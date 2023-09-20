@@ -19,7 +19,19 @@ import static configgen.schema.Metadata.MetaTag.TAG;
 
 public class Metas {
 
-    static void putEntry(Metadata meta, EntryType entry) {
+    public static void putComment(Metadata meta, String comment) {
+        meta.data().putLast("__comment", new Metadata.MetaStr(comment));
+    }
+
+    public static String removeComment(Metadata meta) {
+        MetaValue obj = meta.data().remove("__comment");
+        if (obj instanceof MetaStr ms) {
+            return ms.value();
+        }
+        return "";
+    }
+
+    public static void putEntry(Metadata meta, EntryType entry) {
         switch (entry) {
             case ENo.NO -> {
             }
@@ -28,21 +40,21 @@ public class Metas {
         }
     }
 
-    static EntryType removeEntry(Metadata meta) {
+    public static EntryType removeEntry(Metadata meta) {
         SequencedMap<String, MetaValue> data = meta.data();
         MetaValue entry = data.remove("entry");
-        if (entry != null) {
-            return new EEntry(((MetaStr) entry).value());
+        if (entry instanceof MetaStr ms) {
+            return new EEntry(ms.value());
         }
 
         MetaValue anEnum = data.remove("enum");
-        if (anEnum != null) {
-            return new EEnum(((MetaStr) anEnum).value());
+        if (anEnum instanceof MetaStr ms) {
+            return new EEnum(ms.value());
         }
         return ENo.NO;
     }
 
-    static void putFmt(Metadata meta, FieldFormat fmt) {
+    public static void putFmt(Metadata meta, FieldFormat fmt) {
         SequencedMap<String, MetaValue> data = meta.data();
         switch (fmt) {
             case AUTO -> {
@@ -54,25 +66,25 @@ public class Metas {
         }
     }
 
-    static FieldFormat removeFmt(Metadata meta) {
+    public static FieldFormat removeFmt(Metadata meta) {
         SequencedMap<String, MetaValue> data = meta.data();
         if (data.remove("pack") != null) {
             return PACK;
         }
 
         MetaValue sep = data.remove("sep");
-        if (sep != null) {
-            return new Sep(((MetaStr) sep).value().charAt(0));
+        if (sep instanceof MetaStr ms) {
+            return new Sep(ms.value().charAt(0));
         }
 
         MetaValue fix = data.remove("fix");
-        if (fix != null) {
-            return new Fix(((MetaInt) fix).value());
+        if (fix instanceof MetaInt mi) {
+            return new Fix(mi.value());
         }
 
         MetaValue block = data.remove("block");
-        if (block != null) {
-            return new Block(((MetaInt) block).value());
+        if (block instanceof MetaInt mi) {
+            return new Block(mi.value());
         }
 
         data.remove("auto");

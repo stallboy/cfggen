@@ -1,37 +1,62 @@
 package configgen.schema.cfg;
 
-import configgen.schema.*;
-
-import static configgen.schema.Metadata.*;
-
-import configgen.schema.xml.XmlParser;
-
 import java.nio.file.Path;
 import java.util.*;
 
+import configgen.schema.*;
+import configgen.util.CachedIndentPrinter;
+
+import static configgen.schema.Metadata.*;
 import static configgen.schema.FieldType.*;
 
-public class CfgSaver {
+public enum CfgSaver {
+    INSTANCE;
 
-    private final CfgSchema cfg;
+    private CachedIndentPrinter printer;
+    private boolean useLastName = false;
 
-    public CfgSaver(CfgSchema cfg) {
-        this.cfg = cfg;
-    }
+    public void saveInAllSubDirectory(CfgSchema root, Path dst) {
+        dst = dst.toAbsolutePath().normalize();
+        Map<String, CfgSchema> cfgs = Cfgs.separate(root);
+        for (Map.Entry<String, CfgSchema> entry : cfgs.entrySet()) {
+            String ns = entry.getKey();
+            CfgSchema cfg = entry.getValue();
 
-    public void save() {
-        for (Fieldable value : cfg.structs().values()) {
-            switch (value) {
-                case StructSchema structSchema -> printStruct(structSchema, "");
-                case InterfaceSchema interfaceSchema -> printInterface(interfaceSchema);
+            if (ns.isEmpty()) {
+                saveInOneFile(cfg, dst, true);
+            } else {
+                Path d = dst.getParent();
+                String[] split = ns.split("\\.");
+                String lastSub = "config";
+                for (String sub : split) {
+                    d = d.resolve(sub);
+                    lastSub = sub;
+                }
+                d = d.resolve(lastSub + ".cfg");
+                saveInOneFile(cfg, d, true);
             }
         }
-        for (TableSchema value : cfg.tables().values()) {
-            printTable(value);
-        }
+    }
 
-        TableSchema tableSchema = cfg.tables().get("item.commonitem");
-        println(tableSchema.toString());
+    public void saveInOneFile(CfgSchema cfg, Path dst) {
+        saveInOneFile(cfg, dst, false);
+    }
+
+    private void saveInOneFile(CfgSchema cfg, Path dst, boolean useLastName) {
+        try (CachedIndentPrinter print = new CachedIndentPrinter(dst)) {
+            printer = print;
+            this.useLastName = useLastName;
+
+            for (Fieldable value : cfg.structs().values()) {
+                switch (value) {
+                    case StructSchema structSchema -> printStruct(structSchema, "");
+                    case InterfaceSchema interfaceSchema -> printInterface(interfaceSchema);
+                }
+            }
+            for (TableSchema value : cfg.tables().values()) {
+                printTable(value);
+            }
+        }
     }
 
     private void printTable(TableSchema table) {
@@ -39,14 +64,15 @@ public class CfgSaver {
             table.meta().data().putFirst("isColumnMode", MetaTag.TAG);
         }
         Metas.putEntry(table.meta(), table.entry());
+        String comment = Metas.removeComment(table.meta());
 
-        println(STR. "table \{ table.name() }\{ keyStr(table.primaryKey()) }\{ metadataStr(table.meta()) } {" );
+        String name = useLastName ? table.lastName() : table.name();
+        println(STR. "table \{ name }\{ keyStr(table.primaryKey()) }\{ metadataStr(table.meta()) } {\{ commentStr(comment) }" );
         printStructural(table, "");
 
         for (KeySchema keySchema : table.uniqueKeys()) {
             println(STR. "\t\{ keyStr(keySchema) }" );
         }
-
         println("}");
         println();
     }
@@ -57,9 +83,10 @@ public class CfgSaver {
             sInterface.meta().data().putFirst("defaultImpl", new MetaStr(sInterface.defaultImpl()));
         }
         sInterface.meta().data().putFirst("enumRef", new MetaStr(sInterface.enumRef()));
+        String comment = Metas.removeComment(sInterface.meta());
 
-        println(STR. "interface \{ sInterface.name() }\{ metadataStr(sInterface.meta()) } {" );
-
+        String name = useLastName ? sInterface.lastName() : sInterface.name();
+        println(STR. "interface \{ name }\{ metadataStr(sInterface.meta()) } {\{ commentStr(comment) }" );
         for (StructSchema value : sInterface.impls().values()) {
             printStruct(value, "\t");
         }
@@ -69,7 +96,9 @@ public class CfgSaver {
 
     private void printStruct(StructSchema struct, String prefix) {
         Metas.putFmt(struct.meta(), struct.fmt());
-        println(STR. "\{ prefix }struct \{ struct.name() }\{ metadataStr(struct.meta()) } {" );
+        String comment = Metas.removeComment(struct.meta());
+        String name = useLastName ? struct.lastName() : struct.name();
+        println(STR. "\{ prefix }struct \{ name }\{ metadataStr(struct.meta()) } {\{ commentStr(comment) }" );
         printStructural(struct, prefix);
         println(STR. "\{ prefix }}" );
         println();
@@ -78,22 +107,24 @@ public class CfgSaver {
     private void printStructural(Structural structural, String prefix) {
         for (FieldSchema f : structural.fields()) {
             Metas.putFmt(f.meta(), f.fmt());
-            println(STR. "\{ prefix }\t\{ f.name() }:\{ typeStr(f.type()) }\{ foreignStr(f, structural) }\{ metadataStr(f.meta()) };" );
+            String comment = Metas.removeComment(f.meta());
+            println(STR. "\{ prefix }\t\{ f.name() }:\{ typeStr(f.type()) }\{ foreignStr(f, structural) }\{ metadataStr(f.meta()) };\{ commentStr(comment) }" );
         }
 
         for (ForeignKeySchema fk : structural.foreignKeys()) {
             if (structural.findField(fk.name()) == null) {
-                println(STR. "\{ prefix }\t->\{ fk.name() }:\{ keyStr(fk.key()) }\{ foreignStr(fk) }\{ metadataStr(fk.meta()) };" );
+                String comment = Metas.removeComment(fk.meta());
+                println(STR. "\{ prefix }\t->\{ fk.name() }:\{ keyStr(fk.key()) }\{ foreignStr(fk) }\{ metadataStr(fk.meta()) };\{ commentStr(comment) }" );
             }
         }
     }
 
     private void println(String s) {
-        System.out.println(s);
+        printer.println(s);
     }
 
     private void println() {
-        System.out.println();
+        printer.println();
     }
 
     static String typeStr(FieldType t) {
@@ -125,7 +156,6 @@ public class CfgSaver {
         };
     }
 
-
     static String metadataStr(Metadata meta) {
         if (meta.data().isEmpty()) {
             return "";
@@ -139,20 +169,26 @@ public class CfgSaver {
                 case MetaTag.TAG -> k;
                 case MetaFloat metaFloat -> STR. "\{ k }=\{ metaFloat.value() }" ;
                 case MetaInt metaInt -> STR. "\{ k }=\{ metaInt.value() }" ;
-                case MetaStr metaStr -> STR. "\{ k }=\{ metaStr.value() }" ;
+                case MetaStr metaStr -> STR. "\{ k }='\{ metaStr.value() }'" ;
             };
             list.add(str);
         }
         return STR. " (\{ String.join(", ", list) })" ;
     }
 
-
-    public static void main(String[] args) {
-        CfgSchema cfg = new CfgSchema(new TreeMap<>(), new TreeMap<>());
-        XmlParser parser = new XmlParser(cfg);
-        parser.parse(Path.of("config.xml"), true);
-        new CfgSaver(cfg).save();
+    static String commentStr(String comment) {
+        if (comment.isEmpty()) {
+            return "";
+        } else {
+            return STR. " // \{ comment }" ;
+        }
     }
 
+    public static void main(String[] args) {
+        CfgSchema cfg = CfgSchema.of();
+        XmlParser parser = new XmlParser(cfg);
+        parser.parse(Path.of("config.xml"), true);
+        CfgSaver.INSTANCE.saveInAllSubDirectory(cfg, Path.of("config.cfg"));
+    }
 
 }

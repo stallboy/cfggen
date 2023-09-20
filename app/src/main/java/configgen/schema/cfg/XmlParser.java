@@ -1,4 +1,4 @@
-package configgen.schema.xml;
+package configgen.schema.cfg;
 
 import configgen.schema.*;
 import configgen.schema.RefKey.RefList;
@@ -60,12 +60,12 @@ public class XmlParser {
                 f = parseStruct(e, pkgNameDot);
             }
 
-            Fieldable old = cfg.structs().put(f.name(), f);
+            Fieldable old = cfg.add(f);
             require(null == old, "Bean名字重复: " + f.name());
         }
         for (Element e : DomUtils.elements(self, "table")) {
             TableSchema t = parseTable(e, pkgNameDot);
-            TableSchema old = cfg.tables().put(t.name(), t);
+            TableSchema old = cfg.add(t);
             require(null == old, "table名字重复: " + t.name());
         }
     }
@@ -83,6 +83,11 @@ public class XmlParser {
             entry = EntryType.ENo.NO;
         }
         boolean isColumnMode = self.hasAttribute("isColumnMode");
+        Metadata meta = Metadata.of();
+        if (self.hasAttribute("extraSplit")) {
+            int extraSplit = Integer.parseInt(self.getAttribute("extraSplit"));
+            meta.data().put("extraSplit", new Metadata.MetaInt(extraSplit));
+        }
 
         List<FieldSchema> fields = parseFieldList(self);
         List<ForeignKeySchema> foreignKeys = parseForeignKeyList(self);
@@ -91,7 +96,7 @@ public class XmlParser {
             uniqueKeys.add(getKeySchema(ele, "keys"));
         }
         return new TableSchema(pkgNameDot + name, primaryKey, entry, isColumnMode,
-                new Metadata(new LinkedHashMap<>()), fields, foreignKeys, uniqueKeys);
+                meta, fields, foreignKeys, uniqueKeys);
     }
 
     private KeySchema getKeySchema(Element self, String attr) {
@@ -104,7 +109,7 @@ public class XmlParser {
         FieldFormat fmt = parseBeanFmt(self);
         List<FieldSchema> fields = parseFieldList(self);
         List<ForeignKeySchema> foreignKeys = parseForeignKeyList(self);
-        return new StructSchema(pkgNameDot + name, fmt, new Metadata(new LinkedHashMap<>()),
+        return new StructSchema(pkgNameDot + name, fmt, Metadata.of(),
                 fields, foreignKeys);
     }
 
@@ -122,7 +127,7 @@ public class XmlParser {
         }
 
         return new InterfaceSchema(pkgNameDot + name, enumRef, defaultBeanName,
-                fmt, new Metadata(new LinkedHashMap<>()), impls);
+                fmt, Metadata.of(), impls);
     }
 
     private FieldFormat parseBeanFmt(Element self) {
@@ -168,14 +173,14 @@ public class XmlParser {
     }
 
     private FieldSchema parseField(Element self) {
-        Metadata meta = new Metadata(new LinkedHashMap<>());
+        Metadata meta = Metadata.of();
         String name = self.getAttribute("name");
         String comment = self.getAttribute("desc");
         if (comment.trim().equalsIgnoreCase(name.trim())) {
             comment = "";
         }
         if (!comment.isEmpty()) {
-            meta.data().putLast("m", new Metadata.MetaStr(comment));
+            Metas.putComment(meta, comment);
         }
 
         FieldType type;
@@ -263,7 +268,7 @@ public class XmlParser {
             refKey = new RefPrimary(nullable);
         }
 
-        return new ForeignKeySchema(name, localKey, refTable, refKey, new Metadata(new LinkedHashMap<>()));
+        return new ForeignKeySchema(name, localKey, refTable, refKey, Metadata.of());
     }
 
     private FieldType parseSimpleType(String typ) {
@@ -285,7 +290,7 @@ public class XmlParser {
     }
 
     public static void main(String[] args) {
-        CfgSchema cfg = new CfgSchema(new TreeMap<>(), new TreeMap<>());
+        CfgSchema cfg = CfgSchema.of();
         XmlParser parser = new XmlParser(cfg);
         parser.parse(Path.of("config.xml"), true);
 

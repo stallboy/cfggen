@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 public class CachedFileOutputStream extends ByteArrayOutputStream {
-    private Path path;
+    private final Path path;
 
     public CachedFileOutputStream(File file) {
         this(file, 512);

@@ -1,14 +1,18 @@
 package configgen.schema;
 
+import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.SequencedMap;
-
 
 
 public record Metadata(SequencedMap<String, MetaValue> data) {
 
     public Metadata {
         Objects.requireNonNull(data);
+    }
+
+    public static Metadata of() {
+        return new Metadata(new LinkedHashMap<>());
     }
 
 

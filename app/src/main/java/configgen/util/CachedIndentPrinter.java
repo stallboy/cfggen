@@ -19,13 +19,21 @@ public class CachedIndentPrinter implements Closeable {
     private int lineCntPerFile;
     private int lineCnt;
 
-    public CachedIndentPrinter(File file, String encoding) {
-        this.path = file.toPath().toAbsolutePath().normalize();
+    public CachedIndentPrinter(Path path) {
+        this(path, "UTF-8");
+    }
+
+    public CachedIndentPrinter(Path path, String encoding) {
+        this.path = path.toAbsolutePath().normalize();
         this.encoding = encoding;
         this.dst = new StringBuilder(1024 * 2048);
         this.cache = new StringBuilder(512 * 1024);
         this.tmp = new StringBuilder(128);
         dst.setLength(0);
+    }
+
+    public CachedIndentPrinter(File file, String encoding) {
+        this(file.toPath().toAbsolutePath().normalize(), encoding);
     }
 
     public CachedIndentPrinter(File file, String encoding, StringBuilder dst, StringBuilder cache, StringBuilder tmp) {
@@ -160,16 +168,18 @@ public class CachedIndentPrinter implements Closeable {
     }
 
     private void prefix(StringBuilder sb, String fmt) {
-        for (int i = 0; i < indent; i++) {
-            sb.append("    ");
-        }
+        sb.append("    ".repeat(Math.max(0, indent)));
         sb.append(fmt);
         sb.append('\n');
     }
 
     @Override
-    public void close() throws IOException {
-        CachedFiles.writeFile(path, dst.toString().getBytes(encoding));
+    public void close() {
+        try {
+            CachedFiles.writeFile(path, dst.toString().getBytes(encoding));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
 
