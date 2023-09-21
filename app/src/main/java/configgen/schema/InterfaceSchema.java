@@ -1,5 +1,6 @@
 package configgen.schema;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -26,14 +27,14 @@ public final class InterfaceSchema implements Fieldable, Nameable {
     /**
      * 所有的实现都放在这
      */
-    private final Map<String, StructSchema> impls;
+    private final List<StructSchema> impls;
 
     private TableSchema enumRefTable;
     private StructSchema defaultImplStruct;
 
     public InterfaceSchema(String name, String enumRef, String defaultImpl,
                            FieldFormat fmt, Metadata meta,
-                           Map<String, StructSchema> impls) {
+                           List<StructSchema> impls) {
         this.name = name;
         this.enumRef = enumRef;
         this.defaultImpl = defaultImpl;
@@ -77,8 +78,17 @@ public final class InterfaceSchema implements Fieldable, Nameable {
         return meta;
     }
 
-    public Map<String, StructSchema> impls() {
+    public List<StructSchema> impls() {
         return impls;
+    }
+
+    public StructSchema findImpl(String name) {
+        for (StructSchema impl : impls) {
+            if (impl.name().equals(name)) {
+                return impl;
+            }
+        }
+        return null;
     }
 
     public TableSchema enumRefTable() {
@@ -97,6 +107,7 @@ public final class InterfaceSchema implements Fieldable, Nameable {
         this.defaultImplStruct = defaultImplStruct;
     }
 
+
     @Override
     public String toString() {
         return "SInterface{" +
@@ -105,4 +116,6 @@ public final class InterfaceSchema implements Fieldable, Nameable {
                 ", defaultImpl='" + defaultImpl + '\'' +
                 '}';
     }
+
+
 }

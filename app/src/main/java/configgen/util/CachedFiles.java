@@ -30,7 +30,7 @@ public class CachedFiles {
                 .forEach(f -> doRemoveFile(f, true));
     }
 
-    static void writeFile(Path path, byte[] data) throws IOException {
+    public static void writeFile(Path path, byte[] data) throws IOException {
         filename_set.add(fileKey(path));
         if (!path.toFile().exists()) {
             Logger.log("create file: " + path);

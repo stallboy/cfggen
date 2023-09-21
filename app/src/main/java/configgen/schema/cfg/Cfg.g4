@@ -2,94 +2,48 @@ grammar Cfg ;
 
 // Parser rules
 
-schema :  (  struct_decl | interface_decl | table_decl )* EOF ;
+schema : schema_ele* EOF ;
 
-struct_decl : STRUCT ns_ident metadata LC ( field_decl )* RC ;
+schema_ele: struct_decl | interface_decl | table_decl ;
 
-interface_decl : INTERFACE ns_ident metadata LC ( field_decl )* RC ;
+struct_decl : 'struct' ns_ident metadata COMMENT?  LC  field_decl* foreign_decl*  RC ;
 
-table_decl : TABLE ns_ident metadata LC ( field_decl )* RC ;
+interface_decl : 'interface' ns_ident metadata COMMENT? LC struct_decl+ RC ;
 
+table_decl : 'table' ns_ident key metadata COMMENT? LC key_decl* field_decl* foreign_decl*  RC ;
 
-enum_decl : ENUM identifier ( COLON type_ )? metadata LC commasep_enumval_decl RC ;
+field_decl : identifier COLON type_ ( ref )? metadata SEMI COMMENT? ;
 
-union_decl : UNION identifier metadata LC commasep_unionval_with_opt_alias RC ;
+foreign_decl: '->' identifier COLON key ref metadata SEMI COMMENT? ;
 
-root_decl : ROOT_TYPE identifier SEMI ;
+key_decl : key SEMI ;
 
-field_decl : identifier COLON type_ ( EQ scalar )? metadata SEMI ;
+ref:  ('->' | '=>') ns_ident key? ;
 
-rpc_decl : RPC_SERVICE identifier LC rpc_method+ RC ;
+key: '[' identifier (',' identifier)* ']' ;
 
-rpc_method : identifier LP identifier RP COLON identifier metadata SEMI ;
+COMMENT: '//' ~[\r\n]* ;
 
-type_ : LB type_ ( COLON integer_const )? RB | BASE_TYPE_NAME | ns_ident ;
+type_ : 'list<' type_ele '>' |  'map<' type_ele ','  type_ele '>' | type_ele;
 
-enumval_decl : ns_ident ( EQ integer_const )? ;
+type_ele : BASE_TYPE_NAME | ns_ident;
 
-commasep_enumval_decl : enumval_decl ( COMMA enumval_decl )* COMMA? ;
-
-unionval_with_opt_alias : ns_ident ( COLON ns_ident )? ( EQ integer_const )? ;
-
-commasep_unionval_with_opt_alias : unionval_with_opt_alias ( COMMA unionval_with_opt_alias )* COMMA? ;
-
-ident_with_opt_single_value : identifier ( COLON single_value )? ;
-
-commasep_ident_with_opt_single_value : ident_with_opt_single_value ( COMMA ident_with_opt_single_value )* ;
+BASE_TYPE_NAME : 'bool' | 'int' | 'long' | 'float' | 'str' | 'res' | 'text' ;
 
 metadata : ( LP commasep_ident_with_opt_single_value RP )? ;
 
-scalar : INTEGER_CONSTANT | HEX_INTEGER_CONSTANT | FLOAT_CONSTANT | identifier ;
+commasep_ident_with_opt_single_value : ident_with_opt_single_value ( COMMA ident_with_opt_single_value )* ;
 
-object_ : LC commasep_ident_with_value RC ;
+ident_with_opt_single_value : identifier ( COLON single_value )? ;
 
-ident_with_value : identifier COLON value ;
-
-commasep_ident_with_value : ident_with_value ( COMMA ident_with_value )* COMMA? ;
-
-single_value : scalar | STRING_CONSTANT ;
-
-value : single_value | object_ | LB commasep_value RB ;
-
-commasep_value : value( COMMA value )* COMMA? ;
-
-file_extension_decl : FILE_EXTENSION STRING_CONSTANT SEMI ;
-
-file_identifier_decl : FILE_IDENTIFIER STRING_CONSTANT SEMI ;
+single_value : INTEGER_CONSTANT | HEX_INTEGER_CONSTANT | FLOAT_CONSTANT | STRING_CONSTANT ;
 
 ns_ident : identifier ( DOT identifier )* ;
 
-integer_const :  INTEGER_CONSTANT | HEX_INTEGER_CONSTANT ;
+identifier: IDENT ;
 
-identifier: IDENT | keywords;
-
-keywords
-  : ATTRIBUTE
-  | ENUM
-  | FILE_EXTENSION
-  | FILE_IDENTIFIER
-  | INCLUDE
-  | NATIVE_INCLUDE
-  | NAMESPACE
-  | ROOT_TYPE
-  | RPC_SERVICE
-  | STRUCT
-  | TABLE
-  | UNION
-  ;
 
 // Lexer rules
-
-// keywords
-STRUCT:     'struct';
-INTERFACE:  'interface';
-TABLE:      'table';
-
-PACK:   'pack';
-SEP:    'sep';
-FIX:    'fix';
-BLOCK:  'block';
-
 
 // symbols
 SEMI: ';';
@@ -139,7 +93,7 @@ UNICODE_ESCAPE_SEQUENCE
     ;
 
 STRING_CONSTANT
-    :   '"' SCHAR_SEQUENCE? '"'
+    :   '\'' SCHAR_SEQUENCE? '\''
     ;
 
 fragment
@@ -152,8 +106,6 @@ SCHAR
     :   ~["\\\r\n]
     |   ESCAPE_SEQUENCE
     ;
-
-BASE_TYPE_NAME : 'bool' | 'byte' | 'ubyte' | 'short' | 'ushort' | 'int' | 'uint' | 'float' | 'long' | 'ulong' | 'double' | 'int8' | 'uint8' | 'int16' | 'uint16' | 'int32' | 'uint32' | 'int64' | 'uint64' | 'float32' | 'float64' | 'string' ;
 
 INTEGER_CONSTANT : [-+]? DECIMAL_DIGIT+ | 'true' | 'false' ;
 
@@ -185,9 +137,7 @@ EXPONENT
     :   ('e' | 'E') (PLUS|MINUS)? DECIMALS
     ;
 
-BLOCK_COMMENT:	'/*' .*? '*/' -> channel(HIDDEN);
-
 // fixed original grammar: allow line comments
-COMMENT : '//' ~[\r\n]* -> channel(HIDDEN);
+//COMMENT : '//' ~[\r\n]* ;
 
 WS : [ \t\r\n] -> skip ;

@@ -16,32 +16,32 @@ import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
 import static configgen.schema.FieldType.Primitive.*;
 
-public class XmlParser {
-    private final CfgSchema cfg;
+public enum XmlParser {
+    INSTANCE;
 
-    public XmlParser(CfgSchema dst) {
-        this.cfg = dst;
-    }
 
-    public void parse(Path xml, boolean includeSubDirectory) {
+    public CfgSchema parse(Path xml, boolean includeSubDirectory) {
+        CfgSchema cfg = CfgSchema.of();
         if (includeSubDirectory) {
-            parseXmlInAllSubDirectory(xml, "");
+            parseXmlInAllSubDirectory(cfg, xml, "");
         } else {
-            parseXml(xml, "");
+            parseXml(cfg, xml, "");
         }
+        return cfg;
     }
 
-    private void parseXmlInAllSubDirectory(Path topXml, String pkgNameDot) {
+    private void parseXmlInAllSubDirectory(CfgSchema cfg, Path topXml, String pkgNameDot) {
         if (Files.exists(topXml)) {
-            parseXml(topXml, pkgNameDot);
+            parseXml(cfg, topXml, pkgNameDot);
         }
         try {
             try (Stream<Path> paths = Files.list(topXml.toAbsolutePath().getParent())) {
                 for (Path path : paths.toList()) {
                     if (Files.isDirectory(path)) {
-                        String subPkgName = path.getFileName().toString().toLowerCase();
+                        String lastDir = path.getFileName().toString().toLowerCase();
+                        String subPkgName = CfgUtil.getPkgNameByDirName(lastDir);
                         Path xml = path.resolve(subPkgName + ".xml");
-                        parseXmlInAllSubDirectory(xml, pkgNameDot + subPkgName + ".");
+                        parseXmlInAllSubDirectory(cfg, xml, pkgNameDot + subPkgName + ".");
                     }
                 }
             }
@@ -50,7 +50,7 @@ public class XmlParser {
         }
     }
 
-    private void parseXml(Path xml, String pkgNameDot) {
+    private void parseXml(CfgSchema cfg, Path xml, String pkgNameDot) {
         Element self = DomUtils.rootElement(xml.toFile());
         for (Element e : DomUtils.elements(self, "bean")) {
             Fieldable f;
@@ -60,13 +60,11 @@ public class XmlParser {
                 f = parseStruct(e, pkgNameDot);
             }
 
-            Fieldable old = cfg.add(f);
-            require(null == old, "Bean名字重复: " + f.name());
+            cfg.items().add(f);
         }
         for (Element e : DomUtils.elements(self, "table")) {
             TableSchema t = parseTable(e, pkgNameDot);
-            TableSchema old = cfg.add(t);
-            require(null == old, "table名字重复: " + t.name());
+            cfg.items().add(t);
         }
     }
 
@@ -104,7 +102,7 @@ public class XmlParser {
         return new KeySchema(Arrays.asList(keys));
     }
 
-    private Fieldable parseStruct(Element self, String pkgNameDot) {
+    private StructSchema parseStruct(Element self, String pkgNameDot) {
         String name = self.getAttribute("name");
         FieldFormat fmt = parseBeanFmt(self);
         List<FieldSchema> fields = parseFieldList(self);
@@ -119,11 +117,10 @@ public class XmlParser {
         String enumRef = self.getAttribute("enumRef");
         String defaultBeanName = self.getAttribute("defaultBeanName");
 
-        Map<String, StructSchema> impls = new HashMap<>();
+        List<StructSchema> impls = new ArrayList<>();
         for (Element subSelf : DomUtils.elements(self, "bean")) {
-            Fieldable subF = parseStruct(subSelf, "");
-            StructSchema old = impls.put(subF.name(), (StructSchema) subF);
-            require(null == old, "Bean名字重复: " + subF.name());
+            StructSchema impl = parseStruct(subSelf, "");
+            impls.add(impl);
         }
 
         return new InterfaceSchema(pkgNameDot + name, enumRef, defaultBeanName,
@@ -290,10 +287,7 @@ public class XmlParser {
     }
 
     public static void main(String[] args) {
-        CfgSchema cfg = CfgSchema.of();
-        XmlParser parser = new XmlParser(cfg);
-        parser.parse(Path.of("config.xml"), true);
-
+        CfgSchema cfg = XmlParser.INSTANCE.parse(Path.of("config.xml"), true);
         System.out.println(cfg);
     }
 }

@@ -51,7 +51,6 @@ public class CachedIndentPrinter implements Closeable {
 
     public void inc() {
         indent++;
-
     }
 
     public void dec() {

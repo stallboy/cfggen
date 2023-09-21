@@ -70,7 +70,7 @@ public class FileNameExtract {
 
         String left = fileNameNoExt.substring(extracted.length());
 
-        if (left.length() == 0) {
+        if (left.isEmpty()) {
             return true;
         }
 

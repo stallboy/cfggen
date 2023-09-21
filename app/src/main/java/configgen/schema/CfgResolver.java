@@ -2,10 +2,7 @@ package configgen.schema;
 
 import configgen.schema.EntryType.EntryBase;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 import static configgen.schema.Err.*;
 import static configgen.schema.FieldFormat.AutoOrPack;
@@ -30,7 +27,7 @@ public final class CfgResolver {
     }
 
     public void resolve() {
-        step0_checkNameMayConflict();
+        step0_checkNameConflict();
         step1_resolveAllFields();
         step2_resolveEachNameable();
         step3_resolveAllForeignKeys();
@@ -41,16 +38,26 @@ public final class CfgResolver {
      * 如果配在每个文件夹下，虽然代码可以按从interface scope -> local scope -> global scope的顺序来解析名字。
      * 但为了清晰性，我们一开始叫避免这种可能的混乱。
      */
-    private void step0_checkNameMayConflict() {
-        HashSet<List<String>> nameSet = new HashSet<>();
-        for (String name : cfg.structs().keySet()) {
-            List<String> list = Arrays.asList(name.split("\\."));
-            nameSet.add(list);
-        }
-        for (String name : cfg.tables().keySet()) {
-            List<String> list = Arrays.asList(name.split("\\."));
+    private void step0_checkNameConflict() {
+        Set<List<String>> nameSet = new HashSet<>();
+        for (Nameable item : cfg.items()) {
+            List<String> list = Arrays.asList(item.name().split("\\."));
             if (!nameSet.add(list)) {
-                errNameMayConflict(name, name);
+                errs.addErr(new NameConflict(item.name()));
+            }
+
+            switch (item) {
+                case InterfaceSchema interfaceSchema -> {
+                    for (StructSchema impl : interfaceSchema.impls()) {
+                        if (!impl.namespace().isEmpty()) {
+                            errs.addErr(new ImplNamespaceNotEmpty(interfaceSchema.name(), impl.name()));
+                        } else if (!nameSet.add(List.of(impl.name()))) {
+                            errs.addErr(new NameConflict(impl.name()));
+                        }
+                        checkInnerNameConflict(impl);
+                    }
+                }
+                case Structural structural -> checkInnerNameConflict(structural);
             }
         }
 
@@ -58,19 +65,42 @@ public final class CfgResolver {
             if (name.size() <= 1) {
                 continue;
             }
-
             int len = name.size();
             for (int i = 1; i < len; i++) {
                 List<String> sub = name.subList(i, len);
                 if (nameSet.contains(sub)) {
-                    errNameMayConflict(String.join(".", name), String.join(".", sub));
+                    String name1 = String.join(".", name);
+                    String name2 = String.join(".", sub);
+                    errs.addErr(new NameMayConflictByRef(name1, name2));
                 }
             }
         }
+
+        Map<String, Fieldable> structMap = new HashMap<>();
+        Map<String, TableSchema> tableMap = new HashMap<>();
+        for (Nameable item : cfg.items()) {
+            switch (item) {
+                case Fieldable fieldable -> structMap.put(fieldable.name(), fieldable);
+                case TableSchema table -> tableMap.put(table.name(), table);
+            }
+        }
+        cfg.resolve(structMap, tableMap);
     }
 
-    private void errNameMayConflict(String name1, String name2) {
-        errs.addErr(new NameMayConflict(name1, name2));
+
+    private void checkInnerNameConflict(Structural structural) {
+        Set<String> innerNameSet = new HashSet<>();
+        for (FieldSchema field : structural.fields()) {
+            if (!innerNameSet.add(field.name())) {
+                errs.addErr(new InnerNameConflict(structural.name(), field.name()));
+            }
+        }
+        innerNameSet.clear();
+        for (ForeignKeySchema fk : structural.foreignKeys()) {
+            if (!innerNameSet.add(fk.name())) {
+                errs.addErr(new InnerNameConflict(structural.name(), fk.name()));
+            }
+        }
     }
 
     ////////////////////////////////////////////////////////////////////
@@ -83,25 +113,24 @@ public final class CfgResolver {
     }
 
     private void resolve_structural(Action<Structural> action) {
-        for (Fieldable value : cfg.structs().values()) {
+        for (Nameable value : cfg.items()) {
             curNameable = value;
             switch (value) {
                 case StructSchema struct -> {
                     action.run(struct);
                 }
                 case InterfaceSchema sInterface -> {
-                    for (StructSchema impl : sInterface.impls().values()) {
+                    for (StructSchema impl : sInterface.impls()) {
                         this.isInCurImpl = true;
                         this.curImpl = impl;
                         action.run(impl);
                     }
                     this.isInCurImpl = false;
                 }
+                case TableSchema table -> {
+                    action.run(table);
+                }
             }
-        }
-        for (TableSchema value : cfg.tables().values()) {
-            curNameable = value;
-            action.run(value);
         }
     }
 
@@ -151,7 +180,7 @@ public final class CfgResolver {
                 String name = structRef.name();
                 // interface里找
                 if (curNameable instanceof InterfaceSchema sInterface) {
-                    StructSchema obj = sInterface.impls().get(name);
+                    StructSchema obj = sInterface.findImpl(name);
                     if (obj != null) {
                         structRef.setObj(obj);
                         return;
@@ -162,7 +191,7 @@ public final class CfgResolver {
                 String namespace = curNameable.namespace();
                 if (!namespace.isEmpty()) {
                     String fullName = Nameable.makeName(namespace, name);
-                    Fieldable obj = cfg.structs().get(fullName);
+                    Fieldable obj = cfg.findFieldable(fullName);
                     if (obj != null) {
                         structRef.setObj(obj);
                         return;
@@ -170,7 +199,7 @@ public final class CfgResolver {
                 }
 
                 // 全局找
-                Fieldable obj = cfg.structs().get(name);
+                Fieldable obj = cfg.findFieldable(name);
                 if (obj != null) {
                     structRef.setObj(obj);
                     return;
@@ -199,25 +228,24 @@ public final class CfgResolver {
 
     ////////////////////////////////////////////////////////////////////
     private void step2_resolveEachNameable() {
-        for (Fieldable value : cfg.structs().values()) {
-            curNameable = value;
-            switch (value) {
+        for (Nameable item : cfg.items()) {
+            curNameable = item;
+            switch (item) {
                 case StructSchema _ -> {
                 }
                 case InterfaceSchema sInterface -> {
                     resolveInterface(sInterface);
                 }
+                case TableSchema table -> {
+                    resolveTable(table);
+                }
             }
-        }
-        for (TableSchema table : cfg.tables().values()) {
-            curNameable = table;
-            resolveTable(table);
         }
     }
 
     private void resolveInterface(InterfaceSchema sInterface) {
         String enumRef = sInterface.enumRef();
-        TableSchema enumRefTable = cfg.tables().get(enumRef);
+        TableSchema enumRefTable = cfg.findTable(enumRef);
         if (enumRefTable != null) {
             sInterface.setEnumRefTable(enumRefTable);
         } else {
@@ -226,7 +254,7 @@ public final class CfgResolver {
 
         String def = sInterface.defaultImpl();
         if (!def.isEmpty()) {
-            StructSchema defImpl = sInterface.impls().get(def);
+            StructSchema defImpl = sInterface.findImpl(def);
             if (defImpl != null) {
                 sInterface.setDefaultImplStruct(defImpl);
             } else {
@@ -385,7 +413,7 @@ public final class CfgResolver {
         // 解析映射到的table
         boolean err = false;
         String refTable = foreignKey.refTable();
-        TableSchema refTableSchema = cfg.tables().get(refTable);
+        TableSchema refTableSchema = cfg.findTable(refTable);
         if (refTableSchema != null) {
             foreignKey.setRefTableSchema(refTableSchema);
         } else {

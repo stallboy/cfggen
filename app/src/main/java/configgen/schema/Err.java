@@ -2,8 +2,18 @@ package configgen.schema;
 
 public sealed interface Err {
 
-    record NameMayConflict(String name1,
-                           String name2) implements Err {
+    record ImplNamespaceNotEmpty(String sInterface,
+                                 String errImplName) implements Err {
+    }
+
+    record NameConflict(String name) implements Err {
+    }
+
+    record InnerNameConflict(String item, String name) implements Err {
+    }
+
+    record NameMayConflictByRef(String name1,
+                                String name2) implements Err {
     }
 
     record TypeNotFound(String struct,

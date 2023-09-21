@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<db>
+    <bean name="TestDefaultBean">
+        <column name="testInt" type="int"/>
+        <column name="testBool" type="bool"/>
+        <column name="testString" type="string"/>
+        <column name="testSubBean" type="Position"/>
+        <column name="testList" pack="1" type="list,int"/>
+        <column name="testList2" type="list,int,3"/>
+        <column name="testMap" type="map,int,string,2"/>
+    </bean>
+    <bean defaultBeanName="TestNoColumn" enumRef="completeconditiontype" name="completecondition">
+        <bean name="KillMonster">
+            <column name="monsterid" ref="other.monster" type="int"/>
+            <column name="count" type="int"/>
+        </bean>
+        <bean name="TalkNpc">
+            <column name="npcid" type="int"/>
+        </bean>
+        <bean name="TestNoColumn"/>
+        <bean name="Chat">
+            <column name="msg" type="string"/>
+        </bean>
+        <bean name="ConditionAnd">
+            <column name="cond1" pack="1" type="task.completecondition"/>
+            <column name="cond2" pack="1" type="task.completecondition"/>
+        </bean>
+        <bean name="CollectItem">
+            <column name="itemid" type="int"/>
+            <column name="count" type="int"/>
+        </bean>
+    </bean>
+    <table enum="name" name="completeconditiontype" primaryKey="id">
+        <column desc="任务完成条件类型（id的范围为1-100）" name="id" type="int"/>
+        <column desc="程序用名字" name="name" type="string"/>
+    </table>
+    <table name="task" primaryKey="taskid">
+        <column desc="任务完成条件类型（id的范围为1-100）" name="taskid" ref="task.taskextraexp" refType="NULLABLE" type="int"/>
+        <column desc="程序用名字" name="name" type="list,text,2"/>
+        <column name="nexttask" ref="task" refType="NULLABLE" type="int"/>
+        <column name="completecondition" type="task.completecondition"/>
+        <column name="exp" type="int"/>
+        <column desc="测试" name="testDefaultBean" pack="1" type="TestDefaultBean"/>
+    </table>
+    <table name="taskextraexp" primaryKey="taskid">
+        <column desc="任务完成条件类型（id的范围为1-100）" name="taskid" type="int"/>
+        <column desc="额外奖励经验" name="extraexp" type="int"/>
+    </table>
+</db>
