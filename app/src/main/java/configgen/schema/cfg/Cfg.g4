@@ -6,35 +6,40 @@ schema : schema_ele* EOF ;
 
 schema_ele: struct_decl | interface_decl | table_decl ;
 
-struct_decl : 'struct' ns_ident metadata COMMENT?  LC  field_decl* foreign_decl*  RC ;
+struct_decl : 'struct' ns_ident metadata LC COMMENT? field_decl* foreign_decl*  RC ;
 
-interface_decl : 'interface' ns_ident metadata COMMENT? LC struct_decl+ RC ;
+interface_decl : 'interface' ns_ident metadata LC COMMENT? struct_decl+ RC ;
 
-table_decl : 'table' ns_ident key metadata COMMENT? LC key_decl* field_decl* foreign_decl*  RC ;
+table_decl : 'table' ns_ident key metadata LC COMMENT? key_decl* field_decl* foreign_decl*  RC ;
 
 field_decl : identifier COLON type_ ( ref )? metadata SEMI COMMENT? ;
 
-foreign_decl: '->' identifier COLON key ref metadata SEMI COMMENT? ;
+foreign_decl: REF identifier COLON key ref metadata SEMI COMMENT? ;
+
+type_ : TLIST '<' type_ele '>' |  TMAP '<' type_ele ','  type_ele '>' | type_ele;
+
+type_ele : TBASE | ns_ident;
+
+TLIST : 'list';
+TMAP: 'map';
+TBASE : 'bool' | 'int' | 'long' | 'float' | 'str' | 'res' | 'text' ;
+
+ref:  (REF | LISTREF) ns_ident key? ;
+
+REF: '->';
+LISTREF: '=>';
 
 key_decl : key SEMI ;
-
-ref:  ('->' | '=>') ns_ident key? ;
 
 key: '[' identifier (',' identifier)* ']' ;
 
 COMMENT: '//' ~[\r\n]* ;
 
-type_ : 'list<' type_ele '>' |  'map<' type_ele ','  type_ele '>' | type_ele;
 
-type_ele : BASE_TYPE_NAME | ns_ident;
 
-BASE_TYPE_NAME : 'bool' | 'int' | 'long' | 'float' | 'str' | 'res' | 'text' ;
+metadata : ( LP ident_with_opt_single_value ( COMMA ident_with_opt_single_value )* RP )? ;
 
-metadata : ( LP commasep_ident_with_opt_single_value RP )? ;
-
-commasep_ident_with_opt_single_value : ident_with_opt_single_value ( COMMA ident_with_opt_single_value )* ;
-
-ident_with_opt_single_value : identifier ( COLON single_value )? ;
+ident_with_opt_single_value : identifier ( EQ single_value )? ;
 
 single_value : INTEGER_CONSTANT | HEX_INTEGER_CONSTANT | FLOAT_CONSTANT | STRING_CONSTANT ;
 

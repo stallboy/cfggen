@@ -281,7 +281,7 @@ public enum XmlParser {
         };
     }
 
-    protected void require(boolean cond, Object detailMessage) {
+    private void require(boolean cond, Object detailMessage) {
         if (!cond)
             throw new AssertionError(detailMessage);
     }

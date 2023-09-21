@@ -80,12 +80,19 @@ public class CfgWriter {
         for (FieldSchema f : structural.fields()) {
             Metas.putFmt(f.meta(), f.fmt());
             String comment = Metas.removeComment(f.meta());
-            println(STR. "\{ prefix }\t\{ f.name() }:\{ typeStr(f.type()) }\{ foreignStr(f, structural) }\{ metadataStr(f.meta()) };\{ commentStr(comment) }" );
+
+            ForeignKeySchema fk = structural.findForeignKey(f.name());
+            String fkStr = fk == null ? "" : foreignStr(fk);
+            if (fk != null) {
+                foreignToMeta(fk, f.meta());
+            }
+            println(STR. "\{ prefix }\t\{ f.name() }:\{ typeStr(f.type()) }\{ fkStr }\{ metadataStr(f.meta()) };\{ commentStr(comment) }" );
         }
 
         for (ForeignKeySchema fk : structural.foreignKeys()) {
             if (structural.findField(fk.name()) == null) {
                 String comment = Metas.removeComment(fk.meta());
+                foreignToMeta(fk, fk.meta());
                 println(STR. "\{ prefix }\t->\{ fk.name() }:\{ keyStr(fk.key()) }\{ foreignStr(fk) }\{ metadataStr(fk.meta()) };\{ commentStr(comment) }" );
             }
         }
@@ -112,12 +119,21 @@ public class CfgWriter {
         return STR. "[\{ String.join(",", key.name()) }]" ;
     }
 
-    static String foreignStr(FieldSchema field, Structural struct) {
-        ForeignKeySchema fk = struct.findForeignKey(field.name());
-        if (fk == null) {
-            return "";
+    static void foreignToMeta(ForeignKeySchema fk, Metadata meta) {
+        switch (fk.refKey()) {
+            case RefKey.RefPrimary refPrimary -> {
+                if (refPrimary.nullable()) {
+                    Metas.putNullable(meta);
+                }
+            }
+            case RefKey.RefUniq refUniq -> {
+                if (refUniq.nullable()) {
+                    Metas.putNullable(meta);
+                }
+            }
+            case RefKey.RefList _ -> {
+            }
         }
-        return foreignStr(fk);
     }
 
     static String foreignStr(ForeignKeySchema fk) {

@@ -31,6 +31,14 @@ public class Metas {
         return "";
     }
 
+    public static void putNullable(Metadata meta) {
+        meta.data().putFirst("nullable", TAG);
+    }
+
+    public static boolean removeNullable(Metadata meta) {
+        return meta.data().remove("nullable") != null;
+    }
+
     public static void putEntry(Metadata meta, EntryType entry) {
         switch (entry) {
             case ENo.NO -> {

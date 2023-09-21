@@ -3,3 +3,7 @@
 /app/out
 /.gradle
 /.idea
+/app/src/main/java/configgen/schema/cfg/Cfg.interp
+/app/src/main/java/configgen/schema/cfg/Cfg.tokens
+/app/src/main/java/configgen/schema/cfg/CfgLexer.interp
+/app/src/main/java/configgen/schema/cfg/CfgLexer.tokens
