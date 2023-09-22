@@ -51,6 +51,8 @@ dependencies {
     implementation 'org.antlr:antlr4-runtime:4.13.1'
     // https://mvnrepository.com/artifact/com.fizzed/rocker-runtime
     implementation 'com.fizzed:rocker-runtime:1.3.0'
+    // https://mvnrepository.com/artifact/org.dhatim/fastexcel-reader
+    implementation 'org.dhatim:fastexcel-reader:0.15.7'
 
     antlr "org.antlr:antlr4:4.13.1"
 }
