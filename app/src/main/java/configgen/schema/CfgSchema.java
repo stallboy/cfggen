@@ -41,6 +41,26 @@ public class CfgSchema {
         this.structMap = structMap;
         this.tableMap = tableMap;
     }
+
+    @Override
+    public String toString() {
+        return "CfgSchema{" +
+                "items=" + items +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CfgSchema cfgSchema = (CfgSchema) o;
+        return Objects.equals(items, cfgSchema.items);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(items);
+    }
 }
 
 

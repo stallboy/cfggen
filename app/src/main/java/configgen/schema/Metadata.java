@@ -14,6 +14,10 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         Objects.requireNonNull(data);
     }
 
+    public Metadata copy() {
+        return new Metadata(new LinkedHashMap<>(data));
+    }
+
     public sealed interface MetaValue {
     }
 

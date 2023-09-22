@@ -1,5 +1,7 @@
 package configgen.schema;
 
+import java.util.Objects;
+
 /**
  * 设计目标：
  * 程序入口，整个策划配表应该由这个做为初始入口，
@@ -15,8 +17,8 @@ public sealed interface EntryType {
     }
 
     sealed abstract class EntryBase implements EntryType {
-        private final String field;
-        private FieldSchema fieldSchema;
+        protected final String field;
+        protected FieldSchema fieldSchema;
 
         EntryBase(String field) {
             this.field = field;
@@ -33,6 +35,19 @@ public sealed interface EntryType {
         void setFieldSchema(FieldSchema fieldSchema) {
             this.fieldSchema = fieldSchema;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            EntryBase entryBase = (EntryBase) o;
+            return Objects.equals(field, entryBase.field);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(field);
+        }
     }
 
     /**
@@ -42,6 +57,13 @@ public sealed interface EntryType {
         public EEntry(String field) {
             super(field);
         }
+
+        @Override
+        public String toString() {
+            return "EEntry{" +
+                    "field='" + field + '\'' +
+                    '}';
+        }
     }
 
     /**
@@ -50,6 +72,13 @@ public sealed interface EntryType {
     final class EEnum extends EntryBase {
         public EEnum(String field) {
             super(field);
+        }
+
+        @Override
+        public String toString() {
+            return "EEnum{" +
+                    "field='" + field + '\'' +
+                    '}';
         }
     }
 

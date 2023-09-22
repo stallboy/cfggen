@@ -39,6 +39,30 @@ public class Metas {
         return meta.data().remove("nullable") != null;
     }
 
+    public static void putEnumRef(Metadata meta, String enumRef) {
+        meta.data().putFirst("enumRef", new MetaStr(enumRef));
+    }
+
+    public static String removeEnumRef(Metadata meta) {
+        MetaValue enumRef = meta.data().remove("enumRef");
+        if (enumRef instanceof MetaStr ms) {
+            return ms.value();
+        }
+        return "";
+    }
+
+    public static void putDefaultImpl(Metadata meta, String defaultImpl) {
+        meta.data().putFirst("defaultImpl", new MetaStr(defaultImpl));
+    }
+
+    public static String removeDefaultImpl(Metadata meta) {
+        MetaValue defaultImpl = meta.data().remove("defaultImpl");
+        if (defaultImpl instanceof MetaStr ms) {
+            return ms.value();
+        }
+        return "";
+    }
+
     public static void putEntry(Metadata meta, EntryType entry) {
         switch (entry) {
             case ENo.NO -> {
@@ -60,6 +84,14 @@ public class Metas {
             return new EEnum(ms.value());
         }
         return ENo.NO;
+    }
+
+    public static void putColumnMode(Metadata meta) {
+        meta.data().putFirst("columnMode", TAG);
+    }
+
+    public static boolean removeColumnMode(Metadata meta) {
+        return meta.data().remove("columnMode") != null;
     }
 
     public static void putFmt(Metadata meta, FieldFormat fmt) {

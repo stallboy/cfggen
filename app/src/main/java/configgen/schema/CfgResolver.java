@@ -233,19 +233,15 @@ public final class CfgResolver {
             switch (item) {
                 case StructSchema _ -> {
                 }
-                case InterfaceSchema sInterface -> {
-                    resolveInterface(sInterface);
-                }
-                case TableSchema table -> {
-                    resolveTable(table);
-                }
+                case InterfaceSchema sInterface -> resolveInterface(sInterface);
+                case TableSchema table -> resolveTable(table);
             }
         }
     }
 
     private void resolveInterface(InterfaceSchema sInterface) {
         String enumRef = sInterface.enumRef();
-        TableSchema enumRefTable = cfg.findTable(enumRef);
+        TableSchema enumRefTable = findTableInLocalThenGlobal(enumRef);
         if (enumRefTable != null) {
             sInterface.setEnumRefTable(enumRefTable);
         } else {
@@ -261,6 +257,21 @@ public final class CfgResolver {
                 errDefaultImplNotFound(def);
             }
         }
+    }
+
+    private TableSchema findTableInLocalThenGlobal(String name) {
+        // 本模块找
+        String namespace = curNameable.namespace();
+        if (!namespace.isEmpty()) {
+            String fullName = Nameable.makeName(namespace, name);
+            TableSchema table = cfg.findTable(fullName);
+            if (table != null) {
+                return table;
+            }
+        }
+
+        // 全局找
+        return cfg.findTable(name);
     }
 
     private void errEnumRefNotFound(String enumRef) {
@@ -413,7 +424,7 @@ public final class CfgResolver {
         // 解析映射到的table
         boolean err = false;
         String refTable = foreignKey.refTable();
-        TableSchema refTableSchema = cfg.findTable(refTable);
+        TableSchema refTableSchema = findTableInLocalThenGlobal(refTable);
         if (refTableSchema != null) {
             foreignKey.setRefTableSchema(refTableSchema);
         } else {

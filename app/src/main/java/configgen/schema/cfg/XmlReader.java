@@ -6,51 +6,20 @@ import configgen.schema.RefKey.RefPrimary;
 import configgen.util.DomUtils;
 import org.w3c.dom.Element;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
 import static configgen.schema.FieldType.Primitive.*;
 
-public enum XmlParser {
+public enum XmlReader implements CfgSchemaReader {
     INSTANCE;
 
-
-    public CfgSchema parse(Path xml, boolean includeSubDirectory) {
-        CfgSchema cfg = CfgSchema.of();
-        if (includeSubDirectory) {
-            parseXmlInAllSubDirectory(cfg, xml, "");
-        } else {
-            parseXml(cfg, xml, "");
-        }
-        return cfg;
-    }
-
-    private void parseXmlInAllSubDirectory(CfgSchema cfg, Path topXml, String pkgNameDot) {
-        if (Files.exists(topXml)) {
-            parseXml(cfg, topXml, pkgNameDot);
-        }
-        try {
-            try (Stream<Path> paths = Files.list(topXml.toAbsolutePath().getParent())) {
-                for (Path path : paths.toList()) {
-                    if (Files.isDirectory(path)) {
-                        String lastDir = path.getFileName().toString().toLowerCase();
-                        String subPkgName = CfgUtil.getPkgNameByDirName(lastDir);
-                        Path xml = path.resolve(subPkgName + ".xml");
-                        parseXmlInAllSubDirectory(cfg, xml, pkgNameDot + subPkgName + ".");
-                    }
-                }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void parseXml(CfgSchema cfg, Path xml, String pkgNameDot) {
+    @Override
+    public void readTo(CfgSchema destination, Path xml, String pkgNameDot) {
         Element self = DomUtils.rootElement(xml.toFile());
         for (Element e : DomUtils.elements(self, "bean")) {
             Fieldable f;
@@ -60,11 +29,11 @@ public enum XmlParser {
                 f = parseStruct(e, pkgNameDot);
             }
 
-            cfg.items().add(f);
+            destination.items().add(f);
         }
         for (Element e : DomUtils.elements(self, "table")) {
             TableSchema t = parseTable(e, pkgNameDot);
-            cfg.items().add(t);
+            destination.items().add(t);
         }
     }
 
@@ -284,10 +253,5 @@ public enum XmlParser {
     private void require(boolean cond, Object detailMessage) {
         if (!cond)
             throw new AssertionError(detailMessage);
-    }
-
-    public static void main(String[] args) {
-        CfgSchema cfg = XmlParser.INSTANCE.parse(Path.of("config.xml"), true);
-        System.out.println(cfg);
     }
 }

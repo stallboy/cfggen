@@ -1,4 +1,4 @@
-// Generated from D:/work/mygithub/cfggen/app/src/main/java/configgen/schema/cfg/Cfg.g4 by ANTLR 4.13.1
+// Generated from E:/work/mygit/cfggen/app/src/main/java/configgen/schema/cfg/Cfg.g4 by ANTLR 4.13.1
 package configgen.schema.cfg;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
@@ -169,7 +169,7 @@ public class CfgLexer extends Lexer {
 		"-\u0017/\u00181\u00003\u00005\u00007\u00009\u0000;\u0000=\u0019?\u0000"+
 		"A\u0000C\u001aE\u001bG\u001cI\u001dK\u0000M\u0000O\u0000Q\u001e\u0001"+
 		"\u0000\u000b\u0002\u0000\n\n\r\r\u0001\u000009\u0003\u000009AFaf\u000b"+
-		"\u0000\"\"\'\'//??\\\\bbffnnrrttvv\u0004\u0000\n\n\r\r\"\"\\\\\u0002\u0000"+
+		"\u0000\"\"\'\'//??\\\\bbffnnrrttvv\u0004\u0000\n\n\r\r\'\'\\\\\u0002\u0000"+
 		"++--\u0003\u0000AZ__az\u0004\u000009AZ__az\u0002\u0000XXxx\u0002\u0000"+
 		"EEee\u0003\u0000\t\n\r\r  \u0150\u0000\u0001\u0001\u0000\u0000\u0000\u0000"+
 		"\u0003\u0001\u0000\u0000\u0000\u0000\u0005\u0001\u0000\u0000\u0000\u0000"+

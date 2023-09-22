@@ -107,14 +107,29 @@ public final class InterfaceSchema implements Fieldable, Nameable {
         this.defaultImplStruct = defaultImplStruct;
     }
 
-
     @Override
     public String toString() {
-        return "SInterface{" +
+        return "InterfaceSchema{" +
                 "name='" + name + '\'' +
                 ", enumRef='" + enumRef + '\'' +
                 ", defaultImpl='" + defaultImpl + '\'' +
+                ", fmt=" + fmt +
+                ", meta=" + meta +
+                ", impls=" + impls +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        InterfaceSchema that = (InterfaceSchema) o;
+        return Objects.equals(name, that.name) && Objects.equals(enumRef, that.enumRef) && Objects.equals(defaultImpl, that.defaultImpl) && Objects.equals(fmt, that.fmt) && Objects.equals(meta, that.meta) && Objects.equals(impls, that.impls);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, enumRef, defaultImpl, fmt, meta, impls);
     }
 
 

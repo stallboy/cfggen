@@ -21,7 +21,7 @@ public class ForeignKeySchema {
         Objects.requireNonNull(key);
         Objects.requireNonNull(refTable);
         Objects.requireNonNull(refKey);
-        Objects.requireNonNull( meta);
+        Objects.requireNonNull(meta);
         if (name.isEmpty()) {
             throw new IllegalArgumentException("struct name empty");
         }
@@ -62,8 +62,20 @@ public class ForeignKeySchema {
                 ", key=" + key +
                 ", refTable='" + refTable + '\'' +
                 ", refKey=" + refKey +
+                ", meta=" + meta +
                 '}';
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ForeignKeySchema that = (ForeignKeySchema) o;
+        return Objects.equals(name, that.name) && Objects.equals(key, that.key) && Objects.equals(refTable, that.refTable) && Objects.equals(refKey, that.refKey) && Objects.equals(meta, that.meta);
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, key, refTable, refKey, meta);
+    }
 }

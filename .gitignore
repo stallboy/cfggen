@@ -7,3 +7,5 @@
 /app/src/main/java/configgen/schema/cfg/Cfg.tokens
 /app/src/main/java/configgen/schema/cfg/CfgLexer.interp
 /app/src/main/java/configgen/schema/cfg/CfgLexer.tokens
+/example/config/config1.cfg
+/example/config/config2.cfg

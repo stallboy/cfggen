@@ -65,20 +65,18 @@ public sealed interface FieldType {
                     '}';
         }
 
-        /**
-         * 注意这里用obj == 即引用相同来作为比较的手段，因为我们知道 Fieldable构建后都通过引用传递
-         */
+
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             StructRef structRef = (StructRef) o;
-            return obj == structRef.obj;
+            return Objects.equals(name, structRef.name);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(obj);
+            return Objects.hash(name);
         }
     }
 

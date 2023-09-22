@@ -108,7 +108,7 @@ SCHAR_SEQUENCE
 
 fragment
 SCHAR
-    :   ~["\\\r\n]
+    :   ~['\\\r\n]
     |   ESCAPE_SEQUENCE
     ;
 
