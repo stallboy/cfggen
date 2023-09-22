@@ -1,7 +1,9 @@
 package configgen.schema;
 
 import configgen.schema.EntryType.EntryBase;
+import configgen.schema.cfg.Cfgs;
 
+import java.nio.file.Path;
 import java.util.*;
 
 import static configgen.schema.Err.*;
@@ -495,13 +497,41 @@ public final class CfgResolver {
             FieldSchema local = localFields.get(i);
             FieldSchema remote = remoteFields.get(i);
 
-            if (!local.type().equals(remote.type())) {
+            switch (local.type()) {
+                case FList flist -> {
+                    if (len != 1 || !checkSimpleTypeMatch(flist.item(), remote.type())) {
+                        ok = false;
+                    }
+                }
+                case FMap fmap -> {
+                    if (len != 1 || !checkSimpleTypeMatch(fmap.value(), remote.type())) {
+                        ok = false;
+                    }
+                }
+                default -> {
+                    if (!checkSimpleTypeMatch(local.type(), remote.type())) {
+                        ok = false;
+                    }
+                }
+            }
+            if (!ok) {
                 errRefLocalKeyRemoteKeyTypeNotMatch(foreignKey.name(),
                         local.type().toString(), remote.type().toString());
-                ok = false;
             }
         }
         return ok;
+    }
+
+    private boolean checkSimpleTypeMatch(FieldType local, FieldType remote) {
+        switch (local) {
+            case Primitive primitive -> {
+                return primitive.equals(remote);
+            }
+            case StructRef structRef -> {
+                return remote instanceof StructRef ref && structRef.obj() == ref.obj();
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + local);
+        }
     }
 
     private void errRefTableNotFound(String foreignKey, String errRefTable) {
@@ -522,5 +552,15 @@ public final class CfgResolver {
 
     private void errRefLocalKeyRemoteKeyTypeNotMatch(String foreignKey, String localType, String remoteType) {
         errs.addErr(new RefLocalKeyRemoteKeyTypeNotMatch(curNameable.name(), foreignKey, localType, remoteType));
+    }
+
+    public static void main(String[] args) {
+        CfgSchema cfg = Cfgs.readFrom(Path.of("config.cfg"), true);
+        CfgErrs errs = CfgErrs.of();
+        new CfgResolver(cfg, errs).resolve();
+
+        for (Err err : errs.errs()) {
+            System.out.println(err);
+        }
     }
 }
