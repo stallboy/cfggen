@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
@@ -116,7 +117,9 @@ public enum XmlReader implements CfgSchemaReader {
         List<FieldSchema> fields = new ArrayList<>();
         for (Element ele : DomUtils.elements(self, "column")) {
             FieldSchema field = parseField(ele);
-            fields.add(field);
+            if (field != null) {
+                fields.add(field);
+            }
         }
         return fields;
     }
@@ -138,9 +141,16 @@ public enum XmlReader implements CfgSchemaReader {
         return foreignKeys;
     }
 
+
     private FieldSchema parseField(Element self) {
         Metadata meta = Metadata.of();
-        String name = self.getAttribute("name");
+        String name = self.getAttribute("name").trim();
+        Pattern pattern = Pattern.compile("[a-zA-Z_][a-zA-Z0-9_]*");
+        if (!pattern.matcher(name).matches()) {
+            System.out.println(STR. "\{ name } not identifier, ignore!" );
+            return null;
+        }
+
         String comment = self.getAttribute("desc");
         if (comment.trim().equalsIgnoreCase(name.trim())) {
             comment = "";

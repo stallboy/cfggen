@@ -20,6 +20,12 @@ import java.util.List;
 public enum CfgReader implements CfgSchemaReader {
     INSTANCE;
 
+    public static CfgSchema parse(String cfgStr) {
+        CfgSchema cfg = CfgSchema.of();
+        INSTANCE.readTo(cfg, CharStreams.fromString(cfgStr), "");
+        return cfg;
+    }
+
     @Override
     public void readTo(CfgSchema destination, Path source, String pkgNameDot) {
         CharStream input;
@@ -28,6 +34,10 @@ public enum CfgReader implements CfgSchemaReader {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        readTo(destination, input, pkgNameDot);
+    }
+
+    public void readTo(CfgSchema destination, CharStream input, String pkgNameDot) {
         CfgLexer lexer = new CfgLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         CfgParser parser = new CfgParser(tokens);
@@ -100,7 +110,7 @@ public enum CfgReader implements CfgSchemaReader {
     private String read_ns_ident(Ns_identContext ctx) {
         List<String> ids = new ArrayList<>();
         for (IdentifierContext ic : ctx.identifier()) {
-            ids.add(ic.IDENT().getText());
+            ids.add(ic.getText());
         }
         return String.join(".", ids);
     }
@@ -108,7 +118,7 @@ public enum CfgReader implements CfgSchemaReader {
     private Metadata read_metadata(MetadataContext metadata, TerminalNode comment) {
         Metadata meta = Metadata.of();
         for (Ident_with_opt_single_valueContext m : metadata.ident_with_opt_single_value()) {
-            String k = m.identifier().IDENT().getText();
+            String k = m.identifier().getText();
             Single_valueContext val = m.single_value();
             if (val == null) {
                 meta.data().put(k, TAG);
@@ -146,7 +156,7 @@ public enum CfgReader implements CfgSchemaReader {
         List<FieldSchema> fieldSchemas = new ArrayList<>(fieldDeclContexts.size());
         List<ForeignKeySchema> foreignKeySchemas = new ArrayList<>(foreignDeclContexts.size());
         for (Field_declContext ctx : fieldDeclContexts) {
-            String name = ctx.identifier().IDENT().getText();
+            String name = ctx.identifier().getText();
             FieldType type = read_type(ctx.type_());
             Metadata meta = read_metadata(ctx.metadata(), ctx.COMMENT());
             FieldFormat fmt = Metas.removeFmt(meta);
@@ -165,7 +175,7 @@ public enum CfgReader implements CfgSchemaReader {
         }
 
         for (Foreign_declContext ctx : foreignDeclContexts) {
-            String name = ctx.identifier().IDENT().getText();
+            String name = ctx.identifier().getText();
             KeySchema localKey = read_key(ctx.key());
             Metadata meta = read_metadata(ctx.metadata(), ctx.COMMENT());
             boolean nullable = Metas.removeNullable(meta);
@@ -219,7 +229,7 @@ public enum CfgReader implements CfgSchemaReader {
         List<IdentifierContext> identifiers = keyCtx.identifier();
         List<String> rk = new ArrayList<>(identifiers.size());
         for (IdentifierContext ic : identifiers) {
-            rk.add(ic.IDENT().getText());
+            rk.add(ic.getText());
         }
         return new KeySchema(rk);
     }

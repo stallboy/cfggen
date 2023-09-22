@@ -6,11 +6,17 @@ schema : schema_ele* EOF ;
 
 schema_ele: struct_decl | interface_decl | table_decl ;
 
-struct_decl : 'struct' ns_ident metadata LC COMMENT? field_decl* foreign_decl*  RC ;
+struct_decl : STRUCT ns_ident metadata LC COMMENT? field_decl* foreign_decl*  RC ;
 
-interface_decl : 'interface' ns_ident metadata LC COMMENT? struct_decl+ RC ;
+STRUCT: 'struct';
 
-table_decl : 'table' ns_ident key metadata LC COMMENT? key_decl* field_decl* foreign_decl*  RC ;
+interface_decl : INTERFACE ns_ident metadata LC COMMENT? struct_decl+ RC ;
+
+INTERFACE: 'interface';
+
+table_decl : TABLE ns_ident key metadata LC COMMENT? key_decl* field_decl* foreign_decl*  RC ;
+
+TABLE: 'table';
 
 field_decl : identifier COLON type_ ( ref )? metadata SEMI COMMENT? ;
 
@@ -45,7 +51,12 @@ single_value : INTEGER_CONSTANT | HEX_INTEGER_CONSTANT | FLOAT_CONSTANT | STRING
 
 ns_ident : identifier ( DOT identifier )* ;
 
-identifier: IDENT ;
+identifier: IDENT | keywords;
+
+IDENT : [a-zA-Z_] [a-zA-Z0-9_]* ;
+
+keywords: STRUCT | INTERFACE | TABLE | TLIST | TMAP | TBASE;
+
 
 
 // Lexer rules
@@ -114,7 +125,6 @@ SCHAR
 
 INTEGER_CONSTANT : [-+]? DECIMAL_DIGIT+ | 'true' | 'false' ;
 
-IDENT : [a-zA-Z_] [a-zA-Z0-9_]* ;
 
 HEX_INTEGER_CONSTANT : [-+]? '0' [xX] HEXADECIMAL_DIGIT+ ;
 
