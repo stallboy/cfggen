@@ -39,19 +39,19 @@ public enum XmlReader implements CfgSchemaReader {
     }
 
     private TableSchema parseTable(Element self, String pkgNameDot) {
-        String name = self.getAttribute("name");
+        String name = self.getAttribute("name").trim();
         KeySchema primaryKey = getKeySchema(self, "primaryKey");
 
         EntryType entry;
         if (self.hasAttribute("enum")) {
-            entry = new EntryType.EEnum(self.getAttribute("enum"));
+            entry = new EntryType.EEnum(self.getAttribute("enum").trim());
         } else if (self.hasAttribute("entry")) {
-            entry = new EntryType.EEntry(self.getAttribute("entry"));
+            entry = new EntryType.EEntry(self.getAttribute("entry").trim());
         } else {
             entry = EntryType.ENo.NO;
         }
         boolean isColumnMode = self.hasAttribute("isColumnMode");
-        Metadata meta = Metadata.of();
+        Metadata meta = parseOwnToMetadata(self);
         if (self.hasAttribute("extraSplit")) {
             int extraSplit = Integer.parseInt(self.getAttribute("extraSplit"));
             meta.data().put("extraSplit", new Metadata.MetaInt(extraSplit));
@@ -73,19 +73,33 @@ public enum XmlReader implements CfgSchemaReader {
     }
 
     private StructSchema parseStruct(Element self, String pkgNameDot) {
-        String name = self.getAttribute("name");
+        String name = self.getAttribute("name").trim();
+        Metadata meta = parseOwnToMetadata(self);
         FieldFormat fmt = parseBeanFmt(self);
         List<FieldSchema> fields = parseFieldList(self);
         List<ForeignKeySchema> foreignKeys = parseForeignKeyList(self);
-        return new StructSchema(pkgNameDot + name, fmt, Metadata.of(),
+        return new StructSchema(pkgNameDot + name, fmt, meta,
                 fields, foreignKeys);
     }
 
+    private Metadata parseOwnToMetadata(Element self) {
+        Metadata meta = Metadata.of();
+        if (self.hasAttribute("own")) {
+            String own = self.getAttribute("own");
+            for (String tag : own.split(",")) {
+                tag = tag.trim();
+                Metas.addTag(meta, tag);
+            }
+        }
+        return meta;
+    }
+
     private InterfaceSchema parseInterface(Element self, String pkgNameDot) {
-        String name = self.getAttribute("name");
+        String name = self.getAttribute("name").trim();
+        Metadata meta = parseOwnToMetadata(self);
         FieldFormat fmt = parseBeanFmt(self);
-        String enumRef = self.getAttribute("enumRef");
-        String defaultBeanName = self.getAttribute("defaultBeanName");
+        String enumRef = self.getAttribute("enumRef").trim();
+        String defaultBeanName = self.getAttribute("defaultBeanName").trim();
 
         List<StructSchema> impls = new ArrayList<>();
         for (Element subSelf : DomUtils.elements(self, "bean")) {
@@ -94,16 +108,16 @@ public enum XmlReader implements CfgSchemaReader {
         }
 
         return new InterfaceSchema(pkgNameDot + name, enumRef, defaultBeanName,
-                fmt, Metadata.of(), impls);
+                fmt, meta, impls);
     }
 
     private FieldFormat parseBeanFmt(Element self) {
         FieldFormat fmt = AUTO;
         String sep = null;
         if (self.hasAttribute("compress")) { // 改为packSep吧
-            sep = self.getAttribute("compress");
+            sep = self.getAttribute("compress").trim();
         } else if (self.hasAttribute("packSep")) {
-            sep = self.getAttribute("packSep");
+            sep = self.getAttribute("packSep").trim();
         }
         if (sep != null) {
             require(sep.length() == 1, "分隔符pack长度必须为1");
@@ -143,7 +157,7 @@ public enum XmlReader implements CfgSchemaReader {
 
 
     private FieldSchema parseField(Element self) {
-        Metadata meta = Metadata.of();
+        Metadata meta = parseOwnToMetadata(self);
         String name = self.getAttribute("name").trim();
         Pattern pattern = Pattern.compile("[a-zA-Z_][a-zA-Z0-9_]*");
         if (!pattern.matcher(name).matches()) {
@@ -151,8 +165,8 @@ public enum XmlReader implements CfgSchemaReader {
             return null;
         }
 
-        String comment = self.getAttribute("desc");
-        if (comment.trim().equalsIgnoreCase(name.trim())) {
+        String comment = self.getAttribute("desc").trim();
+        if (comment.equalsIgnoreCase(name)) {
             comment = "";
         }
         if (!comment.isEmpty()) {
@@ -209,7 +223,7 @@ public enum XmlReader implements CfgSchemaReader {
     }
 
     private ForeignKeySchema parseForeignKey(Element self, boolean isTagColumn) {
-        String name = self.getAttribute("name");
+        String name = self.getAttribute("name").trim();
         KeySchema localKey;
         if (isTagColumn) {
             localKey = new KeySchema(List.of(name));
@@ -217,14 +231,14 @@ public enum XmlReader implements CfgSchemaReader {
             localKey = getKeySchema(self, "keys");
         }
 
-        String refstr = self.getAttribute("ref");
-        String[] r = refstr.split(",");
-        String refTable = r[0];
+        String refstr = self.getAttribute("ref").trim();
+        String[] r = refstr.split("\\s*,\\s*");
+        String refTable = r[0].trim();
         RefKey refKey;
         boolean nullable = false;
         boolean isList = false;
         if (self.hasAttribute("refType")) {
-            String rt = self.getAttribute("refType");
+            String rt = self.getAttribute("refType").trim();
             if (rt.equalsIgnoreCase("nullable")) {
                 nullable = true;
             } else if (rt.equalsIgnoreCase("list")) {

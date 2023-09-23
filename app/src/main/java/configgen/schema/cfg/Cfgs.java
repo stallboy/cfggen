@@ -83,9 +83,15 @@ public class Cfgs {
     public static void main(String[] args) {
         CfgSchema cfg = readFromXml(Path.of("config.xml"), true);
         Path root = Path.of("config.cfg");
+        System.out.println("-----write");
         writeTo(root, true, cfg);
         CfgSchema cfg2 = readFrom(root, true);
+        System.out.println("-----rewrite");
+        writeTo(root, true, cfg2);
+        CfgSchema cfg3 = readFrom(root, true);
+
         System.out.println(cfg2.items().size());
+        System.out.println(cfg2.equals(cfg3));
     }
 
 }
