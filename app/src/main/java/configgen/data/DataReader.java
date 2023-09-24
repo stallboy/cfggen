@@ -15,11 +15,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
+import java.util.stream.Stream;
 
 import static configgen.util.EFileFormat.CSV;
 import static configgen.util.EFileFormat.EXCEL;
@@ -99,7 +97,6 @@ public class DataReader {
 
 
     private static void readByFastExcel() throws IOException {
-
         Logger.mm("start fast read");
         Stat stat = new Stat();
 
@@ -201,17 +198,26 @@ public class DataReader {
     private static Result readCsvByFastCsv(Path path) throws IOException {
         int count = 0;
         List<List<String>> res = new ArrayList<>();
-        for (CsvRow csvRow : CsvReader.builder().build(path, Charset.forName("GBK"))) {
-            if (count == 0) {
-                count = csvRow.getFieldCount();
-            } else if (count != csvRow.getFieldCount()) {
-                System.out.println(STR. "\{ path } \{ csvRow.getOriginalLineNumber() } count \{ csvRow.getFieldCount() } not eq \{ count }" );
+        try (CsvReader reader = CsvReader.builder().build(path, Charset.forName("GBK"))) {
+
+            int cnt = 0;
+            for (CsvRow csvRow : reader) {
+                if (count == 0) {
+                    count = csvRow.getFieldCount();
+                } else if (count != csvRow.getFieldCount()) {
+                    System.out.println(STR. "\{ path } \{ csvRow.getOriginalLineNumber() } count \{ csvRow.getFieldCount() } not eq \{ count }" );
+                }
+                res.add(csvRow.getFields());
+                cnt++;
+
+                if (cnt == 2) { //header only
+                    break;
+                }
             }
-            res.add(csvRow.getFields());
-//            for (int i = 0; i < csvRow.getFieldCount(); i++) {
-//                String field = csvRow.getField(i);
-//            }
+
+
         }
+
         Result result = new Result();
         result.isCsv = true;
         result.csvRes = res;
@@ -237,6 +243,13 @@ public class DataReader {
                 }
                 stat.sheetCount++;
 
+                try (Stream<Row> stream = sheet.openStream()) {
+                    Iterator<Row> it = stream.iterator();
+                    Row first = it.next();
+                    Row second = it.next();
+                }
+
+                /*
                 boolean hasFormula = false;
                 List<Row> rows = sheet.read();
                 result.excelRes.add(new OneSheetResult(sheetName, rows));
@@ -261,6 +274,7 @@ public class DataReader {
                 if (hasFormula) {
                     System.out.println(path + "/" + sheetName);
                 }
+                */
             }
         }
         return result;
