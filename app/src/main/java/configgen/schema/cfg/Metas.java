@@ -43,8 +43,12 @@ public class Metas {
         }
     }
 
-    public static void putComment(Metadata meta, String comment) {
-        meta.data().putLast(COMMENT, new Metadata.MetaStr(comment));
+    public static String putComment(Metadata meta, String comment) {
+        MetaValue value = meta.data().putLast(COMMENT, new MetaStr(comment));
+        if (value instanceof MetaStr ms) {
+            return ms.value();
+        }
+        return "";
     }
 
     public static String removeComment(Metadata meta) {

@@ -4,7 +4,18 @@ import java.util.Objects;
 
 public sealed interface FieldType {
 
-    enum Primitive implements FieldType {
+    FieldType copy();
+
+    sealed interface SimpleType extends FieldType {
+        SimpleType copy();
+    }
+
+    sealed interface ContainerType extends FieldType {
+        ContainerType copy();
+    }
+
+
+    enum Primitive implements SimpleType {
         BOOL,
         INT,
         LONG,
@@ -18,26 +29,39 @@ public sealed interface FieldType {
         /**
          * res表示资源路径
          */
-        RES,
-    }
+        RES;
 
-    sealed interface Container extends FieldType {
-    }
-
-    record FList(FieldType item) implements Container {
-        public FList {
-            Objects.requireNonNull(item);
+        @Override
+        public Primitive copy() {
+            return this;
         }
     }
 
-    record FMap(FieldType key, FieldType value) implements Container {
+
+    record FList(SimpleType item) implements ContainerType {
+        public FList {
+            Objects.requireNonNull(item);
+        }
+
+        @Override
+        public FList copy() {
+            return new FList(item.copy());
+        }
+    }
+
+    record FMap(SimpleType key, SimpleType value) implements ContainerType {
         public FMap {
             Objects.requireNonNull(key);
             Objects.requireNonNull(value);
         }
+
+        @Override
+        public FMap copy() {
+            return new FMap(key.copy(), value.copy());
+        }
     }
 
-    final class StructRef implements FieldType {
+    final class StructRef implements SimpleType {
         private final String name;
         private Fieldable obj;
 
@@ -45,6 +69,12 @@ public sealed interface FieldType {
             Objects.requireNonNull(name);
             this.name = name;
         }
+
+        @Override
+        public StructRef copy() {
+            return new StructRef(name);
+        }
+
 
         public String name() {
             return name;
@@ -78,6 +108,7 @@ public sealed interface FieldType {
         public int hashCode() {
             return Objects.hash(name);
         }
+
     }
 
 }

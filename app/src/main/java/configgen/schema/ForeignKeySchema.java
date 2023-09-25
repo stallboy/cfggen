@@ -27,6 +27,10 @@ public class ForeignKeySchema {
         }
     }
 
+    public ForeignKeySchema copy(){
+        return new ForeignKeySchema(name, key.copy(), refTable, refKey.copy(), meta.copy());
+    }
+
     public String name() {
         return name;
     }

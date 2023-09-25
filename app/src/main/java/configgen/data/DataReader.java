@@ -1,10 +1,11 @@
 package configgen.data;
 
 import configgen.Logger;
-import configgen.util.*;
+import configgen.util.EFileFormat;
+import configgen.util.FileNameExtract;
+import configgen.util.SheetUtils;
 import de.siegmar.fastcsv.reader.CsvReader;
 import de.siegmar.fastcsv.reader.CsvRow;
-import org.checkerframework.checker.units.qual.A;
 import org.dhatim.fastexcel.reader.*;
 
 import java.io.File;
@@ -15,9 +16,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
-import java.util.stream.Stream;
 
 import static configgen.util.EFileFormat.CSV;
 import static configgen.util.EFileFormat.EXCEL;
@@ -210,9 +213,9 @@ public class DataReader {
                 res.add(csvRow.getFields());
                 cnt++;
 
-                if (cnt == 2) { //header only
-                    break;
-                }
+//                if (cnt == 2) { //header only
+//                    break;
+//                }
             }
 
 
@@ -231,7 +234,6 @@ public class DataReader {
         Result result = new Result();
         result.excelRes = new ArrayList<>();
         result.excelStat = stat;
-
         stat.excelCount++;
         try (ReadableWorkbook wb = new ReadableWorkbook(path.toFile())) {
             for (Sheet sheet : wb.getSheets().toList()) {
@@ -243,13 +245,15 @@ public class DataReader {
                 }
                 stat.sheetCount++;
 
-                try (Stream<Row> stream = sheet.openStream()) {
-                    Iterator<Row> it = stream.iterator();
-                    Row first = it.next();
-                    Row second = it.next();
-                }
+//                try (Stream<Row> stream = sheet.openStream()) {
+//                    Iterator<Row> it = stream.iterator();
+//                    Row first = it.next();
+//                    Row second = it.next();
+//                }
 
-                /*
+
+
+
                 boolean hasFormula = false;
                 List<Row> rows = sheet.read();
                 result.excelRes.add(new OneSheetResult(sheetName, rows));
@@ -274,7 +278,7 @@ public class DataReader {
                 if (hasFormula) {
                     System.out.println(path + "/" + sheetName);
                 }
-                */
+
             }
         }
         return result;

@@ -9,6 +9,14 @@ import java.util.Objects;
  */
 public sealed interface EntryType {
 
+    default EntryType copy() {
+        return switch (this) {
+            case ENo.NO -> ENo.NO;
+            case EEntry eEntry -> new EEntry(eEntry.field);
+            case EEnum eEnum -> new EEnum(eEnum.field);
+        };
+    }
+
     /**
      * 大多table在内部，不用开放程序入口
      */

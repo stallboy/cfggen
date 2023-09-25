@@ -166,10 +166,7 @@ public enum XmlReader implements CfgSchemaReader {
         }
 
         String comment = self.getAttribute("desc").trim();
-        if (comment.equalsIgnoreCase(name)) {
-            comment = "";
-        }
-        if (!comment.isEmpty()) {
+        if (!comment.isEmpty() && !comment.equalsIgnoreCase(name)) {
             Metas.putComment(meta, comment);
         }
 
@@ -182,7 +179,7 @@ public enum XmlReader implements CfgSchemaReader {
         if (typ.startsWith("list,")) {
             String[] sp = typ.split(",");
             String v = sp[1].trim();
-            FieldType item = parseSimpleType(v);
+            SimpleType item = parseSimpleType(v);
             type = new FList(item);
 
             if (sp.length > 2) {
@@ -194,8 +191,8 @@ public enum XmlReader implements CfgSchemaReader {
             String[] sp = typ.split(",");
             String k = sp[1].trim();
             String v = sp[2].trim();
-            FieldType key = parseSimpleType(k);
-            FieldType value = parseSimpleType(v);
+            SimpleType key = parseSimpleType(k);
+            SimpleType value = parseSimpleType(v);
             type = new FMap(key, value);
 
             if (sp.length > 3) {
@@ -261,7 +258,7 @@ public enum XmlReader implements CfgSchemaReader {
         return new ForeignKeySchema(name, localKey, refTable, refKey, Metadata.of());
     }
 
-    private FieldType parseSimpleType(String typ) {
+    private SimpleType parseSimpleType(String typ) {
         return switch (typ) {
             case "int" -> INT;
             case "long" -> LONG;

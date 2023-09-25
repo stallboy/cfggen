@@ -196,7 +196,7 @@ public enum CfgReader implements CfgSchemaReader {
         }
     }
 
-    private FieldType read_type_ele(Type_eleContext ctx) {
+    private SimpleType read_type_ele(Type_eleContext ctx) {
         TerminalNode tbase = ctx.TBASE();
         if (tbase != null) {
             String text = tbase.getText();

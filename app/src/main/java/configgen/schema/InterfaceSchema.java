@@ -1,5 +1,6 @@
 package configgen.schema;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -54,8 +55,17 @@ public final class InterfaceSchema implements Fieldable, Nameable {
             throw new IllegalArgumentException("interface enumRef empty");
         }
         if (fmt != AUTO && fmt != PACK) {
-            throw new IllegalArgumentException("interface fmt must be auto or pack");
+            throw new IllegalArgumentException("interface fmt must be auto/pack");
         }
+    }
+
+    @Override
+    public InterfaceSchema copy() {
+        List<StructSchema> implsCopy = new ArrayList<>(impls.size());
+        for (StructSchema impl : impls) {
+            implsCopy.add(impl.copy());
+        }
+        return new InterfaceSchema(name, enumRef, defaultImpl, fmt, meta.copy(), implsCopy);
     }
 
     public String name() {

@@ -1,5 +1,6 @@
 package configgen.schema;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -13,6 +14,10 @@ public class KeySchema {
             throw new IllegalArgumentException("keySchema key empty");
         }
         this.name = key;
+    }
+
+    public KeySchema copy() {
+        return new KeySchema(new ArrayList<>(name));
     }
 
     public List<String> name() {

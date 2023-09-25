@@ -15,7 +15,7 @@ public sealed interface FieldFormat {
     }
 
     /**
-     * sep: 适用type: struct, container，
+     * sep: 适用type: struct, list，
      * 如果field是list,struct结构，list这配置的sep和要struct配置的sep有区分才行（不支持在此field上配置struct的sep，为了方便理解，不要这种灵活性。）。
      *
      * @param sep，分隔符，可以是, : = $等等都可以

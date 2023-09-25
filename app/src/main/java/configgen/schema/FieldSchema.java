@@ -1,6 +1,5 @@
 package configgen.schema;
 
-
 import java.util.Objects;
 
 public record FieldSchema(
@@ -16,5 +15,9 @@ public record FieldSchema(
         if (name.isEmpty()) {
             throw new IllegalArgumentException("field name empty");
         }
+    }
+
+    public FieldSchema copy() {
+        return new FieldSchema(name, type.copy(), fmt, meta.copy());
     }
 }

@@ -6,9 +6,10 @@ import configgen.schema.cfg.Cfgs;
 import java.nio.file.Path;
 import java.util.*;
 
-import static configgen.schema.Err.*;
+import static configgen.schema.CfgErrs.*;
 import static configgen.schema.FieldFormat.AutoOrPack;
 import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
+import static configgen.schema.FieldFormat.AutoOrPack.PACK;
 import static configgen.schema.FieldFormat.Sep;
 import static configgen.schema.FieldType.*;
 import static configgen.schema.FieldType.Primitive.*;
@@ -33,6 +34,7 @@ public final class CfgResolver {
         step1_resolveAllFields();
         step2_resolveEachNameable();
         step3_resolveAllForeignKeys();
+        step4_checkAllChainedSepFmt();
     }
 
     /**
@@ -42,10 +44,18 @@ public final class CfgResolver {
      */
     private void step0_checkNameConflict() {
         Set<List<String>> nameSet = new HashSet<>();
+        Set<List<String>> fieldableNameSet = new HashSet<>();
+        Set<String> fieldableTopNameSet = new HashSet<>();
+
+        // 检查全局名字空间，局部名字空间各自的冲突
         for (Nameable item : cfg.items()) {
-            List<String> list = Arrays.asList(item.name().split("\\."));
-            if (!nameSet.add(list)) {
+            List<String> names = Arrays.asList(item.name().split("\\."));
+            if (!nameSet.add(names)) {
                 errs.addErr(new NameConflict(item.name()));
+            }
+            if (item instanceof Fieldable) {
+                fieldableNameSet.add(names);
+                fieldableTopNameSet.add(names.get(0));
             }
 
             switch (item) {
@@ -53,8 +63,6 @@ public final class CfgResolver {
                     for (StructSchema impl : interfaceSchema.impls()) {
                         if (!impl.namespace().isEmpty()) {
                             errs.addErr(new ImplNamespaceNotEmpty(interfaceSchema.name(), impl.name()));
-                        } else if (!nameSet.add(List.of(impl.name()))) {
-                            errs.addErr(new NameConflict(impl.name()));
                         }
                         checkInnerNameConflict(impl);
                     }
@@ -63,21 +71,35 @@ public final class CfgResolver {
             }
         }
 
-        for (List<String> name : nameSet) {
+        // 检查局部名字空间和全局名字空间潜在的冲突
+        // 1, 先检查interface的局部名字空间里，可能跟全局的冲突
+        for (Nameable item : cfg.items()) {
+            if (item instanceof InterfaceSchema interfaceSchema) {
+                for (StructSchema impl : interfaceSchema.impls()) {
+                    if (fieldableTopNameSet.contains(impl.name())) {
+                        errs.addWarn(new NameMayConflictByRef(interfaceSchema.name() + "." + impl.name(), impl.name()));
+                    }
+                }
+            }
+        }
+
+        // 2，再检查分文件存储schema，可能导致的混乱
+        for (List<String> name : fieldableNameSet) {
             if (name.size() <= 1) {
                 continue;
             }
             int len = name.size();
             for (int i = 1; i < len; i++) {
                 List<String> sub = name.subList(i, len);
-                if (nameSet.contains(sub)) {
+                if (fieldableNameSet.contains(sub)) {
                     String name1 = String.join(".", name);
                     String name2 = String.join(".", sub);
-                    errs.addErr(new NameMayConflictByRef(name1, name2));
+                    errs.addWarn(new NameMayConflictByRef(name1, name2));
                 }
             }
         }
 
+        // resolve
         Map<String, Fieldable> structMap = new HashMap<>();
         Map<String, TableSchema> tableMap = new HashMap<>();
         for (Nameable item : cfg.items()) {
@@ -138,31 +160,7 @@ public final class CfgResolver {
 
     private void resolveFields(Structural structural) {
         for (FieldSchema field : structural.fields()) {
-            resolveField(field);
-        }
-    }
-
-    private void resolveField(FieldSchema field) {
-        FieldType type = field.type();
-        resolveFieldType(field, type);
-
-        FieldFormat fmt = field.fmt();
-        switch (type) {
-            case Container _ -> {
-                if (fmt == AUTO) {
-                    errTypeFmtNotCompatible(field.name(), type.toString(), fmt.toString());
-                }
-            }
-            case Primitive _ -> {
-                if (fmt != AUTO) {
-                    errTypeFmtNotCompatible(field.name(), type.toString(), fmt.toString());
-                }
-            }
-            case StructRef _ -> {
-                if (!(fmt instanceof AutoOrPack) && !(fmt instanceof Sep)) {
-                    errTypeFmtNotCompatible(field.name(), type.toString(), fmt.toString());
-                }
-            }
+            resolveFieldType(field, field.type());
         }
     }
 
@@ -206,19 +204,11 @@ public final class CfgResolver {
                     structRef.setObj(obj);
                     return;
                 }
-
-                errTypeNotFound(field.name(), name);
+                errs.addErr(new TypeStructNotFound(ctx(), field.name(), name));
             }
         }
     }
 
-    private void errTypeNotFound(String field, String type) {
-        errs.addErr(new TypeNotFound(ctx(), field, type));
-    }
-
-    private void errTypeFmtNotCompatible(String field, String type, String errFmt) {
-        errs.addErr(new TypeFmtNotCompatible(ctx(), field, type, errFmt));
-    }
 
     private String ctx() {
         String ctx = curNameable.name();
@@ -247,7 +237,7 @@ public final class CfgResolver {
         if (enumRefTable != null) {
             sInterface.setEnumRefTable(enumRefTable);
         } else {
-            errEnumRefNotFound(enumRef);
+            errs.addErr(new EnumRefNotFound(ctx(), enumRef));
         }
 
         String def = sInterface.defaultImpl();
@@ -256,7 +246,7 @@ public final class CfgResolver {
             if (defImpl != null) {
                 sInterface.setDefaultImplStruct(defImpl);
             } else {
-                errDefaultImplNotFound(def);
+                errs.addErr(new DefaultImplNotFound(ctx(), def));
             }
         }
     }
@@ -274,14 +264,6 @@ public final class CfgResolver {
 
         // 全局找
         return cfg.findTable(name);
-    }
-
-    private void errEnumRefNotFound(String enumRef) {
-        errs.addErr(new EnumRefNotFound(curNameable.name(), enumRef));
-    }
-
-    private void errDefaultImplNotFound(String defaultImpl) {
-        errs.addErr(new DefaultImplNotFound(curNameable.name(), defaultImpl));
     }
 
     private void resolveTable(TableSchema table) {
@@ -306,20 +288,12 @@ public final class CfgResolver {
                 if (fs.type() == Primitive.STR) {
                     entryBase.setFieldSchema(fs);
                 } else {
-                    errEntryFieldTypeNotStr(fn, fs.type().toString());
+                    errs.addErr(new EntryFieldTypeNotStr(ctx(), fn, fs.type().toString()));
                 }
             } else {
-                errEntryNotFound(fn);
+                errs.addErr(new EntryNotFound(ctx(), fn));
             }
         }
-    }
-
-    private void errEntryNotFound(String entry) {
-        errs.addErr(new EntryNotFound(curNameable.name(), entry));
-    }
-
-    private void errEntryFieldTypeNotStr(String entry, String errType) {
-        errs.addErr(new EntryFieldTypeNotStr(curNameable.name(), entry, errType));
     }
 
     private boolean resolveKey(Structural structural, KeySchema key) {
@@ -329,7 +303,7 @@ public final class CfgResolver {
             FieldSchema field = structural.findField(name);
             obj.add(field);
             if (field == null) {
-                errKeyNotFound(name);
+                errs.addErr(new KeyNotFound(ctx(), name));
                 ok = false;
             }
         }
@@ -357,7 +331,7 @@ public final class CfgResolver {
             String tn = type.toString();
 
             switch (type) {
-                case Container _ -> {
+                case ContainerType _ -> {
                     errKeyTypeNotSupport(fn, tn);
                 }
                 case Primitive _ -> {
@@ -402,11 +376,6 @@ public final class CfgResolver {
         return !(type == BOOL || type == INT || type == LONG || type == Primitive.STR);
     }
 
-
-    private void errKeyNotFound(String key) {
-        errs.addErr(new KeyNotFound(curNameable.name(), key));
-    }
-
     private void errKeyTypeNotSupport(String field, String errType) {
         errs.addErr(new KeyTypeNotSupport(curNameable.name(), field, errType));
     }
@@ -430,7 +399,7 @@ public final class CfgResolver {
         if (refTableSchema != null) {
             foreignKey.setRefTableSchema(refTableSchema);
         } else {
-            errRefTableNotFound(foreignKey.name(), refTable);
+            errs.addErr(new RefTableNotFound(ctx(), foreignKey.name(), refTable));
             err = true;
         }
 
@@ -461,14 +430,15 @@ public final class CfgResolver {
                         remoteKey.setObj(uk.obj());
                     }
                 } else {
-                    errRefTableKeyNotUniq(foreignKey.name(), refTable, refUniq.key().name().toString());
+                    errs.addErr(new RefTableKeyNotUniq(ctx(), foreignKey.name(),
+                            refTable, refUniq.key().name().toString()));
                 }
             }
 
             // listRef为了简单，不支持MultiKey
             case RefKey.RefList refList -> {
                 if (localKey.name().size() != 1) {
-                    errListRefMultiKeyNotSupport(foreignKey.name(), localKey.name().toString());
+                    errs.addErr(new ListRefMultiKeyNotSupport(ctx(), foreignKey.name(), localKey.name().toString()));
                     return;
                 }
 
@@ -487,7 +457,7 @@ public final class CfgResolver {
         }
 
         if (localFields.size() != remoteFields.size()) {
-            errRefLocalKeyRemoteKeyCountNotMatch(foreignKey.toString());
+            errs.addErr(new RefLocalKeyRemoteKeyCountNotMatch(ctx(), foreignKey.toString()));
             return false;
         }
 
@@ -515,8 +485,8 @@ public final class CfgResolver {
                 }
             }
             if (!ok) {
-                errRefLocalKeyRemoteKeyTypeNotMatch(foreignKey.name(),
-                        local.type().toString(), remote.type().toString());
+                errs.addErr(new RefLocalKeyRemoteKeyTypeNotMatch(ctx(), foreignKey.name(),
+                        local.type().toString(), remote.type().toString()));
             }
         }
         return ok;
@@ -534,32 +504,93 @@ public final class CfgResolver {
         }
     }
 
-    private void errRefTableNotFound(String foreignKey, String errRefTable) {
-        errs.addErr(new RefTableNotFound(curNameable.name(), foreignKey, errRefTable));
+    private void step4_checkAllChainedSepFmt() {
+        for (Nameable item : cfg.items()) {
+            switch (item) {
+                case InterfaceSchema interfaceSchema -> {
+                    // 为了简单和一致性，在interface的impl上不支持配置fmt
+                    for (StructSchema impl : interfaceSchema.impls()) {
+                        if (impl.fmt() != AUTO) {
+                            errs.addErr(new ImplFmtNotSupport(interfaceSchema.name(), impl.name(), impl.fmt().toString()));
+                        }
+                    }
+                }
+                case StructSchema structSchema -> {
+                    // 为简单，只有field都是简单类型的struct可以配置了sep
+                    if (structSchema.fmt() instanceof Sep) {
+                        boolean isAllFieldsPrimitive = true;
+                        for (FieldSchema field : structSchema.fields()) {
+                            if (!(field.type() instanceof Primitive)) {
+                                isAllFieldsPrimitive = false;
+                                break;
+                            }
+                        }
+                        if (!isAllFieldsPrimitive) {
+                            errs.addErr(new SepFmtStructHasNoPrimitive(structSchema.name()));
+                        }
+                    }
+                }
+                case TableSchema _ -> {
+                }
+            }
+        }
+        resolve_structural(this::checkFieldFmts);
     }
 
-    private void errRefTableKeyNotUniq(String foreignKey, String refTable, String notUniqRefKey) {
-        errs.addErr(new RefTableKeyNotUniq(curNameable.name(), foreignKey, refTable, notUniqRefKey));
+    private void checkFieldFmts(Structural structural) {
+        for (FieldSchema field : structural.fields()) {
+            checkFieldFmt(field);
+        }
     }
 
-    private void errListRefMultiKeyNotSupport(String foreignKey, String errMultiKey) {
-        errs.addErr(new ListRefMultiKeyNotSupport(curNameable.name(), foreignKey, errMultiKey));
+    private void checkFieldFmt(FieldSchema field) {
+        FieldType type = field.type();
+        FieldFormat fmt = field.fmt();
+        switch (type) {
+
+            case Primitive _ -> {
+                if (fmt != AUTO) {
+                    errTypeFmtNotCompatible(field);
+                }
+            }
+            case StructRef _ -> {
+                if (!(fmt instanceof AutoOrPack) && !(fmt instanceof Sep)) {
+                    errTypeFmtNotCompatible(field);
+                }
+            }
+            case FList flist -> {
+                if (fmt == AUTO) {
+                    errTypeFmtNotCompatible(field);
+                }
+                if (fmt instanceof Sep sep && flist.item() instanceof StructRef structRef) {
+                    if (structRef.obj().fmt() instanceof Sep sep2 && sep.sep() == sep2.sep() ||
+                            structRef.obj().fmt() == PACK && sep.sep() == ',') {
+                        errs.addErr(new ListStructSepEqual(ctx(), field.name()));
+                    }
+                }
+            }
+            case FMap _ -> {
+                if (fmt == AUTO || fmt instanceof Sep) {
+                    errTypeFmtNotCompatible(field);
+                }
+            }
+        }
     }
 
-    private void errRefLocalKeyRemoteKeyCountNotMatch(String foreignKey) {
-        errs.addErr(new RefLocalKeyRemoteKeyCountNotMatch(curNameable.name(), foreignKey));
-    }
-
-    private void errRefLocalKeyRemoteKeyTypeNotMatch(String foreignKey, String localType, String remoteType) {
-        errs.addErr(new RefLocalKeyRemoteKeyTypeNotMatch(curNameable.name(), foreignKey, localType, remoteType));
+    private void errTypeFmtNotCompatible(FieldSchema field) {
+        errs.addErr(new TypeFmtNotCompatible(ctx(), field.name(), field.type().toString(), field.fmt().toString()));
     }
 
     public static void main(String[] args) {
         CfgSchema cfg = Cfgs.readFrom(Path.of("config.cfg"), true);
         CfgErrs errs = CfgErrs.of();
         new CfgResolver(cfg, errs).resolve();
-
-        for (Err err : errs.errs()) {
+        System.out.println("warnings:");
+        for (CfgErrs.Warn warn : errs.warns()) {
+            System.out.println(warn);
+        }
+        System.out.println("errors:");
+        for (CfgErrs.Err err : errs.errs()) {
             System.out.println(err);
         }
     }
