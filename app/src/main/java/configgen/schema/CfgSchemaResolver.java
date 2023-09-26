@@ -6,7 +6,7 @@ import configgen.schema.cfg.Cfgs;
 import java.nio.file.Path;
 import java.util.*;
 
-import static configgen.schema.CfgErrs.*;
+import static configgen.schema.SchemaErrs.*;
 import static configgen.schema.FieldFormat.AutoOrPack;
 import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
@@ -17,14 +17,20 @@ import static configgen.schema.FieldType.Primitive.*;
 /**
  * 把CfgSchema内部关系给解决了，如果有Errs，就表明有内部矛盾
  */
-public final class CfgResolver {
+public final class CfgSchemaResolver {
     private final CfgSchema cfg;
-    private final CfgErrs errs;
+    private final SchemaErrs errs;
     private Nameable curNameable;
     private StructSchema curImpl;
     private boolean isInCurImpl;
 
-    public CfgResolver(CfgSchema cfg, CfgErrs errs) {
+    public static SchemaErrs resolve(CfgSchema schema) {
+        SchemaErrs errs = SchemaErrs.of();
+        new CfgSchemaResolver(schema, errs).resolve();
+        return errs;
+    }
+
+    public CfgSchemaResolver(CfgSchema cfg, SchemaErrs errs) {
         this.cfg = cfg;
         this.errs = errs;
     }
@@ -583,15 +589,8 @@ public final class CfgResolver {
 
     public static void main(String[] args) {
         CfgSchema cfg = Cfgs.readFrom(Path.of("config.cfg"), true);
-        CfgErrs errs = CfgErrs.of();
-        new CfgResolver(cfg, errs).resolve();
-        System.out.println("warnings:");
-        for (CfgErrs.Warn warn : errs.warns()) {
-            System.out.println(warn);
-        }
-        System.out.println("errors:");
-        for (CfgErrs.Err err : errs.errs()) {
-            System.out.println(err);
-        }
+        SchemaErrs errs = CfgSchemaResolver.resolve(cfg);
+        errs.print();
+
     }
 }

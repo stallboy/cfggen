@@ -5,17 +5,20 @@ import configgen.schema.*;
 import configgen.schema.EntryType.EEntry;
 import configgen.schema.EntryType.EEnum;
 import configgen.schema.FieldType.Primitive;
+import configgen.schema.cfg.Cfgs;
 import configgen.schema.cfg.Metas;
 
+import java.nio.file.Path;
 import java.util.*;
 
 import static configgen.schema.EntryType.ENo.NO;
-import static configgen.schema.FieldFormat.*;
+import static configgen.schema.FieldFormat.AutoOrPack;
 
 public enum CfgSchemaAlignToDataHeader {
     INSTANCE;
 
-    public CfgSchema align(CfgSchema cfg, Map<String, DataHeader> dataHeaders) {
+    public CfgSchema align(CfgSchema cfg, CfgDataHeader header) {
+        Map<String, TableDataHeader> dataHeaders = new TreeMap<>(header.tables());
         CfgSchema alignedCfg = CfgSchema.of();
         for (Nameable item : cfg.items()) {
             switch (item) {
@@ -23,28 +26,27 @@ public enum CfgSchemaAlignToDataHeader {
                     alignedCfg.add(fieldable.copy());
                 }
                 case TableSchema table -> {
-                    DataHeader header = dataHeaders.remove(table.name());
-                    if (header != null) {
-                        TableSchema alignedTable = alignTable(table, header);
+                    TableDataHeader th = dataHeaders.remove(table.name());
+                    if (th != null) {
+                        TableSchema alignedTable = alignTable(table, th);
                         alignedCfg.add(alignedTable);
                     }
                 }
             }
         }
 
-        for (Map.Entry<String, DataHeader> e : dataHeaders.entrySet()) {
+        for (Map.Entry<String, TableDataHeader> e : dataHeaders.entrySet()) {
             String name = e.getKey();
-            DataHeader header = e.getValue();
-
-            TableSchema newTable = newTable(name, header);
+            TableDataHeader th = e.getValue();
+            TableSchema newTable = newTable(name, th);
             alignedCfg.add(newTable);
         }
         return alignedCfg;
     }
 
-    private TableSchema newTable(String name, DataHeader header) {
+    private TableSchema newTable(String name, TableDataHeader header) {
         List<FieldSchema> fields = new ArrayList<>(header.fields().size());
-        for (DataHeader.HeaderField hf : header.fields()) {
+        for (TableDataHeader.HeaderField hf : header.fields()) {
             Metadata meta = Metadata.of();
             if (!hf.comment().isEmpty()) {
                 Metas.putComment(meta, hf.comment());
@@ -65,7 +67,7 @@ public enum CfgSchemaAlignToDataHeader {
         return new TableSchema(name, primaryKey, NO, false, Metadata.of(), fields, List.of(), List.of());
     }
 
-    private TableSchema alignTable(TableSchema table, DataHeader header) {
+    private TableSchema alignTable(TableSchema table, TableDataHeader header) {
         String name = table.name();
         Map<String, FieldSchema> fieldSchemas = alignFields(table, header);
         if (fieldSchemas.isEmpty()) {
@@ -127,7 +129,7 @@ public enum CfgSchemaAlignToDataHeader {
     }
 
 
-    private Map<String, FieldSchema> alignFields(TableSchema table, DataHeader header) {
+    private Map<String, FieldSchema> alignFields(TableSchema table, TableDataHeader header) {
         Map<String, FieldSchema> curFields = new LinkedHashMap<>();
         for (FieldSchema field : table.fields()) {
             curFields.put(field.name(), field);
@@ -136,7 +138,7 @@ public enum CfgSchemaAlignToDataHeader {
         Map<String, FieldSchema> alignedFields = new LinkedHashMap<>();
         int size = header.fields().size();
         for (int idx = 0; idx < size; ) {
-            DataHeader.HeaderField hf = header.fields().get(idx);
+            TableDataHeader.HeaderField hf = header.fields().get(idx);
             String name = hf.name();
             String comment = hf.comment();
 
@@ -176,6 +178,25 @@ public enum CfgSchemaAlignToDataHeader {
             Logger.log(STR. "\{ table.name() } delete field: \{ remove.name() }" );
         }
         return alignedFields;
+    }
+
+
+    public static void main(String[] args) {
+        Logger.enableVerbose();
+        Logger.mm("start readCfgData");
+        CfgData cfgData = CfgDataReader.INSTANCE.readCfgData(Path.of("."));
+        Logger.mm("end readCfgData");
+
+        cfgData.stat().print();
+        System.out.println("table\t" + cfgData.tables().size());
+
+        CfgSchema cfgSchema = Cfgs.readFrom(Path.of("config.cfg"), true);
+        SchemaErrs errs = CfgSchemaResolver.resolve(cfgSchema);
+        errs.print();
+        CfgDataHeader header = CfgDataHeader.of(cfgData, cfgSchema);
+        CfgSchema alignedSchema = CfgSchemaAlignToDataHeader.INSTANCE.align(cfgSchema, header);
+
+        System.out.println(cfgSchema.equals(alignedSchema));
     }
 
 }

@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public record CfgErrs(List<Err> errs, List<Warn> warns) {
-    public static CfgErrs of() {
-        return new CfgErrs(new ArrayList<>(), new ArrayList<>());
+public record SchemaErrs(List<Err> errs, List<Warn> warns) {
+    public static SchemaErrs of() {
+        return new SchemaErrs(new ArrayList<>(), new ArrayList<>());
     }
 
-    public CfgErrs {
+    public SchemaErrs {
         Objects.requireNonNull(errs);
     }
 
@@ -19,6 +19,17 @@ public record CfgErrs(List<Err> errs, List<Warn> warns) {
 
     void addWarn(Warn warn) {
         warns.add(warn);
+    }
+
+    public void print() {
+        System.out.println("warnings:");
+        for (Warn warn : warns) {
+            System.out.println(warn);
+        }
+        System.out.println("errors:");
+        for (Err err : errs) {
+            System.out.println(err);
+        }
     }
 
     public sealed interface Warn {
