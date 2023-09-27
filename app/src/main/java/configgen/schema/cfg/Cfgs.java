@@ -1,5 +1,6 @@
 package configgen.schema.cfg;
 
+import configgen.data.DataUtil;
 import configgen.schema.CfgSchema;
 import configgen.util.CachedFiles;
 
@@ -42,7 +43,7 @@ public class Cfgs {
                 for (Path path : paths.toList()) {
                     if (Files.isDirectory(path)) {
                         String lastDir = path.getFileName().toString().toLowerCase();
-                        String subPkgName = CfgUtil.getPkgNameByDirName(lastDir);
+                        String subPkgName = DataUtil.getCodeName(lastDir);
 
                         Path subSource = path.resolve(subPkgName + "." + ext);
                         readFromAllSubDirectory(destination, subSource, pkgNameDot + subPkgName + ".",

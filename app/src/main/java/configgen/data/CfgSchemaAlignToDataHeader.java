@@ -10,7 +10,9 @@ import configgen.schema.cfg.Metas;
 
 import java.nio.file.Path;
 import java.util.*;
+import java.util.regex.Pattern;
 
+import static configgen.data.CfgDataHeader.*;
 import static configgen.schema.EntryType.ENo.NO;
 import static configgen.schema.FieldFormat.AutoOrPack;
 
@@ -35,18 +37,16 @@ public enum CfgSchemaAlignToDataHeader {
             }
         }
 
-        for (Map.Entry<String, TableDataHeader> e : dataHeaders.entrySet()) {
-            String name = e.getKey();
-            TableDataHeader th = e.getValue();
-            TableSchema newTable = newTable(name, th);
+        for (TableDataHeader th : dataHeaders.values()) {
+            TableSchema newTable = newTable(th);
             alignedCfg.add(newTable);
         }
         return alignedCfg;
     }
 
-    private TableSchema newTable(String name, TableDataHeader header) {
-        List<FieldSchema> fields = new ArrayList<>(header.fields().size());
-        for (TableDataHeader.HeaderField hf : header.fields()) {
+    private TableSchema newTable(TableDataHeader th) {
+        List<FieldSchema> fields = new ArrayList<>(th.fields().size());
+        for (HeaderField hf : th.fields()) {
             Metadata meta = Metadata.of();
             if (!hf.comment().isEmpty()) {
                 Metas.putComment(meta, hf.comment());
@@ -57,14 +57,14 @@ public enum CfgSchemaAlignToDataHeader {
         }
 
         if (fields.isEmpty()) {
-            Logger.log(STR. "\{ name } header empty, ignored!" );
+            Logger.log(STR. "\{ th.name() } header empty, ignored!" );
             return null;
         }
 
         String first = fields.iterator().next().name();
         KeySchema primaryKey = new KeySchema(List.of(first));
 
-        return new TableSchema(name, primaryKey, NO, false, Metadata.of(), fields, List.of(), List.of());
+        return new TableSchema(th.name(), primaryKey, NO, false, Metadata.of(), fields, List.of(), List.of());
     }
 
     private TableSchema alignTable(TableSchema table, TableDataHeader header) {
@@ -138,30 +138,36 @@ public enum CfgSchemaAlignToDataHeader {
         Map<String, FieldSchema> alignedFields = new LinkedHashMap<>();
         int size = header.fields().size();
         for (int idx = 0; idx < size; ) {
-            TableDataHeader.HeaderField hf = header.fields().get(idx);
+            HeaderField hf = header.fields().get(idx);
             String name = hf.name();
             String comment = hf.comment();
 
             FieldSchema newField;
-            FieldSchema curField = curFields.remove(name);
+            FieldSchema curField = findAndRemove(header.fields(), idx, curFields);
             if (curField != null) {
                 int span = Spans.span(curField);
                 idx += span;
+                String fieldName = curField.name();
                 Metadata meta = curField.meta().copy();
-                if (!comment.isEmpty()) {
+                if (!comment.isEmpty() && !comment.equalsIgnoreCase(fieldName)) {
                     String old = Metas.putComment(meta, comment);
                     if (!old.equals(comment)) {
-                        Logger.log(STR. "\{ table.name() }[\{ name }] set comment: \{ comment }" );
+                        Logger.log(STR. "\{ table.name() }[\{ fieldName }] set comment: \{ old } -> \{ comment }" );
                     }
                 } else {
                     String old = Metas.removeComment(meta);
                     if (!old.isEmpty()) {
-                        Logger.log(STR. "\{ table.name() }[\{ name }] remove old comment: \{ old }" );
+                        Logger.log(STR. "\{ table.name() }[\{ fieldName }] remove old comment: \{ old }" );
                     }
                 }
-                newField = new FieldSchema(name, curField.type().copy(), curField.fmt(), meta);
+                newField = new FieldSchema(fieldName, curField.type().copy(), curField.fmt(), meta);
 
             } else {
+                Pattern pattern = Pattern.compile("[a-zA-Z_][a-zA-Z0-9_]*");
+                if (!pattern.matcher(name).matches()) {
+                    Logger.log(STR. "\{ table.name() }[\{ name }] not identifier, ignore!" );
+                }
+
                 idx++;
                 Metadata meta = Metadata.of();
                 if (!comment.isEmpty()) {
@@ -181,6 +187,75 @@ public enum CfgSchemaAlignToDataHeader {
     }
 
 
+    private FieldSchema findAndRemove(List<HeaderField> headers, int index, Map<String, FieldSchema> curFields) {
+        String name = headers.get(index).name();
+        FieldSchema fs = curFields.remove(name);
+        if (fs != null) {
+            return fs;
+        }
+
+        //// 以下是为兼容之前的做法
+        if (!name.endsWith("1")) {
+            return null;
+        }
+
+        String nam = name.substring(0, name.length() - 1);
+        String listName = STR. "\{ nam }List" ;
+        FieldSchema listField = curFields.get(listName);
+        if (listField != null
+                && listField.type() instanceof FieldType.FList fList && Spans.span(fList.item()) == 1
+                && listField.fmt() instanceof FieldFormat.Fix fix && headers.size() > index + fix.count() - 1) {
+
+            boolean ok = true;
+            for (int i = 2; i <= fix.count(); i++) {
+                if (!headers.get(index + i - 1).name().equals(STR. "\{ nam }\{ i }" )) {
+                    ok = false;
+                    break;
+                }
+            }
+            if (ok) {
+                curFields.remove(listName);
+                return listField;
+            }
+        }
+
+        if (headers.size() <= index + 1) {
+            return null;
+        }
+        String name2 = headers.get(index + 1).name();
+        if (!name2.endsWith("1")) {
+            return null;
+        }
+        String nam2 = name2.substring(0, name2.length() - 1);
+        String mapName = STR. "\{ nam }2\{ nam2 }Map" ;
+        FieldSchema mapField = curFields.get(mapName);
+        if (mapField != null
+                && mapField.type() instanceof FieldType.FMap fMap
+                && Spans.span(fMap.key()) == 1 && Spans.span(fMap.value()) == 1
+                && mapField.fmt() instanceof FieldFormat.Fix fix
+                && headers.size() > index + fix.count() * 2 - 1) {
+
+            boolean ok = true;
+            for (int i = 2; i <= fix.count(); i++) {
+                if (!headers.get(index + (i - 1) * 2).name().equals(STR. "\{ nam }\{ i }" )) {
+                    ok = false;
+                    break;
+                }
+
+                if (!headers.get(index + (i - 1) * 2 + 1).name().equals(STR. "\{ nam2 }\{ i }" )) {
+                    ok = false;
+                    break;
+                }
+            }
+            if (ok) {
+                curFields.remove(mapName);
+                return mapField;
+            }
+        }
+        return null;
+    }
+
+
     public static void main(String[] args) {
         Logger.enableVerbose();
         Logger.mm("start readCfgData");
@@ -193,10 +268,13 @@ public enum CfgSchemaAlignToDataHeader {
         CfgSchema cfgSchema = Cfgs.readFrom(Path.of("config.cfg"), true);
         SchemaErrs errs = CfgSchemaResolver.resolve(cfgSchema);
         errs.print();
-        CfgDataHeader header = CfgDataHeader.of(cfgData, cfgSchema);
+        CfgDataHeader header = of(cfgData, cfgSchema);
         CfgSchema alignedSchema = CfgSchemaAlignToDataHeader.INSTANCE.align(cfgSchema, header);
 
         System.out.println(cfgSchema.equals(alignedSchema));
+
+        SchemaErrs errs2 = CfgSchemaResolver.resolve(alignedSchema);
+        errs2.print();
     }
 
 }

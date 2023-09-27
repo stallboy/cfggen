@@ -69,7 +69,7 @@ public class DataUtil {
         return new TableNameIndex(tableName, index);
     }
 
-    private static String getCodeName(String fileName) {
+    public static String getCodeName(String fileName) {
         if (fileName.isEmpty()) {
             return null;
         }

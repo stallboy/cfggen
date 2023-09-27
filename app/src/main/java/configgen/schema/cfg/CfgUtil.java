@@ -1,5 +1,6 @@
 package configgen.schema.cfg;
 
+import configgen.data.DataUtil;
 import configgen.schema.CfgSchema;
 import configgen.schema.Nameable;
 
@@ -47,11 +48,11 @@ public class CfgUtil {
             return p;
         }
 
-        String postfixName = name + "_";
         try (Stream<Path> subPaths = Files.list(cur)) {
             for (Path path : subPaths.toList()) {
                 String fn = path.getFileName().toString();
-                if (fn.startsWith(postfixName)) {
+                String codeName = DataUtil.getCodeName(fn);
+                if (codeName != null && codeName.equals(name)) {
                     return path;
                 }
             }
@@ -62,12 +63,5 @@ public class CfgUtil {
         return p;
     }
 
-    public static String getPkgNameByDirName(String lastDir) {
-        int idx = lastDir.indexOf('_');
-        if (idx == -1) {
-            return lastDir;
-        }
-        return lastDir.substring(0, idx);
-    }
 
 }

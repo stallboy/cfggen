@@ -1,12 +1,12 @@
 package configgen.data;
 
 import configgen.Logger;
+import configgen.util.UnicodeReader;
 import de.siegmar.fastcsv.reader.CsvReader;
 import de.siegmar.fastcsv.reader.CsvRow;
 import org.dhatim.fastexcel.reader.*;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -113,7 +113,7 @@ public enum CfgDataReader {
     private Result readCsvByFastCsv(Path path, TableNameIndex ti) throws IOException {
         int count = 0;
         List<CsvRow> rows = new ArrayList<>();
-        try (CsvReader reader = CsvReader.builder().build(path, Charset.forName("GBK"))) {
+        try (CsvReader reader = CsvReader.builder().build(new UnicodeReader(Files.newInputStream(path), "GBK"))) {
             for (CsvRow csvRow : reader) {
                 if (count == 0) {
                     count = csvRow.getFieldCount();
@@ -127,7 +127,7 @@ public enum CfgDataReader {
         Result result = new Result();
         result.csvTableName = ti.tableName();
         result.isCsv = true;
-        result.csvData = new CsvData(path.toAbsolutePath().toString(), ti.index(), rows);
+        result.csvData = new CsvData(path.toAbsolutePath().normalize().toString(), ti.index(), rows);
         return result;
     }
 
@@ -149,7 +149,7 @@ public enum CfgDataReader {
                 stat.sheetCount++;
                 List<Row> rows = sheet.read();
                 OneSheetResult oneSheet = new OneSheetResult(ti.tableName(),
-                        new ExcelSheetData(path.toAbsolutePath().toString(), sheetName, ti.index(), rows));
+                        new ExcelSheetData(path.toAbsolutePath().normalize().toString(), sheetName, ti.index(), rows));
                 sheets.add(oneSheet);
 
                 int formula = 0;
