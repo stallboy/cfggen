@@ -7,6 +7,8 @@ package configgen.schema;
 public sealed interface Nameable permits Fieldable, Structural, StructSchema, InterfaceSchema, TableSchema {
     String name();
 
+    Metadata meta();
+
     default String namespace() {
         int idx = name().lastIndexOf('.');
         if (idx == -1) {

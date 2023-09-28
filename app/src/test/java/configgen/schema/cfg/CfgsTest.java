@@ -26,16 +26,7 @@ class CfgsTest {
             boolean equals = cfg1.equals(cfg2);
             System.out.println(equals);
             if (!equals) {
-                int i = 0;
-                for (Nameable item1 : cfg1.items()) {
-                    Nameable item2 = cfg2.items().get(i);
-                    if (!item1.equals(item2)) {
-                        System.out.println("=========not eq=========");
-                        System.out.println(item1);
-                        System.out.println(item2);
-                    }
-                    i++;
-                }
+                cfg1.printDiff(cfg2);
             }
 
             assertEquals(cfg1, cfg2);

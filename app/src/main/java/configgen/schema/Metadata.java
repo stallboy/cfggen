@@ -4,6 +4,8 @@ import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.SequencedMap;
 
+import static configgen.schema.Metadata.MetaTag.TAG;
+
 
 public record Metadata(SequencedMap<String, MetaValue> data) {
     public static Metadata of() {
@@ -12,6 +14,11 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
 
     public Metadata {
         Objects.requireNonNull(data);
+    }
+
+    boolean hasTag(String tag) {
+        MetaValue value = data.get(tag);
+        return value == TAG;
     }
 
     public Metadata copy() {

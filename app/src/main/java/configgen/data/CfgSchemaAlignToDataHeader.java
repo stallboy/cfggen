@@ -19,6 +19,11 @@ import static configgen.schema.FieldFormat.AutoOrPack;
 public enum CfgSchemaAlignToDataHeader {
     INSTANCE;
 
+    public CfgSchema align(CfgSchema cfgSchema, CfgData cfgData) {
+        CfgDataHeader header = CfgDataHeader.of(cfgData, cfgSchema);
+        return align(cfgSchema, header);
+    }
+
     public CfgSchema align(CfgSchema cfg, CfgDataHeader header) {
         Map<String, TableDataHeader> dataHeaders = new TreeMap<>(header.tables());
         CfgSchema alignedCfg = CfgSchema.of();
@@ -86,14 +91,14 @@ public enum CfgSchemaAlignToDataHeader {
         switch (table.entry()) {
             case NO -> {
             }
-            case EEntry eEntry -> {
-                if (fieldSchemas.containsKey(eEntry.field())) {
-                    entry = new EEntry(eEntry.field());
+            case EEntry ee -> {
+                if (fieldSchemas.containsKey(ee.field())) {
+                    entry = new EEntry(ee.field());
                 }
             }
-            case EEnum eEnum -> {
-                if (fieldSchemas.containsKey(eEnum.field())) {
-                    entry = new EEnum(eEnum.field());
+            case EEnum ee -> {
+                if (fieldSchemas.containsKey(ee.field())) {
+                    entry = new EEnum(ee.field());
                 }
             }
         }
@@ -105,14 +110,14 @@ public enum CfgSchemaAlignToDataHeader {
         List<ForeignKeySchema> fks = new ArrayList<>();
         for (ForeignKeySchema fk : table.foreignKeys()) {
             if (isKeyInSchemaList(fk.key(), fieldSchemas)) {
-                fks.add(fk);
+                fks.add(fk.copy());
             }
         }
 
         List<KeySchema> uks = new ArrayList<>();
         for (KeySchema uk : table.uniqueKeys()) {
             if (isKeyInSchemaList(uk, fieldSchemas)) {
-                uks.add(uk);
+                uks.add(uk.copy());
             }
         }
 
@@ -161,23 +166,24 @@ public enum CfgSchemaAlignToDataHeader {
                     }
                 }
                 newField = new FieldSchema(fieldName, curField.type().copy(), curField.fmt(), meta);
+                alignedFields.put(newField.name(), newField);
 
             } else {
+                idx++;
+
                 Pattern pattern = Pattern.compile("[a-zA-Z_][a-zA-Z0-9_]*");
                 if (!pattern.matcher(name).matches()) {
                     Logger.log(STR. "\{ table.name() }[\{ name }] not identifier, ignore!" );
+                } else {
+                    Metadata meta = Metadata.of();
+                    if (!comment.isEmpty()) {
+                        Metas.putComment(meta, comment);
+                    }
+                    newField = new FieldSchema(name, Primitive.STR, AutoOrPack.AUTO, meta);
+                    Logger.log(STR. "\{ table.name() } new field: \{ name }" );
+                    alignedFields.put(newField.name(), newField);
                 }
-
-                idx++;
-                Metadata meta = Metadata.of();
-                if (!comment.isEmpty()) {
-                    Metas.putComment(meta, comment);
-                }
-                newField = new FieldSchema(name, Primitive.STR, AutoOrPack.AUTO, meta);
-                Logger.log(STR. "\{ table.name() } new field: \{ name }" );
             }
-
-            alignedFields.put(name, newField);
         }
 
         for (FieldSchema remove : curFields.values()) {
@@ -266,14 +272,14 @@ public enum CfgSchemaAlignToDataHeader {
         System.out.println("table\t" + cfgData.tables().size());
 
         CfgSchema cfgSchema = Cfgs.readFrom(Path.of("config.cfg"), true);
-        SchemaErrs errs = CfgSchemaResolver.resolve(cfgSchema);
+        SchemaErrs errs = cfgSchema.resolve();
         errs.print();
-        CfgDataHeader header = of(cfgData, cfgSchema);
-        CfgSchema alignedSchema = CfgSchemaAlignToDataHeader.INSTANCE.align(cfgSchema, header);
+        CfgSchema alignedSchema = CfgSchemaAlignToDataHeader.INSTANCE.align(cfgSchema, cfgData);
 
         System.out.println(cfgSchema.equals(alignedSchema));
+        cfgSchema.printDiff(alignedSchema);
 
-        SchemaErrs errs2 = CfgSchemaResolver.resolve(alignedSchema);
+        SchemaErrs errs2 = alignedSchema.resolve();
         errs2.print();
     }
 

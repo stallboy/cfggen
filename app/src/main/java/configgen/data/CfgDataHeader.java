@@ -8,7 +8,6 @@ import org.dhatim.fastexcel.reader.Cell;
 import org.dhatim.fastexcel.reader.Row;
 
 import java.util.*;
-import java.util.regex.Pattern;
 
 import static configgen.data.CfgData.TableData;
 
@@ -19,6 +18,9 @@ public record CfgDataHeader(Map<String, TableDataHeader> tables) {
     }
 
     public static CfgDataHeader of(CfgData cfgData, CfgSchema nullableCfgSchema) {
+        if (nullableCfgSchema != null) {
+            nullableCfgSchema.requireResolved();
+        }
         CfgDataHeader headers = CfgDataHeader.of();
         for (TableData tableData : cfgData.tables().values()) {
             String name = tableData.tableName();

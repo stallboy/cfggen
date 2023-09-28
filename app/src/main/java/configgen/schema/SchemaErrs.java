@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public record SchemaErrs(List<Err> errs, List<Warn> warns) {
+public record SchemaErrs(List<Err> errs,
+                         List<Warn> warns) {
     public static SchemaErrs of() {
         return new SchemaErrs(new ArrayList<>(), new ArrayList<>());
     }

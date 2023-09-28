@@ -9,8 +9,10 @@ import java.util.*;
  */
 public class CfgSchema {
     private final List<Nameable> items;
+
     private Map<String, Fieldable> structMap;
     private Map<String, TableSchema> tableMap;
+    private boolean isResolved = false;
 
     public static CfgSchema of() {
         return new CfgSchema(new ArrayList<>());
@@ -19,6 +21,25 @@ public class CfgSchema {
     public CfgSchema(List<Nameable> items) {
         Objects.requireNonNull(items);
         this.items = items;
+    }
+
+    public SchemaErrs resolve() {
+        SchemaErrs errs = SchemaErrs.of();
+        new CfgSchemaResolver(this, errs).resolve();
+        if (errs.errs().isEmpty()) {
+            isResolved = true;
+        }
+        return errs;
+    }
+
+    public boolean isResolved() {
+        return isResolved;
+    }
+
+    public void requireResolved() {
+        if (!isResolved) {
+            throw new IllegalStateException("cfgSchema not resolved");
+        }
     }
 
     public void add(Nameable item) {
@@ -37,9 +58,22 @@ public class CfgSchema {
         return tableMap.get(name);
     }
 
-    void resolve(Map<String, Fieldable> structMap, Map<String, TableSchema> tableMap) {
+    void setMap(Map<String, Fieldable> structMap, Map<String, TableSchema> tableMap) {
         this.structMap = structMap;
         this.tableMap = tableMap;
+    }
+
+    public void printDiff(CfgSchema cfg2) {
+        int i = 0;
+        for (Nameable item1 : items) {
+            Nameable item2 = cfg2.items().get(i);
+            if (!item1.equals(item2)) {
+                System.out.println("=========not eq=========");
+                System.out.println(item1);
+                System.out.println(item2);
+            }
+            i++;
+        }
     }
 
     @Override

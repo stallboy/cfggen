@@ -24,12 +24,6 @@ public final class CfgSchemaResolver {
     private StructSchema curImpl;
     private boolean isInCurImpl;
 
-    public static SchemaErrs resolve(CfgSchema schema) {
-        SchemaErrs errs = SchemaErrs.of();
-        new CfgSchemaResolver(schema, errs).resolve();
-        return errs;
-    }
-
     public CfgSchemaResolver(CfgSchema cfg, SchemaErrs errs) {
         this.cfg = cfg;
         this.errs = errs;
@@ -114,7 +108,7 @@ public final class CfgSchemaResolver {
                 case TableSchema table -> tableMap.put(table.name(), table);
             }
         }
-        cfg.resolve(structMap, tableMap);
+        cfg.setMap(structMap, tableMap);
     }
 
 
@@ -589,7 +583,7 @@ public final class CfgSchemaResolver {
 
     public static void main(String[] args) {
         CfgSchema cfg = Cfgs.readFrom(Path.of("config.cfg"), true);
-        SchemaErrs errs = CfgSchemaResolver.resolve(cfg);
+        SchemaErrs errs = cfg.resolve();
         errs.print();
 
     }
