@@ -10,7 +10,7 @@ import java.util.*;
 public class CfgSchema {
     private final List<Nameable> items;
 
-    private Map<String, Fieldable> structMap;
+    private Map<String, Fieldable> fieldableMap;
     private Map<String, TableSchema> tableMap;
     private boolean isResolved = false;
 
@@ -26,14 +26,15 @@ public class CfgSchema {
     public SchemaErrs resolve() {
         SchemaErrs errs = SchemaErrs.of();
         new CfgSchemaResolver(this, errs).resolve();
-        if (errs.errs().isEmpty()) {
-            isResolved = true;
-        }
         return errs;
     }
 
     public boolean isResolved() {
         return isResolved;
+    }
+
+    void setResolved() {
+        isResolved = true;
     }
 
     public void requireResolved() {
@@ -51,7 +52,7 @@ public class CfgSchema {
     }
 
     public Fieldable findFieldable(String name) {
-        return structMap.get(name);
+        return fieldableMap.get(name);
     }
 
     public TableSchema findTable(String name) {
@@ -59,8 +60,16 @@ public class CfgSchema {
     }
 
     void setMap(Map<String, Fieldable> structMap, Map<String, TableSchema> tableMap) {
-        this.structMap = structMap;
+        this.fieldableMap = structMap;
         this.tableMap = tableMap;
+    }
+
+    Map<String, Fieldable> fieldableMap() {
+        return fieldableMap;
+    }
+
+    Map<String, TableSchema> tableMap() {
+        return tableMap;
     }
 
     public void printDiff(CfgSchema cfg2) {

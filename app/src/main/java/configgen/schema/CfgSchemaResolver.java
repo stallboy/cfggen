@@ -35,6 +35,10 @@ public final class CfgSchemaResolver {
         step2_resolveEachNameable();
         step3_resolveAllForeignKeys();
         step4_checkAllChainedSepFmt();
+        step5_checkUnusedFieldable();
+        if (errs.errs().isEmpty()) {
+            cfg.setResolved();
+        }
     }
 
     /**
@@ -431,14 +435,14 @@ public final class CfgSchemaResolver {
                     }
                 } else {
                     errs.addErr(new RefTableKeyNotUniq(ctx(), foreignKey.name(),
-                            refTable, refUniq.key().name().toString()));
+                            refTable, refUniq.key().name()));
                 }
             }
 
             // listRef为了简单，不支持MultiKey
             case RefKey.RefList refList -> {
                 if (localKey.name().size() != 1) {
-                    errs.addErr(new ListRefMultiKeyNotSupport(ctx(), foreignKey.name(), localKey.name().toString()));
+                    errs.addErr(new ListRefMultiKeyNotSupport(ctx(), foreignKey.name(), localKey.name()));
                     return;
                 }
 
@@ -509,6 +513,7 @@ public final class CfgSchemaResolver {
             switch (item) {
                 case InterfaceSchema interfaceSchema -> {
                     // 为了简单和一致性，在interface的impl上不支持配置fmt
+                    // 因为如果配置了pack或sep，则这第一列就不是impl的名字了，不一致。
                     for (StructSchema impl : interfaceSchema.impls()) {
                         if (impl.fmt() != AUTO) {
                             errs.addErr(new ImplFmtNotSupport(interfaceSchema.name(), impl.name(), impl.fmt().toString()));
@@ -579,6 +584,75 @@ public final class CfgSchemaResolver {
 
     private void errTypeFmtNotCompatible(FieldSchema field) {
         errs.addErr(new TypeFmtNotCompatible(ctx(), field.name(), field.type().toString(), field.fmt().toString()));
+    }
+
+    private void step5_checkUnusedFieldable() {
+        List<FieldSchema> needToCheck = new ArrayList<>();
+        for (TableSchema table : cfg.tableMap().values()) {
+            needToCheck.addAll(table.fields());
+        }
+
+        Set<String> collectedFieldableSet = new HashSet<>();
+        while (!needToCheck.isEmpty()) {
+            Map<String, Fieldable> needToCheckFieldables = new HashMap<>();
+            for (FieldSchema field : needToCheck) {
+                switch (field.type()) {
+                    case StructRef structRef -> {
+                        if (structRef.obj() != null) {
+                            needToCheckFieldables.put(structRef.obj().name(), structRef.obj());
+                        }
+                    }
+                    case FList fList -> {
+                        if (fList.item() instanceof StructRef structRef) {
+                            if (structRef.obj() != null) {
+                                needToCheckFieldables.put(structRef.obj().name(), structRef.obj());
+                            }
+                        }
+                    }
+                    case FMap fMap -> {
+                        if (fMap.key() instanceof StructRef structRef) {
+                            if (structRef.obj() != null) {
+                                needToCheckFieldables.put(structRef.obj().name(), structRef.obj());
+                            }
+                        }
+                        if (fMap.value() instanceof StructRef structRef) {
+                            if (structRef.obj() != null) {
+                                needToCheckFieldables.put(structRef.obj().name(), structRef.obj());
+                            }
+                        }
+                    }
+                    default -> {
+                    }
+                }
+            }
+
+
+            needToCheck.clear();
+            for (Fieldable f : needToCheckFieldables.values()) {
+                boolean notCheckedBefore = collectedFieldableSet.add(f.name());
+                if (notCheckedBefore) {
+                    switch (f) {
+                        case InterfaceSchema interfaceSchema -> {
+                            for (StructSchema impl : interfaceSchema.impls()) {
+                                needToCheck.addAll(impl.fields());
+                            }
+                        }
+                        case StructSchema structSchema -> {
+                            needToCheck.addAll(structSchema.fields());
+                        }
+                    }
+                }
+            }
+        }
+
+        for (Map.Entry<String, Fieldable> e : cfg.fieldableMap().entrySet()) {
+            if (!collectedFieldableSet.contains(e.getKey())) {
+                switch (e.getValue()) {
+                    case InterfaceSchema _ -> errs.addWarn(new InterfaceNotUsed(e.getKey()));
+                    case StructSchema _ -> errs.addWarn(new StructNotUsed(e.getKey()));
+                }
+            }
+        }
     }
 
     public static void main(String[] args) {

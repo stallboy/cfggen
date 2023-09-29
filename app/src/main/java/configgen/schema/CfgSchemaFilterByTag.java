@@ -5,20 +5,24 @@ import configgen.Logger;
 import java.util.*;
 
 import static configgen.schema.EntryType.*;
+import static configgen.schema.SchemaErrs.*;
 
 public class CfgSchemaFilterByTag {
 
     private final CfgSchema cfg;
     private final String tag;
+    private final SchemaErrs errs;
 
-    public CfgSchemaFilterByTag(CfgSchema cfg, String tag) {
+    public CfgSchemaFilterByTag(CfgSchema cfg, String tag, SchemaErrs errs) {
         cfg.requireResolved();
         Objects.requireNonNull(tag);
         if (tag.isEmpty()) {
             throw new IllegalArgumentException("filter tag empty");
         }
+        Objects.requireNonNull(errs);
         this.cfg = cfg;
         this.tag = tag;
+        this.errs = errs;
     }
 
     public CfgSchema filter() {
@@ -43,7 +47,6 @@ public class CfgSchemaFilterByTag {
                         filtered.add(filterStruct(structSchema, false, tableMap));
                     }
                 }
-
                 case TableSchema tableSchema -> {
                     TableRule tr = tableMap.get(tableSchema.name());
                     if (tr != null) {
@@ -193,33 +196,50 @@ public class CfgSchemaFilterByTag {
 
     private void recordForeignKeyIfOk(List<ForeignKeySchema> fks, ForeignKeySchema fk,
                                       Structural structural, Map<String, TableRule> phase1TableMap) {
-        if (isForeignKeyIn(fk, phase1TableMap)) {
-            fks.add(fk.copy());
-        } else {
-            Logger.verbose(STR. "\{ structural.name() }\{ fk.key().name() } foreignKey \{ fk.refTable() }\{ fk.refKey().keyNames() } not found, ignore!" );
+        RefErr err = isForeignKeyIn(fk, phase1TableMap);
+        switch (err) {
+            case OK -> fks.add(fk.copy());
+            case TABLE_NOT_FOUND -> errs.addWarn(new FilterRefIgnoredByRefTableNotFound(
+                    structural.name(), fk.name(), fk.refTable()));
+            case KEY_NOT_FOUND -> errs.addWarn(new FilterRefIgnoredByRefKeyNotFound(
+                    structural.name(), fk.name(), fk.refTable(), fk.refKey().keyNames()));
         }
     }
 
-    private boolean isForeignKeyIn(ForeignKeySchema fk, Map<String, TableRule> phase1TableMap) {
+    private enum RefErr {
+        OK,
+        TABLE_NOT_FOUND,
+        KEY_NOT_FOUND
+    }
+
+    private RefErr isForeignKeyIn(ForeignKeySchema fk, Map<String, TableRule> phase1TableMap) {
         TableRule refTable = phase1TableMap.get(fk.refTable());
         if (refTable == null) {
-            return false;
+            return RefErr.TABLE_NOT_FOUND;
         }
 
         switch (fk.refKey()) {
             case RefKey.RefPrimary _ -> {
-                return true;
+                return RefErr.OK;
             }
             case RefKey.RefUniq refUniq -> {
                 KeySchema uk = refTable.table.findUniqueKey(refUniq.key());
-                return uk != null;
+                if (uk != null) {
+                    return RefErr.OK;
+                } else {
+                    return RefErr.KEY_NOT_FOUND;
+                }
             }
             case RefKey.RefList refList -> {
                 Set<String> names = new HashSet<>();
                 for (FieldSchema field : refTable.table.fields()) {
                     names.add(field.name());
                 }
-                return names.containsAll(refList.key().name());
+                if (names.containsAll(refList.key().name())) {
+                    return RefErr.OK;
+                } else {
+                    return RefErr.KEY_NOT_FOUND;
+                }
             }
         }
     }

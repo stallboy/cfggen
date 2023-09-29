@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
 import static configgen.schema.FieldType.Primitive.*;
+import static configgen.schema.Metadata.*;
 
 public enum XmlReader implements CfgSchemaReader {
     INSTANCE;
@@ -54,7 +55,7 @@ public enum XmlReader implements CfgSchemaReader {
         Metadata meta = parseOwnToMetadata(self);
         if (self.hasAttribute("extraSplit")) {
             int extraSplit = Integer.parseInt(self.getAttribute("extraSplit"));
-            meta.data().put("extraSplit", new Metadata.MetaInt(extraSplit));
+            meta.data().put("extraSplit", new MetaInt(extraSplit));
         }
 
         List<FieldSchema> fields = parseFieldList(self);
@@ -83,7 +84,7 @@ public enum XmlReader implements CfgSchemaReader {
     }
 
     private Metadata parseOwnToMetadata(Element self) {
-        Metadata meta = Metadata.of();
+        Metadata meta = of();
         if (self.hasAttribute("own")) {
             String own = self.getAttribute("own");
             for (String tag : own.split(",")) {
@@ -163,6 +164,13 @@ public enum XmlReader implements CfgSchemaReader {
         if (!pattern.matcher(name).matches()) {
             System.out.println(STR. "\{ name } not identifier, ignore!" );
             return null;
+        }
+
+        if (self.hasAttribute("range")){
+            String range = self.getAttribute("range").trim();
+            if (!range.isEmpty()){
+                meta.data().put("range", new MetaStr(range));
+            }
         }
 
         String comment = self.getAttribute("desc").trim();
@@ -255,7 +263,7 @@ public enum XmlReader implements CfgSchemaReader {
             refKey = new RefPrimary(nullable);
         }
 
-        return new ForeignKeySchema(name, localKey, refTable, refKey, Metadata.of());
+        return new ForeignKeySchema(name, localKey, refTable, refKey, of());
     }
 
     private SimpleType parseSimpleType(String typ) {

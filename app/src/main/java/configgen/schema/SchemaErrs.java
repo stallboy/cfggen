@@ -40,6 +40,23 @@ public record SchemaErrs(List<Err> errs,
                                 String name2) implements Warn {
     }
 
+    record StructNotUsed(String name) implements Warn {
+    }
+
+    record InterfaceNotUsed(String name) implements Warn {
+    }
+
+    record FilterRefIgnoredByRefTableNotFound(String name,
+                                              String foreignKey,
+                                              String notFoundRefTable) implements Warn {
+    }
+
+    record FilterRefIgnoredByRefKeyNotFound(String name,
+                                            String foreignKey,
+                                            String refTable,
+                                            List<String> notFoundRefKey) implements Warn {
+    }
+
     public sealed interface Err {
     }
 
@@ -111,12 +128,12 @@ public record SchemaErrs(List<Err> errs,
     record RefTableKeyNotUniq(String table,
                               String foreignKey,
                               String refTable,
-                              String notUniqRefKey) implements Err {
+                              List<String> notUniqRefKey) implements Err {
     }
 
     record ListRefMultiKeyNotSupport(String table,
                                      String foreignKey,
-                                     String errMultiKey) implements Err {
+                                     List<String> errMultiKey) implements Err {
     }
 
     record RefLocalKeyRemoteKeyCountNotMatch(String table,

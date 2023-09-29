@@ -4,6 +4,7 @@ import configgen.Logger;
 import configgen.data.DataUtil;
 import configgen.schema.CfgSchema;
 import configgen.schema.CfgSchemaFilterByTag;
+import configgen.schema.CfgSchemaResolver;
 import configgen.schema.SchemaErrs;
 import configgen.util.CachedFiles;
 
@@ -101,11 +102,11 @@ public class Cfgs {
         SchemaErrs fullErr = cfg2.resolve();
         fullErr.print();
 
-        System.out.println("-----filtered");
-        CfgSchema clientCfg = new CfgSchemaFilterByTag(cfg2, "client").filter();
-        SchemaErrs clientErr = clientCfg.resolve();
+        System.out.println("-----filtered by client");
+        SchemaErrs clientErr = SchemaErrs.of();
+        CfgSchema clientCfg = new CfgSchemaFilterByTag(cfg2, "client", clientErr).filter();
+        new CfgSchemaResolver(clientCfg, clientErr).resolve();
         clientErr.print();
-
     }
 
 }
