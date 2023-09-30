@@ -64,11 +64,11 @@ public class CfgSchema {
         this.tableMap = tableMap;
     }
 
-    Map<String, Fieldable> fieldableMap() {
+    public Map<String, Fieldable> fieldableMap() {
         return fieldableMap;
     }
 
-    Map<String, TableSchema> tableMap() {
+    public Map<String, TableSchema> tableMap() {
         return tableMap;
     }
 

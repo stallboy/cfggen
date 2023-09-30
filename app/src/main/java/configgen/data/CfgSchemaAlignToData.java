@@ -5,53 +5,56 @@ import configgen.schema.*;
 import configgen.schema.EntryType.EEntry;
 import configgen.schema.EntryType.EEnum;
 import configgen.schema.FieldType.Primitive;
-import configgen.schema.cfg.Cfgs;
 import configgen.schema.cfg.Metas;
 
-import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import static configgen.data.CfgDataHeader.*;
+import static configgen.data.CfgData.DField;
 import static configgen.schema.EntryType.ENo.NO;
 import static configgen.schema.FieldFormat.AutoOrPack;
 
-public enum CfgSchemaAlignToDataHeader {
+public enum CfgSchemaAlignToData {
     INSTANCE;
 
-    public CfgSchema align(CfgSchema cfgSchema, CfgData cfgData) {
-        CfgDataHeader header = CfgDataHeader.of(cfgData, cfgSchema);
-        return align(cfgSchema, header);
-    }
-
-    public CfgSchema align(CfgSchema cfg, CfgDataHeader header) {
-        Map<String, TableDataHeader> dataHeaders = new TreeMap<>(header.tables());
+    /**
+     * @param cfgSchema 原始schema
+     * @param data 数据
+     * @return align到data后的cfgSchema，未resolve
+     */
+    public CfgSchema align(CfgSchema cfgSchema, CfgData data) {
+        TreeMap<String, CfgData.DTable> dataHeaders = new TreeMap<>(data.tables());
         CfgSchema alignedCfg = CfgSchema.of();
-        for (Nameable item : cfg.items()) {
+        for (Nameable item : cfgSchema.items()) {
             switch (item) {
                 case Fieldable fieldable -> {
                     alignedCfg.add(fieldable.copy());
                 }
                 case TableSchema table -> {
-                    TableDataHeader th = dataHeaders.remove(table.name());
+                    CfgData.DTable th = dataHeaders.remove(table.name());
                     if (th != null) {
-                        TableSchema alignedTable = alignTable(table, th);
+                        TableSchema alignedTable = alignTable(table, th.fields());
                         alignedCfg.add(alignedTable);
                     }
                 }
             }
         }
 
-        for (TableDataHeader th : dataHeaders.values()) {
+        for (CfgData.DTable th : dataHeaders.values()) {
             TableSchema newTable = newTable(th);
             alignedCfg.add(newTable);
         }
         return alignedCfg;
     }
 
-    private TableSchema newTable(TableDataHeader th) {
+    TableSchema newTable(CfgData.DTable th) {
+        if (th.fields().isEmpty()) {
+            Logger.log(STR. "\{ th.tableName() } header empty, ignored!" );
+            return null;
+        }
+
         List<FieldSchema> fields = new ArrayList<>(th.fields().size());
-        for (HeaderField hf : th.fields()) {
+        for (DField hf : th.fields()) {
             Metadata meta = Metadata.of();
             if (!hf.comment().isEmpty()) {
                 Metas.putComment(meta, hf.comment());
@@ -61,18 +64,14 @@ public enum CfgSchemaAlignToDataHeader {
             fields.add(field);
         }
 
-        if (fields.isEmpty()) {
-            Logger.log(STR. "\{ th.name() } header empty, ignored!" );
-            return null;
-        }
-
         String first = fields.iterator().next().name();
         KeySchema primaryKey = new KeySchema(List.of(first));
 
-        return new TableSchema(th.name(), primaryKey, NO, false, Metadata.of(), fields, List.of(), List.of());
+        return new TableSchema(th.tableName(), primaryKey, NO, false,
+                Metadata.of(), fields, List.of(), List.of());
     }
 
-    private TableSchema alignTable(TableSchema table, TableDataHeader header) {
+    TableSchema alignTable(TableSchema table, List<DField> header) {
         String name = table.name();
         Map<String, FieldSchema> fieldSchemas = alignFields(table, header);
         if (fieldSchemas.isEmpty()) {
@@ -134,21 +133,21 @@ public enum CfgSchemaAlignToDataHeader {
     }
 
 
-    private Map<String, FieldSchema> alignFields(TableSchema table, TableDataHeader header) {
+    private Map<String, FieldSchema> alignFields(TableSchema table, List<DField> header) {
         Map<String, FieldSchema> curFields = new LinkedHashMap<>();
         for (FieldSchema field : table.fields()) {
             curFields.put(field.name(), field);
         }
 
         Map<String, FieldSchema> alignedFields = new LinkedHashMap<>();
-        int size = header.fields().size();
+        int size = header.size();
         for (int idx = 0; idx < size; ) {
-            HeaderField hf = header.fields().get(idx);
+            DField hf = header.get(idx);
             String name = hf.name();
             String comment = hf.comment();
 
             FieldSchema newField;
-            FieldSchema curField = findAndRemove(header.fields(), idx, curFields);
+            FieldSchema curField = findAndRemove(header, idx, curFields);
             if (curField != null) {
                 int span = Spans.span(curField);
                 idx += span;
@@ -193,7 +192,7 @@ public enum CfgSchemaAlignToDataHeader {
     }
 
 
-    private FieldSchema findAndRemove(List<HeaderField> headers, int index, Map<String, FieldSchema> curFields) {
+    private FieldSchema findAndRemove(List<DField> headers, int index, Map<String, FieldSchema> curFields) {
         String name = headers.get(index).name();
         FieldSchema fs = curFields.remove(name);
         if (fs != null) {
@@ -259,28 +258,6 @@ public enum CfgSchemaAlignToDataHeader {
             }
         }
         return null;
-    }
-
-
-    public static void main(String[] args) {
-        Logger.enableVerbose();
-        Logger.mm("start readCfgData");
-        CfgData cfgData = CfgDataReader.INSTANCE.readCfgData(Path.of("."));
-        Logger.mm("end readCfgData");
-
-        cfgData.stat().print();
-        System.out.println("table\t" + cfgData.tables().size());
-
-        CfgSchema cfgSchema = Cfgs.readFrom(Path.of("config.cfg"), true);
-        SchemaErrs errs = cfgSchema.resolve();
-        errs.print();
-        CfgSchema alignedSchema = CfgSchemaAlignToDataHeader.INSTANCE.align(cfgSchema, cfgData);
-
-        System.out.println(cfgSchema.equals(alignedSchema));
-        cfgSchema.printDiff(alignedSchema);
-
-        SchemaErrs errs2 = alignedSchema.resolve();
-        errs2.print();
     }
 
 }

@@ -1,106 +1,89 @@
 package configgen.data;
 
 import de.siegmar.fastcsv.reader.CsvRow;
-import org.dhatim.fastexcel.reader.CellType;
 import org.dhatim.fastexcel.reader.Row;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public record CfgData(Map<String, TableData> tables,
+
+public record CfgData(Map<String, DTable> tables,
                       DataStat stat) {
 
-    public void addSheet(String tableName, SheetData sheetData) {
-        TableData tableData = tables.get(tableName);
-        if (tableData != null) {
-            tableData.sheets.add(sheetData);
-        } else {
-            List<SheetData> sheets = new ArrayList<>();
-            sheets.add(sheetData);
-            TableData newTable = new TableData(tableName, sheets);
-            tables.put(tableName, newTable);
-        }
+    public record DTable(String tableName,
+                         List<DField> fields,   // by HeadParser
+                         List<DCell[]> rows,    // by CellParser
+                         List<DRawSheet> rawSheets) {   // by CfgDataReader
     }
 
-    public record TableData(String tableName, List<SheetData> sheets) {
-
+    public record DField(String name,
+                         String comment) {
     }
 
-    public sealed interface SheetData {
-        String id();
+    public record DCell(String value,
+                        DRowId rowId,
+                        int col) {
     }
 
-    public record ExcelSheetData(String fileName,
-                                 String sheetName,
-                                 int index,
-                                 List<Row> rows) implements SheetData {
-        @Override
+    public record DRowId(String fileName,
+                         String sheetName,
+                         int row) {
+    }
+
+
+    public record DRawSheet(String fileName,
+                            String sheetName,  // empty when file is csv
+                            int index,
+                            List<DRawRow> rows,
+                            List<Integer> fieldIndices) {
         public String id() {
-            return STR. "\{ fileName } [\{ sheetName }]" ;
+            if (sheetName.isEmpty()) {
+                return fileName;
+            }
+            return STR. "\{ fileName }[\{ sheetName }]" ;
         }
     }
 
-    public record CsvData(String fileName,
-                          int index,
-                          List<CsvRow> rows) implements SheetData {
+    public sealed interface DRawRow {
+        String cell(int c);
+
+        int count();
+    }
+
+    public record DRawCsvRow(CsvRow row) implements DRawRow {
         @Override
-        public String id() {
-            return fileName;
+        public String cell(int c) {
+            return c < row.getFieldCount() ? row.getField(c).trim() : "";
+        }
+
+        @Override
+        public int count() {
+            return row.getFieldCount();
         }
     }
 
 
-    public static class DataStat {
-        int csvCount;
-        int excelCount;
-        int sheetCount;
-        int nullCellCount;
-        Map<CellType, Integer> cellTypeCountMap = new HashMap<>();
-
-        public int csvCount() {
-            return csvCount;
+    public record DRawExcelRow(Row row) implements DRawRow {
+        @Override
+        public String cell(int c) {
+            return row.getCellText(c).trim();
         }
 
-        public int excelCount() {
-            return excelCount;
+        @Override
+        public int count() {
+            return row.getCellCount();
         }
-
-        public int sheetCount() {
-            return sheetCount;
-        }
-
-        public int nullCellCount() {
-            return nullCellCount;
-        }
-
-        public Map<CellType, Integer> cellTypeCountMap() {
-            return cellTypeCountMap;
-        }
+    }
 
 
-        void merge(DataStat s) {
-            nullCellCount += s.nullCellCount;
-            csvCount += s.csvCount;
-            excelCount += s.excelCount;
-            sheetCount += s.sheetCount;
-
-            for (Map.Entry<CellType, Integer> e : s.cellTypeCountMap.entrySet()) {
-                CellType t = e.getKey();
-                int old = cellTypeCountMap.getOrDefault(t, 0);
-                cellTypeCountMap.put(t, old + e.getValue());
+    public void print() {
+        stat.print();
+        System.out.println(STR. "table count: \t\{ tables.size() }" );
+        for (DTable table : tables.values()) {
+            System.out.println(table.tableName);
+            for (DRawSheet sheet : table.rawSheets) {
+                System.out.println(STR. "\t\{ sheet.id() }" );
             }
-        }
-
-        public void print() {
-            for (Map.Entry<CellType, Integer> entry : cellTypeCountMap.entrySet()) {
-                System.out.println(STR. "\{ entry.getKey().toString() }  \{ entry.getValue() }" );
-            }
-            System.out.println(STR. "null  \{ nullCellCount }" );
-            System.out.println(STR. "csv   \{ csvCount }" );
-            System.out.println(STR. "excel \{ excelCount }" );
-            System.out.println(STR. "sheet \{ sheetCount }" );
         }
     }
 

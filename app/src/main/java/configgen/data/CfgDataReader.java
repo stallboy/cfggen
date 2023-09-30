@@ -1,6 +1,7 @@
 package configgen.data;
 
 import configgen.Logger;
+import configgen.schema.CfgSchema;
 import configgen.util.UnicodeReader;
 import de.siegmar.fastcsv.reader.CsvReader;
 import de.siegmar.fastcsv.reader.CsvRow;
@@ -15,27 +16,33 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static configgen.data.CfgData.*;
-import static configgen.data.DataUtil.*;
 
 
 public enum CfgDataReader {
     INSTANCE;
 
-    public CfgData readCfgData(Path rootDir) {
+    public CfgData readCfgData(Path rootDir, CfgSchema nullableCfgSchema, int headRow) {
+        if (headRow < 2) {
+            throw new IllegalArgumentException(STR. "headRow =\{ headRow } < 2" );
+        }
         try {
-            return _readCfgData(rootDir);
+            return _readCfgData(rootDir, nullableCfgSchema, headRow);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private CfgData _readCfgData(Path rootDir) throws IOException, InterruptedException, ExecutionException {
+    private CfgData _readCfgData(Path rootDir, CfgSchema nullableCfgSchema, int headRow) throws Exception {
         DataStat stat = new DataStat();
         List<Callable<Result>> tasks = new ArrayList<>();
 
+        Logger.mm("start readCfgData");
         Files.walkFileTree(rootDir, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path path, BasicFileAttributes a) {
@@ -49,16 +56,16 @@ public enum CfgDataReader {
                 }
 
                 Path relativePath = rootDir.relativize(path);
-                FileFmt fmt = getFileFormat(path);
+                DataUtil.FileFmt fmt = DataUtil.getFileFormat(path);
                 switch (fmt) {
                     case CSV -> {
                         stat.csvCount++;
-                        TableNameIndex ti = getTableNameIndex(relativePath);
+                        DataUtil.TableNameIndex ti = DataUtil.getTableNameIndex(relativePath);
                         if (ti == null) {
                             Logger.verbose(STR. "\{ path } 名字不符合规范，ignore！" );
                             return FileVisitResult.CONTINUE;
                         } else {
-                            tasks.add(() -> readCsvByFastCsv(path, ti));
+                            tasks.add(() -> readCsvByFastCsv(path, relativePath, ti));
                         }
                     }
                     case EXCEL -> {
@@ -72,47 +79,65 @@ public enum CfgDataReader {
         });
 
 
-        CfgData cfgData = new CfgData(new TreeMap<>(), stat);
+        CfgData data = new CfgData(new TreeMap<>(), stat);
 //        try(ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())) {
 //        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
-        try (ExecutorService executor = Executors.newWorkStealingPool()) {
-            List<Future<Result>> futures = executor.invokeAll(tasks);
-            for (Future<Result> future : futures) {
-                Result result = future.get();
-
-                if (result.isCsv) {
-                    cfgData.addSheet(result.csvTableName, result.csvData);
-
-                } else {
-                    for (OneSheetResult sheet : result.excelData) {
-                        cfgData.addSheet(sheet.tableName, sheet.sheetData);
-                    }
-                    stat.merge(result.excelStat);
-                }
+        ExecutorService executor = Executors.newWorkStealingPool();
+        List<Future<Result>> futures = executor.invokeAll(tasks);
+        for (Future<Result> future : futures) {
+            Result result = future.get();
+            for (OneSheetResult sheet : result.sheets) {
+                addSheet(data, sheet.tableName, sheet.sheet);
+            }
+            if (result.stat != null) {
+                stat.merge(result.stat);
             }
         }
 
-        return cfgData;
+        Logger.mm("start readCfgData parse");
+        List<Callable<Boolean>> parseTasks = new ArrayList<>();
+        for (CfgData.DTable table : data.tables().values()) {
+            parseTasks.add(() -> {
+                HeadParser.parse(table, nullableCfgSchema);
+                CellParser.parse(table, nullableCfgSchema, headRow);
+                return true;
+            });
+        }
+        List<Future<Boolean>> parseFutures = executor.invokeAll(parseTasks);
+        for (Future<Boolean> future : parseFutures) {
+            future.get();
+        }
+        Logger.mm("end readCfgData");
+
+        executor.close();
+        return data;
+    }
+
+    void addSheet(CfgData cfgData, String tableName, DRawSheet sheetData) {
+        CfgData.DTable DTable = cfgData.tables().get(tableName);
+        if (DTable != null) {
+            DTable.rawSheets().add(sheetData);
+        } else {
+            List<DRawSheet> sheets = new ArrayList<>();
+            sheets.add(sheetData);
+            CfgData.DTable newTable = new CfgData.DTable(tableName, new ArrayList<>(), new ArrayList<>(), sheets);
+            cfgData.tables().put(tableName, newTable);
+        }
     }
 
 
-    static class Result {
-        boolean isCsv;
-        String csvTableName;
-        CsvData csvData;
-
-        List<OneSheetResult> excelData;
-        DataStat excelStat;
+    record Result(List<OneSheetResult> sheets,
+                  DataStat stat) {
     }
 
     record OneSheetResult(String tableName,
-                          ExcelSheetData sheetData) {
+                          DRawSheet sheet) {
     }
 
 
-    private Result readCsvByFastCsv(Path path, TableNameIndex ti) throws IOException {
+    private Result readCsvByFastCsv(Path path, Path relativePath, DataUtil.TableNameIndex ti) throws IOException {
         int count = 0;
-        List<CsvRow> rows = new ArrayList<>();
+        List<DRawRow> rows = new ArrayList<>();
         try (CsvReader reader = CsvReader.builder().build(new UnicodeReader(Files.newInputStream(path), "GBK"))) {
             for (CsvRow csvRow : reader) {
                 if (count == 0) {
@@ -120,15 +145,11 @@ public enum CfgDataReader {
                 } else if (count != csvRow.getFieldCount()) {
                     Logger.verbose(STR. "\{ path } \{ csvRow.getOriginalLineNumber() } count \{ csvRow.getFieldCount() } not eq \{ count }" );
                 }
-                rows.add(csvRow);
+                rows.add(new DRawCsvRow(csvRow));
             }
         }
-
-        Result result = new Result();
-        result.csvTableName = ti.tableName();
-        result.isCsv = true;
-        result.csvData = new CsvData(path.toAbsolutePath().normalize().toString(), ti.index(), rows);
-        return result;
+        DRawSheet sheet = new DRawSheet(relativePath.toString(), "", ti.index(), rows, new ArrayList<>());
+        return new Result(List.of(new OneSheetResult(ti.tableName(), sheet)), null);
     }
 
     private Result readExcelByFastExcel(Path path, Path relativePath) throws IOException {
@@ -140,20 +161,24 @@ public enum CfgDataReader {
             for (Sheet sheet : wb.getSheets().toList()) {
                 String sheetName = sheet.getName().trim();
 
-                TableNameIndex ti = getTableNameIndex(relativePath, sheetName);
+                DataUtil.TableNameIndex ti = DataUtil.getTableNameIndex(relativePath, sheetName);
                 if (ti == null) {
                     Logger.verbose(STR. "\{ path } [\{ sheetName }] 名字不符合规范，ignore！" );
                     continue;
                 }
 
                 stat.sheetCount++;
-                List<Row> rows = sheet.read();
+                List<Row> rawRows = sheet.read();
+                List<DRawRow> rows = new ArrayList<>(rawRows.size());
+                for (Row cells : rawRows) {
+                    rows.add(new DRawExcelRow(cells));
+                }
                 OneSheetResult oneSheet = new OneSheetResult(ti.tableName(),
-                        new ExcelSheetData(path.toAbsolutePath().normalize().toString(), sheetName, ti.index(), rows));
+                        new DRawSheet(relativePath.toString(), sheetName, ti.index(), rows, new ArrayList<>()));
                 sheets.add(oneSheet);
 
                 int formula = 0;
-                for (Row row : rows) {
+                for (Row row : rawRows) {
                     for (Cell cell : row) {
                         if (cell != null) {
                             CellType type = cell.getType();
@@ -161,7 +186,7 @@ public enum CfgDataReader {
                             stat.cellTypeCountMap.put(type, old + 1);
                             if (type == CellType.FORMULA) {
                                 formula++;
-//                                Logger.verbose(cell.getAddress() + ": " + cell.getFormula() + " " + cell);
+                                // Logger.verbose(cell.getAddress() + ": formula=" + cell.getFormula() + ", text=" + cell.getText());
                             }
                         } else {
                             stat.nullCellCount++;
@@ -174,22 +199,9 @@ public enum CfgDataReader {
                 }
             }
         }
-        Result result = new Result();
-        result.isCsv = false;
-        result.excelData = sheets;
-        result.excelStat = stat;
-        return result;
+        return new Result(sheets, stat);
     }
 
-    public static void main(String[] args) {
-        Logger.enableVerbose();
-        Logger.mm("start readCfgData");
-        CfgData cfgData = CfgDataReader.INSTANCE.readCfgData(Path.of("."));
-        Logger.mm("end readCfgData");
-
-        cfgData.stat().print();
-        System.out.println("table\t" + cfgData.tables().size());
-    }
 }
 
 

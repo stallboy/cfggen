@@ -1,14 +1,12 @@
 package configgen.schema;
 
-import configgen.Logger;
-
 import java.util.*;
 
 import static configgen.schema.EntryType.*;
-import static configgen.schema.SchemaErrs.*;
+import static configgen.schema.SchemaErrs.FilterRefIgnoredByRefKeyNotFound;
+import static configgen.schema.SchemaErrs.FilterRefIgnoredByRefTableNotFound;
 
 public class CfgSchemaFilterByTag {
-
     private final CfgSchema cfg;
     private final String tag;
     private final SchemaErrs errs;

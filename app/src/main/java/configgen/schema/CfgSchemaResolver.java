@@ -1,18 +1,16 @@
 package configgen.schema;
 
 import configgen.schema.EntryType.EntryBase;
-import configgen.schema.cfg.Cfgs;
 
-import java.nio.file.Path;
 import java.util.*;
 
-import static configgen.schema.SchemaErrs.*;
 import static configgen.schema.FieldFormat.AutoOrPack;
 import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
 import static configgen.schema.FieldFormat.Sep;
 import static configgen.schema.FieldType.*;
 import static configgen.schema.FieldType.Primitive.*;
+import static configgen.schema.SchemaErrs.*;
 
 /**
  * 把CfgSchema内部关系给解决了，如果有Errs，就表明有内部矛盾
@@ -653,12 +651,5 @@ public final class CfgSchemaResolver {
                 }
             }
         }
-    }
-
-    public static void main(String[] args) {
-        CfgSchema cfg = Cfgs.readFrom(Path.of("config.cfg"), true);
-        SchemaErrs errs = cfg.resolve();
-        errs.print();
-
     }
 }

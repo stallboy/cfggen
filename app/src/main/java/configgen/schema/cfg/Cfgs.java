@@ -1,11 +1,7 @@
 package configgen.schema.cfg;
 
-import configgen.Logger;
 import configgen.data.DataUtil;
 import configgen.schema.CfgSchema;
-import configgen.schema.CfgSchemaFilterByTag;
-import configgen.schema.CfgSchemaResolver;
-import configgen.schema.SchemaErrs;
 import configgen.util.CachedFiles;
 
 import java.io.IOException;
@@ -83,30 +79,6 @@ public class Cfgs {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static void main(String[] args) {
-        Logger.enableVerbose();
-        CfgSchema cfg = readFromXml(Path.of("config.xml"), true);
-        Path root = Path.of("config.cfg");
-        System.out.println("-----write");
-        writeTo(root, true, cfg);
-        CfgSchema cfg2 = readFrom(root, true);
-        System.out.println("-----rewrite");
-        writeTo(root, true, cfg2);
-        CfgSchema cfg3 = readFrom(root, true);
-
-        System.out.println(cfg2.items().size());
-        System.out.println(cfg2.equals(cfg3));
-
-        SchemaErrs fullErr = cfg2.resolve();
-        fullErr.print();
-
-        System.out.println("-----filtered by client");
-        SchemaErrs clientErr = SchemaErrs.of();
-        CfgSchema clientCfg = new CfgSchemaFilterByTag(cfg2, "client", clientErr).filter();
-        new CfgSchemaResolver(clientCfg, clientErr).resolve();
-        clientErr.print();
     }
 
 }
