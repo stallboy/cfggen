@@ -3,10 +3,7 @@ package configgen;
 import configgen.data.CfgSchemaAlignToData;
 import configgen.data.CfgData;
 import configgen.data.CfgDataReader;
-import configgen.schema.CfgSchema;
-import configgen.schema.CfgSchemaFilterByTag;
-import configgen.schema.CfgSchemaResolver;
-import configgen.schema.SchemaErrs;
+import configgen.schema.*;
 import configgen.schema.cfg.Cfgs;
 
 import java.nio.file.Path;
@@ -20,6 +17,8 @@ public class Main {
         CfgSchema schema = Cfgs.readFrom(Path.of("config.cfg"), true);
         SchemaErrs errs = schema.resolve();
         errs.print();
+        Stat stat = new SchemaStat(schema);
+        stat.print();
 
         System.out.println("-----read data");
         CfgData data = CfgDataReader.INSTANCE.readCfgData(Path.of("."), schema, 2);

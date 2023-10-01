@@ -1,231 +1,283 @@
 package configgen.schema;
 
-public class SchemaStat {
-    private int structCnt;
-    private int interfaceCnt;
-    private int implCnt;
-    private int tableCnt;
-    private int fieldCnt;
+import java.util.List;
 
-    private int tBoolCnt;
-    private int tIntCnt;
-    private int tLongCnt;
-    private int tFloatCnt;
-    private int tStrCnt;
-    private int tTextCnt;
-    private int tResCnt;
-    private int tListCnt;
-    private int tMapCnt;
-    private int tStructRefCnt;
+import static configgen.schema.FieldFormat.*;
+import static configgen.schema.FieldType.*;
+import static configgen.schema.FieldType.Primitive.*;
 
-    private int fPackCnt;
-    private int fSepCnt;
-    private int fFixCnt;
-    private int fBlockCnt;
+public class SchemaStat implements Stat {
+    private int structCount;
+    private int interfaceCount;
+    private int implCount;
+    private int tableCount;
+    private int fieldCount;
 
-    private int eEntryCnt;
-    private int eEnumCnt;
+    private int tBoolCount;
+    private int tIntCount;
+    private int tLongCount;
+    private int tFloatCount;
+    private int tStrCount;
+    private int tTextCount;
+    private int tResCount;
+    private int tListCount;
+    private int tMapCount;
+    private int tStructRefCount;
 
-    private int refCnt;
-    private int listRefCnt;
-    private int listItemRefCnt;
-    private int mapValueRefCnt;
-    private int structRefCnt;
+    private int fPackCount;
+    private int fSepCount;
+    private int fFixCount;
+    private int fBlockCount;
 
-    private int uniqKeyCnt;
-    private int multiKeyCnt;
-    private int multi2KeyCnt;
-    private int multi3KeyCnt;
+    private int eEntryCount;
+    private int eEnumCount;
+
+    private int refCount;
+    private int refUniqKeyCount;
+    private int refListCount;
+    private int refByStructCount;
+    private int refByListItemCount;
+    private int refByMapValueCount;
+
+    private int uniqKeyCount;
+    private int multi2KeyCount;
+    private int multi3KeyCount;
+    private int multiGt3KeyCount;
 
 
     public SchemaStat(CfgSchema cfg) {
         for (Nameable item : cfg.items()) {
             switch (item) {
-                case InterfaceSchema interfaceSchema -> {
-                    interfaceCnt++;
-                    parseInterface(interfaceSchema);
+                case InterfaceSchema sInterface -> {
+                    interfaceCount++;
+                    parseInterface(sInterface);
 
                 }
-                case StructSchema structSchema -> {
-                    structCnt++;
-                    parseStruct(structSchema);
+                case StructSchema struct -> {
+                    structCount++;
+                    parseStruct(struct);
                 }
-                case TableSchema tableSchema -> {
-                    tableCnt++;
-                    parseTable(tableSchema);
+                case TableSchema table -> {
+                    tableCount++;
+                    parseTable(table);
                 }
             }
         }
     }
 
-    private void parseTable(TableSchema tableSchema) {
+    private void parseTable(TableSchema table) {
+        parseStructural(table);
+        switch (table.entry()) {
+            case EntryType.ENo.NO -> {
+            }
+            case EntryType.EEntry _ -> eEntryCount++;
+            case EntryType.EEnum _ -> eEnumCount++;
+        }
 
-    }
-
-    private void parseStruct(StructSchema structSchema) {
-
-    }
-
-    private void parseInterface(InterfaceSchema sInterface){
-        for (StructSchema impl : sInterface.impls()) {
-            implCnt++;
-
+        parseKey(table.primaryKey());
+        for (KeySchema uk : table.uniqueKeys()) {
+            uniqKeyCount++;
+            parseKey(uk);
         }
     }
 
-    public int structCnt() {
-        return structCnt;
+    private void parseKey(KeySchema key) {
+        switch (key.name().size()) {
+            case 1 -> {
+            }
+            case 2 -> multi2KeyCount++;
+            case 3 -> multi3KeyCount++;
+            default -> multiGt3KeyCount++;
+        }
     }
 
-    public int interfaceCnt() {
-        return interfaceCnt;
+    private void parseStruct(StructSchema struct) {
+        parseStructural(struct);
+        switch (struct.fmt()) {
+            case AutoOrPack.PACK -> fPackCount++;
+            case Sep _ -> fSepCount++;
+            default -> {
+            }
+        }
     }
 
-    public int implCnt() {
-        return implCnt;
+    private void parseInterface(InterfaceSchema sInterface) {
+        for (StructSchema impl : sInterface.impls()) {
+            implCount++;
+            parseStruct(impl);
+        }
     }
 
-    public int tableCnt() {
-        return tableCnt;
+    private void parseStructural(Structural s) {
+        for (FieldSchema field : s.fields()) {
+            fieldCount++;
+            switch (field.type()) {
+                case BOOL -> tBoolCount++;
+                case INT -> tIntCount++;
+                case LONG -> tLongCount++;
+                case FLOAT -> tFloatCount++;
+                case Primitive.STR -> tStrCount++;
+                case TEXT -> tTextCount++;
+                case RES -> tResCount++;
+                case StructRef _ -> tStructRefCount++;
+                case FList _ -> tListCount++;
+                case FMap _ -> tMapCount++;
+            }
+            switch (field.fmt()) {
+                case AutoOrPack.PACK -> fPackCount++;
+                case Sep _ -> fSepCount++;
+                case Fix _ -> fFixCount++;
+                case Block _ -> fBlockCount++;
+                case AutoOrPack.AUTO -> {
+                }
+            }
+        }
+
+        for (ForeignKeySchema fk : s.foreignKeys()) {
+            refCount++;
+            switch (fk.refKey()) {
+                case RefKey.RefPrimary _ -> {
+                }
+                case RefKey.RefUniq _ -> refUniqKeyCount++;
+                case RefKey.RefList _ -> refListCount++;
+            }
+
+            List<FieldSchema> fs = fk.key().obj();
+            if (fs.size() == 1) {
+                FieldSchema f = fs.get(0);
+                switch (f.type()) {
+                    case StructRef _ -> refByStructCount++;
+                    case FList _ -> refByListItemCount++;
+                    case FMap _ -> refByMapValueCount++;
+                    default -> {
+                    }
+                }
+            }
+        }
     }
 
-    public int fieldCnt() {
-        return fieldCnt;
+    public int structCount() {
+        return structCount;
     }
 
-    public int tBoolCnt() {
-        return tBoolCnt;
+    public int interfaceCount() {
+        return interfaceCount;
     }
 
-    public int tIntCnt() {
-        return tIntCnt;
+    public int implCount() {
+        return implCount;
     }
 
-    public int tLongCnt() {
-        return tLongCnt;
+    public int tableCount() {
+        return tableCount;
     }
 
-    public int tFloatCnt() {
-        return tFloatCnt;
+    public int fieldCount() {
+        return fieldCount;
     }
 
-    public int tStrCnt() {
-        return tStrCnt;
+    public int tBoolCount() {
+        return tBoolCount;
     }
 
-    public int tTextCnt() {
-        return tTextCnt;
+    public int tIntCount() {
+        return tIntCount;
     }
 
-    public int tResCnt() {
-        return tResCnt;
+    public int tLongCount() {
+        return tLongCount;
     }
 
-    public int tListCnt() {
-        return tListCnt;
+    public int tFloatCount() {
+        return tFloatCount;
     }
 
-    public int tMapCnt() {
-        return tMapCnt;
+    public int tStrCount() {
+        return tStrCount;
     }
 
-    public int tStructRefCnt() {
-        return tStructRefCnt;
+    public int tTextCount() {
+        return tTextCount;
     }
 
-    public int fPackCnt() {
-        return fPackCnt;
+    public int tResCount() {
+        return tResCount;
     }
 
-    public int fSepCnt() {
-        return fSepCnt;
+    public int tListCount() {
+        return tListCount;
     }
 
-    public int fFixCnt() {
-        return fFixCnt;
+    public int tMapCount() {
+        return tMapCount;
     }
 
-    public int fBlockCnt() {
-        return fBlockCnt;
+    public int tStructRefCount() {
+        return tStructRefCount;
     }
 
-    public int eEntryCnt() {
-        return eEntryCnt;
+    public int fPackCount() {
+        return fPackCount;
     }
 
-    public int eEnumCnt() {
-        return eEnumCnt;
+    public int fSepCount() {
+        return fSepCount;
     }
 
-    public int refCnt() {
-        return refCnt;
+    public int fFixCount() {
+        return fFixCount;
     }
 
-    public int listRefCnt() {
-        return listRefCnt;
+    public int fBlockCount() {
+        return fBlockCount;
     }
 
-    public int listItemRefCnt() {
-        return listItemRefCnt;
+    public int eEntryCount() {
+        return eEntryCount;
     }
 
-    public int mapValueRefCnt() {
-        return mapValueRefCnt;
+    public int eEnumCount() {
+        return eEnumCount;
     }
 
-    public int structRefCnt() {
-        return structRefCnt;
+    public int refCount() {
+        return refCount;
     }
 
-    public int uniqKeyCnt() {
-        return uniqKeyCnt;
+    public int refUniqKeyCount() {
+        return refUniqKeyCount;
     }
 
-    public int multiKeyCnt() {
-        return multiKeyCnt;
+    public int refListCount() {
+        return refListCount;
     }
 
-    public int multi2KeyCnt() {
-        return multi2KeyCnt;
+    public int refByStructCount() {
+        return refByStructCount;
     }
 
-    public int multi3KeyCnt() {
-        return multi3KeyCnt;
+    public int refByListItemCount() {
+        return refByListItemCount;
     }
 
-    @Override
-    public String toString() {
-        return "SchemaStat{" +
-                "structCnt=" + structCnt +
-                ", interfaceCnt=" + interfaceCnt +
-                ", implCnt=" + implCnt +
-                ", tableCnt=" + tableCnt +
-                ", fieldCnt=" + fieldCnt +
-                ", tBoolCnt=" + tBoolCnt +
-                ", tIntCnt=" + tIntCnt +
-                ", tLongCnt=" + tLongCnt +
-                ", tFloatCnt=" + tFloatCnt +
-                ", tStrCnt=" + tStrCnt +
-                ", tTextCnt=" + tTextCnt +
-                ", tResCnt=" + tResCnt +
-                ", tListCnt=" + tListCnt +
-                ", tMapCnt=" + tMapCnt +
-                ", tStructRefCnt=" + tStructRefCnt +
-                ", fPackCnt=" + fPackCnt +
-                ", fSepCnt=" + fSepCnt +
-                ", fFixCnt=" + fFixCnt +
-                ", fBlockCnt=" + fBlockCnt +
-                ", eEntryCnt=" + eEntryCnt +
-                ", eEnumCnt=" + eEnumCnt +
-                ", refCnt=" + refCnt +
-                ", listRefCnt=" + listRefCnt +
-                ", listItemRefCnt=" + listItemRefCnt +
-                ", mapValueRefCnt=" + mapValueRefCnt +
-                ", structRefCnt=" + structRefCnt +
-                ", uniqKeyCnt=" + uniqKeyCnt +
-                ", multiKeyCnt=" + multiKeyCnt +
-                ", multi2KeyCnt=" + multi2KeyCnt +
-                ", multi3KeyCnt=" + multi3KeyCnt +
-                '}';
+    public int refByMapValueCount() {
+        return refByMapValueCount;
     }
+
+    public int uniqKeyCount() {
+        return uniqKeyCount;
+    }
+
+    public int multi2KeyCount() {
+        return multi2KeyCount;
+    }
+
+    public int multi3KeyCount() {
+        return multi3KeyCount;
+    }
+
+    public int multiGt3KeyCount() {
+        return multiGt3KeyCount;
+    }
+
 }

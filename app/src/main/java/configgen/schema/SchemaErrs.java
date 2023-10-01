@@ -25,11 +25,11 @@ public record SchemaErrs(List<Err> errs,
     public void print() {
         System.out.println(STR. "warnings \{ warns.size() }:" );
         for (Warn warn : warns) {
-            System.out.println(warn);
+            System.out.println("\t" + warn);
         }
         System.out.println(STR. "errors \{ errs.size() }:" );
         for (Err err : errs) {
-            System.out.println(err);
+            System.out.println("\t" + err);
         }
     }
 

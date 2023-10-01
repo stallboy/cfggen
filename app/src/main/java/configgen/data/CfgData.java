@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Map;
 
 
+/**
+ * 数据模型
+ */
 public record CfgData(Map<String, DTable> tables,
                       DataStat stat) {
 
@@ -29,7 +32,6 @@ public record CfgData(Map<String, DTable> tables,
                          String sheetName,
                          int row) {
     }
-
 
     public record DRawSheet(String fileName,
                             String sheetName,  // empty when file is csv

@@ -10,12 +10,11 @@ import static configgen.data.CfgData.*;
 
 final class CellParser {
 
-    static void parse(CfgData.DTable table, CfgSchema cfgSchema, int headRow) {
-        boolean isColumnMode = HeadParser.isColumnMode(table, cfgSchema);
-        parse(table, isColumnMode, headRow);
+    static void parse(CfgData.DTable table, DataStat stat, CfgSchema cfgSchema, int headRow) {
+        parse(table, stat, HeadParser.isColumnMode(table, cfgSchema), headRow);
     }
 
-    static void parse(CfgData.DTable table, boolean isColumnMode, int headRow) {
+    static void parse(CfgData.DTable table, DataStat stat, boolean isColumnMode, int headRow) {
         List<DCell[]> result = null;
         if (isColumnMode) {
             for (DRawSheet sheet : table.rawSheets()) {
@@ -29,6 +28,7 @@ final class CellParser {
                     for (int logicRowIdx = headRow; logicRowIdx < maxRow; logicRowIdx++) {
                         String d = rawRowFirst.cell(logicRowIdx);
                         if (d.startsWith("#")) {
+                            stat.ignoredRowCount++;
                             continue;
                         }
 
@@ -57,6 +57,7 @@ final class CellParser {
                 for (int rowIndex = headRow; rowIndex < sheet.rows().size(); rowIndex++) {
                     DRawRow rawRow = sheet.rows().get(rowIndex);
                     if (rawRow.cell(0).startsWith("#")) {
+                        stat.ignoredRowCount++;
                         continue;
                     }
 
@@ -75,7 +76,10 @@ final class CellParser {
             }
         }
 
-        if (result != null) {
+        if (result == null || result.isEmpty()) {
+            stat.emptyTableCount++;
+        } else {
+            stat.rowCount = result.size();
             table.rows().clear();
             table.rows().addAll(result);
         }

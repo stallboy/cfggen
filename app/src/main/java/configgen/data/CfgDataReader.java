@@ -59,12 +59,13 @@ public enum CfgDataReader {
                 DataUtil.FileFmt fmt = DataUtil.getFileFormat(path);
                 switch (fmt) {
                     case CSV -> {
-                        stat.csvCount++;
                         DataUtil.TableNameIndex ti = DataUtil.getTableNameIndex(relativePath);
                         if (ti == null) {
                             Logger.verbose(STR. "\{ path } 名字不符合规范，ignore！" );
+                            stat.ignoredCsvCount++;
                             return FileVisitResult.CONTINUE;
                         } else {
+                            stat.csvCount++;
                             tasks.add(() -> readCsvByFastCsv(path, relativePath, ti));
                         }
                     }
@@ -95,20 +96,23 @@ public enum CfgDataReader {
         }
 
         Logger.mm("start readCfgData parse");
-        List<Callable<Boolean>> parseTasks = new ArrayList<>();
+        List<Callable<DataStat>> parseTasks = new ArrayList<>();
         for (CfgData.DTable table : data.tables().values()) {
             parseTasks.add(() -> {
-                HeadParser.parse(table, nullableCfgSchema);
-                CellParser.parse(table, nullableCfgSchema, headRow);
-                return true;
+                DataStat tStat = new DataStat();
+                HeadParser.parse(table, tStat, nullableCfgSchema);
+                CellParser.parse(table, tStat, nullableCfgSchema, headRow);
+                return tStat;
             });
         }
-        List<Future<Boolean>> parseFutures = executor.invokeAll(parseTasks);
-        for (Future<Boolean> future : parseFutures) {
-            future.get();
+        List<Future<DataStat>> parseFutures = executor.invokeAll(parseTasks);
+        for (Future<DataStat> future : parseFutures) {
+            DataStat tStat = future.get();
+            stat.merge(tStat);
         }
         Logger.mm("end readCfgData");
 
+        stat.tableCount = data.tables().size();
         executor.close();
         return data;
     }
@@ -137,19 +141,21 @@ public enum CfgDataReader {
 
     private Result readCsvByFastCsv(Path path, Path relativePath, DataUtil.TableNameIndex ti) throws IOException {
         int count = 0;
+        DataStat stat = new DataStat();
         List<DRawRow> rows = new ArrayList<>();
         try (CsvReader reader = CsvReader.builder().build(new UnicodeReader(Files.newInputStream(path), "GBK"))) {
             for (CsvRow csvRow : reader) {
+                stat.cellCsvCount += csvRow.getFieldCount();
                 if (count == 0) {
                     count = csvRow.getFieldCount();
                 } else if (count != csvRow.getFieldCount()) {
-                    Logger.verbose(STR. "\{ path } \{ csvRow.getOriginalLineNumber() } count \{ csvRow.getFieldCount() } not eq \{ count }" );
+                    Logger.verbose(STR. "\{ path } \{ csvRow.getOriginalLineNumber() } field count \{ csvRow.getFieldCount() } not eq \{ count }" );
                 }
                 rows.add(new DRawCsvRow(csvRow));
             }
         }
         DRawSheet sheet = new DRawSheet(relativePath.toString(), "", ti.index(), rows, new ArrayList<>());
-        return new Result(List.of(new OneSheetResult(ti.tableName(), sheet)), null);
+        return new Result(List.of(new OneSheetResult(ti.tableName(), sheet)), stat);
     }
 
     private Result readExcelByFastExcel(Path path, Path relativePath) throws IOException {
@@ -164,6 +170,7 @@ public enum CfgDataReader {
                 DataUtil.TableNameIndex ti = DataUtil.getTableNameIndex(relativePath, sheetName);
                 if (ti == null) {
                     Logger.verbose(STR. "\{ path } [\{ sheetName }] 名字不符合规范，ignore！" );
+                    stat.ignoredSheetCount++;
                     continue;
                 }
 
@@ -182,14 +189,33 @@ public enum CfgDataReader {
                     for (Cell cell : row) {
                         if (cell != null) {
                             CellType type = cell.getType();
-                            int old = stat.cellTypeCountMap.getOrDefault(type, 0);
-                            stat.cellTypeCountMap.put(type, old + 1);
+                            switch (type) {
+                                case NUMBER -> {
+                                    stat.cellNumberCount++;
+                                }
+                                case STRING -> {
+                                    stat.cellStrCount++;
+                                }
+                                case FORMULA -> {
+                                    stat.cellFormulaCount++;
+                                }
+                                case ERROR -> {
+                                    stat.cellErrCount++;
+                                }
+                                case BOOLEAN -> {
+                                    stat.cellBoolCount++;
+                                }
+                                case EMPTY -> {
+                                    stat.cellEmptyCount++;
+                                }
+                            }
+
                             if (type == CellType.FORMULA) {
                                 formula++;
                                 // Logger.verbose(cell.getAddress() + ": formula=" + cell.getFormula() + ", text=" + cell.getText());
                             }
                         } else {
-                            stat.nullCellCount++;
+                            stat.cellNullCount++;
                         }
                     }
                 }

@@ -11,9 +11,8 @@ import static configgen.data.CfgData.DTable;
 import static configgen.data.CfgData.*;
 
 final class HeadParser {
-    static void parse(DTable table, CfgSchema cfgSchema) {
-        boolean isColumnMode = isColumnMode(table, cfgSchema);
-        parse(table, isColumnMode);
+    static void parse(DTable table, DataStat stat, CfgSchema cfgSchema) {
+        parse(table, stat, isColumnMode(table, cfgSchema));
     }
 
     static boolean isColumnMode(DTable table, CfgSchema cfgSchema) {
@@ -29,7 +28,7 @@ final class HeadParser {
         return isColumnMode;
     }
 
-    static void parse(DTable table, boolean isColumnMode) {
+    static void parse(DTable table, DataStat stat,  boolean isColumnMode) {
         List<DField> header = null;
         List<String> names = null;
         DRawSheet headerSheet = null;
@@ -39,7 +38,7 @@ final class HeadParser {
         for (DRawSheet sheet : table.rawSheets()) {
             List<String> comments = getLogicRow(sheet, 0, isColumnMode);
             List<String> curNames = getLogicRow(sheet, 1, isColumnMode);
-            List<DField> h = parse(sheet, comments, curNames);
+            List<DField> h = parse(sheet, stat, comments, curNames);
 
             if (header == null) {
                 names = curNames;
@@ -74,19 +73,22 @@ final class HeadParser {
         return result;
     }
 
-    static List<DField> parse(DRawSheet sheet, List<String> comments, List<String> names) {
+    static List<DField> parse(DRawSheet sheet, DataStat stat, List<String> comments, List<String> names) {
         List<DField> fields = new ArrayList<>();
         int size = names.size();
         List<Integer> fieldIndices = new ArrayList<>();
         for (int i = 0; i < size; i++) {
             String name = names.get(i);
             if (name == null) {
+                stat.ignoredColumnCount++;
                 continue;
             }
             name = getColumnName(name);
             if (name.isEmpty()) {
+                stat.ignoredColumnCount++;
                 continue;
             }
+            stat.columnCount++;
 
             String comment = "";
             if (i < comments.size()) {

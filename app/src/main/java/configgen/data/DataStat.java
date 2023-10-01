@@ -1,16 +1,33 @@
 package configgen.data;
 
-import org.dhatim.fastexcel.reader.CellType;
+import configgen.schema.Stat;
 
-import java.util.HashMap;
-import java.util.Map;
-
-public class DataStat {
+public class DataStat implements Stat {
+    int tableCount;
     int csvCount;
     int excelCount;
     int sheetCount;
-    int nullCellCount;
-    Map<CellType, Integer> cellTypeCountMap = new HashMap<>();
+    int rowCount;
+    int columnCount;
+
+    int emptyTableCount;
+    int ignoredSheetCount;
+    int ignoredCsvCount;
+    int ignoredColumnCount;
+    int ignoredRowCount;
+
+    int cellCsvCount;
+    int cellNumberCount;
+    int cellStrCount;
+    int cellBoolCount;
+    int cellEmptyCount;
+    int cellNullCount;
+    int cellFormulaCount;
+    int cellErrCount;
+
+    public int tableCount() {
+        return tableCount;
+    }
 
     public int csvCount() {
         return csvCount;
@@ -24,35 +41,67 @@ public class DataStat {
         return sheetCount;
     }
 
-    public int nullCellCount() {
-        return nullCellCount;
+    public int rowCount() {
+        return rowCount;
     }
 
-    public Map<CellType, Integer> cellTypeCountMap() {
-        return cellTypeCountMap;
+    public int columnCount() {
+        return columnCount;
     }
 
-
-    void merge(DataStat s) {
-        nullCellCount += s.nullCellCount;
-        csvCount += s.csvCount;
-        excelCount += s.excelCount;
-        sheetCount += s.sheetCount;
-
-        for (Map.Entry<CellType, Integer> e : s.cellTypeCountMap.entrySet()) {
-            CellType t = e.getKey();
-            int old = cellTypeCountMap.getOrDefault(t, 0);
-            cellTypeCountMap.put(t, old + e.getValue());
-        }
+    public int emptyTableCount() {
+        return emptyTableCount;
     }
 
-    public void print() {
-        for (Map.Entry<CellType, Integer> entry : cellTypeCountMap.entrySet()) {
-            System.out.println(STR. "\{ entry.getKey().toString() }  \{ entry.getValue() }" );
-        }
-        System.out.println(STR. "null  \{ nullCellCount }" );
-        System.out.println(STR. "csv   \{ csvCount }" );
-        System.out.println(STR. "excel \{ excelCount }" );
-        System.out.println(STR. "sheet \{ sheetCount }" );
+    public int ignoredSheetCount() {
+        return ignoredSheetCount;
+    }
+
+    public int ignoredCsvCount() {
+        return ignoredCsvCount;
+    }
+
+    public int ignoredColumnCount() {
+        return ignoredColumnCount;
+    }
+
+    public int ignoredRowCount() {
+        return ignoredRowCount;
+    }
+
+    public int cellCsvCount() {
+        return cellCsvCount;
+    }
+
+    public int cellNumberCount() {
+        return cellNumberCount;
+    }
+
+    public int cellStrCount() {
+        return cellStrCount;
+    }
+
+    public int cellBoolCount() {
+        return cellBoolCount;
+    }
+
+    public int cellEmptyCount() {
+        return cellEmptyCount;
+    }
+
+    public int cellNullCount() {
+        return cellNullCount;
+    }
+
+    public int cellFormulaCount() {
+        return cellFormulaCount;
+    }
+
+    public int cellErrCount() {
+        return cellErrCount;
+    }
+
+    public static void main(String[] args) {
+        new DataStat().print();
     }
 }
