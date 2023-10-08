@@ -12,28 +12,32 @@ public class Main {
     public static void main(String[] args) {
         Logger.enableVerbose();
 //        Logger.enableMmGc();
+        System.out.println("-----xml to cfg-----");
+        xmlToCfg();
 
-        System.out.println("-----read schema");
+        System.out.println("-----read schema-----");
         CfgSchema schema = Cfgs.readFrom(Path.of("config.cfg"), true);
         SchemaErrs errs = schema.resolve();
         errs.print();
         Stat stat = new SchemaStat(schema);
         stat.print();
 
-        System.out.println("-----read data");
+        System.out.println();
+        System.out.println("-----read data-----");
         CfgData data = CfgDataReader.INSTANCE.readCfgData(Path.of("."), schema, 2);
         data.stat().print();
-        System.out.println("table\t" + data.tables().size());
+        data.print();
 
-
-        System.out.println("-----align to data");
+        System.out.println();
+        System.out.println("-----align to data-----");
         CfgSchema alignedSchema = CfgSchemaAlignToData.INSTANCE.align(schema, data);
         System.out.println(schema.equals(alignedSchema));
 //        schema.printDiff(alignedSchema);
         SchemaErrs alignErr = alignedSchema.resolve();
         alignErr.print();
 
-        System.out.println("-----filtered by client");
+        System.out.println();
+        System.out.println("-----filtered by client-----");
         SchemaErrs clientErr = SchemaErrs.of();
         CfgSchema clientSchema = new CfgSchemaFilterByTag(alignedSchema, "client", clientErr).filter();
         new CfgSchemaResolver(clientSchema, clientErr).resolve();

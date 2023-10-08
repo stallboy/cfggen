@@ -28,7 +28,7 @@ final class HeadParser {
         return isColumnMode;
     }
 
-    static void parse(DTable table, DataStat stat,  boolean isColumnMode) {
+    static void parse(DTable table, DataStat stat, boolean isColumnMode) {
         List<DField> header = null;
         List<String> names = null;
         DRawSheet headerSheet = null;
@@ -70,7 +70,19 @@ final class HeadParser {
                 }
             }
         }
-        return result;
+
+        //trim掉空的后缀
+        int i = result.size() - 1;
+        for (; i >= 0; i--) {
+            if (!result.get(i).trim().isEmpty()) {
+                break;
+            }
+        }
+        if (i == result.size() - 1) {
+            return result;
+        } else {
+            return result.subList(0, i + 1);
+        }
     }
 
     static List<DField> parse(DRawSheet sheet, DataStat stat, List<String> comments, List<String> names) {
