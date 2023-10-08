@@ -194,7 +194,7 @@ public class CfgSchemaFilterByTag {
 
     private void recordForeignKeyIfOk(List<ForeignKeySchema> fks, ForeignKeySchema fk,
                                       Structural structural, Map<String, TableRule> phase1TableMap) {
-        RefErr err = isForeignKeyIn(fk, phase1TableMap);
+        RefErr err = isForeignKeyIn(structural, fk, phase1TableMap);
         switch (err) {
             case OK -> fks.add(fk.copy());
             case TABLE_NOT_FOUND -> errs.addWarn(new FilterRefIgnoredByRefTableNotFound(
@@ -210,8 +210,20 @@ public class CfgSchemaFilterByTag {
         KEY_NOT_FOUND
     }
 
-    private RefErr isForeignKeyIn(ForeignKeySchema fk, Map<String, TableRule> phase1TableMap) {
-        TableRule refTable = phase1TableMap.get(fk.refTable());
+    private RefErr isForeignKeyIn(Structural structural, ForeignKeySchema fk, Map<String, TableRule> phase1TableMap) {
+        TableRule refTable = null;
+        // 本模块找
+        String namespace = structural.namespace();
+        if (!namespace.isEmpty()) {
+            String fullName = Nameable.makeName(namespace, fk.refTable());
+            refTable = phase1TableMap.get(fullName);
+        }
+
+        // 全局找
+        if (refTable == null){
+            refTable = phase1TableMap.get(fk.refTable());
+        }
+
         if (refTable == null) {
             return RefErr.TABLE_NOT_FOUND;
         }

@@ -3,6 +3,8 @@ package configgen.schema;
 import java.util.List;
 import java.util.Objects;
 
+import static configgen.schema.FieldFormat.AutoOrPack.*;
+
 public record TableSchema(String name,
                           KeySchema primaryKey,
                           EntryType entry,
@@ -33,5 +35,10 @@ public record TableSchema(String name,
             }
         }
         return null;
+    }
+
+    @Override
+    public FieldFormat fmt() {
+        return AUTO;
     }
 }

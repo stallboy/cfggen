@@ -111,6 +111,14 @@ public record SchemaErrs(List<Err> errs,
                                 String errType) implements Err {
     }
 
+    /**
+     * 用table逻辑第一列格子是否为空来判断这行是属于上一个record的block，还是新的一格record
+     * 所以要保证新record的第一列必须填。
+     * 这里我们约定有block的，primary key所在列必须包含第一列，primary key总是要填的吧。
+     */
+    record BlockTableFirstFieldNotInPrimaryKey(String table) implements Err {
+    }
+
     record KeyNotFound(String structural,
                        String key) implements Err {
     }

@@ -1,8 +1,6 @@
 package configgen.value;
 
 import configgen.Node;
-import configgen.data.AllData;
-import configgen.define.AllDefine;
 import configgen.gen.Context;
 import configgen.type.AllType;
 import configgen.type.TTable;

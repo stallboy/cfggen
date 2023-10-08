@@ -42,7 +42,7 @@ public final class CfgSchemaResolver {
     /**
      * 如果所有的cfg都配置在一个文件里，那么不需要检测
      * 如果配在每个文件夹下，虽然代码可以按从interface scope -> local scope -> global scope的顺序来解析名字。
-     * 但为了清晰性，我们一开始叫避免这种可能的混乱。
+     * 但为了清晰性，我们一开始就避免这种可能的混乱。
      */
     private void step0_checkNameConflict() {
         Set<List<String>> nameSet = new HashSet<>();
@@ -280,6 +280,12 @@ public final class CfgSchemaResolver {
                 checkPrimaryOrUniqKey(key);
             }
         }
+        if (HasBlock.hasBlock(table)) {
+            String firstField = table.fields().get(0).name();
+            if (!primaryKey.name().contains(firstField)) {
+                errs.addErr(new BlockTableFirstFieldNotInPrimaryKey(table.name()));
+            }
+        }
     }
 
     private void resolveEntry(TableSchema table, EntryType entry) {
@@ -494,6 +500,7 @@ public final class CfgSchemaResolver {
         return ok;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private boolean checkSimpleTypeMatch(FieldType local, FieldType remote) {
         switch (local) {
             case Primitive primitive -> {

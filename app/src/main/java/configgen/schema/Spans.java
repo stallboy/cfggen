@@ -1,10 +1,32 @@
 package configgen.schema;
 
+import java.util.OptionalInt;
+
 import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
 import static configgen.schema.FieldType.*;
 
 public class Spans {
+    public static int span(Nameable nameable) {
+        if (nameable.fmt() == PACK || nameable.fmt() instanceof FieldFormat.Sep) {
+            return 1;
+        }
+
+        switch (nameable) {
+            case InterfaceSchema interfaceSchema -> {
+                OptionalInt max = interfaceSchema.impls().stream().mapToInt(Spans::span).max();
+                if (max.isPresent()) {
+                    return max.getAsInt() + 1;
+                } else {
+                    return 1;
+                }
+            }
+            case Structural structural -> {
+                return structural.fields().stream().mapToInt(Spans::span).sum();
+            }
+        }
+    }
+
     public static int span(FieldSchema field) {
         switch (field.fmt()) {
             case PACK:

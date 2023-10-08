@@ -3,19 +3,22 @@ package configgen.data;
 import configgen.schema.CfgSchema;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static configgen.data.CfgData.*;
 
 final class CellParser {
 
+    /**
+     * 无head，去空行，去注释行，去注释列
+     * 返回的是规整的相同列数的row
+     */
     static void parse(CfgData.DTable table, DataStat stat, CfgSchema cfgSchema, int headRow) {
         parse(table, stat, HeadParser.isColumnMode(table, cfgSchema), headRow);
     }
 
     static void parse(CfgData.DTable table, DataStat stat, boolean isColumnMode, int headRow) {
-        List<DCell[]> result = null;
+        List<List<DCell>> result = null;
         if (isColumnMode) {
             for (DRawSheet sheet : table.rawSheets()) {
                 int maxRow = sheet.rows().stream().mapToInt(DRawRow::count).max().orElse(0);
@@ -32,17 +35,17 @@ final class CellParser {
                             continue;
                         }
 
-                        DCell[] logicRow = new DCell[sheet.fieldIndices().size()];
+                        List<DCell> logicRow = new ArrayList<>(sheet.fieldIndices().size());
                         DRowId logicRowId = new DRowId(sheet.fileName(), sheet.sheetName(), logicRowIdx);
-                        int i = 0;
                         for (int col : sheet.fieldIndices()) {
                             DRawRow rawRow = sheet.rows().get(col);
                             String val = rawRow.cell(logicRowIdx);
-                            logicRow[i] = new DCell(val, logicRowId, col);
-                            i++;
+                            logicRow.add(new DCell(val, logicRowId, col));
                         }
                         if (isLogicRowNotAllEmpty(logicRow)) {
                             result.add(logicRow);
+                        } else {
+                            stat.ignoredRowCount++;
                         }
                     }
                 }
@@ -61,15 +64,15 @@ final class CellParser {
                         continue;
                     }
 
-                    DCell[] logicRow = new DCell[sheet.fieldIndices().size()];
+                    List<DCell> logicRow = new ArrayList<>(sheet.fieldIndices().size());
                     DRowId logicRowId = new DRowId(sheet.fileName(), sheet.sheetName(), rowIndex);
-                    int i = 0;
                     for (int col : sheet.fieldIndices()) {
-                        logicRow[i] = new DCell(rawRow.cell(col), logicRowId, col);
-                        i++;
+                        logicRow.add(new DCell(rawRow.cell(col), logicRowId, col));
                     }
                     if (isLogicRowNotAllEmpty(logicRow)) {
                         result.add(logicRow);
+                    } else {
+                        stat.ignoredRowCount++;
                     }
                 }
                 sheet.rows().clear();
@@ -85,8 +88,8 @@ final class CellParser {
         }
     }
 
-    static boolean isLogicRowNotAllEmpty(DCell[] row) {
-        return Arrays.stream(row).anyMatch((c) -> !c.value().isEmpty());
+    static boolean isLogicRowNotAllEmpty(List<DCell> row) {
+        return row.stream().anyMatch((c) -> !c.value().isEmpty());
     }
 
 
