@@ -2,15 +2,28 @@ package configgen.value;
 
 import configgen.schema.FieldType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static configgen.data.CfgData.DCell;
 
 public record ValueErrs(List<VErr> errs) {
 
+    public static ValueErrs of() {
+        return new ValueErrs(new ArrayList<>());
+    }
+
     void addErr(VErr err) {
         errs.add(err);
     }
+
+    public void print() {
+        System.out.println(STR. "errors \{ errs.size() }:" );
+        for (VErr err : errs) {
+            System.out.println("\t" + err);
+        }
+    }
+
 
     public interface VErr {
     }

@@ -5,6 +5,9 @@ import configgen.data.CfgData;
 import configgen.data.CfgDataReader;
 import configgen.schema.*;
 import configgen.schema.cfg.Cfgs;
+import configgen.value.CfgValue;
+import configgen.value.CfgValueParser;
+import configgen.value.ValueErrs;
 
 import java.nio.file.Path;
 
@@ -12,8 +15,8 @@ public class Main {
     public static void main(String[] args) {
         Logger.enableVerbose();
 //        Logger.enableMmGc();
-        System.out.println("-----xml to cfg-----");
-        xmlToCfg();
+//        System.out.println("-----xml to cfg-----");
+//        xmlToCfg();
 
         System.out.println("-----read schema-----");
         CfgSchema schema = Cfgs.readFrom(Path.of("config.cfg"), true);
@@ -42,6 +45,16 @@ public class Main {
         CfgSchema clientSchema = new CfgSchemaFilterByTag(alignedSchema, "client", clientErr).filter();
         new CfgSchemaResolver(clientSchema, clientErr).resolve();
         clientErr.print();
+
+
+        System.out.println();
+        System.out.println("-----parse to client value-----");
+        ValueErrs clientValueErr = ValueErrs.of();
+
+        CfgValueParser cfgValueParser = new CfgValueParser(clientSchema, data, alignedSchema, clientValueErr);
+        CfgValue cfgValue = cfgValueParser.parseCfgValue();
+        clientValueErr.print();
+
     }
 
     public static void xmlToCfg() {

@@ -199,7 +199,9 @@ public enum CfgReader implements CfgSchemaReader {
     private SimpleType read_type_ele(Type_eleContext ctx) {
         TerminalNode tbase = ctx.TBASE();
         if (tbase != null) {
-            String text = tbase.getText();
+            String text = tbase.getText().toUpperCase();
+            if (text.equals("STR"))
+                return Primitive.STRING;
             return Primitive.valueOf(text.toUpperCase());
         } else {
             return new StructRef(read_ns_ident(ctx.ns_ident()));
