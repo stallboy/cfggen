@@ -1,7 +1,9 @@
 package configgen.data;
 
+import configgen.Logger;
 import configgen.schema.CfgSchema;
 import configgen.schema.TableSchema;
+import configgen.schema.cfg.CfgUtil;
 
 import java.util.ArrayList;
 import java.util.Comparator;

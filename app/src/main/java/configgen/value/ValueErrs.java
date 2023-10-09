@@ -22,8 +22,11 @@ public record ValueErrs(List<VErr> errs) {
         for (VErr err : errs) {
             System.out.println("\t" + err);
         }
-    }
 
+        if (!errs.isEmpty()){
+            throw new IllegalStateException("请修复value errors后再继续");
+        }
+    }
 
     public interface VErr {
     }

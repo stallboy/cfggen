@@ -4,19 +4,35 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 public class Logger {
-    private static boolean verboseEnabled = false;
-    private static boolean mmGcEnabled = false;
+    private static int verboseLevel = 0;
+    private static boolean profileGcEnabled = false;
+    private static boolean profileEnabled = false;
 
-    public static void enableMmGc() {
-        mmGcEnabled = true;
+
+    public static void enableProfileGc() {
+        profileGcEnabled = true;
     }
 
-    public static void enableVerbose() {
-        verboseEnabled = true;
+    public static void setVerboseLevel(int lvl) {
+        verboseLevel = lvl;
+    }
+
+    public static void enableProfile() {
+        profileEnabled = true;
+    }
+
+    public static int verboseLevel() {
+        return verboseLevel;
     }
 
     public static void verbose(String s) {
-        if (verboseEnabled) {
+        if (verboseLevel > 0) {
+            log(s);
+        }
+    }
+
+    public static void verbose2(String s) {
+        if (verboseLevel > 1) {
             log(s);
         }
     }
@@ -29,9 +45,9 @@ public class Logger {
         System.out.println(s);
     }
 
-    public static void mm(String step) {
-        if (verboseEnabled) {
-            if (mmGcEnabled){
+    public static void profile(String step) {
+        if (profileEnabled) {
+            if (profileGcEnabled) {
                 System.gc();
             }
             long memory = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024;

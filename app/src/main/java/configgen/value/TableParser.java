@@ -99,7 +99,7 @@ public class TableParser {
                     } else {
                         enumNames.add(e);
 
-                        if (pkIdx != 0) { //必须是int，这里是java生成需要
+                        if (pkIdx != -1) { //必须是int，这里是java生成需要
                             CfgValue.VInt vInt = (CfgValue.VInt) vStruct.values().get(pkIdx);
                             enumNameToIntegerValueMap.put(e, vInt.value());
                         }
@@ -305,7 +305,8 @@ public class TableParser {
                         return null;
                     }
 
-                    CfgValue.Value v = parseType(subField.type(), parsed, field.type(), field.fmt(),
+                    List<DCell> fieldCells = parsed.subList(startIdx, startIdx + expected);
+                    CfgValue.Value v = parseType(subField.type(), fieldCells, field.type(), field.fmt(),
                             isPack || field.fmt() == PACK, canBeEmpty, curRowIndex,
                             structural.name(), field.name());
                     values.add(v);
@@ -331,7 +332,7 @@ public class TableParser {
                 switch (primitive) {
                     case BOOL -> {
                         boolean v = str.equals("1") || str.equalsIgnoreCase("true");
-                        if (!boolStrSet.contains(str)) {
+                        if (!boolStrSet.contains(str.toLowerCase())) {
                             errs.addErr(new NotMatchFieldType(cell, nameable, field, type));
                         }
                         return new CfgValue.VBool(v, cell);
@@ -339,7 +340,7 @@ public class TableParser {
                     case INT -> {
                         int v = 0;
                         try {
-                            v = Integer.decode(str);
+                            v = str.isEmpty() ? 0 : Integer.decode(str);
                         } catch (Exception e) {
                             errs.addErr(new NotMatchFieldType(cell, nameable, field, type));
                         }
@@ -348,16 +349,16 @@ public class TableParser {
                     case LONG -> {
                         long v = 0;
                         try {
-                            v = Long.decode(str);
+                            v = str.isEmpty() ? 0 : Long.decode(str);
                         } catch (Exception e) {
                             errs.addErr(new NotMatchFieldType(cell, nameable, field, type));
                         }
                         return new CfgValue.VLong(v, cell);
                     }
                     case FLOAT -> {
-                        float v = 0;
+                        float v = 0f;
                         try {
-                            v = Float.parseFloat(str);
+                            v = str.isEmpty() ? 0f : Float.parseFloat(str);
                         } catch (Exception e) {
                             errs.addErr(new NotMatchFieldType(cell, nameable, field, type));
                         }
@@ -453,7 +454,7 @@ public class TableParser {
                             nameable, field);
 
                     CfgValue.Value old = valueMap.put(key, value);
-                    if (old == null) {
+                    if (old != null) {
                         errs.addErr(new MapKeyDuplicated(keyCells, nameable, field));
                     }
 
@@ -587,7 +588,7 @@ public class TableParser {
     }
 
 
-    private static final Set<String> boolStrSet = Set.of("false", "true", "False", "True", "1", "0", "");
+    private static final Set<String> boolStrSet = Set.of("false", "true", "1", "0", "");
 
     private void require(boolean cond) {
         if (!cond)

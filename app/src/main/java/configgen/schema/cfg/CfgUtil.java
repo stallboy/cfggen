@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class CfgUtil {
@@ -61,6 +62,12 @@ public class CfgUtil {
         }
 
         return p;
+    }
+
+    private static final Pattern identifierPattern = Pattern.compile("[a-zA-Z_][a-zA-Z0-9_]*");
+
+    public static boolean isIdentifier(String name) {
+        return identifierPattern.matcher(name).matches();
     }
 
 

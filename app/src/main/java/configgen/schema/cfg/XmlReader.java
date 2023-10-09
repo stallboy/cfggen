@@ -1,5 +1,6 @@
 package configgen.schema.cfg;
 
+import configgen.Logger;
 import configgen.schema.*;
 import configgen.schema.RefKey.RefList;
 import configgen.schema.RefKey.RefPrimary;
@@ -10,7 +11,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
@@ -160,9 +160,8 @@ public enum XmlReader implements CfgSchemaReader {
     private FieldSchema parseField(Element self) {
         Metadata meta = parseOwnToMetadata(self);
         String name = self.getAttribute("name").trim();
-        Pattern pattern = Pattern.compile("[a-zA-Z_][a-zA-Z0-9_]*");
-        if (!pattern.matcher(name).matches()) {
-            System.out.println(STR. "\{ name } not identifier, ignore!" );
+        if (!CfgUtil.isIdentifier(name)) {
+            Logger.log(STR. "\{ name } not identifier, ignore!" );
             return null;
         }
 

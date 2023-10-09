@@ -13,10 +13,10 @@ import java.nio.file.Path;
 
 public class Main {
     public static void main(String[] args) {
-        Logger.enableVerbose();
-//        Logger.enableMmGc();
-//        System.out.println("-----xml to cfg-----");
-//        xmlToCfg();
+        Logger.setVerboseLevel(1);
+        Logger.enableProfile();
+        System.out.println("-----xml to cfg-----");
+        xmlToCfg();
 
         System.out.println("-----read schema-----");
         CfgSchema schema = Cfgs.readFrom(Path.of("config.cfg"), true);
@@ -29,14 +29,19 @@ public class Main {
         System.out.println("-----read data-----");
         CfgData data = CfgDataReader.INSTANCE.readCfgData(Path.of("."), schema, 2);
         data.stat().print();
-        data.print();
+
+        if (Logger.verboseLevel() > 1) {
+            data.print();
+        }
 
         System.out.println();
         System.out.println("-----align to data-----");
-        CfgSchema alignedSchema = CfgSchemaAlignToData.INSTANCE.align(schema, data);
+        SchemaErrs alignErr = SchemaErrs.of();
+        CfgSchema alignedSchema = new CfgSchemaAlignToData(schema, data, alignErr).align();
         System.out.println(schema.equals(alignedSchema));
+        new CfgSchemaResolver(alignedSchema, alignErr).resolve();
 //        schema.printDiff(alignedSchema);
-        SchemaErrs alignErr = alignedSchema.resolve();
+        Logger.profile("end schema align to data");
         alignErr.print();
 
         System.out.println();
@@ -44,6 +49,7 @@ public class Main {
         SchemaErrs clientErr = SchemaErrs.of();
         CfgSchema clientSchema = new CfgSchemaFilterByTag(alignedSchema, "client", clientErr).filter();
         new CfgSchemaResolver(clientSchema, clientErr).resolve();
+        Logger.profile("end schema filter by client");
         clientErr.print();
 
 
@@ -53,12 +59,13 @@ public class Main {
 
         CfgValueParser cfgValueParser = new CfgValueParser(clientSchema, data, alignedSchema, clientValueErr);
         CfgValue cfgValue = cfgValueParser.parseCfgValue();
+        Logger.profile("end parse to cfg value");
         clientValueErr.print();
+
 
     }
 
     public static void xmlToCfg() {
-        Logger.enableVerbose();
         CfgSchema cfg = Cfgs.readFromXml(Path.of("config.xml"), true);
         Path root = Path.of("config.cfg");
         System.out.println("-----write");

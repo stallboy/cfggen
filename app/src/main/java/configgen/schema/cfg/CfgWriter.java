@@ -120,6 +120,7 @@ public class CfgWriter {
 
     static String typeStr(FieldType t) {
         return switch (t) {
+            case Primitive.STRING -> "str";
             case Primitive primitive -> primitive.name().toLowerCase();
             case StructRef structRef -> structRef.name();
             case FList fList -> STR. "list<\{ typeStr(fList.item()) }>" ;

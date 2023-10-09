@@ -144,11 +144,11 @@ public final class Main {
                     break;
 
                 case "-v":
-                    Logger.enableVerbose();
+                    Logger.setVerboseLevel(1);
                     break;
                 case "-v1":
-                    Logger.enableVerbose();
-                    Logger.enableMmGc();
+                    Logger.setVerboseLevel(1);
+                    Logger.enableProfileGc();
                     break;
                 case "-dump":
                     dump = true;
@@ -209,7 +209,7 @@ public final class Main {
             return;
         }
 
-        Logger.mm(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));
+        Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));
         Context ctx = new Context(Paths.get(datadir), encoding);
         ctx.setI18nOrLangSwitch(i18nfile, langSwitchDir, i18nencoding, i18ncrlfaslf);
         if (dump) {
@@ -236,7 +236,7 @@ public final class Main {
         }
 
         CachedFiles.finalExit();
-        Logger.mm("end");
+        Logger.profile("end");
     }
 
 

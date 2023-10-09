@@ -51,17 +51,17 @@ public class Context {
     private final UgcDefine ugcDefine;
 
     Context(Path dataDir, String encoding) {
-        Logger.mm("start");
+        Logger.profile("start");
         fullDefine = new AllDefine(dataDir, encoding);
-        Logger.mm("read xml done");
+        Logger.profile("read xml done");
         fullData = fullDefine.readData();
-        Logger.mm("read full data done");
+        Logger.profile("read full data done");
 
         fullDefine.autoFixFullDefineByData(fullData);
-        Logger.mm("auto fix xml by data done");
+        Logger.profile("auto fix xml by data done");
 
         fullDefine.verifyFullDefine();
-        Logger.mm("verify full xml done");
+        Logger.profile("verify full xml done");
 
 
         fullType = fullDefine.resolveFullTypeAndAttachToData(fullData);
@@ -126,20 +126,20 @@ public class Context {
 
         lastViewFilter = filter;
         AllType type = fullDefine.resolveType(filter);
-        Logger.mm("build all type done");
+        Logger.profile("build all type done");
 
         lastValue = make(type);
 
 
-        Logger.mm("verify " + filter.name());
+        Logger.profile("verify " + filter.name());
         return lastValue;
     }
 
     private AllValue make(AllType myType) {
         AllValue value = new AllValue(myType, this);
-        Logger.mm("make value done");
+        Logger.profile("make value done");
         value.verifyConstraint();
-        Logger.mm("verify value constraint done");
+        Logger.profile("verify value constraint done");
         return value;
     }
 }

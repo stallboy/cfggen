@@ -5,25 +5,31 @@ import configgen.schema.*;
 import configgen.schema.EntryType.EEntry;
 import configgen.schema.EntryType.EEnum;
 import configgen.schema.FieldType.Primitive;
+import configgen.schema.cfg.CfgUtil;
 import configgen.schema.cfg.Metas;
 
 import java.util.*;
-import java.util.regex.Pattern;
 
 import static configgen.data.CfgData.DField;
 import static configgen.schema.EntryType.ENo.NO;
 import static configgen.schema.FieldFormat.AutoOrPack;
 
-public enum CfgSchemaAlignToData {
-    INSTANCE;
+public class CfgSchemaAlignToData {
+    private final CfgSchema cfgSchema;
+    private final CfgData cfgData;
+    private final SchemaErrs errs;
+
+    public CfgSchemaAlignToData(CfgSchema cfgSchema, CfgData cfgData, SchemaErrs errs) {
+        this.cfgSchema = cfgSchema;
+        this.cfgData = cfgData;
+        this.errs = errs;
+    }
 
     /**
-     * @param cfgSchema 原始schema
-     * @param data 数据
-     * @return align到data后的cfgSchema，未resolve
+     * @return align到cfgData后的cfgSchema，未resolve
      */
-    public CfgSchema align(CfgSchema cfgSchema, CfgData data) {
-        TreeMap<String, CfgData.DTable> dataHeaders = new TreeMap<>(data.tables());
+    public CfgSchema align() {
+        TreeMap<String, CfgData.DTable> dataHeaders = new TreeMap<>(cfgData.tables());
         CfgSchema alignedCfg = CfgSchema.of();
         for (Nameable item : cfgSchema.items()) {
             switch (item) {
@@ -170,10 +176,7 @@ public enum CfgSchemaAlignToData {
             } else {
                 idx++;
 
-                Pattern pattern = Pattern.compile("[a-zA-Z_][a-zA-Z0-9_]*");
-                if (!pattern.matcher(name).matches()) {
-                    Logger.log(STR. "\{ table.name() }[\{ name }] not identifier, ignore!" );
-                } else {
+                if (CfgUtil.isIdentifier(name)) {
                     Metadata meta = Metadata.of();
                     if (!comment.isEmpty()) {
                         Metas.putComment(meta, comment);
@@ -181,6 +184,8 @@ public enum CfgSchemaAlignToData {
                     newField = new FieldSchema(name, Primitive.STRING, AutoOrPack.AUTO, meta);
                     Logger.log(STR. "\{ table.name() } new field: \{ name }" );
                     alignedFields.put(newField.name(), newField);
+                } else {
+                    errs.addErr(new SchemaErrs.DataHeadNameNotIdentifier(table.name(), name));
                 }
             }
         }

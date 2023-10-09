@@ -26,7 +26,6 @@ public class CfgSchema {
     public SchemaErrs resolve() {
         SchemaErrs errs = SchemaErrs.of();
         new CfgSchemaResolver(this, errs).resolve();
-        setResolved();
         return errs;
     }
 
