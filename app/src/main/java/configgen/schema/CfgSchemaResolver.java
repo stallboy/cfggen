@@ -246,7 +246,7 @@ public final class CfgSchemaResolver {
         if (!def.isEmpty()) {
             StructSchema defImpl = sInterface.findImpl(def);
             if (defImpl != null) {
-                sInterface.setDefaultImplStruct(defImpl);
+                sInterface.setNullableDefaultImplStruct(defImpl);
             } else {
                 errs.addErr(new DefaultImplNotFound(ctx(), def));
             }
@@ -293,7 +293,7 @@ public final class CfgSchemaResolver {
             String fn = entryBase.field();
             FieldSchema fs = table.findField(fn);
             if (fs != null) {
-                if (fs.type() == Primitive.STR) {
+                if (fs.type() == STRING) {
                     entryBase.setFieldSchema(fs);
                 } else {
                     errs.addErr(new EntryFieldTypeNotStr(ctx(), fn, fs.type().toString()));
@@ -381,7 +381,7 @@ public final class CfgSchemaResolver {
 
     private boolean checkErrFieldAsKey(FieldSchema field) {
         FieldType type = field.type();
-        return !(type == BOOL || type == INT || type == LONG || type == Primitive.STR);
+        return !(type == BOOL || type == INT || type == LONG || type == STRING);
     }
 
     private void errKeyTypeNotSupport(String field, String errType) {
@@ -526,7 +526,7 @@ public final class CfgSchemaResolver {
                     }
                 }
                 case StructSchema structSchema -> {
-                    // 为简单，只有field都是简单类型的struct可以配置了sep
+                    // 为简单，只有field都是primitive类型的struct可以配置了sep
                     if (structSchema.fmt() instanceof Sep) {
                         boolean isAllFieldsPrimitive = true;
                         for (FieldSchema field : structSchema.fields()) {
@@ -536,7 +536,7 @@ public final class CfgSchemaResolver {
                             }
                         }
                         if (!isAllFieldsPrimitive) {
-                            errs.addErr(new SepFmtStructHasNoPrimitive(structSchema.name()));
+                            errs.addErr(new SepFmtStructHasUnPrimitiveField(structSchema.name()));
                         }
                     }
                 }
@@ -564,7 +564,7 @@ public final class CfgSchemaResolver {
                 }
             }
             case StructRef _ -> {
-                if (!(fmt instanceof AutoOrPack) && !(fmt instanceof Sep)) {
+                if (!(fmt instanceof AutoOrPack)) {
                     errTypeFmtNotCompatible(field);
                 }
             }

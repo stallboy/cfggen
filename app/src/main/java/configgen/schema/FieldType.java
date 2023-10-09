@@ -21,15 +21,11 @@ public sealed interface FieldType {
         LONG,
         FLOAT,
 
-        STR,
+        STRING,
         /**
          * text表示要国际化
          */
-        TEXT,
-        /**
-         * res表示资源路径
-         */
-        RES;
+        TEXT;
 
         @Override
         public Primitive copy() {

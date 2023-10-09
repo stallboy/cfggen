@@ -2,11 +2,11 @@ package configgen.schema;
 
 import java.util.OptionalInt;
 
-import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
 import static configgen.schema.FieldType.*;
 
 public class Spans {
+
     public static int span(Nameable nameable) {
         if (nameable.fmt() == PACK || nameable.fmt() instanceof FieldFormat.Sep) {
             return 1;
@@ -28,7 +28,11 @@ public class Spans {
     }
 
     public static int span(FieldSchema field) {
-        switch (field.fmt()) {
+        return span(field.type(), field.fmt());
+    }
+
+    public static int span(FieldType type, FieldFormat fmt) {
+        switch (fmt) {
             case PACK:
             case FieldFormat.Sep _:
                 return 1;
@@ -36,7 +40,7 @@ public class Spans {
                 break;
         }
 
-        switch (field.type()) {
+        switch (type) {
             case Primitive _ -> {
                 return 1;
             }
@@ -46,7 +50,7 @@ public class Spans {
             }
 
             case FList flist -> {
-                switch (field.fmt()) {
+                switch (fmt) {
                     case FieldFormat.Block block -> {
                         return span(flist.item()) * block.fix();
 
@@ -54,12 +58,12 @@ public class Spans {
                     case FieldFormat.Fix fix -> {
                         return span(flist.item()) * fix.count();
                     }
-                    default -> throw new IllegalStateException("Unexpected value: " + field.fmt());
+                    default -> throw new IllegalStateException("Unexpected value: " + fmt);
                 }
 
             }
             case FMap fmap -> {
-                switch (field.fmt()) {
+                switch (fmt) {
                     case FieldFormat.Block block -> {
                         return (span(fmap.key()) + span(fmap.value())) *
                                 block.fix();
@@ -69,7 +73,7 @@ public class Spans {
                         return (span(fmap.key()) + span(fmap.value())) *
                                 fix.count();
                     }
-                    default -> throw new IllegalStateException("Unexpected value: " + field.fmt());
+                    default -> throw new IllegalStateException("Unexpected value: " + fmt);
                 }
             }
         }
@@ -86,37 +90,4 @@ public class Spans {
         }
     }
 
-    public static int span(Fieldable fieldable) {
-        switch (fieldable.fmt()) {
-            case AUTO -> {
-                switch (fieldable) {
-                    case InterfaceSchema interfaceSchema -> {
-                        int max = 0;
-                        for (StructSchema impl : interfaceSchema.impls()) {
-                            int s = span(impl);
-                            if (s > max) {
-                                max = s;
-                            }
-                        }
-                        return max + 1;
-                    }
-                    case StructSchema structSchema -> {
-                        int sum = 0;
-                        for (FieldSchema field : structSchema.fields()) {
-                            sum += span(field);
-                        }
-                        return sum;
-                    }
-                }
-            }
-
-            case PACK -> {
-                return 1;
-            }
-            case FieldFormat.Sep _ -> {
-                return 1;
-            }
-            default -> throw new IllegalStateException("Unexpected value: " + fieldable.fmt());
-        }
-    }
 }

@@ -272,9 +272,8 @@ public enum XmlReader implements CfgSchemaReader {
             case "long" -> LONG;
             case "bool" -> BOOL;
             case "float" -> FLOAT;
-            case "string" -> Primitive.STR;
+            case "string" -> STRING;
             case "text" -> TEXT;
-            case "res" -> RES;
             default -> new StructRef(typ);
         };
     }

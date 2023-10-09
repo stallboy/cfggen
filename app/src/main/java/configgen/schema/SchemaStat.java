@@ -19,7 +19,6 @@ public class SchemaStat implements Stat {
     private int tFloatCount;
     private int tStrCount;
     private int tTextCount;
-    private int tResCount;
     private int tListCount;
     private int tMapCount;
     private int tStructRefCount;
@@ -116,9 +115,8 @@ public class SchemaStat implements Stat {
                 case INT -> tIntCount++;
                 case LONG -> tLongCount++;
                 case FLOAT -> tFloatCount++;
-                case Primitive.STR -> tStrCount++;
+                case STRING -> tStrCount++;
                 case TEXT -> tTextCount++;
-                case RES -> tResCount++;
                 case StructRef _ -> tStructRefCount++;
                 case FList _ -> tListCount++;
                 case FMap _ -> tMapCount++;
@@ -198,10 +196,6 @@ public class SchemaStat implements Stat {
 
     public int tTextCount() {
         return tTextCount;
-    }
-
-    public int tResCount() {
-        return tResCount;
     }
 
     public int tListCount() {

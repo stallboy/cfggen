@@ -51,7 +51,7 @@ class CfgReaderTest {
         {
             FieldSchema f2 = table.fields().get(1);
             assertEquals(f2.name(), "name");
-            assertEquals(f2.type(), Primitive.STR);
+            assertEquals(f2.type(), Primitive.STRING);
             assertEquals(f2.fmt(), AUTO);
             assertEquals(f2.meta().data().size(), 1);
             assertTrue(f2.meta().data().get("__comment") instanceof Metadata.MetaStr ms &&

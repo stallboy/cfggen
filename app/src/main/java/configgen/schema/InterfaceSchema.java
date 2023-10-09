@@ -2,11 +2,12 @@ package configgen.schema;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
+import static configgen.schema.FieldType.Primitive.*;
 
 public final class InterfaceSchema implements Fieldable, Nameable {
     private final String name;
@@ -31,7 +32,7 @@ public final class InterfaceSchema implements Fieldable, Nameable {
     private final List<StructSchema> impls;
 
     private TableSchema enumRefTable;
-    private StructSchema defaultImplStruct;
+    private StructSchema nullableDefaultImplStruct;
 
     public InterfaceSchema(String name, String enumRef, String defaultImpl,
                            FieldFormat fmt, Metadata meta,
@@ -109,13 +110,30 @@ public final class InterfaceSchema implements Fieldable, Nameable {
         this.enumRefTable = enumRefTable;
     }
 
-    public StructSchema defaultImplStruct() {
-        return defaultImplStruct;
+    public StructSchema nullableDefaultImplStruct() {
+        return nullableDefaultImplStruct;
     }
 
-    void setDefaultImplStruct(StructSchema defaultImplStruct) {
-        this.defaultImplStruct = defaultImplStruct;
+    void setNullableDefaultImplStruct(StructSchema defaultImplStruct) {
+        this.nullableDefaultImplStruct = defaultImplStruct;
     }
+
+    /**
+     * 需求：一个格子大部分情况需要配置一个bool，或数字。那就直接写0/1,或数字就行。但有时有需要这个格子里填公式，
+     * 这里通过interface来支持，公式的含义和具体计算由应用自己来定义，这里只给出具体参数
+     *
+     * @return 此interface，是否可做为一个数字或bool的替代出现。
+     */
+    public boolean canBeNumberOrBool() {
+        if (fmt == PACK && nullableDefaultImplStruct != null
+                && nullableDefaultImplStruct.fields().size() == 1) {
+            FieldType type = nullableDefaultImplStruct.fields().get(0).type();
+            return numberOrBoolTypes.contains(type);
+        }
+        return false;
+    }
+
+    private static final Set<FieldType> numberOrBoolTypes = Set.of(BOOL, INT, LONG, FLOAT);
 
     @Override
     public String toString() {

@@ -60,7 +60,7 @@ public enum CfgSchemaAlignToData {
                 Metas.putComment(meta, hf.comment());
             }
 
-            FieldSchema field = new FieldSchema(hf.name(), Primitive.STR, AutoOrPack.AUTO, meta);
+            FieldSchema field = new FieldSchema(hf.name(), Primitive.STRING, AutoOrPack.AUTO, meta);
             fields.add(field);
         }
 
@@ -178,7 +178,7 @@ public enum CfgSchemaAlignToData {
                     if (!comment.isEmpty()) {
                         Metas.putComment(meta, comment);
                     }
-                    newField = new FieldSchema(name, Primitive.STR, AutoOrPack.AUTO, meta);
+                    newField = new FieldSchema(name, Primitive.STRING, AutoOrPack.AUTO, meta);
                     Logger.log(STR. "\{ table.name() } new field: \{ name }" );
                     alignedFields.put(newField.name(), newField);
                 }

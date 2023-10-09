@@ -16,6 +16,11 @@ public class ListParserTest {
     }
 
     @Test
+    public void midfixSeparator_Counts() {
+        test("aa,,bb", "aa", "", "bb");
+    }
+
+    @Test
     public void prefixSeparator_Counts() {
         test(",aa,bb", "", "aa", "bb");
     }

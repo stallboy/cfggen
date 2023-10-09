@@ -82,14 +82,24 @@ public record SchemaErrs(List<Err> errs,
                                 String errFmt) implements Err {
     }
 
+    /**
+     * 为了简单和一致性，在interface的impl上不支持配置fmt
+     *  因为如果配置了pack或sep，则这第一列就有些是impl的名字，有些不是，不一致。
+     */
     record ImplFmtNotSupport(String inInterface,
                              String impl,
                              String errFmt) implements Err {
     }
 
-    record SepFmtStructHasNoPrimitive(String struct) implements Err {
+    /**
+     * 为简单，只有field都是primitive类型的struct可以配置了sep
+     */
+    record SepFmtStructHasUnPrimitiveField(String struct) implements Err {
     }
 
+    /**
+     * list,struct结构，如果list和struct的fmt都是sep，且分隔符选择相同，这也是不支持的
+     */
     record ListStructSepEqual(String structural,
                               String field) implements Err {
     }
@@ -123,6 +133,11 @@ public record SchemaErrs(List<Err> errs,
                        String key) implements Err {
     }
 
+    /**
+     * 可以做为主键或唯一键的字段，或者是基本类型int, long, bool, str, res
+     * 或者是struct，struct里的字段类型必须为int，long，bool，str, res
+     * 或者是多个字段，构建成隐含的struct，同样要符合struct内字段类型必须为int, long, bool, str, res
+     */
     record KeyTypeNotSupport(String structural,
                              String field,
                              String errType) implements Err {

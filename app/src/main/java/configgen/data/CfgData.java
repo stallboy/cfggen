@@ -38,6 +38,10 @@ public record CfgData(Map<String, DTable> tables,
                         DRowId rowId,
                         int col) {
 
+        public boolean isCellEmpty() {
+            return value.isEmpty();
+        }
+
         public DCell createSub(String sub) {
             return new DCell(sub, rowId, col);
         }
