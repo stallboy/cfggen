@@ -44,7 +44,7 @@ public class CfgValueParser {
         Logger.profile("precalculate schema span");
 
         List<Callable<OneTableParserResult>> tasks = new ArrayList<>();
-        CfgValue value = new CfgValue(new TreeMap<>());
+        CfgValue value = new CfgValue(subSchema, new TreeMap<>());
         for (TableSchema subTable : subSchema.tableMap().values()) {
             String name = subTable.name();
             CfgData.DTable dTable = data.tables().get(name);

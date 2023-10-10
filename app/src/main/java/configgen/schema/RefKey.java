@@ -8,7 +8,11 @@ public sealed interface RefKey {
 
     RefKey copy();
 
-    record RefPrimary(boolean nullable) implements RefKey {
+    sealed interface RefSimple extends RefKey {
+        boolean nullable();
+    }
+
+    record RefPrimary(boolean nullable) implements RefSimple {
         @Override
         public List<String> keyNames() {
             return List.of();
@@ -20,7 +24,7 @@ public sealed interface RefKey {
         }
     }
 
-    record RefUniq(KeySchema key, boolean nullable) implements RefKey {
+    record RefUniq(KeySchema key, boolean nullable) implements RefSimple {
         public RefUniq {
             Objects.requireNonNull(key);
         }

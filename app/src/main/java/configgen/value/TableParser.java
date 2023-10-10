@@ -53,10 +53,9 @@ public class TableParser {
             }
         }
 
+        // 收集主键和唯一键
         Set<CfgValue.Value> primaryKeyValueSet = new LinkedHashSet<>();
         Map<List<String>, Set<CfgValue.Value>> uniqueKeyValueSetMap = new LinkedHashMap<>();
-
-        // 收集主键和唯一键
         extractKeyValues(primaryKeyValueSet, valueList, subTableSchema.primaryKey());
         for (KeySchema uniqueKey : subTableSchema.uniqueKeys()) {
             Set<CfgValue.Value> res = new LinkedHashSet<>();
@@ -69,14 +68,14 @@ public class TableParser {
         Map<String, Integer> enumNameToIntegerValueMap = null;
         if (subTableSchema.entry() instanceof EntryBase entry) {
             Set<String> names = new HashSet<>();
-            int idx = findIndex(entry.fieldSchema());
+            int idx = FindFieldIndex.findFieldIndex(subTableSchema, entry.fieldSchema());
 
             enumNames = new LinkedHashSet<>();
 
             int pkIdx = -1;
             List<FieldSchema> pk = subTableSchema.primaryKey().obj();
             if (pk.size() == 1 && pk.get(0) != entry.fieldSchema()) {
-                pkIdx = findIndex(pk.get(0));
+                pkIdx = FindFieldIndex.findFieldIndex(subTableSchema, pk.get(0));
                 enumNameToIntegerValueMap = new LinkedHashMap<>();
             }
 
@@ -114,48 +113,15 @@ public class TableParser {
     }
 
     private void extractKeyValues(Set<CfgValue.Value> keyValueSet, List<VStruct> valueList, KeySchema key) {
-        int size = key.obj().size();
-        int[] keyIndices = new int[size];
-        int i = 0;
-        for (FieldSchema k : key.obj()) {
-            keyIndices[i] = findIndex(k);
-            i++;
-        }
-
-        int idx = keyIndices[0];
-
-
+        int[] keyIndices = FindFieldIndex.findFieldIndices(subTableSchema, key);
         for (VStruct value : valueList) {
-            CfgValue.Value keyValue;
-            if (keyIndices.length == 1) {
-                keyValue = value.values().get(idx);
-            } else {
-                List<CfgValue.Value> values = new ArrayList<>(size);
-                for (int keyIndex : keyIndices) {
-                    values.add(value.values().get(keyIndex));
-                }
-
-                keyValue = new CfgValue.VList(values);
-            }
-
+            CfgValue.Value keyValue = ValueUtil.extract(value, keyIndices);
             boolean add = keyValueSet.add(keyValue);
             if (!add) {
                 errs.addErr(new PrimaryOrUniqueKeyDuplicated(keyValue, tableSchema.name(), key.name()));
             }
         }
     }
-
-    private int findIndex(FieldSchema field) {
-        int i = 0;
-        for (FieldSchema f : subTableSchema.fields()) {
-            if (f == field) {
-                return i;
-            }
-            i++;
-        }
-        return i;
-    }
-
 
     VInterface parseInterface(InterfaceSchema subInterface, List<DCell> cells, InterfaceSchema sInterface,
                               boolean pack, boolean canBeEmpty, int curRowIndex) {
@@ -172,13 +138,23 @@ public class TableParser {
                 isEmpty = true;
             } else if (sInterface.canBeNumberOrBool()) {
                 if (DCells.isFunc(cell)) {
-                    parsed = DCells.parseFunc(cell);
+                    try {
+                        parsed = DCells.parseFunc(cell);
+                    } catch (Exception e) {
+                        errs.addErr(new ParsePackErr(cell, sInterface.name(), e.getMessage()));
+                        return null;
+                    }
                     canChildBeEmpty = false; // 只要是parse了结构的，内部就不允许为空了
                 } else {
                     isNumberOrBool = true;
                 }
             } else {
-                parsed = DCells.parseFunc(cell);
+                try {
+                    parsed = DCells.parseFunc(cell);
+                } catch (Exception e) {
+                    errs.addErr(new ParsePackErr(cell, sInterface.name(), e.getMessage()));
+                    return null;
+                }
                 canChildBeEmpty = false;
             }
 
@@ -249,7 +225,7 @@ public class TableParser {
             vImpl = parseStructural(subImpl, implCells, impl, isPack, canChildBeEmpty, curRowIndex);
         }
 
-        return new VInterface(subInterface, vImpl);
+        return new VInterface(subInterface, vImpl, cells);
     }
 
     VStruct parseStructural(Structural subStructural, List<DCell> cells, Structural structural,
@@ -264,7 +240,12 @@ public class TableParser {
             if (canBeEmpty && cell.isCellEmpty()) {
                 isEmpty = true;
             } else {
-                parsed = DCells.parseNestList(cell);
+                try {
+                    parsed = DCells.parseNestList(cell);
+                } catch (Exception e) {
+                    errs.addErr(new ParsePackErr(cell, structural.name(), e.getMessage()));
+                    return null;
+                }
                 canChildBeEmpty = false;
             }
 
@@ -314,7 +295,7 @@ public class TableParser {
             }
         }
 
-        return new VStruct(subStructural, values);
+        return new VStruct(subStructural, values, cells);
     }
 
     CfgValue.Value parseSimpleType(SimpleType subType, List<DCell> cells, SimpleType type,
@@ -388,7 +369,6 @@ public class TableParser {
         return null;
     }
 
-
     CfgValue.Value parseField(FieldSchema subField, List<DCell> cells, FieldSchema field,
                               boolean pack, boolean canBeEmpty, int curRowIndex,
                               String nameable) {
@@ -419,7 +399,12 @@ public class TableParser {
         if (isPack) {
             require(cells.size() == 1);
             DCell cell = cells.get(0);
-            parsed = DCells.parseNestList(cell);
+            try {
+                parsed = DCells.parseNestList(cell);
+            } catch (Exception e) {
+                errs.addErr(new ParsePackErr(cell, type.toString(), e.getMessage()));
+                return null;
+            }
 
         } else if (field.fmt() instanceof Block _) {
 //            parsed = new ArrayList<>();
@@ -495,7 +480,12 @@ public class TableParser {
         if (isPack) {
             require(cells.size() == 1);
             DCell cell = cells.get(0);
-            parsed = DCells.parseNestList(cell);
+            try {
+                parsed = DCells.parseNestList(cell);
+            } catch (Exception e) {
+                errs.addErr(new ParsePackErr(cell, type.toString(), e.getMessage()));
+                return null;
+            }
 
         } else if (field.fmt() instanceof Block _) {
 //            parsed = new ArrayList<>();
@@ -560,7 +550,7 @@ public class TableParser {
     List<CellsWithRowIndex> parseBlock(List<DCell> cells, int curRowIndex) {
         DCell firstCell = cells.get(0);
         int rowSize = dTable.rows().size();
-        int firstColIndex = getColumnIndex(firstCell);
+        int firstColIndex = findColumnIndex(firstCell);
 
         int colSize = cells.size();
 
@@ -590,7 +580,7 @@ public class TableParser {
                              int rowIndex) {
     }
 
-    private int getColumnIndex(DCell cell) {
+    private int findColumnIndex(DCell cell) {
         int i = 0;
         for (DCell c : curRow) {
             if (c.col() == cell.col()) {

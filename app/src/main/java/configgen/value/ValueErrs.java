@@ -34,6 +34,11 @@ public record ValueErrs(List<VErr> errs) {
     public interface VErr {
     }
 
+    public record ParsePackErr(DCell cell,
+                               String nameable,
+                               String err) implements VErr {
+    }
+
     public record InterfaceCellEmptyButHasNoDefaultImpl(DCell cell,
                                                         String interfaceName) implements VErr {
     }

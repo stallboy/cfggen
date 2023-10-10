@@ -1,5 +1,6 @@
 package configgen.value;
 
+import configgen.schema.CfgSchema;
 import configgen.schema.InterfaceSchema;
 import configgen.schema.Structural;
 import configgen.schema.TableSchema;
@@ -11,27 +12,29 @@ import java.util.Set;
 
 import static configgen.data.CfgData.DCell;
 
-public record CfgValue(Map<String, VTable> vTableMap) {
+public record CfgValue(CfgSchema schema,
+                       Map<String, VTable> vTableMap) {
 
     public record VTable(TableSchema schema,
                          List<VStruct> valueList,
 
                          Set<Value> primaryKeyValueSet,
                          Map<List<String>, Set<Value>> uniqueKeyValueSetMap,
-                         Set<String> enumNames,
-                         Map<String, Integer> enumNameToIntegerValueMap) {
-
+                         Set<String> enumNames, //可为null
+                         Map<String, Integer> enumNameToIntegerValueMap) { //可为null
     }
 
     public interface Value {
     }
 
     public record VStruct(Structural schema,
-                          List<Value> values) implements Value {
+                          List<Value> values,
+                          List<DCell> cells) implements Value {
     }
 
     public record VInterface(InterfaceSchema schema,
-                             VStruct child) implements Value {
+                             VStruct child,
+                             List<DCell> cells) implements Value {
     }
 
     public record VList(List<Value> valueList) implements Value {

@@ -1,6 +1,9 @@
 package configgen.schema;
 
+import configgen.value.CfgValue;
+
 import java.util.Objects;
+import java.util.Set;
 
 public class ForeignKeySchema {
     private final String name;
@@ -10,6 +13,9 @@ public class ForeignKeySchema {
     private final Metadata meta;
 
     private TableSchema refTableSchema;
+
+    public Set<CfgValue.Value> fkValueSet;
+    public int[] keyIndices;
 
     public ForeignKeySchema(String name, KeySchema key, String refTable, RefKey refKey, Metadata meta) {
         this.name = name;
@@ -27,7 +33,7 @@ public class ForeignKeySchema {
         }
     }
 
-    public ForeignKeySchema copy(){
+    public ForeignKeySchema copy() {
         return new ForeignKeySchema(name, key.copy(), refTable, refKey.copy(), meta.copy());
     }
 
