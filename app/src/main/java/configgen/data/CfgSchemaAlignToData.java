@@ -155,7 +155,7 @@ public class CfgSchemaAlignToData {
             FieldSchema newField;
             FieldSchema curField = findAndRemove(header, idx, curFields);
             if (curField != null) {
-                int span = Spans.span(curField);
+                int span = Spans.calcSpan(curField);
                 idx += span;
                 String fieldName = curField.name();
                 Metadata meta = curField.meta().copy();
@@ -213,7 +213,7 @@ public class CfgSchemaAlignToData {
         String listName = STR. "\{ nam }List" ;
         FieldSchema listField = curFields.get(listName);
         if (listField != null
-                && listField.type() instanceof FieldType.FList fList && Spans.span(fList.item()) == 1
+                && listField.type() instanceof FieldType.FList fList && Spans.calcSpan(fList.item()) == 1
                 && listField.fmt() instanceof FieldFormat.Fix fix && headers.size() > index + fix.count() - 1) {
 
             boolean ok = true;
@@ -241,7 +241,7 @@ public class CfgSchemaAlignToData {
         FieldSchema mapField = curFields.get(mapName);
         if (mapField != null
                 && mapField.type() instanceof FieldType.FMap fMap
-                && Spans.span(fMap.key()) == 1 && Spans.span(fMap.value()) == 1
+                && Spans.calcSpan(fMap.key()) == 1 && Spans.calcSpan(fMap.value()) == 1
                 && mapField.fmt() instanceof FieldFormat.Fix fix
                 && headers.size() > index + fix.count() * 2 - 1) {
 

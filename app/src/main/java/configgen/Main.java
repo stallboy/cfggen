@@ -24,19 +24,22 @@ public class Main {
             }
         }
 
-        Logger.setVerboseLevel(1);
+        Logger.setVerboseLevel(0);
         Logger.enableProfile();
 
+        Logger.profile("profiler start");
 //        xmlToCfg();
-        Logger.profile("-----read schema - start");
+//        Logger.profile("xml to cfg");
 
-        CfgSchema schema = Cfgs.readFrom(Path.of("config.cfg"), true);
-        Logger.profile("-----read schema - raw");
+
+        Path root = Path.of("config.cfg");
+        CfgSchema schema = Cfgs.readFrom(root, true);
+        Logger.profile("schema read");
         SchemaErrs errs = schema.resolve();
         errs.print();
         Stat stat = new SchemaStat(schema);
         stat.print();
-        Logger.profile("-----read schema - resolve");
+        Logger.profile("schema resolve");
 
 
         CfgData data = CfgDataReader.INSTANCE.readCfgData(Path.of("."), schema, headRow);
@@ -44,29 +47,30 @@ public class Main {
         if (Logger.verboseLevel() > 1) {
             data.print();
         }
-        Logger.profile("-----read data");
 
 
         SchemaErrs alignErr = SchemaErrs.of();
         CfgSchema alignedSchema = new CfgSchemaAlignToData(schema, data, alignErr).align();
-        System.out.println(schema.equals(alignedSchema));
         new CfgSchemaResolver(alignedSchema, alignErr).resolve();
-//        schema.printDiff(alignedSchema);
         alignErr.print();
-        Logger.profile("-----schema align to data");
+        Logger.profile("schema aligned by data");
+        if (!schema.equals(alignedSchema)){
+            schema.printDiff(alignedSchema);
+            Cfgs.writeTo(root, true, alignedSchema);
+            Logger.profile("schema write");
+        }
+
 
         SchemaErrs clientErr = SchemaErrs.of();
         CfgSchema clientSchema = new CfgSchemaFilterByTag(alignedSchema, "client", clientErr).filter();
         new CfgSchemaResolver(clientSchema, clientErr).resolve();
         clientErr.print();
-        Logger.profile("-----schema filter by client");
-
+        Logger.profile("schema filtered by client");
 
         ValueErrs clientValueErr = ValueErrs.of();
         CfgValueParser cfgValueParser = new CfgValueParser(clientSchema, data, alignedSchema, clientValueErr);
         CfgValue cfgValue = cfgValueParser.parseCfgValue();
         clientValueErr.print();
-        Logger.profile("-----parse to cfg value");
 
 
     }
@@ -74,10 +78,10 @@ public class Main {
     public static void xmlToCfg() {
         CfgSchema cfg = Cfgs.readFromXml(Path.of("config.xml"), true);
         Path root = Path.of("config.cfg");
-        System.out.println("-----write");
+
         Cfgs.writeTo(root, true, cfg);
         CfgSchema cfg2 = Cfgs.readFrom(root, true);
-        System.out.println("-----rewrite");
+
         Cfgs.writeTo(root, true, cfg2);
         CfgSchema cfg3 = Cfgs.readFrom(root, true);
 

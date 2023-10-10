@@ -19,7 +19,36 @@ final class CellParser {
 
     static void parse(CfgData.DTable table, DataStat stat, boolean isColumnMode, int headRow) {
         List<List<DCell>> result = null;
-        if (isColumnMode) {
+        if (!isColumnMode) {
+
+            for (DRawSheet sheet : table.rawSheets()) {
+                if (result == null) {
+                    result = new ArrayList<>(sheet.rows().size() - headRow);
+                }
+
+                for (int rowIndex = headRow; rowIndex < sheet.rows().size(); rowIndex++) {
+                    DRawRow rawRow = sheet.rows().get(rowIndex);
+                    if (rawRow.cell(0).startsWith("#")) {
+                        stat.ignoredRowCount++;
+                        continue;
+                    }
+
+                    List<DCell> logicRow = new ArrayList<>(sheet.fieldIndices().size());
+                    DRowId logicRowId = new DRowId(sheet.fileName(), sheet.sheetName(), rowIndex);
+                    for (int col : sheet.fieldIndices()) {
+                        logicRow.add(new DCell(rawRow.cell(col), logicRowId, col));
+                    }
+                    if (isLogicRowNotAllEmpty(logicRow)) {
+                        result.add(logicRow);
+                    } else {
+                        stat.ignoredRowCount++;
+                    }
+                }
+                sheet.rows().clear();
+            }
+
+        } else { // column mode
+
             for (DRawSheet sheet : table.rawSheets()) {
                 int maxRow = sheet.rows().stream().mapToInt(DRawRow::count).max().orElse(0);
                 if (maxRow > headRow) {
@@ -50,32 +79,6 @@ final class CellParser {
                     }
                 }
                 sheet.rows().clear(); // 清理内存
-            }
-        } else { // not column mode
-            for (DRawSheet sheet : table.rawSheets()) {
-                if (result == null) {
-                    result = new ArrayList<>(sheet.rows().size() - headRow);
-                }
-
-                for (int rowIndex = headRow; rowIndex < sheet.rows().size(); rowIndex++) {
-                    DRawRow rawRow = sheet.rows().get(rowIndex);
-                    if (rawRow.cell(0).startsWith("#")) {
-                        stat.ignoredRowCount++;
-                        continue;
-                    }
-
-                    List<DCell> logicRow = new ArrayList<>(sheet.fieldIndices().size());
-                    DRowId logicRowId = new DRowId(sheet.fileName(), sheet.sheetName(), rowIndex);
-                    for (int col : sheet.fieldIndices()) {
-                        logicRow.add(new DCell(rawRow.cell(col), logicRowId, col));
-                    }
-                    if (isLogicRowNotAllEmpty(logicRow)) {
-                        result.add(logicRow);
-                    } else {
-                        stat.ignoredRowCount++;
-                    }
-                }
-                sheet.rows().clear();
             }
         }
 

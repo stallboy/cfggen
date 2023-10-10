@@ -476,18 +476,30 @@ public final class CfgSchemaResolver {
             FieldSchema remote = remoteFields.get(i);
 
             switch (local.type()) {
-                case FList flist -> {
-                    if (len != 1 || !checkSimpleTypeMatch(flist.item(), remote.type())) {
-                        ok = false;
+                case ContainerType containerType -> {
+                    if (foreignKey.refKey() instanceof RefKey.RefSimple refSimple) {
+                        if (refSimple.nullable()) {
+                            errs.addErr(new RefContainerNullable(ctx(), foreignKey.name()));
+                        }
                     }
-                }
-                case FMap fmap -> {
-                    if (len != 1 || !checkSimpleTypeMatch(fmap.value(), remote.type())) {
-                        ok = false;
+
+                    switch (containerType) {
+                        case FList flist -> {
+                            if (len != 1 || !checkSimpleTypeMatch(flist.item(), remote.type())) {
+                                ok = false;
+                            }
+                        }
+                        case FMap fmap -> {
+                            if (len != 1 || !checkSimpleTypeMatch(fmap.value(), remote.type())) {
+                                ok = false;
+                            }
+                        }
                     }
+
                 }
-                default -> {
-                    if (!checkSimpleTypeMatch(local.type(), remote.type())) {
+
+                case SimpleType simpleType -> {
+                    if (!checkSimpleTypeMatch(simpleType, remote.type())) {
                         ok = false;
                     }
                 }
@@ -501,7 +513,7 @@ public final class CfgSchemaResolver {
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    private boolean checkSimpleTypeMatch(FieldType local, FieldType remote) {
+    private boolean checkSimpleTypeMatch(SimpleType local, FieldType remote) {
         switch (local) {
             case Primitive primitive -> {
                 return primitive.equals(remote);
@@ -509,7 +521,6 @@ public final class CfgSchemaResolver {
             case StructRef structRef -> {
                 return remote instanceof StructRef ref && structRef.obj() == ref.obj();
             }
-            default -> throw new IllegalStateException("Unexpected value: " + local);
         }
     }
 

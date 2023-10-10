@@ -3,6 +3,8 @@ package configgen;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
+import static java.util.FormatProcessor.FMT;
+
 public class Logger {
     private static int verboseLevel = 0;
     private static boolean profileGcEnabled = false;
@@ -61,7 +63,7 @@ public class Logger {
                 time = System.currentTimeMillis();
                 elapse = String.format("%.1f/%.1f seconds", (time - old) / 1000f, (time - firstTime) / 1000f);
             }
-            System.out.printf("%s\t use %dm\t %s\n", step, memory, elapse);
+            System.out.println(FMT. "%30s\{ step }: %4d\{ memory }m %s\{ elapse }" );
         }
     }
 

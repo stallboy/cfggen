@@ -1,9 +1,7 @@
 package configgen.data;
 
-import configgen.Logger;
 import configgen.schema.CfgSchema;
 import configgen.schema.TableSchema;
-import configgen.schema.cfg.CfgUtil;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -59,17 +57,18 @@ final class HeadParser {
 
     static List<String> getLogicRow(DRawSheet sheet, int rowIndex, boolean isColumnMode) {
         List<String> result = new ArrayList<>();
-        if (isColumnMode) {
-            for (DRawRow row : sheet.rows()) {
-                String c = row.cell(rowIndex);
-                result.add(c);
-            }
-        } else {
+        if (!isColumnMode) {
             if (rowIndex < sheet.rows().size()) {
                 DRawRow row = sheet.rows().get(rowIndex);
                 for (int i = 0; i < row.count(); i++) {
                     result.add(row.cell(i));
                 }
+            }
+
+        } else {
+            for (DRawRow row : sheet.rows()) {
+                String c = row.cell(rowIndex);
+                result.add(c);
             }
         }
 

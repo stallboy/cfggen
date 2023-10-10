@@ -1,5 +1,6 @@
 package configgen.data;
 
+import configgen.Logger;
 import de.siegmar.fastcsv.reader.CsvRow;
 import org.dhatim.fastexcel.reader.Row;
 
@@ -107,11 +108,11 @@ public record CfgData(Map<String, DTable> tables,
 
     public void print() {
         stat.print();
-        System.out.println(STR. "table count: \t\{ tables.size() }" );
+        Logger.verbose2(STR. "table count: \t\{ tables.size() }" );
         for (DTable table : tables.values()) {
-            System.out.println(table.tableName);
+            Logger.verbose2(table.tableName);
             for (DRawSheet sheet : table.rawSheets) {
-                System.out.println(STR. "\t\{ sheet.id() }" );
+                Logger.verbose2(STR. "\t\{ sheet.id() }" );
             }
         }
     }

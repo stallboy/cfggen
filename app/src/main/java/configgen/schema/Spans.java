@@ -56,7 +56,7 @@ public class Spans {
 
         switch (nameable) {
             case InterfaceSchema interfaceSchema -> {
-                OptionalInt max = interfaceSchema.impls().stream().mapToInt(Spans::span).max();
+                OptionalInt max = interfaceSchema.impls().stream().mapToInt(Spans::calcSpan).max();
                 if (max.isPresent()) {
                     return max.getAsInt() + 1;
                 } else {
@@ -64,7 +64,7 @@ public class Spans {
                 }
             }
             case Structural structural -> {
-                return structural.fields().stream().mapToInt(Spans::span).sum();
+                return structural.fields().stream().mapToInt(Spans::calcSpan).sum();
             }
         }
     }
@@ -97,17 +97,17 @@ public class Spans {
             }
 
             case StructRef structRef -> {
-                return span(structRef.obj());
+                return calcSpan(structRef.obj());
             }
 
             case FList flist -> {
                 switch (fmt) {
                     case FieldFormat.Block block -> {
-                        return span(flist.item()) * block.fix();
+                        return calcSpan(flist.item()) * block.fix();
 
                     }
                     case FieldFormat.Fix fix -> {
-                        return span(flist.item()) * fix.count();
+                        return calcSpan(flist.item()) * fix.count();
                     }
                     default -> throw new IllegalStateException("Unexpected value: " + fmt);
                 }
@@ -116,12 +116,12 @@ public class Spans {
             case FMap fmap -> {
                 switch (fmt) {
                     case FieldFormat.Block block -> {
-                        return (span(fmap.key()) + span(fmap.value())) *
+                        return (calcSpan(fmap.key()) + calcSpan(fmap.value())) *
                                 block.fix();
 
                     }
                     case FieldFormat.Fix fix -> {
-                        return (span(fmap.key()) + span(fmap.value())) *
+                        return (calcSpan(fmap.key()) + calcSpan(fmap.value())) *
                                 fix.count();
                     }
                     default -> throw new IllegalStateException("Unexpected value: " + fmt);
@@ -137,6 +137,17 @@ public class Spans {
             }
             case StructRef structRef -> {
                 return span(structRef.obj());
+            }
+        }
+    }
+
+    public static int calcSpan(SimpleType type) {
+        switch (type) {
+            case Primitive _ -> {
+                return 1;
+            }
+            case StructRef structRef -> {
+                return calcSpan(structRef.obj());
             }
         }
     }

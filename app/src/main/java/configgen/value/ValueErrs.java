@@ -1,5 +1,6 @@
 package configgen.value;
 
+import configgen.Logger;
 import configgen.schema.FieldType;
 
 import java.util.ArrayList;
@@ -23,9 +24,9 @@ public record ValueErrs(List<VErr> errs) {
 
     public void print() {
         if (!errs.isEmpty()) {
-            System.out.println(STR. "errors \{ errs.size() }:" );
+            Logger.log(STR. "errors \{ errs.size() }:" );
             for (VErr err : errs) {
-                System.out.println("\t" + err);
+                Logger.log("\t" + err);
             }
             throw new IllegalStateException("请修复value errors后再继续");
         }
@@ -87,7 +88,7 @@ public record ValueErrs(List<VErr> errs) {
                                    String field) implements VErr {
     }
 
-    public record PrimaryOrUniqueKeyDuplicated(CfgValue.Value value,
+    public record PrimaryOrUniqueKeyDuplicated(List<DCell> cells,
                                                String table,
                                                List<String> keys) implements VErr {
     }
@@ -102,6 +103,17 @@ public record ValueErrs(List<VErr> errs) {
 
     public record EntryDuplicated(DCell cell,
                                   String table) implements VErr {
+    }
+
+
+    public record RefNotNullableButCellEmpty(List<DCell> cells,
+                                             String table) implements VErr {
+    }
+
+    public record ForeignValueNotFound(List<DCell> cells,
+                                       String table,
+                                       String foreignKey) implements VErr {
+
     }
 
 

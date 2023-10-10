@@ -1,5 +1,7 @@
 package configgen.schema;
 
+import configgen.Logger;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -24,16 +26,16 @@ public record SchemaErrs(List<Err> errs,
 
     public void print() {
         if (!warns.isEmpty()) {
-            System.out.println(STR. "warnings \{ warns.size() }:" );
+            Logger.verbose(STR. "warnings \{ warns.size() }:" );
             for (Warn warn : warns) {
-                System.out.println("\t" + warn);
+                Logger.verbose("\t" + warn);
             }
         }
 
         if (!errs.isEmpty()) {
-            System.out.println(STR. "errors \{ errs.size() }:" );
+            Logger.log(STR. "errors \{ errs.size() }:" );
             for (Err err : errs) {
-                System.out.println("\t" + err);
+                Logger.log("\t" + err);
             }
             throw new IllegalStateException("请修复schema errors后再继续");
         }
@@ -169,12 +171,22 @@ public record SchemaErrs(List<Err> errs,
                                                     String foreignKey) implements Err {
     }
 
-    public record RefLocalKeyRemoteKeyTypeNotMatch(String table,
+    public record RefLocalKeyRemoteKeyTypeNotMatch(String structural,
                                                    String foreignKey,
                                                    String localType,
                                                    String refType) implements Err {
     }
 
+    /**
+     * list，map的ref不应该是nullable
+     */
+    public record RefContainerNullable(String structural,
+                                       String foreignKey) implements Err {
+    }
+
+    /**
+     * csv或excel的第二行名称不是标识符，没法作为程序名
+     */
     public record DataHeadNameNotIdentifier(String table,
                                             String notIdentifierName) implements Err {
     }

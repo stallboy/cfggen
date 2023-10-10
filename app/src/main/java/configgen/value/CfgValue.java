@@ -5,10 +5,7 @@ import configgen.schema.InterfaceSchema;
 import configgen.schema.Structural;
 import configgen.schema.TableSchema;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 import static configgen.data.CfgData.DCell;
 
@@ -25,27 +22,101 @@ public record CfgValue(CfgSchema schema,
     }
 
     public interface Value {
+        List<DCell> cells();
+    }
+
+    public interface SimpleValue extends Value {
+    }
+
+    public interface ContainerValue extends Value {
+    }
+
+    public interface PrimitiveValue extends SimpleValue {
+        DCell cell();
+
+        @Override
+        default List<DCell> cells() {
+            return List.of(cell());
+        }
     }
 
     public record VStruct(Structural schema,
                           List<Value> values,
-                          List<DCell> cells) implements Value {
+                          List<DCell> cells) implements SimpleValue {
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            VStruct vStruct = (VStruct) o;
+            return schema == vStruct.schema && Objects.equals(values, vStruct.values);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(values);
+        }
     }
 
     public record VInterface(InterfaceSchema schema,
                              VStruct child,
-                             List<DCell> cells) implements Value {
+                             List<DCell> cells) implements SimpleValue {
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            VInterface that = (VInterface) o;
+            return schema == that.schema && Objects.equals(child, that.child);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(child);
+        }
     }
 
-    public record VList(List<Value> valueList) implements Value {
+    public record VList(List<SimpleValue> valueList,
+                        List<DCell> cells) implements ContainerValue {
 
+        public static VList of(List<SimpleValue> valueList) {
+            List<DCell> cells = new ArrayList<>();
+            for (SimpleValue value : valueList) {
+                cells.addAll(value.cells());
+            }
+            return new VList(valueList, cells);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            VList vList = (VList) o;
+            return Objects.equals(valueList, vList.valueList);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(valueList);
+        }
     }
 
-    public record VMap(Map<Value, Value> valueMap) implements Value {
+    public record VMap(Map<SimpleValue, SimpleValue> valueMap,
+                       List<DCell> cells) implements ContainerValue {
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            VMap vMap = (VMap) o;
+            return Objects.equals(valueMap, vMap.valueMap);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(valueMap);
+        }
     }
 
 
-    public record VBool(boolean value, DCell cell) implements Value {
+    public record VBool(boolean value, DCell cell) implements PrimitiveValue {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
@@ -60,7 +131,7 @@ public record CfgValue(CfgSchema schema,
         }
     }
 
-    public record VInt(int value, DCell cell) implements Value {
+    public record VInt(int value, DCell cell) implements PrimitiveValue {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
@@ -75,7 +146,7 @@ public record CfgValue(CfgSchema schema,
         }
     }
 
-    public record VLong(long value, DCell cell) implements Value {
+    public record VLong(long value, DCell cell) implements PrimitiveValue {
 
         @Override
         public boolean equals(Object o) {
@@ -91,7 +162,7 @@ public record CfgValue(CfgSchema schema,
         }
     }
 
-    public record VFloat(float value, DCell cell) implements Value {
+    public record VFloat(float value, DCell cell) implements PrimitiveValue {
 
         @Override
         public boolean equals(Object o) {
@@ -108,7 +179,7 @@ public record CfgValue(CfgSchema schema,
     }
 
 
-    public record VString(String value, DCell cell) implements Value {
+    public record VString(String value, DCell cell) implements PrimitiveValue {
 
         @Override
         public boolean equals(Object o) {
@@ -125,7 +196,7 @@ public record CfgValue(CfgSchema schema,
     }
 
 
-    public record VText(String value, DCell cell) implements Value {
+    public record VText(String value, DCell cell) implements PrimitiveValue {
 
         @Override
         public boolean equals(Object o) {

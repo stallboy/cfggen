@@ -11,6 +11,7 @@ import static configgen.schema.FieldFormat.AutoOrPack.PACK;
 import static configgen.schema.FieldFormat.Block;
 import static configgen.schema.FieldFormat.Sep;
 import static configgen.schema.FieldType.Primitive.*;
+import static configgen.value.CfgValue.*;
 import static configgen.value.CfgValue.VInterface;
 import static configgen.value.CfgValue.VStruct;
 import static configgen.value.ValueErrs.*;
@@ -115,10 +116,10 @@ public class TableParser {
     private void extractKeyValues(Set<CfgValue.Value> keyValueSet, List<VStruct> valueList, KeySchema key) {
         int[] keyIndices = FindFieldIndex.findFieldIndices(subTableSchema, key);
         for (VStruct value : valueList) {
-            CfgValue.Value keyValue = ValueUtil.extract(value, keyIndices);
+            CfgValue.Value keyValue = ValueUtil.extractKeyValue(value, keyIndices);
             boolean add = keyValueSet.add(keyValue);
             if (!add) {
-                errs.addErr(new PrimaryOrUniqueKeyDuplicated(keyValue, tableSchema.name(), key.name()));
+                errs.addErr(new PrimaryOrUniqueKeyDuplicated(keyValue.cells(), tableSchema.name(), key.name()));
             }
         }
     }
@@ -298,9 +299,9 @@ public class TableParser {
         return new VStruct(subStructural, values, cells);
     }
 
-    CfgValue.Value parseSimpleType(SimpleType subType, List<DCell> cells, SimpleType type,
-                                   boolean pack, boolean canBeEmpty, int curRowIndex,
-                                   String nameable, String field) {
+    SimpleValue parseSimpleType(SimpleType subType, List<DCell> cells, SimpleType type,
+                                         boolean pack, boolean canBeEmpty, int curRowIndex,
+                                         String nameable, String field) {
         switch (type) {
             case Primitive primitive -> {
                 require(cells.size() == 1);
@@ -345,7 +346,7 @@ public class TableParser {
                         return new CfgValue.VString(str, cell);
                     }
                     case TEXT -> {
-                        return new CfgValue.VText(str, cell);
+                        return new VText(str, cell);
                     }
                 }
             }
@@ -387,7 +388,7 @@ public class TableParser {
         }
     }
 
-    CfgValue.Value parseMap(FieldSchema subField, List<DCell> cells, FieldSchema field,
+    CfgValue.VMap parseMap(FieldSchema subField, List<DCell> cells, FieldSchema field,
                             boolean isPack, int curRowIndex,
                             String nameable) {
 
@@ -407,11 +408,7 @@ public class TableParser {
             }
 
         } else if (field.fmt() instanceof Block _) {
-//            parsed = new ArrayList<>();
             blocks = parseBlock(cells, curRowIndex);
-//            for (CellsWithRowIndex block : blocks) {
-//                parsed.addAll(block.cells);
-//            }
 
         } else {
             require(cells.size() == Spans.span(field));
@@ -422,8 +419,7 @@ public class TableParser {
             blocks = List.of(new CellsWithRowIndex(parsed, curRowIndex));
         }
 
-
-        Map<CfgValue.Value, CfgValue.Value> valueMap = new LinkedHashMap<>();
+        Map<SimpleValue, SimpleValue> valueMap = new LinkedHashMap<>();
 
         int kc = isPack ? 1 : Spans.span(type.key());
         int vc = isPack ? 1 : Spans.span(type.value());
@@ -442,14 +438,14 @@ public class TableParser {
 
                 //第一个单元作为是否有item的标记
                 if (!keyCells.get(0).isCellEmpty()) {
-                    CfgValue.Value key = parseSimpleType(subType.key(), keyCells, type.key(),
+                    SimpleValue key = parseSimpleType(subType.key(), keyCells, type.key(),
                             isPack, false, block.rowIndex,
                             nameable, field.name());
-                    CfgValue.Value value = parseSimpleType(subType.value(), valueCells, type.value(),
+                    SimpleValue value = parseSimpleType(subType.value(), valueCells, type.value(),
                             isPack, false, block.rowIndex,
                             nameable, field.name());
 
-                    CfgValue.Value old = valueMap.put(key, value);
+                    SimpleValue old = valueMap.put(key, value);
                     if (old != null) {
                         errs.addErr(new MapKeyDuplicated(keyCells, nameable, field.name()));
                     }
@@ -463,7 +459,7 @@ public class TableParser {
             }
         }
 
-        return new CfgValue.VMap(valueMap);
+        return new CfgValue.VMap(valueMap, cells);
     }
 
 
@@ -488,11 +484,7 @@ public class TableParser {
             }
 
         } else if (field.fmt() instanceof Block _) {
-//            parsed = new ArrayList<>();
             blocks = parseBlock(cells, curRowIndex);
-//            for (CellsWithRowIndex block : blocks) {
-//                parsed.addAll(block.cells);
-//            }
 
         } else if (field.fmt() instanceof Sep sep) {
             require(cells.size() == 1);
@@ -508,7 +500,7 @@ public class TableParser {
             blocks = List.of(new CellsWithRowIndex(parsed, curRowIndex));
         }
 
-        List<CfgValue.Value> valueList = new ArrayList<>();
+        List<SimpleValue> valueList = new ArrayList<>();
         int itemSpan = isPack ? 1 : Spans.span(type.item());
         for (CellsWithRowIndex block : blocks) {
             List<DCell> curLineParsed = block.cells;
@@ -521,7 +513,7 @@ public class TableParser {
                 List<DCell> itemCells = curLineParsed.subList(startIdx, startIdx + itemSpan);
                 //第一个单元作为是否有item的标记
                 if (!itemCells.get(0).isCellEmpty()) {
-                    CfgValue.Value value = parseSimpleType(subType.item(), itemCells, type.item(),
+                    SimpleValue value = parseSimpleType(subType.item(), itemCells, type.item(),
                             isPack, false, block.rowIndex,
                             nameable, field.name());
                     valueList.add(value);
@@ -532,7 +524,7 @@ public class TableParser {
                 }
             }
         }
-        return new CfgValue.VList(valueList);
+        return new CfgValue.VList(valueList, cells);
 
     }
 

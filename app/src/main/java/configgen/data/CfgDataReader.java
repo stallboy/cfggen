@@ -60,7 +60,7 @@ public enum CfgDataReader {
                     case CSV -> {
                         DataUtil.TableNameIndex ti = DataUtil.getTableNameIndex(relativePath);
                         if (ti == null) {
-                            Logger.verbose(STR. "\{ path } 名字不符合规范，ignore！" );
+                            Logger.verbose2(STR. "\{ path } 名字不符合规范，ignore！" );
                             stat.ignoredCsvCount++;
                             return FileVisitResult.CONTINUE;
                         } else {
@@ -94,7 +94,7 @@ public enum CfgDataReader {
             }
         }
 
-        Logger.profile("-----read data - raw");
+        Logger.profile("data read");
         List<Callable<DataStat>> parseTasks = new ArrayList<>();
         for (CfgData.DTable table : data.tables().values()) {
             parseTasks.add(() -> {
@@ -109,7 +109,7 @@ public enum CfgDataReader {
             DataStat tStat = future.get();
             stat.merge(tStat);
         }
-        Logger.profile("-----read data - parse cell");
+        Logger.profile("data parse");
 
         stat.tableCount = data.tables().size();
         executor.close();
@@ -148,7 +148,7 @@ public enum CfgDataReader {
                 if (count == 0) {
                     count = csvRow.getFieldCount();
                 } else if (count != csvRow.getFieldCount()) {
-                    Logger.verbose(STR. "\{ path } \{ csvRow.getOriginalLineNumber() } field count \{ csvRow.getFieldCount() } not eq \{ count }" );
+                    Logger.verbose2(STR. "\{ path } \{ csvRow.getOriginalLineNumber() } field count \{ csvRow.getFieldCount() } not eq \{ count }" );
                 }
                 rows.add(new DRawCsvRow(csvRow));
             }
@@ -168,7 +168,7 @@ public enum CfgDataReader {
 
                 DataUtil.TableNameIndex ti = DataUtil.getTableNameIndex(relativePath, sheetName);
                 if (ti == null) {
-                    Logger.verbose(STR. "\{ path } [\{ sheetName }] 名字不符合规范，ignore！" );
+                    Logger.verbose2(STR. "\{ path } [\{ sheetName }] 名字不符合规范，ignore！" );
                     stat.ignoredSheetCount++;
                     continue;
                 }
@@ -211,7 +211,7 @@ public enum CfgDataReader {
 
                             if (type == CellType.FORMULA) {
                                 formula++;
-                                // Logger.verbose(cell.getAddress() + ": formula=" + cell.getFormula() + ", text=" + cell.getText());
+                                // Logger.verbose2(cell.getAddress() + ": formula=" + cell.getFormula() + ", text=" + cell.getText());
                             }
                         } else {
                             stat.cellNullCount++;
@@ -220,7 +220,7 @@ public enum CfgDataReader {
                 }
 
                 if (formula > 0) {
-                    Logger.verbose(STR. "\{ path } [\{ sheetName }] formula count=\{ formula }" );
+                    Logger.verbose2(STR. "\{ path } [\{ sheetName }] formula count=\{ formula }" );
                 }
             }
         }
