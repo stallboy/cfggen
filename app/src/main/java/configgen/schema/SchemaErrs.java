@@ -23,16 +23,18 @@ public record SchemaErrs(List<Err> errs,
     }
 
     public void print() {
-        System.out.println(STR. "warnings \{ warns.size() }:" );
-        for (Warn warn : warns) {
-            System.out.println("\t" + warn);
-        }
-        System.out.println(STR. "errors \{ errs.size() }:" );
-        for (Err err : errs) {
-            System.out.println("\t" + err);
+        if (!warns.isEmpty()) {
+            System.out.println(STR. "warnings \{ warns.size() }:" );
+            for (Warn warn : warns) {
+                System.out.println("\t" + warn);
+            }
         }
 
-        if (!errs.isEmpty()){
+        if (!errs.isEmpty()) {
+            System.out.println(STR. "errors \{ errs.size() }:" );
+            for (Err err : errs) {
+                System.out.println("\t" + err);
+            }
             throw new IllegalStateException("请修复schema errors后再继续");
         }
     }
@@ -41,7 +43,7 @@ public record SchemaErrs(List<Err> errs,
     }
 
     public record NameMayConflictByRef(String name1,
-                                String name2) implements Warn {
+                                       String name2) implements Warn {
     }
 
     public record StructNotUsed(String name) implements Warn {
@@ -51,21 +53,21 @@ public record SchemaErrs(List<Err> errs,
     }
 
     public record FilterRefIgnoredByRefTableNotFound(String name,
-                                              String foreignKey,
-                                              String notFoundRefTable) implements Warn {
+                                                     String foreignKey,
+                                                     String notFoundRefTable) implements Warn {
     }
 
     public record FilterRefIgnoredByRefKeyNotFound(String name,
-                                            String foreignKey,
-                                            String refTable,
-                                            List<String> notFoundRefKey) implements Warn {
+                                                   String foreignKey,
+                                                   String refTable,
+                                                   List<String> notFoundRefKey) implements Warn {
     }
 
     public sealed interface Err {
     }
 
     public record ImplNamespaceNotEmpty(String sInterface,
-                                 String errImplName) implements Err {
+                                        String errImplName) implements Err {
     }
 
     public record NameConflict(String name) implements Err {
@@ -76,14 +78,14 @@ public record SchemaErrs(List<Err> errs,
 
 
     public record TypeStructNotFound(String struct,
-                              String field,
-                              String notFoundStruct) implements Err {
+                                     String field,
+                                     String notFoundStruct) implements Err {
     }
 
     public record TypeFmtNotCompatible(String struct,
-                                String field,
-                                String type,
-                                String errFmt) implements Err {
+                                       String field,
+                                       String type,
+                                       String errFmt) implements Err {
     }
 
     /**
@@ -91,8 +93,8 @@ public record SchemaErrs(List<Err> errs,
      * 因为如果配置了pack或sep，则这第一列就有些是impl的名字，有些不是，不一致。
      */
     public record ImplFmtNotSupport(String inInterface,
-                             String impl,
-                             String errFmt) implements Err {
+                                    String impl,
+                                    String errFmt) implements Err {
     }
 
     /**
@@ -105,24 +107,24 @@ public record SchemaErrs(List<Err> errs,
      * list,struct结构，如果list和struct的fmt都是sep，且分隔符选择相同，这也是不支持的
      */
     public record ListStructSepEqual(String structural,
-                              String field) implements Err {
+                                     String field) implements Err {
     }
 
     public record EnumRefNotFound(String sInterface,
-                           String enumRef) implements Err {
+                                  String enumRef) implements Err {
     }
 
     public record DefaultImplNotFound(String sInterface,
-                               String defaultImpl) implements Err {
+                                      String defaultImpl) implements Err {
     }
 
     public record EntryNotFound(String table,
-                         String entry) implements Err {
+                                String entry) implements Err {
     }
 
     public record EntryFieldTypeNotStr(String table,
-                                String entry,
-                                String errType) implements Err {
+                                       String entry,
+                                       String errType) implements Err {
     }
 
     /**
@@ -134,7 +136,7 @@ public record SchemaErrs(List<Err> errs,
     }
 
     public record KeyNotFound(String structural,
-                       String key) implements Err {
+                              String key) implements Err {
     }
 
     /**
@@ -143,34 +145,34 @@ public record SchemaErrs(List<Err> errs,
      * 或者是多个字段，构建成隐含的struct，同样要符合struct内字段类型必须为int, long, bool, str, res
      */
     public record KeyTypeNotSupport(String structural,
-                             String field,
-                             String errType) implements Err {
+                                    String field,
+                                    String errType) implements Err {
     }
 
     public record RefTableNotFound(String table,
-                            String foreignKey,
-                            String errRefTable) implements Err {
+                                   String foreignKey,
+                                   String errRefTable) implements Err {
     }
 
     public record RefTableKeyNotUniq(String table,
-                              String foreignKey,
-                              String refTable,
-                              List<String> notUniqRefKey) implements Err {
+                                     String foreignKey,
+                                     String refTable,
+                                     List<String> notUniqRefKey) implements Err {
     }
 
     public record ListRefMultiKeyNotSupport(String table,
-                                     String foreignKey,
-                                     List<String> errMultiKey) implements Err {
+                                            String foreignKey,
+                                            List<String> errMultiKey) implements Err {
     }
 
     public record RefLocalKeyRemoteKeyCountNotMatch(String table,
-                                             String foreignKey) implements Err {
+                                                    String foreignKey) implements Err {
     }
 
     public record RefLocalKeyRemoteKeyTypeNotMatch(String table,
-                                            String foreignKey,
-                                            String localType,
-                                            String refType) implements Err {
+                                                   String foreignKey,
+                                                   String localType,
+                                                   String refType) implements Err {
     }
 
     public record DataHeadNameNotIdentifier(String table,

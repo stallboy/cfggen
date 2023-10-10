@@ -5,7 +5,6 @@ import java.util.List;
 
 public class ListParser {
 
-    private static final StringBuilder field = new StringBuilder(128); //这里假设是单线程
 
     private enum ListState {
         START, NO_QUOTE, QUOTE, QUOTE2
@@ -16,6 +15,7 @@ public class ListParser {
     public static List<String> parseList(String str, char separator) {
         ListState state = ListState.START;
         ArrayList<String> list = new ArrayList<>();
+        StringBuilder field = new StringBuilder(128);
         field.setLength(0);
 
         for (char c : str.toCharArray()) {

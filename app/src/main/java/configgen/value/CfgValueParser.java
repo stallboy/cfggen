@@ -1,11 +1,19 @@
 package configgen.value;
 
+import configgen.Logger;
 import configgen.data.CfgData;
 import configgen.schema.CfgSchema;
+import configgen.schema.Spans;
 import configgen.schema.TableSchema;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class CfgValueParser {
     private final CfgSchema subSchema;
@@ -31,6 +39,11 @@ public class CfgValueParser {
     }
 
     public CfgValue parseCfgValue() {
+        //预先计算下span，这样在多线程中parseTable过程中，就只读不会写了。
+        Spans.preCalculateAllSpan(schema);
+        Logger.profile("precalculate schema span");
+
+        List<Callable<OneTableParserResult>> tasks = new ArrayList<>();
         CfgValue value = new CfgValue(new TreeMap<>());
         for (TableSchema subTable : subSchema.tableMap().values()) {
             String name = subTable.name();
@@ -39,11 +52,33 @@ public class CfgValueParser {
             TableSchema table = schema.findTable(name);
             Objects.requireNonNull(table);
 
-            TableParser parser = new TableParser(subTable, dTable, table, errs);
-            CfgValue.VTable vTable = parser.parseTable();
-            value.vTableMap().put(name, vTable);
+            tasks.add(() -> {
+                ValueErrs errs = ValueErrs.of();
+                TableParser parser = new TableParser(subTable, dTable, table, errs);
+                CfgValue.VTable vTable = parser.parseTable();
+                return new OneTableParserResult(vTable, errs);
+            });
         }
+
+        try {
+            ExecutorService executor = Executors.newWorkStealingPool();
+            List<Future<OneTableParserResult>> futures = executor.invokeAll(tasks);
+            for (Future<OneTableParserResult> future : futures) {
+                OneTableParserResult result = future.get();
+                CfgValue.VTable vTable = result.vTable;
+                value.vTableMap().put(vTable.schema().name(), vTable);
+                errs.merge(result.errs);
+            }
+            executor.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
         return value;
+    }
+
+    record OneTableParserResult(CfgValue.VTable vTable,
+                                ValueErrs errs) {
     }
 
 }

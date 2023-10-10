@@ -17,13 +17,16 @@ public record ValueErrs(List<VErr> errs) {
         errs.add(err);
     }
 
-    public void print() {
-        System.out.println(STR. "errors \{ errs.size() }:" );
-        for (VErr err : errs) {
-            System.out.println("\t" + err);
-        }
+    void merge(ValueErrs other) {
+        errs.addAll(other.errs);
+    }
 
-        if (!errs.isEmpty()){
+    public void print() {
+        if (!errs.isEmpty()) {
+            System.out.println(STR. "errors \{ errs.size() }:" );
+            for (VErr err : errs) {
+                System.out.println("\t" + err);
+            }
             throw new IllegalStateException("请修复value errors后再继续");
         }
     }

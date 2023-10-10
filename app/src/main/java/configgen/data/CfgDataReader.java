@@ -42,7 +42,6 @@ public enum CfgDataReader {
         DataStat stat = new DataStat();
         List<Callable<Result>> tasks = new ArrayList<>();
 
-        Logger.profile("start readCfgData");
         Files.walkFileTree(rootDir, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path path, BasicFileAttributes a) {
@@ -95,7 +94,7 @@ public enum CfgDataReader {
             }
         }
 
-        Logger.profile("start readCfgData parse");
+        Logger.profile("-----read data - raw");
         List<Callable<DataStat>> parseTasks = new ArrayList<>();
         for (CfgData.DTable table : data.tables().values()) {
             parseTasks.add(() -> {
@@ -110,7 +109,7 @@ public enum CfgDataReader {
             DataStat tStat = future.get();
             stat.merge(tStat);
         }
-        Logger.profile("end readCfgData");
+        Logger.profile("-----read data - parse cell");
 
         stat.tableCount = data.tables().size();
         executor.close();

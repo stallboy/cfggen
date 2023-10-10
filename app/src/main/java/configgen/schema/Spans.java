@@ -4,10 +4,52 @@ import java.util.OptionalInt;
 
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
 import static configgen.schema.FieldType.*;
+import static configgen.schema.Metadata.*;
 
 public class Spans {
 
+    public static void preCalculateAllSpan(CfgSchema schema) {
+        for (Nameable item : schema.items()) {
+            switch (item) {
+                case InterfaceSchema interfaceSchema -> {
+                    for (StructSchema impl : interfaceSchema.impls()) {
+                        for (FieldSchema field : impl.fields()) {
+                            span(field);
+                        }
+                        span(impl);
+                    }
+                    span(interfaceSchema);
+                }
+                case Structural structural -> {
+                    for (FieldSchema field : structural.fields()) {
+                        span(field);
+                    }
+                    span(structural);
+                }
+            }
+        }
+    }
+
+    static final String SPAN = "__span";
+
     public static int span(Nameable nameable) {
+        Metadata meta = nameable.meta();
+        if (meta.get(SPAN) instanceof MetaInt vi) {
+            return vi.value();
+        }
+
+        int s = calcSpan(nameable);
+        meta.putInt(SPAN, s);
+        return s;
+    }
+
+    public static int calcSpan(Nameable nameable) {
+        Metadata meta = nameable.meta();
+        MetaValue value = meta.data().get(SPAN);
+        if (value instanceof MetaInt vi) {
+            return vi.value();
+        }
+
         if (nameable.fmt() == PACK || nameable.fmt() instanceof FieldFormat.Sep) {
             return 1;
         }
@@ -28,10 +70,19 @@ public class Spans {
     }
 
     public static int span(FieldSchema field) {
-        return span(field.type(), field.fmt());
+        Metadata meta = field.meta();
+        if (meta.get(SPAN) instanceof MetaInt vi) {
+            return vi.value();
+        }
+
+        int s = calcSpan(field);
+        meta.putInt(SPAN, s);
+        return s;
     }
 
-    public static int span(FieldType type, FieldFormat fmt) {
+    public static int calcSpan(FieldSchema field) {
+        FieldFormat fmt = field.fmt();
+
         switch (fmt) {
             case PACK:
             case FieldFormat.Sep _:
@@ -40,7 +91,7 @@ public class Spans {
                 break;
         }
 
-        switch (type) {
+        switch (field.type()) {
             case Primitive _ -> {
                 return 1;
             }

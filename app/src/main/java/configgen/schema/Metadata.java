@@ -16,7 +16,15 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         Objects.requireNonNull(data);
     }
 
-    boolean hasTag(String tag) {
+    public MetaValue get(String name) {
+        return data.get(name);
+    }
+
+    public void putInt(String name, int value) {
+        data.putLast(name, new MetaInt(value));
+    }
+
+    public boolean hasTag(String tag) {
         MetaValue value = data.get(tag);
         return value == TAG;
     }

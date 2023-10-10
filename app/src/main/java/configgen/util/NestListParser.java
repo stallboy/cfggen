@@ -5,8 +5,6 @@ import java.util.List;
 
 public class NestListParser {
 
-    private static final StringBuilder field = new StringBuilder(128); //这里假设是单线程
-
     private enum NestListState {
         START, NO_QUOTE, QUOTE, QUOTE2, IN_PARENTHESES, PARENTHESES_OK
     }
@@ -28,6 +26,7 @@ public class NestListParser {
     public static List<String> parseNestList(String str) {
         NestListState state = NestListState.START;
         ArrayList<String> list = new ArrayList<>();
+        StringBuilder field = new StringBuilder(128);
         field.setLength(0);
         int quoteCount_InParentheses = 0;
         int leftNotMatchCount_InParentheses = 0;
@@ -153,6 +152,7 @@ public class NestListParser {
     public static List<String> parseFunction(String str) {
         FunctionState state = FunctionState.START;
         ArrayList<String> list = new ArrayList<>(2);
+        StringBuilder field = new StringBuilder(128);
         field.setLength(0);
 
         boolean parameters_ok = false;
