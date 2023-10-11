@@ -1,74 +1,52 @@
 package configgen.gen;
 
-import configgen.util.SheetData;
-import configgen.util.SheetUtils;
+import configgen.util.CSVUtil;
+import de.siegmar.fastcsv.reader.CsvRow;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public final class I18n {
+    private Map<String, Map<String, String>> map;
+    private final boolean isCRLFAsLF;
+    private Map<String, String> curTable;
 
-    public interface Collector {
-        void enterTable(String table);
-
-        void enterText(String original, String text);
+    public I18n() {
+        isCRLFAsLF = false;
     }
 
-    private Map<String, Map<String, String>> map = null;
-    private Map<String, String> curTable = null;
-    private boolean isCRLFAsLF;
-
-
-    private Collector collector;
-
-    I18n() {
-    }
-
-    I18n(String file, String encoding, boolean crlfaslf) {
-        this(Paths.get(file), encoding, crlfaslf);
-    }
-
-    I18n(Path path, String encoding, boolean crlfaslf) {
+    public I18n(Path path, String encoding, boolean crlfaslf) {
         map = new HashMap<>();
-        List<SheetData> sheetDataList = SheetUtils.readFromFile(path.toFile(), encoding);
-        if (sheetDataList.size() == 0) {
-            throw new IllegalArgumentException("国际化i18n文件为空");
-        }
-        if (sheetDataList.size() > 1) {
-            throw new IllegalArgumentException("国际化i18n文件有多个");
-        }
-        List<List<String>> rows = sheetDataList.get(0).rows;
+        List<CsvRow> rows = CSVUtil.read(path, encoding);
 
         if (rows.isEmpty()) {
             throw new IllegalArgumentException("国际化i18n文件为空");
         }
-        List<String> row0 = rows.get(0);
-        if (row0.size() != 3) {
+        CsvRow row0 = rows.get(0);
+        if (row0.getFieldCount() != 3) {
             throw new IllegalArgumentException("国际化i18n文件列数不为3");
         }
 
         isCRLFAsLF = crlfaslf;
-        for (List<String> row : rows) {
+        for (CsvRow row : rows) {
             if (row.isEmpty()) {
                 continue;
             }
-            if (row.size() != 3) {
+            if (row.getFieldCount() != 3) {
                 System.out.println(row + " 不是3列，被忽略");
             } else {
-                String table = row.get(0);
-                String raw = row.get(1);
-                String i18 = row.get(2);
+                String table = row.getField(0);
+                String raw = row.getField(1);
+                String i18 = row.getField(2);
                 raw = normalizeRaw(raw);
 
-                Map<String, String> m = map.computeIfAbsent(table, k -> new HashMap<>());
+                Map<String, String> m = map.computeIfAbsent(table, _ -> new HashMap<>());
                 m.put(raw, i18);
             }
         }
     }
-
 
     private String normalizeRaw(String raw) {
         if (isCRLFAsLF) {
@@ -78,48 +56,28 @@ public final class I18n {
         }
     }
 
-    public void setCollector(Collector collector) {
-        this.collector = collector;
+    public Map<String, String> getTable(String table) {
+        return map.get(table);
     }
 
-    public void enterTable(String table) {
-        if (collector != null) {
-            collector.enterTable(table);
-        }
-
-        if (map == null) {
-            return;
-        }
-        curTable = map.get(table);
-    }
-
-    // 没找到或是原字符串是空字符串，则返回null
-    public String enterText(String raw) {
-        if (collector == null && curTable == null) {
+    public String getText(Map<String, String> table, String raw) {
+        if (table == null) {
             return null;
         }
-
         raw = normalizeRaw(raw);
-        String text;
-        String res;
-        if (curTable != null) {
-            text = curTable.get(raw);
-            if (text != null && !text.isEmpty()) {
-                res = text;
-            } else {
-                res = null;
-                text = "";
-            }
-        } else {
-            text = "";
-            res = null;
+        String text = table.get(raw);
+        if (text != null && !text.isEmpty()) {
+            return text;
         }
-
-        if (collector != null) {
-            collector.enterText(raw, text);
-        }
-        return res;
+        return null;
     }
 
+    public void enterTable(String tableName) {
+        curTable = getTable(tableName);
+    }
+
+    public String enterText(String raw) {
+        return getText(curTable, raw);
+    }
 }
 

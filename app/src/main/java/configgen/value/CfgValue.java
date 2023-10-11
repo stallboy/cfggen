@@ -12,6 +12,10 @@ import static configgen.data.CfgData.DCell;
 public record CfgValue(CfgSchema schema,
                        Map<String, VTable> vTableMap) {
 
+    public Iterable<VTable> tables() {
+        return vTableMap().values();
+    }
+
     public record VTable(TableSchema schema,
                          List<VStruct> valueList,
 
@@ -19,19 +23,23 @@ public record CfgValue(CfgSchema schema,
                          Map<List<String>, Set<Value>> uniqueKeyValueSetMap,
                          Set<String> enumNames, //可为null
                          Map<String, Integer> enumNameToIntegerValueMap) { //可为null
+
+        public String name() {
+            return schema.name();
+        }
     }
 
-    public interface Value {
+    public sealed interface Value {
         List<DCell> cells();
     }
 
-    public interface SimpleValue extends Value {
+    public sealed interface SimpleValue extends Value {
     }
 
-    public interface ContainerValue extends Value {
+    public sealed interface ContainerValue extends Value {
     }
 
-    public interface PrimitiveValue extends SimpleValue {
+    public sealed interface PrimitiveValue extends SimpleValue {
         DCell cell();
 
         @Override
@@ -178,8 +186,11 @@ public record CfgValue(CfgSchema schema,
         }
     }
 
+    public sealed interface StringValue extends PrimitiveValue {
+        String value();
+    }
 
-    public record VString(String value, DCell cell) implements PrimitiveValue {
+    public record VString(String value, DCell cell) implements StringValue {
 
         @Override
         public boolean equals(Object o) {
@@ -196,7 +207,7 @@ public record CfgValue(CfgSchema schema,
     }
 
 
-    public record VText(String value, DCell cell) implements PrimitiveValue {
+    public record VText(String value, DCell cell) implements StringValue {
 
         @Override
         public boolean equals(Object o) {

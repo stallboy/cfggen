@@ -1,27 +1,18 @@
 package configgen.gen;
 
 import configgen.Logger;
-import configgen.gencs.GenBytes;
-import configgen.gencs.GenCs;
-import configgen.gencs.GenPack;
-import configgen.genjava.GenJavaData;
-import configgen.genjava.code.GenJavaCode;
-import configgen.genlua.GenLua;
-import configgen.tool.*;
+import configgen.tool.ValueSearcher;
 import configgen.util.CachedFiles;
-import configgen.view.ViewFilter;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public final class Main {
     private static void usage(String reason) {
         System.out.println(reason);
 
-        System.out.println("Usage: java -jar configgen.jar -datadir [dir] [options] [gens]");
+        System.out.println("Usage: app.bat -datadir [dir] [options] [gens]");
         System.out.println();
         System.out.println("----配置表信息--------------------------------------");
         System.out.println("    -datadir      配表根目录，根目录可以有个config.xml");
@@ -48,11 +39,11 @@ public final class Main {
         System.out.println();
         System.out.println("----以下gen参数之间由,分割,参数名和参数取值之间由=或:分割--------------------------------------");
         Generators.getAllProviders().forEach((k, v) -> {
-                                                 System.out.printf("    -gen %s\n", k);
-                                                 Usage usage = new Usage();
-                                                 v.create(usage);
-                                                 usage.print();
-                                             }
+                    System.out.printf("    -gen %s\n", k);
+                    Usage usage = new Usage();
+                    v.create(usage);
+                    usage.print();
+                }
         );
 
 
@@ -80,46 +71,46 @@ public final class Main {
     }
 
     private static void main0(String[] args) throws Exception {
-        Generators.addProvider("java", GenJavaCode::new);
-        Generators.addProvider("javadata", GenJavaData::new);
-
-        Generators.addProvider("lua", GenLua::new);
-        Generators.addProvider("cs", GenCs::new);
-        Generators.addProvider("pack", GenPack::new);
-        Generators.addProvider("bytes", GenBytes::new);
-
-        Generators.addProvider("i18n", GenI18n::new);
-        Generators.addProvider("allrefvalues", GenAllRefValues::new);
+//        Generators.addProvider("java", GenJavaCode::new);
+//        Generators.addProvider("javadata", GenJavaData::new);
+//
+//        Generators.addProvider("lua", GenLua::new);
+//        Generators.addProvider("cs", GenCs::new);
+//        Generators.addProvider("pack", GenPack::new);
+//        Generators.addProvider("bytes", GenBytes::new);
+//
+//        Generators.addProvider("i18n", GenI18n::new);
+//        Generators.addProvider("allrefvalues", GenAllRefValues::new);
 
 
         String datadir = null;
+        int headRow = 2;
         String encoding = "GBK";
 
         String i18nfile = null;
         String i18nencoding = "GBK";
         boolean i18ncrlfaslf = false;
-
         String langSwitchDir = null;
-
-        String replaceFile = null;
 
         boolean verify = false;
         List<Generator> generators = new ArrayList<>();
 
-        boolean dump = false;
 
         String binaryToTextFile = null;
         String match = null;
-        boolean compatibleForOwn = false;
 
 
-        Set<Integer> searchIntegers = null;
+        List<String> searchParam = null;
 
         for (int i = 0; i < args.length; ++i) {
             switch (args[i]) {
                 case "-datadir":
                     datadir = args[++i];
                     break;
+                case "-headrow":
+                    headRow = Integer.parseInt(args[++i]);
+                    break;
+
                 case "-encoding":
                     encoding = args[++i];
                     break;
@@ -139,9 +130,6 @@ public final class Main {
                 case "-langSwitchDir":
                     langSwitchDir = args[++i];
                     break;
-                case "-replace":
-                    replaceFile = args[++i];
-                    break;
 
                 case "-v":
                     Logger.setVerboseLevel(1);
@@ -149,9 +137,6 @@ public final class Main {
                 case "-v1":
                     Logger.setVerboseLevel(1);
                     Logger.enableProfileGc();
-                    break;
-                case "-dump":
-                    dump = true;
                     break;
 
                 case "-binaryToText":
@@ -161,15 +146,11 @@ public final class Main {
                     }
                     break;
                 case "-search":
-                    searchIntegers = new HashSet<>();
+                    searchParam = new ArrayList<>();
                     while (i + 1 < args.length && !args[i + 1].startsWith("-")) {
-                        searchIntegers.add(Integer.parseInt(args[++i]));
+                        searchParam.add(args[++i]);
                     }
                     break;
-                case "-compatibleForOwn":
-                    compatibleForOwn = true;
-                    break;
-
 
                 case "-gen":
                     Generator generator = Generators.create(args[++i]);
@@ -185,19 +166,13 @@ public final class Main {
             }
         }
 
-        if (binaryToTextFile != null) {
-            BinaryToText.parse(binaryToTextFile, match);
-            return;
-        }
+//        if (binaryToTextFile != null) {
+//            BinaryToText.parse(binaryToTextFile, match);
+//            return;
+//        }
 
-        if (compatibleForOwn) {
-            if (datadir != null) {
-                CompatibleForOwn.makeCompatible(Paths.get(datadir), encoding);
-            } else {
-                usage("-compatibleForOwn 需要配置-datadir");
-            }
-            return;
-        }
+        Logger.setVerboseLevel(0);
+        Logger.enableProfile();
 
         if (i18nfile != null && langSwitchDir != null) {
             usage("-不能同时配置-i18nfile和-langSwitchDir");
@@ -210,24 +185,22 @@ public final class Main {
         }
 
         Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));
-        Context ctx = new Context(Paths.get(datadir), encoding);
+        Context ctx = new Context(Paths.get(datadir), headRow, encoding);
         ctx.setI18nOrLangSwitch(i18nfile, langSwitchDir, i18nencoding, i18ncrlfaslf);
-        if (dump) {
-            ctx.dump();
-        }
 
-        if (replaceFile != null) {
-            ctx.setReplacement(replaceFile);
-        }
-
-        if (searchIntegers != null) {
-            ValueSearcher.searchValues(ctx.makeValue(ViewFilter.FULL_DEFINE), searchIntegers);
+        if (searchParam != null) {
+            ValueSearcher searcher = new ValueSearcher(ctx.makeValue());
+            if (searchParam.isEmpty()) {
+                searcher.loop();
+            } else {
+                searcher.search(String.join(" ", searchParam));
+            }
             return;
         }
 
         if (verify) {
             Logger.verbose("-----start verify");
-            ctx.makeValue(ViewFilter.FULL_DEFINE);
+            ctx.makeValue();
         }
 
         for (Generator generator : generators) {

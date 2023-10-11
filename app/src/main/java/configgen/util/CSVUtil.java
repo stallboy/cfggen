@@ -1,9 +1,28 @@
 package configgen.util;
 
+import de.siegmar.fastcsv.reader.CsvReader;
+import de.siegmar.fastcsv.reader.CsvRow;
+
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
-public class CSVWriter {
+public class CSVUtil {
+
+    public static List<CsvRow> read(Path path, String defaultEncoding) {
+        try (CsvReader reader = CsvReader.builder().build(new UnicodeReader(Files.newInputStream(path), defaultEncoding))) {
+            List<CsvRow> rows = new ArrayList<>();
+            for (CsvRow csvRow : reader) {
+                rows.add(csvRow);
+            }
+            return rows;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     /* https://tools.ietf.org/html/rfc4180
    6.  Fields containing line breaks (CRLF), double quotes, and commas
@@ -39,7 +58,7 @@ public class CSVWriter {
                     enclose = true;
                 } else if (cell.contains("\r\n") || cell.contains(",")) {
                     enclose = true;
-                } else if (cell.contains("\r") || cell.contains("\n")){ //这个是为了兼容excel，不是rfc4180的要求
+                } else if (cell.contains("\r") || cell.contains("\n")) { //这个是为了兼容excel，不是rfc4180的要求
                     enclose = true;
                 }
 
@@ -60,7 +79,7 @@ public class CSVWriter {
 
 
     public static void writeToFile(File file, String encoding, List<List<String>> rows) throws IOException {
-        try(Writer w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), encoding))){
+        try (Writer w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), encoding))) {
             write(w, rows);
         }
     }

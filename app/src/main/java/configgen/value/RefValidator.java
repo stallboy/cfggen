@@ -19,7 +19,7 @@ public class RefValidator {
 
     public void validate() {
         presetForeignKeyValueSet();
-        for (CfgValue.VTable vTable : value.vTableMap().values()) {
+        for (VTable vTable : value.vTableMap().values()) {
             validateTable(vTable);
         }
     }
@@ -32,9 +32,7 @@ public class RefValidator {
                         presetStructural(impl);
                     }
                 }
-                case Structural structural -> {
-                    presetStructural(structural);
-                }
+                case Structural structural -> presetStructural(structural);
             }
         }
     }
@@ -45,12 +43,12 @@ public class RefValidator {
                 case RefKey.RefList _ -> {
                 }
                 case RefKey.RefPrimary _ -> {
-                    CfgValue.VTable vTable = value.vTableMap().get(fk.refTable());
+                    VTable vTable = value.vTableMap().get(fk.refTableNormalized());
                     fk.fkValueSet = vTable.primaryKeyValueSet();
                     fk.keyIndices = FindFieldIndex.findFieldIndices(structural, fk.key());
                 }
                 case RefKey.RefUniq refUniq -> {
-                    CfgValue.VTable vTable = value.vTableMap().get(fk.refTable());
+                    VTable vTable = value.vTableMap().get(fk.refTableNormalized());
                     fk.fkValueSet = vTable.uniqueKeyValueSetMap().get(refUniq.keyNames());
                     fk.keyIndices = FindFieldIndex.findFieldIndices(structural, fk.key());
                 }
@@ -58,7 +56,7 @@ public class RefValidator {
         }
     }
 
-    private void validateTable(CfgValue.VTable vTable) {
+    private void validateTable(VTable vTable) {
         for (VStruct vStruct : vTable.valueList()) {
             validateStruct(vStruct, vTable.schema().name());
         }
@@ -72,8 +70,8 @@ public class RefValidator {
 
                 FieldType ft = fk.key().obj().get(0).type();
                 switch (ft) {
-                    case SimpleType _ -> {
-                        CfgValue.Value localValue = ValueUtil.extractKeyValue(vStruct, fk.keyIndices);
+                    case  SimpleType _ -> {
+                        Value localValue = ValueUtil.extractKeyValue(vStruct, fk.keyIndices);
                         if (ValueUtil.isValueCellsNotAllEmpty(localValue)) {
                             if (!fk.fkValueSet.contains(localValue)) {
                                 errs.addErr(new ForeignValueNotFound(localValue.cells(), tableName, fk.name()));
@@ -85,7 +83,7 @@ public class RefValidator {
                         }
                     }
                     case FList _ -> {
-                        CfgValue.VList localList = (CfgValue.VList) vStruct.values().get(fk.keyIndices[0]);
+                        VList localList = (VList) vStruct.values().get(fk.keyIndices[0]);
                         for (SimpleValue item : localList.valueList()) {
                             if (!fk.fkValueSet.contains(item)) {
                                 errs.addErr(new ForeignValueNotFound(item.cells(), tableName, fk.name()));
@@ -93,7 +91,7 @@ public class RefValidator {
                         }
                     }
                     case FMap _ -> {
-                        CfgValue.VMap localMap = (CfgValue.VMap) vStruct.values().get(fk.keyIndices[0]);
+                        VMap localMap = (VMap) vStruct.values().get(fk.keyIndices[0]);
 
                         for (SimpleValue val : localMap.valueMap().values()) {
                             if (!fk.fkValueSet.contains(val)) {

@@ -42,7 +42,7 @@ public class Main {
         Logger.profile("schema resolve");
 
 
-        CfgData data = CfgDataReader.INSTANCE.readCfgData(Path.of("."), schema, headRow);
+        CfgData data = CfgDataReader.INSTANCE.readCfgData(Path.of("."), schema, headRow, "GBK");
         data.stat().print();
         if (Logger.verboseLevel() > 1) {
             data.print();
@@ -61,6 +61,12 @@ public class Main {
         }
 
 
+
+        ValueErrs valueErr = ValueErrs.of();
+        CfgValueParser cfgValueParser = new CfgValueParser(alignedSchema, data, alignedSchema, valueErr);
+        CfgValue cfgValue = cfgValueParser.parseCfgValue();
+        valueErr.print();
+
         SchemaErrs clientErr = SchemaErrs.of();
         CfgSchema clientSchema = new CfgSchemaFilterByTag(alignedSchema, "client", clientErr).filter();
         new CfgSchemaResolver(clientSchema, clientErr).resolve();
@@ -68,10 +74,9 @@ public class Main {
         Logger.profile("schema filtered by client");
 
         ValueErrs clientValueErr = ValueErrs.of();
-        CfgValueParser cfgValueParser = new CfgValueParser(clientSchema, data, alignedSchema, clientValueErr);
-        CfgValue cfgValue = cfgValueParser.parseCfgValue();
+        CfgValueParser clientValueParser = new CfgValueParser(clientSchema, data, alignedSchema, clientValueErr);
+        CfgValue clientValue = clientValueParser.parseCfgValue();
         clientValueErr.print();
-
 
     }
 

@@ -1,19 +1,17 @@
 package configgen.gen;
 
-import configgen.util.EFileFormat;
-import configgen.util.SheetUtils;
-
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class LangSwitch {
 
     public static class Lang {
-        private String lang;
-        private I18n i18n;
-        private List<String> idToStr = new ArrayList<>();
+        private final String lang;
+        private final I18n i18n;
+        private final List<String> idToStr = new ArrayList<>();
 
         Lang(String lang, I18n i18n) {
             this.lang = lang;
@@ -31,25 +29,21 @@ public class LangSwitch {
     }
 
 
-    private Map<String, Lang> langMap = new TreeMap<>();
+    private final Map<String, Lang> langMap = new TreeMap<>();
     private int next;
-    private String[] tmp;
-    private String[] tmpEmpty;
+    private final String[] tmpEmpty;
 
 
-    LangSwitch(String path, String encoding, boolean crlfaslf) {
+    public LangSwitch(Path path, String encoding, boolean crlfaslf) {
         langMap.put("zh_cn", new Lang("zh_cn", new I18n())); //原始csv里是中文
-        try {
-            Files.list(Paths.get(path)).forEach(langFilePath -> {
-                EFileFormat format = SheetUtils.getFileFormat(langFilePath.toFile());
-                if (format != null) {
-                    String langName = langFilePath.getFileName().toString();
-                    int i = langName.lastIndexOf(".");
-                    if (i >= 0) {
-                        langName = langName.substring(0, i);
-                    }
-                    langMap.put(langName, new Lang(langName, new I18n(langFilePath, encoding, crlfaslf)));
+        try (Stream<Path> plist = Files.list(path)) {
+            plist.forEach(langFilePath -> {
+                String langName = langFilePath.getFileName().toString();
+                int i = langName.lastIndexOf(".");
+                if (i >= 0) {
+                    langName = langName.substring(0, i);
                 }
+                langMap.put(langName, new Lang(langName, new I18n(langFilePath, encoding, crlfaslf)));
             });
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -57,8 +51,6 @@ public class LangSwitch {
 
 
         int langCnt = langMap.size();
-        tmp = new String[langCnt];
-
         tmpEmpty = new String[langCnt];
         for (int i = 0; i < langCnt; i++) {
             tmpEmpty[i] = "";
@@ -97,6 +89,7 @@ public class LangSwitch {
             return tmpEmpty;
         }
 
+        String[] tmp = new String[langMap.size()];
         int i = 0;
         for (Lang lang : langMap.values()) {
             String t = lang.i18n.enterText(raw);
@@ -107,6 +100,5 @@ public class LangSwitch {
         }
         return tmp;
     }
-
 
 }

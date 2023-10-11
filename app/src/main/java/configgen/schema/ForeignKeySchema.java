@@ -49,6 +49,10 @@ public class ForeignKeySchema {
         return refTable;
     }
 
+    public String refTableNormalized() {
+        return refTableSchema.name();
+    }
+
     public RefKey refKey() {
         return refKey;
     }

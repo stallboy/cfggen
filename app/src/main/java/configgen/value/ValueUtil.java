@@ -3,13 +3,11 @@ package configgen.value;
 import java.util.ArrayList;
 import java.util.List;
 
-import static configgen.data.CfgData.DCell;
-import static configgen.value.CfgValue.SimpleValue;
-import static configgen.value.CfgValue.VStruct;
+import static configgen.value.CfgValue.*;
 
-class ValueUtil {
+public class ValueUtil {
 
-    static CfgValue.Value extractKeyValue(VStruct vStruct, int[] keyIndices) {
+    public static Value extractKeyValue(VStruct vStruct, int[] keyIndices) {
         if (keyIndices.length == 1) {
             return vStruct.values().get(keyIndices[0]);
         } else {
@@ -17,11 +15,11 @@ class ValueUtil {
             for (int keyIndex : keyIndices) {
                 values.add((SimpleValue) vStruct.values().get(keyIndex));
             }
-            return CfgValue.VList.of(values);
+            return VList.of(values);
         }
     }
 
-    static boolean isValueCellsNotAllEmpty(CfgValue.Value value) {
+    public static boolean isValueCellsNotAllEmpty(Value value) {
         return value.cells().stream().anyMatch(c -> !c.isCellEmpty());
     }
 

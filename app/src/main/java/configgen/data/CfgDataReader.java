@@ -27,18 +27,20 @@ import static configgen.data.CfgData.*;
 public enum CfgDataReader {
     INSTANCE;
 
-    public CfgData readCfgData(Path rootDir, CfgSchema nullableCfgSchema, int headRow) {
+
+    public CfgData readCfgData(Path rootDir, CfgSchema nullableCfgSchema, int headRow, String defaultEncoding) {
         if (headRow < 2) {
             throw new IllegalArgumentException(STR. "headRow =\{ headRow } < 2" );
         }
         try {
-            return _readCfgData(rootDir, nullableCfgSchema, headRow);
+            return _readCfgData(rootDir, nullableCfgSchema, headRow, defaultEncoding);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private CfgData _readCfgData(Path rootDir, CfgSchema nullableCfgSchema, int headRow) throws Exception {
+    private CfgData _readCfgData(Path rootDir, CfgSchema nullableCfgSchema,
+                                 int headRow, String defaultEncoding) throws Exception {
         DataStat stat = new DataStat();
         List<Callable<Result>> tasks = new ArrayList<>();
 
@@ -65,7 +67,7 @@ public enum CfgDataReader {
                             return FileVisitResult.CONTINUE;
                         } else {
                             stat.csvCount++;
-                            tasks.add(() -> readCsvByFastCsv(path, relativePath, ti));
+                            tasks.add(() -> readCsvByFastCsv(path, relativePath, ti, defaultEncoding));
                         }
                     }
                     case EXCEL -> {
@@ -138,11 +140,12 @@ public enum CfgDataReader {
     }
 
 
-    private Result readCsvByFastCsv(Path path, Path relativePath, DataUtil.TableNameIndex ti) throws IOException {
+    private Result readCsvByFastCsv(Path path, Path relativePath, DataUtil.TableNameIndex ti,
+                                    String defaultEncoding) throws IOException {
         int count = 0;
         DataStat stat = new DataStat();
         List<DRawRow> rows = new ArrayList<>();
-        try (CsvReader reader = CsvReader.builder().build(new UnicodeReader(Files.newInputStream(path), "GBK"))) {
+        try (CsvReader reader = CsvReader.builder().build(new UnicodeReader(Files.newInputStream(path), defaultEncoding))) {
             for (CsvRow csvRow : reader) {
                 stat.cellCsvCount += csvRow.getFieldCount();
                 if (count == 0) {
@@ -162,7 +165,7 @@ public enum CfgDataReader {
         List<OneSheetResult> sheets = new ArrayList<>();
 
         stat.excelCount++;
-        try (ReadableWorkbook wb = new ReadableWorkbook(path.toFile())) {
+        try (ReadableWorkbook wb = new ReadableWorkbook(path.toFile(), new ReadingOptions(true, false))) {
             for (Sheet sheet : wb.getSheets().toList()) {
                 String sheetName = sheet.getName().trim();
 

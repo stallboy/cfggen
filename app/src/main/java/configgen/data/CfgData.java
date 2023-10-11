@@ -19,6 +19,9 @@ public record CfgData(Map<String, DTable> tables,
      * @param fields    head信息
      * @param rows      无head，去空行，去注释行，去注释列。规整的相同列数的row，列数不为0
      * @param rawSheets 原始的excel[sheet]信息
+     *                  约定表格必须在同一个文件夹下，且名称为 xxx 或者 xxx_0,xxx_1,xxx_2,xxx_3 ...
+     *                  比如task表，如果是csv配置，可以拆分成：task.csv(同task_0.csv)，task_1.csv，task_2.csv
+     *                  如果是excel配置，excel中的页签名称可以拆分成：task(同task_0)，task_1，task_2
      */
     public record DTable(String tableName,
                          List<DField> fields,   // by HeadParser

@@ -15,6 +15,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import static configgen.value.CfgValue.*;
+
 public class CfgValueParser {
     private final CfgSchema subSchema;
     private final CfgData data;
@@ -55,7 +57,7 @@ public class CfgValueParser {
             tasks.add(() -> {
                 ValueErrs errs = ValueErrs.of();
                 TableParser parser = new TableParser(subTable, dTable, table, errs);
-                CfgValue.VTable vTable = parser.parseTable();
+                VTable vTable = parser.parseTable();
                 return new OneTableParserResult(vTable, errs);
             });
         }
@@ -65,7 +67,7 @@ public class CfgValueParser {
             List<Future<OneTableParserResult>> futures = executor.invokeAll(tasks);
             for (Future<OneTableParserResult> future : futures) {
                 OneTableParserResult result = future.get();
-                CfgValue.VTable vTable = result.vTable;
+                VTable vTable = result.vTable;
                 value.vTableMap().put(vTable.schema().name(), vTable);
                 errs.merge(result.errs);
             }
@@ -81,7 +83,7 @@ public class CfgValueParser {
         return value;
     }
 
-    record OneTableParserResult(CfgValue.VTable vTable,
+    record OneTableParserResult(VTable vTable,
                                 ValueErrs errs) {
     }
 

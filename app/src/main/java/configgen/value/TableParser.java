@@ -12,8 +12,6 @@ import static configgen.schema.FieldFormat.Block;
 import static configgen.schema.FieldFormat.Sep;
 import static configgen.schema.FieldType.Primitive.*;
 import static configgen.value.CfgValue.*;
-import static configgen.value.CfgValue.VInterface;
-import static configgen.value.CfgValue.VStruct;
 import static configgen.value.ValueErrs.*;
 
 public class TableParser {
@@ -30,7 +28,7 @@ public class TableParser {
         this.errs = errs;
     }
 
-    public CfgValue.VTable parseTable() {
+    public VTable parseTable() {
         boolean hasBlock = HasBlock.hasBlock(tableSchema);
 
         int rowCnt = dTable.rows().size();
@@ -55,11 +53,11 @@ public class TableParser {
         }
 
         // 收集主键和唯一键
-        Set<CfgValue.Value> primaryKeyValueSet = new LinkedHashSet<>();
-        Map<List<String>, Set<CfgValue.Value>> uniqueKeyValueSetMap = new LinkedHashMap<>();
+        Set<Value> primaryKeyValueSet = new LinkedHashSet<>();
+        Map<List<String>, Set<Value>> uniqueKeyValueSetMap = new LinkedHashMap<>();
         extractKeyValues(primaryKeyValueSet, valueList, subTableSchema.primaryKey());
         for (KeySchema uniqueKey : subTableSchema.uniqueKeys()) {
-            Set<CfgValue.Value> res = new LinkedHashSet<>();
+            Set<Value> res = new LinkedHashSet<>();
             extractKeyValues(res, valueList, uniqueKey);
             uniqueKeyValueSetMap.put(uniqueKey.name(), res);
         }
@@ -81,7 +79,7 @@ public class TableParser {
             }
 
             for (VStruct vStruct : valueList) {
-                CfgValue.VString vStr = (CfgValue.VString) vStruct.values().get(idx);
+                VString vStr = (VString) vStruct.values().get(idx);
                 String e = vStr.value();
                 if (e.contains(" ")) {
                     errs.addErr(new EntryContainsSpace(vStr.cell(), tableSchema.name()));
@@ -100,7 +98,7 @@ public class TableParser {
                         enumNames.add(e);
 
                         if (pkIdx != -1) { //必须是int，这里是java生成需要
-                            CfgValue.VInt vInt = (CfgValue.VInt) vStruct.values().get(pkIdx);
+                            VInt vInt = (VInt) vStruct.values().get(pkIdx);
                             enumNameToIntegerValueMap.put(e, vInt.value());
                         }
                     }
@@ -109,14 +107,14 @@ public class TableParser {
         }
 
 
-        return new CfgValue.VTable(subTableSchema, valueList,
+        return new VTable(subTableSchema, valueList,
                 primaryKeyValueSet, uniqueKeyValueSetMap, enumNames, enumNameToIntegerValueMap);
     }
 
-    private void extractKeyValues(Set<CfgValue.Value> keyValueSet, List<VStruct> valueList, KeySchema key) {
+    private void extractKeyValues(Set<Value> keyValueSet, List<VStruct> valueList, KeySchema key) {
         int[] keyIndices = FindFieldIndex.findFieldIndices(subTableSchema, key);
         for (VStruct value : valueList) {
-            CfgValue.Value keyValue = ValueUtil.extractKeyValue(value, keyIndices);
+            Value keyValue = ValueUtil.extractKeyValue(value, keyIndices);
             boolean add = keyValueSet.add(keyValue);
             if (!add) {
                 errs.addErr(new PrimaryOrUniqueKeyDuplicated(keyValue.cells(), tableSchema.name(), key.name()));
@@ -263,12 +261,12 @@ public class TableParser {
             require(cells.size() == Spans.span(structural), "列宽度应一致");
         }
 
-        List<CfgValue.Value> values = new ArrayList<>(subStructural.fields().size());
+        List<Value> values = new ArrayList<>(subStructural.fields().size());
         if (isEmpty) {
             for (FieldSchema subField : subStructural.fields()) {
                 FieldSchema field = structural.findField(subField.name());
                 require(field != null);
-                CfgValue.Value v = parseField(subField, parsed, field,
+                Value v = parseField(subField, parsed, field,
                         true, true, curRowIndex, structural.name());
                 values.add(v);
             }
@@ -287,7 +285,7 @@ public class TableParser {
                     }
 
                     List<DCell> fieldCells = parsed.subList(startIdx, startIdx + expected);
-                    CfgValue.Value v = parseField(subField, fieldCells, field,
+                    Value v = parseField(subField, fieldCells, field,
                             isPack || field.fmt() == PACK, canChildBeEmpty, curRowIndex, structural.name());
                     values.add(v);
                 }
@@ -313,7 +311,7 @@ public class TableParser {
                         if (!boolStrSet.contains(str.toLowerCase())) {
                             errs.addErr(new NotMatchFieldType(cell, nameable, field, type));
                         }
-                        return new CfgValue.VBool(v, cell);
+                        return new VBool(v, cell);
                     }
                     case INT -> {
                         int v = 0;
@@ -322,7 +320,7 @@ public class TableParser {
                         } catch (Exception e) {
                             errs.addErr(new NotMatchFieldType(cell, nameable, field, type));
                         }
-                        return new CfgValue.VInt(v, cell);
+                        return new VInt(v, cell);
                     }
                     case LONG -> {
                         long v = 0;
@@ -331,7 +329,7 @@ public class TableParser {
                         } catch (Exception e) {
                             errs.addErr(new NotMatchFieldType(cell, nameable, field, type));
                         }
-                        return new CfgValue.VLong(v, cell);
+                        return new VLong(v, cell);
                     }
                     case FLOAT -> {
                         float v = 0f;
@@ -340,10 +338,10 @@ public class TableParser {
                         } catch (Exception e) {
                             errs.addErr(new NotMatchFieldType(cell, nameable, field, type));
                         }
-                        return new CfgValue.VFloat(v, cell);
+                        return new VFloat(v, cell);
                     }
                     case STRING -> {
-                        return new CfgValue.VString(str, cell);
+                        return new VString(str, cell);
                     }
                     case TEXT -> {
                         return new VText(str, cell);
@@ -370,7 +368,7 @@ public class TableParser {
         return null;
     }
 
-    CfgValue.Value parseField(FieldSchema subField, List<DCell> cells, FieldSchema field,
+    Value parseField(FieldSchema subField, List<DCell> cells, FieldSchema field,
                               boolean pack, boolean canBeEmpty, int curRowIndex,
                               String nameable) {
 
@@ -388,7 +386,7 @@ public class TableParser {
         }
     }
 
-    CfgValue.VMap parseMap(FieldSchema subField, List<DCell> cells, FieldSchema field,
+    VMap parseMap(FieldSchema subField, List<DCell> cells, FieldSchema field,
                             boolean isPack, int curRowIndex,
                             String nameable) {
 
@@ -459,11 +457,11 @@ public class TableParser {
             }
         }
 
-        return new CfgValue.VMap(valueMap, cells);
+        return new VMap(valueMap, cells);
     }
 
 
-    CfgValue.VList parseList(FieldSchema subField, List<DCell> cells, FieldSchema field,
+    VList parseList(FieldSchema subField, List<DCell> cells, FieldSchema field,
                              boolean isPack, int curRowIndex,
                              String nameable) {
 
@@ -524,7 +522,7 @@ public class TableParser {
                 }
             }
         }
-        return new CfgValue.VList(valueList, cells);
+        return new VList(valueList, cells);
 
     }
 
