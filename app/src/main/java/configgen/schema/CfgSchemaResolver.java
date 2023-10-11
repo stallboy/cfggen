@@ -20,7 +20,6 @@ public final class CfgSchemaResolver {
     private final SchemaErrs errs;
     private Nameable curNameable;
     private StructSchema curImpl;
-    private boolean isInCurImpl;
 
     public CfgSchemaResolver(CfgSchema cfg, SchemaErrs errs) {
         this.cfg = cfg;
@@ -147,16 +146,16 @@ public final class CfgSchemaResolver {
                 }
                 case InterfaceSchema sInterface -> {
                     for (StructSchema impl : sInterface.impls()) {
-                        this.isInCurImpl = true;
                         this.curImpl = impl;
                         action.run(impl);
+                        this.curImpl = null;
                     }
-                    this.isInCurImpl = false;
                 }
                 case TableSchema table -> {
                     action.run(table);
                 }
             }
+            curNameable = null;
         }
     }
 
@@ -214,7 +213,7 @@ public final class CfgSchemaResolver {
 
     private String ctx() {
         String ctx = curNameable.name();
-        if (isInCurImpl) {
+        if (curImpl != null) {
             ctx += "." + curImpl.name();
         }
         return ctx;

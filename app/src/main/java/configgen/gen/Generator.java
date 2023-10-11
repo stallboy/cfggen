@@ -12,6 +12,7 @@ import java.util.zip.ZipOutputStream;
 
 public abstract class Generator {
     protected final Parameter parameter;
+    protected String tag;
 
     /**
      * @param parameter 此接口有2个实现类，一个用于收集usage，一个用于实际参数解析
@@ -19,6 +20,7 @@ public abstract class Generator {
      */
     protected Generator(Parameter parameter) {
         this.parameter = parameter;
+        tag = parameter.get("tag", null, "提取部分配置");
     }
 
     public abstract void generate(Context ctx) throws IOException;

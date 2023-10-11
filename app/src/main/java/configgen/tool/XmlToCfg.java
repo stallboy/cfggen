@@ -18,7 +18,6 @@ public class XmlToCfg {
         Cfgs.writeTo(cfgPath, true, cfg2);
         CfgSchema cfg3 = Cfgs.readFrom(cfgPath, true);
 
-        System.out.println(cfg2.items().size());
         if (!cfg2.equals(cfg3)) {
             throw new IllegalStateException("should equal");
         }

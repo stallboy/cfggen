@@ -10,12 +10,7 @@ import java.util.*;
 
 import static configgen.value.CfgValue.*;
 
-public class ValueSearcher {
-    private final CfgValue cfgValue;
-
-    public ValueSearcher(CfgValue cfgValue) {
-        this.cfgValue = cfgValue;
-    }
+public record ValueSearcher(CfgValue cfgValue) {
 
     public interface PrimitiveValueVisitor {
         void accept(PrimitiveValue value, String table, List<String> fieldChain);

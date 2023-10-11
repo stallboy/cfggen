@@ -19,9 +19,7 @@ public class RefValidator {
 
     public void validate() {
         presetForeignKeyValueSet();
-        for (VTable vTable : value.vTableMap().values()) {
-            validateTable(vTable);
-        }
+        new ForeachVStruct(value).forEach(this::validateVStruct);
     }
 
     private void presetForeignKeyValueSet() {
@@ -56,13 +54,8 @@ public class RefValidator {
         }
     }
 
-    private void validateTable(VTable vTable) {
-        for (VStruct vStruct : vTable.valueList()) {
-            validateStruct(vStruct, vTable.schema().name());
-        }
-    }
 
-    private void validateStruct(VStruct vStruct, String tableName) {
+    private void validateVStruct(VStruct vStruct, VTable fromTable) {
         Structural structural = vStruct.schema();
         for (ForeignKeySchema fk : structural.foreignKeys()) {
             RefKey refKey = fk.refKey();
@@ -70,15 +63,19 @@ public class RefValidator {
 
                 FieldType ft = fk.key().obj().get(0).type();
                 switch (ft) {
-                    case  SimpleType _ -> {
+                    case SimpleType _ -> {
                         Value localValue = ValueUtil.extractKeyValue(vStruct, fk.keyIndices);
                         if (ValueUtil.isValueCellsNotAllEmpty(localValue)) {
-                            if (!fk.fkValueSet.contains(localValue)) {
-                                errs.addErr(new ForeignValueNotFound(localValue.cells(), tableName, fk.name()));
+                            //主键或唯一键，并且nullableRef，--->则可以格子中有值，但ref不到
+                            //否则，--->格子中有值，就算配置为nullableRef也不行
+                            boolean canNotEmptyAndNullableRef = structural == fromTable.schema() &&
+                                    isForeignLocalKeyInPrimaryOrUniq(fk, fromTable.schema());
+                            if (!canNotEmptyAndNullableRef && !fk.fkValueSet.contains(localValue)) {
+                                errs.addErr(new ForeignValueNotFound(localValue.cells(), fromTable.name(), fk.name()));
                             }
                         } else {
                             if (!refSimple.nullable()) {
-                                errs.addErr(new RefNotNullableButCellEmpty(localValue.cells(), tableName));
+                                errs.addErr(new RefNotNullableButCellEmpty(localValue.cells(), fromTable.name()));
                             }
                         }
                     }
@@ -86,7 +83,7 @@ public class RefValidator {
                         VList localList = (VList) vStruct.values().get(fk.keyIndices[0]);
                         for (SimpleValue item : localList.valueList()) {
                             if (!fk.fkValueSet.contains(item)) {
-                                errs.addErr(new ForeignValueNotFound(item.cells(), tableName, fk.name()));
+                                errs.addErr(new ForeignValueNotFound(item.cells(), fromTable.name(), fk.name()));
                             }
                         }
                     }
@@ -95,14 +92,33 @@ public class RefValidator {
 
                         for (SimpleValue val : localMap.valueMap().values()) {
                             if (!fk.fkValueSet.contains(val)) {
-                                errs.addErr(new ForeignValueNotFound(val.cells(), tableName, fk.name()));
+                                errs.addErr(new ForeignValueNotFound(val.cells(), fromTable.name(), fk.name()));
                             }
                         }
                     }
                 }
             }
         }
+    }
 
+    private boolean isForeignLocalKeyInPrimaryOrUniq(ForeignKeySchema fk, TableSchema table) {
+        if (fk.key().obj().size() == 1) {
+            FieldSchema f = fk.key().obj().get(0);
+            for (FieldSchema pkf : table.primaryKey().obj()) {
+                if (f == pkf) {
+                    return true;
+                }
+            }
+
+            for (KeySchema uk : table.uniqueKeys()) {
+                for (FieldSchema ukf : uk.obj()) {
+                    if (f == ukf) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
 
