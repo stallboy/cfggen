@@ -1,6 +1,6 @@
 package configgen.schema.cfg;
 
-import configgen.Logger;
+import configgen.util.Logger;
 import configgen.schema.*;
 import configgen.schema.RefKey.RefList;
 import configgen.schema.RefKey.RefPrimary;

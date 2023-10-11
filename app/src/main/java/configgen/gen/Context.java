@@ -1,6 +1,6 @@
 package configgen.gen;
 
-import configgen.Logger;
+import configgen.util.Logger;
 import configgen.data.CfgData;
 import configgen.data.CfgDataReader;
 import configgen.data.CfgSchemaAlignToData;

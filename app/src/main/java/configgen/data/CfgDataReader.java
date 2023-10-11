@@ -1,6 +1,6 @@
 package configgen.data;
 
-import configgen.Logger;
+import configgen.util.Logger;
 import configgen.schema.CfgSchema;
 import configgen.util.UnicodeReader;
 import de.siegmar.fastcsv.reader.CsvReader;

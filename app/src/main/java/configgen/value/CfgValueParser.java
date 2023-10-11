@@ -1,6 +1,6 @@
 package configgen.value;
 
-import configgen.Logger;
+import configgen.util.Logger;
 import configgen.data.CfgData;
 import configgen.schema.CfgSchema;
 import configgen.schema.Spans;

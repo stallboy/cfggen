@@ -1,6 +1,6 @@
 package configgen.gen;
 
-import configgen.Logger;
+import configgen.util.Logger;
 
 import java.io.IOException;
 import java.nio.charset.Charset;

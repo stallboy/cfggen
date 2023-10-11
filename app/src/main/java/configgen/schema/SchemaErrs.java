@@ -1,6 +1,6 @@
 package configgen.schema;
 
-import configgen.Logger;
+import configgen.util.Logger;
 
 import java.util.ArrayList;
 import java.util.List;

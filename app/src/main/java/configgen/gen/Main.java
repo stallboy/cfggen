@@ -1,9 +1,11 @@
 package configgen.gen;
 
-import configgen.Logger;
+import configgen.tool.XmlToCfg;
+import configgen.util.Logger;
 import configgen.tool.ValueSearcher;
 import configgen.util.CachedFiles;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +18,7 @@ public final class Main {
         System.out.println();
         System.out.println("----配置表信息--------------------------------------");
         System.out.println("    -datadir      配表根目录，根目录可以有个config.xml");
-        System.out.println("    -encoding     配表编码，默认是GBK，如果文件中含有bom则用bom标记的编码");
+        System.out.println("    -encoding     csv编码，默认是GBK，如果文件中含有bom则用bom标记的编码");
         System.out.println("    -verify       检查配表约束");
 
         System.out.println();
@@ -84,6 +86,7 @@ public final class Main {
 
 
         String datadir = null;
+        boolean xmlToCfg = false;
         int headRow = 2;
         String encoding = "GBK";
 
@@ -106,6 +109,9 @@ public final class Main {
             switch (args[i]) {
                 case "-datadir":
                     datadir = args[++i];
+                    break;
+                case "-xmltocfg":
+                    xmlToCfg = true;
                     break;
                 case "-headrow":
                     headRow = Integer.parseInt(args[++i]);
@@ -170,22 +176,27 @@ public final class Main {
 //            BinaryToText.parse(binaryToTextFile, match);
 //            return;
 //        }
+        if (datadir == null) {
+            usage("请需要配置-datadir");
+            return;
+        }
 
+        Path dataDir = Paths.get(datadir);
         Logger.setVerboseLevel(0);
         Logger.enableProfile();
+
+        if (xmlToCfg){
+            XmlToCfg.convertAndCheck(dataDir);
+            return;
+        }
 
         if (i18nfile != null && langSwitchDir != null) {
             usage("-不能同时配置-i18nfile和-langSwitchDir");
             return;
         }
 
-        if (datadir == null) {
-            usage("请需要配置-datadir");
-            return;
-        }
-
         Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));
-        Context ctx = new Context(Paths.get(datadir), headRow, encoding);
+        Context ctx = new Context(dataDir, headRow, encoding);
         ctx.setI18nOrLangSwitch(i18nfile, langSwitchDir, i18nencoding, i18ncrlfaslf);
 
         if (searchParam != null) {

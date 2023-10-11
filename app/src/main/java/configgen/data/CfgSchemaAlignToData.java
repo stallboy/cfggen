@@ -1,6 +1,6 @@
 package configgen.data;
 
-import configgen.Logger;
+import configgen.util.Logger;
 import configgen.schema.*;
 import configgen.schema.EntryType.EEntry;
 import configgen.schema.EntryType.EEnum;

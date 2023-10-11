@@ -1,4 +1,4 @@
-package configgen;
+package configgen.util;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;

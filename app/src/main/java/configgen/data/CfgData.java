@@ -1,6 +1,6 @@
 package configgen.data;
 
-import configgen.Logger;
+import configgen.util.Logger;
 import de.siegmar.fastcsv.reader.CsvRow;
 import org.dhatim.fastexcel.reader.Row;
 

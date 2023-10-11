@@ -1,6 +1,6 @@
 package configgen.value;
 
-import configgen.Logger;
+import configgen.util.Logger;
 import configgen.schema.FieldType;
 
 import java.util.ArrayList;
