@@ -63,7 +63,7 @@ run {
 
 application {
     // Define the main class for the application.
-    mainClass = 'configgen.Main'
+    mainClass = 'configgen.gen.Main'
 }
 
 tasks.named('test') {
