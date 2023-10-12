@@ -76,6 +76,10 @@ public sealed interface FieldType {
             return name;
         }
 
+        public String nameNormalized() {
+            return obj.name();
+        }
+
         public Fieldable obj() {
             return obj;
         }

@@ -62,6 +62,11 @@ public record CfgValue(CfgSchema schema,
     public record VStruct(Structural schema,
                           List<Value> values,
                           List<DCell> cells) implements SimpleValue {
+
+        public String name() {
+            return schema.name();
+        }
+
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;

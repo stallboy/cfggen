@@ -68,7 +68,6 @@ public class TableParser {
         if (subTableSchema.entry() instanceof EntryBase entry) {
             Set<String> names = new HashSet<>();
             int idx = FindFieldIndex.findFieldIndex(subTableSchema, entry.fieldSchema());
-
             enumNames = new LinkedHashSet<>();
 
             int pkIdx = -1;
