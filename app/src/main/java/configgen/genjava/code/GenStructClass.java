@@ -5,17 +5,23 @@ import configgen.define.Column;
 import configgen.define.ForeignKey;
 import configgen.define.Table;
 import configgen.gen.Generator;
+import configgen.schema.StructSchema;
+import configgen.schema.Structural;
+import configgen.schema.TableSchema;
 import configgen.type.*;
 import configgen.util.CachedIndentPrinter;
+import configgen.value.CfgValue;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-class GenBeanClass {
+import static configgen.value.CfgValue.*;
 
-    static void generateBuilder(TBean tbean, BeanName name, CachedIndentPrinter ps) {
+class GenStructClass {
+
+    static void generateBuilder(TableSchema table, NameableName name, CachedIndentPrinter ps) {
 
         ps.println("package %s;", name.pkg);
         ps.println();
@@ -24,7 +30,7 @@ class GenBeanClass {
 
 
         // field, public，并且都不设置默认值，如果要做，可以自己来包装
-        for (Type type : tbean.getColumns()) {
+        for (Type type : table.getColumns()) {
             ps.println1("public %s %s;",
                         TypeStr.type(type),
                         Generator.lower1(type.getColumnName()));
@@ -33,7 +39,7 @@ class GenBeanClass {
 
         // build
         ps.println1("public %s build() {", name.className);
-        for (Type type : tbean.getColumns()) {
+        for (Type type : table.getColumns()) {
             if (!type.isPrimitiveValueType()) {
                 ps.println2("java.util.Objects.requireNonNull(%s);", Generator.lower1(type.getColumnName()));
             }
@@ -47,22 +53,22 @@ class GenBeanClass {
         ps.println("}");
     }
 
-    static void generate(TBean tbean, VTable vtable, BeanName name, CachedIndentPrinter ps, boolean isTableUgc) {
+    static void generate(Structural struct, VTable vtable, NameableName name, CachedIndentPrinter ps, boolean isTableUgc) {
         boolean isBean = vtable == null;
         boolean isTable = !isBean;
 
-        boolean isBeanAndHasNoColumn = isBean && tbean.getColumns().isEmpty();
-        boolean isChildDynamicBean = tbean.getBeanDefine().type == Bean.BeanType.ChildDynamicBean;
+        boolean isBeanAndHasNoColumn = isBean && struct.getColumns().isEmpty();
+        boolean isChildDynamicBean = struct.getBeanDefine().type == Bean.BeanType.ChildDynamicBean;
 
         ps.println("package " + name.pkg + ";");
         ps.println();
         if (isChildDynamicBean) {
-            TBean baseAction = (TBean) tbean.parent;
+            TBean baseAction = (TBean) struct.parent;
             ps.println("public class " + name.className + " implements " + Name.fullName(baseAction) + " {");
             ps.println1("@Override");
             ps.println1("public " + Name.refType(baseAction.getChildDynamicBeanEnumRefTable()) + " type() {");
             ps.println2("return " + Name.refType(
-                    baseAction.getChildDynamicBeanEnumRefTable()) + "." + tbean.name.toUpperCase() + ";");
+                    baseAction.getChildDynamicBeanEnumRefTable()) + "." + struct.name.toUpperCase() + ";");
             ps.println1("}");
             ps.println();
         } else {
@@ -70,7 +76,7 @@ class GenBeanClass {
         }
 
         //field
-        for (Type type : tbean.getColumns()) {
+        for (Type type : struct.getColumns()) {
             ps.println1("private %s %s;",
                         TypeStr.type(type),
                         Generator.lower1(type.getColumnName()));
@@ -81,12 +87,12 @@ class GenBeanClass {
             }
         }
 
-        for (TForeignKey foreignKey : tbean.getMRefs()) {
+        for (TForeignKey foreignKey : struct.getMRefs()) {
             ps.println1("private %s %s;",
                         Name.refType(foreignKey),
                         Name.refName(foreignKey));
         }
-        for (TForeignKey foreignKey : tbean.getListRefs()) {
+        for (TForeignKey foreignKey : struct.getListRefs()) {
             ps.println1("private %s %s;",
                         Name.refTypeForList(foreignKey),
                         Name.refName(foreignKey));
@@ -107,8 +113,8 @@ class GenBeanClass {
 
         //bean有构造器，可能会ugc的table由builder生成，这里提供package访问级别构造器
         if (isBean) {
-            ps.println1("public %s(%s) {", name.className, MethodStr.formalParams(tbean.getColumnMap()));
-            for (String n : tbean.getColumnMap().keySet()) {
+            ps.println1("public %s(%s) {", name.className, MethodStr.formalParams(struct.getColumnMap()));
+            for (String n : struct.getColumnMap().keySet()) {
                 String ln = Generator.lower1(n);
                 ps.println2("this.%s = %s;", ln, ln);
             }
@@ -117,7 +123,7 @@ class GenBeanClass {
         } else if (isTableUgc) {
             // package访问级别，只能通过builder.build()来构建
             ps.println1("%s(%sBuilder b) {", name.className, name.className);
-            for (String n : tbean.getColumnMap().keySet()) {
+            for (String n : struct.getColumnMap().keySet()) {
                 String ln = Generator.lower1(n);
                 ps.println2("this.%s = b.%s;", ln, ln);
             }
@@ -129,7 +135,7 @@ class GenBeanClass {
         ps.println1("public static %s _create(configgen.genjava.ConfigInput input) {", name.className);
         ps.println2("%s self = new %s();", name.className, name.className);
 
-        for (Map.Entry<String, Type> f : tbean.getColumnMap().entrySet()) {
+        for (Map.Entry<String, Type> f : struct.getColumnMap().entrySet()) {
 
             Type t = f.getValue();
             String ln = Generator.lower1(f.getKey());
@@ -154,10 +160,10 @@ class GenBeanClass {
 
 
         //getter
-        for (Map.Entry<String, Type> entry : tbean.getColumnMap().entrySet()) {
+        for (Map.Entry<String, Type> entry : struct.getColumnMap().entrySet()) {
             String n = entry.getKey();
             Type t = entry.getValue();
-            Column f = tbean.getBeanDefine().columns.get(n);
+            Column f = struct.getBeanDefine().columns.get(n);
             if (!f.desc.isEmpty()) {
                 ps.println1("/**");
                 ps.println1(" * " + f.desc);
@@ -177,7 +183,7 @@ class GenBeanClass {
             }
         }
 
-        for (TForeignKey tForeignKey : tbean.getMRefs()) {
+        for (TForeignKey tForeignKey : struct.getMRefs()) {
             ps.println1("public %s %s() {",
                         Name.refType(tForeignKey),
                         Generator.lower1(Name.refName(tForeignKey)));
@@ -187,7 +193,7 @@ class GenBeanClass {
             ps.println();
         }
 
-        for (TForeignKey tForeignKey : tbean.getListRefs()) {
+        for (TForeignKey tForeignKey : struct.getListRefs()) {
             ps.println1("public %s %s() {",
                         Name.refTypeForList(tForeignKey),
                         Generator.lower1(Name.refName(tForeignKey)));
@@ -212,7 +218,7 @@ class GenBeanClass {
 
 
         } else if (isBean) {
-            Map<String, Type> keys = tbean.getColumnMap();
+            Map<String, Type> keys = struct.getColumnMap();
             ps.println1("@Override");
             ps.println1("public int hashCode() {");
             ps.println2("return " + MethodStr.hashCodes(keys) + ";");
@@ -238,7 +244,7 @@ class GenBeanClass {
         if (isBeanAndHasNoColumn) {
             ps.println2("return \"%s\";", beanName);
         } else {
-            String params = tbean.getColumnMap().keySet().stream().map(Generator::lower1).collect(
+            String params = struct.getColumnMap().keySet().stream().map(Generator::lower1).collect(
                     Collectors.joining(" + \",\" + "));
             ps.println2("return \"%s(\" + %s + \")\";", beanName, params);
         }
@@ -247,12 +253,12 @@ class GenBeanClass {
 
 
         //_resolve
-        if (tbean.hasRef()) {
-            generateResolve(tbean, ps);
+        if (struct.hasRef()) {
+            generateResolve(struct, ps);
         }
 
         if (isTable) {
-            GenBeanClassTablePart.generate(tbean, vtable, name, ps);
+            GenBeanClassTablePart.generate(struct, vtable, name, ps);
         }
         ps.println("}");
     }
@@ -342,7 +348,7 @@ class GenBeanClass {
         for (TForeignKey l : tbean.getListRefs()) {
             ps.println2("%s = new java.util.ArrayList<>();", Name.refName(l));
 
-            BeanName refn = new BeanName(l.refTable.getTBean());
+            NameableName refn = new NameableName(l.refTable.getTBean());
             Table refTableDefine = l.refTable.getTableDefine();
             boolean has_OnlyEnum = refTableDefine.isEnumFull() && refTableDefine.isEnumHasOnlyPrimaryKeyAndEnumStr();
             boolean has_Enum_Detail = refTableDefine.isEnumFull() && !refTableDefine.isEnumHasOnlyPrimaryKeyAndEnumStr();

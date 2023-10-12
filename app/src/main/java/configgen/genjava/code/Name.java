@@ -40,7 +40,7 @@ public class Name {
 
 
     static String fullName(TBean tbean) {
-        return new BeanName(tbean).fullName;
+        return new NameableName(tbean).fullName;
     }
 
     static String tableDataFullName(TTable ttable) {
@@ -53,7 +53,7 @@ public class Name {
 
 
     static String refType(TTable ttable) {
-        return new BeanName(ttable.getTBean()).fullName;
+        return new NameableName(ttable.getTBean()).fullName;
     }
 
 

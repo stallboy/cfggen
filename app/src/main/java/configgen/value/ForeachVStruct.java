@@ -7,7 +7,7 @@ import static configgen.value.CfgValue.*;
 public class ForeachVStruct {
 
     public interface VStructVisitor {
-        void accept(VStruct vStruct, VTable fromVTable);
+        void visit(VStruct vStruct, VTable fromVTable);
     }
 
     public static void foreach(VStructVisitor visitor, CfgValue cfgValue) {
@@ -23,7 +23,7 @@ public class ForeachVStruct {
     }
 
     public static void foreachVStruct(VStructVisitor visitor, VStruct vStruct, VTable table) {
-        visitor.accept(vStruct, table);
+        visitor.visit(vStruct, table);
 
         for (Value fieldValue : vStruct.values()) {
             switch (fieldValue) {

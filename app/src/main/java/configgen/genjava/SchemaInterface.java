@@ -31,10 +31,9 @@ public class SchemaInterface implements Schema {
 
     @Override
     public boolean compatible(Schema other) {
-        if (!(other instanceof SchemaInterface)) {
+        if (!(other instanceof SchemaInterface si)) {
             return false;
         }
-        SchemaInterface si = (SchemaInterface) other;
         if (implementations.size() > si.implementations.size()) {
             throw new SchemaCompatibleException("size not compatible with data err, code=" + implementations.size() + ", data=" + si.implementations.size());
         }

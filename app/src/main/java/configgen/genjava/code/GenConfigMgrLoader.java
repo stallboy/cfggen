@@ -1,10 +1,11 @@
 package configgen.genjava.code;
 
 import configgen.util.CachedIndentPrinter;
+import configgen.value.CfgValue;
 
 class GenConfigMgrLoader {
 
-    static void generate(AllValue vdb, CachedIndentPrinter ps) {
+    static void generate(CfgValue cfgValue, CachedIndentPrinter ps) {
         ps.println("package %s;", Name.codeTopPkg);
         ps.println();
 
@@ -19,7 +20,7 @@ class GenConfigMgrLoader {
         ps.println2("ConfigMgr mgr = new ConfigMgr();");
 
         int cnt = 0;
-        for (VTable vTable : vdb.getVTables()) {
+        for (VTable vTable : cfgValue.getVTables()) {
             if (vTable.getTTable().getTableDefine().isEnumFull() && vTable.getTTable().getTableDefine().isEnumHasOnlyPrimaryKeyAndEnumStr()) {
                 continue;
             }
@@ -56,7 +57,7 @@ class GenConfigMgrLoader {
 
         ps.println1("private static Map<String, ConfigLoader> getAllConfigLoaders() {");
         ps.println2("Map<String, ConfigLoader> allConfigLoaders = new LinkedHashMap<>();");
-        for (VTable vTable : vdb.getVTables()) {
+        for (VTable vTable : cfgValue.getVTables()) {
             if (vTable.getTTable().getTableDefine().isEnumFull() && vTable.getTTable().getTableDefine().isEnumHasOnlyPrimaryKeyAndEnumStr()) {
                 continue;
             }

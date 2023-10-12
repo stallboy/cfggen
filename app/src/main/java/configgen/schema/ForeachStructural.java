@@ -3,7 +3,7 @@ package configgen.schema;
 public class ForeachStructural {
 
     public interface StructuralVisitor {
-        void accept(Structural structural, InterfaceSchema nullableFromInterface);
+        void visit(Structural structural, InterfaceSchema nullableFromInterface);
     }
 
     public static void foreach(StructuralVisitor visitor, CfgSchema cfgSchema) {
@@ -11,11 +11,11 @@ public class ForeachStructural {
             switch (item) {
                 case InterfaceSchema interfaceSchema -> {
                     for (StructSchema impl : interfaceSchema.impls()) {
-                        visitor.accept(impl, interfaceSchema);
+                        visitor.visit(impl, interfaceSchema);
                     }
                 }
                 case Structural structural -> {
-                    visitor.accept(structural, null);
+                    visitor.visit(structural, null);
                 }
             }
         }

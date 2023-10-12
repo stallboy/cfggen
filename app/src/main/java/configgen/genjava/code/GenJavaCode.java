@@ -1,23 +1,34 @@
 package configgen.genjava.code;
 
-import configgen.define.Bean;
-import configgen.define.Table;
 import configgen.gen.Context;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
-import configgen.type.TBean;
+import configgen.genjava.GenJavaUtil;
+import configgen.schema.*;
 import configgen.util.CachedFiles;
 import configgen.util.CachedIndentPrinter;
+import configgen.util.Logger;
+import configgen.value.CfgValue;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static configgen.value.CfgValue.VTable;
 
 public class GenJavaCode extends Generator {
     private File dstDir;
     private final String dir;
     private final String pkg;
     private final String encoding;
+    private final String buildersFilename;
+    private Set<String> needBuilderTables = null;
     private final int schemaNumPerFile;
 
 
@@ -26,16 +37,35 @@ public class GenJavaCode extends Generator {
         dir = parameter.get("dir", "config", "目录");
         pkg = parameter.get("pkg", "config", "包名");
         encoding = parameter.get("encoding", "UTF-8", "生成代码文件的编码");
+        buildersFilename = parameter.get("builders", null, "对这些table生成对应的builder，默认为null");
         schemaNumPerFile = Integer.parseInt(
                 parameter.get("schemaNumPerFile", "100",
-                              "当配表数量过多时生成的ConfigCodeSchema会超过java编译器限制，用此参数来分文件"));
+                        "当配表数量过多时生成的ConfigCodeSchema会超过java编译器限制，用此参数来分文件"));
 
+        if (buildersFilename != null) {
+            readNeedBuilderTables();
+        }
         parameter.end();
     }
 
+    private void readNeedBuilderTables() {
+        Path fn = Path.of(buildersFilename).normalize();
+        if (Files.exists(fn)) {
+            try {
+                needBuilderTables = new HashSet<>();
+                List<String> lines = Files.readAllLines(fn, StandardCharsets.UTF_8);
+                needBuilderTables.addAll(lines);
+            } catch (IOException e) {
+                Logger.log(STR. "读\{ fn.toAbsolutePath() }文件异常, 忽略此文件" );
+            }
+        }
+    }
+
+
     @Override
     public void generate(Context ctx) throws IOException {
-        AllValue value = ctx.makeValue(filter);
+
+        CfgValue cfgValue = ctx.makeValue(tag);
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/')).toFile();
 
         Name.codeTopPkg = pkg;
@@ -43,27 +73,23 @@ public class GenJavaCode extends Generator {
         boolean isLangSwitch = ctx.getLangSwitch() != null;
         TypeStr.isLangSwitch = isLangSwitch; //辅助Text的类型声明和创建
 
-        for (TBean tbean : value.getTDb().getTBeans()) {
-            try {
-                generateBeanClass(tbean);
-            } catch (Throwable e) {
-                throw new AssertionError(tbean.fullName() + ",这个结构生成java代码出错", e);
-            }
-            for (TBean childBean : tbean.getChildDynamicBeans()) {
-                try {
-                    generateBeanClass(childBean);
-                } catch (Throwable e) {
-                    throw new AssertionError(childBean.fullName() + ",这个子结构生成java代码出错", e);
+        for (Nameable nameable : cfgValue.schema().items()) {
+            switch (nameable) {
+                case StructSchema structSchema -> {
+                    generateStructClass(structSchema, null);
+                }
+                case InterfaceSchema interfaceSchema -> {
+                    generateInterfaceClass(interfaceSchema);
+                    for (StructSchema impl : interfaceSchema.impls()) {
+                        generateStructClass(impl, interfaceSchema);
+                    }
+                }
+                case TableSchema _ -> {
                 }
             }
         }
-
-        for (VTable vtable : value.getVTables()) {
-            try {
-                generateTableClass(vtable);
-            } catch (Throwable e) {
-                throw new AssertionError(vtable.getTTable().fullName() + ",这个表生成java代码出错", e);
-            }
+        for (VTable vtable : cfgValue.tables()) {
+            generateTableClass(vtable);
         }
 
         if (isLangSwitch) { //生成Text这个Bean
@@ -81,10 +107,10 @@ public class GenJavaCode extends Generator {
         }
 
         try (CachedIndentPrinter ps = createCode(new File(dstDir, "ConfigMgrLoader.java"), encoding)) {
-            GenConfigMgrLoader.generate(value, ps);
+            GenConfigMgrLoader.generate(cfgValue, ps);
         }
 
-        GenConfigCodeSchema.generateAll(this, schemaNumPerFile, value, ctx.getLangSwitch());
+        GenConfigCodeSchema.generateAll(this, schemaNumPerFile, cfgValue, ctx.getLangSwitch());
 
         CachedFiles.deleteOtherFiles(dstDir);
     }
@@ -94,25 +120,29 @@ public class GenJavaCode extends Generator {
     }
 
 
-    private void generateBeanClass(TBean tbean) throws IOException {
-        BeanName name = new BeanName(tbean);
+    private void generateStructClass(StructSchema struct, InterfaceSchema nullableInterface) {
+        NameableName name = new NameableName(struct, nullableInterface);
         try (CachedIndentPrinter ps = createCode(dstDir.toPath().resolve(name.path).toFile(), encoding)) {
-            if (tbean.getBeanDefine().type == Bean.BeanType.BaseDynamicBean) {
-                GenBaseDynamicBeanInterface.generate(tbean, name, ps);
-            } else {
-                GenBeanClass.generate(tbean, null, name, ps, false);
-            }
+            GenStructClass.generate(struct, null, name, ps, false);
         }
     }
 
-    private void generateTableClass(VTable vtable) throws IOException {
+    private void generateInterfaceClass(InterfaceSchema interfaceSchema) {
+        NameableName name = new NameableName(interfaceSchema);
+        try (CachedIndentPrinter ps = createCode(dstDir.toPath().resolve(name.path).toFile(), encoding)) {
+            GenInterface.generate(interfaceSchema, name, ps);
+        }
+    }
+
+    private void generateTableClass(VTable vTable) {
         boolean isNeedReadData = true;
         String dataPostfix = "";
-        Table define = vtable.getTTable().getTableDefine();
-        if (define.isEnum()) {
+        TableSchema schema = vTable.schema();
+        if (schema.entry() instanceof EntryType.EntryBase base) {
             String entryPostfix = "";
-            if (define.isEnumFull()) {
-                if (define.isEnumHasOnlyPrimaryKeyAndEnumStr()) {
+            boolean isEnum = base instanceof EntryType.EEnum;
+            if (isEnum) {
+                if (GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(schema)) {
                     isNeedReadData = false;
                 } else {
                     dataPostfix = "_Detail";
@@ -121,32 +151,31 @@ public class GenJavaCode extends Generator {
                 entryPostfix = "_Entry";
             }
 
-            BeanName name = new BeanName(vtable.getTTable().getTBean(), entryPostfix);
-            BeanName dataName = new BeanName(vtable.getTTable().getTBean(), dataPostfix);
+            NameableName name = new NameableName(schema, entryPostfix);
+            NameableName dataName = new NameableName(schema, dataPostfix);
             File javaFile = dstDir.toPath().resolve(name.path).toFile();
             try (CachedIndentPrinter ps = createCode(javaFile, encoding)) {
-                GenEnumClass.generate(vtable, name, ps, define.isEnumFull(), isNeedReadData, dataName);
+                GenEnumClass.generate(vTable, name, ps, isEnum, isNeedReadData, dataName);
             }
         }
 
         if (isNeedReadData) {
-            BeanName name = new BeanName(vtable.getTTable().getTBean(), dataPostfix);
-            boolean isTableUgc = AllValue.getCurrent().getCtx().getUgcDefine().isUgcTable(vtable.name);
+            NameableName name = new NameableName(schema, dataPostfix);
+            boolean isTableNeedBuilder = needBuilderTables != null && needBuilderTables.contains(vTable.name());
             File javaFile = dstDir.toPath().resolve(name.path).toFile();
             try (CachedIndentPrinter ps = createCode(javaFile, encoding)) {
-                GenBeanClass.generate(vtable.getTTable().getTBean(), vtable, name, ps, isTableUgc);
+                GenStructClass.generate(vTable.schema(), vTable, name, ps, isTableNeedBuilder);
             }
 
-            if (isTableUgc) {
+            if (isTableNeedBuilder) {
                 String builderPath = name.path.substring(0, name.path.length() - 5) + "Builder.java";
                 File builderFile = dstDir.toPath().resolve(builderPath).toFile();
                 try (CachedIndentPrinter ps = createCode(builderFile, encoding)) {
-                    GenBeanClass.generateBuilder(vtable.getTTable().getTBean(), name, ps);
+                    GenStructClass.generateBuilder(vTable.schema(), name, ps);
                 }
             }
 
         }
     }
-
 
 }

@@ -132,7 +132,7 @@ class MethodStr {
 
     static String tableGet(TTable ttable, String[] cols, String actualParam) {
         boolean isPrimaryKey = cols.length == 0;
-        BeanName name = new BeanName(ttable.getTBean());
+        NameableName name = new NameableName(ttable.getTBean());
 
         if (ttable.getTableDefine().isEnumFull()) {
             return name.fullName + ".get(" + actualParam + ");";

@@ -7,12 +7,13 @@ import configgen.type.TBean;
 import configgen.type.TForeignKey;
 import configgen.type.Type;
 import configgen.util.CachedIndentPrinter;
+import configgen.value.CfgValue;
 
 import java.util.Map;
 
 class GenEnumClass {
 
-    static void generate(VTable vtable, BeanName name, CachedIndentPrinter ps, boolean isFull, boolean isNeedReadData, BeanName dataName) {
+    static void generate(CfgValue.VTable vtable, NameableName name, CachedIndentPrinter ps, boolean isFull, boolean isNeedReadData, NameableName dataName) {
         ps.println("package " + name.pkg + ";");
         ps.println();
 

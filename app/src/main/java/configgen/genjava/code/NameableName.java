@@ -1,33 +1,40 @@
 package configgen.genjava.code;
 
-import configgen.define.Bean;
-import configgen.type.TBean;
+import configgen.schema.InterfaceSchema;
+import configgen.schema.Nameable;
 
 import java.util.Arrays;
 
-class BeanName {
+class NameableName {
     final String pkg;
     final String className;
     final String fullName;
     final String path;
     final String containerPrefix;
 
-    BeanName(TBean tbean) {
-        this(tbean, "");
+    NameableName(Nameable nameable) {
+        this(nameable, null, "");
     }
 
-    BeanName(TBean tbean, String postfix) {
+    NameableName(Nameable nameable, String postfix) {
+        this(nameable, null, postfix);
+    }
+
+    NameableName(Nameable nameable, InterfaceSchema nullableInterface) {
+        this(nameable, nullableInterface, "");
+    }
+
+    NameableName(Nameable nameable, InterfaceSchema nullableInterface, String postfix) {
         String topPkg = Name.codeTopPkg;
         String name;
-        if (tbean.getBeanDefine().type == Bean.BeanType.ChildDynamicBean) {
-            TBean baseAction = (TBean) tbean.parent;
-            name = baseAction.name.toLowerCase() + "." + tbean.name;
+        if (nullableInterface != null) {
+            name = nullableInterface.name().toLowerCase() + "." + nameable.name();
         } else {
-            name = tbean.name;
+            name = nameable.name();
         }
 
         name += postfix;
-        containerPrefix = tbean.name.replace('.', '_') + "_";
+        containerPrefix = nameable.name().replace('.', '_') + "_";
         String[] seps = name.split("\\.");
         String c = seps[seps.length - 1];
         className = c.substring(0, 1).toUpperCase() + c.substring(1);

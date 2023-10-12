@@ -13,7 +13,7 @@ public class SchemaList implements Schema {
 
     @Override
     public boolean compatible(Schema other) {
-        return other instanceof SchemaList && ele.compatible(((SchemaList) other).ele);
+        return other instanceof SchemaList os && ele.compatible(os.ele);
     }
 
     @Override

@@ -11,7 +11,7 @@ import static configgen.value.CfgValue.*;
 public class ForeachPrimitiveValue {
 
     public interface PrimitiveValueVisitor {
-        void accept(PrimitiveValue primitiveValue, String table, List<String> fieldChain);
+        void visit(PrimitiveValue primitiveValue, String table, List<String> fieldChain);
     }
 
     public static void foreach(PrimitiveValueVisitor visitor, CfgValue cfgValue) {
@@ -29,7 +29,7 @@ public class ForeachPrimitiveValue {
     public static void foreachValue(PrimitiveValueVisitor visitor, Value value, String table, List<String> fieldChain) {
         switch (value) {
             case PrimitiveValue primitiveValue -> {
-                visitor.accept(primitiveValue, table, fieldChain);
+                visitor.visit(primitiveValue, table, fieldChain);
             }
             case VStruct vStruct -> {
                 int i = 0;

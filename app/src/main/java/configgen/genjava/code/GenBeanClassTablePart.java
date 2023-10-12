@@ -15,7 +15,7 @@ class GenBeanClassTablePart {
     static List<String> mapsInMgr = new ArrayList<>();
 
 
-    static void generate(TBean tbean, VTable vtable, BeanName name, CachedIndentPrinter ps) {
+    static void generate(TBean tbean, VTable vtable, NameableName name, CachedIndentPrinter ps) {
         TTable ttable = vtable.getTTable();
         //static get
         generateMapGetBy(ttable.getPrimaryKey(), name, ps, true);
@@ -66,7 +66,7 @@ class GenBeanClassTablePart {
     }
 
 
-    private static void generateMapGetBy(Map<String, Type> keys, BeanName name, CachedIndentPrinter ps, boolean isPrimaryKey) {
+    private static void generateMapGetBy(Map<String, Type> keys, NameableName name, CachedIndentPrinter ps, boolean isPrimaryKey) {
         if (keys.size() > 1) {
             generateKeyClass(keys, ps);
         }
@@ -88,14 +88,14 @@ class GenBeanClassTablePart {
         ps.println();
     }
 
-    private static void generateAllMapPut(TTable ttable, BeanName name, CachedIndentPrinter ps) {
+    private static void generateAllMapPut(TTable ttable, NameableName name, CachedIndentPrinter ps) {
         generateMapPut(ttable.getPrimaryKey(), name, ps, true);
         for (Map<String, Type> uniqueKey : ttable.getUniqueKeys()) {
             generateMapPut(uniqueKey, name, ps, false);
         }
     }
 
-    private static void generateMapPut(Map<String, Type> keys, BeanName name, CachedIndentPrinter ps, boolean isPrimaryKey) {
+    private static void generateMapPut(Map<String, Type> keys, NameableName name, CachedIndentPrinter ps, boolean isPrimaryKey) {
         String mapName = name.containerPrefix + (isPrimaryKey ? "All" : Name.uniqueKeyMapName(keys));
         ps.println4("mgr." + mapName + ".put(" + MethodStr.actualParamsKey(keys, "self.") + ", self);");
     }

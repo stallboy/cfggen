@@ -1,19 +1,20 @@
 package configgen.genjava.code;
 
+import configgen.schema.InterfaceSchema;
 import configgen.type.TBean;
 import configgen.util.CachedIndentPrinter;
 
-class GenBaseDynamicBeanInterface {
+class GenInterface {
 
-    static void generate(TBean tbean, BeanName name, CachedIndentPrinter ps) {
+    static void generate(InterfaceSchema sInterface, NameableName name, CachedIndentPrinter ps) {
         ps.println("package %s;", name.pkg);
         ps.println();
         ps.println("public interface %s {", name.className);
         ps.inc();
-        ps.println("%s type();", Name.refType(tbean.getChildDynamicBeanEnumRefTable()));
+        ps.println("%s type();", Name.refType(sInterface.getChildDynamicBeanEnumRefTable()));
         ps.println();
 
-        if (tbean.hasRef()) {
+        if (sInterface.hasRef()) {
             ps.println("default void _resolve(%s.ConfigMgr mgr) {", Name.codeTopPkg);
             ps.println("}");
             ps.println();
@@ -22,8 +23,8 @@ class GenBaseDynamicBeanInterface {
         ps.println("static %s _create(configgen.genjava.ConfigInput input) {", name.className);
         ps.inc();
         ps.println("switch(input.readStr()) {");
-        for (TBean actionBean : tbean.getChildDynamicBeans()) {
-            if (actionBean.name.equals(tbean.getChildDynamicDefaultBeanName())) {
+        for (TBean actionBean : sInterface.getChildDynamicBeans()) {
+            if (actionBean.name.equals(sInterface.getChildDynamicDefaultBeanName())) {
                 ps.println1("case \"\":");
             }
             ps.println1("case \"%s\":", actionBean.name);

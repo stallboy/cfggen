@@ -3,6 +3,7 @@ package configgen.genjava.code;
 import configgen.gen.LangSwitch;
 import configgen.genjava.*;
 import configgen.util.CachedIndentPrinter;
+import configgen.value.CfgValue;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -10,8 +11,8 @@ import java.util.List;
 import java.util.Map;
 
 final class GenConfigCodeSchema {
-    static void generateAll(GenJavaCode gen, int schemaNumPerFile, AllValue vdb, LangSwitch ls) throws IOException {
-        SchemaInterface schemaInterface = SchemaParser.parse(vdb, ls);
+    static void generateAll(GenJavaCode gen, int schemaNumPerFile, CfgValue cfgValue, LangSwitch ls) throws IOException {
+        SchemaInterface schemaInterface = SchemaParser.parse(cfgValue, ls);
         List<Map.Entry<String, Schema>> all = new ArrayList<>(schemaInterface.implementations.entrySet());
         List<Map.Entry<String, Schema>> main;
         List<List<Map.Entry<String, Schema>>> nullableOthers = null;

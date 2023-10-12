@@ -16,10 +16,9 @@ public class SchemaMap implements Schema {
 
     @Override
     public boolean compatible(Schema other) {
-        if (!(other instanceof SchemaMap)) {
+        if (!(other instanceof SchemaMap sm)) {
             return false;
         }
-        SchemaMap sm = (SchemaMap) other;
         return key.compatible(sm.key) && value.compatible(sm.value);
     }
 
