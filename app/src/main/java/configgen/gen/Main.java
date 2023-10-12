@@ -185,7 +185,7 @@ public final class Main {
         Logger.setVerboseLevel(0);
         Logger.enableProfile();
 
-        if (xmlToCfg){
+        if (xmlToCfg) {
             XmlToCfg.convertAndCheck(dataDir);
             return;
         }
@@ -204,7 +204,7 @@ public final class Main {
             if (searchParam.isEmpty()) {
                 searcher.loop();
             } else {
-                searcher.search(String.join(" ", searchParam));
+                searcher.search(searchParam.get(0), searchParam.subList(1, searchParam.size()));
             }
             return;
         }

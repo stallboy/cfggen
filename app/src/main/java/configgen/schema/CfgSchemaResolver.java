@@ -16,13 +16,13 @@ import static configgen.schema.SchemaErrs.*;
  * 把CfgSchema内部关系给解决了，如果有Errs，就表明有内部矛盾
  */
 public final class CfgSchemaResolver {
-    private final CfgSchema cfg;
+    private final CfgSchema cfgSchema;
     private final SchemaErrs errs;
     private Nameable curNameable;
     private StructSchema curImpl;
 
     public CfgSchemaResolver(CfgSchema cfg, SchemaErrs errs) {
-        this.cfg = cfg;
+        this.cfgSchema = cfg;
         this.errs = errs;
     }
 
@@ -34,7 +34,7 @@ public final class CfgSchemaResolver {
         step4_checkAllChainedSepFmt();
         step5_checkUnusedFieldable();
         if (errs.errs().isEmpty()) {
-            cfg.setResolved();
+            cfgSchema.setResolved();
         }
     }
 
@@ -49,7 +49,7 @@ public final class CfgSchemaResolver {
         Set<String> fieldableTopNameSet = new HashSet<>();
 
         // 检查全局名字空间，局部名字空间各自的冲突
-        for (Nameable item : cfg.items()) {
+        for (Nameable item : cfgSchema.items()) {
             List<String> names = Arrays.asList(item.name().split("\\."));
             if (!nameSet.add(names)) {
                 errs.addErr(new NameConflict(item.name()));
@@ -74,7 +74,7 @@ public final class CfgSchemaResolver {
 
         // 检查局部名字空间和全局名字空间潜在的冲突
         // 1, 先检查interface的局部名字空间里，可能跟全局的冲突
-        for (Nameable item : cfg.items()) {
+        for (Nameable item : cfgSchema.items()) {
             if (item instanceof InterfaceSchema interfaceSchema) {
                 for (StructSchema impl : interfaceSchema.impls()) {
                     if (fieldableTopNameSet.contains(impl.name())) {
@@ -103,13 +103,13 @@ public final class CfgSchemaResolver {
         // resolve
         Map<String, Fieldable> structMap = new HashMap<>();
         Map<String, TableSchema> tableMap = new HashMap<>();
-        for (Nameable item : cfg.items()) {
+        for (Nameable item : cfgSchema.items()) {
             switch (item) {
                 case Fieldable fieldable -> structMap.put(fieldable.name(), fieldable);
                 case TableSchema table -> tableMap.put(table.name(), table);
             }
         }
-        cfg.setMap(structMap, tableMap);
+        cfgSchema.setMap(structMap, tableMap);
     }
 
 
@@ -138,11 +138,11 @@ public final class CfgSchemaResolver {
     }
 
     private void resolve_structural(Action<Structural> action) {
-        for (Nameable value : cfg.items()) {
+        for (Nameable value : cfgSchema.items()) {
             curNameable = value;
             switch (value) {
-                case StructSchema struct -> {
-                    action.run(struct);
+                case Structural table -> {
+                    action.run(table);
                 }
                 case InterfaceSchema sInterface -> {
                     for (StructSchema impl : sInterface.impls()) {
@@ -150,9 +150,6 @@ public final class CfgSchemaResolver {
                         action.run(impl);
                         this.curImpl = null;
                     }
-                }
-                case TableSchema table -> {
-                    action.run(table);
                 }
             }
             curNameable = null;
@@ -192,7 +189,7 @@ public final class CfgSchemaResolver {
                 String namespace = curNameable.namespace();
                 if (!namespace.isEmpty()) {
                     String fullName = Nameable.makeName(namespace, name);
-                    Fieldable obj = cfg.findFieldable(fullName);
+                    Fieldable obj = cfgSchema.findFieldable(fullName);
                     if (obj != null) {
                         structRef.setObj(obj);
                         return;
@@ -200,7 +197,7 @@ public final class CfgSchemaResolver {
                 }
 
                 // 全局找
-                Fieldable obj = cfg.findFieldable(name);
+                Fieldable obj = cfgSchema.findFieldable(name);
                 if (obj != null) {
                     structRef.setObj(obj);
                     return;
@@ -221,7 +218,7 @@ public final class CfgSchemaResolver {
 
     ////////////////////////////////////////////////////////////////////
     private void step2_resolveEachNameable() {
-        for (Nameable item : cfg.items()) {
+        for (Nameable item : cfgSchema.items()) {
             curNameable = item;
             switch (item) {
                 case StructSchema _ -> {
@@ -257,14 +254,14 @@ public final class CfgSchemaResolver {
         String namespace = curNameable.namespace();
         if (!namespace.isEmpty()) {
             String fullName = Nameable.makeName(namespace, name);
-            TableSchema table = cfg.findTable(fullName);
+            TableSchema table = cfgSchema.findTable(fullName);
             if (table != null) {
                 return table;
             }
         }
 
         // 全局找
-        return cfg.findTable(name);
+        return cfgSchema.findTable(name);
     }
 
     private void resolveTable(TableSchema table) {
@@ -524,7 +521,7 @@ public final class CfgSchemaResolver {
     }
 
     private void step4_checkAllChainedSepFmt() {
-        for (Nameable item : cfg.items()) {
+        for (Nameable item : cfgSchema.items()) {
             switch (item) {
                 case InterfaceSchema interfaceSchema -> {
                     // 为了简单和一致性，在interface的impl上不支持配置fmt
@@ -603,7 +600,7 @@ public final class CfgSchemaResolver {
 
     private void step5_checkUnusedFieldable() {
         List<FieldSchema> needToCheck = new ArrayList<>();
-        for (TableSchema table : cfg.tableMap().values()) {
+        for (TableSchema table : cfgSchema.tableMap().values()) {
             needToCheck.addAll(table.fields());
         }
 
@@ -660,7 +657,7 @@ public final class CfgSchemaResolver {
             }
         }
 
-        for (Map.Entry<String, Fieldable> e : cfg.fieldableMap().entrySet()) {
+        for (Map.Entry<String, Fieldable> e : cfgSchema.fieldableMap().entrySet()) {
             if (!collectedFieldableSet.contains(e.getKey())) {
                 switch (e.getValue()) {
                     case InterfaceSchema _ -> errs.addWarn(new InterfaceNotUsed(e.getKey()));

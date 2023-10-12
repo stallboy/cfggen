@@ -13,6 +13,7 @@ public class CfgSchema {
     private Map<String, Fieldable> fieldableMap;
     private Map<String, TableSchema> tableMap;
     private boolean isResolved = false;
+    private boolean isForeignKeyValueCached = false;
 
     public static CfgSchema of() {
         return new CfgSchema(new ArrayList<>());
@@ -37,9 +38,19 @@ public class CfgSchema {
         isResolved = true;
     }
 
+    public void setForeignKeyValueCached() {
+        isForeignKeyValueCached = true;
+    }
+
     public void requireResolved() {
         if (!isResolved) {
             throw new IllegalStateException("cfgSchema not resolved");
+        }
+    }
+
+    public void requireForeignKeyValueCached() {
+        if (!isForeignKeyValueCached) {
+            throw new IllegalStateException("cfgSchema not foreignKeyValueCached");
         }
     }
 

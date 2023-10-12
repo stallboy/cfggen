@@ -20,7 +20,7 @@ public abstract class Generator {
      */
     protected Generator(Parameter parameter) {
         this.parameter = parameter;
-        tag = parameter.get("tag", null, "提取部分配置");
+        String tag = parameter.get("tag", null, "提取部分配置");
     }
 
     public abstract void generate(Context ctx) throws IOException;

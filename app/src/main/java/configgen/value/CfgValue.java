@@ -6,6 +6,8 @@ import configgen.schema.Structural;
 import configgen.schema.TableSchema;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static configgen.data.CfgData.DCell;
 
@@ -31,6 +33,10 @@ public record CfgValue(CfgSchema schema,
 
     public sealed interface Value {
         List<DCell> cells();
+
+        default String repr() {
+            return cells().stream().map(DCell::value).collect(Collectors.joining("#"));
+        }
     }
 
     public sealed interface SimpleValue extends Value {
@@ -41,6 +47,11 @@ public record CfgValue(CfgSchema schema,
 
     public sealed interface PrimitiveValue extends SimpleValue {
         DCell cell();
+
+        @Override
+        default String repr() {
+            return cell().value();
+        }
 
         @Override
         default List<DCell> cells() {
