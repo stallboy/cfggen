@@ -20,13 +20,17 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         return data.get(name);
     }
 
-    public void putInt(String name, int value) {
-        data.putLast(name, new MetaInt(value));
-    }
-
     public boolean hasTag(String tag) {
         MetaValue value = data.get(tag);
         return value == TAG;
+    }
+
+    public void putTag(String tag) {
+        data.putLast(tag, TAG);
+    }
+
+    public void putInt(String name, int value) {
+        data.putLast(name, new MetaInt(value));
     }
 
     public Metadata copy() {

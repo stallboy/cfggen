@@ -16,7 +16,7 @@ public class RefValidator {
     }
 
     public void validate() {
-        ForeachStructural.foreach(this::presetStructural, value.schema());
+        ForeachSchema.foreachStructural(this::presetStructural, value.schema());
         value.schema().setForeignKeyValueCached();
         ForeachVStruct.foreach(this::validateVStruct, value);
     }

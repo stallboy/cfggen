@@ -1,6 +1,8 @@
 package configgen.genjava.code;
 
 import configgen.gen.Generator;
+import configgen.schema.Nameable;
+import configgen.schema.TableSchema;
 import configgen.type.*;
 
 import java.util.Map;
@@ -39,8 +41,8 @@ public class Name {
     }
 
 
-    static String fullName(TBean tbean) {
-        return new NameableName(tbean).fullName;
+    static String fullName(Nameable nameable) {
+        return new NameableName(nameable).fullName;
     }
 
     static String tableDataFullName(TTable ttable) {
@@ -52,8 +54,8 @@ public class Name {
     }
 
 
-    static String refType(TTable ttable) {
-        return new NameableName(ttable.getTBean()).fullName;
+    static String refType(TableSchema table) {
+        return new NameableName(table).fullName;
     }
 
 

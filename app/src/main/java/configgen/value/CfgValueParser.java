@@ -1,5 +1,6 @@
 package configgen.value;
 
+import configgen.schema.HasRef;
 import configgen.util.Logger;
 import configgen.data.CfgData;
 import configgen.schema.CfgSchema;
@@ -43,6 +44,10 @@ public class CfgValueParser {
     public CfgValue parseCfgValue() {
         //预先计算下span，这样在多线程中parseTable过程中，就只读不会写了。
         Spans.preCalculateAllSpan(schema);
+
+        //预先计算hasRef，方便生成时使用
+        HasRef.preCalculateAllHasRef(schema);
+
         Logger.profile("schema span calculate");
 
         List<Callable<OneTableParserResult>> tasks = new ArrayList<>();
