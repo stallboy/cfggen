@@ -1,5 +1,6 @@
 package configgen.gen;
 
+import configgen.genjava.BinaryToText;
 import configgen.genjava.GenJavaData;
 import configgen.genjava.code.GenJavaCode;
 import configgen.tool.XmlToCfg;
@@ -32,8 +33,9 @@ public final class Main {
 
         System.out.println();
         System.out.println("----小工具--------------------------------------");
-        System.out.println("    -binaryToText 后可接2个参数（java data的file，table名称-用startsWith匹配），打印table的定义和数据");
-        System.out.println("    -search       后可接多个数字，找到匹配的数据");
+        System.out.println("    -binaryToText       后可接1或2个参数（java data的file，table名称-用startsWith匹配），打印table的定义和数据");
+        System.out.println("    -binaryToTextLoop   后可接1个参数（java data的file），打印table的定义和数据");
+        System.out.println("    -search             后接命令，找到匹配的数据");
 
         System.out.println("    -dump         打印内部树结构");
         System.out.println("    -v[1]         输出一些额外信息,1是额外gc测试内存");
@@ -99,6 +101,7 @@ public final class Main {
         List<Generator> generators = new ArrayList<>();
 
 
+        boolean binaryToTextLoop = false;
         String binaryToTextFile = null;
         String match = null;
 
@@ -151,6 +154,11 @@ public final class Main {
                         match = args[++i];
                     }
                     break;
+                case "-binaryToTextLoop":
+                    binaryToTextLoop = true;
+                    binaryToTextFile = args[++i];
+                    break;
+
                 case "-search":
                     searchParam = new ArrayList<>();
                     while (i + 1 < args.length && !args[i + 1].startsWith("-")) {
@@ -172,10 +180,14 @@ public final class Main {
             }
         }
 
-//        if (binaryToTextFile != null) {
-//            BinaryToText.parse(binaryToTextFile, match);
-//            return;
-//        }
+        if (binaryToTextFile != null) {
+            if (binaryToTextLoop) {
+                BinaryToText.loop(binaryToTextFile);
+            } else {
+                BinaryToText.parse(binaryToTextFile, match);
+            }
+            return;
+        }
         if (datadir == null) {
             usage("请需要配置-datadir");
             return;
