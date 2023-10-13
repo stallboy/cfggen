@@ -43,7 +43,7 @@ public final class RefSearcher {
 
         Map<Value, Set<String>> res = new LinkedHashMap<>();
         ForeachVStruct.VStructVisitor vStructVisitor = (vStruct, fromVTable) -> search(vStruct, fromVTable, refTable, nullableUniqueKeys, res);
-        for (VTable vTable : cfgValue.tables()) {
+        for (VTable vTable : cfgValue.sortedTables()) {
             if (!ignoredTables.contains(vTable.name())) {
                 ForeachVStruct.foreachVTable(vStructVisitor, vTable);
             }

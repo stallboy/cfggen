@@ -15,7 +15,7 @@ public class ForeachPrimitiveValue {
     }
 
     public static void foreach(PrimitiveValueVisitor visitor, CfgValue cfgValue) {
-        for (VTable vTable : cfgValue.tables()) {
+        for (VTable vTable : cfgValue.sortedTables()) {
             foreachVTable(visitor, vTable);
         }
     }

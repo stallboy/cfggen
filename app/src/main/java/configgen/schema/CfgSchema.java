@@ -1,5 +1,7 @@
 package configgen.schema;
 
+import org.apache.poi.ss.usermodel.Table;
+
 import java.util.*;
 
 /**
@@ -70,8 +72,8 @@ public class CfgSchema {
         return tableMap.get(name);
     }
 
-    void setMap(Map<String, Fieldable> structMap, Map<String, TableSchema> tableMap) {
-        this.fieldableMap = structMap;
+    void setMap(Map<String, Fieldable> fieldableMap, Map<String, TableSchema> tableMap) {
+        this.fieldableMap = fieldableMap;
         this.tableMap = tableMap;
     }
 
@@ -81,6 +83,16 @@ public class CfgSchema {
 
     public Map<String, TableSchema> tableMap() {
         return tableMap;
+    }
+
+    public Iterable<Fieldable> sortedFieldables() {
+        Map<String, Fieldable> sorted = new TreeMap<>(fieldableMap);
+        return sorted.values();
+    }
+
+    public Iterable<TableSchema> sortedTables() {
+        Map<String, TableSchema> sorted = new TreeMap<>(tableMap);
+        return sorted.values();
     }
 
     public void printDiff(CfgSchema cfg2) {

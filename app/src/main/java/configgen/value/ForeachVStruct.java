@@ -11,7 +11,7 @@ public class ForeachVStruct {
     }
 
     public static void foreach(VStructVisitor visitor, CfgValue cfgValue) {
-        for (VTable table : cfgValue.tables()) {
+        for (VTable table : cfgValue.sortedTables()) {
             foreachVTable(visitor, table);
         }
     }

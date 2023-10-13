@@ -46,7 +46,7 @@ public final class GenJavaData extends Generator {
         }
 
         output.writeInt(cnt);
-        for (VTable vTable : cfgValue.tables()) {
+        for (VTable vTable : cfgValue.sortedTables()) {
             if (GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(vTable.schema())) {
                 continue;
             }

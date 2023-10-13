@@ -6,13 +6,13 @@ public class ConfigCodeSchema {
 
     public static Schema getCodeSchema() {
         SchemaInterface schema = new SchemaInterface();
-        schema.addImp("equip.TestPackBean", equip_TestPackBean());
-        schema.addImp("task.TestDefaultBean", task_TestDefaultBean());
-        schema.addImp("Position", Position());
         schema.addImp("LevelRank", LevelRank());
-        schema.addImp("task.completecondition", task_completecondition());
+        schema.addImp("Position", Position());
         schema.addImp("Range", Range());
+        schema.addImp("equip.TestPackBean", equip_TestPackBean());
         schema.addImp("other.DropItem", other_DropItem());
+        schema.addImp("task.TestDefaultBean", task_TestDefaultBean());
+        schema.addImp("task.completecondition", task_completecondition());
         schema.addImp("ai.ai", ai_ai());
         schema.addImp("ai.ai_action", ai_ai_action());
         schema.addImp("ai.ai_condition", ai_ai_condition());
@@ -37,10 +37,41 @@ public class ConfigCodeSchema {
         return schema;
     }
 
+    static Schema LevelRank() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("Level", SchemaPrimitive.SInt);
+        s2.addColumn("Rank", SchemaPrimitive.SInt);
+        return s2;
+    }
+
+    static Schema Position() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("x", SchemaPrimitive.SInt);
+        s2.addColumn("y", SchemaPrimitive.SInt);
+        s2.addColumn("z", SchemaPrimitive.SInt);
+        return s2;
+    }
+
+    static Schema Range() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("Min", SchemaPrimitive.SInt);
+        s2.addColumn("Max", SchemaPrimitive.SInt);
+        return s2;
+    }
+
     static Schema equip_TestPackBean() {
         SchemaBean s2 = new SchemaBean(false);
         s2.addColumn("name", SchemaPrimitive.SStr);
         s2.addColumn("range", new SchemaRef("Range"));
+        return s2;
+    }
+
+    static Schema other_DropItem() {
+        SchemaBean s2 = new SchemaBean(false);
+        s2.addColumn("chance", SchemaPrimitive.SInt);
+        s2.addColumn("itemids", new SchemaList(SchemaPrimitive.SInt));
+        s2.addColumn("countmin", SchemaPrimitive.SInt);
+        s2.addColumn("countmax", SchemaPrimitive.SInt);
         return s2;
     }
 
@@ -53,21 +84,6 @@ public class ConfigCodeSchema {
         s2.addColumn("testList", new SchemaList(SchemaPrimitive.SInt));
         s2.addColumn("testList2", new SchemaList(SchemaPrimitive.SInt));
         s2.addColumn("testMap", new SchemaMap(SchemaPrimitive.SInt, SchemaPrimitive.SStr));
-        return s2;
-    }
-
-    static Schema Position() {
-        SchemaBean s2 = new SchemaBean(false);
-        s2.addColumn("x", SchemaPrimitive.SInt);
-        s2.addColumn("y", SchemaPrimitive.SInt);
-        s2.addColumn("z", SchemaPrimitive.SInt);
-        return s2;
-    }
-
-    static Schema LevelRank() {
-        SchemaBean s2 = new SchemaBean(false);
-        s2.addColumn("Level", SchemaPrimitive.SInt);
-        s2.addColumn("Rank", SchemaPrimitive.SInt);
         return s2;
     }
 
@@ -105,22 +121,6 @@ public class ConfigCodeSchema {
             s3.addColumn("count", SchemaPrimitive.SInt);
             s2.addImp("CollectItem", s3);
         }
-        return s2;
-    }
-
-    static Schema Range() {
-        SchemaBean s2 = new SchemaBean(false);
-        s2.addColumn("Min", SchemaPrimitive.SInt);
-        s2.addColumn("Max", SchemaPrimitive.SInt);
-        return s2;
-    }
-
-    static Schema other_DropItem() {
-        SchemaBean s2 = new SchemaBean(false);
-        s2.addColumn("chance", SchemaPrimitive.SInt);
-        s2.addColumn("itemids", new SchemaList(SchemaPrimitive.SInt));
-        s2.addColumn("countmin", SchemaPrimitive.SInt);
-        s2.addColumn("countmax", SchemaPrimitive.SInt);
         return s2;
     }
 

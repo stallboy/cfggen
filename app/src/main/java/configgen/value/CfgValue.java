@@ -17,6 +17,11 @@ public record CfgValue(CfgSchema schema,
         return vTableMap().values();
     }
 
+    public Iterable<VTable> sortedTables() {
+        Map<String, VTable> sorted = new TreeMap<>(vTableMap);
+        return sorted.values();
+    }
+
     public record VTable(TableSchema schema,
                          List<VStruct> valueList,
 

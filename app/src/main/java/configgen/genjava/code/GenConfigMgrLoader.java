@@ -60,7 +60,7 @@ class GenConfigMgrLoader {
 
         ps.println1("private static Map<String, ConfigLoader> getAllConfigLoaders() {");
         ps.println2("Map<String, ConfigLoader> allConfigLoaders = new LinkedHashMap<>();");
-        for (VTable vTable : cfgValue.tables()) {
+        for (VTable vTable : cfgValue.sortedTables()) {
             if (GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(vTable.schema())) {
                 continue;
             }

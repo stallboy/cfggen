@@ -24,7 +24,7 @@ public final class SchemaParser {
         }
 
         CfgSchema schema = cfgValue.schema();
-        for (Fieldable fieldable : schema.fieldableMap().values()) {
+        for (Fieldable fieldable : schema.sortedFieldables()) {
             Schema sc = switch (fieldable) {
                 case InterfaceSchema interfaceSchema -> parseInterface(interfaceSchema);
                 case StructSchema structSchema -> parseStructural(structSchema);
@@ -32,11 +32,10 @@ public final class SchemaParser {
             root.addImp(fieldable.name(), sc);
         }
 
-        for (VTable vTable : cfgValue.tables()) {
+        for (VTable vTable : cfgValue.sortedTables()) {
             TableSchema tableSchema = vTable.schema();
             String name = tableSchema.name();
             EntryType entry = tableSchema.entry();
-
 
             if (entry instanceof EntryType.EEnum) {
                 root.addImp(name, parseEntry(vTable, false));
