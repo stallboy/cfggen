@@ -9,7 +9,22 @@ import java.util.List;
 import java.util.Map;
 
 public final class I18n {
-    private Map<String, Map<String, String>> map;
+
+    public record TableI18n(Map<String, String> map,
+                            boolean isCRLFAsLF) {
+
+
+        public String findText(String raw) {
+            String normalizeRaw = I18n.normalizeRaw(raw, isCRLFAsLF);
+            String text = map.get(normalizeRaw);
+            if (text != null && !text.isEmpty()) {
+                return text;
+            }
+            return null;
+        }
+    }
+
+    private final Map<String, TableI18n> map = new HashMap<>();
     private final boolean isCRLFAsLF;
     private Map<String, String> curTable;
 
@@ -18,7 +33,6 @@ public final class I18n {
     }
 
     public I18n(Path path, String encoding, boolean crlfaslf) {
-        map = new HashMap<>();
         List<CsvRow> rows = CSVUtil.read(path, encoding);
 
         if (rows.isEmpty()) {
@@ -40,15 +54,15 @@ public final class I18n {
                 String table = row.getField(0);
                 String raw = row.getField(1);
                 String i18 = row.getField(2);
-                raw = normalizeRaw(raw);
+                raw = normalizeRaw(raw, isCRLFAsLF);
 
-                Map<String, String> m = map.computeIfAbsent(table, _ -> new HashMap<>());
-                m.put(raw, i18);
+                TableI18n m = map.computeIfAbsent(table, _ -> new TableI18n(new HashMap<>(), isCRLFAsLF));
+                m.map.put(raw, i18);
             }
         }
     }
 
-    private String normalizeRaw(String raw) {
+    static String normalizeRaw(String raw, boolean isCRLFAsLF) {
         if (isCRLFAsLF) {
             return raw.replaceAll("\r\n", "\n");
         } else {
@@ -56,7 +70,7 @@ public final class I18n {
         }
     }
 
-    public Map<String, String> getTable(String table) {
+    public TableI18n getTableI18n(String table) {
         return map.get(table);
     }
 

@@ -1,12 +1,13 @@
 package configgen.value;
 
-import configgen.data.CfgData;
 import configgen.schema.*;
 import configgen.schema.EntryType.EntryBase;
 
 import java.util.*;
 
+import static configgen.data.CfgData.*;
 import static configgen.data.CfgData.DCell;
+import static configgen.gen.I18n.*;
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
 import static configgen.schema.FieldFormat.Block;
 import static configgen.schema.FieldFormat.Sep;
@@ -16,15 +17,17 @@ import static configgen.value.ValueErrs.*;
 
 public class TableParser {
     private final TableSchema subTableSchema;
-    private final CfgData.DTable dTable;
+    private final DTable dTable;
     private final TableSchema tableSchema;
+    private final TableI18n nullableTableI18n;
     private final ValueErrs errs;
     private List<DCell> curRow;
 
-    public TableParser(TableSchema subTableSchema, CfgData.DTable dTable, TableSchema tableSchema, ValueErrs errs) {
+    public TableParser(TableSchema subTableSchema, DTable dTable, TableSchema tableSchema, TableI18n nullableTableI18n, ValueErrs errs) {
         this.subTableSchema = subTableSchema;
         this.dTable = dTable;
         this.tableSchema = tableSchema;
+        this.nullableTableI18n = nullableTableI18n;
         this.errs = errs;
     }
 
@@ -297,8 +300,8 @@ public class TableParser {
     }
 
     SimpleValue parseSimpleType(SimpleType subType, List<DCell> cells, SimpleType type,
-                                         boolean pack, boolean canBeEmpty, int curRowIndex,
-                                         String nameable, String field) {
+                                boolean pack, boolean canBeEmpty, int curRowIndex,
+                                String nameable, String field) {
         switch (type) {
             case Primitive primitive -> {
                 require(cells.size() == 1);
@@ -368,8 +371,8 @@ public class TableParser {
     }
 
     Value parseField(FieldSchema subField, List<DCell> cells, FieldSchema field,
-                              boolean pack, boolean canBeEmpty, int curRowIndex,
-                              String nameable) {
+                     boolean pack, boolean canBeEmpty, int curRowIndex,
+                     String nameable) {
 
         switch (field.type()) {
             case SimpleType simple -> {
@@ -386,8 +389,8 @@ public class TableParser {
     }
 
     VMap parseMap(FieldSchema subField, List<DCell> cells, FieldSchema field,
-                            boolean isPack, int curRowIndex,
-                            String nameable) {
+                  boolean isPack, int curRowIndex,
+                  String nameable) {
 
         FMap subType = (FMap) subField.type();
         FMap type = (FMap) field.type();
@@ -461,8 +464,8 @@ public class TableParser {
 
 
     VList parseList(FieldSchema subField, List<DCell> cells, FieldSchema field,
-                             boolean isPack, int curRowIndex,
-                             String nameable) {
+                    boolean isPack, int curRowIndex,
+                    String nameable) {
 
         FList subType = (FList) subField.type();
         FList type = (FList) field.type();

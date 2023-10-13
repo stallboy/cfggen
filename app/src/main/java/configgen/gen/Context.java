@@ -81,10 +81,6 @@ public class Context {
         return langSwitch;
     }
 
-    public I18n getI18n() {
-        return i18n;
-    }
-
     public CfgValue makeValue() {
         return makeValue(null);
     }
@@ -113,7 +109,7 @@ public class Context {
         }
 
         ValueErrs valueErrs = ValueErrs.of();
-        CfgValueParser clientValueParser = new CfgValueParser(tagSchema, cfgData, cfgSchema, valueErrs);
+        CfgValueParser clientValueParser = new CfgValueParser(tagSchema, cfgData, cfgSchema, i18n, valueErrs);
         CfgValue value = clientValueParser.parseCfgValue();
         valueErrs.print();
 
