@@ -25,6 +25,7 @@ public final class Main {
         System.out.println("    -encoding     csv编码，默认是GBK，如果文件中含有bom则用bom标记的编码");
         System.out.println("    -verify       检查配表约束");
 
+
         System.out.println();
         System.out.println("----国际化支持--------------------------------------");
         System.out.println("    -i18nfile     国际化需要的文件，如果不用国际化，就不要配置");
@@ -40,7 +41,10 @@ public final class Main {
         System.out.println("    -search             后接命令，找到匹配的数据");
 
         System.out.println("    -dump         打印内部树结构");
-        System.out.println("    -v[1]         输出一些额外信息,1是额外gc测试内存");
+        System.out.println("    -v            verbose，级别1，输出统计和warning信息");
+        System.out.println("    -vv           verbose，级别2，输出额外信息");
+        System.out.println("    -p            profiler，内存和时间监测");
+        System.out.println("    -pp           profiler，内存监测前加gc");
 
         System.out.println();
         System.out.println("----以下gen参数之间由,分割,参数名和参数取值之间由=或:分割--------------------------------------");
@@ -77,9 +81,10 @@ public final class Main {
     }
 
     private static void main0(String[] args) throws Exception {
+        Generators.addProvider("i18n", GenI18n::new);
+
         Generators.addProvider("java", GenJavaCode::new);
         Generators.addProvider("javadata", GenJavaData::new);
-        Generators.addProvider("i18n", GenI18n::new);
 
 //
 //        Generators.addProvider("lua", GenLua::new);
@@ -148,8 +153,15 @@ public final class Main {
                 case "-v":
                     Logger.setVerboseLevel(1);
                     break;
-                case "-v1":
-                    Logger.setVerboseLevel(1);
+                case "-vv":
+                    Logger.setVerboseLevel(2);
+                    break;
+
+                case "-p":
+                    Logger.enableProfile();
+                    break;
+                case "-pp":
+                    Logger.enableProfile();
                     Logger.enableProfileGc();
                     break;
 
@@ -199,9 +211,6 @@ public final class Main {
         }
 
         Path dataDir = Paths.get(datadir);
-        Logger.setVerboseLevel(0);
-        Logger.enableProfile();
-
         if (xmlToCfg) {
             XmlToCfg.convertAndCheck(dataDir);
             return;
@@ -214,7 +223,7 @@ public final class Main {
 
         Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));
         Context ctx = new Context(dataDir, headRow, encoding);
-        ctx.setI18nOrLangSwitch(i18nfile, i18nencoding, i18ncrlfaslf, langSwitchDir,defaultLang);
+        ctx.setI18nOrLangSwitch(i18nfile, i18nencoding, i18ncrlfaslf, langSwitchDir, defaultLang);
 
         if (searchParam != null) {
             ValueSearcher searcher = new ValueSearcher(ctx.makeValue());
