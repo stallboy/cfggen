@@ -3,6 +3,7 @@ package configgen.gen;
 import configgen.genjava.BinaryToText;
 import configgen.genjava.GenJavaData;
 import configgen.genjava.code.GenJavaCode;
+import configgen.tool.GenI18n;
 import configgen.tool.XmlToCfg;
 import configgen.util.Logger;
 import configgen.tool.ValueSearcher;
@@ -30,6 +31,7 @@ public final class Main {
         System.out.println("    -i18nencoding 国际化需要的文件的编码，默认是GBK，如果文件中含有bom则用bom标记的编码");
         System.out.println("    -i18ncrlfaslf 把字符串里的\\r\\n 替换为 \\n，默认是false");
         System.out.println("    -langSwitchDir 国际化并且可随时切换语言");
+        System.out.println("    -defaultLang  langSwitchDir设置时有效，表示默认的语言，默认为zh_cn");
 
         System.out.println();
         System.out.println("----小工具--------------------------------------");
@@ -77,15 +79,14 @@ public final class Main {
     private static void main0(String[] args) throws Exception {
         Generators.addProvider("java", GenJavaCode::new);
         Generators.addProvider("javadata", GenJavaData::new);
+        Generators.addProvider("i18n", GenI18n::new);
+
 //
 //        Generators.addProvider("lua", GenLua::new);
 //        Generators.addProvider("cs", GenCs::new);
 //        Generators.addProvider("pack", GenPack::new);
 //        Generators.addProvider("bytes", GenBytes::new);
 //
-//        Generators.addProvider("i18n", GenI18n::new);
-//        Generators.addProvider("allrefvalues", GenAllRefValues::new);
-
 
         String datadir = null;
         boolean xmlToCfg = false;
@@ -96,6 +97,7 @@ public final class Main {
         String i18nencoding = "GBK";
         boolean i18ncrlfaslf = false;
         String langSwitchDir = null;
+        String defaultLang = "zh_cn";
 
         boolean verify = false;
         List<Generator> generators = new ArrayList<>();
@@ -138,6 +140,9 @@ public final class Main {
                     break;
                 case "-langSwitchDir":
                     langSwitchDir = args[++i];
+                    break;
+                case "-defaultLang":
+                    defaultLang = args[++i];
                     break;
 
                 case "-v":
@@ -209,7 +214,7 @@ public final class Main {
 
         Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));
         Context ctx = new Context(dataDir, headRow, encoding);
-        ctx.setI18nOrLangSwitch(i18nfile, langSwitchDir, i18nencoding, i18ncrlfaslf);
+        ctx.setI18nOrLangSwitch(i18nfile, i18nencoding, i18ncrlfaslf, langSwitchDir,defaultLang);
 
         if (searchParam != null) {
             ValueSearcher searcher = new ValueSearcher(ctx.makeValue());

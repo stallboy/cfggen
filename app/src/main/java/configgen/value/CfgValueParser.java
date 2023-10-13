@@ -1,6 +1,5 @@
 package configgen.value;
 
-import configgen.gen.I18n;
 import configgen.schema.HasRef;
 import configgen.util.Logger;
 import configgen.data.CfgData;
@@ -17,24 +16,24 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import static configgen.gen.I18n.*;
+import static configgen.value.TextI18n.*;
 import static configgen.value.CfgValue.*;
 
 public class CfgValueParser {
     private final CfgSchema subSchema;
     private final CfgData data;
     private final CfgSchema schema;
-    private final I18n nullableI18n;
+    private final TextI18n nullableI18n;
     private final ValueErrs errs;
 
     /**
      * @param subSchema    这是返会目标CfgValue对应的schema
      * @param data         全部的数据
      * @param schema       全部的数据对应的schema
-     * @param nullableI18n 国际化信息，会替换text里的str
+     * @param nullableI18n 国际化信息，会替换text里的value
      * @param errs         错误记录器
      */
-    public CfgValueParser(CfgSchema subSchema, CfgData data, CfgSchema schema, I18n nullableI18n, ValueErrs errs) {
+    public CfgValueParser(CfgSchema subSchema, CfgData data, CfgSchema schema, TextI18n nullableI18n, ValueErrs errs) {
         subSchema.requireResolved();
         schema.requireResolved();
         Objects.requireNonNull(data);

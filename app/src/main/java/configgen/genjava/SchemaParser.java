@@ -54,8 +54,8 @@ public final class SchemaParser {
 
     private static Schema parseLangSwitch(LangSwitch ls) {
         SchemaBean sb = new SchemaBean(false);
-        for (LangSwitch.Lang lang : ls.getAllLangInfo()) {
-            sb.addColumn(lang.getLang(), SStr);
+        for (String lang : ls.languages()) {
+            sb.addColumn(lang, SStr);
         }
         return sb;
     }

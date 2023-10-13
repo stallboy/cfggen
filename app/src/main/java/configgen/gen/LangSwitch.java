@@ -1,41 +1,33 @@
 package configgen.gen;
 
+import configgen.util.CSVUtil;
+import configgen.value.TextI18n;
+import de.siegmar.fastcsv.reader.CsvRow;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class LangSwitch {
+import static configgen.value.TextI18n.*;
 
-    public static class Lang {
-        private final String lang;
-        private final I18n i18n;
-        private final List<String> idToStr = new ArrayList<>();
+public record LangSwitch(Map<String, TextI18n> lang2i18n,
+                         String defaultLang) {
 
-        Lang(String lang, I18n i18n) {
-            this.lang = lang;
-            this.i18n = i18n;
-            idToStr.add(""); //这个是第一个，重用
-        }
-
-        public String getLang() {
-            return lang;
-        }
-
-        public List<String> getStrList() {
-            return idToStr;
-        }
+    public List<String> languages() {
+        List<String> res = new ArrayList<>(lang2i18n.size() + 1);
+        res.add(defaultLang);
+        res.addAll(lang2i18n.keySet());
+        return res;
     }
 
+    public int languageCount() {
+        return lang2i18n.size() + 1;
+    }
 
-    private final Map<String, Lang> langMap = new TreeMap<>();
-    private int next;
-    private final String[] tmpEmpty;
-
-
-    public LangSwitch(Path path, String encoding, boolean crlfaslf) {
-        langMap.put("zh_cn", new Lang("zh_cn", new I18n())); //原始csv里是中文
+    public static LangSwitch loadLangSwitch(Path path, String defaultLang, String encoding, boolean crlfaslf) {
+        Map<String, TextI18n> lang2i18n = new TreeMap<>();
         try (Stream<Path> plist = Files.list(path)) {
             plist.forEach(langFilePath -> {
                 String langName = langFilePath.getFileName().toString();
@@ -43,62 +35,46 @@ public class LangSwitch {
                 if (i >= 0) {
                     langName = langName.substring(0, i);
                 }
-                langMap.put(langName, new Lang(langName, new I18n(langFilePath, encoding, crlfaslf)));
+                lang2i18n.put(langName, loadTextI18n(langFilePath, encoding, crlfaslf));
             });
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-
-        int langCnt = langMap.size();
-        tmpEmpty = new String[langCnt];
-        for (int i = 0; i < langCnt; i++) {
-            tmpEmpty[i] = "";
-        }
+        return new LangSwitch(lang2i18n, defaultLang);
     }
 
 
-    public void enterTable(String tableName) {
-        for (Lang lang : langMap.values()) {
-            lang.i18n.enterTable(tableName);
-        }
-    }
+    public static TextI18n loadTextI18n(Path path, String encoding, boolean crlfaslf) {
+        List<CsvRow> rows = CSVUtil.read(path, encoding);
 
-    public int enterText(String raw) {
-        if (raw.isEmpty()) {
-            return 0;
+        if (rows.isEmpty()) {
+            throw new IllegalArgumentException("国际化i18n文件为空");
+        }
+        CsvRow row0 = rows.get(0);
+        if (row0.getFieldCount() != 3) {
+            throw new IllegalArgumentException("国际化i18n文件列数不为3");
         }
 
-        for (Lang lang : langMap.values()) {
-            String t = lang.i18n.enterText(raw);
-            if (t == null) {
-                t = raw;
+        Map<String, TableI18n> tableI18nMap = new TreeMap<>();
+        for (CsvRow row : rows) {
+            if (row.isEmpty()) {
+                continue;
             }
-            lang.idToStr.add(t);
-        }
-        next++;
-        return next;
-    }
+            if (row.getFieldCount() != 3) {
+                System.out.println(row + " 不是3列，被忽略");
+            } else {
+                String table = row.getField(0);
+                String original = row.getField(1);
+                String lang = row.getField(2);
+                original = TextI18n.normalize(original, crlfaslf);
 
-    public Collection<Lang> getAllLangInfo() {
-        return langMap.values();
-    }
-
-    public String[] findAllLangText(String raw) {
-        if (raw.isEmpty()) {
-            return tmpEmpty;
-        }
-
-        String[] tmp = new String[langMap.size()];
-        int i = 0;
-        for (Lang lang : langMap.values()) {
-            String t = lang.i18n.enterText(raw);
-            if (t == null) {
-                t = raw;
+                TableI18n tableI18n = tableI18nMap.computeIfAbsent(table, t ->
+                        new TableI18n(new LinkedHashMap<>(), crlfaslf));
+                tableI18n.original2text().put(original, lang);
             }
-            tmp[i++] = t;
         }
-        return tmp;
+        return new TextI18n(tableI18nMap);
     }
 
 }

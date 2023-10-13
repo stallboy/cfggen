@@ -6,6 +6,7 @@ import configgen.data.CfgDataReader;
 import configgen.data.CfgSchemaAlignToData;
 import configgen.schema.*;
 import configgen.schema.cfg.Cfgs;
+import configgen.value.TextI18n;
 import configgen.value.CfgValue;
 import configgen.value.CfgValueParser;
 import configgen.value.ValueErrs;
@@ -22,7 +23,7 @@ public class Context {
     /**
      * 直接国际化,直接改成对应国家语言
      */
-    private I18n i18n = null;
+    private TextI18n i18n = null;
 
     /**
      * 这个是要实现客户端可在多国语言间切换语言，所以客户端服务器都需要完整的多国语言信息，而不能如i18n那样直接替换
@@ -69,11 +70,12 @@ public class Context {
         this.cfgSchema = alignedSchema;
     }
 
-    void setI18nOrLangSwitch(String i18nFile, String langSwitchDir, String i18nEncoding, boolean crlfaslf) {
+    void setI18nOrLangSwitch(String i18nFile, String i18nEncoding, boolean crlfaslf,
+                             String langSwitchDir, String defaultLang) {
         if (i18nFile != null) {
-            i18n = new I18n(Path.of(i18nFile), i18nEncoding, crlfaslf);
+            i18n = LangSwitch.loadTextI18n(Path.of(i18nFile), i18nEncoding, crlfaslf);
         } else if (langSwitchDir != null) {
-            langSwitch = new LangSwitch(Path.of(langSwitchDir), i18nEncoding, crlfaslf);
+            langSwitch = LangSwitch.loadLangSwitch(Path.of(langSwitchDir), defaultLang, i18nEncoding, crlfaslf);
         }
     }
 

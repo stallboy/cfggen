@@ -97,6 +97,7 @@ public record ValueSearcher(CfgValue cfgValue) {
                     searchRef(refTable, nullableForeignKeys, ignoredTables);
                 }
             }
+            default -> System.out.println(STR. "\{ func } unknownqq" );
         }
     }
 

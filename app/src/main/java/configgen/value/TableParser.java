@@ -7,7 +7,7 @@ import java.util.*;
 
 import static configgen.data.CfgData.*;
 import static configgen.data.CfgData.DCell;
-import static configgen.gen.I18n.*;
+import static configgen.value.TextI18n.*;
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
 import static configgen.schema.FieldFormat.Block;
 import static configgen.schema.FieldFormat.Sep;
@@ -346,7 +346,16 @@ public class TableParser {
                         return new VString(str, cell);
                     }
                     case TEXT -> {
-                        return new VText(str, cell);
+                        String value;
+                        if (nullableTableI18n != null) {
+                            value = nullableTableI18n.findText(str);
+                            if (value == null) {
+                                value = str;
+                            }
+                        } else {
+                            value = str;
+                        }
+                        return new VText(value, str, cell);
                     }
                 }
             }
