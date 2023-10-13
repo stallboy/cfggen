@@ -4,9 +4,9 @@ public class Signin {
     private int id;
     private java.util.Map<Integer, Integer> item2countMap;
     private java.util.Map<Integer, Integer> vipitem2vipcountMap;
-    private java.util.Map<Integer, config.other.Loot> RefVipitem2vipcountMap;
     private int viplevel;
     private String iconFile;
+    private java.util.Map<Integer, config.other.Loot> RefVipitem2vipcountMap;
 
     private Signin() {
     }
@@ -56,10 +56,6 @@ public class Signin {
         return vipitem2vipcountMap;
     }
 
-    public java.util.Map<Integer, config.other.Loot> refVipitem2vipcountMap() {
-        return RefVipitem2vipcountMap;
-    }
-
     /**
      * 领取vip奖励的最低等级
      */
@@ -72,6 +68,10 @@ public class Signin {
      */
     public String getIconFile() {
         return iconFile;
+    }
+
+    public java.util.Map<Integer, config.other.Loot> refVipitem2vipcountMap() {
+        return RefVipitem2vipcountMap;
     }
 
     @Override
@@ -104,7 +104,7 @@ public class Signin {
 
         @Override
         public int hashCode() {
-            return id + viplevel;
+            return java.util.Objects.hash(id, viplevel);
         }
 
         @Override

@@ -50,6 +50,5 @@ class NameableName {
             path = className + ".java";
         else
             path = String.join("/", pks) + "/" + className + ".java";
-
     }
 }

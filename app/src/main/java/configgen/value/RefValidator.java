@@ -21,7 +21,7 @@ public class RefValidator {
         ForeachVStruct.foreach(this::validateVStruct, value);
     }
 
-    private void presetStructural(Structural structural, InterfaceSchema nullableFromInterface) {
+    private void presetStructural(Structural structural) {
         for (ForeignKeySchema fk : structural.foreignKeys()) {
             switch (fk.refKey()) {
                 case RefKey.RefPrimary _ -> {

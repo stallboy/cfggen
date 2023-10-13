@@ -171,7 +171,7 @@ final class GenConfigCodeSchema {
             String name = "s" + ip.indent();
             ip.println("SchemaBean %s = new SchemaBean(%s);", name, schemaBean.isTable ? "true" : "false");
             for (SchemaBean.Column column : schemaBean.columns) {
-                ip.println("%s.addColumn(\"%s\", %s);", name, column.name, parse(column.schema));
+                ip.println("%s.addColumn(\"%s\", %s);", name, column.name(), parse(column.schema()));
             }
         }
 
@@ -194,7 +194,7 @@ final class GenConfigCodeSchema {
         public void visit(SchemaEnum schemaEnum) {
             String name = "s" + ip.indent();
             ip.println("SchemaEnum %s = new SchemaEnum(%s, %s);", name, schemaEnum.isEnumPart ? "true" : "false",
-                       schemaEnum.hasIntValue ? "true" : "false");
+                    schemaEnum.hasIntValue ? "true" : "false");
             for (Map.Entry<String, Integer> entry : schemaEnum.values.entrySet()) {
                 if (schemaEnum.hasIntValue) {
                     ip.println("%s.addValue(\"%s\", %d);", name, entry.getKey(), entry.getValue());

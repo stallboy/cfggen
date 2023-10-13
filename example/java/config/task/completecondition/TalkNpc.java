@@ -27,7 +27,7 @@ public class TalkNpc implements config.task.Completecondition {
 
     @Override
     public int hashCode() {
-        return npcid;
+        return java.util.Objects.hash(npcid);
     }
 
     @Override

@@ -10,13 +10,13 @@ public class HasRef {
 
     static final String HAS_REF = "__hasRef";
 
-    private static boolean calcHasRef(Nameable nameable, InterfaceSchema nullableFromInterface) {
+    private static boolean calcHasRef(Nameable nameable) {
         Metadata meta = nameable.meta();
         if (meta.hasTag(HAS_REF)) {
             return true;
         }
         boolean hasRef = switch (nameable) {
-            case InterfaceSchema sInterface -> sInterface.impls().stream().anyMatch(im -> calcHasRef(im, sInterface));
+            case InterfaceSchema sInterface -> sInterface.impls().stream().anyMatch(HasRef::calcHasRef);
             case Structural structural -> !structural.foreignKeys().isEmpty() ||
                     structural.fields().stream().anyMatch(f -> hasRef(f.type()));
         };
@@ -27,13 +27,13 @@ public class HasRef {
         return hasRef;
     }
 
-    private static boolean hasRef(FieldType type) {
+    public static boolean hasRef(FieldType type) {
         switch (type) {
             case Primitive _ -> {
                 return false;
             }
             case StructRef structRef -> {
-                return calcHasRef(structRef.obj(), null);
+                return calcHasRef(structRef.obj());
             }
             case FList fList -> {
                 return hasRef(fList.item());

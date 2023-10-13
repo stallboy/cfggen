@@ -27,7 +27,7 @@ public class Chat implements config.task.Completecondition {
 
     @Override
     public int hashCode() {
-        return msg.hashCode();
+        return java.util.Objects.hash(msg);
     }
 
     @Override

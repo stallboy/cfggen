@@ -18,8 +18,9 @@ import static configgen.schema.SchemaErrs.*;
 public final class CfgSchemaResolver {
     private final CfgSchema cfgSchema;
     private final SchemaErrs errs;
+    private Nameable curTopNameable;
     private Nameable curNameable;
-    private StructSchema curImpl;
+
 
     public CfgSchemaResolver(CfgSchema cfg, SchemaErrs errs) {
         this.cfgSchema = cfg;
@@ -27,6 +28,7 @@ public final class CfgSchemaResolver {
     }
 
     public void resolve() {
+        step0_setImplInterface();
         step0_checkNameConflict();
         step1_resolveAllFields();
         step2_resolveEachNameable();
@@ -37,6 +39,17 @@ public final class CfgSchemaResolver {
             cfgSchema.setResolved();
         }
     }
+
+    private void step0_setImplInterface() {
+        for (Nameable item : cfgSchema.items()) {
+            if (item instanceof InterfaceSchema sInterface) {
+                for (StructSchema impl : sInterface.impls()) {
+                    impl.setNullableInterface(sInterface);
+                }
+            }
+        }
+    }
+
 
     /**
      * 如果所有的cfg都配置在一个文件里，那么不需要检测
@@ -133,27 +146,17 @@ public final class CfgSchemaResolver {
         resolve_structural(this::resolveFields);
     }
 
-    private interface Action<T> {
-        void run(T t);
-    }
+    private void resolve_structural(ForeachSchema.StructuralVisitor visitor) {
+        ForeachSchema.foreachStructural(structural -> {
+            curNameable = structural;
+            curTopNameable = curNameable instanceof StructSchema s && s.nullableInterface() != null ?
+                    s.nullableInterface() : curNameable;
 
-    private void resolve_structural(Action<Structural> action) {
-        for (Nameable value : cfgSchema.items()) {
-            curNameable = value;
-            switch (value) {
-                case Structural table -> {
-                    action.run(table);
-                }
-                case InterfaceSchema sInterface -> {
-                    for (StructSchema impl : sInterface.impls()) {
-                        this.curImpl = impl;
-                        action.run(impl);
-                        this.curImpl = null;
-                    }
-                }
-            }
+            visitor.visit(structural);
+
             curNameable = null;
-        }
+            curTopNameable = null;
+        }, cfgSchema);
     }
 
     private void resolveFields(Structural structural) {
@@ -177,7 +180,7 @@ public final class CfgSchemaResolver {
             case StructRef structRef -> {
                 String name = structRef.name();
                 // interface里找
-                if (curNameable instanceof InterfaceSchema sInterface) {
+                if (curTopNameable instanceof InterfaceSchema sInterface) {
                     StructSchema obj = sInterface.findImpl(name);
                     if (obj != null) {
                         structRef.setObj(obj);
@@ -186,7 +189,7 @@ public final class CfgSchemaResolver {
                 }
 
                 // 本模块找
-                String namespace = curNameable.namespace();
+                String namespace = curTopNameable.namespace();
                 if (!namespace.isEmpty()) {
                     String fullName = Nameable.makeName(namespace, name);
                     Fieldable obj = cfgSchema.findFieldable(fullName);
@@ -209,17 +212,14 @@ public final class CfgSchemaResolver {
 
 
     private String ctx() {
-        String ctx = curNameable.name();
-        if (curImpl != null) {
-            ctx += "." + curImpl.name();
-        }
-        return ctx;
+        return curNameable.fullName();
     }
 
     ////////////////////////////////////////////////////////////////////
     private void step2_resolveEachNameable() {
         for (Nameable item : cfgSchema.items()) {
             curNameable = item;
+            curTopNameable = item;
             switch (item) {
                 case StructSchema _ -> {
                 }
@@ -251,7 +251,7 @@ public final class CfgSchemaResolver {
 
     private TableSchema findTableInLocalThenGlobal(String name) {
         // 本模块找
-        String namespace = curNameable.namespace();
+        String namespace = curTopNameable.namespace();
         if (!namespace.isEmpty()) {
             String fullName = Nameable.makeName(namespace, name);
             TableSchema table = cfgSchema.findTable(fullName);
@@ -381,7 +381,7 @@ public final class CfgSchemaResolver {
     }
 
     private void errKeyTypeNotSupport(String field, String errType) {
-        errs.addErr(new KeyTypeNotSupport(curNameable.name(), field, errType));
+        errs.addErr(new KeyTypeNotSupport(ctx(), field, errType));
     }
 
     ////////////////////////////////////////////////////////////////////

@@ -7,8 +7,8 @@ public class KillMonster implements config.task.Completecondition {
     }
 
     private int monsterid;
-    private config.other.Monster RefMonsterid;
     private int count;
+    private config.other.Monster RefMonsterid;
 
     private KillMonster() {
     }
@@ -29,17 +29,17 @@ public class KillMonster implements config.task.Completecondition {
         return monsterid;
     }
 
-    public config.other.Monster refMonsterid() {
-        return RefMonsterid;
-    }
-
     public int getCount() {
         return count;
     }
 
+    public config.other.Monster refMonsterid() {
+        return RefMonsterid;
+    }
+
     @Override
     public int hashCode() {
-        return monsterid + count;
+        return java.util.Objects.hash(monsterid, count);
     }
 
     @Override

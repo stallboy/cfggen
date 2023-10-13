@@ -34,9 +34,6 @@ public class Ai {
         return self;
     }
 
-    /**
-     * ID
-     */
     public int getID() {
         return iD;
     }

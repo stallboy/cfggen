@@ -1,7 +1,10 @@
 package configgen.genjava.code;
 
+import configgen.genjava.GenJavaUtil;
 import configgen.util.CachedIndentPrinter;
 import configgen.value.CfgValue;
+
+import static configgen.value.CfgValue.*;
 
 class GenConfigMgrLoader {
 
@@ -20,8 +23,8 @@ class GenConfigMgrLoader {
         ps.println2("ConfigMgr mgr = new ConfigMgr();");
 
         int cnt = 0;
-        for (VTable vTable : cfgValue.getVTables()) {
-            if (vTable.getTTable().getTableDefine().isEnumFull() && vTable.getTTable().getTableDefine().isEnumHasOnlyPrimaryKeyAndEnumStr()) {
+        for (VTable vTable : cfgValue.tables()) {
+            if (GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(vTable.schema())) {
                 continue;
             }
             cnt++;
@@ -57,12 +60,11 @@ class GenConfigMgrLoader {
 
         ps.println1("private static Map<String, ConfigLoader> getAllConfigLoaders() {");
         ps.println2("Map<String, ConfigLoader> allConfigLoaders = new LinkedHashMap<>();");
-        for (VTable vTable : cfgValue.getVTables()) {
-            if (vTable.getTTable().getTableDefine().isEnumFull() && vTable.getTTable().getTableDefine().isEnumHasOnlyPrimaryKeyAndEnumStr()) {
+        for (VTable vTable : cfgValue.tables()) {
+            if (GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(vTable.schema())) {
                 continue;
             }
-
-            ps.println2("allConfigLoaders.put(\"%s\", new %s._ConfigLoader());", vTable.name, Name.tableDataFullName(vTable.getTTable()));
+            ps.println2("allConfigLoaders.put(\"%s\", new %s._ConfigLoader());", vTable.name(), Name.tableDataFullName(vTable.schema()));
         }
         ps.println();
         ps.println2("return allConfigLoaders;");

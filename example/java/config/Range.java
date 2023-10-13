@@ -35,7 +35,7 @@ public class Range {
 
     @Override
     public int hashCode() {
-        return min + max;
+        return java.util.Objects.hash(min, max);
     }
 
     @Override

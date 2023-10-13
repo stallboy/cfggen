@@ -36,7 +36,7 @@ public class Position {
 
     @Override
     public int hashCode() {
-        return x + y + z;
+        return java.util.Objects.hash(x, y, z);
     }
 
     @Override

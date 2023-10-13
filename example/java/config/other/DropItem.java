@@ -58,7 +58,7 @@ public class DropItem {
 
     @Override
     public int hashCode() {
-        return chance + itemids.hashCode() + countmin + countmax;
+        return java.util.Objects.hash(chance, itemids, countmin, countmax);
     }
 
     @Override

@@ -34,7 +34,7 @@ public class CollectItem implements config.task.Completecondition {
 
     @Override
     public int hashCode() {
-        return itemid + count;
+        return java.util.Objects.hash(itemid, count);
     }
 
     @Override

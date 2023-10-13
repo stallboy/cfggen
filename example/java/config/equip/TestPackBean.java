@@ -29,7 +29,7 @@ public class TestPackBean {
 
     @Override
     public int hashCode() {
-        return name.hashCode() + range.hashCode();
+        return java.util.Objects.hash(name, range);
     }
 
     @Override

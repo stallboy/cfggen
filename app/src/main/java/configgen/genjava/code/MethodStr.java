@@ -1,155 +1,67 @@
 package configgen.genjava.code;
 
 import configgen.gen.Generator;
-import configgen.type.*;
+import configgen.schema.*;
 
-import java.util.Arrays;
-import java.util.Map;
+import java.util.List;
 import java.util.stream.Collectors;
+
+import static configgen.gen.Generator.lower1;
+import static configgen.schema.FieldType.Primitive.*;
+import static configgen.schema.RefKey.*;
 
 class MethodStr {
 
-    static String formalParams(Map<String, Type> fs) {
-        return fs.entrySet().stream().map(e -> TypeStr.type(e.getValue()) + " " + Generator.lower1(e.getKey())).collect(Collectors.joining(", "));
+    static String formalParams(List<FieldSchema> fs) {
+        return fs.stream().map(f -> TypeStr.type(f.type()) + " " + lower1(f.name())).collect(Collectors.joining(", "));
     }
 
-    static String actualParams(String[] keys) {
-        return Arrays.stream(keys).map(Generator::lower1).collect(Collectors.joining(", "));
+    static String actualParams(List<String> keys) {
+        return keys.stream().map(Generator::lower1).collect(Collectors.joining(", "));
     }
 
-    static String actualParamsKey(Map<String, Type> keys, String pre) {
-        String p = keys.entrySet().stream().map(e -> pre + Generator.lower1(e.getKey())).collect(Collectors.joining(", "));
-        return keys.size() > 1 ? "new " + Name.keyClassName(keys) + "(" + p + ")" : p;
+    static String actualParamsKey(KeySchema keySchema, String pre) {
+        String p = keySchema.name().stream().map(e -> pre + lower1(e)).collect(Collectors.joining(", "));
+        return keySchema.name().size() > 1 ? "new " + Name.keyClassName(keySchema) + "(" + p + ")" : p;
     }
 
-    static String hashCodes(Map<String, Type> fs) {
-        return fs.entrySet().stream().map(e -> hashCode(e.getKey(), e.getValue())).collect(Collectors.joining(" + "));
+    static String hashCodes(List<FieldSchema> fs) {
+        String paramList = fs.stream().map(f -> lower1(f.name())).collect(Collectors.joining(", "));
+        return STR. "java.util.Objects.hash(\{ paramList })" ;
     }
 
-    private static String hashCode(String name, Type t) {
-        String n = Generator.lower1(name);
-        return t.accept(new TypeVisitorT<String>() {
-            @Override
-            public String visit(TBool type) {
-                return "Boolean.hashCode(" + n + ")";
-            }
-
-            @Override
-            public String visit(TInt type) {
-                return n;
-            }
-
-            @Override
-            public String visit(TLong type) {
-                return "Long.hashCode(" + n + ")";
-            }
-
-            @Override
-            public String visit(TFloat type) {
-                return "Float.hashCode(" + n + ")";
-            }
-
-            @Override
-            public String visit(TString type) {
-                return n + ".hashCode()";
-            }
-
-            @Override
-            public String visit(TList type) {
-                return n + ".hashCode()";
-            }
-
-            @Override
-            public String visit(TMap type) {
-                return n + ".hashCode()";
-            }
-
-            @Override
-            public String visit(TBean type) {
-                return n + ".hashCode()";
-            }
-
-            @Override
-            public String visit(TBeanRef type) {
-                return n + ".hashCode()";
-            }
-        });
+    static String equals(List<FieldSchema> fs) {
+        return fs.stream().map(f -> equal(lower1(f.name()), "o." + lower1(f.name()), f.type())).collect(Collectors.joining(" && "));
     }
 
-    static String equals(Map<String, Type> fs) {
-        return fs.entrySet().stream().map(e -> equal(Generator.lower1(e.getKey()), "o." + Generator.lower1(e.getKey()), e.getValue())).collect(Collectors.joining(" && "));
+    static String equal(String a, String b, FieldType t) {
+        return TypeStr.isJavaPrimitive(t) ? a + " == " + b : a + ".equals(" + b + ")";
     }
 
-    static String equal(String a, String b, Type t) {
-        boolean eq = t.accept(new TypeVisitorT<Boolean>() {
-            @Override
-            public Boolean visit(TBool type) {
-                return false;
-            }
+    static String tableGet(TableSchema refTable, RefSimple refSimple, String actualParam) {
+        NameableName name = new NameableName(refTable);
 
-            @Override
-            public Boolean visit(TInt type) {
-                return false;
-            }
-
-            @Override
-            public Boolean visit(TLong type) {
-                return false;
-            }
-
-            @Override
-            public Boolean visit(TFloat type) {
-                return false;
-            }
-
-            @Override
-            public Boolean visit(TString type) {
-                return true;
-            }
-
-            @Override
-            public Boolean visit(TList type) {
-                return true;
-            }
-
-            @Override
-            public Boolean visit(TMap type) {
-                return true;
-            }
-
-            @Override
-            public Boolean visit(TBean type) {
-                return true;
-            }
-
-            @Override
-            public Boolean visit(TBeanRef type) {
-                return true;
-            }
-        });
-        return eq ? a + ".equals(" + b + ")" : a + " == " + b;
-    }
-
-    static String tableGet(TTable ttable, String[] cols, String actualParam) {
-        boolean isPrimaryKey = cols.length == 0;
-        NameableName name = new NameableName(ttable.getTBean());
-
-        if (ttable.getTableDefine().isEnumFull()) {
+        if (refTable.entry() instanceof EntryType.EEnum) {
             return name.fullName + ".get(" + actualParam + ");";
         } else {
             String pre = "mgr." + name.containerPrefix;
-
-            if (isPrimaryKey) {//ref to primary key
-                if (ttable.getPrimaryKey().size() == 1) {
-                    return pre + "All.get(" + actualParam + ");";
-                } else {
-                    return pre + "All.get(new " + name.fullName + "." + Name.multiKeyClassName(ttable.getTableDefine().primaryKey) + "(" + actualParam + ") );";
+            switch (refSimple) {
+                case RefPrimary _ -> {
+                    if (refTable.primaryKey().obj().size() == 1) {
+                        return pre + "All.get(" + actualParam + ");";
+                    } else {
+                        return pre + "All.get(new " + name.fullName + "." +
+                                Name.multiKeyClassName(refTable.primaryKey().name()) + "(" + actualParam + ") );";
+                    }
                 }
-            } else {
-                if (cols.length == 1) {
-                    return pre + Name.uniqueKeyMapName(cols) + ".get(" + actualParam + ");";
-                } else {
-                    return pre + Name.uniqueKeyMapName(cols) + ".get( new " + name.fullName + "." + Name.multiKeyClassName(cols) + "(" + actualParam + ") );";
+
+                case RefUniq refUniq -> {
+                    if (refUniq.key().name().size() == 1) {
+                        return pre + Name.uniqueKeyMapName(refUniq.key()) + ".get(" + actualParam + ");";
+                    } else {
+                        return pre + Name.uniqueKeyMapName(refUniq.key()) + ".get( new " + name.fullName + "." +
+                                Name.multiKeyClassName(refUniq.keyNames()) + "(" + actualParam + ") );";
+                    }
                 }
             }
         }

@@ -27,7 +27,12 @@ public sealed interface Nameable permits Fieldable, Structural, StructSchema, In
         return name().substring(idx + 1);
     }
 
+    default String fullName(){
+        return name();
+    }
+
     static String makeName(String namespace, String lastName) {
         return namespace + "." + lastName;
     }
+
 }

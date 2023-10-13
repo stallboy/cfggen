@@ -71,7 +71,7 @@ public class Lootitem {
 
         @Override
         public int hashCode() {
-            return lootid + itemid;
+            return java.util.Objects.hash(lootid, itemid);
         }
 
         @Override

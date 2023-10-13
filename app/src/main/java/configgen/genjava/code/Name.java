@@ -1,53 +1,50 @@
 package configgen.genjava.code;
 
 import configgen.gen.Generator;
-import configgen.schema.Nameable;
-import configgen.schema.TableSchema;
-import configgen.type.*;
+import configgen.genjava.GenJavaUtil;
+import configgen.schema.*;
 
-import java.util.Map;
-import java.util.stream.Stream;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static configgen.schema.FieldType.*;
 
 public class Name {
 
     static String codeTopPkg;
 
-    static String uniqueKeyGetByName(Map<String, Type> keys) {
-        return "getBy" + keys.keySet().stream().map(Generator::upper1).reduce("", (a, b) -> a + b);
+    static String uniqueKeyGetByName(KeySchema keySchema) {
+        return "getBy" + keySchema.name().stream().map(Generator::upper1).collect(Collectors.joining());
     }
 
-    static String uniqueKeyMapName(Map<String, Type> keys) {
-        return keys.keySet().stream().map(Generator::upper1).reduce("", (a, b) -> a + b) + "Map";
+    static String uniqueKeyMapName(KeySchema keySchema) {
+        return keySchema.name().stream().map(Generator::upper1).collect(Collectors.joining()) + "Map";
     }
 
-    static String uniqueKeyMapName(String[] keys) {
-        return Stream.of(keys).map(Generator::upper1).reduce("", (a, b) -> a + b) + "Map";
-    }
-
-    static String keyClassName(Map<String, Type> keys) {
-        if (keys.size() > 1)
-            return keys.keySet().stream().map(Generator::upper1).reduce("", (a, b) -> a + b) + "Key";
+    static String keyClassName(KeySchema keySchema) {
+        if (keySchema.name().size() > 1)
+            return keySchema.name().stream().map(Generator::upper1).collect(Collectors.joining()) + "Key";
         else
             try {
-                return TypeStr.boxType(keys.values().iterator().next());
+                return TypeStr.boxType(keySchema.obj().get(0).type());
             } catch (Exception e) {
                 return null;
             }
-
     }
 
-    static String multiKeyClassName(String[] keys) {
-        return Stream.of(keys).map(Generator::upper1).reduce("", (a, b) -> a + b) + "Key";
+    static String multiKeyClassName(List<String> keys) {
+        return keys.stream().map(Generator::upper1).collect(Collectors.joining()) + "Key";
     }
 
 
     static String fullName(Nameable nameable) {
-        return new NameableName(nameable).fullName;
+        InterfaceSchema sInterface = nameable instanceof StructSchema struct ? struct.nullableInterface() : null;
+        return new NameableName(nameable, sInterface).fullName;
     }
 
-    static String tableDataFullName(TTable ttable) {
-        String fn = fullName(ttable.getTBean());
-        if (ttable.getTableDefine().isEnumFull() && !ttable.getTableDefine().isEnumHasOnlyPrimaryKeyAndEnumStr()) {
+    static String tableDataFullName(TableSchema table) {
+        String fn = fullName(table);
+        if (table.entry() instanceof EntryType.EEnum && !GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(table)) {
             fn = fn + "_Detail";
         }
         return fn;
@@ -58,49 +55,37 @@ public class Name {
         return new NameableName(table).fullName;
     }
 
+    static String refType(ForeignKeySchema fk) {
+        switch (fk.refKey()) {
+            case RefKey.RefList _ -> {
+                return "java.util.List<" + refType(fk.refTableSchema()) + ">";
+            }
+            case RefKey.RefSimple _ -> {
+                FieldSchema firstLocal = fk.key().obj().get(0);
+                switch (firstLocal.type()) {
 
-    static String refType(TForeignKey fk) {
-        return refType(fk.refTable);
-    }
-
-    static String refType(SRef ref) {
-        return refType(ref.refTable);
-    }
-
-    static String refType(Type t, SRef ref) {
-        if (t instanceof TList) {
-            return "java.util.List<" + refType(ref.refTable) + ">";
-        } else if (t instanceof TMap) {
-            return "java.util.Map<"
-                    + (ref.mapKeyRefTable != null ? refTypeForMapKey(ref) : TypeStr.boxType(((TMap) t).key)) + ", "
-                    + (ref.refTable != null ? refType(ref) : TypeStr.boxType(((TMap) t).value)) + ">";
-        } else {
-            return refType(ref);
+                    case SimpleType _ -> {
+                        return refType(fk.refTableSchema());
+                    }
+                    case FList _ -> {
+                        return "java.util.List<" + refType(fk.refTableSchema()) + ">";
+                    }
+                    case FMap fMap -> {
+                        return "java.util.Map<"
+                                + (TypeStr.boxType((fMap.key()))) + ", "
+                                + refType(fk.refTableSchema()) + ">";
+                    }
+                }
+            }
         }
     }
 
-    static String refTypeForMapKey(SRef ref) {
-        return refType(ref.mapKeyRefTable);
-    }
-
-    static String refTypeForList(TForeignKey fk) {
-        return "java.util.List<" + refType(fk.refTable) + ">";
-    }
-
-
-    static String refName(SRef sr) {
-        return (sr.refNullable ? "NullableRef" : "Ref") + Generator.upper1(sr.name);
-    }
-
-    static String refName(TForeignKey fk) {
-        switch (fk.foreignKeyDefine.refType) {
-            case NORMAL:
-                return "Ref" + Generator.upper1(fk.name);
-            case NULLABLE:
-                return "NullableRef" + Generator.upper1(fk.name);
-            default:
-                return "ListRef" + Generator.upper1(fk.name);
-        }
+    static String refName(ForeignKeySchema fk) {
+        String prefix = switch (fk.refKey()) {
+            case RefKey.RefList _ -> "ListRef";
+            case RefKey.RefSimple refSimple -> refSimple.nullable() ? "NullableRef" : "Ref";
+        };
+        return prefix + Generator.upper1(fk.name());
     }
 
 }

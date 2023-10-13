@@ -1,38 +1,41 @@
 package configgen.genjava.code;
 
-import configgen.define.Column;
-import configgen.gen.Generator;
-import configgen.type.SRef;
-import configgen.type.TBean;
-import configgen.type.TForeignKey;
-import configgen.type.Type;
+import configgen.schema.EntryType;
+import configgen.schema.FieldSchema;
+import configgen.schema.ForeignKeySchema;
+import configgen.schema.TableSchema;
 import configgen.util.CachedIndentPrinter;
-import configgen.value.CfgValue;
 
 import java.util.Map;
 
-class GenEnumClass {
+import static configgen.gen.Generator.lower1;
+import static configgen.gen.Generator.upper1;
+import static configgen.value.CfgValue.VTable;
 
-    static void generate(CfgValue.VTable vtable, NameableName name, CachedIndentPrinter ps, boolean isFull, boolean isNeedReadData, NameableName dataName) {
+class GenEntryOrEnumClass {
+
+    static void generate(VTable vTable, EntryType.EntryBase entryBase, NameableName name, CachedIndentPrinter ps,
+                         boolean isNeedReadData, NameableName dataName) {
+        TableSchema table = vTable.schema();
         ps.println("package " + name.pkg + ";");
         ps.println();
 
-        ps.println((isFull ? "public enum " : "public class ") + name.className + " {");
-
-        boolean hasIntValue = !vtable.getTTable().getTableDefine().isEnumAsPrimaryKey();
-        if (!hasIntValue) {
-            int len = vtable.getEnumNames().size();
+        boolean isEnum = entryBase instanceof EntryType.EEnum;
+        ps.println((isEnum ? "public enum " : "public class ") + name.className + " {");
+        boolean hasNoIntValue = vTable.enumNameToIntegerValueMap() == null;
+        if (hasNoIntValue) {
+            int len = vTable.enumNames().size();
             int c = 0;
-            for (String enumName : vtable.getEnumNames()) {
+            for (String enumName : vTable.enumNames()) {
                 c++;
                 String fix = c == len ? ";" : ",";
-                if (isFull) {
+                if (isEnum) {
                     ps.println1("%s(\"%s\")%s", enumName.toUpperCase(), enumName, fix);
                 } else {
                     ps.println1("public static final %s %s = new %s(\"%s\");", name.className, enumName.toUpperCase(), name.className, enumName);
                 }
             }
-            if (isFull && 0 == c) {
+            if (isEnum && 0 == c) {
                 ps.println1(";");
             }
 
@@ -51,21 +54,21 @@ class GenEnumClass {
 //            ps.println();
 
         } else {
-            int len = vtable.getEnumNameToIntegerValueMap().size();
+            int len = vTable.enumNameToIntegerValueMap().size();
             int c = 0;
-            for (Map.Entry<String, Integer> entry : vtable.getEnumNameToIntegerValueMap().entrySet()) {
+            for (Map.Entry<String, Integer> entry : vTable.enumNameToIntegerValueMap().entrySet()) {
                 String enumName = entry.getKey();
                 int value = entry.getValue();
                 c++;
                 String fix = c == len ? ";" : ",";
 
-                if (isFull) {
+                if (isEnum) {
                     ps.println1("%s(\"%s\", %d)%s", enumName.toUpperCase(), enumName, value, fix);
                 } else {
                     ps.println1("public static final %s %s = new %s(\"%s\", %d);", name.className, enumName.toUpperCase(), name.className, enumName, value);
                 }
             }
-            if (isFull && 0 == c) {
+            if (isEnum && 0 == c) {
                 ps.println1(";");
             }
 
@@ -93,8 +96,8 @@ class GenEnumClass {
         }
 
 
-        if (isFull) {
-            ps.println1("private static final java.util.Map<%s, %s> map = new java.util.HashMap<>();", hasIntValue ? "Integer" : "String", name.className);
+        if (isEnum) {
+            ps.println1("private static final java.util.Map<%s, %s> map = new java.util.HashMap<>();", hasNoIntValue ? "String" : "Integer", name.className);
             ps.println();
 
             ps.println1("static {");
@@ -104,50 +107,36 @@ class GenEnumClass {
             ps.println1("}");
             ps.println();
 
-            ps.println1("public static %s get(%s value) {", name.className, hasIntValue ? "int" : "String");
+            ps.println1("public static %s get(%s value) {", name.className, hasNoIntValue ? "String" : "int");
             ps.println2("return map.get(value);");
             ps.println1("}");
             ps.println();
 
-            TBean tbean = vtable.getTTable().getTBean();
-            for (Map.Entry<String, Type> entry : tbean.getColumnMap().entrySet()) {
-                String n = entry.getKey();
-                Type t = entry.getValue();
-                Column f = tbean.getBeanDefine().columns.get(n);
-                if (!f.desc.isEmpty()) {
+            for (FieldSchema field : table.fields()) {
+                String comment = field.meta().getComment();
+
+                if (!comment.isEmpty()) {
                     ps.println1("/**");
-                    ps.println1(" * " + f.desc);
+                    ps.println1(" * " + comment);
                     ps.println1(" */");
                 }
-                ps.println1("public " + TypeStr.type(t) + " get" + Generator.upper1(n) + "() {");
-                if (f.name.equals(vtable.getTTable().getTableDefine().primaryKey[0])) {
+                ps.println1("public " + TypeStr.type(field.type()) + " get" + upper1(field.name()) + "() {");
+                if (field == table.primaryKey().obj().get(0)) {
                     ps.println2("return value;");
-                } else if (f.name.equals(vtable.getTTable().getTableDefine().enumStr)) {
+                } else if (field == entryBase.fieldSchema()) {
                     ps.println2("return name;");
                 } else {
-                    ps.println2("return ref().get" + Generator.upper1(n) + "();");
+                    ps.println2("return ref().get" + upper1(field.name()) + "();");
                 }
                 ps.println1("}");
                 ps.println();
 
-                for (SRef r : t.getConstraint().references) {
-                    ps.println1("public " + Name.refType(t, r) + " " + Generator.lower1(Name.refName(r)) + "() {");
-                    ps.println2("return ref()." + Generator.lower1(Name.refName(r)) + "();");
-                    ps.println1("}");
-                    ps.println();
-                }
             }
 
-            for (TForeignKey m : tbean.getMRefs()) {
-                ps.println1("public " + Name.refType(m) + " " + Generator.lower1(Name.refName(m)) + "() {");
-                ps.println2("return ref()." + Generator.lower1(Name.refName(m)) + "();");
-                ps.println1("}");
-                ps.println();
-            }
-
-            for (TForeignKey l : tbean.getListRefs()) {
-                ps.println1("public " + Name.refTypeForList(l) + " " + Generator.lower1(Name.refName(l)) + "() {");
-                ps.println2("return ref()." + Generator.lower1(Name.refName(l)) + "();");
+            for (ForeignKeySchema fk : table.foreignKeys()) {
+                String refFuncName = lower1(Name.refName(fk));
+                ps.println1("public " + Name.refType(fk) + " " + refFuncName + "() {");
+                ps.println2("return ref()." + refFuncName + "();");
                 ps.println1("}");
                 ps.println();
             }

@@ -17,9 +17,6 @@ public class Monster {
         return self;
     }
 
-    /**
-     * id
-     */
     public int getId() {
         return id;
     }

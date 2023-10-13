@@ -34,7 +34,7 @@ public class ConditionAnd implements config.task.Completecondition {
 
     @Override
     public int hashCode() {
-        return cond1.hashCode() + cond2.hashCode();
+        return java.util.Objects.hash(cond1, cond2);
     }
 
     @Override

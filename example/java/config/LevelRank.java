@@ -40,7 +40,7 @@ public class LevelRank {
 
     @Override
     public int hashCode() {
-        return level + rank;
+        return java.util.Objects.hash(level, rank);
     }
 
     @Override

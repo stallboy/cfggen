@@ -73,7 +73,7 @@ public class TestDefaultBean {
 
     @Override
     public int hashCode() {
-        return testInt + Boolean.hashCode(testBool) + testString.hashCode() + testSubBean.hashCode() + testList.hashCode() + testList2.hashCode() + testMap.hashCode();
+        return java.util.Objects.hash(testInt, testBool, testString, testSubBean, testList, testList2, testMap);
     }
 
     @Override

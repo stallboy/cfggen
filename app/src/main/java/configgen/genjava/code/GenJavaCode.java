@@ -69,7 +69,7 @@ public class GenJavaCode extends Generator {
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/')).toFile();
 
         Name.codeTopPkg = pkg;
-        GenBeanClassTablePart.mapsInMgr.clear();
+        GenStructuralClassTablePart.mapsInMgr.clear();
         boolean isLangSwitch = ctx.getLangSwitch() != null;
         TypeStr.isLangSwitch = isLangSwitch; //辅助Text的类型声明和创建
 
@@ -123,7 +123,7 @@ public class GenJavaCode extends Generator {
     private void generateStructClass(StructSchema struct, InterfaceSchema nullableInterface) {
         NameableName name = new NameableName(struct, nullableInterface);
         try (CachedIndentPrinter ps = createCode(dstDir.toPath().resolve(name.path).toFile(), encoding)) {
-            GenStructClass.generate(struct, null, name, ps, false);
+            GenStructuralClass.generate(struct, nullableInterface, null, name, ps, false);
         }
     }
 
@@ -138,9 +138,9 @@ public class GenJavaCode extends Generator {
         boolean isNeedReadData = true;
         String dataPostfix = "";
         TableSchema schema = vTable.schema();
-        if (schema.entry() instanceof EntryType.EntryBase base) {
+        if (schema.entry() instanceof EntryType.EntryBase entryBase) {
             String entryPostfix = "";
-            boolean isEnum = base instanceof EntryType.EEnum;
+            boolean isEnum = entryBase instanceof EntryType.EEnum;
             if (isEnum) {
                 if (GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(schema)) {
                     isNeedReadData = false;
@@ -155,7 +155,7 @@ public class GenJavaCode extends Generator {
             NameableName dataName = new NameableName(schema, dataPostfix);
             File javaFile = dstDir.toPath().resolve(name.path).toFile();
             try (CachedIndentPrinter ps = createCode(javaFile, encoding)) {
-                GenEnumClass.generate(vTable, name, ps, isEnum, isNeedReadData, dataName);
+                GenEntryOrEnumClass.generate(vTable, entryBase, name, ps, isNeedReadData, dataName);
             }
         }
 
@@ -164,14 +164,14 @@ public class GenJavaCode extends Generator {
             boolean isTableNeedBuilder = needBuilderTables != null && needBuilderTables.contains(vTable.name());
             File javaFile = dstDir.toPath().resolve(name.path).toFile();
             try (CachedIndentPrinter ps = createCode(javaFile, encoding)) {
-                GenStructClass.generate(vTable.schema(), vTable, name, ps, isTableNeedBuilder);
+                GenStructuralClass.generate(vTable.schema(), null,  vTable, name, ps, isTableNeedBuilder);
             }
 
             if (isTableNeedBuilder) {
                 String builderPath = name.path.substring(0, name.path.length() - 5) + "Builder.java";
                 File builderFile = dstDir.toPath().resolve(builderPath).toFile();
                 try (CachedIndentPrinter ps = createCode(builderFile, encoding)) {
-                    GenStructClass.generateBuilder(vTable.schema(), name, ps);
+                    GenStructuralClassTablePart.generateTableBuilder(vTable.schema(), name, ps);
                 }
             }
 

@@ -23,7 +23,7 @@ class GenConfigMgr {
         ps.println();
 
 
-        for (String s : GenBeanClassTablePart.mapsInMgr) {
+        for (String s : GenStructuralClassTablePart.mapsInMgr) {
             ps.println(s);
             ps.println();
         }

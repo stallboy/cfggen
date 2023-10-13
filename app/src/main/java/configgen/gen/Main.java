@@ -1,5 +1,7 @@
 package configgen.gen;
 
+import configgen.genjava.GenJavaData;
+import configgen.genjava.code.GenJavaCode;
 import configgen.tool.XmlToCfg;
 import configgen.util.Logger;
 import configgen.tool.ValueSearcher;
@@ -32,8 +34,6 @@ public final class Main {
         System.out.println("----小工具--------------------------------------");
         System.out.println("    -binaryToText 后可接2个参数（java data的file，table名称-用startsWith匹配），打印table的定义和数据");
         System.out.println("    -search       后可接多个数字，找到匹配的数据");
-//        System.out.println("    -compatibleForOwn   原来在table里配置了own='x'后，如果此table下没有column配置own='x'，" +
-//                                   "则默认所有column都被选择，现在去掉此约定，必须显示配置column的own，这个命令用来做兼容性转换");
 
         System.out.println("    -dump         打印内部树结构");
         System.out.println("    -v[1]         输出一些额外信息,1是额外gc测试内存");
@@ -73,8 +73,8 @@ public final class Main {
     }
 
     private static void main0(String[] args) throws Exception {
-//        Generators.addProvider("java", GenJavaCode::new);
-//        Generators.addProvider("javadata", GenJavaData::new);
+        Generators.addProvider("java", GenJavaCode::new);
+        Generators.addProvider("javadata", GenJavaData::new);
 //
 //        Generators.addProvider("lua", GenLua::new);
 //        Generators.addProvider("cs", GenCs::new);

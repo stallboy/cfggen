@@ -5,16 +5,16 @@ public class Jewelry {
     private String name;
     private String iconFile;
     private config.LevelRank lvlRank;
-    private config.equip.Jewelryrandom RefLvlRank;
     private String type;
-    private config.equip.Jewelrytype RefType;
     private int suitID;
-    private config.equip.Jewelrysuit NullableRefSuitID;
     private int keyAbility;
-    private config.equip.Ability RefKeyAbility;
     private int keyAbilityValue;
     private int salePrice;
     private String description;
+    private config.equip.Jewelryrandom RefLvlRank;
+    private config.equip.Jewelrytype RefType;
+    private config.equip.Jewelrysuit NullableRefSuitID;
+    private config.equip.Ability RefKeyAbility;
 
     private Jewelry() {
     }
@@ -75,19 +75,11 @@ public class Jewelry {
         return lvlRank;
     }
 
-    public config.equip.Jewelryrandom refLvlRank() {
-        return RefLvlRank;
-    }
-
     /**
      * 首饰类型
      */
     public String getType() {
         return type;
-    }
-
-    public config.equip.Jewelrytype refType() {
-        return RefType;
     }
 
     /**
@@ -97,19 +89,11 @@ public class Jewelry {
         return suitID;
     }
 
-    public config.equip.Jewelrysuit nullableRefSuitID() {
-        return NullableRefSuitID;
-    }
-
     /**
      * 关键属性类型
      */
     public int getKeyAbility() {
         return keyAbility;
-    }
-
-    public config.equip.Ability refKeyAbility() {
-        return RefKeyAbility;
     }
 
     /**
@@ -131,6 +115,22 @@ public class Jewelry {
      */
     public String getDescription() {
         return description;
+    }
+
+    public config.equip.Jewelryrandom refLvlRank() {
+        return RefLvlRank;
+    }
+
+    public config.equip.Jewelrytype refType() {
+        return RefType;
+    }
+
+    public config.equip.Jewelrysuit nullableRefSuitID() {
+        return NullableRefSuitID;
+    }
+
+    public config.equip.Ability refKeyAbility() {
+        return RefKeyAbility;
     }
 
     @Override

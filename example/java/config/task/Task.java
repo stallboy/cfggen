@@ -2,13 +2,13 @@ package config.task;
 
 public class Task {
     private int taskid;
-    private config.task.Taskextraexp NullableRefTaskid;
     private java.util.List<String> name;
     private int nexttask;
-    private config.task.Task NullableRefNexttask;
     private config.task.Completecondition completecondition;
     private int exp;
     private config.task.TestDefaultBean testDefaultBean;
+    private config.task.Taskextraexp NullableRefTaskid;
+    private config.task.Task NullableRefNexttask;
 
     private Task() {
     }
@@ -34,10 +34,6 @@ public class Task {
         return taskid;
     }
 
-    public config.task.Taskextraexp nullableRefTaskid() {
-        return NullableRefTaskid;
-    }
-
     /**
      * 程序用名字
      */
@@ -47,10 +43,6 @@ public class Task {
 
     public int getNexttask() {
         return nexttask;
-    }
-
-    public config.task.Task nullableRefNexttask() {
-        return NullableRefNexttask;
     }
 
     public config.task.Completecondition getCompletecondition() {
@@ -68,15 +60,23 @@ public class Task {
         return testDefaultBean;
     }
 
+    public config.task.Taskextraexp nullableRefTaskid() {
+        return NullableRefTaskid;
+    }
+
+    public config.task.Task nullableRefNexttask() {
+        return NullableRefNexttask;
+    }
+
     @Override
     public String toString() {
         return "(" + taskid + "," + name + "," + nexttask + "," + completecondition + "," + exp + "," + testDefaultBean + ")";
     }
 
     public void _resolve(config.ConfigMgr mgr) {
+        completecondition._resolve(mgr);
         NullableRefTaskid = mgr.task_taskextraexp_All.get(taskid);
         NullableRefNexttask = mgr.task_task_All.get(nexttask);
-        completecondition._resolve(mgr);
     }
 
     public static Task get(int taskid) {

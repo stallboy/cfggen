@@ -26,9 +26,6 @@ public class Ai_action {
         return self;
     }
 
-    /**
-     * ID
-     */
     public int getID() {
         return iD;
     }

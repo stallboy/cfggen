@@ -1,5 +1,6 @@
 package configgen.schema;
 
+import javax.xml.stream.events.Comment;
 import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.SequencedMap;
@@ -10,6 +11,10 @@ import static configgen.schema.Metadata.MetaTag.TAG;
 public record Metadata(SequencedMap<String, MetaValue> data) {
     public static Metadata of() {
         return new Metadata(new LinkedHashMap<>());
+    }
+
+    public Metadata copy() {
+        return new Metadata(new LinkedHashMap<>(data));
     }
 
     public Metadata {
@@ -33,9 +38,14 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         data.putLast(name, new MetaInt(value));
     }
 
-    public Metadata copy() {
-        return new Metadata(new LinkedHashMap<>(data));
+
+    public String getComment() {
+        if (data.get("__comment") instanceof MetaStr str) {
+            return str.value;
+        }
+        return "";
     }
+
 
     public sealed interface MetaValue {
     }

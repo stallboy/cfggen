@@ -26,9 +26,6 @@ public class Ai_condition {
         return self;
     }
 
-    /**
-     * ID
-     */
     public int getID() {
         return iD;
     }
