@@ -8,11 +8,9 @@ public class HasRef {
         ForeachSchema.foreachNameable(HasRef::calcHasRef, schema);
     }
 
-    static final String HAS_REF = "__hasRef";
-
     private static boolean calcHasRef(Nameable nameable) {
         Metadata meta = nameable.meta();
-        if (meta.hasTag(HAS_REF)) {
+        if (meta.getHasRef()) {
             return true;
         }
         boolean hasRef = switch (nameable) {
@@ -22,7 +20,7 @@ public class HasRef {
         };
 
         if (hasRef) {
-            meta.putTag(HAS_REF);
+            meta.putHasRef();
         }
         return hasRef;
     }
@@ -46,6 +44,6 @@ public class HasRef {
     }
 
     public static boolean hasRef(Nameable nameable) {
-        return nameable.meta().hasTag(HAS_REF);
+        return nameable.meta().getHasRef();
     }
 }

@@ -105,7 +105,7 @@ class GenStructuralClass {
         // getter
         for (FieldSchema field : struct.fields()) {
             String n = field.name();
-            String comment = field.meta().getComment();
+            String comment = field.comment();
             if (!comment.isEmpty()) {
                 ps.println1("/**");
                 ps.println1(" * " + comment);

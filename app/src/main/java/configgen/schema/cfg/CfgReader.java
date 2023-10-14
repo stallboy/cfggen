@@ -68,8 +68,8 @@ public enum CfgReader implements CfgSchemaReader {
         String name = read_ns_ident(ctx.ns_ident());
         KeySchema primaryKey = read_key(ctx.key());
         Metadata meta = read_metadata(ctx.metadata(), ctx.COMMENT());
-        EntryType entry = Metas.removeEntry(meta);
-        boolean isColumnMode = Metas.removeColumnMode(meta);
+        EntryType entry = meta.removeEntry();
+        boolean isColumnMode = meta.removeColumnMode();
         FieldsAndForeigns ff = read_fields_foreigns(ctx.field_decl(), ctx.foreign_decl());
 
         List<Key_declContext> kds = ctx.key_decl();
@@ -86,9 +86,9 @@ public enum CfgReader implements CfgSchemaReader {
     private InterfaceSchema read_interface(Interface_declContext ctx, String pkgNameDot) {
         String name = read_ns_ident(ctx.ns_ident());
         Metadata meta = read_metadata(ctx.metadata(), ctx.COMMENT());
-        String enumRef = Metas.removeEnumRef(meta);
-        String defaultImpl = Metas.removeDefaultImpl(meta);
-        FieldFormat fmt = Metas.removeFmt(meta);
+        String enumRef = meta.removeEnumRef();
+        String defaultImpl = meta.removeDefaultImpl();
+        FieldFormat fmt = meta.removeFmt();
 
         List<Struct_declContext> struct_decls = ctx.struct_decl();
         List<StructSchema> structSchemas = new ArrayList<>(struct_decls.size());
@@ -102,7 +102,7 @@ public enum CfgReader implements CfgSchemaReader {
     private StructSchema read_struct(Struct_declContext ctx, String pkgNameDot) {
         String name = read_ns_ident(ctx.ns_ident());
         Metadata meta = read_metadata(ctx.metadata(), ctx.COMMENT());
-        FieldFormat fmt = Metas.removeFmt(meta);
+        FieldFormat fmt = meta.removeFmt();
         FieldsAndForeigns ff = read_fields_foreigns(ctx.field_decl(), ctx.foreign_decl());
         return new StructSchema(pkgNameDot + name, fmt, meta, ff.fieldSchemas(), ff.foreignKeySchemas());
     }
@@ -141,7 +141,7 @@ public enum CfgReader implements CfgSchemaReader {
             String c = comment.getText();
             c = c.substring(2).trim();
             if (!c.isEmpty()) {
-                Metas.putComment(meta, c);
+                meta.putComment(c);
             }
         }
         return meta;
@@ -159,16 +159,16 @@ public enum CfgReader implements CfgSchemaReader {
             String name = ctx.identifier().getText();
             FieldType type = read_type(ctx.type_());
             Metadata meta = read_metadata(ctx.metadata(), ctx.COMMENT());
-            FieldFormat fmt = Metas.removeFmt(meta);
+            FieldFormat fmt = meta.removeFmt();
             FieldSchema fieldSchema = new FieldSchema(name, type, fmt, meta);
             fieldSchemas.add(fieldSchema);
 
             RefContext ref = ctx.ref();
             if (ref != null) {
                 KeySchema localKey = new KeySchema(List.of(name));
-                boolean nullable = Metas.removeNullable(meta);
+                boolean nullable = meta.removeNullable();
                 Metadata refMeta = meta.copy();
-                Metas.removeComment(refMeta);
+                refMeta.removeComment();
                 ForeignKeySchema foreignKeySchema = read_ref(ref, name, localKey, refMeta, nullable);
                 foreignKeySchemas.add(foreignKeySchema);
             }
@@ -178,7 +178,7 @@ public enum CfgReader implements CfgSchemaReader {
             String name = ctx.identifier().getText();
             KeySchema localKey = read_key(ctx.key());
             Metadata meta = read_metadata(ctx.metadata(), ctx.COMMENT());
-            boolean nullable = Metas.removeNullable(meta);
+            boolean nullable = meta.removeNullable();
             ForeignKeySchema foreignKeySchema = read_ref(ctx.ref(), name, localKey, meta, nullable);
             foreignKeySchemas.add(foreignKeySchema);
         }

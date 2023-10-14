@@ -2,11 +2,10 @@ package configgen.schema;
 
 import java.util.Objects;
 
-public record FieldSchema(
-        String name,
-        FieldType type,
-        FieldFormat fmt,
-        Metadata meta) {
+public record FieldSchema(String name,
+                          FieldType type,
+                          FieldFormat fmt,
+                          Metadata meta) {
     public FieldSchema {
         Objects.requireNonNull(name);
         Objects.requireNonNull(type);
@@ -15,6 +14,10 @@ public record FieldSchema(
         if (name.isEmpty()) {
             throw new IllegalArgumentException("field name empty");
         }
+    }
+
+    public String comment() {
+        return meta.getComment();
     }
 
     public FieldSchema copy() {

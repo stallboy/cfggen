@@ -42,10 +42,10 @@ public class CfgWriter {
     public void writeTable(TableSchema table) {
         Metadata meta = table.meta().copy();
         if (table.isColumnMode()) {
-            Metas.putColumnMode(meta);
+            meta.putColumnMode();
         }
-        Metas.putEntry(meta, table.entry());
-        String comment = Metas.removeComment(meta);
+        meta.putEntry(table.entry());
+        String comment = meta.removeComment();
 
         String name = useLastName ? table.lastName() : table.name();
         println(STR. "table \{ name }\{ keyStr(table.primaryKey()) }\{ metadataStr(meta) } {\{ commentStr(comment) }" );
@@ -59,12 +59,12 @@ public class CfgWriter {
 
     public void writeInterface(InterfaceSchema sInterface) {
         Metadata meta = sInterface.meta().copy();
-        Metas.putFmt(meta, sInterface.fmt());
+        meta.putFmt(sInterface.fmt());
         if (!sInterface.defaultImpl().isEmpty()) {
-            Metas.putDefaultImpl(meta, sInterface.defaultImpl());
+            meta.putDefaultImpl(sInterface.defaultImpl());
         }
-        Metas.putEnumRef(meta, sInterface.enumRef());
-        String comment = Metas.removeComment(meta);
+        meta.putEnumRef(sInterface.enumRef());
+        String comment = meta.removeComment();
 
         String name = useLastName ? sInterface.lastName() : sInterface.name();
         println(STR. "interface \{ name }\{ metadataStr(meta) } {\{ commentStr(comment) }" );
@@ -77,8 +77,8 @@ public class CfgWriter {
 
     public void writeStruct(StructSchema struct, String prefix) {
         Metadata meta = struct.meta().copy();
-        Metas.putFmt(meta, struct.fmt());
-        String comment = Metas.removeComment(meta);
+        meta.putFmt(struct.fmt());
+        String comment = meta.removeComment();
         String name = useLastName ? struct.lastName() : struct.name();
         println(STR. "\{ prefix }struct \{ name }\{ metadataStr(meta) } {\{ commentStr(comment) }" );
         writeStructural(struct, prefix);
@@ -89,8 +89,8 @@ public class CfgWriter {
     private void writeStructural(Structural structural, String prefix) {
         for (FieldSchema f : structural.fields()) {
             Metadata meta = f.meta().copy();
-            Metas.putFmt(meta, f.fmt());
-            String comment = Metas.removeComment(meta);
+            meta.putFmt(f.fmt());
+            String comment = meta.removeComment();
 
             ForeignKeySchema fk = structural.findForeignKey(f.name());
             String fkStr = fk == null ? "" : foreignStr(fk);
@@ -103,7 +103,7 @@ public class CfgWriter {
         for (ForeignKeySchema fk : structural.foreignKeys()) {
             if (structural.findField(fk.name()) == null) {
                 Metadata meta = fk.meta().copy();
-                String comment = Metas.removeComment(meta);
+                String comment = meta.removeComment();
                 foreignToMeta(fk, meta);
                 println(STR. "\{ prefix }\t->\{ fk.name() }:\{ keyStr(fk.key()) }\{ foreignStr(fk) }\{ metadataStr(meta) };\{ commentStr(comment) }" );
             }
@@ -134,14 +134,9 @@ public class CfgWriter {
 
     static void foreignToMeta(ForeignKeySchema fk, Metadata meta) {
         switch (fk.refKey()) {
-            case RefKey.RefPrimary refPrimary -> {
-                if (refPrimary.nullable()) {
-                    Metas.putNullable(meta);
-                }
-            }
-            case RefKey.RefUniq refUniq -> {
-                if (refUniq.nullable()) {
-                    Metas.putNullable(meta);
+            case RefKey.RefSimple refSimple -> {
+                if (refSimple.nullable()) {
+                    meta.putNullable();
                 }
             }
             case RefKey.RefList _ -> {

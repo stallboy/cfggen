@@ -89,7 +89,7 @@ public enum XmlReader implements CfgSchemaReader {
             String own = self.getAttribute("own");
             for (String tag : own.split(",")) {
                 tag = tag.trim();
-                Metas.addTag(meta, tag);
+                meta.addTag(tag);
             }
         }
         return meta;
@@ -165,16 +165,16 @@ public enum XmlReader implements CfgSchemaReader {
             return null;
         }
 
-        if (self.hasAttribute("range")){
+        if (self.hasAttribute("range")) {
             String range = self.getAttribute("range").trim();
-            if (!range.isEmpty()){
+            if (!range.isEmpty()) {
                 meta.data().put("range", new MetaStr(range));
             }
         }
 
         String comment = self.getAttribute("desc").trim();
         if (!comment.isEmpty() && !comment.equalsIgnoreCase(name)) {
-            Metas.putComment(meta, comment);
+            meta.putComment(comment);
         }
 
         FieldType type;

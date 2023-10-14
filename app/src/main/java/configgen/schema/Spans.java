@@ -30,22 +30,20 @@ public class Spans {
         }
     }
 
-    static final String SPAN = "__span";
-
     public static int span(Nameable nameable) {
         Metadata meta = nameable.meta();
-        if (meta.get(SPAN) instanceof MetaInt vi) {
+        if (meta.getSpan() instanceof MetaInt vi) {
             return vi.value();
         }
 
         int s = calcSpan(nameable);
-        meta.putInt(SPAN, s);
+        meta.putSpan(s);
         return s;
     }
 
     public static int calcSpan(Nameable nameable) {
         Metadata meta = nameable.meta();
-        MetaValue value = meta.data().get(SPAN);
+        MetaValue value = meta.getSpan();
         if (value instanceof MetaInt vi) {
             return vi.value();
         }
@@ -71,12 +69,12 @@ public class Spans {
 
     public static int span(FieldSchema field) {
         Metadata meta = field.meta();
-        if (meta.get(SPAN) instanceof MetaInt vi) {
+        if (meta.getSpan() instanceof MetaInt vi) {
             return vi.value();
         }
 
         int s = calcSpan(field);
-        meta.putInt(SPAN, s);
+        meta.putSpan(s);
         return s;
     }
 

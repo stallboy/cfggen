@@ -113,7 +113,7 @@ class GenEntryOrEnumClass {
             ps.println();
 
             for (FieldSchema field : table.fields()) {
-                String comment = field.meta().getComment();
+                String comment = field.comment();
 
                 if (!comment.isEmpty()) {
                     ps.println1("/**");

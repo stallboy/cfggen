@@ -6,7 +6,6 @@ import configgen.schema.EntryType.EEntry;
 import configgen.schema.EntryType.EEnum;
 import configgen.schema.FieldType.Primitive;
 import configgen.schema.cfg.CfgUtil;
-import configgen.schema.cfg.Metas;
 
 import java.util.*;
 
@@ -63,7 +62,7 @@ public class CfgSchemaAlignToData {
         for (DField hf : th.fields()) {
             Metadata meta = Metadata.of();
             if (!hf.comment().isEmpty()) {
-                Metas.putComment(meta, hf.comment());
+                meta.putComment(hf.comment());
             }
 
             FieldSchema field = new FieldSchema(hf.name(), Primitive.STRING, AutoOrPack.AUTO, meta);
@@ -160,12 +159,12 @@ public class CfgSchemaAlignToData {
                 String fieldName = curField.name();
                 Metadata meta = curField.meta().copy();
                 if (!comment.isEmpty() && !comment.equalsIgnoreCase(fieldName)) {
-                    String old = Metas.putComment(meta, comment);
+                    String old = meta.putComment(comment);
                     if (!old.equals(comment)) {
                         Logger.log(STR. "\{ table.name() }[\{ fieldName }] set comment: \{ old } -> \{ comment }" );
                     }
                 } else {
-                    String old = Metas.removeComment(meta);
+                    String old = meta.removeComment();
                     if (!old.isEmpty()) {
                         Logger.log(STR. "\{ table.name() }[\{ fieldName }] remove old comment: \{ old }" );
                     }
@@ -179,7 +178,7 @@ public class CfgSchemaAlignToData {
                 if (CfgUtil.isIdentifier(name)) {
                     Metadata meta = Metadata.of();
                     if (!comment.isEmpty()) {
-                        Metas.putComment(meta, comment);
+                        meta.putComment(comment);
                     }
                     newField = new FieldSchema(name, Primitive.STRING, AutoOrPack.AUTO, meta);
                     Logger.log(STR. "\{ table.name() } new field: \{ name }" );

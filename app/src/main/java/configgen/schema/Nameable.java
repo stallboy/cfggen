@@ -11,6 +11,10 @@ public sealed interface Nameable permits Fieldable, Structural, StructSchema, In
 
     Metadata meta();
 
+    default String comment() {
+        return meta().getComment();
+    }
+
     default String namespace() {
         int idx = name().lastIndexOf('.');
         if (idx == -1) {
@@ -27,12 +31,11 @@ public sealed interface Nameable permits Fieldable, Structural, StructSchema, In
         return name().substring(idx + 1);
     }
 
-    default String fullName(){
+    default String fullName() {
         return name();
     }
 
     static String makeName(String namespace, String lastName) {
         return namespace + "." + lastName;
     }
-
 }
