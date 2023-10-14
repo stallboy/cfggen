@@ -118,22 +118,28 @@ public enum CfgReader implements CfgSchemaReader {
     private Metadata read_metadata(MetadataContext metadata, TerminalNode comment) {
         Metadata meta = Metadata.of();
         for (Ident_with_opt_single_valueContext m : metadata.ident_with_opt_single_value()) {
-            String k = m.identifier().getText();
-            Single_valueContext val = m.single_value();
-            if (val == null) {
-                meta.data().put(k, TAG);
+            Minus_identContext minusIdentContext = m.minus_ident();
+            if (minusIdentContext == null) {
+                String k = m.identifier().getText();
+                Single_valueContext val = m.single_value();
+                if (val == null) {
+                    meta.data().put(k, TAG);
+                } else {
+                    TerminalNode tn = (TerminalNode) val.getChild(0);
+                    int type = tn.getSymbol().getType();
+                    String text = tn.getSymbol().getText();
+                    MetaValue mv = switch (type) {
+                        case INTEGER_CONSTANT -> new MetaInt(Integer.parseInt(text));
+                        case HEX_INTEGER_CONSTANT -> new MetaInt(Integer.decode(text));
+                        case FLOAT_CONSTANT -> new MetaFloat(Float.parseFloat(text));
+                        case STRING_CONSTANT -> new MetaStr(text.trim().substring(1, text.trim().length() - 1));
+                        default -> throw new IllegalStateException("Unexpected value: " + type);
+                    };
+                    meta.data().put(k, mv);
+                }
             } else {
-                TerminalNode tn = (TerminalNode) val.getChild(0);
-                int type = tn.getSymbol().getType();
-                String text = tn.getSymbol().getText();
-                MetaValue mv = switch (type) {
-                    case INTEGER_CONSTANT -> new MetaInt(Integer.parseInt(text));
-                    case HEX_INTEGER_CONSTANT -> new MetaInt(Integer.decode(text));
-                    case FLOAT_CONSTANT -> new MetaFloat(Float.parseFloat(text));
-                    case STRING_CONSTANT -> new MetaStr(text.trim().substring(1, text.trim().length() - 1));
-                    default -> throw new IllegalStateException("Unexpected value: " + type);
-                };
-                meta.data().put(k, mv);
+                String k = minusIdentContext.identifier().getText();
+                meta.data().put("-" + k, TAG);
             }
         }
 

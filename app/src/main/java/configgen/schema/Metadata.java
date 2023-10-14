@@ -42,7 +42,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         return data.get(name);
     }
 
-    public void addTag(String tag) {
+    public void putTag(String tag) {
         if (reserved.contains(tag)) {
             throw new IllegalArgumentException(STR. "'\{ tag }' reserved" );
         }

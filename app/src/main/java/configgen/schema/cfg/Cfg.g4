@@ -45,7 +45,9 @@ COMMENT: '//' ~[\r\n]* ;
 
 metadata : ( LP ident_with_opt_single_value ( COMMA ident_with_opt_single_value )* RP )? ;
 
-ident_with_opt_single_value : identifier ( EQ single_value )? ;
+ident_with_opt_single_value : identifier (EQ single_value)? |  minus_ident;
+
+minus_ident: MINUS identifier;
 
 single_value : INTEGER_CONSTANT | HEX_INTEGER_CONSTANT | FLOAT_CONSTANT | STRING_CONSTANT ;
 

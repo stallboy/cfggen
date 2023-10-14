@@ -6,9 +6,23 @@ import static configgen.schema.EntryType.*;
 import static configgen.schema.SchemaErrs.FilterRefIgnoredByRefKeyNotFound;
 import static configgen.schema.SchemaErrs.FilterRefIgnoredByRefTableNotFound;
 
+/**
+ * tag： 只标注field的就行，不用标注foreign key，
+ * foreign key是否提取，只由是否可行决定，能包含就包含。
+ * <p>
+ * 如果在structural上配置了tag，分3种情况
+ * 1，所有field都没tag，-tag, 则包含所有field
+ * 2，有部分field设了tag，则取这设置了tag的field
+ * 3，没有设置tag的，但有部分设置了-tag，则提取没设-tag的field
+ * <p>
+ * 一般情况下，impl不需要设置tag，
+ * 如果impl上设置tag，则则是为了能filter出空结构，相当于只用此impl类名字做标志，
+ * 普通的struct不支持filter出空结构。
+ */
 public class CfgSchemaFilterByTag {
     private final CfgSchema cfg;
     private final String tag;
+    private final String minusTag;
     private final SchemaErrs errs;
 
     public CfgSchemaFilterByTag(CfgSchema cfg, String tag, SchemaErrs errs) {
@@ -20,6 +34,7 @@ public class CfgSchemaFilterByTag {
         Objects.requireNonNull(errs);
         this.cfg = cfg;
         this.tag = tag;
+        minusTag = "-" + tag;
         this.errs = errs;
     }
 
@@ -73,7 +88,7 @@ public class CfgSchemaFilterByTag {
     private StructSchema filterStruct(StructSchema struct, boolean isImpl, Map<String, TableRule> tableMap) {
         FieldsRule ff = filterFields(struct, isImpl);
         List<ForeignKeySchema> fks = filterForeignKeys(struct, ff.rule, tableMap);
-        return new StructSchema(struct.name(), struct.fmt(), struct.meta().copy(), ff.fields, fks);
+        return new StructSchema(struct.name(), struct.fmt(), struct.meta().copy(), ff.filteredFields, fks);
     }
 
     private InterfaceSchema filterInterface(InterfaceSchema sInterface, Map<String, TableRule> tableMap) {
@@ -92,14 +107,15 @@ public class CfgSchemaFilterByTag {
     private enum IncludeRule {
         ALL,
         WITH_TAG,
-        EMPTY,
+        WITH_NO_MINUS_TAG,
+        IMPL_EMPTY //只有interface下的struct，可以为空
     }
 
-    private record FieldsRule(List<FieldSchema> fields,
+    private record FieldsRule(List<FieldSchema> filteredFields,
                               IncludeRule rule) {
 
         boolean hasField(String name) {
-            return fields.stream().anyMatch(f -> f.name().equals(name));
+            return filteredFields.stream().anyMatch(f -> f.name().equals(name));
         }
 
         boolean hasAllFields(List<String> names) {
@@ -126,39 +142,46 @@ public class CfgSchemaFilterByTag {
         }
         List<KeySchema> uks = filterUniqKeys(table, ff);
         TableSchema t = new TableSchema(table.name(), table.primaryKey().copy(), entry, table.isColumnMode(),
-                table.meta().copy(), ff.fields(), List.of(), uks);
+                table.meta().copy(), ff.filteredFields(), List.of(), uks);
         return new TableRule(t, ff.rule);
     }
 
     private FieldsRule filterFields(Structural structural, boolean isImpl) {
-        List<FieldSchema> fields = new ArrayList<>();
+        List<FieldSchema> withTagFields = new ArrayList<>();
+        int withMinusTagFieldCount = 0;
         for (FieldSchema field : structural.fields()) {
             if (field.meta().hasTag(tag)) {
-                fields.add(field.copy());
+                withTagFields.add(field.copy());
+            } else if (field.meta().hasTag(minusTag)) {
+                withMinusTagFieldCount++;
             }
         }
 
-        // 如果在structural上配置了tag，分两种情况
-        // 1，所有field都没tag，则包含所有field
-        // 2，否则，有部分field设了tag，则只取这部分field
         IncludeRule rule;
-        if (fields.isEmpty()) {
-            // 一般情况下，impl不需要设置tag，
-            // 如果impl上设置tag，则则是为了能filter出空结构，相当于只用此impl类名字做标志，
-            // 普通的struct不支持filter出空结构。
+        @SuppressWarnings("UnnecessaryLocalVariable")
+        List<FieldSchema> filteredFields = withTagFields;
+        if (withTagFields.isEmpty()) {
             if (isImpl && structural.meta().hasTag(tag)) {
-                rule = IncludeRule.EMPTY;
+                rule = IncludeRule.IMPL_EMPTY;
+            } else if (withMinusTagFieldCount > 0) {
+                for (FieldSchema field : structural.fields()) {
+                    if (!field.meta().hasTag(minusTag)) {
+                        filteredFields.add(field.copy());
+                    }
+                }
+                rule = IncludeRule.WITH_NO_MINUS_TAG;
             } else {
                 for (FieldSchema field : structural.fields()) {
-                    fields.add(field.copy());
+                    filteredFields.add(field.copy());
                 }
                 rule = IncludeRule.ALL;
+
             }
         } else {
             rule = IncludeRule.WITH_TAG;
         }
 
-        return new FieldsRule(fields, rule);
+        return new FieldsRule(filteredFields, rule);
     }
 
     private TableSchema filterTablePhase2(TableSchema originalTable, TableRule tr,
@@ -187,6 +210,15 @@ public class CfgSchemaFilterByTag {
                         recordForeignKeyIfOk(fks, fk, structural, phase1TableMap);
                     }
                 }
+            }
+            case WITH_NO_MINUS_TAG -> {
+                for (ForeignKeySchema fk : structural.foreignKeys()) {
+                    if (!fk.meta().hasTag(minusTag)) {
+                        recordForeignKeyIfOk(fks, fk, structural, phase1TableMap);
+                    }
+                }
+            }
+            case IMPL_EMPTY -> {
             }
         }
         return fks;
@@ -220,7 +252,7 @@ public class CfgSchemaFilterByTag {
         }
 
         // 全局找
-        if (refTable == null){
+        if (refTable == null) {
             refTable = phase1TableMap.get(fk.refTable());
         }
 
@@ -262,12 +294,14 @@ public class CfgSchemaFilterByTag {
                     uks.add(uk.copy());
                 }
             }
-            case WITH_TAG -> {
+            case WITH_TAG, WITH_NO_MINUS_TAG -> {
                 for (KeySchema uk : table.uniqueKeys()) {
                     if (ff.hasAllFields(uk.name())) {
                         uks.add(uk.copy());
                     }
                 }
+            }
+            case IMPL_EMPTY -> {
             }
         }
         return uks;

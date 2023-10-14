@@ -25,7 +25,6 @@ public final class Main {
         System.out.println("    -encoding     csv编码，默认是GBK，如果文件中含有bom则用bom标记的编码");
         System.out.println("    -verify       检查配表约束");
 
-
         System.out.println();
         System.out.println("----国际化支持--------------------------------------");
         System.out.println("    -i18nfile     国际化需要的文件，如果不用国际化，就不要配置");
@@ -39,6 +38,7 @@ public final class Main {
         System.out.println("    -binaryToText       后可接1或2个参数（java data的file，table名称-用startsWith匹配），打印table的定义和数据");
         System.out.println("    -binaryToTextLoop   后可接1个参数（java data的file），打印table的定义和数据");
         System.out.println("    -search             后接命令，找到匹配的数据");
+        System.out.println("    -xmlToCfg           .xml变成.cfg文件");
 
         System.out.println("    -dump         打印内部树结构");
         System.out.println("    -v            verbose，级别1，输出统计和warning信息");
@@ -116,7 +116,7 @@ public final class Main {
         List<String> searchParam = null;
 
         for (int i = 0; i < args.length; ++i) {
-            switch (args[i]) {
+            switch (args[i].toLowerCase()) {
                 case "-datadir":
                     datadir = args[++i];
                     break;
@@ -143,10 +143,10 @@ public final class Main {
                 case "-i18ncrlfaslf":
                     i18ncrlfaslf = true;
                     break;
-                case "-langSwitchDir":
+                case "-langswitchdir":
                     langSwitchDir = args[++i];
                     break;
-                case "-defaultLang":
+                case "-defaultlang":
                     defaultLang = args[++i];
                     break;
 
@@ -165,13 +165,13 @@ public final class Main {
                     Logger.enableProfileGc();
                     break;
 
-                case "-binaryToText":
+                case "-binarytotext":
                     binaryToTextFile = args[++i];
                     if (i + 1 < args.length && !args[i + 1].startsWith("-")) {
                         match = args[++i];
                     }
                     break;
-                case "-binaryToTextLoop":
+                case "-binarytotextloop":
                     binaryToTextLoop = true;
                     binaryToTextFile = args[++i];
                     break;

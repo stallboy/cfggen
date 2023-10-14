@@ -8,9 +8,7 @@ import configgen.util.DomUtils;
 import org.w3c.dom.Element;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
@@ -28,7 +26,7 @@ public enum XmlReader implements CfgSchemaReader {
             if (e.hasAttribute("enumRef")) {
                 f = parseInterface(e, pkgNameDot);
             } else {
-                f = parseStruct(e, pkgNameDot);
+                f = parseStruct(e, pkgNameDot, false);
             }
 
             destination.items().add(f);
@@ -52,13 +50,14 @@ public enum XmlReader implements CfgSchemaReader {
             entry = EntryType.ENo.NO;
         }
         boolean isColumnMode = self.hasAttribute("isColumnMode");
-        Metadata meta = parseOwnToMetadata(self);
+        FieldTagMap fieldTagMap = parseOwn(self, false);
+        Metadata meta = fieldTagMap.meta;
         if (self.hasAttribute("extraSplit")) {
             int extraSplit = Integer.parseInt(self.getAttribute("extraSplit"));
             meta.data().put("extraSplit", new MetaInt(extraSplit));
         }
 
-        List<FieldSchema> fields = parseFieldList(self);
+        List<FieldSchema> fields = parseFieldList(self, fieldTagMap.tag2FieldTag);
         List<ForeignKeySchema> foreignKeys = parseForeignKeyList(self);
         List<KeySchema> uniqueKeys = new ArrayList<>();
         for (Element ele : DomUtils.elements(self, "uniqueKey")) {
@@ -73,27 +72,39 @@ public enum XmlReader implements CfgSchemaReader {
         return new KeySchema(Arrays.asList(keys));
     }
 
-    private StructSchema parseStruct(Element self, String pkgNameDot) {
+    private StructSchema parseStruct(Element self, String pkgNameDot, boolean isImpl) {
         String name = self.getAttribute("name").trim();
-        Metadata meta = parseOwnToMetadata(self);
+        FieldTagMap fieldTagMap = parseOwn(self, isImpl);
+        Metadata meta = fieldTagMap.meta;
         FieldFormat fmt = parseBeanFmt(self);
-        List<FieldSchema> fields = parseFieldList(self);
+        List<FieldSchema> fields = parseFieldList(self, fieldTagMap.tag2FieldTag);
         List<ForeignKeySchema> foreignKeys = parseForeignKeyList(self);
         return new StructSchema(pkgNameDot + name, fmt, meta,
                 fields, foreignKeys);
     }
 
     private Metadata parseOwnToMetadata(Element self) {
-        Metadata meta = of();
-        if (self.hasAttribute("own")) {
-            String own = self.getAttribute("own");
-            for (String tag : own.split(",")) {
-                tag = tag.trim();
-                meta.addTag(tag);
-            }
+        Metadata meta = Metadata.of();
+        for (String tag : parseOwnSet(self)) {
+            meta.putTag(tag);
         }
         return meta;
     }
+
+    private Set<String> parseOwnSet(Element self) {
+        String own = self.getAttribute("own");
+        if (self.hasAttribute("own")) {
+            Set<String> tags = new HashSet<>();
+            for (String tag : own.split(",")) {
+                tag = tag.trim();
+                tags.add(tag);
+            }
+            return tags;
+        } else {
+            return Set.of();
+        }
+    }
+
 
     private InterfaceSchema parseInterface(Element self, String pkgNameDot) {
         String name = self.getAttribute("name").trim();
@@ -104,7 +115,7 @@ public enum XmlReader implements CfgSchemaReader {
 
         List<StructSchema> impls = new ArrayList<>();
         for (Element subSelf : DomUtils.elements(self, "bean")) {
-            StructSchema impl = parseStruct(subSelf, "");
+            StructSchema impl = parseStruct(subSelf, "", true);
             impls.add(impl);
         }
 
@@ -128,10 +139,10 @@ public enum XmlReader implements CfgSchemaReader {
         return fmt;
     }
 
-    private List<FieldSchema> parseFieldList(Element self) {
+    private List<FieldSchema> parseFieldList(Element self, Map<String, FieldTag> tag2OwnField) {
         List<FieldSchema> fields = new ArrayList<>();
         for (Element ele : DomUtils.elements(self, "column")) {
-            FieldSchema field = parseField(ele);
+            FieldSchema field = parseField(ele, tag2OwnField);
             if (field != null) {
                 fields.add(field);
             }
@@ -139,26 +150,80 @@ public enum XmlReader implements CfgSchemaReader {
         return fields;
     }
 
-    private List<ForeignKeySchema> parseForeignKeyList(Element self) {
-        List<ForeignKeySchema> foreignKeys = new ArrayList<>();
-        for (Element ele : DomUtils.elements(self, "column")) {
-            if (ele.hasAttribute("ref")) {
-                ForeignKeySchema fk = parseForeignKey(ele, true);
-                foreignKeys.add(fk);
+
+    private enum FieldTagPolicy {
+        ALL,
+        USE_TAG,
+        USE_MINUS_TAG
+    }
+
+    private static class FieldTag {
+        int count;
+        FieldTagPolicy policy = FieldTagPolicy.USE_TAG;
+
+        void resolve(int all) {
+            if (count == all) {
+                policy = FieldTagPolicy.ALL;
+            } else if (count >= 0.7 * all) {
+                policy = FieldTagPolicy.USE_MINUS_TAG;
             }
         }
+    }
 
-        for (Element ele : DomUtils.elements(self, "foreignKey")) {
-            ForeignKeySchema fk = parseForeignKey(ele, false);
-            foreignKeys.add(fk);
+    private record FieldTagMap(Map<String, FieldTag> tag2FieldTag,
+                               Metadata meta) {
+    }
+
+    private FieldTagMap parseOwn(Element self, boolean isImpl) {
+        Map<String, FieldTag> tag2FieldTag = new LinkedHashMap<>();
+        int all = 0;
+        for (Element ele : DomUtils.elements(self, "column")) {
+            Set<String> tags = parseOwnSet(ele);
+            for (String tag : tags) {
+                //noinspection unused
+                FieldTag ownField = tag2FieldTag.computeIfAbsent(tag, k -> new FieldTag());
+                ownField.count++;
+            }
+            all++;
         }
 
-        return foreignKeys;
+        for (FieldTag of : tag2FieldTag.values()) {
+            of.resolve(all);
+        }
+
+        Metadata meta = Metadata.of();
+        if (!isImpl) { //impl 刘不加了，实际会在interface处
+            for (String tag : tag2FieldTag.keySet()) {
+                meta.putTag(tag);
+            }
+        }
+        return new FieldTagMap(tag2FieldTag, meta);
     }
 
 
-    private FieldSchema parseField(Element self) {
-        Metadata meta = parseOwnToMetadata(self);
+    private FieldSchema parseField(Element self, Map<String, FieldTag> tag2OwnField) {
+        Set<String> ownSet = parseOwnSet(self);
+        Metadata meta = Metadata.of();
+        for (Map.Entry<String, FieldTag> e : tag2OwnField.entrySet()) {
+            String tag = e.getKey();
+            FieldTag ownField = e.getValue();
+
+            switch (ownField.policy) {
+                case ALL -> {
+                }
+                case USE_TAG -> {
+                    if (ownSet.contains(tag)) {
+                        meta.putTag(tag);
+                    }
+                }
+                case USE_MINUS_TAG -> {
+                    if (!ownSet.contains(tag)) {
+                        meta.putTag("-" + tag);
+                    }
+                }
+            }
+        }
+
         String name = self.getAttribute("name").trim();
         if (!CfgUtil.isIdentifier(name)) {
             Logger.log(STR. "\{ name } not identifier, ignore!" );
@@ -226,17 +291,35 @@ public enum XmlReader implements CfgSchemaReader {
         return new FieldSchema(name, type, fmt, meta);
     }
 
-    private ForeignKeySchema parseForeignKey(Element self, boolean isTagColumn) {
+    private List<ForeignKeySchema> parseForeignKeyList(Element self) {
+        List<ForeignKeySchema> foreignKeys = new ArrayList<>();
+        for (Element ele : DomUtils.elements(self, "column")) {
+            if (ele.hasAttribute("ref")) {
+                ForeignKeySchema fk = parseForeignKey(ele, true);
+                foreignKeys.add(fk);
+            }
+        }
+
+        for (Element ele : DomUtils.elements(self, "foreignKey")) {
+            ForeignKeySchema fk = parseForeignKey(ele, false);
+            foreignKeys.add(fk);
+        }
+
+        return foreignKeys;
+    }
+
+
+    private ForeignKeySchema parseForeignKey(Element self, boolean isFromColumnTag) {
         String name = self.getAttribute("name").trim();
         KeySchema localKey;
-        if (isTagColumn) {
+        if (isFromColumnTag) {
             localKey = new KeySchema(List.of(name));
         } else {
             localKey = getKeySchema(self, "keys");
         }
 
-        String refstr = self.getAttribute("ref").trim();
-        String[] r = refstr.split("\\s*,\\s*");
+        String refStr = self.getAttribute("ref").trim();
+        String[] r = refStr.split("\\s*,\\s*");
         String refTable = r[0].trim();
         RefKey refKey;
         boolean nullable = false;
@@ -262,7 +345,7 @@ public enum XmlReader implements CfgSchemaReader {
             refKey = new RefPrimary(nullable);
         }
 
-        return new ForeignKeySchema(name, localKey, refTable, refKey, of());
+        return new ForeignKeySchema(name, localKey, refTable, refKey, Metadata.of());
     }
 
     private SimpleType parseSimpleType(String typ) {

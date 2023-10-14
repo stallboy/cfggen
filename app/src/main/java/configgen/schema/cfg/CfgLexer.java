@@ -1,4 +1,4 @@
-// Generated from E:/work/mygit/cfggen/app/src/main/java/configgen/schema/cfg/Cfg.g4 by ANTLR 4.13.1
+// Generated from D:/work/mygithub/cfggen/app/src/main/java/configgen/schema/cfg/Cfg.g4 by ANTLR 4.13.1
 package configgen.schema.cfg;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
