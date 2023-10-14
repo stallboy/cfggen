@@ -33,7 +33,7 @@ class CfgReaderTest {
             foreignKeys=[], uniqueKeys=[]]"
         */
 
-        assertEquals(table.primaryKey().name(), List.of("id"));
+        assertEquals(table.primaryKey().fields(), List.of("id"));
         assertTrue(table.entry() instanceof EntryType.EEnum e && e.field().equals("name"));
         assertFalse(table.isColumnMode());
         assertTrue(table.meta().data().isEmpty());
@@ -88,7 +88,7 @@ class CfgReaderTest {
         assertEquals(struct.foreignKeys().size(), 1);
         ForeignKeySchema fk = struct.foreignKeys().get(0);
         assertEquals(fk.name(), "Attr");
-        assertEquals(fk.key().name(), List.of("Attr"));
+        assertEquals(fk.key().fields(), List.of("Attr"));
         assertEquals(fk.refTable(), "common.fightattrs");
         assertTrue(fk.refKey() instanceof RefKey.RefPrimary p && !p.nullable() && fk.meta().data().isEmpty());
     }
@@ -209,7 +209,7 @@ class CfgReaderTest {
                 meta=Metadata[data={}]}], uniqueKeys=[]]
          */
         ForeignKeySchema fk = table.foreignKeys().get(0);
-        assertTrue(fk.refKey() instanceof RefKey.RefList rl && rl.key().name().equals(List.of("AttrType")));
+        assertTrue(fk.refKey() instanceof RefKey.RefList rl && rl.key().fields().equals(List.of("AttrType")));
 
     }
 }

@@ -29,12 +29,12 @@ public record TableSchema(String name,
     }
 
     public KeySchema findUniqueKey(KeySchema ref) {
-        return findUniqueKey(ref.name());
+        return findUniqueKey(ref.fields());
     }
 
     public KeySchema findUniqueKey(List<String> names) {
         for (KeySchema uk : uniqueKeys) {
-            if (uk.name().equals(names)) {
+            if (uk.fields().equals(names)) {
                 return uk;
             }
         }

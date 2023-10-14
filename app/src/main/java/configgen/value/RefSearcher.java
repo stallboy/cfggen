@@ -67,7 +67,7 @@ public final class RefSearcher {
             }
 
             if (match) { // 只搜索主键索引
-                FieldType ft = fk.key().obj().get(0).type();
+                FieldType ft = fk.key().fieldSchemas().get(0).type();
                 switch (ft) {
                     case FieldType.SimpleType _ -> {
                         Value localValue = ValueUtil.extractKeyValue(vStruct, fk.keyIndices);

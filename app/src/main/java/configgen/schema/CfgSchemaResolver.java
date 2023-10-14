@@ -278,7 +278,7 @@ public final class CfgSchemaResolver {
         }
         if (HasBlock.hasBlock(table)) {
             String firstField = table.fields().get(0).name();
-            if (!primaryKey.name().contains(firstField)) {
+            if (!primaryKey.fields().contains(firstField)) {
                 errs.addErr(new BlockTableFirstFieldNotInPrimaryKey(table.name()));
             }
         }
@@ -303,7 +303,7 @@ public final class CfgSchemaResolver {
     private boolean resolveKey(Structural structural, KeySchema key) {
         List<FieldSchema> obj = new ArrayList<>();
         boolean ok = true;
-        for (String name : key.name()) {
+        for (String name : key.fields()) {
             FieldSchema field = structural.findField(name);
             obj.add(field);
             if (field == null) {
@@ -312,7 +312,7 @@ public final class CfgSchemaResolver {
             }
         }
         if (ok) {
-            key.setObj(obj);
+            key.setFieldSchemas(obj);
         }
         return ok;
     }
@@ -326,7 +326,7 @@ public final class CfgSchemaResolver {
      * @param key primary or unique key
      */
     private void checkPrimaryOrUniqKey(KeySchema key) {
-        List<FieldSchema> fields = key.obj();
+        List<FieldSchema> fields = key.fieldSchemas();
         if (fields.size() == 1) {
             FieldSchema field = fields.get(0);
             FieldType type = field.type();
@@ -431,18 +431,18 @@ public final class CfgSchemaResolver {
                 KeySchema uk = refTableSchema.findUniqueKey(remoteKey);
                 if (uk != null) {
                     if (checkLocalAndRemoteTypeMatch(foreignKey, localKey, remoteKey)) {
-                        remoteKey.setObj(uk.obj());
+                        remoteKey.setFieldSchemas(uk.fieldSchemas());
                     }
                 } else {
                     errs.addErr(new RefTableKeyNotUniq(ctx(), foreignKey.name(),
-                            refTable, refUniq.key().name()));
+                            refTable, refUniq.key().fields()));
                 }
             }
 
             // listRef为了简单，不支持MultiKey
             case RefKey.RefList refList -> {
-                if (localKey.name().size() != 1) {
-                    errs.addErr(new ListRefMultiKeyNotSupport(ctx(), foreignKey.name(), localKey.name()));
+                if (localKey.fields().size() != 1) {
+                    errs.addErr(new ListRefMultiKeyNotSupport(ctx(), foreignKey.name(), localKey.fields()));
                     return;
                 }
 
@@ -454,8 +454,8 @@ public final class CfgSchemaResolver {
     }
 
     private boolean checkLocalAndRemoteTypeMatch(ForeignKeySchema foreignKey, KeySchema localKey, KeySchema remoteKey) {
-        List<FieldSchema> localFields = localKey.obj();
-        List<FieldSchema> remoteFields = remoteKey.obj();
+        List<FieldSchema> localFields = localKey.fieldSchemas();
+        List<FieldSchema> remoteFields = remoteKey.fieldSchemas();
         if (remoteFields == null) {
             return false;
         }

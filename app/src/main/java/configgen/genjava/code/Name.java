@@ -14,19 +14,19 @@ public class Name {
     static String codeTopPkg;
 
     static String uniqueKeyGetByName(KeySchema keySchema) {
-        return "getBy" + keySchema.name().stream().map(Generator::upper1).collect(Collectors.joining());
+        return "getBy" + keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining());
     }
 
     static String uniqueKeyMapName(KeySchema keySchema) {
-        return keySchema.name().stream().map(Generator::upper1).collect(Collectors.joining()) + "Map";
+        return keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()) + "Map";
     }
 
     static String keyClassName(KeySchema keySchema) {
-        if (keySchema.name().size() > 1)
-            return keySchema.name().stream().map(Generator::upper1).collect(Collectors.joining()) + "Key";
+        if (keySchema.fields().size() > 1)
+            return keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()) + "Key";
         else
             try {
-                return TypeStr.boxType(keySchema.obj().get(0).type());
+                return TypeStr.boxType(keySchema.fieldSchemas().get(0).type());
             } catch (Exception e) {
                 return null;
             }
@@ -61,7 +61,7 @@ public class Name {
                 return "java.util.List<" + refType(fk.refTableSchema()) + ">";
             }
             case RefKey.RefSimple _ -> {
-                FieldSchema firstLocal = fk.key().obj().get(0);
+                FieldSchema firstLocal = fk.key().fieldSchemas().get(0);
                 switch (firstLocal.type()) {
 
                     case SimpleType _ -> {

@@ -5,31 +5,31 @@ import java.util.List;
 import java.util.Objects;
 
 public class KeySchema {
-    private final List<String> name;
-    private List<FieldSchema> obj;
+    private final List<String> fields;
+    private List<FieldSchema> fieldSchemas;
 
     public KeySchema(List<String> key) {
         Objects.requireNonNull(key);
         if (key.isEmpty()) {
             throw new IllegalArgumentException("keySchema key empty");
         }
-        this.name = key;
+        this.fields = key;
     }
 
     public KeySchema copy() {
-        return new KeySchema(new ArrayList<>(name));
+        return new KeySchema(new ArrayList<>(fields));
     }
 
-    public List<String> name() {
-        return name;
+    public List<String> fields() {
+        return fields;
     }
 
-    public List<FieldSchema> obj() {
-        return obj;
+    public List<FieldSchema> fieldSchemas() {
+        return fieldSchemas;
     }
 
-    void setObj(List<FieldSchema> obj) {
-        this.obj = obj;
+    void setFieldSchemas(List<FieldSchema> fieldSchemas) {
+        this.fieldSchemas = fieldSchemas;
     }
 
     @Override
@@ -37,18 +37,18 @@ public class KeySchema {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         KeySchema keySchema = (KeySchema) o;
-        return Objects.equals(name, keySchema.name);
+        return Objects.equals(fields, keySchema.fields);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name);
+        return Objects.hash(fields);
     }
 
     @Override
     public String toString() {
         return "KeySchema{" +
-                "name=" + name +
+                "name=" + fields +
                 '}';
     }
 }

@@ -81,7 +81,7 @@ public class SchemaStat implements Stat {
     }
 
     private void parseKey(KeySchema key) {
-        switch (key.name().size()) {
+        switch (key.fields().size()) {
             case 1 -> {
             }
             case 2 -> multi2KeyCount++;
@@ -140,7 +140,7 @@ public class SchemaStat implements Stat {
                 case RefKey.RefList _ -> refListCount++;
             }
 
-            List<FieldSchema> fs = fk.key().obj();
+            List<FieldSchema> fs = fk.key().fieldSchemas();
             if (fs.size() == 1) {
                 FieldSchema f = fs.get(0);
                 switch (f.type()) {

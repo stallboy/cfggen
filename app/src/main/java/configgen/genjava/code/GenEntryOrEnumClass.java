@@ -121,7 +121,7 @@ class GenEntryOrEnumClass {
                     ps.println1(" */");
                 }
                 ps.println1("public " + TypeStr.type(field.type()) + " get" + upper1(field.name()) + "() {");
-                if (field == table.primaryKey().obj().get(0)) {
+                if (field == table.primaryKey().fieldSchemas().get(0)) {
                     ps.println2("return value;");
                 } else if (field == entryBase.fieldSchema()) {
                     ps.println2("return name;");

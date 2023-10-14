@@ -31,7 +31,7 @@ public sealed interface RefKey {
 
         @Override
         public List<String> keyNames() {
-            return key.name();
+            return key.fields();
         }
 
         @Override
@@ -47,7 +47,7 @@ public sealed interface RefKey {
 
         @Override
         public List<String> keyNames() {
-            return key.name();
+            return key.fields();
         }
 
         @Override

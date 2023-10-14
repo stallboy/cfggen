@@ -45,7 +45,7 @@ public class RefValidator {
         for (ForeignKeySchema fk : structural.foreignKeys()) {
             RefKey refKey = fk.refKey();
             if (refKey instanceof RefKey.RefSimple refSimple) {
-                FieldType ft = fk.key().obj().get(0).type();
+                FieldType ft = fk.key().fieldSchemas().get(0).type();
                 switch (ft) {
                     case SimpleType _ -> {
                         Value localValue = ValueUtil.extractKeyValue(vStruct, fk.keyIndices);
@@ -85,16 +85,16 @@ public class RefValidator {
     }
 
     private boolean isForeignLocalKeyInPrimaryOrUniq(ForeignKeySchema fk, TableSchema table) {
-        if (fk.key().obj().size() == 1) {
-            FieldSchema f = fk.key().obj().get(0);
-            for (FieldSchema pkf : table.primaryKey().obj()) {
+        if (fk.key().fieldSchemas().size() == 1) {
+            FieldSchema f = fk.key().fieldSchemas().get(0);
+            for (FieldSchema pkf : table.primaryKey().fieldSchemas()) {
                 if (f == pkf) {
                     return true;
                 }
             }
 
             for (KeySchema uk : table.uniqueKeys()) {
-                for (FieldSchema ukf : uk.obj()) {
+                for (FieldSchema ukf : uk.fieldSchemas()) {
                     if (f == ukf) {
                         return true;
                     }

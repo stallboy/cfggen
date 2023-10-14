@@ -277,7 +277,7 @@ public class CfgSchemaFilterByTag {
                 for (FieldSchema field : refTable.table.fields()) {
                     names.add(field.name());
                 }
-                if (names.containsAll(refList.key().name())) {
+                if (names.containsAll(refList.key().fields())) {
                     return RefErr.OK;
                 } else {
                     return RefErr.KEY_NOT_FOUND;
@@ -296,7 +296,7 @@ public class CfgSchemaFilterByTag {
             }
             case WITH_TAG, WITH_NO_MINUS_TAG -> {
                 for (KeySchema uk : table.uniqueKeys()) {
-                    if (ff.hasAllFields(uk.name())) {
+                    if (ff.hasAllFields(uk.fields())) {
                         uks.add(uk.copy());
                     }
                 }

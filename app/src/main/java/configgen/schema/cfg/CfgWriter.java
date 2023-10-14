@@ -129,7 +129,7 @@ public class CfgWriter {
     }
 
     static String keyStr(KeySchema key) {
-        return STR. "[\{ String.join(",", key.name()) }]" ;
+        return STR. "[\{ String.join(",", key.fields()) }]" ;
     }
 
     static void foreignToMeta(ForeignKeySchema fk, Metadata meta) {

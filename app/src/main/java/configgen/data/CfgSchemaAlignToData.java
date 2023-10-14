@@ -129,7 +129,7 @@ public class CfgSchemaAlignToData {
     }
 
     private boolean isKeyInSchemaList(KeySchema key, Map<String, FieldSchema> fieldSchemas) {
-        for (String k : key.name()) {
+        for (String k : key.fields()) {
             if (!fieldSchemas.containsKey(k)) {
                 return false;
             }

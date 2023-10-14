@@ -225,13 +225,13 @@ class GenStructuralClass {
             if (!(fk.refKey() instanceof RefKey.RefSimple refSimple)) {
                 continue;
             }
-            FieldSchema firstField = fk.key().obj().get(0);
+            FieldSchema firstField = fk.key().fieldSchemas().get(0);
             String refName = Name.refName(fk);
             TableSchema refTable = fk.refTableSchema();
             switch (firstField.type()) {
                 case SimpleType _ -> {
                     ps.println2(refName + " = " + MethodStr.tableGet(refTable, refSimple,
-                            MethodStr.actualParams(fk.key().name())));
+                            MethodStr.actualParams(fk.key().fields())));
                     if (!refSimple.nullable())
                         ps.println2("java.util.Objects.requireNonNull(" + refName + ");");
                 }
@@ -271,7 +271,7 @@ class GenStructuralClass {
                 ps.println2("for (%s v : %s.values()) {", refn.fullName, refn.fullName);
             } else if (isEnum) {
                 ps.println2("for (%s vv : %s.values()) {", refn.fullName, refn.fullName);
-                String primK = refTable.primaryKey().name().get(0);
+                String primK = refTable.primaryKey().fields().get(0);
                 ps.println3("%s v = mgr.%sAll.get(vv.get%s());", refn.fullName + "_Detail", refn.containerPrefix,
                         upper1(primK));
             } else {
@@ -279,8 +279,8 @@ class GenStructuralClass {
             }
 
             List<String> eqs = new ArrayList<>();
-            for (int i = 0; i < fk.key().name().size(); i++) {
-                FieldSchema k = fk.key().obj().get(i);
+            for (int i = 0; i < fk.key().fields().size(); i++) {
+                FieldSchema k = fk.key().fieldSchemas().get(i);
                 String rk = refList.keyNames().get(i); // refKey不可能是refTable的primary key，所以可以直接调用keyNames
                 eqs.add(MethodStr.equal("v.get" + upper1(rk) + "()", lower1(k.name()), k.type()));
             }

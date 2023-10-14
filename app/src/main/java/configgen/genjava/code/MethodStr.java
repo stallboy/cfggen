@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static configgen.gen.Generator.lower1;
-import static configgen.schema.FieldType.Primitive.*;
 import static configgen.schema.RefKey.*;
 
 class MethodStr {
@@ -21,8 +20,8 @@ class MethodStr {
     }
 
     static String actualParamsKey(KeySchema keySchema, String pre) {
-        String p = keySchema.name().stream().map(e -> pre + lower1(e)).collect(Collectors.joining(", "));
-        return keySchema.name().size() > 1 ? "new " + Name.keyClassName(keySchema) + "(" + p + ")" : p;
+        String p = keySchema.fields().stream().map(e -> pre + lower1(e)).collect(Collectors.joining(", "));
+        return keySchema.fields().size() > 1 ? "new " + Name.keyClassName(keySchema) + "(" + p + ")" : p;
     }
 
     static String hashCodes(List<FieldSchema> fs) {
@@ -47,16 +46,16 @@ class MethodStr {
             String pre = "mgr." + name.containerPrefix;
             switch (refSimple) {
                 case RefPrimary _ -> {
-                    if (refTable.primaryKey().obj().size() == 1) {
+                    if (refTable.primaryKey().fieldSchemas().size() == 1) {
                         return pre + "All.get(" + actualParam + ");";
                     } else {
                         return pre + "All.get(new " + name.fullName + "." +
-                                Name.multiKeyClassName(refTable.primaryKey().name()) + "(" + actualParam + ") );";
+                                Name.multiKeyClassName(refTable.primaryKey().fields()) + "(" + actualParam + ") );";
                     }
                 }
 
                 case RefUniq refUniq -> {
-                    if (refUniq.key().name().size() == 1) {
+                    if (refUniq.key().fields().size() == 1) {
                         return pre + Name.uniqueKeyMapName(refUniq.key()) + ".get(" + actualParam + ");";
                     } else {
                         return pre + Name.uniqueKeyMapName(refUniq.key()) + ".get( new " + name.fullName + "." +

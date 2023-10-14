@@ -64,20 +64,20 @@ class GenStructuralClassTablePart {
 
 
     private static void generateMapGetBy(KeySchema keySchema, NameableName name, CachedIndentPrinter ps, boolean isPrimaryKey) {
-        if (keySchema.name().size() > 1) {
+        if (keySchema.fields().size() > 1) {
             generateKeyClass(keySchema, ps);
         }
 
         String mapName = name.containerPrefix + (isPrimaryKey ? "All" : Name.uniqueKeyMapName(keySchema));
         String keyTypeName = Name.keyClassName(keySchema);
-        if (keySchema.name().size() > 1) {
+        if (keySchema.fields().size() > 1) {
             keyTypeName = name.fullName + "." + keyTypeName;
         }
 
         mapsInMgr.add(String.format("    public final java.util.Map<%s, %s> %s = new java.util.LinkedHashMap<>();", keyTypeName, name.fullName, mapName));
 
         String getByName = isPrimaryKey ? "get" : Name.uniqueKeyGetByName(keySchema);
-        ps.println1("public static " + name.className + " " + getByName + "(" + MethodStr.formalParams(keySchema.obj()) + ") {");
+        ps.println1("public static " + name.className + " " + getByName + "(" + MethodStr.formalParams(keySchema.fieldSchemas()) + ") {");
         ps.println2("%s.ConfigMgr mgr = %s.ConfigMgr.getMgr();", Name.codeTopPkg, Name.codeTopPkg);
         ps.println2("return mgr." + mapName + ".get(" + MethodStr.actualParamsKey(keySchema, "") + ");");
         ps.println1("}");
@@ -100,13 +100,13 @@ class GenStructuralClassTablePart {
         String keyClassName = Name.keyClassName(keySchema);
         //static Key class
         ps.println1("public static class " + keyClassName + " {");
-        for (FieldSchema f : keySchema.obj()) {
+        for (FieldSchema f : keySchema.fieldSchemas()) {
             ps.println2("private final " + TypeStr.type(f.type()) + " " + lower1(f.name()) + ";");
         }
         ps.println();
 
-        ps.println2(keyClassName + "(" + MethodStr.formalParams(keySchema.obj()) + ") {");
-        for (FieldSchema f : keySchema.obj()) {
+        ps.println2(keyClassName + "(" + MethodStr.formalParams(keySchema.fieldSchemas()) + ") {");
+        for (FieldSchema f : keySchema.fieldSchemas()) {
             ps.println3("this." + lower1(f.name()) + " = " + lower1(f.name()) + ";");
         }
         ps.println2("}");
@@ -114,7 +114,7 @@ class GenStructuralClassTablePart {
 
         ps.println2("@Override");
         ps.println2("public int hashCode() {");
-        ps.println3("return " + MethodStr.hashCodes(keySchema.obj()) + ";");
+        ps.println3("return " + MethodStr.hashCodes(keySchema.fieldSchemas()) + ";");
         ps.println2("}");
         ps.println();
 
@@ -123,7 +123,7 @@ class GenStructuralClassTablePart {
         ps.println3("if (!(other instanceof " + keyClassName + "))");
         ps.println4("return false;");
         ps.println3(keyClassName + " o = (" + keyClassName + ") other;");
-        ps.println3("return " + MethodStr.equals(keySchema.obj()) + ";");
+        ps.println3("return " + MethodStr.equals(keySchema.fieldSchemas()) + ";");
         ps.println2("}");
 
         ps.println1("}");

@@ -62,7 +62,7 @@ public class TableParser {
         for (KeySchema uniqueKey : subTableSchema.uniqueKeys()) {
             Set<Value> res = new LinkedHashSet<>();
             extractKeyValues(res, valueList, uniqueKey);
-            uniqueKeyValueSetMap.put(uniqueKey.name(), res);
+            uniqueKeyValueSetMap.put(uniqueKey.fields(), res);
         }
 
         // 收集枚举
@@ -74,7 +74,7 @@ public class TableParser {
             enumNames = new LinkedHashSet<>();
 
             int pkIdx = -1;
-            List<FieldSchema> pk = subTableSchema.primaryKey().obj();
+            List<FieldSchema> pk = subTableSchema.primaryKey().fieldSchemas();
             if (pk.size() == 1 && pk.get(0) != entry.fieldSchema()) {
                 pkIdx = FindFieldIndex.findFieldIndex(subTableSchema, pk.get(0));
                 enumNameToIntegerValueMap = new LinkedHashMap<>();
@@ -119,7 +119,7 @@ public class TableParser {
             Value keyValue = ValueUtil.extractKeyValue(value, keyIndices);
             boolean add = keyValueSet.add(keyValue);
             if (!add) {
-                errs.addErr(new PrimaryOrUniqueKeyDuplicated(keyValue.cells(), tableSchema.name(), key.name()));
+                errs.addErr(new PrimaryOrUniqueKeyDuplicated(keyValue.cells(), tableSchema.name(), key.fields()));
             }
         }
     }
