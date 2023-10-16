@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using ICSharpCode.SharpZipLib.Zip;
 
 namespace Config
 {
@@ -78,27 +77,12 @@ namespace Config
 
         public static ProcessConfigStream Processor;
 
-        public static void LoadPack(string packDir)
+        public static void LoadBytes(byte[] data)
         {
-            var byterList = new List<BinaryReader>();
-            var zipFiles = new List<ZipFile>();
-            foreach (var f in Directory.GetFiles(packDir, "*.zip"))
-            {
-                var name = Path.GetFileNameWithoutExtension(f);
-                if (name != null )
-                {
-                    var z = new ZipFile(f);
-                    zipFiles.Add(z);
-                    var byter = new BinaryReader(z.GetInputStream(z.GetEntry(name)));
-                    byterList.Add(byter);
-                }
-            }
-
-            Processor(new Stream(byterList));
-            foreach (var z in zipFiles)
-            {
-                z.Close();
-            }
+            MemoryStream memoryStream = new MemoryStream(data);
+            var reader = new BinaryReader(memoryStream);
+            Processor(new Stream( new List<BinaryReader>{ reader }) );
+            memoryStream.Dispose();
         }
     }
 }

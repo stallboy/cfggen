@@ -123,7 +123,6 @@ public final class GenJavaData extends Generator {
         return tmp;
     }
 
-
     private void writeValue(Value value, LangSwitch nullableLS, ConfigOutput output) {
         switch (value) {
             case VBool vBool -> output.writeBool(vBool.value());

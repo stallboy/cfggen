@@ -1,5 +1,6 @@
 package configgen.gen;
 
+import configgen.gencs.GenBytes;
 import configgen.gencs.GenCs;
 import configgen.genjava.BinaryToText;
 import configgen.genjava.GenJavaData;
@@ -88,11 +89,11 @@ public final class Main {
         Generators.addProvider("javadata", GenJavaData::new);
 
         Generators.addProvider("cs", GenCs::new);
+        Generators.addProvider("bytes", GenBytes::new);
 
 //        Generators.addProvider("lua", GenLua::new);
 //          Generators.addProvider("pack", GenPack::new);
-//        Generators.addProvider("bytes", GenBytes::new);
-//
+
 
         String datadir = null;
         boolean xmlToCfg = false;
