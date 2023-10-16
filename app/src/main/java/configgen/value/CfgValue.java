@@ -46,7 +46,10 @@ public record CfgValue(CfgSchema schema,
     public sealed interface SimpleValue extends Value {
     }
 
-    public sealed interface ContainerValue extends Value {
+    public sealed interface ContainerValue extends Value, CompositeValue {
+    }
+
+    public sealed interface CompositeValue extends Value {
     }
 
     public sealed interface PrimitiveValue extends SimpleValue {
@@ -65,7 +68,7 @@ public record CfgValue(CfgSchema schema,
 
     public record VStruct(Structural schema,
                           List<Value> values,
-                          List<DCell> cells) implements SimpleValue {
+                          List<DCell> cells) implements SimpleValue, CompositeValue {
 
         public String name() {
             return schema.name();
@@ -87,7 +90,7 @@ public record CfgValue(CfgSchema schema,
 
     public record VInterface(InterfaceSchema schema,
                              VStruct child,
-                             List<DCell> cells) implements SimpleValue {
+                             List<DCell> cells) implements SimpleValue, CompositeValue {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
