@@ -6,9 +6,6 @@ import configgen.util.CachedIndentPrinter;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.zip.CRC32;
-import java.util.zip.CheckedOutputStream;
-import java.util.zip.ZipOutputStream;
 
 public abstract class Generator {
     protected final Parameter parameter;
@@ -20,7 +17,7 @@ public abstract class Generator {
      */
     protected Generator(Parameter parameter) {
         this.parameter = parameter;
-        String tag = parameter.get("tag", null, "提取部分配置");
+        tag = parameter.get("own", null, "提取部分配置");
     }
 
     public abstract void generate(Context ctx) throws IOException;
@@ -38,10 +35,6 @@ public abstract class Generator {
 
     protected static CachedIndentPrinter createCode(File file, String encoding, StringBuilder dst, StringBuilder cache, StringBuilder tmp) {
         return new CachedIndentPrinter(file, encoding, dst, cache, tmp);
-    }
-
-    protected static ZipOutputStream createZip(File file) {
-        return new ZipOutputStream(new CheckedOutputStream(new CachedFileOutputStream(file), new CRC32()));
     }
 
     protected static OutputStreamWriter createUtf8Writer(File file) {

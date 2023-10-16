@@ -14,11 +14,10 @@ class AContext {
     }
 
     private String pkgPrefixStr;
-    private LangSwitch langSwitch;
+    private LangSwitchSupport nullableLangSwitchSupport;
     private boolean sharedEmptyTable;
     private boolean shared;
     private boolean packBool;
-    private boolean tryColumnMode;
     private boolean noStr; //只用于测试
 
     private String emptyTableStr;
@@ -34,11 +33,11 @@ class AContext {
     private AStat statistics;
 
     void init(String pkg, LangSwitch ls, boolean shareEmptyTable, boolean share,
-              boolean col, boolean packBool, boolean noStr, boolean rForOldShared) {
-        langSwitch = ls;
+              boolean packBool, boolean noStr, boolean rForOldShared) {
+
+        nullableLangSwitchSupport = ls != null ? new LangSwitchSupport(ls) : null;
         sharedEmptyTable = shareEmptyTable;
         shared = share;
-        tryColumnMode = col;
         this.packBool = packBool;
         this.noStr = noStr;
 
@@ -56,7 +55,7 @@ class AContext {
             listMapPostfixStr = "})";
         }
 
-        if (pkg.length() == 0) {
+        if (pkg.isEmpty()) {
             pkgPrefixStr = "";
         } else {
             pkgPrefixStr = pkg + ".";
@@ -71,8 +70,8 @@ class AContext {
         return forbidLocalNames.contains(name);
     }
 
-    LangSwitch getLangSwitch() {
-        return langSwitch;
+    LangSwitchSupport nullableLangSwitchSupport() {
+        return nullableLangSwitchSupport;
     }
 
     boolean isShared() {
@@ -81,10 +80,6 @@ class AContext {
 
     boolean isPackBool() {
         return packBool;
-    }
-
-    boolean isTryColumnMode() {
-        return tryColumnMode;
     }
 
     boolean isNoStr() {

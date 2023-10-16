@@ -5,6 +5,7 @@ import configgen.gencs.GenCs;
 import configgen.genjava.BinaryToText;
 import configgen.genjava.GenJavaData;
 import configgen.genjava.code.GenJavaCode;
+import configgen.genlua.GenLua;
 import configgen.tool.GenI18n;
 import configgen.tool.XmlToCfg;
 import configgen.util.Logger;
@@ -91,9 +92,7 @@ public final class Main {
         Generators.addProvider("cs", GenCs::new);
         Generators.addProvider("bytes", GenBytes::new);
 
-//        Generators.addProvider("lua", GenLua::new);
-//          Generators.addProvider("pack", GenPack::new);
-
+        Generators.addProvider("lua", GenLua::new);
 
         String datadir = null;
         boolean xmlToCfg = false;

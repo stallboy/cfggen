@@ -1,7 +1,5 @@
 package configgen.schema;
 
-import org.apache.poi.ss.usermodel.Table;
-
 import java.util.*;
 
 /**
@@ -30,10 +28,6 @@ public class CfgSchema {
         SchemaErrs errs = SchemaErrs.of();
         new CfgSchemaResolver(this, errs).resolve();
         return errs;
-    }
-
-    public boolean isResolved() {
-        return isResolved;
     }
 
     void setResolved() {

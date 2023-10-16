@@ -79,8 +79,8 @@ class ValueStringify {
     }
 
     private void addVText(VText value) {
-        if (AContext.getInstance().getLangSwitch() != null && !isKey) { // text字段仅用于asValue，不能用于asKey
-            int id = AContext.getInstance().getLangSwitch().enterText(value.value()) + 1;
+        if (AContext.getInstance().nullableLangSwitchSupport() != null && !isKey) { // text字段仅用于asValue，不能用于asKey
+            int id = AContext.getInstance().nullableLangSwitchSupport().enterText(value.value()) + 1;
             res.append(id);
             return;
         }
@@ -108,7 +108,7 @@ class ValueStringify {
     private void addVList(VList value) {
         int sz = value.valueList().size();
         if (sz == 0) { //优化，避免重复创建空table
-            ctx.getCtxShared().incEmptyTableUseCount();
+            ctx.ctxShared().incEmptyTableUseCount();
             res.append(AContext.getInstance().getEmptyTableStr());
 
         } else {
@@ -117,7 +117,7 @@ class ValueStringify {
                 res.append(vstr);
 
             } else {
-                ctx.getCtxShared().incListTableUseCount();
+                ctx.ctxShared().incListTableUseCount();
                 res.append(AContext.getInstance().getListMapPrefixStr());
                 int idx = 0;
                 for (Value eleValue : value.valueList()) {
@@ -134,7 +134,7 @@ class ValueStringify {
 
     private String getSharedCompositeBriefName(CompositeValue value) {
         if (value.isShared()) {
-            return ctx.getCtxShared().getSharedName(value); //优化，重用相同的table
+            return ctx.ctxShared().getSharedName(value); //优化，重用相同的table
         }
         return null;
     }
@@ -143,7 +143,7 @@ class ValueStringify {
     private void addVMap(VMap value) {
         int sz = value.valueMap().size();
         if (sz == 0) { //优化，避免重复创建空table
-            ctx.getCtxShared().incEmptyTableUseCount();
+            ctx.ctxShared().incEmptyTableUseCount();
             res.append(AContext.getInstance().getEmptyTableStr());
 
         } else {
@@ -152,7 +152,7 @@ class ValueStringify {
                 res.append(vstr);
 
             } else {
-                ctx.getCtxShared().incMapTableUseCount();
+                ctx.ctxShared().incMapTableUseCount();
                 res.append(AContext.getInstance().getListMapPrefixStr());
                 int idx = 0;
                 for (Map.Entry<SimpleValue, SimpleValue> e : value.valueMap().entrySet()) {
@@ -179,7 +179,7 @@ class ValueStringify {
 
         String beanType = beanTypeStr;
         if (beanType == null) {
-            beanType = ctx.getCtxName().getLocalName(Name.fullName(val.schema()));
+            beanType = ctx.ctxName().getLocalName(Name.fullName(val.schema()));
         }
 
         String vstr = getSharedCompositeBriefName(value);

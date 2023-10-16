@@ -430,9 +430,9 @@ public final class CfgSchemaResolver {
                 KeySchema remoteKey = refUniq.key();
                 KeySchema uk = refTableSchema.findUniqueKey(remoteKey);
                 if (uk != null) {
-                    if (checkLocalAndRemoteTypeMatch(foreignKey, localKey, remoteKey)) {
-                        remoteKey.setFieldSchemas(uk.fieldSchemas());
-                    }
+                    remoteKey.setFieldSchemas(uk.fieldSchemas());
+                    checkLocalAndRemoteTypeMatch(foreignKey, localKey, remoteKey);
+
                 } else {
                     errs.addErr(new RefTableKeyNotUniq(ctx(), foreignKey.name(),
                             refTable, refUniq.key().fields()));
@@ -447,22 +447,33 @@ public final class CfgSchemaResolver {
                 }
 
                 KeySchema remoteKey = refList.key();
-                // 这里remote应该向local的type看齐，保持一致
-                checkLocalAndRemoteTypeMatch(foreignKey, localKey, remoteKey);
+                if (remoteKey.fields().size() != 1) {
+                    errs.addErr(new ListRefMultiKeyNotSupport(ctx(), foreignKey.name(), remoteKey.fields()));
+                    return;
+                }
+
+                FieldSchema remoteField = refTableSchema.findField(remoteKey.fields().get(0));
+                if (remoteField != null) {
+                    remoteKey.setFieldSchemas(List.of(remoteField));
+                    // 这里remote应该向local的type看齐，保持一致
+                    checkLocalAndRemoteTypeMatch(foreignKey, localKey, remoteKey);
+
+                } else {
+                    errs.addErr(new RefTableKeyNotUniq(ctx(), foreignKey.name(),
+                            refTable, refList.key().fields()));
+                }
             }
         }
     }
 
-    private boolean checkLocalAndRemoteTypeMatch(ForeignKeySchema foreignKey, KeySchema localKey, KeySchema remoteKey) {
+
+    private void checkLocalAndRemoteTypeMatch(ForeignKeySchema foreignKey, KeySchema localKey, KeySchema remoteKey) {
         List<FieldSchema> localFields = localKey.fieldSchemas();
         List<FieldSchema> remoteFields = remoteKey.fieldSchemas();
-        if (remoteFields == null) {
-            return false;
-        }
 
         if (localFields.size() != remoteFields.size()) {
             errs.addErr(new RefLocalKeyRemoteKeyCountNotMatch(ctx(), foreignKey.toString()));
-            return false;
+            return;
         }
 
         boolean ok = true;
@@ -505,7 +516,6 @@ public final class CfgSchemaResolver {
                         local.type().toString(), remote.type().toString()));
             }
         }
-        return ok;
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")

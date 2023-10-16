@@ -46,10 +46,22 @@ public record CfgValue(CfgSchema schema,
     public sealed interface SimpleValue extends Value {
     }
 
-    public sealed interface ContainerValue extends Value, CompositeValue {
+    public sealed interface ContainerValue extends Value {
     }
 
-    public sealed interface CompositeValue extends Value {
+    public static sealed abstract class CompositeValue implements Value {
+        /**
+         * shared用于lua生成时最小化内存占用，所以对同一个表中相同的table，就共享， 算是个优化
+         */
+        private boolean shared = false;
+
+        public void setShared() {
+            shared = true;
+        }
+
+        public boolean isShared() {
+            return shared;
+        }
     }
 
     public sealed interface PrimitiveValue extends SimpleValue {
@@ -66,9 +78,18 @@ public record CfgValue(CfgSchema schema,
         }
     }
 
-    public record VStruct(Structural schema,
-                          List<Value> values,
-                          List<DCell> cells) implements SimpleValue, CompositeValue {
+    public static final class VStruct extends CompositeValue implements SimpleValue {
+        private final Structural schema;
+        private final List<Value> values;
+        private final List<DCell> cells;
+
+        public VStruct(Structural schema,
+                       List<Value> values,
+                       List<DCell> cells) {
+            this.schema = schema;
+            this.values = values;
+            this.cells = cells;
+        }
 
         public String name() {
             return schema.name();
@@ -86,11 +107,43 @@ public record CfgValue(CfgSchema schema,
         public int hashCode() {
             return Objects.hash(values);
         }
+
+        public Structural schema() {
+            return schema;
+        }
+
+        public List<Value> values() {
+            return values;
+        }
+
+        @Override
+        public List<DCell> cells() {
+            return cells;
+        }
+
+        @Override
+        public String toString() {
+            return "VStruct[" +
+                    "schema=" + schema + ", " +
+                    "values=" + values + ", " +
+                    "cells=" + cells + ']';
+        }
+
     }
 
-    public record VInterface(InterfaceSchema schema,
-                             VStruct child,
-                             List<DCell> cells) implements SimpleValue, CompositeValue {
+    public static final class VInterface extends CompositeValue implements SimpleValue {
+        private final InterfaceSchema schema;
+        private final VStruct child;
+        private final List<DCell> cells;
+
+        public VInterface(InterfaceSchema schema,
+                          VStruct child,
+                          List<DCell> cells) {
+            this.schema = schema;
+            this.child = child;
+            this.cells = cells;
+        }
+
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
@@ -103,10 +156,39 @@ public record CfgValue(CfgSchema schema,
         public int hashCode() {
             return Objects.hash(child);
         }
+
+        public InterfaceSchema schema() {
+            return schema;
+        }
+
+        public VStruct child() {
+            return child;
+        }
+
+        @Override
+        public List<DCell> cells() {
+            return cells;
+        }
+
+        @Override
+        public String toString() {
+            return "VInterface[" +
+                    "schema=" + schema + ", " +
+                    "child=" + child + ", " +
+                    "cells=" + cells + ']';
+        }
+
     }
 
-    public record VList(List<SimpleValue> valueList,
-                        List<DCell> cells) implements ContainerValue {
+    public static final class VList extends CompositeValue implements ContainerValue {
+        private final List<SimpleValue> valueList;
+        private final List<DCell> cells;
+
+        public VList(List<SimpleValue> valueList,
+                     List<DCell> cells) {
+            this.valueList = valueList;
+            this.cells = cells;
+        }
 
         public static VList of(List<SimpleValue> valueList) {
             List<DCell> cells = new ArrayList<>();
@@ -128,10 +210,34 @@ public record CfgValue(CfgSchema schema,
         public int hashCode() {
             return Objects.hash(valueList);
         }
+
+        public List<SimpleValue> valueList() {
+            return valueList;
+        }
+
+        @Override
+        public List<DCell> cells() {
+            return cells;
+        }
+
+        @Override
+        public String toString() {
+            return "VList[" +
+                    "valueList=" + valueList + ", " +
+                    "cells=" + cells + ']';
+        }
     }
 
-    public record VMap(Map<SimpleValue, SimpleValue> valueMap,
-                       List<DCell> cells) implements ContainerValue {
+    public static final class VMap extends CompositeValue implements ContainerValue {
+        private final Map<SimpleValue, SimpleValue> valueMap;
+        private final List<DCell> cells;
+
+        public VMap(Map<SimpleValue, SimpleValue> valueMap,
+                    List<DCell> cells) {
+            this.valueMap = valueMap;
+            this.cells = cells;
+        }
+
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
@@ -144,6 +250,23 @@ public record CfgValue(CfgSchema schema,
         public int hashCode() {
             return Objects.hash(valueMap);
         }
+
+        public Map<SimpleValue, SimpleValue> valueMap() {
+            return valueMap;
+        }
+
+        @Override
+        public List<DCell> cells() {
+            return cells;
+        }
+
+        @Override
+        public String toString() {
+            return "VMap[" +
+                    "valueMap=" + valueMap + ", " +
+                    "cells=" + cells + ']';
+        }
+
     }
 
 

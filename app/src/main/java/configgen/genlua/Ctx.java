@@ -7,19 +7,21 @@ class Ctx {
     private final CtxShared ctxShared;
     private final CtxName ctxName;
 
-
     Ctx(VTable vtable) {
         vTable = vtable;
         ctxName = new CtxName();
         ctxShared = new CtxShared();
     }
 
+    public VTable vTable() {
+        return vTable;
+    }
 
-    CtxName getCtxName() {
+    CtxName ctxName() {
         return ctxName;
     }
 
-    CtxShared getCtxShared() {
+    CtxShared ctxShared() {
         return ctxShared;
     }
 

@@ -1,52 +1,43 @@
 package configgen.genlua;
 
-import configgen.define.Column;
-import configgen.gen.Generator;
 import configgen.schema.*;
-import configgen.schema.FieldType.Primitive;
-import configgen.type.*;
-import configgen.value.CfgValue;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
-import static configgen.gen.Generator.*;
+import static configgen.gen.Generator.lower1;
 import static configgen.schema.FieldType.Primitive.*;
-import static configgen.value.CfgValue.*;
+import static configgen.value.CfgValue.VTable;
 
 class TypeStr {
 
 
     // {{allName, getName=, keyIdx1=, keyIdx2=}, }
     static String getLuaUniqKeysString(Ctx ctx) {
-        TTable ttable = ctx.getVTable().getTTable();
+        TableSchema table = ctx.vTable().schema();
         StringBuilder sb = new StringBuilder();
         sb.append("{ ");
-        sb.append(getLuaOneUniqKeyString(ctx, ttable.getPrimaryKey(), true));
-        for (Map<String, Type> uniqueKey : ttable.getUniqueKeys()) {
-            sb.append(getLuaOneUniqKeyString(ctx, uniqueKey, false));
+        sb.append(getLuaOneUniqKeyString(ctx, table.primaryKey(), true));
+        for (KeySchema uk : table.uniqueKeys()) {
+            sb.append(getLuaOneUniqKeyString(ctx, uk, false));
         }
         sb.append("}");
         return sb.toString();
     }
 
-    private static String getLuaOneUniqKeyString(Ctx ctx, Map<String, Type> keys, boolean isPrimaryKey) {
-        String allname = isPrimaryKey ? Name.primaryKeyMapName : Name.uniqueKeyMapName(keys);
-        String getname = isPrimaryKey ? Name.primaryKeyGetName : Name.uniqueKeyGetByName(keys);
+    private static String getLuaOneUniqKeyString(Ctx ctx, KeySchema keySchema, boolean isPrimaryKey) {
+        String allname = isPrimaryKey ? Name.primaryKeyMapName : Name.uniqueKeyMapName(keySchema);
+        String getname = isPrimaryKey ? Name.primaryKeyGetName : Name.uniqueKeyGetByName(keySchema);
 
-        TTable ttable = ctx.getVTable().getTTable();
-        Iterator<Type> it = keys.values().iterator();
-        Type key1 = it.next();
-        String keystr1 = getColumnStrOrIndex(key1, ttable.getTBean(), ctx.getCtxColumnStore().isUseColumnStore());
+        TableSchema table = ctx.vTable().schema();
 
-        if (keys.size() > 1) {
-            if (keys.size() != 2) {
-                throw new RuntimeException("uniqkeys size != 2 " + ttable.name);
+        String keystr1 = getColumnStrOrIndex(keySchema.fieldSchemas().get(0), table);
+
+        if (keySchema.fieldSchemas().size() > 1) {
+            if (keySchema.fieldSchemas().size() != 2) {
+                throw new RuntimeException("uniqkeys size != 2 " + table.name());
             }
-            Type key2 = it.next();
-            String keystr2 = getColumnStrOrIndex(key2, ttable.getTBean(), ctx.getCtxColumnStore().isUseColumnStore());
+            String keystr2 = getColumnStrOrIndex(keySchema.fieldSchemas().get(1), table);
 
             return String.format("{ '%s', '%s', %s, %s }, ", allname, getname, keystr1, keystr2);
         } else {
@@ -120,13 +111,14 @@ class TypeStr {
     }
 
     static String getLuaEnumString(Ctx ctx) {
-        TTable ttable = ctx.getVTable().getTTable();
-        Type enumCol = ttable.getEnumColumnType();
-
-        if (enumCol == null) {
-            return "nil";
-        } else {
-            return getColumnStrOrIndex(enumCol, ttable.getTBean(), ctx.getCtxColumnStore().isUseColumnStore());
+        TableSchema table = ctx.vTable().schema();
+        switch (table.entry()) {
+            case EntryType.ENo.NO -> {
+                return "nil";
+            }
+            case EntryType.EntryBase entryBase -> {
+                return getColumnStrOrIndex(entryBase.fieldSchema(), table);
+            }
         }
     }
 
@@ -291,9 +283,11 @@ class TypeStr {
     static String getLuaEnumStringEmmyLua(VTable vTable) {
         StringBuilder sb = new StringBuilder();
         boolean has = false;
-        for (String enumName : vTable.enumNames()) {
-            sb.append("---@field ").append(enumName).append(" ").append(Name.fullName(vTable.schema())).append("\n");
-            has = true;
+        if (vTable.enumNames() != null){
+            for (String enumName : vTable.enumNames()) {
+                sb.append("---@field ").append(enumName).append(" ").append(Name.fullName(vTable.schema())).append("\n");
+                has = true;
+            }
         }
         if (has) {
             sb.deleteCharAt(sb.length() - 1);

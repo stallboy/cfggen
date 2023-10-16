@@ -2,7 +2,6 @@ package configgen.genlua;
 
 import configgen.gen.Context;
 import configgen.gen.Generator;
-import configgen.gen.LangSwitch;
 import configgen.gen.Parameter;
 import configgen.schema.*;
 import configgen.util.CachedFiles;
@@ -15,7 +14,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-import static configgen.value.CfgValue.*;
+import static configgen.value.CfgValue.VStruct;
+import static configgen.value.CfgValue.VTable;
 
 public class GenLua extends Generator {
 
@@ -27,13 +27,11 @@ public class GenLua extends Generator {
     private final boolean useShared;
     private final boolean useSharedEmptyTable;
     private final boolean packBool;
-    private final boolean tryColumnMode;
 
     private CfgValue cfgValue;
     private CfgSchema cfgSchema;
     private File dstDir;
     private boolean isLangSwitch;
-    private LangSwitch langSwitch;
     private final boolean noStr;
     private final boolean rForOldShared;
 
@@ -49,8 +47,6 @@ public class GenLua extends Generator {
         useShared = parameter.has("shared", "是否提取非空的公共table");
 
         packBool = parameter.has("packbool", "是否要把同一个结构里的多个bool压缩成一个int");
-        tryColumnMode = parameter.has("col", "是否尝试列模式,如果开启将压缩同一列的bool和不超过26bit的整数\n" +
-                "            默认-Dgenlua.column_min_row=100,-Dgenlua.column_min_save=100");
         rForOldShared = parameter.has("RForOldShared", "以前R用于修饰shared table，现在默认行为改为R修饰list，map");
         noStr = parameter.has("nostr", "!!!只用来测试字符串占用内存大小");
         parameter.end();
@@ -59,10 +55,8 @@ public class GenLua extends Generator {
     @Override
     public void generate(Context ctx) throws IOException {
         AContext.getInstance().init(pkg, ctx.getLangSwitch(), useSharedEmptyTable, useShared,
-                tryColumnMode, packBool, noStr, rForOldShared);
-
-        langSwitch = ctx.getLangSwitch();
-        isLangSwitch = langSwitch != null;
+                packBool, noStr, rForOldShared);
+        isLangSwitch = AContext.getInstance().nullableLangSwitchSupport() != null;
 
         Path dstDirPath = Paths.get(dir).resolve(pkg.replace('.', '/'));
         dstDir = dstDirPath.toFile();
@@ -98,11 +92,13 @@ public class GenLua extends Generator {
 
         AContext.getInstance().getStatistics().print();
 
-        if (ctx.getLangSwitch() != null) {
-            for (LangSwitch.Lang lang : ctx.getLangSwitch().getAllLangInfo()) {
-                List<String> idToStr = lang.getStrList();
-                try (CachedIndentPrinter ps = createCode(new File(dstDir, lang.getLang() + ".lua"), encoding, fileDst, cache, tmp)) {
-                    generate_lang(ps, idToStr, lineCache);
+        if (AContext.getInstance().nullableLangSwitchSupport() != null) {
+            Map<String, List<String>> lang2Texts = AContext.getInstance().nullableLangSwitchSupport().getLang2Texts();
+            for (Map.Entry<String, List<String>> e : lang2Texts.entrySet()) {
+                String lang = e.getKey();
+                List<String> texts = e.getValue();
+                try (CachedIndentPrinter ps = createCode(new File(dstDir, lang + ".lua"), encoding, fileDst, cache, tmp)) {
+                    generate_lang(ps, texts, lineCache);
                 }
             }
             copyFile(dstDirPath, "mkcfg.lua", encoding);
@@ -185,18 +181,6 @@ public class GenLua extends Generator {
             }
         }
     }
-
-    private void definePkgEmmyLua(String beanName, CachedIndentPrinter ps, Set<String> context) {
-        List<String> seps = Arrays.asList(beanName.split("\\."));
-        for (int i = 0; i < seps.size() - 1; i++) {
-            String pkg = String.join(".", seps.subList(0, i + 1));
-            if (context.add(pkg)) {
-                ps.println();
-                ps.println("---@class %s", pkg);
-            }
-        }
-    }
-
 
     private void generate_loads(CachedIndentPrinter ps) {
         ps.println("local require = require");
@@ -338,7 +322,7 @@ public class GenLua extends Generator {
 
         int extraSplit = 0;
         Metadata.MetaValue m = table.meta().get("extraSplit");
-        if (m instanceof Metadata.MetaInt mi){
+        if (m instanceof Metadata.MetaInt mi) {
             extraSplit = mi.value();
         }
 
@@ -368,7 +352,7 @@ public class GenLua extends Generator {
         ps.println();
 
         if (isLangSwitch) {
-            langSwitch.enterTable(table.name);
+            AContext.getInstance().nullableLangSwitchSupport().enterTable(table.name());
         }
 
 
@@ -380,7 +364,7 @@ public class GenLua extends Generator {
 
             for (VStruct vStruct : vTable.valueList()) {
                 lineCache.setLength(0);
-                vStruct.accept(stringify);
+                stringify.addValue(vStruct);
                 ps.println(lineCache.toString());
             }
         }
@@ -388,19 +372,19 @@ public class GenLua extends Generator {
         ps.disableCache();
 
 
-        if (!ctx.getCtxName().getLocalNameMap().isEmpty()) { // 对收集到的引用local化，lua执行会快点
-            for (Map.Entry<String, String> entry : ctx.getCtxName().getLocalNameMap().entrySet()) {
+        if (!ctx.ctxName().getLocalNameMap().isEmpty()) { // 对收集到的引用local化，lua执行会快点
+            for (Map.Entry<String, String> entry : ctx.ctxName().getLocalNameMap().entrySet()) {
                 ps.println("local %s = %s", entry.getValue(), entry.getKey());
             }
             ps.println();
         }
 
         boolean hasER = false;
-        if (useSharedEmptyTable && ctx.getCtxShared().getEmptyTableUseCount() > 0) { // 共享空表
+        if (useSharedEmptyTable && ctx.ctxShared().getEmptyTableUseCount() > 0) { // 共享空表
             ps.println("local E = %s._mk.E", pkg);
             hasER = true;
         }
-        if (!rForOldShared && ctx.getCtxShared().hasListTableOrMapTable()) {
+        if (!rForOldShared && ctx.ctxShared().hasListTableOrMapTable()) {
             ps.println("local R = %s._mk.R", pkg);
             hasER = true;
         }
@@ -408,16 +392,16 @@ public class GenLua extends Generator {
             ps.println();
         }
 
-        if (tryUseShared && ctx.getCtxShared().getSharedList().size() > 0) { // 共享相同的表
+        if (tryUseShared && !ctx.ctxShared().getSharedList().isEmpty()) { // 共享相同的表
             if (rForOldShared) { //只为保持跟武林一致
                 ps.println("local R = %s._mk.R", pkg); // 给lua个机会设置__newindex，做运行时检测
                 ps.println("local A = {}");
-                for (CtxShared.VCompositeStr vstr : ctx.getCtxShared().getSharedList()) {
+                for (CtxShared.CompositeValueStr vstr : ctx.ctxShared().getSharedList()) {
                     ps.println("%s = R(%s)", vstr.getName(), vstr.getValueStr());
                 }
             } else {
                 ps.println("local A = {}");
-                for (CtxShared.VCompositeStr vstr : ctx.getCtxShared().getSharedList()) {
+                for (CtxShared.CompositeValueStr vstr : ctx.ctxShared().getSharedList()) {
                     ps.println("%s = %s", vstr.getName(), vstr.getValueStr());
                 }
             }
@@ -434,22 +418,22 @@ public class GenLua extends Generator {
         for (int extraIdx = 0; extraIdx < extraFileCnt; extraIdx++) {
             ps.println("require \"%s_%d\"(mk)", fullName, extraIdx + 1);
 
-            try (CachedIndentPrinter extraPs = createCode(new File(dstDir, Name.tableExtraPath(vTable.name, extraIdx + 1)), encoding)) {
+            try (CachedIndentPrinter extraPs = createCode(new File(dstDir, Name.tableExtraPath(vTable.name(), extraIdx + 1)), encoding)) {
 
                 extraPs.println("local %s = require \"%s._cfgs\"", pkg, pkg);
-                if (table.getTBean().hasSubBean()) {
+                if (HasSubFieldable.hasSubFieldable(table)) {
                     extraPs.println("local Beans = %s._beans", pkg);
                 }
                 extraPs.println();
 
-                if (!ctx.getCtxName().getLocalNameMap().isEmpty()) { // 对收集到的引用local化，lua执行会快点
-                    for (Map.Entry<String, String> entry : ctx.getCtxName().getLocalNameMap().entrySet()) {
+                if (!ctx.ctxName().getLocalNameMap().isEmpty()) { // 对收集到的引用local化，lua执行会快点
+                    for (Map.Entry<String, String> entry : ctx.ctxName().getLocalNameMap().entrySet()) {
                         extraPs.println("local %s = %s", entry.getValue(), entry.getKey());
                     }
                     extraPs.println();
                 }
 
-                if (useSharedEmptyTable && ctx.getCtxShared().getEmptyTableUseCount() > 0) { // 共享空表
+                if (useSharedEmptyTable && ctx.ctxShared().getEmptyTableUseCount() > 0) { // 共享空表
                     extraPs.println("local E = %s._mk.E", pkg);
                     extraPs.println();
                 }

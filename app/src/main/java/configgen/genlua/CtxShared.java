@@ -12,19 +12,16 @@ import static configgen.value.CfgValue.CompositeValue;
  */
 class CtxShared {
     private int emptyTableUseCount = 0;
-
     private int listTableUseCount = 0;
-
     private int mapTableUseCount = 0;
+    private final Map<CompositeValue, CompositeValueStr> sharedCompositeValues = new LinkedHashMap<>();
 
-    private final Map<CompositeValue, VCompositeStr> sharedCompositeValues = new LinkedHashMap<>();
 
-
-    static class VCompositeStr {
+    static class CompositeValueStr {
         private String valueStr = null;
         private final String name;
 
-        VCompositeStr(int i) {
+        CompositeValueStr(int i) {
             name = String.format("A[%d]", i);
         }
 
@@ -43,37 +40,37 @@ class CtxShared {
 
 
     void parseShared(Ctx ctx) {
-        ValueShared shared = new ValueShared(ctx.getVTable());
+        ValueShared shared = new ValueShared(ctx.vTable());
         shared.iterateShared();
 
         // 遍历层级收集下
         int idx = 0;
         for (int i = shared.getLayers().size() - 1; i >= 0; i--) {
             ValueSharedLayer layer = shared.getLayers().get(i);
-            for (ValueSharedLayer.VCompositeCnt vc : layer.getCompositeValueToCnt().values()) {
+            for (ValueSharedLayer.CompositeValueCnt vc : layer.getCompositeValueToCnt().values()) {
                 if (vc.getCnt() > 1) {
                     idx++;
                     AContext.getInstance().getStatistics().useSharedTable(vc.getCnt() - 1);
-                    sharedCompositeValues.put(vc.getFirst(), new VCompositeStr(idx));
+                    sharedCompositeValues.put(vc.getFirst(), new CompositeValueStr(idx));
                 }
             }
         }
 
         // 生成value的字符串
-        for (Map.Entry<CompositeValue, VCompositeStr> entry : sharedCompositeValues.entrySet()) {
+        for (Map.Entry<CompositeValue, CompositeValueStr> entry : sharedCompositeValues.entrySet()) {
             StringBuilder sb = new StringBuilder();
-            entry.getKey().accept(new ValueStringify(sb, ctx, null));
+            new ValueStringify(sb, ctx, null).addValue(entry.getKey());
             entry.getValue().setValueStr(sb.toString());
         }
     }
 
 
-    Collection<VCompositeStr> getSharedList() {
+    Collection<CompositeValueStr> getSharedList() {
         return sharedCompositeValues.values();
     }
 
     String getSharedName(CompositeValue v) {
-        VCompositeStr vstr = sharedCompositeValues.get(v);
+        CompositeValueStr vstr = sharedCompositeValues.get(v);
         if (vstr != null) {
             if (vstr.getValueStr() != null) {
                 return vstr.getName();

@@ -1,7 +1,5 @@
 package configgen.genlua;
 
-import configgen.value.CfgValue;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +17,7 @@ class ValueShared {
     void iterateShared() {
         ValueSharedLayer layer1 = new ValueSharedLayer(this);
         for (VStruct vStruct : vTable.valueList()) {
-            vStruct.accept(layer1);
+            layer1.visitVStruct(vStruct);
         }
         layers.add(layer1);
 
@@ -27,10 +25,10 @@ class ValueShared {
         while (true) {
             ValueSharedLayer nextLayer = new ValueSharedLayer(this);
 
-            List<ValueSharedLayer.VCompositeCnt> currLayerCopy = new ArrayList<>(currLayer.getCompositeValueToCnt().values());
-            for (ValueSharedLayer.VCompositeCnt vc : currLayerCopy) {
+            List<ValueSharedLayer.CompositeValueCnt> currLayerCopy = new ArrayList<>(currLayer.getCompositeValueToCnt().values());
+            for (ValueSharedLayer.CompositeValueCnt vc : currLayerCopy) {
                 if (!vc.isTraversed()) {
-                    vc.getFirst().accept(nextLayer);
+                    nextLayer.visit(vc.getFirst());
                     vc.setTraversed();
                 }
             }
@@ -48,9 +46,9 @@ class ValueShared {
         return layers;
     }
 
-    ValueSharedLayer.VCompositeCnt remove(VComposite v) {
+    ValueSharedLayer.CompositeValueCnt remove(CompositeValue v) {
         for (ValueSharedLayer layer : layers) {
-            ValueSharedLayer.VCompositeCnt old = layer.getCompositeValueToCnt().remove(v);
+            ValueSharedLayer.CompositeValueCnt old = layer.getCompositeValueToCnt().remove(v);
             if (old != null) {
                 return old;
             }
