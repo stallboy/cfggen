@@ -17,12 +17,13 @@ import static configgen.value.CfgValue.*;
 class GenStructuralClass {
 
 
-    static void generate(Structural struct, InterfaceSchema nullableInterface, VTable vtable,
+    static void generate(Structural structural, VTable vtable,
                          NameableName name, CachedIndentPrinter ps, boolean isTableNeedBuilder) {
         boolean isTable = vtable != null;
         boolean isStruct = vtable == null;
+        InterfaceSchema nullableInterface = structural instanceof StructSchema struct ? struct.nullableInterface() : null;
         boolean isImpl = nullableInterface != null;
-        boolean isStructAndHasNoField = isStruct && struct.fields().isEmpty();
+        boolean isStructAndHasNoField = isStruct && structural.fields().isEmpty();
 
         ps.println(STR. "package \{ name.pkg };" );
         ps.println();
@@ -30,7 +31,7 @@ class GenStructuralClass {
             ps.println(STR. "public class \{ name.className } implements \{ Name.fullName(nullableInterface) } {" );
             ps.println1("@Override");
             ps.println1(STR. "public \{ Name.refType(nullableInterface.enumRefTable()) } type() {" );
-            ps.println2(STR. "return \{ Name.refType(nullableInterface.enumRefTable()) }.\{ struct.name().toUpperCase() };" );
+            ps.println2(STR. "return \{ Name.refType(nullableInterface.enumRefTable()) }.\{ structural.name().toUpperCase() };" );
             ps.println1("}");
             ps.println();
         } else {
@@ -38,12 +39,12 @@ class GenStructuralClass {
         }
 
         // field
-        for (FieldSchema field : struct.fields()) {
+        for (FieldSchema field : structural.fields()) {
             ps.println1(STR. "private \{ TypeStr.type(field.type()) } \{ lower1(field.name()) };" );
         }
 
         // fk
-        for (ForeignKeySchema fk : struct.foreignKeys()) {
+        for (ForeignKeySchema fk : structural.foreignKeys()) {
             ps.println1(STR. "private \{ Name.refType(fk) } \{ Name.refName(fk) };" );
         }
         ps.println();
@@ -62,21 +63,21 @@ class GenStructuralClass {
 
         if (isStruct) {
             // struct有public构造器
-            ps.println1(STR. "public \{ name.className }(\{ MethodStr.formalParams(struct.fields()) }) {" );
-            for (FieldSchema field : struct.fields()) {
+            ps.println1(STR. "public \{ name.className }(\{ MethodStr.formalParams(structural.fields()) }) {" );
+            for (FieldSchema field : structural.fields()) {
                 String ln = lower1(field.name());
                 ps.println2(STR. "this.\{ ln } = \{ ln };" );
             }
             ps.println1("}");
             ps.println();
         } else if (isTableNeedBuilder) {
-            GenStructuralClassTablePart.generateTableBuild(struct, name, ps);
+            GenStructuralClassTablePart.generateTableBuild(structural, name, ps);
         }
 
         // static create from ConfigInput
         ps.println1(STR. "public static \{ name.className } _create(configgen.genjava.ConfigInput input) {" );
         ps.println2(STR. "\{ name.className } self = new \{ name.className }();" );
-        for (FieldSchema field : struct.fields()) {
+        for (FieldSchema field : structural.fields()) {
             String ln = lower1(field.name());
             switch (field.type()) {
                 case SimpleType simpleType -> {
@@ -103,7 +104,7 @@ class GenStructuralClass {
 
 
         // getter
-        for (FieldSchema field : struct.fields()) {
+        for (FieldSchema field : structural.fields()) {
             String n = field.name();
             String comment = field.comment();
             if (!comment.isEmpty()) {
@@ -118,7 +119,7 @@ class GenStructuralClass {
             ps.println();
         }
 
-        for (ForeignKeySchema fk : struct.foreignKeys()) {
+        for (ForeignKeySchema fk : structural.foreignKeys()) {
             ps.println1("public %s %s() {", Name.refType(fk), lower1(Name.refName(fk)));
             ps.println2("return %s;", Name.refName(fk));
             ps.println1("}");
@@ -142,7 +143,7 @@ class GenStructuralClass {
         } else if (isStruct) {
             ps.println1("@Override");
             ps.println1("public int hashCode() {");
-            ps.println2("return " + MethodStr.hashCodes(struct.fields()) + ";");
+            ps.println2("return " + MethodStr.hashCodes(structural.fields()) + ";");
             ps.println1("}");
             ps.println();
 
@@ -151,7 +152,7 @@ class GenStructuralClass {
             ps.println2("if (!(other instanceof " + name.className + "))");
             ps.println3("return false;");
             ps.println2(name.className + " o = (" + name.className + ") other;");
-            ps.println2("return " + MethodStr.equals(struct.fields()) + ";");
+            ps.println2("return " + MethodStr.equals(structural.fields()) + ";");
             ps.println1("}");
             ps.println();
         }
@@ -165,7 +166,7 @@ class GenStructuralClass {
         if (isStructAndHasNoField) {
             ps.println2("return \"%s\";", beanName);
         } else {
-            String params = struct.fields().stream().map(f -> lower1(f.name())).collect(
+            String params = structural.fields().stream().map(f -> lower1(f.name())).collect(
                     Collectors.joining(" + \",\" + "));
             ps.println2("return \"%s(\" + %s + \")\";", beanName, params);
         }
@@ -174,12 +175,12 @@ class GenStructuralClass {
 
 
         // _resolve
-        if (HasRef.hasRef(struct)) {
-            generateResolve(struct, nullableInterface, ps);
+        if (HasRef.hasRef(structural)) {
+            generateResolve(structural, nullableInterface, ps);
         }
 
         if (isTable) {
-            GenStructuralClassTablePart.generate(struct, vtable, name, ps);
+            GenStructuralClassTablePart.generate(structural, vtable, name, ps);
         }
         ps.println("}");
     }

@@ -11,8 +11,8 @@ namespace Config.Task.Completecondition
         }
 
         public int Monsterid { get; private set; }
-        public Config.Other.DataMonster RefMonsterid { get; private set; }
         public int Count { get; private set; }
+        public Config.Other.DataMonster RefMonsterid { get; private set; }
 
         public DataKillmonster() {
         }
@@ -51,7 +51,7 @@ namespace Config.Task.Completecondition
         internal override void _resolve(Config.LoadErrors errors)
         {
             RefMonsterid = Config.Other.DataMonster.Get(Monsterid);
-            if (RefMonsterid == null) errors.RefNull("KillMonster", ToString(), "monsterid", Monsterid);
+            if (RefMonsterid == null) errors.RefNull("KillMonster", ToString(), "monsterid");
 	    }
 
     }

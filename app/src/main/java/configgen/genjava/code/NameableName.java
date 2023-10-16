@@ -2,6 +2,7 @@ package configgen.genjava.code;
 
 import configgen.schema.InterfaceSchema;
 import configgen.schema.Nameable;
+import configgen.schema.StructSchema;
 
 import java.util.Arrays;
 
@@ -13,18 +14,11 @@ class NameableName {
     final String containerPrefix;
 
     NameableName(Nameable nameable) {
-        this(nameable, null, "");
+        this(nameable, "");
     }
 
     NameableName(Nameable nameable, String postfix) {
-        this(nameable, null, postfix);
-    }
-
-    NameableName(Nameable nameable, InterfaceSchema nullableInterface) {
-        this(nameable, nullableInterface, "");
-    }
-
-    NameableName(Nameable nameable, InterfaceSchema nullableInterface, String postfix) {
+        InterfaceSchema nullableInterface = nameable instanceof StructSchema struct ? struct.nullableInterface() : null;
         String topPkg = Name.codeTopPkg;
         String name;
         if (nullableInterface != null) {

@@ -9,9 +9,9 @@ namespace Config.Other
         public int Id { get; private set; } /* 礼包ID*/
         public KeyedList<int, int> Item2countMap { get; private set; } /* 普通奖励*/
         public KeyedList<int, int> Vipitem2vipcountMap { get; private set; } /* vip奖励*/
-        public KeyedList<int, Config.Other.DataLoot> RefVipitem2vipcountMap { get; private set; }
         public int Viplevel { get; private set; } /* 领取vip奖励的最低等级*/
         public string IconFile { get; private set; } /* 礼包图标*/
+        public KeyedList<int, Config.Other.DataLoot> RefVipitem2vipcountMap { get; private set; }
 
         public override int GetHashCode()
         {
@@ -125,7 +125,7 @@ namespace Config.Other
             {
                 var k = kv.Key;
                 var v = Config.Other.DataLoot.Get(kv.Value);
-                if (v == null) errors.RefNull("other.signin", ToString(), "vipitem2vipcountMap", kv.Value);
+                if (v == null) errors.RefNull("other.signin", ToString(), "vipitem2vipcountMap");
                 RefVipitem2vipcountMap.Add(k, v);
             }
 	    }

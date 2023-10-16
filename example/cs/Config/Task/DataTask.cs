@@ -7,13 +7,13 @@ namespace Config.Task
     public partial class DataTask
     {
         public int Taskid { get; private set; } /* 任务完成条件类型（id的范围为1-100）*/
-        public Config.Task.DataTaskextraexp NullableRefTaskid { get; private set; }
         public List<string> Name { get; private set; } /* 程序用名字*/
         public int Nexttask { get; private set; }
-        public Config.Task.DataTask NullableRefNexttask { get; private set; }
         public Config.Task.DataCompletecondition Completecondition { get; private set; }
         public int Exp { get; private set; }
         public Config.Task.DataTestdefaultbean TestDefaultBean { get; private set; } /* 测试*/
+        public Config.Task.DataTaskextraexp NullableRefTaskid { get; private set; }
+        public Config.Task.DataTask NullableRefNexttask { get; private set; }
 
         public override int GetHashCode()
         {
@@ -87,9 +87,9 @@ namespace Config.Task
 
         internal void _resolve(Config.LoadErrors errors)
         {
+            Completecondition._resolve(errors);
             NullableRefTaskid = Config.Task.DataTaskextraexp.Get(Taskid);
             NullableRefNexttask = Config.Task.DataTask.Get(Nexttask);
-            Completecondition._resolve(errors);
 	    }
 
     }

@@ -76,12 +76,12 @@ public class GenJavaCode extends Generator {
         for (Nameable nameable : cfgValue.schema().items()) {
             switch (nameable) {
                 case StructSchema structSchema -> {
-                    generateStructClass(structSchema, null);
+                    generateStructClass(structSchema);
                 }
                 case InterfaceSchema interfaceSchema -> {
                     generateInterfaceClass(interfaceSchema);
                     for (StructSchema impl : interfaceSchema.impls()) {
-                        generateStructClass(impl, interfaceSchema);
+                        generateStructClass(impl);
                     }
                 }
                 case TableSchema _ -> {
@@ -120,10 +120,10 @@ public class GenJavaCode extends Generator {
     }
 
 
-    private void generateStructClass(StructSchema struct, InterfaceSchema nullableInterface) {
-        NameableName name = new NameableName(struct, nullableInterface);
+    private void generateStructClass(StructSchema struct) {
+        NameableName name = new NameableName(struct);
         try (CachedIndentPrinter ps = createCode(dstDir.toPath().resolve(name.path).toFile(), encoding)) {
-            GenStructuralClass.generate(struct, nullableInterface, null, name, ps, false);
+            GenStructuralClass.generate(struct, null, name, ps, false);
         }
     }
 
@@ -164,7 +164,7 @@ public class GenJavaCode extends Generator {
             boolean isTableNeedBuilder = needBuilderTables != null && needBuilderTables.contains(vTable.name());
             File javaFile = dstDir.toPath().resolve(name.path).toFile();
             try (CachedIndentPrinter ps = createCode(javaFile, encoding)) {
-                GenStructuralClass.generate(vTable.schema(), null,  vTable, name, ps, isTableNeedBuilder);
+                GenStructuralClass.generate(vTable.schema(), vTable, name, ps, isTableNeedBuilder);
             }
 
             if (isTableNeedBuilder) {

@@ -47,7 +47,7 @@ namespace Config
         internal void _resolve(Config.LoadErrors errors)
         {
             RefRank = Config.Equip.DataRank.Get(Rank);
-            if (RefRank == null) errors.RefNull("LevelRank", ToString(), "Rank", Rank);
+            if (RefRank == null) errors.RefNull("LevelRank", ToString(), "Rank");
 	    }
 
     }

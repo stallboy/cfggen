@@ -16,6 +16,9 @@ public record FieldSchema(String name,
         }
     }
 
+    /**
+     * @return empty when no comment
+     */
     public String comment() {
         return meta.getComment();
     }

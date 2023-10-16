@@ -6,7 +6,7 @@ namespace Config.Ai
 {
     public partial class DataAi
     {
-        public int ID { get; private set; } /* ID*/
+        public int ID { get; private set; }
         public string Desc { get; private set; } /* 描述----这里测试下多行效果--再来一行*/
         public string CondID { get; private set; } /* 触发公式*/
         public int TrigTick { get; private set; } /* 触发间隔(帧)*/

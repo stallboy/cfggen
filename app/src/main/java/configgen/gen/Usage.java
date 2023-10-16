@@ -4,16 +4,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 class Usage implements Parameter {
-    private static class Info {
-        String def;
-        boolean flag;
-        String info;
-
-        Info(String def, boolean flag, String info) {
-            this.def = def;
-            this.flag = flag;
-            this.info = info;
-        }
+    private record Info(String def,
+                        boolean flag,
+                        String info) {
     }
 
     private final Map<String, Info> infos = new LinkedHashMap<>();

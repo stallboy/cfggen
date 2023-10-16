@@ -1,5 +1,6 @@
 package configgen.gen;
 
+import configgen.gencs.GenCs;
 import configgen.genjava.BinaryToText;
 import configgen.genjava.GenJavaData;
 import configgen.genjava.code.GenJavaCode;
@@ -86,10 +87,10 @@ public final class Main {
         Generators.addProvider("java", GenJavaCode::new);
         Generators.addProvider("javadata", GenJavaData::new);
 
-//
+        Generators.addProvider("cs", GenCs::new);
+
 //        Generators.addProvider("lua", GenLua::new);
-//        Generators.addProvider("cs", GenCs::new);
-//        Generators.addProvider("pack", GenPack::new);
+//          Generators.addProvider("pack", GenPack::new);
 //        Generators.addProvider("bytes", GenBytes::new);
 //
 

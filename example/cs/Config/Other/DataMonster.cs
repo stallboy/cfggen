@@ -6,7 +6,7 @@ namespace Config.Other
 {
     public partial class DataMonster
     {
-        public int Id { get; private set; } /* id*/
+        public int Id { get; private set; }
         public List<Config.DataPosition> PosList { get; private set; }
 
         public override int GetHashCode()

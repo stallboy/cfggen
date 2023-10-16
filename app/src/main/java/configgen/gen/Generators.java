@@ -4,6 +4,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class Generators {
+    public interface GeneratorProvider {
+        Generator create(Parameter parameter);
+    }
+
     private static final Map<String, GeneratorProvider> providers = new LinkedHashMap<>();
 
     public static Generator create(String arg) {

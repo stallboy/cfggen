@@ -7,6 +7,7 @@ import configgen.schema.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static configgen.gen.Generator.*;
 import static configgen.schema.FieldType.*;
 
 public class Name {
@@ -38,8 +39,7 @@ public class Name {
 
 
     static String fullName(Nameable nameable) {
-        InterfaceSchema sInterface = nameable instanceof StructSchema struct ? struct.nullableInterface() : null;
-        return new NameableName(nameable, sInterface).fullName;
+        return new NameableName(nameable).fullName;
     }
 
     static String tableDataFullName(TableSchema table) {
@@ -85,7 +85,7 @@ public class Name {
             case RefKey.RefList _ -> "ListRef";
             case RefKey.RefSimple refSimple -> refSimple.nullable() ? "NullableRef" : "Ref";
         };
-        return prefix + Generator.upper1(fk.name());
+        return prefix + upper1(fk.name());
     }
 
 }
