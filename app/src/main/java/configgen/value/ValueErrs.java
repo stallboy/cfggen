@@ -15,6 +15,7 @@ public record ValueErrs(List<VErr> errs) {
     }
 
     void addErr(VErr err) {
+        Logger.log(err.toString());
         errs.add(err);
     }
 

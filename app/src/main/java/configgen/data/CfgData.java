@@ -73,7 +73,7 @@ public record CfgData(Map<String, DTable> tables,
             int q = v / N;
             String r = String.valueOf((char) ('A' + (v % N)));
             if (q > 0) {
-                return toAZ(q) + r;
+                return toAZ(q-1) + r;
             } else {
                 return r;
             }

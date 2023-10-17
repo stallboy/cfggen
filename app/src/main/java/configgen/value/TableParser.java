@@ -39,7 +39,9 @@ public class TableParser {
         for (int curRecordRow = 0; curRecordRow < rowCnt; ) {
             curRow = dTable.rows().get(curRecordRow);
             VStruct vStruct = parseStructural(subTableSchema, curRow, tableSchema, false, true, curRecordRow);
-            valueList.add(vStruct);
+            if (vStruct != null) {
+                valueList.add(vStruct);
+            }
             curRecordRow++;
 
             if (hasBlock) {
@@ -226,6 +228,10 @@ public class TableParser {
             vImpl = parseStructural(subImpl, implCells, impl, isPack, canChildBeEmpty, curRowIndex);
         }
 
+        if (vImpl == null) {
+            return null;
+        }
+
         return new VInterface(subInterface, vImpl, cells);
     }
 
@@ -270,7 +276,11 @@ public class TableParser {
                 require(field != null);
                 Value v = parseField(subField, parsed, field,
                         true, true, curRowIndex, structural.name());
-                values.add(v);
+                if (v != null) {
+                    values.add(v);
+                } else {
+                    return null;
+                }
             }
 
         } else {
@@ -289,7 +299,11 @@ public class TableParser {
                     List<DCell> fieldCells = parsed.subList(startIdx, startIdx + expected);
                     Value v = parseField(subField, fieldCells, field,
                             isPack || field.fmt() == PACK, canChildBeEmpty, curRowIndex, structural.name());
-                    values.add(v);
+                    if (v != null) {
+                        values.add(v);
+                    } else {
+                        return null;
+                    }
                 }
 
                 startIdx += expected;
@@ -454,11 +468,12 @@ public class TableParser {
                             isPack, false, block.rowIndex,
                             nameable, field.name());
 
-                    SimpleValue old = valueMap.put(key, value);
-                    if (old != null) {
-                        errs.addErr(new MapKeyDuplicated(keyCells, nameable, field.name()));
+                    if (key != null && value != null) {
+                        SimpleValue old = valueMap.put(key, value);
+                        if (old != null) {
+                            errs.addErr(new MapKeyDuplicated(keyCells, nameable, field.name()));
+                        }
                     }
-
                 } else {
                     List<DCell> itemCells = curLineParsed.subList(startIdx, startIdx + itemSpan);
                     if (itemCells.stream().anyMatch(c -> !c.isCellEmpty())) {
@@ -525,7 +540,9 @@ public class TableParser {
                     SimpleValue value = parseSimpleType(subType.item(), itemCells, type.item(),
                             isPack, false, block.rowIndex,
                             nameable, field.name());
-                    valueList.add(value);
+                    if (value != null) {
+                        valueList.add(value);
+                    }
                 } else {
                     if (itemCells.stream().anyMatch(c -> !c.isCellEmpty())) {
                         errs.addErr(new ContainerItemPartialSet(itemCells, nameable, field.name()));
