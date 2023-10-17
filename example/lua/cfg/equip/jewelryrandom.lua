@@ -14,8 +14,8 @@ local this = cfg.equip.jewelryrandom
 local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, nil, 
     'lvlRank', -- LevelRank, 等级
     'attackRange', -- Range, 最小攻击力
-    'otherRange', -- list,Range,4, 最小防御力
-    'testPack' -- list,TestPackBean, 测试pack
+    'otherRange', -- list<Range>, 最小防御力
+    'testPack' -- list<TestPackBean>, 测试pack
     )
 
 local testpackbean = Beans.equip.testpackbean

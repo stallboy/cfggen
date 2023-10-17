@@ -15,9 +15,9 @@ local cfg = require "cfg._cfgs"
 local this = cfg.equip.equipconfig
 
 local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 1, nil, 
-    'entry', -- string, 入口，程序填
+    'entry', -- str, 入口，程序填
     'stone_count_for_set', -- int, 形成套装的音石数量
-    'draw_protect_name', -- string, 保底策略名称
+    'draw_protect_name', -- str, 保底策略名称
     'broadcastid', -- int, 公告Id
     'broadcast_least_quality', -- int, 公告的最低品质
     'week_reward_mailid' -- int, 抽卡周奖励的邮件id

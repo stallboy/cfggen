@@ -2,7 +2,7 @@ local cfg = require "cfg._cfgs"
 local Beans = cfg._beans
 
 ---@class cfg.other.monster
----@field id number , id
+---@field id number 
 ---@field posList table<number,Beans.position> 
 ---@field get fun(id:number):cfg.other.monster
 ---@field all table<any,cfg.other.monster>
@@ -10,8 +10,8 @@ local Beans = cfg._beans
 local this = cfg.other.monster
 
 local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, nil, 
-    'id', -- int, id
-    'posList' -- list,Position
+    'id', -- int
+    'posList' -- list<Position>
     )
 
 local position = Beans.position

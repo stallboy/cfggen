@@ -1,7 +1,7 @@
 local cfg = require "cfg._cfgs"
 
 ---@class cfg.ai.ai_action
----@field iD number , ID
+---@field iD number 
 ---@field desc string , 描述
 ---@field formulaID number , 公式
 ---@field argIList table<number,number> , 参数(int)1
@@ -12,11 +12,11 @@ local cfg = require "cfg._cfgs"
 local this = cfg.ai.ai_action
 
 local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, nil, 
-    'iD', -- int, ID
-    'desc', -- string, 描述
+    'iD', -- int
+    'desc', -- str, 描述
     'formulaID', -- int, 公式
-    'argIList', -- list,int,6, 参数(int)1
-    'argSList' -- list,int,3, 参数(string)1
+    'argIList', -- list<int>, 参数(int)1
+    'argSList' -- list<int>, 参数(string)1
     )
 
 local E = cfg._mk.E

@@ -21,7 +21,7 @@ public final class Main {
     private static void usage(String reason) {
         System.out.println(reason);
 
-        System.out.println("Usage: app.bat -datadir [dir] [options] [gens]");
+        System.out.println("Usage: java --enable-preview -jar configgen.jar -datadir [dir] [options] [gens]");
         System.out.println();
         System.out.println("----配置表信息--------------------------------------");
         System.out.println("    -datadir      配表根目录，根目录可以有个config.xml");

@@ -19,7 +19,7 @@ local this = cfg.equip.jewelrysuit
 
 local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 2, nil, 
     'suitID', -- int, 饰品套装ID
-    'ename', -- string
+    'ename', -- str
     'name', -- text, 策划用名字
     'ability1', -- int, 套装属性类型1（装备套装中的两件时增加的属性）
     'ability1Value', -- int, 套装属性1
@@ -27,7 +27,7 @@ local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 2, nil,
     'ability2Value', -- int, 套装属性2
     'ability3', -- int, 套装属性类型3（装备套装中的四件时增加的属性）
     'ability3Value', -- int, 套装属性3
-    'suitList' -- list,int,4, 部件1
+    'suitList' -- list<int>, 部件1
     )
 
 local R = cfg._mk.R

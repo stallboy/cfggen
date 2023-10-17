@@ -2,6 +2,7 @@
 import config.ConfigCodeSchema;
 import config.ConfigMgr;
 import config.ConfigMgrLoader;
+import configgen.genjava.BinaryToText;
 import configgen.genjava.ConfigInput;
 import configgen.genjava.Schema;
 import configgen.genjava.SchemaCompatibleException;
@@ -47,6 +48,7 @@ public class LoadConfig {
     }
 
     public static void listen(ScheduledExecutorService executorService, Path path, Runnable callback) throws IOException {
+        path = path.toAbsolutePath().normalize();
         if (!path.toFile().isDirectory()) { // 简化
             path = path.getParent();
         }
@@ -69,10 +71,12 @@ public class LoadConfig {
     }
 
     public static void main(String[] args) throws IOException {
-        String fn = "example/config.data";
+        String fn = "config.data";
         load(fn);
-        autoReload(Executors.newSingleThreadScheduledExecutor(), fn, null);
-
-        System.out.println("ok");
+        ScheduledExecutorService watcher = Executors.newSingleThreadScheduledExecutor();
+        autoReload(watcher, fn, null);
+        System.out.println("read ok");
+        BinaryToText.loop(fn);
+        watcher.close();
     }
 }

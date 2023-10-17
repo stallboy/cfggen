@@ -17,7 +17,7 @@ local this = cfg.equip.ability
 
 local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, 2, nil, 
     'id', -- int, 属性类型
-    'name' -- string, 程序用名字
+    'name' -- str, 程序用名字
     )
 
 mk(1, "attack")

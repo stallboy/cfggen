@@ -47,7 +47,7 @@ Beans.equip = {}
 
 ---@type Beans.equip.testpackbean
 Beans.equip.testpackbean = bean(nil, 
-    'name', -- string
+    'name', -- str
     'range' -- Range
     )
 
@@ -61,7 +61,7 @@ Beans.other = {}
 ---@type Beans.other.dropitem
 Beans.other.dropitem = bean(nil, 
     'chance', -- int, 掉落概率
-    'itemids', -- list,int, 掉落物品
+    'itemids', -- list<int>, 掉落物品
     'countmin', -- int, 数量下限
     'countmax' -- int, 数量上限
     )
@@ -80,11 +80,11 @@ Beans.task = {}
 Beans.task.testdefaultbean = bean(nil, 
     'testInt', -- int
     'testBool', -- bool
-    'testString', -- string
+    'testString', -- str
     'testSubBean', -- Position
-    'testList', -- list,int
-    'testList2', -- list,int,3
-    'testMap' -- map,int,string,2
+    'testList', -- list<int>
+    'testList2', -- list<int>
+    'testMap' -- map<int,str>
     )
 
 ---@class Beans.task.completecondition
@@ -122,7 +122,7 @@ Beans.task.completecondition.testnocolumn = action("TestNoColumn")()
 
 ---@type Beans.task.completecondition.chat
 Beans.task.completecondition.chat = action("Chat", nil, 
-    'msg' -- string
+    'msg' -- str
     )
 
 ---@class Beans.task.completecondition.conditionand : Beans.task.completecondition

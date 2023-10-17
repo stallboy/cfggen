@@ -27,15 +27,15 @@ local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, {
     { 'NullableRefSuitID', 0, cfg.equip.jewelrysuit, 'get', 6 }, 
     { 'RefKeyAbility', 0, cfg.equip.ability, 'get', 7 }, }, 
     'iD', -- int, 首饰ID
-    'name', -- string, 首饰名称
-    'iconFile', -- string, 图标ID
+    'name', -- str, 首饰名称
+    'iconFile', -- str, 图标ID
     'lvlRank', -- LevelRank, 首饰等级
-    'type', -- string, 首饰类型
+    'type', -- str, 首饰类型
     'suitID', -- int, 套装ID（为0是没有不属于套装，首饰品级为4的首饰该参数为套装id，其余情况为0,引用JewelrySuit.csv）
     'keyAbility', -- int, 关键属性类型
     'keyAbilityValue', -- int, 关键属性数值
     'salePrice', -- int, 售卖价格
-    'description' -- string, 描述,根据Lvl和Rank来随机3个属性，第一个属性由Lvl,Rank行随机，剩下2个由Lvl和小于Rank的行里随机。Rank最小的时候都从Lvl，Rank里随机。
+    'description' -- str, 描述,根据Lvl和Rank来随机3个属性，第一个属性由Lvl,Rank行随机，剩下2个由Lvl和小于Rank的行里随机。Rank最小的时候都从Lvl，Rank里随机。
     )
 
 local levelrank = Beans.levelrank
@@ -65,12 +65,12 @@ mk(22, "人雄·虹涛珮", "texture/t_jew_1_080.bundle", levelrank(80, 2), "Jad
 mk(23, "地魁·虹涛珮", "texture/t_jew_1_080.bundle", levelrank(80, 3), "Jade", 0, 2, 330, 1000, "")
 mk(24, "天堑·虹涛珮", "texture/t_jew_1_084.bundle", levelrank(80, 4), "Jade", 6, 2, 360, 1000, "")
 mk(25, "神王·虹涛珮", "texture/t_jew_1_085.bundle", levelrank(80, 5), "Jade", 7, 2, 393, 1000, "")
-mk(26, "梨木镯", "texture/t_jew_2_010.bundle", levelrank(5, 1), "Bracelet", 0, 1, 70, 1000, "<color=#123456>种在地里多少年也不会长出梨的</color>")
+mk(26, "梨木镯", "texture/t_jew_2_010.bundle", levelrank(5, 1), "Bracelet", 0, 1, 70, 1000, "<color=t_red>种在地里多少年也不会长出梨的</color>")
 mk(27, "人雄·梨木镯", "texture/t_jew_2_010.bundle", levelrank(5, 2), "Bracelet", 0, 1, 100, 1000, "种在地里多少年也不会长出梨的")
 mk(28, "地魁·梨木镯", "texture/t_jew_2_010.bundle", levelrank(5, 3), "Bracelet", 0, 1, 130, 1000, "种在地里多少年也不会长出梨的")
 mk(29, "天堑·梨木镯", "texture/t_jew_2_014.bundle", levelrank(5, 4), "Bracelet", 0, 1, 235, 1000, "种在地里多少年也不会长出梨的")
 mk(30, "神王·梨木镯", "texture/t_jew_2_015.bundle", levelrank(5, 5), "Bracelet", 0, 1, 285, 1000, "种在地里多少年也不会长出梨的")
-mk(31, "镜玉镯  ", "texture/t_jew_2_020.bundle", levelrank(20, 1), "Bracelet", 0, 1, 300, 1000, "形似凝脂，吹弹可破——易碎")
+mk(31, "镜玉镯", "texture/t_jew_2_020.bundle", levelrank(20, 1), "Bracelet", 0, 1, 300, 1000, "形似凝脂，吹弹可破——易碎")
 mk(32, "人雄·镜玉镯", "texture/t_jew_2_020.bundle", levelrank(20, 2), "Bracelet", 0, 1, 320, 1000, "形似凝脂，吹弹可破——易碎")
 mk(33, "地魁·镜玉镯", "texture/t_jew_2_020.bundle", levelrank(20, 3), "Bracelet", 0, 1, 350, 1000, "形似凝脂，吹弹可破——易碎")
 mk(34, "天堑·镜玉镯", "texture/t_jew_2_024.bundle", levelrank(20, 4), "Bracelet", 0, 1, 380, 1000, "形似凝脂，吹弹可破——易碎")

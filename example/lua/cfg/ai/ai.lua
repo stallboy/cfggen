@@ -1,7 +1,7 @@
 local cfg = require "cfg._cfgs"
 
 ---@class cfg.ai.ai
----@field iD number , ID
+---@field iD number 
 ---@field desc string , 描述----这里测试下多行效果--再来一行
 ---@field condID string , 触发公式
 ---@field trigTick number , 触发间隔(帧)
@@ -14,12 +14,12 @@ local cfg = require "cfg._cfgs"
 local this = cfg.ai.ai
 
 local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, nil, 
-    'iD', -- int, ID
-    'desc', -- string, 描述----这里测试下多行效果--再来一行
-    'condID', -- string, 触发公式
+    'iD', -- int
+    'desc', -- str, 描述----这里测试下多行效果--再来一行
+    'condID', -- str, 触发公式
     'trigTick', -- int, 触发间隔(帧)
     'trigOdds', -- int, 触发几率
-    'actionID', -- string, 触发行为
+    'actionID', -- str, 触发行为
     'deathRemove' -- bool, 死亡移除
     )
 

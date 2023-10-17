@@ -14,9 +14,9 @@ local this = cfg.other.loot
 local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, { 
     { 'ListRefLootid', 2, cfg.other.lootitem, 'all', 1, 1 }, }, 
     'lootid', -- int, 序号
-    'ename', -- string
+    'ename', -- str
     'name', -- text, 名字
-    'chanceList' -- list,int,7, 掉落0件物品的概率
+    'chanceList' -- list<int>, 掉落0件物品的概率
     )
 
 local R = cfg._mk.R

@@ -25,9 +25,20 @@ dependencies {
     implementation 'de.siegmar:fastcsv:2.2.2'
 }
 
+
+// Apply a specific Java toolchain to ease working on different environments.
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['java', 'javaload']
+        }
     }
 }
 
@@ -37,42 +48,23 @@ compileJava {
     options.encoding = "UTF-8"
 }
 
-compileTestJava {
-    options.compilerArgs += ["--enable-preview"]
-    options.encoding = "UTF-8"
-}
-
-test {
-    jvmArgs += ['--enable-preview']
-}
-
 run {
     jvmArgs += ['--enable-preview']
 }
 
 jar {
     manifest {
-        attributes 'Main-Class': 'configgen.gen.Main'
-    }
-}
-
-tasks.register('fatJar', Jar) {
-    archiveFileName = 'configgen.jar'
-    manifest.from jar.manifest
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-    from sourceSets.main.output
-    dependsOn configurations.runtimeClasspath
-    from {
-        configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+        attributes 'Main-Class': 'LoadConfig'
     }
 }
 
 application {
+    // Define the main class for the application.
     mainClass = 'configgen.gen.Main'
     applicationDefaultJvmArgs = ['--enable-preview']
 }
 
 tasks.named('test') {
+    // Use JUnit Platform for unit tests.
     useJUnitPlatform()
 }

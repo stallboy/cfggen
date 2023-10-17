@@ -9,16 +9,17 @@ local cfg = require "cfg._cfgs"
 ---@field get fun(id:number):cfg.other.signin
 ---@field getByIdViplevel fun(id:number,viplevel:number):cfg.other.signin
 ---@field all table<any,cfg.other.signin>
+---@field RefVipitem2vipcountMap cfg.other.loot
 
 local this = cfg.other.signin
 
 local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, { 'IdViplevelMap', 'getByIdViplevel', 1, 4 }, }, nil, { 
     { 'RefVipitem2vipcountMap', 3, cfg.other.loot, 'get', 3 }, }, 
     'id', -- int, 礼包ID
-    'item2countMap', -- map,int,int,5, 普通奖励
-    'vipitem2vipcountMap', -- map,int,int,2, vip奖励
+    'item2countMap', -- map<int,int>, 普通奖励
+    'vipitem2vipcountMap', -- map<int,int>, vip奖励
     'viplevel', -- int, 领取vip奖励的最低等级
-    'iconFile' -- string, 礼包图标
+    'iconFile' -- str, 礼包图标
     )
 
 local E = cfg._mk.E

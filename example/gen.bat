@@ -1,2 +1,0 @@
-java -Dfile.encoding=utf8 -jar ../configgen.jar -datadir config  -gen lua,dir:lua,emmylua,sharedEmptyTable,shared -gen java,dir:java,builders:config/builders.txt -gen cs,dir:cs -gen pack,dir:cs/cfg -gen javadata
-pause
