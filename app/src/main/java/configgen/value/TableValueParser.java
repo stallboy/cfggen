@@ -15,7 +15,7 @@ import static configgen.schema.FieldType.Primitive.*;
 import static configgen.value.CfgValue.*;
 import static configgen.value.ValueErrs.*;
 
-public class TableParser {
+public class TableValueParser {
     private final TableSchema subTableSchema;
     private final DTable dTable;
     private final TableSchema tableSchema;
@@ -23,7 +23,7 @@ public class TableParser {
     private final ValueErrs errs;
     private List<DCell> curRow;
 
-    public TableParser(TableSchema subTableSchema, DTable dTable, TableSchema tableSchema, TableI18n nullableTableI18n, ValueErrs errs) {
+    public TableValueParser(TableSchema subTableSchema, DTable dTable, TableSchema tableSchema, TableI18n nullableTableI18n, ValueErrs errs) {
         this.subTableSchema = subTableSchema;
         this.dTable = dTable;
         this.tableSchema = tableSchema;

@@ -64,7 +64,7 @@ public record CfgData(Map<String, DTable> tables,
                 r = rowId.row;
                 c = col;
             }
-            return String.format("表=%s,行=%d,列=%s,数据=%s", sheet, r+1, toAZ(c), value);
+            return String.format("表=%s,行=%d,列=%s,数据=%s", sheet, r + 1, toAZ(c), value);
         }
 
         private static final int N = 'Z' - 'A' + 1;
@@ -73,7 +73,7 @@ public record CfgData(Map<String, DTable> tables,
             int q = v / N;
             String r = String.valueOf((char) ('A' + (v % N)));
             if (q > 0) {
-                return toAZ(q-1) + r;
+                return toAZ(q - 1) + r;
             } else {
                 return r;
             }
@@ -104,6 +104,10 @@ public record CfgData(Map<String, DTable> tables,
                 return fileName;
             }
             return STR. "\{ fileName }[\{ sheetName }]" ;
+        }
+
+        public boolean isCsv() {
+            return sheetName.isEmpty();
         }
     }
 

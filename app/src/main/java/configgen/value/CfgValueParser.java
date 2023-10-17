@@ -66,7 +66,7 @@ public class CfgValueParser {
 
             tasks.add(() -> {
                 ValueErrs errs = ValueErrs.of();
-                TableParser parser = new TableParser(subTable, dTable, table, tableI18n, errs);
+                TableValueParser parser = new TableValueParser(subTable, dTable, table, tableI18n, errs);
                 VTable vTable = parser.parseTable();
                 return new OneTableParserResult(vTable, errs);
             });
