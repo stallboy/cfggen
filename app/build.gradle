@@ -33,7 +33,7 @@ java {
     }
 }
 
-tasks.withType(JavaCompile).configureEach {
+compileJava {
     options.compilerArgs += ["--enable-preview"]
     options.encoding = "UTF-8"
 }
@@ -42,9 +42,29 @@ run {
     jvmArgs += ['--enable-preview']
 }
 
+jar {
+    manifest {
+        attributes 'Main-Class': 'configgen.gen.Main'
+    }
+}
+
+tasks.register('fatJar', Jar) {
+    archiveFileName = 'configgen.jar'
+    manifest.from jar.manifest
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from sourceSets.main.output
+    dependsOn configurations.runtimeClasspath
+    from {
+        configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+    }
+}
+
+
 application {
     // Define the main class for the application.
     mainClass = 'configgen.gen.Main'
+    applicationDefaultJvmArgs = ['--enable-preview']
 }
 
 tasks.named('test') {

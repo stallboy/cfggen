@@ -1,6 +1,7 @@
 package configgen.genlua;
 
 import configgen.schema.*;
+import configgen.schema.cfg.CfgWriter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +11,6 @@ import static configgen.schema.FieldType.Primitive.*;
 import static configgen.value.CfgValue.VTable;
 
 class TypeStr {
-
 
     // {{allName, getName=, keyIdx1=, keyIdx2=}, }
     static String getLuaUniqKeysString(Ctx ctx) {
@@ -211,7 +211,7 @@ class TypeStr {
                         if (bf.type() == BOOL) {
                             i++;
                             String c = getCommaDescStr(bf.comment());
-                            sb.append("\n    '").append(lower1(bf.name())).append("', -- ").append(typeToLuaType(field.type())).append(c);
+                            sb.append("\n    '").append(lower1(bf.name())).append("', -- ").append(CfgWriter.typeStr(field.type())).append(c);
                         }
                     }
                     if (i < cnt) {
@@ -230,7 +230,7 @@ class TypeStr {
                 if (i < cnt) {
                     sb.append(",");
                 }
-                sb.append(" -- ").append(typeToLuaType(field.type())).append(c);
+                sb.append(" -- ").append(CfgWriter.typeStr(field.type())).append(c);
             }
 
         }

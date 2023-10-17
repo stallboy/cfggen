@@ -3,16 +3,14 @@ package configgen.genlua;
 import configgen.util.Logger;
 
 class AStat {
-
     private int emptyTableCount = 0;
     private int listTableCount = 0;
     private int mapTableCount = 0;
-    private int beanTableCount = 0;
+    private int interfaceTableCount = 0;
+    private int structTableCount = 0;
     private int recordTableCount = 0;
     private int sharedTableReduceCount = 0;
     private int packBoolReduceCount = 0;
-    private int columnPackSaveCount = 0;
-    private int columnTableCnt = 0;
 
     void useEmptyTable() {
         emptyTableCount++;
@@ -26,8 +24,12 @@ class AStat {
         mapTableCount++;
     }
 
-    void useBeanTable() {
-        beanTableCount++;
+    void useInterfaceTable() {
+        interfaceTableCount++;
+    }
+
+    void useStructTable() {
+        structTableCount++;
     }
 
     void useRecordTable() {
@@ -42,21 +44,17 @@ class AStat {
         packBoolReduceCount += c;
     }
 
-    void useColumnPack(int c) {
-        columnPackSaveCount += c;
-        columnTableCnt++;
-    }
 
     void print() {
-        Logger.log(String.format(
-                "可共享空table个数:%d, 共享table节省:%d，压缩bool节省:%d, 列模式可省:%d(%d个表)，总共有list:%d, map:%d, bean:%d, record:%d",
+        Logger.verbose(String.format(
+                "可共享空table个数:%d, 共享table节省:%d，压缩bool节省:%d，总共有list:%d，map:%d，interface:%d，struct:%d，record:%d",
                 emptyTableCount,
                 sharedTableReduceCount,
                 packBoolReduceCount,
-                columnPackSaveCount, columnTableCnt,
                 listTableCount,
                 mapTableCount,
-                beanTableCount,
+                interfaceTableCount,
+                structTableCount,
                 recordTableCount));
     }
 }

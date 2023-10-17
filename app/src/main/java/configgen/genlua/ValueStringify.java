@@ -187,10 +187,13 @@ class ValueStringify {
             res.append(vstr);
 
         } else {
+            AStat statistics = AContext.getInstance().getStatistics();
             if (beanTypeStr != null) {
-                AContext.getInstance().getStatistics().useRecordTable();
+                statistics.useRecordTable();
+            } else if (nullableInterface != null) {
+                statistics.useInterfaceTable();
             } else {
-                AContext.getInstance().getStatistics().useBeanTable();
+                statistics.useStructTable();
             }
             res.append(beanType);
             int sz = val.values().size();
@@ -215,7 +218,7 @@ class ValueStringify {
                                 }
                             }
                             idx += cnt;
-                            AContext.getInstance().getStatistics().usePackBool(cnt - 1);
+                            statistics.usePackBool(cnt - 1);
 
                             long v = 0;
                             if (!bs.isEmpty()) {

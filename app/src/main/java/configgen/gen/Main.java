@@ -113,8 +113,17 @@ public final class Main {
         String binaryToTextFile = null;
         String match = null;
 
-
         List<String> searchParam = null;
+
+        String row = System.getProperty("configgen.headrow");
+        if (row == null || row.equals("2")) {
+            //noinspection ReassignedVariable
+            headRow = 2;
+        } else if (row.equals("3")) {
+            headRow = 3; //第三行可以是类型信息，随便，这里不会读取这个数据，会忽略掉，也就是说类型的权威数据在xml里
+        } else {
+            System.err.printf("-Dconfiggen.headrow，设置为[%s], 它只能设置为2或3，不设置的话默认是2\n", row);
+        }
 
         for (int i = 0; i < args.length; ++i) {
             switch (args[i].toLowerCase()) {

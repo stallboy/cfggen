@@ -118,7 +118,7 @@ public class CfgWriter {
         destination.append("\r\n");
     }
 
-    static String typeStr(FieldType t) {
+    public static String typeStr(FieldType t) {
         return switch (t) {
             case Primitive.STRING -> "str";
             case Primitive primitive -> primitive.name().toLowerCase();
