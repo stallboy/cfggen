@@ -40,15 +40,45 @@ public record CfgData(Map<String, DTable> tables,
      */
     public record DCell(String value,
                         DRowId rowId,
-                        int col) {
+                        int col,
+                        boolean isColumnMode) {
 
         public boolean isCellEmpty() {
             return value.isEmpty();
         }
 
         public DCell createSub(String sub) {
-            return new DCell(sub, rowId, col);
+            return new DCell(sub, rowId, col, isColumnMode);
         }
+
+        @Override
+        public String toString() {
+            String sheet = rowId.sheetName.isEmpty() ? rowId.fileName :
+                    String.format("%s[%s]", rowId.fileName, rowId.sheetName);
+            int r;
+            int c;
+            if (isColumnMode) {
+                r = col;
+                c = rowId.row;
+            } else {
+                r = rowId.row;
+                c = col;
+            }
+            return String.format("表=%s,行=%d,列=%s,数据=%s", sheet, r+1, toAZ(c), value);
+        }
+
+        private static final int N = 'Z' - 'A' + 1;
+
+        private static String toAZ(int v) {
+            int q = v / N;
+            String r = String.valueOf((char) ('A' + (v % N)));
+            if (q > 0) {
+                return toAZ(q) + r;
+            } else {
+                return r;
+            }
+        }
+
     }
 
     public record DRowId(String fileName,

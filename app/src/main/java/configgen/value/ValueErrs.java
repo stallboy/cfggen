@@ -42,11 +42,26 @@ public record ValueErrs(List<VErr> errs) {
 
     public record InterfaceCellEmptyButHasNoDefaultImpl(DCell cell,
                                                         String interfaceName) implements VErr {
+        @Override
+        public String toString() {
+            return "空单元格类型为接口，没设置defaultImpl{" +
+                    "cell=" + cell +
+                    ", interfaceName='" + interfaceName + '\'' +
+                    '}';
+        }
     }
 
     public record InterfaceCellImplNotFound(DCell cell,
                                             String interfaceName,
                                             String notFoundImpl) implements VErr {
+        @Override
+        public String toString() {
+            return "接口无此实现{" +
+                    "cell=" + cell +
+                    ", interfaceName='" + interfaceName + '\'' +
+                    ", notFoundImpl='" + notFoundImpl + '\'' +
+                    '}';
+        }
     }
 
     public record InterfaceCellImplSpanNotEnough(List<DCell> cells,
@@ -73,6 +88,15 @@ public record ValueErrs(List<VErr> errs) {
                                     String nameable,
                                     String field,
                                     FieldType expectedType) implements VErr {
+        @Override
+        public String toString() {
+            return "类型不匹配{" +
+                    "cell=" + cell +
+                    ", nameable='" + nameable + '\'' +
+                    ", field='" + field + '\'' +
+                    ", expectedType=" + expectedType +
+                    '}';
+        }
     }
 
     /**
@@ -91,6 +115,14 @@ public record ValueErrs(List<VErr> errs) {
     public record PrimaryOrUniqueKeyDuplicated(List<DCell> cells,
                                                String table,
                                                List<String> keys) implements VErr {
+        @Override
+        public String toString() {
+            return "键值重复{" +
+                    "cells=" + cells +
+                    ", table='" + table + '\'' +
+                    ", keys=" + keys +
+                    '}';
+        }
     }
 
     public record EnumEmpty(DCell cell,
@@ -108,12 +140,27 @@ public record ValueErrs(List<VErr> errs) {
 
     public record RefNotNullableButCellEmpty(List<DCell> cells,
                                              String table) implements VErr {
+        @Override
+        public String toString() {
+            return "ref没设置nullable时单元格不能空{" +
+                    "cells=" + cells +
+                    ", table='" + table + '\'' +
+                    '}';
+        }
     }
 
     public record ForeignValueNotFound(List<DCell> cells,
                                        String table,
                                        String foreignKey) implements VErr {
 
+        @Override
+        public String toString() {
+            return "外键没找到对应值{" +
+                    "cells=" + cells +
+                    ", table='" + table + '\'' +
+                    ", foreignKey='" + foreignKey + '\'' +
+                    '}';
+        }
     }
 
 
