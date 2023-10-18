@@ -26,9 +26,9 @@ public record SchemaErrs(List<Err> errs,
 
     public void print() {
         if (!warns.isEmpty()) {
-            Logger.verbose(STR. "warnings \{ warns.size() }:" );
+            Logger.log(STR. "warnings \{ warns.size() }:" );
             for (Warn warn : warns) {
-                Logger.verbose("\t" + warn);
+                Logger.log("\t" + warn);
             }
         }
 

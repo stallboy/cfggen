@@ -36,7 +36,8 @@ final class CellParser {
                     List<DCell> logicRow = new ArrayList<>(sheet.fieldIndices().size());
                     DRowId logicRowId = new DRowId(sheet.fileName(), sheet.sheetName(), rowIndex);
                     for (int col : sheet.fieldIndices()) {
-                        logicRow.add(new DCell(rawRow.cell(col), logicRowId, col, isColumnMode));
+                        logicRow.add(new DCell(rawRow.cell(col), logicRowId, col,
+                                DCell.modeOf(isColumnMode, rawRow.isCellNumberWithComma(col))));
                     }
                     if (isLogicRowNotAllEmpty(logicRow)) {
                         result.add(logicRow);
@@ -69,7 +70,8 @@ final class CellParser {
                         for (int col : sheet.fieldIndices()) {
                             DRawRow rawRow = sheet.rows().get(col);
                             String val = rawRow.cell(logicRowIdx);
-                            logicRow.add(new DCell(val, logicRowId, col, isColumnMode));
+                            logicRow.add(new DCell(val, logicRowId, col,
+                                    DCell.modeOf(isColumnMode, rawRow.isCellNumberWithComma(logicRowIdx))));
                         }
                         if (isLogicRowNotAllEmpty(logicRow)) {
                             result.add(logicRow);

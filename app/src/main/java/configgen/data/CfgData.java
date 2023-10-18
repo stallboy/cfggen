@@ -41,14 +41,36 @@ public record CfgData(Map<String, DTable> tables,
     public record DCell(String value,
                         DRowId rowId,
                         int col,
-                        boolean isColumnMode) {
+                        byte mode) {
+
+        public static final byte COLUMN_MODE = 0x1;
+        public static final byte CELL_NUMBER_WITH_COMMA = 0x2;
+
+        public static byte modeOf(boolean isColumnMode, boolean isCellNumberWithComma) {
+            byte res = 0;
+            if (isColumnMode) {
+                res |= COLUMN_MODE;
+            }
+            if (isCellNumberWithComma) {
+                res |= CELL_NUMBER_WITH_COMMA;
+            }
+            return res;
+        }
+
+        public boolean isColumnMode() {
+            return (mode & COLUMN_MODE) != 0;
+        }
+
+        public boolean isCellNumberWithComma() {
+            return (mode & CELL_NUMBER_WITH_COMMA) != 0;
+        }
 
         public boolean isCellEmpty() {
             return value.isEmpty();
         }
 
         public DCell createSub(String sub) {
-            return new DCell(sub, rowId, col, isColumnMode);
+            return new DCell(sub, rowId, col, mode);
         }
 
         @Override
@@ -57,7 +79,7 @@ public record CfgData(Map<String, DTable> tables,
                     String.format("%s[%s]", rowId.fileName, rowId.sheetName);
             int r;
             int c;
-            if (isColumnMode) {
+            if (isColumnMode()) {
                 r = col;
                 c = rowId.row;
             } else {
@@ -114,6 +136,8 @@ public record CfgData(Map<String, DTable> tables,
     public sealed interface DRawRow {
         String cell(int c);
 
+        boolean isCellNumberWithComma(int c);
+
         int count();
     }
 
@@ -121,6 +145,11 @@ public record CfgData(Map<String, DTable> tables,
         @Override
         public String cell(int c) {
             return c < row.getFieldCount() ? row.getField(c).trim() : "";
+        }
+
+        @Override
+        public boolean isCellNumberWithComma(int c) {
+            return false;
         }
 
         @Override
@@ -134,6 +163,11 @@ public record CfgData(Map<String, DTable> tables,
         @Override
         public String cell(int c) {
             return row.getCellText(c).trim();
+        }
+
+        @Override
+        public boolean isCellNumberWithComma(int c) {
+            return false;
         }
 
         @Override

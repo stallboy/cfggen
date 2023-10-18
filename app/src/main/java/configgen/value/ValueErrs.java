@@ -15,7 +15,6 @@ public record ValueErrs(List<VErr> errs) {
     }
 
     void addErr(VErr err) {
-        Logger.log(err.toString());
         errs.add(err);
     }
 
@@ -162,6 +161,13 @@ public record ValueErrs(List<VErr> errs) {
                     ", foreignKey='" + foreignKey + '\'' +
                     '}';
         }
+    }
+
+    /**
+     * @see CommaNumberCellChecker
+     */
+    public record NumberWithCommaCellIsListIntOrIntStruct(DCell cell,
+                                                          String type) implements VErr {
     }
 
 

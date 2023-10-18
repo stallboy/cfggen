@@ -27,7 +27,6 @@ import static configgen.data.CfgData.*;
 public enum CfgDataReader {
     INSTANCE;
 
-
     public CfgData readCfgData(Path rootDir, CfgSchema nullableCfgSchema, int headRow, String defaultEncoding) {
         if (headRow < 2) {
             throw new IllegalArgumentException(STR. "headRow =\{ headRow } < 2" );
@@ -216,6 +215,7 @@ public enum CfgDataReader {
                                 formula++;
                                 // Logger.verbose2(cell.getAddress() + ": formula=" + cell.getFormula() + ", text=" + cell.getText());
                             }
+
                         } else {
                             stat.cellNullCount++;
                         }

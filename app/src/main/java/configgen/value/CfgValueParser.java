@@ -68,6 +68,8 @@ public class CfgValueParser {
                 ValueErrs errs = ValueErrs.of();
                 TableValueParser parser = new TableValueParser(subTable, dTable, table, tableI18n, errs);
                 VTable vTable = parser.parseTable();
+                CommaNumberCellChecker checker = new CommaNumberCellChecker(vTable, dTable, errs);
+                checker.check();
                 return new OneTableParserResult(vTable, errs);
             });
         }
