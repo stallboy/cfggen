@@ -23,6 +23,8 @@ dependencies {
     implementation 'org.antlr:antlr4-runtime:4.13.1'
     implementation 'org.dhatim:fastexcel-reader:0.15.7'
     implementation 'de.siegmar:fastcsv:2.2.2'
+    implementation 'org.apache.poi:poi:5.2.4'
+    implementation 'org.apache.poi:poi-ooxml:5.2.4'
 }
 
 java {

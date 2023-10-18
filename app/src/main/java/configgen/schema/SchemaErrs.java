@@ -25,7 +25,7 @@ public record SchemaErrs(List<Err> errs,
     }
 
     public void print() {
-        if (!warns.isEmpty()) {
+        if (Logger.isWarningEnabled() && !warns.isEmpty()) {
             Logger.log(STR. "warnings \{ warns.size() }:" );
             for (Warn warn : warns) {
                 Logger.log("\t" + warn);

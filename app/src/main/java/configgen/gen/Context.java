@@ -19,6 +19,7 @@ public class Context {
 
     private final CfgSchema cfgSchema;
     private final CfgData cfgData;
+    private final boolean checkComma;
 
     /**
      * 直接国际化,直接改成对应国家语言
@@ -38,7 +39,8 @@ public class Context {
     private CfgValue lastCfgValue;
     private String lastCfgValueTag;
 
-    public Context(Path dataDir, int headRow, String defaultEncoding) {
+    public Context(Path dataDir, int headRow, boolean checkComma, String defaultEncoding) {
+        this.checkComma = checkComma;
         Path cfgPath = dataDir.resolve("config.cfg");
         CfgSchema schema = Cfgs.readFrom(cfgPath, true);
         Logger.profile("schema read");
@@ -49,11 +51,8 @@ public class Context {
         Logger.profile("schema resolve");
 
 
-        CfgData data = CfgDataReader.INSTANCE.readCfgData(dataDir, schema, headRow, defaultEncoding);
-        data.stat().print();
-        if (Logger.verboseLevel() > 1) {
-            data.print();
-        }
+        CfgData data = CfgDataReader.INSTANCE.readCfgData(dataDir, schema, headRow, checkComma, defaultEncoding);
+        data.print();
 
         SchemaErrs alignErr = SchemaErrs.of();
         CfgSchema alignedSchema = new CfgSchemaAlignToData(schema, data, alignErr).align();
@@ -111,7 +110,7 @@ public class Context {
         }
 
         ValueErrs valueErrs = ValueErrs.of();
-        CfgValueParser clientValueParser = new CfgValueParser(tagSchema, cfgData, cfgSchema, i18n, valueErrs);
+        CfgValueParser clientValueParser = new CfgValueParser(tagSchema, cfgData, cfgSchema, i18n, checkComma, valueErrs);
         CfgValue value = clientValueParser.parseCfgValue();
         valueErrs.print();
 

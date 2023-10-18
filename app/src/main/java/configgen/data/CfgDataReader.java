@@ -1,10 +1,14 @@
 package configgen.data;
 
-import configgen.util.Logger;
 import configgen.schema.CfgSchema;
+import configgen.util.Logger;
 import configgen.util.UnicodeReader;
 import de.siegmar.fastcsv.reader.CsvReader;
 import de.siegmar.fastcsv.reader.CsvRow;
+import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.dhatim.fastexcel.reader.*;
 
 import java.io.IOException;
@@ -27,19 +31,19 @@ import static configgen.data.CfgData.*;
 public enum CfgDataReader {
     INSTANCE;
 
-    public CfgData readCfgData(Path rootDir, CfgSchema nullableCfgSchema, int headRow, String defaultEncoding) {
+    public CfgData readCfgData(Path rootDir, CfgSchema nullableCfgSchema, int headRow, boolean checkComma, String defaultEncoding) {
         if (headRow < 2) {
             throw new IllegalArgumentException(STR. "headRow =\{ headRow } < 2" );
         }
         try {
-            return _readCfgData(rootDir, nullableCfgSchema, headRow, defaultEncoding);
+            return _readCfgData(rootDir, nullableCfgSchema, headRow, checkComma, defaultEncoding);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     private CfgData _readCfgData(Path rootDir, CfgSchema nullableCfgSchema,
-                                 int headRow, String defaultEncoding) throws Exception {
+                                 int headRow, boolean checkComma, String defaultEncoding) throws Exception {
         DataStat stat = new DataStat();
         List<Callable<Result>> tasks = new ArrayList<>();
 
@@ -70,7 +74,11 @@ public enum CfgDataReader {
                         }
                     }
                     case EXCEL -> {
-                        tasks.add(() -> readExcelByFastExcel(path, relativePath));
+                        if (checkComma) {
+                            tasks.add(() -> readExcelByPoi(path, relativePath));
+                        } else {
+                            tasks.add(() -> readExcelByFastExcel(path, relativePath));
+                        }
                     }
                     case null -> {
                     }
@@ -230,6 +238,62 @@ public enum CfgDataReader {
         return new Result(sheets, stat);
     }
 
+    private Result readExcelByPoi(Path path, Path relativePath) throws IOException {
+        DataStat stat = new DataStat();
+        List<OneSheetResult> sheets = new ArrayList<>();
+
+        stat.excelCount++;
+
+
+        try (Workbook workbook = WorkbookFactory.create(path.toFile())) {
+            DataFormatter formatter = new DataFormatter();
+            FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+            DRawPoiFmt fmt = new DRawPoiFmt(formatter, evaluator);
+            for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
+                org.apache.poi.ss.usermodel.Sheet sheet = workbook.getSheetAt(sheetIndex);
+                String sheetName = sheet.getSheetName().trim();
+                DataUtil.TableNameIndex ti = DataUtil.getTableNameIndex(relativePath, sheetName);
+                if (ti == null) {
+                    Logger.verbose2(STR. "\{ path } [\{ sheetName }] 名字不符合规范，ignore！" );
+                    stat.ignoredSheetCount++;
+                    continue;
+                }
+
+                stat.sheetCount++;
+                List<DRawRow> rows = new ArrayList<>(sheet.getLastRowNum() + 1);
+                for (org.apache.poi.ss.usermodel.Row row : sheet) {
+                    rows.add(new DRawPoiExcelRow(row, fmt));
+                    for (org.apache.poi.ss.usermodel.Cell cell : row) {
+                        switch (cell.getCellType()) {
+                            case NUMERIC -> {
+                                stat.cellNumberCount++;
+                            }
+                            case STRING -> {
+                                stat.cellStrCount++;
+                            }
+                            case FORMULA -> {
+                                stat.cellFormulaCount++;
+                            }
+                            case BLANK -> {
+                                stat.cellEmptyCount++;
+                            }
+                            case BOOLEAN -> {
+                                stat.cellBoolCount++;
+                            }
+                            case ERROR -> {
+                                stat.cellErrCount++;
+                            }
+                        }
+                    }
+                }
+                OneSheetResult oneSheet = new OneSheetResult(ti.tableName(),
+                        new DRawSheet(relativePath.toString(), sheetName, ti.index(), rows, new ArrayList<>()));
+                sheets.add(oneSheet);
+            }
+        }
+
+        return new Result(sheets, stat);
+    }
 }
 
 

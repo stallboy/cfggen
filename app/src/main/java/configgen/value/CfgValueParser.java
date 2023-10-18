@@ -24,6 +24,7 @@ public class CfgValueParser {
     private final CfgData data;
     private final CfgSchema schema;
     private final TextI18n nullableI18n;
+    private final boolean checkComma;
     private final ValueErrs errs;
 
     /**
@@ -31,9 +32,10 @@ public class CfgValueParser {
      * @param data         全部的数据
      * @param schema       全部的数据对应的schema
      * @param nullableI18n 国际化信息，会替换text里的value
+     * @param checkComma   检查excel中包含逗号的number格子。
      * @param errs         错误记录器
      */
-    public CfgValueParser(CfgSchema subSchema, CfgData data, CfgSchema schema, TextI18n nullableI18n, ValueErrs errs) {
+    public CfgValueParser(CfgSchema subSchema, CfgData data, CfgSchema schema, TextI18n nullableI18n, boolean checkComma, ValueErrs errs) {
         subSchema.requireResolved();
         schema.requireResolved();
         Objects.requireNonNull(data);
@@ -42,6 +44,7 @@ public class CfgValueParser {
         this.data = data;
         this.schema = schema;
         this.nullableI18n = nullableI18n;
+        this.checkComma = checkComma;
         this.errs = errs;
     }
 
@@ -68,8 +71,10 @@ public class CfgValueParser {
                 ValueErrs errs = ValueErrs.of();
                 TableValueParser parser = new TableValueParser(subTable, dTable, table, tableI18n, errs);
                 VTable vTable = parser.parseTable();
-                CommaNumberCellChecker checker = new CommaNumberCellChecker(vTable, dTable, errs);
-                checker.check();
+                if (checkComma) {
+                    CommaNumberCellChecker checker = new CommaNumberCellChecker(vTable, dTable, errs);
+                    checker.check();
+                }
                 return new OneTableParserResult(vTable, errs);
             });
         }

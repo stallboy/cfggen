@@ -9,22 +9,31 @@ public class Logger {
     private static int verboseLevel = 0;
     private static boolean profileGcEnabled = false;
     private static boolean profileEnabled = false;
+    private static boolean warningEnabled = true;
 
 
     public static void enableProfileGc() {
         profileGcEnabled = true;
     }
 
-    public static void setVerboseLevel(int lvl) {
-        verboseLevel = lvl;
-    }
-
     public static void enableProfile() {
         profileEnabled = true;
     }
 
+    public static void setVerboseLevel(int lvl) {
+        verboseLevel = lvl;
+    }
+
     public static int verboseLevel() {
         return verboseLevel;
+    }
+
+    public static void setNoWarning() {
+        warningEnabled = false;
+    }
+
+    public static boolean isWarningEnabled() {
+        return warningEnabled;
     }
 
     public static void verbose(String s) {

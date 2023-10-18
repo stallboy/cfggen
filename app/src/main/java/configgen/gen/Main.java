@@ -27,6 +27,8 @@ public final class Main {
         System.out.println("    -datadir      配表根目录，根目录可以有个config.xml");
         System.out.println("    -encoding     csv编码，默认是GBK，如果文件中含有bom则用bom标记的编码");
         System.out.println("    -verify       检查配表约束");
+        System.out.println("    -checkcomma   检查带逗号的number格子，如果设置为list<number>,或由number组成bean类型且逗号分割，就报错");
+        System.out.println("                  生成会慢一些");
 
         System.out.println();
         System.out.println("----国际化支持--------------------------------------");
@@ -43,11 +45,13 @@ public final class Main {
         System.out.println("    -search             后接命令，找到匹配的数据");
         System.out.println("    -xmlToCfg           .xml变成.cfg文件");
 
-        System.out.println("    -dump         打印内部树结构");
+
         System.out.println("    -v            verbose，级别1，输出统计和warning信息");
         System.out.println("    -vv           verbose，级别2，输出额外信息");
         System.out.println("    -p            profiler，内存和时间监测");
         System.out.println("    -pp           profiler，内存监测前加gc");
+        System.out.println("    -nowarn       不打印警告信息，默认打印");
+
 
         System.out.println();
         System.out.println("----以下gen参数之间由,分割,参数名和参数取值之间由=或:分割--------------------------------------");
@@ -97,6 +101,8 @@ public final class Main {
         String datadir = null;
         boolean xmlToCfg = false;
         int headRow = 2;
+        boolean checkComma = false;
+
         String encoding = "GBK";
 
         String i18nfile = null;
@@ -106,8 +112,10 @@ public final class Main {
         String defaultLang = "zh_cn";
 
         boolean verify = false;
-        List<Generator> generators = new ArrayList<>();
 
+        record NamedGenerator(String name, Generator gen) {
+        }
+        List<NamedGenerator> generators = new ArrayList<>();
 
         boolean binaryToTextLoop = false;
         String binaryToTextFile = null;
@@ -116,9 +124,8 @@ public final class Main {
         List<String> searchParam = null;
 
         String row = System.getProperty("configgen.headrow");
+        //noinspection StatementWithEmptyBody
         if (row == null || row.equals("2")) {
-            //noinspection ReassignedVariable
-            headRow = 2;
         } else if (row.equals("3")) {
             headRow = 3; //第三行可以是类型信息，随便，这里不会读取这个数据，会忽略掉，也就是说类型的权威数据在xml里
         } else {
@@ -127,83 +134,49 @@ public final class Main {
 
         for (int i = 0; i < args.length; ++i) {
             switch (args[i].toLowerCase()) {
-                case "-datadir":
-                    datadir = args[++i];
-                    break;
-                case "-xmltocfg":
-                    xmlToCfg = true;
-                    break;
-                case "-headrow":
-                    headRow = Integer.parseInt(args[++i]);
-                    break;
-
-                case "-encoding":
-                    encoding = args[++i];
-                    break;
-                case "-verify":
-                    verify = true;
-                    break;
-
-                case "-i18nfile":
-                    i18nfile = args[++i];
-                    break;
-                case "-i18nencoding":
-                    i18nencoding = args[++i];
-                    break;
-                case "-i18ncrlfaslf":
-                    i18ncrlfaslf = true;
-                    break;
-                case "-langswitchdir":
-                    langSwitchDir = args[++i];
-                    break;
-                case "-defaultlang":
-                    defaultLang = args[++i];
-                    break;
-
-                case "-v":
-                    Logger.setVerboseLevel(1);
-                    break;
-                case "-vv":
-                    Logger.setVerboseLevel(2);
-                    break;
-
-                case "-p":
-                    Logger.enableProfile();
-                    break;
-                case "-pp":
+                case "-datadir" -> datadir = args[++i];
+                case "-xmltocfg" -> xmlToCfg = true;
+                case "-headrow" -> headRow = Integer.parseInt(args[++i]);
+                case "-checkcomma" -> checkComma = true;
+                case "-encoding" -> encoding = args[++i];
+                case "-verify" -> verify = true;
+                case "-i18nfile" -> i18nfile = args[++i];
+                case "-i18nencoding" -> i18nencoding = args[++i];
+                case "-i18ncrlfaslf" -> i18ncrlfaslf = true;
+                case "-langswitchdir" -> langSwitchDir = args[++i];
+                case "-defaultlang" -> defaultLang = args[++i];
+                case "-v" -> Logger.setVerboseLevel(1);
+                case "-vv" -> Logger.setVerboseLevel(2);
+                case "-p" -> Logger.enableProfile();
+                case "-pp" -> {
                     Logger.enableProfile();
                     Logger.enableProfileGc();
-                    break;
-
-                case "-binarytotext":
+                }
+                case "-nowarn" -> Logger.setNoWarning();
+                case "-binarytotext" -> {
                     binaryToTextFile = args[++i];
                     if (i + 1 < args.length && !args[i + 1].startsWith("-")) {
                         match = args[++i];
                     }
-                    break;
-                case "-binarytotextloop":
+                }
+                case "-binarytotextloop" -> {
                     binaryToTextLoop = true;
                     binaryToTextFile = args[++i];
-                    break;
-
-                case "-search":
+                }
+                case "-search" -> {
                     searchParam = new ArrayList<>();
                     while (i + 1 < args.length && !args[i + 1].startsWith("-")) {
                         searchParam.add(args[++i]);
                     }
-                    break;
-
-                case "-gen":
-                    Generator generator = Generators.create(args[++i]);
+                }
+                case "-gen" -> {
+                    String name = args[++i];
+                    Generator generator = Generators.create(name);
                     if (generator == null)
                         usage("");
-                    generators.add(generator);
-                    break;
-
-
-                default:
-                    usage("unknown args " + args[i]);
-                    break;
+                    generators.add(new NamedGenerator(name, generator));
+                }
+                default -> usage("unknown args " + args[i]);
             }
         }
 
@@ -232,7 +205,7 @@ public final class Main {
         }
 
         Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));
-        Context ctx = new Context(dataDir, headRow, encoding);
+        Context ctx = new Context(dataDir, headRow, checkComma, encoding);
         ctx.setI18nOrLangSwitch(i18nfile, i18nencoding, i18ncrlfaslf, langSwitchDir, defaultLang);
 
         if (searchParam != null) {
@@ -250,14 +223,14 @@ public final class Main {
             ctx.makeValue();
         }
 
-        for (Generator generator : generators) {
-            Logger.verbose("-----generate " + generator.parameter);
-            generator.generate(ctx);
+        for (NamedGenerator ng : generators) {
+            Logger.verbose("-----generate " + ng.gen.parameter);
+            ng.gen.generate(ctx);
+            Logger.profile("generate " + ng.name);
         }
 
         CachedFiles.finalExit();
         Logger.profile("end");
     }
-
 
 }

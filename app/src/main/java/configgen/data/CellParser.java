@@ -33,12 +33,7 @@ final class CellParser {
                         continue;
                     }
 
-                    List<DCell> logicRow = new ArrayList<>(sheet.fieldIndices().size());
-                    DRowId logicRowId = new DRowId(sheet.fileName(), sheet.sheetName(), rowIndex);
-                    for (int col : sheet.fieldIndices()) {
-                        logicRow.add(new DCell(rawRow.cell(col), logicRowId, col,
-                                DCell.modeOf(isColumnMode, rawRow.isCellNumberWithComma(col))));
-                    }
+                    List<DCell> logicRow = getCellsInRowMode(sheet, rawRow, rowIndex);
                     if (isLogicRowNotAllEmpty(logicRow)) {
                         result.add(logicRow);
                     } else {
@@ -65,14 +60,7 @@ final class CellParser {
                             continue;
                         }
 
-                        List<DCell> logicRow = new ArrayList<>(sheet.fieldIndices().size());
-                        DRowId logicRowId = new DRowId(sheet.fileName(), sheet.sheetName(), logicRowIdx);
-                        for (int col : sheet.fieldIndices()) {
-                            DRawRow rawRow = sheet.rows().get(col);
-                            String val = rawRow.cell(logicRowIdx);
-                            logicRow.add(new DCell(val, logicRowId, col,
-                                    DCell.modeOf(isColumnMode, rawRow.isCellNumberWithComma(logicRowIdx))));
-                        }
+                        List<DCell> logicRow = getCellsInColumnMode(sheet, logicRowIdx);
                         if (isLogicRowNotAllEmpty(logicRow)) {
                             result.add(logicRow);
                         } else {
@@ -91,6 +79,29 @@ final class CellParser {
             table.rows().clear();
             table.rows().addAll(result);
         }
+    }
+
+    private static List<DCell> getCellsInColumnMode(DRawSheet sheet, int logicRowIdx) {
+        List<DCell> logicRow = new ArrayList<>(sheet.fieldIndices().size());
+        DRowId logicRowId = new DRowId(sheet.fileName(), sheet.sheetName(), logicRowIdx);
+        for (int col : sheet.fieldIndices()) {
+            DRawRow rawRow = sheet.rows().get(col);
+            String val = rawRow.cell(logicRowIdx);
+            boolean isCommaNumber = rawRow.isCellNumberWithComma(logicRowIdx) && val.contains(",");
+            logicRow.add(new DCell(val, logicRowId, col, DCell.modeOf(true, isCommaNumber)));
+        }
+        return logicRow;
+    }
+
+    private static List<DCell> getCellsInRowMode(DRawSheet sheet, DRawRow rawRow, int rowIndex) {
+        List<DCell> logicRow = new ArrayList<>(sheet.fieldIndices().size());
+        DRowId logicRowId = new DRowId(sheet.fileName(), sheet.sheetName(), rowIndex);
+        for (int col : sheet.fieldIndices()) {
+            String val = rawRow.cell(col);
+            boolean isCommaNumber = rawRow.isCellNumberWithComma(col) && val.contains(",");
+            logicRow.add(new DCell(val, logicRowId, col, DCell.modeOf(false, isCommaNumber)));
+        }
+        return logicRow;
     }
 
     static boolean isLogicRowNotAllEmpty(List<DCell> row) {
