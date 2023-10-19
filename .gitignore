@@ -13,3 +13,6 @@
 /example/out
 /app/tmp
 /configgen.jar
+/example/cs/.idea
+/example/cs/bin
+/example/cs/obj

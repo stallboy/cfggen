@@ -6,12 +6,12 @@ namespace Config.Task
 {
     public partial class DataTask
     {
-        public int Taskid { get; private set; } /* ÈÎÎñÍê³ÉÌõ¼şÀàĞÍ£¨idµÄ·¶Î§Îª1-100£©*/
-        public List<string> Name { get; private set; } /* ³ÌĞòÓÃÃû×Ö*/
+        public int Taskid { get; private set; } /* ä»»åŠ¡å®Œæˆæ¡ä»¶ç±»å‹ï¼ˆidçš„èŒƒå›´ä¸º1-100ï¼‰*/
+        public List<string> Name { get; private set; } /* ç¨‹åºç”¨åå­—*/
         public int Nexttask { get; private set; }
         public Config.Task.DataCompletecondition Completecondition { get; private set; }
         public int Exp { get; private set; }
-        public Config.Task.DataTestdefaultbean TestDefaultBean { get; private set; } /* ²âÊÔ*/
+        public Config.Task.DataTestdefaultbean TestDefaultBean { get; private set; } /* æµ‹è¯•*/
         public Config.Task.DataTaskextraexp NullableRefTaskid { get; private set; }
         public Config.Task.DataTask NullableRefNexttask { get; private set; }
 

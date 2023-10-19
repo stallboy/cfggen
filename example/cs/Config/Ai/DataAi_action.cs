@@ -7,10 +7,10 @@ namespace Config.Ai
     public partial class DataAi_action
     {
         public int ID { get; private set; }
-        public string Desc { get; private set; } /* 描述*/
-        public int FormulaID { get; private set; } /* 公式*/
-        public List<int> ArgIList { get; private set; } /* 参数(int)1*/
-        public List<int> ArgSList { get; private set; } /* 参数(string)1*/
+        public string Desc { get; private set; } /* 鎻忚堪*/
+        public int FormulaID { get; private set; } /* 鍏紡*/
+        public List<int> ArgIList { get; private set; } /* 鍙傛暟(int)1*/
+        public List<int> ArgSList { get; private set; } /* 鍙傛暟(string)1*/
 
         public override int GetHashCode()
         {

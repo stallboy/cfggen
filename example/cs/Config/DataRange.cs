@@ -6,8 +6,8 @@ namespace Config
 {
     public partial class DataRange
     {
-        public int Min { get; private set; } /* ×îĞ¡*/
-        public int Max { get; private set; } /* ×î´ó*/
+        public int Min { get; private set; } /* æœ€å°*/
+        public int Max { get; private set; } /* æœ€å¤§*/
 
         public DataRange() {
         }

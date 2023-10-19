@@ -13,8 +13,8 @@ namespace Config.Task
         public static DataCompleteconditiontype Chat { get; private set; }
         public static DataCompleteconditiontype TestNoColumn { get; private set; }
 
-        public int Id { get; private set; } /* ÈÎÎñÍê³ÉÌõ¼şÀàĞÍ£¨idµÄ·¶Î§Îª1-100£©*/
-        public string Name { get; private set; } /* ³ÌĞòÓÃÃû×Ö*/
+        public int Id { get; private set; } /* ä»»åŠ¡å®Œæˆæ¡ä»¶ç±»å‹ï¼ˆidçš„èŒƒå›´ä¸º1-100ï¼‰*/
+        public string Name { get; private set; } /* ç¨‹åºç”¨åå­—*/
 
         public override int GetHashCode()
         {

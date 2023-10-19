@@ -6,16 +6,16 @@ namespace Config.Equip
 {
     public partial class DataJewelry
     {
-        public int ID { get; private set; } /* Ê×ÊÎID*/
-        public string Name { get; private set; } /* Ê×ÊÎÃû³Æ*/
-        public string IconFile { get; private set; } /* Í¼±êID*/
-        public Config.DataLevelrank LvlRank { get; private set; } /* Ê×ÊÎµÈ¼¶*/
-        public string Type { get; private set; } /* Ê×ÊÎÀàĞÍ*/
-        public int SuitID { get; private set; } /* Ì××°ID£¨Îª0ÊÇÃ»ÓĞ²»ÊôÓÚÌ××°£¬Ê×ÊÎÆ·¼¶Îª4µÄÊ×ÊÎ¸Ã²ÎÊıÎªÌ××°id£¬ÆäÓàÇé¿öÎª0,ÒıÓÃJewelrySuit.csv£©*/
-        public int KeyAbility { get; private set; } /* ¹Ø¼üÊôĞÔÀàĞÍ*/
-        public int KeyAbilityValue { get; private set; } /* ¹Ø¼üÊôĞÔÊıÖµ*/
-        public int SalePrice { get; private set; } /* ÊÛÂô¼Û¸ñ*/
-        public string Description { get; private set; } /* ÃèÊö,¸ù¾İLvlºÍRankÀ´Ëæ»ú3¸öÊôĞÔ£¬µÚÒ»¸öÊôĞÔÓÉLvl,RankĞĞËæ»ú£¬Ê£ÏÂ2¸öÓÉLvlºÍĞ¡ÓÚRankµÄĞĞÀïËæ»ú¡£Rank×îĞ¡µÄÊ±ºò¶¼´ÓLvl£¬RankÀïËæ»ú¡£*/
+        public int ID { get; private set; } /* é¦–é¥°ID*/
+        public string Name { get; private set; } /* é¦–é¥°åç§°*/
+        public string IconFile { get; private set; } /* å›¾æ ‡ID*/
+        public Config.DataLevelrank LvlRank { get; private set; } /* é¦–é¥°ç­‰çº§*/
+        public string Type { get; private set; } /* é¦–é¥°ç±»å‹*/
+        public int SuitID { get; private set; } /* å¥—è£…IDï¼ˆä¸º0æ˜¯æ²¡æœ‰ä¸å±äºå¥—è£…ï¼Œé¦–é¥°å“çº§ä¸º4çš„é¦–é¥°è¯¥å‚æ•°ä¸ºå¥—è£…idï¼Œå…¶ä½™æƒ…å†µä¸º0,å¼•ç”¨JewelrySuit.csvï¼‰*/
+        public int KeyAbility { get; private set; } /* å…³é”®å±æ€§ç±»å‹*/
+        public int KeyAbilityValue { get; private set; } /* å…³é”®å±æ€§æ•°å€¼*/
+        public int SalePrice { get; private set; } /* å”®å–ä»·æ ¼*/
+        public string Description { get; private set; } /* æè¿°,æ ¹æ®Lvlå’ŒRankæ¥éšæœº3ä¸ªå±æ€§ï¼Œç¬¬ä¸€ä¸ªå±æ€§ç”±Lvl,Rankè¡Œéšæœºï¼Œå‰©ä¸‹2ä¸ªç”±Lvlå’Œå°äºRankçš„è¡Œé‡Œéšæœºã€‚Rankæœ€å°çš„æ—¶å€™éƒ½ä»Lvlï¼ŒRanké‡Œéšæœºã€‚*/
         public Config.Equip.DataJewelryrandom RefLvlRank { get; private set; }
         public Config.Equip.DataJewelrytype RefType { get; private set; }
         public Config.Equip.DataJewelrysuit NullableRefSuitID { get; private set; }

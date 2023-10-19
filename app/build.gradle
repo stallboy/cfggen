@@ -19,6 +19,7 @@ repositories {
 dependencies {
     // Use JUnit Jupiter for testing.
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.1'
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 
     implementation 'org.antlr:antlr4-runtime:4.13.1'
     implementation 'org.dhatim:fastexcel-reader:0.15.7'

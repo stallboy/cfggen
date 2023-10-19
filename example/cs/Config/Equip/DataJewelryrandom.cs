@@ -6,10 +6,10 @@ namespace Config.Equip
 {
     public partial class DataJewelryrandom
     {
-        public Config.DataLevelrank LvlRank { get; private set; } /* 等级*/
-        public Config.DataRange AttackRange { get; private set; } /* 最小攻击力*/
-        public List<Config.DataRange> OtherRange { get; private set; } /* 最小防御力*/
-        public List<Config.Equip.DataTestpackbean> TestPack { get; private set; } /* 测试pack*/
+        public Config.DataLevelrank LvlRank { get; private set; } /* 绛夌骇*/
+        public Config.DataRange AttackRange { get; private set; } /* 鏈�灏忔敾鍑诲姏*/
+        public List<Config.DataRange> OtherRange { get; private set; } /* 鏈�灏忛槻寰″姏*/
+        public List<Config.Equip.DataTestpackbean> TestPack { get; private set; } /* 娴嬭瘯pack*/
 
         public override int GetHashCode()
         {

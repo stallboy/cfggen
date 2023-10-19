@@ -14,3 +14,37 @@
 * 生成java注重安全
 
 * 生成lua注重内存大小
+
+## build & test
+
+* 生成configgen.jar
+```bash
+gradle fatjar  # 打出app/build/libs/configgen.jar
+```
+
+* 测试java：生成java代码和数据
+```bash
+cd example
+genjavasealed.bat # genjava 也可以，sealed需要java 17或以上才支持
+```
+
+* 测试java：检验java生成
+```bash
+gradle build 
+java -jar build/libs/example.jar # 进入命令行，输入q退出，输入其他比如ai会打印表名称以ai开头的结构定义和数据
+```
+
+* 测试lua
+```bash
+genlua.bat 
+cd lua
+lua.exe test.lua
+```
+
+* 测试csharp
+
+```bash
+gencshape.bat 
+cd cs
+dotnet run
+```

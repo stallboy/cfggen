@@ -6,11 +6,11 @@ namespace Config.Other
 {
     public partial class DataLootitem
     {
-        public int Lootid { get; private set; } /* 掉落id*/
-        public int Itemid { get; private set; } /* 掉落物品*/
-        public int Chance { get; private set; } /* 掉落概率*/
-        public int Countmin { get; private set; } /* 数量下限*/
-        public int Countmax { get; private set; } /* 数量上限*/
+        public int Lootid { get; private set; } /* 鎺夎惤id*/
+        public int Itemid { get; private set; } /* 鎺夎惤鐗╁搧*/
+        public int Chance { get; private set; } /* 鎺夎惤姒傜巼*/
+        public int Countmin { get; private set; } /* 鏁伴噺涓嬮檺*/
+        public int Countmax { get; private set; } /* 鏁伴噺涓婇檺*/
 
         public override int GetHashCode()
         {

@@ -1,4 +1,6 @@
-package.path = './../../src/support/?.lua;' .. package.path
+print("中文1234")
+
+package.path = './../../app/src/main/resources/support/?.lua;' .. package.path
 local mkcfg = require("mkcfg")
 local init = require("mkcfginit")
 package.loaded["common.mkcfg"] = mkcfg
@@ -12,17 +14,27 @@ mkcfg.R = init.R
 local Beans = require("cfg._beans")
 local cfg = require("cfg._cfgs")
 
+local function assertEqual(actual, expected)
+    if actual == expected then
+        return
+    end
+
+    print("actual  : " .. actual);
+    print("expected: " .. expected);
+    error("not equal")
+end
+
 local function testToString()
     local t1 = cfg.task.task.get(1)
     print(t1)
     local t2 = cfg.task.task.get(2)
-    assert(tostring(t2) == '{taskid=2,name=[和npc对话,和npc对话],nexttask=3,completecondition=TalkNpc{npcid=1},exp=2000,testDefaultBean={testInt=22,testBool=false,testString=text,testSubBean={x=3,y=4,z=5},testList=[11,22],testList2=[3,4,5],testMap=[str in map]}}')
+    assertEqual(tostring(t2),
+            '{taskid=2,name=[和npc对话,和npc对话],nexttask=3,completecondition=TalkNpc{npcid=1},exp=2000,testDefaultBean={testInt=22,testBool=false,testString=text,testSubBean={x=3,y=4,z=5},testList=[11,22],testList2=[3,4,5],testMap=[str in map]}}')
     --print(t2)
 
-    local s4 = cfg.other.signin.get(4)
+    local s1 = cfg.other.signin.get(1)
     --print(tostring(s4))
-    assert(tostring(s4) ==
-            '{id=4,item2countMap={10001=5,30002=5,30001=5},vipitem2vipcountMap={10001=10},viplevel=0,iconFile=texture/t_i10008.bundle}')
+    assertEqual(tostring(s1),'{id=1,item2countMap={10001=1},vipitem2vipcountMap=[],viplevel=0,iconFile=texture/t_i10005.bundle}')
 
 end
 
@@ -264,17 +276,17 @@ local function testMetadata()
     assert(fields[7] == "deathRemove")
 
     local uniqkeys = ai.Metadata.uniqkeys
-    assert(#uniqkeys == 1 )
+    assert(#uniqkeys == 1)
     local pk = ai.Metadata.uniqkeys[1]
-    assert(pk[1] == 'all' )
-    assert(pk[2] == 'get' )
-    assert(pk[3] == 1 )
+    assert(pk[1] == 'all')
+    assert(pk[2] == 'get')
+    assert(pk[3] == 1)
 
     local refs = cfg.equip.jewelry.Metadata.refs
-    assert(#refs == 4 )
+    assert(#refs == 4)
 
     local enumidx = cfg.equip.jewelrytype.Metadata.enumidx
-    assert(enumidx == 1 )
+    assert(enumidx == 1)
 end
 
 testReadOnly()

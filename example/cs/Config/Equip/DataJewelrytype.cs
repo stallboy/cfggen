@@ -11,7 +11,7 @@ namespace Config.Equip
         public static DataJewelrytype Magic { get; private set; }
         public static DataJewelrytype Bottle { get; private set; }
 
-        public string TypeName { get; private set; } /* ³ÌĞòÓÃÃû×Ö*/
+        public string TypeName { get; private set; } /* ç¨‹åºç”¨åå­—*/
 
         public override int GetHashCode()
         {

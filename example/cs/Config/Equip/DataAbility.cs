@@ -14,8 +14,8 @@ namespace Config.Equip
         public static DataAbility Block { get; private set; }
         public static DataAbility Break_armor { get; private set; }
 
-        public int Id { get; private set; } /* ÊôĞÔÀàĞÍ*/
-        public string Name { get; private set; } /* ³ÌĞòÓÃÃû×Ö*/
+        public int Id { get; private set; } /* å±æ€§ç±»å‹*/
+        public string Name { get; private set; } /* ç¨‹åºç”¨åå­—*/
 
         public override int GetHashCode()
         {

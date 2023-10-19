@@ -8,16 +8,16 @@ namespace Config.Equip
     {
         public static DataJewelrysuit SpecialSuit { get; private set; }
 
-        public int SuitID { get; private set; } /* ÊÎÆ·Ì××°ID*/
+        public int SuitID { get; private set; } /* é¥°å“å¥—è£…ID*/
         public string Ename { get; private set; }
-        public string Name { get; private set; } /* ²ß»®ÓÃÃû×Ö*/
-        public int Ability1 { get; private set; } /* Ì××°ÊôĞÔÀàĞÍ1£¨×°±¸Ì××°ÖĞµÄÁ½¼şÊ±Ôö¼ÓµÄÊôĞÔ£©*/
-        public int Ability1Value { get; private set; } /* Ì××°ÊôĞÔ1*/
-        public int Ability2 { get; private set; } /* Ì××°ÊôĞÔÀàĞÍ2£¨×°±¸Ì××°ÖĞµÄÈı¼şÊ±Ôö¼ÓµÄÊôĞÔ£©*/
-        public int Ability2Value { get; private set; } /* Ì××°ÊôĞÔ2*/
-        public int Ability3 { get; private set; } /* Ì××°ÊôĞÔÀàĞÍ3£¨×°±¸Ì××°ÖĞµÄËÄ¼şÊ±Ôö¼ÓµÄÊôĞÔ£©*/
-        public int Ability3Value { get; private set; } /* Ì××°ÊôĞÔ3*/
-        public List<int> SuitList { get; private set; } /* ²¿¼ş1*/
+        public string Name { get; private set; } /* ç­–åˆ’ç”¨åå­—*/
+        public int Ability1 { get; private set; } /* å¥—è£…å±æ€§ç±»å‹1ï¼ˆè£…å¤‡å¥—è£…ä¸­çš„ä¸¤ä»¶æ—¶å¢åŠ çš„å±æ€§ï¼‰*/
+        public int Ability1Value { get; private set; } /* å¥—è£…å±æ€§1*/
+        public int Ability2 { get; private set; } /* å¥—è£…å±æ€§ç±»å‹2ï¼ˆè£…å¤‡å¥—è£…ä¸­çš„ä¸‰ä»¶æ—¶å¢åŠ çš„å±æ€§ï¼‰*/
+        public int Ability2Value { get; private set; } /* å¥—è£…å±æ€§2*/
+        public int Ability3 { get; private set; } /* å¥—è£…å±æ€§ç±»å‹3ï¼ˆè£…å¤‡å¥—è£…ä¸­çš„å››ä»¶æ—¶å¢åŠ çš„å±æ€§ï¼‰*/
+        public int Ability3Value { get; private set; } /* å¥—è£…å±æ€§3*/
+        public List<int> SuitList { get; private set; } /* éƒ¨ä»¶1*/
 
         public override int GetHashCode()
         {

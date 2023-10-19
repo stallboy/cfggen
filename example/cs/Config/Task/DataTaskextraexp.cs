@@ -6,8 +6,8 @@ namespace Config.Task
 {
     public partial class DataTaskextraexp
     {
-        public int Taskid { get; private set; } /* ÈÎÎñÍê³ÉÌõ¼şÀàĞÍ£¨idµÄ·¶Î§Îª1-100£©*/
-        public int Extraexp { get; private set; } /* ¶îÍâ½±Àø¾­Ñé*/
+        public int Taskid { get; private set; } /* ä»»åŠ¡å®Œæˆæ¡ä»¶ç±»å‹ï¼ˆidçš„èŒƒå›´ä¸º1-100ï¼‰*/
+        public int Extraexp { get; private set; } /* é¢å¤–å¥–åŠ±ç»éªŒ*/
 
         public override int GetHashCode()
         {

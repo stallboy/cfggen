@@ -7,12 +7,12 @@ namespace Config.Ai
     public partial class DataAi
     {
         public int ID { get; private set; }
-        public string Desc { get; private set; } /* ÃèÊö----ÕâÀï²âÊÔÏÂ¶àĞĞĞ§¹û--ÔÙÀ´Ò»ĞĞ*/
-        public string CondID { get; private set; } /* ´¥·¢¹«Ê½*/
-        public int TrigTick { get; private set; } /* ´¥·¢¼ä¸ô(Ö¡)*/
-        public int TrigOdds { get; private set; } /* ´¥·¢¼¸ÂÊ*/
-        public string ActionID { get; private set; } /* ´¥·¢ĞĞÎª*/
-        public bool DeathRemove { get; private set; } /* ËÀÍöÒÆ³ı*/
+        public string Desc { get; private set; } /* æè¿°----è¿™é‡Œæµ‹è¯•ä¸‹å¤šè¡Œæ•ˆæœ--å†æ¥ä¸€è¡Œ*/
+        public string CondID { get; private set; } /* è§¦å‘å…¬å¼*/
+        public int TrigTick { get; private set; } /* è§¦å‘é—´éš”(å¸§)*/
+        public int TrigOdds { get; private set; } /* è§¦å‘å‡ ç‡*/
+        public string ActionID { get; private set; } /* è§¦å‘è¡Œä¸º*/
+        public bool DeathRemove { get; private set; } /* æ­»äº¡ç§»é™¤*/
 
         public override int GetHashCode()
         {

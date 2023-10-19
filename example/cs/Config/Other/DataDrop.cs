@@ -6,10 +6,10 @@ namespace Config.Other
 {
     public partial class DataDrop
     {
-        public int Dropid { get; private set; } /* ĞòºÅ*/
-        public string Name { get; private set; } /* Ãû×Ö*/
-        public List<Config.Other.DataDropitem> Items { get; private set; } /* µôÂä¸ÅÂÊ*/
-        public KeyedList<int, int> Testmap { get; private set; } /* ²âÊÔmap block*/
+        public int Dropid { get; private set; } /* åºå·*/
+        public string Name { get; private set; } /* åå­—*/
+        public List<Config.Other.DataDropitem> Items { get; private set; } /* æ‰è½æ¦‚ç‡*/
+        public KeyedList<int, int> Testmap { get; private set; } /* æµ‹è¯•map block*/
 
         public override int GetHashCode()
         {

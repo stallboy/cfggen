@@ -12,9 +12,9 @@ namespace Config.Equip
         public static DataRank Purple { get; private set; }
         public static DataRank Yellow { get; private set; }
 
-        public int RankID { get; private set; } /* Ï¡ÓĞ¶È*/
-        public string RankName { get; private set; } /* ³ÌĞòÓÃÃû×Ö*/
-        public string RankShowName { get; private set; } /* ÏÔÊ¾Ãû³Æ*/
+        public int RankID { get; private set; } /* ç¨€æœ‰åº¦*/
+        public string RankName { get; private set; } /* ç¨‹åºç”¨åå­—*/
+        public string RankShowName { get; private set; } /* æ˜¾ç¤ºåç§°*/
 
         public override int GetHashCode()
         {

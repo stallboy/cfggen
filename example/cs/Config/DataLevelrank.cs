@@ -6,8 +6,8 @@ namespace Config
 {
     public partial class DataLevelrank
     {
-        public int Level { get; private set; } /* 等级*/
-        public int Rank { get; private set; } /* 品质*/
+        public int Level { get; private set; } /* 绛夌骇*/
+        public int Rank { get; private set; } /* 鍝佽川*/
         public Config.Equip.DataRank RefRank { get; private set; }
 
         public DataLevelrank() {

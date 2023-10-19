@@ -6,11 +6,11 @@ namespace Config.Other
 {
     public partial class DataSignin
     {
-        public int Id { get; private set; } /* Àñ°üID*/
-        public KeyedList<int, int> Item2countMap { get; private set; } /* ÆÕÍ¨½±Àø*/
-        public KeyedList<int, int> Vipitem2vipcountMap { get; private set; } /* vip½±Àø*/
-        public int Viplevel { get; private set; } /* ÁìÈ¡vip½±ÀøµÄ×îµÍµÈ¼¶*/
-        public string IconFile { get; private set; } /* Àñ°üÍ¼±ê*/
+        public int Id { get; private set; } /* ç¤¼åŒ…ID*/
+        public KeyedList<int, int> Item2countMap { get; private set; } /* æ™®é€šå¥–åŠ±*/
+        public KeyedList<int, int> Vipitem2vipcountMap { get; private set; } /* vipå¥–åŠ±*/
+        public int Viplevel { get; private set; } /* é¢†å–vipå¥–åŠ±çš„æœ€ä½ç­‰çº§*/
+        public string IconFile { get; private set; } /* ç¤¼åŒ…å›¾æ ‡*/
         public KeyedList<int, Config.Other.DataLoot> RefVipitem2vipcountMap { get; private set; }
 
         public override int GetHashCode()

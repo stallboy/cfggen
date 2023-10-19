@@ -6,10 +6,10 @@ namespace Config.Other
 {
     public partial class DataLoot
     {
-        public int Lootid { get; private set; } /* 序号*/
+        public int Lootid { get; private set; } /* 搴忓彿*/
         public string Ename { get; private set; }
-        public string Name { get; private set; } /* 名字*/
-        public List<int> ChanceList { get; private set; } /* 掉落0件物品的概率*/
+        public string Name { get; private set; } /* 鍚嶅瓧*/
+        public List<int> ChanceList { get; private set; } /* 鎺夎惤0浠剁墿鍝佺殑姒傜巼*/
         public List<Config.Other.DataLootitem> ListRefLootid { get; private set; }
 
         public override int GetHashCode()

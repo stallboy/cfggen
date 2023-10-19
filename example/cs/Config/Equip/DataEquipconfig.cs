@@ -9,12 +9,12 @@ namespace Config.Equip
         public static DataEquipconfig Instance { get; private set; }
         public static DataEquipconfig Instance2 { get; private set; }
 
-        public string Entry { get; private set; } /* Èë¿Ú£¬³ÌĞòÌî*/
-        public int Stone_count_for_set { get; private set; } /* ĞÎ³ÉÌ××°µÄÒôÊ¯ÊıÁ¿*/
-        public string Draw_protect_name { get; private set; } /* ±£µ×²ßÂÔÃû³Æ*/
-        public int Broadcastid { get; private set; } /* ¹«¸æId*/
-        public int Broadcast_least_quality { get; private set; } /* ¹«¸æµÄ×îµÍÆ·ÖÊ*/
-        public int Week_reward_mailid { get; private set; } /* ³é¿¨ÖÜ½±ÀøµÄÓÊ¼şid*/
+        public string Entry { get; private set; } /* å…¥å£ï¼Œç¨‹åºå¡«*/
+        public int Stone_count_for_set { get; private set; } /* å½¢æˆå¥—è£…çš„éŸ³çŸ³æ•°é‡*/
+        public string Draw_protect_name { get; private set; } /* ä¿åº•ç­–ç•¥åç§°*/
+        public int Broadcastid { get; private set; } /* å…¬å‘ŠId*/
+        public int Broadcast_least_quality { get; private set; } /* å…¬å‘Šçš„æœ€ä½å“è´¨*/
+        public int Week_reward_mailid { get; private set; } /* æŠ½å¡å‘¨å¥–åŠ±çš„é‚®ä»¶id*/
 
         public override int GetHashCode()
         {
