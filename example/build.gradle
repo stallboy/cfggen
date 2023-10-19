@@ -19,10 +19,6 @@ repositories {
 dependencies {
     // Use JUnit Jupiter for testing.
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.1'
-
-    implementation 'org.antlr:antlr4-runtime:4.13.1'
-    implementation 'org.dhatim:fastexcel-reader:0.15.7'
-    implementation 'de.siegmar:fastcsv:2.2.2'
 }
 
 
@@ -44,12 +40,7 @@ sourceSets {
 
 
 compileJava {
-    options.compilerArgs += ["--enable-preview"]
     options.encoding = "UTF-8"
-}
-
-run {
-    jvmArgs += ['--enable-preview']
 }
 
 jar {
@@ -60,8 +51,7 @@ jar {
 
 application {
     // Define the main class for the application.
-    mainClass = 'configgen.gen.Main'
-    applicationDefaultJvmArgs = ['--enable-preview']
+    mainClass = 'LoadConfig'
 }
 
 tasks.named('test') {

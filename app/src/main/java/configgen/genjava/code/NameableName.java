@@ -6,7 +6,12 @@ import configgen.schema.StructSchema;
 
 import java.util.Arrays;
 
+import static configgen.gen.Generator.upper1;
+
 class NameableName {
+
+    static boolean isSealedInterface = false;
+
     final String pkg;
     final String className;
     final String fullName;
@@ -23,6 +28,10 @@ class NameableName {
         String name;
         if (nullableInterface != null) {
             name = nullableInterface.name().toLowerCase() + "." + nameable.name();
+        } else if (isSealedInterface && nameable instanceof InterfaceSchema sInterface) { //java要求：sealed interface需要跟impl在同一个package下
+            String[] split = sInterface.name().split("\\.");
+            String interfaceName = split[split.length - 1];
+            name = sInterface.name().toLowerCase() + "." + interfaceName;
         } else {
             name = nameable.name();
         }
@@ -31,7 +40,7 @@ class NameableName {
         containerPrefix = nameable.name().replace('.', '_') + "_";
         String[] seps = name.split("\\.");
         String c = seps[seps.length - 1];
-        className = c.substring(0, 1).toUpperCase() + c.substring(1);
+        className = upper1(c);
 
         String[] pks = Arrays.copyOf(seps, seps.length - 1);
         if (pks.length == 0)

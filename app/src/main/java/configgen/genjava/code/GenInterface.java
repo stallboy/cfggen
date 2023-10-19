@@ -5,12 +5,21 @@ import configgen.schema.InterfaceSchema;
 import configgen.schema.StructSchema;
 import configgen.util.CachedIndentPrinter;
 
+import java.util.stream.Collectors;
+
+import static configgen.gen.Generator.upper1;
+
 class GenInterface {
 
     static void generate(InterfaceSchema sInterface, NameableName name, CachedIndentPrinter ps) {
         ps.println(STR. "package \{ name.pkg };" );
         ps.println();
-        ps.println(STR. "public interface \{ name.className } {" );
+        if (NameableName.isSealedInterface) {
+            String implClassNameList = sInterface.impls().stream().map(s -> upper1(s.name())).collect(Collectors.joining(", "));
+            ps.println(STR. "public sealed interface \{ name.className } permits \{ implClassNameList } {" );
+        } else {
+            ps.println(STR. "public interface \{ name.className } {" );
+        }
         ps.inc();
         ps.println(STR. "\{ Name.refType(sInterface.enumRefTable()) } type();" );
         ps.println();

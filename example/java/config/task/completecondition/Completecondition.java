@@ -1,6 +1,6 @@
-package config.task;
+package config.task.completecondition;
 
-public interface Completecondition {
+public sealed interface Completecondition permits KillMonster, TalkNpc, TestNoColumn, Chat, ConditionAnd, CollectItem {
     config.task.Completeconditiontype type();
 
     default void _resolve(config.ConfigMgr mgr) {

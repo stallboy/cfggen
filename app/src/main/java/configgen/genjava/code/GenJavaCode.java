@@ -27,6 +27,7 @@ public class GenJavaCode extends Generator {
     private final String dir;
     private final String pkg;
     private final String encoding;
+    private final boolean sealed;
     private final String buildersFilename;
     private Set<String> needBuilderTables = null;
     private final int schemaNumPerFile;
@@ -37,6 +38,7 @@ public class GenJavaCode extends Generator {
         dir = parameter.get("dir", "config", "目录");
         pkg = parameter.get("pkg", "config", "包名");
         encoding = parameter.get("encoding", "UTF-8", "生成代码文件的编码");
+        sealed = parameter.has("sealed", "生成sealed interface，需要java17");
         buildersFilename = parameter.get("builders", null, "对这些table生成对应的builder，默认为null");
         schemaNumPerFile = Integer.parseInt(
                 parameter.get("schemaNumPerFile", "100",
@@ -69,6 +71,7 @@ public class GenJavaCode extends Generator {
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/')).toFile();
 
         Name.codeTopPkg = pkg;
+        NameableName.isSealedInterface = sealed;
         GenStructuralClassTablePart.mapsInMgr.clear();
         boolean isLangSwitch = ctx.getLangSwitch() != null;
         TypeStr.isLangSwitch = isLangSwitch; //辅助Text的类型声明和创建

@@ -49,17 +49,18 @@ public enum CfgDataReader {
 
         Files.walkFileTree(rootDir, new SimpleFileVisitor<>() {
             @Override
-            public FileVisitResult visitFile(Path path, BasicFileAttributes a) {
+            public FileVisitResult visitFile(Path filePath, BasicFileAttributes a) {
 
-                if (path.toFile().isHidden()) {
+                if (filePath.toFile().isHidden()) {
                     return FileVisitResult.CONTINUE;
                 }
 
-                if (path.getFileName().toString().startsWith("~")) {
+                if (filePath.getFileName().toString().startsWith("~")) {
                     return FileVisitResult.CONTINUE;
                 }
 
-                Path relativePath = rootDir.relativize(path);
+                Path relativePath = rootDir.relativize(filePath);
+                Path path = filePath.toAbsolutePath().normalize();
                 DataUtil.FileFmt fmt = DataUtil.getFileFormat(path);
                 switch (fmt) {
                     case CSV -> {
@@ -245,12 +246,11 @@ public enum CfgDataReader {
         stat.excelCount++;
 
 
-        try (Workbook workbook = WorkbookFactory.create(path.toFile())) {
+        try (Workbook workbook = WorkbookFactory.create(path.toFile(), null, true)) {
             DataFormatter formatter = new DataFormatter();
             FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
             DRawPoiFmt fmt = new DRawPoiFmt(formatter, evaluator);
-            for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
-                org.apache.poi.ss.usermodel.Sheet sheet = workbook.getSheetAt(sheetIndex);
+            for (org.apache.poi.ss.usermodel.Sheet sheet : workbook) {
                 String sheetName = sheet.getSheetName().trim();
                 DataUtil.TableNameIndex ti = DataUtil.getTableNameIndex(relativePath, sheetName);
                 if (ti == null) {

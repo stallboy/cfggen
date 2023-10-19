@@ -28,7 +28,8 @@ class GenStructuralClass {
         ps.println(STR. "package \{ name.pkg };" );
         ps.println();
         if (isImpl) {
-            ps.println(STR. "public class \{ name.className } implements \{ Name.fullName(nullableInterface) } {" );
+            String classStr = NameableName.isSealedInterface ? "final class" : "class";
+            ps.println(STR. "public \{ classStr } \{ name.className } implements \{ Name.fullName(nullableInterface) } {" );
             ps.println1("@Override");
             ps.println1(STR. "public \{ Name.refType(nullableInterface.enumRefTable()) } type() {" );
             ps.println2(STR. "return \{ Name.refType(nullableInterface.enumRefTable()) }.\{ structural.name().toUpperCase() };" );

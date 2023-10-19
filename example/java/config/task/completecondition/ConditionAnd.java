@@ -1,34 +1,34 @@
 package config.task.completecondition;
 
-public class ConditionAnd implements config.task.Completecondition {
+public final class ConditionAnd implements config.task.completecondition.Completecondition {
     @Override
     public config.task.Completeconditiontype type() {
         return config.task.Completeconditiontype.CONDITIONAND;
     }
 
-    private config.task.Completecondition cond1;
-    private config.task.Completecondition cond2;
+    private config.task.completecondition.Completecondition cond1;
+    private config.task.completecondition.Completecondition cond2;
 
     private ConditionAnd() {
     }
 
-    public ConditionAnd(config.task.Completecondition cond1, config.task.Completecondition cond2) {
+    public ConditionAnd(config.task.completecondition.Completecondition cond1, config.task.completecondition.Completecondition cond2) {
         this.cond1 = cond1;
         this.cond2 = cond2;
     }
 
     public static ConditionAnd _create(configgen.genjava.ConfigInput input) {
         ConditionAnd self = new ConditionAnd();
-        self.cond1 = config.task.Completecondition._create(input);
-        self.cond2 = config.task.Completecondition._create(input);
+        self.cond1 = config.task.completecondition.Completecondition._create(input);
+        self.cond2 = config.task.completecondition.Completecondition._create(input);
         return self;
     }
 
-    public config.task.Completecondition getCond1() {
+    public config.task.completecondition.Completecondition getCond1() {
         return cond1;
     }
 
-    public config.task.Completecondition getCond2() {
+    public config.task.completecondition.Completecondition getCond2() {
         return cond2;
     }
 

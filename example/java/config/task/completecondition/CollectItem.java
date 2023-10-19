@@ -1,6 +1,6 @@
 package config.task.completecondition;
 
-public class CollectItem implements config.task.Completecondition {
+public final class CollectItem implements config.task.completecondition.Completecondition {
     @Override
     public config.task.Completeconditiontype type() {
         return config.task.Completeconditiontype.COLLECTITEM;

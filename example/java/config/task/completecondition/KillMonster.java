@@ -1,6 +1,6 @@
 package config.task.completecondition;
 
-public class KillMonster implements config.task.Completecondition {
+public final class KillMonster implements config.task.completecondition.Completecondition {
     @Override
     public config.task.Completeconditiontype type() {
         return config.task.Completeconditiontype.KILLMONSTER;

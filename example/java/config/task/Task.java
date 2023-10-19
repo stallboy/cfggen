@@ -4,7 +4,7 @@ public class Task {
     private int taskid;
     private java.util.List<String> name;
     private int nexttask;
-    private config.task.Completecondition completecondition;
+    private config.task.completecondition.Completecondition completecondition;
     private int exp;
     private config.task.TestDefaultBean testDefaultBean;
     private config.task.Taskextraexp NullableRefTaskid;
@@ -21,7 +21,7 @@ public class Task {
             self.name.add(input.readStr());
         }
         self.nexttask = input.readInt();
-        self.completecondition = config.task.Completecondition._create(input);
+        self.completecondition = config.task.completecondition.Completecondition._create(input);
         self.exp = input.readInt();
         self.testDefaultBean = config.task.TestDefaultBean._create(input);
         return self;
@@ -45,7 +45,7 @@ public class Task {
         return nexttask;
     }
 
-    public config.task.Completecondition getCompletecondition() {
+    public config.task.completecondition.Completecondition getCompletecondition() {
         return completecondition;
     }
 

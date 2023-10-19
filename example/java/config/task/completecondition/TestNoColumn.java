@@ -1,6 +1,6 @@
 package config.task.completecondition;
 
-public class TestNoColumn implements config.task.Completecondition {
+public final class TestNoColumn implements config.task.completecondition.Completecondition {
     @Override
     public config.task.Completeconditiontype type() {
         return config.task.Completeconditiontype.TESTNOCOLUMN;
