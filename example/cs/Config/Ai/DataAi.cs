@@ -9,9 +9,9 @@ namespace Config.Ai
         public int ID { get; private set; }
         public string Desc { get; private set; } /* 描述----这里测试下多行效果--再来一行*/
         public string CondID { get; private set; } /* 触发公式*/
-        public int TrigTick { get; private set; } /* 触发间隔(帧)*/
+        public Config.Ai.DataTriggertick TrigTick { get; private set; } /* 触发间隔(帧)*/
         public int TrigOdds { get; private set; } /* 触发几率*/
-        public string ActionID { get; private set; } /* 触发行为*/
+        public List<int> ActionID { get; private set; } /* 触发行为*/
         public bool DeathRemove { get; private set; } /* 死亡移除*/
 
         public override int GetHashCode()
@@ -29,7 +29,7 @@ namespace Config.Ai
 
         public override string ToString()
         {
-            return "(" + ID + "," + Desc + "," + CondID + "," + TrigTick + "," + TrigOdds + "," + ActionID + "," + DeathRemove + ")";
+            return "(" + ID + "," + Desc + "," + CondID + "," + TrigTick + "," + TrigOdds + "," + CSV.ToString(ActionID) + "," + DeathRemove + ")";
         }
 
         static Config.KeyedList<int, DataAi> all = null;
@@ -71,9 +71,11 @@ namespace Config.Ai
             self.ID = os.ReadInt32();
             self.Desc = os.ReadString();
             self.CondID = os.ReadString();
-            self.TrigTick = os.ReadInt32();
+            self.TrigTick = Config.Ai.DataTriggertick._create(os);
             self.TrigOdds = os.ReadInt32();
-            self.ActionID = os.ReadString();
+            self.ActionID = new List<int>();
+            for (var c = os.ReadInt32(); c > 0; c--)
+                self.ActionID.Add(os.ReadInt32());
             self.DeathRemove = os.ReadBool();
             return self;
         }

@@ -38,6 +38,7 @@ java -jar build/libs/example.jar # 进入命令行，输入q退出，输入其�
 ```bash
 genlua.bat 
 cd lua
+chcp 65001
 lua.exe test.lua
 ```
 

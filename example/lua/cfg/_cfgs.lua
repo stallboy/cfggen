@@ -10,6 +10,8 @@ cfg.ai.ai = pre("cfg.ai.ai")
 cfg.ai.ai_action = pre("cfg.ai.ai_action")
 ---@type cfg.ai.ai_condition
 cfg.ai.ai_condition = pre("cfg.ai.ai_condition")
+---@type cfg.ai.triggerticktype
+cfg.ai.triggerticktype = pre("cfg.ai.triggerticktype")
 cfg.equip = {}
 ---@type cfg.equip.ability
 cfg.equip.ability = pre("cfg.equip.ability")

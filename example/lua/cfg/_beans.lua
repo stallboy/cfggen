@@ -40,6 +40,42 @@ Beans.range = bean(nil,
     'max' -- int, 最大
     )
 
+Beans.ai = {}
+---@class Beans.ai.triggertick
+
+---@type Beans.ai.triggertick
+Beans.ai.triggertick = {}
+
+---@class Beans.ai.triggertick.constvalue : Beans.ai.triggertick
+---@field value number 
+
+---@type Beans.ai.triggertick.constvalue
+Beans.ai.triggertick.constvalue = action("ConstValue", nil, 
+    'value' -- int
+    )
+
+---@class Beans.ai.triggertick.bylevel : Beans.ai.triggertick
+---@field init number 
+---@field coefficient number 
+
+---@type Beans.ai.triggertick.bylevel
+Beans.ai.triggertick.bylevel = action("ByLevel", nil, 
+    'init', -- int
+    'coefficient' -- float
+    )
+
+---@class Beans.ai.triggertick.byserverupday : Beans.ai.triggertick
+---@field init number 
+---@field coefficient1 number 
+---@field coefficient2 number 
+
+---@type Beans.ai.triggertick.byserverupday
+Beans.ai.triggertick.byserverupday = action("ByServerUpDay", nil, 
+    'init', -- int
+    'coefficient1', -- float
+    'coefficient2' -- float
+    )
+
 Beans.equip = {}
 ---@class Beans.equip.testpackbean
 ---@field name string 

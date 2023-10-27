@@ -4,9 +4,9 @@ public class Ai {
     private int iD;
     private String desc;
     private String condID;
-    private int trigTick;
+    private config.ai.triggertick.TriggerTick trigTick;
     private int trigOdds;
-    private String actionID;
+    private java.util.List<Integer> actionID;
     private boolean deathRemove;
 
     private Ai() {
@@ -27,9 +27,12 @@ public class Ai {
         self.iD = input.readInt();
         self.desc = input.readStr();
         self.condID = input.readStr();
-        self.trigTick = input.readInt();
+        self.trigTick = config.ai.triggertick.TriggerTick._create(input);
         self.trigOdds = input.readInt();
-        self.actionID = input.readStr();
+        self.actionID = new java.util.ArrayList<>();
+        for (int c = input.readInt(); c > 0; c--) {
+            self.actionID.add(input.readInt());
+        }
         self.deathRemove = input.readBool();
         return self;
     }
@@ -55,7 +58,7 @@ public class Ai {
     /**
      * 触发间隔(帧)
      */
-    public int getTrigTick() {
+    public config.ai.triggertick.TriggerTick getTrigTick() {
         return trigTick;
     }
 
@@ -69,7 +72,7 @@ public class Ai {
     /**
      * 触发行为
      */
-    public String getActionID() {
+    public java.util.List<Integer> getActionID() {
         return actionID;
     }
 

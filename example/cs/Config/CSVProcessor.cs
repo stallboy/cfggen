@@ -13,6 +13,7 @@ namespace Config
                 "ai.ai",
                 "ai.ai_action",
                 "ai.ai_condition",
+                "ai.triggerticktype",
                 "equip.ability",
                 "equip.equipconfig",
                 "equip.jewelry",
@@ -47,6 +48,10 @@ namespace Config
                     case "ai.ai_condition":
                         configNulls.Remove(csv);
                         Config.Ai.DataAi_condition.Initialize(os, Errors);
+                        break;
+                    case "ai.triggerticktype":
+                        configNulls.Remove(csv);
+                        Config.Ai.DataTriggerticktype.Initialize(os, Errors);
                         break;
                     case "equip.ability":
                         configNulls.Remove(csv);

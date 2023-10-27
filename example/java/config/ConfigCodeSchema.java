@@ -9,6 +9,7 @@ public class ConfigCodeSchema {
         schema.addImp("LevelRank", LevelRank());
         schema.addImp("Position", Position());
         schema.addImp("Range", Range());
+        schema.addImp("ai.TriggerTick", ai_TriggerTick());
         schema.addImp("equip.TestPackBean", equip_TestPackBean());
         schema.addImp("other.DropItem", other_DropItem());
         schema.addImp("task.TestDefaultBean", task_TestDefaultBean());
@@ -16,6 +17,7 @@ public class ConfigCodeSchema {
         schema.addImp("ai.ai", ai_ai());
         schema.addImp("ai.ai_action", ai_ai_action());
         schema.addImp("ai.ai_condition", ai_ai_condition());
+        schema.addImp("ai.triggerticktype", ai_triggerticktype());
         schema.addImp("equip.ability", equip_ability());
         schema.addImp("equip.equipconfig", equip_equipconfig());
         schema.addImp("equip.equipconfig_Entry", equip_equipconfig_Entry());
@@ -56,6 +58,29 @@ public class ConfigCodeSchema {
         SchemaBean s2 = new SchemaBean(false);
         s2.addColumn("Min", SchemaPrimitive.SInt);
         s2.addColumn("Max", SchemaPrimitive.SInt);
+        return s2;
+    }
+
+    static Schema ai_TriggerTick() {
+        SchemaInterface s2 = new SchemaInterface();
+        {
+            SchemaBean s3 = new SchemaBean(false);
+            s3.addColumn("value", SchemaPrimitive.SInt);
+            s2.addImp("ConstValue", s3);
+        }
+        {
+            SchemaBean s3 = new SchemaBean(false);
+            s3.addColumn("init", SchemaPrimitive.SInt);
+            s3.addColumn("coefficient", SchemaPrimitive.SFloat);
+            s2.addImp("ByLevel", s3);
+        }
+        {
+            SchemaBean s3 = new SchemaBean(false);
+            s3.addColumn("init", SchemaPrimitive.SInt);
+            s3.addColumn("coefficient1", SchemaPrimitive.SFloat);
+            s3.addColumn("coefficient2", SchemaPrimitive.SFloat);
+            s2.addImp("ByServerUpDay", s3);
+        }
         return s2;
     }
 
@@ -129,9 +154,9 @@ public class ConfigCodeSchema {
         s2.addColumn("ID", SchemaPrimitive.SInt);
         s2.addColumn("Desc", SchemaPrimitive.SStr);
         s2.addColumn("CondID", SchemaPrimitive.SStr);
-        s2.addColumn("TrigTick", SchemaPrimitive.SInt);
+        s2.addColumn("TrigTick", new SchemaRef("ai.TriggerTick"));
         s2.addColumn("TrigOdds", SchemaPrimitive.SInt);
-        s2.addColumn("ActionID", SchemaPrimitive.SStr);
+        s2.addColumn("ActionID", new SchemaList(SchemaPrimitive.SInt));
         s2.addColumn("DeathRemove", SchemaPrimitive.SBool);
         return s2;
     }
@@ -153,6 +178,14 @@ public class ConfigCodeSchema {
         s2.addColumn("FormulaID", SchemaPrimitive.SInt);
         s2.addColumn("ArgIList", new SchemaList(SchemaPrimitive.SInt));
         s2.addColumn("ArgSList", new SchemaList(SchemaPrimitive.SInt));
+        return s2;
+    }
+
+    static Schema ai_triggerticktype() {
+        SchemaEnum s2 = new SchemaEnum(false, false);
+        s2.addValue("ConstValue");
+        s2.addValue("ByLevel");
+        s2.addValue("ByServerUpDay");
         return s2;
     }
 

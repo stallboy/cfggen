@@ -289,6 +289,23 @@ local function testMetadata()
     assert(enumidx == 1)
 end
 
+
+local function testCellNumberAsInterface()
+    local ai = cfg.ai.ai
+    local t = ai.get(10019)
+    assertEqual(t.trigTick.type(), "ConstValue")
+    assertEqual(t.trigTick.value, 30000)
+
+    t = ai.get(10020)
+    assertEqual(t.trigTick.type(), "ByLevel")
+    assertEqual(t.trigTick.coefficient, 0.1)
+
+    t = ai.get(10021)
+    assertEqual(t.trigTick.type(), "ByServerUpDay")
+    assertEqual(t.trigTick.coefficient2, 0.2)
+end
+
+
 testReadOnly()
 testToString()
 
@@ -324,4 +341,5 @@ testDefaultBean()
 
 testAddDel()
 testMetadata()
+testCellNumberAsInterface()
 print("ok")
