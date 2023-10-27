@@ -18,8 +18,8 @@ public final class GenI18n extends Generator {
 
     public GenI18n(Parameter parameter) {
         super(parameter);
-        file = new File(parameter.get("file", "../i18n/i18n-config.csv", "生成文件"));
-        encoding = parameter.get("encoding", "GBK", "生成文件的编码");
+        file = new File(parameter.get("file", "../i18n/i18n-config.csv"));
+        encoding = parameter.get("encoding", "GBK");
         parameter.end();
     }
 

@@ -1,5 +1,6 @@
 package configgen.value;
 
+import configgen.util.Localize;
 import configgen.util.Logger;
 import configgen.schema.FieldType;
 
@@ -28,7 +29,8 @@ public record ValueErrs(List<VErr> errs) {
             for (VErr err : errs) {
                 Logger.log("\t" + err);
             }
-            throw new IllegalStateException("请修复value errors后再继续");
+            Logger.log(Localize.getMessage("FixValueErrFirst"));
+            System.exit(1);
         }
     }
 
@@ -44,7 +46,7 @@ public record ValueErrs(List<VErr> errs) {
                                                         String interfaceName) implements VErr {
         @Override
         public String toString() {
-            return "空单元格类型为接口，没设置defaultImpl{" +
+            return Localize.getMessage("InterfaceCellEmptyButHasNoDefaultImpl") + "{" +
                     "cell=" + cell +
                     ", interfaceName='" + interfaceName + '\'' +
                     '}';
@@ -56,7 +58,7 @@ public record ValueErrs(List<VErr> errs) {
                                             String notFoundImpl) implements VErr {
         @Override
         public String toString() {
-            return "接口无此实现{" +
+            return Localize.getMessage("InterfaceCellImplNotFound") + "{" +
                     "cell=" + cell +
                     ", interfaceName='" + interfaceName + '\'' +
                     ", notFoundImpl='" + notFoundImpl + '\'' +
@@ -90,7 +92,7 @@ public record ValueErrs(List<VErr> errs) {
                                     FieldType expectedType) implements VErr {
         @Override
         public String toString() {
-            return "类型不匹配{" +
+            return Localize.getMessage("NotMatchFieldType") + "{" +
                     "cell=" + cell +
                     ", nameable='" + nameable + '\'' +
                     ", field='" + field + '\'' +
@@ -117,7 +119,7 @@ public record ValueErrs(List<VErr> errs) {
                                                List<String> keys) implements VErr {
         @Override
         public String toString() {
-            return "键值重复{" +
+            return Localize.getMessage("PrimaryOrUniqueKeyDuplicated") + "{" +
                     "cells=" + cells +
                     ", table='" + table + '\'' +
                     ", keys=" + keys +
@@ -142,7 +144,7 @@ public record ValueErrs(List<VErr> errs) {
                                              String table) implements VErr {
         @Override
         public String toString() {
-            return "ref没设置nullable时单元格不能空{" +
+            return Localize.getMessage("RefNotNullableButCellEmpty") + "{" +
                     "cells=" + cells +
                     ", table='" + table + '\'' +
                     '}';
@@ -155,7 +157,7 @@ public record ValueErrs(List<VErr> errs) {
 
         @Override
         public String toString() {
-            return "外键没找到对应值{" +
+            return Localize.getMessage("ForeignValueNotFound") + "{" +
                     "cells=" + cells +
                     ", table='" + table + '\'' +
                     ", foreignKey='" + foreignKey + '\'' +

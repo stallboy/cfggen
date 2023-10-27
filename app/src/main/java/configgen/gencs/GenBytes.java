@@ -20,7 +20,7 @@ public class GenBytes extends Generator {
 
     public GenBytes(Parameter parameter) {
         super(parameter);
-        file = new File(parameter.get("file", "config.bytes", "文件名"));
+        file = new File(parameter.get("file", "config.bytes"));
         parameter.end();
     }
 

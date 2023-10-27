@@ -1,9 +1,14 @@
 package configgen.gen;
 
 public interface Parameter {
-    String get(String key, String def, String info);
+    String get(String key, String def);
 
-    boolean has(String key, String info);
+    boolean has(String key);
 
-    void end();
+    default void end() {
+    }
+
+    default String get(String key, String def, String messageId) {
+        return get(key, def);
+    }
 }

@@ -37,18 +37,18 @@ public class GenLua extends Generator {
 
     public GenLua(Parameter parameter) {
         super(parameter);
-        dir = parameter.get("dir", ".", "生成代码所在目录");
-        pkg = parameter.get("pkg", "cfg", "模块名称");
-        encoding = parameter.get("encoding", "UTF-8", "编码");
+        dir = parameter.get("dir", ".");
+        pkg = parameter.get("pkg", "cfg");
+        encoding = parameter.get("encoding", "UTF-8");
 
-        useEmmyLua = parameter.has("emmylua", "是否生成EmmyLua相关的注解");
-        preload = parameter.has("preload", "是否一开始就全部加载配置，默认用到的时候再加载");
-        useSharedEmptyTable = parameter.has("sharedEmptyTable", "是否提取空table {}");
-        useShared = parameter.has("shared", "是否提取非空的公共table");
+        useEmmyLua = parameter.has("emmylua");
+        preload = parameter.has("preload");
+        useSharedEmptyTable = parameter.has("sharedemptytable");
+        useShared = parameter.has("shared");
 
-        packBool = parameter.has("packbool", "是否要把同一个结构里的多个bool压缩成一个int");
-        rForOldShared = parameter.has("RForOldShared", "以前R用于修饰shared table，现在默认行为改为R修饰list，map");
-        noStr = parameter.has("nostr", "!!!只用来测试字符串占用内存大小");
+        packBool = parameter.has("packbool");
+        rForOldShared = parameter.has("rforoldshared");
+        noStr = parameter.has("nostr");
         parameter.end();
     }
 

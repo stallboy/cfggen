@@ -17,7 +17,7 @@ public abstract class Generator {
      */
     protected Generator(Parameter parameter) {
         this.parameter = parameter;
-        tag = parameter.get("own", null, "提取部分配置");
+        tag = parameter.get("own", null, "Gen.Own");
     }
 
     public abstract void generate(Context ctx) throws IOException;

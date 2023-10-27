@@ -25,7 +25,7 @@ public final class GenJavaData extends Generator {
 
     public GenJavaData(Parameter parameter) {
         super(parameter);
-        file = new File(parameter.get("file", "config.data", "文件名"));
+        file = new File(parameter.get("file", "config.data"));
 
         parameter.end();
     }

@@ -1,5 +1,6 @@
 package configgen.schema;
 
+import configgen.util.Localize;
 import configgen.util.Logger;
 
 import java.util.ArrayList;
@@ -37,7 +38,8 @@ public record SchemaErrs(List<Err> errs,
             for (Err err : errs) {
                 Logger.log("\t" + err);
             }
-            throw new IllegalStateException("请修复schema errors后再继续");
+            Logger.log(Localize.getMessage("FixSchemaErrFirst"));
+            System.exit(1);
         }
     }
 

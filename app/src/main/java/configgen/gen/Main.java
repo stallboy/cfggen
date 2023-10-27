@@ -8,6 +8,7 @@ import configgen.genjava.code.GenJavaCode;
 import configgen.genlua.GenLua;
 import configgen.tool.GenI18n;
 import configgen.tool.XmlToCfg;
+import configgen.util.Localize;
 import configgen.util.Logger;
 import configgen.tool.ValueSearcher;
 import configgen.util.CachedFiles;
@@ -16,48 +17,48 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public final class Main {
     private static void usage(String reason) {
         System.out.println(reason);
 
-        System.out.println("Usage: java --enable-preview -jar configgen.jar -datadir [dir] [options] [gens]");
+        System.out.println("Usage: java --enable-preview -jar configgen.jar [options] -datadir [dir] [options] [gens]");
         System.out.println();
-        System.out.println("----配置表信息--------------------------------------");
-        System.out.println("    -datadir      配表根目录，根目录可以有个config.xml");
-        System.out.println("    -encoding     csv编码，默认是GBK，如果文件中含有bom则用bom标记的编码");
-        System.out.println("    -verify       检查配表约束");
-        System.out.println("    -checkcomma   检查带逗号的number格子，如果设置为list<number>,或由number组成bean类型且逗号分割，就报错");
-        System.out.println("                  生成会慢一些");
+        System.out.println("-----schema & data");
+        System.out.println("    -datadir          " + Localize.getMessage("Usage.DataDir"));
+        System.out.println("    -encoding         " + Localize.getMessage("Usage.Encoding"));
 
         System.out.println();
-        System.out.println("----国际化支持--------------------------------------");
-        System.out.println("    -i18nfile     国际化需要的文件，如果不用国际化，就不要配置");
-        System.out.println("    -i18nencoding 国际化需要的文件的编码，默认是GBK，如果文件中含有bom则用bom标记的编码");
-        System.out.println("    -i18ncrlfaslf 把字符串里的\\r\\n 替换为 \\n，默认是false");
-        System.out.println("    -langSwitchDir 国际化并且可随时切换语言");
-        System.out.println("    -defaultLang  langSwitchDir设置时有效，表示默认的语言，默认为zh_cn");
+        System.out.println("-----i18n support");
+        System.out.println("    -i18nfile         " + Localize.getMessage("Usage.I18nFile"));
+        System.out.println("    -i18nencoding     " + Localize.getMessage("Usage.I18nEncoding"));
+        System.out.println("    -i18ncrlfaslf     " + Localize.getMessage("Usage.I18nCrLfAsLf"));
+        System.out.println("    -langswitchdir    " + Localize.getMessage("Usage.LangSwitchDir"));
+        System.out.println("    -defaultlang      " + Localize.getMessage("Usage.DefaultLang"));
 
         System.out.println();
-        System.out.println("----小工具--------------------------------------");
-        System.out.println("    -binaryToText       后可接1或2个参数（java data的file，table名称-用startsWith匹配），打印table的定义和数据");
-        System.out.println("    -binaryToTextLoop   后可接1个参数（java data的file），打印table的定义和数据");
-        System.out.println("    -search             后接命令，找到匹配的数据");
-        System.out.println("    -xmlToCfg           .xml变成.cfg文件");
+        System.out.println("-----tools");
+        System.out.println("    -verify           " + Localize.getMessage("Usage.Verify"));
+        System.out.println("    -search           " + Localize.getMessage("Usage.Search"));
+        ValueSearcher.printUsage("        ");
+        System.out.println("    -binarytotext     " + Localize.getMessage("Usage.BinaryToText"));
+        System.out.println("    -binarytotextloop " + Localize.getMessage("Usage.BinaryToTextLoop"));
+        System.out.println("    -xmltocfg         " + Localize.getMessage("Usage.XmlToCfg"));
+        System.out.println("    -checkcomma       " + Localize.getMessage("Usage.CheckComma"));
 
-
-        System.out.println("    -v            verbose，级别1，输出统计和warning信息");
-        System.out.println("    -vv           verbose，级别2，输出额外信息");
-        System.out.println("    -p            profiler，内存和时间监测");
-        System.out.println("    -pp           profiler，内存监测前加gc");
-        System.out.println("    -nowarn       不打印警告信息，默认打印");
-
+        System.out.println("-----options");
+        System.out.println("    -v                " + Localize.getMessage("Usage.V"));
+        System.out.println("    -vv               " + Localize.getMessage("Usage.VV"));
+        System.out.println("    -p                " + Localize.getMessage("Usage.P"));
+        System.out.println("    -pp               " + Localize.getMessage("Usage.PP"));
+        System.out.println("    -nowarn           " + Localize.getMessage("Usage.NOWARN"));
 
         System.out.println();
-        System.out.println("----以下gen参数之间由,分割,参数名和参数取值之间由=或:分割--------------------------------------");
+        System.out.println("-----" + Localize.getMessage("Usage.GenStart"));
         Generators.getAllProviders().forEach((k, v) -> {
                     System.out.printf("    -gen %s\n", k);
-                    Usage usage = new Usage();
+                    Usage usage = Usage.of(k);
                     v.create(usage);
                     usage.print();
                 }
@@ -98,6 +99,7 @@ public final class Main {
 
         Generators.addProvider("lua", GenLua::new);
 
+
         String datadir = null;
         boolean xmlToCfg = false;
         int headRow = 2;
@@ -134,6 +136,15 @@ public final class Main {
 
         for (int i = 0; i < args.length; ++i) {
             switch (args[i].toLowerCase()) {
+                case "-locale" -> {
+                    String language = args[++i];
+                    Locale locale = Locale.of(language);
+                    if (!Localize.isSupported(locale)) {
+                        System.err.println("Specified Locale is not supported: " + locale.toString());
+                        return;
+                    }
+                    Localize.setLocale(locale);
+                }
                 case "-datadir" -> datadir = args[++i];
                 case "-xmltocfg" -> xmlToCfg = true;
                 case "-headrow" -> headRow = Integer.parseInt(args[++i]);
@@ -189,7 +200,7 @@ public final class Main {
             return;
         }
         if (datadir == null) {
-            usage("请需要配置-datadir");
+            usage("请配置-datadir");
             return;
         }
 
@@ -200,7 +211,7 @@ public final class Main {
         }
 
         if (i18nfile != null && langSwitchDir != null) {
-            usage("-不能同时配置-i18nfile和-langSwitchDir");
+            usage("-不能同时配置-i18nfile和-langswitchdir");
             return;
         }
 

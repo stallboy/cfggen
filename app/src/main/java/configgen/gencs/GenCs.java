@@ -27,10 +27,10 @@ public class GenCs extends Generator {
 
     public GenCs(Parameter parameter) {
         super(parameter);
-        dir = parameter.get("dir", "Config", "目录");
-        pkg = parameter.get("pkg", "Config", "包名");
-        encoding = parameter.get("encoding", "GBK", "生成文件的编码");
-        prefix = parameter.get("prefix", "Data", "生成类的前缀");
+        dir = parameter.get("dir", "Config");
+        pkg = parameter.get("pkg", "Config");
+        encoding = parameter.get("encoding", "GBK");
+        prefix = parameter.get("prefix", "Data");
         parameter.end();
     }
 

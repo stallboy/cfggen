@@ -101,12 +101,14 @@ public record ValueSearcher(CfgValue cfgValue) {
         }
     }
 
+    public static void printUsage(String prefix){
+        System.out.println(prefix + "int <int> <int> ...: search integers");
+        System.out.println(prefix + "str <str>: search string");
+        System.out.println(prefix + "ref <refTable> <IgnoredTables>: search ref");
+        System.out.println(prefix + "q: quit");
+    }
     public void loop() {
-        System.out.println("int <int> <int> ...: search integers");
-        System.out.println("str <str>: search string");
-        System.out.println("ref <refTable> <IgnoredTables>: search ref");
-        System.out.println("q: quit");
-
+        printUsage("");
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         while (true) {
             try {

@@ -2,6 +2,7 @@ package configgen.data;
 
 import configgen.schema.CfgSchema;
 import configgen.schema.TableSchema;
+import configgen.util.Localize;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -45,7 +46,9 @@ final class HeadParser {
                 header = h;
                 headerSheet = sheet;
             } else if (!curNames.equals(names)) {
-                throw new IllegalStateException(STR. "\{ sheet.id() } 文件头:\{ curNames }和\n\{ headerSheet.id() }文件头:\{ names }不匹配！" );
+                throw new IllegalStateException(
+                        Localize.getMessage("SplitDataHeaderNotEqual",
+                                sheet.id(), curNames, headerSheet.id(), names));
             }
         }
 

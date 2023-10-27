@@ -20,21 +20,23 @@ class Argument implements Parameter {
             }
 
             if (c == -1) {
-                params.put(s, null);
+                params.put(s.trim().toLowerCase(), null);
             } else {
-                params.put(s.substring(0, c), s.substring(c + 1));
+                params.put(s.substring(0, c).trim().toLowerCase(), s.substring(c + 1).trim().toLowerCase());
             }
         }
     }
 
-    public String get(String key, String def, String info) {
-        String v = params.remove(key);
+    @Override
+    public String get(String key, String def) {
+        String v = params.remove(key.toLowerCase());
         return v != null ? v : def;
     }
 
-    public boolean has(String key, String info) {
-        if (params.containsKey(key)) {
-            String v = params.remove(key);
+    @Override
+    public boolean has(String key) {
+        if (params.containsKey(key.toLowerCase())) {
+            String v = params.remove(key.toLowerCase());
             if (v != null) {
                 return Boolean.parseBoolean(v);
             } else {
@@ -45,6 +47,7 @@ class Argument implements Parameter {
         }
     }
 
+    @Override
     public void end() {
         if (!params.isEmpty()) {
             throw new AssertionError("-gen " + type + " not support parameter: " + params);

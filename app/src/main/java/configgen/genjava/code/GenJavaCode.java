@@ -32,17 +32,15 @@ public class GenJavaCode extends Generator {
     private Set<String> needBuilderTables = null;
     private final int schemaNumPerFile;
 
-
     public GenJavaCode(Parameter parameter) {
         super(parameter);
-        dir = parameter.get("dir", "config", "目录");
-        pkg = parameter.get("pkg", "config", "包名");
-        encoding = parameter.get("encoding", "UTF-8", "生成代码文件的编码");
-        sealed = parameter.has("sealed", "生成sealed interface，需要java17");
-        buildersFilename = parameter.get("builders", null, "对这些table生成对应的builder，默认为null");
+        dir = parameter.get("dir", "config");
+        pkg = parameter.get("pkg", "config");
+        encoding = parameter.get("encoding", "UTF-8");
+        sealed = parameter.has("sealed");
+        buildersFilename = parameter.get("builders", null);
         schemaNumPerFile = Integer.parseInt(
-                parameter.get("schemaNumPerFile", "100",
-                        "当配表数量过多时生成的ConfigCodeSchema会超过java编译器限制，用此参数来分文件"));
+                parameter.get("schemanumperfile", "100"));
 
         if (buildersFilename != null) {
             readNeedBuilderTables();

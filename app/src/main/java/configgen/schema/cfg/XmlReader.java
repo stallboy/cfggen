@@ -4,7 +4,7 @@ import configgen.util.Logger;
 import configgen.schema.*;
 import configgen.schema.RefKey.RefList;
 import configgen.schema.RefKey.RefPrimary;
-import configgen.util.DomUtils;
+import configgen.util.DOMUtil;
 import org.w3c.dom.Element;
 
 import java.nio.file.Path;
@@ -20,8 +20,8 @@ public enum XmlReader implements CfgSchemaReader {
 
     @Override
     public void readTo(CfgSchema destination, Path xml, String pkgNameDot) {
-        Element self = DomUtils.rootElement(xml.toFile());
-        for (Element e : DomUtils.elements(self, "bean")) {
+        Element self = DOMUtil.rootElement(xml.toFile());
+        for (Element e : DOMUtil.elements(self, "bean")) {
             Fieldable f;
             if (e.hasAttribute("enumRef")) {
                 f = parseInterface(e, pkgNameDot);
@@ -31,7 +31,7 @@ public enum XmlReader implements CfgSchemaReader {
 
             destination.items().add(f);
         }
-        for (Element e : DomUtils.elements(self, "table")) {
+        for (Element e : DOMUtil.elements(self, "table")) {
             TableSchema t = parseTable(e, pkgNameDot);
             destination.items().add(t);
         }
@@ -60,7 +60,7 @@ public enum XmlReader implements CfgSchemaReader {
         List<FieldSchema> fields = parseFieldList(self, fieldTagMap.tag2FieldTag);
         List<ForeignKeySchema> foreignKeys = parseForeignKeyList(self);
         List<KeySchema> uniqueKeys = new ArrayList<>();
-        for (Element ele : DomUtils.elements(self, "uniqueKey")) {
+        for (Element ele : DOMUtil.elements(self, "uniqueKey")) {
             uniqueKeys.add(getKeySchema(ele, "keys"));
         }
         return new TableSchema(pkgNameDot + name, primaryKey, entry, isColumnMode,
@@ -68,7 +68,7 @@ public enum XmlReader implements CfgSchemaReader {
     }
 
     private KeySchema getKeySchema(Element self, String attr) {
-        String[] keys = DomUtils.parseStringArray(self, attr);
+        String[] keys = DOMUtil.parseStringArray(self, attr);
         return new KeySchema(Arrays.asList(keys));
     }
 
@@ -114,7 +114,7 @@ public enum XmlReader implements CfgSchemaReader {
         String defaultBeanName = self.getAttribute("defaultBeanName").trim();
 
         List<StructSchema> impls = new ArrayList<>();
-        for (Element subSelf : DomUtils.elements(self, "bean")) {
+        for (Element subSelf : DOMUtil.elements(self, "bean")) {
             StructSchema impl = parseStruct(subSelf, "", true);
             impls.add(impl);
         }
@@ -141,7 +141,7 @@ public enum XmlReader implements CfgSchemaReader {
 
     private List<FieldSchema> parseFieldList(Element self, Map<String, FieldTag> tag2OwnField) {
         List<FieldSchema> fields = new ArrayList<>();
-        for (Element ele : DomUtils.elements(self, "column")) {
+        for (Element ele : DOMUtil.elements(self, "column")) {
             FieldSchema field = parseField(ele, tag2OwnField);
             if (field != null) {
                 fields.add(field);
@@ -177,7 +177,7 @@ public enum XmlReader implements CfgSchemaReader {
     private FieldTagMap parseOwn(Element self, boolean isImpl) {
         Map<String, FieldTag> tag2FieldTag = new LinkedHashMap<>();
         int all = 0;
-        for (Element ele : DomUtils.elements(self, "column")) {
+        for (Element ele : DOMUtil.elements(self, "column")) {
             Set<String> tags = parseOwnSet(ele);
             for (String tag : tags) {
                 //noinspection unused
@@ -293,14 +293,14 @@ public enum XmlReader implements CfgSchemaReader {
 
     private List<ForeignKeySchema> parseForeignKeyList(Element self) {
         List<ForeignKeySchema> foreignKeys = new ArrayList<>();
-        for (Element ele : DomUtils.elements(self, "column")) {
+        for (Element ele : DOMUtil.elements(self, "column")) {
             if (ele.hasAttribute("ref")) {
                 ForeignKeySchema fk = parseForeignKey(ele, true);
                 foreignKeys.add(fk);
             }
         }
 
-        for (Element ele : DomUtils.elements(self, "foreignKey")) {
+        for (Element ele : DOMUtil.elements(self, "foreignKey")) {
             ForeignKeySchema fk = parseForeignKey(ele, false);
             foreignKeys.add(fk);
         }

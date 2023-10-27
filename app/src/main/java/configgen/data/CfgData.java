@@ -1,5 +1,6 @@
 package configgen.data;
 
+import configgen.util.Localize;
 import configgen.util.Logger;
 import de.siegmar.fastcsv.reader.CsvRow;
 import org.apache.poi.ss.usermodel.Cell;
@@ -91,7 +92,7 @@ public record CfgData(Map<String, DTable> tables,
                 r = rowId.row;
                 c = col;
             }
-            return String.format("表=%s,行=%d,列=%s,数据=%s", sheet, r + 1, toAZ(c), value);
+            return Localize.getMessage("CellToString", sheet, r + 1, toAZ(c), value);
         }
 
         private static final int N = 'Z' - 'A' + 1;

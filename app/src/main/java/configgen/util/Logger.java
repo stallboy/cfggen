@@ -11,7 +11,6 @@ public class Logger {
     private static boolean profileEnabled = false;
     private static boolean warningEnabled = true;
 
-
     public static void enableProfileGc() {
         profileGcEnabled = true;
     }
