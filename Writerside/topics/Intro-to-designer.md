@@ -180,7 +180,7 @@ table jewelrysuit[SuitID] (entry='Ename') {
     SuitList:list<int> (block=4);
 }
 ```
-### 对结构列表，配置block
+### 对结构列表，配置block {id="column_reduce_struct_list"}
 
 比如20个复合结构，每个复合结构需要4列，那就需要20*4=80列，这应该是导致列数失控的罪魁祸首。大致有3种解法，先推荐最直接的，用block=1
 
@@ -379,7 +379,7 @@ item表，有type字段指向itemtype表，itemtype表里配置上装备，宝�
 
 - 可以配置一行，用entry来引用这整行。
 
-- 但这样可能列数太多，看着不舒服，我们还有列模式机制，在这个表上配置上isColumnMod，那可以把表反转90度，很多列，变成很多行，配置起来舒服多了
+- 但这样可能列数太多，看着不舒服，我们还有列模式机制，在这个表上配置columnMode，那可以把表反转90度，很多列，变成很多行，配置起来舒服多了
 
 ```
 table equipconfig[entry] (entry='entry', columnMode) {
@@ -405,4 +405,4 @@ excel表为：
 
 ### 掉落表
 
-见[拆表]一节的讨论
+见[对结构列表如何减少列数](#column_reduce_struct_list)一节的讨论
