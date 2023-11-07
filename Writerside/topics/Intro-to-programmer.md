@@ -121,7 +121,7 @@ table task[taskid] (entry='entry') {
 
 > RewardItem的range结构是Range，这是对嵌套结构的支持。
 > 
-> RewardItem.itemids 里配置->item.item，表明这个list<int>里每个int都指向item.item表。
+> RewardItem.itemids 里配置->item.item，表明这个list\<int\>里每个int都指向item.item表。
 > 
 > KillMonster.monsterid 设置->npc.monster， 表明这个id是个外键，指向npc.monster表。
 > 
@@ -258,7 +258,7 @@ cfg文件的antlrv4定义大致如下，熟悉bnf格式的，可以参考
 
 <chapter title="cfg文件语法" collapsible="true"  default-state="collapsed">
 
-```antlrv4
+```
 
 grammar Cfg ;
 
