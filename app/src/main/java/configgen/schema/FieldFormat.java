@@ -4,10 +4,10 @@ public sealed interface FieldFormat {
 
     /**
      * auto: 适用type: primitive, struct, interface。
-     * 占格子：primitive都是1，bean则自动计算
+     * 占格子：primitive都是1，struct，interface则自动计算
      * <p>
      * pack: 适用type: struct, interface, container。
-     * 推荐使用，使用,(),[],{}来写任何结构
+     * 推荐使用，使用,()来写任何结构
      */
     enum AutoOrPack implements FieldFormat {
         AUTO,
@@ -26,7 +26,7 @@ public sealed interface FieldFormat {
     }
 
     /**
-     * fixed: 适用type: container。
+     * fix: 适用type: container。
      * 横向扩展格子
      *
      * @param count 个数，占格子数 = 容器内元素占的格子 * count
