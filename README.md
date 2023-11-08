@@ -28,6 +28,12 @@
 gradle fatjar  # app/build/libs/configgen.jar
 ```
 
+* 查看使用说明
+```bash
+cd example
+usage.bat  # 打印使用说明
+```
+
 * 测试java：生成java代码和数据
 ```bash
 cd example
@@ -49,7 +55,6 @@ lua.exe test.lua
 ```
 
 * 测试csharp
-
 ```bash
 gencshape.bat 
 cd cs
