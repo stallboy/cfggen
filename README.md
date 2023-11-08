@@ -5,10 +5,6 @@
 > 为程序生成访问配置表的代码
 > 
 
-## Documentation
-
- 请阅读[详细文档](https://github.com/stallboy/cfggen)，这里有从策划和从程序员角度来做介绍。
-
 ## 主要功能
 
 * 通过配置外键，取值范围，使策划可以随时检测数据一致性
@@ -20,6 +16,10 @@
 * 生成java注重安全
 
 * 生成lua注重内存大小
+
+## Documentation
+
+请阅读[详细文档](https://stallboy.github.io/cfggen)，文档从策划和从程序员角度做了介绍。
 
 ## build & test
 
