@@ -40,6 +40,8 @@ public final class Main {
         System.out.println();
         System.out.println("-----tools");
         System.out.println("    -verify           " + Localize.getMessage("Usage.Verify"));
+        System.out.println("    -searchto         " + Localize.getMessage("Usage.SearchTo"));
+        System.out.println("    -searchOwn        " + Localize.getMessage("Usage.SearchOwn"));
         System.out.println("    -search           " + Localize.getMessage("Usage.Search"));
         ValueSearcher.printUsage("        ");
         System.out.println("    -binarytotext     " + Localize.getMessage("Usage.BinaryToText"));
@@ -123,6 +125,8 @@ public final class Main {
         String binaryToTextFile = null;
         String match = null;
 
+        String searchTo = null;
+        String searchOwn = null;
         List<String> searchParam = null;
 
         String row = System.getProperty("configgen.headrow");
@@ -174,6 +178,10 @@ public final class Main {
                     binaryToTextLoop = true;
                     binaryToTextFile = args[++i];
                 }
+
+                case "-searchto" -> searchTo = args[++i];
+                case "-searchown" -> searchOwn = args[++i];
+
                 case "-search" -> {
                     searchParam = new ArrayList<>();
                     while (i + 1 < args.length && !args[i + 1].startsWith("-")) {
@@ -220,7 +228,7 @@ public final class Main {
         ctx.setI18nOrLangSwitch(i18nfile, i18nencoding, i18ncrlfaslf, langSwitchDir, defaultLang);
 
         if (searchParam != null) {
-            ValueSearcher searcher = new ValueSearcher(ctx.makeValue());
+            ValueSearcher searcher = new ValueSearcher(ctx.makeValue(searchOwn), searchTo);
             if (searchParam.isEmpty()) {
                 searcher.loop();
             } else {
@@ -231,7 +239,7 @@ public final class Main {
 
         if (verify) {
             Logger.verbose("-----start verify");
-            ctx.makeValue();
+            ctx.makeValue(null);
         }
 
         for (NamedGenerator ng : generators) {

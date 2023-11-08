@@ -45,7 +45,9 @@ public class Context {
         CfgSchema schema = Cfgs.readFrom(cfgPath, true);
         Logger.profile("schema read");
         SchemaErrs errs = schema.resolve();
-        errs.print();
+        if (!errs.errs().isEmpty()){
+            errs.print();
+        }
         Stat stat = new SchemaStat(schema);
         stat.print();
         Logger.profile("schema resolve");
@@ -80,10 +82,6 @@ public class Context {
 
     public LangSwitch getLangSwitch() {
         return langSwitch;
-    }
-
-    public CfgValue makeValue() {
-        return makeValue(null);
     }
 
     public CfgValue makeValue(String tag) {

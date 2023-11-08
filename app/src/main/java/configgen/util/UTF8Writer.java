@@ -14,16 +14,24 @@ public class UTF8Writer implements Closeable {
         writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
     }
 
-    public void write(String str) throws IOException {
-        if (!touched) {
-            stream.write(UTF8_BOM);
-            touched = true;
+    public void write(String str) {
+        try {
+            if (!touched) {
+                stream.write(UTF8_BOM);
+                touched = true;
+            }
+            writer.write(str);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        writer.write(str);
     }
 
     @Override
-    public void close() throws IOException {
-        writer.close();
+    public void close() {
+        try {
+            writer.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

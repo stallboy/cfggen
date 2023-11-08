@@ -1,29 +1,52 @@
 package configgen.tool;
 
+import configgen.util.UTF8Writer;
 import configgen.value.CfgValue;
 import configgen.value.ForeachPrimitiveValue;
 import configgen.value.RefSearcher;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.*;
 
 import static configgen.value.CfgValue.*;
 
-public record ValueSearcher(CfgValue cfgValue) {
+public class ValueSearcher {
+    private final CfgValue cfgValue;
+    private final UTF8Writer fileWriter;
+
+    public ValueSearcher(CfgValue cfgValue, String searchTo) {
+        this.cfgValue = cfgValue;
+        if (searchTo != null) {
+            try {
+                fileWriter = new UTF8Writer(new FileOutputStream(searchTo));
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            fileWriter = null;
+        }
+    }
+
+    private void println(String str) {
+        if (fileWriter != null) {
+            fileWriter.write(str + System.lineSeparator());
+        } else {
+            System.out.println(str);
+        }
+    }
+
 
     public void searchInt(Set<Integer> integers) {
         ForeachPrimitiveValue.foreach((primitiveValue, table, fieldChain) -> {
             switch (primitiveValue) {
                 case VInt vInt -> {
                     if (integers.contains(vInt.value())) {
-                        System.out.println(STR. "\{ table } \{ String.join("-", fieldChain) } \{ vInt.value() }" );
+                        println(STR. "\{ table }, \{ String.join("-", fieldChain) }, \{ vInt.value() }" );
                     }
                 }
                 case VLong vLong -> {
                     if (integers.contains((int) vLong.value())) {
-                        System.out.println(STR. "\{ table } \{ String.join("-", fieldChain) } \{ vLong.value() }" );
+                        println(STR. "\{ table }, \{ String.join("-", fieldChain) }, \{ vLong.value() }" );
                     }
                 }
                 default -> {
@@ -37,26 +60,26 @@ public record ValueSearcher(CfgValue cfgValue) {
             if (Objects.requireNonNull(primitiveValue) instanceof StringValue sv) {
                 String v = sv.value();
                 if (v.contains(str)) {
-                    System.out.println(STR. "\{ table } \{ String.join("-", fieldChain) } \{ v }" );
+                    println(STR. "\{ table }, \{ String.join("-", fieldChain) }, \{ v }" );
                 }
             }
         }, cfgValue);
     }
 
-    public void searchRef(String refTable, List<String> nullableForeignKeys, Set<String> ignoredTables) {
-        RefSearcher.RefSearchResult res = RefSearcher.search(cfgValue, refTable, nullableForeignKeys, ignoredTables);
+    public void searchRef(String refTable, List<String> nullableUniqKeys, Set<String> ignoredTables) {
+        RefSearcher.RefSearchResult res = RefSearcher.search(cfgValue, refTable, nullableUniqKeys, ignoredTables);
         switch (res.err()) {
             case Ok -> {
                 for (Map.Entry<Value, Set<String>> e : res.value2tables().entrySet()) {
                     Set<String> tables = e.getValue();
-                    System.out.println(STR. "\{ e.getKey().repr() }, \{ tables.size() }, \{ tables }" );
+                    println(STR. "\{ e.getKey().repr() }, \{ tables.size() }, \{ tables }" );
                 }
             }
             case TableNotFound -> {
-                System.out.println(STR. "table \{ refTable } not found" );
+                println(STR. "table \{ refTable } not found" );
             }
             case UniqueKeyNotFound -> {
-                System.out.println(STR. "table \{ refTable } unique key \{ nullableForeignKeys } not found" );
+                println(STR. "table \{ refTable } unique key \{ nullableUniqKeys } not found" );
             }
         }
     }
@@ -70,7 +93,7 @@ public record ValueSearcher(CfgValue cfgValue) {
                         Integer i = Integer.decode(s.trim());
                         integers.add(i);
                     } catch (Exception e) {
-                        System.out.println(STR. "\{ s.trim() } not int ignore" );
+                        println(STR. "\{ s.trim() } not int ignore" );
                         return;
                     }
                 }
@@ -85,28 +108,29 @@ public record ValueSearcher(CfgValue cfgValue) {
             case "ref" -> {
                 if (!params.isEmpty()) {
                     String refTable = params.get(0);
-                    List<String> nullableForeignKeys = null;
+                    List<String> nullableUniqKeys = null;
                     int idx = refTable.indexOf('[');
                     if (idx != -1) {
                         String full = refTable;
                         refTable = full.substring(0, idx);
                         String[] keys = full.substring(idx + 1, full.length() - 1).split("\\s*,\\s*");
-                        nullableForeignKeys = Arrays.asList(keys);
+                        nullableUniqKeys = Arrays.asList(keys);
                     }
                     Set<String> ignoredTables = new LinkedHashSet<>(params.subList(1, params.size()));
-                    searchRef(refTable, nullableForeignKeys, ignoredTables);
+                    searchRef(refTable, nullableUniqKeys, ignoredTables);
                 }
             }
-            default -> System.out.println(STR. "\{ func } unknownqq" );
+            default -> println(STR. "\{ func } unknown" );
         }
     }
 
-    public static void printUsage(String prefix){
+    public static void printUsage(String prefix) {
         System.out.println(prefix + "int <int> <int> ...: search integers");
         System.out.println(prefix + "str <str>: search string");
-        System.out.println(prefix + "ref <refTable> <IgnoredTables>: search ref");
+        System.out.println(prefix + "ref <refTable<[uniqKeys]>?> <IgnoredTables>: search ref");
         System.out.println(prefix + "q: quit");
     }
+
     public void loop() {
         printUsage("");
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
