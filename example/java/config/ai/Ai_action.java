@@ -65,12 +65,12 @@ public class Ai_action {
 
     public static Ai_action get(int iD) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.ai_ai_action_All.get(iD);
+        return mgr.getAiAi_action(iD);
     }
 
     public static java.util.Collection<Ai_action> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.ai_ai_action_All.values();
+        return mgr.allAiAi_action();
     }
 
     public static class _ConfigLoader implements config.ConfigLoader {

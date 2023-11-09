@@ -19,9 +19,14 @@ class GenConfigMgrLoader {
         ps.println("public class ConfigMgrLoader {");
         ps.println();
 
+
         ps.println1("public static ConfigMgr load(configgen.genjava.ConfigInput input) {");
         ps.println2("ConfigMgr mgr = new ConfigMgr();");
+        ps.println2("return load(mgr, input);");
+        ps.println1("}");
+        ps.println();
 
+        ps.println1("public static ConfigMgr load(ConfigMgr mgr, configgen.genjava.ConfigInput input) {");
         int cnt = 0;
         for (VTable vTable : cfgValue.tables()) {
             if (GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(vTable.schema())) {

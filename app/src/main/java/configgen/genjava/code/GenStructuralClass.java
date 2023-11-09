@@ -18,7 +18,7 @@ class GenStructuralClass {
 
 
     static void generate(Structural structural, VTable vtable,
-                         NameableName name, CachedIndentPrinter ps, boolean isTableNeedBuilder) {
+                         NameableName name, CachedIndentPrinter ps, boolean isTableAndNeedBuilder) {
         boolean isTable = vtable != null;
         boolean isStruct = vtable == null;
         InterfaceSchema nullableInterface = structural instanceof StructSchema struct ? struct.nullableInterface() : null;
@@ -44,11 +44,14 @@ class GenStructuralClass {
             ps.println1(STR. "private \{ TypeStr.type(field.type()) } \{ lower1(field.name()) };" );
         }
 
-        // fk
-        for (ForeignKeySchema fk : structural.foreignKeys()) {
-            ps.println1(STR. "private \{ Name.refType(fk) } \{ Name.refName(fk) };" );
+        if (!isTableAndNeedBuilder){
+            // fk
+            for (ForeignKeySchema fk : structural.foreignKeys()) {
+                ps.println1(STR. "private \{ Name.refType(fk) } \{ Name.refName(fk) };" );
+            }
+            ps.println();
         }
-        ps.println();
+
 
         // constructor
         //noinspection StatementWithEmptyBody
@@ -71,7 +74,7 @@ class GenStructuralClass {
             }
             ps.println1("}");
             ps.println();
-        } else if (isTableNeedBuilder) {
+        } else if (isTableAndNeedBuilder) {
             GenStructuralClassTablePart.generateTableBuild(structural, name, ps);
         }
 
@@ -120,12 +123,15 @@ class GenStructuralClass {
             ps.println();
         }
 
-        for (ForeignKeySchema fk : structural.foreignKeys()) {
-            ps.println1("public %s %s() {", Name.refType(fk), lower1(Name.refName(fk)));
-            ps.println2("return %s;", Name.refName(fk));
-            ps.println1("}");
-            ps.println();
+        if (!isTableAndNeedBuilder){
+            for (ForeignKeySchema fk : structural.foreignKeys()) {
+                ps.println1("public %s %s() {", Name.refType(fk), lower1(Name.refName(fk)));
+                ps.println2("return %s;", Name.refName(fk));
+                ps.println1("}");
+                ps.println();
+            }
         }
+
 
         if (isStructAndHasNoField) {
             ps.println1("@Override");
@@ -176,12 +182,12 @@ class GenStructuralClass {
 
 
         // _resolve
-        if (HasRef.hasRef(structural)) {
+        if (HasRef.hasRef(structural) && !isTableAndNeedBuilder) {
             generateResolve(structural, nullableInterface, ps);
         }
 
         if (isTable) {
-            GenStructuralClassTablePart.generate(structural, vtable, name, ps);
+            GenStructuralClassTablePart.generate(structural, vtable, isTableAndNeedBuilder, name, ps);
         }
         ps.println("}");
     }

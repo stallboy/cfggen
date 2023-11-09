@@ -81,12 +81,12 @@ public class Task {
 
     public static Task get(int taskid) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.task_task_All.get(taskid);
+        return mgr.getTaskTask(taskid);
     }
 
     public static java.util.Collection<Task> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.task_task_All.values();
+        return mgr.allTaskTask();
     }
 
     public static class _ConfigLoader implements config.ConfigLoader {

@@ -8,7 +8,6 @@ public class Ai {
     private int trigOdds;
     private java.util.List<Integer> actionID;
     private boolean deathRemove;
-
     private Ai() {
     }
 
@@ -90,12 +89,12 @@ public class Ai {
 
     public static Ai get(int iD) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.ai_ai_All.get(iD);
+        return mgr.getAiAi(iD);
     }
 
     public static java.util.Collection<Ai> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.ai_ai_All.values();
+        return mgr.allAiAi();
     }
 
     public static class _ConfigLoader implements config.ConfigLoader {

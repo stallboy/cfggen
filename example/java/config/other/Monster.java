@@ -32,12 +32,12 @@ public class Monster {
 
     public static Monster get(int id) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.other_monster_All.get(id);
+        return mgr.getOtherMonster(id);
     }
 
     public static java.util.Collection<Monster> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.other_monster_All.values();
+        return mgr.allOtherMonster();
     }
 
     public static class _ConfigLoader implements config.ConfigLoader {

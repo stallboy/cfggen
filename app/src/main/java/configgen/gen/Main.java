@@ -234,7 +234,6 @@ public final class Main {
             } else {
                 searcher.search(searchParam.get(0), searchParam.subList(1, searchParam.size()));
             }
-            return;
         }
 
         if (verify) {

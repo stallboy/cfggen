@@ -59,12 +59,12 @@ public class Drop {
 
     public static Drop get(int dropid) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.other_drop_All.get(dropid);
+        return mgr.getOtherDrop(dropid);
     }
 
     public static java.util.Collection<Drop> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.other_drop_All.values();
+        return mgr.allOtherDrop();
     }
 
     public static class _ConfigLoader implements config.ConfigLoader {

@@ -44,12 +44,12 @@ public class Rank_Detail {
 
     public static Rank_Detail get(int rankID) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.equip_rank_All.get(rankID);
+        return mgr.getEquipRank(rankID);
     }
 
     public static java.util.Collection<Rank_Detail> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.equip_rank_All.values();
+        return mgr.allEquipRank();
     }
 
     public static class _ConfigLoader implements config.ConfigLoader {

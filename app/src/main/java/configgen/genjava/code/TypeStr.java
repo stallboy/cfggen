@@ -44,6 +44,18 @@ class TypeStr {
         };
     }
 
+    static String defaultValue(FieldType t) {
+        return switch (t) {
+            case BOOL -> "false";
+            case INT, LONG, FLOAT -> "0";
+            case STRING, TEXT -> "\"\"";
+            case FList _ -> "new java.util.ArrayList<>()";
+            case FMap _ -> "new java.util.LinkedHashMap<>()";
+            case StructRef _ -> "null";
+        };
+    }
+
+
     static boolean isJavaPrimitive(FieldType t) {
         return switch (t) {
             case BOOL, INT, LONG, FLOAT -> true;

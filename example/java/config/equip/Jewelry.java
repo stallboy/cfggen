@@ -11,11 +11,6 @@ public class Jewelry {
     private int keyAbilityValue;
     private int salePrice;
     private String description;
-    private config.equip.Jewelryrandom RefLvlRank;
-    private config.equip.Jewelrytype RefType;
-    private config.equip.Jewelrysuit NullableRefSuitID;
-    private config.equip.Ability RefKeyAbility;
-
     private Jewelry() {
     }
 
@@ -117,46 +112,19 @@ public class Jewelry {
         return description;
     }
 
-    public config.equip.Jewelryrandom refLvlRank() {
-        return RefLvlRank;
-    }
-
-    public config.equip.Jewelrytype refType() {
-        return RefType;
-    }
-
-    public config.equip.Jewelrysuit nullableRefSuitID() {
-        return NullableRefSuitID;
-    }
-
-    public config.equip.Ability refKeyAbility() {
-        return RefKeyAbility;
-    }
-
     @Override
     public String toString() {
         return "(" + iD + "," + name + "," + iconFile + "," + lvlRank + "," + type + "," + suitID + "," + keyAbility + "," + keyAbilityValue + "," + salePrice + "," + description + ")";
     }
 
-    public void _resolve(config.ConfigMgr mgr) {
-        lvlRank._resolve(mgr);
-        RefLvlRank = mgr.equip_jewelryrandom_All.get(lvlRank);
-        java.util.Objects.requireNonNull(RefLvlRank);
-        RefType = config.equip.Jewelrytype.get(type);
-        java.util.Objects.requireNonNull(RefType);
-        NullableRefSuitID = mgr.equip_jewelrysuit_All.get(suitID);
-        RefKeyAbility = config.equip.Ability.get(keyAbility);
-        java.util.Objects.requireNonNull(RefKeyAbility);
-    }
-
     public static Jewelry get(int iD) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.equip_jewelry_All.get(iD);
+        return mgr.getEquipJewelry(iD);
     }
 
     public static java.util.Collection<Jewelry> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.equip_jewelry_All.values();
+        return mgr.allEquipJewelry();
     }
 
     public static class _ConfigLoader implements config.ConfigLoader {
@@ -171,9 +139,7 @@ public class Jewelry {
 
         @Override
         public void resolveAll(config.ConfigMgr mgr) {
-            for (Jewelry e : mgr.equip_jewelry_All.values()) {
-                e._resolve(mgr);
-            }
+            // no resolve
         }
 
     }

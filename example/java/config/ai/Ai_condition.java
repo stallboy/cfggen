@@ -65,12 +65,12 @@ public class Ai_condition {
 
     public static Ai_condition get(int iD) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.ai_ai_condition_All.get(iD);
+        return mgr.getAiAi_condition(iD);
     }
 
     public static java.util.Collection<Ai_condition> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.ai_ai_condition_All.values();
+        return mgr.allAiAi_condition();
     }
 
     public static class _ConfigLoader implements config.ConfigLoader {

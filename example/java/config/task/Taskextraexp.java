@@ -35,12 +35,12 @@ public class Taskextraexp {
 
     public static Taskextraexp get(int taskid) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.task_taskextraexp_All.get(taskid);
+        return mgr.getTaskTaskextraexp(taskid);
     }
 
     public static java.util.Collection<Taskextraexp> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.task_taskextraexp_All.values();
+        return mgr.allTaskTaskextraexp();
     }
 
     public static class _ConfigLoader implements config.ConfigLoader {

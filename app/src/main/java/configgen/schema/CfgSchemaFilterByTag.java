@@ -86,9 +86,9 @@ public class CfgSchemaFilterByTag {
     }
 
     private StructSchema filterStruct(StructSchema struct, boolean isImpl, Map<String, TableRule> tableMap) {
-        FieldsRule ff = filterFields(struct, isImpl);
-        List<ForeignKeySchema> fks = filterForeignKeys(struct, ff.rule, tableMap);
-        return new StructSchema(struct.name(), struct.fmt(), struct.meta().copy(), ff.filteredFields, fks);
+        FieldsRule fieldsRule = filterFields(struct, isImpl);
+        List<ForeignKeySchema> fks = filterForeignKeys(struct, fieldsRule, tableMap);
+        return new StructSchema(struct.name(), struct.fmt(), struct.meta().copy(), fieldsRule.filteredFields, fks);
     }
 
     private InterfaceSchema filterInterface(InterfaceSchema sInterface, Map<String, TableRule> tableMap) {
@@ -100,9 +100,6 @@ public class CfgSchemaFilterByTag {
                 sInterface.fmt(), sInterface.meta().copy(), impls);
     }
 
-    private record TableRule(TableSchema table,
-                             IncludeRule rule) {
-    }
 
     private enum IncludeRule {
         ALL,
@@ -118,10 +115,15 @@ public class CfgSchemaFilterByTag {
             return filteredFields.stream().anyMatch(f -> f.name().equals(name));
         }
 
-        boolean hasAllFields(List<String> names) {
-            return names.stream().allMatch(this::hasField);
+        boolean hasKey(KeySchema key) {
+            return key.fields().stream().allMatch(this::hasField);
         }
     }
+
+    private record TableRule(TableSchema table,
+                             FieldsRule fieldsRule) {
+    }
+
 
     private TableRule filterTablePhase1(TableSchema table) {
         FieldsRule ff = filterFields(table, false);
@@ -143,7 +145,7 @@ public class CfgSchemaFilterByTag {
         List<KeySchema> uks = filterUniqKeys(table, ff);
         TableSchema t = new TableSchema(table.name(), table.primaryKey().copy(), entry, table.isColumnMode(),
                 table.meta().copy(), ff.filteredFields(), List.of(), uks);
-        return new TableRule(t, ff.rule);
+        return new TableRule(t, ff);
     }
 
     private FieldsRule filterFields(Structural structural, boolean isImpl) {
@@ -186,8 +188,8 @@ public class CfgSchemaFilterByTag {
 
     private TableSchema filterTablePhase2(TableSchema originalTable, TableRule tr,
                                           Map<String, TableRule> phase1TableMap) {
-        List<ForeignKeySchema> fks = filterForeignKeys(originalTable, tr.rule, phase1TableMap);
         TableSchema table = tr.table;
+        List<ForeignKeySchema> fks = filterForeignKeys(originalTable, tr.fieldsRule, phase1TableMap);
 
         return new TableSchema(table.name(), table.primaryKey(), table.entry(), table.isColumnMode(),
                 table.meta(), table.fields(), fks, table.uniqueKeys());
@@ -195,40 +197,35 @@ public class CfgSchemaFilterByTag {
     }
 
 
-    private List<ForeignKeySchema> filterForeignKeys(Structural structural, IncludeRule rule,
+    private List<ForeignKeySchema> filterForeignKeys(Structural originalStructural,
+                                                     FieldsRule fieldsRule,
                                                      Map<String, TableRule> phase1TableMap) {
-        List<ForeignKeySchema> fks = new ArrayList<>();
-        switch (rule) {
+        List<ForeignKeySchema> resultFks = new ArrayList<>();
+        switch (fieldsRule.rule) {
             case ALL -> {
-                for (ForeignKeySchema fk : structural.foreignKeys()) {
-                    recordForeignKeyIfOk(fks, fk, structural, phase1TableMap);
-                }
-            }
-            case WITH_TAG -> {
-                for (ForeignKeySchema fk : structural.foreignKeys()) {
-                    if (fk.meta().hasTag(tag)) {
-                        recordForeignKeyIfOk(fks, fk, structural, phase1TableMap);
-                    }
-                }
-            }
-            case WITH_NO_MINUS_TAG -> {
-                for (ForeignKeySchema fk : structural.foreignKeys()) {
-                    if (!fk.meta().hasTag(minusTag)) {
-                        recordForeignKeyIfOk(fks, fk, structural, phase1TableMap);
-                    }
+                for (ForeignKeySchema fk : originalStructural.foreignKeys()) {
+                    recordForeignKeyIfOk(resultFks, fk, originalStructural, phase1TableMap);
                 }
             }
             case IMPL_EMPTY -> {
             }
+
+            default -> {
+                for (ForeignKeySchema fk : originalStructural.foreignKeys()) {
+                    if (fieldsRule.hasKey(fk.key())) {
+                        recordForeignKeyIfOk(resultFks, fk, originalStructural, phase1TableMap);
+                    }
+                }
+            }
         }
-        return fks;
+        return resultFks;
     }
 
-    private void recordForeignKeyIfOk(List<ForeignKeySchema> fks, ForeignKeySchema fk,
+    private void recordForeignKeyIfOk(List<ForeignKeySchema> resultFks, ForeignKeySchema fk,
                                       Structural structural, Map<String, TableRule> phase1TableMap) {
         RefErr err = isForeignKeyIn(structural, fk, phase1TableMap);
         switch (err) {
-            case OK -> fks.add(fk.copy());
+            case OK -> resultFks.add(fk.copy());
             case TABLE_NOT_FOUND -> errs.addWarn(new FilterRefIgnoredByRefTableNotFound(
                     structural.name(), fk.name(), fk.refTable()));
             case KEY_NOT_FOUND -> errs.addWarn(new FilterRefIgnoredByRefKeyNotFound(
@@ -296,7 +293,7 @@ public class CfgSchemaFilterByTag {
             }
             case WITH_TAG, WITH_NO_MINUS_TAG -> {
                 for (KeySchema uk : table.uniqueKeys()) {
-                    if (ff.hasAllFields(uk.fields())) {
+                    if (ff.hasKey(uk)) {
                         uks.add(uk.copy());
                     }
                 }

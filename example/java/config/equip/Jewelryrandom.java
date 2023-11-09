@@ -63,12 +63,12 @@ public class Jewelryrandom {
 
     public static Jewelryrandom get(config.LevelRank lvlRank) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.equip_jewelryrandom_All.get(lvlRank);
+        return mgr.getEquipJewelryrandom(lvlRank);
     }
 
     public static java.util.Collection<Jewelryrandom> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.equip_jewelryrandom_All.values();
+        return mgr.allEquipJewelryrandom();
     }
 
     public static class _ConfigLoader implements config.ConfigLoader {

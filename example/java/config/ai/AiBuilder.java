@@ -10,10 +10,16 @@ public class AiBuilder {
     public boolean deathRemove;
 
     public Ai build() {
-        java.util.Objects.requireNonNull(desc);
-        java.util.Objects.requireNonNull(condID);
+        if (desc == null) {
+            desc = "";
+        }
+        if (condID == null) {
+            condID = "";
+        }
         java.util.Objects.requireNonNull(trigTick);
-        java.util.Objects.requireNonNull(actionID);
+        if (actionID == null) {
+            actionID = new java.util.ArrayList<>();
+        }
         return new Ai(this);
     }
 

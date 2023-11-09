@@ -64,7 +64,7 @@ public class Lootitem {
         private final int lootid;
         private final int itemid;
 
-        LootidItemidKey(int lootid, int itemid) {
+        public LootidItemidKey(int lootid, int itemid) {
             this.lootid = lootid;
             this.itemid = itemid;
         }
@@ -85,12 +85,12 @@ public class Lootitem {
 
     public static Lootitem get(int lootid, int itemid) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.other_lootitem_All.get(new LootidItemidKey(lootid, itemid));
+        return mgr.getOtherLootitem(lootid, itemid);
     }
 
     public static java.util.Collection<Lootitem> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.other_lootitem_All.values();
+        return mgr.allOtherLootitem();
     }
 
     public static class _ConfigLoader implements config.ConfigLoader {

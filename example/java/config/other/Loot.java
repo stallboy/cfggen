@@ -66,12 +66,12 @@ public class Loot {
 
     public static Loot get(int lootid) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.other_loot_All.get(lootid);
+        return mgr.getOtherLoot(lootid);
     }
 
     public static java.util.Collection<Loot> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.other_loot_All.values();
+        return mgr.allOtherLoot();
     }
 
     public static class _ConfigLoader implements config.ConfigLoader {

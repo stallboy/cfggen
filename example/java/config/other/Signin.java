@@ -6,8 +6,6 @@ public class Signin {
     private java.util.Map<Integer, Integer> vipitem2vipcountMap;
     private int viplevel;
     private String iconFile;
-    private java.util.Map<Integer, config.other.Loot> RefVipitem2vipcountMap;
-
     private Signin() {
     }
 
@@ -70,34 +68,21 @@ public class Signin {
         return iconFile;
     }
 
-    public java.util.Map<Integer, config.other.Loot> refVipitem2vipcountMap() {
-        return RefVipitem2vipcountMap;
-    }
-
     @Override
     public String toString() {
         return "(" + id + "," + item2countMap + "," + vipitem2vipcountMap + "," + viplevel + "," + iconFile + ")";
     }
 
-    public void _resolve(config.ConfigMgr mgr) {
-        RefVipitem2vipcountMap = new java.util.LinkedHashMap<>();
-        vipitem2vipcountMap.forEach( (k, v) -> {
-            config.other.Loot rv = mgr.other_loot_All.get(v);
-            java.util.Objects.requireNonNull(rv);
-            RefVipitem2vipcountMap.put(k, rv);
-        });
-    }
-
     public static Signin get(int id) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.other_signin_All.get(id);
+        return mgr.getOtherSignin(id);
     }
 
     public static class IdViplevelKey {
         private final int id;
         private final int viplevel;
 
-        IdViplevelKey(int id, int viplevel) {
+        public IdViplevelKey(int id, int viplevel) {
             this.id = id;
             this.viplevel = viplevel;
         }
@@ -118,12 +103,12 @@ public class Signin {
 
     public static Signin getByIdViplevel(int id, int viplevel) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.other_signin_IdViplevelMap.get(new IdViplevelKey(id, viplevel));
+        return mgr.getOtherSigninByIdViplevel(id, viplevel);
     }
 
     public static java.util.Collection<Signin> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.other_signin_All.values();
+        return mgr.allOtherSignin();
     }
 
     public static class _ConfigLoader implements config.ConfigLoader {
@@ -139,9 +124,7 @@ public class Signin {
 
         @Override
         public void resolveAll(config.ConfigMgr mgr) {
-            for (Signin e : mgr.other_signin_All.values()) {
-                e._resolve(mgr);
-            }
+            // no resolve
         }
 
     }

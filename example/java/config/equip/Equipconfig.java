@@ -71,12 +71,12 @@ public class Equipconfig {
 
     public static Equipconfig get(String entry) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.equip_equipconfig_All.get(entry);
+        return mgr.getEquipEquipconfig(entry);
     }
 
     public static java.util.Collection<Equipconfig> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.equip_equipconfig_All.values();
+        return mgr.allEquipEquipconfig();
     }
 
     public static class _ConfigLoader implements config.ConfigLoader {

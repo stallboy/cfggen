@@ -8,9 +8,15 @@ public class SigninBuilder {
     public String iconFile;
 
     public Signin build() {
-        java.util.Objects.requireNonNull(item2countMap);
-        java.util.Objects.requireNonNull(vipitem2vipcountMap);
-        java.util.Objects.requireNonNull(iconFile);
+        if (item2countMap == null) {
+            item2countMap = new java.util.LinkedHashMap<>();
+        }
+        if (vipitem2vipcountMap == null) {
+            vipitem2vipcountMap = new java.util.LinkedHashMap<>();
+        }
+        if (iconFile == null) {
+            iconFile = "";
+        }
         return new Signin(this);
     }
 

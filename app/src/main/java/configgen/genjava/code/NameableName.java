@@ -12,6 +12,7 @@ class NameableName {
 
     static boolean isSealedInterface = false;
 
+    final Nameable nameable;
     final String pkg;
     final String className;
     final String fullName;
@@ -23,6 +24,7 @@ class NameableName {
     }
 
     NameableName(Nameable nameable, String postfix) {
+        this.nameable = nameable;
         InterfaceSchema nullableInterface = nameable instanceof StructSchema struct ? struct.nullableInterface() : null;
         String topPkg = Name.codeTopPkg;
         String name;

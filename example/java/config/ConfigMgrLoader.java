@@ -7,6 +7,10 @@ public class ConfigMgrLoader {
 
     public static ConfigMgr load(configgen.genjava.ConfigInput input) {
         ConfigMgr mgr = new ConfigMgr();
+        return load(mgr, input);
+    }
+
+    public static ConfigMgr load(ConfigMgr mgr, configgen.genjava.ConfigInput input) {
         int c = input.readInt();
         if (c < 15) {
             throw new IllegalArgumentException();

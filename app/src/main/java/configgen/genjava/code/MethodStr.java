@@ -19,9 +19,13 @@ class MethodStr {
         return keys.stream().map(Generator::lower1).collect(Collectors.joining(", "));
     }
 
-    static String actualParamsKey(KeySchema keySchema, String pre) {
-        String p = keySchema.fields().stream().map(e -> pre + lower1(e)).collect(Collectors.joining(", "));
-        return keySchema.fields().size() > 1 ? "new " + Name.keyClassName(keySchema) + "(" + p + ")" : p;
+    static String actualParamsKey(KeySchema keySchema, String pre, NameableName nullableName) {
+        String p = actualParamsKeyRaw(keySchema, pre);
+        return keySchema.fields().size() > 1 ? "new " + Name.keyClassName(keySchema, nullableName) + "(" + p + ")" : p;
+    }
+
+    static String actualParamsKeyRaw(KeySchema keySchema, String pre) {
+        return keySchema.fields().stream().map(e -> pre + lower1(e)).collect(Collectors.joining(", "));
     }
 
     static String hashCodes(List<FieldSchema> fs) {
@@ -49,8 +53,8 @@ class MethodStr {
                     if (refTable.primaryKey().fieldSchemas().size() == 1) {
                         return pre + "All.get(" + actualParam + ");";
                     } else {
-                        return pre + "All.get(new " + name.fullName + "." +
-                                Name.multiKeyClassName(refTable.primaryKey().fields()) + "(" + actualParam + ") );";
+                        return pre + "All.get(new " + Name.keyClassName(refTable.primaryKey(), name) +
+                                "(" + actualParam + ") );";
                     }
                 }
 
@@ -58,8 +62,8 @@ class MethodStr {
                     if (refUniq.key().fields().size() == 1) {
                         return pre + Name.uniqueKeyMapName(refUniq.key()) + ".get(" + actualParam + ");";
                     } else {
-                        return pre + Name.uniqueKeyMapName(refUniq.key()) + ".get( new " + name.fullName + "." +
-                                Name.multiKeyClassName(refUniq.keyNames()) + "(" + actualParam + ") );";
+                        return pre + Name.uniqueKeyMapName(refUniq.key()) + ".get( new " +
+                                Name.keyClassName(refUniq.key(), name) + "(" + actualParam + ") );";
                     }
                 }
             }

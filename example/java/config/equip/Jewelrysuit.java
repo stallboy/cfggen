@@ -107,12 +107,12 @@ public class Jewelrysuit {
 
     public static Jewelrysuit get(int suitID) {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.equip_jewelrysuit_All.get(suitID);
+        return mgr.getEquipJewelrysuit(suitID);
     }
 
     public static java.util.Collection<Jewelrysuit> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.equip_jewelrysuit_All.values();
+        return mgr.allEquipJewelrysuit();
     }
 
     public static class _ConfigLoader implements config.ConfigLoader {

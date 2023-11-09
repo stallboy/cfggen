@@ -4,6 +4,7 @@ import configgen.gen.Generator;
 import configgen.genjava.GenJavaUtil;
 import configgen.schema.*;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,7 +15,19 @@ public class Name {
 
     static String codeTopPkg;
 
-    static String uniqueKeyGetByName(KeySchema keySchema) {
+    static String GetByKeyFunctionNameInConfigMgr(KeySchema keySchema, boolean isPrimaryKey, Nameable nameable) {
+        String name = "get" + Arrays.stream(nameable.name().split("\\.")).map(Generator::upper1).collect(Collectors.joining());
+
+        if (isPrimaryKey){
+            return name;
+        }
+        return name + "By" + keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining());
+    }
+
+    static String GetByKeyFunctionName(KeySchema keySchema, boolean isPrimaryKey) {
+        if (isPrimaryKey){
+            return "get";
+        }
         return "getBy" + keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining());
     }
 
@@ -22,19 +35,26 @@ public class Name {
         return keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()) + "Map";
     }
 
-    static String keyClassName(KeySchema keySchema) {
-        if (keySchema.fields().size() > 1)
-            return keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()) + "Key";
-        else
+    static String keyClassName(KeySchema keySchema){
+        return keyClassName(keySchema, null);
+    }
+
+    static String keyClassName(KeySchema keySchema, NameableName nullableName) {
+        if (keySchema.fields().size() > 1) {
+            String klsName = keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()) + "Key";
+            if (nullableName != null) {
+                return nullableName.fullName + "." + klsName;
+            } else {
+                return klsName;
+            }
+
+        } else {
             try {
                 return TypeStr.boxType(keySchema.fieldSchemas().get(0).type());
             } catch (Exception e) {
                 return null;
             }
-    }
-
-    static String multiKeyClassName(List<String> keys) {
-        return keys.stream().map(Generator::upper1).collect(Collectors.joining()) + "Key";
+        }
     }
 
 

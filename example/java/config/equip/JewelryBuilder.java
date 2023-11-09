@@ -13,11 +13,19 @@ public class JewelryBuilder {
     public String description;
 
     public Jewelry build() {
-        java.util.Objects.requireNonNull(name);
-        java.util.Objects.requireNonNull(iconFile);
+        if (name == null) {
+            name = "";
+        }
+        if (iconFile == null) {
+            iconFile = "";
+        }
         java.util.Objects.requireNonNull(lvlRank);
-        java.util.Objects.requireNonNull(type);
-        java.util.Objects.requireNonNull(description);
+        if (type == null) {
+            type = "";
+        }
+        if (description == null) {
+            description = "";
+        }
         return new Jewelry(this);
     }
 
