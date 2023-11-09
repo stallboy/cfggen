@@ -1,4 +1,4 @@
-java --enable-preview -Dfile.encoding=utf8 -jar ../app/build/libs/configgen.jar -datadir config -gen java,dir:java,builders:config/builders.txt -gen javadata
+java --enable-preview -jar ../app/build/libs/configgen.jar -datadir config -gen java,dir:java,builders:config/builders.txt -gen javadata
 
 set DIR=java/configgen/genjava
 if not exist %DIR% mkdir %DIR%

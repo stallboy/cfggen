@@ -110,7 +110,8 @@ public class Context {
         ValueErrs valueErrs = ValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(tagSchema, cfgData, cfgSchema, i18n, checkComma, valueErrs);
         CfgValue value = clientValueParser.parseCfgValue();
-        valueErrs.print(tag == null ? "value" : STR. "[\{ tag }] filtered value" );
+        String prefix = tag == null ? "value" : String.format("[%s] filtered value", tag);
+        valueErrs.print(prefix);
 
         lastCfgValue = value;
         lastCfgValueTag = tag;

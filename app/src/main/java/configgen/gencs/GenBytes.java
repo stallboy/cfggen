@@ -15,7 +15,6 @@ import java.util.Map;
 import static configgen.value.CfgValue.*;
 
 public class GenBytes extends Generator {
-
     private final File file;
 
     public GenBytes(Parameter parameter) {
@@ -29,14 +28,14 @@ public class GenBytes extends Generator {
         CfgValue cfgValue = ctx.makeValue(tag);
 
         try (CachedFileOutputStream stream = new CachedFileOutputStream(file, 2048 * 1024)) {
-            this.byter = new DataOutputStream(stream);
+            this.stream = new DataOutputStream(stream);
             for (VTable vTable : cfgValue.sortedTables()) {
                 addVTable(vTable);
             }
         }
     }
 
-    private DataOutputStream byter;
+    private DataOutputStream stream;
     private final byte[] writeBuffer = new byte[8];
 
     private void addVTable(VTable vTable) {
@@ -85,7 +84,7 @@ public class GenBytes extends Generator {
 
     private void addBool(boolean v) {
         try {
-            byter.writeBoolean(v);
+            stream.writeBoolean(v);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -93,10 +92,10 @@ public class GenBytes extends Generator {
 
     private void addInt(int v) {
         try {
-            byter.write((v) & 0xFF);
-            byter.write((v >>> 8) & 0xFF);
-            byter.write((v >>> 16) & 0xFF);
-            byter.write((v >>> 24) & 0xFF);
+            stream.write((v) & 0xFF);
+            stream.write((v >>> 8) & 0xFF);
+            stream.write((v >>> 16) & 0xFF);
+            stream.write((v >>> 24) & 0xFF);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -112,7 +111,7 @@ public class GenBytes extends Generator {
         writeBuffer[6] = (byte) (v >>> 48);
         writeBuffer[7] = (byte) (v >>> 56);
         try {
-            byter.write(writeBuffer);
+            stream.write(writeBuffer);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -126,11 +125,9 @@ public class GenBytes extends Generator {
         try {
             byte[] b = v.getBytes(StandardCharsets.UTF_8);
             addInt(b.length);
-            byter.write(b);
+            stream.write(b);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
-
-
 }
