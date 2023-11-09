@@ -45,8 +45,8 @@ public class Context {
         CfgSchema schema = Cfgs.readFrom(cfgPath, true);
         Logger.profile("schema read");
         SchemaErrs errs = schema.resolve();
-        if (!errs.errs().isEmpty()){
-            errs.print();
+        if (!errs.errs().isEmpty()) {
+            errs.print("schema");
         }
         Stat stat = new SchemaStat(schema);
         stat.print();
@@ -59,7 +59,7 @@ public class Context {
         SchemaErrs alignErr = SchemaErrs.of();
         CfgSchema alignedSchema = new CfgSchemaAlignToData(schema, data, alignErr).align();
         new CfgSchemaResolver(alignedSchema, alignErr).resolve();
-        alignErr.print();
+        alignErr.print("aligned schema");
         Logger.profile("schema aligned by data");
         if (!schema.equals(alignedSchema)) {
             // schema.printDiff(alignedSchema);
@@ -99,9 +99,9 @@ public class Context {
         CfgSchema tagSchema;
         if (tag != null) {
             SchemaErrs errs = SchemaErrs.of();
-            tagSchema = new CfgSchemaFilterByTag(cfgSchema, "client", errs).filter();
+            tagSchema = new CfgSchemaFilterByTag(cfgSchema, tag, errs).filter();
             new CfgSchemaResolver(tagSchema, errs).resolve();
-            errs.print();
+            errs.print(STR. "[\{ tag }] filtered schema" );
             Logger.profile(STR. "schema filtered by \{ tag }" );
         } else {
             tagSchema = cfgSchema;
@@ -110,7 +110,7 @@ public class Context {
         ValueErrs valueErrs = ValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(tagSchema, cfgData, cfgSchema, i18n, checkComma, valueErrs);
         CfgValue value = clientValueParser.parseCfgValue();
-        valueErrs.print();
+        valueErrs.print(tag == null ? "value" : STR. "[\{ tag }] filtered value" );
 
         lastCfgValue = value;
         lastCfgValueTag = tag;

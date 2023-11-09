@@ -23,9 +23,9 @@ public record ValueErrs(List<VErr> errs) {
         errs.addAll(other.errs);
     }
 
-    public void print() {
+    public void print(String prefix) {
         if (!errs.isEmpty()) {
-            Logger.log(STR. "errors \{ errs.size() }:" );
+            Logger.log(STR. "\{ prefix } errors \{ errs.size() }:" );
             for (VErr err : errs) {
                 Logger.log("\t" + err);
             }

@@ -23,6 +23,6 @@ public class XmlToCfg {
         }
 
         SchemaErrs fullErr = cfg2.resolve();
-        fullErr.print();
+        fullErr.print("schema");
     }
 }

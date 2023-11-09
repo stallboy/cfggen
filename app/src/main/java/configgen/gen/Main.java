@@ -41,7 +41,7 @@ public final class Main {
         System.out.println("-----tools");
         System.out.println("    -verify           " + Localize.getMessage("Usage.Verify"));
         System.out.println("    -searchto         " + Localize.getMessage("Usage.SearchTo"));
-        System.out.println("    -searchOwn        " + Localize.getMessage("Usage.SearchOwn"));
+        System.out.println("    -searchown        " + Localize.getMessage("Usage.SearchOwn"));
         System.out.println("    -search           " + Localize.getMessage("Usage.Search"));
         ValueSearcher.printUsage("        ");
         System.out.println("    -binarytotext     " + Localize.getMessage("Usage.BinaryToText"));

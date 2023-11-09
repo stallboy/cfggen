@@ -25,16 +25,16 @@ public record SchemaErrs(List<Err> errs,
         warns.add(warn);
     }
 
-    public void print() {
+    public void print(String prefix) {
         if (Logger.isWarningEnabled() && !warns.isEmpty()) {
-            Logger.log(STR. "warnings \{ warns.size() }:" );
+            Logger.log(STR. "\{ prefix } warnings \{ warns.size() }:" );
             for (Warn warn : warns) {
                 Logger.log("\t" + warn);
             }
         }
 
         if (!errs.isEmpty()) {
-            Logger.log(STR. "errors \{ errs.size() }:" );
+            Logger.log(STR. "\{ prefix } errors \{ errs.size() }:" );
             for (Err err : errs) {
                 Logger.log("\t" + err);
             }
