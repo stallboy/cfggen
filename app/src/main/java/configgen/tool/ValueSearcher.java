@@ -35,6 +35,12 @@ public class ValueSearcher {
         }
     }
 
+    public void close() {
+        if (fileWriter != null) {
+            fileWriter.close();
+        }
+    }
+
 
     public void searchInt(Set<Integer> integers) {
         ForeachPrimitiveValue.foreach((primitiveValue, table, fieldChain) -> {

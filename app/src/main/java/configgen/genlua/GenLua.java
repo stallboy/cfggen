@@ -356,7 +356,7 @@ public class GenLua extends Generator {
         }
 
 
-        int extraFileCnt = 0;
+        int extraFileCnt;
         {
             ///////////////////////////////////// 正常模式
             ValueStringify stringify = new ValueStringify(lineCache, ctx, "mk");
