@@ -87,8 +87,9 @@ final class CellParser {
         for (int col : sheet.fieldIndices()) {
             DRawRow rawRow = sheet.rows().get(col);
             String val = rawRow.cell(logicRowIdx);
-            boolean isCommaNumber = rawRow.isCellNumberWithComma(logicRowIdx) && val.contains(",");
-            logicRow.add(new DCell(val, logicRowId, col, DCell.modeOf(true, isCommaNumber)));
+            boolean isNumber = rawRow.isCellNumber(logicRowIdx);
+            boolean isCommaNumber = isNumber && val.contains(",");
+            logicRow.add(new DCell(val, logicRowId, col, DCell.modeOf(true, isNumber, isCommaNumber)));
         }
         return logicRow;
     }
@@ -98,8 +99,9 @@ final class CellParser {
         DRowId logicRowId = new DRowId(sheet.fileName(), sheet.sheetName(), rowIndex);
         for (int col : sheet.fieldIndices()) {
             String val = rawRow.cell(col);
-            boolean isCommaNumber = rawRow.isCellNumberWithComma(col) && val.contains(",");
-            logicRow.add(new DCell(val, logicRowId, col, DCell.modeOf(false, isCommaNumber)));
+            boolean isNumber = rawRow.isCellNumber(col);
+            boolean isCommaNumber = isNumber && val.contains(",");
+            logicRow.add(new DCell(val, logicRowId, col, DCell.modeOf(false, isNumber, isCommaNumber)));
         }
         return logicRow;
     }

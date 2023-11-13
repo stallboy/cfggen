@@ -39,7 +39,10 @@ public class Context {
     private CfgValue lastCfgValue;
     private String lastCfgValueTag;
 
-    public Context(Path dataDir, int headRow, boolean checkComma, String defaultEncoding) {
+    public Context(Path dataDir, int headRow, boolean usePoi, boolean checkComma, String defaultEncoding) {
+        if (checkComma && !usePoi) {
+            throw new IllegalArgumentException("checkComma must be used with usePoi");
+        }
         this.checkComma = checkComma;
         Path cfgPath = dataDir.resolve("config.cfg");
         CfgSchema schema = Cfgs.readFrom(cfgPath, true);
@@ -53,7 +56,7 @@ public class Context {
         Logger.profile("schema resolve");
 
 
-        CfgData data = CfgDataReader.INSTANCE.readCfgData(dataDir, schema, headRow, checkComma, defaultEncoding);
+        CfgData data = CfgDataReader.INSTANCE.readCfgData(dataDir, schema, headRow, usePoi, defaultEncoding);
         data.print();
 
         SchemaErrs alignErr = SchemaErrs.of();

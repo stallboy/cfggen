@@ -6,10 +6,12 @@ import de.siegmar.fastcsv.reader.CsvRow;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
+import org.dhatim.fastexcel.reader.CellType;
 import org.dhatim.fastexcel.reader.Row;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.apache.poi.ss.usermodel.CellType.NUMERIC;
 
@@ -50,12 +52,16 @@ public record CfgData(Map<String, DTable> tables,
                         byte mode) {
 
         public static final byte COLUMN_MODE = 0x1;
-        public static final byte CELL_NUMBER_WITH_COMMA = 0x2;
+        public static final byte CELL_NUMBER = 0x2;
+        public static final byte CELL_NUMBER_WITH_COMMA = 0x4;
 
-        public static byte modeOf(boolean isColumnMode, boolean isCellNumberWithComma) {
+        public static byte modeOf(boolean isColumnMode, boolean isCellNumber, boolean isCellNumberWithComma) {
             byte res = 0;
             if (isColumnMode) {
                 res |= COLUMN_MODE;
+            }
+            if (isCellNumber) {
+                res |= CELL_NUMBER;
             }
             if (isCellNumberWithComma) {
                 res |= CELL_NUMBER_WITH_COMMA;
@@ -65,6 +71,10 @@ public record CfgData(Map<String, DTable> tables,
 
         public boolean isColumnMode() {
             return (mode & COLUMN_MODE) != 0;
+        }
+
+        public boolean isCellNumber() {
+            return (mode & CELL_NUMBER) != 0;
         }
 
         public boolean isCellNumberWithComma() {
@@ -142,7 +152,7 @@ public record CfgData(Map<String, DTable> tables,
     public sealed interface DRawRow {
         String cell(int c);
 
-        boolean isCellNumberWithComma(int c);
+        boolean isCellNumber(int c);
 
         int count();
     }
@@ -154,7 +164,7 @@ public record CfgData(Map<String, DTable> tables,
         }
 
         @Override
-        public boolean isCellNumberWithComma(int c) {
+        public boolean isCellNumber(int c) {
             return false;
         }
 
@@ -172,8 +182,9 @@ public record CfgData(Map<String, DTable> tables,
         }
 
         @Override
-        public boolean isCellNumberWithComma(int c) {
-            return false; // fastexcel 没有读style信息，所以没法查找是否有显示的逗号
+        public boolean isCellNumber(int c) {
+            Optional<org.dhatim.fastexcel.reader.Cell> cell = row.getOptionalCell(c);
+            return cell.isPresent() && cell.get().getType() == CellType.NUMBER; //这里只判断数字，外部判断comma
         }
 
         @Override
@@ -195,7 +206,7 @@ public record CfgData(Map<String, DTable> tables,
         }
 
         @Override
-        public boolean isCellNumberWithComma(int c) {
+        public boolean isCellNumber(int c) {
             Cell cell = row.getCell(c);
             return cell != null && cell.getCellType() == NUMERIC; //这里只判断数字，外部判断comma
         }

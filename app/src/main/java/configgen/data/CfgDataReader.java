@@ -31,19 +31,19 @@ import static configgen.data.CfgData.*;
 public enum CfgDataReader {
     INSTANCE;
 
-    public CfgData readCfgData(Path rootDir, CfgSchema nullableCfgSchema, int headRow, boolean checkComma, String defaultEncoding) {
+    public CfgData readCfgData(Path rootDir, CfgSchema nullableCfgSchema, int headRow, boolean usePoi, String defaultEncoding) {
         if (headRow < 2) {
             throw new IllegalArgumentException(STR. "headRow =\{ headRow } < 2" );
         }
         try {
-            return _readCfgData(rootDir, nullableCfgSchema, headRow, checkComma, defaultEncoding);
+            return _readCfgData(rootDir, nullableCfgSchema, headRow, usePoi, defaultEncoding);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     private CfgData _readCfgData(Path rootDir, CfgSchema nullableCfgSchema,
-                                 int headRow, boolean checkComma, String defaultEncoding) throws Exception {
+                                 int headRow, boolean usePoi, String defaultEncoding) throws Exception {
         DataStat stat = new DataStat();
         List<Callable<Result>> tasks = new ArrayList<>();
 
@@ -75,7 +75,7 @@ public enum CfgDataReader {
                         }
                     }
                     case EXCEL -> {
-                        if (checkComma) {
+                        if (usePoi) {
                             tasks.add(() -> readExcelByPoi(path, relativePath));
                         } else {
                             tasks.add(() -> readExcelByFastExcel(path, relativePath));
@@ -176,7 +176,6 @@ public enum CfgDataReader {
         try (ReadableWorkbook wb = new ReadableWorkbook(path.toFile(), new ReadingOptions(true, false))) {
             for (Sheet sheet : wb.getSheets().toList()) {
                 String sheetName = sheet.getName().trim();
-
                 DataUtil.TableNameIndex ti = DataUtil.getTableNameIndex(relativePath, sheetName);
                 if (ti == null) {
                     Logger.verbose2(STR. "\{ path } [\{ sheetName }] 名字不符合规范，ignore！" );

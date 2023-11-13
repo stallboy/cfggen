@@ -8,6 +8,7 @@ import configgen.genjava.code.GenJavaCode;
 import configgen.genlua.GenLua;
 import configgen.tool.GenI18n;
 import configgen.tool.XmlToCfg;
+import configgen.tool.ComparePoiAndFastExcel;
 import configgen.util.Localize;
 import configgen.util.Logger;
 import configgen.tool.ValueSearcher;
@@ -27,6 +28,7 @@ public final class Main {
         System.out.println();
         System.out.println("-----schema & data");
         System.out.println("    -datadir          " + Localize.getMessage("Usage.DataDir"));
+        System.out.println("    -headrow          " + Localize.getMessage("Usage.HeadRow"));
         System.out.println("    -encoding         " + Localize.getMessage("Usage.Encoding"));
 
         System.out.println();
@@ -47,6 +49,9 @@ public final class Main {
         System.out.println("    -binarytotext     " + Localize.getMessage("Usage.BinaryToText"));
         System.out.println("    -binarytotextloop " + Localize.getMessage("Usage.BinaryToTextLoop"));
         System.out.println("    -xmltocfg         " + Localize.getMessage("Usage.XmlToCfg"));
+        System.out.println("    -comparepoiandfastexcel   " + Localize.getMessage("Usage.ComparePoiAndFastExcel"));
+
+        System.out.println("    -usepoi           " + Localize.getMessage("Usage.UsePoi"));
         System.out.println("    -checkcomma       " + Localize.getMessage("Usage.CheckComma"));
 
         System.out.println("-----options");
@@ -101,12 +106,12 @@ public final class Main {
 
         Generators.addProvider("lua", GenLua::new);
 
-
         String datadir = null;
         boolean xmlToCfg = false;
+        boolean comparePoiAndFastExcel = false;
         int headRow = 2;
+        boolean usePoi = false;
         boolean checkComma = false;
-
         String encoding = "GBK";
 
         String i18nfile = null;
@@ -151,7 +156,9 @@ public final class Main {
                 }
                 case "-datadir" -> datadir = args[++i];
                 case "-xmltocfg" -> xmlToCfg = true;
+                case "-comparepoiandfastexcel" -> comparePoiAndFastExcel = true;
                 case "-headrow" -> headRow = Integer.parseInt(args[++i]);
+                case "-usepoi" -> usePoi = true;
                 case "-checkcomma" -> checkComma = true;
                 case "-encoding" -> encoding = args[++i];
                 case "-verify" -> verify = true;
@@ -218,17 +225,22 @@ public final class Main {
             return;
         }
 
+        if (comparePoiAndFastExcel) {
+            ComparePoiAndFastExcel.compareCellData(dataDir, headRow, encoding);
+            return;
+        }
+
         if (i18nfile != null && langSwitchDir != null) {
             usage("-不能同时配置-i18nfile和-langswitchdir");
             return;
         }
 
         Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));
-        Context ctx = new Context(dataDir, headRow, checkComma, encoding);
-        ctx.setI18nOrLangSwitch(i18nfile, i18nencoding, i18ncrlfaslf, langSwitchDir, defaultLang);
+        Context context = new Context(dataDir, headRow, usePoi, checkComma, encoding);
+        context.setI18nOrLangSwitch(i18nfile, i18nencoding, i18ncrlfaslf, langSwitchDir, defaultLang);
 
         if (searchParam != null) {
-            ValueSearcher searcher = new ValueSearcher(ctx.makeValue(searchOwn), searchTo);
+            ValueSearcher searcher = new ValueSearcher(context.makeValue(searchOwn), searchTo);
             if (searchParam.isEmpty()) {
                 searcher.loop();
             } else {
@@ -239,12 +251,12 @@ public final class Main {
 
         if (verify) {
             Logger.verbose("-----start verify");
-            ctx.makeValue(null);
+            context.makeValue(null);
         }
 
         for (NamedGenerator ng : generators) {
             Logger.verbose("-----generate " + ng.gen.parameter);
-            ng.gen.generate(ctx);
+            ng.gen.generate(context);
             Logger.profile("generate " + ng.name);
         }
 
