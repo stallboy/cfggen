@@ -34,7 +34,13 @@ public class DataUtil {
     }
 
     public static TableNameIndex getTableNameIndex(Path filePath, String sheetName) {
-        return getTableNameIndex(filePath.getParent().resolve(sheetName));
+        Path path;
+        if (filePath.getParent() != null) {
+            path = filePath.getParent().resolve(sheetName);
+        } else {
+            path = Path.of(sheetName);
+        }
+        return getTableNameIndex(path);
     }
 
     //现在都小写了，要是讲究的话，应该是路径小写，sheetName不改
