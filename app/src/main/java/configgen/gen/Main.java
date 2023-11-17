@@ -49,7 +49,7 @@ public final class Main {
         System.out.println("    -binarytotext     " + Localize.getMessage("Usage.BinaryToText"));
         System.out.println("    -binarytotextloop " + Localize.getMessage("Usage.BinaryToTextLoop"));
         System.out.println("    -xmltocfg         " + Localize.getMessage("Usage.XmlToCfg"));
-        if (BuildSettings.is_include_poi) {
+        if (BuildSettings.isIncludePoi) {
             System.out.println("    -usepoi           " + Localize.getMessage("Usage.UsePoi"));
             System.out.println("    -comparepoiandfastexcel   " + Localize.getMessage("Usage.ComparePoiAndFastExcel"));
             // checkcomma 在只包含poi而不包含fastexcel时检测
@@ -204,7 +204,7 @@ public final class Main {
                     generators.add(new NamedGenerator(name, generator));
                 }
                 default -> {
-                    if (BuildSettings.is_include_poi) {
+                    if (BuildSettings.isIncludePoi) {
                         switch (paramType) {
                             case "-usepoi" -> usePoi = true;
                             case "-comparepoiandfastexcel" -> comparePoiAndFastExcel = true;

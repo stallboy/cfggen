@@ -91,7 +91,7 @@ public enum CfgDataReader {
                         }
                     }
                     case EXCEL -> {
-                        if (BuildSettings.is_include_poi && usePoi) {
+                        if (BuildSettings.isIncludePoi && usePoi) {
                             tasks.add(() -> BuildSettings.poiReader.readExcels(path, relativePath));
                         } else {
                             tasks.add(() -> ReadByFastExcel.INSTANCE.readExcels(path, relativePath));

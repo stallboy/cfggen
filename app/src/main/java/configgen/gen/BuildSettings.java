@@ -3,7 +3,7 @@ package configgen.gen;
 import configgen.data.ExcelReader;
 
 public final class BuildSettings {
-    public static boolean is_include_poi = false;
+    public static boolean isIncludePoi = false;
     public static ExcelReader poiReader;
 
     static {
@@ -12,7 +12,7 @@ public final class BuildSettings {
             Object[] enumConstants = readByPoiClass.getEnumConstants();
             Object instance = enumConstants[0];
             if (instance instanceof ExcelReader reader) {
-                is_include_poi = true;
+                isIncludePoi = true;
                 poiReader = reader;
             }
         } catch (ClassNotFoundException e) {
