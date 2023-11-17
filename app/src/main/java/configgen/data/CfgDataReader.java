@@ -1,15 +1,11 @@
 package configgen.data;
 
+import configgen.gen.BuildSettings;
 import configgen.schema.CfgSchema;
 import configgen.util.Logger;
 import configgen.util.UnicodeReader;
 import de.siegmar.fastcsv.reader.CsvReader;
 import de.siegmar.fastcsv.reader.CsvRow;
-import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.ss.usermodel.FormulaEvaluator;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.dhatim.fastexcel.reader.*;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -25,11 +21,31 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import static configgen.data.CfgData.*;
+import static configgen.data.CfgData.DRawRow;
+import static configgen.data.CfgData.DRawSheet;
+import static configgen.data.ExcelReader.*;
 
 
 public enum CfgDataReader {
     INSTANCE;
+
+    record DRawCsvRow(CsvRow row) implements DRawRow {
+        @Override
+        public String cell(int c) {
+            return c < row.getFieldCount() ? row.getField(c).trim() : "";
+        }
+
+        @Override
+        public boolean isCellNumber(int c) {
+            return false;
+        }
+
+        @Override
+        public int count() {
+            return row.getFieldCount();
+        }
+    }
+
 
     public CfgData readCfgData(Path rootDir, CfgSchema nullableCfgSchema, int headRow, boolean usePoi, String defaultEncoding) {
         if (headRow < 2) {
@@ -45,7 +61,7 @@ public enum CfgDataReader {
     private CfgData _readCfgData(Path rootDir, CfgSchema nullableCfgSchema,
                                  int headRow, boolean usePoi, String defaultEncoding) throws Exception {
         DataStat stat = new DataStat();
-        List<Callable<Result>> tasks = new ArrayList<>();
+        List<Callable<AllResult>> tasks = new ArrayList<>();
 
         Files.walkFileTree(rootDir, new SimpleFileVisitor<>() {
             @Override
@@ -75,10 +91,10 @@ public enum CfgDataReader {
                         }
                     }
                     case EXCEL -> {
-                        if (usePoi) {
-                            tasks.add(() -> readExcelByPoi(path, relativePath));
+                        if (BuildSettings.is_include_poi && usePoi) {
+                            tasks.add(() -> BuildSettings.poiReader.readExcels(path, relativePath));
                         } else {
-                            tasks.add(() -> readExcelByFastExcel(path, relativePath));
+                            tasks.add(() -> ReadByFastExcel.INSTANCE.readExcels(path, relativePath));
                         }
                     }
                     case null -> {
@@ -93,14 +109,14 @@ public enum CfgDataReader {
 //        try(ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())) {
 //        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
         ExecutorService executor = Executors.newWorkStealingPool();
-        List<Future<Result>> futures = executor.invokeAll(tasks);
-        for (Future<Result> future : futures) {
-            Result result = future.get();
-            for (OneSheetResult sheet : result.sheets) {
-                addSheet(data, sheet.tableName, sheet.sheet);
+        List<Future<AllResult>> futures = executor.invokeAll(tasks);
+        for (Future<AllResult> future : futures) {
+            AllResult result = future.get();
+            for (OneSheetResult sheet : result.sheets()) {
+                addSheet(data, sheet.tableName(), sheet.sheet());
             }
-            if (result.stat != null) {
-                stat.merge(result.stat);
+            if (result.stat() != null) {
+                stat.merge(result.stat());
             }
         }
 
@@ -139,17 +155,8 @@ public enum CfgDataReader {
     }
 
 
-    record Result(List<OneSheetResult> sheets,
-                  DataStat stat) {
-    }
-
-    record OneSheetResult(String tableName,
-                          DRawSheet sheet) {
-    }
-
-
-    private Result readCsvByFastCsv(Path path, Path relativePath, DataUtil.TableNameIndex ti,
-                                    String defaultEncoding) throws IOException {
+    private AllResult readCsvByFastCsv(Path path, Path relativePath, DataUtil.TableNameIndex ti,
+                                       String defaultEncoding) throws IOException {
         int count = 0;
         DataStat stat = new DataStat();
         List<DRawRow> rows = new ArrayList<>();
@@ -165,134 +172,9 @@ public enum CfgDataReader {
             }
         }
         DRawSheet sheet = new DRawSheet(relativePath.toString(), "", ti.index(), rows, new ArrayList<>());
-        return new Result(List.of(new OneSheetResult(ti.tableName(), sheet)), stat);
+        return new AllResult(List.of(new OneSheetResult(ti.tableName(), sheet)), stat);
     }
 
-    private Result readExcelByFastExcel(Path path, Path relativePath) throws IOException {
-        DataStat stat = new DataStat();
-        List<OneSheetResult> sheets = new ArrayList<>();
-
-        stat.excelCount++;
-        try (ReadableWorkbook wb = new ReadableWorkbook(path.toFile(), new ReadingOptions(true, false))) {
-            for (Sheet sheet : wb.getSheets().toList()) {
-                String sheetName = sheet.getName().trim();
-                DataUtil.TableNameIndex ti = DataUtil.getTableNameIndex(relativePath, sheetName);
-                if (ti == null) {
-                    Logger.verbose2(STR. "\{ path } [\{ sheetName }] 名字不符合规范，ignore！" );
-                    stat.ignoredSheetCount++;
-                    continue;
-                }
-
-                stat.sheetCount++;
-                List<Row> rawRows = sheet.read();
-                List<DRawRow> rows = new ArrayList<>(rawRows.size());
-                for (Row cells : rawRows) {
-                    rows.add(new DRawExcelRow(cells));
-                }
-                OneSheetResult oneSheet = new OneSheetResult(ti.tableName(),
-                        new DRawSheet(relativePath.toString(), sheetName, ti.index(), rows, new ArrayList<>()));
-                sheets.add(oneSheet);
-
-                int formula = 0;
-                for (Row row : rawRows) {
-                    for (Cell cell : row) {
-                        if (cell != null) {
-                            CellType type = cell.getType();
-                            switch (type) {
-                                case NUMBER -> {
-                                    stat.cellNumberCount++;
-                                }
-                                case STRING -> {
-                                    stat.cellStrCount++;
-                                }
-                                case FORMULA -> {
-                                    stat.cellFormulaCount++;
-                                }
-                                case ERROR -> {
-                                    stat.cellErrCount++;
-                                }
-                                case BOOLEAN -> {
-                                    stat.cellBoolCount++;
-                                }
-                                case EMPTY -> {
-                                    stat.cellEmptyCount++;
-                                }
-                            }
-
-                            if (type == CellType.FORMULA) {
-                                formula++;
-                                // Logger.verbose2(cell.getAddress() + ": formula=" + cell.getFormula() + ", text=" + cell.getText());
-                            }
-
-                        } else {
-                            stat.cellNullCount++;
-                        }
-                    }
-                }
-
-                if (formula > 0) {
-                    Logger.verbose2(STR. "\{ path } [\{ sheetName }] formula count=\{ formula }" );
-                }
-            }
-        }
-        return new Result(sheets, stat);
-    }
-
-    private Result readExcelByPoi(Path path, Path relativePath) throws IOException {
-        DataStat stat = new DataStat();
-        List<OneSheetResult> sheets = new ArrayList<>();
-
-        stat.excelCount++;
-
-
-        try (Workbook workbook = WorkbookFactory.create(path.toFile(), null, true)) {
-            DataFormatter formatter = new DataFormatter();
-            FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
-            DRawPoiFmt fmt = new DRawPoiFmt(formatter, evaluator);
-            for (org.apache.poi.ss.usermodel.Sheet sheet : workbook) {
-                String sheetName = sheet.getSheetName().trim();
-                DataUtil.TableNameIndex ti = DataUtil.getTableNameIndex(relativePath, sheetName);
-                if (ti == null) {
-                    Logger.verbose2(STR. "\{ path } [\{ sheetName }] 名字不符合规范，ignore！" );
-                    stat.ignoredSheetCount++;
-                    continue;
-                }
-
-                stat.sheetCount++;
-                List<DRawRow> rows = new ArrayList<>(sheet.getLastRowNum() + 1);
-                for (org.apache.poi.ss.usermodel.Row row : sheet) {
-                    rows.add(new DRawPoiExcelRow(row, fmt));
-                    for (org.apache.poi.ss.usermodel.Cell cell : row) {
-                        switch (cell.getCellType()) {
-                            case NUMERIC -> {
-                                stat.cellNumberCount++;
-                            }
-                            case STRING -> {
-                                stat.cellStrCount++;
-                            }
-                            case FORMULA -> {
-                                stat.cellFormulaCount++;
-                            }
-                            case BLANK -> {
-                                stat.cellEmptyCount++;
-                            }
-                            case BOOLEAN -> {
-                                stat.cellBoolCount++;
-                            }
-                            case ERROR -> {
-                                stat.cellErrCount++;
-                            }
-                        }
-                    }
-                }
-                OneSheetResult oneSheet = new OneSheetResult(ti.tableName(),
-                        new DRawSheet(relativePath.toString(), sheetName, ti.index(), rows, new ArrayList<>()));
-                sheets.add(oneSheet);
-            }
-        }
-
-        return new Result(sheets, stat);
-    }
 }
 
 

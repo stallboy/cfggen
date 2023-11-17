@@ -49,10 +49,12 @@ public final class Main {
         System.out.println("    -binarytotext     " + Localize.getMessage("Usage.BinaryToText"));
         System.out.println("    -binarytotextloop " + Localize.getMessage("Usage.BinaryToTextLoop"));
         System.out.println("    -xmltocfg         " + Localize.getMessage("Usage.XmlToCfg"));
-        System.out.println("    -comparepoiandfastexcel   " + Localize.getMessage("Usage.ComparePoiAndFastExcel"));
-
-        System.out.println("    -usepoi           " + Localize.getMessage("Usage.UsePoi"));
-        System.out.println("    -checkcomma       " + Localize.getMessage("Usage.CheckComma"));
+        if (BuildSettings.is_include_poi) {
+            System.out.println("    -usepoi           " + Localize.getMessage("Usage.UsePoi"));
+            System.out.println("    -comparepoiandfastexcel   " + Localize.getMessage("Usage.ComparePoiAndFastExcel"));
+            // checkcomma 在只包含poi而不包含fastexcel时检测
+            System.out.println("    -checkcomma       " + Localize.getMessage("Usage.CheckComma"));
+        }
 
         System.out.println("-----options");
         System.out.println("    -v                " + Localize.getMessage("Usage.V"));
@@ -144,7 +146,8 @@ public final class Main {
         }
 
         for (int i = 0; i < args.length; ++i) {
-            switch (args[i].toLowerCase()) {
+            String paramType = args[i].toLowerCase();
+            switch (paramType) {
                 case "-locale" -> {
                     String language = args[++i];
                     Locale locale = Locale.of(language);
@@ -156,10 +159,8 @@ public final class Main {
                 }
                 case "-datadir" -> datadir = args[++i];
                 case "-xmltocfg" -> xmlToCfg = true;
-                case "-comparepoiandfastexcel" -> comparePoiAndFastExcel = true;
                 case "-headrow" -> headRow = Integer.parseInt(args[++i]);
-                case "-usepoi" -> usePoi = true;
-                case "-checkcomma" -> checkComma = true;
+
                 case "-encoding" -> encoding = args[++i];
                 case "-verify" -> verify = true;
                 case "-i18nfile" -> i18nfile = args[++i];
@@ -202,7 +203,18 @@ public final class Main {
                         usage("");
                     generators.add(new NamedGenerator(name, generator));
                 }
-                default -> usage("unknown args " + args[i]);
+                default -> {
+                    if (BuildSettings.is_include_poi) {
+                        switch (paramType) {
+                            case "-usepoi" -> usePoi = true;
+                            case "-comparepoiandfastexcel" -> comparePoiAndFastExcel = true;
+                            case "-checkcomma" -> checkComma = true;
+                            default -> usage("unknown args " + args[i]);
+                        }
+                    } else {
+                        usage("unknown args " + args[i]);
+                    }
+                }
             }
         }
 

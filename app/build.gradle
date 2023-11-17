@@ -25,9 +25,11 @@ dependencies {
     implementation 'org.dhatim:fastexcel-reader:0.15.7'
     implementation 'de.siegmar:fastcsv:2.2.2'
 
-    // 以下两个库只用于-checkcomma，可以不要，这样打出来的fatjar从20M会下降到2M
-    implementation 'org.apache.poi:poi:5.2.4'
-    implementation 'org.apache.poi:poi-ooxml:5.2.4'
+    if (!project.hasProperty("noPoi")) {
+        // 以下两个库只用于-checkcomma，可以不要，这样打出来的fatjar从20M会下降到2M
+        implementation 'org.apache.poi:poi:5.2.4'
+        implementation 'org.apache.poi:poi-ooxml:5.2.4'
+    }
 }
 
 java {
@@ -38,6 +40,9 @@ java {
 
 
 compileJava {
+    if (project.hasProperty("noPoi")) {
+        sourceSets.main.java.exclude("configgen/data/ReadByPoi.java")
+    }
     options.compilerArgs += ["--enable-preview"]
     options.encoding = "UTF-8"
 }

@@ -2,18 +2,9 @@ package configgen.data;
 
 import configgen.util.Localize;
 import configgen.util.Logger;
-import de.siegmar.fastcsv.reader.CsvRow;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.ss.usermodel.FormulaEvaluator;
-import org.dhatim.fastexcel.reader.CellType;
-import org.dhatim.fastexcel.reader.Row;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-
-import static org.apache.poi.ss.usermodel.CellType.NUMERIC;
 
 
 /**
@@ -149,76 +140,12 @@ public record CfgData(Map<String, DTable> tables,
         }
     }
 
-    public sealed interface DRawRow {
+    public interface DRawRow {
         String cell(int c);
 
         boolean isCellNumber(int c);
 
         int count();
-    }
-
-    public record DRawCsvRow(CsvRow row) implements DRawRow {
-        @Override
-        public String cell(int c) {
-            return c < row.getFieldCount() ? row.getField(c).trim() : "";
-        }
-
-        @Override
-        public boolean isCellNumber(int c) {
-            return false;
-        }
-
-        @Override
-        public int count() {
-            return row.getFieldCount();
-        }
-    }
-
-
-    public record DRawExcelRow(Row row) implements DRawRow {
-        @Override
-        public String cell(int c) {
-            return row.getCellText(c).trim();
-        }
-
-        @Override
-        public boolean isCellNumber(int c) {
-            Optional<org.dhatim.fastexcel.reader.Cell> cell = row.getOptionalCell(c);
-            return cell.isPresent() && cell.get().getType() == CellType.NUMBER; //这里只判断数字，外部判断comma
-        }
-
-        @Override
-        public int count() {
-            return row.getCellCount();
-        }
-    }
-
-    public record DRawPoiExcelRow(org.apache.poi.ss.usermodel.Row row,
-                                  DRawPoiFmt fmt) implements DRawRow {
-        @Override
-        public String cell(int c) {
-            Cell cell = row.getCell(c);
-            if (cell != null) {
-                return fmt.formatter.formatCellValue(cell, fmt.evaluator).trim();
-            } else {
-                return "";
-            }
-        }
-
-        @Override
-        public boolean isCellNumber(int c) {
-            Cell cell = row.getCell(c);
-            return cell != null && cell.getCellType() == NUMERIC; //这里只判断数字，外部判断comma
-        }
-
-        @Override
-        public int count() {
-            return row.getLastCellNum();
-        }
-    }
-
-    public record DRawPoiFmt(DataFormatter formatter,
-                             FormulaEvaluator evaluator) {
     }
 
 
