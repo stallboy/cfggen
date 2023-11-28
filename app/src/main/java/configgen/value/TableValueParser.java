@@ -554,7 +554,7 @@ public class TableValueParser {
 
     }
 
-    // 要允许block<bean>,bean里仍然有block，如下所示
+    // 要允许block<struct>,struct里仍然有block，如下所示
     // xxxaabbxccc
     //      bb ccc
     //      bb
