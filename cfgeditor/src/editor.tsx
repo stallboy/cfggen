@@ -6,119 +6,81 @@ import {
     Presets as ConnectionPresets
 } from "rete-connection-plugin";
 import { ReactPlugin, Presets, ReactArea2D } from "rete-react-plugin";
-import { Button, Progress } from "antd";
-import "antd/dist/reset.css";
 
-class Node extends ClassicPreset.Node<
-    { [key in string]: ClassicPreset.Socket },
-    { [key in string]: ClassicPreset.Socket },
-    {
-        [key in string]:
-        | ButtonControl
-        | ProgressControl
-        | ClassicPreset.Control
-        | ClassicPreset.InputControl<"number">
-        | ClassicPreset.InputControl<"text">;
-    }
-> {}
-class Connection<
-    A extends Node,
-    B extends Node
-> extends ClassicPreset.Connection<A, B> {}
+import { AutoArrangePlugin, Presets as ArrangePresets } from "rete-auto-arrange-plugin";
 
-type Schemes = GetSchemes<Node, Connection<Node, Node>>;
-type AreaExtra = ReactArea2D<any>;
-
-class ButtonControl extends ClassicPreset.Control {
-    constructor(public label: string, public onClick: () => void) {
-        super();
-    }
+class Node extends ClassicPreset.Node {
+    width = 180;
+    height = 220;
 }
+class Connection<N extends Node> extends ClassicPreset.Connection<N, N> {}
 
-class ProgressControl extends ClassicPreset.Control {
-    constructor(public percent: number) {
-        super();
-    }
-}
 
-function CustomButton(props: { data: ButtonControl }) {
-    return (
-        <Button
-            onPointerDown={(e) => e.stopPropagation()}
-    onDoubleClick={(e) => e.stopPropagation()}
-    onClick={props.data.onClick}
-        >
-        {props.data.label}
-        </Button>
-);
-}
+type Schemes = GetSchemes<
+    Node,
+    Connection<Node>
+>;
+type AreaExtra = ReactArea2D<Schemes>;
 
-function CustomProgress(props: { data: ProgressControl }) {
-    return <Progress type="circle" percent={props.data.percent} />;
-}
+
 
 export async function createEditor(container: HTMLElement) {
-    const socket = new ClassicPreset.Socket("socket");
+
 
     const editor = new NodeEditor<Schemes>();
     const area = new AreaPlugin<Schemes, AreaExtra>(container);
     const connection = new ConnectionPlugin<Schemes, AreaExtra>();
     const render = new ReactPlugin<Schemes, AreaExtra>({ createRoot });
 
-    render.addPreset(
-        Presets.classic.setup({
-            customize: {
-                control(data) {
-                    if (data.payload instanceof ButtonControl) {
-                        return CustomButton;
-                    }
-                    if (data.payload instanceof ProgressControl) {
-                        return CustomProgress;
-                    }
-                    if (data.payload instanceof ClassicPreset.InputControl) {
-                        return Presets.classic.Control;
-                    }
-                    return null;
-                }
-            }
-        })
-    );
+    AreaExtensions.selectableNodes(area, AreaExtensions.selector(), {
+        accumulating: AreaExtensions.accumulateOnCtrl()
+    });
+
+    const arrange = new AutoArrangePlugin<Schemes>();
+    arrange.addPreset(ArrangePresets.classic.setup());
+    area.use(arrange);
+
+    render.addPreset(Presets.classic.setup());
     connection.addPreset(ConnectionPresets.classic.setup());
 
     editor.use(area);
     area.use(connection);
     area.use(render);
 
+    AreaExtensions.simpleNodesOrder(area);
+
+    const socket = new ClassicPreset.Socket("socket");
+    const socket2 = new ClassicPreset.Socket("socket2");
+
     const a = new Node("A");
-    a.addOutput("a", new ClassicPreset.Output(socket));
-
-    const progressControl = new ProgressControl(0);
-    const inputControl = new ClassicPreset.InputControl("number", {
-        initial: 0,
-        change(value) {
-            progressControl.percent = value;
-            area.update("control", progressControl.id);
-        }
-    });
-
-    a.addControl("input", inputControl);
-    a.addControl("progress", progressControl);
-    a.addControl(
-        "button",
-        new ButtonControl("Randomize", () => {
-            const percent = Math.round(Math.random() * 100);
-
-            inputControl.setValue(percent);
-            area.update("control", inputControl.id);
-
-            progressControl.percent = percent;
-            area.update("control", progressControl.id);
-        })
-    );
+    a.addControl("a", new ClassicPreset.InputControl("text", { initial: "a" , readonly: true}));
+    a.addOutput("a", new ClassicPreset.Output(socket, "aa"));
+    a.addOutput("a2", new ClassicPreset.Output(socket2, "aa2"));
     await editor.addNode(a);
 
-    AreaExtensions.zoomAt(area, editor.getNodes());
+    const b = new Node("B");
+    b.addControl("b", new ClassicPreset.InputControl("text", { initial: "b" }));
+    b.addInput("b", new ClassicPreset.Input(socket));
+    await editor.addNode(b);
 
+    const c = new Node("C");
+    c.addInput("c", new ClassicPreset.Input(socket2));
+    c.addControl("c1", new ClassicPreset.InputControl("text", { initial: "c" }));
+    c.addControl("c2", new ClassicPreset.InputControl("text", { initial: "c2" }));
+
+    await editor.addNode(c);
+
+    await editor.addConnection(new Connection(a, "a", b, "b"));
+    await editor.addConnection(new Connection(a, "a2", c, "c"));
+
+    await arrange.layout();
+    // await area.translate(a.id, { x: 0, y: 0 });
+    // await area.translate(b.id, { x: 270, y: 0 });
+
+    setTimeout(() => {
+        // wait until nodes rendered because they dont have predefined width and height
+        AreaExtensions.zoomAt(area, editor.getNodes());
+    }, 10);
     return {
         destroy: () => area.destroy()
     };
