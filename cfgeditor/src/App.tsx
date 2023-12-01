@@ -1,5 +1,5 @@
 import { useRete } from "rete-react-plugin";
-import { createEditor } from "./editor";
+import { createEditor } from "./antd.tsx";
 
 export default function App() {
     const [ref] = useRete(createEditor);

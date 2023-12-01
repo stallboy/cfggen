@@ -14,10 +14,12 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rete": "^2.0.2",
+    "elkjs": "^0.8.2",
     "rete-area-plugin": "^2.0.1",
     "rete-connection-plugin": "^2.0.0",
     "rete-react-plugin": "^2.0.4",
     "rete-render-utils": "^2.0.1",
+    "rete-auto-arrange-plugin": "^2.0.0",
     "styled-components": "^6.1.1"
   },
   "devDependencies": {
@@ -28,11 +30,9 @@
     "@typescript-eslint/eslint-plugin": "^6.10.0",
     "@typescript-eslint/parser": "^6.10.0",
     "@vitejs/plugin-react-swc": "^3.5.0",
-    "elkjs": "^0.8.2",
     "eslint": "^8.53.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.4",
-    "rete-auto-arrange-plugin": "^2.0.0",
     "typescript": "^5.2.2",
     "vite": "^5.0.0"
   }

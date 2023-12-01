@@ -50,28 +50,27 @@ export async function createEditor(container: HTMLElement) {
     AreaExtensions.simpleNodesOrder(area);
 
     const socket = new ClassicPreset.Socket("socket");
-    const socket2 = new ClassicPreset.Socket("socket2");
 
     const a = new Node("A");
-    a.addControl("a", new ClassicPreset.InputControl("text", { initial: "a" , readonly: true}));
+    a.addControl("a", new ClassicPreset.InputControl("text", { initial: "a\nb\nc" , readonly: true}));
     a.addOutput("a", new ClassicPreset.Output(socket, "aa"));
-    a.addOutput("a2", new ClassicPreset.Output(socket2, "aa2"));
+    a.addOutput("a2", new ClassicPreset.Output(socket, "bbbb"));
     await editor.addNode(a);
 
     const b = new Node("B");
     b.addControl("b", new ClassicPreset.InputControl("text", { initial: "b" }));
-    b.addInput("b", new ClassicPreset.Input(socket));
+    b.addInput("b", new ClassicPreset.Input(socket, "b port"));
     await editor.addNode(b);
 
     const c = new Node("C");
-    c.addInput("c", new ClassicPreset.Input(socket2));
+    c.addInput("c", new ClassicPreset.Input(socket, "c port"));
     c.addControl("c1", new ClassicPreset.InputControl("text", { initial: "c" }));
     c.addControl("c2", new ClassicPreset.InputControl("text", { initial: "c2" }));
 
     await editor.addNode(c);
 
     await editor.addConnection(new Connection(a, "a", b, "b"));
-    await editor.addConnection(new Connection(a, "a2", c, "c"));
+    await editor.addConnection(new Connection(a, "a", c, "c"));
 
     await arrange.layout();
     // await area.translate(a.id, { x: 0, y: 0 });
