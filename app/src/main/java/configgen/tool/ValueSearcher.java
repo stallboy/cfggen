@@ -1,5 +1,8 @@
 package configgen.tool;
 
+import configgen.schema.CfgSchema;
+import configgen.schema.Nameable;
+import configgen.schema.cfg.CfgWriter;
 import configgen.util.UTF8Writer;
 import configgen.value.CfgValue;
 import configgen.value.ForeachPrimitiveValue;
@@ -43,16 +46,21 @@ public class ValueSearcher {
 
 
     public void searchInt(Set<Integer> integers) {
-        ForeachPrimitiveValue.foreach((primitiveValue, table, fieldChain) -> {
+        ForeachPrimitiveValue.foreach((primitiveValue, table, pk, fieldChain) -> {
             switch (primitiveValue) {
                 case VInt vInt -> {
                     if (integers.contains(vInt.value())) {
-                        println(STR. "\{ table }, \{ String.join("-", fieldChain) }, \{ vInt.value() }" );
+                        String res = String.format("%s[%s], %s, %d", table, pk.repr(),
+                                String.join(".", fieldChain), vInt.value());
+                        println(res);
                     }
                 }
                 case VLong vLong -> {
                     if (integers.contains((int) vLong.value())) {
-                        println(STR. "\{ table }, \{ String.join("-", fieldChain) }, \{ vLong.value() }" );
+                        String res = String.format("%s[%s], %s, %d", table, pk.repr(),
+                                String.join(".", fieldChain), vLong.value());
+
+                        println(res);
                     }
                 }
                 default -> {
@@ -62,11 +70,13 @@ public class ValueSearcher {
     }
 
     public void searchStr(String str) {
-        ForeachPrimitiveValue.foreach((primitiveValue, table, fieldChain) -> {
+        ForeachPrimitiveValue.foreach((primitiveValue, table, pk, fieldChain) -> {
             if (Objects.requireNonNull(primitiveValue) instanceof StringValue sv) {
                 String v = sv.value();
                 if (v.contains(str)) {
-                    println(STR. "\{ table }, \{ String.join("-", fieldChain) }, \{ v }" );
+                    String res = String.format("%s[%s], %s, %s", table, pk.repr(),
+                            String.join(".", fieldChain), v);
+                    println(res);
                 }
             }
         }, cfgValue);
@@ -88,6 +98,26 @@ public class ValueSearcher {
                 println(STR. "table \{ refTable } unique key \{ nullableUniqKeys } not found" );
             }
         }
+    }
+
+    public void listNameOfSchemas(String want) {
+        for (Nameable nameable : cfgValue.schema().items()) {
+            String name = nameable.name();
+            if (name.contains(want)) {
+                println(name);
+            }
+        }
+    }
+
+    public void listSchemas(String want) {
+        CfgSchema schema = CfgSchema.of();
+        for (Nameable nameable : cfgValue.schema().items()) {
+            String name = nameable.name();
+            if (name.contains(want)) {
+                schema.add(nameable);
+            }
+        }
+        println(CfgWriter.stringify(schema));
     }
 
     public void search(String func, List<String> params) {
@@ -126,6 +156,21 @@ public class ValueSearcher {
                     searchRef(refTable, nullableUniqKeys, ignoredTables);
                 }
             }
+            case "ls" -> {
+                String want = "";
+                if (!params.isEmpty()) {
+                    want = params.get(0);
+                }
+                listNameOfSchemas(want);
+            }
+            case "ll" -> {
+                String want = "";
+                if (!params.isEmpty()) {
+                    want = params.get(0);
+                }
+                listSchemas(want);
+            }
+
             default -> println(STR. "\{ func } unknown" );
         }
     }
@@ -134,6 +179,11 @@ public class ValueSearcher {
         System.out.println(prefix + "int <int> <int> ...: search integers");
         System.out.println(prefix + "str <str>: search string");
         System.out.println(prefix + "ref <refTable<[uniqKeys]>?> <IgnoredTables>: search ref");
+
+        System.out.println(prefix + "ls  <name>?: list name of schemas");
+        System.out.println(prefix + "ll  <name>?: list schemas");
+
+        System.out.println(prefix + "h: help");
         System.out.println(prefix + "q: quit");
     }
 
@@ -153,7 +203,11 @@ public class ValueSearcher {
                 if (func.equals("q")) {
                     break;
                 }
-                search(func, Arrays.asList(args).subList(1, args.length));
+                if (func.equals("h")) {
+                    printUsage("");
+                } else {
+                    search(func, Arrays.asList(args).subList(1, args.length));
+                }
             } catch (IOException e) {
                 System.out.println(e.getMessage());
             }

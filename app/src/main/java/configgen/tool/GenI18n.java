@@ -34,7 +34,7 @@ public final class GenI18n extends Generator {
         CSVUtil.writeToFile(file, encoding, data);
     }
 
-    private void visit(PrimitiveValue primitiveValue, String table, List<String> fieldChain) {
+    private void visit(PrimitiveValue primitiveValue, String table, Value pk, List<String> fieldChain) {
         if (primitiveValue instanceof VText vText) {
             data.add(List.of(table, vText.original(), vText.value()));
         }

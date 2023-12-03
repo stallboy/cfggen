@@ -12,21 +12,23 @@ import static configgen.schema.Metadata.*;
 public class CfgWriter {
     private final StringBuilder destination;
     private final boolean useLastName;
+    private final boolean useMetaStartWith__;
 
     public static String stringify(CfgSchema cfg) {
-        return stringify(cfg, false);
+        return stringify(cfg, false, false);
     }
 
-    public static String stringify(CfgSchema cfg, boolean useLastName) {
+    public static String stringify(CfgSchema cfg, boolean useLastName, boolean useMetaStartWith__) {
         StringBuilder sb = new StringBuilder(4 * 1024);
-        CfgWriter cfgWriter = new CfgWriter(sb, useLastName);
+        CfgWriter cfgWriter = new CfgWriter(sb, useLastName, useMetaStartWith__);
         cfgWriter.writeCfg(cfg);
         return sb.toString();
     }
 
-    public CfgWriter(StringBuilder destination, boolean useLastName) {
+    public CfgWriter(StringBuilder destination, boolean useLastName, boolean useMetaStartWith__) {
         this.destination = destination;
         this.useLastName = useLastName;
+        this.useMetaStartWith__ = useMetaStartWith__;
     }
 
     public void writeCfg(CfgSchema cfg) {
@@ -152,13 +154,29 @@ public class CfgWriter {
         };
     }
 
-    static String metadataStr(Metadata meta) {
+    String metadataStr(Metadata meta) {
         if (meta.data().isEmpty()) {
             return "";
         }
 
+        Metadata m;
+        if (useMetaStartWith__) {
+            m = meta;
+        } else {
+            m = Metadata.of();
+            for (Map.Entry<String, MetaValue> e : meta.data().entrySet()) {
+                if (!e.getKey().startsWith("__")) {
+                    m.data().put(e.getKey(), e.getValue());
+                }
+            }
+
+            if (m.data().isEmpty()) {
+                return "";
+            }
+        }
+
         List<String> list = new ArrayList<>();
-        for (Map.Entry<String, MetaValue> entry : meta.data().entrySet()) {
+        for (Map.Entry<String, MetaValue> entry : m.data().entrySet()) {
             String k = entry.getKey();
             MetaValue v = entry.getValue();
             String str = switch (v) {

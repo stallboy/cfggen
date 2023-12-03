@@ -73,7 +73,7 @@ public class Cfgs {
     }
 
     private static void writeToOneFile(Path dst, CfgSchema cfg, boolean useLastName) {
-        String content = CfgWriter.stringify(cfg, useLastName);
+        String content = CfgWriter.stringify(cfg, useLastName, false);
         try {
             CachedFiles.writeFile(dst, content.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {

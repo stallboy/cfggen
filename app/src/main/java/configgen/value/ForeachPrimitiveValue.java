@@ -11,7 +11,7 @@ import static configgen.value.CfgValue.*;
 public class ForeachPrimitiveValue {
 
     public interface PrimitiveValueVisitor {
-        void visit(PrimitiveValue primitiveValue, String table, List<String> fieldChain);
+        void visit(PrimitiveValue primitiveValue, String table, Value primaryKey, List<String> fieldChain);
     }
 
     public static void foreach(PrimitiveValueVisitor visitor, CfgValue cfgValue) {
@@ -21,39 +21,43 @@ public class ForeachPrimitiveValue {
     }
 
     public static void foreachVTable(PrimitiveValueVisitor visitor, VTable vTable) {
+        List<Value> pks = vTable.primaryKeyValueSet().stream().toList();
+        int i = 0;
         for (VStruct vStruct : vTable.valueList()) {
-            foreachValue(visitor, vStruct, vTable.name(), List.of());
+            Value pk = pks.get(i);
+            foreachValue(visitor, vStruct, vTable.name(), pk, List.of());
+            i++;
         }
     }
 
-    public static void foreachValue(PrimitiveValueVisitor visitor, Value value, String table, List<String> fieldChain) {
+    public static void foreachValue(PrimitiveValueVisitor visitor, Value value, String table, Value pk, List<String> fieldChain) {
         switch (value) {
             case PrimitiveValue primitiveValue -> {
-                visitor.visit(primitiveValue, table, fieldChain);
+                visitor.visit(primitiveValue, table, pk, fieldChain);
             }
             case VStruct vStruct -> {
                 int i = 0;
                 for (FieldSchema field : vStruct.schema().fields()) {
                     Value fv = vStruct.values().get(i);
-                    foreachValue(visitor, fv, table, listAddOf(fieldChain, field.name()));
+                    foreachValue(visitor, fv, table, pk, listAddOf(fieldChain, field.name()));
                     i++;
                 }
             }
             case VInterface vInterface -> {
-                foreachValue(visitor, vInterface.child(), table, fieldChain);
+                foreachValue(visitor, vInterface.child(), table, pk, fieldChain);
             }
             case VList vList -> {
                 int i = 0;
                 for (SimpleValue sv : vList.valueList()) {
-                    foreachValue(visitor, sv, table, listAddOf(fieldChain, STR. "\{ i }" ));
+                    foreachValue(visitor, sv, table, pk, listAddOf(fieldChain, STR. "\{ i }" ));
                     i++;
                 }
             }
             case VMap vMap -> {
                 int i = 0;
                 for (Map.Entry<SimpleValue, SimpleValue> entry : vMap.valueMap().entrySet()) {
-                    foreachValue(visitor, entry.getKey(), table, listAddOf(fieldChain, STR. "\{ i }k" ));
-                    foreachValue(visitor, entry.getKey(), table, listAddOf(fieldChain, STR. "\{ i }v" ));
+                    foreachValue(visitor, entry.getKey(), table, pk, listAddOf(fieldChain, STR. "\{ i }k" ));
+                    foreachValue(visitor, entry.getKey(), table, pk, listAddOf(fieldChain, STR. "\{ i }v" ));
                     i++;
                 }
             }

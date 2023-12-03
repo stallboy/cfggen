@@ -8,6 +8,9 @@ dependencies:
   antd:
     specifier: ^5.11.5
     version: 5.11.5(react-dom@18.2.0)(react@18.2.0)
+  elkjs:
+    specifier: ^0.8.2
+    version: 0.8.2
   react:
     specifier: ^18.2.0
     version: 18.2.0
@@ -20,6 +23,9 @@ dependencies:
   rete-area-plugin:
     specifier: ^2.0.1
     version: 2.0.1(rete@2.0.2)
+  rete-auto-arrange-plugin:
+    specifier: ^2.0.0
+    version: 2.0.0(elkjs@0.8.2)(rete-area-plugin@2.0.1)(rete@2.0.2)(web-worker@1.2.0)
   rete-connection-plugin:
     specifier: ^2.0.0
     version: 2.0.0(rete-area-plugin@2.0.1)(rete@2.0.2)
@@ -55,9 +61,6 @@ devDependencies:
   '@vitejs/plugin-react-swc':
     specifier: ^3.5.0
     version: 3.5.0(vite@5.0.2)
-  elkjs:
-    specifier: ^0.8.2
-    version: 0.8.2
   eslint:
     specifier: ^8.53.0
     version: 8.54.0
@@ -67,9 +70,6 @@ devDependencies:
   eslint-plugin-react-refresh:
     specifier: ^0.4.4
     version: 0.4.4(eslint@8.54.0)
-  rete-auto-arrange-plugin:
-    specifier: ^2.0.0
-    version: 2.0.0(elkjs@0.8.2)(rete-area-plugin@2.0.1)(rete@2.0.2)(web-worker@1.2.0)
   typescript:
     specifier: ^5.2.2
     version: 5.3.2
@@ -145,6 +145,7 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       regenerator-runtime: 0.14.0
+    dev: false
 
   /@ctrl/tinycolor@3.6.1:
     resolution: {integrity: sha512-SITSV6aIXsuVNV3f3O0f2n/cgyEDWoSqtZMYiAmcsYHydcKrOz3gUxB/iXd/Qf08+IZX4KpgNbvUdMBmWz+kcA==}
@@ -1284,7 +1285,7 @@ packages:
 
   /elkjs@0.8.2:
     resolution: {integrity: sha512-L6uRgvZTH+4OF5NE/MBbzQx/WYpru1xCBE9respNj6qznEewGUIfhzmm7horWWxbNO2M0WckQypGctR8lH79xQ==}
-    dev: true
+    dev: false
 
   /esbuild@0.19.8:
     resolution: {integrity: sha512-l7iffQpT2OrZfH2rXIp7/FkmaeZM0vxbxN9KfiCwGYuZqzMg/JdvX26R31Zxn/Pxvsrg3Y9N6XTcnknqDyyv4w==}
@@ -2349,6 +2350,7 @@ packages:
 
   /regenerator-runtime@0.14.0:
     resolution: {integrity: sha512-srw17NI0TUWHuGa5CFGGmhfNIeja30WMBfbslPNhf6JrqQlLN5gcrvig1oqPxiVaXb0oW0XRKtH6Nngs5lKCIA==}
+    dev: false
 
   /resize-observer-polyfill@1.5.1:
     resolution: {integrity: sha512-LwZrotdHOo12nQuZlHEmtuXdqGoOD0OhaxopaNFxWzInpEgaLWoVuAMbTzixuosCx2nEG58ngzW3vxdWoxIgdg==}
@@ -2366,6 +2368,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.23.4
       rete: 2.0.2
+    dev: false
 
   /rete-auto-arrange-plugin@2.0.0(elkjs@0.8.2)(rete-area-plugin@2.0.1)(rete@2.0.2)(web-worker@1.2.0):
     resolution: {integrity: sha512-wyrJ+DW94J1E4ceTX6XVHt7lnp0eNXdwHKnuREY8ePl3BO8buLutvVpuMFwJEVW6AbnUVcKY38/huAwp4wDGoQ==}
@@ -2380,7 +2383,7 @@ packages:
       rete: 2.0.2
       rete-area-plugin: 2.0.1(rete@2.0.2)
       web-worker: 1.2.0
-    dev: true
+    dev: false
 
   /rete-connection-plugin@2.0.0(rete-area-plugin@2.0.1)(rete@2.0.2):
     resolution: {integrity: sha512-8M+UC6gcWwTi0PEICprmCaoGxwEA4x42z0ywx3O5NQSILvkhWcvQXzHcyvwGx/LTsJT/UPzNjCfixu/TbRyTEw==}
@@ -2429,6 +2432,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@babel/runtime': 7.23.4
+    dev: false
 
   /reusify@1.0.4:
     resolution: {integrity: sha512-U9nH88a3fc/ekCF1l0/UP1IosiuIjyTh7hBvXVMHYgVcfGvt897Xguj2UOLDeI5BG2m7/uwyaLVT6fbtCwTyzw==}
@@ -2670,7 +2674,7 @@ packages:
 
   /web-worker@1.2.0:
     resolution: {integrity: sha512-PgF341avzqyx60neE9DD+XS26MMNMoUQRz9NOZwW32nPQrF6p77f1htcnjBSEV8BGMKZ16choqUG4hyI0Hx7mA==}
-    dev: true
+    dev: false
 
   /which@2.0.2:
     resolution: {integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==}
