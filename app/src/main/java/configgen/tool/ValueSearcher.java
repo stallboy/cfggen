@@ -1,7 +1,10 @@
 package configgen.tool;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONWriter;
 import configgen.schema.CfgSchema;
 import configgen.schema.Nameable;
+import configgen.schema.TableSchema;
 import configgen.schema.cfg.CfgWriter;
 import configgen.util.UTF8Writer;
 import configgen.value.CfgValue;
@@ -35,6 +38,14 @@ public class ValueSearcher {
             fileWriter.write(str + System.lineSeparator());
         } else {
             System.out.println(str);
+        }
+    }
+
+    private void print(String str) {
+        if (fileWriter != null) {
+            fileWriter.write(str);
+        } else {
+            System.out.print(str);
         }
     }
 
@@ -110,6 +121,32 @@ public class ValueSearcher {
     }
 
     public void listSchemas(String want) {
+        for (Nameable nameable : cfgValue.schema().items()) {
+            String name = nameable.name();
+            if (name.contains(want)) {
+                CfgSchema schema = CfgSchema.of();
+                schema.add(nameable);
+                print(CfgWriter.stringify(schema));
+
+                if (nameable instanceof TableSchema){
+                    VTable vTable = cfgValue.vTableMap().get(name);
+
+                    println("count: " + vTable.valueList().size());
+                    int c = 0;
+                    for (VStruct vStruct : vTable.valueList()) {
+                        println(vStruct.packStr());
+                        c++;
+                        if (c >= 100){
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    public void listSchemasUseJson(String want) {
         CfgSchema schema = CfgSchema.of();
         for (Nameable nameable : cfgValue.schema().items()) {
             String name = nameable.name();
@@ -117,7 +154,7 @@ public class ValueSearcher {
                 schema.add(nameable);
             }
         }
-        println(CfgWriter.stringify(schema));
+        println(JSON.toJSONString(ServeSchema.fromCfgSchema(schema), JSONWriter.Feature.PrettyFormat));
     }
 
     public void search(String func, List<String> params) {
@@ -156,19 +193,26 @@ public class ValueSearcher {
                     searchRef(refTable, nullableUniqKeys, ignoredTables);
                 }
             }
-            case "ls" -> {
+            case "sl" -> {
                 String want = "";
                 if (!params.isEmpty()) {
                     want = params.get(0);
                 }
                 listNameOfSchemas(want);
             }
-            case "ll" -> {
+            case "sll" -> {
                 String want = "";
                 if (!params.isEmpty()) {
                     want = params.get(0);
                 }
                 listSchemas(want);
+            }
+            case "slljson" -> {
+                String want = "";
+                if (!params.isEmpty()) {
+                    want = params.get(0);
+                }
+                listSchemasUseJson(want);
             }
 
             default -> println(STR. "\{ func } unknown" );
@@ -180,8 +224,10 @@ public class ValueSearcher {
         System.out.println(prefix + "str <str>: search string");
         System.out.println(prefix + "ref <refTable<[uniqKeys]>?> <IgnoredTables>: search ref");
 
-        System.out.println(prefix + "ls  <name>?: list name of schemas");
-        System.out.println(prefix + "ll  <name>?: list schemas");
+        System.out.println(prefix + "sl  <name>?: list name of schemas");
+        System.out.println(prefix + "sll <name>?: list schemas");
+        System.out.println(prefix + "slljson <name>?: list schemas. use json");
+
 
         System.out.println(prefix + "h: help");
         System.out.println(prefix + "q: quit");

@@ -41,6 +41,10 @@ public record CfgValue(CfgSchema schema,
         default String repr() {
             return cells().stream().map(DCell::value).collect(Collectors.joining("#"));
         }
+
+        default String packStr() {
+            return ValueUtil.pack(this);
+        }
     }
 
     public sealed interface SimpleValue extends Value {

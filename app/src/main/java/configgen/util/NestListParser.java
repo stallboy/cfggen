@@ -19,7 +19,7 @@ public class NestListParser {
     /**
      * "b,c" 解析为两段：                  <1>b        <2>c
      * "(b,c)" 解析为一段                  <1>b,c
-     * "a(b,c)" 解析为一段                 <1>a(b,c)
+     * "a(b,c)" 解析为一段                 <1>a(b,c)  -> 这要用parseFunction来解析
      * "a,(b,c)" 解析为两段                <1>a        <2>b,c
      * "a,(b,(c1,c2)),d(e,f)" 解析为三段： <1>a        <2>b,(c1,c2)        <3>d(e,f)
      */

@@ -29,10 +29,10 @@ public final class RefSearcher {
      * 如果nullableUniqueKeys == null： value是refTable的主键具体值，
      * 否则：value是唯一键的具体值
      */
-    public static RefSearchResult search(CfgValue cfgValue, String refTableName,
+    public static RefSearchResult search(CfgValue cfgValue, String tableName,
                                          List<String> nullableUniqueKeys, Set<String> ignoredTables) {
         cfgValue.schema().requireForeignKeyValueCached();
-        TableSchema refTable = cfgValue.schema().findTable(refTableName);
+        TableSchema refTable = cfgValue.schema().findTable(tableName);
         if (refTable == null) {
             return new RefSearchResult(TableNotFound, null);
         }
@@ -79,7 +79,6 @@ public final class RefSearcher {
                         VList localList = (VList) vStruct.values().get(fk.keyIndices[0]);
                         for (SimpleValue item : localList.valueList()) {
                             addValueTable(res, item, fromTable.name());
-
                         }
                     }
                     case FieldType.FMap _ -> {
