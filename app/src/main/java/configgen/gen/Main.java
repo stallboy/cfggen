@@ -8,6 +8,7 @@ import configgen.genjava.code.GenJavaCode;
 import configgen.genlua.GenLua;
 import configgen.tool.GenI18n;
 import configgen.tool.XmlToCfg;
+import configgen.tool.Server;
 import configgen.tool.ComparePoiAndFastExcel;
 import configgen.util.Localize;
 import configgen.util.Logger;
@@ -19,6 +20,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
 
 public final class Main {
     private static void usage(String reason) {
@@ -107,6 +109,9 @@ public final class Main {
         Generators.addProvider("bytes", GenBytes::new);
 
         Generators.addProvider("lua", GenLua::new);
+
+        Generators.addProvider("server", Server::new);
+
 
         String datadir = null;
         boolean xmlToCfg = false;

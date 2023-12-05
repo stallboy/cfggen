@@ -10,7 +10,6 @@ import {Table} from "antd";
 import "antd/dist/reset.css";
 
 
-
 class Node extends ClassicPreset.Node<
     { [key in string]: ClassicPreset.Socket },
     { [key in string]: ClassicPreset.Socket },
@@ -40,6 +39,7 @@ import type {ColumnsType} from 'antd/es/table';
 interface DataType {
     name: string;
     value: string | number | boolean;
+    key: string;
 }
 
 interface TableType {
@@ -55,7 +55,8 @@ class TableControl extends ClassicPreset.Control {
 
 function MkTable(props: { data: TableControl }) {
     return (
-        <Table bordered showHeader={false} columns={props.data.table.columns} dataSource={props.data.table.dataSource} pagination={false}/>
+        <Table bordered showHeader={false} columns={props.data.table.columns} dataSource={props.data.table.dataSource}
+               pagination={false}/>
     );
 }
 
@@ -99,6 +100,7 @@ export async function createEditor(container: HTMLElement) {
             dataIndex: 'name',
             align: 'right',
             width: 100,
+            key: 'name'
 
 
         },
@@ -106,6 +108,7 @@ export async function createEditor(container: HTMLElement) {
             title: 'value',
             dataIndex: 'value',
             width: 300,
+            key: 'value',
             // render: (_, { tags }) => (
             //     <>
             //         {tags.map((tag) => {
@@ -127,18 +130,22 @@ export async function createEditor(container: HTMLElement) {
 
     const data: DataType[] = [
         {
+            key: '1',
             name: 'Name:',
             value: 'John Brown',
         },
         {
+            key: '2',
             name: 'Age:',
             value: 32,
         },
         {
+            key: '3',
             name: 'Address:',
             value: 'New York',
         },
         {
+            key: '4',
             name: 'Tags:',
             value: true,
         },

@@ -58,7 +58,7 @@ public class TableValueParser {
         }
 
         // 收集主键和唯一键
-        Set<Value> primaryKeyValueSet = new LinkedHashSet<>();
+        SequencedSet<Value> primaryKeyValueSet = new LinkedHashSet<>();
         Map<List<String>, Set<Value>> uniqueKeyValueSetMap = new LinkedHashMap<>();
         extractKeyValues(primaryKeyValueSet, valueList, subTableSchema.primaryKey());
         for (KeySchema uniqueKey : subTableSchema.uniqueKeys()) {

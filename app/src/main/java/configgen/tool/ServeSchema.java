@@ -3,6 +3,7 @@ package configgen.tool;
 import com.alibaba.fastjson2.annotation.JSONField;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgWriter;
+import configgen.value.CfgValue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,13 +62,19 @@ public class ServeSchema {
         }
     }
 
+    public record RecordId(String id,
+                           String desc) {
+    }
+
     public record STable(String name,
                          List<String> pk,
                          List<List<String>> uks,
                          SEntryType entryType,
                          String entryField,
                          List<SField> fields,
-                         List<SForeignKey> foreignKeys) implements SNameable {
+                         List<SForeignKey> foreignKeys,
+                         int recordCount,
+                         List<RecordId> recordIds) implements SNameable {
         @JSONField
         public String type() {
             return "table";
@@ -79,15 +86,18 @@ public class ServeSchema {
 
 
     public static Schema fromCfgSchema(CfgSchema cfgSchema) {
-        return new Schema(cfgSchema.items().stream().map(ServeSchema::fromNameable).toList());
+        return new Schema(cfgSchema.items().stream().map(n -> fromNameable(n, null, -1)).toList());
     }
 
+    public static Schema fromCfgValue(CfgValue cfgValue, int returnMaxIdCount) {
+        return new Schema(cfgValue.schema().items().stream().map(n -> fromNameable(n, cfgValue, returnMaxIdCount)).toList());
+    }
 
-    public static SNameable fromNameable(Nameable n) {
+    public static SNameable fromNameable(Nameable n, CfgValue cfgValue, int returnMaxIdCount) {
         return switch (n) {
             case InterfaceSchema is -> fromInterface(is);
             case StructSchema ss -> fromStruct(ss);
-            case TableSchema ts -> fromTable(ts);
+            case TableSchema ts -> fromTable(ts, cfgValue, returnMaxIdCount);
         };
     }
 
@@ -104,7 +114,7 @@ public class ServeSchema {
                 fromFks(ss.foreignKeys()));
     }
 
-    public static STable fromTable(TableSchema ts) {
+    public static STable fromTable(TableSchema ts, CfgValue cfgValue, int returnMaxIdCount) {
         SEntryType entryType;
         String entryField;
         switch (ts.entry()) {
@@ -121,13 +131,38 @@ public class ServeSchema {
                 entryField = eEnum.field();
             }
         }
+        int recordCount;
+        List<RecordId> recordIds;
+
+        CfgValue.VTable vTable = null;
+        if (cfgValue != null) {
+            vTable = cfgValue.vTableMap().get(ts.name());
+        }
+        if (vTable == null) {
+            recordCount = -1;
+            recordIds = null;
+        } else {
+            recordCount = vTable.primaryKeyValueSet().size();
+            recordIds = new ArrayList<>(Math.min(recordCount, returnMaxIdCount));
+            int i = 0;
+            for (CfgValue.Value pk : vTable.primaryKeyValueSet()) {
+                recordIds.add(new RecordId(pk.packStr(), null));
+                i++;
+                if (i >= returnMaxIdCount) {
+                    break;
+                }
+            }
+        }
+
         return new STable(ts.name(),
                 ts.primaryKey().fields(),
                 ts.uniqueKeys().stream().map(KeySchema::fields).toList(),
                 entryType,
                 entryField,
                 fromFields(ts.fields()),
-                fromFks(ts.foreignKeys()));
+                fromFks(ts.foreignKeys()),
+                recordCount,
+                recordIds);
     }
 
     private static List<SField> fromFields(List<FieldSchema> fields) {

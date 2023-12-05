@@ -3,6 +3,7 @@ package configgen.util;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 public class Localize {
@@ -24,7 +25,11 @@ public class Localize {
         if (bundle == null) {
             bundle = ResourceBundle.getBundle(MESSAGES_KEY);
         }
-        return bundle.getString(key);
+        try {
+            return bundle.getString(key);
+        } catch (MissingResourceException _) {
+            return "";
+        }
     }
 
     public static String getMessage(String key, Object... arguments) {

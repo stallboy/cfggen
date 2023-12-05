@@ -25,7 +25,7 @@ public record CfgValue(CfgSchema schema,
     public record VTable(TableSchema schema,
                          List<VStruct> valueList,
 
-                         Set<Value> primaryKeyValueSet,
+                         SequencedSet<Value> primaryKeyValueSet,
                          Map<List<String>, Set<Value>> uniqueKeyValueSetMap,
                          Set<String> enumNames, //可为null
                          Map<String, Integer> enumNameToIntegerValueMap) { //可为null

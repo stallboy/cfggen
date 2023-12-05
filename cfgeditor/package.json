@@ -10,16 +10,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ant-design/icons": "^5.2.6",
     "antd": "^5.11.5",
+    "elkjs": "^0.8.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rete": "^2.0.2",
-    "elkjs": "^0.8.2",
     "rete-area-plugin": "^2.0.1",
+    "rete-auto-arrange-plugin": "^2.0.0",
     "rete-connection-plugin": "^2.0.0",
     "rete-react-plugin": "^2.0.4",
     "rete-render-utils": "^2.0.1",
-    "rete-auto-arrange-plugin": "^2.0.0",
     "styled-components": "^6.1.1"
   },
   "devDependencies": {
