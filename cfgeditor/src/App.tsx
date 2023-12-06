@@ -14,8 +14,8 @@ export default function App() {
     useEffect(() => {
         const fetchData = async () => {
             const response = await fetch('http://localhost:3456/schemas');
-            const schema = await response.json();
-            resolveSchema(schema);
+            const rawSchema = await response.json();
+            const schema = resolveSchema(rawSchema);
 
             setSchema(schema);
             selectCurTableFromSchema(schema) // 这时schema还没传过来

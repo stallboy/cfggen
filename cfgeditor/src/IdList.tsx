@@ -28,8 +28,7 @@ export function IdList({curTable, curId, setCurId}: {
             options={options}
             style={{width: 200}}
             value={curId}
-            placeholder="search a table"
-            optionFilterProp="label"
+            placeholder="search a record"
             filterOption={(inputValue, option) =>
                 option!.value.toUpperCase().includes(inputValue.toUpperCase())
             }

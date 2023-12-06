@@ -1,3 +1,5 @@
+import {Schema} from "inspector";
+
 export interface Namable {
     name: string;
     type: string;
@@ -46,27 +48,30 @@ export interface STable extends Namable {
 
 export type SItem = SStruct | SInterface | STable;
 
-export interface Schema {
-    items: {
-        [field: string]: SItem
-    };
+export interface RawSchema {
+    items: SItem[];
 }
 
-export function resolveSchema(schema: Schema) {
-    for (let k in schema.items) {
-        let item = schema.items[k];
+export interface Schema {
+    itemMap: Map<string, SItem>;
+}
+
+export function resolveSchema(rawSchema: RawSchema): Schema {
+    let schema: Schema = {itemMap: new Map<string, SItem>()}
+    for (let item of rawSchema.items) {
         if (item.type == 'interface') {
             let ii = item as SInterface;
             for (let impl of ii.impls) {
                 impl.extends = ii;
             }
         }
+        schema.itemMap.set(item.name, item);
     }
+    return schema;
 }
 
 export function getFirstSTable(schema: Schema): STable | null {
-    for (let k in schema.items) {
-        let item = schema.items[k];
+    for (let item of schema.itemMap.values()) {
         if (item.type == 'table') {
             return item as STable;
         }
@@ -75,7 +80,7 @@ export function getFirstSTable(schema: Schema): STable | null {
 }
 
 export function getSTable(schema: Schema, name: string): STable | null {
-    let item = schema.items[name];
+    let item = schema.itemMap.get(name);
     if (item && item.type == 'table') {
         return item as STable;
     }
@@ -84,7 +89,7 @@ export function getSTable(schema: Schema, name: string): STable | null {
 
 const set = new Set<string>(['bool', 'int', 'long', 'float', 'str', 'text']);
 
-export function getDepStructs(item: STable | SStruct, schema: Schema | null = null): Set<string> {
+export function getDepStructs(item: STable | SStruct, schema: Schema): Set<string> {
     let res = new Set<string>();
     for (let field of item.fields) {
         let type = field.type;
@@ -112,30 +117,57 @@ export function getDepStructs(item: STable | SStruct, schema: Schema | null = nu
         }
     }
 
-    if (schema && res.size > 0 && item.type == 'struct') {
-        let si = item as SStruct;
-        if (si.extends) {
-            let implNameSet = new Set<string>();
-            for (let impl of si.extends.impls) {
-                implNameSet.add(impl.name);
-            }
-            let fixedRes = new Set<string>();
-            for (let n of res) {
-                if (implNameSet.has(n)) {
-                    fixedRes.add(si.extends.name + "." + n);
-                } else {
-                    fixedRes.add(n);
+    if (res.size > 0) {
+        let interfaceNamespace;
+        let implNameSet = new Set<string>();
+        if (item.type == 'struct') {
+            let si = item as SStruct;
+            if (si.extends) {
+                interfaceNamespace = si.extends.name + ".";
+                for (let impl of si.extends.impls) {
+                    implNameSet.add(impl.name);
                 }
             }
         }
-    }
 
+        let moduleNamespace;
+        let lastIdx = item.name.lastIndexOf(".");
+        if (lastIdx != -1) {
+            moduleNamespace = item.name.substring(0, lastIdx + 1);
+        }
+
+        let fixedRes = new Set<string>();
+        for (let n of res) {
+            if (interfaceNamespace) {
+                if (implNameSet.has(n)) {
+                    fixedRes.add(interfaceNamespace + n);
+                    continue;
+                }
+            }
+
+            if (moduleNamespace) {
+                let fn = moduleNamespace + n;
+                if (schema.itemMap.has(fn)) {
+                    fixedRes.add(fn);
+                    continue;
+                }
+            }
+
+            if (schema.itemMap.has(n)) {
+                fixedRes.add(n);
+                continue;
+            }
+
+            console.log("getDepStructs " + item.name + ", " + n + " not found!");
+        }
+        return fixedRes;
+    }
 
     return res;
 }
 
 
-export function getDepStructs2(items: (STable | SStruct)[], schema: Schema | null = null): Set<string> {
+export function getDepStructs2(items: (STable | SStruct)[], schema: Schema): Set<string> {
     let res = new Set<string>();
     for (let item of items) {
         let r = getDepStructs(item, schema);

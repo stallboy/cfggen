@@ -58,7 +58,7 @@ export function TableSchema({schema, curTable, inDepth, outDepth}: {
         for (let depName of depStructNames) {
             let depNode = data.get(depName);
             if (!depNode) {
-                let dep = schema.items[depName];
+                let dep = schema.itemMap.get(depName);
                 if (dep) {
                     let depNode = createNode(dep, dep.name);
                     data.set(depNode.id, depNode);

@@ -30,8 +30,7 @@ export class CurSelect {
 
 export function schemaToTree(schema: Schema): TableTreeNode {
     let tree = new TableTreeNode();
-    for (let k in schema.items) {
-        let item = schema.items[k];
+    for (let item of schema.itemMap.values()) {
         if (item.type == 'table') {
             let node = tree;
             let sp = item.name.split(".");
