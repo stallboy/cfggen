@@ -50,9 +50,9 @@ export interface Schema {
 
 }
 
-export function getSTable(schema: Schema, name: string): STable | null {
+export function getSTable(schema: Schema, name: string | null = null): STable | null {
     for (let item of schema.items) {
-        if (item.type == 'table' && item.name == name) {
+        if (item.type == 'table' && (name == null || item.name == name)) {
             return item as STable;
         }
     }
