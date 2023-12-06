@@ -44,7 +44,7 @@ export interface FieldType {
 }
 
 export interface ConnectToSocket {
-    node: string;
+    nodeId: string;
     inputKey: string;
 }
 
@@ -59,7 +59,8 @@ export interface OutputConnectInfo {
 }
 
 export interface NamedNodeType {
-    name: string;
+    id: string;
+    label: string;
     fields: FieldType[];
     inputs: SocketInfo[];
     outputs: OutputConnectInfo[];
@@ -141,10 +142,10 @@ export async function createEditor(container: HTMLElement, data: Map<string, Nam
         },
     ];
 
-    let name2node = new Map<string, Node>();
+    let id2node = new Map<string, Node>();
     for (let nodeData of data.values()) {
-        const node = new Node(nodeData.name);
-        name2node.set(nodeData.name, node);
+        const node = new Node(nodeData.label);
+        id2node.set(nodeData.id, node);
         node.height = 40 * nodeData.fields.length + nodeData.inputs.length * 60 + nodeData.outputs.length * 60 + 60;
 
         const fields = new TableControl({columns: columns, dataSource: nodeData.fields});
@@ -163,10 +164,10 @@ export async function createEditor(container: HTMLElement, data: Map<string, Nam
     }
 
     for (let nodeData of data.values()) {
-        let fromNode = name2node.get(nodeData.name) as Node;
+        let fromNode = id2node.get(nodeData.id) as Node;
         for (let output of nodeData.outputs) {
             for (let connSocket of output.connectToSockets) {
-                let toNode = name2node.get(connSocket.node) as Node;
+                let toNode = id2node.get(connSocket.nodeId) as Node;
                 let conn = new Connection(fromNode, output.output.key, toNode, connSocket.inputKey);
                 await editor.addConnection(conn);
             }

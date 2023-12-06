@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
 import {TableList} from "./TableList.tsx";
-import {getFirstSTable, getSTable, Schema, STable} from "./model.ts";
+import {getFirstSTable, getSTable, resolveSchema, Schema, STable} from "./model.ts";
 import {Space} from "antd";
 import {IdList} from "./IdList.tsx";
 import {TableSchema} from "./TableSchema.tsx";
@@ -15,6 +15,7 @@ export default function App() {
         const fetchData = async () => {
             const response = await fetch('http://localhost:3456/schemas');
             const schema = await response.json();
+            resolveSchema(schema);
 
             setSchema(schema);
             selectCurTableFromSchema(schema) // 这时schema还没传过来

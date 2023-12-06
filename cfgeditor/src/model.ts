@@ -19,6 +19,7 @@ export interface SForeignKey {
 export interface SStruct extends Namable {
     fields: SField[];
     foreignKeys?: SForeignKey[];
+    extends?: SInterface;
 }
 
 export interface SInterface extends Namable {
@@ -51,6 +52,18 @@ export interface Schema {
     };
 }
 
+export function resolveSchema(schema: Schema) {
+    for (let k in schema.items) {
+        let item = schema.items[k];
+        if (item.type == 'interface') {
+            let ii = item as SInterface;
+            for (let impl of ii.impls) {
+                impl.extends = ii;
+            }
+        }
+    }
+}
+
 export function getFirstSTable(schema: Schema): STable | null {
     for (let k in schema.items) {
         let item = schema.items[k];
@@ -71,7 +84,7 @@ export function getSTable(schema: Schema, name: string): STable | null {
 
 const set = new Set<string>(['bool', 'int', 'long', 'float', 'str', 'text']);
 
-export function getDepStructs(item: STable | SStruct): Set<string> {
+export function getDepStructs(item: STable | SStruct, schema: Schema | null = null): Set<string> {
     let res = new Set<string>();
     for (let field of item.fields) {
         let type = field.type;
@@ -98,14 +111,34 @@ export function getDepStructs(item: STable | SStruct): Set<string> {
             res.add(type);
         }
     }
+
+    if (schema && res.size > 0 && item.type == 'struct') {
+        let si = item as SStruct;
+        if (si.extends) {
+            let implNameSet = new Set<string>();
+            for (let impl of si.extends.impls) {
+                implNameSet.add(impl.name);
+            }
+            let fixedRes = new Set<string>();
+            for (let n of res) {
+                if (implNameSet.has(n)) {
+                    fixedRes.add(si.extends.name + "." + n);
+                } else {
+                    fixedRes.add(n);
+                }
+            }
+        }
+    }
+
+
     return res;
 }
 
 
-export function getDepStructs2(items: (STable | SStruct)[]) : Set<string> {
+export function getDepStructs2(items: (STable | SStruct)[], schema: Schema | null = null): Set<string> {
     let res = new Set<string>();
     for (let item of items) {
-        let r = getDepStructs(item);
+        let r = getDepStructs(item, schema);
         for (let i of r) {
             res.add(i);
         }

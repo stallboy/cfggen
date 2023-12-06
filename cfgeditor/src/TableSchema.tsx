@@ -4,9 +4,10 @@ import {createEditor, ConnectToSocket, NamedNodeType} from "./whiteboard.tsx";
 import {useCallback} from "react";
 
 
-function createNode(item: SItem): NamedNodeType {
+function createNode(item: SItem, id: string): NamedNodeType {
     const node: NamedNodeType = {
-        name: item.name,
+        id: id,
+        label: item.name,
         fields: [],
         inputs: [],
         outputs: [],
@@ -46,33 +47,33 @@ export function TableSchema({schema, curTable, inDepth, outDepth}: {
 
     const data = new Map<string, NamedNodeType>();
 
-    let curNode = createNode(curTable);
-    data.set(curNode.name, curNode);
+    let curNode = createNode(curTable, curTable.name);
+    data.set(curNode.id, curNode);
 
     let frontier: (STable | SStruct)[] = [curTable];
     while (frontier.length > 0) {
         let oldFrontier = frontier;
-        let depStructNames = getDepStructs2(frontier);
+        let depStructNames = getDepStructs2(frontier, schema);
         frontier = [];
         for (let depName of depStructNames) {
             let depNode = data.get(depName);
             if (!depNode) {
                 let dep = schema.items[depName];
                 if (dep) {
-                    let depNode = createNode(dep);
-                    data.set(depNode.name, depNode);
+                    let depNode = createNode(dep, dep.name);
+                    data.set(depNode.id, depNode);
 
                     if (dep.type == 'interface') {
                         let depInterface = dep as SInterface;
                         let connSockets: ConnectToSocket[] = [];
                         let cnt = 0;
                         for (let impl of depInterface.impls) {
-                            let depNode2 = createNode(impl);
-                            data.set(depNode2.name, depNode2);
+                            let depNode2 = createNode(impl, depInterface.name + "." + impl.name);
+                            data.set(depNode2.id, depNode2);
                             frontier.push(impl);
 
                             connSockets.push({
-                                node: depNode2.name,
+                                nodeId: depNode2.id,
                                 inputKey: "input",
                             })
                             cnt++;
@@ -94,17 +95,25 @@ export function TableSchema({schema, curTable, inDepth, outDepth}: {
 
         for (let oldF of oldFrontier) {
             let oldFNode = data.get(oldF.name);
-            let deps = getDepStructs(oldF);
+            if (!oldFNode) {
+                continue;
+            }
+
+            let deps = getDepStructs(oldF, schema);
 
             let connSockets: ConnectToSocket[] = [];
             for (let dep of deps) {
                 connSockets.push({
-                    node: dep,
+                    nodeId: dep,
                     inputKey: "input",
                 })
             }
 
-            oldFNode?.outputs.push({
+            if (oldFNode.outputs.length > 0) {
+                console.log(oldF.name);
+            }
+
+            oldFNode.outputs.push({
                 output: {key: "output"},
                 connectToSockets: connSockets
             })
