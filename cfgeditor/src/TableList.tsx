@@ -22,7 +22,8 @@ export function TableList({schema, curTable, setCurTable}: {
     }
 
     let group2Tables = new Map<string, TableWithLastName[]>();
-    for (let item of schema.items) {
+    for (let k in schema.items) {
+        let item = schema.items[k];
         if (item.type == 'table') {
             let t = item as STable
             let group = ""

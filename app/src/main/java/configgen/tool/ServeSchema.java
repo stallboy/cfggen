@@ -6,7 +6,9 @@ import configgen.schema.cfg.CfgWriter;
 import configgen.value.CfgValue;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class ServeSchema {
@@ -81,16 +83,26 @@ public class ServeSchema {
         }
     }
 
-    public record Schema(List<SNameable> items) {
+    public record Schema(Map<String, SNameable> items) {
     }
 
 
     public static Schema fromCfgSchema(CfgSchema cfgSchema) {
-        return new Schema(cfgSchema.items().stream().map(n -> fromNameable(n, null, -1)).toList());
+        Map<String, SNameable> items = new LinkedHashMap<>();
+        for (Nameable item : cfgSchema.items()) {
+            SNameable i = fromNameable(item, null, -1);
+            items.put(i.name(), i);
+        }
+        return new Schema(items);
     }
 
     public static Schema fromCfgValue(CfgValue cfgValue, int returnMaxIdCount) {
-        return new Schema(cfgValue.schema().items().stream().map(n -> fromNameable(n, cfgValue, returnMaxIdCount)).toList());
+        Map<String, SNameable> items = new LinkedHashMap<>();
+        for (Nameable item : cfgValue.schema().items()) {
+            SNameable i = fromNameable(item, cfgValue, returnMaxIdCount);
+            items.put(i.name(), i);
+        }
+        return new Schema(items);
     }
 
     public static SNameable fromNameable(Nameable n, CfgValue cfgValue, int returnMaxIdCount) {

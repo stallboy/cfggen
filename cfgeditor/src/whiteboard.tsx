@@ -6,7 +6,7 @@ import {
     Presets as ConnectionPresets
 } from "rete-connection-plugin";
 import {ReactPlugin, Presets, ReactArea2D} from "rete-react-plugin";
-import {Table} from "antd";
+import {Space, Table} from "antd";
 import "antd/dist/reset.css";
 
 
@@ -22,7 +22,7 @@ class Node extends ClassicPreset.Node<
     }
 > {
     width = 280;
-    height = 400;
+    height = 440;
 }
 
 class Connection<
@@ -35,16 +35,40 @@ type Schemes = GetSchemes<Node, Connection<Node, Node>>;
 type AreaExtra = ReactArea2D<never>;
 
 import type {ColumnsType} from 'antd/es/table';
+import {AutoArrangePlugin, Presets as ArrangePresets} from "rete-auto-arrange-plugin";
 
-interface DataType {
+export interface FieldType {
     name: string;
     value: string | number | boolean;
     key: string;
 }
 
+export interface ConnectToSocket {
+    node: string;
+    inputKey: string;
+}
+
+export interface SocketInfo {
+    key : string;
+    label? : string;
+}
+
+export interface OutputConnectInfo {
+    output: SocketInfo;
+    connectToSockets: ConnectToSocket[];
+}
+
+export interface NamedNodeType {
+    name: string;
+    fields: FieldType[];
+    inputs: SocketInfo[];
+    outputs: OutputConnectInfo[];
+}
+
+
 interface TableType {
-    columns: ColumnsType<DataType>;
-    dataSource: DataType[];
+    columns: ColumnsType<FieldType>;
+    dataSource: FieldType[];
 }
 
 class TableControl extends ClassicPreset.Control {
@@ -54,19 +78,29 @@ class TableControl extends ClassicPreset.Control {
 }
 
 function MkTable(props: { data: TableControl }) {
-    return (
-        <Table bordered showHeader={false} columns={props.data.table.columns} dataSource={props.data.table.dataSource}
-               pagination={false}/>
-    );
+    if (props.data.table.dataSource.length == 0) {
+        return <Space/>
+    }
+    return <Table bordered
+                  showHeader={false}
+                  columns={props.data.table.columns}
+                  dataSource={props.data.table.dataSource}
+                  size={"small"}
+                  pagination={false}/>;
+
 }
 
-export async function createEditor(container: HTMLElement) {
+export async function createEditor(container: HTMLElement, data: Map<string, NamedNodeType>) {
     const socket = new ClassicPreset.Socket("socket");
 
     const editor = new NodeEditor<Schemes>();
     const area = new AreaPlugin<Schemes, AreaExtra>(container);
     const connection = new ConnectionPlugin<Schemes, AreaExtra>();
     const render = new ReactPlugin<Schemes, AreaExtra>({createRoot});
+
+    const arrange = new AutoArrangePlugin<Schemes>();
+    arrange.addPreset(ArrangePresets.classic.setup());
+    area.use(arrange);
 
     render.addPreset(
         Presets.classic.setup({
@@ -85,78 +119,63 @@ export async function createEditor(container: HTMLElement) {
         })
     );
     connection.addPreset(ConnectionPresets.classic.setup());
-
     editor.use(area);
     area.use(connection);
     area.use(render);
 
-    const a = new Node("A");
-    a.addOutput("a", new ClassicPreset.Output(socket));
-
-
-    const columns: ColumnsType<DataType> = [
+    const columns: ColumnsType<FieldType> = [
         {
             title: 'name',
             dataIndex: 'name',
             align: 'right',
             width: 100,
-            key: 'name'
-
-
+            key: 'name',
+            ellipsis: true,
         },
         {
             title: 'value',
             dataIndex: 'value',
-            width: 300,
+            width: 100,
             key: 'value',
-            // render: (_, { tags }) => (
-            //     <>
-            //         {tags.map((tag) => {
-            //             let color = tag.length > 5 ? 'geekblue' : 'green';
-            //             if (tag === 'loser') {
-            //                 color = 'volcano';
-            //             }
-            //             return (
-            //                 <Tag color={color} key={tag}>
-            //                     {tag.toUpperCase()}
-            //                 </Tag>
-            //             );
-            //         })}
-            //     </>
-            // ),
-
+            ellipsis: true,
         },
     ];
 
-    const data: DataType[] = [
-        {
-            key: '1',
-            name: 'Name:',
-            value: 'John Brown',
-        },
-        {
-            key: '2',
-            name: 'Age:',
-            value: 32,
-        },
-        {
-            key: '3',
-            name: 'Address:',
-            value: 'New York',
-        },
-        {
-            key: '4',
-            name: 'Tags:',
-            value: true,
-        },
-    ];
+    let name2node = new Map<string, Node>();
+    for (let nodeData of data.values()) {
+        const node = new Node(nodeData.name);
+        name2node.set(nodeData.name, node);
+        node.height = 40 * nodeData.fields.length + nodeData.inputs.length * 60 + nodeData.outputs.length * 60 + 60;
 
+        const fields = new TableControl({columns: columns, dataSource: nodeData.fields});
+        node.addControl("value", fields);
 
-    a.addControl("value", new TableControl({columns: columns, dataSource: data}));
+        for (let inputSocket of nodeData.inputs) {
+            let input = new ClassicPreset.Input(socket, inputSocket.label);
+            node.addInput(inputSocket.key, input);
+        }
+        for (let outputInfo of nodeData.outputs) {
+            let output = new ClassicPreset.Output(socket, outputInfo.output.label);
+            node.addOutput(outputInfo.output.key, output);
+        }
 
-    await editor.addNode(a);
+        await editor.addNode(node);
+    }
 
+    for (let nodeData of data.values()) {
+        let fromNode = name2node.get(nodeData.name) as Node;
+        for (let output of nodeData.outputs) {
+            for (let connSocket of output.connectToSockets) {
+                let toNode = name2node.get(connSocket.node) as Node;
+                let conn = new Connection(fromNode, output.output.key, toNode, connSocket.inputKey);
+                await editor.addConnection(conn);
+            }
+        }
+    }
+
+    await arrange.layout();
     AreaExtensions.zoomAt(area, editor.getNodes());
+
 
     return {
         destroy: () => area.destroy()

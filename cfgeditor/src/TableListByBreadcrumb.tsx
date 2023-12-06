@@ -11,11 +11,6 @@ export class TableTreeNode {
     parent?: TableTreeNode;
     children: Map<string, TableTreeNode> = new Map<string, TableTreeNode>(); // 中间子节点
 
-
-    isRoot(): boolean {
-        return this.parent == undefined;
-    }
-
     constructor(name: string = "") {
         this.nodeName = name;
     }
@@ -35,7 +30,8 @@ export class CurSelect {
 
 export function schemaToTree(schema: Schema): TableTreeNode {
     let tree = new TableTreeNode();
-    for (let item of schema.items) {
+    for (let k in schema.items) {
+        let item = schema.items[k];
         if (item.type == 'table') {
             let node = tree;
             let sp = item.name.split(".");

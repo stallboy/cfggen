@@ -28,7 +28,7 @@ type_ele : TBASE | ns_ident;
 
 TLIST : 'list';
 TMAP: 'map';
-TBASE : 'bool' | 'int' | 'long' | 'float' | 'str' | 'res' | 'text' ;
+TBASE : 'bool' | 'int' | 'long' | 'float' | 'str' | 'text' ;
 
 ref:  (REF | LISTREF) ns_ident key? ;
 
