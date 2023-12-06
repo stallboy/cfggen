@@ -49,8 +49,8 @@ export interface ConnectToSocket {
 }
 
 export interface SocketInfo {
-    key : string;
-    label? : string;
+    key: string;
+    label?: string;
 }
 
 export interface OutputConnectInfo {
@@ -92,8 +92,6 @@ function MkTable(props: { data: TableControl }) {
 }
 
 export async function createEditor(container: HTMLElement, data: Map<string, NamedNodeType>) {
-    const socket = new ClassicPreset.Socket("socket");
-
     const editor = new NodeEditor<Schemes>();
     const area = new AreaPlugin<Schemes, AreaExtra>(container);
     const connection = new ConnectionPlugin<Schemes, AreaExtra>();
@@ -123,6 +121,8 @@ export async function createEditor(container: HTMLElement, data: Map<string, Nam
     editor.use(area);
     area.use(connection);
     area.use(render);
+
+    const socket = new ClassicPreset.Socket("socket");
 
     const columns: ColumnsType<FieldType> = [
         {

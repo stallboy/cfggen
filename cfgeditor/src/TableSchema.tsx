@@ -44,7 +44,6 @@ export function TableSchema({schema, curTable, inDepth, outDepth}: {
     if (schema == null || curTable == null) {
         return <div/>
     }
-
     const data = new Map<string, NamedNodeType>();
 
     let curNode = createNode(curTable, curTable.name);
