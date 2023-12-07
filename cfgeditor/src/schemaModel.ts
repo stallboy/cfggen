@@ -1,8 +1,7 @@
-import {Schema} from "inspector";
-
 export interface Namable {
     name: string;
     type: string;
+    id?: string;
 }
 
 export interface SField {
@@ -63,6 +62,7 @@ export function resolveSchema(rawSchema: RawSchema): Schema {
             let ii = item as SInterface;
             for (let impl of ii.impls) {
                 impl.extends = ii;
+                impl.id = ii.name + "." + impl.name;
             }
         }
         schema.itemMap.set(item.name, item);
@@ -90,7 +90,7 @@ export function getSTable(schema: Schema, name: string): STable | null {
 const set = new Set<string>(['bool', 'int', 'long', 'float', 'str', 'text']);
 
 export function getDepStructs(item: STable | SStruct, schema: Schema): Set<string> {
-    let res = new Set<string>();
+    let depNameSet = new Set<string>();
     for (let field of item.fields) {
         let type = field.type;
         if (set.has(type)) {
@@ -99,7 +99,7 @@ export function getDepStructs(item: STable | SStruct, schema: Schema): Set<strin
         if (type.startsWith("list")) {
             let itemType = type.slice(5, type.length - 1);
             if (!set.has(itemType)) {
-                res.add(itemType);
+                depNameSet.add(itemType);
             }
         } else if (type.startsWith("map")) {
             let item = type.slice(4, type.length - 1);
@@ -107,22 +107,25 @@ export function getDepStructs(item: STable | SStruct, schema: Schema): Set<strin
             let keyType = sp[0].trim();
             let valueType = sp[1].trim();
             if (!set.has(keyType)) {
-                res.add(keyType);
+                depNameSet.add(keyType);
             }
             if (!set.has(valueType)) {
-                res.add(valueType);
+                depNameSet.add(valueType);
             }
         } else {
-            res.add(type);
+            depNameSet.add(type);
         }
     }
 
-    if (res.size > 0) {
+    // 把局部空间的名字，全转换成全局空间的名字
+    if (depNameSet.size > 0) {
         let interfaceNamespace;
         let implNameSet = new Set<string>();
+        let pitem: SItem = item;
         if (item.type == 'struct') {
             let si = item as SStruct;
             if (si.extends) {
+                pitem = si.extends;
                 interfaceNamespace = si.extends.name + ".";
                 for (let impl of si.extends.impls) {
                     implNameSet.add(impl.name);
@@ -131,16 +134,16 @@ export function getDepStructs(item: STable | SStruct, schema: Schema): Set<strin
         }
 
         let moduleNamespace;
-        let lastIdx = item.name.lastIndexOf(".");
+        let lastIdx = pitem.name.lastIndexOf(".");
         if (lastIdx != -1) {
-            moduleNamespace = item.name.substring(0, lastIdx + 1);
+            moduleNamespace = pitem.name.substring(0, lastIdx + 1);
         }
 
-        let fixedRes = new Set<string>();
-        for (let n of res) {
+        let depNameSetGlobal = new Set<string>();
+        for (let n of depNameSet) {
             if (interfaceNamespace) {
                 if (implNameSet.has(n)) {
-                    fixedRes.add(interfaceNamespace + n);
+                    depNameSetGlobal.add(interfaceNamespace + n);
                     continue;
                 }
             }
@@ -148,22 +151,22 @@ export function getDepStructs(item: STable | SStruct, schema: Schema): Set<strin
             if (moduleNamespace) {
                 let fn = moduleNamespace + n;
                 if (schema.itemMap.has(fn)) {
-                    fixedRes.add(fn);
+                    depNameSetGlobal.add(fn);
                     continue;
                 }
             }
 
             if (schema.itemMap.has(n)) {
-                fixedRes.add(n);
+                depNameSetGlobal.add(n);
                 continue;
             }
 
             console.log("getDepStructs " + item.name + ", " + n + " not found!");
         }
-        return fixedRes;
+        return depNameSetGlobal;
     }
 
-    return res;
+    return depNameSet;
 }
 
 

@@ -1,4 +1,4 @@
-import {Schema} from "./model.ts";
+import {Schema} from "./schemaModel.ts";
 import {Dispatch} from "react";
 import {Breadcrumb, Spin} from "antd";
 import {TableOutlined} from "@ant-design/icons";

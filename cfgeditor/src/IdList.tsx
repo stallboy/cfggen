@@ -1,4 +1,4 @@
-import {STable} from "./model.ts";
+import {STable} from "./schemaModel.ts";
 import {Dispatch} from "react";
 import {Badge, Select, Space, Skeleton} from "antd";
 import {MinusOutlined} from "@ant-design/icons";

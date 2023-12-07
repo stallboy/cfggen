@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
 import {TableList} from "./TableList.tsx";
-import {getFirstSTable, getSTable, resolveSchema, Schema, STable} from "./model.ts";
+import {getFirstSTable, getSTable, resolveSchema, Schema, STable} from "./schemaModel.ts";
 import {Space} from "antd";
 import {IdList} from "./IdList.tsx";
 import {TableSchema} from "./TableSchema.tsx";
@@ -10,6 +10,7 @@ export default function App() {
     const [schema, setSchema] = useState<Schema | null>(null);
     const [curTable, setCurTable] = useState<STable | null>(null);
     const [curId, setCurId] = useState<string | null>(null);
+    const [settingMaxImplSchema, setSettingMaxImplSchema] = useState<number>(10);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -18,7 +19,8 @@ export default function App() {
             const schema = resolveSchema(rawSchema);
 
             setSchema(schema);
-            selectCurTableFromSchema(schema) // 这时schema还没传过来
+            selectCurTableFromSchema(schema);
+            setSettingMaxImplSchema(10);
         }
 
         fetchData().catch(console.error);
@@ -52,7 +54,8 @@ export default function App() {
         <TableList schema={schema} curTable={curTable} setCurTable={selectCurTable}/>
         <IdList curTable={curTable} curId={curId} setCurId={setCurId}/>
     </Space>
-        <TableSchema schema={schema} curTable={curTable} inDepth={0} outDepth={0}/>
+        <TableSchema schema={schema} curTable={curTable} inDepth={0} outDepth={0}
+                     settingMaxImplSchema={settingMaxImplSchema}/>
     </div>;
 
 }

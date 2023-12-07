@@ -1,11 +1,12 @@
-import {getDepStructs, getDepStructs2, Schema, SInterface, SItem, SStruct, STable} from "./model.ts";
+import {getDepStructs, getDepStructs2, Schema, SInterface, SItem, SStruct, STable} from "./schemaModel.ts";
 import {useRete} from "rete-react-plugin";
-import {createEditor, ConnectToSocket, NamedNodeType} from "./whiteboard.tsx";
+import {createEditor} from "./editor.tsx";
 import {useCallback} from "react";
+import {ConnectTo, Entity} from "./graphModel.ts";
 
 
-function createNode(item: SItem, id: string): NamedNodeType {
-    const node: NamedNodeType = {
+function createNode(item: SItem, id: string): Entity {
+    const node: Entity = {
         id: id,
         label: item.name,
         fields: [],
@@ -34,49 +35,36 @@ function createNode(item: SItem, id: string): NamedNodeType {
     return node;
 }
 
+type FrontierType = (STable | SStruct)[];
 
-export function TableSchema({schema, curTable, inDepth, outDepth}: {
-    schema: Schema | null;
-    curTable: STable | null;
-    inDepth: number;
-    outDepth: number;
-}) {
-    if (schema == null || curTable == null) {
-        return <div/>
-    }
-    const data = new Map<string, NamedNodeType>();
-
-    let curNode = createNode(curTable, curTable.name);
-    data.set(curNode.id, curNode);
-
-    let frontier: (STable | SStruct)[] = [curTable];
+function includeSubStructs(entityMap: Map<string, Entity>, frontier: FrontierType, schema: Schema, settingMaxImplSchema: number) {
     while (frontier.length > 0) {
         let oldFrontier = frontier;
         let depStructNames = getDepStructs2(frontier, schema);
         frontier = [];
         for (let depName of depStructNames) {
-            let depNode = data.get(depName);
+            let depNode = entityMap.get(depName);
             if (!depNode) {
                 let dep = schema.itemMap.get(depName);
                 if (dep) {
                     let depNode = createNode(dep, dep.name);
-                    data.set(depNode.id, depNode);
+                    entityMap.set(depNode.id, depNode);
 
                     if (dep.type == 'interface') {
                         let depInterface = dep as SInterface;
-                        let connSockets: ConnectToSocket[] = [];
+                        let connSockets: ConnectTo[] = [];
                         let cnt = 0;
                         for (let impl of depInterface.impls) {
-                            let depNode2 = createNode(impl, depInterface.name + "." + impl.name);
-                            data.set(depNode2.id, depNode2);
+                            let implNode = createNode(impl, depInterface.name + "." + impl.name);
+                            entityMap.set(implNode.id, implNode);
                             frontier.push(impl);
 
                             connSockets.push({
-                                nodeId: depNode2.id,
+                                nodeId: implNode.id,
                                 inputKey: "input",
                             })
                             cnt++;
-                            if (cnt >= 10) {
+                            if (cnt >= settingMaxImplSchema) {
                                 break;
                             }
                         }
@@ -93,14 +81,15 @@ export function TableSchema({schema, curTable, inDepth, outDepth}: {
         }
 
         for (let oldF of oldFrontier) {
-            let oldFNode = data.get(oldF.name);
+            let oldFNode = entityMap.get(oldF.id ?? oldF.name);
             if (!oldFNode) {
+                console.log("old frontier " + oldF.id ?? oldF.name + " not found!");
                 continue;
             }
 
             let deps = getDepStructs(oldF, schema);
 
-            let connSockets: ConnectToSocket[] = [];
+            let connSockets: ConnectTo[] = [];
             for (let dep of deps) {
                 connSockets.push({
                     nodeId: dep,
@@ -118,11 +107,29 @@ export function TableSchema({schema, curTable, inDepth, outDepth}: {
             })
         }
     }
+}
 
+export function TableSchema({schema, curTable, inDepth, outDepth, settingMaxImplSchema}: {
+    schema: Schema | null;
+    curTable: STable | null;
+    inDepth: number;
+    outDepth: number;
+    settingMaxImplSchema: number;
+}) {
+    if (schema == null || curTable == null) {
+        return <div/>
+    }
+
+    const entityMap = new Map<string, Entity>();
+
+    let curNode = createNode(curTable, curTable.name);
+    entityMap.set(curNode.id, curNode);
+    let frontier: FrontierType = [curTable];
+    includeSubStructs(entityMap, frontier, schema, settingMaxImplSchema);
 
     const create = useCallback(
         (el: HTMLElement) => {
-            return createEditor(el, data);
+            return createEditor(el, {entityMap});
         },
         [schema, curTable, inDepth, outDepth]
     );
