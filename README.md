@@ -3,7 +3,7 @@
 > 让策划可以在excel中做灵活的配置
 >
 > 为程序生成访问配置表的代码
-> 
+>
 
 ## 主要功能
 
@@ -24,6 +24,7 @@
 ## build & test
 
 * 生成configgen.jar
+
 ```bash
 genjar.bat  # 生成configgen.jar, cfggen.jar，
 # 区别是cfggen.jar只用fastexcel来读excel，不支持excel中的数字格式
@@ -31,18 +32,21 @@ genjar.bat  # 生成configgen.jar, cfggen.jar，
 ```
 
 * 查看使用说明
+
 ```bash
 cd example
 usage.bat  # 打印使用说明
 ```
 
 * 测试java：生成java代码和数据
+
 ```bash
 cd example
 genjavasealed.bat # genjava 也可以，sealed需要java 17或以上才支持
 ```
 
 * 测试java：检验java生成
+
 ```bash
 gradle build 
 java -jar build/libs/example.jar 
@@ -50,6 +54,7 @@ java -jar build/libs/example.jar
 ```
 
 * 测试lua
+
 ```bash
 genlua.bat 
 cd lua
@@ -58,6 +63,7 @@ lua.exe test.lua
 ```
 
 * 测试csharp
+
 ```bash
 gencshape.bat 
 cd cs
@@ -65,6 +71,7 @@ dotnet run
 ```
 
 * 生成cfggen.exe
+
 ```bash
 # 先安装graalvm
 genexe_step1.bat  
