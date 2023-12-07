@@ -48,7 +48,7 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
     );
     connection.addPreset(ConnectionPresets.classic.setup());
     editor.use(area);
-    area.use(connection);
+    // area.use(connection); // Disable connection manipulation
     area.use(render);
 
     const socket = new ClassicPreset.Socket("socket");
@@ -58,7 +58,7 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
         const node = new EntityNode(nodeData.label);
         node.nodeType = nodeData.nodeType ?? EntityNodeType.Normal;
         id2node.set(nodeData.id, node);
-        node.height = 40 * nodeData.fields.length + nodeData.inputs.length * 60 + nodeData.outputs.length * 60 + 60;
+        node.height = 40 * nodeData.fields.length + nodeData.inputs.length * 50 + nodeData.outputs.length * 50 + 60;
 
         const fields = new TableControl(nodeData.fields);
         node.addControl("value", fields);

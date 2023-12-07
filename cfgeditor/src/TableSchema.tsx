@@ -1,8 +1,8 @@
-import {getDepStructs, getDepStructs2, Schema, SInterface, SItem, SStruct, STable} from "./schemaModel.ts";
+import {Schema, SInterface, SItem, SStruct, STable} from "./schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback} from "react";
-import {ConnectTo, Entity, EntityNodeType} from "./graphModel.ts";
+import {ConnectTo, Entity, EntityConnectionType, EntityNodeType} from "./graphModel.ts";
 
 
 function createNode(item: SItem, id: string, nodeType: EntityNodeType = EntityNodeType.Normal): Entity {
@@ -16,69 +16,70 @@ function createNode(item: SItem, id: string, nodeType: EntityNodeType = EntityNo
         userData: item,
     };
 
-    if (item.type == "interface") {
-        node.inputs.push({key: "input"});
-        return node;
+    node.inputs.push({key: "input"});
+
+    if (item.type != "interface") {
+        let st = item as STable | SStruct;
+        for (let field of st.fields) {
+            node.fields.push({
+                key: field.name,
+                name: field.name,
+                value: field.type
+            });
+        }
     }
 
-    let st = item as STable | SStruct;
-
-    if (item.type == "struct") {
-        node.inputs.push({key: "input"});
-    }
-
-    for (let field of st.fields) {
-        node.fields.push({
-            key: field.name,
-            name: field.name,
-            value: field.type
-        });
-    }
     return node;
 }
 
 
-function includeSubStructs(entityMap: Map<string, Entity>, frontier: (STable | SStruct)[], schema: Schema, settingMaxImplSchema: number) {
+function includeSubStructs(entityMap: Map<string, Entity>, frontier: (STable | SStruct)[],
+                           schema: Schema, settingMaxImplSchema: number) {
     while (frontier.length > 0) {
         let oldFrontier = frontier;
-        let depStructNames = getDepStructs2(frontier, schema);
+        let depStructNames = schema.getDepStructsByItems(frontier);
         frontier = [];
         for (let depName of depStructNames) {
             let depNode = entityMap.get(depName);
-            if (!depNode) {
-                let dep = schema.itemMap.get(depName);
-                if (dep) {
-                    let depNode = createNode(dep, dep.name);
-                    entityMap.set(depNode.id, depNode);
+            if (depNode) {
+                continue;
+            }
+            let dep = schema.itemMap.get(depName);
+            if (!dep) {
+                continue; //不会发生
+            }
 
-                    if (dep.type == 'interface') {
-                        let depInterface = dep as SInterface;
-                        let connSockets: ConnectTo[] = [];
-                        let cnt = 0;
-                        for (let impl of depInterface.impls) {
-                            let implNode = createNode(impl, depInterface.name + "." + impl.name);
-                            entityMap.set(implNode.id, implNode);
-                            frontier.push(impl);
+            depNode = createNode(dep, dep.name);
+            entityMap.set(depNode.id, depNode);
 
-                            connSockets.push({
-                                nodeId: implNode.id,
-                                inputKey: "input",
-                            })
-                            cnt++;
-                            if (cnt >= settingMaxImplSchema) {
-                                break;
-                            }
-                        }
-                        depNode.outputs.push({
-                            output: {key: "output", label: depInterface.impls.length.toString()},
-                            connectToSockets: connSockets
-                        })
+            if (dep.type == 'interface') {
+                let depInterface = dep as SInterface;
+                let connSockets: ConnectTo[] = [];
+                let cnt = 0;
+                for (let impl of depInterface.impls) {
+                    let implNode = createNode(impl, depInterface.name + "." + impl.name);
+                    entityMap.set(implNode.id, implNode);
+                    frontier.push(impl);
 
-                    } else {
-                        frontier.push(dep as SStruct);
+                    connSockets.push({
+                        nodeId: implNode.id,
+                        inputKey: "input",
+                    })
+                    cnt++;
+                    if (cnt >= settingMaxImplSchema) {
+                        break;
                     }
                 }
+                depNode.outputs.push({
+                    output: {key: "output", label: depInterface.impls.length.toString()},
+                    connectToSockets: connSockets
+                })
+
+            } else {
+                frontier.push(dep as SStruct);
             }
+
+
         }
 
         for (let oldF of oldFrontier) {
@@ -88,7 +89,7 @@ function includeSubStructs(entityMap: Map<string, Entity>, frontier: (STable | S
                 continue;
             }
 
-            let deps = getDepStructs(oldF, schema);
+            let deps = schema.getDepStructsByItem(oldF);
 
             let connSockets: ConnectTo[] = [];
             for (let dep of deps) {
@@ -96,10 +97,6 @@ function includeSubStructs(entityMap: Map<string, Entity>, frontier: (STable | S
                     nodeId: dep,
                     inputKey: "input",
                 })
-            }
-
-            if (oldFNode.outputs.length > 0) {
-                console.log(oldF.name);
             }
 
             oldFNode.outputs.push({
@@ -110,22 +107,70 @@ function includeSubStructs(entityMap: Map<string, Entity>, frontier: (STable | S
     }
 }
 
-function includeRefTables(entityMap: Map<string, Entity>, schema: Schema, refOutDepth: number) {
+function includeRefTables(entityMap: Map<string, Entity>, schema: Schema) {
     let frontier: SItem[] = [];
+    let entityFrontier: Entity[] = [];
     for (let e of entityMap.values()) {
         frontier.push(e.userData as SItem);
+        entityFrontier.push(e);
     }
 
-    if (frontier.length == 0) {
-        return;
+    let refTableNames = schema.getRefTables(frontier);
+    for (let ref of refTableNames) {
+        let refNode = entityMap.get(ref);
+        if (refNode) {
+            continue;
+        }
+
+        let refTable = schema.getSTable(ref);
+        if (!refTable) {
+            console.log(ref + "not found!")
+            continue; // 不该发生
+        }
+
+        refNode = createNode(refTable, ref, EntityNodeType.Ref);
+        entityMap.set(ref, refNode);
     }
 
-    while (refOutDepth > 0) {
+    for (let oldNode of entityFrontier) {
+        let item = oldNode.userData as SItem;
 
-        refOutDepth--;
+        if (item.type == 'interface') {
+            let ii = item as SInterface;
+            oldNode.outputs.push({
+                output: {key: "enumRef", label: "enumRef"},
+                connectToSockets: [{nodeId: ii.enumRef, inputKey: "input", connectionType: EntityConnectionType.Ref}]
+            })
+        } else {
+            let si = item as (SStruct | STable)
+            if (si.foreignKeys) {
+                for (let fk of si.foreignKeys) {
+                    let prefix = 'ref';
+                    if (fk.refType == 'rList') {
+                        prefix = 'refList';
+                    } else if (fk.refType.startsWith("rNullable")) {
+                        prefix = 'nullableRef'
+                    }
+                    let key = prefix + upper1(fk.name);
+                    oldNode.outputs.push({
+                        output: {key: key, label: key},
+                        connectToSockets: [{
+                            nodeId: fk.refTable,
+                            inputKey: "input",
+                            connectionType: EntityConnectionType.Ref
+                        }]
+                    })
+                }
+            }
+        }
     }
+}
 
-
+function upper1(str: string): string {
+    if (str.length > 0) {
+        return str.charAt(0).toUpperCase() + str.substring(1);
+    }
+    return str;
 }
 
 export function TableSchema({schema, curTable, inDepth, outDepth, settingMaxImplSchema}: {
@@ -145,7 +190,7 @@ export function TableSchema({schema, curTable, inDepth, outDepth, settingMaxImpl
     entityMap.set(curNode.id, curNode);
     let frontier = [curTable];
     includeSubStructs(entityMap, frontier, schema, settingMaxImplSchema);
-    includeRefTables(entityMap, schema, outDepth);
+    includeRefTables(entityMap, schema);
 
     const create = useCallback(
         (el: HTMLElement) => {

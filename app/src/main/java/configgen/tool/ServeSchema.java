@@ -24,7 +24,9 @@ public class ServeSchema {
     public enum SRefType {
         rPrimary,
         rUniq,
-        rList
+        rList,
+        rNullablePrimary,
+        rNullableUniq
     }
 
     public record SForeignKey(String name,
@@ -103,7 +105,7 @@ public class ServeSchema {
 
     public static SInterface fromInterface(InterfaceSchema is) {
         return new SInterface(is.name(),
-                is.enumRef(),
+                is.enumRefTable().fullName(), // 全局名字空间
                 is.defaultImpl(),
                 is.impls().stream().map(ServeSchema::fromStruct).toList());
     }
@@ -175,11 +177,11 @@ public class ServeSchema {
             SRefType ref;
             List<String> refKeys = null;
             switch (f.refKey()) {
-                case RefKey.RefPrimary _ -> {
-                    ref = SRefType.rPrimary;
+                case RefKey.RefPrimary refPrimary -> {
+                    ref = refPrimary.nullable() ? SRefType.rNullablePrimary : SRefType.rPrimary;
                 }
                 case RefKey.RefUniq refUniq -> {
-                    ref = SRefType.rUniq;
+                    ref = refUniq.nullable() ? SRefType.rNullableUniq : SRefType.rUniq;
                     refKeys = refUniq.keyNames();
                 }
                 case RefKey.RefList refList -> {
@@ -187,7 +189,11 @@ public class ServeSchema {
                     refKeys = refList.keyNames();
                 }
             }
-            res.add(new SForeignKey(f.name(), f.key().fields(), f.refTable(), ref, refKeys));
+            res.add(new SForeignKey(f.name(),
+                    f.key().fields(),
+                    f.refTableSchema().fullName(),  //用full name，避免让client去先local后global的去解析名字空间。
+                    ref,
+                    refKeys));
         }
         return res;
     }

@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
 import {TableList} from "./TableList.tsx";
-import {getFirstSTable, getSTable, resolveSchema, Schema, STable} from "./schemaModel.ts";
+import {Schema, STable} from "./schemaModel.ts";
 import {Space} from "antd";
 import {IdList} from "./IdList.tsx";
 import {TableSchema} from "./TableSchema.tsx";
@@ -16,7 +16,7 @@ export default function App() {
         const fetchData = async () => {
             const response = await fetch('http://localhost:3456/schemas');
             const rawSchema = await response.json();
-            const schema = resolveSchema(rawSchema);
+            const schema = new Schema(rawSchema);
 
             setSchema(schema);
             selectCurTableFromSchema(schema);
@@ -33,9 +33,9 @@ export default function App() {
         }
         let table;
         if (cur) {
-            table = getSTable(schema, cur);
+            table = schema.getSTable(cur);
         } else {
-            table = getFirstSTable(schema);
+            table = schema.getFirstSTable();
         }
         if (table) {
             setCurTable(table);
