@@ -30,6 +30,7 @@ export interface Entity {
     outputs: EntitySocketOutput[];
 
     nodeType?: EntityNodeType;
+    userData? : any;
 }
 
 export interface EntityGraph {

@@ -2,16 +2,18 @@ import {getDepStructs, getDepStructs2, Schema, SInterface, SItem, SStruct, STabl
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback} from "react";
-import {ConnectTo, Entity} from "./graphModel.ts";
+import {ConnectTo, Entity, EntityNodeType} from "./graphModel.ts";
 
 
-function createNode(item: SItem, id: string): Entity {
+function createNode(item: SItem, id: string, nodeType: EntityNodeType = EntityNodeType.Normal): Entity {
     const node: Entity = {
         id: id,
         label: item.name,
         fields: [],
         inputs: [],
         outputs: [],
+        nodeType,
+        userData: item,
     };
 
     if (item.type == "interface") {
@@ -35,9 +37,8 @@ function createNode(item: SItem, id: string): Entity {
     return node;
 }
 
-type FrontierType = (STable | SStruct)[];
 
-function includeSubStructs(entityMap: Map<string, Entity>, frontier: FrontierType, schema: Schema, settingMaxImplSchema: number) {
+function includeSubStructs(entityMap: Map<string, Entity>, frontier: (STable | SStruct)[], schema: Schema, settingMaxImplSchema: number) {
     while (frontier.length > 0) {
         let oldFrontier = frontier;
         let depStructNames = getDepStructs2(frontier, schema);
@@ -109,6 +110,24 @@ function includeSubStructs(entityMap: Map<string, Entity>, frontier: FrontierTyp
     }
 }
 
+function includeRefTables(entityMap: Map<string, Entity>, schema: Schema, refOutDepth: number) {
+    let frontier: SItem[] = [];
+    for (let e of entityMap.values()) {
+        frontier.push(e.userData as SItem);
+    }
+
+    if (frontier.length == 0) {
+        return;
+    }
+
+    while (refOutDepth > 0) {
+
+        refOutDepth--;
+    }
+
+
+}
+
 export function TableSchema({schema, curTable, inDepth, outDepth, settingMaxImplSchema}: {
     schema: Schema | null;
     curTable: STable | null;
@@ -124,8 +143,9 @@ export function TableSchema({schema, curTable, inDepth, outDepth, settingMaxImpl
 
     let curNode = createNode(curTable, curTable.name);
     entityMap.set(curNode.id, curNode);
-    let frontier: FrontierType = [curTable];
+    let frontier = [curTable];
     includeSubStructs(entityMap, frontier, schema, settingMaxImplSchema);
+    includeRefTables(entityMap, schema, outDepth);
 
     const create = useCallback(
         (el: HTMLElement) => {

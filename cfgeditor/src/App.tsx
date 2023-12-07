@@ -20,7 +20,7 @@ export default function App() {
 
             setSchema(schema);
             selectCurTableFromSchema(schema);
-            setSettingMaxImplSchema(10);
+            setSettingMaxImplSchema(1000);
         }
 
         fetchData().catch(console.error);
