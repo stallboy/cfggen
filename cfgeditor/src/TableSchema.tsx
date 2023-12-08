@@ -173,11 +173,9 @@ function upper1(str: string): string {
     return str;
 }
 
-export function TableSchema({schema, curTable, inDepth, outDepth, settingMaxImplSchema}: {
+export function TableSchema({schema, curTable, settingMaxImplSchema}: {
     schema: Schema | null;
     curTable: STable | null;
-    inDepth: number;
-    outDepth: number;
     settingMaxImplSchema: number;
 }) {
     if (schema == null || curTable == null) {
@@ -196,7 +194,7 @@ export function TableSchema({schema, curTable, inDepth, outDepth, settingMaxImpl
         (el: HTMLElement) => {
             return createEditor(el, {entityMap});
         },
-        [schema, curTable, inDepth, outDepth]
+        [schema, curTable]
     );
     const [ref] = useRete(create);
 

@@ -20,7 +20,7 @@ export default function App() {
 
             setSchema(schema);
             selectCurTableFromSchema(schema);
-            setSettingMaxImplSchema(1000);
+            setSettingMaxImplSchema(10);
         }
 
         fetchData().catch(console.error);
@@ -54,7 +54,7 @@ export default function App() {
         <TableList schema={schema} curTable={curTable} setCurTable={selectCurTable}/>
         <IdList curTable={curTable} curId={curId} setCurId={setCurId}/>
     </Space>
-        <TableSchema schema={schema} curTable={curTable} inDepth={0} outDepth={0}
+        <TableSchema schema={schema} curTable={curTable}
                      settingMaxImplSchema={settingMaxImplSchema}/>
     </div>;
 
