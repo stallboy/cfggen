@@ -1,6 +1,6 @@
 package configgen.value;
 
-import configgen.util.Localize;
+import configgen.util.LocaleUtil;
 import configgen.util.Logger;
 import configgen.schema.FieldType;
 
@@ -25,11 +25,11 @@ public record ValueErrs(List<VErr> errs) {
 
     public void print(String prefix) {
         if (!errs.isEmpty()) {
-            Logger.log(STR. "\{ prefix } errors \{ errs.size() }:" );
+            Logger.log("%s errors %d:", prefix, errs.size());
             for (VErr err : errs) {
                 Logger.log("\t" + err);
             }
-            Logger.log(Localize.getMessage("FixValueErrFirst"));
+            Logger.log(LocaleUtil.getMessage("FixValueErrFirst"));
             System.exit(1);
         }
     }
@@ -46,7 +46,7 @@ public record ValueErrs(List<VErr> errs) {
                                                         String interfaceName) implements VErr {
         @Override
         public String toString() {
-            return Localize.getMessage("InterfaceCellEmptyButHasNoDefaultImpl") + "{" +
+            return LocaleUtil.getMessage("InterfaceCellEmptyButHasNoDefaultImpl") + "{" +
                     "cell=" + cell +
                     ", interfaceName='" + interfaceName + '\'' +
                     '}';
@@ -58,7 +58,7 @@ public record ValueErrs(List<VErr> errs) {
                                             String notFoundImpl) implements VErr {
         @Override
         public String toString() {
-            return Localize.getMessage("InterfaceCellImplNotFound") + "{" +
+            return LocaleUtil.getMessage("InterfaceCellImplNotFound") + "{" +
                     "cell=" + cell +
                     ", interfaceName='" + interfaceName + '\'' +
                     ", notFoundImpl='" + notFoundImpl + '\'' +
@@ -92,7 +92,7 @@ public record ValueErrs(List<VErr> errs) {
                                     FieldType expectedType) implements VErr {
         @Override
         public String toString() {
-            return Localize.getMessage("NotMatchFieldType") + "{" +
+            return LocaleUtil.getMessage("NotMatchFieldType") + "{" +
                     "cell=" + cell +
                     ", nameable='" + nameable + '\'' +
                     ", field='" + field + '\'' +
@@ -119,7 +119,7 @@ public record ValueErrs(List<VErr> errs) {
                                                List<String> keys) implements VErr {
         @Override
         public String toString() {
-            return Localize.getMessage("PrimaryOrUniqueKeyDuplicated") + "{" +
+            return LocaleUtil.getMessage("PrimaryOrUniqueKeyDuplicated") + "{" +
                     "cells=" + cells +
                     ", table='" + table + '\'' +
                     ", keys=" + keys +
@@ -144,7 +144,7 @@ public record ValueErrs(List<VErr> errs) {
                                              String table) implements VErr {
         @Override
         public String toString() {
-            return Localize.getMessage("RefNotNullableButCellEmpty") + "{" +
+            return LocaleUtil.getMessage("RefNotNullableButCellEmpty") + "{" +
                     "cells=" + cells +
                     ", table='" + table + '\'' +
                     '}';
@@ -157,7 +157,7 @@ public record ValueErrs(List<VErr> errs) {
 
         @Override
         public String toString() {
-            return Localize.getMessage("ForeignValueNotFound") + "{" +
+            return LocaleUtil.getMessage("ForeignValueNotFound") + "{" +
                     "cells=" + cells +
                     ", table='" + table + '\'' +
                     ", foreignKey='" + foreignKey + '\'' +

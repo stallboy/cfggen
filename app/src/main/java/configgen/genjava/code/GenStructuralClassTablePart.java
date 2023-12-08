@@ -175,10 +175,10 @@ class GenStructuralClassTablePart {
 
     static void generateTableBuild(Structural struct, NameableName name, CachedIndentPrinter ps) {
         // package访问级别，通过builder.build()来构建
-        ps.println1(STR. "\{ name.className }(\{ name.className }Builder b) {" );
+        ps.println1("%s(%sBuilder b) {", name.className, name.className);
         for (FieldSchema field : struct.fields()) {
             String ln = lower1(field.name());
-            ps.println2(STR. "this.\{ ln } = b.\{ ln };" );
+            ps.println2("this.%s = b.%s;", ln, ln);
         }
         ps.println1("}");
         ps.println();

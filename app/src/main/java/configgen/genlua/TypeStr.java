@@ -141,20 +141,20 @@ class TypeStr {
                 case RefKey.RefList refList -> {
                     //{refName, 2, dstTable, dstAllName, thisColumnIdx, dstColumnIdx}, --listRef到别的表
                     String dstAllName = Name.primaryKeyMapName;
-                    String thisColumnIdx = getColumnStrOrIndex(fk.key().fieldSchemas().get(0), structural);
-                    String dstColumnIdx = getColumnStrOrIndex(refList.key().fieldSchemas().get(0), fk.refTableSchema());
+                    String thisColumnIdx = getColumnStrOrIndex(fk.key().fieldSchemas().getFirst(), structural);
+                    String dstColumnIdx = getColumnStrOrIndex(refList.key().fieldSchemas().getFirst(), fk.refTableSchema());
 
                     sb.append(String.format("\n    { '%s', 2, %s, '%s', %s, %s }, ",
                             refName, dstTable, dstAllName, thisColumnIdx, dstColumnIdx));
 
                 }
                 case RefKey.RefSimple refSimple -> {
-                    FieldSchema firstField = fk.key().fieldSchemas().get(0);
+                    FieldSchema firstField = fk.key().fieldSchemas().getFirst();
                     String dstGetName = Name.uniqueKeyGetByName(refSimple.keyNames());
                     String thisColumnIdx = getColumnStrOrIndex(firstField, structural);
 
                     switch (firstField.type()) {
-                        case SimpleType _ -> {
+                        case SimpleType ignored -> {
                             if (fk.key().fieldSchemas().size() > 2) {
                                 throw new RuntimeException("lua最多只支持两列做为索引！，" + structural.name());
                             }
@@ -170,11 +170,11 @@ class TypeStr {
                             }
 
                         }
-                        case FList _ -> {
+                        case FList ignored -> {
                             // {refName, 1, dstTable, dstGetName, thisColumnIdx}, --本身是list
                             sb.append(String.format("\n    { '%s', 1, %s, '%s', %s }, ", refName, dstTable, dstGetName, thisColumnIdx));
                         }
-                        case FMap _ -> {
+                        case FMap ignored -> {
                             // {refName, 3, dstTable, dstGetName, thisColumnIdx}, --本身是map
                             sb.append(String.format("\n    { '%s', 3, %s, '%s', %s }, ", refName, dstTable, dstGetName, thisColumnIdx));
                         }
@@ -304,7 +304,7 @@ class TypeStr {
 
             boolean isList = (fk.refKey() instanceof RefKey.RefList);
             if (!isList) {
-                isList = fk.key().fieldSchemas().get(0).type() instanceof FList;
+                isList = fk.key().fieldSchemas().getFirst().type() instanceof FList;
             }
             if (isList) {
                 sb.append(String.format("---@field %s table<number,%s>\n", refName, dstTable));

@@ -126,15 +126,7 @@ public enum CfgReader implements CfgSchemaReader {
                     meta.data().put(k, TAG);
                 } else {
                     TerminalNode tn = (TerminalNode) val.getChild(0);
-                    int type = tn.getSymbol().getType();
-                    String text = tn.getSymbol().getText();
-                    MetaValue mv = switch (type) {
-                        case INTEGER_CONSTANT -> new MetaInt(Integer.parseInt(text));
-                        case HEX_INTEGER_CONSTANT -> new MetaInt(Integer.decode(text));
-                        case FLOAT_CONSTANT -> new MetaFloat(Float.parseFloat(text));
-                        case STRING_CONSTANT -> new MetaStr(text.trim().substring(1, text.trim().length() - 1));
-                        default -> throw new IllegalStateException("Unexpected value: " + type);
-                    };
+                    MetaValue mv = metaValue(tn);
                     meta.data().put(k, mv);
                 }
             } else {
@@ -151,6 +143,18 @@ public enum CfgReader implements CfgSchemaReader {
             }
         }
         return meta;
+    }
+
+    private static MetaValue metaValue(TerminalNode tn) {
+        int type = tn.getSymbol().getType();
+        String text = tn.getSymbol().getText();
+        return switch (type) {
+            case INTEGER_CONSTANT -> new MetaInt(Integer.parseInt(text));
+            case HEX_INTEGER_CONSTANT -> new MetaInt(Integer.decode(text));
+            case FLOAT_CONSTANT -> new MetaFloat(Float.parseFloat(text));
+            case STRING_CONSTANT -> new MetaStr(text.trim().substring(1, text.trim().length() - 1));
+            default -> throw new IllegalStateException("Unexpected value: " + type);
+        };
     }
 
     private record FieldsAndForeigns(List<FieldSchema> fieldSchemas,

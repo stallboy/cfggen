@@ -48,7 +48,7 @@ public class ForeachVStruct {
 
     public static void foreachVStructSimpleValue(VStructVisitor visitor, SimpleValue simpleValue, VTable table) {
         switch (simpleValue) {
-            case PrimitiveValue _ -> {
+            case PrimitiveValue ignored -> {
             }
             case VInterface vInterface -> foreachVStruct(visitor, vInterface.child(), table);
             case VStruct vStruct -> foreachVStruct(visitor, vStruct, table);

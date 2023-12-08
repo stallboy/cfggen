@@ -83,14 +83,15 @@ public class Spans {
 
         switch (fmt) {
             case PACK:
-            case FieldFormat.Sep _:
+                return 1;
+            case FieldFormat.Sep ignored:
                 return 1;
             default:
                 break;
         }
 
         switch (field.type()) {
-            case Primitive _ -> {
+            case Primitive ignored -> {
                 return 1;
             }
 
@@ -130,7 +131,7 @@ public class Spans {
 
     public static int span(SimpleType type) {
         switch (type) {
-            case Primitive _ -> {
+            case Primitive ignored -> {
                 return 1;
             }
             case StructRef structRef -> {
@@ -141,7 +142,7 @@ public class Spans {
 
     public static int calcSpan(SimpleType type) {
         switch (type) {
-            case Primitive _ -> {
+            case Primitive ignored -> {
                 return 1;
             }
             case StructRef structRef -> {

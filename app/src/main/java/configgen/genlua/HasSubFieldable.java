@@ -9,7 +9,7 @@ class HasSubFieldable {
     static boolean hasSubFieldable(Structural structural) {
         for (FieldSchema field : structural.fields()) {
             switch (field.type()) {
-                case StructRef _ -> {
+                case StructRef ignored -> {
                     return true;
                 }
                 case FList fList -> {
@@ -22,7 +22,7 @@ class HasSubFieldable {
                         return true;
                     }
                 }
-                case Primitive _ -> {
+                case Primitive ignored -> {
                 }
             }
         }

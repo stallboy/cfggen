@@ -5,10 +5,9 @@ import configgen.genjava.GenJavaUtil;
 import configgen.schema.*;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Collectors;
 
-import static configgen.gen.Generator.*;
+import static configgen.gen.Generator.upper1;
 import static configgen.schema.FieldType.*;
 
 public class Name {
@@ -50,7 +49,7 @@ public class Name {
 
         } else {
             try {
-                return TypeStr.boxType(keySchema.fieldSchemas().get(0).type());
+                return TypeStr.boxType(keySchema.fieldSchemas().getFirst().type());
             } catch (Exception e) {
                 return null;
             }
@@ -77,17 +76,17 @@ public class Name {
 
     static String refType(ForeignKeySchema fk) {
         switch (fk.refKey()) {
-            case RefKey.RefList _ -> {
+            case RefKey.RefList ignored -> {
                 return "java.util.List<" + refType(fk.refTableSchema()) + ">";
             }
-            case RefKey.RefSimple _ -> {
-                FieldSchema firstLocal = fk.key().fieldSchemas().get(0);
+            case RefKey.RefSimple ignored -> {
+                FieldSchema firstLocal = fk.key().fieldSchemas().getFirst();
                 switch (firstLocal.type()) {
 
-                    case SimpleType _ -> {
+                    case SimpleType ignored2 -> {
                         return refType(fk.refTableSchema());
                     }
-                    case FList _ -> {
+                    case FList ignored2 -> {
                         return "java.util.List<" + refType(fk.refTableSchema()) + ">";
                     }
                     case FMap fMap -> {
@@ -102,7 +101,7 @@ public class Name {
 
     static String refName(ForeignKeySchema fk) {
         String prefix = switch (fk.refKey()) {
-            case RefKey.RefList _ -> "ListRef";
+            case RefKey.RefList ignored -> "ListRef";
             case RefKey.RefSimple refSimple -> refSimple.nullable() ? "NullableRef" : "Ref";
         };
         return prefix + upper1(fk.name());

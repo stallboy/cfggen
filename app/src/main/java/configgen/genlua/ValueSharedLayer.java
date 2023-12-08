@@ -77,7 +77,7 @@ class ValueSharedLayer {
 
     void visit(Value value) {
         switch (value) {
-            case PrimitiveValue _ -> {
+            case PrimitiveValue ignored -> {
             }
             case VStruct vStruct -> visitVStruct(vStruct);
             case VInterface vInterface -> visitVInterface(vInterface);

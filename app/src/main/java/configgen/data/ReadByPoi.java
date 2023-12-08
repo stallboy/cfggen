@@ -57,7 +57,7 @@ public enum ReadByPoi implements ExcelReader {
                 String sheetName = sheet.getSheetName().trim();
                 DataUtil.TableNameIndex ti = DataUtil.getTableNameIndex(relativePath, sheetName);
                 if (ti == null) {
-                    Logger.verbose2(STR. "\{ path } [\{ sheetName }] 名字不符合规范，ignore！" );
+                    Logger.verbose2("%s [%s] 名字不符合规范，ignore！", path, sheetName);
                     stat.ignoredSheetCount++;
                     continue;
                 }

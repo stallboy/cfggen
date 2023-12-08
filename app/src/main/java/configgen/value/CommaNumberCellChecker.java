@@ -62,7 +62,7 @@ public class CommaNumberCellChecker {
             throw new IllegalStateException("TableNumberCellChecker value cell count != 1");
         }
 
-        CfgData.DCell cell = value.cells().get(0);
+        CfgData.DCell cell = value.cells().getFirst();
         if (cell.isCellNumberWithComma()) {
             errs.addErr(new NumberWithCommaCellIsListIntOrIntStruct(cell, finder.type()));
         }
@@ -98,7 +98,7 @@ public class CommaNumberCellChecker {
         int fieldIdx = 0;
         for (FieldSchema field : structural.fields()) {
             switch (field.type()) {
-                case Primitive _ -> {
+                case Primitive ignored -> {
                 }
                 case StructRef structRef -> {
                     Finder findChain = finder.copyAdd(new FStructField(fieldIdx));
@@ -113,7 +113,7 @@ public class CommaNumberCellChecker {
 
                     if (field.fmt() instanceof Fix || field.fmt() instanceof Block) {
                         switch (fList.item()) {
-                            case Primitive _ -> {
+                            case Primitive ignored -> {
                             }
                             case StructRef structRef -> {
                                 Finder findChain = finder.copyAdd(new FStructField(fieldIdx), FContainerEach.LIST_ITEM);
@@ -125,7 +125,7 @@ public class CommaNumberCellChecker {
                 case FMap fMap -> {
                     if (field.fmt() instanceof Fix || field.fmt() instanceof Block) {
                         switch (fMap.key()) {
-                            case Primitive _ -> {
+                            case Primitive ignored -> {
                             }
                             case StructRef structRef -> {
                                 Finder findChain = finder.copyAdd(new FStructField(fieldIdx), FContainerEach.MAP_KEY);
@@ -134,7 +134,7 @@ public class CommaNumberCellChecker {
                         }
 
                         switch (fMap.value()) {
-                            case Primitive _ -> {
+                            case Primitive ignored -> {
                             }
                             case StructRef structRef -> {
                                 Finder findChain = finder.copyAdd(new FStructField(fieldIdx), FContainerEach.MAP_VALUE);

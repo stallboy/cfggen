@@ -54,7 +54,7 @@ public class CfgSchemaAlignToData {
 
     TableSchema newTable(CfgData.DTable th) {
         if (th.fields().isEmpty()) {
-            Logger.log(STR. "\{ th.tableName() } header empty, ignored!" );
+            Logger.log("%s header empty, ignored!", th.tableName());
             return null;
         }
 
@@ -69,7 +69,7 @@ public class CfgSchemaAlignToData {
             fields.add(field);
         }
 
-        String first = fields.iterator().next().name();
+        String first = fields.getFirst().name();
         KeySchema primaryKey = new KeySchema(List.of(first));
 
         return new TableSchema(th.tableName(), primaryKey, NO, false,
@@ -161,12 +161,12 @@ public class CfgSchemaAlignToData {
                 if (!comment.isEmpty() && !comment.equalsIgnoreCase(fieldName)) {
                     String old = meta.putComment(comment);
                     if (!old.equals(comment)) {
-                        Logger.log(STR. "\{ table.name() }[\{ fieldName }] set comment: \{ old } -> \{ comment }" );
+                        Logger.log("%s[%s] set comment: %s -> %s", table.name(), fieldName, old, comment);
                     }
                 } else {
                     String old = meta.removeComment();
                     if (!old.isEmpty()) {
-                        Logger.log(STR. "\{ table.name() }[\{ fieldName }] remove old comment: \{ old }" );
+                        Logger.log("%s[%s] remove old comment: %s", table.name(), fieldName, old);
                     }
                 }
                 newField = new FieldSchema(fieldName, curField.type().copy(), curField.fmt(), meta);
@@ -181,7 +181,7 @@ public class CfgSchemaAlignToData {
                         meta.putComment(comment);
                     }
                     newField = new FieldSchema(name, Primitive.STRING, AutoOrPack.AUTO, meta);
-                    Logger.log(STR. "\{ table.name() } new field: \{ name }" );
+                    Logger.log("%s new field: %s", table.name(), name);
                     alignedFields.put(newField.name(), newField);
                 } else {
                     errs.addErr(new SchemaErrs.DataHeadNameNotIdentifier(table.name(), name));
@@ -190,7 +190,7 @@ public class CfgSchemaAlignToData {
         }
 
         for (FieldSchema remove : curFields.values()) {
-            Logger.log(STR. "\{ table.name() } delete field: \{ remove.name() }" );
+            Logger.log("%s delete field: %s", table.name(), remove.name());
         }
         return alignedFields;
     }
@@ -209,7 +209,7 @@ public class CfgSchemaAlignToData {
         }
 
         String nam = name.substring(0, name.length() - 1);
-        String listName = STR. "\{ nam }List" ;
+        String listName = String.format("%sList", nam);
         FieldSchema listField = curFields.get(listName);
         if (listField != null
                 && listField.type() instanceof FieldType.FList fList && Spans.calcSpan(fList.item()) == 1
@@ -217,7 +217,7 @@ public class CfgSchemaAlignToData {
 
             boolean ok = true;
             for (int i = 2; i <= fix.count(); i++) {
-                if (!headers.get(index + i - 1).name().equals(STR. "\{ nam }\{ i }" )) {
+                if (!headers.get(index + i - 1).name().equals(String.format("%s%d", nam, i))) {
                     ok = false;
                     break;
                 }
@@ -236,7 +236,7 @@ public class CfgSchemaAlignToData {
             return null;
         }
         String nam2 = name2.substring(0, name2.length() - 1);
-        String mapName = STR. "\{ nam }2\{ nam2 }Map" ;
+        String mapName = String.format("%s2%sMap", nam, nam2);
         FieldSchema mapField = curFields.get(mapName);
         if (mapField != null
                 && mapField.type() instanceof FieldType.FMap fMap
@@ -246,12 +246,12 @@ public class CfgSchemaAlignToData {
 
             boolean ok = true;
             for (int i = 2; i <= fix.count(); i++) {
-                if (!headers.get(index + (i - 1) * 2).name().equals(STR. "\{ nam }\{ i }" )) {
+                if (!headers.get(index + (i - 1) * 2).name().equals(String.format("%s%d", nam, i))) {
                     ok = false;
                     break;
                 }
 
-                if (!headers.get(index + (i - 1) * 2 + 1).name().equals(STR. "\{ nam2 }\{ i }" )) {
+                if (!headers.get(index + (i - 1) * 2 + 1).name().equals(String.format("%s%d", nam2, i))) {
                     ok = false;
                     break;
                 }

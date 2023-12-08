@@ -69,7 +69,7 @@ public final class CfgSchemaResolver {
             }
             if (item instanceof Fieldable) {
                 fieldableNameSet.add(names);
-                fieldableTopNameSet.add(names.get(0));
+                fieldableTopNameSet.add(names.getFirst());
             }
 
             switch (item) {
@@ -175,7 +175,7 @@ public final class CfgSchemaResolver {
                 resolveFieldType(field, key);
                 resolveFieldType(field, value);
             }
-            case Primitive _ -> {
+            case Primitive ignored -> {
             }
             case StructRef structRef -> {
                 String name = structRef.name();
@@ -221,7 +221,7 @@ public final class CfgSchemaResolver {
             curNameable = item;
             curTopNameable = item;
             switch (item) {
-                case StructSchema _ -> {
+                case StructSchema ignored -> {
                 }
                 case InterfaceSchema sInterface -> resolveInterface(sInterface);
                 case TableSchema table -> resolveTable(table);
@@ -277,7 +277,7 @@ public final class CfgSchemaResolver {
             }
         }
         if (HasBlock.hasBlock(table)) {
-            String firstField = table.fields().get(0).name();
+            String firstField = table.fields().getFirst().name();
             if (!primaryKey.fields().contains(firstField)) {
                 errs.addErr(new BlockTableFirstFieldNotInPrimaryKey(table.name()));
             }
@@ -328,17 +328,17 @@ public final class CfgSchemaResolver {
     private void checkPrimaryOrUniqKey(KeySchema key) {
         List<FieldSchema> fields = key.fieldSchemas();
         if (fields.size() == 1) {
-            FieldSchema field = fields.get(0);
+            FieldSchema field = fields.getFirst();
             FieldType type = field.type();
 
             String fn = field.name();
             String tn = type.toString();
 
             switch (type) {
-                case ContainerType _ -> {
+                case ContainerType ignored -> {
                     errKeyTypeNotSupport(fn, tn);
                 }
-                case Primitive _ -> {
+                case Primitive ignored -> {
                     if (checkErrFieldAsKey(field)) {
                         errKeyTypeNotSupport(fn, tn);
                     }
@@ -347,7 +347,7 @@ public final class CfgSchemaResolver {
                     Fieldable fieldable = structRef.obj();
 
                     switch (fieldable) {
-                        case InterfaceSchema _ -> {
+                        case InterfaceSchema ignored -> {
                             errKeyTypeNotSupport(fn, tn);
                         }
                         case StructSchema structSchema -> {
@@ -421,7 +421,7 @@ public final class CfgSchemaResolver {
         switch (foreignKey.refKey()) {
 
             // 不配具体ref到的key，则映射到主键，只检测type相符
-            case RefKey.RefPrimary _ -> {
+            case RefKey.RefPrimary ignored -> {
                 checkLocalAndRemoteTypeMatch(foreignKey, localKey, refTableSchema.primaryKey());
             }
 
@@ -452,7 +452,7 @@ public final class CfgSchemaResolver {
                     return;
                 }
 
-                FieldSchema remoteField = refTableSchema.findField(remoteKey.fields().get(0));
+                FieldSchema remoteField = refTableSchema.findField(remoteKey.fields().getFirst());
                 if (remoteField != null) {
                     remoteKey.setFieldSchemas(List.of(remoteField));
                     // 这里remote应该向local的type看齐，保持一致
@@ -557,7 +557,7 @@ public final class CfgSchemaResolver {
                         }
                     }
                 }
-                case TableSchema _ -> {
+                case TableSchema ignored -> {
                 }
             }
         }
@@ -575,12 +575,12 @@ public final class CfgSchemaResolver {
         FieldFormat fmt = field.fmt();
         switch (type) {
 
-            case Primitive _ -> {
+            case Primitive ignored -> {
                 if (fmt != AUTO) {
                     errTypeFmtNotCompatible(field);
                 }
             }
-            case StructRef _ -> {
+            case StructRef ignored -> {
                 if (!(fmt instanceof AutoOrPack)) {
                     errTypeFmtNotCompatible(field);
                 }
@@ -596,7 +596,7 @@ public final class CfgSchemaResolver {
                     }
                 }
             }
-            case FMap _ -> {
+            case FMap ignored -> {
                 if (fmt == AUTO || fmt instanceof Sep) {
                     errTypeFmtNotCompatible(field);
                 }
@@ -670,8 +670,8 @@ public final class CfgSchemaResolver {
         for (Map.Entry<String, Fieldable> e : cfgSchema.fieldableMap().entrySet()) {
             if (!collectedFieldableSet.contains(e.getKey())) {
                 switch (e.getValue()) {
-                    case InterfaceSchema _ -> errs.addWarn(new InterfaceNotUsed(e.getKey()));
-                    case StructSchema _ -> errs.addWarn(new StructNotUsed(e.getKey()));
+                    case InterfaceSchema ignored -> errs.addWarn(new InterfaceNotUsed(e.getKey()));
+                    case StructSchema ignored -> errs.addWarn(new StructNotUsed(e.getKey()));
                 }
             }
         }

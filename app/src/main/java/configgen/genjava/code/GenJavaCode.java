@@ -56,7 +56,7 @@ public class GenJavaCode extends Generator {
                 List<String> lines = Files.readAllLines(fn, StandardCharsets.UTF_8);
                 needBuilderTables.addAll(lines);
             } catch (IOException e) {
-                Logger.log(STR. "读\{ fn.toAbsolutePath() }文件异常, 忽略此文件" );
+                Logger.log("读文件异常, 忽略此文件", fn.toAbsolutePath());
             }
         }
     }
@@ -85,7 +85,7 @@ public class GenJavaCode extends Generator {
                         generateStructClass(impl);
                     }
                 }
-                case TableSchema _ -> {
+                case TableSchema ignored -> {
                 }
             }
         }

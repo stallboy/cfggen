@@ -104,8 +104,8 @@ public class Context {
             SchemaErrs errs = SchemaErrs.of();
             tagSchema = new CfgSchemaFilterByTag(cfgSchema, tag, errs).filter();
             new CfgSchemaResolver(tagSchema, errs).resolve();
-            errs.print(STR. "[\{ tag }] filtered schema" );
-            Logger.profile(STR. "schema filtered by \{ tag }" );
+            errs.print(String.format("[%s] filtered schema", tag));
+            Logger.profile(String.format("schema filtered by %s", tag));
         } else {
             tagSchema = cfgSchema;
         }

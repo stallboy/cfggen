@@ -1,6 +1,6 @@
 package configgen.data;
 
-import configgen.util.Localize;
+import configgen.util.LocaleUtil;
 import configgen.util.Logger;
 
 import java.util.List;
@@ -64,10 +64,6 @@ public record CfgData(Map<String, DTable> tables,
             return (mode & COLUMN_MODE) != 0;
         }
 
-        public boolean isCellNumber() {
-            return (mode & CELL_NUMBER) != 0;
-        }
-
         public boolean isCellNumberWithComma() {
             return (mode & CELL_NUMBER_WITH_COMMA) != 0;
         }
@@ -93,7 +89,7 @@ public record CfgData(Map<String, DTable> tables,
                 r = rowId.row;
                 c = col;
             }
-            return Localize.getMessage("CellToString", sheet, r + 1, toAZ(c), value);
+            return LocaleUtil.getMessage("CellToString", sheet, r + 1, toAZ(c), value);
         }
 
         private static final int N = 'Z' - 'A' + 1;
@@ -132,7 +128,7 @@ public record CfgData(Map<String, DTable> tables,
             if (sheetName.isEmpty()) {
                 return fileName;
             }
-            return STR. "\{ fileName }[\{ sheetName }]" ;
+            return String.format("%s[%s]", fileName, sheetName);
         }
 
         public boolean isCsv() {
@@ -148,14 +144,13 @@ public record CfgData(Map<String, DTable> tables,
         int count();
     }
 
-
     public void print() {
         stat.print();
-        Logger.verbose2(STR. "table count: \t\{ tables.size() }" );
+        Logger.verbose2("table count: %d", tables.size());
         for (DTable table : tables.values()) {
             Logger.verbose2(table.tableName);
             for (DRawSheet sheet : table.rawSheets) {
-                Logger.verbose2(STR. "\t\{ sheet.id() }" );
+                Logger.verbose2("\t%s", sheet.id());
             }
         }
     }

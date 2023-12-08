@@ -49,15 +49,15 @@ public class ForeachPrimitiveValue {
             case VList vList -> {
                 int i = 0;
                 for (SimpleValue sv : vList.valueList()) {
-                    foreachValue(visitor, sv, table, pk, listAddOf(fieldChain, STR. "\{ i }" ));
+                    foreachValue(visitor, sv, table, pk, listAddOf(fieldChain, String.valueOf(i)));
                     i++;
                 }
             }
             case VMap vMap -> {
                 int i = 0;
                 for (Map.Entry<SimpleValue, SimpleValue> entry : vMap.valueMap().entrySet()) {
-                    foreachValue(visitor, entry.getKey(), table, pk, listAddOf(fieldChain, STR. "\{ i }k" ));
-                    foreachValue(visitor, entry.getKey(), table, pk, listAddOf(fieldChain, STR. "\{ i }v" ));
+                    foreachValue(visitor, entry.getKey(), table, pk, listAddOf(fieldChain, String.format("%dk", i)));
+                    foreachValue(visitor, entry.getKey(), table, pk, listAddOf(fieldChain, String.format("%dv", i)));
                     i++;
                 }
             }

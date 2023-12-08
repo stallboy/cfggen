@@ -46,7 +46,7 @@ class AStat {
 
 
     void print() {
-        Logger.verbose(String.format(
+        Logger.verbose(
                 "可共享空table个数:%d, 共享table节省:%d，压缩bool节省:%d，总共有list:%d，map:%d，interface:%d，struct:%d，record:%d",
                 emptyTableCount,
                 sharedTableReduceCount,
@@ -55,6 +55,6 @@ class AStat {
                 mapTableCount,
                 interfaceTableCount,
                 structTableCount,
-                recordTableCount));
+                recordTableCount);
     }
 }

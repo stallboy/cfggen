@@ -10,7 +10,7 @@ import static configgen.schema.EntryType.EEnum;
 public class GenJavaUtil {
 
     public static boolean isEnumAndHasOnlyPrimaryKeyAndEnumStr(TableSchema tableSchema) {
-        if (tableSchema.entry() instanceof EEnum _) {
+        if (tableSchema.entry() instanceof EEnum ignored) {
             int fz = tableSchema.fields().size();
             if (fz > 2) {
                 return false;

@@ -69,8 +69,8 @@ public class SchemaStat implements Stat {
         switch (table.entry()) {
             case EntryType.ENo.NO -> {
             }
-            case EntryType.EEntry _ -> eEntryCount++;
-            case EntryType.EEnum _ -> eEnumCount++;
+            case EntryType.EEntry ignored -> eEntryCount++;
+            case EntryType.EEnum ignored -> eEnumCount++;
         }
 
         parseKey(table.primaryKey());
@@ -94,7 +94,7 @@ public class SchemaStat implements Stat {
         parseStructural(struct);
         switch (struct.fmt()) {
             case AutoOrPack.PACK -> fPackCount++;
-            case Sep _ -> fSepCount++;
+            case Sep ignored -> fSepCount++;
             default -> {
             }
         }
@@ -117,15 +117,15 @@ public class SchemaStat implements Stat {
                 case FLOAT -> tFloatCount++;
                 case STRING -> tStrCount++;
                 case TEXT -> tTextCount++;
-                case StructRef _ -> tStructRefCount++;
-                case FList _ -> tListCount++;
-                case FMap _ -> tMapCount++;
+                case StructRef ignored -> tStructRefCount++;
+                case FList ignored -> tListCount++;
+                case FMap ignored -> tMapCount++;
             }
             switch (field.fmt()) {
                 case AutoOrPack.PACK -> fPackCount++;
-                case Sep _ -> fSepCount++;
-                case Fix _ -> fFixCount++;
-                case Block _ -> fBlockCount++;
+                case Sep ignored -> fSepCount++;
+                case Fix ignored -> fFixCount++;
+                case Block ignored -> fBlockCount++;
                 case AutoOrPack.AUTO -> {
                 }
             }
@@ -134,19 +134,19 @@ public class SchemaStat implements Stat {
         for (ForeignKeySchema fk : s.foreignKeys()) {
             refCount++;
             switch (fk.refKey()) {
-                case RefKey.RefPrimary _ -> {
+                case RefKey.RefPrimary ignored -> {
                 }
-                case RefKey.RefUniq _ -> refUniqKeyCount++;
-                case RefKey.RefList _ -> refListCount++;
+                case RefKey.RefUniq ignored -> refUniqKeyCount++;
+                case RefKey.RefList ignored -> refListCount++;
             }
 
             List<FieldSchema> fs = fk.key().fieldSchemas();
             if (fs.size() == 1) {
-                FieldSchema f = fs.get(0);
+                FieldSchema f = fs.getFirst();
                 switch (f.type()) {
-                    case StructRef _ -> refByStructCount++;
-                    case FList _ -> refByListItemCount++;
-                    case FMap _ -> refByMapValueCount++;
+                    case StructRef ignored -> refByStructCount++;
+                    case FList ignored -> refByListItemCount++;
+                    case FMap ignored -> refByMapValueCount++;
                     default -> {
                     }
                 }

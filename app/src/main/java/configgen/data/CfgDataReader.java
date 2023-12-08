@@ -49,7 +49,7 @@ public enum CfgDataReader {
 
     public CfgData readCfgData(Path rootDir, CfgSchema nullableCfgSchema, int headRow, boolean usePoi, String defaultEncoding) {
         if (headRow < 2) {
-            throw new IllegalArgumentException(STR. "headRow =\{ headRow } < 2" );
+            throw new IllegalArgumentException(String.format("headRow =%d < 2", headRow));
         }
         try {
             return _readCfgData(rootDir, nullableCfgSchema, headRow, usePoi, defaultEncoding);
@@ -82,7 +82,7 @@ public enum CfgDataReader {
                     case CSV -> {
                         DataUtil.TableNameIndex ti = DataUtil.getTableNameIndex(relativePath);
                         if (ti == null) {
-                            Logger.verbose2(STR. "\{ path } 名字不符合规范，ignore！" );
+                            Logger.verbose2("%s 名字不符合规范，ignore！", path);
                             stat.ignoredCsvCount++;
                             return FileVisitResult.CONTINUE;
                         } else {
@@ -166,7 +166,8 @@ public enum CfgDataReader {
                 if (count == 0) {
                     count = csvRow.getFieldCount();
                 } else if (count != csvRow.getFieldCount()) {
-                    Logger.verbose2(STR. "\{ path } \{ csvRow.getOriginalLineNumber() } field count \{ csvRow.getFieldCount() } not eq \{ count }" );
+                    Logger.verbose2("%s %d field count %d not eq %d",
+                            path, csvRow.getOriginalLineNumber(), csvRow.getFieldCount(), count);
                 }
                 rows.add(new DRawCsvRow(csvRow));
             }

@@ -24,7 +24,7 @@ public class RefValidator {
     private void presetStructural(Structural structural) {
         for (ForeignKeySchema fk : structural.foreignKeys()) {
             switch (fk.refKey()) {
-                case RefKey.RefPrimary _ -> {
+                case RefKey.RefPrimary ignored -> {
                     VTable vTable = value.vTableMap().get(fk.refTableNormalized());
                     fk.fkValueSet = vTable.primaryKeyValueSet();
                     fk.keyIndices = FindFieldIndex.findFieldIndices(structural, fk.key());
@@ -34,7 +34,7 @@ public class RefValidator {
                     fk.fkValueSet = vTable.uniqueKeyValueSetMap().get(refUniq.keyNames());
                     fk.keyIndices = FindFieldIndex.findFieldIndices(structural, fk.key());
                 }
-                case RefKey.RefList _ -> {
+                case RefKey.RefList ignored -> {
                 }
             }
         }
@@ -45,16 +45,16 @@ public class RefValidator {
         for (ForeignKeySchema fk : structural.foreignKeys()) {
             RefKey refKey = fk.refKey();
             if (refKey instanceof RefKey.RefSimple refSimple) {
-                FieldType ft = fk.key().fieldSchemas().get(0).type();
+                FieldType ft = fk.key().fieldSchemas().getFirst().type();
                 switch (ft) {
-                    case SimpleType _ -> {
+                    case SimpleType ignored -> {
                         Value localValue = ValueUtil.extractKeyValue(vStruct, fk.keyIndices);
                         if (ValueUtil.isValueCellsNotAllEmpty(localValue)) {
                             //主键或唯一键，并且nullableRef，--->则可以格子中有值，但ref不到
                             //否则，--->格子中有值，就算配置为nullableRef也不行
-                            boolean canNotEmptyAndNullableRef = structural == fromTable.schema() &&
-                                    isForeignLocalKeyInPrimaryOrUniq(fk, fromTable.schema());
-                            if (!canNotEmptyAndNullableRef && !fk.fkValueSet.contains(localValue)) {
+                            boolean can_NotEmpty_And_NullableRef = structural == fromTable.schema() &&
+                                    isForeignLocalKeyInPrimaryOrUniq(fk, fromTable.schema()) && refSimple.nullable();
+                            if (!can_NotEmpty_And_NullableRef && !fk.fkValueSet.contains(localValue)) {
                                 errs.addErr(new ForeignValueNotFound(localValue.cells(), fromTable.name(), fk.name()));
                             }
                         } else {
@@ -63,7 +63,7 @@ public class RefValidator {
                             }
                         }
                     }
-                    case FList _ -> {
+                    case FList ignored -> {
                         VList localList = (VList) vStruct.values().get(fk.keyIndices[0]);
                         for (SimpleValue item : localList.valueList()) {
                             if (!fk.fkValueSet.contains(item)) {
@@ -71,7 +71,7 @@ public class RefValidator {
                             }
                         }
                     }
-                    case FMap _ -> {
+                    case FMap ignored -> {
                         VMap localMap = (VMap) vStruct.values().get(fk.keyIndices[0]);
                         for (SimpleValue val : localMap.valueMap().values()) {
                             if (!fk.fkValueSet.contains(val)) {
@@ -86,7 +86,7 @@ public class RefValidator {
 
     private boolean isForeignLocalKeyInPrimaryOrUniq(ForeignKeySchema fk, TableSchema table) {
         if (fk.key().fieldSchemas().size() == 1) {
-            FieldSchema f = fk.key().fieldSchemas().get(0);
+            FieldSchema f = fk.key().fieldSchemas().getFirst();
             for (FieldSchema pkf : table.primaryKey().fieldSchemas()) {
                 if (f == pkf) {
                     return true;

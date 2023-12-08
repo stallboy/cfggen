@@ -1,2 +1,2 @@
-java --enable-preview -jar ../app/build/libs/configgen.jar
+java -jar ../app/build/libs/configgen.jar
 pause

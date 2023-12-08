@@ -53,7 +53,7 @@ public final class StructSchema implements Fieldable, Structural, Nameable {
     @Override
     public String fullName() {
         if (nullableInterface != null) {
-            return STR. "\{ nullableInterface.name() }.\{ name }" ;
+            return String.format("%s.%s", nullableInterface.name(), name);
         }
         return name;
     }

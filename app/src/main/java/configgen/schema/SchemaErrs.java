@@ -1,6 +1,6 @@
 package configgen.schema;
 
-import configgen.util.Localize;
+import configgen.util.LocaleUtil;
 import configgen.util.Logger;
 
 import java.util.ArrayList;
@@ -27,18 +27,18 @@ public record SchemaErrs(List<Err> errs,
 
     public void print(String prefix) {
         if (Logger.isWarningEnabled() && !warns.isEmpty()) {
-            Logger.log(STR. "\{ prefix } warnings \{ warns.size() }:" );
+            Logger.log("%s warnings %d:", prefix, warns.size());
             for (Warn warn : warns) {
                 Logger.log("\t" + warn);
             }
         }
 
         if (!errs.isEmpty()) {
-            Logger.log(STR. "\{ prefix } errors \{ errs.size() }:" );
+            Logger.log("%s errors %d:", prefix, errs.size());
             for (Err err : errs) {
                 Logger.log("\t" + err);
             }
-            Logger.log(Localize.getMessage("FixSchemaErrFirst"));
+            Logger.log(LocaleUtil.getMessage("FixSchemaErrFirst"));
             System.exit(1);
         }
     }

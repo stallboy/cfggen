@@ -48,7 +48,7 @@ public class TableValueParser {
                 while (curRecordRow < rowCnt) {
                     List<DCell> nr = dTable.rows().get(curRecordRow);
                     // 用第一列 格子是否为空来判断这行是属于上一个record的block，还是新的一格record
-                    if (nr.get(0).value().isEmpty()) {
+                    if (nr.getFirst().value().isEmpty()) {
                         curRecordRow++;  // 具体提取让VList，VMap，通郭parseBlock自己去提取
                     } else {
                         break;
@@ -77,8 +77,8 @@ public class TableValueParser {
 
             int pkIdx = -1;
             List<FieldSchema> pk = subTableSchema.primaryKey().fieldSchemas();
-            if (pk.size() == 1 && pk.get(0) != entry.fieldSchema()) {
-                pkIdx = FindFieldIndex.findFieldIndex(subTableSchema, pk.get(0));
+            if (pk.size() == 1 && pk.getFirst() != entry.fieldSchema()) {
+                pkIdx = FindFieldIndex.findFieldIndex(subTableSchema, pk.getFirst());
                 enumNameToIntegerValueMap = new LinkedHashMap<>();
             }
 
@@ -136,7 +136,7 @@ public class TableValueParser {
         boolean isPack = pack || sInterface.fmt() == PACK;
         if (isPack) {
             require(cells.size() == 1, "pack应该只占一格");
-            DCell cell = cells.get(0);
+            DCell cell = cells.getFirst();
             if (canBeEmpty && cell.isCellEmpty()) {
                 isEmpty = true;
             } else if (sInterface.canBeNumberOrBool()) {
@@ -163,7 +163,7 @@ public class TableValueParser {
 
         } else if (sInterface.fmt() instanceof Sep sep) {
             require(cells.size() == 1, "sep应该只占一格");
-            DCell cell = cells.get(0);
+            DCell cell = cells.getFirst();
             if (canBeEmpty && cell.isCellEmpty()) {
                 isEmpty = true;
             } else {
@@ -180,7 +180,7 @@ public class TableValueParser {
             StructSchema impl = sInterface.nullableDefaultImplStruct();
             StructSchema subImpl = subInterface.nullableDefaultImplStruct();
             if (impl == null) {
-                errs.addErr(new InterfaceCellEmptyButHasNoDefaultImpl(parsed.get(0), sInterface.name()));
+                errs.addErr(new InterfaceCellEmptyButHasNoDefaultImpl(parsed.getFirst(), sInterface.name()));
                 return null;
             }
             require(subImpl != null);
@@ -199,19 +199,19 @@ public class TableValueParser {
                 implCells = parsed;
 
             } else {
-                String implName = parsed.get(0).value();
+                String implName = parsed.getFirst().value();
                 if (!implName.isEmpty()) {
                     impl = sInterface.findImpl(implName);
                     subImpl = subInterface.findImpl(implName);
                     if (impl == null) {
-                        errs.addErr(new InterfaceCellImplNotFound(parsed.get(0), sInterface.name(), implName));
+                        errs.addErr(new InterfaceCellImplNotFound(parsed.getFirst(), sInterface.name(), implName));
                         return null;
                     }
                 } else {
                     impl = sInterface.nullableDefaultImplStruct();
                     subImpl = subInterface.nullableDefaultImplStruct();
                     if (impl == null) {
-                        errs.addErr(new InterfaceCellEmptyButHasNoDefaultImpl(parsed.get(0), sInterface.name()));
+                        errs.addErr(new InterfaceCellEmptyButHasNoDefaultImpl(parsed.getFirst(), sInterface.name()));
                         return null;
                     }
                 }
@@ -243,7 +243,7 @@ public class TableValueParser {
         boolean isPack = pack || structural.fmt() == PACK;
         if (isPack) {
             require(cells.size() == 1, "pack应该只占一格");
-            DCell cell = cells.get(0);
+            DCell cell = cells.getFirst();
             if (canBeEmpty && cell.isCellEmpty()) {
                 isEmpty = true;
             } else {
@@ -258,7 +258,7 @@ public class TableValueParser {
 
         } else if (structural.fmt() instanceof Sep sep) {
             require(cells.size() == 1, "sep应该只占一格");
-            DCell cell = cells.get(0);
+            DCell cell = cells.getFirst();
             if (canBeEmpty && cell.isCellEmpty()) {
                 isEmpty = true;
             } else {
@@ -319,7 +319,7 @@ public class TableValueParser {
         switch (type) {
             case Primitive primitive -> {
                 require(cells.size() == 1);
-                DCell cell = cells.get(0);
+                DCell cell = cells.getFirst();
                 String str = cell.value().trim();
                 switch (primitive) {
                     case BOOL -> {
@@ -401,11 +401,11 @@ public class TableValueParser {
             case SimpleType simple -> {
                 return parseSimpleType((SimpleType) subField.type(), cells, simple, pack, canBeEmpty, curRowIndex, nameable, field.name());
             }
-            case FList _ -> {
+            case FList ignored -> {
                 return parseList(subField, cells, field, pack, curRowIndex, nameable);
             }
 
-            case FMap _ -> {
+            case FMap ignored -> {
                 return parseMap(subField, cells, field, pack, curRowIndex, nameable);
             }
         }
@@ -422,7 +422,7 @@ public class TableValueParser {
         List<CellsWithRowIndex> blocks = null;
         if (isPack) {
             require(cells.size() == 1);
-            DCell cell = cells.get(0);
+            DCell cell = cells.getFirst();
             try {
                 parsed = DCells.parseNestList(cell);
             } catch (Exception e) {
@@ -430,7 +430,7 @@ public class TableValueParser {
                 return null;
             }
 
-        } else if (field.fmt() instanceof Block _) {
+        } else if (field.fmt() instanceof Block ignored) {
             blocks = parseBlock(cells, curRowIndex);
 
         } else {
@@ -460,7 +460,7 @@ public class TableValueParser {
                 List<DCell> valueCells = curLineParsed.subList(startIdx + kc, startIdx + itemSpan);
 
                 //第一个单元作为是否有item的标记
-                if (!keyCells.get(0).isCellEmpty()) {
+                if (!keyCells.getFirst().isCellEmpty()) {
                     SimpleValue key = parseSimpleType(subType.key(), keyCells, type.key(),
                             isPack, false, block.rowIndex,
                             nameable, field.name());
@@ -499,7 +499,7 @@ public class TableValueParser {
         List<CellsWithRowIndex> blocks = null;
         if (isPack) {
             require(cells.size() == 1);
-            DCell cell = cells.get(0);
+            DCell cell = cells.getFirst();
             try {
                 parsed = DCells.parseNestList(cell);
             } catch (Exception e) {
@@ -507,12 +507,12 @@ public class TableValueParser {
                 return null;
             }
 
-        } else if (field.fmt() instanceof Block _) {
+        } else if (field.fmt() instanceof Block ignored) {
             blocks = parseBlock(cells, curRowIndex);
 
         } else if (field.fmt() instanceof Sep sep) {
             require(cells.size() == 1);
-            DCell cell = cells.get(0);
+            DCell cell = cells.getFirst();
             parsed = DCells.parseList(cell, sep.sep());
 
         } else {
@@ -536,7 +536,7 @@ public class TableValueParser {
                 }
                 List<DCell> itemCells = curLineParsed.subList(startIdx, startIdx + itemSpan);
                 //第一个单元作为是否有item的标记
-                if (!itemCells.get(0).isCellEmpty()) {
+                if (!itemCells.getFirst().isCellEmpty()) {
                     SimpleValue value = parseSimpleType(subType.item(), itemCells, type.item(),
                             isPack, false, block.rowIndex,
                             nameable, field.name());
@@ -566,7 +566,7 @@ public class TableValueParser {
     // 可以可以在中间加入一个列，比如以上的aabb和ccc直接有x来分割
     // 以上规则现在没有做检测，要检测有点复杂，人工保证吧。
     List<CellsWithRowIndex> parseBlock(List<DCell> cells, int curRowIndex) {
-        DCell firstCell = cells.get(0);
+        DCell firstCell = cells.getFirst();
         int rowSize = dTable.rows().size();
         int firstColIndex = findColumnIndex(firstCell);
 
@@ -579,7 +579,7 @@ public class TableValueParser {
             List<DCell> line = dTable.rows().get(row);
 
             // 属于上一个record的block
-            if (line.get(0).isCellEmpty()) {
+            if (line.getFirst().isCellEmpty()) {
                 // 上一格为空，本格不为空 -》 是这个block了
                 if (line.get(firstColIndex - 1).isCellEmpty() && !line.get(firstColIndex).isCellEmpty()) {
                     res.add(new CellsWithRowIndex(line.subList(firstColIndex, firstColIndex + colSize), row));

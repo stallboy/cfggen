@@ -120,7 +120,7 @@ public class ServeSchema {
         SEntryType entryType;
         String entryField;
         switch (ts.entry()) {
-            case EntryType.ENo _ -> {
+            case EntryType.ENo ignored -> {
                 entryType = SEntryType.eNo;
                 entryField = null;
             }

@@ -10,7 +10,7 @@ import configgen.tool.GenI18n;
 import configgen.tool.XmlToCfg;
 import configgen.tool.Server;
 import configgen.tool.ComparePoiAndFastExcel;
-import configgen.util.Localize;
+import configgen.util.LocaleUtil;
 import configgen.util.Logger;
 import configgen.tool.ValueSearcher;
 import configgen.util.CachedFiles;
@@ -29,44 +29,44 @@ public final class Main {
         System.out.println("Usage: java --enable-preview -jar configgen.jar [options] -datadir [dir] [options] [gens]");
         System.out.println();
         System.out.println("-----schema & data");
-        System.out.println("    -datadir          " + Localize.getMessage("Usage.DataDir"));
-        System.out.println("    -headrow          " + Localize.getMessage("Usage.HeadRow"));
-        System.out.println("    -encoding         " + Localize.getMessage("Usage.Encoding"));
+        System.out.println("    -datadir          " + LocaleUtil.getMessage("Usage.DataDir"));
+        System.out.println("    -headrow          " + LocaleUtil.getMessage("Usage.HeadRow"));
+        System.out.println("    -encoding         " + LocaleUtil.getMessage("Usage.Encoding"));
 
         System.out.println();
         System.out.println("-----i18n support");
-        System.out.println("    -i18nfile         " + Localize.getMessage("Usage.I18nFile"));
-        System.out.println("    -i18nencoding     " + Localize.getMessage("Usage.I18nEncoding"));
-        System.out.println("    -i18ncrlfaslf     " + Localize.getMessage("Usage.I18nCrLfAsLf"));
-        System.out.println("    -langswitchdir    " + Localize.getMessage("Usage.LangSwitchDir"));
-        System.out.println("    -defaultlang      " + Localize.getMessage("Usage.DefaultLang"));
+        System.out.println("    -i18nfile         " + LocaleUtil.getMessage("Usage.I18nFile"));
+        System.out.println("    -i18nencoding     " + LocaleUtil.getMessage("Usage.I18nEncoding"));
+        System.out.println("    -i18ncrlfaslf     " + LocaleUtil.getMessage("Usage.I18nCrLfAsLf"));
+        System.out.println("    -langswitchdir    " + LocaleUtil.getMessage("Usage.LangSwitchDir"));
+        System.out.println("    -defaultlang      " + LocaleUtil.getMessage("Usage.DefaultLang"));
 
         System.out.println();
         System.out.println("-----tools");
-        System.out.println("    -verify           " + Localize.getMessage("Usage.Verify"));
-        System.out.println("    -searchto         " + Localize.getMessage("Usage.SearchTo"));
-        System.out.println("    -searchown        " + Localize.getMessage("Usage.SearchOwn"));
-        System.out.println("    -search           " + Localize.getMessage("Usage.Search"));
+        System.out.println("    -verify           " + LocaleUtil.getMessage("Usage.Verify"));
+        System.out.println("    -searchto         " + LocaleUtil.getMessage("Usage.SearchTo"));
+        System.out.println("    -searchown        " + LocaleUtil.getMessage("Usage.SearchOwn"));
+        System.out.println("    -search           " + LocaleUtil.getMessage("Usage.Search"));
         ValueSearcher.printUsage("        ");
-        System.out.println("    -binarytotext     " + Localize.getMessage("Usage.BinaryToText"));
-        System.out.println("    -binarytotextloop " + Localize.getMessage("Usage.BinaryToTextLoop"));
-        System.out.println("    -xmltocfg         " + Localize.getMessage("Usage.XmlToCfg"));
+        System.out.println("    -binarytotext     " + LocaleUtil.getMessage("Usage.BinaryToText"));
+        System.out.println("    -binarytotextloop " + LocaleUtil.getMessage("Usage.BinaryToTextLoop"));
+        System.out.println("    -xmltocfg         " + LocaleUtil.getMessage("Usage.XmlToCfg"));
         if (BuildSettings.isIncludePoi) {
-            System.out.println("    -usepoi           " + Localize.getMessage("Usage.UsePoi"));
-            System.out.println("    -comparepoiandfastexcel   " + Localize.getMessage("Usage.ComparePoiAndFastExcel"));
+            System.out.println("    -usepoi           " + LocaleUtil.getMessage("Usage.UsePoi"));
+            System.out.println("    -comparepoiandfastexcel   " + LocaleUtil.getMessage("Usage.ComparePoiAndFastExcel"));
             // checkcomma 在只包含poi而不包含fastexcel时检测
-            System.out.println("    -checkcomma       " + Localize.getMessage("Usage.CheckComma"));
+            System.out.println("    -checkcomma       " + LocaleUtil.getMessage("Usage.CheckComma"));
         }
 
         System.out.println("-----options");
-        System.out.println("    -v                " + Localize.getMessage("Usage.V"));
-        System.out.println("    -vv               " + Localize.getMessage("Usage.VV"));
-        System.out.println("    -p                " + Localize.getMessage("Usage.P"));
-        System.out.println("    -pp               " + Localize.getMessage("Usage.PP"));
-        System.out.println("    -nowarn           " + Localize.getMessage("Usage.NOWARN"));
+        System.out.println("    -v                " + LocaleUtil.getMessage("Usage.V"));
+        System.out.println("    -vv               " + LocaleUtil.getMessage("Usage.VV"));
+        System.out.println("    -p                " + LocaleUtil.getMessage("Usage.P"));
+        System.out.println("    -pp               " + LocaleUtil.getMessage("Usage.PP"));
+        System.out.println("    -nowarn           " + LocaleUtil.getMessage("Usage.NOWARN"));
 
         System.out.println();
-        System.out.println("-----" + Localize.getMessage("Usage.GenStart"));
+        System.out.println("-----" + LocaleUtil.getMessage("Usage.GenStart"));
         Generators.getAllProviders().forEach((k, v) -> {
                     System.out.printf("    -gen %s\n", k);
                     Usage usage = Usage.of(k);
@@ -156,11 +156,11 @@ public final class Main {
                 case "-locale" -> {
                     String language = args[++i];
                     Locale locale = Locale.of(language);
-                    if (!Localize.isSupported(locale)) {
+                    if (!LocaleUtil.isSupported(locale)) {
                         System.err.println("Specified Locale is not supported: " + locale.toString());
                         return;
                     }
-                    Localize.setLocale(locale);
+                    LocaleUtil.setLocale(locale);
                 }
                 case "-datadir" -> datadir = args[++i];
                 case "-xmltocfg" -> xmlToCfg = true;
@@ -261,7 +261,7 @@ public final class Main {
             if (searchParam.isEmpty()) {
                 searcher.loop();
             } else {
-                searcher.search(searchParam.get(0), searchParam.subList(1, searchParam.size()));
+                searcher.search(searchParam.getFirst(), searchParam.subList(1, searchParam.size()));
             }
             searcher.close();
         }

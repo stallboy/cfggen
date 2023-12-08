@@ -3,8 +3,6 @@ package configgen.util;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-import static java.util.FormatProcessor.FMT;
-
 public class Logger {
     private static int verboseLevel = 0;
     private static boolean profileGcEnabled = false;
@@ -35,15 +33,15 @@ public class Logger {
         return warningEnabled;
     }
 
-    public static void verbose(String s) {
+    public static void verbose(String fmt, Object... args) {
         if (verboseLevel > 0) {
-            log(s);
+            log(fmt, args);
         }
     }
 
-    public static void verbose2(String s) {
+    public static void verbose2(String fmt, Object... args) {
         if (verboseLevel > 1) {
-            log(s);
+            log(fmt, args);
         }
     }
 
@@ -51,8 +49,12 @@ public class Logger {
     private static long time;
     private static long firstTime;
 
-    public static void log(String s) {
-        System.out.println(s);
+    public static void log(String fmt, Object... args) {
+        if (args.length == 0) {
+            System.out.println(fmt);
+        } else {
+            System.out.println(String.format(fmt, args));
+        }
     }
 
     public static void profile(String step) {
@@ -71,7 +73,7 @@ public class Logger {
                 time = System.currentTimeMillis();
                 elapse = String.format("%.1f/%.1f seconds", (time - old) / 1000f, (time - firstTime) / 1000f);
             }
-            System.out.println(FMT. "%30s\{ step }: %4d\{ memory }m %s\{ elapse }" );
+            System.out.printf("%30s: %4dm %s%n", step, memory, elapse);
         }
     }
 

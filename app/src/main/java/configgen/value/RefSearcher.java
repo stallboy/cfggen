@@ -67,21 +67,21 @@ public final class RefSearcher {
             }
 
             if (match) { // 只搜索主键索引
-                FieldType ft = fk.key().fieldSchemas().get(0).type();
+                FieldType ft = fk.key().fieldSchemas().getFirst().type();
                 switch (ft) {
-                    case FieldType.SimpleType _ -> {
+                    case FieldType.SimpleType ignored -> {
                         Value localValue = ValueUtil.extractKeyValue(vStruct, fk.keyIndices);
                         if (fk.fkValueSet.contains(localValue)) {
                             addValueTable(res, localValue, fromTable.name());
                         }
                     }
-                    case FieldType.FList _ -> {
+                    case FieldType.FList ignored -> {
                         VList localList = (VList) vStruct.values().get(fk.keyIndices[0]);
                         for (SimpleValue item : localList.valueList()) {
                             addValueTable(res, item, fromTable.name());
                         }
                     }
-                    case FieldType.FMap _ -> {
+                    case FieldType.FMap ignored -> {
                         VMap localMap = (VMap) vStruct.values().get(fk.keyIndices[0]);
                         for (SimpleValue val : localMap.valueMap().values()) {
                             addValueTable(res, val, fromTable.name());

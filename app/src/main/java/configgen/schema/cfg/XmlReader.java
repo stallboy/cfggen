@@ -226,7 +226,7 @@ public enum XmlReader implements CfgSchemaReader {
 
         String name = self.getAttribute("name").trim();
         if (!CfgUtil.isIdentifier(name)) {
-            Logger.log(STR. "\{ name } not identifier, ignore!" );
+            Logger.log("%s not identifier, ignore!", name);
             return null;
         }
 

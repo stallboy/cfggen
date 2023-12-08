@@ -44,11 +44,11 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
 
     public void putTag(String tag) {
         if (reserved.contains(tag)) {
-            throw new IllegalArgumentException(STR. "'\{ tag }' reserved" );
+            throw new IllegalArgumentException(String.format("'%s' reserved", tag));
         }
         MetaValue old = data.putLast(tag, TAG);
         if (old != null) {
-            throw new IllegalArgumentException(STR. "'\{ tag }' duplicated" );
+            throw new IllegalArgumentException(String.format("'%s' duplicated", tag));
         }
     }
 

@@ -23,7 +23,7 @@ class TypeStr {
             case LONG -> box ? "Long" : "long";
             case FLOAT -> box ? "Float" : "float";
             case STRING -> "String";
-            case TEXT -> isLangSwitch ? STR. "\{ Name.codeTopPkg }.Text" : "String";
+            case TEXT -> isLangSwitch ? Name.codeTopPkg + ".Text" : "String";
             case StructRef structRef -> Name.fullName(structRef.obj());
             case FList fList -> "java.util.List<" + _type(fList.item(), true) + ">";
             case FMap fMap -> "java.util.Map<" + _type(fMap.key(), true) + ", " + _type(fMap.value(), true) + ">";
@@ -37,10 +37,10 @@ class TypeStr {
             case LONG -> "input.readLong()";
             case FLOAT -> "input.readFloat()";
             case STRING -> "input.readStr()";
-            case TEXT -> isLangSwitch ? STR. "\{ Name.codeTopPkg }.Text._create(input)" : "input.readStr()";
-            case StructRef structRef -> STR. "\{ Name.fullName(structRef.obj()) }._create(input)" ;
-            case FList _ -> null;
-            case FMap _ -> null;
+            case TEXT -> isLangSwitch ? Name.codeTopPkg + ".Text._create(input)" : "input.readStr()";
+            case StructRef structRef -> Name.fullName(structRef.obj()) + "._create(input)";
+            case FList ignored -> null;
+            case FMap ignored -> null;
         };
     }
 
@@ -49,9 +49,9 @@ class TypeStr {
             case BOOL -> "false";
             case INT, LONG, FLOAT -> "0";
             case STRING, TEXT -> "\"\"";
-            case FList _ -> "new java.util.ArrayList<>()";
-            case FMap _ -> "new java.util.LinkedHashMap<>()";
-            case StructRef _ -> "null";
+            case FList ignored -> "new java.util.ArrayList<>()";
+            case FMap ignored -> "new java.util.LinkedHashMap<>()";
+            case StructRef ignored -> "null";
         };
     }
 

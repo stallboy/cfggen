@@ -25,29 +25,29 @@ class GenStructuralClass {
         boolean isImpl = nullableInterface != null;
         boolean isStructAndHasNoField = isStruct && structural.fields().isEmpty();
 
-        ps.println(STR. "package \{ name.pkg };" );
+        ps.println("package %s;", name.pkg);
         ps.println();
         if (isImpl) {
             String classStr = NameableName.isSealedInterface ? "final class" : "class";
-            ps.println(STR. "public \{ classStr } \{ name.className } implements \{ Name.fullName(nullableInterface) } {" );
+            ps.println("public %s %s implements %s {", classStr, name.className, Name.fullName(nullableInterface));
             ps.println1("@Override");
-            ps.println1(STR. "public \{ Name.refType(nullableInterface.enumRefTable()) } type() {" );
-            ps.println2(STR. "return \{ Name.refType(nullableInterface.enumRefTable()) }.\{ structural.name().toUpperCase() };" );
+            ps.println1("public %s type() {", Name.refType(nullableInterface.enumRefTable()));
+            ps.println2("return %s.%s;", Name.refType(nullableInterface.enumRefTable()), structural.name().toUpperCase());
             ps.println1("}");
             ps.println();
         } else {
-            ps.println(STR. "public class \{ name.className } {" );
+            ps.println("public class %s {", name.className);
         }
 
         // field
         for (FieldSchema field : structural.fields()) {
-            ps.println1(STR. "private \{ TypeStr.type(field.type()) } \{ lower1(field.name()) };" );
+            ps.println1("private %s %s;", TypeStr.type(field.type()), lower1(field.name()));
         }
 
-        if (!isTableAndNeedBuilder){
+        if (!isTableAndNeedBuilder) {
             // fk
             for (ForeignKeySchema fk : structural.foreignKeys()) {
-                ps.println1(STR. "private \{ Name.refType(fk) } \{ Name.refName(fk) };" );
+                ps.println1("private %s %s;", Name.refType(fk), Name.refName(fk));
             }
             ps.println();
         }
@@ -60,17 +60,17 @@ class GenStructuralClass {
             // 后面会生成空参数的public构造函数
             // 这里忽略
         } else {
-            ps.println1(STR. "private \{ name.className }() {" );
+            ps.println1("private %s() {", name.className);
             ps.println1("}");
             ps.println();
         }
 
         if (isStruct) {
             // struct有public构造器
-            ps.println1(STR. "public \{ name.className }(\{ MethodStr.formalParams(structural.fields()) }) {" );
+            ps.println1("public %s(%s) {", name.className, MethodStr.formalParams(structural.fields()));
             for (FieldSchema field : structural.fields()) {
                 String ln = lower1(field.name());
-                ps.println2(STR. "this.\{ ln } = \{ ln };" );
+                ps.println2("this.%s = %s;", ln, ln);
             }
             ps.println1("}");
             ps.println();
@@ -79,22 +79,22 @@ class GenStructuralClass {
         }
 
         // static create from ConfigInput
-        ps.println1(STR. "public static \{ name.className } _create(configgen.genjava.ConfigInput input) {" );
-        ps.println2(STR. "\{ name.className } self = new \{ name.className }();" );
+        ps.println1("public static %s _create(configgen.genjava.ConfigInput input) {", name.className);
+        ps.println2("%s self = new %s();", name.className, name.className);
         for (FieldSchema field : structural.fields()) {
             String ln = lower1(field.name());
             switch (field.type()) {
                 case SimpleType simpleType -> {
-                    ps.println2(STR. "self.\{ ln } = \{ TypeStr.readValue(simpleType) };" );
+                    ps.println2("self.%s = %s;", ln, TypeStr.readValue(simpleType));
                 }
                 case FList fList -> {
-                    ps.println2(STR. "self.\{ ln } = new java.util.ArrayList<>();" );
+                    ps.println2("self.%s = new java.util.ArrayList<>();", ln);
                     ps.println2("for (int c = input.readInt(); c > 0; c--) {");
                     ps.println3("self.%s.add(%s);", ln, TypeStr.readValue((fList.item())));
                     ps.println2("}");
                 }
                 case FMap fMap -> {
-                    ps.println2(STR. "self.\{ ln } = new java.util.LinkedHashMap<>();" );
+                    ps.println2("self.%s = new java.util.LinkedHashMap<>();", ln);
                     ps.println2("for (int c = input.readInt(); c > 0; c--) {");
                     ps.println3("self.%s.put(%s, %s);", ln, TypeStr.readValue(fMap.key()),
                             TypeStr.readValue((fMap.value())));
@@ -123,7 +123,7 @@ class GenStructuralClass {
             ps.println();
         }
 
-        if (!isTableAndNeedBuilder){
+        if (!isTableAndNeedBuilder) {
             for (ForeignKeySchema fk : structural.foreignKeys()) {
                 ps.println1("public %s %s() {", Name.refType(fk), lower1(Name.refName(fk)));
                 ps.println2("return %s;", Name.refName(fk));
@@ -209,21 +209,21 @@ class GenStructuralClass {
             }
             String ln = lower1(field.name());
             switch (type) {
-                case StructRef _ -> {
+                case StructRef ignored -> {
                     ps.println2("%s._resolve(mgr);", ln);
                 }
-                case FList _ -> {
+                case FList ignored -> {
                     ps.println2("%s.forEach( e -> {", ln);
                     ps.println3("e._resolve(mgr);");
                     ps.println2("});");
 
                 }
-                case FMap _ -> {
+                case FMap ignored -> {
                     ps.println2("%s.forEach( (k, v) -> {", ln);
                     ps.println3("v._resolve(mgr);");
                     ps.println2("});");
                 }
-                case Primitive _ -> {
+                case Primitive ignored -> {
                 }
             }
         }
@@ -233,17 +233,17 @@ class GenStructuralClass {
             if (!(fk.refKey() instanceof RefKey.RefSimple refSimple)) {
                 continue;
             }
-            FieldSchema firstField = fk.key().fieldSchemas().get(0);
+            FieldSchema firstField = fk.key().fieldSchemas().getFirst();
             String refName = Name.refName(fk);
             TableSchema refTable = fk.refTableSchema();
             switch (firstField.type()) {
-                case SimpleType _ -> {
+                case SimpleType ignored -> {
                     ps.println2(refName + " = " + MethodStr.tableGet(refTable, refSimple,
                             MethodStr.actualParams(fk.key().fields())));
                     if (!refSimple.nullable())
                         ps.println2("java.util.Objects.requireNonNull(" + refName + ");");
                 }
-                case FList _ -> {
+                case FList ignored -> {
                     ps.println2("%s = new java.util.ArrayList<>();", refName);
                     ps.println2("%s.forEach( e -> {", lower1(firstField.name()));
                     ps.println3(Name.refType(refTable) + " r = " + MethodStr.tableGet(refTable, refSimple, "e"));
@@ -251,7 +251,7 @@ class GenStructuralClass {
                     ps.println3(refName + ".add(r);");
                     ps.println2("});");
                 }
-                case FMap _ -> {
+                case FMap ignored -> {
                     ps.println2("%s = new java.util.LinkedHashMap<>();", refName);
                     ps.println2("%s.forEach( (k, v) -> {", lower1(firstField.name()));
                     ps.println3(Name.refType(refTable) + " rv = " + MethodStr.tableGet(refTable, refSimple, "v"));
@@ -272,18 +272,18 @@ class GenStructuralClass {
 
             ps.println2("%s = new java.util.ArrayList<>();", refName);
 
-            NameableName refn = new NameableName(refTable);
+            NameableName refN = new NameableName(refTable);
             boolean isEnumAndNoDetail = GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(refTable);
             boolean isEnum = refTable.entry() instanceof EEnum && !isEnumAndNoDetail;
             if (isEnumAndNoDetail) {
-                ps.println2("for (%s v : %s.values()) {", refn.fullName, refn.fullName);
+                ps.println2("for (%s v : %s.values()) {", refN.fullName, refN.fullName);
             } else if (isEnum) {
-                ps.println2("for (%s vv : %s.values()) {", refn.fullName, refn.fullName);
-                String primK = refTable.primaryKey().fields().get(0);
-                ps.println3("%s v = mgr.%sAll.get(vv.get%s());", refn.fullName + "_Detail", refn.containerPrefix,
+                ps.println2("for (%s vv : %s.values()) {", refN.fullName, refN.fullName);
+                String primK = refTable.primaryKey().fields().getFirst();
+                ps.println3("%s v = mgr.%sAll.get(vv.get%s());", refN.fullName + "_Detail", refN.containerPrefix,
                         upper1(primK));
             } else {
-                ps.println2("mgr.%sAll.values().forEach( v -> {", refn.containerPrefix); // 为了跟之前兼容
+                ps.println2("mgr.%sAll.values().forEach( v -> {", refN.containerPrefix); // 为了跟之前兼容
             }
 
             List<String> eqs = new ArrayList<>();

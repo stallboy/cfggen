@@ -258,7 +258,7 @@ public class CfgSchemaFilterByTag {
         }
 
         switch (fk.refKey()) {
-            case RefKey.RefPrimary _ -> {
+            case RefKey.RefPrimary ignored -> {
                 return RefErr.OK;
             }
             case RefKey.RefUniq refUniq -> {

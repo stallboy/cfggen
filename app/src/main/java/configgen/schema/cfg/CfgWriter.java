@@ -50,9 +50,9 @@ public class CfgWriter {
         String comment = meta.removeComment();
 
         String name = useLastName ? table.lastName() : table.name();
-        println(STR. "table \{ name }\{ keyStr(table.primaryKey()) }\{ metadataStr(meta) } {\{ commentStr(comment) }" );
+        println("table %s%s%s {%s", name, keyStr(table.primaryKey()), metadataStr(meta), commentStr(comment));
         for (KeySchema keySchema : table.uniqueKeys()) {
-            println(STR. "\t\{ keyStr(keySchema) };" );
+            println("\t%s;", keyStr(keySchema));
         }
         writeStructural(table, "");
         println("}");
@@ -69,7 +69,7 @@ public class CfgWriter {
         String comment = meta.removeComment();
 
         String name = useLastName ? sInterface.lastName() : sInterface.name();
-        println(STR. "interface \{ name }\{ metadataStr(meta) } {\{ commentStr(comment) }" );
+        println("interface %s%s {%s", name, metadataStr(meta), commentStr(comment));
         for (StructSchema value : sInterface.impls()) {
             writeStruct(value, "\t");
         }
@@ -82,9 +82,9 @@ public class CfgWriter {
         meta.putFmt(struct.fmt());
         String comment = meta.removeComment();
         String name = useLastName ? struct.lastName() : struct.name();
-        println(STR. "\{ prefix }struct \{ name }\{ metadataStr(meta) } {\{ commentStr(comment) }" );
+        println("%sstruct %s%s {%s", prefix, name, metadataStr(meta), commentStr(comment));
         writeStructural(struct, prefix);
-        println(STR. "\{ prefix }}" );
+        println("%s}", prefix);
         println();
     }
 
@@ -99,7 +99,8 @@ public class CfgWriter {
             if (fk != null) {
                 foreignToMeta(fk, meta);
             }
-            println(STR. "\{ prefix }\t\{ f.name() }:\{ typeStr(f.type()) }\{ fkStr }\{ metadataStr(meta) };\{ commentStr(comment) }" );
+            println("%s\t%s:%s%s%s;%s",
+                    prefix, f.name(), typeStr(f.type()), fkStr, metadataStr(meta), commentStr(comment));
         }
 
         for (ForeignKeySchema fk : structural.foreignKeys()) {
@@ -107,13 +108,20 @@ public class CfgWriter {
                 Metadata meta = fk.meta().copy();
                 String comment = meta.removeComment();
                 foreignToMeta(fk, meta);
-                println(STR. "\{ prefix }\t->\{ fk.name() }:\{ keyStr(fk.key()) }\{ foreignStr(fk) }\{ metadataStr(meta) };\{ commentStr(comment) }" );
+                println("%s\t->%s:%s%s%s;%s",
+                        prefix, fk.name(), keyStr(fk.key()), foreignStr(fk), metadataStr(meta), commentStr(comment));
             }
         }
     }
 
-    private void println(String s) {
-        destination.append(s).append("\r\n");
+    private void println(String fmt, Object... args) {
+        if (args.length == 0) {
+            destination.append(fmt);
+        } else {
+            destination.append(String.format(fmt, args));
+        }
+
+        destination.append("\r\n");
     }
 
     private void println() {
@@ -125,13 +133,13 @@ public class CfgWriter {
             case Primitive.STRING -> "str";
             case Primitive primitive -> primitive.name().toLowerCase();
             case StructRef structRef -> structRef.name();
-            case FList fList -> STR. "list<\{ typeStr(fList.item()) }>" ;
-            case FMap fMap -> STR. "map<\{ typeStr(fMap.key()) },\{ typeStr(fMap.value()) }>" ;
+            case FList fList -> String.format("list<%s>", typeStr(fList.item()));
+            case FMap fMap -> String.format("map<%s,%s>", typeStr(fMap.key()), typeStr(fMap.value()));
         };
     }
 
     static String keyStr(KeySchema key) {
-        return STR. "[\{ String.join(",", key.fields()) }]" ;
+        return String.format("[%s]", String.join(",", key.fields()));
     }
 
     static void foreignToMeta(ForeignKeySchema fk, Metadata meta) {
@@ -141,16 +149,16 @@ public class CfgWriter {
                     meta.putNullable();
                 }
             }
-            case RefKey.RefList _ -> {
+            case RefKey.RefList ignored -> {
             }
         }
     }
 
     static String foreignStr(ForeignKeySchema fk) {
         return switch (fk.refKey()) {
-            case RefKey.RefPrimary _ -> STR. " ->\{ fk.refTable() }" ;
-            case RefKey.RefUniq refUniq -> STR. " ->\{ fk.refTable() }\{ keyStr(refUniq.key()) }" ;
-            case RefKey.RefList refList -> STR. " =>\{ fk.refTable() }\{ keyStr(refList.key()) }" ;
+            case RefKey.RefPrimary ignored -> String.format(" ->%s", fk.refTable());
+            case RefKey.RefUniq refUniq -> String.format(" ->%s%s", fk.refTable(), keyStr(refUniq.key()));
+            case RefKey.RefList refList -> String.format(" =>%s%s", fk.refTable(), keyStr(refList.key()));
         };
     }
 
@@ -181,20 +189,20 @@ public class CfgWriter {
             MetaValue v = entry.getValue();
             String str = switch (v) {
                 case MetaTag.TAG -> k;
-                case MetaFloat metaFloat -> STR. "\{ k }=\{ metaFloat.value() }" ;
-                case MetaInt metaInt -> STR. "\{ k }=\{ metaInt.value() }" ;
-                case MetaStr metaStr -> STR. "\{ k }='\{ metaStr.value() }'" ;
+                case MetaFloat metaFloat -> String.format("%s=%f", k, metaFloat.value());
+                case MetaInt metaInt -> String.format("%s=%d", k, metaInt.value());
+                case MetaStr metaStr -> String.format("%s='%s'", k, metaStr.value());
             };
             list.add(str);
         }
-        return STR. " (\{ String.join(", ", list) })" ;
+        return String.format(" (%s)", String.join(", ", list));
     }
 
     static String commentStr(String comment) {
         if (comment.isEmpty()) {
             return "";
         } else {
-            return STR. " // \{ comment }" ;
+            return String.format(" // %s", comment);
         }
     }
 }

@@ -27,7 +27,7 @@ public class HasRef {
 
     public static boolean hasRef(FieldType type) {
         switch (type) {
-            case Primitive _ -> {
+            case Primitive ignored -> {
                 return false;
             }
             case StructRef structRef -> {

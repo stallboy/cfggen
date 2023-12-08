@@ -30,7 +30,7 @@ class MethodStr {
 
     static String hashCodes(List<FieldSchema> fs) {
         String paramList = fs.stream().map(f -> lower1(f.name())).collect(Collectors.joining(", "));
-        return STR. "java.util.Objects.hash(\{ paramList })" ;
+        return String.format("java.util.Objects.hash(%s)", paramList) ;
     }
 
     static String equals(List<FieldSchema> fs) {
@@ -49,7 +49,7 @@ class MethodStr {
         } else {
             String pre = "mgr." + name.containerPrefix;
             switch (refSimple) {
-                case RefPrimary _ -> {
+                case RefPrimary ignored -> {
                     if (refTable.primaryKey().fieldSchemas().size() == 1) {
                         return pre + "All.get(" + actualParam + ");";
                     } else {

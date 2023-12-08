@@ -1,6 +1,6 @@
 package configgen.gen;
 
-import configgen.util.Localize;
+import configgen.util.LocaleUtil;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -24,15 +24,15 @@ record Usage(String genId,
             String messageId = info.messageId != null ? info.messageId : genId + "." + key;
             if (info.isFlag) {
                 System.out.printf("        %-20s %s,%s\n", key,
-                        Localize.getMessage(messageId),
-                        Localize.getMessage("Gen.DefaultFalse"));
+                        LocaleUtil.getMessage(messageId),
+                        LocaleUtil.getMessage("Gen.DefaultFalse"));
             } else {
                 String def = info.def;
                 if (def == null) {
                     def = "null";
                 }
                 System.out.printf("        %-20s %s\n", key + "=" + def,
-                        Localize.getMessage(messageId)
+                        LocaleUtil.getMessage(messageId)
                 );
             }
         }

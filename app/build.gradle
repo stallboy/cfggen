@@ -44,21 +44,11 @@ compileJava {
     if (project.hasProperty("noPoi")) {
         sourceSets.main.java.exclude("configgen/data/ReadByPoi.java")
     }
-    options.compilerArgs += ["--enable-preview"]
     options.encoding = "UTF-8"
 }
 
 compileTestJava {
-    options.compilerArgs += ["--enable-preview"]
     options.encoding = "UTF-8"
-}
-
-test {
-    jvmArgs += ['--enable-preview']
-}
-
-run {
-    jvmArgs += ['--enable-preview']
 }
 
 jar {
@@ -81,7 +71,6 @@ tasks.register('fatJar', Jar) {
 
 application {
     mainClass = 'configgen.gen.Main'
-    applicationDefaultJvmArgs = ['--enable-preview']
 }
 
 tasks.named('test') {

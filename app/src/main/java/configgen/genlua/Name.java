@@ -33,7 +33,7 @@ public class Name {
 
     static String refName(ForeignKeySchema fk) {
         switch (fk.refKey()) {
-            case RefKey.RefList _ -> {
+            case RefKey.RefList ignored -> {
                 return "ListRef" + upper1(fk.name());
             }
             case RefKey.RefSimple refSimple -> {
@@ -48,7 +48,7 @@ public class Name {
 
     static String fullName(Nameable nameable) {
         switch (nameable) {
-            case InterfaceSchema _ -> {
+            case InterfaceSchema ignored -> {
                 return "Beans." + nameable.name().toLowerCase();
             }
             case StructSchema struct -> {

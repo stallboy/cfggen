@@ -386,22 +386,22 @@ public class GenCs extends Generator {
                     continue;
                 }
                 switch (type) {
-                    case StructRef _ -> {
+                    case StructRef ignored -> {
                         ps.println3(upper1(field.name()) + "._resolve(errors);");
                     }
-                    case FList _ -> {
+                    case FList ignored -> {
                         ps.println3("foreach (var e in " + upper1(field.name()) + ")");
                         ps.println3("{");
                         ps.println4("e._resolve(errors);");
                         ps.println3("}");
                     }
-                    case FMap _ -> {
+                    case FMap ignored -> {
                         ps.println3("foreach (var kv in " + upper1(field.name()) + ".Map)");
                         ps.println3("{");
                         ps.println4("kv.Value._resolve(errors);");
                         ps.println3("}");
                     }
-                    case Primitive _ -> {
+                    case Primitive ignored -> {
                     }
                 }
             }
@@ -411,18 +411,18 @@ public class GenCs extends Generator {
                 if (!(fk.refKey() instanceof RefKey.RefSimple refSimple)) {
                     continue;
                 }
-                FieldSchema firstField = fk.key().fieldSchemas().get(0);
+                FieldSchema firstField = fk.key().fieldSchemas().getFirst();
                 String refName = refName(fk);
                 String fkStr = "\"" + fk.name() + "\"";
 
                 switch (firstField.type()) {
-                    case SimpleType _ -> {
+                    case SimpleType ignored -> {
                         ps.println3(refName + " = " + tableGet(fk.refTableSchema(), refSimple, actualParams(fk.key())));
                         if (!refSimple.nullable()) {
                             ps.println3("if (" + refName + " == null) errors.RefNull(" + csv + ", ToString(), " + fkStr + ");");
                         }
                     }
-                    case FList _ -> {
+                    case FList ignored -> {
                         ps.println3(refName + " = new " + refType(fk) + "();");
                         ps.println3("foreach (var e in " + upper1(firstField.name()) + ")");
                         ps.println3("{");
@@ -431,7 +431,7 @@ public class GenCs extends Generator {
                         ps.println4(refName + ".Add(r);");
                         ps.println3("}");
                     }
-                    case FMap _ -> {
+                    case FMap ignored -> {
                         ps.println3(refName + " = new " + refType(fk) + "();");
                         ps.println3("foreach (var kv in " + upper1(firstField.name()) + ".Map)");
                         ps.println3("{");
@@ -555,7 +555,7 @@ public class GenCs extends Generator {
         if (keySchema.fieldSchemas().size() > 1)
             return keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()) + "Key";
         else
-            return type(keySchema.fieldSchemas().get(0).type());
+            return type(keySchema.fieldSchemas().getFirst().type());
     }
 
     private String formalParams(List<FieldSchema> fs) {
@@ -597,7 +597,7 @@ public class GenCs extends Generator {
 
     private String tableGet(TableSchema refTable, RefKey.RefSimple refSimple, String actualParam) {
         switch (refSimple) {
-            case RefKey.RefPrimary _ -> {
+            case RefKey.RefPrimary ignored -> {
                 return fullName(refTable) + ".Get(" + actualParam + ");";
             }
             case RefKey.RefUniq refUniq -> {
@@ -610,16 +610,16 @@ public class GenCs extends Generator {
 
     private String refType(ForeignKeySchema fk) {
         switch (fk.refKey()) {
-            case RefKey.RefList _ -> {
+            case RefKey.RefList ignored -> {
                 return "List<" + fullName(fk.refTableSchema()) + ">";
             }
-            case RefKey.RefSimple _ -> {
-                FieldSchema firstLocal = fk.key().fieldSchemas().get(0);
+            case RefKey.RefSimple ignored -> {
+                FieldSchema firstLocal = fk.key().fieldSchemas().getFirst();
                 switch (firstLocal.type()) {
-                    case SimpleType _ -> {
+                    case SimpleType ignored2 -> {
                         return fullName(fk.refTableSchema());
                     }
-                    case FList _ -> {
+                    case FList ignored2 -> {
                         return "List<" + fullName(fk.refTableSchema()) + ">";
                     }
                     case FMap fMap -> {
@@ -632,7 +632,7 @@ public class GenCs extends Generator {
 
     private String refName(ForeignKeySchema fk) {
         switch (fk.refKey()) {
-            case RefKey.RefList _ -> {
+            case RefKey.RefList ignored -> {
                 return "ListRef" + upper1(fk.name());
             }
             case RefKey.RefSimple refSimple -> {
@@ -671,8 +671,8 @@ public class GenCs extends Generator {
             case FLOAT -> "os.ReadSingle()";
             case STRING, TEXT -> "os.ReadString()";
             case StructRef structRef -> fullName(structRef.obj()) + "._create(os)";
-            case FList _ -> null;
-            case FMap _ -> null;
+            case FList ignored -> null;
+            case FMap ignored -> null;
         };
     }
 

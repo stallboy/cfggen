@@ -33,7 +33,14 @@ public class ValueSearcher {
         }
     }
 
-    private void println(String str) {
+    private void println(String fmt, Object... args) {
+        String str;
+        if (args.length == 0) {
+            str = fmt;
+        } else {
+            str = String.format(fmt, args);
+        }
+
         if (fileWriter != null) {
             fileWriter.write(str + System.lineSeparator());
         } else {
@@ -61,17 +68,14 @@ public class ValueSearcher {
             switch (primitiveValue) {
                 case VInt vInt -> {
                     if (integers.contains(vInt.value())) {
-                        String res = String.format("%s[%s], %s, %d", table, pk.repr(),
+                        println("%s[%s], %s, %d", table, pk.repr(),
                                 String.join(".", fieldChain), vInt.value());
-                        println(res);
                     }
                 }
                 case VLong vLong -> {
                     if (integers.contains((int) vLong.value())) {
-                        String res = String.format("%s[%s], %s, %d", table, pk.repr(),
+                        println("%s[%s], %s, %d", table, pk.repr(),
                                 String.join(".", fieldChain), vLong.value());
-
-                        println(res);
                     }
                 }
                 default -> {
@@ -85,9 +89,8 @@ public class ValueSearcher {
             if (Objects.requireNonNull(primitiveValue) instanceof StringValue sv) {
                 String v = sv.value();
                 if (v.contains(str)) {
-                    String res = String.format("%s[%s], %s, %s", table, pk.repr(),
+                    println("%s[%s], %s, %s", table, pk.repr(),
                             String.join(".", fieldChain), v);
-                    println(res);
                 }
             }
         }, cfgValue);
@@ -99,14 +102,14 @@ public class ValueSearcher {
             case Ok -> {
                 for (Map.Entry<Value, Set<String>> e : res.value2tables().entrySet()) {
                     Set<String> tables = e.getValue();
-                    println(STR. "\{ e.getKey().repr() }, \{ tables.size() }, \{ tables }" );
+                    println("%s, %d, %s", e.getKey().repr(), tables.size(), tables);
                 }
             }
             case TableNotFound -> {
-                println(STR. "table \{ refTable } not found" );
+                println("table %s not found", refTable);
             }
             case UniqueKeyNotFound -> {
-                println(STR. "table \{ refTable } unique key \{ nullableUniqKeys } not found" );
+                println("table %s unique key %s not found", refTable, nullableUniqKeys);
             }
         }
     }
@@ -128,7 +131,7 @@ public class ValueSearcher {
                 schema.add(nameable);
                 print(CfgWriter.stringify(schema));
 
-                if (nameable instanceof TableSchema){
+                if (nameable instanceof TableSchema) {
                     VTable vTable = cfgValue.vTableMap().get(name);
 
                     println("count: " + vTable.valueList().size());
@@ -136,7 +139,7 @@ public class ValueSearcher {
                     for (VStruct vStruct : vTable.valueList()) {
                         println(vStruct.packStr());
                         c++;
-                        if (c >= 100){
+                        if (c >= 100) {
                             break;
                         }
                     }
@@ -166,7 +169,7 @@ public class ValueSearcher {
                         Integer i = Integer.decode(s.trim());
                         integers.add(i);
                     } catch (Exception e) {
-                        println(STR. "\{ s.trim() } not int ignore" );
+                        println("%s not int ignore", s.trim());
                         return;
                     }
                 }
@@ -180,7 +183,7 @@ public class ValueSearcher {
 
             case "ref" -> {
                 if (!params.isEmpty()) {
-                    String refTable = params.get(0);
+                    String refTable = params.getFirst();
                     List<String> nullableUniqKeys = null;
                     int idx = refTable.indexOf('[');
                     if (idx != -1) {
@@ -196,26 +199,26 @@ public class ValueSearcher {
             case "sl" -> {
                 String want = "";
                 if (!params.isEmpty()) {
-                    want = params.get(0);
+                    want = params.getFirst();
                 }
                 listNameOfSchemas(want);
             }
             case "sll" -> {
                 String want = "";
                 if (!params.isEmpty()) {
-                    want = params.get(0);
+                    want = params.getFirst();
                 }
                 listSchemas(want);
             }
             case "slljson" -> {
                 String want = "";
                 if (!params.isEmpty()) {
-                    want = params.get(0);
+                    want = params.getFirst();
                 }
                 listSchemasUseJson(want);
             }
 
-            default -> println(STR. "\{ func } unknown" );
+            default -> println("%s unknown", func);
         }
     }
 
