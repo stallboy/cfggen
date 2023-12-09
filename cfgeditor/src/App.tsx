@@ -4,6 +4,7 @@ import {Schema, STable} from "./schemaModel.ts";
 import {Space, Tabs} from "antd";
 import {IdList} from "./IdList.tsx";
 import {TableSchema} from "./TableSchema.tsx";
+import {TableRef} from "./TableRef.tsx";
 
 
 export default function App() {
@@ -67,10 +68,8 @@ export default function App() {
         {
             key: "表关系",
             label: "表关系",
-            children: <TableSchema schema={schema} curTable={curTable}
-                                   maxImpl={maxImpl}
-                                   setMaxImpl={setMaxImpl}
-                                   setCurTable={selectCurTable}/>
+            children: <TableRef schema={schema} curTable={curTable}
+                                setCurTable={selectCurTable}/>
         },
         {
             key: "数据",

@@ -1,7 +1,8 @@
 export interface Namable {
     name: string;
     type: 'struct' | 'interface' | 'table';
-    id?: string;
+    id?: string;  // 给impl唯一id，由json推理得到
+    refTables?: Set<string> // 能索引到的表, cache，是个优化
 }
 
 export interface SField {
@@ -21,7 +22,7 @@ export interface SForeignKey {
 export interface SStruct extends Namable {
     fields: SField[];
     foreignKeys?: SForeignKey[];
-    extends?: SInterface;
+    extends?: SInterface; // 由json推理得到
 }
 
 export interface SInterface extends Namable {
@@ -54,6 +55,7 @@ export interface RawSchema {
 
 export class Schema {
     itemMap: Map<string, SItem> = new Map<string, SItem>();
+    itemIncludeImplMap: Map<string, SItem> = new Map<string, SItem>();
 
     constructor(rawSchema: RawSchema) {
         for (let item of rawSchema.items) {
@@ -62,9 +64,12 @@ export class Schema {
                 for (let impl of ii.impls) {
                     impl.extends = ii;
                     impl.id = ii.name + "." + impl.name;
+
+                    this.itemIncludeImplMap.set(impl.id, impl);
                 }
             }
             this.itemMap.set(item.name, item);
+            this.itemIncludeImplMap.set(item.name, item);
         }
     }
 
@@ -85,20 +90,30 @@ export class Schema {
         return null;
     }
 
-    getDepStructsByItem(item: STable | SStruct): Set<string> {
-        const primitiveTypeSet = new Set<string>(['bool', 'int', 'long', 'float', 'str', 'text']);
+    getDirectDepStructsByItem(item: SItem): Set<string> {
         let depNameSet = new Set<string>();
+        if (item.type == 'interface') {
+            let ii = item as SInterface;
+            for (let impl of ii.impls) {
+                depNameSet.add(impl.id ?? impl.name);
+            }
+            return depNameSet;
+        }
+
+        item = item as SStruct | STable
+        const primitiveTypeSet = new Set<string>(['bool', 'int', 'long', 'float', 'str', 'text']);
+
         for (let field of item.fields) {
             let type = field.type;
             if (primitiveTypeSet.has(type)) {
                 continue;
             }
-            if (type.startsWith("list")) {
+            if (type.startsWith("list<")) {
                 let itemType = type.slice(5, type.length - 1);
                 if (!primitiveTypeSet.has(itemType)) {
                     depNameSet.add(itemType);
                 }
-            } else if (type.startsWith("map")) {
+            } else if (type.startsWith("map<")) {
                 let item = type.slice(4, type.length - 1);
                 let sp = item.split(",");
                 let keyType = sp[0].trim();
@@ -166,18 +181,17 @@ export class Schema {
         return depNameSet;
     }
 
-    getDepStructsByItems(items: (STable | SStruct)[]): Set<string> {
+    getDirectDepStructsByItems(items: SItem[]): Set<string> {
         let res = new Set<string>();
         for (let item of items) {
-            let r = this.getDepStructsByItem(item);
-            for (let i of r) {
-                res.add(i);
-            }
+            let r = this.getDirectDepStructsByItem(item);
+            setUnion(res, r);
         }
         return res;
     }
 
-    getRefTables(items: SItem[]): Set<string> {
+
+    getDirectRefTables(items: SItem[]): Set<string> {
         let res = new Set<string>();
         for (let item of items) {
             if (item.type == 'interface') {
@@ -195,4 +209,83 @@ export class Schema {
         return res;
     }
 
+    private ids2items(ids: Set<string>): SItem[] {
+        let ss: SItem[] = [];
+        for (let id of ids) {
+            let item = this.itemIncludeImplMap.get(id);
+            if (item) {
+                ss.push(item);
+            } else {
+                console.error(`${id} not found!`);
+            }
+        }
+        return ss;
+    }
+
+
+    getAllDepStructs(item: SItem): Set<string> {
+        let res = new Set<string>();
+        res.add(item.id ?? item.name);
+        let frontier = this.getDirectDepStructsByItem(item);
+        frontier.delete(item.id ?? item.name);
+        while (frontier.size > 0) {
+            setUnion(res, frontier);
+            let frontierItems = this.ids2items(frontier);
+            let newFrontier = this.getDirectDepStructsByItems(frontierItems);
+            setDelete(newFrontier, res);
+
+            frontier = newFrontier;
+        }
+        return res;
+    }
+
+
+    getAllRefTablesByItem(item: SItem): Set<string> {
+        if (item.refTables) {
+            return item.refTables;
+        }
+
+        let allDepIds = this.getAllDepStructs(item);
+        let allDepStructs = this.ids2items(allDepIds);
+
+        let res = new Set<string>();
+
+        for (let si of allDepStructs) {
+            if (si.type == 'interface') {
+                let ii = si as SInterface;
+                res.add(ii.enumRef);
+            } else {
+                si = si as (SStruct | STable)
+                if (si.foreignKeys) {
+                    for (let fk of si.foreignKeys) {
+                        res.add(fk.refTable);
+                    }
+                }
+            }
+        }
+        item.refTables = res;
+        return res;
+    }
+
+    getAllRefTablesByItems(items: SItem[]): Set<string> {
+        let res = new Set<string>();
+        for (let item of items) {
+            let r = this.getAllRefTablesByItem(item);
+            setUnion(res, r);
+        }
+        return res;
+
+    }
+}
+
+function setUnion(dst: Set<string>, from: Set<string>) {
+    for (let s of from) {
+        dst.add(s);
+    }
+}
+
+function setDelete(dst: Set<string>, from: Set<string>) {
+    for (let s of from) {
+        dst.delete(s);
+    }
 }

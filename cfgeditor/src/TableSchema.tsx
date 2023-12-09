@@ -7,8 +7,6 @@ import {Item} from "rete-context-menu-plugin/_types/types";
 
 
 function createNode(item: SItem, id: string, nodeType: EntityNodeType = EntityNodeType.Normal): Entity {
-
-
     let fields = [];
     if (item.type != "interface") {
         let st = item as STable | SStruct;
@@ -22,12 +20,12 @@ function createNode(item: SItem, id: string, nodeType: EntityNodeType = EntityNo
         }
     }
 
-    let fieldsShow : FieldsShow = 'direct';
+    let fieldsShow: FieldsShow = 'direct';
     if (nodeType == EntityNodeType.Ref && fields.length > 5) {
         fieldsShow = 'fold';
     }
 
-    const node: Entity = {
+    return {
         id: id,
         label: item.name,
         fields: fields,
@@ -38,12 +36,6 @@ function createNode(item: SItem, id: string, nodeType: EntityNodeType = EntityNo
         nodeType,
         userData: item,
     };
-
-
-    node.inputs.push();
-
-
-    return node;
 }
 
 
@@ -52,7 +44,7 @@ function includeSubStructs(entityMap: Map<string, Entity>, frontier: (STable | S
     let hasInterface = false;
     while (frontier.length > 0) {
         let oldFrontier = frontier;
-        let depStructNames = schema.getDepStructsByItems(frontier);
+        let depStructNames = schema.getDirectDepStructsByItems(frontier);
         frontier = [];
         for (let depName of depStructNames) {
             let depNode = entityMap.get(depName);
@@ -103,7 +95,7 @@ function includeSubStructs(entityMap: Map<string, Entity>, frontier: (STable | S
                 continue;
             }
 
-            let deps = schema.getDepStructsByItem(oldF);
+            let deps = schema.getDirectDepStructsByItem(oldF);
 
             let connSockets: ConnectTo[] = [];
             for (let dep of deps) {
@@ -130,7 +122,7 @@ function includeRefTables(entityMap: Map<string, Entity>, schema: Schema) {
         entityFrontier.push(e);
     }
 
-    let refTableNames = schema.getRefTables(frontier);
+    let refTableNames = schema.getDirectRefTables(frontier);
     for (let ref of refTableNames) {
         let refNode = entityMap.get(ref);
         if (refNode) {
