@@ -9,10 +9,11 @@ import {EntityConnectionType, EntityGraph, EntityNodeType} from "./graphModel.ts
 import {TableControl, TableControlComponent} from "./ui/TableControl.tsx";
 import {EntityNode, EntityNodeComponent} from "./ui/EntityNode.tsx";
 import {EntityConnection, EntityConnectionComponent} from "./ui/EntityConnection.tsx";
+import {ContextMenuExtra, ContextMenuPlugin} from "rete-context-menu-plugin";
 
 
 type Schemes = GetSchemes<EntityNode, EntityConnection<EntityNode, EntityNode>>;
-type AreaExtra = ReactArea2D<never>;
+type AreaExtra = ReactArea2D<Schemes> | ContextMenuExtra;
 
 export async function createEditor(container: HTMLElement, graph: EntityGraph) {
     const editor = new NodeEditor<Schemes>();
@@ -23,6 +24,19 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
     const arrange = new AutoArrangePlugin<Schemes>();
     arrange.addPreset(ArrangePresets.classic.setup());
     area.use(arrange);
+
+    AreaExtensions.selectableNodes(area, AreaExtensions.selector(), {
+        accumulating: AreaExtensions.accumulateOnCtrl()
+    });
+
+
+    const contextMenu = new ContextMenuPlugin<Schemes>({
+        items: (_context: 'root' | Schemes['Node'], _plugin: ContextMenuPlugin<Schemes>) => {
+            return {list: graph.menu}
+        }
+    });
+    area.use(contextMenu);
+    render.addPreset(Presets.contextMenu.setup());
 
     render.addPreset(
         Presets.classic.setup({

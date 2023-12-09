@@ -26,7 +26,7 @@ export class EntityNode extends ClassicPreset.Node<
 const refStyles = css<{ selected?: boolean }>`
     background: darkcyan;
     ${(props) => props.selected && css`
-        border-color: #ff0000c4;
+        background: #ffd92c;
     `}`;
 
 export function EntityNodeComponent(props: { data: EntityNode, emit: RenderEmit<any> }) {

@@ -32,6 +32,9 @@ dependencies:
   rete-connection-plugin:
     specifier: ^2.0.0
     version: 2.0.0(rete-area-plugin@2.0.1)(rete@2.0.2)
+  rete-context-menu-plugin:
+    specifier: ^2.0.0
+    version: 2.0.0(rete-area-plugin@2.0.1)(rete@2.0.2)
   rete-react-plugin:
     specifier: ^2.0.4
     version: 2.0.4(react-dom@18.2.0)(react@18.2.0)(rete-area-plugin@2.0.1)(rete-render-utils@2.0.1)(rete@2.0.2)(styled-components@6.1.1)
@@ -2390,6 +2393,17 @@ packages:
 
   /rete-connection-plugin@2.0.0(rete-area-plugin@2.0.1)(rete@2.0.2):
     resolution: {integrity: sha512-8M+UC6gcWwTi0PEICprmCaoGxwEA4x42z0ywx3O5NQSILvkhWcvQXzHcyvwGx/LTsJT/UPzNjCfixu/TbRyTEw==}
+    peerDependencies:
+      rete: ^2.0.1
+      rete-area-plugin: ^2.0.0
+    dependencies:
+      '@babel/runtime': 7.23.4
+      rete: 2.0.2
+      rete-area-plugin: 2.0.1(rete@2.0.2)
+    dev: false
+
+  /rete-context-menu-plugin@2.0.0(rete-area-plugin@2.0.1)(rete@2.0.2):
+    resolution: {integrity: sha512-cFqXUCgbuzdD994+cUgLNCiN/BeQzBb8PS1oZfJijL1RsHpRIlMM/pvVgGp1DJcveeIeKccndXb6UuzR9qfU4A==}
     peerDependencies:
       rete: ^2.0.1
       rete-area-plugin: ^2.0.0

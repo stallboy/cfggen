@@ -1,3 +1,5 @@
+import {Item} from "rete-context-menu-plugin/_types/types";
+
 export interface EntityField {
     name: string;
     value: string | number | boolean;
@@ -35,6 +37,7 @@ export interface Entity {
 
 export interface EntityGraph {
     entityMap: Map<string, Entity>;
+    menu : Item[];
 }
 
 export enum EntityNodeType {

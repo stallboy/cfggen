@@ -3,6 +3,7 @@ import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback} from "react";
 import {ConnectTo, Entity, EntityConnectionType, EntityNodeType} from "./graphModel.ts";
+import {Item} from "rete-context-menu-plugin/_types/types";
 
 
 function createNode(item: SItem, id: string, nodeType: EntityNodeType = EntityNodeType.Normal): Entity {
@@ -173,10 +174,11 @@ function upper1(str: string): string {
     return str;
 }
 
-export function TableSchema({schema, curTable, settingMaxImplSchema}: {
+export function TableSchema({schema, curTable, maxImpl, setMaxImpl}: {
     schema: Schema | null;
     curTable: STable | null;
-    settingMaxImplSchema: number;
+    maxImpl: number;
+    setMaxImpl: React.Dispatch<number>;
 }) {
     if (schema == null || curTable == null) {
         return <div/>
@@ -187,14 +189,25 @@ export function TableSchema({schema, curTable, settingMaxImplSchema}: {
     let curNode = createNode(curTable, curTable.name);
     entityMap.set(curNode.id, curNode);
     let frontier = [curTable];
-    includeSubStructs(entityMap, frontier, schema, settingMaxImplSchema);
+    includeSubStructs(entityMap, frontier, schema, maxImpl);
     includeRefTables(entityMap, schema);
+
+    const menu: Item[] = [];
+    for (let n of [10, 100, 1000]) {
+        menu.push({
+            label: `MaxImpl：${n.toString()}`,
+            key: n.toString(),
+            handler: () => {
+                setMaxImpl(n);
+            }
+        })
+    }
 
     const create = useCallback(
         (el: HTMLElement) => {
-            return createEditor(el, {entityMap});
+            return createEditor(el, {entityMap, menu});
         },
-        [schema, curTable]
+        [schema, curTable, maxImpl]
     );
     const [ref] = useRete(create);
 

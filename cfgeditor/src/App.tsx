@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react";
 import {TableList} from "./TableList.tsx";
 import {Schema, STable} from "./schemaModel.ts";
-import {Space} from "antd";
+import {Space, Tabs} from "antd";
 import {IdList} from "./IdList.tsx";
 import {TableSchema} from "./TableSchema.tsx";
 
@@ -10,7 +10,7 @@ export default function App() {
     const [schema, setSchema] = useState<Schema | null>(null);
     const [curTable, setCurTable] = useState<STable | null>(null);
     const [curId, setCurId] = useState<string | null>(null);
-    const [settingMaxImplSchema, setSettingMaxImplSchema] = useState<number>(10);
+    const [maxImpl, setMaxImpl] = useState<number>(10);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -20,7 +20,6 @@ export default function App() {
 
             setSchema(schema);
             selectCurTableFromSchema(schema);
-            setSettingMaxImplSchema(10);
         }
 
         fetchData().catch(console.error);
@@ -49,13 +48,39 @@ export default function App() {
         selectCurTableFromSchema(schema, cur);
     }
 
-
-    return <div className="App"><Space>
+    let operation = <Space>
         <TableList schema={schema} curTable={curTable} setCurTable={selectCurTable}/>
         <IdList curTable={curTable} curId={curId} setCurId={setCurId}/>
-    </Space>
-        <TableSchema schema={schema} curTable={curTable}
-                     settingMaxImplSchema={settingMaxImplSchema}/>
+    </Space>;
+
+
+    let items = [
+        {
+            key: "表结构",
+            label: "表结构",
+            children: <TableSchema schema={schema} curTable={curTable}
+                                   maxImpl={maxImpl}
+                                   setMaxImpl={setMaxImpl}/>
+        },
+        {
+            key: "表关系",
+            label: "表关系",
+            children: <TableSchema schema={schema} curTable={curTable}
+                                   maxImpl={maxImpl}
+                                   setMaxImpl={setMaxImpl}/>
+        },
+        {
+            key: "数据",
+            label: "数据",
+            children: <TableSchema schema={schema} curTable={curTable}
+                                   maxImpl={maxImpl}
+                                   setMaxImpl={setMaxImpl}/>
+        },
+    ]
+
+
+    return <div className="App">
+        <Tabs tabBarExtraContent={{'left': operation}} items={items} type="card"/>
     </div>;
 
 }

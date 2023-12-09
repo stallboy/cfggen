@@ -123,7 +123,7 @@ export class Schema {
                 let si = item as SStruct;
                 if (si.extends) {
                     pitem = si.extends;
-                    interfaceNamespace = si.extends.name + ".";
+                    interfaceNamespace = `${si.extends.name}.`;
                     for (let impl of si.extends.impls) {
                         implNameSet.add(impl.name);
                     }
@@ -158,7 +158,7 @@ export class Schema {
                     continue;
                 }
 
-                console.log("getDepStructs " + item.name + ", " + n + " not found!");
+                console.log(`getDepStructs ${item.name}, ${n} not found!`);
             }
             return depNameSetGlobal;
         }
