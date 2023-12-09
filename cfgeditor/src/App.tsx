@@ -60,21 +60,25 @@ export default function App() {
             label: "表结构",
             children: <TableSchema schema={schema} curTable={curTable}
                                    maxImpl={maxImpl}
-                                   setMaxImpl={setMaxImpl}/>
+                                   setMaxImpl={setMaxImpl}
+                                   setCurTable={selectCurTable}/>
+
         },
         {
             key: "表关系",
             label: "表关系",
             children: <TableSchema schema={schema} curTable={curTable}
                                    maxImpl={maxImpl}
-                                   setMaxImpl={setMaxImpl}/>
+                                   setMaxImpl={setMaxImpl}
+                                   setCurTable={selectCurTable}/>
         },
         {
             key: "数据",
             label: "数据",
             children: <TableSchema schema={schema} curTable={curTable}
                                    maxImpl={maxImpl}
-                                   setMaxImpl={setMaxImpl}/>
+                                   setMaxImpl={setMaxImpl}
+                                   setCurTable={selectCurTable}/>
         },
     ]
 

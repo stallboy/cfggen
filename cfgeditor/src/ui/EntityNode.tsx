@@ -1,6 +1,6 @@
 import {ClassicPreset} from "rete";
 import {TableControl} from "./TableControl.tsx";
-import {EntityNodeType} from "../graphModel.ts";
+import {Entity, EntityNodeType} from "../graphModel.ts";
 import {Presets, RenderEmit} from "rete-react-plugin";
 import {css} from "styled-components";
 
@@ -20,7 +20,7 @@ export class EntityNode extends ClassicPreset.Node<
     width = 280;
     height = 440;
 
-    nodeType: EntityNodeType = EntityNodeType.Normal;
+    entity?: Entity;
 }
 
 const refStyles = css<{ selected?: boolean }>`
@@ -30,7 +30,7 @@ const refStyles = css<{ selected?: boolean }>`
     `}`;
 
 export function EntityNodeComponent(props: { data: EntityNode, emit: RenderEmit<any> }) {
-    if (props.data.nodeType == EntityNodeType.Ref) {
+    if (props.data.entity?.nodeType == EntityNodeType.Ref) {
         return <Node styles={() => refStyles} {...props} />;
     } else {
         return <Node {...props} />;

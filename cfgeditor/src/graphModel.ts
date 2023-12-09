@@ -23,7 +23,6 @@ export interface EntitySocketOutput {
     connectToSockets: ConnectTo[];
 }
 
-
 export interface Entity {
     id: string;
     label: string;
@@ -38,6 +37,7 @@ export interface Entity {
 export interface EntityGraph {
     entityMap: Map<string, Entity>;
     menu : Item[];
+    nodeMenuFunc? : (node: Entity) => Item[];
 }
 
 export enum EntityNodeType {

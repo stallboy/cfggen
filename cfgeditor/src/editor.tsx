@@ -5,7 +5,7 @@ import {ConnectionPlugin, Presets as ConnectionPresets} from "rete-connection-pl
 import {Presets, ReactArea2D, ReactPlugin} from "rete-react-plugin";
 
 import {AutoArrangePlugin, Presets as ArrangePresets} from "rete-auto-arrange-plugin";
-import {EntityConnectionType, EntityGraph, EntityNodeType} from "./graphModel.ts";
+import {EntityConnectionType, EntityGraph} from "./graphModel.ts";
 import {TableControl, TableControlComponent} from "./ui/TableControl.tsx";
 import {EntityNode, EntityNodeComponent} from "./ui/EntityNode.tsx";
 import {EntityConnection, EntityConnectionComponent} from "./ui/EntityConnection.tsx";
@@ -31,8 +31,16 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
 
 
     const contextMenu = new ContextMenuPlugin<Schemes>({
-        items: (_context: 'root' | Schemes['Node'], _plugin: ContextMenuPlugin<Schemes>) => {
-            return {list: graph.menu}
+        items: (context: 'root' | Schemes['Node'], _plugin: ContextMenuPlugin<Schemes>) => {
+            if (context == 'root') {
+                return {list: graph.menu};
+            } else if (graph.nodeMenuFunc) {
+                let en = editor.getNode(context.id) as EntityNode;
+                if (en.entity) {
+                    return {list: graph.nodeMenuFunc(en.entity)};
+                }
+            }
+            return {list: []}
         }
     });
     area.use(contextMenu);
@@ -70,7 +78,7 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
     let id2node = new Map<string, EntityNode>();
     for (let nodeData of graph.entityMap.values()) {
         const node = new EntityNode(nodeData.label);
-        node.nodeType = nodeData.nodeType ?? EntityNodeType.Normal;
+        node.entity = nodeData;
         id2node.set(nodeData.id, node);
         node.height = 40 * nodeData.fields.length + nodeData.inputs.length * 50 + nodeData.outputs.length * 50 + 60;
 
@@ -102,7 +110,7 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
     }
 
     await arrange.layout();
-    await AreaExtensions.zoomAt(area, editor.getNodes());
+    // await AreaExtensions.zoomAt(area, editor.getNodes());
 
     return {
         destroy: () => area.destroy()

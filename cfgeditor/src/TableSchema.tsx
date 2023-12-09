@@ -1,7 +1,7 @@
 import {Schema, SInterface, SItem, SStruct, STable} from "./schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
-import {useCallback} from "react";
+import {Dispatch, useCallback} from "react";
 import {ConnectTo, Entity, EntityConnectionType, EntityNodeType} from "./graphModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 
@@ -174,11 +174,12 @@ function upper1(str: string): string {
     return str;
 }
 
-export function TableSchema({schema, curTable, maxImpl, setMaxImpl}: {
+export function TableSchema({schema, curTable, maxImpl, setMaxImpl, setCurTable}: {
     schema: Schema | null;
     curTable: STable | null;
     maxImpl: number;
-    setMaxImpl: React.Dispatch<number>;
+    setMaxImpl: Dispatch<number>;
+    setCurTable: (cur: string) => void;
 }) {
     if (schema == null || curTable == null) {
         return <div/>
@@ -193,9 +194,9 @@ export function TableSchema({schema, curTable, maxImpl, setMaxImpl}: {
     includeRefTables(entityMap, schema);
 
     const menu: Item[] = [];
-    for (let n of [10, 100, 1000]) {
+    for (let n of [10, 1000]) {
         menu.push({
-            label: `MaxImpl：${n.toString()}`,
+            label: `MaxImpl：${n}`,
             key: n.toString(),
             handler: () => {
                 setMaxImpl(n);
@@ -203,9 +204,24 @@ export function TableSchema({schema, curTable, maxImpl, setMaxImpl}: {
         })
     }
 
+    const nodeMenuFunc = (node: Entity): Item[] => {
+        let sItem = node.userData as SItem;
+        if (sItem.type == 'table' && sItem.name != curTable.name) {
+            return [{
+                label: `表结构`,
+                key: `${sItem.name}表结构`,
+                handler: () => {
+                    setCurTable(sItem.name);
+                }
+            }];
+
+        }
+        return [];
+    }
+
     const create = useCallback(
         (el: HTMLElement) => {
-            return createEditor(el, {entityMap, menu});
+            return createEditor(el, {entityMap, menu, nodeMenuFunc});
         },
         [schema, curTable, maxImpl]
     );
