@@ -2,33 +2,46 @@ import {Schema, SInterface, SItem, SStruct, STable} from "./schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {Dispatch, useCallback} from "react";
-import {ConnectTo, Entity, EntityConnectionType, EntityNodeType} from "./graphModel.ts";
+import {ConnectTo, Entity, EntityConnectionType, EntityNodeType, FieldsShow} from "./graphModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 
 
 function createNode(item: SItem, id: string, nodeType: EntityNodeType = EntityNodeType.Normal): Entity {
-    const node: Entity = {
-        id: id,
-        label: item.name,
-        fields: [],
-        inputs: [],
-        outputs: [],
-        nodeType,
-        userData: item,
-    };
 
-    node.inputs.push({key: "input"});
 
+    let fields = [];
     if (item.type != "interface") {
         let st = item as STable | SStruct;
         for (let field of st.fields) {
-            node.fields.push({
+            fields.push({
                 key: field.name,
                 name: field.name,
+                comment: field.comment,
                 value: field.type
             });
         }
     }
+
+    let fieldsShow : FieldsShow = 'direct';
+    if (nodeType == EntityNodeType.Ref && fields.length > 5) {
+        fieldsShow = 'fold';
+    }
+
+    const node: Entity = {
+        id: id,
+        label: item.name,
+        fields: fields,
+        inputs: [{key: "input"}],
+        outputs: [],
+
+        fieldsShow,
+        nodeType,
+        userData: item,
+    };
+
+
+    node.inputs.push();
+
 
     return node;
 }

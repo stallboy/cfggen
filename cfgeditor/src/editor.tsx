@@ -28,6 +28,7 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
     AreaExtensions.selectableNodes(area, AreaExtensions.selector(), {
         accumulating: AreaExtensions.accumulateOnCtrl()
     });
+    // AreaExtensions.simpleNodesOrder(area);
 
 
     const contextMenu = new ContextMenuPlugin<Schemes>({
@@ -76,20 +77,61 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
     const socket = new ClassicPreset.Socket("socket");
 
     let id2node = new Map<string, EntityNode>();
-    for (let nodeData of graph.entityMap.values()) {
-        const node = new EntityNode(nodeData.label);
-        node.entity = nodeData;
-        id2node.set(nodeData.id, node);
-        node.height = 40 * nodeData.fields.length + nodeData.inputs.length * 50 + nodeData.outputs.length * 50 + 60;
+    for (let entity of graph.entityMap.values()) {
+        const node = new EntityNode(entity.label);
+        node.entity = entity;
+        id2node.set(entity.id, node);
 
-        const fields = new TableControl(nodeData.fields);
-        node.addControl("value", fields);
+        let hasCtrl = true;
+        let fc;
+        switch (entity.fieldsShow) {
+            case "direct":
+                fc = entity.fields.length;
+                hasCtrl = false;
+                break;
+            case "expand":
+                fc = entity.fields.length + 1;
+                break;
+            case "fold":
+                fc = 1;
+                break;
+        }
+        node.height = 60 + fc * 40 +
+            entity.inputs.length * 40 +
+            entity.outputs.length * 40;
 
-        for (let inputSocket of nodeData.inputs) {
+        const fieldsControl = new TableControl(entity.fields, entity.fieldsShow);
+        if (hasCtrl) {
+            fieldsControl.onChange = (key: string | string[]) => {
+                let cnt;
+                if (key.length == 0) {
+                    cnt = 1;
+                } else {
+                    cnt = entity.fields.length + 1;
+                }
+                node.height = 60 + cnt * 40 +
+                    entity.inputs.length * 40 +
+                    entity.outputs.length * 40;
+
+                area.update('node', node.id);
+                // 没办法让connection刷新
+                // area.update('control', fieldsControl.id);
+                // area.update('socket', node.inputs[0]?.socket.name as string);
+                // const connections = editor.getConnections();
+                // const incomingConnections = connections.filter(connection => connection.target === node.id);
+                // for (let ic of incomingConnections) {
+                //     area.update('connection', ic.id);
+                // }
+
+            };
+        }
+        node.addControl("value", fieldsControl);
+
+        for (let inputSocket of entity.inputs) {
             let input = new ClassicPreset.Input(socket, inputSocket.label);
             node.addInput(inputSocket.key, input);
         }
-        for (let outputInfo of nodeData.outputs) {
+        for (let outputInfo of entity.outputs) {
             let output = new ClassicPreset.Output(socket, outputInfo.output.label);
             node.addOutput(outputInfo.output.key, output);
         }
@@ -97,9 +139,9 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
         await editor.addNode(node);
     }
 
-    for (let nodeData of graph.entityMap.values()) {
-        let fromNode = id2node.get(nodeData.id) as EntityNode;
-        for (let output of nodeData.outputs) {
+    for (let entity of graph.entityMap.values()) {
+        let fromNode = id2node.get(entity.id) as EntityNode;
+        for (let output of entity.outputs) {
             for (let connSocket of output.connectToSockets) {
                 let toNode = id2node.get(connSocket.nodeId) as EntityNode;
                 let conn = new EntityConnection(fromNode, output.output.key, toNode, connSocket.inputKey);
@@ -110,7 +152,7 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
     }
 
     await arrange.layout();
-    // await AreaExtensions.zoomAt(area, editor.getNodes());
+    await AreaExtensions.zoomAt(area, editor.getNodes());
 
     return {
         destroy: () => area.destroy()

@@ -1,7 +1,7 @@
 import {ClassicPreset} from "rete";
 import type {ColumnsType} from "antd/es/table";
-import {EntityField} from "../graphModel.ts";
-import {Space, Table} from "antd";
+import {EntityField, FieldsShow} from "../graphModel.ts";
+import {Collapse, Space, Table, Tooltip} from "antd";
 
 const columns: ColumnsType<EntityField> = [
     {
@@ -10,33 +10,66 @@ const columns: ColumnsType<EntityField> = [
         align: 'right',
         width: 100,
         key: 'name',
-        ellipsis: true,
+        ellipsis: {
+            showTitle: false
+        },
+        render: (_text: any, record: EntityField, _index: number) => (
+            <Tooltip placement="topLeft" title={record.name + ": " + record.comment}>
+                {record.name}
+            </Tooltip>
+        )
     },
     {
         title: 'value',
         dataIndex: 'value',
         width: 100,
         key: 'value',
-        ellipsis: true,
+        ellipsis: {
+            showTitle: false
+        },
+        render: (_text: any, record: EntityField, _index: number) => (
+            <Tooltip placement="topLeft" title={record.value}>
+                {record.value}
+            </Tooltip>
+        )
     },
 ];
 
 
+function dummpyOnChange(_key: string | string[]) {
+}
+
 export class TableControl extends ClassicPreset.Control {
-    constructor(public data: EntityField[]) {
+    onChange: (key: string | string[]) => void = dummpyOnChange;
+
+    constructor(public data: EntityField[], public fieldsShow: FieldsShow) {
         super();
     }
 }
 
 export function TableControlComponent(props: { data: TableControl }) {
-    if (props.data.data.length == 0) {
+    let ctrl = props.data;
+    if (ctrl.data.length == 0) {
         return <Space/>
     }
-    return <Table bordered
-                  showHeader={false}
-                  columns={columns}
-                  dataSource={props.data.data}
-                  size={"small"}
-                  pagination={false}/>;
+    let tab = <Table bordered
+                     showHeader={false}
+                     columns={columns}
+                     dataSource={props.data.data}
+                     size={"small"}
+                     pagination={false}/>;
 
+
+    switch (ctrl.fieldsShow) {
+        case "direct":
+            return tab;
+
+        case "expand":
+            let items = [{key: '1', label: `${ctrl.data.length} fields`, children: tab}];
+            return <Collapse defaultActiveKey={'1'} items={items} onChange={ctrl.onChange}/>
+
+        case "fold":
+            let items2 = [{key: '1', label: `${ctrl.data.length} fields`, children: tab}];
+            return <Collapse items={items2} onChange={ctrl.onChange}/>
+    }
 }

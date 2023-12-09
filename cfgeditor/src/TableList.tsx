@@ -48,11 +48,17 @@ export function TableList({schema, curTable, setCurTable}: {
         let subOptions = [];
 
         for (let tl of tls) {
+            let style = {backgroundColor: '#bbbbbb'}
+            if (tl.table == curTable) {
+                style = {backgroundColor: '#52c41a'};
+            }
+
+            let badge = <Badge count={tl.table.recordCount} overflowCount={999999}
+                               style={style}/>
+
             subOptions.push({
-                label: <Space><TableOutlined/>{tl.lastName}
-                    <Badge count={tl.table.recordCount} overflowCount={999999}
-                           style={{backgroundColor: '#bbbbbb'}}/></Space>,
-                value: tl.table.name
+                label: <Space><TableOutlined/>{tl.lastName}{badge} </Space>,
+                value: tl.table.name,
             });
         }
 

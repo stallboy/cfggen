@@ -2,6 +2,7 @@ import {Item} from "rete-context-menu-plugin/_types/types";
 
 export interface EntityField {
     name: string;
+    comment?: string;
     value: string | number | boolean;
     key: string;
 }
@@ -30,14 +31,17 @@ export interface Entity {
     inputs: EntitySocket[];
     outputs: EntitySocketOutput[];
 
+    fieldsShow: FieldsShow;
     nodeType?: EntityNodeType;
-    userData? : any;
+    userData?: any;
 }
+
+export type FieldsShow = 'direct' | 'expand' | 'fold';
 
 export interface EntityGraph {
     entityMap: Map<string, Entity>;
-    menu : Item[];
-    nodeMenuFunc? : (node: Entity) => Item[];
+    menu: Item[];
+    nodeMenuFunc?: (node: Entity) => Item[];
 }
 
 export enum EntityNodeType {
