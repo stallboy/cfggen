@@ -35,7 +35,8 @@ function createNode(item: SItem, id: string, nodeType: EntityNodeType = EntityNo
 
 
 function includeSubStructs(entityMap: Map<string, Entity>, frontier: (STable | SStruct)[],
-                           schema: Schema, settingMaxImplSchema: number) {
+                           schema: Schema, maxImpl: number): boolean {
+    let hasInterface = false;
     while (frontier.length > 0) {
         let oldFrontier = frontier;
         let depStructNames = schema.getDepStructsByItems(frontier);
@@ -54,6 +55,7 @@ function includeSubStructs(entityMap: Map<string, Entity>, frontier: (STable | S
             entityMap.set(depNode.id, depNode);
 
             if (dep.type == 'interface') {
+                hasInterface = true;
                 let depInterface = dep as SInterface;
                 let connSockets: ConnectTo[] = [];
                 let cnt = 0;
@@ -67,7 +69,7 @@ function includeSubStructs(entityMap: Map<string, Entity>, frontier: (STable | S
                         inputKey: "input",
                     })
                     cnt++;
-                    if (cnt >= settingMaxImplSchema) {
+                    if (cnt >= maxImpl) {
                         break;
                     }
                 }
@@ -79,8 +81,6 @@ function includeSubStructs(entityMap: Map<string, Entity>, frontier: (STable | S
             } else {
                 frontier.push(dep as SStruct);
             }
-
-
         }
 
         for (let oldF of oldFrontier) {
@@ -106,6 +106,7 @@ function includeSubStructs(entityMap: Map<string, Entity>, frontier: (STable | S
             })
         }
     }
+    return hasInterface;
 }
 
 function includeRefTables(entityMap: Map<string, Entity>, schema: Schema) {
@@ -190,18 +191,20 @@ export function TableSchema({schema, curTable, maxImpl, setMaxImpl, setCurTable}
     let curNode = createNode(curTable, curTable.name);
     entityMap.set(curNode.id, curNode);
     let frontier = [curTable];
-    includeSubStructs(entityMap, frontier, schema, maxImpl);
+    let hasInterface = includeSubStructs(entityMap, frontier, schema, maxImpl);
     includeRefTables(entityMap, schema);
 
     const menu: Item[] = [];
-    for (let n of [10, 1000]) {
-        menu.push({
-            label: `MaxImpl：${n}`,
-            key: n.toString(),
-            handler: () => {
-                setMaxImpl(n);
-            }
-        })
+    if (hasInterface) {
+        for (let n of [10, 1000]) {
+            menu.push({
+                label: `MaxImpl：${n}`,
+                key: n.toString(),
+                handler: () => {
+                    setMaxImpl(n);
+                }
+            })
+        }
     }
 
     const nodeMenuFunc = (node: Entity): Item[] => {
