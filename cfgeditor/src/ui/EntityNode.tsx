@@ -35,12 +35,22 @@ const ref2Styles = css<{ selected?: boolean }>`
         background: #ffd92c;
     `}`;
 
+const refInStyles = css<{ selected?: boolean }>`
+    background: mediumslateblue;
+    ${(props) => props.selected && css`
+        background: #ffd92c;
+    `}`;
+
 export function EntityNodeComponent(props: { data: EntityNode, emit: RenderEmit<any> }) {
-    if (props.data.entity?.nodeType == EntityNodeType.Ref) {
-        return <Node styles={() => refStyles} {...props} />;
-    } else if (props.data.entity?.nodeType == EntityNodeType.Ref2) {
-        return <Node styles={() => ref2Styles} {...props} />;
-    } else {
-        return <Node {...props} />;
+    let type = props.data.entity?.nodeType;
+    switch (type) {
+        case EntityNodeType.Ref:
+            return <Node styles={() => refStyles} {...props} />;
+        case EntityNodeType.Ref2:
+            return <Node styles={() => ref2Styles} {...props} />;
+        case EntityNodeType.RefIn:
+            return <Node styles={() => refInStyles} {...props} />;
     }
+    return <Node {...props} />;
+
 }

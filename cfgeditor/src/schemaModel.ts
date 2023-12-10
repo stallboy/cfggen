@@ -45,6 +45,8 @@ export interface STable extends Namable {
     foreignKeys?: SForeignKey[];
     recordCount: number;
     recordIds: RecordId[];
+
+    refInTables?: Set<string> // 被这些表索引， cache
 }
 
 export type SItem = SStruct | SInterface | STable;
@@ -70,6 +72,25 @@ export class Schema {
             }
             this.itemMap.set(item.name, item);
             this.itemIncludeImplMap.set(item.name, item);
+        }
+
+        for (let item of rawSchema.items) {
+            this.getAllRefTablesByItem(item);
+            if (item.type == 'table') {
+                let st = item as STable;
+                st.refInTables = new Set<string>();
+            }
+        }
+
+        for (let item of rawSchema.items) {
+            if (item.type == 'table') {
+                let st = item as STable;
+                let refTables = st.refTables as Set<string>;
+                for (let refTable of refTables) {
+                    let t:STable = this.getSTable(refTable) as STable;
+                    t.refInTables?.add(st.name);
+                }
+            }
         }
     }
 

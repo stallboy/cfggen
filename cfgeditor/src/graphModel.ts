@@ -48,6 +48,7 @@ export enum EntityNodeType {
     Normal,
     Ref,
     Ref2,
+    RefIn,
 }
 
 export enum EntityConnectionType {

@@ -20,14 +20,48 @@ function createNode(item: SItem, id: string, nodeType: EntityNodeType = EntityNo
     };
 }
 
-function includeRefTables(entityMap: Map<string, Entity>, schema: Schema, maxOutDepth: number) {
-    let frontier: SItem[] = [];
-    let entityFrontier: Entity[] = [];
-    for (let e of entityMap.values()) {
-        frontier.push(e.userData as SItem);
-        entityFrontier.push(e);
+function includeRefTables(entityMap: Map<string, Entity>, curTable: STable, schema: Schema,
+                          refIn: boolean, maxOutDepth: number, maxNode: number) {
+
+    let curNode = createNode(curTable, curTable.name);
+    entityMap.set(curNode.id, curNode);
+
+
+    if (refIn && curTable.refInTables) {
+
+        for (let ref of curTable.refInTables) {
+            let refInNode = entityMap.get(ref);
+            if (refInNode) {
+                continue;
+            }
+
+            let refInTable = schema.getSTable(ref);
+            if (!refInTable) {
+                console.log(ref + " not found!")
+                continue; // 不该发生
+            }
+
+            refInNode = createNode(refInTable, ref, EntityNodeType.RefIn);
+            entityMap.set(ref, refInNode);
+
+            refInNode.outputs.push({
+                output: {key: 'refIn', label: 'refIn'},
+                connectToSockets: [{
+                    nodeId: curTable.name,
+                    inputKey: "input",
+                    connectionType: EntityConnectionType.Ref
+                }],
+            });
+
+            if (entityMap.size > maxNode / 2) {
+                break;
+            }
+        }
     }
 
+
+    let frontier: SItem[] = [curTable];
+    let entityFrontier: Entity[] = [curNode];
     let depth = 1;
     while (depth <= maxOutDepth) {
 
@@ -43,7 +77,7 @@ function includeRefTables(entityMap: Map<string, Entity>, schema: Schema, maxOut
 
             let refTable = schema.getSTable(ref);
             if (!refTable) {
-                console.log(ref + "not found!")
+                console.log(ref + " not found!")
                 continue; // 不该发生
             }
 
@@ -53,6 +87,10 @@ function includeRefTables(entityMap: Map<string, Entity>, schema: Schema, maxOut
 
             newFrontier.push(refTable);
             newEntityFrontier.push(refNode);
+
+            if (entityMap.size > maxNode) {
+                break;
+            }
         }
 
         for (let oldNode of entityFrontier) {
@@ -61,11 +99,13 @@ function includeRefTables(entityMap: Map<string, Entity>, schema: Schema, maxOut
             let directRefs = schema.getAllRefTablesByItem(item);
             let connectToSockets = []
             for (let ref of directRefs) {
-                connectToSockets.push({
-                    nodeId: ref,
-                    inputKey: "input",
-                    connectionType: EntityConnectionType.Ref
-                });
+                if (entityMap.has(ref)) {
+                    connectToSockets.push({
+                        nodeId: ref,
+                        inputKey: "input",
+                        connectionType: EntityConnectionType.Ref
+                    });
+                }
             }
 
             if (connectToSockets.length > 0) {
@@ -79,6 +119,10 @@ function includeRefTables(entityMap: Map<string, Entity>, schema: Schema, maxOut
         frontier = newFrontier;
         entityFrontier = newEntityFrontier;
         depth++;
+
+        if (entityMap.size > maxNode) {
+            break;
+        }
     }
 }
 
@@ -96,10 +140,7 @@ export function TableRef({schema, curTable, setCurTable, refIn, refOutDepth, max
     }
 
     const entityMap = new Map<string, Entity>();
-
-    let curNode = createNode(curTable, curTable.name);
-    entityMap.set(curNode.id, curNode);
-    includeRefTables(entityMap, schema, refOutDepth);
+    includeRefTables(entityMap, curTable, schema, refIn, refOutDepth, maxNode);
 
     const menu: Item[] = [];
 
