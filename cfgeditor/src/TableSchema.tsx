@@ -1,7 +1,7 @@
 import {Schema, SInterface, SItem, SStruct, STable} from "./schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
-import {Dispatch, useCallback} from "react";
+import {useCallback} from "react";
 import {ConnectTo, Entity, EntityConnectionType, EntityNodeType, FieldsShow} from "./graphModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 
@@ -180,11 +180,10 @@ function upper1(str: string): string {
     return str;
 }
 
-export function TableSchema({schema, curTable, maxImpl, setMaxImpl, setCurTable}: {
+export function TableSchema({schema, curTable, maxImpl, setCurTable}: {
     schema: Schema | null;
     curTable: STable | null;
     maxImpl: number;
-    setMaxImpl: Dispatch<number>;
     setCurTable: (cur: string) => void;
 }) {
     if (schema == null || curTable == null) {
@@ -196,21 +195,10 @@ export function TableSchema({schema, curTable, maxImpl, setMaxImpl, setCurTable}
     let curNode = createNode(curTable, curTable.name);
     entityMap.set(curNode.id, curNode);
     let frontier = [curTable];
-    let hasInterface = includeSubStructs(entityMap, frontier, schema, maxImpl);
+    includeSubStructs(entityMap, frontier, schema, maxImpl);
     includeRefTables(entityMap, schema);
 
     const menu: Item[] = [];
-    if (hasInterface) {
-        for (let n of [10, 1000]) {
-            menu.push({
-                label: `MaxImpl：${n}`,
-                key: n.toString(),
-                handler: () => {
-                    setMaxImpl(n);
-                }
-            })
-        }
-    }
 
     const nodeMenuFunc = (node: Entity): Item[] => {
         let sItem = node.userData as SItem;

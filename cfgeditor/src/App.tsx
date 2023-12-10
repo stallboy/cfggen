@@ -1,17 +1,24 @@
 import {useEffect, useState} from "react";
 import {TableList} from "./TableList.tsx";
 import {Schema, STable} from "./schemaModel.ts";
-import {Space, Tabs} from "antd";
+import {Button, Drawer, Form, InputNumber, Space, Switch, Tabs} from "antd";
 import {IdList} from "./IdList.tsx";
 import {TableSchema} from "./TableSchema.tsx";
 import {TableRef} from "./TableRef.tsx";
+import {SettingOutlined} from "@ant-design/icons";
 
 
 export default function App() {
     const [schema, setSchema] = useState<Schema | null>(null);
     const [curTable, setCurTable] = useState<STable | null>(null);
     const [curId, setCurId] = useState<string | null>(null);
+
+    const [settingOpen, setSettingOpen] = useState(false);
     const [maxImpl, setMaxImpl] = useState<number>(10);
+    const [refIn, setRefIn] = useState<boolean>(true);
+    const [refOutDepth, setRefOutDepth] = useState<number>(3);
+    const [maxNode, setMaxNode] = useState<number>(30);
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -55,35 +62,89 @@ export default function App() {
     </Space>;
 
 
+    const showDrawer = () => {
+        setSettingOpen(true);
+    };
+
+    const onClose = () => {
+        setSettingOpen(false);
+    };
+
+    let setting = <Button type="default" onClick={showDrawer}>
+        <SettingOutlined/>
+    </Button>
+
     let items = [
         {
             key: "表结构",
             label: "表结构",
             children: <TableSchema schema={schema} curTable={curTable}
                                    maxImpl={maxImpl}
-                                   setMaxImpl={setMaxImpl}
                                    setCurTable={selectCurTable}/>
 
         },
         {
             key: "表关系",
             label: "表关系",
-            children: <TableRef schema={schema} curTable={curTable}
-                                setCurTable={selectCurTable}/>
+            children: <TableRef schema={schema}
+                                curTable={curTable}
+                                setCurTable={selectCurTable}
+                                refIn={refIn}
+                                refOutDepth={refOutDepth}
+                                maxNode={maxNode}/>
         },
         {
             key: "数据",
             label: "数据",
             children: <TableSchema schema={schema} curTable={curTable}
                                    maxImpl={maxImpl}
-                                   setMaxImpl={setMaxImpl}
                                    setCurTable={selectCurTable}/>
         },
     ]
 
+    function onChangeRefOutDepth(value: number | null) {
+        if (value) {
+            setRefOutDepth(value);
+        }
+    }
+
+    function onChangeMaxImpl(value: number | null) {
+        if (value) {
+            setMaxImpl(value);
+        }
+    }
+
+    function onChangeMaxNode(value: number | null) {
+        if (value) {
+            setMaxNode(value);
+        }
+    }
+
+    function onChangeRefIn(checked: boolean) {
+        setRefIn(checked);
+    }
 
     return <div className="App">
-        <Tabs tabBarExtraContent={{'left': operation}} items={items} type="card"/>
+        <Tabs tabBarExtraContent={{'left': operation, 'right': setting}} items={items} type="card"/>
+        <Drawer title="setting" placement="right" onClose={onClose} open={settingOpen}>
+            <Form labelCol={{span: 6}} wrapperCol={{span: 14}} layout={'horizontal'}>
+                <Form.Item label='接口实现数:'>
+                    <InputNumber value={maxImpl} min={1} max={500} onChange={onChangeMaxImpl}/>
+                </Form.Item>
+
+                <Form.Item label='入层：'>
+                    <Switch checked={refIn} onChange={onChangeRefIn}/>
+                </Form.Item>
+
+                <Form.Item label='出层：'>
+                    <InputNumber defaultValue={3} min={1} max={500} onChange={onChangeRefOutDepth}/>
+                </Form.Item>
+
+                <Form.Item label='节点数：'>
+                    <InputNumber defaultValue={10} min={1} max={500} onChange={onChangeMaxNode}/>
+                </Form.Item>
+            </Form>
+        </Drawer>
     </div>;
 
 }

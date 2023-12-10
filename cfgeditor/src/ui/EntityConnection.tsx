@@ -21,11 +21,6 @@ const refStyles = css`
         }
     }`;
 
-
-// const normalStyles = css`
-//     stroke: #b30000b8;
-// `;
-
 export function EntityConnectionComponent(props: {
     data: EntityConnection<EntityNode, EntityNode> & { isLoop?: boolean };
 }) {

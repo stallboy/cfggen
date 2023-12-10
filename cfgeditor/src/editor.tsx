@@ -83,33 +83,40 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
         id2node.set(entity.id, node);
 
         let hasCtrl = true;
+        let ch;
         let fc;
         switch (entity.fieldsShow) {
             case "direct":
+                ch = 0;
                 fc = entity.fields.length;
                 hasCtrl = false;
                 break;
             case "expand":
-                fc = entity.fields.length + 1;
+                ch = 80;
+                fc = entity.fields.length;
                 break;
             case "fold":
-                fc = 1;
+                ch = 60;
+                fc = 0;
                 break;
         }
-        node.height = 60 + fc * 40 +
+        node.height = 60 + ch + fc * 40 +
             entity.inputs.length * 40 +
             entity.outputs.length * 40;
 
         const fieldsControl = new TableControl(entity.fields, entity.fieldsShow);
         if (hasCtrl) {
             fieldsControl.onChange = (key: string | string[]) => {
-                let cnt;
+                let ch;
+                let fc;
                 if (key.length == 0) {
-                    cnt = 1;
+                    ch = 60;
+                    fc = 0;
                 } else {
-                    cnt = entity.fields.length + 1;
+                    ch = 80;
+                    fc = entity.fields.length;
                 }
-                node.height = 60 + cnt * 40 +
+                node.height = 60 + ch + fc * 40 +
                     entity.inputs.length * 40 +
                     entity.outputs.length * 40;
 

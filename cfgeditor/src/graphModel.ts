@@ -36,17 +36,18 @@ export interface Entity {
     userData?: any;
 }
 
-export type FieldsShow = 'direct' | 'expand' | 'fold';
-
 export interface EntityGraph {
     entityMap: Map<string, Entity>;
     menu: Item[];
     nodeMenuFunc?: (node: Entity) => Item[];
 }
 
+export type FieldsShow = 'direct' | 'expand' | 'fold';
+
 export enum EntityNodeType {
     Normal,
     Ref,
+    Ref2,
 }
 
 export enum EntityConnectionType {

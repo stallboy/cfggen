@@ -28,7 +28,8 @@ function includeRefTables(entityMap: Map<string, Entity>, schema: Schema, maxOut
         entityFrontier.push(e);
     }
 
-    while (maxOutDepth > 0) {
+    let depth = 1;
+    while (depth <= maxOutDepth) {
 
         let newFrontier: SItem[] = [];
         let newEntityFrontier: Entity[] = [];
@@ -46,7 +47,8 @@ function includeRefTables(entityMap: Map<string, Entity>, schema: Schema, maxOut
                 continue; // 不该发生
             }
 
-            refNode = createNode(refTable, ref, EntityNodeType.Ref);
+            let nodeType = depth == 1 ? EntityNodeType.Ref : EntityNodeType.Ref2;
+            refNode = createNode(refTable, ref, nodeType);
             entityMap.set(ref, refNode);
 
             newFrontier.push(refTable);
@@ -66,24 +68,28 @@ function includeRefTables(entityMap: Map<string, Entity>, schema: Schema, maxOut
                 });
             }
 
-            oldNode.outputs.push({
-                output: {key: 'ref', label: 'ref'},
-                connectToSockets
-            });
+            if (connectToSockets.length > 0) {
+                oldNode.outputs.push({
+                    output: {key: 'ref', label: 'ref'},
+                    connectToSockets
+                });
+            }
         }
 
         frontier = newFrontier;
         entityFrontier = newEntityFrontier;
-        maxOutDepth--;
+        depth++;
     }
-
 }
 
 
-export function TableRef({schema, curTable, setCurTable}: {
+export function TableRef({schema, curTable, setCurTable, refIn, refOutDepth, maxNode}: {
     schema: Schema | null;
     curTable: STable | null;
     setCurTable: (cur: string) => void;
+    refIn: boolean;
+    refOutDepth: number;
+    maxNode: number;
 }) {
     if (schema == null || curTable == null) {
         return <div/>
@@ -93,7 +99,7 @@ export function TableRef({schema, curTable, setCurTable}: {
 
     let curNode = createNode(curTable, curTable.name);
     entityMap.set(curNode.id, curNode);
-    includeRefTables(entityMap, schema, 3);
+    includeRefTables(entityMap, schema, refOutDepth);
 
     const menu: Item[] = [];
 
@@ -116,7 +122,7 @@ export function TableRef({schema, curTable, setCurTable}: {
         (el: HTMLElement) => {
             return createEditor(el, {entityMap, menu, nodeMenuFunc});
         },
-        [schema, curTable]
+        [schema, curTable, refIn, refOutDepth, maxNode]
     );
     const [ref] = useRete(create);
 
