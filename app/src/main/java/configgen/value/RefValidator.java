@@ -26,12 +26,12 @@ public class RefValidator {
             switch (fk.refKey()) {
                 case RefKey.RefPrimary ignored -> {
                     VTable vTable = value.vTableMap().get(fk.refTableNormalized());
-                    fk.fkValueSet = vTable.primaryKeyValueSet();
+                    fk.fkValueSet = vTable.primaryKeyMap().sequencedKeySet();
                     fk.keyIndices = FindFieldIndex.findFieldIndices(structural, fk.key());
                 }
                 case RefKey.RefUniq refUniq -> {
                     VTable vTable = value.vTableMap().get(fk.refTableNormalized());
-                    fk.fkValueSet = vTable.uniqueKeyValueSetMap().get(refUniq.keyNames());
+                    fk.fkValueSet = vTable.uniqueKeyMaps().get(refUniq.keyNames()).sequencedKeySet();
                     fk.keyIndices = FindFieldIndex.findFieldIndices(structural, fk.key());
                 }
                 case RefKey.RefList ignored -> {

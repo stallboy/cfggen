@@ -56,11 +56,6 @@ export default function App() {
         selectCurTableFromSchema(schema, cur);
     }
 
-    let operation = <Space>
-        <TableList schema={schema} curTable={curTable} setCurTable={selectCurTable}/>
-        <IdList curTable={curTable} curId={curId} setCurId={setCurId}/>
-    </Space>;
-
 
     const showDrawer = () => {
         setSettingOpen(true);
@@ -70,9 +65,15 @@ export default function App() {
         setSettingOpen(false);
     };
 
-    let setting = <Button type="default" onClick={showDrawer}>
-        <SettingOutlined/>
-    </Button>
+
+    let operation = <Space>
+        <Button type="default" onClick={showDrawer}>
+            <SettingOutlined/>
+        </Button>
+        <TableList schema={schema} curTable={curTable} setCurTable={selectCurTable}/>
+        <IdList curTable={curTable} curId={curId} setCurId={setCurId}/>
+    </Space>;
+
 
     let items = [
         {
@@ -125,8 +126,8 @@ export default function App() {
     }
 
     return <div className="App">
-        <Tabs tabBarExtraContent={{'left': operation, 'right': setting}} items={items} type="card"/>
-        <Drawer title="setting" placement="right" onClose={onClose} open={settingOpen}>
+        <Tabs tabBarExtraContent={{'left': operation}} items={items} type="card"/>
+        <Drawer title="setting" placement="left" onClose={onClose} open={settingOpen}>
             <Form labelCol={{span: 6}} wrapperCol={{span: 14}} layout={'horizontal'}>
                 <Form.Item label='接口实现数:'>
                     <InputNumber value={maxImpl} min={1} max={500} onChange={onChangeMaxImpl}/>
@@ -137,11 +138,11 @@ export default function App() {
                 </Form.Item>
 
                 <Form.Item label='出层：'>
-                    <InputNumber defaultValue={3} min={1} max={500} onChange={onChangeRefOutDepth}/>
+                    <InputNumber value={refOutDepth} min={1} max={500} onChange={onChangeRefOutDepth}/>
                 </Form.Item>
 
                 <Form.Item label='节点数：'>
-                    <InputNumber defaultValue={10} min={1} max={500} onChange={onChangeMaxNode}/>
+                    <InputNumber value={maxNode} min={1} max={500} onChange={onChangeMaxNode}/>
                 </Form.Item>
             </Form>
         </Drawer>

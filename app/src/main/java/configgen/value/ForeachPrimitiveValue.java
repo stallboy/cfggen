@@ -21,12 +21,10 @@ public class ForeachPrimitiveValue {
     }
 
     public static void foreachVTable(PrimitiveValueVisitor visitor, VTable vTable) {
-        List<Value> pks = vTable.primaryKeyValueSet().stream().toList();
-        int i = 0;
-        for (VStruct vStruct : vTable.valueList()) {
-            Value pk = pks.get(i);
+        for (Map.Entry<Value, VStruct> e : vTable.primaryKeyMap().entrySet()) {
+            Value pk = e.getKey();
+            VStruct vStruct = e.getValue();
             foreachValue(visitor, vStruct, vTable.name(), pk, List.of());
-            i++;
         }
     }
 

@@ -144,10 +144,10 @@ public class ServeSchema {
             recordCount = -1;
             recordIds = null;
         } else {
-            recordCount = vTable.primaryKeyValueSet().size();
+            recordCount = vTable.primaryKeyMap().size();
             recordIds = new ArrayList<>(Math.min(recordCount, returnMaxIdCount));
             int i = 0;
-            for (CfgValue.Value pk : vTable.primaryKeyValueSet()) {
+            for (CfgValue.Value pk : vTable.primaryKeyMap().sequencedKeySet()) {
                 recordIds.add(new RecordId(pk.packStr(), null));
                 i++;
                 if (i >= returnMaxIdCount) {

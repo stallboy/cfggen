@@ -12,6 +12,9 @@ import configgen.value.CfgValue;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Executors;
 
 public class Server extends Generator {
     private final int port;
@@ -28,8 +31,8 @@ public class Server extends Generator {
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
 
         server.createContext("/schemas", this::handleSchemas);
-        server.createContext("/ids", this::handleIds);
         server.createContext("/record", this::handleRecord);
+        server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
 
         server.start();
 
@@ -37,10 +40,15 @@ public class Server extends Generator {
     }
 
     private void handleSchemas(HttpExchange exchange) throws IOException {
+        System.out.println("/schemas");
         ServeSchema.Schema schema = ServeSchema.fromCfgValue(cfgValue, 999999);
-        byte[] jsonBytes = JSON.toJSONBytes(schema);
+        sendResponse(exchange, schema);
+    }
+
+    private static void sendResponse(HttpExchange exchange, Object object) throws IOException {
+        byte[] jsonBytes = JSON.toJSONBytes(object);
         exchange.getResponseHeaders().set("Content-Type", "application/json");
-        exchange.getResponseHeaders().set("Access-Control-Allow-Origin","*");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
         exchange.sendResponseHeaders(200, jsonBytes.length);
         OutputStream out = exchange.getResponseBody();
         out.write(jsonBytes);
@@ -48,13 +56,27 @@ public class Server extends Generator {
         out.close();
     }
 
-
-    private void handleIds(HttpExchange exchange) throws IOException {
-
+    private void handleRecord(HttpExchange exchange) throws IOException {
+        Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
+        String table = query.get("table");
+        String id = query.get("id");
+        ServeRecord.TableRecord record = ServeRecord.getRecord(cfgValue, table, id);
+        sendResponse(exchange, record);
     }
 
-    private void handleRecord(HttpExchange exchange) throws IOException {
-
+    private static Map<String, String> queryToMap(String query) {
+        Map<String, String> result = new HashMap<>();
+        if (query != null) {
+            for (String param : query.split("&")) {
+                String[] pair = param.split("=");
+                if (pair.length > 1) {
+                    result.put(pair[0], pair[1]);
+                } else {
+                    result.put(pair[0], "");
+                }
+            }
+        }
+        return result;
     }
 
 }

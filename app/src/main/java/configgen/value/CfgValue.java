@@ -25,8 +25,8 @@ public record CfgValue(CfgSchema schema,
     public record VTable(TableSchema schema,
                          List<VStruct> valueList,
 
-                         SequencedSet<Value> primaryKeyValueSet,
-                         Map<List<String>, Set<Value>> uniqueKeyValueSetMap,
+                         SequencedMap<Value, VStruct> primaryKeyMap,
+                         SequencedMap<List<String>, SequencedMap<Value, VStruct>> uniqueKeyMaps,
                          Set<String> enumNames, //可为null
                          Map<String, Integer> enumNameToIntegerValueMap) { //可为null
 
@@ -43,7 +43,7 @@ public record CfgValue(CfgSchema schema,
         }
 
         default String packStr() {
-            return ValueUtil.pack(this);
+            return ValuePack.pack(this);
         }
     }
 
@@ -95,6 +95,14 @@ public record CfgValue(CfgSchema schema,
             this.cells = cells;
         }
 
+        public static VStruct of(Structural schema, List<Value> values) {
+            List<DCell> cells = new ArrayList<>();
+            for (Value value : values) {
+                cells.addAll(value.cells());
+            }
+            return new VStruct(schema, values, cells);
+        }
+
         public String name() {
             return schema.name();
         }
@@ -104,6 +112,7 @@ public record CfgValue(CfgSchema schema,
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             VStruct vStruct = (VStruct) o;
+            // 这里用schema == vStruct.schema，这里要保证我们不会用动态新建的struct schema去查询
             return schema == vStruct.schema && Objects.equals(values, vStruct.values);
         }
 
