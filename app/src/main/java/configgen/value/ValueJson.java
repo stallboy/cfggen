@@ -33,15 +33,14 @@ public class ValueJson {
             Value fv = vStruct.values().get(i);
             json.put(fs.name(), toJson(fv));
         }
+        json.put("$type", vStruct.schema().fullName());
         return json;
 
     }
 
     public static JSONObject toJson(VInterface vInterface) {
         VStruct child = vInterface.child();
-        JSONObject json = toJson(child);
-        json.put("$type", child.name());
-        return json;
+        return toJson(child);
     }
 
 
