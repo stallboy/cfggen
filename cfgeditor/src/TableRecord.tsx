@@ -181,7 +181,6 @@ function createRefNodes(entityMap: Map<string, Entity>, refs: TableMap) {
         let recordMap = refs[table]
         for (let id in recordMap) {
             let refId: RefId = {table, id};
-            let refRecord: Refs = recordMap[id];
             let eid = getId(table, id);
             let entity: Entity = {
                 id: eid,
@@ -196,7 +195,6 @@ function createRefNodes(entityMap: Map<string, Entity>, refs: TableMap) {
             };
 
             entityMap.set(eid, entity);
-            createRefs(entity, refRecord);
         }
     }
 }
