@@ -5,7 +5,7 @@ import {ConnectionPlugin, Presets as ConnectionPresets} from "rete-connection-pl
 import {Presets, ReactArea2D, ReactPlugin} from "rete-react-plugin";
 
 import {AutoArrangePlugin, Presets as ArrangePresets} from "rete-auto-arrange-plugin";
-import {EntityConnectionType, EntityGraph} from "./model/graphModel.ts";
+import {EntityConnectionType, EntityGraph, FieldsShowType} from "./model/graphModel.ts";
 import {TableControl, TableControlComponent} from "./ui/TableControl.tsx";
 import {EntityNode, EntityNodeComponent} from "./ui/EntityNode.tsx";
 import {EntityConnection, EntityConnectionComponent} from "./ui/EntityConnection.tsx";
@@ -86,16 +86,16 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
         let ch;
         let fc;
         switch (entity.fieldsShow) {
-            case "direct":
+            case FieldsShowType.Direct:
                 ch = 0;
                 fc = entity.fields.length;
                 hasCtrl = false;
                 break;
-            case "expand":
+            case FieldsShowType.Expand:
                 ch = 80;
                 fc = entity.fields.length;
                 break;
-            case "fold":
+            case FieldsShowType.Fold:
                 ch = 60;
                 fc = 0;
                 break;

@@ -26,9 +26,9 @@ public class ServeRecord {
         paramErr,
     }
 
-    public record Refs(
-            @JSONField(name = "$refs")
-            Map<String, List<RefId>> refs) {
+    public record Refs(String value,
+                       @JSONField(name = "$refs")
+                       Map<String, List<RefId>> refs) {
     }
 
     public record TableRecord(ResultCode resultCode,
@@ -122,7 +122,7 @@ public class ServeRecord {
                 ValueRefCollector collector = new ValueRefCollector(newFrontier, refIdMap);
                 collector.collect(record, List.of());
 
-                result.put(refId, new Refs(refIdMap));
+                result.put(refId, new Refs(record.packStr(), refIdMap));
 
                 if (result.size() > maxObjs) {
                     break;

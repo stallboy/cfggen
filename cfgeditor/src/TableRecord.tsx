@@ -8,9 +8,19 @@ import {
     EntityField,
     EntityNodeType,
     EntitySocketOutput,
+    FieldsShowType, fillInputs,
 } from "./model/graphModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
-import {JSONArray, JSONObject, JSONValue, RecordResult, RefId, Refs, TableMap} from "./model/recordModel.ts";
+import {
+    BriefRecord,
+    JSONArray,
+    JSONObject,
+    JSONValue,
+    RecordResult,
+    RefId,
+    Refs,
+    TableMap
+} from "./model/recordModel.ts";
 import {Empty, Result, Spin} from "antd";
 
 
@@ -141,10 +151,10 @@ function createNodes(entityMap: Map<string, Entity>, schema: Schema, refId: RefI
         id: id,
         label: label,
         fields: fields,
-        inputs: [{key: 'input'}],
+        inputs: [],
         outputs: outputs,
 
-        fieldsShow: 'direct',
+        fieldsShow: FieldsShowType.Direct,
         nodeType: EntityNodeType.Normal,
         userData: refId,
     };
@@ -180,16 +190,18 @@ function createRefNodes(entityMap: Map<string, Entity>, refs: TableMap) {
     for (let table in refs) {
         let recordMap = refs[table]
         for (let id in recordMap) {
+            let briefRecord: BriefRecord = recordMap[id];
             let refId: RefId = {table, id};
             let eid = getId(table, id);
             let entity: Entity = {
                 id: eid,
                 label: getLabel(table),
-                fields: [{key: "id", name: "id", value: id}],
-                inputs: [{key: "input"}],
+                fields: [{key: 'id', name: 'id', value: id},
+                    {key: 'value', name: 'value', value: briefRecord.value}],
+                inputs: [],
                 outputs: [],
 
-                fieldsShow: 'direct',
+                fieldsShow: FieldsShowType.Direct,
                 nodeType: EntityNodeType.Ref,
                 userData: refId,
             };
@@ -214,6 +226,7 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
     let refId = {table: curTable.name, id: curId};
     let entityId = getId(curTable.name, curId);
     createNodes(entityMap, schema, refId, entityId, recordResult.object);
+    fillInputs(entityMap);
 
     const menu: Item[] = [];
 

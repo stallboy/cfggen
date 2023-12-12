@@ -1,6 +1,6 @@
 import {ClassicPreset} from "rete";
 import type {ColumnsType} from "antd/es/table";
-import {EntityField, FieldsShow} from "../model/graphModel.ts";
+import {EntityField, FieldsShowType} from "../model/graphModel.ts";
 import {Collapse, Space, Table, Tooltip} from "antd";
 
 const columns: ColumnsType<EntityField> = [
@@ -14,7 +14,7 @@ const columns: ColumnsType<EntityField> = [
             showTitle: false
         },
         render: (_text: any, record: EntityField, _index: number) => (
-            <Tooltip placement="topLeft" title={record.name + ": " + record.comment}>
+            <Tooltip placement="topLeft" title={record.comment ? record.name + ": " + record.comment : record.name}>
                 {record.name}
             </Tooltip>
         )
@@ -42,7 +42,7 @@ function dummpyOnChange(_key: string | string[]) {
 export class TableControl extends ClassicPreset.Control {
     onChange: (key: string | string[]) => void = dummpyOnChange;
 
-    constructor(public data: EntityField[], public fieldsShow: FieldsShow) {
+    constructor(public data: EntityField[], public fieldsShow: FieldsShowType) {
         super();
     }
 }
@@ -61,14 +61,12 @@ export function TableControlComponent(props: { data: TableControl }) {
 
 
     switch (ctrl.fieldsShow) {
-        case "direct":
+        case FieldsShowType.Direct:
             return tab;
-
-        case "expand":
+        case FieldsShowType.Expand:
             let items = [{key: '1', label: `${ctrl.data.length} fields`, children: tab}];
             return <Collapse defaultActiveKey={'1'} items={items} onChange={ctrl.onChange}/>
-
-        case "fold":
+        case FieldsShowType.Fold:
             let items2 = [{key: '1', label: `${ctrl.data.length} fields`, children: tab}];
             return <Collapse items={items2} onChange={ctrl.onChange}/>
     }

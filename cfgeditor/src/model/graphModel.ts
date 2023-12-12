@@ -10,7 +10,6 @@ export interface EntityField {
 export interface ConnectTo {
     nodeId: string;
     inputKey: string;
-
     connectionType?: EntityConnectionType;
 }
 
@@ -31,7 +30,7 @@ export interface Entity {
     inputs: EntitySocket[];
     outputs: EntitySocketOutput[];
 
-    fieldsShow: FieldsShow;
+    fieldsShow: FieldsShowType;
     nodeType?: EntityNodeType;
     userData?: any;
 }
@@ -42,7 +41,11 @@ export interface EntityGraph {
     nodeMenuFunc?: (node: Entity) => Item[];
 }
 
-export type FieldsShow = 'direct' | 'expand' | 'fold';
+export enum FieldsShowType {
+    Direct,
+    Expand,
+    Fold
+}
 
 export enum EntityNodeType {
     Normal,
@@ -54,4 +57,22 @@ export enum EntityNodeType {
 export enum EntityConnectionType {
     Normal,
     Ref = 1,
+}
+
+export function fillInputs(entityMap: Map<string, Entity>) {
+    let nodeIdSet = new Set<string>();
+    for (let entity of entityMap.values()) {
+        for (let output of entity.outputs) {
+            for (let connectToSocket of output.connectToSockets) {
+                nodeIdSet.add(connectToSocket.nodeId);
+            }
+        }
+    }
+
+    for (let id of nodeIdSet) {
+        let entity = entityMap.get(id);
+        if (entity) {
+            entity.inputs = [{key: 'input'}];
+        }
+    }
 }

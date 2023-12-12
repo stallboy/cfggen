@@ -2,7 +2,14 @@ import {Schema, SInterface, SItem, SStruct, STable} from "./model/schemaModel.ts
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback} from "react";
-import {ConnectTo, Entity, EntityConnectionType, EntityNodeType, FieldsShow} from "./model/graphModel.ts";
+import {
+    ConnectTo,
+    Entity,
+    EntityConnectionType,
+    EntityNodeType,
+    FieldsShowType,
+    fillInputs
+} from "./model/graphModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 
 
@@ -20,16 +27,16 @@ function createNode(item: SItem, id: string, nodeType: EntityNodeType = EntityNo
         }
     }
 
-    let fieldsShow: FieldsShow = 'direct';
+    let fieldsShow = FieldsShowType.Direct;
     if (nodeType == EntityNodeType.Ref && fields.length > 5) {
-        fieldsShow = 'fold';
+        fieldsShow = FieldsShowType.Fold;
     }
 
     return {
         id: id,
         label: item.name,
         fields: fields,
-        inputs: [{key: "input"}],
+        inputs: [],
         outputs: [],
 
         fieldsShow,
@@ -104,11 +111,12 @@ function includeSubStructs(entityMap: Map<string, Entity>, frontier: (STable | S
                     inputKey: "input",
                 })
             }
-
-            oldFNode.outputs.push({
-                output: {key: "output"},
-                connectToSockets: connSockets
-            })
+            if (connSockets.length > 0) {
+                oldFNode.outputs.push({
+                    output: {key: "output"},
+                    connectToSockets: connSockets
+                })
+            }
         }
     }
     return hasInterface;
@@ -192,6 +200,7 @@ export function TableSchema({schema, curTable, maxImpl, setCurTable}: {
     let frontier = [curTable];
     includeSubStructs(entityMap, frontier, schema, maxImpl);
     includeRefTables(entityMap, schema);
+    fillInputs(entityMap);
 
     const menu: Item[] = [];
 

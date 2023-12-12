@@ -2,7 +2,7 @@ import {Schema, SItem, STable} from "./model/schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback} from "react";
-import {Entity, EntityConnectionType, EntityNodeType} from "./model/graphModel.ts";
+import {Entity, EntityConnectionType, EntityNodeType, FieldsShowType, fillInputs} from "./model/graphModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 
 
@@ -11,10 +11,10 @@ function createNode(item: SItem, id: string, nodeType: EntityNodeType = EntityNo
         id: id,
         label: item.name,
         fields: [],
-        inputs: [{key: "input"}],
+        inputs: [],
         outputs: [],
 
-        fieldsShow: 'direct',
+        fieldsShow: FieldsShowType.Direct,
         nodeType,
         userData: item,
     };
@@ -137,6 +137,7 @@ export function TableRef({schema, curTable, setCurTable, refIn, refOutDepth, max
 }) {
     const entityMap = new Map<string, Entity>();
     includeRefTables(entityMap, curTable, schema, refIn, refOutDepth, maxNode);
+    fillInputs(entityMap);
 
     const menu: Item[] = [];
 

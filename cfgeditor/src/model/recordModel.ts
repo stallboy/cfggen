@@ -15,6 +15,10 @@ export interface Refs {
     "$refs"?: RefIdMap;
 }
 
+export interface BriefRecord extends Refs {
+    value: string;
+}
+
 export interface RefIdMap {
     [refName: string]: RefId[];
 }
@@ -32,7 +36,7 @@ export interface TableMap {
 }
 
 export interface RecordMap {
-    [id: string]: Refs;
+    [id: string]: BriefRecord;
 }
 
 export interface RecordResult {
