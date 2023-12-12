@@ -1,8 +1,8 @@
-import {Schema, SItem, STable} from "./schemaModel.ts";
+import {Schema, SItem, STable} from "./model/schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback} from "react";
-import {Entity, EntityConnectionType, EntityNodeType} from "./graphModel.ts";
+import {Entity, EntityConnectionType, EntityNodeType} from "./model/graphModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 
 
@@ -128,17 +128,13 @@ function includeRefTables(entityMap: Map<string, Entity>, curTable: STable, sche
 
 
 export function TableRef({schema, curTable, setCurTable, refIn, refOutDepth, maxNode}: {
-    schema: Schema | null;
-    curTable: STable | null;
+    schema: Schema;
+    curTable: STable;
     setCurTable: (cur: string) => void;
     refIn: boolean;
     refOutDepth: number;
     maxNode: number;
 }) {
-    if (schema == null || curTable == null) {
-        return <div/>
-    }
-
     const entityMap = new Map<string, Entity>();
     includeRefTables(entityMap, curTable, schema, refIn, refOutDepth, maxNode);
 

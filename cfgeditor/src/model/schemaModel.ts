@@ -87,7 +87,7 @@ export class Schema {
                 let st = item as STable;
                 let refTables = st.refTables as Set<string>;
                 for (let refTable of refTables) {
-                    let t:STable = this.getSTable(refTable) as STable;
+                    let t: STable = this.getSTable(refTable) as STable;
                     t.refInTables?.add(st.name);
                 }
             }
@@ -309,4 +309,13 @@ function setDelete(dst: Set<string>, from: Set<string>) {
     for (let s of from) {
         dst.delete(s);
     }
+}
+
+export function getField(item: STable | SStruct, fieldName: string): SField | null {
+    for (let field of item.fields) {
+        if (field.name == fieldName) {
+            return field;
+        }
+    }
+    return null;
 }

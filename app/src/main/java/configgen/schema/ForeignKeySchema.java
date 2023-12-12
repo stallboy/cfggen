@@ -3,6 +3,7 @@ package configgen.schema;
 import configgen.value.CfgValue;
 
 import java.util.Objects;
+import java.util.SequencedMap;
 import java.util.Set;
 
 public class ForeignKeySchema {
@@ -14,7 +15,7 @@ public class ForeignKeySchema {
 
     private TableSchema refTableSchema;
 
-    public Set<CfgValue.Value> fkValueSet;
+    public SequencedMap<CfgValue.Value, CfgValue.VStruct> fkValueMap;
     public int[] keyIndices;
 
     public ForeignKeySchema(String name, KeySchema key, String refTable, RefKey refKey, Metadata meta) {

@@ -1,11 +1,12 @@
 import {useEffect, useState} from "react";
 import {TableList} from "./TableList.tsx";
-import {Schema, STable} from "./schemaModel.ts";
+import {Schema, STable} from "./model/schemaModel.ts";
 import {Button, Drawer, Form, InputNumber, Space, Switch, Tabs} from "antd";
 import {IdList} from "./IdList.tsx";
 import {TableSchema} from "./TableSchema.tsx";
 import {TableRef} from "./TableRef.tsx";
 import {SettingOutlined} from "@ant-design/icons";
+import {TableRecord} from "./TableRecord.tsx";
 
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
     const [refIn, setRefIn] = useState<boolean>(true);
     const [refOutDepth, setRefOutDepth] = useState<number>(3);
     const [maxNode, setMaxNode] = useState<number>(30);
+    const [recordRefOutDepth, setRecordRefOutDepth] = useState<number>(3);
 
 
     useEffect(() => {
@@ -34,26 +36,38 @@ export default function App() {
     }, []);
 
 
-    function selectCurTableFromSchema(schema: Schema | null, cur: string | null = null) {
+    function selectCurTableFromSchema(schema: Schema,
+                                      curTableName: string | null = null,
+                                      curId: string | null = null) {
         if (schema == null) {
             return;
         }
         let table;
-        if (cur) {
-            table = schema.getSTable(cur);
+        if (curTableName) {
+            table = schema.getSTable(curTableName);
         } else {
             table = schema.getFirstSTable();
         }
         if (table) {
             setCurTable(table);
-            if (table.recordIds.length > 0) {
+            if (curId) {
+                setCurId(curId)
+            } else if (table.recordIds.length > 0) {
                 setCurId(table.recordIds[0].id)
             }
         }
     }
 
-    function selectCurTable(cur: string) {
-        selectCurTableFromSchema(schema, cur);
+    function selectCurTable(curTableName: string) {
+        if (schema) {
+            selectCurTableFromSchema(schema, curTableName);
+        }
+    }
+
+    function selectCurTableAndId(curTableName: string, curId: string) {
+        if (schema) {
+            selectCurTableFromSchema(schema, curTableName, curId);
+        }
     }
 
 
@@ -74,44 +88,47 @@ export default function App() {
         <IdList curTable={curTable} curId={curId} setCurId={setCurId}/>
     </Space>;
 
-
-    let items = [
-        {
-            key: "表结构",
-            label: "表结构",
-            children: <TableSchema schema={schema} curTable={curTable}
+    let tableSchema = <div/>;
+    let tableRef = <div/>;
+    let tableRecord = <div/>;
+    if (schema != null && curTable != null) {
+        tableSchema = <TableSchema schema={schema}
+                                   curTable={curTable}
                                    maxImpl={maxImpl}
-                                   setCurTable={selectCurTable}/>
+                                   setCurTable={selectCurTable}/>;
+        tableRef = <TableRef schema={schema}
+                             curTable={curTable}
+                             setCurTable={selectCurTable}
+                             refIn={refIn}
+                             refOutDepth={refOutDepth}
+                             maxNode={maxNode}/>;
 
-        },
-        {
-            key: "表关系",
-            label: "表关系",
-            children: <TableRef schema={schema}
-                                curTable={curTable}
-                                setCurTable={selectCurTable}
-                                refIn={refIn}
-                                refOutDepth={refOutDepth}
-                                maxNode={maxNode}/>
-        },
-        {
-            key: "数据",
-            label: "数据",
-            children: <TableSchema schema={schema} curTable={curTable}
-                                   maxImpl={maxImpl}
-                                   setCurTable={selectCurTable}/>
-        },
-    ]
-
-    function onChangeRefOutDepth(value: number | null) {
-        if (value) {
-            setRefOutDepth(value);
+        if (curId != null) {
+            tableRecord = <TableRecord schema={schema}
+                                       curTable={curTable}
+                                       curId={curId}
+                                       setCurTableAndId={selectCurTableAndId}/>;
         }
     }
+
+    let items = [{key: "表结构", label: "表结构", children: tableSchema,},
+        {key: "表关系", label: "表关系", children: tableRef,},
+        {key: "数据", label: "数据", children: tableRecord,}]
+
 
     function onChangeMaxImpl(value: number | null) {
         if (value) {
             setMaxImpl(value);
+        }
+    }
+
+    function onChangeRefIn(checked: boolean) {
+        setRefIn(checked);
+    }
+
+    function onChangeRefOutDepth(value: number | null) {
+        if (value) {
+            setRefOutDepth(value);
         }
     }
 
@@ -121,9 +138,12 @@ export default function App() {
         }
     }
 
-    function onChangeRefIn(checked: boolean) {
-        setRefIn(checked);
+    function onChangeRecordRefOutDepth(value: number | null) {
+        if (value) {
+            setRecordRefOutDepth(value);
+        }
     }
+
 
     return <div className="App">
         <Tabs tabBarExtraContent={{'left': operation}} items={items} type="card"/>
@@ -143,6 +163,10 @@ export default function App() {
 
                 <Form.Item label='节点数：'>
                     <InputNumber value={maxNode} min={1} max={500} onChange={onChangeMaxNode}/>
+                </Form.Item>
+
+                <Form.Item label='数据出层：'>
+                    <InputNumber value={recordRefOutDepth} min={1} max={500} onChange={onChangeRecordRefOutDepth}/>
                 </Form.Item>
             </Form>
         </Drawer>

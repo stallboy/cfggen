@@ -1,6 +1,6 @@
 import {EntityNode} from "./EntityNode.tsx";
 import {ClassicPreset} from "rete";
-import {EntityConnectionType} from "../graphModel.ts";
+import {EntityConnectionType} from "../model/graphModel.ts";
 import {css} from "styled-components";
 import {Presets} from "rete-react-plugin";
 

@@ -40,7 +40,7 @@ public class Server extends Generator {
     }
 
     private void handleSchemas(HttpExchange exchange) throws IOException {
-        System.out.println("/schemas");
+        System.out.println(exchange.getRequestURI());
         ServeSchema.Schema schema = ServeSchema.fromCfgValue(cfgValue, 999999);
         sendResponse(exchange, schema);
     }
@@ -57,10 +57,36 @@ public class Server extends Generator {
     }
 
     private void handleRecord(HttpExchange exchange) throws IOException {
+        System.out.println(exchange.getRequestURI());
         Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
         String table = query.get("table");
         String id = query.get("id");
-        ServeRecord.TableRecord record = ServeRecord.getRecord(cfgValue, table, id);
+        String depthStr = query.get("depth");
+        String maxObjsStr = query.get("maxObjs");
+        String inStr = query.get("in");
+
+        int depth = 1;
+        if (depthStr != null) {
+            try {
+                depth = Integer.parseInt(depthStr);
+            } catch (NumberFormatException e) {
+                // ignore
+            }
+        }
+
+        int maxObjs = 30;
+        if (depthStr != null) {
+            try {
+                maxObjs = Integer.parseInt(maxObjsStr);
+            } catch (NumberFormatException e) {
+                // ignore
+            }
+        }
+
+        boolean in = inStr != null;
+
+
+        ServeRecord.TableRecord record = new ServeRecord(cfgValue, table, id, depth, in, maxObjs).retrieve();
         sendResponse(exchange, record);
     }
 

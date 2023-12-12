@@ -71,7 +71,7 @@ public final class RefSearcher {
                 switch (ft) {
                     case FieldType.SimpleType ignored -> {
                         Value localValue = ValueUtil.extractKeyValue(vStruct, fk.keyIndices);
-                        if (fk.fkValueSet.contains(localValue)) {
+                        if (fk.fkValueMap.containsKey(localValue)) {
                             addValueTable(res, localValue, fromTable.name());
                         }
                     }

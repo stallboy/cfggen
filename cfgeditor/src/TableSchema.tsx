@@ -1,8 +1,8 @@
-import {Schema, SInterface, SItem, SStruct, STable} from "./schemaModel.ts";
+import {Schema, SInterface, SItem, SStruct, STable} from "./model/schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback} from "react";
-import {ConnectTo, Entity, EntityConnectionType, EntityNodeType, FieldsShow} from "./graphModel.ts";
+import {ConnectTo, Entity, EntityConnectionType, EntityNodeType, FieldsShow} from "./model/graphModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 
 
@@ -181,17 +181,12 @@ function upper1(str: string): string {
 }
 
 export function TableSchema({schema, curTable, maxImpl, setCurTable}: {
-    schema: Schema | null;
-    curTable: STable | null;
+    schema: Schema;
+    curTable: STable;
     maxImpl: number;
     setCurTable: (cur: string) => void;
 }) {
-    if (schema == null || curTable == null) {
-        return <div/>
-    }
-
     const entityMap = new Map<string, Entity>();
-
     let curNode = createNode(curTable, curTable.name);
     entityMap.set(curNode.id, curNode);
     let frontier = [curTable];
@@ -222,7 +217,6 @@ export function TableSchema({schema, curTable, maxImpl, setCurTable}: {
         [schema, curTable, maxImpl]
     );
     const [ref] = useRete(create);
-
 
     return <div ref={ref} style={{height: "100vh", width: "100vw"}}></div>
 }

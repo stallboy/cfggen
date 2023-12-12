@@ -5,7 +5,7 @@ import {ConnectionPlugin, Presets as ConnectionPresets} from "rete-connection-pl
 import {Presets, ReactArea2D, ReactPlugin} from "rete-react-plugin";
 
 import {AutoArrangePlugin, Presets as ArrangePresets} from "rete-auto-arrange-plugin";
-import {EntityConnectionType, EntityGraph} from "./graphModel.ts";
+import {EntityConnectionType, EntityGraph} from "./model/graphModel.ts";
 import {TableControl, TableControlComponent} from "./ui/TableControl.tsx";
 import {EntityNode, EntityNodeComponent} from "./ui/EntityNode.tsx";
 import {EntityConnection, EntityConnectionComponent} from "./ui/EntityConnection.tsx";
@@ -151,9 +151,12 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
         for (let output of entity.outputs) {
             for (let connSocket of output.connectToSockets) {
                 let toNode = id2node.get(connSocket.nodeId) as EntityNode;
-                let conn = new EntityConnection(fromNode, output.output.key, toNode, connSocket.inputKey);
-                conn.connectionType = connSocket.connectionType ?? EntityConnectionType.Normal;
-                await editor.addConnection(conn);
+                if (toNode) { // 可能会没有
+                    let conn = new EntityConnection(fromNode, output.output.key, toNode, connSocket.inputKey);
+                    conn.connectionType = connSocket.connectionType ?? EntityConnectionType.Normal;
+                    await editor.addConnection(conn);
+                }
+
             }
         }
     }

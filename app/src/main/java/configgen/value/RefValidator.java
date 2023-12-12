@@ -23,16 +23,16 @@ public class RefValidator {
 
     private void presetStructural(Structural structural) {
         for (ForeignKeySchema fk : structural.foreignKeys()) {
+            fk.keyIndices = FindFieldIndex.findFieldIndices(structural, fk.key());
+
             switch (fk.refKey()) {
                 case RefKey.RefPrimary ignored -> {
                     VTable vTable = value.vTableMap().get(fk.refTableNormalized());
-                    fk.fkValueSet = vTable.primaryKeyMap().sequencedKeySet();
-                    fk.keyIndices = FindFieldIndex.findFieldIndices(structural, fk.key());
+                    fk.fkValueMap = vTable.primaryKeyMap();
                 }
                 case RefKey.RefUniq refUniq -> {
                     VTable vTable = value.vTableMap().get(fk.refTableNormalized());
-                    fk.fkValueSet = vTable.uniqueKeyMaps().get(refUniq.keyNames()).sequencedKeySet();
-                    fk.keyIndices = FindFieldIndex.findFieldIndices(structural, fk.key());
+                    fk.fkValueMap = vTable.uniqueKeyMaps().get(refUniq.keyNames());
                 }
                 case RefKey.RefList ignored -> {
                 }
@@ -54,7 +54,7 @@ public class RefValidator {
                             //否则，--->格子中有值，就算配置为nullableRef也不行
                             boolean can_NotEmpty_And_NullableRef = structural == fromTable.schema() &&
                                     isForeignLocalKeyInPrimaryOrUniq(fk, fromTable.schema()) && refSimple.nullable();
-                            if (!can_NotEmpty_And_NullableRef && !fk.fkValueSet.contains(localValue)) {
+                            if (!can_NotEmpty_And_NullableRef && !fk.fkValueMap.containsKey(localValue)) {
                                 errs.addErr(new ForeignValueNotFound(localValue.cells(), fromTable.name(), fk.name()));
                             }
                         } else {
@@ -66,7 +66,7 @@ public class RefValidator {
                     case FList ignored -> {
                         VList localList = (VList) vStruct.values().get(fk.keyIndices[0]);
                         for (SimpleValue item : localList.valueList()) {
-                            if (!fk.fkValueSet.contains(item)) {
+                            if (!fk.fkValueMap.containsKey(item)) {
                                 errs.addErr(new ForeignValueNotFound(item.cells(), fromTable.name(), fk.name()));
                             }
                         }
@@ -74,7 +74,7 @@ public class RefValidator {
                     case FMap ignored -> {
                         VMap localMap = (VMap) vStruct.values().get(fk.keyIndices[0]);
                         for (SimpleValue val : localMap.valueMap().values()) {
-                            if (!fk.fkValueSet.contains(val)) {
+                            if (!fk.fkValueMap.containsKey(val)) {
                                 errs.addErr(new ForeignValueNotFound(val.cells(), fromTable.name(), fk.name()));
                             }
                         }

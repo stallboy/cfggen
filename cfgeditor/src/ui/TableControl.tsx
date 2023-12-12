@@ -1,6 +1,6 @@
 import {ClassicPreset} from "rete";
 import type {ColumnsType} from "antd/es/table";
-import {EntityField, FieldsShow} from "../graphModel.ts";
+import {EntityField, FieldsShow} from "../model/graphModel.ts";
 import {Collapse, Space, Table, Tooltip} from "antd";
 
 const columns: ColumnsType<EntityField> = [
