@@ -1,11 +1,11 @@
 [package]
-name = "app"
+name = "cfgeditor"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "config editor for designer"
+authors = ["cxs"]
 license = ""
 repository = ""
-default-run = "app"
+default-run = "cfgeditor"
 edition = "2021"
 rust-version = "1.60"
 
