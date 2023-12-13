@@ -15,6 +15,7 @@
     "elkjs": "^0.8.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-hotkeys-hook": "^4.4.1",
     "rete": "^2.0.2",
     "rete-area-plugin": "^2.0.1",
     "rete-auto-arrange-plugin": "^2.0.0",

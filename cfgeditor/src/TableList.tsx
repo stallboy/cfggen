@@ -1,7 +1,6 @@
 import {Schema, STable} from "./model/schemaModel.ts";
 import {Dispatch} from "react";
 import {Badge, Select, Space} from "antd";
-import {TableOutlined} from "@ant-design/icons";
 
 class TableWithLastName {
     table: STable;
@@ -57,7 +56,7 @@ export function TableList({schema, curTable, setCurTable}: {
                                style={style}/>
 
             subOptions.push({
-                label: <Space><TableOutlined/>{tl.lastName}{badge} </Space>,
+                label: <Space>{tl.lastName}{badge} </Space>,
                 value: tl.table.name,
             });
         }
@@ -72,7 +71,7 @@ export function TableList({schema, curTable, setCurTable}: {
     return <Select
         showSearch
         options={options}
-        style={{width: 300}}
+        style={{width: 200}}
         value={curTable?.name}
         placeholder="search a table"
         optionFilterProp="children"

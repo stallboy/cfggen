@@ -1,15 +1,21 @@
 import {useEffect, useState} from "react";
-import {TableList} from "./TableList.tsx";
+import {Button, Drawer, Form, InputNumber, Space, Switch, Tabs, Tag} from "antd";
+import {LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
 import {Schema, STable} from "./model/schemaModel.ts";
-import {Button, Drawer, Form, InputNumber, Space, Switch, Tabs} from "antd";
+import {History, HistoryItem} from "./model/historyModel.ts";
+import {TableList} from "./TableList.tsx";
 import {IdList} from "./IdList.tsx";
 import {TableSchema} from "./TableSchema.tsx";
 import {TableRef} from "./TableRef.tsx";
-import {LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
 import {TableRecord} from "./TableRecord.tsx";
 import {TableRecordRef} from "./TableRecordRef.tsx";
-import {History, HistoryItem} from "./model/historyModel.ts";
 import {SearchValue} from "./SearchValue.tsx";
+import {useHotkeys} from "react-hotkeys-hook";
+
+const key1 = 'tableSchema'
+const key2 = 'tableRef'
+const key3 = 'tableRecord'
+const key4 = 'tableRecordRef'
 
 export default function App() {
     const [schema, setSchema] = useState<Schema | null>(null);
@@ -42,6 +48,16 @@ export default function App() {
 
         fetchData().catch(console.error);
     }, []);
+
+
+    const [activePage, setActivePage] = useState<string>(key1);
+    useHotkeys('alt+1', () => setActivePage(key1));
+    useHotkeys('alt+2', () => setActivePage(key2));
+    useHotkeys('alt+3', () => setActivePage(key3));
+    useHotkeys('alt+4', () => setActivePage(key4));
+    useHotkeys('alt+x', () => showSearch());
+    useHotkeys('alt+c', () => prev());
+    useHotkeys('alt+v', () => next());
 
 
     function selectCurTableFromSchema(schema: Schema,
@@ -101,6 +117,18 @@ export default function App() {
         selectHistoryCur(newHistory.cur());
     }
 
+    const leftOp = <Space>
+        <TableList schema={schema} curTable={curTable} setCurTable={selectCurTable}/>
+        <IdList curTable={curTable} curId={curId} setCurId={setCurId}/>
+
+        <Button onClick={prev} disabled={!history.canPrev()}>
+            <LeftOutlined/><Tag>alt+c</Tag>
+        </Button>
+
+        <Button onClick={next} disabled={!history.canNext()}>
+            <RightOutlined/><Tag>alt+v</Tag>
+        </Button>
+    </Space>;
 
     const showSetting = () => {
         setSettingOpen(true);
@@ -110,23 +138,6 @@ export default function App() {
         setSettingOpen(false);
     };
 
-
-    let leftOp = <Space>
-        <Button onClick={showSetting}>
-            <SettingOutlined/>
-        </Button>
-        <TableList schema={schema} curTable={curTable} setCurTable={selectCurTable}/>
-        <IdList curTable={curTable} curId={curId} setCurId={setCurId}/>
-
-        <Button onClick={prev} disabled={!history.canPrev()}>
-            <LeftOutlined/>
-        </Button>
-
-        <Button onClick={next} disabled={!history.canNext()}>
-            <RightOutlined/>
-        </Button>
-    </Space>;
-
     const showSearch = () => {
         setSearchOpen(true);
     };
@@ -135,9 +146,12 @@ export default function App() {
         setSearchOpen(false);
     };
 
-    let rightOp = <Space>
+    const rightOp = <Space>
         <Button onClick={showSearch}>
-            <SearchOutlined/>
+            <SearchOutlined/><Tag>alt+x</Tag>
+        </Button>
+        <Button onClick={showSetting}>
+            <SettingOutlined/>
         </Button>
     </Space>
 
@@ -172,11 +186,16 @@ export default function App() {
         }
     }
 
-    let items = [{key: "表结构", label: "表结构", children: tableSchema,},
-        {key: "表关系", label: "表关系", children: tableRef,},
-        {key: "数据", label: "数据", children: tableRecord,},
-        {key: "数据关系", label: "数据关系", children: tableRecordRef,},
+    let items = [
+        {key: key1, label: <Space>表结构<Tag>alt+1</Tag></Space>, children: tableSchema,},
+        {key: key2, label: <Space>表关系<Tag>alt+2</Tag></Space>, children: tableRef,},
+        {key: key3, label: <Space>数据<Tag>alt+3</Tag></Space>, children: tableRecord,},
+        {key: key4, label: <Space>数据关系<Tag>alt+4</Tag></Space>, children: tableRecordRef,},
     ]
+
+    function onTabChange(activeKey: string) {
+        setActivePage(activeKey);
+    }
 
 
     function onChangeMaxImpl(value: number | null) {
@@ -224,9 +243,13 @@ export default function App() {
     }
 
     return <div className="App">
-        <Tabs tabBarExtraContent={{'left': leftOp, 'right': rightOp}} items={items} type="card"/>
-        <Drawer title="setting" placement="left" onClose={onSettingClose} open={settingOpen}>
-            <Form labelCol={{span: 6}} wrapperCol={{span: 14}} layout={'horizontal'}>
+        <Tabs tabBarExtraContent={{'left': leftOp, 'right': rightOp}}
+              items={items}
+              activeKey={activePage}
+              onChange={onTabChange}
+              type="card"/>
+        <Drawer title="setting" placement="right" onClose={onSettingClose} open={settingOpen}>
+            <Form labelCol={{span: 10}} wrapperCol={{span: 14}} layout={'horizontal'}>
                 <Form.Item label='接口实现数:'>
                     <InputNumber value={maxImpl} min={1} max={500} onChange={onChangeMaxImpl}/>
                 </Form.Item>

@@ -1,7 +1,6 @@
 import {STable} from "./model/schemaModel.ts";
 import {Dispatch} from "react";
 import {Select, Space, Skeleton} from "antd";
-import {MinusOutlined} from "@ant-design/icons";
 
 
 export function IdList({curTable, curId, setCurId}: {
@@ -15,13 +14,13 @@ export function IdList({curTable, curId, setCurId}: {
 
     let options = [];
     for (let id of curTable.recordIds) {
-        options.push({label: <Space><MinusOutlined/> {id.id}</Space>, value: id.id});
+        options.push({label: <Space>{id.id}</Space>, value: id.id});
     }
 
     return <Select
         showSearch
         options={options}
-        style={{width: 200}}
+        style={{width: 160}}
         value={curId}
         placeholder="search a record"
         filterOption={(inputValue, option) =>
