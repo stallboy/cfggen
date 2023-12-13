@@ -9,6 +9,7 @@ import {LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant
 import {TableRecord} from "./TableRecord.tsx";
 import {TableRecordRef} from "./TableRecordRef.tsx";
 import {History, HistoryItem} from "./model/historyModel.ts";
+import {SearchValue} from "./SearchValue.tsx";
 
 export default function App() {
     const [schema, setSchema] = useState<Schema | null>(null);
@@ -260,7 +261,9 @@ export default function App() {
             </Form>
         </Drawer>
 
-        <Drawer title="search" placement="right" onClose={onSearchClose} open={searchOpen}/>
+        <Drawer title="search" placement="right" onClose={onSearchClose} open={searchOpen} size={'large'}>
+            <SearchValue searchMax={searchMax} setCurTableAndId={selectCurTableAndId}/>
+        </Drawer>
 
     </div>;
 
