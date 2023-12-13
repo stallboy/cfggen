@@ -1,35 +1,102 @@
 package configgen.tool;
 
 import configgen.value.CfgValue;
-import configgen.value.ForeachPrimitiveValue;
 import configgen.value.RefSearcher;
 
 import java.util.*;
 
+import static configgen.value.ForeachPrimitiveValue.PrimitiveValueVisitor;
+import static configgen.value.ForeachPrimitiveValue.foreachVTable;
+
 public class ServeSearch {
 
-    public record SearchNumber(Set<Long> numberSet) {
+    public enum ResultCode {
+        ok,
+        qNotSet,
     }
 
-    public record SearchNumberResultItem(String table,
-                                         String primaryKey,
-                                         String fieldChain,
-                                         long value) {
+    public record SearchResultItem(String table,
+                                   String pk,
+                                   String fieldChain,
+                                   String value) {
     }
 
-    public record SearchNumberResult(List<SearchNumberResultItem> items) {
+    public record SearchResult(ResultCode resultCode,
+                               String q,
+                               int max,
+                               List<SearchResultItem> items) {
     }
 
-    public record SearchStr(String keyword) {
+    public static SearchResult search(CfgValue cfgValue, String q, int maxItems) {
+        if (q == null || q.isBlank()) {
+            return new SearchResult(ResultCode.qNotSet, q == null ? "" : q, maxItems, List.of());
+        }
+
+        boolean isNumber = false;
+        long value = 0;
+        try {
+            value = Long.parseLong(q);
+            isNumber = true;
+        } catch (NumberFormatException e) {
+            // ignore
+        }
+
+        if (isNumber) {
+            return searchNumber(cfgValue, value, maxItems);
+        } else {
+            return searchStr(cfgValue, q, maxItems);
+        }
     }
 
-    public record SearchStrResultItem(String table,
-                                      String primaryKey,
-                                      String fieldChain,
-                                      String value) {
+    public static SearchResult searchNumber(CfgValue cfgValue, long value, int maxItems) {
+        SearchResult res = new SearchResult(ResultCode.ok, String.valueOf(value), maxItems, new ArrayList<>(32));
+        PrimitiveValueVisitor visitor = (primitiveValue, table, pk, fieldChain) -> {
+            switch (primitiveValue) {
+                case CfgValue.VInt vInt -> {
+                    if (value == (long) vInt.value()) {
+                        res.items.add(new SearchResultItem(
+                                table, pk.packStr(), String.join(".", fieldChain), String.valueOf(vInt.value())));
+                    }
+                }
+                case CfgValue.VLong vLong -> {
+                    if (value == vLong.value()) {
+                        res.items.add(new SearchResultItem(
+                                table, pk.packStr(), String.join(".", fieldChain), String.valueOf(vLong.value())));
+                    }
+                }
+                default -> {
+                }
+            }
+        };
+
+        for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
+            foreachVTable(visitor, vTable);
+            if (res.items.size() >= maxItems) {
+                break;
+            }
+        }
+        return res;
     }
 
-    public record SearchStrResult(List<SearchStrResultItem> items) {
+    public static SearchResult searchStr(CfgValue cfgValue, String keyword, int maxItems) {
+        SearchResult res = new SearchResult(ResultCode.ok, keyword, maxItems, new ArrayList<>(32));
+        PrimitiveValueVisitor visitor = (primitiveValue, table, pk, fieldChain) -> {
+            if (Objects.requireNonNull(primitiveValue) instanceof CfgValue.StringValue sv) {
+                String v = sv.value();
+                if (v.contains(keyword)) {
+                    res.items.add(new SearchResultItem(
+                            table, pk.packStr(), String.join(".", fieldChain), v));
+                }
+            }
+        };
+
+        for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
+            foreachVTable(visitor, vTable);
+            if (res.items.size() >= maxItems) {
+                break;
+            }
+        }
+        return res;
     }
 
 
@@ -46,43 +113,6 @@ public class ServeSearch {
     public record SearchRefResult(List<SearchRefResultItem> items) {
     }
 
-
-    public static SearchNumberResult searchNumber(CfgValue cfgValue, SearchNumber param) {
-        SearchNumberResult res = new SearchNumberResult(new ArrayList<>(32));
-        ForeachPrimitiveValue.foreach((primitiveValue, table, pk, fieldChain) -> {
-            switch (primitiveValue) {
-                case CfgValue.VInt vInt -> {
-                    if (param.numberSet.contains((long) vInt.value())) {
-                        res.items.add(new SearchNumberResultItem(
-                                table, pk.repr(), String.join(".", fieldChain), vInt.value()));
-                    }
-                }
-                case CfgValue.VLong vLong -> {
-                    if (param.numberSet.contains(vLong.value())) {
-                        res.items.add(new SearchNumberResultItem(
-                                table, pk.repr(), String.join(".", fieldChain), vLong.value()));
-                    }
-                }
-                default -> {
-                }
-            }
-        }, cfgValue);
-        return res;
-    }
-
-    public static SearchStrResult searchStr(CfgValue cfgValue, SearchStr param) {
-        SearchStrResult res = new SearchStrResult(new ArrayList<>(32));
-        ForeachPrimitiveValue.foreach((primitiveValue, table, pk, fieldChain) -> {
-            if (Objects.requireNonNull(primitiveValue) instanceof CfgValue.StringValue sv) {
-                String v = sv.value();
-                if (v.contains(param.keyword)) {
-                    res.items.add(new SearchStrResultItem(
-                            table, pk.repr(), String.join(".", fieldChain), v));
-                }
-            }
-        }, cfgValue);
-        return res;
-    }
 
     public static SearchRefResult searchRef(CfgValue cfgValue, SearchRef param) {
         SearchRefResult res = new SearchRefResult(new ArrayList<>(32));

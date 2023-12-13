@@ -5,10 +5,10 @@ import {Button, Drawer, Form, InputNumber, Space, Switch, Tabs} from "antd";
 import {IdList} from "./IdList.tsx";
 import {TableSchema} from "./TableSchema.tsx";
 import {TableRef} from "./TableRef.tsx";
-import {LeftOutlined, RightOutlined, SettingOutlined} from "@ant-design/icons";
+import {LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
 import {TableRecord} from "./TableRecord.tsx";
 import {TableRecordRef} from "./TableRecordRef.tsx";
-import {History, HistoryItem} from "./model/HistoryModel.ts";
+import {History, HistoryItem} from "./model/historyModel.ts";
 
 export default function App() {
     const [schema, setSchema] = useState<Schema | null>(null);
@@ -25,7 +25,9 @@ export default function App() {
     const [recordRefIn, setRecordRefIn] = useState<boolean>(true);
     const [recordRefOutDepth, setRecordRefOutDepth] = useState<number>(3);
     const [recordMaxNode, setRecordMaxNode] = useState<number>(30);
+    const [searchMax, setSearchMax] = useState<number>(30);
 
+    const [searchOpen, setSearchOpen] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -99,17 +101,17 @@ export default function App() {
     }
 
 
-    const showDrawer = () => {
+    const showSetting = () => {
         setSettingOpen(true);
     };
 
-    const onClose = () => {
+    const onSettingClose = () => {
         setSettingOpen(false);
     };
 
 
-    let operation = <Space>
-        <Button onClick={showDrawer}>
+    let leftOp = <Space>
+        <Button onClick={showSetting}>
             <SettingOutlined/>
         </Button>
         <TableList schema={schema} curTable={curTable} setCurTable={selectCurTable}/>
@@ -123,6 +125,20 @@ export default function App() {
             <RightOutlined/>
         </Button>
     </Space>;
+
+    const showSearch = () => {
+        setSearchOpen(true);
+    };
+
+    const onSearchClose = () => {
+        setSearchOpen(false);
+    };
+
+    let rightOp = <Space>
+        <Button onClick={showSearch}>
+            <SearchOutlined/>
+        </Button>
+    </Space>
 
     let tableSchema = <div/>;
     let tableRef = <div/>;
@@ -200,10 +216,15 @@ export default function App() {
         }
     }
 
+    function onChangeSearchMax(value: number | null) {
+        if (value) {
+            setSearchMax(value);
+        }
+    }
 
     return <div className="App">
-        <Tabs tabBarExtraContent={{'left': operation}} items={items} type="card"/>
-        <Drawer title="setting" placement="left" onClose={onClose} open={settingOpen}>
+        <Tabs tabBarExtraContent={{'left': leftOp, 'right': rightOp}} items={items} type="card"/>
+        <Drawer title="setting" placement="left" onClose={onSettingClose} open={settingOpen}>
             <Form labelCol={{span: 6}} wrapperCol={{span: 14}} layout={'horizontal'}>
                 <Form.Item label='接口实现数:'>
                     <InputNumber value={maxImpl} min={1} max={500} onChange={onChangeMaxImpl}/>
@@ -232,8 +253,15 @@ export default function App() {
                 <Form.Item label='数据节点数：'>
                     <InputNumber value={recordMaxNode} min={1} max={500} onChange={onChangeRecordMaxNode}/>
                 </Form.Item>
+
+                <Form.Item label='搜索返回数：'>
+                    <InputNumber value={searchMax} min={1} max={500} onChange={onChangeSearchMax}/>
+                </Form.Item>
             </Form>
         </Drawer>
+
+        <Drawer title="search" placement="right" onClose={onSearchClose} open={searchOpen}/>
+
     </div>;
 
 }

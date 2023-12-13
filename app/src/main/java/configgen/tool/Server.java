@@ -38,6 +38,7 @@ public class Server extends Generator {
 
         server.createContext("/schemas", this::handleSchemas);
         server.createContext("/record", this::handleRecord);
+        server.createContext("/search", this::handleSearch);
         server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
 
         server.start();
@@ -60,6 +61,26 @@ public class Server extends Generator {
         out.write(jsonBytes);
         out.flush();
         out.close();
+    }
+
+    private void handleSearch(HttpExchange exchange) throws IOException {
+        System.out.println(exchange.getRequestURI());
+        Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
+        String q = query.get("q");
+        String maxStr = query.get("max");
+
+        int max = 30;
+        if (maxStr != null) {
+            try {
+                max = Integer.parseInt(maxStr);
+            } catch (NumberFormatException e) {
+                // ignore
+            }
+        }
+
+        ServeSearch.SearchResult result = ServeSearch.search(cfgValue, q, max);
+        sendResponse(exchange, result);
+
     }
 
     private void handleRecord(HttpExchange exchange) throws IOException {
