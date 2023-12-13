@@ -1,5 +1,5 @@
 import {useState} from "react";
-import {Button, Divider, Empty, Input, Result, Table} from "antd";
+import {Button, Empty, Input, Result, Table} from "antd";
 import {SearchResult, SearchResultItem} from "./model/searchModel.ts";
 import type {ColumnsType} from "antd/es/table";
 
@@ -11,7 +11,7 @@ function getLabel(table: string, id: string): string {
 
 
 function getColumns(onClick: (item: SearchResultItem) => void): ColumnsType<SearchResultItem> {
-    const columns: ColumnsType<SearchResultItem> = [
+    return [
         {
             title: 'id',
             align: 'left',
@@ -42,8 +42,6 @@ function getColumns(onClick: (item: SearchResultItem) => void): ColumnsType<Sear
             ellipsis: true,
         }
     ];
-
-    return columns;
 }
 
 
@@ -93,7 +91,6 @@ export function SearchValue({searchMax, setCurTableAndId}: {
                       size='large'
                       loading={loading}
                       onSearch={onSearch}/>
-        <Divider/>
         {content}
     </div>
 
