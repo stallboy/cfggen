@@ -1,5 +1,5 @@
 import {useState} from "react";
-import {Button, Divider, Empty, Input, Result, Space, Table} from "antd";
+import {Button, Divider, Empty, Input, Result, Table} from "antd";
 import {SearchResult, SearchResultItem} from "./model/searchModel.ts";
 import type {ColumnsType} from "antd/es/table";
 
@@ -51,21 +51,23 @@ export function SearchValue({searchMax, setCurTableAndId}: {
     searchMax: number;
     setCurTableAndId: (table: string, id: string) => void;
 }) {
+    const [loading, setLoading] = useState<boolean>(false);
     const [query, setQuery] = useState<string>('');
     const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
 
-
-    function onInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-        setQuery(e.target.value);
-    }
-
-    function onSearch() {
+    function onSearch(value: string) {
+        setQuery(value);
+        setLoading(true);
         const fetchData = async () => {
-            const response = await fetch(`http://localhost:3456/search?q=${query}&max=${searchMax}`);
+            const response = await fetch(`http://localhost:3456/search?q=${value}&max=${searchMax}`);
             const recordResult: SearchResult = await response.json();
             setSearchResult(recordResult);
+            setLoading(false);
         }
-        fetchData().catch(console.error);
+        fetchData().catch((err) => {
+            console.log(err)
+            setLoading(false);
+        });
     }
 
 
@@ -80,15 +82,17 @@ export function SearchValue({searchMax, setCurTableAndId}: {
         content = <Result status={'error'} title={searchResult.resultCode}/>
     } else {
         let columns = getColumns(onClickItem);
-        content = <div> q={query}&max={searchMax}
-            <Table columns={columns} dataSource={searchResult.items} />
+        content = <div>q={searchResult.q}&max={searchResult.max}
+            <Table columns={columns} dataSource={searchResult.items}/>
         </div>
     }
 
     return <div>
-        <Input placeholder={'search value'} value={query} onChange={onInputChange}></Input>
-        <Space/>
-        <Button onClick={onSearch}>搜索</Button>
+        <Input.Search placeholder='search value' defaultValue={query}
+                      enterButton='搜索'
+                      size='large'
+                      loading={loading}
+                      onSearch={onSearch}/>
         <Divider/>
         {content}
     </div>

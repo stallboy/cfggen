@@ -11,7 +11,7 @@ export interface SearchResultItem {
 
 export interface SearchResult {
     resultCode: SearchResultCode;
-    string: string;
+    q: string;
     max: number;
     items: SearchResultItem[];
 }
