@@ -102,6 +102,10 @@ public final class InterfaceSchema implements Fieldable, Nameable {
         return null;
     }
 
+    public String enumRefNormalized() {
+        return enumRefTable.name();
+    }
+
     public TableSchema enumRefTable() {
         return enumRefTable;
     }

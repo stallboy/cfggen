@@ -114,15 +114,17 @@ public final class CfgSchemaResolver {
         }
 
         // resolve
+        Map<String, Nameable> itemMap = new HashMap<>();
         Map<String, Fieldable> structMap = new HashMap<>();
         Map<String, TableSchema> tableMap = new HashMap<>();
         for (Nameable item : cfgSchema.items()) {
+            itemMap.put(item.name(), item);
             switch (item) {
                 case Fieldable fieldable -> structMap.put(fieldable.name(), fieldable);
                 case TableSchema table -> tableMap.put(table.name(), table);
             }
         }
-        cfgSchema.setMap(structMap, tableMap);
+        cfgSchema.setMap(itemMap, structMap, tableMap);
     }
 
 

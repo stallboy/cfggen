@@ -42,7 +42,7 @@ public final class RefSearcher {
         }
 
         Map<Value, Set<String>> res = new LinkedHashMap<>();
-        ForeachVStruct.VStructVisitor vStructVisitor = (vStruct, fromVTable) -> search(vStruct, fromVTable, refTable, nullableUniqueKeys, res);
+        ForeachVStruct.VStructVisitor vStructVisitor = (vStruct, ctx) -> search(vStruct, ctx, refTable, nullableUniqueKeys, res);
         for (VTable vTable : cfgValue.sortedTables()) {
             if (!ignoredTables.contains(vTable.name())) {
                 ForeachVStruct.foreachVTable(vStructVisitor, vTable);
@@ -51,7 +51,8 @@ public final class RefSearcher {
         return new RefSearchResult(Ok, res);
     }
 
-    private static void search(VStruct vStruct, VTable fromTable, TableSchema refTable, List<String> nullableUniqueKeys, Map<Value, Set<String>> res) {
+    private static void search(VStruct vStruct, ForeachVStruct.Context ctx, TableSchema refTable, List<String> nullableUniqueKeys, Map<Value, Set<String>> res) {
+        VTable fromTable = ctx.fromVTable();
         Structural structural = vStruct.schema();
         for (ForeignKeySchema fk : structural.foreignKeys()) {
             RefKey refKey = fk.refKey();
@@ -66,7 +67,7 @@ public final class RefSearcher {
                 match = uniq.keyNames().equals(nullableUniqueKeys);
             }
 
-            if (match) { // 只搜索主键索引
+            if (match) {
                 FieldType ft = fk.key().fieldSchemas().getFirst().type();
                 switch (ft) {
                     case FieldType.SimpleType ignored -> {

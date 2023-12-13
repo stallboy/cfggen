@@ -6,14 +6,10 @@ import configgen.genjava.BinaryToText;
 import configgen.genjava.GenJavaData;
 import configgen.genjava.code.GenJavaCode;
 import configgen.genlua.GenLua;
-import configgen.tool.GenI18n;
-import configgen.tool.XmlToCfg;
-import configgen.tool.Server;
-import configgen.tool.ComparePoiAndFastExcel;
+import configgen.tool.*;
+import configgen.util.CachedFiles;
 import configgen.util.LocaleUtil;
 import configgen.util.Logger;
-import configgen.tool.ValueSearcher;
-import configgen.util.CachedFiles;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -269,6 +265,10 @@ public final class Main {
         if (verify) {
             Logger.verbose("-----start verify");
             context.makeValue(null);
+//            CfgValue cfgValue = context.makeValue(null);
+//            ServeRecord serveRecord = new ServeRecord(cfgValue, new TableSchemaRefGraph(cfgValue.schema()),
+//                    "achievement.achievement", "2", 3, true, 30, ServeRecord.RequestType.requestRefs);
+//            serveRecord.retrieve();
         }
 
         for (NamedGenerator ng : generators) {

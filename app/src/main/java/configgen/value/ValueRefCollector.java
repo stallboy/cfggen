@@ -69,6 +69,7 @@ public class ValueRefCollector {
         Structural structural = vStruct.schema();
         for (ForeignKeySchema fk : structural.foreignKeys()) {
             RefKey refKey = fk.refKey();
+            // TODO, 这里没考虑ListRef
             if (refKey instanceof RefKey.RefSimple refSimple) {
                 FieldType ft = fk.key().fieldSchemas().getFirst().type();
                 String refName = (refSimple.nullable() ? "nullableRef" : "ref") + Generator.upper1(fk.name());

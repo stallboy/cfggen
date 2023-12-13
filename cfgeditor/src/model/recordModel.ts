@@ -17,6 +17,7 @@ export interface Refs {
 
 export interface BriefRecord extends Refs {
     value: string;
+    depth: number;
 }
 
 export interface RefIdMap {
@@ -39,13 +40,30 @@ export interface RecordMap {
     [id: string]: BriefRecord;
 }
 
+export type ResultCode =
+    'ok'
+    | 'tableNotSet'
+    | 'idNotSet'
+    | 'tableNotFound'
+    | 'idFormatErr'
+    | 'idNotFound'
+    | 'paramErr';
+
 export interface RecordResult {
-    resultCode: 'ok' | 'tableNotSet' | 'idNotSet' | 'tableNotFound' | 'idFormatErr' | 'idNotFound' | 'paramErr';
+    resultCode: ResultCode;
+    table?: string;
+    id?: string;
+    maxObjs: number;
+    object: JSONObject & Refs;
+    refs: TableMap;
+}
+
+export interface RecordRefsResult {
+    resultCode: ResultCode;
     table?: string;
     id?: string;
     depth: number;
     in: boolean;
     maxObjs: number;
-    object: JSONObject & Refs;
     refs: TableMap;
 }

@@ -40,7 +40,8 @@ public class RefValidator {
         }
     }
 
-    private void validateVStruct(VStruct vStruct, VTable fromTable) {
+    private void validateVStruct(VStruct vStruct, ForeachVStruct.Context ctx) {
+        VTable fromTable = ctx.fromVTable();
         Structural structural = vStruct.schema();
         for (ForeignKeySchema fk : structural.foreignKeys()) {
             RefKey refKey = fk.refKey();

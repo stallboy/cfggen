@@ -10,6 +10,7 @@ import java.util.*;
 public class CfgSchema {
     private final List<Nameable> items;
 
+    private Map<String, Nameable> itemMap;
     private Map<String, Fieldable> fieldableMap;
     private Map<String, TableSchema> tableMap;
     private boolean isResolved = false;
@@ -66,7 +67,14 @@ public class CfgSchema {
         return tableMap.get(name);
     }
 
-    void setMap(Map<String, Fieldable> fieldableMap, Map<String, TableSchema> tableMap) {
+    public Nameable findItem(String name) {
+        return itemMap.get(name);
+    }
+
+    void setMap(Map<String, Nameable> itemMap,
+                Map<String, Fieldable> fieldableMap,
+                Map<String, TableSchema> tableMap) {
+        this.itemMap = itemMap;
         this.fieldableMap = fieldableMap;
         this.tableMap = tableMap;
     }

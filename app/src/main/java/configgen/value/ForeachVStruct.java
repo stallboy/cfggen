@@ -6,8 +6,13 @@ import static configgen.value.CfgValue.*;
 
 public class ForeachVStruct {
 
+    public record Context(VTable fromVTable,
+                          Value pkValue,
+                          Value recordValue) {
+    }
+
     public interface VStructVisitor {
-        void visit(VStruct vStruct, VTable fromVTable);
+        void visit(VStruct vStruct, Context ctx);
     }
 
     public static void foreach(VStructVisitor visitor, CfgValue cfgValue) {
@@ -17,41 +22,41 @@ public class ForeachVStruct {
     }
 
     public static void foreachVTable(VStructVisitor visitor, VTable table) {
-        for (VStruct vStruct : table.valueList()) {
-            foreachVStruct(visitor, vStruct, table);
+        for (Map.Entry<Value, VStruct> e : table.primaryKeyMap().entrySet()) {
+            foreachVStruct(visitor, e.getValue(), new Context(table, e.getKey(), e.getValue()));
         }
     }
 
-    public static void foreachVStruct(VStructVisitor visitor, VStruct vStruct, VTable table) {
-        visitor.visit(vStruct, table);
+    private static void foreachVStruct(VStructVisitor visitor, VStruct vStruct, Context ctx) {
+        visitor.visit(vStruct, ctx);
 
         for (Value fieldValue : vStruct.values()) {
             switch (fieldValue) {
                 case SimpleValue simpleValue -> {
-                    foreachVStructSimpleValue(visitor, simpleValue, table);
+                    foreachVStructSimpleValue(visitor, simpleValue, ctx);
                 }
 
                 case VList vList -> {
                     for (SimpleValue sv : vList.valueList()) {
-                        foreachVStructSimpleValue(visitor, sv, table);
+                        foreachVStructSimpleValue(visitor, sv, ctx);
                     }
                 }
                 case VMap vMap -> {
                     for (Map.Entry<SimpleValue, SimpleValue> e : vMap.valueMap().entrySet()) {
-                        foreachVStructSimpleValue(visitor, e.getKey(), table);
-                        foreachVStructSimpleValue(visitor, e.getValue(), table);
+                        foreachVStructSimpleValue(visitor, e.getKey(), ctx);
+                        foreachVStructSimpleValue(visitor, e.getValue(), ctx);
                     }
                 }
             }
         }
     }
 
-    public static void foreachVStructSimpleValue(VStructVisitor visitor, SimpleValue simpleValue, VTable table) {
+    private static void foreachVStructSimpleValue(VStructVisitor visitor, SimpleValue simpleValue, Context ctx) {
         switch (simpleValue) {
             case PrimitiveValue ignored -> {
             }
-            case VInterface vInterface -> foreachVStruct(visitor, vInterface.child(), table);
-            case VStruct vStruct -> foreachVStruct(visitor, vStruct, table);
+            case VInterface vInterface -> foreachVStruct(visitor, vInterface.child(), ctx);
+            case VStruct vStruct -> foreachVStruct(visitor, vStruct, ctx);
         }
     }
 }

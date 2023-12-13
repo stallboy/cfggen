@@ -5,21 +5,26 @@ import {Button, Drawer, Form, InputNumber, Space, Switch, Tabs} from "antd";
 import {IdList} from "./IdList.tsx";
 import {TableSchema} from "./TableSchema.tsx";
 import {TableRef} from "./TableRef.tsx";
-import {SettingOutlined} from "@ant-design/icons";
+import {LeftOutlined, RightOutlined, SettingOutlined} from "@ant-design/icons";
 import {TableRecord} from "./TableRecord.tsx";
-
+import {TableRecordRef} from "./TableRecordRef.tsx";
+import {History, HistoryItem} from "./model/HistoryModel.ts";
 
 export default function App() {
     const [schema, setSchema] = useState<Schema | null>(null);
     const [curTable, setCurTable] = useState<STable | null>(null);
     const [curId, setCurId] = useState<string | null>(null);
 
+    const [history, setHistory] = useState<History>(new History());
+
     const [settingOpen, setSettingOpen] = useState(false);
     const [maxImpl, setMaxImpl] = useState<number>(10);
     const [refIn, setRefIn] = useState<boolean>(true);
     const [refOutDepth, setRefOutDepth] = useState<number>(3);
     const [maxNode, setMaxNode] = useState<number>(30);
+    const [recordRefIn, setRecordRefIn] = useState<boolean>(true);
     const [recordRefOutDepth, setRecordRefOutDepth] = useState<number>(3);
+    const [recordMaxNode, setRecordMaxNode] = useState<number>(30);
 
 
     useEffect(() => {
@@ -38,7 +43,8 @@ export default function App() {
 
     function selectCurTableFromSchema(schema: Schema,
                                       curTableName: string | null = null,
-                                      curId: string | null = null) {
+                                      curIdStr: string | null = null,
+                                      fromOp: boolean = true) {
         if (schema == null) {
             return;
         }
@@ -50,10 +56,14 @@ export default function App() {
         }
         if (table) {
             setCurTable(table);
-            if (curId) {
-                setCurId(curId)
-            } else if (table.recordIds.length > 0) {
-                setCurId(table.recordIds[0].id)
+            if (curIdStr == null) {
+                if (table.recordIds.length > 0) {
+                    curIdStr = table.recordIds[0].id;
+                }
+            }
+            setCurId(curIdStr);
+            if (fromOp) { // 如果是从prev，next中来的，就不要再设置history了
+                setHistory(history.addItem(table.name, curIdStr));
             }
         }
     }
@@ -70,6 +80,24 @@ export default function App() {
         }
     }
 
+    function selectHistoryCur(item: HistoryItem | null) {
+        if (item && schema) {
+            selectCurTableFromSchema(schema, item.table, item.id, false);
+        }
+    }
+
+    function prev() {
+        let newHistory = history.prev();
+        setHistory(newHistory);
+        selectHistoryCur(newHistory.cur());
+    }
+
+    function next() {
+        let newHistory = history.next();
+        setHistory(newHistory);
+        selectHistoryCur(newHistory.cur());
+    }
+
 
     const showDrawer = () => {
         setSettingOpen(true);
@@ -81,16 +109,25 @@ export default function App() {
 
 
     let operation = <Space>
-        <Button type="default" onClick={showDrawer}>
+        <Button onClick={showDrawer}>
             <SettingOutlined/>
         </Button>
         <TableList schema={schema} curTable={curTable} setCurTable={selectCurTable}/>
         <IdList curTable={curTable} curId={curId} setCurId={setCurId}/>
+
+        <Button onClick={prev} disabled={!history.canPrev()}>
+            <LeftOutlined/>
+        </Button>
+
+        <Button onClick={next} disabled={!history.canNext()}>
+            <RightOutlined/>
+        </Button>
     </Space>;
 
     let tableSchema = <div/>;
     let tableRef = <div/>;
     let tableRecord = <div/>;
+    let tableRecordRef = <div/>;
     if (schema != null && curTable != null) {
         tableSchema = <TableSchema schema={schema}
                                    curTable={curTable}
@@ -108,12 +145,21 @@ export default function App() {
                                        curTable={curTable}
                                        curId={curId}
                                        setCurTableAndId={selectCurTableAndId}/>;
+
+            tableRecordRef = <TableRecordRef curTable={curTable}
+                                             curId={curId}
+                                             refIn={recordRefIn}
+                                             refOutDepth={recordRefOutDepth}
+                                             maxNode={recordMaxNode}
+                                             setCurTableAndId={selectCurTableAndId}/>;
         }
     }
 
     let items = [{key: "表结构", label: "表结构", children: tableSchema,},
         {key: "表关系", label: "表关系", children: tableRef,},
-        {key: "数据", label: "数据", children: tableRecord,}]
+        {key: "数据", label: "数据", children: tableRecord,},
+        {key: "数据关系", label: "数据关系", children: tableRecordRef,},
+    ]
 
 
     function onChangeMaxImpl(value: number | null) {
@@ -138,9 +184,19 @@ export default function App() {
         }
     }
 
+    function onChangeRecordRefIn(checked: boolean) {
+        setRecordRefIn(checked);
+    }
+
     function onChangeRecordRefOutDepth(value: number | null) {
         if (value) {
             setRecordRefOutDepth(value);
+        }
+    }
+
+    function onChangeRecordMaxNode(value: number | null) {
+        if (value) {
+            setRecordMaxNode(value);
         }
     }
 
@@ -165,8 +221,16 @@ export default function App() {
                     <InputNumber value={maxNode} min={1} max={500} onChange={onChangeMaxNode}/>
                 </Form.Item>
 
+                <Form.Item label='数据入层：'>
+                    <Switch checked={recordRefIn} onChange={onChangeRecordRefIn}/>
+                </Form.Item>
+
                 <Form.Item label='数据出层：'>
                     <InputNumber value={recordRefOutDepth} min={1} max={500} onChange={onChangeRecordRefOutDepth}/>
+                </Form.Item>
+
+                <Form.Item label='数据节点数：'>
+                    <InputNumber value={recordMaxNode} min={1} max={500} onChange={onChangeRecordMaxNode}/>
                 </Form.Item>
             </Form>
         </Drawer>

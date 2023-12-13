@@ -210,7 +210,7 @@ export function TableSchema({schema, curTable, maxImpl, setCurTable}: {
             return [{
                 label: `表结构`,
                 key: `${sItem.name}表结构`,
-                handler: () => {
+                handler() {
                     setCurTable(sItem.name);
                 }
             }];

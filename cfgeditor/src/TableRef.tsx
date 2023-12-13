@@ -147,7 +147,7 @@ export function TableRef({schema, curTable, setCurTable, refIn, refOutDepth, max
             return [{
                 label: `表关系`,
                 key: `${sItem.name}表关系`,
-                handler: () => {
+                handler() {
                     setCurTable(sItem.name);
                 }
             }];

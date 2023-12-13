@@ -237,7 +237,7 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
             return [{
                 label: '数据',
                 key: '数据',
-                handler: () => {
+                handler() {
                     setCurTableAndId(refId.table, refId.id);
                 }
             }];

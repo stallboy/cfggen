@@ -6,6 +6,7 @@ import com.sun.net.httpserver.HttpServer;
 import configgen.gen.Context;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
+import configgen.schema.TableSchemaRefGraph;
 import configgen.util.Logger;
 import configgen.value.CfgValue;
 
@@ -16,9 +17,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
+import static configgen.tool.ServeRecord.*;
+
 public class Server extends Generator {
     private final int port;
     private CfgValue cfgValue;
+    private TableSchemaRefGraph graph;
 
     public Server(Parameter parameter) {
         super(parameter);
@@ -28,6 +32,8 @@ public class Server extends Generator {
     @Override
     public void generate(Context ctx) throws IOException {
         cfgValue = ctx.makeValue(tag);
+        graph = new TableSchemaRefGraph(cfgValue.schema());
+        System.gc();
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
 
         server.createContext("/schemas", this::handleSchemas);
@@ -64,6 +70,7 @@ public class Server extends Generator {
         String depthStr = query.get("depth");
         String maxObjsStr = query.get("maxObjs");
         String inStr = query.get("in");
+        String refsStr = query.get("refs");
 
         int depth = 1;
         if (depthStr != null) {
@@ -85,8 +92,8 @@ public class Server extends Generator {
 
         boolean in = inStr != null;
 
-
-        ServeRecord.TableRecord record = new ServeRecord(cfgValue, table, id, depth, in, maxObjs).retrieve();
+        RequestType requestType = refsStr != null ? RequestType.requestRefs : RequestType.requestRecord;
+        RecordResponse record = new ServeRecord(cfgValue, graph, table, id, depth, in, maxObjs, requestType).retrieve();
         sendResponse(exchange, record);
     }
 
