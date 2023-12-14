@@ -9,4 +9,5 @@
     <toc-element topic="Overview.md"/>
     <toc-element topic="Intro-to-designer.md"/>
     <toc-element topic="Intro-to-programmer.md"/>
+    <toc-element topic="cfgeditor.md"/>
 </instance-profile>

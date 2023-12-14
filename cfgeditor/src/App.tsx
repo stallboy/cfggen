@@ -261,7 +261,7 @@ export default function App() {
     let alertSetServer = <><p>或者 更改服务器地址(在设置里也可更改)，查看别人的配表！</p>
         <Input.Search defaultValue={server} enterButton='连接' onSearch={onSetServer}/>
     </>;
-    
+
     return <div className="App">
         <Modal title="服务器连接失败" open={isModalOpen} onOk={handleModalOk} cancelButtonProps={{disabled: true}}
                onCancel={handleModalOk}>
