@@ -45,8 +45,9 @@ function getColumns(onClick: (item: SearchResultItem) => void): ColumnsType<Sear
 }
 
 
-export function SearchValue({searchMax, setCurTableAndId}: {
+export function SearchValue({searchMax, server, setCurTableAndId}: {
     searchMax: number;
+    server:string;
     setCurTableAndId: (table: string, id: string) => void;
 }) {
     const [loading, setLoading] = useState<boolean>(false);
@@ -57,7 +58,7 @@ export function SearchValue({searchMax, setCurTableAndId}: {
         setQuery(value);
         setLoading(true);
         const fetchData = async () => {
-            const response = await fetch(`http://localhost:3456/search?q=${value}&max=${searchMax}`);
+            const response = await fetch(`http://${server}/search?q=${value}&max=${searchMax}`);
             const recordResult: SearchResult = await response.json();
             setSearchResult(recordResult);
             setLoading(false);

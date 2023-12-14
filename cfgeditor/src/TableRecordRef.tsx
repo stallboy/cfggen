@@ -134,12 +134,13 @@ export function TableRecordRefLoaded({curTable, curId, recordRefResult, setCurTa
     return <div ref={ref} style={{height: "100vh", width: "100vw"}}></div>
 }
 
-export function TableRecordRef({curTable, curId, refIn, refOutDepth, maxNode, setCurTableAndId}: {
+export function TableRecordRef({curTable, curId, refIn, refOutDepth, maxNode, server, setCurTableAndId}: {
     curTable: STable;
     curId: string;
     refIn: boolean;
     refOutDepth: number;
     maxNode: number;
+    server: string;
     setCurTableAndId: (table: string, id: string) => void;
 }) {
     const [recordRefResult, setRecordRefResult] = useState<RecordRefsResult | null>(null);
@@ -147,13 +148,13 @@ export function TableRecordRef({curTable, curId, refIn, refOutDepth, maxNode, se
     useEffect(() => {
         setRecordRefResult(null);
         const fetchData = async () => {
-            const response = await fetch(`http://localhost:3456/record?table=${curTable.name}&id=${curId}&depth=${refOutDepth}&maxObjs=${maxNode}&refs${refIn ? '&in' : ''}`);
+            const response = await fetch(`http://${server}/record?table=${curTable.name}&id=${curId}&depth=${refOutDepth}&maxObjs=${maxNode}&refs${refIn ? '&in' : ''}`);
             const recordResult: RecordRefsResult = await response.json();
             setRecordRefResult(recordResult);
         }
 
         fetchData().catch(console.error);
-    }, [curTable, curId]);
+    }, [server, curTable, curId, refOutDepth, maxNode, refIn]);
 
 
     if (recordRefResult == null) {

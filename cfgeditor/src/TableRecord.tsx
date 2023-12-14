@@ -258,10 +258,11 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
     return <div ref={ref} style={{height: "100vh", width: "100vw"}}></div>
 }
 
-export function TableRecord({schema, curTable, curId, setCurTableAndId}: {
+export function TableRecord({schema, curTable, curId, server, setCurTableAndId}: {
     schema: Schema;
     curTable: STable;
     curId: string;
+    server: string;
     setCurTableAndId: (table: string, id: string) => void;
 }) {
     const [recordResult, setRecordResult] = useState<RecordResult | null>(null);
@@ -269,13 +270,13 @@ export function TableRecord({schema, curTable, curId, setCurTableAndId}: {
     useEffect(() => {
         setRecordResult(null);
         const fetchData = async () => {
-            const response = await fetch(`http://localhost:3456/record?table=${curTable.name}&id=${curId}&depth=1`);
+            const response = await fetch(`http://${server}/record?table=${curTable.name}&id=${curId}&depth=1`);
             const recordResult: RecordResult = await response.json();
             setRecordResult(recordResult);
         }
 
         fetchData().catch(console.error);
-    }, [schema, curTable, curId]);
+    }, [schema, server, curTable, curId]);
 
 
     if (recordResult == null) {

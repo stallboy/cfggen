@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {Button, Drawer, Form, InputNumber, Space, Switch, Tabs, Tag} from "antd";
+import {Alert, Button, Drawer, Form, Input, InputNumber, Modal, Space, Switch, Tabs, Tag} from "antd";
 import {LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
 import {Schema, STable} from "./model/schemaModel.ts";
 import {History, HistoryItem} from "./model/historyModel.ts";
@@ -24,7 +24,6 @@ export default function App() {
 
     const [history, setHistory] = useState<History>(new History());
 
-    const [settingOpen, setSettingOpen] = useState(false);
     const [maxImpl, setMaxImpl] = useState<number>(10);
     const [refIn, setRefIn] = useState<boolean>(true);
     const [refOutDepth, setRefOutDepth] = useState<number>(3);
@@ -34,21 +33,9 @@ export default function App() {
     const [recordMaxNode, setRecordMaxNode] = useState<number>(30);
     const [searchMax, setSearchMax] = useState<number>(30);
 
-    const [searchOpen, setSearchOpen] = useState(false);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            const response = await fetch('http://localhost:3456/schemas');
-            const rawSchema = await response.json();
-            const schema = new Schema(rawSchema);
-
-            setSchema(schema);
-            selectCurTableFromSchema(schema);
-        }
-
-        fetchData().catch(console.error);
-    }, []);
-
+    const [settingOpen, setSettingOpen] = useState<boolean>(false);
+    const [searchOpen, setSearchOpen] = useState<boolean>(false);
+    const [server, setServer] = useState<string>('localhost:3456');
 
     const [activePage, setActivePage] = useState<string>(key1);
     useHotkeys('alt+1', () => setActivePage(key1));
@@ -58,6 +45,25 @@ export default function App() {
     useHotkeys('alt+x', () => showSearch());
     useHotkeys('alt+c', () => prev());
     useHotkeys('alt+v', () => next());
+
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const response = await fetch(`http://${server}/schemas`);
+            const rawSchema = await response.json();
+            const schema = new Schema(rawSchema);
+
+            setSchema(schema);
+            selectCurTableFromSchema(schema);
+        }
+
+        fetchData().catch((err) => {
+            console.error(err);
+            setIsModalOpen(true);
+
+        });
+    }, [server, isModalOpen]);
 
 
     function selectCurTableFromSchema(schema: Schema,
@@ -175,6 +181,7 @@ export default function App() {
             tableRecord = <TableRecord schema={schema}
                                        curTable={curTable}
                                        curId={curId}
+                                       server={server}
                                        setCurTableAndId={selectCurTableAndId}/>;
 
             tableRecordRef = <TableRecordRef curTable={curTable}
@@ -182,6 +189,7 @@ export default function App() {
                                              refIn={recordRefIn}
                                              refOutDepth={recordRefOutDepth}
                                              maxNode={recordMaxNode}
+                                             server={server}
                                              setCurTableAndId={selectCurTableAndId}/>;
         }
     }
@@ -242,7 +250,20 @@ export default function App() {
         }
     }
 
+    function onSetServer(server: string) {
+        setServer(server);
+    }
+
+    function handleModalOk() {
+        setIsModalOpen(false);
+    }
+
     return <div className="App">
+        <Modal title="服务器连接失败" open={isModalOpen} onOk={handleModalOk} cancelButtonProps={{disabled: true}}>
+            <Alert message='请先启动 cfgeditor服务器.bat，查看自己的配表！' type="error"/>
+            <Alert message='或者 在设置里更改服务器地址，查看别人的配表！' type="error"/>
+        </Modal>
+
         <Tabs tabBarExtraContent={{'left': leftOp, 'right': rightOp}}
               items={items}
               activeKey={activePage}
@@ -281,11 +302,17 @@ export default function App() {
                 <Form.Item label='搜索返回数：'>
                     <InputNumber value={searchMax} min={1} max={500} onChange={onChangeSearchMax}/>
                 </Form.Item>
+
+                <Form.Item label='服务器：'>
+                    <Input.Search defaultValue={server} enterButton='连接' onSearch={onSetServer}/>
+                </Form.Item>
             </Form>
         </Drawer>
 
         <Drawer title="search" placement="right" onClose={onSearchClose} open={searchOpen} size={'large'}>
-            <SearchValue searchMax={searchMax} setCurTableAndId={selectCurTableAndId}/>
+            <SearchValue searchMax={searchMax}
+                         server={server}
+                         setCurTableAndId={selectCurTableAndId}/>
         </Drawer>
 
     </div>;
