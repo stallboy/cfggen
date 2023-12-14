@@ -23,23 +23,21 @@ export class EntityNode extends ClassicPreset.Node<
     entity?: Entity;
 }
 
+const normalStyles = css<{ selected?: boolean }>`
+    background: #1677ff;
+`;
+
 const refStyles = css<{ selected?: boolean }>`
-    background: darkcyan;
-    ${(props) => props.selected && css`
-        background: #ffd92c;
-    `}`;
+    background: #237804;
+`;
 
 const ref2Styles = css<{ selected?: boolean }>`
-    background: darkblue;
-    ${(props) => props.selected && css`
-        background: #ffd92c;
-    `}`;
+    background: #006d75;
+`;
 
 const refInStyles = css<{ selected?: boolean }>`
-    background: mediumslateblue;
-    ${(props) => props.selected && css`
-        background: #ffd92c;
-    `}`;
+    background: #003eb3;
+`;
 
 export function EntityNodeComponent(props: { data: EntityNode, emit: RenderEmit<any> }) {
     let type = props.data.entity?.nodeType;
@@ -51,6 +49,6 @@ export function EntityNodeComponent(props: { data: EntityNode, emit: RenderEmit<
         case EntityNodeType.RefIn:
             return <Node styles={() => refInStyles} {...props} />;
     }
-    return <Node {...props} />;
+    return <Node styles={() => normalStyles} {...props}  />;
 
 }

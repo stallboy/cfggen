@@ -98,7 +98,7 @@ function includeSubStructs(entityMap: Map<string, Entity>, frontier: (STable | S
         for (let oldF of oldFrontier) {
             let oldFNode = entityMap.get(oldF.id ?? oldF.name);
             if (!oldFNode) {
-                console.log("old frontier " + oldF.id ?? oldF.name + " not found!");
+                console.log("old frontier " + (oldF.id ?? oldF.name) + " not found!");
                 continue;
             }
 
