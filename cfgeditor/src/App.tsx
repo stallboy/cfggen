@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {Alert, Button, Drawer, Form, Input, InputNumber, Modal, Space, Switch, Tabs, Tag} from "antd";
+import {Alert, Button, Drawer, Form, Input, InputNumber, Modal, Space, Switch, Tabs} from "antd";
 import {LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
 import {Schema, STable} from "./model/schemaModel.ts";
 import {History, HistoryItem} from "./model/historyModel.ts";
@@ -36,8 +36,8 @@ export default function App() {
     const [settingOpen, setSettingOpen] = useState<boolean>(false);
     const [searchOpen, setSearchOpen] = useState<boolean>(false);
     const [server, setServer] = useState<string>('localhost:3456');
-
     const [activePage, setActivePage] = useState<string>(key1);
+
     useHotkeys('alt+1', () => setActivePage(key1));
     useHotkeys('alt+2', () => setActivePage(key2));
     useHotkeys('alt+3', () => setActivePage(key3));
@@ -56,12 +56,12 @@ export default function App() {
 
             setSchema(schema);
             selectCurTableFromSchema(schema);
+            setIsModalOpen(false);
         }
 
         fetchData().catch((err) => {
             console.error(err);
             setIsModalOpen(true);
-
         });
     }, [server, isModalOpen]);
 
@@ -128,11 +128,11 @@ export default function App() {
         <IdList curTable={curTable} curId={curId} setCurId={setCurId}/>
 
         <Button onClick={prev} disabled={!history.canPrev()}>
-            <LeftOutlined/><Tag>alt+c</Tag>
+            <LeftOutlined/>
         </Button>
 
         <Button onClick={next} disabled={!history.canNext()}>
-            <RightOutlined/><Tag>alt+v</Tag>
+            <RightOutlined/>
         </Button>
     </Space>;
 
@@ -154,7 +154,7 @@ export default function App() {
 
     const rightOp = <Space>
         <Button onClick={showSearch}>
-            <SearchOutlined/><Tag>alt+x</Tag>
+            <SearchOutlined/>
         </Button>
         <Button onClick={showSetting}>
             <SettingOutlined/>
@@ -195,10 +195,10 @@ export default function App() {
     }
 
     let items = [
-        {key: key1, label: <Space>表结构<Tag>alt+1</Tag></Space>, children: tableSchema,},
-        {key: key2, label: <Space>表关系<Tag>alt+2</Tag></Space>, children: tableRef,},
-        {key: key3, label: <Space>数据<Tag>alt+3</Tag></Space>, children: tableRecord,},
-        {key: key4, label: <Space>数据关系<Tag>alt+4</Tag></Space>, children: tableRecordRef,},
+        {key: key1, label: <Space>表结构</Space>, children: tableSchema,},
+        {key: key2, label: <Space>表关系</Space>, children: tableRef,},
+        {key: key3, label: <Space>数据</Space>, children: tableRecord,},
+        {key: key4, label: <Space>数据关系</Space>, children: tableRecordRef,},
     ]
 
     function onTabChange(activeKey: string) {
@@ -288,29 +288,56 @@ export default function App() {
                     <InputNumber value={refOutDepth} min={1} max={500} onChange={onChangeRefOutDepth}/>
                 </Form.Item>
 
-                <Form.Item label='节点数：'>
+                <Form.Item label='节点数'>
                     <InputNumber value={maxNode} min={1} max={500} onChange={onChangeMaxNode}/>
                 </Form.Item>
 
-                <Form.Item label='数据入层：'>
+                <Form.Item label='数据入层'>
                     <Switch checked={recordRefIn} onChange={onChangeRecordRefIn}/>
                 </Form.Item>
 
-                <Form.Item label='数据出层：'>
+                <Form.Item label='数据出层'>
                     <InputNumber value={recordRefOutDepth} min={1} max={500} onChange={onChangeRecordRefOutDepth}/>
                 </Form.Item>
 
-                <Form.Item label='数据节点数：'>
+                <Form.Item label='数据节点数'>
                     <InputNumber value={recordMaxNode} min={1} max={500} onChange={onChangeRecordMaxNode}/>
                 </Form.Item>
 
-                <Form.Item label='搜索返回数：'>
+                <Form.Item label='搜索返回数'>
                     <InputNumber value={searchMax} min={1} max={500} onChange={onChangeSearchMax}/>
                 </Form.Item>
 
-                <Form.Item label='服务器：'>
+                <Form.Item label='服务器'>
                     <Input.Search defaultValue={server} enterButton='连接' onSearch={onSetServer}/>
                 </Form.Item>
+                <Form.Item label='当前服务器'>
+                    {server}
+                </Form.Item>
+
+                <Form.Item label=<LeftOutlined/>>
+                    alt+x
+                </Form.Item>
+                <Form.Item label=<RightOutlined/>>
+                    alt+c
+                </Form.Item>
+                <Form.Item label='表结构'>
+                    alt+1
+                </Form.Item>
+                <Form.Item label='表关系'>
+                    alt+2
+                </Form.Item>
+                <Form.Item label='数据'>
+                    alt+3
+                </Form.Item>
+                <Form.Item label='数据关系'>
+                    alt+4
+                </Form.Item>
+                <Form.Item label=<SearchOutlined/>>
+                    alt+q
+                </Form.Item>
+
+
             </Form>
         </Drawer>
 

@@ -18,3 +18,6 @@
 /example/cs/obj
 /cfggen.jar
 /Writerside/.idea
+/native-image
+/cfgeditor.exe
+/cfgeditor服务器.bat
