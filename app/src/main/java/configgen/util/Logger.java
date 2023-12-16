@@ -53,7 +53,7 @@ public class Logger {
         if (args.length == 0) {
             System.out.println(fmt);
         } else {
-            System.out.println(String.format(fmt, args));
+            System.out.printf((fmt) + "%n", args);
         }
     }
 

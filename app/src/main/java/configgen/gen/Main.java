@@ -22,7 +22,7 @@ public final class Main {
     private static void usage(String reason) {
         System.out.println(reason);
 
-        System.out.println("Usage: java --enable-preview -jar configgen.jar [options] -datadir [dir] [options] [gens]");
+        System.out.println("Usage: java -jar cfggen.jar [options] -datadir [dir] [options] [gens]");
         System.out.println();
         System.out.println("-----schema & data");
         System.out.println("    -datadir          " + LocaleUtil.getMessage("Usage.DataDir"));
@@ -107,7 +107,7 @@ public final class Main {
         Generators.addProvider("lua", GenLua::new);
 
         Generators.addProvider("server", Server::new);
-
+        Generators.addProvider("json", GenJson::new);
 
         String datadir = null;
         boolean xmlToCfg = false;
@@ -265,10 +265,6 @@ public final class Main {
         if (verify) {
             Logger.verbose("-----start verify");
             context.makeValue(null);
-//            CfgValue cfgValue = context.makeValue(null);
-//            ServeRecord serveRecord = new ServeRecord(cfgValue, new TableSchemaRefGraph(cfgValue.schema()),
-//                    "achievement.achievement", "2", 3, true, 30, ServeRecord.RequestType.requestRefs);
-//            serveRecord.retrieve();
         }
 
         for (NamedGenerator ng : generators) {

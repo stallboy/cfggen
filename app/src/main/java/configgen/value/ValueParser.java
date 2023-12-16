@@ -1,21 +1,21 @@
 package configgen.value;
 
-import configgen.data.CfgData;
 import configgen.schema.*;
 
 import java.util.*;
 
+import static configgen.data.CfgData.DCell;
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
+import static configgen.value.CfgValue.*;
 
 public class ValueParser {
 
-
-    public record CellsWithRowIndex(List<CfgData.DCell> cells,
+    public record CellsWithRowIndex(List<DCell> cells,
                                     int rowIndex) {
     }
 
     public interface BlockParser {
-        List<CellsWithRowIndex> parseBlock(List<CfgData.DCell> cells, int curRowIndex);
+        List<CellsWithRowIndex> parseBlock(List<DCell> cells, int curRowIndex);
 
         BlockParser dummy = (cells, curRowIndex) -> List.of(new CellsWithRowIndex(cells, curRowIndex));
     }
@@ -32,9 +32,9 @@ public class ValueParser {
     }
 
 
-    CfgValue.VInterface parseInterface(InterfaceSchema subInterface, List<CfgData.DCell> cells, InterfaceSchema sInterface,
-                                       boolean pack, boolean canBeEmpty, int curRowIndex) {
-        List<CfgData.DCell> parsed = cells;
+    VInterface parseInterface(InterfaceSchema subInterface, List<DCell> cells, InterfaceSchema sInterface,
+                              boolean pack, boolean canBeEmpty, int curRowIndex) {
+        List<DCell> parsed = cells;
 
         boolean isEmpty = false; // 支持excel里的cell为空，并且它还是个复合结构；但不支持非empty的cell里部分结构为空
         boolean isNumberOrBool = false;
@@ -42,7 +42,7 @@ public class ValueParser {
         boolean isPack = pack || sInterface.fmt() == PACK;
         if (isPack) {
             require(cells.size() == 1, "pack应该只占一格");
-            CfgData.DCell cell = cells.getFirst();
+            DCell cell = cells.getFirst();
             if (canBeEmpty && cell.isCellEmpty()) {
                 isEmpty = true;
             } else if (sInterface.canBeNumberOrBool()) {
@@ -69,7 +69,7 @@ public class ValueParser {
 
         } else if (sInterface.fmt() instanceof FieldFormat.Sep sep) {
             require(cells.size() == 1, "sep应该只占一格");
-            CfgData.DCell cell = cells.getFirst();
+            DCell cell = cells.getFirst();
             if (canBeEmpty && cell.isCellEmpty()) {
                 isEmpty = true;
             } else {
@@ -81,7 +81,7 @@ public class ValueParser {
         }
 
         // 内容为空的单一格子，处理方式是把这空的parsed一层层传下去
-        CfgValue.VStruct vImpl;
+        VStruct vImpl;
         if (isEmpty) {
             StructSchema impl = sInterface.nullableDefaultImplStruct();
             StructSchema subImpl = subInterface.nullableDefaultImplStruct();
@@ -97,7 +97,7 @@ public class ValueParser {
         } else {
             StructSchema impl;
             StructSchema subImpl;
-            List<CfgData.DCell> implCells;
+            List<DCell> implCells;
             if (isNumberOrBool) {
                 impl = sInterface.nullableDefaultImplStruct();
                 subImpl = subInterface.nullableDefaultImplStruct();
@@ -138,18 +138,18 @@ public class ValueParser {
             return null;
         }
 
-        return new CfgValue.VInterface(subInterface, vImpl, cells);
+        return new VInterface(subInterface, vImpl, cells);
     }
 
-    CfgValue.VStruct parseStructural(Structural subStructural, List<CfgData.DCell> cells, Structural structural,
-                                     boolean pack, boolean canBeEmpty, int curRowIndex) {
-        List<CfgData.DCell> parsed = cells;
+    VStruct parseStructural(Structural subStructural, List<DCell> cells, Structural structural,
+                            boolean pack, boolean canBeEmpty, int curRowIndex) {
+        List<DCell> parsed = cells;
         boolean isEmpty = false; // 支持excel里的cell为空，并且它还是个复合结构；但不支持非empty的cell里部分结构为空
         boolean canChildBeEmpty = canBeEmpty;
         boolean isPack = pack || structural.fmt() == PACK;
         if (isPack) {
             require(cells.size() == 1, "pack应该只占一格");
-            CfgData.DCell cell = cells.getFirst();
+            DCell cell = cells.getFirst();
             if (canBeEmpty && cell.isCellEmpty()) {
                 isEmpty = true;
             } else {
@@ -164,7 +164,7 @@ public class ValueParser {
 
         } else if (structural.fmt() instanceof FieldFormat.Sep sep) {
             require(cells.size() == 1, "sep应该只占一格");
-            CfgData.DCell cell = cells.getFirst();
+            DCell cell = cells.getFirst();
             if (canBeEmpty && cell.isCellEmpty()) {
                 isEmpty = true;
             } else {
@@ -175,12 +175,12 @@ public class ValueParser {
             require(cells.size() == Spans.span(structural), "列宽度应一致");
         }
 
-        List<CfgValue.Value> values = new ArrayList<>(subStructural.fields().size());
+        List<Value> values = new ArrayList<>(subStructural.fields().size());
         if (isEmpty) {
             for (FieldSchema subField : subStructural.fields()) {
                 FieldSchema field = structural.findField(subField.name());
                 require(field != null);
-                CfgValue.Value v = parseField(subField, parsed, field,
+                Value v = parseField(subField, parsed, field,
                         true, true, curRowIndex, structural.name());
                 if (v != null) {
                     values.add(v);
@@ -202,8 +202,8 @@ public class ValueParser {
                         return null;
                     }
 
-                    List<CfgData.DCell> fieldCells = parsed.subList(startIdx, startIdx + expected);
-                    CfgValue.Value v = parseField(subField, fieldCells, field,
+                    List<DCell> fieldCells = parsed.subList(startIdx, startIdx + expected);
+                    Value v = parseField(subField, fieldCells, field,
                             isPack || field.fmt() == PACK, canChildBeEmpty, curRowIndex, structural.name());
                     if (v != null) {
                         values.add(v);
@@ -216,16 +216,16 @@ public class ValueParser {
             }
         }
 
-        return new CfgValue.VStruct(subStructural, values, cells);
+        return new VStruct(subStructural, values, cells);
     }
 
-    CfgValue.SimpleValue parseSimpleType(FieldType.SimpleType subType, List<CfgData.DCell> cells, FieldType.SimpleType type,
-                                         boolean pack, boolean canBeEmpty, int curRowIndex,
-                                         String nameable, String field) {
+    SimpleValue parseSimpleType(FieldType.SimpleType subType, List<DCell> cells, FieldType.SimpleType type,
+                                boolean pack, boolean canBeEmpty, int curRowIndex,
+                                String nameable, String field) {
         switch (type) {
             case FieldType.Primitive primitive -> {
                 require(cells.size() == 1);
-                CfgData.DCell cell = cells.getFirst();
+                DCell cell = cells.getFirst();
                 String str = cell.value().trim();
                 switch (primitive) {
                     case BOOL -> {
@@ -233,7 +233,7 @@ public class ValueParser {
                         if (!boolStrSet.contains(str.toLowerCase())) {
                             errs.addErr(new ValueErrs.NotMatchFieldType(cell, nameable, field, type));
                         }
-                        return new CfgValue.VBool(v, cell);
+                        return new VBool(v, cell);
                     }
                     case INT -> {
                         int v = 0;
@@ -242,7 +242,7 @@ public class ValueParser {
                         } catch (Exception e) {
                             errs.addErr(new ValueErrs.NotMatchFieldType(cell, nameable, field, type));
                         }
-                        return new CfgValue.VInt(v, cell);
+                        return new VInt(v, cell);
                     }
                     case LONG -> {
                         long v = 0;
@@ -251,7 +251,7 @@ public class ValueParser {
                         } catch (Exception e) {
                             errs.addErr(new ValueErrs.NotMatchFieldType(cell, nameable, field, type));
                         }
-                        return new CfgValue.VLong(v, cell);
+                        return new VLong(v, cell);
                     }
                     case FLOAT -> {
                         float v = 0f;
@@ -260,10 +260,10 @@ public class ValueParser {
                         } catch (Exception e) {
                             errs.addErr(new ValueErrs.NotMatchFieldType(cell, nameable, field, type));
                         }
-                        return new CfgValue.VFloat(v, cell);
+                        return new VFloat(v, cell);
                     }
                     case STRING -> {
-                        return new CfgValue.VString(str, cell);
+                        return new VString(str, cell);
                     }
                     case TEXT -> {
                         String value;
@@ -275,7 +275,7 @@ public class ValueParser {
                         } else {
                             value = str;
                         }
-                        return new CfgValue.VText(value, str, cell);
+                        return new VText(value, str, cell);
                     }
                 }
             }
@@ -299,9 +299,9 @@ public class ValueParser {
         return null;
     }
 
-    CfgValue.Value parseField(FieldSchema subField, List<CfgData.DCell> cells, FieldSchema field,
-                              boolean pack, boolean canBeEmpty, int curRowIndex,
-                              String nameable) {
+    Value parseField(FieldSchema subField, List<DCell> cells, FieldSchema field,
+                     boolean pack, boolean canBeEmpty, int curRowIndex,
+                     String nameable) {
 
         switch (field.type()) {
             case FieldType.SimpleType simple -> {
@@ -317,18 +317,18 @@ public class ValueParser {
         }
     }
 
-    CfgValue.VMap parseMap(FieldSchema subField, List<CfgData.DCell> cells, FieldSchema field,
-                           boolean isPack, int curRowIndex,
-                           String nameable) {
+    VMap parseMap(FieldSchema subField, List<DCell> cells, FieldSchema field,
+                  boolean isPack, int curRowIndex,
+                  String nameable) {
 
         FieldType.FMap subType = (FieldType.FMap) subField.type();
         FieldType.FMap type = (FieldType.FMap) field.type();
 
-        List<CfgData.DCell> parsed = null;
+        List<DCell> parsed = null;
         List<CellsWithRowIndex> blocks = null;
         if (isPack) {
             require(cells.size() == 1);
-            CfgData.DCell cell = cells.getFirst();
+            DCell cell = cells.getFirst();
             try {
                 parsed = DCells.parseNestList(cell);
             } catch (Exception e) {
@@ -348,40 +348,40 @@ public class ValueParser {
             blocks = List.of(new CellsWithRowIndex(parsed, curRowIndex));
         }
 
-        Map<CfgValue.SimpleValue, CfgValue.SimpleValue> valueMap = new LinkedHashMap<>();
+        Map<SimpleValue, SimpleValue> valueMap = new LinkedHashMap<>();
 
         int kc = isPack ? 1 : Spans.span(type.key());
         int vc = isPack ? 1 : Spans.span(type.value());
         int itemSpan = kc + vc;
 
         for (CellsWithRowIndex block : blocks) {
-            List<CfgData.DCell> curLineParsed = block.cells;
+            List<DCell> curLineParsed = block.cells;
             for (int startIdx = 0; startIdx < curLineParsed.size(); startIdx += itemSpan) {
                 if (startIdx + itemSpan > curLineParsed.size()) {
                     errs.addErr(new ValueErrs.FieldCellSpanNotEnough(curLineParsed.subList(startIdx, curLineParsed.size()),
                             nameable, field.name(), itemSpan, curLineParsed.size() - startIdx));
                     continue;
                 }
-                List<CfgData.DCell> keyCells = curLineParsed.subList(startIdx, startIdx + kc);
-                List<CfgData.DCell> valueCells = curLineParsed.subList(startIdx + kc, startIdx + itemSpan);
+                List<DCell> keyCells = curLineParsed.subList(startIdx, startIdx + kc);
+                List<DCell> valueCells = curLineParsed.subList(startIdx + kc, startIdx + itemSpan);
 
                 //第一个单元作为是否有item的标记
                 if (!keyCells.getFirst().isCellEmpty()) {
-                    CfgValue.SimpleValue key = parseSimpleType(subType.key(), keyCells, type.key(),
+                    SimpleValue key = parseSimpleType(subType.key(), keyCells, type.key(),
                             isPack, false, block.rowIndex,
                             nameable, field.name());
-                    CfgValue.SimpleValue value = parseSimpleType(subType.value(), valueCells, type.value(),
+                    SimpleValue value = parseSimpleType(subType.value(), valueCells, type.value(),
                             isPack, false, block.rowIndex,
                             nameable, field.name());
 
                     if (key != null && value != null) {
-                        CfgValue.SimpleValue old = valueMap.put(key, value);
+                        SimpleValue old = valueMap.put(key, value);
                         if (old != null) {
                             errs.addErr(new ValueErrs.MapKeyDuplicated(keyCells, nameable, field.name()));
                         }
                     }
                 } else {
-                    List<CfgData.DCell> itemCells = curLineParsed.subList(startIdx, startIdx + itemSpan);
+                    List<DCell> itemCells = curLineParsed.subList(startIdx, startIdx + itemSpan);
                     if (itemCells.stream().anyMatch(c -> !c.isCellEmpty())) {
                         errs.addErr(new ValueErrs.ContainerItemPartialSet(itemCells, nameable, field.name()));
                     }
@@ -389,23 +389,23 @@ public class ValueParser {
             }
         }
 
-        return new CfgValue.VMap(valueMap, cells);
+        return new VMap(valueMap, cells);
     }
 
 
-    CfgValue.VList parseList(FieldSchema subField, List<CfgData.DCell> cells, FieldSchema field,
-                             boolean isPack, int curRowIndex,
-                             String nameable) {
+    VList parseList(FieldSchema subField, List<DCell> cells, FieldSchema field,
+                    boolean isPack, int curRowIndex,
+                    String nameable) {
 
         FieldType.FList subType = (FieldType.FList) subField.type();
         FieldType.FList type = (FieldType.FList) field.type();
 
 
-        List<CfgData.DCell> parsed = null;
+        List<DCell> parsed = null;
         List<CellsWithRowIndex> blocks = null;
         if (isPack) {
             require(cells.size() == 1);
-            CfgData.DCell cell = cells.getFirst();
+            DCell cell = cells.getFirst();
             try {
                 parsed = DCells.parseNestList(cell);
             } catch (Exception e) {
@@ -418,7 +418,7 @@ public class ValueParser {
 
         } else if (field.fmt() instanceof FieldFormat.Sep sep) {
             require(cells.size() == 1);
-            CfgData.DCell cell = cells.getFirst();
+            DCell cell = cells.getFirst();
             parsed = DCells.parseList(cell, sep.sep());
 
         } else {
@@ -430,20 +430,20 @@ public class ValueParser {
             blocks = List.of(new CellsWithRowIndex(parsed, curRowIndex));
         }
 
-        List<CfgValue.SimpleValue> valueList = new ArrayList<>();
+        List<SimpleValue> valueList = new ArrayList<>();
         int itemSpan = isPack ? 1 : Spans.span(type.item());
         for (CellsWithRowIndex block : blocks) {
-            List<CfgData.DCell> curLineParsed = block.cells;
+            List<DCell> curLineParsed = block.cells;
             for (int startIdx = 0; startIdx < curLineParsed.size(); startIdx += itemSpan) {
                 if (startIdx + itemSpan > curLineParsed.size()) {
                     errs.addErr(new ValueErrs.FieldCellSpanNotEnough(curLineParsed.subList(startIdx, curLineParsed.size()),
                             nameable, field.name(), itemSpan, curLineParsed.size() - startIdx));
                     continue;
                 }
-                List<CfgData.DCell> itemCells = curLineParsed.subList(startIdx, startIdx + itemSpan);
+                List<DCell> itemCells = curLineParsed.subList(startIdx, startIdx + itemSpan);
                 //第一个单元作为是否有item的标记
                 if (!itemCells.getFirst().isCellEmpty()) {
-                    CfgValue.SimpleValue value = parseSimpleType(subType.item(), itemCells, type.item(),
+                    SimpleValue value = parseSimpleType(subType.item(), itemCells, type.item(),
                             isPack, false, block.rowIndex,
                             nameable, field.name());
                     if (value != null) {
@@ -456,7 +456,7 @@ public class ValueParser {
                 }
             }
         }
-        return new CfgValue.VList(valueList, cells);
+        return new VList(valueList, cells);
 
     }
 

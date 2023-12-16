@@ -16,7 +16,6 @@ import java.util.Objects;
 
 
 public class Context {
-
     private final CfgSchema cfgSchema;
     private final CfgData cfgData;
     private final boolean checkComma;

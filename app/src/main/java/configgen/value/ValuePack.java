@@ -58,10 +58,9 @@ public class ValuePack {
         FieldSchema field = new FieldSchema("fieldName", type, AUTO, Metadata.of());
         ValueParser parser = new ValueParser(errs, null, ValueParser.BlockParser.dummy);
 
-        CfgData.DCell dCell = new CfgData.DCell(str, new CfgData.DRowId("fileName", "sheetName", 0), 0, (byte) 0);
+        CfgData.DCell dCell = CfgData.DCell.of(str);
         return parser.parseField(field, List.of(dCell), field, true, true, 0, "tableName");
     }
-
 
 
 }

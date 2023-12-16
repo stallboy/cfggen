@@ -42,6 +42,13 @@ public record CfgData(Map<String, DTable> tables,
                         int col,
                         byte mode) {
 
+
+        public static final DCell DUMMY = of("");
+
+        public static DCell of(String str) {
+            return new DCell(str, new CfgData.DRowId("fileName", "sheetName", 0), 0, (byte) 0);
+        }
+
         public static final byte COLUMN_MODE = 0x1;
         public static final byte CELL_NUMBER = 0x2;
         public static final byte CELL_NUMBER_WITH_COMMA = 0x4;

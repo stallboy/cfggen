@@ -13,6 +13,10 @@ import static configgen.value.ValueRefCollector.*;
 public class ValueToJson {
     private final Map<RefId, VStruct> refRecordMap;
 
+    public ValueToJson() {
+        this.refRecordMap = null;
+    }
+
     public ValueToJson(Map<RefId, VStruct> refRecordMap) {
         this.refRecordMap = refRecordMap;
     }
