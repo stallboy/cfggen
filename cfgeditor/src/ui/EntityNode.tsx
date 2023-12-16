@@ -1,5 +1,5 @@
 import {ClassicPreset} from "rete";
-import {TableControl} from "./TableControl.tsx";
+import {EntityTableControl} from "./EntityTableControl.tsx";
 import {Entity, EntityNodeType} from "../model/graphModel.ts";
 import {Presets, RenderEmit} from "rete-react-plugin";
 import {css} from "styled-components";
@@ -11,7 +11,7 @@ export class EntityNode extends ClassicPreset.Node<
     { [key in string]: ClassicPreset.Socket },
     {
         [key in string]:
-        | TableControl
+        | EntityTableControl
         | ClassicPreset.Control
         | ClassicPreset.InputControl<"number">
         | ClassicPreset.InputControl<"text">;

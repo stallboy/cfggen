@@ -45,7 +45,7 @@ function getColumns(fieldShow: FieldsShowType) : ColumnsType<EntityField> {
 function dummpyOnChange(_key: string | string[]) {
 }
 
-export class TableControl extends ClassicPreset.Control {
+export class EntityTableControl extends ClassicPreset.Control {
     onChange: (key: string | string[]) => void = dummpyOnChange;
 
     constructor(public data: EntityField[], public fieldsShow: FieldsShowType) {
@@ -53,7 +53,7 @@ export class TableControl extends ClassicPreset.Control {
     }
 }
 
-export function TableControlComponent(props: { data: TableControl }) {
+export function EntityTableControlComponent(props: { data: EntityTableControl }) {
     let ctrl = props.data;
     if (ctrl.data.length == 0) {
         return <Space/>

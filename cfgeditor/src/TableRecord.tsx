@@ -8,7 +8,8 @@ import {
     EntityField,
     EntityNodeType,
     EntitySocketOutput,
-    FieldsShowType, fillInputs,
+    FieldsShowType,
+    fillInputs,
 } from "./model/graphModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 import {
@@ -33,7 +34,8 @@ function getId(table: string, id: string): string {
     return table + "-" + id;
 }
 
-function createNodes(entityMap: Map<string, Entity>, schema: Schema, refId: RefId, id: string, obj: JSONObject & Refs): Entity | null {
+function createNodes(entityMap: Map<string, Entity>, schema: Schema, refId: RefId, id: string,
+                     obj: JSONObject & Refs, isEditing: boolean): Entity | null {
     let fields: EntityField[] = [];
     let type: string = obj['$type'] as string;
     if (type == null) {
@@ -85,7 +87,7 @@ function createNodes(entityMap: Map<string, Entity>, schema: Schema, refId: RefI
                         for (let e of fArr) {
                             let fObj: JSONObject & Refs = e as JSONObject & Refs;
                             let childId: string = `${id}-${fieldKey}[${i}]`;
-                            let childNode = createNodes(entityMap, schema, refId, childId, fObj);
+                            let childNode = createNodes(entityMap, schema, refId, childId, fObj, isEditing);
                             i++;
 
                             if (childNode) {
@@ -119,7 +121,7 @@ function createNodes(entityMap: Map<string, Entity>, schema: Schema, refId: RefI
             } else {
                 let fObj: JSONObject & Refs = fieldValue as JSONObject & Refs;
                 let childId: string = id + "-" + fieldKey;
-                let childNode = createNodes(entityMap, schema, refId, childId, fObj);
+                let childNode = createNodes(entityMap, schema, refId, childId, fObj, isEditing);
                 if (childNode) {
                     outputs.push({
                         output: {key: fieldKey, label: fieldKey},
@@ -154,7 +156,7 @@ function createNodes(entityMap: Map<string, Entity>, schema: Schema, refId: RefI
         inputs: [],
         outputs: outputs,
 
-        fieldsShow: FieldsShowType.Edit,
+        fieldsShow: isEditing ? FieldsShowType.Edit : FieldsShowType.Direct,
         nodeType: EntityNodeType.Normal,
         userData: refId,
     };
@@ -220,27 +222,55 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
     setCurTableAndId: (table: string, id: string) => void;
 }) {
 
+    const [editMode, setEditMode] = useState<boolean>(false);
+
     const entityMap = new Map<string, Entity>();
 
     createRefNodes(entityMap, recordResult.refs);
     let refId = {table: curTable.name, id: curId};
     let entityId = getId(curTable.name, curId);
-    createNodes(entityMap, schema, refId, entityId, recordResult.object);
+    let isEditable = schema.isEditable && curTable.isEditable;
+    let isEditing = isEditable && editMode;
+
+    createNodes(entityMap, schema, refId, entityId, recordResult.object, isEditing);
     fillInputs(entityMap);
 
     const menu: Item[] = [];
 
     const nodeMenuFunc = (node: Entity): Item[] => {
         let refId = node.userData as RefId;
-        if (refId.table != curTable.name || refId.id != curId) {
-
-            return [{
-                label: '数据',
-                key: '数据',
-                handler() {
-                    setCurTableAndId(refId.table, refId.id);
-                }
-            }];
+        if (refId.table != curTable.name || refId.id != curId) {  // ref节点
+            return [
+                {
+                    label: '数据',
+                    key: '数据',
+                    handler() {
+                        setCurTableAndId(refId.table, refId.id);
+                    }
+                },
+            ];
+        } else if (isEditable) { // 本节点
+            if (editMode) {
+                return [
+                    {
+                        label: '只读',
+                        key: '只读',
+                        handler() {
+                            setEditMode(false);
+                        }
+                    },
+                ];
+            } else {
+                return [
+                    {
+                        label: '编辑',
+                        key: '编辑',
+                        handler() {
+                            setEditMode(true);
+                        }
+                    },
+                ];
+            }
 
         }
         return [];
@@ -250,7 +280,7 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
         (el: HTMLElement) => {
             return createEditor(el, {entityMap, menu, nodeMenuFunc});
         },
-        [recordResult]
+        [recordResult, editMode]
     );
     const [ref] = useRete(create);
 

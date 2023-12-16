@@ -77,7 +77,8 @@ public class SchemaService {
                          String entryField,
                          List<SField> fields,
                          List<SForeignKey> foreignKeys,
-                         List<RecordId> recordIds) implements SNameable {
+                         List<RecordId> recordIds,
+                         boolean isEditable) implements SNameable {
         @JSONField
         public String type() {
             return "table";
@@ -149,7 +150,8 @@ public class SchemaService {
                 entryField,
                 fromFields(ts.fields()),
                 fromFks(ts.foreignKeys()),
-                recordIds);
+                recordIds,
+                ts.meta().isJson());
     }
 
     public static List<RecordId> getRecordIds(VTable vTable) {

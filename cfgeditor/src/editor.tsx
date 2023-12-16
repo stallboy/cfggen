@@ -6,7 +6,7 @@ import {Presets, ReactArea2D, ReactPlugin} from "rete-react-plugin";
 
 import {AutoArrangePlugin, Presets as ArrangePresets} from "rete-auto-arrange-plugin";
 import {EntityConnectionType, EntityGraph, FieldsShowType} from "./model/graphModel.ts";
-import {TableControl, TableControlComponent} from "./ui/TableControl.tsx";
+import {EntityTableControl, EntityTableControlComponent} from "./ui/EntityTableControl.tsx";
 import {EntityNode, EntityNodeComponent} from "./ui/EntityNode.tsx";
 import {EntityConnection, EntityConnectionComponent} from "./ui/EntityConnection.tsx";
 import {ContextMenuExtra, ContextMenuPlugin} from "rete-context-menu-plugin";
@@ -51,8 +51,8 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
         Presets.classic.setup({
             customize: {
                 control(data) {
-                    if (data.payload instanceof TableControl) {
-                        return TableControlComponent;
+                    if (data.payload instanceof EntityTableControl) {
+                        return EntityTableControlComponent;
                     }
 
                     if (data.payload instanceof ClassicPreset.InputControl) {
@@ -110,7 +110,7 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
             entity.inputs.length * 40 +
             entity.outputs.length * 40;
 
-        const fieldsControl = new TableControl(entity.fields, entity.fieldsShow);
+        const fieldsControl = new EntityTableControl(entity.fields, entity.fieldsShow);
         if (hasCtrl) {
             fieldsControl.onChange = async (key: string | string[]) => {
                 let ch;
