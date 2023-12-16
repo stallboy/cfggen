@@ -51,8 +51,6 @@ public final class Main {
         if (BuildSettings.isIncludePoi) {
             System.out.println("    -usepoi           " + LocaleUtil.getMessage("Usage.UsePoi"));
             System.out.println("    -comparepoiandfastexcel   " + LocaleUtil.getMessage("Usage.ComparePoiAndFastExcel"));
-            // checkcomma 在只包含poi而不包含fastexcel时检测
-            System.out.println("    -checkcomma       " + LocaleUtil.getMessage("Usage.CheckComma"));
         }
 
         System.out.println("-----options");
@@ -115,7 +113,6 @@ public final class Main {
         boolean comparePoiAndFastExcel = false;
         int headRow = 2;
         boolean usePoi = false;
-        boolean checkComma = false;
         String encoding = "GBK";
 
         String i18nfile = null;
@@ -210,7 +207,6 @@ public final class Main {
                         switch (paramType) {
                             case "-usepoi" -> usePoi = true;
                             case "-comparepoiandfastexcel" -> comparePoiAndFastExcel = true;
-                            case "-checkcomma" -> checkComma = true;
                             default -> usage("unknown args " + args[i]);
                         }
                     } else {
@@ -250,7 +246,7 @@ public final class Main {
         }
 
         Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));
-        Context context = new Context(dataDir, headRow, usePoi, checkComma, encoding);
+        Context context = new Context(dataDir, headRow, usePoi, encoding);
         context.setI18nOrLangSwitch(i18nfile, i18nencoding, i18ncrlfaslf, langSwitchDir, defaultLang);
 
         if (searchParam != null) {

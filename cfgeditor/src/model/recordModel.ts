@@ -45,7 +45,7 @@ export type ResultCode =
     | 'tableNotSet'
     | 'idNotSet'
     | 'tableNotFound'
-    | 'idFormatErr'
+    | 'idParseErr'
     | 'idNotFound'
     | 'paramErr';
 

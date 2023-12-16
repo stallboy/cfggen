@@ -419,6 +419,8 @@ public final class CfgSchemaResolver {
             return;
         }
 
+        foreignKey.setKeyIndices(FindFieldIndex.findFieldIndices(structural, foreignKey.key()));
+
         // 解析 ref key
         switch (foreignKey.refKey()) {
 

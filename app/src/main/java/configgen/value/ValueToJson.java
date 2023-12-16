@@ -8,16 +8,19 @@ import java.util.List;
 import java.util.Map;
 
 import static configgen.value.CfgValue.*;
-import static configgen.value.ValueRefCollector.*;
+import static configgen.value.ValueRefCollector.RefId;
+import static configgen.value.ValueRefCollector.collectStructRef;
 
 public class ValueToJson {
+    private final CfgValue cfgValue;
     private final Map<RefId, VStruct> refRecordMap;
 
     public ValueToJson() {
-        this.refRecordMap = null;
+        this(null, null);
     }
 
-    public ValueToJson(Map<RefId, VStruct> refRecordMap) {
+    public ValueToJson(CfgValue cfgValue, Map<RefId, VStruct> refRecordMap) {
+        this.cfgValue = cfgValue;
         this.refRecordMap = refRecordMap;
     }
 
@@ -46,7 +49,7 @@ public class ValueToJson {
         }
         json.put("$type", vStruct.schema().fullName());
         if (refRecordMap != null) {
-            Map<String, List<RefId>> refIdMap = collectStructRef(refRecordMap, vStruct);
+            Map<String, List<RefId>> refIdMap = collectStructRef(cfgValue, refRecordMap, vStruct);
             if (!refIdMap.isEmpty()) {
                 json.put("$refs", refIdMap);
             }

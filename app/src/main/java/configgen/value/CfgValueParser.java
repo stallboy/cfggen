@@ -50,7 +50,7 @@ public class CfgValueParser {
         Logger.profile("schema span calculate");
 
         List<Callable<OneTableParserResult>> tasks = new ArrayList<>();
-        CfgValue value = new CfgValue(subSchema, new TreeMap<>());
+        CfgValue cfgValue = new CfgValue(subSchema, new TreeMap<>());
         for (TableSchema subTable : subSchema.tableMap().values()) {
             String name = subTable.name();
             TableSchema table = context.cfgSchema().findTable(name);
@@ -64,19 +64,13 @@ public class CfgValueParser {
                     ValueErrs errs = ValueErrs.of();
                     VTableParser parser = new VTableParser(subTable, dTable, table, tableI18n, errs);
                     VTable vTable = parser.parseTable();
-                    if (context.checkComma()) {
-                        CommaNumberCellChecker checker = new CommaNumberCellChecker(vTable, dTable, errs);
-                        checker.check();
-                    }
                     return new OneTableParserResult(vTable, errs);
                 });
 
             } else {
                 tasks.add(() -> {
-                    String dir = "_" + name.replace(".", "_");
-                    Path jsonDir = context.dataDir().resolve(dir);
                     ValueErrs errs = ValueErrs.of();
-                    VTableParserFromJson parser = new VTableParserFromJson(subTable, jsonDir, table, tableI18n, errs);
+                    VTableJsonParser parser = new VTableJsonParser(subTable, context.dataDir(), table, tableI18n, errs);
                     VTable vTable = parser.parseTable();
                     return new OneTableParserResult(vTable, errs);
                 });
@@ -89,7 +83,7 @@ public class CfgValueParser {
             for (Future<OneTableParserResult> future : futures) {
                 OneTableParserResult result = future.get();
                 VTable vTable = result.vTable;
-                value.vTableMap().put(vTable.schema().name(), vTable);
+                cfgValue.vTableMap().put(vTable.schema().name(), vTable);
                 errs.merge(result.errs);
             }
             executor.close();
@@ -98,10 +92,10 @@ public class CfgValueParser {
         }
         Logger.profile("value parse");
 
-        new RefValidator(value, errs).validate();
+        new RefValidator(cfgValue, errs).validate();
         Logger.profile("value ref validate");
 
-        return value;
+        return cfgValue;
     }
 
     record OneTableParserResult(VTable vTable,

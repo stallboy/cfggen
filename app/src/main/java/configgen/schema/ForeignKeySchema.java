@@ -1,10 +1,6 @@
 package configgen.schema;
 
-import configgen.value.CfgValue;
-
 import java.util.Objects;
-import java.util.SequencedMap;
-import java.util.Set;
 
 public class ForeignKeySchema {
     private final String name;
@@ -14,9 +10,7 @@ public class ForeignKeySchema {
     private final Metadata meta;
 
     private TableSchema refTableSchema;
-
-    public SequencedMap<CfgValue.Value, CfgValue.VStruct> fkValueMap;
-    public int[] keyIndices;
+    private int[] keyIndices;
 
     public ForeignKeySchema(String name, KeySchema key, String refTable, RefKey refKey, Metadata meta) {
         this.name = name;
@@ -62,9 +56,18 @@ public class ForeignKeySchema {
         return refTableSchema;
     }
 
+    public int[] keyIndices() {
+        return keyIndices;
+    }
+
     void setRefTableSchema(TableSchema refTableSchema) {
         this.refTableSchema = refTableSchema;
     }
+
+    public void setKeyIndices(int[] keyIndices) {
+        this.keyIndices = keyIndices;
+    }
+
 
     public Metadata meta() {
         return meta;
@@ -93,4 +96,6 @@ public class ForeignKeySchema {
     public int hashCode() {
         return Objects.hash(name, key, refTable, refKey, meta);
     }
+
+
 }

@@ -20,7 +20,6 @@ public class Context {
     private final Path dataDir;
     private final CfgSchema cfgSchema;
     private final CfgData cfgData;
-    private final boolean checkComma;
 
     private TextI18n nullableI18n = null;
     private LangSwitch nullableLangSwitch = null;
@@ -35,10 +34,6 @@ public class Context {
 
     public CfgData cfgData() {
         return cfgData;
-    }
-
-    public boolean checkComma() {
-        return checkComma;
     }
 
     /**
@@ -56,15 +51,8 @@ public class Context {
     }
 
 
-    /**
-     * @param checkComma 检查excel中包含逗号的number格子。
-     */
-    public Context(Path dataDir, int headRow, boolean usePoi, boolean checkComma, String defaultEncoding) {
-        if (checkComma && !usePoi) {
-            throw new IllegalArgumentException("checkComma must be used with usePoi");
-        }
+    public Context(Path dataDir, int headRow, boolean usePoi , String defaultEncoding) {
         this.dataDir = dataDir;
-        this.checkComma = checkComma;
         Path cfgPath = dataDir.resolve("config.cfg");
         CfgSchema schema = Cfgs.readFrom(cfgPath, true);
         Logger.profile("schema read");
@@ -137,11 +125,11 @@ public class Context {
 
         ValueErrs valueErrs = ValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(tagSchema, this, valueErrs);
-        CfgValue value = clientValueParser.parseCfgValue();
+        CfgValue cfgValue = clientValueParser.parseCfgValue();
         String prefix = tag == null ? "value" : String.format("[%s] filtered value", tag);
         valueErrs.print(prefix);
 
-        lastCfgValue = value;
+        lastCfgValue = cfgValue;
         lastCfgValueTag = tag;
         return lastCfgValue;
     }

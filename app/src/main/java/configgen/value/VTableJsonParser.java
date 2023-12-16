@@ -2,10 +2,14 @@ package configgen.value;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson2.JSONWriter;
+import configgen.gen.Generator;
 import configgen.schema.TableSchema;
+import configgen.util.CachedFiles;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -14,19 +18,19 @@ import java.util.List;
 import static configgen.value.CfgValue.*;
 import static configgen.value.CfgValue.VTable;
 
-public class VTableParserFromJson {
+public class VTableJsonParser {
     private final TableSchema subTableSchema;
     private final Path jsonDir;
     private final TableSchema tableSchema;
     private final ValueErrs errs;
-    private final ValueFromJson parser;
+    private final ValueJsonParser parser;
 
-    public VTableParserFromJson(TableSchema subTableSchema, Path jsonDir, TableSchema tableSchema,
-                                TextI18n.TableI18n nullableTableI18n, ValueErrs errs) {
+    public VTableJsonParser(TableSchema subTableSchema, Path dataDir, TableSchema tableSchema,
+                            TextI18n.TableI18n nullableTableI18n, ValueErrs errs) {
         this.subTableSchema = subTableSchema;
-        this.jsonDir = jsonDir;
+        this.jsonDir = getJsonTableDir(tableSchema, dataDir);
         this.tableSchema = tableSchema;
-        this.parser = new ValueFromJson(subTableSchema, nullableTableI18n);
+        this.parser = new ValueJsonParser(subTableSchema, nullableTableI18n);
         this.errs = errs;
     }
 
@@ -42,7 +46,7 @@ public class VTableParserFromJson {
                             try {
                                 VStruct vStruct = parser.fromJson(str);
                                 valueList.add(vStruct);
-                            } catch (ValueFromJson.JsonParseException e) {
+                            } catch (ValueJsonParser.JsonParseException e) {
                                 errs.addErr(new ValueErrs.JsonFileParseErr(file.getName(), tableSchema.name()));
                             }
                         } catch (IOException e) {
@@ -55,5 +59,25 @@ public class VTableParserFromJson {
         return new VTableCreator(subTableSchema, tableSchema, errs).create(valueList);
     }
 
+    private static Path getJsonTableDir(TableSchema tableSchema, Path dataDir) {
+        String dir = "_" + tableSchema.name().replace(".", "_");
+        return dataDir.resolve(dir);
+    }
+
+    public static void addOrUpdateRecordStore(VStruct record, TableSchema tableSchema, String id, Path dataDir) throws IOException {
+        Path jsonDir = getJsonTableDir(tableSchema, dataDir);
+        Path recordPath = jsonDir.resolve(id + ".json");
+        try (OutputStreamWriter writer = Generator.createUtf8Writer(recordPath.toFile())) {
+            JSONObject jsonObject = new ValueToJson().toJson(record);
+            String jsonString = JSON.toJSONString(jsonObject, JSONWriter.Feature.PrettyFormat);
+            writer.write(jsonString);
+        }
+    }
+
+    public static boolean deleteRecordStore(TableSchema tableSchema, String id, Path dataDir) {
+        Path jsonDir = getJsonTableDir(tableSchema, dataDir);
+        Path recordPath = jsonDir.resolve(id + ".json");
+        return CachedFiles.delete(recordPath.toFile());
+    }
 
 }

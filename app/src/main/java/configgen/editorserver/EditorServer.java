@@ -12,19 +12,24 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
-import static configgen.editorserver.ServeRecord.*;
-import static configgen.editorserver.ServeRecordEdit.*;
+import static configgen.editorserver.RecordEditService.ResultCode.*;
+import static configgen.editorserver.RecordService.*;
+import static configgen.editorserver.RecordEditService.*;
 
 public class EditorServer extends Generator {
     private final int port;
-    private CfgValue cfgValue;
+
+    private Path dataDir;
+    private volatile CfgValue cfgValue;  // 可能会被改变
     private TableSchemaRefGraph graph;
     private HttpServer server;
+
 
     public EditorServer(Parameter parameter) {
         super(parameter);
@@ -33,6 +38,7 @@ public class EditorServer extends Generator {
 
     @Override
     public void generate(Context ctx) throws IOException {
+        dataDir = ctx.dataDir();
         cfgValue = ctx.makeValue(tag);
         graph = new TableSchemaRefGraph(cfgValue.schema());
         System.gc();
@@ -46,77 +52,17 @@ public class EditorServer extends Generator {
         handle("/record", this::handleRecord);
         handle("/search", this::handleSearch);
 
-        handle("/recordAdd", this::handleRecordAdd);
-        handle("/recordDel", this::handleRecordDel);
-        handle("/recordUpdate", this::handleRecordUpdate);
-
+        handle("/recordAddOrUpdate", this::handleRecordAddOrUpdate);
+        handle("/recordDelete", this::handleRecordDelete);
 
         server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
         server.start();
-
         logger.info("Server is started at " + listenAddr);
     }
 
-    private void handle(String path, HttpHandler handler) {
-        HttpContext context = server.createContext(path, handler);
-        context.getFilters().add(logging);
-    }
-
-    private static final Logger logger = Logger.getLogger("http");
-    private static final Filter logging = new Filter() {
-        @Override
-        public void doFilter(HttpExchange http, Chain chain) throws IOException {
-            try {
-                chain.doFilter(http);
-            } finally {
-                logger.info(String.format("%s %s %s",
-                        http.getRequestMethod(),
-                        http.getRequestURI(),
-                        http.getRemoteAddress()));
-            }
-        }
-
-        @Override
-        public String description() {
-            return "logging";
-        }
-    };
-
-
-    private void handleRecordAdd(HttpExchange exchange) throws IOException {
-        if (!exchange.getRequestMethod().equals("POST")) {
-            return;
-        }
-
-        byte[] bytes = exchange.getRequestBody().readAllBytes();
-        String jsonStr = new String(bytes, StandardCharsets.UTF_8);
-        RecordEditResult result = new ServeRecordEdit(cfgValue).addRecord(jsonStr);
-        sendResponse(exchange, result);
-    }
-
-    private void handleRecordDel(HttpExchange exchange) throws IOException {
-        Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
-        String table = query.get("table");
-        String id = query.get("table");
-
-        RecordEditResult result = new ServeRecordEdit(cfgValue).deleteRecord(table, id);
-        sendResponse(exchange, result);
-    }
-
-    private void handleRecordUpdate(HttpExchange exchange) throws IOException {
-        if (!exchange.getRequestMethod().equals("POST")) {
-            return;
-        }
-
-        byte[] bytes = exchange.getRequestBody().readAllBytes();
-        String jsonStr = new String(bytes, StandardCharsets.UTF_8);
-        RecordEditResult result = new ServeRecordEdit(cfgValue).updateRecord(jsonStr);
-        sendResponse(exchange, result);
-
-    }
 
     private void handleSchemas(HttpExchange exchange) throws IOException {
-        ServeSchema.Schema schema = ServeSchema.fromCfgValue(cfgValue, 999999);
+        SchemaService.Schema schema = SchemaService.fromCfgValue(cfgValue);
         sendResponse(exchange, schema);
     }
 
@@ -134,7 +80,7 @@ public class EditorServer extends Generator {
             }
         }
 
-        ServeSearch.SearchResult result = ServeSearch.search(cfgValue, q, max);
+        SearchService.SearchResult result = SearchService.search(cfgValue, q, max);
         sendResponse(exchange, result);
     }
 
@@ -168,9 +114,74 @@ public class EditorServer extends Generator {
         boolean in = inStr != null;
 
         RequestType requestType = refsStr != null ? RequestType.requestRefs : RequestType.requestRecord;
-        RecordResponse record = new ServeRecord(cfgValue, graph, table, id, depth, in, maxObjs, requestType).retrieve();
+        RecordResponse record = new RecordService(cfgValue, graph, table, id, depth, in, maxObjs, requestType).retrieve();
         sendResponse(exchange, record);
     }
+
+    private void handleRecordAddOrUpdate(HttpExchange exchange) throws IOException {
+        if (!exchange.getRequestMethod().equals("POST")) {
+            return;
+        }
+
+        Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
+        String table = query.get("table");
+
+
+        byte[] bytes = exchange.getRequestBody().readAllBytes();
+        String jsonStr = new String(bytes, StandardCharsets.UTF_8);
+
+        RecordEditResult result;
+        synchronized (this) {
+            RecordEditService service = new RecordEditService(dataDir, cfgValue);
+            result = service.addOrUpdateRecord(table, jsonStr);
+            if (result.resultCode() == addOk || result.resultCode() == updateOk) {
+                cfgValue = service.newCfgValue();
+            }
+        }
+        sendResponse(exchange, result);
+    }
+
+    private void handleRecordDelete(HttpExchange exchange) throws IOException {
+        Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
+        String table = query.get("table");
+        String id = query.get("id");
+
+        RecordEditResult result;
+        synchronized (this) {
+            RecordEditService service = new RecordEditService(dataDir, cfgValue);
+            result = service.deleteRecord(table, id);
+            if (result.resultCode() == deleteOk) {
+                cfgValue = service.newCfgValue();
+            }
+        }
+        sendResponse(exchange, result);
+    }
+
+    private void handle(String path, HttpHandler handler) {
+        HttpContext context = server.createContext(path, handler);
+        context.getFilters().add(logging);
+    }
+
+    private static final Logger logger = Logger.getLogger("http");
+    private static final Filter logging = new Filter() {
+        @Override
+        public void doFilter(HttpExchange http, Chain chain) throws IOException {
+            try {
+                chain.doFilter(http);
+            } finally {
+                logger.info(String.format("%s %s %s %s",
+                        http.getRequestMethod(),
+                        http.getRequestURI(),
+                        http.getRemoteAddress(),
+                        http.getRequestBody()));
+            }
+        }
+
+        @Override
+        public String description() {
+            return "logging";
+        }
+    };
 
     private static void sendResponse(HttpExchange exchange, Object object) throws IOException {
         byte[] jsonBytes = JSON.toJSONBytes(object);

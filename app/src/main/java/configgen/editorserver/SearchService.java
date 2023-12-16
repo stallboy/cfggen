@@ -1,14 +1,15 @@
 package configgen.editorserver;
 
 import configgen.value.CfgValue;
-import configgen.value.RefSearcher;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 import static configgen.value.ForeachPrimitiveValue.PrimitiveValueVisitor;
 import static configgen.value.ForeachPrimitiveValue.foreachVTable;
 
-public class ServeSearch {
+public class SearchService {
 
     public enum ResultCode {
         ok,
@@ -94,34 +95,6 @@ public class ServeSearch {
             foreachVTable(visitor, vTable);
             if (res.items.size() >= maxItems) {
                 break;
-            }
-        }
-        return res;
-    }
-
-
-    public record SearchRef(String table,
-                            List<String> uniqKeys,  // 默认为空，搜索索引对主键的索引
-                            Set<String> ignoredTables) {
-    }
-
-    public record SearchRefResultItem(String key,
-                                      Set<String> refTables) {
-    }
-
-
-    public record SearchRefResult(List<SearchRefResultItem> items) {
-    }
-
-
-    public static SearchRefResult searchRef(CfgValue cfgValue, SearchRef param) {
-        SearchRefResult res = new SearchRefResult(new ArrayList<>(32));
-
-        RefSearcher.RefSearchResult rs = RefSearcher.search(cfgValue, param.table, param.uniqKeys, param.ignoredTables);
-        if (rs.err() == RefSearcher.RefSearchErr.Ok) {
-            for (Map.Entry<CfgValue.Value, Set<String>> e : rs.value2tables().entrySet()) {
-                Set<String> tables = e.getValue();
-                res.items.add(new SearchRefResultItem(e.getKey().repr(), tables));
             }
         }
         return res;

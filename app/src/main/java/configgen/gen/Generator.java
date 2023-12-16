@@ -37,7 +37,7 @@ public abstract class Generator {
         return new CachedIndentPrinter(file, encoding, dst, cache, tmp);
     }
 
-    protected static OutputStreamWriter createUtf8Writer(File file) {
+    public static OutputStreamWriter createUtf8Writer(File file) {
         return new OutputStreamWriter(new CachedFileOutputStream(file), StandardCharsets.UTF_8);
     }
 

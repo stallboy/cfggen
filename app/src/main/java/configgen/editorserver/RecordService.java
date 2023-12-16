@@ -2,7 +2,6 @@ package configgen.editorserver;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.annotation.JSONField;
-import configgen.schema.FieldType;
 import configgen.schema.TableSchemaRefGraph;
 import configgen.value.*;
 import configgen.value.CfgValue.VStruct;
@@ -12,11 +11,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static configgen.editorserver.ServeRecord.ResultCode.*;
+import static configgen.editorserver.RecordService.ResultCode.*;
 import static configgen.value.CfgValue.VTable;
 import static configgen.value.CfgValue.Value;
 
-public class ServeRecord {
+public class RecordService {
 
     public interface RecordResponse {
     }
@@ -46,7 +45,7 @@ public class ServeRecord {
         tableNotSet,
         idNotSet,
         tableNotFound,
-        idFormatErr,
+        idParseErr,
         idNotFound,
         paramErr,
     }
@@ -73,9 +72,9 @@ public class ServeRecord {
     private final int maxObjs;
     private final RequestType requestType;
 
-    public ServeRecord(CfgValue cfgValue, TableSchemaRefGraph graph,
-                       String tableName, String id,
-                       int depth, boolean in, int maxObjs, RequestType requestType) {
+    public RecordService(CfgValue cfgValue, TableSchemaRefGraph graph,
+                         String tableName, String id,
+                         int depth, boolean in, int maxObjs, RequestType requestType) {
         this.cfgValue = cfgValue;
         this.graph = graph;
         this.table = tableName;
@@ -109,15 +108,14 @@ public class ServeRecord {
             return ofErr(tableNotFound);
         }
 
-        FieldType pkFieldType = ValueUtil.getKeyFieldType(vTable.schema().primaryKey());
         ValueErrs errs = ValueErrs.of();
-        Value pkValue = ValuePack.unpack(id, pkFieldType, errs);
+        Value pkValue = ValuePack.unpackTablePrimaryKey(id, vTable.schema(), errs);
 
         if (!errs.errs().isEmpty()) {
             for (ValueErrs.VErr err : errs.errs()) {
-                System.out.println(err);
+                System.err.println(err);
             }
-            return ofErr(idFormatErr);
+            return ofErr(idParseErr);
         }
 
         if (pkValue instanceof VStruct vPkValue) {
@@ -137,7 +135,7 @@ public class ServeRecord {
         int curDepth = 0;
         switch (requestType) {
             case requestRecord -> {
-                object = new ValueToJson(frontier).toJson(vRecord);
+                object = new ValueToJson(cfgValue, frontier).toJson(vRecord);
                 frontier.remove(thisObjId);
                 curDepth = 1;
             }
@@ -157,7 +155,7 @@ public class ServeRecord {
                 VStruct record = e.getValue();
 
                 Map<String, List<RefId>> refIdMap = new LinkedHashMap<>();
-                ValueRefCollector collector = new ValueRefCollector(newFrontier, refIdMap);
+                ValueRefCollector collector = new ValueRefCollector(cfgValue, newFrontier, refIdMap);
                 collector.collect(record, List.of());
 
                 result.put(refId, new Refs(record.packStr(), refIdMap, curDepth));

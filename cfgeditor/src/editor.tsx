@@ -85,6 +85,7 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
         let hasCtrl = true;
         let ch;
         let fc;
+        let fh = 40;
         switch (entity.fieldsShow) {
             case FieldsShowType.Direct:
                 ch = 0;
@@ -99,14 +100,19 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
                 ch = 60;
                 fc = 0;
                 break;
+            case FieldsShowType.Edit:
+                ch = 0;
+                fc = entity.fields.length;
+                fh = 60;
+                break;
         }
-        node.height = 60 + ch + fc * 40 +
+        node.height = 60 + ch + fc * fh +
             entity.inputs.length * 40 +
             entity.outputs.length * 40;
 
         const fieldsControl = new TableControl(entity.fields, entity.fieldsShow);
         if (hasCtrl) {
-            fieldsControl.onChange = (key: string | string[]) => {
+            fieldsControl.onChange = async (key: string | string[]) => {
                 let ch;
                 let fc;
                 if (key.length == 0) {
@@ -120,15 +126,24 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
                     entity.inputs.length * 40 +
                     entity.outputs.length * 40;
 
-                area.update('node', node.id);
+                await area.update('node', node.id);
                 // 没办法让connection刷新
                 // area.update('control', fieldsControl.id);
                 // area.update('socket', node.inputs[0]?.socket.name as string);
-                // const connections = editor.getConnections();
-                // const incomingConnections = connections.filter(connection => connection.target === node.id);
-                // for (let ic of incomingConnections) {
-                //     area.update('connection', ic.id);
-                // }
+
+                // setTimeout(() => {
+                //     const connections = editor.getConnections();
+                //     const incomingConnections = connections.filter(connection => connection.target === node.id);
+                //     for (let ic of incomingConnections) {
+                //         editor.removeConnection(ic.id);
+                //         let fromNode = editor.getNode(ic.source);
+                //         let toNode = editor.getNode(ic.target);
+                //         let conn = new EntityConnection(fromNode, ic.sourceOutput, toNode, ic.targetInput);
+                //         conn.connectionType = ic.connectionType ?? EntityConnectionType.Normal;
+                //         editor.addConnection(conn);
+                //         area.update('connection', conn.id);
+                //     }
+                // }, 100);
 
             };
         }

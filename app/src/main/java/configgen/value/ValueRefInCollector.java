@@ -64,14 +64,14 @@ public class ValueRefInCollector {
             FieldType ft = fk.key().fieldSchemas().getFirst().type();
             switch (ft) {
                 case FieldType.SimpleType ignored -> {
-                    Value localValue = ValueUtil.extractKeyValue(vStruct, fk.keyIndices);
+                    Value localValue = ValueUtil.extractKeyValue(vStruct, fk.keyIndices());
                     if (localValue.equals(myPkValue)) {
                         addCtx(result, ctx);
                     }
 
                 }
                 case FieldType.FList ignored -> {
-                    VList localList = (VList) vStruct.values().get(fk.keyIndices[0]);
+                    VList localList = (VList) vStruct.values().get(fk.keyIndices()[0]);
                     for (SimpleValue item : localList.valueList()) {
                         if (item.equals(myPkValue)) {
                             addCtx(result, ctx);
@@ -79,7 +79,7 @@ public class ValueRefInCollector {
                     }
                 }
                 case FieldType.FMap ignored -> {
-                    VMap localMap = (VMap) vStruct.values().get(fk.keyIndices[0]);
+                    VMap localMap = (VMap) vStruct.values().get(fk.keyIndices()[0]);
                     for (SimpleValue val : localMap.valueMap().values()) {
                         if (val.equals(myPkValue)) {
                             addCtx(result, ctx);

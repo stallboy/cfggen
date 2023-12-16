@@ -10,16 +10,16 @@
 
 
 ## 查看表结构
-![](tableschema.png)
+![](../images/tableschema.png)
 
 ## 查看表关系 
-![](tableref.png)
+![](../images/tableref.png)
 
 ## 查看记录
-![](record.png)
+![](../images/record.png)
 
 ## 查看记录关系
-![](recordref.png)
+![](../images/recordref.png)
 
 ## 搜索记录
-![](search.png)
+![](../images/search.png)

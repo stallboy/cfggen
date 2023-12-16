@@ -44,7 +44,8 @@ export interface EntityGraph {
 export enum FieldsShowType {
     Direct,
     Expand,
-    Fold
+    Fold,
+    Edit,
 }
 
 export enum EntityNodeType {

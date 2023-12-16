@@ -31,7 +31,6 @@ public final class RefSearcher {
      */
     public static RefSearchResult search(CfgValue cfgValue, String tableName,
                                          List<String> nullableUniqueKeys, Set<String> ignoredTables) {
-        cfgValue.schema().requireForeignKeyValueCached();
         TableSchema refTable = cfgValue.schema().findTable(tableName);
         if (refTable == null) {
             return new RefSearchResult(TableNotFound, null);
@@ -42,7 +41,8 @@ public final class RefSearcher {
         }
 
         Map<Value, Set<String>> res = new LinkedHashMap<>();
-        ForeachVStruct.VStructVisitor vStructVisitor = (vStruct, ctx) -> search(vStruct, ctx, refTable, nullableUniqueKeys, res);
+        ForeachVStruct.VStructVisitor vStructVisitor = (vStruct, ctx) -> search(vStruct, ctx, cfgValue,
+                refTable, nullableUniqueKeys, res);
         for (VTable vTable : cfgValue.sortedTables()) {
             if (!ignoredTables.contains(vTable.name())) {
                 ForeachVStruct.foreachVTable(vStructVisitor, vTable);
@@ -51,7 +51,8 @@ public final class RefSearcher {
         return new RefSearchResult(Ok, res);
     }
 
-    private static void search(VStruct vStruct, ForeachVStruct.Context ctx, TableSchema refTable, List<String> nullableUniqueKeys, Map<Value, Set<String>> res) {
+    private static void search(VStruct vStruct, ForeachVStruct.Context ctx, CfgValue cfgValue,
+                               TableSchema refTable, List<String> nullableUniqueKeys, Map<Value, Set<String>> res) {
         VTable fromTable = ctx.fromVTable();
         Structural structural = vStruct.schema();
         for (ForeignKeySchema fk : structural.foreignKeys()) {
@@ -71,19 +72,20 @@ public final class RefSearcher {
                 FieldType ft = fk.key().fieldSchemas().getFirst().type();
                 switch (ft) {
                     case FieldType.SimpleType ignored -> {
-                        Value localValue = ValueUtil.extractKeyValue(vStruct, fk.keyIndices);
-                        if (fk.fkValueMap.containsKey(localValue)) {
+                        Value localValue = ValueUtil.extractKeyValue(vStruct, fk.keyIndices());
+                        Map<Value, VStruct> foreignKeyValueMap = ValueUtil.getForeignKeyValueMap(cfgValue, fk);
+                        if (foreignKeyValueMap != null && foreignKeyValueMap.containsKey(localValue)) {
                             addValueTable(res, localValue, fromTable.name());
                         }
                     }
                     case FieldType.FList ignored -> {
-                        VList localList = (VList) vStruct.values().get(fk.keyIndices[0]);
+                        VList localList = (VList) vStruct.values().get(fk.keyIndices()[0]);
                         for (SimpleValue item : localList.valueList()) {
                             addValueTable(res, item, fromTable.name());
                         }
                     }
                     case FieldType.FMap ignored -> {
-                        VMap localMap = (VMap) vStruct.values().get(fk.keyIndices[0]);
+                        VMap localMap = (VMap) vStruct.values().get(fk.keyIndices()[0]);
                         for (SimpleValue val : localMap.valueMap().values()) {
                             addValueTable(res, val, fromTable.name());
                         }

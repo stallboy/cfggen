@@ -77,10 +77,12 @@ public class CachedFiles {
         return path.toAbsolutePath().normalize().toString();
     }
 
-    private static void delete(File file) {
+    public static boolean delete(File file) {
         String dir = file.isDirectory() ? "dir" : "file";
-        String ok = file.delete() ? "" : " fail";
-        Logger.log("delete " + dir + ok + ": " + normalizePath(file.toPath()));
+        boolean deleteOk = file.delete();
+        String status = deleteOk ? "" : " fail";
+        Logger.log("delete " + dir + status + ": " + normalizePath(file.toPath()));
+        return deleteOk;
     }
 
     private static void doRemoveFile(File file, boolean keepMeta) {

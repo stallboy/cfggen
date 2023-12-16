@@ -52,7 +52,7 @@ export function TableList({schema, curTable, setCurTable}: {
                 style = {backgroundColor: '#52c41a'};
             }
 
-            let badge = <Badge count={tl.table.recordCount} overflowCount={999999}
+            let badge = <Badge count={tl.table.recordIds.length} overflowCount={999999}
                                style={style}/>
 
             subOptions.push({

@@ -8,8 +8,10 @@ import configgen.value.CfgValue;
 import java.util.ArrayList;
 import java.util.List;
 
+import static configgen.value.CfgValue.*;
 
-public class ServeSchema {
+
+public class SchemaService {
 
     public interface SNameable {
         String name();
@@ -75,7 +77,6 @@ public class ServeSchema {
                          String entryField,
                          List<SField> fields,
                          List<SForeignKey> foreignKeys,
-                         int recordCount,
                          List<RecordId> recordIds) implements SNameable {
         @JSONField
         public String type() {
@@ -89,18 +90,20 @@ public class ServeSchema {
 
 
     public static Schema fromCfgSchema(CfgSchema cfgSchema) {
-        return new Schema(!cfgSchema.isPartial(), cfgSchema.items().stream().map(n -> fromNameable(n, null, -1)).toList());
+        return new Schema(!cfgSchema.isPartial(), cfgSchema.items().stream()
+                .map(n -> fromNameable(n, null)).toList());
     }
 
-    public static Schema fromCfgValue(CfgValue cfgValue, int returnMaxIdCount) {
-        return new Schema(!cfgValue.schema().isPartial(), cfgValue.schema().items().stream().map(n -> fromNameable(n, cfgValue, returnMaxIdCount)).toList());
+    public static Schema fromCfgValue(CfgValue cfgValue) {
+        return new Schema(!cfgValue.schema().isPartial(), cfgValue.schema().items().stream()
+                .map(n -> fromNameable(n, cfgValue)).toList());
     }
 
-    public static SNameable fromNameable(Nameable n, CfgValue cfgValue, int returnMaxIdCount) {
+    public static SNameable fromNameable(Nameable n, CfgValue cfgValue) {
         return switch (n) {
             case InterfaceSchema is -> fromInterface(is);
             case StructSchema ss -> fromStruct(ss);
-            case TableSchema ts -> fromTable(ts, cfgValue, returnMaxIdCount);
+            case TableSchema ts -> fromTable(ts, cfgValue);
         };
     }
 
@@ -108,7 +111,7 @@ public class ServeSchema {
         return new SInterface(is.name(),
                 is.enumRefTable().fullName(), // 全局名字空间
                 is.defaultImpl(),
-                is.impls().stream().map(ServeSchema::fromStruct).toList());
+                is.impls().stream().map(SchemaService::fromStruct).toList());
     }
 
     public static SStruct fromStruct(StructSchema ss) {
@@ -117,7 +120,7 @@ public class ServeSchema {
                 fromFks(ss.foreignKeys()));
     }
 
-    public static STable fromTable(TableSchema ts, CfgValue cfgValue, int returnMaxIdCount) {
+    public static STable fromTable(TableSchema ts, CfgValue cfgValue) {
         SEntryType entryType;
         String entryField;
         switch (ts.entry()) {
@@ -134,28 +137,10 @@ public class ServeSchema {
                 entryField = eEnum.field();
             }
         }
-        int recordCount;
-        List<RecordId> recordIds;
 
-        CfgValue.VTable vTable = null;
-        if (cfgValue != null) {
-            vTable = cfgValue.vTableMap().get(ts.name());
-        }
-        if (vTable == null) {
-            recordCount = -1;
-            recordIds = null;
-        } else {
-            recordCount = vTable.primaryKeyMap().size();
-            recordIds = new ArrayList<>(Math.min(recordCount, returnMaxIdCount));
-            int i = 0;
-            for (CfgValue.Value pk : vTable.primaryKeyMap().sequencedKeySet()) {
-                recordIds.add(new RecordId(pk.packStr(), null));
-                i++;
-                if (i >= returnMaxIdCount) {
-                    break;
-                }
-            }
-        }
+        VTable vTable = cfgValue != null ? cfgValue.vTableMap().get(ts.name()) : null;
+        List<RecordId> recordIds = getRecordIds(vTable);
+
 
         return new STable(ts.name(),
                 ts.primaryKey().fields(),
@@ -164,8 +149,18 @@ public class ServeSchema {
                 entryField,
                 fromFields(ts.fields()),
                 fromFks(ts.foreignKeys()),
-                recordCount,
                 recordIds);
+    }
+
+    public static List<RecordId> getRecordIds(VTable vTable) {
+        if (vTable == null) {
+            return List.of();
+        }
+        List<RecordId> recordIds = new ArrayList<>(vTable.primaryKeyMap().size());
+        for (Value pk : vTable.primaryKeyMap().sequencedKeySet()) {
+            recordIds.add(new RecordId(pk.packStr(), null));
+        }
+        return recordIds;
     }
 
     private static List<SField> fromFields(List<FieldSchema> fields) {

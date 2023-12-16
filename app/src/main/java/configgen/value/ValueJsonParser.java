@@ -14,7 +14,7 @@ import static configgen.schema.FieldType.*;
 import static configgen.schema.FieldType.Primitive.*;
 import static configgen.value.CfgValue.*;
 
-public class ValueFromJson {
+public class ValueJsonParser {
 
     public static class JsonParseException extends RuntimeException {
         public JsonParseException(String message) {
@@ -27,7 +27,11 @@ public class ValueFromJson {
     private DCell cell;
     private List<DCell> cellList;
 
-    public ValueFromJson(TableSchema subTableSchema, TextI18n.TableI18n nullableTableI18n) {
+    public ValueJsonParser(TableSchema subTableSchema) {
+        this(subTableSchema, null);
+    }
+
+    public ValueJsonParser(TableSchema subTableSchema, TextI18n.TableI18n nullableTableI18n) {
         this.subTableSchema = subTableSchema;
         this.nullableTableI18n = nullableTableI18n;
     }

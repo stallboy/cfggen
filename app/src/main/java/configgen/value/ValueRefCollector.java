@@ -19,11 +19,13 @@ public class ValueRefCollector {
                         String id) {
     }
 
+    private final CfgValue cfgValue;
     private final Map<RefId, VStruct> refRecordMap;
     private final Map<String, List<RefId>> refIdMap;
 
 
-    public ValueRefCollector(Map<RefId, VStruct> refRecordMap, Map<String, List<RefId>> refIdMap) {
+    public ValueRefCollector(CfgValue cfgValue, Map<RefId, VStruct> refRecordMap, Map<String, List<RefId>> refIdMap) {
+        this.cfgValue = cfgValue;
         this.refRecordMap = refRecordMap;
         this.refIdMap = refIdMap;
     }
@@ -40,7 +42,7 @@ public class ValueRefCollector {
     }
 
     public void collect(VStruct vStruct, List<String> prefix) {
-        Map<String, List<RefId>> thisRefIdMap = collectStructRef(refRecordMap, vStruct);
+        Map<String, List<RefId>> thisRefIdMap = collectStructRef(cfgValue, refRecordMap, vStruct);
         if (prefix.isEmpty()) {
             refIdMap.putAll(thisRefIdMap);
         } else {
@@ -64,36 +66,40 @@ public class ValueRefCollector {
         return res;
     }
 
-    static Map<String, List<RefId>> collectStructRef(Map<RefId, VStruct> refRecordMap, VStruct vStruct) {
+    static Map<String, List<RefId>> collectStructRef(CfgValue cfgValue, Map<RefId, VStruct> refRecordMap, VStruct vStruct) {
         Map<String, List<RefId>> refIdMap = new LinkedHashMap<>();
         Structural structural = vStruct.schema();
         for (ForeignKeySchema fk : structural.foreignKeys()) {
             RefKey refKey = fk.refKey();
-            // TODO, 这里没考虑ListRef
+            Map<Value, VStruct> foreignKeyValueMap = ValueUtil.getForeignKeyValueMap(cfgValue, fk);
+            if (foreignKeyValueMap == null) {
+                continue;
+            }
+            // 这里没考虑ListRef
             if (refKey instanceof RefKey.RefSimple refSimple) {
                 FieldType ft = fk.key().fieldSchemas().getFirst().type();
                 String refName = (refSimple.nullable() ? "nullableRef" : "ref") + Generator.upper1(fk.name());
                 switch (ft) {
                     case FieldType.SimpleType ignored -> {
-                        Value localValue = ValueUtil.extractKeyValue(vStruct, fk.keyIndices);
-                        VStruct refRecord = fk.fkValueMap.get(localValue);
+                        Value localValue = ValueUtil.extractKeyValue(vStruct, fk.keyIndices());
+                        VStruct refRecord = foreignKeyValueMap.get(localValue);
                         if (refRecord != null) {
                             addRef(refRecordMap, refIdMap, refName, fk.refTableNormalized(), localValue.packStr(), refRecord);
                         }
                     }
                     case FieldType.FList ignored -> {
-                        VList localList = (VList) vStruct.values().get(fk.keyIndices[0]);
+                        VList localList = (VList) vStruct.values().get(fk.keyIndices()[0]);
                         for (SimpleValue item : localList.valueList()) {
-                            VStruct refRecord = fk.fkValueMap.get(item);
+                            VStruct refRecord = foreignKeyValueMap.get(item);
                             if (refRecord != null) {
                                 addRef(refRecordMap, refIdMap, refName, fk.refTableNormalized(), item.packStr(), refRecord);
                             }
                         }
                     }
                     case FieldType.FMap ignored -> {
-                        VMap localMap = (VMap) vStruct.values().get(fk.keyIndices[0]);
+                        VMap localMap = (VMap) vStruct.values().get(fk.keyIndices()[0]);
                         for (SimpleValue val : localMap.valueMap().values()) {
-                            VStruct refRecord = fk.fkValueMap.get(val);
+                            VStruct refRecord = foreignKeyValueMap.get(val);
                             if (refRecord != null) {
                                 addRef(refRecordMap, refIdMap, refName, fk.refTableNormalized(), val.packStr(), refRecord);
                             }

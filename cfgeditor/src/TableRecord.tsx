@@ -154,7 +154,7 @@ function createNodes(entityMap: Map<string, Entity>, schema: Schema, refId: RefI
         inputs: [],
         outputs: outputs,
 
-        fieldsShow: FieldsShowType.Direct,
+        fieldsShow: FieldsShowType.Edit,
         nodeType: EntityNodeType.Normal,
         userData: refId,
     };

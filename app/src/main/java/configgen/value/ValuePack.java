@@ -62,5 +62,9 @@ public class ValuePack {
         return parser.parseField(field, List.of(dCell), field, true, true, 0, "tableName");
     }
 
+    public static Value unpackTablePrimaryKey(String id, TableSchema tableSchema, ValueErrs errs) {
+        FieldType pkFieldType = ValueUtil.getKeyFieldType(tableSchema.primaryKey());
+        return ValuePack.unpack(id, pkFieldType, errs);
+    }
 
 }

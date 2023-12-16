@@ -1,19 +1,13 @@
 package configgen.tool;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
-import com.alibaba.fastjson2.JSONWriter;
 import configgen.gen.Context;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
 import configgen.util.Logger;
 import configgen.value.CfgValue;
-import configgen.value.ValueFromJson;
-import configgen.value.ValueToJson;
+import configgen.value.VTableJsonParser;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,16 +47,10 @@ public class GenJson extends Generator {
                 continue;
             }
 
-            Path tabPath = dstPath.resolve("_" + vTable.schema().name().replace(".", "_"));
             for (Map.Entry<Value, VStruct> e : vTable.primaryKeyMap().entrySet()) {
                 Value pk = e.getKey();
-                VStruct value = e.getValue();
-                Path recordPath = tabPath.resolve(pk.packStr() + ".json");
-                try (OutputStreamWriter writer = createUtf8Writer(recordPath.toFile())) {
-                    JSONObject jsonObject = new ValueToJson().toJson(value);
-                    String jsonString = JSON.toJSONString(jsonObject, JSONWriter.Feature.PrettyFormat);
-                    writer.write(jsonString);
-                }
+                VStruct record = e.getValue();
+                VTableJsonParser.addOrUpdateRecordStore(record, vTable.schema(), pk.packStr(), dstPath);
             }
         }
     }

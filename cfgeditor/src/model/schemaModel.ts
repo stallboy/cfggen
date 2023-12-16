@@ -43,7 +43,6 @@ export interface STable extends Namable {
     entryField?: string;
     fields: SField[];
     foreignKeys?: SForeignKey[];
-    recordCount: number;
     recordIds: RecordId[];
 
     refInTables?: Set<string> // 被这些表索引， cache
@@ -52,14 +51,17 @@ export interface STable extends Namable {
 export type SItem = SStruct | SInterface | STable;
 
 export interface RawSchema {
+    isEditable: boolean;
     items: SItem[];
 }
 
 export class Schema {
+    isEditable: boolean;
     itemMap: Map<string, SItem> = new Map<string, SItem>();
     itemIncludeImplMap: Map<string, SItem> = new Map<string, SItem>();
 
     constructor(rawSchema: RawSchema) {
+        this.isEditable = rawSchema.isEditable;
         for (let item of rawSchema.items) {
             if (item.type == 'interface') {
                 let ii = item as SInterface;
