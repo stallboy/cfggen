@@ -27,8 +27,8 @@ public record CfgValue(CfgSchema schema,
 
                          SequencedMap<Value, VStruct> primaryKeyMap,
                          SequencedMap<List<String>, SequencedMap<Value, VStruct>> uniqueKeyMaps,
-                         Set<String> enumNames, //可为null
-                         Map<String, Integer> enumNameToIntegerValueMap) { //可为null
+                         SequencedSet<String> enumNames, //可为null
+                         SequencedMap<String, Integer> enumNameToIntegerValueMap) { //可为null
 
         public String name() {
             return schema.name();

@@ -1,5 +1,6 @@
 package configgen.value;
 
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import configgen.schema.*;
@@ -23,13 +24,18 @@ public class ValueFromJson {
 
     private final TableSchema subTableSchema;
     private final TextI18n.TableI18n nullableTableI18n;
+    private DCell cell;
+    private List<DCell> cellList;
 
     public ValueFromJson(TableSchema subTableSchema, TextI18n.TableI18n nullableTableI18n) {
         this.subTableSchema = subTableSchema;
         this.nullableTableI18n = nullableTableI18n;
     }
 
-    public VStruct fromJson(JSONObject jsonObject) {
+    public VStruct fromJson(String str) {
+        JSONObject jsonObject = JSON.parseObject(str);
+        cell = DCell.of(str);
+        cellList = List.of(cell);
         return parseStructural(subTableSchema, jsonObject);
     }
 
@@ -45,7 +51,7 @@ public class ValueFromJson {
     }
 
     private VStruct parseStructural(Structural subStructural, JSONObject jsonObject) {
-        VStruct vStruct = new VStruct(subStructural, new ArrayList<>(subStructural.fields().size()), List.of());
+        VStruct vStruct = new VStruct(subStructural, new ArrayList<>(subStructural.fields().size()), cellList);
         for (FieldSchema fs : subStructural.fields()) {
             Object fieldObj = jsonObject.get(fs.name());
             if (fieldObj == null) {
@@ -72,25 +78,25 @@ public class ValueFromJson {
         }
 
         VStruct implValue = parseStructural(impl, jsonObject);
-        return new VInterface(subInterfaceSchema, implValue, List.of());
+        return new VInterface(subInterfaceSchema, implValue, cellList);
     }
 
     private Value parse(FieldType type, Object obj) {
         switch (type) {
             case BOOL -> {
-                return new VBool((Boolean) obj, DCell.DUMMY);
+                return new VBool((Boolean) obj, cell);
             }
             case INT -> {
-                return new VInt((Integer) obj, DCell.DUMMY);
+                return new VInt((Integer) obj, cell);
             }
             case LONG -> {
-                return new VLong((Long) obj, DCell.DUMMY);
+                return new VLong((Long) obj, cell);
             }
             case FLOAT -> {
-                return new VFloat((Float) obj, DCell.DUMMY);
+                return new VFloat((Float) obj, cell);
             }
             case STRING -> {
-                return new VString((String) obj, DCell.DUMMY);
+                return new VString((String) obj, cell);
             }
             case TEXT -> {
                 String str = (String) obj;
@@ -103,11 +109,11 @@ public class ValueFromJson {
                 } else {
                     value = str;
                 }
-                return new VText(value, str, DCell.DUMMY);
+                return new VText(value, str, cell);
             }
             case FList fList -> {
                 JSONArray jsonArray = (JSONArray) obj;
-                VList vList = new VList(new ArrayList<>(jsonArray.size()), List.of());
+                VList vList = new VList(new ArrayList<>(jsonArray.size()), cellList);
                 for (Object itemObj : jsonArray) {
                     SimpleValue v = (SimpleValue) parse(fList.item(), itemObj);
                     vList.valueList().add(v);
@@ -117,7 +123,7 @@ public class ValueFromJson {
             case FMap fMap -> {
                 JSONArray jsonArray = (JSONArray) obj;
                 int cnt = jsonArray.size();
-                VMap vMap = new VMap(new LinkedHashMap<>(cnt), List.of());
+                VMap vMap = new VMap(new LinkedHashMap<>(cnt), cellList);
                 for (int i = 0; i < cnt / 2; i++) {
                     Object keyObj = jsonArray.get(i * 2);
                     Object valueObj = jsonArray.get(i * 2 + 1);

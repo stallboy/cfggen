@@ -42,6 +42,10 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         return data.get(name);
     }
 
+    public boolean isJson() {
+        return hasTag(JSON);
+    }
+
     public void putTag(String tag) {
         if (reserved.contains(tag)) {
             throw new IllegalArgumentException(String.format("'%s' reserved", tag));
@@ -61,7 +65,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         data.putLast(HAS_REF, TAG);
     }
 
-    public boolean getHasRef() {
+    public boolean hasRef() {
         return hasTag(HAS_REF);
     }
 
@@ -74,10 +78,13 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     }
 
 
-    private static final String COMMENT = "__comment";
-    private static final String SPAN = "__span";
-    private static final String HAS_REF = "__hasRef";
+    // 使用下划线开头，表示这个meta数据是private的，内部用。
+    private static final String COMMENT = "_comment";
+    private static final String SPAN = "_span";
+    private static final String HAS_REF = "_hasRef";
 
+
+    private static final String JSON = "json"; // 这个表用json来分文件存
     private static final String NULLABLE = "nullable";
     private static final String ENUM_REF = "enumRef";
     private static final String DEFAULT_IMPL = "defaultImpl";
@@ -90,7 +97,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     private static final String BLOCK = "block";
 
     private static final Set<String> reserved = Set.of(COMMENT, SPAN, HAS_REF,
-            NULLABLE, ENUM_REF, DEFAULT_IMPL, ENTRY, ENUM, COLUMN_MODE, PACK, SEP, FIX, BLOCK);
+            JSON, NULLABLE, ENUM_REF, DEFAULT_IMPL, ENTRY, ENUM, COLUMN_MODE, PACK, SEP, FIX, BLOCK);
 
     public String getComment() {
         if (data.get(COMMENT) instanceof MetaStr str) {

@@ -1,4 +1,4 @@
-package configgen.tool;
+package configgen.editorserver;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.annotation.JSONField;
@@ -12,7 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static configgen.tool.ServeRecord.ResultCode.*;
+import static configgen.editorserver.ServeRecord.ResultCode.*;
 import static configgen.value.CfgValue.VTable;
 import static configgen.value.CfgValue.Value;
 

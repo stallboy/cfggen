@@ -10,7 +10,7 @@ public class HasRef {
 
     private static boolean calcHasRef(Nameable nameable) {
         Metadata meta = nameable.meta();
-        if (meta.getHasRef()) {
+        if (meta.hasRef()) {
             return true;
         }
         boolean hasRef = switch (nameable) {
@@ -44,6 +44,6 @@ public class HasRef {
     }
 
     public static boolean hasRef(Nameable nameable) {
-        return nameable.meta().getHasRef();
+        return nameable.meta().hasRef();
     }
 }

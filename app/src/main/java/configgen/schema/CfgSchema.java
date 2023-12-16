@@ -9,6 +9,7 @@ import java.util.*;
  */
 public class CfgSchema {
     private final List<Nameable> items;
+    private final boolean isPartial;
 
     private Map<String, Nameable> itemMap;
     private Map<String, Fieldable> fieldableMap;
@@ -17,12 +18,17 @@ public class CfgSchema {
     private boolean isForeignKeyValueCached = false;
 
     public static CfgSchema of() {
-        return new CfgSchema(new ArrayList<>());
+        return new CfgSchema(new ArrayList<>(), false);
     }
 
-    public CfgSchema(List<Nameable> items) {
+    public static CfgSchema ofPartial() {
+        return new CfgSchema(new ArrayList<>(), true);
+    }
+
+    private CfgSchema(List<Nameable> items, boolean isPartial) {
         Objects.requireNonNull(items);
         this.items = items;
+        this.isPartial = isPartial;
     }
 
     public SchemaErrs resolve() {
@@ -57,6 +63,10 @@ public class CfgSchema {
 
     public List<Nameable> items() {
         return items;
+    }
+
+    public boolean isPartial() {
+        return isPartial;
     }
 
     public Fieldable findFieldable(String name) {

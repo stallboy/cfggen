@@ -1,5 +1,6 @@
 package configgen.value;
 
+import configgen.gen.Context;
 import configgen.schema.HasRef;
 import configgen.util.Logger;
 import configgen.data.CfgData;
@@ -7,6 +8,7 @@ import configgen.schema.CfgSchema;
 import configgen.schema.Spans;
 import configgen.schema.TableSchema;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -21,39 +23,29 @@ import static configgen.value.CfgValue.*;
 
 public class CfgValueParser {
     private final CfgSchema subSchema;
-    private final CfgData data;
-    private final CfgSchema schema;
-    private final TextI18n nullableI18n;
-    private final boolean checkComma;
+    private final Context context;
     private final ValueErrs errs;
 
     /**
-     * @param subSchema    这是返会目标CfgValue对应的schema
-     * @param data         全部的数据
-     * @param schema       全部的数据对应的schema
-     * @param nullableI18n 国际化信息，会替换text里的value
-     * @param checkComma   检查excel中包含逗号的number格子。
-     * @param errs         错误记录器
+     * @param subSchema 这是返会目标CfgValue对应的schema
+     * @param context   全局信息
+     * @param errs      错误记录器
      */
-    public CfgValueParser(CfgSchema subSchema, CfgData data, CfgSchema schema, TextI18n nullableI18n, boolean checkComma, ValueErrs errs) {
+    public CfgValueParser(CfgSchema subSchema, Context context, ValueErrs errs) {
         subSchema.requireResolved();
-        schema.requireResolved();
-        Objects.requireNonNull(data);
+        context.cfgSchema().requireResolved();
         Objects.requireNonNull(errs);
         this.subSchema = subSchema;
-        this.data = data;
-        this.schema = schema;
-        this.nullableI18n = nullableI18n;
-        this.checkComma = checkComma;
+        this.context = context;
         this.errs = errs;
     }
 
     public CfgValue parseCfgValue() {
         //预先计算下span，这样在多线程中parseTable过程中，就只读不会写了。
-        Spans.preCalculateAllSpan(schema);
+        Spans.preCalculateAllSpan(context.cfgSchema());
 
         //预先计算hasRef，方便生成时使用
-        HasRef.preCalculateAllHasRef(schema);
+        HasRef.preCalculateAllHasRef(context.cfgSchema());
 
         Logger.profile("schema span calculate");
 
@@ -61,22 +53,34 @@ public class CfgValueParser {
         CfgValue value = new CfgValue(subSchema, new TreeMap<>());
         for (TableSchema subTable : subSchema.tableMap().values()) {
             String name = subTable.name();
-            CfgData.DTable dTable = data.tables().get(name);
-            Objects.requireNonNull(dTable);
-            TableSchema table = schema.findTable(name);
+            TableSchema table = context.cfgSchema().findTable(name);
             Objects.requireNonNull(table);
-            TableI18n tableI18n = nullableI18n != null ? nullableI18n.getTableI18n(name) : null;
 
-            tasks.add(() -> {
-                ValueErrs errs = ValueErrs.of();
-                TableValueParser parser = new TableValueParser(subTable, dTable, table, tableI18n, errs);
-                VTable vTable = parser.parseTable();
-                if (checkComma) {
-                    CommaNumberCellChecker checker = new CommaNumberCellChecker(vTable, dTable, errs);
-                    checker.check();
-                }
-                return new OneTableParserResult(vTable, errs);
-            });
+            TableI18n tableI18n = context.nullableI18n() != null ? context.nullableI18n().getTableI18n(name) : null;
+            CfgData.DTable dTable = context.cfgData().tables().get(name);
+
+            if (dTable != null) {
+                tasks.add(() -> {
+                    ValueErrs errs = ValueErrs.of();
+                    VTableParser parser = new VTableParser(subTable, dTable, table, tableI18n, errs);
+                    VTable vTable = parser.parseTable();
+                    if (context.checkComma()) {
+                        CommaNumberCellChecker checker = new CommaNumberCellChecker(vTable, dTable, errs);
+                        checker.check();
+                    }
+                    return new OneTableParserResult(vTable, errs);
+                });
+
+            } else {
+                tasks.add(() -> {
+                    String dir = "_" + name.replace(".", "_");
+                    Path jsonDir = context.dataDir().resolve(dir);
+                    ValueErrs errs = ValueErrs.of();
+                    VTableParserFromJson parser = new VTableParserFromJson(subTable, jsonDir, table, tableI18n, errs);
+                    VTable vTable = parser.parseTable();
+                    return new OneTableParserResult(vTable, errs);
+                });
+            }
         }
 
         try {

@@ -43,8 +43,6 @@ public record CfgData(Map<String, DTable> tables,
                         byte mode) {
 
 
-        public static final DCell DUMMY = of("");
-
         public static DCell of(String str) {
             return new DCell(str, new CfgData.DRowId("fileName", "sheetName", 0), 0, (byte) 0);
         }

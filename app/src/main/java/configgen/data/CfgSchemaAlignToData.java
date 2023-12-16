@@ -37,9 +37,21 @@ public class CfgSchemaAlignToData {
                 }
                 case TableSchema table -> {
                     CfgData.DTable th = dataHeaders.remove(table.name());
-                    if (th != null) {
-                        TableSchema alignedTable = alignTable(table, th.fields());
-                        alignedCfg.add(alignedTable);
+
+                    if (table.meta().isJson()) {
+                        alignedCfg.add(table);
+                        if (th != null) {
+                            List<String> sheets = new ArrayList<>();
+                            for (CfgData.DRawSheet rawSheet : th.rawSheets()) {
+                                sheets.add(String.format("%s[%s]", rawSheet.fileName(), rawSheet.sheetName()));
+                            }
+                            errs.addErr(new SchemaErrs.JsonTableNotSupportExcel(table.name(), sheets));
+                        }
+                    } else {
+                        if (th != null) {
+                            TableSchema alignedTable = alignTable(table, th.fields());
+                            alignedCfg.add(alignedTable);
+                        }
                     }
                 }
             }

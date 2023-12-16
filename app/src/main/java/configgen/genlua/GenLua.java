@@ -54,7 +54,7 @@ public class GenLua extends Generator {
 
     @Override
     public void generate(Context ctx) throws IOException {
-        AContext.getInstance().init(pkg, ctx.getLangSwitch(), useSharedEmptyTable, useShared,
+        AContext.getInstance().init(pkg, ctx.nullableLangSwitch(), useSharedEmptyTable, useShared,
                 packBool, noStr, rForOldShared);
         isLangSwitch = AContext.getInstance().nullableLangSwitchSupport() != null;
 

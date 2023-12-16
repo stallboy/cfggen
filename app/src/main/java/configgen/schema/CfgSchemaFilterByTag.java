@@ -47,7 +47,7 @@ public class CfgSchemaFilterByTag {
             }
         }
 
-        CfgSchema filtered = CfgSchema.of();
+        CfgSchema filtered = CfgSchema.ofPartial();
         for (Nameable item : cfg.items()) {
             switch (item) {
                 case InterfaceSchema interfaceSchema -> {

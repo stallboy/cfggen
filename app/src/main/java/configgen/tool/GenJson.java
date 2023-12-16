@@ -53,7 +53,7 @@ public class GenJson extends Generator {
                 continue;
             }
 
-            Path tabPath = dstPath.resolve("_" + vTable.schema().lastName());
+            Path tabPath = dstPath.resolve("_" + vTable.schema().name().replace(".", "_"));
             for (Map.Entry<Value, VStruct> e : vTable.primaryKeyMap().entrySet()) {
                 Value pk = e.getKey();
                 VStruct value = e.getValue();

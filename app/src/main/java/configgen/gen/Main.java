@@ -1,5 +1,6 @@
 package configgen.gen;
 
+import configgen.editorserver.EditorServer;
 import configgen.gencs.GenBytes;
 import configgen.gencs.GenCs;
 import configgen.genjava.BinaryToText;
@@ -106,7 +107,7 @@ public final class Main {
 
         Generators.addProvider("lua", GenLua::new);
 
-        Generators.addProvider("server", Server::new);
+        Generators.addProvider("server", EditorServer::new);
         Generators.addProvider("json", GenJson::new);
 
         String datadir = null;

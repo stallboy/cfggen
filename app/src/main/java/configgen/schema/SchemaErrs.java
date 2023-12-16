@@ -193,4 +193,9 @@ public record SchemaErrs(List<Err> errs,
                                             String notIdentifierName) implements Err {
     }
 
+    public record JsonTableNotSupportExcel(String table,
+                                           List<String> excelSheetList) implements Err {
+    }
+
+
 }

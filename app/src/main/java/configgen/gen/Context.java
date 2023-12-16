@@ -16,32 +16,54 @@ import java.util.Objects;
 
 
 public class Context {
+
+    private final Path dataDir;
     private final CfgSchema cfgSchema;
     private final CfgData cfgData;
     private final boolean checkComma;
 
+    private TextI18n nullableI18n = null;
+    private LangSwitch nullableLangSwitch = null;
+
+    public Path dataDir() {
+        return dataDir;
+    }
+
+    public CfgSchema cfgSchema() {
+        return cfgSchema;
+    }
+
+    public CfgData cfgData() {
+        return cfgData;
+    }
+
+    public boolean checkComma() {
+        return checkComma;
+    }
+
     /**
      * 直接国际化,直接改成对应国家语言
      */
-    private TextI18n i18n = null;
+    public TextI18n nullableI18n() {
+        return nullableI18n;
+    }
 
     /**
      * 这个是要实现客户端可在多国语言间切换语言，所以客户端服务器都需要完整的多国语言信息，而不能如i18n那样直接替换
      */
-    private LangSwitch langSwitch = null;
+    public LangSwitch nullableLangSwitch() {
+        return nullableLangSwitch;
+    }
 
 
     /**
-     * 优化，避免gen多次时，重复生成value
-     * 注意这里不再立马生成fullValue，因为很费内存，在用到时再生成。
+     * @param checkComma 检查excel中包含逗号的number格子。
      */
-    private CfgValue lastCfgValue;
-    private String lastCfgValueTag;
-
     public Context(Path dataDir, int headRow, boolean usePoi, boolean checkComma, String defaultEncoding) {
         if (checkComma && !usePoi) {
             throw new IllegalArgumentException("checkComma must be used with usePoi");
         }
+        this.dataDir = dataDir;
         this.checkComma = checkComma;
         Path cfgPath = dataDir.resolve("config.cfg");
         CfgSchema schema = Cfgs.readFrom(cfgPath, true);
@@ -76,15 +98,19 @@ public class Context {
     void setI18nOrLangSwitch(String i18nFile, String i18nEncoding, boolean crlfaslf,
                              String langSwitchDir, String defaultLang) {
         if (i18nFile != null) {
-            i18n = LangSwitch.loadTextI18n(Path.of(i18nFile), i18nEncoding, crlfaslf);
+            nullableI18n = LangSwitch.loadTextI18n(Path.of(i18nFile), i18nEncoding, crlfaslf);
         } else if (langSwitchDir != null) {
-            langSwitch = LangSwitch.loadLangSwitch(Path.of(langSwitchDir), defaultLang, i18nEncoding, crlfaslf);
+            nullableLangSwitch = LangSwitch.loadLangSwitch(Path.of(langSwitchDir), defaultLang, i18nEncoding, crlfaslf);
         }
     }
 
-    public LangSwitch getLangSwitch() {
-        return langSwitch;
-    }
+
+    /**
+     * 优化，避免gen多次时，重复生成value
+     * 注意这里不再立马生成fullValue，因为很费内存，在用到时再生成。
+     */
+    private CfgValue lastCfgValue;
+    private String lastCfgValueTag;
 
     public CfgValue makeValue(String tag) {
         if (tag != null && tag.isEmpty()) {
@@ -110,7 +136,7 @@ public class Context {
         }
 
         ValueErrs valueErrs = ValueErrs.of();
-        CfgValueParser clientValueParser = new CfgValueParser(tagSchema, cfgData, cfgSchema, i18n, checkComma, valueErrs);
+        CfgValueParser clientValueParser = new CfgValueParser(tagSchema, this, valueErrs);
         CfgValue value = clientValueParser.parseCfgValue();
         String prefix = tag == null ? "value" : String.format("[%s] filtered value", tag);
         valueErrs.print(prefix);

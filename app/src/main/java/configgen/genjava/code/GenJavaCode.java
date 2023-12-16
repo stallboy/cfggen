@@ -71,7 +71,7 @@ public class GenJavaCode extends Generator {
         Name.codeTopPkg = pkg;
         NameableName.isSealedInterface = sealed;
         GenStructuralClassTablePart.mapsInMgr.clear();
-        boolean isLangSwitch = ctx.getLangSwitch() != null;
+        boolean isLangSwitch = ctx.nullableLangSwitch() != null;
         TypeStr.isLangSwitch = isLangSwitch; //辅助Text的类型声明和创建
 
         for (Nameable nameable : cfgValue.schema().items()) {
@@ -95,7 +95,7 @@ public class GenJavaCode extends Generator {
 
         if (isLangSwitch) { //生成Text这个Bean
             try (CachedIndentPrinter ps = createCode(new File(dstDir, "Text.java"), encoding)) {
-                GenText.generate(ctx.getLangSwitch(), ps);
+                GenText.generate(ctx.nullableLangSwitch(), ps);
             }
         }
 
@@ -111,7 +111,7 @@ public class GenJavaCode extends Generator {
             GenConfigMgrLoader.generate(cfgValue, ps);
         }
 
-        GenConfigCodeSchema.generateAll(this, schemaNumPerFile, cfgValue, ctx.getLangSwitch());
+        GenConfigCodeSchema.generateAll(this, schemaNumPerFile, cfgValue, ctx.nullableLangSwitch());
 
         CachedFiles.deleteOtherFiles(dstDir);
     }

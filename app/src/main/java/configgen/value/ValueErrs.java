@@ -172,5 +172,10 @@ public record ValueErrs(List<VErr> errs) {
                                                           String type) implements VErr {
     }
 
+    public record JsonFileReadErr(String jsonFile) implements VErr {
+    }
+
+    public record JsonFileParseErr(String jsonFile, String table) implements VErr {
+    }
 
 }

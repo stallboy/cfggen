@@ -1,4 +1,4 @@
-package configgen.tool;
+package configgen.editorserver;
 
 import configgen.value.CfgValue;
 import configgen.value.RefSearcher;

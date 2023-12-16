@@ -1,4 +1,4 @@
-package configgen.tool;
+package configgen.editorserver;
 
 import com.alibaba.fastjson2.annotation.JSONField;
 import configgen.schema.*;
@@ -83,16 +83,17 @@ public class ServeSchema {
         }
     }
 
-    public record Schema(List<SNameable> items) {
+    public record Schema(boolean isEditable,
+                         List<SNameable> items) {
     }
 
 
     public static Schema fromCfgSchema(CfgSchema cfgSchema) {
-        return new Schema(cfgSchema.items().stream().map(n -> fromNameable(n, null, -1)).toList());
+        return new Schema(!cfgSchema.isPartial(), cfgSchema.items().stream().map(n -> fromNameable(n, null, -1)).toList());
     }
 
     public static Schema fromCfgValue(CfgValue cfgValue, int returnMaxIdCount) {
-        return new Schema(cfgValue.schema().items().stream().map(n -> fromNameable(n, cfgValue, returnMaxIdCount)).toList());
+        return new Schema(!cfgValue.schema().isPartial(), cfgValue.schema().items().stream().map(n -> fromNameable(n, cfgValue, returnMaxIdCount)).toList());
     }
 
     public static SNameable fromNameable(Nameable n, CfgValue cfgValue, int returnMaxIdCount) {

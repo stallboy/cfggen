@@ -34,9 +34,9 @@ public final class GenJavaData extends Generator {
     public void generate(Context ctx) throws IOException {
         CfgValue cfgValue = ctx.makeValue(tag);
         try (ConfigOutput output = new ConfigOutput(new DataOutputStream(new CachedFileOutputStream(file, 2048 * 1024)))) {
-            Schema schema = SchemaParser.parse(cfgValue, ctx.getLangSwitch());
+            Schema schema = SchemaParser.parse(cfgValue, ctx.nullableLangSwitch());
             schema.write(output);
-            writeCfgValue(cfgValue, ctx.getLangSwitch(), output);
+            writeCfgValue(cfgValue, ctx.nullableLangSwitch(), output);
         }
     }
 

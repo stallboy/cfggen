@@ -12,7 +12,7 @@ import static configgen.schema.Metadata.*;
 public class CfgWriter {
     private final StringBuilder destination;
     private final boolean useLastName;
-    private final boolean useMetaStartWith__;
+    private final boolean useMetaStartWith_;
 
     public static String stringify(CfgSchema cfg) {
         return stringify(cfg, false, false);
@@ -25,10 +25,10 @@ public class CfgWriter {
         return sb.toString();
     }
 
-    public CfgWriter(StringBuilder destination, boolean useLastName, boolean useMetaStartWith__) {
+    public CfgWriter(StringBuilder destination, boolean useLastName, boolean useMetaStartWith_) {
         this.destination = destination;
         this.useLastName = useLastName;
-        this.useMetaStartWith__ = useMetaStartWith__;
+        this.useMetaStartWith_ = useMetaStartWith_;
     }
 
     public void writeCfg(CfgSchema cfg) {
@@ -168,12 +168,12 @@ public class CfgWriter {
         }
 
         Metadata m;
-        if (useMetaStartWith__) {
+        if (useMetaStartWith_) {
             m = meta;
         } else {
             m = Metadata.of();
             for (Map.Entry<String, MetaValue> e : meta.data().entrySet()) {
-                if (!e.getKey().startsWith("__")) {
+                if (!e.getKey().startsWith("_")) {
                     m.data().put(e.getKey(), e.getValue());
                 }
             }
