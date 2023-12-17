@@ -1,59 +1,61 @@
 # cfggen
 
-> 让策划可以在excel中做灵活的配置
->
-> 为程序生成访问配置表的代码
->
+* make any structural data in Excel.
+* make any structural data using node based editor
+* view 
+* Generate code for accessing structural data in programs.
 
-## 主要功能
+## Features
 
-* 通过配置外键，取值范围，使策划可以随时检测数据一致性
+* Allow designer to check data consistency at any time through configuration foreign keys.
 
-* 通过生成代码，使程序方便访问类型化数据，生成外键引用，生成entry、enum（让程序中没有魔数），支持java、c#、lua
+* Generate code to facilitate program access to typed data, create foreign key references, generate entries and enums (eliminating magic numbers in the program), and support Java, C#, and Lua.
 
-* 支持多态结构，嵌套结构，可在一个单元格里写任意复杂的结构数据，相当于让csv有了xml的灵活性
+* Support polymorphic structures and nested structures. Complex structured data can be written in a single cell, providing the flexibility of XML to CSV.
 
-* 生成java注重安全
+* Focuse security in generating Java code.
 
-* 生成lua注重内存大小
+* Optimize memory size in generating Lua code.
 
-## Documentation
-
-请阅读[详细文档](https://stallboy.github.io/cfggen)，文档从策划和从程序员角度做了介绍。
 
 ## build & test
 
-* 生成configgen.jar
+### Prerequisites
+
+* jdk21
+* gradle
+
+### build, generate cfggen.jar.
 
 ```bash
-genjar.bat  # 生成configgen.jar, cfggen.jar，
-# 区别是cfggen.jar只用fastexcel来读excel，不支持excel中的数字格式
-# configgen.jar则包含了用poi来读excel，支持数字格式
+genjar.bat
 ```
 
-* 查看使用说明
+### test
+
+first `cd example` 
+
+* show usage 
+
+```bash
+usage.bat  
+```
+
+* generate java code
 
 ```bash
 cd example
-usage.bat  # 打印使用说明
+genjavasealed.bat 
 ```
 
-* 测试java：生成java代码和数据
-
-```bash
-cd example
-genjavasealed.bat # genjava 也可以，sealed需要java 17或以上才支持
-```
-
-* 测试java：检验java生成
+* test java code
 
 ```bash
 gradle build 
 java -jar build/libs/example.jar 
-# 进入命令行，输入q退出，输入其他比如"ai"会打印表名称以ai开头的结构定义和数据
 ```
 
-* 测试lua
+* generate lua code, test lua
 
 ```bash
 genlua.bat 
@@ -62,7 +64,7 @@ chcp 65001
 lua.exe test.lua
 ```
 
-* 测试csharp
+* generate c# code, test c#
 
 ```bash
 gencshape.bat 
@@ -70,10 +72,3 @@ cd cs
 dotnet run
 ```
 
-* 生成cfggen.exe
-
-```bash
-# 先安装graalvm
-genexe_step1.bat  
-genexe_step2.bat
-```

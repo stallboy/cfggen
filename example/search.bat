@@ -1,2 +1,2 @@
-java -jar ../app/build/libs/configgen.jar -datadir config -search
+java -jar ../cfggen.jar -datadir config -search
 

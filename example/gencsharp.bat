@@ -1,4 +1,4 @@
-java -jar ../app/build/libs/configgen.jar -datadir config  -gen cs,dir:cs,encoding:UTF-8 -gen bytes
+java -jar ../cfggen.jar -datadir config  -gen cs,dir:cs,encoding:UTF-8 -gen bytes
 
 set DIR=cs/Config
 if not exist %DIR% mkdir %DIR%

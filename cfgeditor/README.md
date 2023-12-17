@@ -1,27 +1,29 @@
 # cfgeditor
 
-## 功能
+## features
 
-* 可视化表结构，可视化记录
-* 编辑记录
+* view table schema, view record in table
+* edit record
 
 ## build
 
-1. 启动app服务器
+1. run cfgeditor backend server
 
 ```bash
-../cfgeditor.exe -datadir ../example/config  -gen server
+java -jar ../cfggen.jar -datadir ../example/config  -gen server
 ```
 
-2. 启动cfgeditor调试server，使用浏览器查看
+2. run cfgeditor front server
 
 ```bash
 pnpm run dev
 ```
 
+3. browser 
 http://localhost:5173/
 
-3. 生成cfgeditor.exe
+
+## generate cfgeditor.exe
 
 ```bash
 pnpm tauri dev
