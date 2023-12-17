@@ -55,7 +55,6 @@ export default function CfgEditorApp() {
         tryConnect(server);
     }, []);
 
-
     function tryConnect(server: string) {
         setSchema(null);
         setIsFetching(true);
@@ -195,6 +194,10 @@ export default function CfgEditorApp() {
         </Button>
     </Space>
 
+    function tryReconnect() {
+        tryConnect(server);
+    }
+
     let tableSchema = <div/>;
     let tableRef = <div/>;
     let tableRecord = <div/>;
@@ -216,6 +219,7 @@ export default function CfgEditorApp() {
                                        curTable={curTable}
                                        curId={curId}
                                        server={server}
+                                       tryReconnect={tryReconnect}
                                        setCurTableAndId={selectCurTableAndId}/>;
 
             tableRecordRef = <TableRecordRef curTable={curTable}
@@ -224,6 +228,7 @@ export default function CfgEditorApp() {
                                              refOutDepth={recordRefOutDepth}
                                              maxNode={recordMaxNode}
                                              server={server}
+                                             tryReconnect={tryReconnect}
                                              setCurTableAndId={selectCurTableAndId}/>;
         }
     }
@@ -397,6 +402,7 @@ export default function CfgEditorApp() {
         <Drawer title="search" placement="right" onClose={onSearchClose} open={searchOpen} size='large'>
             <SearchValue searchMax={searchMax}
                          server={server}
+                         tryReconnect={tryReconnect}
                          setCurTableAndId={selectCurTableAndId}/>
         </Drawer>
 

@@ -5,7 +5,7 @@ import {useCallback, useEffect, useState} from "react";
 import {Entity, EntityConnectionType, EntityNodeType, FieldsShowType, fillInputs,} from "./model/graphModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 import {BriefRecord, RecordRefsResult, RefId, Refs, TableMap} from "./model/recordModel.ts";
-import {Empty, Result, Spin} from "antd";
+import {App, Empty, Result, Spin} from "antd";
 
 
 function getLabel(id: string): string {
@@ -134,26 +134,33 @@ export function TableRecordRefLoaded({curTable, curId, recordRefResult, setCurTa
     return <div ref={ref} style={{height: "100vh", width: "100vw"}}></div>
 }
 
-export function TableRecordRef({curTable, curId, refIn, refOutDepth, maxNode, server, setCurTableAndId}: {
+export function TableRecordRef({curTable, curId, refIn, refOutDepth, maxNode, server, tryReconnect, setCurTableAndId}: {
     curTable: STable;
     curId: string;
     refIn: boolean;
     refOutDepth: number;
     maxNode: number;
     server: string;
+    tryReconnect: () => void;
     setCurTableAndId: (table: string, id: string) => void;
 }) {
     const [recordRefResult, setRecordRefResult] = useState<RecordRefsResult | null>(null);
+    const {notification} = App.useApp();
 
     useEffect(() => {
         setRecordRefResult(null);
+        let url = `http://${server}/record?table=${curTable.name}&id=${curId}&depth=${refOutDepth}&maxObjs=${maxNode}&refs${refIn ? '&in' : ''}`;
         const fetchData = async () => {
-            const response = await fetch(`http://${server}/record?table=${curTable.name}&id=${curId}&depth=${refOutDepth}&maxObjs=${maxNode}&refs${refIn ? '&in' : ''}`);
+            const response = await fetch(url);
             const recordResult: RecordRefsResult = await response.json();
             setRecordRefResult(recordResult);
+            notification.info({message: `fetch ${url} ok`, placement: 'topRight', duration: 2});
         }
 
-        fetchData().catch(console.error);
+        fetchData().catch((err) => {
+            notification.error({message: `fetch ${url} err: ${err.toString()}`, placement: 'topRight', duration: 4});
+            tryReconnect();
+        });
     }, [server, curTable, curId, refOutDepth, maxNode, refIn]);
 
 

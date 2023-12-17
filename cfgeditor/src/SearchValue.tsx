@@ -1,5 +1,5 @@
 import {useState} from "react";
-import {Button, Empty, Input, Result, Table} from "antd";
+import {App, Button, Empty, Input, Result, Table} from "antd";
 import {SearchResult, SearchResultItem} from "./model/searchModel.ts";
 import type {ColumnsType} from "antd/es/table";
 
@@ -45,26 +45,30 @@ function getColumns(onClick: (item: SearchResultItem) => void): ColumnsType<Sear
 }
 
 
-export function SearchValue({searchMax, server, setCurTableAndId}: {
+export function SearchValue({searchMax, server, tryReconnect, setCurTableAndId}: {
     searchMax: number;
-    server:string;
+    server: string;
+    tryReconnect: () => void;
     setCurTableAndId: (table: string, id: string) => void;
 }) {
     const [loading, setLoading] = useState<boolean>(false);
     const [query, setQuery] = useState<string>('');
     const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
+    const {notification} = App.useApp();
 
     function onSearch(value: string) {
         setQuery(value);
         setLoading(true);
+        let url = `http://${server}/search?q=${value}&max=${searchMax}`;
         const fetchData = async () => {
-            const response = await fetch(`http://${server}/search?q=${value}&max=${searchMax}`);
+            const response = await fetch(url);
             const recordResult: SearchResult = await response.json();
             setSearchResult(recordResult);
             setLoading(false);
         }
         fetchData().catch((err) => {
-            console.log(err)
+            notification.error({message: `fetch ${url} err: ${err.toString()}`, placement: 'topRight', duration: 4});
+            tryReconnect();
             setLoading(false);
         });
     }

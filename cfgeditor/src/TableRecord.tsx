@@ -22,7 +22,7 @@ import {
     Refs,
     TableMap
 } from "./model/recordModel.ts";
-import {Empty, Result, Spin} from "antd";
+import {App, Empty, Result, Spin} from "antd";
 
 
 function getLabel(id: string): string {
@@ -288,24 +288,31 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
     return <div ref={ref} style={{height: "100vh", width: "100vw"}}></div>
 }
 
-export function TableRecord({schema, curTable, curId, server, setCurTableAndId}: {
+export function TableRecord({schema, curTable, curId, server, tryReconnect, setCurTableAndId}: {
     schema: Schema;
     curTable: STable;
     curId: string;
     server: string;
+    tryReconnect: () => void;
     setCurTableAndId: (table: string, id: string) => void;
 }) {
     const [recordResult, setRecordResult] = useState<RecordResult | null>(null);
+    const {notification} = App.useApp();
 
     useEffect(() => {
         setRecordResult(null);
+        let url = `http://${server}/record?table=${curTable.name}&id=${curId}&depth=1`;
         const fetchData = async () => {
-            const response = await fetch(`http://${server}/record?table=${curTable.name}&id=${curId}&depth=1`);
+            const response = await fetch(url);
             const recordResult: RecordResult = await response.json();
             setRecordResult(recordResult);
+            notification.info({message: `fetch ${url} ok`, placement: 'topRight', duration: 2});
         }
 
-        fetchData().catch(console.error);
+        fetchData().catch((err) => {
+            notification.error({message: `fetch ${url} err: ${err.toString()}`, placement: 'topRight', duration: 4});
+            tryReconnect();
+        });
     }, [schema, server, curTable, curId]);
 
 
