@@ -1,5 +1,5 @@
 export class HistoryItem {
-    constructor(public table: string, public id: string | null) {
+    constructor(public table: string, public id: string) {
     }
 }
 
@@ -7,7 +7,7 @@ export class History {
     constructor(public items: HistoryItem[] = [], public index: number = -1) {
     }
 
-    addItem(table: string, id: string | null): History {
+    addItem(table: string, id: string): History {
         if (this.items.length > 0) {
             let item = this.items[this.index];
             if (item.table == table && item.id == id) {

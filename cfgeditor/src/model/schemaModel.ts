@@ -47,6 +47,7 @@ export interface STable extends Namable {
     isEditable: boolean;
 
     refInTables?: Set<string> // 被这些表索引， cache
+    idSet?: Set<string>;
 }
 
 export type SItem = SStruct | SInterface | STable;
@@ -82,6 +83,10 @@ export class Schema {
             if (item.type == 'table') {
                 let st = item as STable;
                 st.refInTables = new Set<string>();
+                st.idSet = new Set<string>();
+                for (let recordId of st.recordIds) {
+                    st.idSet.add(recordId.id);
+                }
             }
         }
 
@@ -112,6 +117,13 @@ export class Schema {
             return item as STable;
         }
         return null;
+    }
+
+    hasId(table: STable, id: string): boolean {
+        if (table.idSet) {
+            return table.idSet.has(id);
+        }
+        return false;
     }
 
     getDirectDepStructsByItem(item: SItem): Set<string> {

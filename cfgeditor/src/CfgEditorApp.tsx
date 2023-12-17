@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {Alert, Button, Drawer, Form, Input, InputNumber, Modal, Space, Switch, Tabs} from "antd";
+import {Alert, Button, Drawer, Flex, Form, Input, InputNumber, Modal, Space, Switch, Tabs} from "antd";
 import {LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
 import {Schema, STable} from "./model/schemaModel.ts";
 import {History, HistoryItem} from "./model/historyModel.ts";
@@ -11,85 +11,107 @@ import {TableRecord} from "./TableRecord.tsx";
 import {TableRecordRef} from "./TableRecordRef.tsx";
 import {SearchValue} from "./SearchValue.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
+import {getInt, getBool, getStr} from "./model/localStore.ts";
 
-const key1 = 'tableSchema'
+const key1 = 'table'
 const key2 = 'tableRef'
-const key3 = 'tableRecord'
-const key4 = 'tableRecordRef'
+const key3 = 'record'
+const key4 = 'recordRef'
 
-export default function App() {
+export default function CfgEditorApp() {
+    const [server, setServer] = useState<string>(getStr('server', 'localhost:3456'));
     const [schema, setSchema] = useState<Schema | null>(null);
+    const [curTableId, setCurTableId] = useState<string>(getStr('curTableId', ''));
     const [curTable, setCurTable] = useState<STable | null>(null);
-    const [curId, setCurId] = useState<string | null>(null);
+    const [curId, setCurId] = useState<string>(getStr('curId', ''));
+    const [curPage, setCurPage] = useState<string>(getStr('curPage', key3));
+
+    const [maxImpl, setMaxImpl] = useState<number>(getInt('maxImpl', 10));
+    const [refIn, setRefIn] = useState<boolean>(getBool('refIn', true));
+    const [refOutDepth, setRefOutDepth] = useState<number>(getInt('refOutDepth', 5));
+    const [maxNode, setMaxNode] = useState<number>(getInt('maxNode', 30));
+    const [recordRefIn, setRecordRefIn] = useState<boolean>(getBool('recordRefIn', true));
+    const [recordRefOutDepth, setRecordRefOutDepth] = useState<number>(getInt('recordRefOutDepth', 5));
+    const [recordMaxNode, setRecordMaxNode] = useState<number>(getInt('recordMaxNode', 30));
+    const [searchMax, setSearchMax] = useState<number>(getInt('searchMax', 50));
 
     const [history, setHistory] = useState<History>(new History());
-
-    const [maxImpl, setMaxImpl] = useState<number>(10);
-    const [refIn, setRefIn] = useState<boolean>(true);
-    const [refOutDepth, setRefOutDepth] = useState<number>(3);
-    const [maxNode, setMaxNode] = useState<number>(30);
-    const [recordRefIn, setRecordRefIn] = useState<boolean>(true);
-    const [recordRefOutDepth, setRecordRefOutDepth] = useState<number>(3);
-    const [recordMaxNode, setRecordMaxNode] = useState<number>(30);
-    const [searchMax, setSearchMax] = useState<number>(30);
-
     const [settingOpen, setSettingOpen] = useState<boolean>(false);
     const [searchOpen, setSearchOpen] = useState<boolean>(false);
-    const [server, setServer] = useState<string>('localhost:3456');
-    const [activePage, setActivePage] = useState<string>(key1);
 
-    useHotkeys('alt+1', () => setActivePage(key1));
-    useHotkeys('alt+2', () => setActivePage(key2));
-    useHotkeys('alt+3', () => setActivePage(key3));
-    useHotkeys('alt+4', () => setActivePage(key4));
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+    const [isFetching, setIsFetching] = useState<boolean>(false);
+    const [fetchErr, setFetchErr] = useState<string>('');
+
+    useHotkeys('alt+1', () => selectCurPage(key1));
+    useHotkeys('alt+2', () => selectCurPage(key2));
+    useHotkeys('alt+3', () => selectCurPage(key3));
+    useHotkeys('alt+4', () => selectCurPage(key4));
     useHotkeys('alt+x', () => showSearch());
     useHotkeys('alt+c', () => prev());
     useHotkeys('alt+v', () => next());
 
-    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-
     useEffect(() => {
+        tryConnect(server);
+    }, []);
+
+
+    function tryConnect(server: string) {
+        setSchema(null);
+        setIsFetching(true);
+
         const fetchData = async () => {
             const response = await fetch(`http://${server}/schemas`);
             const rawSchema = await response.json();
             const schema = new Schema(rawSchema);
 
             setSchema(schema);
-            selectCurTableFromSchema(schema);
+            selectCurTableFromSchema(schema, curTableId, curId);
+            setIsFetching(false);
             setIsModalOpen(false);
         }
 
         fetchData().catch((err) => {
-            console.error(err);
+            setIsFetching(false);
+            setFetchErr(err.toString());
             setIsModalOpen(true);
         });
-    }, [server, isModalOpen]);
+    }
 
 
     function selectCurTableFromSchema(schema: Schema,
-                                      curTableName: string | null = null,
-                                      curIdStr: string | null = null,
+                                      curTableName: string = curTableId,
+                                      curIdStr: string = curId,
                                       fromOp: boolean = true) {
         if (schema == null) {
             return;
         }
-        let table;
-        if (curTableName) {
-            table = schema.getSTable(curTableName);
-        } else {
-            table = schema.getFirstSTable();
+
+        let curTab;
+        if (curTableName.length > 0) {
+            curTab = schema.getSTable(curTableName);
         }
-        if (table) {
-            setCurTable(table);
-            if (curIdStr == null) {
-                if (table.recordIds.length > 0) {
-                    curIdStr = table.recordIds[0].id;
-                }
+        if (curTab == null) {
+            curTab = schema.getFirstSTable();
+        }
+
+        if (curTab) {
+            setCurTableId(curTab.name);
+            setCurTable(curTab);
+
+            let id = '';
+            if (curIdStr.length > 0 && schema.hasId(curTab, curIdStr)) {
+                id = curIdStr;
+            } else if (curTab.recordIds.length > 0) {
+                id = curTab.recordIds[0].id;
             }
-            setCurId(curIdStr);
+
+            setCurId(id);
             if (fromOp) { // 如果是从prev，next中来的，就不要再设置history了
-                setHistory(history.addItem(table.name, curIdStr));
+                setHistory(history.addItem(curTab.name, id));
             }
+            localStorage.setItem('curTableId', curTab.name);
+            localStorage.setItem('curId', id);
         }
     }
 
@@ -104,6 +126,13 @@ export default function App() {
             selectCurTableFromSchema(schema, curTableName, curId);
         }
     }
+
+    function selectCurId(curId: string) {
+        if (schema && curTable) {
+            selectCurTableFromSchema(schema, curTable.name, curId);
+        }
+    }
+
 
     function selectHistoryCur(item: HistoryItem | null) {
         if (item && schema) {
@@ -123,9 +152,14 @@ export default function App() {
         selectHistoryCur(newHistory.cur());
     }
 
+    function selectCurPage(page: string) {
+        setCurPage(page);
+        localStorage.setItem('curPage', page);
+    }
+
     const leftOp = <Space>
         <TableList schema={schema} curTable={curTable} setCurTable={selectCurTable}/>
-        <IdList curTable={curTable} curId={curId} setCurId={setCurId}/>
+        <IdList curTable={curTable} curId={curId} setCurId={selectCurId}/>
 
         <Button onClick={prev} disabled={!history.canPrev()}>
             <LeftOutlined/>
@@ -202,76 +236,95 @@ export default function App() {
     ]
 
     function onTabChange(activeKey: string) {
-        setActivePage(activeKey);
+        selectCurPage(activeKey);
     }
 
 
     function onChangeMaxImpl(value: number | null) {
         if (value) {
             setMaxImpl(value);
+            localStorage.setItem('maxImpl', value.toString());
         }
     }
 
     function onChangeRefIn(checked: boolean) {
         setRefIn(checked);
+        localStorage.setItem('refIn', checked ? 'true' : 'false');
     }
 
     function onChangeRefOutDepth(value: number | null) {
         if (value) {
             setRefOutDepth(value);
+            localStorage.setItem('refOutDepth', value.toString());
         }
     }
 
     function onChangeMaxNode(value: number | null) {
         if (value) {
             setMaxNode(value);
+            localStorage.setItem('maxNode', value.toString());
         }
     }
 
     function onChangeRecordRefIn(checked: boolean) {
         setRecordRefIn(checked);
+        localStorage.setItem('recordRefIn', checked ? 'true' : 'false');
     }
 
     function onChangeRecordRefOutDepth(value: number | null) {
         if (value) {
             setRecordRefOutDepth(value);
+            localStorage.setItem('recordRefOutDepth', value.toString());
         }
     }
 
     function onChangeRecordMaxNode(value: number | null) {
         if (value) {
             setRecordMaxNode(value);
+            localStorage.setItem('recordMaxNode', value.toString());
         }
     }
 
     function onChangeSearchMax(value: number | null) {
         if (value) {
             setSearchMax(value);
+            localStorage.setItem('searchMax', value.toString());
         }
     }
 
-    function onSetServer(server: string) {
-        setServer(server);
+    function onConnectServer(value: string) {
+        setServer(value);
+        localStorage.setItem('server', value);
+        tryConnect(value);
     }
+
 
     function handleModalOk() {
-        setIsModalOpen(false);
+        onConnectServer(server);
     }
 
-    let alertSetServer = <><p>或者 更改服务器地址(在设置里也可更改)，查看别人的配表！</p>
-        <Input.Search defaultValue={server} enterButton='连接' onSearch={onSetServer}/>
-    </>;
 
-    return <div className="App">
-        <Modal title="服务器连接失败" open={isModalOpen} onOk={handleModalOk} cancelButtonProps={{disabled: true}}
-               onCancel={handleModalOk}>
-            <Alert message='请先启动 cfgeditor服务器.bat，查看自己的配表！' type="error"/>
-            <Alert message={alertSetServer} type="error"/>
+    return <Space>
+        <Modal title="服务器连接失败" open={isModalOpen}
+               cancelButtonProps={{disabled: true}}
+               closable={false}
+               confirmLoading={isFetching}
+               okText='重连当前服务器'
+               onOk={handleModalOk}>
+
+            <Flex vertical>
+                <Alert message={fetchErr} type='error'/>
+                <p> 请 启动'cfgeditor服务器.bat'，查看自己的配表！ 或 更改服务器地址，查看别人的配表！</p>
+                <p> 当前服务器: {server}</p>
+                <Form.Item label='新服务器:'>
+                    <Input.Search defaultValue={server} enterButton='连接新服' onSearch={onConnectServer}/>
+                </Form.Item>
+            </Flex>
         </Modal>
 
         <Tabs tabBarExtraContent={{'left': leftOp, 'right': rightOp}}
               items={items}
-              activeKey={activePage}
+              activeKey={curPage}
               onChange={onTabChange}
               type="card"/>
         <Drawer title="setting" placement="right" onClose={onSettingClose} open={settingOpen}>
@@ -308,11 +361,11 @@ export default function App() {
                     <InputNumber value={searchMax} min={1} max={500} onChange={onChangeSearchMax}/>
                 </Form.Item>
 
-                <Form.Item label='服务器'>
-                    <Input.Search defaultValue={server} enterButton='连接' onSearch={onSetServer}/>
-                </Form.Item>
                 <Form.Item label='当前服务器'>
                     {server}
+                </Form.Item>
+                <Form.Item label='服务器'>
+                    <Input.Search defaultValue={server} enterButton='连接' onSearch={onConnectServer}/>
                 </Form.Item>
 
                 <Form.Item label=<LeftOutlined/>>
@@ -341,13 +394,13 @@ export default function App() {
             </Form>
         </Drawer>
 
-        <Drawer title="search" placement="right" onClose={onSearchClose} open={searchOpen} size={'large'}>
+        <Drawer title="search" placement="right" onClose={onSearchClose} open={searchOpen} size='large'>
             <SearchValue searchMax={searchMax}
                          server={server}
                          setCurTableAndId={selectCurTableAndId}/>
         </Drawer>
 
-    </div>;
+    </Space>;
 
 }
 

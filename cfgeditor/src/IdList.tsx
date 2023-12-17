@@ -1,12 +1,11 @@
 import {STable} from "./model/schemaModel.ts";
-import {Dispatch} from "react";
 import {Select, Space, Skeleton} from "antd";
 
 
 export function IdList({curTable, curId, setCurId}: {
     curTable: STable | null,
     curId: string | null
-    setCurId: Dispatch<string>
+    setCurId: (id: string) => void;
 }) {
     if (curTable == null) {
         return <Skeleton.Input/>
