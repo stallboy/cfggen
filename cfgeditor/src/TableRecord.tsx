@@ -306,7 +306,7 @@ export function TableRecord({schema, curTable, curId, server, tryReconnect, setC
             const response = await fetch(url);
             const recordResult: RecordResult = await response.json();
             setRecordResult(recordResult);
-            notification.info({message: `fetch ${url} ok`, placement: 'topRight', duration: 2});
+            // notification.info({message: `fetch ${url} ok`, placement: 'topRight', duration: 2});
         }
 
         fetchData().catch((err) => {

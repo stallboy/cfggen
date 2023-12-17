@@ -127,7 +127,13 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
                     entity.outputs.length * 40;
 
                 await area.update('node', node.id);
-                // 没办法让connection刷新
+                // @Ni55aN TODO this does not update connection!
+                const connections = editor.getConnections();
+                const incomingConnections = connections.filter(connection => connection.target === node.id);
+                for (let ic of incomingConnections) {
+                    await area.update('connection', ic.id);
+                }
+
                 // area.update('control', fieldsControl.id);
                 // area.update('socket', node.inputs[0]?.socket.name as string);
 
@@ -135,13 +141,13 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
                 //     const connections = editor.getConnections();
                 //     const incomingConnections = connections.filter(connection => connection.target === node.id);
                 //     for (let ic of incomingConnections) {
-                //         editor.removeConnection(ic.id);
+                //         await editor.removeConnection(ic.id);
                 //         let fromNode = editor.getNode(ic.source);
                 //         let toNode = editor.getNode(ic.target);
                 //         let conn = new EntityConnection(fromNode, ic.sourceOutput, toNode, ic.targetInput);
                 //         conn.connectionType = ic.connectionType ?? EntityConnectionType.Normal;
-                //         editor.addConnection(conn);
-                //         area.update('connection', conn.id);
+                //         await editor.addConnection(conn);
+                //         await area.update('connection', conn.id);
                 //     }
                 // }, 100);
 

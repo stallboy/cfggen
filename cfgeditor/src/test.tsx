@@ -15,7 +15,7 @@ import {
 
 type SizeType = Parameters<typeof Form>[0]['size'];
 
-const App: React.FC = () => {
+const Test: React.FC = () => {
   const [componentSize, setComponentSize] = useState<SizeType | 'default'>('default');
 
   const onFormLayoutChange = ({ size }: { size: SizeType }) => {
@@ -31,7 +31,6 @@ const App: React.FC = () => {
       onValuesChange={onFormLayoutChange}
       size={componentSize as SizeType}
       style={{ maxWidth: 600 }}
-      disabled={true}
     >
       <Form.Item label="Form Size" name="size">
         <Radio.Group>
@@ -82,4 +81,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+export default Test;

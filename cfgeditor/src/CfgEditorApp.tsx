@@ -394,8 +394,6 @@ export default function CfgEditorApp() {
                 <Form.Item label=<SearchOutlined/>>
                     alt+q
                 </Form.Item>
-
-
             </Form>
         </Drawer>
 

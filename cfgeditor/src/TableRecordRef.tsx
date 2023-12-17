@@ -154,7 +154,7 @@ export function TableRecordRef({curTable, curId, refIn, refOutDepth, maxNode, se
             const response = await fetch(url);
             const recordResult: RecordRefsResult = await response.json();
             setRecordRefResult(recordResult);
-            notification.info({message: `fetch ${url} ok`, placement: 'topRight', duration: 2});
+            // notification.info({message: `fetch ${url} ok`, placement: 'topRight', duration: 2});
         }
 
         fetchData().catch((err) => {
