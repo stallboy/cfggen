@@ -1,8 +1,7 @@
 # cfggen
 
-* make any structural data in Excel.
-* make any structural data using node based editor
-* view 
+* Make structural data in Excel file.
+* View & make structural data using node based editor
 * Generate code for accessing structural data in programs.
 
 ## Features
