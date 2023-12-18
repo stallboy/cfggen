@@ -3,8 +3,21 @@ import {Item} from "rete-context-menu-plugin/_types/types";
 export interface EntityField {
     name: string;
     comment?: string;
-    value: string | number | boolean;
+    value: string;
     key: string;
+}
+
+export type EditFieldType = 'array' | 'ele' | 'button';
+export type EditFieldEleType = 'bool' | 'int' | 'long' | 'float' | 'str' | 'text';
+
+export interface EntityEditField {
+    name: string;
+    comment?: string;
+    type: EditFieldType;
+    eleType: EditFieldEleType;
+    value: string | number | boolean | string[] | number[] | boolean[] | (() => void);
+    rows?: number;  // use TextArea if rows > 1
+    options?: string[]; // use Select if has options
 }
 
 export interface ConnectTo {
@@ -27,6 +40,7 @@ export interface Entity {
     id: string;
     label: string;
     fields: EntityField[];
+    editFields?: EntityEditField[];
     inputs: EntitySocket[];
     outputs: EntitySocketOutput[];
 

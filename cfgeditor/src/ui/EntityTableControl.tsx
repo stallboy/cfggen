@@ -1,10 +1,10 @@
 import {ClassicPreset} from "rete";
-import {EntityField, FieldsShowType} from "../model/graphModel.ts";
-import {Collapse, Input, Space, Table, Tooltip} from "antd";
+import {Entity, EntityField, FieldsShowType} from "../model/graphModel.ts";
+import {Collapse, Empty, Form, Space, Table, Tooltip} from "antd";
 import {ColumnsType} from "antd/es/table";
 
 
-function getColumns(fieldShow: FieldsShowType) : ColumnsType<EntityField> {
+function getColumns(): ColumnsType<EntityField> {
     return [
         {
             title: 'name',
@@ -30,13 +30,9 @@ function getColumns(fieldShow: FieldsShowType) : ColumnsType<EntityField> {
                 showTitle: false
             },
             render: (_text: any, record: EntityField, _index: number) => {
-                if (fieldShow == FieldsShowType.Edit) {
-                    return <Input defaultValue={record.value.toString()}/>;
-                } else {
-                    return <Tooltip placement="topLeft" title={record.value}>
-                        {record.value}
-                    </Tooltip>;
-                }
+                return <Tooltip placement="topLeft" title={record.value}>
+                    {record.value}
+                </Tooltip>;
             }
         },
     ];
@@ -48,34 +44,52 @@ function dummpyOnChange(_key: string | string[]) {
 export class EntityTableControl extends ClassicPreset.Control {
     onChange: (key: string | string[]) => void = dummpyOnChange;
 
-    constructor(public data: EntityField[], public fieldsShow: FieldsShowType) {
+    constructor(public entity: Entity) {
         super();
     }
 }
 
 export function EntityTableControlComponent(props: { data: EntityTableControl }) {
-    let ctrl = props.data;
-    if (ctrl.data.length == 0) {
+    let entity: Entity = props.data.entity;
+    if (entity.fieldsShow == FieldsShowType.Edit) {
+        let fields = entity.editFields;
+        if (!fields || fields.length == 0) {
+            return <Space/>
+        }
+
+        return <Form labelCol={{span: 4}} wrapperCol={{span: 14}}
+                     layout="horizontal" style={{maxWidth: 400}}>
+            {fields.map((_field, _index) => {
+
+                return <Empty/>
+            })}
+        </Form>
+    }
+
+
+    let fields = entity.fields;
+    if (fields.length == 0) {
         return <Space/>
     }
+
     let tab = <Table bordered
                      showHeader={false}
-                     columns={getColumns(ctrl.fieldsShow)}
-                     dataSource={props.data.data}
+                     columns={getColumns()}
+                     dataSource={fields}
                      size={"small"}
                      pagination={false}/>;
 
+    if (entity.fieldsShow == FieldsShowType.Direct) {
+        return tab;
+    }
 
-    switch (ctrl.fieldsShow) {
-        case FieldsShowType.Direct:
-            return tab;
-        case FieldsShowType.Edit:
-            return tab;
+    let items = [{key: '1', label: `${fields.length} fields`, children: tab}];
+
+
+    switch (entity.fieldsShow) {
         case FieldsShowType.Expand:
-            let items = [{key: '1', label: `${ctrl.data.length} fields`, children: tab}];
-            return <Collapse defaultActiveKey={'1'} items={items} onChange={ctrl.onChange}/>
+            return <Collapse defaultActiveKey={'1'} items={items} onChange={props.data.onChange}/>
         case FieldsShowType.Fold:
-            let items2 = [{key: '1', label: `${ctrl.data.length} fields`, children: tab}];
-            return <Collapse items={items2} onChange={ctrl.onChange}/>
+            return <Collapse items={items} onChange={props.data.onChange}/>
     }
 }

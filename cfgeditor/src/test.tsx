@@ -1,84 +1,111 @@
-import React, { useState } from 'react';
-import './style.css';
-import {
-  Button,
-  Cascader,
-  DatePicker,
-  Form,
-  Input,
-  InputNumber,
-  Radio,
-  Select,
-  Switch,
-  TreeSelect,
-} from 'antd';
+import React from 'react';
+import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { Button, Form, Input } from 'antd';
 
-type SizeType = Parameters<typeof Form>[0]['size'];
+const formItemLayout = {
+  labelCol: {
+    xs: { span: 24 },
+    sm: { span: 4 },
+  },
+  wrapperCol: {
+    xs: { span: 24 },
+    sm: { span: 20 },
+  },
+};
 
-const Test: React.FC = () => {
-  const [componentSize, setComponentSize] = useState<SizeType | 'default'>('default');
+const formItemLayoutWithOutLabel = {
+  wrapperCol: {
+    xs: { span: 24, offset: 0 },
+    sm: { span: 20, offset: 4 },
+  },
+};
 
-  const onFormLayoutChange = ({ size }: { size: SizeType }) => {
-    setComponentSize(size);
+const App: React.FC = () => {
+  const onFinish = (values: any) => {
+    console.log('Received values of form:', values);
   };
 
   return (
-    <Form
-      labelCol={{ span: 4 }}
-      wrapperCol={{ span: 14 }}
-      layout="horizontal"
-      initialValues={{ size: componentSize }}
-      onValuesChange={onFormLayoutChange}
-      size={componentSize as SizeType}
-      style={{ maxWidth: 600 }}
-    >
-      <Form.Item label="Form Size" name="size">
-        <Radio.Group>
-          <Radio.Button value="small">Small</Radio.Button>
-          <Radio.Button value="default">Default</Radio.Button>
-          <Radio.Button value="large">Large</Radio.Button>
-        </Radio.Group>
-      </Form.Item>
-      <Form.Item label="Input">
-        <Input value={"123"}/>
-      </Form.Item>
-      <Form.Item label="Select">
-        <Select>
-          <Select.Option value="demo">Demo</Select.Option>
-        </Select>
-      </Form.Item>
-      <Form.Item label="TreeSelect">
-        <TreeSelect
-          treeData={[
-            { title: 'Light', value: 'light', children: [{ title: 'Bamboo', value: 'bamboo' }] },
-          ]}
-        />
-      </Form.Item>
-      <Form.Item label="Cascader">
-        <Cascader
-          options={[
-            {
-              value: 'zhejiang',
-              label: 'Zhejiang',
-              children: [{ value: 'hangzhou', label: 'Hangzhou' }],
-            },
-          ]}
-        />
-      </Form.Item>
-      <Form.Item label="DatePicker">
-        <DatePicker />
-      </Form.Item>
-      <Form.Item label="InputNumber">
-        <InputNumber />
-      </Form.Item>
-      <Form.Item label="Switch" valuePropName="checked">
-        <Switch />
-      </Form.Item>
-      <Form.Item label="Button">
-        <Button>Button</Button>
-      </Form.Item>
-    </Form>
+      <Form
+          name="dynamic_form_item"
+          {...formItemLayoutWithOutLabel}
+          onFinish={onFinish}
+          style={{ maxWidth: 600 }}
+      >
+        <Form.List
+            name="names"
+            rules={[
+              {
+                validator: async (_, names) => {
+                  if (!names || names.length < 2) {
+                    return Promise.reject(new Error('At least 2 passengers'));
+                  }
+                },
+              },
+            ]}
+        >
+          {(fields, { add, remove }, { errors }) => (
+              <>
+                {fields.map((field, index) => (
+                    <Form.Item
+                        {...(index === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
+                        label={index === 0 ? 'Passengers' : ''}
+                        required={false}
+                        key={field.key}
+                    >
+                      <Form.Item
+                          {...field}
+                          validateTrigger={['onChange', 'onBlur']}
+                          rules={[
+                            {
+                              required: true,
+                              whitespace: true,
+                              message: "Please input passenger's name or delete this field.",
+                            },
+                          ]}
+                          noStyle
+                      >
+                        <Input placeholder="passenger name" style={{ width: '60%' }} />
+                      </Form.Item>
+                      {fields.length > 1 ? (
+                          <MinusCircleOutlined
+                              className="dynamic-delete-button"
+                              onClick={() => remove(field.name)}
+                          />
+                      ) : null}
+                    </Form.Item>
+                ))}
+                <Form.Item>
+                  <Button
+                      type="dashed"
+                      onClick={() => add()}
+                      style={{ width: '60%' }}
+                      icon={<PlusOutlined />}
+                  >
+                    Add field
+                  </Button>
+                  <Button
+                      type="dashed"
+                      onClick={() => {
+                        add('The head item', 0);
+                      }}
+                      style={{ width: '60%', marginTop: '20px' }}
+                      icon={<PlusOutlined />}
+                  >
+                    Add field at head
+                  </Button>
+                  <Form.ErrorList errors={errors} />
+                </Form.Item>
+              </>
+          )}
+        </Form.List>
+        <Form.Item>
+          <Button type="primary" htmlType="submit">
+            Submit
+          </Button>
+        </Form.Item>
+      </Form>
   );
 };
 
-export default Test;
+export default App;

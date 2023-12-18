@@ -110,7 +110,7 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
             entity.inputs.length * 40 +
             entity.outputs.length * 40;
 
-        const fieldsControl = new EntityTableControl(entity.fields, entity.fieldsShow);
+        const fieldsControl = new EntityTableControl(entity);
         if (hasCtrl) {
             fieldsControl.onChange = async (key: string | string[]) => {
                 let ch;
