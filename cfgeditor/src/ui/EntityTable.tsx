@@ -2,6 +2,11 @@ import {ColumnsType} from "antd/es/table";
 import {EntityField} from "../model/graphModel.ts";
 import {Table, Tooltip} from "antd";
 
+
+export function tooltip(field: { name: string, comment?: string }) {
+    return field.comment ? `${field.name}: ${field.comment}` : field.name;
+}
+
 function getColumns(): ColumnsType<EntityField> {
     return [
         {
@@ -13,9 +18,9 @@ function getColumns(): ColumnsType<EntityField> {
             ellipsis: {
                 showTitle: false
             },
-            render: (_text: any, record: EntityField, _index: number) => (
-                <Tooltip placement="topLeft" title={record.comment ? record.name + ": " + record.comment : record.name}>
-                    {record.name}
+            render: (_text: any, field: EntityField, _index: number) => (
+                <Tooltip placement="topLeft" title={tooltip(field)}>
+                    {field.name}
                 </Tooltip>
             )
         },
@@ -27,9 +32,9 @@ function getColumns(): ColumnsType<EntityField> {
             ellipsis: {
                 showTitle: false
             },
-            render: (_text: any, record: EntityField, _index: number) => {
-                return <Tooltip placement="topLeft" title={record.value}>
-                    {record.value}
+            render: (_text: any, field: EntityField, _index: number) => {
+                return <Tooltip placement="topLeft" title={field.value}>
+                    {field.value}
                 </Tooltip>;
             }
         },

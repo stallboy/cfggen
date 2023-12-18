@@ -334,3 +334,12 @@ export function getField(item: STable | SStruct, fieldName: string): SField | nu
     }
     return null;
 }
+
+export function getImpl(sInterface: SInterface, implName: string): SStruct | null {
+    for (let impl of sInterface.impls) {
+        if (impl.name == implName) {
+            return impl;
+        }
+    }
+    return null;
+}

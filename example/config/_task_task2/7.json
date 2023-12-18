@@ -9,26 +9,5 @@
 		"$type":"task.completecondition.TestNoColumn"
 	},
 	"exp":2000,
-	"testDefaultBean":{
-		"testInt":0,
-		"testBool":false,
-		"testString":"",
-		"testSubBean":{
-			"x":0,
-			"y":0,
-			"z":0,
-			"$type":"Position"
-		},
-		"testList":[
-
-		],
-		"testList2":[
-
-		],
-		"testMap":[
-
-		],
-		"$type":"task.TestDefaultBean"
-	},
 	"$type":"task.task2"
 }

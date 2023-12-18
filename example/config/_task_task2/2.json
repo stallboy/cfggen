@@ -10,33 +10,5 @@
 		"$type":"task.completecondition.TalkNpc"
 	},
 	"exp":2000,
-	"testDefaultBean":{
-		"testInt":22,
-		"testBool":false,
-		"testString":"text",
-		"testSubBean":{
-			"x":3,
-			"y":4,
-			"z":5,
-			"$type":"Position"
-		},
-		"testList":[
-			11,
-			22
-		],
-		"testList2":[
-			3,
-			4,
-			5
-		],
-		"testMap":[
-			{
-				"key":1,
-				"value":"str in map",
-				"$type":"$entry"
-			}
-		],
-		"$type":"task.TestDefaultBean"
-	},
 	"$type":"task.task2"
 }

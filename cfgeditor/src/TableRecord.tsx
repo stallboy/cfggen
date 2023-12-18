@@ -6,8 +6,9 @@ import {Entity, fillInputs} from "./model/graphModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 import {RecordResult, RefId} from "./model/recordModel.ts";
 import {App, Empty, Result, Spin} from "antd";
-import {createRefNodes, getId} from "./model/recordRefGraph.ts";
-import {RecordNodeCreator} from "./model/recordGraph.ts";
+import {createRefNodes, getId} from "./model/recordRefNode.ts";
+import {RecordNodeCreator} from "./model/RecordNodeCreator.ts";
+import {RecordEditNodeCreator} from "./model/RecordEditNodeCreator.ts";
 
 
 export function TableRecordLoaded({schema, curTable, curId, recordResult, setCurTableAndId}: {
@@ -26,8 +27,13 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
     let entityId = getId(curTable.name, curId);
     let isEditable = schema.isEditable && curTable.isEditable;
     let isEditing = isEditable && editMode;
-    let recordNodeCreator = new RecordNodeCreator(entityMap, schema, refId, recordResult.refs, isEditing);
-    recordNodeCreator.createNodes(entityId, recordResult.object);
+    if (!isEditing) {
+        let recordNodeCreator = new RecordNodeCreator(entityMap, schema, refId, recordResult.refs);
+        recordNodeCreator.createNodes(entityId, recordResult.object);
+    } else {
+        let recordEditNodeCreator = new RecordEditNodeCreator(entityMap, schema, refId, recordResult.refs);
+        recordEditNodeCreator.createNodes(entityId, curTable, recordResult.object);
+    }
     fillInputs(entityMap);
 
     const menu: Item[] = [];

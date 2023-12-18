@@ -1,6 +1,11 @@
 import {BriefRecord, RefId, Refs, TableMap} from "./recordModel.ts";
 import {Entity, EntityConnectionType, EntityNodeType, FieldsShowType} from "./graphModel.ts";
 
+export function getLastName(id: string): string {
+    let seps = id.split('.');
+    return seps[seps.length - 1];
+}
+
 export function getLabel(id: string): string {
     let seps = id.split('.');
     return seps[seps.length - 1];

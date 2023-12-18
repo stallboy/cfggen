@@ -86,15 +86,18 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
         let ch;
         let fc;
         let fh = 40;
+        if (entity.fieldsShow == FieldsShowType.Edit && entity.editFields){
+            fc = entity.editFields.length;
+        }else{
+            fc = entity.fields.length;
+        }
         switch (entity.fieldsShow) {
             case FieldsShowType.Direct:
                 ch = 0;
-                fc = entity.fields.length;
                 hasCtrl = false;
                 break;
             case FieldsShowType.Expand:
                 ch = 80;
-                fc = entity.fields.length;
                 break;
             case FieldsShowType.Fold:
                 ch = 60;
@@ -102,7 +105,6 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
                 break;
             case FieldsShowType.Edit:
                 ch = 0;
-                fc = entity.fields.length;
                 fh = 60;
                 break;
         }

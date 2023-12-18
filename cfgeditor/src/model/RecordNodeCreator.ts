@@ -8,14 +8,13 @@ import {
 } from "./graphModel.ts";
 import {getField, Schema, SField, SStruct, STable} from "./schemaModel.ts";
 import {JSONArray, JSONObject, JSONValue, RefId, Refs, TableMap} from "./recordModel.ts";
-import {createRefs, getLabel} from "./recordRefGraph.ts";
+import {createRefs, getLabel} from "./recordRefNode.ts";
 
 export class RecordNodeCreator {
     constructor(public entityMap: Map<string, Entity>,
                 public schema: Schema,
                 public refId: RefId,
-                public refs : TableMap,
-                public isEditing: boolean) {
+                public refs : TableMap) {
     }
 
     createNodes(id: string, obj: JSONObject & Refs): Entity | null {
@@ -139,7 +138,7 @@ export class RecordNodeCreator {
             inputs: [],
             outputs: outputs,
 
-            fieldsShow: this.isEditing ? FieldsShowType.Edit : FieldsShowType.Direct,
+            fieldsShow: FieldsShowType.Direct,
             nodeType: EntityNodeType.Normal,
             userData: this.refId,
         };

@@ -6,7 +6,7 @@ import {Entity, fillInputs,} from "./model/graphModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 import {RecordRefsResult, RefId} from "./model/recordModel.ts";
 import {App, Empty, Result, Spin} from "antd";
-import {createRefNodes} from "./model/recordRefGraph.ts";
+import {createRefNodes} from "./model/recordRefNode.ts";
 
 
 export function TableRecordRefLoaded({curTable, curId, recordRefResult, setCurTableAndId}: {

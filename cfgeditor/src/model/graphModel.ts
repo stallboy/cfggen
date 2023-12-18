@@ -7,18 +7,20 @@ export interface EntityField {
     key: string;
 }
 
-export type EditFieldType = 'array' | 'ele' | 'button';
-export type EditFieldEleType = 'bool' | 'int' | 'long' | 'float' | 'str' | 'text';
-
 export interface EntityEditField {
     name: string;
     comment?: string;
     type: EditFieldType;
-    eleType: EditFieldEleType;
-    value: string | number | boolean | string[] | number[] | boolean[] | (() => void);
-    rows?: number;  // use TextArea if rows > 1
-    options?: string[]; // use Select if has options
+    eleType?: EditFieldEleType;
+    value: EditFieldValueType;
+    autoCompleteOptions?: string[]; // use Select if it has autoCompleteOptions
+    implFields?: EntityEditField[];
+    interfaceOnChangeImpl?: ((impl: string) => void)
 }
+
+export type EditFieldType = 'arrayOfPrimitive' | 'primitive' | 'func' | 'interface'; // interface: value:string
+export type EditFieldEleType = 'bool' | 'int' | 'long' | 'float' | 'str' | 'text';
+export type EditFieldValueType = string | number | boolean | string[] | number[] | boolean[] | (() => void);
 
 export interface ConnectTo {
     nodeId: string;
