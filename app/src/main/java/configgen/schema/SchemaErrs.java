@@ -118,6 +118,9 @@ public record SchemaErrs(List<Err> errs,
                                   String enumRef) implements Err {
     }
 
+    public record InterfaceImplEmpty(String sInterface) implements Err {
+    }
+
     public record DefaultImplNotFound(String sInterface,
                                       String defaultImpl) implements Err {
     }

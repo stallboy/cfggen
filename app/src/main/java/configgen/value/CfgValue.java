@@ -1,9 +1,6 @@
 package configgen.value;
 
-import configgen.schema.CfgSchema;
-import configgen.schema.InterfaceSchema;
-import configgen.schema.Structural;
-import configgen.schema.TableSchema;
+import configgen.schema.*;
 
 import java.util.*;
 import java.util.stream.Collectors;

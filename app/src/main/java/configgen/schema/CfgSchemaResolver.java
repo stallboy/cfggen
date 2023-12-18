@@ -240,6 +240,10 @@ public final class CfgSchemaResolver {
             errs.addErr(new EnumRefNotFound(ctx(), enumRef));
         }
 
+        if (sInterface.impls().isEmpty()) {
+            errs.addErr(new InterfaceImplEmpty(ctx()));
+        }
+
         String def = sInterface.defaultImpl();
         if (!def.isEmpty()) {
             StructSchema defImpl = sInterface.findImpl(def);

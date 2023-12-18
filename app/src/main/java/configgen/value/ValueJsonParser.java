@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import configgen.schema.*;
+import configgen.util.Logger;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -58,10 +59,15 @@ public class ValueJsonParser {
         VStruct vStruct = new VStruct(subStructural, new ArrayList<>(subStructural.fields().size()), cellList);
         for (FieldSchema fs : subStructural.fields()) {
             Object fieldObj = jsonObject.get(fs.name());
-            if (fieldObj == null) {
-                throw new JsonParseException(fs.name() + " field not found in json object");
+            Value fieldValue;
+            if (fieldObj != null) {
+                fieldValue = parse(fs.type(), fieldObj);
+            } else {
+                // not throw exception, but use default value
+                // make it easy to add field in future
+                fieldValue = ValueDefault.of(fs.type());
+                Logger.log("%s[%s] field not found in json object", subStructural.fullName(), fs.name());
             }
-            Value fieldValue = parse(fs.type(), fieldObj);
             vStruct.values().add(fieldValue);
         }
         return vStruct;
