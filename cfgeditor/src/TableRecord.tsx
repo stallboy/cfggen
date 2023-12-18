@@ -70,7 +70,7 @@ function createNodes(entityMap: Map<string, Entity>, schema: Schema, refId: RefI
 
         let ft = typeof fieldValue
         if (ft == 'object') {
-            if (Array.isArray(fieldValue)) {
+            if (Array.isArray(fieldValue)) {  // list or map, (map is list of $entry)
                 let fArr: JSONArray = fieldValue as JSONArray;
                 if (fArr.length == 0) {
                     fields.push({
@@ -81,7 +81,7 @@ function createNodes(entityMap: Map<string, Entity>, schema: Schema, refId: RefI
                     });
                 } else {
                     let ele = fArr[0];
-                    if (typeof ele == 'object') {
+                    if (typeof ele == 'object') { // list of struct/interface, or map
                         let i = 0;
                         let connectToSockets = [];
                         for (let e of fArr) {
@@ -104,7 +104,7 @@ function createNodes(entityMap: Map<string, Entity>, schema: Schema, refId: RefI
                             connectToSockets: connectToSockets
                         });
 
-                    } else {
+                    } else {  // list of primitive value
                         let i = 0;
                         for (let e of fArr) {
                             fields.push({
@@ -118,7 +118,7 @@ function createNodes(entityMap: Map<string, Entity>, schema: Schema, refId: RefI
 
                     }
                 }
-            } else {
+            } else { // struct or interface
                 let fObj: JSONObject & Refs = fieldValue as JSONObject & Refs;
                 let childId: string = id + "-" + fieldKey;
                 let childNode = createNodes(entityMap, schema, refId, childId, fObj, isEditing);
@@ -133,7 +133,7 @@ function createNodes(entityMap: Map<string, Entity>, schema: Schema, refId: RefI
                     });
                 }
             }
-        } else {
+        } else { // primitive
             let valueStr: string = fieldValue.toString();
             if (ft == 'boolean') {
                 let fb = fieldValue as boolean

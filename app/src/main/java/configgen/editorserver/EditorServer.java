@@ -129,6 +129,7 @@ public class EditorServer extends Generator {
 
         byte[] bytes = exchange.getRequestBody().readAllBytes();
         String jsonStr = new String(bytes, StandardCharsets.UTF_8);
+        logger.info(jsonStr);
 
         RecordEditResult result;
         synchronized (this) {
@@ -169,11 +170,10 @@ public class EditorServer extends Generator {
             try {
                 chain.doFilter(http);
             } finally {
-                logger.info(String.format("%s %s %s %s",
+                logger.info(String.format("%s %s %s",
                         http.getRequestMethod(),
                         http.getRequestURI(),
-                        http.getRemoteAddress(),
-                        http.getRequestBody()));
+                        http.getRemoteAddress()));
             }
         }
 
