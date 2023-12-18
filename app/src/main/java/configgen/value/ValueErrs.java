@@ -165,13 +165,6 @@ public record ValueErrs(List<VErr> errs) {
         }
     }
 
-    /**
-     * @see CommaNumberCellChecker
-     */
-    public record NumberWithCommaCellIsListIntOrIntStruct(DCell cell,
-                                                          String type) implements VErr {
-    }
-
     public record JsonFileReadErr(String jsonFile) implements VErr {
     }
 

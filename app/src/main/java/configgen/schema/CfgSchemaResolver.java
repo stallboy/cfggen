@@ -573,6 +573,9 @@ public final class CfgSchemaResolver {
     }
 
     private void checkFieldFmts(Structural structural) {
+        if (structural instanceof TableSchema tableSchema && tableSchema.meta().isJson()) {
+            return;
+        }
         for (FieldSchema field : structural.fields()) {
             checkFieldFmt(field);
         }

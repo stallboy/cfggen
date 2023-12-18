@@ -1,0 +1,36 @@
+{
+	"taskid":1,
+	"name":[
+		"杀个怪",
+		"杀怪"
+	],
+	"nexttask":2,
+	"completecondition":{
+		"monsterid":1,
+		"count":3,
+		"$type":"task.completecondition.KillMonster"
+	},
+	"exp":1000,
+	"testDefaultBean":{
+		"testInt":0,
+		"testBool":false,
+		"testString":"",
+		"testSubBean":{
+			"x":0,
+			"y":0,
+			"z":0,
+			"$type":"Position"
+		},
+		"testList":[
+
+		],
+		"testList2":[
+
+		],
+		"testMap":[
+
+		],
+		"$type":"task.TestDefaultBean"
+	},
+	"$type":"task.task2"
+}

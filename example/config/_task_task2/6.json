@@ -1,0 +1,43 @@
+{
+	"taskid":6,
+	"name":[
+		"聊天并且杀怪",
+		"测试转义符号"
+	],
+	"nexttask":0,
+	"completecondition":{
+		"cond1":{
+			"msg":"葵花宝典,123",
+			"$type":"task.completecondition.Chat"
+		},
+		"cond2":{
+			"monsterid":1,
+			"count":3,
+			"$type":"task.completecondition.KillMonster"
+		},
+		"$type":"task.completecondition.ConditionAnd"
+	},
+	"exp":5000,
+	"testDefaultBean":{
+		"testInt":0,
+		"testBool":false,
+		"testString":"",
+		"testSubBean":{
+			"x":0,
+			"y":0,
+			"z":0,
+			"$type":"Position"
+		},
+		"testList":[
+
+		],
+		"testList2":[
+
+		],
+		"testMap":[
+
+		],
+		"$type":"task.TestDefaultBean"
+	},
+	"$type":"task.task2"
+}

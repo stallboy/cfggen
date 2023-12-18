@@ -1,0 +1,34 @@
+{
+	"taskid":8,
+	"name":[
+		"测试2",
+		"测试默认bean"
+	],
+	"nexttask":0,
+	"completecondition":{
+		"$type":"task.completecondition.TestNoColumn"
+	},
+	"exp":3000,
+	"testDefaultBean":{
+		"testInt":0,
+		"testBool":false,
+		"testString":"",
+		"testSubBean":{
+			"x":0,
+			"y":0,
+			"z":0,
+			"$type":"Position"
+		},
+		"testList":[
+
+		],
+		"testList2":[
+
+		],
+		"testMap":[
+
+		],
+		"$type":"task.TestDefaultBean"
+	},
+	"$type":"task.task2"
+}

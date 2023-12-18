@@ -20,11 +20,19 @@ public class Spans {
                     }
                     span(interfaceSchema);
                 }
-                case Structural structural -> {
-                    for (FieldSchema field : structural.fields()) {
+                case TableSchema tableSchema -> {
+                    if (!tableSchema.meta().isJson()) {
+                        for (FieldSchema field : tableSchema.fields()) {
+                            span(field);
+                        }
+                        span(tableSchema);
+                    }
+                }
+                case StructSchema struct -> {
+                    for (FieldSchema field : struct.fields()) {
                         span(field);
                     }
-                    span(structural);
+                    span(struct);
                 }
             }
         }

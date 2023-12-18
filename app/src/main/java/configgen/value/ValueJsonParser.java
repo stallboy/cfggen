@@ -39,7 +39,7 @@ public class ValueJsonParser {
 
     public VStruct fromJson(String str) {
         JSONObject jsonObject = JSON.parseObject(str);
-        cell = DCell.of(str);
+        cell = DCell.EMPTY;
         cellList = List.of(cell);
         return parseStructural(subTableSchema, jsonObject);
     }

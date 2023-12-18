@@ -1,0 +1,51 @@
+{
+	"taskid":5,
+	"name":[
+		"杀怪对话并且收集物品",
+		"杀怪对话并且收集物品"
+	],
+	"nexttask":0,
+	"completecondition":{
+		"cond1":{
+			"cond1":{
+				"monsterid":1,
+				"count":3,
+				"$type":"task.completecondition.KillMonster"
+			},
+			"cond2":{
+				"npcid":1,
+				"$type":"task.completecondition.TalkNpc"
+			},
+			"$type":"task.completecondition.ConditionAnd"
+		},
+		"cond2":{
+			"itemid":11,
+			"count":1,
+			"$type":"task.completecondition.CollectItem"
+		},
+		"$type":"task.completecondition.ConditionAnd"
+	},
+	"exp":5000,
+	"testDefaultBean":{
+		"testInt":0,
+		"testBool":false,
+		"testString":"",
+		"testSubBean":{
+			"x":0,
+			"y":0,
+			"z":0,
+			"$type":"Position"
+		},
+		"testList":[
+
+		],
+		"testList2":[
+
+		],
+		"testMap":[
+
+		],
+		"$type":"task.TestDefaultBean"
+	},
+	"$type":"task.task2"
+}
