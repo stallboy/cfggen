@@ -127,30 +127,10 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
                     entity.outputs.length * 40;
 
                 await area.update('node', node.id);
-                await area.update('socket', node.inputs[0]?.socket.name as string);
-                // @Ni55aN TODO this does not update connection!
-                const connections = editor.getConnections();
-                const incomingConnections = connections.filter(connection => connection.target === node.id);
-                for (let ic of incomingConnections) {
-                    await area.update('connection', ic.id);
-                }
-
-                // area.update('control', fieldsControl.id);
-
-                // setTimeout(() => {
-                //     const connections = editor.getConnections();
-                //     const incomingConnections = connections.filter(connection => connection.target === node.id);
-                //     for (let ic of incomingConnections) {
-                //         await editor.removeConnection(ic.id);
-                //         let fromNode = editor.getNode(ic.source);
-                //         let toNode = editor.getNode(ic.target);
-                //         let conn = new EntityConnection(fromNode, ic.sourceOutput, toNode, ic.targetInput);
-                //         conn.connectionType = ic.connectionType ?? EntityConnectionType.Normal;
-                //         await editor.addConnection(conn);
-                //         await area.update('connection', conn.id);
-                //     }
-                // }, 100);
-
+                // await area.update('socket', node.inputs[0]?.socket.name as string);
+                setTimeout(async ()=> {
+                    await area.update('node', node.id);
+                }, 300)
             };
         }
         node.addControl("value", fieldsControl);
