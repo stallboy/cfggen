@@ -8,6 +8,12 @@ namespace Config.Task
     {
         public int Taskid { get; private set; } /* 任务完成条件类型（id的范围为1-100）*/
         public int Extraexp { get; private set; } /* 额外奖励经验*/
+        public string Test1 { get; private set; }
+        public string Test2 { get; private set; }
+        public string Fielda { get; private set; }
+        public string Fieldb { get; private set; }
+        public string Fieldc { get; private set; }
+        public string Fieldd { get; private set; }
 
         public override int GetHashCode()
         {
@@ -24,7 +30,7 @@ namespace Config.Task
 
         public override string ToString()
         {
-            return "(" + Taskid + "," + Extraexp + ")";
+            return "(" + Taskid + "," + Extraexp + "," + Test1 + "," + Test2 + "," + Fielda + "," + Fieldb + "," + Fieldc + "," + Fieldd + ")";
         }
 
         static Config.KeyedList<int, DataTaskextraexp> all = null;
@@ -65,6 +71,12 @@ namespace Config.Task
             var self = new DataTaskextraexp();
             self.Taskid = os.ReadInt32();
             self.Extraexp = os.ReadInt32();
+            self.Test1 = os.ReadString();
+            self.Test2 = os.ReadString();
+            self.Fielda = os.ReadString();
+            self.Fieldb = os.ReadString();
+            self.Fieldc = os.ReadString();
+            self.Fieldd = os.ReadString();
             return self;
         }
 

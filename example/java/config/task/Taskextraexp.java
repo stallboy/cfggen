@@ -3,6 +3,12 @@ package config.task;
 public class Taskextraexp {
     private int taskid;
     private int extraexp;
+    private String test1;
+    private String test2;
+    private String fielda;
+    private String fieldb;
+    private String fieldc;
+    private String fieldd;
 
     private Taskextraexp() {
     }
@@ -11,6 +17,12 @@ public class Taskextraexp {
         Taskextraexp self = new Taskextraexp();
         self.taskid = input.readInt();
         self.extraexp = input.readInt();
+        self.test1 = input.readStr();
+        self.test2 = input.readStr();
+        self.fielda = input.readStr();
+        self.fieldb = input.readStr();
+        self.fieldc = input.readStr();
+        self.fieldd = input.readStr();
         return self;
     }
 
@@ -28,9 +40,33 @@ public class Taskextraexp {
         return extraexp;
     }
 
+    public String getTest1() {
+        return test1;
+    }
+
+    public String getTest2() {
+        return test2;
+    }
+
+    public String getFielda() {
+        return fielda;
+    }
+
+    public String getFieldb() {
+        return fieldb;
+    }
+
+    public String getFieldc() {
+        return fieldc;
+    }
+
+    public String getFieldd() {
+        return fieldd;
+    }
+
     @Override
     public String toString() {
-        return "(" + taskid + "," + extraexp + ")";
+        return "(" + taskid + "," + extraexp + "," + test1 + "," + test2 + "," + fielda + "," + fieldb + "," + fieldc + "," + fieldd + ")";
     }
 
     public static Taskextraexp get(int taskid) {

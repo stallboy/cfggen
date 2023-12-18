@@ -362,6 +362,12 @@ public class ConfigCodeSchema {
         SchemaBean s2 = new SchemaBean(true);
         s2.addColumn("taskid", SchemaPrimitive.SInt);
         s2.addColumn("extraexp", SchemaPrimitive.SInt);
+        s2.addColumn("test1", SchemaPrimitive.SStr);
+        s2.addColumn("test2", SchemaPrimitive.SStr);
+        s2.addColumn("fielda", SchemaPrimitive.SStr);
+        s2.addColumn("fieldb", SchemaPrimitive.SStr);
+        s2.addColumn("fieldc", SchemaPrimitive.SStr);
+        s2.addColumn("fieldd", SchemaPrimitive.SStr);
         return s2;
     }
 
