@@ -1,6 +1,6 @@
 java -jar ../cfggen.jar -datadir config -gen java,dir:java,sealed,builders:config/builders.txt -gen javadata
 
-set DIR=java/configgen/genjava
+set DIR=java\configgen\genjava
 if not exist %DIR% mkdir %DIR%
 
 set SDIR=../app/src/main/java/configgen/genjava
