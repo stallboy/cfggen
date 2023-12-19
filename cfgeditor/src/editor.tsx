@@ -82,13 +82,17 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
         node.entity = entity;
         id2node.set(entity.id, node);
 
+        // TODO height
         let hasCtrl = true;
         let ch;
         let fc;
         let fh = 40;
-        if (entity.fieldsShow == FieldsShowType.Edit && entity.editFields){
+        if (entity.fieldsShow == FieldsShowType.Edit && entity.editFields) {
             fc = entity.editFields.length;
-        }else{
+            if (fc > 0 && entity.editFields[0].implFields) {
+                fc += entity.editFields[0].implFields.length;
+            }
+        } else {
             fc = entity.fields.length;
         }
         switch (entity.fieldsShow) {
@@ -131,7 +135,7 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
 
                 await area.update('node', node.id);
                 // await area.update('socket', node.inputs[0]?.socket.name as string);
-                setTimeout(async ()=> {
+                setTimeout(async () => {
                     await area.update('node', node.id);
                 }, 300)
             };

@@ -20,7 +20,7 @@ export interface EntityEditField {
 
 export type EditFieldType = 'arrayOfPrimitive' | 'primitive' | 'funcAdd' | 'interface' | 'funcSubmit' | 'funcDelete'; // interface: value:string
 export type PrimitiveType = 'bool' | 'int' | 'long' | 'float' | 'str' | 'text';
-export type EditFieldValueType = string | number | boolean | string[] | number[] | boolean[] | (() => void);
+export type EditFieldValueType = string | number | boolean | string[] | number[] | boolean[] | ((values:any) => void);
 
 export interface ConnectTo {
     nodeId: string;

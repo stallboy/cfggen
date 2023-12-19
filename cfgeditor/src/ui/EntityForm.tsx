@@ -160,9 +160,16 @@ function makeFieldsFormItem(fields: EntityEditField[]) {
 export function EntityForm({fields}: {
     fields: EntityEditField[];
 }) {
-    let form = <Form labelCol={{span: 6}} wrapperCol={{span: 18}}
-                     style={{maxWidth: 400, backgroundColor: "white", borderRadius: 15, padding: 20}}>
 
+    if (fields.length > 0){
+        let f = fields[fields.length-1]
+        if (f.type == 'funcSubmit'){
+
+        }
+    }
+
+    let form = <Form labelCol={{span: 6}} wrapperCol={{span: 18}}
+                     style={{maxWidth: 400, backgroundColor: "white", borderRadius: 15, padding: 10}}>
         {makeFieldsFormItem(fields)}
     </Form>
 

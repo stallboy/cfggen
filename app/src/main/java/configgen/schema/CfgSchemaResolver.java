@@ -28,7 +28,7 @@ public final class CfgSchemaResolver {
     }
 
     public void resolve() {
-        step0_setImplInterface();
+        step0_setImplInterfaceAndCheckTableName();
         step0_checkNameConflict();
         step1_resolveAllFields();
         step2_resolveEachNameable();
@@ -40,11 +40,15 @@ public final class CfgSchemaResolver {
         }
     }
 
-    private void step0_setImplInterface() {
+    private void step0_setImplInterfaceAndCheckTableName() {
         for (Nameable item : cfgSchema.items()) {
             if (item instanceof InterfaceSchema sInterface) {
                 for (StructSchema impl : sInterface.impls()) {
                     impl.setNullableInterface(sInterface);
+                }
+            } else if (item instanceof TableSchema tableSchema) {
+                if (!tableSchema.name().equals(tableSchema.name().toLowerCase())) {
+                    errs.addErr(new TableNameNotLowerCase(tableSchema.name()));
                 }
             }
         }

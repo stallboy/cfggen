@@ -4,7 +4,7 @@ import {createEditor} from "./editor.tsx";
 import {useCallback, useEffect, useState} from "react";
 import {Entity, fillInputs} from "./model/graphModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
-import {RecordResult, RefId} from "./model/recordModel.ts";
+import {JSONObject, RecordResult, RefId, Refs} from "./model/recordModel.ts";
 import {App, Empty, Result, Spin} from "antd";
 import {createRefNodes, getId} from "./model/recordRefNode.ts";
 import {RecordNodeCreator} from "./model/RecordNodeCreator.ts";
@@ -20,19 +20,20 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
 }) {
 
     const [editMode, setEditMode] = useState<boolean>(false);
+    const [editingRecord, setEditingRecord] = useState<(JSONObject & Refs) | null>(null);
 
     const entityMap = new Map<string, Entity>();
-    createRefNodes(entityMap, recordResult.refs, false);
     let refId = {table: curTable.name, id: curId};
     let entityId = getId(curTable.name, curId);
     let isEditable = schema.isEditable && curTable.isEditable;
     let isEditing = isEditable && editMode;
     if (!isEditing) {
+        createRefNodes(entityMap, recordResult.refs, false);
         let recordNodeCreator = new RecordNodeCreator(entityMap, schema, refId, recordResult.refs);
         recordNodeCreator.createNodes(entityId, recordResult.object);
     } else {
-        let recordEditNodeCreator = new RecordEditNodeCreator(entityMap, schema, refId, recordResult.refs);
-        recordEditNodeCreator.createNodes(entityId, curTable, recordResult.object);
+        let recordEditNodeCreator = new RecordEditNodeCreator(entityMap, schema, refId, setEditingRecord);
+        recordEditNodeCreator.createNodes(entityId, curTable, editingRecord ?? recordResult.object);
     }
     fillInputs(entityMap);
 

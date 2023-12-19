@@ -70,6 +70,9 @@ public record SchemaErrs(List<Err> errs,
     public sealed interface Err {
     }
 
+    public record TableNameNotLowerCase(String tableName) implements Err {
+    }
+
     public record ImplNamespaceNotEmpty(String sInterface,
                                         String errImplName) implements Err {
     }

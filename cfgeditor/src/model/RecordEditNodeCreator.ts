@@ -8,8 +8,8 @@ import {
     FieldsShowType
 } from "./graphModel.ts";
 import {getField, getImpl, Schema, SInterface, SItem, SStruct, STable} from "./schemaModel.ts";
-import {JSONArray, JSONObject, JSONValue, RefId, Refs, TableMap} from "./recordModel.ts";
-import {createRefs, getLabel, getLastName} from "./recordRefNode.ts";
+import {JSONArray, JSONObject, JSONValue, RefId, Refs} from "./recordModel.ts";
+import {getLabel, getLastName} from "./recordRefNode.ts";
 
 
 function getImplNames(sInterface: SInterface): string[] {
@@ -84,7 +84,7 @@ function makeEditFields(sItem: SItem, obj: JSONObject): EntityEditField[] {
             }
         }
 
-        if ('pk' in structural){
+        if ('pk' in structural) {
             fields.push({
                 name: '$submit',
                 comment: '',
@@ -104,10 +104,10 @@ export class RecordEditNodeCreator {
     constructor(public entityMap: Map<string, Entity>,
                 public schema: Schema,
                 public refId: RefId,
-                public refs: TableMap) {
+                public setEditingRecord: ((record: JSONObject & Refs) => void)) {
     }
 
-    createNodes(id: string, sItem: SItem, obj: JSONObject & Refs, isArrayItem : boolean = false): Entity | null {
+    createNodes(id: string, sItem: SItem, obj: JSONObject & Refs, isArrayItem: boolean = false): Entity | null {
         let label = getLabel(sItem.name);
 
         let type: string = obj['$type'] as string;
@@ -205,7 +205,7 @@ export class RecordEditNodeCreator {
             }
         }
 
-        if (isArrayItem){
+        if (isArrayItem) {
             fields.push({
                 name: '$del',
                 comment: '',
@@ -231,7 +231,6 @@ export class RecordEditNodeCreator {
         };
 
         this.entityMap.set(id, entity);
-        createRefs(entity, obj, this.refs);
         return entity;
     }
 
