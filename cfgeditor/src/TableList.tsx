@@ -17,7 +17,7 @@ export function TableList({schema, curTable, setCurTable}: {
 }) {
 
     if (schema == null) {
-        return <Select loading={true}/>
+        return <Select id='table' loading={true}/>
     }
 
     let group2Tables = new Map<string, TableWithLastName[]>();

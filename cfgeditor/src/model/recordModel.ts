@@ -67,3 +67,4 @@ export interface RecordRefsResult {
     maxObjs: number;
     refs: TableMap;
 }
+

@@ -135,30 +135,36 @@ export function TableRef({schema, curTable, setCurTable, refIn, refOutDepth, max
     refOutDepth: number;
     maxNode: number;
 }) {
-    const entityMap = new Map<string, Entity>();
-    includeRefTables(entityMap, curTable, schema, refIn, refOutDepth, maxNode);
-    fillInputs(entityMap);
 
-    const menu: Item[] = [];
+    function createGraph() {
 
-    const nodeMenuFunc = (node: Entity): Item[] => {
-        let sItem = node.userData as SItem;
-        if (sItem.type == 'table' && sItem.name != curTable.name) {
-            return [{
-                label: `表关系`,
-                key: `${sItem.name}表关系`,
-                handler() {
-                    setCurTable(sItem.name);
-                }
-            }];
 
+        const entityMap = new Map<string, Entity>();
+        includeRefTables(entityMap, curTable, schema, refIn, refOutDepth, maxNode);
+        fillInputs(entityMap);
+
+        const menu: Item[] = [];
+
+        const nodeMenuFunc = (node: Entity): Item[] => {
+            let sItem = node.userData as SItem;
+            if (sItem.type == 'table' && sItem.name != curTable.name) {
+                return [{
+                    label: `表关系`,
+                    key: `${sItem.name}表关系`,
+                    handler() {
+                        setCurTable(sItem.name);
+                    }
+                }];
+
+            }
+            return [];
         }
-        return [];
+        return {entityMap, menu, nodeMenuFunc};
     }
 
     const create = useCallback(
         (el: HTMLElement) => {
-            return createEditor(el, {entityMap, menu, nodeMenuFunc});
+            return createEditor(el, createGraph());
         },
         [schema, curTable, refIn, refOutDepth, maxNode]
     );

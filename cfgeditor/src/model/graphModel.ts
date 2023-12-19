@@ -15,12 +15,12 @@ export interface EntityEditField {
     value: EditFieldValueType;
     autoCompleteOptions?: string[]; // use Select if it has autoCompleteOptions
     implFields?: EntityEditField[];
-    interfaceOnChangeImpl?: ((impl: string) => EntityEditField[])
+    interfaceOnChangeImpl?: ((impl: string) => void)
 }
 
 export type EditFieldType = 'arrayOfPrimitive' | 'primitive' | 'funcAdd' | 'interface' | 'funcSubmit' | 'funcDelete'; // interface: value:string
 export type PrimitiveType = 'bool' | 'int' | 'long' | 'float' | 'str' | 'text';
-export type EditFieldValueType = string | number | boolean | string[] | number[] | boolean[] | ((values: any) => void);
+export type EditFieldValueType = string | number | boolean | string[] | number[] | boolean[] | ((value: any) => void);
 
 export interface ConnectTo {
     nodeId: string;

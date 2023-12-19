@@ -194,34 +194,40 @@ export function TableSchema({schema, curTable, maxImpl, setCurTable}: {
     maxImpl: number;
     setCurTable: (cur: string) => void;
 }) {
-    const entityMap = new Map<string, Entity>();
-    let curNode = createNode(curTable, curTable.name);
-    entityMap.set(curNode.id, curNode);
-    let frontier = [curTable];
-    includeSubStructs(entityMap, frontier, schema, maxImpl);
-    includeRefTables(entityMap, schema);
-    fillInputs(entityMap);
 
-    const menu: Item[] = [];
+    function createGraph() {
+        const entityMap = new Map<string, Entity>();
+        let curNode = createNode(curTable, curTable.name);
+        entityMap.set(curNode.id, curNode);
+        let frontier = [curTable];
+        includeSubStructs(entityMap, frontier, schema, maxImpl);
+        includeRefTables(entityMap, schema);
+        fillInputs(entityMap);
 
-    const nodeMenuFunc = (node: Entity): Item[] => {
-        let sItem = node.userData as SItem;
-        if (sItem.type == 'table' && sItem.name != curTable.name) {
-            return [{
-                label: `表结构`,
-                key: `${sItem.name}表结构`,
-                handler() {
-                    setCurTable(sItem.name);
-                }
-            }];
+        const menu: Item[] = [];
 
+        const nodeMenuFunc = (node: Entity): Item[] => {
+            let sItem = node.userData as SItem;
+            if (sItem.type == 'table' && sItem.name != curTable.name) {
+                return [{
+                    label: `表结构`,
+                    key: `${sItem.name}表结构`,
+                    handler() {
+                        setCurTable(sItem.name);
+                    }
+                }];
+
+            }
+            return [];
         }
-        return [];
+
+        return {entityMap, menu, nodeMenuFunc};
     }
+
 
     const create = useCallback(
         (el: HTMLElement) => {
-            return createEditor(el, {entityMap, menu, nodeMenuFunc});
+            return createEditor(el, createGraph());
         },
         [schema, curTable, maxImpl]
     );

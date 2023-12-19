@@ -1,3 +1,5 @@
+import {JSONObject} from "./recordModel.ts";
+
 export interface Namable {
     name: string;
     type: 'struct' | 'interface' | 'table';
@@ -310,8 +312,48 @@ export class Schema {
             setUnion(res, r);
         }
         return res;
-
     }
+
+
+    defaultValueOfStruct(sStruct: SStruct): JSONObject {
+        let res: JSONObject = {"$type": sStruct.id ?? sStruct.name};
+        for (let field of sStruct.fields) {
+            let n = field.name;
+            let t = field.type;
+            if (t == 'bool') {
+                res[n] = false;
+            } else if (t == 'int' || t == 'long' || t == 'float') {
+                res[n] = 0;
+            } else if (t == 'str' || t == 'text') {
+                res[n] = '';
+            } else if (t.startsWith('list<') || t.startsWith('map<')) {
+                res[n] = [];
+            } else {
+                let sf = this.itemIncludeImplMap.get(t);
+                if (sf) {
+                    // TODO recursive check
+                    if ('impls' in sf) {
+                        res[n] = this.defaultValueOfInterface(sf as SInterface);
+                    } else {
+                        res[n] = this.defaultValueOfStruct(sf as SStruct);
+                    }
+                }
+            }
+        }
+        return res;
+    }
+
+    defaultValueOfInterface(sInterface: SInterface): JSONObject {
+        let impl: SStruct;
+        if (sInterface.defaultImpl) {
+            impl = getImpl(sInterface, sInterface.defaultImpl) as SStruct;
+        } else {
+            impl = sInterface.impls[0];
+        }
+        return this.defaultValueOfStruct(impl);
+    }
+
+
 }
 
 function setUnion(dst: Set<string>, from: Set<string>) {

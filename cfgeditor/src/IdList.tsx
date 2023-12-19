@@ -16,19 +16,18 @@ export function IdList({curTable, curId, setCurId}: {
         options.push({label: id.id, value: id.id});
     }
 
-    return <Select
-        showSearch
-        options={options}
-        style={{width: 160}}
-        value={curId}
-        placeholder="search a record"
-        filterOption={(inputValue, option) =>
-            option!.value.toUpperCase().includes(inputValue.toUpperCase())
-        }
-        onChange={(value, _) => {
-            setCurId(value);
-            // console.log(value);
-        }}
-    />
+    return <Select id='id'
+                   showSearch
+                   options={options}
+                   style={{width: 160}}
+                   value={curId}
+                   placeholder="search a record"
+                   filterOption={(inputValue, option) =>
+                       option!.value.toUpperCase().includes(inputValue.toUpperCase())
+                   }
+                   onChange={(value, _) => {
+                       setCurId(value);
+                       // console.log(value);
+                   }}/>
 
 }

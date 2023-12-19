@@ -16,31 +16,34 @@ export function TableRecordRefLoaded({curTable, curId, recordRefResult, setCurTa
     setCurTableAndId: (table: string, id: string) => void;
 }) {
 
-    const entityMap = new Map<string, Entity>();
-    createRefNodes(entityMap, recordRefResult.refs);
-    fillInputs(entityMap);
+    function createGraph() {
+        const entityMap = new Map<string, Entity>();
+        createRefNodes(entityMap, recordRefResult.refs);
+        fillInputs(entityMap);
 
-    const menu: Item[] = [];
+        const menu: Item[] = [];
 
-    const nodeMenuFunc = (node: Entity): Item[] => {
-        let refId = node.userData as RefId;
-        if (refId.table != curTable.name || refId.id != curId) {
+        const nodeMenuFunc = (node: Entity): Item[] => {
+            let refId = node.userData as RefId;
+            if (refId.table != curTable.name || refId.id != curId) {
 
-            return [{
-                label: '数据关系',
-                key: '数据关系',
-                handler() {
-                    setCurTableAndId(refId.table, refId.id);
-                }
-            }];
+                return [{
+                    label: '数据关系',
+                    key: '数据关系',
+                    handler() {
+                        setCurTableAndId(refId.table, refId.id);
+                    }
+                }];
 
+            }
+            return [];
         }
-        return [];
+        return {entityMap, menu, nodeMenuFunc};
     }
 
     const create = useCallback(
         (el: HTMLElement) => {
-            return createEditor(el, {entityMap, menu, nodeMenuFunc});
+            return createEditor(el, createGraph());
         },
         [recordRefResult]
     );

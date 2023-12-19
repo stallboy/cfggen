@@ -26,108 +26,6 @@ function isPrimitiveType(type: string): boolean {
     return setOfPrimitive.has(type);
 }
 
-function getInterfaceImplFields(sInterface: SInterface, implName: string,
-                                thisImplName: string, thisImplFields: EntityEditField[]): EntityEditField[] {
-    if (implName == thisImplName) {
-        return thisImplFields;
-    } else {
-        let fields: EntityEditField[] = [];
-        let impl = getImpl(sInterface, implName) as SStruct;
-        makeStructuralEditFields(fields, impl);
-        return fields;  // 考虑是否有直接子对象
-    }
-}
-
-function makeStructuralEditFields(fields: EntityEditField[], structural: SStruct | STable, obj: JSONObject | null = null) {
-    for (let sf of structural.fields) {
-        let fieldValue = obj ? obj[sf.name] : null;
-        if (isPrimitiveType(sf.type)) {
-            let v;
-            if (fieldValue) {
-                v = fieldValue as (boolean | number | string);
-            } else if (sf.type == 'bool') {
-                v = false;
-            } else if (sf.type == 'str' || sf.type == 'text') {
-                v = '';
-            } else {
-                v = 0;
-            }
-
-            fields.push({
-                name: sf.name,
-                comment: sf.comment,
-                type: 'primitive',
-                eleType: sf.type as PrimitiveType,
-                value: v,
-            });
-        } else if (sf.type.startsWith('list<')) {
-            let itemType = sf.type.substring(5, sf.type.length - 1);
-            if (isPrimitiveType(itemType)) {
-                let v = fieldValue ? fieldValue as (boolean | number | string) : [];
-                fields.push({
-                    name: sf.name,
-                    comment: sf.comment,
-                    type: 'arrayOfPrimitive',
-                    eleType: itemType as PrimitiveType,
-                    value: v,
-                });
-            } else {
-                fields.push({
-                    name: sf.name,
-                    comment: sf.comment,
-                    type: 'funcAdd',
-                    eleType: itemType,
-                    value: () => {
-                        // TODO
-                    }
-                });
-            }
-
-        } else { // 为简单，不支持map<
-            // ignore
-        }
-    }
-
-}
-
-function makeEditFields(sItem: SItem, obj: JSONObject): EntityEditField[] {
-    let fields: EntityEditField[] = [];
-    let type: string = obj['$type'] as string;
-    if ('impls' in sItem) {
-        let implName = getLastName(type);
-        let sInterface = sItem as SInterface;
-        let impl = getImpl(sInterface, implName) as SStruct;
-        fields.push({
-            name: '$impl',
-            type: 'interface',
-            eleType: sInterface.name,
-            value: implName,
-            autoCompleteOptions: getImplNames(sInterface),
-            implFields: makeEditFields(impl, obj),
-            interfaceOnChangeImpl: (_implName: string) => {
-                return null;
-            },
-        })
-
-    } else {
-        let structural = sItem as (SStruct | STable);
-        makeStructuralEditFields(fields, structural, obj);
-
-        if ('pk' in structural) {
-            fields.push({
-                name: '$submit',
-                comment: '',
-                type: 'funcSubmit',
-                eleType: 'bool',
-                value: () => {
-                    // TODO
-                }
-            });
-        }
-    }
-    return fields;
-
-}
 
 export class RecordEditNodeCreator {
     constructor(public entityMap: Map<string, Entity>,
@@ -144,7 +42,7 @@ export class RecordEditNodeCreator {
             console.error('$type missing');
             return null;
         }
-        let fields: EntityEditField[] = makeEditFields(sItem, obj);
+        let fields: EntityEditField[] = this.makeEditFields(sItem, obj);
 
         let structural: STable | SStruct;
         if ('impls' in sItem) {
@@ -261,6 +159,107 @@ export class RecordEditNodeCreator {
 
         this.entityMap.set(id, entity);
         return entity;
+    }
+
+    makeEditFields(sItem: SItem, obj: JSONObject): EntityEditField[] {
+        let fields: EntityEditField[] = [];
+        let type: string = obj['$type'] as string;
+        if ('impls' in sItem) {
+            let implName = getLastName(type);
+            let sInterface = sItem as SInterface;
+            let impl = getImpl(sInterface, implName) as SStruct;
+            fields.push({
+                name: '$impl',
+                type: 'interface',
+                eleType: sInterface.name,
+                value: implName,
+                autoCompleteOptions: getImplNames(sInterface),
+                implFields: this.makeEditFields(impl, obj),
+                interfaceOnChangeImpl: (newImplName: string) => {
+                    let newObj: JSONObject;
+                    if (newImplName == implName) {
+                        newObj = obj;
+                    } else {
+                        let newImpl = getImpl(sInterface, newImplName);
+                        if (newImpl) {
+                            newObj = this.schema.defaultValueOfStruct(newImpl);
+                        }
+                    }
+
+                },
+            })
+
+        } else {
+            let structural = sItem as (SStruct | STable);
+            this.makeStructuralEditFields(fields, structural, obj);
+
+            if ('pk' in structural) {
+                fields.push({
+                    name: '$submit',
+                    comment: '',
+                    type: 'funcSubmit',
+                    eleType: 'bool',
+                    value: () => {
+                        // TODO
+                    }
+                });
+            }
+        }
+        return fields;
+
+    }
+
+
+    makeStructuralEditFields(fields: EntityEditField[], structural: SStruct | STable, obj: JSONObject) {
+        for (let sf of structural.fields) {
+            let fieldValue = obj[sf.name];
+            if (isPrimitiveType(sf.type)) {
+                let v;
+                if (fieldValue) {
+                    v = fieldValue as (boolean | number | string);
+                } else if (sf.type == 'bool') {
+                    v = false;
+                } else if (sf.type == 'str' || sf.type == 'text') {
+                    v = '';
+                } else {
+                    v = 0;
+                }
+
+                fields.push({
+                    name: sf.name,
+                    comment: sf.comment,
+                    type: 'primitive',
+                    eleType: sf.type as PrimitiveType,
+                    value: v,
+                });
+            } else if (sf.type.startsWith('list<')) {
+                let itemType = sf.type.substring(5, sf.type.length - 1);
+                if (isPrimitiveType(itemType)) {
+                    let v = fieldValue ? fieldValue as (boolean | number | string) : [];
+                    fields.push({
+                        name: sf.name,
+                        comment: sf.comment,
+                        type: 'arrayOfPrimitive',
+                        eleType: itemType as PrimitiveType,
+                        value: v,
+                    });
+                } else {
+                    fields.push({
+                        name: sf.name,
+                        comment: sf.comment,
+                        type: 'funcAdd',
+                        eleType: itemType,
+                        value: () => {
+                            // TODO
+                        }
+                    });
+                }
+
+            } else { // 为简单，不支持map<
+                // ignore
+            }
+        }
+
     }
 
 }

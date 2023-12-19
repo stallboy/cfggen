@@ -22,65 +22,69 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
     const [editMode, setEditMode] = useState<boolean>(false);
     const [editingRecord, setEditingRecord] = useState<(JSONObject & Refs) | null>(null);
 
-    const entityMap = new Map<string, Entity>();
-    let refId = {table: curTable.name, id: curId};
-    let entityId = getId(curTable.name, curId);
-    let isEditable = schema.isEditable && curTable.isEditable;
-    let isEditing = isEditable && editMode;
-    if (!isEditing) {
-        createRefNodes(entityMap, recordResult.refs, false);
-        let recordNodeCreator = new RecordNodeCreator(entityMap, schema, refId, recordResult.refs);
-        recordNodeCreator.createNodes(entityId, recordResult.object);
-    } else {
-        let recordEditNodeCreator = new RecordEditNodeCreator(entityMap, schema, refId, setEditingRecord);
-        recordEditNodeCreator.createNodes(entityId, curTable, editingRecord ?? recordResult.object);
-    }
-    fillInputs(entityMap);
-
-    const menu: Item[] = [];
-
-    const nodeMenuFunc = (node: Entity): Item[] => {
-        let refId = node.userData as RefId;
-        if (refId.table != curTable.name || refId.id != curId) {  // ref节点
-            return [
-                {
-                    label: '数据',
-                    key: '数据',
-                    handler() {
-                        setCurTableAndId(refId.table, refId.id);
-                    }
-                },
-            ];
-        } else if (isEditable) { // 本节点
-            if (editMode) {
-                return [
-                    {
-                        label: '只读',
-                        key: '只读',
-                        handler() {
-                            setEditMode(false);
-                        }
-                    },
-                ];
-            } else {
-                return [
-                    {
-                        label: '编辑',
-                        key: '编辑',
-                        handler() {
-                            setEditMode(true);
-                        }
-                    },
-                ];
-            }
-
+    function createGraph() {
+        const entityMap = new Map<string, Entity>();
+        let refId = {table: curTable.name, id: curId};
+        let entityId = getId(curTable.name, curId);
+        let isEditable = schema.isEditable && curTable.isEditable;
+        let isEditing = isEditable && editMode;
+        if (!isEditing) {
+            createRefNodes(entityMap, recordResult.refs, false);
+            let recordNodeCreator = new RecordNodeCreator(entityMap, schema, refId, recordResult.refs);
+            recordNodeCreator.createNodes(entityId, recordResult.object);
+        } else {
+            let recordEditNodeCreator = new RecordEditNodeCreator(entityMap, schema, refId, setEditingRecord);
+            recordEditNodeCreator.createNodes(entityId, curTable, editingRecord ?? recordResult.object);
         }
-        return [];
+        fillInputs(entityMap);
+
+        const menu: Item[] = [];
+
+        const nodeMenuFunc = (node: Entity): Item[] => {
+            let refId = node.userData as RefId;
+            if (refId.table != curTable.name || refId.id != curId) {  // ref节点
+                return [
+                    {
+                        label: '数据',
+                        key: '数据',
+                        handler() {
+                            setCurTableAndId(refId.table, refId.id);
+                        }
+                    },
+                ];
+            } else if (isEditable) { // 本节点
+                if (editMode) {
+                    return [
+                        {
+                            label: '只读',
+                            key: '只读',
+                            handler() {
+                                setEditMode(false);
+                            }
+                        },
+                    ];
+                } else {
+                    return [
+                        {
+                            label: '编辑',
+                            key: '编辑',
+                            handler() {
+                                setEditMode(true);
+                            }
+                        },
+                    ];
+                }
+
+            }
+            return [];
+        }
+        return {entityMap, menu, nodeMenuFunc}
     }
+
 
     const create = useCallback(
         (el: HTMLElement) => {
-            return createEditor(el, {entityMap, menu, nodeMenuFunc});
+            return createEditor(el, createGraph());
         },
         [recordResult, editMode]
     );

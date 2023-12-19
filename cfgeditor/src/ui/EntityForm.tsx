@@ -6,7 +6,7 @@ import {CloseOutlined, MinusCircleOutlined, PlusCircleOutlined, PlusCircleTwoTon
 
 const setOfNumber = new Set<string>(['int', 'long', 'float']);
 
-function makePrimitiveControl(field: EntityEditField, isFromArray: boolean = false) {
+function PrimitiveControl(field: EntityEditField, isFromArray: boolean = false) {
     let style = isFromArray ? {style: {width: '92%'}} : {};
     let control;
     if (field.autoCompleteOptions) {
@@ -25,13 +25,13 @@ function makePrimitiveControl(field: EntityEditField, isFromArray: boolean = fal
     return control;
 }
 
-function makePrimitiveFormItem(field: EntityEditField) {
+function PrimitiveFormItem(field: EntityEditField) {
     let props = {}
     if (field.eleType == 'bool') {
         props = {valuePropName: "checked"}
     }
     return <Form.Item name={field.name} key={field.name} label={makeLabel(field)} initialValue={field.value} {...props}>
-        {makePrimitiveControl(field)}
+        {PrimitiveControl(field)}
     </Form.Item>;
 }
 
@@ -74,7 +74,7 @@ const formItemLayoutWithOutLabel = {
     },
 };
 
-function makeArrayOfPrimitiveFormItem(editField: EntityEditField) {
+function ArrayOfPrimitiveFormItem(editField: EntityEditField) {
     return <Form.List name={editField.name} key={editField.name} initialValue={editField.value as any[]}>
         {(fields, {add, remove}) => (
             <>
@@ -83,7 +83,7 @@ function makeArrayOfPrimitiveFormItem(editField: EntityEditField) {
                                label={index === 0 ? makeLabel(editField) : ''}
                                key={field.key}>
                         <Form.Item {...field} noStyle>
-                            {makePrimitiveControl(editField, true)}
+                            {PrimitiveControl(editField, true)}
                         </Form.Item>
 
                         <MinusCircleOutlined key={`delete-${field.key}`}
@@ -101,7 +101,7 @@ function makeArrayOfPrimitiveFormItem(editField: EntityEditField) {
     </Form.List>
 }
 
-function makeFuncAddFormItem(field: EntityEditField) {
+function FuncAddFormItem(field: EntityEditField) {
     let func = field.value as (() => void);
     return <Form.Item {...formItemLayout} key={field.name}
                       label={makeLabel(field)}>
@@ -109,7 +109,7 @@ function makeFuncAddFormItem(field: EntityEditField) {
     </Form.Item>
 }
 
-function makeFuncSubmitFormItem(field: EntityEditField) {
+function FuncSubmitFormItem(field: EntityEditField) {
     let func = field.value as (() => void);
     return <Form.Item {...formItemLayoutWithOutLabel} key={field.name}>
         <Button type="primary" htmlType="submit" onClick={() => func()}>
@@ -118,7 +118,7 @@ function makeFuncSubmitFormItem(field: EntityEditField) {
     </Form.Item>
 }
 
-function makeFuncDeleteFormItem(field: EntityEditField) {
+function FuncDeleteFormItem(field: EntityEditField) {
     let func = field.value as (() => void);
     return <Form.Item {...formItemLayoutWithOutLabel} key={field.name}>
         <Button type="primary" danger onClick={() => func()}>
@@ -127,38 +127,40 @@ function makeFuncDeleteFormItem(field: EntityEditField) {
     </Form.Item>
 }
 
-function makeInterfaceFormItem(field: EntityEditField): any {
+function InterfaceFormItem(field: EntityEditField): any {
     let options = []
     for (let op of field.autoCompleteOptions as string[]) {
         options.push({label: op, value: op});
     }
     let implSelect = <Form.Item name={field.name} key={field.name} label={makeLabel(field)} initialValue={field.value}>
-        <Select options={options}/>
+        <Select showSearch options={options} filterOption={(inputValue, option) =>
+            option!.value.toUpperCase().includes(inputValue.toUpperCase())
+        }/>
     </Form.Item>;
 
-    return [implSelect, ...makeFieldsFormItem(field.implFields as EntityEditField[])]
+    return [implSelect, ...FieldsFormItem(field.implFields as EntityEditField[])]
 }
 
-function makeFieldFormItem(field: EntityEditField) {
+function FieldFormItem(field: EntityEditField) {
     switch (field.type) {
         case "arrayOfPrimitive":
-            return makeArrayOfPrimitiveFormItem(field);
+            return ArrayOfPrimitiveFormItem(field);
         case "primitive":
-            return makePrimitiveFormItem(field);
+            return PrimitiveFormItem(field);
         case "funcAdd":
-            return makeFuncAddFormItem(field);
+            return FuncAddFormItem(field);
         case "interface":
-            return makeInterfaceFormItem(field);
+            return InterfaceFormItem(field);
         case "funcSubmit":
-            return makeFuncSubmitFormItem(field);
+            return FuncSubmitFormItem(field);
         case "funcDelete":
-            return makeFuncDeleteFormItem(field);
+            return FuncDeleteFormItem(field);
     }
 }
 
-function makeFieldsFormItem(fields: EntityEditField[]) {
+function FieldsFormItem(fields: EntityEditField[]) {
     return fields.map((field, _index) => {
-        return makeFieldFormItem(field);
+        return FieldFormItem(field);
     });
 }
 
@@ -174,14 +176,14 @@ export function EntityForm({fields}: {
         }
     }
 
-    function onValuesChange(changedFields: any, allFields: any) {
-        console.log(changedFields, allFields);
+    function onValuesChange(_changedFields: any, allFields: object) {
+        console.log(allFields);
     }
 
     let form = <Form labelCol={{span: 6}} wrapperCol={{span: 18}}
                      onValuesChange={onValuesChange}
                      style={{maxWidth: 400, backgroundColor: "white", borderRadius: 15, padding: 10}}>
-        {makeFieldsFormItem(fields)}
+        {FieldsFormItem(fields)}
     </Form>
 
     return <ConfigProvider theme={{
