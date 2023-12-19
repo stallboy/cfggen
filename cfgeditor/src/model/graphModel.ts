@@ -18,7 +18,7 @@ export interface EntityEditField {
     interfaceOnChangeImpl?: ((impl: string) => void)
 }
 
-export type EditFieldType = 'arrayOfPrimitive' | 'primitive' | 'func' | 'interface'; // interface: value:string
+export type EditFieldType = 'arrayOfPrimitive' | 'primitive' | 'funcAdd' | 'interface' | 'funcSubmit' | 'funcDelete'; // interface: value:string
 export type PrimitiveType = 'bool' | 'int' | 'long' | 'float' | 'str' | 'text';
 export type EditFieldValueType = string | number | boolean | string[] | number[] | boolean[] | (() => void);
 

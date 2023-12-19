@@ -71,7 +71,7 @@ function makeEditFields(sItem: SItem, obj: JSONObject): EntityEditField[] {
                     fields.push({
                         name: sf.name,
                         comment: sf.comment,
-                        type: 'func',
+                        type: 'funcAdd',
                         eleType: itemType,
                         value: () => {
                             // TODO
@@ -82,6 +82,18 @@ function makeEditFields(sItem: SItem, obj: JSONObject): EntityEditField[] {
             } else { // 为简单，不支持map<
                 // ignore
             }
+        }
+
+        if ('pk' in structural){
+            fields.push({
+                name: '$submit',
+                comment: '',
+                type: 'funcSubmit',
+                eleType: 'bool',
+                value: () => {
+                    // TODO
+                }
+            });
         }
     }
     return fields;
@@ -95,7 +107,7 @@ export class RecordEditNodeCreator {
                 public refs: TableMap) {
     }
 
-    createNodes(id: string, sItem: SItem, obj: JSONObject & Refs): Entity | null {
+    createNodes(id: string, sItem: SItem, obj: JSONObject & Refs, isArrayItem : boolean = false): Entity | null {
         let label = getLabel(sItem.name);
 
         let type: string = obj['$type'] as string;
@@ -154,7 +166,7 @@ export class RecordEditNodeCreator {
                 for (let e of fArr) {
                     let itemObj = e as JSONObject & Refs;
                     let childId: string = `${id}-${fieldKey}[${i}]`;
-                    let childNode = this.createNodes(childId, itemType, itemObj);
+                    let childNode = this.createNodes(childId, itemType, itemObj, true);
                     i++;
 
                     if (childNode) {
@@ -191,7 +203,18 @@ export class RecordEditNodeCreator {
                     });
                 }
             }
+        }
 
+        if (isArrayItem){
+            fields.push({
+                name: '$del',
+                comment: '',
+                type: 'funcDelete',
+                eleType: 'bool',
+                value: () => {
+                    // TODO
+                }
+            });
         }
 
         let entity: Entity = {

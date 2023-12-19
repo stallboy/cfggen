@@ -11,5 +11,13 @@
 		"$type":"task.completecondition.KillMonster"
 	},
 	"exp":1000,
+	"testListStruct" : [
+		{
+			"x": 1,
+			"y": 2,
+			"z": 3,
+			"$type": "Position"
+		}
+	],
 	"$type":"task.task2"
 }

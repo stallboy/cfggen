@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
 import {Alert, Button, Drawer, Flex, Form, Input, InputNumber, Modal, Space, Switch, Tabs} from "antd";
-import {LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
+import {CloseOutlined, LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
 import {Schema, STable} from "./model/schemaModel.ts";
 import {History, HistoryItem} from "./model/historyModel.ts";
 import {TableList} from "./TableList.tsx";
@@ -308,6 +308,19 @@ export default function CfgEditorApp() {
         onConnectServer(server);
     }
 
+    function onDeleteRecord() {
+
+    }
+
+    let deleteButton = null;
+    if (schema && curTable && schema.isEditable && curTable.isEditable) {
+        deleteButton = <Form.Item wrapperCol={{span: 18, offset: 6,}}>
+            <Button type="primary" danger onClick={onDeleteRecord}>
+                <CloseOutlined/>删除当前数据
+            </Button>
+        </Form.Item>
+    }
+
 
     return <Space>
         <Modal title="服务器连接失败" open={isModalOpen}
@@ -373,6 +386,7 @@ export default function CfgEditorApp() {
                     <Input.Search defaultValue={server} enterButton='连接' onSearch={onConnectServer}/>
                 </Form.Item>
 
+
                 <Form.Item label=<LeftOutlined/>>
                     alt+x
                 </Form.Item>
@@ -394,6 +408,9 @@ export default function CfgEditorApp() {
                 <Form.Item label=<SearchOutlined/>>
                     alt+q
                 </Form.Item>
+
+                {deleteButton}
+
             </Form>
         </Drawer>
 

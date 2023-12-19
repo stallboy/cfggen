@@ -1,8 +1,7 @@
 import {EntityEditField} from "../model/graphModel.ts";
-import {ConfigProvider, Form, InputNumber, Select, Switch, Tooltip} from "antd";
+import {Button, ConfigProvider, Form, InputNumber, Select, Switch, Tooltip} from "antd";
 import TextArea from "antd/es/input/TextArea";
-import {MinusCircleOutlined, PlusCircleOutlined, PlusCircleTwoTone} from "@ant-design/icons";
-
+import {CloseOutlined, MinusCircleOutlined, PlusCircleOutlined, PlusCircleTwoTone} from "@ant-design/icons";
 
 const setOfNumber = new Set<string>(['int', 'long', 'float']);
 
@@ -40,7 +39,7 @@ function makeLabel(field: EntityEditField) {
         case "primitive":
             type = field.eleType;
             break;
-        case "func":
+        case "funcAdd":
             type = `list<${field.eleType}>`
             break;
         case "interface":
@@ -63,14 +62,14 @@ const formItemLayout = {
     },
 };
 
-function makeArrayOfPrimitiveFormItem(editField: EntityEditField) {
-    const formItemLayoutWithOutLabel = {
-        wrapperCol: {
-            xs: {span: 24, offset: 0},
-            sm: {span: 18, offset: 6},
-        },
-    };
+const formItemLayoutWithOutLabel = {
+    wrapperCol: {
+        xs: {span: 24, offset: 0},
+        sm: {span: 18, offset: 6},
+    },
+};
 
+function makeArrayOfPrimitiveFormItem(editField: EntityEditField) {
     return <Form.List name={editField.name} key={editField.name} initialValue={editField.value as any[]}>
         {(fields, {add, remove}) => (
             <>
@@ -96,7 +95,7 @@ function makeArrayOfPrimitiveFormItem(editField: EntityEditField) {
     </Form.List>
 }
 
-function makeFuncFormItem(field: EntityEditField)  {
+function makeFuncAddFormItem(field: EntityEditField) {
     let func = field.value as (() => void);
     return <Form.Item {...formItemLayout}
                       label={makeLabel(field)}>
@@ -104,7 +103,25 @@ function makeFuncFormItem(field: EntityEditField)  {
     </Form.Item>
 }
 
-function makeInterfaceFormItem(field: EntityEditField) : any {
+function makeFuncSubmitFormItem(field: EntityEditField) {
+    let func = field.value as (() => void);
+    return <Form.Item {...formItemLayoutWithOutLabel} >
+        <Button type="primary" htmlType="submit" onClick={() => func()}>
+            更新
+        </Button>
+    </Form.Item>
+}
+
+function makeFuncDeleteFormItem(field: EntityEditField) {
+    let func = field.value as (() => void);
+    return <Form.Item {...formItemLayoutWithOutLabel} >
+        <Button type="primary" danger onClick={() => func()}>
+            <CloseOutlined/>
+        </Button>
+    </Form.Item>
+}
+
+function makeInterfaceFormItem(field: EntityEditField): any {
     let options = []
     for (let op of field.autoCompleteOptions as string[]) {
         options.push({label: op, value: op});
@@ -122,10 +139,14 @@ function makeFieldFormItem(field: EntityEditField) {
             return makeArrayOfPrimitiveFormItem(field);
         case "primitive":
             return makePrimitiveFormItem(field);
-        case "func":
-            return makeFuncFormItem(field);
+        case "funcAdd":
+            return makeFuncAddFormItem(field);
         case "interface":
             return makeInterfaceFormItem(field);
+        case "funcSubmit":
+            return makeFuncSubmitFormItem(field);
+        case "funcDelete":
+            return makeFuncDeleteFormItem(field);
     }
 }
 
