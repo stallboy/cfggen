@@ -106,6 +106,7 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
             case FieldsShowType.Edit:
                 ch = 0;
                 fh = 60;
+                node.width = 360;
                 break;
         }
         node.height = 60 + ch + fc * fh +

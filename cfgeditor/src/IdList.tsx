@@ -1,5 +1,5 @@
 import {STable} from "./model/schemaModel.ts";
-import {Select, Space, Skeleton} from "antd";
+import {Select, Skeleton} from "antd";
 
 
 export function IdList({curTable, curId, setCurId}: {
@@ -13,7 +13,7 @@ export function IdList({curTable, curId, setCurId}: {
 
     let options = [];
     for (let id of curTable.recordIds) {
-        options.push({label: <Space>{id.id}</Space>, value: id.id});
+        options.push({label: id.id, value: id.id});
     }
 
     return <Select

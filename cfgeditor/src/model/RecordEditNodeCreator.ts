@@ -1,5 +1,5 @@
 import {
-    EditFieldEleType,
+    PrimitiveType,
     Entity,
     EntityConnectionType,
     EntityEditField,
@@ -36,6 +36,7 @@ function makeEditFields(sItem: SItem, obj: JSONObject): EntityEditField[] {
         fields.push({
             name: '$impl',
             type: 'interface',
+            eleType: sInterface.name,
             value: implName,
             autoCompleteOptions: getImplNames(sInterface),
             implFields: makeEditFields(impl, obj),
@@ -53,7 +54,7 @@ function makeEditFields(sItem: SItem, obj: JSONObject): EntityEditField[] {
                     name: sf.name,
                     comment: sf.comment,
                     type: 'primitive',
-                    eleType: sf.type as EditFieldEleType,
+                    eleType: sf.type as PrimitiveType,
                     value: fieldValue as (boolean | number | string),
                 });
             } else if (sf.type.startsWith('list<')) {
@@ -63,7 +64,7 @@ function makeEditFields(sItem: SItem, obj: JSONObject): EntityEditField[] {
                         name: sf.name,
                         comment: sf.comment,
                         type: 'arrayOfPrimitive',
-                        eleType: sf.type as EditFieldEleType,
+                        eleType: sf.type as PrimitiveType,
                         value: fieldValue as (boolean[] | number[] | string[]),
                     });
                 } else {
@@ -71,6 +72,7 @@ function makeEditFields(sItem: SItem, obj: JSONObject): EntityEditField[] {
                         name: sf.name,
                         comment: sf.comment,
                         type: 'func',
+                        eleType: itemType,
                         value: () => {
                             // TODO
                         }

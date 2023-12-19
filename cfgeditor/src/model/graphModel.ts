@@ -11,7 +11,7 @@ export interface EntityEditField {
     name: string;
     comment?: string;
     type: EditFieldType;
-    eleType?: EditFieldEleType;
+    eleType: string;
     value: EditFieldValueType;
     autoCompleteOptions?: string[]; // use Select if it has autoCompleteOptions
     implFields?: EntityEditField[];
@@ -19,7 +19,7 @@ export interface EntityEditField {
 }
 
 export type EditFieldType = 'arrayOfPrimitive' | 'primitive' | 'func' | 'interface'; // interface: value:string
-export type EditFieldEleType = 'bool' | 'int' | 'long' | 'float' | 'str' | 'text';
+export type PrimitiveType = 'bool' | 'int' | 'long' | 'float' | 'str' | 'text';
 export type EditFieldValueType = string | number | boolean | string[] | number[] | boolean[] | (() => void);
 
 export interface ConnectTo {

@@ -3,7 +3,7 @@ import {EntityField} from "../model/graphModel.ts";
 import {Table, Tooltip} from "antd";
 
 
-export function tooltip(field: { name: string, comment?: string }) {
+function tooltip(field: { name: string, comment?: string }) {
     return field.comment ? `${field.name}: ${field.comment}` : field.name;
 }
 
