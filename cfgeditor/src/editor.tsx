@@ -5,7 +5,7 @@ import {ConnectionPlugin, Presets as ConnectionPresets} from "rete-connection-pl
 import {Presets, ReactArea2D, ReactPlugin} from "rete-react-plugin";
 
 import {AutoArrangePlugin, Presets as ArrangePresets} from "rete-auto-arrange-plugin";
-import {EntityConnectionType, EntityGraph, FieldsShowType} from "./model/graphModel.ts";
+import {Entity, EntityConnectionType, EntityGraph, FieldsShowType} from "./model/graphModel.ts";
 import {EntityControl, EntityControlComponent} from "./ui/EntityControl.tsx";
 import {EntityNode, EntityNodeComponent} from "./ui/EntityNode.tsx";
 import {EntityConnection, EntityConnectionComponent} from "./ui/EntityConnection.tsx";
@@ -29,7 +29,6 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
         accumulating: AreaExtensions.accumulateOnCtrl()
     });
     // AreaExtensions.simpleNodesOrder(area);
-
 
     const contextMenu = new ContextMenuPlugin<Schemes>({
         items: (context: 'root' | Schemes['Node'], _plugin: ContextMenuPlugin<Schemes>) => {
@@ -76,6 +75,7 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
 
     const socket = new ClassicPreset.Socket("socket");
 
+
     let id2node = new Map<string, EntityNode>();
     for (let entity of graph.entityMap.values()) {
         const node = new EntityNode(entity.label);
@@ -83,63 +83,19 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
         id2node.set(entity.id, node);
 
         // TODO height
-        let hasCtrl = true;
-        let ch;
-        let fc;
-        let fh = 40;
-        if (entity.fieldsShow == FieldsShowType.Edit && entity.editFields) {
-            fc = entity.editFields.length;
-            if (fc > 0 && entity.editFields[0].implFields) {
-                fc += entity.editFields[0].implFields.length;
-            }
-        } else {
-            fc = entity.fields.length;
-        }
-        switch (entity.fieldsShow) {
-            case FieldsShowType.Direct:
-                ch = 0;
-                hasCtrl = false;
-                break;
-            case FieldsShowType.Expand:
-                ch = 80;
-                break;
-            case FieldsShowType.Fold:
-                ch = 60;
-                fc = 0;
-                break;
-            case FieldsShowType.Edit:
-                ch = 0;
-                fh = 60;
-                node.width = 360;
-                break;
-        }
-        node.height = 60 + ch + fc * fh +
-            entity.inputs.length * 40 +
-            entity.outputs.length * 40;
+        node.height = calcHeight(entity);
+        node.width = entity.fieldsShow == FieldsShowType.Edit ? 360 : 280;
 
-        const fieldsControl = new EntityControl(entity);
-        if (hasCtrl) {
-            fieldsControl.onChange = async (key: string | string[]) => {
-                let ch;
-                let fc;
-                if (key.length == 0) {
-                    ch = 60;
-                    fc = 0;
-                } else {
-                    ch = 80;
-                    fc = entity.fields.length;
-                }
-                node.height = 60 + ch + fc * 40 +
-                    entity.inputs.length * 40 +
-                    entity.outputs.length * 40;
-
+        async function changeHeightCallback(height: number) {
+            node.height = calcKnownHeight(entity) + height;
+            await area.update('node', node.id);
+            // await area.update('socket', node.inputs[0]?.socket.name as string);
+            setTimeout(async () => {
                 await area.update('node', node.id);
-                // await area.update('socket', node.inputs[0]?.socket.name as string);
-                setTimeout(async () => {
-                    await area.update('node', node.id);
-                }, 300)
-            };
+            }, 200)
         }
+
+        const fieldsControl = new EntityControl(entity, changeHeightCallback);
         node.addControl("value", fieldsControl);
 
         for (let inputSocket of entity.inputs) {
@@ -164,7 +120,6 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
                     conn.connectionType = connSocket.connectionType ?? EntityConnectionType.Normal;
                     await editor.addConnection(conn);
                 }
-
             }
         }
     }
@@ -175,4 +130,41 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
     return {
         destroy: () => area.destroy()
     };
+}
+
+function calcHeight(entity: Entity): number {
+    let ch;
+    let fc;
+    let fh = 40;
+
+    if (entity.fieldsShow == FieldsShowType.Edit && entity.editFields) {
+        fc = entity.editFields.length;
+        if (fc > 0 && entity.editFields[0].implFields) {
+            fc += entity.editFields[0].implFields.length;
+        }
+    } else {
+        fc = entity.fields.length;
+    }
+    switch (entity.fieldsShow) {
+        case FieldsShowType.Direct:
+            ch = 0;
+            break;
+        case FieldsShowType.Expand:
+            ch = 80;
+            break;
+        case FieldsShowType.Fold:
+            ch = 60;
+            fc = 0;
+            break;
+        case FieldsShowType.Edit:
+            ch = 0;
+            fh = 60;
+            break;
+    }
+    return calcKnownHeight(entity) + ch + fc * fh;
+}
+
+
+function calcKnownHeight(entity: Entity): number {
+    return 60 + entity.inputs.length * 40 + entity.outputs.length * 40;
 }

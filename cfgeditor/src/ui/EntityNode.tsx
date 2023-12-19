@@ -18,7 +18,7 @@ export class EntityNode extends ClassicPreset.Node<
     }
 > {
     width = 280;
-    height = 440;
+    height = 200;
 
     entity?: Entity;
 }

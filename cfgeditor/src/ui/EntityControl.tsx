@@ -3,46 +3,69 @@ import {Entity, FieldsShowType} from "../model/graphModel.ts";
 import {Collapse, Space} from "antd";
 import {EntityTable} from "./EntityTable.tsx";
 import {EntityForm} from "./EntityForm.tsx";
+import {useEffect, useRef} from "react";
 
-
-function dummpyOnChange(_key: string | string[]) {
-}
 
 export class EntityControl extends ClassicPreset.Control {
-    onChange: (key: string | string[]) => void = dummpyOnChange;
-
-    constructor(public entity: Entity) {
+    constructor(public entity: Entity,
+                public changeHeightCallback: (height: number) => void) {
         super();
     }
 }
 
 export function EntityControlComponent(props: { data: EntityControl }) {
+    const ref = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (ref.current) {
+            // console.log(ref.current.offsetHeight);
+            props.data.changeHeightCallback(ref.current.offsetHeight);
+
+            // 监听的函数
+            const resize = new ResizeObserver(() => {
+                if (ref.current) {
+                    props.data.changeHeightCallback(ref.current.offsetHeight);
+                }
+            });
+            // 传入监听对象
+            resize.observe(ref.current);
+            // 及时销毁监听函数（重要!!!）
+            return () => {
+                if (ref.current) {
+                    resize.unobserve(ref.current);
+                }
+            };
+        }
+    }, []);
+
+    let content;
     let entity: Entity = props.data.entity;
     if (entity.fieldsShow == FieldsShowType.Edit) {
         let fields = entity.editFields;
         if (!fields || fields.length == 0) {
-            return <Space/>
+            content = <Space/>;
+        } else {
+            content = <EntityForm fields={fields}/>;
         }
+    } else {
 
-        return <EntityForm fields={fields}/>
+        let fields = entity.fields;
+        if (fields.length == 0) {
+            content = <Space/>;
+        } else {
+            let tab = <EntityTable fields={fields}/>;
+            if (entity.fieldsShow == FieldsShowType.Direct) {
+                content = tab;
+            } else {
+                let items = [{key: '1', label: `${fields.length} fields`, children: tab}];
+                if (entity.fieldsShow == FieldsShowType.Expand) {
+                    content = <Collapse defaultActiveKey={'1'} items={items}/>;
+                } else {
+                    content = <Collapse items={items}/>
+                }
+            }
+        }
     }
 
+    return <div ref={ref}> {content}</div>
 
-    let fields = entity.fields;
-    if (fields.length == 0) {
-        return <Space/>
-    }
-
-    let tab = <EntityTable fields={fields}/>;
-    if (entity.fieldsShow == FieldsShowType.Direct) {
-        return tab;
-    }
-
-    let items = [{key: '1', label: `${fields.length} fields`, children: tab}];
-    switch (entity.fieldsShow) {
-        case FieldsShowType.Expand:
-            return <Collapse defaultActiveKey={'1'} items={items} onChange={props.data.onChange}/>
-        case FieldsShowType.Fold:
-            return <Collapse items={items} onChange={props.data.onChange}/>
-    }
 }

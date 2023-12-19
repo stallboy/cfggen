@@ -26,7 +26,11 @@ function makePrimitiveControl(field: EntityEditField, isFromArray: boolean = fal
 }
 
 function makePrimitiveFormItem(field: EntityEditField) {
-    return <Form.Item name={field.name} key={field.name} label={makeLabel(field)} initialValue={field.value}>
+    let props = {}
+    if (field.eleType == 'bool') {
+        props = {valuePropName: "checked"}
+    }
+    return <Form.Item name={field.name} key={field.name} label={makeLabel(field)} initialValue={field.value} {...props}>
         {makePrimitiveControl(field)}
     </Form.Item>;
 }
@@ -98,7 +102,7 @@ function makeArrayOfPrimitiveFormItem(editField: EntityEditField) {
 
 function makeFuncAddFormItem(field: EntityEditField) {
     let func = field.value as (() => void);
-    return <Form.Item {...formItemLayout}
+    return <Form.Item {...formItemLayout} key={field.name}
                       label={makeLabel(field)}>
         <PlusCircleTwoTone onClick={() => func()}/>
     </Form.Item>
@@ -106,7 +110,7 @@ function makeFuncAddFormItem(field: EntityEditField) {
 
 function makeFuncSubmitFormItem(field: EntityEditField) {
     let func = field.value as (() => void);
-    return <Form.Item {...formItemLayoutWithOutLabel} >
+    return <Form.Item {...formItemLayoutWithOutLabel} key={field.name}>
         <Button type="primary" htmlType="submit" onClick={() => func()}>
             更新
         </Button>
@@ -115,7 +119,7 @@ function makeFuncSubmitFormItem(field: EntityEditField) {
 
 function makeFuncDeleteFormItem(field: EntityEditField) {
     let func = field.value as (() => void);
-    return <Form.Item {...formItemLayoutWithOutLabel} >
+    return <Form.Item {...formItemLayoutWithOutLabel} key={field.name}>
         <Button type="primary" danger onClick={() => func()}>
             <CloseOutlined/>
         </Button>
@@ -179,14 +183,13 @@ export function EntityForm({fields}: {
         {makeFieldsFormItem(fields)}
     </Form>
 
-    return <ConfigProvider
-        theme={{
-            components: {
-                Form: {
-                    itemMarginBottom: 8,
-                },
+    return <ConfigProvider theme={{
+        components: {
+            Form: {
+                itemMarginBottom: 8,
             },
-        }}>
+        },
+    }}>
         {form}
     </ConfigProvider>
 }

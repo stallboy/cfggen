@@ -126,6 +126,7 @@ export function TableRecord({schema, curTable, curId, server, tryReconnect, setC
     }
 
     return <TableRecordLoaded schema={schema} curTable={curTable} curId={curId}
+                              key={`${curTable.name}-${curId}`}
                               recordResult={recordResult}
                               setCurTableAndId={setCurTableAndId}/>
 
