@@ -15,7 +15,7 @@ export interface EntityEditField {
     value: EditFieldValueType;
     autoCompleteOptions?: string[]; // use Select if it has autoCompleteOptions
     implFields?: EntityEditField[];
-    interfaceOnChangeImpl?: ((impl: string) => void)
+    interfaceOnChangeImpl?: ((impl: string) => EntityEditField[])
 }
 
 export type EditFieldType = 'arrayOfPrimitive' | 'primitive' | 'funcAdd' | 'interface' | 'funcSubmit' | 'funcDelete'; // interface: value:string

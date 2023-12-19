@@ -26,6 +26,70 @@ function isPrimitiveType(type: string): boolean {
     return setOfPrimitive.has(type);
 }
 
+function getInterfaceImplFields(sInterface: SInterface, implName: string,
+                                thisImplName: string, thisImplFields: EntityEditField[]): EntityEditField[] {
+    if (implName == thisImplName) {
+        return thisImplFields;
+    } else {
+        let fields: EntityEditField[] = [];
+        let impl = getImpl(sInterface, implName) as SStruct;
+        makeStructuralEditFields(fields, impl);
+        return fields;  // 考虑是否有直接子对象
+    }
+}
+
+function makeStructuralEditFields(fields: EntityEditField[], structural: SStruct | STable, obj: JSONObject | null = null) {
+    for (let sf of structural.fields) {
+        let fieldValue = obj ? obj[sf.name] : null;
+        if (isPrimitiveType(sf.type)) {
+            let v;
+            if (fieldValue) {
+                v = fieldValue as (boolean | number | string);
+            } else if (sf.type == 'bool') {
+                v = false;
+            } else if (sf.type == 'str' || sf.type == 'text') {
+                v = '';
+            } else {
+                v = 0;
+            }
+
+            fields.push({
+                name: sf.name,
+                comment: sf.comment,
+                type: 'primitive',
+                eleType: sf.type as PrimitiveType,
+                value: v,
+            });
+        } else if (sf.type.startsWith('list<')) {
+            let itemType = sf.type.substring(5, sf.type.length - 1);
+            if (isPrimitiveType(itemType)) {
+                let v = fieldValue ? fieldValue as (boolean | number | string) : [];
+                fields.push({
+                    name: sf.name,
+                    comment: sf.comment,
+                    type: 'arrayOfPrimitive',
+                    eleType: itemType as PrimitiveType,
+                    value: v,
+                });
+            } else {
+                fields.push({
+                    name: sf.name,
+                    comment: sf.comment,
+                    type: 'funcAdd',
+                    eleType: itemType,
+                    value: () => {
+                        // TODO
+                    }
+                });
+            }
+
+        } else { // 为简单，不支持map<
+            // ignore
+        }
+    }
+
+}
+
 function makeEditFields(sItem: SItem, obj: JSONObject): EntityEditField[] {
     let fields: EntityEditField[] = [];
     let type: string = obj['$type'] as string;
@@ -41,48 +105,13 @@ function makeEditFields(sItem: SItem, obj: JSONObject): EntityEditField[] {
             autoCompleteOptions: getImplNames(sInterface),
             implFields: makeEditFields(impl, obj),
             interfaceOnChangeImpl: (_implName: string) => {
-                // TODO
+                return null;
             },
         })
 
     } else {
         let structural = sItem as (SStruct | STable);
-        for (let sf of structural.fields) {
-            let fieldValue: JSONValue = obj[sf.name];
-            if (isPrimitiveType(sf.type)) {
-                fields.push({
-                    name: sf.name,
-                    comment: sf.comment,
-                    type: 'primitive',
-                    eleType: sf.type as PrimitiveType,
-                    value: fieldValue as (boolean | number | string),
-                });
-            } else if (sf.type.startsWith('list<')) {
-                let itemType = sf.type.substring(5, sf.type.length - 1);
-                if (isPrimitiveType(itemType)) {
-                    fields.push({
-                        name: sf.name,
-                        comment: sf.comment,
-                        type: 'arrayOfPrimitive',
-                        eleType: sf.type as PrimitiveType,
-                        value: fieldValue as (boolean[] | number[] | string[]),
-                    });
-                } else {
-                    fields.push({
-                        name: sf.name,
-                        comment: sf.comment,
-                        type: 'funcAdd',
-                        eleType: itemType,
-                        value: () => {
-                            // TODO
-                        }
-                    });
-                }
-
-            } else { // 为简单，不支持map<
-                // ignore
-            }
-        }
+        makeStructuralEditFields(fields, structural, obj);
 
         if ('pk' in structural) {
             fields.push({

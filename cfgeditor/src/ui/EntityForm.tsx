@@ -3,6 +3,7 @@ import {Button, ConfigProvider, Form, InputNumber, Select, Switch, Tooltip} from
 import TextArea from "antd/es/input/TextArea";
 import {CloseOutlined, MinusCircleOutlined, PlusCircleOutlined, PlusCircleTwoTone} from "@ant-design/icons";
 
+
 const setOfNumber = new Set<string>(['int', 'long', 'float']);
 
 function makePrimitiveControl(field: EntityEditField, isFromArray: boolean = false) {
@@ -13,19 +14,19 @@ function makePrimitiveControl(field: EntityEditField, isFromArray: boolean = fal
         for (let op of field.autoCompleteOptions) {
             options.push({label: op, value: op});
         }
-        control = <Select defaultValue={field.value} options={options}/>
+        control = <Select options={options}/>
     } else if (field.eleType == 'bool') {
-        control = <Switch defaultChecked={field.value as boolean} {...style}/>;
+        control = <Switch  {...style}/>;
     } else if (setOfNumber.has(field.eleType)) {
-        control = <InputNumber defaultValue={field.value as number}  {...style}/>;
+        control = <InputNumber {...style}/>;
     } else {
-        control = <TextArea defaultValue={field.value as string} {...style}/>;
+        control = <TextArea {...style}/>;
     }
     return control;
 }
 
 function makePrimitiveFormItem(field: EntityEditField) {
-    return <Form.Item name={field.name} key={field.name} label={makeLabel(field)}>
+    return <Form.Item name={field.name} key={field.name} label={makeLabel(field)} initialValue={field.value}>
         {makePrimitiveControl(field)}
     </Form.Item>;
 }
@@ -126,8 +127,8 @@ function makeInterfaceFormItem(field: EntityEditField): any {
     for (let op of field.autoCompleteOptions as string[]) {
         options.push({label: op, value: op});
     }
-    let implSelect = <Form.Item name={field.name} key={field.name} label={makeLabel(field)}>
-        <Select defaultValue={field.value} options={options}/>
+    let implSelect = <Form.Item name={field.name} key={field.name} label={makeLabel(field)} initialValue={field.value}>
+        <Select options={options}/>
     </Form.Item>;
 
     return [implSelect, ...makeFieldsFormItem(field.implFields as EntityEditField[])]
@@ -161,14 +162,19 @@ export function EntityForm({fields}: {
     fields: EntityEditField[];
 }) {
 
-    if (fields.length > 0){
-        let f = fields[fields.length-1]
-        if (f.type == 'funcSubmit'){
+    if (fields.length > 0) {
+        let f = fields[fields.length - 1]
+        if (f.type == 'funcSubmit') {
 
         }
     }
 
+    function onValuesChange(changedFields: any, allFields: any) {
+        console.log(changedFields, allFields);
+    }
+
     let form = <Form labelCol={{span: 6}} wrapperCol={{span: 18}}
+                     onValuesChange={onValuesChange}
                      style={{maxWidth: 400, backgroundColor: "white", borderRadius: 15, padding: 10}}>
         {makeFieldsFormItem(fields)}
     </Form>

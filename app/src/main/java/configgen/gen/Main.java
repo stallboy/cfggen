@@ -237,7 +237,6 @@ public final class Main {
 
         if (comparePoiAndFastExcel) {
             ComparePoiAndFastExcel.compareCellData(dataDir, headRow, encoding);
-            return;
         }
 
         if (i18nfile != null && langSwitchDir != null) {
