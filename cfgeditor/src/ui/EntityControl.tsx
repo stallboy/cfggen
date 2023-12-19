@@ -20,15 +20,12 @@ export function EntityControlComponent(props: { data: EntityControl }) {
             // console.log(ref.current.offsetHeight);
             props.data.changeHeightCallback(ref.current.offsetHeight);
 
-            // 监听的函数
             const resize = new ResizeObserver(() => {
                 if (ref.current) {
                     props.data.changeHeightCallback(ref.current.offsetHeight);
                 }
             });
-            // 传入监听对象
             resize.observe(ref.current);
-            // 及时销毁监听函数（重要!!!）
             return () => {
                 if (ref.current) {
                     resize.unobserve(ref.current);

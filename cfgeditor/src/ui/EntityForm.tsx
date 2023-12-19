@@ -86,7 +86,8 @@ function makeArrayOfPrimitiveFormItem(editField: EntityEditField) {
                             {makePrimitiveControl(editField, true)}
                         </Form.Item>
 
-                        <MinusCircleOutlined className="dynamic-delete-button"
+                        <MinusCircleOutlined key={`delete-${field.key}`}
+                                             className="dynamic-delete-button"
                                              onClick={() => remove(field.name)}/>
 
                     </Form.Item>

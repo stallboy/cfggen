@@ -68,18 +68,18 @@ export function TableList({schema, curTable, setCurTable}: {
         })
     }
 
-    return <Select
-        showSearch
-        options={options}
-        style={{width: 200}}
-        value={curTable?.name}
-        placeholder="search a table"
-        optionFilterProp="children"
-        filterOption={(inputValue, option) => {
-            return !!option?.value.includes(inputValue);
-        }}
-        onChange={(value, _) => {
-            setCurTable(value);
-        }}
+    return <Select id='table'
+                   showSearch
+                   options={options}
+                   style={{width: 200}}
+                   value={curTable?.name}
+                   placeholder="search a table"
+                   optionFilterProp="children"
+                   filterOption={(inputValue, option) => {
+                       return !!option?.value.includes(inputValue);
+                   }}
+                   onChange={(value, _) => {
+                       setCurTable(value);
+                   }}
     />;
 }
