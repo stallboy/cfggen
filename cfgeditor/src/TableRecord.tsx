@@ -6,9 +6,9 @@ import {Entity, fillInputs} from "./model/graphModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 import {JSONObject, RecordResult, RefId, Refs} from "./model/recordModel.ts";
 import {App, Empty, Result, Spin} from "antd";
-import {createRefNodes, getId} from "./model/recordRefNode.ts";
-import {RecordNodeCreator} from "./model/RecordNodeCreator.ts";
-import {RecordEditNodeCreator} from "./model/RecordEditNodeCreator.ts";
+import {createRefNodes, getId} from "./func/recordRefNode.ts";
+import {RecordNodeCreator} from "./func/RecordNodeCreator.ts";
+import {RecordEditNodeCreator} from "./func/RecordEditNodeCreator.ts";
 
 
 export function TableRecordLoaded({schema, curTable, curId, recordResult, setCurTableAndId}: {

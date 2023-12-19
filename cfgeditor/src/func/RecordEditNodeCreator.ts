@@ -6,9 +6,9 @@ import {
     EntityNodeType,
     EntitySocketOutput,
     FieldsShowType
-} from "./graphModel.ts";
-import {getField, getImpl, Schema, SInterface, SItem, SStruct, STable} from "./schemaModel.ts";
-import {JSONArray, JSONObject, JSONValue, RefId, Refs} from "./recordModel.ts";
+} from "../model/graphModel.ts";
+import {getField, getImpl, Schema, SInterface, SItem, SStruct, STable} from "../model/schemaModel.ts";
+import {JSONArray, JSONObject, JSONValue, RefId, Refs} from "../model/recordModel.ts";
 import {getLabel, getLastName} from "./recordRefNode.ts";
 
 

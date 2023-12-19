@@ -11,7 +11,7 @@ import {TableRecord} from "./TableRecord.tsx";
 import {TableRecordRef} from "./TableRecordRef.tsx";
 import {SearchValue} from "./SearchValue.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
-import {getInt, getBool, getStr} from "./model/localStore.ts";
+import {getInt, getBool, getStr} from "./func/localStore.ts";
 
 const key1 = 'table'
 const key2 = 'tableRef'

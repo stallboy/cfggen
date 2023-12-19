@@ -5,9 +5,9 @@ import {
     EntityNodeType,
     EntitySocketOutput,
     FieldsShowType
-} from "./graphModel.ts";
-import {getField, Schema, SField, SStruct, STable} from "./schemaModel.ts";
-import {JSONArray, JSONObject, JSONValue, RefId, Refs, TableMap} from "./recordModel.ts";
+} from "../model/graphModel.ts";
+import {getField, Schema, SField, SStruct, STable} from "../model/schemaModel.ts";
+import {JSONArray, JSONObject, JSONValue, RefId, Refs, TableMap} from "../model/recordModel.ts";
 import {createRefs, getLabel} from "./recordRefNode.ts";
 
 export class RecordNodeCreator {
