@@ -95,7 +95,8 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
             }, 200)
         }
 
-        const fieldsControl = new EntityControl(entity, changeHeightCallback);
+        const fieldsControl = new EntityControl(entity, changeHeightCallback,
+            graph.setForceUpdate, graph.setEditingRecord);
         node.addControl("value", fieldsControl);
 
         for (let inputSocket of entity.inputs) {

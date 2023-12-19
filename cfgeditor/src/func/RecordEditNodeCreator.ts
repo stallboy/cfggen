@@ -31,7 +31,8 @@ export class RecordEditNodeCreator {
     constructor(public entityMap: Map<string, Entity>,
                 public schema: Schema,
                 public refId: RefId,
-                public setEditingRecord: ((record: JSONObject & Refs) => void)) {
+                public setEditingRecord: ((record: JSONObject & Refs) => void),
+                public setForceUpdate: () => void) {
     }
 
     createNodes(id: string, sItem: SItem, obj: JSONObject & Refs, isArrayItem: boolean = false): Entity | null {
@@ -180,11 +181,10 @@ export class RecordEditNodeCreator {
                     if (newImplName == implName) {
                         newObj = obj;
                     } else {
-                        let newImpl = getImpl(sInterface, newImplName);
-                        if (newImpl) {
-                            newObj = this.schema.defaultValueOfStruct(newImpl);
-                        }
+                        let newImpl = getImpl(sInterface, newImplName) as SStruct;
+                        newObj = this.schema.defaultValueOfStruct(newImpl);
                     }
+                    console.log(newObj);
 
                 },
             })

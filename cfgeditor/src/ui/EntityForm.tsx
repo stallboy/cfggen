@@ -3,7 +3,6 @@ import {Button, ConfigProvider, Form, InputNumber, Select, Switch, Tooltip} from
 import TextArea from "antd/es/input/TextArea";
 import {CloseOutlined, MinusCircleOutlined, PlusCircleOutlined, PlusCircleTwoTone} from "@ant-design/icons";
 
-
 const setOfNumber = new Set<string>(['int', 'long', 'float']);
 
 function PrimitiveControl(field: EntityEditField, isFromArray: boolean = false) {
@@ -176,8 +175,9 @@ export function EntityForm({fields}: {
         }
     }
 
-    function onValuesChange(_changedFields: any, allFields: object) {
+    function onValuesChange(_changedFields: any, allFields: any) {
         console.log(allFields);
+        // call setEditRecord indirectly by function in EntityEditField
     }
 
     let form = <Form labelCol={{span: 6}} wrapperCol={{span: 18}}

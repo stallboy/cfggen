@@ -1,10 +1,10 @@
 import {Schema, STable} from "./model/schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
-import {useCallback, useEffect, useState} from "react";
+import {useCallback, useEffect, useReducer, useState} from "react";
 import {Entity, fillInputs} from "./model/graphModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
-import {JSONObject, RecordResult, RefId, Refs} from "./model/recordModel.ts";
+import {JSONObject, RecordResult, RefId} from "./model/recordModel.ts";
 import {App, Empty, Result, Spin} from "antd";
 import {createRefNodes, getId} from "./func/recordRefNode.ts";
 import {RecordNodeCreator} from "./func/RecordNodeCreator.ts";
@@ -20,7 +20,8 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
 }) {
 
     const [editMode, setEditMode] = useState<boolean>(false);
-    const [editingRecord, setEditingRecord] = useState<(JSONObject & Refs) | null>(null);
+    const [editingRecord, setEditingRecord] = useState<(JSONObject) | null>(null);
+    const [forceUpdate, setForceUpdate] = useReducer(x => x + 1, 0);
 
     function createGraph() {
         const entityMap = new Map<string, Entity>();
@@ -33,7 +34,7 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
             let recordNodeCreator = new RecordNodeCreator(entityMap, schema, refId, recordResult.refs);
             recordNodeCreator.createNodes(entityId, recordResult.object);
         } else {
-            let recordEditNodeCreator = new RecordEditNodeCreator(entityMap, schema, refId, setEditingRecord);
+            let recordEditNodeCreator = new RecordEditNodeCreator(entityMap, schema, refId, setEditingRecord, setForceUpdate);
             recordEditNodeCreator.createNodes(entityId, curTable, editingRecord ?? recordResult.object);
         }
         fillInputs(entityMap);
@@ -86,7 +87,7 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
         (el: HTMLElement) => {
             return createEditor(el, createGraph());
         },
-        [recordResult, editMode]
+        [recordResult, editMode, forceUpdate]
     );
     const [ref] = useRete(create);
 
