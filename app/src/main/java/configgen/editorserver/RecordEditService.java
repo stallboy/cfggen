@@ -82,7 +82,6 @@ public class RecordEditService {
 
         ValueErrs errs = applyNewRecordList(newRecordList, tableSchema);
         List<String> errStrList = errs.errs().stream().map(Object::toString).toList();
-        List<SchemaService.RecordId> recordIds = SchemaService.getRecordIds(vTable);
 
         try {
             // 最后确定其他都对的时候再存储
@@ -90,6 +89,8 @@ public class RecordEditService {
         } catch (Exception e) {
             return new RecordEditResult(jsonStoreErr, table, id, List.of(e.getMessage()), List.of());
         }
+
+        List<SchemaService.RecordId> recordIds = SchemaService.getRecordIds(newCfgValue.vTableMap().get(table));
         return new RecordEditResult(code, table, id, errStrList, recordIds);
     }
 
@@ -165,7 +166,6 @@ public class RecordEditService {
 
         ValueErrs valueErrs = applyNewRecordList(newRecordList, tableSchema);
         List<String> errStrList = valueErrs.errs().stream().map(Object::toString).toList();
-        List<SchemaService.RecordId> recordIds = SchemaService.getRecordIds(vTable);
 
 
         try {
@@ -177,9 +177,8 @@ public class RecordEditService {
         } catch (Exception e) {
             return new RecordEditResult(jsonStoreErr, table, id, List.of(e.getMessage()), List.of());
         }
+        List<SchemaService.RecordId> recordIds = SchemaService.getRecordIds(newCfgValue.vTableMap().get(table));
         return new RecordEditResult(deleteOk, table, id, errStrList, recordIds);
-
-
     }
 
 }

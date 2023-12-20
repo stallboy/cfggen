@@ -64,7 +64,7 @@ export class Schema {
     itemMap: Map<string, SItem> = new Map<string, SItem>();
     itemIncludeImplMap: Map<string, SItem> = new Map<string, SItem>();
 
-    constructor(rawSchema: RawSchema) {
+    constructor(public rawSchema: RawSchema) {
         this.isEditable = rawSchema.isEditable;
         for (let item of rawSchema.items) {
             if (item.type == 'interface') {
@@ -387,4 +387,17 @@ export function getImpl(sInterface: SInterface, implName: string): SStruct | nul
         }
     }
     return null;
+}
+
+export function newSchema(schema: Schema, table: string, recordIds: RecordId[]) {
+    let items: SItem[] = [];
+    for (let item of schema.rawSchema.items) {
+        if (item.name == table) {
+            let updatedItem = {...item, recordIds: recordIds};
+            items.push(updatedItem);
+        } else {
+            items.push(item);
+        }
+    }
+    return new Schema({isEditable: schema.isEditable, items});
 }

@@ -1,4 +1,4 @@
-import {Schema, STable} from "./model/schemaModel.ts";
+import {newSchema, Schema, STable} from "./model/schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback, useEffect, useReducer, useState} from "react";
@@ -97,13 +97,14 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
     return <div ref={ref} style={{height: "100vh", width: "100vw"}}></div>
 }
 
-export function TableRecord({schema, curTable, curId, server, tryReconnect, setCurTableAndId}: {
+export function TableRecord({schema, curTable, curId, server, tryReconnect, setCurTableAndId, setSchema}: {
     schema: Schema;
     curTable: STable;
     curId: string;
     server: string;
     tryReconnect: () => void;
     setCurTableAndId: (table: string, id: string) => void;
+    setSchema: (schema: Schema) => void;
 }) {
     const [recordResult, setRecordResult] = useState<RecordResult | null>(null);
     const {notification} = App.useApp();
@@ -126,7 +127,7 @@ export function TableRecord({schema, curTable, curId, server, tryReconnect, setC
 
 
     function onSubmit() {
-        console.log(editingState.editingObject);
+        // console.log(editingState.editingObject);
         let editingObject = editingState.editingObject;
 
         let url = `http://${server}/recordAddOrUpdate?table=${curTable.name}`;
@@ -144,12 +145,28 @@ export function TableRecord({schema, curTable, curId, server, tryReconnect, setC
                 body: JSON.stringify(editingObject)
             });
             const editResult: RecordEditResult = await response.json();
-            // setRecordResult(recordResult);
-            notification.info({message: `post ${url} ${editResult.resultCode}`, placement: 'topRight', duration: 3});
+            if (editResult.resultCode == 'updateOk' || editResult.resultCode == 'addOk') {
+                console.log(editResult);
+                setSchema(newSchema(schema, editResult.table, editResult.recordIds));
+                notification.info({
+                    message: `post ${url} ${editResult.resultCode}`,
+                    placement: 'topRight',
+                    duration: 3
+                });
+            } else {
+                notification.warning({
+                    message: `post ${url} ${editResult.resultCode}`,
+                    placement: 'topRight',
+                    duration: 4
+                });
+            }
         }
 
         postData().catch((err) => {
-            notification.error({message: `post ${url} err: ${err.toString()}`, placement: 'topRight', duration: 4});
+            notification.error({
+                message: `post ${url} err: ${err.toString()}`,
+                placement: 'topRight', duration: 4
+            });
             tryReconnect();
         });
     }

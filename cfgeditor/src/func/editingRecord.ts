@@ -35,8 +35,7 @@ export class EditingState {
 
 
     onUpdateFormValues(values: any, fieldChains: (string | number)[]) {
-        console.log('formChange', fieldChains, values);
-
+        // console.log('formChange', fieldChains, values);
         let obj = this.getFieldObj(fieldChains);
         for (let key in values) {
             if (key.startsWith("$")) { // $impl
@@ -68,21 +67,21 @@ export class EditingState {
     }
 
     onUpdateInterfaceValue(jsonObject: JSONObject, fieldChains: (string | number)[]) {
-        console.log('updateInterface', fieldChains, jsonObject);
+        // console.log('updateInterface', fieldChains, jsonObject);
         let obj = this.getFieldObj(fieldChains.slice(0, fieldChains.length - 1));
         obj[fieldChains[fieldChains.length - 1]] = jsonObject;
         this.setForceUpdate();
     }
 
     onDeleteItemFromArray(deleteIndex: number, arrayFieldChains: (string | number)[]) {
-        console.log('delItem', arrayFieldChains, deleteIndex);
+        // console.log('delItem', arrayFieldChains, deleteIndex);
         let obj = this.getFieldObj(arrayFieldChains) as JSONArray;
         obj.splice(deleteIndex, 1);
         this.setForceUpdate();
     }
 
     onAddItemForArray(defaultItemJsonObject: JSONObject, arrayFieldChains: (string | number)[]) {
-        console.log('addItem', arrayFieldChains, defaultItemJsonObject);
+        // console.log('addItem', arrayFieldChains, defaultItemJsonObject);
         let obj = this.getFieldObj(arrayFieldChains) as JSONArray;
         obj.push(defaultItemJsonObject);
         this.setForceUpdate();

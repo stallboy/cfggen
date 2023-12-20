@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react";
-import {Alert, Button, Drawer, Flex, Form, Input, InputNumber, Modal, Space, Switch, Tabs} from "antd";
+import {Alert, App, Button, Drawer, Flex, Form, Input, InputNumber, Modal, Space, Switch, Tabs} from "antd";
 import {CloseOutlined, LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
-import {Schema, STable} from "./model/schemaModel.ts";
+import {newSchema, Schema} from "./model/schemaModel.ts";
 import {History, HistoryItem} from "./model/historyModel.ts";
 import {TableList} from "./TableList.tsx";
 import {IdList} from "./IdList.tsx";
@@ -12,6 +12,7 @@ import {TableRecordRef} from "./TableRecordRef.tsx";
 import {SearchValue} from "./SearchValue.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
 import {getInt, getBool, getStr} from "./func/localStore.ts";
+import {RecordEditResult} from "./model/recordModel.ts";
 
 const key1 = 'table'
 const key2 = 'tableRef'
@@ -22,7 +23,6 @@ export default function CfgEditorApp() {
     const [server, setServer] = useState<string>(getStr('server', 'localhost:3456'));
     const [schema, setSchema] = useState<Schema | null>(null);
     const [curTableId, setCurTableId] = useState<string>(getStr('curTableId', ''));
-    const [curTable, setCurTable] = useState<STable | null>(null);
     const [curId, setCurId] = useState<string>(getStr('curId', ''));
     const [curPage, setCurPage] = useState<string>(getStr('curPage', key3));
 
@@ -51,6 +51,7 @@ export default function CfgEditorApp() {
     useHotkeys('alt+c', () => prev());
     useHotkeys('alt+v', () => next());
 
+    const {notification} = App.useApp();
     useEffect(() => {
         tryConnect(server);
     }, []);
@@ -96,7 +97,6 @@ export default function CfgEditorApp() {
 
         if (curTab) {
             setCurTableId(curTab.name);
-            setCurTable(curTab);
 
             let id = '';
             if (curIdStr.length > 0 && schema.hasId(curTab, curIdStr)) {
@@ -125,6 +125,8 @@ export default function CfgEditorApp() {
             selectCurTableFromSchema(schema, curTableName, curId);
         }
     }
+
+    let curTable = schema ? schema.getSTable(curTableId) : null;
 
     function selectCurId(curId: string) {
         if (schema && curTable) {
@@ -220,7 +222,8 @@ export default function CfgEditorApp() {
                                        curId={curId}
                                        server={server}
                                        tryReconnect={tryReconnect}
-                                       setCurTableAndId={selectCurTableAndId}/>;
+                                       setCurTableAndId={selectCurTableAndId}
+                                       setSchema={setSchema}/>;
 
             tableRecordRef = <TableRecordRef curTable={curTable}
                                              curId={curId}
@@ -309,6 +312,41 @@ export default function CfgEditorApp() {
     }
 
     function onDeleteRecord() {
+        let url = `http://${server}/recordDelete?table=${curTableId}&id=${curId}`;
+        const postData = async () => {
+            const response = await fetch(url, {
+                method: 'POST',
+                cache: "no-cache",
+                mode: "cors",
+                credentials: "same-origin",
+                redirect: "follow",
+                referrerPolicy: "no-referrer"
+            });
+            const editResult: RecordEditResult = await response.json();
+            if (editResult.resultCode == 'deleteOk') {
+                console.log(editResult);
+                setSchema(newSchema(schema!!, editResult.table, editResult.recordIds));
+                notification.info({
+                    message: `post ${url} ${editResult.resultCode}`,
+                    placement: 'topRight',
+                    duration: 3
+                });
+            } else {
+                notification.warning({
+                    message: `post ${url} ${editResult.resultCode}`,
+                    placement: 'topRight',
+                    duration: 4
+                });
+            }
+        }
+
+        postData().catch((err) => {
+            notification.error({
+                message: `post ${url} err: ${err.toString()}`,
+                placement: 'topRight', duration: 4
+            });
+            tryReconnect();
+        });
 
     }
 

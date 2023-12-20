@@ -119,9 +119,10 @@ public class EditorServer extends Generator {
     }
 
     private void handleRecordAddOrUpdate(HttpExchange exchange) throws IOException {
-//        if (!exchange.getRequestMethod().equals("POST")) {
-//            return;
-//        }
+        if (exchange.getRequestMethod().equals("OPTIONS")) {
+            sendOptionsResponse(exchange);
+            return;
+        }
 
         Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
         String table = query.get("table");
@@ -142,6 +143,11 @@ public class EditorServer extends Generator {
     }
 
     private void handleRecordDelete(HttpExchange exchange) throws IOException {
+        if (exchange.getRequestMethod().equals("OPTIONS")) {
+            sendOptionsResponse(exchange);
+            return;
+        }
+
         Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
         String table = query.get("table");
         String id = query.get("id");
@@ -182,12 +188,22 @@ public class EditorServer extends Generator {
         }
     };
 
+    private static void sendOptionsResponse(HttpExchange exchange) throws IOException {
+        exchange.getResponseHeaders().set("Content-Type", "application/json");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Credentials", "true");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "X-PINGOTHER, Content-Type");
+        exchange.sendResponseHeaders(200, -1);
+        exchange.getRequestBody().close();
+    }
+
     private static void sendResponse(HttpExchange exchange, Object object) throws IOException {
         byte[] jsonBytes = JSON.toJSONBytes(object);
         exchange.getResponseHeaders().set("Content-Type", "application/json");
         exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
         exchange.getResponseHeaders().set("Access-Control-Allow-Credentials", "true");
-        exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS");
         exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "X-PINGOTHER, Content-Type");
 
         exchange.sendResponseHeaders(200, jsonBytes.length);

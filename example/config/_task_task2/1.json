@@ -7,7 +7,7 @@
 	"completecondition":{
 		"cond1":{
 			"cond1":{
-				"monsterid":0,
+				"monsterid":1,
 				"count":0,
 				"$type":"task.completecondition.KillMonster"
 			},
@@ -45,11 +45,7 @@
 	],
 	"testListInterface":[
 		{
-			"value":0,
-			"$type":"ai.TriggerTick.ConstValue"
-		},
-		{
-			"value":111,
+			"value":1234,
 			"$type":"ai.TriggerTick.ConstValue"
 		}
 	],
