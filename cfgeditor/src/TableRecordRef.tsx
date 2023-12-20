@@ -7,16 +7,18 @@ import {Item} from "rete-context-menu-plugin/_types/types";
 import {RecordRefsResult, RefId} from "./model/recordModel.ts";
 import {App, Empty, Result, Spin} from "antd";
 import {createRefEntities} from "./func/recordRefEntity.ts";
+import {pageRecord} from "./CfgEditorApp.tsx";
 
 
-export function TableRecordRefLoaded({curTable, curId, recordRefResult, setCurTableAndId}: {
+export function TableRecordRefLoaded({curTable, curId, recordRefResult, setCurTableAndId, setCurPage}: {
     curTable: STable;
     curId: string;
     recordRefResult: RecordRefsResult;
     setCurTableAndId: (table: string, id: string) => void;
+    setCurPage: (page: string) => void;
 }) {
 
-    function createGraph() : EntityGraph {
+    function createGraph(): EntityGraph {
         const entityMap = new Map<string, Entity>();
         createRefEntities(entityMap, recordRefResult.refs);
         fillInputs(entityMap);
@@ -32,6 +34,13 @@ export function TableRecordRefLoaded({curTable, curId, recordRefResult, setCurTa
                     key: '数据关系',
                     handler() {
                         setCurTableAndId(refId.table, refId.id);
+                    }
+                },{
+                    label: '数据',
+                    key: '数据',
+                    handler() {
+                        setCurTableAndId(refId.table, refId.id);
+                        setCurPage(pageRecord);
                     }
                 }];
 
@@ -53,7 +62,12 @@ export function TableRecordRefLoaded({curTable, curId, recordRefResult, setCurTa
     return <div ref={ref} style={{height: "100vh", width: "100vw"}}></div>
 }
 
-export function TableRecordRef({curTable, curId, refIn, refOutDepth, maxNode, server, tryReconnect, setCurTableAndId}: {
+export function TableRecordRef({
+                                   curTable, curId,
+                                   refIn, refOutDepth, maxNode,
+                                   server, tryReconnect,
+                                   setCurTableAndId, setCurPage
+                               }: {
     curTable: STable;
     curId: string;
     refIn: boolean;
@@ -62,6 +76,7 @@ export function TableRecordRef({curTable, curId, refIn, refOutDepth, maxNode, se
     server: string;
     tryReconnect: () => void;
     setCurTableAndId: (table: string, id: string) => void;
+    setCurPage: (page: string) => void;
 }) {
     const [recordRefResult, setRecordRefResult] = useState<RecordRefsResult | null>(null);
     const {notification} = App.useApp();
@@ -93,7 +108,8 @@ export function TableRecordRef({curTable, curId, refIn, refOutDepth, maxNode, se
 
     return <TableRecordRefLoaded curTable={curTable} curId={curId}
                                  recordRefResult={recordRefResult}
-                                 setCurTableAndId={setCurTableAndId}/>
+                                 setCurTableAndId={setCurTableAndId}
+                                 setCurPage={setCurPage}/>
 
 
 }

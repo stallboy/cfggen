@@ -14,17 +14,17 @@ import {useHotkeys} from "react-hotkeys-hook";
 import {getInt, getBool, getStr} from "./func/localStore.ts";
 import {RecordEditResult} from "./model/recordModel.ts";
 
-const key1 = 'table'
-const key2 = 'tableRef'
-const key3 = 'record'
-const key4 = 'recordRef'
+export const pageTable = 'table'
+export const pageTableRef = 'tableRef'
+export const pageRecord = 'record'
+export const pageRecordRef = 'recordRef'
 
-export default function CfgEditorApp() {
+export function CfgEditorApp() {
     const [server, setServer] = useState<string>(getStr('server', 'localhost:3456'));
     const [schema, setSchema] = useState<Schema | null>(null);
     const [curTableId, setCurTableId] = useState<string>(getStr('curTableId', ''));
     const [curId, setCurId] = useState<string>(getStr('curId', ''));
-    const [curPage, setCurPage] = useState<string>(getStr('curPage', key3));
+    const [curPage, setCurPage] = useState<string>(getStr('curPage', pageRecord));
 
     const [maxImpl, setMaxImpl] = useState<number>(getInt('maxImpl', 10));
     const [refIn, setRefIn] = useState<boolean>(getBool('refIn', true));
@@ -43,10 +43,10 @@ export default function CfgEditorApp() {
     const [isFetching, setIsFetching] = useState<boolean>(false);
     const [fetchErr, setFetchErr] = useState<string>('');
 
-    useHotkeys('alt+1', () => selectCurPage(key1));
-    useHotkeys('alt+2', () => selectCurPage(key2));
-    useHotkeys('alt+3', () => selectCurPage(key3));
-    useHotkeys('alt+4', () => selectCurPage(key4));
+    useHotkeys('alt+1', () => selectCurPage(pageTable));
+    useHotkeys('alt+2', () => selectCurPage(pageTableRef));
+    useHotkeys('alt+3', () => selectCurPage(pageRecord));
+    useHotkeys('alt+4', () => selectCurPage(pageRecordRef));
     useHotkeys('alt+x', () => showSearch());
     useHotkeys('alt+c', () => prev());
     useHotkeys('alt+v', () => next());
@@ -232,15 +232,16 @@ export default function CfgEditorApp() {
                                              maxNode={recordMaxNode}
                                              server={server}
                                              tryReconnect={tryReconnect}
-                                             setCurTableAndId={selectCurTableAndId}/>;
+                                             setCurTableAndId={selectCurTableAndId}
+                                             setCurPage={selectCurPage}/>;
         }
     }
 
     let items = [
-        {key: key1, label: <Space>表结构</Space>, children: tableSchema,},
-        {key: key2, label: <Space>表关系</Space>, children: tableRef,},
-        {key: key3, label: <Space>数据</Space>, children: tableRecord,},
-        {key: key4, label: <Space>数据关系</Space>, children: tableRecordRef,},
+        {key: pageTable, label: <Space>表结构</Space>, children: tableSchema,},
+        {key: pageTableRef, label: <Space>表关系</Space>, children: tableRef,},
+        {key: pageRecord, label: <Space>数据</Space>, children: tableRecord,},
+        {key: pageRecordRef, label: <Space>数据关系</Space>, children: tableRecordRef,},
     ]
 
     function onTabChange(activeKey: string) {
