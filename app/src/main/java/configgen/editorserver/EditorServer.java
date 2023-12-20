@@ -119,13 +119,12 @@ public class EditorServer extends Generator {
     }
 
     private void handleRecordAddOrUpdate(HttpExchange exchange) throws IOException {
-        if (!exchange.getRequestMethod().equals("POST")) {
-            return;
-        }
+//        if (!exchange.getRequestMethod().equals("POST")) {
+//            return;
+//        }
 
         Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
         String table = query.get("table");
-
 
         byte[] bytes = exchange.getRequestBody().readAllBytes();
         String jsonStr = new String(bytes, StandardCharsets.UTF_8);
@@ -187,6 +186,10 @@ public class EditorServer extends Generator {
         byte[] jsonBytes = JSON.toJSONBytes(object);
         exchange.getResponseHeaders().set("Content-Type", "application/json");
         exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Credentials", "true");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "X-PINGOTHER, Content-Type");
+
         exchange.sendResponseHeaders(200, jsonBytes.length);
         OutputStream out = exchange.getResponseBody();
         out.write(jsonBytes);

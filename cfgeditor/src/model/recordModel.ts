@@ -1,3 +1,5 @@
+import {RecordId} from "./schemaModel.ts";
+
 export type JSONValue =
     | string
     | number
@@ -68,3 +70,25 @@ export interface RecordRefsResult {
     refs: TableMap;
 }
 
+export type EditResultCode =
+    'addOk'
+    | 'updateOk'
+    | 'deleteOk'
+    | 'serverNotEditable'
+    | 'tableNotSet'
+    | 'idNotSet'
+    | 'tableNotFound'
+    | 'tableNotEditable'
+    | 'idParseErr'
+    | 'idNotFound'
+    | 'jsonParseErr'
+    | 'jsonStoreErr';
+
+
+export interface RecordEditResult {
+    resultCode: EditResultCode;
+    table: string;
+    id: string;
+    valueErrs: string[];
+    recordIds: RecordId[];
+}

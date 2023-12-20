@@ -4,7 +4,7 @@ import {createEditor} from "./editor.tsx";
 import {useCallback, useEffect, useReducer, useState} from "react";
 import {Entity, EntityGraph, fillInputs} from "./model/entityModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
-import {RecordResult, RefId} from "./model/recordModel.ts";
+import {RecordEditResult, RecordResult, RefId} from "./model/recordModel.ts";
 import {App, Empty, Result, Spin} from "antd";
 import {createRefEntities, getId} from "./func/recordRefEntity.ts";
 import {RecordEntityCreator} from "./func/RecordEntityCreator.ts";
@@ -12,16 +12,18 @@ import {RecordEditEntityCreator} from "./func/RecordEditEntityCreator.ts";
 import {editingState} from "./func/editingRecord.ts";
 
 
-export function TableRecordLoaded({schema, curTable, curId, recordResult, setCurTableAndId}: {
+export function TableRecordLoaded({schema, curTable, curId, recordResult, setCurTableAndId, onSubmit}: {
     schema: Schema;
     curTable: STable;
     curId: string;
     recordResult: RecordResult;
     setCurTableAndId: (table: string, id: string) => void;
+    onSubmit: () => void;
 }) {
 
     const [editMode, setEditMode] = useState<boolean>(false);
     const [forceUpdate, setForceUpdate] = useReducer(x => x + 1, 0);
+
 
     function createGraph(): EntityGraph {
         const entityMap = new Map<string, Entity>();
@@ -34,13 +36,8 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
             let creator = new RecordEntityCreator(entityMap, schema, refId, recordResult.refs);
             creator.createEntity(entityId, recordResult.object);
         } else {
-
-            function OnSubmit() {
-                console.log(editingState.editingObject);
-
-            }
             editingState.startEditingObject(recordResult, setForceUpdate);
-            let creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId, OnSubmit);
+            let creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId, onSubmit);
             creator.createThis();
         }
         fillInputs(entityMap);
@@ -128,6 +125,35 @@ export function TableRecord({schema, curTable, curId, server, tryReconnect, setC
     }, [schema, server, curTable, curId]);
 
 
+    function onSubmit() {
+        console.log(editingState.editingObject);
+        let editingObject = editingState.editingObject;
+
+        let url = `http://${server}/recordAddOrUpdate?table=${curTable.name}`;
+        const postData = async () => {
+            const response = await fetch(url, {
+                method: 'POST',
+                cache: "no-cache",
+                mode: "cors",
+                credentials: "same-origin",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                redirect: "follow",
+                referrerPolicy: "no-referrer",
+                body: JSON.stringify(editingObject)
+            });
+            const editResult: RecordEditResult = await response.json();
+            // setRecordResult(recordResult);
+            notification.info({message: `post ${url} ${editResult.resultCode}`, placement: 'topRight', duration: 3});
+        }
+
+        postData().catch((err) => {
+            notification.error({message: `post ${url} err: ${err.toString()}`, placement: 'topRight', duration: 4});
+            tryReconnect();
+        });
+    }
+
     if (recordResult == null) {
         return <Empty> <Spin/> </Empty>
     }
@@ -139,7 +165,8 @@ export function TableRecord({schema, curTable, curId, server, tryReconnect, setC
     return <TableRecordLoaded schema={schema} curTable={curTable} curId={curId}
                               key={`${curTable.name}-${curId}`}
                               recordResult={recordResult}
-                              setCurTableAndId={setCurTableAndId}/>
+                              setCurTableAndId={setCurTableAndId}
+                              onSubmit={onSubmit}/>
 
 }
 

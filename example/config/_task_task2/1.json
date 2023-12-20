@@ -1,22 +1,56 @@
 {
 	"taskid":1,
 	"name":[
-		"杀个怪",
-		"杀怪"
+		
 	],
 	"nexttask":2,
 	"completecondition":{
-		"monsterid":1,
-		"count":3,
-		"$type":"task.completecondition.KillMonster"
+		"cond1":{
+			"cond1":{
+				"monsterid":0,
+				"count":0,
+				"$type":"task.completecondition.KillMonster"
+			},
+			"cond2":{
+				"npcid":0,
+				"$type":"task.completecondition.TalkNpc"
+			},
+			"$type":"task.completecondition.ConditionAnd"
+		},
+		"cond2":{
+			"npcid":0,
+			"$type":"task.completecondition.TalkNpc"
+		},
+		"$type":"task.completecondition.ConditionAnd"
 	},
-	"exp":1000,
-	"testListStruct" : [
+	"exp":10001,
+	"testBool":true,
+	"testString":"",
+	"testStruct":{
+		"x":1,
+		"y":0,
+		"z":0,
+		"$type":"Position"
+	},
+	"testList":[
+		12
+	],
+	"testListStruct":[
 		{
-			"x": 1,
-			"y": 2,
-			"z": 3,
-			"$type": "Position"
+			"x":1,
+			"y":2,
+			"z":3,
+			"$type":"Position"
+		}
+	],
+	"testListInterface":[
+		{
+			"value":0,
+			"$type":"ai.TriggerTick.ConstValue"
+		},
+		{
+			"value":111,
+			"$type":"ai.TriggerTick.ConstValue"
 		}
 	],
 	"$type":"task.task2"

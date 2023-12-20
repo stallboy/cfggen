@@ -27,7 +27,7 @@ public class RecordEditService {
         idParseErr,
         idNotFound,
         jsonParseErr,
-        JsonStoreErr,
+        jsonStoreErr,
     }
 
     public record RecordEditResult(ResultCode resultCode,
@@ -88,7 +88,7 @@ public class RecordEditService {
             // 最后确定其他都对的时候再存储
             VTableJsonParser.addOrUpdateRecordStore(thisValue, tableSchema, id, dataDir);
         } catch (Exception e) {
-            return new RecordEditResult(JsonStoreErr, table, id, List.of(e.getMessage()), List.of());
+            return new RecordEditResult(jsonStoreErr, table, id, List.of(e.getMessage()), List.of());
         }
         return new RecordEditResult(code, table, id, errStrList, recordIds);
     }
@@ -172,10 +172,10 @@ public class RecordEditService {
             // 最后确定其他都对的时候再存储
             boolean deleteOk = VTableJsonParser.deleteRecordStore(tableSchema, id, dataDir);
             if (!deleteOk) {
-                return new RecordEditResult(JsonStoreErr, table, id, List.of("delete fail"), List.of());
+                return new RecordEditResult(jsonStoreErr, table, id, List.of("delete fail"), List.of());
             }
         } catch (Exception e) {
-            return new RecordEditResult(JsonStoreErr, table, id, List.of(e.getMessage()), List.of());
+            return new RecordEditResult(jsonStoreErr, table, id, List.of(e.getMessage()), List.of());
         }
         return new RecordEditResult(deleteOk, table, id, errStrList, recordIds);
 
