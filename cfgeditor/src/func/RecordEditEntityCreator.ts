@@ -3,13 +3,13 @@ import {
     Entity,
     EntityConnectionType,
     EntityEditField,
-    EntityNodeType,
+    EntityType,
     EntitySocketOutput,
     FieldsShowType
 } from "../model/graphModel.ts";
 import {getField, getImpl, Schema, SInterface, SItem, SStruct, STable} from "../model/schemaModel.ts";
 import {JSONArray, JSONObject, JSONValue, RefId, Refs} from "../model/recordModel.ts";
-import {getLabel, getLastName} from "./recordRefNode.ts";
+import {getLabel, getLastName} from "./recordRefEntity.ts";
 
 
 function getImplNames(sInterface: SInterface): string[] {
@@ -27,7 +27,7 @@ function isPrimitiveType(type: string): boolean {
 }
 
 
-export class RecordEditNodeCreator {
+export class RecordEditEntityCreator {
     constructor(public entityMap: Map<string, Entity>,
                 public schema: Schema,
                 public refId: RefId,
@@ -35,7 +35,7 @@ export class RecordEditNodeCreator {
                 public setForceUpdate: () => void) {
     }
 
-    createNodes(id: string, sItem: SItem, obj: JSONObject & Refs, isArrayItem: boolean = false): Entity | null {
+    createEntity(id: string, sItem: SItem, obj: JSONObject & Refs, isArrayItem: boolean = false): Entity | null {
         let label = getLabel(sItem.name);
 
         let type: string = obj['$type'] as string;
@@ -94,12 +94,12 @@ export class RecordEditNodeCreator {
                 for (let e of fArr) {
                     let itemObj = e as JSONObject & Refs;
                     let childId: string = `${id}-${fieldKey}[${i}]`;
-                    let childNode = this.createNodes(childId, itemType, itemObj, true);
+                    let childEntity = this.createEntity(childId, itemType, itemObj, true);
                     i++;
 
-                    if (childNode) {
+                    if (childEntity) {
                         connectToSockets.push({
-                            nodeId: childNode.id,
+                            entityId: childEntity.id,
                             inputKey: 'input',
                             connectionType: EntityConnectionType.Normal
                         });
@@ -119,12 +119,12 @@ export class RecordEditNodeCreator {
                 }
                 let fieldObj = fieldValue as JSONObject & Refs;
                 let childId: string = id + "-" + fieldKey;
-                let childNode = this.createNodes(childId, fieldType, fieldObj);
-                if (childNode) {
+                let childEntity = this.createEntity(childId, fieldType, fieldObj);
+                if (childEntity) {
                     outputs.push({
                         output: {key: fieldKey, label: fieldKey},
                         connectToSockets: [{
-                            nodeId: childNode.id,
+                            entityId: childEntity.id,
                             inputKey: 'input',
                             connectionType: EntityConnectionType.Normal
                         }]
@@ -154,7 +154,7 @@ export class RecordEditNodeCreator {
             outputs: outputs,
 
             fieldsShow: FieldsShowType.Edit,
-            nodeType: EntityNodeType.Normal,
+            entityType: EntityType.Normal,
             userData: this.refId,
         };
 

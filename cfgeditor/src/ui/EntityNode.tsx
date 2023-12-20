@@ -1,6 +1,6 @@
 import {ClassicPreset} from "rete";
 import {EntityControl} from "./EntityControl.tsx";
-import {Entity, EntityNodeType} from "../model/graphModel.ts";
+import {Entity, EntityType} from "../model/graphModel.ts";
 import {Presets, RenderEmit} from "rete-react-plugin";
 import {css} from "styled-components";
 
@@ -40,13 +40,13 @@ const refInStyles = css<{ selected?: boolean }>`
 `;
 
 export function EntityNodeComponent(props: { data: EntityNode, emit: RenderEmit<any> }) {
-    let type = props.data.entity?.nodeType;
+    let type = props.data.entity?.entityType;
     switch (type) {
-        case EntityNodeType.Ref:
+        case EntityType.Ref:
             return <Node styles={() => refStyles} {...props} />;
-        case EntityNodeType.Ref2:
+        case EntityType.Ref2:
             return <Node styles={() => ref2Styles} {...props} />;
-        case EntityNodeType.RefIn:
+        case EntityType.RefIn:
             return <Node styles={() => refInStyles} {...props} />;
     }
     return <Node styles={() => normalStyles} {...props}  />;

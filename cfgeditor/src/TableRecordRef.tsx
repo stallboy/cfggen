@@ -2,11 +2,11 @@ import {STable} from "./model/schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback, useEffect, useState} from "react";
-import {Entity, fillInputs,} from "./model/graphModel.ts";
+import {Entity, EntityGraph, fillInputs,} from "./model/graphModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 import {RecordRefsResult, RefId} from "./model/recordModel.ts";
 import {App, Empty, Result, Spin} from "antd";
-import {createRefNodes} from "./func/recordRefNode.ts";
+import {createRefEntities} from "./func/recordRefEntity.ts";
 
 
 export function TableRecordRefLoaded({curTable, curId, recordRefResult, setCurTableAndId}: {
@@ -16,15 +16,15 @@ export function TableRecordRefLoaded({curTable, curId, recordRefResult, setCurTa
     setCurTableAndId: (table: string, id: string) => void;
 }) {
 
-    function createGraph() {
+    function createGraph() : EntityGraph {
         const entityMap = new Map<string, Entity>();
-        createRefNodes(entityMap, recordRefResult.refs);
+        createRefEntities(entityMap, recordRefResult.refs);
         fillInputs(entityMap);
 
         const menu: Item[] = [];
 
-        const nodeMenuFunc = (node: Entity): Item[] => {
-            let refId = node.userData as RefId;
+        const entityMenuFunc = (entity: Entity): Item[] => {
+            let refId = entity.userData as RefId;
             if (refId.table != curTable.name || refId.id != curId) {
 
                 return [{
@@ -38,7 +38,7 @@ export function TableRecordRefLoaded({curTable, curId, recordRefResult, setCurTa
             }
             return [];
         }
-        return {entityMap, menu, nodeMenuFunc};
+        return {entityMap, menu, entityMenuFunc};
     }
 
     const create = useCallback(

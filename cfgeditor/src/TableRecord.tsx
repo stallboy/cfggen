@@ -2,13 +2,13 @@ import {Schema, STable} from "./model/schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback, useEffect, useReducer, useState} from "react";
-import {Entity, fillInputs} from "./model/graphModel.ts";
+import {Entity, EntityGraph, fillInputs} from "./model/graphModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 import {JSONObject, RecordResult, RefId} from "./model/recordModel.ts";
 import {App, Empty, Result, Spin} from "antd";
-import {createRefNodes, getId} from "./func/recordRefNode.ts";
-import {RecordNodeCreator} from "./func/RecordNodeCreator.ts";
-import {RecordEditNodeCreator} from "./func/RecordEditNodeCreator.ts";
+import {createRefEntities, getId} from "./func/recordRefEntity.ts";
+import {RecordEntityCreator} from "./func/RecordEntityCreator.ts";
+import {RecordEditEntityCreator} from "./func/RecordEditEntityCreator.ts";
 
 
 export function TableRecordLoaded({schema, curTable, curId, recordResult, setCurTableAndId}: {
@@ -23,26 +23,26 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
     const [editingRecord, setEditingRecord] = useState<(JSONObject) | null>(null);
     const [forceUpdate, setForceUpdate] = useReducer(x => x + 1, 0);
 
-    function createGraph() {
+    function createGraph() : EntityGraph {
         const entityMap = new Map<string, Entity>();
         let refId = {table: curTable.name, id: curId};
         let entityId = getId(curTable.name, curId);
         let isEditable = schema.isEditable && curTable.isEditable;
         let isEditing = isEditable && editMode;
         if (!isEditing) {
-            createRefNodes(entityMap, recordResult.refs, false);
-            let recordNodeCreator = new RecordNodeCreator(entityMap, schema, refId, recordResult.refs);
-            recordNodeCreator.createNodes(entityId, recordResult.object);
+            createRefEntities(entityMap, recordResult.refs, false);
+            let creator = new RecordEntityCreator(entityMap, schema, refId, recordResult.refs);
+            creator.createEntity(entityId, recordResult.object);
         } else {
-            let recordEditNodeCreator = new RecordEditNodeCreator(entityMap, schema, refId, setEditingRecord, setForceUpdate);
-            recordEditNodeCreator.createNodes(entityId, curTable, editingRecord ?? recordResult.object);
+            let creator = new RecordEditEntityCreator(entityMap, schema, refId, setEditingRecord, setForceUpdate);
+            creator.createEntity(entityId, curTable, editingRecord ?? recordResult.object);
         }
         fillInputs(entityMap);
 
         const menu: Item[] = [];
 
-        const nodeMenuFunc = (node: Entity): Item[] => {
-            let refId = node.userData as RefId;
+        const entityMenuFunc = (entity: Entity): Item[] => {
+            let refId = entity.userData as RefId;
             if (refId.table != curTable.name || refId.id != curId) {  // ref节点
                 return [
                     {
@@ -79,7 +79,7 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
             }
             return [];
         }
-        return {entityMap, menu, nodeMenuFunc}
+        return {entityMap, menu, entityMenuFunc}
     }
 
 

@@ -1,5 +1,5 @@
 import {BriefRecord, RefId, Refs, TableMap} from "../model/recordModel.ts";
-import {Entity, EntityConnectionType, EntityNodeType, FieldsShowType} from "../model/graphModel.ts";
+import {Entity, EntityConnectionType, EntityType, FieldsShowType} from "../model/graphModel.ts";
 
 export function getLastName(id: string): string {
     let seps = id.split('.');
@@ -26,7 +26,7 @@ function isRefIdInTableMap(refId: RefId, tableMap: TableMap): boolean {
     return false;
 }
 
-export function createRefs(node: Entity, refs: Refs, tableMap: TableMap) {
+export function createRefs(entity: Entity, refs: Refs, tableMap: TableMap) {
     let refIdMap = refs.$refs;
     if (refIdMap == null) {
         return;
@@ -37,14 +37,14 @@ export function createRefs(node: Entity, refs: Refs, tableMap: TableMap) {
         for (let refId of refIds) {
             if (isRefIdInTableMap(refId, tableMap)) {
                 connectToSockets.push({
-                    nodeId: getId(refId.table, refId.id),
+                    entityId: getId(refId.table, refId.id),
                     inputKey: 'input',
                     connectionType: EntityConnectionType.Ref
                 });
             }
         }
         if (connectToSockets.length > 0) {
-            node.outputs.push({
+            entity.outputs.push({
                 output: {key: refName, label: refName},
                 connectToSockets: connectToSockets
             });
@@ -52,7 +52,7 @@ export function createRefs(node: Entity, refs: Refs, tableMap: TableMap) {
     }
 }
 
-export function createRefNodes(entityMap: Map<string, Entity>, tableMap: TableMap, isCreateRefs: boolean = true) {
+export function createRefEntities(entityMap: Map<string, Entity>, tableMap: TableMap, isCreateRefs: boolean = true) {
     for (let table in tableMap) {
         let recordMap = tableMap[table]
         for (let id in recordMap) {
@@ -60,15 +60,15 @@ export function createRefNodes(entityMap: Map<string, Entity>, tableMap: TableMa
             let refId: RefId = {table, id};
             let eid = getId(table, id);
 
-            let nodeType;
+            let entityType;
             if (briefRecord.depth == 0) {
-                nodeType = EntityNodeType.Normal;
+                entityType = EntityType.Normal;
             } else if (briefRecord.depth == 1) {
-                nodeType = EntityNodeType.Ref;
+                entityType = EntityType.Ref;
             } else if (briefRecord.depth > 1) {
-                nodeType = EntityNodeType.Ref2;
+                entityType = EntityType.Ref2;
             } else {
-                nodeType = EntityNodeType.RefIn;
+                entityType = EntityType.RefIn;
             }
 
             let entity: Entity = {
@@ -81,7 +81,7 @@ export function createRefNodes(entityMap: Map<string, Entity>, tableMap: TableMa
                 outputs: [],
 
                 fieldsShow: FieldsShowType.Direct,
-                nodeType,
+                entityType: entityType,
                 userData: refId,
             };
             if (isCreateRefs){

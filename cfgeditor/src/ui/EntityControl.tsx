@@ -41,7 +41,7 @@ export function EntityControlComponent(props: { data: EntityControl }) {
         if (!fields || fields.length == 0) {
             content = <Space/>;
         } else {
-            content = <EntityForm fields={fields}/>;
+            content = <EntityForm fields={fields} id={entity.id}/>;
         }
     } else {
 

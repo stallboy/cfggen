@@ -23,7 +23,7 @@ export type PrimitiveType = 'bool' | 'int' | 'long' | 'float' | 'str' | 'text';
 export type EditFieldValueType = string | number | boolean | string[] | number[] | boolean[] | ((value: any) => void);
 
 export interface ConnectTo {
-    nodeId: string;
+    entityId: string;
     inputKey: string;
     connectionType?: EntityConnectionType;
 }
@@ -47,14 +47,14 @@ export interface Entity {
     outputs: EntitySocketOutput[];
 
     fieldsShow: FieldsShowType;
-    nodeType?: EntityNodeType;
+    entityType?: EntityType;
     userData?: any;
 }
 
 export interface EntityGraph {
     entityMap: Map<string, Entity>;
     menu: Item[];
-    nodeMenuFunc?: (node: Entity) => Item[];
+    entityMenuFunc?: (entity: Entity) => Item[];
 }
 
 export enum FieldsShowType {
@@ -64,7 +64,7 @@ export enum FieldsShowType {
     Edit,
 }
 
-export enum EntityNodeType {
+export enum EntityType {
     Normal,
     Ref,
     Ref2,
@@ -77,16 +77,16 @@ export enum EntityConnectionType {
 }
 
 export function fillInputs(entityMap: Map<string, Entity>) {
-    let nodeIdSet = new Set<string>();
+    let entityIdSet = new Set<string>();
     for (let entity of entityMap.values()) {
         for (let output of entity.outputs) {
             for (let connectToSocket of output.connectToSockets) {
-                nodeIdSet.add(connectToSocket.nodeId);
+                entityIdSet.add(connectToSocket.entityId);
             }
         }
     }
 
-    for (let id of nodeIdSet) {
+    for (let id of entityIdSet) {
         let entity = entityMap.get(id);
         if (entity) {
             entity.inputs = [{key: 'input'}];

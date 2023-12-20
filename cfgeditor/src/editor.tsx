@@ -34,10 +34,10 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
         items: (context: 'root' | Schemes['Node'], _plugin: ContextMenuPlugin<Schemes>) => {
             if (context == 'root') {
                 return {list: graph.menu};
-            } else if (graph.nodeMenuFunc) {
+            } else if (graph.entityMenuFunc) {
                 let en = editor.getNode(context.id) as EntityNode;
                 if (en.entity) {
-                    return {list: graph.nodeMenuFunc(en.entity)};
+                    return {list: graph.entityMenuFunc(en.entity)};
                 }
             }
             return {list: []}
@@ -115,7 +115,7 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
         let fromNode = id2node.get(entity.id) as EntityNode;
         for (let output of entity.outputs) {
             for (let connSocket of output.connectToSockets) {
-                let toNode = id2node.get(connSocket.nodeId) as EntityNode;
+                let toNode = id2node.get(connSocket.entityId) as EntityNode;
                 if (toNode) { // 可能会没有
                     let conn = new EntityConnection(fromNode, output.output.key, toNode, connSocket.inputKey);
                     conn.connectionType = connSocket.connectionType ?? EntityConnectionType.Normal;

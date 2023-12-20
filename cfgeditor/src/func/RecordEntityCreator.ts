@@ -2,22 +2,22 @@ import {
     Entity,
     EntityConnectionType,
     EntityField,
-    EntityNodeType,
+    EntityType,
     EntitySocketOutput,
     FieldsShowType
 } from "../model/graphModel.ts";
 import {getField, Schema, SField, SStruct, STable} from "../model/schemaModel.ts";
 import {JSONArray, JSONObject, JSONValue, RefId, Refs, TableMap} from "../model/recordModel.ts";
-import {createRefs, getLabel} from "./recordRefNode.ts";
+import {createRefs, getLabel} from "./recordRefEntity.ts";
 
-export class RecordNodeCreator {
+export class RecordEntityCreator {
     constructor(public entityMap: Map<string, Entity>,
                 public schema: Schema,
                 public refId: RefId,
                 public refs : TableMap) {
     }
 
-    createNodes(id: string, obj: JSONObject & Refs): Entity | null {
+    createEntity(id: string, obj: JSONObject & Refs): Entity | null {
         let fields: EntityField[] = [];
         let type: string = obj['$type'] as string;
         if (type == null) {
@@ -69,12 +69,12 @@ export class RecordNodeCreator {
                             for (let e of fArr) {
                                 let fObj: JSONObject & Refs = e as JSONObject & Refs;
                                 let childId: string = `${id}-${fieldKey}[${i}]`;
-                                let childNode = this.createNodes(childId, fObj);
+                                let childEntity = this.createEntity(childId, fObj);
                                 i++;
 
-                                if (childNode) {
+                                if (childEntity) {
                                     connectToSockets.push({
-                                        nodeId: childNode.id,
+                                        entityId: childEntity.id,
                                         inputKey: 'input',
                                         connectionType: EntityConnectionType.Normal
                                     });
@@ -103,12 +103,12 @@ export class RecordNodeCreator {
                 } else { // struct or interface
                     let fObj: JSONObject & Refs = fieldValue as JSONObject & Refs;
                     let childId: string = id + "-" + fieldKey;
-                    let childNode = this.createNodes(childId, fObj);
-                    if (childNode) {
+                    let childEntity = this.createEntity(childId, fObj);
+                    if (childEntity) {
                         outputs.push({
                             output: {key: fieldKey, label: fieldKey},
                             connectToSockets: [{
-                                nodeId: childNode.id,
+                                entityId: childEntity.id,
                                 inputKey: 'input',
                                 connectionType: EntityConnectionType.Normal
                             }]
@@ -139,7 +139,7 @@ export class RecordNodeCreator {
             outputs: outputs,
 
             fieldsShow: FieldsShowType.Direct,
-            nodeType: EntityNodeType.Normal,
+            entityType: EntityType.Normal,
             userData: this.refId,
         };
 

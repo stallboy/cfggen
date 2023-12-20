@@ -17,7 +17,7 @@ function PrimitiveControl(field: EntityEditField, isFromArray: boolean = false) 
     } else if (field.eleType == 'bool') {
         control = <Switch  {...style}/>;
     } else if (setOfNumber.has(field.eleType)) {
-        control = <InputNumber {...style}/>;
+        control = <InputNumber {...style} />;
     } else {
         control = <TextArea {...style}/>;
     }
@@ -164,8 +164,9 @@ function FieldsFormItem(fields: EntityEditField[]) {
 }
 
 
-export function EntityForm({fields}: {
+export function EntityForm({fields, id}: {
     fields: EntityEditField[];
+    id: string;
 }) {
 
     if (fields.length > 0) {
@@ -176,7 +177,7 @@ export function EntityForm({fields}: {
     }
 
     function onValuesChange(_changedFields: any, allFields: any) {
-        console.log(allFields);
+        console.log(id, allFields);
         // call setEditRecord indirectly by function in EntityEditField
     }
 
