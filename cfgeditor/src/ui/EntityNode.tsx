@@ -1,6 +1,6 @@
 import {ClassicPreset} from "rete";
 import {EntityControl} from "./EntityControl.tsx";
-import {Entity, EntityType} from "../model/graphModel.ts";
+import {Entity, EntityType} from "../model/entityModel.ts";
 import {Presets, RenderEmit} from "rete-react-plugin";
 import {css} from "styled-components";
 

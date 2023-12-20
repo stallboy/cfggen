@@ -5,7 +5,7 @@ import {ConnectionPlugin, Presets as ConnectionPresets} from "rete-connection-pl
 import {Presets, ReactArea2D, ReactPlugin} from "rete-react-plugin";
 
 import {AutoArrangePlugin, Presets as ArrangePresets} from "rete-auto-arrange-plugin";
-import {Entity, EntityConnectionType, EntityGraph, FieldsShowType} from "./model/graphModel.ts";
+import {Entity, EntityConnectionType, EntityGraph, FieldsShowType} from "./model/entityModel.ts";
 import {EntityControl, EntityControlComponent} from "./ui/EntityControl.tsx";
 import {EntityNode, EntityNodeComponent} from "./ui/EntityNode.tsx";
 import {EntityConnection, EntityConnectionComponent} from "./ui/EntityConnection.tsx";

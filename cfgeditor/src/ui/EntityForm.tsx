@@ -1,4 +1,4 @@
-import {EntityEditField} from "../model/graphModel.ts";
+import {EntityEditField} from "../model/entityModel.ts";
 import {Button, ConfigProvider, Form, InputNumber, Select, Switch, Tooltip} from "antd";
 import TextArea from "antd/es/input/TextArea";
 import {CloseOutlined, MinusCircleOutlined, PlusCircleOutlined, PlusCircleTwoTone} from "@ant-design/icons";

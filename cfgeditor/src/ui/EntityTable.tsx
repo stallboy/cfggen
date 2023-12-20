@@ -1,5 +1,5 @@
 import {ColumnsType} from "antd/es/table";
-import {EntityField} from "../model/graphModel.ts";
+import {EntityField} from "../model/entityModel.ts";
 import {Table, Tooltip} from "antd";
 
 

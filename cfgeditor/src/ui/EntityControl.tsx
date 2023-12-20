@@ -1,5 +1,5 @@
 import {ClassicPreset} from "rete";
-import {Entity, FieldsShowType} from "../model/graphModel.ts";
+import {Entity, FieldsShowType} from "../model/entityModel.ts";
 import {Collapse, Space} from "antd";
 import {EntityTable} from "./EntityTable.tsx";
 import {EntityForm} from "./EntityForm.tsx";

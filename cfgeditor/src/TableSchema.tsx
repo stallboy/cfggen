@@ -9,7 +9,7 @@ import {
     EntityType,
     FieldsShowType,
     fillInputs
-} from "./model/graphModel.ts";
+} from "./model/entityModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 
 
