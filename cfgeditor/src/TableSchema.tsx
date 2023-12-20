@@ -11,6 +11,7 @@ import {
     fillInputs
 } from "./model/entityModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
+import {pageTableRef} from "./CfgEditorApp.tsx";
 
 
 function createEntity(item: SItem, id: string, entityType: EntityType = EntityType.Normal): Entity {
@@ -188,14 +189,15 @@ function upper1(str: string): string {
     return str;
 }
 
-export function TableSchema({schema, curTable, maxImpl, setCurTable}: {
+export function TableSchema({schema, curTable, maxImpl, setCurTable, setCurPage}: {
     schema: Schema;
     curTable: STable;
     maxImpl: number;
     setCurTable: (cur: string) => void;
+    setCurPage: (page: string) => void;
 }) {
 
-    function createGraph() : EntityGraph {
+    function createGraph(): EntityGraph {
         const entityMap = new Map<string, Entity>();
         let curEntity = createEntity(curTable, curTable.name);
         entityMap.set(curEntity.id, curEntity);
@@ -204,21 +206,30 @@ export function TableSchema({schema, curTable, maxImpl, setCurTable}: {
         includeRefTables(entityMap, schema);
         fillInputs(entityMap);
 
-        const menu: Item[] = [];
+        const menu: Item[] = [{
+            label: `表关系`,
+            key: `表关系`,
+            handler() {
+                setCurPage(pageTableRef);
+            }
+        }];
 
         const entityMenuFunc = (entity: Entity): Item[] => {
             let sItem = entity.userData as SItem;
-            if (sItem.type == 'table' && sItem.name != curTable.name) {
-                return [{
-                    label: `表结构`,
-                    key: `${sItem.name}表结构`,
-                    handler() {
-                        setCurTable(sItem.name);
-                    }
-                }];
-
-            }
-            return [];
+            return [{
+                label: `表结构`,
+                key: `${sItem.name}表结构`,
+                handler() {
+                    setCurTable(sItem.name);
+                }
+            }, {
+                label: `表关系`,
+                key: `表关系`,
+                handler() {
+                    setCurTable(sItem.name);
+                    setCurPage(pageTableRef);
+                }
+            }];
         }
 
         return {entityMap, menu, entityMenuFunc};

@@ -1,22 +1,43 @@
 import {EntityEditField} from "../model/entityModel.ts";
-import {Button, ConfigProvider, Form, InputNumber, Select, Switch, Tooltip} from "antd";
+import {AutoComplete, Button, ConfigProvider, Form, InputNumber, Select, Switch, Tooltip} from "antd";
 import TextArea from "antd/es/input/TextArea";
 import {CloseOutlined, MinusCircleOutlined, PlusCircleOutlined, PlusCircleTwoTone} from "@ant-design/icons";
+
+const formItemLayout = {
+    labelCol: {
+        xs: {span: 24},
+        sm: {span: 6},
+    },
+    wrapperCol: {
+        xs: {span: 24},
+        sm: {span: 18},
+    },
+};
+
+const formItemLayoutWithOutLabel = {
+    wrapperCol: {
+        xs: {span: 24, offset: 0},
+        sm: {span: 18, offset: 6},
+    },
+};
 
 const setOfNumber = new Set<string>(['int', 'long', 'float']);
 
 function PrimitiveControl(field: EntityEditField, isFromArray: boolean = false) {
     let style = isFromArray ? {style: {width: '92%'}} : {};
     let control;
-    if (field.autoCompleteOptions) {
+    const {eleType, autoCompleteOptions} = field;
+    if (autoCompleteOptions && autoCompleteOptions.length > 0) {
         let options = []
-        for (let op of field.autoCompleteOptions) {
+        for (let op of autoCompleteOptions) {
             options.push({label: op, value: op});
         }
-        control = <Select options={options}/>
-    } else if (field.eleType == 'bool') {
+        control = <AutoComplete options={options} filterOption={(inputValue, option) =>
+            option!.value.toUpperCase().includes(inputValue.toUpperCase())
+        }/>
+    } else if (eleType == 'bool') {
         control = <Switch  {...style}/>;
-    } else if (setOfNumber.has(field.eleType)) {
+    } else if (setOfNumber.has(eleType)) {
         control = <InputNumber {...style} />;
     } else {
         control = <TextArea {...style}/>;
@@ -54,24 +75,6 @@ function makeLabel(field: EntityEditField) {
         {field.name}
     </Tooltip>;
 }
-
-const formItemLayout = {
-    labelCol: {
-        xs: {span: 24},
-        sm: {span: 6},
-    },
-    wrapperCol: {
-        xs: {span: 24},
-        sm: {span: 18},
-    },
-};
-
-const formItemLayoutWithOutLabel = {
-    wrapperCol: {
-        xs: {span: 24, offset: 0},
-        sm: {span: 18, offset: 6},
-    },
-};
 
 function ArrayOfPrimitiveFormItem(editField: EntityEditField) {
     return <Form.List name={editField.name} key={editField.name} initialValue={editField.value as any[]}>
@@ -136,7 +139,6 @@ function InterfaceFormItem(field: EntityEditField): any {
             option!.value.toUpperCase().includes(inputValue.toUpperCase())
         } onChange={(value, _) => {
             field.interfaceOnChangeImpl!!(value);
-            // console.log(value);
         }}/>
     </Form.Item>;
 

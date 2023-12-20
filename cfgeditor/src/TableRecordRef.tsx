@@ -10,9 +10,7 @@ import {createRefEntities} from "./func/recordRefEntity.ts";
 import {pageRecord} from "./CfgEditorApp.tsx";
 
 
-export function TableRecordRefLoaded({curTable, curId, recordRefResult, setCurTableAndId, setCurPage}: {
-    curTable: STable;
-    curId: string;
+export function TableRecordRefLoaded({recordRefResult, setCurTableAndId, setCurPage}: {
     recordRefResult: RecordRefsResult;
     setCurTableAndId: (table: string, id: string) => void;
     setCurPage: (page: string) => void;
@@ -23,29 +21,30 @@ export function TableRecordRefLoaded({curTable, curId, recordRefResult, setCurTa
         createRefEntities(entityMap, recordRefResult.refs);
         fillInputs(entityMap);
 
-        const menu: Item[] = [];
+        const menu: Item[] = [{
+            label: '数据',
+            key: '数据',
+            handler() {
+                setCurPage(pageRecord);
+            }
+        }];
 
         const entityMenuFunc = (entity: Entity): Item[] => {
             let refId = entity.userData as RefId;
-            if (refId.table != curTable.name || refId.id != curId) {
-
-                return [{
-                    label: '数据关系',
-                    key: '数据关系',
-                    handler() {
-                        setCurTableAndId(refId.table, refId.id);
-                    }
-                },{
-                    label: '数据',
-                    key: '数据',
-                    handler() {
-                        setCurTableAndId(refId.table, refId.id);
-                        setCurPage(pageRecord);
-                    }
-                }];
-
-            }
-            return [];
+            return [{
+                label: '数据关系',
+                key: '数据关系',
+                handler() {
+                    setCurTableAndId(refId.table, refId.id);
+                }
+            }, {
+                label: '数据',
+                key: '数据',
+                handler() {
+                    setCurTableAndId(refId.table, refId.id);
+                    setCurPage(pageRecord);
+                }
+            }];
         }
         return {entityMap, menu, entityMenuFunc};
     }
@@ -106,8 +105,7 @@ export function TableRecordRef({
         return <Result status={'error'} title={recordRefResult.resultCode}/>
     }
 
-    return <TableRecordRefLoaded curTable={curTable} curId={curId}
-                                 recordRefResult={recordRefResult}
+    return <TableRecordRefLoaded recordRefResult={recordRefResult}
                                  setCurTableAndId={setCurTableAndId}
                                  setCurPage={setCurPage}/>
 

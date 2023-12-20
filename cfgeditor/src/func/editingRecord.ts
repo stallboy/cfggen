@@ -1,7 +1,9 @@
 import {JSONArray, JSONObject, RecordResult} from "../model/recordModel.ts";
+import {getField, Schema, SItem, SStruct, STable} from "../model/schemaModel.ts";
 
 
 export class EditingState {
+    schema?: Schema;
     editingObject: JSONObject;
     table?: string;
     id?: string;
@@ -16,7 +18,8 @@ export class EditingState {
         };
     }
 
-    startEditingObject(recordResult: RecordResult, setForceUpdate: () => void) {
+    startEditingObject(schema: Schema, recordResult: RecordResult, setForceUpdate: () => void) {
+        this.schema = schema;
         this.setForceUpdate = setForceUpdate;
         if (this.table && this.id) {
             if (recordResult.table == this.table && recordResult.id == this.id) {
@@ -28,19 +31,25 @@ export class EditingState {
         this.id = recordResult.id;
 
         let clone: JSONObject = {...recordResult.object}
-        delete clone['$refs'];
+        delete clone['$refs'];  // inner $ref not deleted
 
         this.editingObject = structuredClone(clone);
+        console.log(this.editingObject);
     }
 
 
     onUpdateFormValues(values: any, fieldChains: (string | number)[]) {
         // console.log('formChange', fieldChains, values);
         let obj = this.getFieldObj(fieldChains);
+        let name = obj['$type'] as string;
+        let sItem = this.schema?.itemIncludeImplMap.get(name);
+
         for (let key in values) {
             if (key.startsWith("$")) { // $impl
                 continue;
             }
+            let conv = this.getFieldPrimitiveTypeConverter(key, sItem);
+
             let fieldValue = values[key];
             if (Array.isArray(fieldValue)) {
                 // antd form 会返回[undefined, .. ], 这里忽略掉undefined 的item
@@ -48,12 +57,12 @@ export class EditingState {
                 let newArr = [];
                 for (let fArrElement of fArr) {
                     if (fArrElement != undefined) {
-                        newArr.push(fArrElement);
+                        newArr.push(conv(fArrElement));
                     }
                 }
                 obj[key] = newArr;
             } else {
-                obj[key] = fieldValue;
+                obj[key] = conv(fieldValue);
             }
         }
     }
@@ -87,7 +96,52 @@ export class EditingState {
         this.setForceUpdate();
     }
 
+    getFieldPrimitiveTypeConverter(fieldName: string, sItem?: SItem): ((value: any) => any) {
+        if (sItem) {
+            let structural = sItem as SStruct | STable;
+            let field = getField(structural, fieldName);
+            if (field) {
+                let ft = field.type;
+                if (ft == 'int') {
+                    return toInt;
+                } else if (ft == 'long' || ft == 'float') {
+                    return toFloat;
+                } else if (ft.startsWith('list<')) {
+                    let itemType = ft.slice(5, ft.length - 1);
+                    if (itemType == 'int') {
+                        return toInt;
+                    } else if (itemType == 'long' || itemType == 'float') {
+                        return toFloat;
+                    }
+                }
+            }
+        }
+        return same;
+    }
+
 
 }
+
+function same(value: any) {
+    return value;
+}
+
+function toInt(value: any) {
+    if (typeof value == 'string') {
+        return parseInt(value);
+    } else {
+        return value;
+    }
+}
+
+
+function toFloat(value: any) {
+    if (typeof value == 'string') {
+        return parseFloat(value);
+    } else {
+        return value;
+    }
+}
+
 
 export let editingState: EditingState = new EditingState();

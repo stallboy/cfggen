@@ -251,6 +251,7 @@ export class RecordEditEntityCreator {
                     type: 'primitive',
                     eleType: sf.type as PrimitiveType,
                     value: v,
+                    autoCompleteOptions: this.getAutoCompleteOptions(structural, sf.name),
                 });
             } else if (sf.type.startsWith('list<')) {
                 let itemType = sf.type.substring(5, sf.type.length - 1);
@@ -262,6 +263,7 @@ export class RecordEditEntityCreator {
                         type: 'arrayOfPrimitive',
                         eleType: itemType as PrimitiveType,
                         value: v,
+                        autoCompleteOptions: this.getAutoCompleteOptions(structural, sf.name),
                     });
                 } else {
                     fields.push({
@@ -282,6 +284,33 @@ export class RecordEditEntityCreator {
             }
         }
 
+    }
+
+    getAutoCompleteOptions(structural: SStruct | STable, fieldName: string): string[] | undefined {
+        if (!structural.foreignKeys) {
+            return undefined;
+        }
+        let fkTable = null;
+        for (let fk of structural.foreignKeys) {
+            if (fk.keys.length == 1 && fk.keys[0] == fieldName &&
+                (fk.refType == 'rPrimary' || fk.refType == 'rNullablePrimary')) {
+                fkTable = fk.refTable;
+                break;
+            }
+        }
+        if (fkTable == null) {
+            return undefined;
+        }
+        let sTable = this.schema.getSTable(fkTable);
+        if (sTable == null) {
+            return undefined;
+        }
+
+        if (!sTable.idSet) {
+            return undefined;
+        }
+
+        return [...sTable.idSet];
     }
 
 }

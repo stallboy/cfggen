@@ -139,6 +139,8 @@ public class EditorServer extends Generator {
                 cfgValue = service.newCfgValue();
             }
         }
+
+        logger.info(result.toString());
         sendResponse(exchange, result);
     }
 
@@ -160,6 +162,7 @@ public class EditorServer extends Generator {
                 cfgValue = service.newCfgValue();
             }
         }
+        logger.info(result.toString());
         sendResponse(exchange, result);
     }
 

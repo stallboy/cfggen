@@ -10,14 +10,16 @@ import {createRefEntities, getId} from "./func/recordRefEntity.ts";
 import {RecordEntityCreator} from "./func/RecordEntityCreator.ts";
 import {RecordEditEntityCreator} from "./func/RecordEditEntityCreator.ts";
 import {editingState} from "./func/editingRecord.ts";
+import {pageRecordRef} from "./CfgEditorApp.tsx";
 
 
-export function TableRecordLoaded({schema, curTable, curId, recordResult, setCurTableAndId, onSubmit}: {
+export function TableRecordLoaded({schema, curTable, curId, recordResult, setCurTableAndId, setCurPage, onSubmit}: {
     schema: Schema;
     curTable: STable;
     curId: string;
     recordResult: RecordResult;
     setCurTableAndId: (table: string, id: string) => void;
+    setCurPage: (page: string) => void;
     onSubmit: () => void;
 }) {
 
@@ -36,13 +38,39 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
             let creator = new RecordEntityCreator(entityMap, schema, refId, recordResult.refs);
             creator.createEntity(entityId, recordResult.object);
         } else {
-            editingState.startEditingObject(recordResult, setForceUpdate);
+            editingState.startEditingObject(schema, recordResult, setForceUpdate);
             let creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId, onSubmit);
             creator.createThis();
         }
         fillInputs(entityMap);
 
-        const menu: Item[] = [];
+        function getEditMenu() {
+            if (editMode) {
+                return {
+                    label: '只读',
+                    key: '只读',
+                    handler() {
+                        setEditMode(false);
+                    }
+                };
+            } else {
+                return {
+                    label: '编辑',
+                    key: '编辑',
+                    handler() {
+                        setEditMode(true);
+                    }
+                };
+            }
+        }
+
+        const menu: Item[] = [{
+            label: '数据关系',
+            key: '数据关系',
+            handler() {
+                setCurPage(pageRecordRef);
+            }
+        }, getEditMenu()];
 
         const entityMenuFunc = (entity: Entity): Item[] => {
             let refId = entity.userData as RefId;
@@ -57,28 +85,7 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
                     },
                 ];
             } else if (isEditable) { // 本节点
-                if (editMode) {
-                    return [
-                        {
-                            label: '只读',
-                            key: '只读',
-                            handler() {
-                                setEditMode(false);
-                            }
-                        },
-                    ];
-                } else {
-                    return [
-                        {
-                            label: '编辑',
-                            key: '编辑',
-                            handler() {
-                                setEditMode(true);
-                            }
-                        },
-                    ];
-                }
-
+                return [getEditMenu()];
             }
             return [];
         }
@@ -97,7 +104,7 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
     return <div ref={ref} style={{height: "100vh", width: "100vw"}}></div>
 }
 
-export function TableRecord({schema, curTable, curId, server, tryReconnect, setCurTableAndId, setSchema}: {
+export function TableRecord({schema, curTable, curId, server, tryReconnect, setCurTableAndId, setSchema, setCurPage}: {
     schema: Schema;
     curTable: STable;
     curId: string;
@@ -105,6 +112,7 @@ export function TableRecord({schema, curTable, curId, server, tryReconnect, setC
     tryReconnect: () => void;
     setCurTableAndId: (table: string, id: string) => void;
     setSchema: (schema: Schema) => void;
+    setCurPage: (page: string) => void;
 }) {
     const [recordResult, setRecordResult] = useState<RecordResult | null>(null);
     const {notification} = App.useApp();
@@ -183,6 +191,7 @@ export function TableRecord({schema, curTable, curId, server, tryReconnect, setC
                               key={`${curTable.name}-${curId}`}
                               recordResult={recordResult}
                               setCurTableAndId={setCurTableAndId}
+                              setCurPage={setCurPage}
                               onSubmit={onSubmit}/>
 
 }

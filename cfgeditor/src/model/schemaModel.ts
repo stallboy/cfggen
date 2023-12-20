@@ -371,8 +371,8 @@ function setDelete(dst: Set<string>, from: Set<string>) {
     }
 }
 
-export function getField(item: STable | SStruct, fieldName: string): SField | null {
-    for (let field of item.fields) {
+export function getField(structural: STable | SStruct, fieldName: string): SField | null {
+    for (let field of structural.fields) {
         if (field.name == fieldName) {
             return field;
         }

@@ -208,13 +208,16 @@ export function CfgEditorApp() {
         tableSchema = <TableSchema schema={schema}
                                    curTable={curTable}
                                    maxImpl={maxImpl}
-                                   setCurTable={selectCurTable}/>;
+                                   setCurTable={selectCurTable}
+                                   setCurPage={selectCurPage}/>;
+
         tableRef = <TableRef schema={schema}
                              curTable={curTable}
                              setCurTable={selectCurTable}
                              refIn={refIn}
                              refOutDepth={refOutDepth}
-                             maxNode={maxNode}/>;
+                             maxNode={maxNode}
+                             setCurPage={selectCurPage}/>;
 
         if (curId != null) {
             tableRecord = <TableRecord schema={schema}
@@ -223,7 +226,8 @@ export function CfgEditorApp() {
                                        server={server}
                                        tryReconnect={tryReconnect}
                                        setCurTableAndId={selectCurTableAndId}
-                                       setSchema={setSchema}/>;
+                                       setSchema={setSchema}
+                                       setCurPage={selectCurPage}/>;
 
             tableRecordRef = <TableRecordRef curTable={curTable}
                                              curId={curId}

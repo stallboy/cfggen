@@ -2,8 +2,16 @@ import {Schema, SItem, STable} from "./model/schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback} from "react";
-import {Entity, EntityConnectionType, EntityGraph, EntityType, FieldsShowType, fillInputs} from "./model/entityModel.ts";
+import {
+    Entity,
+    EntityConnectionType,
+    EntityGraph,
+    EntityType,
+    FieldsShowType,
+    fillInputs
+} from "./model/entityModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
+import {pageTable} from "./CfgEditorApp.tsx";
 
 
 function createEntity(item: SItem, id: string, entityType: EntityType = EntityType.Normal): Entity {
@@ -127,13 +135,14 @@ function includeRefTables(entityMap: Map<string, Entity>, curTable: STable, sche
 }
 
 
-export function TableRef({schema, curTable, setCurTable, refIn, refOutDepth, maxNode}: {
+export function TableRef({schema, curTable, setCurTable, refIn, refOutDepth, maxNode, setCurPage}: {
     schema: Schema;
     curTable: STable;
     setCurTable: (cur: string) => void;
     refIn: boolean;
     refOutDepth: number;
     maxNode: number;
+    setCurPage: (page: string) => void;
 }) {
 
     function createGraph(): EntityGraph {
@@ -141,22 +150,32 @@ export function TableRef({schema, curTable, setCurTable, refIn, refOutDepth, max
         includeRefTables(entityMap, curTable, schema, refIn, refOutDepth, maxNode);
         fillInputs(entityMap);
 
-        const menu: Item[] = [];
+        const menu: Item[] = [{
+            label: `表结构`,
+            key: `表结构`,
+            handler() {
+                setCurPage(pageTable);
+            }
+        }];
 
         const entityMenuFunc = (entity: Entity): Item[] => {
             let sItem = entity.userData as SItem;
-            if (sItem.type == 'table' && sItem.name != curTable.name) {
-                return [{
-                    label: `表关系`,
-                    key: `${sItem.name}表关系`,
-                    handler() {
-                        setCurTable(sItem.name);
-                    }
-                }];
-
-            }
-            return [];
+            return [{
+                label: `表关系`,
+                key: `${sItem.name}表关系`,
+                handler() {
+                    setCurTable(sItem.name);
+                }
+            }, {
+                label: `表结构`,
+                key: `表结构`,
+                handler() {
+                    setCurTable(sItem.name);
+                    setCurPage(pageTable);
+                }
+            }];
         }
+
         return {entityMap, menu, entityMenuFunc};
     }
 
