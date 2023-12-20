@@ -4,11 +4,12 @@ import {createEditor} from "./editor.tsx";
 import {useCallback, useEffect, useReducer, useState} from "react";
 import {Entity, EntityGraph, fillInputs} from "./model/entityModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
-import {JSONObject, RecordResult, RefId} from "./model/recordModel.ts";
+import {RecordResult, RefId} from "./model/recordModel.ts";
 import {App, Empty, Result, Spin} from "antd";
 import {createRefEntities, getId} from "./func/recordRefEntity.ts";
 import {RecordEntityCreator} from "./func/RecordEntityCreator.ts";
 import {RecordEditEntityCreator} from "./func/RecordEditEntityCreator.ts";
+import {editingState} from "./func/editingRecord.ts";
 
 
 export function TableRecordLoaded({schema, curTable, curId, recordResult, setCurTableAndId}: {
@@ -20,10 +21,9 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
 }) {
 
     const [editMode, setEditMode] = useState<boolean>(false);
-    const [editingRecord, setEditingRecord] = useState<(JSONObject) | null>(null);
     const [forceUpdate, setForceUpdate] = useReducer(x => x + 1, 0);
 
-    function createGraph() : EntityGraph {
+    function createGraph(): EntityGraph {
         const entityMap = new Map<string, Entity>();
         let refId = {table: curTable.name, id: curId};
         let entityId = getId(curTable.name, curId);
@@ -34,8 +34,14 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
             let creator = new RecordEntityCreator(entityMap, schema, refId, recordResult.refs);
             creator.createEntity(entityId, recordResult.object);
         } else {
-            let creator = new RecordEditEntityCreator(entityMap, schema, refId, setEditingRecord, setForceUpdate);
-            creator.createEntity(entityId, curTable, editingRecord ?? recordResult.object);
+
+            function OnSubmit() {
+                console.log(editingState.editingObject);
+
+            }
+            editingState.startEditingObject(recordResult, setForceUpdate);
+            let creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId, OnSubmit);
+            creator.createThis();
         }
         fillInputs(entityMap);
 

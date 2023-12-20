@@ -314,6 +314,13 @@ export class Schema {
         return res;
     }
 
+    defaultValue(sFieldable: SStruct | SInterface): JSONObject {
+        if ('impls' in sFieldable) {
+            return this.defaultValueOfInterface(sFieldable as SInterface);
+        } else {
+            return this.defaultValueOfStruct(sFieldable as SStruct);
+        }
+    }
 
     defaultValueOfStruct(sStruct: SStruct): JSONObject {
         let res: JSONObject = {"$type": sStruct.id ?? sStruct.name};
@@ -331,12 +338,8 @@ export class Schema {
             } else {
                 let sf = this.itemIncludeImplMap.get(t);
                 if (sf) {
+                    res[n] = this.defaultValue(sf);
                     // TODO recursive check
-                    if ('impls' in sf) {
-                        res[n] = this.defaultValueOfInterface(sf as SInterface);
-                    } else {
-                        res[n] = this.defaultValueOfStruct(sf as SStruct);
-                    }
                 }
             }
         }

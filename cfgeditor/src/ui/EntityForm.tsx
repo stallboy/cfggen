@@ -134,7 +134,10 @@ function InterfaceFormItem(field: EntityEditField): any {
     let implSelect = <Form.Item name={field.name} key={field.name} label={makeLabel(field)} initialValue={field.value}>
         <Select showSearch options={options} filterOption={(inputValue, option) =>
             option!.value.toUpperCase().includes(inputValue.toUpperCase())
-        }/>
+        } onChange={(value, _) => {
+            field.interfaceOnChangeImpl!!(value);
+            // console.log(value);
+        }}/>
     </Form.Item>;
 
     return [implSelect, ...FieldsFormItem(field.implFields as EntityEditField[])]
@@ -164,9 +167,9 @@ function FieldsFormItem(fields: EntityEditField[]) {
 }
 
 
-export function EntityForm({fields, id}: {
+export function EntityForm({fields, onUpdateValues}: {
     fields: EntityEditField[];
-    id: string;
+    onUpdateValues: (values: any) => void;
 }) {
 
     if (fields.length > 0) {
@@ -177,8 +180,7 @@ export function EntityForm({fields, id}: {
     }
 
     function onValuesChange(_changedFields: any, allFields: any) {
-        console.log(id, allFields);
-        // call setEditRecord indirectly by function in EntityEditField
+        onUpdateValues(allFields);
     }
 
     let form = <Form labelCol={{span: 6}} wrapperCol={{span: 18}}

@@ -43,6 +43,8 @@ export interface Entity {
     label: string;
     fields: EntityField[];
     editFields?: EntityEditField[];
+    editOnUpdateValues?: (values: any) => void;
+
     inputs: EntitySocket[];
     outputs: EntitySocketOutput[];
 

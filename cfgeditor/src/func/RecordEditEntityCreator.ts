@@ -8,8 +8,9 @@ import {
     FieldsShowType
 } from "../model/entityModel.ts";
 import {getField, getImpl, Schema, SInterface, SItem, SStruct, STable} from "../model/schemaModel.ts";
-import {JSONArray, JSONObject, JSONValue, RefId, Refs} from "../model/recordModel.ts";
-import {getLabel, getLastName} from "./recordRefEntity.ts";
+import {JSONArray, JSONObject, JSONValue, RefId} from "../model/recordModel.ts";
+import {getId, getLabel, getLastName} from "./recordRefEntity.ts";
+import {editingState} from "./editingRecord.ts";
 
 
 function getImplNames(sInterface: SInterface): string[] {
@@ -28,14 +29,24 @@ function isPrimitiveType(type: string): boolean {
 
 
 export class RecordEditEntityCreator {
+    curRefId: RefId;
+
     constructor(public entityMap: Map<string, Entity>,
                 public schema: Schema,
-                public refId: RefId,
-                public setEditingRecord: ((record: JSONObject & Refs) => void),
-                public setForceUpdate: () => void) {
+                public curTable: STable,
+                public curId: string,
+                public onSubmit: () => void) {
+        this.curRefId = {table: curTable.name, id: curId};
     }
 
-    createEntity(id: string, sItem: SItem, obj: JSONObject & Refs, isArrayItem: boolean = false): Entity | null {
+    createThis() {
+        let id = getId(this.curTable.name, this.curId);
+        this.createEntity(id, this.curTable, editingState.editingObject, []);
+    }
+
+    createEntity(id: string, sItem: SItem, obj: JSONObject,
+                 fieldChain: (string | number)[],
+                 onDeleteFunc?: () => void): Entity | null {
         let label = getLabel(sItem.name);
 
         let type: string = obj['$type'] as string;
@@ -43,7 +54,7 @@ export class RecordEditEntityCreator {
             console.error('$type missing');
             return null;
         }
-        let fields: EntityEditField[] = this.makeEditFields(sItem, obj);
+        let fields: EntityEditField[] = this.makeEditFields(sItem, obj, fieldChain);
 
         let structural: STable | SStruct;
         if ('impls' in sItem) {
@@ -51,7 +62,6 @@ export class RecordEditEntityCreator {
         } else {
             structural = sItem;
         }
-
 
         let outputs: EntitySocketOutput[] = [];
         for (let fieldKey in obj) {
@@ -92,9 +102,16 @@ export class RecordEditEntityCreator {
                 let i = 0;
                 let connectToSockets = [];
                 for (let e of fArr) {
-                    let itemObj = e as JSONObject & Refs;
+                    let itemObj = e as JSONObject;
                     let childId: string = `${id}-${fieldKey}[${i}]`;
-                    let childEntity = this.createEntity(childId, itemType, itemObj, true);
+                    let arrayIndex = i;
+
+                    const onDeleteFunc = () => {
+                        editingState.onDeleteItemFromArray(arrayIndex, [...fieldChain, fieldKey]);
+                    }
+
+                    let childEntity = this.createEntity(childId, itemType, itemObj,
+                        [...fieldChain, fieldKey, i], onDeleteFunc);
                     i++;
 
                     if (childEntity) {
@@ -117,9 +134,9 @@ export class RecordEditEntityCreator {
                 if (fieldType == null) {
                     continue;
                 }
-                let fieldObj = fieldValue as JSONObject & Refs;
+                let fieldObj = fieldValue as JSONObject;
                 let childId: string = id + "-" + fieldKey;
-                let childEntity = this.createEntity(childId, fieldType, fieldObj);
+                let childEntity = this.createEntity(childId, fieldType, fieldObj, [...fieldChain, fieldKey]);
                 if (childEntity) {
                     outputs.push({
                         output: {key: fieldKey, label: fieldKey},
@@ -133,36 +150,39 @@ export class RecordEditEntityCreator {
             }
         }
 
-        if (isArrayItem) {
+        if (onDeleteFunc) {
             fields.push({
                 name: '$del',
                 comment: '',
                 type: 'funcDelete',
                 eleType: 'bool',
-                value: () => {
-                    // TODO
-                }
+                value: onDeleteFunc,
             });
         }
+
+        const editOnUpdateValues = (values: any) => {
+            editingState.onUpdateFormValues(values, fieldChain);
+        };
 
         let entity: Entity = {
             id: id,
             label: label,
             fields: [],
             editFields: fields,
+            editOnUpdateValues,
             inputs: [],
             outputs: outputs,
 
             fieldsShow: FieldsShowType.Edit,
             entityType: EntityType.Normal,
-            userData: this.refId,
+            userData: this.curRefId,
         };
 
         this.entityMap.set(id, entity);
         return entity;
     }
 
-    makeEditFields(sItem: SItem, obj: JSONObject): EntityEditField[] {
+    makeEditFields(sItem: SItem, obj: JSONObject, fieldChain: (string | number)[]): EntityEditField[] {
         let fields: EntityEditField[] = [];
         let type: string = obj['$type'] as string;
         if ('impls' in sItem) {
@@ -175,7 +195,7 @@ export class RecordEditEntityCreator {
                 eleType: sInterface.name,
                 value: implName,
                 autoCompleteOptions: getImplNames(sInterface),
-                implFields: this.makeEditFields(impl, obj),
+                implFields: this.makeEditFields(impl, obj, fieldChain),
                 interfaceOnChangeImpl: (newImplName: string) => {
                     let newObj: JSONObject;
                     if (newImplName == implName) {
@@ -184,14 +204,15 @@ export class RecordEditEntityCreator {
                         let newImpl = getImpl(sInterface, newImplName) as SStruct;
                         newObj = this.schema.defaultValueOfStruct(newImpl);
                     }
-                    console.log(newObj);
 
+                    editingState.onUpdateInterfaceValue(newObj, fieldChain);
+                    // console.log(newObj);
                 },
             })
 
         } else {
             let structural = sItem as (SStruct | STable);
-            this.makeStructuralEditFields(fields, structural, obj);
+            this.makeStructuralEditFields(fields, structural, obj, fieldChain);
 
             if ('pk' in structural) {
                 fields.push({
@@ -199,9 +220,7 @@ export class RecordEditEntityCreator {
                     comment: '',
                     type: 'funcSubmit',
                     eleType: 'bool',
-                    value: () => {
-                        // TODO
-                    }
+                    value: this.onSubmit
                 });
             }
         }
@@ -210,7 +229,8 @@ export class RecordEditEntityCreator {
     }
 
 
-    makeStructuralEditFields(fields: EntityEditField[], structural: SStruct | STable, obj: JSONObject) {
+    makeStructuralEditFields(fields: EntityEditField[], structural: SStruct | STable, obj: JSONObject,
+                             fieldChain: (string | number)[]) {
         for (let sf of structural.fields) {
             let fieldValue = obj[sf.name];
             if (isPrimitiveType(sf.type)) {
@@ -250,7 +270,9 @@ export class RecordEditEntityCreator {
                         type: 'funcAdd',
                         eleType: itemType,
                         value: () => {
-                            // TODO
+                            let sFieldable = this.schema.itemIncludeImplMap.get(itemType) as SStruct | SInterface;
+                            let defaultValue = this.schema.defaultValue(sFieldable);
+                            editingState.onAddItemForArray(defaultValue, [...fieldChain, sf.name]);
                         }
                     });
                 }
