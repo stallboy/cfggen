@@ -430,10 +430,10 @@ export function CfgEditorApp() {
                 </Form.Item>
 
 
-                <Form.Item label=<LeftOutlined/>>
+                <Form.Item label={<LeftOutlined/>}>
                     alt+x
                 </Form.Item>
-                <Form.Item label=<RightOutlined/>>
+                <Form.Item label={<RightOutlined/>}>
                     alt+c
                 </Form.Item>
                 <Form.Item label='表结构'>
@@ -448,7 +448,7 @@ export function CfgEditorApp() {
                 <Form.Item label='数据关系'>
                     alt+4
                 </Form.Item>
-                <Form.Item label=<SearchOutlined/>>
+                <Form.Item label={<SearchOutlined/>}>
                     alt+q
                 </Form.Item>
 
