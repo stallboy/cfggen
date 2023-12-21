@@ -26,6 +26,7 @@ export function CfgEditorApp() {
     const [curTableId, setCurTableId] = useState<string>(getStr('curTableId', ''));
     const [curId, setCurId] = useState<string>(getStr('curId', ''));
     const [curPage, setCurPage] = useState<string>(getStr('curPage', pageRecord));
+    const [editMode, setEditMode] = useState<boolean>(false);
 
     const [maxImpl, setMaxImpl] = useState<number>(getInt('maxImpl', 10));
     const [refIn, setRefIn] = useState<boolean>(getBool('refIn', true));
@@ -230,7 +231,9 @@ export function CfgEditorApp() {
                                        tryReconnect={tryReconnect}
                                        setCurTableAndId={selectCurTableAndId}
                                        setSchema={setSchema}
-                                       setCurPage={selectCurPage}/>;
+                                       setCurPage={selectCurPage}
+                                       editMode={editMode}
+                                       setEditMode={setEditMode}/>;
 
             tableRecordRef = <TableRecordRef curTable={curTable}
                                              curId={curId}
@@ -240,7 +243,8 @@ export function CfgEditorApp() {
                                              server={server}
                                              tryReconnect={tryReconnect}
                                              setCurTableAndId={selectCurTableAndId}
-                                             setCurPage={selectCurPage}/>;
+                                             setCurPage={selectCurPage}
+                                             setEditMode={setEditMode}/>;
         }
     }
 

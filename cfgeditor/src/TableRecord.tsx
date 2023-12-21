@@ -14,7 +14,17 @@ import {pageRecordRef} from "./CfgEditorApp.tsx";
 import {useTranslation} from "react-i18next";
 
 
-export function TableRecordLoaded({schema, curTable, curId, recordResult, setCurTableAndId, setCurPage, onSubmit}: {
+export function TableRecordLoaded({
+                                      schema,
+                                      curTable,
+                                      curId,
+                                      recordResult,
+                                      setCurTableAndId,
+                                      setCurPage,
+                                      onSubmit,
+                                      editMode,
+                                      setEditMode
+                                  }: {
     schema: Schema;
     curTable: STable;
     curId: string;
@@ -22,9 +32,9 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
     setCurTableAndId: (table: string, id: string) => void;
     setCurPage: (page: string) => void;
     onSubmit: () => void;
+    editMode: boolean,
+    setEditMode: (edit: boolean) => void;
 }) {
-
-    const [editMode, setEditMode] = useState<boolean>(false);
     const [forceUpdate, setForceUpdate] = useReducer(x => x + 1, 0);
     const [t] = useTranslation();
 
@@ -141,7 +151,9 @@ export function TableRecord({
                                 tryReconnect,
                                 setCurTableAndId,
                                 setSchema,
-                                setCurPage
+                                setCurPage,
+                                editMode,
+                                setEditMode,
                             }: {
     schema: Schema;
     curTable: STable;
@@ -151,6 +163,8 @@ export function TableRecord({
     setCurTableAndId: (table: string, id: string) => void;
     setSchema: (schema: Schema) => void;
     setCurPage: (page: string) => void;
+    editMode: boolean,
+    setEditMode: (edit: boolean) => void;
 }) {
     const [recordResult, setRecordResult] = useState<RecordResult | null>(null);
     const {notification} = App.useApp();
@@ -234,7 +248,9 @@ export function TableRecord({
                               recordResult={recordResult}
                               setCurTableAndId={setCurTableAndId}
                               setCurPage={setCurPage}
-                              onSubmit={onSubmit}/>
+                              onSubmit={onSubmit}
+                              editMode={editMode}
+                              setEditMode={setEditMode}/>
 
 }
 

@@ -11,10 +11,11 @@ import {pageRecord} from "./CfgEditorApp.tsx";
 import {useTranslation} from "react-i18next";
 
 
-export function TableRecordRefLoaded({recordRefResult, setCurTableAndId, setCurPage}: {
+export function TableRecordRefLoaded({recordRefResult, setCurTableAndId, setCurPage, setEditMode}: {
     recordRefResult: RecordRefsResult;
     setCurTableAndId: (table: string, id: string) => void;
     setCurPage: (page: string) => void;
+    setEditMode: (edit: boolean) => void;
 }) {
 
     const [t] = useTranslation();
@@ -36,13 +37,13 @@ export function TableRecordRefLoaded({recordRefResult, setCurTableAndId, setCurP
             let refId = entity.userData as RefId;
             let id = getId(refId.table, refId.id);
             return [{
-                label: id  + "\n" + t('recordRef'),
+                label: id + "\n" + t('recordRef'),
                 key: 'entityRecordRef',
                 handler() {
                     setCurTableAndId(refId.table, refId.id);
                 }
             }, {
-                label: id  + "\n" + t('record'),
+                label: id + "\n" + t('record'),
                 key: 'entityRecord',
                 handler() {
                     setCurTableAndId(refId.table, refId.id);
@@ -69,7 +70,7 @@ export function TableRecordRef({
                                    curTable, curId,
                                    refIn, refOutDepth, maxNode,
                                    server, tryReconnect,
-                                   setCurTableAndId, setCurPage
+                                   setCurTableAndId, setCurPage, setEditMode
                                }: {
     curTable: STable;
     curId: string;
@@ -80,6 +81,7 @@ export function TableRecordRef({
     tryReconnect: () => void;
     setCurTableAndId: (table: string, id: string) => void;
     setCurPage: (page: string) => void;
+    setEditMode: (edit: boolean) => void;
 }) {
     const [recordRefResult, setRecordRefResult] = useState<RecordRefsResult | null>(null);
     const {notification} = App.useApp();
@@ -111,7 +113,8 @@ export function TableRecordRef({
 
     return <TableRecordRefLoaded recordRefResult={recordRefResult}
                                  setCurTableAndId={setCurTableAndId}
-                                 setCurPage={setCurPage}/>
+                                 setCurPage={setCurPage}
+                                 setEditMode={setEditMode}/>
 
 
 }
