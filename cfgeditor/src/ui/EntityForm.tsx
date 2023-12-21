@@ -2,6 +2,8 @@ import {EntityEditField} from "../model/entityModel.ts";
 import {AutoComplete, Button, ConfigProvider, Form, InputNumber, Select, Switch, Tooltip} from "antd";
 import TextArea from "antd/es/input/TextArea";
 import {CloseOutlined, MinusCircleOutlined, PlusCircleOutlined, PlusCircleTwoTone} from "@ant-design/icons";
+import {Drag} from "rete-react-plugin";
+import {useRef} from "react";
 
 const formItemLayout = {
     labelCol: {
@@ -173,13 +175,8 @@ export function EntityForm({fields, onUpdateValues}: {
     fields: EntityEditField[];
     onUpdateValues: (values: any) => void;
 }) {
-
-    if (fields.length > 0) {
-        let f = fields[fields.length - 1]
-        if (f.type == 'funcSubmit') {
-
-        }
-    }
+    const ref = useRef<HTMLDivElement>(null);
+    Drag.useNoDrag(ref)
 
     function onValuesChange(_changedFields: any, allFields: any) {
         onUpdateValues(allFields);
@@ -198,6 +195,7 @@ export function EntityForm({fields, onUpdateValues}: {
             },
         },
     }}>
-        {form}
+        <div ref={ref}> {form} </div>
+
     </ConfigProvider>
 }

@@ -1,7 +1,7 @@
 {
 	"taskid":1,
 	"name":[
-		
+		"测试用"
 	],
 	"nexttask":2,
 	"completecondition":{
@@ -12,8 +12,9 @@
 				"$type":"task.completecondition.KillMonster"
 			},
 			"cond2":{
-				"npcid":0,
-				"$type":"task.completecondition.TalkNpc"
+				"itemid":0,
+				"count":0,
+				"$type":"task.completecondition.CollectItem"
 			},
 			"$type":"task.completecondition.ConditionAnd"
 		},

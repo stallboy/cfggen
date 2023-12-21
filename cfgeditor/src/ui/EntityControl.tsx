@@ -5,7 +5,6 @@ import {EntityTable} from "./EntityTable.tsx";
 import {EntityForm} from "./EntityForm.tsx";
 import {useEffect, useRef} from "react";
 
-
 export class EntityControl extends ClassicPreset.Control {
     constructor(public entity: Entity,
                 public changeHeightCallback: (height: number) => void) {
@@ -15,6 +14,8 @@ export class EntityControl extends ClassicPreset.Control {
 
 export function EntityControlComponent(props: { data: EntityControl }) {
     const ref = useRef<HTMLDivElement>(null);
+
+
     useEffect(() => {
         if (ref.current) {
             // console.log(ref.current.offsetHeight);
