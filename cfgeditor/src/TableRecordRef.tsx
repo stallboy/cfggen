@@ -6,8 +6,9 @@ import {Entity, EntityGraph, fillInputs,} from "./model/entityModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 import {RecordRefsResult, RefId} from "./model/recordModel.ts";
 import {App, Empty, Result, Spin} from "antd";
-import {createRefEntities} from "./func/recordRefEntity.ts";
+import {createRefEntities, getId} from "./func/recordRefEntity.ts";
 import {pageRecord} from "./CfgEditorApp.tsx";
+import {useTranslation} from "react-i18next";
 
 
 export function TableRecordRefLoaded({recordRefResult, setCurTableAndId, setCurPage}: {
@@ -16,14 +17,16 @@ export function TableRecordRefLoaded({recordRefResult, setCurTableAndId, setCurP
     setCurPage: (page: string) => void;
 }) {
 
+    const [t] = useTranslation();
+
     function createGraph(): EntityGraph {
         const entityMap = new Map<string, Entity>();
         createRefEntities(entityMap, recordRefResult.refs);
         fillInputs(entityMap);
 
         const menu: Item[] = [{
-            label: '数据',
-            key: '数据',
+            label: recordRefResult.table + "\n" + t('record'),
+            key: 'record',
             handler() {
                 setCurPage(pageRecord);
             }
@@ -31,15 +34,16 @@ export function TableRecordRefLoaded({recordRefResult, setCurTableAndId, setCurP
 
         const entityMenuFunc = (entity: Entity): Item[] => {
             let refId = entity.userData as RefId;
+            let id = getId(refId.table, refId.id);
             return [{
-                label: '数据关系',
-                key: '数据关系',
+                label: id  + "\n" + t('recordRef'),
+                key: 'entityRecordRef',
                 handler() {
                     setCurTableAndId(refId.table, refId.id);
                 }
             }, {
-                label: '数据',
-                key: '数据',
+                label: id  + "\n" + t('record'),
+                key: 'entityRecord',
                 handler() {
                     setCurTableAndId(refId.table, refId.id);
                     setCurPage(pageRecord);

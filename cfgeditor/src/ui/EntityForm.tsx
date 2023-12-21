@@ -4,6 +4,7 @@ import TextArea from "antd/es/input/TextArea";
 import {CloseOutlined, MinusCircleOutlined, PlusCircleOutlined, PlusCircleTwoTone} from "@ant-design/icons";
 import {Drag} from "rete-react-plugin";
 import {useRef} from "react";
+import {useTranslation} from "react-i18next";
 
 const formItemLayout = {
     labelCol: {
@@ -26,7 +27,7 @@ const formItemLayoutWithOutLabel = {
 const setOfNumber = new Set<string>(['int', 'long', 'float']);
 
 function PrimitiveControl(field: EntityEditField, isFromArray: boolean = false) {
-    let style = isFromArray ? {style: {width: '92%'}} : {};
+    let style = isFromArray ? {style: {width: '88%'}} : {};
     let control;
     const {eleType, autoCompleteOptions} = field;
     if (autoCompleteOptions && autoCompleteOptions.length > 0) {
@@ -114,10 +115,11 @@ function FuncAddFormItem(field: EntityEditField) {
 }
 
 function FuncSubmitFormItem(field: EntityEditField) {
+    const [t] = useTranslation();
     let func = field.value as (() => void);
     return <Form.Item {...formItemLayoutWithOutLabel} key={field.name}>
         <Button type="primary" htmlType="submit" onClick={() => func()}>
-            更新
+            {t('addOrUpdate')}
         </Button>
     </Form.Item>
 }

@@ -11,6 +11,7 @@ import {RecordEntityCreator} from "./func/RecordEntityCreator.ts";
 import {RecordEditEntityCreator} from "./func/RecordEditEntityCreator.ts";
 import {editingState} from "./func/editingRecord.ts";
 import {pageRecordRef} from "./CfgEditorApp.tsx";
+import {useTranslation} from "react-i18next";
 
 
 export function TableRecordLoaded({schema, curTable, curId, recordResult, setCurTableAndId, setCurPage, onSubmit}: {
@@ -25,7 +26,7 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
 
     const [editMode, setEditMode] = useState<boolean>(false);
     const [forceUpdate, setForceUpdate] = useReducer(x => x + 1, 0);
-
+    const [t] = useTranslation();
 
     function createGraph(): EntityGraph {
         const entityMap = new Map<string, Entity>();
@@ -44,50 +45,78 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
         }
         fillInputs(entityMap);
 
-        function getEditMenu() {
-            if (editMode) {
+        function getEditMenu(table: string, id: string, edit: boolean) {
+            if (edit) {
                 return {
-                    label: '只读',
-                    key: '只读',
+                    label: getId(table, id) + '\n' + t('edit'),
+                    key: 'edit',
                     handler() {
-                        setEditMode(false);
+                        if (table != curTable.name || id != curId) {
+                            setCurTableAndId(table, id);
+                        }
+                        setEditMode(true);
                     }
                 };
             } else {
                 return {
-                    label: '编辑',
-                    key: '编辑',
+                    label: getId(table, id) + '\n' + t('view'),
+                    key: 'view',
                     handler() {
-                        setEditMode(true);
+                        if (table != curTable.name || id != curId) {
+                            setCurTableAndId(table, id);
+                        }
+                        setEditMode(false);
                     }
                 };
+
             }
         }
 
         const menu: Item[] = [{
-            label: '数据关系',
-            key: '数据关系',
+            label: entityId + "\n" + t('recordRef'),
+            key: 'recordRef',
             handler() {
                 setCurPage(pageRecordRef);
             }
-        }, getEditMenu()];
+        }];
+        if (isEditable) {
+            menu.push(getEditMenu(curTable.name, curId, !editMode));
+        }
 
         const entityMenuFunc = (entity: Entity): Item[] => {
             let refId = entity.userData as RefId;
-            if (refId.table != curTable.name || refId.id != curId) {  // ref节点
-                return [
-                    {
-                        label: '数据',
-                        key: '数据',
+            let id = getId(refId.table, refId.id);
+
+            let mm = [{
+                label: id + "\n" + t('recordRef'),
+                key: 'entityRecordRef',
+                handler() {
+                    setCurTableAndId(refId.table, refId.id);
+                    setCurPage(pageRecordRef);
+                }
+            }];
+
+            let isCurrentNode = (refId.table == curTable.name && refId.id == curId);
+            if (isCurrentNode) {
+                if (isEditable) {
+                    mm.push(getEditMenu(curTable.name, curId, !editMode));
+                }
+            } else {
+                let isNodeEditable = !!(schema.getSTable(refId.table)?.isEditable);
+                if (isNodeEditable) {
+                    mm.push(getEditMenu(refId.table, refId.id, false));
+                    mm.push(getEditMenu(refId.table, refId.id, true));
+                } else {
+                    mm.push({
+                        label: id + "\n" + t('record'),
+                        key: 'entityRecord',
                         handler() {
                             setCurTableAndId(refId.table, refId.id);
                         }
-                    },
-                ];
-            } else if (isEditable) { // 本节点
-                return [getEditMenu()];
+                    });
+                }
             }
-            return [];
+            return mm;
         }
         return {entityMap, menu, entityMenuFunc}
     }
@@ -104,7 +133,16 @@ export function TableRecordLoaded({schema, curTable, curId, recordResult, setCur
     return <div ref={ref} style={{height: "100vh", width: "100vw"}}></div>
 }
 
-export function TableRecord({schema, curTable, curId, server, tryReconnect, setCurTableAndId, setSchema, setCurPage}: {
+export function TableRecord({
+                                schema,
+                                curTable,
+                                curId,
+                                server,
+                                tryReconnect,
+                                setCurTableAndId,
+                                setSchema,
+                                setCurPage
+                            }: {
     schema: Schema;
     curTable: STable;
     curId: string;
@@ -128,7 +166,11 @@ export function TableRecord({schema, curTable, curId, server, tryReconnect, setC
         }
 
         fetchData().catch((err) => {
-            notification.error({message: `fetch ${url} err: ${err.toString()}`, placement: 'topRight', duration: 4});
+            notification.error({
+                message: `fetch ${url} err: ${err.toString()}`,
+                placement: 'topRight',
+                duration: 4
+            });
             tryReconnect();
         });
     }, [schema, server, curTable, curId]);

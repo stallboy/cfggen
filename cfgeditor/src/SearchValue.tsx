@@ -2,6 +2,7 @@ import {useState} from "react";
 import {App, Button, Empty, Input, Result, Table} from "antd";
 import {SearchResult, SearchResultItem} from "./model/searchModel.ts";
 import type {ColumnsType} from "antd/es/table";
+import {useTranslation} from "react-i18next";
 
 
 function getLabel(table: string, id: string): string {
@@ -55,6 +56,7 @@ export function SearchValue({searchMax, server, tryReconnect, setCurTableAndId}:
     const [query, setQuery] = useState<string>('');
     const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
     const {notification} = App.useApp();
+    const {t} = useTranslation();
 
     function onSearch(value: string) {
         setQuery(value);
@@ -92,7 +94,7 @@ export function SearchValue({searchMax, server, tryReconnect, setCurTableAndId}:
 
     return <div>
         <Input.Search placeholder='search value' defaultValue={query}
-                      enterButton='搜索'
+                      enterButton={t('search')}
                       size='large'
                       loading={loading}
                       onSearch={onSearch}/>

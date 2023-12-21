@@ -13,6 +13,7 @@ import {SearchValue} from "./SearchValue.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
 import {getInt, getBool, getStr} from "./func/localStore.ts";
 import {RecordEditResult} from "./model/recordModel.ts";
+import {useTranslation} from "react-i18next";
 
 export const pageTable = 'table'
 export const pageTableRef = 'tableRef'
@@ -52,6 +53,8 @@ export function CfgEditorApp() {
     useHotkeys('alt+v', () => next());
 
     const {notification} = App.useApp();
+    const {t} = useTranslation();
+
     useEffect(() => {
         tryConnect(server);
     }, []);
@@ -242,10 +245,10 @@ export function CfgEditorApp() {
     }
 
     let items = [
-        {key: pageTable, label: <Space>表结构</Space>, children: tableSchema,},
-        {key: pageTableRef, label: <Space>表关系</Space>, children: tableRef,},
-        {key: pageRecord, label: <Space>数据</Space>, children: tableRecord,},
-        {key: pageRecordRef, label: <Space>数据关系</Space>, children: tableRecordRef,},
+        {key: pageTable, label: <Space>{t('table')}</Space>, children: tableSchema,},
+        {key: pageTableRef, label: <Space>{t('tableRef')}</Space>, children: tableRef,},
+        {key: pageRecord, label: <Space>{t('record')}</Space>, children: tableRecord,},
+        {key: pageRecordRef, label: <Space>{t('recordRef')}</Space>, children: tableRecordRef,},
     ]
 
     function onTabChange(activeKey: string) {
@@ -359,26 +362,26 @@ export function CfgEditorApp() {
     if (schema && curTable && schema.isEditable && curTable.isEditable) {
         deleteButton = <Form.Item wrapperCol={{span: 18, offset: 6,}}>
             <Button type="primary" danger onClick={onDeleteRecord}>
-                <CloseOutlined/>删除当前数据
+                <CloseOutlined/>t{'deleteCurRecord'}
             </Button>
         </Form.Item>
     }
 
 
     return <Space>
-        <Modal title="服务器连接失败" open={isModalOpen}
+        <Modal title={t('serverConnectFail')} open={isModalOpen}
                cancelButtonProps={{disabled: true}}
                closable={false}
                confirmLoading={isFetching}
-               okText='重连当前服务器'
+               okText={t('reconnectCurServer')}
                onOk={handleModalOk}>
 
             <Flex vertical>
                 <Alert message={fetchErr} type='error'/>
-                <p> 请 启动'cfgeditor服务器.bat'，查看自己的配表！ 或 更改服务器地址，查看别人的配表！</p>
-                <p> 当前服务器: {server}</p>
-                <Form.Item label='新服务器:'>
-                    <Input.Search defaultValue={server} enterButton='连接新服' onSearch={onConnectServer}/>
+                <p> {t('netErrFixTip')} </p>
+                <p> {t('curServer')}: {server}</p>
+                <Form.Item label={t('newServer') + ':'}>
+                    <Input.Search defaultValue={server} enterButton={t('connectNewServer')} onSearch={onConnectServer}/>
                 </Form.Item>
             </Flex>
         </Modal>
@@ -390,43 +393,43 @@ export function CfgEditorApp() {
               type="card"/>
         <Drawer title="setting" placement="right" onClose={onSettingClose} open={settingOpen}>
             <Form labelCol={{span: 10}} wrapperCol={{span: 14}} layout={'horizontal'}>
-                <Form.Item label='接口实现数:'>
+                <Form.Item label={t('implsShowCnt')}>
                     <InputNumber value={maxImpl} min={1} max={500} onChange={onChangeMaxImpl}/>
                 </Form.Item>
 
-                <Form.Item label='入层：'>
+                <Form.Item label={t('refIn')}>
                     <Switch checked={refIn} onChange={onChangeRefIn}/>
                 </Form.Item>
 
-                <Form.Item label='出层：'>
+                <Form.Item label={t('refOutDepth')}>
                     <InputNumber value={refOutDepth} min={1} max={500} onChange={onChangeRefOutDepth}/>
                 </Form.Item>
 
-                <Form.Item label='节点数'>
+                <Form.Item label={t('maxNode')}>
                     <InputNumber value={maxNode} min={1} max={500} onChange={onChangeMaxNode}/>
                 </Form.Item>
 
-                <Form.Item label='数据入层'>
+                <Form.Item label={t('recordRefIn')}>
                     <Switch checked={recordRefIn} onChange={onChangeRecordRefIn}/>
                 </Form.Item>
 
-                <Form.Item label='数据出层'>
+                <Form.Item label={t('recordRefOutDepth')}>
                     <InputNumber value={recordRefOutDepth} min={1} max={500} onChange={onChangeRecordRefOutDepth}/>
                 </Form.Item>
 
-                <Form.Item label='数据节点数'>
+                <Form.Item label={t('recordMaxNode')}>
                     <InputNumber value={recordMaxNode} min={1} max={500} onChange={onChangeRecordMaxNode}/>
                 </Form.Item>
 
-                <Form.Item label='搜索返回数'>
+                <Form.Item label={t('searchMaxReturn')}>
                     <InputNumber value={searchMax} min={1} max={500} onChange={onChangeSearchMax}/>
                 </Form.Item>
 
-                <Form.Item label='当前服务器'>
+                <Form.Item label={t('curServer')}>
                     {server}
                 </Form.Item>
-                <Form.Item label='服务器'>
-                    <Input.Search defaultValue={server} enterButton='连接' onSearch={onConnectServer}/>
+                <Form.Item label={t('newServer')}>
+                    <Input.Search defaultValue={server} enterButton={t('connect')} onSearch={onConnectServer}/>
                 </Form.Item>
 
 
@@ -436,16 +439,16 @@ export function CfgEditorApp() {
                 <Form.Item label={<RightOutlined/>}>
                     alt+c
                 </Form.Item>
-                <Form.Item label='表结构'>
+                <Form.Item label={t('table')}>
                     alt+1
                 </Form.Item>
-                <Form.Item label='表关系'>
+                <Form.Item label={t('tableRef')}>
                     alt+2
                 </Form.Item>
-                <Form.Item label='数据'>
+                <Form.Item label={t('record')}>
                     alt+3
                 </Form.Item>
-                <Form.Item label='数据关系'>
+                <Form.Item label={t('recordRef')}>
                     alt+4
                 </Form.Item>
                 <Form.Item label={<SearchOutlined/>}>
