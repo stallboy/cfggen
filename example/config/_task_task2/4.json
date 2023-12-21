@@ -19,5 +19,22 @@
 		"$type":"task.completecondition.ConditionAnd"
 	},
 	"exp":4000,
+	"testBool":false,
+	"testString":"",
+	"testStruct":{
+		"x":0,
+		"y":0,
+		"z":0,
+		"$type":"Position"
+	},
+	"testList":[
+		
+	],
+	"testListStruct":[
+		
+	],
+	"testListInterface":[
+		
+	],
 	"$type":"task.task2"
 }
