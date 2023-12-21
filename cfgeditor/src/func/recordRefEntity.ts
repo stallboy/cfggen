@@ -73,7 +73,7 @@ export function createRefEntities(entityMap: Map<string, Entity>, tableMap: Tabl
 
             let entity: Entity = {
                 id: eid,
-                label: getLabel(table),
+                label: getId(getLabel(table), id),
                 fields: [{key: 'id', name: 'id', value: id},
                     {key: 'value', name: 'value', value: briefRecord.value}
                 ],
