@@ -22,7 +22,7 @@ export class EditingState {
         this.schema = schema;
         this.setForceUpdate = setForceUpdate;
         if (this.table && this.id) {
-            if (recordResult.table == this.table && recordResult.id == this.id) {
+            if (this.table == recordResult.table && this.id == recordResult.id) {
                 return;
             }
         }
@@ -37,6 +37,10 @@ export class EditingState {
         console.log(this.editingObject);
     }
 
+    onClearToDefault(defaultValue: JSONObject) {
+        this.editingObject = defaultValue;
+        this.setForceUpdate();
+    }
 
     onUpdateFormValues(values: any, fieldChains: (string | number)[]) {
         // console.log('formChange', fieldChains, values);

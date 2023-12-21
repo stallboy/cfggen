@@ -1,7 +1,13 @@
-import {EntityEditField} from "../model/entityModel.ts";
-import {AutoComplete, Button, ConfigProvider, Form, InputNumber, Select, Switch, Tooltip} from "antd";
+import {EntityEditField, FuncSubmitType, FuncType} from "../model/entityModel.ts";
+import {AutoComplete, Button, ConfigProvider, Form, InputNumber, Select, Space, Switch, Tooltip} from "antd";
 import TextArea from "antd/es/input/TextArea";
-import {CloseOutlined, MinusCircleOutlined, PlusCircleOutlined, PlusCircleTwoTone} from "@ant-design/icons";
+import {
+    ClearOutlined,
+    CloseOutlined,
+    MinusCircleOutlined,
+    PlusCircleOutlined,
+    PlusCircleTwoTone
+} from "@ant-design/icons";
 import {Drag} from "rete-react-plugin";
 import {useRef} from "react";
 import {useTranslation} from "react-i18next";
@@ -107,7 +113,7 @@ function ArrayOfPrimitiveFormItem(editField: EntityEditField) {
 }
 
 function FuncAddFormItem(field: EntityEditField) {
-    let func = field.value as (() => void);
+    let func = field.value as FuncType;
     return <Form.Item {...formItemLayout} key={field.name}
                       label={makeLabel(field)}>
         <PlusCircleTwoTone onClick={() => func()}/>
@@ -116,16 +122,19 @@ function FuncAddFormItem(field: EntityEditField) {
 
 function FuncSubmitFormItem(field: EntityEditField) {
     const [t] = useTranslation();
-    let func = field.value as (() => void);
+    let func = field.value as FuncSubmitType;
     return <Form.Item {...formItemLayoutWithOutLabel} key={field.name}>
-        <Button type="primary" htmlType="submit" onClick={() => func()}>
-            {t('addOrUpdate')}
-        </Button>
+        <Space size={50}>
+            <Button type="primary" htmlType="submit" onClick={() => func.funcSubmit()}>
+                {t('addOrUpdate')}
+            </Button>
+            <ClearOutlined onClick={() => func.funcClear()}/>
+        </Space>
     </Form.Item>
 }
 
 function FuncDeleteFormItem(field: EntityEditField) {
-    let func = field.value as (() => void);
+    let func = field.value as FuncType;
     return <Form.Item {...formItemLayoutWithOutLabel} key={field.name}>
         <Button type="primary" danger onClick={() => func()}>
             <CloseOutlined/>

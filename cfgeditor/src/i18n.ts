@@ -34,6 +34,7 @@ i18n.use(LanguageDetector)
                     edit: 'edit',
                     view: 'view',
                     addOrUpdate: 'add or update',
+                    setDefaultValue: 'clear',
                 }
             },
             zh: {
@@ -65,8 +66,7 @@ i18n.use(LanguageDetector)
                     edit: '编辑',
                     view: '浏览',
                     addOrUpdate: '更新',
-
-
+                    setDefaultValue: '清空',
                 }
             }
         }

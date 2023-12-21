@@ -167,45 +167,9 @@ export class Schema {
             }
         }
 
-        // 把局部空间的名字，全转换成全局空间的名字
         if (depNameSet.size > 0) {
-            let interfaceNamespace;
-            let implNameSet = new Set<string>();
-            let pitem: SItem = item;
-            if (item.type == 'struct') {
-                let si = item as SStruct;
-                if (si.extends) {
-                    pitem = si.extends;
-                    interfaceNamespace = `${si.extends.name}.`;
-                    for (let impl of si.extends.impls) {
-                        implNameSet.add(impl.name);
-                    }
-                }
-            }
-
-            let moduleNamespace;
-            let lastIdx = pitem.name.lastIndexOf(".");
-            if (lastIdx != -1) {
-                moduleNamespace = pitem.name.substring(0, lastIdx + 1);
-            }
-
             let depNameSetGlobal = new Set<string>();
             for (let n of depNameSet) {
-                if (interfaceNamespace) {
-                    if (implNameSet.has(n)) {
-                        depNameSetGlobal.add(interfaceNamespace + n);
-                        continue;
-                    }
-                }
-
-                if (moduleNamespace) {
-                    let fn = moduleNamespace + n;
-                    if (this.itemMap.has(fn)) {
-                        depNameSetGlobal.add(fn);
-                        continue;
-                    }
-                }
-
                 if (this.itemMap.has(n)) {
                     depNameSetGlobal.add(n);
                     continue;
@@ -318,11 +282,11 @@ export class Schema {
         if ('impls' in sFieldable) {
             return this.defaultValueOfInterface(sFieldable as SInterface);
         } else {
-            return this.defaultValueOfStruct(sFieldable as SStruct);
+            return this.defaultValueOfStructural(sFieldable as SStruct);
         }
     }
 
-    defaultValueOfStruct(sStruct: SStruct): JSONObject {
+    defaultValueOfStructural(sStruct: SStruct | STable): JSONObject {
         let res: JSONObject = {"$type": sStruct.id ?? sStruct.name};
         for (let field of sStruct.fields) {
             let n = field.name;
@@ -353,7 +317,7 @@ export class Schema {
         } else {
             impl = sInterface.impls[0];
         }
-        return this.defaultValueOfStruct(impl);
+        return this.defaultValueOfStructural(impl);
     }
 
 

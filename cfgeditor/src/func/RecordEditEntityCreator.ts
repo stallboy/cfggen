@@ -10,7 +10,7 @@ import {
 import {getField, getImpl, Schema, SInterface, SItem, SStruct, STable} from "../model/schemaModel.ts";
 import {JSONArray, JSONObject, JSONValue, RefId} from "../model/recordModel.ts";
 import {getId, getLabel, getLastName} from "./recordRefEntity.ts";
-import {editingState} from "./editingRecord.ts";
+import {editingState} from "./editingState.ts";
 
 
 function getImplNames(sInterface: SInterface): string[] {
@@ -202,7 +202,7 @@ export class RecordEditEntityCreator {
                         newObj = obj;
                     } else {
                         let newImpl = getImpl(sInterface, newImplName) as SStruct;
-                        newObj = this.schema.defaultValueOfStruct(newImpl);
+                        newObj = this.schema.defaultValueOfStructural(newImpl);
                     }
 
                     editingState.onUpdateInterfaceValue(newObj, fieldChain);
@@ -214,13 +214,21 @@ export class RecordEditEntityCreator {
             let structural = sItem as (SStruct | STable);
             this.makeStructuralEditFields(fields, structural, obj, fieldChain);
 
+            let funcClear = () => {
+                let defaultValue = this.schema.defaultValueOfStructural(structural);
+                editingState.onClearToDefault(defaultValue);
+            };
+
             if ('pk' in structural) {
                 fields.push({
                     name: '$submit',
                     comment: '',
                     type: 'funcSubmit',
                     eleType: 'bool',
-                    value: this.onSubmit
+                    value: {
+                        funcSubmit: this.onSubmit,
+                        funcClear
+                    }
                 });
             }
         }

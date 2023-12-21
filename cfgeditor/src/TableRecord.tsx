@@ -9,7 +9,7 @@ import {App, Empty, Result, Spin} from "antd";
 import {createRefEntities, getId} from "./func/recordRefEntity.ts";
 import {RecordEntityCreator} from "./func/RecordEntityCreator.ts";
 import {RecordEditEntityCreator} from "./func/RecordEditEntityCreator.ts";
-import {editingState} from "./func/editingRecord.ts";
+import {editingState} from "./func/editingState.ts";
 import {pageRecordRef} from "./CfgEditorApp.tsx";
 import {useTranslation} from "react-i18next";
 
