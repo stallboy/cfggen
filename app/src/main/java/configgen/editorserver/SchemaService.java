@@ -166,7 +166,7 @@ public class SchemaService {
     }
 
     private static List<SField> fromFields(List<FieldSchema> fields) {
-        return fields.stream().map(f -> new SField(f.name(), CfgWriter.typeStr(f.type()), f.comment())).toList();
+        return fields.stream().map(f -> new SField(f.name(), CfgWriter.typeStrWithFullName(f.type()), f.comment())).toList();
     }
 
     private static List<SForeignKey> fromFks(List<ForeignKeySchema> fks) {

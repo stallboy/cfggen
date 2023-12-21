@@ -20,6 +20,7 @@ import static configgen.value.CfgValue.VTable;
 
 public class VTableJsonParser {
     private final TableSchema subTableSchema;
+    private final Path dataDir;
     private final Path jsonDir;
     private final TableSchema tableSchema;
     private final ValueErrs errs;
@@ -28,6 +29,7 @@ public class VTableJsonParser {
     public VTableJsonParser(TableSchema subTableSchema, Path dataDir, TableSchema tableSchema,
                             TextI18n.TableI18n nullableTableI18n, ValueErrs errs) {
         this.subTableSchema = subTableSchema;
+        this.dataDir = dataDir;
         this.jsonDir = getJsonTableDir(tableSchema, dataDir);
         this.tableSchema = tableSchema;
         this.parser = new ValueJsonParser(subTableSchema, nullableTableI18n);
@@ -54,6 +56,16 @@ public class VTableJsonParser {
                         }
                     }
                 }
+            }
+        } else { //创建默认的一个record，供cfgeditor开始update或add
+            VStruct defaultValue = ValueDefault.ofStructural(tableSchema);
+            Value pkValue = ValueUtil.extractPrimaryKeyValue(defaultValue, tableSchema);
+            String id = pkValue.packStr();
+            try {
+                VTableJsonParser.addOrUpdateRecordStore(defaultValue, tableSchema, id, dataDir);
+                valueList.add(defaultValue);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
         return new VTableCreator(subTableSchema, tableSchema, errs).create(valueList);

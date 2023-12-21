@@ -138,6 +138,18 @@ public class CfgWriter {
         };
     }
 
+    public static String typeStrWithFullName(FieldType t) {
+        return switch (t) {
+            case Primitive.STRING -> "str";
+            case Primitive primitive -> primitive.name().toLowerCase();
+            case StructRef structRef -> structRef.obj().fullName();
+            case FList fList -> String.format("list<%s>", typeStrWithFullName(fList.item()));
+            case FMap fMap ->
+                    String.format("map<%s,%s>", typeStrWithFullName(fMap.key()), typeStrWithFullName(fMap.value()));
+        };
+    }
+
+
     static String keyStr(KeySchema key) {
         return String.format("[%s]", String.join(",", key.fields()));
     }
