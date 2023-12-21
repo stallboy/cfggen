@@ -35,20 +35,26 @@ export function TableSchema({schema, curTable, maxImpl, setCurTable, setCurPage}
 
         const entityMenuFunc = (entity: Entity): Item[] => {
             let userData = entity.userData as UserData;
-            return [{
-                label: userData.table + "\n" + t('table'),
-                key: `entityTable`,
-                handler() {
-                    setCurTable(userData.table);
-                }
-            }, {
+            let mm = [];
+            if (userData.table != curTable.name) {
+                mm.push({
+                    label: userData.table + "\n" + t('table'),
+                    key: `entityTable`,
+                    handler() {
+                        setCurTable(userData.table);
+                    }
+                });
+            }
+
+            mm.push({
                 label: userData.table + "\n" + t('tableRef'),
                 key: `entityTableRef`,
                 handler() {
                     setCurTable(userData.table);
                     setCurPage(pageTableRef);
                 }
-            }];
+            });
+            return mm;
         }
 
         return {entityMap, menu, entityMenuFunc};

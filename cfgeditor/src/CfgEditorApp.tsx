@@ -235,7 +235,8 @@ export function CfgEditorApp() {
                                        editMode={editMode}
                                        setEditMode={setEditMode}/>;
 
-            tableRecordRef = <TableRecordRef curTable={curTable}
+            tableRecordRef = <TableRecordRef schema={schema}
+                                             curTable={curTable}
                                              curId={curId}
                                              refIn={recordRefIn}
                                              refOutDepth={recordRefOutDepth}

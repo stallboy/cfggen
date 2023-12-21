@@ -1,4 +1,4 @@
-import {STable} from "./model/schemaModel.ts";
+import {Schema, STable} from "./model/schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback, useEffect, useState} from "react";
@@ -11,7 +11,8 @@ import {pageRecord} from "./CfgEditorApp.tsx";
 import {useTranslation} from "react-i18next";
 
 
-export function TableRecordRefLoaded({recordRefResult, setCurTableAndId, setCurPage, setEditMode}: {
+export function TableRecordRefLoaded({schema, recordRefResult, setCurTableAndId, setCurPage, setEditMode}: {
+    schema: Schema;
     recordRefResult: RecordRefsResult;
     setCurTableAndId: (table: string, id: string) => void;
     setCurPage: (page: string) => void;
@@ -36,20 +37,39 @@ export function TableRecordRefLoaded({recordRefResult, setCurTableAndId, setCurP
         const entityMenuFunc = (entity: Entity): Item[] => {
             let refId = entity.userData as RefId;
             let id = getId(refId.table, refId.id);
-            return [{
-                label: id + "\n" + t('recordRef'),
-                key: 'entityRecordRef',
-                handler() {
-                    setCurTableAndId(refId.table, refId.id);
-                }
-            }, {
+            let mm = [];
+            if (refId.table != recordRefResult.table && refId.id != recordRefResult.id) {
+                mm.push({
+                    label: id + "\n" + t('recordRef'),
+                    key: 'entityRecordRef',
+                    handler() {
+                        setCurTableAndId(refId.table, refId.id);
+                    }
+                });
+            }
+            mm.push({
                 label: id + "\n" + t('record'),
                 key: 'entityRecord',
                 handler() {
                     setCurTableAndId(refId.table, refId.id);
                     setCurPage(pageRecord);
+                    setEditMode(false);
                 }
-            }];
+            });
+
+            let isEntityEditable = schema.isEditable && !!(schema.getSTable(refId.table)?.isEditable);
+            if (isEntityEditable) {
+                mm.push({
+                    label: id + "\n" + t('edit'),
+                    key: 'entityEdit',
+                    handler() {
+                        setCurTableAndId(refId.table, refId.id);
+                        setCurPage(pageRecord);
+                        setEditMode(true);
+                    }
+                });
+            }
+            return mm;
         }
         return {entityMap, menu, entityMenuFunc};
     }
@@ -67,11 +87,12 @@ export function TableRecordRefLoaded({recordRefResult, setCurTableAndId, setCurP
 }
 
 export function TableRecordRef({
-                                   curTable, curId,
+                                   schema, curTable, curId,
                                    refIn, refOutDepth, maxNode,
                                    server, tryReconnect,
                                    setCurTableAndId, setCurPage, setEditMode
                                }: {
+    schema: Schema;
     curTable: STable;
     curId: string;
     refIn: boolean;
@@ -111,10 +132,12 @@ export function TableRecordRef({
         return <Result status={'error'} title={recordRefResult.resultCode}/>
     }
 
-    return <TableRecordRefLoaded recordRefResult={recordRefResult}
-                                 setCurTableAndId={setCurTableAndId}
-                                 setCurPage={setCurPage}
-                                 setEditMode={setEditMode}/>
+    return <TableRecordRefLoaded
+        schema={schema}
+        recordRefResult={recordRefResult}
+        setCurTableAndId={setCurTableAndId}
+        setCurPage={setCurPage}
+        setEditMode={setEditMode}/>
 
 
 }

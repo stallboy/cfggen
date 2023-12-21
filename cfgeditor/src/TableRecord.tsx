@@ -82,38 +82,32 @@ export function TableRecordLoaded({
             }
         }
 
-        const menu: Item[] = [{
+        const menu: Item[] = [];
+        if (isEditable) {
+            menu.push(getEditMenu(curTable.name, curId, !editMode));
+        }
+        menu.push({
             label: entityId + "\n" + t('recordRef'),
             key: 'recordRef',
             handler() {
                 setCurPage(pageRecordRef);
             }
-        }];
-        if (isEditable) {
-            menu.push(getEditMenu(curTable.name, curId, !editMode));
-        }
+        })
 
         const entityMenuFunc = (entity: Entity): Item[] => {
             let refId = entity.userData as RefId;
             let id = getId(refId.table, refId.id);
 
-            let mm = [{
-                label: id + "\n" + t('recordRef'),
-                key: 'entityRecordRef',
-                handler() {
-                    setCurTableAndId(refId.table, refId.id);
-                    setCurPage(pageRecordRef);
-                }
-            }];
+            let mm = [];
 
-            let isCurrentNode = (refId.table == curTable.name && refId.id == curId);
-            if (isCurrentNode) {
+            let isCurrentEntity = (refId.table == curTable.name && refId.id == curId);
+            if (isCurrentEntity) {
                 if (isEditable) {
                     mm.push(getEditMenu(curTable.name, curId, !editMode));
                 }
             } else {
-                let isNodeEditable = !!(schema.getSTable(refId.table)?.isEditable);
-                if (isNodeEditable) {
+                let isEntityEditable = schema.isEditable && !!(schema.getSTable(refId.table)?.isEditable);
+                if (isEntityEditable) {
                     mm.push(getEditMenu(refId.table, refId.id, false));
                     mm.push(getEditMenu(refId.table, refId.id, true));
                 } else {
@@ -126,6 +120,14 @@ export function TableRecordLoaded({
                     });
                 }
             }
+            mm.push({
+                label: id + "\n" + t('recordRef'),
+                key: 'entityRecordRef',
+                handler() {
+                    setCurTableAndId(refId.table, refId.id);
+                    setCurPage(pageRecordRef);
+                }
+            })
             return mm;
         }
         return {entityMap, menu, entityMenuFunc}

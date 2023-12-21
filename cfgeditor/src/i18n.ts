@@ -17,7 +17,7 @@ i18n.use(LanguageDetector)
                     table: "table",
                     tableRef: "table relation",
                     record: "record",
-                    recordRef: "record relation",
+                    recordRef: "relation",
 
                     serverConnectFail: 'connect failed',
                     netErrFixTip: "run cfgeditor_server.bat to view your own data！ " +
@@ -33,7 +33,7 @@ i18n.use(LanguageDetector)
                     search: 'search',
                     edit: 'edit',
                     view: 'view',
-                    addOrUpdate:'add or update',
+                    addOrUpdate: 'add or update',
                 }
             },
             zh: {
@@ -41,7 +41,7 @@ i18n.use(LanguageDetector)
                     table: "表结构",
                     tableRef: "表关系",
                     record: "数据",
-                    recordRef: "数据关系",
+                    recordRef: "关系",
 
                     serverConnectFail: '服务器连接失败',
                     netErrFixTip: '请 启动 cfgeditor服务器.bat，查看自己的配表！ 或 更改服务器地址，查看别人的配表！',
@@ -64,7 +64,7 @@ i18n.use(LanguageDetector)
                     search: '搜索',
                     edit: '编辑',
                     view: '浏览',
-                    addOrUpdate:'更新',
+                    addOrUpdate: '更新',
 
 
                 }
