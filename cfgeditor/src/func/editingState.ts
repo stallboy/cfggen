@@ -37,6 +37,10 @@ export class EditingState {
         console.log(this.editingObject);
     }
 
+    clear() {
+        this.id = undefined;
+    }
+
     onClearToDefault(defaultValue: JSONObject) {
         this.editingObject = defaultValue;
         this.setForceUpdate();

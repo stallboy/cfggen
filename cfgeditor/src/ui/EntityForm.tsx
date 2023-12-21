@@ -49,7 +49,7 @@ function PrimitiveControl(field: EntityEditField, isFromArray: boolean = false) 
     } else if (setOfNumber.has(eleType)) {
         control = <InputNumber {...style} />;
     } else {
-        control = <TextArea {...style}/>;
+        control = <TextArea autoSize={true} {...style}/>;
     }
     return control;
 }

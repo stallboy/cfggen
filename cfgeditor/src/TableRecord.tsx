@@ -38,6 +38,11 @@ export function TableRecordLoaded({
     const [forceUpdate, setForceUpdate] = useReducer(x => x + 1, 0);
     const [t] = useTranslation();
 
+
+    useEffect(() => {
+        editingState.clear();
+    }, [schema, curTable, curId, editMode]);
+
     function createGraph(): EntityGraph {
         const entityMap = new Map<string, Entity>();
         let refId = {table: curTable.name, id: curId};
