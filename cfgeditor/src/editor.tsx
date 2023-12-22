@@ -129,10 +129,10 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
     await AreaExtensions.zoomAt(area, editor.getNodes());
 
     // wait height update
-    setTimeout(async () => {
-        await arrange.layout();
-        await AreaExtensions.zoomAt(area, editor.getNodes());
-    }, 500)
+    // setTimeout(async () => {
+    //     await arrange.layout();
+    //     await AreaExtensions.zoomAt(area, editor.getNodes());
+    // }, 500)
 
     return {
         destroy: () => area.destroy()
@@ -152,7 +152,7 @@ function calcHeight(entity: Entity): number {
     } else if (entity.fields) {
         fc = entity.fields.length;
     } else if (entity.brief) {
-        fc = 2;
+        fc = 3;
     }
     switch (entity.fieldsShow) {
         case FieldsShowType.Direct:

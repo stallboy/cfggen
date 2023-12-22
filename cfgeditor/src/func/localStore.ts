@@ -24,3 +24,11 @@ export function getStr(key: string, def: string): string {
     }
     return def;
 }
+
+export function getJson(key: string): any {
+    let v = localStorage.getItem(key);
+    if (v) {
+        return JSON.parse(v);
+    }
+    return null;
+}

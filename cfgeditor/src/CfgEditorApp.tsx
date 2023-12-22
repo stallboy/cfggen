@@ -1,5 +1,20 @@
 import {useEffect, useState} from "react";
-import {Alert, App, Button, Drawer, Flex, Form, Input, InputNumber, Modal, Space, Switch, Tabs, Tag} from "antd";
+import {
+    Alert,
+    App,
+    Button,
+    Drawer,
+    Flex,
+    Form,
+    Input,
+    InputNumber,
+    Modal,
+    Select,
+    Space,
+    Switch,
+    Tabs,
+    Tag
+} from "antd";
 import {CloseOutlined, LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
 import {getNextId, newSchema, Schema} from "./model/schemaModel.ts";
 import {History, HistoryItem} from "./model/historyModel.ts";
@@ -11,14 +26,29 @@ import {TableRecord} from "./TableRecord.tsx";
 import {TableRecordRef} from "./TableRecordRef.tsx";
 import {SearchValue} from "./SearchValue.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
-import {getInt, getBool, getStr} from "./func/localStore.ts";
+import {getInt, getBool, getStr, getJson} from "./func/localStore.ts";
 import {RecordEditResult} from "./model/recordModel.ts";
 import {useTranslation} from "react-i18next";
+import {getId} from "./func/recordRefEntity.ts";
+import {DraggablePanel} from "@ant-design/pro-editor";
 
 export const pageTable = 'table'
 export const pageTableRef = 'tableRef'
 export const pageRecord = 'record'
 export const pageRecordRef = 'recordRef'
+export const pageFixed = 'fix'
+
+// export type DraggablePanelType = 'recordRef' | 'fix' | 'none';
+
+export class FixedPage {
+    constructor(
+        public table: string,
+        public id: string,
+        public refIn: boolean,
+        public refOutDepth: number,
+        public maxNode: number) {
+    }
+}
 
 export function CfgEditorApp() {
     const [server, setServer] = useState<string>(getStr('server', 'localhost:3456'));
@@ -27,6 +57,9 @@ export function CfgEditorApp() {
     const [curId, setCurId] = useState<string>(getStr('curId', ''));
     const [curPage, setCurPage] = useState<string>(getStr('curPage', pageRecord));
     const [editMode, setEditMode] = useState<boolean>(false);
+
+    const [dragPanel, setDragPanel] = useState<string>(getStr('dragPanel', 'none'));
+    const [fix, setFix] = useState<FixedPage | null>(getJson('fix'));
 
     const [maxImpl, setMaxImpl] = useState<number>(getInt('maxImpl', 10));
     const [refIn, setRefIn] = useState<boolean>(getBool('refIn', true));
@@ -170,20 +203,6 @@ export function CfgEditorApp() {
     }
 
 
-    const leftOp = <Space>
-        <TableList schema={schema} curTable={curTable} setCurTable={selectCurTable}/>
-        <IdList curTable={curTable} curId={curId} setCurId={selectCurId}/>
-        {nextId}
-        <Button onClick={prev} disabled={!history.canPrev()}>
-            <LeftOutlined/>
-        </Button>
-
-        <Button onClick={next} disabled={!history.canNext()}>
-            <RightOutlined/>
-        </Button>
-
-    </Space>;
-
     const showSetting = () => {
         setSettingOpen(true);
     };
@@ -200,14 +219,24 @@ export function CfgEditorApp() {
         setSearchOpen(false);
     };
 
-    const rightOp = <Space>
-        <Button onClick={showSearch}>
-            <SearchOutlined/>
-        </Button>
+    const leftOp = <Space>
         <Button onClick={showSetting}>
             <SettingOutlined/>
         </Button>
-    </Space>
+        <Button onClick={showSearch}>
+            <SearchOutlined/>
+        </Button>
+        <TableList schema={schema} curTable={curTable} setCurTable={selectCurTable}/>
+        <IdList curTable={curTable} curId={curId} setCurId={selectCurId}/>
+        {nextId}
+        <Button onClick={prev} disabled={!history.canPrev()}>
+            <LeftOutlined/>
+        </Button>
+
+        <Button onClick={next} disabled={!history.canNext()}>
+            <RightOutlined/>
+        </Button>
+    </Space>;
 
     function tryReconnect() {
         tryConnect(server);
@@ -217,6 +246,7 @@ export function CfgEditorApp() {
     let tableRef = <div/>;
     let tableRecord = <div/>;
     let tableRecordRef = <div/>;
+    let tableRecordRefFixed = null;
     if (schema != null && curTable != null) {
         tableSchema = <TableSchema schema={schema}
                                    curTable={curTable}
@@ -262,8 +292,36 @@ export function CfgEditorApp() {
         {key: pageTable, label: <Space>{t('table')}</Space>, children: tableSchema,},
         {key: pageTableRef, label: <Space>{t('tableRef')}</Space>, children: tableRef,},
         {key: pageRecord, label: <Space>{t('record')}</Space>, children: tableRecord,},
-        {key: pageRecordRef, label: <Space>{t('recordRef')}</Space>, children: tableRecordRef,},
+
     ]
+
+    if (dragPanel != pageRecordRef) {
+        items.push({key: pageRecordRef, label: <Space>{t('recordRef')}</Space>, children: tableRecordRef,});
+    }
+
+    if (fix && schema) {
+        let fixedTable = schema.getSTable(fix.table);
+        if (fixedTable) {
+            tableRecordRefFixed = <TableRecordRef schema={schema}
+                                                  curTable={fixedTable}
+                                                  curId={fix.id}
+                                                  refIn={fix.refIn}
+                                                  refOutDepth={fix.refOutDepth}
+                                                  maxNode={fix.maxNode}
+                                                  server={server}
+                                                  tryReconnect={tryReconnect}
+                                                  setCurTableAndId={selectCurTableAndId}
+                                                  setCurPage={selectCurPage}
+                                                  setEditMode={setEditMode}/>;
+            if (dragPanel != pageFixed) {
+                items.push({
+                    key: pageFixed,
+                    label: <Space>{t('fix') + ' ' + getId(fix.table, fix.id)}</Space>,
+                    children: tableRecordRefFixed,
+                });
+            }
+        }
+    }
 
     function onTabChange(activeKey: string) {
         selectCurPage(activeKey);
@@ -322,6 +380,12 @@ export function CfgEditorApp() {
         }
     }
 
+    function onChangeDragePanel(value: string) {
+        setDragPanel(value);
+        localStorage.setItem('dragPanel', value);
+    }
+
+
     function onConnectServer(value: string) {
         setServer(value);
         localStorage.setItem('server', value);
@@ -372,17 +436,62 @@ export function CfgEditorApp() {
 
     }
 
-    let deleteButton = null;
+    let deleteButton;
     if (schema && curTable && schema.isEditable && curTable.isEditable) {
         deleteButton = <Form.Item wrapperCol={{span: 18, offset: 6,}}>
             <Button type="primary" danger onClick={onDeleteRecord}>
-                <CloseOutlined/>t{'deleteCurRecord'}
+                <CloseOutlined/>{t('deleteCurRecord')}
             </Button>
         </Form.Item>
     }
 
+    function onAddFix() {
+        let fp = new FixedPage(curTableId, curId, recordRefIn, recordRefOutDepth, recordMaxNode);
+        setFix(fp);
+        localStorage.setItem('fix', JSON.stringify(fp));
+    }
 
-    return <Space>
+    let addFixButton;
+    if (schema && curTable && curPage == pageRecordRef) {
+        addFixButton = <Form.Item wrapperCol={{span: 18, offset: 6,}}>
+            <Button type="primary" onClick={onAddFix}>
+                {t('addFix')}
+            </Button>
+        </Form.Item>
+    }
+    let tab = <Tabs tabBarExtraContent={{'left': leftOp}}
+                    items={items}
+                    activeKey={curPage}
+                    onChange={onTabChange}
+                    type="card"/>
+
+    let dragPage = null;
+    if (dragPanel == 'recordRef') {
+        dragPage = tableRecordRef;
+    } else if (dragPanel == 'fix') {
+        dragPage = tableRecordRefFixed;
+    }
+    let content;
+    if (dragPage) {
+        content = <div style={{
+            position: "absolute",
+            background: '#f1f1f1',
+            border: '2px solid #ddd',
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+        }}>
+            <DraggablePanel
+                placement={'left'}
+                style={{background: '#fff', width: '100%', padding: 12}}>
+                {dragPage}
+            </DraggablePanel>
+            <div>{tab}</div>
+        </div>;
+    } else {
+        content = tab;
+    }
+    return <>
         <Modal title={t('serverConnectFail')} open={isModalOpen}
                cancelButtonProps={{disabled: true}}
                closable={false}
@@ -399,13 +508,8 @@ export function CfgEditorApp() {
                 </Form.Item>
             </Flex>
         </Modal>
-
-        <Tabs tabBarExtraContent={{'left': leftOp, 'right': rightOp}}
-              items={items}
-              activeKey={curPage}
-              onChange={onTabChange}
-              type="card"/>
-        <Drawer title="setting" placement="right" onClose={onSettingClose} open={settingOpen}>
+        {content}
+        <Drawer title="setting" placement="left" onClose={onSettingClose} open={settingOpen}>
             <Form labelCol={{span: 10}} wrapperCol={{span: 14}} layout={'horizontal'}>
                 <Form.Item label={t('implsShowCnt')}>
                     <InputNumber value={maxImpl} min={1} max={500} onChange={onChangeMaxImpl}/>
@@ -439,6 +543,12 @@ export function CfgEditorApp() {
                     <InputNumber value={searchMax} min={1} max={500} onChange={onChangeSearchMax}/>
                 </Form.Item>
 
+                <Form.Item label={t('dragPanel')}>
+                    <Select value={dragPanel} options={[{label: 'recordRef', value: 'recordRef'},
+                        {label: 'fix', value: 'fix'},
+                        {label: 'none', value: 'none'}]} onChange={onChangeDragePanel}/>
+                </Form.Item>
+
                 <Form.Item label={t('curServer')}>
                     {server}
                 </Form.Item>
@@ -469,19 +579,20 @@ export function CfgEditorApp() {
                     alt+q
                 </Form.Item>
 
+                {addFixButton}
                 {deleteButton}
 
             </Form>
         </Drawer>
 
-        <Drawer title="search" placement="right" onClose={onSearchClose} open={searchOpen} size='large'>
+        <Drawer title="search" placement="left" onClose={onSearchClose} open={searchOpen} size='large'>
             <SearchValue searchMax={searchMax}
                          server={server}
                          tryReconnect={tryReconnect}
                          setCurTableAndId={selectCurTableAndId}/>
         </Drawer>
 
-    </Space>;
+    </>;
 
 }
 

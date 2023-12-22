@@ -38,7 +38,7 @@ export function TableRecordRefLoaded({schema, recordRefResult, setCurTableAndId,
             let refId = entity.userData as RefId;
             let id = getId(refId.table, refId.id);
             let mm = [];
-            if (refId.table != recordRefResult.table && refId.id != recordRefResult.id) {
+            if (refId.table != recordRefResult.table || refId.id != recordRefResult.id) {
                 mm.push({
                     label: id + "\n" + t('recordRef'),
                     key: 'entityRecordRef',
@@ -90,7 +90,8 @@ export function TableRecordRef({
                                    schema, curTable, curId,
                                    refIn, refOutDepth, maxNode,
                                    server, tryReconnect,
-                                   setCurTableAndId, setCurPage, setEditMode
+                                   setCurTableAndId, setCurPage,
+                                   setEditMode
                                }: {
     schema: Schema;
     curTable: STable;

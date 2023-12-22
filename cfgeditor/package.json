@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.2.6",
+    "@ant-design/pro-editor": "^0.33.1",
     "antd": "^5.11.5",
+    "antd-style": "^3.6.1",
     "elkjs": "^0.8.2",
     "i18next": "^23.7.11",
     "i18next-browser-languagedetector": "^7.2.0",

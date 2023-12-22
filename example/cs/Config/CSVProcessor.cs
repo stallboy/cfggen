@@ -28,6 +28,7 @@ namespace Config
                 "other.signin",
                 "task.completeconditiontype",
                 "task.task",
+                "task.task2",
                 "task.taskextraexp",
             };
             for(;;)
@@ -109,6 +110,10 @@ namespace Config
                         configNulls.Remove(csv);
                         Config.Task.DataTask.Initialize(os, Errors);
                         break;
+                    case "task.task2":
+                        configNulls.Remove(csv);
+                        Config.Task.DataTask2.Initialize(os, Errors);
+                        break;
                     case "task.taskextraexp":
                         configNulls.Remove(csv);
                         Config.Task.DataTaskextraexp.Initialize(os, Errors);
@@ -125,6 +130,7 @@ namespace Config
             Config.Other.DataLoot.Resolve(Errors);
             Config.Other.DataSignin.Resolve(Errors);
             Config.Task.DataTask.Resolve(Errors);
+            Config.Task.DataTask2.Resolve(Errors);
         }
 
     }
