@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react";
-import {Alert, App, Button, Drawer, Flex, Form, Input, InputNumber, Modal, Space, Switch, Tabs} from "antd";
+import {Alert, App, Button, Drawer, Flex, Form, Input, InputNumber, Modal, Space, Switch, Tabs, Tag} from "antd";
 import {CloseOutlined, LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
-import {newSchema, Schema} from "./model/schemaModel.ts";
+import {getNextId, newSchema, Schema} from "./model/schemaModel.ts";
 import {History, HistoryItem} from "./model/historyModel.ts";
 import {TableList} from "./TableList.tsx";
 import {IdList} from "./IdList.tsx";
@@ -138,7 +138,6 @@ export function CfgEditorApp() {
         }
     }
 
-
     function selectHistoryCur(item: HistoryItem | null) {
         if (item && schema) {
             selectCurTableFromSchema(schema, item.table, item.id, false);
@@ -162,10 +161,19 @@ export function CfgEditorApp() {
         localStorage.setItem('curPage', page);
     }
 
+    let nextId;
+    if (curTable) {
+        let nId = getNextId(curTable);
+        if (nId) {
+            nextId = <Tag> next id: {nId}</Tag>
+        }
+    }
+
+
     const leftOp = <Space>
         <TableList schema={schema} curTable={curTable} setCurTable={selectCurTable}/>
         <IdList curTable={curTable} curId={curId} setCurId={selectCurId}/>
-
+        {nextId}
         <Button onClick={prev} disabled={!history.canPrev()}>
             <LeftOutlined/>
         </Button>
@@ -173,6 +181,7 @@ export function CfgEditorApp() {
         <Button onClick={next} disabled={!history.canNext()}>
             <RightOutlined/>
         </Button>
+
     </Space>;
 
     const showSetting = () => {

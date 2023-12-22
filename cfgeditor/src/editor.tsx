@@ -149,8 +149,10 @@ function calcHeight(entity: Entity): number {
         if (fc > 0 && entity.editFields[0].implFields) {
             fc += entity.editFields[0].implFields.length;
         }
-    } else if (entity.fields){
+    } else if (entity.fields) {
         fc = entity.fields.length;
+    } else if (entity.brief) {
+        fc = 2;
     }
     switch (entity.fieldsShow) {
         case FieldsShowType.Direct:
