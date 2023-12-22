@@ -20,6 +20,7 @@ i18n.use(LanguageDetector)
                     recordRef: "relation",
                     fix: "fix",
 
+
                     serverConnectFail: 'connect failed',
                     netErrFixTip: "run cfgeditor_server.bat to view your own data！ " +
                         "or use another server address to view other's data！",
@@ -63,6 +64,9 @@ i18n.use(LanguageDetector)
                     recordRefOutDepth: '数据出层',
                     recordMaxNode: '数据节点数',
                     searchMaxReturn: '搜索返回数',
+                    dragPanel: '可拖拽面板',
+                    none: '不要',
+
                     deleteCurRecord: '删除当前数据',
                     addFix: '固定',
 

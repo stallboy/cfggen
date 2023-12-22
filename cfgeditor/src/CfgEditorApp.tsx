@@ -544,9 +544,9 @@ export function CfgEditorApp() {
                 </Form.Item>
 
                 <Form.Item label={t('dragPanel')}>
-                    <Select value={dragPanel} options={[{label: 'recordRef', value: 'recordRef'},
-                        {label: 'fix', value: 'fix'},
-                        {label: 'none', value: 'none'}]} onChange={onChangeDragePanel}/>
+                    <Select value={dragPanel} options={[{label: t('recordRef'), value: 'recordRef'},
+                        {label: t('fix'), value: 'fix'},
+                        {label: t('none'), value: 'none'}]} onChange={onChangeDragePanel}/>
                 </Form.Item>
 
                 <Form.Item label={t('curServer')}>
@@ -555,7 +555,6 @@ export function CfgEditorApp() {
                 <Form.Item label={t('newServer')}>
                     <Input.Search defaultValue={server} enterButton={t('connect')} onSearch={onConnectServer}/>
                 </Form.Item>
-
 
                 <Form.Item label={<LeftOutlined/>}>
                     alt+x
