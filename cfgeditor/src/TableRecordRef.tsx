@@ -83,7 +83,7 @@ export function TableRecordRefLoaded({schema, recordRefResult, setCurTableAndId,
     const [ref] = useRete(create);
 
 
-    return <div ref={ref} style={{height: "100vh", width: "100vw"}}></div>
+    return <div ref={ref} style={{height: "100vh", width: "100%"}}></div>
 }
 
 export function TableRecordRef({

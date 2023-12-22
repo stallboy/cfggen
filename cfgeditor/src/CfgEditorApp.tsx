@@ -486,7 +486,7 @@ export function CfgEditorApp() {
                 style={{background: '#fff', width: '100%', padding: 12}}>
                 {dragPage}
             </DraggablePanel>
-            <div>{tab}</div>
+            <div style={{ flex: 'auto'}}>{tab}</div>
         </div>;
     } else {
         content = tab;
@@ -581,7 +581,6 @@ export function CfgEditorApp() {
 
                 {addFixButton}
                 {deleteButton}
-
             </Form>
         </Drawer>
 
