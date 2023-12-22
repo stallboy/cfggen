@@ -4,6 +4,7 @@ import {Collapse, Space} from "antd";
 import {EntityTable} from "./EntityTable.tsx";
 import {EntityForm} from "./EntityForm.tsx";
 import {useEffect, useRef} from "react";
+import {EntityCard} from "./EntityCard.tsx";
 
 export class EntityControl extends ClassicPreset.Control {
     constructor(public entity: Entity,
@@ -37,15 +38,13 @@ export function EntityControlComponent(props: { data: EntityControl }) {
 
     let content;
     let entity: Entity = props.data.entity;
-    if (entity.fieldsShow == FieldsShowType.Edit) {
-        let fields = entity.editFields;
-        if (!fields || fields.length == 0) {
+    if (entity.editFields) {
+        if (entity.editFields.length == 0) {
             content = <Space/>;
         } else {
-            content = <EntityForm fields={fields} onUpdateValues={entity.editOnUpdateValues!!}/>;
+            content = <EntityForm fields={entity.editFields} onUpdateValues={entity.editOnUpdateValues!!}/>;
         }
-    } else {
-
+    } else if (entity.fields) {
         let fields = entity.fields;
         if (fields.length == 0) {
             content = <Space/>;
@@ -62,6 +61,11 @@ export function EntityControlComponent(props: { data: EntityControl }) {
                 }
             }
         }
+    } else if (entity.brief) {
+        content = <EntityCard brief={entity.brief}/>;
+
+    } else {
+        content = <Space/>;
     }
 
     return <div ref={ref}> {content}</div>

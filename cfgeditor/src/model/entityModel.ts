@@ -53,12 +53,26 @@ export interface EntitySocketOutput {
     connectToSockets: ConnectTo[];
 }
 
+export interface EntityBrief {
+    img?: string;
+    title?: string;
+    description?: string;
+    value: string;
+}
+
 export interface Entity {
     id: string;
     label: string;
-    fields: EntityField[];
+
+    // table/record -> table
+    fields?: EntityField[];
+
+    // edit -> form
     editFields?: EntityEditField[];
     editOnUpdateValues?: (values: any) => void;
+
+    // brief -> card
+    brief?: EntityBrief;
 
     inputs: EntitySocket[];
     outputs: EntitySocketOutput[];

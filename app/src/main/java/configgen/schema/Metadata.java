@@ -42,6 +42,14 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         return data.get(name);
     }
 
+    public String getStr(String name, String def) {
+        MetaValue metaValue = data.get(name);
+        if (metaValue instanceof MetaStr str) {
+            return str.value;
+        }
+        return def;
+    }
+
     public boolean isJson() {
         return hasTag(JSON);
     }

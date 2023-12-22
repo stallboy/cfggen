@@ -23,7 +23,7 @@ export function TableRecordRefLoaded({schema, recordRefResult, setCurTableAndId,
 
     function createGraph(): EntityGraph {
         const entityMap = new Map<string, Entity>();
-        createRefEntities(entityMap, recordRefResult.refs);
+        createRefEntities(entityMap, schema, recordRefResult.refs);
         fillInputs(entityMap);
 
         const menu: Item[] = [{

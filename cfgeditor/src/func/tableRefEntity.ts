@@ -5,7 +5,6 @@ function createEntity(item: SItem, id: string, entityType: EntityType = EntityTy
     return {
         id: id,
         label: item.name,
-        fields: [],
         inputs: [],
         outputs: [],
 

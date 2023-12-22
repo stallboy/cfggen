@@ -31,6 +31,14 @@ public class ValueUtil {
         return extractKeyValue(vStruct, keyIndices);
     }
 
+    public static Value extractFieldValue(VStruct vStruct, String fieldName) {
+        int idx = FindFieldIndex.findFieldIndex(vStruct.schema(), fieldName);
+        if (idx == -1) {
+            return null;
+        }
+        return vStruct.values().get(idx);
+    }
+
     public static Map<Value, VStruct> getForeignKeyValueMap(CfgValue cfgValue, ForeignKeySchema fk) {
         switch (fk.refKey()) {
             case RefKey.RefPrimary ignored -> {

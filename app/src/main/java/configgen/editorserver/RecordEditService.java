@@ -30,11 +30,12 @@ public class RecordEditService {
         jsonStoreErr,
     }
 
-    public record RecordEditResult(ResultCode resultCode,
-                                   String table,
-                                   String id,
-                                   List<String> valueErrs, // 即使有错，也更新，只是这里提示
-                                   List<SchemaService.RecordId> recordIds) {
+    public record RecordEditResult(
+            ResultCode resultCode,
+            String table,
+            String id,
+            List<String> valueErrs, // 即使有错，也更新，只是这里提示
+            List<SchemaService.RecordId> recordIds) {
     }
 
 

@@ -18,6 +18,10 @@ export interface Refs {
 }
 
 export interface BriefRecord extends Refs {
+    img?: string;
+    title?: string;
+    description?: string;
+
     value: string;
     depth: number;
 }

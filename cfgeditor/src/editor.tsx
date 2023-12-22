@@ -124,8 +124,15 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
         }
     }
 
+
     await arrange.layout();
     await AreaExtensions.zoomAt(area, editor.getNodes());
+
+    // wait height update
+    setTimeout(async () => {
+        await arrange.layout();
+        await AreaExtensions.zoomAt(area, editor.getNodes());
+    }, 500)
 
     return {
         destroy: () => area.destroy()
@@ -134,15 +141,15 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
 
 function calcHeight(entity: Entity): number {
     let ch;
-    let fc;
+    let fc = 0;
     let fh = 40;
 
-    if (entity.fieldsShow == FieldsShowType.Edit && entity.editFields) {
+    if (entity.editFields) {
         fc = entity.editFields.length;
         if (fc > 0 && entity.editFields[0].implFields) {
             fc += entity.editFields[0].implFields.length;
         }
-    } else {
+    } else if (entity.fields){
         fc = entity.fields.length;
     }
     switch (entity.fieldsShow) {

@@ -167,7 +167,6 @@ export class RecordEditEntityCreator {
         let entity: Entity = {
             id: id,
             label: label,
-            fields: [],
             editFields: fields,
             editOnUpdateValues,
             inputs: [],

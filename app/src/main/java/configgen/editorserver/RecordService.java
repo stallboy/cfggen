@@ -20,23 +20,25 @@ public class RecordService {
     public interface RecordResponse {
     }
 
-    public record TableRecord(ResultCode resultCode,
-                              String table,
-                              String id,
-                              int maxObjs,
-                              JSONObject object,
-                              // table -> (id -> refs)
-                              Map<String, Map<String, Refs>> refs) implements RecordResponse {
+    public record TableRecord(
+            ResultCode resultCode,
+            String table,
+            String id,
+            int maxObjs,
+            JSONObject object,
+            // table -> (id -> briefRecord)
+            Map<String, Map<String, BriefRecord>> refs) implements RecordResponse {
     }
 
-    public record TableRecordRefs(ResultCode resultCode,
-                                  String table,
-                                  String id,
-                                  int depth,
-                                  boolean in,
-                                  int maxObjs,
-                                  // table -> (id -> refs)
-                                  Map<String, Map<String, Refs>> refs) implements RecordResponse {
+    public record TableRecordRefs(
+            ResultCode resultCode,
+            String table,
+            String id,
+            int depth,
+            boolean in,
+            int maxObjs,
+            // table -> (id -> briefRecord)
+            Map<String, Map<String, BriefRecord>> refs) implements RecordResponse {
     }
 
 
@@ -50,11 +52,15 @@ public class RecordService {
         paramErr,
     }
 
-    public record Refs(String value,
-                       // refName -> [refId]
-                       @JSONField(name = "$refs")
-                       Map<String, List<RefId>> refs,
-                       int depth) {
+    public record BriefRecord(
+            String img,
+            String title,
+            String description,
+            String value,  // 完整信息
+            // refName -> [refId]
+            @JSONField(name = "$refs")
+            Map<String, List<RefId>> refs,
+            int depth) {
     }
 
     public enum RequestType {
@@ -145,7 +151,7 @@ public class RecordService {
         }
 
 
-        Map<RefId, Refs> result = new LinkedHashMap<>();
+        Map<RefId, BriefRecord> result = new LinkedHashMap<>();
 
         while (curDepth <= depth) {
             Map<RefId, VStruct> newFrontier = new LinkedHashMap<>();
@@ -158,7 +164,7 @@ public class RecordService {
                 ValueRefCollector collector = new ValueRefCollector(cfgValue, newFrontier, refIdMap);
                 collector.collect(record, List.of());
 
-                result.put(refId, new Refs(record.packStr(), refIdMap, curDepth));
+                result.put(refId, vStructToBriefRecord(record, refIdMap, curDepth));
 
                 if (result.size() > maxObjs) {
                     break;
@@ -179,7 +185,7 @@ public class RecordService {
 
         if (in) {
             ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
-            Map<RefId, Value> refIns = refInCollector.collect(vTable, pkValue);
+            Map<RefId, VStruct> refIns = refInCollector.collect(vTable, pkValue);
             if (!refIns.isEmpty()) {
                 for (RefId r : result.keySet()) {
                     refIns.remove(r);
@@ -187,9 +193,9 @@ public class RecordService {
             }
 
             Map<String, List<RefId>> staticRefIn = Map.of("refin", List.of(thisObjId));
-            for (Map.Entry<RefId, Value> e : refIns.entrySet()) {
+            for (Map.Entry<RefId, VStruct> e : refIns.entrySet()) {
                 RefId refId = e.getKey();
-                result.put(refId, new Refs(e.getValue().packStr(), staticRefIn, -1));
+                result.put(refId, vStructToBriefRecord(e.getValue(), staticRefIn, -1));
 
                 if (result.size() > maxObjs + 8) {
                     break;
@@ -198,10 +204,10 @@ public class RecordService {
         }
 
 
-        Map<String, Map<String, Refs>> refs = new LinkedHashMap<>();
-        for (Map.Entry<RefId, Refs> e : result.entrySet()) {
+        Map<String, Map<String, BriefRecord>> refs = new LinkedHashMap<>();
+        for (Map.Entry<RefId, BriefRecord> e : result.entrySet()) {
             RefId refId = e.getKey();
-            Map<String, Refs> tableValues = refs.computeIfAbsent(refId.table(), k -> new LinkedHashMap<>());
+            Map<String, BriefRecord> tableValues = refs.computeIfAbsent(refId.table(), k -> new LinkedHashMap<>());
             tableValues.put(refId.id(), e.getValue());
         }
 
@@ -212,4 +218,28 @@ public class RecordService {
 
     }
 
+    private static BriefRecord vStructToBriefRecord(VStruct vStruct, Map<String, List<RefId>> refs, int depth) {
+        String img = getBriefValue(vStruct, "img");
+        String title = getBriefValue(vStruct, "title");
+        String description = getBriefValue(vStruct, "description");
+        String value = vStruct.packStr();
+        return new BriefRecord(img, title, description, value, refs, depth);
+    }
+
+    private static String getBriefValue(VStruct vStruct, String briefKey) {
+        String fieldName = vStruct.schema().meta().getStr(briefKey, null);
+        if (fieldName == null) {
+            return null;
+        }
+
+        Value fv = ValueUtil.extractFieldValue(vStruct, fieldName);
+        if (fv == null) {
+            return null;
+        }
+
+        if (fv instanceof CfgValue.StringValue stringValue) {
+            return stringValue.value();
+        }
+        return null;
+    }
 }

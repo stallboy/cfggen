@@ -50,7 +50,7 @@ export function TableRecordLoaded({
         let isEditable = schema.isEditable && curTable.isEditable;
         let isEditing = isEditable && editMode;
         if (!isEditing) {
-            createRefEntities(entityMap, recordResult.refs, false);
+            createRefEntities(entityMap, schema, recordResult.refs, false);
             let creator = new RecordEntityCreator(entityMap, schema, refId, recordResult.refs);
             creator.createEntity(entityId, recordResult.object);
         } else {

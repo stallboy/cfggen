@@ -47,6 +47,7 @@ export interface STable extends Namable {
     foreignKeys?: SForeignKey[];
     recordIds: RecordId[];
     isEditable: boolean;
+    imgPrefix?: string;
 
     refInTables?: Set<string> // 被这些表索引， cache
     idSet?: Set<string>;

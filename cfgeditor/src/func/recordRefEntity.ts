@@ -1,5 +1,6 @@
 import {BriefRecord, RefId, Refs, TableMap} from "../model/recordModel.ts";
 import {Entity, EntityConnectionType, EntityType, FieldsShowType} from "../model/entityModel.ts";
+import {Schema} from "../model/schemaModel.ts";
 
 export function getLastName(id: string): string {
     let seps = id.split('.');
@@ -52,9 +53,14 @@ export function createRefs(entity: Entity, refs: Refs, tableMap: TableMap) {
     }
 }
 
-export function createRefEntities(entityMap: Map<string, Entity>, tableMap: TableMap, isCreateRefs: boolean = true) {
+export function createRefEntities(entityMap: Map<string, Entity>, schema: Schema, tableMap: TableMap, isCreateRefs: boolean = true) {
     for (let table in tableMap) {
         let recordMap = tableMap[table]
+        let imgPrefix;
+        let sTable = schema.getSTable(table);
+        if (sTable) {
+            imgPrefix = sTable.imgPrefix;
+        }
         for (let id in recordMap) {
             let briefRecord: BriefRecord = recordMap[id];
             let refId: RefId = {table, id};
@@ -71,12 +77,23 @@ export function createRefEntities(entityMap: Map<string, Entity>, tableMap: Tabl
                 entityType = EntityType.RefIn;
             }
 
+
+            let img = briefRecord.img;
+            if (img && imgPrefix) {
+                img = imgPrefix + img;
+            }
+
+
             let entity: Entity = {
                 id: eid,
                 label: getId(getLabel(table), id),
-                fields: [{key: 'id', name: 'id', value: id},
-                    {key: 'value', name: 'value', value: briefRecord.value}
-                ],
+                brief: {
+                    img: img,
+                    title: briefRecord.title,
+                    description: briefRecord.description,
+                    value: briefRecord.value
+                },
+
                 inputs: [],
                 outputs: [],
 
@@ -84,7 +101,7 @@ export function createRefEntities(entityMap: Map<string, Entity>, tableMap: Tabl
                 entityType: entityType,
                 userData: refId,
             };
-            if (isCreateRefs){
+            if (isCreateRefs) {
                 createRefs(entity, briefRecord, tableMap);
             }
             entityMap.set(eid, entity);

@@ -19,8 +19,8 @@ public class ValueRefInCollector {
     }
 
 
-    public Map<RefId, Value> collect(VTable vTable, Value pkValue) {
-        Value recordValue = vTable.primaryKeyMap().get(pkValue);
+    public Map<RefId, VStruct> collect(VTable vTable, Value pkValue) {
+        VStruct recordValue = vTable.primaryKeyMap().get(pkValue);
         if (recordValue == null) {
             return Map.of();
         }
@@ -34,8 +34,7 @@ public class ValueRefInCollector {
             return Map.of();
         }
 
-        Map<RefId, Value> result = new HashMap<>();
-
+        Map<RefId, VStruct> result = new HashMap<>();
         for (String refInTable : refInTables) {
             VTable vRefInTable = cfgValue.vTableMap().get(refInTable);
             ForeachVStruct.VStructVisitor vStructVisitor = (vStruct, ctx) -> search(vStruct, ctx, vTable, pkValue, result);
@@ -47,7 +46,7 @@ public class ValueRefInCollector {
 
     private static void search(VStruct vStruct, ForeachVStruct.Context ctx,
                                VTable myTable, Value myPkValue,
-                               Map<RefId, Value> result) {
+                               Map<RefId, VStruct> result) {
 
         Structural structural = vStruct.schema();
         for (ForeignKeySchema fk : structural.foreignKeys()) {
@@ -90,7 +89,7 @@ public class ValueRefInCollector {
         }
     }
 
-    private static void addCtx(Map<RefId, Value> result, ForeachVStruct.Context ctx) {
+    private static void addCtx(Map<RefId, VStruct> result, ForeachVStruct.Context ctx) {
         result.put(new RefId(ctx.fromVTable().name(), ctx.pkValue().packStr()), ctx.recordValue());
     }
 }

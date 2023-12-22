@@ -21,7 +21,18 @@ public class FindFieldIndex {
             }
             i++;
         }
-        return i;
+        return -1;
+    }
+
+    public static int findFieldIndex(Structural structural, String fieldName) {
+        int i = 0;
+        for (FieldSchema f : structural.fields()) {
+            if (f.name().equals(fieldName)) {
+                return i;
+            }
+            i++;
+        }
+        return -1;
     }
 
 }

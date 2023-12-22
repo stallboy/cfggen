@@ -8,7 +8,7 @@ public class ForeachVStruct {
 
     public record Context(VTable fromVTable,
                           Value pkValue,
-                          Value recordValue) {
+                          VStruct recordValue) {
     }
 
     public interface VStructVisitor {
