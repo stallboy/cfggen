@@ -35,7 +35,7 @@ export interface SInterface extends Namable {
 
 export interface RecordId {
     id: string;
-    desc?: string;
+    title?: string;
 }
 
 export interface STable extends Namable {

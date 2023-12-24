@@ -2,6 +2,8 @@ package configgen.editorserver;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.annotation.JSONField;
+import configgen.schema.EntryType;
+import configgen.schema.TableSchema;
 import configgen.schema.TableSchemaRefGraph;
 import configgen.value.*;
 import configgen.value.CfgValue.VStruct;
@@ -220,7 +222,7 @@ public class RecordService {
 
     private static BriefRecord vStructToBriefRecord(VStruct vStruct, Map<String, List<RefId>> refs, int depth) {
         String img = getBriefValue(vStruct, "img");
-        String title = getBriefValue(vStruct, "title");
+        String title = getBriefTitle(vStruct);
         String description = getBriefValue(vStruct, "description");
         String value = vStruct.packStr();
         return new BriefRecord(img, title, description, value, refs, depth);
@@ -241,5 +243,28 @@ public class RecordService {
             return stringValue.value();
         }
         return null;
+    }
+
+    public static String getBriefTitle(VStruct vStruct) {
+        String title = getBriefValue(vStruct, "title");
+
+        String enumName = null;
+        if (vStruct.schema() instanceof TableSchema tableSchema) {
+            if (tableSchema.entry() instanceof EntryType.EEnum eEnum) {
+                Value fv = ValueUtil.extractFieldValue(vStruct, eEnum.field());
+                if (fv instanceof CfgValue.VString vString) {
+                    enumName = vString.value();
+                }
+            }
+        }
+        if (enumName != null) {
+            if (title != null) {
+                return enumName + ": " + title;
+            } else {
+                return enumName;
+            }
+        } else {
+            return title;
+        }
     }
 }

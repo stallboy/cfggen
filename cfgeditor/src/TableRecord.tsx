@@ -224,6 +224,7 @@ export function TableRecord({
                     placement: 'topRight',
                     duration: 3
                 });
+                setCurTableAndId(editResult.table, editResult.id);
             } else {
                 notification.warning({
                     message: `post ${url} ${editResult.resultCode}`,

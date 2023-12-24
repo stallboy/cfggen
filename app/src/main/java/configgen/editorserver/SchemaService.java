@@ -7,6 +7,7 @@ import configgen.value.CfgValue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static configgen.value.CfgValue.*;
 
@@ -67,7 +68,7 @@ public class SchemaService {
     }
 
     public record RecordId(String id,
-                           String desc) {
+                           String title) {
     }
 
     public record STable(String name,
@@ -143,7 +144,6 @@ public class SchemaService {
         VTable vTable = cfgValue != null ? cfgValue.vTableMap().get(ts.name()) : null;
         List<RecordId> recordIds = getRecordIds(vTable);
 
-
         return new STable(ts.name(),
                 ts.primaryKey().fields(),
                 ts.uniqueKeys().stream().map(KeySchema::fields).toList(),
@@ -161,8 +161,10 @@ public class SchemaService {
             return List.of();
         }
         List<RecordId> recordIds = new ArrayList<>(vTable.primaryKeyMap().size());
-        for (Value pk : vTable.primaryKeyMap().sequencedKeySet()) {
-            recordIds.add(new RecordId(pk.packStr(), null));
+        for (Map.Entry<Value, VStruct> e : vTable.primaryKeyMap().sequencedEntrySet()) {
+            Value pk = e.getKey();
+            VStruct vStruct = e.getValue();
+            recordIds.add(new RecordId(pk.packStr(), RecordService.getBriefTitle(vStruct)));
         }
         return recordIds;
     }
