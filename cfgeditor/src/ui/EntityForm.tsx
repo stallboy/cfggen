@@ -1,4 +1,4 @@
-import {EntityEditField, FuncSubmitType, FuncType} from "../model/entityModel.ts";
+import {EntityEditField, EntityEditFieldOption, FuncSubmitType, FuncType} from "../model/entityModel.ts";
 import {AutoComplete, Button, ConfigProvider, Form, InputNumber, Select, Space, Switch, Tooltip} from "antd";
 import TextArea from "antd/es/input/TextArea";
 import {
@@ -37,11 +37,7 @@ function PrimitiveControl(field: EntityEditField, isFromArray: boolean = false) 
     let control;
     const {eleType, autoCompleteOptions} = field;
     if (autoCompleteOptions && autoCompleteOptions.length > 0) {
-        let options = []
-        for (let op of autoCompleteOptions) {
-            options.push({label: op, value: op});
-        }
-        control = <AutoComplete options={options} filterOption={(inputValue, option) =>
+        control = <AutoComplete options={autoCompleteOptions} filterOption={(inputValue, option) =>
             option!.value.toUpperCase().includes(inputValue.toUpperCase())
         }/>
     } else if (eleType == 'bool') {
@@ -143,10 +139,8 @@ function FuncDeleteFormItem(field: EntityEditField) {
 }
 
 function InterfaceFormItem(field: EntityEditField): any {
-    let options = []
-    for (let op of field.autoCompleteOptions as string[]) {
-        options.push({label: op, value: op});
-    }
+    let options = field.autoCompleteOptions as EntityEditFieldOption[]
+
     let implSelect = <Form.Item name={field.name} key={field.name} label={makeLabel(field)} initialValue={field.value}>
         <Select showSearch options={options} filterOption={(inputValue, option) =>
             option!.value.toUpperCase().includes(inputValue.toUpperCase())

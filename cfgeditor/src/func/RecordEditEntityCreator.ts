@@ -5,7 +5,7 @@ import {
     EntityEditField,
     EntityType,
     EntitySocketOutput,
-    FieldsShowType
+    FieldsShowType, EntityEditFieldOption
 } from "../model/entityModel.ts";
 import {getField, getImpl, Schema, SInterface, SItem, SStruct, STable} from "../model/schemaModel.ts";
 import {JSONArray, JSONObject, JSONValue, RefId} from "../model/recordModel.ts";
@@ -13,10 +13,10 @@ import {getId, getLabel, getLastName} from "./recordRefEntity.ts";
 import {editingState} from "./editingState.ts";
 
 
-function getImplNames(sInterface: SInterface): string[] {
+function getImplNames(sInterface: SInterface): EntityEditFieldOption[] {
     let impls = [];
     for (let impl of sInterface.impls) {
-        impls.push(impl.name);
+        impls.push({value: impl.name, label: impl.name});
     }
     return impls;
 }
@@ -293,7 +293,7 @@ export class RecordEditEntityCreator {
 
     }
 
-    getAutoCompleteOptions(structural: SStruct | STable, fieldName: string): string[] | undefined {
+    getAutoCompleteOptions(structural: SStruct | STable, fieldName: string): EntityEditFieldOption[] | undefined {
         if (!structural.foreignKeys) {
             return undefined;
         }
@@ -313,11 +313,11 @@ export class RecordEditEntityCreator {
             return undefined;
         }
 
-        if (!sTable.idSet) {
-            return undefined;
+        let options: EntityEditFieldOption[] = [];
+        for (let recordId of sTable.recordIds) {
+            options.push({value: recordId.id, label: recordId.title ? `${recordId.id}-${recordId.title}` : recordId.id})
         }
-
-        return [...sTable.idSet];
+        return options;
     }
 
 }

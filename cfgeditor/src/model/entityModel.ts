@@ -7,13 +7,18 @@ export interface EntityField {
     key: string;
 }
 
+export interface EntityEditFieldOption {
+    value: string;
+    label: string;
+}
+
 export interface EntityEditField {
     name: string;
     comment?: string;
     type: EditFieldType;
     eleType: string;
     value: EditFieldValueType;
-    autoCompleteOptions?: string[]; // use Select if it has autoCompleteOptions
+    autoCompleteOptions?: EntityEditFieldOption[]; // use Select if it has autoCompleteOptions
     implFields?: EntityEditField[];
     interfaceOnChangeImpl?: ((impl: string) => void)
 }

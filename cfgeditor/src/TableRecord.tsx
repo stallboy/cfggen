@@ -19,7 +19,7 @@ export function TableRecordLoaded({
                                       curTable,
                                       curId,
                                       recordResult,
-                                      setCurTableAndId,
+                                      selectCurTableAndIdFromSchema,
                                       setCurPage,
                                       onSubmit,
                                       editMode,
@@ -29,7 +29,7 @@ export function TableRecordLoaded({
     curTable: STable;
     curId: string;
     recordResult: RecordResult;
-    setCurTableAndId: (table: string, id: string) => void;
+    selectCurTableAndIdFromSchema: (schema: Schema, table: string, id: string, fromOp: boolean) => void;
     setCurPage: (page: string) => void;
     onSubmit: () => void;
     editMode: boolean,
@@ -42,6 +42,11 @@ export function TableRecordLoaded({
     useEffect(() => {
         editingState.clear();
     }, [schema, curTable, curId, editMode]);
+
+    function setCurTableAndId(table: string, id: string) {
+        selectCurTableAndIdFromSchema(schema, table, id, true);
+    }
+
 
     function createGraph(): EntityGraph {
         const entityMap = new Map<string, Entity>();
@@ -156,8 +161,7 @@ export function TableRecord({
                                 curId,
                                 server,
                                 tryReconnect,
-                                setCurTableAndId,
-                                setSchema,
+                                selectCurTableAndIdFromSchema,
                                 setCurPage,
                                 editMode,
                                 setEditMode,
@@ -167,8 +171,7 @@ export function TableRecord({
     curId: string;
     server: string;
     tryReconnect: () => void;
-    setCurTableAndId: (table: string, id: string) => void;
-    setSchema: (schema: Schema) => void;
+    selectCurTableAndIdFromSchema: (schema: Schema, table: string, id: string, fromOp: boolean) => void;
     setCurPage: (page: string) => void;
     editMode: boolean,
     setEditMode: (edit: boolean) => void;
@@ -218,13 +221,14 @@ export function TableRecord({
             const editResult: RecordEditResult = await response.json();
             if (editResult.resultCode == 'updateOk' || editResult.resultCode == 'addOk') {
                 console.log(editResult);
-                setSchema(newSchema(schema, editResult.table, editResult.recordIds));
+
                 notification.info({
                     message: `post ${url} ${editResult.resultCode}`,
                     placement: 'topRight',
                     duration: 3
                 });
-                setCurTableAndId(editResult.table, editResult.id);
+                let newSch = newSchema(schema, editResult.table, editResult.recordIds);
+                selectCurTableAndIdFromSchema(newSch, editResult.table, editResult.id, true);
             } else {
                 notification.warning({
                     message: `post ${url} ${editResult.resultCode}`,
@@ -254,7 +258,7 @@ export function TableRecord({
     return <TableRecordLoaded schema={schema} curTable={curTable} curId={curId}
                               key={`${curTable.name}-${curId}`}
                               recordResult={recordResult}
-                              setCurTableAndId={setCurTableAndId}
+                              selectCurTableAndIdFromSchema={selectCurTableAndIdFromSchema}
                               setCurPage={setCurPage}
                               onSubmit={onSubmit}
                               editMode={editMode}

@@ -103,7 +103,7 @@ export function CfgEditorApp() {
             const schema = new Schema(rawSchema);
 
             setSchema(schema);
-            selectCurTableFromSchema(schema, curTableId, curId);
+            selectCurTableAndIdFromSchema(schema, curTableId, curId);
             setIsFetching(false);
             setIsModalOpen(false);
         }
@@ -116,10 +116,10 @@ export function CfgEditorApp() {
     }
 
 
-    function selectCurTableFromSchema(schema: Schema,
-                                      curTableName: string = curTableId,
-                                      curIdStr: string = curId,
-                                      fromOp: boolean = true) {
+    function selectCurTableAndIdFromSchema(schema: Schema,
+                                           curTableName: string = curTableId,
+                                           curIdStr: string = curId,
+                                           fromOp: boolean = true) {
         if (schema == null) {
             return;
         }
@@ -153,13 +153,13 @@ export function CfgEditorApp() {
 
     function selectCurTable(curTableName: string) {
         if (schema) {
-            selectCurTableFromSchema(schema, curTableName);
+            selectCurTableAndIdFromSchema(schema, curTableName);
         }
     }
 
     function selectCurTableAndId(curTableName: string, curId: string) {
         if (schema) {
-            selectCurTableFromSchema(schema, curTableName, curId);
+            selectCurTableAndIdFromSchema(schema, curTableName, curId);
         }
     }
 
@@ -167,13 +167,13 @@ export function CfgEditorApp() {
 
     function selectCurId(curId: string) {
         if (schema && curTable) {
-            selectCurTableFromSchema(schema, curTable.name, curId);
+            selectCurTableAndIdFromSchema(schema, curTable.name, curId);
         }
     }
 
     function selectHistoryCur(item: HistoryItem | null) {
         if (item && schema) {
-            selectCurTableFromSchema(schema, item.table, item.id, false);
+            selectCurTableAndIdFromSchema(schema, item.table, item.id, false);
         }
     }
 
@@ -268,8 +268,7 @@ export function CfgEditorApp() {
                                        curId={curId}
                                        server={server}
                                        tryReconnect={tryReconnect}
-                                       setCurTableAndId={selectCurTableAndId}
-                                       setSchema={setSchema}
+                                       selectCurTableAndIdFromSchema={selectCurTableAndIdFromSchema}
                                        setCurPage={selectCurPage}
                                        editMode={editMode}
                                        setEditMode={setEditMode}/>;

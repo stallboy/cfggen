@@ -13,7 +13,7 @@ export function IdList({curTable, curId, setCurId}: {
 
     let options = [];
     for (let id of curTable.recordIds) {
-        options.push({label: id.id, value: id.id});
+        options.push({label: id.title ? `${id.id}-${id.title}` : id.id, value: id.id});
     }
 
     return <Select id='id'
@@ -23,7 +23,7 @@ export function IdList({curTable, curId, setCurId}: {
                    value={curId}
                    placeholder="search a record"
                    filterOption={(inputValue, option) =>
-                       option!.value.toUpperCase().includes(inputValue.toUpperCase())
+                       option!.label.toUpperCase().includes(inputValue.toUpperCase())
                    }
                    onChange={(value, _) => {
                        setCurId(value);
