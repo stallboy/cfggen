@@ -2,8 +2,9 @@ import {Card} from "antd";
 import {EntityBrief} from "../model/entityModel.ts";
 
 
-export function EntityCard({brief}: {
+export function EntityCard({brief, query}: {
     brief: EntityBrief
+    query?: string;
 }) {
     let cover = {};
     if (brief.img) {
@@ -12,10 +13,23 @@ export function EntityCard({brief}: {
 
     let title = {};
     if (brief.title) {
-        title = {title: brief.title};
+        if (query) {
+            title = {title: <Highlight text={brief.title} keyword={query}/>};
+        } else {
+            title = {title: brief.title};
+        }
     }
+    let desc = brief.description ?? brief.value;
 
-    return <Card hoverable style={{width: 240}}        {...cover}>
-        <Card.Meta {...title} description={brief.description ?? brief.value}/>
+    return <Card hoverable style={{width: 240}} {...cover}>
+        <Card.Meta {...title} description={query ? <Highlight text={desc} keyword={query}/> : desc}/>
     </Card>;
+}
+
+export function Highlight({text, keyword}: {
+    text: string;
+    keyword: string;
+}) {
+    return text.split(new RegExp(`(${keyword})`, "gi"))
+        .map((c, i) => c === keyword ? <mark key={i}>{c}</mark> : c);
 }

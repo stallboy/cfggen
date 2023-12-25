@@ -73,6 +73,7 @@ export function CfgEditorApp() {
     const [history, setHistory] = useState<History>(new History());
     const [settingOpen, setSettingOpen] = useState<boolean>(false);
     const [searchOpen, setSearchOpen] = useState<boolean>(false);
+    const [query, setQuery] = useState<string>('');
 
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [isFetching, setIsFetching] = useState<boolean>(false);
@@ -284,7 +285,8 @@ export function CfgEditorApp() {
                                              tryReconnect={tryReconnect}
                                              setCurTableAndId={selectCurTableAndId}
                                              setCurPage={selectCurPage}
-                                             setEditMode={setEditMode}/>;
+                                             setEditMode={setEditMode}
+                                             query={query}/>;
         }
     }
 
@@ -312,7 +314,8 @@ export function CfgEditorApp() {
                                                   tryReconnect={tryReconnect}
                                                   setCurTableAndId={selectCurTableAndId}
                                                   setCurPage={selectCurPage}
-                                                  setEditMode={setEditMode}/>;
+                                                  setEditMode={setEditMode}
+                                                  query={query}/>;
             if (dragPanel != pageFixed) {
                 items.push({
                     key: pageFixed,
@@ -586,6 +589,8 @@ export function CfgEditorApp() {
         <Drawer title="search" placement="left" onClose={onSearchClose} open={searchOpen} size='large'>
             <SearchValue searchMax={searchMax}
                          server={server}
+                         query={query}
+                         setQuery={setQuery}
                          tryReconnect={tryReconnect}
                          setCurTableAndId={selectCurTableAndId}/>
         </Drawer>

@@ -8,7 +8,8 @@ import {EntityCard} from "./EntityCard.tsx";
 
 export class EntityControl extends ClassicPreset.Control {
     constructor(public entity: Entity,
-                public changeHeightCallback: (height: number) => void) {
+                public changeHeightCallback: (height: number) => void,
+                public query?: string,) {
         super();
     }
 }
@@ -62,7 +63,7 @@ export function EntityControlComponent(props: { data: EntityControl }) {
             }
         }
     } else if (entity.brief) {
-        content = <EntityCard brief={entity.brief}/>;
+        content = <EntityCard brief={entity.brief} query={props.data.query}/>;
 
     } else {
         content = <Space/>;

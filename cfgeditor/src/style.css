@@ -1,8 +1,14 @@
 .App {
-  font-family: sans-serif;
+    font-family: sans-serif;
 }
+
 body {
-  overflow: hidden;
-  margin: 0;
-  padding: 0;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+mark {
+    color: #2986ff;
+    font-weight: bold;
 }

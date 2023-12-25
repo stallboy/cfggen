@@ -15,7 +15,7 @@ import {ContextMenuExtra, ContextMenuPlugin} from "rete-context-menu-plugin";
 type Schemes = GetSchemes<EntityNode, EntityConnection<EntityNode, EntityNode>>;
 type AreaExtra = ReactArea2D<Schemes> | ContextMenuExtra;
 
-export async function createEditor(container: HTMLElement, graph: EntityGraph) {
+export async function createEditor(container: HTMLElement, graph: EntityGraph, query?: string) {
     const editor = new NodeEditor<Schemes>();
     const area = new AreaPlugin<Schemes, AreaExtra>(container);
     const connection = new ConnectionPlugin<Schemes, AreaExtra>();
@@ -95,7 +95,7 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
             }, 200)
         }
 
-        const fieldsControl = new EntityControl(entity, changeHeightCallback);
+        const fieldsControl = new EntityControl(entity, changeHeightCallback, query);
         node.addControl("value", fieldsControl);
 
         for (let inputSocket of entity.inputs) {

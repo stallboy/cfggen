@@ -3,6 +3,7 @@ import {App, Button, Empty, Input, Result, Table} from "antd";
 import {SearchResult, SearchResultItem} from "./model/searchModel.ts";
 import type {ColumnsType} from "antd/es/table";
 import {useTranslation} from "react-i18next";
+import {getId} from "./func/recordRefEntity.ts";
 
 
 function getLabel(table: string, id: string): string {
@@ -46,14 +47,15 @@ function getColumns(onClick: (item: SearchResultItem) => void): ColumnsType<Sear
 }
 
 
-export function SearchValue({searchMax, server, tryReconnect, setCurTableAndId}: {
+export function SearchValue({searchMax, server, query, setQuery, tryReconnect, setCurTableAndId}: {
     searchMax: number;
     server: string;
+    query: string;
+    setQuery: (q: string) => void;
     tryReconnect: () => void;
     setCurTableAndId: (table: string, id: string) => void;
 }) {
     const [loading, setLoading] = useState<boolean>(false);
-    const [query, setQuery] = useState<string>('');
     const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
     const {notification} = App.useApp();
     const {t} = useTranslation();
@@ -88,7 +90,8 @@ export function SearchValue({searchMax, server, tryReconnect, setCurTableAndId}:
     } else {
         let columns = getColumns(onClickItem);
         content = <div>q={searchResult.q}&max={searchResult.max}
-            <Table columns={columns} dataSource={searchResult.items}/>
+            <Table columns={columns} dataSource={searchResult.items}
+                   rowKey={(item: SearchResultItem) => getId(item.table, item.pk)}/>
         </div>
     }
 

@@ -11,12 +11,13 @@ import {pageRecord} from "./CfgEditorApp.tsx";
 import {useTranslation} from "react-i18next";
 
 
-export function TableRecordRefLoaded({schema, recordRefResult, setCurTableAndId, setCurPage, setEditMode}: {
+export function TableRecordRefLoaded({schema, recordRefResult, setCurTableAndId, setCurPage, setEditMode,query}: {
     schema: Schema;
     recordRefResult: RecordRefsResult;
     setCurTableAndId: (table: string, id: string) => void;
     setCurPage: (page: string) => void;
     setEditMode: (edit: boolean) => void;
+    query:string;
 }) {
 
     const [t] = useTranslation();
@@ -76,9 +77,9 @@ export function TableRecordRefLoaded({schema, recordRefResult, setCurTableAndId,
 
     const create = useCallback(
         (el: HTMLElement) => {
-            return createEditor(el, createGraph());
+            return createEditor(el, createGraph(), query);
         },
-        [recordRefResult]
+        [recordRefResult, query]
     );
     const [ref] = useRete(create);
 
@@ -91,7 +92,7 @@ export function TableRecordRef({
                                    refIn, refOutDepth, maxNode,
                                    server, tryReconnect,
                                    setCurTableAndId, setCurPage,
-                                   setEditMode
+                                   setEditMode, query
                                }: {
     schema: Schema;
     curTable: STable;
@@ -104,6 +105,7 @@ export function TableRecordRef({
     setCurTableAndId: (table: string, id: string) => void;
     setCurPage: (page: string) => void;
     setEditMode: (edit: boolean) => void;
+    query: string;
 }) {
     const [recordRefResult, setRecordRefResult] = useState<RecordRefsResult | null>(null);
     const {notification} = App.useApp();
@@ -138,7 +140,8 @@ export function TableRecordRef({
         recordRefResult={recordRefResult}
         setCurTableAndId={setCurTableAndId}
         setCurPage={setCurPage}
-        setEditMode={setEditMode}/>
+        setEditMode={setEditMode}
+        query={query}/>
 
 
 }
