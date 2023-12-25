@@ -32,6 +32,8 @@ i18n.use(LanguageDetector)
 
                     deleteCurRecord: 'delete cur record',
                     addFix: 'add fix',
+                    addKeywordColor: 'add keyword color',
+                    setKeywordColors: 'set keyword colors',
 
                     search: 'search',
                     edit: 'edit',
@@ -65,10 +67,12 @@ i18n.use(LanguageDetector)
                     recordMaxNode: '数据节点数',
                     searchMaxReturn: '搜索返回数',
                     dragPanel: '可拖拽面板',
+                    addFix: '固定',
                     none: '不要',
 
                     deleteCurRecord: '删除当前数据',
-                    addFix: '固定',
+                    addKeywordColor: '增加关键词颜色',
+                    setKeywordColors: '设置关键词颜色',
 
                     search: '搜索',
                     edit: '编辑',

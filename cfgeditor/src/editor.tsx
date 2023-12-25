@@ -15,7 +15,7 @@ import {ContextMenuExtra, ContextMenuPlugin} from "rete-context-menu-plugin";
 type Schemes = GetSchemes<EntityNode, EntityConnection<EntityNode, EntityNode>>;
 type AreaExtra = ReactArea2D<Schemes> | ContextMenuExtra;
 
-export async function createEditor(container: HTMLElement, graph: EntityGraph, query?: string) {
+export async function createEditor(container: HTMLElement, graph: EntityGraph) {
     const editor = new NodeEditor<Schemes>();
     const area = new AreaPlugin<Schemes, AreaExtra>(container);
     const connection = new ConnectionPlugin<Schemes, AreaExtra>();
@@ -80,6 +80,8 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph, q
     for (let entity of graph.entityMap.values()) {
         const node = new EntityNode(entity.label);
         node.entity = entity;
+        node.keywordColors = graph.keywordColors;
+
         id2node.set(entity.id, node);
 
         // TODO height
@@ -95,7 +97,7 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph, q
             }, 200)
         }
 
-        const fieldsControl = new EntityControl(entity, changeHeightCallback, query);
+        const fieldsControl = new EntityControl(entity, changeHeightCallback, graph.query);
         node.addControl("value", fieldsControl);
 
         for (let inputSocket of entity.inputs) {

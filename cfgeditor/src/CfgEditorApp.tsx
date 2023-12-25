@@ -2,7 +2,7 @@ import {useEffect, useState} from "react";
 import {
     Alert,
     App,
-    Button,
+    Button, Divider,
     Drawer,
     Flex,
     Form,
@@ -31,6 +31,8 @@ import {RecordEditResult} from "./model/recordModel.ts";
 import {useTranslation} from "react-i18next";
 import {getId} from "./func/recordRefEntity.ts";
 import {DraggablePanel} from "@ant-design/pro-editor";
+import {KeywordColorSetting} from "./KeywordColorSetting.tsx";
+import {KeywordColor} from "./model/entityModel.ts";
 
 export const pageTable = 'table'
 export const pageTableRef = 'tableRef'
@@ -69,6 +71,7 @@ export function CfgEditorApp() {
     const [recordRefOutDepth, setRecordRefOutDepth] = useState<number>(getInt('recordRefOutDepth', 5));
     const [recordMaxNode, setRecordMaxNode] = useState<number>(getInt('recordMaxNode', 30));
     const [searchMax, setSearchMax] = useState<number>(getInt('searchMax', 50));
+    const [keywordColors, setKeywordColors] = useState<KeywordColor[]>(getJson('keywordColors'));
 
     const [history, setHistory] = useState<History>(new History());
     const [settingOpen, setSettingOpen] = useState<boolean>(false);
@@ -286,7 +289,8 @@ export function CfgEditorApp() {
                                              setCurTableAndId={selectCurTableAndId}
                                              setCurPage={selectCurPage}
                                              setEditMode={setEditMode}
-                                             query={query}/>;
+                                             query={query}
+                                             keywordColors={keywordColors}/>;
         }
     }
 
@@ -315,7 +319,8 @@ export function CfgEditorApp() {
                                                   setCurTableAndId={selectCurTableAndId}
                                                   setCurPage={selectCurPage}
                                                   setEditMode={setEditMode}
-                                                  query={query}/>;
+                                                  query={query}
+                                                  keywordColors={keywordColors}/>;
             if (dragPanel != pageFixed) {
                 items.push({
                     key: pageFixed,
@@ -395,6 +400,11 @@ export function CfgEditorApp() {
         tryConnect(value);
     }
 
+    function onChangeKeywordColors(colors: KeywordColor[]) {
+        setKeywordColors(colors);
+        localStorage.setItem('keywordColors', JSON.stringify(colors));
+    }
+
 
     function handleModalOk() {
         onConnectServer(server);
@@ -462,6 +472,7 @@ export function CfgEditorApp() {
             </Button>
         </Form.Item>
     }
+
     let tab = <Tabs tabBarExtraContent={{'left': leftOp}}
                     items={items}
                     activeKey={curPage}
@@ -552,6 +563,8 @@ export function CfgEditorApp() {
                         {label: t('none'), value: 'none'}]} onChange={onChangeDragePanel}/>
                 </Form.Item>
 
+                {addFixButton}
+
                 <Form.Item label={t('curServer')}>
                     {server}
                 </Form.Item>
@@ -581,9 +594,11 @@ export function CfgEditorApp() {
                     alt+q
                 </Form.Item>
 
-                {addFixButton}
                 {deleteButton}
             </Form>
+
+            <Divider/>
+            <KeywordColorSetting keywordColors={keywordColors} setKeywordColors={onChangeKeywordColors}/>
         </Drawer>
 
         <Drawer title="search" placement="left" onClose={onSearchClose} open={searchOpen} size='large'>

@@ -1,6 +1,6 @@
 import {ClassicPreset} from "rete";
 import {EntityControl} from "./EntityControl.tsx";
-import {Entity, EntityType} from "../model/entityModel.ts";
+import {Entity, EntityType, KeywordColor} from "../model/entityModel.ts";
 import {Presets, RenderEmit} from "rete-react-plugin";
 import {css} from "styled-components";
 
@@ -21,6 +21,7 @@ export class EntityNode extends ClassicPreset.Node<
     height = 200;
 
     entity?: Entity;
+    keywordColors?: KeywordColor[];
 }
 
 const normalStyles = css<{ selected?: boolean }>`
@@ -40,7 +41,33 @@ const refInStyles = css<{ selected?: boolean }>`
 `;
 
 export function EntityNodeComponent(props: { data: EntityNode, emit: RenderEmit<any> }) {
-    let type = props.data.entity?.entityType;
+    let styles = null;
+    let entity = props.data.entity;
+
+    if (entity && entity.brief && props.data.keywordColors && props.data.keywordColors.length > 0) {
+
+        let color: string | null = null;
+        for (let keywordColor of props.data.keywordColors) {
+            if (entity.brief.value.includes(keywordColor.keyword)) {
+                color = keywordColor.color;
+                break;
+            }
+        }
+
+        if (color != null) {
+            styles = {
+                styles: () => css<{ selected?: boolean }>`
+                    background: ${color};
+                `
+            };
+        }
+    }
+
+    if (styles) {
+        return <Node {...styles} {...props} />;
+    }
+
+    let type = entity?.entityType;
     switch (type) {
         case EntityType.Ref:
             return <Node styles={() => refStyles} {...props} />;

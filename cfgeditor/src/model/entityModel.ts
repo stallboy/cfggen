@@ -91,6 +91,14 @@ export interface EntityGraph {
     entityMap: Map<string, Entity>;
     menu: Item[];
     entityMenuFunc?: (entity: Entity) => Item[];
+
+    query?: string;
+    keywordColors?: KeywordColor[];
+}
+
+export interface KeywordColor {
+    keyword: string;
+    color: string;
 }
 
 export enum FieldsShowType {
@@ -129,3 +137,4 @@ export function fillInputs(entityMap: Map<string, Entity>) {
         }
     }
 }
+

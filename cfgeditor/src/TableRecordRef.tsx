@@ -2,7 +2,7 @@ import {Schema, STable} from "./model/schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback, useEffect, useState} from "react";
-import {Entity, EntityGraph, fillInputs,} from "./model/entityModel.ts";
+import {Entity, EntityGraph, fillInputs, KeywordColor,} from "./model/entityModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 import {RecordRefsResult, RefId} from "./model/recordModel.ts";
 import {App, Empty, Result, Spin} from "antd";
@@ -11,13 +11,17 @@ import {pageRecord} from "./CfgEditorApp.tsx";
 import {useTranslation} from "react-i18next";
 
 
-export function TableRecordRefLoaded({schema, recordRefResult, setCurTableAndId, setCurPage, setEditMode,query}: {
+export function TableRecordRefLoaded({
+                                         schema, recordRefResult, setCurTableAndId, setCurPage, setEditMode,
+                                         query, keywordColors
+                                     }: {
     schema: Schema;
     recordRefResult: RecordRefsResult;
     setCurTableAndId: (table: string, id: string) => void;
     setCurPage: (page: string) => void;
     setEditMode: (edit: boolean) => void;
-    query:string;
+    query: string;
+    keywordColors: KeywordColor[];
 }) {
 
     const [t] = useTranslation();
@@ -72,14 +76,14 @@ export function TableRecordRefLoaded({schema, recordRefResult, setCurTableAndId,
             }
             return mm;
         }
-        return {entityMap, menu, entityMenuFunc};
+        return {entityMap, menu, entityMenuFunc, query, keywordColors};
     }
 
     const create = useCallback(
         (el: HTMLElement) => {
-            return createEditor(el, createGraph(), query);
+            return createEditor(el, createGraph());
         },
-        [recordRefResult, query]
+        [recordRefResult, query, keywordColors]
     );
     const [ref] = useRete(create);
 
@@ -92,7 +96,7 @@ export function TableRecordRef({
                                    refIn, refOutDepth, maxNode,
                                    server, tryReconnect,
                                    setCurTableAndId, setCurPage,
-                                   setEditMode, query
+                                   setEditMode, query, keywordColors
                                }: {
     schema: Schema;
     curTable: STable;
@@ -106,6 +110,7 @@ export function TableRecordRef({
     setCurPage: (page: string) => void;
     setEditMode: (edit: boolean) => void;
     query: string;
+    keywordColors: KeywordColor[];
 }) {
     const [recordRefResult, setRecordRefResult] = useState<RecordRefsResult | null>(null);
     const {notification} = App.useApp();
@@ -141,7 +146,8 @@ export function TableRecordRef({
         setCurTableAndId={setCurTableAndId}
         setCurPage={setCurPage}
         setEditMode={setEditMode}
-        query={query}/>
+        query={query}
+        keywordColors={keywordColors}/>
 
 
 }
