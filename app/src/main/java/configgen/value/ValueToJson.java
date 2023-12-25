@@ -13,15 +13,15 @@ import static configgen.value.ValueRefCollector.collectStructRef;
 
 public class ValueToJson {
     private final CfgValue cfgValue;
-    private final Map<RefId, VStruct> refRecordMap;
+    private final Map<RefId, VStruct> refIdToRecordMap;
 
     public ValueToJson() {
         this(null, null);
     }
 
-    public ValueToJson(CfgValue cfgValue, Map<RefId, VStruct> refRecordMap) {
+    public ValueToJson(CfgValue cfgValue, Map<RefId, VStruct> refIdToRecordMap) {
         this.cfgValue = cfgValue;
-        this.refRecordMap = refRecordMap;
+        this.refIdToRecordMap = refIdToRecordMap;
     }
 
     public Object toJson(Value value) {
@@ -48,8 +48,8 @@ public class ValueToJson {
             json.put(fs.name(), toJson(fv));
         }
         json.put("$type", vStruct.schema().fullName());
-        if (refRecordMap != null) {
-            Map<String, List<RefId>> refIdMap = collectStructRef(cfgValue, refRecordMap, vStruct);
+        if (refIdToRecordMap != null) {
+            Map<String, List<RefId>> refIdMap = collectStructRef(cfgValue, vStruct, refIdToRecordMap, null, "");
             if (!refIdMap.isEmpty()) {
                 json.put("$refs", refIdMap);
             }

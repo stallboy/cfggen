@@ -20,14 +20,14 @@ public class ValueRefCollector {
     }
 
     private final CfgValue cfgValue;
-    private final Map<RefId, VStruct> refRecordMap;
-    private final Map<String, List<RefId>> refIdMap;
+    private final Map<RefId, VStruct> refIdToRecordMap;
+    private final Map<String, List<RefId>> nameToRefIdsMap;
 
 
-    public ValueRefCollector(CfgValue cfgValue, Map<RefId, VStruct> refRecordMap, Map<String, List<RefId>> refIdMap) {
+    public ValueRefCollector(CfgValue cfgValue, Map<RefId, VStruct> refIdToRecordMap, Map<String, List<RefId>> nameToRefIdsMap) {
         this.cfgValue = cfgValue;
-        this.refRecordMap = refRecordMap;
-        this.refIdMap = refIdMap;
+        this.refIdToRecordMap = refIdToRecordMap;
+        this.nameToRefIdsMap = nameToRefIdsMap;
     }
 
     public void collect(Value value, List<String> prefix) {
@@ -42,14 +42,12 @@ public class ValueRefCollector {
     }
 
     public void collect(VStruct vStruct, List<String> prefix) {
-        Map<String, List<RefId>> thisRefIdMap = collectStructRef(cfgValue, refRecordMap, vStruct);
-        if (prefix.isEmpty()) {
-            refIdMap.putAll(thisRefIdMap);
-        } else {
-            for (Map.Entry<String, List<RefId>> e : thisRefIdMap.entrySet()) {
-                refIdMap.put(String.join(".", prefix) + "." + e.getKey(), e.getValue());
-            }
+        String pre = "";
+        if (!prefix.isEmpty()) {
+            pre = String.join(".", prefix) + ".";
         }
+
+        collectStructRef(cfgValue, vStruct, refIdToRecordMap, nameToRefIdsMap, pre);
 
         int i = 0;
         for (Value value : vStruct.values()) {
@@ -66,8 +64,16 @@ public class ValueRefCollector {
         return res;
     }
 
-    static Map<String, List<RefId>> collectStructRef(CfgValue cfgValue, Map<RefId, VStruct> refRecordMap, VStruct vStruct) {
-        Map<String, List<RefId>> refIdMap = new LinkedHashMap<>();
+    static Map<String, List<RefId>> collectStructRef(CfgValue cfgValue,
+                                                     VStruct vStruct,
+                                                     Map<RefId, VStruct> refIdToRecordMap,
+                                                     Map<String, List<RefId>> nameToRefIdsMap,
+                                                     String namePrefix
+    ) {
+        if (nameToRefIdsMap == null){
+            nameToRefIdsMap = new LinkedHashMap<>();
+        }
+
         Structural structural = vStruct.schema();
         for (ForeignKeySchema fk : structural.foreignKeys()) {
             RefKey refKey = fk.refKey();
@@ -78,13 +84,26 @@ public class ValueRefCollector {
             // 这里没考虑ListRef
             if (refKey instanceof RefKey.RefSimple refSimple) {
                 FieldType ft = fk.key().fieldSchemas().getFirst().type();
-                String refName = (refSimple.nullable() ? "nullableRef" : "ref") + Generator.upper1(fk.name());
+
+                // 允许自定义ref的名称
+                String refName = null;
+                String refTitleFieldName = fk.meta().getStr("refTitle", null);
+                if (refTitleFieldName != null){
+                    Value refTitleValue = ValueUtil.extractFieldValue(vStruct, refTitleFieldName);
+                    if (refTitleValue instanceof StringValue stringValue){
+                        refName = stringValue.value();
+                    }
+                }
+                if (refName == null){
+                    refName = namePrefix + (refSimple.nullable() ? "nullableRef" : "ref") + Generator.upper1(fk.name());
+                }
+
                 switch (ft) {
                     case FieldType.SimpleType ignored -> {
                         Value localValue = ValueUtil.extractKeyValue(vStruct, fk.keyIndices());
                         VStruct refRecord = foreignKeyValueMap.get(localValue);
                         if (refRecord != null) {
-                            addRef(refRecordMap, refIdMap, refName, fk.refTableNormalized(), localValue.packStr(), refRecord);
+                            addRef(refIdToRecordMap, nameToRefIdsMap, refName, fk.refTableNormalized(), localValue.packStr(), refRecord);
                         }
                     }
                     case FieldType.FList ignored -> {
@@ -92,7 +111,7 @@ public class ValueRefCollector {
                         for (SimpleValue item : localList.valueList()) {
                             VStruct refRecord = foreignKeyValueMap.get(item);
                             if (refRecord != null) {
-                                addRef(refRecordMap, refIdMap, refName, fk.refTableNormalized(), item.packStr(), refRecord);
+                                addRef(refIdToRecordMap, nameToRefIdsMap, refName, fk.refTableNormalized(), item.packStr(), refRecord);
                             }
                         }
                     }
@@ -101,20 +120,20 @@ public class ValueRefCollector {
                         for (SimpleValue val : localMap.valueMap().values()) {
                             VStruct refRecord = foreignKeyValueMap.get(val);
                             if (refRecord != null) {
-                                addRef(refRecordMap, refIdMap, refName, fk.refTableNormalized(), val.packStr(), refRecord);
+                                addRef(refIdToRecordMap, nameToRefIdsMap, refName, fk.refTableNormalized(), val.packStr(), refRecord);
                             }
                         }
                     }
                 }
             }
         }
-        return refIdMap;
+        return nameToRefIdsMap;
     }
 
-    private static void addRef(Map<RefId, VStruct> refRecordMap, Map<String, List<RefId>> refIdMap, String refName, String table, String id, VStruct refRecord) {
+    private static void addRef(Map<RefId, VStruct> refIdToRecordMap, Map<String, List<RefId>> nameToRefIdsMap, String refName, String table, String id, VStruct refRecord) {
         RefId refId = new RefId(table, id);
-        refRecordMap.put(refId, refRecord);
-        List<RefId> refIds = refIdMap.computeIfAbsent(refName, k -> new ArrayList<>());
+        refIdToRecordMap.put(refId, refRecord);
+        List<RefId> refIds = nameToRefIdsMap.computeIfAbsent(refName, k -> new ArrayList<>());
         refIds.add(refId);
     }
 

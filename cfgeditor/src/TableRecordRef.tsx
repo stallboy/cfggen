@@ -122,7 +122,7 @@ export function TableRecordRef({
             notification.error({message: `fetch ${url} err: ${err.toString()}`, placement: 'topRight', duration: 4});
             tryReconnect();
         });
-    }, [server, curTable, curId, refOutDepth, maxNode, refIn]);
+    }, [schema, server, curTable, curId, refOutDepth, maxNode, refIn]);
 
 
     if (recordRefResult == null) {

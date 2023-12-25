@@ -120,6 +120,7 @@ export function CfgEditorApp() {
                                            curTableName: string = curTableId,
                                            curIdStr: string = curId,
                                            fromOp: boolean = true) {
+        setSchema(schema);
         if (schema == null) {
             return;
         }
@@ -485,7 +486,7 @@ export function CfgEditorApp() {
                 style={{background: '#fff', width: '100%', padding: 12}}>
                 {dragPage}
             </DraggablePanel>
-            <div style={{ flex: 'auto'}}>{tab}</div>
+            <div style={{flex: 'auto'}}>{tab}</div>
         </div>;
     } else {
         content = tab;
