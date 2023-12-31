@@ -11,6 +11,7 @@ import {
 import {Drag} from "rete-react-plugin";
 import {useRef} from "react";
 import {useTranslation} from "react-i18next";
+import {DefaultOptionType} from "antd/es/select";
 
 const formItemLayout = {
     labelCol: {
@@ -36,10 +37,19 @@ function PrimitiveControl(field: EntityEditField, isFromArray: boolean = false) 
     let style = isFromArray ? {style: {width: '88%'}} : {};
     let control;
     const {eleType, autoCompleteOptions} = field;
-    if (autoCompleteOptions && autoCompleteOptions.length > 0) {
-        control = <AutoComplete options={autoCompleteOptions} filterOption={(inputValue, option) =>
-            option!.value.toUpperCase().includes(inputValue.toUpperCase())
-        }/>
+    if (autoCompleteOptions && autoCompleteOptions.options.length > 0) {
+        let filterSorts = {};
+        if (autoCompleteOptions.isValueInteger) {
+            filterSorts = {
+                filterSort: (optionA: DefaultOptionType, optionB: DefaultOptionType) =>
+                    parseInt(optionA.value as string) - parseInt(optionB.value as string)
+            };
+        }
+        control = <AutoComplete options={autoCompleteOptions.options}
+                                {...filterSorts}
+                                filterOption={(inputValue, option) =>
+                                    option!.value.toUpperCase().includes(inputValue.toUpperCase())
+                                }/>
     } else if (eleType == 'bool') {
         control = <Switch  {...style}/>;
     } else if (setOfNumber.has(eleType)) {
@@ -139,7 +149,7 @@ function FuncDeleteFormItem(field: EntityEditField) {
 }
 
 function InterfaceFormItem(field: EntityEditField): any {
-    let options = field.autoCompleteOptions as EntityEditFieldOption[]
+    let options = field.autoCompleteOptions?.options as EntityEditFieldOption[]
 
     let implSelect = <Form.Item name={field.name} key={field.name} label={makeLabel(field)} initialValue={field.value}>
         <Select showSearch options={options} filterOption={(inputValue, option) =>

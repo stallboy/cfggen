@@ -368,24 +368,37 @@ export function newSchema(schema: Schema, table: string, recordIds: RecordId[]) 
 }
 
 export function getNextId(sTable: STable): number | null {
-    if (sTable.pk.length > 1) {
+    if (!isPkInteger(sTable)) {
         return null;
+    }
+    let max = 1;
+    for (let recordId of sTable.recordIds) {
+        let v = parseInt(recordId.id);
+        if (v > max) {
+            max = v;
+        }
+    }
+    return max + 1;
+}
+
+export function isPkInteger(sTable: STable) {
+    if (sTable.pk.length > 1) {
+        return false;
     }
 
     let field = getField(sTable, sTable.pk[0]);
     if (field == null) {
-        return null;
+        return false;
     }
 
-    if (field.type == 'int' || field.type == 'long') {
-        let max = 1;
-        for (let recordId of sTable.recordIds) {
-            let v = parseInt(recordId.id);
-            if (v > max) {
-                max = v;
-            }
-        }
-        return max + 1;
+    return field.type == 'int' || field.type == 'long';
+}
+
+export function getIdOptions(sTable: STable) {
+    let options = [];
+    for (let id of sTable.recordIds) {
+        let label = (id.title && id.title != id.id) ? `${id.id}-${id.title}` : id.id;
+        options.push({label, value: id.id});
     }
-    return null;
+    return options;
 }

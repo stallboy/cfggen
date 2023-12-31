@@ -12,13 +12,18 @@ export interface EntityEditFieldOption {
     label: string;
 }
 
+export interface EntityEditFieldOptions {
+    options: EntityEditFieldOption[];
+    isValueInteger: boolean;
+}
+
 export interface EntityEditField {
     name: string;
     comment?: string;
     type: EditFieldType;
     eleType: string;
     value: EditFieldValueType;
-    autoCompleteOptions?: EntityEditFieldOption[]; // use Select if it has autoCompleteOptions
+    autoCompleteOptions?: EntityEditFieldOptions; // use AutoComplete if it has autoCompleteOptions
     implFields?: EntityEditField[];
     interfaceOnChangeImpl?: ((impl: string) => void)
 }

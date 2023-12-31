@@ -1,4 +1,5 @@
-import {STable} from "./model/schemaModel.ts";
+import {DefaultOptionType} from "antd/es/select/index";
+import {getIdOptions, isPkInteger, STable} from "./model/schemaModel.ts";
 import {Select, Skeleton} from "antd";
 
 
@@ -11,9 +12,13 @@ export function IdList({curTable, curId, setCurId}: {
         return <Skeleton.Input/>
     }
 
-    let options = [];
-    for (let id of curTable.recordIds) {
-        options.push({label: id.title ? `${id.id}-${id.title}` : id.id, value: id.id});
+    let options = getIdOptions(curTable);
+    let filterSorts = {};
+    if (isPkInteger(curTable)) {
+        filterSorts = {
+            filterSort: (optionA: DefaultOptionType, optionB: DefaultOptionType) =>
+                parseInt(optionA.value as string) - parseInt(optionB.value as string)
+        };
     }
 
     return <Select id='id'
@@ -22,6 +27,7 @@ export function IdList({curTable, curId, setCurId}: {
                    style={{width: 160}}
                    value={curId}
                    placeholder="search a record"
+                   {...filterSorts}
                    filterOption={(inputValue, option) =>
                        option!.label.toUpperCase().includes(inputValue.toUpperCase())
                    }

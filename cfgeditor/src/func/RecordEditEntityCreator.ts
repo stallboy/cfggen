@@ -5,9 +5,19 @@ import {
     EntityEditField,
     EntityType,
     EntitySocketOutput,
-    FieldsShowType, EntityEditFieldOption
+    FieldsShowType, EntityEditFieldOption, EntityEditFieldOptions
 } from "../model/entityModel.ts";
-import {getField, getImpl, Schema, SInterface, SItem, SStruct, STable} from "../model/schemaModel.ts";
+import {
+    getField,
+    getIdOptions,
+    getImpl,
+    isPkInteger,
+    Schema,
+    SInterface,
+    SItem,
+    SStruct,
+    STable
+} from "../model/schemaModel.ts";
 import {JSONArray, JSONObject, JSONValue, RefId} from "../model/recordModel.ts";
 import {getId, getLabel, getLastName} from "./recordRefEntity.ts";
 import {editingState} from "./editingState.ts";
@@ -193,7 +203,7 @@ export class RecordEditEntityCreator {
                 type: 'interface',
                 eleType: sInterface.name,
                 value: implName,
-                autoCompleteOptions: getImplNames(sInterface),
+                autoCompleteOptions: {options: getImplNames(sInterface), isValueInteger: false},
                 implFields: this.makeEditFields(impl, obj, fieldChain),
                 interfaceOnChangeImpl: (newImplName: string) => {
                     let newObj: JSONObject;
@@ -293,9 +303,9 @@ export class RecordEditEntityCreator {
 
     }
 
-    getAutoCompleteOptions(structural: SStruct | STable, fieldName: string): EntityEditFieldOption[] | undefined {
+    getAutoCompleteOptions(structural: SStruct | STable, fieldName: string): EntityEditFieldOptions | undefined {
         if (!structural.foreignKeys) {
-            return undefined;
+            return;
         }
         let fkTable = null;
         for (let fk of structural.foreignKeys) {
@@ -306,18 +316,15 @@ export class RecordEditEntityCreator {
             }
         }
         if (fkTable == null) {
-            return undefined;
+            return;
         }
         let sTable = this.schema.getSTable(fkTable);
         if (sTable == null) {
-            return undefined;
+            return;
         }
 
-        let options: EntityEditFieldOption[] = [];
-        for (let recordId of sTable.recordIds) {
-            options.push({value: recordId.id, label: recordId.title ? `${recordId.id}-${recordId.title}` : recordId.id})
-        }
-        return options;
+        let options = getIdOptions(sTable);
+        return {options, isValueInteger: isPkInteger(sTable)};
     }
 
 }
