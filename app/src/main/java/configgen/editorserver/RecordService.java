@@ -126,8 +126,8 @@ public class RecordService {
             return ofErr(idParseErr);
         }
 
-        if (pkValue instanceof VStruct vPkValue) {
-            pkValue = ValueUtil.vStructToVList(vPkValue); // key里不会有VStruct，用VList
+        if (pkValue instanceof VStruct vPkValue && vTable.schema().primaryKey().fields().size() > 1) {
+            pkValue = ValueUtil.vStructToVList(vPkValue); // 多key时schema是struct，但value用的是VList，这里要转换下
         }
         String id = pkValue.packStr();
 
@@ -135,7 +135,6 @@ public class RecordService {
         if (vRecord == null) {
             return ofErr(idNotFound);
         }
-
 
         Map<RefId, VStruct> frontier = new LinkedHashMap<>();
         RefId thisObjId = new RefId(table, id);

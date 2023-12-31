@@ -19,7 +19,7 @@ export function EntityCard({brief, query}: {
             title = {title: brief.title};
         }
     }
-    let desc = brief.description ?? brief.value;
+    let desc = (brief.description && brief.description.length > 0) ? brief.description : brief.value;
 
     return <Card hoverable style={{width: 240}} {...cover}>
         <Card.Meta {...title} description={query ? <Highlight text={desc} keyword={query}/> : desc}/>
