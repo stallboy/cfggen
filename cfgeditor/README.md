@@ -13,22 +13,34 @@
 java -jar ../cfggen.jar -datadir ../example/config  -gen server
 ```
 
-2. run cfgeditor front server
+2. use cfgeditor front server & web browser to test
+
+    ```bash
+    pnpm run dev
+    ```
+
+   http://localhost:5173/
+
+   or use cfgeditor.exe to test
+    ```bash
+    pnpm tauri dev
+    ```
+
+## generate front server
 
 ```bash
-pnpm run dev
+pnpm run build  # generate dist/*
 ```
 
-3. browser 
-http://localhost:5173/
+then you can use apache or nginx to serve the dist directory. or use jwebserver to test
 
+```bash
+cd dist
+jwebserver # use
+```
 
 ## generate cfgeditor.exe
 
 ```bash
-pnpm tauri dev
-```
-
-```bash
-pnpm tauri build
+pnpm tauri build  # generate src-tauri\target\release\cfgeditor.exe
 ```
