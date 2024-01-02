@@ -75,6 +75,7 @@ export function CfgEditorApp() {
     const [recordRefOutDepth, setRecordRefOutDepth] = useState<number>(getInt('recordRefOutDepth', 5));
     const [recordMaxNode, setRecordMaxNode] = useState<number>(getInt('recordMaxNode', 30));
     const [searchMax, setSearchMax] = useState<number>(getInt('searchMax', 50));
+    const [imageSizeScale, setImageSizeScale] = useState<number>(getInt('imageSizeScale', 16));
     const [keywordColors, setKeywordColors] = useState<KeywordColor[]>(getJson('keywordColors'));
 
     const [history, setHistory] = useState<History>(new History());
@@ -108,8 +109,8 @@ export function CfgEditorApp() {
             return
         }
 
-        let w = ref.current.offsetWidth * 16;
-        let h = ref.current.offsetHeight * 16;
+        let w = ref.current.offsetWidth * imageSizeScale;
+        let h = ref.current.offsetHeight * imageSizeScale;
 
         toBlob(ref.current, {cacheBust: true, canvasWidth: w, canvasHeight: h})
             .then((blob) => {
@@ -123,7 +124,7 @@ export function CfgEditorApp() {
                 notification.error({message: "save png failed: limit the max node count", duration: 3});
                 console.log(err)
             })
-    }, [ref])
+    }, [ref, curTableId, curId, imageSizeScale])
 
 
     function tryConnect(server: string) {
@@ -419,6 +420,13 @@ export function CfgEditorApp() {
         }
     }
 
+    function onChangeImageSizeScale(value: number | null) {
+        if (value) {
+            setImageSizeScale(value);
+            localStorage.setItem('imageSizeScale', value.toString());
+        }
+    }
+
     function onChangeDragePanel(value: string) {
         setDragPanel(value);
         localStorage.setItem('dragPanel', value);
@@ -430,6 +438,7 @@ export function CfgEditorApp() {
         localStorage.setItem('server', value);
         tryConnect(value);
     }
+
 
     function onChangeKeywordColors(colors: KeywordColor[]) {
         setKeywordColors(colors);
@@ -607,6 +616,18 @@ export function CfgEditorApp() {
                     <InputNumber id='searchMaxReturn' value={searchMax} min={1} max={500} onChange={onChangeSearchMax}/>
                 </Form.Item>
 
+                <Form.Item label={t('imageSizeScale')}>
+                    <InputNumber id='imageSizeScale' value={imageSizeScale} min={1} max={256}
+                                 onChange={onChangeImageSizeScale}/>
+                </Form.Item>
+
+                <Form.Item wrapperCol={{span: 18, offset: 6}}>
+                    <Button type="primary" onClick={onToPngClick}>
+                        {t('toPng')}
+                    </Button>
+                </Form.Item>
+
+
                 <Form.Item label={t('dragPanel')}>
                     <Select id='dragPanel' value={dragPanel} options={[{label: t('recordRef'), value: 'recordRef'},
                         {label: t('fix'), value: 'fix'},
@@ -622,12 +643,6 @@ export function CfgEditorApp() {
                 <Form.Item label={t('newServer')}>
                     <Input.Search id='newServer' defaultValue={server} enterButton={t('connect')}
                                   onSearch={onConnectServer}/>
-                </Form.Item>
-
-                <Form.Item wrapperCol={{span: 18, offset: 6}}>
-                    <Button type="primary" onClick={onToPngClick}>
-                        {t('toPng')}
-                    </Button>
                 </Form.Item>
 
                 <Form.Item label={<LeftOutlined/>}>

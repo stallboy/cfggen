@@ -71,6 +71,7 @@ i18n.use(LanguageDetector)
                     recordRefOutDepth: '数据出层',
                     recordMaxNode: '数据节点数',
                     searchMaxReturn: '搜索返回数',
+                    imageSizeScale: '图片缩放倍数',
                     dragPanel: '可拖拽面板',
                     addFix: '固定',
                     removeFix: '删除固定',
