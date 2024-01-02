@@ -13,7 +13,7 @@ import {
     Space,
     Switch,
     Tabs,
-    Tag
+    Typography
 } from "antd";
 import {CloseOutlined, LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
 import {getNextId, newSchema, Schema} from "./model/schemaModel.ts";
@@ -33,6 +33,8 @@ import {getId} from "./func/recordRefEntity.ts";
 import {DraggablePanel} from "@ant-design/pro-editor";
 import {KeywordColorSetting} from "./KeywordColorSetting.tsx";
 import {KeywordColor} from "./model/entityModel.ts";
+
+const { Text } = Typography;
 
 export const pageTable = 'table'
 export const pageTableRef = 'tableRef'
@@ -201,9 +203,9 @@ export function CfgEditorApp() {
 
     let nextId;
     if (curTable) {
-        let nId = getNextId(curTable);
+        let nId = getNextId(curTable, curId);
         if (nId) {
-            nextId = <Tag> next id: {nId}</Tag>
+            nextId = <Text>{t('nextSlot')} <Text copyable>{nId}</Text></Text>
         }
     }
 

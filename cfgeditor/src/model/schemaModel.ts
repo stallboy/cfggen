@@ -367,18 +367,27 @@ export function newSchema(schema: Schema, table: string, recordIds: RecordId[]) 
     return new Schema({isEditable: schema.isEditable, items});
 }
 
-export function getNextId(sTable: STable): number | null {
+export function getNextId(sTable: STable, curId: string): number | null {
     if (!isPkInteger(sTable)) {
         return null;
     }
-    let max = 1;
+    let id = parseInt(curId);
+    if (isNaN(id)){
+        id = 0;
+    }
+
+    let idSet = new Set<number>();
     for (let recordId of sTable.recordIds) {
         let v = parseInt(recordId.id);
-        if (v > max) {
-            max = v;
-        }
+        idSet.add(v);
     }
-    return max + 1;
+
+    id++;
+    while(idSet.has(id)){
+        id++;
+    }
+
+    return id;
 }
 
 export function isPkInteger(sTable: STable) {

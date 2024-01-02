@@ -14,6 +14,7 @@ i18n.use(LanguageDetector)
         resources: {
             en: {
                 translation: {
+                    nextSlot: "next slot:",
                     table: "table",
                     tableRef: "table relation",
                     record: "record",
@@ -44,6 +45,7 @@ i18n.use(LanguageDetector)
             },
             zh: {
                 translation: {
+                    nextSlot: "空位:",
                     table: "表结构",
                     tableRef: "表关系",
                     record: "数据",
