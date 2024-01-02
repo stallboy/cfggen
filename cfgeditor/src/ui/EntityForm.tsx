@@ -1,13 +1,7 @@
 import {EntityEditField, EntityEditFieldOption, FuncSubmitType, FuncType} from "../model/entityModel.ts";
 import {AutoComplete, Button, ConfigProvider, Form, InputNumber, Select, Space, Switch, Tooltip} from "antd";
 import TextArea from "antd/es/input/TextArea";
-import {
-    ClearOutlined,
-    CloseOutlined,
-    MinusCircleOutlined,
-    PlusCircleOutlined,
-    PlusCircleTwoTone
-} from "@ant-design/icons";
+import {CloseOutlined, MinusCircleOutlined, PlusCircleOutlined, PlusCircleTwoTone} from "@ant-design/icons";
 import {Drag} from "rete-react-plugin";
 import {useRef} from "react";
 import {useTranslation} from "react-i18next";
@@ -134,7 +128,9 @@ function FuncSubmitFormItem(field: EntityEditField) {
             <Button type="primary" htmlType="submit" onClick={() => func.funcSubmit()}>
                 {t('addOrUpdate')}
             </Button>
-            <ClearOutlined onClick={() => func.funcClear()}/>
+            <Button type="default" onClick={() => func.funcClear()}>
+                {t('setDefaultValue')}
+            </Button>
         </Space>
     </Form.Item>
 }

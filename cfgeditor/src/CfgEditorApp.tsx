@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import {
     Alert,
     App,
@@ -15,6 +15,7 @@ import {
     Tabs,
     Typography
 } from "antd";
+import { saveAs } from 'file-saver';
 import {CloseOutlined, LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
 import {getNextId, newSchema, Schema} from "./model/schemaModel.ts";
 import {History, HistoryItem} from "./model/historyModel.ts";
@@ -33,8 +34,9 @@ import {getId} from "./func/recordRefEntity.ts";
 import {DraggablePanel} from "@ant-design/pro-editor";
 import {KeywordColorSetting} from "./KeywordColorSetting.tsx";
 import {KeywordColor} from "./model/entityModel.ts";
+import {toBlob} from "html-to-image";
 
-const { Text } = Typography;
+const {Text} = Typography;
 
 export const pageTable = 'table'
 export const pageTableRef = 'tableRef'
@@ -98,6 +100,25 @@ export function CfgEditorApp() {
     useEffect(() => {
         tryConnect(server);
     }, []);
+
+    const ref = useRef<HTMLDivElement>(null)
+
+    const onToPngClick = useCallback(() => {
+        if (ref.current === null) {
+            return
+        }
+
+        toBlob(ref.current, {cacheBust: true, skipAutoScale:true, canvasWidth:8192, canvasHeight:8192})
+            .then((blob) => {
+                if (blob){
+                    saveAs(blob, `${curTableId}_${curId}.png`);
+                }
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+    }, [ref])
+
 
     function tryConnect(server: string) {
         setSchema(null);
@@ -280,19 +301,21 @@ export function CfgEditorApp() {
                                        editMode={editMode}
                                        setEditMode={setEditMode}/>;
 
-            tableRecordRef = <TableRecordRef schema={schema}
-                                             curTable={curTable}
-                                             curId={curId}
-                                             refIn={recordRefIn}
-                                             refOutDepth={recordRefOutDepth}
-                                             maxNode={recordMaxNode}
-                                             server={server}
-                                             tryReconnect={tryReconnect}
-                                             setCurTableAndId={selectCurTableAndId}
-                                             setCurPage={selectCurPage}
-                                             setEditMode={setEditMode}
-                                             query={query}
-                                             keywordColors={keywordColors}/>;
+            tableRecordRef = <div ref={ref} style={{background: '#fff'}}>
+                <TableRecordRef schema={schema}
+                                curTable={curTable}
+                                curId={curId}
+                                refIn={recordRefIn}
+                                refOutDepth={recordRefOutDepth}
+                                maxNode={recordMaxNode}
+                                server={server}
+                                tryReconnect={tryReconnect}
+                                setCurTableAndId={selectCurTableAndId}
+                                setCurPage={selectCurPage}
+                                setEditMode={setEditMode}
+                                query={query}
+                                keywordColors={keywordColors}/>
+            </div>;
         }
     }
 
@@ -466,14 +489,31 @@ export function CfgEditorApp() {
         localStorage.setItem('fix', JSON.stringify(fp));
     }
 
+    function onRemoveFix() {
+        setFix(null);
+        localStorage.removeItem('fix');
+    }
+
+
     let addFixButton;
-    if (schema && curTable && curPage == pageRecordRef) {
-        addFixButton = <Form.Item wrapperCol={{span: 18, offset: 6,}}>
-            <Button type="primary" onClick={onAddFix}>
-                {t('addFix')}
+    let removeFixButton;
+    if (schema && curTable) {
+        if (curPage == pageRecordRef) {
+            addFixButton = <Form.Item wrapperCol={{span: 18, offset: 6,}}>
+                <Button type="primary" onClick={onAddFix}>
+                    {t('addFix')}
+                </Button>
+            </Form.Item>
+        }
+    }
+    if (tableRecordRefFixed) {
+        removeFixButton = <Form.Item wrapperCol={{span: 18, offset: 6,}}>
+            <Button type="primary" onClick={onRemoveFix}>
+                {t('removeFix')}
             </Button>
         </Form.Item>
     }
+
 
     let tab = <Tabs tabBarExtraContent={{'left': leftOp}}
                     items={items}
@@ -527,51 +567,61 @@ export function CfgEditorApp() {
         {content}
         <Drawer title="setting" placement="left" onClose={onSettingClose} open={settingOpen}>
             <Form labelCol={{span: 10}} wrapperCol={{span: 14}} layout={'horizontal'}>
-                <Form.Item label={t('implsShowCnt')}>
-                    <InputNumber value={maxImpl} min={1} max={500} onChange={onChangeMaxImpl}/>
+                <Form.Item label={t('implsShowCnt')} htmlFor='implsShowCount'>
+                    <InputNumber id='implsShowCount' value={maxImpl} min={1} max={500} onChange={onChangeMaxImpl}/>
                 </Form.Item>
 
                 <Form.Item label={t('refIn')}>
-                    <Switch checked={refIn} onChange={onChangeRefIn}/>
+                    <Switch id='refIn' checked={refIn} onChange={onChangeRefIn}/>
                 </Form.Item>
 
                 <Form.Item label={t('refOutDepth')}>
-                    <InputNumber value={refOutDepth} min={1} max={500} onChange={onChangeRefOutDepth}/>
+                    <InputNumber id='refOutDepth' value={refOutDepth} min={1} max={500} onChange={onChangeRefOutDepth}/>
                 </Form.Item>
 
                 <Form.Item label={t('maxNode')}>
-                    <InputNumber value={maxNode} min={1} max={500} onChange={onChangeMaxNode}/>
+                    <InputNumber id='maxNode' value={maxNode} min={1} max={500} onChange={onChangeMaxNode}/>
                 </Form.Item>
 
                 <Form.Item label={t('recordRefIn')}>
-                    <Switch checked={recordRefIn} onChange={onChangeRecordRefIn}/>
+                    <Switch id='recordRefIn' checked={recordRefIn} onChange={onChangeRecordRefIn}/>
                 </Form.Item>
 
                 <Form.Item label={t('recordRefOutDepth')}>
-                    <InputNumber value={recordRefOutDepth} min={1} max={500} onChange={onChangeRecordRefOutDepth}/>
+                    <InputNumber id='recordRefOutDepth' value={recordRefOutDepth} min={1} max={500}
+                                 onChange={onChangeRecordRefOutDepth}/>
                 </Form.Item>
 
                 <Form.Item label={t('recordMaxNode')}>
-                    <InputNumber value={recordMaxNode} min={1} max={500} onChange={onChangeRecordMaxNode}/>
+                    <InputNumber id='recordMaxNode' value={recordMaxNode} min={1} max={500}
+                                 onChange={onChangeRecordMaxNode}/>
                 </Form.Item>
 
                 <Form.Item label={t('searchMaxReturn')}>
-                    <InputNumber value={searchMax} min={1} max={500} onChange={onChangeSearchMax}/>
+                    <InputNumber id='searchMaxReturn' value={searchMax} min={1} max={500} onChange={onChangeSearchMax}/>
                 </Form.Item>
 
                 <Form.Item label={t('dragPanel')}>
-                    <Select value={dragPanel} options={[{label: t('recordRef'), value: 'recordRef'},
+                    <Select id='dragPanel' value={dragPanel} options={[{label: t('recordRef'), value: 'recordRef'},
                         {label: t('fix'), value: 'fix'},
                         {label: t('none'), value: 'none'}]} onChange={onChangeDragePanel}/>
                 </Form.Item>
 
                 {addFixButton}
+                {removeFixButton}
 
                 <Form.Item label={t('curServer')}>
                     {server}
                 </Form.Item>
                 <Form.Item label={t('newServer')}>
-                    <Input.Search defaultValue={server} enterButton={t('connect')} onSearch={onConnectServer}/>
+                    <Input.Search id='newServer' defaultValue={server} enterButton={t('connect')}
+                                  onSearch={onConnectServer}/>
+                </Form.Item>
+
+                <Form.Item wrapperCol={{span: 18, offset: 6}}>
+                    <Button type="primary" onClick={onToPngClick}>
+                        {t('toPng')}
+                    </Button>
                 </Form.Item>
 
                 <Form.Item label={<LeftOutlined/>}>

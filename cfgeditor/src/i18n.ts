@@ -33,6 +33,9 @@ i18n.use(LanguageDetector)
 
                     deleteCurRecord: 'delete cur record',
                     addFix: 'add fix',
+                    removeFix: 'remove fix',
+                    toPng: 'save relation png',
+
                     addKeywordColor: 'add keyword color',
                     setKeywordColors: 'set keyword colors',
 
@@ -70,7 +73,9 @@ i18n.use(LanguageDetector)
                     searchMaxReturn: '搜索返回数',
                     dragPanel: '可拖拽面板',
                     addFix: '固定',
+                    removeFix: '删除固定',
                     none: '不要',
+                    toPng: '保存关系图片',
 
                     deleteCurRecord: '删除当前数据',
                     addKeywordColor: '增加关键词颜色',
