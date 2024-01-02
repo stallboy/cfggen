@@ -15,7 +15,7 @@ import {
     Tabs,
     Typography
 } from "antd";
-import { saveAs } from 'file-saver';
+import {saveAs} from 'file-saver';
 import {CloseOutlined, LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
 import {getNextId, newSchema, Schema} from "./model/schemaModel.ts";
 import {History, HistoryItem} from "./model/historyModel.ts";
@@ -108,13 +108,19 @@ export function CfgEditorApp() {
             return
         }
 
-        toBlob(ref.current, {cacheBust: true, skipAutoScale:true, canvasWidth:8192, canvasHeight:8192})
+        let w = ref.current.offsetWidth * 4;
+        let h = ref.current.offsetHeight * 4;
+
+        toBlob(ref.current, {cacheBust: true, canvasWidth: w, canvasHeight: h})
             .then((blob) => {
-                if (blob){
-                    saveAs(blob, `${curTableId}_${curId}.png`);
+                if (blob) {
+                    let fn = `${curTableId}_${curId}.png`;
+                    saveAs(blob, fn);
+                    notification.info({message: "save png to " + fn, duration: 3});
                 }
             })
             .catch((err) => {
+                notification.error({message: "save png failed: limit the max node count", duration: 3});
                 console.log(err)
             })
     }, [ref])
