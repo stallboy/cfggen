@@ -16,6 +16,11 @@
       "shell": {
         "all": false,
         "open": true
+      },
+      "fs" : {
+        "scope": ["$DOWNLOAD/*", "$EXE/*"],
+        "all" : true,
+        "writeFile": true
       }
     },
     "bundle": {

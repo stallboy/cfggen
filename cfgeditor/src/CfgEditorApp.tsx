@@ -108,8 +108,8 @@ export function CfgEditorApp() {
             return
         }
 
-        let w = ref.current.offsetWidth * 4;
-        let h = ref.current.offsetHeight * 4;
+        let w = ref.current.offsetWidth * 16;
+        let h = ref.current.offsetHeight * 16;
 
         toBlob(ref.current, {cacheBust: true, canvasWidth: w, canvasHeight: h})
             .then((blob) => {

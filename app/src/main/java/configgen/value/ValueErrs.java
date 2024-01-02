@@ -114,13 +114,13 @@ public record ValueErrs(List<VErr> errs) {
                                    String field) implements VErr {
     }
 
-    public record PrimaryOrUniqueKeyDuplicated(List<DCell> cells,
+    public record PrimaryOrUniqueKeyDuplicated(CfgValue.Value value,
                                                String table,
                                                List<String> keys) implements VErr {
         @Override
         public String toString() {
             return LocaleUtil.getMessage("PrimaryOrUniqueKeyDuplicated") + "{" +
-                    "cells=" + cells +
+                    valueStr(value) +
                     ", table='" + table + '\'' +
                     ", keys=" + keys +
                     '}';
@@ -140,26 +140,37 @@ public record ValueErrs(List<VErr> errs) {
     }
 
 
-    public record RefNotNullableButCellEmpty(List<DCell> cells,
-                                             String table) implements VErr {
+    public record RefNotNullableButCellEmpty(CfgValue.Value value,
+                                             String recordId) implements VErr {
         @Override
         public String toString() {
             return LocaleUtil.getMessage("RefNotNullableButCellEmpty") + "{" +
-                    "cells=" + cells +
-                    ", table='" + table + '\'' +
+                    valueStr(value) +
+                    ", recordId='" + recordId + '\'' +
                     '}';
         }
     }
 
-    public record ForeignValueNotFound(List<DCell> cells,
-                                       String table,
+    private static String valueStr(CfgValue.Value value) {
+        String valStr;
+        if (value.cells().isEmpty() || (value.cells().size() == 1 && value.cells().getFirst() == DCell.EMPTY)) {
+            valStr = "value=" + value.packStr();
+        } else {
+            valStr = "cells=" + value.cells();
+        }
+        return valStr;
+    }
+
+    public record ForeignValueNotFound(CfgValue.Value value,
+                                       String recordId,
                                        String foreignKey) implements VErr {
 
         @Override
         public String toString() {
+
             return LocaleUtil.getMessage("ForeignValueNotFound") + "{" +
-                    "cells=" + cells +
-                    ", table='" + table + '\'' +
+                    valueStr(value) +
+                    ", recordId='" + recordId + '\'' +
                     ", foreignKey='" + foreignKey + '\'' +
                     '}';
         }

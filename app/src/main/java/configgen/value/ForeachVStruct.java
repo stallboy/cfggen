@@ -9,6 +9,9 @@ public class ForeachVStruct {
     public record Context(VTable fromVTable,
                           Value pkValue,
                           VStruct recordValue) {
+        String recordId() {
+            return String.format("%s-%s", fromVTable.name(), pkValue.packStr());
+        }
     }
 
     public interface VStructVisitor {

@@ -83,7 +83,7 @@ public class VTableCreator {
             Value keyValue = ValueUtil.extractKeyValue(value, keyIndices);
             VStruct old = keyMap.put(keyValue, value);
             if (old != null) {
-                errs.addErr(new ValueErrs.PrimaryOrUniqueKeyDuplicated(keyValue.cells(), tableSchema.name(), key.fields()));
+                errs.addErr(new ValueErrs.PrimaryOrUniqueKeyDuplicated(keyValue, tableSchema.name(), key.fields()));
             }
         }
     }
