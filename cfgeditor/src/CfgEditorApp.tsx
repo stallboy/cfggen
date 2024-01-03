@@ -1,22 +1,7 @@
-import {useCallback, useEffect, useRef, useState} from "react";
-import {
-    Alert,
-    App,
-    Button, Divider,
-    Drawer,
-    Flex,
-    Form,
-    Input,
-    InputNumber,
-    Modal,
-    Select,
-    Space,
-    Switch,
-    Tabs,
-    Typography
-} from "antd";
+import {useEffect, useRef, useState} from "react";
+import {Alert, App, Button, Drawer, Flex, Form, Input, Modal, Space, Tabs, Typography} from "antd";
 import {saveAs} from 'file-saver';
-import {CloseOutlined, LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
+import {LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
 import {getNextId, newSchema, Schema} from "./model/schemaModel.ts";
 import {History, HistoryItem} from "./model/historyModel.ts";
 import {TableList} from "./TableList.tsx";
@@ -32,9 +17,9 @@ import {RecordEditResult} from "./model/recordModel.ts";
 import {useTranslation} from "react-i18next";
 import {getId} from "./func/recordRefEntity.ts";
 import {DraggablePanel} from "@ant-design/pro-editor";
-import {KeywordColorSetting} from "./KeywordColorSetting.tsx";
 import {KeywordColor} from "./model/entityModel.ts";
 import {toBlob} from "html-to-image";
+import {Setting} from "./Setting.tsx";
 
 const {Text} = Typography;
 
@@ -104,28 +89,6 @@ export function CfgEditorApp() {
 
     const ref = useRef<HTMLDivElement>(null)
 
-    const onToPngClick = useCallback(() => {
-        if (ref.current === null) {
-            return
-        }
-
-        let w = ref.current.offsetWidth * imageSizeScale;
-        let h = ref.current.offsetHeight * imageSizeScale;
-
-        toBlob(ref.current, {cacheBust: true, canvasWidth: w, canvasHeight: h})
-            .then((blob) => {
-                if (blob) {
-                    let fn = `${curTableId}_${curId}.png`;
-                    saveAs(blob, fn);
-                    notification.info({message: "save png to " + fn, duration: 3});
-                }
-            })
-            .catch((err) => {
-                notification.error({message: "save png failed: limit the max node count", duration: 3});
-                console.log(err)
-            })
-    }, [ref, curTableId, curId, imageSizeScale])
-
 
     function tryConnect(server: string) {
         setSchema(null);
@@ -148,7 +111,6 @@ export function CfgEditorApp() {
             setIsModalOpen(true);
         });
     }
-
 
     function selectCurTableAndIdFromSchema(schema: Schema,
                                            curTableName: string = curTableId,
@@ -368,83 +330,11 @@ export function CfgEditorApp() {
     }
 
 
-    function onChangeMaxImpl(value: number | null) {
-        if (value) {
-            setMaxImpl(value);
-            localStorage.setItem('maxImpl', value.toString());
-        }
-    }
-
-    function onChangeRefIn(checked: boolean) {
-        setRefIn(checked);
-        localStorage.setItem('refIn', checked ? 'true' : 'false');
-    }
-
-    function onChangeRefOutDepth(value: number | null) {
-        if (value) {
-            setRefOutDepth(value);
-            localStorage.setItem('refOutDepth', value.toString());
-        }
-    }
-
-    function onChangeMaxNode(value: number | null) {
-        if (value) {
-            setMaxNode(value);
-            localStorage.setItem('maxNode', value.toString());
-        }
-    }
-
-    function onChangeRecordRefIn(checked: boolean) {
-        setRecordRefIn(checked);
-        localStorage.setItem('recordRefIn', checked ? 'true' : 'false');
-    }
-
-    function onChangeRecordRefOutDepth(value: number | null) {
-        if (value) {
-            setRecordRefOutDepth(value);
-            localStorage.setItem('recordRefOutDepth', value.toString());
-        }
-    }
-
-    function onChangeRecordMaxNode(value: number | null) {
-        if (value) {
-            setRecordMaxNode(value);
-            localStorage.setItem('recordMaxNode', value.toString());
-        }
-    }
-
-    function onChangeSearchMax(value: number | null) {
-        if (value) {
-            setSearchMax(value);
-            localStorage.setItem('searchMax', value.toString());
-        }
-    }
-
-    function onChangeImageSizeScale(value: number | null) {
-        if (value) {
-            setImageSizeScale(value);
-            localStorage.setItem('imageSizeScale', value.toString());
-        }
-    }
-
-    function onChangeDragePanel(value: string) {
-        setDragPanel(value);
-        localStorage.setItem('dragPanel', value);
-    }
-
-
     function onConnectServer(value: string) {
         setServer(value);
         localStorage.setItem('server', value);
         tryConnect(value);
     }
-
-
-    function onChangeKeywordColors(colors: KeywordColor[]) {
-        setKeywordColors(colors);
-        localStorage.setItem('keywordColors', JSON.stringify(colors));
-    }
-
 
     function handleModalOk() {
         onConnectServer(server);
@@ -486,49 +376,28 @@ export function CfgEditorApp() {
             });
             tryReconnect();
         });
-
     }
 
-    let deleteButton;
-    if (schema && curTable && schema.isEditable && curTable.isEditable) {
-        deleteButton = <Form.Item wrapperCol={{span: 18, offset: 6,}}>
-            <Button type="primary" danger onClick={onDeleteRecord}>
-                <CloseOutlined/>{t('deleteCurRecord')}
-            </Button>
-        </Form.Item>
-    }
-
-    function onAddFix() {
-        let fp = new FixedPage(curTableId, curId, recordRefIn, recordRefOutDepth, recordMaxNode);
-        setFix(fp);
-        localStorage.setItem('fix', JSON.stringify(fp));
-    }
-
-    function onRemoveFix() {
-        setFix(null);
-        localStorage.removeItem('fix');
-    }
-
-
-    let addFixButton;
-    let removeFixButton;
-    if (schema && curTable) {
-        if (curPage == pageRecordRef) {
-            addFixButton = <Form.Item wrapperCol={{span: 18, offset: 6,}}>
-                <Button type="primary" onClick={onAddFix}>
-                    {t('addFix')}
-                </Button>
-            </Form.Item>
+    function onToPng() {
+        if (ref.current === null) {
+            return
         }
-    }
-    if (tableRecordRefFixed) {
-        removeFixButton = <Form.Item wrapperCol={{span: 18, offset: 6,}}>
-            <Button type="primary" onClick={onRemoveFix}>
-                {t('removeFix')}
-            </Button>
-        </Form.Item>
-    }
 
+        let w = ref.current.offsetWidth * imageSizeScale;
+        let h = ref.current.offsetHeight * imageSizeScale;
+
+        toBlob(ref.current, {cacheBust: true, canvasWidth: w, canvasHeight: h, pixelRatio: 1})
+            .then((blob) => {
+                if (blob) {
+                    let fn = `${curTableId}_${curId}.png`;
+                    saveAs(blob, fn);
+                    notification.info({message: "save png to " + fn, duration: 3});
+                }
+            }).catch((err) => {
+            notification.error({message: "save png failed: limit the max node count", duration: 3});
+            console.log(err)
+        })
+    }
 
     let tab = <Tabs tabBarExtraContent={{'left': leftOp}}
                     items={items}
@@ -581,97 +450,20 @@ export function CfgEditorApp() {
         </Modal>
         {content}
         <Drawer title="setting" placement="left" onClose={onSettingClose} open={settingOpen}>
-            <Form labelCol={{span: 10}} wrapperCol={{span: 14}} layout={'horizontal'}>
-                <Form.Item label={t('implsShowCnt')} htmlFor='implsShowCount'>
-                    <InputNumber id='implsShowCount' value={maxImpl} min={1} max={500} onChange={onChangeMaxImpl}/>
-                </Form.Item>
-
-                <Form.Item label={t('refIn')}>
-                    <Switch id='refIn' checked={refIn} onChange={onChangeRefIn}/>
-                </Form.Item>
-
-                <Form.Item label={t('refOutDepth')}>
-                    <InputNumber id='refOutDepth' value={refOutDepth} min={1} max={500} onChange={onChangeRefOutDepth}/>
-                </Form.Item>
-
-                <Form.Item label={t('maxNode')}>
-                    <InputNumber id='maxNode' value={maxNode} min={1} max={500} onChange={onChangeMaxNode}/>
-                </Form.Item>
-
-                <Form.Item label={t('recordRefIn')}>
-                    <Switch id='recordRefIn' checked={recordRefIn} onChange={onChangeRecordRefIn}/>
-                </Form.Item>
-
-                <Form.Item label={t('recordRefOutDepth')}>
-                    <InputNumber id='recordRefOutDepth' value={recordRefOutDepth} min={1} max={500}
-                                 onChange={onChangeRecordRefOutDepth}/>
-                </Form.Item>
-
-                <Form.Item label={t('recordMaxNode')}>
-                    <InputNumber id='recordMaxNode' value={recordMaxNode} min={1} max={500}
-                                 onChange={onChangeRecordMaxNode}/>
-                </Form.Item>
-
-                <Form.Item label={t('searchMaxReturn')}>
-                    <InputNumber id='searchMaxReturn' value={searchMax} min={1} max={500} onChange={onChangeSearchMax}/>
-                </Form.Item>
-
-                <Form.Item label={t('imageSizeScale')}>
-                    <InputNumber id='imageSizeScale' value={imageSizeScale} min={1} max={256}
-                                 onChange={onChangeImageSizeScale}/>
-                </Form.Item>
-
-                <Form.Item wrapperCol={{span: 18, offset: 6}}>
-                    <Button type="primary" onClick={onToPngClick}>
-                        {t('toPng')}
-                    </Button>
-                </Form.Item>
-
-
-                <Form.Item label={t('dragPanel')}>
-                    <Select id='dragPanel' value={dragPanel} options={[{label: t('recordRef'), value: 'recordRef'},
-                        {label: t('fix'), value: 'fix'},
-                        {label: t('none'), value: 'none'}]} onChange={onChangeDragePanel}/>
-                </Form.Item>
-
-                {addFixButton}
-                {removeFixButton}
-
-                <Form.Item label={t('curServer')}>
-                    {server}
-                </Form.Item>
-                <Form.Item label={t('newServer')}>
-                    <Input.Search id='newServer' defaultValue={server} enterButton={t('connect')}
-                                  onSearch={onConnectServer}/>
-                </Form.Item>
-
-                <Form.Item label={<LeftOutlined/>}>
-                    alt+x
-                </Form.Item>
-                <Form.Item label={<RightOutlined/>}>
-                    alt+c
-                </Form.Item>
-                <Form.Item label={t('table')}>
-                    alt+1
-                </Form.Item>
-                <Form.Item label={t('tableRef')}>
-                    alt+2
-                </Form.Item>
-                <Form.Item label={t('record')}>
-                    alt+3
-                </Form.Item>
-                <Form.Item label={t('recordRef')}>
-                    alt+4
-                </Form.Item>
-                <Form.Item label={<SearchOutlined/>}>
-                    alt+q
-                </Form.Item>
-
-                {deleteButton}
-            </Form>
-
-            <Divider/>
-            <KeywordColorSetting keywordColors={keywordColors} setKeywordColors={onChangeKeywordColors}/>
+            <Setting  {...{
+                schema, curTableId, curId, curPage,
+                curTable, hasFix: tableRecordRefFixed != null, onDeleteRecord,
+                server, onConnectServer,
+                maxImpl, setMaxImpl,
+                refIn, setRefIn, refOutDepth, setRefOutDepth, maxNode, setMaxNode,
+                recordRefIn, setRecordRefIn, recordRefOutDepth, setRecordRefOutDepth,
+                recordMaxNode, setRecordMaxNode,
+                searchMax, setSearchMax,
+                imageSizeScale, setImageSizeScale, onToPng,
+                setFix,
+                dragPanel, setDragPanel,
+                keywordColors, setKeywordColors,
+            }}/>
         </Drawer>
 
         <Drawer title="search" placement="left" onClose={onSearchClose} open={searchOpen} size='large'>
