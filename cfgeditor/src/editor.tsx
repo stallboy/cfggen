@@ -77,6 +77,24 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
 
 
     let id2node = new Map<string, EntityNode>();
+    let heightCollected = 0;
+
+    let options = {
+        'elk.layered.spacing.nodeNodeBetweenLayers': '80',
+        'elk.spacing.nodeNode': '60',
+        'elk.layered.nodePlacement.strategy': 'SIMPLE',
+        // 'LINEAR_SEGMENTS', 'INTERACTIVE','SIMPLE'
+    };
+
+    async function onHeightCallback() {
+        heightCollected++;
+        if (heightCollected == graph.entityMap.size) {
+            // console.log("layout" + heightCollected);
+            heightCollected = 0;
+            await arrange.layout({options});
+        }
+    }
+
     for (let entity of graph.entityMap.values()) {
         const node = new EntityNode(entity.label);
         node.entity = entity;
@@ -89,12 +107,15 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
         node.width = entity.fieldsShow == FieldsShowType.Edit ? 360 : 280;
 
         async function changeHeightCallback(height: number) {
+            // console.log(entity.id + ", " + new Date() + ", " + height);
             node.height = calcKnownHeight(entity) + height;
+            onHeightCallback();
             await area.update('node', node.id);
             // await area.update('socket', node.inputs[0]?.socket.name as string);
             setTimeout(async () => {
                 await area.update('node', node.id);
             }, 200)
+
         }
 
         const fieldsControl = new EntityControl(entity, changeHeightCallback, graph.query);
@@ -127,14 +148,8 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
     }
 
 
-    await arrange.layout();
+    await arrange.layout({options});
     await AreaExtensions.zoomAt(area, editor.getNodes());
-
-    // wait height update
-    // setTimeout(async () => {
-    //     await arrange.layout();
-    //     await AreaExtensions.zoomAt(area, editor.getNodes());
-    // }, 500)
 
     return {
         destroy: () => area.destroy()

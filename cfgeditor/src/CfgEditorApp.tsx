@@ -444,7 +444,7 @@ export function CfgEditorApp() {
                 <p> {t('netErrFixTip')} </p>
                 <p> {t('curServer')}: {server}</p>
                 <Form.Item label={t('newServer') + ':'}>
-                    <Input.Search defaultValue={server} enterButton={t('connectNewServer')} onSearch={onConnectServer}/>
+                    <Input.Search enterButton={t('connectNewServer')} onSearch={onConnectServer}/>
                 </Form.Item>
             </Flex>
         </Modal>

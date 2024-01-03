@@ -235,7 +235,7 @@ export function Setting({
                 {server}
             </Form.Item>
             <Form.Item label={t('newServer')}>
-                <Input.Search id='newServer' defaultValue={server} enterButton={t('connect')}
+                <Input.Search id='newServer' enterButton={t('connect')}
                               onSearch={onConnectServer}/>
             </Form.Item>
 
