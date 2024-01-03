@@ -18,6 +18,9 @@ export interface Refs {
 }
 
 export interface BriefRecord extends Refs {
+    table: string;
+    id: string;
+
     img?: string;
     title?: string;
     description?: string;
@@ -38,14 +41,6 @@ export interface RefId {
 export interface JSONArray extends Array<JSONValue> {
 }
 
-export interface TableMap {
-    [table: string]: RecordMap;
-}
-
-export interface RecordMap {
-    [id: string]: BriefRecord;
-}
-
 export type ResultCode =
     'ok'
     | 'tableNotSet'
@@ -61,7 +56,7 @@ export interface RecordResult {
     id?: string;
     maxObjs: number;
     object: JSONObject & Refs;
-    refs: TableMap;
+    refs: BriefRecord[];
 }
 
 export interface RecordRefsResult {
@@ -71,7 +66,7 @@ export interface RecordRefsResult {
     depth: number;
     in: boolean;
     maxObjs: number;
-    refs: TableMap;
+    refs: BriefRecord[];
 }
 
 export type EditResultCode =

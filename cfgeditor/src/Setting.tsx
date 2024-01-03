@@ -2,8 +2,8 @@ import {Button, Divider, Form, Input, InputNumber, Select, Switch} from "antd";
 import {CloseOutlined, LeftOutlined, RightOutlined, SearchOutlined} from "@ant-design/icons";
 import {KeywordColorSetting} from "./KeywordColorSetting.tsx";
 import {useTranslation} from "react-i18next";
-import {KeywordColor} from "./model/entityModel.ts";
-import {FixedPage, pageRecordRef} from "./CfgEditorApp.tsx";
+import {KeywordColor, NodePlacementStrategyType, ShowDescriptionType} from "./model/entityModel.ts";
+import {DraggablePanelType, FixedPage, pageRecordRef} from "./CfgEditorApp.tsx";
 import {Schema, STable} from "./model/schemaModel.ts";
 
 
@@ -21,6 +21,8 @@ export function Setting({
                             setFix,
                             dragPanel, setDragPanel,
                             keywordColors, setKeywordColors,
+                            showDescription, setShowDescription,
+                            nodePlacementStrategy, setNodePlacementStrategy
 
                         }: {
     schema: Schema | null;
@@ -54,11 +56,14 @@ export function Setting({
     setImageSizeScale: (v: number) => void;
     onToPng: () => void;
     setFix: (v: FixedPage | null) => void;
-    dragPanel: string;
-    setDragPanel: (v: string) => void;
+    dragPanel: DraggablePanelType;
+    setDragPanel: (v: DraggablePanelType) => void;
     keywordColors: KeywordColor[],
     setKeywordColors: (v: KeywordColor[]) => void;
-
+    showDescription: ShowDescriptionType;
+    setShowDescription: (t: ShowDescriptionType) => void;
+    nodePlacementStrategy: NodePlacementStrategyType;
+    setNodePlacementStrategy: (t: NodePlacementStrategyType) => void;
 }) {
 
     const {t} = useTranslation();
@@ -108,6 +113,16 @@ export function Setting({
         }
     }
 
+    function onChangeShowDescription(value: string) {
+        setShowDescription(value as ShowDescriptionType);
+        localStorage.setItem('showDescription', value);
+    }
+
+    function onChangeNodePlacementStrategy(value: string) {
+        setNodePlacementStrategy(value as NodePlacementStrategyType);
+        localStorage.setItem('nodePlacementStrategy', value);
+    }
+
     function onChangeSearchMax(value: number | null) {
         if (value) {
             setSearchMax(value);
@@ -123,7 +138,7 @@ export function Setting({
     }
 
     function onChangeDragePanel(value: string) {
-        setDragPanel(value);
+        setDragPanel(value as DraggablePanelType);
         localStorage.setItem('dragPanel', value);
     }
 
@@ -205,6 +220,22 @@ export function Setting({
                              onChange={onChangeRecordMaxNode}/>
             </Form.Item>
 
+            <Form.Item label={t('showDescription')}>
+                <Select id='showDescription' value={showDescription} onChange={onChangeShowDescription} options={[
+                    {label: t('show'), value: 'show'},
+                    {label: t('showFallbackValue'), value: 'showFallbackValue'},
+                    {label: t('showValue'), value: 'showValue'},
+                    {label: t('none'), value: 'none'}]}/>
+            </Form.Item>
+
+            <Form.Item label={t('nodePlacementStrategy')}>
+                <Select id='nodePlacementStrategy' value={nodePlacementStrategy}
+                        onChange={onChangeNodePlacementStrategy} options={[
+                    {label: t('LINEAR_SEGMENTS'), value: 'LINEAR_SEGMENTS'},
+                    {label: t('SIMPLE'), value: 'SIMPLE'},
+                    {label: t('BRANDES_KOEPF'), value: 'BRANDES_KOEPF'}]}/>
+            </Form.Item>
+
             <Form.Item label={t('searchMaxReturn')}>
                 <InputNumber id='searchMaxReturn' value={searchMax} min={1} max={500} onChange={onChangeSearchMax}/>
             </Form.Item>
@@ -222,10 +253,10 @@ export function Setting({
 
 
             <Form.Item label={t('dragPanel')}>
-                <Select id='dragPanel' value={dragPanel} options={[
+                <Select id='dragPanel' value={dragPanel} onChange={onChangeDragePanel} options={[
                     {label: t('recordRef'), value: 'recordRef'},
                     {label: t('fix'), value: 'fix'},
-                    {label: t('none'), value: 'none'}]} onChange={onChangeDragePanel}/>
+                    {label: t('none'), value: 'none'}]}/>
             </Form.Item>
 
             {addFixButton}

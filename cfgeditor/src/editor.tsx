@@ -82,9 +82,11 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
     let options = {
         'elk.layered.spacing.nodeNodeBetweenLayers': '80',
         'elk.spacing.nodeNode': '60',
-        'elk.layered.nodePlacement.strategy': 'SIMPLE',
-        // 'LINEAR_SEGMENTS', 'INTERACTIVE','SIMPLE'
+        'elk.layered.nodePlacement.strategy': graph.nodePlacementStrategy ?? 'LINEAR_SEGMENTS',
+        'elk.layered.considerModelOrder.strategy': 'NODES_AND_EDGES',
+        'elk.layered.crossingMinimization.forceNodeModelOrder': 'true',
     };
+
 
     async function onHeightCallback() {
         heightCollected++;
@@ -92,6 +94,7 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
             // console.log("layout" + heightCollected);
             heightCollected = 0;
             await arrange.layout({options});
+            await AreaExtensions.zoomAt(area, editor.getNodes());
         }
     }
 
@@ -99,7 +102,6 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
         const node = new EntityNode(entity.label);
         node.entity = entity;
         node.keywordColors = graph.keywordColors;
-
         id2node.set(entity.id, node);
 
         // TODO height
@@ -111,14 +113,13 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
             node.height = calcKnownHeight(entity) + height;
             onHeightCallback();
             await area.update('node', node.id);
-            // await area.update('socket', node.inputs[0]?.socket.name as string);
             setTimeout(async () => {
                 await area.update('node', node.id);
             }, 200)
 
         }
 
-        const fieldsControl = new EntityControl(entity, changeHeightCallback, graph.query);
+        const fieldsControl = new EntityControl(entity, changeHeightCallback, graph.query, graph.showDescription);
         node.addControl("value", fieldsControl);
 
         for (let inputSocket of entity.inputs) {
@@ -146,7 +147,6 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
             }
         }
     }
-
 
     await arrange.layout({options});
     await AreaExtensions.zoomAt(area, editor.getNodes());

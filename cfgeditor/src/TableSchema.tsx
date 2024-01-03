@@ -2,19 +2,20 @@ import {Schema, STable} from "./model/schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback} from "react";
-import {Entity, EntityGraph, fillInputs} from "./model/entityModel.ts";
+import {Entity, EntityGraph, fillInputs, NodePlacementStrategyType} from "./model/entityModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 import {pageTableRef} from "./CfgEditorApp.tsx";
 import {useTranslation} from "react-i18next";
 import {TableEntityCreator, UserData} from "./func/TableEntityCreator.ts";
 
 
-export function TableSchema({schema, curTable, maxImpl, setCurTable, setCurPage}: {
+export function TableSchema({schema, curTable, maxImpl, setCurTable, setCurPage, nodePlacementStrategy}: {
     schema: Schema;
     curTable: STable;
     maxImpl: number;
     setCurTable: (cur: string) => void;
     setCurPage: (page: string) => void;
+    nodePlacementStrategy: NodePlacementStrategyType
 }) {
     const {t} = useTranslation();
 
@@ -57,7 +58,7 @@ export function TableSchema({schema, curTable, maxImpl, setCurTable, setCurPage}
             return mm;
         }
 
-        return {entityMap, menu, entityMenuFunc};
+        return {entityMap, menu, entityMenuFunc, nodePlacementStrategy};
     }
 
 
@@ -65,7 +66,7 @@ export function TableSchema({schema, curTable, maxImpl, setCurTable, setCurPage}
         (el: HTMLElement) => {
             return createEditor(el, createGraph());
         },
-        [schema, curTable, maxImpl]
+        [schema, curTable, maxImpl, nodePlacementStrategy]
     );
     const [ref] = useRete(create);
 

@@ -2,14 +2,23 @@ import {Schema, SItem, STable} from "./model/schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback} from "react";
-import {Entity, EntityGraph, fillInputs} from "./model/entityModel.ts";
+import {Entity, EntityGraph, fillInputs, NodePlacementStrategyType} from "./model/entityModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 import {pageTable} from "./CfgEditorApp.tsx";
 import {useTranslation} from "react-i18next";
 import {includeRefTables} from "./func/tableRefEntity.ts";
 
 
-export function TableRef({schema, curTable, setCurTable, refIn, refOutDepth, maxNode, setCurPage}: {
+export function TableRef({
+                             schema,
+                             curTable,
+                             setCurTable,
+                             refIn,
+                             refOutDepth,
+                             maxNode,
+                             setCurPage,
+                             nodePlacementStrategy
+                         }: {
     schema: Schema;
     curTable: STable;
     setCurTable: (cur: string) => void;
@@ -17,6 +26,7 @@ export function TableRef({schema, curTable, setCurTable, refIn, refOutDepth, max
     refOutDepth: number;
     maxNode: number;
     setCurPage: (page: string) => void;
+    nodePlacementStrategy: NodePlacementStrategyType;
 }) {
     const {t} = useTranslation();
 
@@ -51,14 +61,14 @@ export function TableRef({schema, curTable, setCurTable, refIn, refOutDepth, max
             }];
         }
 
-        return {entityMap, menu, entityMenuFunc};
+        return {entityMap, menu, entityMenuFunc, nodePlacementStrategy};
     }
 
     const create = useCallback(
         (el: HTMLElement) => {
             return createEditor(el, createGraph());
         },
-        [schema, curTable, refIn, refOutDepth, maxNode]
+        [schema, curTable, refIn, refOutDepth, maxNode, nodePlacementStrategy]
     );
     const [ref] = useRete(create);
 

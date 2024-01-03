@@ -1,10 +1,11 @@
 import {Card} from "antd";
-import {EntityBrief} from "../model/entityModel.ts";
+import {EntityBrief, ShowDescriptionType} from "../model/entityModel.ts";
 
 
-export function EntityCard({brief, query}: {
+export function EntityCard({brief, query, showDescription}: {
     brief: EntityBrief
     query?: string;
+    showDescription? : ShowDescriptionType
 }) {
     let cover = {};
     if (brief.img) {
@@ -19,7 +20,21 @@ export function EntityCard({brief, query}: {
             title = {title: brief.title};
         }
     }
-    let desc = (brief.description && brief.description.length > 0) ? brief.description : brief.value;
+
+    let desc = brief.value;
+    switch (showDescription){
+        case "show":
+            desc = brief.description ?? "";
+            break;
+        case "showFallbackValue":
+            desc = (brief.description && brief.description.length > 0) ? brief.description : brief.value
+            break;
+        case "showValue":
+            break;
+        case "none":
+            desc = "";
+            break;
+    }
 
     return <Card hoverable style={{width: 240}} {...cover}>
         <Card.Meta {...title} description={query ? <Highlight text={desc} keyword={query}/> : desc}/>

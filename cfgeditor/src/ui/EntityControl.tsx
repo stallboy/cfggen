@@ -1,5 +1,5 @@
 import {ClassicPreset} from "rete";
-import {Entity, FieldsShowType} from "../model/entityModel.ts";
+import {Entity, FieldsShowType, ShowDescriptionType} from "../model/entityModel.ts";
 import {Collapse, Space} from "antd";
 import {EntityTable} from "./EntityTable.tsx";
 import {EntityForm} from "./EntityForm.tsx";
@@ -9,7 +9,8 @@ import {EntityCard} from "./EntityCard.tsx";
 export class EntityControl extends ClassicPreset.Control {
     constructor(public entity: Entity,
                 public changeHeightCallback: (height: number) => void,
-                public query?: string,) {
+                public query?: string,
+                public showDescription?: ShowDescriptionType) {
         super();
     }
 }
@@ -63,7 +64,9 @@ export function EntityControlComponent(props: { data: EntityControl }) {
             }
         }
     } else if (entity.brief) {
-        content = <EntityCard brief={entity.brief} query={props.data.query}/>;
+        content = <EntityCard brief={entity.brief}
+                              query={props.data.query}
+                              showDescription={props.data.showDescription}/>;
 
     } else {
         content = <Space/>;

@@ -2,7 +2,14 @@ import {Schema, STable} from "./model/schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback, useEffect, useState} from "react";
-import {Entity, EntityGraph, fillInputs, KeywordColor,} from "./model/entityModel.ts";
+import {
+    Entity,
+    EntityGraph,
+    fillInputs,
+    KeywordColor,
+    NodePlacementStrategyType,
+    ShowDescriptionType,
+} from "./model/entityModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 import {RecordRefsResult, RefId} from "./model/recordModel.ts";
 import {App, Empty, Result, Spin} from "antd";
@@ -13,7 +20,7 @@ import {useTranslation} from "react-i18next";
 
 export function TableRecordRefLoaded({
                                          schema, recordRefResult, setCurTableAndId, setCurPage, setEditMode,
-                                         query, keywordColors
+                                         query, keywordColors, showDescription, nodePlacementStrategy
                                      }: {
     schema: Schema;
     recordRefResult: RecordRefsResult;
@@ -22,6 +29,8 @@ export function TableRecordRefLoaded({
     setEditMode: (edit: boolean) => void;
     query: string;
     keywordColors: KeywordColor[];
+    showDescription: ShowDescriptionType;
+    nodePlacementStrategy: NodePlacementStrategyType;
 }) {
 
     const [t] = useTranslation();
@@ -76,14 +85,14 @@ export function TableRecordRefLoaded({
             }
             return mm;
         }
-        return {entityMap, menu, entityMenuFunc, query, keywordColors};
+        return {entityMap, menu, entityMenuFunc, query, keywordColors, showDescription, nodePlacementStrategy};
     }
 
     const create = useCallback(
         (el: HTMLElement) => {
             return createEditor(el, createGraph());
         },
-        [recordRefResult, query, keywordColors]
+        [recordRefResult, query, keywordColors, showDescription, nodePlacementStrategy]
     );
     const [ref] = useRete(create);
 
@@ -96,7 +105,8 @@ export function TableRecordRef({
                                    refIn, refOutDepth, maxNode,
                                    server, tryReconnect,
                                    setCurTableAndId, setCurPage,
-                                   setEditMode, query, keywordColors
+                                   setEditMode, query, keywordColors,
+                                   showDescription, nodePlacementStrategy
                                }: {
     schema: Schema;
     curTable: STable;
@@ -111,6 +121,8 @@ export function TableRecordRef({
     setEditMode: (edit: boolean) => void;
     query: string;
     keywordColors: KeywordColor[];
+    showDescription: ShowDescriptionType;
+    nodePlacementStrategy: NodePlacementStrategyType;
 }) {
     const [recordRefResult, setRecordRefResult] = useState<RecordRefsResult | null>(null);
     const {notification} = App.useApp();
@@ -141,13 +153,11 @@ export function TableRecordRef({
     }
 
     return <TableRecordRefLoaded
-        schema={schema}
-        recordRefResult={recordRefResult}
-        setCurTableAndId={setCurTableAndId}
-        setCurPage={setCurPage}
-        setEditMode={setEditMode}
-        query={query}
-        keywordColors={keywordColors}/>
+        {...{
+            schema, recordRefResult, setCurTableAndId, setCurPage, setEditMode,
+            query, keywordColors, showDescription, nodePlacementStrategy
+        }}
+    />
 
 
 }

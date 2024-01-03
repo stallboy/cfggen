@@ -17,7 +17,7 @@ import {RecordEditResult} from "./model/recordModel.ts";
 import {useTranslation} from "react-i18next";
 import {getId} from "./func/recordRefEntity.ts";
 import {DraggablePanel} from "@ant-design/pro-editor";
-import {KeywordColor} from "./model/entityModel.ts";
+import {KeywordColor, NodePlacementStrategyType, ShowDescriptionType} from "./model/entityModel.ts";
 import {toBlob} from "html-to-image";
 import {Setting} from "./Setting.tsx";
 
@@ -29,7 +29,7 @@ export const pageRecord = 'record'
 export const pageRecordRef = 'recordRef'
 export const pageFixed = 'fix'
 
-// export type DraggablePanelType = 'recordRef' | 'fix' | 'none';
+export type DraggablePanelType = 'recordRef' | 'fix' | 'none';
 
 export class FixedPage {
     constructor(
@@ -41,6 +41,7 @@ export class FixedPage {
     }
 }
 
+
 export function CfgEditorApp() {
     const [server, setServer] = useState<string>(getStr('server', 'localhost:3456'));
     const [schema, setSchema] = useState<Schema | null>(null);
@@ -49,7 +50,7 @@ export function CfgEditorApp() {
     const [curPage, setCurPage] = useState<string>(getStr('curPage', pageRecord));
     const [editMode, setEditMode] = useState<boolean>(false);
 
-    const [dragPanel, setDragPanel] = useState<string>(getStr('dragPanel', 'none'));
+    const [dragPanel, setDragPanel] = useState<DraggablePanelType>(getStr('dragPanel', 'none') as DraggablePanelType);
     const [fix, setFix] = useState<FixedPage | null>(getJson('fix'));
 
     const [maxImpl, setMaxImpl] = useState<number>(getInt('maxImpl', 10));
@@ -62,6 +63,10 @@ export function CfgEditorApp() {
     const [searchMax, setSearchMax] = useState<number>(getInt('searchMax', 50));
     const [imageSizeScale, setImageSizeScale] = useState<number>(getInt('imageSizeScale', 16));
     const [keywordColors, setKeywordColors] = useState<KeywordColor[]>(getJson('keywordColors'));
+    const [showDescription, setShowDescription] = useState<ShowDescriptionType>(
+        getStr('showDescription', 'showFallbackValue') as ShowDescriptionType);
+    const [nodePlacementStrategy, setNodePlacementStrategy] = useState<NodePlacementStrategyType>(
+        getStr('nodePlacementStrategy', 'LINEAR_SEGMENTS') as NodePlacementStrategyType);
 
     const [history, setHistory] = useState<History>(new History());
     const [settingOpen, setSettingOpen] = useState<boolean>(false);
@@ -199,7 +204,6 @@ export function CfgEditorApp() {
         }
     }
 
-
     const showSetting = () => {
         setSettingOpen(true);
     };
@@ -249,7 +253,8 @@ export function CfgEditorApp() {
                                    curTable={curTable}
                                    maxImpl={maxImpl}
                                    setCurTable={selectCurTable}
-                                   setCurPage={selectCurPage}/>;
+                                   setCurPage={selectCurPage}
+                                   nodePlacementStrategy={nodePlacementStrategy}/>;
 
         tableRef = <TableRef schema={schema}
                              curTable={curTable}
@@ -257,7 +262,8 @@ export function CfgEditorApp() {
                              refIn={refIn}
                              refOutDepth={refOutDepth}
                              maxNode={maxNode}
-                             setCurPage={selectCurPage}/>;
+                             setCurPage={selectCurPage}
+                             nodePlacementStrategy={nodePlacementStrategy}/>;
 
         if (curId != null) {
             tableRecord = <TableRecord schema={schema}
@@ -268,7 +274,9 @@ export function CfgEditorApp() {
                                        selectCurTableAndIdFromSchema={selectCurTableAndIdFromSchema}
                                        setCurPage={selectCurPage}
                                        editMode={editMode}
-                                       setEditMode={setEditMode}/>;
+                                       setEditMode={setEditMode}
+                                       showDescription={showDescription}
+                                       nodePlacementStrategy={nodePlacementStrategy}/>;
 
             tableRecordRef = <div ref={ref} style={{background: '#fff'}}>
                 <TableRecordRef schema={schema}
@@ -283,7 +291,9 @@ export function CfgEditorApp() {
                                 setCurPage={selectCurPage}
                                 setEditMode={setEditMode}
                                 query={query}
-                                keywordColors={keywordColors}/>
+                                keywordColors={keywordColors}
+                                showDescription={showDescription}
+                                nodePlacementStrategy={nodePlacementStrategy}/>;
             </div>;
         }
     }
@@ -314,7 +324,9 @@ export function CfgEditorApp() {
                                                   setCurPage={selectCurPage}
                                                   setEditMode={setEditMode}
                                                   query={query}
-                                                  keywordColors={keywordColors}/>;
+                                                  keywordColors={keywordColors}
+                                                  showDescription={showDescription}
+                                                  nodePlacementStrategy={nodePlacementStrategy}/>;
             if (dragPanel != pageFixed) {
                 items.push({
                     key: pageFixed,
@@ -463,6 +475,8 @@ export function CfgEditorApp() {
                 setFix,
                 dragPanel, setDragPanel,
                 keywordColors, setKeywordColors,
+                showDescription, setShowDescription,
+                nodePlacementStrategy, setNodePlacementStrategy
             }}/>
         </Drawer>
 

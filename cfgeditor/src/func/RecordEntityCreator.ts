@@ -7,7 +7,7 @@ import {
     FieldsShowType
 } from "../model/entityModel.ts";
 import {getField, Schema, SField, SStruct, STable} from "../model/schemaModel.ts";
-import {JSONArray, JSONObject, JSONValue, RefId, Refs, TableMap} from "../model/recordModel.ts";
+import {BriefRecord, JSONArray, JSONObject, JSONValue, RefId, Refs} from "../model/recordModel.ts";
 import {createRefs, getLabel} from "./recordRefEntity.ts";
 
 
@@ -15,7 +15,7 @@ export class RecordEntityCreator {
     constructor(public entityMap: Map<string, Entity>,
                 public schema: Schema,
                 public refId: RefId,
-                public refs : TableMap) {
+                public refs : BriefRecord[]) {
     }
 
     createEntity(id: string, obj: JSONObject & Refs): Entity | null {

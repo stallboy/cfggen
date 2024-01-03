@@ -9,6 +9,7 @@ import configgen.value.*;
 import configgen.value.CfgValue.VStruct;
 import configgen.value.ValueRefCollector.RefId;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,8 +29,7 @@ public class RecordService {
             String id,
             int maxObjs,
             JSONObject object,
-            // table -> (id -> briefRecord)
-            Map<String, Map<String, BriefRecord>> refs) implements RecordResponse {
+            Collection<BriefRecord> refs) implements RecordResponse {
     }
 
     public record TableRecordRefs(
@@ -39,8 +39,7 @@ public class RecordService {
             int depth,
             boolean in,
             int maxObjs,
-            // table -> (id -> briefRecord)
-            Map<String, Map<String, BriefRecord>> refs) implements RecordResponse {
+            Collection<BriefRecord> refs) implements RecordResponse {
     }
 
 
@@ -55,6 +54,9 @@ public class RecordService {
     }
 
     public record BriefRecord(
+            String table,
+            String id,
+
             String img,
             String title,
             String description,
@@ -165,7 +167,7 @@ public class RecordService {
                 ValueRefCollector collector = new ValueRefCollector(cfgValue, newFrontier, refIdMap);
                 collector.collect(record, List.of());
 
-                result.put(refId, vStructToBriefRecord(record, refIdMap, curDepth));
+                result.put(refId, vStructToBriefRecord(refId, record, refIdMap, curDepth));
 
                 if (result.size() > maxObjs) {
                     break;
@@ -196,7 +198,7 @@ public class RecordService {
             Map<String, List<RefId>> staticRefIn = Map.of("refin", List.of(thisObjId));
             for (Map.Entry<RefId, VStruct> e : refIns.entrySet()) {
                 RefId refId = e.getKey();
-                result.put(refId, vStructToBriefRecord(e.getValue(), staticRefIn, -1));
+                result.put(refId, vStructToBriefRecord(refId, e.getValue(), staticRefIn, -1));
 
                 if (result.size() > maxObjs + 8) {
                     break;
@@ -205,26 +207,19 @@ public class RecordService {
         }
 
 
-        Map<String, Map<String, BriefRecord>> refs = new LinkedHashMap<>();
-        for (Map.Entry<RefId, BriefRecord> e : result.entrySet()) {
-            RefId refId = e.getKey();
-            Map<String, BriefRecord> tableValues = refs.computeIfAbsent(refId.table(), k -> new LinkedHashMap<>());
-            tableValues.put(refId.id(), e.getValue());
-        }
-
         return switch (requestType) {
-            case requestRecord -> new TableRecord(ok, table, id, maxObjs, object, refs);
-            case requestRefs -> new TableRecordRefs(ok, table, id, depth, in, maxObjs, refs);
+            case requestRecord -> new TableRecord(ok, table, id, maxObjs, object, result.values());
+            case requestRefs -> new TableRecordRefs(ok, table, id, depth, in, maxObjs, result.values());
         };
 
     }
 
-    private static BriefRecord vStructToBriefRecord(VStruct vStruct, Map<String, List<RefId>> refs, int depth) {
+    private static BriefRecord vStructToBriefRecord(RefId refId, VStruct vStruct, Map<String, List<RefId>> refs, int depth) {
         String img = getBriefValue(vStruct, "img");
         String title = getBriefTitle(vStruct);
         String description = getBriefValue(vStruct, "description");
         String value = vStruct.packStr();
-        return new BriefRecord(img, title, description, value, refs, depth);
+        return new BriefRecord(refId.table(), refId.id(), img, title, description, value, refs, depth);
     }
 
     private static String getBriefValue(VStruct vStruct, String briefKey) {

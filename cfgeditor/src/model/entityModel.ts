@@ -99,12 +99,18 @@ export interface EntityGraph {
 
     query?: string;
     keywordColors?: KeywordColor[];
+    showDescription?: ShowDescriptionType;
+    nodePlacementStrategy?: NodePlacementStrategyType;
 }
 
 export interface KeywordColor {
     keyword: string;
     color: string;
 }
+
+export type ShowDescriptionType = 'show' | 'showFallbackValue' | 'showValue' | 'none';
+export type NodePlacementStrategyType = 'LINEAR_SEGMENTS' | 'SIMPLE' | 'BRANDES_KOEPF';
+
 
 export enum FieldsShowType {
     Direct,
