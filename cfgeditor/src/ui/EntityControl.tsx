@@ -18,7 +18,6 @@ export class EntityControl extends ClassicPreset.Control {
 export function EntityControlComponent(props: { data: EntityControl }) {
     const ref = useRef<HTMLDivElement>(null);
 
-
     useEffect(() => {
         if (ref.current) {
             // console.log(ref.current.offsetHeight);

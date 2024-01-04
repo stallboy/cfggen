@@ -195,7 +195,7 @@ export function EntityForm({fields, onUpdateValues}: {
 
     let form = <Form labelCol={{span: 6}} wrapperCol={{span: 18}}
                      onValuesChange={onValuesChange}
-                     style={{maxWidth: 400, backgroundColor: "white", borderRadius: 15, padding: 10}}>
+                     style={{maxWidth: 600, backgroundColor: "white", borderRadius: 15, padding: 10}}>
         {FieldsFormItem(fields)}
     </Form>
 

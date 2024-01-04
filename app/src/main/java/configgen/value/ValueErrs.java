@@ -23,14 +23,17 @@ public record ValueErrs(List<VErr> errs) {
         errs.addAll(other.errs);
     }
 
-    public void print(String prefix) {
+    public void print(String prefix, boolean allowErr) {
         if (!errs.isEmpty()) {
             Logger.log("%s errors %d:", prefix, errs.size());
             for (VErr err : errs) {
                 Logger.log("\t" + err);
             }
-            Logger.log(LocaleUtil.getMessage("FixValueErrFirst"));
-            System.exit(1);
+
+            if (!allowErr){
+                Logger.log(LocaleUtil.getMessage("FixValueErrFirst"));
+                System.exit(1);
+            }
         }
     }
 

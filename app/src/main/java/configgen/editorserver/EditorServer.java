@@ -39,7 +39,7 @@ public class EditorServer extends Generator {
     @Override
     public void generate(Context ctx) throws IOException {
         dataDir = ctx.dataDir();
-        cfgValue = ctx.makeValue(tag);
+        cfgValue = ctx.makeValue(tag, true);
         graph = new TableSchemaRefGraph(cfgValue.schema());
         System.gc();
         System.setProperty("java.util.logging.SimpleFormatter.format",

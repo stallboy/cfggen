@@ -100,7 +100,11 @@ public class Context {
     private CfgValue lastCfgValue;
     private String lastCfgValueTag;
 
-    public CfgValue makeValue(String tag) {
+    public CfgValue makeValue(String tag){
+        return makeValue(tag, false);
+    }
+
+    public CfgValue makeValue(String tag, boolean allowErr) {
         if (tag != null && tag.isEmpty()) {
             throw new IllegalArgumentException("tag不能为空");
         }
@@ -127,7 +131,7 @@ public class Context {
         CfgValueParser clientValueParser = new CfgValueParser(tagSchema, this, valueErrs);
         CfgValue cfgValue = clientValueParser.parseCfgValue();
         String prefix = tag == null ? "value" : String.format("[%s] filtered value", tag);
-        valueErrs.print(prefix);
+        valueErrs.print(prefix, allowErr);
 
         lastCfgValue = cfgValue;
         lastCfgValueTag = tag;
