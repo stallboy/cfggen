@@ -66,6 +66,7 @@ export function CfgEditorApp() {
         getStr('showDescription', 'showFallbackValue') as ShowDescriptionType);
     const [nodePlacementStrategy, setNodePlacementStrategy] = useState<NodePlacementStrategyType>(
         getStr('nodePlacementStrategy', 'LINEAR_SEGMENTS') as NodePlacementStrategyType);
+    const [containEnum, setContainEnum] = useState<boolean>(getBool('containEnum', true));
 
     const [history, setHistory] = useState<History>(new History());
     const [settingOpen, setSettingOpen] = useState<boolean>(false);
@@ -199,7 +200,7 @@ export function CfgEditorApp() {
     if (curTable) {
         let nId = getNextId(curTable, curId);
         if (nId) {
-            nextId = <Text>{t('nextSlot')} <Text copyable>{nId}</Text>  --- </Text>
+            nextId = <Text>{t('nextSlot')} <Text copyable>{nId}</Text> --- </Text>
         }
     }
 
@@ -293,7 +294,8 @@ export function CfgEditorApp() {
                                 query={query}
                                 keywordColors={keywordColors}
                                 showDescription={showDescription}
-                                nodePlacementStrategy={nodePlacementStrategy}/>;
+                                nodePlacementStrategy={nodePlacementStrategy}
+                                containEnum={containEnum}/>;
             </div>;
         }
     }
@@ -325,7 +327,8 @@ export function CfgEditorApp() {
                                                   query={query}
                                                   keywordColors={keywordColors}
                                                   showDescription={showDescription}
-                                                  nodePlacementStrategy={nodePlacementStrategy}/>;
+                                                  nodePlacementStrategy={nodePlacementStrategy}
+                                                  containEnum={containEnum}/>;
             if (dragPanel != pageFixed) {
                 items.push({
                     key: pageFixed,
@@ -475,7 +478,8 @@ export function CfgEditorApp() {
                 dragPanel, setDragPanel,
                 keywordColors, setKeywordColors,
                 showDescription, setShowDescription,
-                nodePlacementStrategy, setNodePlacementStrategy
+                nodePlacementStrategy, setNodePlacementStrategy,
+                containEnum, setContainEnum,
             }}/>
         </Drawer>
 

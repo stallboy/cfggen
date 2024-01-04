@@ -22,7 +22,8 @@ export function Setting({
                             dragPanel, setDragPanel,
                             keywordColors, setKeywordColors,
                             showDescription, setShowDescription,
-                            nodePlacementStrategy, setNodePlacementStrategy
+                            nodePlacementStrategy, setNodePlacementStrategy,
+                            containEnum, setContainEnum,
 
                         }: {
     schema: Schema | null;
@@ -64,6 +65,8 @@ export function Setting({
     setShowDescription: (t: ShowDescriptionType) => void;
     nodePlacementStrategy: NodePlacementStrategyType;
     setNodePlacementStrategy: (t: NodePlacementStrategyType) => void;
+    containEnum: boolean;
+    setContainEnum: (t: boolean) => void;
 }) {
 
     const {t} = useTranslation();
@@ -113,6 +116,11 @@ export function Setting({
         }
     }
 
+    function onChangeContainEnum(checked: boolean) {
+        setContainEnum(checked);
+        localStorage.setItem('containEnum', checked ? 'true' : 'false');
+    }
+
     function onChangeShowDescription(value: string) {
         setShowDescription(value as ShowDescriptionType);
         localStorage.setItem('showDescription', value);
@@ -151,7 +159,7 @@ export function Setting({
 
     let deleteRecordButton;
     if (schema && curTable && schema.isEditable && curTable.isEditable) {
-        deleteRecordButton = <Form.Item wrapperCol={{span: 18, offset: 6,}}>
+        deleteRecordButton = <Form.Item wrapperCol={{offset: 10}}>
             <Button type="primary" danger onClick={onDeleteRecord}>
                 <CloseOutlined/>{t('deleteCurRecord')}
             </Button>
@@ -168,7 +176,7 @@ export function Setting({
             localStorage.setItem('fix', JSON.stringify(fp));
         }
 
-        addFixButton = <Form.Item wrapperCol={{span: 18, offset: 6,}}>
+        addFixButton = <Form.Item wrapperCol={{offset: 10}}>
             <Button type="primary" onClick={onAddFix}>
                 {t('addFix')}
             </Button>
@@ -180,7 +188,7 @@ export function Setting({
             localStorage.removeItem('fix');
         }
 
-        removeFixButton = <Form.Item wrapperCol={{span: 18, offset: 6,}}>
+        removeFixButton = <Form.Item wrapperCol={{offset: 10}}>
             <Button type="primary" onClick={onRemoveFix}>
                 {t('removeFix')}
             </Button>
@@ -222,6 +230,11 @@ export function Setting({
                              onChange={onChangeRecordMaxNode}/>
             </Form.Item>
 
+            <Form.Item label={t('containEnum')}>
+                <Switch id='containEnum' checked={containEnum} onChange={onChangeContainEnum}/>
+            </Form.Item>
+
+
             <Form.Item label={t('showDescription')}>
                 <Select id='showDescription' value={showDescription} onChange={onChangeShowDescription} options={[
                     {label: t('show'), value: 'show'},
@@ -243,7 +256,7 @@ export function Setting({
                              onChange={onChangeImageSizeScale}/>
             </Form.Item>
 
-            <Form.Item wrapperCol={{span: 18, offset: 6}}>
+            <Form.Item wrapperCol={{offset: 10}}>
                 <Button type="primary" onClick={onToPng}>
                     {t('toPng')}
                 </Button>

@@ -74,6 +74,7 @@ i18n.use(LanguageDetector)
                     recordRefIn: '数据入层',
                     recordRefOutDepth: '数据出层',
                     recordMaxNode: '数据节点数',
+                    containEnum: '包含枚举',
                     showDescription: '描述',
                     show: '显示',
                     showFallbackValue: '无则显示值',
@@ -92,6 +93,7 @@ i18n.use(LanguageDetector)
                     toPng: '保存关系图片',
 
                     deleteCurRecord: '删除当前数据',
+                    keywordColorSetting: '关键词颜色',
                     addKeywordColor: '增加关键词颜色',
                     setKeywordColors: '设置关键词颜色',
 

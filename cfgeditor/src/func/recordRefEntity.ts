@@ -16,16 +16,21 @@ export function getId(table: string, id: string): string {
     return table + "-" + id;
 }
 
-function isRefIdInTableMap(refId: RefId, briefRecords: BriefRecord[]): boolean {
+function isRefIdInBriefRecords(refId: RefId, briefRecords: BriefRecord[]): boolean {
     for (let br of briefRecords) {
-        if (br.table == refId.table && br.id == refId.id){
+        if (br.table == refId.table && br.id == refId.id) {
             return true;
         }
     }
     return false;
 }
 
-export function createRefs(entity: Entity, refs: Refs, briefRecords: BriefRecord[]) {
+function alwaysOk(_t: string) {
+    return true;
+}
+
+export function createRefs(entity: Entity, refs: Refs, briefRecords: BriefRecord[],
+                           checkTable: ((table: string) => boolean) = alwaysOk) {
     let refIdMap = refs.$refs;
     if (refIdMap == null) {
         return;
@@ -34,7 +39,7 @@ export function createRefs(entity: Entity, refs: Refs, briefRecords: BriefRecord
         let refIds: RefId[] = refIdMap[refName];
         let connectToSockets = [];
         for (let refId of refIds) {
-            if (isRefIdInTableMap(refId, briefRecords)) {
+            if (checkTable(refId.table) && isRefIdInBriefRecords(refId, briefRecords)) {
                 connectToSockets.push({
                     entityId: getId(refId.table, refId.id),
                     inputKey: 'input',
@@ -51,16 +56,33 @@ export function createRefs(entity: Entity, refs: Refs, briefRecords: BriefRecord
     }
 }
 
-export function createRefEntities(entityMap: Map<string, Entity>, schema: Schema, refs: BriefRecord[], isCreateRefs: boolean = true) {
-    JSON.parse
+export function createRefEntities(entityMap: Map<string, Entity>, schema: Schema, refs: BriefRecord[],
+                                  isCreateRefs: boolean = true, containEnum: boolean = true) {
+    let checkTable = alwaysOk;
+    if (!containEnum) {
+        checkTable = (t: string) => {
+            let sT = schema.getSTable(t);
+            if (sT == null) {
+                return false;
+            }
+            return sT.entryType != 'eEnum';
+        };
+    }
+
     for (let briefRecord of refs) {
         let table = briefRecord.table;
         let id = briefRecord.id;
         let imgPrefix;
         let sTable = schema.getSTable(table);
-        if (sTable) {
-            imgPrefix = sTable.imgPrefix;
+        if (sTable == null) {
+            continue;
         }
+
+        if (!containEnum && sTable.entryType == 'eEnum') {
+            continue;
+        }
+
+        imgPrefix = sTable.imgPrefix;
         let refId: RefId = {table, id};
         let eid = getId(table, id);
 
@@ -98,7 +120,7 @@ export function createRefEntities(entityMap: Map<string, Entity>, schema: Schema
             userData: refId,
         };
         if (isCreateRefs) {
-            createRefs(entity, briefRecord, refs);
+            createRefs(entity, briefRecord, refs, checkTable);
         }
         entityMap.set(eid, entity);
     }

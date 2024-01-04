@@ -20,7 +20,7 @@ import {useTranslation} from "react-i18next";
 
 export function TableRecordRefLoaded({
                                          schema, recordRefResult, setCurTableAndId, setCurPage, setEditMode,
-                                         query, keywordColors, showDescription, nodePlacementStrategy
+                                         query, keywordColors, showDescription, nodePlacementStrategy, containEnum
                                      }: {
     schema: Schema;
     recordRefResult: RecordRefsResult;
@@ -31,13 +31,14 @@ export function TableRecordRefLoaded({
     keywordColors: KeywordColor[];
     showDescription: ShowDescriptionType;
     nodePlacementStrategy: NodePlacementStrategyType;
+    containEnum: boolean;
 }) {
 
     const [t] = useTranslation();
 
     function createGraph(): EntityGraph {
         const entityMap = new Map<string, Entity>();
-        createRefEntities(entityMap, schema, recordRefResult.refs);
+        createRefEntities(entityMap, schema, recordRefResult.refs, true, containEnum);
         fillInputs(entityMap);
 
         const menu: Item[] = [{
@@ -92,7 +93,7 @@ export function TableRecordRefLoaded({
         (el: HTMLElement) => {
             return createEditor(el, createGraph());
         },
-        [recordRefResult, query, keywordColors, showDescription, nodePlacementStrategy]
+        [recordRefResult, query, keywordColors, showDescription, nodePlacementStrategy, containEnum]
     );
     const [ref] = useRete(create);
 
@@ -106,7 +107,7 @@ export function TableRecordRef({
                                    server, tryReconnect,
                                    setCurTableAndId, setCurPage,
                                    setEditMode, query, keywordColors,
-                                   showDescription, nodePlacementStrategy
+                                   showDescription, nodePlacementStrategy, containEnum
                                }: {
     schema: Schema;
     curTable: STable;
@@ -123,6 +124,7 @@ export function TableRecordRef({
     keywordColors: KeywordColor[];
     showDescription: ShowDescriptionType;
     nodePlacementStrategy: NodePlacementStrategyType;
+    containEnum: boolean;
 }) {
     const [recordRefResult, setRecordRefResult] = useState<RecordRefsResult | null>(null);
     const {notification} = App.useApp();
@@ -155,7 +157,7 @@ export function TableRecordRef({
     return <TableRecordRefLoaded
         {...{
             schema, recordRefResult, setCurTableAndId, setCurPage, setEditMode,
-            query, keywordColors, showDescription, nodePlacementStrategy
+            query, keywordColors, showDescription, nodePlacementStrategy, containEnum
         }}
     />
 
