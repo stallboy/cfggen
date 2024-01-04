@@ -41,7 +41,6 @@ export class FixedPage {
     }
 }
 
-
 export function CfgEditorApp() {
     const [server, setServer] = useState<string>(getStr('server', 'localhost:3456'));
     const [schema, setSchema] = useState<Schema | null>(null);
@@ -200,7 +199,7 @@ export function CfgEditorApp() {
     if (curTable) {
         let nId = getNextId(curTable, curId);
         if (nId) {
-            nextId = <Text>{t('nextSlot')} <Text copyable>{nId}</Text></Text>
+            nextId = <Text>{t('nextSlot')} <Text copyable>{nId}</Text>  --- </Text>
         }
     }
 
@@ -237,6 +236,7 @@ export function CfgEditorApp() {
         <Button onClick={next} disabled={!history.canNext()}>
             <RightOutlined/>
         </Button>
+
     </Space>;
 
     function tryReconnect() {
@@ -302,7 +302,6 @@ export function CfgEditorApp() {
         {key: pageTable, label: <Space>{t('table')}</Space>, children: tableSchema,},
         {key: pageTableRef, label: <Space>{t('tableRef')}</Space>, children: tableRef,},
         {key: pageRecord, label: <Space>{t('record')}</Space>, children: tableRecord,},
-
     ]
 
     if (dragPanel != pageRecordRef) {
@@ -461,7 +460,7 @@ export function CfgEditorApp() {
             </Flex>
         </Modal>
         {content}
-        <Drawer title="setting" placement="left" onClose={onSettingClose} open={settingOpen}>
+        <Drawer title="setting" placement="left" onClose={onSettingClose} open={settingOpen} size='large'>
             <Setting  {...{
                 schema, curTableId, curId, curPage,
                 curTable, hasFix: tableRecordRefFixed != null, onDeleteRecord,

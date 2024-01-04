@@ -1,4 +1,4 @@
-import {Button, Divider, Form, Input, InputNumber, Select, Switch} from "antd";
+import {Button, Divider, Form, Input, InputNumber, Select, Switch, Tabs} from "antd";
 import {CloseOutlined, LeftOutlined, RightOutlined, SearchOutlined} from "@ant-design/icons";
 import {KeywordColorSetting} from "./KeywordColorSetting.tsx";
 import {useTranslation} from "react-i18next";
@@ -187,8 +187,7 @@ export function Setting({
         </Form.Item>
     }
 
-
-    return <>
+    let tableSetting =
         <Form labelCol={{span: 10}} wrapperCol={{span: 14}} layout={'horizontal'}>
             <Form.Item label={t('implsShowCnt')} htmlFor='implsShowCount'>
                 <InputNumber id='implsShowCount' value={maxImpl} min={1} max={500} onChange={onChangeMaxImpl}/>
@@ -205,7 +204,10 @@ export function Setting({
             <Form.Item label={t('maxNode')}>
                 <InputNumber id='maxNode' value={maxNode} min={1} max={500} onChange={onChangeMaxNode}/>
             </Form.Item>
+        </Form>;
 
+    let recordSetting = <>
+        <Form labelCol={{span: 10}} wrapperCol={{span: 14}} layout={'horizontal'}>
             <Form.Item label={t('recordRefIn')}>
                 <Switch id='recordRefIn' checked={recordRefIn} onChange={onChangeRecordRefIn}/>
             </Form.Item>
@@ -236,10 +238,6 @@ export function Setting({
                     {label: t('BRANDES_KOEPF'), value: 'BRANDES_KOEPF'}]}/>
             </Form.Item>
 
-            <Form.Item label={t('searchMaxReturn')}>
-                <InputNumber id='searchMaxReturn' value={searchMax} min={1} max={500} onChange={onChangeSearchMax}/>
-            </Form.Item>
-
             <Form.Item label={t('imageSizeScale')}>
                 <InputNumber id='imageSizeScale' value={imageSizeScale} min={1} max={256}
                              onChange={onChangeImageSizeScale}/>
@@ -250,7 +248,16 @@ export function Setting({
                     {t('toPng')}
                 </Button>
             </Form.Item>
+        </Form>
+        <Divider/>
+        <KeywordColorSetting keywordColors={keywordColors} setKeywordColors={onChangeKeywordColors}/>
+    </>;
 
+    let otherSetting =
+        <Form labelCol={{span: 10}} wrapperCol={{span: 14}} layout={'horizontal'}>
+            <Form.Item label={t('searchMaxReturn')}>
+                <InputNumber id='searchMaxReturn' value={searchMax} min={1} max={500} onChange={onChangeSearchMax}/>
+            </Form.Item>
 
             <Form.Item label={t('dragPanel')}>
                 <Select id='dragPanel' value={dragPanel} onChange={onChangeDragePanel} options={[
@@ -269,7 +276,12 @@ export function Setting({
                 <Input.Search id='newServer' enterButton={t('connect')}
                               onSearch={onConnectServer}/>
             </Form.Item>
+            {deleteRecordButton}
+        </Form>;
 
+
+    let keySetting =
+        <Form labelCol={{span: 10}} wrapperCol={{span: 14}} layout={'horizontal'}>
             <Form.Item label={<LeftOutlined/>}>
                 alt+x
             </Form.Item>
@@ -291,12 +303,16 @@ export function Setting({
             <Form.Item label={<SearchOutlined/>}>
                 alt+q
             </Form.Item>
+        </Form>;
 
-            {deleteRecordButton}
-        </Form>
+    let items = [
+        {key: 'tableSetting', label: t('tableSetting'), children: tableSetting,},
+        {key: 'recordSetting', label: t('recordSetting'), children: recordSetting,},
+        {key: 'otherSetting', label: t('otherSetting'), children: otherSetting,},
+        {key: 'keySetting', label: t('keySetting'), children: keySetting,},
+    ]
 
-        <Divider/>
-        <KeywordColorSetting keywordColors={keywordColors} setKeywordColors={onChangeKeywordColors}/>
-    </>
+
+    return <Tabs items={items} tabPosition='left'/>;
 
 }

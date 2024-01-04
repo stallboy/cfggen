@@ -79,6 +79,7 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
     let id2node = new Map<string, EntityNode>();
     let heightCollected = 0;
 
+    // https://eclipse.dev/elk/reference/algorithms/org-eclipse-elk-layered.html
     let options = {
         'elk.layered.spacing.nodeNodeBetweenLayers': '80',
         'elk.spacing.nodeNode': '60',
@@ -104,7 +105,6 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
         node.keywordColors = graph.keywordColors;
         id2node.set(entity.id, node);
 
-        // TODO height
         node.height = calcHeight(entity);
         node.width = entity.fieldsShow == FieldsShowType.Edit ? 360 : 280;
 

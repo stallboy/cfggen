@@ -63,6 +63,10 @@ i18n.use(LanguageDetector)
                     connect: '连接',
                     reconnectCurServer: '重连当前服务器',
 
+                    tableSetting: '表显示',
+                    recordSetting: '关系显示',
+                    otherSetting: '其他',
+                    keySetting: '快捷键',
                     implsShowCnt: '接口实现数',
                     refIn: '入层',
                     refOutDepth: '出层',
