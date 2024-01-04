@@ -250,34 +250,40 @@ export function CfgEditorApp() {
     let tableRecordRef = <div/>;
     let tableRecordRefFixed = null;
     if (schema != null && curTable != null) {
-        tableSchema = <TableSchema schema={schema}
-                                   curTable={curTable}
-                                   maxImpl={maxImpl}
-                                   setCurTable={selectCurTable}
-                                   setCurPage={selectCurPage}
-                                   nodePlacementStrategy={nodePlacementStrategy}/>;
+        tableSchema = <div ref={ref} style={{background: '#fff'}}>
+            <TableSchema schema={schema}
+                         curTable={curTable}
+                         maxImpl={maxImpl}
+                         setCurTable={selectCurTable}
+                         setCurPage={selectCurPage}
+                         nodePlacementStrategy={nodePlacementStrategy}/>
+        </div>;
 
-        tableRef = <TableRef schema={schema}
-                             curTable={curTable}
-                             setCurTable={selectCurTable}
-                             refIn={refIn}
-                             refOutDepth={refOutDepth}
-                             maxNode={maxNode}
-                             setCurPage={selectCurPage}
-                             nodePlacementStrategy={nodePlacementStrategy}/>;
+        tableRef = <div ref={ref} style={{background: '#fff'}}>
+            <TableRef schema={schema}
+                      curTable={curTable}
+                      setCurTable={selectCurTable}
+                      refIn={refIn}
+                      refOutDepth={refOutDepth}
+                      maxNode={maxNode}
+                      setCurPage={selectCurPage}
+                      nodePlacementStrategy={nodePlacementStrategy}/>
+        </div>;
 
         if (curId != null) {
-            tableRecord = <TableRecord schema={schema}
-                                       curTable={curTable}
-                                       curId={curId}
-                                       server={server}
-                                       tryReconnect={tryReconnect}
-                                       selectCurTableAndIdFromSchema={selectCurTableAndIdFromSchema}
-                                       setCurPage={selectCurPage}
-                                       editMode={editMode}
-                                       setEditMode={setEditMode}
-                                       showDescription={showDescription}
-                                       nodePlacementStrategy={nodePlacementStrategy}/>;
+            tableRecord = <div ref={ref} style={{background: '#fff'}}>
+                <TableRecord schema={schema}
+                             curTable={curTable}
+                             curId={curId}
+                             server={server}
+                             tryReconnect={tryReconnect}
+                             selectCurTableAndIdFromSchema={selectCurTableAndIdFromSchema}
+                             setCurPage={selectCurPage}
+                             editMode={editMode}
+                             setEditMode={setEditMode}
+                             showDescription={showDescription}
+                             nodePlacementStrategy={nodePlacementStrategy}/>
+            </div>;
 
             tableRecordRef = <div ref={ref} style={{background: '#fff'}}>
                 <TableRecordRef schema={schema}
