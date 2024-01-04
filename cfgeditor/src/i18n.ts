@@ -90,7 +90,7 @@ i18n.use(LanguageDetector)
                     addFix: '固定',
                     removeFix: '删除固定',
                     none: '不要',
-                    toPng: '保存关系图片',
+                    toPng: '保存图片',
 
                     deleteCurRecord: '删除当前数据',
                     keywordColorSetting: '关键词颜色',

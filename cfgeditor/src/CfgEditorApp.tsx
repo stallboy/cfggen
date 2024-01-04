@@ -409,7 +409,12 @@ export function CfgEditorApp() {
         toBlob(ref.current, {cacheBust: true, canvasWidth: w, canvasHeight: h, pixelRatio: 1})
             .then((blob) => {
                 if (blob) {
-                    let fn = `${curTableId}_${curId}.png`;
+                    let fn;
+                    if (curPage.startsWith("table")){
+                        fn = `${curPage}_${curTableId}.png`;
+                    }else{
+                        fn = `${curPage}_${curTableId}_${curId}.png`;
+                    }
                     saveAs(blob, fn);
                     notification.info({message: "save png to " + fn, duration: 3});
                 }
