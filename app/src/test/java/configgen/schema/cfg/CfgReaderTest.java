@@ -22,7 +22,7 @@ class CfgReaderTest {
         CfgSchema cfg = CfgReader.parse(str);
         assertEquals(1, cfg.items().size());
 
-        TableSchema table = (TableSchema) cfg.items().get(0);
+        TableSchema table = (TableSchema) cfg.items().getFirst();
         assertEquals(table.name(), "ability");
 //        System.out.println(table);
         /*
@@ -40,12 +40,12 @@ class CfgReaderTest {
 
         assertEquals(table.fields().size(), 2);
         {
-            FieldSchema f1 = table.fields().get(0);
+            FieldSchema f1 = table.fields().getFirst();
             assertEquals(f1.name(), "id");
             assertEquals(f1.type(), Primitive.INT);
             assertEquals(f1.fmt(), AUTO);
             assertEquals(f1.meta().data().size(), 1);
-            assertTrue(f1.meta().data().get("__comment") instanceof Metadata.MetaStr ms &&
+            assertTrue(f1.meta().data().get("_comment") instanceof Metadata.MetaStr ms &&
                     ms.value().equals("属性类型"));
         }
         {
@@ -54,7 +54,7 @@ class CfgReaderTest {
             assertEquals(f2.type(), Primitive.STRING);
             assertEquals(f2.fmt(), AUTO);
             assertEquals(f2.meta().data().size(), 1);
-            assertTrue(f2.meta().data().get("__comment") instanceof Metadata.MetaStr ms &&
+            assertTrue(f2.meta().data().get("_comment") instanceof Metadata.MetaStr ms &&
                     ms.value().equals("程序用名字"));
         }
     }
@@ -105,7 +105,7 @@ class CfgReaderTest {
         CfgSchema cfg = CfgReader.parse(str);
         assertEquals(1, cfg.items().size());
 
-        StructSchema struct = (StructSchema) cfg.items().get(0);
+        StructSchema struct = (StructSchema) cfg.items().getFirst();
         assertEquals(struct.name(), "AddMonsterBuff");
 //        System.out.println(struct);
         /*
@@ -116,7 +116,7 @@ class CfgReaderTest {
                 meta=Metadata[data={__comment=MetaStr[value=buff列表]}]]], foreignKeys=[]]
          */
 
-        FieldSchema f1 = struct.fields().get(0);
+        FieldSchema f1 = struct.fields().getFirst();
         assertTrue(f1.type() instanceof FieldType.FList flist && flist.item() == Primitive.INT);
         assertTrue(f1.fmt() instanceof FieldFormat.Sep sep && sep.sep() == ';');
     }
@@ -166,7 +166,7 @@ class CfgReaderTest {
         CfgSchema cfg = CfgReader.parse(str);
         assertEquals(1, cfg.items().size());
 
-        InterfaceSchema sInterface = (InterfaceSchema) cfg.items().get(0);
+        InterfaceSchema sInterface = (InterfaceSchema) cfg.items().getFirst();
 //        System.out.println(sInterface);
         /*
         InterfaceSchema{name='achievement.Achievementtype', enumRef='achievement.achievementtype', defaultImpl='',
@@ -196,7 +196,7 @@ class CfgReaderTest {
         CfgSchema cfg = CfgReader.parse(str);
         assertEquals(1, cfg.items().size());
 
-        TableSchema table = (TableSchema) cfg.items().get(0);
+        TableSchema table = (TableSchema) cfg.items().getFirst();
 //        System.out.print(table);
         /*
         TableSchema[name=attrtype, primaryKey=KeySchema{name=[Id]}, entry=EEnum{field='Ename'},
@@ -208,7 +208,7 @@ class CfgReaderTest {
                 refTable='buff.effectdamagetype', refKey=RefList[key=KeySchema{name=[AttrType]}],
                 meta=Metadata[data={}]}], uniqueKeys=[]]
          */
-        ForeignKeySchema fk = table.foreignKeys().get(0);
+        ForeignKeySchema fk = table.foreignKeys().getFirst();
         assertTrue(fk.refKey() instanceof RefKey.RefList rl && rl.key().fields().equals(List.of("AttrType")));
 
     }
