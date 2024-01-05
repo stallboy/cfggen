@@ -5,7 +5,7 @@ import {EntityBrief, ShowDescriptionType} from "../model/entityModel.ts";
 export function EntityCard({brief, query, showDescription}: {
     brief: EntityBrief
     query?: string;
-    showDescription? : ShowDescriptionType
+    showDescription?: ShowDescriptionType,
 }) {
     let cover = {};
     if (brief.img) {
@@ -22,7 +22,7 @@ export function EntityCard({brief, query, showDescription}: {
     }
 
     let desc = brief.value;
-    switch (showDescription){
+    switch (showDescription) {
         case "show":
             desc = brief.description ?? "";
             break;

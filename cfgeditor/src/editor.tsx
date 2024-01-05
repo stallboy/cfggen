@@ -36,9 +36,7 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
                 return {list: graph.menu};
             } else if (graph.entityMenuFunc) {
                 let en = editor.getNode(context.id) as EntityNode;
-                if (en.entity) {
-                    return {list: graph.entityMenuFunc(en.entity)};
-                }
+                return {list: graph.entityMenuFunc(en.entity)};
             }
             return {list: []}
         }
@@ -100,9 +98,8 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
     }
 
     for (let entity of graph.entityMap.values()) {
-        const node = new EntityNode(entity.label);
-        node.entity = entity;
-        node.keywordColors = graph.keywordColors;
+        const node = new EntityNode(entity, graph.keywordColors);
+
         id2node.set(entity.id, node);
 
         node.height = calcHeight(entity);

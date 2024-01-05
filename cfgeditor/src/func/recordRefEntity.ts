@@ -13,7 +13,7 @@ export function getLabel(id: string): string {
 }
 
 export function getId(table: string, id: string): string {
-    return table + "-" + id;
+    return table + "_" + id;
 }
 
 function isRefIdInBriefRecords(refId: RefId, briefRecords: BriefRecord[]): boolean {
