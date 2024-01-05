@@ -44,9 +44,9 @@ public class VTableJsonParser {
                 for (File file : files) {
                     if (file.isFile() && file.getName().endsWith(".json")) {
                         try {
-                            String str = Files.readString(file.toPath());
+                            String jsonStr = Files.readString(file.toPath());
                             try {
-                                VStruct vStruct = parser.fromJson(str);
+                                VStruct vStruct = parser.fromJson(jsonStr, file.getName());
                                 valueList.add(vStruct);
                             } catch (ValueJsonParser.JsonParseException e) {
                                 errs.addErr(new ValueErrs.JsonFileParseErr(file.getName(), tableSchema.name()));

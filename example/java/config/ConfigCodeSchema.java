@@ -17,7 +17,6 @@ public class ConfigCodeSchema {
         schema.addImp("ai.ai", ai_ai());
         schema.addImp("ai.ai_action", ai_ai_action());
         schema.addImp("ai.ai_condition", ai_ai_condition());
-        schema.addImp("ai.triggerticktype", ai_triggerticktype());
         schema.addImp("equip.ability", equip_ability());
         schema.addImp("equip.equipconfig", equip_equipconfig());
         schema.addImp("equip.equipconfig_Entry", equip_equipconfig_Entry());
@@ -35,6 +34,7 @@ public class ConfigCodeSchema {
         schema.addImp("other.signin", other_signin());
         schema.addImp("task.completeconditiontype", task_completeconditiontype());
         schema.addImp("task.task", task_task());
+        schema.addImp("task.task2", task_task2());
         schema.addImp("task.taskextraexp", task_taskextraexp());
         return schema;
     }
@@ -178,14 +178,6 @@ public class ConfigCodeSchema {
         s2.addColumn("FormulaID", SchemaPrimitive.SInt);
         s2.addColumn("ArgIList", new SchemaList(SchemaPrimitive.SInt));
         s2.addColumn("ArgSList", new SchemaList(SchemaPrimitive.SInt));
-        return s2;
-    }
-
-    static Schema ai_triggerticktype() {
-        SchemaEnum s2 = new SchemaEnum(false, false);
-        s2.addValue("ConstValue");
-        s2.addValue("ByLevel");
-        s2.addValue("ByServerUpDay");
         return s2;
     }
 
@@ -355,6 +347,22 @@ public class ConfigCodeSchema {
         s2.addColumn("completecondition", new SchemaRef("task.completecondition"));
         s2.addColumn("exp", SchemaPrimitive.SInt);
         s2.addColumn("testDefaultBean", new SchemaRef("task.TestDefaultBean"));
+        return s2;
+    }
+
+    static Schema task_task2() {
+        SchemaBean s2 = new SchemaBean(true);
+        s2.addColumn("taskid", SchemaPrimitive.SInt);
+        s2.addColumn("name", new SchemaList(SchemaPrimitive.SStr));
+        s2.addColumn("nexttask", SchemaPrimitive.SInt);
+        s2.addColumn("completecondition", new SchemaRef("task.completecondition"));
+        s2.addColumn("exp", SchemaPrimitive.SInt);
+        s2.addColumn("testBool", SchemaPrimitive.SBool);
+        s2.addColumn("testString", SchemaPrimitive.SStr);
+        s2.addColumn("testStruct", new SchemaRef("Position"));
+        s2.addColumn("testList", new SchemaList(SchemaPrimitive.SInt));
+        s2.addColumn("testListStruct", new SchemaList(new SchemaRef("Position")));
+        s2.addColumn("testListInterface", new SchemaList(new SchemaRef("ai.TriggerTick")));
         return s2;
     }
 

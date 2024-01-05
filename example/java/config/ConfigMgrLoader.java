@@ -12,7 +12,7 @@ public class ConfigMgrLoader {
 
     public static ConfigMgr load(ConfigMgr mgr, configgen.genjava.ConfigInput input) {
         int c = input.readInt();
-        if (c < 15) {
+        if (c < 16) {
             throw new IllegalArgumentException();
         }
 
@@ -51,6 +51,7 @@ public class ConfigMgrLoader {
         allConfigLoaders.put("other.monster", new config.other.Monster._ConfigLoader());
         allConfigLoaders.put("other.signin", new config.other.Signin._ConfigLoader());
         allConfigLoaders.put("task.task", new config.task.Task._ConfigLoader());
+        allConfigLoaders.put("task.task2", new config.task.Task2._ConfigLoader());
         allConfigLoaders.put("task.taskextraexp", new config.task.Taskextraexp._ConfigLoader());
 
         return allConfigLoaders;

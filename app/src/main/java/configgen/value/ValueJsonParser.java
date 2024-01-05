@@ -27,6 +27,7 @@ public class ValueJsonParser {
     private final TextI18n.TableI18n nullableTableI18n;
     private DCell cell;
     private List<DCell> cellList;
+    private String fromFileName;
 
     public ValueJsonParser(TableSchema subTableSchema) {
         this(subTableSchema, null);
@@ -37,8 +38,9 @@ public class ValueJsonParser {
         this.nullableTableI18n = nullableTableI18n;
     }
 
-    public VStruct fromJson(String str) {
-        JSONObject jsonObject = JSON.parseObject(str);
+    public VStruct fromJson(String jsonStr, String fromFileName) {
+        this.fromFileName = fromFileName;
+        JSONObject jsonObject = JSON.parseObject(jsonStr);
         cell = DCell.EMPTY;
         cellList = List.of(cell);
         return parseStructural(subTableSchema, jsonObject);
@@ -66,7 +68,7 @@ public class ValueJsonParser {
                 // not throw exception, but use default value
                 // make it easy to add field in future
                 fieldValue = ValueDefault.of(fs.type());
-                Logger.log("%s[%s] field not found in json object", subStructural.fullName(), fs.name());
+                Logger.log("%s %s[%s] not found ", fromFileName, subStructural.fullName(), fs.name());
             }
             vStruct.values().add(fieldValue);
         }

@@ -42,7 +42,7 @@ usage.bat  # 打印使用说明
 
 ```bash
 cd example
-genjavasealed.bat # genjava 也可以，sealed需要java 17或以上才支持
+genjava.bat # sealed需要java 17或以上才支持，也可以去掉sealed
 ```
 
 * 测试java：检验java生成

@@ -6,10 +6,6 @@ namespace Config.Ai.Triggertick
 {
     public partial class DataConstvalue : Config.Ai.DataTriggertick
     {
-        public override Config.Ai.DataTriggerticktype type() {
-            return Config.Ai.DataTriggerticktype.ConstValue;
-        }
-
         public int Value { get; private set; }
 
         public DataConstvalue() {

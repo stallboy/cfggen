@@ -17,7 +17,6 @@ public abstract class DataCompletecondition
                 return Config.Task.Completecondition.DataKillmonster._create(os);
             case "TalkNpc":
                 return Config.Task.Completecondition.DataTalknpc._create(os);
-            case "":
             case "TestNoColumn":
                 return Config.Task.Completecondition.DataTestnocolumn._create(os);
             case "Chat":

@@ -44,7 +44,7 @@ usage.bat
 
 ```bash
 cd example
-genjavasealed.bat 
+genjava.bat 
 ```
 
 * test java code

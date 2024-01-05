@@ -237,24 +237,26 @@ public final class CfgSchemaResolver {
 
     private void resolveInterface(InterfaceSchema sInterface) {
         String enumRef = sInterface.enumRef();
-        TableSchema enumRefTable = findTableInLocalThenGlobal(enumRef);
-        if (enumRefTable != null) {
-            sInterface.setEnumRefTable(enumRefTable);
-        } else {
-            errs.addErr(new EnumRefNotFound(ctx(), enumRef));
+        if (!enumRef.isEmpty()){
+            TableSchema enumRefTable = findTableInLocalThenGlobal(enumRef);
+            if (enumRefTable != null) {
+                sInterface.setNullableEnumRefTable(enumRefTable);
+            } else {
+                errs.addErr(new EnumRefNotFound(ctx(), enumRef));
+            }
         }
 
         if (sInterface.impls().isEmpty()) {
             errs.addErr(new InterfaceImplEmpty(ctx()));
         }
 
-        String def = sInterface.defaultImpl();
-        if (!def.isEmpty()) {
-            StructSchema defImpl = sInterface.findImpl(def);
-            if (defImpl != null) {
-                sInterface.setNullableDefaultImplStruct(defImpl);
+        String defaultImpl = sInterface.defaultImpl();
+        if (!defaultImpl.isEmpty()) {
+            StructSchema defaultImplStruct = sInterface.findImpl(defaultImpl);
+            if (defaultImplStruct != null) {
+                sInterface.setNullableDefaultImplStruct(defaultImplStruct);
             } else {
-                errs.addErr(new DefaultImplNotFound(ctx(), def));
+                errs.addErr(new DefaultImplNotFound(ctx(), defaultImpl));
             }
         }
     }

@@ -30,11 +30,15 @@ class GenStructuralClass {
         if (isImpl) {
             String classStr = NameableName.isSealedInterface ? "final class" : "class";
             ps.println("public %s %s implements %s {", classStr, name.className, Name.fullName(nullableInterface));
-            ps.println1("@Override");
-            ps.println1("public %s type() {", Name.refType(nullableInterface.enumRefTable()));
-            ps.println2("return %s.%s;", Name.refType(nullableInterface.enumRefTable()), structural.name().toUpperCase());
-            ps.println1("}");
-            ps.println();
+
+            TableSchema enumRefTable = nullableInterface.nullableEnumRefTable();
+            if (enumRefTable != null) {
+                ps.println1("@Override");
+                ps.println1("public %s type() {", Name.refType(enumRefTable));
+                ps.println2("return %s.%s;", Name.refType(enumRefTable), structural.name().toUpperCase());
+                ps.println1("}");
+                ps.println();
+            }
         } else {
             ps.println("public class %s {", name.className);
         }

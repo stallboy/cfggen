@@ -28,7 +28,7 @@ export interface SStruct extends Namable {
 }
 
 export interface SInterface extends Namable {
-    enumRef: string;
+    enumRef?: string;
     defaultImpl?: string;
     impls: SStruct[];
 }
@@ -199,7 +199,10 @@ export class Schema {
         for (let item of items) {
             if (item.type == 'interface') {
                 let ii = item as SInterface;
-                res.add(ii.enumRef);  // 这里不再遍历impls，因为假设impl被包含在参数items里
+                if (ii.enumRef){
+                    res.add(ii.enumRef);
+                }
+                // 这里不再遍历impls，因为假设impl被包含在参数items里
             } else {
                 let si = item as (SStruct | STable)
                 if (si.foreignKeys) {
@@ -256,7 +259,9 @@ export class Schema {
         for (let si of allDepStructs) {
             if (si.type == 'interface') {
                 let ii = si as SInterface;
-                res.add(ii.enumRef);
+                if (ii.enumRef){
+                    res.add(ii.enumRef);
+                }
             } else {
                 si = si as (SStruct | STable)
                 if (si.foreignKeys) {

@@ -65,7 +65,9 @@ public class CfgWriter {
         if (!sInterface.defaultImpl().isEmpty()) {
             meta.putDefaultImpl(sInterface.defaultImpl());
         }
-        meta.putEnumRef(sInterface.enumRef());
+        if (!sInterface.enumRef().isEmpty()) {
+            meta.putEnumRef(sInterface.enumRef());
+        }
         String comment = meta.removeComment();
 
         String name = useLastName ? sInterface.lastName() : sInterface.name();

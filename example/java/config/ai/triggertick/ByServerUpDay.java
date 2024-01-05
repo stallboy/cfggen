@@ -1,11 +1,6 @@
 package config.ai.triggertick;
 
 public final class ByServerUpDay implements config.ai.triggertick.TriggerTick {
-    @Override
-    public config.ai.Triggerticktype type() {
-        return config.ai.Triggerticktype.BYSERVERUPDAY;
-    }
-
     private int init;
     private float coefficient1;
     private float coefficient2;

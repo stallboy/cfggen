@@ -1,11 +1,6 @@
 package config.ai.triggertick;
 
 public final class ConstValue implements config.ai.triggertick.TriggerTick {
-    @Override
-    public config.ai.Triggerticktype type() {
-        return config.ai.Triggerticktype.CONSTVALUE;
-    }
-
     private int value;
 
     private ConstValue() {

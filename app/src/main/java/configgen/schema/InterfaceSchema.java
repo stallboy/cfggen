@@ -52,9 +52,6 @@ public final class InterfaceSchema implements Fieldable, Nameable {
         if (name.isEmpty()) {
             throw new IllegalArgumentException("interface name empty");
         }
-        if (enumRef.isEmpty()) {
-            throw new IllegalArgumentException("interface enumRef empty");
-        }
         if (fmt != AUTO && fmt != PACK) {
             throw new IllegalArgumentException("interface fmt must be auto/pack");
         }
@@ -102,15 +99,11 @@ public final class InterfaceSchema implements Fieldable, Nameable {
         return null;
     }
 
-    public String enumRefNormalized() {
-        return enumRefTable.name();
-    }
-
-    public TableSchema enumRefTable() {
+    public TableSchema nullableEnumRefTable() {
         return enumRefTable;
     }
 
-    void setEnumRefTable(TableSchema enumRefTable) {
+    void setNullableEnumRefTable(TableSchema enumRefTable) {
         this.enumRefTable = enumRefTable;
     }
 
@@ -131,7 +124,7 @@ public final class InterfaceSchema implements Fieldable, Nameable {
     public boolean canBeNumberOrBool() {
         if (fmt == PACK && nullableDefaultImplStruct != null
                 && nullableDefaultImplStruct.fields().size() == 1) {
-            FieldType type = nullableDefaultImplStruct.fields().get(0).type();
+            FieldType type = nullableDefaultImplStruct.fields().getFirst().type();
             return numberOrBoolTypes.contains(type);
         }
         return false;

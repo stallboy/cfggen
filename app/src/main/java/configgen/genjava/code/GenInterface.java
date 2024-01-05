@@ -21,8 +21,10 @@ class GenInterface {
             ps.println("public interface %s {", name.className);
         }
         ps.inc();
-        ps.println("%s type();", Name.refType(sInterface.enumRefTable()));
-        ps.println();
+        if (sInterface.nullableEnumRefTable() != null){
+            ps.println("%s type();", Name.refType(sInterface.nullableEnumRefTable()));
+            ps.println();
+        }
 
         if (HasRef.hasRef(sInterface)) {
             ps.println("default void _resolve(%s.ConfigMgr mgr) {", Name.codeTopPkg);
@@ -34,9 +36,6 @@ class GenInterface {
         ps.inc();
         ps.println("switch(input.readStr()) {");
         for (StructSchema impl : sInterface.impls()) {
-            if (impl == sInterface.nullableDefaultImplStruct()) {
-                ps.println1("case \"\":");
-            }
             ps.println1("case \"%s\":", impl.name());
             ps.println2("return %s._create(input);", Name.fullName(impl));
         }

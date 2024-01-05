@@ -12,7 +12,6 @@ public sealed interface Completecondition permits KillMonster, TalkNpc, TestNoCo
                 return config.task.completecondition.KillMonster._create(input);
             case "TalkNpc":
                 return config.task.completecondition.TalkNpc._create(input);
-            case "":
             case "TestNoColumn":
                 return config.task.completecondition.TestNoColumn._create(input);
             case "Chat":

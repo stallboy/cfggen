@@ -58,7 +58,7 @@ public class RecordEditService {
         TableSchema tableSchema = vTable.schema();
         VStruct thisValue;
         try {
-            thisValue = new ValueJsonParser(vTable.schema()).fromJson(jsonStr);
+            thisValue = new ValueJsonParser(vTable.schema()).fromJson(jsonStr, "<server>");
         } catch (Exception e) {
             return new RecordEditResult(jsonParseErr, table, "", List.of(e.getMessage()), List.of());
         }

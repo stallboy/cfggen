@@ -6,10 +6,6 @@ namespace Config.Ai.Triggertick
 {
     public partial class DataByserverupday : Config.Ai.DataTriggertick
     {
-        public override Config.Ai.DataTriggerticktype type() {
-            return Config.Ai.DataTriggerticktype.ByServerUpDay;
-        }
-
         public int Init { get; private set; }
         public float Coefficient1 { get; private set; }
         public float Coefficient2 { get; private set; }

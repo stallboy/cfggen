@@ -130,8 +130,10 @@ public class GenCs extends Generator {
         ps.println("{");
         ps.println("public abstract class " + name.className);
         ps.println("{");
-        ps.println1("public abstract " + fullName(sInterface.enumRefTable()) + " type();");
-        ps.println();
+        if (sInterface.nullableEnumRefTable() != null) {
+            ps.println1("public abstract " + fullName(sInterface.nullableEnumRefTable()) + " type();");
+            ps.println();
+        }
 
         if (HasRef.hasRef(sInterface)) {
             ps.println1("internal virtual void _resolve(Config.LoadErrors errors)");
@@ -143,9 +145,6 @@ public class GenCs extends Generator {
         ps.println1("internal static " + name.className + " _create(Config.Stream os) {");
         ps.println2("switch(os.ReadString()) {");
         for (StructSchema impl : sInterface.impls()) {
-            if (impl.name().equals(sInterface.defaultImpl())) {
-                ps.println3("case \"\":");
-            }
             ps.println3("case \"" + impl.name() + "\":");
             ps.println4("return " + fullName(impl) + "._create(os);");
         }
@@ -177,10 +176,14 @@ public class GenCs extends Generator {
         if (isImpl) {
             ps.println1("public partial class " + name.className + " : " + fullName(nullableInterface));
             ps.println1("{");
-            ps.println2("public override " + fullName(nullableInterface.enumRefTable()) + " type() {");
-            ps.println3("return " + fullName(nullableInterface.enumRefTable()) + "." + structural.name() + ";");
-            ps.println2("}");
-            ps.println();
+
+            TableSchema enumRefTable = nullableInterface.nullableEnumRefTable();
+            if (enumRefTable != null){
+                ps.println2("public override " + fullName(enumRefTable) + " type() {");
+                ps.println3("return " + fullName(enumRefTable) + "." + structural.name() + ";");
+                ps.println2("}");
+                ps.println();
+            }
         } else {
             ps.println1("public partial class " + name.className);
             ps.println1("{");

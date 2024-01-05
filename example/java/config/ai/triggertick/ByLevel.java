@@ -1,11 +1,6 @@
 package config.ai.triggertick;
 
 public final class ByLevel implements config.ai.triggertick.TriggerTick {
-    @Override
-    public config.ai.Triggerticktype type() {
-        return config.ai.Triggerticktype.BYLEVEL;
-    }
-
     private int init;
     private float coefficient;
 

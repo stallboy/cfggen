@@ -99,6 +99,12 @@ public class ConfigMgr {
 
     public java.util.Collection<config.task.Task> allTaskTask() { return task_task_All.values(); }
 
+    public final java.util.Map<Integer, config.task.Task2> task_task2_All = new java.util.LinkedHashMap<>();
+
+    public config.task.Task2 getTaskTask2(int taskid) { return task_task2_All.get(taskid); }
+
+    public java.util.Collection<config.task.Task2> allTaskTask2() { return task_task2_All.values(); }
+
     public final java.util.Map<Integer, config.task.Taskextraexp> task_taskextraexp_All = new java.util.LinkedHashMap<>();
 
     public config.task.Taskextraexp getTaskTaskextraexp(int taskid) { return task_taskextraexp_All.get(taskid); }

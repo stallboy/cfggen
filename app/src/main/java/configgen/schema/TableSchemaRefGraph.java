@@ -53,7 +53,10 @@ public class TableSchemaRefGraph {
             Nameable item = schema.findItem(dep);
             switch (item) {
                 case InterfaceSchema interfaceSchema -> {
-                    refOut.add(interfaceSchema.enumRefNormalized());
+                    if (interfaceSchema.nullableEnumRefTable()!= null){
+                        refOut.add(interfaceSchema.nullableEnumRefTable().name());
+                    }
+
                     for (StructSchema impl : interfaceSchema.impls()) {
                         for (ForeignKeySchema fk : impl.foreignKeys()) {
                             refOut.add(fk.refTableNormalized());

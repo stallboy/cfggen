@@ -112,7 +112,7 @@ public class SchemaService {
 
     public static SInterface fromInterface(InterfaceSchema is) {
         return new SInterface(is.name(),
-                is.enumRefTable().fullName(), // 全局名字空间
+                is.nullableEnumRefTable() != null ? is.nullableEnumRefTable().name() : "", // 全局名字空间
                 is.defaultImpl(),
                 is.impls().stream().map(SchemaService::fromStruct).toList());
     }

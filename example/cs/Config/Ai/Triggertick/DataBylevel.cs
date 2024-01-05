@@ -6,10 +6,6 @@ namespace Config.Ai.Triggertick
 {
     public partial class DataBylevel : Config.Ai.DataTriggertick
     {
-        public override Config.Ai.DataTriggerticktype type() {
-            return Config.Ai.DataTriggerticktype.ByLevel;
-        }
-
         public int Init { get; private set; }
         public float Coefficient { get; private set; }
 

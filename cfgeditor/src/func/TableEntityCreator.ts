@@ -155,14 +155,17 @@ export class TableEntityCreator {
 
             if (item.type == 'interface') {
                 let ii = item as SInterface;
-                oldEntity.outputs.push({
-                    output: {key: "enumRef", label: "enumRef"},
-                    connectToSockets: [{
-                        entityId: ii.enumRef,
-                        inputKey: "input",
-                        connectionType: EntityConnectionType.Ref
-                    }]
-                })
+                if (ii.enumRef) {
+                    oldEntity.outputs.push({
+                        output: {key: "enumRef", label: "enumRef"},
+                        connectToSockets: [{
+                            entityId: ii.enumRef,
+                            inputKey: "input",
+                            connectionType: EntityConnectionType.Ref
+                        }]
+                    })
+                }
+
             } else {
                 let si = item as (SStruct | STable)
                 if (si.foreignKeys) {
