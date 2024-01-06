@@ -1,13 +1,11 @@
 import {ClassicPreset} from "rete";
 import {EntityControl} from "./EntityControl.tsx";
 import {Entity, EntityType, KeywordColor} from "../model/entityModel.ts";
-import {RenderEmit} from "rete-react-plugin";
+import {Presets, RenderEmit} from "rete-react-plugin";
 import {css} from "styled-components";
-import {RefSocket} from "rete-react-plugin/src/presets/classic/components/refs/RefSocket.tsx";
-import {RefControl} from "rete-react-plugin/src/presets/classic/components/refs/RefControl.tsx";
-import {NodeStyles} from "rete-react-plugin/src/presets/classic/components/Node.tsx";
 import {Typography} from "antd";
 
+const {NodeStyles, RefControl, RefSocket} = Presets.classic;
 
 export class EntityNode extends ClassicPreset.Node<
     { [key in string]: ClassicPreset.Socket },
