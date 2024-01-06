@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: page
 title: 编辑器
 nav_order: 6
 ---

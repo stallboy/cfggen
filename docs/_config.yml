@@ -1,5 +1,6 @@
 title: cfggen
 description: excel/CSV/JSON object mapping. object database viewer and editor. generate reading code.
+theme: just-the-docs
 remote_theme: just-the-docs/just-the-docs
 
 url: https://stallboy.github.io/cfggen
@@ -10,6 +11,7 @@ aux_links:
 exclude:
   - Gemfile
   - Gemfile.lock
+  - serve.bat
 
 # Enable or disable the site search
 # Supports true (default) or false

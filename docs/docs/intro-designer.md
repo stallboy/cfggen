@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: page
 title: 给策划看的介绍
 nav_order: 2
 ---

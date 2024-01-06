@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: home
 title: 策划配表系统
 nav_order: 1
 ---
@@ -57,7 +57,6 @@ lua.exe test.lua
 ```
 
 * 测试csharp
-
 ```bash
 gencshape.bat 
 cd cs
