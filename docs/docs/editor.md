@@ -29,16 +29,16 @@ nav_order: 6
 编辑数据会保存成json文件
 
 ## 查看表结构
-![](assets/images/tableschema.png)
+![](../assets/images/tableschema.png)
 
 ## 查看表关系 
-![](assets/images/tableref.png)
+![](../assets/images/tableref.png)
 
 ## 查看记录
-![](assets/images/record.png)
+![](../assets/images/record.png)
 
 ## 查看记录关系
-![](assets/images/recordref.png)
+![](../assets/images/recordref.png)
 
 ## 搜索记录
-![](assets/images/search.png)
+![](../assets/images/search.png)

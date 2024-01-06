@@ -1,6 +1,6 @@
 ---
-title: Home
-layout: home
+layout: default
+title: 策划配表系统
 nav_order: 1
 ---
 
@@ -15,6 +15,7 @@ nav_order: 1
 
 3. 生成访问代码
 
+[View it on GitHub][cfggen repo]{: .btn .fs-5 .mb-4 .mb-md-0 }
 
 ## 主要功能
 
@@ -62,3 +63,7 @@ gencshape.bat
 cd cs
 dotnet run
 ```
+
+---
+
+[cfggen repo]: https://github.com/stallboy/cfggen
