@@ -1,11 +1,19 @@
-# Overview
-<show-structure for="chapter,procedure" depth="2"/>
+---
+title: Home
+layout: home
+nav_order: 1
+---
+
+# 策划配表系统
+
+一个对象数据库浏览器、编辑器、程序访问代码生成器
 
 
-> 让策划可以在excel中做灵活的配置
->
-> 为程序生成访问配置表的代码
-{style='note'}
+1. 定义对象结构
+
+2. 使用excel编辑、或直接编辑json、或使用gui编辑，可以浏览所有对象。
+
+3. 生成访问代码
 
 
 ## 主要功能

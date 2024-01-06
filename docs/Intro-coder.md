@@ -1,11 +1,23 @@
-# cfggen 给程序员看的介绍
+---
+layout: default
+title: 给程序员看的介绍
+nav_order: 4
+---
 
-<show-structure for="chapter,procedure" depth="2"/>
+# 给程序员看的介绍
+{: .no_toc }
 
-> 让策划可以在excel中做灵活的配置
-> 
-> 为程序生成访问配置表的代码
-{style='note'}
+## Table of contents
+{: .no_toc .text-delta }
+
+- TOC
+{:toc}
+---
+
+
+1. 让策划可以在excel中做灵活的配置
+2为程序生成访问配置表的代码
+
 
 
 ## 主要功能
@@ -182,7 +194,7 @@ table task[taskid] (entry='entry') {
 > 
 > 可以看到compeletecondition下4个struct最多占2列，则compeletecondition占2+1=3列，因为名称KillMonster或TalkNpc...要占第一列。
 > 
-> 至于pack如何以,()这三者写任意结构，参考 [复杂结构的单元格](Intro-to-designer.md#pack_to_one_cell)
+> 至于pack如何以,()这三者写任意结构，参考 [复杂结构的单元格]
 
 ### sep
 
@@ -225,7 +237,7 @@ table task[taskid] (entry='entry') {
 
 ### columnMode
 
-在table的meta里可配置columnMode，用于方便配置[模块参数表](Intro-to-designer.md#module_param)
+在table的meta里可配置columnMode，用于方便配置[模块参数表]
 
 ### extraSplit
 
@@ -253,9 +265,9 @@ table task[taskid] (entry='entry') {
 
 ## cfg文件格式
 
-cfg文件的antlrv4定义大致如下，熟悉bnf格式的，可以参考
+<details markdown="block">
+<summary>cfg文件的antlrv4定义大致如下，熟悉bnf格式的，可以参考</summary>
 
-<chapter title="cfg文件语法" collapsible="true"  default-state="collapsed">
 
 ```
 
@@ -317,4 +329,6 @@ IDENT : [a-zA-Z_] [a-zA-Z0-9_]* ;
 keywords: STRUCT | INTERFACE | TABLE | TLIST | TMAP | TBASE;
 
 ```
-</chapter>
+
+
+</details>
