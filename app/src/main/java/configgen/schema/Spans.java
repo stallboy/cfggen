@@ -1,92 +1,89 @@
 package configgen.schema;
 
-import java.util.OptionalInt;
+import java.util.*;
 
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
 import static configgen.schema.FieldType.*;
 import static configgen.schema.Metadata.*;
 
+@SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
 public class Spans {
 
-    public static void preCalculateAllSpan(CfgSchema schema) {
-        for (Nameable item : schema.items()) {
-            switch (item) {
-                case InterfaceSchema interfaceSchema -> {
-                    for (StructSchema impl : interfaceSchema.impls()) {
-                        for (FieldSchema field : impl.fields()) {
-                            span(field);
-                        }
-                        span(impl);
-                    }
-                    span(interfaceSchema);
-                }
-                case TableSchema tableSchema -> {
-                    if (!tableSchema.meta().isJson()) {
-                        for (FieldSchema field : tableSchema.fields()) {
-                            span(field);
-                        }
-                        span(tableSchema);
-                    }
-                }
-                case StructSchema struct -> {
-                    for (FieldSchema field : struct.fields()) {
-                        span(field);
-                    }
-                    span(struct);
-                }
-            }
-        }
-    }
-
     public static int span(Nameable nameable) {
-        Metadata meta = nameable.meta();
-        if (meta.getSpan() instanceof MetaInt vi) {
-            return vi.value();
-        }
+        synchronized (nameable) {
+            Metadata meta = nameable.meta();
+            if (meta.getSpan() instanceof MetaInt vi) {
+                return vi.value();
+            }
 
-        int s = calcSpan(nameable);
-        meta.putSpan(s);
-        return s;
+            int s = calcSpan(nameable);
+            meta.putSpan(s);
+            return s;
+        }
     }
 
     public static int calcSpan(Nameable nameable) {
-        Metadata meta = nameable.meta();
-        MetaValue value = meta.getSpan();
-        if (value instanceof MetaInt vi) {
-            return vi.value();
+        return calcSpanCheckLoop(nameable, new LinkedHashSet<>());
+    }
+
+    private static int calcSpanCheckLoop(Nameable nameable, SequencedSet<String> stack) {
+        synchronized (nameable) {
+            Metadata meta = nameable.meta();
+            MetaValue value = meta.getSpan();
+            if (value instanceof MetaInt vi) {
+                return vi.value();
+            }
         }
 
         if (nameable.fmt() == PACK || nameable.fmt() instanceof FieldFormat.Sep) {
             return 1;
         }
 
+        if (!stack.add(nameable.fullName())) {
+            throw new IllegalStateException("Calculate span loop: " + String.join(",", stack));
+        }
+
+        int resultSpan;
         switch (nameable) {
             case InterfaceSchema interfaceSchema -> {
-                OptionalInt max = interfaceSchema.impls().stream().mapToInt(Spans::calcSpan).max();
+                OptionalInt max = interfaceSchema.impls().stream()
+                        .mapToInt(impl -> calcSpanCheckLoop(impl, stack))
+                        .max();
                 if (max.isPresent()) {
-                    return max.getAsInt() + 1;
+                    resultSpan = max.getAsInt() + 1;
                 } else {
-                    return 1;
+                    resultSpan = 1;
                 }
             }
             case Structural structural -> {
-                return structural.fields().stream().mapToInt(Spans::calcSpan).sum();
+                resultSpan = structural.fields().stream()
+                        .mapToInt(field -> calcFieldSpanCheckLoop(field, stack))
+                        .sum();
             }
         }
+        stack.remove(nameable.fullName());
+        return resultSpan;
+
     }
 
-    public static int span(FieldSchema field) {
-        Metadata meta = field.meta();
-        if (meta.getSpan() instanceof MetaInt vi) {
-            return vi.value();
+    public static int fieldSpan(FieldSchema field) {
+        synchronized (field) {
+            Metadata meta = field.meta();
+            if (meta.getSpan() instanceof MetaInt vi) {
+                return vi.value();
+            }
+
+            int s = calcFieldSpan(field);
+            meta.putSpan(s);
+            return s;
         }
-
-        int s = calcSpan(field);
-        meta.putSpan(s);
-        return s;
     }
 
-    public static int calcSpan(FieldSchema field) {
+    public static int calcFieldSpan(FieldSchema field) {
+        return calcFieldSpanCheckLoop(field, new LinkedHashSet<>());
+    }
+
+    public static int calcFieldSpanCheckLoop(FieldSchema field, SequencedSet<String> stack) {
         FieldFormat fmt = field.fmt();
 
         switch (fmt) {
@@ -104,17 +101,17 @@ public class Spans {
             }
 
             case StructRef structRef -> {
-                return calcSpan(structRef.obj());
+                return calcSpanCheckLoop(structRef.obj(), stack);
             }
 
             case FList flist -> {
                 switch (fmt) {
                     case FieldFormat.Block block -> {
-                        return calcSpan(flist.item()) * block.fix();
+                        return calcSimpleTypeSpanCheckLoop(flist.item(), stack) * block.fix();
 
                     }
                     case FieldFormat.Fix fix -> {
-                        return calcSpan(flist.item()) * fix.count();
+                        return calcSimpleTypeSpanCheckLoop(flist.item(), stack) * fix.count();
                     }
                     default -> throw new IllegalStateException("Unexpected value: " + fmt);
                 }
@@ -123,13 +120,15 @@ public class Spans {
             case FMap fmap -> {
                 switch (fmt) {
                     case FieldFormat.Block block -> {
-                        return (calcSpan(fmap.key()) + calcSpan(fmap.value())) *
-                                block.fix();
+                        return (calcSimpleTypeSpanCheckLoop(fmap.key(), stack)
+                                + calcSimpleTypeSpanCheckLoop(fmap.value(), stack))
+                                * block.fix();
 
                     }
                     case FieldFormat.Fix fix -> {
-                        return (calcSpan(fmap.key()) + calcSpan(fmap.value())) *
-                                fix.count();
+                        return (calcSimpleTypeSpanCheckLoop(fmap.key(), stack)
+                                + calcSimpleTypeSpanCheckLoop(fmap.value(), stack))
+                                * fix.count();
                     }
                     default -> throw new IllegalStateException("Unexpected value: " + fmt);
                 }
@@ -137,7 +136,7 @@ public class Spans {
         }
     }
 
-    public static int span(SimpleType type) {
+    public static int simpleTypeSpan(SimpleType type) {
         switch (type) {
             case Primitive ignored -> {
                 return 1;
@@ -148,13 +147,17 @@ public class Spans {
         }
     }
 
-    public static int calcSpan(SimpleType type) {
+    public static int calcSimpleTypeSpan(SimpleType type) {
+        return calcSimpleTypeSpanCheckLoop(type, new LinkedHashSet<>());
+    }
+
+    public static int calcSimpleTypeSpanCheckLoop(SimpleType type, SequencedSet<String> stack) {
         switch (type) {
             case Primitive ignored -> {
                 return 1;
             }
             case StructRef structRef -> {
-                return calcSpan(structRef.obj());
+                return calcSpanCheckLoop(structRef.obj(), stack);
             }
         }
     }

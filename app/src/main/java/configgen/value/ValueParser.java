@@ -192,7 +192,7 @@ public class ValueParser {
         } else {
             int startIdx = 0;
             for (FieldSchema field : structural.fields()) {
-                int expected = isPack ? 1 : Spans.span(field);
+                int expected = isPack ? 1 : Spans.fieldSpan(field);
                 FieldSchema subField = subStructural.findField(field.name());
                 if (subField != null) {
                     // 提取单个field
@@ -340,7 +340,7 @@ public class ValueParser {
             blocks = blockParser.parseBlock(cells, curRowIndex);
 
         } else {
-            require(cells.size() == Spans.span(field));
+            require(cells.size() == Spans.fieldSpan(field));
             parsed = cells;
         }
 
@@ -350,8 +350,8 @@ public class ValueParser {
 
         Map<SimpleValue, SimpleValue> valueMap = new LinkedHashMap<>();
 
-        int kc = isPack ? 1 : Spans.span(type.key());
-        int vc = isPack ? 1 : Spans.span(type.value());
+        int kc = isPack ? 1 : Spans.simpleTypeSpan(type.key());
+        int vc = isPack ? 1 : Spans.simpleTypeSpan(type.value());
         int itemSpan = kc + vc;
 
         for (CellsWithRowIndex block : blocks) {
@@ -422,7 +422,7 @@ public class ValueParser {
             parsed = DCells.parseList(cell, sep.sep());
 
         } else {
-            require(cells.size() == Spans.span(field));
+            require(cells.size() == Spans.fieldSpan(field));
             parsed = cells;
         }
 
@@ -431,7 +431,7 @@ public class ValueParser {
         }
 
         List<SimpleValue> valueList = new ArrayList<>();
-        int itemSpan = isPack ? 1 : Spans.span(type.item());
+        int itemSpan = isPack ? 1 : Spans.simpleTypeSpan(type.item());
         for (CellsWithRowIndex block : blocks) {
             List<DCell> curLineParsed = block.cells;
             for (int startIdx = 0; startIdx < curLineParsed.size(); startIdx += itemSpan) {

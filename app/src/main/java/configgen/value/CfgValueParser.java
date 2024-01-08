@@ -41,9 +41,6 @@ public class CfgValueParser {
     }
 
     public CfgValue parseCfgValue() {
-        //预先计算下span，这样在多线程中parseTable过程中，就只读不会写了。
-        Spans.preCalculateAllSpan(context.cfgSchema());
-
         //预先计算hasRef，方便生成时使用
         HasRef.preCalculateAllHasRef(context.cfgSchema());
 
