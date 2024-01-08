@@ -12,10 +12,11 @@ import {useTranslation} from "react-i18next";
 
 
 export function TableRecordRefLoaded({
-                                         schema, recordRefResult, setCurTableAndId, setCurPage, setEditMode,
+                                         schema, curTable, recordRefResult, setCurTableAndId, setCurPage, setEditMode,
                                          query, nodeShow
                                      }: {
     schema: Schema;
+    curTable: STable;
     recordRefResult: RecordRefsResult;
     setCurTableAndId: (table: string, id: string) => void;
     setCurPage: (page: string) => void;
@@ -28,7 +29,8 @@ export function TableRecordRefLoaded({
 
     function createGraph(): EntityGraph {
         const entityMap = new Map<string, Entity>();
-        createRefEntities(entityMap, schema, recordRefResult.refs, true, nodeShow.containEnum);
+        const hasContainEnum = nodeShow.containEnum || curTable.entryType == 'eEnum';
+        createRefEntities(entityMap, schema, recordRefResult.refs, true, hasContainEnum);
         fillInputs(entityMap);
 
         const menu: Item[] = [{
@@ -142,7 +144,7 @@ export function TableRecordRef({
 
     return <TableRecordRefLoaded
         {...{
-            schema, recordRefResult, setCurTableAndId, setCurPage, setEditMode,
+            schema, curTable, recordRefResult, setCurTableAndId, setCurPage, setEditMode,
             query, nodeShow
         }}
     />

@@ -52,7 +52,7 @@ export function TableRecordLoaded({
         if (!isEditing) {
             let creator = new RecordEntityCreator(entityMap, schema, refId, recordResult.refs);
             creator.createEntity(entityId, recordResult.object);
-            createRefEntities(entityMap, schema, recordResult.refs, false);
+            createRefEntities(entityMap, schema, recordResult.refs, false, true);
         } else {
             editingState.startEditingObject(schema, recordResult, setForceUpdate);
             let creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId, onSubmit);
