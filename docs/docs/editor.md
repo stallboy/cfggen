@@ -1,7 +1,7 @@
 ---
 layout: page
 title: 编辑器
-nav_order: 6
+nav_order: 11
 ---
 
 # 编辑器

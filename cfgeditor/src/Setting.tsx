@@ -267,14 +267,10 @@ export function Setting({
             </Form.Item>
         </Form>;
 
-    let items = [
+    return <Tabs items={[
         {key: 'tableSetting', label: t('tableSetting'), children: tableSetting,},
         {key: 'recordSetting', label: t('recordSetting'), children: recordSetting,},
         {key: 'otherSetting', label: t('otherSetting'), children: otherSetting,},
         {key: 'keySetting', label: t('keySetting'), children: keySetting,},
-    ]
-
-
-    return <Tabs items={items} tabPosition='left'/>;
-
+    ]} tabPosition='left'/>;
 }

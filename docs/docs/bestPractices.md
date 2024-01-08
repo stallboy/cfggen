@@ -1,10 +1,10 @@
 ---
 layout: page
-title: 给策划看的介绍
-nav_order: 2
+title: 最佳实践
+nav_order: 20
 ---
 
-# 给策划看的介绍
+# 最佳实践
 {: .no_toc }
 
 ## Table of contents
@@ -14,99 +14,7 @@ nav_order: 2
 {:toc}
 ---
 
-## 目录结构
-
-- 为了模块化，尽量不要在顶层目录放csv或excel文件，而是都要放到子文件夹下，比如equip目录下
-- excel文件可以包含多个sheet，生成时excel文件名被忽略，而直接用sheet名称，csv文件则直接用csv的文件名。
-- 每个子文件夹会有对应的.cfg文件，比如equip目录下生成equip.cfg，做为excel，csv数据文件的格式描述，
-  在这里程序会配置上struct，interface，table列的类型，主键，唯一键，外键，枚举，取值约束等
-
-目录结构，包含excel表做为数据，和后缀为.cfg文件做为数据的描述
-
-* excel表主要由策划来填写，如下levelUp.xlsx
-
-| id  | 升级经验       | 等级奖励       |
-|-----|------------|------------|
-| id  | upgradeExp | levelAward |
-| 1   | 60         | 1000082    |
-| 2   | 70         | 0          |
-| 3   | 80         | 0          |
-| 4   | 90         | 0          |
-
-
-* .cfg文件主要由程序员来维护 ， 以上levelUp对应的.cfg文件里的描述如下
-```
-table levelup[id] (client) {
-	id:int;
-	upgradeExp:int; // 升级经验
-	levelAward:int; // 等级奖励
-}
-```
-
-
-## 新建或改结构
-
-
-新建或修改csv或excel文件，csv文件前2行或前3行做为header，
-
-    第一行是中文描述，
-    第二行是程序用名
-    第三行随意，我们可以约定填类型，但真正的类型以cfg里为准
-
-
-然后交给程序就ok了
-
-    程序使用configgen.jar 来完善cfg，如果cfg不满足需求，则手动修改cfg，
-    比如修改类型，主键，增加唯一键，外键，枚举，取值约束等
-
-
-
-## 改数据
-
-
-更改csv或excel里的数据，随便改
-
-
-然后根据需求双击配表顶层目录下的以下任一文件
-
-* 校验数据.bat
-* 校验数据并生成客户端配置.bat
-* 校验数据并生成服务器配置.bat
-* 校验数据并生成客户端和服务器配置.bat
-
-
-
-如果出错，根据出错提示修改数据，如果正确，则可以提交svn了。
-
-我们支持表之间的链接关系（可以让程序来在.cfg中配置），比如完成任务里的KillMonster的第一个参数是monsterid，这个id必须在monster表中存在。
-
-
-
-## 忽略机制
-
-- 忽略文件
-
-  csv文件或excel里的sheet名称如果不是a-z，A-Z开头的就忽略，策划可以多建sheet或csv来做说明
-
-- 忽略列或行
-
-    - 如果第二行，也就是程序用名中的格子为空，则表明这列程序不用，策划随便写。
-    - 如果数据行有一行全为空，或一行的第一个格子内容以#口头，则会被程序忽略。
-
-| 序号       | 策划用列 | 名字    | 掉落0件物品的概率 | 掉落1件物品的概率 |
-|----------|------|-------|-----------|-----------|
-| lootid   |      | name  | chance1   | chance2   |
-| 1        |      | 测试掉落  | 100       | 200       |
-| #这行会被忽略 |      |       |           |           |
-| 2        | XXX用 | 小宝箱   | 0         | 100       |
-|          |      |       |           |           |
-| 4        |      | 大宝箱   | 0         | 100       |
-| 5        |      | 测试掉落2 | 20        | 10        |
-
-上例中，第2列、第4行、第6行 都会被忽略
-
-
-## 减少拆表 
+## 减少拆表
 
 原来如果要模块化概念，可能要把它放到单独的一个配表中，其他表要引用这个就通过一个id，这样配置一个功能时需要牵涉到多个表格文件，
 现在则可以定义这个概念为结构，在这个功能表格中直接配置这个结构。
@@ -136,14 +44,14 @@ struct Position (sep=';') {
     z:int;
 }
 ```
-   
+
 ### 对简单的列表，配置sep或pack或block
 
 比如list\<int\>, list\<float\>, list\<str\>；也支持map\<int, int>可以配置pack，block
 
 
 如下：饰品套装的部件subList最多只有4个，则用fix=4是很合适的，只占4列。
-    
+
 ```
 table jewelrysuit[SuitID] (entry='Ename') {
     SuitID:int; // 饰品套装ID
@@ -152,7 +60,7 @@ table jewelrysuit[SuitID] (entry='Ename') {
     SuitList:list<int> (fix=4); // 子部件列表
 }
 ```
-    
+
 如果这个部件大多数情况下都小于4，但少数情况会有12个。
 
 - 如果配fix=12 如下，则固定占12列，可能太多了。
@@ -177,7 +85,7 @@ table jewelrysuit[SuitID] (entry='Ename') {
     SuitList:list<int> (sep=';');
 }
 ```
-    
+
 - 也可以配置block=4，占4列；一个记录大多数占一行，少数情况占2，3行。
 ```
 table jewelrysuit[SuitID] (entry='Ename') {
@@ -236,7 +144,7 @@ table drop[dropid] {
     name:text; 
 }
 ```
-     
+
 * dropItem是另一个表，里面包含了dropid来索引->到drop。
 * drop表中dropid 通过=>(不是->)索引到dropItem的dropid列，程序代码会生成list\<DropItem>。
 * 这里的会产生额外的dropItemId，一般情况下是不需要的，所以推荐3里的block做法。
@@ -274,7 +182,7 @@ table drop[dropid] {
 则如果不配置npc，就把npcid对应的单元格留空，不要填0，-1
 
 > excel或csv单元格中不填的话默认为false,0,""，所以不要用0作为一行的id。
-> 
+>
 > 如果有nullableRef请不要填0，请用留空。否则程序会检测报错.
 
 
@@ -373,7 +281,7 @@ item表，有type字段指向itemtype表，itemtype表里配置上装备，宝�
 * 第一种做法好处是其他表可以声明（ref）自己字段是个itemequip，如果用第二种方案，则只能声明字段是item。第二种程序也会要多做一些判断，
   我期望的是itemequip，但我拿到的类型是item，那item.extra是不是equip我需要判断啊，不是怎么处理。不好写。
 
-### 模块参数表 
+### 模块参数表
 
 一个模块一般会有通用参数需要配置，那怎么配置舒服呢？
 
