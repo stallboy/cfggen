@@ -8,11 +8,8 @@ nav_order: 1
 
 一个对象数据库浏览器、编辑器、程序访问代码生成器
 
-
 1. 定义对象结构
-
 2. 使用excel编辑、或直接编辑json、或使用gui编辑，可以浏览所有对象。
-
 3. 生成访问代码
 
 [View it on GitHub][cfggen repo]{: .btn .fs-5 .mb-4 .mb-md-0 }
@@ -63,6 +60,10 @@ cd cs
 dotnet run
 ```
 
+## build cfgeditor.exe
+请参考[(编辑器 cfgeditor 文档)][cfgeditor README]
+
 ---
 
 [cfggen repo]: https://github.com/stallboy/cfggen
+[cfgeditor README]: https://github.com/stallboy/cfggen/blob/master/cfgeditor/README.md
