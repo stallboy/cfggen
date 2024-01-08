@@ -2,7 +2,7 @@ import {Schema, SItem, STable} from "./model/schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback} from "react";
-import {Entity, EntityGraph, fillInputs, NodePlacementStrategyType} from "./model/entityModel.ts";
+import {Entity, EntityGraph, fillInputs, NodeShowType} from "./model/entityModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 import {pageTable} from "./CfgEditorApp.tsx";
 import {useTranslation} from "react-i18next";
@@ -17,7 +17,7 @@ export function TableRef({
                              refOutDepth,
                              maxNode,
                              setCurPage,
-                             nodePlacementStrategy
+                             nodeShow
                          }: {
     schema: Schema;
     curTable: STable;
@@ -26,7 +26,7 @@ export function TableRef({
     refOutDepth: number;
     maxNode: number;
     setCurPage: (page: string) => void;
-    nodePlacementStrategy: NodePlacementStrategyType;
+    nodeShow: NodeShowType;
 }) {
     const {t} = useTranslation();
 
@@ -61,14 +61,14 @@ export function TableRef({
             }];
         }
 
-        return {entityMap, menu, entityMenuFunc, nodePlacementStrategy};
+        return {entityMap, menu, entityMenuFunc, nodeShow};
     }
 
     const create = useCallback(
         (el: HTMLElement) => {
             return createEditor(el, createGraph());
         },
-        [schema, curTable, refIn, refOutDepth, maxNode, nodePlacementStrategy]
+        [schema, curTable, refIn, refOutDepth, maxNode, nodeShow]
     );
     const [ref] = useRete(create);
 

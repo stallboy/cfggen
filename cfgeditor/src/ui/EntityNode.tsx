@@ -1,6 +1,6 @@
 import {ClassicPreset} from "rete";
 import {EntityControl} from "./EntityControl.tsx";
-import {Entity, EntityType, KeywordColor} from "../model/entityModel.ts";
+import {Entity, EntityType, NodeShowType} from "../model/entityModel.ts";
 import {Presets, RenderEmit} from "rete-react-plugin";
 import {css} from "styled-components";
 import {Typography} from "antd";
@@ -22,7 +22,7 @@ export class EntityNode extends ClassicPreset.Node<
     height = 200;
 
     constructor(public entity: Entity,
-                public keywordColors?: KeywordColor[],) {
+                public nodeShow?: NodeShowType,) {
         super(entity.label);
     }
 }
@@ -31,8 +31,9 @@ export function EntityNodeComponent(props: { data: EntityNode, emit: RenderEmit<
     let entity = props.data.entity;
 
     let color: string | null = null;
-    if (entity.brief && props.data.keywordColors && props.data.keywordColors.length > 0) {
-        for (let keywordColor of props.data.keywordColors) {
+    let nodeShow = props.data.nodeShow;
+    if (entity.brief && nodeShow && nodeShow.keywordColors.length > 0) {
+        for (let keywordColor of nodeShow.keywordColors) {
             if (entity.brief.value.includes(keywordColor.keyword)) {
                 color = keywordColor.color;
                 break;
@@ -67,12 +68,13 @@ function MyNode(props: { data: EntityNode, emit: RenderEmit<any>, styles?: () =>
     const outputs = Object.entries(props.data.outputs)
     const controls = Object.entries(props.data.controls)
     const selected = props.data.selected || false
-    const { id, label, width, height } = props.data
+    const {id, label, width, height} = props.data
 
     let title;
-    if (label.indexOf("_")!=-1){
-        title =  <Typography.Text className="title" data-testid="title" copyable>{label}</Typography.Text>;
-    }else {
+    const nodeShow = props.data.nodeShow;
+    if (label.indexOf("_") != -1 && nodeShow && nodeShow.showHead == 'showCopyable') {
+        title = <Typography.Text className="title" data-testid="title" copyable>{label}</Typography.Text>;
+    } else {
         title = <div className="title" data-testid="title">{label}</div>
     }
     return (

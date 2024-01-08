@@ -25,10 +25,10 @@ export function getStr(key: string, def: string): string {
     return def;
 }
 
-export function getJson(key: string): any {
+export function getJson(key: string, def: any): any {
     let v = localStorage.getItem(key);
     if (v) {
         return JSON.parse(v);
     }
-    return null;
+    return def;
 }

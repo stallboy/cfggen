@@ -98,9 +98,15 @@ export interface EntityGraph {
     entityMenuFunc?: (entity: Entity) => Item[];
 
     query?: string;
-    keywordColors?: KeywordColor[];
-    showDescription?: ShowDescriptionType;
-    nodePlacementStrategy?: NodePlacementStrategyType;
+    nodeShow?: NodeShowType;
+}
+
+export interface NodeShowType {
+    showHead: ShowHeadType;
+    showDescription: ShowDescriptionType;
+    containEnum: boolean;
+    nodePlacementStrategy: NodePlacementStrategyType;
+    keywordColors: KeywordColor[];
 }
 
 export interface KeywordColor {
@@ -108,8 +114,9 @@ export interface KeywordColor {
     color: string;
 }
 
+export type ShowHeadType = 'show' | 'showCopyable';
 export type ShowDescriptionType = 'show' | 'showFallbackValue' | 'showValue' | 'none';
-export type NodePlacementStrategyType = 'LINEAR_SEGMENTS' | 'SIMPLE' | 'BRANDES_KOEPF';
+export type NodePlacementStrategyType = 'SIMPLE' | 'LINEAR_SEGMENTS' | 'BRANDES_KOEPF';
 
 
 export enum FieldsShowType {

@@ -81,7 +81,7 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
     let options = {
         'elk.layered.spacing.nodeNodeBetweenLayers': '80',
         'elk.spacing.nodeNode': '60',
-        'elk.layered.nodePlacement.strategy': graph.nodePlacementStrategy ?? 'LINEAR_SEGMENTS',
+        'elk.layered.nodePlacement.strategy': graph.nodeShow?.nodePlacementStrategy ?? 'LINEAR_SEGMENTS',
         'elk.layered.considerModelOrder.strategy': 'NODES_AND_EDGES',
         'elk.layered.crossingMinimization.forceNodeModelOrder': 'true',
     };
@@ -98,7 +98,7 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
     }
 
     for (let entity of graph.entityMap.values()) {
-        const node = new EntityNode(entity, graph.keywordColors);
+        const node = new EntityNode(entity, graph.nodeShow);
 
         id2node.set(entity.id, node);
 
@@ -116,7 +116,7 @@ export async function createEditor(container: HTMLElement, graph: EntityGraph) {
 
         }
 
-        const fieldsControl = new EntityControl(entity, changeHeightCallback, graph.query, graph.showDescription);
+        const fieldsControl = new EntityControl(entity, changeHeightCallback, graph.query, graph.nodeShow?.showDescription);
         node.addControl("value", fieldsControl);
 
         for (let inputSocket of entity.inputs) {

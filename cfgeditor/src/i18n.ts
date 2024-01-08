@@ -37,7 +37,7 @@ i18n.use(LanguageDetector)
                     toPng: 'save relation png',
 
                     addKeywordColor: 'add keyword color',
-                    setKeywordColors: 'set keyword colors',
+                    setNodeShow: 'set node show',
 
                     search: 'search',
                     edit: 'edit',
@@ -74,14 +74,9 @@ i18n.use(LanguageDetector)
                     recordRefIn: '数据入层',
                     recordRefOutDepth: '数据出层',
                     recordMaxNode: '数据节点数',
-                    containEnum: '包含枚举',
-                    showDescription: '描述',
-                    show: '显示',
-                    showFallbackValue: '无则显示值',
-                    showValue: '全值',
-                    nodePlacementStrategy: '节点布局',
-                    LINEAR_SEGMENTS: '中间起伏',
+
                     SIMPLE: '中间',
+                    LINEAR_SEGMENTS: '中间起伏',
                     BRANDES_KOEPF: '往右上走',
 
                     searchMaxReturn: '搜索返回数',
@@ -93,9 +88,18 @@ i18n.use(LanguageDetector)
                     toPng: '保存图片',
 
                     deleteCurRecord: '删除当前数据',
-                    keywordColorSetting: '关键词颜色',
+
+                    nodeShowSetting: '节点显示设置',
+                    showHead: '节点标头',
+                    showCopyable: '显示并可复制',
+                    containEnum: '包含枚举',
+                    showDescription: '描述',
+                    show: '显示',
+                    showFallbackValue: '无则显示值',
+                    showValue: '全值',
+                    nodePlacementStrategy: '节点布局',
                     addKeywordColor: '增加关键词颜色',
-                    setKeywordColors: '设置关键词颜色',
+                    setNodeShow: '提交',
 
                     search: '搜索',
                     edit: '编辑',

@@ -7,16 +7,12 @@ import {useRef} from "react";
 import {useTranslation} from "react-i18next";
 import {DefaultOptionType} from "antd/es/select";
 
-const formItemLayout = {
-    labelCol: {
-        xs: {span: 24},
-        sm: {span: 6},
-    },
-    wrapperCol: {
-        xs: {span: 24},
-        sm: {span: 18},
-    },
+const formLayout = {
+    labelCol: {xs: {span: 24}, sm: {span: 6},},
+    wrapperCol: {xs: {span: 24}, sm: {span: 18},},
 };
+
+const formItemLayout = formLayout;
 
 const formItemLayoutWithOutLabel = {
     wrapperCol: {
@@ -193,7 +189,7 @@ export function EntityForm({fields, onUpdateValues}: {
         onUpdateValues(allFields);
     }
 
-    let form = <Form labelCol={{span: 6}} wrapperCol={{span: 18}}
+    let form = <Form {...formLayout}
                      onValuesChange={onValuesChange}
                      style={{maxWidth: 600, backgroundColor: "white", borderRadius: 15, padding: 10}}>
         {FieldsFormItem(fields)}

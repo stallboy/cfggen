@@ -1,10 +1,10 @@
 import {Button, Divider, Form, Input, InputNumber, Select, Switch, Tabs} from "antd";
 import {CloseOutlined, LeftOutlined, RightOutlined, SearchOutlined} from "@ant-design/icons";
-import {KeywordColorSetting} from "./KeywordColorSetting.tsx";
+import {NodeShowSetting} from "./NodeShowSetting.tsx";
 import {useTranslation} from "react-i18next";
-import {KeywordColor, NodePlacementStrategyType, ShowDescriptionType} from "./model/entityModel.ts";
 import {DraggablePanelType, FixedPage, pageRecordRef} from "./CfgEditorApp.tsx";
 import {Schema, STable} from "./model/schemaModel.ts";
+import {NodeShowType} from "./model/entityModel.ts";
 
 
 export function Setting({
@@ -20,10 +20,7 @@ export function Setting({
                             imageSizeScale, setImageSizeScale, onToPng,
                             setFix,
                             dragPanel, setDragPanel,
-                            keywordColors, setKeywordColors,
-                            showDescription, setShowDescription,
-                            nodePlacementStrategy, setNodePlacementStrategy,
-                            containEnum, setContainEnum,
+                            nodeShow, setNodeShow,
 
                         }: {
     schema: Schema | null;
@@ -59,14 +56,8 @@ export function Setting({
     setFix: (v: FixedPage | null) => void;
     dragPanel: DraggablePanelType;
     setDragPanel: (v: DraggablePanelType) => void;
-    keywordColors: KeywordColor[],
-    setKeywordColors: (v: KeywordColor[]) => void;
-    showDescription: ShowDescriptionType;
-    setShowDescription: (t: ShowDescriptionType) => void;
-    nodePlacementStrategy: NodePlacementStrategyType;
-    setNodePlacementStrategy: (t: NodePlacementStrategyType) => void;
-    containEnum: boolean;
-    setContainEnum: (t: boolean) => void;
+    nodeShow: NodeShowType,
+    setNodeShow: (nodeShow: NodeShowType) => void;
 }) {
 
     const {t} = useTranslation();
@@ -116,21 +107,6 @@ export function Setting({
         }
     }
 
-    function onChangeContainEnum(checked: boolean) {
-        setContainEnum(checked);
-        localStorage.setItem('containEnum', checked ? 'true' : 'false');
-    }
-
-    function onChangeShowDescription(value: string) {
-        setShowDescription(value as ShowDescriptionType);
-        localStorage.setItem('showDescription', value);
-    }
-
-    function onChangeNodePlacementStrategy(value: string) {
-        setNodePlacementStrategy(value as NodePlacementStrategyType);
-        localStorage.setItem('nodePlacementStrategy', value);
-    }
-
     function onChangeSearchMax(value: number | null) {
         if (value) {
             setSearchMax(value);
@@ -149,13 +125,6 @@ export function Setting({
         setDragPanel(value as DraggablePanelType);
         localStorage.setItem('dragPanel', value);
     }
-
-
-    function onChangeKeywordColors(colors: KeywordColor[]) {
-        setKeywordColors(colors);
-        localStorage.setItem('keywordColors', JSON.stringify(colors));
-    }
-
 
     let deleteRecordButton;
     if (schema && curTable && schema.isEditable && curTable.isEditable) {
@@ -229,26 +198,15 @@ export function Setting({
                 <InputNumber id='recordMaxNode' value={recordMaxNode} min={1} max={500}
                              onChange={onChangeRecordMaxNode}/>
             </Form.Item>
+        </Form>
+        <Divider/>
+        <NodeShowSetting {...{nodeShow, setNodeShow}}/>
+    </>;
 
-            <Form.Item label={t('containEnum')}>
-                <Switch id='containEnum' checked={containEnum} onChange={onChangeContainEnum}/>
-            </Form.Item>
-
-
-            <Form.Item label={t('showDescription')}>
-                <Select id='showDescription' value={showDescription} onChange={onChangeShowDescription} options={[
-                    {label: t('show'), value: 'show'},
-                    {label: t('showFallbackValue'), value: 'showFallbackValue'},
-                    {label: t('showValue'), value: 'showValue'},
-                    {label: t('none'), value: 'none'}]}/>
-            </Form.Item>
-
-            <Form.Item label={t('nodePlacementStrategy')}>
-                <Select id='nodePlacementStrategy' value={nodePlacementStrategy}
-                        onChange={onChangeNodePlacementStrategy} options={[
-                    {label: t('LINEAR_SEGMENTS'), value: 'LINEAR_SEGMENTS'},
-                    {label: t('SIMPLE'), value: 'SIMPLE'},
-                    {label: t('BRANDES_KOEPF'), value: 'BRANDES_KOEPF'}]}/>
+    let otherSetting =
+        <Form labelCol={{span: 10}} wrapperCol={{span: 14}} layout={'horizontal'}>
+            <Form.Item label={t('searchMaxReturn')}>
+                <InputNumber id='searchMaxReturn' value={searchMax} min={1} max={500} onChange={onChangeSearchMax}/>
             </Form.Item>
 
             <Form.Item label={t('imageSizeScale')}>
@@ -261,16 +219,6 @@ export function Setting({
                     {t('toPng')}
                 </Button>
             </Form.Item>
-        </Form>
-        <Divider/>
-        <KeywordColorSetting keywordColors={keywordColors} setKeywordColors={onChangeKeywordColors}/>
-    </>;
-
-    let otherSetting =
-        <Form labelCol={{span: 10}} wrapperCol={{span: 14}} layout={'horizontal'}>
-            <Form.Item label={t('searchMaxReturn')}>
-                <InputNumber id='searchMaxReturn' value={searchMax} min={1} max={500} onChange={onChangeSearchMax}/>
-            </Form.Item>
 
             <Form.Item label={t('dragPanel')}>
                 <Select id='dragPanel' value={dragPanel} onChange={onChangeDragePanel} options={[
@@ -281,6 +229,7 @@ export function Setting({
 
             {addFixButton}
             {removeFixButton}
+
 
             <Form.Item label={t('curServer')}>
                 {server}

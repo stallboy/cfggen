@@ -122,7 +122,7 @@ table levelup[id] (client) {
 
 策划规划拆表规则时，既可以按照比如物品类型来拆表，所有装备放到item_1，宝石放到item_2里；也可以按照id分段来拆。
 
-## 表列数太多怎么办？ {id="column_reduce"}
+## 表列数太多怎么办？
 
 ### 对简单的结构，配置sep
 
@@ -185,7 +185,7 @@ table jewelrysuit[SuitID] (entry='Ename') {
     SuitList:list<int> (block=4);
 }
 ```
-### 对结构列表，配置block {id="column_reduce_struct_list"}
+### 对结构列表，配置block
 
 比如20个复合结构，每个复合结构需要4列，那就需要20*4=80列，这应该是导致列数失控的罪魁祸首。大致有3种解法，先推荐最直接的，用block=1
 

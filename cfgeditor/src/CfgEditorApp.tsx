@@ -12,14 +12,14 @@ import {TableRecord} from "./TableRecord.tsx";
 import {TableRecordRef} from "./TableRecordRef.tsx";
 import {SearchValue} from "./SearchValue.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
-import {getInt, getBool, getStr, getJson} from "./func/localStore.ts";
+import {getBool, getInt, getJson, getStr} from "./func/localStore.ts";
 import {RecordEditResult} from "./model/recordModel.ts";
 import {useTranslation} from "react-i18next";
 import {getId} from "./func/recordRefEntity.ts";
 import {DraggablePanel} from "@ant-design/pro-editor";
-import {KeywordColor, NodePlacementStrategyType, ShowDescriptionType} from "./model/entityModel.ts";
 import {toBlob} from "html-to-image";
 import {Setting} from "./Setting.tsx";
+import {NodeShowType} from "./model/entityModel.ts";
 
 const {Text} = Typography;
 
@@ -41,6 +41,14 @@ export class FixedPage {
     }
 }
 
+const defaultNodeShow:NodeShowType = {
+    showHead: 'show',
+    showDescription: 'show',
+    containEnum: true,
+    keywordColors: [],
+    nodePlacementStrategy: 'SIMPLE',
+}
+
 export function CfgEditorApp() {
     const [server, setServer] = useState<string>(getStr('server', 'localhost:3456'));
     const [schema, setSchema] = useState<Schema | null>(null);
@@ -50,7 +58,7 @@ export function CfgEditorApp() {
     const [editMode, setEditMode] = useState<boolean>(false);
 
     const [dragPanel, setDragPanel] = useState<DraggablePanelType>(getStr('dragPanel', 'none') as DraggablePanelType);
-    const [fix, setFix] = useState<FixedPage | null>(getJson('fix'));
+    const [fix, setFix] = useState<FixedPage | null>(getJson('fix', null));
 
     const [maxImpl, setMaxImpl] = useState<number>(getInt('maxImpl', 10));
     const [refIn, setRefIn] = useState<boolean>(getBool('refIn', true));
@@ -61,12 +69,7 @@ export function CfgEditorApp() {
     const [recordMaxNode, setRecordMaxNode] = useState<number>(getInt('recordMaxNode', 30));
     const [searchMax, setSearchMax] = useState<number>(getInt('searchMax', 50));
     const [imageSizeScale, setImageSizeScale] = useState<number>(getInt('imageSizeScale', 16));
-    const [keywordColors, setKeywordColors] = useState<KeywordColor[]>(getJson('keywordColors'));
-    const [showDescription, setShowDescription] = useState<ShowDescriptionType>(
-        getStr('showDescription', 'showFallbackValue') as ShowDescriptionType);
-    const [nodePlacementStrategy, setNodePlacementStrategy] = useState<NodePlacementStrategyType>(
-        getStr('nodePlacementStrategy', 'LINEAR_SEGMENTS') as NodePlacementStrategyType);
-    const [containEnum, setContainEnum] = useState<boolean>(getBool('containEnum', true));
+    const [nodeShow, setNodeShow] = useState<NodeShowType>(getJson('nodeShow', defaultNodeShow));
 
     const [history, setHistory] = useState<History>(new History());
     const [settingOpen, setSettingOpen] = useState<boolean>(false);
@@ -256,7 +259,7 @@ export function CfgEditorApp() {
                          maxImpl={maxImpl}
                          setCurTable={selectCurTable}
                          setCurPage={selectCurPage}
-                         nodePlacementStrategy={nodePlacementStrategy}/>
+                         nodeShow={nodeShow}/>
         </div>;
 
         tableRef = <div ref={ref} style={{background: '#fff'}}>
@@ -267,7 +270,7 @@ export function CfgEditorApp() {
                       refOutDepth={refOutDepth}
                       maxNode={maxNode}
                       setCurPage={selectCurPage}
-                      nodePlacementStrategy={nodePlacementStrategy}/>
+                      nodeShow={nodeShow}/>
         </div>;
 
         if (curId != null) {
@@ -281,8 +284,7 @@ export function CfgEditorApp() {
                              setCurPage={selectCurPage}
                              editMode={editMode}
                              setEditMode={setEditMode}
-                             showDescription={showDescription}
-                             nodePlacementStrategy={nodePlacementStrategy}/>
+                             nodeShow={nodeShow}/>
             </div>;
 
             tableRecordRef = <div ref={ref} style={{background: '#fff'}}>
@@ -298,10 +300,7 @@ export function CfgEditorApp() {
                                 setCurPage={selectCurPage}
                                 setEditMode={setEditMode}
                                 query={query}
-                                keywordColors={keywordColors}
-                                showDescription={showDescription}
-                                nodePlacementStrategy={nodePlacementStrategy}
-                                containEnum={containEnum}/>;
+                                nodeShow={nodeShow}/>;
             </div>;
         }
     }
@@ -331,10 +330,7 @@ export function CfgEditorApp() {
                                                   setCurPage={selectCurPage}
                                                   setEditMode={setEditMode}
                                                   query={query}
-                                                  keywordColors={keywordColors}
-                                                  showDescription={showDescription}
-                                                  nodePlacementStrategy={nodePlacementStrategy}
-                                                  containEnum={containEnum}/>;
+                                                  nodeShow={nodeShow}/>;
             if (dragPanel != pageFixed) {
                 items.push({
                     key: pageFixed,
@@ -487,10 +483,7 @@ export function CfgEditorApp() {
                 imageSizeScale, setImageSizeScale, onToPng,
                 setFix,
                 dragPanel, setDragPanel,
-                keywordColors, setKeywordColors,
-                showDescription, setShowDescription,
-                nodePlacementStrategy, setNodePlacementStrategy,
-                containEnum, setContainEnum,
+                nodeShow, setNodeShow,
             }}/>
         </Drawer>
 
