@@ -18,9 +18,9 @@ public class CfgWriter {
         return stringify(cfg, false, false);
     }
 
-    public static String stringify(CfgSchema cfg, boolean useLastName, boolean useMetaStartWith__) {
+    public static String stringify(CfgSchema cfg, boolean useLastName, boolean useMetaStartWith_) {
         StringBuilder sb = new StringBuilder(4 * 1024);
-        CfgWriter cfgWriter = new CfgWriter(sb, useLastName, useMetaStartWith__);
+        CfgWriter cfgWriter = new CfgWriter(sb, useLastName, useMetaStartWith_);
         cfgWriter.writeCfg(cfg);
         return sb.toString();
     }

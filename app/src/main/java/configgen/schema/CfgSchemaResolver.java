@@ -35,6 +35,7 @@ public final class CfgSchemaResolver {
         step3_resolveAllForeignKeys();
         step4_checkAllChainedSepFmt();
         step5_checkUnusedFieldable();
+        Spans.preCalculateAllNeededSpans(cfgSchema);
         if (errs.errs().isEmpty()) {
             cfgSchema.setResolved();
         }
@@ -693,4 +694,7 @@ public final class CfgSchemaResolver {
             }
         }
     }
+
+
+
 }
