@@ -1,4 +1,4 @@
-import {Button, Divider, Form, Input, InputNumber, Select, Switch, Tabs} from "antd";
+import {Button, Descriptions, Divider, Form, Input, InputNumber, Select, Switch, Tabs} from "antd";
 import {CloseOutlined, LeftOutlined, RightOutlined, SearchOutlined} from "@ant-design/icons";
 import {NodeShowSetting} from "./NodeShowSetting.tsx";
 import {useTranslation} from "react-i18next";
@@ -165,38 +165,38 @@ export function Setting({
     }
 
     let tableSetting =
-        <Form labelCol={{span: 10}} wrapperCol={{span: 14}} layout={'horizontal'}>
-            <Form.Item label={t('implsShowCnt')} htmlFor='implsShowCount'>
-                <InputNumber id='implsShowCount' value={maxImpl} min={1} max={500} onChange={onChangeMaxImpl}/>
+        <Form labelCol={{span: 10}} wrapperCol={{span: 14}} layout={'horizontal'}
+              initialValues={{maxImpl, refIn, refOutDepth, maxNode}}>
+            <Form.Item label={t('implsShowCnt')} name='maxImpl'>
+                <InputNumber min={1} max={500} onChange={onChangeMaxImpl}/>
             </Form.Item>
 
-            <Form.Item label={t('refIn')}>
-                <Switch id='refIn' checked={refIn} onChange={onChangeRefIn}/>
+            <Form.Item name='refIn' label={t('refIn')} valuePropName="checked">
+                <Switch onChange={onChangeRefIn}/>
             </Form.Item>
 
-            <Form.Item label={t('refOutDepth')}>
-                <InputNumber id='refOutDepth' value={refOutDepth} min={1} max={500} onChange={onChangeRefOutDepth}/>
+            <Form.Item name='refOutDepth' label={t('refOutDepth')}>
+                <InputNumber min={1} max={500} onChange={onChangeRefOutDepth}/>
             </Form.Item>
 
-            <Form.Item label={t('maxNode')}>
-                <InputNumber id='maxNode' value={maxNode} min={1} max={500} onChange={onChangeMaxNode}/>
+            <Form.Item name='maxNode' label={t('maxNode')}>
+                <InputNumber min={1} max={500} onChange={onChangeMaxNode}/>
             </Form.Item>
         </Form>;
 
     let recordSetting = <>
-        <Form labelCol={{span: 10}} wrapperCol={{span: 14}} layout={'horizontal'}>
-            <Form.Item label={t('recordRefIn')}>
-                <Switch id='recordRefIn' checked={recordRefIn} onChange={onChangeRecordRefIn}/>
+        <Form labelCol={{span: 10}} wrapperCol={{span: 14}} layout={'horizontal'}
+              initialValues={{recordRefIn, recordRefOutDepth, recordMaxNode}}>
+            <Form.Item name='recordRefIn' label={t('recordRefIn')} valuePropName="checked">
+                <Switch onChange={onChangeRecordRefIn}/>
             </Form.Item>
 
-            <Form.Item label={t('recordRefOutDepth')}>
-                <InputNumber id='recordRefOutDepth' value={recordRefOutDepth} min={1} max={500}
-                             onChange={onChangeRecordRefOutDepth}/>
+            <Form.Item name='recordRefOutDepth' label={t('recordRefOutDepth')}>
+                <InputNumber min={1} max={500} onChange={onChangeRecordRefOutDepth}/>
             </Form.Item>
 
-            <Form.Item label={t('recordMaxNode')}>
-                <InputNumber id='recordMaxNode' value={recordMaxNode} min={1} max={500}
-                             onChange={onChangeRecordMaxNode}/>
+            <Form.Item name='recordMaxNode' label={t('recordMaxNode')}>
+                <InputNumber min={1} max={500} onChange={onChangeRecordMaxNode}/>
             </Form.Item>
         </Form>
         <Divider/>
@@ -204,14 +204,14 @@ export function Setting({
     </>;
 
     let otherSetting =
-        <Form labelCol={{span: 10}} wrapperCol={{span: 14}} layout={'horizontal'}>
-            <Form.Item label={t('searchMaxReturn')}>
-                <InputNumber id='searchMaxReturn' value={searchMax} min={1} max={500} onChange={onChangeSearchMax}/>
+        <Form labelCol={{span: 10}} wrapperCol={{span: 14}} layout={'horizontal'}
+              initialValues={{searchMax, imageSizeScale, dragPanel, server}}>
+            <Form.Item name='searchMax' label={t('searchMaxReturn')}>
+                <InputNumber min={1} max={500} onChange={onChangeSearchMax}/>
             </Form.Item>
 
-            <Form.Item label={t('imageSizeScale')}>
-                <InputNumber id='imageSizeScale' value={imageSizeScale} min={1} max={256}
-                             onChange={onChangeImageSizeScale}/>
+            <Form.Item name='imageSizeScale' label={t('imageSizeScale')}>
+                <InputNumber min={1} max={256} onChange={onChangeImageSizeScale}/>
             </Form.Item>
 
             <Form.Item wrapperCol={{offset: 10}}>
@@ -220,8 +220,8 @@ export function Setting({
                 </Button>
             </Form.Item>
 
-            <Form.Item label={t('dragPanel')}>
-                <Select id='dragPanel' value={dragPanel} onChange={onChangeDragePanel} options={[
+            <Form.Item name='dragePanel' label={t('dragPanel')}>
+                <Select onChange={onChangeDragePanel} options={[
                     {label: t('recordRef'), value: 'recordRef'},
                     {label: t('fix'), value: 'fix'},
                     {label: t('none'), value: 'none'}]}/>
@@ -234,38 +234,53 @@ export function Setting({
             <Form.Item label={t('curServer')}>
                 {server}
             </Form.Item>
-            <Form.Item label={t('newServer')}>
-                <Input.Search id='newServer' enterButton={t('connect')}
-                              onSearch={onConnectServer}/>
+            <Form.Item name='server' label={t('newServer')}>
+                <Input.Search enterButton={t('connect')} onSearch={onConnectServer}/>
             </Form.Item>
             {deleteRecordButton}
         </Form>;
 
 
     let keySetting =
-        <Form labelCol={{span: 10}} wrapperCol={{span: 14}} layout={'horizontal'}>
-            <Form.Item label={<LeftOutlined/>}>
-                alt+x
-            </Form.Item>
-            <Form.Item label={<RightOutlined/>}>
-                alt+c
-            </Form.Item>
-            <Form.Item label={t('table')}>
-                alt+1
-            </Form.Item>
-            <Form.Item label={t('tableRef')}>
-                alt+2
-            </Form.Item>
-            <Form.Item label={t('record')}>
-                alt+3
-            </Form.Item>
-            <Form.Item label={t('recordRef')}>
-                alt+4
-            </Form.Item>
-            <Form.Item label={<SearchOutlined/>}>
-                alt+q
-            </Form.Item>
-        </Form>;
+        <Descriptions title="Key Shortcut" column={1} items={[
+            {
+                key: '1',
+                label: <LeftOutlined/>,
+                children: 'alt+x',
+            },
+            {
+                key: '2',
+                label: <RightOutlined/>,
+                children: 'alt+c',
+            },
+            {
+                key: '3',
+                label: t('table'),
+                children: 'alt+1',
+            },
+            {
+                key: '4',
+                label: t('tableRef'),
+                children: 'alt+2',
+            },
+            {
+                key: '5',
+                label: t('record'),
+                children: 'alt+3',
+            },
+            {
+                key: '6',
+                label: t('recordRef'),
+                children: 'alt+4',
+            },
+
+            {
+                key: '7',
+                label: <SearchOutlined/>,
+                children: 'alt+q',
+            },
+        ]}/>;
+
 
     return <Tabs items={[
         {key: 'tableSetting', label: t('tableSetting'), children: tableSetting,},

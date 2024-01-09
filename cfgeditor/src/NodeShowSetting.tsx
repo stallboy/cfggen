@@ -48,13 +48,13 @@ export function NodeShowSetting({nodeShow, setNodeShow}: {
         <Form name="node show setting"  {...formLayout} initialValues={nodeShow} onFinish={onFinish} autoComplete="off">
 
             <Form.Item name='showHead' label={t('showHead')}>
-                <Select id='showHead' options={[
+                <Select options={[
                     {label: t('show'), value: 'show'},
                     {label: t('showCopyable'), value: 'showCopyable'},]}/>
             </Form.Item>
 
             <Form.Item name='showDescription' label={t('showDescription')}>
-                <Select id='showDescription' options={[
+                <Select options={[
                     {label: t('show'), value: 'show'},
                     {label: t('showFallbackValue'), value: 'showFallbackValue'},
                     {label: t('showValue'), value: 'showValue'},
@@ -62,11 +62,11 @@ export function NodeShowSetting({nodeShow, setNodeShow}: {
             </Form.Item>
 
             <Form.Item name='containEnum' label={t('containEnum')} valuePropName='checked'>
-                <Switch id='containEnum'/>
+                <Switch/>
             </Form.Item>
 
             <Form.Item name='nodePlacementStrategy' label={t('nodePlacementStrategy')}>
-                <Select id='nodePlacementStrategy' options={[
+                <Select options={[
                     {label: t('LINEAR_SEGMENTS'), value: 'LINEAR_SEGMENTS'},
                     {label: t('SIMPLE'), value: 'SIMPLE'},
                     {label: t('BRANDES_KOEPF'), value: 'BRANDES_KOEPF'}]}/>
@@ -75,16 +75,16 @@ export function NodeShowSetting({nodeShow, setNodeShow}: {
             <Form.List name="keywordColors">
                 {(fields, {add, remove}) => (
                     <>
-                        {fields.map(({key, name, ...restField}, index) => (
+                        {fields.map(({key, name}, index) => (
                             <Form.Item {...(index === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
                                        label={index === 0 ? t('keywordColors') : ''}
                                        key={key}>
                                 <Space>
-                                    <Form.Item {...restField} name={[name, 'keyword']} noStyle>
+                                    <Form.Item name={[name, 'keyword']} noStyle>
                                         <Input placeholder="keyword"/>
                                     </Form.Item>
-                                    <Form.Item {...restField} name={[name, 'color']} noStyle>
-                                        <ColorPicker defaultValue='#1677ff'/>
+                                    <Form.Item name={[name, 'color']} noStyle>
+                                        <ColorPicker/>
                                     </Form.Item>
                                     <MinusCircleOutlined className="dynamic-delete-button"
                                                          onClick={() => remove(name)}/>
