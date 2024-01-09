@@ -35,6 +35,12 @@ public sealed interface Nameable permits Fieldable, Structural, StructSchema, In
         return name();
     }
 
+    default String stringify() {
+        CfgSchema schema = CfgSchema.of();
+        schema.add(this);
+        return schema.stringify();
+    }
+
     static String makeName(String namespace, String lastName) {
         return namespace + "." + lastName;
     }

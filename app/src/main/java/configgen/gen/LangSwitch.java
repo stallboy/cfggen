@@ -51,7 +51,7 @@ public record LangSwitch(Map<String, TextI18n> lang2i18n,
         if (rows.isEmpty()) {
             throw new IllegalArgumentException("国际化i18n文件为空");
         }
-        CsvRow row0 = rows.get(0);
+        CsvRow row0 = rows.getFirst();
         if (row0.getFieldCount() != 3) {
             throw new IllegalArgumentException("国际化i18n文件列数不为3");
         }

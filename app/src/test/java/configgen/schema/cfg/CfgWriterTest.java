@@ -19,7 +19,7 @@ class CfgWriterTest {
 
     private void eqs(String source) {
         CfgSchema cfg = CfgReader.parse(source);
-        String dst = CfgWriter.stringify(cfg);
+        String dst = cfg.stringify();
         assertEquals(source.trim(), dst.replaceAll("\r\n", "\n").trim());
     }
 

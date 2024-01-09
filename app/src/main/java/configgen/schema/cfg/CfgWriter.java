@@ -12,23 +12,23 @@ import static configgen.schema.Metadata.*;
 public class CfgWriter {
     private final StringBuilder destination;
     private final boolean useLastName;
-    private final boolean useMetaStartWith_;
+    private final boolean includeMetaStartWith_;
 
     public static String stringify(CfgSchema cfg) {
         return stringify(cfg, false, false);
     }
 
-    public static String stringify(CfgSchema cfg, boolean useLastName, boolean useMetaStartWith_) {
+    public static String stringify(CfgSchema cfg, boolean useLastName, boolean includeMetaStartWith_) {
         StringBuilder sb = new StringBuilder(4 * 1024);
-        CfgWriter cfgWriter = new CfgWriter(sb, useLastName, useMetaStartWith_);
+        CfgWriter cfgWriter = new CfgWriter(sb, useLastName, includeMetaStartWith_);
         cfgWriter.writeCfg(cfg);
         return sb.toString();
     }
 
-    public CfgWriter(StringBuilder destination, boolean useLastName, boolean useMetaStartWith_) {
+    public CfgWriter(StringBuilder destination, boolean useLastName, boolean includeMetaStartWith_) {
         this.destination = destination;
         this.useLastName = useLastName;
-        this.useMetaStartWith_ = useMetaStartWith_;
+        this.includeMetaStartWith_ = includeMetaStartWith_;
     }
 
     public void writeCfg(CfgSchema cfg) {
@@ -182,7 +182,7 @@ public class CfgWriter {
         }
 
         Metadata m;
-        if (useMetaStartWith_) {
+        if (includeMetaStartWith_) {
             m = meta;
         } else {
             m = Metadata.of();
@@ -196,7 +196,10 @@ public class CfgWriter {
                 return "";
             }
         }
+        return noEmptyMetaStr(m);
+    }
 
+    private static String noEmptyMetaStr(Metadata m) {
         List<String> list = new ArrayList<>();
         for (Map.Entry<String, MetaValue> entry : m.data().entrySet()) {
             String k = entry.getKey();

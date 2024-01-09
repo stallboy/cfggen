@@ -23,12 +23,6 @@ public abstract class Generator {
     public abstract void generate(Context ctx) throws IOException;
 
 
-    protected void require(boolean cond, String... str) {
-        if (!cond)
-            throw new AssertionError(getClass().getSimpleName() + ": " + String.join(",", str));
-    }
-
-
     protected static CachedIndentPrinter createCode(File file, String encoding) {
         return new CachedIndentPrinter(file, encoding);
     }

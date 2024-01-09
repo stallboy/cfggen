@@ -6,7 +6,6 @@ import configgen.editorserver.SchemaService;
 import configgen.schema.CfgSchema;
 import configgen.schema.Nameable;
 import configgen.schema.TableSchema;
-import configgen.schema.cfg.CfgWriter;
 import configgen.util.UTF8Writer;
 import configgen.value.CfgValue;
 import configgen.value.ForeachPrimitiveValue;
@@ -128,9 +127,7 @@ public class ValueSearcher {
         for (Nameable nameable : cfgValue.schema().items()) {
             String name = nameable.name();
             if (name.contains(want)) {
-                CfgSchema schema = CfgSchema.of();
-                schema.add(nameable);
-                print(CfgWriter.stringify(schema));
+                print(nameable.stringify());
 
                 if (nameable instanceof TableSchema) {
                     VTable vTable = cfgValue.vTableMap().get(name);

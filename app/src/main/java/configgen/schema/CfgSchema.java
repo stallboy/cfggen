@@ -1,5 +1,7 @@
 package configgen.schema;
 
+import configgen.schema.cfg.CfgWriter;
+
 import java.util.*;
 
 /**
@@ -107,6 +109,10 @@ public class CfgSchema {
             }
             i++;
         }
+    }
+
+    public String stringify() {
+        return CfgWriter.stringify(this);
     }
 
     @Override

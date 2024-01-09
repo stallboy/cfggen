@@ -16,7 +16,6 @@ import java.util.Objects;
 
 
 public class Context {
-
     private final Path dataDir;
     private final CfgSchema cfgSchema;
     private final CfgData cfgData;
