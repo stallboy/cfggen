@@ -154,7 +154,7 @@ public class ValueParser {
                 isEmpty = true;
             } else {
                 try {
-                    parsed = DCells.parseNestList(cell);
+                    parsed = DCells.parsePack(cell);
                 } catch (Exception e) {
                     errs.addErr(new ValueErrs.ParsePackErr(cell, structural.name(), e.getMessage()));
                     return null;
@@ -330,7 +330,7 @@ public class ValueParser {
             require(cells.size() == 1);
             DCell cell = cells.getFirst();
             try {
-                parsed = DCells.parseNestList(cell);
+                parsed = DCells.parsePack(cell);
             } catch (Exception e) {
                 errs.addErr(new ValueErrs.ParsePackErr(cell, type.toString(), e.getMessage()));
                 return null;
@@ -407,7 +407,7 @@ public class ValueParser {
             require(cells.size() == 1);
             DCell cell = cells.getFirst();
             try {
-                parsed = DCells.parseNestList(cell);
+                parsed = DCells.parsePack(cell);
             } catch (Exception e) {
                 errs.addErr(new ValueErrs.ParsePackErr(cell, type.toString(), e.getMessage()));
                 return null;

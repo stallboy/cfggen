@@ -7,7 +7,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class NestListParserTest {
+public class PackParserTest {
 
     @Test
     public void parseNestList() {
@@ -48,7 +48,7 @@ public class NestListParserTest {
     }
 
     private void t1(String source, String... row) {
-        List<String> a = NestListParser.parseNestList(source);
+        List<String> a = PackParser.parsePack(source);
         assertEquals(row.length, a.size());
         int i = 0;
         for (String c : row) {
@@ -65,7 +65,7 @@ public class NestListParserTest {
     }
 
     private void t2(String source, String name, String parameters) {
-        List<String> a = NestListParser.parseFunction(source);
+        List<String> a = PackParser.parseFunction(source);
         assertEquals(2, a.size());
         assertEquals(name, a.get(0));
         assertEquals(parameters, a.get(1));

@@ -3,7 +3,7 @@ package configgen.util;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NestListParser {
+public class PackParser {
 
     private enum NestListState {
         START, NO_QUOTE, QUOTE, QUOTE2, IN_PARENTHESES, PARENTHESES_OK
@@ -23,7 +23,7 @@ public class NestListParser {
      * "a,(b,c)" 解析为两段                <1>a        <2>b,c
      * "a,(b,(c1,c2)),d(e,f)" 解析为三段： <1>a        <2>b,(c1,c2)        <3>d(e,f)
      */
-    public static List<String> parseNestList(String str) {
+    public static List<String> parsePack(String str) {
         NestListState state = NestListState.START;
         ArrayList<String> list = new ArrayList<>();
         StringBuilder field = new StringBuilder(128);
