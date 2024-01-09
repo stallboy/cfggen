@@ -436,9 +436,8 @@ export function CfgEditorApp() {
     if (dragPage) {
         content = <div style={{
             position: "absolute",
-            background: '#f1f1f1',
-            border: '2px solid #ddd',
-            width: '100%',
+            background: '#fff',
+            border: '1px solid #ddd', width: '100%',
             height: '100%',
             display: 'flex',
         }}>

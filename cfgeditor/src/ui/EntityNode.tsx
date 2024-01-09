@@ -2,8 +2,8 @@ import {ClassicPreset} from "rete";
 import {EntityControl} from "./EntityControl.tsx";
 import {Entity, EntityType, NodeShowType} from "../model/entityModel.ts";
 import {Presets, RenderEmit} from "rete-react-plugin";
-import {css} from "styled-components";
 import {Typography} from "antd";
+import {css} from "styled-components";
 
 const {NodeStyles, RefControl, RefSocket} = Presets.classic;
 
@@ -26,6 +26,7 @@ export class EntityNode extends ClassicPreset.Node<
         super(entity.label);
     }
 }
+
 
 export function EntityNodeComponent(props: { data: EntityNode, emit: RenderEmit<any> }) {
     let entity = props.data.entity;
@@ -58,7 +59,8 @@ export function EntityNodeComponent(props: { data: EntityNode, emit: RenderEmit<
         }
     }
 
-    return <MyNode styles={() => css`background: ${color as string}`} {...props}  />;
+    const styles = css<{}>`background: ${color as string}`;
+    return <MyNode styles={() => styles} {...props} />;
 }
 
 

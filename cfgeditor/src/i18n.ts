@@ -98,7 +98,8 @@ i18n.use(LanguageDetector)
                     showFallbackValue: '无则显示值',
                     showValue: '全值',
                     nodePlacementStrategy: '节点布局',
-                    addKeywordColor: '增加关键词颜色',
+                    keywordColors: '关键词颜色',
+                    addKeywordColor: '增加',
                     setNodeShow: '提交',
 
                     search: '搜索',
