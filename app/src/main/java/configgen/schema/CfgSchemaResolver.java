@@ -4,9 +4,7 @@ import configgen.schema.EntryType.EntryBase;
 
 import java.util.*;
 
-import static configgen.schema.FieldFormat.AutoOrPack;
 import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
-import static configgen.schema.FieldFormat.AutoOrPack.PACK;
 import static configgen.schema.FieldFormat.Sep;
 import static configgen.schema.FieldType.*;
 import static configgen.schema.FieldType.Primitive.*;
@@ -35,7 +33,7 @@ public final class CfgSchemaResolver {
         step3_resolveAllForeignKeys();
         step4_checkAllChainedSepFmt();
         step5_checkUnusedFieldable();
-        Spans.preCalculateAllNeededSpans(cfgSchema);
+        Spans.preCalculateAllNeededSpans(cfgSchema, errs);
         if (errs.errs().isEmpty()) {
             cfgSchema.setResolved();
         }
@@ -576,55 +574,9 @@ public final class CfgSchemaResolver {
                 }
             }
         }
-        resolve_structural(this::checkFieldFmts);
     }
 
-    private void checkFieldFmts(Structural structural) {
-        if (structural instanceof TableSchema tableSchema && tableSchema.meta().isJson()) {
-            return;
-        }
-        for (FieldSchema field : structural.fields()) {
-            checkFieldFmt(field);
-        }
-    }
 
-    private void checkFieldFmt(FieldSchema field) {
-        FieldType type = field.type();
-        FieldFormat fmt = field.fmt();
-        switch (type) {
-
-            case Primitive ignored -> {
-                if (fmt != AUTO) {
-                    errTypeFmtNotCompatible(field);
-                }
-            }
-            case StructRef ignored -> {
-                if (!(fmt instanceof AutoOrPack)) {
-                    errTypeFmtNotCompatible(field);
-                }
-            }
-            case FList flist -> {
-                if (fmt == AUTO) {
-                    errTypeFmtNotCompatible(field);
-                }
-                if (fmt instanceof Sep sep && flist.item() instanceof StructRef structRef) {
-                    if (structRef.obj().fmt() instanceof Sep sep2 && sep.sep() == sep2.sep() ||
-                            structRef.obj().fmt() == PACK && sep.sep() == ',') {
-                        errs.addErr(new ListStructSepEqual(ctx(), field.name()));
-                    }
-                }
-            }
-            case FMap ignored -> {
-                if (fmt == AUTO || fmt instanceof Sep) {
-                    errTypeFmtNotCompatible(field);
-                }
-            }
-        }
-    }
-
-    private void errTypeFmtNotCompatible(FieldSchema field) {
-        errs.addErr(new TypeFmtNotCompatible(ctx(), field.name(), field.type().toString(), field.fmt().toString()));
-    }
 
     private void step5_checkUnusedFieldable() {
         List<FieldSchema> needToCheck = new ArrayList<>();

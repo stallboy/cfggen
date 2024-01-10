@@ -2,14 +2,19 @@ package configgen.schema;
 
 import java.util.*;
 
+import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
 import static configgen.schema.FieldType.*;
 import static configgen.schema.Metadata.MetaInt;
 
 public class Spans {
 
-    public static void preCalculateAllNeededSpans(CfgSchema cfgSchema) {
+    public static void preCalculateAllNeededSpans(CfgSchema cfgSchema, SchemaErrs errs) {
         SequencedMap<String, Nameable> needSpans = collectNeededCalculateSpans(cfgSchema);
+
+        for (Nameable nameable : needSpans.reversed().values()) {
+            checkNameable(nameable, errs);
+        }
         for (Nameable nameable : needSpans.reversed().values()) {
             calcSpanCheckLoop(nameable, new LinkedHashSet<>());
             if (nameable instanceof Structural structural && nameable.fmt() instanceof FieldFormat.Sep){
@@ -20,6 +25,63 @@ public class Spans {
             }
         }
     }
+
+    private static void checkNameable(Nameable nameable, SchemaErrs errs) {
+        switch (nameable){
+            case InterfaceSchema interfaceSchema -> {
+                for (StructSchema impl : interfaceSchema.impls()) {
+                    for (FieldSchema field : impl.fields()) {
+                        checkFieldFmt(field, errs, impl.fullName());
+                    }
+                }
+            }
+
+            case Structural structural -> {
+                for (FieldSchema field : structural.fields()) {
+                    checkFieldFmt(field, errs, structural.fullName());
+                }
+            }
+        }
+    }
+
+    private static void checkFieldFmt(FieldSchema field, SchemaErrs errs, String ctx) {
+        FieldType type = field.type();
+        FieldFormat fmt = field.fmt();
+        switch (type) {
+
+            case Primitive ignored -> {
+                if (fmt != AUTO) {
+                    errTypeFmtNotCompatible(field, errs, ctx);
+                }
+            }
+            case StructRef ignored -> {
+                if (!(fmt instanceof FieldFormat.AutoOrPack)) {
+                    errTypeFmtNotCompatible(field, errs, ctx);
+                }
+            }
+            case FList flist -> {
+                if (fmt == AUTO) {
+                    errTypeFmtNotCompatible(field, errs, ctx);
+                }
+                if (fmt instanceof FieldFormat.Sep sep && flist.item() instanceof StructRef structRef) {
+                    if (structRef.obj().fmt() instanceof FieldFormat.Sep sep2 && sep.sep() == sep2.sep() ||
+                            structRef.obj().fmt() == PACK && sep.sep() == ',') {
+                        errs.addErr(new SchemaErrs.ListStructSepEqual(ctx, field.name()));
+                    }
+                }
+            }
+            case FMap ignored -> {
+                if (fmt == AUTO || fmt instanceof FieldFormat.Sep) {
+                    errTypeFmtNotCompatible(field, errs, ctx);
+                }
+            }
+        }
+    }
+
+    private static void errTypeFmtNotCompatible(FieldSchema field, SchemaErrs errs, String ctx) {
+        errs.addErr(new SchemaErrs.TypeFmtNotCompatible(ctx, field.name(), field.type().toString(), field.fmt().toString()));
+    }
+
 
     private static SequencedMap<String, Nameable> collectNeededCalculateSpans(CfgSchema cfgSchema) {
         SequencedMap<String, Nameable> collectedNeedSpans = new LinkedHashMap<>();
