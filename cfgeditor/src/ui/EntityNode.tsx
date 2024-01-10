@@ -33,7 +33,17 @@ export function EntityNodeComponent(props: { data: EntityNode, emit: RenderEmit<
 
     let color: string | null = null;
     let nodeShow = props.data.nodeShow;
-    if (entity.brief && nodeShow && nodeShow.keywordColors.length > 0) {
+
+    if (nodeShow && nodeShow.tableColors.length > 0) {
+        for (let tableColor of nodeShow.tableColors) {
+            if (entity.label.includes(tableColor.keyword)) {
+                color = tableColor.color;
+                break;
+            }
+        }
+    }
+
+    if (color == null && entity.brief && nodeShow && nodeShow.keywordColors.length > 0) {
         for (let keywordColor of nodeShow.keywordColors) {
             if (entity.brief.value.includes(keywordColor.keyword)) {
                 color = keywordColor.color;

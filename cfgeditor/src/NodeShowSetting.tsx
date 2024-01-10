@@ -1,8 +1,8 @@
 import {Button, Card, ColorPicker, Form, Input, Select, Space, Switch} from "antd";
-import {MinusCircleOutlined, PlusOutlined} from "@ant-design/icons";
+import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 
-import {NodeShowType} from "./model/entityModel.ts";
+import {KeywordColor, NodeShowType} from "./model/entityModel.ts";
 
 
 export function NodeShowSetting({nodeShow, setNodeShow}: {
@@ -12,23 +12,30 @@ export function NodeShowSetting({nodeShow, setNodeShow}: {
     const {t} = useTranslation();
 
     function onFinish(values: any) {
-        // console.log(values.keywordColors);
-        let colors = [];
-        for (let keywordColor of values.keywordColors) {
-            let color;
-            if (typeof keywordColor.color == 'object') {
-                color = keywordColor.color.toHexString();
-            } else if (typeof keywordColor.color == 'string') {
-                color = keywordColor.color;
-            } else {
-                color = '#1677ff';
-            }
-            colors.push({keyword: keywordColor.keyword, color})
-        }
-
-        const newNodeShow = {...values, keywordColors: colors};
+        // console.log(values);
+        const newNodeShow = {
+            ...values,
+            keywordColors: fixColors(values.keywordColors),
+            tableColors: fixColors(values.tableColors)
+        };
         setNodeShow(newNodeShow);
         localStorage.setItem('nodeShow', JSON.stringify(newNodeShow));
+    }
+
+    function fixColors(keywordColors: any[]): KeywordColor[] {
+        let colors = [];
+        for (let {keyword, color} of keywordColors) {
+            let c;
+            if (typeof color == 'object') {
+                c = color.toHexString();
+            } else if (typeof color == 'string') {
+                c = color;
+            } else {
+                c = '#1677ff';
+            }
+            colors.push({keyword: keyword, color: c})
+        }
+        return colors;
     }
 
     const formLayout = {
@@ -36,14 +43,6 @@ export function NodeShowSetting({nodeShow, setNodeShow}: {
         wrapperCol: {xs: {span: 24}, sm: {span: 18},},
     };
 
-    const formItemLayout = formLayout;
-
-    const formItemLayoutWithOutLabel = {
-        wrapperCol: {
-            xs: {span: 24, offset: 0},
-            sm: {span: 18, offset: 6},
-        },
-    };
     return <Card title={t("nodeShowSetting")}>
         <Form name="node show setting"  {...formLayout} initialValues={nodeShow} onFinish={onFinish} autoComplete="off">
 
@@ -72,36 +71,53 @@ export function NodeShowSetting({nodeShow, setNodeShow}: {
                     {label: t('BRANDES_KOEPF'), value: 'BRANDES_KOEPF'}]}/>
             </Form.Item>
 
-            <Form.List name="keywordColors">
-                {(fields, {add, remove}) => (
-                    <>
-                        {fields.map(({key, name}, index) => (
-                            <Form.Item {...(index === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
-                                       label={index === 0 ? t('keywordColors') : ''}
-                                       key={key}>
-                                <Space>
+            <Form.Item label={t('keywordColors')}>
+                <Form.List name="keywordColors">
+                    {(fields, {add, remove}) => (
+                        <div style={{display: 'flex', flexDirection: 'column', rowGap: 16}}>
+                            {fields.map(({key, name}) => (
+                                <Space key={key}>
                                     <Form.Item name={[name, 'keyword']} noStyle>
                                         <Input placeholder="keyword"/>
                                     </Form.Item>
                                     <Form.Item name={[name, 'color']} noStyle>
                                         <ColorPicker/>
                                     </Form.Item>
-                                    <MinusCircleOutlined className="dynamic-delete-button"
-                                                         onClick={() => remove(name)}/>
+                                    <CloseOutlined onClick={() => remove(name)}/>
                                 </Space>
-                            </Form.Item>
-                        ))}
-                        <Form.Item {...(fields.length === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
-                                   label={fields.length === 0 ? t('keywordColors') : ''}>
-                            <Space>
-                                <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined/>}>
-                                    {t('addKeywordColor')}
-                                </Button>
-                            </Space>
-                        </Form.Item>
-                    </>
-                )}
-            </Form.List>
+                            ))}
+
+                            <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined/>}>
+                                {t('addKeywordColor')}
+                            </Button>
+                        </div>
+                    )}
+                </Form.List>
+            </Form.Item>
+
+            <Form.Item label={t('tableColors')}>
+                <Form.List name="tableColors">
+                    {(fields, {add, remove}) => (
+                        <div style={{display: 'flex', flexDirection: 'column', rowGap: 16}}>
+                            {fields.map(({key, name}) => (
+                                <Space key={key}>
+                                    <Form.Item name={[name, 'keyword']} noStyle>
+                                        <Input placeholder="table"/>
+                                    </Form.Item>
+                                    <Form.Item name={[name, 'color']} noStyle>
+                                        <ColorPicker/>
+                                    </Form.Item>
+                                    <CloseOutlined onClick={() => remove(name)}/>
+                                </Space>
+                            ))}
+
+                            <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined/>}>
+                                {t('addTableColor')}
+                            </Button>
+                        </div>
+                    )}
+                </Form.List>
+            </Form.Item>
 
             <Form.Item>
                 <Button type="primary" htmlType="submit">

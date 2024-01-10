@@ -100,6 +100,8 @@ i18n.use(LanguageDetector)
                     nodePlacementStrategy: '节点布局',
                     keywordColors: '关键词颜色',
                     addKeywordColor: '增加',
+                    tableColors: '表颜色',
+                    addTableColor: '增加',
                     setNodeShow: '提交',
 
                     search: '搜索',

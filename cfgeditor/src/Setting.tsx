@@ -283,8 +283,8 @@ export function Setting({
 
 
     return <Tabs items={[
-        {key: 'tableSetting', label: t('tableSetting'), children: tableSetting,},
         {key: 'recordSetting', label: t('recordSetting'), children: recordSetting,},
+        {key: 'tableSetting', label: t('tableSetting'), children: tableSetting,},
         {key: 'otherSetting', label: t('otherSetting'), children: otherSetting,},
         {key: 'keySetting', label: t('keySetting'), children: keySetting,},
     ]} tabPosition='left'/>;

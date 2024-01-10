@@ -41,12 +41,13 @@ export class FixedPage {
     }
 }
 
-const defaultNodeShow:NodeShowType = {
+const defaultNodeShow: NodeShowType = {
     showHead: 'show',
     showDescription: 'show',
     containEnum: true,
-    keywordColors: [],
     nodePlacementStrategy: 'SIMPLE',
+    keywordColors: [],
+    tableColors: [],
 }
 
 export function CfgEditorApp() {
@@ -406,9 +407,9 @@ export function CfgEditorApp() {
             .then((blob) => {
                 if (blob) {
                     let fn;
-                    if (curPage.startsWith("table")){
+                    if (curPage.startsWith("table")) {
                         fn = `${curPage}_${curTableId}.png`;
-                    }else{
+                    } else {
                         fn = `${curPage}_${curTableId}_${curId}.png`;
                     }
                     saveAs(blob, fn);

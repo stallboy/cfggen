@@ -107,6 +107,8 @@ export interface NodeShowType {
     containEnum: boolean;
     nodePlacementStrategy: NodePlacementStrategyType;
     keywordColors: KeywordColor[];
+    tableColors: KeywordColor[];
+
 }
 
 export interface KeywordColor {
