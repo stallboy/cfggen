@@ -1,1 +1,1 @@
-pnpm tauri build
+pnpm tauri build -b none
