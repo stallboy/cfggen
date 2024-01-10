@@ -1,4 +1,5 @@
 import {Item} from "rete-context-menu-plugin/_types/types";
+import {BriefDescription} from "./recordModel.ts";
 
 export interface EntityField {
     name: string;
@@ -66,7 +67,7 @@ export interface EntitySocketOutput {
 export interface EntityBrief {
     img?: string;
     title?: string;
-    description?: string;
+    descriptions?: BriefDescription[];
     value: string;
 }
 

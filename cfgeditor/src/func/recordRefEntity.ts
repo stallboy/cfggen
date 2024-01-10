@@ -108,7 +108,7 @@ export function createRefEntities(entityMap: Map<string, Entity>, schema: Schema
             brief: {
                 img: img,
                 title: briefRecord.title,
-                description: briefRecord.description,
+                descriptions: briefRecord.descriptions,
                 value: briefRecord.value
             },
 

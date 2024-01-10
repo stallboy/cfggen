@@ -242,7 +242,7 @@ export function Setting({
 
 
     let keySetting =
-        <Descriptions title="Key Shortcut" column={1} items={[
+        <Descriptions title="Key Shortcut" bordered column={2} items={[
             {
                 key: '1',
                 label: <LeftOutlined/>,

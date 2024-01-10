@@ -3,16 +3,14 @@ package configgen.editorserver;
 import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.fastjson2.annotation.JSONField;
 import configgen.schema.EntryType;
+import configgen.schema.FieldSchema;
 import configgen.schema.TableSchema;
 import configgen.schema.TableSchemaRefGraph;
 import configgen.value.*;
 import configgen.value.CfgValue.VStruct;
 import configgen.value.ValueRefCollector.RefId;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static configgen.editorserver.RecordService.ResultCode.*;
 import static configgen.value.CfgValue.VTable;
@@ -53,13 +51,20 @@ public class RecordService {
         paramErr,
     }
 
+    public record BriefDescription(
+            String field,
+            String value,
+            String comment) {
+    }
+
+
     public record BriefRecord(
             String table,
             String id,
 
             String img,
             String title,
-            String description,
+            List<BriefDescription> descriptions,
             String value,  // 完整信息
             // refName -> [refId]
             @JSONField(name = "$refs")
@@ -217,9 +222,9 @@ public class RecordService {
     private static BriefRecord vStructToBriefRecord(RefId refId, VStruct vStruct, Map<String, List<RefId>> refs, int depth) {
         String img = getBriefValue(vStruct, "img");
         String title = getBriefTitle(vStruct);
-        String description = getBriefValue(vStruct, "description");
+        List<BriefDescription> descriptions = getBriefDescriptions(vStruct);
         String value = vStruct.packStr();
-        return new BriefRecord(refId.table(), refId.id(), img, title, description, value, refs, depth);
+        return new BriefRecord(refId.table(), refId.id(), img, title, descriptions, value, refs, depth);
     }
 
     private static String getBriefValue(VStruct vStruct, String briefKey) {
@@ -235,8 +240,9 @@ public class RecordService {
 
         if (fv instanceof CfgValue.StringValue stringValue) {
             return stringValue.value();
+        } else {
+            return fv.packStr();
         }
-        return null;
     }
 
     public static String getBriefTitle(VStruct vStruct) {
@@ -260,5 +266,37 @@ public class RecordService {
         } else {
             return title;
         }
+    }
+
+    public static List<BriefDescription> getBriefDescriptions(VStruct vStruct) {
+        String fields = vStruct.schema().meta().getStr("description", null);
+        if (fields == null) {
+            return null;
+        }
+
+        List<BriefDescription> descriptions = new ArrayList<>();
+        for (String f : fields.split(",")) {
+            String fieldName = f.trim();
+            Value fv = ValueUtil.extractFieldValue(vStruct, fieldName);
+            if (fv == null) {
+                continue;
+            }
+
+            FieldSchema fs = vStruct.schema().findField(fieldName);
+            if (fs == null) {
+                continue;
+            }
+
+            String value;
+            if (fv instanceof CfgValue.StringValue stringValue) {
+                value = stringValue.value();
+            } else {
+                value = fv.packStr();
+            }
+
+            descriptions.add(new BriefDescription(fieldName, value, fs.comment()));
+        }
+
+        return descriptions;
     }
 }

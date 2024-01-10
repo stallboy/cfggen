@@ -17,13 +17,19 @@ export interface Refs {
     "$refs"?: RefIdMap;
 }
 
+export interface BriefDescription {
+    field: string;
+    value: string;
+    comment: string;
+}
+
 export interface BriefRecord extends Refs {
     table: string;
     id: string;
 
     img?: string;
     title?: string;
-    description?: string;
+    descriptions?: BriefDescription[];
 
     value: string;
     depth: number;

@@ -1,5 +1,6 @@
-import {Card} from "antd";
+import {Card, Descriptions, Tooltip} from "antd";
 import {EntityBrief, ShowDescriptionType} from "../model/entityModel.ts";
+import {DescriptionsItemType} from "antd/es/descriptions";
 
 
 export function EntityCard({brief, query, showDescription}: {
@@ -7,6 +8,11 @@ export function EntityCard({brief, query, showDescription}: {
     query?: string;
     showDescription?: ShowDescriptionType,
 }) {
+    if (!brief.img && !brief.title && (!brief.descriptions || brief.descriptions.length == 0)
+        && brief.value.length == 0) {
+        return <></>
+    }
+
     let cover = {};
     if (brief.img) {
         cover = {cover: <img alt="img" src={brief.img}/>}
@@ -21,23 +27,47 @@ export function EntityCard({brief, query, showDescription}: {
         }
     }
 
-    let desc = brief.value;
+    let ds = brief.descriptions;
+    let desc: string | null = null;
     switch (showDescription) {
         case "show":
-            desc = brief.description ?? "";
+            desc = ds && ds.length > 0 ? ds[ds.length - 1].value : "";
             break;
         case "showFallbackValue":
-            desc = (brief.description && brief.description.length > 0) ? brief.description : brief.value
+            desc = ds && ds.length > 0 ? ds[ds.length - 1].value : brief.value;
             break;
         case "showValue":
+            desc = brief.value;
             break;
         case "none":
-            desc = "";
             break;
     }
 
-    return <Card hoverable style={{width: 240}} {...cover}>
-        <Card.Meta {...title} description={query ? <Highlight text={desc} keyword={query}/> : desc}/>
+    let description = {}
+    if (desc && ds && ds.length > 1) {
+        const items: DescriptionsItemType[] = [];
+        for (let i = 0; i < ds.length - 1; i++) {
+            const d = ds[i];
+            items.push({
+                key: i,
+                label: <Tooltip title={d.comment}> {d.field} </Tooltip>,
+                children: d.value,
+            })
+
+        }
+
+        description = {
+            description: <><Descriptions column={1} bordered size={"small"} items={items}/>
+                {query ? <Highlight text={desc} keyword={query}/> : desc} </>
+        }
+    } else if (desc) {
+        description = {
+            description: query ? <Highlight text={desc} keyword={query}/> : desc
+        }
+    }
+
+    return <Card hoverable style={{width: 240}}  {...cover}>
+        <Card.Meta {...title} {...description}/>
     </Card>;
 }
 
