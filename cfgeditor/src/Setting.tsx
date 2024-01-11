@@ -1,11 +1,11 @@
-import {Button, Descriptions, Divider, Form, Input, InputNumber, Select, Switch, Tabs} from "antd";
+import {Button, Descriptions, Divider, Flex, Form, Input, InputNumber, Select, Space, Switch, Tabs} from "antd";
 import {CloseOutlined, LeftOutlined, RightOutlined, SearchOutlined} from "@ant-design/icons";
 import {NodeShowSetting} from "./NodeShowSetting.tsx";
 import {useTranslation} from "react-i18next";
-import {pageRecordRef} from "./CfgEditorApp.tsx";
+import {DraggablePanelType, pageRecordRef} from "./CfgEditorApp.tsx";
 import {STable} from "./model/schemaModel.ts";
 import {Schema} from "./model/schemaUtil.ts";
-import {Convert, DraggablePanelType, FixedPage, NodeShowType} from "./func/localStoreJson.ts";
+import {Convert, FixedPage, NodeShowType} from "./func/localStoreJson.ts";
 
 
 export function Setting({
@@ -129,11 +129,10 @@ export function Setting({
 
     let deleteRecordButton;
     if (schema && curTable && schema.isEditable && curTable.isEditable) {
-        deleteRecordButton = <Form.Item wrapperCol={{offset: 10}}>
-            <Button type="primary" danger onClick={onDeleteRecord}>
-                <CloseOutlined/>{t('deleteCurRecord')}
-            </Button>
-        </Form.Item>
+        deleteRecordButton = <Button type="primary" danger onClick={onDeleteRecord}>
+            <CloseOutlined/>{t('deleteCurRecord')}
+        </Button>
+
     }
 
 
@@ -245,11 +244,10 @@ export function Setting({
             <Form.Item name='server' label={t('newServer')}>
                 <Input.Search enterButton={t('connect')} onSearch={onConnectServer}/>
             </Form.Item>
-            {deleteRecordButton}
         </Form>;
 
 
-    let keySetting =
+    let keySetting = <Flex gap={"middle"} vertical>
         <Descriptions title="Key Shortcut" bordered column={2} items={[
             {
                 key: '1',
@@ -287,7 +285,12 @@ export function Setting({
                 label: <SearchOutlined/>,
                 children: 'alt+q',
             },
-        ]}/>;
+        ]}/>
+
+        <Space>
+            {deleteRecordButton}
+        </Space>
+    </Flex>;
 
 
     return <Tabs items={[
