@@ -2,9 +2,10 @@ import {DefaultOptionType} from "antd/es/select/index";
 import {STable} from "./model/schemaModel.ts";
 import {Select, Skeleton} from "antd";
 import {getIdOptions, isPkInteger} from "./model/schemaUtil.ts";
+import {memo} from "react";
 
 
-export function IdList({curTable, curId, setCurId}: {
+export const IdList = memo(function IdList({curTable, curId, setCurId}: {
     curTable: STable | null,
     curId: string | null
     setCurId: (id: string) => void;
@@ -37,4 +38,4 @@ export function IdList({curTable, curId, setCurId}: {
                        // console.log(value);
                    }}/>
 
-}
+});

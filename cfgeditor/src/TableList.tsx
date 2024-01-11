@@ -1,5 +1,5 @@
 import {STable} from "./model/schemaModel.ts";
-import {Dispatch} from "react";
+import {Dispatch, memo} from "react";
 import {Badge, Select, Space} from "antd";
 import {Schema} from "./model/schemaUtil.ts";
 
@@ -13,7 +13,7 @@ class TableWithLastName {
     }
 }
 
-export function TableList({schema, curTable, setCurTable}: {
+export const TableList = memo(function TableList({schema, curTable, setCurTable}: {
     schema: Schema | null, curTable: STable | null, setCurTable: Dispatch<string>
 }) {
 
@@ -83,4 +83,4 @@ export function TableList({schema, curTable, setCurTable}: {
                        setCurTable(value);
                    }}
     />;
-}
+});

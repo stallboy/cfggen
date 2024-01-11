@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import {Alert, App, Button, Drawer, Flex, Form, Input, Modal, Space, Tabs, Typography} from "antd";
 import {saveAs} from 'file-saver';
 import {LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
@@ -150,25 +150,25 @@ export function CfgEditorApp() {
         }
     }
 
-    function selectCurTable(curTableName: string) {
+    const setCurTable = useCallback((curTableName: string) => {
         if (schema) {
             selectCurTableAndIdFromSchema(schema, curTableName);
         }
-    }
+    }, [schema]);
 
-    function selectCurTableAndId(curTableName: string, curId: string) {
+    const setCurTableAndId = useCallback((curTableName: string, curId: string) => {
         if (schema) {
             selectCurTableAndIdFromSchema(schema, curTableName, curId);
         }
-    }
+    }, [schema]);
 
     let curTable = schema ? schema.getSTable(curTableId) : null;
 
-    function selectCurId(curId: string) {
+    const selectCurId = useCallback((curId: string) => {
         if (schema && curTable) {
             selectCurTableAndIdFromSchema(schema, curTable.name, curId);
         }
-    }
+    }, [schema, curTableId]);
 
     function selectHistoryCur(item: HistoryItem | null) {
         if (item && schema) {
@@ -224,7 +224,7 @@ export function CfgEditorApp() {
         <Button onClick={showSearch}>
             <SearchOutlined/>
         </Button>
-        <TableList schema={schema} curTable={curTable} setCurTable={selectCurTable}/>
+        <TableList schema={schema} curTable={curTable} setCurTable={setCurTable}/>
         <IdList curTable={curTable} curId={curId} setCurId={selectCurId}/>
         {nextId}
         <Button onClick={prev} disabled={!history.canPrev()}>
@@ -251,7 +251,7 @@ export function CfgEditorApp() {
             <TableSchema schema={schema}
                          curTable={curTable}
                          maxImpl={maxImpl}
-                         setCurTable={selectCurTable}
+                         setCurTable={setCurTable}
                          setCurPage={selectCurPage}
                          nodeShow={nodeShow}/>
         </div>;
@@ -259,7 +259,7 @@ export function CfgEditorApp() {
         tableRef = <div ref={ref} style={{background: '#fff'}}>
             <TableRef schema={schema}
                       curTable={curTable}
-                      setCurTable={selectCurTable}
+                      setCurTable={setCurTable}
                       refIn={refIn}
                       refOutDepth={refOutDepth}
                       maxNode={maxNode}
@@ -290,7 +290,7 @@ export function CfgEditorApp() {
                                 maxNode={recordMaxNode}
                                 server={server}
                                 tryReconnect={tryReconnect}
-                                setCurTableAndId={selectCurTableAndId}
+                                setCurTableAndId={setCurTableAndId}
                                 setCurPage={selectCurPage}
                                 setEditMode={setEditMode}
                                 query={query}
@@ -320,7 +320,7 @@ export function CfgEditorApp() {
                                                   maxNode={fix.maxNode}
                                                   server={server}
                                                   tryReconnect={tryReconnect}
-                                                  setCurTableAndId={selectCurTableAndId}
+                                                  setCurTableAndId={setCurTableAndId}
                                                   setCurPage={selectCurPage}
                                                   setEditMode={setEditMode}
                                                   query={query}
@@ -481,12 +481,7 @@ export function CfgEditorApp() {
         </Drawer>
 
         <Drawer title="search" placement="left" onClose={onSearchClose} open={searchOpen} size='large'>
-            <SearchValue searchMax={searchMax}
-                         server={server}
-                         query={query}
-                         setQuery={setQuery}
-                         tryReconnect={tryReconnect}
-                         setCurTableAndId={selectCurTableAndId}/>
+            <SearchValue {...{searchMax, server, query, setQuery, tryReconnect, setCurTableAndId}}/>
         </Drawer>
 
     </>;
