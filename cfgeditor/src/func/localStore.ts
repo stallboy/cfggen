@@ -25,10 +25,35 @@ export function getStr(key: string, def: string): string {
     return def;
 }
 
-export function getJson(key: string, def: any): any {
+export function getEnumStr(key: string, enums: string[], def: string): string {
+    let v = localStorage.getItem(key);
+    if (v && enums.includes(v)) {
+        return v;
+    }
+    return def;
+}
+
+
+export function getJsonNullable<T>(key: string, parser: (jsonStr: string) => T): T | null {
     let v = localStorage.getItem(key);
     if (v) {
-        return JSON.parse(v);
+        try {
+            return parser(v);
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    return null;
+}
+
+export function getJson<T>(key: string, parser: (jsonStr: string) => T, def: T): T {
+    let v = localStorage.getItem(key);
+    if (v) {
+        try {
+            return parser(v);
+        } catch (e) {
+            console.log(e);
+        }
     }
     return def;
 }

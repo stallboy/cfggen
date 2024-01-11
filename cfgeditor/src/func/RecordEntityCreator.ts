@@ -6,9 +6,10 @@ import {
     EntitySocketOutput,
     FieldsShowType
 } from "../model/entityModel.ts";
-import {getField, Schema, SField, SStruct, STable} from "../model/schemaModel.ts";
+import {SField, SStruct, STable} from "../model/schemaModel.ts";
 import {BriefRecord, JSONArray, JSONObject, JSONValue, RefId, Refs} from "../model/recordModel.ts";
 import {createRefs, getLabel} from "./recordRefEntity.ts";
+import {getField, Schema} from "../model/schemaUtil.ts";
 
 
 export class RecordEntityCreator {

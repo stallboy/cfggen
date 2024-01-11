@@ -2,7 +2,7 @@ import {Button, Card, ColorPicker, Form, Input, Select, Space, Switch} from "ant
 import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 
-import {KeywordColor, NodeShowType} from "./model/entityModel.ts";
+import {Convert, KeywordColor, NodeShowType} from "./func/localStoreJson.ts";
 
 
 export function NodeShowSetting({nodeShow, setNodeShow}: {
@@ -19,7 +19,7 @@ export function NodeShowSetting({nodeShow, setNodeShow}: {
             tableColors: fixColors(values.tableColors)
         };
         setNodeShow(newNodeShow);
-        localStorage.setItem('nodeShow', JSON.stringify(newNodeShow));
+        localStorage.setItem('nodeShow', Convert.nodeShowTypeToJson(newNodeShow));
     }
 
     function fixColors(keywordColors: any[]): KeywordColor[] {

@@ -2,7 +2,6 @@ import {useEffect, useRef, useState} from "react";
 import {Alert, App, Button, Drawer, Flex, Form, Input, Modal, Space, Tabs, Typography} from "antd";
 import {saveAs} from 'file-saver';
 import {LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
-import {getNextId, newSchema, Schema} from "./model/schemaModel.ts";
 import {History, HistoryItem} from "./model/historyModel.ts";
 import {TableList} from "./TableList.tsx";
 import {IdList} from "./IdList.tsx";
@@ -12,14 +11,15 @@ import {TableRecord} from "./TableRecord.tsx";
 import {TableRecordRef} from "./TableRecordRef.tsx";
 import {SearchValue} from "./SearchValue.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
-import {getBool, getInt, getJson, getStr} from "./func/localStore.ts";
+import {getBool, getEnumStr, getInt, getJson, getJsonNullable, getStr} from "./func/localStore.ts";
 import {RecordEditResult} from "./model/recordModel.ts";
 import {useTranslation} from "react-i18next";
 import {getId} from "./func/recordRefEntity.ts";
 import {DraggablePanel} from "@ant-design/pro-editor";
 import {toBlob} from "html-to-image";
 import {Setting} from "./Setting.tsx";
-import {NodeShowType} from "./model/entityModel.ts";
+import {Convert, FixedPage, NodeShowType} from "./func/localStoreJson.ts";
+import {getNextId, newSchema, Schema} from "./model/schemaUtil.ts";
 
 const {Text} = Typography;
 
@@ -30,16 +30,6 @@ export const pageRecordRef = 'recordRef'
 export const pageFixed = 'fix'
 
 export type DraggablePanelType = 'recordRef' | 'fix' | 'none';
-
-export class FixedPage {
-    constructor(
-        public table: string,
-        public id: string,
-        public refIn: boolean,
-        public refOutDepth: number,
-        public maxNode: number) {
-    }
-}
 
 const defaultNodeShow: NodeShowType = {
     showHead: 'show',
@@ -58,8 +48,10 @@ export function CfgEditorApp() {
     const [curPage, setCurPage] = useState<string>(getStr('curPage', pageRecord));
     const [editMode, setEditMode] = useState<boolean>(false);
 
-    const [dragPanel, setDragPanel] = useState<DraggablePanelType>(getStr('dragPanel', 'none') as DraggablePanelType);
-    const [fix, setFix] = useState<FixedPage | null>(getJson('fix', null));
+    const [dragPanel, setDragPanel] = useState<DraggablePanelType>(
+        getEnumStr('dragPanel', ['recordRef', 'fix', 'none'], 'none') as DraggablePanelType);
+    const [fix, setFix] = useState<FixedPage | null>(
+        getJsonNullable<FixedPage>('fix', Convert.toFixedPage));
 
     const [maxImpl, setMaxImpl] = useState<number>(getInt('maxImpl', 10));
     const [refIn, setRefIn] = useState<boolean>(getBool('refIn', true));
@@ -70,7 +62,8 @@ export function CfgEditorApp() {
     const [recordMaxNode, setRecordMaxNode] = useState<number>(getInt('recordMaxNode', 30));
     const [searchMax, setSearchMax] = useState<number>(getInt('searchMax', 50));
     const [imageSizeScale, setImageSizeScale] = useState<number>(getInt('imageSizeScale', 16));
-    const [nodeShow, setNodeShow] = useState<NodeShowType>(getJson('nodeShow', defaultNodeShow));
+    const [nodeShow, setNodeShow] = useState<NodeShowType>(
+        getJson<NodeShowType>('nodeShow', Convert.toNodeShowType, defaultNodeShow));
 
     const [history, setHistory] = useState<History>(new History());
     const [settingOpen, setSettingOpen] = useState<boolean>(false);

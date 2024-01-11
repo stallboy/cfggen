@@ -1,5 +1,6 @@
-import {Schema, SInterface, SItem, SStruct, STable} from "../model/schemaModel.ts";
+import {SInterface, SItem, SStruct, STable} from "../model/schemaModel.ts";
 import {ConnectTo, Entity, EntityConnectionType, EntityType, FieldsShowType} from "../model/entityModel.ts";
+import {Schema} from "../model/schemaUtil.ts";
 
 export class UserData {
     constructor(public table: string, public item: SItem) {

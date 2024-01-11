@@ -8,11 +8,6 @@ import {
     FieldsShowType, EntityEditFieldOption, EntityEditFieldOptions
 } from "../model/entityModel.ts";
 import {
-    getField,
-    getIdOptions,
-    getImpl,
-    isPkInteger,
-    Schema,
     SInterface,
     SItem,
     SStruct,
@@ -21,6 +16,7 @@ import {
 import {JSONArray, JSONObject, JSONValue, RefId} from "../model/recordModel.ts";
 import {getId, getLabel, getLastName} from "./recordRefEntity.ts";
 import {editingState} from "./editingState.ts";
+import {getField, getIdOptions, getImpl, isPkInteger, Schema} from "../model/schemaUtil.ts";
 
 
 function getImplNames(sInterface: SInterface): EntityEditFieldOption[] {

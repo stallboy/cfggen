@@ -36,7 +36,9 @@ public final class GenI18n extends Generator {
 
     private void visit(PrimitiveValue primitiveValue, String table, Value pk, List<String> fieldChain) {
         if (primitiveValue instanceof VText vText) {
-            data.add(List.of(table, vText.original(), vText.value()));
+            if (!vText.original().trim().isEmpty() || !vText.value().trim().isEmpty()) {
+                data.add(List.of(table, vText.original(), vText.value()));
+            }
         }
     }
 }

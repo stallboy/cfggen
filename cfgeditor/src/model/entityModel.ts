@@ -1,5 +1,6 @@
 import {Item} from "rete-context-menu-plugin/_types/types";
 import {BriefDescription} from "./recordModel.ts";
+import {NodeShowType} from "../func/localStoreJson.ts";
 
 export interface EntityField {
     name: string;
@@ -102,24 +103,6 @@ export interface EntityGraph {
     nodeShow?: NodeShowType;
 }
 
-export interface NodeShowType {
-    showHead: ShowHeadType;
-    showDescription: ShowDescriptionType;
-    containEnum: boolean;
-    nodePlacementStrategy: NodePlacementStrategyType;
-    keywordColors: KeywordColor[];
-    tableColors: KeywordColor[];
-
-}
-
-export interface KeywordColor {
-    keyword: string;
-    color: string;
-}
-
-export type ShowHeadType = 'show' | 'showCopyable';
-export type ShowDescriptionType = 'show' | 'showFallbackValue' | 'showValue' | 'none';
-export type NodePlacementStrategyType = 'SIMPLE' | 'LINEAR_SEGMENTS' | 'BRANDES_KOEPF';
 
 
 export enum FieldsShowType {

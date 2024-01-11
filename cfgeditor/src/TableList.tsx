@@ -1,6 +1,7 @@
-import {Schema, STable} from "./model/schemaModel.ts";
+import {STable} from "./model/schemaModel.ts";
 import {Dispatch} from "react";
 import {Badge, Select, Space} from "antd";
+import {Schema} from "./model/schemaUtil.ts";
 
 class TableWithLastName {
     table: STable;

@@ -13,6 +13,9 @@ export interface JSONObject {
     "$type": string;
 }
 
+export interface JSONArray extends Array<JSONValue> {
+}
+
 export interface Refs {
     "$refs"?: RefIdMap;
 }
@@ -42,9 +45,6 @@ export interface RefIdMap {
 export interface RefId {
     table: string;
     id: string;
-}
-
-export interface JSONArray extends Array<JSONValue> {
 }
 
 export type ResultCode =
@@ -88,7 +88,6 @@ export type EditResultCode =
     | 'idNotFound'
     | 'jsonParseErr'
     | 'jsonStoreErr';
-
 
 export interface RecordEditResult {
     resultCode: EditResultCode;

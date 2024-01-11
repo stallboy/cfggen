@@ -2,9 +2,10 @@ import {Button, Descriptions, Divider, Form, Input, InputNumber, Select, Switch,
 import {CloseOutlined, LeftOutlined, RightOutlined, SearchOutlined} from "@ant-design/icons";
 import {NodeShowSetting} from "./NodeShowSetting.tsx";
 import {useTranslation} from "react-i18next";
-import {DraggablePanelType, FixedPage, pageRecordRef} from "./CfgEditorApp.tsx";
-import {Schema, STable} from "./model/schemaModel.ts";
-import {NodeShowType} from "./model/entityModel.ts";
+import {pageRecordRef} from "./CfgEditorApp.tsx";
+import {STable} from "./model/schemaModel.ts";
+import {Schema} from "./model/schemaUtil.ts";
+import {Convert, DraggablePanelType, FixedPage, NodeShowType} from "./func/localStoreJson.ts";
 
 
 export function Setting({
@@ -140,9 +141,16 @@ export function Setting({
     let removeFixButton;
     if (schema && curTable && curPage == pageRecordRef) {
         function onAddFix() {
-            let fp = new FixedPage(curTableId, curId, recordRefIn, recordRefOutDepth, recordMaxNode);
+            let fp: FixedPage = {
+                table: curTableId,
+                id: curId,
+                refIn: recordRefIn,
+                refOutDepth: recordRefOutDepth,
+                maxNode: recordMaxNode,
+                nodeShow: nodeShow,
+            };
             setFix(fp);
-            localStorage.setItem('fix', JSON.stringify(fp));
+            localStorage.setItem('fix', Convert.fixedPageToJson(fp));
         }
 
         addFixButton = <Form.Item wrapperCol={{offset: 10}}>

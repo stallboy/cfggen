@@ -1,4 +1,4 @@
-import {Schema, SItem, STable} from "./model/schemaModel.ts";
+import {SItem, STable} from "./model/schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback} from "react";
@@ -7,6 +7,7 @@ import {Item} from "rete-context-menu-plugin/_types/types";
 import {pageTable} from "./CfgEditorApp.tsx";
 import {useTranslation} from "react-i18next";
 import {includeRefTables} from "./func/tableRefEntity.ts";
+import {Schema} from "./model/schemaUtil.ts";
 
 
 export function TableRef({

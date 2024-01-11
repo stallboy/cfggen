@@ -1,5 +1,6 @@
-import {Schema, SItem, STable} from "../model/schemaModel.ts";
+import {SItem, STable} from "../model/schemaModel.ts";
 import {Entity, EntityConnectionType, EntityType, FieldsShowType} from "../model/entityModel.ts";
+import {Schema} from "../model/schemaUtil.ts";
 
 function createEntity(item: SItem, id: string, entityType: EntityType = EntityType.Normal): Entity {
     return {

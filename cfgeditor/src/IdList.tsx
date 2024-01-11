@@ -1,6 +1,7 @@
 import {DefaultOptionType} from "antd/es/select/index";
-import {getIdOptions, isPkInteger, STable} from "./model/schemaModel.ts";
+import {STable} from "./model/schemaModel.ts";
 import {Select, Skeleton} from "antd";
+import {getIdOptions, isPkInteger} from "./model/schemaUtil.ts";
 
 
 export function IdList({curTable, curId, setCurId}: {

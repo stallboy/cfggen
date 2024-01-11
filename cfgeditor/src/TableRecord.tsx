@@ -1,4 +1,4 @@
-import {newSchema, Schema, STable} from "./model/schemaModel.ts";
+import {STable} from "./model/schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback, useEffect, useReducer, useState} from "react";
@@ -12,6 +12,7 @@ import {RecordEditEntityCreator} from "./func/RecordEditEntityCreator.ts";
 import {editingState} from "./func/editingState.ts";
 import {pageRecordRef} from "./CfgEditorApp.tsx";
 import {useTranslation} from "react-i18next";
+import {newSchema, Schema} from "./model/schemaUtil.ts";
 
 
 export function TableRecordLoaded({

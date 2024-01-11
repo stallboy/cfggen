@@ -1,6 +1,7 @@
 import {BriefRecord, RefId, Refs} from "../model/recordModel.ts";
 import {Entity, EntityConnectionType, EntityType, FieldsShowType} from "../model/entityModel.ts";
-import {Schema} from "../model/schemaModel.ts";
+
+import {Schema} from "../model/schemaUtil.ts";
 
 export function getLastName(id: string): string {
     let seps = id.split('.');
