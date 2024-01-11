@@ -1,6 +1,7 @@
 import {Card, Descriptions, Tooltip} from "antd";
-import {EntityBrief, ShowDescriptionType} from "../model/entityModel.ts";
+import {EntityBrief} from "../model/entityModel.ts";
 import {DescriptionsItemType} from "antd/es/descriptions";
+import {ShowDescriptionType} from "../func/localStoreJson.ts";
 
 
 export function EntityCard({brief, query, showDescription}: {
@@ -8,14 +9,11 @@ export function EntityCard({brief, query, showDescription}: {
     query?: string;
     showDescription?: ShowDescriptionType,
 }) {
-    if (!brief.img && !brief.title && (!brief.descriptions || brief.descriptions.length == 0)
-        && brief.value.length == 0) {
-        return <></>
-    }
-
+    let hasContent = false;
     let cover = {};
     if (brief.img) {
         cover = {cover: <img alt="img" src={brief.img}/>}
+        hasContent = true;
     }
 
     let title = {};
@@ -25,6 +23,7 @@ export function EntityCard({brief, query, showDescription}: {
         } else {
             title = {title: brief.title};
         }
+        hasContent = true;
     }
 
     let ds = brief.descriptions;
@@ -53,17 +52,22 @@ export function EntityCard({brief, query, showDescription}: {
                 label: <Tooltip title={d.comment}> {d.field} </Tooltip>,
                 children: d.value,
             })
-
         }
 
+        hasContent = true;
         description = {
             description: <><Descriptions column={1} bordered size={"small"} items={items}/>
                 {query ? <Highlight text={desc} keyword={query}/> : desc} </>
         }
     } else if (desc) {
+        hasContent = true;
         description = {
             description: query ? <Highlight text={desc} keyword={query}/> : desc
         }
+    }
+
+    if (!hasContent) {
+        return <></>;
     }
 
     return <Card hoverable style={{width: 240}}  {...cover}>

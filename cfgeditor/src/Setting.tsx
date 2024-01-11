@@ -212,7 +212,7 @@ export function Setting({
 
     let otherSetting =
         <Form labelCol={{span: 10}} wrapperCol={{span: 14}} layout={'horizontal'}
-              initialValues={{searchMax, imageSizeScale, dragPanel, server}}>
+              initialValues={{searchMax, imageSizeScale, server}}>
             <Form.Item name='searchMax' label={t('searchMaxReturn')}>
                 <InputNumber min={1} max={500} onChange={onChangeSearchMax}/>
             </Form.Item>
@@ -227,7 +227,7 @@ export function Setting({
                 </Button>
             </Form.Item>
 
-            <Form.Item name='dragePanel' label={t('dragPanel')}>
+            <Form.Item name='dragePanel' initialValue={dragPanel}  label={t('dragPanel')}>
                 <Select onChange={onChangeDragePanel} options={[
                     {label: t('recordRef'), value: 'recordRef'},
                     {label: t('fix'), value: 'fix'},

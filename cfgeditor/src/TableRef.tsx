@@ -2,12 +2,13 @@ import {SItem, STable} from "./model/schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback} from "react";
-import {Entity, EntityGraph, fillInputs, NodeShowType} from "./model/entityModel.ts";
+import {Entity, EntityGraph, fillInputs} from "./model/entityModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
 import {pageTable} from "./CfgEditorApp.tsx";
 import {useTranslation} from "react-i18next";
 import {includeRefTables} from "./func/tableRefEntity.ts";
 import {Schema} from "./model/schemaUtil.ts";
+import {NodeShowType} from "./func/localStoreJson.ts";
 
 
 export function TableRef({

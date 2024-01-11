@@ -1,1 +1,1 @@
-pnpm tauri build -b none
+pnpm tauri build -b none --debug

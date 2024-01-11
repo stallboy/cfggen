@@ -1,9 +1,10 @@
 import {ClassicPreset} from "rete";
 import {EntityControl} from "./EntityControl.tsx";
-import {Entity, EntityType, NodeShowType} from "../model/entityModel.ts";
+import {Entity, EntityType} from "../model/entityModel.ts";
 import {Presets, RenderEmit} from "rete-react-plugin";
 import {Typography} from "antd";
 import {css} from "styled-components";
+import {NodeShowType} from "../func/localStoreJson.ts";
 
 const {NodeStyles, RefControl, RefSocket} = Presets.classic;
 
