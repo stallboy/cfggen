@@ -3,19 +3,14 @@ using System.Collections.Generic;
 
 namespace Config.Task
 {
-    public partial class DataTask2
+    public partial class DataTask
     {
         public int Taskid { get; private set; } /* 任务完成条件类型（id的范围为1-100）*/
-        public List<string> Name { get; private set; }
+        public List<Config.Text> Name { get; private set; } /* 程序用名字*/
         public int Nexttask { get; private set; }
         public Config.Task.DataCompletecondition Completecondition { get; private set; }
         public int Exp { get; private set; }
-        public bool TestBool { get; private set; }
-        public string TestString { get; private set; }
-        public Config.DataPosition TestStruct { get; private set; }
-        public List<int> TestList { get; private set; }
-        public List<Config.DataPosition> TestListStruct { get; private set; }
-        public List<Config.Ai.DataTriggertick> TestListInterface { get; private set; }
+        public Config.Task.DataTestdefaultbean TestDefaultBean { get; private set; } /* 测试*/
         public Config.Task.DataTaskextraexp NullableRefTaskid { get; private set; }
         public Config.Task.DataTask NullableRefNexttask { get; private set; }
 
@@ -28,31 +23,31 @@ namespace Config.Task
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataTask2;
+            var o = obj as DataTask;
             return o != null && Taskid.Equals(o.Taskid);
         }
 
         public override string ToString()
         {
-            return "(" + Taskid + "," + CSV.ToString(Name) + "," + Nexttask + "," + Completecondition + "," + Exp + "," + TestBool + "," + TestString + "," + TestStruct + "," + CSV.ToString(TestList) + "," + CSV.ToString(TestListStruct) + "," + CSV.ToString(TestListInterface) + ")";
+            return "(" + Taskid + "," + CSV.ToString(Name) + "," + Nexttask + "," + Completecondition + "," + Exp + "," + TestDefaultBean + ")";
         }
 
-        static Config.KeyedList<int, DataTask2> all = null;
+        static Config.KeyedList<int, DataTask> all = null;
 
-        public static DataTask2 Get(int taskid)
+        public static DataTask Get(int taskid)
         {
-            DataTask2 v;
+            DataTask v;
             return all.TryGetValue(taskid, out v) ? v : null;
         }
 
-        public static List<DataTask2> All()
+        public static List<DataTask> All()
         {
             return all.OrderedValues;
         }
 
-        public static List<DataTask2> Filter(Predicate<DataTask2> predicate)
+        public static List<DataTask> Filter(Predicate<DataTask> predicate)
         {
-            var r = new List<DataTask2>();
+            var r = new List<DataTask>();
             foreach (var e in all.OrderedValues)
             {
                 if (predicate(e))
@@ -63,7 +58,7 @@ namespace Config.Task
 
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
-            all = new Config.KeyedList<int, DataTask2>();
+            all = new Config.KeyedList<int, DataTask>();
             for (var c = os.ReadInt32(); c > 0; c--) {
                 var self = _create(os);
                 all.Add(self.Taskid, self);
@@ -75,28 +70,17 @@ namespace Config.Task
                 v._resolve(errors);
         }
 
-        internal static DataTask2 _create(Config.Stream os)
+        internal static DataTask _create(Config.Stream os)
         {
-            var self = new DataTask2();
+            var self = new DataTask();
             self.Taskid = os.ReadInt32();
-            self.Name = new List<string>();
+            self.Name = new List<Config.Text>();
             for (var c = os.ReadInt32(); c > 0; c--)
-                self.Name.Add(os.ReadString());
+                self.Name.Add(Config.Text._create(os));
             self.Nexttask = os.ReadInt32();
             self.Completecondition = Config.Task.DataCompletecondition._create(os);
             self.Exp = os.ReadInt32();
-            self.TestBool = os.ReadBool();
-            self.TestString = os.ReadString();
-            self.TestStruct = Config.DataPosition._create(os);
-            self.TestList = new List<int>();
-            for (var c = os.ReadInt32(); c > 0; c--)
-                self.TestList.Add(os.ReadInt32());
-            self.TestListStruct = new List<Config.DataPosition>();
-            for (var c = os.ReadInt32(); c > 0; c--)
-                self.TestListStruct.Add(Config.DataPosition._create(os));
-            self.TestListInterface = new List<Config.Ai.DataTriggertick>();
-            for (var c = os.ReadInt32(); c > 0; c--)
-                self.TestListInterface.Add(Config.Ai.DataTriggertick._create(os));
+            self.TestDefaultBean = Config.Task.DataTestdefaultbean._create(os);
             return self;
         }
 

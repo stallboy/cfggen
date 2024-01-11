@@ -9,7 +9,7 @@ namespace Config.Equip
 
         public int SuitID { get; private set; } /* 饰品套装ID*/
         public string Ename { get; private set; }
-        public string Name { get; private set; } /* 策划用名字*/
+        public Config.Text Name { get; private set; } /* 策划用名字*/
         public int Ability1 { get; private set; } /* 套装属性类型1（装备套装中的两件时增加的属性）*/
         public int Ability1Value { get; private set; } /* 套装属性1*/
         public int Ability2 { get; private set; } /* 套装属性类型2（装备套装中的三件时增加的属性）*/
@@ -89,7 +89,7 @@ namespace Config.Equip
             var self = new DataJewelrysuit();
             self.SuitID = os.ReadInt32();
             self.Ename = os.ReadString();
-            self.Name = os.ReadString();
+            self.Name = Config.Text._create(os);
             self.Ability1 = os.ReadInt32();
             self.Ability1Value = os.ReadInt32();
             self.Ability2 = os.ReadInt32();

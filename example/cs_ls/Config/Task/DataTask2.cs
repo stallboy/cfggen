@@ -6,7 +6,7 @@ namespace Config.Task
     public partial class DataTask2
     {
         public int Taskid { get; private set; } /* 任务完成条件类型（id的范围为1-100）*/
-        public List<string> Name { get; private set; }
+        public List<Config.Text> Name { get; private set; }
         public int Nexttask { get; private set; }
         public Config.Task.DataCompletecondition Completecondition { get; private set; }
         public int Exp { get; private set; }
@@ -79,9 +79,9 @@ namespace Config.Task
         {
             var self = new DataTask2();
             self.Taskid = os.ReadInt32();
-            self.Name = new List<string>();
+            self.Name = new List<Config.Text>();
             for (var c = os.ReadInt32(); c > 0; c--)
-                self.Name.Add(os.ReadString());
+                self.Name.Add(Config.Text._create(os));
             self.Nexttask = os.ReadInt32();
             self.Completecondition = Config.Task.DataCompletecondition._create(os);
             self.Exp = os.ReadInt32();

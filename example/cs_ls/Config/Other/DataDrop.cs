@@ -6,7 +6,7 @@ namespace Config.Other
     public partial class DataDrop
     {
         public int Dropid { get; private set; } /* 序号*/
-        public string Name { get; private set; } /* 名字*/
+        public Config.Text Name { get; private set; } /* 名字*/
         public List<Config.Other.DataDropitem> Items { get; private set; } /* 掉落概率*/
         public KeyedList<int, int> Testmap { get; private set; } /* 测试map block*/
 
@@ -65,7 +65,7 @@ namespace Config.Other
         {
             var self = new DataDrop();
             self.Dropid = os.ReadInt32();
-            self.Name = os.ReadString();
+            self.Name = Config.Text._create(os);
             self.Items = new List<Config.Other.DataDropitem>();
             for (var c = os.ReadInt32(); c > 0; c--)
                 self.Items.Add(Config.Other.DataDropitem._create(os));

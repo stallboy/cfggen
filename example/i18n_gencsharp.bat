@@ -1,6 +1,6 @@
-java -jar ../cfggen.jar -datadir config  -gen cs,dir:cs,encoding:UTF-8 -gen bytes,file=cs/config.bytes
+java -jar ../cfggen.jar -datadir config -langswitchdir i18n -gen cs,dir:cs_ls,encoding:UTF-8 -gen bytes,file=cs_ls/config.bytes
 
-set DIR=cs\Config
+set DIR=cs_ls\Config
 if not exist %DIR% mkdir %DIR%
 
 set SDIR=../app/src/main/resources/support
