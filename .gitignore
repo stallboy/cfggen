@@ -26,3 +26,5 @@
 /gradlew
 /gradlew.bat
 /docs/_site
+/example/cs_ls/bin
+/example/cs_ls/obj
