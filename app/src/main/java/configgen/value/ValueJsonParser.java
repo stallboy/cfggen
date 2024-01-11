@@ -3,6 +3,7 @@ package configgen.value;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import configgen.gen.TextI18n;
 import configgen.schema.*;
 import configgen.util.Logger;
 

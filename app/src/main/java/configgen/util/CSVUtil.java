@@ -38,11 +38,11 @@ public class CSVUtil {
 
        "aaa","b""bb","ccc"
        */
-    public static void write(Writer writer, List<List<String>> rows) throws IOException {
+    public static void write(UTF8Writer writer, List<List<String>> rows) throws IOException {
         if (rows.isEmpty()) {
             return;
         }
-        int columnCount = rows.get(0).size();
+        int columnCount = rows.getFirst().size();
 
         for (int r = 0; r < rows.size(); r++) {
             List<String> row = rows.get(r);
@@ -78,8 +78,8 @@ public class CSVUtil {
     }
 
 
-    public static void writeToFile(File file, String encoding, List<List<String>> rows) throws IOException {
-        try (Writer w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), encoding))) {
+    public static void writeToFile(File file, List<List<String>> rows) throws IOException {
+        try (UTF8Writer w = new UTF8Writer(new FileOutputStream(file))) {
             write(w, rows);
         }
     }

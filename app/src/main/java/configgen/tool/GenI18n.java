@@ -13,13 +13,11 @@ import static configgen.value.CfgValue.*;
 
 public final class GenI18n extends Generator {
     private final File file;
-    private final String encoding;
     private List<List<String>> data;
 
     public GenI18n(Parameter parameter) {
         super(parameter);
         file = new File(parameter.get("file", "../i18n/i18n-config.csv"));
-        encoding = parameter.get("encoding", "GBK");
         parameter.end();
     }
 
@@ -31,7 +29,8 @@ public final class GenI18n extends Generator {
         for (VTable vTable : cfgValue.sortedTables()) {
             ForeachPrimitiveValue.foreachVTable(this::visit, vTable);
         }
-        CSVUtil.writeToFile(file, encoding, data);
+
+        CSVUtil.writeToFile(file, data);
     }
 
     private void visit(PrimitiveValue primitiveValue, String table, Value pk, List<String> fieldChain) {

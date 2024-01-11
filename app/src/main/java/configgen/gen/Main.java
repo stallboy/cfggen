@@ -33,7 +33,6 @@ public final class Main {
         System.out.println();
         System.out.println("-----i18n support");
         System.out.println("    -i18nfile         " + LocaleUtil.getMessage("Usage.I18nFile"));
-        System.out.println("    -i18nencoding     " + LocaleUtil.getMessage("Usage.I18nEncoding"));
         System.out.println("    -i18ncrlfaslf     " + LocaleUtil.getMessage("Usage.I18nCrLfAsLf"));
         System.out.println("    -langswitchdir    " + LocaleUtil.getMessage("Usage.LangSwitchDir"));
         System.out.println("    -defaultlang      " + LocaleUtil.getMessage("Usage.DefaultLang"));
@@ -116,7 +115,6 @@ public final class Main {
         String encoding = "GBK";
 
         String i18nfile = null;
-        String i18nencoding = "GBK";
         boolean i18ncrlfaslf = false;
         String langSwitchDir = null;
         String defaultLang = "zh_cn";
@@ -163,7 +161,6 @@ public final class Main {
                 case "-encoding" -> encoding = args[++i];
                 case "-verify" -> verify = true;
                 case "-i18nfile" -> i18nfile = args[++i];
-                case "-i18nencoding" -> i18nencoding = args[++i];
                 case "-i18ncrlfaslf" -> i18ncrlfaslf = true;
                 case "-langswitchdir" -> langSwitchDir = args[++i];
                 case "-defaultlang" -> defaultLang = args[++i];
@@ -246,7 +243,7 @@ public final class Main {
 
         Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));
         Context context = new Context(dataDir, headRow, usePoi, encoding);
-        context.setI18nOrLangSwitch(i18nfile, i18nencoding, i18ncrlfaslf, langSwitchDir, defaultLang);
+        context.setI18nOrLangSwitch(i18nfile, i18ncrlfaslf, langSwitchDir, defaultLang);
 
         if (searchParam != null) {
             ValueSearcher searcher = new ValueSearcher(context.makeValue(searchOwn), searchTo);

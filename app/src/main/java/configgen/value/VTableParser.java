@@ -10,7 +10,7 @@ import static configgen.data.CfgData.DCell;
 import static configgen.data.CfgData.DTable;
 import static configgen.value.CfgValue.VStruct;
 import static configgen.value.CfgValue.VTable;
-import static configgen.value.TextI18n.TableI18n;
+import static configgen.gen.TextI18n.TableI18n;
 import static configgen.value.ValueParser.BlockParser;
 import static configgen.value.ValueParser.CellsWithRowIndex;
 

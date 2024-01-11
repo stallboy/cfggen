@@ -6,7 +6,6 @@ import configgen.data.CfgDataReader;
 import configgen.data.CfgSchemaAlignToData;
 import configgen.schema.*;
 import configgen.schema.cfg.Cfgs;
-import configgen.value.TextI18n;
 import configgen.value.CfgValue;
 import configgen.value.CfgValueParser;
 import configgen.value.ValueErrs;
@@ -82,12 +81,12 @@ public class Context {
         this.cfgSchema = alignedSchema;
     }
 
-    void setI18nOrLangSwitch(String i18nFile, String i18nEncoding, boolean crlfaslf,
+    void setI18nOrLangSwitch(String i18nFile, boolean crlfaslf,
                              String langSwitchDir, String defaultLang) {
         if (i18nFile != null) {
-            nullableI18n = LangSwitch.loadTextI18n(Path.of(i18nFile), i18nEncoding, crlfaslf);
+            nullableI18n = LangSwitch.loadTextI18n(Path.of(i18nFile), crlfaslf);
         } else if (langSwitchDir != null) {
-            nullableLangSwitch = LangSwitch.loadLangSwitch(Path.of(langSwitchDir), defaultLang, i18nEncoding, crlfaslf);
+            nullableLangSwitch = LangSwitch.loadLangSwitch(Path.of(langSwitchDir), defaultLang, crlfaslf);
         }
     }
 

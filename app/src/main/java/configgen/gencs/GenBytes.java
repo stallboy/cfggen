@@ -2,6 +2,7 @@ package configgen.gencs;
 
 import configgen.gen.Context;
 import configgen.gen.Generator;
+import configgen.gen.LangSwitchRuntime;
 import configgen.gen.Parameter;
 import configgen.util.CachedFileOutputStream;
 import configgen.value.CfgValue;
@@ -16,6 +17,7 @@ import static configgen.value.CfgValue.*;
 
 public class GenBytes extends Generator {
     private final File file;
+    private LangSwitchRuntime langSwitchRuntime;
 
     public GenBytes(Parameter parameter) {
         super(parameter);
@@ -27,6 +29,10 @@ public class GenBytes extends Generator {
     public void generate(Context ctx) throws IOException {
         CfgValue cfgValue = ctx.makeValue(tag);
 
+        if (ctx.nullableLangSwitch() != null) {
+            langSwitchRuntime = new LangSwitchRuntime(ctx.nullableLangSwitch());
+        }
+        
         try (CachedFileOutputStream stream = new CachedFileOutputStream(file, 2048 * 1024)) {
             this.stream = new DataOutputStream(stream);
             for (VTable vTable : cfgValue.sortedTables()) {
@@ -39,6 +45,10 @@ public class GenBytes extends Generator {
     private final byte[] writeBuffer = new byte[8];
 
     private void addVTable(VTable vTable) {
+        if (langSwitchRuntime != null) {
+            langSwitchRuntime.enterTable(vTable.name());
+        }
+
         addString(vTable.name());
         addInt(vTable.valueList().size());
         for (VStruct v : vTable.valueList()) {
@@ -53,7 +63,17 @@ public class GenBytes extends Generator {
             case VLong vLong -> addLong(vLong.value());
             case VFloat vFloat -> addFloat(vFloat.value());
             case VString vStr -> addString(vStr.value());
-            case VText vText -> addString(vText.value());
+            case VText vText -> {
+                if (langSwitchRuntime != null) {
+                    //这里全部写进去，作为一个Text的Bean
+                    String[] i18nStrings = langSwitchRuntime.findAllLangText(vText.value());
+                    for (String i18nStr : i18nStrings) {
+                        addString(i18nStr);
+                    }
+                } else {
+                    addString(vText.value());
+                }
+            }
             case VStruct vStruct -> {
                 for (Value v : vStruct.values()) {
                     addValue(v);

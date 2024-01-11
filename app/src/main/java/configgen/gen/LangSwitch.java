@@ -1,7 +1,6 @@
 package configgen.gen;
 
 import configgen.util.CSVUtil;
-import configgen.value.TextI18n;
 import de.siegmar.fastcsv.reader.CsvRow;
 
 import java.io.IOException;
@@ -10,7 +9,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static configgen.value.TextI18n.*;
+import static configgen.gen.TextI18n.*;
 
 public record LangSwitch(Map<String, TextI18n> lang2i18n,
                          String defaultLang) {
@@ -26,7 +25,7 @@ public record LangSwitch(Map<String, TextI18n> lang2i18n,
         return lang2i18n.size() + 1;
     }
 
-    public static LangSwitch loadLangSwitch(Path path, String defaultLang, String encoding, boolean crlfaslf) {
+    public static LangSwitch loadLangSwitch(Path path, String defaultLang, boolean crlfaslf) {
         Map<String, TextI18n> lang2i18n = new TreeMap<>();
         try (Stream<Path> plist = Files.list(path)) {
             plist.forEach(langFilePath -> {
@@ -35,7 +34,7 @@ public record LangSwitch(Map<String, TextI18n> lang2i18n,
                 if (i >= 0) {
                     langName = langName.substring(0, i);
                 }
-                lang2i18n.put(langName, loadTextI18n(langFilePath, encoding, crlfaslf));
+                lang2i18n.put(langName, loadTextI18n(langFilePath, crlfaslf));
             });
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -45,8 +44,8 @@ public record LangSwitch(Map<String, TextI18n> lang2i18n,
     }
 
 
-    public static TextI18n loadTextI18n(Path path, String encoding, boolean crlfaslf) {
-        List<CsvRow> rows = CSVUtil.read(path, encoding);
+    public static TextI18n loadTextI18n(Path path, boolean crlfaslf) {
+        List<CsvRow> rows = CSVUtil.read(path, "UTF-8");
 
         if (rows.isEmpty()) {
             throw new IllegalArgumentException("国际化i18n文件为空");

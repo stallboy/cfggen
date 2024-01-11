@@ -1,4 +1,4 @@
-package configgen.value;
+package configgen.gen;
 
 import java.util.Map;
 import java.util.regex.Pattern;

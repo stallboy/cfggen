@@ -24,6 +24,7 @@ public class GenCs extends Generator {
     private final String prefix;
     private File dstDir;
     private CfgSchema cfgSchema;
+    private boolean isLangSwitch;
 
     public GenCs(Parameter parameter) {
         super(parameter);
@@ -39,6 +40,8 @@ public class GenCs extends Generator {
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/')).toFile();
         CfgValue cfgValue = ctx.makeValue(tag);  // 这里只需要schema，生成value只用于检验数据
         cfgSchema = cfgValue.schema();
+
+        isLangSwitch = ctx.nullableLangSwitch() != null;
         //copyFile("CSV.cs");
         //copyFile("CSVLoader.cs");
         //copyFile("LoadErrors.cs");
@@ -62,6 +65,13 @@ public class GenCs extends Generator {
         for (VTable vTable : cfgValue.sortedTables()) {
             generateStructClass(vTable.schema(), vTable);
         }
+
+        if (isLangSwitch) { //生成Text这个Bean
+            try (CachedIndentPrinter ps = createCode(new File(dstDir, "Text.cs"), encoding)) {
+                GenText.generate(ctx.nullableLangSwitch(), pkg, ps);
+            }
+        }
+
 
         CachedFiles.keepMetaAndDeleteOtherFiles(dstDir);
     }
@@ -122,7 +132,6 @@ public class GenCs extends Generator {
     private void generateInterface(InterfaceSchema sInterface, Name name, CachedIndentPrinter ps) {
         ps.println("using System;");
         ps.println("using System.Collections.Generic;");
-        ps.println("using System.IO;");
         if (!pkg.equals("Config")) {
             ps.println("using Config;");
         }
@@ -160,7 +169,7 @@ public class GenCs extends Generator {
         TableSchema table = vTable != null ? vTable.schema() : null;
         ps.println("using System;");
         ps.println("using System.Collections.Generic;");
-        ps.println("using System.IO;");
+
         if (!pkg.equals("Config")) {
             ps.println("using Config;");
         }
@@ -178,7 +187,7 @@ public class GenCs extends Generator {
             ps.println1("{");
 
             TableSchema enumRefTable = nullableInterface.nullableEnumRefTable();
-            if (enumRefTable != null){
+            if (enumRefTable != null) {
                 ps.println2("public override " + fullName(enumRefTable) + " type() {");
                 ps.println3("return " + fullName(enumRefTable) + "." + structural.name() + ";");
                 ps.println2("}");
@@ -659,7 +668,8 @@ public class GenCs extends Generator {
             case INT -> "int";
             case LONG -> "long";
             case FLOAT -> "float";
-            case STRING, TEXT -> "string";
+            case STRING -> "string";
+            case TEXT -> isLangSwitch ? pkg + ".Text" : "string";
             case StructRef structRef -> fullName(structRef.obj());
             case FList fList -> "List<" + type(fList.item()) + ">";
             case FMap fMap -> "KeyedList<" + type(fMap.key()) + ", " + type(fMap.value()) + ">";
@@ -672,7 +682,8 @@ public class GenCs extends Generator {
             case INT -> "os.ReadInt32()";
             case LONG -> "os.ReadInt64()";
             case FLOAT -> "os.ReadSingle()";
-            case STRING, TEXT -> "os.ReadString()";
+            case STRING -> "os.ReadString()";
+            case TEXT -> isLangSwitch ? pkg + ".Text._create(os)" : "os.ReadString()";
             case StructRef structRef -> fullName(structRef.obj()) + "._create(os)";
             case FList ignored -> null;
             case FMap ignored -> null;

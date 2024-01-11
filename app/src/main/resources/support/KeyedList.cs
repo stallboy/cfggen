@@ -4,16 +4,9 @@ namespace Config
 {
     public class KeyedList<TKey, TValue>
     {
-        public KeyedList()
-        {
-            OrderedKeys = new List<TKey>();
-            OrderedValues = new List<TValue>();
-            Map = new Dictionary<TKey, TValue>();
-        }
-
-        public List<TKey> OrderedKeys { get; private set; }
-        public List<TValue> OrderedValues { get; private set; }
-        public Dictionary<TKey, TValue> Map { get; private set; }
+        public List<TKey> OrderedKeys { get; private set; } = new();
+        public List<TValue> OrderedValues { get; private set; } = new();
+        public Dictionary<TKey, TValue> Map { get; private set; } = new();
 
         public void Add(TKey key, TValue value)
         {
