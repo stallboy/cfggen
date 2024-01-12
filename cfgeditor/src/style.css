@@ -12,3 +12,10 @@ mark {
     color: #2986ff;
     font-weight: bold;
 }
+
+.formNode {
+     border: 3px solid darkgray;
+     padding: 5px;
+     border-radius: 15px;
+     background: white;
+ }

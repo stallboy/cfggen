@@ -23,6 +23,7 @@
     "react-dom": "^18.2.0",
     "react-hotkeys-hook": "^4.4.1",
     "react-i18next": "^13.5.0",
+    "reactflow": "^11.10.1",
     "rete": "^2.0.2",
     "rete-area-plugin": "^2.0.1",
     "rete-auto-arrange-plugin": "^2.0.0",
