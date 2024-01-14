@@ -20,7 +20,6 @@ import {toBlob} from "html-to-image";
 import {Setting} from "./Setting.tsx";
 import {Convert, FixedPage, NodeShowType} from "./func/localStoreJson.ts";
 import {getNextId, newSchema, Schema} from "./model/schemaUtil.ts";
-import {Flow} from "./Test.tsx";
 
 const {Text} = Typography;
 
@@ -301,7 +300,6 @@ export function CfgEditorApp() {
     }
 
     let items = [
-        {key: 'test', label: <Space>{t('test')}</Space>, children: <Flow/>,},
         {key: pageTable, label: <Space>{t('table')}</Space>, children: tableSchema,},
         {key: pageTableRef, label: <Space>{t('tableRef')}</Space>, children: tableRef,},
         {key: pageRecord, label: <Space>{t('record')}</Space>, children: tableRecord,},

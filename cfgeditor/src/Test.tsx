@@ -4,7 +4,9 @@ import ReactFlow, {
     useNodesState, useEdgesState, Edge, Node, NodeTypes, ReactFlowProvider, useNodes, Handle, Position
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import {Button, Checkbox, Form, Input, Space} from "antd";
+import {Button, Checkbox, Flex, Form, Input, List, Space, Typography} from "antd";
+
+const {Text} = Typography;
 
 const onFinish = (values: any) => {
     console.log('Success:', values);
@@ -20,8 +22,39 @@ type FieldType = {
     remember?: string;
 };
 
+const dataSource = [
+    {prop: "prop1", value: "value1"},
+    {prop: "prop2", value: "value22222222222"},
+    {prop: "prop3", value: "value3"},
+]
+
+function PropertiesNode() {
+    return <Flex vertical gap={'small'} className='formNode' style={{width: 300, backgroundColor: '#1677ff'}}>
+        <Text strong style={{fontSize: 18, color: "#fff"}}
+              copyable={{text: 'header'}}
+              ellipsis={{tooltip: true}}>header</Text>
+        <List size='small' style={{backgroundColor: '#ffffff'}} bordered dataSource={dataSource} renderItem={(item) => {
+            return <List.Item style={{position: 'relative'}}>
+                <Flex justify="space-between" style={{width: '100%'}}>
+                    <Typography.Text style={{color: '#1677ff'}} ellipsis={{tooltip: true}}>
+                        {item.prop}
+                    </Typography.Text>
+                    <Typography.Text ellipsis={{tooltip: true}}>
+                        {item.value}
+                    </Typography.Text>
+                </Flex>
+
+                <Handle type={'source'} position={Position.Right} id={item.prop}
+                        style={{position: 'absolute', left: '280px'}}/>
+            </List.Item>;
+
+        }}/>
+    </Flex>;
+}
+
+
 function FormNode() {
-    return <div className='formNode'>
+    return <div className='formNode' style={{width: 300, backgroundColor: '#13c2c2'}}>
         <Form name="basic"
               labelCol={{span: 8}}
               wrapperCol={{span: 16}}
@@ -45,10 +78,11 @@ function FormNode() {
                 name="password"
                 rules={[{required: true, message: 'Please input your password!'}]}
             >
-                <Space size={[20,10]} style={{marginRight: 0}}>
+                <Space>
                     <Input.Password/>
 
-                    <Handle type={'source'} position={Position.Right} id={'password'}/>
+                    <Handle type={'source'} position={Position.Right} id={'password'}
+                            style={{position: 'relative', left: '12px'}}/>
                 </Space>
             </Form.Item>
 
@@ -74,6 +108,7 @@ function FormNode() {
 
 const nodeTypes: NodeTypes = {
     formNode: FormNode,
+    propNode: PropertiesNode,
 };
 
 
@@ -87,7 +122,8 @@ const initialNodes: Node[] = [
     {
         id: '2',
         data: {label: 'World'},
-        position: {x: 100, y: 100},
+        position: {x: 400, y: 100},
+        type: "propNode",
     },
 ];
 
@@ -117,7 +153,7 @@ function FlowInner() {
 }
 
 
-export function Flow() {
+export function Test() {
     return (
         <ReactFlowProvider>
             <FlowInner/>

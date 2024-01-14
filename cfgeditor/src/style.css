@@ -14,8 +14,7 @@ mark {
 }
 
 .formNode {
-     border: 3px solid darkgray;
+     border: 0;
      padding: 5px;
-     border-radius: 15px;
-     background: white;
+     border-radius: 8px;
  }
