@@ -20,7 +20,7 @@ import {
 
 export function Setting({
                             schema, curPage,
-                            curTable, hasFix, onDeleteRecord,
+                            curTable, onDeleteRecord,
                             onConnectServer,
                             onToPng,
 
@@ -31,12 +31,8 @@ export function Setting({
     curId: string;
     curPage: string;
     curTable: STable | null;
-    hasFix: boolean;
     onDeleteRecord: () => void;
-
     onConnectServer: (v: string) => void;
-
-
     onToPng: () => void;
 
 }) {
@@ -48,7 +44,7 @@ export function Setting({
         maxImpl,
         refIn, refOutDepth, maxNode,
         recordRefIn, recordRefOutDepth, recordMaxNode,
-        searchMax, imageSizeScale
+        searchMax, imageSizeScale, fix
     } = store;
 
     let deleteRecordButton;
@@ -56,22 +52,18 @@ export function Setting({
         deleteRecordButton = <Button type="primary" danger onClick={onDeleteRecord}>
             <CloseOutlined/>{t('deleteCurRecord')}
         </Button>
-
     }
-
 
     let addFixButton;
     let removeFixButton;
     if (schema && curTable && curPage == pageRecordRef) {
-
-
         addFixButton = <Form.Item wrapperCol={{offset: 10}}>
             <Button type="primary" onClick={setFix}>
                 {t('addFix')}
             </Button>
         </Form.Item>
     }
-    if (hasFix) {
+    if (fix != null) {
         removeFixButton = <Form.Item wrapperCol={{offset: 10}}>
             <Button type="primary" onClick={setFixNull}>
                 {t('removeFix')}

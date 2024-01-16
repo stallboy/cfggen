@@ -1,10 +1,12 @@
 import {DefaultOptionType} from "antd/es/select/index";
 import {Select, Skeleton} from "antd";
 import {getIdOptions, isPkInteger} from "./model/schemaUtil.ts";
-import {setCurId, store} from "./model/store.ts";
+import {navTo, setCurId, store} from "./model/store.ts";
+import {useNavigate} from "react-router-dom";
 
 
 export function IdList() {
+    const navigate = useNavigate();
     const {schema, curTableId, curId} = store;
     let curTable = schema ? schema.getSTable(curTableId) : null;
 
@@ -32,7 +34,11 @@ export function IdList() {
                        option!.label.toUpperCase().includes(inputValue.toUpperCase())
                    }
                    onChange={(value, _) => {
-                       setCurId(value);
+
+                       const {curPage} = store;
+                       const [tabId, id] = setCurId(value);
+                       navigate(navTo(curPage, tabId, id));
+
                        // console.log(value);
                    }}/>
 

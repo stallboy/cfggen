@@ -1,20 +1,18 @@
-import {SItem, STable} from "./model/schemaModel.ts";
+import {SItem} from "./model/schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback} from "react";
 import {Entity, EntityGraph, fillInputs} from "./model/entityModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
-import {pageTable} from "./CfgEditorApp.tsx";
+import {pageTable, SchemaTableType} from "./CfgEditorApp.tsx";
 import {useTranslation} from "react-i18next";
 import {includeRefTables} from "./func/tableRefEntity.ts";
-import {Schema} from "./model/schemaUtil.ts";
 import {setCurPage, setCurTable, store} from "./model/store.ts";
+import {useOutletContext} from "react-router-dom";
 
 
-export function TableRef({schema, curTable,}: {
-    schema: Schema;
-    curTable: STable;
-}) {
+export function TableRef() {
+    const {schema, curTable} = useOutletContext<SchemaTableType>();
     const {refIn, refOutDepth, maxNode, nodeShow} = store;
     const {t} = useTranslation();
 

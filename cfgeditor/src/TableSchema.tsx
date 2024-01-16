@@ -1,20 +1,17 @@
-import {STable} from "./model/schemaModel.ts";
 import {useRete} from "rete-react-plugin";
 import {createEditor} from "./editor.tsx";
 import {useCallback} from "react";
 import {Entity, EntityGraph, fillInputs} from "./model/entityModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
-import {pageTableRef} from "./CfgEditorApp.tsx";
+import {pageTableRef, SchemaTableType} from "./CfgEditorApp.tsx";
 import {useTranslation} from "react-i18next";
 import {TableEntityCreator, UserData} from "./func/TableEntityCreator.ts";
-import {Schema} from "./model/schemaUtil.ts";
 import {setCurPage, setCurTable, store} from "./model/store.ts";
+import {useOutletContext} from "react-router-dom";
 
 
-export function TableSchema({schema, curTable}: {
-    schema: Schema,
-    curTable: STable
-}) {
+export function TableSchema() {
+    const {schema, curTable} = useOutletContext<SchemaTableType>();
     const {maxImpl, nodeShow} = store;
     const {t} = useTranslation();
 

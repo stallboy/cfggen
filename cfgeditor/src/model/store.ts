@@ -214,12 +214,15 @@ export function setSchemaCurTableAndId(schema: Schema,
     }
     if (curTab == null) {
         curTab = schema.getFirstSTable();
+
     }
 
+    let tabId = curTableId;
+    let id = '';
     if (curTab) {
+        tabId = curTab.name;
         store.curTableId = curTab.name;
 
-        let id = '';
         if (curId.length > 0 && schema.hasId(curTab, curId)) {
             id = curId;
         } else if (curTab.recordIds.length > 0) {
@@ -233,26 +236,34 @@ export function setSchemaCurTableAndId(schema: Schema,
         localStorage.setItem('curTableId', curTab.name);
         localStorage.setItem('curId', id);
     }
+
+    return [tabId, id];
 }
 
 export function setCurTable(curTableId: string) {
     const {schema, curId} = store;
     if (schema) {
-        setSchemaCurTableAndId(schema, curTableId, curId);
+        return setSchemaCurTableAndId(schema, curTableId, curId);
+    } else {
+        return [curTableId, curId];
     }
 }
 
 export function setCurTableAndId(curTableId: string, curId: string) {
     const {schema} = store;
     if (schema) {
-        setSchemaCurTableAndId(schema, curTableId, curId);
+        return setSchemaCurTableAndId(schema, curTableId, curId);
+    } else {
+        return [curTableId, curId];
     }
 }
 
 export function setCurId(curId: string) {
     const {schema, curTableId} = store;
     if (schema) {
-        setSchemaCurTableAndId(schema, curTableId, curId);
+        return setSchemaCurTableAndId(schema, curTableId, curId);
+    } else {
+        return [curTableId, curId];
     }
 }
 
@@ -273,5 +284,14 @@ export function historyNext() {
     const cur = newHistory.cur();
     if (cur && schema) {
         setSchemaCurTableAndId(schema, cur.table, cur.id, false);
+    }
+}
+
+
+export function navTo(curPage: string, tabId: string, id: string) {
+    if (curPage == 'table' || curPage == 'tableRef') {
+        return `${curPage}/${tabId}`;
+    } else {
+        return `${curPage}/${tabId}/${id}`;
     }
 }

@@ -6,6 +6,8 @@ import {App, ConfigProvider} from "antd";
 import './i18n.js'
 import {createBrowserRouter, RouterProvider} from "react-router-dom";
 import {Index} from './routes/Index.tsx';
+import {TableSchema} from "./TableSchema.tsx";
+import {TableRef} from "./TableRef.tsx";
 
 
 const router = createBrowserRouter([
@@ -19,11 +21,11 @@ const router = createBrowserRouter([
             },
             {
                 path: "table/:table",
-                element: <Index/>
+                Component: TableSchema
             },
             {
                 path: "tableRef/:table",
-                element: <Index/>,
+                Component: TableRef,
             },
             {
                 path: "record/:table/:id",

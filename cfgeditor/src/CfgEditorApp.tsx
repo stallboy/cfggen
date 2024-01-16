@@ -1,12 +1,23 @@
 import {useEffect, useRef, useState} from "react";
-import {Alert, App, Button, Drawer, Flex, Form, Input, Modal, Space, Tabs, Typography} from "antd";
+import {
+    Alert,
+    App,
+    Button,
+    Drawer,
+    Flex,
+    Form,
+    Input,
+    Modal,
+    Radio,
+    RadioChangeEvent,
+    Space,
+    Typography
+} from "antd";
 import {saveAs} from 'file-saver';
 import {LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
 import {TableList} from "./TableList.tsx";
 import {IdList} from "./IdList.tsx";
-import {TableSchema} from "./TableSchema.tsx";
-import {TableRef} from "./TableRef.tsx";
-import {TableRecord} from "./TableRecord.tsx";
+
 import {TableRecordRef} from "./TableRecordRef.tsx";
 import {SearchValue} from "./SearchValue.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
@@ -19,13 +30,14 @@ import {Setting} from "./Setting.tsx";
 import {getNextId, newSchema, Schema} from "./model/schemaUtil.ts";
 import {
     historyNext,
-    historyPrev,
-    PageType,
+    historyPrev, navTo,
     setCurPage,
     setSchemaCurTableAndId,
     setSchemaNull, setServer,
     store
 } from "./model/store.ts";
+import {Outlet, useNavigate} from "react-router-dom";
+import {STable} from "./model/schemaModel.ts";
 
 const {Text} = Typography;
 
@@ -36,6 +48,9 @@ export const pageRecordRef = 'recordRef'
 export const pageFixed = 'fix'
 
 
+export type SchemaTableType = { schema: Schema, curTable: STable };
+
+
 export function CfgEditorApp() {
     const {
         schema, curTableId, curId, curPage, server,
@@ -44,6 +59,7 @@ export function CfgEditorApp() {
         imageSizeScale, history
     } = store;
 
+    const navigate = useNavigate();
     const [settingOpen, setSettingOpen] = useState<boolean>(false);
     const [searchOpen, setSearchOpen] = useState<boolean>(false);
 
@@ -98,7 +114,7 @@ export function CfgEditorApp() {
     if (curTable) {
         let nId = getNextId(curTable, curId);
         if (nId) {
-            nextId = <Text>{t('nextSlot')} <Text copyable>{nId}</Text> --- </Text>
+            nextId = <Text>{t('nextSlot')} <Text copyable>{nId}</Text> </Text>
         }
     }
 
@@ -118,98 +134,31 @@ export function CfgEditorApp() {
         setSearchOpen(false);
     };
 
-    const leftOp = <Space>
-        <Button onClick={showSetting}>
-            <SettingOutlined/>
-        </Button>
-        <Button onClick={showSearch}>
-            <SearchOutlined/>
-        </Button>
-        <TableList/>
-        <IdList/>
-        {nextId}
-        <Button onClick={historyPrev} disabled={!history.canPrev()}>
-            <LeftOutlined/>
-        </Button>
-
-        <Button onClick={historyNext} disabled={!history.canNext()}>
-            <RightOutlined/>
-        </Button>
-
-    </Space>;
-
-    function tryReconnect() {
-        tryConnect(server);
-    }
-
-    let tableSchema = <div/>;
-    let tableRef = <div/>;
-    let tableRecord = <div/>;
-    let tableRecordRef = <div/>;
-    let tableRecordRefFixed = null;
-    if (schema != null && curTable != null) {
-        tableSchema = <div ref={ref} style={{background: '#fff'}}>
-            <TableSchema {...{schema, curTable}}/>
-        </div>;
-
-        tableRef = <div ref={ref} style={{background: '#fff'}}>
-            <TableRef {...{schema, curTable}}/>
-        </div>;
-
-        if (curId != null) {
-            tableRecord = <div ref={ref} style={{background: '#fff'}}>
-                <TableRecord schema={schema}
-                             curTable={curTable}
-                             tryReconnect={tryReconnect}
-                />
-            </div>;
-
-            tableRecordRef = <div ref={ref} style={{background: '#fff'}}>
-                <TableRecordRef schema={schema}
-                                curTable={curTable}
-                                curId={curId}
-                                refIn={recordRefIn}
-                                refOutDepth={recordRefOutDepth}
-                                maxNode={recordMaxNode}
-                                tryReconnect={tryReconnect}
-                                nodeShow={nodeShow}/>;
-            </div>;
-        }
-    }
-
-    let items = [
-        {key: pageTable, label: <Space>{t('table')}</Space>, children: tableSchema,},
-        {key: pageTableRef, label: <Space>{t('tableRef')}</Space>, children: tableRef,},
-        {key: pageRecord, label: <Space>{t('record')}</Space>, children: tableRecord,},
+    let options = [
+        {label: t('table'), value: 'table'},
+        {label: t('tableRef'), value: 'tableRef'},
+        {label: t('record'), value: 'record'},
     ]
 
     if (dragPanel != pageRecordRef) {
-        items.push({key: pageRecordRef, label: <Space>{t('recordRef')}</Space>, children: tableRecordRef,});
+        options.push({label: t('recordRef'), value: 'recordRef'});
     }
 
     if (fix && schema) {
         let fixedTable = schema.getSTable(fix.table);
-        if (fixedTable) {
-            tableRecordRefFixed = <TableRecordRef schema={schema}
-                                                  curTable={fixedTable}
-                                                  curId={fix.id}
-                                                  refIn={fix.refIn}
-                                                  refOutDepth={fix.refOutDepth}
-                                                  maxNode={fix.maxNode}
-                                                  tryReconnect={tryReconnect}
-                                                  nodeShow={fix.nodeShow}/>;
-            if (dragPanel != pageFixed) {
-                items.push({
-                    key: pageFixed,
-                    label: <Space>{t('fix') + ' ' + getId(fix.table, fix.id)}</Space>,
-                    children: tableRecordRefFixed,
-                });
-            }
+        if (fixedTable && dragPanel != pageFixed) {
+            options.push({label: t('fix') + ' ' + getId(fix.table, fix.id), value: 'fix'});
         }
     }
 
-    function onTabChange(activeKey: string) {
-        setCurPage(activeKey as PageType);
+    function onChangeCurPage(e: RadioChangeEvent) {
+        const page = e.target.value;
+        setCurPage(page);
+        navigate(navTo(page, curTableId, curId));
+    }
+
+    function tryReconnect() {
+        tryConnect(server);
     }
 
     function onConnectServer(value: string) {
@@ -285,39 +234,91 @@ export function CfgEditorApp() {
         })
     }
 
-    let tab = <Tabs tabBarExtraContent={{'left': leftOp}}
-                    items={items}
-                    activeKey={curPage}
-                    onChange={onTabChange}
-                    style={{margin: 0}}
-                    type="card"/>
 
-    let dragPage = null;
-    if (dragPanel == 'recordRef') {
-        dragPage = tableRecordRef;
-    } else if (dragPanel == 'fix') {
-        dragPage = tableRecordRefFixed;
-    }
     let content;
-    if (dragPage) {
-        content = <div style={{
-            position: "absolute",
-            background: '#fff',
-            border: '1px solid #ddd', width: '100%',
-            height: '100%',
-            display: 'flex',
-        }}>
-            <DraggablePanel
-                placement={'left'}
-                style={{background: '#fff', width: '100%', padding: 12}}>
-                {dragPage}
-            </DraggablePanel>
-            <div style={{flex: 'auto'}}>{tab}</div>
-        </div>;
+    if (schema == null || curTable == null) {
+        content = <></>
     } else {
-        content = tab;
+
+        let dragPage = null;
+        if (dragPanel == 'recordRef') {
+            dragPage = <TableRecordRef schema={schema}
+                                       curTable={curTable}
+                                       curId={curId}
+                                       refIn={recordRefIn}
+                                       refOutDepth={recordRefOutDepth}
+                                       maxNode={recordMaxNode}
+                                       tryReconnect={tryReconnect}
+                                       nodeShow={nodeShow}/>;
+        } else if (dragPanel == 'fix' && fix) {
+            let fixedTable = schema.getSTable(fix.table);
+            if (fixedTable) {
+                dragPage = <TableRecordRef schema={schema}
+                                           curTable={fixedTable}
+                                           curId={fix.id}
+                                           refIn={fix.refIn}
+                                           refOutDepth={fix.refOutDepth}
+                                           maxNode={fix.maxNode}
+                                           tryReconnect={tryReconnect}
+                                           nodeShow={fix.nodeShow}/>;
+            }
+        }
+
+        if (dragPage) {
+            content = <div style={{
+                position: "absolute",
+                background: '#fff',
+                display: 'flex',
+                height: "100vh", width: "100vw"
+            }}>
+                <DraggablePanel
+                    placement={'left'}
+                    style={{background: '#fff', width: '100%', padding: 12}}>
+                    {dragPage}
+                </DraggablePanel>
+                <div ref={ref} style={{flex: 'auto'}}>
+                    <Outlet context={{schema, curTable} satisfies SchemaTableType}/>
+                </div>
+            </div>;
+        } else {
+            content = <div ref={ref} style={{height: "100vh", width: "100vw"}}>
+                <Outlet context={{schema, curTable}  satisfies SchemaTableType}/>
+            </div>;
+        }
     }
-    return <>
+
+
+    return <div style={{position: 'relative'}}>
+        <Space size={'large'} style={{position: 'absolute', zIndex: 1}}>
+            <Space>
+                <Button onClick={showSetting}>
+                    <SettingOutlined/>
+                </Button>
+                <Button onClick={showSearch}>
+                    <SearchOutlined/>
+                </Button>
+                <TableList/>
+                <IdList/>
+                {nextId}
+            </Space>
+
+            <Space>
+                <Radio.Group value={curPage} onChange={onChangeCurPage}
+                             options={options} optionType={'button'}>
+                </Radio.Group>
+
+                <Button onClick={historyPrev} disabled={!history.canPrev()}>
+                    <LeftOutlined/>
+                </Button>
+
+                <Button onClick={historyNext} disabled={!history.canNext()}>
+                    <RightOutlined/>
+                </Button>
+            </Space>
+        </Space>
+
+        {content}
+
         <Modal title={t('serverConnectFail')} open={isModalOpen}
                cancelButtonProps={{disabled: true}}
                closable={false}
@@ -334,11 +335,12 @@ export function CfgEditorApp() {
                 </Form.Item>
             </Flex>
         </Modal>
-        {content}
+
+
         <Drawer title="setting" placement="left" onClose={onSettingClose} open={settingOpen} size='large'>
             <Setting  {...{
                 schema, curTableId, curId, curPage,
-                curTable, hasFix: tableRecordRefFixed != null, onDeleteRecord,
+                curTable, onDeleteRecord,
                 onConnectServer,
                 onToPng,
 
@@ -349,7 +351,7 @@ export function CfgEditorApp() {
             <SearchValue {...{tryReconnect}}/>
         </Drawer>
 
-    </>;
+    </div>;
 
 }
 
