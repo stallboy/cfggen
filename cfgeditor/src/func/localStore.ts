@@ -25,10 +25,10 @@ export function getStr(key: string, def: string): string {
     return def;
 }
 
-export function getEnumStr(key: string, enums: string[], def: string): string {
+export function getEnumStr<T>(key: string, enums: string[], def: T): T {
     let v = localStorage.getItem(key);
     if (v && enums.includes(v)) {
-        return v;
+        return v as T;
     }
     return def;
 }

@@ -2,14 +2,13 @@ import {Button, Card, ColorPicker, Form, Input, Select, Space, Switch} from "ant
 import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 
-import {Convert, KeywordColor, NodeShowType} from "./func/localStoreJson.ts";
+import {KeywordColor} from "./func/localStoreJson.ts";
+import {setNodeShow, store} from "./model/store.ts";
 
 
-export function NodeShowSetting({nodeShow, setNodeShow}: {
-    nodeShow: NodeShowType;
-    setNodeShow: (nodeShow: NodeShowType) => void;
-}) {
+export function NodeShowSetting() {
     const {t} = useTranslation();
+    const {nodeShow} = store;
 
     function onFinish(values: any) {
         // console.log(values);
@@ -19,7 +18,6 @@ export function NodeShowSetting({nodeShow, setNodeShow}: {
             tableColors: fixColors(values.tableColors)
         };
         setNodeShow(newNodeShow);
-        localStorage.setItem('nodeShow', Convert.nodeShowTypeToJson(newNodeShow));
     }
 
     function fixColors(keywordColors: any[]): KeywordColor[] {

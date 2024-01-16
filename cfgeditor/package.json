@@ -12,7 +12,6 @@
   "dependencies": {
     "@ant-design/icons": "^5.2.6",
     "@ant-design/pro-editor": "^0.38.0",
-    "@reduxjs/toolkit": "^2.0.1",
     "antd": "^5.11.5",
     "antd-style": "^3.6.1",
     "elkjs": "^0.8.2",
@@ -25,8 +24,9 @@
     "react-dom": "^18.2.0",
     "react-hotkeys-hook": "^4.4.1",
     "react-i18next": "^13.5.0",
-    "react-redux": "^9.1.0",
+    "react-router-dom": "^6.21.2",
     "reactflow": "^11.10.1",
+    "resso": "^0.15.0",
     "rete": "^2.0.2",
     "rete-area-plugin": "^2.0.1",
     "rete-auto-arrange-plugin": "^2.0.0",

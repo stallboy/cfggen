@@ -4,6 +4,7 @@ import {SearchResult, SearchResultItem} from "./model/searchModel.ts";
 import type {ColumnsType} from "antd/es/table";
 import {useTranslation} from "react-i18next";
 import {getId} from "./func/recordRefEntity.ts";
+import {setCurTableAndId, setQuery, store} from "./model/store.ts";
 
 
 function getLabel(table: string, id: string): string {
@@ -12,7 +13,7 @@ function getLabel(table: string, id: string): string {
 }
 
 
-function getColumns(onClick: (item: SearchResultItem) => void): ColumnsType<SearchResultItem> {
+function getColumns(): ColumnsType<SearchResultItem> {
     return [
         {
             title: 'id',
@@ -24,7 +25,7 @@ function getColumns(onClick: (item: SearchResultItem) => void): ColumnsType<Sear
             },
             render: (_text: any, item: SearchResultItem, _index: number) => {
                 let label = getLabel(item.table, item.pk);
-                return <Button type={'link'} onClick={() => onClick(item)}>
+                return <Button type={'link'} onClick={() => setCurTableAndId(item.table, item.pk)}>
                     {label}
                 </Button>;
             }
@@ -47,14 +48,11 @@ function getColumns(onClick: (item: SearchResultItem) => void): ColumnsType<Sear
 }
 
 
-export function SearchValue({searchMax, server, query, setQuery, tryReconnect, setCurTableAndId}: {
-    searchMax: number;
-    server: string;
-    query: string;
-    setQuery: (q: string) => void;
+export function SearchValue({tryReconnect}: {
     tryReconnect: () => void;
-    setCurTableAndId: (table: string, id: string) => void;
 }) {
+    const {server, query, searchMax} = store;
+
     const [loading, setLoading] = useState<boolean>(false);
     const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
     const {notification} = App.useApp();
@@ -62,6 +60,7 @@ export function SearchValue({searchMax, server, query, setQuery, tryReconnect, s
 
     function onSearch(value: string) {
         setQuery(value);
+
         setLoading(true);
         let url = `http://${server}/search?q=${value}&max=${searchMax}`;
         const fetchData = async () => {
@@ -78,17 +77,13 @@ export function SearchValue({searchMax, server, query, setQuery, tryReconnect, s
     }
 
 
-    function onClickItem(item: SearchResultItem) {
-        setCurTableAndId(item.table, item.pk);
-    }
-
     let content;
     if (searchResult == null) {
         content = <Empty/>
     } else if (searchResult.resultCode != 'ok') {
         content = <Result status={'error'} title={searchResult.resultCode}/>
     } else {
-        let columns = getColumns(onClickItem);
+        let columns = getColumns();
         content = <div>q={searchResult.q}&max={searchResult.max}
             <Table columns={columns} dataSource={searchResult.items}
                    rowKey={(item: SearchResultItem) => getId(item.table, item.pk)}/>
