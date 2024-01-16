@@ -11,22 +11,17 @@ import {pageRecord} from "./CfgEditorApp.tsx";
 import {useTranslation} from "react-i18next";
 import {Schema} from "./model/schemaUtil.ts";
 import {NodeShowType} from "./func/localStoreJson.ts";
+import {setCurPage, setCurTableAndId, setEditMode, store} from "./model/store.ts";
 
 
-export function TableRecordRefLoaded({
-                                         schema, curTable, recordRefResult, setCurTableAndId, setCurPage, setEditMode,
-                                         query, nodeShow
-                                     }: {
+export function TableRecordRefLoaded({schema, curTable, recordRefResult, nodeShow}: {
     schema: Schema;
     curTable: STable;
     recordRefResult: RecordRefsResult;
-    setCurTableAndId: (table: string, id: string) => void;
-    setCurPage: (page: string) => void;
-    setEditMode: (edit: boolean) => void;
-    query: string;
     nodeShow: NodeShowType;
 }) {
 
+    const {query} = store;
     const [t] = useTranslation();
 
     function createGraph(): EntityGraph {
@@ -98,9 +93,8 @@ export function TableRecordRefLoaded({
 export function TableRecordRef({
                                    schema, curTable, curId,
                                    refIn, refOutDepth, maxNode,
-                                   server, tryReconnect,
-                                   setCurTableAndId, setCurPage,
-                                   setEditMode, query, nodeShow
+                                   tryReconnect,
+                                   nodeShow
                                }: {
     schema: Schema;
     curTable: STable;
@@ -108,14 +102,10 @@ export function TableRecordRef({
     refIn: boolean;
     refOutDepth: number;
     maxNode: number;
-    server: string;
-    tryReconnect: () => void;
-    setCurTableAndId: (table: string, id: string) => void;
-    setCurPage: (page: string) => void;
-    setEditMode: (edit: boolean) => void;
-    query: string;
     nodeShow: NodeShowType;
+    tryReconnect: () => void;
 }) {
+    const {server} = store;
     const [recordRefResult, setRecordRefResult] = useState<RecordRefsResult | null>(null);
     const {notification} = App.useApp();
 
@@ -144,12 +134,7 @@ export function TableRecordRef({
         return <Result status={'error'} title={recordRefResult.resultCode}/>
     }
 
-    return <TableRecordRefLoaded
-        {...{
-            schema, curTable, recordRefResult, setCurTableAndId, setCurPage, setEditMode,
-            query, nodeShow
-        }}
-    />
+    return <TableRecordRefLoaded {...{schema, curTable, recordRefResult, nodeShow}}/>
 
 
 }

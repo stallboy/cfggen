@@ -8,28 +8,14 @@ import {pageTable} from "./CfgEditorApp.tsx";
 import {useTranslation} from "react-i18next";
 import {includeRefTables} from "./func/tableRefEntity.ts";
 import {Schema} from "./model/schemaUtil.ts";
-import {NodeShowType} from "./func/localStoreJson.ts";
+import {setCurPage, setCurTable, store} from "./model/store.ts";
 
 
-export function TableRef({
-                             schema,
-                             curTable,
-                             setCurTable,
-                             refIn,
-                             refOutDepth,
-                             maxNode,
-                             setCurPage,
-                             nodeShow
-                         }: {
+export function TableRef({schema, curTable,}: {
     schema: Schema;
     curTable: STable;
-    setCurTable: (cur: string) => void;
-    refIn: boolean;
-    refOutDepth: number;
-    maxNode: number;
-    setCurPage: (page: string) => void;
-    nodeShow: NodeShowType;
 }) {
+    const {refIn, refOutDepth, maxNode, nodeShow} = store;
     const {t} = useTranslation();
 
     function createGraph(): EntityGraph {

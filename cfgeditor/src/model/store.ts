@@ -149,7 +149,7 @@ export function setImageSizeScale(value: number | null) {
     }
 }
 
-export function setDragPanel(value: string) {
+export function setDragPanel(value: DragPanelType) {
     if (dragPanelEnums.includes(value)) {
         store.dragPanel = (value as DragPanelType);
         localStorage.setItem('dragPanel', value);
@@ -176,23 +176,35 @@ export function setFixNull() {
     localStorage.removeItem('fix');
 }
 
+export function setServer(value: string) {
+    store.server = value;
+    localStorage.setItem('server', value);
+}
+
 export function setNodeShow(nodeShow: NodeShowType) {
     store.nodeShow = nodeShow;
     localStorage.setItem('nodeShow', Convert.nodeShowTypeToJson(nodeShow));
 }
 
-export function setCurPage(page: string) {
+export function setCurPage(page: PageType) {
     if (pageEnums.includes(page)) {
         store.curPage = page as PageType;
         localStorage.setItem('curPage', page);
     }
 }
 
-function setSchemaCurTableAndId(schema: Schema,
-                                curTableId: string,
-                                curId: string,
-                                fromOp: boolean = true) {
+export function setEditMode(editMode: boolean) {
+    store.editMode = editMode;
+}
 
+export function setSchemaNull() {
+    store.schema = null;
+}
+
+export function setSchemaCurTableAndId(schema: Schema,
+                                       curTableId: string,
+                                       curId: string,
+                                       fromOp: boolean = true) {
     const {history} = store;
     store.schema = schema;
 
@@ -236,7 +248,6 @@ export function setCurTableAndId(curTableId: string, curId: string) {
         setSchemaCurTableAndId(schema, curTableId, curId);
     }
 }
-
 
 export function setCurId(curId: string) {
     const {schema, curTableId} = store;

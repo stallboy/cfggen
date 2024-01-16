@@ -1,21 +1,16 @@
 import {STable} from "./model/schemaModel.ts";
-import {Dispatch, memo} from "react";
 import {Badge, Select, Space} from "antd";
-import {Schema} from "./model/schemaUtil.ts";
+import {setCurTable, store} from "./model/store.ts";
 
-class TableWithLastName {
+interface TableWithLastName {
+    tableId: string;
     table: STable;
     lastName: string;
-
-    constructor(table: STable, lastName: string) {
-        this.table = table;
-        this.lastName = lastName;
-    }
 }
 
-export const TableList = memo(function TableList({schema, curTable, setCurTable}: {
-    schema: Schema | null, curTable: STable | null, setCurTable: Dispatch<string>
-}) {
+
+export function TableList() {
+    const {schema, curTableId} = store;
 
     if (schema == null) {
         return <Select id='table' loading={true}/>
@@ -24,12 +19,13 @@ export const TableList = memo(function TableList({schema, curTable, setCurTable}
     let group2Tables = new Map<string, TableWithLastName[]>();
     for (let item of schema.itemMap.values()) {
         if (item.type == 'table') {
-            let t = item as STable
+            let table = item as STable;
+            let tableId = item.name;
             let group = ""
-            let name = t.name
-            let sp = name.split(".")
+            let lastName = tableId;
+            let sp = lastName.split(".")
             if (sp.length > 1) {
-                name = sp[sp.length - 1]
+                lastName = sp[sp.length - 1]
                 group = sp.slice(0, sp.length - 1).join(".")
             }
 
@@ -38,7 +34,7 @@ export const TableList = memo(function TableList({schema, curTable, setCurTable}
                 tables = []
                 group2Tables.set(group, tables)
             }
-            tables.push(new TableWithLastName(t, name))
+            tables.push({tableId, table, lastName})
         }
     }
     let options = [];
@@ -49,7 +45,7 @@ export const TableList = memo(function TableList({schema, curTable, setCurTable}
 
         for (let tl of tls) {
             let style = {backgroundColor: '#bbbbbb'}
-            if (tl.table == curTable) {
+            if (tl.tableId == curTableId) {
                 style = {backgroundColor: '#52c41a'};
             }
 
@@ -73,7 +69,7 @@ export const TableList = memo(function TableList({schema, curTable, setCurTable}
                    showSearch
                    options={options}
                    style={{width: 200}}
-                   value={curTable?.name}
+                   value={curTableId}
                    placeholder="search a table"
                    optionFilterProp="children"
                    filterOption={(inputValue, option) => {
@@ -83,4 +79,4 @@ export const TableList = memo(function TableList({schema, curTable, setCurTable}
                        setCurTable(value);
                    }}
     />;
-});
+}

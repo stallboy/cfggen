@@ -17,7 +17,15 @@ import {DraggablePanel} from "@ant-design/pro-editor";
 import {toBlob} from "html-to-image";
 import {Setting} from "./Setting.tsx";
 import {getNextId, newSchema, Schema} from "./model/schemaUtil.ts";
-import {historyNext, historyPrev, setCurPage, store} from "./model/store.ts";
+import {
+    historyNext,
+    historyPrev,
+    PageType,
+    setCurPage,
+    setSchemaCurTableAndId,
+    setSchemaNull, setServer,
+    store
+} from "./model/store.ts";
 
 const {Text} = Typography;
 
@@ -31,7 +39,9 @@ export const pageFixed = 'fix'
 export function CfgEditorApp() {
     const {
         schema, curTableId, curId, curPage, server,
-        dragPanel, editMode,imageSizeScale, history
+        fix, dragPanel,
+        recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow,
+        imageSizeScale, history
     } = store;
 
     const [settingOpen, setSettingOpen] = useState<boolean>(false);
@@ -62,9 +72,8 @@ export function CfgEditorApp() {
     let curTable = schema ? schema.getSTable(curTableId) : null;
 
 
-
     function tryConnect(server: string) {
-        setSchema(null);
+        setSchemaNull();
         setIsFetching(true);
 
         const fetchData = async () => {
@@ -72,8 +81,7 @@ export function CfgEditorApp() {
             const rawSchema = await response.json();
             const schema = new Schema(rawSchema);
 
-            setSchema(schema);
-            selectCurTableAndIdFromSchema(schema, curTableId, curId);
+            setSchemaCurTableAndId(schema, curTableId, curId);
             setIsFetching(false);
             setIsModalOpen(false);
         }
@@ -117,8 +125,8 @@ export function CfgEditorApp() {
         <Button onClick={showSearch}>
             <SearchOutlined/>
         </Button>
-        <TableList schema={schema} curTable={curTable} setCurTable={setCurTable}/>
-        <IdList curTable={curTable} curId={curId} setCurId={selectCurId}/>
+        <TableList/>
+        <IdList/>
         {nextId}
         <Button onClick={historyPrev} disabled={!history.canPrev()}>
             <LeftOutlined/>
@@ -141,37 +149,19 @@ export function CfgEditorApp() {
     let tableRecordRefFixed = null;
     if (schema != null && curTable != null) {
         tableSchema = <div ref={ref} style={{background: '#fff'}}>
-            <TableSchema schema={schema}
-                         curTable={curTable}
-                         maxImpl={maxImpl}
-                         setCurTable={setCurTable}
-                         setCurPage={setCurPage}
-                         nodeShow={nodeShow}/>
+            <TableSchema {...{schema, curTable}}/>
         </div>;
 
         tableRef = <div ref={ref} style={{background: '#fff'}}>
-            <TableRef schema={schema}
-                      curTable={curTable}
-                      setCurTable={setCurTable}
-                      refIn={refIn}
-                      refOutDepth={refOutDepth}
-                      maxNode={maxNode}
-                      setCurPage={setCurPage}
-                      nodeShow={nodeShow}/>
+            <TableRef {...{schema, curTable}}/>
         </div>;
 
         if (curId != null) {
             tableRecord = <div ref={ref} style={{background: '#fff'}}>
                 <TableRecord schema={schema}
                              curTable={curTable}
-                             curId={curId}
-                             server={server}
                              tryReconnect={tryReconnect}
-                             selectCurTableAndIdFromSchema={selectCurTableAndIdFromSchema}
-                             setCurPage={setCurPage}
-                             editMode={editMode}
-                             setEditMode={setEditMode}
-                             nodeShow={nodeShow}/>
+                />
             </div>;
 
             tableRecordRef = <div ref={ref} style={{background: '#fff'}}>
@@ -181,12 +171,7 @@ export function CfgEditorApp() {
                                 refIn={recordRefIn}
                                 refOutDepth={recordRefOutDepth}
                                 maxNode={recordMaxNode}
-                                server={server}
                                 tryReconnect={tryReconnect}
-                                setCurTableAndId={setCurTableAndId}
-                                setCurPage={setCurPage}
-                                setEditMode={setEditMode}
-                                query={query}
                                 nodeShow={nodeShow}/>;
             </div>;
         }
@@ -211,13 +196,8 @@ export function CfgEditorApp() {
                                                   refIn={fix.refIn}
                                                   refOutDepth={fix.refOutDepth}
                                                   maxNode={fix.maxNode}
-                                                  server={server}
                                                   tryReconnect={tryReconnect}
-                                                  setCurTableAndId={setCurTableAndId}
-                                                  setCurPage={setCurPage}
-                                                  setEditMode={setEditMode}
-                                                  query={query}
-                                                  nodeShow={nodeShow}/>;
+                                                  nodeShow={fix.nodeShow}/>;
             if (dragPanel != pageFixed) {
                 items.push({
                     key: pageFixed,
@@ -229,13 +209,11 @@ export function CfgEditorApp() {
     }
 
     function onTabChange(activeKey: string) {
-        setCurPage(activeKey);
+        setCurPage(activeKey as PageType);
     }
-
 
     function onConnectServer(value: string) {
         setServer(value);
-        localStorage.setItem('server', value);
         tryConnect(value);
     }
 
@@ -257,7 +235,7 @@ export function CfgEditorApp() {
             const editResult: RecordEditResult = await response.json();
             if (editResult.resultCode == 'deleteOk') {
                 console.log(editResult);
-                setSchema(newSchema(schema!!, editResult.table, editResult.recordIds));
+                setSchemaCurTableAndId(newSchema(schema!!, editResult.table, editResult.recordIds), curTableId, curId);
                 notification.info({
                     message: `post ${url} ${editResult.resultCode}`,
                     placement: 'topRight',

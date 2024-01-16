@@ -13,26 +13,16 @@ import {editingState} from "./func/editingState.ts";
 import {pageRecordRef} from "./CfgEditorApp.tsx";
 import {useTranslation} from "react-i18next";
 import {newSchema, Schema} from "./model/schemaUtil.ts";
-import {NodeShowType} from "./func/localStoreJson.ts";
+import {setCurPage, setEditMode, setSchemaCurTableAndId, store} from "./model/store.ts";
 
 
-export function TableRecordLoaded({
-                                      schema, curTable, curId,
-                                      recordResult, selectCurTableAndIdFromSchema, setCurPage,
-                                      onSubmit, editMode, setEditMode,
-                                      nodeShow
-                                  }: {
+export function TableRecordLoaded({schema, curTable, recordResult, onSubmit}: {
     schema: Schema;
     curTable: STable;
-    curId: string;
     recordResult: RecordResult;
-    selectCurTableAndIdFromSchema: (schema: Schema, table: string, id: string, fromOp: boolean) => void;
-    setCurPage: (page: string) => void;
     onSubmit: () => void;
-    editMode: boolean,
-    setEditMode: (edit: boolean) => void;
-    nodeShow: NodeShowType;
 }) {
+    const {curId, editMode, nodeShow} = store;
     const [forceUpdate, setForceUpdate] = useReducer(x => x + 1, 0);
     const [t] = useTranslation();
 
@@ -42,7 +32,7 @@ export function TableRecordLoaded({
     }, [schema, curTable, curId, editMode]);
 
     function setCurTableAndId(table: string, id: string) {
-        selectCurTableAndIdFromSchema(schema, table, id, true);
+        setSchemaCurTableAndId(schema, table, id, true);
     }
 
     function createGraph(): EntityGraph {
@@ -151,24 +141,12 @@ export function TableRecordLoaded({
     return <div ref={ref} style={{height: "100vh", width: "100%"}}></div>
 }
 
-export function TableRecord({
-                                schema, curTable, curId,
-                                server, tryReconnect,
-                                selectCurTableAndIdFromSchema, setCurPage,
-                                editMode, setEditMode,
-                                nodeShow,
-                            }: {
+export function TableRecord({schema, curTable, tryReconnect}: {
     schema: Schema;
     curTable: STable;
-    curId: string;
-    server: string;
     tryReconnect: () => void;
-    selectCurTableAndIdFromSchema: (schema: Schema, table: string, id: string, fromOp: boolean) => void;
-    setCurPage: (page: string) => void;
-    editMode: boolean,
-    setEditMode: (edit: boolean) => void;
-    nodeShow: NodeShowType;
 }) {
+    const {curId, server} = store;
     const [recordResult, setRecordResult] = useState<RecordResult | null>(null);
     const {notification} = App.useApp();
 
@@ -221,7 +199,7 @@ export function TableRecord({
                     duration: 3
                 });
                 let newSch = newSchema(schema, editResult.table, editResult.recordIds);
-                selectCurTableAndIdFromSchema(newSch, editResult.table, editResult.id, true);
+                setSchemaCurTableAndId(newSch, editResult.table, editResult.id, true);
             } else {
                 notification.warning({
                     message: `post ${url} ${editResult.resultCode}`,
@@ -250,10 +228,9 @@ export function TableRecord({
 
     return <TableRecordLoaded key={`${curTable.name}-${curId}`}
                               {...{
-                                  schema, curTable, curId,
-                                  recordResult, selectCurTableAndIdFromSchema, setCurPage,
-                                  onSubmit, editMode, setEditMode,
-                                  nodeShow
+                                  schema, curTable,
+                                  recordResult,
+                                  onSubmit
                               }}
     />
 
