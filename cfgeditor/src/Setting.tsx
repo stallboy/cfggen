@@ -2,7 +2,6 @@ import {Button, Descriptions, Divider, Flex, Form, Input, InputNumber, Select, S
 import {CloseOutlined, LeftOutlined, RightOutlined, SearchOutlined} from "@ant-design/icons";
 import {NodeShowSetting} from "./NodeShowSetting.tsx";
 import {useTranslation} from "react-i18next";
-import {pageRecordRef} from "./CfgEditorApp.tsx";
 import {STable} from "./model/schemaModel.ts";
 import {Schema} from "./model/schemaUtil.ts";
 import {
@@ -14,7 +13,7 @@ import {
     setRecordRefOutDepth,
     setRefIn,
     setRefOutDepth, setSearchMax,
-    store
+    store, useLocationData
 } from "./model/store.ts";
 
 
@@ -47,6 +46,8 @@ export function Setting({
         searchMax, imageSizeScale, fix
     } = store;
 
+    const {curTableId, curId} = useLocationData();
+
     let deleteRecordButton;
     if (schema && curTable && schema.isEditable && curTable.isEditable) {
         deleteRecordButton = <Button type="primary" danger onClick={onDeleteRecord}>
@@ -56,9 +57,9 @@ export function Setting({
 
     let addFixButton;
     let removeFixButton;
-    if (schema && curTable && curPage == pageRecordRef) {
+    if (schema && curTable && curPage == 'recordRef') {
         addFixButton = <Form.Item wrapperCol={{offset: 10}}>
-            <Button type="primary" onClick={setFix}>
+            <Button type="primary" onClick={() => setFix(curTableId, curId)}>
                 {t('addFix')}
             </Button>
         </Form.Item>

@@ -3,17 +3,18 @@ import {createEditor} from "./editor.tsx";
 import {useCallback} from "react";
 import {Entity, EntityGraph, fillInputs} from "./model/entityModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
-import {pageTableRef, SchemaTableType} from "./CfgEditorApp.tsx";
+import {SchemaTableType} from "./CfgEditorApp.tsx";
 import {useTranslation} from "react-i18next";
 import {TableEntityCreator, UserData} from "./func/TableEntityCreator.ts";
-import {setCurPage, setCurTable, store} from "./model/store.ts";
-import {useOutletContext} from "react-router-dom";
+import {navTo, store} from "./model/store.ts";
+import {useNavigate, useOutletContext} from "react-router-dom";
 
 
 export function TableSchema() {
     const {schema, curTable} = useOutletContext<SchemaTableType>();
     const {maxImpl, nodeShow} = store;
     const {t} = useTranslation();
+    const navigate = useNavigate();
 
     function createGraph(): EntityGraph {
         const entityMap = new Map<string, Entity>();
@@ -26,7 +27,7 @@ export function TableSchema() {
             label: curTable.name + "\n" + t('tableRef'),
             key: 'tableRef',
             handler() {
-                setCurPage(pageTableRef);
+                navigate(navTo('tableRef', curTable.name));
             }
         }];
 
@@ -38,7 +39,7 @@ export function TableSchema() {
                     label: userData.table + "\n" + t('table'),
                     key: `entityTable`,
                     handler() {
-                        setCurTable(userData.table);
+                        navigate(navTo('table', userData.table));
                     }
                 });
             }
@@ -47,8 +48,7 @@ export function TableSchema() {
                 label: userData.table + "\n" + t('tableRef'),
                 key: `entityTableRef`,
                 handler() {
-                    setCurTable(userData.table);
-                    setCurPage(pageTableRef);
+                    navigate(navTo('tableRef', userData.table));
                 }
             });
             return mm;

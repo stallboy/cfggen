@@ -1,10 +1,10 @@
 import {useState} from "react";
 import {App, Button, Empty, Input, Result, Table} from "antd";
 import {SearchResult, SearchResultItem} from "./model/searchModel.ts";
-import type {ColumnsType} from "antd/es/table";
 import {useTranslation} from "react-i18next";
 import {getId} from "./func/recordRefEntity.ts";
-import {setCurTableAndId, setQuery, store} from "./model/store.ts";
+import {navTo, setQuery, store, useLocationData} from "./model/store.ts";
+import {useNavigate} from "react-router-dom";
 
 
 function getLabel(table: string, id: string): string {
@@ -12,51 +12,17 @@ function getLabel(table: string, id: string): string {
     return seps[seps.length - 1] + '-' + id;
 }
 
-
-function getColumns(): ColumnsType<SearchResultItem> {
-    return [
-        {
-            title: 'id',
-            align: 'left',
-            width: 200,
-            key: 'id',
-            ellipsis: {
-                showTitle: false
-            },
-            render: (_text: any, item: SearchResultItem, _index: number) => {
-                let label = getLabel(item.table, item.pk);
-                return <Button type={'link'} onClick={() => setCurTableAndId(item.table, item.pk)}>
-                    {label}
-                </Button>;
-            }
-        },
-        {
-            title: 'fieldChain',
-            dataIndex: 'fieldChain',
-            width: 200,
-            key: 'fieldChain',
-            ellipsis: true,
-        },
-        {
-            title: 'value',
-            dataIndex: 'value',
-            width: 300,
-            key: 'value',
-            ellipsis: true,
-        }
-    ];
-}
-
-
 export function SearchValue({tryReconnect}: {
     tryReconnect: () => void;
 }) {
     const {server, query, searchMax} = store;
+    const navigate = useNavigate();
 
     const [loading, setLoading] = useState<boolean>(false);
     const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
     const {notification} = App.useApp();
     const {t} = useTranslation();
+    const {curPage} = useLocationData();
 
     function onSearch(value: string) {
         setQuery(value);
@@ -83,7 +49,39 @@ export function SearchValue({tryReconnect}: {
     } else if (searchResult.resultCode != 'ok') {
         content = <Result status={'error'} title={searchResult.resultCode}/>
     } else {
-        let columns = getColumns();
+        let columns = [
+            {
+                title: 'id',
+                // align: 'left',
+                width: 200,
+                key: 'id',
+                ellipsis: {
+                    showTitle: false
+                },
+                render: (_text: any, item: SearchResultItem, _index: number) => {
+                    let label = getLabel(item.table, item.pk);
+                    return <Button type={'link'} onClick={() => {
+                        navigate(navTo(curPage, item.table, item.pk));
+                    }}>
+                        {label}
+                    </Button>;
+                }
+            },
+            {
+                title: 'fieldChain',
+                dataIndex: 'fieldChain',
+                width: 200,
+                key: 'fieldChain',
+                ellipsis: true,
+            },
+            {
+                title: 'value',
+                dataIndex: 'value',
+                width: 300,
+                key: 'value',
+                ellipsis: true,
+            }
+        ];
         content = <div>q={searchResult.q}&max={searchResult.max}
             <Table columns={columns} dataSource={searchResult.items}
                    rowKey={(item: SearchResultItem) => getId(item.table, item.pk)}/>

@@ -7,11 +7,11 @@ import {Item} from "rete-context-menu-plugin/_types/types";
 import {RecordRefsResult, RefId} from "./model/recordModel.ts";
 import {App, Empty, Result, Spin} from "antd";
 import {createRefEntities, getId} from "./func/recordRefEntity.ts";
-import {pageRecord} from "./CfgEditorApp.tsx";
 import {useTranslation} from "react-i18next";
 import {Schema} from "./model/schemaUtil.ts";
 import {NodeShowType} from "./func/localStoreJson.ts";
-import {setCurPage, setCurTableAndId, setEditMode, store} from "./model/store.ts";
+import {navTo, setEditMode, store} from "./model/store.ts";
+import {useNavigate} from "react-router-dom";
 
 
 export function TableRecordRefLoaded({schema, curTable, recordRefResult, nodeShow}: {
@@ -21,8 +21,9 @@ export function TableRecordRefLoaded({schema, curTable, recordRefResult, nodeSho
     nodeShow: NodeShowType;
 }) {
 
-    const {query} = store;
+    const {query, curId} = store;
     const [t] = useTranslation();
+    const navigate = useNavigate();
 
     function createGraph(): EntityGraph {
         const entityMap = new Map<string, Entity>();
@@ -34,7 +35,7 @@ export function TableRecordRefLoaded({schema, curTable, recordRefResult, nodeSho
             label: recordRefResult.table + "\n" + t('record'),
             key: 'record',
             handler() {
-                setCurPage(pageRecord);
+                navigate(navTo('record', curTable.name, curId));
             }
         }];
 
@@ -47,7 +48,7 @@ export function TableRecordRefLoaded({schema, curTable, recordRefResult, nodeSho
                     label: id + "\n" + t('recordRef'),
                     key: 'entityRecordRef',
                     handler() {
-                        setCurTableAndId(refId.table, refId.id);
+                        navigate(navTo('recordRef', refId.table, refId.id));
                     }
                 });
             }
@@ -55,8 +56,7 @@ export function TableRecordRefLoaded({schema, curTable, recordRefResult, nodeSho
                 label: id + "\n" + t('record'),
                 key: 'entityRecord',
                 handler() {
-                    setCurTableAndId(refId.table, refId.id);
-                    setCurPage(pageRecord);
+                    navigate(navTo('record', refId.table, refId.id));
                     setEditMode(false);
                 }
             });
@@ -67,8 +67,7 @@ export function TableRecordRefLoaded({schema, curTable, recordRefResult, nodeSho
                     label: id + "\n" + t('edit'),
                     key: 'entityEdit',
                     handler() {
-                        setCurTableAndId(refId.table, refId.id);
-                        setCurPage(pageRecord);
+                        navigate(navTo('record', refId.table, refId.id));
                         setEditMode(true);
                     }
                 });

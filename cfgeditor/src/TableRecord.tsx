@@ -10,10 +10,10 @@ import {createRefEntities, getId} from "./func/recordRefEntity.ts";
 import {RecordEntityCreator} from "./func/RecordEntityCreator.ts";
 import {RecordEditEntityCreator} from "./func/RecordEditEntityCreator.ts";
 import {editingState} from "./func/editingState.ts";
-import {pageRecordRef} from "./CfgEditorApp.tsx";
 import {useTranslation} from "react-i18next";
 import {newSchema, Schema} from "./model/schemaUtil.ts";
-import {setCurPage, setEditMode, setSchemaCurTableAndId, store} from "./model/store.ts";
+import {navTo, setEditMode, setSchema, store, useLocationData} from "./model/store.ts";
+import {useNavigate} from "react-router-dom";
 
 
 export function TableRecordLoaded({schema, curTable, recordResult, onSubmit}: {
@@ -22,18 +22,16 @@ export function TableRecordLoaded({schema, curTable, recordResult, onSubmit}: {
     recordResult: RecordResult;
     onSubmit: () => void;
 }) {
-    const {curId, editMode, nodeShow} = store;
+    const {editMode, nodeShow} = store;
     const [forceUpdate, setForceUpdate] = useReducer(x => x + 1, 0);
     const [t] = useTranslation();
+    const navigate = useNavigate();
+    const {curId} = useLocationData();
 
 
     useEffect(() => {
         editingState.clear();
     }, [schema, curTable, curId, editMode]);
-
-    function setCurTableAndId(table: string, id: string) {
-        setSchemaCurTableAndId(schema, table, id, true);
-    }
 
     function createGraph(): EntityGraph {
         const entityMap = new Map<string, Entity>();
@@ -59,7 +57,7 @@ export function TableRecordLoaded({schema, curTable, recordResult, onSubmit}: {
                     key: 'edit',
                     handler() {
                         if (table != curTable.name || id != curId) {
-                            setCurTableAndId(table, id);
+                            navigate(navTo('record', table, id));
                         }
                         setEditMode(true);
                     }
@@ -70,7 +68,7 @@ export function TableRecordLoaded({schema, curTable, recordResult, onSubmit}: {
                     key: 'view',
                     handler() {
                         if (table != curTable.name || id != curId) {
-                            setCurTableAndId(table, id);
+                            navigate(navTo('record', table, id));
                         }
                         setEditMode(false);
                     }
@@ -87,7 +85,7 @@ export function TableRecordLoaded({schema, curTable, recordResult, onSubmit}: {
             label: entityId + "\n" + t('recordRef'),
             key: 'recordRef',
             handler() {
-                setCurPage(pageRecordRef);
+                navigate(navTo('recordRef', curTable.name, curId));
             }
         })
 
@@ -112,7 +110,7 @@ export function TableRecordLoaded({schema, curTable, recordResult, onSubmit}: {
                         label: id + "\n" + t('record'),
                         key: 'entityRecord',
                         handler() {
-                            setCurTableAndId(refId.table, refId.id);
+                            navigate(navTo('record', refId.table, refId.id));
                         }
                     });
                 }
@@ -121,8 +119,7 @@ export function TableRecordLoaded({schema, curTable, recordResult, onSubmit}: {
                 label: id + "\n" + t('recordRef'),
                 key: 'entityRecordRef',
                 handler() {
-                    setCurTableAndId(refId.table, refId.id);
-                    setCurPage(pageRecordRef);
+                    navigate(navTo('recordRef', refId.table, refId.id));
                 }
             })
             return mm;
@@ -146,9 +143,11 @@ export function TableRecord({schema, curTable, tryReconnect}: {
     curTable: STable;
     tryReconnect: () => void;
 }) {
-    const {curId, server} = store;
+    const {server} = store;
     const [recordResult, setRecordResult] = useState<RecordResult | null>(null);
     const {notification} = App.useApp();
+    const {curPage, curTableId, curId} = useLocationData();
+    const navigate = useNavigate();
 
     useEffect(() => {
         setRecordResult(null);
@@ -198,8 +197,9 @@ export function TableRecord({schema, curTable, tryReconnect}: {
                     placement: 'topRight',
                     duration: 3
                 });
-                let newSch = newSchema(schema, editResult.table, editResult.recordIds);
-                setSchemaCurTableAndId(newSch, editResult.table, editResult.id, true);
+                let schemaNew = newSchema(schema, editResult.table, editResult.recordIds);
+                const [tableId, id] = setSchema(schemaNew, curTableId, curId);
+                navigate(navTo(curPage, tableId, id));
             } else {
                 notification.warning({
                     message: `post ${url} ${editResult.resultCode}`,

@@ -56,5 +56,5 @@ export async function deleteRecord(tableId: string, id: string) {
         referrerPolicy: "no-referrer"
     });
     return await response.json() as RecordEditResult;
-
 }
+

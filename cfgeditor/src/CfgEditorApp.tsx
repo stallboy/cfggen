@@ -30,35 +30,36 @@ import {Setting} from "./Setting.tsx";
 import {getNextId, newSchema, Schema} from "./model/schemaUtil.ts";
 import {
     historyNext,
-    historyPrev, navTo,
-    setCurPage,
-    setSchemaCurTableAndId,
-    setSchemaNull, setServer,
-    store
+    historyPrev,
+    navTo,
+    setSchema,
+    setSchemaNull,
+    setServer,
+    store, useLocationData
 } from "./model/store.ts";
-import {Outlet, useNavigate} from "react-router-dom";
+import {LoaderFunctionArgs, Outlet, useNavigate} from "react-router-dom";
 import {STable} from "./model/schemaModel.ts";
 
 const {Text} = Typography;
 
-export const pageTable = 'table'
-export const pageTableRef = 'tableRef'
-export const pageRecord = 'record'
-export const pageRecordRef = 'recordRef'
-export const pageFixed = 'fix'
-
-
 export type SchemaTableType = { schema: Schema, curTable: STable };
 
+export function appLoader({request, params}: LoaderFunctionArgs) {
+    console.log(request.url, params);
+
+    return null;
+}
 
 export function CfgEditorApp() {
+    console.log("app render");
     const {
-        schema, curTableId, curId, curPage, server,
+        schema, server,
         fix, dragPanel,
         recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow,
         imageSizeScale, history
     } = store;
 
+    const {curPage, curTableId, curId} = useLocationData();
     const navigate = useNavigate();
     const [settingOpen, setSettingOpen] = useState<boolean>(false);
     const [searchOpen, setSearchOpen] = useState<boolean>(false);
@@ -67,13 +68,13 @@ export function CfgEditorApp() {
     const [isFetching, setIsFetching] = useState<boolean>(false);
     const [fetchErr, setFetchErr] = useState<string>('');
 
-    useHotkeys('alt+1', () => setCurPage(pageTable));
-    useHotkeys('alt+2', () => setCurPage(pageTableRef));
-    useHotkeys('alt+3', () => setCurPage(pageRecord));
-    useHotkeys('alt+4', () => setCurPage(pageRecordRef));
+    useHotkeys('alt+1', () => navigate(navTo('table', curTableId, curId)));
+    useHotkeys('alt+2', () => navigate(navTo('tableRef', curTableId, curId)));
+    useHotkeys('alt+3', () => navigate(navTo('record', curTableId, curId)));
+    useHotkeys('alt+4', () => navigate(navTo('recordRef', curTableId, curId)));
     useHotkeys('alt+x', () => showSearch());
-    useHotkeys('alt+c', () => historyPrev());
-    useHotkeys('alt+v', () => historyNext());
+    useHotkeys('alt+c', () => prev());
+    useHotkeys('alt+v', () => next());
 
     const {notification} = App.useApp();
     const {t} = useTranslation();
@@ -88,6 +89,20 @@ export function CfgEditorApp() {
     let curTable = schema ? schema.getSTable(curTableId) : null;
 
 
+    function prev() {
+        const path = historyPrev(curPage);
+        if (path) {
+            navigate(path);
+        }
+    }
+
+    function next() {
+        const path = historyNext(curPage);
+        if (path) {
+            navigate(path);
+        }
+    }
+
     function tryConnect(server: string) {
         setSchemaNull();
         setIsFetching(true);
@@ -97,7 +112,9 @@ export function CfgEditorApp() {
             const rawSchema = await response.json();
             const schema = new Schema(rawSchema);
 
-            setSchemaCurTableAndId(schema, curTableId, curId);
+            const [tableId, id] = setSchema(schema, curTableId, curId);
+            navigate(navTo(curPage, tableId, id));
+
             setIsFetching(false);
             setIsModalOpen(false);
         }
@@ -140,20 +157,19 @@ export function CfgEditorApp() {
         {label: t('record'), value: 'record'},
     ]
 
-    if (dragPanel != pageRecordRef) {
+    if (dragPanel != 'recordRef') {
         options.push({label: t('recordRef'), value: 'recordRef'});
     }
 
     if (fix && schema) {
         let fixedTable = schema.getSTable(fix.table);
-        if (fixedTable && dragPanel != pageFixed) {
+        if (fixedTable && dragPanel != 'fix') {
             options.push({label: t('fix') + ' ' + getId(fix.table, fix.id), value: 'fix'});
         }
     }
 
     function onChangeCurPage(e: RadioChangeEvent) {
         const page = e.target.value;
-        setCurPage(page);
         navigate(navTo(page, curTableId, curId));
     }
 
@@ -184,7 +200,10 @@ export function CfgEditorApp() {
             const editResult: RecordEditResult = await response.json();
             if (editResult.resultCode == 'deleteOk') {
                 console.log(editResult);
-                setSchemaCurTableAndId(newSchema(schema!!, editResult.table, editResult.recordIds), curTableId, curId);
+                const schemaNew = newSchema(schema!!, editResult.table, editResult.recordIds)
+                const [tableId, id] = setSchema(schemaNew, curTableId, curId);
+                navigate(navTo(curPage, tableId, id));
+
                 notification.info({
                     message: `post ${url} ${editResult.resultCode}`,
                     placement: 'topRight',
@@ -307,11 +326,11 @@ export function CfgEditorApp() {
                              options={options} optionType={'button'}>
                 </Radio.Group>
 
-                <Button onClick={historyPrev} disabled={!history.canPrev()}>
+                <Button onClick={prev} disabled={!history.canPrev()}>
                     <LeftOutlined/>
                 </Button>
 
-                <Button onClick={historyNext} disabled={!history.canNext()}>
+                <Button onClick={next} disabled={!history.canNext()}>
                     <RightOutlined/>
                 </Button>
             </Space>

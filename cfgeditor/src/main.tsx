@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import {CfgEditorApp} from './CfgEditorApp.tsx'
+import {appLoader, CfgEditorApp} from './CfgEditorApp.tsx'
 import './style.css'
 import {App, ConfigProvider} from "antd";
 import './i18n.js'
@@ -14,17 +14,18 @@ const router = createBrowserRouter([
     {
         path: "/",
         element: <CfgEditorApp/>,
+        loader: appLoader,
         children: [
             {
                 index: true,
                 element: <Index/>
             },
             {
-                path: "table/:table",
+                path: "table/:table/:id?",
                 Component: TableSchema
             },
             {
-                path: "tableRef/:table",
+                path: "tableRef/:table/:id?",
                 Component: TableRef,
             },
             {
@@ -32,7 +33,11 @@ const router = createBrowserRouter([
                 element: <Index/>,
                 errorElement: <div>Oops! There was an error.</div>,
             },
-
+            {
+                path: "recordRef/:table/:id",
+                element: <Index/>,
+                errorElement: <div>Oops! There was an error.</div>,
+            },
         ]
     }
 ]);
@@ -51,5 +56,5 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 <RouterProvider router={router}/>
             </App>
         </ConfigProvider>
-    </React.StrictMode>,
-)
+    </React.StrictMode>
+);

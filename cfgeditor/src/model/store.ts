@@ -3,18 +3,15 @@ import {Convert, FixedPage, NodeShowType} from "../func/localStoreJson.ts";
 import {getBool, getEnumStr, getInt, getJson, getJsonNullable, getStr} from "../func/localStore.ts";
 import {History} from "./historyModel.ts";
 import {Schema} from "./schemaUtil.ts";
+import {useLocation} from "react-router-dom";
 
 export type DragPanelType = 'recordRef' | 'fix' | 'none';
 const dragPanelEnums = ['recordRef', 'fix', 'none']
 
 export type PageType = 'table' | 'tableRef' | 'record' | 'recordRef' | 'fix';
-const pageEnums = ['table', 'tableRef', 'record', 'recordRef', 'fix'];
+export const pageEnums = ['table', 'tableRef', 'record', 'recordRef', 'fix'];
 
 export type StoreState = {
-    curTableId: string;
-    curId: string;
-    curPage: PageType;
-
     server: string;
     maxImpl: number;
 
@@ -52,10 +49,6 @@ const defaultNodeShow: NodeShowType = {
 
 function readStoreState(): StoreState {
     return {
-        curTableId: getStr('curTableId', ''),
-        curId: getStr('curId', ''),
-        curPage: getEnumStr<PageType>('curPage', pageEnums, 'record'),
-
         server: getStr('server', 'localhost:3456'),
         maxImpl: getInt('maxImpl', 10),
 
@@ -157,8 +150,8 @@ export function setDragPanel(value: DragPanelType) {
 }
 
 
-export function setFix() {
-    const {curTableId, curId, recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow} = store;
+export function setFix(curTableId: string, curId: string) {
+    const {recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow} = store;
     let fp: FixedPage = {
         table: curTableId,
         id: curId,
@@ -186,26 +179,37 @@ export function setNodeShow(nodeShow: NodeShowType) {
     localStorage.setItem('nodeShow', Convert.nodeShowTypeToJson(nodeShow));
 }
 
-export function setCurPage(page: PageType) {
-    if (pageEnums.includes(page)) {
-        store.curPage = page as PageType;
-        localStorage.setItem('curPage', page);
-    }
-}
-
 export function setEditMode(editMode: boolean) {
     store.editMode = editMode;
 }
+
+
+export function historyPrev(curPage: PageType) {
+    const {schema, history} = store;
+    const newHistory = history.prev();
+    store.history = newHistory;
+    const cur = newHistory.cur();
+    if (cur && schema) {
+        return navTo(curPage, cur.table, cur.id, false);
+    }
+}
+
+export function historyNext(curPage: PageType) {
+    const {schema, history} = store;
+    const newHistory = history.next();
+    store.history = newHistory;
+    const cur = newHistory.cur();
+    if (cur && schema) {
+        return navTo(curPage, cur.table, cur.id, false);
+    }
+}
+
 
 export function setSchemaNull() {
     store.schema = null;
 }
 
-export function setSchemaCurTableAndId(schema: Schema,
-                                       curTableId: string,
-                                       curId: string,
-                                       fromOp: boolean = true) {
-    const {history} = store;
+export function setSchema(schema: Schema, curTableId: string, curId: string) {
     store.schema = schema;
 
     let curTab;
@@ -217,81 +221,66 @@ export function setSchemaCurTableAndId(schema: Schema,
 
     }
 
-    let tabId = curTableId;
+    let tableId = curTableId;
     let id = '';
     if (curTab) {
-        tabId = curTab.name;
-        store.curTableId = curTab.name;
+        tableId = curTab.name;
 
         if (curId.length > 0 && schema.hasId(curTab, curId)) {
             id = curId;
         } else if (curTab.recordIds.length > 0) {
             id = curTab.recordIds[0].id;
         }
-
-        store.curId = id;
-        if (fromOp) { // 如果是从prev，next中来的，就不要再设置history了
-            store.history = history.addItem(curTab.name, id);
-        }
-        localStorage.setItem('curTableId', curTab.name);
-        localStorage.setItem('curId', id);
     }
-
-    return [tabId, id];
+    return [tableId, id];
 }
 
-export function setCurTable(curTableId: string) {
-    const {schema, curId} = store;
-    if (schema) {
-        return setSchemaCurTableAndId(schema, curTableId, curId);
-    } else {
-        return [curTableId, curId];
-    }
-}
 
-export function setCurTableAndId(curTableId: string, curId: string) {
+export function getFixCurIdByTable(curTableId: string, curId: string) {
     const {schema} = store;
+    let id = '';
     if (schema) {
-        return setSchemaCurTableAndId(schema, curTableId, curId);
-    } else {
-        return [curTableId, curId];
+        let table = schema.getSTable(curTableId);
+        if (table) {
+            if (schema.hasId(table, curId)) {
+                id = curId;
+            } else if (table.recordIds.length > 0) {
+                id = table.recordIds[0].id;
+            }
+        }
     }
+    return id;
 }
 
-export function setCurId(curId: string) {
-    const {schema, curTableId} = store;
-    if (schema) {
-        return setSchemaCurTableAndId(schema, curTableId, curId);
-    } else {
-        return [curTableId, curId];
+export function navTo(curPage: PageType, tableId: string, id: string = '', addHistory: boolean = true) {
+    if (addHistory) {
+        const {history} = store;
+        const cur = history.cur();
+        if (cur == null || (cur.table != tableId || cur.id != id)) {
+            store.history = history.addItem(tableId, id);
+        }
     }
-}
-
-export function historyPrev() {
-    const {schema, history} = store;
-    const newHistory = history.prev();
-    store.history = newHistory;
-    const cur = newHistory.cur();
-    if (cur && schema) {
-        setSchemaCurTableAndId(schema, cur.table, cur.id, false);
-    }
-}
-
-export function historyNext() {
-    const {schema, history} = store;
-    const newHistory = history.next();
-    store.history = newHistory;
-    const cur = newHistory.cur();
-    if (cur && schema) {
-        setSchemaCurTableAndId(schema, cur.table, cur.id, false);
-    }
+    return `/${curPage}/${tableId}/${id}`;
 }
 
 
-export function navTo(curPage: string, tabId: string, id: string) {
-    if (curPage == 'table' || curPage == 'tableRef') {
-        return `${curPage}/${tabId}`;
-    } else {
-        return `${curPage}/${tabId}/${id}`;
+export function useLocationData() {
+    const location = useLocation();
+    const split = location.pathname.split('/');
+    let curPage: PageType = 'table';
+    let curTableId = '';
+    let curId = '';
+
+    if (split.length > 1) {
+        if (pageEnums.includes(split[1])) {
+            curPage = split[1] as PageType;
+        }
     }
+    if (split.length > 2) {
+        curTableId = split[2];
+    }
+    if (split.length > 3) {
+        curId = split[3];
+    }
+    return {curPage, curTableId, curId};
 }
