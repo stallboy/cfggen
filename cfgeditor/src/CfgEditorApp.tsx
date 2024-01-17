@@ -77,6 +77,7 @@ export function CfgEditorApp() {
         if (!schema) {
             setSchemaNull();
             setIsFetching(true);
+            setFetchError(null);
 
             const fetchData = async () => {
                 const rawSchema = await fetchSchema(server);
@@ -315,7 +316,7 @@ export function CfgEditorApp() {
 
         {content}
 
-        <Modal title={t('serverConnectFail')} open={!schema && !isFetching}
+        <Modal title={t('serverConnectFail')} open={!schema && !!fetchError}
                cancelButtonProps={{disabled: true}}
                closable={false}
                confirmLoading={isFetching}

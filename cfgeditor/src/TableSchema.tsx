@@ -1,14 +1,16 @@
 import {Entity, fillInputs} from "./model/entityModel.ts";
 import {SchemaTableType} from "./CfgEditorApp.tsx";
 import {TableEntityCreator} from "./func/TableEntityCreator.ts";
-import {store} from "./model/store.ts";
+import {store, useLocationData} from "./model/store.ts";
 import {useOutletContext} from "react-router-dom";
-import {FlowEntityGraph} from "./ui/FlowEntityNode.tsx";
+import {convertNodeAndEdges, FlowEntityGraph} from "./ui/FlowEntityNode.tsx";
+import {ReactFlowProvider} from "reactflow";
 
 
 export function TableSchema() {
     const {schema, curTable} = useOutletContext<SchemaTableType>();
     const {maxImpl, nodeShow} = store;
+    const {pathname} = useLocationData();
     // const {t} = useTranslation();
     // const navigate = useNavigate();
 
@@ -70,5 +72,9 @@ export function TableSchema() {
     creator.includeRefTables();
     fillInputs(entityMap);
 
-    return <FlowEntityGraph entityGraph={{entityMap, menu: [], nodeShow}}/>
+    const {nodes, edges} = convertNodeAndEdges({entityMap, menu: [], nodeShow});
+
+    return <ReactFlowProvider>
+        <FlowEntityGraph key={pathname} initialNodes={nodes} initialEdges={edges}/>
+    </ReactFlowProvider>
 }

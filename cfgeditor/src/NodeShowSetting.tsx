@@ -1,4 +1,4 @@
-import {Button, Card, ColorPicker, Form, Input, Select, Space, Switch} from "antd";
+import {Button, Card, ColorPicker, Form, Input, Radio, Space, Switch} from "antd";
 import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 
@@ -45,13 +45,13 @@ export function NodeShowSetting() {
         <Form name="node show setting"  {...formLayout} initialValues={nodeShow} onFinish={onFinish} autoComplete="off">
 
             <Form.Item name='showHead' label={t('showHead')}>
-                <Select options={[
+                <Radio.Group optionType='button' buttonStyle='solid' options={[
                     {label: t('show'), value: 'show'},
                     {label: t('showCopyable'), value: 'showCopyable'},]}/>
             </Form.Item>
 
             <Form.Item name='showDescription' label={t('showDescription')}>
-                <Select options={[
+                <Radio.Group optionType='button' buttonStyle='solid'  options={[
                     {label: t('show'), value: 'show'},
                     {label: t('showFallbackValue'), value: 'showFallbackValue'},
                     {label: t('showValue'), value: 'showValue'},
@@ -63,7 +63,7 @@ export function NodeShowSetting() {
             </Form.Item>
 
             <Form.Item name='nodePlacementStrategy' label={t('nodePlacementStrategy')}>
-                <Select options={[
+                <Radio.Group optionType='button' buttonStyle='solid'  options={[
                     {label: t('LINEAR_SEGMENTS'), value: 'LINEAR_SEGMENTS'},
                     {label: t('SIMPLE'), value: 'SIMPLE'},
                     {label: t('BRANDES_KOEPF'), value: 'BRANDES_KOEPF'}]}/>

@@ -35,7 +35,6 @@ export type StoreState = {
     editMode: boolean;
     history: History;
     schema: Schema | null;
-
 }
 
 const defaultNodeShow: NodeShowType = {
@@ -144,7 +143,7 @@ export function setImageSizeScale(value: number | null) {
 
 export function setDragPanel(value: DragPanelType) {
     if (dragPanelEnums.includes(value)) {
-        store.dragPanel = (value as DragPanelType);
+        store.dragPanel = value;
         localStorage.setItem('dragPanel', value);
     }
 }
@@ -266,7 +265,8 @@ export function navTo(curPage: PageType, tableId: string, id: string = '', addHi
 
 export function useLocationData() {
     const location = useLocation();
-    const split = location.pathname.split('/');
+    const pathname = location.pathname;
+    const split = pathname.split('/');
     let curPage: PageType = 'table';
     let curTableId = '';
     let curId = '';
@@ -282,5 +282,5 @@ export function useLocationData() {
     if (split.length > 3) {
         curId = split[3];
     }
-    return {curPage, curTableId, curId};
+    return {curPage, curTableId, curId, pathname};
 }

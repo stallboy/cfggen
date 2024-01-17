@@ -1,10 +1,11 @@
-import {Button, Descriptions, Divider, Flex, Form, Input, InputNumber, Select, Space, Switch, Tabs} from "antd";
+import {Button, Descriptions, Divider, Flex, Form, Input, InputNumber, Radio, Space, Switch, Tabs} from "antd";
 import {CloseOutlined, LeftOutlined, RightOutlined, SearchOutlined} from "@ant-design/icons";
 import {NodeShowSetting} from "./NodeShowSetting.tsx";
 import {useTranslation} from "react-i18next";
 import {STable} from "./model/schemaModel.ts";
 import {Schema} from "./model/schemaUtil.ts";
 import {
+    DragPanelType,
     setDragPanel, setFix, setFixNull,
     setImageSizeScale,
     setMaxImpl,
@@ -129,7 +130,8 @@ export function Setting({
             </Form.Item>
 
             <Form.Item name='dragePanel' initialValue={dragPanel} label={t('dragPanel')}>
-                <Select onChange={setDragPanel} options={[
+                <Radio.Group onChange={(e) => setDragPanel(e.target.value as DragPanelType)}
+                             optionType='button' buttonStyle="solid" options={[
                     {label: t('recordRef'), value: 'recordRef'},
                     {label: t('fix'), value: 'fix'},
                     {label: t('none'), value: 'none'}]}/>
