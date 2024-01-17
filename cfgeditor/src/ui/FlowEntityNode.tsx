@@ -8,6 +8,7 @@ import ReactFlow, {
 } from "reactflow";
 import {Entity, EntityGraph} from "../model/entityModel.ts";
 import {Flex, List, Typography} from "antd";
+import {useEffect} from "react";
 
 const {Text} = Typography;
 
@@ -18,10 +19,11 @@ function tooltip(field: { name: string, comment?: string }) {
 
 
 export function PropertiesNode({entity}: { entity: Entity }) {
-    return <Flex vertical gap={'small'} className='formNode' style={{width: 300, backgroundColor: '#1677ff'}}>
+    return <Flex vertical gap={'small'} className='formNode' style={{width: 240, backgroundColor: '#1677ff'}}>
         <Text strong style={{fontSize: 18, color: "#fff"}} ellipsis={{tooltip: true}}>
             {entity.label}
         </Text>
+        {(entity.fields && entity.fields.length > 0 &&
         <List size='small' style={{backgroundColor: '#ffffff'}} bordered dataSource={entity.fields!}
               renderItem={(item) => {
                   return <List.Item key={item.key} style={{position: 'relative'}}>
@@ -39,6 +41,7 @@ export function PropertiesNode({entity}: { entity: Entity }) {
                   </List.Item>;
 
               }}/>
+        )}
     </Flex>;
 
 }
@@ -71,18 +74,22 @@ export function convertNodeAndEdges(graph: EntityGraph) {
 
 export function FlowEntityGraph({entityGraph}: { entityGraph: EntityGraph }) {
     const {initialNodes, initialEdges} = convertNodeAndEdges(entityGraph);
-    const [nodes, _setNodes, onNodesChange] = useNodesState<Entity>(initialNodes);
-    const [edges, _setEdges, onEdgesChange] = useEdgesState(initialEdges);
+    const [nodes, setNodes, onNodesChange] = useNodesState<Entity>(initialNodes);
+    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+    useEffect(() => {
+        setNodes(initialNodes);
+        setEdges(initialEdges);
+    }, [entityGraph]);
 
     return <ReactFlow
-                nodes={nodes}
-                onNodesChange={onNodesChange}
-                edges={edges}
-                onEdgesChange={onEdgesChange}
-                nodeTypes={nodeTypes}
-                fitView
-            >
-                <Background/>
-                <Controls/>
-            </ReactFlow>    ;
+        nodes={nodes}
+        onNodesChange={onNodesChange}
+        edges={edges}
+        onEdgesChange={onEdgesChange}
+        nodeTypes={nodeTypes}
+        fitView
+    >
+        <Background/>
+        <Controls/>
+    </ReactFlow>;
 }
