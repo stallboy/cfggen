@@ -32,26 +32,20 @@ import {
     historyNext,
     historyPrev,
     navTo,
-    setSchema,
-    setSchemaNull,
+    setSchema, setSchemaNull,
     setServer,
     store, useLocationData
 } from "./model/store.ts";
-import {LoaderFunctionArgs, Outlet, useNavigate} from "react-router-dom";
+import {Outlet, useNavigate} from "react-router-dom";
 import {STable} from "./model/schemaModel.ts";
+import {fetchSchema} from "./model/api.ts";
 
 const {Text} = Typography;
 
 export type SchemaTableType = { schema: Schema, curTable: STable };
 
-export function appLoader({request, params}: LoaderFunctionArgs) {
-    console.log(request.url, params);
-
-    return null;
-}
 
 export function CfgEditorApp() {
-    console.log("app render");
     const {
         schema, server,
         fix, dragPanel,
@@ -63,10 +57,9 @@ export function CfgEditorApp() {
     const navigate = useNavigate();
     const [settingOpen, setSettingOpen] = useState<boolean>(false);
     const [searchOpen, setSearchOpen] = useState<boolean>(false);
-
-    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [isFetching, setIsFetching] = useState<boolean>(false);
-    const [fetchErr, setFetchErr] = useState<string>('');
+    const [fetchError, setFetchError] = useState<string | null>(null);
+
 
     useHotkeys('alt+1', () => navigate(navTo('table', curTableId, curId)));
     useHotkeys('alt+2', () => navigate(navTo('tableRef', curTableId, curId)));
@@ -78,16 +71,32 @@ export function CfgEditorApp() {
 
     const {notification} = App.useApp();
     const {t} = useTranslation();
+    const ref = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        tryConnect(server);
-    }, []);
+        if (!schema) {
+            setSchemaNull();
+            setIsFetching(true);
 
-    const ref = useRef<HTMLDivElement>(null)
+            const fetchData = async () => {
+                const rawSchema = await fetchSchema(server);
+                const schema = new Schema(rawSchema);
+                const [tableId, id] = setSchema(schema, curTableId, curId);
+                navigate(navTo(curPage, tableId, id));
+
+                setIsFetching(false);
+                setFetchError(null);
+            }
+
+            fetchData().catch((err) => {
+                setIsFetching(false);
+                setFetchError(err.toString());
+            });
+        }
+    }, [schema])
 
 
     let curTable = schema ? schema.getSTable(curTableId) : null;
-
 
     function prev() {
         const path = historyPrev(curPage);
@@ -102,30 +111,6 @@ export function CfgEditorApp() {
             navigate(path);
         }
     }
-
-    function tryConnect(server: string) {
-        setSchemaNull();
-        setIsFetching(true);
-
-        const fetchData = async () => {
-            const response = await fetch(`http://${server}/schemas`);
-            const rawSchema = await response.json();
-            const schema = new Schema(rawSchema);
-
-            const [tableId, id] = setSchema(schema, curTableId, curId);
-            navigate(navTo(curPage, tableId, id));
-
-            setIsFetching(false);
-            setIsModalOpen(false);
-        }
-
-        fetchData().catch((err) => {
-            setIsFetching(false);
-            setFetchErr(err.toString());
-            setIsModalOpen(true);
-        });
-    }
-
 
     let nextId;
     if (curTable) {
@@ -173,13 +158,8 @@ export function CfgEditorApp() {
         navigate(navTo(page, curTableId, curId));
     }
 
-    function tryReconnect() {
-        tryConnect(server);
-    }
-
     function onConnectServer(value: string) {
         setServer(value);
-        tryConnect(value);
     }
 
     function handleModalOk() {
@@ -223,7 +203,6 @@ export function CfgEditorApp() {
                 message: `post ${url} err: ${err.toString()}`,
                 placement: 'topRight', duration: 4
             });
-            tryReconnect();
         });
     }
 
@@ -267,7 +246,6 @@ export function CfgEditorApp() {
                                        refIn={recordRefIn}
                                        refOutDepth={recordRefOutDepth}
                                        maxNode={recordMaxNode}
-                                       tryReconnect={tryReconnect}
                                        nodeShow={nodeShow}/>;
         } else if (dragPanel == 'fix' && fix) {
             let fixedTable = schema.getSTable(fix.table);
@@ -278,7 +256,6 @@ export function CfgEditorApp() {
                                            refIn={fix.refIn}
                                            refOutDepth={fix.refOutDepth}
                                            maxNode={fix.maxNode}
-                                           tryReconnect={tryReconnect}
                                            nodeShow={fix.nodeShow}/>;
             }
         }
@@ -338,7 +315,7 @@ export function CfgEditorApp() {
 
         {content}
 
-        <Modal title={t('serverConnectFail')} open={isModalOpen}
+        <Modal title={t('serverConnectFail')} open={!schema && !isFetching}
                cancelButtonProps={{disabled: true}}
                closable={false}
                confirmLoading={isFetching}
@@ -346,7 +323,7 @@ export function CfgEditorApp() {
                onOk={handleModalOk}>
 
             <Flex vertical>
-                <Alert message={fetchErr} type='error'/>
+                <Alert message={fetchError ?? ''} type='error'/>
                 <p> {t('netErrFixTip')} </p>
                 <p> {t('curServer')}: {server}</p>
                 <Form.Item label={t('newServer') + ':'}>
@@ -367,7 +344,7 @@ export function CfgEditorApp() {
         </Drawer>
 
         <Drawer title="search" placement="left" onClose={onSearchClose} open={searchOpen} size='large'>
-            <SearchValue {...{tryReconnect}}/>
+            <SearchValue/>
         </Drawer>
 
     </div>;

@@ -3,8 +3,7 @@ import {RawSchema} from "./schemaModel.ts";
 import {JSONObject, RecordEditResult, RecordRefsResult, RecordResult} from "./recordModel.ts";
 
 
-export async function fetchSchema() {
-    const {server} = store;
+export async function fetchSchema(server: string) {
     const response = await fetch(`http://${server}/schemas`);
     return await response.json() as RawSchema;
 }

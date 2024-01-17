@@ -7,6 +7,8 @@ export interface EntityField {
     comment?: string;
     value: string;
     key: string;
+    handleOut?: boolean;
+    handleIn?: boolean;
 }
 
 export interface EntityEditFieldOption {

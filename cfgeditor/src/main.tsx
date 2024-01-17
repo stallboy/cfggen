@@ -1,6 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import {appLoader, CfgEditorApp} from './CfgEditorApp.tsx'
+import {QueryClient, QueryClientProvider} from '@tanstack/react-query'
+
+import {CfgEditorApp} from './CfgEditorApp.tsx'
 import './style.css'
 import {App, ConfigProvider} from "antd";
 import './i18n.js'
@@ -9,12 +11,19 @@ import {Index} from './routes/Index.tsx';
 import {TableSchema} from "./TableSchema.tsx";
 import {TableRef} from "./TableRef.tsx";
 
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            staleTime: 1000 * 10,
+        },
+    },
+})
+
 
 const router = createBrowserRouter([
     {
         path: "/",
         element: <CfgEditorApp/>,
-        loader: appLoader,
         children: [
             {
                 index: true,
@@ -53,7 +62,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             },
         }}>
             <App>
-                <RouterProvider router={router}/>
+                <QueryClientProvider client={queryClient}>
+                    <RouterProvider router={router}/>
+                </QueryClientProvider>
             </App>
         </ConfigProvider>
     </React.StrictMode>

@@ -10,8 +10,9 @@ import {createRefEntities, getId} from "./func/recordRefEntity.ts";
 import {useTranslation} from "react-i18next";
 import {Schema} from "./model/schemaUtil.ts";
 import {NodeShowType} from "./func/localStoreJson.ts";
-import {navTo, setEditMode, store} from "./model/store.ts";
+import {navTo, setEditMode, store, useLocationData} from "./model/store.ts";
 import {useNavigate} from "react-router-dom";
+import {useQueryClient} from "@tanstack/react-query";
 
 
 export function TableRecordRefLoaded({schema, curTable, recordRefResult, nodeShow}: {
@@ -21,7 +22,8 @@ export function TableRecordRefLoaded({schema, curTable, recordRefResult, nodeSho
     nodeShow: NodeShowType;
 }) {
 
-    const {query, curId} = store;
+    const {query} = store;
+    const {curId} = useLocationData();
     const [t] = useTranslation();
     const navigate = useNavigate();
 
@@ -92,7 +94,6 @@ export function TableRecordRefLoaded({schema, curTable, recordRefResult, nodeSho
 export function TableRecordRef({
                                    schema, curTable, curId,
                                    refIn, refOutDepth, maxNode,
-                                   tryReconnect,
                                    nodeShow
                                }: {
     schema: Schema;
@@ -102,11 +103,11 @@ export function TableRecordRef({
     refOutDepth: number;
     maxNode: number;
     nodeShow: NodeShowType;
-    tryReconnect: () => void;
 }) {
     const {server} = store;
     const [recordRefResult, setRecordRefResult] = useState<RecordRefsResult | null>(null);
     const {notification} = App.useApp();
+    const queryClient = useQueryClient();
 
     useEffect(() => {
         setRecordRefResult(null);
@@ -120,7 +121,7 @@ export function TableRecordRef({
 
         fetchData().catch((err) => {
             notification.error({message: `fetch ${url} err: ${err.toString()}`, placement: 'topRight', duration: 4});
-            tryReconnect();
+            queryClient.clear();
         });
     }, [schema, server, curTable, curId, refOutDepth, maxNode, refIn]);
 

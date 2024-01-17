@@ -5,6 +5,7 @@ import {useTranslation} from "react-i18next";
 import {getId} from "./func/recordRefEntity.ts";
 import {navTo, setQuery, store, useLocationData} from "./model/store.ts";
 import {useNavigate} from "react-router-dom";
+import {useQueryClient} from "@tanstack/react-query";
 
 
 function getLabel(table: string, id: string): string {
@@ -12,11 +13,10 @@ function getLabel(table: string, id: string): string {
     return seps[seps.length - 1] + '-' + id;
 }
 
-export function SearchValue({tryReconnect}: {
-    tryReconnect: () => void;
-}) {
+export function SearchValue() {
     const {server, query, searchMax} = store;
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
     const [loading, setLoading] = useState<boolean>(false);
     const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
@@ -37,7 +37,7 @@ export function SearchValue({tryReconnect}: {
         }
         fetchData().catch((err) => {
             notification.error({message: `fetch ${url} err: ${err.toString()}`, placement: 'topRight', duration: 4});
-            tryReconnect();
+            queryClient.clear();
             setLoading(false);
         });
     }

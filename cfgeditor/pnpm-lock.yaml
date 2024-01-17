@@ -11,6 +11,9 @@ dependencies:
   '@ant-design/pro-editor':
     specifier: ^0.38.0
     version: 0.38.0(@emotion/react@11.11.1)(@types/react-dom@18.2.17)(@types/react@18.2.39)(antd-style@3.6.1)(antd@5.11.5)(rc-field-form@1.40.0)(react-dom@18.2.0)(react@18.2.0)
+  '@tanstack/react-query':
+    specifier: ^5.17.15
+    version: 5.17.15(react@18.2.0)
   antd:
     specifier: ^5.11.5
     version: 5.11.5(react-dom@18.2.0)(react@18.2.0)
@@ -2398,6 +2401,19 @@ packages:
   /@swc/types@0.1.5:
     resolution: {integrity: sha512-myfUej5naTBWnqOCc/MdVOLVjXUXtIA+NpDrDBKJtLLg2shUjBu3cZmB/85RyitKc55+lUUyl7oRfLOvkr2hsw==}
     dev: true
+
+  /@tanstack/query-core@5.17.15:
+    resolution: {integrity: sha512-QURxpu77/ICA4d61aPvV7EcJ2MwmksxUejKBaq/xLcO2TUJAlXf4PFKHC/WxnVFI/7F1jeLx85AO3Vpk0+uBXw==, tarball: https://registry.npmmirror.com/@tanstack/query-core/-/query-core-5.17.15.tgz}
+    dev: false
+
+  /@tanstack/react-query@5.17.15(react@18.2.0):
+    resolution: {integrity: sha512-9qur91mOihaUN7pXm6ioDtS+4qgkBcCiIaZyvi3lZNcQZsrMGCYZ+eP3hiFrV4khoJyJrFUX1W0NcCVlgwNZxQ==, tarball: https://registry.npmmirror.com/@tanstack/react-query/-/react-query-5.17.15.tgz}
+    peerDependencies:
+      react: ^18.0.0
+    dependencies:
+      '@tanstack/query-core': 5.17.15
+      react: 18.2.0
+    dev: false
 
   /@tauri-apps/cli-darwin-arm64@1.5.6:
     resolution: {integrity: sha512-NNvG3XLtciCMsBahbDNUEvq184VZmOveTGOuy0So2R33b/6FDkuWaSgWZsR1mISpOuP034htQYW0VITCLelfqg==, tarball: https://registry.npmmirror.com/@tauri-apps/cli-darwin-arm64/-/cli-darwin-arm64-1.5.6.tgz}

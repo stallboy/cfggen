@@ -14,6 +14,7 @@ import {useTranslation} from "react-i18next";
 import {newSchema, Schema} from "./model/schemaUtil.ts";
 import {navTo, setEditMode, setSchema, store, useLocationData} from "./model/store.ts";
 import {useNavigate} from "react-router-dom";
+import {useQueryClient} from "@tanstack/react-query";
 
 
 export function TableRecordLoaded({schema, curTable, recordResult, onSubmit}: {
@@ -138,16 +139,16 @@ export function TableRecordLoaded({schema, curTable, recordResult, onSubmit}: {
     return <div ref={ref} style={{height: "100vh", width: "100%"}}></div>
 }
 
-export function TableRecord({schema, curTable, tryReconnect}: {
+export function TableRecord({schema, curTable}: {
     schema: Schema;
     curTable: STable;
-    tryReconnect: () => void;
 }) {
     const {server} = store;
     const [recordResult, setRecordResult] = useState<RecordResult | null>(null);
     const {notification} = App.useApp();
     const {curPage, curTableId, curId} = useLocationData();
     const navigate = useNavigate();
+    const queryClient = useQueryClient()
 
     useEffect(() => {
         setRecordResult(null);
@@ -165,7 +166,7 @@ export function TableRecord({schema, curTable, tryReconnect}: {
                 placement: 'topRight',
                 duration: 4
             });
-            tryReconnect();
+            queryClient.clear();
         });
     }, [schema, server, curTable, curId]);
 
@@ -214,7 +215,7 @@ export function TableRecord({schema, curTable, tryReconnect}: {
                 message: `post ${url} err: ${err.toString()}`,
                 placement: 'topRight', duration: 4
             });
-            tryReconnect();
+            queryClient.clear();
         });
     }
 
