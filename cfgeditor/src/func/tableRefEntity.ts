@@ -8,6 +8,7 @@ function createEntity(item: SItem, id: string, entityType: EntityType = EntityTy
         label: item.name,
         inputs: [],
         outputs: [],
+        sourceEdges: [],
 
         fieldsShow: FieldsShowType.Direct,
         entityType: entityType,

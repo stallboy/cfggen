@@ -1,5 +1,5 @@
 import {JSONObject} from "./recordModel.ts";
-import {RawSchema, RecordId, SField, SInterface, SItem, SStruct, STable} from "./schemaModel.ts";
+import {RawSchema, RecordId, SField, SForeignKey, SInterface, SItem, SStruct, STable} from "./schemaModel.ts";
 
 export class Schema {
     isEditable: boolean;
@@ -71,27 +71,31 @@ export class Schema {
     }
 
     getDirectDepStructsByItem(item: SItem): Set<string> {
-        let depNameSet = new Set<string>();
+        const map = this.getDirectDepStructsMapByItem(item);
+        return new Set(map.keys())
+    }
+
+    getDirectDepStructsMapByItem(item: SItem): Map<string, string> {
+        let depNameMap = new Map<string, string>();
         if (item.type == 'interface') {
             let ii = item as SInterface;
             for (let impl of ii.impls) {
-                depNameSet.add(impl.id ?? impl.name);
+                depNameMap.set(impl.id ?? impl.name, '@out');
             }
-            return depNameSet;
+            return depNameMap;
         }
 
         item = item as SStruct | STable
         const primitiveTypeSet = new Set<string>(['bool', 'int', 'long', 'float', 'str', 'text']);
 
-        for (let field of item.fields) {
-            let type = field.type;
+        for (let {name, type} of item.fields) {
             if (primitiveTypeSet.has(type)) {
                 continue;
             }
             if (type.startsWith("list<")) {
                 let itemType = type.slice(5, type.length - 1);
                 if (!primitiveTypeSet.has(itemType)) {
-                    depNameSet.add(itemType);
+                    depNameMap.set(itemType, name);
                 }
             } else if (type.startsWith("map<")) {
                 let item = type.slice(4, type.length - 1);
@@ -99,30 +103,29 @@ export class Schema {
                 let keyType = sp[0].trim();
                 let valueType = sp[1].trim();
                 if (!primitiveTypeSet.has(keyType)) {
-                    depNameSet.add(keyType);
+                    depNameMap.set(keyType, name);
                 }
                 if (!primitiveTypeSet.has(valueType)) {
-                    depNameSet.add(valueType);
+                    depNameMap.set(valueType, name);
                 }
             } else {
-                depNameSet.add(type);
+                depNameMap.set(type, name);
             }
         }
 
-        if (depNameSet.size > 0) {
-            let depNameSetGlobal = new Set<string>();
-            for (let n of depNameSet) {
-                if (this.itemMap.has(n)) {
-                    depNameSetGlobal.add(n);
-                    continue;
+        if (depNameMap.size > 0) {
+            // 去掉对impl的依赖
+            let depNameMapGlobal = new Map<string, string>();
+            for (let [type, name] of depNameMap) {
+                if (this.itemMap.has(type)) {
+                    depNameMapGlobal.set(type, name);
                 }
-
-                console.log(`getDepStructs ${item.name}, ${n} not found!`);
+                // console.log(`getDepStructs ${item.name}, ${type} not found!`);
             }
-            return depNameSetGlobal;
+            return depNameMapGlobal;
         }
 
-        return depNameSet;
+        return depNameMap;
     }
 
     getDirectDepStructsByItems(items: SItem[]): Set<string> {
@@ -267,6 +270,17 @@ export class Schema {
         return this.defaultValueOfStructural(impl);
     }
 
+
+    getFkTargetHandle(fk: SForeignKey): string {
+        if (fk.refKeys && fk.refKeys.length > 0) {
+            return `@in_${fk.refKeys[0]}`;
+        }
+        const ref = this.getSTable(fk.refTable);
+        if (ref) {
+            return `@in_${ref.pk[0]}`;
+        }
+        return '@in';
+    }
 
 }
 

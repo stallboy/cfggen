@@ -139,6 +139,7 @@ export class RecordEntityCreator {
             fields: fields,
             inputs: [],
             outputs: outputs,
+            sourceEdges:[],
 
             fieldsShow: FieldsShowType.Direct,
             entityType: EntityType.Normal,

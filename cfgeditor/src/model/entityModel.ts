@@ -7,8 +7,8 @@ export interface EntityField {
     comment?: string;
     value: string;
     key: string;
-    handleOut?: boolean;
-    handleIn?: boolean;
+    handleOut?: boolean; // <name>
+    handleIn?: boolean;  // @in_<name>
 }
 
 export interface EntityEditFieldOption {
@@ -67,6 +67,13 @@ export interface EntitySocketOutput {
     connectToSockets: ConnectTo[];
 }
 
+export interface EntitySourceEdge {
+    sourceHandle: string;
+    target: string;
+    targetHandle: string;
+    type: EntityEdgeType;
+}
+
 export interface EntityBrief {
     img?: string;
     title?: string;
@@ -91,6 +98,10 @@ export interface Entity {
     inputs: EntitySocket[];
     outputs: EntitySocketOutput[];
 
+    sourceEdges: EntitySourceEdge[];
+    handleIn?: boolean;  // @in
+    handleOut?: boolean; // @out
+
     fieldsShow: FieldsShowType;
     entityType?: EntityType;
     userData?: any;
@@ -104,7 +115,6 @@ export interface EntityGraph {
     query?: string;
     nodeShow?: NodeShowType;
 }
-
 
 
 export enum FieldsShowType {
@@ -122,6 +132,11 @@ export enum EntityType {
 }
 
 export enum EntityConnectionType {
+    Normal,
+    Ref = 1,
+}
+
+export enum EntityEdgeType {
     Normal,
     Ref = 1,
 }
@@ -144,3 +159,38 @@ export function fillInputs(entityMap: Map<string, Entity>) {
     }
 }
 
+function findField(fields: EntityField[], key: string) {
+    for (let field of fields) {
+        if (field.key == key) {
+            return field;
+        }
+    }
+    return null;
+}
+
+
+export function fillHandles(entityMap: Map<string, Entity>) {
+    for (let entity of entityMap.values()) {
+        for (let {sourceHandle, target, targetHandle} of entity.sourceEdges) {
+            if (sourceHandle == '@out') {
+                entity.handleOut = true;
+            } else {
+                let field = findField(entity.fields!, sourceHandle);
+                field!.handleOut = true;
+            }
+
+            let targetEntity = entityMap.get(target);
+            if (targetEntity) {
+                if (targetHandle == '@in') {
+                    targetEntity.handleIn = true;
+                } else if (targetHandle.startsWith('@in_')) {
+                    let field = findField(targetEntity.fields!, targetHandle.substring(4));
+                    field!.handleIn = true;
+                }else{
+                    console.error(targetHandle + ' not found');
+                }
+            }
+
+        }
+    }
+}

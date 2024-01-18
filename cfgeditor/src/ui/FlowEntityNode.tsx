@@ -1,8 +1,8 @@
 import ReactFlow, {
     Background,
     Controls,
-    Edge, Node,
-    NodeTypes,
+    Edge, Handle, Node,
+    NodeTypes, Position,
     useEdgesState,
     useNodesState,
 } from "reactflow";
@@ -15,12 +15,23 @@ import {memo} from "react";
 const {Text} = Typography;
 
 
-function tooltip(field: { name: string, comment?: string }) {
-    return field.comment ? `${field.name}: ${field.comment}` : field.name;
+function tooltip({comment, name}: { name: string, comment?: string }) {
+    return comment ? `${name}: ${comment}` : name;
+}
+
+const re = /[（(]/;
+
+function text({comment, name}: { name: string, comment?: string }) {
+    if (comment) {
+        const c = comment.split(re)[0];
+
+        return `${c.substring(0, 6)} ${name}`
+    }
+    return name;
 }
 
 
-export const PropertiesNode = memo(function({entity}: { entity: Entity }) {
+export const PropertiesNode = memo(function ({entity}: { entity: Entity }) {
     return <Flex vertical gap={'small'} className='formNode' style={{width: 240, backgroundColor: '#1677ff'}}>
         <Text strong style={{fontSize: 18, color: "#fff"}} ellipsis={{tooltip: true}}>
             {entity.label}
@@ -32,7 +43,7 @@ export const PropertiesNode = memo(function({entity}: { entity: Entity }) {
                           <Flex justify="space-between" style={{width: '100%'}}>
                               <Tooltip title={tooltip(item)}>
                                   <Text style={{color: '#1677ff'}} ellipsis={{tooltip: true}}>
-                                      {item.name}
+                                      {text(item)}
                                   </Text>
                               </Tooltip>
                               <Text ellipsis={{tooltip: true}}>
@@ -40,12 +51,32 @@ export const PropertiesNode = memo(function({entity}: { entity: Entity }) {
                               </Text>
                           </Flex>
 
-                          {/*<Handle type={'source'} position={Position.Right} id={item.prop}*/}
-                          {/*        style={{position: 'absolute', left: '280px'}}/>*/}
+                          {(item.handleIn) && <Handle type='target' position={Position.Left} id={`@in_${item.name}`}
+                                                      style={{
+                                                          position: 'absolute',
+                                                          left: '-10px',
+                                                          backgroundColor: '#1677ff'
+                                                      }}/>}
+                          {(item.handleOut) && <Handle type='source' position={Position.Right} id={item.name}
+                                                       style={{
+                                                           position: 'absolute',
+                                                           left: '230px',
+                                                           backgroundColor: '#1677ff'
+                                                       }}/>}
                       </List.Item>;
 
                   }}/>
         )}
+        {(entity.handleIn && <Handle type='target' position={Position.Left} id='@in'
+                                     style={{
+                                         position: 'absolute',
+                                         backgroundColor: '#1677ff'
+                                     }}/>)}
+        {(entity.handleOut && <Handle type='source' position={Position.Right} id='@in'
+                                      style={{
+                                          position: 'absolute',
+                                          backgroundColor: '#1677ff'
+                                      }}/>)}
     </Flex>;
 
 });
@@ -64,56 +95,20 @@ export function convertNodeAndEdges(graph: EntityGraph) {
     let ei = 1;
     for (let entity of graph.entityMap.values()) {
         nodes.push({id: entity.id, data: entity, type: 'props', position: {x: 100, y: 100}})
-
-        for (let output of entity.outputs) {
-            for (let connectToSocket of output.connectToSockets) {
-                edges.push({
-                    id: '' + (ei++), source: entity.id, sourceHandle: output.output.key,
-                    target: connectToSocket.entityId, targetHandle: connectToSocket.inputKey, type: 'smoothstep'
-                });
-            }
+        for (let edge of entity.sourceEdges) {
+            edges.push({
+                id: '' + (ei++),
+                source: entity.id,
+                sourceHandle: edge.sourceHandle,
+                target: edge.target,
+                targetHandle: edge.targetHandle,
+                type: 'default',
+            });
         }
     }
     return {nodes, edges};
 }
 
-
-// import ELK, {ElkNode, ElkExtendedEdge} from 'elkjs';
-// const elk = new ELK();
-
-// function layout(nodes: FlowNode[], edges: Edge[]) {
-//     const defaultOptions = {
-//         'elk.algorithm': 'layered',
-//         'elk.layered.spacing.nodeNodeBetweenLayers': '100',
-//         'elk.spacing.nodeNode': '80',
-//         'elk.direction': 'RIGHT',
-//     };
-//
-//     const graph: ElkNode = {
-//         id: 'root',
-//         layoutOptions: defaultOptions,
-//         children: nodes as ElkNode[],
-//         edges: edges as unknown as ElkExtendedEdge[],
-//     };
-//
-//
-//     elk.layout(graph).then(({children}) => {
-//         // By mutating the children in-place we saves ourselves from creating a
-//         // needless copy of the nodes array.
-//         if (children) {
-//             children.forEach((node: ElkNode) => {
-//                 (node as FlowNode).position = {x: node.x!, y: node.y!};
-//
-//                 // console.log(node.id, node.x, node.y, "--", node.width, node.height);
-//             });
-//
-//             // setNodes(children as FlowNode[]);
-//             // window.requestAnimationFrame(() => {
-//             //     fitView();
-//             // });
-//         }
-//     });
-// }
 
 export function FlowEntityGraph({initialNodes, initialEdges}: {
     initialNodes: FlowNode[],
@@ -122,7 +117,6 @@ export function FlowEntityGraph({initialNodes, initialEdges}: {
     const [nodes, _setNodes, onNodesChange] = useNodesState<Entity>(initialNodes);
     const [edges, _setEdges, onEdgesChange] = useEdgesState(initialEdges);
     // const {fitView} = useReactFlow();
-
 
     // layout(nodes, edges);
 

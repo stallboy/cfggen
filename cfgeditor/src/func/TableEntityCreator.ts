@@ -1,5 +1,5 @@
 import {SInterface, SItem, SStruct, STable} from "../model/schemaModel.ts";
-import {ConnectTo, Entity, EntityConnectionType, EntityType, FieldsShowType} from "../model/entityModel.ts";
+import {Entity, EntityEdgeType, EntityType, FieldsShowType} from "../model/entityModel.ts";
 import {Schema} from "../model/schemaUtil.ts";
 
 export class UserData {
@@ -32,6 +32,7 @@ function createEntity(item: SItem, id: string, table: string, entityType: Entity
         fields: fields,
         inputs: [],
         outputs: [],
+        sourceEdges: [],
 
         fieldsShow,
         entityType: entityType,
@@ -73,26 +74,25 @@ export class TableEntityCreator {
                 if (dep.type == 'interface') {
 
                     let depInterface = dep as SInterface;
-                    let connSockets: ConnectTo[] = [];
+
                     let cnt = 0;
                     for (let impl of depInterface.impls) {
                         let implEntity = createEntity(impl, depInterface.name + "." + impl.name, this.curTable.name);
                         this.entityMap.set(implEntity.id, implEntity);
                         frontier.push(impl);
 
-                        connSockets.push({
-                            entityId: implEntity.id,
-                            inputKey: "input",
+                        depEntity.sourceEdges.push({
+                            sourceHandle: '@out',
+                            target: implEntity.id,
+                            targetHandle: '@in',
+                            type: EntityEdgeType.Normal,
                         })
+
                         cnt++;
                         if (cnt >= this.maxImpl) {
                             break;
                         }
                     }
-                    depEntity.outputs.push({
-                        output: {key: "output", label: depInterface.impls.length.toString()},
-                        connectToSockets: connSockets
-                    })
 
                 } else {
                     frontier.push(dep as SStruct);
@@ -105,20 +105,13 @@ export class TableEntityCreator {
                     console.log("old frontier " + (oldF.id ?? oldF.name) + " not found!");
                     continue;
                 }
-
-                let deps = this.schema.getDirectDepStructsByItem(oldF);
-
-                let connSockets: ConnectTo[] = [];
-                for (let dep of deps) {
-                    connSockets.push({
-                        entityId: dep,
-                        inputKey: "input",
-                    })
-                }
-                if (connSockets.length > 0) {
-                    oldFEntity.outputs.push({
-                        output: {key: "output"},
-                        connectToSockets: connSockets
+                let deps = this.schema.getDirectDepStructsMapByItem(oldF);
+                for (let [type, name] of deps) {
+                    oldFEntity.sourceEdges.push({
+                        sourceHandle: name,
+                        target: type,
+                        targetHandle: '@in',
+                        type: EntityEdgeType.Normal,
                     })
                 }
             }
@@ -128,13 +121,14 @@ export class TableEntityCreator {
 
     includeRefTables() {
         let frontier: SItem[] = [];
-        let entityFrontier: Entity[] = [];
+        let entityFrontier = [];
         for (let e of this.entityMap.values()) {
             frontier.push((e.userData as UserData).item);
             entityFrontier.push(e);
         }
 
         let refTableNames = this.schema.getDirectRefTables(frontier);
+
         for (let ref of refTableNames) {
             let refEntity = this.entityMap.get(ref);
             if (refEntity) {
@@ -157,45 +151,27 @@ export class TableEntityCreator {
             if (item.type == 'interface') {
                 let ii = item as SInterface;
                 if (ii.enumRef) {
-                    oldEntity.outputs.push({
-                        output: {key: "enumRef", label: "enumRef"},
-                        connectToSockets: [{
-                            entityId: ii.enumRef,
-                            inputKey: "input",
-                            connectionType: EntityConnectionType.Ref
-                        }]
-                    })
+                    oldEntity.sourceEdges.push({
+                        sourceHandle: '@out',
+                        target: ii.enumRef,
+                        targetHandle: "@in",
+                        type: EntityEdgeType.Ref,
+                    });
                 }
 
             } else {
                 let si = item as (SStruct | STable)
                 if (si.foreignKeys) {
                     for (let fk of si.foreignKeys) {
-                        let prefix = 'ref';
-                        if (fk.refType == 'rList') {
-                            prefix = 'refList';
-                        } else if (fk.refType.startsWith("rNullable")) {
-                            prefix = 'nullableRef'
-                        }
-                        let key = prefix + upper1(fk.name);
-                        oldEntity.outputs.push({
-                            output: {key: key, label: key},
-                            connectToSockets: [{
-                                entityId: fk.refTable,
-                                inputKey: "input",
-                                connectionType: EntityConnectionType.Ref
-                            }]
-                        })
+                        oldEntity.sourceEdges.push({
+                            sourceHandle: fk.keys[0],
+                            target: fk.refTable,
+                            targetHandle: this.schema.getFkTargetHandle(fk),
+                            type: EntityEdgeType.Ref,
+                        });
                     }
                 }
             }
         }
     }
-}
-
-function upper1(str: string): string {
-    if (str.length > 0) {
-        return str.charAt(0).toUpperCase() + str.substring(1);
-    }
-    return str;
 }

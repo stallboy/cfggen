@@ -1,4 +1,4 @@
-import {Entity, fillInputs} from "./model/entityModel.ts";
+import {Entity, fillHandles} from "./model/entityModel.ts";
 import {SchemaTableType} from "./CfgEditorApp.tsx";
 import {TableEntityCreator} from "./func/TableEntityCreator.ts";
 import {store, useLocationData} from "./model/store.ts";
@@ -70,7 +70,7 @@ export function TableSchema() {
     let creator = new TableEntityCreator(entityMap, schema, curTable, maxImpl);
     creator.includeSubStructs();
     creator.includeRefTables();
-    fillInputs(entityMap);
+    fillHandles(entityMap);
 
     const {nodes, edges} = convertNodeAndEdges({entityMap, menu: [], nodeShow});
 

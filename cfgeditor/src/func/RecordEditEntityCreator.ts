@@ -177,6 +177,7 @@ export class RecordEditEntityCreator {
             editOnUpdateValues,
             inputs: [],
             outputs: outputs,
+            sourceEdges:[],
 
             fieldsShow: FieldsShowType.Edit,
             entityType: EntityType.Normal,
