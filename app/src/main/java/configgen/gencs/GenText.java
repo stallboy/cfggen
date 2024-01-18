@@ -21,7 +21,7 @@ public class GenText {
         List<String> languages = langSwitch.languages().stream().map(Generator::upper1).toList();
         //fields
         for (String lang : languages) {
-            ps.println2("public String %s { get; private set; }", lang);
+            ps.println2("public string %s { get; private set; }", lang);
         }
 
         ps.println2("private Text() {}");
