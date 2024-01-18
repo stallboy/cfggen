@@ -4,13 +4,11 @@ import {ReactFlowInstance, XYPosition} from "reactflow";
 
 const elk = new ELK();
 
-
-function nodeToLayoutChild(node: FlowNode, nodes: FlowNode[]): ElkNode {
+function nodeToLayoutChild(node: FlowNode): ElkNode {
     return {
         id: node.id,
         width: node.width!,
         height: node.height!,
-        // ...graphToElk(nodes, [], node.id),
     };
 }
 
@@ -22,14 +20,6 @@ function edgeToLayoutEdge(edge: FlowEdge): ElkExtendedEdge {
     }
 }
 
-
-function graphToElk(nodes: FlowNode[], edges: FlowEdge[], parentId?: string): Pick<ElkNode, 'children' | 'edges'> {
-    return {
-        children: nodes //.filter(n => n.data.parentId === parentId)
-            .map(n => nodeToLayoutChild(n, nodes)),
-        edges: parentId ? [] : edges.map(edgeToLayoutEdge),
-    };
-}
 
 function toPositonMap(map: Map<string, XYPosition>, children: ElkNode[]) {
     for (let {id, x, y, children: subChildren} of children) {
@@ -60,28 +50,35 @@ export function layout(flowInstance: ReactFlowInstance) {
     const graph: ElkNode = {
         id: 'root',
         layoutOptions: defaultOptions,
-        ...graphToElk(nodes, edges)
+        children: nodes.map(nodeToLayoutChild),
+        edges: edges.map(edgeToLayoutEdge),
     };
 
     const flowNodeMap = new Map<string, FlowNode>();
     nodes.forEach(n => flowNodeMap.set(n.id, n));
 
-
     elk.layout(graph).then(({children}) => {
-        if (children) {
+        if (children && edges) {
             const map = new Map<string, XYPosition>();
             toPositonMap(map, children);
             const newNodes: FlowNode[] = nodes.map(n => {
                 const newPos = map.get(n.id);
-                return newPos ? {...n, position: newPos} : n;
+                return {...n, ...(newPos ? {position: newPos} : {}), style: undefined};
+            })
+
+            const newEdges: FlowEdge[] = edges.map(e => {
+                return {...e, style: {...e.style, visibility: undefined}};
             })
 
             flowInstance.setNodes(newNodes);
+            flowInstance.setEdges(newEdges);
 
-            setTimeout(()=>{
-                flowInstance.fitView();
+            setTimeout(() => {
+                flowInstance.fitView({duration: 300});
             })
 
         }
     });
 }
+
+

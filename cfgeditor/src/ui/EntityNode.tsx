@@ -1,10 +1,11 @@
 import {ClassicPreset} from "rete";
 import {EntityControl} from "./EntityControl.tsx";
-import {Entity, EntityType} from "../model/entityModel.ts";
+import {Entity} from "../model/entityModel.ts";
 import {Presets, RenderEmit} from "rete-react-plugin";
 import {Typography} from "antd";
 import {css} from "styled-components";
 import {NodeShowType} from "../func/localStoreJson.ts";
+import {getNodeBackgroundColor} from "./colors.ts";
 
 const {NodeStyles, RefControl, RefSocket} = Presets.classic;
 
@@ -31,46 +32,11 @@ export class EntityNode extends ClassicPreset.Node<
 
 export function EntityNodeComponent(props: { data: EntityNode, emit: RenderEmit<any> }) {
     let entity = props.data.entity;
+    entity.nodeShow = props.data.nodeShow;
+    let color: string = getNodeBackgroundColor(entity);
 
-    let color: string | null = null;
-    let nodeShow = props.data.nodeShow;
 
-    if (nodeShow && nodeShow.tableColors.length > 0) {
-        for (let tableColor of nodeShow.tableColors) {
-            if (entity.label.includes(tableColor.keyword)) {
-                color = tableColor.color;
-                break;
-            }
-        }
-    }
-
-    if (color == null && entity.brief && nodeShow && nodeShow.keywordColors.length > 0) {
-        for (let keywordColor of nodeShow.keywordColors) {
-            if (entity.brief.value.includes(keywordColor.keyword)) {
-                color = keywordColor.color;
-                break;
-            }
-        }
-    }
-
-    if (color == null) {
-        switch (entity.entityType) {
-            case EntityType.Ref:
-                color = '#237804';
-                break;
-            case EntityType.Ref2:
-                color = '#006d75';
-                break;
-            case EntityType.RefIn:
-                color = '#003eb3';
-                break;
-            default:
-                color = '#1677ff';
-                break;
-        }
-    }
-
-    const styles = css<{}>`background: ${color as string}`;
+    const styles = css<{}>`background: ${color}`;
     return <MyNode styles={() => styles} {...props} />;
 }
 

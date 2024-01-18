@@ -107,6 +107,9 @@ export interface Entity {
     fieldsShow: FieldsShowType;
     entityType?: EntityType;
     userData?: any;
+
+    query?: string;
+    nodeShow?: NodeShowType;
 }
 
 export interface EntityGraph {
@@ -176,8 +179,8 @@ export function fillHandles(entityMap: Map<string, Entity>) {
         for (let {sourceHandle, target, targetHandle} of entity.sourceEdges) {
             if (sourceHandle == '@out') {
                 entity.handleOut = true;
-            } else {
-                let field = findField(entity.fields!, sourceHandle);
+            } else if (entity.fields) {
+                let field = findField(entity.fields, sourceHandle);
                 field!.handleOut = true;
             }
 
@@ -185,8 +188,8 @@ export function fillHandles(entityMap: Map<string, Entity>) {
             if (targetEntity) {
                 if (targetHandle == '@in') {
                     targetEntity.handleIn = true;
-                } else if (targetHandle.startsWith('@in_')) {
-                    let field = findField(targetEntity.fields!, targetHandle.substring(4));
+                } else if (targetHandle.startsWith('@in_') && targetEntity.fields) {
+                    let field = findField(targetEntity.fields, targetHandle.substring(4));
                     field!.handleIn = true;
                 } else {
                     console.error(targetHandle + ' not found');

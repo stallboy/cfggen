@@ -1,5 +1,5 @@
 import {SItem, STable} from "../model/schemaModel.ts";
-import {Entity, EntityConnectionType, EntityType, FieldsShowType} from "../model/entityModel.ts";
+import {Entity, EntityEdgeType, EntityType, FieldsShowType} from "../model/entityModel.ts";
 import {Schema} from "../model/schemaUtil.ts";
 
 function createEntity(item: SItem, id: string, entityType: EntityType = EntityType.Normal): Entity {
@@ -39,15 +39,12 @@ export function includeRefTables(entityMap: Map<string, Entity>, curTable: STabl
 
             refInEntity = createEntity(refInTable, ref, EntityType.RefIn);
             entityMap.set(ref, refInEntity);
-
-            refInEntity.outputs.push({
-                output: {key: 'refIn', label: 'refIn'},
-                connectToSockets: [{
-                    entityId: curTable.name,
-                    inputKey: "input",
-                    connectionType: EntityConnectionType.Ref
-                }],
-            });
+            refInEntity.sourceEdges.push({
+                sourceHandle: "@out",
+                target: curTable.name,
+                targetHandle: "@in",
+                type: EntityEdgeType.Ref,
+            })
 
             if (entityMap.size > maxNode / 2) {
                 break;
@@ -91,24 +88,17 @@ export function includeRefTables(entityMap: Map<string, Entity>, curTable: STabl
 
         for (let oldEntity of entityFrontier) {
             let item = oldEntity.userData as SItem;
-
             let directRefs = schema.getAllRefTablesByItem(item);
-            let connectToSockets = []
             for (let ref of directRefs) {
                 if (entityMap.has(ref)) {
-                    connectToSockets.push({
-                        entityId: ref,
-                        inputKey: "input",
-                        connectionType: EntityConnectionType.Ref
-                    });
-                }
-            }
+                    oldEntity.sourceEdges.push({
+                        sourceHandle: "@out",
+                        target: ref,
+                        targetHandle: "@in",
+                        type: EntityEdgeType.Ref,
 
-            if (connectToSockets.length > 0) {
-                oldEntity.outputs.push({
-                    output: {key: 'ref', label: 'ref'},
-                    connectToSockets
-                });
+                    })
+                }
             }
         }
 
