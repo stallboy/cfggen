@@ -102,6 +102,8 @@ export interface Entity {
     handleIn?: boolean;  // @in
     handleOut?: boolean; // @out
 
+    parentId?: string;
+
     fieldsShow: FieldsShowType;
     entityType?: EntityType;
     userData?: any;
@@ -186,7 +188,7 @@ export function fillHandles(entityMap: Map<string, Entity>) {
                 } else if (targetHandle.startsWith('@in_')) {
                     let field = findField(targetEntity.fields!, targetHandle.substring(4));
                     field!.handleIn = true;
-                }else{
+                } else {
                     console.error(targetHandle + ' not found');
                 }
             }

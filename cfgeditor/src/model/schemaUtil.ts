@@ -138,27 +138,6 @@ export class Schema {
     }
 
 
-    getDirectRefTables(items: SItem[]): Set<string> {
-        let res = new Set<string>();
-        for (let item of items) {
-            if (item.type == 'interface') {
-                let ii = item as SInterface;
-                if (ii.enumRef) {
-                    res.add(ii.enumRef);
-                }
-                // 这里不再遍历impls，因为假设impl被包含在参数items里
-            } else {
-                let si = item as (SStruct | STable)
-                if (si.foreignKeys) {
-                    for (let fk of si.foreignKeys) {
-                        res.add(fk.refTable);
-                    }
-                }
-            }
-        }
-        return res;
-    }
-
     private ids2items(ids: Set<string>): SItem[] {
         let ss: SItem[] = [];
         for (let id of ids) {

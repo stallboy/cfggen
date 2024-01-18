@@ -1,15 +1,19 @@
 import ReactFlow, {
     Background,
     Controls,
-    Edge, Handle, Node,
-    NodeTypes, Position,
+    Edge,
+    Handle,
+    Node,
+    NodeTypes,
+    Position,
     useEdgesState,
     useNodesState,
 } from "reactflow";
-import {Entity, EntityGraph} from "../model/entityModel.ts";
+import {Entity, EntityEdgeType, EntityGraph} from "../model/entityModel.ts";
 import {Flex, List, Tooltip, Typography} from "antd";
 
 import {memo} from "react";
+import {layout} from "./layout.ts";
 
 
 const {Text} = Typography;
@@ -82,7 +86,8 @@ export const PropertiesNode = memo(function ({entity}: { entity: Entity }) {
 });
 
 
-type FlowNode = Node<Entity, string>;
+export type FlowNode = Node<Entity, string>;
+export type FlowEdge = Edge;
 
 const nodeTypes: NodeTypes = {
     props: (data) => <PropertiesNode entity={data.data as Entity}/>,
@@ -90,20 +95,29 @@ const nodeTypes: NodeTypes = {
 
 export function convertNodeAndEdges(graph: EntityGraph) {
     const nodes: FlowNode[] = []
-    const edges: Edge[] = []
+    const edges: FlowEdge[] = []
 
     let ei = 1;
     for (let entity of graph.entityMap.values()) {
         nodes.push({id: entity.id, data: entity, type: 'props', position: {x: 100, y: 100}})
         for (let edge of entity.sourceEdges) {
-            edges.push({
+            let fe: FlowEdge = {
                 id: '' + (ei++),
-                source: entity.id,
+                    source: entity.id,
                 sourceHandle: edge.sourceHandle,
                 target: edge.target,
                 targetHandle: edge.targetHandle,
-                type: 'default',
-            });
+
+                type: 'simplebezier',
+                animated: true,
+                style: {stroke: '#1677ff'},
+            }
+
+            if (edge.type == EntityEdgeType.Normal){
+
+
+            }
+            edges.push(fe);
         }
     }
     return {nodes, edges};
@@ -116,16 +130,17 @@ export function FlowEntityGraph({initialNodes, initialEdges}: {
 }) {
     const [nodes, _setNodes, onNodesChange] = useNodesState<Entity>(initialNodes);
     const [edges, _setEdges, onEdgesChange] = useEdgesState(initialEdges);
-    // const {fitView} = useReactFlow();
-
-    // layout(nodes, edges);
 
     return <ReactFlow nodes={nodes}
                       onNodesChange={onNodesChange}
                       edges={edges}
                       onEdgesChange={onEdgesChange}
                       nodeTypes={nodeTypes}
-                      fitView>
+                      onInit={layout}
+                      fitView
+                      minZoom={0.1}
+                      maxZoom={2}>
+
         <Background/>
         <Controls/>
     </ReactFlow>;
