@@ -1,7 +1,8 @@
 import {STable} from "./model/schemaModel.ts";
 import {Badge, Select, Space} from "antd";
-import {getFixCurIdByTable, navTo, store, useLocationData} from "./model/store.ts";
+import {getFixCurIdByTable, navTo, useLocationData} from "./model/store.ts";
 import {useNavigate} from "react-router-dom";
+import {Schema} from "./model/schemaUtil.ts";
 
 interface TableWithLastName {
     tableId: string;
@@ -10,13 +11,12 @@ interface TableWithLastName {
 }
 
 
-export function TableList() {
-    const {schema} = store;
+export function TableList({schema} : {schema: Schema}) {
 
     const {curPage, curTableId, curId} = useLocationData();
     const navigate = useNavigate();
 
-    if (schema == null) {
+    if (!schema) {
         return <Select id='table' loading={true}/>
     }
 
@@ -80,7 +80,7 @@ export function TableList() {
                        return !!option?.value.includes(inputValue);
                    }}
                    onChange={(tableId, _) => {
-                       const id = getFixCurIdByTable(tableId, curId);
+                       const id = getFixCurIdByTable(schema, tableId, curId);
                        navigate(navTo(curPage, tableId, id));
                    }}
     />;

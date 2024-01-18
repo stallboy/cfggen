@@ -26,7 +26,7 @@ export function Setting({
 
 
                         }: {
-    schema: Schema | null;
+    schema: Schema | undefined;
     curTableId: string;
     curId: string;
     curPage: string;

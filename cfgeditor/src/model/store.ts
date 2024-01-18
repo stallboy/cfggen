@@ -34,7 +34,6 @@ export type StoreState = {
     //---
     editMode: boolean;
     history: History;
-    schema: Schema | null;
 }
 
 const defaultNodeShow: NodeShowType = {
@@ -69,7 +68,6 @@ function readStoreState(): StoreState {
 
         history: new History(),
         editMode: false,
-        schema: null,
     };
 }
 
@@ -184,33 +182,28 @@ export function setEditMode(editMode: boolean) {
 
 
 export function historyPrev(curPage: PageType) {
-    const {schema, history} = store;
+    const {history} = store;
     const newHistory = history.prev();
     store.history = newHistory;
     const cur = newHistory.cur();
-    if (cur && schema) {
+    if (cur) {
         return navTo(curPage, cur.table, cur.id, false);
     }
 }
 
 export function historyNext(curPage: PageType) {
-    const {schema, history} = store;
+    const {history} = store;
     const newHistory = history.next();
     store.history = newHistory;
     const cur = newHistory.cur();
-    if (cur && schema) {
+    if (cur) {
         return navTo(curPage, cur.table, cur.id, false);
     }
 }
 
 
-export function setSchemaNull() {
-    store.schema = null;
-}
 
 export function setSchema(schema: Schema, curTableId: string, curId: string) {
-    store.schema = schema;
-
     let curTab;
     if (curTableId.length > 0) {
         curTab = schema.getSTable(curTableId);
@@ -235,17 +228,14 @@ export function setSchema(schema: Schema, curTableId: string, curId: string) {
 }
 
 
-export function getFixCurIdByTable(curTableId: string, curId: string) {
-    const {schema} = store;
+export function getFixCurIdByTable(schema: Schema, curTableId: string, curId: string) {
     let id = '';
-    if (schema) {
-        let table = schema.getSTable(curTableId);
-        if (table) {
-            if (schema.hasId(table, curId)) {
-                id = curId;
-            } else if (table.recordIds.length > 0) {
-                id = table.recordIds[0].id;
-            }
+    let table = schema.getSTable(curTableId);
+    if (table) {
+        if (schema.hasId(table, curId)) {
+            id = curId;
+        } else if (table.recordIds.length > 0) {
+            id = table.recordIds[0].id;
         }
     }
     return id;

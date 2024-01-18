@@ -4,13 +4,12 @@ import ReactFlow, {
     Edge, Node,
     NodeTypes,
     useEdgesState,
-    useNodesState, useReactFlow,
+    useNodesState,
 } from "reactflow";
 import {Entity, EntityGraph} from "../model/entityModel.ts";
 import {Flex, List, Tooltip, Typography} from "antd";
 
-import ELK, {ElkNode, ElkExtendedEdge} from 'elkjs';
-import {memo, useEffect} from "react";
+import {memo} from "react";
 
 
 const {Text} = Typography;
@@ -66,54 +65,55 @@ export function convertNodeAndEdges(graph: EntityGraph) {
     for (let entity of graph.entityMap.values()) {
         nodes.push({id: entity.id, data: entity, type: 'props', position: {x: 100, y: 100}})
 
-        // for (let output of entity.outputs) {
-        //     for (let connectToSocket of output.connectToSockets) {
-        //         edges.push({
-        //             id: '' + (ei++), source: entity.id, sourceHandle: output.output.key,
-        //             target: connectToSocket.entityId, targetHandle: connectToSocket.inputKey, type: 'smoothstep'
-        //         });
-        //     }
-        // }
+        for (let output of entity.outputs) {
+            for (let connectToSocket of output.connectToSockets) {
+                edges.push({
+                    id: '' + (ei++), source: entity.id, sourceHandle: output.output.key,
+                    target: connectToSocket.entityId, targetHandle: connectToSocket.inputKey, type: 'smoothstep'
+                });
+            }
+        }
     }
     return {nodes, edges};
 }
 
 
-const elk = new ELK();
+// import ELK, {ElkNode, ElkExtendedEdge} from 'elkjs';
+// const elk = new ELK();
 
-function layout(nodes: FlowNode[], edges: Edge[]) {
-    const defaultOptions = {
-        'elk.algorithm': 'layered',
-        'elk.layered.spacing.nodeNodeBetweenLayers': '100',
-        'elk.spacing.nodeNode': '80',
-        'elk.direction': 'RIGHT',
-    };
-
-    const graph: ElkNode = {
-        id: 'root',
-        layoutOptions: defaultOptions,
-        children: nodes as ElkNode[],
-        edges: edges as unknown as ElkExtendedEdge[],
-    };
-
-
-    elk.layout(graph).then(({children}) => {
-        // By mutating the children in-place we saves ourselves from creating a
-        // needless copy of the nodes array.
-        if (children) {
-            children.forEach((node: ElkNode) => {
-                (node as FlowNode).position = {x: node.x!, y: node.y!};
-
-                // console.log(node.id, node.x, node.y, "--", node.width, node.height);
-            });
-
-            // setNodes(children as FlowNode[]);
-            // window.requestAnimationFrame(() => {
-            //     fitView();
-            // });
-        }
-    });
-}
+// function layout(nodes: FlowNode[], edges: Edge[]) {
+//     const defaultOptions = {
+//         'elk.algorithm': 'layered',
+//         'elk.layered.spacing.nodeNodeBetweenLayers': '100',
+//         'elk.spacing.nodeNode': '80',
+//         'elk.direction': 'RIGHT',
+//     };
+//
+//     const graph: ElkNode = {
+//         id: 'root',
+//         layoutOptions: defaultOptions,
+//         children: nodes as ElkNode[],
+//         edges: edges as unknown as ElkExtendedEdge[],
+//     };
+//
+//
+//     elk.layout(graph).then(({children}) => {
+//         // By mutating the children in-place we saves ourselves from creating a
+//         // needless copy of the nodes array.
+//         if (children) {
+//             children.forEach((node: ElkNode) => {
+//                 (node as FlowNode).position = {x: node.x!, y: node.y!};
+//
+//                 // console.log(node.id, node.x, node.y, "--", node.width, node.height);
+//             });
+//
+//             // setNodes(children as FlowNode[]);
+//             // window.requestAnimationFrame(() => {
+//             //     fitView();
+//             // });
+//         }
+//     });
+// }
 
 export function FlowEntityGraph({initialNodes, initialEdges}: {
     initialNodes: FlowNode[],

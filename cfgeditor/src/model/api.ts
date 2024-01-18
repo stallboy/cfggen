@@ -1,11 +1,14 @@
 import {store} from "./store.ts";
 import {RawSchema} from "./schemaModel.ts";
 import {JSONObject, RecordEditResult, RecordRefsResult, RecordResult} from "./recordModel.ts";
+import axios from 'axios';
+import {Schema} from "./schemaUtil.ts";
 
 
 export async function fetchSchema(server: string) {
-    const response = await fetch(`http://${server}/schemas`);
-    return await response.json() as RawSchema;
+    // axios.get()
+    const response = await axios.get<RawSchema>(`http://${server}/schemas`);
+    return new Schema(response.data);
 }
 
 export async function fetchRecord(tableId: string, id: string) {

@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from "react";
+import {useRef, useState} from "react";
 import {
     Alert,
     App,
@@ -10,6 +10,7 @@ import {
     Modal,
     Radio,
     RadioChangeEvent,
+    Select, Skeleton,
     Space,
     Typography
 } from "antd";
@@ -32,13 +33,14 @@ import {
     historyNext,
     historyPrev,
     navTo,
-    setSchema, setSchemaNull,
+    setSchema,
     setServer,
     store, useLocationData
 } from "./model/store.ts";
 import {Outlet, useNavigate} from "react-router-dom";
 import {STable} from "./model/schemaModel.ts";
 import {fetchSchema} from "./model/api.ts";
+import {useQuery} from "@tanstack/react-query";
 
 const {Text} = Typography;
 
@@ -47,8 +49,7 @@ export type SchemaTableType = { schema: Schema, curTable: STable };
 
 export function CfgEditorApp() {
     const {
-        schema, server,
-        fix, dragPanel,
+        server, fix, dragPanel,
         recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow,
         imageSizeScale, history
     } = store;
@@ -57,9 +58,6 @@ export function CfgEditorApp() {
     const navigate = useNavigate();
     const [settingOpen, setSettingOpen] = useState<boolean>(false);
     const [searchOpen, setSearchOpen] = useState<boolean>(false);
-    const [isFetching, setIsFetching] = useState<boolean>(false);
-    const [fetchError, setFetchError] = useState<string | null>(null);
-
 
     useHotkeys('alt+1', () => navigate(navTo('table', curTableId, curId)));
     useHotkeys('alt+2', () => navigate(navTo('tableRef', curTableId, curId)));
@@ -72,30 +70,11 @@ export function CfgEditorApp() {
     const {notification} = App.useApp();
     const {t} = useTranslation();
     const ref = useRef<HTMLDivElement>(null)
-
-    useEffect(() => {
-        if (!schema) {
-            setSchemaNull();
-            setIsFetching(true);
-            setFetchError(null);
-
-            const fetchData = async () => {
-                const rawSchema = await fetchSchema(server);
-                const schema = new Schema(rawSchema);
-                const [tableId, id] = setSchema(schema, curTableId, curId);
-                navigate(navTo(curPage, tableId, id));
-
-                setIsFetching(false);
-                setFetchError(null);
-            }
-
-            fetchData().catch((err) => {
-                setIsFetching(false);
-                setFetchError(err.toString());
-            });
-        }
-    }, [schema])
-
+    const {isLoading, isError, error, data: schema} = useQuery({
+        queryKey: ['schema'],
+        queryFn: () => fetchSchema(server),
+        staleTime: 1000 * 60 * 5,
+    })
 
     let curTable = schema ? schema.getSTable(curTableId) : null;
 
@@ -294,8 +273,8 @@ export function CfgEditorApp() {
                 <Button onClick={showSearch}>
                     <SearchOutlined/>
                 </Button>
-                <TableList/>
-                <IdList/>
+                {schema ? <TableList schema={schema}/> : <Select id='table' loading={true}/>}
+                {curTable ? <IdList curTable={curTable}/> : <Skeleton.Input/>}
                 {nextId}
             </Space>
 
@@ -316,15 +295,15 @@ export function CfgEditorApp() {
 
         {content}
 
-        <Modal title={t('serverConnectFail')} open={!schema && !!fetchError}
+        <Modal title={t('serverConnectFail')} open={isError}
                cancelButtonProps={{disabled: true}}
                closable={false}
-               confirmLoading={isFetching}
+               confirmLoading={isLoading}
                okText={t('reconnectCurServer')}
                onOk={handleModalOk}>
 
             <Flex vertical>
-                <Alert message={fetchError ?? ''} type='error'/>
+                <Alert message={error ? error.message : ''} type='error'/>
                 <p> {t('netErrFixTip')} </p>
                 <p> {t('curServer')}: {server}</p>
                 <Form.Item label={t('newServer') + ':'}>
