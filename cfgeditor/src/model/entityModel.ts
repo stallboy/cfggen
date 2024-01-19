@@ -72,6 +72,7 @@ export interface EntitySourceEdge {
     target: string;
     targetHandle: string;
     type: EntityEdgeType;
+    label?: string;
 }
 
 export interface EntityBrief {
@@ -181,7 +182,13 @@ export function fillHandles(entityMap: Map<string, Entity>) {
                 entity.handleOut = true;
             } else if (entity.fields) {
                 let field = findField(entity.fields, sourceHandle);
-                field!.handleOut = true;
+                if (field) {
+                    field.handleOut = true;
+                } else {
+                    console.log(sourceHandle + " handle not found for", entity);
+                }
+            } else {
+                console.log(sourceHandle + " handle not found for", entity);
             }
 
             let targetEntity = entityMap.get(target);
@@ -190,9 +197,13 @@ export function fillHandles(entityMap: Map<string, Entity>) {
                     targetEntity.handleIn = true;
                 } else if (targetHandle.startsWith('@in_') && targetEntity.fields) {
                     let field = findField(targetEntity.fields, targetHandle.substring(4));
-                    field!.handleIn = true;
+                    if (field) {
+                        field.handleIn = true;
+                    } else {
+                        console.log(targetHandle + " handle not found for", entity);
+                    }
                 } else {
-                    console.error(targetHandle + ' not found');
+                    console.error(targetHandle + ' not found for', entity);
                 }
             }
 

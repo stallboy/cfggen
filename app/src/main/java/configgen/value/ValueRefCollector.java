@@ -1,13 +1,9 @@
 package configgen.value;
 
 import configgen.gen.Generator;
-import configgen.schema.FieldType;
-import configgen.schema.ForeignKeySchema;
-import configgen.schema.RefKey;
-import configgen.schema.Structural;
+import configgen.schema.*;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,15 +15,22 @@ public class ValueRefCollector {
                         String id) {
     }
 
+    public record FieldRef(
+            String firstField,
+            String label,
+            String toTable,
+            String toId) {
+    }
+
     private final CfgValue cfgValue;
     private final Map<RefId, VStruct> refIdToRecordMap;
-    private final Map<String, List<RefId>> nameToRefIdsMap;
+    private final List<FieldRef> fieldRefs;
 
 
-    public ValueRefCollector(CfgValue cfgValue, Map<RefId, VStruct> refIdToRecordMap, Map<String, List<RefId>> nameToRefIdsMap) {
+    public ValueRefCollector(CfgValue cfgValue, Map<RefId, VStruct> refIdToRecordMap, List<FieldRef> fieldRefs) {
         this.cfgValue = cfgValue;
         this.refIdToRecordMap = refIdToRecordMap;
-        this.nameToRefIdsMap = nameToRefIdsMap;
+        this.fieldRefs = fieldRefs;
     }
 
     public void collect(Value value, List<String> prefix) {
@@ -47,7 +50,7 @@ public class ValueRefCollector {
             pre = String.join(".", prefix) + ".";
         }
 
-        collectStructRef(cfgValue, vStruct, refIdToRecordMap, nameToRefIdsMap, pre);
+        collectStructRef(cfgValue, vStruct, refIdToRecordMap, fieldRefs, pre);
 
         int i = 0;
         for (Value value : vStruct.values()) {
@@ -64,14 +67,14 @@ public class ValueRefCollector {
         return res;
     }
 
-    static Map<String, List<RefId>> collectStructRef(CfgValue cfgValue,
-                                                     VStruct vStruct,
-                                                     Map<RefId, VStruct> refIdToRecordMap,
-                                                     Map<String, List<RefId>> nameToRefIdsMap,
-                                                     String namePrefix
+    static List<FieldRef> collectStructRef(CfgValue cfgValue,
+                                           VStruct vStruct,
+                                           Map<RefId, VStruct> refIdToRecordMap,
+                                           List<FieldRef> fieldRefs,
+                                           String namePrefix
     ) {
-        if (nameToRefIdsMap == null){
-            nameToRefIdsMap = new LinkedHashMap<>();
+        if (fieldRefs == null) {
+            fieldRefs = new ArrayList<>();
         }
 
         Structural structural = vStruct.schema();
@@ -83,18 +86,19 @@ public class ValueRefCollector {
             }
             // 这里没考虑ListRef
             if (refKey instanceof RefKey.RefSimple refSimple) {
-                FieldType ft = fk.key().fieldSchemas().getFirst().type();
+                FieldSchema firstField = fk.key().fieldSchemas().getFirst();
+                FieldType ft = firstField.type();
 
                 // 允许自定义ref的名称
                 String refName = null;
                 String refTitleFieldName = fk.meta().getStr("refTitle", null);
-                if (refTitleFieldName != null){
+                if (refTitleFieldName != null) {
                     Value refTitleValue = ValueUtil.extractFieldValue(vStruct, refTitleFieldName);
-                    if (refTitleValue instanceof StringValue stringValue){
+                    if (refTitleValue instanceof StringValue stringValue) {
                         refName = stringValue.value();
                     }
                 }
-                if (refName == null){
+                if (refName == null) {
                     refName = namePrefix + (refSimple.nullable() ? "nullableRef" : "ref") + Generator.upper1(fk.name());
                 }
 
@@ -103,7 +107,7 @@ public class ValueRefCollector {
                         Value localValue = ValueUtil.extractKeyValue(vStruct, fk.keyIndices());
                         VStruct refRecord = foreignKeyValueMap.get(localValue);
                         if (refRecord != null) {
-                            addRef(refIdToRecordMap, nameToRefIdsMap, refName, fk.refTableNormalized(), localValue.packStr(), refRecord);
+                            addRef(refIdToRecordMap, fieldRefs, fk, refName, localValue.packStr(), refRecord);
                         }
                     }
                     case FieldType.FList ignored -> {
@@ -111,7 +115,7 @@ public class ValueRefCollector {
                         for (SimpleValue item : localList.valueList()) {
                             VStruct refRecord = foreignKeyValueMap.get(item);
                             if (refRecord != null) {
-                                addRef(refIdToRecordMap, nameToRefIdsMap, refName, fk.refTableNormalized(), item.packStr(), refRecord);
+                                addRef(refIdToRecordMap, fieldRefs, fk, refName, item.packStr(), refRecord);
                             }
                         }
                     }
@@ -120,21 +124,21 @@ public class ValueRefCollector {
                         for (SimpleValue val : localMap.valueMap().values()) {
                             VStruct refRecord = foreignKeyValueMap.get(val);
                             if (refRecord != null) {
-                                addRef(refIdToRecordMap, nameToRefIdsMap, refName, fk.refTableNormalized(), val.packStr(), refRecord);
+                                addRef(refIdToRecordMap, fieldRefs, fk, refName, val.packStr(), refRecord);
                             }
                         }
                     }
                 }
             }
         }
-        return nameToRefIdsMap;
+        return fieldRefs;
     }
 
-    private static void addRef(Map<RefId, VStruct> refIdToRecordMap, Map<String, List<RefId>> nameToRefIdsMap, String refName, String table, String id, VStruct refRecord) {
+    private static void addRef(Map<RefId, VStruct> refIdToRecordMap, List<FieldRef> fieldRefs, ForeignKeySchema fk, String refName, String id, VStruct refRecord) {
+        String table = fk.refTableNormalized();
         RefId refId = new RefId(table, id);
         refIdToRecordMap.put(refId, refRecord);
-        List<RefId> refIds = nameToRefIdsMap.computeIfAbsent(refName, k -> new ArrayList<>());
-        refIds.add(refId);
+        fieldRefs.add(new FieldRef(fk.key().fieldSchemas().getFirst().name(), refName, table, id));
     }
 
 

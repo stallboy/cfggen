@@ -8,6 +8,7 @@ import configgen.schema.TableSchema;
 import configgen.schema.TableSchemaRefGraph;
 import configgen.value.*;
 import configgen.value.CfgValue.VStruct;
+import configgen.value.ValueRefCollector.FieldRef;
 import configgen.value.ValueRefCollector.RefId;
 
 import java.util.*;
@@ -57,7 +58,6 @@ public class RecordService {
             String comment) {
     }
 
-
     public record BriefRecord(
             String table,
             String id,
@@ -68,7 +68,7 @@ public class RecordService {
             String value,  // 完整信息
             // refName -> [refId]
             @JSONField(name = "$refs")
-            Map<String, List<RefId>> refs,
+            Collection<FieldRef> refs,
             int depth) {
     }
 
@@ -168,11 +168,11 @@ public class RecordService {
                 RefId refId = e.getKey();
                 VStruct record = e.getValue();
 
-                Map<String, List<RefId>> refIdMap = new LinkedHashMap<>();
-                ValueRefCollector collector = new ValueRefCollector(cfgValue, newFrontier, refIdMap);
+                List<FieldRef> fieldRefs = new ArrayList<>();
+                ValueRefCollector collector = new ValueRefCollector(cfgValue, newFrontier, fieldRefs);
                 collector.collect(record, List.of());
 
-                result.put(refId, vStructToBriefRecord(refId, record, refIdMap, curDepth));
+                result.put(refId, vStructToBriefRecord(refId, record, fieldRefs, curDepth));
 
                 if (result.size() > maxObjs) {
                     break;
@@ -200,10 +200,10 @@ public class RecordService {
                 }
             }
 
-            Map<String, List<RefId>> staticRefIn = Map.of("refin", List.of(thisObjId));
+            FieldRef staticRefIn = new FieldRef("@out", null, thisObjId.table(), thisObjId.id());
             for (Map.Entry<RefId, VStruct> e : refIns.entrySet()) {
                 RefId refId = e.getKey();
-                result.put(refId, vStructToBriefRecord(refId, e.getValue(), staticRefIn, -1));
+                result.put(refId, vStructToBriefRecord(refId, e.getValue(), List.of(staticRefIn), -1));
 
                 if (result.size() > maxObjs + 8) {
                     break;
@@ -219,7 +219,7 @@ public class RecordService {
 
     }
 
-    private static BriefRecord vStructToBriefRecord(RefId refId, VStruct vStruct, Map<String, List<RefId>> refs, int depth) {
+    private static BriefRecord vStructToBriefRecord(RefId refId, VStruct vStruct, Collection<FieldRef> refs, int depth) {
         String img = getBriefValue(vStruct, "img");
         String title = getBriefTitle(vStruct);
         List<BriefDescription> descriptions = getBriefDescriptions(vStruct);

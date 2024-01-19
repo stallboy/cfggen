@@ -17,7 +17,7 @@ export interface JSONArray extends Array<JSONValue> {
 }
 
 export interface Refs {
-    "$refs"?: RefIdMap;
+    "$refs"?: FieldRef[];
 }
 
 export interface BriefDescription {
@@ -38,8 +38,11 @@ export interface BriefRecord extends Refs {
     depth: number;
 }
 
-export interface RefIdMap {
-    [refName: string]: RefId[];
+export interface FieldRef {
+    firstField: string;
+    label?: string;
+    toTable: string;
+    toId: string;
 }
 
 export interface RefId {

@@ -3,7 +3,7 @@ import {SchemaTableType} from "../CfgEditorApp.tsx";
 import {includeRefTables} from "../func/tableRefEntity.ts";
 import {navTo, store, useLocationData} from "../model/store.ts";
 import {useNavigate, useOutletContext} from "react-router-dom";
-import {convertNodeAndEdges, FlowEntityGraph} from "../ui/FlowEntityNode.tsx";
+import {convertNodeAndEdges, FlowEntityGraph} from "../ui/FlowEntityGraph.tsx";
 import {ReactFlowProvider} from "reactflow";
 import {MenuItem} from "../ui/FlowContextMenu.tsx";
 import {useTranslation} from "react-i18next";

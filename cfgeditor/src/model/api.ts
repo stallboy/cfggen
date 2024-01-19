@@ -1,4 +1,3 @@
-import {store} from "./store.ts";
 import {RawSchema} from "./schemaModel.ts";
 import {JSONObject, RecordEditResult, RecordRefsResult, RecordResult} from "./recordModel.ts";
 import axios from 'axios';
@@ -6,57 +5,54 @@ import {Schema} from "./schemaUtil.ts";
 
 
 export async function fetchSchema(server: string) {
-    // axios.get()
     const response = await axios.get<RawSchema>(`http://${server}/schemas`);
     return new Schema(response.data);
 }
 
-export async function fetchRecord(tableId: string, id: string) {
-    const {server} = store;
+export async function fetchRecord(server: string, tableId: string, id: string) {
     const url = `http://${server}/record?table=${tableId}&id=${id}&depth=1`;
-    const response = await fetch(url);
-    return await response.json() as RecordResult;
+    const response = await axios.get<RecordResult>(url);
+    return response.data;
 }
 
-export async function fetchRecordRefs(tableId: string, id: string,
+export async function fetchRecordRefs(server: string, tableId: string, id: string,
                                       refOutDepth: number, maxNode: number, refIn: boolean) {
-    const {server} = store;
     let url = `http://${server}/record?table=${tableId}&id=${id}&depth=${refOutDepth}&maxObjs=${maxNode}&refs${refIn ? '&in' : ''}`;
-    const response = await fetch(url);
-    return await response.json() as RecordRefsResult;
+    const response = await axios.get<RecordRefsResult>(url);
+    return response.data;
 }
 
-export async function addOrUpdateRecord(tableId: string, editingObject: JSONObject) {
-    const {server} = store;
+export async function addOrUpdateRecord(server: string, tableId: string, editingObject: JSONObject) {
 
     let url = `http://${server}/recordAddOrUpdate?table=${tableId}`;
-    const response = await fetch(url, {
-        method: 'POST',
-        cache: "no-cache",
-        mode: "cors",
-        credentials: "same-origin",
+    const response = await axios.post<RecordEditResult>(url, editingObject, {
+        method: 'post',
         headers: {
+            cache: "no-cache",
+            mode: "cors",
+            credentials: "same-origin",
+            redirect: "follow",
+            referrerPolicy: "no-referrer",
             "Content-Type": "application/json",
         },
-        redirect: "follow",
-        referrerPolicy: "no-referrer",
-        body: JSON.stringify(editingObject)
     });
-    return await response.json() as RecordEditResult;
+    return response.data;
 }
 
-export async function deleteRecord(tableId: string, id: string) {
-    const {server} = store;
+
+export async function deleteRecord(server: string, tableId: string, id: string) {
 
     let url = `http://${server}/recordDelete?table=${tableId}&id=${id}`;
-    const response = await fetch(url, {
-        method: 'POST',
-        cache: "no-cache",
-        mode: "cors",
-        credentials: "same-origin",
-        redirect: "follow",
-        referrerPolicy: "no-referrer"
+    const response = await axios.post<RecordEditResult>(url, null, {
+        method: 'post',
+        headers: {
+            cache: "no-cache",
+            mode: "cors",
+            credentials: "same-origin",
+            redirect: "follow",
+            referrerPolicy: "no-referrer"
+        }
     });
-    return await response.json() as RecordEditResult;
+    return response.data;
 }
 

@@ -1,9 +1,9 @@
 import {
     Entity,
-    EntityConnectionType,
+    EntityEdgeType,
     EntityField,
+    EntitySourceEdge,
     EntityType,
-    EntitySocketOutput,
     FieldsShowType
 } from "../model/entityModel.ts";
 import {SField, SStruct, STable} from "../model/schemaModel.ts";
@@ -16,10 +16,10 @@ export class RecordEntityCreator {
     constructor(public entityMap: Map<string, Entity>,
                 public schema: Schema,
                 public refId: RefId,
-                public refs : BriefRecord[]) {
+                public refs: BriefRecord[]) {
     }
 
-    createEntity(id: string, obj: JSONObject & Refs): Entity | null {
+    createRecordEntity(id: string, obj: JSONObject & Refs): Entity | null {
         let fields: EntityField[] = [];
         let type: string = obj['$type'] as string;
         if (type == null) {
@@ -38,7 +38,7 @@ export class RecordEntityCreator {
             }
         }
 
-        let outputs: EntitySocketOutput[] = [];
+        let sourceEdges: EntitySourceEdge[] = [];
 
         for (let fieldKey in obj) {
             if (fieldKey.startsWith("$")) {
@@ -52,70 +52,58 @@ export class RecordEntityCreator {
             }
             let comment = sField?.comment ?? fieldKey;
 
+            const field = {
+                key: fieldKey,
+                name: fieldKey,
+                comment: comment,
+                value: '',
+            }
+            fields.push(field);
+
             let ft = typeof fieldValue
             if (ft == 'object') {
                 if (Array.isArray(fieldValue)) {  // list or map, (map is list of $entry)
                     let fArr: JSONArray = fieldValue as JSONArray;
                     if (fArr.length == 0) {
-                        fields.push({
-                            key: fieldKey,
-                            name: fieldKey,
-                            comment: comment,
-                            value: '[]'
-                        });
+                        field.value = '[]'
                     } else {
                         let ele = fArr[0];
                         if (typeof ele == 'object') { // list of struct/interface, or map
                             let i = 0;
-                            let connectToSockets = [];
                             for (let e of fArr) {
                                 let fObj: JSONObject & Refs = e as JSONObject & Refs;
                                 let childId: string = `${id}-${fieldKey}[${i}]`;
-                                let childEntity = this.createEntity(childId, fObj);
+                                let childEntity = this.createRecordEntity(childId, fObj);
                                 i++;
 
                                 if (childEntity) {
-                                    connectToSockets.push({
-                                        entityId: childEntity.id,
-                                        inputKey: 'input',
-                                        connectionType: EntityConnectionType.Normal
-                                    });
+                                    sourceEdges.push({
+                                        sourceHandle: fieldKey,
+                                        target: childEntity.id,
+                                        targetHandle: '@in',
+                                        type: EntityEdgeType.Normal
+                                    })
                                 }
                             }
-
-                            outputs.push({
-                                output: {key: fieldKey, label: fieldKey},
-                                connectToSockets: connectToSockets
-                            });
+                            field.value = `[]*${i}`
 
                         } else {  // list of primitive value
-                            let i = 0;
-                            for (let e of fArr) {
-                                fields.push({
-                                    key: `${fieldKey}[${i}]`,
-                                    name: i == 0 ? fieldKey : "",
-                                    comment: i == 0 ? comment : "",
-                                    value: e.toString(),
-                                });
-                                i++;
-                            }
-
+                            field.value = fArr.join(',')
                         }
                     }
                 } else { // struct or interface
                     let fObj: JSONObject & Refs = fieldValue as JSONObject & Refs;
                     let childId: string = id + "-" + fieldKey;
-                    let childEntity = this.createEntity(childId, fObj);
+                    let childEntity = this.createRecordEntity(childId, fObj);
                     if (childEntity) {
-                        outputs.push({
-                            output: {key: fieldKey, label: fieldKey},
-                            connectToSockets: [{
-                                entityId: childEntity.id,
-                                inputKey: 'input',
-                                connectionType: EntityConnectionType.Normal
-                            }]
+                        sourceEdges.push({
+                            sourceHandle: fieldKey,
+                            target: childEntity.id,
+                            targetHandle: '@in',
+                            type: EntityEdgeType.Normal,
                         });
                     }
+                    field.value = '<>';
                 }
             } else { // primitive
                 let valueStr: string = fieldValue.toString();
@@ -123,13 +111,7 @@ export class RecordEntityCreator {
                     let fb = fieldValue as boolean
                     valueStr = fb ? '✔️' : '✘';
                 }
-
-                fields.push({
-                    key: fieldKey,
-                    name: fieldKey,
-                    comment: comment,
-                    value: valueStr
-                });
+                field.value = valueStr
             }
         }
 
@@ -138,8 +120,8 @@ export class RecordEntityCreator {
             label: label,
             fields: fields,
             inputs: [],
-            outputs: outputs,
-            sourceEdges:[],
+            outputs: [],
+            sourceEdges: sourceEdges,
 
             fieldsShow: FieldsShowType.Direct,
             entityType: EntityType.Normal,

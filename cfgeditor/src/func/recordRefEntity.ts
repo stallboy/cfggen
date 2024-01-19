@@ -1,5 +1,5 @@
 import {BriefRecord, RefId, Refs} from "../model/recordModel.ts";
-import {Entity, EntityConnectionType, EntityType, FieldsShowType} from "../model/entityModel.ts";
+import {Entity, EntityEdgeType, EntityType, FieldsShowType} from "../model/entityModel.ts";
 
 import {Schema} from "../model/schemaUtil.ts";
 
@@ -17,9 +17,9 @@ export function getId(table: string, id: string): string {
     return table + "_" + id;
 }
 
-function isRefIdInBriefRecords(refId: RefId, briefRecords: BriefRecord[]): boolean {
-    for (let br of briefRecords) {
-        if (br.table == refId.table && br.id == refId.id) {
+function isRefIdInBriefRecords(toTable: string, toId: string, briefRecords: BriefRecord[]): boolean {
+    for (let {id, table} of briefRecords) {
+        if (table == toTable && id == toId) {
             return true;
         }
     }
@@ -31,27 +31,20 @@ function alwaysOk(_t: string) {
 }
 
 export function createRefs(entity: Entity, refs: Refs, briefRecords: BriefRecord[],
-                           checkTable: ((table: string) => boolean) = alwaysOk) {
-    let refIdMap = refs.$refs;
-    if (refIdMap == null) {
+                           checkTable: ((table: string) => boolean) = alwaysOk,
+                           isEnityBrief: boolean = false) {
+    let fieldRefs = refs.$refs;
+    if (fieldRefs == null) {
         return;
     }
-    for (let refName in refIdMap) {
-        let refIds: RefId[] = refIdMap[refName];
-        let connectToSockets = [];
-        for (let refId of refIds) {
-            if (checkTable(refId.table) && isRefIdInBriefRecords(refId, briefRecords)) {
-                connectToSockets.push({
-                    entityId: getId(refId.table, refId.id),
-                    inputKey: 'input',
-                    connectionType: EntityConnectionType.Ref
-                });
-            }
-        }
-        if (connectToSockets.length > 0) {
-            entity.outputs.push({
-                output: {key: refName, label: refName},
-                connectToSockets: connectToSockets
+    for (let {firstField, label, toId, toTable} of fieldRefs) {
+        if (checkTable(toTable) && isRefIdInBriefRecords(toTable, toId, briefRecords)) {
+            entity.sourceEdges.push({
+                sourceHandle: isEnityBrief ? '@out' : firstField,
+                target: getId(toTable, toId),
+                targetHandle: '@in', // target肯定brief模式
+                type: EntityEdgeType.Ref,
+                label: label,
             });
         }
     }
@@ -115,13 +108,14 @@ export function createRefEntities(entityMap: Map<string, Entity>, schema: Schema
 
             inputs: [],
             outputs: [],
+            sourceEdges: [],
 
             fieldsShow: FieldsShowType.Direct,
             entityType: entityType,
             userData: refId,
         };
         if (isCreateRefs) {
-            createRefs(entity, briefRecord, refs, checkTable);
+            createRefs(entity, briefRecord, refs, checkTable, true);
         }
         entityMap.set(eid, entity);
     }

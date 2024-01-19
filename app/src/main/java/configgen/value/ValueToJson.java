@@ -3,6 +3,7 @@ package configgen.value;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import configgen.schema.FieldSchema;
+import configgen.value.ValueRefCollector.FieldRef;
 
 import java.util.List;
 import java.util.Map;
@@ -49,9 +50,9 @@ public class ValueToJson {
         }
         json.put("$type", vStruct.schema().fullName());
         if (refIdToRecordMap != null) {
-            Map<String, List<RefId>> refIdMap = collectStructRef(cfgValue, vStruct, refIdToRecordMap, null, "");
-            if (!refIdMap.isEmpty()) {
-                json.put("$refs", refIdMap);
+            List<FieldRef> fieldRefs = collectStructRef(cfgValue, vStruct, refIdToRecordMap, null, "");
+            if (!fieldRefs.isEmpty()) {
+                json.put("$refs", fieldRefs);
             }
         }
 

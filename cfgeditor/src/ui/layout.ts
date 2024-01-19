@@ -1,5 +1,5 @@
 import ELK, {ElkNode, ElkExtendedEdge} from 'elkjs';
-import {FlowEdge, FlowNode} from "./FlowEntityNode.tsx";
+import {FlowEdge, FlowNode} from "./FlowEntityGraph.tsx";
 import {ReactFlowInstance, Viewport, XYPosition} from "reactflow";
 import {QueryClient} from "@tanstack/react-query";
 
@@ -37,7 +37,7 @@ export function layout(flowInstance: ReactFlowInstance, pathname: string, queryC
     queryClient.fetchQuery({
         queryKey: ['layout', pathname],
         queryFn: async () => {
-            console.log("layout", pathname);
+            // console.log("layout", pathname);
             const defaultOptions = {
                 'elk.algorithm': 'layered',
                 'elk.direction': 'RIGHT',
@@ -89,7 +89,7 @@ export function layout(flowInstance: ReactFlowInstance, pathname: string, queryC
                 flowInstance.setViewport(viewport);
             } else {
                 setTimeout(() => {
-                    console.log("fitView", pathname);
+                    // console.log("fitView", pathname);
                     flowInstance.fitView();
                     const viewport = flowInstance.getViewport();
                     queryClient.setQueryData(['viewport', pathname], viewport);
