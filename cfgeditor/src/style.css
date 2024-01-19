@@ -13,8 +13,26 @@ mark {
     font-weight: bold;
 }
 
-.formNode {
-     border: 0;
-     padding: 5px;
-     border-radius: 8px;
- }
+.propertiesNode {
+    border: 0;
+    padding: 5px;
+    border-radius: 5px;
+    min-height: 60px;
+}
+
+.react-flow__pane {
+    cursor: default;
+}
+
+.contextMenu {
+    border-color: #2986ff;
+    border-style: solid;
+    position: absolute;
+    z-index: 10;
+}
+
+.contextMenu button {
+    padding: 0.5em;
+    border: none;
+    border-radius: 0;
+}

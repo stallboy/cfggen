@@ -19,7 +19,7 @@ import {LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant
 import {TableList} from "./TableList.tsx";
 import {IdList} from "./IdList.tsx";
 
-import {TableRecordRef} from "./TableRecordRef.tsx";
+import {TableRecordRef} from "./routes/TableRecordRef.tsx";
 import {SearchValue} from "./SearchValue.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
 import {RecordEditResult} from "./model/recordModel.ts";

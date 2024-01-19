@@ -8,8 +8,8 @@ import {App, ConfigProvider} from "antd";
 import './i18n.js'
 import {createBrowserRouter, RouterProvider} from "react-router-dom";
 import {Index} from './routes/Index.tsx';
-import {TableSchema} from "./TableSchema.tsx";
-import {TableRef} from "./TableRef.tsx";
+import {TableSchema} from "./routes/TableSchema.tsx";
+import {TableRef} from "./routes/TableRef.tsx";
 
 const queryClient = new QueryClient({
     defaultOptions: {

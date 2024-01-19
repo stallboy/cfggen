@@ -1,16 +1,16 @@
-import {STable} from "./model/schemaModel.ts";
+import {STable} from "../model/schemaModel.ts";
 import {useRete} from "rete-react-plugin";
-import {createEditor} from "./editor.tsx";
+import {createEditor} from "../editor.tsx";
 import {useCallback, useEffect, useState} from "react";
-import {Entity, EntityGraph, fillInputs} from "./model/entityModel.ts";
+import {Entity, EntityGraph, fillInputs} from "../model/entityModel.ts";
 import {Item} from "rete-context-menu-plugin/_types/types";
-import {RecordRefsResult, RefId} from "./model/recordModel.ts";
+import {RecordRefsResult, RefId} from "../model/recordModel.ts";
 import {App, Empty, Result, Spin} from "antd";
-import {createRefEntities, getId} from "./func/recordRefEntity.ts";
+import {createRefEntities, getId} from "../func/recordRefEntity.ts";
 import {useTranslation} from "react-i18next";
-import {Schema} from "./model/schemaUtil.ts";
-import {NodeShowType} from "./func/localStoreJson.ts";
-import {navTo, setEditMode, store, useLocationData} from "./model/store.ts";
+import {Schema} from "../model/schemaUtil.ts";
+import {NodeShowType} from "../func/localStoreJson.ts";
+import {navTo, setEditMode, store, useLocationData} from "../model/store.ts";
 import {useNavigate} from "react-router-dom";
 import {useQueryClient} from "@tanstack/react-query";
 
