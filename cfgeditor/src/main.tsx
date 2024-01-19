@@ -10,8 +10,8 @@ import {createBrowserRouter, RouterProvider} from "react-router-dom";
 import {Index} from './routes/Index.tsx';
 import {TableSchema} from "./routes/TableSchema.tsx";
 import {TableRef} from "./routes/TableRef.tsx";
-import {TableRecord} from "./routes/TableRecord.tsx";
-import {TableRecordRefRoute} from "./routes/TableRecordRef.tsx";
+import {Record} from "./routes/Record.tsx";
+import {RecordRefRoute} from "./routes/RecordRef.tsx";
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -41,12 +41,12 @@ const router = createBrowserRouter([
             },
             {
                 path: "record/:table/:id",
-                Component: TableRecord,
+                Component: Record,
                 errorElement: <div>Oops! There was an error.</div>,
             },
             {
                 path: "recordRef/:table/:id",
-                Component: TableRecordRefRoute,
+                Component: RecordRefRoute,
                 errorElement: <div>Oops! There was an error.</div>,
             },
         ]

@@ -1,5 +1,5 @@
 import ELK, {ElkNode, ElkExtendedEdge} from 'elkjs';
-import {FlowEdge, FlowNode} from "./FlowEntityGraph.tsx";
+import {FlowEdge, FlowNode} from "./FlowGraph.tsx";
 import {ReactFlowInstance, Viewport, XYPosition} from "reactflow";
 import {QueryClient} from "@tanstack/react-query";
 

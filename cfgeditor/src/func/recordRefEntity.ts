@@ -1,5 +1,5 @@
 import {BriefRecord, RefId, Refs} from "../model/recordModel.ts";
-import {Entity, EntityEdgeType, EntityType, FieldsShowType} from "../model/entityModel.ts";
+import {Entity, EntityEdgeType, EntityType} from "../model/entityModel.ts";
 
 import {Schema} from "../model/schemaUtil.ts";
 
@@ -105,12 +105,7 @@ export function createRefEntities(entityMap: Map<string, Entity>, schema: Schema
                 descriptions: briefRecord.descriptions,
                 value: briefRecord.value
             },
-
-            inputs: [],
-            outputs: [],
             sourceEdges: [],
-
-            fieldsShow: FieldsShowType.Direct,
             entityType: entityType,
             userData: refId,
         };

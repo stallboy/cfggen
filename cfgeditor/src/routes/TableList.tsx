@@ -1,8 +1,8 @@
-import {STable} from "./model/schemaModel.ts";
+import {STable} from "../model/schemaModel.ts";
 import {Badge, Select, Space} from "antd";
-import {getFixCurIdByTable, navTo, useLocationData} from "./model/store.ts";
+import {getFixCurIdByTable, navTo, useLocationData} from "../model/store.ts";
 import {useNavigate} from "react-router-dom";
-import {Schema} from "./model/schemaUtil.ts";
+import {Schema} from "../model/schemaUtil.ts";
 
 interface TableWithLastName {
     tableId: string;

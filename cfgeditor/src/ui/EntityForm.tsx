@@ -1,4 +1,4 @@
-import {EntityEditField, EntityEditFieldOption, FuncSubmitType, FuncType} from "../model/entityModel.ts";
+import {EntityEdit, EntityEditField, EntityEditFieldOption, FuncSubmitType, FuncType} from "../model/entityModel.ts";
 import {AutoComplete, Button, ConfigProvider, Form, InputNumber, Select, Space, Switch, Tooltip} from "antd";
 import TextArea from "antd/es/input/TextArea";
 import {CloseOutlined, MinusCircleOutlined, PlusCircleOutlined, PlusCircleTwoTone} from "@ant-design/icons";
@@ -178,21 +178,20 @@ function FieldsFormItem(fields: EntityEditField[]) {
 }
 
 
-export function EntityForm({fields, onUpdateValues}: {
-    fields: EntityEditField[];
-    onUpdateValues: (values: any) => void;
+export function EntityForm({edit}: {
+    edit: EntityEdit;
 }) {
     const ref = useRef<HTMLDivElement>(null);
     Drag.useNoDrag(ref)
 
     function onValuesChange(_changedFields: any, allFields: any) {
-        onUpdateValues(allFields);
+        edit.editOnUpdateValues(allFields);
     }
 
     let form = <Form {...formLayout}
                      onValuesChange={onValuesChange}
                      style={{maxWidth: 600, backgroundColor: "white", borderRadius: 15, padding: 10}}>
-        {FieldsFormItem(fields)}
+        {FieldsFormItem(edit.editFields)}
     </Form>
 
     return <ConfigProvider theme={{

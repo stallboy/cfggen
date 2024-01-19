@@ -1,23 +1,24 @@
-import {Entity, fillHandles} from "../model/entityModel.ts";
+import {Entity} from "../model/entityModel.ts";
 import {JSONObject, RecordEditResult, RefId} from "../model/recordModel.ts";
 import {App, Empty, Result, Spin} from "antd";
 import {createRefEntities, getId} from "../func/recordRefEntity.ts";
 import {RecordEntityCreator} from "../func/RecordEntityCreator.ts";
 import {RecordEditEntityCreator} from "../func/RecordEditEntityCreator.ts";
-import {editingState} from "../func/editingState.ts";
+import {editingState} from "../model/editingState.ts";
 import {useTranslation} from "react-i18next";
 import {navTo, setEditMode, store, useLocationData} from "../model/store.ts";
 import {useNavigate, useOutletContext} from "react-router-dom";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
-import {addOrUpdateRecord, fetchRecord} from "../model/api.ts";
+import {addOrUpdateRecord, fetchRecord} from "../func/api.ts";
 import {useReducer} from "react";
-import {convertNodeAndEdges, FlowEntityGraph} from "../ui/FlowEntityGraph.tsx";
+import {FlowGraph} from "../ui/FlowGraph.tsx";
 import {ReactFlowProvider} from "reactflow";
 import {MenuItem} from "../ui/FlowContextMenu.tsx";
 import {SchemaTableType} from "../CfgEditorApp.tsx";
+import {convertNodeAndEdges, fillHandles} from "../ui/entityToFlow.ts";
 
 
-export function TableRecord() {
+export function Record() {
     const {schema, curTable} = useOutletContext<SchemaTableType>();
     const {server, editMode, nodeShow} = store;
     const {notification} = App.useApp();
@@ -177,15 +178,14 @@ export function TableRecord() {
         })
         return mm;
     }
-    const entityGraph = {entityMap, menu: paneMenu, entityMenuFunc: nodeMenuFunc, nodeShow};
-    const {nodes, edges} = convertNodeAndEdges(entityGraph);
+    const {nodes, edges} = convertNodeAndEdges({entityMap, nodeShow});
 
     return <ReactFlowProvider>
-        <FlowEntityGraph key={pathname}
-                         initialNodes={nodes}
-                         initialEdges={edges}
-                         paneMenu={paneMenu}
-                         nodeMenuFunc={nodeMenuFunc}
+        <FlowGraph key={pathname}
+                   initialNodes={nodes}
+                   initialEdges={edges}
+                   paneMenu={paneMenu}
+                   nodeMenuFunc={nodeMenuFunc}
         />
     </ReactFlowProvider>
 

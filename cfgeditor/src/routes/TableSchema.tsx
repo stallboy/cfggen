@@ -1,12 +1,13 @@
-import {Entity, fillHandles} from "../model/entityModel.ts";
+import {Entity} from "../model/entityModel.ts";
 import {SchemaTableType} from "../CfgEditorApp.tsx";
 import {TableEntityCreator, UserData} from "../func/TableEntityCreator.ts";
 import {navTo, store, useLocationData} from "../model/store.ts";
 import {useNavigate, useOutletContext} from "react-router-dom";
-import {convertNodeAndEdges, FlowEntityGraph} from "../ui/FlowEntityGraph.tsx";
+import {FlowGraph} from "../ui/FlowGraph.tsx";
 import {ReactFlowProvider} from "reactflow";
 import {MenuItem} from "../ui/FlowContextMenu.tsx";
 import {useTranslation} from "react-i18next";
+import {convertNodeAndEdges, fillHandles} from "../ui/entityToFlow.ts";
 
 
 export function TableSchema() {
@@ -32,7 +33,7 @@ export function TableSchema() {
 
     const nodeMenuFunc = (entity: Entity): MenuItem[] => {
         let userData = entity.userData as UserData;
-        let mm : MenuItem[] = [];
+        let mm: MenuItem[] = [];
         if (userData.table != curTable.name) {
             mm.push({
                 label: userData.table + "\n" + t('table'),
@@ -53,14 +54,14 @@ export function TableSchema() {
         return mm;
     }
 
-    const {nodes, edges} = convertNodeAndEdges({entityMap, menu: [], nodeShow});
+    const {nodes, edges} = convertNodeAndEdges({entityMap, nodeShow});
 
     return <ReactFlowProvider>
-        <FlowEntityGraph key={pathname}
-                         initialNodes={nodes}
-                         initialEdges={edges}
-                         paneMenu ={paneMenu}
-                         nodeMenuFunc={nodeMenuFunc}
+        <FlowGraph key={pathname}
+                   initialNodes={nodes}
+                   initialEdges={edges}
+                   paneMenu={paneMenu}
+                   nodeMenuFunc={nodeMenuFunc}
         />
     </ReactFlowProvider>
 }

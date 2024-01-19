@@ -1,21 +1,17 @@
 import {
-    PrimitiveType,
     Entity,
-    EntityConnectionType,
+    EntityEdgeType,
     EntityEditField,
+    EntityEditFieldOption,
+    EntityEditFieldOptions,
+    EntitySourceEdge,
     EntityType,
-    EntitySocketOutput,
-    FieldsShowType, EntityEditFieldOption, EntityEditFieldOptions
+    PrimitiveType
 } from "../model/entityModel.ts";
-import {
-    SInterface,
-    SItem,
-    SStruct,
-    STable
-} from "../model/schemaModel.ts";
+import {SInterface, SItem, SStruct, STable} from "../model/schemaModel.ts";
 import {JSONArray, JSONObject, JSONValue, RefId} from "../model/recordModel.ts";
 import {getId, getLabel, getLastName} from "./recordRefEntity.ts";
-import {editingState} from "./editingState.ts";
+import {editingState} from "../model/editingState.ts";
 import {getField, getIdOptions, getImpl, isPkInteger, Schema} from "../model/schemaUtil.ts";
 
 
@@ -60,7 +56,7 @@ export class RecordEditEntityCreator {
             console.error('$type missing');
             return null;
         }
-        let fields: EntityEditField[] = this.makeEditFields(sItem, obj, fieldChain);
+        let editFields: EntityEditField[] = this.makeEditFields(sItem, obj, fieldChain);
 
         let structural: STable | SStruct;
         if ('impls' in sItem) {
@@ -69,7 +65,7 @@ export class RecordEditEntityCreator {
             structural = sItem;
         }
 
-        let outputs: EntitySocketOutput[] = [];
+        let sourceEdges: EntitySourceEdge[] = [];
         for (let fieldKey in obj) {
             if (fieldKey.startsWith("$")) {
                 continue;
@@ -95,7 +91,7 @@ export class RecordEditEntityCreator {
                     continue;
                 }
 
-                if (!sField.type.startsWith("list<")) {
+                if (!sField.type.startsWith("list<")) {  // 不支持map
                     continue;
                 }
                 let itemTypeId = sField.type.substring(5, sField.type.length - 1);
@@ -104,9 +100,8 @@ export class RecordEditEntityCreator {
                     continue;
                 }
 
-                // list of struct/interface, or map
+                // list of struct/interface
                 let i = 0;
-                let connectToSockets = [];
                 for (let e of fArr) {
                     let itemObj = e as JSONObject;
                     let childId: string = `${id}-${fieldKey}[${i}]`;
@@ -121,19 +116,14 @@ export class RecordEditEntityCreator {
                     i++;
 
                     if (childEntity) {
-                        connectToSockets.push({
-                            entityId: childEntity.id,
-                            inputKey: 'input',
-                            connectionType: EntityConnectionType.Normal
-                        });
+                        sourceEdges.push({
+                            sourceHandle: fieldKey,
+                            target: childEntity.id,
+                            targetHandle: '@in',
+                            type: EntityEdgeType.Normal,
+                        })
                     }
                 }
-
-                outputs.push({
-                    output: {key: fieldKey, label: fieldKey},
-                    connectToSockets: connectToSockets
-                });
-
 
             } else { // struct or interface
                 let fieldType = this.schema.itemIncludeImplMap.get(sField.type);
@@ -144,20 +134,18 @@ export class RecordEditEntityCreator {
                 let childId: string = id + "-" + fieldKey;
                 let childEntity = this.createEntity(childId, fieldType, fieldObj, [...fieldChain, fieldKey]);
                 if (childEntity) {
-                    outputs.push({
-                        output: {key: fieldKey, label: fieldKey},
-                        connectToSockets: [{
-                            entityId: childEntity.id,
-                            inputKey: 'input',
-                            connectionType: EntityConnectionType.Normal
-                        }]
+                    sourceEdges.push({
+                        sourceHandle: fieldKey,
+                        target: childEntity.id,
+                        targetHandle: '@in',
+                        type: EntityEdgeType.Normal,
                     });
                 }
             }
         }
 
         if (onDeleteFunc) {
-            fields.push({
+            editFields.push({
                 name: '$del',
                 comment: '',
                 type: 'funcDelete',
@@ -173,13 +161,9 @@ export class RecordEditEntityCreator {
         let entity: Entity = {
             id: id,
             label: label,
-            editFields: fields,
-            editOnUpdateValues,
-            inputs: [],
-            outputs: outputs,
-            sourceEdges:[],
+            edit: {editFields, editOnUpdateValues},
+            sourceEdges: sourceEdges,
 
-            fieldsShow: FieldsShowType.Edit,
             entityType: EntityType.Normal,
             userData: this.curRefId,
         };

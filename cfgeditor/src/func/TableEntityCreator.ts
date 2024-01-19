@@ -1,5 +1,5 @@
 import {SInterface, SItem, SStruct, STable} from "../model/schemaModel.ts";
-import {Entity, EntityEdgeType, EntityType, FieldsShowType} from "../model/entityModel.ts";
+import {Entity, EntityEdgeType, EntityType} from "../model/entityModel.ts";
 import {Schema} from "../model/schemaUtil.ts";
 
 export class UserData {
@@ -21,20 +21,12 @@ function createEntity(item: SItem, id: string, table: string, entityType: Entity
         }
     }
 
-    let fieldsShow = FieldsShowType.Direct;
-    if (entityType == EntityType.Ref && fields.length > 5) {
-        fieldsShow = FieldsShowType.Fold;
-    }
 
     return {
         id: id,
         label: item.name,
         fields: fields,
-        inputs: [],
-        outputs: [],
         sourceEdges: [],
-
-        fieldsShow,
         entityType: entityType,
         userData: new UserData(table, item),
     };
@@ -78,7 +70,6 @@ export class TableEntityCreator {
                     let cnt = 0;
                     for (let impl of depInterface.impls) {
                         let implEntity = createEntity(impl, impl.id ?? impl.name, this.curTable.name);
-                        implEntity.parentId = depEntity.id;
                         this.entityMap.set(implEntity.id, implEntity);
                         frontier.push(impl);
 

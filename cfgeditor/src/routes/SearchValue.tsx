@@ -1,9 +1,9 @@
 import {useState} from "react";
 import {App, Button, Empty, Input, Result, Table} from "antd";
-import {SearchResult, SearchResultItem} from "./model/searchModel.ts";
+import {SearchResult, SearchResultItem} from "../model/searchModel.ts";
 import {useTranslation} from "react-i18next";
-import {getId} from "./func/recordRefEntity.ts";
-import {navTo, setQuery, store, useLocationData} from "./model/store.ts";
+import {getId} from "../func/recordRefEntity.ts";
+import {navTo, setQuery, store, useLocationData} from "../model/store.ts";
 import {useNavigate} from "react-router-dom";
 import {useQueryClient} from "@tanstack/react-query";
 

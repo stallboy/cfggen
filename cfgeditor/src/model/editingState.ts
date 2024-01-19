@@ -1,6 +1,6 @@
-import {JSONArray, JSONObject, RecordResult} from "../model/recordModel.ts";
-import {SItem, SStruct, STable} from "../model/schemaModel.ts";
-import {getField, Schema} from "../model/schemaUtil.ts";
+import {JSONArray, JSONObject, RecordResult} from "./recordModel.ts";
+import {SItem, SStruct, STable} from "./schemaModel.ts";
+import {getField, Schema} from "./schemaUtil.ts";
 
 
 export class EditingState {

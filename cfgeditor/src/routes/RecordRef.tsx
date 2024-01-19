@@ -1,6 +1,6 @@
 import {STable} from "../model/schemaModel.ts";
 
-import {Entity, fillHandles} from "../model/entityModel.ts";
+import {Entity} from "../model/entityModel.ts";
 
 import {RefId} from "../model/recordModel.ts";
 import {Result, Spin} from "antd";
@@ -11,14 +11,15 @@ import {NodeShowType} from "../func/localStoreJson.ts";
 import {navTo, setEditMode, store, useLocationData} from "../model/store.ts";
 import {useNavigate, useOutletContext} from "react-router-dom";
 import {useQuery} from "@tanstack/react-query";
-import {fetchRecordRefs} from "../model/api.ts";
+import {fetchRecordRefs} from "../func/api.ts";
 import {MenuItem} from "../ui/FlowContextMenu.tsx";
-import {convertNodeAndEdges, FlowEntityGraph} from "../ui/FlowEntityGraph.tsx";
+import {FlowGraph} from "../ui/FlowGraph.tsx";
 import {ReactFlowProvider} from "reactflow";
 import {SchemaTableType} from "../CfgEditorApp.tsx";
+import {convertNodeAndEdges, fillHandles} from "../ui/entityToFlow.ts";
 
 
-export function TableRecordRef({schema, curTable, curId, refIn, refOutDepth, maxNode, nodeShow}: {
+export function RecordRef({schema, curTable, curId, refIn, refOutDepth, maxNode, nodeShow}: {
     schema: Schema;
     curTable: STable;
     curId: string;
@@ -103,26 +104,25 @@ export function TableRecordRef({schema, curTable, curId, refIn, refOutDepth, max
         }
         return mm;
     }
-    const entityGraph = {entityMap, menu: paneMenu, entityMenuFunc: nodeMenuFunc, nodeShow, query};
-    const {nodes, edges} = convertNodeAndEdges(entityGraph);
 
+    const {nodes, edges} = convertNodeAndEdges({entityMap, nodeShow, query});
     return <ReactFlowProvider>
-        <FlowEntityGraph key={pathname}
-                         initialNodes={nodes}
-                         initialEdges={edges}
-                         paneMenu={paneMenu}
-                         nodeMenuFunc={nodeMenuFunc}
+        <FlowGraph key={pathname}
+                   initialNodes={nodes}
+                   initialEdges={edges}
+                   paneMenu={paneMenu}
+                   nodeMenuFunc={nodeMenuFunc}
         />
     </ReactFlowProvider>
 }
 
-export function TableRecordRefRoute() {
+export function RecordRefRoute() {
     const {schema, curTable} = useOutletContext<SchemaTableType>();
     const {curId} = useLocationData();
     const {recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow} = store;
 
-    return <TableRecordRef schema={schema} curTable={curTable} curId={curId}
-                           refIn={recordRefIn} refOutDepth={recordRefOutDepth} maxNode={recordMaxNode}
-                           nodeShow={nodeShow}/>
+    return <RecordRef schema={schema} curTable={curTable} curId={curId}
+                      refIn={recordRefIn} refOutDepth={recordRefOutDepth} maxNode={recordMaxNode}
+                      nodeShow={nodeShow}/>
 }
 

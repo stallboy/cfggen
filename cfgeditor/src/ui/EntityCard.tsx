@@ -1,14 +1,16 @@
 import {Card, Descriptions, Tooltip} from "antd";
-import {EntityBrief} from "../model/entityModel.ts";
+import {Entity} from "../model/entityModel.ts";
 import {DescriptionsItemType} from "antd/es/descriptions";
-import {ShowDescriptionType} from "../func/localStoreJson.ts";
 
 
-export function EntityCard({brief, query, showDescription}: {
-    brief: EntityBrief
-    query?: string;
-    showDescription?: ShowDescriptionType,
+export function EntityCard({entity}: {
+    entity: Entity,
 }) {
+    const {brief, nodeShow, query} = entity;
+    if (!brief) {
+        return <></>;
+    }
+
     let hasContent = false;
     let cover = {};
     if (brief.img) {
@@ -28,18 +30,20 @@ export function EntityCard({brief, query, showDescription}: {
 
     let ds = brief.descriptions;
     let desc: string | null = null;
-    switch (showDescription) {
-        case "show":
-            desc = ds && ds.length > 0 ? ds[ds.length - 1].value : "";
-            break;
-        case "showFallbackValue":
-            desc = ds && ds.length > 0 ? ds[ds.length - 1].value : brief.value;
-            break;
-        case "showValue":
-            desc = brief.value;
-            break;
-        case "none":
-            break;
+    if (nodeShow) {
+        switch (nodeShow.showDescription) {
+            case "show":
+                desc = ds && ds.length > 0 ? ds[ds.length - 1].value : "";
+                break;
+            case "showFallbackValue":
+                desc = ds && ds.length > 0 ? ds[ds.length - 1].value : brief.value;
+                break;
+            case "showValue":
+                desc = brief.value;
+                break;
+            case "none":
+                break;
+        }
     }
 
     let description = {}
@@ -70,7 +74,7 @@ export function EntityCard({brief, query, showDescription}: {
         return <></>;
     }
 
-    return <Card hoverable style={{width: 240}}  {...cover}>
+    return <Card hoverable {...cover}>
         <Card.Meta {...title} {...description}/>
     </Card>;
 }

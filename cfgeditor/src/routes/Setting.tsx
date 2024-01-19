@@ -2,8 +2,8 @@ import {Button, Descriptions, Divider, Flex, Form, Input, InputNumber, Radio, Sp
 import {CloseOutlined, LeftOutlined, RightOutlined, SearchOutlined} from "@ant-design/icons";
 import {NodeShowSetting} from "./NodeShowSetting.tsx";
 import {useTranslation} from "react-i18next";
-import {STable} from "./model/schemaModel.ts";
-import {Schema} from "./model/schemaUtil.ts";
+import {STable} from "../model/schemaModel.ts";
+import {Schema} from "../model/schemaUtil.ts";
 import {
     DragPanelType,
     setDragPanel, setFix, setFixNull,
@@ -15,7 +15,7 @@ import {
     setRefIn,
     setRefOutDepth, setSearchMax,
     store, useLocationData
-} from "./model/store.ts";
+} from "../model/store.ts";
 
 
 export function Setting({

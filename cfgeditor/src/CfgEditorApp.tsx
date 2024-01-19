@@ -16,18 +16,18 @@ import {
 } from "antd";
 import {saveAs} from 'file-saver';
 import {LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
-import {TableList} from "./TableList.tsx";
-import {IdList} from "./IdList.tsx";
+import {TableList} from "./routes/TableList.tsx";
+import {IdList} from "./routes/IdList.tsx";
 
-import {TableRecordRef} from "./routes/TableRecordRef.tsx";
-import {SearchValue} from "./SearchValue.tsx";
+import {RecordRef} from "./routes/RecordRef.tsx";
+import {SearchValue} from "./routes/SearchValue.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
 import {RecordEditResult} from "./model/recordModel.ts";
 import {useTranslation} from "react-i18next";
 import {getId} from "./func/recordRefEntity.ts";
 import {DraggablePanel} from "@ant-design/pro-editor";
 import {toBlob} from "html-to-image";
-import {Setting} from "./Setting.tsx";
+import {Setting} from "./routes/Setting.tsx";
 import {getNextId, newSchema, Schema} from "./model/schemaUtil.ts";
 import {
     historyNext,
@@ -39,7 +39,7 @@ import {
 } from "./model/store.ts";
 import {Outlet, useNavigate} from "react-router-dom";
 import {STable} from "./model/schemaModel.ts";
-import {fetchSchema} from "./model/api.ts";
+import {fetchSchema} from "./func/api.ts";
 import {useQuery} from "@tanstack/react-query";
 
 const {Text} = Typography;
@@ -220,23 +220,23 @@ export function CfgEditorApp() {
 
         let dragPage = null;
         if (dragPanel == 'recordRef') {
-            dragPage = <TableRecordRef schema={schema}
-                                       curTable={curTable}
-                                       curId={curId}
-                                       refIn={recordRefIn}
-                                       refOutDepth={recordRefOutDepth}
-                                       maxNode={recordMaxNode}
-                                       nodeShow={nodeShow}/>;
+            dragPage = <RecordRef schema={schema}
+                                  curTable={curTable}
+                                  curId={curId}
+                                  refIn={recordRefIn}
+                                  refOutDepth={recordRefOutDepth}
+                                  maxNode={recordMaxNode}
+                                  nodeShow={nodeShow}/>;
         } else if (dragPanel == 'fix' && fix) {
             let fixedTable = schema.getSTable(fix.table);
             if (fixedTable) {
-                dragPage = <TableRecordRef schema={schema}
-                                           curTable={fixedTable}
-                                           curId={fix.id}
-                                           refIn={fix.refIn}
-                                           refOutDepth={fix.refOutDepth}
-                                           maxNode={fix.maxNode}
-                                           nodeShow={fix.nodeShow}/>;
+                dragPage = <RecordRef schema={schema}
+                                      curTable={fixedTable}
+                                      curId={fix.id}
+                                      refIn={fix.refIn}
+                                      refOutDepth={fix.refOutDepth}
+                                      maxNode={fix.maxNode}
+                                      nodeShow={fix.nodeShow}/>;
             }
         }
 

@@ -1,29 +1,20 @@
-import {Item} from "rete-context-menu-plugin/_types/types";
 import {BriefDescription} from "./recordModel.ts";
 import {NodeShowType} from "../func/localStoreJson.ts";
 
-export interface EntityField {
+export interface EntityBaseField {
     name: string;
     comment?: string;
-    value: string;
-    key: string;
     handleOut?: boolean; // <name>
     handleIn?: boolean;  // @in_<name>
 }
 
-export interface EntityEditFieldOption {
+export interface EntityField extends EntityBaseField {
     value: string;
-    label: string;
+    key: string;
 }
 
-export interface EntityEditFieldOptions {
-    options: EntityEditFieldOption[];
-    isValueInteger: boolean;
-}
 
-export interface EntityEditField {
-    name: string;
-    comment?: string;
+export interface EntityEditField extends EntityBaseField {
     type: EditFieldType;
     eleType: string;
     value: EditFieldValueType;
@@ -31,6 +22,7 @@ export interface EntityEditField {
     implFields?: EntityEditField[];
     interfaceOnChangeImpl?: ((impl: string) => void)
 }
+
 
 export type EditFieldType = 'arrayOfPrimitive' | 'primitive' | 'funcAdd' | 'interface' | 'funcSubmit' | 'funcDelete'; // interface: value:string
 export type PrimitiveType = 'bool' | 'int' | 'long' | 'float' | 'str' | 'text';
@@ -51,20 +43,26 @@ export interface FuncSubmitType {
     funcClear: FuncType;
 }
 
-export interface ConnectTo {
-    entityId: string;
-    inputKey: string;
-    connectionType?: EntityConnectionType;
+export interface EntityEditFieldOptions {
+    options: EntityEditFieldOption[];
+    isValueInteger: boolean;
 }
 
-export interface EntitySocket {
-    key: string;
-    label?: string;
+export interface EntityEditFieldOption {
+    value: string;
+    label: string;
 }
 
-export interface EntitySocketOutput {
-    output: EntitySocket;
-    connectToSockets: ConnectTo[];
+export interface EntityEdit {
+    editFields: EntityEditField[];
+    editOnUpdateValues: (values: any) => void;
+}
+
+export interface EntityBrief {
+    img?: string;
+    title?: string;
+    descriptions?: BriefDescription[];
+    value: string;
 }
 
 export interface EntitySourceEdge {
@@ -75,59 +73,31 @@ export interface EntitySourceEdge {
     label?: string;
 }
 
-export interface EntityBrief {
-    img?: string;
-    title?: string;
-    descriptions?: BriefDescription[];
-    value: string;
-}
-
 export interface Entity {
     id: string;
     label: string;
 
     // table/record -> table
     fields?: EntityField[];
-
     // edit -> form
-    editFields?: EntityEditField[];
-    editOnUpdateValues?: (values: any) => void;
-
+    edit?: EntityEdit;
     // brief -> card
     brief?: EntityBrief;
-
-    inputs: EntitySocket[];
-    outputs: EntitySocketOutput[];
 
     sourceEdges: EntitySourceEdge[];
     handleIn?: boolean;  // @in
     handleOut?: boolean; // @out
-
-    parentId?: string;
-
-    fieldsShow: FieldsShowType;
     entityType?: EntityType;
-    userData?: any;
 
+    userData?: any;
     query?: string;
     nodeShow?: NodeShowType;
 }
 
 export interface EntityGraph {
     entityMap: Map<string, Entity>;
-    menu: Item[];
-    entityMenuFunc?: (entity: Entity) => Item[];
-
     query?: string;
     nodeShow?: NodeShowType;
-}
-
-
-export enum FieldsShowType {
-    Direct,
-    Expand,
-    Fold,
-    Edit,
 }
 
 export enum EntityType {
@@ -137,76 +107,7 @@ export enum EntityType {
     RefIn,
 }
 
-export enum EntityConnectionType {
-    Normal,
-    Ref = 1,
-}
-
 export enum EntityEdgeType {
     Normal,
     Ref = 1,
-}
-
-export function fillInputs(entityMap: Map<string, Entity>) {
-    let entityIdSet = new Set<string>();
-    for (let entity of entityMap.values()) {
-        for (let output of entity.outputs) {
-            for (let connectToSocket of output.connectToSockets) {
-                entityIdSet.add(connectToSocket.entityId);
-            }
-        }
-    }
-
-    for (let id of entityIdSet) {
-        let entity = entityMap.get(id);
-        if (entity) {
-            entity.inputs = [{key: 'input'}];
-        }
-    }
-}
-
-function findField(fields: EntityField[], key: string) {
-    for (let field of fields) {
-        if (field.key == key) {
-            return field;
-        }
-    }
-    return null;
-}
-
-
-export function fillHandles(entityMap: Map<string, Entity>) {
-    for (let entity of entityMap.values()) {
-        for (let {sourceHandle, target, targetHandle} of entity.sourceEdges) {
-            if (sourceHandle == '@out') {
-                entity.handleOut = true;
-            } else if (entity.fields) {
-                let field = findField(entity.fields, sourceHandle);
-                if (field) {
-                    field.handleOut = true;
-                } else {
-                    console.log(sourceHandle + " handle not found for", entity);
-                }
-            } else {
-                console.log(sourceHandle + " handle not found for", entity);
-            }
-
-            let targetEntity = entityMap.get(target);
-            if (targetEntity) {
-                if (targetHandle == '@in') {
-                    targetEntity.handleIn = true;
-                } else if (targetHandle.startsWith('@in_') && targetEntity.fields) {
-                    let field = findField(targetEntity.fields, targetHandle.substring(4));
-                    if (field) {
-                        field.handleIn = true;
-                    } else {
-                        console.log(targetHandle + " handle not found for", entity);
-                    }
-                } else {
-                    console.error(targetHandle + ' not found for', entity);
-                }
-            }
-
-        }
-    }
 }

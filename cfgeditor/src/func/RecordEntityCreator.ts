@@ -1,11 +1,4 @@
-import {
-    Entity,
-    EntityEdgeType,
-    EntityField,
-    EntitySourceEdge,
-    EntityType,
-    FieldsShowType
-} from "../model/entityModel.ts";
+import {Entity, EntityEdgeType, EntityField, EntitySourceEdge, EntityType} from "../model/entityModel.ts";
 import {SField, SStruct, STable} from "../model/schemaModel.ts";
 import {BriefRecord, JSONArray, JSONObject, JSONValue, RefId, Refs} from "../model/recordModel.ts";
 import {createRefs, getLabel} from "./recordRefEntity.ts";
@@ -119,11 +112,7 @@ export class RecordEntityCreator {
             id: id,
             label: label,
             fields: fields,
-            inputs: [],
-            outputs: [],
             sourceEdges: sourceEdges,
-
-            fieldsShow: FieldsShowType.Direct,
             entityType: EntityType.Normal,
             userData: this.refId,
         };

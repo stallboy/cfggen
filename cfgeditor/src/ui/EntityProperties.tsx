@@ -19,7 +19,7 @@ function text({comment, name}: { name: string, comment?: string }) {
     return name;
 }
 
-export function PropertiesControl({fields, color}: {
+export function EntityProperties({fields, color}: {
     fields: EntityField[],
     color: string,
 }) {

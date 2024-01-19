@@ -1,4 +1,4 @@
 
 export function Index() {
-    return <></>
+    return <>Hello world</>
 }

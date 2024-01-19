@@ -1,16 +1,12 @@
 import {SItem, STable} from "../model/schemaModel.ts";
-import {Entity, EntityEdgeType, EntityType, FieldsShowType} from "../model/entityModel.ts";
+import {Entity, EntityEdgeType, EntityType} from "../model/entityModel.ts";
 import {Schema} from "../model/schemaUtil.ts";
 
 function createEntity(item: SItem, id: string, entityType: EntityType = EntityType.Normal): Entity {
     return {
         id: id,
         label: item.name,
-        inputs: [],
-        outputs: [],
         sourceEdges: [],
-
-        fieldsShow: FieldsShowType.Direct,
         entityType: entityType,
         userData: item,
     };

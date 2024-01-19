@@ -13,7 +13,11 @@ mark {
     font-weight: bold;
 }
 
-.propertiesNode {
+.react-flow__edge-path{
+    stroke-width: 3px;
+}
+
+.flowNode {
     border: 0;
     padding: 5px;
     border-radius: 5px;

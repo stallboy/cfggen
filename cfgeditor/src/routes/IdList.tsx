@@ -1,9 +1,9 @@
 import {DefaultOptionType} from "antd/es/select/index";
 import {Select} from "antd";
-import {getIdOptions, isPkInteger,} from "./model/schemaUtil.ts";
-import {navTo, useLocationData} from "./model/store.ts";
+import {getIdOptions, isPkInteger,} from "../model/schemaUtil.ts";
+import {navTo, useLocationData} from "../model/store.ts";
 import {useNavigate} from "react-router-dom";
-import {STable} from "./model/schemaModel.ts";
+import {STable} from "../model/schemaModel.ts";
 
 
 export function IdList({curTable}: {

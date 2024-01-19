@@ -2,8 +2,8 @@ import {Button, Card, ColorPicker, Form, Input, Radio, Space, Switch} from "antd
 import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 
-import {KeywordColor} from "./func/localStoreJson.ts";
-import {setNodeShow, store} from "./model/store.ts";
+import {KeywordColor} from "../func/localStoreJson.ts";
+import {setNodeShow, store} from "../model/store.ts";
 
 
 export function NodeShowSetting() {
