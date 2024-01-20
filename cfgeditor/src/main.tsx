@@ -7,11 +7,10 @@ import './style.css'
 import {App, ConfigProvider} from "antd";
 import './i18n.js'
 import {createBrowserRouter, RouterProvider} from "react-router-dom";
-import {Index} from './routes/Index.tsx';
-import {TableSchema} from "./routes/TableSchema.tsx";
-import {TableRef} from "./routes/TableRef.tsx";
-import {Record} from "./routes/Record.tsx";
-import {RecordRefRoute} from "./routes/RecordRef.tsx";
+import {TableSchema} from "./routes/table/TableSchema.tsx";
+import {TableRef} from "./routes/table/TableRef.tsx";
+import {Record} from "./routes/record/Record.tsx";
+import {RecordRefRoute} from "./routes/record/RecordRef.tsx";
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -28,26 +27,20 @@ const router = createBrowserRouter([
         element: <CfgEditorApp/>,
         children: [
             {
-                index: true,
-                element: <Index/>
-            },
-            {
                 path: "table/:table/:id?",
-                Component: TableSchema
+                Component: TableSchema,
             },
             {
                 path: "tableRef/:table/:id?",
                 Component: TableRef,
             },
             {
-                path: "record/:table/:id",
+                path: "record/:table/:id/edit?",
                 Component: Record,
-                errorElement: <div>Oops! There was an error.</div>,
             },
             {
                 path: "recordRef/:table/:id",
                 Component: RecordRefRoute,
-                errorElement: <div>Oops! There was an error.</div>,
             },
         ]
     }

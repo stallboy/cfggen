@@ -1,48 +1,22 @@
 import {useRef, useState} from "react";
-import {
-    Alert,
-    App,
-    Button,
-    Drawer,
-    Flex,
-    Form,
-    Input,
-    Modal,
-    Radio,
-    RadioChangeEvent,
-    Select, Skeleton,
-    Space,
-    Typography
-} from "antd";
+import {Alert, App, Drawer, Flex, Form, Input, Modal,} from "antd";
 import {saveAs} from 'file-saver';
-import {LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
-import {TableList} from "./routes/TableList.tsx";
-import {IdList} from "./routes/IdList.tsx";
-
-import {RecordRef} from "./routes/RecordRef.tsx";
-import {SearchValue} from "./routes/SearchValue.tsx";
+import {RecordRef} from "./routes/record/RecordRef.tsx";
+import {SearchValue} from "./routes/search/SearchValue.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
-import {RecordEditResult} from "./model/recordModel.ts";
+import {RecordEditResult} from "./routes/record/recordModel.ts";
 import {useTranslation} from "react-i18next";
-import {getId} from "./func/recordRefEntity.ts";
 import {DraggablePanel} from "@ant-design/pro-editor";
 import {toBlob} from "html-to-image";
-import {Setting} from "./routes/Setting.tsx";
-import {getNextId, newSchema, Schema} from "./model/schemaUtil.ts";
-import {
-    historyNext,
-    historyPrev,
-    navTo,
-    setSchema,
-    setServer,
-    store, useLocationData
-} from "./model/store.ts";
+import {Setting} from "./routes/setting/Setting.tsx";
+import {newSchema, Schema} from "./routes/table/schemaUtil.ts";
+import {navTo, setSchema, setServer, store, useLocationData} from "./routes/setting/store.ts";
 import {Outlet, useNavigate} from "react-router-dom";
-import {STable} from "./model/schemaModel.ts";
-import {fetchSchema} from "./func/api.ts";
+import {STable} from "./routes/table/schemaModel.ts";
+import {fetchSchema} from "./io/api.ts";
 import {useQuery} from "@tanstack/react-query";
+import {HeaderBar} from "./routes/headerbar/HeaderBar.tsx";
 
-const {Text} = Typography;
 
 export type SchemaTableType = { schema: Schema, curTable: STable };
 
@@ -51,7 +25,7 @@ export function CfgEditorApp() {
     const {
         server, fix, dragPanel,
         recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow,
-        imageSizeScale, history
+        imageSizeScale
     } = store;
 
     const {curPage, curTableId, curId} = useLocationData();
@@ -63,9 +37,8 @@ export function CfgEditorApp() {
     useHotkeys('alt+2', () => navigate(navTo('tableRef', curTableId, curId)));
     useHotkeys('alt+3', () => navigate(navTo('record', curTableId, curId)));
     useHotkeys('alt+4', () => navigate(navTo('recordRef', curTableId, curId)));
-    useHotkeys('alt+x', () => showSearch());
-    useHotkeys('alt+c', () => prev());
-    useHotkeys('alt+v', () => next());
+    useHotkeys('alt+x', () => setSearchOpen(true));
+
 
     const {notification} = App.useApp();
     const {t} = useTranslation();
@@ -78,65 +51,13 @@ export function CfgEditorApp() {
 
     let curTable = schema ? schema.getSTable(curTableId) : null;
 
-    function prev() {
-        const path = historyPrev(curPage);
-        if (path) {
-            navigate(path);
-        }
-    }
-
-    function next() {
-        const path = historyNext(curPage);
-        if (path) {
-            navigate(path);
-        }
-    }
-
-    let nextId;
-    if (curTable) {
-        let nId = getNextId(curTable, curId);
-        if (nId) {
-            nextId = <Text>{t('nextSlot')} <Text copyable>{nId}</Text> </Text>
-        }
-    }
-
-    const showSetting = () => {
-        setSettingOpen(true);
-    };
-
     const onSettingClose = () => {
         setSettingOpen(false);
-    };
-
-    const showSearch = () => {
-        setSearchOpen(true);
     };
 
     const onSearchClose = () => {
         setSearchOpen(false);
     };
-
-    let options = [
-        {label: t('table'), value: 'table'},
-        {label: t('tableRef'), value: 'tableRef'},
-        {label: t('record'), value: 'record'},
-    ]
-
-    if (dragPanel != 'recordRef') {
-        options.push({label: t('recordRef'), value: 'recordRef'});
-    }
-
-    if (fix && schema) {
-        let fixedTable = schema.getSTable(fix.table);
-        if (fixedTable && dragPanel != 'fix') {
-            options.push({label: t('fix') + ' ' + getId(fix.table, fix.id), value: 'fix'});
-        }
-    }
-
-    function onChangeCurPage(e: RadioChangeEvent) {
-        const page = e.target.value;
-        navigate(navTo(page, curTableId, curId));
-    }
 
     function onConnectServer(value: string) {
         setServer(value);
@@ -265,33 +186,8 @@ export function CfgEditorApp() {
 
 
     return <div style={{position: 'relative'}}>
-        <Space size={'large'} style={{position: 'absolute', zIndex: 1}}>
-            <Space>
-                <Button onClick={showSetting}>
-                    <SettingOutlined/>
-                </Button>
-                <Button onClick={showSearch}>
-                    <SearchOutlined/>
-                </Button>
-                {schema ? <TableList schema={schema}/> : <Select id='table' loading={true}/>}
-                {curTable ? <IdList curTable={curTable}/> : <Skeleton.Input/>}
-                {nextId}
-            </Space>
-
-            <Space>
-                <Radio.Group value={curPage} onChange={onChangeCurPage}
-                             options={options} optionType={'button'}>
-                </Radio.Group>
-
-                <Button onClick={prev} disabled={!history.canPrev()}>
-                    <LeftOutlined/>
-                </Button>
-
-                <Button onClick={next} disabled={!history.canNext()}>
-                    <RightOutlined/>
-                </Button>
-            </Space>
-        </Space>
+        <HeaderBar schema={schema} curTable={curTable}
+                   setSettingOpen={setSettingOpen} setSearchOpen={setSearchOpen}/>
 
         {content}
 
@@ -319,7 +215,6 @@ export function CfgEditorApp() {
                 curTable, onDeleteRecord,
                 onConnectServer,
                 onToPng,
-
             }}/>
         </Drawer>
 
