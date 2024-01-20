@@ -3,17 +3,15 @@ import {SItem, SStruct, STable} from "../table/schemaModel.ts";
 import {getField, Schema} from "../table/schemaUtil.ts";
 import {produce} from "immer";
 
-
 export interface EditingObject {
     table: string;
     id: string;
     editingJson: JSONObject;
 }
 
-export interface EditCtx {
+export interface EditContext {
     editingObject: EditingObject;
-    setEditingObject: (eo: EditingObject) => void;
-
+    setNewEditingObject: (obj: EditingObject) => void;
 }
 
 export function startEditingObject(recordResult: RecordResult,
@@ -31,7 +29,7 @@ export function startEditingObject(recordResult: RecordResult,
     return {table, id, editingJson}
 }
 
-export function onDeleteItemFromArray(ctx: EditCtx,
+export function onDeleteItemFromArray(ctx: EditContext,
                                       deleteIndex: number,
                                       arrayFieldChains: (string | number)[]) {
     // console.log('delItem', arrayFieldChains, deleteIndex);
@@ -42,14 +40,14 @@ export function onDeleteItemFromArray(ctx: EditCtx,
     });
 }
 
-export function onUpdateFormValues(ctx: EditCtx,
+export function onUpdateFormValues(ctx: EditContext,
                                    schema: Schema,
                                    values: any,
                                    fieldChains: (string | number)[]) {
 
     // console.log('formChange', fieldChains, values);
-    applyMutate(ctx, (draft: EditingObject) => {
-        let obj = getFieldObj(draft, fieldChains);
+    // applyMutate(ctx, (draft: EditingObject) => {
+        let obj = getFieldObj(ctx.editingObject, fieldChains);
         let name = obj['$type'] as string;
         let sItem = schema.itemIncludeImplMap.get(name);
 
@@ -74,11 +72,11 @@ export function onUpdateFormValues(ctx: EditCtx,
                 obj[key] = conv(fieldValue);
             }
         }
-    });
+    // });
 }
 
 
-export function onUpdateInterfaceValue(ctx: EditCtx,
+export function onUpdateInterfaceValue(ctx: EditContext,
                                        jsonObject: JSONObject,
                                        fieldChains: (string | number)[]) {
     // console.log('updateInterface', fieldChains, jsonObject);
@@ -89,7 +87,7 @@ export function onUpdateInterfaceValue(ctx: EditCtx,
 }
 
 
-export function onAddItemForArray(ctx: EditCtx,
+export function onAddItemForArray(ctx: EditContext,
                                   defaultItemJsonObject: JSONObject,
                                   arrayFieldChains: (string | number)[]) {
     // console.log('addItem', arrayFieldChains, defaultItemJsonObject);
@@ -99,16 +97,16 @@ export function onAddItemForArray(ctx: EditCtx,
     });
 }
 
-export function onClearToDefault(ctx: EditCtx,
+export function onClearToDefault(ctx: EditContext,
                                  defaultValue: JSONObject) {
     applyMutate(ctx, (draft: EditingObject) => {
         draft.editingJson = defaultValue;
     });
 }
 
-function applyMutate(ctx: EditCtx, mutate: (draft: EditingObject) => void) {
+function applyMutate(ctx: EditContext, mutate: (draft: EditingObject) => void) {
     const newEditingObject = produce<EditingObject>(ctx.editingObject, mutate);
-    ctx.setEditingObject(newEditingObject);
+    ctx.setNewEditingObject(newEditingObject);
 }
 
 function getFieldObj(editingObject: EditingObject, fieldChains: (string | number)[]): any {

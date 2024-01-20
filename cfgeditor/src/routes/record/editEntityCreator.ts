@@ -13,7 +13,7 @@ import {JSONArray, JSONObject, JSONValue, RefId} from "./recordModel.ts";
 import {getId, getLabel, getLastName} from "./recordRefEntity.ts";
 import {getField, getIdOptions, getImpl, isPkInteger, Schema} from "../table/schemaUtil.ts";
 import {
-    EditCtx, onAddItemForArray, onClearToDefault,
+    EditContext, onAddItemForArray, onClearToDefault,
     onDeleteItemFromArray,
     onUpdateFormValues,
     onUpdateInterfaceValue
@@ -42,11 +42,10 @@ export class EditEntityCreator {
                 public schema: Schema,
                 public curTable: STable,
                 public curId: string,
-                public editCtx: EditCtx,
+                public editCtx: EditContext,
                 public onSubmit: () => void
     ) {
-        this
-            .curRefId = {table: curTable.name, id: curId};
+        this.curRefId = {table: curTable.name, id: curId};
     }
 
     createThis() {

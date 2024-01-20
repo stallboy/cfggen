@@ -63,7 +63,7 @@ export function layout(flowInstance: ReactFlowInstance, pathname: string, queryC
             nodes.forEach(n => flowNodeMap.set(n.id, n));
 
             return await elk.layout(graph);
-        }
+        },
     }).then(({children}) => {
         if (children) {
             const map = new Map<string, XYPosition>();

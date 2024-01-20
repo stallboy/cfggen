@@ -28,6 +28,7 @@ export function Record() {
     const [t] = useTranslation();
     const {edit, pathname} = useLocationData();
     const [editingObject, setEditingObject] = useState<EditingObject | undefined>();
+    const [editSeq, setEditSeq] = useState<number>(0);
 
     const {isLoading, isError, error, data: recordResult} = useQuery({
         queryKey: ['table', curTableId, curId],
@@ -93,15 +94,21 @@ export function Record() {
         creator.createRecordEntity(entityId, recordResult.object);
         createRefEntities(entityMap, schema, recordResult.refs, false, true);
     } else {
-
         const thisEditingObject = startEditingObject(recordResult, editingObject);
 
         function onSubmit() {
             addOrUpdateRecordMutation.mutate(thisEditingObject.editingJson);
         }
 
+        function setNewEditingObject(obj: EditingObject) {
+            setEditingObject(obj);
+            setEditSeq(editSeq + 1);
+            queryClient.invalidateQueries({queryKey: ['layout', pathname]});
+        }
+
+
         let creator = new EditEntityCreator(entityMap, schema, curTable, curId,
-            {editingObject:thisEditingObject, setEditingObject}, onSubmit);
+            {editingObject: thisEditingObject, setNewEditingObject}, onSubmit);
         creator.createThis();
     }
     fillHandles(entityMap);
@@ -176,12 +183,11 @@ export function Record() {
     }
     const {nodes, edges} = convertNodeAndEdges({entityMap, nodeShow});
 
-    console.log("nodes", nodes.length);
+    console.log('seq', editSeq, ", nodes", nodes.length);
 
 
     return <ReactFlowProvider>
-        <FlowGraph
-            key={pathname}
+        <FlowGraph key={pathname + (isEditing ? ',' + editSeq : '')}
                    initialNodes={nodes}
                    initialEdges={edges}
                    paneMenu={paneMenu}
