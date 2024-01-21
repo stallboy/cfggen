@@ -186,9 +186,9 @@ export function CfgEditorApp() {
     }
 
 
-    return <div style={{position: 'relative'}}>
+    return <div >
         <HeaderBar schema={schema} curTable={curTable}
-                   setSettingOpen={setSettingOpen} setSearchOpen={setSearchOpen}/>
+               setSettingOpen={setSettingOpen} setSearchOpen={setSearchOpen}/>
 
         {content}
 
@@ -208,7 +208,6 @@ export function CfgEditorApp() {
                 </Form.Item>
             </Flex>
         </Modal>
-
 
         <Drawer title="setting" placement="left" onClose={onSettingClose} open={settingOpen} size='large'>
             <Setting  {...{

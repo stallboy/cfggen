@@ -71,31 +71,31 @@ export const HeaderBar = memo(function ({schema, curTable, setSettingOpen, setSe
         }
     }
 
-    return <Space size={'large'} style={{position: 'absolute', zIndex: 1}}>
-        <Space>
-            <Button onClick={() => setSettingOpen(true)}>
-                <SettingOutlined/>
-            </Button>
-            <Button onClick={() => setSearchOpen(true)}>
-                <SearchOutlined/>
-            </Button>
-            {schema ? <TableList schema={schema}/> : <Select id='table' loading={true}/>}
-            {curTable ? <IdList curTable={curTable}/> : <Skeleton.Input/>}
-            {nextId}
-        </Space>
+    return <div style={{position: 'relative'}}>
+        <Space size={'large'} style={{position: 'absolute', zIndex: 1}}>
+            <Space>
+                <Button onClick={() => setSettingOpen(true)}>
+                    <SettingOutlined/>
+                </Button>
+                <Button onClick={() => setSearchOpen(true)}>
+                    <SearchOutlined/>
+                </Button>
+                {schema ? <TableList schema={schema}/> : <Select id='table' loading={true}/>}
+                {curTable ? <IdList curTable={curTable}/> : <Skeleton.Input/>}
+                {nextId}
+            </Space>
+            <Space>
+                <Radio.Group value={curPage} onChange={onChangeCurPage}
+                             options={options} optionType={'button'}>
+                </Radio.Group>
 
-        <Space>
-            <Radio.Group value={curPage} onChange={onChangeCurPage}
-                         options={options} optionType={'button'}>
-            </Radio.Group>
+                <Button onClick={prev} disabled={!history.canPrev()}>
+                    <LeftOutlined/>
+                </Button>
 
-            <Button onClick={prev} disabled={!history.canPrev()}>
-                <LeftOutlined/>
-            </Button>
-
-            <Button onClick={next} disabled={!history.canNext()}>
-                <RightOutlined/>
-            </Button>
-        </Space>
-    </Space>;
+                <Button onClick={next} disabled={!history.canNext()}>
+                    <RightOutlined/>
+                </Button>
+            </Space>
+        </Space></div>;
 });

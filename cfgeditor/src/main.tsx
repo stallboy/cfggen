@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query'
 
 import {CfgEditorApp} from './CfgEditorApp.tsx'
+import 'reactflow/dist/style.css';
 import './style.css'
 import {App, ConfigProvider} from "antd";
 import './i18n.js'
