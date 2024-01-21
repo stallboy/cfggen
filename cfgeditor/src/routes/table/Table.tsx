@@ -10,7 +10,7 @@ import {useTranslation} from "react-i18next";
 import {convertNodeAndEdges, fillHandles} from "../../flow/entityToFlow.ts";
 
 
-export function TableSchema() {
+export function Table() {
     const {schema, curTable} = useOutletContext<SchemaTableType>();
     const {maxImpl, nodeShow} = store;
     const {pathname} = useLocationData();

@@ -4,7 +4,7 @@ import {App, Empty, Result, Spin} from "antd";
 import {createRefEntities, getId} from "./recordRefEntity.ts";
 import {RecordEntityCreator} from "./recordEntityCreator.ts";
 import {EditEntityCreator} from "./editEntityCreator.ts";
-import {EditingObject, startEditingObject} from "./editingObject.ts";
+import {editState, startEditingObject} from "./editingObject.ts";
 import {useTranslation} from "react-i18next";
 import {navTo, store, useLocationData} from "../setting/store.ts";
 import {useNavigate, useOutletContext} from "react-router-dom";
@@ -27,8 +27,8 @@ export function Record() {
     const queryClient = useQueryClient()
     const [t] = useTranslation();
     const {edit, pathname} = useLocationData();
-    const [editingObject, setEditingObject] = useState<EditingObject | undefined>();
     const [editSeq, setEditSeq] = useState<number>(0);
+
 
     const {isLoading, isError, error, data: recordResult} = useQuery({
         queryKey: ['table', curTableId, curId],
@@ -67,6 +67,9 @@ export function Record() {
         },
     });
 
+    console.log("record rerender")
+
+
 
     if (isLoading) {
         return <Empty> <Spin/> </Empty>;
@@ -94,21 +97,20 @@ export function Record() {
         creator.createRecordEntity(entityId, recordResult.object);
         createRefEntities(entityMap, schema, recordResult.refs, false, true);
     } else {
-        const thisEditingObject = startEditingObject(recordResult, editingObject);
 
-        function onSubmit() {
-            addOrUpdateRecordMutation.mutate(thisEditingObject.editingJson);
+        function submitEditingObject() {
+            addOrUpdateRecordMutation.mutate(editState.editingObject);
         }
 
-        function setNewEditingObject(obj: EditingObject) {
-            setEditingObject(obj);
+        function afterEditStateChanged() {
             setEditSeq(editSeq + 1);
-            queryClient.invalidateQueries({queryKey: ['layout', pathname]});
+            console.log("state changed", editSeq+1);
+            queryClient.removeQueries({queryKey: ['layout', pathname]});
+            queryClient.removeQueries({queryKey: ['viewport', pathname]});
         }
-
-
-        let creator = new EditEntityCreator(entityMap, schema, curTable, curId,
-            {editingObject: thisEditingObject, setNewEditingObject}, onSubmit);
+        //这是非纯函数，escape hatch，用useRef也能做，这里用全局变量
+        startEditingObject(recordResult, afterEditStateChanged, submitEditingObject);
+        let creator = new EditEntityCreator(entityMap, schema, curTable, curId);
         creator.createThis();
     }
     fillHandles(entityMap);
@@ -184,7 +186,6 @@ export function Record() {
     const {nodes, edges} = convertNodeAndEdges({entityMap, nodeShow});
 
     console.log('seq', editSeq, ", nodes", nodes.length);
-
 
     return <ReactFlowProvider>
         <FlowGraph key={pathname + (isEditing ? ',' + editSeq : '')}

@@ -3,7 +3,7 @@ import {Entity} from "./entityModel.ts";
 import {DescriptionsItemType} from "antd/es/descriptions";
 import {memo} from "react";
 
-export const EntityCard = memo(function ({entity}: {
+export const EntityCard = memo(function EntityCard({entity}: {
     entity: Entity,
 }) {
     const {brief, nodeShow, query} = entity;

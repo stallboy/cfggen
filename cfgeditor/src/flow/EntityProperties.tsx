@@ -20,7 +20,7 @@ function text({comment, name}: { name: string, comment?: string }) {
     return name;
 }
 
-export const EntityProperties = memo(function ({fields, color}: {
+export const EntityProperties = memo(function EntityProperties({fields, color}: {
     fields: EntityField[],
     color: string,
 }) {

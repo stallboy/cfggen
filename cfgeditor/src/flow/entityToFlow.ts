@@ -57,7 +57,7 @@ export function convertNodeAndEdges(graph: EntityGraph) {
             data: entity,
             type: 'node',
             position: {x: 100, y: 100},
-            style: {visibility: 'hidden'},
+            // style: {visibility: 'hidden'},
         })
         for (let edge of entity.sourceEdges) {
             let fe: FlowEdge = {
@@ -68,7 +68,10 @@ export function convertNodeAndEdges(graph: EntityGraph) {
                 targetHandle: edge.targetHandle,
 
                 type: 'simplebezier',
-                style: {stroke: edgeStorkColor, visibility: 'hidden'},
+                style: {
+                    stroke: edgeStorkColor,
+                    // visibility: 'hidden'
+                },
             }
 
             if (edge.type == EntityEdgeType.Ref) {

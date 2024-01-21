@@ -9,7 +9,7 @@ import {EntityForm} from "./EntityForm.tsx";
 
 const {Text} = Typography;
 
-export const FlowNode = memo(function (nodeProps: NodeProps<Entity>) {
+export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
     const {fields, brief, edit, handleIn, handleOut, label} = nodeProps.data;
     const color: string = getNodeBackgroundColor(nodeProps.data);
     const width = edit ? 360 : 240;

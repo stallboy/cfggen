@@ -71,17 +71,17 @@ export function layout(flowInstance: ReactFlowInstance, pathname: string, queryC
 
             const nodes = flowInstance.getNodes();
             const edges = flowInstance.getEdges();
-            // change in place，maybe beacause of the zustand store
+            // change in place，maybe because of the zustand store
             nodes.forEach(n => {
                 const newPos = map.get(n.id);
                 if (newPos) {
                     n.position = newPos;
                 }
-                n.style = undefined;
+                // n.style = undefined;
             })
-            edges.forEach(e => {
-                e.style = {...e.style, visibility: undefined};
-            })
+            // edges.forEach(e => {
+                // e.style = {...e.style, visibility: undefined};
+            // })
             flowInstance.setNodes(nodes);
             flowInstance.setEdges(edges);
             const viewport = queryClient.getQueryData<Viewport>(['viewport', pathname]);

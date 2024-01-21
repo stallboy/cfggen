@@ -93,6 +93,10 @@ function PrimitiveFormItem(field: EntityEditField) {
     if (field.eleType == 'bool') {
         props = {valuePropName: "checked"}
     }
+
+    if (field.value.toString().startsWith('帮助')) {
+        console.log('ff', field.value);
+    }
     return <Form.Item name={field.name} key={field.name} label={makeLabel(field)} initialValue={field.value} {...props}>
         {PrimitiveControl(field)}
     </Form.Item>;
@@ -220,7 +224,7 @@ function FieldsFormItem(fields: EntityEditField[]) {
 }
 
 
-export const EntityForm = memo(function ({edit}: {
+export const EntityForm = memo(function EntityForm({edit}: {
     edit: EntityEdit;
 }) {
     const ref = useRef<HTMLDivElement>(null);

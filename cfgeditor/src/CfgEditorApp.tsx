@@ -166,7 +166,8 @@ export function CfgEditorApp() {
                 position: "absolute",
                 background: '#fff',
                 display: 'flex',
-                height: "100vh", width: "100vw"
+                height: "100vh",
+                width: "100vw"
             }}>
                 <DraggablePanel
                     placement={'left'}

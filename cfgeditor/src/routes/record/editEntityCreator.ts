@@ -13,7 +13,8 @@ import {JSONArray, JSONObject, JSONValue, RefId} from "./recordModel.ts";
 import {getId, getLabel, getLastName} from "./recordRefEntity.ts";
 import {getField, getIdOptions, getImpl, isPkInteger, Schema} from "../table/schemaUtil.ts";
 import {
-    EditContext, onAddItemForArray, onClearToDefault,
+    applyNewEditingObject, editState,
+    onAddItemForArray,
     onDeleteItemFromArray,
     onUpdateFormValues,
     onUpdateInterfaceValue
@@ -42,15 +43,13 @@ export class EditEntityCreator {
                 public schema: Schema,
                 public curTable: STable,
                 public curId: string,
-                public editCtx: EditContext,
-                public onSubmit: () => void
     ) {
         this.curRefId = {table: curTable.name, id: curId};
     }
 
     createThis() {
         let id = getId(this.curTable.name, this.curId);
-        this.createEntity(id, this.curTable, this.editCtx.editingObject.editingJson, []);
+        this.createEntity(id, this.curTable, editState.editingObject, []);
     }
 
     createEntity(id: string, sItem: SItem, obj: JSONObject,
@@ -115,7 +114,7 @@ export class EditEntityCreator {
                     let arrayIndex = i;
 
                     const onDeleteFunc = () => {
-                        onDeleteItemFromArray(this.editCtx, arrayIndex, [...fieldChain, fieldKey]);
+                        onDeleteItemFromArray(arrayIndex, [...fieldChain, fieldKey]);
                     }
 
                     let childEntity = this.createEntity(childId, itemType, itemObj,
@@ -162,7 +161,7 @@ export class EditEntityCreator {
         }
 
         const editOnUpdateValues = (values: any) => {
-            onUpdateFormValues(this.editCtx, this.schema, values, fieldChain);
+            onUpdateFormValues(this.schema, values, fieldChain);
         };
 
         let entity: Entity = {
@@ -179,14 +178,9 @@ export class EditEntityCreator {
         return entity;
     }
 
-    makeEditFields(sItem
-                       :
-                       SItem, obj
-                       :
-                       JSONObject, fieldChain
-                       :
-                       (string | number)[]
-    ):
+    makeEditFields(sItem: SItem,
+                   obj: JSONObject,
+                   fieldChain: (string | number)[]):
         EntityEditField[] {
         let fields: EntityEditField[] = [];
         let type: string = obj['$type'] as string;
@@ -210,7 +204,7 @@ export class EditEntityCreator {
                         newObj = this.schema.defaultValueOfStructural(newImpl);
                     }
 
-                    onUpdateInterfaceValue(this.editCtx, newObj, fieldChain);
+                    onUpdateInterfaceValue(newObj, fieldChain);
                     // console.log(newObj);
                 },
             })
@@ -221,7 +215,7 @@ export class EditEntityCreator {
 
             let funcClear = () => {
                 let defaultValue = this.schema.defaultValueOfStructural(structural);
-                onClearToDefault(this.editCtx, defaultValue);
+                applyNewEditingObject(defaultValue);
             };
 
             if ('pk' in structural) {
@@ -231,7 +225,7 @@ export class EditEntityCreator {
                     type: 'funcSubmit',
                     eleType: 'bool',
                     value: {
-                        funcSubmit: this.onSubmit,
+                        funcSubmit: editState.submitEditingObject,
                         funcClear
                     }
                 });
@@ -242,17 +236,10 @@ export class EditEntityCreator {
     }
 
 
-    makeStructuralEditFields(fields
-                                 :
-                                 EntityEditField[], structural
-                                 :
-                                 SStruct | STable, obj
-                                 :
-                                 JSONObject,
-                             fieldChain
-                                 :
-                                 (string | number)[]
-    ) {
+    makeStructuralEditFields(fields: EntityEditField[],
+                             structural: SStruct | STable,
+                             obj: JSONObject,
+                             fieldChain: (string | number)[]) {
         for (let sf of structural.fields) {
             let fieldValue = obj[sf.name];
             if (isPrimitiveType(sf.type)) {
@@ -296,7 +283,7 @@ export class EditEntityCreator {
                         value: () => {
                             let sFieldable = this.schema.itemIncludeImplMap.get(itemType) as SStruct | SInterface;
                             let defaultValue = this.schema.defaultValue(sFieldable);
-                            onAddItemForArray(this.editCtx, defaultValue, [...fieldChain, sf.name]);
+                            onAddItemForArray(defaultValue, [...fieldChain, sf.name]);
                         }
                     });
                 }
@@ -314,13 +301,8 @@ export class EditEntityCreator {
 
     }
 
-    getAutoCompleteOptions(structural
-                               :
-                               SStruct | STable, fieldName
-                               :
-                               string
-    ):
-        EntityEditFieldOptions | undefined {
+    getAutoCompleteOptions(structural: SStruct | STable,
+                           fieldName: string): EntityEditFieldOptions | undefined {
         if (!structural.foreignKeys) {
             return;
         }

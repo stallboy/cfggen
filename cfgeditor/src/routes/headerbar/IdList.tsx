@@ -4,9 +4,10 @@ import {getIdOptions, isPkInteger,} from "../table/schemaUtil.ts";
 import {navTo, useLocationData} from "../setting/store.ts";
 import {useNavigate} from "react-router-dom";
 import {STable} from "../table/schemaModel.ts";
+import {memo} from "react";
 
 
-export function IdList({curTable}: {
+export const IdList = memo(function ({curTable}: {
     curTable: STable,
 }) {
     const navigate = useNavigate();
@@ -35,4 +36,4 @@ export function IdList({curTable}: {
                        navigate(navTo(curPage, curTableId, value));
                    }}/>
 
-}
+});

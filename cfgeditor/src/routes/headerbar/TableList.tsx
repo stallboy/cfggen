@@ -3,6 +3,7 @@ import {Badge, Select, Space} from "antd";
 import {getFixCurIdByTable, navTo, useLocationData} from "../setting/store.ts";
 import {useNavigate} from "react-router-dom";
 import {Schema} from "../table/schemaUtil.ts";
+import {memo} from "react";
 
 interface TableWithLastName {
     tableId: string;
@@ -11,7 +12,7 @@ interface TableWithLastName {
 }
 
 
-export function TableList({schema} : {schema: Schema}) {
+export const TableList = memo(function ({schema} : {schema: Schema}) {
 
     const {curPage, curTableId, curId} = useLocationData();
     const navigate = useNavigate();
@@ -84,4 +85,4 @@ export function TableList({schema} : {schema: Schema}) {
                        navigate(navTo(curPage, tableId, id));
                    }}
     />;
-}
+});

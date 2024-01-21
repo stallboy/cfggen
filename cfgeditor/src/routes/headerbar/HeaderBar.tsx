@@ -9,10 +9,11 @@ import {useNavigate} from "react-router-dom";
 import {STable} from "../table/schemaModel.ts";
 import {getId} from "../record/recordRefEntity.ts";
 import {useTranslation} from "react-i18next";
+import {memo} from "react";
 
 const {Text} = Typography;
 
-export function HeaderBar({schema, curTable, setSettingOpen, setSearchOpen}: {
+export const HeaderBar = memo(function ({schema, curTable, setSettingOpen, setSearchOpen}: {
     schema: Schema | undefined;
     curTable: STable | null;
     setSettingOpen: (open: boolean) => void;
@@ -96,6 +97,5 @@ export function HeaderBar({schema, curTable, setSettingOpen, setSearchOpen}: {
                 <RightOutlined/>
             </Button>
         </Space>
-    </Space>
-
-}
+    </Space>;
+});

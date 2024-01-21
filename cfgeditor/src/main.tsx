@@ -7,7 +7,7 @@ import './style.css'
 import {App, ConfigProvider} from "antd";
 import './i18n.js'
 import {createBrowserRouter, RouterProvider} from "react-router-dom";
-import {TableSchema} from "./routes/table/TableSchema.tsx";
+import {Table} from "./routes/table/Table.tsx";
 import {TableRef} from "./routes/table/TableRef.tsx";
 import {Record} from "./routes/record/Record.tsx";
 import {RecordRefRoute} from "./routes/record/RecordRef.tsx";
@@ -28,7 +28,7 @@ const router = createBrowserRouter([
         children: [
             {
                 path: "table/:table/:id?",
-                Component: TableSchema,
+                Component: Table,
             },
             {
                 path: "tableRef/:table/:id?",

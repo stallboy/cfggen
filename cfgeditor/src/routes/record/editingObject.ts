@@ -1,116 +1,120 @@
 import {JSONArray, JSONObject, RecordResult} from "./recordModel.ts";
 import {SItem, SStruct, STable} from "../table/schemaModel.ts";
 import {getField, Schema} from "../table/schemaUtil.ts";
-import {produce} from "immer";
 
-export interface EditingObject {
+export type EditState = {
     table: string;
     id: string;
-    editingJson: JSONObject;
+    editingObject: JSONObject;
+
+    afterEditStateChanged: () => void;
+    submitEditingObject: () => void;
 }
 
-export interface EditContext {
-    editingObject: EditingObject;
-    setNewEditingObject: (obj: EditingObject) => void;
-}
+
+export const editState: EditState = {
+    table: '',
+    id: '',
+    editingObject: {'$type': ''},
+    afterEditStateChanged: () => {
+    },
+    submitEditingObject: () => {
+    },
+};
+
 
 export function startEditingObject(recordResult: RecordResult,
-                                   oldEditingObject: EditingObject | undefined): EditingObject {
-
-    const {table, id} = recordResult;
-    if (oldEditingObject && oldEditingObject.table == table && oldEditingObject.id == id) {
-        return oldEditingObject;  //cache一个state，从edit切换到view再回来会保留。
+                                   afterEditStateChanged: () => void,
+                                   submitEditingObject: () => void) {
+    editState.afterEditStateChanged = afterEditStateChanged;
+    editState.submitEditingObject = submitEditingObject;
+    const {table, id} = editState;
+    const {table: newTable, id: newId} = recordResult;
+    if (newTable == table && newId == id) {
+        return;
     }
-
 
     const clone: JSONObject = {...recordResult.object}
     delete clone['$refs'];  // inner $ref not deleted
-    const editingJson = structuredClone(clone);
-    return {table, id, editingJson}
+    const newEditingObject = structuredClone(clone);
+    editState.table = newTable;
+    editState.id = newId;
+    editState.editingObject = newEditingObject;
+    console.log("new editObject")
 }
 
-export function onDeleteItemFromArray(ctx: EditContext,
-                                      deleteIndex: number,
+export function onDeleteItemFromArray(deleteIndex: number,
                                       arrayFieldChains: (string | number)[]) {
-    // console.log('delItem', arrayFieldChains, deleteIndex);
+    console.log('delItem', arrayFieldChains, deleteIndex);
 
-    applyMutate(ctx, (draft: EditingObject) => {
-        let obj = getFieldObj(draft, arrayFieldChains) as JSONArray;
-        obj.splice(deleteIndex, 1);
-    });
+    let obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
+    obj.splice(deleteIndex, 1);
+    editState.afterEditStateChanged();
 }
 
-export function onUpdateFormValues(ctx: EditContext,
-                                   schema: Schema,
+export function onUpdateFormValues(schema: Schema,
                                    values: any,
                                    fieldChains: (string | number)[]) {
+    console.log('formChange', fieldChains, values);
 
-    // console.log('formChange', fieldChains, values);
-    // applyMutate(ctx, (draft: EditingObject) => {
-        let obj = getFieldObj(ctx.editingObject, fieldChains);
-        let name = obj['$type'] as string;
-        let sItem = schema.itemIncludeImplMap.get(name);
+    let obj = getFieldObj(editState.editingObject, fieldChains);
+    let name = obj['$type'] as string;
+    let sItem = schema.itemIncludeImplMap.get(name);
 
-        for (let key in values) {
-            if (key.startsWith("$")) { // $impl
-                continue;
-            }
-            let conv = getFieldPrimitiveTypeConverter(key, sItem);
-
-            let fieldValue = values[key];
-            if (Array.isArray(fieldValue)) {
-                // antd form 会返回[undefined, .. ], 这里忽略掉undefined 的item
-                let fArr: JSONArray = fieldValue as JSONArray;
-                let newArr = [];
-                for (let fArrElement of fArr) {
-                    if (fArrElement != undefined) {
-                        newArr.push(conv(fArrElement));
-                    }
-                }
-                obj[key] = newArr;
-            } else {
-                obj[key] = conv(fieldValue);
-            }
+    for (let key in values) {
+        if (key.startsWith("$")) { // $impl
+            continue;
         }
-    // });
+        let conv = getFieldPrimitiveTypeConverter(key, sItem);
+
+        let fieldValue = values[key];
+        if (Array.isArray(fieldValue)) {
+            // antd form 会返回[undefined, .. ], 这里忽略掉undefined 的item
+            let fArr: JSONArray = fieldValue as JSONArray;
+            let newArr = [];
+            for (let fArrElement of fArr) {
+                if (fArrElement != undefined) {
+                    newArr.push(conv(fArrElement));
+                }
+            }
+            obj[key] = newArr;
+        } else {
+            obj[key] = conv(fieldValue);
+        }
+    }
+    // 当在单个node的form里更改时，因为ui已经更改，不需要再触发Record的更新。
 }
 
 
-export function onUpdateInterfaceValue(ctx: EditContext,
-                                       jsonObject: JSONObject,
+export function onUpdateInterfaceValue(jsonObject: JSONObject,
                                        fieldChains: (string | number)[]) {
-    // console.log('updateInterface', fieldChains, jsonObject);
-    applyMutate(ctx, (draft: EditingObject) => {
-        let obj = getFieldObj(draft, fieldChains.slice(0, fieldChains.length - 1));
-        obj[fieldChains[fieldChains.length - 1]] = jsonObject;
-    });
+    console.log('updateInterface', fieldChains, jsonObject);
+
+    let obj = getFieldObj(editState.editingObject, fieldChains.slice(0, fieldChains.length - 1));
+    obj[fieldChains[fieldChains.length - 1]] = jsonObject;
+
+    editState.afterEditStateChanged();
 }
 
 
-export function onAddItemForArray(ctx: EditContext,
-                                  defaultItemJsonObject: JSONObject,
+export function onAddItemForArray(defaultItemJsonObject: JSONObject,
                                   arrayFieldChains: (string | number)[]) {
-    // console.log('addItem', arrayFieldChains, defaultItemJsonObject);
-    applyMutate(ctx, (draft: EditingObject) => {
-        let obj = getFieldObj(draft, arrayFieldChains) as JSONArray;
-        obj.push(defaultItemJsonObject);
-    });
+    console.log('addItem', arrayFieldChains, defaultItemJsonObject);
+
+    let obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
+    obj.push(defaultItemJsonObject);
+
+    editState.afterEditStateChanged();
 }
 
-export function onClearToDefault(ctx: EditContext,
-                                 defaultValue: JSONObject) {
-    applyMutate(ctx, (draft: EditingObject) => {
-        draft.editingJson = defaultValue;
-    });
+
+export function applyNewEditingObject(newEditingObject: JSONObject) {
+    editState.editingObject = newEditingObject;
+    editState.afterEditStateChanged();
 }
 
-function applyMutate(ctx: EditContext, mutate: (draft: EditingObject) => void) {
-    const newEditingObject = produce<EditingObject>(ctx.editingObject, mutate);
-    ctx.setNewEditingObject(newEditingObject);
-}
-
-function getFieldObj(editingObject: EditingObject, fieldChains: (string | number)[]): any {
-    let obj: any = editingObject.editingJson;
+function getFieldObj(editingObject: JSONObject, fieldChains: (string | number)[]): any {
+    let obj: any = editingObject;
     for (let field of fieldChains) {
         obj = obj[field];  // as 只是为了跳过ts类型检查
     }
@@ -151,7 +155,6 @@ function toInt(value: any) {
         return value;
     }
 }
-
 
 function toFloat(value: any) {
     if (typeof value == 'string') {

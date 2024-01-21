@@ -1,11 +1,11 @@
-import ReactFlow, {Background, Controls, Edge, Node, NodeTypes, ReactFlowInstance} from "reactflow";
+import ReactFlow, {Controls, Edge, Node, NodeTypes, ReactFlowInstance} from "reactflow";
 import {Entity} from "./entityModel.ts";
 import {MouseEvent, useCallback, useRef, useState} from "react";
 import {layout} from "./layout.ts";
-import {useLocationData} from "../routes/setting/store.ts";
 import {useQueryClient} from "@tanstack/react-query";
 import {FlowContextMenu, MenuItem, MenuStyle} from "./FlowContextMenu.tsx";
 import {FlowNode} from "./FlowNode.tsx";
+import {useLocationData} from "../routes/setting/store.ts";
 
 
 export type FlowNode = Node<Entity, string>;
@@ -21,12 +21,10 @@ export function FlowGraph({initialNodes, initialEdges, paneMenu, nodeMenuFunc}: 
     paneMenu?: MenuItem[],
     nodeMenuFunc?: (entity: Entity) => MenuItem[],
 }) {
-    // const [nodes, _setNodes, onNodesChange] = useNodesState<Entity>(initialNodes);
-    // const [edges, _setEdges, onEdgesChange] = useEdgesState(initialEdges);
+    const {pathname} = useLocationData();
     const [menuStyle, setMenuStyle] = useState<MenuStyle | undefined>(undefined);
     const [menuItems, setMenuItems] = useState<MenuItem[] | undefined>(undefined);
 
-    const {pathname} = useLocationData();
     const queryClient = useQueryClient();
     const ref = useRef<HTMLDivElement>(null);
 
@@ -85,7 +83,7 @@ export function FlowGraph({initialNodes, initialEdges, paneMenu, nodeMenuFunc}: 
                       }}>
 
 
-        <Background/>
+        {/*<Background/>*/}
         <Controls/>
         {(menuStyle && menuItems) &&
             <FlowContextMenu menuStyle={menuStyle} menuItems={menuItems}/>}
