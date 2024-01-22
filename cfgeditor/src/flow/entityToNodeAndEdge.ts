@@ -2,12 +2,25 @@ import {Entity, EntityBaseField, EntityEdgeType, EntityGraph} from "./entityMode
 import {edgeStorkColor} from "./colors.ts";
 import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
 
-function findField(entity: Entity, name: string) {
-    let fields: EntityBaseField[] | undefined = entity.fields;
-    if (!fields && entity.edit) {
-        fields = entity.edit.editFields;
+function findField({fields, edit}: Entity, name: string) {
+    let fs: EntityBaseField[] | undefined = fields;
+    if (!fs && edit) {
+        fs = edit.editFields;
     }
-    return fields && fields.find(f => f.name == name);
+    const eq = ((f: EntityBaseField) => f.name == name);
+    const f = fs && fs.find(eq);
+    if (f) {
+        return f;
+    }
+
+    if (edit) {
+        for (let {implFields} of edit.editFields) {
+            const f = implFields && implFields.find(eq);
+            if (f) {
+                return f;
+            }
+        }
+    }
 }
 
 export function fillHandles(entityMap: Map<string, Entity>) {
