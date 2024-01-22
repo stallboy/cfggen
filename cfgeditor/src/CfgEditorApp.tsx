@@ -33,10 +33,6 @@ export function CfgEditorApp() {
     const [settingOpen, setSettingOpen] = useState<boolean>(false);
     const [searchOpen, setSearchOpen] = useState<boolean>(false);
 
-    useHotkeys('alt+1', () => navigate(navTo('table', curTableId, curId)));
-    useHotkeys('alt+2', () => navigate(navTo('tableRef', curTableId, curId)));
-    useHotkeys('alt+3', () => navigate(navTo('record', curTableId, curId)));
-    useHotkeys('alt+4', () => navigate(navTo('recordRef', curTableId, curId)));
     useHotkeys('alt+x', () => setSearchOpen(true));
 
 

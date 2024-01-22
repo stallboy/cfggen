@@ -314,8 +314,8 @@ export class EditEntityCreator {
         }
 
         const isValueInteger = isPkInteger(sTable)
-        const options = getIdOptions(sTable, isValueInteger);
         const isEnum = sTable.entryType == 'eEnum'
+        const options = getIdOptions(sTable, isValueInteger && isEnum);
 
         return {options, isValueInteger, isEnum};
     }

@@ -12,6 +12,7 @@ import {Table} from "./routes/table/Table.tsx";
 import {TableRef} from "./routes/table/TableRef.tsx";
 import {Record} from "./routes/record/Record.tsx";
 import {RecordRefRoute} from "./routes/record/RecordRef.tsx";
+import {PathNotFound} from "./routes/PathNotFound.tsx";
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -43,6 +44,10 @@ const router = createBrowserRouter([
                 path: "recordRef/:table/:id",
                 Component: RecordRefRoute,
             },
+            {
+                path: "*",
+                Component: PathNotFound,
+            }
         ]
     }
 ]);

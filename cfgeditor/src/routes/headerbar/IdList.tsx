@@ -1,7 +1,7 @@
 import {DefaultOptionType} from "antd/es/select/index";
 import {Select} from "antd";
 import {getIdOptions, isPkInteger,} from "../table/schemaUtil.ts";
-import {navTo, useLocationData} from "../setting/store.ts";
+import {navTo, store, useLocationData} from "../setting/store.ts";
 import {useNavigate} from "react-router-dom";
 import {STable} from "../table/schemaModel.ts";
 import {memo} from "react";
@@ -12,6 +12,7 @@ export const IdList = memo(function ({curTable}: {
 }) {
     const navigate = useNavigate();
     const {curPage, curTableId, curId} = useLocationData();
+    const {isEditMode} = store;
 
     let options = getIdOptions(curTable);
     let filterSorts = {};
@@ -33,7 +34,7 @@ export const IdList = memo(function ({curTable}: {
                        option!.label.toUpperCase().includes(inputValue.toUpperCase())
                    }
                    onChange={(value, _) => {
-                       navigate(navTo(curPage, curTableId, value));
+                       navigate(navTo(curPage, curTableId, value, isEditMode));
                    }}/>
 
 });

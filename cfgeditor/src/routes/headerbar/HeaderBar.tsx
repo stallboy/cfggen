@@ -20,11 +20,16 @@ export const HeaderBar = memo(function ({schema, curTable, setSettingOpen, setSe
     setSearchOpen: (open: boolean) => void;
 }) {
     const {curPage, curTableId, curId} = useLocationData();
+    const {dragPanel, fix, history, isEditMode} = store;
     const navigate = useNavigate();
     const {t} = useTranslation();
+    useHotkeys('alt+1', () => navigate(navTo('table', curTableId, curId)));
+    useHotkeys('alt+2', () => navigate(navTo('tableRef', curTableId, curId)));
+    useHotkeys('alt+3', () => navigate(navTo('record', curTableId, curId, isEditMode)));
+    useHotkeys('alt+4', () => navigate(navTo('recordRef', curTableId, curId)));
     useHotkeys('alt+c', () => prev());
     useHotkeys('alt+v', () => next());
-    const {dragPanel, fix, history} = store;
+
 
 
     function prev() {
@@ -51,7 +56,7 @@ export const HeaderBar = memo(function ({schema, curTable, setSettingOpen, setSe
 
     function onChangeCurPage(e: RadioChangeEvent) {
         const page = e.target.value;
-        navigate(navTo(page, curTableId, curId));
+        navigate(navTo(page, curTableId, curId, isEditMode));
     }
 
     let options = [

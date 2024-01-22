@@ -32,6 +32,7 @@ export type StoreState = {
     imageSizeScale: number;
 
     history: History;
+    isEditMode: boolean;
 }
 
 const defaultNodeShow: NodeShowType = {
@@ -65,6 +66,7 @@ function readStoreState(): StoreState {
         imageSizeScale: getInt('imageSizeScale', 16),
 
         history: new History(),
+        isEditMode: false,
     };
 }
 
@@ -174,22 +176,22 @@ export function setNodeShow(nodeShow: NodeShowType) {
 }
 
 export function historyPrev(curPage: PageType) {
-    const {history} = store;
+    const {history, isEditMode} = store;
     const newHistory = history.prev();
     store.history = newHistory;
     const cur = newHistory.cur();
     if (cur) {
-        return navTo(curPage, cur.table, cur.id, false, false);
+        return navTo(curPage, cur.table, cur.id, isEditMode, false);
     }
 }
 
 export function historyNext(curPage: PageType) {
-    const {history} = store;
+    const {history, isEditMode} = store;
     const newHistory = history.next();
     store.history = newHistory;
     const cur = newHistory.cur();
     if (cur) {
-        return navTo(curPage, cur.table, cur.id, false, false);
+        return navTo(curPage, cur.table, cur.id, isEditMode, false);
     }
 }
 
@@ -218,7 +220,6 @@ export function setSchema(schema: Schema, curTableId: string, curId: string) {
     return [tableId, id];
 }
 
-
 export function getFixCurIdByTable(schema: Schema, curTableId: string, curId: string) {
     let id = '';
     let table = schema.getSTable(curTableId);
@@ -232,6 +233,10 @@ export function getFixCurIdByTable(schema: Schema, curTableId: string, curId: st
     return id;
 }
 
+export function setIsEditMode(isEditMode: boolean) {
+    store.isEditMode = isEditMode;
+}
+
 export function navTo(curPage: PageType, tableId: string, id: string = '',
                       edit: boolean = false, addHistory: boolean = true) {
     if (addHistory) {
@@ -243,7 +248,7 @@ export function navTo(curPage: PageType, tableId: string, id: string = '',
     }
 
     const url = `/${curPage}/${tableId}/${id}`;
-    return edit ? url + '/edit' : url;
+    return (curPage == 'record' && edit) ? url + '/edit' : url;
 }
 
 

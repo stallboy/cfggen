@@ -6,7 +6,7 @@ import {RecordEntityCreator} from "./recordEntityCreator.ts";
 import {EditEntityCreator} from "./editEntityCreator.ts";
 import {editState, startEditingObject} from "./editingObject.ts";
 import {useTranslation} from "react-i18next";
-import {navTo, store, useLocationData} from "../setting/store.ts";
+import {navTo, setIsEditMode, store, useLocationData} from "../setting/store.ts";
 import {useNavigate, useOutletContext} from "react-router-dom";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {addOrUpdateRecord, fetchRecord} from "../../io/api.ts";
@@ -15,7 +15,7 @@ import {ReactFlowProvider} from "reactflow";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
 import {SchemaTableType} from "../../CfgEditorApp.tsx";
 import {convertNodeAndEdges, fillHandles} from "../../flow/entityToNodeAndEdge.ts";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 
 
 export function Record() {
@@ -34,6 +34,10 @@ export function Record() {
         queryFn: () => fetchRecord(server, curTableId, curId),
         staleTime: 1000 * 10,
     })
+
+    useEffect(() => {
+        setIsEditMode(edit);
+    }, [edit]);
 
     const addOrUpdateRecordMutation = useMutation<RecordEditResult, Error, JSONObject>({
         mutationFn: (jsonObject: JSONObject) => addOrUpdateRecord(server, curTableId, jsonObject),

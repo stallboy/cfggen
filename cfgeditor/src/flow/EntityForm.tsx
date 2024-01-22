@@ -35,11 +35,11 @@ const formItemLayoutWithOutLabel = {
 
 const setOfNumber = new Set<string>(['int', 'long', 'float']);
 
-function filterOption(inputValue: string, option?: EntityEditFieldOption) : boolean{
+function filterOption(inputValue: string, option?: EntityEditFieldOption): boolean {
     return (!!option) && (option.value.toString().includes(inputValue) || option.label.includes(inputValue));
 }
 
-function filterNumberSort(optionA: EntityEditFieldOption, optionB: EntityEditFieldOption) : number{
+function filterNumberSort(optionA: EntityEditFieldOption, optionB: EntityEditFieldOption): number {
     return (optionA.value as number) - (optionB.value as number);
 }
 
@@ -77,7 +77,7 @@ function PrimitiveControl(field: EntityEditField) {
 function StructRefItem(field: EntityEditField) {
     return <Flex key={field.name} gap={'middle'} justify="flex-end"
                  style={{marginBottom: 10, position: 'relative'}}>
-        <Tag color={'blue'}>{makeLabel(field)}</Tag>
+        <Tag color={'blue'}>{field.name}</Tag>
         {field.handleOut && <Handle type='source' position={Position.Right} id={field.name}
                                     style={{
                                         position: 'absolute',
