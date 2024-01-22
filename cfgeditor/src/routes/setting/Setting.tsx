@@ -8,9 +8,10 @@ import {Schema} from "../table/schemaUtil.ts";
 import {KeyShortCut} from "./KeyShortcut.tsx";
 import {TableSetting} from "./TableSetting.tsx";
 import {Operations} from "./Operations.tsx";
+import {memo} from "react";
 
 
-export function Setting({schema, curTable, onToPng}: {
+export const Setting = memo(function Setting({schema, curTable, onToPng}: {
     schema: Schema | undefined;
     curTable: STable | null;
     onToPng: () => void;
@@ -27,4 +28,4 @@ export function Setting({schema, curTable, onToPng}: {
         },
         {key: 'keySetting', label: t('keySetting'), children: <KeyShortCut/>,},
     ]} tabPosition='left'/>;
-}
+});
