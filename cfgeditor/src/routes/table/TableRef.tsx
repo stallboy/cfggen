@@ -8,7 +8,7 @@ import {ReactFlowProvider} from "reactflow";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
 import {useTranslation} from "react-i18next";
 import {SItem} from "./schemaModel.ts";
-import {convertNodeAndEdges, fillHandles} from "../../flow/entityToFlow.ts";
+import {convertNodeAndEdges, fillHandles} from "../../flow/entityToNodeAndEdge.ts";
 
 
 export function TableRef() {

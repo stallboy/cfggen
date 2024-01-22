@@ -2,7 +2,6 @@ import {
     Entity,
     EntityEdgeType,
     EntityEditField,
-    EntityEditFieldOption,
     EntityEditFieldOptions,
     EntitySourceEdge,
     EntityType,
@@ -20,14 +19,6 @@ import {
     onUpdateInterfaceValue
 } from "./editingObject.ts";
 
-
-function getImplNames(sInterface: SInterface): EntityEditFieldOption[] {
-    let impls = [];
-    for (let impl of sInterface.impls) {
-        impls.push({value: impl.name, label: impl.name});
-    }
-    return impls;
-}
 
 const setOfPrimitive = new Set<string>(['bool', 'int', 'long', 'float', 'str', 'text']);
 
@@ -193,7 +184,7 @@ export class EditEntityCreator {
                 type: 'interface',
                 eleType: sInterface.name,
                 value: implName,
-                autoCompleteOptions: {options: getImplNames(sInterface), isValueInteger: false},
+                autoCompleteOptions: getImplNameOptions(sInterface),
                 implFields: this.makeEditFields(impl, obj, fieldChain),
                 interfaceOnChangeImpl: (newImplName: string) => {
                     let newObj: JSONObject;
@@ -322,8 +313,20 @@ export class EditEntityCreator {
             return;
         }
 
-        let options = getIdOptions(sTable);
-        return {options, isValueInteger: isPkInteger(sTable)};
+        const isValueInteger = isPkInteger(sTable)
+        const options = getIdOptions(sTable, isValueInteger);
+        const isEnum = sTable.entryType == 'eEnum'
+
+        return {options, isValueInteger, isEnum};
     }
 
+}
+
+
+function getImplNameOptions(sInterface: SInterface): EntityEditFieldOptions {
+    const impls = [];
+    for (let {name} of sInterface.impls) {
+        impls.push({value: name, label: name});
+    }
+    return {options: impls, isValueInteger: false, isEnum: true};
 }

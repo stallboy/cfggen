@@ -16,7 +16,7 @@ import {MenuItem} from "../../flow/FlowContextMenu.tsx";
 import {FlowGraph} from "../../flow/FlowGraph.tsx";
 import {ReactFlowProvider} from "reactflow";
 import {SchemaTableType} from "../../CfgEditorApp.tsx";
-import {convertNodeAndEdges, fillHandles} from "../../flow/entityToFlow.ts";
+import {convertNodeAndEdges, fillHandles} from "../../flow/entityToNodeAndEdge.ts";
 
 
 export function RecordRef({schema, curTable, curId, refIn, refOutDepth, maxNode, nodeShow}: {

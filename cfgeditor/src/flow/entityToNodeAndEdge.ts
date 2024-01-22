@@ -1,6 +1,6 @@
 import {Entity, EntityBaseField, EntityEdgeType, EntityGraph} from "./entityModel.ts";
 import {edgeStorkColor} from "./colors.ts";
-import {FlowEdge, FlowNode} from "./FlowGraph.tsx";
+import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
 
 function findField(entity: Entity, name: string) {
     let fields: EntityBaseField[] | undefined = entity.fields;
@@ -44,8 +44,8 @@ export function fillHandles(entityMap: Map<string, Entity>) {
 }
 
 export function convertNodeAndEdges(graph: EntityGraph) {
-    const nodes: FlowNode[] = []
-    const edges: FlowEdge[] = []
+    const nodes: EntityNode[] = []
+    const edges: EntityEdge[] = []
 
     let ei = 1;
     for (let entity of graph.entityMap.values()) {
@@ -60,7 +60,7 @@ export function convertNodeAndEdges(graph: EntityGraph) {
             // style: {visibility: 'hidden'},
         })
         for (let edge of entity.sourceEdges) {
-            let fe: FlowEdge = {
+            let fe: EntityEdge = {
                 id: '' + (ei++),
                 source: entity.id,
                 sourceHandle: edge.sourceHandle,

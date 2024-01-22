@@ -8,16 +8,16 @@ import {FlowNode} from "./FlowNode.tsx";
 import {useLocationData} from "../routes/setting/store.ts";
 
 
-export type FlowNode = Node<Entity, string>;
-export type FlowEdge = Edge;
+export type EntityNode = Node<Entity, string>;
+export type EntityEdge = Edge;
 
 const nodeTypes: NodeTypes = {
     node: FlowNode,
 };
 
 export function FlowGraph({initialNodes, initialEdges, paneMenu, nodeMenuFunc}: {
-    initialNodes: FlowNode[],
-    initialEdges: Edge[],
+    initialNodes: EntityNode[],
+    initialEdges: EntityEdge[],
     paneMenu?: MenuItem[],
     nodeMenuFunc?: (entity: Entity) => MenuItem[],
 }) {
@@ -28,7 +28,7 @@ export function FlowGraph({initialNodes, initialEdges, paneMenu, nodeMenuFunc}: 
     const queryClient = useQueryClient();
     const ref = useRef<HTMLDivElement>(null);
 
-    const onContextMenu = useCallback((event: MouseEvent, flowNode?: FlowNode) => {
+    const onContextMenu = useCallback((event: MouseEvent, flowNode?: EntityNode) => {
             if (ref.current == null) {
                 return;
             }
@@ -70,7 +70,7 @@ export function FlowGraph({initialNodes, initialEdges, paneMenu, nodeMenuFunc}: 
                       minZoom={0.1}
                       maxZoom={2}
                       fitView
-                      onNodeContextMenu={(e: MouseEvent, node: FlowNode) => {
+                      onNodeContextMenu={(e: MouseEvent, node: EntityNode) => {
                           onContextMenu(e, node);
                       }}
                       onPaneClick={closeMenu}

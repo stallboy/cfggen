@@ -196,7 +196,7 @@ public class EditorServer extends Generator {
         exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
         exchange.getResponseHeaders().set("Access-Control-Allow-Credentials", "true");
         exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS");
-        exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "X-PINGOTHER, Content-Type");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "*");
         exchange.sendResponseHeaders(200, -1);
         exchange.getRequestBody().close();
     }
@@ -207,7 +207,7 @@ public class EditorServer extends Generator {
         exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
         exchange.getResponseHeaders().set("Access-Control-Allow-Credentials", "true");
         exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS");
-        exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "X-PINGOTHER, Content-Type");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "*");
 
         exchange.sendResponseHeaders(200, jsonBytes.length);
         OutputStream out = exchange.getResponseBody();

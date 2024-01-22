@@ -1,11 +1,11 @@
 import ELK, {ElkNode, ElkExtendedEdge} from 'elkjs';
-import {FlowEdge, FlowNode} from "./FlowGraph.tsx";
+import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
 import {ReactFlowInstance, Viewport, XYPosition} from "reactflow";
 import {QueryClient} from "@tanstack/react-query";
 
 const elk = new ELK();
 
-function nodeToLayoutChild(node: FlowNode): ElkNode {
+function nodeToLayoutChild(node: EntityNode): ElkNode {
     return {
         id: node.id,
         width: node.width!,
@@ -13,7 +13,7 @@ function nodeToLayoutChild(node: FlowNode): ElkNode {
     };
 }
 
-function edgeToLayoutEdge(edge: FlowEdge): ElkExtendedEdge {
+function edgeToLayoutEdge(edge: EntityEdge): ElkExtendedEdge {
     return {
         id: edge.id,
         sources: [edge.source],
@@ -59,7 +59,7 @@ export function layout(flowInstance: ReactFlowInstance, pathname: string, queryC
                 edges: edges.map(edgeToLayoutEdge),
             };
 
-            const flowNodeMap = new Map<string, FlowNode>();
+            const flowNodeMap = new Map<string, EntityNode>();
             nodes.forEach(n => flowNodeMap.set(n.id, n));
 
             return await elk.layout(graph);

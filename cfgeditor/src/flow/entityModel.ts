@@ -47,10 +47,11 @@ export interface FuncSubmitType {
 export interface EntityEditFieldOptions {
     options: EntityEditFieldOption[];
     isValueInteger: boolean;
+    isEnum: boolean;
 }
 
 export interface EntityEditFieldOption {
-    value: string;
+    value: string | number;
     label: string;
 }
 

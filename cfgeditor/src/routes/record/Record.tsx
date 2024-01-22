@@ -14,7 +14,7 @@ import {FlowGraph} from "../../flow/FlowGraph.tsx";
 import {ReactFlowProvider} from "reactflow";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
 import {SchemaTableType} from "../../CfgEditorApp.tsx";
-import {convertNodeAndEdges, fillHandles} from "../../flow/entityToFlow.ts";
+import {convertNodeAndEdges, fillHandles} from "../../flow/entityToNodeAndEdge.ts";
 import {useState} from "react";
 
 
@@ -28,7 +28,6 @@ export function Record() {
     const [t] = useTranslation();
     const {edit, pathname} = useLocationData();
     const [editSeq, setEditSeq] = useState<number>(0);
-
 
     const {isLoading, isError, error, data: recordResult} = useQuery({
         queryKey: ['table', curTableId, curId],
@@ -67,10 +66,6 @@ export function Record() {
         },
     });
 
-    console.log("record rerender")
-
-
-
     if (isLoading) {
         return <Empty> <Spin/> </Empty>;
     }
@@ -104,10 +99,10 @@ export function Record() {
 
         function afterEditStateChanged() {
             setEditSeq(editSeq + 1);
-            console.log("state changed", editSeq+1);
             queryClient.removeQueries({queryKey: ['layout', pathname]});
             queryClient.removeQueries({queryKey: ['viewport', pathname]});
         }
+
         //这是非纯函数，escape hatch，用useRef也能做，这里用全局变量
         startEditingObject(recordResult, afterEditStateChanged, submitEditingObject);
         let creator = new EditEntityCreator(entityMap, schema, curTable, curId);
@@ -185,15 +180,12 @@ export function Record() {
     }
     const {nodes, edges} = convertNodeAndEdges({entityMap, nodeShow});
 
-    console.log('seq', editSeq, ", nodes", nodes.length);
-
-    return <ReactFlowProvider>
-        <FlowGraph key={pathname + (isEditing ? ',' + editSeq : '')}
-                   initialNodes={nodes}
+    // 这个key的位置一定要放到Provider这里，要不然ReactFlow的缓存机制让人找bug抓狂
+    return <ReactFlowProvider key={pathname + (isEditing ? ',' + editSeq : '')}>
+        <FlowGraph initialNodes={nodes}
                    initialEdges={edges}
                    paneMenu={paneMenu}
-                   nodeMenuFunc={nodeMenuFunc}
-        />
+                   nodeMenuFunc={nodeMenuFunc}/>
     </ReactFlowProvider>
 
 

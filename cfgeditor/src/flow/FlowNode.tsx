@@ -12,8 +12,7 @@ const {Text} = Typography;
 export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
     const {fields, brief, edit, handleIn, handleOut, label} = nodeProps.data;
     const color: string = getNodeBackgroundColor(nodeProps.data);
-    const width = edit ? 360 : 240;
-
+    const width = edit ? 280 : 240;
 
     return <Flex vertical gap={'small'} className='flowNode' style={{width: width, backgroundColor: color}}>
         <Text strong style={{fontSize: 18, color: "#fff"}}>

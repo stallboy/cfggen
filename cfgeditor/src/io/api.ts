@@ -23,10 +23,9 @@ export async function fetchRecordRefs(server: string, tableId: string, id: strin
 }
 
 export async function addOrUpdateRecord(server: string, tableId: string, editingObject: JSONObject) {
-
     let url = `http://${server}/recordAddOrUpdate?table=${tableId}`;
     const response = await axios.post<RecordEditResult>(url, editingObject, {
-        method: 'post',
+        method: 'POST',
         headers: {
             cache: "no-cache",
             mode: "cors",
@@ -41,10 +40,9 @@ export async function addOrUpdateRecord(server: string, tableId: string, editing
 
 
 export async function deleteRecord(server: string, tableId: string, id: string) {
-
     let url = `http://${server}/recordDelete?table=${tableId}&id=${id}`;
     const response = await axios.post<RecordEditResult>(url, null, {
-        method: 'post',
+        method: 'POST',
         headers: {
             cache: "no-cache",
             mode: "cors",

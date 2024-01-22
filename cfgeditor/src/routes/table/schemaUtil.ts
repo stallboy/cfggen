@@ -342,11 +342,11 @@ export function isPkInteger(sTable: STable) {
     return field.type == 'int' || field.type == 'long';
 }
 
-export function getIdOptions(sTable: STable) {
+export function getIdOptions(sTable: STable, valueToInteger: boolean = false) {
     let options = [];
-    for (let id of sTable.recordIds) {
-        let label = (id.title && id.title != id.id) ? `${id.id}-${id.title}` : id.id;
-        options.push({label, value: id.id});
+    for (let {id, title} of sTable.recordIds) {
+        let label = (title && title != id) ? `${id}-${title}` : id;
+        options.push({label, value: valueToInteger ? parseInt(id) : id});
     }
     return options;
 }

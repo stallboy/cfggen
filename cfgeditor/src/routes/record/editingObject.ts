@@ -40,22 +40,14 @@ export function startEditingObject(recordResult: RecordResult,
     editState.table = newTable;
     editState.id = newId;
     editState.editingObject = newEditingObject;
-    console.log("new editObject")
 }
 
-export function onDeleteItemFromArray(deleteIndex: number,
-                                      arrayFieldChains: (string | number)[]) {
-    console.log('delItem', arrayFieldChains, deleteIndex);
 
-    let obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
-    obj.splice(deleteIndex, 1);
-    editState.afterEditStateChanged();
-}
 
 export function onUpdateFormValues(schema: Schema,
                                    values: any,
                                    fieldChains: (string | number)[]) {
-    console.log('formChange', fieldChains, values);
+    // console.log('formChange', fieldChains, values);
 
     let obj = getFieldObj(editState.editingObject, fieldChains);
     let name = obj['$type'] as string;
@@ -88,7 +80,7 @@ export function onUpdateFormValues(schema: Schema,
 
 export function onUpdateInterfaceValue(jsonObject: JSONObject,
                                        fieldChains: (string | number)[]) {
-    console.log('updateInterface', fieldChains, jsonObject);
+    // console.log('updateInterface', fieldChains, jsonObject);
 
     let obj = getFieldObj(editState.editingObject, fieldChains.slice(0, fieldChains.length - 1));
     obj[fieldChains[fieldChains.length - 1]] = jsonObject;
@@ -99,14 +91,21 @@ export function onUpdateInterfaceValue(jsonObject: JSONObject,
 
 export function onAddItemForArray(defaultItemJsonObject: JSONObject,
                                   arrayFieldChains: (string | number)[]) {
-    console.log('addItem', arrayFieldChains, defaultItemJsonObject);
+    // console.log('addItem', arrayFieldChains, defaultItemJsonObject);
 
     let obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
     obj.push(defaultItemJsonObject);
-
     editState.afterEditStateChanged();
 }
 
+export function onDeleteItemFromArray(deleteIndex: number,
+                                      arrayFieldChains: (string | number)[]) {
+    // console.log('delItem', arrayFieldChains, deleteIndex);
+
+    let obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
+    obj.splice(deleteIndex, 1);
+    editState.afterEditStateChanged();
+}
 
 export function applyNewEditingObject(newEditingObject: JSONObject) {
     editState.editingObject = newEditingObject;

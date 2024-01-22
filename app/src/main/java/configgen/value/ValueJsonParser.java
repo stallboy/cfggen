@@ -69,7 +69,9 @@ public class ValueJsonParser {
                 // not throw exception, but use default value
                 // make it easy to add field in future
                 fieldValue = ValueDefault.of(fs.type());
-                Logger.log("%s %s[%s] not found ", fromFileName, subStructural.fullName(), fs.name());
+                if (Logger.isWarningEnabled()){
+                    Logger.log("%s %s[%s] not found ", fromFileName, subStructural.fullName(), fs.name());
+                }
             }
             vStruct.values().add(fieldValue);
         }
