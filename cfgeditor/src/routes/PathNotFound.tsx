@@ -11,5 +11,4 @@ export function PathNotFound() {
             Return to home page
         </Link>
     </Flex>
-
 }

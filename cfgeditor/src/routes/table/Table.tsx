@@ -8,12 +8,13 @@ import {ReactFlowProvider} from "reactflow";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
 import {useTranslation} from "react-i18next";
 import {convertNodeAndEdges, fillHandles} from "../../flow/entityToNodeAndEdge.ts";
+import {Schema} from "./schemaUtil.ts";
 
 
 export function Table() {
     const {schema, curTable} = useOutletContext<SchemaTableType>();
     const {maxImpl, nodeShow} = store;
-    const {pathname} = useLocationData();
+    const {pathname, curId} = useLocationData();
     const {t} = useTranslation();
     const navigate = useNavigate();
 
@@ -27,7 +28,7 @@ export function Table() {
         label: curTable.name + "\n" + t('tableRef'),
         key: 'tableRef',
         handler() {
-            navigate(navTo('tableRef', curTable.name));
+            navigate(navTo('tableRef', curTable.name, getDefaultIdInTable(schema, curTable.name, curId)));
         }
     }];
 
@@ -39,7 +40,7 @@ export function Table() {
                 label: userData.table + "\n" + t('table'),
                 key: `entityTable`,
                 handler() {
-                    navigate(navTo('table', userData.table));
+                    navigate(navTo('table', userData.table, getDefaultIdInTable(schema, userData.table, curId)));
                 }
             });
         }
@@ -48,7 +49,7 @@ export function Table() {
             label: userData.table + "\n" + t('tableRef'),
             key: `entityTableRef`,
             handler() {
-                navigate(navTo('tableRef', userData.table));
+                navigate(navTo('tableRef', userData.table, getDefaultIdInTable(schema, userData.table, curId)));
             }
         });
         return mm;
@@ -64,4 +65,13 @@ export function Table() {
                    nodeMenuFunc={nodeMenuFunc}
         />
     </ReactFlowProvider>
+}
+
+
+export function getDefaultIdInTable(schema: Schema, tableId: string, curId: string) {
+    const sTable = schema.getSTable(tableId);
+    if (sTable && sTable.recordIds.length > 0) {
+        return sTable.recordIds[0].id;
+    }
+    return curId;
 }

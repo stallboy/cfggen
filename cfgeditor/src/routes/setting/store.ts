@@ -237,7 +237,7 @@ export function setIsEditMode(isEditMode: boolean) {
     store.isEditMode = isEditMode;
 }
 
-export function navTo(curPage: PageType, tableId: string, id: string = '',
+export function navTo(curPage: PageType, tableId: string, id: string,
                       edit: boolean = false, addHistory: boolean = true) {
     if (addHistory) {
         const {history} = store;
@@ -247,10 +247,20 @@ export function navTo(curPage: PageType, tableId: string, id: string = '',
         }
     }
 
+    localStorage.setItem('curPage', curPage);
+    localStorage.setItem('curTableId', tableId);
+    localStorage.setItem('curId', id);
+
     const url = `/${curPage}/${tableId}/${id}`;
     return (curPage == 'record' && edit) ? url + '/edit' : url;
 }
 
+export function getLastNavToInLocalStore() {
+    const curPage = getEnumStr<PageType>('curPage', pageEnums, 'table');
+    const tableId = getStr('curTableId', '');
+    const id = getStr('curId', '');
+    return navTo(curPage, tableId, id);
+}
 
 export function useLocationData() {
     const location = useLocation();

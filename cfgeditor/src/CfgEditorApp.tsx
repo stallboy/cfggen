@@ -1,4 +1,4 @@
-import {useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {Alert, App, Drawer, Flex, Form, Input, Modal,} from "antd";
 import {saveAs} from 'file-saver';
 import {RecordRef} from "./routes/record/RecordRef.tsx";
@@ -9,12 +9,18 @@ import {DraggablePanel} from "@ant-design/pro-editor";
 import {toBlob} from "html-to-image";
 import {Setting} from "./routes/setting/Setting.tsx";
 import {Schema} from "./routes/table/schemaUtil.ts";
-import {setServer, store, useLocationData} from "./routes/setting/store.ts";
-import {Outlet} from "react-router-dom";
+import {
+    getLastNavToInLocalStore,
+    setServer,
+    store,
+    useLocationData
+} from "./routes/setting/store.ts";
+import {Outlet, useNavigate} from "react-router-dom";
 import {STable} from "./routes/table/schemaModel.ts";
 import {fetchSchema} from "./io/api.ts";
 import {useQuery} from "@tanstack/react-query";
 import {HeaderBar} from "./routes/headerbar/HeaderBar.tsx";
+
 
 
 export type SchemaTableType = { schema: Schema, curTable: STable };
@@ -30,6 +36,7 @@ export function CfgEditorApp() {
     const {curPage, curTableId, curId} = useLocationData();
     const [settingOpen, setSettingOpen] = useState<boolean>(false);
     const [searchOpen, setSearchOpen] = useState<boolean>(false);
+    const navigate = useNavigate();
 
     useHotkeys('alt+x', () => setSearchOpen(true));
 
@@ -42,6 +49,12 @@ export function CfgEditorApp() {
         queryFn: () => fetchSchema(server),
         staleTime: 1000 * 60 * 5,
     })
+
+    useEffect(() => {
+        if (schema && curTableId.length == 0 ){
+            navigate(getLastNavToInLocalStore());
+        }
+    }, [schema]);
 
     let curTable = schema ? schema.getSTable(curTableId) : null;
 
@@ -87,12 +100,10 @@ export function CfgEditorApp() {
         })
     }
 
-
     let content;
-    if (schema == null || curTable == null) {
+    if ( (!schema) || curTable == null) {
         content = <></>
     } else {
-
         let dragPage = null;
         if (dragPanel == 'recordRef') {
             dragPage = <RecordRef schema={schema}
