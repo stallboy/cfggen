@@ -80,7 +80,7 @@ export function layout(flowInstance: ReactFlowInstance, pathname: string, queryC
                 // n.style = undefined;
             })
             // edges.forEach(e => {
-                // e.style = {...e.style, visibility: undefined};
+            // e.style = {...e.style, visibility: undefined};
             // })
             flowInstance.setNodes(nodes);
             flowInstance.setEdges(edges);

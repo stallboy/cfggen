@@ -13,6 +13,7 @@ import {TableRef} from "./routes/table/TableRef.tsx";
 import {Record} from "./routes/record/Record.tsx";
 import {RecordRefRoute} from "./routes/record/RecordRef.tsx";
 import {PathNotFound} from "./routes/PathNotFound.tsx";
+// import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -65,6 +66,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <App>
                 <QueryClientProvider client={queryClient}>
                     <RouterProvider router={router}/>
+                    {/*<ReactQueryDevtools initialIsOpen={false} />*/}
                 </QueryClientProvider>
             </App>
         </ConfigProvider>

@@ -1,4 +1,4 @@
-import ReactFlow, {Controls, Edge, Node, NodeTypes, ReactFlowInstance} from "reactflow";
+import ReactFlow, {Background, Controls, Edge, Node, NodeTypes, ReactFlowInstance} from "reactflow";
 import {Entity} from "./entityModel.ts";
 import {MouseEvent, useCallback, useRef, useState} from "react";
 import {layout} from "./layout.ts";
@@ -59,10 +59,6 @@ export function FlowGraph({initialNodes, initialEdges, paneMenu, nodeMenuFunc}: 
     const closeMenu = useCallback(() => setMenuStyle(undefined), [setMenuStyle]);
 
     return <ReactFlow ref={ref}
-        // nodes={nodes}
-        // onNodesChange={onNodesChange}
-        // edges={edges}
-        // onEdgesChange={onEdgesChange}
                       defaultNodes={initialNodes}
                       defaultEdges={initialEdges}
                       nodeTypes={nodeTypes}
@@ -83,7 +79,7 @@ export function FlowGraph({initialNodes, initialEdges, paneMenu, nodeMenuFunc}: 
                       }}>
 
 
-        {/*<Background/>*/}
+        <Background/>
         <Controls/>
         {(menuStyle && menuItems) &&
             <FlowContextMenu menuStyle={menuStyle} menuItems={menuItems}/>}

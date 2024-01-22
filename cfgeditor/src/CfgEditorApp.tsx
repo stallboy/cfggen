@@ -4,14 +4,13 @@ import {saveAs} from 'file-saver';
 import {RecordRef} from "./routes/record/RecordRef.tsx";
 import {SearchValue} from "./routes/search/SearchValue.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
-import {RecordEditResult} from "./routes/record/recordModel.ts";
 import {useTranslation} from "react-i18next";
 import {DraggablePanel} from "@ant-design/pro-editor";
 import {toBlob} from "html-to-image";
 import {Setting} from "./routes/setting/Setting.tsx";
-import {newSchema, Schema} from "./routes/table/schemaUtil.ts";
-import {navTo, setSchema, setServer, store, useLocationData} from "./routes/setting/store.ts";
-import {Outlet, useNavigate} from "react-router-dom";
+import {Schema} from "./routes/table/schemaUtil.ts";
+import {setServer, store, useLocationData} from "./routes/setting/store.ts";
+import {Outlet} from "react-router-dom";
 import {STable} from "./routes/table/schemaModel.ts";
 import {fetchSchema} from "./io/api.ts";
 import {useQuery} from "@tanstack/react-query";
@@ -29,7 +28,6 @@ export function CfgEditorApp() {
     } = store;
 
     const {curPage, curTableId, curId} = useLocationData();
-    const navigate = useNavigate();
     const [settingOpen, setSettingOpen] = useState<boolean>(false);
     const [searchOpen, setSearchOpen] = useState<boolean>(false);
 
@@ -61,46 +59,6 @@ export function CfgEditorApp() {
 
     function handleModalOk() {
         onConnectServer(server);
-    }
-
-    function onDeleteRecord() {
-        let url = `http://${server}/recordDelete?table=${curTableId}&id=${curId}`;
-        const postData = async () => {
-            const response = await fetch(url, {
-                method: 'POST',
-                cache: "no-cache",
-                mode: "cors",
-                credentials: "same-origin",
-                redirect: "follow",
-                referrerPolicy: "no-referrer"
-            });
-            const editResult: RecordEditResult = await response.json();
-            if (editResult.resultCode == 'deleteOk') {
-                console.log(editResult);
-                const schemaNew = newSchema(schema!!, editResult.table, editResult.recordIds)
-                const [tableId, id] = setSchema(schemaNew, curTableId, curId);
-                navigate(navTo(curPage, tableId, id));
-
-                notification.info({
-                    message: `post ${url} ${editResult.resultCode}`,
-                    placement: 'topRight',
-                    duration: 3
-                });
-            } else {
-                notification.warning({
-                    message: `post ${url} ${editResult.resultCode}`,
-                    placement: 'topRight',
-                    duration: 4
-                });
-            }
-        }
-
-        postData().catch((err) => {
-            notification.error({
-                message: `post ${url} err: ${err.toString()}`,
-                placement: 'topRight', duration: 4
-            });
-        });
     }
 
     function onToPng() {
@@ -182,9 +140,9 @@ export function CfgEditorApp() {
     }
 
 
-    return <div >
+    return <div>
         <HeaderBar schema={schema} curTable={curTable}
-               setSettingOpen={setSettingOpen} setSearchOpen={setSearchOpen}/>
+                   setSettingOpen={setSettingOpen} setSearchOpen={setSearchOpen}/>
 
         {content}
 
@@ -206,12 +164,7 @@ export function CfgEditorApp() {
         </Modal>
 
         <Drawer title="setting" placement="left" onClose={onSettingClose} open={settingOpen} size='large'>
-            <Setting  {...{
-                schema, curTableId, curId, curPage,
-                curTable, onDeleteRecord,
-                onConnectServer,
-                onToPng,
-            }}/>
+            <Setting schema={schema} curTable={curTable} onToPng={onToPng}/>
         </Drawer>
 
         <Drawer title="search" placement="left" onClose={onSearchClose} open={searchOpen} size='large'>
