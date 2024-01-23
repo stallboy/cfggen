@@ -1,20 +1,13 @@
 import {useEffect, useRef, useState} from "react";
-import {Alert, App, Drawer, Flex, Form, Input, Modal,} from "antd";
-import {saveAs} from 'file-saver';
+import {Alert, Drawer, Flex, Form, Input, Modal,} from "antd";
 import {RecordRef} from "./routes/record/RecordRef.tsx";
 import {SearchValue} from "./routes/search/SearchValue.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
 import {useTranslation} from "react-i18next";
 import {DraggablePanel} from "@ant-design/pro-editor";
-import {toBlob} from "html-to-image";
 import {Setting} from "./routes/setting/Setting.tsx";
 import {Schema} from "./routes/table/schemaUtil.ts";
-import {
-    getLastNavToInLocalStore,
-    setServer,
-    store,
-    useLocationData
-} from "./routes/setting/store.ts";
+import {getLastNavToInLocalStore, setServer, store, useLocationData} from "./routes/setting/store.ts";
 import {Outlet, useNavigate} from "react-router-dom";
 import {STable} from "./routes/table/schemaModel.ts";
 import {fetchSchema} from "./io/api.ts";
@@ -29,18 +22,15 @@ export function CfgEditorApp() {
     const {
         server, fix, dragPanel,
         recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow,
-        imageSizeScale
     } = store;
 
-    const {curPage, curTableId, curId} = useLocationData();
+    const {curTableId, curId} = useLocationData();
     const [settingOpen, setSettingOpen] = useState<boolean>(false);
     const [searchOpen, setSearchOpen] = useState<boolean>(false);
     const navigate = useNavigate();
 
     useHotkeys('alt+x', () => setSearchOpen(true));
 
-
-    const {notification} = App.useApp();
     const {t} = useTranslation();
     const ref = useRef<HTMLDivElement>(null)
     const {isLoading, isError, error, data: schema} = useQuery({
@@ -50,7 +40,7 @@ export function CfgEditorApp() {
     })
 
     useEffect(() => {
-        if (schema && curTableId.length == 0 ){
+        if (schema && curTableId.length == 0) {
             navigate(getLastNavToInLocalStore());
         }
     }, [schema]);
@@ -73,34 +63,9 @@ export function CfgEditorApp() {
         onConnectServer(server);
     }
 
-    function onToPng() {
-        if (ref.current === null) {
-            return
-        }
-
-        let w = ref.current.offsetWidth * imageSizeScale;
-        let h = ref.current.offsetHeight * imageSizeScale;
-
-        toBlob(ref.current, {cacheBust: true, canvasWidth: w, canvasHeight: h, pixelRatio: 1})
-            .then((blob) => {
-                if (blob) {
-                    let fn;
-                    if (curPage.startsWith("table")) {
-                        fn = `${curPage}_${curTableId}.png`;
-                    } else {
-                        fn = `${curPage}_${curTableId}_${curId}.png`;
-                    }
-                    saveAs(blob, fn);
-                    notification.info({message: "save png to " + fn, duration: 3});
-                }
-            }).catch((err) => {
-            notification.error({message: "save png failed: limit the max node count", duration: 3});
-            console.log(err)
-        })
-    }
 
     let content;
-    if ( (!schema) || curTable == null) {
+    if ((!schema) || curTable == null) {
         content = <></>
     } else {
         let dragPage = null;
@@ -149,7 +114,6 @@ export function CfgEditorApp() {
         }
     }
 
-
     return <div>
         <HeaderBar schema={schema} curTable={curTable}
                    setSettingOpen={setSettingOpen} setSearchOpen={setSearchOpen}/>
@@ -174,14 +138,12 @@ export function CfgEditorApp() {
         </Modal>
 
         <Drawer title="setting" placement="left" onClose={onSettingClose} open={settingOpen} size='large'>
-            <Setting schema={schema} curTable={curTable} onToPng={onToPng}/>
+            <Setting schema={schema} curTable={curTable} flowRef={ref}/>
         </Drawer>
 
         <Drawer title="search" placement="left" onClose={onSearchClose} open={searchOpen} size='large'>
             <SearchValue/>
         </Drawer>
-
     </div>;
-
 }
 

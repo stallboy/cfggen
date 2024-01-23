@@ -1,6 +1,6 @@
-import {memo} from "react";
+import {memo, RefObject} from "react";
 import {useTranslation} from "react-i18next";
-import {App, Button, Divider, Form, Input, InputNumber, Radio, Space} from "antd";
+import {App, Button, Divider, Form, Input, InputNumber, Radio} from "antd";
 import {
     DragPanelType,
     navTo,
@@ -18,16 +18,18 @@ import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {RecordEditResult} from "../record/recordModel.ts";
 import {deleteRecord} from "../../io/api.ts";
 import {useNavigate} from "react-router-dom";
+import {toBlob} from "html-to-image";
+import {saveAs} from "file-saver";
 
 const formLayout = {
     labelCol: {xs: {span: 24}, sm: {span: 6},},
     wrapperCol: {xs: {span: 24}, sm: {span: 18},},
 };
 
-export const Operations = memo(function Operations({schema, curTable, onToPng}: {
+export const Operations = memo(function Operations({schema, curTable, flowRef}: {
     schema: Schema | undefined;
     curTable: STable | null;
-    onToPng: () => void;
+    flowRef: RefObject<HTMLDivElement>;
 }) {
     const {curPage} = useLocationData();
     const {t} = useTranslation();
@@ -72,31 +74,40 @@ export const Operations = memo(function Operations({schema, curTable, onToPng}: 
         },
     });
 
+    function onToPng() {
+        const {current} = flowRef;
+        if (current === null) {
+            return
+        }
 
-    let deleteRecordButton;
-    if (schema && curTable && schema.isEditable && curTable.isEditable) {
-        deleteRecordButton = <Button type="primary" danger onClick={() => deleteRecordMutation.mutate()}>
-            <CloseOutlined/>{t('deleteCurRecord')}
-        </Button>
-    }
+        let w = current.offsetWidth * imageSizeScale;
+        let h = current.offsetHeight * imageSizeScale;
 
-    let addFixButton;
-    let removeFixButton;
-    if (schema && curTable && curPage == 'recordRef') {
-        addFixButton = <Form.Item wrapperCol={{offset: 10}}>
-            <Button type="primary" onClick={() => setFix(curTableId, curId)}>
-                {t('addFix')}
-            </Button>
-        </Form.Item>
-    }
-    if (fix != null) {
-        removeFixButton = <Form.Item wrapperCol={{offset: 10}}>
-            <Button type="primary" onClick={setFixNull}>
-                {t('removeFix')}
-            </Button>
-        </Form.Item>
-    }
+        toBlob(current, {
+            cacheBust: true, canvasWidth: w, canvasHeight: h, pixelRatio: 1,
+            filter: ({classList}: HTMLElement) => {
 
+                return (!classList) ||
+                    (!classList.contains('react-flow__attribution') &&
+                        !classList.contains('react-flow__controls') &&
+                        !classList.contains('react-flow__background'));
+            }
+        }).then((blob) => {
+            if (blob) {
+                let fn;
+                if (curPage.startsWith("table")) {
+                    fn = `${curPage}_${curTableId}.png`;
+                } else {
+                    fn = `${curPage}_${curTableId}_${curId}.png`;
+                }
+                saveAs(blob, fn);
+                notification.info({message: "save png to " + fn, duration: 3});
+            }
+        }).catch((err) => {
+            notification.error({message: "save png failed: limit the max node count", duration: 3});
+            console.log(err)
+        })
+    }
 
     return <Form {...formLayout} layout={'horizontal'}
                  initialValues={{imageSizeScale, server}}>
@@ -118,8 +129,20 @@ export const Operations = memo(function Operations({schema, curTable, onToPng}: 
                 {label: t('none'), value: 'none'}]}/>
         </Form.Item>
 
-        {addFixButton}
-        {removeFixButton}
+        {(schema && curTable && curPage == 'recordRef') &&
+            <Form.Item wrapperCol={{offset: 6}}>
+                <Button type="primary" onClick={() => setFix(curTableId, curId)}>
+                    {t('addFix')}
+                </Button>
+            </Form.Item>
+        }
+        {(fix != null) &&
+            <Form.Item wrapperCol={{offset: 10}}>
+                <Button type="primary" onClick={setFixNull}>
+                    {t('removeFix')}
+                </Button>
+            </Form.Item>
+        }
 
 
         <Form.Item label={t('curServer')}>
@@ -130,8 +153,12 @@ export const Operations = memo(function Operations({schema, curTable, onToPng}: 
         </Form.Item>
 
         <Divider/>
-        <Space>
-            {deleteRecordButton}
-        </Space>
+
+        {(schema && curTable && schema.isEditable && curTable.isEditable) &&
+            <Button type="primary" danger onClick={() => deleteRecordMutation.mutate()}>
+                <CloseOutlined/>{t('deleteCurRecord')}
+            </Button>
+        }
+
     </Form>;
 });

@@ -44,11 +44,11 @@
     },
     "windows": [
       {
-        "fullscreen": false,
-        "height": 600,
+        "fullscreen": true,
+        "height": 768,
         "resizable": true,
         "title": "cfgeditor",
-        "width": 800
+        "width": 1024
       }
     ]
   }
