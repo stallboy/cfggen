@@ -22,7 +22,6 @@ import {useQuery} from "@tanstack/react-query";
 import {HeaderBar} from "./routes/headerbar/HeaderBar.tsx";
 
 
-
 export type SchemaTableType = { schema: Schema, curTable: STable };
 
 
