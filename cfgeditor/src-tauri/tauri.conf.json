@@ -44,7 +44,7 @@
     },
     "windows": [
       {
-        "fullscreen": true,
+        "fullscreen": false,
         "height": 768,
         "resizable": true,
         "title": "cfgeditor",
