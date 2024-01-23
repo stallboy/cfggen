@@ -13,14 +13,18 @@ export interface MenuItem {
     handler: () => void;
 }
 
-export function FlowContextMenu({menuStyle, menuItems}: {
+export function FlowContextMenu({menuStyle, menuItems, closeMenu}: {
     menuStyle: MenuStyle,
     menuItems: MenuItem[],
+    closeMenu: () => void,
 }) {
 
     return (
         <Flex vertical className='contextMenu' style={{...menuStyle}}>
-            {menuItems.map(({handler, key, label}) => <Button key={key} onClick={handler}>{label}</Button>)}
+            {menuItems.map(({handler, key, label}) => <Button key={key} onClick={() => {
+                handler();
+                closeMenu();
+            }}>{label}</Button>)}
         </Flex>
 
     );

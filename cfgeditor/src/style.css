@@ -31,7 +31,7 @@ mark {
 .contextMenu {
     border-color: #2986ff;
     border-style: solid;
-    position: absolute;
+    position: fixed;
     z-index: 10;
 }
 

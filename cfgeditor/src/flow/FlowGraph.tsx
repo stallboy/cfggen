@@ -1,6 +1,6 @@
 import ReactFlow, {Background, Controls, Edge, Node, NodeTypes, ReactFlowInstance} from "reactflow";
 import {Entity} from "./entityModel.ts";
-import {MouseEvent, useCallback, useRef, useState} from "react";
+import {MouseEvent, useCallback, useState} from "react";
 import {layout} from "./layout.ts";
 import {useQueryClient} from "@tanstack/react-query";
 import {FlowContextMenu, MenuItem, MenuStyle} from "./FlowContextMenu.tsx";
@@ -23,67 +23,49 @@ export function FlowGraph({pathname, initialNodes, initialEdges, paneMenu, nodeM
 }) {
     const [menuStyle, setMenuStyle] = useState<MenuStyle | undefined>(undefined);
     const [menuItems, setMenuItems] = useState<MenuItem[] | undefined>(undefined);
-
     const queryClient = useQueryClient();
-    const ref = useRef<HTMLDivElement>(null);
 
-    const onContextMenu = useCallback((event: MouseEvent, flowNode?: EntityNode) => {
-            if (ref.current == null) {
-                return;
-            }
-            // Prevent native context menu from showing
+    const onPaneContextMenu = useCallback((event: MouseEvent) => {
             event.preventDefault();
-
-            // Calculate position of the context menu. We want to make sure it
-            // doesn't get positioned off-screen.
-            const pane = ref.current.getBoundingClientRect();
-            const {offsetX, offsetY} = event.nativeEvent;
-            setMenuStyle({
-                top: offsetY < pane.height - 200 ? offsetY - 30 : undefined,
-                left: offsetX < pane.width - 200 ? offsetX - 50 : undefined,
-                right: offsetX >= pane.width - 200 ? (pane.width - offsetX - 50) : undefined,
-                bottom: offsetY >= pane.height - 200 ? pane.height - offsetY - 30 : undefined,
-            });
-
-            if (flowNode) {
-                setMenuItems(nodeMenuFunc ? nodeMenuFunc(flowNode.data) : undefined);
-            } else {
-                setMenuItems(paneMenu);
-            }
-
+            setMenuStyle({top: event.clientY - 30, left: event.clientX - 30,});
+            setMenuItems(paneMenu);
         },
-        [nodeMenuFunc, paneMenu, setMenuStyle, setMenuItems],
+        [paneMenu, setMenuStyle, setMenuItems],
     );
+    const onNodeContextMenu = useCallback((event: MouseEvent, flowNode: EntityNode) => {
+            event.preventDefault();           // Prevent native context menu from showing
+            setMenuStyle({top: event.clientY - 30, left: event.clientX - 30,});
+            setMenuItems(nodeMenuFunc ? nodeMenuFunc(flowNode.data) : undefined);
+        },
+        [nodeMenuFunc, setMenuStyle, setMenuItems],
+    );
+    const closeMenu = useCallback(() => {
+        setMenuStyle(undefined)
+    }, [setMenuStyle]);
 
-    // Close the context menu if it's open whenever the window is clicked.
-    const closeMenu = useCallback(() => setMenuStyle(undefined), [setMenuStyle]);
+    const onInit = useCallback((instance: ReactFlowInstance) => {
+        layout(instance, pathname, queryClient)
+    }, [pathname, queryClient]);
 
-    return <ReactFlow ref={ref}
-                      defaultNodes={initialNodes}
-                      defaultEdges={initialEdges}
-                      nodeTypes={nodeTypes}
-                      onInit={(instance: ReactFlowInstance) => layout(instance, pathname, queryClient)}
-                      minZoom={0.1}
-                      maxZoom={2}
-                      fitView
-                      onNodeContextMenu={(e: MouseEvent, node: EntityNode) => {
-                          onContextMenu(e, node);
-                      }}
-                      onPaneClick={closeMenu}
-                      onNodeClick={closeMenu}
-                      onMoveStart={closeMenu}
-                      onNodeDragStart={closeMenu}
-
-                      onPaneContextMenu={(e: MouseEvent) => {
-                          onContextMenu(e);
-                      }}>
-
-
-        <Background/>
-        <Controls/>
+    return <>
+        <ReactFlow defaultNodes={initialNodes}
+                   defaultEdges={initialEdges}
+                   nodeTypes={nodeTypes}
+                   onInit={onInit}
+                   minZoom={0.1}
+                   maxZoom={2}
+                   fitView
+                   onNodeContextMenu={onNodeContextMenu}
+                   onPaneClick={closeMenu}
+                   onNodeClick={closeMenu}
+                   onMoveStart={closeMenu}
+                   onNodeDragStart={closeMenu}
+                   onPaneContextMenu={onPaneContextMenu}>
+            <Background/>
+            <Controls/>
+        </ReactFlow>
         {(menuStyle && menuItems) &&
-            <FlowContextMenu menuStyle={menuStyle} menuItems={menuItems}/>}
-    </ReactFlow>
-        ;
+            <FlowContextMenu menuStyle={menuStyle} menuItems={menuItems} closeMenu={closeMenu}/>}
+    </>;
 
 }
