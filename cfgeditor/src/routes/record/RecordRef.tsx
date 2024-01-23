@@ -31,7 +31,7 @@ export function RecordRef({schema, curTable, curId, refIn, refOutDepth, maxNode,
     const {server, query} = store;
     const [t] = useTranslation();
     const navigate = useNavigate();
-    const {pathname} = useLocationData();
+
 
     const {isLoading, isError, error, data: recordRefResult} = useQuery({
         queryKey: ['tableRef', curTable.id, curId, refOutDepth, maxNode, refIn],
@@ -55,6 +55,7 @@ export function RecordRef({schema, curTable, curId, refIn, refOutDepth, maxNode,
     if (recordRefResult.resultCode != 'ok') {
         return <Result status={'error'} title={recordRefResult.resultCode}/>;
     }
+
 
     const entityMap = new Map<string, Entity>();
     const hasContainEnum = nodeShow.containEnum || curTable.entryType == 'eEnum';
@@ -103,9 +104,10 @@ export function RecordRef({schema, curTable, curId, refIn, refOutDepth, maxNode,
         return mm;
     }
 
+    const pathname = `/tableRef/${curTable.name}/${curId}`;
     const {nodes, edges} = convertNodeAndEdges({entityMap, nodeShow, query});
-    return <ReactFlowProvider>
-        <FlowGraph key={pathname}
+    return <ReactFlowProvider key={pathname}>
+        <FlowGraph pathname={pathname}
                    initialNodes={nodes}
                    initialEdges={edges}
                    paneMenu={paneMenu}

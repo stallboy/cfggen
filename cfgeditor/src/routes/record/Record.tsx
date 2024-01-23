@@ -186,7 +186,8 @@ export function Record() {
 
     // 这个key的位置一定要放到Provider这里，要不然ReactFlow的缓存机制让人找bug抓狂
     return <ReactFlowProvider key={pathname + (isEditing ? ',' + editSeq : '')}>
-        <FlowGraph initialNodes={nodes}
+        <FlowGraph pathname={pathname}
+                   initialNodes={nodes}
                    initialEdges={edges}
                    paneMenu={paneMenu}
                    nodeMenuFunc={nodeMenuFunc}/>

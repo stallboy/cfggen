@@ -137,7 +137,7 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
             </Form.Item>
         }
         {(fix != null) &&
-            <Form.Item wrapperCol={{offset: 10}}>
+            <Form.Item wrapperCol={{offset: 6}}>
                 <Button type="primary" onClick={setFixNull}>
                     {t('removeFix')}
                 </Button>

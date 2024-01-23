@@ -57,8 +57,8 @@ export function Table() {
 
     const {nodes, edges} = convertNodeAndEdges({entityMap, nodeShow});
 
-    return <ReactFlowProvider>
-        <FlowGraph key={pathname}
+    return <ReactFlowProvider key={pathname}>
+        <FlowGraph pathname={pathname}
                    initialNodes={nodes}
                    initialEdges={edges}
                    paneMenu={paneMenu}

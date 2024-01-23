@@ -5,7 +5,6 @@ import {layout} from "./layout.ts";
 import {useQueryClient} from "@tanstack/react-query";
 import {FlowContextMenu, MenuItem, MenuStyle} from "./FlowContextMenu.tsx";
 import {FlowNode} from "./FlowNode.tsx";
-import {useLocationData} from "../routes/setting/store.ts";
 
 
 export type EntityNode = Node<Entity, string>;
@@ -15,13 +14,13 @@ const nodeTypes: NodeTypes = {
     node: FlowNode,
 };
 
-export function FlowGraph({initialNodes, initialEdges, paneMenu, nodeMenuFunc}: {
+export function FlowGraph({pathname, initialNodes, initialEdges, paneMenu, nodeMenuFunc}: {
+    pathname: string;
     initialNodes: EntityNode[],
     initialEdges: EntityEdge[],
     paneMenu?: MenuItem[],
     nodeMenuFunc?: (entity: Entity) => MenuItem[],
 }) {
-    const {pathname} = useLocationData();
     const [menuStyle, setMenuStyle] = useState<MenuStyle | undefined>(undefined);
     const [menuItems, setMenuItems] = useState<MenuItem[] | undefined>(undefined);
 
@@ -38,11 +37,12 @@ export function FlowGraph({initialNodes, initialEdges, paneMenu, nodeMenuFunc}: 
             // Calculate position of the context menu. We want to make sure it
             // doesn't get positioned off-screen.
             const pane = ref.current.getBoundingClientRect();
+            const {offsetX, offsetY} = event.nativeEvent;
             setMenuStyle({
-                top: event.clientY < pane.height - 200 ? event.clientY - 30 : undefined,
-                left: event.clientX < pane.width - 200 ? event.clientX - 50 : undefined,
-                right: event.clientX >= pane.width - 200 ? (pane.width - event.clientX - 50) : undefined,
-                bottom: event.clientY >= pane.height - 200 ? pane.height - event.clientY - 30 : undefined,
+                top: offsetY < pane.height - 200 ? offsetY - 30 : undefined,
+                left: offsetX < pane.width - 200 ? offsetX - 50 : undefined,
+                right: offsetX >= pane.width - 200 ? (pane.width - offsetX - 50) : undefined,
+                bottom: offsetY >= pane.height - 200 ? pane.height - offsetY - 30 : undefined,
             });
 
             if (flowNode) {
