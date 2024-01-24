@@ -13,7 +13,7 @@ import {memo} from "react";
 
 const {Text} = Typography;
 
-export const HeaderBar = memo(function ({schema, curTable, setSettingOpen, setSearchOpen}: {
+export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOpen, setSearchOpen}: {
     schema: Schema | undefined;
     curTable: STable | null;
     setSettingOpen: (open: boolean) => void;
@@ -29,7 +29,6 @@ export const HeaderBar = memo(function ({schema, curTable, setSettingOpen, setSe
     useHotkeys('alt+4', () => navigate(navTo('recordRef', curTableId, curId)));
     useHotkeys('alt+c', () => prev());
     useHotkeys('alt+v', () => next());
-
 
 
     function prev() {

@@ -12,7 +12,7 @@ interface TableWithLastName {
 }
 
 
-export const TableList = memo(function ({schema}: { schema: Schema }) {
+export const TableList = memo(function TableList({schema}: { schema: Schema }) {
 
     const {curPage, curTableId, curId} = useLocationData();
     const navigate = useNavigate();

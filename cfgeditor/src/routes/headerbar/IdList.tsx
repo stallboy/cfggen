@@ -7,7 +7,7 @@ import {STable} from "../table/schemaModel.ts";
 import {memo} from "react";
 
 
-export const IdList = memo(function ({curTable}: {
+export const IdList = memo(function IdList({curTable}: {
     curTable: STable,
 }) {
     const navigate = useNavigate();
