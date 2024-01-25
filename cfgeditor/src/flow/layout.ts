@@ -1,7 +1,8 @@
 import ELK, {ElkNode, ElkExtendedEdge} from 'elkjs';
 import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
-import {ReactFlowInstance, Viewport, XYPosition} from "reactflow";
+import {ReactFlowInstance, XYPosition} from "reactflow";
 import {QueryClient} from "@tanstack/react-query";
+
 
 const elk = new ELK();
 
@@ -66,6 +67,7 @@ export function layout(flowInstance: ReactFlowInstance, pathname: string, queryC
         },
     }).then(({children}) => {
         if (children) {
+            // console.log('layout ok', children.length)
             const map = new Map<string, XYPosition>();
             toPositionMap(map, children);
 
@@ -80,22 +82,19 @@ export function layout(flowInstance: ReactFlowInstance, pathname: string, queryC
                 // n.style = undefined;
             })
             // edges.forEach(e => {
-            // e.style = {...e.style, visibility: undefined};
+            //     e.style = {...e.style, visibility: undefined};
             // })
             flowInstance.setNodes(nodes);
             flowInstance.setEdges(edges);
-            const viewport = queryClient.getQueryData<Viewport>(['viewport', pathname]);
-            if (viewport) {
-                flowInstance.setViewport(viewport);
-            } else {
-                setTimeout(() => {
-                    // console.log("fitView", pathname);
-                    flowInstance.fitView();
-                    const viewport = flowInstance.getViewport();
-                    queryClient.setQueryData(['viewport', pathname], viewport);
-                })
-            }
+            flowInstance.fitView({
+                minZoom: 0.3,
+                maxZoom: 1
+            });
+        } else {
+            console.log('children null');
         }
+    }).catch((reason: any) => {
+        console.log("layout err" + reason);
     });
 }
 

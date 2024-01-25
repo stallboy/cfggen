@@ -10,7 +10,7 @@ import {EntityForm} from "./EntityForm.tsx";
 const {Text} = Typography;
 
 export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
-    const {fields, brief, edit, handleIn, handleOut, label, nodeShow} = nodeProps.data;
+    const {fields, brief, edit, handleIn, handleOut, id, label, nodeShow} = nodeProps.data;
     const color: string = getNodeBackgroundColor(nodeProps.data);
     const width = edit ? 280 : 240;
     const copy: any = {}
@@ -18,7 +18,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
         copy.copyable = true;
     }
 
-    return <Flex vertical gap={'small'} className='flowNode' style={{width: width, backgroundColor: color}}>
+    return <Flex key={id} vertical gap={'small'} className='flowNode' style={{width: width, backgroundColor: color}}>
 
         <Text strong style={{fontSize: 18, color: "#fff"}} {...copy}>
             {label}

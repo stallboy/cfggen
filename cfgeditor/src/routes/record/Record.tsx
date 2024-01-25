@@ -87,10 +87,10 @@ export function Record() {
     }
 
     const entityMap = new Map<string, Entity>();
-    let refId = {table: curTable.name, id: curId};
-    let entityId = getId(curTable.name, curId);
-    let isEditable = schema.isEditable && curTable.isEditable;
-    let isEditing = isEditable && edit;
+    const refId = {table: curTable.name, id: curId};
+    const entityId = getId(curTable.name, curId);
+    const isEditable = schema.isEditable && curTable.isEditable;
+    const isEditing = isEditable && edit;
     if (!isEditing) {
         let creator = new RecordEntityCreator(entityMap, schema, refId, recordResult.refs);
         creator.createRecordEntity(entityId, recordResult.object);
