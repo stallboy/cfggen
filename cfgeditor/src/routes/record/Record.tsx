@@ -22,7 +22,7 @@ export function Record() {
     const {schema, curTable} = useOutletContext<SchemaTableType>();
     const {server, nodeShow} = store;
     const {notification} = App.useApp();
-    const {curPage, curTableId, curId} = useLocationData();
+    const {curTableId, curId} = useLocationData();
     const navigate = useNavigate();
     const queryClient = useQueryClient()
     const [t] = useTranslation();
@@ -59,7 +59,7 @@ export function Record() {
                     duration: 3
                 });
                 queryClient.clear();
-                navigate(navTo(curPage, curTableId, curId));
+                // navigate(navTo(curPage, curTableId, curId));
             } else {
                 notification.warning({
                     message: `addOrUpdateRecord ${curTableId}/${curId} ${editResult.resultCode}`,

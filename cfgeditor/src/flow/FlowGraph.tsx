@@ -5,6 +5,7 @@ import {layout} from "./layout.ts";
 import {useQueryClient} from "@tanstack/react-query";
 import {FlowContextMenu, MenuItem, MenuStyle} from "./FlowContextMenu.tsx";
 import {FlowNode} from "./FlowNode.tsx";
+// import {syncLayout} from "./syncLayout.ts";
 
 
 export type EntityNode = Node<Entity, string>;
@@ -46,6 +47,11 @@ export function FlowGraph({pathname, initialNodes, initialEdges, paneMenu, nodeM
     const onInit = useCallback((instance: ReactFlowInstance) => {
         layout(instance, pathname, queryClient)
     }, [pathname, queryClient]);
+
+    // const onInit = useCallback((instance: ReactFlowInstance) => {
+    //     syncLayout(instance);
+    // }, []);
+
 
     return <>
         <ReactFlow defaultNodes={initialNodes}
