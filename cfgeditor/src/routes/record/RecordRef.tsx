@@ -32,9 +32,8 @@ export function RecordRef({schema, curTable, curId, refIn, refOutDepth, maxNode,
     const [t] = useTranslation();
     const navigate = useNavigate();
 
-
     const {isLoading, isError, error, data: recordRefResult} = useQuery({
-        queryKey: ['tableRef', curTable.id, curId, refOutDepth, maxNode, refIn],
+        queryKey: ['tableRef', curTable.name, curId, refOutDepth, maxNode, refIn],
         queryFn: () => fetchRecordRefs(server, curTable.name, curId, refOutDepth, maxNode, refIn),
         staleTime: 1000 * 10,
     })
