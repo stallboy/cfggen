@@ -9,10 +9,11 @@ import {App, ConfigProvider} from "antd";
 import './i18n.js'
 import {createBrowserRouter, RouterProvider} from "react-router-dom";
 import {Table} from "./routes/table/Table.tsx";
-import {TableRef} from "./routes/table/TableRef.tsx";
+// import {TableRef} from "./routes/table/TableRef.tsx";
 import {Record} from "./routes/record/Record.tsx";
 import {RecordRefRoute} from "./routes/record/RecordRef.tsx";
 import {PathNotFound} from "./routes/PathNotFound.tsx";
+import {TableRef} from "./routes/table/TableRef.tsx";
 // import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
 
 const queryClient = new QueryClient({

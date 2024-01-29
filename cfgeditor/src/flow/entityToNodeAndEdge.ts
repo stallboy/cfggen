@@ -74,7 +74,7 @@ export function convertNodeAndEdges(graph: EntityGraph) {
         })
         for (let edge of entity.sourceEdges) {
             let fe: EntityEdge = {
-                id: '' + (ei++),
+                id: `${entity.id}_${edge.target}_${ei++}`,
                 source: entity.id,
                 sourceHandle: edge.sourceHandle,
                 target: edge.target,

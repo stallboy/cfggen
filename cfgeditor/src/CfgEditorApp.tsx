@@ -13,6 +13,7 @@ import {STable} from "./routes/table/schemaModel.ts";
 import {fetchSchema} from "./io/api.ts";
 import {useQuery} from "@tanstack/react-query";
 import {HeaderBar} from "./routes/headerbar/HeaderBar.tsx";
+import {FlowGraph} from "./flow/FlowGraph.tsx";
 
 
 export type SchemaTableType = { schema: Schema, curTable: STable };
@@ -101,15 +102,22 @@ export function CfgEditorApp() {
                 <DraggablePanel
                     placement={'left'}
                     style={{background: '#fff', width: '100%', padding: 12}}>
-                    {dragPage}
+
+                    <FlowGraph>
+                        {dragPage}
+                    </FlowGraph>
                 </DraggablePanel>
                 <div ref={ref} style={{flex: 'auto'}}>
-                    <Outlet context={{schema, curTable} satisfies SchemaTableType}/>
+                    <FlowGraph>
+                        <Outlet context={{schema, curTable} satisfies SchemaTableType}/>
+                    </FlowGraph>
                 </div>
             </div>;
         } else {
             content = <div ref={ref} style={{height: "100vh", width: "100vw"}}>
-                <Outlet context={{schema, curTable}  satisfies SchemaTableType}/>
+                <FlowGraph>
+                    <Outlet context={{schema, curTable}  satisfies SchemaTableType}/>
+                </FlowGraph>
             </div>;
         }
     }

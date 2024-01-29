@@ -1,6 +1,6 @@
 import {Entity} from "../../flow/entityModel.ts";
-import {JSONObject, RecordEditResult, RefId} from "./recordModel.ts";
-import {App, Empty, Result, Spin} from "antd";
+import {JSONObject, RecordEditResult, RecordResult, RefId} from "./recordModel.ts";
+import {App, Result} from "antd";
 import {createRefEntities, getId} from "./recordRefEntity.ts";
 import {RecordEntityCreator} from "./recordEntityCreator.ts";
 import {EditEntityCreator} from "./editEntityCreator.ts";
@@ -10,17 +10,17 @@ import {navTo, setIsEditMode, store, useLocationData} from "../setting/store.ts"
 import {useNavigate, useOutletContext} from "react-router-dom";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {addOrUpdateRecord, fetchRecord} from "../../io/api.ts";
-import {FlowGraph} from "../../flow/FlowGraph.tsx";
-import {ReactFlowProvider} from "reactflow";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
 import {SchemaTableType} from "../../CfgEditorApp.tsx";
-import {convertNodeAndEdges, fillHandles} from "../../flow/entityToNodeAndEdge.ts";
+import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
 import {useEffect, useState} from "react";
 
+import {useEntityToGraph} from "../../flow/FlowGraph.tsx";
 
-export function Record() {
+
+function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const {schema, curTable} = useOutletContext<SchemaTableType>();
-    const {server, nodeShow} = store;
+    const {server} = store;
     const {notification} = App.useApp();
     const {curTableId, curId} = useLocationData();
     const navigate = useNavigate();
@@ -28,12 +28,6 @@ export function Record() {
     const [t] = useTranslation();
     const {edit, pathname} = useLocationData();
     const [editSeq, setEditSeq] = useState<number>(0);
-
-    const {isLoading, isError, error, data: recordResult} = useQuery({
-        queryKey: ['table', curTableId, curId],
-        queryFn: () => fetchRecord(server, curTableId, curId),
-        staleTime: 1000 * 10,
-    })
 
     useEffect(() => {
         setIsEditMode(edit);
@@ -69,22 +63,6 @@ export function Record() {
             }
         },
     });
-
-    if (isLoading) {
-        return <Empty> <Spin/> </Empty>;
-    }
-
-    if (isError) {
-        return <Result status={'error'} title={error.message}/>;
-    }
-
-    if (!recordResult) {
-        return <Result title={'record result empty'}/>;
-    }
-
-    if (recordResult.resultCode != 'ok') {
-        return <Result status={'error'} title={recordResult.resultCode}/>;
-    }
 
     const entityMap = new Map<string, Entity>();
     const refId = {table: curTable.name, id: curId};
@@ -182,17 +160,37 @@ export function Record() {
         })
         return mm;
     }
-    const {nodes, edges} = convertNodeAndEdges({entityMap, nodeShow});
 
-    // 这个key的位置一定要放到Provider这里，要不然ReactFlow的缓存机制让人找bug抓狂
-    return <ReactFlowProvider key={pathname + (isEditing ? ',' + editSeq : '')}>
-        <FlowGraph pathname={pathname}
-                   initialNodes={nodes}
-                   initialEdges={edges}
-                   paneMenu={paneMenu}
-                   nodeMenuFunc={nodeMenuFunc}/>
-    </ReactFlowProvider>
+    useEntityToGraph(pathname, entityMap, nodeMenuFunc, paneMenu);
+
+    return <></>
+}
 
 
+export function Record() {
+    const {server} = store;
+    const {curTableId, curId} = useLocationData();
+    const {isLoading, isError, error, data: recordResult} = useQuery({
+        queryKey: ['table', curTableId, curId],
+        queryFn: () => fetchRecord(server, curTableId, curId),
+    })
+
+    if (isLoading) {
+        return;
+    }
+
+    if (isError) {
+        return <Result status={'error'} title={error.message}/>;
+    }
+
+    if (!recordResult) {
+        return <Result title={'record result empty'}/>;
+    }
+
+    if (recordResult.resultCode != 'ok') {
+        return <Result status={'error'} title={recordResult.resultCode}/>;
+    }
+
+    return <RecordWithResult recordResult={recordResult}/>;
 }
 

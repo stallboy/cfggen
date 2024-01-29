@@ -1,9 +1,7 @@
 import {STable} from "../table/schemaModel.ts";
-
 import {Entity} from "../../flow/entityModel.ts";
-
-import {RefId} from "./recordModel.ts";
-import {Result, Spin} from "antd";
+import {RecordRefsResult, RefId} from "./recordModel.ts";
+import {Result} from "antd";
 import {createRefEntities, getId} from "./recordRefEntity.ts";
 import {useTranslation} from "react-i18next";
 import {Schema} from "../table/schemaUtil.ts";
@@ -13,48 +11,21 @@ import {useNavigate, useOutletContext} from "react-router-dom";
 import {useQuery} from "@tanstack/react-query";
 import {fetchRecordRefs} from "../../io/api.ts";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
-import {FlowGraph} from "../../flow/FlowGraph.tsx";
-import {ReactFlowProvider} from "reactflow";
 import {SchemaTableType} from "../../CfgEditorApp.tsx";
-import {convertNodeAndEdges, fillHandles} from "../../flow/entityToNodeAndEdge.ts";
+import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
+
+import {useEntityToGraph} from "../../flow/FlowGraph.tsx";
 
 
-export function RecordRef({schema, curTable, curId, refIn, refOutDepth, maxNode, nodeShow}: {
+export function RecordRefWithResult({schema, curTable, curId, nodeShow, recordRefResult}: {
     schema: Schema;
     curTable: STable;
     curId: string;
-    refIn: boolean;
-    refOutDepth: number;
-    maxNode: number;
     nodeShow: NodeShowType;
+    recordRefResult: RecordRefsResult;
 }) {
-    const {server, query} = store;
     const [t] = useTranslation();
     const navigate = useNavigate();
-
-    const {isLoading, isError, error, data: recordRefResult} = useQuery({
-        queryKey: ['tableRef', curTable.name, curId, refOutDepth, maxNode, refIn],
-        queryFn: () => fetchRecordRefs(server, curTable.name, curId, refOutDepth, maxNode, refIn),
-        staleTime: 1000 * 10,
-    })
-
-
-    if (isLoading) {
-        return <Spin/>;
-    }
-
-    if (isError) {
-        return <Result status={'error'} title={error.message}/>;
-    }
-
-    if (!recordRefResult) {
-        return <Result title={'recordRef result empty'}/>;
-    }
-
-    if (recordRefResult.resultCode != 'ok') {
-        return <Result status={'error'} title={recordRefResult.resultCode}/>;
-    }
-
 
     const entityMap = new Map<string, Entity>();
     const hasContainEnum = nodeShow.containEnum || curTable.entryType == 'eEnum';
@@ -104,15 +75,48 @@ export function RecordRef({schema, curTable, curId, refIn, refOutDepth, maxNode,
     }
 
     const pathname = `/tableRef/${curTable.name}/${curId}`;
-    const {nodes, edges} = convertNodeAndEdges({entityMap, nodeShow, query});
-    return <ReactFlowProvider key={pathname}>
-        <FlowGraph pathname={pathname}
-                   initialNodes={nodes}
-                   initialEdges={edges}
-                   paneMenu={paneMenu}
-                   nodeMenuFunc={nodeMenuFunc}
-        />
-    </ReactFlowProvider>
+    useEntityToGraph(pathname, entityMap, nodeMenuFunc, paneMenu);
+
+    return <></>;
+}
+
+
+export function RecordRef({schema, curTable, curId, refIn, refOutDepth, maxNode, nodeShow}: {
+    schema: Schema;
+    curTable: STable;
+    curId: string;
+    refIn: boolean;
+    refOutDepth: number;
+    maxNode: number;
+    nodeShow: NodeShowType;
+}) {
+    const {server} = store;
+    const {isLoading, isError, error, data: recordRefResult} = useQuery({
+        queryKey: ['tableRef', curTable.name, curId, refOutDepth, maxNode, refIn],
+        queryFn: () => fetchRecordRefs(server, curTable.name, curId, refOutDepth, maxNode, refIn),
+        staleTime: 1000 * 10,
+    })
+
+
+    if (isLoading) {
+        return;
+    }
+
+    if (isError) {
+        return <Result status={'error'} title={error.message}/>;
+    }
+
+    if (!recordRefResult) {
+        return <Result title={'recordRef result empty'}/>;
+    }
+
+    if (recordRefResult.resultCode != 'ok') {
+        return <Result status={'error'} title={recordRefResult.resultCode}/>;
+    }
+
+    return <RecordRefWithResult schema={schema} curTable={curTable} curId={curId}
+                                nodeShow={nodeShow} recordRefResult={recordRefResult}/>
+
 }
 
 export function RecordRefRoute() {

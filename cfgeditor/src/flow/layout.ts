@@ -1,17 +1,25 @@
 import ELK, {ElkNode, ElkExtendedEdge} from 'elkjs';
 import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
-import {ReactFlowInstance, XYPosition} from "reactflow";
+import {getNodesBounds, getViewportForBounds, ReactFlowInstance, XYPosition} from "reactflow";
 import {QueryClient} from "@tanstack/react-query";
 
 
 const elk = new ELK();
 
 function nodeToLayoutChild(node: EntityNode): ElkNode {
-    return {
-        id: node.id,
-        width: node.width!,
-        height: node.height!,
-    };
+    let width = node.width
+    if (!width) {
+        width = 300;
+        console.log('width', width);
+    }
+
+    let height = node.height
+    if (!height) {
+        height = 300;
+        console.log('height', height);
+    }
+
+    return {id: node.id, width, height,};
 }
 
 function edgeToLayoutEdge(edge: EntityEdge): ElkExtendedEdge {
@@ -34,7 +42,22 @@ function toPositionMap(map: Map<string, XYPosition>, children: ElkNode[]) {
     }
 }
 
-export function layout(flowInstance: ReactFlowInstance, pathname: string, queryClient: QueryClient) {
+function allWidthHeightOk(nodes: EntityNode[]) {
+    for (let node of nodes) {
+        if (!node.width || !node.height) {
+            return false;
+        }
+    }
+    return true;
+}
+
+export function layout(flowInstance: ReactFlowInstance, width: number, height: number, pathname: string, queryClient: QueryClient) {
+    const nodes = flowInstance.getNodes();
+    if (!allWidthHeightOk(nodes)) {
+        // console.log('layout ignore')
+        return;
+    }
+    const edges = flowInstance.getEdges();
     queryClient.fetchQuery({
         queryKey: ['layout', pathname],
         queryFn: async () => {
@@ -50,8 +73,6 @@ export function layout(flowInstance: ReactFlowInstance, pathname: string, queryC
                 'elk.layered.crossingMinimization.forceNodeModelOrder': 'true',
             };
 
-            const nodes = flowInstance.getNodes();
-            const edges = flowInstance.getEdges();
 
             const graph: ElkNode = {
                 id: 'root',
@@ -72,29 +93,39 @@ export function layout(flowInstance: ReactFlowInstance, pathname: string, queryC
             toPositionMap(map, children);
 
             const nodes = flowInstance.getNodes();
-            const edges = flowInstance.getEdges();
+            // const edges = flowInstance.getEdges();
+            // console.log('before', nodes);
             // change in place，maybe because of the zustand store
-            nodes.forEach(n => {
+            const newNodes = nodes.map(n => {
                 const newPos = map.get(n.id);
                 if (newPos) {
-                    n.position = newPos;
+                    return {
+                        //去掉positionAbsolute，要不然getNodesBounds返回用这个
+                        id: n.id,
+                        data: n.data,
+                        position: newPos,
+                        width: n.width,
+                        height: n.height,
+                        type: n.type
+                    }
+                } else {
+                    return n;
                 }
                 // n.style = undefined;
             })
             // edges.forEach(e => {
             //     e.style = {...e.style, visibility: undefined};
             // })
-            flowInstance.setNodes(nodes);
-            flowInstance.setEdges(edges);
-            flowInstance.fitView({
-                minZoom: 0.3,
-                maxZoom: 1
-            });
+            flowInstance.setNodes(newNodes);
+            // flowInstance.setEdges(edges);
+            const bounds = getNodesBounds(newNodes);
+
+            const viewportForBounds = getViewportForBounds(bounds, width, height, 0.3, 1);
+            flowInstance.setViewport(viewportForBounds);
+            // console.log('set viewport', newNodes, bounds, viewportForBounds);
         } else {
             console.log('children null');
         }
-    }).catch((reason: any) => {
-        console.log("layout err" + reason);
     });
 }
 
