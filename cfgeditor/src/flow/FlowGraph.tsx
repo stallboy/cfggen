@@ -84,9 +84,8 @@ export function FlowGraphInner({children}: { children: ReactNode }) {
     //     syncLayout(instance);
     // }, []);
 
-    const width = useStore( (state) => state.width);
-    const height = useStore( (state) => state.height);
-
+    const width = useStore((state) => state.width);
+    const height = useStore((state) => state.height);
 
 
     const thisSetNodeMenuFunc = function (func: NodeMenuFunc) {
@@ -103,15 +102,17 @@ export function FlowGraphInner({children}: { children: ReactNode }) {
 
 
     const ctx: FlowGraphContextType = {
-        setPaneMenu, setNodeMenuFunc: thisSetNodeMenuFunc, setPathname, setNodes: _setNodes, setEdges: _setEdges
+        setPaneMenu, setNodeMenuFunc: thisSetNodeMenuFunc, setPathname,
+        setNodes: _setNodes, setEdges: _setEdges
     };
     return <>
-        <ReactFlow nodes={nodes}
+        <ReactFlow key={pathname}
+                   nodes={nodes}
                    edges={edges}
                    onNodesChange={onNodesChange}
                    onEdgesChange={onEdgesChange}
                    nodeTypes={nodeTypes}
-                   // onInit={onInit}
+            // onInit={onInit}
                    minZoom={0.1}
                    maxZoom={2}
                    fitView
@@ -145,7 +146,8 @@ export function useEntityToGraph(pathname: string,
                                  nodeMenuFunc: NodeMenuFunc,
                                  paneMenu: MenuItem[]
 ) {
-    const flowGraph = useContext(FlowGraphContext)
+    const flowGraph = useContext(FlowGraphContext);
+    // const flowInstance = useReactFlow();
     const {query, nodeShow} = store;
     const {nodes, edges} = convertNodeAndEdges({entityMap, query, nodeShow});
     // console.log(entityMap.values(), nodes, edges);
@@ -158,5 +160,5 @@ export function useEntityToGraph(pathname: string,
         // console.log("set nodes, edges");
         // console.log(nodes);
         // console.log(edges);
-    }, []);
+    }, [pathname]);
 }

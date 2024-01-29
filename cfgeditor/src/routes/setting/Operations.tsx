@@ -3,7 +3,6 @@ import {useTranslation} from "react-i18next";
 import {App, Button, Divider, Form, Input, InputNumber, Radio} from "antd";
 import {
     DragPanelType,
-    navTo,
     setDragPanel,
     setFix,
     setFixNull,
@@ -17,7 +16,6 @@ import {STable} from "../table/schemaModel.ts";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {RecordEditResult} from "../record/recordModel.ts";
 import {deleteRecord} from "../../io/api.ts";
-import {useNavigate} from "react-router-dom";
 import {toBlob} from "html-to-image";
 import {saveAs} from "file-saver";
 
@@ -41,7 +39,6 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
     const {curTableId, curId} = useLocationData();
     const {notification} = App.useApp();
     const queryClient = useQueryClient();
-    const navigate = useNavigate();
 
     const deleteRecordMutation = useMutation<RecordEditResult, Error>({
         mutationFn: () => deleteRecord(server, curTableId, curId),
@@ -52,7 +49,6 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
                 placement: 'topRight',
                 duration: 4
             });
-            queryClient.clear();
         },
         onSuccess: (editResult, _variables, _context) => {
             if (editResult.resultCode == 'deleteOk') {
@@ -63,7 +59,6 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
                     duration: 3
                 });
                 queryClient.clear();
-                navigate(navTo(curPage, curTableId, curId));
             } else {
                 notification.warning({
                     message: `deleteRecord ${curTableId}/${curId}  ${editResult.resultCode}`,

@@ -36,7 +36,7 @@ export function CfgEditorApp() {
     const ref = useRef<HTMLDivElement>(null)
     const {isLoading, isError, error, data: schema} = useQuery({
         queryKey: ['schema'],
-        queryFn: () => fetchSchema(server),
+        queryFn: ({signal}) => fetchSchema(server, signal),
         staleTime: 1000 * 60 * 5,
     })
 

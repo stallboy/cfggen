@@ -74,7 +74,7 @@ export function RecordRefWithResult({schema, curTable, curId, nodeShow, recordRe
         return mm;
     }
 
-    const pathname = `/tableRef/${curTable.name}/${curId}`;
+    const pathname = `/recordRef/${curTable.name}/${curId}`;
     useEntityToGraph(pathname, entityMap, nodeMenuFunc, paneMenu);
 
     return <></>;
@@ -93,7 +93,7 @@ export function RecordRef({schema, curTable, curId, refIn, refOutDepth, maxNode,
     const {server} = store;
     const {isLoading, isError, error, data: recordRefResult} = useQuery({
         queryKey: ['tableRef', curTable.name, curId, refOutDepth, maxNode, refIn],
-        queryFn: () => fetchRecordRefs(server, curTable.name, curId, refOutDepth, maxNode, refIn),
+        queryFn: ({signal}) => fetchRecordRefs(server, curTable.name, curId, refOutDepth, maxNode, refIn, signal),
         staleTime: 1000 * 10,
     })
 

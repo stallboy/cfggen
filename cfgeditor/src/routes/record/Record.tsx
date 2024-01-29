@@ -41,7 +41,6 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
                 message: `addOrUpdateRecord  ${curTableId}/${curId}  err: ${error.toString()}`,
                 placement: 'topRight', duration: 4
             });
-            queryClient.clear();
         },
         onSuccess: (editResult, _variables, _context) => {
             if (editResult.resultCode == 'updateOk' || editResult.resultCode == 'addOk') {
@@ -161,9 +160,10 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
         return mm;
     }
 
-    useEntityToGraph(pathname, entityMap, nodeMenuFunc, paneMenu);
+    const ep = pathname + (isEditing ? ',' + editSeq : '');
+    useEntityToGraph(ep, entityMap, nodeMenuFunc, paneMenu);
 
-    return <></>
+    return <></>;
 }
 
 
@@ -172,7 +172,7 @@ export function Record() {
     const {curTableId, curId} = useLocationData();
     const {isLoading, isError, error, data: recordResult} = useQuery({
         queryKey: ['table', curTableId, curId],
-        queryFn: () => fetchRecord(server, curTableId, curId),
+        queryFn: ({signal}) => fetchRecord(server, curTableId, curId, signal),
     })
 
     if (isLoading) {

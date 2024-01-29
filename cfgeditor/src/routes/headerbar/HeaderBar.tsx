@@ -55,7 +55,11 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
 
     function onChangeCurPage(e: RadioChangeEvent) {
         const page = e.target.value;
-        navigate(navTo(page, curTableId, curId, isEditMode));
+        if (page == 'fix'){
+            navigate(navTo('recordRef', fix!.table, fix!.id));
+        }else{
+            navigate(navTo(page, curTableId, curId, isEditMode));
+        }
     }
 
     let options = [

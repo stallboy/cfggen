@@ -4,21 +4,23 @@ import axios from 'axios';
 import {Schema} from "../routes/table/schemaUtil.ts";
 
 
-export async function fetchSchema(server: string) {
-    const response = await axios.get<RawSchema>(`http://${server}/schemas`);
+export async function fetchSchema(server: string, signal:AbortSignal) {
+    const response = await axios.get<RawSchema>(`http://${server}/schemas`, {signal});
+    console.log('new schema');
     return new Schema(response.data);
 }
 
-export async function fetchRecord(server: string, tableId: string, id: string) {
+export async function fetchRecord(server: string, tableId: string, id: string, signal:AbortSignal) {
     const url = `http://${server}/record?table=${tableId}&id=${id}&depth=1`;
-    const response = await axios.get<RecordResult>(url);
+    const response = await axios.get<RecordResult>(url, {signal});
     return response.data;
 }
 
 export async function fetchRecordRefs(server: string, tableId: string, id: string,
-                                      refOutDepth: number, maxNode: number, refIn: boolean) {
+                                      refOutDepth: number, maxNode: number, refIn: boolean,
+                                      signal:AbortSignal) {
     let url = `http://${server}/record?table=${tableId}&id=${id}&depth=${refOutDepth}&maxObjs=${maxNode}&refs${refIn ? '&in' : ''}`;
-    const response = await axios.get<RecordRefsResult>(url);
+    const response = await axios.get<RecordRefsResult>(url, {signal});
     return response.data;
 }
 

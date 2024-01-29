@@ -51,14 +51,9 @@ function allWidthHeightOk(nodes: EntityNode[]) {
     return true;
 }
 
-export function layout(flowInstance: ReactFlowInstance, width: number, height: number, pathname: string, queryClient: QueryClient) {
-    const nodes = flowInstance.getNodes();
-    if (!allWidthHeightOk(nodes)) {
-        // console.log('layout ignore')
-        return;
-    }
-    const edges = flowInstance.getEdges();
-    queryClient.fetchQuery({
+async function asyncLayout(nodes: EntityNode[], edges: EntityEdge[], pathname: string, queryClient: QueryClient) {
+    // await queryClient.cancelQueries({queryKey: ['layout']})
+    return await queryClient.fetchQuery({
         queryKey: ['layout', pathname],
         queryFn: async () => {
             // console.log("layout", pathname);
@@ -73,9 +68,8 @@ export function layout(flowInstance: ReactFlowInstance, width: number, height: n
                 'elk.layered.crossingMinimization.forceNodeModelOrder': 'true',
             };
 
-
             const graph: ElkNode = {
-                id: 'root',
+                id: pathname,
                 layoutOptions: defaultOptions,
                 children: nodes.map(nodeToLayoutChild),
                 edges: edges.map(edgeToLayoutEdge),
@@ -86,16 +80,30 @@ export function layout(flowInstance: ReactFlowInstance, width: number, height: n
 
             return await elk.layout(graph);
         },
-    }).then(({children}) => {
-        if (children) {
-            // console.log('layout ok', children.length)
+    })
+}
+
+
+export function layout(flowInstance: ReactFlowInstance, width: number, height: number, pathname: string, queryClient: QueryClient) {
+    const nodes = flowInstance.getNodes();
+    if (!allWidthHeightOk(nodes)) {
+        // console.log('layout ignore')
+        return;
+    }
+    const edges = flowInstance.getEdges();
+
+    // console.log('layout', pathname);
+    asyncLayout(nodes, edges, pathname, queryClient).then(({id, children}) => {
+        if (id != pathname) {
+            console.log('layout ignore other', id, pathname);
+        } else if (children) {
+            // console.log('layout ok', id)
             const map = new Map<string, XYPosition>();
             toPositionMap(map, children);
 
             const nodes = flowInstance.getNodes();
             // const edges = flowInstance.getEdges();
             // console.log('before', nodes);
-            // change in place，maybe because of the zustand store
             const newNodes = nodes.map(n => {
                 const newPos = map.get(n.id);
                 if (newPos) {
@@ -109,6 +117,7 @@ export function layout(flowInstance: ReactFlowInstance, width: number, height: n
                         type: n.type
                     }
                 } else {
+                    console.log('not found', n, map)
                     return n;
                 }
                 // n.style = undefined;
