@@ -161,7 +161,7 @@ export function useEntityToGraph(pathname: string,
     // const flowInstance = useReactFlow();
     const {query, nodeShow} = store;
     const {nodes, edges} = convertNodeAndEdges({entityMap, query, nodeShow});
-    console.log('new nodes', nodes, edges);
+    // console.log('new nodes', nodes, edges);
     useEffect(() => {
         flowGraph.setPathname(pathname);
         flowGraph.setNodeMenuFunc(nodeMenuFunc);
@@ -169,8 +169,8 @@ export function useEntityToGraph(pathname: string,
         flowGraph.setNodes(nodes);
         flowGraph.setEdges(edges);
         flowGraph.forceLayout();
-        console.log("set nodes, edges");
-        console.log(nodes);
+        // console.log("set nodes, edges");
+        // console.log(nodes);
         // console.log(edges);
     }, [pathname, nodes, edges]);
 }

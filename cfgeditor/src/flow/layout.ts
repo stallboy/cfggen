@@ -52,18 +52,32 @@ function allWidthHeightOk(nodes: EntityNode[]) {
     return true;
 }
 
+function allPositionXYOk(nodes: EntityNode[], map: Map<string, XYPosition>) {
+    if (nodes.length != map.size) {
+        return false;
+    }
+    for (let node of nodes) {
+        const newPos = map.get(node.id);
+        if (!newPos) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
 async function asyncLayout(nodes: EntityNode[], edges: EntityEdge[],
                            oldPathnameRef: MutableRefObject<string | null>, pathname: string) {
     if (oldPathnameRef.current) {
         await queryClient.cancelQueries({queryKey: ['layout', oldPathnameRef.current]})
     }
     oldPathnameRef.current = pathname;
-    console.log('layout req', pathname);
+    // console.log('layout req', pathname);
 
     return await queryClient.fetchQuery({
         queryKey: ['layout', pathname],
         queryFn: async () => {
-            // console.log("layout", pathname);
+            console.log("layout", pathname);
             const defaultOptions = {
                 'elk.algorithm': 'layered',
                 'elk.direction': 'RIGHT',
@@ -87,6 +101,7 @@ async function asyncLayout(nodes: EntityNode[], edges: EntityEdge[],
 
             return await elk.layout(graph);
         },
+        staleTime: 1000 * 60 * 5
     })
 }
 
@@ -102,7 +117,8 @@ export function layout(flowInstance: ReactFlowInstance, oldPathnameRef: MutableR
 
     // console.log('layout', pathname);
     asyncLayout(nodes, edges, oldPathnameRef, pathname).then(({id, children}) => {
-        console.log('layout res', id, children);
+        oldPathnameRef.current = null;
+        // console.log('layout res', id, children);
         // if (id != pathname) {
         //     console.log('layout ignore other', id, pathname);
         // } else
@@ -111,7 +127,12 @@ export function layout(flowInstance: ReactFlowInstance, oldPathnameRef: MutableR
             const map = new Map<string, XYPosition>();
             toPositionMap(map, children);
 
+            // 重新取nodes，因为此时nodes可能跟异步layout请求开始时的nodes不同，所以要检验下是不是allPositionXYOk
             const nodes = flowInstance.getNodes();
+            if (!allPositionXYOk(nodes, map)) {
+                console.log('layout ignored, nodes may changed', id, nodes);
+                return;
+            }
             // const edges = flowInstance.getEdges();
             // console.log('before', nodes);
             nodes.forEach(n => {
@@ -145,7 +166,13 @@ export function layout(flowInstance: ReactFlowInstance, oldPathnameRef: MutableR
             flowInstance.setViewport(viewportForBounds);
             // console.log('set viewport', newNodes, bounds, viewportForBounds);
         } else {
-            console.log('children null');
+            console.log('layout children null');
+        }
+    }).catch((reason: any) => {
+        if (typeof reason == 'object' && 'revert' in reason) {
+            //CancelledError是正常的
+        } else {
+            console.log('layout err', reason);
         }
     });
 }
