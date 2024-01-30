@@ -4,6 +4,7 @@ import {getBool, getEnumStr, getInt, getJson, getJsonNullable, getStr} from "../
 import {History} from "../headerbar/historyModel.ts";
 import {Schema} from "../table/schemaUtil.ts";
 import {useLocation} from "react-router-dom";
+import {queryClient} from "../../main.tsx";
 
 export type DragPanelType = 'recordRef' | 'fix' | 'none';
 const dragPanelEnums = ['recordRef', 'fix', 'none']
@@ -73,9 +74,14 @@ function readStoreState(): StoreState {
 export const store = resso<StoreState>(readStoreState());
 
 
+function clearLayoutCache(){
+    queryClient.removeQueries({queryKey: ['layout']});
+}
+
 export function setQuery(v: string) {
     store.query = v;
     localStorage.setItem('query', v);
+    clearLayoutCache();
 }
 
 
@@ -83,18 +89,21 @@ export function setMaxImpl(value: number | null) {
     if (value) {
         store.maxImpl = value;
         localStorage.setItem('maxImpl', value.toString());
+        clearLayoutCache();
     }
 }
 
 export function setRefIn(checked: boolean) {
     store.refIn = checked;
     localStorage.setItem('refIn', checked ? 'true' : 'false');
+    clearLayoutCache();
 }
 
 export function setRefOutDepth(value: number | null) {
     if (value) {
         store.refOutDepth = value;
         localStorage.setItem('refOutDepth', value.toString());
+        clearLayoutCache();
     }
 }
 
@@ -102,18 +111,21 @@ export function setMaxNode(value: number | null) {
     if (value) {
         store.maxNode = value;
         localStorage.setItem('maxNode', value.toString());
+        clearLayoutCache();
     }
 }
 
 export function setRecordRefIn(checked: boolean) {
     store.recordRefIn = checked;
     localStorage.setItem('recordRefIn', checked ? 'true' : 'false');
+    clearLayoutCache();
 }
 
 export function setRecordRefOutDepth(value: number | null) {
     if (value) {
         store.recordRefOutDepth = value;
         localStorage.setItem('recordRefOutDepth', value.toString());
+        clearLayoutCache();
     }
 }
 
@@ -121,6 +133,7 @@ export function setRecordMaxNode(value: number | null) {
     if (value) {
         store.recordMaxNode = value;
         localStorage.setItem('recordMaxNode', value.toString());
+        clearLayoutCache();
     }
 }
 
@@ -158,6 +171,7 @@ export function setFix(curTableId: string, curId: string) {
     };
     store.fix = fp;
     localStorage.setItem('fix', Convert.fixedPageToJson(fp));
+    clearLayoutCache();
 }
 
 export function setFixNull() {
@@ -193,31 +207,6 @@ export function historyNext(curPage: PageType) {
     if (cur) {
         return navTo(curPage, cur.table, cur.id, isEditMode, false);
     }
-}
-
-
-export function setSchema(schema: Schema, curTableId: string, curId: string) {
-    let curTab;
-    if (curTableId.length > 0) {
-        curTab = schema.getSTable(curTableId);
-    }
-    if (curTab == null) {
-        curTab = schema.getFirstSTable();
-
-    }
-
-    let tableId = curTableId;
-    let id = '';
-    if (curTab) {
-        tableId = curTab.name;
-
-        if (curId.length > 0 && schema.hasId(curTab, curId)) {
-            id = curId;
-        } else if (curTab.recordIds.length > 0) {
-            id = curTab.recordIds[0].id;
-        }
-    }
-    return [tableId, id];
 }
 
 export function getFixCurIdByTable(schema: Schema, curTableId: string, curId: string) {

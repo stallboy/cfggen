@@ -9,9 +9,18 @@ import ReactFlow, {
     useNodesState, useReactFlow, useStore
 } from "reactflow";
 import {Entity} from "./entityModel.ts";
-import {createContext, MouseEvent, ReactNode, useCallback, useContext, useEffect, useState} from "react";
+import {
+    createContext,
+    MouseEvent,
+    ReactNode,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo, useReducer,
+    useRef,
+    useState
+} from "react";
 import {layout} from "./layout.ts";
-import {useQueryClient} from "@tanstack/react-query";
 import {FlowContextMenu, MenuItem, MenuStyle} from "./FlowContextMenu.tsx";
 import {FlowNode} from "./FlowNode.tsx";
 import {store} from "../routes/setting/store.ts";
@@ -29,6 +38,7 @@ export interface FlowGraphContextType {
     setPathname: (pathname: string) => void;
     setNodes: (nodes: Node[]) => void;
     setEdges: (edges: any[]) => void;
+    forceLayout: ()=>void;
 }
 
 function dummy() {
@@ -40,6 +50,7 @@ export const FlowGraphContext = createContext<FlowGraphContextType>({
     setPathname: dummy,
     setNodes: dummy,
     setEdges: dummy,
+    forceLayout:dummy,
 });
 
 const nodeTypes: NodeTypes = {
@@ -49,13 +60,13 @@ const nodeTypes: NodeTypes = {
 export function FlowGraphInner({children}: { children: ReactNode }) {
     const [menuStyle, setMenuStyle] = useState<MenuStyle | undefined>(undefined);
     const [menuItems, setMenuItems] = useState<MenuItem[] | undefined>(undefined);
-    const queryClient = useQueryClient();
 
     const [nodes, _setNodes, onNodesChange] = useNodesState<Entity>([]);
     const [edges, _setEdges, onEdgesChange] = useEdgesState<any>([]);
     const [paneMenu, setPaneMenu] = useState<MenuItem[]>([]);
     const [nodeMenuFunc, setNodeMenuFunc] = useState<NodeMenuFunc>();
     const [pathname, setPathname] = useState<string>('');
+
 
     const onPaneContextMenu = useCallback((event: MouseEvent) => {
             event.preventDefault();
@@ -75,36 +86,36 @@ export function FlowGraphInner({children}: { children: ReactNode }) {
         setMenuStyle(undefined)
     }, [setMenuStyle]);
 
-    // const onInit = useCallback((instance: ReactFlowInstance) => {
-    //     console.log('onInit', pathname);
-    //     layout(instance, pathname, queryClient)
-    // }, [pathname, queryClient]);
-
-    // const onInit = useCallback((instance: ReactFlowInstance) => {
-    //     syncLayout(instance);
-    // }, []);
-
     const width = useStore((state) => state.width);
     const height = useStore((state) => state.height);
-
-
-    const thisSetNodeMenuFunc = function (func: NodeMenuFunc) {
-        setNodeMenuFunc(() => func);
-    }
-
     const flowInstance = useReactFlow();
     const nodesInitialized = useNodesInitialized();
+    const oldPathnameRef = useRef<string | null>(null);
+    const [forceLayoutState, forceLayout] = useReducer(v => v + 1, 0);
+
     useEffect(() => {
         if (nodesInitialized) {
-            layout(flowInstance, width, height, pathname, queryClient)
+            layout(flowInstance, oldPathnameRef, width, height, pathname)
         }
-    }, [flowInstance, nodesInitialized, pathname, width, height, queryClient]);
+    }, [flowInstance, nodesInitialized, forceLayoutState, pathname, width, height]);
 
+    const thisSetNodeMenuFunc = useCallback(function (func: NodeMenuFunc) {
+        setNodeMenuFunc(() => func);
+    }, [setNodeMenuFunc]);
 
-    const ctx: FlowGraphContextType = {
-        setPaneMenu, setNodeMenuFunc: thisSetNodeMenuFunc, setPathname,
-        setNodes: _setNodes, setEdges: _setEdges
-    };
+    const ctx = useMemo(() => {
+        return {
+            setPaneMenu, setNodeMenuFunc: thisSetNodeMenuFunc, setPathname,
+            setNodes: _setNodes, setEdges: _setEdges, forceLayout
+        }
+    }, [setPaneMenu, thisSetNodeMenuFunc, setPathname, _setNodes, _setEdges, forceLayout]);
+
+    // const onNodesChanged = useCallback((changes: NodeChange[]) => {
+    //     onNodesChange(changes);
+    //     console.log('node changed', changes);
+    //     // layout(flowInstance, oldPathnameRef, width, height, pathname);
+    // },  [onNodesChange])
+
     return <>
         <ReactFlow key={pathname}
                    nodes={nodes}
@@ -150,15 +161,16 @@ export function useEntityToGraph(pathname: string,
     // const flowInstance = useReactFlow();
     const {query, nodeShow} = store;
     const {nodes, edges} = convertNodeAndEdges({entityMap, query, nodeShow});
-    // console.log(entityMap.values(), nodes, edges);
+    console.log('new nodes', nodes, edges);
     useEffect(() => {
         flowGraph.setPathname(pathname);
         flowGraph.setNodeMenuFunc(nodeMenuFunc);
         flowGraph.setPaneMenu(paneMenu);
         flowGraph.setNodes(nodes);
         flowGraph.setEdges(edges);
-        // console.log("set nodes, edges");
-        // console.log(nodes);
+        flowGraph.forceLayout();
+        console.log("set nodes, edges");
+        console.log(nodes);
         // console.log(edges);
-    }, [pathname]);
+    }, [pathname, nodes, edges]);
 }

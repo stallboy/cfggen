@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import {Alert, Drawer, Flex, Form, Input, Modal,} from "antd";
 import {RecordRef} from "./routes/record/RecordRef.tsx";
 import {SearchValue} from "./routes/search/SearchValue.tsx";
@@ -47,6 +47,10 @@ export function CfgEditorApp() {
     }, [schema]);
 
     let curTable = schema ? schema.getSTable(curTableId) : null;
+
+    const outletCtx = useMemo(() => {
+        return {schema, curTable}
+    }, [schema, curTable]);
 
     const onSettingClose = () => {
         setSettingOpen(false);
@@ -109,14 +113,14 @@ export function CfgEditorApp() {
                 </DraggablePanel>
                 <div ref={ref} style={{flex: 'auto'}}>
                     <FlowGraph>
-                        <Outlet context={{schema, curTable} satisfies SchemaTableType}/>
+                        <Outlet context={outletCtx}/>
                     </FlowGraph>
                 </div>
             </div>;
         } else {
             content = <div ref={ref} style={{height: "100vh", width: "100vw"}}>
                 <FlowGraph>
-                    <Outlet context={{schema, curTable}  satisfies SchemaTableType}/>
+                    <Outlet context={outletCtx}/>
                 </FlowGraph>
             </div>;
         }

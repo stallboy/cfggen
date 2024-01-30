@@ -1,7 +1,8 @@
 import ELK, {ElkNode, ElkExtendedEdge} from 'elkjs';
 import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
 import {getNodesBounds, getViewportForBounds, ReactFlowInstance, XYPosition} from "reactflow";
-import {QueryClient} from "@tanstack/react-query";
+import {MutableRefObject} from "react";
+import {queryClient} from "../main.tsx";
 
 
 const elk = new ELK();
@@ -51,8 +52,14 @@ function allWidthHeightOk(nodes: EntityNode[]) {
     return true;
 }
 
-async function asyncLayout(nodes: EntityNode[], edges: EntityEdge[], pathname: string, queryClient: QueryClient) {
-    // await queryClient.cancelQueries({queryKey: ['layout']})
+async function asyncLayout(nodes: EntityNode[], edges: EntityEdge[],
+                           oldPathnameRef: MutableRefObject<string | null>, pathname: string) {
+    if (oldPathnameRef.current) {
+        await queryClient.cancelQueries({queryKey: ['layout', oldPathnameRef.current]})
+    }
+    oldPathnameRef.current = pathname;
+    console.log('layout req', pathname);
+
     return await queryClient.fetchQuery({
         queryKey: ['layout', pathname],
         queryFn: async () => {
@@ -84,7 +91,8 @@ async function asyncLayout(nodes: EntityNode[], edges: EntityEdge[], pathname: s
 }
 
 
-export function layout(flowInstance: ReactFlowInstance, width: number, height: number, pathname: string, queryClient: QueryClient) {
+export function layout(flowInstance: ReactFlowInstance, oldPathnameRef: MutableRefObject<string | null>,
+                       width: number, height: number, pathname: string) {
     const nodes = flowInstance.getNodes();
     if (!allWidthHeightOk(nodes)) {
         // console.log('layout ignore')
@@ -93,10 +101,12 @@ export function layout(flowInstance: ReactFlowInstance, width: number, height: n
     const edges = flowInstance.getEdges();
 
     // console.log('layout', pathname);
-    asyncLayout(nodes, edges, pathname, queryClient).then(({id, children}) => {
-        if (id != pathname) {
-            console.log('layout ignore other', id, pathname);
-        } else if (children) {
+    asyncLayout(nodes, edges, oldPathnameRef, pathname).then(({id, children}) => {
+        console.log('layout res', id, children);
+        // if (id != pathname) {
+        //     console.log('layout ignore other', id, pathname);
+        // } else
+        if (children) {
             // console.log('layout ok', id)
             const map = new Map<string, XYPosition>();
             toPositionMap(map, children);
@@ -104,18 +114,20 @@ export function layout(flowInstance: ReactFlowInstance, width: number, height: n
             const nodes = flowInstance.getNodes();
             // const edges = flowInstance.getEdges();
             // console.log('before', nodes);
-            const newNodes = nodes.map(n => {
+            nodes.forEach(n => {
                 const newPos = map.get(n.id);
                 if (newPos) {
-                    return {
-                        //去掉positionAbsolute，要不然getNodesBounds返回用这个
-                        id: n.id,
-                        data: n.data,
-                        position: newPos,
-                        width: n.width,
-                        height: n.height,
-                        type: n.type
-                    }
+                    n.positionAbsolute = undefined;
+                    n.position = newPos;
+                    // return {
+                    //     //去掉positionAbsolute，要不然getNodesBounds返回用这个
+                    //     id: n.id,
+                    //     data: n.data,
+                    //     position: newPos,
+                    //     width: n.width,
+                    //     height: n.height,
+                    //     type: n.type
+                    // }
                 } else {
                     console.log('not found', n, map)
                     return n;
@@ -125,9 +137,9 @@ export function layout(flowInstance: ReactFlowInstance, width: number, height: n
             // edges.forEach(e => {
             //     e.style = {...e.style, visibility: undefined};
             // })
-            flowInstance.setNodes(newNodes);
+            flowInstance.setNodes(nodes);
             // flowInstance.setEdges(edges);
-            const bounds = getNodesBounds(newNodes);
+            const bounds = getNodesBounds(nodes);
 
             const viewportForBounds = getViewportForBounds(bounds, width, height, 0.3, 1);
             flowInstance.setViewport(viewportForBounds);

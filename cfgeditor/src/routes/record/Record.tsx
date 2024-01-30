@@ -80,8 +80,6 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
 
         function afterEditStateChanged() {
             setEditSeq(editSeq + 1);
-            queryClient.removeQueries({queryKey: ['layout', pathname]});
-            queryClient.removeQueries({queryKey: ['viewport', pathname]});
         }
 
         //这是非纯函数，escape hatch，用useRef也能做，这里用全局变量

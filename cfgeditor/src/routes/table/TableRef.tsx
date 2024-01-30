@@ -9,9 +9,10 @@ import {SItem} from "./schemaModel.ts";
 import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
 import {getDefaultIdInTable} from "./Table.tsx";
 import {useEntityToGraph} from "../../flow/FlowGraph.tsx";
+import {memo, useCallback, useMemo} from "react";
 
 
-export function TableRef() {
+export const TableRef = memo(function TableRef() {
     const {schema, curTable} = useOutletContext<SchemaTableType>();
     const {refIn, refOutDepth, maxNode} = store;
     const {curId, pathname} = useLocationData();
@@ -21,15 +22,15 @@ export function TableRef() {
     includeRefTables(entityMap, curTable, schema, refIn, refOutDepth, maxNode);
     fillHandles(entityMap);
 
-    const paneMenu: MenuItem[] = [{
+    const paneMenu: MenuItem[] = useMemo(() => [{
         label: curTable.name + "\n" + t('table'),
         key: 'table',
         handler() {
             navigate(navTo('table', curTable.name, getDefaultIdInTable(schema, curTable.name, curId)));
         }
-    }];
+    }], [navigate, schema, curTable, curId]);
 
-    const nodeMenuFunc = (entity: Entity): MenuItem[] => {
+    const nodeMenuFunc = useCallback((entity: Entity): MenuItem[] => {
         let sItem = entity.userData as SItem;
         return [{
             label: sItem.name + "\n" + t('tableRef'),
@@ -44,9 +45,9 @@ export function TableRef() {
                 navigate(navTo('table', sItem.name, getDefaultIdInTable(schema, sItem.name, curId)));
             }
         }];
-    }
+    }, [navigate, schema, curId]);
 
     useEntityToGraph(pathname, entityMap, nodeMenuFunc, paneMenu);
 
     return <></>;
-}
+});

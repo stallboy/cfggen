@@ -16,7 +16,7 @@ import {PathNotFound} from "./routes/PathNotFound.tsx";
 import {TableRef} from "./routes/table/TableRef.tsx";
 // import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
 
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
             staleTime: 1000 * 10,
