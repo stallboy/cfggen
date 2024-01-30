@@ -1,5 +1,5 @@
 import Dagre from '@dagrejs/dagre';
-import {ReactFlowInstance} from "reactflow";
+import {ReactFlowInstance} from '@xyflow/react';
 import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
 
 const g = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));

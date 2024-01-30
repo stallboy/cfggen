@@ -13,9 +13,9 @@ import {
 } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import {MinusSquareTwoTone, PlusSquareTwoTone} from "@ant-design/icons";
-import {memo, useRef} from "react";
+import {memo, useEffect, useRef} from "react";
 import {useTranslation} from "react-i18next";
-import {Handle, Position} from "reactflow";
+import {Handle, Position} from "@xyflow/react";
 import {ActionIcon} from "@ant-design/pro-editor";
 
 
@@ -74,7 +74,7 @@ function PrimitiveControl(field: EntityEditField) {
     return control;
 }
 
-function StructRefItem(field: EntityEditField) {
+function StructRefItem({field}: { field: EntityEditField }) {
     return <Flex key={field.name} gap={'middle'} justify="flex-end"
                  style={{marginBottom: 10, position: 'relative'}}>
         <Tag color={'blue'}>{field.name}</Tag>
@@ -88,7 +88,7 @@ function StructRefItem(field: EntityEditField) {
 }
 
 
-function FuncAddFormItem(field: EntityEditField) {
+function FuncAddFormItem({field}: { field: EntityEditField }) {
     let func = field.value as FuncType;
     return <Flex key={field.name} gap={'middle'} justify="flex-end"
                  style={{marginBottom: 10, position: 'relative'}}>
@@ -102,7 +102,13 @@ function FuncAddFormItem(field: EntityEditField) {
     </Flex>;
 }
 
-function PrimitiveFormItem(field: EntityEditField) {
+function PrimitiveFormItem({field}: { field: EntityEditField }) {
+    const form = Form.useFormInstance();
+    useEffect(() => {
+        form.setFieldValue(field.name, field.value);
+    }, [field.value]);
+
+
     let props = {}
     if (field.eleType == 'bool') {
         props = {valuePropName: "checked"}
@@ -136,21 +142,26 @@ function makeLabel(field: EntityEditField) {
     </Tooltip>;
 }
 
-function ArrayOfPrimitiveFormItem(editField: EntityEditField) {
-    return <Form.List name={editField.name} key={editField.name} initialValue={editField.value as any[]}>
+function ArrayOfPrimitiveFormItem({field}: { field: EntityEditField }) {
+    const form = Form.useFormInstance();
+    useEffect(() => {
+        form.setFieldValue(field.name, field.value);
+    }, [field.value]);
+
+    return <Form.List name={field.name} key={field.name} initialValue={field.value as any[]}>
         {(fields, {add, remove}) => (
             <>
-                {fields.map((field, index) => (
+                {fields.map((f, index) => (
                     <Form.Item {...(index === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
-                               label={index === 0 ? makeLabel(editField) : ''}
-                               key={field.key}>
+                               label={index === 0 ? makeLabel(field) : ''}
+                               key={f.key}>
 
                         <Space>
-                            <Form.Item {...field} >
-                                {PrimitiveControl(editField)}
+                            <Form.Item {...f} >
+                                {PrimitiveControl(field)}
                             </Form.Item>
                             <ActionIcon icon={<MinusSquareTwoTone twoToneColor='red'/>}
-                                        onClick={() => remove(field.name)}
+                                        onClick={() => remove(f.name)}
                             />
 
                         </Space>
@@ -158,8 +169,8 @@ function ArrayOfPrimitiveFormItem(editField: EntityEditField) {
                     </Form.Item>
                 ))}
                 <Form.Item {...(fields.length === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
-                           label={fields.length === 0 ? makeLabel(editField) : ''}>
-                    <Button onClick={add} icon={<PlusSquareTwoTone/>}> {editField.name} </Button>
+                           label={fields.length === 0 ? makeLabel(field) : ''}>
+                    <Button onClick={add} icon={<PlusSquareTwoTone/>}> {field.name} </Button>
 
                 </Form.Item>
             </>
@@ -168,7 +179,7 @@ function ArrayOfPrimitiveFormItem(editField: EntityEditField) {
 }
 
 
-function FuncSubmitFormItem(field: EntityEditField) {
+function FuncSubmitFormItem({field}: { field: EntityEditField }) {
     const [t] = useTranslation();
     let func = field.value as FuncSubmitType;
     return <Form.Item {...formItemLayoutWithOutLabel} key={field.name}>
@@ -183,7 +194,7 @@ function FuncSubmitFormItem(field: EntityEditField) {
     </Form.Item>
 }
 
-function FuncDeleteFormItem(field: EntityEditField) {
+function FuncDeleteFormItem({field}: { field: EntityEditField }) {
     let func = field.value as FuncType;
     return <Form.Item {...formItemLayoutWithOutLabel} key={field.name}>
         <ActionIcon icon={<MinusSquareTwoTone twoToneColor='red'/>}
@@ -191,7 +202,12 @@ function FuncDeleteFormItem(field: EntityEditField) {
     </Form.Item>
 }
 
-function InterfaceFormItem(field: EntityEditField): any {
+function InterfaceFormItem({field}: { field: EntityEditField }): any {
+    const form = Form.useFormInstance();
+    useEffect(() => {
+        form.setFieldValue(field.name, field.value);
+    }, [field.value]);
+
     let options = field.autoCompleteOptions?.options;
     let implSelect = <Form.Item name={field.name} key={field.name} label={makeLabel(field)}
                                 initialValue={field.value}>
@@ -203,32 +219,33 @@ function InterfaceFormItem(field: EntityEditField): any {
 
     </Form.Item>;
 
-    return [implSelect, ...FieldsFormItem(field.implFields as EntityEditField[])]
+    return <>
+        {implSelect}
+        <FieldsFormItem fields={field.implFields as EntityEditField[]}/>
+    </>
 }
 
-function FieldFormItem(field: EntityEditField) {
+function FieldFormItem({field}: { field: EntityEditField }) {
     switch (field.type) {
         case "structRef":
-            return StructRefItem(field);
+            return <StructRefItem field={field}/>;
         case "arrayOfPrimitive":
-            return ArrayOfPrimitiveFormItem(field);
+            return <ArrayOfPrimitiveFormItem field={field}/>;
         case "primitive":
-            return PrimitiveFormItem(field);
+            return <PrimitiveFormItem field={field}/>;
         case "funcAdd":
-            return FuncAddFormItem(field);
+            return <FuncAddFormItem field={field}/>;
         case "interface":
-            return InterfaceFormItem(field);
+            return <InterfaceFormItem field={field}/>;
         case "funcSubmit":
-            return FuncSubmitFormItem(field);
+            return <FuncSubmitFormItem field={field}/>;
         case "funcDelete":
-            return FuncDeleteFormItem(field);
+            return <FuncDeleteFormItem field={field}/>;
     }
 }
 
-function FieldsFormItem(fields: EntityEditField[]) {
-    return fields.map((field, _index) => {
-        return FieldFormItem(field);
-    });
+function FieldsFormItem({fields}: { fields: EntityEditField[] }) {
+    return <>{fields.map((field, _index) => <FieldFormItem field={field}/>)} </>
 }
 
 
@@ -237,15 +254,11 @@ export const EntityForm = memo(function EntityForm({edit}: {
 }) {
     const ref = useRef<HTMLDivElement>(null);
 
+    const [_form] = Form.useForm();
+
     function onValuesChange(_changedFields: any, allFields: any) {
         edit.editOnUpdateValues(allFields);
     }
-
-    let form = <Form {...formLayout}
-                     onValuesChange={onValuesChange}
-                     style={{maxWidth: 600, backgroundColor: "white", borderRadius: 15, padding: 10}}>
-        {FieldsFormItem(edit.editFields)}
-    </Form>
 
     return <ConfigProvider theme={{
         components: {
@@ -254,7 +267,14 @@ export const EntityForm = memo(function EntityForm({edit}: {
             },
         },
     }}>
-        <div ref={ref}> {form} </div>
+        <div ref={ref}>
+            <Form {...formLayout}
+                  form={_form}
+                  onValuesChange={onValuesChange}
+                  style={{maxWidth: 600, backgroundColor: "white", borderRadius: 15, padding: 10}}>
+                <FieldsFormItem fields={edit.editFields}/>
+            </Form>
+        </div>
 
     </ConfigProvider>
 });

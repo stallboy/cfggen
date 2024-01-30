@@ -7,6 +7,10 @@ export class UserData {
     }
 }
 
+function eid(id: string) {
+    return 't-' + id;
+}
+
 function createEntity(item: SItem, id: string, table: string, entityType: EntityType = EntityType.Normal): Entity {
     let fields = [];
     if (item.type != "interface") {
@@ -23,7 +27,7 @@ function createEntity(item: SItem, id: string, table: string, entityType: Entity
 
 
     return {
-        id: id,
+        id: eid(id),
         label: item.name,
         fields: fields,
         sourceEdges: [],
@@ -51,7 +55,7 @@ export class TableEntityCreator {
             let depStructNames = this.schema.getDirectDepStructsByItems(frontier);
             frontier = [];
             for (let depName of depStructNames) {
-                let depEntity = this.entityMap.get(depName);
+                let depEntity = this.entityMap.get(eid(depName));
                 if (depEntity) {
                     continue;
                 }
@@ -92,7 +96,7 @@ export class TableEntityCreator {
             }
 
             for (let oldF of oldFrontier) {
-                let oldFEntity = this.entityMap.get(oldF.id ?? oldF.name);
+                let oldFEntity = this.entityMap.get(eid(oldF.id ?? oldF.name));
                 if (!oldFEntity) {
                     console.log("old frontier " + (oldF.id ?? oldF.name) + " not found!");
                     continue;
@@ -101,7 +105,7 @@ export class TableEntityCreator {
                 for (let [type, name] of deps) {
                     oldFEntity.sourceEdges.push({
                         sourceHandle: name,
-                        target: type,
+                        target: eid(type),
                         targetHandle: '@in',
                         type: EntityEdgeType.Normal,
                     })
@@ -126,7 +130,7 @@ export class TableEntityCreator {
                     this.addRefToEntityMapIf(ii.enumRef);
                     oldEntity.sourceEdges.push({
                         sourceHandle: '@out',
-                        target: ii.enumRef,
+                        target: eid(ii.enumRef),
                         targetHandle: "@in",
                         type: EntityEdgeType.Ref,
                     });
@@ -139,7 +143,7 @@ export class TableEntityCreator {
                         this.addRefToEntityMapIf(fk.refTable);
                         oldEntity.sourceEdges.push({
                             sourceHandle: fk.keys[0],
-                            target: fk.refTable,
+                            target: eid(fk.refTable),
                             targetHandle: this.schema.getFkTargetHandle(fk),
                             type: EntityEdgeType.Ref,
                         });
@@ -150,12 +154,12 @@ export class TableEntityCreator {
     }
 
     addRefToEntityMapIf(tableName: string) {
-        let entity = this.entityMap.get(tableName);
+        let entity = this.entityMap.get(eid(tableName));
         if (!entity) {
             let sTable = this.schema.getSTable(tableName);
             if (sTable) {
                 entity = createEntity(sTable, sTable.name, sTable.name, EntityType.Ref);
-                this.entityMap.set(sTable.name, entity);
+                this.entityMap.set(entity.id, entity);
             }
         }
     }

@@ -1,6 +1,6 @@
 import ELK, {ElkNode, ElkExtendedEdge} from 'elkjs';
 import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
-import {getNodesBounds, getViewportForBounds, ReactFlowInstance, XYPosition} from "reactflow";
+import {getNodesBounds, getViewportForBounds, ReactFlowInstance, XYPosition} from "@xyflow/react";
 import {MutableRefObject} from "react";
 import {queryClient} from "../main.tsx";
 
@@ -8,13 +8,13 @@ import {queryClient} from "../main.tsx";
 const elk = new ELK();
 
 function nodeToLayoutChild(node: EntityNode): ElkNode {
-    let width = node.width
+    let width = node.computed?.width
     if (!width) {
         width = 300;
         console.log('width', width);
     }
 
-    let height = node.height
+    let height = node.computed?.height
     if (!height) {
         height = 300;
         console.log('height', height);
@@ -45,7 +45,7 @@ function toPositionMap(map: Map<string, XYPosition>, children: ElkNode[]) {
 
 function allWidthHeightOk(nodes: EntityNode[]) {
     for (let node of nodes) {
-        if (!node.width || !node.height) {
+        if (!node.computed?.width || !node.computed?.height) {
             return false;
         }
     }
@@ -77,7 +77,7 @@ async function asyncLayout(nodes: EntityNode[], edges: EntityEdge[],
     return await queryClient.fetchQuery({
         queryKey: ['layout', pathname],
         queryFn: async () => {
-            console.log("layout", pathname);
+            // console.log("layout calc", pathname);
             const defaultOptions = {
                 'elk.algorithm': 'layered',
                 'elk.direction': 'RIGHT',
@@ -110,12 +110,12 @@ export function layout(flowInstance: ReactFlowInstance, oldPathnameRef: MutableR
                        width: number, height: number, pathname: string) {
     const nodes = flowInstance.getNodes();
     if (!allWidthHeightOk(nodes)) {
-        // console.log('layout ignore')
+        console.log('layout ignore')
         return;
     }
     const edges = flowInstance.getEdges();
 
-    // console.log('layout', pathname);
+    console.log('layout', pathname);
     asyncLayout(nodes, edges, oldPathnameRef, pathname).then(({id, children}) => {
         oldPathnameRef.current = null;
         // console.log('layout res', id, children);
@@ -138,8 +138,11 @@ export function layout(flowInstance: ReactFlowInstance, oldPathnameRef: MutableR
             nodes.forEach(n => {
                 const newPos = map.get(n.id);
                 if (newPos) {
-                    n.positionAbsolute = undefined;
+                    if (n.computed) {
+                        n.computed.positionAbsolute = undefined;
+                    }
                     n.position = newPos;
+
                     // return {
                     //     //去掉positionAbsolute，要不然getNodesBounds返回用这个
                     //     id: n.id,
@@ -162,9 +165,9 @@ export function layout(flowInstance: ReactFlowInstance, oldPathnameRef: MutableR
             // flowInstance.setEdges(edges);
             const bounds = getNodesBounds(nodes);
 
-            const viewportForBounds = getViewportForBounds(bounds, width, height, 0.3, 1);
+            const viewportForBounds = getViewportForBounds(bounds, width, height, 0.3, 1, 0);
             flowInstance.setViewport(viewportForBounds);
-            // console.log('set viewport', newNodes, bounds, viewportForBounds);
+            // console.log('set viewport', nodes, bounds, viewportForBounds);
         } else {
             console.log('layout children null');
         }

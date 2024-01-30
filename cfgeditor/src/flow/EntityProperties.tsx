@@ -1,4 +1,4 @@
-import {Handle, Position} from "reactflow";
+import {Handle, Position} from "@xyflow/react";
 import {EntityField} from "./entityModel.ts";
 import {Flex, List, Tooltip, Typography} from "antd";
 import {memo} from "react";

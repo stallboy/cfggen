@@ -1,4 +1,5 @@
-import ReactFlow, {
+import {
+    ReactFlow,
     Background,
     Controls,
     Edge,
@@ -7,7 +8,7 @@ import ReactFlow, {
     ReactFlowProvider,
     useEdgesState, useNodesInitialized,
     useNodesState, useReactFlow, useStore
-} from "reactflow";
+} from "@xyflow/react";
 import {Entity} from "./entityModel.ts";
 import {
     createContext,
@@ -28,7 +29,7 @@ import {convertNodeAndEdges} from "./entityToNodeAndEdge.ts";
 // import {syncLayout} from "./syncLayout.ts";
 
 
-export type EntityNode = Node<Entity, string>;
+export type EntityNode = Node<Entity, string | undefined>;
 export type EntityEdge = Edge;
 export type NodeMenuFunc = (entity: Entity) => MenuItem[];
 
@@ -38,7 +39,7 @@ export interface FlowGraphContextType {
     setPathname: (pathname: string) => void;
     setNodes: (nodes: Node[]) => void;
     setEdges: (edges: any[]) => void;
-    forceLayout: ()=>void;
+    forceLayout: () => void;
 }
 
 function dummy() {
@@ -50,25 +51,28 @@ export const FlowGraphContext = createContext<FlowGraphContextType>({
     setPathname: dummy,
     setNodes: dummy,
     setEdges: dummy,
-    forceLayout:dummy,
+    forceLayout: dummy,
 });
 
 const nodeTypes: NodeTypes = {
     node: FlowNode,
 };
 
-export function FlowGraphInner({children}: { children: ReactNode }) {
+export function FlowGraphInner({pathname, setPathname, children}: {
+    pathname: string;
+    setPathname: (p: string) => void;
+    children: ReactNode
+}) {
     const [menuStyle, setMenuStyle] = useState<MenuStyle | undefined>(undefined);
     const [menuItems, setMenuItems] = useState<MenuItem[] | undefined>(undefined);
 
-    const [nodes, _setNodes, onNodesChange] = useNodesState<Entity>([]);
+    const [nodes, _setNodes, onNodesChange] = useNodesState<EntityNode>([]);
     const [edges, _setEdges, onEdgesChange] = useEdgesState<any>([]);
     const [paneMenu, setPaneMenu] = useState<MenuItem[]>([]);
     const [nodeMenuFunc, setNodeMenuFunc] = useState<NodeMenuFunc>();
-    const [pathname, setPathname] = useState<string>('');
 
 
-    const onPaneContextMenu = useCallback((event: MouseEvent) => {
+    const onPaneContextMenu = useCallback((event: any) => {
             event.preventDefault();
             setMenuStyle({top: event.clientY - 30, left: event.clientX - 30,});
             setMenuItems(paneMenu);
@@ -116,9 +120,9 @@ export function FlowGraphInner({children}: { children: ReactNode }) {
     //     // layout(flowInstance, oldPathnameRef, width, height, pathname);
     // },  [onNodesChange])
 
+    console.log('flow graph', pathname, nodes);
     return <>
-        <ReactFlow key={pathname}
-                   nodes={nodes}
+        <ReactFlow nodes={nodes}
                    edges={edges}
                    onNodesChange={onNodesChange}
                    onEdgesChange={onEdgesChange}
@@ -147,8 +151,10 @@ export function FlowGraphInner({children}: { children: ReactNode }) {
 }
 
 export function FlowGraph({children}: { children: ReactNode }) {
-    return <ReactFlowProvider>
-        <FlowGraphInner children={children}/>
+    const [pathname, setPathname] = useState<string>('');
+
+    return <ReactFlowProvider >
+        <FlowGraphInner pathname={pathname} setPathname={setPathname} children={children}/>
     </ReactFlowProvider>;
 }
 

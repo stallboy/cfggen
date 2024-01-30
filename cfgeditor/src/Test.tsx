@@ -1,8 +1,9 @@
-import ReactFlow, {
+import {
+    ReactFlow,
     Controls,
     Background,
     useNodesState, useEdgesState, Edge, Node, NodeTypes, ReactFlowProvider, useNodes, Handle, Position
-} from 'reactflow';
+} from '@xyflow/react';
 import 'reactflow/dist/style.css';
 import {Button, Checkbox, Flex, Form, Input, List, Space, Typography} from "antd";
 

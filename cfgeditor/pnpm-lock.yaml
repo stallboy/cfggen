@@ -17,9 +17,9 @@ dependencies:
   '@tanstack/react-query':
     specifier: ^5.17.15
     version: 5.17.15(react@18.2.0)
-  '@xyflow/system':
-    specifier: ^0.0.15
-    version: 0.0.15
+  '@xyflow/react':
+    specifier: 12.0.0-next.8
+    version: 12.0.0-next.8(@types/react@18.2.39)(react-dom@18.2.0)(react@18.2.0)
   antd:
     specifier: ^5.11.5
     version: 5.11.5(react-dom@18.2.0)(react@18.2.0)
@@ -56,9 +56,6 @@ dependencies:
   react-router-dom:
     specifier: ^6.21.2
     version: 6.21.2(react-dom@18.2.0)(react@18.2.0)
-  reactflow:
-    specifier: ^11.10.1
-    version: 11.10.1(@types/react@18.2.39)(immer@9.0.21)(react-dom@18.2.0)(react@18.2.0)
   resso:
     specifier: ^0.15.0
     version: 0.15.0(react@18.2.0)
@@ -2667,8 +2664,24 @@ packages:
       - '@swc/helpers'
     dev: true
 
-  /@xyflow/system@0.0.15:
-    resolution: {integrity: sha512-TD3+lm4H1CtDgzooDv9K8izG49RzfpMklIyiQ84ftF3HgwhjPY8oR8pf0L7f6i+sTeCyIL1V+P4kM1GJc0ZN3w==, tarball: https://registry.npmmirror.com/@xyflow/system/-/system-0.0.15.tgz}
+  /@xyflow/react@12.0.0-next.8(@types/react@18.2.39)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-Jdy/0wv10ycxwQm5rESWN8Psp+FTipbIv4RTIJwAH9zG5AqGp20ESi/k3oxJmAsbQHIcGgjB2RlOhxBs2qqJLA==, tarball: https://registry.npmmirror.com/@xyflow/react/-/react-12.0.0-next.8.tgz}
+    peerDependencies:
+      react: '>=17'
+      react-dom: '>=17'
+    dependencies:
+      '@xyflow/system': 0.0.16
+      classcat: 5.0.4
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+      zustand: 4.4.7(@types/react@18.2.39)(immer@9.0.21)(react@18.2.0)
+    transitivePeerDependencies:
+      - '@types/react'
+      - immer
+    dev: false
+
+  /@xyflow/system@0.0.16:
+    resolution: {integrity: sha512-pVWaBHAE1Ew9acmNGEdsVLNh8Z+TEBbsdaIojV+SDbmolYlCQ1UJ6Sse4k+K3rr7kgX/1GRsiEcWxOFIx0wt+w==, tarball: https://registry.npmmirror.com/@xyflow/system/-/system-0.0.16.tgz}
     dependencies:
       '@types/d3': 7.4.3
       '@types/d3-drag': 3.0.7

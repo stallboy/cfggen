@@ -1,5 +1,5 @@
 import {memo} from "react";
-import {Handle, NodeProps, Position} from "reactflow";
+import {Handle, NodeProps, Position} from "@xyflow/react";
 import {Entity} from "./entityModel.ts";
 import {getNodeBackgroundColor} from "./colors.ts";
 import {Flex, Typography} from "antd";
@@ -17,6 +17,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
     if (nodeShow?.showHead == 'showCopyable') {
         copy.copyable = true;
     }
+    console.log('flownode', nodeProps)
 
     return <Flex key={id} vertical gap={'small'} className='flowNode' style={{width: width, backgroundColor: color}}>
 
