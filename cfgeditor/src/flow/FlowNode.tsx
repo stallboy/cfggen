@@ -17,7 +17,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
     if (nodeShow?.showHead == 'showCopyable') {
         copy.copyable = true;
     }
-    console.log('flownode', nodeProps)
+    // console.log('flownode', nodeProps)
 
     return <Flex key={id} vertical gap={'small'} className='flowNode' style={{width: width, backgroundColor: color}}>
 

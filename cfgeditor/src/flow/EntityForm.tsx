@@ -13,7 +13,7 @@ import {
 } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import {MinusSquareTwoTone, PlusSquareTwoTone} from "@ant-design/icons";
-import {memo, useEffect, useRef} from "react";
+import {memo, useEffect} from "react";
 import {useTranslation} from "react-i18next";
 import {Handle, Position} from "@xyflow/react";
 import {ActionIcon} from "@ant-design/pro-editor";
@@ -252,8 +252,6 @@ function FieldsFormItem({fields}: { fields: EntityEditField[] }) {
 export const EntityForm = memo(function EntityForm({edit}: {
     edit: EntityEdit;
 }) {
-    const ref = useRef<HTMLDivElement>(null);
-
     const [_form] = Form.useForm();
 
     function onValuesChange(_changedFields: any, allFields: any) {
@@ -267,14 +265,11 @@ export const EntityForm = memo(function EntityForm({edit}: {
             },
         },
     }}>
-        <div ref={ref}>
-            <Form {...formLayout}
-                  form={_form}
-                  onValuesChange={onValuesChange}
-                  style={{maxWidth: 600, backgroundColor: "white", borderRadius: 15, padding: 10}}>
-                <FieldsFormItem fields={edit.editFields}/>
-            </Form>
-        </div>
-
+        <Form {...formLayout}
+              form={_form}
+              onValuesChange={onValuesChange}
+              style={{maxWidth: 600, backgroundColor: "white", borderRadius: 15, padding: 10}}>
+            <FieldsFormItem fields={edit.editFields}/>
+        </Form>
     </ConfigProvider>
 });

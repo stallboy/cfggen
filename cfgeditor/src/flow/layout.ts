@@ -115,7 +115,7 @@ export function layout(flowInstance: ReactFlowInstance, oldPathnameRef: MutableR
     }
     const edges = flowInstance.getEdges();
 
-    console.log('layout', pathname);
+    console.log('layout', pathname, nodes, edges);
     asyncLayout(nodes, edges, oldPathnameRef, pathname).then(({id, children}) => {
         oldPathnameRef.current = null;
         // console.log('layout res', id, children);
@@ -135,23 +135,23 @@ export function layout(flowInstance: ReactFlowInstance, oldPathnameRef: MutableR
             }
             // const edges = flowInstance.getEdges();
             // console.log('before', nodes);
-            nodes.forEach(n => {
+            const newNodes = nodes.map(n => {
                 const newPos = map.get(n.id);
                 if (newPos) {
-                    if (n.computed) {
-                        n.computed.positionAbsolute = undefined;
-                    }
-                    n.position = newPos;
-
-                    // return {
-                    //     //去掉positionAbsolute，要不然getNodesBounds返回用这个
-                    //     id: n.id,
-                    //     data: n.data,
-                    //     position: newPos,
-                    //     width: n.width,
-                    //     height: n.height,
-                    //     type: n.type
+                    // if (n.computed) {
+                    //     n.computed.positionAbsolute = undefined;
                     // }
+                    // n.position = newPos;
+
+                    return {
+                        ...n,
+                        position: newPos,
+                        computed: {
+                            ...n.computed,
+                            positionAbsolute: undefined
+                        }
+                        //去掉positionAbsolute，要不然getNodesBounds返回用这个
+                    }
                 } else {
                     console.log('not found', n, map)
                     return n;
@@ -161,13 +161,14 @@ export function layout(flowInstance: ReactFlowInstance, oldPathnameRef: MutableR
             // edges.forEach(e => {
             //     e.style = {...e.style, visibility: undefined};
             // })
-            flowInstance.setNodes(nodes);
+            flowInstance.setNodes(newNodes);
             // flowInstance.setEdges(edges);
+
+            console.log('layout res set nodes', nodes, edges);
             const bounds = getNodesBounds(nodes);
 
             const viewportForBounds = getViewportForBounds(bounds, width, height, 0.3, 1, 0);
             flowInstance.setViewport(viewportForBounds);
-            // console.log('set viewport', nodes, bounds, viewportForBounds);
         } else {
             console.log('layout children null');
         }
@@ -175,7 +176,7 @@ export function layout(flowInstance: ReactFlowInstance, oldPathnameRef: MutableR
         if (typeof reason == 'object' && 'revert' in reason) {
             //CancelledError是正常的
         } else {
-            console.log('layout err', reason);
+            console.log('layout err', reason, nodes, edges);
         }
     });
 }
