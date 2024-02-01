@@ -4,7 +4,7 @@ import {
     Background,
     useNodesState, useEdgesState, Edge, Node, NodeTypes, ReactFlowProvider, useNodes, Handle, Position
 } from '@xyflow/react';
-import 'reactflow/dist/style.css';
+import '@xyflow/react/dist/style.css';
 import {Button, Checkbox, Flex, Form, Input, List, Space, Typography} from "antd";
 
 const {Text} = Typography;

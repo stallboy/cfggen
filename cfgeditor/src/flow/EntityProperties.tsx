@@ -50,7 +50,7 @@ export const EntityProperties = memo(function EntityProperties({fields, color}: 
                          {item.handleOut && <Handle type='source' position={Position.Right} id={item.name}
                                                     style={{
                                                         position: 'absolute',
-                                                        left: '230px',
+                                                        left: '226px',
                                                         backgroundColor: color
                                                     }}/>}
                      </List.Item>;

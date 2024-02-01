@@ -187,6 +187,7 @@ export function setServer(value: string) {
 export function setNodeShow(nodeShow: NodeShowType) {
     store.nodeShow = nodeShow;
     localStorage.setItem('nodeShow', Convert.nodeShowTypeToJson(nodeShow));
+    clearLayoutCache();
 }
 
 export function historyPrev(curPage: PageType) {

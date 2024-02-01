@@ -3,9 +3,10 @@ import {Handle, NodeProps, Position} from "@xyflow/react";
 import {Entity} from "./entityModel.ts";
 import {getNodeBackgroundColor} from "./colors.ts";
 import {Flex, Typography} from "antd";
-import {EntityCard} from "./EntityCard.tsx";
+import {EntityCard, getDsLenAndDesc} from "./EntityCard.tsx";
 import {EntityProperties} from "./EntityProperties.tsx";
 import {EntityForm} from "./EntityForm.tsx";
+import {NodeShowType} from "../io/localStoreJson.ts";
 
 const {Text} = Typography;
 
@@ -40,3 +41,59 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
                                }}/>)}
     </Flex>;
 });
+
+// 在一次又一次尝试了等待node准备好，直接用node的computed理的width，height后，增加这一个异步，太容易有闪烁和被代码绕晕了。
+// 放弃放弃，还是预先估算好。
+export function calcWidthHeight(entity: Entity, nodeShow: NodeShowType) {
+    const {fields, brief, edit} = entity;
+    const width = edit ? 280 : 240;
+    let height = 40;
+
+    if (fields) {
+        height += 41 * fields.length;
+
+    } else if (brief) {
+        height += 48 + (brief.title ? 32 : 0);
+        let [showDsLen, desc] = getDsLenAndDesc(brief, nodeShow);
+        height += showDsLen * 38;
+        if (desc) {
+            height += 22 * desc.length / 13;
+        }
+
+    } else if (edit) {
+        let cnt = 0;
+        let extra = 0;
+        for (let editField of edit.editFields) {
+            switch (editField.type) {
+                case "arrayOfPrimitive":
+                    cnt += (editField.value as any[]).length;
+                    break;
+
+                case "interface":
+                    cnt++;
+                    if (editField.implFields) {
+                        cnt += editField.implFields.length;
+                    }
+                    break;
+                case 'primitive':
+                    if (editField.eleType == 'text' || editField.eleType == 'str') {
+                        let row = (editField.value as string).length / 10;
+                        if (row > 10) {
+                            row = 10;
+                        }
+                        extra += row * 22 + 10;
+                    } else {
+                        cnt++;
+                    }
+                    break;
+                default:
+                    cnt++;
+                    break;
+            }
+        }
+        height += 20 + 40 * cnt + extra;
+    }
+
+    return [width, height];
+
+}

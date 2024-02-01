@@ -221,31 +221,31 @@ function InterfaceFormItem({field}: { field: EntityEditField }): any {
 
     return <>
         {implSelect}
-        <FieldsFormItem fields={field.implFields as EntityEditField[]}/>
+        {FieldsFormItem(field.implFields as EntityEditField[])}
     </>
 }
 
-function FieldFormItem({field}: { field: EntityEditField }) {
+function FieldFormItem(field: EntityEditField) {
     switch (field.type) {
         case "structRef":
-            return <StructRefItem field={field}/>;
+            return <StructRefItem key={field.name} field={field}/>;
         case "arrayOfPrimitive":
-            return <ArrayOfPrimitiveFormItem field={field}/>;
+            return <ArrayOfPrimitiveFormItem key={field.name} field={field}/>;
         case "primitive":
-            return <PrimitiveFormItem field={field}/>;
+            return <PrimitiveFormItem key={field.name} field={field}/>;
         case "funcAdd":
-            return <FuncAddFormItem field={field}/>;
+            return <FuncAddFormItem key={field.name} field={field}/>;
         case "interface":
-            return <InterfaceFormItem field={field}/>;
+            return <InterfaceFormItem key={field.name} field={field}/>;
         case "funcSubmit":
-            return <FuncSubmitFormItem field={field}/>;
+            return <FuncSubmitFormItem key={field.name} field={field}/>;
         case "funcDelete":
-            return <FuncDeleteFormItem field={field}/>;
+            return <FuncDeleteFormItem key={field.name} field={field}/>;
     }
 }
 
-function FieldsFormItem({fields}: { fields: EntityEditField[] }) {
-    return <>{fields.map((field, _index) => <FieldFormItem field={field}/>)} </>
+function FieldsFormItem(fields: EntityEditField[]) {
+    return fields.map((field, _index) => FieldFormItem(field));
 }
 
 
@@ -269,7 +269,7 @@ export const EntityForm = memo(function EntityForm({edit}: {
               form={_form}
               onValuesChange={onValuesChange}
               style={{maxWidth: 600, backgroundColor: "white", borderRadius: 15, padding: 10}}>
-            <FieldsFormItem fields={edit.editFields}/>
+            {FieldsFormItem(edit.editFields)}
         </Form>
     </ConfigProvider>
 });

@@ -1,11 +1,14 @@
 import ELK, {ElkNode, ElkExtendedEdge} from 'elkjs';
 import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
 import {XYPosition} from "@xyflow/react";
+import {calcWidthHeight} from "./FlowNode.tsx";
+import {NodeShowType} from "../io/localStoreJson.ts";
 
 
-function nodeToLayoutChild(node: EntityNode): ElkNode {
-    const width = node.width ?? 300;
-    const height = node.height ?? 300;
+function nodeToLayoutChild(node: EntityNode, nodeShow:NodeShowType): ElkNode {
+    const [width, height] = calcWidthHeight(node.data, nodeShow);
+    node.width = width;
+    node.height = height;
     return {id: node.id, width, height};
 }
 
@@ -43,9 +46,9 @@ function allPositionXYOk(nodes: EntityNode[], map: Map<string, XYPosition>) {
 }
 
 
-export async function asyncLayout(nodes: EntityNode[], edges: EntityEdge[], pathname: string) {
+export async function asyncLayout(nodes: EntityNode[], edges: EntityEdge[], nodeShow: NodeShowType) {
     const elk = new ELK();
-    console.log('layout', pathname, nodes, edges);
+    // console.log('layout', pathname, nodes, edges);
 
     // console.log("layout calc", pathname);
     const defaultOptions = {
@@ -60,11 +63,13 @@ export async function asyncLayout(nodes: EntityNode[], edges: EntityEdge[], path
     };
 
     const graph: ElkNode = {
-        id: pathname,
+        id: 'root',
         layoutOptions: defaultOptions,
-        children: nodes.map(nodeToLayoutChild),
+        children: nodes.map( (n) => nodeToLayoutChild(n, nodeShow)),
         edges: edges.map(edgeToLayoutEdge),
     };
+
+    // console.log(graph);
 
     const flowNodeMap = new Map<string, EntityNode>();
     nodes.forEach(n => flowNodeMap.set(n.id, n));
@@ -99,10 +104,10 @@ export async function asyncLayout(nodes: EntityNode[], edges: EntityEdge[], path
                 return {
                     ...n,
                     position: newPos,
-                    computed: {
-                        ...n.computed,
-                        positionAbsolute: undefined
-                    }
+                    // computed: {
+                    //     ...n.computed,
+                    //     positionAbsolute: undefined
+                    // }
                     //去掉positionAbsolute，要不然getNodesBounds返回用这个
                 }
             } else {
@@ -116,7 +121,7 @@ export async function asyncLayout(nodes: EntityNode[], edges: EntityEdge[], path
         // })
         // flowInstance.setEdges(edges);
 
-        console.log('layout res set nodes', newNodes, edges);
+        // console.log('layout res nodes', newNodes, edges);
 
         return newNodes;
     } else {

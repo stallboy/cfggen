@@ -70,8 +70,6 @@ export function convertNodeAndEdges(graph: EntityGraph) {
             data: entity,
             type: 'node',
             position: {x: 100, y: 100},
-            width: 300,
-            height: 300,
             // style: {visibility: 'hidden'},
         })
         for (let edge of entity.sourceEdges) {

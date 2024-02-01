@@ -6,7 +6,7 @@ import {
     Node,
     NodeTypes,
     ReactFlowProvider,
-    useStore, getNodesBounds, getViewportForBounds
+    useStore, getNodesBounds, getViewportForBounds,
 } from "@xyflow/react";
 import {Entity} from "./entityModel.ts";
 import {
@@ -19,13 +19,12 @@ import {
     useMemo,
     useState
 } from "react";
-import {asyncLayout } from "./layout.ts";
+import {asyncLayout} from "./layout.ts";
 import {FlowContextMenu, MenuItem, MenuStyle} from "./FlowContextMenu.tsx";
 import {FlowNode} from "./FlowNode.tsx";
 import {store} from "../routes/setting/store.ts";
 import {convertNodeAndEdges} from "./entityToNodeAndEdge.ts";
 import {useQuery} from "@tanstack/react-query";
-import {useStoreApi} from "@ant-design/pro-editor/es/DataFill/store";
 // import {syncLayout} from "./syncLayout.ts";
 
 
@@ -36,7 +35,6 @@ export type NodeMenuFunc = (entity: Entity) => MenuItem[];
 export interface FlowGraphContextType {
     setPaneMenu: (menu: MenuItem[]) => void;
     setNodeMenuFunc: (func: NodeMenuFunc) => void;
-    setPathname: (pathname: string) => void;
 }
 
 function dummy() {
@@ -45,16 +43,16 @@ function dummy() {
 export const FlowGraphContext = createContext<FlowGraphContextType>({
     setPaneMenu: dummy,
     setNodeMenuFunc: dummy,
-    setPathname: dummy,
 });
 
 const nodeTypes: NodeTypes = {
     node: FlowNode,
 };
 
-export function FlowGraphInner({pathname, setPathname, children}: {
-    pathname: string;
-    setPathname: (p: string) => void;
+const defaultNodes: EntityNode[] = [];
+const defaultEdges: EntityEdge[] = [];
+
+export function FlowGraph({children}: {
     children: ReactNode
 }) {
     const [menuStyle, setMenuStyle] = useState<MenuStyle | undefined>(undefined);
@@ -87,19 +85,20 @@ export function FlowGraphInner({pathname, setPathname, children}: {
 
     const ctx = useMemo(() => {
         return {
-            setPaneMenu, setNodeMenuFunc: thisSetNodeMenuFunc, setPathname,
+            setPaneMenu,
+            setNodeMenuFunc: thisSetNodeMenuFunc,
         }
-    }, [setPaneMenu, thisSetNodeMenuFunc, setPathname]);
+    }, [setPaneMenu, thisSetNodeMenuFunc]);
 
 
-    return <>
+    return <ReactFlowProvider>
         <ReactFlow
-            defaultNodes={[]}
-            defaultEdges={[]}
+            defaultNodes={defaultNodes}
+            defaultEdges={defaultEdges}
             nodeTypes={nodeTypes}
             minZoom={0.1}
             maxZoom={2}
-            fitView
+            // fitView
             onNodeContextMenu={onNodeContextMenu}
             onPaneClick={closeMenu}
             onNodeClick={closeMenu}
@@ -115,17 +114,10 @@ export function FlowGraphInner({pathname, setPathname, children}: {
         <FlowGraphContext.Provider value={ctx}>
             {children}
         </FlowGraphContext.Provider>
-    </>;
-
-}
-
-export function FlowGraph({children}: { children: ReactNode }) {
-    const [pathname, setPathname] = useState<string>('');
-
-    return <ReactFlowProvider>
-        <FlowGraphInner pathname={pathname} setPathname={setPathname} children={children}/>
     </ReactFlowProvider>;
+
 }
+
 
 export function useEntityToGraph(pathname: string,
                                  entityMap: Map<string, Entity>,
@@ -133,39 +125,38 @@ export function useEntityToGraph(pathname: string,
                                  paneMenu: MenuItem[]
 ) {
     const flowGraph = useContext(FlowGraphContext);
-    // const flowInstance = useReactFlow();
     const {query, nodeShow} = store;
     const width = useStore((state) => state.width);
     const height = useStore((state) => state.height);
     const setNodes = useStore((state) => state.setNodes);
     const setEdges = useStore((state) => state.setEdges);
     const panZoom = useStore((state) => state.panZoom);
-    // const storeApi = useStoreApi();
-
 
     const {nodes, edges} = convertNodeAndEdges({entityMap, query, nodeShow});
     // console.log('new nodes', nodes, edges);
-    const {isLoading, isError, error, data: newNodes} = useQuery({
-        queryKey:  ['layout', pathname],
-        queryFn: () => asyncLayout(nodes, edges, pathname),
+    const {data: newNodes} = useQuery({
+        queryKey: ['layout', pathname],
+        queryFn: () => asyncLayout(nodes, edges, nodeShow),
+        staleTime: 1000 * 60 * 5,
     })
 
+    // console.log('entity to graph', isLoading, isError, error, newNodes);
     useEffect(() => {
-        if (newNodes ){
-
-            flowGraph.setPathname(pathname);
+        if (newNodes) {
             flowGraph.setNodeMenuFunc(nodeMenuFunc);
             flowGraph.setPaneMenu(paneMenu);
-            setNodes(newNodes );
+
+            setNodes(newNodes);
             setEdges(edges);
-            // storeApi.setState({nodeLookup: new Map()})
+            // console.log("set nodes", newNodes, edges);
 
-            const bounds = getNodesBounds(newNodes);
-            const viewportForBounds = getViewportForBounds(bounds, width, height, 0.3, 1, 0);
+            const bounds = getNodesBounds(newNodes, {useRelativePosition: true}); //
+            const viewportForBounds = getViewportForBounds(bounds, width, height, 0.3, 1, 0.2);
+            // flowInstance.setViewport(viewportForBounds);
             panZoom?.setViewport(viewportForBounds);
+            // console.log(bounds, width, height, viewportForBounds)
 
-            console.log("set nodes", nodes, edges);
         }
-    }, [newNodes, nodes, edges]);
+    }, [newNodes, edges]);
 
 }

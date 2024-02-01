@@ -1,7 +1,8 @@
 import {Card, Descriptions, Tooltip} from "antd";
-import {Entity} from "./entityModel.ts";
+import {Entity, EntityBrief} from "./entityModel.ts";
 import {DescriptionsItemType} from "antd/es/descriptions";
 import {memo} from "react";
+import {NodeShowType} from "../io/localStoreJson.ts";
 
 export const EntityCard = memo(function EntityCard({entity}: {
     entity: Entity,
@@ -29,27 +30,13 @@ export const EntityCard = memo(function EntityCard({entity}: {
     }
 
     let ds = brief.descriptions;
-    let desc: string | null = null;
-    if (nodeShow) {
-        switch (nodeShow.showDescription) {
-            case "show":
-                desc = ds && ds.length > 0 ? ds[ds.length - 1].value : "";
-                break;
-            case "showFallbackValue":
-                desc = ds && ds.length > 0 ? ds[ds.length - 1].value : brief.value;
-                break;
-            case "showValue":
-                desc = brief.value;
-                break;
-            case "none":
-                break;
-        }
-    }
+    let [showDsLen, desc] = getDsLenAndDesc(brief, nodeShow);
 
     let description = {}
-    if (desc && ds && ds.length > 1) {
+    if (desc && ds && showDsLen > 0) {
         const items: DescriptionsItemType[] = [];
-        for (let i = 0; i < ds.length - 1; i++) {
+
+        for (let i = 0; i < showDsLen; i++) {
             const d = ds[i];
             items.push({
                 key: i,
@@ -85,4 +72,38 @@ export function Highlight({text, keyword}: {
 }) {
     return text.split(new RegExp(`(${keyword})`, "gi"))
         .map((c, i) => c === keyword ? <mark key={i}>{c}</mark> : c);
+}
+
+export function getDsLenAndDesc(brief: EntityBrief, nodeShow?: NodeShowType): [number, string | null] {
+    let ds = brief.descriptions;
+    let desc: string | null = null;
+    let showDsLen: number = 0;
+    if (nodeShow) {
+        switch (nodeShow.showDescription) {
+            case "show":
+                if (ds && ds.length > 0) {
+                    desc = ds[ds.length - 1].value;
+                    showDsLen = ds.length - 1;
+                }
+                break;
+            case "showFallbackValue":
+                if (ds && ds.length > 0) {
+                    desc = ds[ds.length - 1].value;
+                    showDsLen = ds.length - 1;
+                } else {
+                    desc = brief.value;
+                }
+                break;
+            case "showValue":
+                desc = brief.value;
+                if (ds) {
+                    showDsLen = ds.length;
+                }
+                break;
+            case "none":
+                break;
+        }
+    }
+
+    return [showDsLen, desc];
 }

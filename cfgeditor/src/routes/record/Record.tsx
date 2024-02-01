@@ -44,8 +44,6 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
         },
         onSuccess: (editResult, _variables, _context) => {
             if (editResult.resultCode == 'updateOk' || editResult.resultCode == 'addOk') {
-                console.log(editResult);
-
                 notification.info({
                     message: `addOrUpdateRecord  ${curTableId}/${curId}  ${editResult.resultCode}`,
                     placement: 'topRight',
