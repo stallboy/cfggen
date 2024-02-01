@@ -6,7 +6,7 @@ import {
     Node,
     NodeTypes,
     ReactFlowProvider,
-    useStore, getNodesBounds, getViewportForBounds,
+    useStore, getNodesBounds, getViewportForBounds, Rect,
 } from "@xyflow/react";
 import {Entity} from "./entityModel.ts";
 import {
@@ -122,7 +122,8 @@ export function FlowGraph({children}: {
 export function useEntityToGraph(pathname: string,
                                  entityMap: Map<string, Entity>,
                                  nodeMenuFunc: NodeMenuFunc,
-                                 paneMenu: MenuItem[]
+                                 paneMenu: MenuItem[],
+                                 inDragPanelAndFix: boolean = false,
 ) {
     const flowGraph = useContext(FlowGraphContext);
     const {query, nodeShow} = store;
@@ -133,14 +134,16 @@ export function useEntityToGraph(pathname: string,
     const panZoom = useStore((state) => state.panZoom);
 
     const {nodes, edges} = convertNodeAndEdges({entityMap, query, nodeShow});
+
     // console.log('new nodes', nodes, edges);
-    const {data: newNodes} = useQuery({
+    const {data: id2PosMap} = useQuery({
         queryKey: ['layout', pathname],
         queryFn: () => asyncLayout(nodes, edges, nodeShow),
         staleTime: 1000 * 60 * 5,
     })
 
-    // console.log('entity to graph', isLoading, isError, error, newNodes);
+    let newNodes: EntityNode[] | null = id2PosMap ? applyPositionToNodes(nodes, id2PosMap) : null;
+
     useEffect(() => {
         if (newNodes) {
             flowGraph.setNodeMenuFunc(nodeMenuFunc);
@@ -150,13 +153,47 @@ export function useEntityToGraph(pathname: string,
             setEdges(edges);
             // console.log("set nodes", newNodes, edges);
 
-            const bounds = getNodesBounds(newNodes, {useRelativePosition: true}); //
-            const viewportForBounds = getViewportForBounds(bounds, width, height, 0.3, 1, 0.2);
-            // flowInstance.setViewport(viewportForBounds);
-            panZoom?.setViewport(viewportForBounds);
+            if (!inDragPanelAndFix) {
+                const appliedWHNodes = applyWidthHeightToNodes(newNodes, id2PosMap);
+                const bounds = getNodesBounds(appliedWHNodes, {useRelativePosition: true}); //
+                const viewportForBounds = getViewportForBounds(bounds, width, height, 0.3, 1, 0.2);
+                panZoom?.setViewport(viewportForBounds);
+            }
             // console.log(bounds, width, height, viewportForBounds)
 
         }
-    }, [newNodes, edges]);
+    }, [newNodes, edges, nodeMenuFunc, paneMenu, inDragPanelAndFix]);
 
+}
+
+function applyPositionToNodes(nodes: EntityNode[], id2PosMap: Map<string, Rect>) {
+    return nodes.map(n => {
+        const newPos = id2PosMap.get(n.id);
+        if (newPos) {
+            const {x, y} = newPos;
+            return {
+                ...n,
+                position: {x, y},
+            }
+        } else {
+            console.log('not found', n, id2PosMap)
+            return n;
+        }
+    })
+}
+
+
+function applyWidthHeightToNodes(nodes: EntityNode[], id2PosMap?: Map<string, Rect>) {
+    if (!id2PosMap) {
+        return nodes;
+    }
+    return nodes.map(n => {
+        const newPos = id2PosMap.get(n.id);
+        if (newPos) {
+            const {width, height} = newPos;
+            return {...n, width, height};
+        } else {
+            return n;
+        }
+    })
 }

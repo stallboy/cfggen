@@ -17,12 +17,13 @@ import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
 import {useEntityToGraph} from "../../flow/FlowGraph.tsx";
 
 
-export function RecordRefWithResult({schema, curTable, curId, nodeShow, recordRefResult}: {
+export function RecordRefWithResult({schema, curTable, curId, nodeShow, recordRefResult, inDragPanelAndFix}: {
     schema: Schema;
     curTable: STable;
     curId: string;
     nodeShow: NodeShowType;
     recordRefResult: RecordRefsResult;
+    inDragPanelAndFix: boolean;
 }) {
     const [t] = useTranslation();
     const navigate = useNavigate();
@@ -75,13 +76,13 @@ export function RecordRefWithResult({schema, curTable, curId, nodeShow, recordRe
     }
 
     const pathname = `/recordRef/${curTable.name}/${curId}`;
-    useEntityToGraph(pathname, entityMap, nodeMenuFunc, paneMenu);
+    useEntityToGraph(pathname, entityMap, nodeMenuFunc, paneMenu, inDragPanelAndFix);
 
     return <></>;
 }
 
 
-export function RecordRef({schema, curTable, curId, refIn, refOutDepth, maxNode, nodeShow}: {
+export function RecordRef({schema, curTable, curId, refIn, refOutDepth, maxNode, nodeShow, inDragPanelAndFix}: {
     schema: Schema;
     curTable: STable;
     curId: string;
@@ -89,6 +90,7 @@ export function RecordRef({schema, curTable, curId, refIn, refOutDepth, maxNode,
     refOutDepth: number;
     maxNode: number;
     nodeShow: NodeShowType;
+    inDragPanelAndFix: boolean;
 }) {
     const {server} = store;
     const {isLoading, isError, error, data: recordRefResult} = useQuery({
@@ -115,7 +117,8 @@ export function RecordRef({schema, curTable, curId, refIn, refOutDepth, maxNode,
     }
 
     return <RecordRefWithResult schema={schema} curTable={curTable} curId={curId}
-                                nodeShow={nodeShow} recordRefResult={recordRefResult}/>
+                                nodeShow={nodeShow} recordRefResult={recordRefResult}
+                                inDragPanelAndFix={inDragPanelAndFix}/>
 
 }
 
@@ -126,6 +129,7 @@ export function RecordRefRoute() {
 
     return <RecordRef schema={schema} curTable={curTable} curId={curId}
                       refIn={recordRefIn} refOutDepth={recordRefOutDepth} maxNode={recordMaxNode}
-                      nodeShow={nodeShow}/>
+                      nodeShow={nodeShow}
+                      inDragPanelAndFix={false}/>
 }
 

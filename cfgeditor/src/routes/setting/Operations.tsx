@@ -2,6 +2,7 @@ import {memo, RefObject} from "react";
 import {useTranslation} from "react-i18next";
 import {App, Button, Divider, Form, Input, InputNumber, Radio} from "antd";
 import {
+    clearLayoutCache,
     DragPanelType,
     setDragPanel,
     setFix,
@@ -52,13 +53,14 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
         },
         onSuccess: (editResult, _variables, _context) => {
             if (editResult.resultCode == 'deleteOk') {
-                console.log(editResult);
+                // console.log(editResult);
                 notification.info({
                     message: `deleteRecord ${curTableId}/${curId} ${editResult.resultCode}`,
                     placement: 'topRight',
                     duration: 3
                 });
-                queryClient.clear();
+                clearLayoutCache();
+                queryClient.invalidateQueries({queryKey: [], refetchType: 'all'});
             } else {
                 notification.warning({
                     message: `deleteRecord ${curTableId}/${curId}  ${editResult.resultCode}`,

@@ -1,14 +1,13 @@
 import ELK, {ElkNode, ElkExtendedEdge} from 'elkjs';
 import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
-import {XYPosition} from "@xyflow/react";
+import {Rect, XYPosition} from "@xyflow/react";
 import {calcWidthHeight} from "./FlowNode.tsx";
 import {NodeShowType} from "../io/localStoreJson.ts";
 
 
-function nodeToLayoutChild(node: EntityNode, nodeShow:NodeShowType): ElkNode {
+function nodeToLayoutChild(node: EntityNode, nodeShow: NodeShowType, id2PosMap: Map<string, Rect>): ElkNode {
     const [width, height] = calcWidthHeight(node.data, nodeShow);
-    node.width = width;
-    node.height = height;
+    id2PosMap.set(node.id, {x: 0, y: 0, width, height})
     return {id: node.id, width, height};
 }
 
@@ -23,8 +22,10 @@ function edgeToLayoutEdge(edge: EntityEdge): ElkExtendedEdge {
 
 function toPositionMap(map: Map<string, XYPosition>, children: ElkNode[]) {
     for (let {id, x, y, children: subChildren} of children) {
-        if (x != undefined && y != undefined) {
-            map.set(id, {x, y});
+        const rect = map.get(id);
+        if (x != undefined && y != undefined && rect) {
+            rect.x = x;
+            rect.y = y;
         }
         if (subChildren) {
             toPositionMap(map, subChildren);
@@ -48,9 +49,10 @@ function allPositionXYOk(nodes: EntityNode[], map: Map<string, XYPosition>) {
 
 export async function asyncLayout(nodes: EntityNode[], edges: EntityEdge[], nodeShow: NodeShowType) {
     const elk = new ELK();
-    // console.log('layout', pathname, nodes, edges);
+    // console.log('layout', nodes.length, nodes, edges);
 
-    // console.log("layout calc", pathname);
+    const id2PosMap = new Map<string, Rect>();
+
     const defaultOptions = {
         'elk.algorithm': 'layered',
         'elk.direction': 'RIGHT',
@@ -65,14 +67,11 @@ export async function asyncLayout(nodes: EntityNode[], edges: EntityEdge[], node
     const graph: ElkNode = {
         id: 'root',
         layoutOptions: defaultOptions,
-        children: nodes.map( (n) => nodeToLayoutChild(n, nodeShow)),
+        children: nodes.map((n) => nodeToLayoutChild(n, nodeShow, id2PosMap)),
         edges: edges.map(edgeToLayoutEdge),
     };
 
     // console.log(graph);
-
-    const flowNodeMap = new Map<string, EntityNode>();
-    nodes.forEach(n => flowNodeMap.set(n.id, n));
 
     const {id, children} = await elk.layout(graph);
 
@@ -83,47 +82,16 @@ export async function asyncLayout(nodes: EntityNode[], edges: EntityEdge[], node
     // } else
     if (children) {
         // console.log('layout ok', id)
-        const map = new Map<string, XYPosition>();
-        toPositionMap(map, children);
+        toPositionMap(id2PosMap, children);
 
         // 重新取nodes，因为此时nodes可能跟异步layout请求开始时的nodes不同，所以要检验下是不是allPositionXYOk
-        if (!allPositionXYOk(nodes, map)) {
+        if (!allPositionXYOk(nodes, id2PosMap)) {
             console.log('layout ignored, nodes may changed', id, nodes);
             return;
         }
         // const edges = flowInstance.getEdges();
         // console.log('before', nodes);
-        const newNodes = nodes.map(n => {
-            const newPos = map.get(n.id);
-            if (newPos) {
-                // if (n.computed) {
-                //     n.computed.positionAbsolute = undefined;
-                // }
-                // n.position = newPos;
-
-                return {
-                    ...n,
-                    position: newPos,
-                    // computed: {
-                    //     ...n.computed,
-                    //     positionAbsolute: undefined
-                    // }
-                    //去掉positionAbsolute，要不然getNodesBounds返回用这个
-                }
-            } else {
-                console.log('not found', n, map)
-                return n;
-            }
-            // n.style = undefined;
-        })
-        // edges.forEach(e => {
-        //     e.style = {...e.style, visibility: undefined};
-        // })
-        // flowInstance.setEdges(edges);
-
-        // console.log('layout res nodes', newNodes, edges);
-
-        return newNodes;
+        return id2PosMap;
     } else {
         console.log('layout children null');
     }

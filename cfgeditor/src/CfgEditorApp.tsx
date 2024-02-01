@@ -71,6 +71,7 @@ export function CfgEditorApp() {
 
     let content;
     if ((!schema) || curTable == null) {
+        // console.log("empty content");
         content = <></>
     } else {
         let dragPage = null;
@@ -81,7 +82,8 @@ export function CfgEditorApp() {
                                   refIn={recordRefIn}
                                   refOutDepth={recordRefOutDepth}
                                   maxNode={recordMaxNode}
-                                  nodeShow={nodeShow}/>;
+                                  nodeShow={nodeShow}
+                                  inDragPanelAndFix={false}/>;
         } else if (dragPanel == 'fix' && fix) {
             let fixedTable = schema.getSTable(fix.table);
             if (fixedTable) {
@@ -91,7 +93,8 @@ export function CfgEditorApp() {
                                       refIn={fix.refIn}
                                       refOutDepth={fix.refOutDepth}
                                       maxNode={fix.maxNode}
-                                      nodeShow={fix.nodeShow}/>;
+                                      nodeShow={fix.nodeShow}
+                                      inDragPanelAndFix={true}/>;
             }
         }
 

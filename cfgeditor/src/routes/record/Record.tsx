@@ -6,7 +6,7 @@ import {RecordEntityCreator} from "./recordEntityCreator.ts";
 import {EditEntityCreator} from "./editEntityCreator.ts";
 import {editState, startEditingObject} from "./editingObject.ts";
 import {useTranslation} from "react-i18next";
-import {navTo, setIsEditMode, store, useLocationData} from "../setting/store.ts";
+import {clearLayoutCache, navTo, setIsEditMode, store, useLocationData} from "../setting/store.ts";
 import {useNavigate, useOutletContext} from "react-router-dom";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {addOrUpdateRecord, fetchRecord} from "../../io/api.ts";
@@ -38,22 +38,24 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
 
         onError: (error, _variables, _context) => {
             notification.error({
-                message: `addOrUpdateRecord  ${curTableId}/${curId}  err: ${error.toString()}`,
+                message: `addOrUpdateRecord  ${curTableId}  err: ${error.toString()}`,
                 placement: 'topRight', duration: 4
             });
         },
         onSuccess: (editResult, _variables, _context) => {
             if (editResult.resultCode == 'updateOk' || editResult.resultCode == 'addOk') {
                 notification.info({
-                    message: `addOrUpdateRecord  ${curTableId}/${curId}  ${editResult.resultCode}`,
+                    message: `addOrUpdateRecord  ${curTableId} ${editResult.resultCode}`,
                     placement: 'topRight',
                     duration: 3
                 });
-                queryClient.clear();
-                // navigate(navTo(curPage, curTableId, curId));
+
+                clearLayoutCache();
+                queryClient.invalidateQueries({queryKey: [], refetchType: 'all'});
+                // navigate(0);
             } else {
                 notification.warning({
-                    message: `addOrUpdateRecord ${curTableId}/${curId} ${editResult.resultCode}`,
+                    message: `addOrUpdateRecord ${curTableId} ${editResult.resultCode}`,
                     placement: 'topRight',
                     duration: 4
                 });

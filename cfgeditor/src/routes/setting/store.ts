@@ -74,7 +74,7 @@ function readStoreState(): StoreState {
 export const store = resso<StoreState>(readStoreState());
 
 
-function clearLayoutCache(){
+export function clearLayoutCache(){
     queryClient.removeQueries({queryKey: ['layout']});
 }
 

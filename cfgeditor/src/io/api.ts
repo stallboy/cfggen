@@ -6,7 +6,7 @@ import {Schema} from "../routes/table/schemaUtil.ts";
 
 export async function fetchSchema(server: string, signal:AbortSignal) {
     const response = await axios.get<RawSchema>(`http://${server}/schemas`, {signal});
-    console.log('new schema');
+    console.log('fetch schema');
     return new Schema(response.data);
 }
 
@@ -20,12 +20,15 @@ export async function fetchRecordRefs(server: string, tableId: string, id: strin
                                       refOutDepth: number, maxNode: number, refIn: boolean,
                                       signal:AbortSignal) {
     let url = `http://${server}/record?table=${tableId}&id=${id}&depth=${refOutDepth}&maxObjs=${maxNode}&refs${refIn ? '&in' : ''}`;
+    // console.log('fetch refs', tableId, id);
     const response = await axios.get<RecordRefsResult>(url, {signal});
+    // console.log('fetch refs res', tableId, id, response.data);
     return response.data;
 }
 
 export async function addOrUpdateRecord(server: string, tableId: string, editingObject: JSONObject) {
     let url = `http://${server}/recordAddOrUpdate?table=${tableId}`;
+    // console.log('add or update', tableId, editingObject);
     const response = await axios.post<RecordEditResult>(url, editingObject, {
         method: 'POST',
         headers: {
