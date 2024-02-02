@@ -1,1 +1,1 @@
-quicktype json.ts  --prefer-unions -o src/func/localStoreJson.ts
+quicktype json.ts  --prefer-unions -o src/io/localStoreJson.ts

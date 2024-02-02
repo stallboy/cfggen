@@ -30,7 +30,32 @@ export function RecordRefWithResult({schema, curTable, curId, nodeShow, recordRe
 
     const entityMap = new Map<string, Entity>();
     const hasContainEnum = nodeShow.containEnum || curTable.entryType == 'eEnum';
-    createRefEntities(entityMap, schema, recordRefResult.refs, true, hasContainEnum);
+
+    let checkTable;
+    if (!hasContainEnum || nodeShow.tableHideAndColors.length > 0){
+        checkTable = (tableName:string) => {
+            if (!hasContainEnum){
+                let sT = schema.getSTable(tableName);
+                if (sT == null) {
+                    return false;
+                }
+                if (sT.entryType == 'eEnum'){
+                    return false;
+                }
+            }
+
+            for (let {keyword, hide} of nodeShow.tableHideAndColors) {
+                if (hide){
+                    if (tableName.includes(keyword)){
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+    }
+
+    createRefEntities(entityMap, schema, recordRefResult.refs, true, checkTable);
     fillHandles(entityMap);
 
     const paneMenu: MenuItem[] = [{

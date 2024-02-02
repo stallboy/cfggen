@@ -73,7 +73,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     if (!isEditing) {
         let creator = new RecordEntityCreator(entityMap, schema, refId, recordResult.refs);
         creator.createRecordEntity(entityId, recordResult.object);
-        createRefEntities(entityMap, schema, recordResult.refs, false, true);
+        createRefEntities(entityMap, schema, recordResult.refs, false);
     } else {
 
         function submitEditingObject() {

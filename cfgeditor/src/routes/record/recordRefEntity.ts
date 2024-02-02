@@ -51,18 +51,10 @@ export function createRefs(entity: Entity, refs: Refs, briefRecords: BriefRecord
 }
 
 export function createRefEntities(entityMap: Map<string, Entity>, schema: Schema, refs: BriefRecord[],
-                                  isCreateRefs: boolean = true, containEnum: boolean = true) {
-    let checkTable = alwaysOk;
-    if (!containEnum) {
-        checkTable = (t: string) => {
-            let sT = schema.getSTable(t);
-            if (sT == null) {
-                return false;
-            }
-            return sT.entryType != 'eEnum';
-        };
-    }
+                                  isCreateRefs: boolean = true, checkTable?: (t: string) => boolean) {
 
+
+    let myCheckTable = checkTable ?? alwaysOk;
     for (let briefRecord of refs) {
         let table = briefRecord.table;
         let id = briefRecord.id;
@@ -72,7 +64,7 @@ export function createRefEntities(entityMap: Map<string, Entity>, schema: Schema
             continue;
         }
 
-        if (!containEnum && sTable.entryType == 'eEnum') {
+        if (!myCheckTable(table)) {
             continue;
         }
 
@@ -110,7 +102,7 @@ export function createRefEntities(entityMap: Map<string, Entity>, schema: Schema
             userData: refId,
         };
         if (isCreateRefs) {
-            createRefs(entity, briefRecord, refs, checkTable, true);
+            createRefs(entity, briefRecord, refs, myCheckTable, true);
         }
         entityMap.set(eid, entity);
     }

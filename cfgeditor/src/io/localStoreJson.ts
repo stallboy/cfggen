@@ -1,9 +1,10 @@
 // To parse this data:
 //
-//   import { Convert, NodeShowType, KeywordColor, ShowHeadType, ShowDescriptionType, NodePlacementStrategyType, FixedPage } from "./file";
+//   import { Convert, NodeShowType, KeywordColor, TableHideAndColor, ShowHeadType, ShowDescriptionType, NodePlacementStrategyType, FixedPage } from "./file";
 //
 //   const nodeShowType = Convert.toNodeShowType(json);
 //   const keywordColor = Convert.toKeywordColor(json);
+//   const tableHideAndColor = Convert.toTableHideAndColor(json);
 //   const showHeadType = Convert.toShowHeadType(json);
 //   const showDescriptionType = Convert.toShowDescriptionType(json);
 //   const nodePlacementStrategyType = Convert.toNodePlacementStrategyType(json);
@@ -27,7 +28,7 @@ export interface NodeShowType {
     nodePlacementStrategy: NodePlacementStrategyType;
     showDescription:       ShowDescriptionType;
     showHead:              ShowHeadType;
-    tableColors:           KeywordColor[];
+    tableHideAndColors:    TableHideAndColor[];
 }
 
 export interface KeywordColor {
@@ -40,6 +41,12 @@ export type NodePlacementStrategyType = "BRANDES_KOEPF" | "LINEAR_SEGMENTS" | "S
 export type ShowDescriptionType = "none" | "show" | "showFallbackValue" | "showValue";
 
 export type ShowHeadType = "show" | "showCopyable";
+
+export interface TableHideAndColor {
+    color:   string;
+    hide:    boolean;
+    keyword: string;
+}
 
 // Converts JSON strings to/from your types
 // and asserts the results of JSON.parse at runtime
@@ -58,6 +65,14 @@ export class Convert {
 
     public static keywordColorToJson(value: KeywordColor): string {
         return JSON.stringify(uncast(value, r("KeywordColor")), null, 2);
+    }
+
+    public static toTableHideAndColor(json: string): TableHideAndColor {
+        return cast(JSON.parse(json), r("TableHideAndColor"));
+    }
+
+    public static tableHideAndColorToJson(value: TableHideAndColor): string {
+        return JSON.stringify(uncast(value, r("TableHideAndColor")), null, 2);
     }
 
     public static toShowHeadType(json: string): ShowHeadType {
@@ -260,10 +275,15 @@ const typeMap: any = {
         { json: "nodePlacementStrategy", js: "nodePlacementStrategy", typ: r("NodePlacementStrategyType") },
         { json: "showDescription", js: "showDescription", typ: r("ShowDescriptionType") },
         { json: "showHead", js: "showHead", typ: r("ShowHeadType") },
-        { json: "tableColors", js: "tableColors", typ: a(r("KeywordColor")) },
+        { json: "tableHideAndColors", js: "tableHideAndColors", typ: a(r("TableHideAndColor")) },
     ], false),
     "KeywordColor": o([
         { json: "color", js: "color", typ: "" },
+        { json: "keyword", js: "keyword", typ: "" },
+    ], false),
+    "TableHideAndColor": o([
+        { json: "color", js: "color", typ: "" },
+        { json: "hide", js: "hide", typ: true },
         { json: "keyword", js: "keyword", typ: "" },
     ], false),
     "NodePlacementStrategyType": [

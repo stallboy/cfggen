@@ -4,11 +4,17 @@ export interface NodeShowType {
     containEnum: boolean;
     nodePlacementStrategy: NodePlacementStrategyType;
     keywordColors: KeywordColor[];
-    tableColors: KeywordColor[];
+    tableHideAndColors: TableHideAndColor[];
 }
 
 export interface KeywordColor {
     keyword: string;
+    color: string;
+}
+
+export interface TableHideAndColor {
+    keyword: string;
+    hide: boolean;
     color: string;
 }
 

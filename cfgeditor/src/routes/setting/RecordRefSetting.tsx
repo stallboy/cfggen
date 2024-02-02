@@ -1,8 +1,8 @@
-import {Button, Card, ColorPicker, Form, Input, InputNumber, Radio, Space, Switch} from "antd";
+import {Button, Card, Checkbox, ColorPicker, Form, Input, InputNumber, Radio, Space, Switch} from "antd";
 import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 
-import {KeywordColor} from "../../io/localStoreJson.ts";
+import {KeywordColor, TableHideAndColor} from "../../io/localStoreJson.ts";
 import {setNodeShow, setRecordMaxNode, setRecordRefIn, setRecordRefOutDepth, store} from "./store.ts";
 import {memo} from "react";
 
@@ -10,6 +10,34 @@ const formLayout = {
     labelCol: {xs: {span: 24}, sm: {span: 6},},
     wrapperCol: {xs: {span: 24}, sm: {span: 18},},
 };
+
+function fixColor(color: any) {
+    let c;
+    if (typeof color == 'object') {
+        c = color.toHexString();
+    } else if (typeof color == 'string') {
+        c = color;
+    } else {
+        c = '#1677ff';
+    }
+    return c;
+}
+
+function fixColors(keywordColors: any[]): KeywordColor[] {
+    let colors = [];
+    for (let {keyword, color} of keywordColors) {
+        colors.push({keyword: keyword, color: fixColor(color)})
+    }
+    return colors;
+}
+
+function fixHideAndColors(keywordHideAndColors: any[]): TableHideAndColor[] {
+    let colors = [];
+    for (let {keyword, hide, color} of keywordHideAndColors) {
+        colors.push({keyword: keyword, hide: hide, color: fixColor(color)})
+    }
+    return colors;
+}
 
 export const RecordRefSetting = memo(function RecordRefSetting() {
     const {t} = useTranslation();
@@ -20,25 +48,9 @@ export const RecordRefSetting = memo(function RecordRefSetting() {
         const newNodeShow = {
             ...values,
             keywordColors: fixColors(values.keywordColors),
-            tableColors: fixColors(values.tableColors)
+            tableHideAndColors: fixHideAndColors(values.tableHideAndColors)
         };
         setNodeShow(newNodeShow);
-    }
-
-    function fixColors(keywordColors: any[]): KeywordColor[] {
-        let colors = [];
-        for (let {keyword, color} of keywordColors) {
-            let c;
-            if (typeof color == 'object') {
-                c = color.toHexString();
-            } else if (typeof color == 'string') {
-                c = color;
-            } else {
-                c = '#1677ff';
-            }
-            colors.push({keyword: keyword, color: c})
-        }
-        return colors;
     }
 
     return <> <Form labelCol={{span: 6}} wrapperCol={{span: 18}} layout={'horizontal'}
@@ -109,14 +121,17 @@ export const RecordRefSetting = memo(function RecordRefSetting() {
                     </Form.List>
                 </Form.Item>
 
-                <Form.Item label={t('tableColors')}>
-                    <Form.List name="tableColors">
+                <Form.Item label={t('tableHideAndColors')}>
+                    <Form.List name="tableHideAndColors">
                         {(fields, {add, remove}) => (
                             <div style={{display: 'flex', flexDirection: 'column', rowGap: 16}}>
                                 {fields.map(({key, name}) => (
                                     <Space key={key}>
                                         <Form.Item name={[name, 'keyword']} noStyle>
                                             <Input placeholder="table"/>
+                                        </Form.Item>
+                                        <Form.Item name={[name, 'hide']} valuePropName='checked' noStyle>
+                                            <Checkbox>hide</Checkbox>
                                         </Form.Item>
                                         <Form.Item name={[name, 'color']} noStyle>
                                             <ColorPicker/>
@@ -126,7 +141,7 @@ export const RecordRefSetting = memo(function RecordRefSetting() {
                                 ))}
 
                                 <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined/>}>
-                                    {t('addTableColor')}
+                                    {t('addTableHideAndColor')}
                                 </Button>
                             </div>
                         )}

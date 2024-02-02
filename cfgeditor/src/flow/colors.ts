@@ -4,8 +4,8 @@ import {Entity, EntityType} from "./entityModel.ts";
 export function getNodeBackgroundColor(entity: Entity): string {
     let nodeShow = entity.nodeShow;
 
-    if (nodeShow && nodeShow.tableColors.length > 0) {
-        for (let tableColor of nodeShow.tableColors) {
+    if (nodeShow && nodeShow.tableHideAndColors.length > 0) {
+        for (let tableColor of nodeShow.tableHideAndColors) {
             if (entity.label.includes(tableColor.keyword)) {
                 return tableColor.color;
             }
@@ -16,7 +16,6 @@ export function getNodeBackgroundColor(entity: Entity): string {
         for (let keywordColor of nodeShow.keywordColors) {
             if (entity.brief.value.includes(keywordColor.keyword)) {
                 return keywordColor.color;
-                break;
             }
         }
     }

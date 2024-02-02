@@ -42,7 +42,7 @@ const defaultNodeShow: NodeShowType = {
     containEnum: true,
     nodePlacementStrategy: 'SIMPLE',
     keywordColors: [],
-    tableColors: [],
+    tableHideAndColors: [],
 }
 
 function readStoreState(): StoreState {
