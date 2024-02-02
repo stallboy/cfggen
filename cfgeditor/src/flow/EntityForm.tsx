@@ -194,14 +194,6 @@ function FuncSubmitFormItem({field}: { field: EntityEditField }) {
     </Form.Item>
 }
 
-function FuncDeleteFormItem({field}: { field: EntityEditField }) {
-    let func = field.value as FuncType;
-    return <Form.Item {...formItemLayoutWithOutLabel} key={field.name}>
-        <ActionIcon icon={<MinusSquareTwoTone twoToneColor='red'/>}
-                    onClick={func}/>
-    </Form.Item>
-}
-
 function InterfaceFormItem({field}: { field: EntityEditField }): any {
     const form = Form.useFormInstance();
     useEffect(() => {
@@ -239,8 +231,6 @@ function FieldFormItem(field: EntityEditField) {
             return <InterfaceFormItem key={field.name} field={field}/>;
         case "funcSubmit":
             return <FuncSubmitFormItem key={field.name} field={field}/>;
-        case "funcDelete":
-            return <FuncDeleteFormItem key={field.name} field={field}/>;
     }
 }
 

@@ -7,6 +7,8 @@ import {EntityCard, getDsLenAndDesc} from "./EntityCard.tsx";
 import {EntityProperties} from "./EntityProperties.tsx";
 import {EntityForm} from "./EntityForm.tsx";
 import {NodeShowType} from "../io/localStoreJson.ts";
+import {ActionIcon} from "@ant-design/pro-editor";
+import {CloseOutlined} from "@ant-design/icons";
 
 const {Text} = Typography;
 
@@ -22,9 +24,13 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
 
     return <Flex key={id} vertical gap={'small'} className='flowNode' style={{width: width, backgroundColor: color}}>
 
-        <Text strong style={{fontSize: 18, color: "#fff"}} {...copy}>
-            {label}
-        </Text>
+        <Flex justify="space-between" style={{width: '100%'}}>
+            <Text strong style={{fontSize: 18, color: "#fff"}} {...copy}>
+                {label}
+            </Text>
+            {edit && edit.editOnDelete && <ActionIcon icon={<CloseOutlined/>} onClick={edit.editOnDelete}/>}
+        </Flex>
+
         {fields && <EntityProperties fields={fields} color={color}/>}
         {brief && <EntityCard entity={nodeProps.data}/>}
         {edit && <EntityForm edit={edit}/>}

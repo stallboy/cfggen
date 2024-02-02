@@ -25,7 +25,7 @@ export interface EntityEditField extends EntityBaseField {
 
 
 export type EditFieldType = 'arrayOfPrimitive' | 'primitive' | 'structRef' |
-    'funcAdd' | 'interface' | 'funcSubmit' | 'funcDelete'; // interface: value:string
+    'funcAdd' | 'interface' | 'funcSubmit'; // | 'funcDelete'; // interface: value:string
 export type PrimitiveType = 'bool' | 'int' | 'long' | 'float' | 'str' | 'text';
 export type EditFieldValueType =
     string
@@ -57,6 +57,7 @@ export interface EntityEditFieldOption {
 
 export interface EntityEdit {
     editFields: EntityEditField[];
+    editOnDelete?: () => void;
     editOnUpdateValues: (values: any) => void;
 }
 

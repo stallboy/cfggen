@@ -141,24 +141,14 @@ export class EditEntityCreator {
             }
         }
 
-        if (onDeleteFunc) {
-            editFields.push({
-                name: '$del',
-                comment: '',
-                type: 'funcDelete',
-                eleType: 'bool',
-                value: onDeleteFunc,
-            });
-        }
-
-        const editOnUpdateValues = (values: any) => {
+         const editOnUpdateValues = (values: any) => {
             onUpdateFormValues(this.schema, values, fieldChain);
         };
 
         let entity: Entity = {
             id: id,
             label: label,
-            edit: {editFields, editOnUpdateValues},
+            edit: {editFields, editOnDelete:onDeleteFunc, editOnUpdateValues},
             sourceEdges: sourceEdges,
 
             entityType: EntityType.Normal,
