@@ -13,7 +13,7 @@ import {addOrUpdateRecord, fetchRecord} from "../../io/api.ts";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
 import {SchemaTableType} from "../../CfgEditorApp.tsx";
 import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
-import {useEffect, useState} from "react";
+import {useEffect, useReducer} from "react";
 
 import {useEntityToGraph} from "../../flow/FlowGraph.tsx";
 
@@ -27,7 +27,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const queryClient = useQueryClient()
     const [t] = useTranslation();
     const {edit, pathname} = useLocationData();
-    const [editSeq, setEditSeq] = useState<number>(0);
+    const [_, forceUpdate] = useReducer(v => v++, 0);
 
     useEffect(() => {
         setIsEditMode(edit);
@@ -68,6 +68,8 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const entityId = getId(curTable.name, curId);
     const isEditable = schema.isEditable && curTable.isEditable;
     const isEditing = isEditable && edit;
+    let editSeq: number = 0;
+    let fitView: boolean = true;
     if (!isEditing) {
         let creator = new RecordEntityCreator(entityMap, schema, refId, recordResult.refs);
         creator.createRecordEntity(entityId, recordResult.object);
@@ -79,11 +81,11 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
         }
 
         function afterEditStateChanged() {
-            setEditSeq(editSeq + 1);
+            forceUpdate();  // 触发更新
         }
 
         //这是非纯函数，escape hatch，用useRef也能做，这里用全局变量
-        startEditingObject(recordResult, afterEditStateChanged, submitEditingObject);
+        [editSeq, fitView] = startEditingObject(recordResult, afterEditStateChanged, submitEditingObject);
         let creator = new EditEntityCreator(entityMap, schema, curTable, curId);
         creator.createThis();
     }
@@ -159,7 +161,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     }
 
     const ep = pathname + (isEditing ? ',' + editSeq : '');
-    useEntityToGraph(ep, entityMap, nodeMenuFunc, paneMenu);
+    useEntityToGraph(ep, entityMap, nodeMenuFunc, paneMenu, fitView);
 
     return <></>;
 }

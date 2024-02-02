@@ -5,9 +5,9 @@ import {calcWidthHeight} from "./FlowNode.tsx";
 import {NodeShowType} from "../io/localStoreJson.ts";
 
 
-function nodeToLayoutChild(node: EntityNode, nodeShow: NodeShowType, id2PosMap: Map<string, Rect>): ElkNode {
+function nodeToLayoutChild(node: EntityNode, nodeShow: NodeShowType, id2RectMap: Map<string, Rect>): ElkNode {
     const [width, height] = calcWidthHeight(node.data, nodeShow);
-    id2PosMap.set(node.id, {x: 0, y: 0, width, height})
+    id2RectMap.set(node.id, {x: 0, y: 0, width, height})
     return {id: node.id, width, height};
 }
 
@@ -50,8 +50,7 @@ function allPositionXYOk(nodes: EntityNode[], map: Map<string, XYPosition>) {
 export async function asyncLayout(nodes: EntityNode[], edges: EntityEdge[], nodeShow: NodeShowType) {
     const elk = new ELK();
     // console.log('layout', nodes.length, nodes, edges);
-
-    const id2PosMap = new Map<string, Rect>();
+    const id2RectMap = new Map<string, Rect>();
 
     const defaultOptions = {
         'elk.algorithm': 'layered',
@@ -67,31 +66,21 @@ export async function asyncLayout(nodes: EntityNode[], edges: EntityEdge[], node
     const graph: ElkNode = {
         id: 'root',
         layoutOptions: defaultOptions,
-        children: nodes.map((n) => nodeToLayoutChild(n, nodeShow, id2PosMap)),
+        children: nodes.map((n) => nodeToLayoutChild(n, nodeShow, id2RectMap)),
         edges: edges.map(edgeToLayoutEdge),
     };
-
     // console.log(graph);
 
-    const {id, children} = await elk.layout(graph);
-
-
-    // console.log('layout res', id, children);
-    // if (id != pathname) {
-    //     console.log('layout ignore other', id, pathname);
-    // } else
+    const {children} = await elk.layout(graph);
     if (children) {
-        // console.log('layout ok', id)
-        toPositionMap(id2PosMap, children);
+        toPositionMap(id2RectMap, children);
 
         // 重新取nodes，因为此时nodes可能跟异步layout请求开始时的nodes不同，所以要检验下是不是allPositionXYOk
-        if (!allPositionXYOk(nodes, id2PosMap)) {
-            console.log('layout ignored, nodes may changed', id, nodes);
+        if (!allPositionXYOk(nodes, id2RectMap)) {
+            console.log('layout ignored', nodes);
             return;
         }
-        // const edges = flowInstance.getEdges();
-        // console.log('before', nodes);
-        return id2PosMap;
+        return id2RectMap;
     } else {
         console.log('layout children null');
     }

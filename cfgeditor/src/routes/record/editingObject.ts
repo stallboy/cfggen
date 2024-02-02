@@ -6,16 +6,19 @@ export type EditState = {
     table: string;
     id: string;
     editingObject: JSONObject;
+    seq: number;  // 触发layout
+    fitView: boolean;
 
     afterEditStateChanged: () => void;
     submitEditingObject: () => void;
 }
 
-
 export const editState: EditState = {
     table: '',
     id: '',
     editingObject: {'$type': ''},
+    seq: 0,
+    fitView: true,
     afterEditStateChanged: () => {
     },
     submitEditingObject: () => {
@@ -25,13 +28,13 @@ export const editState: EditState = {
 
 export function startEditingObject(recordResult: RecordResult,
                                    afterEditStateChanged: () => void,
-                                   submitEditingObject: () => void) {
+                                   submitEditingObject: () => void): [number, boolean] {
     editState.afterEditStateChanged = afterEditStateChanged;
     editState.submitEditingObject = submitEditingObject;
-    const {table, id} = editState;
+    const {table, id, seq, fitView} = editState;
     const {table: newTable, id: newId} = recordResult;
     if (newTable == table && newId == id) {
-        return;
+        return [seq, fitView];
     }
 
     const clone: JSONObject = {...recordResult.object}
@@ -39,9 +42,11 @@ export function startEditingObject(recordResult: RecordResult,
     const newEditingObject = structuredClone(clone);
     editState.table = newTable;
     editState.id = newId;
+    editState.seq = 0;
+    editState.fitView = true;
     editState.editingObject = newEditingObject;
+    return [0, true];
 }
-
 
 
 export function onUpdateFormValues(schema: Schema,
@@ -85,6 +90,8 @@ export function onUpdateInterfaceValue(jsonObject: JSONObject,
     let obj = getFieldObj(editState.editingObject, fieldChains.slice(0, fieldChains.length - 1));
     obj[fieldChains[fieldChains.length - 1]] = jsonObject;
 
+    editState.seq++;
+    editState.fitView = false;
     editState.afterEditStateChanged();
 }
 
@@ -95,6 +102,9 @@ export function onAddItemForArray(defaultItemJsonObject: JSONObject,
 
     let obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
     obj.push(defaultItemJsonObject);
+
+    editState.seq++;
+    editState.fitView = false;
     editState.afterEditStateChanged();
 }
 
@@ -104,11 +114,17 @@ export function onDeleteItemFromArray(deleteIndex: number,
 
     let obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
     obj.splice(deleteIndex, 1);
+
+    editState.seq++;
+    editState.fitView = false;
     editState.afterEditStateChanged();
 }
 
 export function applyNewEditingObject(newEditingObject: JSONObject) {
     editState.editingObject = newEditingObject;
+
+    editState.seq++;
+    editState.fitView = true;
     editState.afterEditStateChanged();
 }
 

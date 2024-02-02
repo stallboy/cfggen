@@ -123,7 +123,7 @@ export function useEntityToGraph(pathname: string,
                                  entityMap: Map<string, Entity>,
                                  nodeMenuFunc: NodeMenuFunc,
                                  paneMenu: MenuItem[],
-                                 inDragPanelAndFix: boolean = false,
+                                 fitView: boolean = true,
 ) {
     const flowGraph = useContext(FlowGraphContext);
     const {query, nodeShow} = store;
@@ -136,13 +136,13 @@ export function useEntityToGraph(pathname: string,
     const {nodes, edges} = convertNodeAndEdges({entityMap, query, nodeShow});
 
     // console.log('new nodes', nodes, edges);
-    const {data: id2PosMap} = useQuery({
+    const {data: id2RectMap} = useQuery({
         queryKey: ['layout', pathname],
         queryFn: () => asyncLayout(nodes, edges, nodeShow),
         staleTime: 1000 * 60 * 5,
     })
 
-    let newNodes: EntityNode[] | null = id2PosMap ? applyPositionToNodes(nodes, id2PosMap) : null;
+    let newNodes: EntityNode[] | null = id2RectMap ? applyPositionToNodes(nodes, id2RectMap) : null;
 
     useEffect(() => {
         if (newNodes) {
@@ -153,22 +153,22 @@ export function useEntityToGraph(pathname: string,
             setEdges(edges);
             // console.log("set nodes", newNodes, edges);
 
-            if (!inDragPanelAndFix) {
-                const appliedWHNodes = applyWidthHeightToNodes(newNodes, id2PosMap);
+            if (fitView) {
+                const appliedWHNodes = applyWidthHeightToNodes(newNodes, id2RectMap);
                 const bounds = getNodesBounds(appliedWHNodes, {useRelativePosition: true}); //
                 const viewportForBounds = getViewportForBounds(bounds, width, height, 0.3, 1, 0.2);
                 panZoom?.setViewport(viewportForBounds);
+                // console.log(bounds, width, height, viewportForBounds)
             }
-            // console.log(bounds, width, height, viewportForBounds)
 
         }
-    }, [newNodes, edges, nodeMenuFunc, paneMenu, inDragPanelAndFix]);
+    }, [newNodes, edges, nodeMenuFunc, paneMenu, fitView]);
 
 }
 
-function applyPositionToNodes(nodes: EntityNode[], id2PosMap: Map<string, Rect>) {
+function applyPositionToNodes(nodes: EntityNode[], id2RectMap: Map<string, Rect>) {
     return nodes.map(n => {
-        const newPos = id2PosMap.get(n.id);
+        const newPos = id2RectMap.get(n.id);
         if (newPos) {
             const {x, y} = newPos;
             return {
@@ -176,19 +176,19 @@ function applyPositionToNodes(nodes: EntityNode[], id2PosMap: Map<string, Rect>)
                 position: {x, y},
             }
         } else {
-            console.log('not found', n, id2PosMap)
+            console.log('not found', n, id2RectMap)
             return n;
         }
     })
 }
 
 
-function applyWidthHeightToNodes(nodes: EntityNode[], id2PosMap?: Map<string, Rect>) {
-    if (!id2PosMap) {
+function applyWidthHeightToNodes(nodes: EntityNode[], id2RectMap?: Map<string, Rect>) {
+    if (!id2RectMap) {
         return nodes;
     }
     return nodes.map(n => {
-        const newPos = id2PosMap.get(n.id);
+        const newPos = id2RectMap.get(n.id);
         if (newPos) {
             const {width, height} = newPos;
             return {...n, width, height};

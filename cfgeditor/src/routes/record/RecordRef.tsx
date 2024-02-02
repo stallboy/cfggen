@@ -76,7 +76,8 @@ export function RecordRefWithResult({schema, curTable, curId, nodeShow, recordRe
     }
 
     const pathname = `/recordRef/${curTable.name}/${curId}`;
-    useEntityToGraph(pathname, entityMap, nodeMenuFunc, paneMenu, inDragPanelAndFix);
+    const fitView = !inDragPanelAndFix;
+    useEntityToGraph(pathname, entityMap, nodeMenuFunc, paneMenu, fitView);
 
     return <></>;
 }
