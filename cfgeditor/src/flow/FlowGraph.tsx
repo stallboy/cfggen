@@ -124,6 +124,7 @@ export function useEntityToGraph(pathname: string,
                                  nodeMenuFunc: NodeMenuFunc,
                                  paneMenu: MenuItem[],
                                  fitView: boolean = true,
+                                 setFitViewForPathname?: (pathname: string) => void
 ) {
     const flowGraph = useContext(FlowGraphContext);
     const {query, nodeShow} = store;
@@ -133,9 +134,9 @@ export function useEntityToGraph(pathname: string,
     const setEdges = useStore((state) => state.setEdges);
     const panZoom = useStore((state) => state.panZoom);
 
-    const {nodes, edges} = convertNodeAndEdges({entityMap, query, nodeShow});
+    const {nodes, edges} = useMemo(() => convertNodeAndEdges({entityMap, query, nodeShow})
+        , [entityMap, query, nodeShow]);
 
-    // console.log('new nodes', nodes, edges);
     const {data: id2RectMap} = useQuery({
         queryKey: ['layout', pathname],
         queryFn: () => asyncLayout(nodes, edges, nodeShow),
@@ -143,6 +144,8 @@ export function useEntityToGraph(pathname: string,
     })
 
     let newNodes: EntityNode[] | null = id2RectMap ? applyPositionToNodes(nodes, id2RectMap) : null;
+    // console.log('new nodes', pathname, fitView, newNodes);
+
 
     useEffect(() => {
         if (newNodes) {
@@ -158,7 +161,10 @@ export function useEntityToGraph(pathname: string,
                 const bounds = getNodesBounds(appliedWHNodes, {useRelativePosition: true}); //
                 const viewportForBounds = getViewportForBounds(bounds, width, height, 0.3, 1, 0.2);
                 panZoom?.setViewport(viewportForBounds);
-                // console.log(bounds, width, height, viewportForBounds)
+                // console.log(pathname, bounds, width, height, viewportForBounds)
+                if (setFitViewForPathname){
+                    setFitViewForPathname(pathname);
+                }
             }
 
         }

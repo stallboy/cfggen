@@ -15,6 +15,7 @@ import {SchemaTableType} from "../../CfgEditorApp.tsx";
 import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
 
 import {useEntityToGraph} from "../../flow/FlowGraph.tsx";
+import {useCallback, useRef} from "react";
 
 
 export function RecordRefWithResult({schema, curTable, curId, nodeShow, recordRefResult, inDragPanelAndFix}: {
@@ -32,21 +33,21 @@ export function RecordRefWithResult({schema, curTable, curId, nodeShow, recordRe
     const hasContainEnum = nodeShow.containEnum || curTable.entryType == 'eEnum';
 
     let checkTable;
-    if (!hasContainEnum || nodeShow.tableHideAndColors.length > 0){
-        checkTable = (tableName:string) => {
-            if (!hasContainEnum){
+    if (!hasContainEnum || nodeShow.tableHideAndColors.length > 0) {
+        checkTable = (tableName: string) => {
+            if (!hasContainEnum) {
                 let sT = schema.getSTable(tableName);
                 if (sT == null) {
                     return false;
                 }
-                if (sT.entryType == 'eEnum'){
+                if (sT.entryType == 'eEnum') {
                     return false;
                 }
             }
 
             for (let {keyword, hide} of nodeShow.tableHideAndColors) {
-                if (hide){
-                    if (tableName.includes(keyword)){
+                if (hide) {
+                    if (tableName.includes(keyword)) {
                         return false;
                     }
                 }
@@ -100,9 +101,24 @@ export function RecordRefWithResult({schema, curTable, curId, nodeShow, recordRe
         return mm;
     }
 
-    const pathname = `/recordRef/${curTable.name}/${curId}`;
-    const fitView = !inDragPanelAndFix;
-    useEntityToGraph(pathname, entityMap, nodeMenuFunc, paneMenu, fitView);
+    const lastFitViewForFix = useRef<string | undefined>();
+    let pathname = `/recordRef/${curTable.name}/${curId}`;
+    let fitView = true;
+    if (inDragPanelAndFix) {
+        pathname += '/fix';
+        if (lastFitViewForFix.current && lastFitViewForFix.current == pathname) {
+            fitView = false;
+        }
+    }
+
+    const setFitViewForPathname = useCallback((pathname: string) => {
+        lastFitViewForFix.current = pathname;
+    }, [lastFitViewForFix]);
+
+
+
+    useEntityToGraph(pathname, entityMap, nodeMenuFunc, paneMenu, fitView,
+        inDragPanelAndFix ? setFitViewForPathname : undefined);
 
     return <></>;
 }
