@@ -92,7 +92,7 @@ function FuncAddFormItem({field}: { field: EntityEditField }) {
     let func = field.value as FuncType;
     return <Flex key={field.name} gap={'middle'} justify="flex-end"
                  style={{marginBottom: 10, position: 'relative'}}>
-        <Button onClick={func} icon={<PlusSquareTwoTone/>}> {field.name} </Button>
+        <Button className='nodrag' onClick={func} icon={<PlusSquareTwoTone/>}> {field.name} </Button>
         {field.handleOut && <Handle type='source' position={Position.Right} id={field.name}
                                     style={{
                                         position: 'absolute',
@@ -160,7 +160,8 @@ function ArrayOfPrimitiveFormItem({field}: { field: EntityEditField }) {
                             <Form.Item {...f} >
                                 {PrimitiveControl(field)}
                             </Form.Item>
-                            <ActionIcon icon={<MinusSquareTwoTone twoToneColor='red'/>}
+                            <ActionIcon className='nodrag'
+                                        icon={<MinusSquareTwoTone twoToneColor='red'/>}
                                         onClick={() => remove(f.name)}
                             />
 
@@ -170,7 +171,9 @@ function ArrayOfPrimitiveFormItem({field}: { field: EntityEditField }) {
                 ))}
                 <Form.Item {...(fields.length === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
                            label={fields.length === 0 ? makeLabel(field) : ''}>
-                    <Button onClick={add} icon={<PlusSquareTwoTone/>}> {field.name} </Button>
+                    <Button className='nodrag'
+                            onClick={add}
+                            icon={<PlusSquareTwoTone/>}> {field.name} </Button>
 
                 </Form.Item>
             </>
@@ -184,10 +187,10 @@ function FuncSubmitFormItem({field}: { field: EntityEditField }) {
     let func = field.value as FuncSubmitType;
     return <Form.Item {...formItemLayoutWithOutLabel} key={field.name}>
         <Space size={50}>
-            <Button type="primary" htmlType="submit" onClick={() => func.funcSubmit()}>
+            <Button className='nodrag' type="primary" htmlType="submit" onClick={() => func.funcSubmit()}>
                 {t('addOrUpdate')}
             </Button>
-            <Button type="default" onClick={() => func.funcClear()}>
+            <Button className='nodrag' type="default" onClick={() => func.funcClear()}>
                 {t('setDefaultValue')}
             </Button>
         </Space>

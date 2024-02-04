@@ -28,7 +28,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
             <Text strong style={{fontSize: 18, color: "#fff"}} {...copy}>
                 {label}
             </Text>
-            {edit && edit.editOnDelete && <ActionIcon icon={<CloseOutlined/>} onClick={edit.editOnDelete}/>}
+            {edit && edit.editOnDelete && <ActionIcon className='nodrag' icon={<CloseOutlined/>} onClick={edit.editOnDelete}/>}
         </Flex>
 
         {fields && <EntityProperties fields={fields} color={color}/>}
