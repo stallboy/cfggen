@@ -6,7 +6,7 @@ import {Flex, Typography} from "antd";
 import {EntityCard, getDsLenAndDesc} from "./EntityCard.tsx";
 import {EntityProperties} from "./EntityProperties.tsx";
 import {EntityForm} from "./EntityForm.tsx";
-import {NodeShowType} from "../io/localStoreJson.ts";
+import {NodeShowType} from "../routes/setting/storageJson.ts";
 import {ActionIcon} from "@ant-design/pro-editor";
 import {CloseOutlined} from "@ant-design/icons";
 

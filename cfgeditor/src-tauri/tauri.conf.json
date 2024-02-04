@@ -18,9 +18,17 @@
         "open": true
       },
       "fs" : {
-        "scope": ["$DOWNLOAD/*", "$EXE/*"],
+        "scope": ["$DOWNLOAD/*", "$EXE/*", "**"],
         "all" : true,
         "writeFile": true
+      },
+      "protocol": {
+        "all": true,
+        "asset": true,
+        "assetScope": ["**"]
+      },
+      "path": {
+        "all": true
       }
     },
     "bundle": {
@@ -35,6 +43,7 @@
         "icons/icon.ico"
       ]
     },
+
     "security": {
       "csp": null,
       "dangerousUseHttpScheme": true

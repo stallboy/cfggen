@@ -10,7 +10,7 @@ import {Schema} from "./routes/table/schemaUtil.ts";
 import {getLastNavToInLocalStore, setServer, store, useLocationData} from "./routes/setting/store.ts";
 import {Outlet, useNavigate} from "react-router-dom";
 import {STable} from "./routes/table/schemaModel.ts";
-import {fetchSchema} from "./io/api.ts";
+import {fetchSchema} from "./routes/api.ts";
 import {useQuery} from "@tanstack/react-query";
 import {HeaderBar} from "./routes/headerbar/HeaderBar.tsx";
 import {FlowGraph} from "./flow/FlowGraph.tsx";
@@ -67,7 +67,6 @@ export function CfgEditorApp() {
     function handleModalOk() {
         onConnectServer(server);
     }
-
 
     let content;
     if ((!schema) || curTable == null) {

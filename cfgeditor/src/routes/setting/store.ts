@@ -1,6 +1,14 @@
 import resso from "resso";
-import {Convert, FixedPage, NodeShowType} from "../../io/localStoreJson.ts";
-import {getBool, getEnumStr, getInt, getJson, getJsonNullable, getStr} from "../../io/localStore.ts";
+import {Convert, FixedPage, NodeShowType} from "./storageJson.ts";
+import {
+    getBool,
+    getEnumStr,
+    getInt,
+    getJson,
+    getJsonNullable,
+    getStr, removeCfg,
+    setCfg,
+} from "./storage.ts";
 import {History} from "../headerbar/historyModel.ts";
 import {Schema} from "../table/schemaUtil.ts";
 import {useLocation} from "react-router-dom";
@@ -46,6 +54,7 @@ const defaultNodeShow: NodeShowType = {
 }
 
 function readStoreState(): StoreState {
+    console.log('read storage')
     return {
         server: getStr('server', 'localhost:3456'),
         maxImpl: getInt('maxImpl', 10),
@@ -80,7 +89,7 @@ export function clearLayoutCache(){
 
 export function setQuery(v: string) {
     store.query = v;
-    localStorage.setItem('query', v);
+    setCfg('query', v);
     clearLayoutCache();
 }
 
@@ -88,21 +97,21 @@ export function setQuery(v: string) {
 export function setMaxImpl(value: number | null) {
     if (value) {
         store.maxImpl = value;
-        localStorage.setItem('maxImpl', value.toString());
+        setCfg('maxImpl', value.toString());
         clearLayoutCache();
     }
 }
 
 export function setRefIn(checked: boolean) {
     store.refIn = checked;
-    localStorage.setItem('refIn', checked ? 'true' : 'false');
+    setCfg('refIn', checked ? 'true' : 'false');
     clearLayoutCache();
 }
 
 export function setRefOutDepth(value: number | null) {
     if (value) {
         store.refOutDepth = value;
-        localStorage.setItem('refOutDepth', value.toString());
+        setCfg('refOutDepth', value.toString());
         clearLayoutCache();
     }
 }
@@ -110,21 +119,21 @@ export function setRefOutDepth(value: number | null) {
 export function setMaxNode(value: number | null) {
     if (value) {
         store.maxNode = value;
-        localStorage.setItem('maxNode', value.toString());
+        setCfg('maxNode', value.toString());
         clearLayoutCache();
     }
 }
 
 export function setRecordRefIn(checked: boolean) {
     store.recordRefIn = checked;
-    localStorage.setItem('recordRefIn', checked ? 'true' : 'false');
+    setCfg('recordRefIn', checked ? 'true' : 'false');
     clearLayoutCache();
 }
 
 export function setRecordRefOutDepth(value: number | null) {
     if (value) {
         store.recordRefOutDepth = value;
-        localStorage.setItem('recordRefOutDepth', value.toString());
+        setCfg('recordRefOutDepth', value.toString());
         clearLayoutCache();
     }
 }
@@ -132,7 +141,7 @@ export function setRecordRefOutDepth(value: number | null) {
 export function setRecordMaxNode(value: number | null) {
     if (value) {
         store.recordMaxNode = value;
-        localStorage.setItem('recordMaxNode', value.toString());
+        setCfg('recordMaxNode', value.toString());
         clearLayoutCache();
     }
 }
@@ -140,21 +149,21 @@ export function setRecordMaxNode(value: number | null) {
 export function setSearchMax(value: number | null) {
     if (value) {
         store.searchMax = value;
-        localStorage.setItem('searchMax', value.toString());
+        setCfg('searchMax', value.toString());
     }
 }
 
 export function setImageSizeScale(value: number | null) {
     if (value) {
         store.imageSizeScale = value;
-        localStorage.setItem('imageSizeScale', value.toString());
+        setCfg('imageSizeScale', value.toString());
     }
 }
 
 export function setDragPanel(value: DragPanelType) {
     if (dragPanelEnums.includes(value)) {
         store.dragPanel = value;
-        localStorage.setItem('dragPanel', value);
+        setCfg('dragPanel', value);
     }
 }
 
@@ -170,23 +179,23 @@ export function setFix(curTableId: string, curId: string) {
         nodeShow: nodeShow,
     };
     store.fix = fp;
-    localStorage.setItem('fix', Convert.fixedPageToJson(fp));
+    setCfg('fix', Convert.fixedPageToJson(fp));
     clearLayoutCache();
 }
 
 export function setFixNull() {
     store.fix = null;
-    localStorage.removeItem('fix');
+    removeCfg('fix');
 }
 
 export function setServer(value: string) {
     store.server = value;
-    localStorage.setItem('server', value);
+    setCfg('server', value);
 }
 
 export function setNodeShow(nodeShow: NodeShowType) {
     store.nodeShow = nodeShow;
-    localStorage.setItem('nodeShow', Convert.nodeShowTypeToJson(nodeShow));
+    setCfg('nodeShow', Convert.nodeShowTypeToJson(nodeShow));
     clearLayoutCache();
 }
 
@@ -237,9 +246,9 @@ export function navTo(curPage: PageType, tableId: string, id: string,
         }
     }
 
-    localStorage.setItem('curPage', curPage);
-    localStorage.setItem('curTableId', tableId);
-    localStorage.setItem('curId', id);
+    setCfg('curPage', curPage);
+    setCfg('curTableId', tableId);
+    setCfg('curId', id);
 
     const url = `/${curPage}/${tableId}/${id}`;
     return (curPage == 'record' && edit) ? url + '/edit' : url;

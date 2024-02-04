@@ -2,7 +2,7 @@ import {Card, Descriptions, Tooltip} from "antd";
 import {Entity, EntityBrief} from "./entityModel.ts";
 import {DescriptionsItemType} from "antd/es/descriptions";
 import {memo} from "react";
-import {NodeShowType} from "../io/localStoreJson.ts";
+import {NodeShowType} from "../routes/setting/storageJson.ts";
 
 export const EntityCard = memo(function EntityCard({entity}: {
     entity: Entity,

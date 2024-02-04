@@ -16,7 +16,7 @@ import {Schema} from "../table/schemaUtil.ts";
 import {STable} from "../table/schemaModel.ts";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {RecordEditResult} from "../record/recordModel.ts";
-import {deleteRecord} from "../../io/api.ts";
+import {deleteRecord} from "../api.ts";
 import {toBlob} from "html-to-image";
 import {saveAs} from "file-saver";
 

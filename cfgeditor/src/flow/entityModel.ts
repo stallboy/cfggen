@@ -1,5 +1,5 @@
 import {BriefDescription} from "../routes/record/recordModel.ts";
-import {NodeShowType} from "../io/localStoreJson.ts";
+import {NodeShowType} from "../routes/setting/storageJson.ts";
 
 export interface EntityBaseField {
     name: string;

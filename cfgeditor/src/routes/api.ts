@@ -1,7 +1,7 @@
-import {RawSchema} from "../routes/table/schemaModel.ts";
-import {JSONObject, RecordEditResult, RecordRefsResult, RecordResult} from "../routes/record/recordModel.ts";
+import {RawSchema} from "./table/schemaModel.ts";
+import {JSONObject, RecordEditResult, RecordRefsResult, RecordResult} from "./record/recordModel.ts";
 import axios from 'axios';
-import {Schema} from "../routes/table/schemaUtil.ts";
+import {Schema} from "./table/schemaUtil.ts";
 
 
 export async function fetchSchema(server: string, signal:AbortSignal) {

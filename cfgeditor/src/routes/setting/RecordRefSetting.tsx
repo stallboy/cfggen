@@ -2,7 +2,7 @@ import {Button, Card, Checkbox, ColorPicker, Form, Input, InputNumber, Radio, Sp
 import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 
-import {KeywordColor, TableHideAndColor} from "../../io/localStoreJson.ts";
+import {KeywordColor, TableHideAndColor} from "./storageJson.ts";
 import {setNodeShow, setRecordMaxNode, setRecordRefIn, setRecordRefOutDepth, store} from "./store.ts";
 import {memo} from "react";
 

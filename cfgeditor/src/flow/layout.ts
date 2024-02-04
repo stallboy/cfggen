@@ -2,7 +2,7 @@ import ELK, {ElkNode, ElkExtendedEdge} from 'elkjs';
 import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
 import {Rect, XYPosition} from "@xyflow/react";
 import {calcWidthHeight} from "./FlowNode.tsx";
-import {NodeShowType} from "../io/localStoreJson.ts";
+import {NodeShowType} from "../routes/setting/storageJson.ts";
 
 
 function nodeToLayoutChild(node: EntityNode, nodeShow: NodeShowType, id2RectMap: Map<string, Rect>): ElkNode {
