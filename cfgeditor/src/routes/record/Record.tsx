@@ -3,7 +3,7 @@ import {JSONObject, RecordEditResult, RecordResult, RefId} from "./recordModel.t
 import {App, Result} from "antd";
 import {createRefEntities, getId} from "./recordRefEntity.ts";
 import {RecordEntityCreator} from "./recordEntityCreator.ts";
-import {EditEntityCreator} from "./editEntityCreator.ts";
+import {RecordEditEntityCreator} from "./recordEditEntityCreator.ts";
 import {editState, startEditingObject} from "./editingObject.ts";
 import {useTranslation} from "react-i18next";
 import {clearLayoutCache, navTo, setIsEditMode, store, useLocationData} from "../setting/store.ts";
@@ -86,7 +86,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
 
         //这是非纯函数，escape hatch，用useRef也能做，这里用全局变量
         [editSeq, fitView] = startEditingObject(recordResult, afterEditStateChanged, submitEditingObject);
-        let creator = new EditEntityCreator(entityMap, schema, curTable, curId);
+        let creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId);
         creator.createThis();
     }
     fillHandles(entityMap);

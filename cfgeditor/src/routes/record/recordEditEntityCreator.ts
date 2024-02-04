@@ -27,7 +27,7 @@ function isPrimitiveType(type: string): boolean {
 }
 
 
-export class EditEntityCreator {
+export class RecordEditEntityCreator {
     curRefId: RefId;
 
     constructor(public entityMap: Map<string, Entity>,

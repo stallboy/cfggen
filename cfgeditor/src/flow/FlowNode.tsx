@@ -72,7 +72,8 @@ export function calcWidthHeight(entity: Entity, nodeShow: NodeShowType) {
         for (let editField of edit.editFields) {
             switch (editField.type) {
                 case "arrayOfPrimitive":
-                    cnt += (editField.value as any[]).length;
+                    const len = (editField.value as any[]).length
+                    cnt += len + 1;
                     break;
 
                 case "interface":
@@ -87,7 +88,11 @@ export function calcWidthHeight(entity: Entity, nodeShow: NodeShowType) {
                         if (row > 10) {
                             row = 10;
                         }
-                        extra += row * 22 + 10;
+                        if (row > 1) {
+                            extra += row * 22 + 10;
+                        } else {
+                            cnt++;
+                        }
                     } else {
                         cnt++;
                     }
