@@ -49,7 +49,7 @@ i18n.use(LanguageDetector)
             zh: {
                 translation: {
                     nextSlot: "空位:",
-                    table: "表结构",
+                    table: "表",
                     tableRef: "表关系",
                     record: "数据",
                     recordRef: "关系",

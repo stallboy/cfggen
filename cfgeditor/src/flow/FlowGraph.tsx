@@ -19,13 +19,12 @@ import {
     useMemo,
     useState
 } from "react";
-import {asyncLayout} from "./layout.ts";
+import {layoutAsync} from "./layoutAsync.ts";
 import {FlowContextMenu, MenuItem, MenuStyle} from "./FlowContextMenu.tsx";
 import {FlowNode} from "./FlowNode.tsx";
 import {store} from "../routes/setting/store.ts";
 import {convertNodeAndEdges} from "./entityToNodeAndEdge.ts";
 import {useQuery} from "@tanstack/react-query";
-// import {syncLayout} from "./syncLayout.ts";
 
 
 export type EntityNode = Node<Entity, string | undefined>;
@@ -51,6 +50,8 @@ const nodeTypes: NodeTypes = {
 
 const defaultNodes: EntityNode[] = [];
 const defaultEdges: EntityEdge[] = [];
+
+const proOptions = {hideAttribution: true};
 
 export function FlowGraph({children}: {
     children: ReactNode
@@ -104,9 +105,10 @@ export function FlowGraph({children}: {
             onNodeClick={closeMenu}
             onMoveStart={closeMenu}
             onNodeDragStart={closeMenu}
-            onPaneContextMenu={onPaneContextMenu}>
+            onPaneContextMenu={onPaneContextMenu}
+            proOptions={proOptions}>
             <Background/>
-            <Controls/>
+            <Controls showZoom={false}/>
         </ReactFlow>
         {(menuStyle && menuItems && menuItems.length > 0) &&
             <FlowContextMenu menuStyle={menuStyle} menuItems={menuItems} closeMenu={closeMenu}/>}
@@ -139,7 +141,7 @@ export function useEntityToGraph(pathname: string,
 
     const {data: id2RectMap} = useQuery({
         queryKey: ['layout', pathname],
-        queryFn: () => asyncLayout(nodes, edges, nodeShow),
+        queryFn: () => layoutAsync(nodes, edges, nodeShow),
         staleTime: 1000 * 60 * 5,
     })
 
@@ -162,7 +164,7 @@ export function useEntityToGraph(pathname: string,
                 const viewportForBounds = getViewportForBounds(bounds, width, height, 0.3, 1, 0.2);
                 panZoom?.setViewport(viewportForBounds);
                 // console.log(pathname, bounds, width, height, viewportForBounds)
-                if (setFitViewForPathname){
+                if (setFitViewForPathname) {
                     setFitViewForPathname(pathname);
                 }
             }

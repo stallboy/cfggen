@@ -10,6 +10,7 @@ import {STable} from "../table/schemaModel.ts";
 import {getId} from "../record/recordRefEntity.ts";
 import {useTranslation} from "react-i18next";
 import {memo} from "react";
+import {ActionIcon} from "@ant-design/pro-editor";
 
 const {Text} = Typography;
 
@@ -80,30 +81,22 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
 
     return <div style={{position: 'relative'}}>
         <Space size={'large'} style={{position: 'absolute', zIndex: 1}}>
-            <Space>
-                <Button onClick={() => setSettingOpen(true)}>
-                    <SettingOutlined/>
-                </Button>
-                <Button onClick={() => setSearchOpen(true)}>
-                    <SearchOutlined/>
-                </Button>
+            <Space size={'small'}>
+                <ActionIcon icon=<SettingOutlined/> onClick={() => setSettingOpen(true)}/>
+                <ActionIcon icon=<SearchOutlined/> onClick={() => setSearchOpen(true)}/>
+
                 {schema ? <TableList schema={schema}/> : <Select id='table' loading={true}/>}
                 {curTable ? <IdList curTable={curTable}/> : <Skeleton.Input/>}
                 {nextId}
             </Space>
-            <Space>
+            <Space size={'small'}>
                 <Radio.Group value={curPage} onChange={onChangeCurPage}
                              options={options} optionType={'button'}>
                 </Radio.Group>
                 {goFix}
 
-                <Button onClick={prev} disabled={!history.canPrev()}>
-                    <LeftOutlined/>
-                </Button>
-
-                <Button onClick={next} disabled={!history.canNext()}>
-                    <RightOutlined/>
-                </Button>
+                <ActionIcon icon=<LeftOutlined/> onClick={prev} disabled={!history.canPrev()}/>
+                <ActionIcon icon=<RightOutlined/> onClick={next} disabled={!history.canNext()}/>
             </Space>
         </Space></div>;
 });

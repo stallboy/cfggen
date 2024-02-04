@@ -47,7 +47,7 @@ function allPositionXYOk(nodes: EntityNode[], map: Map<string, XYPosition>) {
 }
 
 
-export async function asyncLayout(nodes: EntityNode[], edges: EntityEdge[], nodeShow: NodeShowType) {
+export async function layoutAsync(nodes: EntityNode[], edges: EntityEdge[], nodeShow: NodeShowType) {
     const elk = new ELK();
     // console.log('layout', nodes.length, nodes, edges);
     const id2RectMap = new Map<string, Rect>();
