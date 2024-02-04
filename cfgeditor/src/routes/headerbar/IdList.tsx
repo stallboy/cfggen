@@ -4,7 +4,7 @@ import {getIdOptions, isPkInteger,} from "../table/schemaUtil.ts";
 import {navTo, store, useLocationData} from "../setting/store.ts";
 import {useNavigate} from "react-router-dom";
 import {STable} from "../table/schemaModel.ts";
-import {memo} from "react";
+import {memo, useMemo} from "react";
 
 
 export const IdList = memo(function IdList({curTable}: {
@@ -12,9 +12,8 @@ export const IdList = memo(function IdList({curTable}: {
 }) {
     const navigate = useNavigate();
     const {curPage, curTableId, curId} = useLocationData();
-    const {isEditMode} = store;
 
-    let options = getIdOptions(curTable);
+    let options = useMemo(() => getIdOptions(curTable), [curTable]);
     let filterSorts = {};
     if (isPkInteger(curTable)) {
         filterSorts = {
@@ -34,6 +33,7 @@ export const IdList = memo(function IdList({curTable}: {
                        option!.label.toUpperCase().includes(inputValue.toUpperCase())
                    }
                    onChange={(value, _) => {
+                       const {isEditMode} = store;
                        navigate(navTo(curPage, curTableId, value, isEditMode));
                    }}/>
 

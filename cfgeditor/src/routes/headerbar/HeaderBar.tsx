@@ -55,11 +55,7 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
 
     function onChangeCurPage(e: RadioChangeEvent) {
         const page = e.target.value;
-        if (page == 'fix'){
-            navigate(navTo('recordRef', fix!.table, fix!.id));
-        }else{
-            navigate(navTo(page, curTableId, curId, isEditMode));
-        }
+        navigate(navTo(page, curTableId, curId, isEditMode));
     }
 
     let options = [
@@ -72,10 +68,13 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
         options.push({label: t('recordRef'), value: 'recordRef'});
     }
 
+    let goFix;
     if (fix && schema) {
         let fixedTable = schema.getSTable(fix.table);
         if (fixedTable && dragPanel != 'fix') {
-            options.push({label: t('fix') + ' ' + getId(fix.table, fix.id), value: 'fix'});
+            goFix = <Button onClick={() => {
+                navigate(navTo('recordRef', fix!.table, fix!.id));
+            }}> {getId(fix.table, fix.id)} </Button>
         }
     }
 
@@ -96,6 +95,7 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
                 <Radio.Group value={curPage} onChange={onChangeCurPage}
                              options={options} optionType={'button'}>
                 </Radio.Group>
+                {goFix}
 
                 <Button onClick={prev} disabled={!history.canPrev()}>
                     <LeftOutlined/>

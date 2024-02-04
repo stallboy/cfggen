@@ -29,7 +29,7 @@ export function getPrefStr(key: string, def: string): string {
     return def;
 }
 
-export function getPrefEnumStr<T>(key: string, enums: string[]): T | undefined{
+export function getPrefEnumStr<T>(key: string, enums: string[]): T | undefined {
     let v = localStorage.getItem(key);
     if (v && enums.includes(v)) {
         return v as T;
@@ -58,12 +58,17 @@ async function getConf() {
     return conf;
 }
 
-export async function readPrefAsync() {
-    console.log('read cfg file')
+let alreadyRead = false;
+
+export async function readPrefOnceAsync() {
+    if (alreadyRead) {
+        return true;
+    }
+    alreadyRead = true;
+    console.log('read yml file')
     const conf = await getConf();
     const content = await readTextFile(conf);
     const settings = parse(content);
-    // console.log(conf, content, settings);
     if (typeof settings == "object") {
         for (const key in settings) {
             const value = settings[key];

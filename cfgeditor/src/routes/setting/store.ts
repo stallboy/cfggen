@@ -9,8 +9,8 @@ import {queryClient} from "../../main.tsx";
 export type DragPanelType = 'recordRef' | 'fix' | 'none';
 const dragPanelEnums = ['recordRef', 'fix', 'none']
 
-export type PageType = 'table' | 'tableRef' | 'record' | 'recordRef' | 'fix';
-export const pageEnums = ['table', 'tableRef', 'record', 'recordRef', 'fix'];
+export type PageType = 'table' | 'tableRef' | 'record' | 'recordRef';
+export const pageEnums = ['table', 'tableRef', 'record', 'recordRef'];
 
 export type StoreState = {
     server: string;
@@ -69,13 +69,13 @@ const storeState: StoreState = {
     isEditMode: false,
 };
 
-let isReaded = false;
+let alreadyRead = false;
 
 export function readStoreStateOnce() {
-    if (isReaded) {
+    if (alreadyRead) {
         return;
     }
-    isReaded = true;
+    alreadyRead = true;
     console.log('read storage')
     for (const k in storeState) {
         let key = k as keyof StoreState;
