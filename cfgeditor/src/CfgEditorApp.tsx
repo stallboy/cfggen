@@ -7,7 +7,13 @@ import {useTranslation} from "react-i18next";
 import {DraggablePanel} from "@ant-design/pro-editor";
 import {Setting} from "./routes/setting/Setting.tsx";
 import {Schema} from "./routes/table/schemaUtil.ts";
-import {getLastNavToInLocalStore, setServer, store, useLocationData} from "./routes/setting/store.ts";
+import {
+    getLastNavToInLocalStore,
+    readStoreStateOnce,
+    setServer,
+    store,
+    useLocationData
+} from "./routes/setting/store.ts";
 import {Outlet, useNavigate} from "react-router-dom";
 import {STable} from "./routes/table/schemaModel.ts";
 import {fetchSchema} from "./routes/api.ts";
@@ -20,6 +26,7 @@ export type SchemaTableType = { schema: Schema, curTable: STable };
 
 
 export function CfgEditorApp() {
+    readStoreStateOnce();
     const {
         server, fix, dragPanel,
         recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow,

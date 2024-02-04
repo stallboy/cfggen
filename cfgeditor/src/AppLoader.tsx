@@ -1,11 +1,11 @@
 import {useQuery} from "@tanstack/react-query";
-import {readCfgAsync} from "./routes/setting/storage.ts";
+import {readPrefAsync} from "./routes/setting/storage.ts";
 import {CfgEditorApp} from "./CfgEditorApp.tsx";
 
 export function AppLoader() {
     const {isError, error: _error, data} = useQuery({
         queryKey: ['setting'],
-        queryFn: readCfgAsync,
+        queryFn: readPrefAsync,
         staleTime: Infinity,
         retry: 0,
     })

@@ -1,14 +1,6 @@
 import resso from "resso";
 import {Convert, FixedPage, NodeShowType} from "./storageJson.ts";
-import {
-    getBool,
-    getEnumStr,
-    getInt,
-    getJson,
-    getJsonNullable,
-    getStr, removeCfg,
-    setCfg,
-} from "./storage.ts";
+import {getPrefBool, getPrefEnumStr, getPrefInt, getPrefJson, getPrefStr, setPref, removePref} from "./storage.ts";
 import {History} from "../headerbar/historyModel.ts";
 import {Schema} from "../table/schemaUtil.ts";
 import {useLocation} from "react-router-dom";
@@ -37,7 +29,7 @@ export type StoreState = {
     searchMax: number;
 
     dragPanel: DragPanelType;
-    fix: FixedPage | null;
+    fix?: FixedPage;
     imageSizeScale: number;
 
     history: History;
@@ -53,43 +45,89 @@ const defaultNodeShow: NodeShowType = {
     tableHideAndColors: [],
 }
 
-function readStoreState(): StoreState {
+const storeState: StoreState = {
+    server: 'localhost:3456',
+    maxImpl: 10,
+
+    refIn: true,
+    refOutDepth: 5,
+    maxNode: 30,
+
+    recordRefIn: true,
+    recordRefOutDepth: 5,
+    recordMaxNode: 30,
+    nodeShow: defaultNodeShow,
+
+    query: '',
+    searchMax: 50,
+
+    dragPanel: 'none',
+    fix: undefined,
+    imageSizeScale: 16,
+
+    history: new History(),
+    isEditMode: false,
+};
+
+let isReaded = false;
+
+export function readStoreStateOnce() {
+    if (isReaded) {
+        return;
+    }
+    isReaded = true;
     console.log('read storage')
-    return {
-        server: getStr('server', 'localhost:3456'),
-        maxImpl: getInt('maxImpl', 10),
-
-        refIn: getBool('refIn', true),
-        refOutDepth: getInt('refOutDepth', 5),
-        maxNode: getInt('maxNode', 30),
-
-        recordRefIn: getBool('recordRefIn', true),
-        recordRefOutDepth: getInt('recordRefOutDepth', 5),
-        recordMaxNode: getInt('recordMaxNode', 30),
-        nodeShow: getJson<NodeShowType>('nodeShow', Convert.toNodeShowType, defaultNodeShow),
-
-        query: getStr('query', ''),
-        searchMax: getInt('searchMax', 50),
-
-        dragPanel: getEnumStr<DragPanelType>('dragPanel', dragPanelEnums, 'none'),
-        fix: getJsonNullable<FixedPage>('fix', Convert.toFixedPage),
-        imageSizeScale: getInt('imageSizeScale', 16),
-
-        history: new History(),
-        isEditMode: false,
-    };
+    for (const k in storeState) {
+        let key = k as keyof StoreState;
+        const value = storeState[key]
+        switch (key) {
+            case 'nodeShow':
+                const ns = getPrefJson<NodeShowType>('nodeShow', Convert.toNodeShowType);
+                if (ns) {
+                    store.nodeShow = ns;
+                }
+                break;
+            case 'fix':
+                const fp = getPrefJson<FixedPage>('fix', Convert.toFixedPage);
+                if (fp) {
+                    store.fix = fp;
+                }
+                break;
+            case 'dragPanel':
+                const dp = getPrefEnumStr<DragPanelType>('dragPanel', dragPanelEnums);
+                if (dp) {
+                    store.dragPanel = dp;
+                }
+                break;
+            default:
+                switch (typeof value) {
+                    case "boolean":
+                        store(key, () => getPrefBool(key, value));
+                        break;
+                    case "number":
+                        store(key, () => getPrefInt(key, value));
+                        break;
+                    case "string":
+                        store(key, () => getPrefStr(key, value));
+                        break;
+                    default:
+                        break;
+                }
+                break;
+        }
+    }
 }
 
-export const store = resso<StoreState>(readStoreState());
+export const store = resso<StoreState>(storeState);
 
 
-export function clearLayoutCache(){
+export function clearLayoutCache() {
     queryClient.removeQueries({queryKey: ['layout']});
 }
 
 export function setQuery(v: string) {
     store.query = v;
-    setCfg('query', v);
+    setPref('query', v);
     clearLayoutCache();
 }
 
@@ -97,21 +135,21 @@ export function setQuery(v: string) {
 export function setMaxImpl(value: number | null) {
     if (value) {
         store.maxImpl = value;
-        setCfg('maxImpl', value.toString());
+        setPref('maxImpl', value.toString());
         clearLayoutCache();
     }
 }
 
 export function setRefIn(checked: boolean) {
     store.refIn = checked;
-    setCfg('refIn', checked ? 'true' : 'false');
+    setPref('refIn', checked ? 'true' : 'false');
     clearLayoutCache();
 }
 
 export function setRefOutDepth(value: number | null) {
     if (value) {
         store.refOutDepth = value;
-        setCfg('refOutDepth', value.toString());
+        setPref('refOutDepth', value.toString());
         clearLayoutCache();
     }
 }
@@ -119,21 +157,21 @@ export function setRefOutDepth(value: number | null) {
 export function setMaxNode(value: number | null) {
     if (value) {
         store.maxNode = value;
-        setCfg('maxNode', value.toString());
+        setPref('maxNode', value.toString());
         clearLayoutCache();
     }
 }
 
 export function setRecordRefIn(checked: boolean) {
     store.recordRefIn = checked;
-    setCfg('recordRefIn', checked ? 'true' : 'false');
+    setPref('recordRefIn', checked ? 'true' : 'false');
     clearLayoutCache();
 }
 
 export function setRecordRefOutDepth(value: number | null) {
     if (value) {
         store.recordRefOutDepth = value;
-        setCfg('recordRefOutDepth', value.toString());
+        setPref('recordRefOutDepth', value.toString());
         clearLayoutCache();
     }
 }
@@ -141,7 +179,7 @@ export function setRecordRefOutDepth(value: number | null) {
 export function setRecordMaxNode(value: number | null) {
     if (value) {
         store.recordMaxNode = value;
-        setCfg('recordMaxNode', value.toString());
+        setPref('recordMaxNode', value.toString());
         clearLayoutCache();
     }
 }
@@ -149,21 +187,21 @@ export function setRecordMaxNode(value: number | null) {
 export function setSearchMax(value: number | null) {
     if (value) {
         store.searchMax = value;
-        setCfg('searchMax', value.toString());
+        setPref('searchMax', value.toString());
     }
 }
 
 export function setImageSizeScale(value: number | null) {
     if (value) {
         store.imageSizeScale = value;
-        setCfg('imageSizeScale', value.toString());
+        setPref('imageSizeScale', value.toString());
     }
 }
 
 export function setDragPanel(value: DragPanelType) {
     if (dragPanelEnums.includes(value)) {
         store.dragPanel = value;
-        setCfg('dragPanel', value);
+        setPref('dragPanel', value);
     }
 }
 
@@ -179,23 +217,23 @@ export function setFix(curTableId: string, curId: string) {
         nodeShow: nodeShow,
     };
     store.fix = fp;
-    setCfg('fix', Convert.fixedPageToJson(fp));
+    setPref('fix', Convert.fixedPageToJson(fp));
     clearLayoutCache();
 }
 
-export function setFixNull() {
-    store.fix = null;
-    removeCfg('fix');
+export function removeFix() {
+    store.fix = undefined;
+    removePref('fix');
 }
 
 export function setServer(value: string) {
     store.server = value;
-    setCfg('server', value);
+    setPref('server', value);
 }
 
 export function setNodeShow(nodeShow: NodeShowType) {
     store.nodeShow = nodeShow;
-    setCfg('nodeShow', Convert.nodeShowTypeToJson(nodeShow));
+    setPref('nodeShow', Convert.nodeShowTypeToJson(nodeShow));
     clearLayoutCache();
 }
 
@@ -246,19 +284,19 @@ export function navTo(curPage: PageType, tableId: string, id: string,
         }
     }
 
-    setCfg('curPage', curPage);
-    setCfg('curTableId', tableId);
-    setCfg('curId', id);
+    setPref('curPage', curPage);
+    setPref('curTableId', tableId);
+    setPref('curId', id);
 
     const url = `/${curPage}/${tableId}/${id}`;
     return (curPage == 'record' && edit) ? url + '/edit' : url;
 }
 
 export function getLastNavToInLocalStore() {
-    const curPage = getEnumStr<PageType>('curPage', pageEnums, 'table');
-    const tableId = getStr('curTableId', '');
-    const id = getStr('curId', '');
-    return navTo(curPage, tableId, id);
+    let page = getPrefEnumStr<PageType>('curPage', pageEnums);
+    const tableId = getPrefStr('curTableId', '');
+    const id = getPrefStr('curId', '');
+    return navTo(page ?? 'table', tableId, id);
 }
 
 export function useLocationData() {

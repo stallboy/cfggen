@@ -2,7 +2,7 @@ import {path} from "@tauri-apps/api";
 import {readTextFile, writeTextFile} from "@tauri-apps/api/fs";
 import {parse, stringify} from "yaml";
 
-export function getInt(key: string, def: number): number {
+export function getPrefInt(key: string, def: number): number {
     let v = localStorage.getItem(key);
     if (v) {
         let n = parseInt(v);
@@ -13,7 +13,7 @@ export function getInt(key: string, def: number): number {
     return def;
 }
 
-export function getBool(key: string, def: boolean): boolean {
+export function getPrefBool(key: string, def: boolean): boolean {
     let v = localStorage.getItem(key);
     if (v) {
         return v == 'true';
@@ -21,7 +21,7 @@ export function getBool(key: string, def: boolean): boolean {
     return def;
 }
 
-export function getStr(key: string, def: string): string {
+export function getPrefStr(key: string, def: string): string {
     let v = localStorage.getItem(key);
     if (v) {
         return v;
@@ -29,16 +29,15 @@ export function getStr(key: string, def: string): string {
     return def;
 }
 
-export function getEnumStr<T>(key: string, enums: string[], def: T): T {
+export function getPrefEnumStr<T>(key: string, enums: string[]): T | undefined{
     let v = localStorage.getItem(key);
     if (v && enums.includes(v)) {
         return v as T;
     }
-    return def;
 }
 
 
-export function getJsonNullable<T>(key: string, parser: (jsonStr: string) => T): T | null {
+export function getPrefJson<T>(key: string, parser: (jsonStr: string) => T): T | undefined {
     let v = localStorage.getItem(key);
     if (v) {
         try {
@@ -47,20 +46,8 @@ export function getJsonNullable<T>(key: string, parser: (jsonStr: string) => T):
             console.log(e);
         }
     }
-    return null;
 }
 
-export function getJson<T>(key: string, parser: (jsonStr: string) => T, def: T): T {
-    let v = localStorage.getItem(key);
-    if (v) {
-        try {
-            return parser(v);
-        } catch (e) {
-            console.log(e);
-        }
-    }
-    return def;
-}
 
 let conf: string | undefined = undefined;
 
@@ -71,7 +58,7 @@ async function getConf() {
     return conf;
 }
 
-export async function readCfgAsync() {
+export async function readPrefAsync() {
     console.log('read cfg file')
     const conf = await getConf();
     const content = await readTextFile(conf);
@@ -87,7 +74,7 @@ export async function readCfgAsync() {
     return true;
 }
 
-async function saveCfgAsync() {
+async function savePrefAsync() {
     const settings: Record<string, any> = {};
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -100,15 +87,20 @@ async function saveCfgAsync() {
     await writeTextFile(conf, content);
 }
 
-function dummy(_reason: any) {
+function log(reason: any) {
+    console.log(reason)
 }
 
-export function setCfg(key: string, value: string) {
+export function setPref(key: string, value: string) {
     localStorage.setItem(key, value);
-    saveCfgAsync().catch(dummy);
+    if (window.__TAURI__) {
+        savePrefAsync().catch(log);
+    }
 }
 
-export function removeCfg(key: string) {
+export function removePref(key: string) {
     localStorage.removeItem(key);
-    saveCfgAsync().catch(dummy);
+    if (window.__TAURI__) {
+        savePrefAsync().catch(log);
+    }
 }

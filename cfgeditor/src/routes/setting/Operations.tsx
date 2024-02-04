@@ -6,7 +6,7 @@ import {
     DragPanelType,
     setDragPanel,
     setFix,
-    setFixNull,
+    removeFix,
     setImageSizeScale, setServer,
     store,
     useLocationData
@@ -133,9 +133,9 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
                 </Button>
             </Form.Item>
         }
-        {(fix != null) &&
+        {fix &&
             <Form.Item wrapperCol={{offset: 6}}>
-                <Button type="primary" onClick={setFixNull}>
+                <Button type="primary" onClick={removeFix}>
                     {t('removeFix')}
                 </Button>
             </Form.Item>

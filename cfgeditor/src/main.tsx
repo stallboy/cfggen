@@ -13,6 +13,7 @@ import {RecordRefRoute} from "./routes/record/RecordRef.tsx";
 import {PathNotFound} from "./routes/PathNotFound.tsx";
 import {TableRef} from "./routes/table/TableRef.tsx";
 import {AppLoader} from "./AppLoader.tsx";
+import {CfgEditorApp} from "./CfgEditorApp.tsx";
 // import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
 
 export const queryClient = new QueryClient({
@@ -26,7 +27,7 @@ export const queryClient = new QueryClient({
 const router = createBrowserRouter([
     {
         path: "/",
-        Component: AppLoader,
+        Component: window.__TAURI__ ? AppLoader : CfgEditorApp,
         children: [
             {
                 path: "table/:table/:id?",
