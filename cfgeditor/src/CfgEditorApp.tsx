@@ -9,7 +9,7 @@ import {Setting} from "./routes/setting/Setting.tsx";
 import {Schema} from "./routes/table/schemaUtil.ts";
 import {
     getLastNavToInLocalStore,
-    readStoreStateOnce,
+    readStoreStateOnce, setDragPanelWidth,
     setServer,
     store,
     useLocationData
@@ -28,7 +28,7 @@ export type SchemaTableType = { schema: Schema, curTable: STable };
 export function CfgEditorApp() {
     readStoreStateOnce();
     const {
-        server, fix, dragPanel,
+        server, fix, dragPanel, dragPanelWidth,
         recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow,
     } = store;
 
@@ -105,6 +105,7 @@ export function CfgEditorApp() {
         }
 
         if (dragPage) {
+
             content = <div style={{
                 position: "absolute",
                 background: '#fff',
@@ -114,8 +115,13 @@ export function CfgEditorApp() {
             }}>
                 <DraggablePanel
                     placement={'left'}
-                    style={{background: '#fff', width: '100%', padding: 12}}>
-
+                    style={{background: '#fff', width: '100%', padding: 12}}
+                    defaultSize={{width: dragPanelWidth}}
+                    onSizeChange={(_delta: any, size?: { width: string | number }) => {
+                        if (size) {
+                            setDragPanelWidth(size.width as number);
+                        }
+                    }}>
                     <FlowGraph>
                         {dragPage}
                     </FlowGraph>

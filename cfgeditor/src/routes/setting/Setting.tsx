@@ -22,8 +22,8 @@ export const Setting = memo(function Setting({schema, curTable, flowRef}: {
         {key: 'recordSetting', label: t('recordSetting'), children: <RecordRefSetting/>,},
         {key: 'tableSetting', label: t('tableSetting'), children: <TableSetting/>,},
         {
-            key: 'otherSetting',
-            label: t('otherSetting'),
+            key: 'operations',
+            label: t('operations'),
             children: <Operations schema={schema} curTable={curTable} flowRef={flowRef}/>,
         },
         {key: 'keySetting', label: t('keySetting'), children: <KeyShortCut/>,},

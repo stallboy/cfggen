@@ -65,7 +65,7 @@ i18n.use(LanguageDetector)
 
                     tableSetting: '表显示',
                     recordSetting: '关系显示',
-                    otherSetting: '其他',
+                    operations: '操作',
                     keySetting: '快捷键',
                     implsShowCnt: '接口实现数',
                     refIn: '入层',
@@ -103,6 +103,7 @@ i18n.use(LanguageDetector)
                     tableHideAndColors: '表显示',
                     addTableHideAndColor: '增加',
                     setNodeShow: '提交',
+                    toggleFullScreen: '切换全屏',
 
                     search: '搜索',
                     edit: '编辑',

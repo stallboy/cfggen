@@ -1,24 +1,39 @@
 import {memo} from "react";
 import {useTranslation} from "react-i18next";
-import {Descriptions} from "antd";
+import {Button, Descriptions} from "antd";
 import {LeftOutlined, RightOutlined, SearchOutlined} from "@ant-design/icons";
 import {path} from '@tauri-apps/api';
+import {appWindow} from '@tauri-apps/api/window';
 import {useQuery} from "@tanstack/react-query";
 
-async function queryFn() {
+
+async function queryResourceDir() {
     return await path.resourceDir();
 }
 
+export async function toggleFullScreen() {
+    const isFullScreen = await appWindow.isFullscreen();
+    await appWindow.setFullscreen(!isFullScreen);
+}
+
+export const TauriSetting = memo(function TauriSetting() {
+    const {t} = useTranslation();
+    const {data: resourceDir} = useQuery({
+        queryKey: ['tauri', 'resourceDir'],
+        queryFn: queryResourceDir,
+    });
+
+    return <>
+        <p>resourceDir: {resourceDir}</p>
+        <Button onClick={toggleFullScreen}> {t('toggleFullScreen')}</Button>
+    </>
+
+});
 
 export const KeyShortCut = memo(function KeyShortcut() {
     const {t} = useTranslation();
-    const {data} = useQuery({
-        queryKey: ['path'],
-        queryFn: queryFn,
-    })
 
     return <>
-        {data}
         <Descriptions title="Key Shortcut" bordered column={2} items={[
             {
                 key: '1',
@@ -56,7 +71,13 @@ export const KeyShortCut = memo(function KeyShortcut() {
                 label: <SearchOutlined/>,
                 children: 'alt+q',
             },
+            {
+                key: '8',
+                label: t('toggleFullScreen'),
+                children: 'alt+enter',
+            },
         ]}/>
+        {window.__TAURI__ && <TauriSetting/>}
     </>;
 
 

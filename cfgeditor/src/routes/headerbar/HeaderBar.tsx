@@ -11,6 +11,7 @@ import {getId} from "../record/recordRefEntity.ts";
 import {useTranslation} from "react-i18next";
 import {memo} from "react";
 import {ActionIcon} from "@ant-design/pro-editor";
+import {toggleFullScreen} from "../setting/KeyShortcut.tsx";
 
 const {Text} = Typography;
 
@@ -30,7 +31,7 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
     useHotkeys('alt+4', () => navigate(navTo('recordRef', curTableId, curId)));
     useHotkeys('alt+c', () => prev());
     useHotkeys('alt+v', () => next());
-
+    useHotkeys('alt+enter', toggleFullScreen);
 
     function prev() {
         const path = historyPrev(curPage);

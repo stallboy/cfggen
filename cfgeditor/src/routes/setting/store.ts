@@ -29,6 +29,7 @@ export type StoreState = {
     searchMax: number;
 
     dragPanel: DragPanelType;
+    dragPanelWidth: string | number;
     fix?: FixedPage;
     imageSizeScale: number;
 
@@ -62,6 +63,7 @@ const storeState: StoreState = {
     searchMax: 50,
 
     dragPanel: 'none',
+    dragPanelWidth: '600px',
     fix: undefined,
     imageSizeScale: 16,
 
@@ -205,6 +207,10 @@ export function setDragPanel(value: DragPanelType) {
     }
 }
 
+export function setDragPanelWidth(value: string | number) {
+    store.dragPanelWidth = value;
+    setPref('dragPanelWidth', value.toString());
+}
 
 export function setFix(curTableId: string, curId: string) {
     const {recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow} = store;
