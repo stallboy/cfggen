@@ -19,11 +19,7 @@ import {RecordEditResult} from "../record/recordModel.ts";
 import {deleteRecord} from "../api.ts";
 import {toBlob} from "html-to-image";
 import {saveAs} from "file-saver";
-
-const formLayout = {
-    labelCol: {xs: {span: 24}, sm: {span: 6},},
-    wrapperCol: {xs: {span: 24}, sm: {span: 18},},
-};
+import {formLayout} from "./TableSetting.tsx";
 
 export const Operations = memo(function Operations({schema, curTable, flowRef}: {
     schema: Schema | undefined;

@@ -3,7 +3,7 @@ import {Form, InputNumber, Switch} from "antd";
 import {setMaxImpl, setMaxNode, setRefIn, setRefOutDepth, setSearchMax, store} from "./store.ts";
 import {useTranslation} from "react-i18next";
 
-const formLayout = {
+export const formLayout = {
     labelCol: {xs: {span: 24}, sm: {span: 6},},
     wrapperCol: {xs: {span: 24}, sm: {span: 18},},
 };

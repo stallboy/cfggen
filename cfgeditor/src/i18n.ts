@@ -104,6 +104,10 @@ i18n.use(LanguageDetector)
                     addTableHideAndColor: '增加',
                     setNodeShow: '提交',
                     toggleFullScreen: '切换全屏',
+                    tauriConf: 'App设置',
+                    resDirs: '资源目录',
+                    addResDir: '增加',
+                    setTauriConf: '提交',
 
                     search: '搜索',
                     edit: '编辑',

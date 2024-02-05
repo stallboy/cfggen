@@ -119,7 +119,7 @@ export function CfgEditorApp() {
                     defaultSize={{width: dragPanelWidth}}
                     onSizeChange={(_delta: any, size?: { width: string | number }) => {
                         if (size) {
-                            setDragPanelWidth(size.width as number);
+                            setDragPanelWidth(size.width);
                         }
                     }}>
                     <FlowGraph>

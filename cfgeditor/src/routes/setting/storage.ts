@@ -60,7 +60,7 @@ async function getConf() {
 
 let alreadyRead = false;
 
-export async function readPrefOnceAsync() {
+export async function readPrefAsyncOnce() {
     if (alreadyRead) {
         return true;
     }

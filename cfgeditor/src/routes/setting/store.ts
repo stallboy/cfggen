@@ -1,5 +1,5 @@
 import resso from "resso";
-import {Convert, FixedPage, NodeShowType} from "./storageJson.ts";
+import {Convert, FixedPage, NodeShowType, TauriConf} from "./storageJson.ts";
 import {getPrefBool, getPrefEnumStr, getPrefInt, getPrefJson, getPrefStr, setPref, removePref} from "./storage.ts";
 import {History} from "../headerbar/historyModel.ts";
 import {Schema} from "../table/schemaUtil.ts";
@@ -32,18 +32,11 @@ export type StoreState = {
     dragPanelWidth: string | number;
     fix?: FixedPage;
     imageSizeScale: number;
+    tauriConf: TauriConf;
 
     history: History;
     isEditMode: boolean;
-}
-
-const defaultNodeShow: NodeShowType = {
-    showHead: 'show',
-    showDescription: 'show',
-    containEnum: true,
-    nodePlacementStrategy: 'SIMPLE',
-    keywordColors: [],
-    tableHideAndColors: [],
+    resMap: Map<string, string[]>;
 }
 
 const storeState: StoreState = {
@@ -57,18 +50,29 @@ const storeState: StoreState = {
     recordRefIn: true,
     recordRefOutDepth: 5,
     recordMaxNode: 30,
-    nodeShow: defaultNodeShow,
+    nodeShow: {
+        showHead: 'show',
+        showDescription: 'show',
+        containEnum: true,
+        nodePlacementStrategy: 'SIMPLE',
+        keywordColors: [],
+        tableHideAndColors: [],
+    },
 
     query: '',
     searchMax: 50,
 
     dragPanel: 'none',
-    dragPanelWidth: '600px',
+    dragPanelWidth: '50vw',
     fix: undefined,
     imageSizeScale: 16,
+    tauriConf: {
+        resDirs: [],
+    },
 
     history: new History(),
     isEditMode: false,
+    resMap: new Map<string, string[]>(),
 };
 
 let alreadyRead = false;
@@ -93,6 +97,12 @@ export function readStoreStateOnce() {
                 const fp = getPrefJson<FixedPage>('fix', Convert.toFixedPage);
                 if (fp) {
                     store.fix = fp;
+                }
+                break;
+            case 'tauriConf':
+                const tc = getPrefJson<TauriConf>('tauriConf', Convert.toTauriConf);
+                if (tc) {
+                    store.tauriConf = tc;
                 }
                 break;
             case 'dragPanel':
@@ -240,6 +250,12 @@ export function setServer(value: string) {
 export function setNodeShow(nodeShow: NodeShowType) {
     store.nodeShow = nodeShow;
     setPref('nodeShow', Convert.nodeShowTypeToJson(nodeShow));
+    clearLayoutCache();
+}
+
+export function setTauriConf(tauriConf: TauriConf) {
+    store.tauriConf = tauriConf;
+    setPref('tauriConf', Convert.tauriConfToJson(tauriConf));
     clearLayoutCache();
 }
 

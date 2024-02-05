@@ -1,6 +1,6 @@
 // To parse this data:
 //
-//   import { Convert, NodeShowType, KeywordColor, TableHideAndColor, ShowHeadType, ShowDescriptionType, NodePlacementStrategyType, FixedPage } from "./file";
+//   import { Convert, NodeShowType, KeywordColor, TableHideAndColor, ShowHeadType, ShowDescriptionType, NodePlacementStrategyType, FixedPage, ResDir, TauriConf } from "./file";
 //
 //   const nodeShowType = Convert.toNodeShowType(json);
 //   const keywordColor = Convert.toKeywordColor(json);
@@ -9,6 +9,8 @@
 //   const showDescriptionType = Convert.toShowDescriptionType(json);
 //   const nodePlacementStrategyType = Convert.toNodePlacementStrategyType(json);
 //   const fixedPage = Convert.toFixedPage(json);
+//   const resDir = Convert.toResDir(json);
+//   const tauriConf = Convert.toTauriConf(json);
 //
 // These functions will throw an error if the JSON doesn't
 // match the expected interface, even if the JSON is valid.
@@ -46,6 +48,14 @@ export interface TableHideAndColor {
     color:   string;
     hide:    boolean;
     keyword: string;
+}
+
+export interface TauriConf {
+    resDirs: ResDir[];
+}
+
+export interface ResDir {
+    dir: string;
 }
 
 // Converts JSON strings to/from your types
@@ -105,6 +115,22 @@ export class Convert {
 
     public static fixedPageToJson(value: FixedPage): string {
         return JSON.stringify(uncast(value, r("FixedPage")), null, 2);
+    }
+
+    public static toResDir(json: string): ResDir {
+        return cast(JSON.parse(json), r("ResDir"));
+    }
+
+    public static resDirToJson(value: ResDir): string {
+        return JSON.stringify(uncast(value, r("ResDir")), null, 2);
+    }
+
+    public static toTauriConf(json: string): TauriConf {
+        return cast(JSON.parse(json), r("TauriConf"));
+    }
+
+    public static tauriConfToJson(value: TauriConf): string {
+        return JSON.stringify(uncast(value, r("TauriConf")), null, 2);
     }
 }
 
@@ -243,7 +269,7 @@ function l(typ: any) {
 function a(typ: any) {
     return { arrayItems: typ };
 }
-
+//
 // function u(...typs: any[]) {
 //     return { unionMembers: typs };
 // }
@@ -285,6 +311,12 @@ const typeMap: any = {
         { json: "color", js: "color", typ: "" },
         { json: "hide", js: "hide", typ: true },
         { json: "keyword", js: "keyword", typ: "" },
+    ], false),
+    "TauriConf": o([
+        { json: "resDirs", js: "resDirs", typ: a(r("ResDir")) },
+    ], false),
+    "ResDir": o([
+        { json: "dir", js: "dir", typ: "" },
     ], false),
     "NodePlacementStrategyType": [
         "BRANDES_KOEPF",

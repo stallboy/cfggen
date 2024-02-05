@@ -31,3 +31,11 @@ export interface FixedPage {
     maxNode: number;
     nodeShow: NodeShowType;
 }
+
+export interface ResDir {
+    dir: string;
+}
+
+export interface TauriConf {
+    resDirs: ResDir[]
+}

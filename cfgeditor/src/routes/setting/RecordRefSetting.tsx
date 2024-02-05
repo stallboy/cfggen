@@ -5,11 +5,8 @@ import {useTranslation} from "react-i18next";
 import {KeywordColor, TableHideAndColor} from "./storageJson.ts";
 import {setNodeShow, setRecordMaxNode, setRecordRefIn, setRecordRefOutDepth, store} from "./store.ts";
 import {memo} from "react";
+import {formLayout} from "./TableSetting.tsx";
 
-const formLayout = {
-    labelCol: {xs: {span: 24}, sm: {span: 6},},
-    wrapperCol: {xs: {span: 24}, sm: {span: 18},},
-};
 
 function fixColor(color: any) {
     let c;
@@ -53,20 +50,21 @@ export const RecordRefSetting = memo(function RecordRefSetting() {
         setNodeShow(newNodeShow);
     }
 
-    return <> <Form labelCol={{span: 6}} wrapperCol={{span: 18}} layout={'horizontal'}
-                    initialValues={{recordRefIn, recordRefOutDepth, recordMaxNode}}>
-        <Form.Item name='recordRefIn' label={t('recordRefIn')} valuePropName="checked">
-            <Switch onChange={setRecordRefIn}/>
-        </Form.Item>
+    return <>
+        <Form labelCol={{span: 6}} wrapperCol={{span: 18}} layout={'horizontal'}
+              initialValues={{recordRefIn, recordRefOutDepth, recordMaxNode}}>
+            <Form.Item name='recordRefIn' label={t('recordRefIn')} valuePropName="checked">
+                <Switch onChange={setRecordRefIn}/>
+            </Form.Item>
 
-        <Form.Item name='recordRefOutDepth' label={t('recordRefOutDepth')}>
-            <InputNumber min={1} max={500} onChange={setRecordRefOutDepth}/>
-        </Form.Item>
+            <Form.Item name='recordRefOutDepth' label={t('recordRefOutDepth')}>
+                <InputNumber min={1} max={500} onChange={setRecordRefOutDepth}/>
+            </Form.Item>
 
-        <Form.Item name='recordMaxNode' label={t('recordMaxNode')}>
-            <InputNumber min={1} max={500} onChange={setRecordMaxNode}/>
-        </Form.Item>
-    </Form>
+            <Form.Item name='recordMaxNode' label={t('recordMaxNode')}>
+                <InputNumber min={1} max={500} onChange={setRecordMaxNode}/>
+            </Form.Item>
+        </Form>
 
         <Card title={t("nodeShowSetting")}>
             <Form name="node show setting"  {...formLayout} initialValues={nodeShow} onFinish={onFinish}
