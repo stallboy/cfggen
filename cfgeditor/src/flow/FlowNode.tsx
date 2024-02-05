@@ -27,14 +27,14 @@ function isImage(r: string) {
 }
 
 function label(r: string) {
-    let i = r.lastIndexOf("/");
-    if (i == -1) {
-        i = r.lastIndexOf('\\');
+    let i = r.length - 1;
+    for (; i >= 0; i--) {
+        const c = r[i];
+        if (c == '/' || c == '\\') {
+            break;
+        }
     }
-    if (i != -1) {
-        return r.substring(i + 1);
-    }
-    return r;
+    return r.substring(i + 1);
 }
 
 function getResBrief(res: string[]) {
