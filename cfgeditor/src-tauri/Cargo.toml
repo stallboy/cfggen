@@ -12,7 +12,7 @@ edition = "2021"
 tauri-build = { version = "1.5", features = [] }
 
 [dependencies]
-tauri = { version = "1.5", features = [ "window-all", "path-all", "protocol-all", "fs-all", "shell-open"] }
+tauri = { version = "1.5", features = [ "shell-all", "window-all", "path-all", "protocol-all", "fs-all"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tauri-plugin-store = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }

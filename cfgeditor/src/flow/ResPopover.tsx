@@ -1,7 +1,15 @@
 import {ResInfo} from "../routes/setting/store.ts";
 import {memo, useCallback, useRef} from "react";
-import {Flex, Tabs, TabsProps} from "antd";
+import {Button, Flex, Space, Tabs, TabsProps} from "antd";
 import {convertFileSrc} from "@tauri-apps/api/tauri";
+import {Command} from "@tauri-apps/api/shell";
+
+
+function goExplorer(file: string) {
+    const command = new Command('explorer', ['/select,', file]);
+    // console.log(file, command);
+    command.execute();
+}
 
 export const VideoAudioSyncer = memo(function VideoAudioSyncer({resInfo}: { resInfo: ResInfo }) {
     const ref = useRef<HTMLElement>(null);
@@ -31,13 +39,21 @@ export const VideoAudioSyncer = memo(function VideoAudioSyncer({resInfo}: { resI
         }
     }, [ref]);
 
+
     const assetUrl = convertFileSrc(resInfo.path);
     const audioTracks = resInfo.audioTracks!;
     return <Flex ref={ref} vertical>
-        <video src={assetUrl} onPlay={onPlay} onPause={onPause} controls={true} width="320px"/>
+        <Space key={resInfo.path}>
+            <video src={assetUrl} onPlay={onPlay} onPause={onPause}
+                   controls={true} width="320px"/>
+            <Button onClick={() => goExplorer(resInfo.path)}>{resInfo.name}</Button>
+        </Space>
         {audioTracks.map(a => {
             const url = convertFileSrc(a.path);
-            return <audio key={a.path} src={url} controls={true}/>;
+            return <Space key={a.path} >
+                <audio src={url} controls={true}/>
+                <Button onClick={() => goExplorer(a.path)}>{a.name}</Button>
+            </Space>;
         })}
     </Flex>;
 });
@@ -54,19 +70,28 @@ export const ResPopover = memo(function ResPopover({resInfos}: { resInfos: ResIn
                     content = <VideoAudioSyncer resInfo={r}/>;
                 } else {
                     assetUrl = convertFileSrc(path);
-                    content = <video src={assetUrl} controls={true} width="320px"/>;
+                    content = <Space>
+                        <video src={assetUrl} controls={true} width="320px"/>
+                        <Button onClick={() => goExplorer(path)}>{name}</Button>
+                    </Space>;
                 }
                 break;
             case "audio":
                 assetUrl = convertFileSrc(path);
-                content = <audio src={assetUrl} controls={true}/>;
+                content = <Space>
+                    <audio src={assetUrl} controls={true}/>
+                    <Button onClick={() => goExplorer(path)}>{name}</Button>
+                </Space>
                 break;
             case "image":
                 assetUrl = convertFileSrc(path);
-                content = <img src={assetUrl} alt={path}/>;
+                content = <Space>
+                    <img src={assetUrl} alt={path} width="320px"/>
+                    <Button onClick={() => goExplorer(path)}>{name}</Button>
+                </Space>;
                 break;
             case "other":
-                content = <p>{path}</p>
+                content = <Button onClick={() => goExplorer(path)}>{path}</Button>
                 break;
         }
 

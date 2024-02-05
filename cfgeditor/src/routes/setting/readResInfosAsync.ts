@@ -210,6 +210,6 @@ export async function readResInfosAsync() {
 
     const packed = packAllAudioTracks(result);
     store.resMap = packed;
-    console.log(`read res file for ${packed.size} node`, stat);
+    console.log(`read res file for ${packed.size} node`, packed, stat);
     return true;
 }

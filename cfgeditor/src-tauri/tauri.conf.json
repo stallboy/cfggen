@@ -14,18 +14,32 @@
     "allowlist": {
       "all": false,
       "shell": {
-        "all": false,
-        "open": true
+        "all": true,
+        "execute": true,
+        "open": true,
+        "scope": [
+          {
+            "name": "explorer",
+            "cmd": "explorer",
+            "args": true
+          }
+        ]
       },
-      "fs" : {
-        "scope": ["$DOWNLOAD/*", "$EXE/*", "**"],
-        "all" : true,
+      "fs": {
+        "scope": [
+          "$DOWNLOAD/*",
+          "$EXE/*",
+          "**"
+        ],
+        "all": true,
         "writeFile": true
       },
       "protocol": {
         "all": true,
         "asset": true,
-        "assetScope": ["**"]
+        "assetScope": [
+          "**"
+        ]
       },
       "path": {
         "all": true
@@ -46,7 +60,6 @@
         "icons/icon.ico"
       ]
     },
-
     "security": {
       "csp": null,
       "dangerousUseHttpScheme": true
