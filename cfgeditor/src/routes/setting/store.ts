@@ -12,6 +12,20 @@ const dragPanelEnums = ['recordRef', 'fix', 'none']
 export type PageType = 'table' | 'tableRef' | 'record' | 'recordRef';
 export const pageEnums = ['table', 'tableRef', 'record', 'recordRef'];
 
+export type ResType = 'video' | 'audio' | 'image' | 'other';
+
+export interface ResAudio {
+    name: string;
+    path: string;
+}
+
+export interface ResInfo {
+    type: ResType;
+    name: string;
+    path: string;
+    audioTracks?: ResAudio[];
+}
+
 export type StoreState = {
     server: string;
     maxImpl: number;
@@ -36,7 +50,7 @@ export type StoreState = {
 
     history: History;
     isEditMode: boolean;
-    resMap: Map<string, string[]>;
+    resMap: Map<string, ResInfo[]>;
 }
 
 const storeState: StoreState = {
@@ -72,7 +86,7 @@ const storeState: StoreState = {
 
     history: new History(),
     isEditMode: false,
-    resMap: new Map<string, string[]>(),
+    resMap: new Map<string, ResInfo[]>(),
 };
 
 let alreadyRead = false;

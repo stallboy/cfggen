@@ -3,7 +3,7 @@ import {useTranslation} from "react-i18next";
 import {Button, Card, Descriptions, Form, Input, Space} from "antd";
 import {CloseOutlined, LeftOutlined, PlusOutlined, RightOutlined, SearchOutlined} from "@ant-design/icons";
 import {path} from '@tauri-apps/api';
-import {appWindow} from '@tauri-apps/api/window';
+import {appWindow} from "@tauri-apps/api/window";
 import {useQuery} from "@tanstack/react-query";
 import {formLayout} from "./TableSetting.tsx";
 import {setTauriConf, store} from "./store.ts";

@@ -1,7 +1,7 @@
 import ELK, {ElkNode, ElkExtendedEdge} from 'elkjs';
 import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
 import {Rect, XYPosition} from "@xyflow/react";
-import {calcWidthHeight} from "./FlowNode.tsx";
+import {calcWidthHeight} from "./calcWidthHeight.ts";
 import {NodeShowType} from "../routes/setting/storageJson.ts";
 
 
