@@ -48,7 +48,7 @@
     },
 
     "security": {
-      "csp": null,
+      "csp": "default-src '*' asset: https://asset.localhost",
       "dangerousUseHttpScheme": true
     },
     "updater": {

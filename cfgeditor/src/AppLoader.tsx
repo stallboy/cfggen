@@ -52,8 +52,6 @@ function processEntries(entries: FileEntry[], result: Map<string, string[]>, sta
                     }
                     stat.set(ext, cnt);
                 }
-
-
             }
         }
     }
