@@ -1,81 +1,8 @@
 import {memo} from "react";
 import {useTranslation} from "react-i18next";
-import {Button, Card, Checkbox, Descriptions, Form, Input, Space} from "antd";
-import {CloseOutlined, LeftOutlined, PlusOutlined, RightOutlined, SearchOutlined} from "@ant-design/icons";
-import {path} from '@tauri-apps/api';
-import {appWindow} from "@tauri-apps/api/window";
-import {useQuery} from "@tanstack/react-query";
-import {formLayout} from "./TableSetting.tsx";
-import {setTauriConf, store} from "./store.ts";
+import {Descriptions} from "antd";
+import {LeftOutlined, RightOutlined, SearchOutlined} from "@ant-design/icons";
 
-
-async function queryResourceDir() {
-    return await path.resourceDir();
-}
-
-export async function toggleFullScreen() {
-    const isFullScreen = await appWindow.isFullscreen();
-    await appWindow.setFullscreen(!isFullScreen);
-}
-
-export const TauriSetting = memo(function TauriSetting() {
-    const {t} = useTranslation();
-    const {data: resourceDir} = useQuery({
-        queryKey: ['tauri', 'resourceDir'],
-        queryFn: queryResourceDir,
-    });
-    const {tauriConf} = store;
-
-    function onFinish(values: any) {
-        console.log(values);
-        setTauriConf(values);
-    }
-
-
-    return <>
-        <p>resourceDir: {resourceDir}</p>
-        <Button onClick={toggleFullScreen}> {t('toggleFullScreen')}</Button>
-
-        <Card title={t("tauriConf")}>
-            <Form name="tauriConf"  {...formLayout} initialValues={tauriConf} onFinish={onFinish}
-                  autoComplete="off">
-                <Form.Item label={t('resDirs')}>
-                    <Form.List name="resDirs">
-                        {(fields, {add, remove}) => (
-                            <div style={{display: 'flex', flexDirection: 'column', rowGap: 16}}>
-                                {fields.map(({key, name}) => (
-                                    <Space key={key}>
-                                        <Form.Item name={[name, 'dir']} noStyle>
-                                            <Input placeholder="dir"/>
-                                        </Form.Item>
-                                        <Form.Item name={[name, 'txtAsSrt']} valuePropName='checked' noStyle>
-                                            <Checkbox>txtAsSrt</Checkbox>
-                                        </Form.Item>
-                                        <Form.Item name={[name, 'lang']} noStyle>
-                                            <Input placeholder="lang"/>
-                                        </Form.Item>
-                                        <CloseOutlined onClick={() => remove(name)}/>
-                                    </Space>
-                                ))}
-
-                                <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined/>}>
-                                    {t('addResDir')}
-                                </Button>
-                            </div>
-                        )}
-                    </Form.List>
-                </Form.Item>
-                <Form.Item>
-                    <Button type="primary" htmlType="submit">
-                        {t('setTauriConf')}
-                    </Button>
-                </Form.Item>
-            </Form>
-        </Card>
-
-    </>
-
-});
 
 export const KeyShortCut = memo(function KeyShortcut() {
     const {t} = useTranslation();
@@ -124,7 +51,6 @@ export const KeyShortCut = memo(function KeyShortcut() {
                 children: 'alt+enter',
             },
         ]}/>
-        {window.__TAURI__ && <TauriSetting/>}
     </>;
 
 

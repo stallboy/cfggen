@@ -11,7 +11,7 @@ import {getId} from "../record/recordRefEntity.ts";
 import {useTranslation} from "react-i18next";
 import {memo} from "react";
 import {ActionIcon} from "@ant-design/pro-editor";
-import {toggleFullScreen} from "../setting/KeyShortcut.tsx";
+import {toggleFullScreen} from "../setting/TauriSeting.tsx";
 
 const {Text} = Typography;
 

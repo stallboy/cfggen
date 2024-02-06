@@ -1,6 +1,8 @@
 import {readStoreStateOnce, ResAudioTrack, ResInfo, ResSubtitlesTrack, ResType, store} from "./store.ts";
-import {FileEntry, readDir} from "@tauri-apps/api/fs";
+import {FileEntry, readDir, writeTextFile} from "@tauri-apps/api/fs";
 import {path} from "@tauri-apps/api";
+import {Schema} from "../table/schemaUtil.ts";
+import {getResBrief} from "../../flow/ResPopover.tsx";
 
 function findKeyEndIndex(name: string) {
     let foundFirst = false;
@@ -36,8 +38,8 @@ function parentDir(dir: string): [boolean, string] {
     return [false, dir];
 }
 
-function joinDir(_baseDir: string, _dir: string): [boolean, string] {
-    let dir = _dir;
+function joinPath(_baseDir: string, _path: string): [boolean, string] {
+    let path = _path;
     let baseDir = _baseDir;
     if (baseDir.startsWith('\\\\?\\')) {
         baseDir = baseDir.substring(4);
@@ -49,16 +51,16 @@ function joinDir(_baseDir: string, _dir: string): [boolean, string] {
         }
     }
 
-    while (dir.startsWith('../') || dir.startsWith('..\\')) {
-        dir = dir.substring(3);
+    while (path.startsWith('../') || path.startsWith('..\\')) {
+        path = path.substring(3);
         let [ok, pd] = parentDir(baseDir);
         if (ok) {
             baseDir = pd;
         } else {
-            return [false, dir];
+            return [false, path];
         }
     }
-    return [true, baseDir + '/' + dir]
+    return [true, baseDir + '/' + path]
 }
 
 const ext2type: Record<string, ResType> = {
@@ -96,7 +98,7 @@ function processEntries(entries: FileEntry[], txtAsSrt: boolean, lang: string | 
 
                     const key = name.substring(0, idx);
                     const value = result.get(key);
-                    const resInfo: ResInfo = {type, name, path, lang:thisLang};
+                    const resInfo: ResInfo = {type, name, path, lang: thisLang};
                     if (value) {
                         value.push(resInfo);
                     } else {
@@ -217,7 +219,7 @@ export async function readResInfosAsync() {
         let dir = resDir.dir;
         if (dir.startsWith('.')) {
             const baseDir = await path.resourceDir();
-            let [ok, fullDir] = joinDir(baseDir, dir);
+            let [ok, fullDir] = joinPath(baseDir, dir);
             if (ok) {
                 dir = fullDir;
             } else {
@@ -239,3 +241,67 @@ export async function readResInfosAsync() {
     console.log(`read res file for ${packed.size} node`, packed, stat);
     return true;
 }
+
+interface ResEntry {
+    id: string;
+    infos?: ResInfo[];
+    brief: string;
+}
+
+export async function summarizeResAsync(schema: Schema) {
+    const {resMap} = store;
+    const table2entries = new Map<string, ResEntry[]>();
+    for (let [key, infos] of resMap.entries()) {
+        const i = key.indexOf('_');
+        if (i != -1) {
+            let tableLabel = key.substring(0, i);
+            let id = key.substring(i + 1);
+            let entries = table2entries.get(tableLabel);
+            let e = {id, infos, brief: getResBrief(infos)};
+            if (entries != undefined) {
+                entries.push(e);
+            } else {
+                table2entries.set(tableLabel, [e]);
+            }
+        }
+    }
+
+    for (let [tableLabel, entries] of table2entries.entries()) {
+        if (entries.length > 8) {
+            const sTable = schema.getSTableByLastName(tableLabel);
+            if (sTable && sTable.idSet) {
+
+                const resIdSet = new Set<string>();
+                for (let entry of entries) {
+                    resIdSet.add(entry.id);
+                    if (!sTable.idSet.has(entry.id)) {
+                        entry.brief = 'noCfg-' + entry.brief;
+                    }
+                }
+
+                for (let id of sTable.idSet) {
+                    if (!resIdSet.has(id)) {
+                        entries.push({id, brief: 'noRes'});
+                    }
+                }
+            }
+        }
+    }
+
+
+    const lines = [];
+    for (let [tableLabel, entries] of table2entries.entries()) {
+        for (let {id, brief} of entries) {
+            lines.push(`${tableLabel},${id},${brief}`);
+        }
+    }
+
+    const baseDir = await path.resourceDir();
+    let [ok, fullPath] = joinPath(baseDir, '../res.csv');
+    if (ok) {
+        await writeTextFile(fullPath, lines.join("\r\n"));
+    }
+    return fullPath;
+}
+
+

@@ -67,6 +67,7 @@ i18n.use(LanguageDetector)
                     recordSetting: '关系显示',
                     operations: '操作',
                     keySetting: '快捷键',
+                    appSetting: '资源',
                     implsShowCnt: '接口实现数',
                     refIn: '入层',
                     refOutDepth: '出层',
@@ -108,6 +109,7 @@ i18n.use(LanguageDetector)
                     resDirs: '资源目录',
                     addResDir: '增加',
                     setTauriConf: '提交',
+                    summarizeRes: '资源分析',
 
                     search: '搜索',
                     edit: '编辑',

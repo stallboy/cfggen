@@ -261,6 +261,21 @@ export class Schema {
         return '@in';
     }
 
+    getSTableByLastName(tableLabel:string) : STable|undefined{
+        for (let item of this.itemMap.values()) {
+            if (item.type == 'table') {
+                let name = item.name
+                let i = name.lastIndexOf('.');
+                if (i != -1){
+                    name = name.substring(i+1);
+                }
+                if (name == tableLabel){
+                    return item as STable;
+                }
+            }
+        }
+    }
+
 }
 
 function setUnion(dst: Set<string>, from: Set<string>) {
@@ -350,3 +365,4 @@ export function getIdOptions(sTable: STable, valueToInteger: boolean = false) {
     }
     return options;
 }
+
