@@ -1,7 +1,7 @@
 import {Entity} from "../../flow/entityModel.ts";
 import {JSONObject, RecordEditResult, RecordResult, RefId} from "./recordModel.ts";
 import {App, Result} from "antd";
-import {createRefEntities, getId} from "./recordRefEntity.ts";
+import {createRefEntities, getId, getLabel} from "./recordRefEntity.ts";
 import {RecordEntityCreator} from "./recordEntityCreator.ts";
 import {RecordEditEntityCreator} from "./recordEditEntityCreator.ts";
 import {editState, startEditingObject} from "./editingObject.ts";
@@ -72,7 +72,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     let fitView: boolean = true;
     if (!isEditing) {
         let creator = new RecordEntityCreator(entityMap, schema, refId, recordResult.refs);
-        creator.createRecordEntity(entityId, recordResult.object);
+        creator.createRecordEntity(entityId, recordResult.object, getId(getLabel(curTable.name), curId));
         createRefEntities(entityMap, schema, recordResult.refs, false);
     } else {
 

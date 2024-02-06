@@ -26,7 +26,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
 
     let resBrief;
     let resContent;
-    if (brief) {
+    if (label.includes('_')) {
         const res = resMap.get(label);
         if (res) {
             resContent = <ResPopover resInfos={res}/>;

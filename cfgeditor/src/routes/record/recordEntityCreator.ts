@@ -12,15 +12,13 @@ export class RecordEntityCreator {
                 public refs: BriefRecord[]) {
     }
 
-    createRecordEntity(id: string, obj: JSONObject & Refs): Entity | null {
+    createRecordEntity(id: string, obj: JSONObject & Refs, label?:string): Entity | null {
         let fields: EntityField[] = [];
         let type: string = obj['$type'] as string;
         if (type == null) {
             console.error('$type missing');
             return null;
         }
-
-        let label = getLabel(type);
 
         let sItem: STable | SStruct | null = null;
         if (!type.startsWith("$")) {
@@ -110,7 +108,7 @@ export class RecordEntityCreator {
 
         let entity: Entity = {
             id: id,
-            label: label,
+            label: label ?? getLabel(type),
             fields: fields,
             sourceEdges: sourceEdges,
             entityType: EntityType.Normal,
