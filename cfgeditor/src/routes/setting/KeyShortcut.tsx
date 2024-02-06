@@ -1,6 +1,6 @@
 import {memo} from "react";
 import {useTranslation} from "react-i18next";
-import {Button, Card, Descriptions, Form, Input, Space} from "antd";
+import {Button, Card, Checkbox, Descriptions, Form, Input, Space} from "antd";
 import {CloseOutlined, LeftOutlined, PlusOutlined, RightOutlined, SearchOutlined} from "@ant-design/icons";
 import {path} from '@tauri-apps/api';
 import {appWindow} from "@tauri-apps/api/window";
@@ -47,6 +47,12 @@ export const TauriSetting = memo(function TauriSetting() {
                                     <Space key={key}>
                                         <Form.Item name={[name, 'dir']} noStyle>
                                             <Input placeholder="dir"/>
+                                        </Form.Item>
+                                        <Form.Item name={[name, 'txtAsSrt']} valuePropName='checked' noStyle>
+                                            <Checkbox>txtAsSrt</Checkbox>
+                                        </Form.Item>
+                                        <Form.Item name={[name, 'lang']} noStyle>
+                                            <Input placeholder="lang"/>
                                         </Form.Item>
                                         <CloseOutlined onClick={() => remove(name)}/>
                                     </Space>

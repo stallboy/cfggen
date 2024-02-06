@@ -55,7 +55,9 @@ export interface TauriConf {
 }
 
 export interface ResDir {
-    dir: string;
+    dir:       string;
+    lang?:     string;
+    txtAsSrt?: boolean;
 }
 
 // Converts JSON strings to/from your types
@@ -269,10 +271,10 @@ function l(typ: any) {
 function a(typ: any) {
     return { arrayItems: typ };
 }
-//
-// function u(...typs: any[]) {
-//     return { unionMembers: typs };
-// }
+
+function u(...typs: any[]) {
+    return { unionMembers: typs };
+}
 
 function o(props: any[], additional: any) {
     return { props, additional };
@@ -317,6 +319,8 @@ const typeMap: any = {
     ], false),
     "ResDir": o([
         { json: "dir", js: "dir", typ: "" },
+        { json: "lang", js: "lang", typ: u(undefined, "") },
+        { json: "txtAsSrt", js: "txtAsSrt", typ: u(undefined, true) },
     ], false),
     "NodePlacementStrategyType": [
         "BRANDES_KOEPF",

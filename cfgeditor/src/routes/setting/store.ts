@@ -12,18 +12,26 @@ const dragPanelEnums = ['recordRef', 'fix', 'none']
 export type PageType = 'table' | 'tableRef' | 'record' | 'recordRef';
 export const pageEnums = ['table', 'tableRef', 'record', 'recordRef'];
 
-export type ResType = 'video' | 'audio' | 'image' | 'other';
+export type ResType = 'video' | 'audio' | 'image' | 'subtitles' | 'other';
 
-export interface ResAudio {
+export interface ResAudioTrack {
     name: string;
     path: string;
+}
+
+export interface ResSubtitlesTrack {
+    name: string;
+    path: string;
+    lang: string;
 }
 
 export interface ResInfo {
     type: ResType;
     name: string;
     path: string;
-    audioTracks?: ResAudio[];
+    lang?: string;
+    audioTracks?: ResAudioTrack[];
+    subtitlesTracks?: ResSubtitlesTrack[];
 }
 
 export type StoreState = {

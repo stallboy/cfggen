@@ -34,6 +34,8 @@ export interface FixedPage {
 
 export interface ResDir {
     dir: string;
+    txtAsSrt?: boolean;
+    lang?: string;
 }
 
 export interface TauriConf {

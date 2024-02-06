@@ -1,4 +1,4 @@
-import {readStoreStateOnce, ResInfo, ResType, store} from "./store.ts";
+import {readStoreStateOnce, ResAudioTrack, ResInfo, ResSubtitlesTrack, ResType, store} from "./store.ts";
 import {FileEntry, readDir} from "@tauri-apps/api/fs";
 import {path} from "@tauri-apps/api";
 
@@ -70,10 +70,11 @@ const ext2type: Record<string, ResType> = {
     ['.jpeg']: 'image',
 };
 
-function processEntries(entries: FileEntry[], result: Map<string, ResInfo[]>, stat: Map<string, number>) {
+function processEntries(entries: FileEntry[], txtAsSrt: boolean, lang: string | undefined,
+                        result: Map<string, ResInfo[]>, stat: Map<string, number>) {
     for (const {path, name, children} of entries) {
         if (children) {
-            processEntries(children, result, stat);
+            processEntries(children, txtAsSrt, lang, result, stat);
         } else if (name && !name.endsWith(".meta")) {
             const idx = findKeyEndIndex(name);
             if (idx == -1) {
@@ -85,13 +86,17 @@ function processEntries(entries: FileEntry[], result: Map<string, ResInfo[]>, st
                 } else {
                     const ext = name.substring(extIdx).toLowerCase();
                     let type: ResType = 'other';
+                    let thisLang;
                     if (ext in ext2type) {
                         type = ext2type[ext];
+                    } else if (txtAsSrt && ext == '.txt') {
+                        type = 'subtitles';
+                        thisLang = lang
                     }
 
                     const key = name.substring(0, idx);
                     const value = result.get(key);
-                    const resInfo: ResInfo = {type, name, path};
+                    const resInfo: ResInfo = {type, name, path, lang:thisLang};
                     if (value) {
                         value.push(resInfo);
                     } else {
@@ -110,12 +115,13 @@ function processEntries(entries: FileEntry[], result: Map<string, ResInfo[]>, st
     }
 }
 
-function packAudioTracks(resInfos: ResInfo[]): ResInfo[] {
+function packTracks(resInfos: ResInfo[]): ResInfo[] {
     if (resInfos.length == 1) {
         return resInfos;
     }
     const videos = [];
     const audios: (ResInfo & { _picked?: boolean }) [] = [];
+    const subtitles: (ResInfo & { _picked?: boolean }) [] = [];
     const imageAndOthers = [];
     for (const r of resInfos) {
         switch (r.type) {
@@ -125,12 +131,15 @@ function packAudioTracks(resInfos: ResInfo[]): ResInfo[] {
             case "audio":
                 audios.push(r);
                 break;
+            case "subtitles":
+                subtitles.push(r);
+                break;
             default:
                 imageAndOthers.push(r);
                 break;
         }
     }
-    if (videos.length == 0 || audios.length == 0) {
+    if (videos.length == 0 || (audios.length == 0 && subtitles.length == 0)) {
         return resInfos;
     }
 
@@ -142,13 +151,25 @@ function packAudioTracks(resInfos: ResInfo[]): ResInfo[] {
             const noExtName = v.name.substring(0, idx);
             for (const a of audios) {
                 if (!a._picked && a.name.startsWith(noExtName)) {
-                    const ad = {name: a.name, path: a.path};
+                    const at: ResAudioTrack = {name: a.name, path: a.path};
                     if (v.audioTracks) {
-                        v.audioTracks.push(ad);
+                        v.audioTracks.push(at);
                     } else {
-                        v.audioTracks = [ad];
+                        v.audioTracks = [at];
                     }
                     a._picked = true;
+                    picked++;
+                }
+            }
+            for (const s of subtitles) {
+                if (!s._picked && s.name.startsWith(noExtName)) {
+                    const st: ResSubtitlesTrack = {name: s.name, path: s.path, lang: s.lang ?? 'zh'};
+                    if (v.subtitlesTracks) {
+                        v.subtitlesTracks.push(st);
+                    } else {
+                        v.subtitlesTracks = [st];
+                    }
+                    s._picked = true;
                     picked++;
                 }
             }
@@ -160,18 +181,23 @@ function packAudioTracks(resInfos: ResInfo[]): ResInfo[] {
 
     const result: ResInfo[] = videos.reverse();
     for (let a of audios) {
-        if (!a._picked){
+        if (!a._picked) {
             result.push(a);
+        }
+    }
+    for (let s of subtitles) {
+        if (!s._picked) {
+            result.push(s);
         }
     }
     result.push(...imageAndOthers);
     return result;
 }
 
-function packAllAudioTracks(raws: Map<string, ResInfo[]>) {
+function packAllTracks(raws: Map<string, ResInfo[]>) {
     const packed = new Map<string, ResInfo[]>();
     for (let [key, resInfos] of raws.entries()) {
-        packed.set(key, packAudioTracks(resInfos));
+        packed.set(key, packTracks(resInfos));
     }
     return packed;
 }
@@ -201,14 +227,14 @@ export async function readResInfosAsync() {
         }
         try {
             const entries = await readDir(dir, {recursive: true});
-            processEntries(entries, result, stat);
+            processEntries(entries, !!resDir.txtAsSrt, resDir.lang, result, stat);
 
         } catch (reason: any) {
             console.error(reason);
         }
     }
 
-    const packed = packAllAudioTracks(result);
+    const packed = packAllTracks(result);
     store.resMap = packed;
     console.log(`read res file for ${packed.size} node`, packed, stat);
     return true;

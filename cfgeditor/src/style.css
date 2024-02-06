@@ -40,3 +40,7 @@ mark {
     border: none;
     border-radius: 0;
 }
+
+.player {
+    width: 320px;
+}
