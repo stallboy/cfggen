@@ -45,7 +45,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
 
     if (resContent) {
         title = <Popover content={resContent}
-                         placement='bottomLeft'
+                         placement='rightTop'
                          trigger='click'>
             {title}
         </Popover>

@@ -158,7 +158,7 @@ export const ResPopover = memo(function ResPopover({resInfos}: { resInfos: ResIn
         });
     }
 
-    return <Tabs tabPosition='left' items={items}/>
+    return <Tabs tabPosition={items.length < 4 ? 'top' : 'left'} items={items}/>
 });
 
 export function getResBrief(res: ResInfo[]) {
