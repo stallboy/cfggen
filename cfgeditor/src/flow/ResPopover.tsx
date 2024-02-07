@@ -157,6 +157,9 @@ export const ResPopover = memo(function ResPopover({resInfos}: { resInfos: ResIn
             children: content
         });
     }
+    if (items.length == 1) {
+        return items[0].children;
+    }
 
     return <Tabs tabPosition={items.length < 4 ? 'top' : 'left'} items={items}/>
 });
