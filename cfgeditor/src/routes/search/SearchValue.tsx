@@ -2,7 +2,6 @@ import {useState} from "react";
 import {App, Button, Empty, Input, Result, Table} from "antd";
 import {SearchResult, SearchResultItem} from "./searchModel.ts";
 import {useTranslation} from "react-i18next";
-import {getId} from "../record/recordRefEntity.ts";
 import {navTo, setQuery, store, useLocationData} from "../setting/store.ts";
 import {useNavigate} from "react-router-dom";
 
@@ -79,10 +78,9 @@ export function SearchValue() {
                 ellipsis: true,
             }
         ];
-        content = <div>q={searchResult.q}&max={searchResult.max}
-            <Table columns={columns} dataSource={searchResult.items}
-                   rowKey={(item: SearchResultItem) => getId(item.table, item.pk)}/>
-        </div>
+        //q={searchResult.q}&max={searchResult.max}
+        content = <Table columns={columns} dataSource={searchResult.items} pagination={false}
+                         rowKey={(item: SearchResultItem) => `${item.table}-${item.pk}-${item.fieldChain}`}/>
     }
 
     return <div>
