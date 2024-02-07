@@ -2,19 +2,18 @@ import {memo, RefObject} from "react";
 import {useTranslation} from "react-i18next";
 import {App, Button, Divider, Form, Input, InputNumber, Radio} from "antd";
 import {
-    clearLayoutCache,
     DragPanelType,
     setDragPanel,
     setFix,
     removeFix,
     setImageSizeScale, setServer,
     store,
-    useLocationData
+    useLocationData, invalidateAllQueries
 } from "./store.ts";
 import {CloseOutlined} from "@ant-design/icons";
 import {Schema} from "../table/schemaUtil.ts";
 import {STable} from "../table/schemaModel.ts";
-import {useMutation, useQueryClient} from "@tanstack/react-query";
+import {useMutation} from "@tanstack/react-query";
 import {RecordEditResult} from "../record/recordModel.ts";
 import {deleteRecord} from "../api.ts";
 import {toBlob} from "html-to-image";
@@ -36,7 +35,6 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
 
     const {curTableId, curId} = useLocationData();
     const {notification} = App.useApp();
-    const queryClient = useQueryClient();
 
     const deleteRecordMutation = useMutation<RecordEditResult, Error>({
         mutationFn: () => deleteRecord(server, curTableId, curId),
@@ -56,8 +54,7 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
                     placement: 'topRight',
                     duration: 3
                 });
-                clearLayoutCache();
-                queryClient.invalidateQueries({queryKey: [], refetchType: 'all'});
+                invalidateAllQueries();
             } else {
                 notification.warning({
                     message: `deleteRecord ${curTableId}/${curId}  ${editResult.resultCode}`,

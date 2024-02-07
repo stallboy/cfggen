@@ -6,9 +6,15 @@ import {RecordEntityCreator} from "./recordEntityCreator.ts";
 import {RecordEditEntityCreator} from "./recordEditEntityCreator.ts";
 import {editState, startEditingObject} from "./editingObject.ts";
 import {useTranslation} from "react-i18next";
-import {clearLayoutCache, navTo, setIsEditMode, store, useLocationData} from "../setting/store.ts";
+import {
+    invalidateAllQueries,
+    navTo,
+    setIsEditMode,
+    store,
+    useLocationData
+} from "../setting/store.ts";
 import {useNavigate, useOutletContext} from "react-router-dom";
-import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
+import {useMutation, useQuery} from "@tanstack/react-query";
 import {addOrUpdateRecord, fetchRecord} from "../api.ts";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
 import {SchemaTableType} from "../../CfgEditorApp.tsx";
@@ -24,7 +30,6 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const {notification} = App.useApp();
     const {curTableId, curId} = useLocationData();
     const navigate = useNavigate();
-    const queryClient = useQueryClient()
     const [t] = useTranslation();
     const {edit, pathname} = useLocationData();
     const [_, forceUpdate] = useReducer(v => v++, 0);
@@ -50,8 +55,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
                     duration: 3
                 });
 
-                clearLayoutCache();
-                queryClient.invalidateQueries({queryKey: [], refetchType: 'all'});
+                invalidateAllQueries();
                 // navigate(0);
             } else {
                 notification.warning({

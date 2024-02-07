@@ -159,6 +159,12 @@ export function clearLayoutCache() {
     queryClient.removeQueries({queryKey: ['layout']});
 }
 
+export function invalidateAllQueries() {
+    queryClient.invalidateQueries({queryKey: [], refetchType: 'all'}).catch((reason: any) => {
+        console.log(reason);
+    });
+}
+
 export function setQuery(v: string) {
     store.query = v;
     setPref('query', v);

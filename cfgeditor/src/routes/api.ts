@@ -2,11 +2,13 @@ import {RawSchema} from "./table/schemaModel.ts";
 import {JSONObject, RecordEditResult, RecordRefsResult, RecordResult} from "./record/recordModel.ts";
 import axios from 'axios';
 import {Schema} from "./table/schemaUtil.ts";
+import {clearLayoutCache} from "./setting/store.ts";
 
 
 export async function fetchSchema(server: string, signal:AbortSignal) {
     const response = await axios.get<RawSchema>(`http://${server}/schemas`, {signal});
-    console.log('fetch schema');
+    console.log('fetched schema');
+    clearLayoutCache();
     return new Schema(response.data);
 }
 
@@ -22,7 +24,7 @@ export async function fetchRecordRefs(server: string, tableId: string, id: strin
     let url = `http://${server}/record?table=${tableId}&id=${id}&depth=${refOutDepth}&maxObjs=${maxNode}&refs${refIn ? '&in' : ''}`;
     // console.log('fetch refs', tableId, id);
     const response = await axios.get<RecordRefsResult>(url, {signal});
-    // console.log('fetch refs res', tableId, id, response.data);
+    // console.log('fetched refs', tableId, id, response.data);
     return response.data;
 }
 

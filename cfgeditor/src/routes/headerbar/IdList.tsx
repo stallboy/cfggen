@@ -43,7 +43,6 @@ export const IdList = memo(function IdList({curTable}: {
                    {...filterSorts}
                    filterOption={filterOption}
                    onSearch={onSearch}
-
                    onChange={(value, _) => {
                        const {isEditMode} = store;
                        navigate(navTo(curPage, curTableId, value, isEditMode));
