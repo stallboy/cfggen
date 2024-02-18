@@ -67,6 +67,12 @@ export function RecordRefWithResult({schema, curTable, curId, nodeShow, recordRe
         }
     }];
 
+    const nodeDoubleClickFunc = (entity: Entity): void => {
+        const {isEditMode} = store;
+        let refId = entity.userData as RefId;
+        navigate(navTo('record', refId.table, refId.id, isEditMode));
+    }
+
     const nodeMenuFunc = (entity: Entity): MenuItem[] => {
         let refId = entity.userData as RefId;
         let id = getId(refId.table, refId.id);
@@ -118,7 +124,7 @@ export function RecordRefWithResult({schema, curTable, curId, nodeShow, recordRe
 
 
     useEntityToGraph(pathname, entityMap, nodeMenuFunc, paneMenu, fitView,
-        inDragPanelAndFix ? setFitViewForPathname : undefined);
+        inDragPanelAndFix ? setFitViewForPathname : undefined, nodeDoubleClickFunc);
 
     return <></>;
 }

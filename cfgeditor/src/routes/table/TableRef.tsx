@@ -30,6 +30,11 @@ export const TableRef = memo(function TableRef() {
         }
     }], [navigate, schema, curTable, curId]);
 
+    const nodeDoubleClickFunc = useCallback((entity: Entity): void => {
+        let sItem = entity.userData as SItem;
+        navigate(navTo('table', sItem.name, getDefaultIdInTable(schema, sItem.name, curId)));
+    }, [navigate, schema, curId]);
+
     const nodeMenuFunc = useCallback((entity: Entity): MenuItem[] => {
         let sItem = entity.userData as SItem;
         return [{
@@ -47,7 +52,7 @@ export const TableRef = memo(function TableRef() {
         }];
     }, [navigate, schema, curId]);
 
-    useEntityToGraph(pathname, entityMap, nodeMenuFunc, paneMenu);
+    useEntityToGraph(pathname, entityMap, nodeMenuFunc, paneMenu, true, undefined, nodeDoubleClickFunc);
 
     return <></>;
 });

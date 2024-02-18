@@ -30,10 +30,12 @@ import {useQuery} from "@tanstack/react-query";
 export type EntityNode = Node<Entity, string | undefined>;
 export type EntityEdge = Edge;
 export type NodeMenuFunc = (entity: Entity) => MenuItem[];
+export type NodeDoubleClickFunc = (entity: Entity) => void;
 
 export interface FlowGraphContextType {
     setPaneMenu: (menu: MenuItem[]) => void;
     setNodeMenuFunc: (func: NodeMenuFunc) => void;
+    setNodeDoubleClickFunc: (func: NodeDoubleClickFunc) => void;
 }
 
 function dummy() {
@@ -42,6 +44,7 @@ function dummy() {
 export const FlowGraphContext = createContext<FlowGraphContextType>({
     setPaneMenu: dummy,
     setNodeMenuFunc: dummy,
+    setNodeDoubleClickFunc: dummy,
 });
 
 const nodeTypes: NodeTypes = {
@@ -61,6 +64,7 @@ export function FlowGraph({children}: {
 
     const [paneMenu, setPaneMenu] = useState<MenuItem[]>([]);
     const [nodeMenuFunc, setNodeMenuFunc] = useState<NodeMenuFunc>();
+    const [nodeDoubleClickFunc, setNodeDoubleClickFunc] = useState<NodeDoubleClickFunc>();
 
     const onPaneContextMenu = useCallback((event: any) => {
             event.preventDefault();
@@ -76,6 +80,12 @@ export function FlowGraph({children}: {
         },
         [nodeMenuFunc, setMenuStyle, setMenuItems],
     );
+    const onNodeDoubleClick = useCallback((_event: MouseEvent, flowNode: EntityNode) => {
+            nodeDoubleClickFunc?.(flowNode.data);
+        },
+        [nodeDoubleClickFunc],
+    );
+
     const closeMenu = useCallback(() => {
         setMenuStyle(undefined)
     }, [setMenuStyle]);
@@ -84,12 +94,17 @@ export function FlowGraph({children}: {
         setNodeMenuFunc(() => func);
     }, [setNodeMenuFunc]);
 
+    const thisSetNodeDoubleClickFunc = useCallback(function (func: NodeDoubleClickFunc) {
+        setNodeDoubleClickFunc(() => func);
+    }, [setNodeMenuFunc]);
+
     const ctx = useMemo(() => {
         return {
             setPaneMenu,
             setNodeMenuFunc: thisSetNodeMenuFunc,
+            setNodeDoubleClickFunc: thisSetNodeDoubleClickFunc,
         }
-    }, [setPaneMenu, thisSetNodeMenuFunc]);
+    }, [setPaneMenu, thisSetNodeMenuFunc, setNodeDoubleClickFunc]);
 
 
     return <ReactFlowProvider>
@@ -100,6 +115,7 @@ export function FlowGraph({children}: {
             minZoom={0.1}
             maxZoom={2}
             // fitView
+            onNodeDoubleClick={onNodeDoubleClick}
             onNodeContextMenu={onNodeContextMenu}
             onPaneClick={closeMenu}
             onNodeClick={closeMenu}
@@ -126,7 +142,8 @@ export function useEntityToGraph(pathname: string,
                                  nodeMenuFunc: NodeMenuFunc,
                                  paneMenu: MenuItem[],
                                  fitView: boolean = true,
-                                 setFitViewForPathname?: (pathname: string) => void
+                                 setFitViewForPathname?: (pathname: string) => void,
+                                 nodeDoubleClickFunc?: NodeDoubleClickFunc,
 ) {
     const flowGraph = useContext(FlowGraphContext);
     const {query, nodeShow} = store;
@@ -153,6 +170,9 @@ export function useEntityToGraph(pathname: string,
         if (newNodes) {
             flowGraph.setNodeMenuFunc(nodeMenuFunc);
             flowGraph.setPaneMenu(paneMenu);
+            if (nodeDoubleClickFunc) {
+                flowGraph.setNodeDoubleClickFunc(nodeDoubleClickFunc)
+            }
 
             setNodes(newNodes);
             setEdges(edges);

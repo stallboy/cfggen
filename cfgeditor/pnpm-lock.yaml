@@ -18,8 +18,8 @@ dependencies:
     specifier: ^1.5.3
     version: 1.5.3
   '@xyflow/react':
-    specifier: 12.0.0-next.8
-    version: 12.0.0-next.8(@types/react@18.2.39)(react-dom@18.2.0)(react@18.2.0)
+    specifier: 12.0.0-next.9
+    version: 12.0.0-next.9(@types/react@18.2.39)(react-dom@18.2.0)(react@18.2.0)
   antd:
     specifier: ^5.11.5
     version: 5.11.5(react-dom@18.2.0)(react@18.2.0)
@@ -2663,13 +2663,13 @@ packages:
       - '@swc/helpers'
     dev: true
 
-  /@xyflow/react@12.0.0-next.8(@types/react@18.2.39)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-Jdy/0wv10ycxwQm5rESWN8Psp+FTipbIv4RTIJwAH9zG5AqGp20ESi/k3oxJmAsbQHIcGgjB2RlOhxBs2qqJLA==, tarball: https://registry.npmmirror.com/@xyflow/react/-/react-12.0.0-next.8.tgz}
+  /@xyflow/react@12.0.0-next.9(@types/react@18.2.39)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-WrW5H4HN/oHXORnUdy5tYs6tK96npLZAvcx8weza3tzkNiZO+gncjpwHxWq/wt5ABIAgSadCXRvfv8nAMTlrnQ==, tarball: https://registry.npmmirror.com/@xyflow/react/-/react-12.0.0-next.9.tgz}
     peerDependencies:
       react: '>=17'
       react-dom: '>=17'
     dependencies:
-      '@xyflow/system': 0.0.16
+      '@xyflow/system': 0.0.17
       classcat: 5.0.4
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
@@ -2679,8 +2679,8 @@ packages:
       - immer
     dev: false
 
-  /@xyflow/system@0.0.16:
-    resolution: {integrity: sha512-pVWaBHAE1Ew9acmNGEdsVLNh8Z+TEBbsdaIojV+SDbmolYlCQ1UJ6Sse4k+K3rr7kgX/1GRsiEcWxOFIx0wt+w==, tarball: https://registry.npmmirror.com/@xyflow/system/-/system-0.0.16.tgz}
+  /@xyflow/system@0.0.17:
+    resolution: {integrity: sha512-3a7ulxW4xQvpFN9USjfbLi0whyltqDv6KxguIrOK2AOg6l1KMNimbV+WxiM0LdQAtJAW6ftthbhdSCPw66JPIw==, tarball: https://registry.npmmirror.com/@xyflow/system/-/system-0.0.17.tgz}
     dependencies:
       '@types/d3': 7.4.3
       '@types/d3-drag': 3.0.7

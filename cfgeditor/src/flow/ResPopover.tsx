@@ -169,13 +169,10 @@ export function getResBrief(res: ResInfo[]) {
     let a = 0;
     let i = 0;
     let o = 0;
-    for (let r of res) {
-        switch (r.type) {
+    for (let {type, audioTracks, subtitlesTracks} of res) {
+        switch (type) {
             case "video":
                 v++;
-                if (r.audioTracks) {
-                    a += r.audioTracks.length;
-                }
                 break;
             case "audio":
                 a++;
@@ -187,7 +184,14 @@ export function getResBrief(res: ResInfo[]) {
                 o++;
                 break;
         }
+        if (audioTracks) {
+            a += audioTracks.length;
+        }
+        if (subtitlesTracks) {
+            o += subtitlesTracks.length;
+        }
     }
+
     let info = '';
     if (v > 0) {
         info += v + 'v';
