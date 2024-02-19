@@ -25,7 +25,7 @@ import {useEntityToGraph} from "../../flow/FlowGraph.tsx";
 
 
 function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
-    const {schema, curTable} = useOutletContext<SchemaTableType>();
+    const {schema, notes, curTable} = useOutletContext<SchemaTableType>();
     const {server} = store;
     const {notification} = App.useApp();
     const {curTableId, curId} = useLocationData();
@@ -164,7 +164,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     }
 
     const ep = pathname + (isEditing ? ',' + editSeq : '');
-    useEntityToGraph(ep, entityMap, nodeMenuFunc, paneMenu, fitView);
+    useEntityToGraph(ep, entityMap, notes, nodeMenuFunc, paneMenu, fitView);
 
     return <></>;
 }

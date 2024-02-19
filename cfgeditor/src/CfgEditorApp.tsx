@@ -16,13 +16,17 @@ import {
 } from "./routes/setting/store.ts";
 import {Outlet, useNavigate} from "react-router-dom";
 import {STable} from "./routes/table/schemaModel.ts";
-import {fetchSchema} from "./routes/api.ts";
+import {fetchNotes, fetchSchema} from "./routes/api.ts";
 import {useQuery} from "@tanstack/react-query";
 import {HeaderBar} from "./routes/headerbar/HeaderBar.tsx";
 import {FlowGraph} from "./flow/FlowGraph.tsx";
 
 
-export type SchemaTableType = { schema: Schema, curTable: STable };
+export type SchemaTableType = {
+    schema: Schema,
+    notes?: Map<string, string>,
+    curTable: STable
+};
 
 
 export function CfgEditorApp() {
@@ -47,6 +51,13 @@ export function CfgEditorApp() {
         staleTime: 1000 * 60 * 5,
     })
 
+    const {data: notes} = useQuery({
+        queryKey: ['notes'],
+        queryFn: ({signal}) => fetchNotes(server, signal),
+        staleTime: 1000 * 60 * 5,
+    })
+
+
     useEffect(() => {
         if (schema && curTableId.length == 0) {
             navigate(getLastNavToInLocalStore());
@@ -56,8 +67,8 @@ export function CfgEditorApp() {
     let curTable = schema ? schema.getSTable(curTableId) : null;
 
     const outletCtx = useMemo(() => {
-        return {schema, curTable}
-    }, [schema, curTable]);
+        return {schema, notes, curTable}
+    }, [schema, notes, curTable]);
 
     const onSettingClose = () => {
         setSettingOpen(false);
@@ -83,6 +94,7 @@ export function CfgEditorApp() {
         let dragPage = null;
         if (dragPanel == 'recordRef') {
             dragPage = <RecordRef schema={schema}
+                                  notes={notes}
                                   curTable={curTable}
                                   curId={curId}
                                   refIn={recordRefIn}
@@ -94,6 +106,7 @@ export function CfgEditorApp() {
             let fixedTable = schema.getSTable(fix.table);
             if (fixedTable) {
                 dragPage = <RecordRef schema={schema}
+                                      notes={notes}
                                       curTable={fixedTable}
                                       curId={fix.id}
                                       refIn={fix.refIn}

@@ -13,7 +13,7 @@ import {memo, useCallback, useMemo} from "react";
 
 
 export const TableRef = memo(function TableRef() {
-    const {schema, curTable} = useOutletContext<SchemaTableType>();
+    const {schema, notes, curTable} = useOutletContext<SchemaTableType>();
     const {refIn, refOutDepth, maxNode} = store;
     const {curId, pathname} = useLocationData();
     const {t} = useTranslation();
@@ -52,7 +52,7 @@ export const TableRef = memo(function TableRef() {
         }];
     }, [navigate, schema, curId]);
 
-    useEntityToGraph(pathname, entityMap, nodeMenuFunc, paneMenu, true, undefined, nodeDoubleClickFunc);
+    useEntityToGraph(pathname, entityMap, notes, nodeMenuFunc, paneMenu, true, undefined, nodeDoubleClickFunc);
 
     return <></>;
 });

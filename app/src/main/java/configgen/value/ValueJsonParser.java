@@ -69,7 +69,7 @@ public class ValueJsonParser {
                 // not throw exception, but use default value
                 // make it easy to add field in future
                 fieldValue = ValueDefault.of(fs.type());
-                if (Logger.isWarningEnabled()){
+                if (Logger.isWarningEnabled()) {
                     Logger.log("%s %s[%s] not found ", fromFileName, subStructural.fullName(), fs.name());
                 }
             }
@@ -114,17 +114,16 @@ public class ValueJsonParser {
                 return new VString((String) obj, cell);
             }
             case TEXT -> {
-                String str = (String) obj;
+                String original = (String) obj;
+                String i18n = null;
                 String value;
                 if (nullableTableI18n != null) {
-                    value = nullableTableI18n.findText(str);
-                    if (value == null) {
-                        value = str;
-                    }
+                    i18n = nullableTableI18n.findText(original);
+                    value = i18n != null ? i18n : original;
                 } else {
-                    value = str;
+                    value = original;
                 }
-                return new VText(value, str, cell);
+                return new VText(value, original, i18n, cell);
             }
             case FList fList -> {
                 JSONArray jsonArray = (JSONArray) obj;

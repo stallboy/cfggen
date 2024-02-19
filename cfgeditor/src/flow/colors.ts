@@ -2,7 +2,7 @@ import {Entity, EntityType} from "./entityModel.ts";
 
 
 export function getNodeBackgroundColor(entity: Entity): string {
-    let nodeShow = entity.nodeShow;
+    let nodeShow = entity.sharedSetting?.nodeShow;
 
     if (nodeShow && nodeShow.tableHideAndColors.length > 0) {
         for (let tableColor of nodeShow.tableHideAndColors) {

@@ -16,7 +16,7 @@ public class ValueDefault {
     private static final VLong DLONG = new VLong(0, DCell.EMPTY);
     private static final VFloat DFLOAT = new VFloat(0, DCell.EMPTY);
     private static final VString DSTR = new VString("", DCell.EMPTY);
-    private static final VText DTEXT = new VText("", "", DCell.EMPTY);
+    private static final VText DTEXT = new VText("", "", "", DCell.EMPTY);
     private static final VList DLIST = new VList(List.of(), List.of());
     private static final VMap DMAP = new VMap(Map.of(), List.of());
 

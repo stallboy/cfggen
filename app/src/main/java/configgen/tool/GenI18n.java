@@ -35,8 +35,10 @@ public final class GenI18n extends Generator {
 
     private void visit(PrimitiveValue primitiveValue, String table, Value pk, List<String> fieldChain) {
         if (primitiveValue instanceof VText vText) {
-            if (!vText.original().trim().isEmpty() || !vText.value().trim().isEmpty()) {
-                data.add(List.of(table, vText.original(), vText.value()));
+            String original = vText.original().trim();
+            String nullableI18n = vText.nullableI18n();
+            if (!original.isEmpty() || nullableI18n != null) {
+                data.add(List.of(table, original, nullableI18n != null ? nullableI18n.trim() : ""));
             }
         }
     }

@@ -2,35 +2,65 @@ import {memo} from "react";
 import {Handle, NodeProps, Position} from "@xyflow/react";
 import {Entity} from "./entityModel.ts";
 import {getNodeBackgroundColor} from "./colors.ts";
-import {Flex, Popover, Typography} from "antd";
+import {Button, Flex, Popconfirm, Popover, Typography} from "antd";
 import {EntityCard} from "./EntityCard.tsx";
 import {EntityProperties} from "./EntityProperties.tsx";
 import {EntityForm} from "./EntityForm.tsx";
 import {ActionIcon} from "@ant-design/pro-editor";
-import {CloseOutlined} from "@ant-design/icons";
+import {BookOutlined, CloseOutlined} from "@ant-design/icons";
 import {store} from "../routes/setting/store.ts";
 import {getResBrief, ResPopover} from "./ResPopover.tsx";
+import TextArea from "antd/es/input/TextArea";
 
 const {Text} = Typography;
 
 
 export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
-    const {fields, brief, edit, handleIn, handleOut, id, label, nodeShow} = nodeProps.data;
+    const {fields, brief, edit, handleIn, handleOut, id, label, sharedSetting} = nodeProps.data;
     const {resMap} = store;
     const color: string = getNodeBackgroundColor(nodeProps.data);
     const width = edit ? 280 : 240;
     const copy: any = {}
-    if (nodeShow?.showHead == 'showCopyable') {
+    if (sharedSetting?.nodeShow?.showHead == 'showCopyable') {
         copy.copyable = true;
     }
 
-    let resBrief;
-    let resContent;
-    if (label.includes('_')) {
+    // 用label包含做为它是table_id格式的标志
+    const mayHasResOrNote = label.includes('_');
+    let editNoteButton;
+    let note;
+    if (mayHasResOrNote) {
+        const notes = sharedSetting?.notes;
+        if (notes) {
+            note = notes.get(label);
+        }
+
+        if (note && note.length > 0) {
+
+        } else {
+            const confirm = () =>
+                new Promise((resolve) => {
+                    setTimeout(() => resolve(null), 3000);
+                });
+            editNoteButton = <Popconfirm title={label}
+                                         description={<TextArea placeholder='note'/>}
+                                         onConfirm={confirm}>
+                <ActionIcon icon=<BookOutlined/> />
+            </Popconfirm>
+        }
+
+
+    }
+
+    let resBriefButton;
+    if (mayHasResOrNote) {
         const res = resMap.get(label);
         if (res) {
-            resContent = <ResPopover resInfos={res}/>;
-            resBrief = <Text style={{fontSize: 18, color: '#fff'}}>{getResBrief(res)}</Text>;
+            resBriefButton = <Popover content={<ResPopover resInfos={res}/>}
+                                      placement='rightTop'
+                                      trigger='click'>
+                <Button type={'text'} style={{color: '#fff'}}>{getResBrief(res)}</Button>;
+            </Popover>
         }
     }
 
@@ -38,18 +68,12 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
         <Text strong style={{fontSize: 18, color: "#fff"}} {...copy}>
             {label}
         </Text>
-        {resBrief}
+        {editNoteButton}
+        {resBriefButton}
         {edit && edit.editOnDelete &&
             <ActionIcon className='nodrag' icon={<CloseOutlined/>} onClick={edit.editOnDelete}/>}
     </Flex>
 
-    if (resContent) {
-        title = <Popover content={resContent}
-                         placement='rightTop'
-                         trigger='click'>
-            {title}
-        </Popover>
-    }
 
     return <Flex key={id} vertical gap={'small'} className='flowNode' style={{width: width, backgroundColor: color}}>
         {title}

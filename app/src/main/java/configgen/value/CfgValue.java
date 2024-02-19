@@ -363,7 +363,7 @@ public record CfgValue(CfgSchema schema,
     }
 
 
-    public record VText(String value, String original, DCell cell) implements StringValue {
+    public record VText(String value, String original, String nullableI18n, DCell cell) implements StringValue {
 
         @Override
         public boolean equals(Object o) {

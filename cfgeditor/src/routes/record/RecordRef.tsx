@@ -18,8 +18,9 @@ import {useEntityToGraph} from "../../flow/FlowGraph.tsx";
 import {useCallback, useRef} from "react";
 
 
-export function RecordRefWithResult({schema, curTable, curId, nodeShow, recordRefResult, inDragPanelAndFix}: {
+export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, recordRefResult, inDragPanelAndFix}: {
     schema: Schema;
+    notes: Map<string, string> | undefined;
     curTable: STable;
     curId: string;
     nodeShow: NodeShowType;
@@ -121,15 +122,16 @@ export function RecordRefWithResult({schema, curTable, curId, nodeShow, recordRe
     }, [lastFitViewForFix]);
 
 
-    useEntityToGraph(pathname, entityMap, nodeMenuFunc, paneMenu, fitView,
+    useEntityToGraph(pathname, entityMap, notes, nodeMenuFunc, paneMenu, fitView,
         inDragPanelAndFix ? setFitViewForPathname : undefined, nodeDoubleClickFunc);
 
     return <></>;
 }
 
 
-export function RecordRef({schema, curTable, curId, refIn, refOutDepth, maxNode, nodeShow, inDragPanelAndFix}: {
+export function RecordRef({schema, notes, curTable, curId, refIn, refOutDepth, maxNode, nodeShow, inDragPanelAndFix}: {
     schema: Schema;
+    notes: Map<string, string> | undefined;
     curTable: STable;
     curId: string;
     refIn: boolean;
@@ -162,18 +164,18 @@ export function RecordRef({schema, curTable, curId, refIn, refOutDepth, maxNode,
         return <Result status={'error'} title={recordRefResult.resultCode}/>;
     }
 
-    return <RecordRefWithResult schema={schema} curTable={curTable} curId={curId}
+    return <RecordRefWithResult schema={schema} notes={notes} curTable={curTable} curId={curId}
                                 nodeShow={nodeShow} recordRefResult={recordRefResult}
                                 inDragPanelAndFix={inDragPanelAndFix}/>
 
 }
 
 export function RecordRefRoute() {
-    const {schema, curTable} = useOutletContext<SchemaTableType>();
+    const {schema, notes, curTable} = useOutletContext<SchemaTableType>();
     const {curId} = useLocationData();
     const {recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow} = store;
 
-    return <RecordRef schema={schema} curTable={curTable} curId={curId}
+    return <RecordRef schema={schema} notes={notes} curTable={curTable} curId={curId}
                       refIn={recordRefIn} refOutDepth={recordRefOutDepth} maxNode={recordMaxNode}
                       nodeShow={nodeShow}
                       inDragPanelAndFix={false}/>

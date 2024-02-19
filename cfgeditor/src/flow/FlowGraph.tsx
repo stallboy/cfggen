@@ -139,6 +139,7 @@ export function FlowGraph({children}: {
 
 export function useEntityToGraph(pathname: string,
                                  entityMap: Map<string, Entity>,
+                                 notes: Map<string, string> | undefined,
                                  nodeMenuFunc: NodeMenuFunc,
                                  paneMenu: MenuItem[],
                                  fitView: boolean = true,
@@ -153,7 +154,7 @@ export function useEntityToGraph(pathname: string,
     const setEdges = useStore((state) => state.setEdges);
     const panZoom = useStore((state) => state.panZoom);
 
-    const {nodes, edges} = useMemo(() => convertNodeAndEdges({entityMap, query, nodeShow})
+    const {nodes, edges} = useMemo(() => convertNodeAndEdges({entityMap, sharedSetting: {notes, query, nodeShow}})
         , [entityMap, query, nodeShow]);
 
     const {data: id2RectMap} = useQuery({

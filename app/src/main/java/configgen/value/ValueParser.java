@@ -267,16 +267,15 @@ public class ValueParser {
                         return new VString(str, cell);
                     }
                     case TEXT -> {
+                        String i18n = null;
                         String value;
                         if (nullableTableI18n != null) {
-                            value = nullableTableI18n.findText(str);
-                            if (value == null) {
-                                value = str;
-                            }
+                            i18n = nullableTableI18n.findText(str);
+                            value = i18n != null ? i18n : str;
                         } else {
                             value = str;
                         }
-                        return new VText(value, str, cell);
+                        return new VText(value, str, i18n, cell);
                     }
                 }
             }

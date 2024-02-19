@@ -7,7 +7,10 @@ import {NodeShowType} from "../routes/setting/storageJson.ts";
 export const EntityCard = memo(function EntityCard({entity}: {
     entity: Entity,
 }) {
-    const {brief, nodeShow, query} = entity;
+    const {brief, sharedSetting} = entity;
+    const query = sharedSetting?.query;
+    const nodeShow = sharedSetting?.nodeShow;
+
     if (!brief) {
         return <></>;
     }

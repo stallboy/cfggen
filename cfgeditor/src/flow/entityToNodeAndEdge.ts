@@ -56,21 +56,19 @@ export function fillHandles(entityMap: Map<string, Entity>) {
     }
 }
 
-export function convertNodeAndEdges(graph: EntityGraph) {
+export function convertNodeAndEdges({entityMap, sharedSetting}: EntityGraph) {
     const nodes: EntityNode[] = []
     const edges: EntityEdge[] = []
 
     let ei = 1;
-    for (let entity of graph.entityMap.values()) {
-        entity.query = graph.query;
-        entity.nodeShow = graph.nodeShow;
+    for (let entity of entityMap.values()) {
+        entity.sharedSetting = sharedSetting;
 
         nodes.push({
             id: entity.id,
             data: entity,
             type: 'node',
             position: {x: 100, y: 100},
-            // style: {visibility: 'hidden'},
         })
         for (let edge of entity.sourceEdges) {
             let fe: EntityEdge = {
@@ -83,7 +81,6 @@ export function convertNodeAndEdges(graph: EntityGraph) {
                 type: 'simplebezier',
                 style: {
                     stroke: edgeStorkColor,
-                    // visibility: 'hidden'
                 },
             }
 

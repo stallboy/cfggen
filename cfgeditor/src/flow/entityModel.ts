@@ -93,12 +93,16 @@ export interface Entity {
     entityType?: EntityType;
 
     userData?: any;
-    query?: string;
-    nodeShow?: NodeShowType;
+    sharedSetting?: EntitySharedSetting;
 }
 
 export interface EntityGraph {
     entityMap: Map<string, Entity>;
+    sharedSetting?: EntitySharedSetting;
+}
+
+export interface EntitySharedSetting {
+    notes?: Map<string, string>;
     query?: string;
     nodeShow?: NodeShowType;
 }

@@ -12,7 +12,7 @@ import {Schema} from "./schemaUtil.ts";
 
 
 export function Table() {
-    const {schema, curTable} = useOutletContext<SchemaTableType>();
+    const {schema, notes, curTable} = useOutletContext<SchemaTableType>();
     const {maxImpl} = store;
     const {pathname, curId} = useLocationData();
     const {t} = useTranslation();
@@ -57,7 +57,7 @@ export function Table() {
         return mm;
     }
 
-    useEntityToGraph(pathname, entityMap, nodeMenuFunc, paneMenu);
+    useEntityToGraph(pathname, entityMap, notes, nodeMenuFunc, paneMenu);
     return null;
 }
 

@@ -24,16 +24,19 @@ import static configgen.editorserver.RecordEditService.*;
 
 public class EditorServer extends Generator {
     private final int port;
+    private final String noteCsvPath;
 
     private Path dataDir;
     private volatile CfgValue cfgValue;  // 可能会被改变
     private TableSchemaRefGraph graph;
     private HttpServer server;
+    private NoteEditService noteEditService;
 
 
     public EditorServer(Parameter parameter) {
         super(parameter);
         port = Integer.parseInt(parameter.get("port", "3456"));
+        noteCsvPath = parameter.get("note", "../note.csv");
     }
 
     @Override
@@ -41,6 +44,8 @@ public class EditorServer extends Generator {
         dataDir = ctx.dataDir();
         cfgValue = ctx.makeValue(tag, true);
         graph = new TableSchemaRefGraph(cfgValue.schema());
+        noteEditService = new NoteEditService(Path.of(noteCsvPath));
+
         System.gc();
         System.setProperty("java.util.logging.SimpleFormatter.format",
                 "[%1$tF %1$tT] %5$s %n");
@@ -49,9 +54,14 @@ public class EditorServer extends Generator {
         server = HttpServer.create(listenAddr, 0);
 
         handle("/schemas", this::handleSchemas);
-        handle("/record", this::handleRecord);
+        handle("/notes", this::handleNotes);
+        handle("/noteAddOrUpdate", this::handleNoteAddOrUpdate);
+        handle("/noteDelete", this::handleNoteDelete);
+
+
         handle("/search", this::handleSearch);
 
+        handle("/record", this::handleRecord);
         handle("/recordAddOrUpdate", this::handleRecordAddOrUpdate);
         handle("/recordDelete", this::handleRecordDelete);
 
@@ -65,6 +75,42 @@ public class EditorServer extends Generator {
         SchemaService.Schema schema = SchemaService.fromCfgValue(cfgValue);
         sendResponse(exchange, schema);
     }
+
+    private void handleNotes(HttpExchange exchange) throws IOException {
+        NoteEditService.Notes notes = noteEditService.getNotes();
+        sendResponse(exchange, notes);
+    }
+
+    private void handleNoteAddOrUpdate(HttpExchange exchange) throws IOException {
+        if (exchange.getRequestMethod().equals("OPTIONS")) {
+            sendOptionsResponse(exchange);
+            return;
+        }
+
+        Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
+        String key = query.get("key");
+
+        byte[] bytes = exchange.getRequestBody().readAllBytes();
+        String note = new String(bytes, StandardCharsets.UTF_8);
+        logger.info(note);
+
+        NoteEditService.NoteEditResult result = noteEditService.addOrUpdateNote(key, note);
+        sendResponse(exchange, result);
+    }
+
+    private void handleNoteDelete(HttpExchange exchange) throws IOException {
+        if (exchange.getRequestMethod().equals("OPTIONS")) {
+            sendOptionsResponse(exchange);
+            return;
+        }
+
+        Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
+        String key = query.get("key");
+
+        NoteEditService.NoteEditResult result = noteEditService.deleteNode(key);
+        sendResponse(exchange, result);
+    }
+
 
     private void handleSearch(HttpExchange exchange) throws IOException {
         Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
