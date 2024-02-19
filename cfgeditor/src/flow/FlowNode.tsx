@@ -59,7 +59,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
             resBriefButton = <Popover content={<ResPopover resInfos={res}/>}
                                       placement='rightTop'
                                       trigger='click'>
-                <Button type={'text'} style={{color: '#fff'}}>{getResBrief(res)}</Button>;
+                <Button type={'text'} style={{color: '#fff'}}>{getResBrief(res)}</Button>
             </Popover>
         }
     }
