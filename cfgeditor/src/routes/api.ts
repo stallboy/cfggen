@@ -70,8 +70,8 @@ export async function fetchNotes(server: string, signal: AbortSignal) {
     return notesToMap(response.data);
 }
 
-export async function addOrUpdateNote(server: string, key: string, note: string) {
-    let url = `http://${server}/noteAddOrUpdate?key=${key}`;
+export async function updateNote(server: string, key: string, note: string) {
+    let url = `http://${server}/noteUpdate?key=${key}`;
     // console.log('add or update note', key, note);
     const response = await axios.post<NoteEditResult>(url, note, {
         method: 'POST',
@@ -83,22 +83,6 @@ export async function addOrUpdateNote(server: string, key: string, note: string)
             referrerPolicy: "no-referrer",
             "Content-Type": "text/plain",
         },
-    });
-    return response.data;
-}
-
-
-export async function deleteNote(server: string, key: string) {
-    let url = `http://${server}/noteDelete?key=${key}`;
-    const response = await axios.post<NoteEditResult>(url, null, {
-        method: 'POST',
-        headers: {
-            cache: "no-cache",
-            mode: "cors",
-            credentials: "same-origin",
-            redirect: "follow",
-            referrerPolicy: "no-referrer"
-        }
     });
     return response.data;
 }

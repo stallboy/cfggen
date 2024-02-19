@@ -26,8 +26,7 @@ public class NoteEditService {
         deleteOk,
 
         keyNotSet,
-        noteNotSet,
-        keyNotFound,
+        keyNotFoundOnDelete,
         storeErr,
     }
 
@@ -41,7 +40,7 @@ public class NoteEditService {
     public NoteEditService(Path noteCsvPath) {
         this.noteCsvPath = noteCsvPath;
         noteMap = new LinkedHashMap<>(256);
-        if (Files.exists(noteCsvPath)){
+        if (Files.exists(noteCsvPath)) {
             List<CsvRow> rows = CSVUtil.read(noteCsvPath, "UTF-8");
             for (CsvRow row : rows) {
                 if (row.getFieldCount() == 2) {
@@ -62,36 +61,25 @@ public class NoteEditService {
         return new Notes(noteMap.entrySet().stream().map(e -> new Note(e.getKey(), e.getValue())).toList());
     }
 
-    public synchronized NoteEditResult addOrUpdateNote(String key, String note) {
-        if (key.isEmpty()) {
-            return new NoteEditResult(ResultCode.keyNotSet, getNotes());
-        }
-        if (note.isEmpty()) {
-            return new NoteEditResult(ResultCode.noteNotSet, getNotes());
-        }
-
-        try {
-            String old = noteMap.put(key, note);
-            writeNoteMap();
-            return new NoteEditResult(old != null ? ResultCode.updateOk : ResultCode.addOk, getNotes());
-        } catch (Exception e) {
-            return new NoteEditResult(ResultCode.storeErr, getNotes());
-        }
-
-    }
-
-    public synchronized NoteEditResult deleteNode(String key) {
+    public synchronized NoteEditResult updateNote(String key, String note) {
         if (key.isEmpty()) {
             return new NoteEditResult(ResultCode.keyNotSet, getNotes());
         }
 
         try {
-            String old = noteMap.remove(key);
+            ResultCode code;
+            if (note.isEmpty()) {
+                String old = noteMap.remove(key);
+                code = old != null ? ResultCode.deleteOk : ResultCode.keyNotFoundOnDelete;
+            } else {
+                String old = noteMap.put(key, note);
+                code = old != null ? ResultCode.updateOk : ResultCode.addOk;
+            }
             writeNoteMap();
-            return new NoteEditResult(old != null ? ResultCode.deleteOk : ResultCode.keyNotFound, getNotes());
+            return new NoteEditResult(code, getNotes());
         } catch (Exception e) {
             return new NoteEditResult(ResultCode.storeErr, getNotes());
         }
-    }
 
+    }
 }

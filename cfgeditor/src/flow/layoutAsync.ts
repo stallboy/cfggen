@@ -2,11 +2,10 @@ import ELK, {ElkNode, ElkExtendedEdge} from 'elkjs';
 import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
 import {Rect, XYPosition} from "@xyflow/react";
 import {calcWidthHeight} from "./calcWidthHeight.ts";
-import {NodeShowType} from "../routes/setting/storageJson.ts";
 
 
-function nodeToLayoutChild(node: EntityNode, nodeShow: NodeShowType, id2RectMap: Map<string, Rect>): ElkNode {
-    const [width, height] = calcWidthHeight(node.data, nodeShow);
+function nodeToLayoutChild(node: EntityNode, id2RectMap: Map<string, Rect>): ElkNode {
+    const [width, height] = calcWidthHeight(node.data);
     id2RectMap.set(node.id, {x: 0, y: 0, width, height})
     return {id: node.id, width, height};
 }
@@ -47,7 +46,7 @@ function allPositionXYOk(nodes: EntityNode[], map: Map<string, XYPosition>) {
 }
 
 
-export async function layoutAsync(nodes: EntityNode[], edges: EntityEdge[], nodeShow: NodeShowType) {
+export async function layoutAsync(nodes: EntityNode[], edges: EntityEdge[]) {
     const elk = new ELK();
     // console.log('layout', nodes.length, nodes, edges);
     const id2RectMap = new Map<string, Rect>();
@@ -66,7 +65,7 @@ export async function layoutAsync(nodes: EntityNode[], edges: EntityEdge[], node
     const graph: ElkNode = {
         id: 'root',
         layoutOptions: defaultOptions,
-        children: nodes.map((n) => nodeToLayoutChild(n, nodeShow, id2RectMap)),
+        children: nodes.map((n) => nodeToLayoutChild(n, id2RectMap)),
         edges: edges.map(edgeToLayoutEdge),
     };
     // console.log(graph);

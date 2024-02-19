@@ -110,6 +110,8 @@ i18n.use(LanguageDetector)
                     addResDir: '增加',
                     setTauriConf: '提交',
                     summarizeRes: '资源分析',
+                    cancelUpdateNote: '取消',
+                    updateNote: '更新',
 
                     search: '搜索',
                     edit: '编辑',

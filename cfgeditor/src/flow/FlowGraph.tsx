@@ -155,11 +155,11 @@ export function useEntityToGraph(pathname: string,
     const panZoom = useStore((state) => state.panZoom);
 
     const {nodes, edges} = useMemo(() => convertNodeAndEdges({entityMap, sharedSetting: {notes, query, nodeShow}})
-        , [entityMap, query, nodeShow]);
+        , [entityMap, notes, query, nodeShow]);
 
     const {data: id2RectMap} = useQuery({
         queryKey: ['layout', pathname],
-        queryFn: () => layoutAsync(nodes, edges, nodeShow),
+        queryFn: () => layoutAsync(nodes, edges),
         staleTime: 1000 * 60 * 5,
     })
 

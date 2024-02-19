@@ -55,9 +55,7 @@ public class EditorServer extends Generator {
 
         handle("/schemas", this::handleSchemas);
         handle("/notes", this::handleNotes);
-        handle("/noteAddOrUpdate", this::handleNoteAddOrUpdate);
-        handle("/noteDelete", this::handleNoteDelete);
-
+        handle("/noteUpdate", this::handleNoteUpdate);
 
         handle("/search", this::handleSearch);
 
@@ -81,7 +79,7 @@ public class EditorServer extends Generator {
         sendResponse(exchange, notes);
     }
 
-    private void handleNoteAddOrUpdate(HttpExchange exchange) throws IOException {
+    private void handleNoteUpdate(HttpExchange exchange) throws IOException {
         if (exchange.getRequestMethod().equals("OPTIONS")) {
             sendOptionsResponse(exchange);
             return;
@@ -91,26 +89,12 @@ public class EditorServer extends Generator {
         String key = query.get("key");
 
         byte[] bytes = exchange.getRequestBody().readAllBytes();
-        String note = new String(bytes, StandardCharsets.UTF_8);
+        String note = new String(bytes, StandardCharsets.UTF_8).trim();
         logger.info(note);
 
-        NoteEditService.NoteEditResult result = noteEditService.addOrUpdateNote(key, note);
+        NoteEditService.NoteEditResult result = noteEditService.updateNote(key, note);
         sendResponse(exchange, result);
     }
-
-    private void handleNoteDelete(HttpExchange exchange) throws IOException {
-        if (exchange.getRequestMethod().equals("OPTIONS")) {
-            sendOptionsResponse(exchange);
-            return;
-        }
-
-        Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
-        String key = query.get("key");
-
-        NoteEditService.NoteEditResult result = noteEditService.deleteNode(key);
-        sendResponse(exchange, result);
-    }
-
 
     private void handleSearch(HttpExchange exchange) throws IOException {
         Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());

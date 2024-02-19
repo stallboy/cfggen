@@ -1,8 +1,8 @@
-import {memo} from "react";
+import {memo, useState} from "react";
 import {Handle, NodeProps, Position} from "@xyflow/react";
 import {Entity} from "./entityModel.ts";
 import {getNodeBackgroundColor} from "./colors.ts";
-import {Button, Flex, Popconfirm, Popover, Typography} from "antd";
+import {Button, Flex, Popover, Typography} from "antd";
 import {EntityCard} from "./EntityCard.tsx";
 import {EntityProperties} from "./EntityProperties.tsx";
 import {EntityForm} from "./EntityForm.tsx";
@@ -10,14 +10,15 @@ import {ActionIcon} from "@ant-design/pro-editor";
 import {BookOutlined, CloseOutlined} from "@ant-design/icons";
 import {store} from "../routes/setting/store.ts";
 import {getResBrief, ResPopover} from "./ResPopover.tsx";
-import TextArea from "antd/es/input/TextArea";
+import {NoteShow, NoteEdit} from "./NoteShowOrEdit.tsx";
 
 const {Text} = Typography;
 
 
 export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
-    const {fields, brief, edit, handleIn, handleOut, id, label, sharedSetting} = nodeProps.data;
     const {resMap} = store;
+    const [isEditNote, setIsEditNote] = useState<boolean>(false);
+    const {fields, brief, edit, handleIn, handleOut, id, label, sharedSetting} = nodeProps.data;
     const color: string = getNodeBackgroundColor(nodeProps.data);
     const width = edit ? 280 : 240;
     const copy: any = {}
@@ -28,28 +29,24 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
     // 用label包含做为它是table_id格式的标志
     const mayHasResOrNote = label.includes('_');
     let editNoteButton;
-    let note;
+    let noteShowOrEdit;
     if (mayHasResOrNote) {
         const notes = sharedSetting?.notes;
-        if (notes) {
-            note = notes.get(label);
-        }
+        let note = notes?.get(id) ?? '';
 
-        if (note && note.length > 0) {
-
+        if ((note.length > 0) || isEditNote) {
+            if (isEditNote){
+                noteShowOrEdit = <NoteEdit id={id} note={note} setIsEdit={setIsEditNote}/>
+            }else{
+                noteShowOrEdit = <NoteShow note={note} setIsEdit={setIsEditNote}/>;
+            }
         } else {
-            const confirm = () =>
-                new Promise((resolve) => {
-                    setTimeout(() => resolve(null), 3000);
-                });
-            editNoteButton = <Popconfirm title={label}
-                                         description={<TextArea placeholder='note'/>}
-                                         onConfirm={confirm}>
-                <ActionIcon icon=<BookOutlined/> />
-            </Popconfirm>
+            function onEditNote() {
+                setIsEditNote(true);
+            }
+
+            editNoteButton = <ActionIcon icon={<BookOutlined/>} onClick={onEditNote}/>;
         }
-
-
     }
 
     let resBriefButton;
@@ -76,6 +73,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
 
 
     return <Flex key={id} vertical gap={'small'} className='flowNode' style={{width: width, backgroundColor: color}}>
+        {noteShowOrEdit}
         {title}
 
         {fields && <EntityProperties fields={fields} color={color}/>}

@@ -12,8 +12,7 @@ export type NoteEditResultCode =
     | 'updateOk'
     | 'deleteOk'
     | 'keyNotSet'
-    | 'noteNotSet'
-    | 'keyNotFound'
+    | 'keyNotFoundOnDelete'
     | 'storeErr'
 
 export interface NoteEditResult {
