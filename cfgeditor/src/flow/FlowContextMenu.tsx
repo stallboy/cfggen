@@ -1,4 +1,5 @@
-import {Button, Flex} from "antd";
+import {Menu} from "antd";
+import {useCallback} from "react";
 
 export interface MenuStyle {
     top?: number;
@@ -19,13 +20,20 @@ export function FlowContextMenu({menuStyle, menuItems, closeMenu}: {
     closeMenu: () => void,
 }) {
 
-    return (
-        <Flex vertical className='contextMenu' style={{...menuStyle}}>
-            {menuItems.map(({handler, key, label}) => <Button key={key} onClick={() => {
-                handler();
-                closeMenu();
-            }}>{label}</Button>)}
-        </Flex>
+    const onClick = useCallback((info: any) => {
+        const menuItem = menuItems.find((mi) => mi.key == info.key);
+        if (menuItem) {
+            menuItem.handler();
+            closeMenu();
+        }
+    }, [menuItems, closeMenu]);
 
-    );
+    return <div className='contextMenu' style={{...menuStyle}}>
+        <Menu items={menuItems.map(mi => {
+            return {
+                key: mi.key,
+                label: mi.label
+            };
+        })} onClick={onClick}/>
+    </div>;
 }

@@ -98,7 +98,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     function getEditMenu(table: string, id: string, edit: boolean) {
         if (edit) {
             return {
-                label: getId(table, id) + ' ' + t('edit'),
+                label: t('edit') + id,
                 key: 'edit',
                 handler() {
                     navigate(navTo('record', table, id, true));
@@ -106,7 +106,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
             };
         } else {
             return {
-                label: getId(table, id) + ' ' + t('view'),
+                label: t('view') + id,
                 key: 'view',
                 handler() {
                     navigate(navTo('record', table, id));
@@ -121,7 +121,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
         paneMenu.push(getEditMenu(curTable.name, curId, !edit));
     }
     paneMenu.push({
-        label: entityId + " " + t('recordRef'),
+        label: t('recordRef') + curId,
         key: 'recordRef',
         handler() {
             navigate(navTo('recordRef', curTable.name, curId));
@@ -130,7 +130,6 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
 
     const nodeMenuFunc = (entity: Entity): MenuItem[] => {
         let refId = entity.userData as RefId;
-        let id = getId(refId.table, refId.id);
 
         let mm = [];
 
@@ -146,7 +145,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
                 mm.push(getEditMenu(refId.table, refId.id, true));
             } else {
                 mm.push({
-                    label: id + " " + t('record'),
+                    label: t('record') + refId.id,
                     key: 'entityRecord',
                     handler() {
                         navigate(navTo('record', refId.table, refId.id));
@@ -155,7 +154,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
             }
         }
         mm.push({
-            label: id + " " + t('recordRef'),
+            label: t('recordRef') + refId.id,
             key: 'entityRecordRef',
             handler() {
                 navigate(navTo('recordRef', refId.table, refId.id));

@@ -2,7 +2,7 @@ import {STable} from "../table/schemaModel.ts";
 import {Entity} from "../../flow/entityModel.ts";
 import {RecordRefsResult, RefId} from "./recordModel.ts";
 import {Result} from "antd";
-import {createRefEntities, getId} from "./recordRefEntity.ts";
+import {createRefEntities} from "./recordRefEntity.ts";
 import {useTranslation} from "react-i18next";
 import {Schema} from "../table/schemaUtil.ts";
 import {NodeShowType} from "../setting/storageJson.ts";
@@ -60,7 +60,7 @@ export function RecordRefWithResult({schema, curTable, curId, nodeShow, recordRe
     fillHandles(entityMap);
 
     const paneMenu: MenuItem[] = [{
-        label: recordRefResult.table + "\n" + t('record'),
+        label: t('record') + curId,
         key: 'record',
         handler() {
             navigate(navTo('record', curTable.name, curId));
@@ -75,19 +75,9 @@ export function RecordRefWithResult({schema, curTable, curId, nodeShow, recordRe
 
     const nodeMenuFunc = (entity: Entity): MenuItem[] => {
         let refId = entity.userData as RefId;
-        let id = getId(refId.table, refId.id);
         let mm = [];
-        if (refId.table != recordRefResult.table || refId.id != recordRefResult.id) {
-            mm.push({
-                label: id + "\n" + t('recordRef'),
-                key: 'entityRecordRef',
-                handler() {
-                    navigate(navTo('recordRef', refId.table, refId.id));
-                }
-            });
-        }
         mm.push({
-            label: id + "\n" + t('record'),
+            label: t('record') + refId.id,
             key: 'entityRecord',
             handler() {
                 navigate(navTo('record', refId.table, refId.id));
@@ -97,10 +87,19 @@ export function RecordRefWithResult({schema, curTable, curId, nodeShow, recordRe
         let isEntityEditable = schema.isEditable && !!(schema.getSTable(refId.table)?.isEditable);
         if (isEntityEditable) {
             mm.push({
-                label: id + "\n" + t('edit'),
+                label: t('edit') + refId.id,
                 key: 'entityEdit',
                 handler() {
                     navigate(navTo('record', refId.table, refId.id, true));
+                }
+            });
+        }
+        if (refId.table != recordRefResult.table || refId.id != recordRefResult.id) {
+            mm.push({
+                label: t('recordRef') + refId.id,
+                key: 'entityRecordRef',
+                handler() {
+                    navigate(navTo('recordRef', refId.table, refId.id));
                 }
             });
         }
@@ -120,7 +119,6 @@ export function RecordRefWithResult({schema, curTable, curId, nodeShow, recordRe
     const setFitViewForPathname = useCallback((pathname: string) => {
         lastFitViewForFix.current = pathname;
     }, [lastFitViewForFix]);
-
 
 
     useEntityToGraph(pathname, entityMap, nodeMenuFunc, paneMenu, fitView,

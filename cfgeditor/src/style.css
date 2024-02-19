@@ -31,15 +31,13 @@ mark {
 .contextMenu {
     border-color: #2986ff;
     border-style: solid;
+    border-radius: 8px;
+    border-width: 2px;
     position: fixed;
+
     z-index: 10;
 }
 
-.contextMenu button {
-    padding: 0.5em;
-    border: none;
-    border-radius: 0;
-}
 
 .player {
     width: 320px;
