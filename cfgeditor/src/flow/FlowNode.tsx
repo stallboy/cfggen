@@ -44,7 +44,6 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
             function onEditNote() {
                 setIsEditNote(true);
             }
-
             editNoteButton = <ActionIcon icon={<BookOutlined/>} onClick={onEditNote}/>;
         }
     }

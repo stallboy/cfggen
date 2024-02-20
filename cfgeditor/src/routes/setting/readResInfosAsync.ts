@@ -297,7 +297,7 @@ export async function summarizeResAsync(schema: Schema) {
     }
 
     const baseDir = await path.resourceDir();
-    let [ok, fullPath] = joinPath(baseDir, '../res.csv');
+    let [ok, fullPath] = joinPath(baseDir, '_res.csv');
     if (ok) {
         await writeTextFile(fullPath, lines.join("\r\n"));
     }

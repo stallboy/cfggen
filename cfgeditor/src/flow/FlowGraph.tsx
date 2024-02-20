@@ -159,7 +159,7 @@ export function useEntityToGraph(pathname: string,
 
     const {data: id2RectMap} = useQuery({
         queryKey: ['layout', pathname],
-        queryFn: () => layoutAsync(nodes, edges),
+        queryFn: () => layoutAsync(nodes, edges, nodeShow),
         staleTime: 1000 * 60 * 5,
     })
 

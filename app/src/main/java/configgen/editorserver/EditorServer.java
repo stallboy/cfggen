@@ -36,7 +36,7 @@ public class EditorServer extends Generator {
     public EditorServer(Parameter parameter) {
         super(parameter);
         port = Integer.parseInt(parameter.get("port", "3456"));
-        noteCsvPath = parameter.get("note", "../note.csv");
+        noteCsvPath = parameter.get("note", "_note.csv");
     }
 
     @Override

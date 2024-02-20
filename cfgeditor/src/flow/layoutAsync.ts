@@ -2,6 +2,7 @@ import ELK, {ElkNode, ElkExtendedEdge} from 'elkjs';
 import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
 import {Rect, XYPosition} from "@xyflow/react";
 import {calcWidthHeight} from "./calcWidthHeight.ts";
+import {NodeShowType} from "../routes/setting/storageJson.ts";
 
 
 function nodeToLayoutChild(node: EntityNode, id2RectMap: Map<string, Rect>): ElkNode {
@@ -46,7 +47,7 @@ function allPositionXYOk(nodes: EntityNode[], map: Map<string, XYPosition>) {
 }
 
 
-export async function layoutAsync(nodes: EntityNode[], edges: EntityEdge[]) {
+export async function layoutAsync(nodes: EntityNode[], edges: EntityEdge[], nodeShow: NodeShowType) {
     const elk = new ELK();
     // console.log('layout', nodes.length, nodes, edges);
     const id2RectMap = new Map<string, Rect>();
@@ -57,7 +58,7 @@ export async function layoutAsync(nodes: EntityNode[], edges: EntityEdge[]) {
         'elk.edgeRouting': 'POLYLINE',
         'elk.layered.spacing.nodeNodeBetweenLayers': '80',
         'elk.spacing.nodeNode': '60',
-        'elk.layered.nodePlacement.strategy': 'SIMPLE',
+        'elk.layered.nodePlacement.strategy': nodeShow.nodePlacementStrategy,
         'elk.layered.considerModelOrder.strategy': 'NODES_AND_EDGES',
         'elk.layered.crossingMinimization.forceNodeModelOrder': 'true',
     };

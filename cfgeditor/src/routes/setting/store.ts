@@ -76,7 +76,7 @@ const storeState: StoreState = {
         showHead: 'show',
         showDescription: 'show',
         containEnum: true,
-        nodePlacementStrategy: 'SIMPLE',
+        nodePlacementStrategy: 'BRANDES_KOEPF',
         keywordColors: [],
         tableHideAndColors: [],
     },

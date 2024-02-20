@@ -78,7 +78,7 @@ i18n.use(LanguageDetector)
 
                     SIMPLE: '中间',
                     LINEAR_SEGMENTS: '中间起伏',
-                    BRANDES_KOEPF: '往右上走',
+                    BRANDES_KOEPF: '默认',
 
                     searchMaxReturn: '搜索返回数',
                     imageSizeScale: '图片缩放倍数',
