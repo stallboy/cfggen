@@ -22,14 +22,18 @@ export type ShowHeadType = 'show' | 'showCopyable';
 export type ShowDescriptionType = 'show' | 'showFallbackValue' | 'showValue' | 'none';
 export type NodePlacementStrategyType = 'SIMPLE' | 'LINEAR_SEGMENTS' | 'BRANDES_KOEPF';
 
-
 export interface FixedPage {
+    label: string; // 显示
     table: string;
     id: string;
     refIn: boolean;
     refOutDepth: number;
     maxNode: number;
     nodeShow: NodeShowType;
+}
+
+export interface FixedPagesConf {
+    pages: FixedPage[];
 }
 
 export interface ResDir {

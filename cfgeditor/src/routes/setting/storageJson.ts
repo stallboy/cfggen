@@ -1,6 +1,6 @@
 // To parse this data:
 //
-//   import { Convert, NodeShowType, KeywordColor, TableHideAndColor, ShowHeadType, ShowDescriptionType, NodePlacementStrategyType, FixedPage, ResDir, TauriConf } from "./file";
+//   import { Convert, NodeShowType, KeywordColor, TableHideAndColor, ShowHeadType, ShowDescriptionType, NodePlacementStrategyType, FixedPage, FixedPagesConf, ResDir, TauriConf } from "./file";
 //
 //   const nodeShowType = Convert.toNodeShowType(json);
 //   const keywordColor = Convert.toKeywordColor(json);
@@ -9,14 +9,20 @@
 //   const showDescriptionType = Convert.toShowDescriptionType(json);
 //   const nodePlacementStrategyType = Convert.toNodePlacementStrategyType(json);
 //   const fixedPage = Convert.toFixedPage(json);
+//   const fixedPagesConf = Convert.toFixedPagesConf(json);
 //   const resDir = Convert.toResDir(json);
 //   const tauriConf = Convert.toTauriConf(json);
 //
 // These functions will throw an error if the JSON doesn't
 // match the expected interface, even if the JSON is valid.
 
+export interface FixedPagesConf {
+    pages: FixedPage[];
+}
+
 export interface FixedPage {
     id:          string;
+    label:       string;
     maxNode:     number;
     nodeShow:    NodeShowType;
     refIn:       boolean;
@@ -117,6 +123,14 @@ export class Convert {
 
     public static fixedPageToJson(value: FixedPage): string {
         return JSON.stringify(uncast(value, r("FixedPage")), null, 2);
+    }
+
+    public static toFixedPagesConf(json: string): FixedPagesConf {
+        return cast(JSON.parse(json), r("FixedPagesConf"));
+    }
+
+    public static fixedPagesConfToJson(value: FixedPagesConf): string {
+        return JSON.stringify(uncast(value, r("FixedPagesConf")), null, 2);
     }
 
     public static toResDir(json: string): ResDir {
@@ -289,8 +303,12 @@ function r(name: string) {
 }
 
 const typeMap: any = {
+    "FixedPagesConf": o([
+        { json: "pages", js: "pages", typ: a(r("FixedPage")) },
+    ], false),
     "FixedPage": o([
         { json: "id", js: "id", typ: "" },
+        { json: "label", js: "label", typ: "" },
         { json: "maxNode", js: "maxNode", typ: 3.14 },
         { json: "nodeShow", js: "nodeShow", typ: r("NodeShowType") },
         { json: "refIn", js: "refIn", typ: true },

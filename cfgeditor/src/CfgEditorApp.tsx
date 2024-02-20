@@ -8,6 +8,7 @@ import {DraggablePanel} from "@ant-design/pro-editor";
 import {Setting} from "./routes/setting/Setting.tsx";
 import {Schema} from "./routes/table/schemaUtil.ts";
 import {
+    getFixedPage,
     getLastNavToInLocalStore,
     readStoreStateOnce, setDragPanelWidth,
     setServer,
@@ -32,7 +33,7 @@ export type SchemaTableType = {
 export function CfgEditorApp() {
     readStoreStateOnce();
     const {
-        server, fix, dragPanel, dragPanelWidth,
+        server, dragPanel, dragPanelWidth, pageConf,
         recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow,
     } = store;
 
@@ -102,23 +103,25 @@ export function CfgEditorApp() {
                                   maxNode={recordMaxNode}
                                   nodeShow={nodeShow}
                                   inDragPanelAndFix={false}/>;
-        } else if (dragPanel == 'fix' && fix) {
-            let fixedTable = schema.getSTable(fix.table);
-            if (fixedTable) {
-                dragPage = <RecordRef schema={schema}
-                                      notes={notes}
-                                      curTable={fixedTable}
-                                      curId={fix.id}
-                                      refIn={fix.refIn}
-                                      refOutDepth={fix.refOutDepth}
-                                      maxNode={fix.maxNode}
-                                      nodeShow={fix.nodeShow}
-                                      inDragPanelAndFix={true}/>;
+        } else if (dragPanel != 'none') {
+            const fix = getFixedPage(pageConf, dragPanel);
+            if (fix) {
+                const fixedTable = schema.getSTable(fix.table);
+                if (fixedTable) {
+                    dragPage = <RecordRef schema={schema}
+                                          notes={notes}
+                                          curTable={fixedTable}
+                                          curId={fix.id}
+                                          refIn={fix.refIn}
+                                          refOutDepth={fix.refOutDepth}
+                                          maxNode={fix.maxNode}
+                                          nodeShow={fix.nodeShow}
+                                          inDragPanelAndFix={true}/>;
+                }
             }
         }
 
         if (dragPage) {
-
             content = <div style={{
                 position: "absolute",
                 background: '#fff',

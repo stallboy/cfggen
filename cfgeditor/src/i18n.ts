@@ -64,6 +64,7 @@ i18n.use(LanguageDetector)
                     reconnectCurServer: '重连当前服务器',
 
                     tableSetting: '表显示',
+                    fixedPagesSetting: '固定页面',
                     recordSetting: '关系显示',
                     operations: '操作',
                     keySetting: '快捷键',
@@ -83,8 +84,9 @@ i18n.use(LanguageDetector)
                     searchMaxReturn: '搜索返回数',
                     imageSizeScale: '图片缩放倍数',
                     dragPanel: '可拖拽面板',
-                    addFix: '固定',
-                    removeFix: '删除固定',
+                    pages: '页面',
+                    setFixedPagesConf: '设置固定页面',
+                    fixCurrentPage: '固定当前页面',
                     none: '不要',
                     toPng: '保存图片',
 

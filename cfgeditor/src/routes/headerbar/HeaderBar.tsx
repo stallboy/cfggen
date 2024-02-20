@@ -1,17 +1,17 @@
-import {Button, Radio, RadioChangeEvent, Select, Skeleton, Space, Typography} from "antd";
+import {Radio, RadioChangeEvent, Select, Skeleton, Space, Typography} from "antd";
 import {LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
 import {TableList} from "./TableList.tsx";
 import {IdList} from "./IdList.tsx";
-import {historyNext, historyPrev, navTo, store, useLocationData} from "../setting/store.ts";
+import {getFixedPage, historyNext, historyPrev, navTo, setDragPanel, store, useLocationData} from "../setting/store.ts";
 import {getNextId, Schema} from "../table/schemaUtil.ts";
 import {useHotkeys} from "react-hotkeys-hook";
 import {useNavigate} from "react-router-dom";
 import {STable} from "../table/schemaModel.ts";
-import {getId} from "../record/recordRefEntity.ts";
 import {useTranslation} from "react-i18next";
-import {memo} from "react";
+import {memo, useState} from "react";
 import {ActionIcon} from "@ant-design/pro-editor";
 import {toggleFullScreen} from "../setting/TauriSeting.tsx";
+import {VscLayoutSidebarLeft, VscLayoutSidebarLeftOff} from "react-icons/vsc";
 
 const {Text} = Typography;
 
@@ -22,7 +22,8 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
     setSearchOpen: (open: boolean) => void;
 }) {
     const {curPage, curTableId, curId} = useLocationData();
-    const {dragPanel, fix, history, isEditMode} = store;
+    const {dragPanel, pageConf, history, isEditMode} = store;
+    const [fix, setFix] = useState<string>(dragPanel);
     const navigate = useNavigate();
     const {t} = useTranslation();
     useHotkeys('alt+1', () => navigate(navTo('table', curTableId, curId)));
@@ -64,27 +65,52 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
         {label: t('table'), value: 'table'},
         {label: t('tableRef'), value: 'tableRef'},
         {label: t('record'), value: 'record'},
+        {label: t('recordRef'), value: 'recordRef'}
     ]
 
-    if (dragPanel != 'recordRef') {
-        options.push({label: t('recordRef'), value: 'recordRef'});
-    }
-
-    let goFix;
-    if (fix && schema) {
-        let fixedTable = schema.getSTable(fix.table);
-        if (fixedTable && dragPanel != 'fix') {
-            goFix = <Button onClick={() => {
-                navigate(navTo('recordRef', fix!.table, fix!.id));
-            }}> {getId(fix.table, fix.id)} </Button>
+    function onDragPanelSwitch() {
+        if (dragPanel == 'none') {
+            setDragPanel(fix);
+        } else {
+            setDragPanel('none');
         }
     }
+
+    function onDragePanelSelect(value: string) {
+        setFix(value);
+        if (dragPanel == 'none') {
+            if (value == 'recordRef') {
+                navigate(navTo('recordRef', curTableId, curId, isEditMode));
+            } else {
+                const page = getFixedPage(pageConf, value);
+                if (page) {
+                    navigate(navTo('recordRef', page.table, page.id, isEditMode))
+                }
+            }
+        } else {
+            setDragPanel(value);
+        }
+    }
+
+    let fixedOptions = [
+        ...(pageConf.pages.map(fp => {
+            return {label: fp.label, value: fp.label};
+        })),
+        {label: t('recordRef'), value: 'recordRef'},
+    ]
 
     return <div style={{position: 'relative'}}>
         <Space size={'large'} style={{position: 'absolute', zIndex: 1}}>
             <Space size={'small'}>
                 <ActionIcon icon={<SettingOutlined/>} onClick={() => setSettingOpen(true)}/>
                 <ActionIcon icon={<SearchOutlined/>} onClick={() => setSearchOpen(true)}/>
+                <ActionIcon icon={dragPanel == 'none' ? <VscLayoutSidebarLeftOff/> : <VscLayoutSidebarLeft/>}
+                            onClick={onDragPanelSwitch}/>
+
+                <Select options={fixedOptions}
+                        style={{width: 100}}
+                        value={fix}
+                        onChange={onDragePanelSelect}/>
 
                 {schema ? <TableList schema={schema}/> : <Select id='table' loading={true}/>}
                 {curTable ? <IdList curTable={curTable}/> : <Skeleton.Input/>}
@@ -94,7 +120,7 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
                 <Radio.Group value={curPage} onChange={onChangeCurPage}
                              options={options} optionType={'button'}>
                 </Radio.Group>
-                {goFix}
+
 
                 <ActionIcon icon={<LeftOutlined/>} onClick={prev} disabled={!history.canPrev()}/>
                 <ActionIcon icon={<RightOutlined/>} onClick={next} disabled={!history.canNext()}/>

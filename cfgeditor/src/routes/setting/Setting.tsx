@@ -10,7 +10,7 @@ import {TableSetting} from "./TableSetting.tsx";
 import {Operations} from "./Operations.tsx";
 import {memo, RefObject} from "react";
 import {TauriSetting} from "./TauriSeting.tsx";
-
+import {FixedPagesSetting} from "./FixedPagesSeting.tsx";
 
 
 export const Setting = memo(function Setting({schema, curTable, flowRef}: {
@@ -22,17 +22,39 @@ export const Setting = memo(function Setting({schema, curTable, flowRef}: {
     const {t} = useTranslation();
 
     const items = [
-        {key: 'recordSetting', label: t('recordSetting'), children: <RecordRefSetting/>,},
-        {key: 'tableSetting', label: t('tableSetting'), children: <TableSetting/>,},
+        {
+            key: 'recordSetting',
+            label: t('recordSetting'),
+            children: <RecordRefSetting/>,
+        },
+        {
+            key: 'fixedPagesSetting',
+            label: t('fixedPagesSetting'),
+            children: <FixedPagesSetting schema={schema} curTable={curTable}/>,
+        },
+
+        {
+            key: 'tableSetting',
+            label: t('tableSetting'),
+            children: <TableSetting/>,
+        },
         {
             key: 'operations',
             label: t('operations'),
             children: <Operations schema={schema} curTable={curTable} flowRef={flowRef}/>,
         },
-        {key: 'keySetting', label: t('keySetting'), children: <KeyShortCut/>},
+        {
+            key: 'keySetting',
+            label: t('keySetting'),
+            children: <KeyShortCut/>
+        },
     ]
-    if (window.__TAURI__){
-        items.push({key: 'appSetting', label: t('appSetting'), children: <TauriSetting schema={schema}/>});
+    if (window.__TAURI__) {
+        items.push({
+            key: 'appSetting',
+            label: t('appSetting'),
+            children: <TauriSetting schema={schema}/>
+        });
     }
     return <Tabs items={items} tabPosition='left'/>;
 });

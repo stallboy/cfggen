@@ -1,15 +1,7 @@
 import {memo, RefObject} from "react";
 import {useTranslation} from "react-i18next";
-import {App, Button, Divider, Form, Input, InputNumber, Radio} from "antd";
-import {
-    DragPanelType,
-    setDragPanel,
-    setFix,
-    removeFix,
-    setImageSizeScale, setServer,
-    store,
-    useLocationData, invalidateAllQueries
-} from "./store.ts";
+import {App, Button, Divider, Form, Input, InputNumber} from "antd";
+import {setImageSizeScale, setServer, store, useLocationData, invalidateAllQueries} from "./store.ts";
 import {CloseOutlined} from "@ant-design/icons";
 import {Schema} from "../table/schemaUtil.ts";
 import {STable} from "../table/schemaModel.ts";
@@ -28,10 +20,7 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
 }) {
     const {curPage} = useLocationData();
     const {t} = useTranslation();
-    const {
-        server, dragPanel,
-        imageSizeScale, fix
-    } = store;
+    const {server, imageSizeScale} = store;
 
     const {curTableId, curId} = useLocationData();
     const {notification} = App.useApp();
@@ -111,30 +100,6 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
                 {t('toPng')}
             </Button>
         </Form.Item>
-
-        <Form.Item name='dragePanel' initialValue={dragPanel} label={t('dragPanel')}>
-            <Radio.Group onChange={(e) => setDragPanel(e.target.value as DragPanelType)}
-                         optionType='button' buttonStyle="solid" options={[
-                {label: t('recordRef'), value: 'recordRef'},
-                {label: t('fix'), value: 'fix'},
-                {label: t('none'), value: 'none'}]}/>
-        </Form.Item>
-
-        {(schema && curTable && curPage == 'recordRef') &&
-            <Form.Item wrapperCol={{offset: 6}}>
-                <Button type="primary" onClick={() => setFix(curTableId, curId)}>
-                    {t('addFix')}
-                </Button>
-            </Form.Item>
-        }
-        {fix &&
-            <Form.Item wrapperCol={{offset: 6}}>
-                <Button type="primary" onClick={removeFix}>
-                    {t('removeFix')}
-                </Button>
-            </Form.Item>
-        }
-
 
         <Form.Item label={t('curServer')}>
             {server}

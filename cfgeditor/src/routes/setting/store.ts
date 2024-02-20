@@ -1,13 +1,11 @@
 import resso from "resso";
-import {Convert, FixedPage, NodeShowType, TauriConf} from "./storageJson.ts";
-import {getPrefBool, getPrefEnumStr, getPrefInt, getPrefJson, getPrefStr, setPref, removePref} from "./storage.ts";
+import {Convert, FixedPage, NodeShowType, FixedPagesConf, TauriConf} from "./storageJson.ts";
+import {getPrefBool, getPrefEnumStr, getPrefInt, getPrefJson, getPrefStr, setPref} from "./storage.ts";
 import {History} from "../headerbar/historyModel.ts";
 import {Schema} from "../table/schemaUtil.ts";
 import {useLocation} from "react-router-dom";
 import {queryClient} from "../../main.tsx";
-
-export type DragPanelType = 'recordRef' | 'fix' | 'none';
-const dragPanelEnums = ['recordRef', 'fix', 'none']
+import {getId} from "../record/recordRefEntity.ts";
 
 export type PageType = 'table' | 'tableRef' | 'record' | 'recordRef';
 export const pageEnums = ['table', 'tableRef', 'record', 'recordRef'];
@@ -49,11 +47,11 @@ export type StoreState = {
 
     query: string;
     searchMax: number;
-
-    dragPanel: DragPanelType;
-    dragPanelWidth: string | number;
-    fix?: FixedPage;
     imageSizeScale: number;
+
+    dragPanel: string;  // 'recordRef', 'none', page.label（page的label不要用recordRef和none）
+    dragPanelWidth: string | number;
+    pageConf: FixedPagesConf;
     tauriConf: TauriConf;
 
     history: History;
@@ -83,11 +81,13 @@ const storeState: StoreState = {
 
     query: '',
     searchMax: 50,
+    imageSizeScale: 4,
 
     dragPanel: 'none',
     dragPanelWidth: '50vw',
-    fix: undefined,
-    imageSizeScale: 16,
+    pageConf: {
+        pages: [],
+    },
     tauriConf: {
         resDirs: [],
     },
@@ -115,22 +115,16 @@ export function readStoreStateOnce() {
                     store.nodeShow = ns;
                 }
                 break;
-            case 'fix':
-                const fp = getPrefJson<FixedPage>('fix', Convert.toFixedPage);
-                if (fp) {
-                    store.fix = fp;
+            case 'pageConf':
+                const pc = getPrefJson<FixedPagesConf>('pageConf', Convert.toFixedPagesConf);
+                if (pc) {
+                    store.pageConf = pc;
                 }
                 break;
             case 'tauriConf':
                 const tc = getPrefJson<TauriConf>('tauriConf', Convert.toTauriConf);
                 if (tc) {
                     store.tauriConf = tc;
-                }
-                break;
-            case 'dragPanel':
-                const dp = getPrefEnumStr<DragPanelType>('dragPanel', dragPanelEnums);
-                if (dp) {
-                    store.dragPanel = dp;
                 }
                 break;
             default:
@@ -238,11 +232,9 @@ export function setImageSizeScale(value: number | null) {
     }
 }
 
-export function setDragPanel(value: DragPanelType) {
-    if (dragPanelEnums.includes(value)) {
-        store.dragPanel = value;
-        setPref('dragPanel', value);
-    }
+export function setDragPanel(value: string) {
+    store.dragPanel = value;
+    setPref('dragPanel', value);
 }
 
 export function setDragPanelWidth(value: string | number) {
@@ -250,9 +242,10 @@ export function setDragPanelWidth(value: string | number) {
     setPref('dragPanelWidth', value.toString());
 }
 
-export function setFix(curTableId: string, curId: string) {
+export function makeFixedPage(curTableId: string, curId: string) {
     const {recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow} = store;
     let fp: FixedPage = {
+        label: getId(curTableId, curId),
         table: curTableId,
         id: curId,
         refIn: recordRefIn,
@@ -260,14 +253,21 @@ export function setFix(curTableId: string, curId: string) {
         maxNode: recordMaxNode,
         nodeShow: nodeShow,
     };
-    store.fix = fp;
-    setPref('fix', Convert.fixedPageToJson(fp));
+    return fp;
+}
+
+export function setFixedPagesConf(pageConf: FixedPagesConf) {
+    store.pageConf = pageConf;
+    setPref('pageConf', Convert.fixedPagesConfToJson(pageConf));
     clearLayoutCache();
 }
 
-export function removeFix() {
-    store.fix = undefined;
-    removePref('fix');
+export function getFixedPage(pageConf: FixedPagesConf, label: string) {
+    for (let page of pageConf.pages) {
+        if (page.label == label) {
+            return page;
+        }
+    }
 }
 
 export function setServer(value: string) {
