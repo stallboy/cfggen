@@ -13,7 +13,6 @@ export function AppLoader() {
     useQuery({
         queryKey: ['setting', 'resInfo'],
         queryFn: readResInfosAsync,
-        // The query will not execute until the userId exists
         enabled: !!data,
     })
 

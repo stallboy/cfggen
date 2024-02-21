@@ -8,7 +8,7 @@ import {App, Button, Card, Checkbox, Form, Input, Space} from "antd";
 import {formLayout} from "./TableSetting.tsx";
 import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
 import {Schema} from "../table/schemaUtil.ts";
-import {summarizeResAsync} from "./readResInfosAsync.ts";
+import {invalidateResInfos, summarizeResAsync} from "./readResInfosAsync.ts";
 
 
 async function queryResourceDir() {
@@ -89,7 +89,7 @@ export const TauriSetting = memo(function TauriSetting({schema}: {
         </Card>
 
         {schema && <Button onClick={summarizeRes}> {t('summarizeRes')}</Button>}
-
+        <Button onClick={invalidateResInfos}> {t('reloadRes')}</Button>
     </>
 
 });

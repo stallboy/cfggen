@@ -3,6 +3,7 @@ import {FileEntry, readDir, writeTextFile} from "@tauri-apps/api/fs";
 import {path} from "@tauri-apps/api";
 import {Schema} from "../table/schemaUtil.ts";
 import {getResBrief} from "../../flow/ResPopover.tsx";
+import {queryClient} from "../../main.tsx";
 
 function findKeyEndIndex(name: string) {
     let foundFirst = false;
@@ -205,6 +206,13 @@ function packAllTracks(raws: Map<string, ResInfo[]>) {
 }
 
 let alreadyRead = false;
+
+export function invalidateResInfos(){
+    queryClient.invalidateQueries({queryKey: ['setting', 'resInfo'], refetchType: 'all'}).catch((reason: any) => {
+        console.log(reason);
+    });
+    alreadyRead = false;
+}
 
 export async function readResInfosAsync() {
     if (alreadyRead) {
