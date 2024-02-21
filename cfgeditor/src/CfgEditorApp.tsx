@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useRef, useState} from "react";
+import {CSSProperties, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {Alert, Drawer, Flex, Form, Input, Modal,} from "antd";
 import {RecordRef} from "./routes/record/RecordRef.tsx";
 import {SearchValue} from "./routes/search/SearchValue.tsx";
@@ -29,6 +29,25 @@ export type SchemaTableType = {
     curTable: STable
 };
 
+const contentDivStyle: CSSProperties = {
+    position: "absolute",
+    background: '#fff',
+    display: 'flex',
+    height: "100vh",
+    width: "100vw"
+};
+const dragPanelStyle: CSSProperties = {background: '#fff', width: '100%', padding: 12};
+
+function onDragPanelSizeChange(_delta: any, size?: { width: string | number }) {
+    if (size) {
+        setDragPanelWidth(size.width);
+    }
+}
+
+
+function onConnectServer(value: string) {
+    setServer(value);
+}
 
 export function CfgEditorApp() {
     readStoreStateOnce();
@@ -71,21 +90,18 @@ export function CfgEditorApp() {
         return {schema, notes, curTable}
     }, [schema, notes, curTable]);
 
-    const onSettingClose = () => {
+    const onSettingClose = useCallback(() => {
         setSettingOpen(false);
-    };
+    }, [setSettingOpen]);
 
-    const onSearchClose = () => {
+    const onSearchClose = useCallback(() => {
         setSearchOpen(false);
-    };
+    }, [setSearchOpen]);
 
-    function onConnectServer(value: string) {
-        setServer(value);
-    }
 
-    function handleModalOk() {
+    const handleModalOk = useCallback(() => {
         onConnectServer(server);
-    }
+    }, [server]);
 
     let content;
     if ((!schema) || curTable == null) {
@@ -122,22 +138,12 @@ export function CfgEditorApp() {
         }
 
         if (dragPage) {
-            content = <div style={{
-                position: "absolute",
-                background: '#fff',
-                display: 'flex',
-                height: "100vh",
-                width: "100vw"
-            }}>
+            content = <div style={contentDivStyle}>
                 <DraggablePanel
-                    placement={'left'}
-                    style={{background: '#fff', width: '100%', padding: 12}}
+                    placement='left'
+                    style={dragPanelStyle}
                     defaultSize={{width: dragPanelWidth}}
-                    onSizeChange={(_delta: any, size?: { width: string | number }) => {
-                        if (size) {
-                            setDragPanelWidth(size.width);
-                        }
-                    }}>
+                    onSizeChange={onDragPanelSizeChange}>
                     <FlowGraph>
                         {dragPage}
                     </FlowGraph>

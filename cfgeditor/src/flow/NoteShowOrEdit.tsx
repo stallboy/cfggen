@@ -1,7 +1,6 @@
-import {ChangeEvent, memo, useCallback, useState} from "react";
+import {ChangeEvent, CSSProperties, memo, useCallback, useState} from "react";
 import {App, Button, Flex} from "antd";
 import TextArea from "antd/es/input/TextArea";
-import {ActionIcon} from "@ant-design/pro-editor";
 import {BookOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 import {useMutation} from "@tanstack/react-query";
@@ -10,6 +9,10 @@ import {store} from "../routes/setting/store.ts";
 import {NoteEditResult, notesToMap} from "../routes/record/noteModel.ts";
 import {queryClient} from "../main.tsx";
 
+
+const noteButtonStyle: CSSProperties = {float: 'right', borderWidth: 0, backgroundColor: 'transparent'};
+const bookIcon = <BookOutlined/>;
+const noteStyle: CSSProperties = {backgroundColor: "yellow", borderRadius: '8px'}
 export const NoteShow = memo(function NoteShow({note, setIsEdit}: {
     note: string;
     setIsEdit: (ie: boolean) => void;
@@ -18,8 +21,10 @@ export const NoteShow = memo(function NoteShow({note, setIsEdit}: {
         setIsEdit(true);
     }, [setIsEdit]);
 
-    return <div style={{backgroundColor: "yellow", borderRadius: '8px'}}>
-        <p>{note} {<ActionIcon style={{float: 'right'}} icon={<BookOutlined/>} onClick={onEditClick}/>}</p>
+    return <div style={noteStyle}>
+        <p>{note} {<Button style={noteButtonStyle}
+                           icon={bookIcon}
+                           onClick={onEditClick}/>}</p>
     </div>
 });
 

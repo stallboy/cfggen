@@ -13,11 +13,10 @@ import {
 } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import {MinusSquareTwoTone, PlusSquareTwoTone} from "@ant-design/icons";
-import {memo, useEffect} from "react";
+import {CSSProperties, memo, useCallback, useEffect} from "react";
 import {useTranslation} from "react-i18next";
 import {Handle, Position} from "@xyflow/react";
 import {ActionIcon} from "@ant-design/pro-editor";
-
 
 const formLayout = {
     labelCol: {xs: {span: 24}, sm: {span: 6},},
@@ -74,31 +73,23 @@ function PrimitiveControl(field: EntityEditField) {
     return control;
 }
 
+const rowFlexStyle: CSSProperties = {marginBottom: 10, position: 'relative'}
+const handleOutStyle: CSSProperties = {position: 'absolute', left: '270px', backgroundColor: 'blue'}
+
 function StructRefItem({field}: { field: EntityEditField }) {
-    return <Flex key={field.name} gap={'middle'} justify="flex-end"
-                 style={{marginBottom: 10, position: 'relative'}}>
+    return <Flex key={field.name} gap='middle' justify="flex-end" style={rowFlexStyle}>
         <Tag color={'blue'}>{field.name}</Tag>
         {field.handleOut && <Handle type='source' position={Position.Right} id={field.name}
-                                    style={{
-                                        position: 'absolute',
-                                        left: '260px',
-                                        backgroundColor: 'blue'
-                                    }}/>}
+                                    style={handleOutStyle}/>}
     </Flex>
 }
 
-
 function FuncAddFormItem({field}: { field: EntityEditField }) {
     let func = field.value as FuncType;
-    return <Flex key={field.name} gap={'middle'} justify="flex-end"
-                 style={{marginBottom: 10, position: 'relative'}}>
+    return <Flex key={field.name} gap='middle' justify="flex-end" style={rowFlexStyle}>
         <Button className='nodrag' onClick={func} icon={<PlusSquareTwoTone/>}> {field.name} </Button>
         {field.handleOut && <Handle type='source' position={Position.Right} id={field.name}
-                                    style={{
-                                        position: 'absolute',
-                                        left: '260px',
-                                        backgroundColor: 'blue'
-                                    }}/>}
+                                    style={handleOutStyle}/>}
     </Flex>;
 }
 
@@ -241,27 +232,29 @@ function FieldsFormItem(fields: EntityEditField[]) {
     return fields.map((field, _index) => FieldFormItem(field));
 }
 
+const theme = {
+    components: {
+        Form: {
+            itemMarginBottom: 8,
+        },
+    },
+}
+const formStyle = {backgroundColor: "white", borderRadius: 15, padding: 10}
 
 export const EntityForm = memo(function EntityForm({edit}: {
     edit: EntityEdit;
 }) {
     const [_form] = Form.useForm();
 
-    function onValuesChange(_changedFields: any, allFields: any) {
+    const onValuesChange = useCallback((_changedFields: any, allFields: any) => {
         edit.editOnUpdateValues(allFields);
-    }
+    }, [edit]);
 
-    return <ConfigProvider theme={{
-        components: {
-            Form: {
-                itemMarginBottom: 8,
-            },
-        },
-    }}>
+    return <ConfigProvider theme={theme}>
         <Form {...formLayout}
               form={_form}
               onValuesChange={onValuesChange}
-              style={{maxWidth: 600, backgroundColor: "white", borderRadius: 15, padding: 10}}>
+              style={formStyle}>
             {FieldsFormItem(edit.editFields)}
         </Form>
     </ConfigProvider>

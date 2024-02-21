@@ -53,16 +53,17 @@ const router = createBrowserRouter([
     }
 ]);
 
+const theme = {
+    components: {
+        Tabs: {
+            horizontalMargin: '0,0,0,0'
+        },
+    },
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-        <ConfigProvider theme={{
-            components: {
-                Tabs: {
-                    horizontalMargin: '0,0,0,0'
-                },
-            },
-        }}>
+        <ConfigProvider theme={theme}>
             <App>
                 <QueryClientProvider client={queryClient}>
                     <RouterProvider router={router}/>

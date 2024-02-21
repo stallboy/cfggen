@@ -1,7 +1,7 @@
 import {Handle, Position} from "@xyflow/react";
 import {EntityField} from "./entityModel.ts";
 import {Flex, List, Tooltip, Typography} from "antd";
-import {memo} from "react";
+import {CSSProperties, memo, useMemo} from "react";
 
 const {Text} = Typography;
 
@@ -20,39 +20,49 @@ function text({comment, name}: { name: string, comment?: string }) {
     return name;
 }
 
+const listStyle: CSSProperties = {backgroundColor: '#fff'};
+const listItemStyle: CSSProperties = {position: 'relative'};
+const flexStyle = {width: '100%'};
+const ellipsis = {tooltip: true};
+const itemValueStyle = {maxWidth: '70%'};
+
 export const EntityProperties = memo(function EntityProperties({fields, color}: {
     fields: EntityField[],
     color: string,
 }) {
+
+    const itemKeyStyle = useMemo(() => {
+        return {color: color, maxWidth: '80%'}
+    }, [color]);
+
+    const handleInStyle: CSSProperties = useMemo(() => {
+        return {position: 'absolute', left: '-10px', backgroundColor: color}
+    }, [color]);
+    const handleOutStyle: CSSProperties = useMemo(() => {
+        return {position: 'absolute', left: '238px', backgroundColor: color}
+    }, [color]);
+
     if (fields.length == 0) {
         return <></>;
     }
-    return <List size='small' style={{backgroundColor: '#fff'}} bordered dataSource={fields}
+    return <List size='small' style={listStyle} bordered dataSource={fields}
                  renderItem={(item) => {
-                     return <List.Item key={item.key} style={{position: 'relative'}}>
-                         <Flex justify="space-between" style={{width: '100%'}}>
+                     return <List.Item key={item.key} style={listItemStyle}>
+                         <Flex justify="space-between" style={flexStyle}>
                              <Tooltip title={tooltip(item)}>
-                                 <Text style={{color: color, maxWidth: '80%'}} ellipsis={{tooltip: true}}>
+                                 <Text style={itemKeyStyle} ellipsis={ellipsis}>
                                      {text(item)}
                                  </Text>
                              </Tooltip>
-                             <Text style={{maxWidth: '70%'}} ellipsis={{tooltip: true}}>
+                             <Text style={itemValueStyle} ellipsis={ellipsis}>
                                  {item.value}
                              </Text>
                          </Flex>
 
                          {item.handleIn && <Handle type='target' position={Position.Left} id={`@in_${item.name}`}
-                                                   style={{
-                                                       position: 'absolute',
-                                                       left: '-10px',
-                                                       backgroundColor: color
-                                                   }}/>}
+                                                   style={handleInStyle}/>}
                          {item.handleOut && <Handle type='source' position={Position.Right} id={item.name}
-                                                    style={{
-                                                        position: 'absolute',
-                                                        left: '226px',
-                                                        backgroundColor: color
-                                                    }}/>}
+                                                    style={handleOutStyle}/>}
                      </List.Item>;
 
                  }}/>;

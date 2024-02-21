@@ -1,4 +1,4 @@
-import {Radio, RadioChangeEvent, Select, Skeleton, Space, Typography} from "antd";
+import {Button, Radio, RadioChangeEvent, Select, Skeleton, Space, Typography} from "antd";
 import {LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
 import {TableList} from "./TableList.tsx";
 import {IdList} from "./IdList.tsx";
@@ -8,12 +8,18 @@ import {useHotkeys} from "react-hotkeys-hook";
 import {useNavigate} from "react-router-dom";
 import {STable} from "../table/schemaModel.ts";
 import {useTranslation} from "react-i18next";
-import {memo, useState} from "react";
-import {ActionIcon} from "@ant-design/pro-editor";
+import {memo, useCallback, useMemo, useState} from "react";
 import {toggleFullScreen} from "../setting/TauriSeting.tsx";
 import {VscLayoutSidebarLeft, VscLayoutSidebarLeftOff} from "react-icons/vsc";
 
 const {Text} = Typography;
+const settingIcon = <SettingOutlined/>;
+const searchIcon = <SearchOutlined/>;
+const fixOffIcon = <VscLayoutSidebarLeftOff/>;
+const fixOnIcon = <VscLayoutSidebarLeft/>;
+const prevIcon = <LeftOutlined/>;
+const nextIcon = <RightOutlined/>;
+
 
 export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOpen, setSearchOpen}: {
     schema: Schema | undefined;
@@ -34,19 +40,19 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
     useHotkeys('alt+v', () => next());
     useHotkeys('alt+enter', toggleFullScreen);
 
-    function prev() {
+    const prev = useCallback(() => {
         const path = historyPrev(curPage);
         if (path) {
             navigate(path);
         }
-    }
+    }, [curPage, navigate]);
 
-    function next() {
+    const next = useCallback(() => {
         const path = historyNext(curPage);
         if (path) {
             navigate(path);
         }
-    }
+    }, [curPage, navigate]);
 
     let nextId;
     if (curTable) {
@@ -56,27 +62,10 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
         }
     }
 
-    function onChangeCurPage(e: RadioChangeEvent) {
-        const page = e.target.value;
-        navigate(navTo(page, curTableId, curId, isEditMode));
-    }
-
-    let options = [
-        {label: t('table'), value: 'table'},
-        {label: t('tableRef'), value: 'tableRef'},
-        {label: t('record'), value: 'record'},
-        {label: t('recordRef'), value: 'recordRef'}
-    ]
-
-    function onDragPanelSwitch() {
-        if (dragPanel == 'none') {
-            setDragPanel(fix);
-        } else {
-            setDragPanel('none');
-        }
-    }
-
-    function onDragePanelSelect(value: string) {
+    const onSettingClick = useCallback(() => setSettingOpen(true), [setSettingOpen]);
+    const onSearchClick = useCallback(() => setSearchOpen(true), [setSearchOpen]);
+    const onDragPanelSwitch = useCallback(() => setDragPanel(dragPanel == 'none' ? fix : 'none'), [dragPanel]);
+    const onDragPanelSelect = useCallback((value: string) => {
         setFix(value);
         if (dragPanel == 'none') {
             if (value == 'recordRef') {
@@ -90,27 +79,39 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
         } else {
             setDragPanel(value);
         }
-    }
+    }, [setFix, dragPanel, pageConf, isEditMode, navigate]);
 
-    let fixedOptions = [
+    let fixedOptions = useMemo(() => [
         ...(pageConf.pages.map(fp => {
             return {label: fp.label, value: fp.label};
         })),
         {label: t('recordRef'), value: 'recordRef'},
-    ]
+    ], [pageConf]);
+
+    let options = useMemo(() => [
+        {label: t('table'), value: 'table'},
+        {label: t('tableRef'), value: 'tableRef'},
+        {label: t('record'), value: 'record'},
+        {label: t('recordRef'), value: 'recordRef'}
+    ], [t]);
+
+
+    const onChangeCurPage = useCallback((e: RadioChangeEvent) => {
+        const page = e.target.value;
+        navigate(navTo(page, curTableId, curId, isEditMode));
+    }, [curTableId, curId, isEditMode, navigate]);
 
     return <div style={{position: 'relative'}}>
         <Space size={'large'} style={{position: 'absolute', zIndex: 1}}>
             <Space size={'small'}>
-                <ActionIcon icon={<SettingOutlined/>} onClick={() => setSettingOpen(true)}/>
-                <ActionIcon icon={<SearchOutlined/>} onClick={() => setSearchOpen(true)}/>
-                <ActionIcon icon={dragPanel == 'none' ? <VscLayoutSidebarLeftOff/> : <VscLayoutSidebarLeft/>}
-                            onClick={onDragPanelSwitch}/>
-
+                <Button icon={settingIcon} onClick={onSettingClick}/>
+                <Button icon={searchIcon} onClick={onSearchClick}/>
+                <Button icon={dragPanel == 'none' ? fixOffIcon : fixOnIcon}
+                        onClick={onDragPanelSwitch}/>
                 <Select options={fixedOptions}
                         style={{width: 100}}
                         value={fix}
-                        onChange={onDragePanelSelect}/>
+                        onChange={onDragPanelSelect}/>
 
                 {schema ? <TableList schema={schema}/> : <Select id='table' loading={true}/>}
                 {curTable ? <IdList curTable={curTable}/> : <Skeleton.Input/>}
@@ -121,9 +122,8 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
                              options={options} optionType={'button'}>
                 </Radio.Group>
 
-
-                <ActionIcon icon={<LeftOutlined/>} onClick={prev} disabled={!history.canPrev()}/>
-                <ActionIcon icon={<RightOutlined/>} onClick={next} disabled={!history.canNext()}/>
+                <Button icon={prevIcon} onClick={prev} disabled={!history.canPrev()}/>
+                <Button icon={nextIcon} onClick={next} disabled={!history.canNext()}/>
             </Space>
         </Space></div>;
 });
