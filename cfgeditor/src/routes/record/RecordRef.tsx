@@ -122,8 +122,11 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
     }, [lastFitViewForFix]);
 
 
-    useEntityToGraph(pathname, entityMap, notes, nodeMenuFunc, paneMenu, fitView,
-        inDragPanelAndFix ? setFitViewForPathname : undefined, nodeDoubleClickFunc);
+    useEntityToGraph({
+        pathname, entityMap, notes, nodeMenuFunc, paneMenu, nodeDoubleClickFunc, fitView,
+        setFitViewForPathname: (inDragPanelAndFix ? setFitViewForPathname : undefined),
+        nodeShow,
+    });
 
     return <></>;
 }

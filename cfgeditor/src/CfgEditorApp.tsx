@@ -37,6 +37,9 @@ const contentDivStyle: CSSProperties = {
     width: "100vw"
 };
 const dragPanelStyle: CSSProperties = {background: '#fff', width: '100%', padding: 12};
+const rightDivStyle = {flex: 'auto'};
+const fullDivStyle = {height: "100vh", width: "100vw"};
+const disabledProps = {disabled: true}
 
 function onDragPanelSizeChange(_delta: any, size?: { width: string | number }) {
     if (size) {
@@ -103,6 +106,10 @@ export function CfgEditorApp() {
         onConnectServer(server);
     }, [server]);
 
+    const dragDefaultSize = useMemo(() => {
+        return {width: dragPanelWidth};
+    }, [dragPanelWidth]);
+
     let content;
     if ((!schema) || curTable == null) {
         // console.log("empty content");
@@ -142,20 +149,20 @@ export function CfgEditorApp() {
                 <DraggablePanel
                     placement='left'
                     style={dragPanelStyle}
-                    defaultSize={{width: dragPanelWidth}}
+                    defaultSize={dragDefaultSize}
                     onSizeChange={onDragPanelSizeChange}>
                     <FlowGraph>
                         {dragPage}
                     </FlowGraph>
                 </DraggablePanel>
-                <div ref={ref} style={{flex: 'auto'}}>
+                <div ref={ref} style={rightDivStyle}>
                     <FlowGraph>
                         <Outlet context={outletCtx}/>
                     </FlowGraph>
                 </div>
             </div>;
         } else {
-            content = <div ref={ref} style={{height: "100vh", width: "100vw"}}>
+            content = <div ref={ref} style={fullDivStyle}>
                 <FlowGraph>
                     <Outlet context={outletCtx}/>
                 </FlowGraph>
@@ -170,7 +177,7 @@ export function CfgEditorApp() {
         {content}
 
         <Modal title={t('serverConnectFail')} open={isError}
-               cancelButtonProps={{disabled: true}}
+               cancelButtonProps={disabledProps}
                closable={false}
                confirmLoading={isLoading}
                okText={t('reconnectCurServer')}

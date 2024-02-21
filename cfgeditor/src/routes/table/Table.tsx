@@ -57,7 +57,7 @@ export function Table() {
         return mm;
     }
 
-    useEntityToGraph(pathname, entityMap, notes, nodeMenuFunc, paneMenu);
+    useEntityToGraph({pathname, entityMap, notes, nodeMenuFunc, paneMenu, fitView: true});
     return null;
 }
 

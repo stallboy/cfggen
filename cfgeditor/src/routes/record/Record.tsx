@@ -164,7 +164,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     }
 
     const ep = pathname + (isEditing ? ',' + editSeq : '');
-    useEntityToGraph(ep, entityMap, notes, nodeMenuFunc, paneMenu, fitView);
+    useEntityToGraph({pathname: ep, entityMap, notes, nodeMenuFunc, paneMenu, fitView});
 
     return <></>;
 }

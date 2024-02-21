@@ -25,6 +25,7 @@ import {FlowNode} from "./FlowNode.tsx";
 import {store} from "../routes/setting/store.ts";
 import {convertNodeAndEdges} from "./entityToNodeAndEdge.ts";
 import {useQuery} from "@tanstack/react-query";
+import {NodeShowType} from "../routes/setting/storageJson.ts";
 
 
 export type EntityNode = Node<Entity, string | undefined>;
@@ -136,30 +137,40 @@ export function FlowGraph({children}: {
 
 }
 
+interface FlowGraphInput {
+    pathname: string;
+    entityMap: Map<string, Entity>;
+    notes?: Map<string, string>;
+    nodeMenuFunc: NodeMenuFunc;
+    paneMenu: MenuItem[];
+    nodeDoubleClickFunc?: NodeDoubleClickFunc;
 
-export function useEntityToGraph(pathname: string,
-                                 entityMap: Map<string, Entity>,
-                                 notes: Map<string, string> | undefined,
-                                 nodeMenuFunc: NodeMenuFunc,
-                                 paneMenu: MenuItem[],
-                                 fitView: boolean = true,
-                                 setFitViewForPathname?: (pathname: string) => void,
-                                 nodeDoubleClickFunc?: NodeDoubleClickFunc,
-) {
+    fitView: boolean;
+    setFitViewForPathname?: (pathname: string) => void;
+    nodeShow?: NodeShowType;
+}
+
+export function useEntityToGraph({
+                                     pathname, entityMap, notes, nodeMenuFunc, paneMenu,
+                                     fitView, setFitViewForPathname, nodeDoubleClickFunc, nodeShow
+                                 }: FlowGraphInput) {
     const flowGraph = useContext(FlowGraphContext);
-    const {query, nodeShow} = store;
+    const {query, nodeShow: currentNodeShow} = store;
     const width = useStore((state) => state.width);
     const height = useStore((state) => state.height);
     const setNodes = useStore((state) => state.setNodes);
     const setEdges = useStore((state) => state.setEdges);
     const panZoom = useStore((state) => state.panZoom);
+    const nodeShowSetting = nodeShow ?? currentNodeShow;
 
-    const {nodes, edges} = useMemo(() => convertNodeAndEdges({entityMap, sharedSetting: {notes, query, nodeShow}})
-        , [entityMap, notes, query, nodeShow]);
+    const {nodes, edges} = useMemo(() => convertNodeAndEdges({
+        entityMap,
+        sharedSetting: {notes, query, nodeShow: nodeShowSetting}
+    }), [entityMap, notes, query, nodeShowSetting]);
 
     const {data: id2RectMap} = useQuery({
         queryKey: ['layout', pathname],
-        queryFn: () => layoutAsync(nodes, edges, nodeShow),
+        queryFn: () => layoutAsync(nodes, edges, nodeShowSetting),
         staleTime: 1000 * 60 * 5,
     })
 

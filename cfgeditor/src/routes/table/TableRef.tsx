@@ -52,7 +52,7 @@ export const TableRef = memo(function TableRef() {
         }];
     }, [navigate, schema, curId]);
 
-    useEntityToGraph(pathname, entityMap, notes, nodeMenuFunc, paneMenu, true, undefined, nodeDoubleClickFunc);
+    useEntityToGraph({pathname, entityMap, notes, nodeMenuFunc, paneMenu, fitView: true, nodeDoubleClickFunc});
 
     return <></>;
 });
