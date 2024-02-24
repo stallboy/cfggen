@@ -74,7 +74,7 @@ lua.exe test.lua
 ```bash
 gencshape.bat 
 cd cs
-dotnet run
+run.bat
 ```
 
 ## 编辑器cfgeditor.exe

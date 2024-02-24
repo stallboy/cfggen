@@ -1,4 +1,4 @@
-java -jar ../cfggen.jar -datadir config  -gen cs,dir:cs,encoding:UTF-8 -gen bytes,file=cs/config.bytes
+java -jar ../cfggen.jar -datadir config  -gen cs,dir:cs,encoding:UTF-8 -gen bytes,file=cs/config.bytes,cipher:xyz
 
 set DIR=cs\Config
 if not exist %DIR% mkdir %DIR%

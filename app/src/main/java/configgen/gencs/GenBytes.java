@@ -5,11 +5,13 @@ import configgen.gen.Generator;
 import configgen.gen.LangSwitchRuntime;
 import configgen.gen.Parameter;
 import configgen.util.CachedFileOutputStream;
+import configgen.util.XorCipherOutputStream;
 import configgen.value.CfgValue;
 
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
@@ -17,11 +19,14 @@ import static configgen.value.CfgValue.*;
 
 public class GenBytes extends Generator {
     private final File file;
+    private final String cipher;
+
     private LangSwitchRuntime langSwitchRuntime;
 
     public GenBytes(Parameter parameter) {
         super(parameter);
         file = new File(parameter.get("file", "config.bytes"));
+        cipher = parameter.get("cipher", "");
         parameter.end();
     }
 
@@ -32,9 +37,13 @@ public class GenBytes extends Generator {
         if (ctx.nullableLangSwitch() != null) {
             langSwitchRuntime = new LangSwitchRuntime(ctx.nullableLangSwitch());
         }
-        
+
         try (CachedFileOutputStream stream = new CachedFileOutputStream(file, 2048 * 1024)) {
-            this.stream = new DataOutputStream(stream);
+            OutputStream st = stream;
+            if (!cipher.isEmpty()) {
+                st = new XorCipherOutputStream(stream, cipher);
+            }
+            this.stream = new DataOutputStream(st);
             for (VTable vTable : cfgValue.sortedTables()) {
                 addVTable(vTable);
             }
