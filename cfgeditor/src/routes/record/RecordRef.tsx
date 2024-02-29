@@ -29,6 +29,7 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
 }) {
     const [t] = useTranslation();
     const navigate = useNavigate();
+    const {tauriConf} = store;
 
     const entityMap = new Map<string, Entity>();
     const hasContainEnum = nodeShow.containEnum || curTable.entryType == 'eEnum';
@@ -57,7 +58,7 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
         }
     }
 
-    createRefEntities(entityMap, schema, recordRefResult.refs, true, checkTable);
+    createRefEntities({entityMap, schema, refs: recordRefResult.refs, isCreateRefs: true, checkTable, tauriConf});
     fillHandles(entityMap);
 
     const paneMenu: MenuItem[] = [{

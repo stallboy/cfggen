@@ -30,7 +30,6 @@ export interface BriefRecord extends Refs {
     table: string;
     id: string;
 
-    img?: string;
     title?: string;
     descriptions?: BriefDescription[];
 

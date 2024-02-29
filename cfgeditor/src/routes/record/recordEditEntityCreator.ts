@@ -141,14 +141,14 @@ export class RecordEditEntityCreator {
             }
         }
 
-         const editOnUpdateValues = (values: any) => {
+        const editOnUpdateValues = (values: any) => {
             onUpdateFormValues(this.schema, values, fieldChain);
         };
 
         let entity: Entity = {
             id: id,
             label: label,
-            edit: {editFields, editOnDelete:onDeleteFunc, editOnUpdateValues},
+            edit: {editFields, editOnDelete: onDeleteFunc, editOnUpdateValues},
             sourceEdges: sourceEdges,
 
             entityType: EntityType.Normal,

@@ -10,6 +10,7 @@ import {BookOutlined, CloseOutlined} from "@ant-design/icons";
 import {store} from "../routes/setting/store.ts";
 import {getResBrief, ResPopover} from "./ResPopover.tsx";
 import {NoteShow, NoteEdit} from "./NoteShowOrEdit.tsx";
+import {ResInfo} from "../res/resInfo.ts";
 
 const {Text} = Typography;
 const bookIcon = <BookOutlined/>;
@@ -22,7 +23,7 @@ const resBriefButtonStyle = {color: '#fff'};
 export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
     const {resMap} = store;
     const [isEditNote, setIsEditNote] = useState<boolean>(false);
-    const {fields, brief, edit, handleIn, handleOut, id, label, sharedSetting} = nodeProps.data;
+    const {fields, brief, edit, handleIn, handleOut, id, label, sharedSetting, assets} = nodeProps.data;
     const color: string = getNodeBackgroundColor(nodeProps.data);
     const width = edit ? 280 : 240;
     const nodeStyle = useMemo(() => {
@@ -52,24 +53,45 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
         }
     }
 
-    const resBriefButton = useMemo(() => {
+    const [resBriefButton, firstImage] = useMemo(() => {
         let btn;
+        let res: ResInfo[] | undefined;
         if (mayHasResOrNote) {
-            const res = resMap.get(label);
-            if (res) {
-                btn = <Popover content={<ResPopover resInfos={res}/>}
-                               placement='rightTop'
-                               trigger='click'>
-                    <Button type='text' style={resBriefButtonStyle}>{getResBrief(res)}</Button>
-                </Popover>
+            res = resMap.get(label);
+        }
+        let finalRes: ResInfo[] | undefined;
+        if (res) {
+            if (assets) {
+                finalRes = [...res, ...assets];
+            } else {
+                finalRes = res;
+            }
+        } else if (assets) {
+            finalRes = assets;
+        }
+
+        let firstImage: string | undefined;
+        if (finalRes) {
+            btn = <Popover content={<ResPopover resInfos={finalRes}/>}
+                           placement='rightTop'
+                           trigger='click'>
+                <Button type='text' style={resBriefButtonStyle}>{getResBrief(finalRes)}</Button>
+            </Popover>
+
+            for (let r of finalRes) {
+                if (r.type == 'image') {
+                    firstImage = r.path;
+                    break;
+                }
             }
         }
-        return btn;
-    }, [resMap, label]);
+        return [btn, firstImage];
+    }, [resMap, label, assets]);
 
 
     let title = <Flex justify="space-between" style={titleStyle}>
-        <Text strong style={titleTextStyle} ellipsis={false} copyable={sharedSetting?.nodeShow?.showHead == 'showCopyable'}>
+        <Text strong style={titleTextStyle} ellipsis={false}
+              copyable={sharedSetting?.nodeShow?.showHead == 'showCopyable'}>
             {label}
         </Text>
         {editNoteButton}
@@ -87,7 +109,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
         {title}
 
         {fields && <EntityProperties fields={fields} color={color}/>}
-        {brief && <EntityCard entity={nodeProps.data}/>}
+        {brief && <EntityCard entity={nodeProps.data} image={firstImage}/>}
         {edit && <EntityForm edit={edit}/>}
 
         {(handleIn && <Handle type='target' position={Position.Left} id='@in'

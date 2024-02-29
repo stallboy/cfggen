@@ -57,7 +57,9 @@ export interface TableHideAndColor {
 }
 
 export interface TauriConf {
-    resDirs: ResDir[];
+    assetDir:      string;
+    assetRefTable: string;
+    resDirs:       ResDir[];
 }
 
 export interface ResDir {
@@ -333,6 +335,8 @@ const typeMap: any = {
         { json: "keyword", js: "keyword", typ: "" },
     ], false),
     "TauriConf": o([
+        { json: "assetDir", js: "assetDir", typ: "" },
+        { json: "assetRefTable", js: "assetRefTable", typ: "" },
         { json: "resDirs", js: "resDirs", typ: a(r("ResDir")) },
     ], false),
     "ResDir": o([

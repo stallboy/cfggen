@@ -1,10 +1,10 @@
-import {ResInfo} from "../routes/setting/store.ts";
 import {memo, useCallback, useRef} from "react";
 import {Button, Flex, Space, Tabs, TabsProps} from "antd";
 import {convertFileSrc} from "@tauri-apps/api/tauri";
 import {Command} from "@tauri-apps/api/shell";
 import {readTextFile} from "@tauri-apps/api/fs";
 import {useQuery} from "@tanstack/react-query";
+import {ResInfo} from "../res/resInfo.ts";
 
 function srt2vtt(srtBody: string) {
     return 'WEBVTT\n\n' + srtBody.split(/\n/g).map(line => line.replace(/((\d+:){0,2}\d+),(\d+)/g, '$1.$3')).join('\n');

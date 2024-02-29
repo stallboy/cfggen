@@ -1,77 +1,11 @@
-import {readStoreStateOnce, ResAudioTrack, ResInfo, ResSubtitlesTrack, ResType, store} from "./store.ts";
-import {FileEntry, readDir, writeTextFile} from "@tauri-apps/api/fs";
-import {path} from "@tauri-apps/api";
-import {Schema} from "../table/schemaUtil.ts";
-import {getResBrief} from "../../flow/ResPopover.tsx";
-import {queryClient} from "../../main.tsx";
-
-function findKeyEndIndex(name: string) {
-    let foundFirst = false;
-    for (let i = 0; i < name.length; i++) {
-        const c = name[i];
-        if (c == '_') {
-            if (foundFirst) {
-                return i;
-            }
-            foundFirst = true;
-        } else if (c == '.') {
-            if (foundFirst) {
-                return i;
-            }
-        }
-    }
-    return -1;
-}
-
-function parentDir(dir: string): [boolean, string] {
-    let idx = -1;
-    for (let i = dir.length - 1; i >= 0; i--) {
-        const c = dir[i];
-        if (c == '/' || c == '\\') {
-            idx = i;
-            break;
-        }
-    }
-    if (idx != -1) {
-        return [true, dir.substring(0, idx)];
-
-    }
-    return [false, dir];
-}
-
-function joinPath(_baseDir: string, _path: string): [boolean, string] {
-    let path = _path;
-    let baseDir = _baseDir;
-    if (baseDir.startsWith('\\\\?\\')) {
-        baseDir = baseDir.substring(4);
-    }
-    if (baseDir.length > 0) {
-        let c = baseDir[baseDir.length - 1];
-        if (c == '/' || c == '\\') {
-            baseDir = baseDir.substring(0, baseDir.length - 1);
-        }
-    }
-
-    while (path.startsWith('../') || path.startsWith('..\\')) {
-        path = path.substring(3);
-        let [ok, pd] = parentDir(baseDir);
-        if (ok) {
-            baseDir = pd;
-        } else {
-            return [false, path];
-        }
-    }
-    return [true, baseDir + '/' + path]
-}
-
-const ext2type: Record<string, ResType> = {
-    ['.mp4']: 'video',
-    ['.mp3']: 'audio',
-    ['.wav']: 'audio',
-    ['.jpg']: 'image',
-    ['.png']: 'image',
-    ['.jpeg']: 'image',
-};
+import {
+    readStoreStateOnce,
+    store
+} from "../routes/setting/store.ts";
+import {FileEntry, readDir} from "@tauri-apps/api/fs";
+import {queryClient} from "../main.tsx";
+import {ext2type, findKeyEndIndex, getResourceDirAsync, joinPath} from "./resUtils.ts";
+import {ResAudioTrack, ResInfo, ResSubtitlesTrack, ResType} from "./resInfo.ts";
 
 function processEntries(entries: FileEntry[], txtAsSrt: boolean, lang: string | undefined,
                         result: Map<string, ResInfo[]>, stat: Map<string, number>) {
@@ -223,10 +157,12 @@ export async function readResInfosAsync() {
     const {tauriConf} = store;
     const result = new Map<string, ResInfo[]>();
     const stat = new Map<string, number>();
+    const baseDir = await getResourceDirAsync();
+    store.resourceDir = baseDir;
+
     for (let resDir of tauriConf.resDirs) {
         let dir = resDir.dir;
         if (dir.startsWith('.')) {
-            const baseDir = await path.resourceDir();
             let [ok, fullDir] = joinPath(baseDir, dir);
             if (ok) {
                 dir = fullDir;
@@ -249,67 +185,4 @@ export async function readResInfosAsync() {
     console.log(`read res file for ${packed.size} node`, packed, stat);
     return true;
 }
-
-interface ResEntry {
-    id: string;
-    infos?: ResInfo[];
-    brief: string;
-}
-
-export async function summarizeResAsync(schema: Schema) {
-    const {resMap} = store;
-    const table2entries = new Map<string, ResEntry[]>();
-    for (let [key, infos] of resMap.entries()) {
-        const i = key.indexOf('_');
-        if (i != -1) {
-            let tableLabel = key.substring(0, i);
-            let id = key.substring(i + 1);
-            let entries = table2entries.get(tableLabel);
-            let e = {id, infos, brief: getResBrief(infos)};
-            if (entries != undefined) {
-                entries.push(e);
-            } else {
-                table2entries.set(tableLabel, [e]);
-            }
-        }
-    }
-
-    for (let [tableLabel, entries] of table2entries.entries()) {
-        if (entries.length > 8) {
-            const sTable = schema.getSTableByLastName(tableLabel);
-            if (sTable && sTable.idSet) {
-
-                const resIdSet = new Set<string>();
-                for (let entry of entries) {
-                    resIdSet.add(entry.id);
-                    if (!sTable.idSet.has(entry.id)) {
-                        entry.brief = 'noCfg-' + entry.brief;
-                    }
-                }
-
-                for (let id of sTable.idSet) {
-                    if (!resIdSet.has(id)) {
-                        entries.push({id, brief: 'noRes'});
-                    }
-                }
-            }
-        }
-    }
-
-
-    const lines = [];
-    for (let [tableLabel, entries] of table2entries.entries()) {
-        for (let {id, brief} of entries) {
-            lines.push(`${tableLabel},${id},${brief}`);
-        }
-    }
-
-    const baseDir = await path.resourceDir();
-    let [ok, fullPath] = joinPath(baseDir, '_res.csv');
-    if (ok) {
-        await writeTextFile(fullPath, lines.join("\r\n"));
-    }
-    return fullPath;
-}
-
 

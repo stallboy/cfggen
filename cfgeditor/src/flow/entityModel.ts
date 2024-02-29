@@ -1,6 +1,8 @@
 import {BriefDescription} from "../routes/record/recordModel.ts";
 import {NodeShowType} from "../routes/setting/storageJson.ts";
 
+import {ResInfo} from "../res/resInfo.ts";
+
 export interface EntityBaseField {
     name: string;
     comment?: string;
@@ -62,7 +64,6 @@ export interface EntityEdit {
 }
 
 export interface EntityBrief {
-    img?: string;
     title?: string;
     descriptions?: BriefDescription[];
     value: string;
@@ -94,6 +95,7 @@ export interface Entity {
 
     userData?: any;
     sharedSetting?: EntitySharedSetting;
+    assets?: ResInfo[];
 }
 
 export interface EntityGraph {

@@ -3,9 +3,11 @@ import {Entity, EntityBrief} from "./entityModel.ts";
 import {DescriptionsItemType} from "antd/es/descriptions";
 import {memo} from "react";
 import {NodeShowType} from "../routes/setting/storageJson.ts";
+import {convertFileSrc} from "@tauri-apps/api/tauri";
 
-export const EntityCard = memo(function EntityCard({entity}: {
+export const EntityCard = memo(function EntityCard({entity, image}: {
     entity: Entity,
+    image?:string;
 }) {
     const {brief, sharedSetting} = entity;
     const query = sharedSetting?.query;
@@ -17,8 +19,9 @@ export const EntityCard = memo(function EntityCard({entity}: {
 
     let hasContent = false;
     let cover = {};
-    if (brief.img) {
-        cover = {cover: <img alt="img" src={brief.img}/>}
+    if (image) {
+        const imageUrl = convertFileSrc(image);
+        cover = {cover: <img alt="img" src={imageUrl}/>}
         hasContent = true;
     }
 

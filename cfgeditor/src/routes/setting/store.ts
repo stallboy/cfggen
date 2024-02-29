@@ -1,36 +1,15 @@
 import resso from "resso";
-import {Convert, FixedPage, NodeShowType, FixedPagesConf, TauriConf} from "./storageJson.ts";
+import {Convert, FixedPage, FixedPagesConf, NodeShowType, TauriConf} from "./storageJson.ts";
 import {getPrefBool, getPrefEnumStr, getPrefInt, getPrefJson, getPrefStr, setPref} from "./storage.ts";
 import {History} from "../headerbar/historyModel.ts";
 import {Schema} from "../table/schemaUtil.ts";
 import {useLocation} from "react-router-dom";
 import {queryClient} from "../../main.tsx";
 import {getId} from "../record/recordRefEntity.ts";
+import {ResInfo} from "../../res/resInfo.ts";
 
 export type PageType = 'table' | 'tableRef' | 'record' | 'recordRef';
 export const pageEnums = ['table', 'tableRef', 'record', 'recordRef'];
-
-export type ResType = 'video' | 'audio' | 'image' | 'subtitles' | 'other';
-
-export interface ResAudioTrack {
-    name: string;
-    path: string;
-}
-
-export interface ResSubtitlesTrack {
-    name: string;
-    path: string;
-    lang: string;
-}
-
-export interface ResInfo {
-    type: ResType;
-    name: string;
-    path: string;
-    lang?: string;
-    audioTracks?: ResAudioTrack[];
-    subtitlesTracks?: ResSubtitlesTrack[];
-}
 
 export type StoreState = {
     server: string;
@@ -57,6 +36,7 @@ export type StoreState = {
     history: History;
     isEditMode: boolean;
     resMap: Map<string, ResInfo[]>;
+    resourceDir: string;
 }
 
 const storeState: StoreState = {
@@ -90,11 +70,14 @@ const storeState: StoreState = {
     },
     tauriConf: {
         resDirs: [],
+        assetDir: '',
+        assetRefTable: '',
     },
 
     history: new History(),
     isEditMode: false,
     resMap: new Map<string, ResInfo[]>(),
+    resourceDir: '',
 };
 
 let alreadyRead = false;

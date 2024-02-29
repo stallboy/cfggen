@@ -43,5 +43,7 @@ export interface ResDir {
 }
 
 export interface TauriConf {
-    resDirs: ResDir[]
+    resDirs: ResDir[];
+    assetDir: string;
+    assetRefTable: string;
 }

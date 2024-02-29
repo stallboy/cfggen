@@ -1,4 +1,3 @@
-import {path} from "@tauri-apps/api";
 import {appWindow} from "@tauri-apps/api/window";
 import {setTauriConf, store} from "./store.ts";
 import {memo, useCallback} from "react";
@@ -8,12 +7,11 @@ import {App, Button, Card, Checkbox, Form, Input, Space} from "antd";
 import {formLayout} from "./TableSetting.tsx";
 import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
 import {Schema} from "../table/schemaUtil.ts";
-import {invalidateResInfos, summarizeResAsync} from "./readResInfosAsync.ts";
+import {invalidateResInfos} from "../../res/readResInfosAsync.ts";
+import {summarizeResAsync} from "../../res/summarizeResAsync.ts";
+import {getResourceDirAsync} from "../../res/resUtils.ts";
 
 
-async function queryResourceDir() {
-    return await path.resourceDir();
-}
 
 export async function toggleFullScreen() {
     const isFullScreen = await appWindow.isFullscreen();
@@ -31,7 +29,7 @@ export const TauriSetting = memo(function TauriSetting({schema}: {
     const {t} = useTranslation();
     const {data: resourceDir} = useQuery({
         queryKey: ['tauri', 'resourceDir'],
-        queryFn: queryResourceDir,
+        queryFn: getResourceDirAsync,
     });
     const {tauriConf} = store;
     const {notification} = App.useApp();
@@ -54,6 +52,14 @@ export const TauriSetting = memo(function TauriSetting({schema}: {
         <Card title={t("tauriConf")}>
             <Form name="tauriConf"  {...formLayout} initialValues={tauriConf} onFinish={onFinishTauriConf}
                   autoComplete="off">
+                <Form.Item  name='assetDir' label={t('assetDir')}>
+                    <Input placeholder="asset dir"/>
+                </Form.Item>
+
+                <Form.Item name='assetRefTable' label={t('assetRefTable')} >
+                    <Input placeholder="asset ref table"/>
+                </Form.Item>
+
                 <Form.Item label={t('resDirs')}>
                     <Form.List name="resDirs">
                         {(fields, {add, remove}) => (

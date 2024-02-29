@@ -62,7 +62,6 @@ public class RecordService {
             String table,
             String id,
 
-            String img,
             String title,
             List<BriefDescription> descriptions,
             String value,  // 完整信息
@@ -220,13 +219,13 @@ public class RecordService {
     }
 
     private static BriefRecord vStructToBriefRecord(RefId refId, VStruct vStruct, Collection<FieldRef> refs, int depth) {
-        String img = getBriefValue(vStruct, "img");
         String title = getBriefTitle(vStruct);
         List<BriefDescription> descriptions = getBriefDescriptions(vStruct);
         String value = vStruct.packStr();
-        return new BriefRecord(refId.table(), refId.id(), img, title, descriptions, value, refs, depth);
+        return new BriefRecord(refId.table(), refId.id(), title, descriptions, value, refs, depth);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static String getBriefValue(VStruct vStruct, String briefKey) {
         String fieldName = vStruct.schema().meta().getStr(briefKey, null);
         if (fieldName == null) {

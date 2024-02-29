@@ -2,6 +2,8 @@ import {BriefRecord, RefId, Refs} from "./recordModel.ts";
 import {Entity, EntityEdgeType, EntityType} from "../../flow/entityModel.ts";
 
 import {Schema} from "../table/schemaUtil.ts";
+import {refsToResInfos} from "../../res/refsToResInfos.ts";
+import {TauriConf} from "../setting/storageJson.ts";
 
 export function getLastName(id: string): string {
     let seps = id.split('.');
@@ -50,16 +52,32 @@ export function createRefs(entity: Entity, refs: Refs, briefRecords: BriefRecord
     }
 }
 
-export function createRefEntities(entityMap: Map<string, Entity>, schema: Schema, refs: BriefRecord[],
-                                  isCreateRefs: boolean = true, checkTable?: (t: string) => boolean) {
+export interface CreateRefEntitiesParameter {
+    entityMap: Map<string, Entity>;
+    schema: Schema;
+    refs: BriefRecord[];
+
+    isCreateRefs: boolean; //true;
+    checkTable?: (t: string) => boolean;
+    tauriConf: TauriConf;
+}
+
+
+export function createRefEntities({
+                                      entityMap,
+                                      schema,
+                                      refs,
+                                      isCreateRefs,
+                                      checkTable,
+                                      tauriConf
+                                  }: CreateRefEntitiesParameter) {
 
 
     let myCheckTable = checkTable ?? alwaysOk;
-    for (let briefRecord of refs) {
-        let table = briefRecord.table;
-        let id = briefRecord.id;
-        let imgPrefix;
-        let sTable = schema.getSTable(table);
+    for (const briefRecord of refs) {
+        const table = briefRecord.table;
+        const id = briefRecord.id;
+        const sTable = schema.getSTable(table);
         if (sTable == null) {
             continue;
         }
@@ -68,7 +86,6 @@ export function createRefEntities(entityMap: Map<string, Entity>, schema: Schema
             continue;
         }
 
-        imgPrefix = sTable.imgPrefix;
         let refId: RefId = {table, id};
         let eid = getId(table, id);
 
@@ -83,16 +100,12 @@ export function createRefEntities(entityMap: Map<string, Entity>, schema: Schema
             entityType = EntityType.RefIn;
         }
 
-        let img = briefRecord.img;
-        if (img && imgPrefix) {
-            img = imgPrefix + img;
-        }
 
-        let entity: Entity = {
+
+        const entity: Entity = {
             id: eid,
             label: getId(getLabel(table), id),
             brief: {
-                img: img,
                 title: briefRecord.title,
                 descriptions: briefRecord.descriptions,
                 value: briefRecord.value
@@ -100,7 +113,10 @@ export function createRefEntities(entityMap: Map<string, Entity>, schema: Schema
             sourceEdges: [],
             entityType: entityType,
             userData: refId,
+            assets: refsToResInfos(briefRecord, tauriConf)
         };
+
+
         if (isCreateRefs) {
             createRefs(entity, briefRecord, refs, myCheckTable, true);
         }

@@ -3,13 +3,16 @@ import {SField, SStruct, STable} from "../table/schemaModel.ts";
 import {BriefRecord, JSONArray, JSONObject, JSONValue, RefId, Refs} from "./recordModel.ts";
 import {createRefs, getLabel} from "./recordRefEntity.ts";
 import {getField, Schema} from "../table/schemaUtil.ts";
+import {refsToResInfos} from "../../res/refsToResInfos.ts";
+import {TauriConf} from "../setting/storageJson.ts";
 
 
 export class RecordEntityCreator {
     constructor(public entityMap: Map<string, Entity>,
                 public schema: Schema,
                 public refId: RefId,
-                public refs: BriefRecord[]) {
+                public refs: BriefRecord[],
+                public tauriConf: TauriConf) {
     }
 
     createRecordEntity(id: string, obj: JSONObject & Refs, label?:string): Entity | null {
@@ -113,6 +116,7 @@ export class RecordEntityCreator {
             sourceEdges: sourceEdges,
             entityType: EntityType.Normal,
             userData: this.refId,
+            assets: refsToResInfos(obj, this.tauriConf),
         };
 
         this.entityMap.set(id, entity);
