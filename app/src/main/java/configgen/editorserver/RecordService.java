@@ -199,11 +199,10 @@ public class RecordService {
                 }
             }
 
-            FieldRef staticRefIn = new FieldRef("@out", null, thisObjId.table(), thisObjId.id());
             for (Map.Entry<RefId, VStruct> e : refIns.entrySet()) {
                 RefId refId = e.getKey();
-                result.put(refId, vStructToBriefRecord(refId, e.getValue(), List.of(staticRefIn), -1));
-
+                List<FieldRef> fieldRefs = ValueRefCollector.collectRefs(e.getValue(), cfgValue);
+                result.put(refId, vStructToBriefRecord(refId, e.getValue(), fieldRefs, -1));
                 if (result.size() > maxObjs + 8) {
                     break;
                 }

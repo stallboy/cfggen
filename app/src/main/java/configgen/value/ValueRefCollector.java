@@ -4,6 +4,7 @@ import configgen.gen.Generator;
 import configgen.schema.*;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +27,13 @@ public class ValueRefCollector {
     private final Map<RefId, VStruct> refIdToRecordMap;
     private final List<FieldRef> fieldRefs;
 
+    public static List<FieldRef> collectRefs(Value record, CfgValue cfgValue) {
+        List<FieldRef> fieldRefs = new ArrayList<>();
+        Map<RefId, VStruct> newFrontier = new LinkedHashMap<>();
+        ValueRefCollector collector = new ValueRefCollector(cfgValue, newFrontier, fieldRefs);
+        collector.collect(record, List.of());
+        return fieldRefs;
+    }
 
     public ValueRefCollector(CfgValue cfgValue, Map<RefId, VStruct> refIdToRecordMap, List<FieldRef> fieldRefs) {
         this.cfgValue = cfgValue;
