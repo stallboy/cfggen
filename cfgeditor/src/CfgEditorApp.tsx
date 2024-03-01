@@ -10,7 +10,7 @@ import {Schema} from "./routes/table/schemaUtil.ts";
 import {
     getFixedPage,
     getLastNavToInLocalStore,
-    readStoreStateOnce, setDragPanelWidth,
+    setDragPanelWidth,
     setServer,
     store,
     useLocationData
@@ -53,7 +53,6 @@ function onConnectServer(value: string) {
 }
 
 export function CfgEditorApp() {
-    readStoreStateOnce();
     const {
         server, dragPanel, dragPanelWidth, pageConf,
         recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow,

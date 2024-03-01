@@ -28,7 +28,6 @@
     "react-i18next": "^13.5.0",
     "react-icons": "^5.0.1",
     "react-router-dom": "^6.22.2",
-    "resso": "^0.17.0",
     "tauri-plugin-store-api": "github:tauri-apps/tauri-plugin-store#v1",
     "yaml": "^2.4.0"
   },
@@ -38,6 +37,7 @@
     "@types/node": "^20.11.24",
     "@types/react": "^18.2.61",
     "@types/react-dom": "^18.2.19",
+    "@types/use-sync-external-store": "^0.0.6",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "@vitejs/plugin-react-swc": "^3.6.0",
@@ -46,6 +46,7 @@
     "eslint-plugin-react-refresh": "^0.4.5",
     "rc-select": "^14.12.0",
     "typescript": "^5.3.3",
+    "use-sync-external-store": "^1.2.0",
     "vite": "^5.1.4",
     "web-worker": "^1.3.0"
   }

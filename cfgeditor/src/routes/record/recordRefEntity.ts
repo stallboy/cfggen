@@ -3,6 +3,8 @@ import {Entity, EntityEdgeType, EntityType} from "../../flow/entityModel.ts";
 
 import {Schema} from "../table/schemaUtil.ts";
 import {findAllResInfos} from "../../res/findAllResInfos.ts";
+import {TauriConf} from "../setting/storageJson.ts";
+import {ResInfo} from "../../res/resInfo.ts";
 
 export function getLastName(id: string): string {
     let seps = id.split('.');
@@ -58,6 +60,10 @@ export interface CreateRefEntitiesParameter {
 
     isCreateRefs: boolean; //true;
     checkTable?: (t: string) => boolean;
+    recordRefInShowLinkMaxNode?: number;
+    tauriConf: TauriConf;
+    resourceDir: string;
+    resMap: Map<string, ResInfo[]>;
 }
 
 
@@ -67,7 +73,24 @@ export function createRefEntities({
                                       refs,
                                       isCreateRefs,
                                       checkTable,
+                                      recordRefInShowLinkMaxNode,
+                                      tauriConf,
+                                      resourceDir,
+                                      resMap,
                                   }: CreateRefEntitiesParameter) {
+
+    let isRefInNotShowLink = false;
+    if (recordRefInShowLinkMaxNode) {
+        let refInCount = 0;
+        for (const briefRecord of refs) {
+            if (briefRecord.depth == -1) {
+                refInCount++;
+            }
+        }
+        if (refInCount > recordRefInShowLinkMaxNode) {
+            isRefInNotShowLink = true;
+        }
+    }
 
 
     let myCheckTable = checkTable ?? alwaysOk;
@@ -86,6 +109,7 @@ export function createRefEntities({
         let refId: RefId = {table, id};
         let eid = getId(table, id);
 
+        let isRefIn = false;
         let entityType;
         if (briefRecord.depth == 0) {
             entityType = EntityType.Normal;
@@ -95,6 +119,7 @@ export function createRefEntities({
             entityType = EntityType.Ref2;
         } else {
             entityType = EntityType.RefIn;
+            isRefIn = true;
         }
 
 
@@ -111,11 +136,23 @@ export function createRefEntities({
             sourceEdges: [],
             entityType: entityType,
             userData: refId,
-            assets: findAllResInfos(label, briefRecord)
+            assets: findAllResInfos({
+                label,
+                refs: briefRecord,
+                tauriConf,
+                resourceDir,
+                resMap
+            })
         };
 
 
-        if (isCreateRefs) {
+        let createLink = isCreateRefs;
+        if (createLink) {
+            if (isRefIn && isRefInNotShowLink) {
+                createLink = false;
+            }
+        }
+        if (createLink) {
             createRefs(entity, briefRecord, refs, myCheckTable, true);
         }
         entityMap.set(eid, entity);

@@ -154,6 +154,10 @@ export async function readResInfosAsync() {
     }
     alreadyRead = true;
     readStoreStateOnce();
+    if (!window.__TAURI__) {
+        return true;
+    }
+
     const {tauriConf} = store;
     const result = new Map<string, ResInfo[]>();
     const stat = new Map<string, number>();

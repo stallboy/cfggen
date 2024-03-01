@@ -41,14 +41,14 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
     useHotkeys('alt+enter', toggleFullScreen);
 
     const prev = useCallback(() => {
-        const path = historyPrev(curPage);
+        const path = historyPrev(curPage, history, isEditMode);
         if (path) {
             navigate(path);
         }
     }, [curPage, navigate]);
 
     const next = useCallback(() => {
-        const path = historyNext(curPage);
+        const path = historyNext(curPage, history, isEditMode);
         if (path) {
             navigate(path);
         }

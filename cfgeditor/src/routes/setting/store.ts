@@ -20,6 +20,7 @@ export type StoreState = {
     maxNode: number;
 
     recordRefIn: boolean;
+    recordRefInShowLinkMaxNode: number;
     recordRefOutDepth: number;
     recordMaxNode: number;
     nodeShow: NodeShowType
@@ -48,6 +49,7 @@ const storeState: StoreState = {
     maxNode: 30,
 
     recordRefIn: true,
+    recordRefInShowLinkMaxNode: 3,
     recordRefOutDepth: 5,
     recordMaxNode: 30,
     nodeShow: {
@@ -185,6 +187,14 @@ export function setRecordRefIn(checked: boolean) {
     clearLayoutCache();
 }
 
+export function setRecordRefInShowLinkMaxNode(value: number | null) {
+    if (value) {
+        store.recordRefInShowLinkMaxNode = value;
+        setPref('recordRefInShowLinkMaxNode', value.toString());
+        clearLayoutCache();
+    }
+}
+
 export function setRecordRefOutDepth(value: number | null) {
     if (value) {
         store.recordRefOutDepth = value;
@@ -270,8 +280,7 @@ export function setTauriConf(tauriConf: TauriConf) {
     clearLayoutCache();
 }
 
-export function historyPrev(curPage: PageType) {
-    const {history, isEditMode} = store;
+export function historyPrev(curPage: PageType, history: History, isEditMode:boolean) {
     const newHistory = history.prev();
     store.history = newHistory;
     const cur = newHistory.cur();
@@ -280,8 +289,7 @@ export function historyPrev(curPage: PageType) {
     }
 }
 
-export function historyNext(curPage: PageType) {
-    const {history, isEditMode} = store;
+export function historyNext(curPage: PageType, history: History, isEditMode:boolean) {
     const newHistory = history.next();
     store.history = newHistory;
     const cur = newHistory.cur();

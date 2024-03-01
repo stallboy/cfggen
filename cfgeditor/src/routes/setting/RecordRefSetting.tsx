@@ -3,7 +3,14 @@ import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 
 import {KeywordColor, TableHideAndColor} from "./storageJson.ts";
-import {setNodeShow, setRecordMaxNode, setRecordRefIn, setRecordRefOutDepth, store} from "./store.ts";
+import {
+    setNodeShow,
+    setRecordMaxNode,
+    setRecordRefIn,
+    setRecordRefInShowLinkMaxNode,
+    setRecordRefOutDepth,
+    store
+} from "./store.ts";
 import {memo} from "react";
 import {formLayout} from "./TableSetting.tsx";
 
@@ -31,14 +38,14 @@ function fixColors(keywordColors: any[]): KeywordColor[] {
 function fixHideAndColors(keywordHideAndColors: any[]): TableHideAndColor[] {
     let colors = [];
     for (let {keyword, hide, color} of keywordHideAndColors) {
-        colors.push({keyword: keyword, hide: hide, color: fixColor(color)})
+        colors.push({keyword: keyword, hide: !!hide, color: fixColor(color)})
     }
     return colors;
 }
 
 export const RecordRefSetting = memo(function RecordRefSetting() {
     const {t} = useTranslation();
-    const {nodeShow, recordRefIn, recordRefOutDepth, recordMaxNode} = store;
+    const {nodeShow, recordRefIn, recordRefInShowLinkMaxNode, recordRefOutDepth, recordMaxNode} = store;
 
     function onFinish(values: any) {
         // console.log(values);
@@ -52,9 +59,13 @@ export const RecordRefSetting = memo(function RecordRefSetting() {
 
     return <>
         <Form labelCol={{span: 6}} wrapperCol={{span: 18}} layout={'horizontal'}
-              initialValues={{recordRefIn, recordRefOutDepth, recordMaxNode}}>
+              initialValues={{recordRefIn, recordRefInShowLinkMaxNode, recordRefOutDepth, recordMaxNode}}>
             <Form.Item name='recordRefIn' label={t('recordRefIn')} valuePropName="checked">
                 <Switch onChange={setRecordRefIn}/>
+            </Form.Item>
+
+            <Form.Item name='recordRefInShowLinkMaxNode' label={t('recordRefInShowLinkMaxNode')}>
+                <InputNumber min={1} max={20} onChange={setRecordRefInShowLinkMaxNode}/>
             </Form.Item>
 
             <Form.Item name='recordRefOutDepth' label={t('recordRefOutDepth')}>

@@ -1,16 +1,24 @@
 import {ResInfo, ResType} from "./resInfo.ts";
 import {ext2type, joinPath, sepParentDirAndFilename} from "./resUtils.ts";
 import {Refs} from "../routes/record/recordModel.ts";
-import {store} from "../routes/setting/store.ts";
+import {TauriConf} from "../routes/setting/storageJson.ts";
 
-export function findAllResInfos(label: string, refs: Refs): ResInfo[] | undefined {
-    const {resMap} = store;
+
+export interface FindResInfosParameter {
+    label: string;
+    refs: Refs;
+    resMap: Map<string, ResInfo[]>,
+    tauriConf: TauriConf;
+    resourceDir: string;
+}
+
+export function findAllResInfos(param: FindResInfosParameter): ResInfo[] | undefined {
     let res: ResInfo[] | undefined;
-    if (label.includes('_')) {
-        res = resMap.get(label);
+    if (param.label.includes('_')) {
+        res = param.resMap.get(param.label);
     }
 
-    const assets = refsToResInfos(refs);
+    const assets = refsToResInfos(param);
 
     let finalRes: ResInfo[] | undefined;
     if (res) {
@@ -26,8 +34,8 @@ export function findAllResInfos(label: string, refs: Refs): ResInfo[] | undefine
     return finalRes;
 }
 
-function refsToResInfos(refs: Refs): ResInfo[] | undefined {
-    const {tauriConf} = store;
+function refsToResInfos(param: FindResInfosParameter): ResInfo[] | undefined {
+    const {refs, tauriConf, resourceDir} = param;
     if (!refs.$refs || refs.$refs.length == 0) {
         return;
     }
@@ -39,7 +47,6 @@ function refsToResInfos(refs: Refs): ResInfo[] | undefined {
 
     let baseDir = assetDir;
     if (assetDir.startsWith('.')) {
-        const {resourceDir} = store;
         let [ok, _baseDir] = joinPath(resourceDir, assetDir);
         baseDir = _baseDir;
         if (!ok) {

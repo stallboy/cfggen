@@ -1,9 +1,11 @@
 import {Card, Descriptions, Tooltip} from "antd";
 import {Entity, EntityBrief} from "./entityModel.ts";
 import {DescriptionsItemType} from "antd/es/descriptions";
-import {memo} from "react";
+import {CSSProperties, memo} from "react";
 import {NodeShowType} from "../routes/setting/storageJson.ts";
 import {convertFileSrc} from "@tauri-apps/api/tauri";
+
+const imageStyle: CSSProperties = {maxHeight: '220px', objectFit: 'scale-down'};
 
 export const EntityCard = memo(function EntityCard({entity, image}: {
     entity: Entity,
@@ -17,28 +19,32 @@ export const EntityCard = memo(function EntityCard({entity, image}: {
         return <></>;
     }
 
-    let hasContent = false;
-    let cover = {};
-    if (image) {
+    let info = 0;
+    let hasCover = false;
+    let cover: any = {};
+    if (image && window.__TAURI__) {
         const imageUrl = convertFileSrc(image);
-        cover = {cover: <img alt="img" style={{maxHeight: '240px'}} src={imageUrl}/>}
-        hasContent = true;
+        cover = {cover: <img alt="img" style={imageStyle} src={imageUrl}/>}
+        hasCover = true;
+        info++;
     }
 
-    let title = {};
+    let hasTitle = false;
+    let title: any = {};
     if (brief.title) {
         if (query) {
             title = {title: <Highlight text={brief.title} keyword={query}/>};
         } else {
             title = {title: brief.title};
         }
-        hasContent = true;
+        hasTitle = true;
+        info++;
     }
 
+
+    let description: any = {}
     let ds = brief.descriptions;
     let [showDsLen, desc] = getDsLenAndDesc(brief, nodeShow);
-
-    let description = {}
     if (desc && ds && showDsLen > 0) {
         const items: DescriptionsItemType[] = [];
 
@@ -51,25 +57,35 @@ export const EntityCard = memo(function EntityCard({entity, image}: {
             })
         }
 
-        hasContent = true;
         description = {
             description: <><Descriptions column={1} bordered size={"small"} items={items}/>
                 {query ? <Highlight text={desc} keyword={query}/> : desc} </>
         }
+        info++;
     } else if (desc) {
-        hasContent = true;
         description = {
             description: query ? <Highlight text={desc} keyword={query}/> : desc
         }
+        info++;
     }
 
-    if (!hasContent) {
+    if (info > 1) {
+        return <Card hoverable {...cover}>
+            <Card.Meta {...title} {...description}/>
+        </Card>;
+
+    } else if (info == 1) {
+        if (hasCover) {
+            return cover.cover;
+        } else if (hasTitle) {
+            return title.title;
+        } else {
+            return description.description;
+        }
+    } else {
         return <></>;
     }
 
-    return <Card hoverable {...cover}>
-        <Card.Meta {...title} {...description}/>
-    </Card>;
 });
 
 export function Highlight({text, keyword}: {

@@ -65,6 +65,9 @@ export async function readPrefAsyncOnce() {
         return true;
     }
     alreadyRead = true;
+    if (!window.__TAURI__) {
+        return true;
+    }
     console.log('read yml file')
     const conf = await getConf();
     const content = await readTextFile(conf);

@@ -29,8 +29,7 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
 }) {
     const [t] = useTranslation();
     const navigate = useNavigate();
-    // @ts-ignore
-    const {tauriConf} = store;
+    const {recordRefInShowLinkMaxNode, tauriConf, resourceDir, resMap} = store;
 
     const entityMap = new Map<string, Entity>();
     const hasContainEnum = nodeShow.containEnum || curTable.entryType == 'eEnum';
@@ -59,7 +58,10 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
         }
     }
 
-    createRefEntities({entityMap, schema, refs: recordRefResult.refs, isCreateRefs: true, checkTable});
+    createRefEntities({
+        entityMap, schema, refs: recordRefResult.refs, isCreateRefs: true,
+        checkTable, recordRefInShowLinkMaxNode, tauriConf, resourceDir, resMap
+    });
     fillHandles(entityMap);
 
     const paneMenu: MenuItem[] = [{
@@ -74,7 +76,7 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
         const {isEditMode} = store;
         let refId = entity.userData as RefId;
         navigate(navTo('record', refId.table, refId.id, isEditMode));
-    }
+    };
 
     const nodeMenuFunc = (entity: Entity): MenuItem[] => {
         let refId = entity.userData as RefId;
@@ -107,7 +109,7 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
             });
         }
         return mm;
-    }
+    };
 
     const lastFitViewForFix = useRef<string | undefined>();
     let pathname = `/recordRef/${curTable.name}/${curId}`;

@@ -15,7 +15,7 @@ const {Text} = Typography;
 const bookIcon = <BookOutlined/>;
 const iconButtonStyle = {borderWidth: 0, backgroundColor: 'transparent'};
 const titleStyle = {width: '100%'};
-const titleTextStyle = {fontSize: 18, color: "#fff"};
+const titleTextStyle = {fontSize: 14, color: "#fff"};
 const closeIcon = <CloseOutlined/>;
 const resBriefButtonStyle = {color: '#fff'};
 

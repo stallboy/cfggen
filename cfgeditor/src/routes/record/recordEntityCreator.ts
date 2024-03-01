@@ -4,13 +4,18 @@ import {BriefRecord, JSONArray, JSONObject, JSONValue, RefId, Refs} from "./reco
 import {createRefs, getLabel} from "./recordRefEntity.ts";
 import {getField, Schema} from "../table/schemaUtil.ts";
 import {findAllResInfos} from "../../res/findAllResInfos.ts";
+import {TauriConf} from "../setting/storageJson.ts";
+import {ResInfo} from "../../res/resInfo.ts";
 
 
 export class RecordEntityCreator {
     constructor(public entityMap: Map<string, Entity>,
                 public schema: Schema,
                 public refId: RefId,
-                public refs: BriefRecord[]) {
+                public refs: BriefRecord[],
+                public tauriConf: TauriConf,
+                public resouceDir: string,
+                public resMap: Map<string, ResInfo[]>) {
     }
 
     createRecordEntity(id: string, obj: JSONObject & Refs, label?: string): Entity | null {
@@ -115,7 +120,13 @@ export class RecordEntityCreator {
             sourceEdges: sourceEdges,
             entityType: EntityType.Normal,
             userData: this.refId,
-            assets: findAllResInfos(thisLabel, obj),
+            assets: findAllResInfos({
+                label: thisLabel,
+                refs: obj,
+                tauriConf: this.tauriConf,
+                resourceDir: this.resouceDir,
+                resMap: this.resMap,
+            }),
         };
 
         this.entityMap.set(id, entity);
