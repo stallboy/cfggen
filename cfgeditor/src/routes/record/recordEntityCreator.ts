@@ -3,19 +3,17 @@ import {SField, SStruct, STable} from "../table/schemaModel.ts";
 import {BriefRecord, JSONArray, JSONObject, JSONValue, RefId, Refs} from "./recordModel.ts";
 import {createRefs, getLabel} from "./recordRefEntity.ts";
 import {getField, Schema} from "../table/schemaUtil.ts";
-import {refsToResInfos} from "../../res/refsToResInfos.ts";
-import {TauriConf} from "../setting/storageJson.ts";
+import {findAllResInfos} from "../../res/findAllResInfos.ts";
 
 
 export class RecordEntityCreator {
     constructor(public entityMap: Map<string, Entity>,
                 public schema: Schema,
                 public refId: RefId,
-                public refs: BriefRecord[],
-                public tauriConf: TauriConf) {
+                public refs: BriefRecord[]) {
     }
 
-    createRecordEntity(id: string, obj: JSONObject & Refs, label?:string): Entity | null {
+    createRecordEntity(id: string, obj: JSONObject & Refs, label?: string): Entity | null {
         let fields: EntityField[] = [];
         let type: string = obj['$type'] as string;
         if (type == null) {
@@ -109,14 +107,15 @@ export class RecordEntityCreator {
             }
         }
 
+        const thisLabel = label ?? getLabel(type);
         let entity: Entity = {
             id: id,
-            label: label ?? getLabel(type),
+            label: thisLabel,
             fields: fields,
             sourceEdges: sourceEdges,
             entityType: EntityType.Normal,
             userData: this.refId,
-            assets: refsToResInfos(obj, this.tauriConf),
+            assets: findAllResInfos(thisLabel, obj),
         };
 
         this.entityMap.set(id, entity);

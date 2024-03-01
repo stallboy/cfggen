@@ -7,7 +7,7 @@ import {convertFileSrc} from "@tauri-apps/api/tauri";
 
 export const EntityCard = memo(function EntityCard({entity, image}: {
     entity: Entity,
-    image?:string;
+    image?: string;
 }) {
     const {brief, sharedSetting} = entity;
     const query = sharedSetting?.query;
@@ -21,7 +21,7 @@ export const EntityCard = memo(function EntityCard({entity, image}: {
     let cover = {};
     if (image) {
         const imageUrl = convertFileSrc(image);
-        cover = {cover: <img alt="img" src={imageUrl}/>}
+        cover = {cover: <img alt="img" style={{maxHeight: '240px'}} src={imageUrl}/>}
         hasContent = true;
     }
 

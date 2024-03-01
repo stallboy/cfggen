@@ -2,8 +2,7 @@ import {BriefRecord, RefId, Refs} from "./recordModel.ts";
 import {Entity, EntityEdgeType, EntityType} from "../../flow/entityModel.ts";
 
 import {Schema} from "../table/schemaUtil.ts";
-import {refsToResInfos} from "../../res/refsToResInfos.ts";
-import {TauriConf} from "../setting/storageJson.ts";
+import {findAllResInfos} from "../../res/findAllResInfos.ts";
 
 export function getLastName(id: string): string {
     let seps = id.split('.');
@@ -59,7 +58,6 @@ export interface CreateRefEntitiesParameter {
 
     isCreateRefs: boolean; //true;
     checkTable?: (t: string) => boolean;
-    tauriConf: TauriConf;
 }
 
 
@@ -69,7 +67,6 @@ export function createRefEntities({
                                       refs,
                                       isCreateRefs,
                                       checkTable,
-                                      tauriConf
                                   }: CreateRefEntitiesParameter) {
 
 
@@ -101,10 +98,11 @@ export function createRefEntities({
         }
 
 
+        const label = getId(getLabel(table), id);
 
         const entity: Entity = {
             id: eid,
-            label: getId(getLabel(table), id),
+            label: label,
             brief: {
                 title: briefRecord.title,
                 descriptions: briefRecord.descriptions,
@@ -113,7 +111,7 @@ export function createRefEntities({
             sourceEdges: [],
             entityType: entityType,
             userData: refId,
-            assets: refsToResInfos(briefRecord, tauriConf)
+            assets: findAllResInfos(label, briefRecord)
         };
 
 

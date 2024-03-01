@@ -7,10 +7,9 @@ import {EntityCard} from "./EntityCard.tsx";
 import {EntityProperties} from "./EntityProperties.tsx";
 import {EntityForm} from "./EntityForm.tsx";
 import {BookOutlined, CloseOutlined} from "@ant-design/icons";
-import {store} from "../routes/setting/store.ts";
 import {getResBrief, ResPopover} from "./ResPopover.tsx";
 import {NoteShow, NoteEdit} from "./NoteShowOrEdit.tsx";
-import {ResInfo} from "../res/resInfo.ts";
+import {findFirstImage} from "./calcWidthHeight.ts";
 
 const {Text} = Typography;
 const bookIcon = <BookOutlined/>;
@@ -21,7 +20,6 @@ const closeIcon = <CloseOutlined/>;
 const resBriefButtonStyle = {color: '#fff'};
 
 export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
-    const {resMap} = store;
     const [isEditNote, setIsEditNote] = useState<boolean>(false);
     const {fields, brief, edit, handleIn, handleOut, id, label, sharedSetting, assets} = nodeProps.data;
     const color: string = getNodeBackgroundColor(nodeProps.data);
@@ -55,38 +53,16 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
 
     const [resBriefButton, firstImage] = useMemo(() => {
         let btn;
-        let res: ResInfo[] | undefined;
-        if (mayHasResOrNote) {
-            res = resMap.get(label);
-        }
-        let finalRes: ResInfo[] | undefined;
-        if (res) {
-            if (assets) {
-                finalRes = [...res, ...assets];
-            } else {
-                finalRes = res;
-            }
-        } else if (assets) {
-            finalRes = assets;
-        }
-
-        let firstImage: string | undefined;
-        if (finalRes) {
-            btn = <Popover content={<ResPopover resInfos={finalRes}/>}
+        let firstImage = findFirstImage(assets);
+        if (assets) {
+            btn = <Popover content={<ResPopover resInfos={assets}/>}
                            placement='rightTop'
                            trigger='click'>
-                <Button type='text' style={resBriefButtonStyle}>{getResBrief(finalRes)}</Button>
+                <Button type='text' style={resBriefButtonStyle}>{getResBrief(assets)}</Button>
             </Popover>
-
-            for (let r of finalRes) {
-                if (r.type == 'image') {
-                    firstImage = r.path;
-                    break;
-                }
-            }
         }
         return [btn, firstImage];
-    }, [resMap, label, assets]);
+    }, [label, assets]);
 
 
     let title = <Flex justify="space-between" style={titleStyle}>

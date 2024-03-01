@@ -26,6 +26,7 @@ import {useEntityToGraph} from "../../flow/FlowGraph.tsx";
 
 function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const {schema, notes, curTable} = useOutletContext<SchemaTableType>();
+    // @ts-ignore
     const {server, tauriConf} = store;
     const {notification} = App.useApp();
     const {curTableId, curId} = useLocationData();
@@ -75,9 +76,9 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     let editSeq: number = 0;
     let fitView: boolean = true;
     if (!isEditing) {
-        let creator = new RecordEntityCreator(entityMap, schema, refId, recordResult.refs, tauriConf);
+        let creator = new RecordEntityCreator(entityMap, schema, refId, recordResult.refs);
         creator.createRecordEntity(entityId, recordResult.object, getId(getLabel(curTable.name), curId));
-        createRefEntities({entityMap, schema, refs: recordResult.refs, isCreateRefs: false, tauriConf});
+        createRefEntities({entityMap, schema, refs: recordResult.refs, isCreateRefs: false});
     } else {
 
         function submitEditingObject() {

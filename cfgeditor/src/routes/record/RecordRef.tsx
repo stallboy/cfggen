@@ -29,6 +29,7 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
 }) {
     const [t] = useTranslation();
     const navigate = useNavigate();
+    // @ts-ignore
     const {tauriConf} = store;
 
     const entityMap = new Map<string, Entity>();
@@ -58,7 +59,7 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
         }
     }
 
-    createRefEntities({entityMap, schema, refs: recordRefResult.refs, isCreateRefs: true, checkTable, tauriConf});
+    createRefEntities({entityMap, schema, refs: recordRefResult.refs, isCreateRefs: true, checkTable});
     fillHandles(entityMap);
 
     const paneMenu: MenuItem[] = [{

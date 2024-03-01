@@ -1,5 +1,6 @@
 import {Entity} from "./entityModel.ts";
 import {getDsLenAndDesc} from "./EntityCard.tsx";
+import {ResInfo} from "../res/resInfo.ts";
 
 
 // 在一次又一次尝试了等待node准备好，直接用node的computed理的width，height后，增加这一个异步，太容易有闪烁和被代码绕晕了。
@@ -17,7 +18,10 @@ export function calcWidthHeight(entity: Entity) {
         let [showDsLen, desc] = getDsLenAndDesc(brief, entity.sharedSetting?.nodeShow);
         height += showDsLen * 38;
         if (desc) {
-            height += 22 * desc.length / 13;
+            height += 22 * simpleStrlen(desc) / 30;
+        }
+        if (findFirstImage(entity.assets)) {
+            height += 200;
         }
 
     } else if (edit) {
@@ -76,4 +80,27 @@ export function calcWidthHeight(entity: Entity) {
 
     return [width, height];
 
+}
+
+
+function simpleStrlen(str: string) {
+    let len = 0;
+    let l = str.length
+    for (let i = 0; i < l; i++) {
+        if (str.charCodeAt(i) > 255) //如果是汉字，则字符串长度加2
+            len += 2;
+        else
+            len++;
+    }
+    return len;
+}
+
+export function findFirstImage(assets: ResInfo[] | undefined): string | undefined {
+    if (assets) {
+        for (let r of assets) {
+            if (r.type == 'image') {
+                return r.path;
+            }
+        }
+    }
 }
