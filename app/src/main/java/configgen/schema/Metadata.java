@@ -5,7 +5,7 @@ import java.util.Objects;
 import java.util.SequencedMap;
 import java.util.Set;
 
-import static configgen.schema.Metadata.MetaTag.TAG;
+import static configgen.schema.Metadata.MetaTag.*;
 
 
 public record Metadata(SequencedMap<String, MetaValue> data) {
@@ -14,7 +14,9 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     }
 
     public enum MetaTag implements MetaValue {
-        TAG
+        TAG,
+        BOOL_TRUE,
+        BOOL_FALSE,
     }
 
     public record MetaInt(int value) implements MetaValue {
@@ -69,12 +71,12 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         return value == TAG;
     }
 
-    public void putHasRef() {
-        data.putLast(HAS_REF, TAG);
+    public void putHasRef(boolean hasRef) {
+        data.putLast(HAS_REF, hasRef ? BOOL_TRUE : BOOL_FALSE);
     }
 
-    public boolean hasRef() {
-        return hasTag(HAS_REF);
+    public MetaValue getHasRef(){
+        return data.get(HAS_REF);
     }
 
     public void putSpan(int value) {
