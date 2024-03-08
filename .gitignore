@@ -29,3 +29,7 @@
 /example/cs_ls/bin
 /example/cs_ls/obj
 /example/cs/global.json
+/samples/cfgeditor.exe
+/samples/cfgeditor.yml
+/samples/cfggen.jar
+/samples/cfgserver.bat
