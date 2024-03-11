@@ -1,0 +1,30 @@
+{
+	"Id":0,
+	"Ename":"",
+	"Name":"",
+	"BuffDesc":"",
+	"MaxCount":0,
+	"IsNeedNoticeClient":false,
+	"BuffIcon":"",
+	"IsIconAwaysShow":false,
+	"TarIconProi":0,
+	"SelfIconProi":0,
+	"BuffAnim":"",
+	"BuffSfx":"",
+	"FadeOutRule":0,
+	"MutexCollectionId":0,
+	"MutexPriority":0,
+	"CanBeDispel":false,
+	"CanBeSteal":false,
+	"BuffClass":0,
+	"BuffSubClass":0,
+	"AttachChance":0,
+	"Duration":0,
+	"Logic":{
+		"sendDamageIncAdd":0,
+		"recvDamageDecAdd":0,
+		"damageSenderMarkBuffId":0,
+		"$type":"buff.BuffLogic.DamageModifier"
+	},
+	"$type":"buff.buff"
+}

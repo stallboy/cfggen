@@ -50,10 +50,10 @@ public class VTableJsonParser {
                                 VStruct vStruct = parser.fromJson(jsonStr, file.getName());
                                 valueList.add(vStruct);
                             } catch (ValueJsonParser.JsonParseException e) {
-                                errs.addErr(new ValueErrs.JsonFileParseErr(file.getName(), tableSchema.name()));
+                                errs.addErr(new ValueErrs.JsonFileParseErr(file.getAbsolutePath(), e.getMessage()));
                             }
-                        } catch (IOException e) {
-                            errs.addErr(new ValueErrs.JsonFileReadErr(file.getName()));
+                        } catch (Exception e) {
+                            errs.addErr(new ValueErrs.JsonFileReadErr(file.getAbsolutePath(), e.getMessage()));
                         }
                     }
                 }
@@ -62,11 +62,12 @@ public class VTableJsonParser {
             VStruct defaultValue = ValueDefault.ofStructural(tableSchema);
             Value pkValue = ValueUtil.extractPrimaryKeyValue(defaultValue, tableSchema);
             String id = pkValue.packStr();
+            Path writePath = dataDir;
             try {
-                VTableJsonParser.addOrUpdateRecordStore(defaultValue, tableSchema, id, dataDir);
+                writePath = addOrUpdateRecordStore(defaultValue, tableSchema, id, dataDir);
                 valueList.add(defaultValue);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            } catch (Exception e) {
+                errs.addErr(new ValueErrs.JsonFileWriteErr(writePath.toAbsolutePath().toString(), e.getMessage()));
             }
         }
         return new VTableCreator(subTableSchema, tableSchema, errs).create(valueList);
@@ -77,13 +78,14 @@ public class VTableJsonParser {
         return dataDir.resolve(dir);
     }
 
-    public static void addOrUpdateRecordStore(VStruct record, TableSchema tableSchema, String id, Path dataDir) throws IOException {
+    public static Path addOrUpdateRecordStore(VStruct record, TableSchema tableSchema, String id, Path dataDir) throws IOException {
         Path jsonDir = getJsonTableDir(tableSchema, dataDir);
         Path recordPath = jsonDir.resolve(id + ".json");
         try (OutputStreamWriter writer = Generator.createUtf8Writer(recordPath.toFile())) {
             JSONObject jsonObject = new ValueToJson().toJson(record);
             String jsonString = JSON.toJSONString(jsonObject, JSONWriter.Feature.PrettyFormat);
             writer.write(jsonString);
+            return recordPath;
         }
     }
 

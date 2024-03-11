@@ -7,6 +7,8 @@ import configgen.gen.TextI18n;
 import configgen.schema.*;
 import configgen.util.Logger;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -97,6 +99,7 @@ public class ValueJsonParser {
     }
 
     private Value parse(FieldType type, Object obj) {
+
         switch (type) {
             case BOOL -> {
                 return new VBool((Boolean) obj, cell);
@@ -108,7 +111,15 @@ public class ValueJsonParser {
                 return new VLong((Long) obj, cell);
             }
             case FLOAT -> {
-                return new VFloat((Float) obj, cell);
+                float fv;
+                if (obj instanceof BigDecimal bd) {
+                    fv = bd.floatValue();
+                } else if (obj instanceof BigInteger bi) {
+                    fv = bi.floatValue();
+                } else {
+                    fv = (float) obj;
+                }
+                return new VFloat(fv, cell);
             }
             case STRING -> {
                 return new VString((String) obj, cell);

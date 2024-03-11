@@ -179,10 +179,13 @@ public record ValueErrs(List<VErr> errs) {
         }
     }
 
-    public record JsonFileReadErr(String jsonFile) implements VErr {
+    public record JsonFileReadErr(String jsonFile, String errMsg) implements VErr {
     }
 
-    public record JsonFileParseErr(String jsonFile, String table) implements VErr {
+    public record JsonFileParseErr(String jsonFile, String errMsg) implements VErr {
+    }
+
+    public record JsonFileWriteErr(String jsonFile, String errMsg) implements VErr {
     }
 
 }
