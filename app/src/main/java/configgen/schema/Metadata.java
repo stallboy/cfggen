@@ -14,9 +14,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     }
 
     public enum MetaTag implements MetaValue {
-        TAG,
-        BOOL_TRUE,
-        BOOL_FALSE,
+        TAG
     }
 
     public record MetaInt(int value) implements MetaValue {
@@ -72,10 +70,10 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     }
 
     public void putHasRef(boolean hasRef) {
-        data.putLast(HAS_REF, hasRef ? BOOL_TRUE : BOOL_FALSE);
+        data.putLast(HAS_REF, hasRef ? new MetaInt(1) : new MetaInt(0));
     }
 
-    public MetaValue getHasRef(){
+    public MetaValue getHasRef() {
         return data.get(HAS_REF);
     }
 

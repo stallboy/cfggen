@@ -14,7 +14,7 @@ public class HasRef {
         Metadata meta = nameable.meta();
         Metadata.MetaValue hasRefValue = meta.getHasRef();
         if (hasRefValue != null) {
-            return hasRefValue == Metadata.MetaTag.BOOL_TRUE;
+            return hasRefValue instanceof Metadata.MetaInt mi && mi.value() == 1;
         }
         boolean hasRef = checkIfIncludedStructsHasRef(nameable);
         meta.putHasRef(hasRef);
@@ -135,6 +135,6 @@ public class HasRef {
     }
 
     public static boolean hasRef(Nameable nameable) {
-        return nameable.meta().getHasRef() == Metadata.MetaTag.BOOL_TRUE;
+        return nameable.meta().getHasRef() instanceof Metadata.MetaInt mi && mi.value() == 1;
     }
 }

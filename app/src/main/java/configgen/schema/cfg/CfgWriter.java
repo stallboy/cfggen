@@ -185,7 +185,7 @@ public class CfgWriter {
         if (includeMetaStartWith_) {
             m = meta;
         } else {
-            m = Metadata.of();
+            m = of();
             for (Map.Entry<String, MetaValue> e : meta.data().entrySet()) {
                 if (!e.getKey().startsWith("_")) {
                     m.data().put(e.getKey(), e.getValue());
