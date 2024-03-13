@@ -116,6 +116,8 @@ public class ValueJsonParser {
                     fv = bd.floatValue();
                 } else if (obj instanceof BigInteger bi) {
                     fv = bi.floatValue();
+                } else if (obj instanceof Integer i) {
+                    fv = i.floatValue();
                 } else {
                     fv = (float) obj;
                 }
