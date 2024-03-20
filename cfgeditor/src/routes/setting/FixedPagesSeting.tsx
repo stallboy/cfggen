@@ -22,7 +22,7 @@ export const FixedPagesSetting = memo(function FixedPagesSetting({schema, curTab
     const {t} = useTranslation();
     const {curTableId, curId} = useLocationData();
     const {pageConf} = store;
-    const form = Form.useFormInstance();
+    const [form] = Form.useForm();
 
     function onFixCurrentPageClick() {
         const page = makeFixedPage(curTableId, curId);
@@ -33,7 +33,7 @@ export const FixedPagesSetting = memo(function FixedPagesSetting({schema, curTab
 
     return <>
         <Card>
-            <Form name="fixedPagesConf"  {...formLayout} onFinish={onFinishPageConf} autoComplete="off">
+            <Form form={form} name="fixedPagesConf"  {...formLayout} onFinish={onFinishPageConf} autoComplete="off">
                 <FixedPages pages={pageConf.pages}/>
                 <Form.Item>
                     <Button type="primary" htmlType="submit">

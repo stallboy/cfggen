@@ -64,7 +64,9 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
 
     const onSettingClick = useCallback(() => setSettingOpen(true), [setSettingOpen]);
     const onSearchClick = useCallback(() => setSearchOpen(true), [setSearchOpen]);
-    const onDragPanelSwitch = useCallback(() => setDragPanel(dragPanel == 'none' ? fix : 'none'), [dragPanel]);
+    const onDragPanelSwitch = useCallback(() => {
+        setDragPanel(dragPanel == 'none' ? fix : 'none');
+    }, [dragPanel, fix]);
     const onDragPanelSelect = useCallback((value: string) => {
         setFix(value);
         if (dragPanel == 'none') {
