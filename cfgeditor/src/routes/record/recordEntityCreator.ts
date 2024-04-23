@@ -18,7 +18,11 @@ export class RecordEntityCreator {
                 public resMap: Map<string, ResInfo[]>) {
     }
 
-    createRecordEntity(id: string, obj: JSONObject & Refs, label?: string): Entity | null {
+    createRecordEntity(id: string,
+                       obj: JSONObject & Refs,
+                       label?: string,
+                       arrayIndex?: number): Entity | null {
+
         let fields: EntityField[] = [];
         let type: string = obj['$type'] as string;
         if (type == null) {
@@ -70,7 +74,7 @@ export class RecordEntityCreator {
                             for (let e of fArr) {
                                 let fObj: JSONObject & Refs = e as JSONObject & Refs;
                                 let childId: string = `${id}-${fieldKey}[${i}]`;
-                                let childEntity = this.createRecordEntity(childId, fObj);
+                                let childEntity = this.createRecordEntity(childId, fObj, undefined, i + 1);
                                 i++;
 
                                 if (childEntity) {
@@ -112,7 +116,9 @@ export class RecordEntityCreator {
             }
         }
 
-        const thisLabel = label ?? getLabel(type);
+        let thisLabel = label ?? getLabel(type);
+        thisLabel = arrayIndex === undefined ? thisLabel : thisLabel + '.' + arrayIndex;
+
         let entity: Entity = {
             id: id,
             label: thisLabel,

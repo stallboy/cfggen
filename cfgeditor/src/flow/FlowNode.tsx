@@ -2,11 +2,11 @@ import {CSSProperties, memo, useCallback, useMemo, useState} from "react";
 import {Handle, NodeProps, Position} from "@xyflow/react";
 import {Entity} from "./entityModel.ts";
 import {getNodeBackgroundColor} from "./colors.ts";
-import {Button, Flex, Popover, Typography} from "antd";
+import {Button, Flex, Popover, Space, Typography} from "antd";
 import {EntityCard} from "./EntityCard.tsx";
 import {EntityProperties} from "./EntityProperties.tsx";
 import {EntityForm} from "./EntityForm.tsx";
-import {BookOutlined, CloseOutlined} from "@ant-design/icons";
+import {ArrowDownOutlined, ArrowUpOutlined, BookOutlined, CloseOutlined} from "@ant-design/icons";
 import {getResBrief, ResPopover} from "./ResPopover.tsx";
 import {NoteShow, NoteEdit} from "./NoteShowOrEdit.tsx";
 import {findFirstImage} from "./calcWidthHeight.ts";
@@ -17,6 +17,9 @@ const iconButtonStyle = {borderWidth: 0, backgroundColor: 'transparent'};
 const titleStyle = {width: '100%'};
 const titleTextStyle = {fontSize: 14, color: "#fff"};
 const closeIcon = <CloseOutlined/>;
+const moveUpIcon = <ArrowUpOutlined/>;
+const moveDownIcon = <ArrowDownOutlined/>;
+
 const resBriefButtonStyle = {color: '#fff'};
 
 export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
@@ -32,7 +35,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
         setIsEditNote(true);
     }, [setIsEditNote]);
 
-    // 用label包含做为它是table_id格式的标志
+    // 用‘label是否包含空格’做为它是table_id格式的标志
     const mayHasResOrNote = label.includes('_');
     let editNoteButton;
     let noteShowOrEdit;
@@ -67,13 +70,19 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
 
     let title = <Flex justify="space-between" style={titleStyle}>
         <Text strong style={titleTextStyle} ellipsis={false}
-              copyable={sharedSetting?.nodeShow?.showHead == 'showCopyable'}>
+              copyable={mayHasResOrNote && sharedSetting?.nodeShow?.showHead == 'showCopyable'}>
             {label}
         </Text>
         {editNoteButton}
         {resBriefButton}
-        {edit && edit.editOnDelete &&
-            <Button className='nodrag' style={iconButtonStyle} icon={closeIcon} onClick={edit.editOnDelete}/>}
+        <Space size={1}>
+            {edit && edit.editOnMoveUp &&
+                <Button className='nodrag' style={iconButtonStyle} icon={moveUpIcon} onClick={edit.editOnMoveUp}/>}
+            {edit && edit.editOnMoveDown &&
+                <Button className='nodrag' style={iconButtonStyle} icon={moveDownIcon} onClick={edit.editOnMoveDown}/>}
+            {edit && edit.editOnDelete &&
+                <Button className='nodrag' style={iconButtonStyle} icon={closeIcon} onClick={edit.editOnDelete}/>}
+        </Space>
     </Flex>
 
     const handleStyle: CSSProperties = useMemo(() => {

@@ -60,6 +60,8 @@ export interface EntityEditFieldOption {
 export interface EntityEdit {
     editFields: EntityEditField[];
     editOnDelete?: () => void;
+    editOnMoveUp?: () => void;
+    editOnMoveDown?: () => void;
     editOnUpdateValues: (values: any) => void;
 }
 

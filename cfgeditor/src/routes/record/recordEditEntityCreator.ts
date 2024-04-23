@@ -14,7 +14,7 @@ import {getField, getIdOptions, getImpl, isPkInteger, Schema} from "../table/sch
 import {
     applyNewEditingObject, editState,
     onAddItemForArray,
-    onDeleteItemFromArray,
+    onDeleteItemFromArray, onMoveItemFromArray,
     onUpdateFormValues,
     onUpdateInterfaceValue
 } from "./editingObject.ts";
@@ -26,6 +26,12 @@ function isPrimitiveType(type: string): boolean {
     return setOfPrimitive.has(type);
 }
 
+interface ArrayItemParam {
+    arrayIndex: number;
+    onDeleteFunc: () => void;
+    onMoveUpFunc?: () => void;
+    onMoveDownFunc?: () => void;
+}
 
 export class RecordEditEntityCreator {
     curRefId: RefId;
@@ -43,10 +49,11 @@ export class RecordEditEntityCreator {
         this.createEntity(id, this.curTable, editState.editingObject, []);
     }
 
-    createEntity(id: string, sItem: SItem, obj: JSONObject,
-                 fieldChain: (string | number)[], onDeleteFunc ?: () => void):
-        Entity | null {
-        let label = getLabel(sItem.name);
+    createEntity(id: string,
+                 sItem: SItem,
+                 obj: JSONObject,
+                 fieldChain: (string | number)[],
+                 arrayItemParam?: ArrayItemParam): Entity | null {
 
         let type: string = obj['$type'] as string;
         if (type == null) {
@@ -80,7 +87,8 @@ export class RecordEditEntityCreator {
 
             if (Array.isArray(fieldValue)) {  // list or map, (map is list of $entry)
                 let fArr: JSONArray = fieldValue as JSONArray;
-                if (fArr.length == 0) {
+                let fArrLen = fArr.length
+                if (fArrLen == 0) {
                     continue;
                 }
                 let ele = fArr[0];
@@ -104,12 +112,35 @@ export class RecordEditEntityCreator {
                     let childId: string = `${id}-${fieldKey}[${i}]`;
                     let arrayIndex = i;
 
+                    let chain = [...fieldChain, fieldKey]
                     const onDeleteFunc = () => {
-                        onDeleteItemFromArray(arrayIndex, [...fieldChain, fieldKey]);
+                        onDeleteItemFromArray(arrayIndex, chain);
                     }
 
-                    let childEntity = this.createEntity(childId, itemType, itemObj,
-                        [...fieldChain, fieldKey, i], onDeleteFunc);
+                    let onMoveUpFunc;
+                    if (i > 0) {
+                        onMoveUpFunc = () => {
+                            onMoveItemFromArray(arrayIndex, arrayIndex - 1, chain);
+                        }
+                    }
+
+                    let onMoveDownFunc;
+                    if (i < fArrLen - 1) {
+                        onMoveDownFunc = () => {
+                            onMoveItemFromArray(arrayIndex, arrayIndex + 1, chain);
+                        }
+                    }
+
+
+                    let childEntity = this.createEntity(
+                        childId, itemType, itemObj,
+                        [...fieldChain, fieldKey, i],
+                        {
+                            arrayIndex: arrayIndex + 1,
+                            onDeleteFunc,
+                            onMoveUpFunc,
+                            onMoveDownFunc,
+                        });
                     i++;
 
                     if (childEntity) {
@@ -145,10 +176,20 @@ export class RecordEditEntityCreator {
             onUpdateFormValues(this.schema, values, fieldChain);
         };
 
+
+        let label = getLabel(sItem.name);
+        label = arrayItemParam ? label + '.' + arrayItemParam.arrayIndex : label;
+
         let entity: Entity = {
             id: id,
             label: label,
-            edit: {editFields, editOnDelete: onDeleteFunc, editOnUpdateValues},
+            edit: {
+                editFields,
+                editOnDelete: arrayItemParam?.onDeleteFunc,
+                editOnMoveUp: arrayItemParam?.onMoveUpFunc,
+                editOnMoveDown: arrayItemParam?.onMoveDownFunc,
+                editOnUpdateValues
+            },
             sourceEdges: sourceEdges,
 
             entityType: EntityType.Normal,

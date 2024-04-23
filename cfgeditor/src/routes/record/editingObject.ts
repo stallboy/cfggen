@@ -108,6 +108,23 @@ export function onAddItemForArray(defaultItemJsonObject: JSONObject,
     editState.afterEditStateChanged();
 }
 
+
+export function onMoveItemFromArray(curIndex: number,
+                                    newIndex: number,
+                                    arrayFieldChains: (string | number)[]) {
+    // console.log('delItem', arrayFieldChains, deleteIndex);
+
+    let obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
+    let o2 = obj[newIndex];
+    obj[newIndex] = obj[curIndex]
+    obj[curIndex] = o2;
+
+    editState.seq++;
+    editState.fitView = false;
+    editState.afterEditStateChanged();
+}
+
+
 export function onDeleteItemFromArray(deleteIndex: number,
                                       arrayFieldChains: (string | number)[]) {
     // console.log('delItem', arrayFieldChains, deleteIndex);
