@@ -12,7 +12,7 @@ import {
     Tooltip,
 } from "antd";
 import TextArea from "antd/es/input/TextArea";
-import {MinusSquareTwoTone, PlusSquareTwoTone} from "@ant-design/icons";
+import {ArrowDownOutlined, ArrowUpOutlined, MinusSquareTwoTone, PlusSquareTwoTone} from "@ant-design/icons";
 import {CSSProperties, memo, useCallback, useEffect} from "react";
 import {useTranslation} from "react-i18next";
 import {Handle, Position} from "@xyflow/react";
@@ -42,6 +42,21 @@ function filterNumberSort(optionA: EntityEditFieldOption, optionB: EntityEditFie
     return (optionA.value as number) - (optionB.value as number);
 }
 
+
+function defaultPrimitiveValue(field: EntityEditField) {
+    const {eleType, autoCompleteOptions} = field;
+    if (autoCompleteOptions && autoCompleteOptions.options.length > 0) {
+        const {options} = autoCompleteOptions;
+        return options[0].value
+    } else if (eleType == 'bool') {
+        return false;
+    } else if (setOfNumber.has(eleType)) {
+        return 0;
+    } else {
+        return '';
+    }
+}
+
 function PrimitiveControl(field: EntityEditField) {
     let control;
     const {eleType, autoCompleteOptions} = field;
@@ -60,7 +75,7 @@ function PrimitiveControl(field: EntityEditField) {
         if (isEnum) {
             control = <Select className='nodrag' options={options} {...filters}/>
         } else {
-            control = <AutoComplete className='nodrag' options={options} {...filters}/>
+            control = <AutoComplete className='nodrag' options={options} {...filters} style={{width: 100}}/>
         }
 
     } else if (eleType == 'bool') {
@@ -140,14 +155,14 @@ function ArrayOfPrimitiveFormItem({field}: { field: EntityEditField }) {
     }, [field.value]);
 
     return <Form.List name={field.name} key={field.name} initialValue={field.value as any[]}>
-        {(fields, {add, remove}) => (
+        {(fields, {add, remove, move}) => (
             <>
                 {fields.map((f, index) => (
                     <Form.Item {...(index === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
                                label={index === 0 ? makeLabel(field) : ''}
                                key={f.key}>
 
-                        <Space>
+                        <Space align='baseline' size={1}>
                             <Form.Item {...f} >
                                 {PrimitiveControl(field)}
                             </Form.Item>
@@ -155,6 +170,17 @@ function ArrayOfPrimitiveFormItem({field}: { field: EntityEditField }) {
                                         icon={<MinusSquareTwoTone twoToneColor='red'/>}
                                         onClick={() => remove(f.name)}
                             />
+                            {index != 0 &&
+                                <ActionIcon className='nodrag'
+                                            icon={<ArrowUpOutlined/>}
+                                            onClick={() => move(index, index - 1)}/>
+                            }
+
+                            {index != fields.length - 1 &&
+                                <ActionIcon className='nodrag'
+                                            icon={<ArrowDownOutlined/>}
+                                            onClick={() => move(index, index + 1)}/>
+                            }
 
                         </Space>
 
@@ -162,9 +188,10 @@ function ArrayOfPrimitiveFormItem({field}: { field: EntityEditField }) {
                 ))}
                 <Form.Item {...(fields.length === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
                            label={fields.length === 0 ? makeLabel(field) : ''}>
-                    <Button className='nodrag'
-                            onClick={add}
-                            icon={<PlusSquareTwoTone/>}> {field.name} </Button>
+                    <ActionIcon className='nodrag'
+                                icon={<PlusSquareTwoTone/>}
+                                onClick={() => add(defaultPrimitiveValue(field))}
+                    />
 
                 </Form.Item>
             </>

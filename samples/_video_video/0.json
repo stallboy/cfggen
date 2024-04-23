@@ -1,2 +1,55 @@
 {
+	"id":0,
+	"name":"test",
+	"text":"",
+	"type":0,
+	"choices":[
+		{
+			"text":"choice1",
+			"target":0,
+			"timeout":0,
+			"conds":[
+				
+			],
+			"hide":false,
+			"x":0,
+			"y":0,
+			"$type":"video.choice"
+		},
+		{
+			"text":"choice2",
+			"target":0,
+			"timeout":0,
+			"conds":[
+				
+			],
+			"hide":false,
+			"x":0,
+			"y":0,
+			"$type":"video.choice"
+		}
+	],
+	"actions":[
+		{
+			"action":{
+				"id":0,
+				"$type":"video.action.giveInfo"
+			},
+			"des":"act1",
+			"appear_time":0,
+			"onLeave":false,
+			"$type":"video.triggerAction"
+		},
+		{
+			"action":{
+				"id":0,
+				"$type":"video.action.giveInfo"
+			},
+			"des":"act2",
+			"appear_time":0,
+			"onLeave":false,
+			"$type":"video.triggerAction"
+		}
+	],
+	"$type":"video.video"
 }
