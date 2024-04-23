@@ -8,10 +8,10 @@ export class Schema {
 
     constructor(public rawSchema: RawSchema) {
         this.isEditable = rawSchema.isEditable;
-        for (let item of rawSchema.items) {
+        for (const item of rawSchema.items) {
             if (item.type == 'interface') {
-                let ii = item as SInterface;
-                for (let impl of ii.impls) {
+                const ii = item as SInterface;
+                for (const impl of ii.impls) {
                     impl.extends = ii;
                     impl.id = ii.name + "." + impl.name;
 
@@ -22,24 +22,24 @@ export class Schema {
             this.itemIncludeImplMap.set(item.name, item);
         }
 
-        for (let item of rawSchema.items) {
+        for (const item of rawSchema.items) {
             this.getAllRefTablesByItem(item);
             if (item.type == 'table') {
-                let st = item as STable;
+                const st = item as STable;
                 st.refInTables = new Set<string>();
                 st.idSet = new Set<string>();
-                for (let recordId of st.recordIds) {
+                for (const recordId of st.recordIds) {
                     st.idSet.add(recordId.id);
                 }
             }
         }
 
-        for (let item of rawSchema.items) {
+        for (const item of rawSchema.items) {
             if (item.type == 'table') {
-                let st = item as STable;
-                let refTables = st.refTables as Set<string>;
-                for (let refTable of refTables) {
-                    let t: STable = this.getSTable(refTable) as STable;
+                const st = item as STable;
+                const refTables = st.refTables as Set<string>;
+                for (const refTable of refTables) {
+                    const t: STable = this.getSTable(refTable) as STable;
                     t.refInTables?.add(st.name);
                 }
             }
@@ -47,7 +47,7 @@ export class Schema {
     }
 
     getFirstSTable(): STable | null {
-        for (let item of this.itemMap.values()) {
+        for (const item of this.itemMap.values()) {
             if (item.type == 'table') {
                 return item as STable;
             }
@@ -56,7 +56,7 @@ export class Schema {
     }
 
     getSTable(name: string): STable | null {
-        let item = this.itemMap.get(name);
+        const item = this.itemMap.get(name);
         if (item && item.type == 'table') {
             return item as STable;
         }
@@ -76,10 +76,10 @@ export class Schema {
     }
 
     getDirectDepStructsMapByItem(item: SItem): Map<string, string> {
-        let depNameMap = new Map<string, string>();
+        const depNameMap = new Map<string, string>();
         if (item.type == 'interface') {
-            let ii = item as SInterface;
-            for (let impl of ii.impls) {
+            const ii = item as SInterface;
+            for (const impl of ii.impls) {
                 depNameMap.set(impl.id ?? impl.name, '@out');
             }
             return depNameMap;
@@ -88,20 +88,20 @@ export class Schema {
         item = item as SStruct | STable
         const primitiveTypeSet = new Set<string>(['bool', 'int', 'long', 'float', 'str', 'text']);
 
-        for (let {name, type} of item.fields) {
+        for (const {name, type} of item.fields) {
             if (primitiveTypeSet.has(type)) {
                 continue;
             }
             if (type.startsWith("list<")) {
-                let itemType = type.slice(5, type.length - 1);
+                const itemType = type.slice(5, type.length - 1);
                 if (!primitiveTypeSet.has(itemType)) {
                     depNameMap.set(itemType, name);
                 }
             } else if (type.startsWith("map<")) {
-                let item = type.slice(4, type.length - 1);
-                let sp = item.split(",");
-                let keyType = sp[0].trim();
-                let valueType = sp[1].trim();
+                const item = type.slice(4, type.length - 1);
+                const sp = item.split(",");
+                const keyType = sp[0].trim();
+                const valueType = sp[1].trim();
                 if (!primitiveTypeSet.has(keyType)) {
                     depNameMap.set(keyType, name);
                 }
@@ -115,8 +115,8 @@ export class Schema {
 
         if (depNameMap.size > 0) {
             // 去掉对impl的依赖
-            let depNameMapGlobal = new Map<string, string>();
-            for (let [type, name] of depNameMap) {
+            const depNameMapGlobal = new Map<string, string>();
+            for (const [type, name] of depNameMap) {
                 if (this.itemMap.has(type)) {
                     depNameMapGlobal.set(type, name);
                 }
@@ -129,9 +129,9 @@ export class Schema {
     }
 
     getDirectDepStructsByItems(items: SItem[]): Set<string> {
-        let res = new Set<string>();
-        for (let item of items) {
-            let r = this.getDirectDepStructsByItem(item);
+        const res = new Set<string>();
+        for (const item of items) {
+            const r = this.getDirectDepStructsByItem(item);
             setUnion(res, r);
         }
         return res;
@@ -139,9 +139,9 @@ export class Schema {
 
 
     private ids2items(ids: Set<string>): SItem[] {
-        let ss: SItem[] = [];
-        for (let id of ids) {
-            let item = this.itemIncludeImplMap.get(id);
+        const ss: SItem[] = [];
+        for (const id of ids) {
+            const item = this.itemIncludeImplMap.get(id);
             if (item) {
                 ss.push(item);
             } else {
@@ -153,14 +153,14 @@ export class Schema {
 
 
     getAllDepStructs(item: SItem): Set<string> {
-        let res = new Set<string>();
+        const res = new Set<string>();
         res.add(item.id ?? item.name);
         let frontier = this.getDirectDepStructsByItem(item);
         frontier.delete(item.id ?? item.name);
         while (frontier.size > 0) {
             setUnion(res, frontier);
-            let frontierItems = this.ids2items(frontier);
-            let newFrontier = this.getDirectDepStructsByItems(frontierItems);
+            const frontierItems = this.ids2items(frontier);
+            const newFrontier = this.getDirectDepStructsByItems(frontierItems);
             setDelete(newFrontier, res);
 
             frontier = newFrontier;
@@ -174,21 +174,21 @@ export class Schema {
             return item.refTables;
         }
 
-        let allDepIds = this.getAllDepStructs(item);
-        let allDepStructs = this.ids2items(allDepIds);
+        const allDepIds = this.getAllDepStructs(item);
+        const allDepStructs = this.ids2items(allDepIds);
 
-        let res = new Set<string>();
+        const res = new Set<string>();
 
         for (let si of allDepStructs) {
             if (si.type == 'interface') {
-                let ii = si as SInterface;
+                const ii = si as SInterface;
                 if (ii.enumRef) {
                     res.add(ii.enumRef);
                 }
             } else {
                 si = si as (SStruct | STable)
                 if (si.foreignKeys) {
-                    for (let fk of si.foreignKeys) {
+                    for (const fk of si.foreignKeys) {
                         res.add(fk.refTable);
                     }
                 }
@@ -199,9 +199,9 @@ export class Schema {
     }
 
     getAllRefTablesByItems(items: SItem[]): Set<string> {
-        let res = new Set<string>();
-        for (let item of items) {
-            let r = this.getAllRefTablesByItem(item);
+        const res = new Set<string>();
+        for (const item of items) {
+            const r = this.getAllRefTablesByItem(item);
             setUnion(res, r);
         }
         return res;
@@ -216,10 +216,10 @@ export class Schema {
     }
 
     defaultValueOfStructural(sStruct: SStruct | STable): JSONObject {
-        let res: JSONObject = {"$type": sStruct.id ?? sStruct.name};
-        for (let field of sStruct.fields) {
-            let n = field.name;
-            let t = field.type;
+        const res: JSONObject = {"$type": sStruct.id ?? sStruct.name};
+        for (const field of sStruct.fields) {
+            const n = field.name;
+            const t = field.type;
             if (t == 'bool') {
                 res[n] = false;
             } else if (t == 'int' || t == 'long' || t == 'float') {
@@ -229,7 +229,7 @@ export class Schema {
             } else if (t.startsWith('list<') || t.startsWith('map<')) {
                 res[n] = [];
             } else {
-                let sf = this.itemIncludeImplMap.get(t);
+                const sf = this.itemIncludeImplMap.get(t);
                 if (sf) {
                     res[n] = this.defaultValue(sf);
                     // TODO recursive check
@@ -262,10 +262,10 @@ export class Schema {
     }
 
     getSTableByLastName(tableLabel:string) : STable|undefined{
-        for (let item of this.itemMap.values()) {
+        for (const item of this.itemMap.values()) {
             if (item.type == 'table') {
                 let name = item.name
-                let i = name.lastIndexOf('.');
+                const i = name.lastIndexOf('.');
                 if (i != -1){
                     name = name.substring(i+1);
                 }
@@ -279,19 +279,19 @@ export class Schema {
 }
 
 function setUnion(dst: Set<string>, from: Set<string>) {
-    for (let s of from) {
+    for (const s of from) {
         dst.add(s);
     }
 }
 
 function setDelete(dst: Set<string>, from: Set<string>) {
-    for (let s of from) {
+    for (const s of from) {
         dst.delete(s);
     }
 }
 
 export function getField(structural: STable | SStruct, fieldName: string): SField | null {
-    for (let field of structural.fields) {
+    for (const field of structural.fields) {
         if (field.name == fieldName) {
             return field;
         }
@@ -300,7 +300,7 @@ export function getField(structural: STable | SStruct, fieldName: string): SFiel
 }
 
 export function getImpl(sInterface: SInterface, implName: string): SStruct | null {
-    for (let impl of sInterface.impls) {
+    for (const impl of sInterface.impls) {
         if (impl.name == implName) {
             return impl;
         }
@@ -309,10 +309,10 @@ export function getImpl(sInterface: SInterface, implName: string): SStruct | nul
 }
 
 export function newSchema(schema: Schema, table: string, recordIds: RecordId[]) {
-    let items: SItem[] = [];
-    for (let item of schema.rawSchema.items) {
+    const items: SItem[] = [];
+    for (const item of schema.rawSchema.items) {
         if (item.name == table) {
-            let updatedItem = {...item, recordIds: recordIds};
+            const updatedItem = {...item, recordIds: recordIds};
             items.push(updatedItem);
         } else {
             items.push(item);
@@ -330,9 +330,9 @@ export function getNextId(sTable: STable, curId: string): number | null {
         id = 0;
     }
 
-    let idSet = new Set<number>();
-    for (let recordId of sTable.recordIds) {
-        let v = parseInt(recordId.id);
+    const idSet = new Set<number>();
+    for (const recordId of sTable.recordIds) {
+        const v = parseInt(recordId.id);
         idSet.add(v);
     }
 
@@ -349,7 +349,7 @@ export function isPkInteger(sTable: STable) {
         return false;
     }
 
-    let field = getField(sTable, sTable.pk[0]);
+    const field = getField(sTable, sTable.pk[0]);
     if (field == null) {
         return false;
     }
@@ -358,9 +358,9 @@ export function isPkInteger(sTable: STable) {
 }
 
 export function getIdOptions(sTable: STable, valueToInteger: boolean = false) {
-    let options = [];
-    for (let {id, title} of sTable.recordIds) {
-        let label = (title && title != id) ? `${id}-${title}` : id;
+    const options = [];
+    for (const {id, title} of sTable.recordIds) {
+        const label = (title && title != id) ? `${id}-${title}` : id;
         options.push({label, value: valueToInteger ? parseInt(id) : id});
     }
     return options;

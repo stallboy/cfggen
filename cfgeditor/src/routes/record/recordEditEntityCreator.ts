@@ -1,6 +1,6 @@
 import {
     Entity,
-    EntityEdgeType,
+    EntityEdgeType, EntityEdit,
     EntityEditField,
     EntityEditFieldOptions,
     EntitySourceEdge,
@@ -13,8 +13,8 @@ import {getId, getLabel, getLastName} from "./recordRefEntity.ts";
 import {getField, getIdOptions, getImpl, isPkInteger, Schema} from "../table/schemaUtil.ts";
 import {
     applyNewEditingObject, editState,
-    onAddItemForArray,
-    onDeleteItemFromArray, onMoveItemFromArray,
+    onAddItemToArray,
+    onDeleteItemFromArray, onMoveItemInArray,
     onUpdateFormValues,
     onUpdateInterfaceValue
 } from "./editingObject.ts";
@@ -45,7 +45,7 @@ export class RecordEditEntityCreator {
     }
 
     createThis() {
-        let id = getId(this.curTable.name, this.curId);
+        const id = getId(this.curTable.name, this.curId);
         this.createEntity(id, this.curTable, editState.editingObject, []);
     }
 
@@ -55,12 +55,12 @@ export class RecordEditEntityCreator {
                  fieldChain: (string | number)[],
                  arrayItemParam?: ArrayItemParam): Entity | null {
 
-        let type: string = obj['$type'] as string;
+        const type: string = obj['$type'] as string;
         if (type == null) {
             console.error('$type missing');
             return null;
         }
-        let editFields: EntityEditField[] = this.makeEditFields(sItem, obj, fieldChain);
+        const editFields: EntityEditField[] = this.makeEditFields(sItem, obj, fieldChain);
 
         let structural: STable | SStruct;
         if ('impls' in sItem) {
@@ -69,29 +69,29 @@ export class RecordEditEntityCreator {
             structural = sItem;
         }
 
-        let sourceEdges: EntitySourceEdge[] = [];
-        for (let fieldKey in obj) {
+        const sourceEdges: EntitySourceEdge[] = [];
+        for (const fieldKey in obj) {
             if (fieldKey.startsWith("$")) {
                 continue;
             }
-            let fieldValue: JSONValue = obj[fieldKey];
-            let ft = typeof fieldValue
+            const fieldValue: JSONValue = obj[fieldKey];
+            const ft = typeof fieldValue
             if (ft != 'object') {
                 continue;
             }
 
-            let sField = getField(structural, fieldKey);
+            const sField = getField(structural, fieldKey);
             if (sField == null) {
                 continue;
             }
 
             if (Array.isArray(fieldValue)) {  // list or map, (map is list of $entry)
-                let fArr: JSONArray = fieldValue as JSONArray;
-                let fArrLen = fArr.length
+                const fArr: JSONArray = fieldValue as JSONArray;
+                const fArrLen = fArr.length
                 if (fArrLen == 0) {
                     continue;
                 }
-                let ele = fArr[0];
+                const ele = fArr[0];
                 if (typeof ele != 'object') { // list of primitive value
                     continue;
                 }
@@ -99,20 +99,20 @@ export class RecordEditEntityCreator {
                 if (!sField.type.startsWith("list<")) {  // 不支持map
                     continue;
                 }
-                let itemTypeId = sField.type.substring(5, sField.type.length - 1);
-                let itemType = this.schema.itemIncludeImplMap.get(itemTypeId);
+                const itemTypeId = sField.type.substring(5, sField.type.length - 1);
+                const itemType = this.schema.itemIncludeImplMap.get(itemTypeId);
                 if (itemType == null) {
                     continue;
                 }
 
                 // list of struct/interface
                 let i = 0;
-                for (let e of fArr) {
-                    let itemObj = e as JSONObject;
-                    let childId: string = `${id}-${fieldKey}[${i}]`;
-                    let arrayIndex = i;
+                for (const e of fArr) {
+                    const itemObj = e as JSONObject;
+                    const childId: string = `${id}-${fieldKey}[${i}]`;
+                    const arrayIndex = i;
 
-                    let chain = [...fieldChain, fieldKey]
+                    const chain = [...fieldChain, fieldKey]
                     const onDeleteFunc = () => {
                         onDeleteItemFromArray(arrayIndex, chain);
                     }
@@ -120,19 +120,19 @@ export class RecordEditEntityCreator {
                     let onMoveUpFunc;
                     if (i > 0) {
                         onMoveUpFunc = () => {
-                            onMoveItemFromArray(arrayIndex, arrayIndex - 1, chain);
+                            onMoveItemInArray(arrayIndex, arrayIndex - 1, chain);
                         }
                     }
 
                     let onMoveDownFunc;
                     if (i < fArrLen - 1) {
                         onMoveDownFunc = () => {
-                            onMoveItemFromArray(arrayIndex, arrayIndex + 1, chain);
+                            onMoveItemInArray(arrayIndex, arrayIndex + 1, chain);
                         }
                     }
 
 
-                    let childEntity = this.createEntity(
+                    const childEntity = this.createEntity(
                         childId, itemType, itemObj,
                         [...fieldChain, fieldKey, i],
                         {
@@ -154,13 +154,13 @@ export class RecordEditEntityCreator {
                 }
 
             } else { // struct or interface
-                let fieldType = this.schema.itemIncludeImplMap.get(sField.type);
+                const fieldType = this.schema.itemIncludeImplMap.get(sField.type);
                 if (fieldType == null) {
                     continue;
                 }
-                let fieldObj = fieldValue as JSONObject;
-                let childId: string = id + "-" + fieldKey;
-                let childEntity = this.createEntity(childId, fieldType, fieldObj, [...fieldChain, fieldKey]);
+                const fieldObj = fieldValue as JSONObject;
+                const childId: string = id + "-" + fieldKey;
+                const childEntity = this.createEntity(childId, fieldType, fieldObj, [...fieldChain, fieldKey]);
                 if (childEntity) {
                     sourceEdges.push({
                         sourceHandle: fieldKey,
@@ -180,16 +180,24 @@ export class RecordEditEntityCreator {
         let label = getLabel(sItem.name);
         label = arrayItemParam ? label + '.' + arrayItemParam.arrayIndex : label;
 
-        let entity: Entity = {
+        const edit: EntityEdit = {
+            editFields: editFields,
+            editOnDelete: arrayItemParam?.onDeleteFunc,
+            editOnMoveUp: arrayItemParam?.onMoveUpFunc,
+            editOnMoveDown: arrayItemParam?.onMoveDownFunc,
+            editOnUpdateValues: editOnUpdateValues
+        }
+
+        if (sItem.type != 'table') {
+            edit.editFieldChain = fieldChain;
+            edit.editObj = obj;
+            edit.editAllowObjType = sItem.id ?? sItem.name;
+        }
+
+        const entity: Entity = {
             id: id,
             label: label,
-            edit: {
-                editFields,
-                editOnDelete: arrayItemParam?.onDeleteFunc,
-                editOnMoveUp: arrayItemParam?.onMoveUpFunc,
-                editOnMoveDown: arrayItemParam?.onMoveDownFunc,
-                editOnUpdateValues
-            },
+            edit: edit,
             sourceEdges: sourceEdges,
 
             entityType: EntityType.Normal,
@@ -204,12 +212,12 @@ export class RecordEditEntityCreator {
                    obj: JSONObject,
                    fieldChain: (string | number)[]):
         EntityEditField[] {
-        let fields: EntityEditField[] = [];
-        let type: string = obj['$type'] as string;
+        const fields: EntityEditField[] = [];
+        const type: string = obj['$type'] as string;
         if ('impls' in sItem) {
-            let implName = getLastName(type);
-            let sInterface = sItem as SInterface;
-            let impl = getImpl(sInterface, implName) as SStruct;
+            const implName = getLastName(type);
+            const sInterface = sItem as SInterface;
+            const impl = getImpl(sInterface, implName) as SStruct;
             fields.push({
                 name: '$impl',
                 type: 'interface',
@@ -222,7 +230,7 @@ export class RecordEditEntityCreator {
                     if (newImplName == implName) {
                         newObj = obj;
                     } else {
-                        let newImpl = getImpl(sInterface, newImplName) as SStruct;
+                        const newImpl = getImpl(sInterface, newImplName) as SStruct;
                         newObj = this.schema.defaultValueOfStructural(newImpl);
                     }
 
@@ -232,11 +240,11 @@ export class RecordEditEntityCreator {
             })
 
         } else {
-            let structural = sItem as (SStruct | STable);
+            const structural = sItem as (SStruct | STable);
             this.makeStructuralEditFields(fields, structural, obj, fieldChain);
 
-            let funcClear = () => {
-                let defaultValue = this.schema.defaultValueOfStructural(structural);
+            const funcClear = () => {
+                const defaultValue = this.schema.defaultValueOfStructural(structural);
                 applyNewEditingObject(defaultValue);
             };
 
@@ -262,8 +270,8 @@ export class RecordEditEntityCreator {
                              structural: SStruct | STable,
                              obj: JSONObject,
                              fieldChain: (string | number)[]) {
-        for (let sf of structural.fields) {
-            let fieldValue = obj[sf.name];
+        for (const sf of structural.fields) {
+            const fieldValue = obj[sf.name];
             if (isPrimitiveType(sf.type)) {
                 let v;
                 if (fieldValue) {
@@ -285,9 +293,9 @@ export class RecordEditEntityCreator {
                     autoCompleteOptions: this.getAutoCompleteOptions(structural, sf.name),
                 });
             } else if (sf.type.startsWith('list<')) {
-                let itemType = sf.type.substring(5, sf.type.length - 1);
+                const itemType = sf.type.substring(5, sf.type.length - 1);
                 if (isPrimitiveType(itemType)) {
-                    let v = fieldValue ? fieldValue as (boolean | number | string) : [];
+                    const v = fieldValue ? fieldValue as (boolean | number | string) : [];
                     fields.push({
                         name: sf.name,
                         comment: sf.comment,
@@ -303,9 +311,9 @@ export class RecordEditEntityCreator {
                         type: 'funcAdd',
                         eleType: itemType,
                         value: () => {
-                            let sFieldable = this.schema.itemIncludeImplMap.get(itemType) as SStruct | SInterface;
-                            let defaultValue = this.schema.defaultValue(sFieldable);
-                            onAddItemForArray(defaultValue, [...fieldChain, sf.name]);
+                            const sFieldable = this.schema.itemIncludeImplMap.get(itemType) as SStruct | SInterface;
+                            const defaultValue = this.schema.defaultValue(sFieldable);
+                            onAddItemToArray(defaultValue, [...fieldChain, sf.name]);
                         }
                     });
                 }
@@ -329,7 +337,7 @@ export class RecordEditEntityCreator {
             return;
         }
         let fkTable = null;
-        for (let fk of structural.foreignKeys) {
+        for (const fk of structural.foreignKeys) {
             if (fk.keys.length == 1 && fk.keys[0] == fieldName &&
                 (fk.refType == 'rPrimary' || fk.refType == 'rNullablePrimary')) {
                 fkTable = fk.refTable;
@@ -339,7 +347,7 @@ export class RecordEditEntityCreator {
         if (fkTable == null) {
             return;
         }
-        let sTable = this.schema.getSTable(fkTable);
+        const sTable = this.schema.getSTable(fkTable);
         if (sTable == null) {
             return;
         }
@@ -356,7 +364,7 @@ export class RecordEditEntityCreator {
 
 function getImplNameOptions(sInterface: SInterface): EntityEditFieldOptions {
     const impls = [];
-    for (let {name} of sInterface.impls) {
+    for (const {name} of sInterface.impls) {
         impls.push({value: name, label: name});
     }
     return {options: impls, isValueInteger: false, isEnum: true};

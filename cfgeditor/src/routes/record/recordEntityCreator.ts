@@ -23,8 +23,8 @@ export class RecordEntityCreator {
                        label?: string,
                        arrayIndex?: number): Entity | null {
 
-        let fields: EntityField[] = [];
-        let type: string = obj['$type'] as string;
+        const fields: EntityField[] = [];
+        const type: string = obj['$type'] as string;
         if (type == null) {
             console.error('$type missing');
             return null;
@@ -39,19 +39,19 @@ export class RecordEntityCreator {
             }
         }
 
-        let sourceEdges: EntitySourceEdge[] = [];
+        const sourceEdges: EntitySourceEdge[] = [];
 
-        for (let fieldKey in obj) {
+        for (const fieldKey in obj) {
             if (fieldKey.startsWith("$")) {
                 continue;
             }
-            let fieldValue: JSONValue = obj[fieldKey];
+            const fieldValue: JSONValue = obj[fieldKey];
 
             let sField: SField | null = null;
             if (sItem) {
                 sField = getField(sItem, fieldKey);
             }
-            let comment = sField?.comment ?? fieldKey;
+            const comment = sField?.comment ?? fieldKey;
 
             const field = {
                 key: fieldKey,
@@ -61,20 +61,20 @@ export class RecordEntityCreator {
             }
             fields.push(field);
 
-            let ft = typeof fieldValue
+            const ft = typeof fieldValue
             if (ft == 'object') {
                 if (Array.isArray(fieldValue)) {  // list or map, (map is list of $entry)
-                    let fArr: JSONArray = fieldValue as JSONArray;
+                    const fArr: JSONArray = fieldValue as JSONArray;
                     if (fArr.length == 0) {
                         field.value = '[]'
                     } else {
-                        let ele = fArr[0];
+                        const ele = fArr[0];
                         if (typeof ele == 'object') { // list of struct/interface, or map
                             let i = 0;
-                            for (let e of fArr) {
-                                let fObj: JSONObject & Refs = e as JSONObject & Refs;
-                                let childId: string = `${id}-${fieldKey}[${i}]`;
-                                let childEntity = this.createRecordEntity(childId, fObj, undefined, i + 1);
+                            for (const e of fArr) {
+                                const fObj: JSONObject & Refs = e as JSONObject & Refs;
+                                const childId: string = `${id}-${fieldKey}[${i}]`;
+                                const childEntity = this.createRecordEntity(childId, fObj, undefined, i + 1);
                                 i++;
 
                                 if (childEntity) {
@@ -93,9 +93,9 @@ export class RecordEntityCreator {
                         }
                     }
                 } else { // struct or interface
-                    let fObj: JSONObject & Refs = fieldValue as JSONObject & Refs;
-                    let childId: string = id + "-" + fieldKey;
-                    let childEntity = this.createRecordEntity(childId, fObj);
+                    const fObj: JSONObject & Refs = fieldValue as JSONObject & Refs;
+                    const childId: string = id + "-" + fieldKey;
+                    const childEntity = this.createRecordEntity(childId, fObj);
                     if (childEntity) {
                         sourceEdges.push({
                             sourceHandle: fieldKey,
@@ -109,7 +109,7 @@ export class RecordEntityCreator {
             } else { // primitive
                 let valueStr: string = fieldValue.toString();
                 if (ft == 'boolean') {
-                    let fb = fieldValue as boolean
+                    const fb = fieldValue as boolean
                     valueStr = fb ? '✔️' : '✘';
                 }
                 field.value = valueStr
@@ -119,7 +119,7 @@ export class RecordEntityCreator {
         let thisLabel = label ?? getLabel(type);
         thisLabel = arrayIndex === undefined ? thisLabel : thisLabel + '.' + arrayIndex;
 
-        let entity: Entity = {
+        const entity: Entity = {
             id: id,
             label: thisLabel,
             fields: fields,

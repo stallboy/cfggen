@@ -38,7 +38,7 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
     if (!hasContainEnum || nodeShow.tableHideAndColors.length > 0) {
         checkTable = (tableName: string) => {
             if (!hasContainEnum) {
-                let sT = schema.getSTable(tableName);
+                const sT = schema.getSTable(tableName);
                 if (sT == null) {
                     return false;
                 }
@@ -47,7 +47,7 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
                 }
             }
 
-            for (let {keyword, hide} of nodeShow.tableHideAndColors) {
+            for (const {keyword, hide} of nodeShow.tableHideAndColors) {
                 if (hide) {
                     if (tableName.includes(keyword)) {
                         return false;
@@ -74,13 +74,13 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
 
     const nodeDoubleClickFunc = (entity: Entity): void => {
         const {isEditMode} = store;
-        let refId = entity.userData as RefId;
+        const refId = entity.userData as RefId;
         navigate(navTo('record', refId.table, refId.id, isEditMode));
     };
 
     const nodeMenuFunc = (entity: Entity): MenuItem[] => {
-        let refId = entity.userData as RefId;
-        let mm = [];
+        const refId = entity.userData as RefId;
+        const mm = [];
         mm.push({
             label: t('record') + refId.id,
             key: 'entityRecord',
@@ -89,7 +89,7 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
             }
         });
 
-        let isEntityEditable = schema.isEditable && !!(schema.getSTable(refId.table)?.isEditable);
+        const isEntityEditable = schema.isEditable && !!(schema.getSTable(refId.table)?.isEditable);
         if (isEntityEditable) {
             mm.push({
                 label: t('edit') + refId.id,

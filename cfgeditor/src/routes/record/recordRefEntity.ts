@@ -7,12 +7,12 @@ import {TauriConf} from "../setting/storageJson.ts";
 import {ResInfo} from "../../res/resInfo.ts";
 
 export function getLastName(id: string): string {
-    let seps = id.split('.');
+    const seps = id.split('.');
     return seps[seps.length - 1];
 }
 
 export function getLabel(id: string): string {
-    let seps = id.split('.');
+    const seps = id.split('.');
     return seps[seps.length - 1];
 }
 
@@ -21,7 +21,7 @@ export function getId(table: string, id: string): string {
 }
 
 function isRefIdInBriefRecords(toTable: string, toId: string, briefRecords: BriefRecord[]): boolean {
-    for (let {id, table} of briefRecords) {
+    for (const {id, table} of briefRecords) {
         if (table == toTable && id == toId) {
             return true;
         }
@@ -36,11 +36,11 @@ function alwaysOk(_t: string) {
 export function createRefs(entity: Entity, refs: Refs, briefRecords: BriefRecord[],
                            checkTable: ((table: string) => boolean) = alwaysOk,
                            isEnityBrief: boolean = false) {
-    let fieldRefs = refs.$refs;
+    const fieldRefs = refs.$refs;
     if (fieldRefs == null) {
         return;
     }
-    for (let {firstField, label, toId, toTable} of fieldRefs) {
+    for (const {firstField, label, toId, toTable} of fieldRefs) {
         if (checkTable(toTable) && isRefIdInBriefRecords(toTable, toId, briefRecords)) {
             entity.sourceEdges.push({
                 sourceHandle: isEnityBrief ? '@out' : firstField,
@@ -93,7 +93,7 @@ export function createRefEntities({
     }
 
 
-    let myCheckTable = checkTable ?? alwaysOk;
+    const myCheckTable = checkTable ?? alwaysOk;
     for (const briefRecord of refs) {
         const table = briefRecord.table;
         const id = briefRecord.id;
@@ -106,8 +106,8 @@ export function createRefEntities({
             continue;
         }
 
-        let refId: RefId = {table, id};
-        let eid = getId(table, id);
+        const refId: RefId = {table, id};
+        const eid = getId(table, id);
 
         let isRefIn = false;
         let entityType;

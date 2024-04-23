@@ -11,6 +11,8 @@ export type EditState = {
 
     afterEditStateChanged: () => void;
     submitEditingObject: () => void;
+
+    copiedObject: JSONObject;
 }
 
 export const editState: EditState = {
@@ -23,6 +25,8 @@ export const editState: EditState = {
     },
     submitEditingObject: () => {
     },
+
+    copiedObject: {'$type': ''},
 };
 
 
@@ -54,22 +58,22 @@ export function onUpdateFormValues(schema: Schema,
                                    fieldChains: (string | number)[]) {
     // console.log('formChange', fieldChains, values);
 
-    let obj = getFieldObj(editState.editingObject, fieldChains);
-    let name = obj['$type'] as string;
-    let sItem = schema.itemIncludeImplMap.get(name);
+    const obj = getFieldObj(editState.editingObject, fieldChains);
+    const name = obj['$type'] as string;
+    const sItem = schema.itemIncludeImplMap.get(name);
 
-    for (let key in values) {
+    for (const key in values) {
         if (key.startsWith("$")) { // $impl
             continue;
         }
-        let conv = getFieldPrimitiveTypeConverter(key, sItem);
+        const conv = getFieldPrimitiveTypeConverter(key, sItem);
 
-        let fieldValue = values[key];
+        const fieldValue = values[key];
         if (Array.isArray(fieldValue)) {
             // antd form 会返回[undefined, .. ], 这里忽略掉undefined 的item
-            let fArr: JSONArray = fieldValue as JSONArray;
-            let newArr = [];
-            for (let fArrElement of fArr) {
+            const fArr: JSONArray = fieldValue as JSONArray;
+            const newArr = [];
+            for (const fArrElement of fArr) {
                 if (fArrElement != undefined) {
                     newArr.push(conv(fArrElement));
                 }
@@ -87,7 +91,7 @@ export function onUpdateInterfaceValue(jsonObject: JSONObject,
                                        fieldChains: (string | number)[]) {
     // console.log('updateInterface', fieldChains, jsonObject);
 
-    let obj = getFieldObj(editState.editingObject, fieldChains.slice(0, fieldChains.length - 1));
+    const obj = getFieldObj(editState.editingObject, fieldChains.slice(0, fieldChains.length - 1));
     obj[fieldChains[fieldChains.length - 1]] = jsonObject;
 
     editState.seq++;
@@ -96,11 +100,11 @@ export function onUpdateInterfaceValue(jsonObject: JSONObject,
 }
 
 
-export function onAddItemForArray(defaultItemJsonObject: JSONObject,
-                                  arrayFieldChains: (string | number)[]) {
+export function onAddItemToArray(defaultItemJsonObject: JSONObject,
+                                 arrayFieldChains: (string | number)[]) {
     // console.log('addItem', arrayFieldChains, defaultItemJsonObject);
 
-    let obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
+    const obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
     obj.push(defaultItemJsonObject);
 
     editState.seq++;
@@ -109,13 +113,13 @@ export function onAddItemForArray(defaultItemJsonObject: JSONObject,
 }
 
 
-export function onMoveItemFromArray(curIndex: number,
-                                    newIndex: number,
-                                    arrayFieldChains: (string | number)[]) {
+export function onMoveItemInArray(curIndex: number,
+                                  newIndex: number,
+                                  arrayFieldChains: (string | number)[]) {
     // console.log('delItem', arrayFieldChains, deleteIndex);
 
-    let obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
-    let o2 = obj[newIndex];
+    const obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
+    const o2 = obj[newIndex];
     obj[newIndex] = obj[curIndex]
     obj[curIndex] = o2;
 
@@ -129,7 +133,7 @@ export function onDeleteItemFromArray(deleteIndex: number,
                                       arrayFieldChains: (string | number)[]) {
     // console.log('delItem', arrayFieldChains, deleteIndex);
 
-    let obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
+    const obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
     obj.splice(deleteIndex, 1);
 
     editState.seq++;
@@ -145,9 +149,48 @@ export function applyNewEditingObject(newEditingObject: JSONObject) {
     editState.afterEditStateChanged();
 }
 
+export function onStructCopy(obj: JSONObject) {
+    editState.copiedObject = structuredClone(obj);
+}
+
+export function isCopiedFitAllowedType(allowdType: string) {
+    const type = editState.copiedObject.$type;
+    if (type == allowdType) {
+        return true;
+    }
+
+    if (type.startsWith(allowdType)) {
+        return type[allowdType.length] == '.'  //简单判断，没有去查询interface和impl
+    }
+
+    return false;
+}
+
+export function onStructPaste(fieldChains: (string | number)[]) {
+    let obj: any = editState.editingObject;
+    const copied = editState.copiedObject;
+
+    let i = 0;
+    const len = fieldChains.length;
+    for (const field of fieldChains) {
+
+        if (i == len - 1) {
+            obj[field] = structuredClone(copied);
+        } else {
+            obj = obj[field];  // as 只是为了跳过ts类型检查
+        }
+        i++;
+    }
+
+    editState.seq++;
+    editState.fitView = true;
+    editState.afterEditStateChanged();
+
+}
+
 function getFieldObj(editingObject: JSONObject, fieldChains: (string | number)[]): any {
     let obj: any = editingObject;
-    for (let field of fieldChains) {
+    for (const field of fieldChains) {
         obj = obj[field];  // as 只是为了跳过ts类型检查
     }
     return obj;
@@ -155,16 +198,16 @@ function getFieldObj(editingObject: JSONObject, fieldChains: (string | number)[]
 
 function getFieldPrimitiveTypeConverter(fieldName: string, sItem?: SItem): ((value: any) => any) {
     if (sItem) {
-        let structural = sItem as SStruct | STable;
-        let field = getField(structural, fieldName);
+        const structural = sItem as SStruct | STable;
+        const field = getField(structural, fieldName);
         if (field) {
-            let ft = field.type;
+            const ft = field.type;
             if (ft == 'int') {
                 return toInt;
             } else if (ft == 'long' || ft == 'float') {
                 return toFloat;
             } else if (ft.startsWith('list<')) {
-                let itemType = ft.slice(5, ft.length - 1);
+                const itemType = ft.slice(5, ft.length - 1);
                 if (itemType == 'int') {
                     return toInt;
                 } else if (itemType == 'long' || itemType == 'float') {

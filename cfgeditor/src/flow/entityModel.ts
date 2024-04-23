@@ -1,4 +1,4 @@
-import {BriefDescription} from "../routes/record/recordModel.ts";
+import {BriefDescription, JSONObject} from "../routes/record/recordModel.ts";
 import {NodeShowType} from "../routes/setting/storageJson.ts";
 
 import {ResInfo} from "../res/resInfo.ts";
@@ -63,6 +63,10 @@ export interface EntityEdit {
     editOnMoveUp?: () => void;
     editOnMoveDown?: () => void;
     editOnUpdateValues: (values: any) => void;
+
+    editFieldChain?: (string | number)[];
+    editObj?: JSONObject;
+    editAllowObjType? : string;
 }
 
 export interface EntityBrief {

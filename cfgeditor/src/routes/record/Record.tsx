@@ -4,7 +4,12 @@ import {App, Result} from "antd";
 import {createRefEntities, getId, getLabel} from "./recordRefEntity.ts";
 import {RecordEntityCreator} from "./recordEntityCreator.ts";
 import {RecordEditEntityCreator} from "./recordEditEntityCreator.ts";
-import {editState, startEditingObject} from "./editingObject.ts";
+import {
+    editState,
+    isCopiedFitAllowedType,
+    onStructCopy, onStructPaste,
+    startEditingObject
+} from "./editingObject.ts";
 import {useTranslation} from "react-i18next";
 import {
     invalidateAllQueries,
@@ -26,7 +31,7 @@ import {useEntityToGraph} from "../../flow/FlowGraph.tsx";
 
 function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const {schema, notes, curTable} = useOutletContext<SchemaTableType>();
-    const {server, tauriConf, resourceDir,resMap} = store;
+    const {server, tauriConf, resourceDir, resMap} = store;
     const {notification} = App.useApp();
     const {curTableId, curId} = useLocationData();
     const navigate = useNavigate();
@@ -75,9 +80,17 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     let editSeq: number = 0;
     let fitView: boolean = true;
     if (!isEditing) {
-        let creator = new RecordEntityCreator(entityMap, schema, refId, recordResult.refs, tauriConf, resourceDir, resMap);
+        const creator = new RecordEntityCreator(entityMap, schema, refId, recordResult.refs, tauriConf, resourceDir, resMap);
         creator.createRecordEntity(entityId, recordResult.object, getId(getLabel(curTable.name), curId));
-        createRefEntities({entityMap, schema, refs: recordResult.refs, isCreateRefs: false, tauriConf, resourceDir, resMap});
+        createRefEntities({
+            entityMap,
+            schema,
+            refs: recordResult.refs,
+            isCreateRefs: false,
+            tauriConf,
+            resourceDir,
+            resMap
+        });
     } else {
 
         function submitEditingObject() {
@@ -90,7 +103,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
 
         //这是非纯函数，escape hatch，用useRef也能做，这里用全局变量
         [editSeq, fitView] = startEditingObject(recordResult, afterEditStateChanged, submitEditingObject);
-        let creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId);
+        const creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId);
         creator.createThis();
     }
     fillHandles(entityMap);
@@ -129,17 +142,17 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     })
 
     const nodeMenuFunc = (entity: Entity): MenuItem[] => {
-        let refId = entity.userData as RefId;
+        const refId = entity.userData as RefId;
 
-        let mm = [];
+        const mm = [];
 
-        let isCurrentEntity = (refId.table == curTable.name && refId.id == curId);
+        const isCurrentEntity = (refId.table == curTable.name && refId.id == curId);
         if (isCurrentEntity) {
             if (isEditable) {
                 mm.push(getEditMenu(curTable.name, curId, !edit));
             }
         } else {
-            let isEntityEditable = schema.isEditable && !!(schema.getSTable(refId.table)?.isEditable);
+            const isEntityEditable = schema.isEditable && !!(schema.getSTable(refId.table)?.isEditable);
             if (isEntityEditable) {
                 mm.push(getEditMenu(refId.table, refId.id, false));
                 mm.push(getEditMenu(refId.table, refId.id, true));
@@ -160,6 +173,28 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
                 navigate(navTo('recordRef', refId.table, refId.id));
             }
         })
+        if (isEditing && entity.edit) {
+            const {editObj, editFieldChain, editAllowObjType} = entity.edit;
+            if (editObj) {
+                mm.push({
+                    label: t('structCopy'),
+                    key: 'structCopy',
+                    handler() {
+                        onStructCopy(editObj)
+                    }
+                });
+            }
+
+            if (editFieldChain && editAllowObjType && isCopiedFitAllowedType(editAllowObjType)) {
+                mm.push({
+                    label: t('structPaste'),
+                    key: 'structPaste',
+                    handler() {
+                        onStructPaste(editFieldChain)
+                    }
+                });
+            }
+        }
         return mm;
     }
 

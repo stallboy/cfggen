@@ -71,7 +71,7 @@ i18n.use(LanguageDetector)
                     appSetting: '资源',
                     implsShowCnt: '接口实现数',
                     refIn: '入层',
-                    recordRefInShowLinkMaxNode:'入层显示链接的最大节点数',
+                    recordRefInShowLinkMaxNode: '入层显示链接的最大节点数',
                     refOutDepth: '出层',
                     maxNode: '节点数',
                     recordRefIn: '数据入层',
@@ -122,6 +122,9 @@ i18n.use(LanguageDetector)
                     view: '浏览',
                     addOrUpdate: '更新',
                     setDefaultValue: '清空',
+
+                    structCopy: '拷贝',
+                    structPaste: '粘贴',
                 }
             }
         }

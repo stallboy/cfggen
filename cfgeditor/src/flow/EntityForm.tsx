@@ -63,7 +63,7 @@ function PrimitiveControl(field: EntityEditField) {
     if (autoCompleteOptions && autoCompleteOptions.options.length > 0) {
         const {options, isValueInteger, isEnum} = autoCompleteOptions;
 
-        let filters: any = {}
+        const filters: any = {}
 
         if (isValueInteger) {
             filters.filterSort = filterNumberSort;
@@ -100,7 +100,7 @@ function StructRefItem({field}: { field: EntityEditField }) {
 }
 
 function FuncAddFormItem({field}: { field: EntityEditField }) {
-    let func = field.value as FuncType;
+    const func = field.value as FuncType;
     return <Flex key={field.name} gap='middle' justify="flex-end" style={rowFlexStyle}>
         <Button className='nodrag' onClick={func} icon={<PlusSquareTwoTone/>}> {field.name} </Button>
         {field.handleOut && <Handle type='source' position={Position.Right} id={field.name}
@@ -202,7 +202,7 @@ function ArrayOfPrimitiveFormItem({field}: { field: EntityEditField }) {
 
 function FuncSubmitFormItem({field}: { field: EntityEditField }) {
     const [t] = useTranslation();
-    let func = field.value as FuncSubmitType;
+    const func = field.value as FuncSubmitType;
     return <Form.Item {...formItemLayoutWithOutLabel} key={field.name}>
         <Space size={50}>
             <Button className='nodrag' type="primary" htmlType="submit" onClick={() => func.funcSubmit()}>
@@ -221,8 +221,8 @@ function InterfaceFormItem({field}: { field: EntityEditField }): any {
         form.setFieldValue(field.name, field.value);
     }, [field.value]);
 
-    let options = field.autoCompleteOptions?.options;
-    let implSelect = <Form.Item name={field.name} key={field.name} label={makeLabel(field)}
+    const options = field.autoCompleteOptions?.options;
+    const implSelect = <Form.Item name={field.name} key={field.name} label={makeLabel(field)}
                                 initialValue={field.value}>
         <Select className='nodrag' options={options}
                 filterOption={filterOption}
