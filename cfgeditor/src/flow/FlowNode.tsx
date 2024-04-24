@@ -94,7 +94,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
         {noteShowOrEdit}
         {title}
 
-        {fields && <EntityProperties fields={fields} color={color}/>}
+        {fields && <EntityProperties fields={fields} entity={nodeProps.data} color={color}/>}
         {brief && <EntityCard entity={nodeProps.data} image={firstImage}/>}
         {edit && <EntityForm edit={edit}/>}
 

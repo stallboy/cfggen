@@ -10,7 +10,7 @@ import {RecordEditResult} from "../record/recordModel.ts";
 import {deleteRecord} from "../api.ts";
 import {toBlob} from "html-to-image";
 import {saveAs} from "file-saver";
-import {formLayout} from "./TableSetting.tsx";
+import {formLayout} from "./BasicSetting.tsx";
 
 
 export const Operations = memo(function Operations({schema, curTable, flowRef}: {

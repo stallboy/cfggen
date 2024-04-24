@@ -1,4 +1,5 @@
-import {Entity, EntityType} from "./entityModel.ts";
+import {Entity, EntityBaseField, EntityType} from "./entityModel.ts";
+import {NodeShowType} from "../routes/setting/storageJson.ts";
 
 
 export function getNodeBackgroundColor(entity: Entity): string {
@@ -32,5 +33,14 @@ export function getNodeBackgroundColor(entity: Entity): string {
     }
 }
 
+export function getFieldBackgroundColor(field: EntityBaseField, nodeShow?: NodeShowType): string | undefined {
+    if (nodeShow && nodeShow.fieldColors.length > 0) {
+        for (const keywordColor of nodeShow.fieldColors) {
+            if (field.name == keywordColor.keyword) {
+                return keywordColor.color;
+            }
+        }
+    }
+}
 
 export const edgeStorkColor = '#0898b5';//'#1677ff';

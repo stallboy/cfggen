@@ -1,12 +1,12 @@
 import {Tabs} from "antd";
 
-import {RecordRefSetting} from "./RecordRefSetting.tsx";
+import {RecordShowSetting} from "./RecordShowSetting.tsx";
 import {useTranslation} from "react-i18next";
 import {STable} from "../table/schemaModel.ts";
 import {Schema} from "../table/schemaUtil.ts";
 
 import {KeyShortCut} from "./KeyShortcut.tsx";
-import {TableSetting} from "./TableSetting.tsx";
+import {BasicSetting} from "./BasicSetting.tsx";
 import {Operations} from "./Operations.tsx";
 import {memo, RefObject} from "react";
 import {TauriSetting} from "./TauriSeting.tsx";
@@ -23,9 +23,14 @@ export const Setting = memo(function Setting({schema, curTable, flowRef}: {
 
     const items = [
         {
-            key: 'recordSetting',
-            label: t('recordSetting'),
-            children: <RecordRefSetting/>,
+            key: 'basicSetting',
+            label: t('basicSetting'),
+            children: <BasicSetting/>,
+        },
+        {
+            key: 'recordShowSetting',
+            label: t('recordShowSetting'),
+            children: <RecordShowSetting/>,
         },
         {
             key: 'fixedPagesSetting',
@@ -33,11 +38,7 @@ export const Setting = memo(function Setting({schema, curTable, flowRef}: {
             children: <FixedPagesSetting schema={schema} curTable={curTable}/>,
         },
 
-        {
-            key: 'tableSetting',
-            label: t('tableSetting'),
-            children: <TableSetting/>,
-        },
+
         {
             key: 'operations',
             label: t('operations'),

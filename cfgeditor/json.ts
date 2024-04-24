@@ -5,6 +5,8 @@ export interface NodeShowType {
     nodePlacementStrategy: NodePlacementStrategyType;
     keywordColors: KeywordColor[];
     tableHideAndColors: TableHideAndColor[];
+
+    fieldColors: KeywordColor[];
 }
 
 export interface KeywordColor {

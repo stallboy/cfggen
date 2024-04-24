@@ -32,6 +32,7 @@ export interface FixedPage {
 
 export interface NodeShowType {
     containEnum:           boolean;
+    fieldColors:           KeywordColor[];
     keywordColors:         KeywordColor[];
     nodePlacementStrategy: NodePlacementStrategyType;
     showDescription:       ShowDescriptionType;
@@ -319,6 +320,7 @@ const typeMap: any = {
     ], false),
     "NodeShowType": o([
         { json: "containEnum", js: "containEnum", typ: true },
+        { json: "fieldColors", js: "fieldColors", typ: a(r("KeywordColor")) },
         { json: "keywordColors", js: "keywordColors", typ: a(r("KeywordColor")) },
         { json: "nodePlacementStrategy", js: "nodePlacementStrategy", typ: r("NodePlacementStrategyType") },
         { json: "showDescription", js: "showDescription", typ: r("ShowDescriptionType") },

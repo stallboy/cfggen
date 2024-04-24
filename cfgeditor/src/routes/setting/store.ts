@@ -59,6 +59,7 @@ const storeState: StoreState = {
         nodePlacementStrategy: 'BRANDES_KOEPF',
         keywordColors: [],
         tableHideAndColors: [],
+        fieldColors: [],
     },
 
     query: '',
@@ -142,7 +143,7 @@ export function clearLayoutCache() {
 }
 
 export function invalidateAllQueries() {
-    queryClient.invalidateQueries({queryKey: [], refetchType: 'all'}).catch((reason: any) => {
+    queryClient.invalidateQueries({queryKey: [], refetchType: 'all'}).catch((reason: unknown) => {
         console.log(reason);
     });
 }

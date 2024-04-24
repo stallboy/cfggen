@@ -1,7 +1,8 @@
 import {Handle, Position} from "@xyflow/react";
-import {EntityField} from "./entityModel.ts";
+import {Entity, EntityField} from "./entityModel.ts";
 import {Flex, List, Tooltip, Typography} from "antd";
 import {CSSProperties, memo, useMemo} from "react";
+import {getFieldBackgroundColor} from "./colors.ts";
 
 const {Text} = Typography;
 
@@ -26,8 +27,9 @@ const flexStyle = {width: '100%'};
 const ellipsis = {tooltip: true};
 const itemValueStyle = {maxWidth: '70%'};
 
-export const EntityProperties = memo(function EntityProperties({fields, color}: {
+export const EntityProperties = memo(function EntityProperties({fields, entity, color}: {
     fields: EntityField[],
+    entity: Entity,
     color: string,
 }) {
 
@@ -47,7 +49,11 @@ export const EntityProperties = memo(function EntityProperties({fields, color}: 
     }
     return <List size='small' style={listStyle} bordered dataSource={fields}
                  renderItem={(item) => {
-                     return <List.Item key={item.key} style={listItemStyle}>
+                     const bgColor = getFieldBackgroundColor(item, entity.sharedSetting?.nodeShow)
+                     const thisItemStyle: CSSProperties = bgColor ?
+                         {position: 'relative', backgroundColor: bgColor} : listItemStyle;
+
+                     return <List.Item key={item.key} style={thisItemStyle}>
                          <Flex justify="space-between" style={flexStyle}>
                              <Tooltip title={tooltip(item)}>
                                  <Text style={itemKeyStyle} ellipsis={ellipsis}>

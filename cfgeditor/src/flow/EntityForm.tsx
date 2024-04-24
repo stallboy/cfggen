@@ -112,7 +112,7 @@ function PrimitiveFormItem({field}: { field: EntityEditField }) {
     const form = Form.useFormInstance();
     useEffect(() => {
         form.setFieldValue(field.name, field.value);
-    }, [field.value]);
+    }, [field.name, field.value, form]);
 
 
     let props = {}

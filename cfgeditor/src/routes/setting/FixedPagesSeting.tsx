@@ -2,7 +2,7 @@ import {makeFixedPage, setFixedPagesConf, store, useLocationData} from "./store.
 import {memo, useEffect} from "react";
 import {useTranslation} from "react-i18next";
 import {Button, Card, Form, Input, Space} from "antd";
-import {formLayout} from "./TableSetting.tsx";
+import {formLayout} from "./BasicSetting.tsx";
 import {CloseOutlined} from "@ant-design/icons";
 import {Schema} from "../table/schemaUtil.ts";
 import {STable} from "../table/schemaModel.ts";

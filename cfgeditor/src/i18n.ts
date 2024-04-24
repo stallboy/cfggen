@@ -63,9 +63,9 @@ i18n.use(LanguageDetector)
                     connect: '连接',
                     reconnectCurServer: '重连当前服务器',
 
-                    tableSetting: '表显示',
+                    basicSetting: '基础',
+                    recordShowSetting: '显示',
                     fixedPagesSetting: '固定页面',
-                    recordSetting: '关系显示',
                     operations: '操作',
                     keySetting: '快捷键',
                     appSetting: '资源',
@@ -106,6 +106,9 @@ i18n.use(LanguageDetector)
                     addKeywordColor: '增加',
                     tableHideAndColors: '表显示',
                     addTableHideAndColor: '增加',
+                    fieldColors: '字段颜色',
+                    addFieldColor: '增加',
+
                     setNodeShow: '提交',
                     toggleFullScreen: '切换全屏',
                     tauriConf: 'App设置',

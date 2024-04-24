@@ -1,18 +1,14 @@
-import {Button, Card, Checkbox, ColorPicker, Form, Input, InputNumber, Radio, Space, Switch} from "antd";
+import {Button, Card, Checkbox, ColorPicker, Form, Input, Radio, Space, Switch} from "antd";
 import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 
-import {KeywordColor, TableHideAndColor} from "./storageJson.ts";
+import {KeywordColor, NodeShowType, TableHideAndColor} from "./storageJson.ts";
 import {
     setNodeShow,
-    setRecordMaxNode,
-    setRecordRefIn,
-    setRecordRefInShowLinkMaxNode,
-    setRecordRefOutDepth,
     store
 } from "./store.ts";
 import {memo} from "react";
-import {formLayout} from "./TableSetting.tsx";
+import {formLayout} from "./BasicSetting.tsx";
 
 
 function fixColor(color: any) {
@@ -43,39 +39,23 @@ function fixHideAndColors(keywordHideAndColors: any[]): TableHideAndColor[] {
     return colors;
 }
 
-export const RecordRefSetting = memo(function RecordRefSetting() {
-    const {t} = useTranslation();
-    const {nodeShow, recordRefIn, recordRefInShowLinkMaxNode, recordRefOutDepth, recordMaxNode} = store;
+function onFinish(values: any) {
+    // console.log(values);
+    const newNodeShow: NodeShowType = {
+        ...values,
+        keywordColors: fixColors(values.keywordColors),
+        tableHideAndColors: fixHideAndColors(values.tableHideAndColors),
+        fieldColors: fixColors(values.fieldColors),
+    };
+    setNodeShow(newNodeShow);
+}
 
-    function onFinish(values: any) {
-        // console.log(values);
-        const newNodeShow = {
-            ...values,
-            keywordColors: fixColors(values.keywordColors),
-            tableHideAndColors: fixHideAndColors(values.tableHideAndColors)
-        };
-        setNodeShow(newNodeShow);
-    }
+export const RecordShowSetting = memo(function RecordRefSetting() {
+    const {t} = useTranslation();
+    const {nodeShow,} = store;
+
 
     return <>
-        <Form labelCol={{span: 6}} wrapperCol={{span: 18}} layout={'horizontal'}
-              initialValues={{recordRefIn, recordRefInShowLinkMaxNode, recordRefOutDepth, recordMaxNode}}>
-            <Form.Item name='recordRefIn' label={t('recordRefIn')} valuePropName="checked">
-                <Switch onChange={setRecordRefIn}/>
-            </Form.Item>
-
-            <Form.Item name='recordRefInShowLinkMaxNode' label={t('recordRefInShowLinkMaxNode')}>
-                <InputNumber min={1} max={20} onChange={setRecordRefInShowLinkMaxNode}/>
-            </Form.Item>
-
-            <Form.Item name='recordRefOutDepth' label={t('recordRefOutDepth')}>
-                <InputNumber min={1} max={500} onChange={setRecordRefOutDepth}/>
-            </Form.Item>
-
-            <Form.Item name='recordMaxNode' label={t('recordMaxNode')}>
-                <InputNumber min={1} max={500} onChange={setRecordMaxNode}/>
-            </Form.Item>
-        </Form>
 
         <Card title={t("nodeShowSetting")}>
             <Form name="node show setting"  {...formLayout} initialValues={nodeShow} onFinish={onFinish}
@@ -157,6 +137,31 @@ export const RecordRefSetting = memo(function RecordRefSetting() {
                     </Form.List>
                 </Form.Item>
 
+
+                <Form.Item label={t('fieldColors')}>
+                    <Form.List name="fieldColors">
+                        {(fields, {add, remove}) => (
+                            <div style={{display: 'flex', flexDirection: 'column', rowGap: 16}}>
+                                {fields.map(({key, name}) => (
+                                    <Space key={key}>
+                                        <Form.Item name={[name, 'keyword']} noStyle>
+                                            <Input placeholder="field"/>
+                                        </Form.Item>
+                                        <Form.Item name={[name, 'color']} noStyle>
+                                            <ColorPicker/>
+                                        </Form.Item>
+                                        <CloseOutlined onClick={() => remove(name)}/>
+                                    </Space>
+                                ))}
+
+                                <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined/>}>
+                                    {t('addFieldColor')}
+                                </Button>
+                            </div>
+                        )}
+                    </Form.List>
+                </Form.Item>
+                
                 <Form.Item>
                     <Button type="primary" htmlType="submit">
                         {t('setNodeShow')}
