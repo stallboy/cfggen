@@ -91,22 +91,25 @@ export function readStoreStateOnce() {
     alreadyRead = true;
     console.log('read storage')
     for (const k in storeState) {
-        let key = k as keyof StoreState;
+        const key = k as keyof StoreState;
         const value = storeState[key]
         switch (key) {
             case 'nodeShow':
+                // eslint-disable-next-line no-case-declarations
                 const ns = getPrefJson<NodeShowType>('nodeShow', Convert.toNodeShowType);
                 if (ns) {
                     store.nodeShow = ns;
                 }
                 break;
             case 'pageConf':
+                // eslint-disable-next-line no-case-declarations
                 const pc = getPrefJson<FixedPagesConf>('pageConf', Convert.toFixedPagesConf);
                 if (pc) {
                     store.pageConf = pc;
                 }
                 break;
             case 'tauriConf':
+                // eslint-disable-next-line no-case-declarations
                 const tc = getPrefJson<TauriConf>('tauriConf', Convert.toTauriConf);
                 if (tc) {
                     store.tauriConf = tc;
@@ -237,7 +240,7 @@ export function setDragPanelWidth(value: string | number) {
 
 export function makeFixedPage(curTableId: string, curId: string) {
     const {recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow} = store;
-    let fp: FixedPage = {
+    const fp: FixedPage = {
         label: getId(curTableId, curId),
         table: curTableId,
         id: curId,
@@ -256,7 +259,7 @@ export function setFixedPagesConf(pageConf: FixedPagesConf) {
 }
 
 export function getFixedPage(pageConf: FixedPagesConf, label: string) {
-    for (let page of pageConf.pages) {
+    for (const page of pageConf.pages) {
         if (page.label == label) {
             return page;
         }
@@ -300,7 +303,7 @@ export function historyNext(curPage: PageType, history: History, isEditMode:bool
 
 export function getFixCurIdByTable(schema: Schema, curTableId: string, curId: string) {
     let id = '';
-    let table = schema.getSTable(curTableId);
+    const table = schema.getSTable(curTableId);
     if (table) {
         if (schema.hasId(table, curId)) {
             id = curId;
@@ -334,7 +337,7 @@ export function navTo(curPage: PageType, tableId: string, id: string,
 }
 
 export function getLastNavToInLocalStore() {
-    let page = getPrefEnumStr<PageType>('curPage', pageEnums);
+    const page = getPrefEnumStr<PageType>('curPage', pageEnums);
     const tableId = getPrefStr('curTableId', '');
     const id = getPrefStr('curId', '');
     return navTo(page ?? 'table', tableId, id);

@@ -26,7 +26,8 @@ import {SchemaTableType} from "../../CfgEditorApp.tsx";
 import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
 import {useEffect, useReducer} from "react";
 
-import {useEntityToGraph} from "../../flow/FlowGraph.tsx";
+
+import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
 
 
 function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
@@ -37,6 +38,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const navigate = useNavigate();
     const [t] = useTranslation();
     const {edit, pathname} = useLocationData();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, forceUpdate] = useReducer(v => v++, 0);
 
     useEffect(() => {
@@ -46,13 +48,13 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const addOrUpdateRecordMutation = useMutation<RecordEditResult, Error, JSONObject>({
         mutationFn: (jsonObject: JSONObject) => addOrUpdateRecord(server, curTableId, jsonObject),
 
-        onError: (error, _variables, _context) => {
+        onError: (error) => {
             notification.error({
                 message: `addOrUpdateRecord  ${curTableId}  err: ${error.toString()}`,
                 placement: 'topRight', duration: 4
             });
         },
-        onSuccess: (editResult, _variables, _context) => {
+        onSuccess: (editResult) => {
             if (editResult.resultCode == 'updateOk' || editResult.resultCode == 'addOk') {
                 notification.info({
                     message: `addOrUpdateRecord  ${curTableId} ${editResult.resultCode}`,
@@ -93,13 +95,13 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
         });
     } else {
 
-        function submitEditingObject() {
+        const submitEditingObject = () => {
             addOrUpdateRecordMutation.mutate(editState.editingObject);
-        }
+        };
 
-        function afterEditStateChanged() {
+        const afterEditStateChanged = () => {
             forceUpdate();  // 触发更新
-        }
+        };
 
         //这是非纯函数，escape hatch，用useRef也能做，这里用全局变量
         [editSeq, fitView] = startEditingObject(recordResult, afterEditStateChanged, submitEditingObject);

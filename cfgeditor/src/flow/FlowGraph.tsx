@@ -1,34 +1,11 @@
-import {
-    ReactFlow,
-    Background,
-    Controls,
-    Edge,
-    Node,
-    NodeTypes,
-    ReactFlowProvider,
-    useStore, getNodesBounds, getViewportForBounds, Rect,
-} from "@xyflow/react";
+import {Background, Controls, Edge, Node, NodeTypes, ReactFlow, ReactFlowProvider} from "@xyflow/react";
 import {Entity} from "./entityModel.ts";
-import {
-    createContext,
-    MouseEvent,
-    ReactNode,
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useState
-} from "react";
-import {layoutAsync} from "./layoutAsync.ts";
+import {createContext, MouseEvent as ReactMouseEvent, ReactNode, useCallback, useMemo, useState} from "react";
 import {FlowContextMenu, MenuItem, MenuStyle} from "./FlowContextMenu.tsx";
 import {FlowNode} from "./FlowNode.tsx";
-import {store} from "../routes/setting/store.ts";
-import {convertNodeAndEdges} from "./entityToNodeAndEdge.ts";
-import {useQuery} from "@tanstack/react-query";
-import {NodeShowType} from "../routes/setting/storageJson.ts";
 
 
-export type EntityNode = Node<Entity, string | undefined>;
+export type EntityNode = Node<Entity>;
 export type EntityEdge = Edge;
 export type NodeMenuFunc = (entity: Entity) => MenuItem[];
 export type NodeDoubleClickFunc = (entity: Entity) => void;
@@ -67,21 +44,21 @@ export function FlowGraph({children}: {
     const [nodeMenuFunc, setNodeMenuFunc] = useState<NodeMenuFunc>();
     const [nodeDoubleClickFunc, setNodeDoubleClickFunc] = useState<NodeDoubleClickFunc>();
 
-    const onPaneContextMenu = useCallback((event: any) => {
+    const onPaneContextMenu = useCallback((event: ReactMouseEvent<Element, MouseEvent> | MouseEvent) => {
             event.preventDefault();
             setMenuStyle({top: event.clientY - 30, left: event.clientX - 30,});
             setMenuItems(paneMenu);
         },
         [paneMenu, setMenuStyle, setMenuItems],
     );
-    const onNodeContextMenu = useCallback((event: MouseEvent, flowNode: EntityNode) => {
+    const onNodeContextMenu = useCallback((event: ReactMouseEvent, flowNode: EntityNode) => {
             event.preventDefault();           // Prevent native context menu from showing
             setMenuStyle({top: event.clientY - 30, left: event.clientX - 30,});
             setMenuItems(nodeMenuFunc ? nodeMenuFunc(flowNode.data) : undefined);
         },
         [nodeMenuFunc, setMenuStyle, setMenuItems],
     );
-    const onNodeDoubleClick = useCallback((_event: MouseEvent, flowNode: EntityNode) => {
+    const onNodeDoubleClick = useCallback((_event: ReactMouseEvent, flowNode: EntityNode) => {
             nodeDoubleClickFunc?.(flowNode.data);
         },
         [nodeDoubleClickFunc],
@@ -97,7 +74,7 @@ export function FlowGraph({children}: {
 
     const thisSetNodeDoubleClickFunc = useCallback(function (func: NodeDoubleClickFunc) {
         setNodeDoubleClickFunc(() => func);
-    }, [setNodeMenuFunc]);
+    }, [setNodeDoubleClickFunc]);
 
     const ctx = useMemo(() => {
         return {
@@ -105,7 +82,7 @@ export function FlowGraph({children}: {
             setNodeMenuFunc: thisSetNodeMenuFunc,
             setNodeDoubleClickFunc: thisSetNodeDoubleClickFunc,
         }
-    }, [setPaneMenu, thisSetNodeMenuFunc, setNodeDoubleClickFunc]);
+    }, [setPaneMenu, thisSetNodeMenuFunc, thisSetNodeDoubleClickFunc]);
 
 
     return <ReactFlowProvider>
@@ -135,105 +112,4 @@ export function FlowGraph({children}: {
         </FlowGraphContext.Provider>
     </ReactFlowProvider>;
 
-}
-
-interface FlowGraphInput {
-    pathname: string;
-    entityMap: Map<string, Entity>;
-    notes?: Map<string, string>;
-    nodeMenuFunc: NodeMenuFunc;
-    paneMenu: MenuItem[];
-    nodeDoubleClickFunc?: NodeDoubleClickFunc;
-
-    fitView: boolean;
-    setFitViewForPathname?: (pathname: string) => void;
-    nodeShow?: NodeShowType;
-}
-
-export function useEntityToGraph({
-                                     pathname, entityMap, notes, nodeMenuFunc, paneMenu,
-                                     fitView, setFitViewForPathname, nodeDoubleClickFunc, nodeShow
-                                 }: FlowGraphInput) {
-    const flowGraph = useContext(FlowGraphContext);
-    const {query, nodeShow: currentNodeShow} = store;
-    const width = useStore((state) => state.width);
-    const height = useStore((state) => state.height);
-    const setNodes = useStore((state) => state.setNodes);
-    const setEdges = useStore((state) => state.setEdges);
-    const panZoom = useStore((state) => state.panZoom);
-    const nodeShowSetting = nodeShow ?? currentNodeShow;
-
-    const {nodes, edges} = useMemo(() => convertNodeAndEdges({
-        entityMap,
-        sharedSetting: {notes, query, nodeShow: nodeShowSetting}
-    }), [entityMap, notes, query, nodeShowSetting]);
-
-    const {data: id2RectMap} = useQuery({
-        queryKey: ['layout', pathname],
-        queryFn: () => layoutAsync(nodes, edges, nodeShowSetting),
-        staleTime: 1000 * 60 * 5,
-    })
-
-    let newNodes: EntityNode[] | null = id2RectMap ? applyPositionToNodes(nodes, id2RectMap) : null;
-    // console.log('new nodes', pathname, fitView, newNodes);
-
-
-    useEffect(() => {
-        if (newNodes) {
-            flowGraph.setNodeMenuFunc(nodeMenuFunc);
-            flowGraph.setPaneMenu(paneMenu);
-            if (nodeDoubleClickFunc) {
-                flowGraph.setNodeDoubleClickFunc(nodeDoubleClickFunc)
-            }
-
-            setNodes(newNodes);
-            setEdges(edges);
-            // console.log("set nodes", newNodes, edges);
-
-            if (fitView) {
-                const appliedWHNodes = applyWidthHeightToNodes(newNodes, id2RectMap);
-                const bounds = getNodesBounds(appliedWHNodes, {useRelativePosition: true}); //
-                const viewportForBounds = getViewportForBounds(bounds, width, height, 0.3, 1, 0.2);
-                panZoom?.setViewport(viewportForBounds);
-                // console.log(pathname, bounds, width, height, viewportForBounds)
-                if (setFitViewForPathname) {
-                    setFitViewForPathname(pathname);
-                }
-            }
-
-        }
-    }, [newNodes, edges, nodeMenuFunc, paneMenu, fitView]);
-
-}
-
-function applyPositionToNodes(nodes: EntityNode[], id2RectMap: Map<string, Rect>) {
-    return nodes.map(n => {
-        const newPos = id2RectMap.get(n.id);
-        if (newPos) {
-            const {x, y} = newPos;
-            return {
-                ...n,
-                position: {x, y},
-            }
-        } else {
-            console.log('not found', n, id2RectMap)
-            return n;
-        }
-    })
-}
-
-
-function applyWidthHeightToNodes(nodes: EntityNode[], id2RectMap?: Map<string, Rect>) {
-    if (!id2RectMap) {
-        return nodes;
-    }
-    return nodes.map(n => {
-        const newPos = id2RectMap.get(n.id);
-        if (newPos) {
-            const {width, height} = newPos;
-            return {...n, width, height};
-        } else {
-            return n;
-        }
-    })
 }

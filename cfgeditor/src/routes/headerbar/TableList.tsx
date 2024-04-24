@@ -21,14 +21,14 @@ export const TableList = memo(function TableList({schema}: { schema: Schema }) {
         return <Select id='table' loading={true}/>
     }
 
-    let group2Tables = new Map<string, TableWithLastName[]>();
-    for (let item of schema.itemMap.values()) {
+    const group2Tables = new Map<string, TableWithLastName[]>();
+    for (const item of schema.itemMap.values()) {
         if (item.type == 'table') {
-            let table = item as STable;
-            let tableId = item.name;
+            const table = item as STable;
+            const tableId = item.name;
             let group = ""
             let lastName = tableId;
-            let sp = lastName.split(".")
+            const sp = lastName.split(".")
             if (sp.length > 1) {
                 lastName = sp[sp.length - 1]
                 group = sp.slice(0, sp.length - 1).join(".")
@@ -42,20 +42,20 @@ export const TableList = memo(function TableList({schema}: { schema: Schema }) {
             tables.push({tableId, table, lastName})
         }
     }
-    let options = [];
-    for (let group2Table of group2Tables.entries()) {
-        let grp = group2Table[0]
-        let tls = group2Table[1]
-        let subOptions = [];
+    const options = [];
+    for (const group2Table of group2Tables.entries()) {
+        const grp = group2Table[0]
+        const tls = group2Table[1]
+        const subOptions = [];
 
-        for (let tl of tls) {
+        for (const tl of tls) {
             let style = {backgroundColor: '#bbbbbb'}
             if (tl.tableId == curTableId) {
                 style = {backgroundColor: '#52c41a'};
             }
 
-            let badge = <Badge count={tl.table.recordIds.length} overflowCount={999999}
-                               style={style}/>
+            const badge = <Badge count={tl.table.recordIds.length} overflowCount={999999}
+                                 style={style}/>
 
             subOptions.push({
                 label: <Space>{tl.lastName}{badge} </Space>,
@@ -80,7 +80,7 @@ export const TableList = memo(function TableList({schema}: { schema: Schema }) {
                    filterOption={(inputValue, option) => {
                        return !!option?.value.includes(inputValue);
                    }}
-                   onChange={(tableId, _) => {
+                   onChange={(tableId) => {
                        const id = getFixCurIdByTable(schema, tableId, curId);
                        navigate(navTo(curPage, tableId, id, isEditMode));
                    }}

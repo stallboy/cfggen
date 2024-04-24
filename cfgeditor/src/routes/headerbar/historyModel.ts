@@ -9,7 +9,7 @@ export class History {
 
     addItem(table: string, id: string): History {
         if (this.items.length > 0) {
-            let item = this.items[this.index];
+            const item = this.items[this.index];
             if (item.table == table && item.id == id) {
                 return this;
             } else {
@@ -18,7 +18,7 @@ export class History {
                 if (startIdx < 0) {
                     startIdx = 0;
                 }
-                let itemsCopy = this.items.slice(startIdx, this.index + 1)
+                const itemsCopy = this.items.slice(startIdx, this.index + 1)
                 itemsCopy.push(new HistoryItem(table, id));
                 return new History(itemsCopy, itemsCopy.length - 1);
             }

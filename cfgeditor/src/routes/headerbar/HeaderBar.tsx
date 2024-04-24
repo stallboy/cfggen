@@ -45,18 +45,18 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
         if (path) {
             navigate(path);
         }
-    }, [curPage, navigate]);
+    }, [curPage, history, isEditMode, navigate]);
 
     const next = useCallback(() => {
         const path = historyNext(curPage, history, isEditMode);
         if (path) {
             navigate(path);
         }
-    }, [curPage, navigate]);
+    }, [curPage, history, isEditMode, navigate]);
 
     let nextId;
     if (curTable) {
-        let nId = getNextId(curTable, curId);
+        const nId = getNextId(curTable, curId);
         if (nId) {
             nextId = <Text>{t('nextSlot')} <Text copyable>{nId}</Text> </Text>
         }
@@ -81,16 +81,16 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
         } else {
             setDragPanel(value);
         }
-    }, [setFix, dragPanel, pageConf, isEditMode, navigate]);
+    }, [dragPanel, navigate, curTableId, curId, isEditMode, pageConf]);
 
-    let fixedOptions = useMemo(() => [
+    const fixedOptions = useMemo(() => [
         ...(pageConf.pages.map(fp => {
             return {label: fp.label, value: fp.label};
         })),
         {label: t('recordRef'), value: 'recordRef'},
-    ], [pageConf]);
+    ], [pageConf.pages, t]);
 
-    let options = useMemo(() => [
+    const options = useMemo(() => [
         {label: t('table'), value: 'table'},
         {label: t('tableRef'), value: 'tableRef'},
         {label: t('record'), value: 'record'},

@@ -3,12 +3,12 @@ import {SchemaTableType} from "../../CfgEditorApp.tsx";
 import {TableEntityCreator, UserData} from "./tableEntityCreator.ts";
 import {navTo, store, useLocationData} from "../setting/store.ts";
 import {useNavigate, useOutletContext} from "react-router-dom";
-import {useEntityToGraph} from "../../flow/FlowGraph.tsx";
 // import {useReactFlow} from "reactflow";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
 import {useTranslation} from "react-i18next";
 import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
 import {Schema} from "./schemaUtil.ts";
+import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
 
 
 export function Table() {

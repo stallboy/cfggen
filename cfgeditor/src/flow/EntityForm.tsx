@@ -152,7 +152,7 @@ function ArrayOfPrimitiveFormItem({field}: { field: EntityEditField }) {
     const form = Form.useFormInstance();
     useEffect(() => {
         form.setFieldValue(field.name, field.value);
-    }, [field.value]);
+    }, [field.name, field.value, form]);
 
     return <Form.List name={field.name} key={field.name} initialValue={field.value as any[]}>
         {(fields, {add, remove, move}) => (
@@ -215,19 +215,19 @@ function FuncSubmitFormItem({field}: { field: EntityEditField }) {
     </Form.Item>
 }
 
-function InterfaceFormItem({field}: { field: EntityEditField }): any {
+function InterfaceFormItem({field}: { field: EntityEditField }) {
     const form = Form.useFormInstance();
     useEffect(() => {
         form.setFieldValue(field.name, field.value);
-    }, [field.value]);
+    }, [field.name, field.value, form]);
 
     const options = field.autoCompleteOptions?.options;
     const implSelect = <Form.Item name={field.name} key={field.name} label={makeLabel(field)}
                                 initialValue={field.value}>
         <Select className='nodrag' options={options}
                 filterOption={filterOption}
-                onChange={(value, _) => {
-                    field.interfaceOnChangeImpl!!(value);
+                onChange={(value) => {
+                    field.interfaceOnChangeImpl!(value);
                 }}/>
 
     </Form.Item>;
@@ -256,7 +256,7 @@ function FieldFormItem(field: EntityEditField) {
 }
 
 function FieldsFormItem(fields: EntityEditField[]) {
-    return fields.map((field, _index) => FieldFormItem(field));
+    return fields.map((field) => FieldFormItem(field));
 }
 
 const theme = {

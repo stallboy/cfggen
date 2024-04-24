@@ -84,9 +84,9 @@ export function CfgEditorApp() {
         if (schema && curTableId.length == 0) {
             navigate(getLastNavToInLocalStore());
         }
-    }, [schema]);
+    }, [curTableId.length, navigate, schema]);
 
-    let curTable = schema ? schema.getSTable(curTableId) : null;
+    const curTable = schema ? schema.getSTable(curTableId) : null;
 
     const outletCtx = useMemo(() => {
         return {schema, notes, curTable}

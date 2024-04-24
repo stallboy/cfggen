@@ -34,7 +34,7 @@ export interface BriefRecord extends Refs {
     descriptions?: BriefDescription[];
 
     value: string;
-    depth: number;
+    depth: number;  // 若ref in为-1，自身为0，ref出去的1,2...
 }
 
 export interface FieldRef {
@@ -63,7 +63,7 @@ export interface RecordResult {
     table: string;
     id: string;
     maxObjs: number;
-    object: JSONObject & Refs;
+    object: JSONObject & Refs;  //自身详细信息
     refs: BriefRecord[];
 }
 
@@ -96,5 +96,5 @@ export interface RecordEditResult {
     table: string;
     id: string;
     valueErrs: string[];
-    recordIds: RecordId[];
+    recordIds: RecordId[];  // 并没有用上，而是返回后直接invalid所有的cache
 }

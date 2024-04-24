@@ -7,9 +7,10 @@ import {EntityCard} from "./EntityCard.tsx";
 import {EntityProperties} from "./EntityProperties.tsx";
 import {EntityForm} from "./EntityForm.tsx";
 import {ArrowDownOutlined, ArrowUpOutlined, BookOutlined, CloseOutlined} from "@ant-design/icons";
-import {getResBrief, ResPopover} from "./ResPopover.tsx";
+import {ResPopover} from "./ResPopover.tsx";
 import {NoteShow, NoteEdit} from "./NoteShowOrEdit.tsx";
 import {findFirstImage} from "./calcWidthHeight.ts";
+import {getResBrief} from "./getResBrief.tsx";
 
 const {Text} = Typography;
 const bookIcon = <BookOutlined/>;
@@ -41,7 +42,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
     let noteShowOrEdit;
     if (mayHasResOrNote) {
         const notes = sharedSetting?.notes;
-        let note = notes?.get(id) ?? '';
+        const note = notes?.get(id) ?? '';
         if ((note.length > 0) || isEditNote) {
             if (isEditNote) {
                 noteShowOrEdit = <NoteEdit id={id} note={note} setIsEdit={setIsEditNote}/>
@@ -56,7 +57,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
 
     const [resBriefButton, firstImage] = useMemo(() => {
         let btn;
-        let firstImage = findFirstImage(assets);
+        const firstImage = findFirstImage(assets);
         if (assets) {
             btn = <Popover content={<ResPopover resInfos={assets}/>}
                            placement='rightTop'
@@ -68,7 +69,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
     }, [label, assets]);
 
 
-    let title = <Flex justify="space-between" style={titleStyle}>
+    const title = <Flex justify="space-between" style={titleStyle}>
         <Text strong style={titleTextStyle} ellipsis={false}
               copyable={mayHasResOrNote && sharedSetting?.nodeShow?.showHead == 'showCopyable'}>
             {label}

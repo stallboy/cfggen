@@ -15,19 +15,19 @@ function createEntity(item: SItem, id: string, entityType: EntityType = EntityTy
 export function includeRefTables(entityMap: Map<string, Entity>, curTable: STable, schema: Schema,
                                  refIn: boolean, maxOutDepth: number, maxNode: number) {
 
-    let curEntity = createEntity(curTable, curTable.name);
+    const curEntity = createEntity(curTable, curTable.name);
     entityMap.set(curEntity.id, curEntity);
 
 
     if (refIn && curTable.refInTables) {
 
-        for (let ref of curTable.refInTables) {
+        for (const ref of curTable.refInTables) {
             let refInEntity = entityMap.get(ref);
             if (refInEntity) {
                 continue;
             }
 
-            let refInTable = schema.getSTable(ref);
+            const refInTable = schema.getSTable(ref);
             if (!refInTable) {
                 console.log(ref + " not found!")
                 continue; // 不该发生
@@ -54,23 +54,23 @@ export function includeRefTables(entityMap: Map<string, Entity>, curTable: STabl
     let depth = 1;
     while (depth <= maxOutDepth) {
 
-        let newFrontier: SItem[] = [];
-        let newEntityFrontier: Entity[] = [];
+        const newFrontier: SItem[] = [];
+        const newEntityFrontier: Entity[] = [];
 
-        let refTableNames = schema.getAllRefTablesByItems(frontier);
-        for (let ref of refTableNames) {
+        const refTableNames = schema.getAllRefTablesByItems(frontier);
+        for (const ref of refTableNames) {
             let refEntity = entityMap.get(ref);
             if (refEntity) {
                 continue;
             }
 
-            let refTable = schema.getSTable(ref);
+            const refTable = schema.getSTable(ref);
             if (!refTable) {
                 console.log(ref + " not found!")
                 continue; // 不该发生
             }
 
-            let entityType = depth == 1 ? EntityType.Ref : EntityType.Ref2;
+            const entityType = depth == 1 ? EntityType.Ref : EntityType.Ref2;
             refEntity = createEntity(refTable, ref, entityType);
             entityMap.set(ref, refEntity);
 
@@ -82,10 +82,10 @@ export function includeRefTables(entityMap: Map<string, Entity>, curTable: STabl
             }
         }
 
-        for (let oldEntity of entityFrontier) {
-            let item = oldEntity.userData as SItem;
-            let directRefs = schema.getAllRefTablesByItem(item);
-            for (let ref of directRefs) {
+        for (const oldEntity of entityFrontier) {
+            const item = oldEntity.userData as SItem;
+            const directRefs = schema.getAllRefTablesByItem(item);
+            for (const ref of directRefs) {
                 if (entityMap.has(ref)) {
                     oldEntity.sourceEdges.push({
                         sourceHandle: "@out",

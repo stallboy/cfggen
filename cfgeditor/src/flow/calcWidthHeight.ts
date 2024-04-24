@@ -1,6 +1,6 @@
 import {Entity} from "./entityModel.ts";
-import {getDsLenAndDesc} from "./EntityCard.tsx";
 import {ResInfo} from "../res/resInfo.ts";
+import {getDsLenAndDesc} from "./getDsLenAndDesc.tsx";
 
 
 // 在一次又一次尝试了等待node准备好，直接用node的computed理的width，height后，增加这一个异步，太容易有闪烁和被代码绕晕了。
@@ -15,7 +15,7 @@ export function calcWidthHeight(entity: Entity) {
 
     } else if (brief) {
         height += 48 + (brief.title ? 32 : 0);
-        let [showDsLen, desc] = getDsLenAndDesc(brief, entity.sharedSetting?.nodeShow);
+        const [showDsLen, desc] = getDsLenAndDesc(brief, entity.sharedSetting?.nodeShow);
         height += showDsLen * 38;
         if (desc) {
             height += 22 * simpleStrlen(desc) / 30;
@@ -27,11 +27,10 @@ export function calcWidthHeight(entity: Entity) {
     } else if (edit) {
         let cnt = 0;
         let extra = 0;
-        for (let editField of edit.editFields) {
+        for (const editField of edit.editFields) {
             switch (editField.type) {
                 case "arrayOfPrimitive":
-                    const len = (editField.value as any[]).length
-                    cnt += len + 1;
+                    cnt += (editField.value as never[]).length + 1;
                     break;
 
                 case "interface":
@@ -85,7 +84,7 @@ export function calcWidthHeight(entity: Entity) {
 
 function simpleStrlen(str: string) {
     let len = 0;
-    let l = str.length
+    const l = str.length
     for (let i = 0; i < l; i++) {
         if (str.charCodeAt(i) > 255) //如果是汉字，则字符串长度加2
             len += 2;
@@ -97,7 +96,7 @@ function simpleStrlen(str: string) {
 
 export function findFirstImage(assets: ResInfo[] | undefined): string | undefined {
     if (assets) {
-        for (let r of assets) {
+        for (const r of assets) {
             if (r.type == 'image') {
                 return r.path;
             }

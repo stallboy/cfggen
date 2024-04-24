@@ -43,7 +43,7 @@ export const TauriSetting = memo(function TauriSetting({schema}: {
                 });
             })
         }
-    }, [schema])
+    }, [notification, schema])
 
     return <>
         <p>resourceDir: {resourceDir}</p>

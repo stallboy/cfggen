@@ -1,9 +1,9 @@
 import {Schema} from "../routes/table/schemaUtil.ts";
 import {store} from "../routes/setting/store.ts";
-import {getResBrief} from "../flow/ResPopover.tsx";
 import {writeTextFile} from "@tauri-apps/api/fs";
 import {getResourceDirAsync, joinPath} from "./resUtils.ts";
 import {ResInfo} from "./resInfo.ts";
+import {getResBrief} from "../flow/getResBrief.tsx";
 
 interface ResEntry {
     id: string;

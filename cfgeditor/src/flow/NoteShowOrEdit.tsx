@@ -42,7 +42,7 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
     const {isPending, mutate} = useMutation<NoteEditResult, Error, string>({
         mutationFn: (newNote: string) => updateNote(server, id, newNote),
 
-        onError: (error, variables, _context) => {
+        onError: (error, variables) => {
             notification.error({
                 message: `updateNote  ${id} ${variables} err: ${error.toString()}`,
                 placement: 'topRight', duration: 4
@@ -50,7 +50,7 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
             setIsEdit(false);
 
         },
-        onSuccess: (editResult, variables, _context) => {
+        onSuccess: (editResult, variables) => {
             const {resultCode, notes} = editResult;
             if (resultCode == 'updateOk' || resultCode == 'addOk' || resultCode == 'deleteOk') {
                 notification.info({

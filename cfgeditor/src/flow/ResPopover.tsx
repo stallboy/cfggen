@@ -17,7 +17,7 @@ async function getSrt2VttUrls(resInfo: ResInfo) {
     }
 
     const urls = [];
-    for (let st of subtitlesTracks) {
+    for (const st of subtitlesTracks) {
         const contents = await readTextFile(st.path);
         const vtt = srt2vtt(contents);
         // console.log(st.name, vtt);
@@ -52,14 +52,14 @@ export const VideoAudioSyncer = memo(function VideoAudioSyncer({resInfo}: { resI
                     v.pause();
                 }
             });
-            let allA = document.querySelectorAll("audio");
+            const allA = document.querySelectorAll("audio");
             allA.forEach(function (a) {
                 a.pause();
             });
 
             if (video) {
                 const audios = ref.current.querySelectorAll<HTMLAudioElement>('audio');
-                for (let audio of audios) {
+                for (const audio of audios) {
                     audio.play();
                     audio.currentTime = video.currentTime;
                 }
@@ -72,7 +72,7 @@ export const VideoAudioSyncer = memo(function VideoAudioSyncer({resInfo}: { resI
             const video = ref.current.querySelector<HTMLVideoElement>('video');
             if (video) {
                 const audios = ref.current.querySelectorAll<HTMLAudioElement>('audio');
-                for (let audio of audios) {
+                for (const audio of audios) {
                     audio.pause();
                     audio.currentTime = video.currentTime;
                 }
@@ -83,10 +83,10 @@ export const VideoAudioSyncer = memo(function VideoAudioSyncer({resInfo}: { resI
 
     const {path, audioTracks, subtitlesTracks} = resInfo;
 
-    let tracks = [];
+    const tracks = [];
     if (subtitlesTracks && vttUrls) {
         let i = 0;
-        for (let st of subtitlesTracks) {
+        for (const st of subtitlesTracks) {
             if (i < vttUrls.length) {
                 const url = vttUrls[i];
                 tracks.push(<track key={st.path} kind='subtitles' src={url} label={st.name} srcLang={st.lang}
@@ -133,7 +133,7 @@ function getImageEle(name: string, path: string) {
 
 export const ResPopover = memo(function ResPopover({resInfos}: { resInfos: ResInfo[] }) {
     const items: TabsProps['items'] = [];
-    for (let r of resInfos) {
+    for (const r of resInfos) {
         const {type, name, path} = r;
         let content;
         switch (type) {
@@ -164,46 +164,3 @@ export const ResPopover = memo(function ResPopover({resInfos}: { resInfos: ResIn
     return <Tabs tabPosition={items.length < 4 ? 'top' : 'left'} items={items}/>
 });
 
-export function getResBrief(res: ResInfo[]) {
-    let v = 0;
-    let a = 0;
-    let i = 0;
-    let o = 0;
-    for (let {type, audioTracks, subtitlesTracks} of res) {
-        switch (type) {
-            case "video":
-                v++;
-                break;
-            case "audio":
-                a++;
-                break;
-            case "image":
-                i++;
-                break;
-            default:
-                o++;
-                break;
-        }
-        if (audioTracks) {
-            a += audioTracks.length;
-        }
-        if (subtitlesTracks) {
-            o += subtitlesTracks.length;
-        }
-    }
-
-    let info = '';
-    if (v > 0) {
-        info += v + 'v';
-    }
-    if (a > 0) {
-        info += a + 'a';
-    }
-    if (i > 0) {
-        info += i + 'i';
-    }
-    if (o > 0) {
-        info += o + 'o';
-    }
-    return info;
-}

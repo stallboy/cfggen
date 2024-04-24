@@ -8,8 +8,8 @@ import {useTranslation} from "react-i18next";
 import {SItem} from "./schemaModel.ts";
 import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
 import {getDefaultIdInTable} from "./Table.tsx";
-import {useEntityToGraph} from "../../flow/FlowGraph.tsx";
 import {memo, useCallback, useMemo} from "react";
+import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
 
 
 export const TableRef = memo(function TableRef() {
@@ -31,12 +31,12 @@ export const TableRef = memo(function TableRef() {
     }], [navigate, schema, curTable, curId]);
 
     const nodeDoubleClickFunc = useCallback((entity: Entity): void => {
-        let sItem = entity.userData as SItem;
+        const sItem = entity.userData as SItem;
         navigate(navTo('table', sItem.name, getDefaultIdInTable(schema, sItem.name, curId)));
     }, [navigate, schema, curId]);
 
     const nodeMenuFunc = useCallback((entity: Entity): MenuItem[] => {
-        let sItem = entity.userData as SItem;
+        const sItem = entity.userData as SItem;
         return [{
             label: sItem.name + "\n" + t('tableRef'),
             key: `entityTableRef`,

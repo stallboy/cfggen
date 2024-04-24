@@ -28,14 +28,14 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
     const deleteRecordMutation = useMutation<RecordEditResult, Error>({
         mutationFn: () => deleteRecord(server, curTableId, curId),
 
-        onError: (error, _variables, _context) => {
+        onError: (error) => {
             notification.error({
                 message: `deleteRecord ${curTableId}/${curId} err: ${error.message}`,
                 placement: 'topRight',
                 duration: 4
             });
         },
-        onSuccess: (editResult, _variables, _context) => {
+        onSuccess: (editResult) => {
             if (editResult.resultCode == 'deleteOk') {
                 // console.log(editResult);
                 notification.info({
@@ -60,8 +60,8 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
             return
         }
 
-        let w = current.offsetWidth * imageSizeScale;
-        let h = current.offsetHeight * imageSizeScale;
+        const w = current.offsetWidth * imageSizeScale;
+        const h = current.offsetHeight * imageSizeScale;
 
         toBlob(current, {
             cacheBust: true, canvasWidth: w, canvasHeight: h, pixelRatio: 1,

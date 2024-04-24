@@ -1,11 +1,15 @@
 import {Card, Descriptions, Tooltip} from "antd";
-import {Entity, EntityBrief} from "./entityModel.ts";
+import {Entity} from "./entityModel.ts";
 import {DescriptionsItemType} from "antd/es/descriptions";
-import {CSSProperties, memo} from "react";
-import {NodeShowType} from "../routes/setting/storageJson.ts";
+import {CSSProperties, memo, ReactElement} from "react";
 import {convertFileSrc} from "@tauri-apps/api/tauri";
+import {getDsLenAndDesc} from "./getDsLenAndDesc.tsx";
 
 const imageStyle: CSSProperties = {maxHeight: '220px', objectFit: 'scale-down'};
+
+interface Props {
+    [prop: string]: string | ReactElement;
+}
 
 export const EntityCard = memo(function EntityCard({entity, image}: {
     entity: Entity,
@@ -21,7 +25,7 @@ export const EntityCard = memo(function EntityCard({entity, image}: {
 
     let info = 0;
     let hasCover = false;
-    let cover: any = {};
+    let cover: Props = {};
     if (image && window.__TAURI__) {
         const imageUrl = convertFileSrc(image);
         cover = {cover: <img alt="img" style={imageStyle} src={imageUrl}/>}
@@ -30,7 +34,7 @@ export const EntityCard = memo(function EntityCard({entity, image}: {
     }
 
     let hasTitle = false;
-    let title: any = {};
+    let title: Props = {};
     if (brief.title) {
         if (query) {
             title = {title: <Highlight text={brief.title} keyword={query}/>};
@@ -42,9 +46,9 @@ export const EntityCard = memo(function EntityCard({entity, image}: {
     }
 
 
-    let description: any = {}
-    let ds = brief.descriptions;
-    let [showDsLen, desc] = getDsLenAndDesc(brief, nodeShow);
+    let description: Props = {}
+    const ds = brief.descriptions;
+    const [showDsLen, desc] = getDsLenAndDesc(brief, nodeShow);
     if (desc && ds && showDsLen > 0) {
         const items: DescriptionsItemType[] = [];
 
@@ -96,36 +100,3 @@ export function Highlight({text, keyword}: {
         .map((c, i) => c === keyword ? <mark key={i}>{c}</mark> : c);
 }
 
-export function getDsLenAndDesc(brief: EntityBrief, nodeShow?: NodeShowType): [number, string | null] {
-    let ds = brief.descriptions;
-    let desc: string | null = null;
-    let showDsLen: number = 0;
-    if (nodeShow) {
-        switch (nodeShow.showDescription) {
-            case "show":
-                if (ds && ds.length > 0) {
-                    desc = ds[ds.length - 1].value;
-                    showDsLen = ds.length - 1;
-                }
-                break;
-            case "showFallbackValue":
-                if (ds && ds.length > 0) {
-                    desc = ds[ds.length - 1].value;
-                    showDsLen = ds.length - 1;
-                } else {
-                    desc = brief.value;
-                }
-                break;
-            case "showValue":
-                desc = brief.value;
-                if (ds) {
-                    showDsLen = ds.length;
-                }
-                break;
-            case "none":
-                break;
-        }
-    }
-
-    return [showDsLen, desc];
-}

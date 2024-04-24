@@ -14,7 +14,7 @@ function findField({fields, edit}: Entity, name: string) {
     }
 
     if (edit) {
-        for (let {implFields} of edit.editFields) {
+        for (const {implFields} of edit.editFields) {
             const f = implFields && implFields.find(eq);
             if (f) {
                 return f;
@@ -24,12 +24,12 @@ function findField({fields, edit}: Entity, name: string) {
 }
 
 export function fillHandles(entityMap: Map<string, Entity>) {
-    for (let entity of entityMap.values()) {
-        for (let {sourceHandle, target, targetHandle} of entity.sourceEdges) {
+    for (const entity of entityMap.values()) {
+        for (const {sourceHandle, target, targetHandle} of entity.sourceEdges) {
             if (sourceHandle == '@out') {
                 entity.handleOut = true;
             } else {
-                let field = findField(entity, sourceHandle);
+                const field = findField(entity, sourceHandle);
                 if (field) {
                     field.handleOut = true;
                 } else {
@@ -37,12 +37,12 @@ export function fillHandles(entityMap: Map<string, Entity>) {
                 }
             }
 
-            let targetEntity = entityMap.get(target);
+            const targetEntity = entityMap.get(target);
             if (targetEntity) {
                 if (targetHandle == '@in') {
                     targetEntity.handleIn = true;
                 } else if (targetHandle.startsWith('@in_')) {
-                    let targetField = findField(targetEntity, targetHandle.substring(4));
+                    const targetField = findField(targetEntity, targetHandle.substring(4));
                     if (targetField) {
                         targetField.handleIn = true;
                     } else {
@@ -61,7 +61,7 @@ export function convertNodeAndEdges({entityMap, sharedSetting}: EntityGraph) {
     const edges: EntityEdge[] = []
 
     let ei = 1;
-    for (let entity of entityMap.values()) {
+    for (const entity of entityMap.values()) {
         entity.sharedSetting = sharedSetting;
 
         nodes.push({
@@ -70,8 +70,8 @@ export function convertNodeAndEdges({entityMap, sharedSetting}: EntityGraph) {
             type: 'node',
             position: {x: 100, y: 100},
         })
-        for (let edge of entity.sourceEdges) {
-            let fe: EntityEdge = {
+        for (const edge of entity.sourceEdges) {
+            const fe: EntityEdge = {
                 id: `${entity.id}_${edge.target}_${ei++}`,
                 source: entity.id,
                 sourceHandle: edge.sourceHandle,

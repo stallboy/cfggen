@@ -3,9 +3,9 @@ import {readTextFile, writeTextFile} from "@tauri-apps/api/fs";
 import {parse, stringify} from "yaml";
 
 export function getPrefInt(key: string, def: number): number {
-    let v = localStorage.getItem(key);
+    const v = localStorage.getItem(key);
     if (v) {
-        let n = parseInt(v);
+        const n = parseInt(v);
         if (!isNaN(n)) {
             return n;
         }
@@ -14,7 +14,7 @@ export function getPrefInt(key: string, def: number): number {
 }
 
 export function getPrefBool(key: string, def: boolean): boolean {
-    let v = localStorage.getItem(key);
+    const v = localStorage.getItem(key);
     if (v) {
         return v == 'true';
     }
@@ -22,7 +22,7 @@ export function getPrefBool(key: string, def: boolean): boolean {
 }
 
 export function getPrefStr(key: string, def: string): string {
-    let v = localStorage.getItem(key);
+    const v = localStorage.getItem(key);
     if (v) {
         return v;
     }
@@ -30,7 +30,7 @@ export function getPrefStr(key: string, def: string): string {
 }
 
 export function getPrefEnumStr<T>(key: string, enums: string[]): T | undefined {
-    let v = localStorage.getItem(key);
+    const v = localStorage.getItem(key);
     if (v && enums.includes(v)) {
         return v as T;
     }
@@ -38,7 +38,7 @@ export function getPrefEnumStr<T>(key: string, enums: string[]): T | undefined {
 
 
 export function getPrefJson<T>(key: string, parser: (jsonStr: string) => T): T | undefined {
-    let v = localStorage.getItem(key);
+    const v = localStorage.getItem(key);
     if (v) {
         try {
             return parser(v);

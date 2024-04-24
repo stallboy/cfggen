@@ -2,10 +2,10 @@ import {Entity, EntityType} from "./entityModel.ts";
 
 
 export function getNodeBackgroundColor(entity: Entity): string {
-    let nodeShow = entity.sharedSetting?.nodeShow;
+    const nodeShow = entity.sharedSetting?.nodeShow;
 
     if (nodeShow && nodeShow.tableHideAndColors.length > 0) {
-        for (let tableColor of nodeShow.tableHideAndColors) {
+        for (const tableColor of nodeShow.tableHideAndColors) {
             if (entity.label.includes(tableColor.keyword)) {
                 return tableColor.color;
             }
@@ -13,7 +13,7 @@ export function getNodeBackgroundColor(entity: Entity): string {
     }
 
     if (entity.brief && nodeShow && nodeShow.keywordColors.length > 0) {
-        for (let keywordColor of nodeShow.keywordColors) {
+        for (const keywordColor of nodeShow.keywordColors) {
             if (entity.brief.value.includes(keywordColor.keyword)) {
                 return keywordColor.color;
             }

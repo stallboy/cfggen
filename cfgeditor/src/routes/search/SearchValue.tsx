@@ -7,7 +7,7 @@ import {useNavigate} from "react-router-dom";
 
 
 function getLabel(table: string, id: string): string {
-    let seps = table.split('.');
+    const seps = table.split('.');
     return seps[seps.length - 1] + '-' + id;
 }
 
@@ -25,7 +25,7 @@ export function SearchValue() {
         setQuery(value);
 
         setLoading(true);
-        let url = `http://${server}/search?q=${value}&max=${searchMax}`;
+        const url = `http://${server}/search?q=${value}&max=${searchMax}`;
         const fetchData = async () => {
             const response = await fetch(url);
             const recordResult: SearchResult = await response.json();
@@ -45,7 +45,7 @@ export function SearchValue() {
     } else if (searchResult.resultCode != 'ok') {
         content = <Result status={'error'} title={searchResult.resultCode}/>
     } else {
-        let columns = [
+        const columns = [
             {
                 title: 'id',
                 // align: 'left',
@@ -55,7 +55,7 @@ export function SearchValue() {
                     showTitle: false
                 },
                 render: (_text: any, item: SearchResultItem, _index: number) => {
-                    let label = getLabel(item.table, item.pk);
+                    const label = getLabel(item.table, item.pk);
                     return <Button type={'link'} onClick={() => {
                         navigate(navTo(curPage, item.table, item.pk));
                     }}>

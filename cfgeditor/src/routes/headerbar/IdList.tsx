@@ -11,6 +11,11 @@ function filterOption(inputValue: string, option?: DefaultOptionType) {
     return (option!.label as string).toLowerCase().includes(inputValue.toLowerCase())
 }
 
+const intFilterSorts = {
+    filterSort: (optionA: DefaultOptionType, optionB: DefaultOptionType) =>
+        parseInt(optionA.value as string) - parseInt(optionB.value as string)
+};
+
 export const IdList = memo(function IdList({curTable}: {
     curTable: STable,
 }) {
@@ -18,14 +23,8 @@ export const IdList = memo(function IdList({curTable}: {
     const {curPage, curTableId, curId} = useLocationData();
     const ref = useRef<BaseSelectRef>(null);
 
-    let options = useMemo(() => getIdOptions(curTable), [curTable]);
-    let filterSorts = {};
-    if (isPkInteger(curTable)) {
-        filterSorts = {
-            filterSort: (optionA: DefaultOptionType, optionB: DefaultOptionType) =>
-                parseInt(optionA.value as string) - parseInt(optionB.value as string)
-        };
-    }
+    const options = useMemo(() => getIdOptions(curTable), [curTable]);
+    const filterSorts = useMemo(() => isPkInteger(curTable) ? intFilterSorts : {}, [curTable]);
 
     const onSearch = useCallback(() => {
         if (ref.current) {
@@ -43,7 +42,7 @@ export const IdList = memo(function IdList({curTable}: {
                    {...filterSorts}
                    filterOption={filterOption}
                    onSearch={onSearch}
-                   onChange={(value, _) => {
+                   onChange={(value) => {
                        const {isEditMode} = store;
                        navigate(navTo(curPage, curTableId, value, isEditMode));
                    }}/>

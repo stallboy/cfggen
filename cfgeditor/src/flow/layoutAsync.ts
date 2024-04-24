@@ -21,7 +21,7 @@ function edgeToLayoutEdge(edge: EntityEdge): ElkExtendedEdge {
 
 
 function toPositionMap(map: Map<string, XYPosition>, children: ElkNode[]) {
-    for (let {id, x, y, children: subChildren} of children) {
+    for (const {id, x, y, children: subChildren} of children) {
         const rect = map.get(id);
         if (x != undefined && y != undefined && rect) {
             rect.x = x;
@@ -37,7 +37,7 @@ function allPositionXYOk(nodes: EntityNode[], map: Map<string, XYPosition>) {
     if (nodes.length != map.size) {
         return false;
     }
-    for (let node of nodes) {
+    for (const node of nodes) {
         const newPos = map.get(node.id);
         if (!newPos) {
             return false;

@@ -14,8 +14,8 @@ import {MenuItem} from "../../flow/FlowContextMenu.tsx";
 import {SchemaTableType} from "../../CfgEditorApp.tsx";
 import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
 
-import {useEntityToGraph} from "../../flow/FlowGraph.tsx";
 import {useCallback, useRef} from "react";
+import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
 
 
 export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, recordRefResult, inDragPanelAndFix}: {

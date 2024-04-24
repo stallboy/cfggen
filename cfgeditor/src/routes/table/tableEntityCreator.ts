@@ -12,10 +12,10 @@ function eid(id: string) {
 }
 
 function createEntity(item: SItem, id: string, table: string, entityType: EntityType = EntityType.Normal): Entity {
-    let fields = [];
+    const fields = [];
     if (item.type != "interface") {
-        let st = item as STable | SStruct;
-        for (let field of st.fields) {
+        const st = item as STable | SStruct;
+        for (const field of st.fields) {
             fields.push({
                 key: field.name,
                 name: field.name,
@@ -47,19 +47,19 @@ export class TableEntityCreator {
 
     includeSubStructs() {
         let frontier: (STable | SStruct)[] = [this.curTable];
-        let curEntity = createEntity(this.curTable, this.curTable.name, this.curTable.name);
+        const curEntity = createEntity(this.curTable, this.curTable.name, this.curTable.name);
         this.entityMap.set(curEntity.id, curEntity);
 
         while (frontier.length > 0) {
-            let oldFrontier = frontier;
-            let depStructNames = this.schema.getDirectDepStructsByItems(frontier);
+            const oldFrontier = frontier;
+            const depStructNames = this.schema.getDirectDepStructsByItems(frontier);
             frontier = [];
-            for (let depName of depStructNames) {
+            for (const depName of depStructNames) {
                 let depEntity = this.entityMap.get(eid(depName));
                 if (depEntity) {
                     continue;
                 }
-                let dep = this.schema.itemMap.get(depName);
+                const dep = this.schema.itemMap.get(depName);
                 if (!dep) {
                     continue; //不会发生
                 }
@@ -69,11 +69,11 @@ export class TableEntityCreator {
 
                 if (dep.type == 'interface') {
 
-                    let depInterface = dep as SInterface;
+                    const depInterface = dep as SInterface;
 
                     let cnt = 0;
-                    for (let impl of depInterface.impls) {
-                        let implEntity = createEntity(impl, impl.id ?? impl.name, this.curTable.name);
+                    for (const impl of depInterface.impls) {
+                        const implEntity = createEntity(impl, impl.id ?? impl.name, this.curTable.name);
                         this.entityMap.set(implEntity.id, implEntity);
                         frontier.push(impl);
 
@@ -95,14 +95,14 @@ export class TableEntityCreator {
                 }
             }
 
-            for (let oldF of oldFrontier) {
-                let oldFEntity = this.entityMap.get(eid(oldF.id ?? oldF.name));
+            for (const oldF of oldFrontier) {
+                const oldFEntity = this.entityMap.get(eid(oldF.id ?? oldF.name));
                 if (!oldFEntity) {
                     console.log("old frontier " + (oldF.id ?? oldF.name) + " not found!");
                     continue;
                 }
-                let deps = this.schema.getDirectDepStructsMapByItem(oldF);
-                for (let [type, name] of deps) {
+                const deps = this.schema.getDirectDepStructsMapByItem(oldF);
+                for (const [type, name] of deps) {
                     oldFEntity.sourceEdges.push({
                         sourceHandle: name,
                         target: eid(type),
@@ -116,16 +116,16 @@ export class TableEntityCreator {
 
 
     includeRefTables() {
-        let entityFrontier = [];
-        for (let e of this.entityMap.values()) {
+        const entityFrontier = [];
+        for (const e of this.entityMap.values()) {
             entityFrontier.push(e);
         }
 
-        for (let oldEntity of entityFrontier) {
-            let item = (oldEntity.userData as UserData).item;
+        for (const oldEntity of entityFrontier) {
+            const item = (oldEntity.userData as UserData).item;
 
             if (item.type == 'interface') {
-                let ii = item as SInterface;
+                const ii = item as SInterface;
                 if (ii.enumRef) {
                     this.addRefToEntityMapIf(ii.enumRef);
                     oldEntity.sourceEdges.push({
@@ -137,9 +137,9 @@ export class TableEntityCreator {
                 }
 
             } else {
-                let si = item as (SStruct | STable)
+                const si = item as (SStruct | STable)
                 if (si.foreignKeys) {
-                    for (let fk of si.foreignKeys) {
+                    for (const fk of si.foreignKeys) {
                         this.addRefToEntityMapIf(fk.refTable);
                         oldEntity.sourceEdges.push({
                             sourceHandle: fk.keys[0],
@@ -156,7 +156,7 @@ export class TableEntityCreator {
     addRefToEntityMapIf(tableName: string) {
         let entity = this.entityMap.get(eid(tableName));
         if (!entity) {
-            let sTable = this.schema.getSTable(tableName);
+            const sTable = this.schema.getSTable(tableName);
             if (sTable) {
                 entity = createEntity(sTable, sTable.name, sTable.name, EntityType.Ref);
                 this.entityMap.set(entity.id, entity);

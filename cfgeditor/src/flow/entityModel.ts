@@ -62,6 +62,7 @@ export interface EntityEdit {
     editOnDelete?: () => void;
     editOnMoveUp?: () => void;
     editOnMoveDown?: () => void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     editOnUpdateValues: (values: any) => void;
 
     editFieldChain?: (string | number)[];
@@ -99,6 +100,7 @@ export interface Entity {
     handleOut?: boolean; // @out
     entityType?: EntityType;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     userData?: any;
     sharedSetting?: EntitySharedSetting;
     assets?: ResInfo[];

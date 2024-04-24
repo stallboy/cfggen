@@ -28,16 +28,16 @@ function fixColor(color: any) {
 }
 
 function fixColors(keywordColors: any[]): KeywordColor[] {
-    let colors = [];
-    for (let {keyword, color} of keywordColors) {
+    const colors = [];
+    for (const {keyword, color} of keywordColors) {
         colors.push({keyword: keyword, color: fixColor(color)})
     }
     return colors;
 }
 
 function fixHideAndColors(keywordHideAndColors: any[]): TableHideAndColor[] {
-    let colors = [];
-    for (let {keyword, hide, color} of keywordHideAndColors) {
+    const colors = [];
+    for (const {keyword, hide, color} of keywordHideAndColors) {
         colors.push({keyword: keyword, hide: !!hide, color: fixColor(color)})
     }
     return colors;

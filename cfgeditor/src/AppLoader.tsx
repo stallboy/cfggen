@@ -4,6 +4,7 @@ import {CfgEditorApp} from "./CfgEditorApp.tsx";
 import {readResInfosAsync} from "./res/readResInfosAsync.ts";
 
 export function AppLoader() {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const {isError, error: _error, data} = useQuery({
         queryKey: ['setting'],
         queryFn: readPrefAsyncOnce,
