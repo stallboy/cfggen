@@ -28,6 +28,7 @@
     "react-i18next": "^13.5.0",
     "react-icons": "^5.0.1",
     "react-router-dom": "^6.22.2",
+    "resso": "^0.17.0",
     "tauri-plugin-store-api": "github:tauri-apps/tauri-plugin-store#v1",
     "yaml": "^2.4.0"
   },
