@@ -47,7 +47,7 @@ export function joinPath(_baseDir: string, _path: string): [boolean, string] {
     let path = _path;
     let baseDir = _baseDir;
     if (baseDir.length > 0) {
-        let c = baseDir[baseDir.length - 1];
+        const c = baseDir[baseDir.length - 1];
         if (c == '/' || c == '\\') {
             baseDir = baseDir.substring(0, baseDir.length - 1);
         }
@@ -55,7 +55,8 @@ export function joinPath(_baseDir: string, _path: string): [boolean, string] {
 
     while (path.startsWith('../') || path.startsWith('..\\')) {
         path = path.substring(3);
-        let [ok, pd, _] = sepParentDirAndFilename(baseDir);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const [ok, pd, _] = sepParentDirAndFilename(baseDir);
         if (ok) {
             baseDir = pd;
         } else {

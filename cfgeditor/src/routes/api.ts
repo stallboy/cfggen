@@ -23,7 +23,7 @@ export async function fetchRecord(server: string, tableId: string, id: string, s
 export async function fetchRecordRefs(server: string, tableId: string, id: string,
                                       refOutDepth: number, maxNode: number, refIn: boolean,
                                       signal: AbortSignal) {
-    let url = `http://${server}/record?table=${tableId}&id=${id}&depth=${refOutDepth}&maxObjs=${maxNode}&refs${refIn ? '&in' : ''}`;
+    const url = `http://${server}/record?table=${tableId}&id=${id}&depth=${refOutDepth}&maxObjs=${maxNode}&refs${refIn ? '&in' : ''}`;
     // console.log('fetch refs', tableId, id);
     const response = await axios.get<RecordRefsResult>(url, {signal});
     // console.log('fetched refs', tableId, id, response.data);
@@ -31,7 +31,7 @@ export async function fetchRecordRefs(server: string, tableId: string, id: strin
 }
 
 export async function addOrUpdateRecord(server: string, tableId: string, editingObject: JSONObject) {
-    let url = `http://${server}/recordAddOrUpdate?table=${tableId}`;
+    const url = `http://${server}/recordAddOrUpdate?table=${tableId}`;
     // console.log('add or update', tableId, editingObject);
     const response = await axios.post<RecordEditResult>(url, editingObject, {
         method: 'POST',
@@ -49,7 +49,7 @@ export async function addOrUpdateRecord(server: string, tableId: string, editing
 
 
 export async function deleteRecord(server: string, tableId: string, id: string) {
-    let url = `http://${server}/recordDelete?table=${tableId}&id=${id}`;
+    const url = `http://${server}/recordDelete?table=${tableId}&id=${id}`;
     const response = await axios.post<RecordEditResult>(url, null, {
         method: 'POST',
         headers: {
@@ -71,7 +71,7 @@ export async function fetchNotes(server: string, signal: AbortSignal) {
 }
 
 export async function updateNote(server: string, key: string, note: string) {
-    let url = `http://${server}/noteUpdate?key=${key}`;
+    const url = `http://${server}/noteUpdate?key=${key}`;
     // console.log('add or update note', key, note);
     const response = await axios.post<NoteEditResult>(url, note, {
         method: 'POST',

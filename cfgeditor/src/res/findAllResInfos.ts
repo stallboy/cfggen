@@ -47,7 +47,7 @@ function refsToResInfos(param: FindResInfosParameter): ResInfo[] | undefined {
 
     let baseDir = assetDir;
     if (assetDir.startsWith('.')) {
-        let [ok, _baseDir] = joinPath(resourceDir, assetDir);
+        const [ok, _baseDir] = joinPath(resourceDir, assetDir);
         baseDir = _baseDir;
         if (!ok) {
             return;
@@ -63,6 +63,7 @@ function refsToResInfos(param: FindResInfosParameter): ResInfo[] | undefined {
                 console.log('not ok, ignore', ref.toId);
                 continue;
             }
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const [_ok, _dir, fileName] = sepParentDirAndFilename(fullPath);
             const extIdx = fileName.lastIndexOf('.');
             if (extIdx == -1) {

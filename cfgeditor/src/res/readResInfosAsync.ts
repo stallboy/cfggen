@@ -83,7 +83,7 @@ function packTracks(resInfos: ResInfo[]): ResInfo[] {
     videos.sort((a, b) => b.name.length - a.name.length);
     let picked = 0;
     for (const v of videos) {
-        let idx = v.name.lastIndexOf('.');
+        const idx = v.name.lastIndexOf('.');
         if (idx != -1) {
             const noExtName = v.name.substring(0, idx);
             for (const a of audios) {
@@ -117,12 +117,12 @@ function packTracks(resInfos: ResInfo[]): ResInfo[] {
     }
 
     const result: ResInfo[] = videos.reverse();
-    for (let a of audios) {
+    for (const a of audios) {
         if (!a._picked) {
             result.push(a);
         }
     }
-    for (let s of subtitles) {
+    for (const s of subtitles) {
         if (!s._picked) {
             result.push(s);
         }
@@ -133,7 +133,7 @@ function packTracks(resInfos: ResInfo[]): ResInfo[] {
 
 function packAllTracks(raws: Map<string, ResInfo[]>) {
     const packed = new Map<string, ResInfo[]>();
-    for (let [key, resInfos] of raws.entries()) {
+    for (const [key, resInfos] of raws.entries()) {
         packed.set(key, packTracks(resInfos));
     }
     return packed;
@@ -164,10 +164,10 @@ export async function readResInfosAsync() {
     const baseDir = await getResourceDirAsync();
     store.resourceDir = baseDir;
 
-    for (let resDir of tauriConf.resDirs) {
+    for (const resDir of tauriConf.resDirs) {
         let dir = resDir.dir;
         if (dir.startsWith('.')) {
-            let [ok, fullDir] = joinPath(baseDir, dir);
+            const [ok, fullDir] = joinPath(baseDir, dir);
             if (ok) {
                 dir = fullDir;
             } else {
