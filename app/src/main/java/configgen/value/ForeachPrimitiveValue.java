@@ -42,6 +42,7 @@ public class ForeachPrimitiveValue {
                 }
             }
             case VInterface vInterface -> {
+                visitor.visit(new VString(vInterface.child().name(), vInterface.cells().getFirst()), table, pk, fieldChain);
                 foreachValue(visitor, vInterface.child(), table, pk, fieldChain);
             }
             case VList vList -> {

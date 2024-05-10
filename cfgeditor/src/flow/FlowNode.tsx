@@ -3,7 +3,7 @@ import {Handle, NodeProps, Position} from "@xyflow/react";
 import {Entity} from "./entityModel.ts";
 import {getNodeBackgroundColor} from "./colors.ts";
 import {Button, Flex, Popover, Space, Typography} from "antd";
-import {EntityCard} from "./EntityCard.tsx";
+import {EntityCard, Highlight} from "./EntityCard.tsx";
 import {EntityProperties} from "./EntityProperties.tsx";
 import {EntityForm} from "./EntityForm.tsx";
 import {ArrowDownOutlined, ArrowUpOutlined, BookOutlined, CloseOutlined} from "@ant-design/icons";
@@ -68,12 +68,16 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
         return [btn, firstImage];
     }, [label, assets]);
 
+    const copyable = mayHasResOrNote && sharedSetting?.nodeShow?.showHead == 'showCopyable'
+    const keyword = sharedSetting?.query
 
     const title = <Flex justify="space-between" style={titleStyle}>
+
         <Text strong style={titleTextStyle} ellipsis={false}
-              copyable={mayHasResOrNote && sharedSetting?.nodeShow?.showHead == 'showCopyable'}>
-            {label}
+              copyable={copyable}>
+            {keyword ? <Highlight text={label} keyword={keyword}/> : label}
         </Text>
+
         {editNoteButton}
         {resBriefButton}
         <Space size={1}>
