@@ -65,7 +65,7 @@ function defaultPrimitiveValue(field: EntityEditField) {
     }
 }
 
-function PrimitiveControl(field: EntityEditField, thisItemStyle: CSSProperties) {
+function PrimitiveControl(field: EntityEditField) {
     let control;
     const {eleType, autoCompleteOptions} = field;
     if (autoCompleteOptions && autoCompleteOptions.options.length > 0) {
@@ -81,17 +81,17 @@ function PrimitiveControl(field: EntityEditField, thisItemStyle: CSSProperties) 
             filters.filterOption = filterOption;
         }
         if (isEnum) {
-            control = <Select className='nodrag' options={options} {...filters} style={thisItemStyle}/>
+            control = <Select className='nodrag' options={options} {...filters} />
         } else {
-            control = <AutoComplete className='nodrag' options={options} {...filters} style={{...thisItemStyle, width: 100}}/>
+            control = <AutoComplete className='nodrag' options={options} {...filters} style={{width: 100}}/>
         }
 
     } else if (eleType == 'bool') {
-        control = <Switch className='nodrag' style={thisItemStyle}/>;
+        control = <Switch className='nodrag'/>;
     } else if (setOfNumber.has(eleType)) {
-        control = <InputNumber className='nodrag' style={thisItemStyle}/>;
+        control = <InputNumber className='nodrag' />;
     } else {
-        control = <TextArea className='nodrag' autoSize={{minRows: 1, maxRows: 10}} style={thisItemStyle}/>;
+        control = <TextArea className='nodrag' autoSize={{minRows: 1, maxRows: 10}} />;
     }
     return control;
 }
@@ -141,7 +141,7 @@ function PrimitiveFormItem({field, bgColor}: { field: EntityEditField, bgColor?:
 
     return <Form.Item name={field.name} key={field.name} label={makeLabel(field)}
                       initialValue={field.value} {...props} style={thisItemStyle}>
-        {PrimitiveControl(field, thisItemStyle)}
+        {PrimitiveControl(field)}
     </Form.Item>;
 }
 
@@ -186,7 +186,7 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: { field: EntityEditField, bg
 
                         <Space align='baseline' size={1}>
                             <Form.Item {...f} >
-                                {PrimitiveControl(field, thisItemStyle)}
+                                {PrimitiveControl(field)}
                             </Form.Item>
                             <ActionIcon className='nodrag'
                                         icon={<MinusSquareTwoTone twoToneColor='red'/>}
