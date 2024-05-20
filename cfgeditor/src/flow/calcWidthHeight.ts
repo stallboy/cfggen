@@ -1,4 +1,4 @@
-import {Entity} from "./entityModel.ts";
+import {Entity, EntityEditField} from "./entityModel.ts";
 import {ResInfo} from "../res/resInfo.ts";
 import {getDsLenAndDesc} from "./getDsLenAndDesc.tsx";
 
@@ -25,40 +25,7 @@ export function calcWidthHeight(entity: Entity) {
         }
 
     } else if (edit) {
-        let cnt = 0;
-        let extra = 0;
-        for (const editField of edit.editFields) {
-            switch (editField.type) {
-                case "arrayOfPrimitive":
-                    cnt += (editField.value as never[]).length + 1;
-                    break;
-
-                case "interface":
-                    cnt++;
-                    if (editField.implFields) {
-                        cnt += editField.implFields.length;
-                    }
-                    break;
-                case 'primitive':
-                    if (editField.eleType == 'text' || editField.eleType == 'str') {
-                        let row = (editField.value as string).length / 10;
-                        if (row > 10) {
-                            row = 10;
-                        }
-                        if (row > 1) {
-                            extra += row * 22 + 10;
-                        } else {
-                            cnt++;
-                        }
-                    } else {
-                        cnt++;
-                    }
-                    break;
-                default:
-                    cnt++;
-                    break;
-            }
-        }
+        const [cnt, extra] = calcEditFieldsCntAndExtra(edit.editFields)
         height += 20 + 40 * cnt + extra;
     }
 
@@ -79,6 +46,48 @@ export function calcWidthHeight(entity: Entity) {
 
     return [width, height];
 
+}
+
+function calcEditFieldsCntAndExtra(editFields: EntityEditField[]) {
+    let cnt = 0;
+    let extra = 0;
+    for (const editField of editFields) {
+        switch (editField.type) {
+            case "arrayOfPrimitive":
+                const len = (editField.value as never[]).length
+                cnt += len + 1;
+                extra += len * 8
+                break;
+
+            case "interface":
+                cnt++;
+                if (editField.implFields) {
+                    const [implCnt, implExtra] = calcEditFieldsCntAndExtra(editField.implFields)
+                    cnt += implCnt
+                    extra += implExtra
+                }
+                break;
+            case 'primitive':
+                if (editField.eleType == 'text' || editField.eleType == 'str') {
+                    let row = (editField.value as string).length / 10;
+                    if (row > 10) {
+                        row = 10;
+                    }
+                    if (row > 1) {
+                        extra += row * 22 + 10;
+                    } else {
+                        cnt++;
+                    }
+                } else {
+                    cnt++;
+                }
+                break;
+            default:
+                cnt++;
+                break;
+        }
+    }
+    return [cnt, extra]
 }
 
 
