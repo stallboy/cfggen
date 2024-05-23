@@ -65,7 +65,20 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
     const onSettingClick = useCallback(() => setSettingOpen(true), [setSettingOpen]);
     const onSearchClick = useCallback(() => setSearchOpen(true), [setSearchOpen]);
     const onDragPanelSwitch = useCallback(() => {
-        setDragPanel(dragPanel == 'none' ? fix : 'none');
+        if (dragPanel == 'none') {
+            let go = fix
+            if (fix == 'none') {
+                if (pageConf.pages.length > 0){
+                    go = pageConf.pages[0].label
+                }else{
+                    go = 'recordRef'
+                }
+                setFix(go)
+            }
+            setDragPanel(fix);
+        } else {
+            setDragPanel('none');
+        }
     }, [dragPanel, fix]);
     const onDragPanelSelect = useCallback((value: string) => {
         setFix(value);
@@ -110,10 +123,12 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
                 <Button icon={searchIcon} onClick={onSearchClick}/>
                 <Button icon={dragPanel == 'none' ? fixOffIcon : fixOnIcon}
                         onClick={onDragPanelSwitch}/>
-                <Select options={fixedOptions}
-                        style={{width: 100}}
-                        value={fix}
-                        onChange={onDragPanelSelect}/>
+                {pageConf.pages.length > 0 &&
+                    <Select options={fixedOptions}
+                            style={{width: 100}}
+                            value={fix}
+                            onChange={onDragPanelSelect}/>
+                }
 
                 {schema ? <TableList schema={schema}/> : <Select id='table' loading={true}/>}
                 {curTable ? <IdList curTable={curTable}/> : <Skeleton.Input/>}
