@@ -87,7 +87,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
         createRefEntities({
             entityMap,
             schema,
-            refs: recordResult.refs,
+            briefRecordRefs: recordResult.refs,
             isCreateRefs: false,
             tauriConf,
             resourceDir,

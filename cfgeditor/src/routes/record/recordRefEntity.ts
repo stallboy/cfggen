@@ -56,7 +56,7 @@ export function createRefs(entity: Entity, refs: Refs, briefRecords: BriefRecord
 export interface CreateRefEntitiesParameter {
     entityMap: Map<string, Entity>;
     schema: Schema;
-    refs: BriefRecord[];
+    briefRecordRefs: BriefRecord[];
 
     isCreateRefs: boolean; //true;
     checkTable?: (t: string) => boolean;
@@ -70,7 +70,7 @@ export interface CreateRefEntitiesParameter {
 export function createRefEntities({
                                       entityMap,
                                       schema,
-                                      refs,
+                                      briefRecordRefs,
                                       isCreateRefs,
                                       checkTable,
                                       recordRefInShowLinkMaxNode,
@@ -82,7 +82,7 @@ export function createRefEntities({
     let isRefInNotShowLink = false;
     if (recordRefInShowLinkMaxNode) {
         let refInCount = 0;
-        for (const briefRecord of refs) {
+        for (const briefRecord of briefRecordRefs) {
             if (briefRecord.depth == -1) {
                 refInCount++;
             }
@@ -94,7 +94,7 @@ export function createRefEntities({
 
 
     const myCheckTable = checkTable ?? alwaysOk;
-    for (const briefRecord of refs) {
+    for (const briefRecord of briefRecordRefs) {
         const table = briefRecord.table;
         const id = briefRecord.id;
         const sTable = schema.getSTable(table);
@@ -153,7 +153,7 @@ export function createRefEntities({
             }
         }
         if (createLink) {
-            createRefs(entity, briefRecord, refs, myCheckTable, true);
+            createRefs(entity, briefRecord, briefRecordRefs, myCheckTable, true);
         }
         entityMap.set(eid, entity);
     }

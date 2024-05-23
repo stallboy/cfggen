@@ -59,7 +59,7 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
     }
 
     createRefEntities({
-        entityMap, schema, refs: recordRefResult.refs, isCreateRefs: true,
+        entityMap, schema, briefRecordRefs: recordRefResult.refs, isCreateRefs: true,
         checkTable, recordRefInShowLinkMaxNode, tauriConf, resourceDir, resMap
     });
     fillHandles(entityMap);
