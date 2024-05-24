@@ -49,8 +49,8 @@ public class ValueJsonParser {
         return parseStructural(subTableSchema, jsonObject);
     }
 
-    private CompositeValue parseNameable(Nameable subNamable, JSONObject jsonObject) {
-        switch (subNamable) {
+    private CompositeValue parseNameable(Nameable subNameable, JSONObject jsonObject) {
+        switch (subNameable) {
             case InterfaceSchema interfaceSchema -> {
                 return parseInterface(interfaceSchema, jsonObject);
             }
@@ -102,25 +102,32 @@ public class ValueJsonParser {
 
         switch (type) {
             case BOOL -> {
-                return new VBool((Boolean) obj, cell);
+                boolean bv = switch (obj) {
+                    case Boolean b -> b;
+                    case Number num -> num.intValue() == 1;
+                    default -> (boolean) obj;
+                };
+                return new VBool(bv, cell);
             }
             case INT -> {
-                return new VInt((Integer) obj, cell);
+                int iv = switch (obj) {
+                    case Number num -> num.intValue();
+                    default -> (int) obj;
+                };
+                return new VInt(iv, cell);
             }
             case LONG -> {
-                return new VLong((Long) obj, cell);
+                long lv = switch (obj) {
+                    case Number num -> num.longValue();
+                    default -> (long) obj;
+                };
+                return new VLong(lv, cell);
             }
             case FLOAT -> {
-                float fv;
-                if (obj instanceof BigDecimal bd) {
-                    fv = bd.floatValue();
-                } else if (obj instanceof BigInteger bi) {
-                    fv = bi.floatValue();
-                } else if (obj instanceof Integer i) {
-                    fv = i.floatValue();
-                } else {
-                    fv = (float) obj;
-                }
+                float fv = switch (obj) {
+                    case Number num -> num.floatValue();
+                    default -> (float) obj;
+                };
                 return new VFloat(fv, cell);
             }
             case STRING -> {
