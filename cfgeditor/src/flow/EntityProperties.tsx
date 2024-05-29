@@ -3,6 +3,7 @@ import {EntityField, EntitySharedSetting} from "./entityModel.ts";
 import {Flex, List, Tooltip, Typography} from "antd";
 import {CSSProperties, memo, useMemo} from "react";
 import {getFieldBackgroundColor} from "./colors.ts";
+import {Highlight} from "./EntityCard.tsx";
 
 const {Text} = Typography;
 
@@ -47,6 +48,8 @@ export const EntityProperties = memo(function EntityProperties({fields, sharedSe
     if (fields.length == 0) {
         return <></>;
     }
+
+    const keyword = sharedSetting?.query
     return <List size='small' style={listStyle} bordered dataSource={fields}
                  renderItem={(item) => {
                      const bgColor = getFieldBackgroundColor(item, sharedSetting?.nodeShow)
@@ -61,7 +64,7 @@ export const EntityProperties = memo(function EntityProperties({fields, sharedSe
                                  </Text>
                              </Tooltip>
                              <Text style={itemValueStyle} ellipsis={ellipsis}>
-                                 {item.value}
+                                 {keyword ? <Highlight text={item.value} keyword={keyword}/> : item.value}
                              </Text>
                          </Flex>
 
