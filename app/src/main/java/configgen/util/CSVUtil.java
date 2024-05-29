@@ -18,7 +18,7 @@ public class CSVUtil {
                 rows.add(csvRow);
             }
             return rows;
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -79,7 +79,7 @@ public class CSVUtil {
 
 
     public static void writeToFile(File file, List<List<String>> rows) throws IOException {
-        try (UTF8Writer w = new UTF8Writer(new FileOutputStream(file))) {
+        try (UTF8Writer w = new UTF8Writer(Files.newOutputStream(file.toPath()))) {
             write(w, rows);
         }
     }

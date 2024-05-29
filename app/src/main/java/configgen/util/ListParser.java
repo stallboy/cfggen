@@ -14,11 +14,12 @@ public class ListParser {
 
     public static List<String> parseList(String str, char separator) {
         ListState state = ListState.START;
-        ArrayList<String> list = new ArrayList<>();
+        ArrayList<String> list = new ArrayList<>(8);
         StringBuilder field = new StringBuilder(128);
         field.setLength(0);
 
-        for (char c : str.toCharArray()) {
+        for (int i=0; i< str.length(); i++) {
+            char c = str.charAt(i);
             switch (state) {
                 case START:
                     if (c == separator) {

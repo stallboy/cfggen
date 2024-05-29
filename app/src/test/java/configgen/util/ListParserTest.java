@@ -37,11 +37,22 @@ public class ListParserTest {
     }
 
     @Test
+    public void useQuoteToEscapeQuoteInString() {
+        test("\"a\"\"a,a\", bb", "a\"a,a", " bb");
+    }
+
+    @Test
+    public void useQuoteNoClose_IgnoreQuote() {
+        test("\"ab", "ab");
+        test("\"a\"b", "ab");
+        test("\"a\"bc,d", "abc", "d");
+    }
+
+    @Test
     public void whitespace_Counts() {
         test("aa, bb", "aa", " bb");
         test(" aa, bb ", " aa", " bb ");
     }
-
 
     private void test(String source, String... row) {
         List<String> a = ListParser.parseList(source, ',');
@@ -51,5 +62,4 @@ public class ListParserTest {
             assertEquals(c, a.get(i++));
         }
     }
-
 }

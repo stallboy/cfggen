@@ -2,6 +2,7 @@ package configgen.value;
 
 import configgen.gen.Context;
 import configgen.schema.HasRef;
+import configgen.schema.cfg.CfgWriter;
 import configgen.util.Logger;
 import configgen.data.CfgData;
 import configgen.schema.CfgSchema;
@@ -41,8 +42,10 @@ public class CfgValueParser {
     public CfgValue parseCfgValue() {
         //预先计算hasRef，方便生成时使用
         HasRef.preCalculateAllHasRef(context.cfgSchema());
-
         Logger.profile("schema span calculate");
+        if (Logger.verboseLevel() > 1) {
+            Logger.log(CfgWriter.stringify(context.cfgSchema(), false, true));
+        }
 
         List<Callable<OneTableParserResult>> tasks = new ArrayList<>();
         CfgValue cfgValue = new CfgValue(subSchema, new TreeMap<>());

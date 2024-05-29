@@ -51,58 +51,60 @@ public class HasRef {
             checked.addAll(frontiers.keySet());
 
             Map<String, Nameable> newFrontiers = new HashMap<>();
-            // expand
-            switch (nameable) {
-                case InterfaceSchema sInterface -> {
-                    for (StructSchema impl : sInterface.impls()) {
-                        String fn = impl.fullName();
-                        if (!checked.contains(fn)) {
-                            newFrontiers.put(fn, impl);
+            for (Nameable frontier : frontiers.values()) {
+                // expand
+                switch (frontier) {
+                    case InterfaceSchema sInterface -> {
+                        for (StructSchema impl : sInterface.impls()) {
+                            String fn = impl.fullName();
+                            if (!checked.contains(fn)) {
+                                newFrontiers.put(fn, impl);
+                            }
                         }
                     }
-                }
-                case Structural structural -> {
-                    for (FieldSchema field : structural.fields()) {
-                        switch (field.type()) {
+                    case Structural structural -> {
+                        for (FieldSchema field : structural.fields()) {
+                            switch (field.type()) {
 
-                            case StructRef structRef -> {
-                                Fieldable obj = structRef.obj();
-                                String fn = obj.fullName();
-                                if (!checked.contains(fn)) {
-                                    newFrontiers.put(fn, obj);
-                                }
-                            }
-                            case FList fList -> {
-                                SimpleType item = fList.item();
-                                if (item instanceof StructRef structRef) {
+                                case StructRef structRef -> {
                                     Fieldable obj = structRef.obj();
                                     String fn = obj.fullName();
                                     if (!checked.contains(fn)) {
                                         newFrontiers.put(fn, obj);
                                     }
                                 }
-                            }
-
-                            case FMap fMap -> {
-                                SimpleType key = fMap.key();
-                                if (key instanceof StructRef structRef) {
-                                    Fieldable obj = structRef.obj();
-                                    String fn = obj.fullName();
-                                    if (!checked.contains(fn)) {
-                                        newFrontiers.put(fn, obj);
+                                case FList fList -> {
+                                    SimpleType item = fList.item();
+                                    if (item instanceof StructRef structRef) {
+                                        Fieldable obj = structRef.obj();
+                                        String fn = obj.fullName();
+                                        if (!checked.contains(fn)) {
+                                            newFrontiers.put(fn, obj);
+                                        }
                                     }
                                 }
-                                SimpleType value = fMap.value();
-                                if (value instanceof StructRef structRef) {
-                                    Fieldable obj = structRef.obj();
-                                    String fn = obj.fullName();
-                                    if (!checked.contains(fn)) {
-                                        newFrontiers.put(fn, obj);
+
+                                case FMap fMap -> {
+                                    SimpleType key = fMap.key();
+                                    if (key instanceof StructRef structRef) {
+                                        Fieldable obj = structRef.obj();
+                                        String fn = obj.fullName();
+                                        if (!checked.contains(fn)) {
+                                            newFrontiers.put(fn, obj);
+                                        }
+                                    }
+                                    SimpleType value = fMap.value();
+                                    if (value instanceof StructRef structRef) {
+                                        Fieldable obj = structRef.obj();
+                                        String fn = obj.fullName();
+                                        if (!checked.contains(fn)) {
+                                            newFrontiers.put(fn, obj);
+                                        }
                                     }
                                 }
-                            }
 
-                            default -> {
+                                default -> {
+                                }
                             }
                         }
                     }

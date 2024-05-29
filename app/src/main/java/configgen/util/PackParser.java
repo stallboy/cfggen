@@ -25,7 +25,7 @@ public class PackParser {
      */
     public static List<String> parsePack(String str) {
         NestListState state = NestListState.START;
-        ArrayList<String> list = new ArrayList<>();
+        ArrayList<String> list = new ArrayList<>(8);
         StringBuilder field = new StringBuilder(128);
         field.setLength(0);
         int quoteCount_InParentheses = 0;
@@ -33,7 +33,8 @@ public class PackParser {
         boolean outMostIsFunction = false;
 
 
-        for (char c : str.toCharArray()) {
+        for (int i = 0; i < str.length(); i++) {
+            char c = str.charAt(i);
             switch (state) {
                 case START:
                     //noinspection StatementWithEmptyBody

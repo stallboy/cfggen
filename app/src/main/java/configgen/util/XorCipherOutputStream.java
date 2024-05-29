@@ -13,6 +13,9 @@ public class XorCipherOutputStream extends FilterOutputStream {
 
     public XorCipherOutputStream(OutputStream out, String cipher) {
         super(out);
+        if (cipher == null || cipher.isEmpty()) {
+            throw new IllegalArgumentException("Cipher cannot be null or empty");
+        }
         this.cipherBytes = cipher.getBytes(StandardCharsets.UTF_8);
         this.index = 0;
     }
@@ -23,5 +26,20 @@ public class XorCipherOutputStream extends FilterOutputStream {
         int encryptedByte = b ^ cipherBytes[index % cipherBytes.length];
         super.write(encryptedByte);
         index++;
+        if (index == cipherBytes.length) {
+            index = 0;
+        }
+    }
+
+    @Override
+    public void write(byte[] b, int off, int len) throws IOException {
+        for (int i = off; i < off + len; i++) {
+            int encryptedByte = b[i] ^ cipherBytes[index % cipherBytes.length];
+            super.write(encryptedByte);
+            index++;
+            if (index == cipherBytes.length) {
+                index = 0;
+            }
+        }
     }
 }

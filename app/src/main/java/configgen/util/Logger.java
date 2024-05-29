@@ -1,7 +1,7 @@
 package configgen.util;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class Logger {
     private static int verboseLevel = 0;
@@ -45,7 +45,7 @@ public class Logger {
         }
     }
 
-    private final static SimpleDateFormat df = new SimpleDateFormat("HH.mm.ss.SSS");
+    private final static DateTimeFormatter df = DateTimeFormatter.ofPattern("HH.mm.ss.SSS");
     private static long time;
     private static long firstTime;
 
@@ -53,7 +53,7 @@ public class Logger {
         if (args.length == 0) {
             System.out.println(fmt);
         } else {
-            System.out.printf((fmt) + "%n", args);
+            System.out.printf((fmt) + System.lineSeparator(), args);
         }
     }
 
@@ -65,7 +65,7 @@ public class Logger {
             long memory = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024;
             String elapse;
             if (time == 0) {
-                elapse = df.format(Calendar.getInstance().getTime());
+                elapse = df.format(LocalDateTime.now());
                 time = System.currentTimeMillis();
                 firstTime = time;
             } else {

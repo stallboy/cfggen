@@ -1,17 +1,18 @@
 package configgen.util;
 
 import java.text.MessageFormat;
-import java.util.Arrays;
-import java.util.Locale;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
+import java.util.*;
 
 public final class LocaleUtil {
     private static ResourceBundle resourceBundle;
+    private static final Set<Locale> availableLocalesSet;
+
+    static {
+        availableLocalesSet = new HashSet<>(Arrays.asList(Locale.getAvailableLocales()));
+    }
 
     public static boolean isSupported(Locale l) {
-        Locale[] availableLocales = Locale.getAvailableLocales();
-        return Arrays.asList(availableLocales).contains(l);
+        return availableLocalesSet.contains(l);
     }
 
     public static void setLocale(Locale l) {

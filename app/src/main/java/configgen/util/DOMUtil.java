@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public final class DOMUtil {
     public static Element rootElement(File file) {
@@ -35,10 +36,12 @@ public final class DOMUtil {
         return res;
     }
 
+    private static final Pattern stringArrayPattern = Pattern.compile("\\s*,\\s*");
+
     public static String[] parseStringArray(Element self, String attrName) {
         String attr = self.getAttribute(attrName).trim();
         if (!attr.isEmpty())
-            return attr.split("\\s*,\\s*");
+            return stringArrayPattern.split(attr);
         else
             return new String[0];
     }

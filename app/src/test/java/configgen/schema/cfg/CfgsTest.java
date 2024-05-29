@@ -24,7 +24,7 @@ class CfgsTest {
             CfgSchema cfg2 = CfgReader.parse(cfgStr);
 
             boolean equals = cfg1.equals(cfg2);
-            System.out.println(equals);
+//            System.out.println(equals);
             if (!equals) {
                 cfg1.printDiff(cfg2);
             }
@@ -51,7 +51,7 @@ class CfgsTest {
             CfgSchema cfgFromOneFile = Cfgs.readFrom(path1, false);
 
             boolean equals = cfg1.equals(cfgFromAllSubDir);
-            System.out.println(equals);
+//            System.out.println(equals);
             if (!equals) {
                 int i = 0;
                 for (Nameable item1 : cfg1.items()) {
