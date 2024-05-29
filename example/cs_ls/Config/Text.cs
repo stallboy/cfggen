@@ -2,8 +2,8 @@ namespace Config
 {
     public partial class Text
     {
-        public String Zh_cn { get; private set; }
-        public String En { get; private set; }
+        public string Zh_cn { get; private set; }
+        public string En { get; private set; }
         private Text() {}
 
         public override string ToString()
