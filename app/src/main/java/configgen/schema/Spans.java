@@ -12,10 +12,11 @@ public class Spans {
     public static void preCalculateAllNeededSpans(CfgSchema cfgSchema, SchemaErrs errs) {
         SequencedMap<String, Nameable> needSpans = collectNeededCalculateSpans(cfgSchema);
 
-        for (Nameable nameable : needSpans.reversed().values()) {
+        Collection<Nameable> reversedNeedSpans = needSpans.reversed().values();
+        for (Nameable nameable : reversedNeedSpans) {
             checkNameable(nameable, errs);
         }
-        for (Nameable nameable : needSpans.reversed().values()) {
+        for (Nameable nameable : reversedNeedSpans) {
             calcSpanCheckLoop(nameable, new LinkedHashSet<>());
             if (nameable instanceof Structural structural && nameable.fmt() instanceof FieldFormat.Sep){
                 // 内部field的span会被略去，这里计算

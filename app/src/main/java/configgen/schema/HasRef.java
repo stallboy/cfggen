@@ -7,6 +7,7 @@ import static configgen.schema.FieldType.*;
 public class HasRef {
 
     public static void preCalculateAllHasRef(CfgSchema schema) {
+        schema.requireResolved();
         ForeachSchema.foreachNameable(HasRef::calcHasRef, schema);
     }
 

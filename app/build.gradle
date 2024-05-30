@@ -20,10 +20,18 @@ repositories {
 dependencies {
     // Use JUnit Jupiter for testing.
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.1'
+    // https://mvnrepository.com/artifact/org.mockito/mockito-inline
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
+
+    // https://mvnrepository.com/artifact/org.mockito/mockito-core
+    testImplementation 'org.mockito:mockito-core:5.12.0'
+
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 
     implementation 'org.antlr:antlr4-runtime:4.13.1'
-    implementation 'org.dhatim:fastexcel-reader:0.15.7'
+    // https://mvnrepository.com/artifact/org.dhatim/fastexcel-reader
+    implementation 'org.dhatim:fastexcel-reader:0.18.0'
+
     implementation 'de.siegmar:fastcsv:2.2.2'
     implementation 'com.alibaba.fastjson2:fastjson2:2.0.43'
 

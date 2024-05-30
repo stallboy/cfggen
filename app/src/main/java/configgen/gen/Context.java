@@ -56,7 +56,7 @@ public class Context {
         Logger.profile("schema read");
         SchemaErrs errs = schema.resolve();
         if (!errs.errs().isEmpty()) {
-            errs.print("schema");
+            errs.assureNoError("schema");
         }
         Stat stat = new SchemaStat(schema);
         stat.print();
@@ -69,7 +69,7 @@ public class Context {
         SchemaErrs alignErr = SchemaErrs.of();
         CfgSchema alignedSchema = new CfgSchemaAlignToData(schema, data, alignErr).align();
         new CfgSchemaResolver(alignedSchema, alignErr).resolve();
-        alignErr.print("aligned schema");
+        alignErr.assureNoError("aligned schema");
         Logger.profile("schema aligned by data");
         if (!schema.equals(alignedSchema)) {
             // schema.printDiff(alignedSchema);
@@ -119,7 +119,7 @@ public class Context {
             SchemaErrs errs = SchemaErrs.of();
             tagSchema = new CfgSchemaFilterByTag(cfgSchema, tag, errs).filter();
             new CfgSchemaResolver(tagSchema, errs).resolve();
-            errs.print(String.format("[%s] filtered schema", tag));
+            errs.assureNoError(String.format("[%s] filtered schema", tag));
             Logger.profile(String.format("schema filtered by %s", tag));
         } else {
             tagSchema = cfgSchema;

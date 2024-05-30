@@ -15,17 +15,18 @@ public record SchemaErrs(List<Err> errs,
 
     public SchemaErrs {
         Objects.requireNonNull(errs);
+        Objects.requireNonNull(warns);
     }
 
     public void addErr(Err err) {
-        errs.add(err);
+        errs.add(Objects.requireNonNull(err));
     }
 
     public void addWarn(Warn warn) {
-        warns.add(warn);
+        warns.add(Objects.requireNonNull(warn));
     }
 
-    public void print(String prefix) {
+    public void assureNoError(String prefix) {
         if (Logger.isWarningEnabled() && !warns.isEmpty()) {
             Logger.log("%s warnings %d:", prefix, warns.size());
             for (Warn warn : warns) {
@@ -39,13 +40,19 @@ public record SchemaErrs(List<Err> errs,
                 Logger.log("\t" + err);
             }
             Logger.log(LocaleUtil.getMessage("FixSchemaErrFirst"));
-            System.exit(1);
+            throw new SchemaError(this);
         }
     }
 
     public sealed interface Warn {
     }
 
+
+    /**
+     * 检查局部名字空间和全局名字空间潜在的冲突
+     * 1, interface的局部名字空间里，可能跟全局的冲突
+     * 2, 分文件存储schema，可能导致的混乱
+     */
     public record NameMayConflictByRef(String name1,
                                        String name2) implements Warn {
     }

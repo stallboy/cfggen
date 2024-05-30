@@ -210,6 +210,5 @@ class CfgReaderTest {
          */
         ForeignKeySchema fk = table.foreignKeys().getFirst();
         assertTrue(fk.refKey() instanceof RefKey.RefList rl && rl.key().fields().equals(List.of("AttrType")));
-
     }
 }
