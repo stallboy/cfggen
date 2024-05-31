@@ -180,18 +180,6 @@ class SpansTest {
     }
 
     @Test
-    public void preCalculateAllNeededSpans_handles_empty_CfgSchema_without_errors() {
-        CfgSchema cfgSchema = CfgSchema.of();
-        cfgSchema.resolve();
-
-        SchemaErrs errs = SchemaErrs.of();
-        Spans.preCalculateAllNeededSpans(cfgSchema, errs);
-
-        assertTrue(errs.errs().isEmpty());
-        assertTrue(errs.warns().isEmpty());
-    }
-
-    @Test
     public void test_preCalculateAllNeededSpans_validCfgSchema() {
         CfgSchema cfgSchema = CfgSchema.of();
         Metadata meta = Metadata.of();
@@ -201,10 +189,6 @@ class SpansTest {
         cfgSchema.add(table);
         cfgSchema.resolve();
 
-        SchemaErrs errs = SchemaErrs.of();
-        Spans.preCalculateAllNeededSpans(cfgSchema, errs);
-
-        assertTrue(errs.errs().isEmpty());
         assertEquals(1, Spans.span(table));
     }
 

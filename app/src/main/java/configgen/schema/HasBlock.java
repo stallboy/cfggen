@@ -1,5 +1,8 @@
 package configgen.schema;
 
+/**
+ *
+ */
 public final class HasBlock {
     public static boolean hasBlock(Nameable nameable) {
         return switch (nameable) {
@@ -9,7 +12,13 @@ public final class HasBlock {
     }
 
     public static boolean hasBlock(FieldSchema field) {
-        return field.fmt() instanceof FieldFormat.Block;
+        if (field.fmt() instanceof FieldFormat.Block) {
+            return true;
+        }
+
+
+        return false;
+
     }
 
 }

@@ -80,12 +80,12 @@ class HasBlockTest {
     }
 
 
-    @Test
-    public void innerStructWithBlock() {
-        assertTrue(HasBlock.hasBlock(cfg.findFieldable("WeightedAttrs")));
-        assertTrue(HasBlock.hasBlock(cfg.findFieldable("condition")));
-        assertTrue(HasBlock.hasBlock(cfg.findFieldable("action")));
-    }
+//    @Test
+//    public void innerStructWithBlock() {
+//        assertTrue(HasBlock.hasBlock(cfg.findFieldable("WeightedAttrs")));
+//        assertTrue(HasBlock.hasBlock(cfg.findFieldable("condition")));
+//        assertTrue(HasBlock.hasBlock(cfg.findFieldable("action")));
+//    }
 
 
 

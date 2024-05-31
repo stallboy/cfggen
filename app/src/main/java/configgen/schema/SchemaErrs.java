@@ -4,6 +4,7 @@ import configgen.util.LocaleUtil;
 import configgen.util.Logger;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -77,25 +78,43 @@ public record SchemaErrs(List<Err> errs,
     public sealed interface Err {
     }
 
+    /**
+     * table名称必须全小写，是因为windows文件名不分大小写，而table名可能就是文件名，这里直接约定必须都小写
+     */
     public record TableNameNotLowerCase(String tableName) implements Err {
     }
 
+    /**
+     * 在interface里的struct不能是a.b这种格式
+     */
     public record ImplNamespaceNotEmpty(String sInterface,
                                         String errImplName) implements Err {
     }
 
+    /**
+     * table，struct，interface名字冲突
+     */
     public record NameConflict(String name) implements Err {
     }
 
+    /**
+     * field 名字冲突
+     */
     public record InnerNameConflict(String item, String name) implements Err {
     }
 
 
+    /**
+     * 类型未找到
+     */
     public record TypeStructNotFound(String struct,
                                      String field,
                                      String notFoundStruct) implements Err {
     }
 
+    /**
+     * 类型无法以这种fmt映射到excel
+     */
     public record TypeFmtNotCompatible(String struct,
                                        String field,
                                        String type,
@@ -124,21 +143,36 @@ public record SchemaErrs(List<Err> errs,
                                      String field) implements Err {
     }
 
+    /**
+     * interface对应的枚举表不存在
+     */
     public record EnumRefNotFound(String sInterface,
                                   String enumRef) implements Err {
     }
 
+    /**
+     * interface里无struct
+     */
     public record InterfaceImplEmpty(String sInterface) implements Err {
     }
 
+    /**
+     * interface的默认实现不存在
+     */
     public record DefaultImplNotFound(String sInterface,
                                       String defaultImpl) implements Err {
     }
 
+    /**
+     * table的entry或enum对应的字段不存在
+     */
     public record EntryNotFound(String table,
                                 String entry) implements Err {
     }
 
+    /**
+     * table的entry或enum对应的字段类型不是string
+     */
     public record EntryFieldTypeNotStr(String table,
                                        String entry,
                                        String errType) implements Err {
@@ -152,6 +186,9 @@ public record SchemaErrs(List<Err> errs,
     public record BlockTableFirstFieldNotInPrimaryKey(String table) implements Err {
     }
 
+    /**
+     * 主键、唯一键或外键 不存在
+     */
     public record KeyNotFound(String structural,
                               String key) implements Err {
     }
@@ -166,26 +203,41 @@ public record SchemaErrs(List<Err> errs,
                                     String errType) implements Err {
     }
 
+    /**
+     * 外键对应的table不存在
+     */
     public record RefTableNotFound(String table,
                                    String foreignKey,
                                    String errRefTable) implements Err {
     }
 
+    /**
+     * 外键到table.key，这里key不是table的唯一键
+     */
     public record RefTableKeyNotUniq(String table,
                                      String foreignKey,
                                      String refTable,
                                      List<String> notUniqRefKey) implements Err {
     }
 
+    /**
+     * one to many的外键（listRef），这个local key和remote key都只支持单字段
+     */
     public record ListRefMultiKeyNotSupport(String table,
                                             String foreignKey,
                                             List<String> errMultiKey) implements Err {
     }
 
+    /**
+     * 外键的local key和remote key数量不匹配
+     */
     public record RefLocalKeyRemoteKeyCountNotMatch(String table,
                                                     String foreignKey) implements Err {
     }
 
+    /**
+     * 外键的local key和remote key类型不匹配
+     */
     public record RefLocalKeyRemoteKeyTypeNotMatch(String structural,
                                                    String foreignKey,
                                                    String localType,
@@ -206,9 +258,16 @@ public record SchemaErrs(List<Err> errs,
                                             String notIdentifierName) implements Err {
     }
 
+    /**
+     * 标记了json的table不能有对应的excel文件
+     */
     public record JsonTableNotSupportExcel(String table,
                                            List<String> excelSheetList) implements Err {
     }
 
-
+    /**
+     * 结构有循环而且没有用pack，导致无法映射到excel列
+     */
+    public record MappingToExcelLoop(Collection<String> structNameLoop) implements Err {
+    }
 }

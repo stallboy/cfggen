@@ -7,28 +7,46 @@ import static configgen.schema.FieldFormat.AutoOrPack.PACK;
 import static configgen.schema.FieldType.*;
 import static configgen.schema.Metadata.MetaInt;
 
+/**
+ * 在resolved前 预先计算好每个结构占用的excel的列数
+ * 查询
+ */
 public class Spans {
 
-    public static void preCalculateAllNeededSpans(CfgSchema cfgSchema, SchemaErrs errs) {
+    static void preCalculateAllNeededSpans(CfgSchema cfgSchema, SchemaErrs errs) {
         SequencedMap<String, Nameable> needSpans = collectNeededCalculateSpans(cfgSchema);
-
+        // 因为needSpans是广度优先拓展得到的，先从需要映射excel的table开始。
+        // reverse下，先计算table依赖的struct的span，感觉更好点
         Collection<Nameable> reversedNeedSpans = needSpans.reversed().values();
         for (Nameable nameable : reversedNeedSpans) {
-            checkNameable(nameable, errs);
+            checkNameableFmt(nameable, errs);
         }
-        for (Nameable nameable : reversedNeedSpans) {
-            calcSpanCheckLoop(nameable, new LinkedHashSet<>());
-            if (nameable instanceof Structural structural && nameable.fmt() instanceof FieldFormat.Sep){
-                // 内部field的span会被略去，这里计算
-                for (FieldSchema field : structural.fields()) {
-                    calcFieldSpanCheckLoop(field, new LinkedHashSet<>());
+        try {
+            for (Nameable nameable : reversedNeedSpans) {
+                calcSpanCheckLoop(nameable, new LinkedHashSet<>());
+                if (nameable instanceof Structural structural && nameable.fmt() instanceof FieldFormat.Sep) {
+                    // 内部field的span会被略去，这里计算
+                    for (FieldSchema field : structural.fields()) {
+                        calcFieldSpanCheckLoop(field, new LinkedHashSet<>());
+                    }
                 }
             }
+        } catch (StructNestLoop loop) {
+            errs.addErr(new SchemaErrs.MappingToExcelLoop(loop.stack));
         }
     }
 
-    private static void checkNameable(Nameable nameable, SchemaErrs errs) {
-        switch (nameable){
+
+    private static class StructNestLoop extends RuntimeException {
+        final SequencedCollection<String> stack;
+
+        StructNestLoop(SequencedCollection<String> stack) {
+            this.stack = stack;
+        }
+    }
+
+    private static void checkNameableFmt(Nameable nameable, SchemaErrs errs) {
+        switch (nameable) {
             case InterfaceSchema interfaceSchema -> {
                 for (StructSchema impl : interfaceSchema.impls()) {
                     for (FieldSchema field : impl.fields()) {
@@ -84,11 +102,15 @@ public class Spans {
     }
 
 
+    /**
+     * @return 广度优先搜索得到所有需要计算span的结构
+     */
     private static SequencedMap<String, Nameable> collectNeededCalculateSpans(CfgSchema cfgSchema) {
         SequencedMap<String, Nameable> collectedNeedSpans = new LinkedHashMap<>();
 
         List<FieldSchema> fieldFrontiers = new ArrayList<>();
         for (TableSchema table : cfgSchema.tableMap().values()) {
+            // json存储的不需要计算span
             if (!table.meta().isJson()) {
                 collectedNeedSpans.put(table.name(), table);
                 fieldFrontiers.addAll(table.fields());
@@ -154,8 +176,13 @@ public class Spans {
     }
 
 
+    /**
+     * @param stack 用它来检验是否循环嵌套，导致无法计算span
+     * @return 返回nameable所占列数
+     */
     private static int calcSpanCheckLoop(Nameable nameable, SequencedSet<String> stack) {
         Metadata meta = nameable.meta();
+        // 如果已经计算过了，直接返回，用来避免重复计算。
         if (meta.getSpan() instanceof MetaInt vi) {
             return vi.value();
         }
@@ -166,7 +193,7 @@ public class Spans {
         }
 
         if (!stack.add(nameable.fullName())) {
-            throw new IllegalStateException("Calculate span loop: " + String.join(",", stack));
+            throw new StructNestLoop(stack);
         }
 
         int resultSpan;
@@ -216,7 +243,6 @@ public class Spans {
                 switch (fmt) {
                     case FieldFormat.Block block -> {
                         resultSpan = calcSimpleTypeSpanCheckLoop(flist.item(), stack) * block.fix();
-
                     }
                     case FieldFormat.Fix fix -> {
                         resultSpan = calcSimpleTypeSpanCheckLoop(flist.item(), stack) * fix.count();
@@ -300,6 +326,5 @@ public class Spans {
             }
         }
     }
-
 
 }

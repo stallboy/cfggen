@@ -4,6 +4,10 @@ import java.util.*;
 
 import static configgen.schema.FieldType.*;
 
+/**
+ * 预先计算每个结构是否有对外引用
+ * 查询
+ */
 public class HasRef {
 
     public static void preCalculateAllHasRef(CfgSchema schema) {
