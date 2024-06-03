@@ -37,15 +37,6 @@ public class TableSchemaRefGraph {
         return refsMap;
     }
 
-    public Set<String> getRefInTables(String table) {
-        Refs refs = refsMap.get(table);
-        if (refs != null) {
-            return refs.refIn;
-        } else {
-            return Set.of();
-        }
-    }
-
     private Set<String> getAllRefOuts(Nameable notImplNameable) {
         Set<String> refOut = new HashSet<>();
         Set<String> deps = collectAllDepStructs(notImplNameable);

@@ -3,10 +3,7 @@ package configgen.schema;
 import configgen.util.LocaleUtil;
 import configgen.util.Logger;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public record SchemaErrs(List<Err> errs,
                          List<Warn> warns) {
@@ -187,16 +184,16 @@ public record SchemaErrs(List<Err> errs,
     }
 
     /**
-     * 主键、唯一键或外键 不存在
+     * 主键、唯一键、外键的本地健 不存在
      */
     public record KeyNotFound(String structural,
                               String key) implements Err {
     }
 
     /**
-     * 可以做为主键或唯一键的字段，或者是基本类型int, long, bool, str, res
-     * 或者是struct，struct里的字段类型必须为int，long，bool，str, res
-     * 或者是多个字段，构建成隐含的struct，同样要符合struct内字段类型必须为int, long, bool, str, res
+     * 可以做为主键或唯一键的字段，或者是基本类型int, long, bool, str
+     * 或者是struct，struct里的字段类型必须为int，long，bool，str
+     * 或者是多个字段，构建成隐含的struct，同样要符合struct内字段类型必须为int, long, bool, str
      */
     public record KeyTypeNotSupport(String structural,
                                     String field,
@@ -268,6 +265,6 @@ public record SchemaErrs(List<Err> errs,
     /**
      * 结构有循环而且没有用pack，导致无法映射到excel列
      */
-    public record MappingToExcelLoop(Collection<String> structNameLoop) implements Err {
+    public record MappingToExcelLoop(SequencedCollection<String> structNameLoop) implements Err {
     }
 }

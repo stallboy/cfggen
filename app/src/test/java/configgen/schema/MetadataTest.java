@@ -81,6 +81,13 @@ public class MetadataTest {
     }
 
     @Test
+    public void hasBlock() {
+        Metadata metadata = Metadata.of();
+        metadata.putHasBlock(true);
+        assertTrue(metadata.getHasBlock() instanceof Metadata.MetaInt v && v.value() == 1);
+    }
+
+    @Test
     public void span() {
         Metadata metadata = Metadata.of();
         int spanValue = 10;

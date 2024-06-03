@@ -11,7 +11,7 @@ import java.util.List;
 import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static org.junit.jupiter.api.Assertions.*;
 
-class SpansTest {
+class SpanTest {
 
     private static CfgSchema cfg;
 
@@ -23,6 +23,11 @@ class SpansTest {
                 	name:str; // 程序用名字
                 }
                 struct AttrRandom {
+                	Attr:int; // 属性id
+                	Min:int; // 最小值
+                	Max:int; // 最大值
+                }
+                struct AttrSep (sep=',') {
                 	Attr:int; // 属性id
                 	Min:int; // 最小值
                 	Max:int; // 最大值
@@ -39,7 +44,7 @@ class SpansTest {
                 	str1:str;
                 	text1:text;
                 	attrPack1:AttrRandom (pack);
-                	attrSep1:AttrRandom (sep=',');
+                	attrSep1:AttrSep;
                                 
                 	listFix1:list<int> (fix=3);
                 	listSep1:list<int> (sep=',');
@@ -108,75 +113,77 @@ class SpansTest {
                 }
                 """;
         cfg = CfgReader.parse(str);
-        cfg.resolve();
+        SchemaErrs errs = cfg.resolve();
+        assertEquals(0, errs.errs().size());
+
     }
 
     @Test
     public void span_for_simple_table() {
-        assertEquals(2, Spans.span(cfg.findTable("ability")));
+        assertEquals(2, Span.span(cfg.findTable("ability")));
     }
 
     @Test
     public void span_for_simple_struct() {
-        assertEquals(3, Spans.span(cfg.findFieldable("AttrRandom")));
-        assertEquals(4, Spans.span(cfg.findTable("item")));
+        assertEquals(3, Span.span(cfg.findFieldable("AttrRandom")));
+        assertEquals(4, Span.span(cfg.findTable("item")));
     }
 
     @Test
     public void span1_for_primitive() {
         TableSchema t = cfg.findTable("test");
-        assertEquals(1, Spans.fieldSpan(t.findField("id")));
-        assertEquals(1, Spans.fieldSpan(t.findField("bool1")));
-        assertEquals(1, Spans.fieldSpan(t.findField("long1")));
-        assertEquals(1, Spans.fieldSpan(t.findField("float1")));
-        assertEquals(1, Spans.fieldSpan(t.findField("str1")));
-        assertEquals(1, Spans.fieldSpan(t.findField("text1")));
+        assertEquals(1, Span.fieldSpan(t.findField("id")));
+        assertEquals(1, Span.fieldSpan(t.findField("bool1")));
+        assertEquals(1, Span.fieldSpan(t.findField("long1")));
+        assertEquals(1, Span.fieldSpan(t.findField("float1")));
+        assertEquals(1, Span.fieldSpan(t.findField("str1")));
+        assertEquals(1, Span.fieldSpan(t.findField("text1")));
     }
 
     @Test
     public void span1_for_struct_pack() {
         TableSchema t = cfg.findTable("test");
-        assertEquals(1, Spans.fieldSpan(t.findField("attrPack1")));
+        assertEquals(1, Span.fieldSpan(t.findField("attrPack1")));
     }
 
     @Test
     public void span1_for_struct_sep() {
         TableSchema t = cfg.findTable("test");
-        assertEquals(1, Spans.fieldSpan(t.findField("attrSep1")));
+        assertEquals(1, Span.fieldSpan(t.findField("attrSep1")));
     }
 
     @Test
     public void span_for_list() {
         TableSchema t = cfg.findTable("test");
-        assertEquals(3, Spans.fieldSpan(t.findField("listFix1")));
-        assertEquals(3, Spans.fieldSpan(t.findField("listBlock1")));
-        assertEquals(1, Spans.fieldSpan(t.findField("listSep1")));
-        assertEquals(1, Spans.fieldSpan(t.findField("listPack1")));
+        assertEquals(3, Span.fieldSpan(t.findField("listFix1")));
+        assertEquals(3, Span.fieldSpan(t.findField("listBlock1")));
+        assertEquals(1, Span.fieldSpan(t.findField("listSep1")));
+        assertEquals(1, Span.fieldSpan(t.findField("listPack1")));
 
-        assertEquals(6, Spans.fieldSpan(t.findField("listFix2")));
-        assertEquals(6, Spans.fieldSpan(t.findField("listBlock2")));
-        assertEquals(1, Spans.fieldSpan(t.findField("listPack2")));
+        assertEquals(6, Span.fieldSpan(t.findField("listFix2")));
+        assertEquals(6, Span.fieldSpan(t.findField("listBlock2")));
+        assertEquals(1, Span.fieldSpan(t.findField("listPack2")));
     }
 
     @Test
     public void span_for_map() {
         TableSchema t = cfg.findTable("test");
-        assertEquals(6, Spans.fieldSpan(t.findField("mapFix1")));
-        assertEquals(6, Spans.fieldSpan(t.findField("mapBlock1")));
-        assertEquals(1, Spans.fieldSpan(t.findField("mapPack1")));
-        assertEquals(8, Spans.fieldSpan(t.findField("mapFix2")));
+        assertEquals(6, Span.fieldSpan(t.findField("mapFix1")));
+        assertEquals(6, Span.fieldSpan(t.findField("mapBlock1")));
+        assertEquals(1, Span.fieldSpan(t.findField("mapPack1")));
+        assertEquals(8, Span.fieldSpan(t.findField("mapFix2")));
     }
 
     @Test
     public void span_for_interface() {
         Fieldable t = cfg.findFieldable("condition");
-        assertEquals(4, Spans.span(t));
+        assertEquals(4, Span.span(t));
     }
 
     @Test
     public void span_no_calc_for_unused_struct() {
         Fieldable t = cfg.findFieldable("NoNoNo");
-        assertThrows(IllegalStateException.class, () -> Spans.span(t));
+        assertThrows(IllegalStateException.class, () -> Span.span(t));
     }
 
     @Test
@@ -189,19 +196,19 @@ class SpansTest {
         cfgSchema.add(table);
         cfgSchema.resolve();
 
-        assertEquals(1, Spans.span(table));
+        assertEquals(1, Span.span(table));
     }
 
     @Test
     public void test_field_span_returns_correct_span() {
         FieldSchema field = new FieldSchema("testField", INT, AUTO, Metadata.of());
-        int span = Spans.fieldSpan(field);
+        int span = Span.fieldSpan(field);
         assertEquals(1, span);
     }
 
     @Test
     public void test_simple_type_span() {
-        int span = Spans.simpleTypeSpan(FieldType.Primitive.STRING);
+        int span = Span.simpleTypeSpan(FieldType.Primitive.STRING);
         assertEquals(1, span);
     }
 

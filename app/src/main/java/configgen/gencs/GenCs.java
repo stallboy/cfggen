@@ -144,7 +144,7 @@ public class GenCs extends Generator {
             ps.println();
         }
 
-        if (HasRef.hasRef(sInterface)) {
+        if (HasRefOrBlock.hasRef(sInterface)) {
             ps.println1("internal virtual void _resolve(Config.LoadErrors errors)");
             ps.println1("{");
             ps.println1("}");
@@ -351,7 +351,7 @@ public class GenCs extends Generator {
             ps.println();
 
             //static resolve
-            if (HasRef.hasRef(structural)) {
+            if (HasRefOrBlock.hasRef(structural)) {
                 ps.println2("internal static void Resolve(Config.LoadErrors errors) {");
                 ps.println3("foreach (var v in All())");
                 ps.println4("v._resolve(errors);");
@@ -385,7 +385,7 @@ public class GenCs extends Generator {
         ps.println();
 
         //resolve
-        if (HasRef.hasRef(structural)) {
+        if (HasRefOrBlock.hasRef(structural)) {
             pre = isImpl ? "internal override " : "internal ";
             ps.println2(pre + "void _resolve(Config.LoadErrors errors)");
             ps.println2("{");
@@ -394,7 +394,7 @@ public class GenCs extends Generator {
             // 1,先调用子_resolve
             for (FieldSchema field : structural.fields()) {
                 FieldType type = field.type();
-                if (!HasRef.hasRef(type)) {
+                if (!HasRefOrBlock.hasRef(type)) {
                     continue;
                 }
                 switch (type) {
@@ -748,7 +748,7 @@ public class GenCs extends Generator {
             ps.println4("Errors.ConfigNull(csv);");
 
             for (TableSchema table : tableSchemas) {
-                if (HasRef.hasRef(table)) {
+                if (HasRefOrBlock.hasRef(table)) {
                     ps.println3(fullName(table) + ".Resolve(Errors);");
                 }
             }

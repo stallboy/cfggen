@@ -4,6 +4,10 @@ import configgen.schema.cfg.CfgReader;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
+import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
+import static configgen.schema.FieldType.Primitive.INT;
 import static org.junit.jupiter.api.Assertions.*;
 
 class HasRefTest {
@@ -50,41 +54,51 @@ class HasRefTest {
                 """;
         cfg = CfgReader.parse(str);
         cfg.resolve();
-        HasRef.preCalculateAllHasRef(cfg);
     }
 
     @Test
     void no_ref_table() {
-        assertFalse(HasRef.hasRef(cfg.findTable("item")));
+        assertFalse(HasRefOrBlock.hasRef(cfg.findTable("item")));
     }
 
     @Test
     void ref_in_table() {
-        assertTrue(HasRef.hasRef(cfg.findTable("ability")));
+        assertTrue(HasRefOrBlock.hasRef(cfg.findTable("ability")));
     }
 
 
     @Test
     void ref_in_interface() {
-        assertTrue(HasRef.hasRef(cfg.findFieldable("condition")));
+        assertTrue(HasRefOrBlock.hasRef(cfg.findFieldable("condition")));
     }
 
     @Test
     void ref_in_interface_indirect() {
-        assertTrue(HasRef.hasRef(cfg.findFieldable("action")));
+        assertTrue(HasRefOrBlock.hasRef(cfg.findFieldable("action")));
     }
 
 
     @Test
     void ref_on_field() {
         TableSchema t = cfg.findTable("ability");
-        assertTrue(HasRef.hasRef(t.findField("action").type()));
+        assertTrue(HasRefOrBlock.hasRef(t.findField("action").type()));
     }
 
     @Test
     void no_ref_on_field() {
         TableSchema t = cfg.findTable("ability");
-        assertFalse(HasRef.hasRef(t.findField("attr").type()));
+        assertFalse(HasRefOrBlock.hasRef(t.findField("attr").type()));
+    }
+
+    @Test
+    public void throwException_ifNotResolve() {
+        StructSchema structSchema = new StructSchema("struct1", AUTO, Metadata.of(),
+                List.of(new FieldSchema("field1", INT, AUTO, Metadata.of())),
+                List.of(new ForeignKeySchema("refField1",
+                        new KeySchema(List.of("field1")), "table1",
+                        new RefKey.RefPrimary(true), Metadata.of())));
+
+        assertThrowsExactly(IllegalStateException.class, () -> HasRefOrBlock.hasRef(structSchema));
     }
 
 }

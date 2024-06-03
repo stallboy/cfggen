@@ -31,7 +31,7 @@ public class ListParserTest {
     }
 
     @Test
-    public void useQuoteToEscapeSeperatorInString() {
+    public void useQuoteToEscapeSeparatorInString() {
         test("\"a,a\", bb", "a,a", " bb");
         test("\"aa\", bb", "aa", " bb");
     }
@@ -61,5 +61,15 @@ public class ListParserTest {
         for (String c : row) {
             assertEquals(c, a.get(i++));
         }
+    }
+
+
+    @Test
+    public void separatorNoComma_Ok() {
+        List<String> a = ListParser.parseList("12:24:30", ':');
+        assertEquals(3, a.size());
+        assertEquals("12", a.get(0));
+        assertEquals("24", a.get(1));
+        assertEquals("30", a.get(2));
     }
 }

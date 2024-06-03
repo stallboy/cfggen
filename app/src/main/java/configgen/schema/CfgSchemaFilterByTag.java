@@ -11,9 +11,9 @@ import static configgen.schema.SchemaErrs.FilterRefIgnoredByRefTableNotFound;
  * foreign key是否提取，只由是否可行决定，能包含就包含。
  * <p>
  * 如果在structural上配置了tag，分3种情况
- * 1，所有field都没tag，-tag, 则包含所有field
- * 2，有部分field设了tag，则取这设置了tag的field
- * 3，没有设置tag的，但有部分设置了-tag，则提取没设-tag的field
+ * <ol>1，所有field都没tag、-tag, 则包含所有field</ol>
+ * <ol>2，有部分field设了tag，则取这设置了tag的field</ol>
+ * <ol>3，没有设置tag的，但有部分设置了-tag，则提取没设-tag的field</ol>
  * <p>
  * 一般情况下，impl不需要设置tag，
  * 如果impl上设置tag，则则是为了能filter出空结构，相当于只用此impl类名字做标志，

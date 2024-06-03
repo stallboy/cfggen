@@ -33,7 +33,13 @@ public final class CfgSchemaResolver {
         step3_resolveAllForeignKeys();
         step4_checkAllChainedSepFmt();
         step5_checkUnusedFieldable();
-        Spans.preCalculateAllNeededSpans(cfgSchema, errs);
+
+        if (errs.errs().isEmpty()){
+            //预先计算hasRef， hasBlock, span 方便生成时使用
+            Span.preCalculateAllNeededSpans(cfgSchema, errs);
+            HasRefOrBlock.preCalculateAllHasRefAndHasBlocks(cfgSchema, errs);
+        }
+
         if (errs.errs().isEmpty()) {
             cfgSchema.setResolved();
         }
@@ -285,12 +291,6 @@ public final class CfgSchemaResolver {
         for (KeySchema key : table.uniqueKeys()) {
             if (resolveKey(table, key)) {
                 checkPrimaryOrUniqKey(key);
-            }
-        }
-        if (HasBlock.hasBlock(table)) {
-            String firstField = table.fields().getFirst().name();
-            if (!primaryKey.fields().contains(firstField)) {
-                errs.addErr(new BlockTableFirstFieldNotInPrimaryKey(table.name()));
             }
         }
     }
@@ -547,6 +547,7 @@ public final class CfgSchemaResolver {
         for (Nameable item : cfgSchema.items()) {
             switch (item) {
                 case InterfaceSchema interfaceSchema -> {
+                    // interface的fmt只能配置为pack，或auto，再构造时已经检测
                     // 为了简单和一致性，在interface的impl上不支持配置fmt
                     // 因为如果配置了pack或sep，则这第一列就不是impl的名字了，不一致。
                     for (StructSchema impl : interfaceSchema.impls()) {

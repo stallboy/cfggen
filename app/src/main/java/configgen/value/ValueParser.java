@@ -78,7 +78,7 @@ public class ValueParser {
                 canChildBeEmpty = false;
             }
         } else {
-            require(cells.size() == Spans.span(sInterface), "列宽度应一致");
+            require(cells.size() == Span.span(sInterface), "列宽度应一致");
         }
 
         // 内容为空的单一格子，处理方式是把这空的parsed一层层传下去
@@ -124,7 +124,7 @@ public class ValueParser {
                 }
 
                 require(subImpl != null);
-                int expected = isPack ? 1 : Spans.span(impl);
+                int expected = isPack ? 1 : Span.span(impl);
                 if (parsed.size() - 1 < expected) {
                     errs.addErr(new ValueErrs.InterfaceCellImplSpanNotEnough(parsed, sInterface.name(), impl.name(),
                             expected, parsed.size() - 1));
@@ -148,6 +148,7 @@ public class ValueParser {
         boolean isEmpty = false; // 支持excel里的cell为空，并且它还是个复合结构；但不支持非empty的cell里部分结构为空
         boolean canChildBeEmpty = canBeEmpty;
         boolean isPack = pack || structural.fmt() == PACK;
+        boolean isSep = false;
         if (isPack) {
             require(cells.size() == 1, "pack应该只占一格");
             DCell cell = cells.getFirst();
@@ -172,8 +173,9 @@ public class ValueParser {
                 parsed = DCells.parseList(cell, sep.sep());
                 canChildBeEmpty = false;
             }
+            isSep = true;
         } else {
-            require(cells.size() == Spans.span(structural), "列宽度应一致");
+            require(cells.size() == Span.span(structural), "列宽度应一致");
         }
 
         List<Value> values = new ArrayList<>(subStructural.fields().size());
@@ -193,7 +195,13 @@ public class ValueParser {
         } else {
             int startIdx = 0;
             for (FieldSchema field : structural.fields()) {
-                int expected = isPack ? 1 : Spans.fieldSpan(field);
+                // 如果是pack，每个field只占1，这个特性是用于打断环嵌套导致的span无法计算问题的关键。
+                // 比如数据为（a，b），c。 parsePack的时候返回2个数据a，b  和 c
+                // 第一个field返回整体的a，b，在下一轮的parsePack里才分别取出a，b。
+                //
+                // 如果是sep，也只占1，CfgSchemaResolver里保证了
+                // 而不要去查询Spans.fieldSpan，因为Spans会忽略掉struct为sep的field计算。
+                int expected = isPack || isSep ? 1 : Span.fieldSpan(field);
                 FieldSchema subField = subStructural.findField(field.name());
                 if (subField != null) {
                     // 提取单个field
@@ -340,7 +348,7 @@ public class ValueParser {
             blocks = blockParser.parseBlock(cells, curRowIndex);
 
         } else {
-            require(cells.size() == Spans.fieldSpan(field));
+            require(cells.size() == Span.fieldSpan(field));
             parsed = cells;
         }
 
@@ -350,8 +358,8 @@ public class ValueParser {
 
         Map<SimpleValue, SimpleValue> valueMap = new LinkedHashMap<>();
 
-        int kc = isPack ? 1 : Spans.simpleTypeSpan(type.key());
-        int vc = isPack ? 1 : Spans.simpleTypeSpan(type.value());
+        int kc = isPack ? 1 : Span.simpleTypeSpan(type.key());
+        int vc = isPack ? 1 : Span.simpleTypeSpan(type.value());
         int itemSpan = kc + vc;
 
         for (CellsWithRowIndex block : blocks) {
@@ -422,7 +430,7 @@ public class ValueParser {
             parsed = DCells.parseList(cell, sep.sep());
 
         } else {
-            require(cells.size() == Spans.fieldSpan(field));
+            require(cells.size() == Span.fieldSpan(field));
             parsed = cells;
         }
 
@@ -431,7 +439,7 @@ public class ValueParser {
         }
 
         List<SimpleValue> valueList = new ArrayList<>();
-        int itemSpan = isPack ? 1 : Spans.simpleTypeSpan(type.item());
+        int itemSpan = isPack ? 1 : Span.simpleTypeSpan(type.item());
         for (CellsWithRowIndex block : blocks) {
             List<DCell> curLineParsed = block.cells;
             for (int startIdx = 0; startIdx < curLineParsed.size(); startIdx += itemSpan) {

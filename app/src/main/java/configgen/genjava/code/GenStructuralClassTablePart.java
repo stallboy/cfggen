@@ -57,7 +57,7 @@ class GenStructuralClassTablePart {
         //static _resolveAll
         ps.println2("@Override");
         ps.println2("public void resolveAll(%s.ConfigMgr mgr) {", Name.codeTopPkg);
-        if (HasRef.hasRef(structural) && !isTableAndNeedBuilder) {
+        if (HasRefOrBlock.hasRef(structural) && !isTableAndNeedBuilder) {
             ps.println3("for (%s e : mgr.%sAll.values()) {", name.className, name.containerPrefix);
             ps.println4("e._resolve(mgr);");
             ps.println3("}");

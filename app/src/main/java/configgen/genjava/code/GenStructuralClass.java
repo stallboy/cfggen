@@ -186,7 +186,7 @@ class GenStructuralClass {
 
 
         // _resolve
-        if (HasRef.hasRef(structural) && !isTableAndNeedBuilder) {
+        if (HasRefOrBlock.hasRef(structural) && !isTableAndNeedBuilder) {
             generateResolve(structural, nullableInterface, ps);
         }
 
@@ -208,7 +208,7 @@ class GenStructuralClass {
         // 1,先调用子_resolve
         for (FieldSchema field : structural.fields()) {
             FieldType type = field.type();
-            if (!HasRef.hasRef(type)) {
+            if (!HasRefOrBlock.hasRef(type)) {
                 continue;
             }
             String ln = lower1(field.name());

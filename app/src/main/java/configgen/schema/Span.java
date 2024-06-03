@@ -11,7 +11,7 @@ import static configgen.schema.Metadata.MetaInt;
  * 在resolved前 预先计算好每个结构占用的excel的列数
  * 查询
  */
-public class Spans {
+public class Span {
 
     static void preCalculateAllNeededSpans(CfgSchema cfgSchema, SchemaErrs errs) {
         SequencedMap<String, Nameable> needSpans = collectNeededCalculateSpans(cfgSchema);
@@ -21,18 +21,15 @@ public class Spans {
         for (Nameable nameable : reversedNeedSpans) {
             checkNameableFmt(nameable, errs);
         }
-        try {
-            for (Nameable nameable : reversedNeedSpans) {
-                calcSpanCheckLoop(nameable, new LinkedHashSet<>());
-                if (nameable instanceof Structural structural && nameable.fmt() instanceof FieldFormat.Sep) {
-                    // 内部field的span会被略去，这里计算
-                    for (FieldSchema field : structural.fields()) {
-                        calcFieldSpanCheckLoop(field, new LinkedHashSet<>());
-                    }
+
+        if (errs.errs().isEmpty()){ // 如果fmt有问题就直接返回，要不然可能会抛出异常
+            try {
+                for (Nameable nameable : reversedNeedSpans) {
+                    calcSpanCheckLoop(nameable, new LinkedHashSet<>());
                 }
+            } catch (StructNestLoop loop) {
+                errs.addErr(new SchemaErrs.MappingToExcelLoop(loop.stack));
             }
-        } catch (StructNestLoop loop) {
-            errs.addErr(new SchemaErrs.MappingToExcelLoop(loop.stack));
         }
     }
 
@@ -298,7 +295,7 @@ public class Spans {
             return vi.value();
         }
 
-        throw new IllegalStateException(nameable.fullName() + "'s span not pre calculated");
+        throw new IllegalStateException(nameable.fullName() + " has no _span meta value, schema may not resolved");
     }
 
 
@@ -312,7 +309,7 @@ public class Spans {
             return vi.value();
         }
 
-        throw new IllegalStateException(field.name() + "'s span not pre calculated");
+        throw new IllegalStateException(field.name() + " has no _span meta value, schema may not resolved");
     }
 
 

@@ -26,21 +26,21 @@ class HasBlockTest {
                 	id:int;
                 	attrs:Attr (block=3);
                 }
-                
+                                
                 struct Attrs {
                     attrs:Attr (block=3);
                 }
-                
+                                
                 struct WeightedAttrs {
                     weight:int;
                     attrs:Attrs;
                 }
-                
+                                
                 interface condition {
                 	struct checkAttrs {
                 		 attrs:Attrs;
                 	}
-                
+                                
                 	struct and {
                 		c1:condition (pack);
                 		c2:condition (pack);
@@ -61,32 +61,31 @@ class HasBlockTest {
     }
 
     @Test
-    public void structWithBlock() {
+    public void throwException_ifNotResolve() {
         FieldSchema fieldWithBlock = new FieldSchema("field1", INT, new Block(2), Metadata.of());
         StructSchema structSchema = new StructSchema("struct1", AUTO, Metadata.of(),
                 List.of(fieldWithBlock), List.of());
 
-        assertTrue(HasBlock.hasBlock(structSchema));
+        assertThrowsExactly(IllegalStateException.class, () -> HasRefOrBlock.hasBlock(structSchema));
     }
 
     @Test
     public void tableWithBlock() {
-        assertTrue(HasBlock.hasBlock(cfg.findTable("item")));
+        assertTrue(HasRefOrBlock.hasBlock(cfg.findTable("item")));
     }
 
     @Test
     public void directStructWithBlock() {
-        assertTrue(HasBlock.hasBlock(cfg.findFieldable("Attrs")));
+        assertTrue(HasRefOrBlock.hasBlock(cfg.findFieldable("Attrs")));
     }
 
 
-//    @Test
-//    public void innerStructWithBlock() {
-//        assertTrue(HasBlock.hasBlock(cfg.findFieldable("WeightedAttrs")));
-//        assertTrue(HasBlock.hasBlock(cfg.findFieldable("condition")));
-//        assertTrue(HasBlock.hasBlock(cfg.findFieldable("action")));
-//    }
-
+    @Test
+    public void innerStructWithBlock() {
+        assertTrue(HasRefOrBlock.hasBlock(cfg.findFieldable("WeightedAttrs")));
+        assertTrue(HasRefOrBlock.hasBlock(cfg.findFieldable("condition")));
+        assertTrue(HasRefOrBlock.hasBlock(cfg.findFieldable("action")));
+    }
 
 
 }

@@ -5,14 +5,14 @@ import java.util.*;
 import static configgen.schema.FieldType.*;
 
 /**
- * 预先计算每个结构是否有对外引用
+ * 预先计算每个结构是否有对外引用 或有block
  * 查询
  */
-public class HasRef {
+public class HasRefOrBlock {
 
-    public static void preCalculateAllHasRef(CfgSchema schema) {
-        schema.requireResolved();
-        ForeachSchema.foreachNameable(HasRef::calcHasRef, schema);
+    static void preCalculateAllHasRefAndHasBlocks(CfgSchema schema, SchemaErrs errs) {
+        ForeachSchema.foreachNameable(HasRefOrBlock::calcHasRef, schema);
+        ForeachSchema.foreachNameable((nameable -> calcHasBlock(nameable, errs)), schema);
     }
 
     private static boolean calcHasRef(Nameable nameable) {
@@ -21,7 +21,7 @@ public class HasRef {
         if (hasRefValue != null) {
             return hasRefValue instanceof Metadata.MetaInt mi && mi.value() == 1;
         }
-        boolean hasRef = checkIfIncludedStructsHasRef(nameable);
+        boolean hasRef = checkIncludedStructs(nameable, HasRefOrBlock::checkIfDirectFieldsHasRef);
         meta.putHasRef(hasRef);
         return hasRef;
     }
@@ -39,8 +39,42 @@ public class HasRef {
         return false;
     }
 
+    private static void calcHasBlock(Nameable nameable, SchemaErrs errs) {
+        Metadata meta = nameable.meta();
+        Metadata.MetaValue hasBlockValue = meta.getHasBlock();
+        if (hasBlockValue != null) {
+            return;
+        }
+        boolean hasBlock = checkIncludedStructs(nameable, HasRefOrBlock::checkIfDirectFieldsHasBlock);
+        meta.putHasBlock(hasBlock);
+        if (hasBlock && nameable instanceof TableSchema table) {
+            String firstField = table.fields().getFirst().name();
+            if (!table.primaryKey().fields().contains(firstField)) {
+                errs.addErr(new SchemaErrs.BlockTableFirstFieldNotInPrimaryKey(table.name()));
+            }
+        }
+    }
 
-    private static boolean checkIfIncludedStructsHasRef(Nameable nameable) {
+    private static boolean checkIfDirectFieldsHasBlock(Nameable nameable) {
+        switch (nameable) {
+            case Structural structural -> {
+                for (FieldSchema f : structural.fields()) {
+                    if (f.fmt() instanceof FieldFormat.Block) {
+                        return true;
+                    }
+                }
+            }
+            default -> {
+            }
+        }
+        return false;
+    }
+
+    private static interface Checker {
+        boolean check(Nameable nameable);
+    }
+
+    private static boolean checkIncludedStructs(Nameable nameable, Checker checker) {
         Set<String> checked = new HashSet<>();
 
         Map<String, Nameable> frontiers = new HashMap<>();
@@ -49,7 +83,7 @@ public class HasRef {
 
         while (!frontiers.isEmpty()) {
             for (Nameable frontier : frontiers.values()) {
-                if (checkIfDirectFieldsHasRef(frontier)) {
+                if (checker.check(frontier)) {
                     return true;
                 }
             }
@@ -142,6 +176,18 @@ public class HasRef {
     }
 
     public static boolean hasRef(Nameable nameable) {
-        return nameable.meta().getHasRef() instanceof Metadata.MetaInt mi && mi.value() == 1;
+        Metadata.MetaValue v = nameable.meta().getHasRef();
+        if (v == null) {
+            throw new IllegalStateException(nameable.fullName() + " has no _hasRef meta value, schema not resolved!");
+        }
+        return v instanceof Metadata.MetaInt mi && mi.value() == 1;
+    }
+
+    public static boolean hasBlock(Nameable nameable) {
+        Metadata.MetaValue v = nameable.meta().getHasBlock();
+        if (v == null) {
+            throw new IllegalStateException(nameable.fullName() + " has no _hasBlock meta value, schema not resolved!");
+        }
+        return v instanceof Metadata.MetaInt mi && mi.value() == 1;
     }
 }

@@ -25,6 +25,9 @@ public class SchemaStat implements Stat {
 
     private int fPackCount;
     private int fSepCount;
+    private int fSepListCount;
+    private int fSepListStructCount;
+
     private int fFixCount;
     private int fBlockCount;
 
@@ -123,7 +126,16 @@ public class SchemaStat implements Stat {
             }
             switch (field.fmt()) {
                 case AutoOrPack.PACK -> fPackCount++;
-                case Sep ignored -> fSepCount++;
+                case Sep ignored -> {
+                    fSepCount++;
+                    if (field.type() instanceof FList flist) {
+                        fSepListCount++;
+                        if (flist.item() instanceof StructRef) {
+//                            System.out.println(field);
+                            fSepListStructCount++;
+                        }
+                    }
+                }
                 case Fix ignored -> fFixCount++;
                 case Block ignored -> fBlockCount++;
                 case AutoOrPack.AUTO -> {
@@ -216,6 +228,14 @@ public class SchemaStat implements Stat {
 
     public int fSepCount() {
         return fSepCount;
+    }
+
+    public int fSepListCount() {
+        return fSepListCount;
+    }
+
+    public int fSepListStructCount() {
+        return fSepListStructCount;
     }
 
     public int fFixCount() {

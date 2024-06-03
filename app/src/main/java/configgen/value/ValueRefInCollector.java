@@ -25,11 +25,11 @@ public class ValueRefInCollector {
             return Map.of();
         }
 
-        Set<String> refInTables = graph.getRefInTables(vTable.name());
-        if (refInTables == null) {
+        TableSchemaRefGraph.Refs refs = graph.refsMap().get(vTable.name());
+        if (refs == null) {
             return Map.of();
         }
-
+        Set<String> refInTables = refs.refIn();
         if (refInTables.isEmpty()) {
             return Map.of();
         }

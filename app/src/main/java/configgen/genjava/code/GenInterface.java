@@ -1,6 +1,6 @@
 package configgen.genjava.code;
 
-import configgen.schema.HasRef;
+import configgen.schema.HasRefOrBlock;
 import configgen.schema.InterfaceSchema;
 import configgen.schema.StructSchema;
 import configgen.util.CachedIndentPrinter;
@@ -26,7 +26,7 @@ class GenInterface {
             ps.println();
         }
 
-        if (HasRef.hasRef(sInterface)) {
+        if (HasRefOrBlock.hasRef(sInterface)) {
             ps.println("default void _resolve(%s.ConfigMgr mgr) {", Name.codeTopPkg);
             ps.println("}");
             ps.println();
