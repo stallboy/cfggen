@@ -129,6 +129,7 @@ public record CfgData(Map<String, DTable> tables,
                             String sheetName,
                             int index,
                             List<DRawRow> rows,
+                            // HeaderParser填写
                             List<Integer> fieldIndices) {
         public String id() {
             if (sheetName.isEmpty()) {

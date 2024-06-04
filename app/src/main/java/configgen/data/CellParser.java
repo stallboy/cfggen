@@ -106,7 +106,7 @@ final class CellParser {
         return logicRow;
     }
 
-    static boolean isLogicRowNotAllEmpty(List<DCell> row) {
+    private static boolean isLogicRowNotAllEmpty(List<DCell> row) {
         return row.stream().anyMatch((c) -> !c.value().isEmpty());
     }
 

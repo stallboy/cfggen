@@ -58,7 +58,7 @@ final class HeadParser {
         }
     }
 
-    static List<String> getLogicRow(DRawSheet sheet, int rowIndex, boolean isColumnMode) {
+    private static List<String> getLogicRow(DRawSheet sheet, int rowIndex, boolean isColumnMode) {
         List<String> result = new ArrayList<>();
         if (!isColumnMode) {
             if (rowIndex < sheet.rows().size()) {
@@ -89,7 +89,7 @@ final class HeadParser {
         }
     }
 
-    static List<DField> parse(DRawSheet sheet, DataStat stat, List<String> comments, List<String> names) {
+    private static List<DField> parse(DRawSheet sheet, DataStat stat, List<String> comments, List<String> names) {
         List<DField> fields = new ArrayList<>();
         int size = names.size();
         List<Integer> fieldIndices = new ArrayList<>();

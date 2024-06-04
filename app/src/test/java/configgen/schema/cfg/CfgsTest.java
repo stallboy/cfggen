@@ -3,6 +3,7 @@ package configgen.schema.cfg;
 import configgen.schema.CfgSchema;
 import configgen.schema.Nameable;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,13 +39,14 @@ class CfgsTest {
 
 
     @Test
-    public void readWriteSeparateReadEqual() {
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream("config1.cfg")) {
+    public void readWriteSeparateReadEqual(@TempDir Path tempFolder) {
+        try (InputStream is =  getClass().getClassLoader().getResourceAsStream("config1.cfg")) {
             String cfgStr = new String(Objects.requireNonNull(is).readAllBytes(), StandardCharsets.UTF_8);
             CfgSchema cfg1 = CfgReader.parse(cfgStr);
 
-            Path path = Path.of("tmp/config.cfg");
-            Path path1 = Path.of("tmp/config1.cfg");
+            Path path = tempFolder.resolve("config.cfg");
+            Path path1 = tempFolder.resolve("config1.cfg");
+
             Cfgs.writeTo(path, true, cfg1);
             Cfgs.writeTo(path1, false, cfg1);
             CfgSchema cfgFromAllSubDir = Cfgs.readFrom(path, true);
