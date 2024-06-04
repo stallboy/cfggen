@@ -76,9 +76,12 @@ public class CfgSchemaAlignToData {
             if (!hf.comment().isEmpty()) {
                 meta.putComment(hf.comment());
             }
-
-            FieldSchema field = new FieldSchema(hf.name(), Primitive.STRING, AutoOrPack.AUTO, meta);
-            fields.add(field);
+            if (CfgUtil.isIdentifier(hf.name())) {
+                FieldSchema field = new FieldSchema(hf.name(), Primitive.STRING, AutoOrPack.AUTO, meta);
+                fields.add(field);
+            } else {
+                errs.addErr(new SchemaErrs.DataHeadNameNotIdentifier(th.tableName(), hf.name()));
+            }
         }
 
         String first = fields.getFirst().name();

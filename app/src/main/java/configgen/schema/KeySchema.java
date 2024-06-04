@@ -48,7 +48,7 @@ public class KeySchema {
     @Override
     public String toString() {
         return "KeySchema{" +
-                "name=" + fields +
+                "fields=" + fields +
                 '}';
     }
 }
