@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import static configgen.value.CfgValue.*;
-import static configgen.value.ValuePackTest.*;
+import static configgen.value.Values.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ValueJsonParserTest {
@@ -129,7 +129,7 @@ class ValueJsonParserTest {
         TableSchema ts = cfg.findTable("ts");
         String jsonStr = """
                 {"id":1,"$type":"ts"}""";
-        VStruct vStruct = new ValueJsonParser(ts).fromJson(jsonStr, "ts_1.json");
+        VStruct vStruct = new ValueJsonParser(ts, null, false).fromJson(jsonStr, "ts_1.json");
 
         JSONObject json = new ValueToJson().toJson(vStruct);
         String jsonStr2 = """
@@ -240,7 +240,6 @@ class ValueJsonParserTest {
         VStruct c1 = VStruct.of(checkItem, List.of(ofInt(123)));
         VStruct c2 = VStruct.of(checkItem, List.of(ofInt(456)));
         VStruct vAnd = VStruct.of(and, List.of(c1, c2));
-
         VStruct vStruct = VStruct.of(cond,
                 List.of(ofInt(666), VMap.of(Map.of(ofInt(123456), vAnd))));
 
@@ -250,7 +249,11 @@ class ValueJsonParserTest {
         assertEquals(jsonStr, json.toString());
 
         VStruct vStruct2 = new ValueJsonParser(cond).fromJson(jsonStr, "cond_666.json");
-        assertEquals(vStruct, vStruct2);
+        assertNotEquals(vStruct, vStruct2); // 因为vStruct里的对象 没有用VInterface包装
+
+        JSONObject json2 = new ValueToJson().toJson(vStruct2);
+        assertEquals(jsonStr, json2.toString());
+
     }
 
     @Test

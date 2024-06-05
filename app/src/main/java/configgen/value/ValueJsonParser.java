@@ -53,7 +53,7 @@ public class ValueJsonParser {
         return parseStructural(subTableSchema, jsonObject);
     }
 
-    private VStruct parseNameable(Nameable subNameable, JSONObject jsonObject) {
+    private CompositeValue parseNameable(Nameable subNameable, JSONObject jsonObject) {
         switch (subNameable) {
             case InterfaceSchema interfaceSchema -> {
                 return parseInterface(interfaceSchema, jsonObject);
@@ -84,7 +84,7 @@ public class ValueJsonParser {
         return vStruct;
     }
 
-    private VStruct parseInterface(InterfaceSchema subInterfaceSchema, JSONObject jsonObject) {
+    private VInterface parseInterface(InterfaceSchema subInterfaceSchema, JSONObject jsonObject) {
         String typeFullName = (String) jsonObject.get("$type");
         if (typeFullName == null) {
             throw new JsonParseException("$type not set");
@@ -101,8 +101,8 @@ public class ValueJsonParser {
             throw new JsonParseException(implName + " not found in interface");
         }
 
-        return parseStructural(impl, jsonObject);
-//        return new VInterface(subInterfaceSchema, implValue, cellList); // 不要这层抽象
+        VStruct implValue = parseStructural(impl, jsonObject);
+        return new VInterface(subInterfaceSchema, implValue, cellList); // 需要这层包装，以方便生成data file
     }
 
     private Value parse(FieldType type, Object obj) {

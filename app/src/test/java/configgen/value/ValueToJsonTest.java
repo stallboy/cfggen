@@ -12,7 +12,7 @@ import java.util.Set;
 
 import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static configgen.value.CfgValue.*;
-import static configgen.value.ValuePackTest.*;
+import static configgen.value.Values.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ValueToJsonTest {

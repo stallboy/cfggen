@@ -1,6 +1,5 @@
 package configgen.value;
 
-import configgen.data.CfgData;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgReader;
 import org.junit.jupiter.api.Test;
@@ -10,35 +9,10 @@ import java.util.List;
 import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static configgen.schema.FieldType.*;
 import static configgen.value.CfgValue.*;
+import static configgen.value.Values.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ValuePackTest {
-
-    static CfgData.DCell ofCell(String str) {
-        return new CfgData.DCell(str, new CfgData.DRowId("fileName", "sheetName", 0), 0, (byte) 0);
-    }
-
-    static VInt ofInt(int v) {
-        return new VInt(v, ofCell(String.valueOf(v)));
-    }
-
-    static VLong ofLong(long v) {
-        return new VLong(v, ofCell(String.valueOf(v)));
-    }
-
-    static VString ofStr(String v) {
-        return new VString(v, ofCell(v));
-    }
-
-    static VBool ofBool(boolean v) {
-        return new VBool(v, ofCell(String.valueOf(v)));
-    }
-
-    static VFloat ofFloat(float v) {
-        return new VFloat(v, ofCell(String.valueOf(v)));
-    }
-
-
     @Test
     void packList() {
         {
