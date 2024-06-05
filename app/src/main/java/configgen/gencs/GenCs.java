@@ -1,6 +1,6 @@
 package configgen.gencs;
 
-import configgen.gen.Context;
+import configgen.ctx.Context;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
 import configgen.schema.*;

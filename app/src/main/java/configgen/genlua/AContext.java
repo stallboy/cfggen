@@ -1,6 +1,6 @@
 package configgen.genlua;
 
-import configgen.gen.LangSwitch;
+import configgen.ctx.LangSwitch;
 
 import java.util.Arrays;
 import java.util.HashSet;

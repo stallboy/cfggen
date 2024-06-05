@@ -1,4 +1,4 @@
-package configgen.gen;
+package configgen.ctx;
 
 import java.util.Map;
 import java.util.regex.Pattern;

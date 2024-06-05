@@ -2,7 +2,7 @@ package configgen.editorserver;
 
 import com.alibaba.fastjson2.JSON;
 import com.sun.net.httpserver.*;
-import configgen.gen.Context;
+import configgen.ctx.Context;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
 import configgen.schema.TableSchemaRefGraph;

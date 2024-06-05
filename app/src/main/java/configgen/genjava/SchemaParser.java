@@ -1,6 +1,6 @@
 package configgen.genjava;
 
-import configgen.gen.LangSwitch;
+import configgen.ctx.LangSwitch;
 import configgen.schema.*;
 import configgen.value.CfgValue;
 

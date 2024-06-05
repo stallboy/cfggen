@@ -1,4 +1,4 @@
-package configgen.gen;
+package configgen.ctx;
 
 import java.util.ArrayList;
 import java.util.List;

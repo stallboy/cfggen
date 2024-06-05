@@ -1,7 +1,7 @@
 package configgen.gencs;
 
 import configgen.gen.Generator;
-import configgen.gen.LangSwitch;
+import configgen.ctx.LangSwitch;
 import configgen.util.CachedIndentPrinter;
 
 import java.util.List;

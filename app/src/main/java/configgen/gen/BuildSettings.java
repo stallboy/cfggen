@@ -3,8 +3,8 @@ package configgen.gen;
 import configgen.data.ExcelReader;
 
 public final class BuildSettings {
-    public static boolean isIncludePoi = false;
-    public static ExcelReader poiReader;
+    private static boolean isIncludePoi = false;
+    private static ExcelReader poiReader;
 
     static {
         try {
@@ -18,5 +18,14 @@ public final class BuildSettings {
         } catch (ClassNotFoundException e) {
             // ignore
         }
+    }
+
+
+    public static boolean isIncludePoi() {
+        return isIncludePoi;
+    }
+
+    public static ExcelReader getPoiReader() {
+        return poiReader;
     }
 }

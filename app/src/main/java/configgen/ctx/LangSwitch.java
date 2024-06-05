@@ -1,4 +1,4 @@
-package configgen.gen;
+package configgen.ctx;
 
 import configgen.util.CSVUtil;
 import de.siegmar.fastcsv.reader.CsvRow;
@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static configgen.gen.TextI18n.*;
+import static configgen.ctx.TextI18n.*;
 
 public record LangSwitch(Map<String, TextI18n> lang2i18n,
                          String defaultLang) {

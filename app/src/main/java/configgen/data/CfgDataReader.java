@@ -1,13 +1,9 @@
 package configgen.data;
 
-import configgen.gen.BuildSettings;
 import configgen.schema.CfgSchema;
 import configgen.util.Logger;
-import configgen.util.UnicodeReader;
-import de.siegmar.fastcsv.reader.CsvReader;
 import de.siegmar.fastcsv.reader.CsvRow;
 
-import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,8 +22,19 @@ import static configgen.data.CfgData.DRawSheet;
 import static configgen.data.ExcelReader.*;
 
 
-public enum CfgDataReader {
-    INSTANCE;
+public class CfgDataReader {
+    private final int headRow;
+    private final ReadCsv csvReader;
+    private final ExcelReader excelReader;
+
+    public CfgDataReader(int headRow, ReadCsv csvReader, ExcelReader excelReader) {
+        this.headRow = headRow;
+        this.csvReader = csvReader;
+        this.excelReader = excelReader;
+        if (headRow < 2) {
+            throw new IllegalArgumentException(String.format("headRow =%d < 2", headRow));
+        }
+    }
 
     record DRawCsvRow(CsvRow row) implements DRawRow {
         @Override
@@ -47,19 +54,15 @@ public enum CfgDataReader {
     }
 
 
-    public CfgData readCfgData(Path rootDir, CfgSchema nullableCfgSchema, int headRow, boolean usePoi, String defaultEncoding) {
-        if (headRow < 2) {
-            throw new IllegalArgumentException(String.format("headRow =%d < 2", headRow));
-        }
+    public CfgData readCfgData(Path rootDir, CfgSchema nullableCfgSchema) {
         try {
-            return _readCfgData(rootDir, nullableCfgSchema, headRow, usePoi, defaultEncoding);
+            return _readCfgData(rootDir, nullableCfgSchema);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private CfgData _readCfgData(Path rootDir, CfgSchema nullableCfgSchema,
-                                 int headRow, boolean usePoi, String defaultEncoding) throws Exception {
+    private CfgData _readCfgData(Path rootDir, CfgSchema nullableCfgSchema) throws Exception {
         DataStat stat = new DataStat();
         List<Callable<AllResult>> tasks = new ArrayList<>();
 
@@ -87,15 +90,11 @@ public enum CfgDataReader {
                             return FileVisitResult.CONTINUE;
                         } else {
                             stat.csvCount++;
-                            tasks.add(() -> readCsvByFastCsv(path, relativePath, ti, defaultEncoding));
+                            tasks.add(() -> csvReader.readCsv(path, relativePath, ti.tableName(), ti.index()));
                         }
                     }
                     case EXCEL -> {
-                        if (BuildSettings.isIncludePoi && usePoi) {
-                            tasks.add(() -> BuildSettings.poiReader.readExcels(path, relativePath));
-                        } else {
-                            tasks.add(() -> ReadByFastExcel.INSTANCE.readExcels(path, relativePath));
-                        }
+                        tasks.add(() -> excelReader.readExcels(path, relativePath));
                     }
                     case null -> {
                     }
@@ -154,27 +153,6 @@ public enum CfgDataReader {
         }
     }
 
-
-    private AllResult readCsvByFastCsv(Path path, Path relativePath, DataUtil.TableNameIndex ti,
-                                       String defaultEncoding) throws IOException {
-        int count = 0;
-        DataStat stat = new DataStat();
-        List<DRawRow> rows = new ArrayList<>();
-        try (CsvReader reader = CsvReader.builder().build(new UnicodeReader(Files.newInputStream(path), defaultEncoding))) {
-            for (CsvRow csvRow : reader) {
-                stat.cellCsvCount += csvRow.getFieldCount();
-                if (count == 0) {
-                    count = csvRow.getFieldCount();
-                } else if (count != csvRow.getFieldCount()) {
-                    Logger.verbose2("%s %d field count %d not eq %d",
-                            path, csvRow.getOriginalLineNumber(), csvRow.getFieldCount(), count);
-                }
-                rows.add(new DRawCsvRow(csvRow));
-            }
-        }
-        DRawSheet sheet = new DRawSheet(relativePath.toString(), "", ti.index(), rows, new ArrayList<>());
-        return new AllResult(List.of(new OneSheetResult(ti.tableName(), sheet)), stat);
-    }
 
 }
 

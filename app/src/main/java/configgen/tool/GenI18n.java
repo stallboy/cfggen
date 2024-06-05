@@ -1,5 +1,6 @@
 package configgen.tool;
 
+import configgen.ctx.Context;
 import configgen.gen.*;
 import configgen.util.CSVUtil;
 import configgen.value.CfgValue;

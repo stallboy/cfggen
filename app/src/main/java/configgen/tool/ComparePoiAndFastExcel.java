@@ -1,7 +1,6 @@
 package configgen.tool;
 
-import configgen.data.CfgData;
-import configgen.data.CfgDataReader;
+import configgen.data.*;
 import configgen.schema.CfgSchema;
 import configgen.schema.SchemaErrs;
 import configgen.schema.cfg.Cfgs;
@@ -12,7 +11,7 @@ import java.util.List;
 
 public class ComparePoiAndFastExcel {
 
-    public static void compareCellData(Path dataDir, int headRow, String defaultEncoding) {
+    public static void compareCellData(Path dataDir, CfgDataReader fastDataReader, CfgDataReader poiDataReader) {
         Path cfgPath = dataDir.resolve("config.cfg");
         CfgSchema schema = Cfgs.readFrom(cfgPath, true);
         Logger.profile("schema read");
@@ -21,9 +20,8 @@ public class ComparePoiAndFastExcel {
             errs.assureNoError("schema");
         }
 
-        CfgData dataByFastExcel = CfgDataReader.INSTANCE.readCfgData(dataDir, schema, headRow, false, defaultEncoding);
-
-        CfgData dataByPoi = CfgDataReader.INSTANCE.readCfgData(dataDir, schema, headRow, true, defaultEncoding);
+        CfgData dataByFastExcel = fastDataReader.readCfgData(dataDir, schema);
+        CfgData dataByPoi = poiDataReader.readCfgData(dataDir, schema);
 
 
         int notMatchCount = 0;

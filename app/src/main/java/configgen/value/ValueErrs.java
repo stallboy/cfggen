@@ -23,7 +23,7 @@ public record ValueErrs(List<VErr> errs) {
         errs.addAll(other.errs);
     }
 
-    public void print(String prefix, boolean allowErr) {
+    public void checkErrors(String prefix, boolean allowErr) {
         if (!errs.isEmpty()) {
             Logger.log("%s errors %d:", prefix, errs.size());
             for (VErr err : errs) {
@@ -32,7 +32,7 @@ public record ValueErrs(List<VErr> errs) {
 
             if (!allowErr){
                 Logger.log(LocaleUtil.getMessage("FixValueErrFirst"));
-                System.exit(1);
+                throw new ValueError(this);
             }
         }
     }

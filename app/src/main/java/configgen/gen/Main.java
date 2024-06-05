@@ -1,5 +1,9 @@
 package configgen.gen;
 
+import configgen.ctx.Context;
+import configgen.ctx.LangSwitch;
+import configgen.ctx.TextI18n;
+import configgen.data.*;
 import configgen.editorserver.EditorServer;
 import configgen.gencs.GenBytes;
 import configgen.gencs.GenCs;
@@ -47,7 +51,7 @@ public final class Main {
         System.out.println("    -binarytotext     " + LocaleUtil.getMessage("Usage.BinaryToText"));
         System.out.println("    -binarytotextloop " + LocaleUtil.getMessage("Usage.BinaryToTextLoop"));
         System.out.println("    -xmltocfg         " + LocaleUtil.getMessage("Usage.XmlToCfg"));
-        if (BuildSettings.isIncludePoi) {
+        if (BuildSettings.isIncludePoi()) {
             System.out.println("    -usepoi           " + LocaleUtil.getMessage("Usage.UsePoi"));
             System.out.println("    -comparepoiandfastexcel   " + LocaleUtil.getMessage("Usage.ComparePoiAndFastExcel"));
         }
@@ -200,7 +204,7 @@ public final class Main {
                     generators.add(new NamedGenerator(name, generator));
                 }
                 default -> {
-                    if (BuildSettings.isIncludePoi) {
+                    if (BuildSettings.isIncludePoi()) {
                         switch (paramType) {
                             case "-usepoi" -> usePoi = true;
                             case "-comparepoiandfastexcel" -> comparePoiAndFastExcel = true;
@@ -233,7 +237,14 @@ public final class Main {
         }
 
         if (comparePoiAndFastExcel) {
-            ComparePoiAndFastExcel.compareCellData(dataDir, headRow, encoding);
+            if (BuildSettings.isIncludePoi()) {
+                ReadCsv csvReader = new ReadCsv(encoding);
+                CfgDataReader fastDataReader = new CfgDataReader(headRow, csvReader, ReadByFastExcel.INSTANCE);
+                CfgDataReader poiDataReader = new CfgDataReader(headRow, csvReader, BuildSettings.getPoiReader());
+                ComparePoiAndFastExcel.compareCellData(dataDir, fastDataReader, poiDataReader);
+            } else {
+                usage("-comparePoiAndFastExcel，但jar里没有包含poi包");
+            }
         }
 
         if (i18nfile != null && langSwitchDir != null) {
@@ -242,8 +253,18 @@ public final class Main {
         }
 
         Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));
-        Context context = new Context(dataDir, headRow, usePoi, encoding);
-        context.setI18nOrLangSwitch(i18nfile, i18ncrlfaslf, langSwitchDir, defaultLang);
+
+        TextI18n nullableI18n = null;
+        LangSwitch nullableLangSwitch = null;
+        if (i18nfile != null) {
+            nullableI18n = LangSwitch.loadTextI18n(Path.of(i18nfile), i18ncrlfaslf);
+        } else if (langSwitchDir != null) {
+            nullableLangSwitch = LangSwitch.loadLangSwitch(Path.of(langSwitchDir), defaultLang, i18ncrlfaslf);
+        }
+        ExcelReader excelReader = (usePoi && BuildSettings.isIncludePoi()) ? BuildSettings.getPoiReader() : ReadByFastExcel.INSTANCE;
+        CfgDataReader dataReader = new CfgDataReader(headRow, new ReadCsv(encoding), excelReader);
+        Context context = new Context(dataDir, dataReader, nullableI18n, nullableLangSwitch);
+
 
         if (searchParam != null) {
             ValueSearcher searcher = new ValueSearcher(context.makeValue(searchOwn), searchTo);

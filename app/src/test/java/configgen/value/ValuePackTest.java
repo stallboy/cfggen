@@ -41,6 +41,53 @@ class ValuePackTest {
     }
 
     @Test
+    void packList_Error_NotMatchFieldType_ReturnList() {
+        String str = "1,2,1.2";
+        FList flist = new FList(Primitive.INT);
+
+        ValueErrs errs = ValueErrs.of();
+        VList unpackValue = (VList)ValuePack.unpack(str, flist, errs);
+        assertEquals(1, errs.errs().size());
+        assertEquals(3, unpackValue.valueList().size());  // 1.2 导致err，但默认用0填充
+        assertEquals(0, ((VInt)(unpackValue.valueList().getLast())).value());
+
+        ValueErrs.VErr err = errs.errs().getFirst();
+        assertInstanceOf(ValueErrs.NotMatchFieldType.class, err);
+        assertEquals("1.2", ((ValueErrs.NotMatchFieldType)err).cell().value());
+    }
+
+
+    @Test
+    void packList_Error_NotMatchFieldType2_ReturnList() {
+        String str = "(1,2)";
+        FList flist = new FList(Primitive.INT);
+
+        ValueErrs errs = ValueErrs.of();
+        VList unpackValue = (VList)ValuePack.unpack(str, flist, errs);
+        assertEquals(1, errs.errs().size());
+        assertEquals(1, unpackValue.valueList().size());  // 1,2 导致err，但默认用0填充
+        assertEquals(0, ((VInt)(unpackValue.valueList().getFirst())).value());
+
+        ValueErrs.VErr err = errs.errs().getFirst();
+        assertInstanceOf(ValueErrs.NotMatchFieldType.class, err);
+        assertEquals("1,2", ((ValueErrs.NotMatchFieldType)err).cell().value());
+    }
+
+    @Test
+    void packList_Error_ParsePackErr_ReturnNull() {
+        String str = "(1,2)3";
+        FList flist = new FList(Primitive.INT);
+
+        ValueErrs errs = ValueErrs.of();
+        Value unpackValue = ValuePack.unpack(str, flist, errs);
+        assertEquals(1, errs.errs().size());
+        assertNull(unpackValue);
+        ValueErrs.VErr err = errs.errs().getFirst();
+        assertInstanceOf(ValueErrs.ParsePackErr.class, err);
+        assertEquals(str, ((ValueErrs.ParsePackErr)err).cell().value());
+    }
+
+    @Test
     void packMap() {
         {
             FMap fmap = new FMap(Primitive.INT, Primitive.LONG);

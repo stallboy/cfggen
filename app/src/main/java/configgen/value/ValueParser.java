@@ -1,6 +1,6 @@
 package configgen.value;
 
-import configgen.gen.TextI18n;
+import configgen.ctx.TextI18n;
 import configgen.schema.*;
 
 import java.util.*;

@@ -1,5 +1,6 @@
 package configgen.gen;
 
+import configgen.ctx.Context;
 import configgen.util.CachedFileOutputStream;
 import configgen.util.CachedIndentPrinter;
 

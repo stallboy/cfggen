@@ -1,8 +1,8 @@
 package configgen.genjava;
 
-import configgen.gen.Context;
+import configgen.ctx.Context;
 import configgen.gen.Generator;
-import configgen.gen.LangSwitchRuntime;
+import configgen.ctx.LangSwitchRuntime;
 import configgen.gen.Parameter;
 import configgen.util.CachedFileOutputStream;
 import configgen.util.Logger;

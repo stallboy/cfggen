@@ -20,7 +20,9 @@ class CfgDataReaderTest {
             Path tmp = tempDir.resolve(fn);
             Files.copy(Objects.requireNonNull(is), tmp, StandardCopyOption.REPLACE_EXISTING);
 
-            return CfgDataReader.INSTANCE.readCfgData(tempDir, null, 2, false, "GBK");
+            ReadCsv csvReader = new ReadCsv("GBK");
+            CfgDataReader fastDataReader = new CfgDataReader(2, csvReader, ReadByFastExcel.INSTANCE);
+            return fastDataReader.readCfgData(tempDir, null);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

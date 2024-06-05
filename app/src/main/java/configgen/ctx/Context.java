@@ -1,4 +1,4 @@
-package configgen.gen;
+package configgen.ctx;
 
 import configgen.util.Logger;
 import configgen.data.CfgData;
@@ -18,39 +18,15 @@ public class Context {
     private final Path dataDir;
     private final CfgSchema cfgSchema;
     private final CfgData cfgData;
-
-    private TextI18n nullableI18n = null;
-    private LangSwitch nullableLangSwitch = null;
-
-    public Path dataDir() {
-        return dataDir;
-    }
-
-    public CfgSchema cfgSchema() {
-        return cfgSchema;
-    }
-
-    public CfgData cfgData() {
-        return cfgData;
-    }
-
-    /**
-     * 直接国际化,直接改成对应国家语言
-     */
-    public TextI18n nullableI18n() {
-        return nullableI18n;
-    }
-
-    /**
-     * 这个是要实现客户端可在多国语言间切换语言，所以客户端服务器都需要完整的多国语言信息，而不能如i18n那样直接替换
-     */
-    public LangSwitch nullableLangSwitch() {
-        return nullableLangSwitch;
-    }
+    private final TextI18n nullableI18n;
+    private final LangSwitch nullableLangSwitch;
 
 
-    public Context(Path dataDir, int headRow, boolean usePoi , String defaultEncoding) {
+    public Context(Path dataDir, CfgDataReader dataReader, TextI18n nullableI18n, LangSwitch nullableLangSwitch) {
         this.dataDir = dataDir;
+        this.nullableI18n = nullableI18n;
+        this.nullableLangSwitch = nullableLangSwitch;
+
         Path cfgPath = dataDir.resolve("config.cfg");
         CfgSchema schema = Cfgs.readFrom(cfgPath, true);
         Logger.profile("schema read");
@@ -62,8 +38,7 @@ public class Context {
         stat.print();
         Logger.profile("schema resolve");
 
-
-        CfgData data = CfgDataReader.INSTANCE.readCfgData(dataDir, schema, headRow, usePoi, defaultEncoding);
+        CfgData data = dataReader.readCfgData(dataDir, schema);
         data.print();
 
         SchemaErrs alignErr = SchemaErrs.of();
@@ -81,15 +56,31 @@ public class Context {
         this.cfgSchema = alignedSchema;
     }
 
-    void setI18nOrLangSwitch(String i18nFile, boolean crlfaslf,
-                             String langSwitchDir, String defaultLang) {
-        if (i18nFile != null) {
-            nullableI18n = LangSwitch.loadTextI18n(Path.of(i18nFile), crlfaslf);
-        } else if (langSwitchDir != null) {
-            nullableLangSwitch = LangSwitch.loadLangSwitch(Path.of(langSwitchDir), defaultLang, crlfaslf);
-        }
+    /**
+     * 直接国际化,直接改成对应国家语言
+     */
+    public TextI18n nullableI18n() {
+        return nullableI18n;
     }
 
+    /**
+     * 这个是要实现客户端可在多国语言间切换语言，所以客户端服务器都需要完整的多国语言信息，而不能如i18n那样直接替换
+     */
+    public LangSwitch nullableLangSwitch() {
+        return nullableLangSwitch;
+    }
+
+    public Path dataDir() {
+        return dataDir;
+    }
+
+    public CfgSchema cfgSchema() {
+        return cfgSchema;
+    }
+
+    public CfgData cfgData() {
+        return cfgData;
+    }
 
     /**
      * 优化，避免gen多次时，重复生成value
@@ -98,7 +89,7 @@ public class Context {
     private CfgValue lastCfgValue;
     private String lastCfgValueTag;
 
-    public CfgValue makeValue(String tag){
+    public CfgValue makeValue(String tag) {
         return makeValue(tag, false);
     }
 
@@ -129,7 +120,7 @@ public class Context {
         CfgValueParser clientValueParser = new CfgValueParser(tagSchema, this, valueErrs);
         CfgValue cfgValue = clientValueParser.parseCfgValue();
         String prefix = tag == null ? "value" : String.format("[%s] filtered value", tag);
-        valueErrs.print(prefix, allowErr);
+        valueErrs.checkErrors(prefix, allowErr);
 
         lastCfgValue = cfgValue;
         lastCfgValueTag = tag;

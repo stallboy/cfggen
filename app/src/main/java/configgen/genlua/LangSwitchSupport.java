@@ -1,8 +1,8 @@
 package configgen.genlua;
 
-import configgen.gen.LangSwitch;
-import configgen.gen.TextI18n;
-import configgen.gen.TextI18n.TableI18n;
+import configgen.ctx.LangSwitch;
+import configgen.ctx.TextI18n;
+import configgen.ctx.TextI18n.TableI18n;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
