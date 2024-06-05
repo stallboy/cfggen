@@ -25,8 +25,8 @@ public class Logger {
         return verboseLevel;
     }
 
-    public static void setNoWarning() {
-        warningEnabled = false;
+    public static void setWarningEnabled(boolean isWarningEnabled) {
+        warningEnabled = isWarningEnabled;
     }
 
     public static boolean isWarningEnabled() {

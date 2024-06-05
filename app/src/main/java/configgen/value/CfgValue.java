@@ -93,7 +93,7 @@ public record CfgValue(CfgSchema schema,
         }
 
         public static VStruct of(Structural schema, List<Value> values) {
-            List<DCell> cells = new ArrayList<>();
+            List<DCell> cells = new ArrayList<>(8);
             for (Value value : values) {
                 cells.addAll(value.cells());
             }
@@ -134,9 +134,9 @@ public record CfgValue(CfgSchema schema,
         @Override
         public String toString() {
             return "VStruct[" +
-                    "schema=" + schema + ", " +
-                    "values=" + values + ", " +
-                    "cells=" + cells + ']';
+                   "schema=" + schema + ", " +
+                   "values=" + values + ", " +
+                   "cells=" + cells + ']';
         }
 
     }
@@ -152,6 +152,15 @@ public record CfgValue(CfgSchema schema,
             this.schema = schema;
             this.child = child;
             this.cells = cells;
+        }
+
+        public static VInterface of(InterfaceSchema schema,
+                                    VStruct child,
+                                    DCell implCell) {
+            List<DCell> cells = new ArrayList<>(1 + child.cells().size());
+            cells.add(implCell);
+            cells.addAll(child.cells());
+            return new VInterface(schema, child, cells);
         }
 
         @Override
@@ -183,9 +192,9 @@ public record CfgValue(CfgSchema schema,
         @Override
         public String toString() {
             return "VInterface[" +
-                    "schema=" + schema + ", " +
-                    "child=" + child + ", " +
-                    "cells=" + cells + ']';
+                   "schema=" + schema + ", " +
+                   "child=" + child + ", " +
+                   "cells=" + cells + ']';
         }
 
     }
@@ -201,7 +210,7 @@ public record CfgValue(CfgSchema schema,
         }
 
         public static VList of(List<SimpleValue> valueList) {
-            List<DCell> cells = new ArrayList<>();
+            List<DCell> cells = new ArrayList<>(8);
             for (SimpleValue value : valueList) {
                 cells.addAll(value.cells());
             }
@@ -233,8 +242,8 @@ public record CfgValue(CfgSchema schema,
         @Override
         public String toString() {
             return "VList[" +
-                    "valueList=" + valueList + ", " +
-                    "cells=" + cells + ']';
+                   "valueList=" + valueList + ", " +
+                   "cells=" + cells + ']';
         }
     }
 
@@ -246,6 +255,15 @@ public record CfgValue(CfgSchema schema,
                     List<DCell> cells) {
             this.valueMap = valueMap;
             this.cells = cells;
+        }
+
+        public static VMap of(Map<SimpleValue, SimpleValue> valueMap) {
+            List<DCell> cells = new ArrayList<>(8);
+            for (var e : valueMap.entrySet()) {
+                cells.addAll(e.getKey().cells());
+                cells.addAll(e.getValue().cells());
+            }
+            return new VMap(valueMap, cells);
         }
 
         @Override
@@ -273,8 +291,8 @@ public record CfgValue(CfgSchema schema,
         @Override
         public String toString() {
             return "VMap[" +
-                    "valueMap=" + valueMap + ", " +
-                    "cells=" + cells + ']';
+                   "valueMap=" + valueMap + ", " +
+                   "cells=" + cells + ']';
         }
 
     }

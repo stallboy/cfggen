@@ -26,6 +26,7 @@ public class ValueJsonParser {
 
     private final TableSchema subTableSchema;
     private final TextI18n.TableI18n nullableTableI18n;
+    private final boolean isLogNotFoundField;
     private DCell cell;
     private List<DCell> cellList;
     private String fromFileName;
@@ -35,8 +36,13 @@ public class ValueJsonParser {
     }
 
     public ValueJsonParser(TableSchema subTableSchema, TextI18n.TableI18n nullableTableI18n) {
+        this(subTableSchema, nullableTableI18n, Logger.isWarningEnabled());
+    }
+
+    public ValueJsonParser(TableSchema subTableSchema, TextI18n.TableI18n nullableTableI18n, boolean isLogNotFoundField) {
         this.subTableSchema = subTableSchema;
         this.nullableTableI18n = nullableTableI18n;
+        this.isLogNotFoundField = isLogNotFoundField;
     }
 
     public VStruct fromJson(String jsonStr, String fromFileName) {
@@ -47,7 +53,7 @@ public class ValueJsonParser {
         return parseStructural(subTableSchema, jsonObject);
     }
 
-    private CompositeValue parseNameable(Nameable subNameable, JSONObject jsonObject) {
+    private VStruct parseNameable(Nameable subNameable, JSONObject jsonObject) {
         switch (subNameable) {
             case InterfaceSchema interfaceSchema -> {
                 return parseInterface(interfaceSchema, jsonObject);
@@ -69,7 +75,7 @@ public class ValueJsonParser {
                 // not throw exception, but use default value
                 // make it easy to add field in future
                 fieldValue = ValueDefault.of(fs.type());
-                if (Logger.isWarningEnabled()) {
+                if (isLogNotFoundField) {
                     Logger.log("%s %s[%s] not found ", fromFileName, subStructural.fullName(), fs.name());
                 }
             }
@@ -78,8 +84,11 @@ public class ValueJsonParser {
         return vStruct;
     }
 
-    private VInterface parseInterface(InterfaceSchema subInterfaceSchema, JSONObject jsonObject) {
+    private VStruct parseInterface(InterfaceSchema subInterfaceSchema, JSONObject jsonObject) {
         String typeFullName = (String) jsonObject.get("$type");
+        if (typeFullName == null) {
+            throw new JsonParseException("$type not set");
+        }
         String interfaceNamePrefix = subInterfaceSchema.name() + ".";
         if (!typeFullName.startsWith(interfaceNamePrefix)) {
             throw new JsonParseException(typeFullName + " not found");
@@ -92,12 +101,11 @@ public class ValueJsonParser {
             throw new JsonParseException(implName + " not found in interface");
         }
 
-        VStruct implValue = parseStructural(impl, jsonObject);
-        return new VInterface(subInterfaceSchema, implValue, cellList);
+        return parseStructural(impl, jsonObject);
+//        return new VInterface(subInterfaceSchema, implValue, cellList); // 不要这层抽象
     }
 
     private Value parse(FieldType type, Object obj) {
-
         switch (type) {
             case BOOL -> {
                 boolean bv = switch (obj) {
@@ -156,9 +164,10 @@ public class ValueJsonParser {
                 JSONArray jsonArray = (JSONArray) obj;
                 int cnt = jsonArray.size();
                 VMap vMap = new VMap(new LinkedHashMap<>(cnt), cellList);
-                for (int i = 0; i < cnt / 2; i++) {
-                    Object keyObj = jsonArray.get(i * 2);
-                    Object valueObj = jsonArray.get(i * 2 + 1);
+                for (int i = 0; i < cnt; i++) {
+                    JSONObject entry = jsonArray.getJSONObject(i);
+                    Object keyObj = entry.get("key");
+                    Object valueObj = entry.get("value");
                     SimpleValue key = (SimpleValue) parse(fMap.key(), keyObj);
                     SimpleValue value = (SimpleValue) parse(fMap.value(), valueObj);
                     vMap.valueMap().put(key, value);

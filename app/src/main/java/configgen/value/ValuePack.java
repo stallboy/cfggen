@@ -20,14 +20,17 @@ public class ValuePack {
         return packStr(value, false);
     }
 
-    @SuppressWarnings("unchecked")
-    private static final Collector<CharSequence, String, String> parenthesesJoin =
-            (Collector<CharSequence, String, String>) Collectors.joining(",", "(", ")");
-    @SuppressWarnings("unchecked")
-    private static final Collector<CharSequence, String, String> join =
-            (Collector<CharSequence, String, String>) Collectors.joining(",");
 
-    public static String packStr(Value value, boolean parentheses) {
+    private static final Collector<CharSequence, ?, String> parenthesesJoin =
+            Collectors.joining(",", "(", ")");
+    private static final Collector<CharSequence, ?, String> join =
+            Collectors.joining(",");
+
+    private static Collector<CharSequence, ?, String> getJoin(boolean hasParenthesesAround) {
+        return hasParenthesesAround ? parenthesesJoin : join;
+    }
+
+    public static String packStr(Value value, boolean hasParenthesesAround) {
         return switch (value) {
             case StringValue stringValue -> stringValue.value();
             case VBool vBool -> vBool.value() ? "true" : "false";
@@ -36,21 +39,21 @@ public class ValuePack {
             case VLong vLong -> String.valueOf(vLong.value());
 
             case VList vList -> vList.valueList().stream().map(v -> packStr(v, true))
-                    .collect(parentheses ? parenthesesJoin : join);
+                    .collect(getJoin(hasParenthesesAround));
 
 
             case VMap vMap -> vMap.valueMap().entrySet().stream()
                     .map(e -> packStr(e.getKey(), true) + "," + packStr(e.getValue(), true))
-                    .collect(parentheses ? parenthesesJoin : join);
+                    .collect(getJoin(hasParenthesesAround));
 
             case VStruct vStruct -> vStruct.values().stream()
                     .map(v -> packStr(v, true))
-                    .collect(parentheses ? parenthesesJoin : join);
+                    .collect(getJoin(hasParenthesesAround));
 
 
             case VInterface vInterface -> vInterface.child().schema().lastName() + vInterface.child().values().stream()
                     .map(v -> packStr(v, true))
-                    .collect(parentheses ? parenthesesJoin : join);
+                    .collect(parenthesesJoin);
         };
     }
 

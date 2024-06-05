@@ -171,7 +171,7 @@ public final class Main {
                     Logger.enableProfile();
                     Logger.enableProfileGc();
                 }
-                case "-nowarn" -> Logger.setNoWarning();
+                case "-nowarn" -> Logger.setWarningEnabled(false);
                 case "-binarytotext" -> {
                     binaryToTextFile = args[++i];
                     if (i + 1 < args.length && !args[i + 1].startsWith("-")) {
