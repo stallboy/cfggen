@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static configgen.value.CfgValue.*;
 
 public class ValueUtil {
@@ -53,33 +52,6 @@ public class ValueUtil {
                 return null;
             }
         }
-    }
-
-    public static FieldType getKeyFieldType(KeySchema keySchema) {
-        List<FieldSchema> keyFields = keySchema.fieldSchemas();
-        if (keyFields.size() == 1) {
-            return keyFields.getFirst().type();
-        }
-        StructSchema obj = makeKeyStructSchema(keyFields);
-        FieldType.StructRef ref = new FieldType.StructRef("key");
-        ref.setObj(obj);
-        return ref;
-    }
-
-    public static VList vStructToVList(VStruct vStruct) {
-        List<SimpleValue> values = new ArrayList<>(vStruct.values().size());
-        for (Value value : vStruct.values()) {
-            if (value instanceof SimpleValue simpleValue) {
-                values.add(simpleValue);
-            } else {
-                throw new IllegalArgumentException("field value in vStruct not simple");
-            }
-        }
-        return VList.of(values);
-    }
-
-    private static StructSchema makeKeyStructSchema(List<FieldSchema> keyFields) {
-        return new StructSchema("key", AUTO, Metadata.of(), keyFields, List.of());
     }
 
     public static boolean isValueCellsNotAllEmpty(Value value) {

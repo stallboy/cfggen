@@ -151,15 +151,20 @@ public record CfgData(Map<String, DTable> tables,
         int count();
     }
 
-    public void print() {
-        stat.print();
-        Logger.verbose2("table count: %d", tables.size());
-        for (DTable table : tables.values()) {
-            Logger.verbose2(table.tableName);
-            for (DRawSheet sheet : table.rawSheets) {
-                Logger.verbose2("\t%s", sheet.id());
+    public void verbosePrintStat() {
+        if (Logger.verboseLevel() > 0) {
+            stat.print();
+        }
+        if (Logger.verboseLevel() > 1) {
+            Logger.log("table count: %d", tables.size());
+            for (DTable table : tables.values()) {
+                Logger.log(table.tableName);
+                for (DRawSheet sheet : table.rawSheets) {
+                    Logger.log("\t%s", sheet.id());
+                }
             }
         }
+
     }
 
 }

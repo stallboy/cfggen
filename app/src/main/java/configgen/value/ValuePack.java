@@ -3,6 +3,7 @@ package configgen.value;
 import configgen.data.CfgData;
 import configgen.schema.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -65,9 +66,32 @@ public class ValuePack {
         return parser.parseField(field, List.of(dCell), field, true, true, 0, "tableName");
     }
 
+    /**
+     * @param id 主键pack后的字符串
+     * @param tableSchema 表结构
+     * @param errs 错误
+     * @return 解析后的主键值，跟VTable里的primaryKeyMap的Key相对应
+     */
     public static Value unpackTablePrimaryKey(String id, TableSchema tableSchema, ValueErrs errs) {
-        FieldType pkFieldType = ValueUtil.getKeyFieldType(tableSchema.primaryKey());
-        return ValuePack.unpack(id, pkFieldType, errs);
+        List<FieldSchema> keyFields = tableSchema.primaryKey().fieldSchemas();
+        if (keyFields.size() == 1) {
+            FieldType pkFieldType = keyFields.getFirst().type();
+            return unpack(id, pkFieldType, errs);
+        } else {
+            StructSchema obj = new StructSchema("key", AUTO, Metadata.of(), keyFields, List.of());
+            FieldType.StructRef ref = new FieldType.StructRef("key");
+            ref.setObj(obj);
+            VStruct vStruct = (VStruct) unpack(id, ref, errs);
+            List<SimpleValue> values = new ArrayList<>(vStruct.values().size());
+            for (Value value : vStruct.values()) {
+                if (value instanceof SimpleValue simpleValue) {
+                    values.add(simpleValue);
+                } else {
+                    throw new IllegalStateException("multi primary key not simple type, should not happen!");
+                }
+            }
+            return VList.of(values);
+        }
     }
 
 }

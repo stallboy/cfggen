@@ -7,12 +7,10 @@ import java.util.*;
 import static configgen.value.CfgValue.*;
 
 public class VTableCreator {
-    private final TableSchema subTableSchema;
     private final TableSchema tableSchema;
     private final ValueErrs errs;
 
-    public VTableCreator(TableSchema subTableSchema, TableSchema tableSchema, ValueErrs errs) {
-        this.subTableSchema = subTableSchema;
+    public VTableCreator(TableSchema tableSchema, ValueErrs errs) {
         this.tableSchema = tableSchema;
         this.errs = errs;
     }
@@ -21,8 +19,8 @@ public class VTableCreator {
         // 收集主键和唯一键
         SequencedMap<Value, VStruct> primaryKeyMap = new LinkedHashMap<>();
         SequencedMap<List<String>, SequencedMap<Value, VStruct>> uniqueKeyValueSetMap = new LinkedHashMap<>();
-        extractKeyValues(primaryKeyMap, valueList, subTableSchema.primaryKey());
-        for (KeySchema uniqueKey : subTableSchema.uniqueKeys()) {
+        extractKeyValues(primaryKeyMap, valueList, tableSchema.primaryKey());
+        for (KeySchema uniqueKey : tableSchema.uniqueKeys()) {
             SequencedMap<Value, VStruct> ukMap = new LinkedHashMap<>();
             extractKeyValues(ukMap, valueList, uniqueKey);
             uniqueKeyValueSetMap.put(uniqueKey.fields(), ukMap);
@@ -31,15 +29,15 @@ public class VTableCreator {
         // 收集枚举
         SequencedSet<String> enumNames = null;
         SequencedMap<String, Integer> enumNameToIntegerValueMap = null;
-        if (subTableSchema.entry() instanceof EntryType.EntryBase entry) {
+        if (tableSchema.entry() instanceof EntryType.EntryBase entry) {
             Set<String> names = new HashSet<>();
-            int idx = FindFieldIndex.findFieldIndex(subTableSchema, entry.fieldSchema());
+            int idx = FindFieldIndex.findFieldIndex(tableSchema, entry.fieldSchema());
             enumNames = new LinkedHashSet<>();
 
             int pkIdx = -1;
-            List<FieldSchema> pk = subTableSchema.primaryKey().fieldSchemas();
+            List<FieldSchema> pk = tableSchema.primaryKey().fieldSchemas();
             if (pk.size() == 1 && pk.getFirst() != entry.fieldSchema()) {
-                pkIdx = FindFieldIndex.findFieldIndex(subTableSchema, pk.getFirst());
+                pkIdx = FindFieldIndex.findFieldIndex(tableSchema, pk.getFirst());
                 enumNameToIntegerValueMap = new LinkedHashMap<>();
             }
 
@@ -71,14 +69,14 @@ public class VTableCreator {
             }
         }
 
-        return new VTable(subTableSchema, valueList,
+        return new VTable(tableSchema, valueList,
                 primaryKeyMap, uniqueKeyValueSetMap, enumNames, enumNameToIntegerValueMap);
 
     }
 
 
     private void extractKeyValues(SequencedMap<Value, VStruct> keyMap, List<VStruct> valueList, KeySchema key) {
-        int[] keyIndices = FindFieldIndex.findFieldIndices(subTableSchema, key);
+        int[] keyIndices = FindFieldIndex.findFieldIndices(tableSchema, key);
         for (VStruct value : valueList) {
             Value keyValue = ValueUtil.extractKeyValue(value, keyIndices);
             VStruct old = keyMap.put(keyValue, value);

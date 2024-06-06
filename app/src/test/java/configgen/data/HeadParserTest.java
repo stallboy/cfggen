@@ -45,8 +45,7 @@ class HeadParserTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
-        errs.assureNoError("");
+        cfg.resolve().checkErrors();
 
         assertTrue(HeadParser.isColumnMode(dt1, cfg));
     }

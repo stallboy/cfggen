@@ -1,35 +1,27 @@
 package configgen.data;
 
+import configgen.Resources;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class CfgDataReaderTest {
 
     static CfgData readFile(String fn, Path tempDir) {
-        try (InputStream is = CfgDataReaderTest.class.getClassLoader().getResourceAsStream(fn)) {
-            Path tmp = tempDir.resolve(fn);
-            Files.copy(Objects.requireNonNull(is), tmp, StandardCopyOption.REPLACE_EXISTING);
-
-            ReadCsv csvReader = new ReadCsv("GBK");
-            CfgDataReader fastDataReader = new CfgDataReader(2, csvReader, ReadByFastExcel.INSTANCE);
-            return fastDataReader.readCfgData(tempDir, null);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        Resources.addTempFileFromResourceFile(fn, tempDir);
+        ReadCsv csvReader = new ReadCsv("GBK");
+        CfgDataReader fastDataReader = new CfgDataReader(2, csvReader, ReadByFastExcel.INSTANCE);
+        return fastDataReader.readCfgData(tempDir, null);
     }
 
+    private @TempDir Path tempDir;
+
     @Test
-    void readCsv(@TempDir Path tempDir) {
+    void readCsv() {
         String fn = "rank.csv";
         CfgData cfgData = readFile(fn, tempDir);
 
@@ -65,7 +57,7 @@ class CfgDataReaderTest {
 
 
     @Test
-    void readExcel(@TempDir Path tempDir) {
+    void readExcel() {
         String fn = "ai行为.xlsx";
         CfgData cfgData = readFile(fn, tempDir);
 

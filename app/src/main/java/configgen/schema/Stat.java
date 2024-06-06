@@ -10,7 +10,7 @@ public interface Stat {
             try {
                 df.setAccessible(true);
                 int v = df.getInt(this);
-                Logger.verbose("%20s: %d", df.getName(), v);
+                Logger.log("%20s: %d", df.getName(), v);
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
             }

@@ -24,8 +24,7 @@ class TableSchemaRefGraphTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
-        errs.assureNoError("");
+        cfg.resolve().checkErrors();
 
 
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfg);
@@ -58,8 +57,7 @@ class TableSchemaRefGraphTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
-        errs.assureNoError("");
+        cfg.resolve().checkErrors();
 
 
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfg);
@@ -96,9 +94,7 @@ class TableSchemaRefGraphTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
-        errs.assureNoError("");
-
+        cfg.resolve().checkErrors();
 
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfg);
         assertEquals(2, graph.refsMap().size());
@@ -136,9 +132,7 @@ class TableSchemaRefGraphTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
-        errs.assureNoError("");
-
+        cfg.resolve().checkErrors();
 
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfg);
         assertEquals(2, graph.refsMap().size());

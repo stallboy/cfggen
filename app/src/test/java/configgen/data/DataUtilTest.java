@@ -13,7 +13,6 @@ class DataUtilTest {
 
     @Test
     public void getCodeName_IgnoreFirstChineseCharAndAfter() {
-
         String e = DataUtil.getCodeName("test中文.xlsx");
         assertEquals(e, "test");
     }

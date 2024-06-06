@@ -22,7 +22,6 @@ public class XmlToCfg {
             throw new IllegalStateException("should equal");
         }
 
-        SchemaErrs fullErr = cfg2.resolve();
-        fullErr.assureNoError("schema");
+        cfg2.resolve().checkErrors();
     }
 }

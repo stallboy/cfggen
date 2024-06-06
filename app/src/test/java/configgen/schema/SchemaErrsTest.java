@@ -58,7 +58,7 @@ class SchemaErrsTest {
         schemaErrs.addErr(new SchemaErrs.TableNameNotLowerCase("TableName"));
         schemaErrs.addWarn(new SchemaErrs.StructNotUsed("StructName"));
 
-        SchemaError schemaError = assertThrows(SchemaError.class, () -> schemaErrs.assureNoError("Prefix"));
+        SchemaError schemaError = assertThrows(SchemaError.class, schemaErrs::checkErrors);
         assertEquals(schemaErrs, schemaError.getErrs());
     }
 }

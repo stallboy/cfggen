@@ -32,19 +32,21 @@ public class Context {
         Logger.profile("schema read");
         SchemaErrs errs = schema.resolve();
         if (!errs.errs().isEmpty()) {
-            errs.assureNoError("schema");
+            errs.checkErrors("schema");
         }
         Stat stat = new SchemaStat(schema);
-        stat.print();
+        if (Logger.verboseLevel() > 0) {
+            stat.print();
+        }
         Logger.profile("schema resolve");
 
         CfgData data = dataReader.readCfgData(dataDir, schema);
-        data.print();
+        data.verbosePrintStat();
 
         SchemaErrs alignErr = SchemaErrs.of();
         CfgSchema alignedSchema = new CfgSchemaAlignToData(schema, data, alignErr).align();
         new CfgSchemaResolver(alignedSchema, alignErr).resolve();
-        alignErr.assureNoError("aligned schema");
+        alignErr.checkErrors("aligned schema");
         Logger.profile("schema aligned by data");
         if (!schema.equals(alignedSchema)) {
             // schema.printDiff(alignedSchema);
@@ -54,6 +56,18 @@ public class Context {
 
         this.cfgData = data;
         this.cfgSchema = alignedSchema;
+    }
+
+    public Path dataDir() {
+        return dataDir;
+    }
+
+    public CfgSchema cfgSchema() {
+        return cfgSchema;
+    }
+
+    public CfgData cfgData() {
+        return cfgData;
     }
 
     /**
@@ -70,24 +84,16 @@ public class Context {
         return nullableLangSwitch;
     }
 
-    public Path dataDir() {
-        return dataDir;
-    }
-
-    public CfgSchema cfgSchema() {
-        return cfgSchema;
-    }
-
-    public CfgData cfgData() {
-        return cfgData;
-    }
-
     /**
      * 优化，避免gen多次时，重复生成value
      * 注意这里不再立马生成fullValue，因为很费内存，在用到时再生成。
      */
     private CfgValue lastCfgValue;
     private String lastCfgValueTag;
+
+    public CfgValue makeValue() {
+        return makeValue(null);
+    }
 
     public CfgValue makeValue(String tag) {
         return makeValue(tag, false);
@@ -110,7 +116,7 @@ public class Context {
             SchemaErrs errs = SchemaErrs.of();
             tagSchema = new CfgSchemaFilterByTag(cfgSchema, tag, errs).filter();
             new CfgSchemaResolver(tagSchema, errs).resolve();
-            errs.assureNoError(String.format("[%s] filtered schema", tag));
+            errs.checkErrors(String.format("[%s] filtered schema", tag));
             Logger.profile(String.format("schema filtered by %s", tag));
         } else {
             tagSchema = cfgSchema;

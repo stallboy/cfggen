@@ -263,7 +263,6 @@ class CfgSchemaFilterByTagTest {
 
         CfgSchema cfg = CfgReader.parse(str);
         SchemaErrs errs = cfg.resolve();
-        errs.assureNoError("");
         assertEquals(0, errs.warns().size());
         assertEquals(0, errs.errs().size());
 
@@ -297,7 +296,6 @@ class CfgSchemaFilterByTagTest {
 
         CfgSchema cfg = CfgReader.parse(str);
         SchemaErrs errs = cfg.resolve();
-        errs.assureNoError("");
         assertEquals(0, errs.warns().size());
         assertEquals(0, errs.errs().size());
 

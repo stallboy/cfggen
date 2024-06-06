@@ -24,7 +24,11 @@ public record SchemaErrs(List<Err> errs,
         warns.add(Objects.requireNonNull(warn));
     }
 
-    public void assureNoError(String prefix) {
+    public void checkErrors() {
+        checkErrors("schema");
+    }
+
+    public void checkErrors(String prefix) {
         if (Logger.isWarningEnabled() && !warns.isEmpty()) {
             Logger.log("%s warnings %d:", prefix, warns.size());
             for (Warn warn : warns) {

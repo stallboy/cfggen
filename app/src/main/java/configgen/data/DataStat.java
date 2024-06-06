@@ -100,8 +100,4 @@ public class DataStat implements Stat {
     public int cellErrCount() {
         return cellErrCount;
     }
-
-    public static void main(String[] args) {
-        new DataStat().print();
-    }
 }

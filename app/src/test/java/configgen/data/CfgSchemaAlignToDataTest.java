@@ -136,7 +136,7 @@ class CfgSchemaAlignToDataTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        cfg.resolve().assureNoError("");
+        cfg.resolve().checkErrors();
 
         CfgData cfgData = CfgDataReaderTest.readFile("rank.csv", tempDir);
         SchemaErrs errs = SchemaErrs.of();
@@ -165,7 +165,7 @@ class CfgSchemaAlignToDataTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        cfg.resolve().assureNoError("");
+        cfg.resolve().checkErrors();
         check_DataHeadNameNotIdentifier(cfg);
     }
 
@@ -186,13 +186,13 @@ class CfgSchemaAlignToDataTest {
 
     private CfgSchema getAlignedCfgSchema(String str) {
         CfgSchema cfg = CfgReader.parse(str);
-        cfg.resolve().assureNoError("");
+        cfg.resolve().checkErrors();
 
         CfgData cfgData = CfgDataReaderTest.readFile("rank.csv", tempDir);
         SchemaErrs errs = SchemaErrs.of();
         CfgSchema aligned = new CfgSchemaAlignToData(cfg, cfgData, errs).align();
         new CfgSchemaResolver(aligned, errs).resolve();
-        errs.assureNoError("align");
+        errs.checkErrors("align");
         return aligned;
     }
 

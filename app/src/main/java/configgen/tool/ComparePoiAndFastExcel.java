@@ -17,7 +17,7 @@ public class ComparePoiAndFastExcel {
         Logger.profile("schema read");
         SchemaErrs errs = schema.resolve();
         if (!errs.errs().isEmpty()) {
-            errs.assureNoError("schema");
+            errs.checkErrors();
         }
 
         CfgData dataByFastExcel = fastDataReader.readCfgData(dataDir, schema);

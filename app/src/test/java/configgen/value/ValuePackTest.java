@@ -299,4 +299,49 @@ class ValuePackTest {
         assertInstanceOf(VInterface.class, value);
     }
 
+
+    @Test
+    void unpackPrimaryKey_oneKey() {
+        String str = """
+                table t[k1] {
+                    k1:int;
+                    v:str;
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        cfg.resolve().checkErrors();
+        TableSchema t = cfg.findTable("t");
+
+        ValueErrs errs = ValueErrs.of();
+        Value value = ValuePack.unpackTablePrimaryKey("11", t, errs);
+        assertEquals(0, errs.errs().size());
+        assertInstanceOf(VInt.class, value);
+        assertEquals("11", value.packStr());
+        VInt vInt = (VInt) value;
+        assertEquals(11, vInt.value());
+    }
+
+    @Test
+    void unpackPrimaryKey_multiKey() {
+        String str = """
+                table t[k1,k2] {
+                    k1:int;
+                    k2:int;
+                    v:str;
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        cfg.resolve().checkErrors();
+        TableSchema t = cfg.findTable("t");
+
+        ValueErrs errs = ValueErrs.of();
+        Value value = ValuePack.unpackTablePrimaryKey("11,22", t, errs);
+        assertEquals(0, errs.errs().size());
+        assertInstanceOf(VList.class, value);
+        assertEquals("11,22", value.packStr());
+        VList v = (VList)value;
+        assertTrue(v.valueList().get(0) instanceof VInt vInt && vInt.value() == 11);
+        assertTrue(v.valueList().get(1) instanceof VInt vInt && vInt.value() == 22);
+    }
+
 }

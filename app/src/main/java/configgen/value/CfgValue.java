@@ -19,6 +19,10 @@ public record CfgValue(CfgSchema schema,
         return sorted.values();
     }
 
+    public VTable getTable(String tableName) {
+        return vTableMap.get(tableName);
+    }
+
     public record VTable(TableSchema schema,
                          List<VStruct> valueList,
 

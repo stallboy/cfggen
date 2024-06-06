@@ -70,7 +70,7 @@ public class VTableJsonParser {
                 errs.addErr(new ValueErrs.JsonFileWriteErr(writePath.toAbsolutePath().toString(), e.getMessage()));
             }
         }
-        return new VTableCreator(subTableSchema, tableSchema, errs).create(valueList);
+        return new VTableCreator(subTableSchema, errs).create(valueList);
     }
 
     private static Path getJsonTableDir(TableSchema tableSchema, Path dataDir) {

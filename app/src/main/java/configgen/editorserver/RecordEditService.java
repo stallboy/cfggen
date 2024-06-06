@@ -123,7 +123,7 @@ public class RecordEditService {
 
     private ValueErrs applyNewRecordList(List<VStruct> newRecordList, TableSchema tableSchema) {
         ValueErrs errs = ValueErrs.of();
-        VTableCreator creator = new VTableCreator(tableSchema, tableSchema, errs);
+        VTableCreator creator = new VTableCreator(tableSchema, errs);
         VTable newVTable = creator.create(newRecordList);
 
         Map<String, VTable> copy = new LinkedHashMap<>(cfgValue.vTableMap());

@@ -63,7 +63,7 @@ class ValueJsonParserTest {
                 }
                 """;
         cfg = CfgReader.parse(str);
-        cfg.resolve().assureNoError("");
+        cfg.resolve().checkErrors();
     }
 
     @Test

@@ -57,7 +57,7 @@ public class VTableParser implements BlockParser {
             }
         }
 
-        return new VTableCreator(subTableSchema, tableSchema, errs).create(valueList);
+        return new VTableCreator(subTableSchema, errs).create(valueList);
     }
 
 

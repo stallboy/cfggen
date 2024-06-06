@@ -132,11 +132,7 @@ public class RecordService {
             return ofErr(idParseErr);
         }
 
-        if (pkValue instanceof VStruct vPkValue && vTable.schema().primaryKey().fields().size() > 1) {
-            pkValue = ValueUtil.vStructToVList(vPkValue); // 多key时schema是struct，但value用的是VList，这里要转换下
-        }
         String id = pkValue.packStr();
-
         VStruct vRecord = vTable.primaryKeyMap().get(pkValue);
         if (vRecord == null) {
             return ofErr(idNotFound);

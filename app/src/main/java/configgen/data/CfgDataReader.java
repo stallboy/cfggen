@@ -141,7 +141,7 @@ public class CfgDataReader {
         return data;
     }
 
-    void addSheet(CfgData cfgData, String tableName, DRawSheet sheetData) {
+    private void addSheet(CfgData cfgData, String tableName, DRawSheet sheetData) {
         CfgData.DTable DTable = cfgData.tables().get(tableName);
         if (DTable != null) {
             DTable.rawSheets().add(sheetData);
@@ -152,8 +152,4 @@ public class CfgDataReader {
             cfgData.tables().put(tableName, newTable);
         }
     }
-
-
 }
-
-
