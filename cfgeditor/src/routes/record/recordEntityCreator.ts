@@ -14,7 +14,7 @@ export class RecordEntityCreator {
                 public refId: RefId,
                 public refs: BriefRecord[],
                 public tauriConf: TauriConf,
-                public resouceDir: string,
+                public resourceDir: string,
                 public resMap: Map<string, ResInfo[]>) {
     }
 
@@ -130,7 +130,7 @@ export class RecordEntityCreator {
                 label: thisLabel,
                 refs: obj,
                 tauriConf: this.tauriConf,
-                resourceDir: this.resouceDir,
+                resourceDir: this.resourceDir,
                 resMap: this.resMap,
             }),
         };

@@ -69,11 +69,7 @@ public record ValueErrs(List<VErr> errs) {
         }
     }
 
-    public record InterfaceCellImplSpanNotEnough(List<DCell> cells,
-                                                 String interfaceName,
-                                                 String implName,
-                                                 int expected,
-                                                 int notEnoughDataSpan) implements VErr {
+    public record InternalError(String internal) implements VErr {
     }
 
     /**
@@ -102,14 +98,6 @@ public record ValueErrs(List<VErr> errs) {
                     ", expectedType=" + expectedType +
                     '}';
         }
-    }
-
-    /**
-     * list.item，或map.entry第一个为空格后，之后必须也都是空格
-     */
-    public record ContainerItemPartialSet(List<DCell> cells,
-                                          String nameable,
-                                          String field) implements VErr {
     }
 
     public record MapKeyDuplicated(List<DCell> cells,

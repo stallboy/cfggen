@@ -56,7 +56,7 @@ public class ForeachPrimitiveValue {
                 int i = 0;
                 for (Map.Entry<SimpleValue, SimpleValue> entry : vMap.valueMap().entrySet()) {
                     foreachValue(visitor, entry.getKey(), table, pk, listAddOf(fieldChain, String.format("%dk", i)));
-                    foreachValue(visitor, entry.getKey(), table, pk, listAddOf(fieldChain, String.format("%dv", i)));
+                    foreachValue(visitor, entry.getValue(), table, pk, listAddOf(fieldChain, String.format("%dv", i)));
                     i++;
                 }
             }

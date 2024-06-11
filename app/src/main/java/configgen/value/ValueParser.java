@@ -68,15 +68,6 @@ public class ValueParser {
                 canChildBeEmpty = false;
             }
 
-        } else if (sInterface.fmt() instanceof FieldFormat.Sep sep) {
-            require(cells.size() == 1, "sep应该只占一格");
-            DCell cell = cells.getFirst();
-            if (canBeEmpty && cell.isCellEmpty()) {
-                isEmpty = true;
-            } else {
-                parsed = DCells.parseList(cell, sep.sep());
-                canChildBeEmpty = false;
-            }
         } else {
             require(cells.size() == Span.span(sInterface), "列宽度应一致");
         }
@@ -126,8 +117,7 @@ public class ValueParser {
                 require(subImpl != null);
                 int expected = isPack ? 1 : Span.span(impl);
                 if (parsed.size() - 1 < expected) {
-                    errs.addErr(new ValueErrs.InterfaceCellImplSpanNotEnough(parsed, sInterface.name(), impl.name(),
-                            expected, parsed.size() - 1));
+                    errs.addErr(new ValueErrs.InternalError(parsed.getFirst().toString() + " impl span not enough"));
                     return null;
                 }
                 implCells = parsed.subList(1, expected + 1);
@@ -373,8 +363,8 @@ public class ValueParser {
                 List<DCell> keyCells = curLineParsed.subList(startIdx, startIdx + kc);
                 List<DCell> valueCells = curLineParsed.subList(startIdx + kc, startIdx + itemSpan);
 
-                //第一个单元作为是否有item的标记
-                if (!keyCells.getFirst().isCellEmpty()) {
+                // 可部分为空，全为空则忽略
+                if (isCellNotAllEmpty(keyCells) || isCellNotAllEmpty(valueCells)) {
                     SimpleValue key = parseSimpleType(subType.key(), keyCells, type.key(),
                             isPack, false, block.rowIndex,
                             nameable, field.name());
@@ -388,16 +378,15 @@ public class ValueParser {
                             errs.addErr(new ValueErrs.MapKeyDuplicated(keyCells, nameable, field.name()));
                         }
                     }
-                } else {
-                    List<DCell> itemCells = curLineParsed.subList(startIdx, startIdx + itemSpan);
-                    if (itemCells.stream().anyMatch(c -> !c.isCellEmpty())) {
-                        errs.addErr(new ValueErrs.ContainerItemPartialSet(itemCells, nameable, field.name()));
-                    }
                 }
             }
         }
 
         return new VMap(valueMap, cells);
+    }
+
+    private static boolean isCellNotAllEmpty(List<DCell> cells){
+        return cells.stream().anyMatch(c -> !c.isCellEmpty());
     }
 
 
@@ -449,17 +438,13 @@ public class ValueParser {
                     continue;
                 }
                 List<DCell> itemCells = curLineParsed.subList(startIdx, startIdx + itemSpan);
-                //第一个单元作为是否有item的标记
-                if (!itemCells.getFirst().isCellEmpty()) {
+                // 全为空，可忽略
+                if (isCellNotAllEmpty(itemCells)) {
                     SimpleValue value = parseSimpleType(subType.item(), itemCells, type.item(),
                             isPack, false, block.rowIndex,
                             nameable, field.name());
                     if (value != null) {
                         valueList.add(value);
-                    }
-                } else {
-                    if (itemCells.stream().anyMatch(c -> !c.isCellEmpty())) {
-                        errs.addErr(new ValueErrs.ContainerItemPartialSet(itemCells, nameable, field.name()));
                     }
                 }
             }

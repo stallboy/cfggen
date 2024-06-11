@@ -130,17 +130,21 @@ final class HeadParser {
     }
 
     private static String getColumnName(String name) {
-        int i = name.indexOf(','); // 给机会在,后面来声明此bean下第一个字段的名称，其实用desc行也可以声明。
+        int i = name.indexOf('.'); // 给机会在.后面来声明此bean下第一个字段的名称
         if (i != -1) {
             return name.substring(0, i).trim();
-        } else {
-            int j = name.indexOf('@'); //为了是兼容之前版本
-            if (j != -1) {
-                return name.substring(0, j).trim();
-            } else {
-                return name.trim();
-            }
         }
+
+        i = name.indexOf(','); // 给机会在,后面来声明此bean下第一个字段的名称
+        if (i != -1) {
+            return name.substring(0, i).trim();
+        }
+
+        i = name.indexOf('@'); //为了是兼容之前版本
+        if (i != -1) {
+            return name.substring(0, i).trim();
+        }
+        return name.trim();
     }
 
     private static String getComment(String comment) {
