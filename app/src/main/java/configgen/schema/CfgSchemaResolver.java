@@ -1,6 +1,7 @@
 package configgen.schema;
 
 import configgen.schema.EntryType.EntryBase;
+import configgen.schema.cfg.CfgWriter;
 
 import java.util.*;
 
@@ -34,7 +35,7 @@ public final class CfgSchemaResolver {
         step4_checkAllChainedSepFmt();
         step5_checkUnusedFieldable();
 
-        if (errs.errs().isEmpty()){
+        if (errs.errs().isEmpty()) {
             //预先计算hasRef， hasBlock, span 方便生成时使用
             Span.preCalculateAllNeededSpans(cfgSchema, errs);
             HasRefOrBlock.preCalculateAllHasRefAndHasBlocks(cfgSchema, errs);
@@ -242,7 +243,7 @@ public final class CfgSchemaResolver {
 
     private void resolveInterface(InterfaceSchema sInterface) {
         String enumRef = sInterface.enumRef();
-        if (!enumRef.isEmpty()){
+        if (!enumRef.isEmpty()) {
             TableSchema enumRefTable = findTableInLocalThenGlobal(enumRef);
             if (enumRefTable != null) {
                 sInterface.setNullableEnumRefTable(enumRefTable);
@@ -303,7 +304,7 @@ public final class CfgSchemaResolver {
                 if (fs.type() == STRING) {
                     entryBase.setFieldSchema(fs);
                 } else {
-                    errs.addErr(new EntryFieldTypeNotStr(ctx(), fn, fs.type().toString()));
+                    errs.addErr(new EntryFieldTypeNotStr(ctx(), fn, CfgWriter.typeStr(fs.type())));
                 }
             } else {
                 errs.addErr(new EntryNotFound(ctx(), fn));
@@ -552,7 +553,7 @@ public final class CfgSchemaResolver {
                     // 因为如果配置了pack或sep，则这第一列就不是impl的名字了，不一致。
                     for (StructSchema impl : interfaceSchema.impls()) {
                         if (impl.fmt() != AUTO) {
-                            errs.addErr(new ImplFmtNotSupport(interfaceSchema.name(), impl.name(), impl.fmt().toString()));
+                            errs.addErr(new ImplFmtNotSupport(interfaceSchema.name(), impl.name(), CfgWriter.fmtStr(impl.fmt())));
                         }
                     }
                 }
@@ -576,7 +577,6 @@ public final class CfgSchemaResolver {
             }
         }
     }
-
 
 
     private void step5_checkUnusedFieldable() {
@@ -647,7 +647,6 @@ public final class CfgSchemaResolver {
             }
         }
     }
-
 
 
 }

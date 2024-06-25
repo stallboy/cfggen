@@ -24,15 +24,15 @@ record Usage(String genId,
             String messageId = info.messageId != null ? info.messageId : genId + "." + key;
             if (info.isFlag) {
                 System.out.printf("        %-20s %s,%s\n", key,
-                        LocaleUtil.getMessage(messageId),
-                        LocaleUtil.getMessage("Gen.DefaultFalse"));
+                        LocaleUtil.getLocaleString(messageId, messageId),
+                        LocaleUtil.getLocaleString("Gen.DefaultFalse", "default false"));
             } else {
                 String def = info.def;
                 if (def == null) {
                     def = "null";
                 }
                 System.out.printf("        %-20s %s\n", key + "=" + def,
-                        LocaleUtil.getMessage(messageId)
+                        LocaleUtil.getLocaleString(messageId, messageId)
                 );
             }
         }

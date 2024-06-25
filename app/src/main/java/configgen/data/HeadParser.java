@@ -47,7 +47,8 @@ final class HeadParser {
                 headerSheet = sheet;
             } else if (!curNames.equals(names)) {
                 throw new IllegalStateException(
-                        LocaleUtil.getMessage("SplitDataHeaderNotEqual",
+                        LocaleUtil.getFormatedLocaleString("SplitDataHeaderNotEqual",
+                                "{0} header: {1},\\n{2} header: {3} not equal!",
                                 sheet.id(), curNames, headerSheet.id(), names));
             }
         }

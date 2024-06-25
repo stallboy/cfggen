@@ -32,21 +32,21 @@ public record SchemaErrs(List<Err> errs,
         if (Logger.isWarningEnabled() && !warns.isEmpty()) {
             Logger.log("%s warnings %d:", prefix, warns.size());
             for (Warn warn : warns) {
-                Logger.log("\t" + warn);
+                Logger.log("\t" + warn.msg());
             }
         }
 
         if (!errs.isEmpty()) {
             Logger.log("%s errors %d:", prefix, errs.size());
             for (Err err : errs) {
-                Logger.log("\t" + err);
+                Logger.log("\t" + err.msg());
             }
-            Logger.log(LocaleUtil.getMessage("FixSchemaErrFirst"));
+            Logger.log(LocaleUtil.getLocaleString("FixSchemaErrFirst", "fix schema errors first"));
             throw new SchemaError(this);
         }
     }
 
-    public sealed interface Warn {
+    public sealed interface Warn extends Msg{
     }
 
 
@@ -76,11 +76,11 @@ public record SchemaErrs(List<Err> errs,
                                                    List<String> notFoundRefKey) implements Warn {
     }
 
-    public sealed interface Err {
+    public sealed interface Err extends Msg {
     }
 
     /**
-     * table名称必须全小写，是因为windows文件名不分大小写，而table名可能就是文件名，这里直接约定必须都小写
+     * table名称必须全小写，(因为windows文件名不分大小写，而table名可能就是文件名，这里直接约定必须都小写)
      */
     public record TableNameNotLowerCase(String tableName) implements Err {
     }
@@ -114,12 +114,40 @@ public record SchemaErrs(List<Err> errs,
     }
 
     /**
-     * 类型无法以这种fmt映射到excel
+     * primitive类型字段fmt必须是auto
      */
-    public record TypeFmtNotCompatible(String struct,
-                                       String field,
-                                       String type,
-                                       String errFmt) implements Err {
+    public record PrimitiveFieldFmtMustBeAuto(String struct,
+                                              String field,
+                                              String type,
+                                              String errFmt) implements Err {
+    }
+
+    /**
+     * struct类型字段fmt必须是auto或pack
+     */
+    public record StructFieldFmtMustBeAutoOrPack(String struct,
+                                                 String field,
+                                                 String type,
+                                                 String errFmt) implements Err {
+    }
+
+    /**
+     * list类型字段fmt必须是pack，sep，fix，block
+     */
+    public record ListFieldFmtMustBePackOrSepOrFixOrBlock(String struct,
+                                                          String field,
+                                                          String type,
+                                                          String errFmt) implements Err {
+    }
+
+
+    /**
+     * list类型字段fmt必须是pack，fix，block
+     */
+    public record MapFieldFmtMustBePackOrFixOrBlock(String struct,
+                                                    String field,
+                                                    String type,
+                                                    String errFmt) implements Err {
     }
 
     /**

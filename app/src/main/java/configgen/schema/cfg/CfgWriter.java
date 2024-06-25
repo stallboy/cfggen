@@ -2,9 +2,9 @@ package configgen.schema.cfg;
 
 import configgen.schema.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static configgen.schema.FieldType.*;
 import static configgen.schema.Metadata.*;
@@ -151,6 +151,16 @@ public class CfgWriter {
         };
     }
 
+    public static String fmtStr(FieldFormat fmt) {
+        Metadata meta = Metadata.of();
+        meta.putFmt(fmt);
+        Map.Entry<String, MetaValue> entry = meta.data().firstEntry();
+        if (entry != null) {
+            return metaEntryStr(entry);
+        }
+        return "";
+    }
+
 
     static String keyStr(KeySchema key) {
         return String.format("[%s]", String.join(",", key.fields()));
@@ -196,23 +206,18 @@ public class CfgWriter {
                 return "";
             }
         }
-        return noEmptyMetaStr(m);
+        List<String> list = m.data().entrySet().stream().map(CfgWriter::metaEntryStr).collect(Collectors.toList());
+        return String.format(" (%s)", String.join(", ", list));
     }
 
-    private static String noEmptyMetaStr(Metadata m) {
-        List<String> list = new ArrayList<>();
-        for (Map.Entry<String, MetaValue> entry : m.data().entrySet()) {
-            String k = entry.getKey();
-            MetaValue v = entry.getValue();
-            String str = switch (v) {
-                case MetaTag.TAG -> k;
-                case MetaFloat metaFloat -> String.format("%s=%f", k, metaFloat.value());
-                case MetaInt metaInt -> String.format("%s=%d", k, metaInt.value());
-                case MetaStr metaStr -> String.format("%s='%s'", k, metaStr.value());
-            };
-            list.add(str);
-        }
-        return String.format(" (%s)", String.join(", ", list));
+    private static String metaEntryStr(Map.Entry<String, MetaValue> entry) {
+        String k = entry.getKey();
+        return switch (entry.getValue()) {
+            case MetaTag.TAG -> k;
+            case MetaFloat metaFloat -> String.format("%s=%f", k, metaFloat.value());
+            case MetaInt metaInt -> String.format("%s=%d", k, metaInt.value());
+            case MetaStr metaStr -> String.format("%s='%s'", k, metaStr.value());
+        };
     }
 
     static String commentStr(String comment) {

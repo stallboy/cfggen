@@ -1,11 +1,14 @@
 package configgen.schema;
 
+import configgen.schema.cfg.CfgWriter;
+
 import java.util.*;
 
 import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
 import static configgen.schema.FieldType.*;
 import static configgen.schema.Metadata.MetaInt;
+import static configgen.schema.SchemaErrs.*;
 
 /**
  * 在resolved前 预先计算好每个结构占用的excel的列数
@@ -22,13 +25,13 @@ public class Span {
             checkNameableFmt(nameable, errs);
         }
 
-        if (errs.errs().isEmpty()){ // 如果fmt有问题就直接返回，要不然可能会抛出异常
+        if (errs.errs().isEmpty()) { // 如果fmt有问题就直接返回，要不然可能会抛出异常
             try {
                 for (Nameable nameable : reversedNeedSpans) {
                     calcSpanCheckLoop(nameable, new LinkedHashSet<>());
                 }
             } catch (StructNestLoop loop) {
-                errs.addErr(new SchemaErrs.MappingToExcelLoop(loop.stack));
+                errs.addErr(new MappingToExcelLoop(loop.stack));
             }
         }
     }
@@ -67,37 +70,44 @@ public class Span {
 
             case Primitive ignored -> {
                 if (fmt != AUTO) {
-                    errTypeFmtNotCompatible(field, errs, ctx);
+                    errs.addErr(new PrimitiveFieldFmtMustBeAuto(ctx,
+                            field.name(),
+                            CfgWriter.typeStr(field.type()),
+                            CfgWriter.fmtStr(field.fmt())));
                 }
             }
             case StructRef ignored -> {
                 if (!(fmt instanceof FieldFormat.AutoOrPack)) {
-                    errTypeFmtNotCompatible(field, errs, ctx);
+                    errs.addErr(new StructFieldFmtMustBeAutoOrPack(ctx,
+                            field.name(),
+                            CfgWriter.typeStr(field.type()),
+                            CfgWriter.fmtStr(field.fmt())));
                 }
             }
             case FList flist -> {
                 if (fmt == AUTO) {
-                    errTypeFmtNotCompatible(field, errs, ctx);
+                    errs.addErr(new ListFieldFmtMustBePackOrSepOrFixOrBlock(ctx,
+                            field.name(),
+                            CfgWriter.typeStr(field.type()),
+                            CfgWriter.fmtStr(field.fmt())));
                 }
                 if (fmt instanceof FieldFormat.Sep sep && flist.item() instanceof StructRef structRef) {
                     if (structRef.obj().fmt() instanceof FieldFormat.Sep sep2 && sep.sep() == sep2.sep() ||
-                            structRef.obj().fmt() == PACK && sep.sep() == ',') {
-                        errs.addErr(new SchemaErrs.ListStructSepEqual(ctx, field.name()));
+                        structRef.obj().fmt() == PACK && sep.sep() == ',') {
+                        errs.addErr(new ListStructSepEqual(ctx, field.name()));
                     }
                 }
             }
             case FMap ignored -> {
                 if (fmt == AUTO || fmt instanceof FieldFormat.Sep) {
-                    errTypeFmtNotCompatible(field, errs, ctx);
+                    errs.addErr(new MapFieldFmtMustBePackOrFixOrBlock(ctx,
+                            field.name(),
+                            CfgWriter.typeStr(field.type()),
+                            CfgWriter.fmtStr(field.fmt())));
                 }
             }
         }
     }
-
-    private static void errTypeFmtNotCompatible(FieldSchema field, SchemaErrs errs, String ctx) {
-        errs.addErr(new SchemaErrs.TypeFmtNotCompatible(ctx, field.name(), field.type().toString(), field.fmt().toString()));
-    }
-
 
     /**
      * @return 广度优先搜索得到所有需要计算span的结构
@@ -252,14 +262,14 @@ public class Span {
                 switch (fmt) {
                     case FieldFormat.Block block -> {
                         resultSpan = (calcSimpleTypeSpanCheckLoop(fmap.key(), stack)
-                                + calcSimpleTypeSpanCheckLoop(fmap.value(), stack))
-                                * block.fix();
+                                      + calcSimpleTypeSpanCheckLoop(fmap.value(), stack))
+                                     * block.fix();
 
                     }
                     case FieldFormat.Fix fix -> {
                         resultSpan = (calcSimpleTypeSpanCheckLoop(fmap.key(), stack)
-                                + calcSimpleTypeSpanCheckLoop(fmap.value(), stack))
-                                * fix.count();
+                                      + calcSimpleTypeSpanCheckLoop(fmap.value(), stack))
+                                     * fix.count();
                     }
                     default -> throw new IllegalStateException("Unexpected value: " + fmt);
                 }

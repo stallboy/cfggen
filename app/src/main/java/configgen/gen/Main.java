@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-
 public final class Main {
     private static void usage(String reason) {
         System.out.println(reason);
@@ -30,41 +29,63 @@ public final class Main {
         System.out.println("Usage: java -jar cfggen.jar [options] -datadir [dir] [options] [gens]");
         System.out.println();
         System.out.println("-----schema & data");
-        System.out.println("    -datadir          " + LocaleUtil.getMessage("Usage.DataDir"));
-        System.out.println("    -headrow          " + LocaleUtil.getMessage("Usage.HeadRow"));
-        System.out.println("    -encoding         " + LocaleUtil.getMessage("Usage.Encoding"));
+        System.out.println("    -datadir          " + LocaleUtil.getLocaleString("Usage.DataDir",
+                "configuration data directory, must contains file:config.cfg"));
+        System.out.println("    -headrow          " + LocaleUtil.getLocaleString("Usage.HeadRow",
+                "csv/Excel file head row count, default 2"));
+        System.out.println("    -encoding         " + LocaleUtil.getLocaleString("Usage.Encoding",
+                "csv encoding, default GBK, if csv file has BOM head, use that encoding"));
 
         System.out.println();
         System.out.println("-----i18n support");
-        System.out.println("    -i18nfile         " + LocaleUtil.getMessage("Usage.I18nFile"));
-        System.out.println("    -i18ncrlfaslf     " + LocaleUtil.getMessage("Usage.I18nCrLfAsLf"));
-        System.out.println("    -langswitchdir    " + LocaleUtil.getMessage("Usage.LangSwitchDir"));
-        System.out.println("    -defaultlang      " + LocaleUtil.getMessage("Usage.DefaultLang"));
+        System.out.println("    -i18nfile         " + LocaleUtil.getLocaleString("Usage.I18nFile",
+                "replace all type=text data, must be csv file with 3 columns(table name, original, replaced). default null"));
+        System.out.println("    -i18ncrlfaslf     " + LocaleUtil.getLocaleString("Usage.I18nCrLfAsLf",
+                "replace \\r\\n to \\n, default false."));
+        System.out.println("    -langswitchdir    " + LocaleUtil.getLocaleString("Usage.LangSwitchDir",
+                "language switch support"));
+        System.out.println("    -defaultlang      " + LocaleUtil.getLocaleString("Usage.DefaultLang",
+                "the default language when use lang switch"));
 
         System.out.println();
         System.out.println("-----tools");
-        System.out.println("    -verify           " + LocaleUtil.getMessage("Usage.Verify"));
-        System.out.println("    -searchto         " + LocaleUtil.getMessage("Usage.SearchTo"));
-        System.out.println("    -searchown        " + LocaleUtil.getMessage("Usage.SearchOwn"));
-        System.out.println("    -search           " + LocaleUtil.getMessage("Usage.Search"));
+        System.out.println("    -verify           " + LocaleUtil.getLocaleString("Usage.Verify",
+                "validate all data"));
+        System.out.println("    -searchto         " + LocaleUtil.getLocaleString("Usage.SearchTo",
+                "save search result to file, default stdout"));
+        System.out.println("    -searchtag        " + LocaleUtil.getLocaleString("Usage.SearchTag",
+                "search value with tag, default full value."));
+        System.out.println("    -search           " + LocaleUtil.getLocaleString("Usage.Search",
+                "enter read-eval-print-loop if no param after this"));
         ValueSearcher.printUsage("        ");
-        System.out.println("    -binarytotext     " + LocaleUtil.getMessage("Usage.BinaryToText"));
-        System.out.println("    -binarytotextloop " + LocaleUtil.getMessage("Usage.BinaryToTextLoop"));
-        System.out.println("    -xmltocfg         " + LocaleUtil.getMessage("Usage.XmlToCfg"));
+        System.out.println("    -binarytotext     " + LocaleUtil.getLocaleString("Usage.BinaryToText",
+                "print table schema & data, 1/2 params. 1:javadata file, 2:table name(use startsWith to match)"));
+        System.out.println("    -binarytotextloop " + LocaleUtil.getLocaleString("Usage.BinaryToTextLoop",
+                "enter read-eval-print-loop, 1 param: javadata file"));
+        System.out.println("    -xmltocfg         " + LocaleUtil.getLocaleString("Usage.XmlToCfg",
+                "convert schema from .xml to .cfg"));
         if (BuildSettings.isIncludePoi()) {
-            System.out.println("    -usepoi           " + LocaleUtil.getMessage("Usage.UsePoi"));
-            System.out.println("    -comparepoiandfastexcel   " + LocaleUtil.getMessage("Usage.ComparePoiAndFastExcel"));
+            System.out.println("    -usepoi           " + LocaleUtil.getLocaleString("Usage.UsePoi",
+                    "use poi lib to read Excel file, slow speed, default false"));
+            System.out.println("    -comparepoiandfastexcel   " + LocaleUtil.getLocaleString("Usage.ComparePoiAndFastExcel",
+                    "compare fastexcel lib read to poi lib read"));
         }
 
         System.out.println("-----options");
-        System.out.println("    -v                " + LocaleUtil.getMessage("Usage.V"));
-        System.out.println("    -vv               " + LocaleUtil.getMessage("Usage.VV"));
-        System.out.println("    -p                " + LocaleUtil.getMessage("Usage.P"));
-        System.out.println("    -pp               " + LocaleUtil.getMessage("Usage.PP"));
-        System.out.println("    -nowarn           " + LocaleUtil.getMessage("Usage.NOWARN"));
+        System.out.println("    -v                " + LocaleUtil.getLocaleString("Usage.V",
+                "verbose level 1, print statistic & warning"));
+        System.out.println("    -vv               " + LocaleUtil.getLocaleString("Usage.VV",
+                "verbose level 2, print extra info"));
+        System.out.println("    -p                " + LocaleUtil.getLocaleString("Usage.P",
+                "profiler, print memory usage & time elapsed"));
+        System.out.println("    -pp               " + LocaleUtil.getLocaleString("Usage.PP",
+                "profiler, gc before print memory usage"));
+        System.out.println("    -nowarn           " + LocaleUtil.getLocaleString("Usage.NOWARN",
+                "do not print warning"));
 
         System.out.println();
-        System.out.println("-----" + LocaleUtil.getMessage("Usage.GenStart"));
+        System.out.println("-----" + LocaleUtil.getLocaleString("Usage.GenStart",
+                "parameters in gen are separated by , and the parameter name and parameter value are separated = or :."));
         Generators.getAllProviders().forEach((k, v) -> {
                     System.out.printf("    -gen %s\n", k);
                     Usage usage = Usage.of(k);
@@ -134,7 +155,7 @@ public final class Main {
         String match = null;
 
         String searchTo = null;
-        String searchOwn = null;
+        String searchTag = null;
         List<String> searchParam = null;
 
         String row = System.getProperty("configgen.headrow");
@@ -188,7 +209,7 @@ public final class Main {
                 }
 
                 case "-searchto" -> searchTo = args[++i];
-                case "-searchown" -> searchOwn = args[++i];
+                case "-searchtag" -> searchTag = args[++i];
 
                 case "-search" -> {
                     searchParam = new ArrayList<>();
@@ -267,7 +288,7 @@ public final class Main {
 
 
         if (searchParam != null) {
-            ValueSearcher searcher = new ValueSearcher(context.makeValue(searchOwn), searchTo);
+            ValueSearcher searcher = new ValueSearcher(context.makeValue(searchTag), searchTo);
             if (searchParam.isEmpty()) {
                 searcher.loop();
             } else {

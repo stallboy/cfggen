@@ -1,5 +1,6 @@
 package configgen.value;
 
+import configgen.schema.Msg;
 import configgen.util.LocaleUtil;
 import configgen.util.Logger;
 import configgen.schema.FieldType;
@@ -27,17 +28,17 @@ public record ValueErrs(List<VErr> errs) {
         if (!errs.isEmpty()) {
             Logger.log("%s errors %d:", prefix, errs.size());
             for (VErr err : errs) {
-                Logger.log("\t" + err);
+                Logger.log("\t" + err.msg());
             }
 
-            if (!allowErr){
-                Logger.log(LocaleUtil.getMessage("FixValueErrFirst"));
+            if (!allowErr) {
+                Logger.log(LocaleUtil.getLocaleString("FixValueErrFirst", "fix value errors first"));
                 throw new ValueError(this);
             }
         }
     }
 
-    public interface VErr {
+    public interface VErr extends Msg {
     }
 
     public record ParsePackErr(DCell cell,
@@ -47,26 +48,11 @@ public record ValueErrs(List<VErr> errs) {
 
     public record InterfaceCellEmptyButHasNoDefaultImpl(DCell cell,
                                                         String interfaceName) implements VErr {
-        @Override
-        public String toString() {
-            return LocaleUtil.getMessage("InterfaceCellEmptyButHasNoDefaultImpl") + "{" +
-                    "cell=" + cell +
-                    ", interfaceName='" + interfaceName + '\'' +
-                    '}';
-        }
     }
 
     public record InterfaceCellImplNotFound(DCell cell,
                                             String interfaceName,
                                             String notFoundImpl) implements VErr {
-        @Override
-        public String toString() {
-            return LocaleUtil.getMessage("InterfaceCellImplNotFound") + "{" +
-                    "cell=" + cell +
-                    ", interfaceName='" + interfaceName + '\'' +
-                    ", notFoundImpl='" + notFoundImpl + '\'' +
-                    '}';
-        }
     }
 
     public record InternalError(String internal) implements VErr {
@@ -89,15 +75,6 @@ public record ValueErrs(List<VErr> errs) {
                                     String nameable,
                                     String field,
                                     FieldType expectedType) implements VErr {
-        @Override
-        public String toString() {
-            return LocaleUtil.getMessage("NotMatchFieldType") + "{" +
-                    "cell=" + cell +
-                    ", nameable='" + nameable + '\'' +
-                    ", field='" + field + '\'' +
-                    ", expectedType=" + expectedType +
-                    '}';
-        }
     }
 
     public record MapKeyDuplicated(List<DCell> cells,
@@ -108,14 +85,6 @@ public record ValueErrs(List<VErr> errs) {
     public record PrimaryOrUniqueKeyDuplicated(CfgValue.Value value,
                                                String table,
                                                List<String> keys) implements VErr {
-        @Override
-        public String toString() {
-            return LocaleUtil.getMessage("PrimaryOrUniqueKeyDuplicated") + "{" +
-                    valueStr(value) +
-                    ", table='" + table + '\'' +
-                    ", keys=" + keys +
-                    '}';
-        }
     }
 
     public record EnumEmpty(DCell cell,
@@ -133,38 +102,11 @@ public record ValueErrs(List<VErr> errs) {
 
     public record RefNotNullableButCellEmpty(CfgValue.Value value,
                                              String recordId) implements VErr {
-        @Override
-        public String toString() {
-            return LocaleUtil.getMessage("RefNotNullableButCellEmpty") + "{" +
-                    valueStr(value) +
-                    ", recordId='" + recordId + '\'' +
-                    '}';
-        }
-    }
-
-    private static String valueStr(CfgValue.Value value) {
-        String valStr;
-        if (value.cells().isEmpty() || (value.cells().size() == 1 && value.cells().getFirst() == DCell.EMPTY)) {
-            valStr = "value=" + value.packStr();
-        } else {
-            valStr = "cells=" + value.cells();
-        }
-        return valStr;
     }
 
     public record ForeignValueNotFound(CfgValue.Value value,
                                        String recordId,
                                        String foreignKey) implements VErr {
-
-        @Override
-        public String toString() {
-
-            return LocaleUtil.getMessage("ForeignValueNotFound") + "{" +
-                    valueStr(value) +
-                    ", recordId='" + recordId + '\'' +
-                    ", foreignKey='" + foreignKey + '\'' +
-                    '}';
-        }
     }
 
     public record JsonFileReadErr(String jsonFile, String errMsg) implements VErr {

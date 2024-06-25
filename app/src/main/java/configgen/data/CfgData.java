@@ -95,7 +95,9 @@ public record CfgData(Map<String, DTable> tables,
                 r = rowId.row;
                 c = col;
             }
-            return LocaleUtil.getMessage("CellToString", sheet, r + 1, toAZ(c), value);
+            return LocaleUtil.getFormatedLocaleString("CellToString",
+                    "sheet={0},row={1},col={2},data={3}",
+                    sheet, r + 1, toAZ(c), value);
         }
 
         private static final int N = 'Z' - 'A' + 1;

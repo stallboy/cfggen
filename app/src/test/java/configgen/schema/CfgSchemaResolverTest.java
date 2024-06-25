@@ -174,7 +174,7 @@ class CfgSchemaResolverTest {
     }
 
     @Test
-    public void TypeFmtNotCompatible_primitiveFieldNotAuto() {
+    public void primitiveFieldNotAuto() {
         String str = """
                 table action[id]{
                     id:int;
@@ -186,16 +186,16 @@ class CfgSchemaResolverTest {
         SchemaErrs errs = cfg.resolve();
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
-        assertInstanceOf(TypeFmtNotCompatible.class, err);
-        TypeFmtNotCompatible e = (TypeFmtNotCompatible) err;
+        assertInstanceOf(PrimitiveFieldFmtMustBeAuto.class, err);
+        PrimitiveFieldFmtMustBeAuto e = (PrimitiveFieldFmtMustBeAuto) err;
         assertEquals("action", e.struct());
         assertEquals("v", e.field());
-        assertEquals("INT", e.type());
-        assertEquals("PACK", e.errFmt());
+        assertEquals("int", e.type());
+        assertEquals("pack", e.errFmt());
     }
 
     @Test
-    public void TypeFmtNotCompatible_structRefFieldNotAutoOrPack() {
+    public void structRefFieldNotAutoOrPack() {
         String str = """
                 struct s {
                     a:int;
@@ -210,16 +210,16 @@ class CfgSchemaResolverTest {
         SchemaErrs errs = cfg.resolve();
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
-        assertInstanceOf(TypeFmtNotCompatible.class, err);
-        TypeFmtNotCompatible e = (TypeFmtNotCompatible) err;
+        assertInstanceOf(StructFieldFmtMustBeAutoOrPack.class, err);
+        StructFieldFmtMustBeAutoOrPack e = (StructFieldFmtMustBeAutoOrPack) err;
         assertEquals("action", e.struct());
         assertEquals("v", e.field());
-        assertTrue(e.type().startsWith("StructRef"));
-        assertTrue(e.errFmt().startsWith("Sep"));
+        assertEquals("s", e.type());
+        assertEquals("sep=','", e.errFmt());
     }
 
     @Test
-    public void TypeFmtNotCompatible_listFieldAuto() {
+    public void listFieldAuto() {
         String str = """
                 table action[id]{
                     id:int;
@@ -231,16 +231,16 @@ class CfgSchemaResolverTest {
         SchemaErrs errs = cfg.resolve();
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
-        assertInstanceOf(TypeFmtNotCompatible.class, err);
-        TypeFmtNotCompatible e = (TypeFmtNotCompatible) err;
+        assertInstanceOf(ListFieldFmtMustBePackOrSepOrFixOrBlock.class, err);
+        ListFieldFmtMustBePackOrSepOrFixOrBlock e = (ListFieldFmtMustBePackOrSepOrFixOrBlock) err;
         assertEquals("action", e.struct());
         assertEquals("v", e.field());
-        assertTrue(e.type().startsWith("FList"));
-        assertEquals("AUTO", e.errFmt());
+        assertEquals("list<int>", e.type());
+        assertEquals("", e.errFmt());
     }
 
     @Test
-    public void TypeFmtNotCompatible_mapFieldAutoOrSep() {
+    public void mapFieldAutoOrSep() {
         String str = """
                 table action[id]{
                     id:int;
@@ -253,14 +253,14 @@ class CfgSchemaResolverTest {
         SchemaErrs errs = cfg.resolve();
         assertEquals(2, errs.errs().size());
         Err err = errs.errs().getFirst();
-        assertInstanceOf(TypeFmtNotCompatible.class, err);
-        TypeFmtNotCompatible e = (TypeFmtNotCompatible) err;
+        assertInstanceOf(MapFieldFmtMustBePackOrFixOrBlock.class, err);
+        MapFieldFmtMustBePackOrFixOrBlock e = (MapFieldFmtMustBePackOrFixOrBlock) err;
         assertEquals("action", e.struct());
         assertEquals("v", e.field());
-        assertTrue(e.type().startsWith("FMap"));
-        assertEquals("AUTO", e.errFmt());
+        assertEquals("map<int,int>", e.type());
+        assertEquals("", e.errFmt());
 
-        assertInstanceOf(TypeFmtNotCompatible.class, errs.errs().get(1));
+        assertInstanceOf(MapFieldFmtMustBePackOrFixOrBlock.class, errs.errs().get(1));
     }
 
     @Test
@@ -281,7 +281,7 @@ class CfgSchemaResolverTest {
         ImplFmtNotSupport e = (ImplFmtNotSupport) err;
         assertEquals("action", e.inInterface());
         assertEquals("impl1", e.impl());
-        assertEquals("PACK", e.errFmt());
+        assertEquals("pack", e.errFmt());
     }
 
     @Test

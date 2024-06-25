@@ -18,7 +18,7 @@ public abstract class Generator {
      */
     public Generator(Parameter parameter) {
         this.parameter = parameter;
-        tag = parameter.get("own", null, "Gen.Own");
+        tag = parameter.get("own", null, "Gen.Tag");
     }
 
     public abstract void generate(Context ctx) throws IOException;
