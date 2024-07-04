@@ -278,9 +278,9 @@ public final class Main {
         TextI18n nullableI18n = null;
         LangSwitch nullableLangSwitch = null;
         if (i18nfile != null) {
-            nullableI18n = LangSwitch.loadTextI18n(Path.of(i18nfile), i18ncrlfaslf);
+            nullableI18n = TextI18n.loadFromCsvFile(Path.of(i18nfile), i18ncrlfaslf);
         } else if (langSwitchDir != null) {
-            nullableLangSwitch = LangSwitch.loadLangSwitch(Path.of(langSwitchDir), defaultLang, i18ncrlfaslf);
+            nullableLangSwitch = LangSwitch.loadFromDirectory(Path.of(langSwitchDir), defaultLang, i18ncrlfaslf);
         }
         ExcelReader excelReader = (usePoi && BuildSettings.isIncludePoi()) ? BuildSettings.getPoiReader() : ReadByFastExcel.INSTANCE;
         CfgDataReader dataReader = new CfgDataReader(headRow, new ReadCsv(encoding), excelReader);

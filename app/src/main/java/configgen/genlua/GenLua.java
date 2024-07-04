@@ -140,9 +140,10 @@ public class GenLua extends Generator {
             ps.println2("return");
             ps.println1("end");
 
-            ps.println1("if %s._last_lang then", pkg);
-            ps.println2("package.loaded[\"%s.\" .. %s._last_lang] = nil", pkg, pkg);
-            ps.println1("end");
+            // 因为package.loaded[_last_lang] = nil 可能导致_last_lang的c#对应的实际文件内存被删除，再require就出错了，所以注释掉
+//            ps.println1("if %s._last_lang then", pkg);
+//            ps.println2("package.loaded[\"%s.\" .. %s._last_lang] = nil", pkg, pkg);
+//            ps.println1("end");
 
             ps.println1("%s._last_lang = lang", pkg);
             ps.println1("%s._mk.i18n = require(\"%s.\" .. lang)", pkg, pkg);

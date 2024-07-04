@@ -15,7 +15,6 @@ class LangSwitchSupport {
     private final List<LangTexts> langTextsList;
     private int index = 0;
 
-
     private static class LangTexts {
         String lang;
         TextI18n langI18n;
