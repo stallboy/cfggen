@@ -27,7 +27,6 @@ function isPrimitiveType(type: string): boolean {
 }
 
 interface ArrayItemParam {
-    arrayIndex: number;
     onDeleteFunc: () => void;
     onMoveUpFunc?: () => void;
     onMoveDownFunc?: () => void;
@@ -118,14 +117,14 @@ export class RecordEditEntityCreator {
                     }
 
                     let onMoveUpFunc;
-                    if (i > 0) {
+                    if (arrayIndex > 0) {
                         onMoveUpFunc = () => {
                             onMoveItemInArray(arrayIndex, arrayIndex - 1, chain);
                         }
                     }
 
                     let onMoveDownFunc;
-                    if (i < fArrLen - 1) {
+                    if (arrayIndex < fArrLen - 1) {
                         onMoveDownFunc = () => {
                             onMoveItemInArray(arrayIndex, arrayIndex + 1, chain);
                         }
@@ -134,9 +133,8 @@ export class RecordEditEntityCreator {
 
                     const childEntity = this.createEntity(
                         childId, itemType, itemObj,
-                        [...fieldChain, fieldKey, i],
+                        [...fieldChain, fieldKey, arrayIndex],
                         {
-                            arrayIndex: arrayIndex + 1,
                             onDeleteFunc,
                             onMoveUpFunc,
                             onMoveDownFunc,
@@ -178,7 +176,10 @@ export class RecordEditEntityCreator {
 
 
         let label = getLabel(sItem.name);
-        label = arrayItemParam ? label + '.' + arrayItemParam.arrayIndex : label;
+        if (arrayItemParam) {
+            const idx = fieldChain[fieldChain.length - 1] as number + 1
+            label = label + '.' + idx
+        }
 
         const edit: EntityEdit = {
             editFields: editFields,

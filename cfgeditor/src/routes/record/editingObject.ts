@@ -112,12 +112,21 @@ export function onAddItemToArray(defaultItemJsonObject: JSONObject,
     editState.afterEditStateChanged();
 }
 
+export function onAddItemToArrayIndex(defaultItemJsonObject: JSONObject,
+                                      index:number,
+                                      arrayFieldChains: (string | number)[]) {
+    const obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
+    obj.splice(index, 0, defaultItemJsonObject);
+
+    editState.seq++;
+    editState.fitView = false;
+    editState.afterEditStateChanged();
+}
+
 
 export function onMoveItemInArray(curIndex: number,
                                   newIndex: number,
                                   arrayFieldChains: (string | number)[]) {
-    // console.log('delItem', arrayFieldChains, deleteIndex);
-
     const obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
     const o2 = obj[newIndex];
     obj[newIndex] = obj[curIndex]

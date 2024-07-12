@@ -126,6 +126,7 @@ i18n.use(LanguageDetector)
                     addOrUpdate: '更新',
                     setDefaultValue: '清空',
 
+                    addListItemBefore: '前插入',
                     structCopy: '拷贝',
                     structPaste: '粘贴',
                 }

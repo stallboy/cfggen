@@ -6,7 +6,7 @@ import {RecordEntityCreator} from "./recordEntityCreator.ts";
 import {RecordEditEntityCreator} from "./recordEditEntityCreator.ts";
 import {
     editState,
-    isCopiedFitAllowedType,
+    isCopiedFitAllowedType, onAddItemToArrayIndex,
     onStructCopy, onStructPaste,
     startEditingObject
 } from "./editingObject.ts";
@@ -28,6 +28,7 @@ import {useEffect, useReducer} from "react";
 
 
 import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
+import {SInterface, SStruct} from "../table/schemaModel.ts";
 
 
 function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
@@ -178,6 +179,18 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
         if (isEditing && entity.edit) {
             const {editObj, editFieldChain, editAllowObjType} = entity.edit;
             if (editObj) {
+                if (editFieldChain && editAllowObjType && entity.edit.editOnDelete) { // 有editOnDelete表明是list的成员
+                    const index = editFieldChain[editFieldChain.length - 1] as number;
+                    mm.push({
+                        label: t('addListItemBefore'),
+                        key: 'addListItemBefore',
+                        handler() {
+                            const sFieldable = schema.itemIncludeImplMap.get(editAllowObjType) as SStruct | SInterface;
+                            const defaultValue = schema.defaultValue(sFieldable);
+                            onAddItemToArrayIndex(defaultValue, index, editFieldChain.slice(0, editFieldChain.length - 1))
+                        }
+                    });
+                }
                 mm.push({
                     label: t('structCopy'),
                     key: 'structCopy',
