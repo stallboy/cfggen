@@ -62,29 +62,34 @@ export const EntityCard = memo(function EntityCard({entity, image}: {
         }
 
         description = {
-            description: <><Descriptions column={1} bordered size={"small"} items={items}/>
-                {query ? <Highlight text={desc} keyword={query}/> : desc} </>
+            description: <>
+                <Descriptions column={1} bordered size={"small"} items={items}/>
+                <div style={{whiteSpace: "break-spaces"}}>{
+                    query ? <Highlight text={desc} keyword={query}/> : desc}
+                </div>
+            </>
         }
         info++;
     } else if (desc) {
         description = {
-            description: query ? <Highlight text={desc} keyword={query}/> : desc
+            description: <div style={{whiteSpace: "break-spaces"}}>{
+                query ? <Highlight text={desc} keyword={query}/> : desc}
+            </div>
         }
         info++;
     }
 
     if (info > 1) {
-        return <Card hoverable {...cover}>
+        return <Card {...cover}>
             <Card.Meta {...title} {...description}/>
         </Card>;
-
     } else if (info == 1) {
         if (hasCover) {
             return cover.cover;
         } else if (hasTitle) {
-            return title.title;
+            return <Card title={title.title}/>;
         } else {
-            return description.description;
+            return <Card>description.description</Card>;
         }
     } else {
         return <></>;

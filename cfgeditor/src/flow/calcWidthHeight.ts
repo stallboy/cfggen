@@ -18,7 +18,7 @@ export function calcWidthHeight(entity: Entity) {
         const [showDsLen, desc] = getDsLenAndDesc(brief, entity.sharedSetting?.nodeShow);
         height += showDsLen * 38;
         if (desc) {
-            height += 22 * simpleStrlen(desc) / 30;
+            height += 22 * simpleStrRowCount(desc);
         }
         if (findFirstImage(entity.assets)) {
             height += 200;
@@ -91,16 +91,27 @@ function calcEditFieldsCntAndExtra(editFields: EntityEditField[]) {
 }
 
 
-function simpleStrlen(str: string) {
+function simpleStrRowCount(str: string) {
     let len = 0;
+    let row = 0;
+    const ln = '\n'.charCodeAt(0)
     const l = str.length
     for (let i = 0; i < l; i++) {
-        if (str.charCodeAt(i) > 255) //如果是汉字，则字符串长度加2
+        const code = str.charCodeAt(i)
+        if (code == ln) {
+            row++;
+            len = 0;
+        } else if (code > 255) { //如果是汉字，则字符串长度加2
             len += 2;
-        else
+        } else {
             len++;
+        }
+        if (len >= 30) {
+            row++;
+            len = 0;
+        }
     }
-    return len;
+    return row;
 }
 
 export function findFirstImage(assets: ResInfo[] | undefined): string | undefined {
