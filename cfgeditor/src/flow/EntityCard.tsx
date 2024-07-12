@@ -89,7 +89,7 @@ export const EntityCard = memo(function EntityCard({entity, image}: {
         } else if (hasTitle) {
             return <Card title={title.title}/>;
         } else {
-            return <Card>description.description</Card>;
+            return <Card>{description.description}</Card>;
         }
     } else {
         return <></>;
