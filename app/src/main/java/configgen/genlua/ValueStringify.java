@@ -82,9 +82,9 @@ class ValueStringify {
         if (AContext.getInstance().nullableLangSwitchSupport() != null && !isKey) { // text字段仅用于asValue，不能用于asKey
             int id = AContext.getInstance().nullableLangSwitchSupport().enterText(value.value()) + 1;
             res.append(id);
-            return;
+        }else{
+            addString(value.value());
         }
-        addString(value.value());
     }
 
     private void addString(String string) {

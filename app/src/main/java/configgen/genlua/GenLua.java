@@ -300,6 +300,10 @@ public class GenLua extends Generator {
     private void generate_table(VTable vTable, CachedIndentPrinter ps, StringBuilder lineCache) {
         TableSchema table = vTable.schema();
 
+        if (isLangSwitch) {
+            AContext.getInstance().nullableLangSwitchSupport().enterTable(table.name());
+        }
+
         ps.println("local %s = require \"%s._cfgs\"", pkg, pkg);
         if (HasSubFieldable.hasSubFieldable(table)) {
             ps.println("local Beans = %s._beans", pkg);
@@ -351,10 +355,6 @@ public class GenLua extends Generator {
                 textFieldsStr,
                 TypeStr.getLuaFieldsString(table));
         ps.println();
-
-        if (isLangSwitch) {
-            AContext.getInstance().nullableLangSwitchSupport().enterTable(table.name());
-        }
 
 
         int extraFileCnt;
