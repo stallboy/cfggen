@@ -22,7 +22,7 @@ class Argument implements Parameter {
             if (c == -1) {
                 params.put(s.trim().toLowerCase(), null);
             } else {
-                params.put(s.substring(0, c).trim().toLowerCase(), s.substring(c + 1).trim().toLowerCase());
+                params.put(s.substring(0, c).trim().toLowerCase(), s.substring(c + 1).trim());
             }
         }
     }

@@ -372,26 +372,7 @@ public class GenLua extends Generator {
 
         ps.disableCache();
 
-
-        if (!ctx.ctxName().getLocalNameMap().isEmpty()) { // 对收集到的引用local化，lua执行会快点
-            for (Map.Entry<String, String> entry : ctx.ctxName().getLocalNameMap().entrySet()) {
-                ps.println("local %s = %s", entry.getValue(), entry.getKey());
-            }
-            ps.println();
-        }
-
-        boolean hasER = false;
-        if (useSharedEmptyTable && ctx.ctxShared().getEmptyTableUseCount() > 0) { // 共享空表
-            ps.println("local E = %s._mk.E", pkg);
-            hasER = true;
-        }
-        if (!rForOldShared && ctx.ctxShared().hasListTableOrMapTable()) {
-            ps.println("local R = %s._mk.R", pkg);
-            hasER = true;
-        }
-        if (hasER) {
-            ps.println();
-        }
+        generate_sharedLocalNamesAndER(ps, ctx);
 
         if (tryUseShared && !ctx.ctxShared().getSharedList().isEmpty()) { // 共享相同的表
             if (rForOldShared) { //只为保持跟武林一致
@@ -427,17 +408,7 @@ public class GenLua extends Generator {
                 }
                 extraPs.println();
 
-                if (!ctx.ctxName().getLocalNameMap().isEmpty()) { // 对收集到的引用local化，lua执行会快点
-                    for (Map.Entry<String, String> entry : ctx.ctxName().getLocalNameMap().entrySet()) {
-                        extraPs.println("local %s = %s", entry.getValue(), entry.getKey());
-                    }
-                    extraPs.println();
-                }
-
-                if (useSharedEmptyTable && ctx.ctxShared().getEmptyTableUseCount() > 0) { // 共享空表
-                    extraPs.println("local E = %s._mk.E", pkg);
-                    extraPs.println();
-                }
+                generate_sharedLocalNamesAndER(extraPs, ctx);
 
                 extraPs.println("return function(mk)");
                 ps.printExtraCacheTo(extraPs, extraIdx);
@@ -447,5 +418,27 @@ public class GenLua extends Generator {
 
         ps.println();
         ps.println("return this");
+    }
+
+    private void generate_sharedLocalNamesAndER(CachedIndentPrinter ps, Ctx ctx) {
+        if (!ctx.ctxName().getLocalNameMap().isEmpty()) { // 对收集到的引用local化，lua执行会快点
+            for (Map.Entry<String, String> entry : ctx.ctxName().getLocalNameMap().entrySet()) {
+                ps.println("local %s = %s", entry.getValue(), entry.getKey());
+            }
+            ps.println();
+        }
+
+        boolean hasER = false;
+        if (useSharedEmptyTable && ctx.ctxShared().getEmptyTableUseCount() > 0) { // 共享空表
+            ps.println("local E = %s._mk.E", pkg);
+            hasER = true;
+        }
+        if (!rForOldShared && ctx.ctxShared().hasListTableOrMapTable()) {
+            ps.println("local R = %s._mk.R", pkg);
+            hasER = true;
+        }
+        if (hasER) {
+            ps.println();
+        }
     }
 }
