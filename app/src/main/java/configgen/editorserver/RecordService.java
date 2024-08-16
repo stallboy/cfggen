@@ -243,14 +243,16 @@ public class RecordService {
         String title = getBriefValue(vStruct, "title");
 
         String enumName = null;
-        if (vStruct.schema() instanceof TableSchema tableSchema) {
-            if (tableSchema.entry() instanceof EntryType.EEnum eEnum) {
-                Value fv = ValueUtil.extractFieldValue(vStruct, eEnum.field());
-                if (fv instanceof CfgValue.VString vString) {
-                    enumName = vString.value();
-                }
+        if (vStruct.schema() instanceof TableSchema tableSchema &&
+            tableSchema.entry() instanceof EntryType.EEnum eEnum &&
+            tableSchema.primaryKey().fieldSchemas().getFirst() != eEnum.fieldSchema()) { // 主键不是enum，才组合enumName
+
+            Value fv = ValueUtil.extractFieldValue(vStruct, eEnum.field());
+            if (fv instanceof CfgValue.VString vString) {
+                enumName = vString.value();
             }
         }
+
         if (enumName != null) {
             if (title != null) {
                 return enumName + ": " + title;
