@@ -83,7 +83,8 @@ export const RecordShowSetting = memo(function RecordRefSetting() {
                     <Radio.Group optionType='button' buttonStyle='solid' options={[
                         {label: t('LINEAR_SEGMENTS'), value: 'LINEAR_SEGMENTS'},
                         {label: t('SIMPLE'), value: 'SIMPLE'},
-                        {label: t('BRANDES_KOEPF'), value: 'BRANDES_KOEPF'}]}/>
+                        {label: t('BRANDES_KOEPF'), value: 'BRANDES_KOEPF'},
+                        {label: t('mrtree'), value: 'mrtree'},]}/>
                 </Form.Item>
 
                 <Form.Item label={t('keywordColors')}>

@@ -45,7 +45,7 @@ export interface KeywordColor {
     keyword: string;
 }
 
-export type NodePlacementStrategyType = "BRANDES_KOEPF" | "LINEAR_SEGMENTS" | "SIMPLE";
+export type NodePlacementStrategyType = "BRANDES_KOEPF" | "LINEAR_SEGMENTS" | "SIMPLE" | "mrtree";
 
 export type ShowDescriptionType = "none" | "show" | "showFallbackValue" | "showValue";
 
@@ -349,6 +349,7 @@ const typeMap: any = {
     "NodePlacementStrategyType": [
         "BRANDES_KOEPF",
         "LINEAR_SEGMENTS",
+        "mrtree",
         "SIMPLE",
     ],
     "ShowDescriptionType": [

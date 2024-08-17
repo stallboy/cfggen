@@ -1,5 +1,5 @@
 import {CSSProperties, memo, useCallback, useMemo, useState} from "react";
-import {Handle, NodeProps, Position} from "@xyflow/react";
+import {Handle, Node, NodeProps, Position} from "@xyflow/react";
 import {Entity} from "./entityModel.ts";
 import {getNodeBackgroundColor} from "./colors.ts";
 import {Button, Flex, Popover, Space, Typography} from "antd";
@@ -23,10 +23,10 @@ const moveDownIcon = <ArrowDownOutlined/>;
 
 const resBriefButtonStyle = {color: '#fff'};
 
-export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
+export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{entity: Entity}, "node">>) {
     const [isEditNote, setIsEditNote] = useState<boolean>(false);
-    const {fields, brief, edit, handleIn, handleOut, id, label, sharedSetting, assets} = nodeProps.data;
-    const color: string = getNodeBackgroundColor(nodeProps.data);
+    const {fields, brief, edit, handleIn, handleOut, id, label, sharedSetting, assets} = nodeProps.data.entity;
+    const color: string = getNodeBackgroundColor(nodeProps.data.entity);
     const width = edit ? 280 : 240;
     const nodeStyle = useMemo(() => {
         return {width: width, backgroundColor: color}
@@ -99,7 +99,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Entity>) {
         {title}
 
         {fields && <EntityProperties fields={fields} sharedSetting={sharedSetting} color={color}/>}
-        {brief && <EntityCard entity={nodeProps.data} image={firstImage}/>}
+        {brief && <EntityCard entity={nodeProps.data.entity} image={firstImage}/>}
         {edit && <EntityForm edit={edit} sharedSetting={sharedSetting}/>}
 
         {(handleIn && <Handle type='target' position={Position.Left} id='@in'

@@ -95,7 +95,7 @@ export function useEntityToGraph({
 
             if (fitView) {
                 const appliedWHNodes = applyWidthHeightToNodes(newNodes, id2RectMap);
-                const bounds = getNodesBounds(appliedWHNodes, {useRelativePosition: true}); //
+                const bounds = getNodesBounds(appliedWHNodes); //  {useRelativePosition: true}
                 const viewportForBounds = getViewportForBounds(bounds, width, height, 0.3, 1, 0.2);
                 panZoom?.setViewport(viewportForBounds);
                 // console.log(pathname, bounds, width, height, viewportForBounds)

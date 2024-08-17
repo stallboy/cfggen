@@ -6,7 +6,7 @@ import {NodeShowType} from "../routes/setting/storageJson.ts";
 
 
 function nodeToLayoutChild(node: EntityNode, id2RectMap: Map<string, Rect>): ElkNode {
-    const [width, height] = calcWidthHeight(node.data);
+    const [width, height] = calcWidthHeight(node.data.entity);
     id2RectMap.set(node.id, {x: 0, y: 0, width, height})
     return {id: node.id, width, height};
 }
@@ -52,20 +52,30 @@ export async function layoutAsync(nodes: EntityNode[], edges: EntityEdge[], node
     // console.log('layout', nodes.length, nodes, edges);
     const id2RectMap = new Map<string, Rect>();
 
-    const defaultOptions = {
-        'elk.algorithm': 'layered',
-        'elk.direction': 'RIGHT',
-        'elk.edgeRouting': 'POLYLINE',
-        'elk.layered.spacing.nodeNodeBetweenLayers': '80',
-        'elk.spacing.nodeNode': '60',
-        'elk.layered.nodePlacement.strategy': nodeShow.nodePlacementStrategy,
-        'elk.layered.considerModelOrder.strategy': 'NODES_AND_EDGES',
-        'elk.layered.crossingMinimization.forceNodeModelOrder': 'true',
-    };
+    let options;
+    if (nodeShow.nodePlacementStrategy == 'mrtree') {
+        options = {
+            'elk.algorithm': 'mrtree',
+            'elk.direction': 'RIGHT',
+            'elk.edgeRouting': 'POLYLINE',
+            'elk.spacing.nodeNode': '100',
+        }
+    } else {
+        options = {
+            'elk.algorithm': 'layered',
+            'elk.direction': 'RIGHT',
+            'elk.edgeRouting': 'POLYLINE',
+            'elk.layered.spacing.nodeNodeBetweenLayers': '80',
+            'elk.spacing.nodeNode': '60',
+            'elk.layered.nodePlacement.strategy': nodeShow.nodePlacementStrategy,
+            'elk.layered.considerModelOrder.strategy': 'NODES_AND_EDGES',
+            'elk.layered.crossingMinimization.forceNodeModelOrder': 'true',
+        };
+    }
 
     const graph: ElkNode = {
         id: 'root',
-        layoutOptions: defaultOptions,
+        layoutOptions: options,
         children: nodes.map((n) => nodeToLayoutChild(n, id2RectMap)),
         edges: edges.map(edgeToLayoutEdge),
     };

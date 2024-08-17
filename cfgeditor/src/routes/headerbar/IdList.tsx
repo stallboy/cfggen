@@ -4,8 +4,7 @@ import {getIdOptions, isPkInteger,} from "../table/schemaUtil.ts";
 import {navTo, store, useLocationData} from "../setting/store.ts";
 import {useNavigate} from "react-router-dom";
 import {STable} from "../table/schemaModel.ts";
-import {memo, useCallback, useMemo, useRef} from "react";
-import {BaseSelectRef} from "rc-select";
+import {memo, useMemo} from "react";
 
 function filterOption(inputValue: string, option?: DefaultOptionType) {
     return (option!.label as string).toLowerCase().includes(inputValue.toLowerCase())
@@ -21,19 +20,11 @@ export const IdList = memo(function IdList({curTable}: {
 }) {
     const navigate = useNavigate();
     const {curPage, curTableId, curId} = useLocationData();
-    const ref = useRef<BaseSelectRef>(null);
 
     const options = useMemo(() => getIdOptions(curTable), [curTable]);
     const filterSorts = useMemo(() => isPkInteger(curTable) ? intFilterSorts : {}, [curTable]);
 
-    const onSearch = useCallback(() => {
-        if (ref.current) {
-            ref.current.scrollTo({top: 0});
-        }
-    }, [ref]);
-
-    return <Select ref={ref}
-                   id='id'
+    return <Select id='id'
                    showSearch
                    options={options}
                    style={{width: 160}}
@@ -41,7 +32,6 @@ export const IdList = memo(function IdList({curTable}: {
                    placeholder="search a record"
                    {...filterSorts}
                    filterOption={filterOption}
-                   onSearch={onSearch}
                    onChange={(value) => {
                        const {isEditMode} = store;
                        navigate(navTo(curPage, curTableId, value, isEditMode));

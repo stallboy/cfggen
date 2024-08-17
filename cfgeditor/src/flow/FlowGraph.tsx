@@ -5,7 +5,7 @@ import {FlowContextMenu, MenuItem, MenuStyle} from "./FlowContextMenu.tsx";
 import {FlowNode} from "./FlowNode.tsx";
 
 
-export type EntityNode = Node<Entity>;
+export type EntityNode = Node<{entity: Entity}, "node">;
 export type EntityEdge = Edge;
 export type NodeMenuFunc = (entity: Entity) => MenuItem[];
 export type NodeDoubleClickFunc = (entity: Entity) => void;
@@ -54,12 +54,12 @@ export function FlowGraph({children}: {
     const onNodeContextMenu = useCallback((event: ReactMouseEvent, flowNode: EntityNode) => {
             event.preventDefault();           // Prevent native context menu from showing
             setMenuStyle({top: event.clientY - 30, left: event.clientX - 30,});
-            setMenuItems(nodeMenuFunc ? nodeMenuFunc(flowNode.data) : undefined);
+            setMenuItems(nodeMenuFunc ? nodeMenuFunc(flowNode.data.entity) : undefined);
         },
         [nodeMenuFunc, setMenuStyle, setMenuItems],
     );
     const onNodeDoubleClick = useCallback((_event: ReactMouseEvent, flowNode: EntityNode) => {
-            nodeDoubleClickFunc?.(flowNode.data);
+            nodeDoubleClickFunc?.(flowNode.data.entity);
         },
         [nodeDoubleClickFunc],
     );

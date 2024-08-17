@@ -66,7 +66,7 @@ export function convertNodeAndEdges({entityMap, sharedSetting}: EntityGraph) {
 
         nodes.push({
             id: entity.id,
-            data: entity,
+            data: {entity: entity},
             type: 'node',
             position: {x: 100, y: 100},
         })

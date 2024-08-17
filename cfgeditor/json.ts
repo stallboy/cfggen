@@ -22,7 +22,7 @@ export interface TableHideAndColor {
 
 export type ShowHeadType = 'show' | 'showCopyable';
 export type ShowDescriptionType = 'show' | 'showFallbackValue' | 'showValue' | 'none';
-export type NodePlacementStrategyType = 'SIMPLE' | 'LINEAR_SEGMENTS' | 'BRANDES_KOEPF';
+export type NodePlacementStrategyType = 'SIMPLE' | 'LINEAR_SEGMENTS' | 'BRANDES_KOEPF' | "mrtree";;
 
 export interface FixedPage {
     label: string; // 显示

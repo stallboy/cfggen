@@ -81,6 +81,7 @@ i18n.use(LanguageDetector)
                     SIMPLE: '中间',
                     LINEAR_SEGMENTS: '中间起伏',
                     BRANDES_KOEPF: '默认',
+                    mrtree:'树状',
 
                     searchMaxReturn: '搜索返回数',
                     imageSizeScale: '图片缩放倍数',
