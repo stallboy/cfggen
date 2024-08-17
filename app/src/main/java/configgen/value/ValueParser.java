@@ -25,6 +25,7 @@ public class ValueParser {
     private final ValueErrs errs;
     private final TextI18n.TableI18n nullableTableI18n;
     private final BlockParser blockParser;
+    private List<DCell> currentCells;
 
     public ValueParser(ValueErrs errs, TextI18n.TableI18n nullableTableI18n, BlockParser blockParser) {
         this.errs = errs;
@@ -36,6 +37,7 @@ public class ValueParser {
     VInterface parseInterface(InterfaceSchema subInterface, List<DCell> cells, InterfaceSchema sInterface,
                               boolean pack, boolean canBeEmpty, int curRowIndex) {
         List<DCell> parsed = cells;
+        currentCells = cells;
 
         boolean isEmpty = false; // 支持excel里的cell为空，并且它还是个复合结构；但不支持非empty的cell里部分结构为空
         boolean isNumberOrBool = false;
@@ -69,7 +71,8 @@ public class ValueParser {
             }
 
         } else {
-            require(cells.size() == Span.span(sInterface), "列宽度应一致");
+            int wanted = Span.span(sInterface);
+            require(cells.size() == wanted, "列宽度应一致, 结构定义宽度=" + wanted + ", 实际=" + cells.size());
         }
 
         // 内容为空的单一格子，处理方式是把这空的parsed一层层传下去
@@ -132,8 +135,10 @@ public class ValueParser {
         return new VInterface(subInterface, vImpl, cells);
     }
 
-    VStruct parseStructural(Structural subStructural, List<DCell> cells, Structural structural,
-                            boolean pack, boolean canBeEmpty, int curRowIndex) {
+    public VStruct parseStructural(Structural subStructural, List<DCell> cells, Structural structural,
+                                   boolean pack, boolean canBeEmpty, int curRowIndex) {
+        currentCells = cells;
+
         List<DCell> parsed = cells;
         boolean isEmpty = false; // 支持excel里的cell为空，并且它还是个复合结构；但不支持非empty的cell里部分结构为空
         boolean canChildBeEmpty = canBeEmpty;
@@ -165,7 +170,8 @@ public class ValueParser {
             }
             isSep = true;
         } else {
-            require(cells.size() == Span.span(structural), "列宽度应一致");
+            int wanted = Span.span(structural);
+            require(cells.size() == wanted, "列宽度应一致, 结构定义=" + wanted + ", 实际=" + cells.size());
         }
 
         List<Value> values = new ArrayList<>(subStructural.fields().size());
@@ -221,6 +227,8 @@ public class ValueParser {
     SimpleValue parseSimpleType(FieldType.SimpleType subType, List<DCell> cells, FieldType.SimpleType type,
                                 boolean pack, boolean canBeEmpty, int curRowIndex,
                                 String nameable, String field) {
+        currentCells = cells;
+
         switch (type) {
             case FieldType.Primitive primitive -> {
                 require(cells.size() == 1);
@@ -300,6 +308,7 @@ public class ValueParser {
     Value parseField(FieldSchema subField, List<DCell> cells, FieldSchema field,
                      boolean pack, boolean canBeEmpty, int curRowIndex,
                      String nameable) {
+        currentCells = cells;
 
         switch (field.type()) {
             case FieldType.SimpleType simple -> {
@@ -318,6 +327,7 @@ public class ValueParser {
     VMap parseMap(FieldSchema subField, List<DCell> cells, FieldSchema field,
                   boolean isPack, int curRowIndex,
                   String nameable) {
+        currentCells = cells;
 
         FieldType.FMap subType = (FieldType.FMap) subField.type();
         FieldType.FMap type = (FieldType.FMap) field.type();
@@ -385,7 +395,7 @@ public class ValueParser {
         return new VMap(valueMap, cells);
     }
 
-    private static boolean isCellNotAllEmpty(List<DCell> cells){
+    private static boolean isCellNotAllEmpty(List<DCell> cells) {
         return cells.stream().anyMatch(c -> !c.isCellEmpty());
     }
 
@@ -393,6 +403,7 @@ public class ValueParser {
     VList parseList(FieldSchema subField, List<DCell> cells, FieldSchema field,
                     boolean isPack, int curRowIndex,
                     String nameable) {
+        currentCells = cells;
 
         FieldType.FList subType = (FieldType.FList) subField.type();
         FieldType.FList type = (FieldType.FList) field.type();
@@ -457,11 +468,22 @@ public class ValueParser {
 
     private void require(boolean cond) {
         if (!cond)
-            throw new AssertionError("");
+            throw new AssertionError(currentCellStr());
     }
 
     private void require(boolean cond, String err) {
         if (!cond)
-            throw new AssertionError(err);
+            throw new AssertionError(err + ":" + currentCellStr());
+    }
+
+    private String currentCellStr() {
+        StringBuilder err = new StringBuilder();
+        if (currentCells != null) {
+            for (DCell c : currentCells) {
+                err.append(c.toString());
+                err.append("\n");
+            }
+        }
+        return err.toString();
     }
 }

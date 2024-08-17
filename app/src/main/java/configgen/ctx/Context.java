@@ -47,15 +47,18 @@ public class Context {
         CfgSchema alignedSchema = new CfgSchemaAlignToData(schema, data, alignErr).align();
         new CfgSchemaResolver(alignedSchema, alignErr).resolve();
         alignErr.checkErrors("aligned schema");
-        Logger.profile("schema aligned by data");
-        if (!schema.equals(alignedSchema)) {
+        if (schema.equals(alignedSchema)) {
+            this.cfgData = data;
+            this.cfgSchema = schema;
+        } else {
+            Logger.profile("schema aligned by data");
             // schema.printDiff(alignedSchema);
             Cfgs.writeTo(cfgPath, true, alignedSchema);
             Logger.profile("schema write");
-        }
 
-        this.cfgData = data;
-        this.cfgSchema = alignedSchema;
+            this.cfgData = dataReader.readCfgData(dataDir, alignedSchema);
+            this.cfgSchema = alignedSchema;
+        }
     }
 
     public Path dataDir() {
