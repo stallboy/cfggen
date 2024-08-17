@@ -16,17 +16,27 @@ import java.util.Objects;
 
 public class Context {
     private final Path dataDir;
-    private final CfgSchema cfgSchema;
-    private final CfgData cfgData;
+    private final CfgDataReader dataReader;
     private final TextI18n nullableI18n;
     private final LangSwitch nullableLangSwitch;
+
+    private CfgSchema cfgSchema;
+    private CfgData cfgData;
 
 
     public Context(Path dataDir, CfgDataReader dataReader, TextI18n nullableI18n, LangSwitch nullableLangSwitch) {
         this.dataDir = dataDir;
+        this.dataReader = dataReader;
         this.nullableI18n = nullableI18n;
         this.nullableLangSwitch = nullableLangSwitch;
 
+        boolean ok = readSchemaAndData(true);
+        if (!ok) {
+            readSchemaAndData(false);
+        }
+    }
+
+    private boolean readSchemaAndData(boolean autoFix) {
         Path cfgPath = dataDir.resolve("config.cfg");
         CfgSchema schema = Cfgs.readFrom(cfgPath, true);
         Logger.profile("schema read");
@@ -50,16 +60,18 @@ public class Context {
         if (schema.equals(alignedSchema)) {
             this.cfgData = data;
             this.cfgSchema = schema;
-        } else {
+            return true;
+        } else if (autoFix) {
             Logger.profile("schema aligned by data");
             // schema.printDiff(alignedSchema);
             Cfgs.writeTo(cfgPath, true, alignedSchema);
             Logger.profile("schema write");
-
-            this.cfgData = dataReader.readCfgData(dataDir, alignedSchema);
-            this.cfgSchema = alignedSchema;
+            return false;
+        } else {
+            throw new RuntimeException("schema align failed");
         }
     }
+
 
     public Path dataDir() {
         return dataDir;
