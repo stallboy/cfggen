@@ -1,14 +1,18 @@
 package configgen.value;
 
+import configgen.ctx.TextI18n;
+import configgen.data.CfgData;
+import configgen.data.Source;
 import configgen.schema.*;
 
 import java.util.*;
-import java.util.stream.Collectors;
-
-import static configgen.data.CfgData.DCell;
 
 public record CfgValue(CfgSchema schema,
                        Map<String, VTable> vTableMap) {
+    public CfgValue {
+        Objects.requireNonNull(schema);
+        Objects.requireNonNull(vTableMap);
+    }
 
     public Iterable<VTable> tables() {
         return vTableMap().values();
@@ -30,6 +34,12 @@ public record CfgValue(CfgSchema schema,
                          SequencedMap<List<String>, SequencedMap<Value, VStruct>> uniqueKeyMaps,
                          SequencedSet<String> enumNames, //可为null
                          SequencedMap<String, Integer> enumNameToIntegerValueMap) { //可为null
+        public VTable {
+            Objects.requireNonNull(schema);
+            Objects.requireNonNull(valueList);
+            Objects.requireNonNull(primaryKeyMap);
+            Objects.requireNonNull(uniqueKeyMaps);
+        }
 
         public String name() {
             return schema.name();
@@ -37,11 +47,7 @@ public record CfgValue(CfgSchema schema,
     }
 
     public sealed interface Value {
-        List<DCell> cells();
-
-        default String repr() {
-            return cells().stream().map(DCell::value).collect(Collectors.joining("#"));
-        }
+        Source source();
 
         default String packStr() {
             return ValuePack.pack(this);
@@ -55,10 +61,17 @@ public record CfgValue(CfgSchema schema,
     }
 
     public static sealed abstract class CompositeValue implements Value {
+        protected Source source;
+
         /**
          * shared用于lua生成时最小化内存占用，所以对同一个表中相同的table，就共享， 算是个优化
          */
         private boolean shared = false;
+
+        @Override
+        public Source source() {
+            return source;
+        }
 
         public void setShared() {
             shared = true;
@@ -70,38 +83,19 @@ public record CfgValue(CfgSchema schema,
     }
 
     public sealed interface PrimitiveValue extends SimpleValue {
-        DCell cell();
-
-        @Override
-        default String repr() {
-            return cell().value();
-        }
-
-        @Override
-        default List<DCell> cells() {
-            return List.of(cell());
-        }
     }
 
     public static final class VStruct extends CompositeValue implements SimpleValue {
         private final Structural schema;
         private final List<Value> values;
-        private final List<DCell> cells;
+        private String note;
 
         public VStruct(Structural schema,
                        List<Value> values,
-                       List<DCell> cells) {
+                       Source source) {
             this.schema = schema;
             this.values = values;
-            this.cells = cells;
-        }
-
-        public static VStruct of(Structural schema, List<Value> values) {
-            List<DCell> cells = new ArrayList<>(8);
-            for (Value value : values) {
-                cells.addAll(value.cells());
-            }
-            return new VStruct(schema, values, cells);
+            this.source = source;
         }
 
         public String name() {
@@ -131,40 +125,33 @@ public record CfgValue(CfgSchema schema,
         }
 
         @Override
-        public List<DCell> cells() {
-            return cells;
-        }
-
-        @Override
         public String toString() {
             return "VStruct[" +
-                   "schema=" + schema + ", " +
-                   "values=" + values + ", " +
-                   "cells=" + cells + ']';
+                    "schema=" + schema + ", " +
+                    "values=" + values + ", " +
+                    "source=" + source + ']';
         }
 
+        public String note() {
+            return note;
+        }
+
+        public void setNote(String note) {
+            this.note = note;
+        }
     }
 
     public static final class VInterface extends CompositeValue implements SimpleValue {
         private final InterfaceSchema schema;
         private final VStruct child;
-        private final List<DCell> cells;
+        private String note;
 
         public VInterface(InterfaceSchema schema,
                           VStruct child,
-                          List<DCell> cells) {
+                          Source source) {
             this.schema = schema;
             this.child = child;
-            this.cells = cells;
-        }
-
-        public static VInterface of(InterfaceSchema schema,
-                                    VStruct child,
-                                    DCell implCell) {
-            List<DCell> cells = new ArrayList<>(1 + child.cells().size());
-            cells.add(implCell);
-            cells.addAll(child.cells());
-            return new VInterface(schema, child, cells);
+            this.source = source;
         }
 
         @Override
@@ -188,38 +175,40 @@ public record CfgValue(CfgSchema schema,
             return child;
         }
 
-        @Override
-        public List<DCell> cells() {
-            return cells;
+        public Source getImplNameSource() {
+            if (source instanceof Source.DCellList list && !list.cells().isEmpty()) {
+                return list.cells().getFirst();
+            }
+            return source;
         }
+
 
         @Override
         public String toString() {
             return "VInterface[" +
-                   "schema=" + schema + ", " +
-                   "child=" + child + ", " +
-                   "cells=" + cells + ']';
+                    "schema=" + schema + ", " +
+                    "child=" + child + ", " +
+                    "source=" + source + ']';
         }
 
+        public String note() {
+            return note;
+        }
+
+        public void setNote(String note) {
+            this.note = note;
+        }
     }
 
     public static final class VList extends CompositeValue implements ContainerValue {
         private final List<SimpleValue> valueList;
-        private final List<DCell> cells;
 
         public VList(List<SimpleValue> valueList,
-                     List<DCell> cells) {
+                     Source source) {
             this.valueList = valueList;
-            this.cells = cells;
+            this.source = source;
         }
 
-        public static VList of(List<SimpleValue> valueList) {
-            List<DCell> cells = new ArrayList<>(8);
-            for (SimpleValue value : valueList) {
-                cells.addAll(value.cells());
-            }
-            return new VList(valueList, cells);
-        }
 
         @Override
         public boolean equals(Object o) {
@@ -239,35 +228,20 @@ public record CfgValue(CfgSchema schema,
         }
 
         @Override
-        public List<DCell> cells() {
-            return cells;
-        }
-
-        @Override
         public String toString() {
             return "VList[" +
-                   "valueList=" + valueList + ", " +
-                   "cells=" + cells + ']';
+                    "valueList=" + valueList + ", " +
+                    "source=" + source + ']';
         }
     }
 
     public static final class VMap extends CompositeValue implements ContainerValue {
         private final Map<SimpleValue, SimpleValue> valueMap;
-        private final List<DCell> cells;
 
         public VMap(Map<SimpleValue, SimpleValue> valueMap,
-                    List<DCell> cells) {
+                    Source source) {
             this.valueMap = valueMap;
-            this.cells = cells;
-        }
-
-        public static VMap of(Map<SimpleValue, SimpleValue> valueMap) {
-            List<DCell> cells = new ArrayList<>(8);
-            for (var e : valueMap.entrySet()) {
-                cells.addAll(e.getKey().cells());
-                cells.addAll(e.getValue().cells());
-            }
-            return new VMap(valueMap, cells);
+            this.source = source;
         }
 
         @Override
@@ -288,21 +262,20 @@ public record CfgValue(CfgSchema schema,
         }
 
         @Override
-        public List<DCell> cells() {
-            return cells;
-        }
-
-        @Override
         public String toString() {
             return "VMap[" +
-                   "valueMap=" + valueMap + ", " +
-                   "cells=" + cells + ']';
+                    "valueMap=" + valueMap + ", " +
+                    "source=" + source + ']';
         }
 
     }
 
 
-    public record VBool(boolean value, DCell cell) implements PrimitiveValue {
+    public record VBool(boolean value, Source source) implements PrimitiveValue {
+        public VBool {
+            Objects.requireNonNull(source);
+        }
+
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
@@ -317,7 +290,11 @@ public record CfgValue(CfgSchema schema,
         }
     }
 
-    public record VInt(int value, DCell cell) implements PrimitiveValue {
+    public record VInt(int value, Source source) implements PrimitiveValue {
+        public VInt {
+            Objects.requireNonNull(source);
+        }
+
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
@@ -332,7 +309,10 @@ public record CfgValue(CfgSchema schema,
         }
     }
 
-    public record VLong(long value, DCell cell) implements PrimitiveValue {
+    public record VLong(long value, Source source) implements PrimitiveValue {
+        public VLong {
+            Objects.requireNonNull(source);
+        }
 
         @Override
         public boolean equals(Object o) {
@@ -348,7 +328,10 @@ public record CfgValue(CfgSchema schema,
         }
     }
 
-    public record VFloat(float value, DCell cell) implements PrimitiveValue {
+    public record VFloat(float value, Source source) implements PrimitiveValue {
+        public VFloat {
+            Objects.requireNonNull(source);
+        }
 
         @Override
         public boolean equals(Object o) {
@@ -356,6 +339,14 @@ public record CfgValue(CfgSchema schema,
             if (o == null || getClass() != o.getClass()) return false;
             VFloat vFloat = (VFloat) o;
             return Float.compare(value, vFloat.value) == 0;
+        }
+
+        public String repr() {
+            if (source instanceof CfgData.DCell cell) {
+                return cell.value().trim();
+            } else {
+                return String.valueOf(value);
+            }
         }
 
         @Override
@@ -368,7 +359,10 @@ public record CfgValue(CfgSchema schema,
         String value();
     }
 
-    public record VString(String value, DCell cell) implements StringValue {
+    public record VString(String value, Source source) implements StringValue {
+        public VString {
+            Objects.requireNonNull(source);
+        }
 
         @Override
         public boolean equals(Object o) {
@@ -385,7 +379,12 @@ public record CfgValue(CfgSchema schema,
     }
 
 
-    public record VText(String value, String original, String nullableI18n, DCell cell) implements StringValue {
+    public record VText(String value, String original, String nullableI18n, Source source) implements StringValue {
+        public VText {
+            Objects.requireNonNull(value);
+            Objects.requireNonNull(original);
+            Objects.requireNonNull(source);
+        }
 
         @Override
         public boolean equals(Object o) {

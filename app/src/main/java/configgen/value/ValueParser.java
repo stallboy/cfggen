@@ -1,6 +1,7 @@
 package configgen.value;
 
 import configgen.ctx.TextI18n;
+import configgen.data.Source;
 import configgen.schema.*;
 
 import java.util.*;
@@ -132,7 +133,7 @@ public class ValueParser {
             return null;
         }
 
-        return new VInterface(subInterface, vImpl, cells);
+        return new VInterface(subInterface, vImpl, Source.of(cells));
     }
 
     public VStruct parseStructural(Structural subStructural, List<DCell> cells, Structural structural,
@@ -202,7 +203,9 @@ public class ValueParser {
                 if (subField != null) {
                     // 提取单个field
                     if (parsed.size() < startIdx + expected) {
-                        errs.addErr(new ValueErrs.FieldCellSpanNotEnough(parsed, structural.name(), field.name(),
+                        errs.addErr(new ValueErrs.FieldCellSpanNotEnough(
+                                Source.of(cells),
+                                structural.name(), field.name(),
                                 expected, parsed.size() - startIdx));
                         return null;
                     }
@@ -221,7 +224,7 @@ public class ValueParser {
             }
         }
 
-        return new VStruct(subStructural, values, cells);
+        return new VStruct(subStructural, values, Source.of(cells));
     }
 
     SimpleValue parseSimpleType(FieldType.SimpleType subType, List<DCell> cells, FieldType.SimpleType type,
@@ -273,15 +276,7 @@ public class ValueParser {
                         return new VString(str, cell);
                     }
                     case TEXT -> {
-                        String i18n = null;
-                        String value;
-                        if (nullableTableI18n != null) {
-                            i18n = nullableTableI18n.findText(str);
-                            value = i18n != null ? i18n : str;
-                        } else {
-                            value = str;
-                        }
-                        return new VText(value, str, i18n, cell);
+                        return ValueUtil.createText(str, cell, nullableTableI18n);
                     }
                 }
             }
@@ -366,7 +361,8 @@ public class ValueParser {
             List<DCell> curLineParsed = block.cells;
             for (int startIdx = 0; startIdx < curLineParsed.size(); startIdx += itemSpan) {
                 if (startIdx + itemSpan > curLineParsed.size()) {
-                    errs.addErr(new ValueErrs.FieldCellSpanNotEnough(curLineParsed.subList(startIdx, curLineParsed.size()),
+                    errs.addErr(new ValueErrs.FieldCellSpanNotEnough(
+                            Source.of(curLineParsed.subList(startIdx, curLineParsed.size())),
                             nameable, field.name(), itemSpan, curLineParsed.size() - startIdx));
                     continue;
                 }
@@ -385,14 +381,15 @@ public class ValueParser {
                     if (key != null && value != null) {
                         SimpleValue old = valueMap.put(key, value);
                         if (old != null) {
-                            errs.addErr(new ValueErrs.MapKeyDuplicated(keyCells, nameable, field.name()));
+                            errs.addErr(new ValueErrs.MapKeyDuplicated(
+                                    Source.of(keyCells), nameable, field.name()));
                         }
                     }
                 }
             }
         }
 
-        return new VMap(valueMap, cells);
+        return new VMap(valueMap, Source.of(cells));
     }
 
     private static boolean isCellNotAllEmpty(List<DCell> cells) {
@@ -444,7 +441,8 @@ public class ValueParser {
             List<DCell> curLineParsed = block.cells;
             for (int startIdx = 0; startIdx < curLineParsed.size(); startIdx += itemSpan) {
                 if (startIdx + itemSpan > curLineParsed.size()) {
-                    errs.addErr(new ValueErrs.FieldCellSpanNotEnough(curLineParsed.subList(startIdx, curLineParsed.size()),
+                    errs.addErr(new ValueErrs.FieldCellSpanNotEnough(
+                            Source.of(curLineParsed.subList(startIdx, curLineParsed.size())),
                             nameable, field.name(), itemSpan, curLineParsed.size() - startIdx));
                     continue;
                 }
@@ -460,7 +458,7 @@ public class ValueParser {
                 }
             }
         }
-        return new VList(valueList, cells);
+        return new VList(valueList, Source.of(cells));
 
     }
 

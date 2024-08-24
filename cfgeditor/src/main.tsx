@@ -29,15 +29,15 @@ const router = createBrowserRouter([
         Component: AppLoader,
         children: [
             {
-                path: "table/:table/:id?",
+                path: "table/:table/*",
                 Component: Table,
             },
             {
-                path: "tableRef/:table/:id?",
+                path: "tableRef/:table/*",
                 Component: TableRef,
             },
             {
-                path: "record/:table/:id/edit?",
+                path: "edit?/record/:table/*",
                 Component: Record,
             },
             {

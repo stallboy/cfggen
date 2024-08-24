@@ -4,14 +4,13 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import configgen.ctx.TextI18n;
+import configgen.data.Source;
 import configgen.schema.*;
 import configgen.util.Logger;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 
-import static configgen.data.CfgData.DCell;
 import static configgen.schema.FieldType.*;
 import static configgen.schema.FieldType.Primitive.*;
 import static configgen.value.CfgValue.*;
@@ -27,8 +26,7 @@ public class ValueJsonParser {
     private final TableSchema subTableSchema;
     private final TextI18n.TableI18n nullableTableI18n;
     private final boolean isLogNotFoundField;
-    private DCell cell;
-    private List<DCell> cellList;
+    private Source.DFile source;
     private String fromFileName;
 
     public ValueJsonParser(TableSchema subTableSchema) {
@@ -45,11 +43,10 @@ public class ValueJsonParser {
         this.isLogNotFoundField = isLogNotFoundField;
     }
 
-    public VStruct fromJson(String jsonStr, String fromFileName) {
-        this.fromFileName = fromFileName;
+    public VStruct fromJson(String jsonStr, String jsonFileName) {
+        fromFileName = jsonFileName;
         JSONObject jsonObject = JSON.parseObject(jsonStr);
-        cell = DCell.EMPTY;
-        cellList = List.of(cell);
+        source = Source.of(fromFileName);
         return parseStructural(subTableSchema, jsonObject);
     }
 
@@ -65,7 +62,7 @@ public class ValueJsonParser {
     }
 
     private VStruct parseStructural(Structural subStructural, JSONObject jsonObject) {
-        VStruct vStruct = new VStruct(subStructural, new ArrayList<>(subStructural.fields().size()), cellList);
+        VStruct vStruct = new VStruct(subStructural, new ArrayList<>(subStructural.fields().size()), source);
         for (FieldSchema fs : subStructural.fields()) {
             Object fieldObj = jsonObject.get(fs.name());
             Value fieldValue;
@@ -74,12 +71,16 @@ public class ValueJsonParser {
             } else {
                 // not throw exception, but use default value
                 // make it easy to add field in future
-                fieldValue = ValueDefault.of(fs.type());
+                fieldValue = ValueDefault.of(fs.type(), source);
                 if (isLogNotFoundField) {
                     Logger.log("%s %s[%s] not found ", fromFileName, subStructural.fullName(), fs.name());
                 }
             }
             vStruct.values().add(fieldValue);
+        }
+        String note = (String) jsonObject.get("$note");
+        if (note != null && !note.isEmpty()) {
+            vStruct.setNote(note);
         }
         return vStruct;
     }
@@ -102,7 +103,12 @@ public class ValueJsonParser {
         }
 
         VStruct implValue = parseStructural(impl, jsonObject);
-        return new VInterface(subInterfaceSchema, implValue, cellList); // 需要这层包装，以方便生成data file
+        VInterface vInterface = new VInterface(subInterfaceSchema, implValue, source); // 需要这层包装，以方便生成data file
+        String note = (String) jsonObject.get("$note");
+        if (note != null && !note.isEmpty()) {
+            vInterface.setNote(note);
+        }
+        return vInterface;
     }
 
     private Value parse(FieldType type, Object obj) {
@@ -113,47 +119,39 @@ public class ValueJsonParser {
                     case Number num -> num.intValue() == 1;
                     default -> (boolean) obj;
                 };
-                return new VBool(bv, cell);
+                return new VBool(bv, source);
             }
             case INT -> {
                 int iv = switch (obj) {
                     case Number num -> num.intValue();
                     default -> (int) obj;
                 };
-                return new VInt(iv, cell);
+                return new VInt(iv, source);
             }
             case LONG -> {
                 long lv = switch (obj) {
                     case Number num -> num.longValue();
                     default -> (long) obj;
                 };
-                return new VLong(lv, cell);
+                return new VLong(lv, source);
             }
             case FLOAT -> {
                 float fv = switch (obj) {
                     case Number num -> num.floatValue();
                     default -> (float) obj;
                 };
-                return new VFloat(fv, cell);
+                return new VFloat(fv, source);
             }
             case STRING -> {
-                return new VString((String) obj, cell);
+                return new VString((String) obj, source);
             }
             case TEXT -> {
                 String original = (String) obj;
-                String i18n = null;
-                String value;
-                if (nullableTableI18n != null) {
-                    i18n = nullableTableI18n.findText(original);
-                    value = i18n != null ? i18n : original;
-                } else {
-                    value = original;
-                }
-                return new VText(value, original, i18n, cell);
+                return ValueUtil.createText(original, source, nullableTableI18n);
             }
             case FList fList -> {
                 JSONArray jsonArray = (JSONArray) obj;
-                VList vList = new VList(new ArrayList<>(jsonArray.size()), cellList);
+                VList vList = new VList(new ArrayList<>(jsonArray.size()), source);
                 for (Object itemObj : jsonArray) {
                     SimpleValue v = (SimpleValue) parse(fList.item(), itemObj);
                     vList.valueList().add(v);
@@ -163,7 +161,7 @@ public class ValueJsonParser {
             case FMap fMap -> {
                 JSONArray jsonArray = (JSONArray) obj;
                 int cnt = jsonArray.size();
-                VMap vMap = new VMap(new LinkedHashMap<>(cnt), cellList);
+                VMap vMap = new VMap(new LinkedHashMap<>(cnt), source);
                 for (int i = 0; i < cnt; i++) {
                     JSONObject entry = jsonArray.getJSONObject(i);
                     Object keyObj = entry.get("key");

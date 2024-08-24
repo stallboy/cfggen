@@ -334,7 +334,7 @@ export function navTo(curPage: PageType, tableId: string, id: string,
     setPref('curId', id);
 
     const url = `/${curPage}/${tableId}/${id}`;
-    return (curPage == 'record' && edit) ? url + '/edit' : url;
+    return (curPage == 'record' && edit) ? '/edit' +　url: url;
 }
 
 export function getLastNavToInLocalStore() {
@@ -351,22 +351,27 @@ export function useLocationData() {
     let curPage: PageType = 'table';
     let curTableId = '';
     let curId = '';
+    let edit = false;
 
+    let idx = 2;
     if (split.length > 1) {
-        if (pageEnums.includes(split[1])) {
+        if (split[1] == 'edit') {
+            edit = true;
+            if (split.length > 2 && split[2] == 'record'){
+                curPage = 'record';
+                idx = 3;
+            }
+        }else if (pageEnums.includes(split[1])) {
             curPage = split[1] as PageType;
         }
     }
-    if (split.length > 2) {
-        curTableId = split[2];
+    if (split.length > idx) {
+        curTableId = split[idx];
+        idx++;
     }
-    if (split.length > 3) {
-        curId = split[3];
+    if (split.length > idx) {
+        curId = split.slice(idx).join("/");
     }
 
-    let edit = false;
-    if (split.length > 4) {
-        edit = split[4] == 'edit';
-    }
     return {curPage, curTableId, curId, edit, pathname};
 }

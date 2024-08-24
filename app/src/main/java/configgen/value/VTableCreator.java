@@ -45,18 +45,18 @@ public class VTableCreator {
                 VString vStr = (VString) vStruct.values().get(idx);
                 String e = vStr.value();
                 if (e.contains(" ")) {
-                    errs.addErr(new ValueErrs.EntryContainsSpace(vStr.cell(), tableSchema.name()));
+                    errs.addErr(new ValueErrs.EntryContainsSpace(vStr.source(), tableSchema.name()));
                     continue;
                 }
 
                 if (e.isEmpty()) {
                     if (entry instanceof EntryType.EEnum) {
-                        errs.addErr(new ValueErrs.EnumEmpty(vStr.cell(), tableSchema.name()));
+                        errs.addErr(new ValueErrs.EnumEmpty(vStr.source(), tableSchema.name()));
                     }
                 } else {
                     boolean add = names.add(e.toUpperCase());
                     if (!add) {
-                        errs.addErr(new ValueErrs.EntryDuplicated(vStr.cell(), tableSchema.name()));
+                        errs.addErr(new ValueErrs.EntryDuplicated(vStr.source(), tableSchema.name()));
                     } else {
                         enumNames.add(e);
 

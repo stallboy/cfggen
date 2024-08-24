@@ -56,7 +56,7 @@ class ValueToJsonTest {
 
     @Test
     void toJson_MapPrimitiveValue() {
-        VMap vMap = VMap.of(Map.of(ofInt(111), ofStr("aaa"), ofInt(222), ofStr("bbb")));
+        VMap vMap = ofMap(Map.of(ofInt(111), ofStr("aaa"), ofInt(222), ofStr("bbb")));
         JSONArray ja = valueToJson.toJson(vMap);
         // [{"key":111,"value":"aaa","$type":"$entry"},{"key":222,"value":"bbb","$type":"$entry"}]
         assertEquals(2, ja.size());
@@ -73,7 +73,7 @@ class ValueToJsonTest {
                 List.of(new FieldSchema("fieldIntA", FieldType.Primitive.INT, AUTO, Metadata.of()),
                         new FieldSchema("fieldStrB", FieldType.Primitive.STRING, AUTO, Metadata.of())),
                 List.of());
-        VStruct vStruct = VStruct.of(ss, List.of(ofInt(123), ofStr("test str")));
+        VStruct vStruct = ofStruct(ss, List.of(ofInt(123), ofStr("test str")));
         JSONObject json = valueToJson.toJson(vStruct);
         assertEquals(3, json.values().size());
 
@@ -88,8 +88,8 @@ class ValueToJsonTest {
                 List.of(new FieldSchema("fieldIntA", FieldType.Primitive.INT, AUTO, Metadata.of()),
                         new FieldSchema("fieldStrB", FieldType.Primitive.STRING, AUTO, Metadata.of())),
                 List.of());
-        VStruct v1 = VStruct.of(ss, List.of(ofInt(123), ofStr("test str")));
-        VStruct v2 = VStruct.of(ss, List.of(ofInt(456), ofStr("bbb")));
+        VStruct v1 = ofStruct(ss, List.of(ofInt(123), ofStr("test str")));
+        VStruct v2 = ofStruct(ss, List.of(ofInt(456), ofStr("bbb")));
         VList vList = VList.of(List.of(v1, v2));
         JSONArray ja = valueToJson.toJson(vList);
 
@@ -118,10 +118,10 @@ class ValueToJsonTest {
         StructSchema checkItem = condition.findImpl("checkItem");
         StructSchema and = condition.findImpl("and");
 
-        VStruct c1 = VStruct.of(checkItem, List.of(ofInt(123)));
-        VStruct c2 = VStruct.of(checkItem, List.of(ofInt(456)));
-        VStruct vAnd = VStruct.of(and, List.of(c1, c2));
-        VInterface vCond = VInterface.of(condition, vAnd, ofCell("and"));
+        VStruct c1 = ofStruct(checkItem, List.of(ofInt(123)));
+        VStruct c2 = ofStruct(checkItem, List.of(ofInt(456)));
+        VStruct vAnd = ofStruct(and, List.of(c1, c2));
+        VInterface vCond = ofStruct(condition, vAnd, ofCell("and"));
 
         JSONObject json = valueToJson.toJson(vCond);
         String jsonStr = """
@@ -158,13 +158,13 @@ class ValueToJsonTest {
         StructSchema and = condition.findImpl("and");
         TableSchema cond = cfg.findTable("cond");
 
-        VStruct c1 = VStruct.of(checkItem, List.of(ofInt(123)));
-        VStruct c2 = VStruct.of(checkItem, List.of(ofInt(456)));
-        VStruct vAnd = VStruct.of(and, List.of(c1, c2));
-//        VInterface vCond = VInterface.of(condition, vAnd, ofCell("and")); // 可以不要这层抽象
+        VStruct c1 = ofStruct(checkItem, List.of(ofInt(123)));
+        VStruct c2 = ofStruct(checkItem, List.of(ofInt(456)));
+        VStruct vAnd = ofStruct(and, List.of(c1, c2));
+//        VInterface vCond = ofStruct(condition, vAnd, ofCell("and")); // 可以不要这层抽象
 
-        VStruct vStruct = VStruct.of(cond,
-                List.of(ofInt(666), VMap.of(Map.of(ofInt(123456), vAnd))));
+        VStruct vStruct = ofStruct(cond,
+                List.of(ofInt(666), ofMap(Map.of(ofInt(123456), vAnd))));
 
 
         JSONObject json = valueToJson.toJson(vStruct);

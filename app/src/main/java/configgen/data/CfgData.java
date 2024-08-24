@@ -5,6 +5,7 @@ import configgen.util.Logger;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 
 /**
@@ -40,28 +41,30 @@ public record CfgData(Map<String, DTable> tables,
     public record DCell(String value,
                         DRowId rowId,
                         int col,
-                        byte mode) {
+                        byte mode) implements Source {
 
         public static final DCell EMPTY = of("");
 
         public static DCell of(String str) {
-            return new DCell(str, new CfgData.DRowId("fileName", "sheetName", 0), 0, (byte) 0);
+            return new DCell(str, new CfgData.DRowId("fileName", "sheetName", 0), 0, CELL_FAKE);
+        }
+
+        public DCell {
+            Objects.requireNonNull(value);
+            Objects.requireNonNull(rowId);
         }
 
         public static final byte COLUMN_MODE = 0x1;
         public static final byte CELL_NUMBER = 0x2;
-        public static final byte CELL_NUMBER_WITH_COMMA = 0x4;
+        public static final byte CELL_FAKE = 0x4;
 
-        public static byte modeOf(boolean isColumnMode, boolean isCellNumber, boolean isCellNumberWithComma) {
+        public static byte modeOf(boolean isColumnMode, boolean isCellNumber) {
             byte res = 0;
             if (isColumnMode) {
                 res |= COLUMN_MODE;
             }
             if (isCellNumber) {
                 res |= CELL_NUMBER;
-            }
-            if (isCellNumberWithComma) {
-                res |= CELL_NUMBER_WITH_COMMA;
             }
             return res;
         }
@@ -70,9 +73,6 @@ public record CfgData(Map<String, DTable> tables,
             return (mode & COLUMN_MODE) != 0;
         }
 
-        public boolean isCellNumberWithComma() {
-            return (mode & CELL_NUMBER_WITH_COMMA) != 0;
-        }
 
         public boolean isCellEmpty() {
             return value.isEmpty();
@@ -133,6 +133,13 @@ public record CfgData(Map<String, DTable> tables,
                             List<DRawRow> rows,
                             // HeaderParser填写
                             List<Integer> fieldIndices) {
+        public DRawSheet {
+            Objects.requireNonNull(fileName);
+            Objects.requireNonNull(sheetName);
+            Objects.requireNonNull(rows);
+            Objects.requireNonNull(fieldIndices);
+        }
+
         public String id() {
             if (sheetName.isEmpty()) {
                 return fileName;

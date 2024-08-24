@@ -21,7 +21,6 @@ public class ValuePack {
         return packStr(value, false);
     }
 
-
     private static final Collector<CharSequence, ?, String> parenthesesJoin =
             Collectors.joining(",", "(", ")");
     private static final Collector<CharSequence, ?, String> join =
@@ -31,11 +30,11 @@ public class ValuePack {
         return hasParenthesesAround ? parenthesesJoin : join;
     }
 
-    public static String packStr(Value value, boolean hasParenthesesAround) {
+    private static String packStr(Value value, boolean hasParenthesesAround) {
         return switch (value) {
             case StringValue stringValue -> stringValue.value();
             case VBool vBool -> vBool.value() ? "true" : "false";
-            case VFloat vFloat -> vFloat.repr().isEmpty() ? "0" : vFloat.repr();
+            case VFloat vFloat -> vFloat.repr();
             case VInt vInt -> String.valueOf(vInt.value());
             case VLong vLong -> String.valueOf(vLong.value());
 
@@ -67,9 +66,9 @@ public class ValuePack {
     }
 
     /**
-     * @param id 主键pack后的字符串
+     * @param id          主键pack后的字符串
      * @param tableSchema 表结构
-     * @param errs 错误
+     * @param errs        错误
      * @return 解析后的主键值，跟VTable里的primaryKeyMap的Key相对应
      */
     public static Value unpackTablePrimaryKey(String id, TableSchema tableSchema, ValueErrs errs) {
@@ -90,7 +89,7 @@ public class ValuePack {
                     throw new IllegalStateException("multi primary key not simple type, should not happen!");
                 }
             }
-            return VList.of(values);
+            return ValueUtil.createList(values);
         }
     }
 

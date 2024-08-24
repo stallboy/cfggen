@@ -1,61 +1,53 @@
 package configgen.value;
 
+import configgen.data.Source;
 import configgen.schema.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static configgen.data.CfgData.DCell;
 import static configgen.schema.FieldType.Primitive.*;
 import static configgen.value.CfgValue.*;
 
 public class ValueDefault {
-    private static final VBool DBOOL = new VBool(false, DCell.EMPTY);
-    private static final VInt DINT = new VInt(0, DCell.EMPTY);
-    private static final VLong DLONG = new VLong(0, DCell.EMPTY);
-    private static final VFloat DFLOAT = new VFloat(0, DCell.EMPTY);
-    private static final VString DSTR = new VString("", DCell.EMPTY);
-    private static final VText DTEXT = new VText("", "", "", DCell.EMPTY);
-    private static final VList DLIST = new VList(List.of(), List.of());
-    private static final VMap DMAP = new VMap(Map.of(), List.of());
 
-    public static Value of(FieldType type) {
+    public static Value of(FieldType type, Source.DFile source) {
         return switch (type) {
-            case BOOL -> DBOOL;
-            case INT -> DINT;
-            case LONG -> DLONG;
-            case FLOAT -> DFLOAT;
-            case STRING -> DSTR;
-            case TEXT -> DTEXT;
-            case FList ignored -> DLIST;
-            case FMap ignored -> DMAP;
-            case StructRef structRef -> of(structRef.obj());
+            case BOOL -> new VBool(false, source);
+            case INT -> new VInt(0, source);
+            case LONG -> new VLong(0, source);
+            case FLOAT -> new VFloat(0, source);
+            case STRING -> new VString("", source);
+            case TEXT -> new VText("", "", null, source);
+            case FList ignored -> new VList(List.of(), source);
+            case FMap ignored -> new VMap(Map.of(), source);
+            case StructRef structRef -> ofNamable(structRef.obj(), source);
         };
     }
 
-    public static Value of(Nameable nameable) {
+    public static Value ofNamable(Nameable nameable, Source.DFile source) {
         return switch (nameable) {
-            case Structural structural -> ofStructural(structural);
-            case InterfaceSchema interfaceSchema -> ofInterface(interfaceSchema);
+            case Structural structural -> ofStructural(structural, source);
+            case InterfaceSchema interfaceSchema -> ofInterface(interfaceSchema, source);
         };
     }
 
-    public static VStruct ofStructural(Structural structural) {
+    public static VStruct ofStructural(Structural structural, Source.DFile source) {
         List<Value> values = new ArrayList<>(structural.fields().size());
         for (FieldSchema field : structural.fields()) {
-            Value fv = of(field.type());
+            Value fv = of(field.type(), source);
             values.add(fv);
         }
-        return new VStruct(structural, values, List.of(DCell.EMPTY));
+        return new VStruct(structural, values, source);
     }
 
-    public static VInterface ofInterface(InterfaceSchema interfaceSchema) {
+    public static VInterface ofInterface(InterfaceSchema interfaceSchema, Source.DFile source) {
         StructSchema impl = interfaceSchema.nullableDefaultImplStruct();
         if (impl == null) {
             impl = interfaceSchema.impls().getFirst();
         }
-        VStruct vStruct = ofStructural(impl);
-        return new VInterface(interfaceSchema, vStruct, List.of(DCell.EMPTY));
+        VStruct vStruct = ofStructural(impl, source);
+        return new VInterface(interfaceSchema, vStruct, source);
     }
 }

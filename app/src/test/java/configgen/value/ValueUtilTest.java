@@ -33,7 +33,7 @@ class ValueUtilTest {
                 """;
         CfgSchema cfg = CfgReader.parse(str);
         cfg.resolve();
-        VStruct vStruct = VStruct.of((Structural) cfg.findItem("st"), List.of(ofInt(1), ofStr("abc")));
+        VStruct vStruct = ofStruct((Structural) cfg.findItem("st"), List.of(ofInt(1), ofStr("abc")));
         {
             Value keyValue = ValueUtil.extractKeyValue(vStruct, new int[]{0});
             assertTrue(keyValue instanceof VInt vInt && vInt.value() == 1);
@@ -60,7 +60,7 @@ class ValueUtilTest {
         CfgSchema cfg = CfgReader.parse(str);
         cfg.resolve();
         TableSchema t = cfg.findTable("t");
-        VStruct vStruct = VStruct.of(t, List.of(ofInt(1), ofStr("abc")));
+        VStruct vStruct = ofStruct(t, List.of(ofInt(1), ofStr("abc")));
 
         Value keyValue = ValueUtil.extractPrimaryKeyValue(vStruct, t);
         assertTrue(keyValue instanceof VInt vInt && vInt.value() == 1);
@@ -77,7 +77,7 @@ class ValueUtilTest {
         CfgSchema cfg = CfgReader.parse(str);
         cfg.resolve().checkErrors();
         TableSchema t = cfg.findTable("t");
-        VStruct vStruct = VStruct.of(t, List.of(ofInt(1), ofStr("abc")));
+        VStruct vStruct = ofStruct(t, List.of(ofInt(1), ofStr("abc")));
 
 
         {

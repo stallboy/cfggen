@@ -5,7 +5,7 @@ import configgen.gen.Generator;
 import configgen.gen.Parameter;
 import configgen.util.Logger;
 import configgen.value.CfgValue;
-import configgen.value.VTableJsonParser;
+import configgen.value.VTableJsonStore;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -50,7 +50,7 @@ public class GenJson extends Generator {
             for (Map.Entry<Value, VStruct> e : vTable.primaryKeyMap().entrySet()) {
                 Value pk = e.getKey();
                 VStruct record = e.getValue();
-                VTableJsonParser.addOrUpdateRecordStore(record, vTable.schema(), pk.packStr(), dstPath);
+                VTableJsonStore.addOrUpdateRecordStore(record, vTable.schema(), pk.packStr(), dstPath);
             }
         }
     }

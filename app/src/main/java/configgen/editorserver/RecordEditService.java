@@ -86,7 +86,7 @@ public class RecordEditService {
 
         try {
             // 最后确定其他都对的时候再存储
-            VTableJsonParser.addOrUpdateRecordStore(thisValue, tableSchema, id, dataDir);
+            VTableJsonStore.addOrUpdateRecordStore(thisValue, tableSchema, id, dataDir);
         } catch (Exception e) {
             return new RecordEditResult(jsonStoreErr, table, id, List.of(e.getMessage()), List.of());
         }
@@ -171,7 +171,7 @@ public class RecordEditService {
 
         try {
             // 最后确定其他都对的时候再存储
-            boolean deleteOk = VTableJsonParser.deleteRecordStore(tableSchema, id, dataDir);
+            boolean deleteOk = VTableJsonStore.deleteRecordStore(tableSchema, id, dataDir);
             if (!deleteOk) {
                 return new RecordEditResult(jsonStoreErr, table, id, List.of("delete fail"), List.of());
             }

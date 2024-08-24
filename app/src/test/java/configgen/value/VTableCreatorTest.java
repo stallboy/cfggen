@@ -28,8 +28,8 @@ class VTableCreatorTest {
         cfg.resolve().checkErrors();
         TableSchema t = cfg.findTable("t");
 
-        VStruct vStruct = VStruct.of(t, List.of(ofInt(123), ofStr("abc")));
-        VStruct vStruct2 = VStruct.of(t, List.of(ofInt(456), ofStr("efg")));
+        VStruct vStruct = ofStruct(t, List.of(ofInt(123), ofStr("abc")));
+        VStruct vStruct2 = ofStruct(t, List.of(ofInt(456), ofStr("efg")));
         ValueErrs errs = ValueErrs.of();
         List<VStruct> vStructList = List.of(vStruct, vStruct2);
         VTable vTable = new VTableCreator(t, errs).create(vStructList);
@@ -58,8 +58,8 @@ class VTableCreatorTest {
         cfg.resolve().checkErrors();
         TableSchema t = cfg.findTable("t");
 
-        VStruct vStruct = VStruct.of(t, List.of(ofInt(123), ofStr("abc")));
-        VStruct vStruct2 = VStruct.of(t, List.of(ofInt(456), ofStr("efg")));
+        VStruct vStruct = ofStruct(t, List.of(ofInt(123), ofStr("abc")));
+        VStruct vStruct2 = ofStruct(t, List.of(ofInt(456), ofStr("efg")));
         ValueErrs errs = ValueErrs.of();
         List<VStruct> vStructList = List.of(vStruct, vStruct2);
         VTable vTable = new VTableCreator(t, errs).create(vStructList);
@@ -82,8 +82,8 @@ class VTableCreatorTest {
         cfg.resolve().checkErrors();
         TableSchema t = cfg.findTable("t");
 
-        VStruct vStruct = VStruct.of(t, List.of(ofInt(123), ofStr("abc")));
-        VStruct vStruct2 = VStruct.of(t, List.of(ofInt(456), ofStr("efg")));
+        VStruct vStruct = ofStruct(t, List.of(ofInt(123), ofStr("abc")));
+        VStruct vStruct2 = ofStruct(t, List.of(ofInt(456), ofStr("efg")));
         ValueErrs errs = ValueErrs.of();
         List<VStruct> vStructList = List.of(vStruct, vStruct2);
         VTable vTable = new VTableCreator(t, errs).create(vStructList);
@@ -109,8 +109,8 @@ class VTableCreatorTest {
         cfg.resolve().checkErrors();
         TableSchema t = cfg.findTable("t");
 
-        VStruct vStruct = VStruct.of(t, List.of(ofInt(123), ofStr("abc"), ofLong(123456)));
-        VStruct vStruct2 = VStruct.of(t, List.of(ofInt(456), ofStr("efg"), ofLong(456789)));
+        VStruct vStruct = ofStruct(t, List.of(ofInt(123), ofStr("abc"), ofLong(123456)));
+        VStruct vStruct2 = ofStruct(t, List.of(ofInt(456), ofStr("efg"), ofLong(456789)));
         ValueErrs errs = ValueErrs.of();
         List<VStruct> vStructList = List.of(vStruct, vStruct2);
         VTable vTable = new VTableCreator(t, errs).create(vStructList);

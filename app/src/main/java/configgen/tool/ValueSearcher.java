@@ -68,13 +68,13 @@ public class ValueSearcher {
             switch (primitiveValue) {
                 case VInt vInt -> {
                     if (integers.contains(vInt.value())) {
-                        println("%s[%s], %s, %d", table, pk.repr(),
+                        println("%s[%s], %s, %d", table, pk.packStr(),
                                 String.join(".", fieldChain), vInt.value());
                     }
                 }
                 case VLong vLong -> {
                     if (integers.contains((int) vLong.value())) {
-                        println("%s[%s], %s, %d", table, pk.repr(),
+                        println("%s[%s], %s, %d", table, pk.packStr(),
                                 String.join(".", fieldChain), vLong.value());
                     }
                 }
@@ -89,7 +89,7 @@ public class ValueSearcher {
             if (Objects.requireNonNull(primitiveValue) instanceof StringValue sv) {
                 String v = sv.value();
                 if (v.contains(str)) {
-                    println("%s[%s], %s, %s", table, pk.repr(),
+                    println("%s[%s], %s, %s", table, pk.packStr(),
                             String.join(".", fieldChain), v);
                 }
             }
@@ -102,7 +102,7 @@ public class ValueSearcher {
             case Ok -> {
                 for (Map.Entry<Value, Set<String>> e : res.value2tables().entrySet()) {
                     Set<String> tables = e.getValue();
-                    println("%s, %d, %s", e.getKey().repr(), tables.size(), tables);
+                    println("%s, %d, %s", e.getKey().packStr(), tables.size(), tables);
                 }
             }
             case TableNotFound -> {

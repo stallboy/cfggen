@@ -1,14 +1,14 @@
 package configgen.value;
 
+import configgen.data.Source;
 import configgen.schema.Msg;
 import configgen.util.LocaleUtil;
 import configgen.util.Logger;
 import configgen.schema.FieldType;
+import configgen.value.CfgValue.Value;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static configgen.data.CfgData.DCell;
 
 public record ValueErrs(List<VErr> errs) {
 
@@ -41,16 +41,16 @@ public record ValueErrs(List<VErr> errs) {
     public interface VErr extends Msg {
     }
 
-    public record ParsePackErr(DCell cell,
+    public record ParsePackErr(Source source,
                                String nameable,
                                String err) implements VErr {
     }
 
-    public record InterfaceCellEmptyButHasNoDefaultImpl(DCell cell,
+    public record InterfaceCellEmptyButHasNoDefaultImpl(Source source,
                                                         String interfaceName) implements VErr {
     }
 
-    public record InterfaceCellImplNotFound(DCell cell,
+    public record InterfaceCellImplNotFound(Source source,
                                             String interfaceName,
                                             String notFoundImpl) implements VErr {
     }
@@ -61,7 +61,7 @@ public record ValueErrs(List<VErr> errs) {
     /**
      * 需要的cell个数不匹配
      */
-    public record FieldCellSpanNotEnough(List<DCell> cells,
+    public record FieldCellSpanNotEnough(Source source,
                                          String nameable,
                                          String field,
                                          int expected,
@@ -71,40 +71,40 @@ public record ValueErrs(List<VErr> errs) {
     /**
      * 类型不匹配
      */
-    public record NotMatchFieldType(DCell cell,
+    public record NotMatchFieldType(Source source,
                                     String nameable,
                                     String field,
                                     FieldType expectedType) implements VErr {
     }
 
-    public record MapKeyDuplicated(List<DCell> cells,
+    public record MapKeyDuplicated(Source source,
                                    String nameable,
                                    String field) implements VErr {
     }
 
-    public record PrimaryOrUniqueKeyDuplicated(CfgValue.Value value,
+    public record PrimaryOrUniqueKeyDuplicated(Value value,
                                                String table,
                                                List<String> keys) implements VErr {
     }
 
-    public record EnumEmpty(DCell cell,
+    public record EnumEmpty(Source source,
                             String table) implements VErr {
     }
 
-    public record EntryContainsSpace(DCell cell,
+    public record EntryContainsSpace(Source source,
                                      String table) implements VErr {
     }
 
-    public record EntryDuplicated(DCell cell,
+    public record EntryDuplicated(Source source,
                                   String table) implements VErr {
     }
 
 
-    public record RefNotNullableButCellEmpty(CfgValue.Value value,
+    public record RefNotNullableButCellEmpty(Value value,
                                              String recordId) implements VErr {
     }
 
-    public record ForeignValueNotFound(CfgValue.Value value,
+    public record ForeignValueNotFound(Value value,
                                        String recordId,
                                        String foreignKey) implements VErr {
     }

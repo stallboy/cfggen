@@ -52,7 +52,7 @@ final class CellParser {
                         result = new ArrayList<>(maxRow - headRow);
                     }
 
-                    DRawRow rawRowFirst = sheet.rows().get(0);
+                    DRawRow rawRowFirst = sheet.rows().getFirst();
                     for (int logicRowIdx = headRow; logicRowIdx < maxRow; logicRowIdx++) {
                         String d = rawRowFirst.cell(logicRowIdx);
                         if (d.startsWith("#")) {
@@ -88,8 +88,7 @@ final class CellParser {
             DRawRow rawRow = sheet.rows().get(col);
             String val = rawRow.cell(logicRowIdx);
             boolean isNumber = rawRow.isCellNumber(logicRowIdx);
-            boolean isCommaNumber = isNumber && val.contains(",");
-            logicRow.add(new DCell(val, logicRowId, col, DCell.modeOf(true, isNumber, isCommaNumber)));
+            logicRow.add(new DCell(val, logicRowId, col, DCell.modeOf(true, isNumber)));
         }
         return logicRow;
     }
@@ -100,8 +99,7 @@ final class CellParser {
         for (int col : sheet.fieldIndices()) {
             String val = rawRow.cell(col);
             boolean isNumber = rawRow.isCellNumber(col);
-            boolean isCommaNumber = isNumber && val.contains(",");
-            logicRow.add(new DCell(val, logicRowId, col, DCell.modeOf(false, isNumber, isCommaNumber)));
+            logicRow.add(new DCell(val, logicRowId, col, DCell.modeOf(false, isNumber)));
         }
         return logicRow;
     }

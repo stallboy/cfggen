@@ -69,7 +69,7 @@ class ValueJsonParserTest {
     @Test
     void fromJson_PrimitiveValue() {
         TableSchema test = cfg.findTable("test");
-        VStruct vStruct = VStruct.of(test, List.of(ofInt(123), ofBool(true), ofLong(1234567890L), ofFloat(3.14f), ofStr("abc")));
+        VStruct vStruct = ofStruct(test, List.of(ofInt(123), ofBool(true), ofLong(1234567890L), ofFloat(3.14f), ofStr("abc")));
 
         JSONObject json = new ValueToJson().toJson(vStruct);
         String jsonStr = """
@@ -112,8 +112,8 @@ class ValueJsonParserTest {
     void fromJson_VStruct() {
         TableSchema ts = cfg.findTable("ts");
         StructSchema attr = (StructSchema) cfg.findFieldable("attr");
-        VStruct vAttr = VStruct.of(attr, List.of(ofInt(111), ofInt(222), ofInt(333)));
-        VStruct vTs = VStruct.of(ts, List.of(ofInt(1), vAttr));
+        VStruct vAttr = ofStruct(attr, List.of(ofInt(111), ofInt(222), ofInt(333)));
+        VStruct vTs = ofStruct(ts, List.of(ofInt(1), vAttr));
 
         JSONObject json = new ValueToJson().toJson(vTs);
         String jsonStr = """
@@ -150,7 +150,7 @@ class ValueJsonParserTest {
     void fromJson_VListPrimitive() {
         TableSchema ts = cfg.findTable("tl");
         VList vList = VList.of(List.of(ofInt(111), ofInt(222), ofInt(333)));
-        VStruct vStruct = VStruct.of(ts, List.of(ofInt(1), vList));
+        VStruct vStruct = ofStruct(ts, List.of(ofInt(1), vList));
 
         JSONObject json = new ValueToJson().toJson(vStruct);
         String jsonStr = """
@@ -190,8 +190,8 @@ class ValueJsonParserTest {
     @Test
     void fromJson_VMapPrimitive() {
         TableSchema ts = cfg.findTable("tm");
-        VMap vMap = VMap.of(Map.of(ofInt(111), ofStr("aaa"), ofInt(222), ofStr("bbb")));
-        VStruct vStruct = VStruct.of(ts, List.of(ofInt(1), vMap));
+        VMap vMap = ofMap(Map.of(ofInt(111), ofStr("aaa"), ofInt(222), ofStr("bbb")));
+        VStruct vStruct = ofStruct(ts, List.of(ofInt(1), vMap));
 
         JSONObject json = new ValueToJson().toJson(vStruct); // 顺序不定
         //{"id":1,"mapIntStr":[{"key":111,"value":"aaa","$type":"$entry"},{"key":222,"value":"bbb","$type":"$entry"}],"$type":"tm"}
@@ -216,9 +216,9 @@ class ValueJsonParserTest {
     void fromJson_VListStruct() {
         TableSchema ts = cfg.findTable("tls");
         StructSchema attr = (StructSchema) cfg.findFieldable("attr");
-        VStruct vAttr = VStruct.of(attr, List.of(ofInt(111), ofInt(222), ofInt(333)));
+        VStruct vAttr = ofStruct(attr, List.of(ofInt(111), ofInt(222), ofInt(333)));
         VList vList = VList.of(List.of(vAttr));
-        VStruct vStruct = VStruct.of(ts, List.of(ofInt(1), vList));
+        VStruct vStruct = ofStruct(ts, List.of(ofInt(1), vList));
 
         JSONObject json = new ValueToJson().toJson(vStruct);
         String jsonStr = """
@@ -237,11 +237,11 @@ class ValueJsonParserTest {
         StructSchema and = condition.findImpl("and");
         TableSchema cond = cfg.findTable("cond");
 
-        VStruct c1 = VStruct.of(checkItem, List.of(ofInt(123)));
-        VStruct c2 = VStruct.of(checkItem, List.of(ofInt(456)));
-        VStruct vAnd = VStruct.of(and, List.of(c1, c2));
-        VStruct vStruct = VStruct.of(cond,
-                List.of(ofInt(666), VMap.of(Map.of(ofInt(123456), vAnd))));
+        VStruct c1 = ofStruct(checkItem, List.of(ofInt(123)));
+        VStruct c2 = ofStruct(checkItem, List.of(ofInt(456)));
+        VStruct vAnd = ofStruct(and, List.of(c1, c2));
+        VStruct vStruct = ofStruct(cond,
+                List.of(ofInt(666), ofMap(Map.of(ofInt(123456), vAnd))));
 
         JSONObject json = new ValueToJson().toJson(vStruct);
         String jsonStr = """
