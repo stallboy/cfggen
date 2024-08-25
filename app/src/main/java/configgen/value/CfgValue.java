@@ -87,7 +87,8 @@ public record CfgValue(CfgSchema schema,
     public static final class VStruct extends CompositeValue implements SimpleValue {
         private final Structural schema;
         private final List<Value> values;
-        private String note;
+        private String note;  // 用json存储的内部结构也要克注释，cfgeditor使用
+        private boolean fold; // 用json存储的结构可被折叠，cfgeditor使用
 
         public VStruct(Structural schema,
                        List<Value> values,
@@ -137,6 +138,14 @@ public record CfgValue(CfgSchema schema,
 
         public void setNote(String note) {
             this.note = note;
+        }
+
+        public boolean isFold() {
+            return fold;
+        }
+
+        public void setFold(boolean fold) {
+            this.fold = fold;
         }
     }
 

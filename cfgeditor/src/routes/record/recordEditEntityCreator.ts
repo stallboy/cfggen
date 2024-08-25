@@ -14,7 +14,7 @@ import {getField, getIdOptions, getImpl, isPkInteger, Schema} from "../table/sch
 import {
     applyNewEditingObject, editState,
     onAddItemToArray,
-    onDeleteItemFromArray, onMoveItemInArray,
+    onDeleteItemFromArray, onMoveItemInArray, onUpdateFold,
     onUpdateFormValues,
     onUpdateInterfaceValue, onUpdateNote
 } from "./editingObject.ts";
@@ -25,6 +25,7 @@ const setOfPrimitive = new Set<string>(['bool', 'int', 'long', 'float', 'str', '
 function isPrimitiveType(type: string): boolean {
     return setOfPrimitive.has(type);
 }
+
 
 interface ArrayItemParam {
     onDeleteFunc: () => void;
@@ -39,6 +40,8 @@ export class RecordEditEntityCreator {
                 public schema: Schema,
                 public curTable: STable,
                 public curId: string,
+                public folds: Folds,
+                public setFolds: (f: Folds) => void,
     ) {
         this.curRefId = {table: curTable.name, id: curId};
     }
@@ -60,8 +63,16 @@ export class RecordEditEntityCreator {
             return null;
         }
         const note: string | undefined = obj['$note'] as string | undefined;
+        let fold: boolean | undefined = this.folds.isFold(fieldChain);
+        if (fold === undefined) { // 只有本地状态没有设置时才用服务器的
+            fold = obj['$fold'] as boolean | undefined;
+        }
+
+        let hasChild: boolean = false;
 
         const editFields: EntityEditField[] = this.makeEditFields(sItem, obj, fieldChain);
+        const sourceEdges: EntitySourceEdge[] = [];
+
 
         let structural: STable | SStruct;
         if ('impls' in sItem) {
@@ -70,7 +81,7 @@ export class RecordEditEntityCreator {
             structural = sItem;
         }
 
-        const sourceEdges: EntitySourceEdge[] = [];
+
         for (const fieldKey in obj) {
             if (fieldKey.startsWith("$")) {
                 continue;
@@ -103,6 +114,10 @@ export class RecordEditEntityCreator {
                 const itemTypeId = sField.type.substring(5, sField.type.length - 1);
                 const itemType = this.schema.itemIncludeImplMap.get(itemTypeId);
                 if (itemType == null) {
+                    continue;
+                }
+                hasChild = true;
+                if (fold) {
                     continue;
                 }
 
@@ -158,6 +173,11 @@ export class RecordEditEntityCreator {
                 if (fieldType == null) {
                     continue;
                 }
+                hasChild = true;
+                if (fold) {
+                    continue;
+                }
+
                 const fieldObj = fieldValue as JSONObject;
                 const childId: string = id + "-" + fieldKey;
                 const childEntity = this.createEntity(childId, fieldType, fieldObj, [...fieldChain, fieldKey]);
@@ -172,12 +192,19 @@ export class RecordEditEntityCreator {
             }
         }
 
+
         const editOnUpdateValues = (values: any) => {
             onUpdateFormValues(this.schema, values, fieldChain);
         };
 
         const editOnUpdateNote = (note?: string) => {
             onUpdateNote(note, fieldChain);
+        };
+
+        const editOnUpdateFold = (fold: boolean) => {
+            onUpdateFold(fold, fieldChain);
+            const newFolds = this.folds.setFold(fieldChain, fold);
+            this.setFolds(newFolds);
         };
 
 
@@ -193,7 +220,10 @@ export class RecordEditEntityCreator {
             editOnMoveUp: arrayItemParam?.onMoveUpFunc,
             editOnMoveDown: arrayItemParam?.onMoveDownFunc,
             editOnUpdateValues,
-            editOnUpdateNote
+            editOnUpdateNote,
+            editOnUpdateFold,
+            fold,
+            hasChild,
         }
 
         if (sItem.type != 'table') {
@@ -377,4 +407,61 @@ function getImplNameOptions(sInterface: SInterface): EntityEditFieldOptions {
         impls.push({value: name, label: name});
     }
     return {options: impls, isValueInteger: false, isEnum: true};
+}
+
+export interface ChainFold {
+    chain: (string | number)[],
+    fold: boolean
+}
+
+export class Folds {
+
+    constructor(public list: ChainFold[]) {
+    }
+
+    setFold(chain: (string | number)[], fold: boolean): Folds {
+        const f = this.isFold(chain);
+        if (f === fold) {
+            return this;
+        }
+
+        if (f === undefined) {
+            return new Folds([...this.list, {chain, fold}]);
+        }
+
+        const newList: ChainFold[] = [];
+        for (let c of this.list) {
+            if (isChainEqual(c.chain, chain)) {
+                newList.push({chain, fold});
+            } else {
+                newList.push(c);
+            }
+        }
+        return new Folds(newList);
+    }
+
+    isFold(chain: (string | number)[]): boolean | undefined {
+        for (let c of this.list) {
+            if (isChainEqual(c.chain, chain)) {
+                return c.fold;
+            }
+        }
+    }
+}
+
+function isChainEqual(a: (string | number)[], b: (string | number)[]) {
+    if (a === b) {
+        return true;
+    }
+    if (a == null || b == null) {
+        return false;
+    }
+    if (a.length !== b.length) {
+        return false;
+    }
+    for (let i = 0; i < a.length; ++i) {
+        if (a[i] !== b[i])
+            return false;
+    }
+    return true;
 }

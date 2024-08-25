@@ -3,7 +3,7 @@ import {JSONObject, RecordEditResult, RecordResult, RefId} from "./recordModel.t
 import {App, Result} from "antd";
 import {createRefEntities, getId, getLabel} from "./recordRefEntity.ts";
 import {RecordEntityCreator} from "./recordEntityCreator.ts";
-import {RecordEditEntityCreator} from "./recordEditEntityCreator.ts";
+import {Folds, RecordEditEntityCreator} from "./recordEditEntityCreator.ts";
 import {
     editState,
     isCopiedFitAllowedType, onAddItemToArrayIndex,
@@ -24,7 +24,7 @@ import {addOrUpdateRecord, fetchRecord} from "../api.ts";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
 import {SchemaTableType} from "../../CfgEditorApp.tsx";
 import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
-import {useEffect, useReducer} from "react";
+import {useEffect, useReducer, useState} from "react";
 
 
 import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
@@ -75,6 +75,9 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
         },
     });
 
+
+    const [folds, setFolds] = useState<Folds>(new Folds([]));
+
     const entityMap = new Map<string, Entity>();
     const refId = {table: curTable.name, id: curId};
     const entityId = getId(curTable.name, curId);
@@ -106,7 +109,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
 
         //这是非纯函数，escape hatch，用useRef也能做，这里用全局变量
         [editSeq, fitView] = startEditingObject(recordResult, afterEditStateChanged, submitEditingObject);
-        const creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId);
+        const creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId, folds, setFolds);
         creator.createThis();
     }
     fillHandles(entityMap);

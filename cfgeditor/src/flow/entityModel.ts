@@ -61,14 +61,17 @@ export interface EntityEdit {
     editFields: EntityEditField[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     editOnUpdateValues: (values: any) => void;
-    editOnUpdateNote: (note?:string) => void;
+    editOnUpdateNote: (note?: string) => void;
+    editOnUpdateFold: (fold: boolean) => void;
     editOnDelete?: () => void;
     editOnMoveUp?: () => void;
     editOnMoveDown?: () => void;
 
     editFieldChain?: (string | number)[];
     editObj?: JSONObject;
-    editAllowObjType? : string;
+    editAllowObjType?: string;
+    fold?: boolean;
+    hasChild:boolean; // 是否有子节点
 }
 
 export interface EntityBrief {
@@ -101,7 +104,7 @@ export interface Entity {
     handleOut?: boolean; // @out
     entityType?: EntityType;
 
-    note?:string; // 注释
+    note?: string; // 注释
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     userData?: any;
     sharedSetting?: EntitySharedSetting;

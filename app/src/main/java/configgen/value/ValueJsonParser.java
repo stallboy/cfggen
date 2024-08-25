@@ -9,6 +9,7 @@ import configgen.schema.*;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.Objects;
 
 import static configgen.schema.FieldType.*;
 import static configgen.schema.FieldType.Primitive.*;
@@ -73,6 +74,10 @@ public class ValueJsonParser {
         if (note != null && !note.isEmpty()) {
             vStruct.setNote(note);
         }
+        boolean fold = parseBool(jsonObject.get("$fold"));
+        if (fold) {
+            vStruct.setFold(true);
+        }
         return vStruct;
     }
 
@@ -98,15 +103,21 @@ public class ValueJsonParser {
         return new VInterface(interfaceSchema, implValue, source); // 需要这层包装，以方便生成data file
     }
 
+    private boolean parseBool(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        return switch (obj) {
+            case Boolean b -> b;
+            case Number num -> num.intValue() == 1;
+            default -> (boolean) obj;
+        };
+    }
+
     private Value parse(FieldType type, Object obj) {
         switch (type) {
             case BOOL -> {
-                boolean bv = switch (obj) {
-                    case Boolean b -> b;
-                    case Number num -> num.intValue() == 1;
-                    default -> (boolean) obj;
-                };
-                return new VBool(bv, source);
+                return new VBool(parseBool(obj), source);
             }
             case INT -> {
                 int iv = switch (obj) {

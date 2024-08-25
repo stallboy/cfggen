@@ -6,7 +6,14 @@ import {Button, Flex, Popover, Space, Typography} from "antd";
 import {EntityCard, Highlight} from "./EntityCard.tsx";
 import {EntityProperties} from "./EntityProperties.tsx";
 import {EntityForm} from "./EntityForm.tsx";
-import {ArrowDownOutlined, ArrowUpOutlined, BookOutlined, CloseOutlined} from "@ant-design/icons";
+import {
+    ArrowDownOutlined,
+    ArrowsAltOutlined,
+    ArrowUpOutlined,
+    BookOutlined,
+    CloseOutlined,
+    ShrinkOutlined
+} from "@ant-design/icons";
 import {ResPopover} from "./ResPopover.tsx";
 import {NoteShow, NoteEdit} from "./NoteShowOrEdit.tsx";
 import {findFirstImage} from "./calcWidthHeight.ts";
@@ -15,11 +22,15 @@ import {getResBrief} from "./getResBrief.tsx";
 const {Text} = Typography;
 const bookIcon = <BookOutlined/>;
 const iconButtonStyle = {borderWidth: 0, backgroundColor: 'transparent'};
+const redIconButtonStyle = {borderWidth: 0, backgroundColor: 'red'};
 const titleStyle = {width: '100%'};
 const titleTextStyle = {fontSize: 14, color: "#fff"};
 const closeIcon = <CloseOutlined/>;
 const moveUpIcon = <ArrowUpOutlined/>;
 const moveDownIcon = <ArrowDownOutlined/>;
+
+const foldIcon = <ShrinkOutlined/>;
+const unfoldIcon = <ArrowsAltOutlined/>;
 
 const resBriefButtonStyle = {color: '#fff'};
 
@@ -48,6 +59,32 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
             setTmpNote(v);
         }
     }, [edit, setTmpNote]);
+
+    const unfoldNode = useCallback(() => {
+        if (edit && edit.editOnUpdateFold) {
+            edit.editOnUpdateFold(false);
+        }
+    }, [edit]);
+
+    const foldNode = useCallback(() => {
+        if (edit && edit.editOnUpdateFold) {
+            edit.editOnUpdateFold(true);
+        }
+    }, [edit]);
+
+
+    let foldButton;
+    if (edit && edit.hasChild) {
+        if (edit.fold) {
+            foldButton = <Button style={redIconButtonStyle} icon={unfoldIcon}
+                                 onClick={unfoldNode}/>;
+        } else {
+            foldButton = <Button style={iconButtonStyle} icon={foldIcon}
+                                 onClick={foldNode}/>;
+        }
+
+    }
+
 
     // 用‘label是否包含空格’做为它是table_id格式的标志
     const mayHasResOrNote = label.includes('_');
@@ -91,7 +128,6 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
         } else if (note) {
             noteShowOrEdit = <NoteShow note={note}/>;
         }
-
     }
 
     const [resBriefButton, firstImage] = useMemo(() => {
@@ -111,6 +147,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
     const keyword = sharedSetting?.query
 
     const title = <Flex justify="space-between" style={titleStyle}>
+        {foldButton}
 
         <Text strong style={titleTextStyle} ellipsis={false}
               copyable={copyable}>

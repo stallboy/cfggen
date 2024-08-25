@@ -62,6 +62,9 @@ public class ValueToJson {
         if (note != null && !note.isEmpty()) {
             json.put("$note", note);
         }
+        if (vStruct.isFold()) {
+            json.put("$fold", true);
+        }
 
         if (refIdToRecordMap != null) {
             List<FieldRef> fieldRefs = collectStructRef(cfgValue, vStruct, refIdToRecordMap, null, "");

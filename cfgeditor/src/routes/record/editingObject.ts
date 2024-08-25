@@ -88,11 +88,18 @@ export function onUpdateFormValues(schema: Schema,
 
 export function onUpdateNote(note: string | undefined,
                              fieldChains: (string | number)[]) {
-
     const obj = getFieldObj(editState.editingObject, fieldChains);
     obj['$note'] = note;
-
 }
+
+
+export function onUpdateFold(fold: boolean,
+                             fieldChains: (string | number)[]) {
+    const obj = getFieldObj(editState.editingObject, fieldChains);
+    obj['$fold'] = fold;
+}
+
+
 
 export function onUpdateInterfaceValue(jsonObject: JSONObject,
                                        fieldChains: (string | number)[]) {
