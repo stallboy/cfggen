@@ -23,9 +23,10 @@ const moveDownIcon = <ArrowDownOutlined/>;
 
 const resBriefButtonStyle = {color: '#fff'};
 
-export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{entity: Entity}, "node">>) {
+export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entity: Entity }, "node">>) {
     const [isEditNote, setIsEditNote] = useState<boolean>(false);
-    const {fields, brief, edit, handleIn, handleOut, id, label, sharedSetting, assets} = nodeProps.data.entity;
+    const [tmpNote, setTmpNote] = useState<string>("");
+    const {id, label, fields, edit, brief, handleIn, handleOut, note, sharedSetting, assets} = nodeProps.data.entity;
     const color: string = getNodeBackgroundColor(nodeProps.data.entity);
     const width = edit ? 280 : 240;
     const nodeStyle = useMemo(() => {
@@ -36,23 +37,59 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{entity
         setIsEditNote(true);
     }, [setIsEditNote]);
 
+    const onEditNoteInEdit = useCallback(() => {
+        setTmpNote("note");
+    }, [setTmpNote]);
+
+
+    const updateNoteInEdit = useCallback((v: string) => {
+        if (edit && edit.editOnUpdateNote) {
+            edit.editOnUpdateNote(v);
+            setTmpNote(v);
+        }
+    }, [edit, setTmpNote]);
+
     // 用‘label是否包含空格’做为它是table_id格式的标志
     const mayHasResOrNote = label.includes('_');
     let editNoteButton;
     let noteShowOrEdit;
     if (mayHasResOrNote) {
         const notes = sharedSetting?.notes;
-        const note = notes?.get(id) ?? '';
-        if ((note.length > 0) || isEditNote) {
+        const recordNote = notes?.get(id) ?? '';
+        if ((recordNote.length > 0) || isEditNote) {
             if (isEditNote) {
-                noteShowOrEdit = <NoteEdit id={id} note={note} setIsEdit={setIsEditNote}/>
+                noteShowOrEdit = <NoteEdit id={id} note={recordNote} setIsEdit={setIsEditNote}/>
             } else {
-                noteShowOrEdit = <NoteShow note={note} setIsEdit={setIsEditNote}/>;
+                noteShowOrEdit = <NoteShow note={recordNote} setIsEdit={setIsEditNote}/>;
             }
+        } else if (note) {
+            noteShowOrEdit = <NoteShow note={note}/>;
         } else {
             editNoteButton = <Button style={iconButtonStyle} icon={bookIcon}
                                      onClick={onEditNote}/>;
         }
+    } else {
+
+        if (edit) {
+            let showNote;
+            if (tmpNote.length > 0) {
+                showNote = tmpNote;
+            } else if (note && note.length > 0) {
+                showNote = note;
+            }
+            if (showNote) {
+                noteShowOrEdit = <NoteEdit id={id} note={showNote}
+                                           setIsEdit={setIsEditNote}
+                                           updateNoteInEdit={updateNoteInEdit}/>
+            } else {
+                editNoteButton = <Button style={iconButtonStyle} icon={bookIcon}
+                                         onClick={onEditNoteInEdit}/>;
+            }
+
+        } else if (note) {
+            noteShowOrEdit = <NoteShow note={note}/>;
+        }
+
     }
 
     const [resBriefButton, firstImage] = useMemo(() => {

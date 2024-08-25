@@ -45,6 +45,7 @@ export function FlowGraph({children}: {
     const [nodeDoubleClickFunc, setNodeDoubleClickFunc] = useState<NodeDoubleClickFunc>();
 
     const onPaneContextMenu = useCallback((event: ReactMouseEvent<Element, MouseEvent> | MouseEvent) => {
+            event.stopPropagation();
             event.preventDefault();
             setMenuStyle({top: event.clientY - 30, left: event.clientX - 30,});
             setMenuItems(paneMenu);
@@ -52,6 +53,7 @@ export function FlowGraph({children}: {
         [paneMenu, setMenuStyle, setMenuItems],
     );
     const onNodeContextMenu = useCallback((event: ReactMouseEvent, flowNode: EntityNode) => {
+            event.stopPropagation();
             event.preventDefault();           // Prevent native context menu from showing
             setMenuStyle({top: event.clientY - 30, left: event.clientX - 30,});
             setMenuItems(nodeMenuFunc ? nodeMenuFunc(flowNode.data.entity) : undefined);
@@ -92,6 +94,7 @@ export function FlowGraph({children}: {
             nodeTypes={nodeTypes}
             minZoom={0.1}
             maxZoom={2}
+            deleteKeyCode={null}
             // fitView
             onNodeDoubleClick={onNodeDoubleClick}
             onNodeContextMenu={onNodeContextMenu}

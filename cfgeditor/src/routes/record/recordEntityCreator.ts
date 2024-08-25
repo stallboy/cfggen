@@ -29,6 +29,7 @@ export class RecordEntityCreator {
             console.error('$type missing');
             return null;
         }
+        const note: string | undefined = obj['$note'] as string | undefined;
 
         let sItem: STable | SStruct | null = null;
         if (!type.startsWith("$")) {
@@ -125,6 +126,7 @@ export class RecordEntityCreator {
             fields: fields,
             sourceEdges: sourceEdges,
             entityType: EntityType.Normal,
+            note: note,
             userData: this.refId,
             assets: findAllResInfos({
                 label: thisLabel,

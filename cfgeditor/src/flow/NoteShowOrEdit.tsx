@@ -15,24 +15,27 @@ const bookIcon = <BookOutlined/>;
 const noteStyle: CSSProperties = {backgroundColor: "yellow", borderRadius: '8px'}
 export const NoteShow = memo(function NoteShow({note, setIsEdit}: {
     note: string;
-    setIsEdit: (ie: boolean) => void;
+    setIsEdit?: (ie: boolean) => void;
 }) {
     const onEditClick = useCallback(() => {
-        setIsEdit(true);
+        if (setIsEdit) {
+            setIsEdit(true);
+        }
     }, [setIsEdit]);
 
     return <div style={noteStyle}>
-        <p>{note} {<Button style={noteButtonStyle}
-                           icon={bookIcon}
-                           onClick={onEditClick}/>}</p>
+        <p>{note} {setIsEdit && <Button style={noteButtonStyle}
+                                        icon={bookIcon}
+                                        onClick={onEditClick}/>}</p>
     </div>
 });
 
 
-export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
+export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit, updateNoteInEdit}: {
     id: string;
     note: string;
     setIsEdit: (ie: boolean) => void;
+    updateNoteInEdit?: (note: string) => void;
 }) {
     const {server} = store;
     const {t} = useTranslation();
@@ -70,27 +73,33 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
         },
     });
 
-    function onCancelClick() {
+    const onCancelClick = useCallback(() => {
         setIsEdit(false);
-    }
+    }, [setIsEdit]);
 
-    function onSubmitClick() {
+    const onSubmitClick = useCallback(() => {
         mutate(newNote);
-    }
+    }, [mutate, newNote]);
 
-    function onNoteChange(e: ChangeEvent<HTMLTextAreaElement>) {
+    const onNoteChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
         const value = e.target.value;
         setNewNote(value);
-    }
+        if (updateNoteInEdit) {
+            updateNoteInEdit(value);
+        }
+    }, [setNewNote, updateNoteInEdit]);
 
     return <Flex vertical style={{backgroundColor: "yellow", borderRadius: '8px'}}>
         <TextArea className='nodrag' placeholder='note' autoSize={{minRows: 2, maxRows: 10}}
+                  style={{backgroundColor: "yellow"}}
                   value={newNote}
                   onChange={onNoteChange}/>
-        <Flex justify={'flex-end'} gap={'small'}>
-            <Button onClick={onCancelClick}>{t('cancelUpdateNote')}</Button>
-            <Button type='primary' loading={isPending} onClick={onSubmitClick}>{t('updateNote')}</Button>
-        </Flex>
+        {!updateNoteInEdit &&
+            <Flex justify={'flex-end'} gap={'small'}>
+                <Button onClick={onCancelClick}>{t('cancelUpdateNote')}</Button>
+                <Button type='primary' loading={isPending} onClick={onSubmitClick}>{t('updateNote')}</Button>
+            </Flex>
+        }
     </Flex>
 
 

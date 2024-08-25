@@ -86,6 +86,13 @@ export function onUpdateFormValues(schema: Schema,
     // 当在单个node的form里更改时，因为ui已经更改，不需要再触发Record的更新。
 }
 
+export function onUpdateNote(note: string | undefined,
+                             fieldChains: (string | number)[]) {
+
+    const obj = getFieldObj(editState.editingObject, fieldChains);
+    obj['$note'] = note;
+
+}
 
 export function onUpdateInterfaceValue(jsonObject: JSONObject,
                                        fieldChains: (string | number)[]) {
@@ -113,7 +120,7 @@ export function onAddItemToArray(defaultItemJsonObject: JSONObject,
 }
 
 export function onAddItemToArrayIndex(defaultItemJsonObject: JSONObject,
-                                      index:number,
+                                      index: number,
                                       arrayFieldChains: (string | number)[]) {
     const obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
     obj.splice(index, 0, defaultItemJsonObject);

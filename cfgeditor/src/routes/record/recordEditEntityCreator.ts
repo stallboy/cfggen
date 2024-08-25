@@ -16,7 +16,7 @@ import {
     onAddItemToArray,
     onDeleteItemFromArray, onMoveItemInArray,
     onUpdateFormValues,
-    onUpdateInterfaceValue
+    onUpdateInterfaceValue, onUpdateNote
 } from "./editingObject.ts";
 
 
@@ -59,6 +59,8 @@ export class RecordEditEntityCreator {
             console.error('$type missing');
             return null;
         }
+        const note: string | undefined = obj['$note'] as string | undefined;
+
         const editFields: EntityEditField[] = this.makeEditFields(sItem, obj, fieldChain);
 
         let structural: STable | SStruct;
@@ -174,6 +176,10 @@ export class RecordEditEntityCreator {
             onUpdateFormValues(this.schema, values, fieldChain);
         };
 
+        const editOnUpdateNote = (note?: string) => {
+            onUpdateNote(note, fieldChain);
+        };
+
 
         let label = getLabel(sItem.name);
         if (arrayItemParam) {
@@ -182,11 +188,12 @@ export class RecordEditEntityCreator {
         }
 
         const edit: EntityEdit = {
-            editFields: editFields,
+            editFields,
             editOnDelete: arrayItemParam?.onDeleteFunc,
             editOnMoveUp: arrayItemParam?.onMoveUpFunc,
             editOnMoveDown: arrayItemParam?.onMoveDownFunc,
-            editOnUpdateValues: editOnUpdateValues
+            editOnUpdateValues,
+            editOnUpdateNote
         }
 
         if (sItem.type != 'table') {
@@ -202,6 +209,7 @@ export class RecordEditEntityCreator {
             sourceEdges: sourceEdges,
 
             entityType: EntityType.Normal,
+            note: note,
             userData: this.curRefId,
         };
 
