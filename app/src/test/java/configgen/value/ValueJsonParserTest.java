@@ -83,7 +83,7 @@ class ValueJsonParserTest {
     @Test
     void fromJson_Primitive_DefaultValue() {
         TableSchema test = cfg.findTable("test");
-        VStruct vStruct = new ValueJsonParser(test, null, false).fromJson("{}", "test_123.json");
+        VStruct vStruct = new ValueJsonParser(test).fromJson("{}", "test_123.json");
         JSONObject json = new ValueToJson().toJson(vStruct);
 
         String jsonStr = """
@@ -129,7 +129,7 @@ class ValueJsonParserTest {
         TableSchema ts = cfg.findTable("ts");
         String jsonStr = """
                 {"id":1,"$type":"ts"}""";
-        VStruct vStruct = new ValueJsonParser(ts, null, false).fromJson(jsonStr, "ts_1.json");
+        VStruct vStruct = new ValueJsonParser(ts).fromJson(jsonStr, "ts_1.json");
 
         JSONObject json = new ValueToJson().toJson(vStruct);
         String jsonStr2 = """
@@ -149,7 +149,7 @@ class ValueJsonParserTest {
     @Test
     void fromJson_VListPrimitive() {
         TableSchema ts = cfg.findTable("tl");
-        VList vList = VList.of(List.of(ofInt(111), ofInt(222), ofInt(333)));
+        VList vList = ofList(List.of(ofInt(111), ofInt(222), ofInt(333)));
         VStruct vStruct = ofStruct(ts, List.of(ofInt(1), vList));
 
         JSONObject json = new ValueToJson().toJson(vStruct);

@@ -2,6 +2,7 @@ package configgen.value;
 
 import configgen.Resources;
 import configgen.ctx.Context;
+import configgen.data.CfgData;
 import configgen.data.CfgDataReader;
 import configgen.data.ReadByFastExcel;
 import configgen.data.ReadCsv;
@@ -39,11 +40,12 @@ class RefValidatorTest {
         clientValueParser.parseCfgValue();
 
         assertEquals(1, valueErrs.errs().size());
-        assertInstanceOf(ValueErrs.RefNotNullableButCellEmpty.class, valueErrs.errs().get(0));
-        ValueErrs.RefNotNullableButCellEmpty err = (ValueErrs.RefNotNullableButCellEmpty) valueErrs.errs().get(0);
+        assertInstanceOf(ValueErrs.RefNotNullableButCellEmpty.class, valueErrs.errs().getFirst());
+        ValueErrs.RefNotNullableButCellEmpty err = (ValueErrs.RefNotNullableButCellEmpty) valueErrs.errs().getFirst();
         assertEquals("t-2", err.recordId());
-        assertEquals(3, err.value().cells().get(0).rowId().row());
-        assertEquals(1, err.value().cells().get(0).col());
+        assertTrue(err.value().source() instanceof CfgData.DCell cell &&
+                cell.rowId().row() == 3 &&
+                cell.col() == 1);
     }
 
 
@@ -70,11 +72,12 @@ class RefValidatorTest {
         clientValueParser.parseCfgValue();
 
         assertEquals(1, valueErrs.errs().size());
-        assertInstanceOf(ValueErrs.ForeignValueNotFound.class, valueErrs.errs().get(0));
-        ValueErrs.ForeignValueNotFound err = (ValueErrs.ForeignValueNotFound) valueErrs.errs().get(0);
+        assertInstanceOf(ValueErrs.ForeignValueNotFound.class, valueErrs.errs().getFirst());
+        ValueErrs.ForeignValueNotFound err = (ValueErrs.ForeignValueNotFound) valueErrs.errs().getFirst();
         assertEquals("t-2", err.recordId());
-        assertEquals(3, err.value().cells().get(0).rowId().row());
-        assertEquals(1, err.value().cells().get(0).col());
+        assertTrue(err.value().source() instanceof CfgData.DCell cell &&
+                cell.rowId().row() == 3 &&
+                cell.col() == 1);
     }
 
 
@@ -104,11 +107,12 @@ class RefValidatorTest {
         clientValueParser.parseCfgValue();
 
         assertEquals(1, valueErrs.errs().size());
-        assertInstanceOf(ValueErrs.ForeignValueNotFound.class, valueErrs.errs().get(0));
-        ValueErrs.ForeignValueNotFound err = (ValueErrs.ForeignValueNotFound) valueErrs.errs().get(0);
+        assertInstanceOf(ValueErrs.ForeignValueNotFound.class, valueErrs.errs().getFirst());
+        ValueErrs.ForeignValueNotFound err = (ValueErrs.ForeignValueNotFound) valueErrs.errs().getFirst();
         assertEquals("t-2", err.recordId());
-        assertEquals(3, err.value().cells().get(0).rowId().row());
-        assertEquals(1, err.value().cells().get(0).col());
+        assertTrue(err.value().source() instanceof CfgData.DCell cell &&
+                cell.rowId().row() == 3 &&
+                cell.col() == 1);
     }
 
     @Test
@@ -135,11 +139,12 @@ class RefValidatorTest {
         clientValueParser.parseCfgValue();
 
         assertEquals(1, valueErrs.errs().size());
-        assertInstanceOf(ValueErrs.ForeignValueNotFound.class, valueErrs.errs().get(0));
-        ValueErrs.ForeignValueNotFound err = (ValueErrs.ForeignValueNotFound) valueErrs.errs().get(0);
+        assertInstanceOf(ValueErrs.ForeignValueNotFound.class, valueErrs.errs().getFirst());
+        ValueErrs.ForeignValueNotFound err = (ValueErrs.ForeignValueNotFound) valueErrs.errs().getFirst();
         assertEquals("t-2", err.recordId());
-        assertEquals(3, err.value().cells().get(0).rowId().row());
-        assertEquals(1, err.value().cells().get(0).col());
+        assertTrue(err.value().source() instanceof CfgData.DCell cell &&
+                cell.rowId().row() == 3 &&
+                cell.col() == 1);
     }
 
 
@@ -167,11 +172,12 @@ class RefValidatorTest {
         clientValueParser.parseCfgValue();
 
         assertEquals(1, valueErrs.errs().size());
-        assertInstanceOf(ValueErrs.ForeignValueNotFound.class, valueErrs.errs().get(0));
-        ValueErrs.ForeignValueNotFound err = (ValueErrs.ForeignValueNotFound) valueErrs.errs().get(0);
+        assertInstanceOf(ValueErrs.ForeignValueNotFound.class, valueErrs.errs().getFirst());
+        ValueErrs.ForeignValueNotFound err = (ValueErrs.ForeignValueNotFound) valueErrs.errs().getFirst();
         assertEquals("t-2", err.recordId());
-        assertEquals(3, err.value().cells().get(0).rowId().row());
-        assertEquals(1, err.value().cells().get(0).col());
+        assertTrue(err.value().source() instanceof CfgData.DCell cell &&
+                cell.rowId().row() == 3 &&
+                cell.col() == 1);
     }
 
 

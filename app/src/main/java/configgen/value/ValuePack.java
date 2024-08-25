@@ -57,12 +57,16 @@ public class ValuePack {
         };
     }
 
-    public static Value unpack(String str, FieldType type, ValueErrs errs) {
-        FieldSchema field = new FieldSchema("fieldName", type, AUTO, Metadata.of());
+    static Value unpack(String content, FieldType type, ValueErrs errs) {
+        return unpack(content, type, "<file>", errs);
+    }
+
+    private static Value unpack(String content, FieldType type, String fileName, ValueErrs errs) {
+        FieldSchema field = new FieldSchema("<field>", type, AUTO, Metadata.of());
         ValueParser parser = new ValueParser(errs, null, ValueParser.BlockParser.dummy);
 
-        CfgData.DCell dCell = CfgData.DCell.of(str);
-        return parser.parseField(field, List.of(dCell), field, true, true, 0, "tableName");
+        CfgData.DCell dCell = CfgData.DCell.of(content, fileName);
+        return parser.parseField(field, List.of(dCell), field, true, true, 0, fileName);
     }
 
     /**
@@ -73,14 +77,15 @@ public class ValuePack {
      */
     public static Value unpackTablePrimaryKey(String id, TableSchema tableSchema, ValueErrs errs) {
         List<FieldSchema> keyFields = tableSchema.primaryKey().fieldSchemas();
+        String fileName = "<" + tableSchema.name() + ">";
         if (keyFields.size() == 1) {
             FieldType pkFieldType = keyFields.getFirst().type();
-            return unpack(id, pkFieldType, errs);
+            return unpack(id, pkFieldType, fileName, errs);
         } else {
             StructSchema obj = new StructSchema("key", AUTO, Metadata.of(), keyFields, List.of());
             FieldType.StructRef ref = new FieldType.StructRef("key");
             ref.setObj(obj);
-            VStruct vStruct = (VStruct) unpack(id, ref, errs);
+            VStruct vStruct = (VStruct) unpack(id, ref, fileName, errs);
             List<SimpleValue> values = new ArrayList<>(vStruct.values().size());
             for (Value value : vStruct.values()) {
                 if (value instanceof SimpleValue simpleValue) {

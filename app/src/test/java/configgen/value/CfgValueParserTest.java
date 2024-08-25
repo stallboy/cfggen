@@ -2,6 +2,7 @@ package configgen.value;
 
 import configgen.Resources;
 import configgen.ctx.Context;
+import configgen.data.CfgData;
 import configgen.data.CfgDataReader;
 import configgen.data.ReadByFastExcel;
 import configgen.data.ReadCsv;
@@ -286,7 +287,7 @@ class CfgValueParserTest {
             assertEquals(2, ((VInt) v.values().get(0)).value());
             VList s = (VList) v.values().get(1);
             assertEquals(1, s.valueList().size());
-            assertEquals(123, ((VInt) s.valueList().get(0)).value());
+            assertEquals(123, ((VInt) s.valueList().getFirst()).value());
         }
     }
 
@@ -322,11 +323,13 @@ class CfgValueParserTest {
         clientValueParser.parseCfgValue();
 
         assertEquals(1, valueErrs.errs().size());
-        assertInstanceOf(InterfaceCellEmptyButHasNoDefaultImpl.class, valueErrs.errs().get(0));
-        InterfaceCellEmptyButHasNoDefaultImpl err = (InterfaceCellEmptyButHasNoDefaultImpl) valueErrs.errs().get(0);
+        assertInstanceOf(InterfaceCellEmptyButHasNoDefaultImpl.class, valueErrs.errs().getFirst());
+        InterfaceCellEmptyButHasNoDefaultImpl err = (InterfaceCellEmptyButHasNoDefaultImpl) valueErrs.errs().getFirst();
         assertEquals("action", err.interfaceName());
-        assertEquals(2, err.cell().rowId().row());
-        assertEquals(1, err.cell().col());
+        assertTrue(err.source() instanceof CfgData.DCell cell &&
+                cell.rowId().row() == 2 &&
+                cell.col() == 1);
+
     }
 
 
@@ -361,12 +364,13 @@ class CfgValueParserTest {
         clientValueParser.parseCfgValue();
 
         assertEquals(1, valueErrs.errs().size());
-        assertInstanceOf(InterfaceCellImplNotFound.class, valueErrs.errs().get(0));
-        InterfaceCellImplNotFound err = (InterfaceCellImplNotFound) valueErrs.errs().get(0);
+        assertInstanceOf(InterfaceCellImplNotFound.class, valueErrs.errs().getFirst());
+        InterfaceCellImplNotFound err = (InterfaceCellImplNotFound) valueErrs.errs().getFirst();
         assertEquals("action", err.interfaceName());
         assertEquals("notExistAction", err.notFoundImpl());
-        assertEquals(2, err.cell().rowId().row());
-        assertEquals(1, err.cell().col());
+        assertTrue(err.source() instanceof CfgData.DCell cell &&
+                cell.rowId().row() == 2 &&
+                cell.col() == 1);
     }
 
 
@@ -400,8 +404,8 @@ class CfgValueParserTest {
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
         assertEquals(1, valueErrs.errs().size());
-        assertInstanceOf(FieldCellSpanNotEnough.class, valueErrs.errs().get(0));
-        FieldCellSpanNotEnough err = (FieldCellSpanNotEnough) valueErrs.errs().get(0);
+        assertInstanceOf(FieldCellSpanNotEnough.class, valueErrs.errs().getFirst());
+        FieldCellSpanNotEnough err = (FieldCellSpanNotEnough) valueErrs.errs().getFirst();
         assertEquals("talk", err.nameable());
         assertEquals("str", err.field());
     }
@@ -433,8 +437,8 @@ class CfgValueParserTest {
         clientValueParser.parseCfgValue();
 
         assertEquals(1, valueErrs.errs().size());
-        assertInstanceOf(NotMatchFieldType.class, valueErrs.errs().get(0));
-        NotMatchFieldType err = (NotMatchFieldType) valueErrs.errs().get(0);
+        assertInstanceOf(NotMatchFieldType.class, valueErrs.errs().getFirst());
+        NotMatchFieldType err = (NotMatchFieldType) valueErrs.errs().getFirst();
         assertEquals("s", err.nameable());
         assertEquals("b", err.field());
     }
@@ -461,8 +465,8 @@ class CfgValueParserTest {
         clientValueParser.parseCfgValue();
 
         assertEquals(1, valueErrs.errs().size());
-        assertInstanceOf(MapKeyDuplicated.class, valueErrs.errs().get(0));
-        MapKeyDuplicated err = (MapKeyDuplicated) valueErrs.errs().get(0);
+        assertInstanceOf(MapKeyDuplicated.class, valueErrs.errs().getFirst());
+        MapKeyDuplicated err = (MapKeyDuplicated) valueErrs.errs().getFirst();
         assertEquals("t", err.nameable());
         assertEquals("s", err.field());
     }
@@ -490,8 +494,8 @@ class CfgValueParserTest {
         clientValueParser.parseCfgValue();
 
         assertEquals(1, valueErrs.errs().size());
-        assertInstanceOf(PrimaryOrUniqueKeyDuplicated.class, valueErrs.errs().get(0));
-        PrimaryOrUniqueKeyDuplicated err = (PrimaryOrUniqueKeyDuplicated) valueErrs.errs().get(0);
+        assertInstanceOf(PrimaryOrUniqueKeyDuplicated.class, valueErrs.errs().getFirst());
+        PrimaryOrUniqueKeyDuplicated err = (PrimaryOrUniqueKeyDuplicated) valueErrs.errs().getFirst();
         assertEquals("t", err.table());
         assertEquals(List.of("id"), err.keys());
         assertEquals(1, ((VInt) err.value()).value());
@@ -520,11 +524,12 @@ class CfgValueParserTest {
         clientValueParser.parseCfgValue();
 
         assertEquals(1, valueErrs.errs().size());
-        assertInstanceOf(EnumEmpty.class, valueErrs.errs().get(0));
-        EnumEmpty err = (EnumEmpty) valueErrs.errs().get(0);
+        assertInstanceOf(EnumEmpty.class, valueErrs.errs().getFirst());
+        EnumEmpty err = (EnumEmpty) valueErrs.errs().getFirst();
         assertEquals("t", err.table());
-        assertEquals(3, err.cell().rowId().row());
-        assertEquals(1, err.cell().col());
+        assertTrue(err.source() instanceof CfgData.DCell cell &&
+                cell.rowId().row() == 3 &&
+                cell.col() == 1);
     }
 
 
@@ -551,11 +556,12 @@ class CfgValueParserTest {
         clientValueParser.parseCfgValue();
 
         assertEquals(1, valueErrs.errs().size());
-        assertInstanceOf(EntryContainsSpace.class, valueErrs.errs().get(0));
-        EntryContainsSpace err = (EntryContainsSpace) valueErrs.errs().get(0);
+        assertInstanceOf(EntryContainsSpace.class, valueErrs.errs().getFirst());
+        EntryContainsSpace err = (EntryContainsSpace) valueErrs.errs().getFirst();
         assertEquals("t", err.table());
-        assertEquals(3, err.cell().rowId().row());
-        assertEquals(1, err.cell().col());
+        assertTrue(err.source() instanceof CfgData.DCell cell &&
+                cell.rowId().row() == 3 &&
+                cell.col() == 1);
     }
 
     @Test
@@ -581,11 +587,12 @@ class CfgValueParserTest {
         clientValueParser.parseCfgValue();
 
         assertEquals(1, valueErrs.errs().size());
-        assertInstanceOf(EntryDuplicated.class, valueErrs.errs().get(0));
-        EntryDuplicated err = (EntryDuplicated) valueErrs.errs().get(0);
+        assertInstanceOf(EntryDuplicated.class, valueErrs.errs().getFirst());
+        EntryDuplicated err = (EntryDuplicated) valueErrs.errs().getFirst();
         assertEquals("t", err.table());
-        assertEquals(3, err.cell().rowId().row());
-        assertEquals(1, err.cell().col());
+        assertTrue(err.source() instanceof CfgData.DCell cell &&
+                cell.rowId().row() == 3 &&
+                cell.col() == 1);
     }
 
 }

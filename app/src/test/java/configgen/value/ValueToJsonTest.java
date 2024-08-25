@@ -38,7 +38,7 @@ class ValueToJsonTest {
     @Test
     void toJson_ListPrimitiveValue() {
         {
-            VList vList = VList.of(List.of(ofInt(123), ofInt(222), ofInt(333)));
+            VList vList = ofList(List.of(ofInt(123), ofInt(222), ofInt(333)));
             JSONArray ja = valueToJson.toJson(vList);
             assertEquals("[123,222,333]", ja.toString());
             assertEquals(123, ja.get(0));
@@ -48,7 +48,7 @@ class ValueToJsonTest {
         {
             String jsonStr = """
                     ["aaa","bbb"]""";
-            VList vList = VList.of(List.of(ofStr("aaa"), ofStr("bbb")));
+            VList vList = ofList(List.of(ofStr("aaa"), ofStr("bbb")));
             JSONArray ja = valueToJson.toJson(vList);
             assertEquals(jsonStr, ja.toString());
         }
@@ -90,7 +90,7 @@ class ValueToJsonTest {
                 List.of());
         VStruct v1 = ofStruct(ss, List.of(ofInt(123), ofStr("test str")));
         VStruct v2 = ofStruct(ss, List.of(ofInt(456), ofStr("bbb")));
-        VList vList = VList.of(List.of(v1, v2));
+        VList vList = ofList(List.of(v1, v2));
         JSONArray ja = valueToJson.toJson(vList);
 
         String jsonStr = """
@@ -121,7 +121,7 @@ class ValueToJsonTest {
         VStruct c1 = ofStruct(checkItem, List.of(ofInt(123)));
         VStruct c2 = ofStruct(checkItem, List.of(ofInt(456)));
         VStruct vAnd = ofStruct(and, List.of(c1, c2));
-        VInterface vCond = ofStruct(condition, vAnd, ofCell("and"));
+        VInterface vCond = ofInterface(condition, vAnd, ofCell("and"));
 
         JSONObject json = valueToJson.toJson(vCond);
         String jsonStr = """

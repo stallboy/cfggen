@@ -1,5 +1,6 @@
 package configgen.value;
 
+import configgen.data.CfgData;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgReader;
 import org.junit.jupiter.api.Test;
@@ -16,7 +17,7 @@ class ValuePackTest {
     @Test
     void packList() {
         {
-            Value value = VList.of(List.of(ofInt(1), ofInt(2), ofInt(3)));
+            Value value = ofList(List.of(ofInt(1), ofInt(2), ofInt(3)));
             String str = ValuePack.pack(value);
             assertEquals("1,2,3", str);
             FList flist = new FList(Primitive.INT);
@@ -28,7 +29,7 @@ class ValuePackTest {
         }
 
         {
-            Value value = VList.of(List.of(ofInt(123)));
+            Value value = ofList(List.of(ofInt(123)));
             String str = ValuePack.pack(value);
             assertEquals("123", str);
             FList flist = new FList(Primitive.INT);
@@ -46,14 +47,16 @@ class ValuePackTest {
         FList flist = new FList(Primitive.INT);
 
         ValueErrs errs = ValueErrs.of();
-        VList unpackValue = (VList)ValuePack.unpack(str, flist, errs);
+        VList unpackValue = (VList) ValuePack.unpack(str, flist, errs);
         assertEquals(1, errs.errs().size());
         assertEquals(3, unpackValue.valueList().size());  // 1.2 导致err，但默认用0填充
-        assertEquals(0, ((VInt)(unpackValue.valueList().getLast())).value());
+        assertEquals(0, ((VInt) (unpackValue.valueList().getLast())).value());
 
         ValueErrs.VErr err = errs.errs().getFirst();
         assertInstanceOf(ValueErrs.NotMatchFieldType.class, err);
-        assertEquals("1.2", ((ValueErrs.NotMatchFieldType)err).cell().value());
+        assertTrue(((ValueErrs.NotMatchFieldType) err).source() instanceof CfgData.DCell cell &&
+                cell.value().equals("1.2"));
+
     }
 
 
@@ -63,14 +66,15 @@ class ValuePackTest {
         FList flist = new FList(Primitive.INT);
 
         ValueErrs errs = ValueErrs.of();
-        VList unpackValue = (VList)ValuePack.unpack(str, flist, errs);
+        VList unpackValue = (VList) ValuePack.unpack(str, flist, errs);
         assertEquals(1, errs.errs().size());
         assertEquals(1, unpackValue.valueList().size());  // 1,2 导致err，但默认用0填充
-        assertEquals(0, ((VInt)(unpackValue.valueList().getFirst())).value());
+        assertEquals(0, ((VInt) (unpackValue.valueList().getFirst())).value());
 
         ValueErrs.VErr err = errs.errs().getFirst();
         assertInstanceOf(ValueErrs.NotMatchFieldType.class, err);
-        assertEquals("1,2", ((ValueErrs.NotMatchFieldType)err).cell().value());
+        assertTrue(((ValueErrs.NotMatchFieldType) err).source() instanceof CfgData.DCell cell &&
+                cell.value().equals("1,2"));
     }
 
     @Test
@@ -84,7 +88,8 @@ class ValuePackTest {
         assertNull(unpackValue);
         ValueErrs.VErr err = errs.errs().getFirst();
         assertInstanceOf(ValueErrs.ParsePackErr.class, err);
-        assertEquals(str, ((ValueErrs.ParsePackErr)err).cell().value());
+        assertTrue(((ValueErrs.ParsePackErr) err).source() instanceof CfgData.DCell cell &&
+                cell.value().equals(str));
     }
 
     @Test
@@ -339,7 +344,7 @@ class ValuePackTest {
         assertEquals(0, errs.errs().size());
         assertInstanceOf(VList.class, value);
         assertEquals("11,22", value.packStr());
-        VList v = (VList)value;
+        VList v = (VList) value;
         assertTrue(v.valueList().get(0) instanceof VInt vInt && vInt.value() == 11);
         assertTrue(v.valueList().get(1) instanceof VInt vInt && vInt.value() == 22);
     }

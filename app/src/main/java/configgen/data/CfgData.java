@@ -43,10 +43,8 @@ public record CfgData(Map<String, DTable> tables,
                         int col,
                         byte mode) implements Source {
 
-        public static final DCell EMPTY = of("");
-
-        public static DCell of(String str) {
-            return new DCell(str, new CfgData.DRowId("fileName", "sheetName", 0), 0, CELL_FAKE);
+        public static DCell of(String content, String fileName) {
+            return new DCell(content, new CfgData.DRowId(fileName, "", 0), 0, CELL_FAKE);
         }
 
         public DCell {
@@ -69,11 +67,6 @@ public record CfgData(Map<String, DTable> tables,
             return res;
         }
 
-        public boolean isColumnMode() {
-            return (mode & COLUMN_MODE) != 0;
-        }
-
-
         public boolean isCellEmpty() {
             return value.isEmpty();
         }
@@ -88,7 +81,7 @@ public record CfgData(Map<String, DTable> tables,
                     String.format("%s[%s]", rowId.fileName, rowId.sheetName);
             int r;
             int c;
-            if (isColumnMode()) {
+            if ((mode & COLUMN_MODE) != 0) {
                 r = col;
                 c = rowId.row;
             } else {

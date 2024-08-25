@@ -42,8 +42,8 @@ class VTableCreatorTest {
         assertEquals(vStruct, vTable.primaryKeyMap().get(ofInt(123)));
         assertEquals(vStruct2, vTable.primaryKeyMap().get(ofInt(456)));
         assertEquals(0, vTable.uniqueKeyMaps().size());
-        assertNull( vTable.enumNames());
-        assertNull( vTable.enumNameToIntegerValueMap());
+        assertNull(vTable.enumNames());
+        assertNull(vTable.enumNameToIntegerValueMap());
     }
 
     @Test
@@ -91,8 +91,8 @@ class VTableCreatorTest {
         assertEquals(1, vTable.uniqueKeyMaps().size());
         SequencedMap<Value, VStruct> uk = vTable.uniqueKeyMaps().get(List.of("s"));
         assertEquals(2, uk.size());
-        assertEquals( vStruct, uk.get(ofStr("abc")));
-        assertEquals( vStruct2, uk.get(ofStr("efg")));
+        assertEquals(vStruct, uk.get(ofStr("abc")));
+        assertEquals(vStruct2, uk.get(ofStr("efg")));
     }
 
 
@@ -117,11 +117,11 @@ class VTableCreatorTest {
 
         assertEquals(2, vTable.primaryKeyMap().size());
         {
-            VList k1 = VList.of(List.of(ofInt(123), ofStr("abc")));
+            VList k1 = ofList(List.of(ofInt(123), ofStr("abc")));
             assertEquals(vStruct, vTable.primaryKeyMap().get(k1));
         }
         {
-            VList k2 = VList.of(List.of(ofInt(456), ofStr("efg")));
+            VList k2 = ofList(List.of(ofInt(456), ofStr("efg")));
             assertEquals(vStruct2, vTable.primaryKeyMap().get(k2));
         }
     }

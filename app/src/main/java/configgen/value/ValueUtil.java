@@ -104,7 +104,7 @@ public class ValueUtil {
             case Source.DCellList dCellList -> {
                 return dCellList.cells().stream().anyMatch(c -> !c.isCellEmpty());
             }
-            case Source.DFile dFile -> {
+            case Source.DFile ignored -> {
                 return true;
             }
         }
