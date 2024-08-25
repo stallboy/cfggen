@@ -2,7 +2,7 @@ import {CSSProperties, memo, useCallback, useMemo, useState} from "react";
 import {Handle, Node, NodeProps, Position} from "@xyflow/react";
 import {Entity} from "./entityModel.ts";
 import {getNodeBackgroundColor} from "./colors.ts";
-import {Button, Flex, Popover, Space, Typography} from "antd";
+import {Button, Card, Flex, Popover, Space, Typography} from "antd";
 import {EntityCard, Highlight} from "./EntityCard.tsx";
 import {EntityProperties} from "./EntityProperties.tsx";
 import {EntityForm} from "./EntityForm.tsx";
@@ -22,7 +22,7 @@ import {getResBrief} from "./getResBrief.tsx";
 const {Text} = Typography;
 const bookIcon = <BookOutlined/>;
 const iconButtonStyle = {borderWidth: 0, backgroundColor: 'transparent'};
-const redIconButtonStyle = {borderWidth: 0, backgroundColor: 'red'};
+const redIconButtonStyle = {borderWidth: 0, backgroundColor: 'cyan'};
 const titleStyle = {width: '100%'};
 const titleTextStyle = {fontSize: 14, color: "#fff"};
 const closeIcon = <CloseOutlined/>;
@@ -74,17 +74,17 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
 
 
     let foldButton;
+    let fold = false;
     if (edit && edit.hasChild) {
         if (edit.fold) {
             foldButton = <Button style={redIconButtonStyle} icon={unfoldIcon}
                                  onClick={unfoldNode}/>;
+            fold = true;
         } else {
             foldButton = <Button style={iconButtonStyle} icon={foldIcon}
                                  onClick={foldNode}/>;
         }
-
     }
-
 
     // 用‘label是否包含空格’做为它是table_id格式的标志
     const mayHasResOrNote = label.includes('_');
@@ -170,7 +170,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
         return {position: 'absolute', backgroundColor: color}
     }, [color]);
 
-    return <Flex key={id} vertical gap='small' className='flowNode' style={nodeStyle}>
+    const node = <Flex key={id} vertical gap='small' className='flowNode' style={nodeStyle}>
         {noteShowOrEdit}
         {title}
 
@@ -183,4 +183,10 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
         {(handleOut && <Handle type='source' position={Position.Right} id='@out'
                                style={handleStyle}/>)}
     </Flex>;
+
+    if (fold) {
+        return <Card key={id} size='small' style={{backgroundColor: 'cyan'}}> {node}</Card>
+    } else {
+        return node;
+    }
 });

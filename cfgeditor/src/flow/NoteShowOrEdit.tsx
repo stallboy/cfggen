@@ -90,7 +90,7 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit, updateNoteI
     }, [setNewNote, updateNoteInEdit]);
 
     return <Flex vertical style={{backgroundColor: "yellow", borderRadius: '8px'}}>
-        <TextArea className='nodrag' placeholder='note' autoSize={{minRows: 2, maxRows: 10}}
+        <TextArea className='nodrag' placeholder='note' autoSize={{minRows: 1, maxRows: 10}}
                   style={{backgroundColor: "yellow"}}
                   value={newNote}
                   onChange={onNoteChange}/>
