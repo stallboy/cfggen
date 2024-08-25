@@ -25,8 +25,8 @@ const resBriefButtonStyle = {color: '#fff'};
 
 export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entity: Entity }, "node">>) {
     const [isEditNote, setIsEditNote] = useState<boolean>(false);
-    const [tmpNote, setTmpNote] = useState<string>("");
     const {id, label, fields, edit, brief, handleIn, handleOut, note, sharedSetting, assets} = nodeProps.data.entity;
+    const [tmpNote, setTmpNote] = useState<string | undefined>();
     const color: string = getNodeBackgroundColor(nodeProps.data.entity);
     const width = edit ? 280 : 240;
     const nodeStyle = useMemo(() => {
@@ -72,8 +72,10 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
 
         if (edit) {
             let showNote;
-            if (tmpNote.length > 0) {
-                showNote = tmpNote;
+            if (tmpNote != undefined) { // 表明有设置过
+                if (tmpNote.length > 0) {
+                    showNote = tmpNote;
+                }
             } else if (note && note.length > 0) {
                 showNote = note;
             }

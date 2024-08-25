@@ -65,8 +65,10 @@ function defaultPrimitiveValue(field: EntityEditField) {
     }
 }
 
-function PrimitiveControl(field: EntityEditField) {
+function PrimitiveControl(field: EntityEditField, bgColor?: string) {
     let control;
+    const style = bgColor ? {style: {backgroundColor: bgColor}} : {}
+
     const {eleType, autoCompleteOptions} = field;
     if (autoCompleteOptions && autoCompleteOptions.options.length > 0) {
         const {options, isValueInteger, isEnum} = autoCompleteOptions;
@@ -81,7 +83,7 @@ function PrimitiveControl(field: EntityEditField) {
             filters.filterOption = filterOption;
         }
         if (isEnum) {
-            control = <Select className='nodrag' options={options} {...filters} />
+            control = <Select className='nodrag' options={options} {...filters}/>
         } else {
             control = <AutoComplete className='nodrag' options={options} {...filters} style={{width: 100}}/>
         }
@@ -89,9 +91,9 @@ function PrimitiveControl(field: EntityEditField) {
     } else if (eleType == 'bool') {
         control = <Switch className='nodrag'/>;
     } else if (setOfNumber.has(eleType)) {
-        control = <InputNumber className='nodrag' />;
+        control = <InputNumber className='nodrag'  {...style}/>;
     } else {
-        control = <TextArea className='nodrag' autoSize={{minRows: 1, maxRows: 10}} />;
+        control = <TextArea className='nodrag' autoSize={{minRows: 1, maxRows: 10}} {...style}/>;
     }
     return control;
 }
@@ -137,11 +139,11 @@ function PrimitiveFormItem({field, bgColor}: { field: EntityEditField, bgColor?:
     if (field.eleType == 'bool') {
         props = {valuePropName: "checked"}
     }
-    const thisItemStyle: CSSProperties = bgColor == undefined ? {} : {backgroundColor: bgColor}
+    const thisItemStyle = bgColor == undefined ? {} : {style: {backgroundColor: bgColor}}
 
     return <Form.Item name={field.name} key={field.name} label={makeLabel(field)}
-                      initialValue={field.value} {...props} style={thisItemStyle}>
-        {PrimitiveControl(field)}
+                      initialValue={field.value} {...props} {...thisItemStyle}>
+        {PrimitiveControl(field, bgColor)}
     </Form.Item>;
 }
 
@@ -175,7 +177,7 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: { field: EntityEditField, bg
         form.setFieldValue(field.name, field.value);
     }, [field.name, field.value, form]);
 
-    return <Form.List name={field.name} key={field.name} initialValue={field.value as any[]}>
+    return <Form.List name={field.name} key={field.name} initialValue={field.value as any[]} >
         {(fields, {add, remove, move}) => (
             <>
                 {fields.map((f, index) => (
