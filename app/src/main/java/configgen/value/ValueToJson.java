@@ -15,6 +15,7 @@ import static configgen.value.ValueRefCollector.collectStructRef;
 public class ValueToJson {
     private final CfgValue cfgValue;
     private final Map<RefId, VStruct> refIdToRecordMap;
+    private boolean isSaveDefault;
 
     public ValueToJson() {
         this(null, null);
@@ -23,6 +24,12 @@ public class ValueToJson {
     public ValueToJson(CfgValue cfgValue, Map<RefId, VStruct> refIdToRecordMap) {
         this.cfgValue = cfgValue;
         this.refIdToRecordMap = refIdToRecordMap;
+        this.isSaveDefault = true;
+    }
+
+
+    public void setSaveDefault(boolean saveDefault) {
+        isSaveDefault = saveDefault;
     }
 
     public Object toJson(Value value) {
@@ -46,9 +53,16 @@ public class ValueToJson {
         for (int i = 0; i < count; i++) {
             FieldSchema fs = vStruct.schema().fields().get(i);
             Value fv = vStruct.values().get(i);
-            json.put(fs.name(), toJson(fv));
+            if (isSaveDefault || !ValueDefault.isDefault(fv)) {
+                json.put(fs.name(), toJson(fv));
+            }
         }
         json.put("$type", vStruct.schema().fullName());
+        String note = vStruct.note();
+        if (note != null && !note.isEmpty()) {
+            json.put("$note", note);
+        }
+
         if (refIdToRecordMap != null) {
             List<FieldRef> fieldRefs = collectStructRef(cfgValue, vStruct, refIdToRecordMap, null, "");
             if (!fieldRefs.isEmpty()) {

@@ -4,7 +4,6 @@ import configgen.data.CfgData;
 import configgen.schema.InterfaceSchema;
 import configgen.schema.Structural;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -46,11 +45,10 @@ public class Values {
         return new VInterface(schema, child, implCell);
     }
     public static VList ofList(List<SimpleValue> valueList) {
-
-        return new VList(valueList, ofCell(""));
+        return ValueUtil.createList(valueList);
     }
 
-    public static VMap of(Map<SimpleValue, SimpleValue> valueMap) {
+    public static VMap ofMap(Map<SimpleValue, SimpleValue> valueMap) {
 //        List<CfgData.DCell> cells = new ArrayList<>(8);
 //        for (var e : valueMap.entrySet()) {
 //            cells.addAll(e.getKey().cells());

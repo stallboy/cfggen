@@ -166,7 +166,7 @@ class ValueJsonParserTest {
         TableSchema ts = cfg.findTable("tl");
         String jsonStr = """
                 {"id":1,"$type":"tl"}""";
-        VStruct vStruct = new ValueJsonParser(ts, null, false).fromJson(jsonStr, "tl_1.json");
+        VStruct vStruct = new ValueJsonParser(ts).fromJson(jsonStr, "tl_1.json");
 
         JSONObject json = new ValueToJson().toJson(vStruct);
         String jsonStr2 = """
@@ -179,7 +179,7 @@ class ValueJsonParserTest {
         TableSchema ts = cfg.findTable("tl");
         String jsonStr = """
                 {"id":1,"extra":333,"$type":"tl"}""";
-        VStruct vStruct = new ValueJsonParser(ts, null, false).fromJson(jsonStr, "tl_1.json");
+        VStruct vStruct = new ValueJsonParser(ts).fromJson(jsonStr, "tl_1.json");
 
         JSONObject json = new ValueToJson().toJson(vStruct);
         String jsonStr2 = """
@@ -204,7 +204,7 @@ class ValueJsonParserTest {
         TableSchema ts = cfg.findTable("tm");
         String jsonStr = """
                 {"id":1,"$type":"tl"}""";
-        VStruct vStruct = new ValueJsonParser(ts, null, false).fromJson(jsonStr, "tm_1.json");
+        VStruct vStruct = new ValueJsonParser(ts).fromJson(jsonStr, "tm_1.json");
 
         JSONObject json = new ValueToJson().toJson(vStruct);
         String jsonStr2 = """
@@ -217,7 +217,7 @@ class ValueJsonParserTest {
         TableSchema ts = cfg.findTable("tls");
         StructSchema attr = (StructSchema) cfg.findFieldable("attr");
         VStruct vAttr = ofStruct(attr, List.of(ofInt(111), ofInt(222), ofInt(333)));
-        VList vList = VList.of(List.of(vAttr));
+        VList vList = ofList(List.of(vAttr));
         VStruct vStruct = ofStruct(ts, List.of(ofInt(1), vList));
 
         JSONObject json = new ValueToJson().toJson(vStruct);

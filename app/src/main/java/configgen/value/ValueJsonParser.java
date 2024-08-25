@@ -6,7 +6,6 @@ import com.alibaba.fastjson2.JSONObject;
 import configgen.ctx.TextI18n;
 import configgen.data.Source;
 import configgen.schema.*;
-import configgen.util.Logger;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -25,28 +24,20 @@ public class ValueJsonParser {
 
     private final TableSchema subTableSchema;
     private final TextI18n.TableI18n nullableTableI18n;
-    private final boolean isLogNotFoundField;
     private Source.DFile source;
-    private String fromFileName;
 
     public ValueJsonParser(TableSchema subTableSchema) {
         this(subTableSchema, null);
     }
 
     public ValueJsonParser(TableSchema subTableSchema, TextI18n.TableI18n nullableTableI18n) {
-        this(subTableSchema, nullableTableI18n, Logger.isWarningEnabled());
-    }
-
-    public ValueJsonParser(TableSchema subTableSchema, TextI18n.TableI18n nullableTableI18n, boolean isLogNotFoundField) {
         this.subTableSchema = subTableSchema;
         this.nullableTableI18n = nullableTableI18n;
-        this.isLogNotFoundField = isLogNotFoundField;
     }
 
     public VStruct fromJson(String jsonStr, String jsonFileName) {
-        fromFileName = jsonFileName;
         JSONObject jsonObject = JSON.parseObject(jsonStr);
-        source = Source.of(fromFileName);
+        source = Source.of(jsonFileName);
         return parseStructural(subTableSchema, jsonObject);
     }
 
@@ -70,11 +61,11 @@ public class ValueJsonParser {
                 fieldValue = parse(fs.type(), fieldObj);
             } else {
                 // not throw exception, but use default value
-                // make it easy to add field in future
+                // save compactly and make it easy to add field in future
                 fieldValue = ValueDefault.of(fs.type(), source);
-                if (isLogNotFoundField) {
-                    Logger.log("%s %s[%s] not found ", fromFileName, subStructural.fullName(), fs.name());
-                }
+//                if (isLogNotFoundField) {
+//                    Logger.log("%s %s[%s] not found ", fromFileName, subStructural.fullName(), fs.name());
+//                }
             }
             vStruct.values().add(fieldValue);
         }
@@ -85,30 +76,26 @@ public class ValueJsonParser {
         return vStruct;
     }
 
-    private VInterface parseInterface(InterfaceSchema subInterfaceSchema, JSONObject jsonObject) {
+    private VInterface parseInterface(InterfaceSchema interfaceSchema, JSONObject jsonObject) {
+
         String typeFullName = (String) jsonObject.get("$type");
+        String name = interfaceSchema.name();
         if (typeFullName == null) {
-            throw new JsonParseException("$type not set");
+            throw new JsonParseException(" $type not set for " + name);
         }
-        String interfaceNamePrefix = subInterfaceSchema.name() + ".";
+        String interfaceNamePrefix = name + ".";
         if (!typeFullName.startsWith(interfaceNamePrefix)) {
-            throw new JsonParseException(typeFullName + " not found");
+            throw new JsonParseException(typeFullName + " not startWith " + name);
         }
 
         String implName = typeFullName.substring(interfaceNamePrefix.length());
-
-        StructSchema impl = subInterfaceSchema.findImpl(implName);
+        StructSchema impl = interfaceSchema.findImpl(implName);
         if (impl == null) {
-            throw new JsonParseException(implName + " not found in interface");
+            throw new JsonParseException(implName + " not found in interface " + name);
         }
 
         VStruct implValue = parseStructural(impl, jsonObject);
-        VInterface vInterface = new VInterface(subInterfaceSchema, implValue, source); // 需要这层包装，以方便生成data file
-        String note = (String) jsonObject.get("$note");
-        if (note != null && !note.isEmpty()) {
-            vInterface.setNote(note);
-        }
-        return vInterface;
+        return new VInterface(interfaceSchema, implValue, source); // 需要这层包装，以方便生成data file
     }
 
     private Value parse(FieldType type, Object obj) {

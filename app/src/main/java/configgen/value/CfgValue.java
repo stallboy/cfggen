@@ -1,6 +1,5 @@
 package configgen.value;
 
-import configgen.ctx.TextI18n;
 import configgen.data.CfgData;
 import configgen.data.Source;
 import configgen.schema.*;
@@ -144,7 +143,6 @@ public record CfgValue(CfgSchema schema,
     public static final class VInterface extends CompositeValue implements SimpleValue {
         private final InterfaceSchema schema;
         private final VStruct child;
-        private String note;
 
         public VInterface(InterfaceSchema schema,
                           VStruct child,
@@ -189,14 +187,6 @@ public record CfgValue(CfgSchema schema,
                     "schema=" + schema + ", " +
                     "child=" + child + ", " +
                     "source=" + source + ']';
-        }
-
-        public String note() {
-            return note;
-        }
-
-        public void setNote(String note) {
-            this.note = note;
         }
     }
 

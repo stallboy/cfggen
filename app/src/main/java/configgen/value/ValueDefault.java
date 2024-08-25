@@ -26,6 +26,22 @@ public class ValueDefault {
         };
     }
 
+
+    public static boolean isDefault(Value value) {
+        return switch (value) {
+            case VBool vBool -> !vBool.value();
+            case VInt vInt -> vInt.value() == 0;
+            case VLong vLong -> vLong.value() == 0;
+            case VFloat vFloat -> vFloat.value() == 0;
+            case VString vStr -> vStr.value().isEmpty();
+            case VText vText -> vText.value().isEmpty();
+            case VStruct vStruct -> false;
+            case VInterface vInterface -> false;
+            case VList vList -> vList.valueList().isEmpty();
+            case VMap vMap -> vMap.valueMap().isEmpty();
+        };
+    }
+
     public static Value ofNamable(Nameable nameable, Source.DFile source) {
         return switch (nameable) {
             case Structural structural -> ofStructural(structural, source);
