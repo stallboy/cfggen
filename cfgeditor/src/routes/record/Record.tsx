@@ -216,7 +216,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
         return mm;
     }
 
-    const ep = pathname + (isEditing ? ',' + editSeq : '');
+    const ep = pathname + (isEditing ? ',' + editSeq : ''); // 用 editSeq触发layout
     useEntityToGraph({pathname: ep, entityMap, notes, nodeMenuFunc, paneMenu, fitView});
 
     return <></>;

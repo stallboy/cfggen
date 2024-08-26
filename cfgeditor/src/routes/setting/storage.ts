@@ -1,6 +1,7 @@
 import {path} from "@tauri-apps/api";
 import {readTextFile, writeTextFile} from "@tauri-apps/api/fs";
 import {parse, stringify} from "yaml";
+import {getPrefKeySet, getPrefSelfKeySet} from "./store.ts";
 
 export function getPrefInt(key: string, def: number): number {
     const v = localStorage.getItem(key);
@@ -50,13 +51,22 @@ export function getPrefJson<T>(key: string, parser: (jsonStr: string) => T): T |
 
 
 let conf: string | undefined = undefined;
+let selfConf: string | undefined = undefined;
 
 async function getConf() {
     if (!conf) {
-        conf = await path.resolveResource("cfgeditor.yml")
+        conf = await path.resolveResource("cfgeditor.yml");
     }
     return conf;
 }
+
+async function getSelfConf() {
+    if (!selfConf) {
+        selfConf = await path.resolveResource("cfgeditorSelf.yml");
+    }
+    return selfConf;
+}
+
 
 let alreadyRead = false;
 
@@ -69,9 +79,14 @@ export async function readPrefAsyncOnce() {
         return true;
     }
     console.log('read yml file')
-    const conf = await getConf();
-    const content = await readTextFile(conf);
-    const settings = parse(content);
+    localStorage.clear();
+    await readConf(await getConf());
+    await readConf(await getSelfConf());
+    return true;
+}
+
+async function readConf(conf: string) {
+    const settings = parse(await readTextFile(conf));
     if (typeof settings == "object") {
         for (const key in settings) {
             const value = settings[key];
@@ -79,20 +94,28 @@ export async function readPrefAsyncOnce() {
             // console.log(key, value);
         }
     }
-    return true;
 }
 
 async function savePrefAsync() {
     const settings: Record<string, any> = {};
+    const selfSettings: Record<string, any> = {};
+    const prefKeySet = getPrefKeySet();
+    const prefSelfKeySet = getPrefSelfKeySet();
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key) {
+        if (key === null) {
+            continue;
+        }
+        if (prefKeySet.has(key)) {
             settings[key] = localStorage.getItem(key);
+        } else if (prefSelfKeySet.has(key)) {
+            selfSettings[key] = localStorage.getItem(key);
         }
     }
     const conf = await getConf();
-    const content = stringify(settings);
-    await writeTextFile(conf, content);
+    await writeTextFile(conf, stringify(settings));
+    const selfConf = await getSelfConf();
+    await writeTextFile(selfConf, stringify(selfSettings));
 }
 
 function log(reason: any) {

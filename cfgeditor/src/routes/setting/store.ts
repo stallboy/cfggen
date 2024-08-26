@@ -83,6 +83,25 @@ const storeState: StoreState = {
     resourceDir: '',
 };
 
+let prefKeySet: Set<string> | undefined;
+let prefSelfKeySet : Set<string>  = new Set<string>(['curPage', 'curTableId', 'curId', 'query']);
+
+export function getPrefKeySet(): Set<string> {
+    if (prefKeySet === undefined) {
+        prefKeySet = new Set<string>(Object.keys(storeState));
+        prefKeySet.delete('query');
+        prefKeySet.delete('history');
+        prefKeySet.delete('isEditMode');
+        prefKeySet.delete('resMap');
+        prefKeySet.delete('resourceDir');
+    }
+    return prefKeySet;
+}
+
+export function getPrefSelfKeySet(): Set<string> {
+    return prefSelfKeySet;
+}
+
 let alreadyRead = false;
 
 export function readStoreStateOnce() {
@@ -284,7 +303,7 @@ export function setTauriConf(tauriConf: TauriConf) {
     clearLayoutCache();
 }
 
-export function historyPrev(curPage: PageType, history: History, isEditMode:boolean) {
+export function historyPrev(curPage: PageType, history: History, isEditMode: boolean) {
     const newHistory = history.prev();
     store.history = newHistory;
     const cur = newHistory.cur();
@@ -293,7 +312,7 @@ export function historyPrev(curPage: PageType, history: History, isEditMode:bool
     }
 }
 
-export function historyNext(curPage: PageType, history: History, isEditMode:boolean) {
+export function historyNext(curPage: PageType, history: History, isEditMode: boolean) {
     const newHistory = history.next();
     store.history = newHistory;
     const cur = newHistory.cur();
@@ -334,7 +353,7 @@ export function navTo(curPage: PageType, tableId: string, id: string,
     setPref('curId', id);
 
     const url = `/${curPage}/${tableId}/${id}`;
-    return (curPage == 'record' && edit) ? '/edit' +　url: url;
+    return (curPage == 'record' && edit) ? '/edit' + url : url;
 }
 
 export function getLastNavToInLocalStore() {
@@ -357,11 +376,11 @@ export function useLocationData() {
     if (split.length > 1) {
         if (split[1] == 'edit') {
             edit = true;
-            if (split.length > 2 && split[2] == 'record'){
+            if (split.length > 2 && split[2] == 'record') {
                 curPage = 'record';
                 idx = 3;
             }
-        }else if (pageEnums.includes(split[1])) {
+        } else if (pageEnums.includes(split[1])) {
             curPage = split[1] as PageType;
         }
     }

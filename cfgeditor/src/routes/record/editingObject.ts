@@ -97,6 +97,9 @@ export function onUpdateFold(fold: boolean,
                              fieldChains: (string | number)[]) {
     const obj = getFieldObj(editState.editingObject, fieldChains);
     obj['$fold'] = fold;
+    editState.seq++;
+    editState.fitView = false;
+    editState.afterEditStateChanged();
 }
 
 
