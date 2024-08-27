@@ -29,9 +29,9 @@ class ValueJsonParserTest {
                         c2:condition;
                     }
                 }
-                table cond[id] (json){
+                table cond[id] {
                     id:int;
-                    c:map<int,condition>;
+                    c:map<int,condition> (pack);
                 }
                 struct attr {
                 	Attr:int; // 属性id
@@ -53,9 +53,9 @@ class ValueJsonParserTest {
                     id:int;
                     listInt1:list<int>;
                 }
-                table tm[id] (json) {
+                table tm[id] {
                     id:int;
-                    mapIntStr:map<int,str>;
+                    mapIntStr:map<int,str> (pack);
                 }
                 table tls[id] (json) {
                     id:int;

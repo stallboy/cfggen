@@ -46,7 +46,7 @@ public record SchemaErrs(List<Err> errs,
         }
     }
 
-    public sealed interface Warn extends Msg{
+    public sealed interface Warn extends Msg {
     }
 
 
@@ -292,6 +292,12 @@ public record SchemaErrs(List<Err> errs,
      */
     public record JsonTableNotSupportExcel(String table,
                                            List<String> excelSheetList) implements Err {
+    }
+
+    /**
+     * 标记了json的table不能有Map类型，cfgeditor不支持。
+     */
+    public record JsonTableNotSupportMap(String table) implements Err {
     }
 
     /**

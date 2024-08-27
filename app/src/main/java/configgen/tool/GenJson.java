@@ -3,6 +3,7 @@ package configgen.tool;
 import configgen.ctx.Context;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
+import configgen.schema.HasMap;
 import configgen.util.Logger;
 import configgen.value.CfgValue;
 import configgen.value.VTableJsonStore;
@@ -43,7 +44,12 @@ public class GenJson extends Generator {
         for (String table : tables) {
             VTable vTable = cfgValue.vTableMap().get(table);
             if (vTable == null) {
-                Logger.log("gen json table=%s not found!", table);
+                Logger.log("ignore gen json! table=%s not found!", table);
+                continue;
+            }
+
+            if (HasMap.hasMap(vTable.schema())) {
+                Logger.log("ignore gen json! table=%s has map!", table);
                 continue;
             }
 
