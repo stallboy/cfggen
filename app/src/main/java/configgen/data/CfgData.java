@@ -27,6 +27,12 @@ public record CfgData(Map<String, DTable> tables,
                          List<DField> fields,   // by HeadParser
                          List<List<DCell>> rows,    // by CellParser
                          List<DRawSheet> rawSheets) {   // by CfgDataReader
+        public DTable {
+            Objects.requireNonNull(tableName);
+            Objects.requireNonNull(fields);
+            Objects.requireNonNull(rows);
+            Objects.requireNonNull(rawSheets);
+        }
     }
 
     public record DField(String name,

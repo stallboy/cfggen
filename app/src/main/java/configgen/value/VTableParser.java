@@ -70,7 +70,7 @@ public class VTableParser implements BlockParser {
     // aabb前面一列要有空格，bb前一列格子也要是空，ccc前一列也是有个空，
     // 用这个空来做为标记，支持block aabb嵌套block bb，来判断此行bb是否属于嵌套的bb还是新起的aabb
     // 这样也强制了2个同级的block不要直接衔接，视觉上不好区分，
-    // 可以可以在中间加入一个列，比如以上的aabb和ccc直接有x来分割
+    // 可以在中间加入一个列，比如以上的aabb和ccc直接有x来分割
     // 以上规则现在没有做检测，要检测有点复杂，人工保证吧。
     @Override
     public List<CellsWithRowIndex> parseBlock(List<DCell> cells, int curRowIndex) {
