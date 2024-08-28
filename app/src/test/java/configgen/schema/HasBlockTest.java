@@ -66,25 +66,25 @@ class HasBlockTest {
         StructSchema structSchema = new StructSchema("struct1", AUTO, Metadata.of(),
                 List.of(fieldWithBlock), List.of());
 
-        assertThrowsExactly(IllegalStateException.class, () -> HasRefOrBlock.hasBlock(structSchema));
+        assertThrowsExactly(IllegalStateException.class, () -> HasBlock.hasBlock(structSchema));
     }
 
     @Test
     public void tableWithBlock() {
-        assertTrue(HasRefOrBlock.hasBlock(cfg.findTable("item")));
+        assertTrue(HasBlock.hasBlock(cfg.findTable("item")));
     }
 
     @Test
     public void directStructWithBlock() {
-        assertTrue(HasRefOrBlock.hasBlock(cfg.findFieldable("Attrs")));
+        assertTrue(HasBlock.hasBlock(cfg.findFieldable("Attrs")));
     }
 
 
     @Test
     public void innerStructWithBlock() {
-        assertTrue(HasRefOrBlock.hasBlock(cfg.findFieldable("WeightedAttrs")));
-        assertTrue(HasRefOrBlock.hasBlock(cfg.findFieldable("condition")));
-        assertTrue(HasRefOrBlock.hasBlock(cfg.findFieldable("action")));
+        assertTrue(HasBlock.hasBlock(cfg.findFieldable("WeightedAttrs")));
+        assertTrue(HasBlock.hasBlock(cfg.findFieldable("condition")));
+        assertTrue(HasBlock.hasBlock(cfg.findFieldable("action")));
     }
 
 

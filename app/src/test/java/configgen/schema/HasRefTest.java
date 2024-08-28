@@ -58,36 +58,36 @@ class HasRefTest {
 
     @Test
     void no_ref_table() {
-        assertFalse(HasRefOrBlock.hasRef(cfg.findTable("item")));
+        assertFalse(HasRef.hasRef(cfg.findTable("item")));
     }
 
     @Test
     void ref_in_table() {
-        assertTrue(HasRefOrBlock.hasRef(cfg.findTable("ability")));
+        assertTrue(HasRef.hasRef(cfg.findTable("ability")));
     }
 
 
     @Test
     void ref_in_interface() {
-        assertTrue(HasRefOrBlock.hasRef(cfg.findFieldable("condition")));
+        assertTrue(HasRef.hasRef(cfg.findFieldable("condition")));
     }
 
     @Test
     void ref_in_interface_indirect() {
-        assertTrue(HasRefOrBlock.hasRef(cfg.findFieldable("action")));
+        assertTrue(HasRef.hasRef(cfg.findFieldable("action")));
     }
 
 
     @Test
     void ref_on_field() {
         TableSchema t = cfg.findTable("ability");
-        assertTrue(HasRefOrBlock.hasRef(t.findField("action").type()));
+        assertTrue(HasRef.hasRef(t.findField("action").type()));
     }
 
     @Test
     void no_ref_on_field() {
         TableSchema t = cfg.findTable("ability");
-        assertFalse(HasRefOrBlock.hasRef(t.findField("attr").type()));
+        assertFalse(HasRef.hasRef(t.findField("attr").type()));
     }
 
     @Test
@@ -98,7 +98,7 @@ class HasRefTest {
                         new KeySchema(List.of("field1")), "table1",
                         new RefKey.RefPrimary(true), Metadata.of())));
 
-        assertThrowsExactly(IllegalStateException.class, () -> HasRefOrBlock.hasRef(structSchema));
+        assertThrowsExactly(IllegalStateException.class, () -> HasRef.hasRef(structSchema));
     }
 
 }

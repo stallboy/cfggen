@@ -85,6 +85,14 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         return data.get(HAS_BLOCK);
     }
 
+    public void putHasMap(boolean hasMap) {
+        data.putLast(HAS_MAP, hasMap ? new MetaInt(1) : new MetaInt(0));
+    }
+
+    public MetaValue getHasMap() {
+        return data.get(HAS_MAP);
+    }
+
     public void putSpan(int value) {
         data.putLast(SPAN, new MetaInt(value));
     }
@@ -99,6 +107,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     private static final String SPAN = "_span";
     private static final String HAS_REF = "_hasRef";
     private static final String HAS_BLOCK = "_hasBlock";
+    private static final String HAS_MAP = "_hasMap";
 
 
     private static final String JSON = "json"; // 这个表用json来分文件存
@@ -113,7 +122,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     private static final String FIX = "fix";
     private static final String BLOCK = "block";
 
-    private static final Set<String> reserved = Set.of(COMMENT, SPAN, HAS_REF, HAS_BLOCK,
+    private static final Set<String> reserved = Set.of(COMMENT, SPAN, HAS_REF, HAS_BLOCK, HAS_MAP,
             JSON, NULLABLE, ENUM_REF, DEFAULT_IMPL, ENTRY, ENUM, COLUMN_MODE, PACK, SEP, FIX, BLOCK);
 
     public String getComment() {

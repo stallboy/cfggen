@@ -38,7 +38,9 @@ public final class CfgSchemaResolver {
         if (errs.errs().isEmpty()) {
             //预先计算hasRef， hasBlock, span 方便生成时使用
             Span.preCalculateAllNeededSpans(cfgSchema, errs);
-            HasRefOrBlock.preCalculateAllHasRefAndHasBlocks(cfgSchema, errs);
+            HasRef.preCalculateAllHasRef(cfgSchema);
+            HasBlock.preCalculateAllHasBlock(cfgSchema, errs);
+            HasMap.preCalculateAllHasMap(cfgSchema, errs);
         }
 
         if (errs.errs().isEmpty()) {

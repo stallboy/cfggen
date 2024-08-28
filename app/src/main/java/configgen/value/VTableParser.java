@@ -1,6 +1,6 @@
 package configgen.value;
 
-import configgen.schema.HasRefOrBlock;
+import configgen.schema.HasBlock;
 import configgen.schema.TableSchema;
 
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ public class VTableParser implements BlockParser {
     }
 
     public VTable parseTable() {
-        boolean hasBlock = HasRefOrBlock.hasBlock(tableSchema);
+        boolean hasBlock = HasBlock.hasBlock(tableSchema);
 
         int rowCnt = dTable.rows().size();
         List<VStruct> valueList = new ArrayList<>(); //可能会多，无所谓
