@@ -15,7 +15,7 @@ import {
     ShrinkOutlined
 } from "@ant-design/icons";
 import {ResPopover} from "./ResPopover.tsx";
-import {NoteShow, NoteEdit} from "./NoteShowOrEdit.tsx";
+import {NoteShow, NoteEdit, NoteShowInner, NoteEditInner} from "./NoteShowOrEdit.tsx";
 import {findFirstImage} from "./calcWidthHeight.ts";
 import {getResBrief} from "./getResBrief.tsx";
 
@@ -35,7 +35,6 @@ const unfoldIcon = <ArrowsAltOutlined/>;
 const resBriefButtonStyle = {color: '#fff'};
 
 export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entity: Entity }, "node">>) {
-    const [isEditNote, setIsEditNote] = useState<boolean>(false);
     const entity = nodeProps.data.entity
     const {id, label, fields, edit, brief, handleIn, handleOut, note, sharedSetting, assets} = entity;
     const color: string = getNodeBackgroundColor(entity);
@@ -44,6 +43,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
         return {width: width, backgroundColor: color}
     }, [width, color]);
 
+    const [isEditNote, setIsEditNote] = useState<boolean>(false);
     const onEditNote = useCallback(() => {
         setIsEditNote(true);
     }, [setIsEditNote]);
@@ -97,6 +97,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
 
     // 如果entity更改，则重置tmpNote为undefined，让其重新渲染
     if (entity !== prevEntity) {
+        // console.log("not equal", entity.id, prevEntity.id, "--", note);
         setPrevEntity(entity);
         setTmpNote(undefined);
         return <></>
@@ -129,7 +130,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
                 noteShowOrEdit = <NoteShow note={recordNote} setIsEdit={setIsEditNote}/>;
             }
         } else if (note) {
-            noteShowOrEdit = <NoteShow note={note}/>;
+            noteShowOrEdit = <NoteShowInner note={note}/>;
         } else {
             editNoteButton = <Button style={iconButtonStyle} icon={bookIcon}
                                      onClick={onEditNote}/>;
@@ -145,16 +146,15 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
                 showNote = note;
             }
             if (showNote) {
-                noteShowOrEdit = <NoteEdit id={id} note={showNote}
-                                           setIsEdit={setIsEditNote}
-                                           updateNoteInEdit={updateNoteInEdit}/>
+                noteShowOrEdit = <NoteEditInner note={showNote}
+                                                updateNoteInEdit={updateNoteInEdit}/>
             } else {
                 editNoteButton = <Button style={iconButtonStyle} icon={bookIcon}
                                          onClick={onEditNoteInEdit}/>;
             }
 
         } else if (note) {
-            noteShowOrEdit = <NoteShow note={note}/>;
+            noteShowOrEdit = <NoteShowInner note={note}/>;
         }
     }
     const copyable = mayHasResOrNote && sharedSetting?.nodeShow?.showHead == 'showCopyable'
