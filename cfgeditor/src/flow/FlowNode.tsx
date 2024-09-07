@@ -36,9 +36,9 @@ const resBriefButtonStyle = {color: '#fff'};
 
 export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entity: Entity }, "node">>) {
     const [isEditNote, setIsEditNote] = useState<boolean>(false);
-    const {id, label, fields, edit, brief, handleIn, handleOut, note, sharedSetting, assets} = nodeProps.data.entity;
-    const [tmpNote, setTmpNote] = useState<string | undefined>();
-    const color: string = getNodeBackgroundColor(nodeProps.data.entity);
+    const entity = nodeProps.data.entity
+    const {id, label, fields, edit, brief, handleIn, handleOut, note, sharedSetting, assets} = entity;
+    const color: string = getNodeBackgroundColor(entity);
     const width = edit ? 280 : 240;
     const nodeStyle = useMemo(() => {
         return {width: width, backgroundColor: color}
@@ -48,10 +48,14 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
         setIsEditNote(true);
     }, [setIsEditNote]);
 
+    // 不能稍微改一下note，就刷新整个树，所以note要缓存下来作为状态
+    const [tmpNote, setTmpNote] = useState<string | undefined>();
+    // 因为list.item的id为index，当删除一项有note的节点后，后面的节点id跟此相同，所以就继承了前面的tmpNote
+    // 所以记录prevEntity，如果entity更改，则重置tmpNote为undefined，
+    const [prevEntity, setPrevEntity] = useState(entity);
     const onEditNoteInEdit = useCallback(() => {
-        setTmpNote("note");
+        setTmpNote("note：");
     }, [setTmpNote]);
-
 
     const updateNoteInEdit = useCallback((v: string) => {
         if (edit && edit.editOnUpdateNote) {
@@ -72,6 +76,31 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
         }
     }, [edit]);
 
+    const [resBriefButton, firstImage] = useMemo(() => {
+        let btn;
+        const firstImage = findFirstImage(assets);
+        if (assets) {
+            btn = <Popover content={<ResPopover resInfos={assets}/>}
+                           placement='rightTop'
+                           trigger='click'>
+                <Button type='text' style={resBriefButtonStyle}>{getResBrief(assets)}</Button>
+            </Popover>
+        }
+        return [btn, firstImage];
+    }, [label, assets]);
+
+
+    const handleStyle: CSSProperties = useMemo(() => {
+        return {position: 'absolute', backgroundColor: color}
+    }, [color]);
+
+
+    // 如果entity更改，则重置tmpNote为undefined，让其重新渲染
+    if (entity !== prevEntity) {
+        setPrevEntity(entity);
+        setTmpNote(undefined);
+        return <></>
+    }
 
     let foldButton;
     let fold = false;
@@ -106,7 +135,6 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
                                      onClick={onEditNote}/>;
         }
     } else {
-
         if (edit) {
             let showNote;
             if (tmpNote != undefined) { // 表明有设置过
@@ -129,20 +157,6 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
             noteShowOrEdit = <NoteShow note={note}/>;
         }
     }
-
-    const [resBriefButton, firstImage] = useMemo(() => {
-        let btn;
-        const firstImage = findFirstImage(assets);
-        if (assets) {
-            btn = <Popover content={<ResPopover resInfos={assets}/>}
-                           placement='rightTop'
-                           trigger='click'>
-                <Button type='text' style={resBriefButtonStyle}>{getResBrief(assets)}</Button>
-            </Popover>
-        }
-        return [btn, firstImage];
-    }, [label, assets]);
-
     const copyable = mayHasResOrNote && sharedSetting?.nodeShow?.showHead == 'showCopyable'
     const keyword = sharedSetting?.query
 
@@ -166,9 +180,6 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
         </Space>
     </Flex>
 
-    const handleStyle: CSSProperties = useMemo(() => {
-        return {position: 'absolute', backgroundColor: color}
-    }, [color]);
 
     const node = <Flex key={id} vertical gap='small' className='flowNode' style={nodeStyle}>
         {noteShowOrEdit}
