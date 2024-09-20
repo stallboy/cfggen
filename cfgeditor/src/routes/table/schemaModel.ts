@@ -1,6 +1,7 @@
 export interface Namable {
     name: string;
     type: 'struct' | 'interface' | 'table';
+    comment: string;
     id?: string;  // 给impl唯一id，由json推理得到
     refTables?: Set<string> // 能索引到的表, cache，是个优化
 }

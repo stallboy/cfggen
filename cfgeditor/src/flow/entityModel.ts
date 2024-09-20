@@ -55,6 +55,7 @@ export interface EntityEditFieldOptions {
 export interface EntityEditFieldOption {
     value: string | number;
     label: string;
+    title?: string;
 }
 
 export interface EntityEdit {

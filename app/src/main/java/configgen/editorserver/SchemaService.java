@@ -16,7 +16,6 @@ public class SchemaService {
 
     public interface SNameable {
         String name();
-
     }
 
     public record SField(String name,
@@ -40,6 +39,7 @@ public class SchemaService {
     }
 
     public record SStruct(String name,
+                          String comment,
                           List<SField> fields,
                           List<SForeignKey> foreignKeys) implements SNameable {
 
@@ -57,6 +57,7 @@ public class SchemaService {
     }
 
     public record SInterface(String name,
+                             String comment,
                              String enumRef,
                              String defaultImpl,
                              List<SStruct> impls) implements SNameable {
@@ -72,6 +73,7 @@ public class SchemaService {
     }
 
     public record STable(String name,
+                         String comment,
                          List<String> pk,
                          List<List<String>> uks,
                          SEntryType entryType,
@@ -110,14 +112,18 @@ public class SchemaService {
     }
 
     public static SInterface fromInterface(InterfaceSchema is) {
-        return new SInterface(is.name(),
+        return new SInterface(
+                is.name(),
+                is.comment(),
                 is.nullableEnumRefTable() != null ? is.nullableEnumRefTable().name() : "", // 全局名字空间
                 is.defaultImpl(),
                 is.impls().stream().map(SchemaService::fromStruct).toList());
     }
 
     public static SStruct fromStruct(StructSchema ss) {
-        return new SStruct(ss.name(),
+        return new SStruct(
+                ss.name(),
+                ss.comment(),
                 fromFields(ss.fields()),
                 fromFks(ss.foreignKeys()));
     }
@@ -143,7 +149,9 @@ public class SchemaService {
         VTable vTable = cfgValue != null ? cfgValue.vTableMap().get(ts.name()) : null;
         List<RecordId> recordIds = getRecordIds(vTable);
 
-        return new STable(ts.name(),
+        return new STable(
+                ts.name(),
+                ts.comment(),
                 ts.primaryKey().fields(),
                 ts.uniqueKeys().stream().map(KeySchema::fields).toList(),
                 entryType,

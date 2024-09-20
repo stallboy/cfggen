@@ -259,6 +259,7 @@ export class RecordEditEntityCreator {
             const impl = getImpl(sInterface, implName) as SStruct;
             fields.push({
                 name: '$impl',
+                comment: sItem.comment,
                 type: 'interface',
                 eleType: sInterface.name,
                 value: implName,
@@ -397,14 +398,13 @@ export class RecordEditEntityCreator {
 
         return {options, isValueInteger, isEnum};
     }
-
 }
 
 
 function getImplNameOptions(sInterface: SInterface): EntityEditFieldOptions {
     const impls = [];
-    for (const {name} of sInterface.impls) {
-        impls.push({value: name, label: name});
+    for (const {name, comment} of sInterface.impls) {
+        impls.push({value: name, label:name, title: comment});
     }
     return {options: impls, isValueInteger: false, isEnum: true};
 }

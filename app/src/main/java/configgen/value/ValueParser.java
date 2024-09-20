@@ -392,10 +392,6 @@ public class ValueParser {
         return new VMap(valueMap, Source.of(cells));
     }
 
-    private static boolean isCellNotAllEmpty(List<DCell> cells) {
-        return cells.stream().anyMatch(c -> !c.isCellEmpty());
-    }
-
 
     VList parseList(FieldSchema subField, List<DCell> cells, FieldSchema field,
                     boolean isPack, int curRowIndex,
@@ -460,6 +456,10 @@ public class ValueParser {
         }
         return new VList(valueList, Source.of(cells));
 
+    }
+
+    private static boolean isCellNotAllEmpty(List<DCell> cells) {
+        return cells.stream().anyMatch(c -> !c.isCellEmpty());
     }
 
     private static final Set<String> boolStrSet = Set.of("false", "true", "1", "0", "");

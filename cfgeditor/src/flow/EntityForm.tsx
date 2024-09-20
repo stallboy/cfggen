@@ -108,7 +108,7 @@ function StructRefItem({field, bgColor}: { field: EntityEditField, bgColor?: str
         backgroundColor: bgColor
     }
     return <Flex key={field.name} gap='middle' justify="flex-end" style={thisRowStyle}>
-        <Tag color={'blue'}>{field.name}</Tag>
+        <Tag color={'blue'}> {makeLabel(field)}</Tag>
         {field.handleOut && <Handle type='source' position={Position.Right} id={field.name}
                                     style={handleOutStyle}/>}
     </Flex>
@@ -122,7 +122,7 @@ function FuncAddFormItem({field, bgColor}: { field: EntityEditField, bgColor?: s
         backgroundColor: bgColor
     }
     return <Flex key={field.name} gap='middle' justify="flex-end" style={thisRowStyle}>
-        <Button className='nodrag' onClick={func} icon={<PlusSquareTwoTone/>}> {field.name} </Button>
+        <Button className='nodrag' onClick={func} icon={<PlusSquareTwoTone/>}> {makeLabel(field)} </Button>
         {field.handleOut && <Handle type='source' position={Position.Right} id={field.name}
                                     style={handleOutStyle}/>}
     </Flex>;
@@ -177,7 +177,7 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: { field: EntityEditField, bg
         form.setFieldValue(field.name, field.value);
     }, [field.name, field.value, form]);
 
-    return <Form.List name={field.name} key={field.name} initialValue={field.value as any[]} >
+    return <Form.List name={field.name} key={field.name} initialValue={field.value as any[]}>
         {(fields, {add, remove, move}) => (
             <>
                 {fields.map((f, index) => (
@@ -246,6 +246,7 @@ function InterfaceFormItem({field, sharedSetting}: { field: EntityEditField, sha
     }, [field.name, field.value, form]);
 
     const options = field.autoCompleteOptions?.options;
+
     const implSelect = <Form.Item name={field.name} key={field.name} label={makeLabel(field)}
                                   initialValue={field.value}>
         <Select className='nodrag' options={options}
