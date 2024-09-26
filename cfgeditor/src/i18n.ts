@@ -49,8 +49,8 @@ i18n.use(LanguageDetector)
             zh: {
                 translation: {
                     nextSlot: "空位:",
-                    table: "表",
-                    tableRef: "表关系",
+                    table: "T",
+                    tableRef: "R",
                     record: "数据",
                     recordRef: "关系",
                     fix: "固定",
@@ -77,6 +77,7 @@ i18n.use(LanguageDetector)
                     recordRefIn: '数据入层',
                     recordRefOutDepth: '数据出层',
                     recordMaxNode: '数据节点数',
+                    isNextIdShow:'显示下一个空Id',
 
                     SIMPLE: '中间',
                     LINEAR_SEGMENTS: '中间起伏',

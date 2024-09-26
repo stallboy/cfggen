@@ -25,6 +25,7 @@ import {useTranslation} from "react-i18next";
 import {Handle, Position} from "@xyflow/react";
 import {ActionIcon} from "@ant-design/pro-editor";
 import {getFieldBackgroundColor} from "./colors.ts";
+import { HappyProvider } from '@ant-design/happy-work-theme';
 
 const formLayout = {
     labelCol: {xs: {span: 24}, sm: {span: 6},},
@@ -122,7 +123,9 @@ function FuncAddFormItem({field, bgColor}: { field: EntityEditField, bgColor?: s
         backgroundColor: bgColor
     }
     return <Flex key={field.name} gap='middle' justify="flex-end" style={thisRowStyle}>
-        <Button className='nodrag' onClick={func} icon={<PlusSquareTwoTone/>}> {makeLabel(field)} </Button>
+        <HappyProvider>
+            <Button className='nodrag' onClick={func} icon={<PlusSquareTwoTone/>}> {makeLabel(field)} </Button>
+        </HappyProvider>
         {field.handleOut && <Handle type='source' position={Position.Right} id={field.name}
                                     style={handleOutStyle}/>}
     </Flex>;
@@ -229,9 +232,11 @@ function FuncSubmitFormItem({field}: { field: EntityEditField }) {
     const func = field.value as FuncSubmitType;
     return <Form.Item {...formItemLayoutWithOutLabel} key={field.name}>
         <Space size={50}>
-            <Button className='nodrag' type="primary" htmlType="submit" onClick={() => func.funcSubmit()}>
-                {t('addOrUpdate')}
-            </Button>
+            <HappyProvider>
+                <Button className='nodrag' type="primary" htmlType="submit" onClick={() => func.funcSubmit()}>
+                    {t('addOrUpdate')}
+                </Button>
+            </HappyProvider>
             <Button className='nodrag' type="default" onClick={() => func.funcClear()}>
                 {t('setDefaultValue')}
             </Button>

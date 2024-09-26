@@ -23,6 +23,7 @@ export type StoreState = {
     recordRefInShowLinkMaxNode: number;
     recordRefOutDepth: number;
     recordMaxNode: number;
+    isNextIdShow: boolean;
     nodeShow: NodeShowType
 
     query: string;
@@ -52,6 +53,8 @@ const storeState: StoreState = {
     recordRefInShowLinkMaxNode: 3,
     recordRefOutDepth: 5,
     recordMaxNode: 30,
+    isNextIdShow: false,
+
     nodeShow: {
         showHead: 'show',
         showDescription: 'show',
@@ -84,12 +87,18 @@ const storeState: StoreState = {
 };
 
 let prefKeySet: Set<string> | undefined;
-let prefSelfKeySet : Set<string>  = new Set<string>(['curPage', 'curTableId', 'curId', 'query']);
+let prefSelfKeySet: Set<string> = new Set<string>(['curPage', 'curTableId', 'curId', 'query', 'isEditMode',
+    'imageSizeScale', 'dragPanel', 'dragPanelWidth']);
 
 export function getPrefKeySet(): Set<string> {
     if (prefKeySet === undefined) {
         prefKeySet = new Set<string>(Object.keys(storeState));
         prefKeySet.delete('query');
+
+        prefKeySet.delete('imageSizeScale');
+        prefKeySet.delete('dragPanel');
+        prefKeySet.delete('dragPanelWidth');
+
         prefKeySet.delete('history');
         prefKeySet.delete('isEditMode');
         prefKeySet.delete('resMap');
@@ -234,6 +243,11 @@ export function setRecordMaxNode(value: number | null) {
     }
 }
 
+export function setIsNextIdShow(checked: boolean) {
+    store.isNextIdShow = checked;
+    setPref('isNextIdShow', checked ? 'true' : 'false');
+}
+
 export function setSearchMax(value: number | null) {
     if (value) {
         store.searchMax = value;
@@ -336,6 +350,7 @@ export function getFixCurIdByTable(schema: Schema, curTableId: string, curId: st
 
 export function setIsEditMode(isEditMode: boolean) {
     store.isEditMode = isEditMode;
+    setPref('isEditMode', isEditMode ? 'true' : 'false');
 }
 
 export function navTo(curPage: PageType, tableId: string, id: string,
@@ -360,7 +375,8 @@ export function getLastNavToInLocalStore() {
     const page = getPrefEnumStr<PageType>('curPage', pageEnums);
     const tableId = getPrefStr('curTableId', '');
     const id = getPrefStr('curId', '');
-    return navTo(page ?? 'table', tableId, id);
+    const isEditMode = getPrefBool('isEditMode', false);
+    return navTo(page ?? 'table', tableId, id, isEditMode);
 }
 
 export function useLocationData() {

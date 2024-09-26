@@ -1,6 +1,7 @@
 import {memo} from "react";
 import {Form, InputNumber, Switch} from "antd";
 import {
+    setIsNextIdShow,
     setMaxImpl,
     setMaxNode, setRecordMaxNode,
     setRecordRefIn,
@@ -21,13 +22,15 @@ export const BasicSetting = memo(function TableSetting() {
     const {t} = useTranslation();
     const {
         maxImpl, refIn, refOutDepth, maxNode, searchMax,
-        recordRefIn, recordRefInShowLinkMaxNode, recordRefOutDepth, recordMaxNode
+        recordRefIn, recordRefInShowLinkMaxNode, recordRefOutDepth, recordMaxNode,
+        isNextIdShow
     } = store;
 
     return <Form {...formLayout} layout={'horizontal'}
                  initialValues={{
                      maxImpl, refIn, refOutDepth, maxNode, searchMax,
-                     recordRefIn, recordRefInShowLinkMaxNode, recordRefOutDepth, recordMaxNode
+                     recordRefIn, recordRefInShowLinkMaxNode, recordRefOutDepth, recordMaxNode,
+                     isNextIdShow
                  }}>
         <Form.Item label={t('implsShowCnt')} name='maxImpl'>
             <InputNumber min={1} max={500} onChange={setMaxImpl}/>
@@ -63,6 +66,10 @@ export const BasicSetting = memo(function TableSetting() {
 
         <Form.Item name='recordMaxNode' label={t('recordMaxNode')}>
             <InputNumber min={1} max={500} onChange={setRecordMaxNode}/>
+        </Form.Item>
+
+        <Form.Item name='isNextIdShow' label={t('isNextIdShow')} valuePropName="checked">
+            <Switch onChange={setIsNextIdShow}/>
         </Form.Item>
 
     </Form>;

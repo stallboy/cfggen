@@ -28,7 +28,7 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
     setSearchOpen: (open: boolean) => void;
 }) {
     const {curPage, curTableId, curId} = useLocationData();
-    const {dragPanel, pageConf, history, isEditMode} = store;
+    const {dragPanel, pageConf, history, isNextIdShow, isEditMode} = store;
     const [fix, setFix] = useState<string>(dragPanel);
     const navigate = useNavigate();
     const {t} = useTranslation();
@@ -55,7 +55,7 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
     }, [curPage, history, isEditMode, navigate]);
 
     let nextId;
-    if (curTable) {
+    if (isNextIdShow && curTable) {
         const nId = getNextId(curTable, curId);
         if (nId) {
             nextId = <Text>{t('nextSlot')} <Text copyable>{nId}</Text> </Text>

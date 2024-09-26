@@ -12,7 +12,7 @@ function getLabel(table: string, id: string): string {
 }
 
 export function SearchValue() {
-    const {server, query, searchMax} = store;
+    const {server, query, searchMax, isEditMode} = store;
     const navigate = useNavigate();
 
     const [loading, setLoading] = useState<boolean>(false);
@@ -57,7 +57,7 @@ export function SearchValue() {
                 render: (_text: any, item: SearchResultItem, _index: number) => {
                     const label = getLabel(item.table, item.pk);
                     return <Button type={'link'} onClick={() => {
-                        navigate(navTo(curPage, item.table, item.pk));
+                        navigate(navTo(curPage, item.table, item.pk, isEditMode));
                     }}>
                         {label}
                     </Button>;

@@ -27,7 +27,7 @@ export const IdList = memo(function IdList({curTable}: {
     return <Select id='id'
                    showSearch
                    options={options}
-                   style={{width: 160}}
+                   style={{width: 240}}
                    value={curId}
                    placeholder="search a record"
                    {...filterSorts}

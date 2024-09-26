@@ -12,12 +12,12 @@ export const KeyShortCut = memo(function KeyShortcut() {
             {
                 key: '1',
                 label: <LeftOutlined/>,
-                children: 'alt+x',
+                children: 'alt+c',
             },
             {
                 key: '2',
                 label: <RightOutlined/>,
-                children: 'alt+c',
+                children: 'alt+v',
             },
             {
                 key: '3',
@@ -43,7 +43,7 @@ export const KeyShortCut = memo(function KeyShortcut() {
             {
                 key: '7',
                 label: <SearchOutlined/>,
-                children: 'alt+q',
+                children: 'alt+x',
             },
             {
                 key: '8',
