@@ -10,7 +10,7 @@ import {BasicSetting} from "./BasicSetting.tsx";
 import {Operations} from "./Operations.tsx";
 import {memo, RefObject} from "react";
 import {TauriSetting} from "./TauriSeting.tsx";
-import {FixedPagesSetting} from "./FixedPagesSeting.tsx";
+import {ServerAndAi} from "./ServerAndAi.tsx";
 
 
 export const Setting = memo(function Setting({schema, curTable, flowRef}: {
@@ -33,9 +33,9 @@ export const Setting = memo(function Setting({schema, curTable, flowRef}: {
             children: <RecordShowSetting/>,
         },
         {
-            key: 'fixedPagesSetting',
-            label: t('fixedPagesSetting'),
-            children: <FixedPagesSetting schema={schema} curTable={curTable}/>,
+            key: 'serverAndAi',
+            label: t('serverAndAi'),
+            children: <ServerAndAi schema={schema}/>,
         },
 
 

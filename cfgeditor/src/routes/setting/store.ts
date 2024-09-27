@@ -1,5 +1,5 @@
 import resso from "resso";
-import {Convert, FixedPage, FixedPagesConf, NodeShowType, TauriConf} from "./storageJson.ts";
+import {AIConf, Convert, FixedPage, FixedPagesConf, NodeShowType, TauriConf} from "./storageJson.ts";
 import {getPrefBool, getPrefEnumStr, getPrefInt, getPrefJson, getPrefStr, setPref} from "./storage.ts";
 import {History} from "../headerbar/historyModel.ts";
 import {Schema} from "../table/schemaUtil.ts";
@@ -13,8 +13,9 @@ export const pageEnums = ['table', 'tableRef', 'record', 'recordRef'];
 
 export type StoreState = {
     server: string;
-    maxImpl: number;
+    aiConf: AIConf;
 
+    maxImpl: number;
     refIn: boolean;
     refOutDepth: number;
     maxNode: number;
@@ -24,8 +25,8 @@ export type StoreState = {
     recordRefOutDepth: number;
     recordMaxNode: number;
     isNextIdShow: boolean;
-    nodeShow: NodeShowType
 
+    nodeShow: NodeShowType
     query: string;
     searchMax: number;
     imageSizeScale: number;
@@ -43,6 +44,13 @@ export type StoreState = {
 
 const storeState: StoreState = {
     server: 'localhost:3456',
+    aiConf: {
+        baseUrl: '',
+        apiKey: '',
+        model: '',
+        examples: [],
+    },
+
     maxImpl: 10,
 
     refIn: true,
@@ -315,6 +323,11 @@ export function setTauriConf(tauriConf: TauriConf) {
     store.tauriConf = tauriConf;
     setPref('tauriConf', Convert.tauriConfToJson(tauriConf));
     clearLayoutCache();
+}
+
+export function setAIConf(aiConf: AIConf) {
+    store.aiConf = aiConf;
+    setPref('aiConf', Convert.aIConfToJson(aiConf));
 }
 
 export function historyPrev(curPage: PageType, history: History, isEditMode: boolean) {

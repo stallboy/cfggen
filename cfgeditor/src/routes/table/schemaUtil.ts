@@ -261,21 +261,33 @@ export class Schema {
         return '@in';
     }
 
-    getSTableByLastName(tableLabel:string) : STable|undefined{
+    getSTableByLastName(tableLabel: string): STable | undefined {
         for (const item of this.itemMap.values()) {
             if (item.type == 'table') {
                 let name = item.name
                 const i = name.lastIndexOf('.');
-                if (i != -1){
-                    name = name.substring(i+1);
+                if (i != -1) {
+                    name = name.substring(i + 1);
                 }
-                if (name == tableLabel){
+                if (name == tableLabel) {
                     return item as STable;
                 }
             }
         }
     }
 
+    getAllEditableSTables(): STable[] {
+        const res: STable[] = [];
+        for (const item of this.itemMap.values()) {
+            if (item.type == 'table') {
+                const t = item as STable;
+                if (t.isEditable) {
+                    res.push(t);
+                }
+            }
+        }
+        return res;
+    }
 }
 
 function setUnion(dst: Set<string>, from: Set<string>) {

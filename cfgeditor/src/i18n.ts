@@ -65,7 +65,7 @@ i18n.use(LanguageDetector)
 
                     basicSetting: '基础',
                     recordShowSetting: '显示',
-                    fixedPagesSetting: '固定页面',
+                    serverAndAi: 'ai',
                     operations: '操作',
                     keySetting: '快捷键',
                     appSetting: '资源',

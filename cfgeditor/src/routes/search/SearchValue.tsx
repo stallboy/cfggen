@@ -83,13 +83,13 @@ export function SearchValue() {
                          rowKey={(item: SearchResultItem) => `${item.table}-${item.pk}-${item.fieldChain}`}/>
     }
 
-    return <div>
+    return <>
         <Input.Search placeholder='search value' defaultValue={query}
                       enterButton={t('search')}
                       size='large'
                       loading={loading}
                       onSearch={onSearch}/>
         {content}
-    </div>
+    </>
 
 }

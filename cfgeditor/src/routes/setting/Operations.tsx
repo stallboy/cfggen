@@ -1,7 +1,12 @@
 import {memo, RefObject} from "react";
 import {useTranslation} from "react-i18next";
-import {App, Button, Divider, Form, Input, InputNumber} from "antd";
-import {setImageSizeScale, setServer, store, useLocationData, invalidateAllQueries} from "./store.ts";
+import {App, Button, Divider, Form, InputNumber} from "antd";
+import {
+    setImageSizeScale,
+    store,
+    useLocationData,
+    invalidateAllQueries,
+} from "./store.ts";
 import {CloseOutlined} from "@ant-design/icons";
 import {Schema} from "../table/schemaUtil.ts";
 import {STable} from "../table/schemaModel.ts";
@@ -11,6 +16,7 @@ import {deleteRecord} from "../api.ts";
 import {toBlob} from "html-to-image";
 import {saveAs} from "file-saver";
 import {formLayout} from "./BasicSetting.tsx";
+import {OpFixPages} from "./OpFixPages.tsx";
 
 
 export const Operations = memo(function Operations({schema, curTable, flowRef}: {
@@ -89,32 +95,29 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
         })
     }
 
-    return <Form {...formLayout} layout={'horizontal'}
-                 initialValues={{imageSizeScale, server}}>
-        <Form.Item name='imageSizeScale' label={t('imageSizeScale')}>
-            <InputNumber min={1} max={256} onChange={setImageSizeScale}/>
-        </Form.Item>
 
-        <Form.Item wrapperCol={{offset: 6}}>
-            <Button type="primary" onClick={onToPng}>
-                {t('toPng')}
-            </Button>
-        </Form.Item>
+    return <>
+        <OpFixPages schema={schema} curTable={curTable}/>
+        <Form {...formLayout} layout={'horizontal'} initialValues={{imageSizeScale}}>
+            <Form.Item name='imageSizeScale' label={t('imageSizeScale')}>
+                <InputNumber min={1} max={256} onChange={setImageSizeScale}/>
+            </Form.Item>
 
-        <Form.Item label={t('curServer')}>
-            {server}
-        </Form.Item>
-        <Form.Item name='server' label={t('newServer')}>
-            <Input.Search enterButton={t('connect')} onSearch={(value: string) => setServer(value)}/>
-        </Form.Item>
+            <Form.Item wrapperCol={{offset: 6}}>
+                <Button type="primary" onClick={onToPng}>
+                    {t('toPng')}
+                </Button>
+            </Form.Item>
 
-        <Divider/>
+            <Divider/>
 
-        {(schema && curTable && schema.isEditable && curTable.isEditable) &&
-            <Button type="primary" danger onClick={() => deleteRecordMutation.mutate()}>
-                <CloseOutlined/>{t('deleteCurRecord')}
-            </Button>
-        }
+            {(schema && curTable && schema.isEditable && curTable.isEditable) &&
+                <Button type="primary" danger onClick={() => deleteRecordMutation.mutate()}>
+                    <CloseOutlined/>{t('deleteCurRecord')}
+                </Button>
+            }
 
-    </Form>;
+        </Form>
+
+    </>;
 });

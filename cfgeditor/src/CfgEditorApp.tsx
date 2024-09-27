@@ -1,7 +1,6 @@
 import {CSSProperties, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {Alert, Drawer, Flex, Form, Input, Modal,} from "antd";
 import {RecordRef} from "./routes/record/RecordRef.tsx";
-import {SearchValue} from "./routes/search/SearchValue.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
 import {useTranslation} from "react-i18next";
 import {DraggablePanel} from "@ant-design/pro-editor";
@@ -21,6 +20,7 @@ import {fetchNotes, fetchSchema} from "./routes/api.ts";
 import {useQuery} from "@tanstack/react-query";
 import {HeaderBar} from "./routes/headerbar/HeaderBar.tsx";
 import {FlowGraph} from "./flow/FlowGraph.tsx";
+import {Query} from "./routes/search/Query.tsx";
 
 
 export type SchemaTableType = {
@@ -60,10 +60,10 @@ export function CfgEditorApp() {
 
     const {curTableId, curId} = useLocationData();
     const [settingOpen, setSettingOpen] = useState<boolean>(false);
-    const [searchOpen, setSearchOpen] = useState<boolean>(false);
+    const [queryOpen, setQueryOpen] = useState<boolean>(false);
     const navigate = useNavigate();
 
-    useHotkeys('alt+x', () => setSearchOpen(true));
+    useHotkeys('alt+x', () => setQueryOpen(true));
 
     const {t} = useTranslation();
     const ref = useRef<HTMLDivElement>(null)
@@ -96,9 +96,9 @@ export function CfgEditorApp() {
         setSettingOpen(false);
     }, [setSettingOpen]);
 
-    const onSearchClose = useCallback(() => {
-        setSearchOpen(false);
-    }, [setSearchOpen]);
+    const onQueryClose = useCallback(() => {
+        setQueryOpen(false);
+    }, [setQueryOpen]);
 
 
     const handleModalOk = useCallback(() => {
@@ -171,7 +171,7 @@ export function CfgEditorApp() {
 
     return <div>
         <HeaderBar schema={schema} curTable={curTable}
-                   setSettingOpen={setSettingOpen} setSearchOpen={setSearchOpen}/>
+                   setSettingOpen={setSettingOpen} setSearchOpen={setQueryOpen}/>
 
         {content}
 
@@ -192,12 +192,12 @@ export function CfgEditorApp() {
             </Flex>
         </Modal>
 
-        <Drawer title="setting" placement="left" onClose={onSettingClose} open={settingOpen} size='large'>
+        <Drawer title={t("setting")} placement="left" onClose={onSettingClose} open={settingOpen} size='large'>
             <Setting schema={schema} curTable={curTable} flowRef={ref}/>
         </Drawer>
 
-        <Drawer title="search" placement="left" onClose={onSearchClose} open={searchOpen} size='large'>
-            <SearchValue/>
+        <Drawer title={t("query")} placement="left" onClose={onQueryClose} open={queryOpen} size='large'>
+            <Query/>
         </Drawer>
     </div>;
 }

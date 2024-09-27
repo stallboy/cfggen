@@ -14,7 +14,7 @@ function onFinishPageConf(values: any) {
     setFixedPagesConf(values);
 }
 
-export const FixedPagesSetting = memo(function FixedPagesSetting({schema, curTable}: {
+export const OpFixPages = memo(function FixedPagesSetting({schema, curTable}: {
     schema: Schema | undefined;
     curTable: STable | null;
 }) {

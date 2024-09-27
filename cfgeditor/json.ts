@@ -49,3 +49,16 @@ export interface TauriConf {
     assetDir: string;
     assetRefTable: string;
 }
+
+export interface AIExample {
+    table: string;
+    id: string;
+    description: string;
+}
+
+export interface AIConf {
+    baseUrl: string;
+    apiKey: string;
+    model: string;
+    examples: AIExample[];
+}
