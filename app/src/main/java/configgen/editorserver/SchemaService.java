@@ -88,6 +88,10 @@ public class SchemaService {
         }
     }
 
+    /**
+     * 结构信息
+     * @param isEditable 因为可能是partial，此时不能被编辑
+     */
     public record Schema(boolean isEditable,
                          List<SNameable> items) {
     }

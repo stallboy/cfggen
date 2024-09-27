@@ -4,6 +4,11 @@ import java.util.*;
 
 public class TableSchemaRefGraph {
 
+    /**
+     * table依赖中的一个节点
+     * @param refIn 谁引用到我
+     * @param refOut 我引用到谁
+     */
     public record Refs(Set<String> refIn,
                        Set<String> refOut) {
     }
