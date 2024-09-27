@@ -41,8 +41,8 @@ const rightDivStyle = {flex: 'auto'};
 const fullDivStyle = {height: "100vh", width: "100vw"};
 const disabledProps = {disabled: true}
 
-function onDragPanelSizeChange(_delta: any, size?: { width: string | number }) {
-    if (size) {
+function onDragPanelSizeChange(_delta: any, size?: { width?: string | number }) {
+    if (size && size.width) {
         setDragPanelWidth(size.width);
     }
 }
