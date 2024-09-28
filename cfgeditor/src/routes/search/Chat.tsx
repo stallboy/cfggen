@@ -5,7 +5,7 @@ import OpenAI from "openai";
 import {store} from "../setting/store.ts";
 import {ChatMessage} from "@ant-design/pro-chat/es/types/message";
 import {AIConf} from "../setting/storageJson.ts";
-import {Button, Col, Form, Input, Row} from "antd";
+import {Button, Col, Divider, Form, Input, Row} from "antd";
 import {useTranslation} from "react-i18next";
 import {formLayout} from "../setting/BasicSetting.tsx";
 
@@ -16,34 +16,19 @@ function onAICreate(values: any) {
 export function Chat() {
     const theme = useTheme();
     const {aiConf} = store;
-    const {t} = useTranslation();
+    // const {t} = useTranslation();
 
-    return (
+    return <>
+        <div style={{height: "5vh"}}/>
         <div style={{backgroundColor: theme.colorBgLayout}}>
-            <Form name="aiCreate"  {...formLayout} onFinish={onAICreate} autoComplete="off">
-                <Row  >
-                    <Col span={20}>
-                        <Form.Item name='prompt'>
-                            <Input.TextArea placeholder="id,description"/>
-                        </Form.Item>
-                    </Col>
 
-                    <Col span={4}>
-                        <Button type="primary" htmlType="submit">
-                            {t('aiCreate')}
-                        </Button>
-                    </Col>
-                </Row>
-
-            </Form>
-
-            <ProChat style={{height: "75vh"}}
+            <ProChat style={{height: "95vh"}}
                      request={async (messages: ChatMessage[]) => {
                          return ask(messages, aiConf)
                      }}
             />
         </div>
-    );
+    </>;
 }
 
 

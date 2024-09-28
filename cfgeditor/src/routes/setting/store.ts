@@ -31,8 +31,7 @@ export type StoreState = {
     searchMax: number;
     imageSizeScale: number;
 
-    dragPanel: string;  // 'recordRef', 'none', page.label（page的label不要用recordRef和none）
-    dragPanelWidth: string | number;
+    dragPanel: string;  // 'recordRef', 'none', 'search', 'chat', page.label（page的label前面的）
     pageConf: FixedPagesConf;
     tauriConf: TauriConf;
 
@@ -78,7 +77,6 @@ const storeState: StoreState = {
     imageSizeScale: 4,
 
     dragPanel: 'none',
-    dragPanelWidth: '50vw',
     pageConf: {
         pages: [],
     },
@@ -96,7 +94,7 @@ const storeState: StoreState = {
 
 let prefKeySet: Set<string> | undefined;
 let prefSelfKeySet: Set<string> = new Set<string>(['curPage', 'curTableId', 'curId', 'query', 'isEditMode',
-    'imageSizeScale', 'dragPanel', 'dragPanelWidth']);
+    'imageSizeScale', 'dragPanel']);
 
 export function getPrefKeySet(): Set<string> {
     if (prefKeySet === undefined) {
@@ -105,7 +103,6 @@ export function getPrefKeySet(): Set<string> {
 
         prefKeySet.delete('imageSizeScale');
         prefKeySet.delete('dragPanel');
-        prefKeySet.delete('dragPanelWidth');
 
         prefKeySet.delete('history');
         prefKeySet.delete('isEditMode');
@@ -273,11 +270,6 @@ export function setImageSizeScale(value: number | null) {
 export function setDragPanel(value: string) {
     store.dragPanel = value;
     setPref('dragPanel', value);
-}
-
-export function setDragPanelWidth(value: string | number) {
-    store.dragPanelWidth = value;
-    setPref('dragPanelWidth', value.toString());
 }
 
 export function makeFixedPage(curTableId: string, curId: string) {

@@ -1,5 +1,5 @@
 import {useState} from "react";
-import {App, Button, Empty, Input, Result, Table} from "antd";
+import {App, Button, Card, Empty, Input, Result, Table} from "antd";
 import {SearchResult, SearchResultItem} from "./searchModel.ts";
 import {useTranslation} from "react-i18next";
 import {navTo, setQuery, store, useLocationData} from "../setting/store.ts";
@@ -49,7 +49,7 @@ export function SearchValue() {
             {
                 title: 'id',
                 // align: 'left',
-                width: 200,
+                width: 160,
                 key: 'id',
                 ellipsis: {
                     showTitle: false
@@ -66,30 +66,39 @@ export function SearchValue() {
             {
                 title: 'fieldChain',
                 dataIndex: 'fieldChain',
-                width: 200,
+                width: 160,
                 key: 'fieldChain',
                 ellipsis: true,
             },
             {
                 title: 'value',
                 dataIndex: 'value',
-                width: 300,
+                // width: 300,
                 key: 'value',
                 ellipsis: true,
             }
         ];
         //q={searchResult.q}&max={searchResult.max}
-        content = <Table columns={columns} dataSource={searchResult.items} pagination={false}
-                         rowKey={(item: SearchResultItem) => `${item.table}-${item.pk}-${item.fieldChain}`}/>
+        content =
+            // <div style={{overflow: "auto"}}>
+            <Table columns={columns} dataSource={searchResult.items}
+                   pagination={false}
+                   // pagination={{position: ['bottomRight']}}
+                   // scroll={{y: "80vh"}}
+                   rowKey={(item: SearchResultItem) => `${item.table}-${item.pk}-${item.fieldChain}`}/>
+        // </div>
     }
-
     return <>
-        <Input.Search placeholder='search value' defaultValue={query}
-                      enterButton={t('search')}
-                      size='large'
-                      loading={loading}
-                      onSearch={onSearch}/>
-        {content}
+        <div style={{height: 32}}/>
+        <Card style={{overflow:"auto"}}>
+            <Input.Search placeholder='search value' defaultValue={query}
+                          enterButton={t('search')}
+                          size='large'
+                          loading={loading}
+                          onSearch={onSearch}/>
+            {content}
+        </Card>
     </>
+
 
 }

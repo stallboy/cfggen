@@ -1,15 +1,13 @@
 import {CSSProperties, useCallback, useEffect, useMemo, useRef, useState} from "react";
-import {Alert, Drawer, Flex, Form, Input, Modal,} from "antd";
+import {Alert, Drawer, Flex, Form, Input, Modal, Splitter,} from "antd";
 import {RecordRef} from "./routes/record/RecordRef.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
 import {useTranslation} from "react-i18next";
-import {DraggablePanel} from "@ant-design/pro-editor";
 import {Setting} from "./routes/setting/Setting.tsx";
 import {Schema} from "./routes/table/schemaUtil.ts";
 import {
     getFixedPage,
     getLastNavToInLocalStore,
-    setDragPanelWidth,
     setServer,
     store,
     useLocationData
@@ -21,6 +19,8 @@ import {useQuery} from "@tanstack/react-query";
 import {HeaderBar} from "./routes/headerbar/HeaderBar.tsx";
 import {FlowGraph} from "./flow/FlowGraph.tsx";
 import {Query} from "./routes/search/Query.tsx";
+import {SearchValue} from "./routes/search/SearchValue.tsx";
+import {Chat} from "./routes/search/Chat.tsx";
 
 
 export type SchemaTableType = {
@@ -36,17 +36,11 @@ const contentDivStyle: CSSProperties = {
     height: "100vh",
     width: "100vw"
 };
-const dragPanelStyle: CSSProperties = {background: '#fff', width: '100%', padding: 12};
-const rightDivStyle = {flex: 'auto'};
+
 const fullDivStyle = {height: "100vh", width: "100vw"};
 const disabledProps = {disabled: true}
-
-function onDragPanelSizeChange(_delta: any, size?: { width?: string | number }) {
-    if (size && size.width) {
-        setDragPanelWidth(size.width);
-    }
-}
-
+const autoOverflow = { overflow: 'auto' }
+const fullHeight = {height: '100%'}
 
 function onConnectServer(value: string) {
     setServer(value);
@@ -54,7 +48,7 @@ function onConnectServer(value: string) {
 
 export function CfgEditorApp() {
     const {
-        server, dragPanel, dragPanelWidth, pageConf,
+        server, dragPanel, pageConf,
         recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow,
     } = store;
 
@@ -105,10 +99,6 @@ export function CfgEditorApp() {
         onConnectServer(server);
     }, [server]);
 
-    const dragDefaultSize = useMemo(() => {
-        return {width: dragPanelWidth};
-    }, [dragPanelWidth]);
-
     let content;
     if ((!schema) || curTable == null) {
         // console.log("empty content");
@@ -116,50 +106,58 @@ export function CfgEditorApp() {
     } else {
         let dragPage = null;
         if (dragPanel == 'recordRef') {
-            dragPage = <RecordRef schema={schema}
-                                  notes={notes}
-                                  curTable={curTable}
-                                  curId={curId}
-                                  refIn={recordRefIn}
-                                  refOutDepth={recordRefOutDepth}
-                                  maxNode={recordMaxNode}
-                                  nodeShow={nodeShow}
-                                  inDragPanelAndFix={false}/>;
+            dragPage = <FlowGraph>
+                <RecordRef schema={schema}
+                           notes={notes}
+                           curTable={curTable}
+                           curId={curId}
+                           refIn={recordRefIn}
+                           refOutDepth={recordRefOutDepth}
+                           maxNode={recordMaxNode}
+                           nodeShow={nodeShow}
+                           inDragPanelAndFix={false}/>
+            </FlowGraph>;
+        } else if (dragPanel == 'search') {
+            dragPage = <SearchValue/>;
+
+        } else if (dragPanel == 'chat') {
+            dragPage = <Chat/>
+
         } else if (dragPanel != 'none') {
             const fix = getFixedPage(pageConf, dragPanel);
             if (fix) {
                 const fixedTable = schema.getSTable(fix.table);
                 if (fixedTable) {
-                    dragPage = <RecordRef schema={schema}
-                                          notes={notes}
-                                          curTable={fixedTable}
-                                          curId={fix.id}
-                                          refIn={fix.refIn}
-                                          refOutDepth={fix.refOutDepth}
-                                          maxNode={fix.maxNode}
-                                          nodeShow={fix.nodeShow}
-                                          inDragPanelAndFix={true}/>;
+                    dragPage = <FlowGraph>
+                        <RecordRef schema={schema}
+                                   notes={notes}
+                                   curTable={fixedTable}
+                                   curId={fix.id}
+                                   refIn={fix.refIn}
+                                   refOutDepth={fix.refOutDepth}
+                                   maxNode={fix.maxNode}
+                                   nodeShow={fix.nodeShow}
+                                   inDragPanelAndFix={true}/>
+                    </FlowGraph>;
                 }
             }
         }
 
         if (dragPage) {
-            content = <div style={contentDivStyle}>
-                <DraggablePanel
-                    placement='left'
-                    style={dragPanelStyle}
-                    defaultSize={dragDefaultSize}
-                    onSizeChange={onDragPanelSizeChange}>
-                    <FlowGraph>
+            content = <Splitter style={contentDivStyle}>
+                <Splitter.Panel defaultSize="40%" style={autoOverflow}>
+                    <div style={fullHeight}>
                         {dragPage}
-                    </FlowGraph>
-                </DraggablePanel>
-                <div ref={ref} style={rightDivStyle}>
-                    <FlowGraph>
-                        <Outlet context={outletCtx}/>
-                    </FlowGraph>
-                </div>
-            </div>;
+                    </div>
+                </Splitter.Panel>
+                <Splitter.Panel>
+                    <div ref={ref} style={fullHeight}>
+                        <FlowGraph>
+                            <Outlet context={outletCtx}/>
+                        </FlowGraph>
+                    </div>
+                </Splitter.Panel>
+            </Splitter>;
         } else {
             content = <div ref={ref} style={fullDivStyle}>
                 <FlowGraph>
@@ -199,6 +197,7 @@ export function CfgEditorApp() {
         <Drawer title={t("query")} placement="left" onClose={onQueryClose} open={queryOpen} size='large'>
             <Query/>
         </Drawer>
-    </div>;
+    </div>
+        ;
 }
 
