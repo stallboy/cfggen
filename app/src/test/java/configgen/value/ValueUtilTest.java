@@ -119,8 +119,7 @@ class ValueUtilTest {
                 id,rank,rankName""";
         Resources.addTempFileFromText("test.csv", tempDir, testStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         List<ForeignKeySchema> fks = ctx.cfgSchema().findTable("test").foreignKeys();
         CfgValue cfgValue = ctx.makeValue();
         VTable rank = cfgValue.getTable("rank");

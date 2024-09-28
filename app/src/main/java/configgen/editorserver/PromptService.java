@@ -1,26 +1,28 @@
 package configgen.editorserver;
 
-import configgen.schema.TableSchema;
-import configgen.value.CfgValue;
-import configgen.value.ValueErrs;
-import configgen.value.ValuePack;
+import configgen.ctx.Context;
+import configgen.schema.*;
+import configgen.schema.cfg.CfgWriter;
+import configgen.util.Logger;
+import configgen.value.*;
 
+import java.nio.file.Path;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static configgen.editorserver.PromptService.PromptResultCode.*;
 
 
 public class PromptService {
 
-    public record AIExample(String id,
-                            String description) {
-    }
-
     public record PromptRequest(String role,
                                 String table,
                                 List<AIExample> examples) {
+    }
+
+    public record AIExample(String id,
+                            String description) {
     }
 
     public record PromptResponse(PromptResultCode resultCode,
@@ -44,10 +46,12 @@ public class PromptService {
     }
 
     private final CfgValue cfgValue;
+    private final TableSchemaRefGraph graph;
     private final PromptRequest req;
 
-    public PromptService(CfgValue cfgValue, PromptRequest req) {
+    public PromptService(CfgValue cfgValue, TableSchemaRefGraph graph, PromptRequest req) {
         this.cfgValue = cfgValue;
+        this.graph = graph;
         this.req = req;
     }
 
@@ -99,50 +103,98 @@ public class PromptService {
         sb = new StringBuilder(4096);
 
         add("""
-                - Role: {0}ºÍjsonÉú³É×¨¼Ò
-                - Background: ÒÔÏÂ»á¸ø³ö{1}Ïà¹ØµÄ½á¹¹¶¨Òå£¬ºÍÏà¹ØÁªcsv±íÄÚÈİ£¬È»ºó¸ù¾İÃèÊöÀ´Éú³É{1}½á¹¹µÄjsonÎÄ¼ş
-                    - {1}Ïà¹ØµÄ½á¹¹¶¨Òå£¬½á¹¹¶¨ÒåÖĞµÄ```->```Ö¸Ã÷ÁË´Ë×Ö¶ÎÍâ¼üµ½ÁíÒ»¸ö±í¡£ÈçÏÂ
+                - Role: {0}å’Œjsonç”Ÿæˆä¸“å®¶
+                - Background: ä»¥ä¸‹ä¼šç»™å‡º{1}ç›¸å…³çš„ç»“æ„å®šä¹‰ï¼Œå’Œç›¸å…³è”csvè¡¨å†…å®¹ï¼Œç„¶åæ ¹æ®æè¿°æ¥ç”Ÿæˆ{1}ç»“æ„çš„jsonæ–‡ä»¶
+                \t- {1}ç›¸å…³çš„ç»“æ„å®šä¹‰ï¼Œç»“æ„å®šä¹‰ä¸­çš„```->```æŒ‡æ˜äº†æ­¤å­—æ®µå¤–é”®åˆ°å¦ä¸€ä¸ªè¡¨ã€‚å¦‚ä¸‹
+                \t```
                 """, req.role, req.table);
-
-        add("\t```");
         addSchema(tableSchema);
-        add("\t```");
-        add("\t- Ïà¹Øcsv±íÄÚÈİ,±íÖĞµÚÒ»ĞĞÊÇ±íÍ·³ÌĞòÓÃÃû³Æ£¬Ö®ºóÊÇ¾ßÌåÊı¾İ\n");
+        add("""
+                \t```
+                \t- ç›¸å…³csvè¡¨å†…å®¹,è¡¨ä¸­ç¬¬ä¸€è¡Œæ˜¯è¡¨å¤´ç¨‹åºç”¨åç§°ï¼Œä¹‹åæ˜¯å…·ä½“æ•°æ®
+                """);
         addRelatedCsv(tableSchema);
         add("""
-                - Profile: ÄãÊÇÒ»Î»¾­Ñé·á¸»Âß¼­ÑÏÃÜµÄ{0}£¬ÉÃ³¤°ÑĞèÇóÃèÊö×ª±äÎª·ûºÏ½á¹¹µÄjsonÊı¾İ
-                - Skills: Äã¾ß±¸ÉîºñµÄĞĞÒµ¾­Ñé¡¢¶Ôjson¸ñÊ½ÓĞÉîÈëÀí½â£¬²¢ÇÒÄÜ¹»Áé»îÔËÓÃ¸÷ÖÖ±à³ÌÓïÑÔºÍ¹¤¾ßÀ´Éú³ÉºÍÑéÖ¤jsonÊı¾İ
-                - Goals: °ÑÃèÊö×ª±äÎª·ûºÏ{1}½á¹¹¶¨ÒåµÄjsonÊı¾İ
-                - Constrains: Éú³ÉµÄjsonÊı¾İ±ØĞëÑÏ¸ñ×ñÊØ¶¨ÒåµÄÊı¾İ½á¹¹£¬È·±£Êı¾İµÄÒ»ÖÂĞÔºÍÓĞĞ§ĞÔ¡£×ñÊØÒÔÏÂ¹æÔò
-                    - Èç¹û¶ÔÏóÀï×Ö¶ÎÎªÄ¬ÈÏÖµ£¬Ôò¿ÉÒÔºöÂÔ´Ë×Ö¶Î
-                        - ×Ö¶ÎÀàĞÍÎªnumber£¬Ä¬ÈÏÎª0
-                        - ×Ö¶ÎÀàĞÍÎªarray£¬Ä¬ÈÏÎª[]
-                        - ×Ö¶ÎÀàĞÍÎªstr£¬Ä¬ÈÏÎª¿Õ×Ö·û´®
-                    - ¶ÔÏóÒª¼ÓÈë$type×Ö¶Î£¬À´±íÃ÷´Ë¶ÔÏóµÄÀàĞÍ
-                      - $typeµÄÖµ ²»ÄÜÊÇ½á¹¹¶¨ÒåÀïµÄ£¬interfaceÃû³Æ£¬¶ø±ØĞëÊÇ¾ßÌåµÄstructÃû³Æ¡£
-                    - ¶ÔÏó¿ÉÒÔ¼ÓÈë$note×Ö¶Î£¬×÷Îª×¢ÊÍ£¬²»ÓÃÈ«²¿¶¼¼Ó£¬×îºÃÕâĞ©×¢ÊÍºÏÆğÀ´×é³ÉÁËÃèÊö
-                    - jsonÖĞ²»Òª°üº¬```//```¿ªÍ·µÄ×¢ÊÍ
+                - Profile: ä½ æ˜¯ä¸€ä½ç»éªŒä¸°å¯Œé€»è¾‘ä¸¥å¯†çš„{0}ï¼Œæ“…é•¿æŠŠéœ€æ±‚æè¿°è½¬å˜ä¸ºç¬¦åˆç»“æ„çš„jsonæ•°æ®
+                - Skills: ä½ å…·å¤‡æ·±åšçš„è¡Œä¸šç»éªŒã€å¯¹jsonæ ¼å¼æœ‰æ·±å…¥ç†è§£ï¼Œå¹¶ä¸”èƒ½å¤Ÿçµæ´»è¿ç”¨å„ç§ç¼–ç¨‹è¯­è¨€å’Œå·¥å…·æ¥ç”Ÿæˆå’ŒéªŒè¯jsonæ•°æ®
+                - Goals: æŠŠæè¿°è½¬å˜ä¸ºç¬¦åˆ{1}ç»“æ„å®šä¹‰çš„jsonæ•°æ®
+                - Constrains: ç”Ÿæˆçš„jsonæ•°æ®å¿…é¡»ä¸¥æ ¼éµå®ˆå®šä¹‰çš„æ•°æ®ç»“æ„ï¼Œç¡®ä¿æ•°æ®çš„ä¸€è‡´æ€§å’Œæœ‰æ•ˆæ€§ã€‚éµå®ˆä»¥ä¸‹è§„åˆ™
+                \t- å¦‚æœå¯¹è±¡é‡Œå­—æ®µä¸ºé»˜è®¤å€¼ï¼Œåˆ™å¯ä»¥å¿½ç•¥æ­¤å­—æ®µ
+                \t\t- å­—æ®µç±»å‹ä¸ºnumberï¼Œé»˜è®¤ä¸º0
+                \t\t- å­—æ®µç±»å‹ä¸ºarrayï¼Œé»˜è®¤ä¸º[]
+                \t\t- å­—æ®µç±»å‹ä¸ºstrï¼Œé»˜è®¤ä¸ºç©ºå­—ç¬¦ä¸²
+                \t- å¯¹è±¡è¦åŠ å…¥$typeå­—æ®µï¼Œæ¥è¡¨æ˜æ­¤å¯¹è±¡çš„ç±»å‹
+                \t\t- $typeçš„å€¼ ä¸èƒ½æ˜¯ç»“æ„å®šä¹‰é‡Œçš„ï¼Œinterfaceåç§°ï¼Œè€Œå¿…é¡»æ˜¯å…·ä½“çš„structåç§°ã€‚
+                \t- å¯¹è±¡å¯ä»¥åŠ å…¥$noteå­—æ®µï¼Œä½œä¸ºæ³¨é‡Šï¼Œä¸ç”¨å…¨éƒ¨éƒ½åŠ ï¼Œæœ€å¥½è¿™äº›æ³¨é‡Šåˆèµ·æ¥ç»„æˆäº†æè¿°
+                \t- jsonä¸­ä¸è¦åŒ…å«```//```å¼€å¤´çš„æ³¨é‡Š
                 - OutputFormat: json
                 - Examples:
                 """, req.role, req.table);
         addExamples(resolvedExamples);
-        add("-Initialization: ÔÚµÚÒ»´Î¶Ô»°ÖĞ£¬ÇëÖ±½ÓÊä³öÒÔÏÂ£ºÄúºÃ£¡ÇëÌá¹©idºÍÏëÒªµÄbuffÃèÊö¡£ÎÒ½«¸ù¾İÕâĞ©ĞÅÏ¢ÎªÄúÉú³É·ûºÏ{0}½á¹¹µÄjsonÊı¾İ",
+        add("-Initialization: åœ¨ç¬¬ä¸€æ¬¡å¯¹è¯ä¸­ï¼Œè¯·ç›´æ¥è¾“å‡ºä»¥ä¸‹ï¼šæ‚¨å¥½ï¼è¯·æä¾›idå’Œæƒ³è¦çš„buffæè¿°ã€‚æˆ‘å°†æ ¹æ®è¿™äº›ä¿¡æ¯ä¸ºæ‚¨ç”Ÿæˆç¬¦åˆ{0}ç»“æ„çš„jsonæ•°æ®",
                 req.table);
         return sb.toString();
     }
 
     private void addSchema(TableSchema tableSchema) {
-        
+        Map<String, Nameable> allIncludedStructs = IncludedStructs.findAllIncludedStructs(tableSchema);
+        for (Nameable s : allIncludedStructs.values()) {
+            if (s instanceof StructSchema ss && ss.nullableInterface() != null) {
+                continue;
+            }
+            CfgWriter cfgWriter = new CfgWriter(sb, false, false);
+            cfgWriter.writeNamable(s, "\t");
+        }
     }
-    private void addRelatedCsv(TableSchema tableSchema) {
 
+    private void addRelatedCsv(TableSchema tableSchema) {
+        Collection<TableSchema> refOutTables = graph.getRefOutTables(tableSchema);
+        if (refOutTables != null) {
+            for (TableSchema refOutTable : refOutTables) {
+                if (refOutTable.entry() instanceof EntryType.EEnum en) {
+                    add("""
+                            \t\t- {0}
+                            \t\t```
+                            """, refOutTable.name());
+                    addOneRelatedCsv(refOutTable, en);
+                    add("""
+                            \t\t```
+                            """);
+                }
+            }
+
+        }
+    }
+
+    private void addOneRelatedCsv(TableSchema tableSchema, EntryType.EEnum en) {
+        Set<String> fieldNames = new LinkedHashSet<>(tableSchema.primaryKey().fields());
+        fieldNames.add(en.field());
+        String title = tableSchema.meta().getStr("title", null);
+        if (title != null) {
+            fieldNames.add(title);
+        }
+
+        CfgValue.VTable vTable = cfgValue.getTable(tableSchema.name());
+        ValueToCsv.writeAsCsv(sb, vTable, fieldNames, "\t\t");
     }
 
     private void addExamples(List<ResolvedExample> resolvedExamples) {
+        for (ResolvedExample e : resolvedExamples) {
+            add("""
+                    \t- {0}ï¼Œ{1}
+                    \t```json
+                    """, e.id, e.description);
+            String jsonString = ValueToJson.toJsonStr(e.record);
+            String result = Arrays.stream(jsonString.split("\n"))
+                    .map(line -> "\t" + line)
+                    .collect(Collectors.joining("\n"));
 
+            add(result + "\n");
+            add("""
+                    \t```
+                    """);
+        }
     }
-
-
 
     private void add(String str) {
         sb.append(str);
@@ -160,4 +212,18 @@ public class PromptService {
         return new PromptResponse(code, "");
     }
 
+    public static void main(String[] args) {
+        Logger.setWarningEnabled(false);
+        Context ctx = new Context(Path.of("."));
+        CfgValue cfgValue = ctx.makeValue();
+        TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
+        PromptService service = new PromptService(cfgValue, graph,
+                new PromptRequest("èµ„æ·±æ¸¸æˆç­–åˆ’", "skill.buff", List.of(
+                        new AIExample("410305", "æ‰€æœ‰ã€æš´æ€’æŠ€èƒ½ã€‘é€ æˆçš„ä¼¤å®³æé«˜30%"),
+                        new AIExample("410425", "æ¯ç§’é¢å¤–å›å¤6ç‚¹èƒ½é‡")
+                )));
+
+        PromptResponse r = service.gen();
+        System.out.println(r.prompt);
+    }
 }

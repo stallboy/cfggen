@@ -2,9 +2,6 @@ package configgen.value;
 
 import configgen.Resources;
 import configgen.ctx.Context;
-import configgen.data.CfgDataReader;
-import configgen.data.ReadByFastExcel;
-import configgen.data.ReadCsv;
 import configgen.schema.TableSchemaRefGraph;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -44,8 +41,7 @@ class ValueRefInCollectorTest {
                 npc/a.prefab,npc
                 """;
         Resources.addTempFileFromText("assets.csv", tempDir, assetStr);
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
 

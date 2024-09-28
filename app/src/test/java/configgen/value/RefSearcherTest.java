@@ -43,8 +43,7 @@ class RefSearcherTest {
                 npc/a.prefab,npc
                 """;
         Resources.addTempFileFromText("assets.csv", tempDir, assetStr);
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         RefSearcher.RefSearchResult res = RefSearcher.search(cfgValue, "assets", null, Set.of());

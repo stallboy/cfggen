@@ -1,7 +1,9 @@
 package configgen.value;
 
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson2.JSONWriter;
 import configgen.schema.FieldSchema;
 import configgen.value.ValueRefCollector.FieldRef;
 
@@ -17,6 +19,13 @@ public class ValueToJson {
     private final Map<RefId, VStruct> refIdToRecordMap;
     private boolean isSaveDefault;
 
+    public static String toJsonStr(VStruct record) {
+        ValueToJson toJson = new ValueToJson();
+        toJson.setSaveDefault(false);
+        JSONObject jsonObject = toJson.toJson(record);
+        return JSON.toJSONString(jsonObject, JSONWriter.Feature.PrettyFormat);
+    }
+
     public ValueToJson() {
         this(null, null);
     }
@@ -26,7 +35,6 @@ public class ValueToJson {
         this.refIdToRecordMap = refIdToRecordMap;
         this.isSaveDefault = true;
     }
-
 
     public void setSaveDefault(boolean saveDefault) {
         isSaveDefault = saveDefault;

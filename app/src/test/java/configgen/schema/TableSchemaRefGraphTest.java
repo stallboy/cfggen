@@ -78,6 +78,27 @@ class TableSchemaRefGraphTest {
 
 
     @Test
+    void directRefSelf() {
+        String str = """
+                table t1[id]{
+                    id:int;
+                    v:int ->t1;
+                }
+                """;
+
+        CfgSchema cfg = CfgReader.parse(str);
+        cfg.resolve().checkErrors();
+
+        TableSchemaRefGraph graph = new TableSchemaRefGraph(cfg);
+        {
+            Refs ref1 = graph.refsMap().get("t1");
+            assertEquals(Set.of("t1"), ref1.refOut());
+            assertEquals(Set.of("t1"), ref1.refIn());
+        }
+    }
+
+
+    @Test
     void indirectRefInAndOut_byStruct() {
         String str = """
                 struct s1 {

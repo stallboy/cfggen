@@ -1,7 +1,7 @@
 package configgen.schema;
 
 import static configgen.schema.FieldType.*;
-import static configgen.schema.IncludedStructsChecker.*;
+import static configgen.schema.IncludedStructs.*;
 
 /**
  * 预先计算每个结构是否有对外引用

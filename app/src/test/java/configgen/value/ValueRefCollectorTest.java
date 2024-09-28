@@ -2,9 +2,6 @@ package configgen.value;
 
 import configgen.Resources;
 import configgen.ctx.Context;
-import configgen.data.CfgDataReader;
-import configgen.data.ReadByFastExcel;
-import configgen.data.ReadCsv;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -34,8 +31,7 @@ class ValueRefCollectorTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         CfgValue.VStruct firstRecord = cfgValue.getTable("t").valueList().get(0);
         CfgValue.VStruct secondRecord = cfgValue.getTable("t").valueList().get(1);
@@ -52,7 +48,7 @@ class ValueRefCollectorTest {
         assertEquals("2", ref2record.getKey().id());
         assertEquals(secondRecord, ref2record.getValue());
 
-        ValueRefCollector.FieldRef fieldRef = fieldRefs.get(0);
+        ValueRefCollector.FieldRef fieldRef = fieldRefs.getFirst();
         assertEquals("next", fieldRef.firstField());
         assertEquals("refNext", fieldRef.label());
         assertEquals("t", fieldRef.toTable());
@@ -81,8 +77,7 @@ class ValueRefCollectorTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         CfgValue.VStruct firstRecord = cfgValue.getTable("t").valueList().get(0);
         CfgValue.VStruct secondRecord = cfgValue.getTable("t").valueList().get(1);
@@ -99,7 +94,7 @@ class ValueRefCollectorTest {
         assertEquals("2", ref2record.getKey().id());
         assertEquals(secondRecord, ref2record.getValue());
 
-        ValueRefCollector.FieldRef fieldRef = fieldRefs.get(0);
+        ValueRefCollector.FieldRef fieldRef = fieldRefs.getFirst();
         assertEquals("next", fieldRef.firstField());  // 第一个字段会被记录
         assertEquals("s.nullableRefNext", fieldRef.label());
         assertEquals("t", fieldRef.toTable());

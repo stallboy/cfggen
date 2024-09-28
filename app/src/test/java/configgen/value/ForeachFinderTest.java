@@ -2,9 +2,6 @@ package configgen.value;
 
 import configgen.Resources;
 import configgen.ctx.Context;
-import configgen.data.CfgDataReader;
-import configgen.data.ReadByFastExcel;
-import configgen.data.ReadCsv;
 import configgen.schema.InterfaceSchema;
 import configgen.value.ForeachFinder.FStructField;
 import configgen.value.ForeachFinder.Finder;
@@ -40,8 +37,7 @@ class ForeachFinderTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         List<CfgValue.Value> list = new ArrayList<>();
@@ -71,8 +67,7 @@ class ForeachFinderTest {
                 2,33,44""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         List<Integer> list = new ArrayList<>();
@@ -112,8 +107,7 @@ class ForeachFinderTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         InterfaceSchema action = (InterfaceSchema) ctx.cfgSchema().findItem("action");
 

@@ -1,6 +1,6 @@
 package configgen.schema;
 
-import static configgen.schema.IncludedStructsChecker.*;
+import static configgen.schema.IncludedStructs.*;
 
 public class HasMap {
 

@@ -1,9 +1,7 @@
 package configgen.ctx;
 
+import configgen.data.*;
 import configgen.util.Logger;
-import configgen.data.CfgData;
-import configgen.data.CfgDataReader;
-import configgen.data.CfgSchemaAlignToData;
 import configgen.schema.*;
 import configgen.schema.cfg.Cfgs;
 import configgen.value.CfgValue;
@@ -23,6 +21,10 @@ public class Context {
     private CfgSchema cfgSchema;
     private CfgData cfgData;
 
+    public Context(Path dataDir) {
+        this(dataDir, new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE),
+                null, null);
+    }
 
     public Context(Path dataDir, CfgDataReader dataReader, TextI18n nullableI18n, LangSwitch nullableLangSwitch) {
         this.dataDir = dataDir;

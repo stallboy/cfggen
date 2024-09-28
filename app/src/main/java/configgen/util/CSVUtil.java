@@ -38,10 +38,16 @@ public class CSVUtil {
 
        "aaa","b""bb","ccc"
        */
-    public static void write(UTF8Writer writer, List<List<String>> rows) throws IOException {
+    public static void write(UTF8Writer writer, List<List<String>> rows)  {
         if (rows.isEmpty()) {
             return;
         }
+        StringBuilder sb = new StringBuilder(256);
+        write(sb, rows, "");
+        writer.write(sb.toString());
+    }
+
+    public static void write(StringBuilder sb, List<List<String>> rows, String prefix) {
         int columnCount = rows.getFirst().size();
 
         for (int r = 0; r < rows.size(); r++) {
@@ -50,6 +56,7 @@ public class CSVUtil {
                 throw new IllegalArgumentException("csv里每行数据个数应该相同，但这里第" + r + "行，数据有" + row.size() + "个,跟第一行" + columnCount + ",个数不符合");
             }
 
+            sb.append(prefix);
             for (int c = 0; c < row.size(); c++) {
                 String cell = row.get(c);
                 boolean enclose = false;
@@ -67,14 +74,15 @@ public class CSVUtil {
                 }
 
 
-                writer.write(cell);
+                sb.append(cell);
                 if (c != row.size() - 1) {
-                    writer.write(",");
+                    sb.append(",");
                 } else {
-                    writer.write("\r\n");
+                    sb.append("\r\n");
                 }
             }
         }
+
     }
 
 

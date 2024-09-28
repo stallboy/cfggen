@@ -2,7 +2,7 @@ package configgen.schema;
 
 import java.util.*;
 
-public class IncludedStructsChecker {
+public class IncludedStructs {
 
     public enum CheckResult {
         Ok,
@@ -14,12 +14,30 @@ public class IncludedStructsChecker {
         CheckResult check(Nameable nameable);
     }
 
+    private final static Checker unknownChecker = nameable -> CheckResult.Unknown;
+
+    /**
+     * @param nameable 目标
+     * @return 目标包含的所有子结构，包括自己，包括interface下的struct，key为fullName
+     */
+    public static Map<String, Nameable> findAllIncludedStructs(Nameable nameable) {
+        Map<String, Nameable> result = new LinkedHashMap<>();
+        checkAnyOk(nameable, unknownChecker, result);
+        return result;
+    }
+
+    /**
+     * @param nameable 目标
+     * @param checker  针对单个结构进行检查
+     * @return 目标包含的所有子结构是否有任意一个返回ok
+     */
     public static boolean checkAnyOk(Nameable nameable, Checker checker) {
-        Set<String> checked = new HashSet<>();
+        return checkAnyOk(nameable, checker, new HashMap<>(4));
+    }
 
-        Map<String, Nameable> frontiers = new HashMap<>();
+    public static boolean checkAnyOk(Nameable nameable, Checker checker, Map<String, Nameable> checked) {
+        Map<String, Nameable> frontiers = new LinkedHashMap<>();
         frontiers.put(nameable.fullName(), nameable);
-
 
         while (!frontiers.isEmpty()) {
             List<Nameable> unknownFrontiers = new ArrayList<>(4);
@@ -36,7 +54,7 @@ public class IncludedStructsChecker {
                     }
                 }
             }
-            checked.addAll(frontiers.keySet());
+            checked.putAll(frontiers);
 
             Map<String, Nameable> newFrontiers = new HashMap<>();
             for (Nameable frontier : unknownFrontiers) {
@@ -45,7 +63,7 @@ public class IncludedStructsChecker {
                     case InterfaceSchema sInterface -> {
                         for (StructSchema impl : sInterface.impls()) {
                             String fn = impl.fullName();
-                            if (!checked.contains(fn)) {
+                            if (!checked.containsKey(fn)) {
                                 newFrontiers.put(fn, impl);
                             }
                         }
@@ -57,7 +75,7 @@ public class IncludedStructsChecker {
                                 case FieldType.StructRef structRef -> {
                                     Fieldable obj = structRef.obj();
                                     String fn = obj.fullName();
-                                    if (!checked.contains(fn)) {
+                                    if (!checked.containsKey(fn)) {
                                         newFrontiers.put(fn, obj);
                                     }
                                 }
@@ -66,7 +84,7 @@ public class IncludedStructsChecker {
                                     if (item instanceof FieldType.StructRef structRef) {
                                         Fieldable obj = structRef.obj();
                                         String fn = obj.fullName();
-                                        if (!checked.contains(fn)) {
+                                        if (!checked.containsKey(fn)) {
                                             newFrontiers.put(fn, obj);
                                         }
                                     }
@@ -77,7 +95,7 @@ public class IncludedStructsChecker {
                                     if (key instanceof FieldType.StructRef structRef) {
                                         Fieldable obj = structRef.obj();
                                         String fn = obj.fullName();
-                                        if (!checked.contains(fn)) {
+                                        if (!checked.containsKey(fn)) {
                                             newFrontiers.put(fn, obj);
                                         }
                                     }
@@ -85,7 +103,7 @@ public class IncludedStructsChecker {
                                     if (value instanceof FieldType.StructRef structRef) {
                                         Fieldable obj = structRef.obj();
                                         String fn = obj.fullName();
-                                        if (!checked.contains(fn)) {
+                                        if (!checked.containsKey(fn)) {
                                             newFrontiers.put(fn, obj);
                                         }
                                     }

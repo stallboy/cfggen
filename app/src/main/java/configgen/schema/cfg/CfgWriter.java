@@ -21,7 +21,7 @@ public class CfgWriter {
     public static String stringify(CfgSchema cfg, boolean useLastName, boolean includeMetaStartWith_) {
         StringBuilder sb = new StringBuilder(4 * 1024);
         CfgWriter cfgWriter = new CfgWriter(sb, useLastName, includeMetaStartWith_);
-        cfgWriter.writeCfg(cfg);
+        cfgWriter.writeCfg(cfg, "");
         return sb.toString();
     }
 
@@ -31,17 +31,22 @@ public class CfgWriter {
         this.includeMetaStartWith_ = includeMetaStartWith_;
     }
 
-    public void writeCfg(CfgSchema cfg) {
+    public void writeCfg(CfgSchema cfg, String prefix) {
         for (Nameable item : cfg.items()) {
-            switch (item) {
-                case StructSchema structSchema -> writeStruct(structSchema, "");
-                case InterfaceSchema interfaceSchema -> writeInterface(interfaceSchema);
-                case TableSchema tableSchema -> writeTable(tableSchema);
-            }
+            writeNamable(item, prefix);
         }
     }
 
-    public void writeTable(TableSchema table) {
+    public void writeNamable(Nameable item, String prefix) {
+        switch (item) {
+            case StructSchema structSchema -> writeStruct(structSchema, prefix);
+            case InterfaceSchema interfaceSchema -> writeInterface(interfaceSchema, prefix);
+            case TableSchema tableSchema -> writeTable(tableSchema, prefix);
+        }
+
+    }
+
+    public void writeTable(TableSchema table, String prefix) {
         Metadata meta = table.meta().copy();
         if (table.isColumnMode()) {
             meta.putColumnMode();
@@ -50,16 +55,17 @@ public class CfgWriter {
         String comment = meta.removeComment();
 
         String name = useLastName ? table.lastName() : table.name();
-        println("table %s%s%s {%s", name, keyStr(table.primaryKey()), metadataStr(meta), commentStr(comment));
+        println("%stable %s%s%s {%s", prefix, name,
+                keyStr(table.primaryKey()), metadataStr(meta), commentStr(comment));
         for (KeySchema keySchema : table.uniqueKeys()) {
-            println("\t%s;", keyStr(keySchema));
+            println("%s\t%s;", prefix, keyStr(keySchema));
         }
-        writeStructural(table, "");
-        println("}");
+        writeStructural(table, prefix);
+        println("%s}", prefix);
         println();
     }
 
-    public void writeInterface(InterfaceSchema sInterface) {
+    public void writeInterface(InterfaceSchema sInterface, String prefix) {
         Metadata meta = sInterface.meta().copy();
         meta.putFmt(sInterface.fmt());
         if (!sInterface.defaultImpl().isEmpty()) {
@@ -71,11 +77,11 @@ public class CfgWriter {
         String comment = meta.removeComment();
 
         String name = useLastName ? sInterface.lastName() : sInterface.name();
-        println("interface %s%s {%s", name, metadataStr(meta), commentStr(comment));
+        println("%sinterface %s%s {%s", prefix, name, metadataStr(meta), commentStr(comment));
         for (StructSchema value : sInterface.impls()) {
-            writeStruct(value, "\t");
+            writeStruct(value, prefix + "\t");
         }
-        println("}");
+        println("%s}", prefix);
         println();
     }
 

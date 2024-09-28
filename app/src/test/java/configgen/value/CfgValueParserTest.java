@@ -3,9 +3,6 @@ package configgen.value;
 import configgen.Resources;
 import configgen.ctx.Context;
 import configgen.data.CfgData;
-import configgen.data.CfgDataReader;
-import configgen.data.ReadByFastExcel;
-import configgen.data.ReadCsv;
 import configgen.schema.InterfaceSchema;
 import configgen.schema.TableSchema;
 import configgen.value.CfgValue.*;
@@ -35,8 +32,7 @@ class CfgValueParserTest {
         Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
         Resources.addTempFileFromResourceFile("rank.csv", tempDir);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         VTable rank = cfgValue.getTable("rank");
         TableSchema rankSchema = ctx.cfgSchema().findTable("rank");
@@ -44,16 +40,16 @@ class CfgValueParserTest {
         assertEquals(rankSchema, rank.schema());
         assertEquals(5, rank.valueList().size());
         {
-            VStruct v = rank.valueList().get(0);
+            VStruct v = rank.valueList().getFirst();
             assertEquals(rankSchema, v.schema());
-            assertEquals(1, ((VInt) v.values().get(0)).value());
+            assertEquals(1, ((VInt) v.values().getFirst()).value());
             assertEquals("white", ((VString) v.values().get(1)).value());
             assertEquals("下品", ((VText) v.values().get(2)).value());
         }
         {
             VStruct v = rank.valueList().get(4);
             assertEquals(rankSchema, v.schema());
-            assertEquals(5, ((VInt) v.values().get(0)).value());
+            assertEquals(5, ((VInt) v.values().getFirst()).value());
             assertEquals("yellow", ((VString) v.values().get(1)).value());
             assertEquals("准神", ((VText) v.values().get(2)).value());
         }
@@ -79,8 +75,7 @@ class CfgValueParserTest {
                 2,333,444""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         VTable tVTable = cfgValue.getTable("t");
         TableSchema tSchema = ctx.cfgSchema().findTable("t");
@@ -88,19 +83,19 @@ class CfgValueParserTest {
         assertEquals(tSchema, tVTable.schema());
         assertEquals(2, tVTable.valueList().size());
         {
-            VStruct v = tVTable.valueList().get(0);
+            VStruct v = tVTable.valueList().getFirst();
             assertEquals(tSchema, v.schema());
-            assertEquals(1, ((VInt) v.values().get(0)).value());
+            assertEquals(1, ((VInt) v.values().getFirst()).value());
             VStruct s = (VStruct) v.values().get(1);
             assertEquals(ctx.cfgSchema().findItem("s"), s.schema());
-            assertEquals(111, ((VInt) s.values().get(0)).value());
+            assertEquals(111, ((VInt) s.values().getFirst()).value());
             assertEquals(222, ((VInt) s.values().get(1)).value());
         }
         {
             VStruct v = tVTable.valueList().get(1);
-            assertEquals(2, ((VInt) v.values().get(0)).value());
+            assertEquals(2, ((VInt) v.values().getFirst()).value());
             VStruct s = (VStruct) v.values().get(1);
-            assertEquals(333, ((VInt) s.values().get(0)).value());
+            assertEquals(333, ((VInt) s.values().getFirst()).value());
             assertEquals(444, ((VInt) s.values().get(1)).value());
         }
     }
@@ -131,8 +126,7 @@ class CfgValueParserTest {
                 2,talk,111,hello world!""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         VTable tVTable = cfgValue.getTable("t");
         TableSchema tSchema = ctx.cfgSchema().findTable("t");
@@ -142,19 +136,19 @@ class CfgValueParserTest {
         assertEquals(tSchema, tVTable.schema());
         assertEquals(2, tVTable.valueList().size());
         {
-            VStruct v = tVTable.valueList().get(0);
+            VStruct v = tVTable.valueList().getFirst();
             assertEquals(tSchema, v.schema());
-            assertEquals(1, ((VInt) v.values().get(0)).value());
+            assertEquals(1, ((VInt) v.values().getFirst()).value());
             VInterface s = (VInterface) v.values().get(1);
             assertEquals(action, s.schema());
             assertEquals(action.findImpl("cast"), s.child().schema());
-            assertEquals(123, ((VInt) s.child().values().get(0)).value());
+            assertEquals(123, ((VInt) s.child().values().getFirst()).value());
         }
         {
             VStruct v = tVTable.valueList().get(1);
-            assertEquals(2, ((VInt) v.values().get(0)).value());
+            assertEquals(2, ((VInt) v.values().getFirst()).value());
             VInterface s = (VInterface) v.values().get(1);
-            assertEquals(111, ((VInt) s.child().values().get(0)).value());
+            assertEquals(111, ((VInt) s.child().values().getFirst()).value());
             assertEquals("hello world!", ((VText) s.child().values().get(1)).value());
         }
     }
@@ -176,8 +170,7 @@ class CfgValueParserTest {
                 2,333,444,""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         VTable tVTable = cfgValue.getTable("t");
         TableSchema tSchema = ctx.cfgSchema().findTable("t");
@@ -185,20 +178,20 @@ class CfgValueParserTest {
         assertEquals(tSchema, tVTable.schema());
         assertEquals(2, tVTable.valueList().size());
         {
-            VStruct v = tVTable.valueList().get(0);
+            VStruct v = tVTable.valueList().getFirst();
             assertEquals(tSchema, v.schema());
-            assertEquals(1, ((VInt) v.values().get(0)).value());
+            assertEquals(1, ((VInt) v.values().getFirst()).value());
             VList s = (VList) v.values().get(1);
             assertEquals(3, s.valueList().size());
-            assertEquals(111, ((VInt) s.valueList().get(0)).value());
+            assertEquals(111, ((VInt) s.valueList().getFirst()).value());
             assertEquals(222, ((VInt) s.valueList().get(1)).value());
             assertEquals(333, ((VInt) s.valueList().get(2)).value());
         }
         {
             VStruct v = tVTable.valueList().get(1);
-            assertEquals(2, ((VInt) v.values().get(0)).value());
+            assertEquals(2, ((VInt) v.values().getFirst()).value());
             VList s = (VList) v.values().get(1);
-            assertEquals(333, ((VInt) s.valueList().get(0)).value());
+            assertEquals(333, ((VInt) s.valueList().getFirst()).value());
             assertEquals(444, ((VInt) s.valueList().get(1)).value());
         }
     }
@@ -219,8 +212,7 @@ class CfgValueParserTest {
                 2,"333,444""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         VTable tVTable = cfgValue.getTable("t");
         TableSchema tSchema = ctx.cfgSchema().findTable("t");
@@ -228,20 +220,20 @@ class CfgValueParserTest {
         assertEquals(tSchema, tVTable.schema());
         assertEquals(2, tVTable.valueList().size());
         {
-            VStruct v = tVTable.valueList().get(0);
+            VStruct v = tVTable.valueList().getFirst();
             assertEquals(tSchema, v.schema());
-            assertEquals(1, ((VInt) v.values().get(0)).value());
+            assertEquals(1, ((VInt) v.values().getFirst()).value());
             VList s = (VList) v.values().get(1);
             assertEquals(3, s.valueList().size());
-            assertEquals(111, ((VInt) s.valueList().get(0)).value());
+            assertEquals(111, ((VInt) s.valueList().getFirst()).value());
             assertEquals(222, ((VInt) s.valueList().get(1)).value());
             assertEquals(333, ((VInt) s.valueList().get(2)).value());
         }
         {
             VStruct v = tVTable.valueList().get(1);
-            assertEquals(2, ((VInt) v.values().get(0)).value());
+            assertEquals(2, ((VInt) v.values().getFirst()).value());
             VList s = (VList) v.values().get(1);
-            assertEquals(333, ((VInt) s.valueList().get(0)).value());
+            assertEquals(333, ((VInt) s.valueList().getFirst()).value());
             assertEquals(444, ((VInt) s.valueList().get(1)).value());
         }
     }
@@ -265,8 +257,7 @@ class CfgValueParserTest {
                 2,123,,""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         VTable tVTable = cfgValue.getTable("t");
         TableSchema tSchema = ctx.cfgSchema().findTable("t");
@@ -274,17 +265,17 @@ class CfgValueParserTest {
         assertEquals(tSchema, tVTable.schema());
         assertEquals(2, tVTable.valueList().size());
         {
-            VStruct v = tVTable.valueList().get(0);
+            VStruct v = tVTable.valueList().getFirst();
             assertEquals(tSchema, v.schema());
-            assertEquals(1, ((VInt) v.values().get(0)).value());
+            assertEquals(1, ((VInt) v.values().getFirst()).value());
             VList s = (VList) v.values().get(1);
             assertEquals(7, s.valueList().size());
-            assertEquals(111, ((VInt) s.valueList().get(0)).value());
+            assertEquals(111, ((VInt) s.valueList().getFirst()).value());
             assertEquals(777, ((VInt) s.valueList().get(6)).value());
         }
         {
             VStruct v = tVTable.valueList().get(1);
-            assertEquals(2, ((VInt) v.values().get(0)).value());
+            assertEquals(2, ((VInt) v.values().getFirst()).value());
             VList s = (VList) v.values().get(1);
             assertEquals(1, s.valueList().size());
             assertEquals(123, ((VInt) s.valueList().getFirst()).value());
@@ -316,8 +307,7 @@ class CfgValueParserTest {
                 1,,,""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         ValueErrs valueErrs = ValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
@@ -357,8 +347,7 @@ class CfgValueParserTest {
                 1,notExistAction,,""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         ValueErrs valueErrs = ValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
@@ -398,8 +387,7 @@ class CfgValueParserTest {
                 1,talk(123)""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         ValueErrs valueErrs = ValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
@@ -430,8 +418,7 @@ class CfgValueParserTest {
                 1,111,abc""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         ValueErrs valueErrs = ValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
@@ -458,8 +445,7 @@ class CfgValueParserTest {
                 1,111,abc,111,efg""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         ValueErrs valueErrs = ValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
@@ -487,8 +473,7 @@ class CfgValueParserTest {
                 1,efg""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         ValueErrs valueErrs = ValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
@@ -517,8 +502,7 @@ class CfgValueParserTest {
                 2,""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         ValueErrs valueErrs = ValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
@@ -549,8 +533,7 @@ class CfgValueParserTest {
                 2,light blue""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         ValueErrs valueErrs = ValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
@@ -580,8 +563,7 @@ class CfgValueParserTest {
                 2,red""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         ValueErrs valueErrs = ValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();

@@ -17,10 +17,7 @@ public class VTableJsonStore {
         Path jsonDir = getJsonTableDir(tableSchema, dataDir);
         Path recordPath = jsonDir.resolve(id + ".json");
         try (OutputStreamWriter writer = Generator.createUtf8Writer(recordPath.toFile())) {
-            ValueToJson toJson = new ValueToJson();
-            toJson.setSaveDefault(false);
-            JSONObject jsonObject = toJson.toJson(record);
-            String jsonString = JSON.toJSONString(jsonObject, JSONWriter.Feature.PrettyFormat);
+            String jsonString = ValueToJson.toJsonStr(record);
             writer.write(jsonString);
             return recordPath;
         }

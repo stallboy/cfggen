@@ -3,9 +3,6 @@ package configgen.value;
 import configgen.Resources;
 import configgen.ctx.Context;
 import configgen.data.CfgData;
-import configgen.data.CfgDataReader;
-import configgen.data.ReadByFastExcel;
-import configgen.data.ReadCsv;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -33,8 +30,7 @@ class RefValidatorTest {
                 2,""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         ValueErrs valueErrs = ValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
@@ -65,8 +61,7 @@ class RefValidatorTest {
                 2,3""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         ValueErrs valueErrs = ValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
@@ -100,8 +95,7 @@ class RefValidatorTest {
                 2,3""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         ValueErrs valueErrs = ValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
@@ -132,8 +126,7 @@ class RefValidatorTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         ValueErrs valueErrs = ValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
@@ -165,8 +158,7 @@ class RefValidatorTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         ValueErrs valueErrs = ValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
@@ -179,7 +171,6 @@ class RefValidatorTest {
                 cell.rowId().row() == 3 &&
                 cell.col() == 1);
     }
-
 
 
 }

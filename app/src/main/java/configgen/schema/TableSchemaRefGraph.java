@@ -2,15 +2,26 @@ package configgen.schema;
 
 import java.util.*;
 
+/**
+ * 查询table之间的引用关系
+ */
 public class TableSchemaRefGraph {
 
     /**
      * table依赖中的一个节点
-     * @param refIn 谁引用到我
-     * @param refOut 我引用到谁
+     *
+     * @param refInTables  引用到我的所有的table
+     * @param refOutTables 我引用到的所有table
      */
-    public record Refs(Set<String> refIn,
-                       Set<String> refOut) {
+    public record Refs(Map<String, TableSchema> refInTables,
+                       Map<String, TableSchema> refOutTables) {
+        public Set<String> refIn() {
+            return refInTables.keySet();
+        }
+
+        public Set<String> refOut() {
+            return refOutTables.keySet();
+        }
     }
 
     private final CfgSchema schema;
@@ -24,16 +35,15 @@ public class TableSchemaRefGraph {
 
     private void buildGraph() {
         for (TableSchema table : schema.tableMap().values()) {
-            Set<String> refOut = getAllRefOuts(table);
-            refsMap.put(table.name(), new Refs(new HashSet<>(), refOut));
+            refsMap.put(table.name(), new Refs(new HashMap<>(), getAllRefOuts(table)));
         }
 
         for (Map.Entry<String, Refs> e : refsMap.entrySet()) {
-            String sourceTable = e.getKey();
+            TableSchema sourceTable = schema.findTable(e.getKey());
             Refs refs = e.getValue();
-            for (String refToTable : refs.refOut) {
-                Refs refsTo = refsMap.get(refToTable);
-                refsTo.refIn.add(sourceTable);
+            for (TableSchema refToTable : refs.refOutTables.values()) {
+                Refs refsTo = refsMap.get(refToTable.name());
+                refsTo.refInTables.put(sourceTable.name(), sourceTable);
             }
         }
     }
@@ -42,100 +52,40 @@ public class TableSchemaRefGraph {
         return refsMap;
     }
 
-    private Set<String> getAllRefOuts(Nameable notImplNameable) {
-        Set<String> refOut = new HashSet<>();
-        Set<String> deps = collectAllDepStructs(notImplNameable);
-        for (String dep : deps) {
-            Nameable item = schema.findItem(dep);
+    public Collection<TableSchema> getRefOutTables(TableSchema table) {
+        Refs refs = refsMap.get(table.name());
+        if (refs != null) {
+            return refs.refOutTables.values();
+        }
+        return null;
+    }
+
+    private Map<String, TableSchema> getAllRefOuts(TableSchema tableSchema) {
+        Map<String, TableSchema> refOut = new HashMap<>();
+        Map<String, Nameable> allIncludedStructs = IncludedStructs.findAllIncludedStructs(tableSchema);
+        for (Nameable item : allIncludedStructs.values()) {
             switch (item) {
                 case InterfaceSchema interfaceSchema -> {
-                    if (interfaceSchema.nullableEnumRefTable()!= null){
-                        refOut.add(interfaceSchema.nullableEnumRefTable().name());
+                    TableSchema ref = interfaceSchema.nullableEnumRefTable();
+                    if (ref != null) {
+                        refOut.put(ref.name(), ref);
                     }
 
                     for (StructSchema impl : interfaceSchema.impls()) {
                         for (ForeignKeySchema fk : impl.foreignKeys()) {
-                            refOut.add(fk.refTableNormalized());
+                            TableSchema t = fk.refTableSchema();
+                            refOut.put(t.name(), t);
                         }
                     }
                 }
                 case Structural structural -> {
                     for (ForeignKeySchema fk : structural.foreignKeys()) {
-                        refOut.add(fk.refTableNormalized());
+                        TableSchema t = fk.refTableSchema();
+                        refOut.put(t.name(), t);
                     }
                 }
             }
         }
         return refOut;
-    }
-
-
-    private Set<String> collectAllDepStructs(Nameable notImplNameable) {
-        Set<String> result = new HashSet<>();
-        List<Nameable> frontier = List.of(notImplNameable);
-
-        while (!frontier.isEmpty()) {
-            for (Nameable nameable : frontier) {
-                result.add(nameable.name());
-            }
-            Set<String> newFrontierIds = new HashSet<>();
-            for (Nameable nameable : frontier) {
-                collectDirectDepStructs(nameable, newFrontierIds);
-            }
-            for (String s : result) {
-                newFrontierIds.remove(s);
-            }
-            List<Nameable> newFrontier = new ArrayList<>(newFrontierIds.size());
-            for (String id : newFrontierIds) {
-                newFrontier.add(schema.findItem(id));
-            }
-            frontier = newFrontier;
-        }
-        return result;
-    }
-
-
-    private static void collectDirectDepStructs(Nameable notImplNameable, Set<String> result) {
-        switch (notImplNameable) {
-            case InterfaceSchema interfaceSchema -> {
-                for (StructSchema impl : interfaceSchema.impls()) {
-                    for (FieldSchema field : impl.fields()) {
-                        collectDirectDepStructs(field.type(), result);
-                    }
-                }
-            }
-            case Structural structural -> {
-                for (FieldSchema field : structural.fields()) {
-                    collectDirectDepStructs(field.type(), result);
-                }
-            }
-        }
-    }
-
-    private static void collectDirectDepStructs(FieldType fieldType, Set<String> result) {
-        switch (fieldType) {
-            case FieldType.StructRef structRef -> {
-                Fieldable obj = structRef.obj();
-                switch (obj) {
-                    case InterfaceSchema interfaceObj -> {
-                        result.add(interfaceObj.name());
-                    }
-                    case StructSchema structObj -> {
-                        if (structObj.nullableInterface() == null) { // 不影响interface的deps的收集
-                            result.add(structObj.name());
-                        }
-                    }
-                }
-            }
-            case FieldType.FList fList -> {
-                collectDirectDepStructs(fList.item(), result);
-            }
-            case FieldType.FMap fMap -> {
-                collectDirectDepStructs(fMap.key(), result);
-                collectDirectDepStructs(fMap.value(), result);
-            }
-            case FieldType.Primitive ignored -> {
-            }
-        }
     }
 }

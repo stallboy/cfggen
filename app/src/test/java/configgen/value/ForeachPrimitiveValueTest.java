@@ -2,9 +2,6 @@ package configgen.value;
 
 import configgen.Resources;
 import configgen.ctx.Context;
-import configgen.data.CfgDataReader;
-import configgen.data.ReadByFastExcel;
-import configgen.data.ReadCsv;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -34,8 +31,7 @@ class ForeachPrimitiveValueTest {
                 2,cd""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         List<CfgValue.PrimitiveValue> list = new ArrayList<>();
@@ -63,8 +59,7 @@ class ForeachPrimitiveValueTest {
                 2,33,44""";
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         List<CfgValue.PrimitiveValue> list = new ArrayList<>();
@@ -103,8 +98,7 @@ class ForeachPrimitiveValueTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         List<CfgValue.PrimitiveValue> list = new ArrayList<>();
@@ -132,8 +126,7 @@ class ForeachPrimitiveValueTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         List<CfgValue.PrimitiveValue> list = new ArrayList<>();
@@ -161,8 +154,7 @@ class ForeachPrimitiveValueTest {
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
-        CfgDataReader dataReader = new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE);
-        Context ctx = new Context(tempDir, dataReader, null, null);
+        Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
 
         List<CfgValue.PrimitiveValue> list = new ArrayList<>();
