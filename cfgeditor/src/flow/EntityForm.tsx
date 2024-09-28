@@ -84,9 +84,9 @@ function PrimitiveControl(field: EntityEditField, bgColor?: string) {
             filters.filterOption = filterOption;
         }
         if (isEnum) {
-            control = <Select className='nodrag' options={options} {...filters}/>
+            control = <Select className='nodrag' options={options} style={{width: 120}} {...filters}/>
         } else {
-            control = <AutoComplete className='nodrag' options={options} {...filters} style={{width: 100}}/>
+            control = <AutoComplete className='nodrag' options={options} {...filters} style={{width: 120}}/>
         }
 
     } else if (eleType == 'bool') {
@@ -190,7 +190,7 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: { field: EntityEditField, bg
                                style={thisItemStyle}>
 
                         <Space align='baseline' size={1}>
-                            <Form.Item {...f} >
+                            <Form.Item key={f.key} >
                                 {PrimitiveControl(field)}
                             </Form.Item>
                             <ActionIcon className='nodrag'

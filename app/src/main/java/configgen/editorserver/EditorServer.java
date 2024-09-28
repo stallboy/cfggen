@@ -58,6 +58,7 @@ public class EditorServer extends Generator {
         handle("/noteUpdate", this::handleNoteUpdate);
 
         handle("/search", this::handleSearch);
+        handle("/prompt", this::handlePrompt);
 
         handle("/record", this::handleRecord);
         handle("/recordAddOrUpdate", this::handleRecordAddOrUpdate);
@@ -114,6 +115,7 @@ public class EditorServer extends Generator {
         sendResponse(exchange, result);
     }
 
+
     private void handleRecord(HttpExchange exchange) throws IOException {
         Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
         String table = query.get("table");
@@ -159,7 +161,7 @@ public class EditorServer extends Generator {
 
         byte[] bytes = exchange.getRequestBody().readAllBytes();
         String jsonStr = new String(bytes, StandardCharsets.UTF_8);
-        logger.info(jsonStr);
+//        logger.info(jsonStr);
 
         RecordEditResult result;
         synchronized (this) {
@@ -193,6 +195,19 @@ public class EditorServer extends Generator {
             }
         }
         logger.info(result.toString());
+        sendResponse(exchange, result);
+    }
+
+
+    private void handlePrompt(HttpExchange exchange) throws IOException {
+        if (exchange.getRequestMethod().equals("OPTIONS")) {
+            sendOptionsResponse(exchange);
+            return;
+        }
+        byte[] bytes = exchange.getRequestBody().readAllBytes();
+        String jsonStr = new String(bytes, StandardCharsets.UTF_8);
+        PromptService.PromptRequest request = JSON.parseObject(jsonStr, PromptService.PromptRequest.class);
+        PromptService.PromptResponse result = new PromptService(cfgValue, graph, request).gen();
         sendResponse(exchange, result);
     }
 

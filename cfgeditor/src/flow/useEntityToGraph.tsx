@@ -1,6 +1,6 @@
 import {useContext, useEffect, useMemo} from "react";
 import {store} from "../routes/setting/store.ts";
-import {getNodesBounds, getViewportForBounds, Rect, useStore} from "@xyflow/react";
+import {getViewportForBounds, Rect, useReactFlow, useStore} from "@xyflow/react";
 import {convertNodeAndEdges} from "./entityToNodeAndEdge.ts";
 import {useQuery} from "@tanstack/react-query";
 import {layoutAsync} from "./layoutAsync.ts";
@@ -66,6 +66,7 @@ export function useEntityToGraph({
     const setEdges = useStore((state) => state.setEdges);
     const panZoom = useStore((state) => state.panZoom);
     const nodeShowSetting = nodeShow ?? currentNodeShow;
+    const {getNodesBounds} = useReactFlow();
 
     const {nodes, edges} = useMemo(() => convertNodeAndEdges({
         entityMap,
