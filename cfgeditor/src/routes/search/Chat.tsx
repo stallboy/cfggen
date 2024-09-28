@@ -5,13 +5,7 @@ import OpenAI from "openai";
 import {store} from "../setting/store.ts";
 import {ChatMessage} from "@ant-design/pro-chat/es/types/message";
 import {AIConf} from "../setting/storageJson.ts";
-import {Button, Col, Divider, Form, Input, Row} from "antd";
-import {useTranslation} from "react-i18next";
-import {formLayout} from "../setting/BasicSetting.tsx";
 
-function onAICreate(values: any) {
-    console.log(values)
-}
 
 export function Chat() {
     const theme = useTheme();

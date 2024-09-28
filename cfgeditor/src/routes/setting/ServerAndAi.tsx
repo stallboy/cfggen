@@ -39,7 +39,7 @@ export const ServerAndAi = memo(function ServerAndAi({schema}: {
             <Form.Item name='server' label={t('newServer')}>
                 <Input.Search enterButton={t('connect')} onSearch={(value: string) => setServer(value)}/>
             </Form.Item>
-        </Form>;
+        </Form>
 
         <Card title={t("aiConf")}>
             <Form name="aiConf"  {...formLayout} initialValues={aiConf} onFinish={onFinishAIConf}

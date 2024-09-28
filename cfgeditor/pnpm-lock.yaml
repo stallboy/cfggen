@@ -62,9 +62,6 @@ dependencies:
   react-i18next:
     specifier: ^13.5.0
     version: 13.5.0(i18next@23.15.1)(react-dom@18.3.1)(react@18.3.1)
-  react-icons:
-    specifier: ^5.3.0
-    version: 5.3.0(react@18.3.1)
   react-router-dom:
     specifier: ^6.26.2
     version: 6.26.2(react-dom@18.3.1)(react@18.3.1)
@@ -401,7 +398,7 @@ packages:
     dev: false
 
   /@ant-design/pro-editor@1.3.0(@emotion/react@11.13.3)(@types/react@18.3.9)(antd-style@3.6.3)(antd@5.21.1)(react-dom@18.3.1)(react@18.3.1):
-    resolution: {integrity: sha512-F6jQl0AMyD2IGRAWCdQeeybJlL5ms15r3RRNj+5UKeyMqfW6lVMoYU6X2HexWO4T3tQ28iLXu7zr0VEBGzVKdg==, tarball: https://registry.npmmirror.com/@ant-design/pro-editor/-/pro-editor-1.3.0.tgz}
+    resolution: {integrity: sha512-F6jQl0AMyD2IGRAWCdQeeybJlL5ms15r3RRNj+5UKeyMqfW6lVMoYU6X2HexWO4T3tQ28iLXu7zr0VEBGzVKdg==}
     peerDependencies:
       antd: '>=5'
       antd-style: '>=3'
@@ -997,7 +994,7 @@ packages:
     dev: false
 
   /@esbuild/aix-ppc64@0.21.5:
-    resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==, tarball: https://registry.npmmirror.com/@esbuild/aix-ppc64/-/aix-ppc64-0.21.5.tgz}
+    resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
     engines: {node: '>=12'}
     cpu: [ppc64]
     os: [aix]
@@ -1006,7 +1003,7 @@ packages:
     optional: true
 
   /@esbuild/android-arm64@0.21.5:
-    resolution: {integrity: sha512-c0uX9VAUBQ7dTDCjq+wdyGLowMdtR/GoC2U5IYk/7D1H1JYC0qseD7+11iMP2mRLN9RcCMRcjC4YMclCzGwS/A==, tarball: https://registry.npmmirror.com/@esbuild/android-arm64/-/android-arm64-0.21.5.tgz}
+    resolution: {integrity: sha512-c0uX9VAUBQ7dTDCjq+wdyGLowMdtR/GoC2U5IYk/7D1H1JYC0qseD7+11iMP2mRLN9RcCMRcjC4YMclCzGwS/A==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [android]
@@ -1015,7 +1012,7 @@ packages:
     optional: true
 
   /@esbuild/android-arm@0.21.5:
-    resolution: {integrity: sha512-vCPvzSjpPHEi1siZdlvAlsPxXl7WbOVUBBAowWug4rJHb68Ox8KualB+1ocNvT5fjv6wpkX6o/iEpbDrf68zcg==, tarball: https://registry.npmmirror.com/@esbuild/android-arm/-/android-arm-0.21.5.tgz}
+    resolution: {integrity: sha512-vCPvzSjpPHEi1siZdlvAlsPxXl7WbOVUBBAowWug4rJHb68Ox8KualB+1ocNvT5fjv6wpkX6o/iEpbDrf68zcg==}
     engines: {node: '>=12'}
     cpu: [arm]
     os: [android]
@@ -1024,7 +1021,7 @@ packages:
     optional: true
 
   /@esbuild/android-x64@0.21.5:
-    resolution: {integrity: sha512-D7aPRUUNHRBwHxzxRvp856rjUHRFW1SdQATKXH2hqA0kAZb1hKmi02OpYRacl0TxIGz/ZmXWlbZgjwWYaCakTA==, tarball: https://registry.npmmirror.com/@esbuild/android-x64/-/android-x64-0.21.5.tgz}
+    resolution: {integrity: sha512-D7aPRUUNHRBwHxzxRvp856rjUHRFW1SdQATKXH2hqA0kAZb1hKmi02OpYRacl0TxIGz/ZmXWlbZgjwWYaCakTA==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [android]
@@ -1033,7 +1030,7 @@ packages:
     optional: true
 
   /@esbuild/darwin-arm64@0.21.5:
-    resolution: {integrity: sha512-DwqXqZyuk5AiWWf3UfLiRDJ5EDd49zg6O9wclZ7kUMv2WRFr4HKjXp/5t8JZ11QbQfUS6/cRCKGwYhtNAY88kQ==, tarball: https://registry.npmmirror.com/@esbuild/darwin-arm64/-/darwin-arm64-0.21.5.tgz}
+    resolution: {integrity: sha512-DwqXqZyuk5AiWWf3UfLiRDJ5EDd49zg6O9wclZ7kUMv2WRFr4HKjXp/5t8JZ11QbQfUS6/cRCKGwYhtNAY88kQ==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [darwin]
@@ -1042,7 +1039,7 @@ packages:
     optional: true
 
   /@esbuild/darwin-x64@0.21.5:
-    resolution: {integrity: sha512-se/JjF8NlmKVG4kNIuyWMV/22ZaerB+qaSi5MdrXtd6R08kvs2qCN4C09miupktDitvh8jRFflwGFBQcxZRjbw==, tarball: https://registry.npmmirror.com/@esbuild/darwin-x64/-/darwin-x64-0.21.5.tgz}
+    resolution: {integrity: sha512-se/JjF8NlmKVG4kNIuyWMV/22ZaerB+qaSi5MdrXtd6R08kvs2qCN4C09miupktDitvh8jRFflwGFBQcxZRjbw==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [darwin]
@@ -1051,7 +1048,7 @@ packages:
     optional: true
 
   /@esbuild/freebsd-arm64@0.21.5:
-    resolution: {integrity: sha512-5JcRxxRDUJLX8JXp/wcBCy3pENnCgBR9bN6JsY4OmhfUtIHe3ZW0mawA7+RDAcMLrMIZaf03NlQiX9DGyB8h4g==, tarball: https://registry.npmmirror.com/@esbuild/freebsd-arm64/-/freebsd-arm64-0.21.5.tgz}
+    resolution: {integrity: sha512-5JcRxxRDUJLX8JXp/wcBCy3pENnCgBR9bN6JsY4OmhfUtIHe3ZW0mawA7+RDAcMLrMIZaf03NlQiX9DGyB8h4g==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [freebsd]
@@ -1060,7 +1057,7 @@ packages:
     optional: true
 
   /@esbuild/freebsd-x64@0.21.5:
-    resolution: {integrity: sha512-J95kNBj1zkbMXtHVH29bBriQygMXqoVQOQYA+ISs0/2l3T9/kj42ow2mpqerRBxDJnmkUDCaQT/dfNXWX/ZZCQ==, tarball: https://registry.npmmirror.com/@esbuild/freebsd-x64/-/freebsd-x64-0.21.5.tgz}
+    resolution: {integrity: sha512-J95kNBj1zkbMXtHVH29bBriQygMXqoVQOQYA+ISs0/2l3T9/kj42ow2mpqerRBxDJnmkUDCaQT/dfNXWX/ZZCQ==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [freebsd]
@@ -1069,7 +1066,7 @@ packages:
     optional: true
 
   /@esbuild/linux-arm64@0.21.5:
-    resolution: {integrity: sha512-ibKvmyYzKsBeX8d8I7MH/TMfWDXBF3db4qM6sy+7re0YXya+K1cem3on9XgdT2EQGMu4hQyZhan7TeQ8XkGp4Q==, tarball: https://registry.npmmirror.com/@esbuild/linux-arm64/-/linux-arm64-0.21.5.tgz}
+    resolution: {integrity: sha512-ibKvmyYzKsBeX8d8I7MH/TMfWDXBF3db4qM6sy+7re0YXya+K1cem3on9XgdT2EQGMu4hQyZhan7TeQ8XkGp4Q==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [linux]
@@ -1078,7 +1075,7 @@ packages:
     optional: true
 
   /@esbuild/linux-arm@0.21.5:
-    resolution: {integrity: sha512-bPb5AHZtbeNGjCKVZ9UGqGwo8EUu4cLq68E95A53KlxAPRmUyYv2D6F0uUI65XisGOL1hBP5mTronbgo+0bFcA==, tarball: https://registry.npmmirror.com/@esbuild/linux-arm/-/linux-arm-0.21.5.tgz}
+    resolution: {integrity: sha512-bPb5AHZtbeNGjCKVZ9UGqGwo8EUu4cLq68E95A53KlxAPRmUyYv2D6F0uUI65XisGOL1hBP5mTronbgo+0bFcA==}
     engines: {node: '>=12'}
     cpu: [arm]
     os: [linux]
@@ -1087,7 +1084,7 @@ packages:
     optional: true
 
   /@esbuild/linux-ia32@0.21.5:
-    resolution: {integrity: sha512-YvjXDqLRqPDl2dvRODYmmhz4rPeVKYvppfGYKSNGdyZkA01046pLWyRKKI3ax8fbJoK5QbxblURkwK/MWY18Tg==, tarball: https://registry.npmmirror.com/@esbuild/linux-ia32/-/linux-ia32-0.21.5.tgz}
+    resolution: {integrity: sha512-YvjXDqLRqPDl2dvRODYmmhz4rPeVKYvppfGYKSNGdyZkA01046pLWyRKKI3ax8fbJoK5QbxblURkwK/MWY18Tg==}
     engines: {node: '>=12'}
     cpu: [ia32]
     os: [linux]
@@ -1096,7 +1093,7 @@ packages:
     optional: true
 
   /@esbuild/linux-loong64@0.21.5:
-    resolution: {integrity: sha512-uHf1BmMG8qEvzdrzAqg2SIG/02+4/DHB6a9Kbya0XDvwDEKCoC8ZRWI5JJvNdUjtciBGFQ5PuBlpEOXQj+JQSg==, tarball: https://registry.npmmirror.com/@esbuild/linux-loong64/-/linux-loong64-0.21.5.tgz}
+    resolution: {integrity: sha512-uHf1BmMG8qEvzdrzAqg2SIG/02+4/DHB6a9Kbya0XDvwDEKCoC8ZRWI5JJvNdUjtciBGFQ5PuBlpEOXQj+JQSg==}
     engines: {node: '>=12'}
     cpu: [loong64]
     os: [linux]
@@ -1105,7 +1102,7 @@ packages:
     optional: true
 
   /@esbuild/linux-mips64el@0.21.5:
-    resolution: {integrity: sha512-IajOmO+KJK23bj52dFSNCMsz1QP1DqM6cwLUv3W1QwyxkyIWecfafnI555fvSGqEKwjMXVLokcV5ygHW5b3Jbg==, tarball: https://registry.npmmirror.com/@esbuild/linux-mips64el/-/linux-mips64el-0.21.5.tgz}
+    resolution: {integrity: sha512-IajOmO+KJK23bj52dFSNCMsz1QP1DqM6cwLUv3W1QwyxkyIWecfafnI555fvSGqEKwjMXVLokcV5ygHW5b3Jbg==}
     engines: {node: '>=12'}
     cpu: [mips64el]
     os: [linux]
@@ -1114,7 +1111,7 @@ packages:
     optional: true
 
   /@esbuild/linux-ppc64@0.21.5:
-    resolution: {integrity: sha512-1hHV/Z4OEfMwpLO8rp7CvlhBDnjsC3CttJXIhBi+5Aj5r+MBvy4egg7wCbe//hSsT+RvDAG7s81tAvpL2XAE4w==, tarball: https://registry.npmmirror.com/@esbuild/linux-ppc64/-/linux-ppc64-0.21.5.tgz}
+    resolution: {integrity: sha512-1hHV/Z4OEfMwpLO8rp7CvlhBDnjsC3CttJXIhBi+5Aj5r+MBvy4egg7wCbe//hSsT+RvDAG7s81tAvpL2XAE4w==}
     engines: {node: '>=12'}
     cpu: [ppc64]
     os: [linux]
@@ -1123,7 +1120,7 @@ packages:
     optional: true
 
   /@esbuild/linux-riscv64@0.21.5:
-    resolution: {integrity: sha512-2HdXDMd9GMgTGrPWnJzP2ALSokE/0O5HhTUvWIbD3YdjME8JwvSCnNGBnTThKGEB91OZhzrJ4qIIxk/SBmyDDA==, tarball: https://registry.npmmirror.com/@esbuild/linux-riscv64/-/linux-riscv64-0.21.5.tgz}
+    resolution: {integrity: sha512-2HdXDMd9GMgTGrPWnJzP2ALSokE/0O5HhTUvWIbD3YdjME8JwvSCnNGBnTThKGEB91OZhzrJ4qIIxk/SBmyDDA==}
     engines: {node: '>=12'}
     cpu: [riscv64]
     os: [linux]
@@ -1132,7 +1129,7 @@ packages:
     optional: true
 
   /@esbuild/linux-s390x@0.21.5:
-    resolution: {integrity: sha512-zus5sxzqBJD3eXxwvjN1yQkRepANgxE9lgOW2qLnmr8ikMTphkjgXu1HR01K4FJg8h1kEEDAqDcZQtbrRnB41A==, tarball: https://registry.npmmirror.com/@esbuild/linux-s390x/-/linux-s390x-0.21.5.tgz}
+    resolution: {integrity: sha512-zus5sxzqBJD3eXxwvjN1yQkRepANgxE9lgOW2qLnmr8ikMTphkjgXu1HR01K4FJg8h1kEEDAqDcZQtbrRnB41A==}
     engines: {node: '>=12'}
     cpu: [s390x]
     os: [linux]
@@ -1141,7 +1138,7 @@ packages:
     optional: true
 
   /@esbuild/linux-x64@0.21.5:
-    resolution: {integrity: sha512-1rYdTpyv03iycF1+BhzrzQJCdOuAOtaqHTWJZCWvijKD2N5Xu0TtVC8/+1faWqcP9iBCWOmjmhoH94dH82BxPQ==, tarball: https://registry.npmmirror.com/@esbuild/linux-x64/-/linux-x64-0.21.5.tgz}
+    resolution: {integrity: sha512-1rYdTpyv03iycF1+BhzrzQJCdOuAOtaqHTWJZCWvijKD2N5Xu0TtVC8/+1faWqcP9iBCWOmjmhoH94dH82BxPQ==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [linux]
@@ -1150,7 +1147,7 @@ packages:
     optional: true
 
   /@esbuild/netbsd-x64@0.21.5:
-    resolution: {integrity: sha512-Woi2MXzXjMULccIwMnLciyZH4nCIMpWQAs049KEeMvOcNADVxo0UBIQPfSmxB3CWKedngg7sWZdLvLczpe0tLg==, tarball: https://registry.npmmirror.com/@esbuild/netbsd-x64/-/netbsd-x64-0.21.5.tgz}
+    resolution: {integrity: sha512-Woi2MXzXjMULccIwMnLciyZH4nCIMpWQAs049KEeMvOcNADVxo0UBIQPfSmxB3CWKedngg7sWZdLvLczpe0tLg==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [netbsd]
@@ -1159,7 +1156,7 @@ packages:
     optional: true
 
   /@esbuild/openbsd-x64@0.21.5:
-    resolution: {integrity: sha512-HLNNw99xsvx12lFBUwoT8EVCsSvRNDVxNpjZ7bPn947b8gJPzeHWyNVhFsaerc0n3TsbOINvRP2byTZ5LKezow==, tarball: https://registry.npmmirror.com/@esbuild/openbsd-x64/-/openbsd-x64-0.21.5.tgz}
+    resolution: {integrity: sha512-HLNNw99xsvx12lFBUwoT8EVCsSvRNDVxNpjZ7bPn947b8gJPzeHWyNVhFsaerc0n3TsbOINvRP2byTZ5LKezow==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [openbsd]
@@ -1168,7 +1165,7 @@ packages:
     optional: true
 
   /@esbuild/sunos-x64@0.21.5:
-    resolution: {integrity: sha512-6+gjmFpfy0BHU5Tpptkuh8+uw3mnrvgs+dSPQXQOv3ekbordwnzTVEb4qnIvQcYXq6gzkyTnoZ9dZG+D4garKg==, tarball: https://registry.npmmirror.com/@esbuild/sunos-x64/-/sunos-x64-0.21.5.tgz}
+    resolution: {integrity: sha512-6+gjmFpfy0BHU5Tpptkuh8+uw3mnrvgs+dSPQXQOv3ekbordwnzTVEb4qnIvQcYXq6gzkyTnoZ9dZG+D4garKg==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [sunos]
@@ -1177,7 +1174,7 @@ packages:
     optional: true
 
   /@esbuild/win32-arm64@0.21.5:
-    resolution: {integrity: sha512-Z0gOTd75VvXqyq7nsl93zwahcTROgqvuAcYDUr+vOv8uHhNSKROyU961kgtCD1e95IqPKSQKH7tBTslnS3tA8A==, tarball: https://registry.npmmirror.com/@esbuild/win32-arm64/-/win32-arm64-0.21.5.tgz}
+    resolution: {integrity: sha512-Z0gOTd75VvXqyq7nsl93zwahcTROgqvuAcYDUr+vOv8uHhNSKROyU961kgtCD1e95IqPKSQKH7tBTslnS3tA8A==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [win32]
@@ -1186,7 +1183,7 @@ packages:
     optional: true
 
   /@esbuild/win32-ia32@0.21.5:
-    resolution: {integrity: sha512-SWXFF1CL2RVNMaVs+BBClwtfZSvDgtL//G/smwAc5oVK/UPu2Gu9tIaRgFmYFFKrmg3SyAjSrElf0TiJ1v8fYA==, tarball: https://registry.npmmirror.com/@esbuild/win32-ia32/-/win32-ia32-0.21.5.tgz}
+    resolution: {integrity: sha512-SWXFF1CL2RVNMaVs+BBClwtfZSvDgtL//G/smwAc5oVK/UPu2Gu9tIaRgFmYFFKrmg3SyAjSrElf0TiJ1v8fYA==}
     engines: {node: '>=12'}
     cpu: [ia32]
     os: [win32]
@@ -1195,7 +1192,7 @@ packages:
     optional: true
 
   /@esbuild/win32-x64@0.21.5:
-    resolution: {integrity: sha512-tQd/1efJuzPC6rCFwEvLtci/xNFcTZknmXs98FYDfGE4wP9ClFV98nyKrzJKVPMhdDnjzLhdUyMX4PsQAPjwIw==, tarball: https://registry.npmmirror.com/@esbuild/win32-x64/-/win32-x64-0.21.5.tgz}
+    resolution: {integrity: sha512-tQd/1efJuzPC6rCFwEvLtci/xNFcTZknmXs98FYDfGE4wP9ClFV98nyKrzJKVPMhdDnjzLhdUyMX4PsQAPjwIw==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [win32]
@@ -1339,11 +1336,11 @@ packages:
     dev: false
 
   /@mui/core-downloads-tracker@5.16.7:
-    resolution: {integrity: sha512-RtsCt4Geed2/v74sbihWzzRs+HsIQCfclHeORh5Ynu2fS4icIKozcSubwuG7vtzq2uW3fOR1zITSP84TNt2GoQ==, tarball: https://registry.npmmirror.com/@mui/core-downloads-tracker/-/core-downloads-tracker-5.16.7.tgz}
+    resolution: {integrity: sha512-RtsCt4Geed2/v74sbihWzzRs+HsIQCfclHeORh5Ynu2fS4icIKozcSubwuG7vtzq2uW3fOR1zITSP84TNt2GoQ==}
     dev: false
 
   /@mui/material@5.16.7(@emotion/react@11.13.3)(@emotion/styled@11.13.0)(@types/react@18.3.9)(react-dom@18.3.1)(react@18.3.1):
-    resolution: {integrity: sha512-cwwVQxBhK60OIOqZOVLFt55t01zmarKJiJUWbk0+8s/Ix5IaUzAShqlJchxsIQ4mSrWqgcKCCXKtIlG5H+/Jmg==, tarball: https://registry.npmmirror.com/@mui/material/-/material-5.16.7.tgz}
+    resolution: {integrity: sha512-cwwVQxBhK60OIOqZOVLFt55t01zmarKJiJUWbk0+8s/Ix5IaUzAShqlJchxsIQ4mSrWqgcKCCXKtIlG5H+/Jmg==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
       '@emotion/react': ^11.5.0
@@ -1379,7 +1376,7 @@ packages:
     dev: false
 
   /@mui/private-theming@5.16.6(@types/react@18.3.9)(react@18.3.1):
-    resolution: {integrity: sha512-rAk+Rh8Clg7Cd7shZhyt2HGTTE5wYKNSJ5sspf28Fqm/PZ69Er9o6KX25g03/FG2dfpg5GCwZh/xOojiTfm3hw==, tarball: https://registry.npmmirror.com/@mui/private-theming/-/private-theming-5.16.6.tgz}
+    resolution: {integrity: sha512-rAk+Rh8Clg7Cd7shZhyt2HGTTE5wYKNSJ5sspf28Fqm/PZ69Er9o6KX25g03/FG2dfpg5GCwZh/xOojiTfm3hw==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
       '@types/react': ^17.0.0 || ^18.0.0
@@ -1396,7 +1393,7 @@ packages:
     dev: false
 
   /@mui/styled-engine@5.16.6(@emotion/react@11.13.3)(@emotion/styled@11.13.0)(react@18.3.1):
-    resolution: {integrity: sha512-zaThmS67ZmtHSWToTiHslbI8jwrmITcN93LQaR2lKArbvS7Z3iLkwRoiikNWutx9MBs8Q6okKvbZq1RQYB3v7g==, tarball: https://registry.npmmirror.com/@mui/styled-engine/-/styled-engine-5.16.6.tgz}
+    resolution: {integrity: sha512-zaThmS67ZmtHSWToTiHslbI8jwrmITcN93LQaR2lKArbvS7Z3iLkwRoiikNWutx9MBs8Q6okKvbZq1RQYB3v7g==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
       '@emotion/react': ^11.4.1
@@ -1418,7 +1415,7 @@ packages:
     dev: false
 
   /@mui/system@5.16.7(@emotion/react@11.13.3)(@emotion/styled@11.13.0)(@types/react@18.3.9)(react@18.3.1):
-    resolution: {integrity: sha512-Jncvs/r/d/itkxh7O7opOunTqbbSSzMTHzZkNLM+FjAOg+cYAZHrPDlYe1ZGKUYORwwb2XexlWnpZp0kZ4AHuA==, tarball: https://registry.npmmirror.com/@mui/system/-/system-5.16.7.tgz}
+    resolution: {integrity: sha512-Jncvs/r/d/itkxh7O7opOunTqbbSSzMTHzZkNLM+FjAOg+cYAZHrPDlYe1ZGKUYORwwb2XexlWnpZp0kZ4AHuA==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
       '@emotion/react': ^11.5.0
@@ -1448,7 +1445,7 @@ packages:
     dev: false
 
   /@mui/types@7.2.17(@types/react@18.3.9):
-    resolution: {integrity: sha512-oyumoJgB6jDV8JFzRqjBo2daUuHpzDjoO/e3IrRhhHo/FxJlaVhET6mcNrKHUq2E+R+q3ql0qAtvQ4rfWHhAeQ==, tarball: https://registry.npmmirror.com/@mui/types/-/types-7.2.17.tgz}
+    resolution: {integrity: sha512-oyumoJgB6jDV8JFzRqjBo2daUuHpzDjoO/e3IrRhhHo/FxJlaVhET6mcNrKHUq2E+R+q3ql0qAtvQ4rfWHhAeQ==}
     peerDependencies:
       '@types/react': ^17.0.0 || ^18.0.0 || ^19.0.0
     peerDependenciesMeta:
@@ -1459,7 +1456,7 @@ packages:
     dev: false
 
   /@mui/utils@5.16.6(@types/react@18.3.9)(react@18.3.1):
-    resolution: {integrity: sha512-tWiQqlhxAt3KENNiSRL+DIn9H5xNVK6Jjf70x3PnfQPz1MPBdh7yyIcAyVBT9xiw7hP3SomRhPR7hzBMBCjqEA==, tarball: https://registry.npmmirror.com/@mui/utils/-/utils-5.16.6.tgz}
+    resolution: {integrity: sha512-tWiQqlhxAt3KENNiSRL+DIn9H5xNVK6Jjf70x3PnfQPz1MPBdh7yyIcAyVBT9xiw7hP3SomRhPR7hzBMBCjqEA==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
       '@types/react': ^17.0.0 || ^18.0.0
@@ -1500,7 +1497,7 @@ packages:
     dev: true
 
   /@popperjs/core@2.11.8:
-    resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==, tarball: https://registry.npmmirror.com/@popperjs/core/-/core-2.11.8.tgz}
+    resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
     dev: false
 
   /@rc-component/async-validator@5.0.4:
@@ -1723,7 +1720,7 @@ packages:
     dev: false
 
   /@rollup/rollup-android-arm-eabi@4.22.4:
-    resolution: {integrity: sha512-Fxamp4aEZnfPOcGA8KSNEohV8hX7zVHOemC8jVBoBUHu5zpJK/Eu3uJwt6BMgy9fkvzxDaurgj96F/NiLukF2w==, tarball: https://registry.npmmirror.com/@rollup/rollup-android-arm-eabi/-/rollup-android-arm-eabi-4.22.4.tgz}
+    resolution: {integrity: sha512-Fxamp4aEZnfPOcGA8KSNEohV8hX7zVHOemC8jVBoBUHu5zpJK/Eu3uJwt6BMgy9fkvzxDaurgj96F/NiLukF2w==}
     cpu: [arm]
     os: [android]
     requiresBuild: true
@@ -1731,7 +1728,7 @@ packages:
     optional: true
 
   /@rollup/rollup-android-arm64@4.22.4:
-    resolution: {integrity: sha512-VXoK5UMrgECLYaMuGuVTOx5kcuap1Jm8g/M83RnCHBKOqvPPmROFJGQaZhGccnsFtfXQ3XYa4/jMCJvZnbJBdA==, tarball: https://registry.npmmirror.com/@rollup/rollup-android-arm64/-/rollup-android-arm64-4.22.4.tgz}
+    resolution: {integrity: sha512-VXoK5UMrgECLYaMuGuVTOx5kcuap1Jm8g/M83RnCHBKOqvPPmROFJGQaZhGccnsFtfXQ3XYa4/jMCJvZnbJBdA==}
     cpu: [arm64]
     os: [android]
     requiresBuild: true
@@ -1739,7 +1736,7 @@ packages:
     optional: true
 
   /@rollup/rollup-darwin-arm64@4.22.4:
-    resolution: {integrity: sha512-xMM9ORBqu81jyMKCDP+SZDhnX2QEVQzTcC6G18KlTQEzWK8r/oNZtKuZaCcHhnsa6fEeOBionoyl5JsAbE/36Q==, tarball: https://registry.npmmirror.com/@rollup/rollup-darwin-arm64/-/rollup-darwin-arm64-4.22.4.tgz}
+    resolution: {integrity: sha512-xMM9ORBqu81jyMKCDP+SZDhnX2QEVQzTcC6G18KlTQEzWK8r/oNZtKuZaCcHhnsa6fEeOBionoyl5JsAbE/36Q==}
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
@@ -1747,7 +1744,7 @@ packages:
     optional: true
 
   /@rollup/rollup-darwin-x64@4.22.4:
-    resolution: {integrity: sha512-aJJyYKQwbHuhTUrjWjxEvGnNNBCnmpHDvrb8JFDbeSH3m2XdHcxDd3jthAzvmoI8w/kSjd2y0udT+4okADsZIw==, tarball: https://registry.npmmirror.com/@rollup/rollup-darwin-x64/-/rollup-darwin-x64-4.22.4.tgz}
+    resolution: {integrity: sha512-aJJyYKQwbHuhTUrjWjxEvGnNNBCnmpHDvrb8JFDbeSH3m2XdHcxDd3jthAzvmoI8w/kSjd2y0udT+4okADsZIw==}
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
@@ -1755,7 +1752,7 @@ packages:
     optional: true
 
   /@rollup/rollup-linux-arm-gnueabihf@4.22.4:
-    resolution: {integrity: sha512-j63YtCIRAzbO+gC2L9dWXRh5BFetsv0j0va0Wi9epXDgU/XUi5dJKo4USTttVyK7fGw2nPWK0PbAvyliz50SCQ==, tarball: https://registry.npmmirror.com/@rollup/rollup-linux-arm-gnueabihf/-/rollup-linux-arm-gnueabihf-4.22.4.tgz}
+    resolution: {integrity: sha512-j63YtCIRAzbO+gC2L9dWXRh5BFetsv0j0va0Wi9epXDgU/XUi5dJKo4USTttVyK7fGw2nPWK0PbAvyliz50SCQ==}
     cpu: [arm]
     os: [linux]
     libc: [glibc]
@@ -1764,7 +1761,7 @@ packages:
     optional: true
 
   /@rollup/rollup-linux-arm-musleabihf@4.22.4:
-    resolution: {integrity: sha512-dJnWUgwWBX1YBRsuKKMOlXCzh2Wu1mlHzv20TpqEsfdZLb3WoJW2kIEsGwLkroYf24IrPAvOT/ZQ2OYMV6vlrg==, tarball: https://registry.npmmirror.com/@rollup/rollup-linux-arm-musleabihf/-/rollup-linux-arm-musleabihf-4.22.4.tgz}
+    resolution: {integrity: sha512-dJnWUgwWBX1YBRsuKKMOlXCzh2Wu1mlHzv20TpqEsfdZLb3WoJW2kIEsGwLkroYf24IrPAvOT/ZQ2OYMV6vlrg==}
     cpu: [arm]
     os: [linux]
     libc: [musl]
@@ -1773,7 +1770,7 @@ packages:
     optional: true
 
   /@rollup/rollup-linux-arm64-gnu@4.22.4:
-    resolution: {integrity: sha512-AdPRoNi3NKVLolCN/Sp4F4N1d98c4SBnHMKoLuiG6RXgoZ4sllseuGioszumnPGmPM2O7qaAX/IJdeDU8f26Aw==, tarball: https://registry.npmmirror.com/@rollup/rollup-linux-arm64-gnu/-/rollup-linux-arm64-gnu-4.22.4.tgz}
+    resolution: {integrity: sha512-AdPRoNi3NKVLolCN/Sp4F4N1d98c4SBnHMKoLuiG6RXgoZ4sllseuGioszumnPGmPM2O7qaAX/IJdeDU8f26Aw==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
@@ -1782,7 +1779,7 @@ packages:
     optional: true
 
   /@rollup/rollup-linux-arm64-musl@4.22.4:
-    resolution: {integrity: sha512-Gl0AxBtDg8uoAn5CCqQDMqAx22Wx22pjDOjBdmG0VIWX3qUBHzYmOKh8KXHL4UpogfJ14G4wk16EQogF+v8hmA==, tarball: https://registry.npmmirror.com/@rollup/rollup-linux-arm64-musl/-/rollup-linux-arm64-musl-4.22.4.tgz}
+    resolution: {integrity: sha512-Gl0AxBtDg8uoAn5CCqQDMqAx22Wx22pjDOjBdmG0VIWX3qUBHzYmOKh8KXHL4UpogfJ14G4wk16EQogF+v8hmA==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
@@ -1791,7 +1788,7 @@ packages:
     optional: true
 
   /@rollup/rollup-linux-powerpc64le-gnu@4.22.4:
-    resolution: {integrity: sha512-3aVCK9xfWW1oGQpTsYJJPF6bfpWfhbRnhdlyhak2ZiyFLDaayz0EP5j9V1RVLAAxlmWKTDfS9wyRyY3hvhPoOg==, tarball: https://registry.npmmirror.com/@rollup/rollup-linux-powerpc64le-gnu/-/rollup-linux-powerpc64le-gnu-4.22.4.tgz}
+    resolution: {integrity: sha512-3aVCK9xfWW1oGQpTsYJJPF6bfpWfhbRnhdlyhak2ZiyFLDaayz0EP5j9V1RVLAAxlmWKTDfS9wyRyY3hvhPoOg==}
     cpu: [ppc64]
     os: [linux]
     libc: [glibc]
@@ -1800,7 +1797,7 @@ packages:
     optional: true
 
   /@rollup/rollup-linux-riscv64-gnu@4.22.4:
-    resolution: {integrity: sha512-ePYIir6VYnhgv2C5Xe9u+ico4t8sZWXschR6fMgoPUK31yQu7hTEJb7bCqivHECwIClJfKgE7zYsh1qTP3WHUA==, tarball: https://registry.npmmirror.com/@rollup/rollup-linux-riscv64-gnu/-/rollup-linux-riscv64-gnu-4.22.4.tgz}
+    resolution: {integrity: sha512-ePYIir6VYnhgv2C5Xe9u+ico4t8sZWXschR6fMgoPUK31yQu7hTEJb7bCqivHECwIClJfKgE7zYsh1qTP3WHUA==}
     cpu: [riscv64]
     os: [linux]
     libc: [glibc]
@@ -1809,7 +1806,7 @@ packages:
     optional: true
 
   /@rollup/rollup-linux-s390x-gnu@4.22.4:
-    resolution: {integrity: sha512-GqFJ9wLlbB9daxhVlrTe61vJtEY99/xB3C8e4ULVsVfflcpmR6c8UZXjtkMA6FhNONhj2eA5Tk9uAVw5orEs4Q==, tarball: https://registry.npmmirror.com/@rollup/rollup-linux-s390x-gnu/-/rollup-linux-s390x-gnu-4.22.4.tgz}
+    resolution: {integrity: sha512-GqFJ9wLlbB9daxhVlrTe61vJtEY99/xB3C8e4ULVsVfflcpmR6c8UZXjtkMA6FhNONhj2eA5Tk9uAVw5orEs4Q==}
     cpu: [s390x]
     os: [linux]
     libc: [glibc]
@@ -1818,7 +1815,7 @@ packages:
     optional: true
 
   /@rollup/rollup-linux-x64-gnu@4.22.4:
-    resolution: {integrity: sha512-87v0ol2sH9GE3cLQLNEy0K/R0pz1nvg76o8M5nhMR0+Q+BBGLnb35P0fVz4CQxHYXaAOhE8HhlkaZfsdUOlHwg==, tarball: https://registry.npmmirror.com/@rollup/rollup-linux-x64-gnu/-/rollup-linux-x64-gnu-4.22.4.tgz}
+    resolution: {integrity: sha512-87v0ol2sH9GE3cLQLNEy0K/R0pz1nvg76o8M5nhMR0+Q+BBGLnb35P0fVz4CQxHYXaAOhE8HhlkaZfsdUOlHwg==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
@@ -1827,7 +1824,7 @@ packages:
     optional: true
 
   /@rollup/rollup-linux-x64-musl@4.22.4:
-    resolution: {integrity: sha512-UV6FZMUgePDZrFjrNGIWzDo/vABebuXBhJEqrHxrGiU6HikPy0Z3LfdtciIttEUQfuDdCn8fqh7wiFJjCNwO+g==, tarball: https://registry.npmmirror.com/@rollup/rollup-linux-x64-musl/-/rollup-linux-x64-musl-4.22.4.tgz}
+    resolution: {integrity: sha512-UV6FZMUgePDZrFjrNGIWzDo/vABebuXBhJEqrHxrGiU6HikPy0Z3LfdtciIttEUQfuDdCn8fqh7wiFJjCNwO+g==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
@@ -1836,7 +1833,7 @@ packages:
     optional: true
 
   /@rollup/rollup-win32-arm64-msvc@4.22.4:
-    resolution: {integrity: sha512-BjI+NVVEGAXjGWYHz/vv0pBqfGoUH0IGZ0cICTn7kB9PyjrATSkX+8WkguNjWoj2qSr1im/+tTGRaY+4/PdcQw==, tarball: https://registry.npmmirror.com/@rollup/rollup-win32-arm64-msvc/-/rollup-win32-arm64-msvc-4.22.4.tgz}
+    resolution: {integrity: sha512-BjI+NVVEGAXjGWYHz/vv0pBqfGoUH0IGZ0cICTn7kB9PyjrATSkX+8WkguNjWoj2qSr1im/+tTGRaY+4/PdcQw==}
     cpu: [arm64]
     os: [win32]
     requiresBuild: true
@@ -1844,7 +1841,7 @@ packages:
     optional: true
 
   /@rollup/rollup-win32-ia32-msvc@4.22.4:
-    resolution: {integrity: sha512-SiWG/1TuUdPvYmzmYnmd3IEifzR61Tragkbx9D3+R8mzQqDBz8v+BvZNDlkiTtI9T15KYZhP0ehn3Dld4n9J5g==, tarball: https://registry.npmmirror.com/@rollup/rollup-win32-ia32-msvc/-/rollup-win32-ia32-msvc-4.22.4.tgz}
+    resolution: {integrity: sha512-SiWG/1TuUdPvYmzmYnmd3IEifzR61Tragkbx9D3+R8mzQqDBz8v+BvZNDlkiTtI9T15KYZhP0ehn3Dld4n9J5g==}
     cpu: [ia32]
     os: [win32]
     requiresBuild: true
@@ -1852,7 +1849,7 @@ packages:
     optional: true
 
   /@rollup/rollup-win32-x64-msvc@4.22.4:
-    resolution: {integrity: sha512-j8pPKp53/lq9lMXN57S8cFz0MynJk8OWNuUnXct/9KCpKU7DgU3bYMJhwWmcqC0UU29p8Lr0/7KEVcaM6bf47Q==, tarball: https://registry.npmmirror.com/@rollup/rollup-win32-x64-msvc/-/rollup-win32-x64-msvc-4.22.4.tgz}
+    resolution: {integrity: sha512-j8pPKp53/lq9lMXN57S8cFz0MynJk8OWNuUnXct/9KCpKU7DgU3bYMJhwWmcqC0UU29p8Lr0/7KEVcaM6bf47Q==}
     cpu: [x64]
     os: [win32]
     requiresBuild: true
@@ -1860,7 +1857,7 @@ packages:
     optional: true
 
   /@shikijs/core@1.20.0:
-    resolution: {integrity: sha512-KlO3iE0THzSdYkzDFugt8SHe6FR3qNYTkmpbdW1d6xo8juQkMjybxAw/cBi2npL2eb2F4PbbnSs5Z9tDusfvyg==, tarball: https://registry.npmmirror.com/@shikijs/core/-/core-1.20.0.tgz}
+    resolution: {integrity: sha512-KlO3iE0THzSdYkzDFugt8SHe6FR3qNYTkmpbdW1d6xo8juQkMjybxAw/cBi2npL2eb2F4PbbnSs5Z9tDusfvyg==}
     dependencies:
       '@shikijs/engine-javascript': 1.20.0
       '@shikijs/engine-oniguruma': 1.20.0
@@ -1871,7 +1868,7 @@ packages:
     dev: false
 
   /@shikijs/engine-javascript@1.20.0:
-    resolution: {integrity: sha512-ZUMo758uduM0Tfgzi/kd+0IKMbNdumCxxWjY36uf1DIs2Qyg9HIq3vA1Wfa/vc6HE7tHWFpANRi3mv7UzJ68MQ==, tarball: https://registry.npmmirror.com/@shikijs/engine-javascript/-/engine-javascript-1.20.0.tgz}
+    resolution: {integrity: sha512-ZUMo758uduM0Tfgzi/kd+0IKMbNdumCxxWjY36uf1DIs2Qyg9HIq3vA1Wfa/vc6HE7tHWFpANRi3mv7UzJ68MQ==}
     dependencies:
       '@shikijs/types': 1.20.0
       '@shikijs/vscode-textmate': 9.2.2
@@ -1879,25 +1876,25 @@ packages:
     dev: false
 
   /@shikijs/engine-oniguruma@1.20.0:
-    resolution: {integrity: sha512-MQ40WkVTZk7by33ces4PGK6XNFSo6PYvKTSAr2kTWdRNhFmOcnaX+1XzvFwB26eySXR7U74t91czZ1qJkEgxTA==, tarball: https://registry.npmmirror.com/@shikijs/engine-oniguruma/-/engine-oniguruma-1.20.0.tgz}
+    resolution: {integrity: sha512-MQ40WkVTZk7by33ces4PGK6XNFSo6PYvKTSAr2kTWdRNhFmOcnaX+1XzvFwB26eySXR7U74t91czZ1qJkEgxTA==}
     dependencies:
       '@shikijs/types': 1.20.0
       '@shikijs/vscode-textmate': 9.2.2
     dev: false
 
   /@shikijs/types@1.20.0:
-    resolution: {integrity: sha512-y+EaDvU2K6/GaXOKXxJaGnr1XtmZMF7MfS0pSEDdxEq66gCtKsLwQvVwoQFdp7R7dLlNAro3ijEE19sMZ0pzqg==, tarball: https://registry.npmmirror.com/@shikijs/types/-/types-1.20.0.tgz}
+    resolution: {integrity: sha512-y+EaDvU2K6/GaXOKXxJaGnr1XtmZMF7MfS0pSEDdxEq66gCtKsLwQvVwoQFdp7R7dLlNAro3ijEE19sMZ0pzqg==}
     dependencies:
       '@shikijs/vscode-textmate': 9.2.2
       '@types/hast': 3.0.4
     dev: false
 
   /@shikijs/vscode-textmate@9.2.2:
-    resolution: {integrity: sha512-TMp15K+GGYrWlZM8+Lnj9EaHEFmOen0WJBrfa17hF7taDOYthuPPV0GWzfd/9iMij0akS/8Yw2ikquH7uVi/fg==, tarball: https://registry.npmmirror.com/@shikijs/vscode-textmate/-/vscode-textmate-9.2.2.tgz}
+    resolution: {integrity: sha512-TMp15K+GGYrWlZM8+Lnj9EaHEFmOen0WJBrfa17hF7taDOYthuPPV0GWzfd/9iMij0akS/8Yw2ikquH7uVi/fg==}
     dev: false
 
   /@swc/core-darwin-arm64@1.7.28:
-    resolution: {integrity: sha512-BNkj6enHo2pdzOpCtQGKZbXT2A/qWIr0CVtbTM4WkJ3MCK/glbFsyO6X59p1r8+gfaZG4bWYnTTu+RuUAcsL5g==, tarball: https://registry.npmmirror.com/@swc/core-darwin-arm64/-/core-darwin-arm64-1.7.28.tgz}
+    resolution: {integrity: sha512-BNkj6enHo2pdzOpCtQGKZbXT2A/qWIr0CVtbTM4WkJ3MCK/glbFsyO6X59p1r8+gfaZG4bWYnTTu+RuUAcsL5g==}
     engines: {node: '>=10'}
     cpu: [arm64]
     os: [darwin]
@@ -1906,7 +1903,7 @@ packages:
     optional: true
 
   /@swc/core-darwin-x64@1.7.28:
-    resolution: {integrity: sha512-96zQ+X5Fd6P/RNPkOyikTJgEc2M4TzznfYvjRd2hye5h22jhxCLL/csoauDgN7lYfd7mwsZ/sVXwJTMKl+vZSA==, tarball: https://registry.npmmirror.com/@swc/core-darwin-x64/-/core-darwin-x64-1.7.28.tgz}
+    resolution: {integrity: sha512-96zQ+X5Fd6P/RNPkOyikTJgEc2M4TzznfYvjRd2hye5h22jhxCLL/csoauDgN7lYfd7mwsZ/sVXwJTMKl+vZSA==}
     engines: {node: '>=10'}
     cpu: [x64]
     os: [darwin]
@@ -1915,7 +1912,7 @@ packages:
     optional: true
 
   /@swc/core-linux-arm-gnueabihf@1.7.28:
-    resolution: {integrity: sha512-l2100Wx6LdXMOmOW3+KoHhBhyZrGdz8ylkygcVOC0QHp6YIATfuG+rRHksfyEWCSOdL3anM9MJZJX26KT/s+XQ==, tarball: https://registry.npmmirror.com/@swc/core-linux-arm-gnueabihf/-/core-linux-arm-gnueabihf-1.7.28.tgz}
+    resolution: {integrity: sha512-l2100Wx6LdXMOmOW3+KoHhBhyZrGdz8ylkygcVOC0QHp6YIATfuG+rRHksfyEWCSOdL3anM9MJZJX26KT/s+XQ==}
     engines: {node: '>=10'}
     cpu: [arm]
     os: [linux]
@@ -1924,7 +1921,7 @@ packages:
     optional: true
 
   /@swc/core-linux-arm64-gnu@1.7.28:
-    resolution: {integrity: sha512-03m6iQ5Bv9u2VPnNRyaBmE8eHi056eE39L0gXcqGoo46GAGuoqYHt9pDz8wS6EgoN4t85iBMUZrkCNqFKkN6ZQ==, tarball: https://registry.npmmirror.com/@swc/core-linux-arm64-gnu/-/core-linux-arm64-gnu-1.7.28.tgz}
+    resolution: {integrity: sha512-03m6iQ5Bv9u2VPnNRyaBmE8eHi056eE39L0gXcqGoo46GAGuoqYHt9pDz8wS6EgoN4t85iBMUZrkCNqFKkN6ZQ==}
     engines: {node: '>=10'}
     cpu: [arm64]
     os: [linux]
@@ -1934,7 +1931,7 @@ packages:
     optional: true
 
   /@swc/core-linux-arm64-musl@1.7.28:
-    resolution: {integrity: sha512-vqVOpG/jc8mvTKQjaPBLhr7tnWyzuztOHsPnJqMWmg7zGcMeQC/2c5pU4uzRAfXMTp25iId6s4Y4wWfPS1EeDw==, tarball: https://registry.npmmirror.com/@swc/core-linux-arm64-musl/-/core-linux-arm64-musl-1.7.28.tgz}
+    resolution: {integrity: sha512-vqVOpG/jc8mvTKQjaPBLhr7tnWyzuztOHsPnJqMWmg7zGcMeQC/2c5pU4uzRAfXMTp25iId6s4Y4wWfPS1EeDw==}
     engines: {node: '>=10'}
     cpu: [arm64]
     os: [linux]
@@ -1944,7 +1941,7 @@ packages:
     optional: true
 
   /@swc/core-linux-x64-gnu@1.7.28:
-    resolution: {integrity: sha512-HGwpWuB83Kr+V0E+zT5UwIIY9OxiS8aLd0UVMRVWuO8SrQyKm9HKJ46+zoAb8tfJrpZftfxvbn2ayZWR7gqosA==, tarball: https://registry.npmmirror.com/@swc/core-linux-x64-gnu/-/core-linux-x64-gnu-1.7.28.tgz}
+    resolution: {integrity: sha512-HGwpWuB83Kr+V0E+zT5UwIIY9OxiS8aLd0UVMRVWuO8SrQyKm9HKJ46+zoAb8tfJrpZftfxvbn2ayZWR7gqosA==}
     engines: {node: '>=10'}
     cpu: [x64]
     os: [linux]
@@ -1954,7 +1951,7 @@ packages:
     optional: true
 
   /@swc/core-linux-x64-musl@1.7.28:
-    resolution: {integrity: sha512-q2Y2T8y8EgFtIiRyInnAXNe94aaHX74F0ha1Bl9VdRxE0u1/So+3VLbPvtp4V3Z6pj5pOePfCQJKifnllgAQ9A==, tarball: https://registry.npmmirror.com/@swc/core-linux-x64-musl/-/core-linux-x64-musl-1.7.28.tgz}
+    resolution: {integrity: sha512-q2Y2T8y8EgFtIiRyInnAXNe94aaHX74F0ha1Bl9VdRxE0u1/So+3VLbPvtp4V3Z6pj5pOePfCQJKifnllgAQ9A==}
     engines: {node: '>=10'}
     cpu: [x64]
     os: [linux]
@@ -1964,7 +1961,7 @@ packages:
     optional: true
 
   /@swc/core-win32-arm64-msvc@1.7.28:
-    resolution: {integrity: sha512-bCqh4uBT/59h3dWK1v91In6qzz8rKoWoFRxCtNQLIK4jP55K0U231ZK9oN7neZD6bzcOUeFvOGgcyMAgDfFWfA==, tarball: https://registry.npmmirror.com/@swc/core-win32-arm64-msvc/-/core-win32-arm64-msvc-1.7.28.tgz}
+    resolution: {integrity: sha512-bCqh4uBT/59h3dWK1v91In6qzz8rKoWoFRxCtNQLIK4jP55K0U231ZK9oN7neZD6bzcOUeFvOGgcyMAgDfFWfA==}
     engines: {node: '>=10'}
     cpu: [arm64]
     os: [win32]
@@ -1973,7 +1970,7 @@ packages:
     optional: true
 
   /@swc/core-win32-ia32-msvc@1.7.28:
-    resolution: {integrity: sha512-XTHbHrksnrqK3JSJ2sbuMWvdJ6/G0roRpgyVTmNDfhTYPOwcVaL/mSrPGLwbksYUbq7ckwoKzrobhdxvQzPsDA==, tarball: https://registry.npmmirror.com/@swc/core-win32-ia32-msvc/-/core-win32-ia32-msvc-1.7.28.tgz}
+    resolution: {integrity: sha512-XTHbHrksnrqK3JSJ2sbuMWvdJ6/G0roRpgyVTmNDfhTYPOwcVaL/mSrPGLwbksYUbq7ckwoKzrobhdxvQzPsDA==}
     engines: {node: '>=10'}
     cpu: [ia32]
     os: [win32]
@@ -1982,7 +1979,7 @@ packages:
     optional: true
 
   /@swc/core-win32-x64-msvc@1.7.28:
-    resolution: {integrity: sha512-jyXeoq6nX8abiCy2EpporsC5ywNENs4ocYuvxo1LSxDktWN1E2MTXq3cdJcEWB2Vydxq0rDcsGyzkRPMzFhkZw==, tarball: https://registry.npmmirror.com/@swc/core-win32-x64-msvc/-/core-win32-x64-msvc-1.7.28.tgz}
+    resolution: {integrity: sha512-jyXeoq6nX8abiCy2EpporsC5ywNENs4ocYuvxo1LSxDktWN1E2MTXq3cdJcEWB2Vydxq0rDcsGyzkRPMzFhkZw==}
     engines: {node: '>=10'}
     cpu: [x64]
     os: [win32]
@@ -2044,7 +2041,7 @@ packages:
     dev: false
 
   /@tauri-apps/cli-darwin-arm64@1.6.2:
-    resolution: {integrity: sha512-6mdRyf9DaLqlZvj8kZB09U3rwY+dOHSGzTZ7+GDg665GJb17f4cb30e8dExj6/aghcsOie9EGpgiURcDUvLNSQ==, tarball: https://registry.npmmirror.com/@tauri-apps/cli-darwin-arm64/-/cli-darwin-arm64-1.6.2.tgz}
+    resolution: {integrity: sha512-6mdRyf9DaLqlZvj8kZB09U3rwY+dOHSGzTZ7+GDg665GJb17f4cb30e8dExj6/aghcsOie9EGpgiURcDUvLNSQ==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [darwin]
@@ -2053,7 +2050,7 @@ packages:
     optional: true
 
   /@tauri-apps/cli-darwin-x64@1.6.2:
-    resolution: {integrity: sha512-PLxZY5dn38H3R9VRmBN/l0ZDB5JFanCwlK4rmpzDQPPg3tQmbu5vjSCP6TVj5U6aLKsj79kFyULblPr5Dn9+vw==, tarball: https://registry.npmmirror.com/@tauri-apps/cli-darwin-x64/-/cli-darwin-x64-1.6.2.tgz}
+    resolution: {integrity: sha512-PLxZY5dn38H3R9VRmBN/l0ZDB5JFanCwlK4rmpzDQPPg3tQmbu5vjSCP6TVj5U6aLKsj79kFyULblPr5Dn9+vw==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [darwin]
@@ -2062,7 +2059,7 @@ packages:
     optional: true
 
   /@tauri-apps/cli-linux-arm-gnueabihf@1.6.2:
-    resolution: {integrity: sha512-xnpj4BLeeGOh5I/ewCQlYJZwHH0CBNBN+4q8BNWNQ9MKkjN9ST366RmHRzl2ANNgWwijOPxyce7GiUmvuH8Atw==, tarball: https://registry.npmmirror.com/@tauri-apps/cli-linux-arm-gnueabihf/-/cli-linux-arm-gnueabihf-1.6.2.tgz}
+    resolution: {integrity: sha512-xnpj4BLeeGOh5I/ewCQlYJZwHH0CBNBN+4q8BNWNQ9MKkjN9ST366RmHRzl2ANNgWwijOPxyce7GiUmvuH8Atw==}
     engines: {node: '>= 10'}
     cpu: [arm]
     os: [linux]
@@ -2071,7 +2068,7 @@ packages:
     optional: true
 
   /@tauri-apps/cli-linux-arm64-gnu@1.6.2:
-    resolution: {integrity: sha512-uaiRE0vE2P+tdsCngfKt+7yKr3VZXIq/t3w01DzSdnBgHSp0zmRsRR4AhZt7ibvoEgA8GzBP+eSHJdFNZsTU9w==, tarball: https://registry.npmmirror.com/@tauri-apps/cli-linux-arm64-gnu/-/cli-linux-arm64-gnu-1.6.2.tgz}
+    resolution: {integrity: sha512-uaiRE0vE2P+tdsCngfKt+7yKr3VZXIq/t3w01DzSdnBgHSp0zmRsRR4AhZt7ibvoEgA8GzBP+eSHJdFNZsTU9w==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
@@ -2081,7 +2078,7 @@ packages:
     optional: true
 
   /@tauri-apps/cli-linux-arm64-musl@1.6.2:
-    resolution: {integrity: sha512-o9JunVrMrhqTBLrdvEbS64W0bo1dPm0lxX51Mx+6x9SmbDjlEWGgaAHC3iKLK9khd5Yu1uO1e+8TJltAcScvmw==, tarball: https://registry.npmmirror.com/@tauri-apps/cli-linux-arm64-musl/-/cli-linux-arm64-musl-1.6.2.tgz}
+    resolution: {integrity: sha512-o9JunVrMrhqTBLrdvEbS64W0bo1dPm0lxX51Mx+6x9SmbDjlEWGgaAHC3iKLK9khd5Yu1uO1e+8TJltAcScvmw==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
@@ -2091,7 +2088,7 @@ packages:
     optional: true
 
   /@tauri-apps/cli-linux-x64-gnu@1.6.2:
-    resolution: {integrity: sha512-jL9f+o61DdQmNYKIt2Q3BA8YJ+hyC5+GdNxqDf7j5SoQ85j//YfUWbmp9ZgsPHVBxgSGZVvgGMNvf64Ykp0buQ==, tarball: https://registry.npmmirror.com/@tauri-apps/cli-linux-x64-gnu/-/cli-linux-x64-gnu-1.6.2.tgz}
+    resolution: {integrity: sha512-jL9f+o61DdQmNYKIt2Q3BA8YJ+hyC5+GdNxqDf7j5SoQ85j//YfUWbmp9ZgsPHVBxgSGZVvgGMNvf64Ykp0buQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
@@ -2101,7 +2098,7 @@ packages:
     optional: true
 
   /@tauri-apps/cli-linux-x64-musl@1.6.2:
-    resolution: {integrity: sha512-xsa4Pu9YMHKAX0J8pIoXfN/uhvAAAoECZDixDhWw8zi57VZ4QX28ycqolS+NscdD9NAGSgHk45MpBZWdvRtvjQ==, tarball: https://registry.npmmirror.com/@tauri-apps/cli-linux-x64-musl/-/cli-linux-x64-musl-1.6.2.tgz}
+    resolution: {integrity: sha512-xsa4Pu9YMHKAX0J8pIoXfN/uhvAAAoECZDixDhWw8zi57VZ4QX28ycqolS+NscdD9NAGSgHk45MpBZWdvRtvjQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
@@ -2111,7 +2108,7 @@ packages:
     optional: true
 
   /@tauri-apps/cli-win32-arm64-msvc@1.6.2:
-    resolution: {integrity: sha512-eJtUOx2UFhJpCCkm5M5+4Co9JbjvgIHTdyS/hTSZfOEdT58CNEGVJXMA39FsSZXYoxYPE+9K7Km6haMozSmlxw==, tarball: https://registry.npmmirror.com/@tauri-apps/cli-win32-arm64-msvc/-/cli-win32-arm64-msvc-1.6.2.tgz}
+    resolution: {integrity: sha512-eJtUOx2UFhJpCCkm5M5+4Co9JbjvgIHTdyS/hTSZfOEdT58CNEGVJXMA39FsSZXYoxYPE+9K7Km6haMozSmlxw==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [win32]
@@ -2120,7 +2117,7 @@ packages:
     optional: true
 
   /@tauri-apps/cli-win32-ia32-msvc@1.6.2:
-    resolution: {integrity: sha512-9Jwx3PrhNw3VKOgPISRRXPkvoEAZP+7rFRHXIo49dvlHy2E/o9qpWi1IntE33HWeazP6KhvsCjvXB2Ai4eGooA==, tarball: https://registry.npmmirror.com/@tauri-apps/cli-win32-ia32-msvc/-/cli-win32-ia32-msvc-1.6.2.tgz}
+    resolution: {integrity: sha512-9Jwx3PrhNw3VKOgPISRRXPkvoEAZP+7rFRHXIo49dvlHy2E/o9qpWi1IntE33HWeazP6KhvsCjvXB2Ai4eGooA==}
     engines: {node: '>= 10'}
     cpu: [ia32]
     os: [win32]
@@ -2129,7 +2126,7 @@ packages:
     optional: true
 
   /@tauri-apps/cli-win32-x64-msvc@1.6.2:
-    resolution: {integrity: sha512-5Z+ZjRFJE8MXghJe1UXvGephY5ZcgVhiTI9yuMi9xgX3CEaAXASatyXllzsvGJ9EDaWMEpa0PHjAzi7LBAWROw==, tarball: https://registry.npmmirror.com/@tauri-apps/cli-win32-x64-msvc/-/cli-win32-x64-msvc-1.6.2.tgz}
+    resolution: {integrity: sha512-5Z+ZjRFJE8MXghJe1UXvGephY5ZcgVhiTI9yuMi9xgX3CEaAXASatyXllzsvGJ9EDaWMEpa0PHjAzi7LBAWROw==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
@@ -2399,7 +2396,7 @@ packages:
     dev: false
 
   /@types/js-cookie@2.2.7:
-    resolution: {integrity: sha512-aLkWa0C0vO5b4Sr798E26QgOkss68Un0bLjs7u9qxzPT5CG+8DuNTffWES58YzJs3hrVAOs1wonycqEBqNJubA==, tarball: https://registry.npmmirror.com/@types/js-cookie/-/js-cookie-2.2.7.tgz}
+    resolution: {integrity: sha512-aLkWa0C0vO5b4Sr798E26QgOkss68Un0bLjs7u9qxzPT5CG+8DuNTffWES58YzJs3hrVAOs1wonycqEBqNJubA==}
     dev: false
 
   /@types/json-schema@7.0.15:
@@ -2462,7 +2459,7 @@ packages:
     dev: true
 
   /@types/react-transition-group@4.4.11:
-    resolution: {integrity: sha512-RM05tAniPZ5DZPzzNFP+DmrcOdD0efDUxMy3145oljWSl3x9ZV5vhme98gTxFrj2lhXvmGNnUiuDyJgY9IKkNA==, tarball: https://registry.npmmirror.com/@types/react-transition-group/-/react-transition-group-4.4.11.tgz}
+    resolution: {integrity: sha512-RM05tAniPZ5DZPzzNFP+DmrcOdD0efDUxMy3145oljWSl3x9ZV5vhme98gTxFrj2lhXvmGNnUiuDyJgY9IKkNA==}
     dependencies:
       '@types/react': 18.3.9
     dev: false
@@ -2710,11 +2707,11 @@ packages:
     dev: false
 
   /ahooks-v3-count@1.0.0:
-    resolution: {integrity: sha512-V7uUvAwnimu6eh/PED4mCDjE7tokeZQLKlxg9lCTMPhN+NjsSbtdacByVlR1oluXQzD3MOw55wylDmQo4+S9ZQ==, tarball: https://registry.npmmirror.com/ahooks-v3-count/-/ahooks-v3-count-1.0.0.tgz}
+    resolution: {integrity: sha512-V7uUvAwnimu6eh/PED4mCDjE7tokeZQLKlxg9lCTMPhN+NjsSbtdacByVlR1oluXQzD3MOw55wylDmQo4+S9ZQ==}
     dev: false
 
   /ahooks@3.7.8(react@18.3.1):
-    resolution: {integrity: sha512-e/NMlQWoCjaUtncNFIZk3FG1ImSkV/JhScQSkTqnftakRwdfZWSw6zzoWSG9OMYqPNs2MguDYBUFFC6THelWXA==, tarball: https://registry.npmmirror.com/ahooks/-/ahooks-3.7.8.tgz}
+    resolution: {integrity: sha512-e/NMlQWoCjaUtncNFIZk3FG1ImSkV/JhScQSkTqnftakRwdfZWSw6zzoWSG9OMYqPNs2MguDYBUFFC6THelWXA==}
     engines: {node: '>=8.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
@@ -3242,14 +3239,14 @@ packages:
     dev: false
 
   /dom-helpers@5.2.1:
-    resolution: {integrity: sha512-nRCa7CK3VTrM2NmGkIy4cbK7IZlgBE/PYMn55rrXefr5xXDP0LdtfPnblFDoVdcAfslJ7or6iqAUnx0CCGIWQA==, tarball: https://registry.npmmirror.com/dom-helpers/-/dom-helpers-5.2.1.tgz}
+    resolution: {integrity: sha512-nRCa7CK3VTrM2NmGkIy4cbK7IZlgBE/PYMn55rrXefr5xXDP0LdtfPnblFDoVdcAfslJ7or6iqAUnx0CCGIWQA==}
     dependencies:
       '@babel/runtime': 7.25.6
       csstype: 3.1.3
     dev: false
 
   /dompurify@3.1.7:
-    resolution: {integrity: sha512-VaTstWtsneJY8xzy7DekmYWEOZcmzIe3Qb3zPd4STve1OBTa+e+WmS1ITQec1fZYXI3HCsOZZiSMpG6oxoWMWQ==, tarball: https://registry.npmmirror.com/dompurify/-/dompurify-3.1.7.tgz}
+    resolution: {integrity: sha512-VaTstWtsneJY8xzy7DekmYWEOZcmzIe3Qb3zPd4STve1OBTa+e+WmS1ITQec1fZYXI3HCsOZZiSMpG6oxoWMWQ==}
     dev: false
 
   /drange@1.1.1:
@@ -3553,7 +3550,7 @@ packages:
     dev: true
 
   /fsevents@2.3.3:
-    resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==, tarball: https://registry.npmmirror.com/fsevents/-/fsevents-2.3.3.tgz}
+    resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
     requiresBuild: true
@@ -3896,7 +3893,7 @@ packages:
     dev: false
 
   /js-cookie@2.2.1:
-    resolution: {integrity: sha512-HvdH2LzI/EAZcUwA8+0nKNtWHqS+ZmijLA30RwZA0bo7ToCckjK5MkGhjED9KoRcXO6BaGI3I9UIzSA1FKFPOQ==, tarball: https://registry.npmmirror.com/js-cookie/-/js-cookie-2.2.1.tgz}
+    resolution: {integrity: sha512-HvdH2LzI/EAZcUwA8+0nKNtWHqS+ZmijLA30RwZA0bo7ToCckjK5MkGhjED9KoRcXO6BaGI3I9UIzSA1FKFPOQ==}
     dev: false
 
   /js-cookie@3.0.5:
@@ -4645,7 +4642,7 @@ packages:
     dev: true
 
   /oniguruma-to-js@0.4.3:
-    resolution: {integrity: sha512-X0jWUcAlxORhOqqBREgPMgnshB7ZGYszBNspP+tS9hPD3l13CdaXcHbgImoHUHlrvGx/7AvFEkTRhAGYh+jzjQ==, tarball: https://registry.npmmirror.com/oniguruma-to-js/-/oniguruma-to-js-0.4.3.tgz}
+    resolution: {integrity: sha512-X0jWUcAlxORhOqqBREgPMgnshB7ZGYszBNspP+tS9hPD3l13CdaXcHbgImoHUHlrvGx/7AvFEkTRhAGYh+jzjQ==}
     dependencies:
       regex: 4.3.2
     dev: false
@@ -5405,14 +5402,6 @@ packages:
       react-dom: 18.3.1(react@18.3.1)
     dev: false
 
-  /react-icons@5.3.0(react@18.3.1):
-    resolution: {integrity: sha512-DnUk8aFbTyQPSkCfF8dbX6kQjXA9DktMeJqfjrg6cK9vwQVMxmcA3BfP4QoiztVmEHtwlTgLFsPuH2NskKT6eg==, tarball: https://registry.npmmirror.com/react-icons/-/react-icons-5.3.0.tgz}
-    peerDependencies:
-      react: '*'
-    dependencies:
-      react: 18.3.1
-    dev: false
-
   /react-intersection-observer@9.13.1(react-dom@18.3.1)(react@18.3.1):
     resolution: {integrity: sha512-tSzDaTy0qwNPLJHg8XZhlyHTgGW6drFKTtvjdL+p6um12rcnp8Z5XstE+QNBJ7c64n5o0Lj4ilUleA41bmDoMw==, tarball: https://registry.npmmirror.com/react-intersection-observer/-/react-intersection-observer-9.13.1.tgz}
     peerDependencies:
@@ -5513,7 +5502,7 @@ packages:
     dev: false
 
   /react-transition-group@4.4.5(react-dom@18.3.1)(react@18.3.1):
-    resolution: {integrity: sha512-pZcd1MCJoiKiBR2NRxeCRg13uCXbydPnmB4EOeRrY7480qNWO8IIgQG6zlDkm6uRMsURXPuKq0GWtiM59a5Q6g==, tarball: https://registry.npmmirror.com/react-transition-group/-/react-transition-group-4.4.5.tgz}
+    resolution: {integrity: sha512-pZcd1MCJoiKiBR2NRxeCRg13uCXbydPnmB4EOeRrY7480qNWO8IIgQG6zlDkm6uRMsURXPuKq0GWtiM59a5Q6g==}
     peerDependencies:
       react: '>=16.6.0'
       react-dom: '>=16.6.0'
@@ -5616,7 +5605,7 @@ packages:
     resolution: {integrity: sha512-dYnhHh0nJoMfnkZs6GmmhFknAGRrLznOu5nc9ML+EJxGvrx6H7teuevqVqCuPcPK//3eDrrjQhehXVx9cnkGdw==, tarball: https://registry.npmmirror.com/regenerator-runtime/-/regenerator-runtime-0.14.1.tgz}
 
   /regex@4.3.2:
-    resolution: {integrity: sha512-kK/AA3A9K6q2js89+VMymcboLOlF5lZRCYJv3gzszXFHBr6kO6qLGzbm+UIugBEV8SMMKCTR59txoY6ctRHYVw==, tarball: https://registry.npmmirror.com/regex/-/regex-4.3.2.tgz}
+    resolution: {integrity: sha512-kK/AA3A9K6q2js89+VMymcboLOlF5lZRCYJv3gzszXFHBr6kO6qLGzbm+UIugBEV8SMMKCTR59txoY6ctRHYVw==}
     dev: false
 
   /rehype-katex@6.0.3:
@@ -5804,7 +5793,7 @@ packages:
     dev: true
 
   /shiki@1.20.0:
-    resolution: {integrity: sha512-MZJJ1PCFsQB1Piq+25wiz0a75yUv8Q3/fzy7SzRx5ONdjdtGdyiKwYn8vb/FnK5kjS0voWGnPpjG16POauUR+g==, tarball: https://registry.npmmirror.com/shiki/-/shiki-1.20.0.tgz}
+    resolution: {integrity: sha512-MZJJ1PCFsQB1Piq+25wiz0a75yUv8Q3/fzy7SzRx5ONdjdtGdyiKwYn8vb/FnK5kjS0voWGnPpjG16POauUR+g==}
     dependencies:
       '@shikijs/core': 1.20.0
       '@shikijs/engine-javascript': 1.20.0
