@@ -25,8 +25,8 @@ public class PromptService {
                             String description) {
     }
 
-    public record PromptResponse(PromptResultCode resultCode,
-                                 String prompt) {
+    public record PromptResult(PromptResultCode resultCode,
+                               String prompt) {
 
     }
 
@@ -55,7 +55,7 @@ public class PromptService {
         this.req = req;
     }
 
-    public PromptResponse gen() {
+    public PromptResult gen() {
         String table = req.table;
         if (table == null || table.isEmpty()) {
             return ofErr(tableNotSet);
@@ -94,7 +94,7 @@ public class PromptService {
             }
             resolvedExamples.add(new ResolvedExample(ex.id, ex.description, vRecord));
         }
-        return new PromptResponse(ok, genPrompt(vTable.schema(), resolvedExamples));
+        return new PromptResult(ok, genPrompt(vTable.schema(), resolvedExamples));
     }
 
     private StringBuilder sb;
@@ -131,9 +131,13 @@ public class PromptService {
                 - Examples:
                 """, req.role, req.table);
         addExamples(resolvedExamples);
-        add("-Initialization: 在第一次对话中，请直接输出以下：您好！请提供id和想要的buff描述。我将根据这些信息为您生成符合{0}结构的json数据",
-                req.table);
+        add("-Initialization: 在第一次对话中，请直接输出以下：{0}",
+                genPromptAnswer());
         return sb.toString();
+    }
+
+    private String genPromptAnswer() {
+        return "您好！请提供id和想要的buff描述。我将根据这些信息为您生成符合%s结构的json数据".formatted(req.table);
     }
 
     private void addSchema(TableSchema tableSchema) {
@@ -208,8 +212,8 @@ public class PromptService {
         sb.append(MessageFormat.format(fmt, arg1, arg2));
     }
 
-    private PromptResponse ofErr(PromptResultCode code) {
-        return new PromptResponse(code, "");
+    private PromptResult ofErr(PromptResultCode code) {
+        return new PromptResult(code, "");
     }
 
     public static void main(String[] args) {
@@ -223,7 +227,7 @@ public class PromptService {
                         new AIExample("410425", "每秒额外回复6点能量")
                 )));
 
-        PromptResponse r = service.gen();
+        PromptResult r = service.gen();
         System.out.println(r.prompt);
     }
 }

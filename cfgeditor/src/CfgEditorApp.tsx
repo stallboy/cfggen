@@ -121,7 +121,7 @@ export function CfgEditorApp() {
             dragPage = <SearchValue/>;
 
         } else if (dragPanel == 'chat') {
-            dragPage = <Chat/>
+            dragPage = <Chat schema={schema}/>
 
         } else if (dragPanel != 'none') {
             const fix = getFixedPage(pageConf, dragPanel);
@@ -195,7 +195,7 @@ export function CfgEditorApp() {
         </Drawer>
 
         <Drawer title={t("query")} placement="left" onClose={onQueryClose} open={queryOpen} size='large'>
-            <Query/>
+            <Query schema={schema}/>
         </Drawer>
     </div>
         ;

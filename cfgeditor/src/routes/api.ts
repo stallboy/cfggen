@@ -4,6 +4,7 @@ import axios from 'axios';
 import {Schema} from "./table/schemaUtil.ts";
 import {clearLayoutCache} from "./setting/store.ts";
 import {NoteEditResult, Notes, notesToMap} from "./record/noteModel.ts";
+import {PromptRequest, PromptResult} from "./search/chatModel.ts";
 
 
 export async function fetchSchema(server: string, signal: AbortSignal) {
@@ -87,3 +88,18 @@ export async function updateNote(server: string, key: string, note: string) {
     return response.data;
 }
 
+export async function generatePrompt(server: string, req: PromptRequest) {
+    const url = `http://${server}/prompt`;
+    const response = await axios.post<PromptResult>(url, req, {
+        method: 'POST',
+        headers: {
+            cache: "no-cache",
+            mode: "cors",
+            credentials: "same-origin",
+            redirect: "follow",
+            referrerPolicy: "no-referrer",
+            "Content-Type": "application/json",
+        },
+    });
+    return response.data;
+}
