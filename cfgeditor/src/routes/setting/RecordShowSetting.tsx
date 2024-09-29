@@ -52,7 +52,7 @@ function onFinish(values: any) {
 
 export const RecordShowSetting = memo(function RecordRefSetting() {
     const {t} = useTranslation();
-    const {nodeShow,} = store;
+    const {nodeShow} = store;
 
 
     return <>

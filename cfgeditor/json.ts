@@ -60,5 +60,6 @@ export interface AIConf {
     baseUrl: string;
     apiKey: string;
     model: string;
+    role: string;
     examples: AIExample[];
 }

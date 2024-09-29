@@ -86,12 +86,13 @@ export async function readPrefAsyncOnce() {
 }
 
 async function readConf(conf: string) {
+    console.log("read", conf);
     const settings = parse(await readTextFile(conf));
     if (typeof settings == "object") {
         for (const key in settings) {
             const value = settings[key];
             localStorage.setItem(key, value);
-            // console.log(key, value);
+            console.log(key, value);
         }
     }
 }

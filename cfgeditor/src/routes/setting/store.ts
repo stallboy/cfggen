@@ -47,6 +47,7 @@ const storeState: StoreState = {
         baseUrl: '',
         apiKey: '',
         model: '',
+        role: '',
         examples: [],
     },
 
@@ -133,6 +134,12 @@ export function readStoreStateOnce() {
                 const ns = getPrefJson<NodeShowType>('nodeShow', Convert.toNodeShowType);
                 if (ns) {
                     store.nodeShow = ns;
+                }
+                break;
+            case 'aiConf':
+                const ac = getPrefJson<AIConf>('aiConf', Convert.toAIConf);
+                if (ac) {
+                    store.aiConf = ac;
                 }
                 break;
             case 'pageConf':

@@ -76,6 +76,7 @@ export interface AIConf {
     baseUrl:  string;
     examples: AIExample[];
     model:    string;
+    role:     string;
 }
 
 export interface AIExample {
@@ -382,6 +383,7 @@ const typeMap: any = {
         { json: "baseUrl", js: "baseUrl", typ: "" },
         { json: "examples", js: "examples", typ: a(r("AIExample")) },
         { json: "model", js: "model", typ: "" },
+        { json: "role", js: "role", typ: "" },
     ], false),
     "AIExample": o([
         { json: "description", js: "description", typ: "" },

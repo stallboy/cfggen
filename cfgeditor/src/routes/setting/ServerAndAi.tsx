@@ -55,6 +55,10 @@ export const ServerAndAi = memo(function ServerAndAi({schema}: {
                     <Input placeholder="model"/>
                 </Form.Item>
 
+                <Form.Item name='role' label={t('role')}>
+                    <Input placeholder="role"/>
+                </Form.Item>
+
                 <Form.Item label={t('examples')}>
                     <Form.List name="examples">
                         {(fields, {add, remove}) => (
