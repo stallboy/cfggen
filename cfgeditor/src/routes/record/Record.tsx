@@ -35,10 +35,9 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const {schema, notes, curTable} = useOutletContext<SchemaTableType>();
     const {server, tauriConf, resourceDir, resMap} = store;
     const {notification} = App.useApp();
-    const {curTableId, curId} = useLocationData();
+    const {curTableId, curId, edit, pathname} = useLocationData();
     const navigate = useNavigate();
     const [t] = useTranslation();
-    const {edit, pathname} = useLocationData();
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_, forceUpdate] = useReducer(v => v++, 0);
 

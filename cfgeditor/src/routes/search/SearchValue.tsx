@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {memo, useState} from "react";
 import {App, Button, Card, Empty, Input, Result, Table} from "antd";
 import {SearchResult, SearchResultItem} from "./searchModel.ts";
 import {useTranslation} from "react-i18next";
@@ -11,7 +11,7 @@ function getLabel(table: string, id: string): string {
     return seps[seps.length - 1] + '-' + id;
 }
 
-export function SearchValue() {
+export const SearchValue = memo(function SearchValue() {
     const {server, query, searchMax, isEditMode} = store;
     const navigate = useNavigate();
 
@@ -83,14 +83,14 @@ export function SearchValue() {
             // <div style={{overflow: "auto"}}>
             <Table columns={columns} dataSource={searchResult.items}
                    pagination={false}
-                   // pagination={{position: ['bottomRight']}}
-                   // scroll={{y: "80vh"}}
+                // pagination={{position: ['bottomRight']}}
+                // scroll={{y: "80vh"}}
                    rowKey={(item: SearchResultItem) => `${item.table}-${item.pk}-${item.fieldChain}`}/>
         // </div>
     }
     return <>
         <div style={{height: 32}}/>
-        <Card style={{overflow:"auto"}}>
+        <Card style={{overflow: "auto"}}>
             <Input.Search placeholder='search value' defaultValue={query}
                           enterButton={t('search')}
                           size='large'
@@ -98,7 +98,5 @@ export function SearchValue() {
                           onSearch={onSearch}/>
             {content}
         </Card>
-    </>
-
-
-}
+    </>;
+});

@@ -103,7 +103,6 @@ export function onUpdateFold(fold: boolean,
 }
 
 
-
 export function onUpdateInterfaceValue(jsonObject: JSONObject,
                                        fieldChains: (string | number)[]) {
     // console.log('updateInterface', fieldChains, jsonObject);

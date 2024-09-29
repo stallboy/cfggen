@@ -207,7 +207,7 @@ public class EditorServer extends Generator {
         byte[] bytes = exchange.getRequestBody().readAllBytes();
         String jsonStr = new String(bytes, StandardCharsets.UTF_8);
         PromptService.PromptRequest request = JSON.parseObject(jsonStr, PromptService.PromptRequest.class);
-        PromptService.PromptResponse result = new PromptService(cfgValue, graph, request).gen();
+        PromptService.PromptResult result = new PromptService(cfgValue, graph, request).gen();
         sendResponse(exchange, result);
     }
 

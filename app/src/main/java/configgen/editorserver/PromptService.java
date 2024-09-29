@@ -26,7 +26,8 @@ public class PromptService {
     }
 
     public record PromptResult(PromptResultCode resultCode,
-                               String prompt) {
+                               String prompt,
+                               String answer) {
 
     }
 
@@ -94,7 +95,7 @@ public class PromptService {
             }
             resolvedExamples.add(new ResolvedExample(ex.id, ex.description, vRecord));
         }
-        return new PromptResult(ok, genPrompt(vTable.schema(), resolvedExamples));
+        return new PromptResult(ok, genPrompt(vTable.schema(), resolvedExamples), genPromptAnswer());
     }
 
     private StringBuilder sb;
@@ -128,7 +129,6 @@ public class PromptService {
                 \t- 对象可以加入$note字段，作为注释，不用全部都加，最好这些注释合起来组成了描述
                 \t- json中不要包含```//```开头的注释
                 - OutputFormat: json
-                - Examples:
                 """, req.role, req.table);
         addExamples(resolvedExamples);
         add("-Initialization: 在第一次对话中，请直接输出以下：{0}",
@@ -137,7 +137,7 @@ public class PromptService {
     }
 
     private String genPromptAnswer() {
-        return "您好！请提供id和想要的buff描述。我将根据这些信息为您生成符合%s结构的json数据".formatted(req.table);
+        return "您好！请提供id和想要的%s描述。我将根据这些信息为您生成符合%s结构的json数据".formatted(req.table, req.table);
     }
 
     private void addSchema(TableSchema tableSchema) {
@@ -183,6 +183,11 @@ public class PromptService {
     }
 
     private void addExamples(List<ResolvedExample> resolvedExamples) {
+        if (!resolvedExamples.isEmpty()) {
+            add("""
+                    - Examples:
+                    """);
+        }
         for (ResolvedExample e : resolvedExamples) {
             add("""
                     \t- {0}，{1}
@@ -213,7 +218,7 @@ public class PromptService {
     }
 
     private PromptResult ofErr(PromptResultCode code) {
-        return new PromptResult(code, "");
+        return new PromptResult(code, "", "");
     }
 
     public static void main(String[] args) {

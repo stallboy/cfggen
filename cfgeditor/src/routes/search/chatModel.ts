@@ -12,6 +12,7 @@ export interface AIExample {
 export interface PromptResult {
     resultCode: PromptResultCode;
     prompt: string;
+    answer: string;
 }
 
 export type PromptResultCode =
