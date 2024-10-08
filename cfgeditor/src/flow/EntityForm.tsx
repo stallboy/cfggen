@@ -25,7 +25,7 @@ import {useTranslation} from "react-i18next";
 import {Handle, Position} from "@xyflow/react";
 import {ActionIcon} from "@ant-design/pro-editor";
 import {getFieldBackgroundColor} from "./colors.ts";
-import { HappyProvider } from '@ant-design/happy-work-theme';
+import {HappyProvider} from '@ant-design/happy-work-theme';
 
 const formLayout = {
     labelCol: {xs: {span: 24}, sm: {span: 6},},
@@ -190,7 +190,7 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: { field: EntityEditField, bg
                                style={thisItemStyle}>
 
                         <Space align='baseline' size={1}>
-                            <Form.Item key={f.key} >
+                            <Form.Item key={f.key} name={f.name}>
                                 {PrimitiveControl(field)}
                             </Form.Item>
                             <ActionIcon className='nodrag'

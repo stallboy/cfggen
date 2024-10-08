@@ -18,7 +18,8 @@ public class PromptService {
 
     public record PromptRequest(String role,
                                 String table,
-                                List<AIExample> examples) {
+                                List<AIExample> examples,
+                                List<String> explains) {
     }
 
     public record AIExample(String id,
@@ -105,7 +106,7 @@ public class PromptService {
 
         add("""
                 - Role: {0}和json生成专家
-                - Background: 以下会给出{1}相关的结构定义，和相关联csv表内容，然后根据描述来生成{1}结构的json文件
+                - Background: 以下会给出{1}相关的结构定义、相关联csv表内容、原理
                 \t- {1}相关的结构定义，结构定义中的```->```指明了此字段外键到另一个表。如下
                 \t```
                 """, req.role, req.table);
@@ -115,6 +116,10 @@ public class PromptService {
                 \t- 相关csv表内容,表中第一行是表头程序用名称，之后是具体数据
                 """);
         addRelatedCsv(tableSchema);
+        for (String explain : req.explains) {
+            add(explain);
+            add("\n");
+        }
         add("""
                 - Profile: 你是一位经验丰富逻辑严密的{0}，擅长把需求描述转变为符合结构的json数据
                 - Skills: 你具备深厚的行业经验、对json格式有深入理解，并且能够灵活运用各种编程语言和工具来生成和验证json数据
@@ -131,8 +136,8 @@ public class PromptService {
                 - OutputFormat: json
                 """, req.role, req.table);
         addExamples(resolvedExamples);
-        add("-Initialization: 在第一次对话中，请直接输出以下：{0}",
-                genPromptAnswer());
+//        add("-Initialization: 在第一次对话中，请直接输出以下：{0}",
+//                genPromptAnswer());
         return sb.toString();
     }
 
@@ -230,7 +235,7 @@ public class PromptService {
                 new PromptRequest("资深游戏策划", "skill.buff", List.of(
                         new AIExample("410305", "所有【暴怒技能】造成的伤害提高30%"),
                         new AIExample("410425", "每秒额外回复6点能量")
-                )));
+                ), List.of()));
 
         PromptResult r = service.gen();
         System.out.println(r.prompt);

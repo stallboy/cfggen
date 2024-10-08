@@ -89,6 +89,36 @@ export const ServerAndAi = memo(function ServerAndAi({schema}: {
                         )}
                     </Form.List>
                 </Form.Item>
+
+                <Form.Item label={t('explains')}>
+                    <Form.List name="explains">
+                        {(fields, {add, remove}) => (
+                            <div style={{display: 'flex', flexDirection: 'column', rowGap: 16}}>
+                                {fields.map(({key, name}) => (
+                                    <Flex key={key} vertical>
+
+                                        <Space>
+                                            <Form.Item name={[name, 'table']} noStyle>
+                                                <Select options={tableOptions} style={{width:120}}/>
+                                            </Form.Item>
+                                            <CloseOutlined onClick={() => remove(name)}/>
+                                        </Space>
+
+                                        <Form.Item name={[name, 'explain']} noStyle>
+                                            <Input.TextArea placeholder="explain"/>
+                                        </Form.Item>
+
+                                    </Flex>
+                                ))}
+
+                                <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined/>}>
+                                    {t('addExplain')}
+                                </Button>
+                            </div>
+                        )}
+                    </Form.List>
+                </Form.Item>
+
                 <Form.Item>
                     <Button type="primary" htmlType="submit">
                         {t('setAIConf')}

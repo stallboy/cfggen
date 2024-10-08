@@ -2,6 +2,7 @@ export interface PromptRequest {
     role: string;
     table: string;
     examples: AIExample[];
+    explains: string[];
 }
 
 export interface AIExample {

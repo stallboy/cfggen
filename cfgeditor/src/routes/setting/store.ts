@@ -49,6 +49,7 @@ const storeState: StoreState = {
         model: '',
         role: '',
         examples: [],
+        explains: [],
     },
 
     maxImpl: 10,

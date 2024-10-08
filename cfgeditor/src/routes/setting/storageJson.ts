@@ -1,6 +1,6 @@
 // To parse this data:
 //
-//   import { Convert, NodeShowType, KeywordColor, TableHideAndColor, ShowHeadType, ShowDescriptionType, NodePlacementStrategyType, FixedPage, FixedPagesConf, ResDir, TauriConf, AIExample, AIConf } from "./file";
+//   import { Convert, NodeShowType, KeywordColor, TableHideAndColor, ShowHeadType, ShowDescriptionType, NodePlacementStrategyType, FixedPage, FixedPagesConf, ResDir, TauriConf, AIExample, AIExplain, AIConf } from "./file";
 //
 //   const nodeShowType = Convert.toNodeShowType(json);
 //   const keywordColor = Convert.toKeywordColor(json);
@@ -13,6 +13,7 @@
 //   const resDir = Convert.toResDir(json);
 //   const tauriConf = Convert.toTauriConf(json);
 //   const aIExample = Convert.toAIExample(json);
+//   const aIExplain = Convert.toAIExplain(json);
 //   const aIConf = Convert.toAIConf(json);
 //
 // These functions will throw an error if the JSON doesn't
@@ -75,6 +76,7 @@ export interface AIConf {
     apiKey:   string;
     baseUrl:  string;
     examples: AIExample[];
+    explains: AIExplain[];
     model:    string;
     role:     string;
 }
@@ -83,6 +85,11 @@ export interface AIExample {
     description: string;
     id:          string;
     table:       string;
+}
+
+export interface AIExplain {
+    explain: string;
+    table:   string;
 }
 
 // Converts JSON strings to/from your types
@@ -174,6 +181,14 @@ export class Convert {
 
     public static aIExampleToJson(value: AIExample): string {
         return JSON.stringify(uncast(value, r("AIExample")), null, 2);
+    }
+
+    public static toAIExplain(json: string): AIExplain {
+        return cast(JSON.parse(json), r("AIExplain"));
+    }
+
+    public static aIExplainToJson(value: AIExplain): string {
+        return JSON.stringify(uncast(value, r("AIExplain")), null, 2);
     }
 
     public static toAIConf(json: string): AIConf {
@@ -382,12 +397,17 @@ const typeMap: any = {
         { json: "apiKey", js: "apiKey", typ: "" },
         { json: "baseUrl", js: "baseUrl", typ: "" },
         { json: "examples", js: "examples", typ: a(r("AIExample")) },
+        { json: "explains", js: "explains", typ: a(r("AIExplain")) },
         { json: "model", js: "model", typ: "" },
         { json: "role", js: "role", typ: "" },
     ], false),
     "AIExample": o([
         { json: "description", js: "description", typ: "" },
         { json: "id", js: "id", typ: "" },
+        { json: "table", js: "table", typ: "" },
+    ], false),
+    "AIExplain": o([
+        { json: "explain", js: "explain", typ: "" },
         { json: "table", js: "table", typ: "" },
     ], false),
     "NodePlacementStrategyType": [

@@ -56,10 +56,16 @@ export interface AIExample {
     description: string;
 }
 
+export interface AIExplain {
+    table: string;
+    explain: string;
+}
+
 export interface AIConf {
     baseUrl: string;
     apiKey: string;
     model: string;
     role: string;
     examples: AIExample[];
+    explains: AIExplain[];
 }

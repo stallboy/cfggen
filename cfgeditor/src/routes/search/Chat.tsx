@@ -13,6 +13,7 @@ import {App, Result, Spin} from "antd";
 import {PromptRequest} from "./chatModel.ts";
 import {JSONObject, RecordEditResult} from "../record/recordModel.ts";
 import {useNavigate} from "react-router-dom";
+import {savePromptAsync} from "./promptStorage.ts";
 
 
 export const Chat = memo(function Chat({schema}: {
@@ -23,7 +24,7 @@ export const Chat = memo(function Chat({schema}: {
     const {curTableId} = useLocationData();
     // const {t} = useTranslation();
     const [chats, setChats] = useState<ChatMessage[]>([]);
-    const chatRef = useRef<ProChatInstance|undefined>();
+    const chatRef = useRef<ProChatInstance | undefined>();
 
     let editable = false;
     if (schema && schema.isEditable) {
@@ -37,6 +38,7 @@ export const Chat = memo(function Chat({schema}: {
         role: aiConf.role,
         table: curTableId,
         examples: [],
+        explains:[],
     }
     for (let e of aiConf.examples) {
         if (e.table == curTableId) {
@@ -46,10 +48,19 @@ export const Chat = memo(function Chat({schema}: {
             });
         }
     }
+    for (let e of aiConf.explains) {
+        if (e.table == curTableId) {
+            req.explains.push(e.explain);
+        }
+    }
 
     const {isLoading, isError, error, data: promptResult} = useQuery({
         queryKey: ['prompt', curTableId],
-        queryFn: () => generatePrompt(server, req),
+        queryFn: async () => {
+            let t = await generatePrompt(server, req);
+            await savePromptAsync(curTableId, t.prompt);
+            return t;
+        },
         staleTime: Infinity,
         enabled: editable
     })
@@ -91,10 +102,10 @@ export const Chat = memo(function Chat({schema}: {
     //     console.log("end", id, type, data)
     // };
 
-    const onChatGenerate = useCallback((chunk : string) => {
+    const onChatGenerate = useCallback((chunk: string) => {
         const json = parseMarkdownToJson(chunk);
         // console.log(chunk, json);
-        if (json){
+        if (json) {
             addOrUpdateRecordMutation.mutate(json);
         }
     }, [addOrUpdateRecordMutation]);
@@ -120,21 +131,15 @@ export const Chat = memo(function Chat({schema}: {
         return <Result status={'error'} title={promptResult.resultCode}/>;
     }
 
-    const pre: ChatMessage[] = [{
+    const system: ChatMessage[] = [{
         id: '1111',
         createAt: 1234,
         updateAt: 1235,
-        role: 'user',
-        content: promptResult.prompt,
-    }, {
-        id: '2222',
-        createAt: 2234,
-        updateAt: 2235,
         role: 'system',
-        content: promptResult.answer,
+        content: promptResult.prompt,
     }];
 
-    const showChats = chats.length > 0 ? chats : pre;
+    // const showChats = chats;
 
     return <>
         <div style={{height: "5vh"}}/>
@@ -142,12 +147,12 @@ export const Chat = memo(function Chat({schema}: {
 
             <ProChat chatRef={chatRef}
                      style={{height: "95vh"}}
-                     chats={showChats}
+                     chats={chats}
                      onChatsChange={setChats}
-                     // onChatEnd={onChatEnd}
+                // onChatEnd={onChatEnd}
                      onChatGenerate={onChatGenerate}
                      request={async (messages: ChatMessage[]) => {
-                         return ask(preAndLastMessage(pre, messages), aiConf)
+                         return ask(preAndLastMessage(system, messages), aiConf)
                      }}
             />
         </div>
@@ -155,16 +160,16 @@ export const Chat = memo(function Chat({schema}: {
 });
 
 
-function parseMarkdownToJson(chunk:string) {
+function parseMarkdownToJson(chunk: string) {
     const c = chunk.trim();
-    if (c.startsWith("```json") && c.endsWith("```")){
-        const jsonStr = c.substring(7, c.length-3);
+    if (c.startsWith("```json") && c.endsWith("```")) {
+        const jsonStr = c.substring(7, c.length - 3);
         return JSON.parse(jsonStr);
     }
 }
 
-function preAndLastMessage(pre: ChatMessage[], messages: ChatMessage[]): ChatMessage[] {
-    const r = [...pre]
+function preAndLastMessage(system: ChatMessage[], messages: ChatMessage[]): ChatMessage[] {
+    const r = [...system]
     if (messages.length > 0) {
         r.push(messages[messages.length - 1]);
     }
