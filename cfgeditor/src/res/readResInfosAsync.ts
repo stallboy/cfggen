@@ -2,24 +2,34 @@ import {
     readStoreStateOnce,
     store
 } from "../routes/setting/store.ts";
-import {FileEntry, readDir} from "@tauri-apps/api/fs";
+import {readDir} from "@tauri-apps/plugin-fs";
 import {queryClient} from "../main.tsx";
 import {ext2type, findKeyEndIndex, getResourceDirAsync, joinPath} from "./resUtils.ts";
 import {ResAudioTrack, ResInfo, ResSubtitlesTrack, ResType} from "./resInfo.ts";
+import {isTauri} from "@tauri-apps/api/core";
+import {join} from "@tauri-apps/api/path";
 
-function processEntries(entries: FileEntry[], txtAsSrt: boolean, lang: string | undefined,
-                        result: Map<string, ResInfo[]>, stat: Map<string, number>) {
-    for (const {path, name, children} of entries) {
-        if (children) {
-            processEntries(children, txtAsSrt, lang, result, stat);
-        } else if (name && !name.endsWith(".meta")) {
+async function processDirRecursively(dir: string,
+                                     txtAsSrt: boolean,
+                                     lang: string | undefined,
+                                     result: Map<string, ResInfo[]>,
+                                     stat: Map<string, number>) {
+    const entries = await readDir(dir);
+
+    for (const {name, isFile, isDirectory} of entries) {
+        if (isDirectory) {
+            const subDir = await join(dir, name);
+            processDirRecursively(subDir, txtAsSrt, lang, result, stat);
+        } else if (isFile && !name.endsWith(".meta")) {
+            const path = await join(dir, name);
+
             const idx = findKeyEndIndex(name);
             if (idx == -1) {
-                console.log(`ignore ${name} ${path}`);
+                console.log(`ignore  ${path}`);
             } else {
                 const extIdx = name.lastIndexOf('.');
                 if (extIdx == -1) {
-                    console.log(`ignore ${name} ${path}`);
+                    console.log(`ignore ${path}`);
                 } else {
                     const ext = name.substring(extIdx).toLowerCase();
                     let type: ResType = 'other';
@@ -141,7 +151,7 @@ function packAllTracks(raws: Map<string, ResInfo[]>) {
 
 let alreadyRead = false;
 
-export function invalidateResInfos(){
+export function invalidateResInfos() {
     queryClient.invalidateQueries({queryKey: ['setting', 'resInfo'], refetchType: 'all'}).catch((reason: any) => {
         console.log(reason);
     });
@@ -154,7 +164,7 @@ export async function readResInfosAsync() {
     }
     alreadyRead = true;
     readStoreStateOnce();
-    if (!window.__TAURI__) {
+    if (!isTauri()) {
         return true;
     }
 
@@ -176,8 +186,7 @@ export async function readResInfosAsync() {
             }
         }
         try {
-            const entries = await readDir(dir, {recursive: true});
-            processEntries(entries, !!resDir.txtAsSrt, resDir.lang, result, stat);
+            await processDirRecursively(dir, !!resDir.txtAsSrt, resDir.lang, result, stat);
 
         } catch (reason: any) {
             console.error(reason);

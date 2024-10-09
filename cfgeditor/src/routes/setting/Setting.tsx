@@ -11,6 +11,7 @@ import {Operations} from "./Operations.tsx";
 import {memo, RefObject} from "react";
 import {TauriSetting} from "./TauriSeting.tsx";
 import {ServerAndAi} from "./ServerAndAi.tsx";
+import {isTauri} from "@tauri-apps/api/core";
 
 
 export const Setting = memo(function Setting({schema, curTable, flowRef}: {
@@ -50,7 +51,7 @@ export const Setting = memo(function Setting({schema, curTable, flowRef}: {
             children: <KeyShortCut/>
         },
     ]
-    if (window.__TAURI__) {
+    if (isTauri()) {
         items.push({
             key: 'appSetting',
             label: t('appSetting'),

@@ -1,6 +1,6 @@
 import {Schema} from "../routes/table/schemaUtil.ts";
 import {store} from "../routes/setting/store.ts";
-import {writeTextFile} from "@tauri-apps/api/fs";
+import {writeTextFile} from "@tauri-apps/plugin-fs";
 import {getResourceDirAsync, joinPath} from "./resUtils.ts";
 import {ResInfo} from "./resInfo.ts";
 import {getResBrief} from "../flow/getResBrief.tsx";

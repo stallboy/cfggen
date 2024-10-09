@@ -1,8 +1,8 @@
 import {memo, useCallback, useRef} from "react";
 import {Button, Flex, Space, Tabs, TabsProps} from "antd";
-import {convertFileSrc} from "@tauri-apps/api/tauri";
-import {Command} from "@tauri-apps/api/shell";
-import {readTextFile} from "@tauri-apps/api/fs";
+import {convertFileSrc} from "@tauri-apps/api/core";
+import {Command} from "@tauri-apps/plugin-shell";
+import {readTextFile} from "@tauri-apps/plugin-fs";
 import {useQuery} from "@tanstack/react-query";
 import {ResInfo} from "../res/resInfo.ts";
 
@@ -30,7 +30,7 @@ async function getSrt2VttUrls(resInfo: ResInfo) {
 
 async function goExplorer(file: string) {
     file = file.replace(/\//g, '\\')
-    const command = new Command('explorer', ['/select,', file]);
+    const command = Command.create('explorer', ['/select,', file]);
     // message.info(file, 4);
     // console.log(file, command);
     await command.execute();

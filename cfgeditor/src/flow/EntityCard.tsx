@@ -2,7 +2,7 @@ import {Card, Descriptions, Tooltip} from "antd";
 import {Entity} from "./entityModel.ts";
 import {DescriptionsItemType} from "antd/es/descriptions";
 import {CSSProperties, memo, ReactElement} from "react";
-import {convertFileSrc} from "@tauri-apps/api/tauri";
+import {convertFileSrc, isTauri} from "@tauri-apps/api/core";
 import {getDsLenAndDesc} from "./getDsLenAndDesc.tsx";
 
 const imageStyle: CSSProperties = {maxHeight: '220px', objectFit: 'scale-down'};
@@ -26,7 +26,7 @@ export const EntityCard = memo(function EntityCard({entity, image}: {
     let info = 0;
     let hasCover = false;
     let cover: Props = {};
-    if (image && window.__TAURI__) {
+    if (image && isTauri()) {
         const imageUrl = convertFileSrc(image);
         cover = {cover: <img alt="img" style={imageStyle} src={imageUrl}/>}
         hasCover = true;

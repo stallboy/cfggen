@@ -1,4 +1,4 @@
-import {appWindow} from "@tauri-apps/api/window";
+import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 import {setTauriConf, store} from "./store.ts";
 import {memo, useCallback} from "react";
 import {useTranslation} from "react-i18next";
@@ -12,8 +12,8 @@ import {summarizeResAsync} from "../../res/summarizeResAsync.ts";
 import {getResourceDirAsync} from "../../res/resUtils.ts";
 
 
-
 export async function toggleFullScreen() {
+    const appWindow = getCurrentWebviewWindow()
     const isFullScreen = await appWindow.isFullscreen();
     await appWindow.setFullscreen(!isFullScreen);
 }

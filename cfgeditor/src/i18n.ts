@@ -21,7 +21,6 @@ i18n.use(LanguageDetector)
                     recordRef: "relation",
                     fix: "fix",
 
-
                     serverConnectFail: 'connect failed',
                     netErrFixTip: "run cfgeditor_server.bat to view your own data！ " +
                         "or use another server address to view other's data！",
@@ -90,7 +89,7 @@ i18n.use(LanguageDetector)
                     pages: '页面',
                     setFixedPagesConf: '设置固定页面',
                     fixCurrentPage: '固定当前页面',
-                    none: '不要',
+                    none: '空',
                     toPng: '保存图片',
 
                     deleteCurRecord: '删除当前数据',

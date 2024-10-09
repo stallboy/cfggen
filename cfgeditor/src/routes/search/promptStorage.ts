@@ -1,5 +1,6 @@
 import {path} from "@tauri-apps/api";
-import {writeTextFile} from "@tauri-apps/api/fs";
+import {writeTextFile} from "@tauri-apps/plugin-fs";
+import {isTauri} from "@tauri-apps/api/core";
 
 const table2fn = new Map<string, string>();
 
@@ -13,7 +14,7 @@ async function getFn(table: string) {
 }
 
 export async function savePromptAsync(table: string, prompt: string) {
-    if (window.__TAURI__) {
+    if (isTauri()) {
         const fn = await getFn(table);
         await writeTextFile(fn, prompt);
     }

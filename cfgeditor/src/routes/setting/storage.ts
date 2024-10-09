@@ -1,7 +1,8 @@
-import {path} from "@tauri-apps/api";
-import {readTextFile, writeTextFile} from "@tauri-apps/api/fs";
+// import {path} from "@tauri-apps/api";
+import {BaseDirectory, readTextFile, writeTextFile} from "@tauri-apps/plugin-fs";
 import {parse, stringify} from "yaml";
 import {getPrefKeySet, getPrefSelfKeySet} from "./store.ts";
+import {isTauri} from "@tauri-apps/api/core";
 
 export function getPrefInt(key: string, def: number): number {
     const v = localStorage.getItem(key);
@@ -50,23 +51,23 @@ export function getPrefJson<T>(key: string, parser: (jsonStr: string) => T): T |
 }
 
 
-let conf: string | undefined = undefined;
-let selfConf: string | undefined = undefined;
-
-async function getConf() {
-    if (!conf) {
-        conf = await path.resolveResource("cfgeditor.yml");
-    }
-    return conf;
-}
-
-async function getSelfConf() {
-    if (!selfConf) {
-        selfConf = await path.resolveResource("cfgeditorSelf.yml");
-    }
-    return selfConf;
-}
-
+// let conf: string | undefined = undefined;
+// let selfConf: string | undefined = undefined;
+//
+// async function getConf() {
+//     if (!conf) {
+//         conf = await path.resolveResource("cfgeditor.yml");
+//     }
+//     return conf;
+// }
+//
+// async function getSelfConf() {
+//     if (!selfConf) {
+//         selfConf = await path.resolveResource("cfgeditorSelf.yml");
+//     }
+//     return selfConf;
+// }
+//
 
 let alreadyRead = false;
 
@@ -75,19 +76,19 @@ export async function readPrefAsyncOnce() {
         return true;
     }
     alreadyRead = true;
-    if (!window.__TAURI__) {
+    if (!isTauri()) {
         return true;
     }
     console.log('read yml file')
     localStorage.clear();
-    await readConf(await getConf());
-    await readConf(await getSelfConf());
+    await readConf("cfgeditor.yml");
+    await readConf("cfgeditorSelf.yml");
     return true;
 }
 
 async function readConf(conf: string) {
     console.log("read", conf);
-    const settings = parse(await readTextFile(conf));
+    const settings = parse(await readTextFile(conf, {baseDir: BaseDirectory.Resource}));
     if (typeof settings == "object") {
         for (const key in settings) {
             const value = settings[key];
@@ -113,10 +114,10 @@ async function savePrefAsync() {
             selfSettings[key] = localStorage.getItem(key);
         }
     }
-    const conf = await getConf();
-    await writeTextFile(conf, stringify(settings));
-    const selfConf = await getSelfConf();
-    await writeTextFile(selfConf, stringify(selfSettings));
+    // const conf = await getConf();
+    await writeTextFile("cfgeditor.yml", stringify(settings), {baseDir: BaseDirectory.Resource});
+    // const selfConf = await getSelfConf();
+    await writeTextFile("cfgeditorSelf.yml", stringify(selfSettings),  {baseDir: BaseDirectory.Resource});
 }
 
 function log(reason: any) {
@@ -125,14 +126,14 @@ function log(reason: any) {
 
 export function setPref(key: string, value: string) {
     localStorage.setItem(key, value);
-    if (window.__TAURI__) {
+    if (isTauri()) {
         savePrefAsync().catch(log);
     }
 }
 
 export function removePref(key: string) {
     localStorage.removeItem(key);
-    if (window.__TAURI__) {
+    if (isTauri()) {
         savePrefAsync().catch(log);
     }
 }
