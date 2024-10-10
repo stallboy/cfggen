@@ -44,7 +44,8 @@ const formItemLayoutWithOutLabel = {
 const setOfNumber = new Set<string>(['int', 'long', 'float']);
 
 function filterOption(inputValue: string, option?: EntityEditFieldOption): boolean {
-    return (!!option) && (option.value.toString().includes(inputValue) || option.label.includes(inputValue));
+    const iv = inputValue.toLowerCase();
+    return (!!option) && (option.value.toString().toLowerCase().includes(iv) || option.label.toLowerCase().includes(iv));
 }
 
 function filterNumberSort(optionA: EntityEditFieldOption, optionB: EntityEditFieldOption): number {
@@ -79,14 +80,14 @@ function PrimitiveControl(field: EntityEditField, bgColor?: string) {
         if (isValueInteger) {
             filters.filterSort = filterNumberSort;
         }
-        if (!isEnum || (options.length > 5)) {
+        if (options.length > 5) {
             filters.showSearch = true;
             filters.filterOption = filterOption;
         }
         if (isEnum) {
-            control = <Select className='nodrag' options={options} style={{width: 120}} {...filters}/>
+            control = <Select className='nodrag' options={options} style={{maxWidth: 200}} {...filters}/>
         } else {
-            control = <AutoComplete className='nodrag' options={options} {...filters} style={{width: 120}}/>
+            control = <AutoComplete className='nodrag' options={options} {...filters} style={{maxWidth: 200}}/>
         }
 
     } else if (eleType == 'bool') {
@@ -244,26 +245,33 @@ function FuncSubmitFormItem({field}: { field: EntityEditField }) {
     </Form.Item>
 }
 
+
 function InterfaceFormItem({field, sharedSetting}: { field: EntityEditField, sharedSetting?: EntitySharedSetting }) {
     const form = Form.useFormInstance();
     useEffect(() => {
         form.setFieldValue(field.name, field.value);
     }, [field.name, field.value, form]);
 
-    const options = field.autoCompleteOptions?.options;
+    const options = field.autoCompleteOptions?.options!;
 
-    const implSelect = <Form.Item name={field.name} key={field.name} label={makeLabel(field)}
-                                  initialValue={field.value}>
-        <Select className='nodrag' options={options}
-                filterOption={filterOption}
-                onChange={(value) => {
-                    field.interfaceOnChangeImpl!(value);
-                }}/>
+    const onSelectChange = useCallback((value: string) => {
+        field.interfaceOnChangeImpl!(value);
+    }, [field]);
 
-    </Form.Item>;
+    const filters: any = {};
+    if (options.length > 5) {
+        filters.showSearch = true;
+        filters.filterOption = filterOption;
+    }
 
     return <>
-        {implSelect}
+        <Form.Item name={field.name} key={field.name} label={makeLabel(field)}
+                   initialValue={field.value}>
+            <Select className='nodrag' options={options}
+                    {...filters}
+                    onChange={onSelectChange}/>
+        </Form.Item>
+
         {FieldsFormItem(field.implFields as EntityEditField[], sharedSetting)}
     </>
 }
