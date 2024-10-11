@@ -3,6 +3,7 @@ package configgen.editorserver;
 import configgen.data.Source;
 import configgen.schema.Msg;
 import configgen.schema.TableSchema;
+import configgen.util.Logger;
 import configgen.value.*;
 
 import java.nio.file.Path;
@@ -16,6 +17,7 @@ import static configgen.editorserver.RecordEditService.ResultCode.*;
 import static configgen.value.CfgValue.*;
 
 public class RecordEditService {
+
     public enum ResultCode {
         addOk,
         updateOk,
@@ -56,11 +58,12 @@ public class RecordEditService {
             return err;
         }
 
+        Logger.log("addOrUpdateRecord %s", jsonStr);
         VTable vTable = cfgValue.vTableMap().get(table);
         TableSchema tableSchema = vTable.schema();
         ValueErrs parseErrs = ValueErrs.of();
         VStruct thisValue = new ValueJsonParser(vTable.schema(), parseErrs).fromJson(jsonStr, Source.DFile.of("<server>", table));
-
+        parseErrs.checkErrors("check json", true, true);
         if (!parseErrs.errs().isEmpty()) {
             return new RecordEditResult(jsonParseErr, table, "",
                     parseErrs.errs().stream().map(Msg::msg).toList(), List.of());
@@ -134,6 +137,7 @@ public class RecordEditService {
         copy.put(newVTable.name(), newVTable);
         newCfgValue = new CfgValue(cfgValue.schema(), copy);
         new RefValidator(newCfgValue, errs).validate();
+        errs.checkErrors("validate", true);
         return errs;
     }
 

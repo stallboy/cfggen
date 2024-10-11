@@ -34,7 +34,12 @@ public record ValueErrs(List<VErr> errs,
     }
 
     public void checkErrors(String prefix, boolean allowErr) {
-        if (Logger.isWarningEnabled() && !warns.isEmpty()) {
+        checkErrors(prefix, allowErr, Logger.isWarningEnabled());
+
+    }
+
+    public void checkErrors(String prefix, boolean allowErr, boolean logWarn) {
+        if (logWarn && !warns.isEmpty()) {
             Logger.log("%s warnings %d:", prefix, warns.size());
             for (VWarn warn : warns) {
                 Logger.log("\t" + warn.msg());

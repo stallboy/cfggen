@@ -39,6 +39,15 @@ public sealed interface Source permits DCell, DCellList, DFile {
             return new DFile(fileName, inStruct, newPath);
         }
 
+        public DFile lastAppend(String impl) {
+            if (path.isEmpty()) {
+                return child(impl);
+            }
+            List<String> newPath = new ArrayList<>(path.subList(0, path.size() - 1));
+            newPath.add(path.getLast() + impl);
+            return new DFile(fileName, inStruct, newPath);
+        }
+
         public DFile parent() {
             if (path.isEmpty()) {
                 return this;

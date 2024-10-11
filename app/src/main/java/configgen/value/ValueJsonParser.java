@@ -138,7 +138,7 @@ public class ValueJsonParser {
             return ValueDefault.ofInterface(interfaceSchema, source);
         }
 
-        VStruct implValue = parseStructural(impl, jsonObject, source.child("<" + implName + ">"));
+        VStruct implValue = parseStructural(impl, jsonObject, source.lastAppend("<" + implName + ">"));
         return new VInterface(interfaceSchema, implValue, source); // 需要这层包装，以方便生成data file
     }
 

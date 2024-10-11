@@ -172,7 +172,7 @@ public class EditorServer extends Generator {
             }
         }
 
-        logger.info(result.toString());
+//        logger.info(result.toString());
         sendResponse(exchange, result);
     }
 

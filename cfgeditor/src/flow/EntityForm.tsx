@@ -191,7 +191,7 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: { field: EntityEditField, bg
                                style={thisItemStyle}>
 
                         <Space align='baseline' size={1}>
-                            <Form.Item key={f.key} name={f.name}>
+                            <Form.Item key={f.key} name={f.name} style={{width: 110}}>
                                 {PrimitiveControl(field)}
                             </Form.Item>
                             <ActionIcon className='nodrag'
