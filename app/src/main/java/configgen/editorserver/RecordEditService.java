@@ -1,5 +1,7 @@
 package configgen.editorserver;
 
+import configgen.data.Source;
+import configgen.schema.Msg;
 import configgen.schema.TableSchema;
 import configgen.value.*;
 
@@ -56,12 +58,14 @@ public class RecordEditService {
 
         VTable vTable = cfgValue.vTableMap().get(table);
         TableSchema tableSchema = vTable.schema();
-        VStruct thisValue;
-        try {
-            thisValue = new ValueJsonParser(vTable.schema()).fromJson(jsonStr, "<server>");
-        } catch (Exception e) {
-            return new RecordEditResult(jsonParseErr, table, "", List.of(e.getMessage()), List.of());
+        ValueErrs parseErrs = ValueErrs.of();
+        VStruct thisValue = new ValueJsonParser(vTable.schema(), parseErrs).fromJson(jsonStr, Source.DFile.of("<server>", table));
+
+        if (!parseErrs.errs().isEmpty()) {
+            return new RecordEditResult(jsonParseErr, table, "",
+                    parseErrs.errs().stream().map(Msg::msg).toList(), List.of());
         }
+
 
         Value pkValue = ValueUtil.extractPrimaryKeyValue(thisValue, tableSchema);
         String id = pkValue.packStr();

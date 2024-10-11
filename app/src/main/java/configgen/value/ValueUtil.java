@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static configgen.data.Source.*;
 import static configgen.value.CfgValue.*;
 
 public class ValueUtil {
@@ -28,11 +29,11 @@ public class ValueUtil {
 
     public static VList createList(List<SimpleValue> valueList) {
         if (valueList.isEmpty()) {
-            return new VList(valueList, Source.of());
+            return new VList(valueList, of());
         }
         SimpleValue first = valueList.getFirst();
-        if (first.source() instanceof Source.DFile) {
-            return new VList(valueList, first.source());
+        if (first.source() instanceof DFile source) {
+            return new VList(valueList, source.parent());
         }
 
         List<CfgData.DCell> list = new ArrayList<>(valueList.size());
@@ -41,14 +42,14 @@ public class ValueUtil {
                 case CfgData.DCell dCell -> {
                     list.add(dCell);
                 }
-                case Source.DCellList dCellList -> {
+                case DCellList dCellList -> {
                     list.addAll(dCellList.cells());
                 }
-                case Source.DFile ignored -> {
+                case DFile ignored -> {
                 }
             }
         }
-        return new VList(valueList, Source.of(list));
+        return new VList(valueList, of(list));
     }
 
 
@@ -101,10 +102,10 @@ public class ValueUtil {
             case CfgData.DCell dCell -> {
                 return !dCell.isCellEmpty();
             }
-            case Source.DCellList dCellList -> {
+            case DCellList dCellList -> {
                 return dCellList.cells().stream().anyMatch(c -> !c.isCellEmpty());
             }
-            case Source.DFile ignored -> {
+            case DFile ignored -> {
                 return true;
             }
         }

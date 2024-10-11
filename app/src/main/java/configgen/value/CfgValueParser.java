@@ -64,7 +64,8 @@ public class CfgValueParser {
             } else {
                 tasks.add(() -> {
                     ValueErrs errs = ValueErrs.of();
-                    VTableJsonParser parser = new VTableJsonParser(subTable, context.dataDir(), table, tableI18n, errs);
+                    VTableJsonParser parser = new VTableJsonParser(subTable, subSchema.isPartial(),
+                            context.dataDir(), table, tableI18n, errs);
                     VTable vTable = parser.parseTable();
                     return new OneTableParserResult(vTable, errs);
                 });

@@ -1,14 +1,18 @@
 package configgen.data;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public sealed interface Source permits CfgData.DCell, Source.DCellList, Source.DFile {
+import static configgen.data.CfgData.*;
+import static configgen.data.Source.*;
 
-    static Source of() {
+public sealed interface Source permits DCell, DCellList, DFile {
+
+    static DCellList of() {
         return new DCellList(List.of());
     }
 
-    static Source of(List<CfgData.DCell> cells) {
+    static Source of(List<DCell> cells) {
         if (cells.size() == 1) {
             return cells.getFirst();
         } else {
@@ -16,16 +20,33 @@ public sealed interface Source permits CfgData.DCell, Source.DCellList, Source.D
         }
     }
 
-    static Source.DFile of(String fileName) {
-        return new DFile(fileName);
+
+    record DCellList(List<DCell> cells) implements Source {
     }
 
-    record DCellList(List<CfgData.DCell> cells) implements Source {
+    record DFile(String fileName, String inStruct, List<String> path) implements Source {
+        public static DFile of(String fileName, String inStruct) {
+            return new DFile(fileName, inStruct, List.of());
+        }
+
+        public DFile inStruct(String struct) {
+            return new DFile(fileName, struct, path);
+        }
+
+        public DFile child(String field) {
+            List<String> newPath = new ArrayList<>(path);
+            newPath.add(field);
+            return new DFile(fileName, inStruct, newPath);
+        }
+
+        public DFile parent() {
+            if (path.isEmpty()) {
+                return this;
+            }
+            List<String> parent = path.subList(0, path.size() - 1);
+            return new DFile(fileName, inStruct, parent);
+        }
+
 
     }
-
-    record DFile(String fileName) implements Source {
-
-    }
-
 }

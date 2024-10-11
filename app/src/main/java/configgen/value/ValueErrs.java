@@ -9,22 +9,38 @@ import configgen.value.CfgValue.Value;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
-public record ValueErrs(List<VErr> errs) {
+import static configgen.data.Source.*;
+
+public record ValueErrs(List<VErr> errs,
+                        List<VWarn> warns) {
 
     public static ValueErrs of() {
-        return new ValueErrs(new ArrayList<>());
+        return new ValueErrs(new ArrayList<>(), new ArrayList<>());
     }
 
     void addErr(VErr err) {
         errs.add(err);
     }
 
+    void addWarn(VWarn warn) {
+        warns.add(warn);
+    }
+
     void merge(ValueErrs other) {
         errs.addAll(other.errs);
+        warns.addAll(other.warns);
     }
 
     public void checkErrors(String prefix, boolean allowErr) {
+        if (Logger.isWarningEnabled() && !warns.isEmpty()) {
+            Logger.log("%s warnings %d:", prefix, warns.size());
+            for (VWarn warn : warns) {
+                Logger.log("\t" + warn.msg());
+            }
+        }
+
         if (!errs.isEmpty()) {
             Logger.log("%s errors %d:", prefix, errs.size());
             for (VErr err : errs) {
@@ -39,6 +55,9 @@ public record ValueErrs(List<VErr> errs) {
     }
 
     public interface VErr extends Msg {
+    }
+
+    public interface VWarn extends Msg {
     }
 
     public record ParsePackErr(Source source,
@@ -112,10 +131,38 @@ public record ValueErrs(List<VErr> errs) {
     public record JsonFileReadErr(String jsonFile, String errMsg) implements VErr {
     }
 
-    public record JsonFileParseErr(String jsonFile, String errMsg) implements VErr {
-    }
-
     public record JsonFileWriteErr(String jsonFile, String errMsg) implements VErr {
     }
+
+    public record JsonStrEmpty(DFile source) implements VErr {
+    }
+
+    public record JsonParseException(DFile source, String err) implements VErr {
+    }
+
+    public record JsonTypeNotExist(DFile source, String expected) implements VErr {
+    }
+
+    public record JsonTypeNotMatch(DFile source, String type, String expected) implements VErr {
+    }
+
+    public record JsonHasExtraFields(DFile source, String type, Set<String> extraFields) implements VWarn {
+    }
+
+    public enum EType {
+        BOOL,
+        INT,
+        LONG,
+        FLOAT,
+        STR,
+        ARRAY,
+        MAP,
+        MAP_ENTRY,
+        STRUCT,
+    }
+
+    public record JsonValueNotMatchType(DFile source, String value, EType expectedType) implements VErr {
+    }
+
 
 }

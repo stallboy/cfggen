@@ -61,8 +61,8 @@ public class Values {
             return new VMap(valueMap, Source.of());
         }
         SimpleValue first = valueMap.keySet().stream().findFirst().get();
-        if (first.source() instanceof Source.DFile) {
-            return new VMap(valueMap, first.source());
+        if (first.source() instanceof Source.DFile source) {
+            return new VMap(valueMap, source.parent());
         }
 
         List<CfgData.DCell> list = new ArrayList<>(valueMap.size() * 2);

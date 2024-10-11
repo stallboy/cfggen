@@ -1,6 +1,8 @@
 package configgen.schema;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public sealed interface Structural extends Nameable permits StructSchema, TableSchema {
     List<FieldSchema> fields();
@@ -23,6 +25,10 @@ public sealed interface Structural extends Nameable permits StructSchema, TableS
             }
         }
         return null;
+    }
+
+    default Set<String> fieldNameSet() {
+        return fields().stream().map(FieldSchema::name).collect(Collectors.toSet());
     }
 
 }

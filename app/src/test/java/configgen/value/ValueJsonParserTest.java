@@ -1,6 +1,7 @@
 package configgen.value;
 
 import com.alibaba.fastjson2.JSONObject;
+import configgen.data.Source;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgReader;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,14 +77,32 @@ class ValueJsonParserTest {
                 {"id":123,"bool1":true,"long1":1234567890,"float1":3.14,"str1":"abc","$type":"test"}""";
         assertEquals(jsonStr, json.toString());
 
-        VStruct vStruct2 = new ValueJsonParser(test).fromJson(jsonStr, "test_123.json");
+        VStruct vStruct2 = fromJson(test, jsonStr);
+
         assertEquals(vStruct, vStruct2);
     }
+
+    private static VStruct fromJson(TableSchema tableSchema,
+                                    String jsonStr) {
+        ValueErrs errs = ValueErrs.of();
+        VStruct vStruct = new ValueJsonParser(tableSchema, errs).fromJson(jsonStr, Source.DFile.of("<file>", tableSchema.name()));
+        assertEquals(0, errs.errs().size());
+        assertEquals(0, errs.warns().size());
+        return vStruct;
+    }
+
+    private static VStruct fromJson(TableSchema tableSchema,
+                                    ValueErrs errs,
+                                    String jsonStr) {
+        return new ValueJsonParser(tableSchema, errs).fromJson(jsonStr, Source.DFile.of("<file>", tableSchema.name()));
+    }
+
 
     @Test
     void fromJson_Primitive_DefaultValue() {
         TableSchema test = cfg.findTable("test");
-        VStruct vStruct = new ValueJsonParser(test).fromJson("{}", "test_123.json");
+        VStruct vStruct = fromJson(test, """
+                {"$type":"test"}""");
         JSONObject json = new ValueToJson().toJson(vStruct);
 
         String jsonStr = """
@@ -92,18 +111,25 @@ class ValueJsonParserTest {
     }
 
     @Test
-    void fromJson_PrimitiveValue_ClassCastError() {
+    void fromJson_PrimitiveValue_TypeNotMatch() {
         TableSchema test = cfg.findTable("test");
         {
             String jsonStr = """
                     {"id":123,"bool1":"should be bool,but str","long1":1234567890,"float1":3.14,"str1":"abc","$type":"test"}""";
-            assertThrows(ClassCastException.class, () -> new ValueJsonParser(test).fromJson(jsonStr, "test_123.json"));
+            ValueErrs errs = ValueErrs.of();
+            VStruct vStruct2 = fromJson(test, errs, jsonStr);
+            assertEquals(1, errs.errs().size());
+            errs.checkErrors("", true);
+
         }
 
         {
             String jsonStr = """
-                    {"id":123,"bool1":"should be bool,but str","long1":1234567890,"float1":3.14,"str1":123,"$type":"test"}""";
-            assertThrows(ClassCastException.class, () -> new ValueJsonParser(test).fromJson(jsonStr, "test_123.json"));
+                    {"id":123,"bool1":true,"long1":1234567890,"float1":3.14,"str1":123,"$type":"test"}""";
+            ValueErrs errs = ValueErrs.of();
+            VStruct vStruct2 = fromJson(test, errs, jsonStr);
+            assertEquals(1, errs.errs().size());
+            errs.checkErrors("", true);
         }
     }
 
@@ -120,7 +146,7 @@ class ValueJsonParserTest {
                 {"id":1,"attr":{"Attr":111,"Min":222,"Max":333,"$type":"attr"},"$type":"ts"}""";
         assertEquals(jsonStr, json.toString());
 
-        VStruct vStruct2 = new ValueJsonParser(ts).fromJson(jsonStr, "ts_1.json");
+        VStruct vStruct2 = fromJson(ts, jsonStr);
         assertEquals(vTs, vStruct2);
     }
 
@@ -129,7 +155,7 @@ class ValueJsonParserTest {
         TableSchema ts = cfg.findTable("ts");
         String jsonStr = """
                 {"id":1,"$type":"ts"}""";
-        VStruct vStruct = new ValueJsonParser(ts).fromJson(jsonStr, "ts_1.json");
+        VStruct vStruct = fromJson(ts, jsonStr);
 
         JSONObject json = new ValueToJson().toJson(vStruct);
         String jsonStr2 = """
@@ -138,12 +164,13 @@ class ValueJsonParserTest {
     }
 
     @Test
-    void fromJson_VStruct_ClassCastError() {
+    void fromJson_VStruct_TypeNotMatch() {
         TableSchema ts = cfg.findTable("ts");
         String jsonStr = """
                 {"id":1,"attr":123,"$type":"ts"}""";
-
-        assertThrows(ClassCastException.class, () -> new ValueJsonParser(ts).fromJson(jsonStr, "ts_1.json"));
+        ValueErrs errs = ValueErrs.of();
+        VStruct vStruct2 = fromJson(ts, errs, jsonStr);
+        assertEquals(1, errs.errs().size());
     }
 
     @Test
@@ -157,7 +184,8 @@ class ValueJsonParserTest {
                 {"id":1,"listInt1":[111,222,333],"$type":"tl"}""";
         assertEquals(jsonStr, json.toString());
 
-        VStruct vStruct2 = new ValueJsonParser(ts).fromJson(jsonStr, "tl_1.json");
+        ValueErrs errs = ValueErrs.of();
+        VStruct vStruct2 = fromJson(ts, errs, jsonStr);
         assertEquals(vStruct, vStruct2);
     }
 
@@ -166,7 +194,7 @@ class ValueJsonParserTest {
         TableSchema ts = cfg.findTable("tl");
         String jsonStr = """
                 {"id":1,"$type":"tl"}""";
-        VStruct vStruct = new ValueJsonParser(ts).fromJson(jsonStr, "tl_1.json");
+        VStruct vStruct = fromJson(ts, jsonStr);
 
         JSONObject json = new ValueToJson().toJson(vStruct);
         String jsonStr2 = """
@@ -175,16 +203,19 @@ class ValueJsonParserTest {
     }
 
     @Test
-    void fromJson_IgnoreExtra() {
+    void fromJson_ExtraFieldsAsWarning() {
         TableSchema ts = cfg.findTable("tl");
         String jsonStr = """
                 {"id":1,"extra":333,"$type":"tl"}""";
-        VStruct vStruct = new ValueJsonParser(ts).fromJson(jsonStr, "tl_1.json");
+        ValueErrs errs = ValueErrs.of();
+        VStruct vStruct = fromJson(ts, errs, jsonStr);
+        assertEquals(1, errs.warns().size());
 
         JSONObject json = new ValueToJson().toJson(vStruct);
         String jsonStr2 = """
                 {"id":1,"listInt1":[],"$type":"tl"}""";
         assertEquals(jsonStr2, json.toString());
+        errs.checkErrors("", true);
     }
 
     @Test
@@ -195,7 +226,7 @@ class ValueJsonParserTest {
 
         JSONObject json = new ValueToJson().toJson(vStruct); // 顺序不定
         //{"id":1,"mapIntStr":[{"key":111,"value":"aaa","$type":"$entry"},{"key":222,"value":"bbb","$type":"$entry"}],"$type":"tm"}
-        VStruct vStruct2 = new ValueJsonParser(ts).fromJson(json.toString(), "tm_1.json");
+        VStruct vStruct2 = fromJson(ts, json.toString());
         assertEquals(vStruct, vStruct2);
     }
 
@@ -203,8 +234,8 @@ class ValueJsonParserTest {
     void fromJson_VMapPrimitive_DefaultValue() {
         TableSchema ts = cfg.findTable("tm");
         String jsonStr = """
-                {"id":1,"$type":"tl"}""";
-        VStruct vStruct = new ValueJsonParser(ts).fromJson(jsonStr, "tm_1.json");
+                {"id":1,"$type":"tm"}""";
+        VStruct vStruct = fromJson(ts, jsonStr);
 
         JSONObject json = new ValueToJson().toJson(vStruct);
         String jsonStr2 = """
@@ -225,7 +256,7 @@ class ValueJsonParserTest {
                 {"id":1,"listAttr":[{"Attr":111,"Min":222,"Max":333,"$type":"attr"}],"$type":"tls"}""";
         assertEquals(jsonStr, json.toString());
 
-        VStruct vStruct2 = new ValueJsonParser(ts).fromJson(json.toString(), "tls_1.json");
+        VStruct vStruct2 = fromJson(ts, json.toString());
         assertEquals(vStruct, vStruct2);
     }
 
@@ -248,7 +279,7 @@ class ValueJsonParserTest {
                 {"id":666,"c":[{"key":123456,"value":{"c1":{"id":123,"$type":"condition.checkItem"},"c2":{"id":456,"$type":"condition.checkItem"},"$type":"condition.and"},"$type":"$entry"}],"$type":"cond"}""";
         assertEquals(jsonStr, json.toString());
 
-        VStruct vStruct2 = new ValueJsonParser(cond).fromJson(jsonStr, "cond_666.json");
+        VStruct vStruct2 = fromJson(cond, jsonStr);
         assertNotEquals(vStruct, vStruct2); // 因为vStruct里的对象 没有用VInterface包装
 
         JSONObject json2 = new ValueToJson().toJson(vStruct2);
@@ -262,7 +293,7 @@ class ValueJsonParserTest {
         String jsonStr = """
                 {"id":666,"c":[{"key":123456,"value":{"c1":{"id":123,"$type":"condition.checkItem"},"c2":{"id":456,"$type":"condition.checkItem"},"$type":"condition.and"},"$type":"$entry"}],"$type":"cond"}""";
 
-        VStruct v = new ValueJsonParser(cond).fromJson(jsonStr, "cond_666.json");
+        VStruct v = fromJson(cond, jsonStr);
         assertEquals(jsonStr, new ValueToJson().toJson(v).toString());
     }
 
@@ -272,7 +303,10 @@ class ValueJsonParserTest {
         String jsonStr = """
                 {"id":666,"c":[{"key":123456,"value":{"c1":{"id":123},"c2":{"id":456,"$type":"condition.checkItem"},"$type":"condition.and"},"$type":"$entry"}],"$type":"cond"}""";
 
-        assertThrows(ValueJsonParser.JsonParseException.class, () -> new ValueJsonParser(cond).fromJson(jsonStr, "cond_666.json"));
+        ValueErrs errs = ValueErrs.of();
+        fromJson(cond, errs, jsonStr);
+        errs.checkErrors("", true);
+        assertEquals(1, errs.errs().size());
     }
 
 }

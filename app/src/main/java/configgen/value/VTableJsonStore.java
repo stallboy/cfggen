@@ -1,8 +1,5 @@
 package configgen.value;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
-import com.alibaba.fastjson2.JSONWriter;
 import configgen.gen.Generator;
 import configgen.schema.TableSchema;
 import configgen.util.CachedFiles;

@@ -12,7 +12,7 @@ import static configgen.value.CfgValue.*;
 
 public class ValueDefault {
 
-    public static Value of(FieldType type, Source.DFile source) {
+    public static Value of(FieldType type, Source source) {
         return switch (type) {
             case BOOL -> new VBool(false, source);
             case INT -> new VInt(0, source);
@@ -35,21 +35,21 @@ public class ValueDefault {
             case VFloat vFloat -> vFloat.value() == 0;
             case VString vStr -> vStr.value().isEmpty();
             case VText vText -> vText.value().isEmpty();
-            case VStruct vStruct -> false;
-            case VInterface vInterface -> false;
+            case VStruct ignored -> false;
+            case VInterface ignored -> false;
             case VList vList -> vList.valueList().isEmpty();
             case VMap vMap -> vMap.valueMap().isEmpty();
         };
     }
 
-    public static Value ofNamable(Nameable nameable, Source.DFile source) {
+    public static Value ofNamable(Nameable nameable, Source source) {
         return switch (nameable) {
             case Structural structural -> ofStructural(structural, source);
             case InterfaceSchema interfaceSchema -> ofInterface(interfaceSchema, source);
         };
     }
 
-    public static VStruct ofStructural(Structural structural, Source.DFile source) {
+    public static VStruct ofStructural(Structural structural, Source source) {
         List<Value> values = new ArrayList<>(structural.fields().size());
         for (FieldSchema field : structural.fields()) {
             Value fv = of(field.type(), source);
@@ -58,7 +58,7 @@ public class ValueDefault {
         return new VStruct(structural, values, source);
     }
 
-    public static VInterface ofInterface(InterfaceSchema interfaceSchema, Source.DFile source) {
+    public static VInterface ofInterface(InterfaceSchema interfaceSchema, Source source) {
         StructSchema impl = interfaceSchema.nullableDefaultImplStruct();
         if (impl == null) {
             impl = interfaceSchema.impls().getFirst();
