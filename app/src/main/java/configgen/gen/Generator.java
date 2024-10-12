@@ -29,7 +29,7 @@ public abstract class Generator {
     }
 
     protected static CachedIndentPrinter createCode(File file, String encoding, StringBuilder dst, StringBuilder cache, StringBuilder tmp) {
-        return new CachedIndentPrinter(file, encoding, dst, cache, tmp);
+        return new CachedIndentPrinter(file.toPath(), encoding, dst, cache, tmp);
     }
 
     public static OutputStreamWriter createUtf8Writer(File file) {

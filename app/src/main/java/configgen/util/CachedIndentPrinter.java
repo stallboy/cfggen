@@ -24,20 +24,19 @@ public class CachedIndentPrinter implements Closeable {
     }
 
     public CachedIndentPrinter(Path path, String encoding) {
-        this.path = path.toAbsolutePath().normalize();
-        this.encoding = encoding;
-        this.dst = new StringBuilder(1024 * 2048);
-        this.cache = new StringBuilder(512 * 1024);
-        this.tmp = new StringBuilder(128);
-        dst.setLength(0);
+        this(path, encoding,
+                new StringBuilder(1024 * 2048),
+                new StringBuilder(512 * 1024),
+                new StringBuilder(128)
+        );
     }
 
     public CachedIndentPrinter(File file, String encoding) {
         this(file.toPath().toAbsolutePath().normalize(), encoding);
     }
 
-    public CachedIndentPrinter(File file, String encoding, StringBuilder dst, StringBuilder cache, StringBuilder tmp) {
-        this.path = file.toPath().toAbsolutePath().normalize();
+    public CachedIndentPrinter(Path path, String encoding, StringBuilder dst, StringBuilder cache, StringBuilder tmp) {
+        this.path = path.toAbsolutePath().normalize();
         this.encoding = encoding;
         this.dst = dst;
         this.cache = cache;
