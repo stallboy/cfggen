@@ -57,14 +57,8 @@ public class ValueToJson {
 
     public JSONObject toJson(VStruct vStruct) {
         int count = vStruct.values().size();
-        JSONObject json = new JSONObject(count);
-        for (int i = 0; i < count; i++) {
-            FieldSchema fs = vStruct.schema().fields().get(i);
-            Value fv = vStruct.values().get(i);
-            if (isSaveDefault || !ValueDefault.isDefault(fv)) {
-                json.put(fs.name(), toJson(fv));
-            }
-        }
+        JSONObject json = new JSONObject(count + 3);
+
         json.put("$type", vStruct.schema().fullName());
         String note = vStruct.note();
         if (note != null && !note.isEmpty()) {
@@ -72,6 +66,14 @@ public class ValueToJson {
         }
         if (vStruct.isFold()) {
             json.put("$fold", true);
+        }
+
+        for (int i = 0; i < count; i++) {
+            FieldSchema fs = vStruct.schema().fields().get(i);
+            Value fv = vStruct.values().get(i);
+            if (isSaveDefault || !ValueDefault.isDefault(fv)) {
+                json.put(fs.name(), toJson(fv));
+            }
         }
 
         if (refIdToRecordMap != null) {
