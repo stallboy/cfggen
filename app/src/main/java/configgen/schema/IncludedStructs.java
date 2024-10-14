@@ -56,7 +56,7 @@ public class IncludedStructs {
             }
             checked.putAll(frontiers);
 
-            Map<String, Nameable> newFrontiers = new HashMap<>();
+            Map<String, Nameable> newFrontiers = new LinkedHashMap<>();
             for (Nameable frontier : unknownFrontiers) {
                 // expand
                 switch (frontier) {

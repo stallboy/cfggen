@@ -8,7 +8,7 @@ import {
     store
 } from "./store.ts";
 import {memo} from "react";
-import {formLayout} from "./BasicSetting.tsx";
+import {formItemLayoutWithOutLabel, formLayout} from "./BasicSetting.tsx";
 
 
 function fixColor(color: any) {
@@ -162,8 +162,8 @@ export const RecordShowSetting = memo(function RecordRefSetting() {
                         )}
                     </Form.List>
                 </Form.Item>
-                
-                <Form.Item>
+
+                <Form.Item {...formItemLayoutWithOutLabel}>
                     <Button type="primary" htmlType="submit">
                         {t('setNodeShow')}
                     </Button>

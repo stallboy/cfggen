@@ -106,7 +106,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
             forceUpdate();  // 触发更新
         };
 
-        //这是非纯函数，escape hatch，用useRef也能做，这里用全局变量
+        // 这是非纯函数，escape hatch，用useRef也能做，这里用全局变量
         [editSeq, fitView] = startEditingObject(recordResult, afterEditStateChanged, submitEditingObject);
         const creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId, folds, setFolds);
         creator.createThis();

@@ -1,8 +1,8 @@
 import {makeFixedPage, setFixedPagesConf, store, useLocationData} from "./store.ts";
 import {memo, useEffect} from "react";
 import {useTranslation} from "react-i18next";
-import {Button, Card, Form, Input, Space} from "antd";
-import {formLayout} from "./BasicSetting.tsx";
+import {Button, Form, Input, Space} from "antd";
+import {formItemLayoutWithOutLabel, formLayout} from "./BasicSetting.tsx";
 import {CloseOutlined} from "@ant-design/icons";
 import {Schema} from "../table/schemaUtil.ts";
 import {STable} from "../table/schemaModel.ts";
@@ -31,22 +31,21 @@ export const OpFixPages = memo(function FixedPagesSetting({schema, curTable}: {
         form.setFieldsValue(newPageConf);
     }
 
-    return <>
-        <Card>
-            <Form form={form} name="fixedPagesConf"  {...formLayout} onFinish={onFinishPageConf} autoComplete="off">
-                <FixedPages pages={pageConf.pages}/>
-                <Form.Item>
-                    <Button type="primary" htmlType="submit">
-                        {t('setFixedPagesConf')}
-                    </Button>
-                </Form.Item>
-            </Form>
-        </Card>
+    return <Form form={form} name="fixedPagesConf"  {...formLayout} onFinish={onFinishPageConf} autoComplete="off">
         {(schema && curTable && curPage == 'recordRef') &&
-            <Button type="primary" onClick={onFixCurrentPageClick}>
-                {t('fixCurrentPage')}
-            </Button>}
-    </>
+            <Form.Item {...formItemLayoutWithOutLabel}>
+                <Button type="primary" onClick={onFixCurrentPageClick}>
+                    {t('fixCurrentPage')}
+                </Button>
+            </Form.Item>}
+
+        <FixedPages pages={pageConf.pages}/>
+        <Form.Item {...formItemLayoutWithOutLabel}>
+            <Button type="primary" htmlType="submit">
+                {t('setFixedPagesConf')}
+            </Button>
+        </Form.Item>
+    </Form>
 });
 
 const FixedPages = memo(function FixedPages({pages}: {

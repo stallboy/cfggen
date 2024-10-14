@@ -6,7 +6,7 @@ import {
     store
 } from "./store.ts";
 
-import {formLayout} from "./BasicSetting.tsx";
+import {formItemLayoutWithOutLabel, formLayout} from "./BasicSetting.tsx";
 import {Schema} from "../table/schemaUtil.ts";
 import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
 
@@ -119,7 +119,7 @@ export const ServerAndAi = memo(function ServerAndAi({schema}: {
                     </Form.List>
                 </Form.Item>
 
-                <Form.Item>
+                <Form.Item {...formItemLayoutWithOutLabel}>
                     <Button type="primary" htmlType="submit">
                         {t('setAIConf')}
                     </Button>

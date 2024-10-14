@@ -68,14 +68,14 @@ public class ValueJsonParser {
     private VStruct parseStructural(Structural structural, JSONObject jsonObject, DFile source) {
         String type = jsonObject.getString("$type");
         if (type == null) {
-            errs.addErr(new JsonTypeNotExist(source, structural.fullName()));
-            return ValueDefault.ofStructural(structural, source);
-        }
-
-        if (!type.equals(structural.fullName())) {
+//            errs.addErr(new JsonTypeNotExist(source, structural.fullName()));
+//            return ValueDefault.ofStructural(structural, source);
+            type = structural.fullName(); //兼容一点，可以没有
+        } else if (!type.equals(structural.fullName())) {
             errs.addErr(new JsonTypeNotMatch(source, type, structural.fullName()));
             return ValueDefault.ofStructural(structural, source);
         }
+
 
         VStruct vStruct = new VStruct(structural, new ArrayList<>(structural.fields().size()), source);
         DFile thisSource = source.inStruct(structural.fullName());

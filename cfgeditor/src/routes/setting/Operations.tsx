@@ -15,7 +15,7 @@ import {RecordEditResult} from "../record/recordModel.ts";
 import {deleteRecord} from "../api.ts";
 import {toBlob} from "html-to-image";
 import {saveAs} from "file-saver";
-import {formLayout} from "./BasicSetting.tsx";
+import {formItemLayoutWithOutLabel, formLayout} from "./BasicSetting.tsx";
 import {OpFixPages} from "./OpFixPages.tsx";
 
 
@@ -103,7 +103,7 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
                 <InputNumber min={1} max={256} onChange={setImageSizeScale}/>
             </Form.Item>
 
-            <Form.Item wrapperCol={{offset: 6}}>
+            <Form.Item {...formItemLayoutWithOutLabel}>
                 <Button type="primary" onClick={onToPng}>
                     {t('toPng')}
                 </Button>
@@ -112,9 +112,12 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
             <Divider/>
 
             {(schema && curTable && schema.isEditable && curTable.isEditable) &&
-                <Button type="primary" danger onClick={() => deleteRecordMutation.mutate()}>
-                    <CloseOutlined/>{t('deleteCurRecord')}
-                </Button>
+                <Form.Item {...formItemLayoutWithOutLabel}>
+                    <Button type="primary" danger
+                            onClick={() => deleteRecordMutation.mutate()}>
+                        <CloseOutlined/>{t('deleteCurRecord')}
+                    </Button>
+                </Form.Item>
             }
 
         </Form>

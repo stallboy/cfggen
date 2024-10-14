@@ -21,6 +21,7 @@ import {FlowGraph} from "./flow/FlowGraph.tsx";
 import {Query} from "./routes/search/Query.tsx";
 import {SearchValue} from "./routes/search/SearchValue.tsx";
 import {Chat} from "./routes/search/Chat.tsx";
+import {AddJson} from "./routes/search/AddJson.tsx";
 
 
 export type SchemaTableType = {
@@ -39,7 +40,7 @@ const contentDivStyle: CSSProperties = {
 
 const fullDivStyle = {height: "100vh", width: "100vw"};
 const disabledProps = {disabled: true}
-const autoOverflow = { overflow: 'auto' }
+const autoOverflow = {overflow: 'auto'}
 const fullHeight = {height: '100%'}
 
 function onConnectServer(value: string) {
@@ -123,6 +124,9 @@ export function CfgEditorApp() {
         } else if (dragPanel == 'chat') {
             dragPage = <Chat schema={schema}/>
 
+        } else if (dragPanel == 'addJson') {
+            dragPage = <AddJson schema={schema}/>
+
         } else if (dragPanel != 'none') {
             const fix = getFixedPage(pageConf, dragPanel);
             if (fix) {
@@ -145,7 +149,7 @@ export function CfgEditorApp() {
 
         if (dragPage) {
             content = <Splitter style={contentDivStyle}>
-                <Splitter.Panel defaultSize="40%" style={autoOverflow}>
+                <Splitter.Panel defaultSize="20%" style={autoOverflow}>
                     <div style={fullHeight}>
                         {dragPage}
                     </div>
