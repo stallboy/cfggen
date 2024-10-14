@@ -8,7 +8,7 @@ import {
     editState,
     isCopiedFitAllowedType, onAddItemToArrayIndex,
     onStructCopy, onStructPaste,
-    startEditingObject
+    startEditingObject,
 } from "./editingObject.ts";
 import {useTranslation} from "react-i18next";
 import {

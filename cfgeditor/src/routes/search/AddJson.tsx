@@ -11,6 +11,7 @@ import {useNavigate} from "react-router-dom";
 import {formLayout} from "../setting/BasicSetting.tsx";
 import {useTranslation} from "react-i18next";
 import {ResultStatusType} from "antd/es/result";
+import {applyNewEditingObject} from "../record/editingObject.ts";
 
 interface AddJsonProps {
     table: string;
@@ -50,8 +51,9 @@ export const AddJson = memo(function AddJson({schema}: {
         },
     });
 
-    const onAddJson = useCallback((values: any) => {
-        addOrUpdateRecordMutation.mutate(values)
+    const onAddJson = useCallback((addJsonProps: any) => {
+        applyNewEditingObject(JSON.parse(addJsonProps.json));
+        // addOrUpdateRecordMutation.mutate(values)
     }, [addOrUpdateRecordMutation]);
 
     let res = <></>
