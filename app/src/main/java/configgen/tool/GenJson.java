@@ -42,7 +42,7 @@ public class GenJson extends Generator {
         CfgValue cfgValue = ctx.makeValue(tag);
 
         for (String table : tables) {
-            VTable vTable = cfgValue.vTableMap().get(table);
+            VTable vTable = cfgValue.getTable(table);
             if (vTable == null) {
                 Logger.log("ignore gen json: table=%s not found!", table);
                 continue;

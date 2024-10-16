@@ -35,6 +35,12 @@ dependencies {
     implementation 'de.siegmar:fastcsv:2.2.2'
     implementation 'com.alibaba.fastjson2:fastjson2:2.0.43'
 
+    // https://mvnrepository.com/artifact/io.github.sashirestela/simple-openai
+    implementation 'io.github.sashirestela:simple-openai:3.8.2'
+
+
+    implementation("gg.jte:jte:3.1.13")
+
     if (!project.hasProperty("noPoi")) {
         // 以下两个库只用于-checkcomma，可以不要，这样打出来的fatjar从20M会下降到2M
         implementation 'org.apache.poi:poi:5.2.4'

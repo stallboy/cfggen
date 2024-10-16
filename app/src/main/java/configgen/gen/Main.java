@@ -132,6 +132,7 @@ public final class Main {
         Generators.addProvider("server", EditorServer::new);
         Generators.addProvider("json", GenJson::new);
         Generators.addProvider("ts", GenTs::new);
+        Generators.addProvider("jsonbyai", GenJsonByAI::new);
 
         String datadir = null;
         boolean xmlToCfg = false;
