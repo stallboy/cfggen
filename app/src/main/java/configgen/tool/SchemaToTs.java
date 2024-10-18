@@ -9,10 +9,12 @@ import java.util.*;
 public class SchemaToTs {
     private final CfgValue cfgValue;
     private final TableSchema tableSchema;
+    private final boolean isGenerate$type;
     private final StringBuilder sb = new StringBuilder(2048);
 
     private final Map<String, Map<String, Struct>> namespaces = new LinkedHashMap<>();
     private final IdentityHashMap<FieldSchema, RefName> refNames = new IdentityHashMap<>();
+    private final List<String> extraRefTables;
 
     private record Struct(Nameable nameable,
                           String tableKey /* 如果为null，表示结构，否则表示引用表的数据 */) {
@@ -23,9 +25,11 @@ public class SchemaToTs {
     }
 
 
-    public SchemaToTs(CfgValue cfgValue, TableSchema tableSchema) {
+    public SchemaToTs(CfgValue cfgValue, TableSchema tableSchema, List<String> extraRefTables, boolean isGenerate$type) {
         this.cfgValue = cfgValue;
         this.tableSchema = tableSchema;
+        this.extraRefTables = extraRefTables;
+        this.isGenerate$type = isGenerate$type;
     }
 
     public String generate() {
@@ -35,8 +39,10 @@ public class SchemaToTs {
 
             if (struct instanceof Structural structural) {
                 for (ForeignKeySchema fk : structural.foreignKeys()) {
-                    // 简单一点，只处理单字段，只考虑枚举
-                    if (fk.key().fields().size() == 1 && fk.refTableSchema().entry() instanceof EntryType.EEnum) {
+                    // 简单一点: 1.只处理单字段，2.只考虑枚举table或在extraRefTables中的table
+                    if (fk.key().fields().size() == 1
+                        && (fk.refTableSchema().entry() instanceof EntryType.EEnum
+                            || extraRefTables.contains(fk.refTableNormalized()))) {
                         TableSchema refTable = fk.refTableSchema();
                         KeySchema refKey = null;
                         switch (fk.refKey()) {
@@ -53,7 +59,6 @@ public class SchemaToTs {
                         if (refKey != null && refKey.fieldSchemas().size() == 1) {
                             FieldSchema refKeyField = refKey.fieldSchemas().getFirst();
                             if (refKeyField.type() instanceof FieldType.Primitive) {
-
                                 FieldSchema field = fk.key().fieldSchemas().getFirst();
                                 String lastName = refTable.lastName() + "_" + refKeyField.name();
                                 refNames.put(field, new RefName(refTable.namespace(), lastName));
@@ -114,6 +119,9 @@ public class SchemaToTs {
         switch (struct) {
             case Structural structural -> {
                 println("export interface %s {%s", structName, comment(structural.comment()));
+                if (isGenerate$type) {
+                    println("\t$type: \"%s\"", structural.fullName());
+                }
                 for (FieldSchema field : structural.fields()) {
                     println("\t%s: %s;%s", field.name(), fieldType(field, structural), comment(field.comment()));
                 }

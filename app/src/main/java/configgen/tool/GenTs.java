@@ -46,7 +46,7 @@ public class GenTs extends Generator {
                 continue;
             }
             try (CachedIndentPrinter ps = createCode(dstPath.resolve(table + ".ts").toFile(), encoding)) {
-                String generate = new SchemaToTs(cfgValue, vTable.schema()).generate();
+                String generate = new SchemaToTs(cfgValue, vTable.schema(), List.of(), false).generate();
                 ps.println(generate);
             }
         }

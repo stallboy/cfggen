@@ -63,7 +63,7 @@ public class ValueJsonParser {
         }
     }
 
-    private static final Set<String> jsonExtraKeySet = Set.of("$type", "$note", "$fold");
+    private static final Set<String> jsonExtraKeySet = Set.of("$type", "$note", "$fold", "$refs");
 
     private VStruct parseStructural(Structural structural, JSONObject jsonObject, DFile source) {
         String type = jsonObject.getString("$type");
