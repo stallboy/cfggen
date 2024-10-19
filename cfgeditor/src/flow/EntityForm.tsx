@@ -7,7 +7,6 @@ import {
     FuncType
 } from "./entityModel.ts";
 import {
-    AutoComplete,
     Button,
     ConfigProvider,
     Flex,
@@ -20,12 +19,13 @@ import {
 } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import {ArrowDownOutlined, ArrowUpOutlined, MinusSquareTwoTone, PlusSquareTwoTone} from "@ant-design/icons";
-import {CSSProperties, memo, useCallback, useEffect} from "react";
+import {CSSProperties, memo, useCallback, useEffect, useMemo} from "react";
 import {useTranslation} from "react-i18next";
 import {Handle, Position} from "@xyflow/react";
 import {ActionIcon} from "@ant-design/pro-editor";
 import {getFieldBackgroundColor} from "./colors.ts";
 import {HappyProvider} from '@ant-design/happy-work-theme';
+import {CustomAutoComplete} from "./CustomAutoComplete.tsx";
 
 const formLayout = {
     labelCol: {xs: {span: 24}, sm: {span: 6},},
@@ -67,48 +67,59 @@ function defaultPrimitiveValue(field: EntityEditField) {
     }
 }
 
-function PrimitiveControl(field: EntityEditField, bgColor?: string) {
-    let control;
-    const style = bgColor ? {style: {backgroundColor: bgColor}} : {}
+const textAreaAutoSize = {minRows: 1, maxRows: 10}
+
+const empty = {}
+const filter_integer = {filterSort: filterNumberSort}
+const filter_search = {showSearch: true, filterOption: filterOption}
+const filter_integerAndSearch = {filterSort: filterNumberSort, showSearch: true, filterOption: filterOption}
+
+function getFilter(isValueInteger: boolean, useSearch: boolean) {
+    if (isValueInteger) {
+        return useSearch ? filter_integerAndSearch : filter_integer;
+    } else {
+        return useSearch ? filter_search : empty;
+    }
+}
+
+function primitiveControl(field: EntityEditField,
+                          style: any){
 
     const {eleType, autoCompleteOptions} = field;
     if (autoCompleteOptions && autoCompleteOptions.options.length > 0) {
         const {options, isValueInteger, isEnum} = autoCompleteOptions;
+        const filters: any = getFilter(isValueInteger, options.length > 5);
 
-        const filters: any = {}
-
-        if (isValueInteger) {
-            filters.filterSort = filterNumberSort;
-        }
-        if (options.length > 5) {
-            filters.showSearch = true;
-            filters.filterOption = filterOption;
-        }
         if (isEnum) {
-            control = <Select className='nodrag' options={options} style={{maxWidth: 200}} {...filters}/>
-        } else {
-            control = <AutoComplete className='nodrag' options={options} {...filters} style={{maxWidth: 200}}/>
+            return <Select className='nodrag' options={options} {...filters}/>
+        } else  {
+            return <CustomAutoComplete options={options} filters={filters}/>
         }
+        // else {
+        //     return <AutoComplete className='nodrag' options={options} {...filters} />
+        // }
 
     } else if (eleType == 'bool') {
-        control = <Switch className='nodrag'/>;
+        return <Switch className='nodrag'/>;
     } else if (setOfNumber.has(eleType)) {
-        control = <InputNumber className='nodrag'  {...style}/>;
+        return <InputNumber className='nodrag'  {...style} />;
     } else {
-        control = <TextArea className='nodrag' autoSize={{minRows: 1, maxRows: 10}} {...style}/>;
+        return <TextArea className='nodrag' autoSize={textAreaAutoSize} {...style}/>;
     }
-    return control;
 }
 
 const rowFlexStyle: CSSProperties = {marginBottom: 10, position: 'relative'}
 const handleOutStyle: CSSProperties = {position: 'absolute', left: '270px', backgroundColor: 'blue'}
 
-function StructRefItem({field, bgColor}: { field: EntityEditField, bgColor?: string | undefined }) {
-    const thisRowStyle: CSSProperties = bgColor == undefined ? rowFlexStyle : {
+function StructRefItem({field, bgColor}: {
+    field: EntityEditField,
+    bgColor?: string
+}) {
+    const thisRowStyle: CSSProperties = useMemo(() => bgColor == undefined ? rowFlexStyle : {
         marginBottom: 10,
         position: 'relative',
         backgroundColor: bgColor
-    }
+    }, [bgColor]);
     return <Flex key={field.name} gap='middle' justify="flex-end" style={thisRowStyle}>
         <Tag color={'blue'}> {makeLabel(field)}</Tag>
         {field.handleOut && <Handle type='source' position={Position.Right} id={field.name}
@@ -116,13 +127,16 @@ function StructRefItem({field, bgColor}: { field: EntityEditField, bgColor?: str
     </Flex>
 }
 
-function FuncAddFormItem({field, bgColor}: { field: EntityEditField, bgColor?: string | undefined }) {
+function FuncAddFormItem({field, bgColor}: {
+    field: EntityEditField,
+    bgColor?: string
+}) {
     const func = field.value as FuncType;
-    const thisRowStyle: CSSProperties = bgColor == undefined ? rowFlexStyle : {
+    const thisRowStyle: CSSProperties = useMemo(() => bgColor == undefined ? rowFlexStyle : {
         marginBottom: 10,
         position: 'relative',
         backgroundColor: bgColor
-    }
+    }, [bgColor]);
     return <Flex key={field.name} gap='middle' justify="flex-end" style={thisRowStyle}>
         <HappyProvider>
             <Button className='nodrag' onClick={func} icon={<PlusSquareTwoTone/>}> {makeLabel(field)} </Button>
@@ -132,22 +146,24 @@ function FuncAddFormItem({field, bgColor}: { field: EntityEditField, bgColor?: s
     </Flex>;
 }
 
-function PrimitiveFormItem({field, bgColor}: { field: EntityEditField, bgColor?: string | undefined }) {
+function PrimitiveFormItem({field, bgColor}: {
+    field: EntityEditField,
+    bgColor?: string
+}) {
     const form = Form.useFormInstance();
     useEffect(() => {
         form.setFieldValue(field.name, field.value);
-    }, [field.name, field.value, form]);
+    }, [form, field.name, field.value]);
 
+    let props = useMemo(() => field.eleType == 'bool' ? {valuePropName: "checked"} : {}, [field.eleType])
 
-    let props = {}
-    if (field.eleType == 'bool') {
-        props = {valuePropName: "checked"}
-    }
-    const thisItemStyle = bgColor == undefined ? {} : {style: {backgroundColor: bgColor}}
+    const thisItemStyle = useMemo(() => {
+        return bgColor == undefined ? {} : {style: {backgroundColor: bgColor}}
+    }, [bgColor]);
 
     return <Form.Item name={field.name} key={field.name} label={makeLabel(field)}
                       initialValue={field.value} {...props} {...thisItemStyle}>
-        {PrimitiveControl(field, bgColor)}
+        {primitiveControl(field, thisItemStyle)}
     </Form.Item>;
 }
 
@@ -173,9 +189,16 @@ function makeLabel(field: EntityEditField) {
     </Tooltip>;
 }
 
-function ArrayOfPrimitiveFormItem({field, bgColor}: { field: EntityEditField, bgColor?: string | undefined }) {
+const listItemStyle = {width: 150}
+
+function ArrayOfPrimitiveFormItem({field, bgColor}: {
+    field: EntityEditField,
+    bgColor?: string
+}) {
     const form = Form.useFormInstance();
-    const thisItemStyle: CSSProperties = bgColor == undefined ? {} : {backgroundColor: bgColor}
+    const thisItemStyle: CSSProperties = useMemo(() => bgColor == undefined ? {} : {
+        backgroundColor: bgColor
+    }, [bgColor]);
 
     useEffect(() => {
         form.setFieldValue(field.name, field.value);
@@ -191,8 +214,8 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: { field: EntityEditField, bg
                                style={thisItemStyle}>
 
                         <Space align='baseline' size={1}>
-                            <Form.Item key={f.key} name={f.name} style={{width: 110}}>
-                                {PrimitiveControl(field)}
+                            <Form.Item key={f.key} name={f.name} style={listItemStyle}>
+                                {primitiveControl(field, empty)}
                             </Form.Item>
                             <ActionIcon className='nodrag'
                                         icon={<MinusSquareTwoTone twoToneColor='red'/>}
@@ -228,7 +251,9 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: { field: EntityEditField, bg
 }
 
 
-function FuncSubmitFormItem({field}: { field: EntityEditField }) {
+function FuncSubmitFormItem({field}: {
+    field: EntityEditField
+}) {
     const [t] = useTranslation();
     const func = field.value as FuncSubmitType;
     return <Form.Item {...formItemLayoutWithOutLabel} key={field.name}>
@@ -246,23 +271,22 @@ function FuncSubmitFormItem({field}: { field: EntityEditField }) {
 }
 
 
-function InterfaceFormItem({field, sharedSetting}: { field: EntityEditField, sharedSetting?: EntitySharedSetting }) {
+function InterfaceFormItem({field, sharedSetting}: {
+    field: EntityEditField,
+    sharedSetting?: EntitySharedSetting
+}) {
     const form = Form.useFormInstance();
     useEffect(() => {
         form.setFieldValue(field.name, field.value);
     }, [field.name, field.value, form]);
 
-    const options = field.autoCompleteOptions?.options!;
 
     const onSelectChange = useCallback((value: string) => {
         field.interfaceOnChangeImpl!(value);
     }, [field]);
 
-    const filters: any = {};
-    if (options.length > 5) {
-        filters.showSearch = true;
-        filters.filterOption = filterOption;
-    }
+    const options = field.autoCompleteOptions?.options!;
+    const filters = getFilter(false, options.length > 5);
 
     return <>
         <Form.Item name={field.name} key={field.name} label={makeLabel(field)}

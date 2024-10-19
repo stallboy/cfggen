@@ -1,5 +1,6 @@
 import {JSONObject} from "../record/recordModel.ts";
 import {RawSchema, RecordId, SField, SForeignKey, SInterface, SItem, SStruct, STable} from "./schemaModel.ts";
+import {EntityEditFieldOption} from "../../flow/entityModel.ts";
 
 export class Schema {
     isEditable: boolean;
@@ -369,11 +370,11 @@ export function isPkInteger(sTable: STable) {
     return field.type == 'int' || field.type == 'long';
 }
 
-export function getIdOptions(sTable: STable, valueToInteger: boolean = false) {
+export function getIdOptions(sTable: STable, valueToInteger: boolean = false): EntityEditFieldOption[] {
     const options = [];
     for (const {id, title} of sTable.recordIds) {
         const label = (title && title != id) ? `${id}-${title}` : id;
-        options.push({label, value: valueToInteger ? parseInt(id) : id});
+        options.push({label, value: valueToInteger ? parseInt(id) : id, title: title ?? ''});
     }
     return options;
 }
