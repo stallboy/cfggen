@@ -83,7 +83,7 @@ function getFilter(isValueInteger: boolean, useSearch: boolean) {
 }
 
 function primitiveControl(field: EntityEditField,
-                          style: any){
+                          style: any) {
 
     const {eleType, autoCompleteOptions} = field;
     if (autoCompleteOptions && autoCompleteOptions.options.length > 0) {
@@ -92,7 +92,7 @@ function primitiveControl(field: EntityEditField,
 
         if (isEnum) {
             return <Select className='nodrag' options={options} {...filters}/>
-        } else  {
+        } else {
             return <CustomAutoComplete options={options} filters={filters}/>
         }
         // else {
@@ -189,7 +189,7 @@ function makeLabel(field: EntityEditField) {
     </Tooltip>;
 }
 
-const listItemStyle = {width: 150}
+const autoCompleteItemStyle = {style: {width: 170}}
 
 function ArrayOfPrimitiveFormItem({field, bgColor}: {
     field: EntityEditField,
@@ -204,6 +204,10 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: {
         form.setFieldValue(field.name, field.value);
     }, [field.name, field.value, form]);
 
+    const itemStyle = field.autoCompleteOptions != null ? autoCompleteItemStyle : empty;
+    const iconSize = field.autoCompleteOptions != null ? 10 : 'default';
+
+
     return <Form.List name={field.name} key={field.name} initialValue={field.value as any[]}>
         {(fields, {add, remove, move}) => (
             <>
@@ -213,22 +217,26 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: {
                                key={f.key}
                                style={thisItemStyle}>
 
-                        <Space align='baseline' size={1}>
-                            <Form.Item key={f.key} name={f.name} style={listItemStyle}>
+                        <Space align='baseline' size={2}>
+                            <Form.Item key={f.key} name={f.name} {...itemStyle}>
                                 {primitiveControl(field, empty)}
                             </Form.Item>
                             <ActionIcon className='nodrag'
+                                        size={iconSize}
                                         icon={<MinusSquareTwoTone twoToneColor='red'/>}
                                         onClick={() => remove(f.name)}
                             />
                             {index != 0 &&
                                 <ActionIcon className='nodrag'
+                                            size={iconSize}
                                             icon={<ArrowUpOutlined/>}
                                             onClick={() => move(index, index - 1)}/>
                             }
 
-                            {index != fields.length - 1 &&
+                            {
+                                index != fields.length - 1 &&
                                 <ActionIcon className='nodrag'
+                                            size={iconSize}
                                             icon={<ArrowDownOutlined/>}
                                             onClick={() => move(index, index + 1)}/>
                             }
@@ -246,7 +254,9 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: {
 
                 </Form.Item>
             </>
-        )}
+        )
+        }
+
     </Form.List>
 }
 

@@ -2,7 +2,10 @@ import {CSSProperties, memo} from 'react';
 import {AutoComplete, Input} from 'antd';
 import {EntityEditFieldOption} from "./entityModel.ts";
 
-const suffixStyle: CSSProperties = {color: '#597ef7', fontSize: '0.85em', textOverflow: "ellipsis", maxWidth: 80}
+const suffixStyle: CSSProperties = {
+    color: '#597ef7', fontSize: '0.85em',
+    textOverflow: "clip", whiteSpace: 'nowrap', overflow: 'hidden', maxWidth: 80
+}
 
 export interface CustomAutoCompleteProps {
     id?: string;
