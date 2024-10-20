@@ -12,8 +12,12 @@ export function getLastName(id: string): string {
 }
 
 export function getLabel(id: string): string {
-    const seps = id.split('.');
-    return seps[seps.length - 1];
+    const idx = id.indexOf('.')
+    if (idx > 0) {
+        return id.substring(idx + 1);
+    } else {
+        return id;
+    }
 }
 
 export function getId(table: string, id: string): string {

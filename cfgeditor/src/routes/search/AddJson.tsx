@@ -87,7 +87,7 @@ export const AddJson = memo(function AddJson({schema}: {
 
 
     return <>
-        <div style={{height: "5vh"}}/>
+        <div style={{height: 32}}/>
         <Card title={t("addJson")}>
             <Form name="addJson"  {...formLayout} onFinish={onAddJson}
                   autoComplete="off">

@@ -142,7 +142,7 @@ export const Chat = memo(function Chat({schema}: {
     // const showChats = chats;
 
     return <>
-        <div style={{height: "5vh"}}/>
+        <div style={{height: 32}}/>
         <div style={{backgroundColor: theme.colorBgLayout}}>
 
             <ProChat chatRef={chatRef}

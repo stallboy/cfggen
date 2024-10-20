@@ -121,7 +121,7 @@ function StructRefItem({field, bgColor}: {
         backgroundColor: bgColor
     }, [bgColor]);
     return <Flex key={field.name} gap='middle' justify="flex-end" style={thisRowStyle}>
-        <Tag color={'blue'}> {makeLabel(field)}</Tag>
+        <Tag color={'blue'}> <LabelWithTooltip field={field}/> </Tag>
         {field.handleOut && <Handle type='source' position={Position.Right} id={field.name}
                                     style={handleOutStyle}/>}
     </Flex>
@@ -139,7 +139,7 @@ function FuncAddFormItem({field, bgColor}: {
     }, [bgColor]);
     return <Flex key={field.name} gap='middle' justify="flex-end" style={thisRowStyle}>
         <HappyProvider>
-            <Button className='nodrag' onClick={func} icon={<PlusSquareTwoTone/>}> {makeLabel(field)} </Button>
+            <Button className='nodrag' onClick={func} icon={<PlusSquareTwoTone/>}> <LabelWithTooltip field={field}/> </Button>
         </HappyProvider>
         {field.handleOut && <Handle type='source' position={Position.Right} id={field.name}
                                     style={handleOutStyle}/>}
@@ -161,13 +161,13 @@ function PrimitiveFormItem({field, bgColor}: {
         return bgColor == undefined ? {} : {style: {backgroundColor: bgColor}}
     }, [bgColor]);
 
-    return <Form.Item name={field.name} key={field.name} label={makeLabel(field)}
+    return <Form.Item name={field.name} key={field.name} label={<LabelWithTooltip field={field}/>}
                       initialValue={field.value} {...props} {...thisItemStyle}>
         {primitiveControl(field, thisItemStyle)}
     </Form.Item>;
 }
 
-function makeLabel(field: EntityEditField) {
+function LabelWithTooltip({field} : {field: EntityEditField}) {
     let type = '';
     switch (field.type) {
         case "arrayOfPrimitive":
@@ -213,7 +213,7 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: {
             <>
                 {fields.map((f, index) => (
                     <Form.Item {...(index === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
-                               label={index === 0 ? makeLabel(field) : ''}
+                               label={index === 0 ? <LabelWithTooltip field={field}/> : ''}
                                key={f.key}
                                style={thisItemStyle}>
 
@@ -246,7 +246,7 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: {
                     </Form.Item>
                 ))}
                 <Form.Item {...(fields.length === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
-                           label={fields.length === 0 ? makeLabel(field) : ''}>
+                           label={fields.length === 0 ? <LabelWithTooltip field={field}/> : ''}>
                     <ActionIcon className='nodrag'
                                 icon={<PlusSquareTwoTone/>}
                                 onClick={() => add(defaultPrimitiveValue(field))}
@@ -299,7 +299,7 @@ function InterfaceFormItem({field, sharedSetting}: {
     const filters = getFilter(false, options.length > 5);
 
     return <>
-        <Form.Item name={field.name} key={field.name} label={makeLabel(field)}
+        <Form.Item name={field.name} key={field.name} label={<LabelWithTooltip field={field}/>}
                    initialValue={field.value}>
             <Select className='nodrag' options={options}
                     {...filters}

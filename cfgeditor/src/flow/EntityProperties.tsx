@@ -16,8 +16,7 @@ const re = /[（(]/;
 function text({comment, name}: { name: string, comment?: string }) {
     if (comment) {
         const c = comment.split(re)[0];
-
-        return `${c.substring(0, 6)} ${name}`
+        return `${name} ${c.substring(0, 6)} `
     }
     return name;
 }
