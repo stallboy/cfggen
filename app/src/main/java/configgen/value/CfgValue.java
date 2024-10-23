@@ -7,10 +7,16 @@ import configgen.schema.*;
 import java.util.*;
 
 public record CfgValue(CfgSchema schema,
-                       Map<String, VTable> vTableMap) {
+                       Map<String, VTable> vTableMap,
+                       ValueStat valueStat) {
     public CfgValue {
         Objects.requireNonNull(schema);
         Objects.requireNonNull(vTableMap);
+        Objects.requireNonNull(valueStat);
+    }
+
+    public static CfgValue of(CfgSchema schema) {
+        return new CfgValue(schema, new TreeMap<>(), new ValueStat());
     }
 
     public Iterable<VTable> tables() {
@@ -127,9 +133,9 @@ public record CfgValue(CfgSchema schema,
         @Override
         public String toString() {
             return "VStruct[" +
-                    "schema=" + schema + ", " +
-                    "values=" + values + ", " +
-                    "source=" + source + ']';
+                   "schema=" + schema + ", " +
+                   "values=" + values + ", " +
+                   "source=" + source + ']';
         }
 
         public String note() {
@@ -193,9 +199,9 @@ public record CfgValue(CfgSchema schema,
         @Override
         public String toString() {
             return "VInterface[" +
-                    "schema=" + schema + ", " +
-                    "child=" + child + ", " +
-                    "source=" + source + ']';
+                   "schema=" + schema + ", " +
+                   "child=" + child + ", " +
+                   "source=" + source + ']';
         }
     }
 
@@ -229,8 +235,8 @@ public record CfgValue(CfgSchema schema,
         @Override
         public String toString() {
             return "VList[" +
-                    "valueList=" + valueList + ", " +
-                    "source=" + source + ']';
+                   "valueList=" + valueList + ", " +
+                   "source=" + source + ']';
         }
     }
 
@@ -263,8 +269,8 @@ public record CfgValue(CfgSchema schema,
         @Override
         public String toString() {
             return "VMap[" +
-                    "valueMap=" + valueMap + ", " +
-                    "source=" + source + ']';
+                   "valueMap=" + valueMap + ", " +
+                   "source=" + source + ']';
         }
 
     }

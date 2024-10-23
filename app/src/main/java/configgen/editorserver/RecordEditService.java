@@ -88,15 +88,15 @@ public class RecordEditService {
             newRecordList.add(thisValue);
         }
 
-        ValueErrs errs = applyNewRecordList(newRecordList, tableSchema);
-        List<String> errStrList = errs.errs().stream().map(Object::toString).toList();
 
         try {
             // 最后确定其他都对的时候再存储
-            VTableJsonStore.addOrUpdateRecordStore(thisValue, tableSchema, id, dataDir);
+            VTableJsonStore.addOrUpdateRecordStore(thisValue, tableSchema, id, dataDir, cfgValue.valueStat());
         } catch (Exception e) {
             return new RecordEditResult(jsonStoreErr, table, id, List.of(e.getMessage()), List.of());
         }
+        ValueErrs errs = applyNewRecordList(newRecordList, tableSchema);
+        List<String> errStrList = errs.errs().stream().map(Object::toString).toList();
 
         List<SchemaService.RecordId> recordIds = SchemaService.getRecordIds(newCfgValue.vTableMap().get(table));
         return new RecordEditResult(code, table, id, errStrList, recordIds);
@@ -135,7 +135,7 @@ public class RecordEditService {
 
         Map<String, VTable> copy = new LinkedHashMap<>(cfgValue.vTableMap());
         copy.put(newVTable.name(), newVTable);
-        newCfgValue = new CfgValue(cfgValue.schema(), copy);
+        newCfgValue = new CfgValue(cfgValue.schema(), copy, cfgValue.valueStat());
         new RefValidator(newCfgValue, errs).validate();
         errs.checkErrors("validate", true);
         return errs;
@@ -162,30 +162,27 @@ public class RecordEditService {
             return new RecordEditResult(idParseErr, table, id, idParseErrs, List.of());
         }
 
-
         VStruct old = vTable.primaryKeyMap().get(pkValue);
         if (old == null) {
             return new RecordEditResult(idNotFound, table, id, List.of(), List.of());
         }
 
-        Map<Value, VStruct> copy = new LinkedHashMap<>(vTable.primaryKeyMap());
-        copy.remove(pkValue);
-        List<VStruct> newRecordList = copy.values().stream().toList();
-
-
-        ValueErrs valueErrs = applyNewRecordList(newRecordList, tableSchema);
-        List<String> errStrList = valueErrs.errs().stream().map(Object::toString).toList();
-
-
         try {
             // 最后确定其他都对的时候再存储
-            boolean deleteOk = VTableJsonStore.deleteRecordStore(tableSchema, id, dataDir);
+            boolean deleteOk = VTableJsonStore.deleteRecordStore(tableSchema, id, dataDir, cfgValue.valueStat());
             if (!deleteOk) {
                 return new RecordEditResult(jsonStoreErr, table, id, List.of("delete fail"), List.of());
             }
         } catch (Exception e) {
             return new RecordEditResult(jsonStoreErr, table, id, List.of(e.getMessage()), List.of());
         }
+
+        Map<Value, VStruct> copy = new LinkedHashMap<>(vTable.primaryKeyMap());
+        copy.remove(pkValue);
+        List<VStruct> newRecordList = copy.values().stream().toList();
+        ValueErrs valueErrs = applyNewRecordList(newRecordList, tableSchema);
+        List<String> errStrList = valueErrs.errs().stream().map(Object::toString).toList();
+
         List<SchemaService.RecordId> recordIds = SchemaService.getRecordIds(newCfgValue.vTableMap().get(table));
         return new RecordEditResult(deleteOk, table, id, errStrList, recordIds);
     }

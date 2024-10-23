@@ -7,10 +7,7 @@ import configgen.data.CfgData;
 import configgen.schema.CfgSchema;
 import configgen.schema.TableSchema;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,7 +41,7 @@ public class CfgValueParser {
         }
 
         List<Callable<OneTableParserResult>> tasks = new ArrayList<>();
-        CfgValue cfgValue = new CfgValue(subSchema, new TreeMap<>());
+        CfgValue cfgValue = CfgValue.of(subSchema);
         for (TableSchema subTable : subSchema.tableMap().values()) {
             String name = subTable.name();
             TableSchema table = context.cfgSchema().findTable(name);
@@ -65,7 +62,7 @@ public class CfgValueParser {
                 tasks.add(() -> {
                     ValueErrs errs = ValueErrs.of();
                     VTableJsonParser parser = new VTableJsonParser(subTable, subSchema.isPartial(),
-                            context.dataDir(), table, tableI18n, errs);
+                            context.dataDir(), table, tableI18n, errs, cfgValue.valueStat());
                     VTable vTable = parser.parseTable();
                     return new OneTableParserResult(vTable, errs);
                 });

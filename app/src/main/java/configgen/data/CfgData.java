@@ -14,6 +14,11 @@ import java.util.Objects;
 public record CfgData(Map<String, DTable> tables,
                       DataStat stat) {
 
+    public CfgData {
+        Objects.requireNonNull(tables);
+        Objects.requireNonNull(stat);
+    }
+
     /**
      * @param tableName 程序员的表名称
      * @param fields    head信息

@@ -138,7 +138,7 @@ public class GenJsonByAI extends Generator {
             structInfo = getTableSchemaRelatedCfgStr(tableSchema);
             extra = getTableRelatedEnumCsv(cfgValue, tableSchema, extraRefTables);
         } else {
-            structInfo = new SchemaToTs(cfgValue, tableSchema,  extraRefTables, true).generate();
+            structInfo = new SchemaToTs(cfgValue, tableSchema, extraRefTables, true).generate();
             extra = "";
         }
 
@@ -172,7 +172,8 @@ public class GenJsonByAI extends Generator {
                     UserMessage.of(promptStr),
                     AssistantMessage.of(ANSWER),
                     UserMessage.of(ask));
-            askWithRetry(messages, retryTimes, stat, tableSchema, openAI);
+            askWithRetry(messages, retryTimes, stat, tableSchema, openAI,
+                    ctx.dataDir(), cfgValue.valueStat());
         }
         System.out.println(stat);
     }
@@ -193,7 +194,8 @@ public class GenJsonByAI extends Generator {
     }
 
     private void askWithRetry(List<ChatMessage> messages, int retryTimes, AskStat stat,
-                              TableSchema tableSchema, SimpleOpenAI openAI) {
+                              TableSchema tableSchema, SimpleOpenAI openAI,
+                              Path dataDir, ValueStat valueStat) {
 
         stat.ask++;
         for (int i = 0; i < retryTimes; i++) {
@@ -207,7 +209,7 @@ public class GenJsonByAI extends Generator {
                 return;
             } else {
                 ValueErrs parseErrs = ValueErrs.of();
-                new ValueJsonParser(tableSchema, parseErrs).fromJson(jsonResult, Source.DFile.of("<server>", table));
+                CfgValue.VStruct record = new ValueJsonParser(tableSchema, parseErrs).fromJson(jsonResult, Source.DFile.of("<server>", table));
                 parseErrs.checkErrors("check json", true, true);
 
                 if (!parseErrs.warns().isEmpty()) {
@@ -215,6 +217,14 @@ public class GenJsonByAI extends Generator {
                 }
                 if (parseErrs.errs().isEmpty()) {
                     stat.ok++;
+
+                    CfgValue.Value pkValue = ValueUtil.extractPrimaryKeyValue(record, tableSchema);
+                    String id = pkValue.packStr();
+                    try {
+                        VTableJsonStore.addOrUpdateRecordStore(record, tableSchema, id, dataDir, valueStat);
+                    } catch (IOException e) {
+                        System.out.printf("save %s err: %s%n", id, e.getMessage());
+                    }
                     return;
                 } else {
                     messages = new ArrayList<>(messages);
@@ -252,7 +262,6 @@ public class GenJsonByAI extends Generator {
             return matcher.group(1).trim();
         }
         return null;
-
     }
 
     static String getTableSchemaRelatedCfgStr(TableSchema tableSchema) {
