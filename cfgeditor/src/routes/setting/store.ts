@@ -90,6 +90,7 @@ const storeState: StoreState = {
 
     history: new History(),
     isEditMode: false,
+
     resMap: new Map<string, ResInfo[]>(),
     resourceDir: '',
 };
@@ -348,12 +349,14 @@ export function historyNext(curPage: PageType, history: History, isEditMode: boo
     }
 }
 
-export function getFixCurIdByTable(schema: Schema, curTableId: string, curId: string) {
-    let id = '';
+export function getLastOpenIdByTable(schema: Schema, curTableId: string): string | undefined {
+    const {history} = store;
+    const lastOpenId = history.findLastOpenId(curTableId)
     const table = schema.getSTable(curTableId);
+    let id;
     if (table) {
-        if (schema.hasId(table, curId)) {
-            id = curId;
+        if (lastOpenId && schema.hasId(table, lastOpenId)) {
+            id = lastOpenId;
         } else if (table.recordIds.length > 0) {
             id = table.recordIds[0].id;
         }
@@ -368,10 +371,11 @@ export function setIsEditMode(isEditMode: boolean) {
 
 export function navTo(curPage: PageType, tableId: string, id: string,
                       edit: boolean = false, addHistory: boolean = true) {
+    const {history} = store;
+
     if (addHistory) {
-        const {history} = store;
         const cur = history.cur();
-        if (cur == null || (cur.table != tableId || cur.id != id)) {
+        if (cur == undefined || (cur.table != tableId || cur.id != id)) {
             store.history = history.addItem(tableId, id);
         }
     }

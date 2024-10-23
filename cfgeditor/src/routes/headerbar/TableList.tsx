@@ -1,6 +1,6 @@
 import {STable} from "../table/schemaModel.ts";
 import {Badge, Select, Space} from "antd";
-import {getFixCurIdByTable, navTo, store, useLocationData} from "../setting/store.ts";
+import {getLastOpenIdByTable, navTo, store, useLocationData} from "../setting/store.ts";
 import {useNavigate} from "react-router-dom";
 import {Schema} from "../table/schemaUtil.ts";
 import {memo} from "react";
@@ -13,7 +13,7 @@ interface TableWithLastName {
 
 
 export const TableList = memo(function TableList({schema}: { schema: Schema }) {
-    const {curPage, curTableId, curId} = useLocationData();
+    const {curPage, curTableId} = useLocationData();
     const navigate = useNavigate();
     const {isEditMode} = store;
 
@@ -81,8 +81,8 @@ export const TableList = memo(function TableList({schema}: { schema: Schema }) {
                        return !!option?.value.includes(inputValue);
                    }}
                    onChange={(tableId) => {
-                       const id = getFixCurIdByTable(schema, tableId, curId);
-                       navigate(navTo(curPage, tableId, id, isEditMode));
+                       const id = getLastOpenIdByTable(schema, tableId);
+                       navigate(navTo(curPage, tableId, id || '', isEditMode));
                    }}
     />;
 });
