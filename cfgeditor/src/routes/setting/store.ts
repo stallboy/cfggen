@@ -31,7 +31,7 @@ export type StoreState = {
     searchMax: number;
     imageSizeScale: number;
 
-    dragPanel: string;  // 'recordRef', 'none', 'search', 'chat', 'addJson', page.label（page的label前面的）
+    dragPanel: string;  // 'recordRef', 'none', 'finder', 'chat', 'addJson', page.label（page的label前面的）
     pageConf: FixedPagesConf;
     tauriConf: TauriConf;
 

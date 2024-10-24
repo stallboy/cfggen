@@ -1,5 +1,5 @@
 import {memo, useState} from "react";
-import {App, Button, Card, Empty, Input, Result, Table} from "antd";
+import {App, Button, Empty, Input, Result, Table} from "antd";
 import {SearchResult, SearchResultItem} from "./searchModel.ts";
 import {useTranslation} from "react-i18next";
 import {navTo, setQuery, store, useLocationData} from "../setting/store.ts";
@@ -37,7 +37,6 @@ export const SearchValue = memo(function SearchValue() {
             setLoading(false);
         });
     }
-
 
     let content;
     if (searchResult == null) {
@@ -81,22 +80,26 @@ export const SearchValue = memo(function SearchValue() {
         //q={searchResult.q}&max={searchResult.max}
         content =
             // <div style={{overflow: "auto"}}>
-            <Table columns={columns} dataSource={searchResult.items}
+            <Table columns={columns}
+                   dataSource={searchResult.items}
                    pagination={false}
                 // pagination={{position: ['bottomRight']}}
                 // scroll={{y: "80vh"}}
-                   rowKey={(item: SearchResultItem) => `${item.table}-${item.pk}-${item.fieldChain}`}/>
+                   rowKey={rowKey}/>
         // </div>
     }
+
     return <>
-        <div style={{height: 32}}/>
-        <Card style={{overflow: "auto"}}>
-            <Input.Search placeholder='search value' defaultValue={query}
-                          enterButton={t('search')}
-                          size='large'
-                          loading={loading}
-                          onSearch={onSearch}/>
-            {content}
-        </Card>
+        <Input.Search placeholder='search value' defaultValue={query}
+                      enterButton={t('search')}
+                      size='large'
+                      loading={loading}
+                      onSearch={onSearch}/>
+        {content}
     </>;
 });
+
+
+function rowKey(item: SearchResultItem) {
+    return `${item.table}-${item.pk}-${item.fieldChain}`
+}

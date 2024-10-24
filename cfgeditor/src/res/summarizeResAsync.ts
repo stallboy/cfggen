@@ -33,17 +33,17 @@ export async function summarizeResAsync(schema: Schema) {
     for (const [tableLabel, entries] of table2entries.entries()) {
         if (entries.length > 8) {
             const sTable = schema.getSTableByLastName(tableLabel);
-            if (sTable && sTable.idSet) {
+            if (sTable && sTable.idMap) {
 
                 const resIdSet = new Set<string>();
                 for (const entry of entries) {
                     resIdSet.add(entry.id);
-                    if (!sTable.idSet.has(entry.id)) {
+                    if (!sTable.idMap.has(entry.id)) {
                         entry.brief = 'noCfg-' + entry.brief;
                     }
                 }
 
-                for (const id of sTable.idSet) {
+                for (const id of sTable.idMap.keys()) {
                     if (!resIdSet.has(id)) {
                         entries.push({id, brief: 'noRes'});
                     }

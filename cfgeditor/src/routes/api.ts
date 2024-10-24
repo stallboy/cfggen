@@ -14,7 +14,6 @@ export async function fetchSchema(server: string, signal: AbortSignal) {
     return new Schema(response.data);
 }
 
-
 export async function fetchRecord(server: string, tableId: string, id: string, signal: AbortSignal) {
     const url = `http://${server}/record?table=${tableId}&id=${id}&depth=1`;
     const response = await axios.get<RecordResult>(url, {signal});

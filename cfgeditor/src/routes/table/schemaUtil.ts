@@ -6,9 +6,11 @@ export class Schema {
     isEditable: boolean;
     itemMap: Map<string, SItem> = new Map<string, SItem>();
     itemIncludeImplMap: Map<string, SItem> = new Map<string, SItem>();
+    lastModifiedMap: Map<string, Map<string, number>>;
 
     constructor(public rawSchema: RawSchema) {
         this.isEditable = rawSchema.isEditable;
+        this.lastModifiedMap = obj2map(rawSchema.lastModifiedMap);
         for (const item of rawSchema.items) {
             if (item.type == 'interface') {
                 const ii = item as SInterface;
@@ -28,9 +30,9 @@ export class Schema {
             if (item.type == 'table') {
                 const st = item as STable;
                 st.refInTables = new Set<string>();
-                st.idSet = new Set<string>();
+                st.idMap = new Map<string, RecordId>();
                 for (const recordId of st.recordIds) {
-                    st.idSet.add(recordId.id);
+                    st.idMap.set(recordId.id, recordId);
                 }
             }
         }
@@ -65,8 +67,8 @@ export class Schema {
     }
 
     hasId(table: STable, id: string): boolean {
-        if (table.idSet) {
-            return table.idSet.has(id);
+        if (table.idMap) {
+            return table.idMap.has(id);
         }
         return false;
     }
@@ -289,6 +291,14 @@ export class Schema {
         }
         return res;
     }
+
+    getIdTitle(table: string, id: string): string | undefined {
+        const t = this.getSTable(table);
+        if (t && t.idMap) {
+            const r = t.idMap.get(id);
+            return r?.title;
+        }
+    }
 }
 
 function setUnion(dst: Set<string>, from: Set<string>) {
@@ -321,19 +331,6 @@ export function getImpl(sInterface: SInterface, implName: string): SStruct | nul
     return null;
 }
 
-export function newSchema(schema: Schema, table: string, recordIds: RecordId[]) {
-    const items: SItem[] = [];
-    for (const item of schema.rawSchema.items) {
-        if (item.name == table) {
-            const updatedItem = {...item, recordIds: recordIds};
-            items.push(updatedItem);
-        } else {
-            items.push(item);
-        }
-    }
-    return new Schema({isEditable: schema.isEditable, items});
-}
-
 export function getNextId(sTable: STable, curId: string): number | null {
     if (!isPkInteger(sTable)) {
         return null;
@@ -343,14 +340,14 @@ export function getNextId(sTable: STable, curId: string): number | null {
         id = 0;
     }
 
-    const idSet = new Set<number>();
+    const intIdSet = new Set<number>();
     for (const recordId of sTable.recordIds) {
         const v = parseInt(recordId.id);
-        idSet.add(v);
+        intIdSet.add(v);
     }
 
     id++;
-    while (idSet.has(id)) {
+    while (intIdSet.has(id)) {
         id++;
     }
 
@@ -379,3 +376,8 @@ export function getIdOptions(sTable: STable, valueToInteger: boolean = false): E
     return options;
 }
 
+
+function obj2map(v: any): any {
+    if (Array.isArray(v)) return v.map(obj2map);
+    return v && typeof v == "object" ? new Map(Object.entries(v).map(([k, v]) => [k, obj2map(v)])) : v;
+}

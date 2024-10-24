@@ -18,7 +18,7 @@ export class History {
             if (item.table == table && item.id == id) {
                 return this;
             } else {
-                const maxHistory = 30;
+                const maxHistory = 20;
                 let startIdx = this.index - maxHistory;
                 if (startIdx < 0) {
                     startIdx = 0;

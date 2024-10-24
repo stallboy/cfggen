@@ -93,18 +93,21 @@ public class SchemaService {
      * @param isEditable 因为可能是partial，此时不能被编辑
      */
     public record Schema(boolean isEditable,
-                         List<SNameable> items) {
+                         List<SNameable> items,
+                         Map<String, Map<String, Long>> lastModifiedMap) {
     }
 
 
     public static Schema fromCfgSchema(CfgSchema cfgSchema) {
-        return new Schema(!cfgSchema.isPartial(), cfgSchema.items().stream()
-                .map(n -> fromNameable(n, null)).toList());
+        return new Schema(!cfgSchema.isPartial(),
+                cfgSchema.items().stream().map(n -> fromNameable(n, null)).toList(),
+                Map.of());
     }
 
     public static Schema fromCfgValue(CfgValue cfgValue) {
-        return new Schema(!cfgValue.schema().isPartial(), cfgValue.schema().items().stream()
-                .map(n -> fromNameable(n, cfgValue)).toList());
+        return new Schema(!cfgValue.schema().isPartial(),
+                cfgValue.schema().items().stream().map(n -> fromNameable(n, cfgValue)).toList(),
+                cfgValue.valueStat().getLastModifiedMap());
     }
 
     public static SNameable fromNameable(Nameable n, CfgValue cfgValue) {

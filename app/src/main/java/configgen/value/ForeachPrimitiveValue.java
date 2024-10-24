@@ -34,6 +34,10 @@ public class ForeachPrimitiveValue {
                 visitor.visit(primitiveValue, table, pk, fieldChain);
             }
             case VStruct vStruct -> {
+                String note = vStruct.note();
+                if (note != null && !note.isEmpty()) {
+                    visitor.visit(new VString(note, vStruct.source()), table, pk, listAddOf(fieldChain, "$note"));
+                }
                 int i = 0;
                 for (FieldSchema field : vStruct.schema().fields()) {
                     Value fv = vStruct.values().get(i);

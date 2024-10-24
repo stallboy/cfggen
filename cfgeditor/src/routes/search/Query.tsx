@@ -3,9 +3,10 @@ import {useTranslation} from "react-i18next";
 import {SearchValue} from "./SearchValue.tsx";
 import {Chat} from "./Chat.tsx";
 import {Schema} from "../table/schemaUtil.ts";
+import {memo} from "react";
 
 
-export function Query({schema}: {
+export const Query = memo(function Query({schema}: {
     schema: Schema | undefined;
 }) {
     const {t} = useTranslation();
@@ -25,4 +26,4 @@ export function Query({schema}: {
     ];
     return <Tabs defaultActiveKey="search" items={items}/>;
 
-}
+});

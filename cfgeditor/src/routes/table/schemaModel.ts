@@ -48,7 +48,7 @@ export interface STable extends Namable {
     isEditable: boolean;
 
     refInTables?: Set<string> // 被这些表索引， cache
-    idSet?: Set<string>;
+    idMap?: Map<string, RecordId>;
 }
 
 export type SItem = SStruct | SInterface | STable;
@@ -56,5 +56,6 @@ export type SItem = SStruct | SInterface | STable;
 export interface RawSchema {
     isEditable: boolean;
     items: SItem[];
+    lastModifiedMap: Map<string, Map<string, number>>;
 }
 
