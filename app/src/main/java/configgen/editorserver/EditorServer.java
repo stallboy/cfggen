@@ -6,6 +6,7 @@ import configgen.ctx.Context;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
 import configgen.schema.TableSchemaRefGraph;
+import configgen.tool.AICfg;
 import configgen.value.CfgValue;
 
 import java.io.IOException;
@@ -31,12 +32,20 @@ public class EditorServer extends Generator {
     private TableSchemaRefGraph graph;
     private HttpServer server;
     private NoteEditService noteEditService;
+    private AICfg aiCfg;
+    private Path aiDir;
 
 
     public EditorServer(Parameter parameter) {
         super(parameter);
         port = Integer.parseInt(parameter.get("port", "3456"));
         noteCsvPath = parameter.get("note", "_note.csv");
+
+        String aiCfgFn = parameter.get("aicfg", null);
+        if (aiCfgFn != null) {
+            aiDir = Path.of(aiCfgFn).getParent();
+            aiCfg = AICfg.readFromFile(aiCfgFn);
+        }
     }
 
     @Override
@@ -200,14 +209,9 @@ public class EditorServer extends Generator {
 
 
     private void handlePrompt(HttpExchange exchange) throws IOException {
-        if (exchange.getRequestMethod().equals("OPTIONS")) {
-            sendOptionsResponse(exchange);
-            return;
-        }
-        byte[] bytes = exchange.getRequestBody().readAllBytes();
-        String jsonStr = new String(bytes, StandardCharsets.UTF_8);
-        PromptService.PromptRequest request = JSON.parseObject(jsonStr, PromptService.PromptRequest.class);
-        PromptService.PromptResult result = new PromptService(cfgValue, graph, request).gen();
+        Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
+        String table = query.get("table");
+        PromptService.PromptResult result = PromptService.gen(cfgValue, aiCfg, aiDir, table);
         sendResponse(exchange, result);
     }
 

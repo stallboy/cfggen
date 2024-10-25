@@ -1,41 +1,27 @@
 package configgen.tool;
 
+import com.alibaba.fastjson2.JSON;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
 
 public record AICfg(String baseUrl,
                     String apiKey,
                     String model,
                     List<TableCfg> tableCfgs) {
 
-    public AICfg {
-        Objects.requireNonNull(baseUrl);
-        Objects.requireNonNull(apiKey);
-        Objects.requireNonNull(model);
-        Objects.requireNonNull(tableCfgs);
-    }
-
 
     public record TableCfg(String table,
                            String promptFile, // {table}.jte
                            List<String> extraRefTables,
                            List<OneExample> examples) {
-
-        public TableCfg {
-            Objects.requireNonNull(table);
-            Objects.requireNonNull(promptFile);
-            Objects.requireNonNull(extraRefTables);
-            Objects.requireNonNull(examples);
-        }
     }
 
     public record OneExample(String id,
                              String description) {
 
-        public OneExample {
-            Objects.requireNonNull(id);
-            Objects.requireNonNull(description);
-        }
     }
 
     public TableCfg findTable(String table) {
@@ -46,4 +32,28 @@ public record AICfg(String baseUrl,
         }
         return null;
     }
+
+    public String findPromptFile(String table, Path dir) {
+        AICfg.TableCfg tableCfg = findTable(table);
+        if (tableCfg != null && tableCfg.promptFile() != null && !tableCfg.promptFile().isEmpty()) {
+            return tableCfg.promptFile();
+        } else {
+            return dir.resolve(table + ".jte").toString();
+        }
+    }
+
+    public static AICfg readFromFile(String cfgFn) {
+        Path path = Path.of(cfgFn);
+        if (!Files.exists(path)) {
+            throw new RuntimeException(cfgFn + " not exist!");
+        }
+        String jsonStr;
+        try {
+            jsonStr = Files.readString(path);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return JSON.parseObject(jsonStr, AICfg.class);
+    }
+
 }
