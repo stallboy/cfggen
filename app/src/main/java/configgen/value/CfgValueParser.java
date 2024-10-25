@@ -52,18 +52,29 @@ public class CfgValueParser {
 
             if (dTable != null) {
                 tasks.add(() -> {
+                    long start = System.currentTimeMillis();
                     ValueErrs errs = ValueErrs.of();
                     VTableParser parser = new VTableParser(subTable, dTable, table, tableI18n, errs);
                     VTable vTable = parser.parseTable();
+                    if (Logger.isProfileEnabled()) {
+                        long e = System.currentTimeMillis() - start;
+                        if (e > 10) {
+                            System.out.printf("%40s: %d%n", name, e);
+                        }
+                    }
                     return new OneTableParserResult(vTable, errs);
                 });
 
             } else {
                 tasks.add(() -> {
+                    long start = System.currentTimeMillis();
                     ValueErrs errs = ValueErrs.of();
                     VTableJsonParser parser = new VTableJsonParser(subTable, subSchema.isPartial(),
                             context.dataDir(), table, tableI18n, errs, cfgValue.valueStat());
                     VTable vTable = parser.parseTable();
+                    if (Logger.isProfileEnabled()) {
+                        System.out.printf("%40s: %d%n", name, System.currentTimeMillis() - start);
+                    }
                     return new OneTableParserResult(vTable, errs);
                 });
             }

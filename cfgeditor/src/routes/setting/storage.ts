@@ -115,9 +115,9 @@ async function savePrefAsync() {
         }
     }
     // const conf = await getConf();
-    await writeTextFile("cfgeditor.yml", stringify(settings), {baseDir: BaseDirectory.Resource});
+    await writeTextFile("cfgeditor.yml", stringify(settings, {sortMapEntries: true}), {baseDir: BaseDirectory.Resource});
     // const selfConf = await getSelfConf();
-    await writeTextFile("cfgeditorSelf.yml", stringify(selfSettings),  {baseDir: BaseDirectory.Resource});
+    await writeTextFile("cfgeditorSelf.yml", stringify(selfSettings, {sortMapEntries: true}), {baseDir: BaseDirectory.Resource});
 }
 
 function log(reason: any) {

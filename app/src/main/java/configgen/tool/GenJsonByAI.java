@@ -28,32 +28,7 @@ import java.util.regex.Pattern;
 import static io.github.sashirestela.openai.domain.chat.ChatMessage.*;
 
 public class GenJsonByAI extends Generator {
-    public record OneExample(
-            String id,
-            String description) {
-    }
 
-    public record TableCfg(
-            String table,
-            List<String> extraRefTables,
-            List<OneExample> examples) {
-    }
-
-    public record AICfg(
-            String baseUrl,
-            String apiKey,
-            String model,
-            List<TableCfg> tableCfgs) {
-
-        public TableCfg findTable(String table) {
-            for (TableCfg tableCfg : tableCfgs) {
-                if (tableCfg.table.equals(table)) {
-                    return tableCfg;
-                }
-            }
-            return null;
-        }
-    }
 
     public record Example(
             String id,
@@ -72,7 +47,7 @@ public class GenJsonByAI extends Generator {
     private final AICfg aiCfg;
     private final List<String> asks;
     private final String table;
-    private final String promptFn;
+    private final String promptFile;
     private final int retryTimes;
     private final boolean isUseRawStructInfo;
 
@@ -81,11 +56,7 @@ public class GenJsonByAI extends Generator {
         String cfgFn = parameter.get("cfg", "ai.json");
         String askFn = parameter.get("ask", "ask.txt");
         table = parameter.get("table", "skill.buff");
-        String pn = parameter.get("promptfn", null);
-        if (pn == null) {
-            pn = table + ".jte";
-        }
-        promptFn = pn;
+        String promptFn = parameter.get("promptfn", null);
         isUseRawStructInfo = parameter.has("raw");
         retryTimes = Integer.parseInt(parameter.get("retry", "1"));
 
@@ -101,9 +72,6 @@ public class GenJsonByAI extends Generator {
         if (!Files.exists(Path.of(askFn))) {
             throw new RuntimeException(askFn + " not exist!");
         }
-        if (!Files.exists(Path.of(promptFn))) {
-            throw new RuntimeException(promptFn + " not exist!");
-        }
 
         String jsonStr;
         try {
@@ -118,6 +86,21 @@ public class GenJsonByAI extends Generator {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+
+        if (promptFn == null) {
+            AICfg.TableCfg tableCfg = aiCfg.findTable(table);
+            if (tableCfg != null && tableCfg.promptFile() != null && !tableCfg.promptFile().isEmpty()) {
+                promptFile = tableCfg.promptFile();
+            } else {
+                promptFile = Path.of(cfgFn).getParent().resolve(table + ".jte").toString();
+            }
+        } else {
+            promptFile = promptFn;
+        }
+        if (!Files.exists(Path.of(promptFile))) {
+            throw new RuntimeException(promptFile + " not exist!");
+        }
     }
 
     @Override
@@ -131,9 +114,9 @@ public class GenJsonByAI extends Generator {
         // 创建model
         String structInfo;
         String extra;
-        TableCfg tableCfg = aiCfg.findTable(table);
-        List<String> extraRefTables = tableCfg != null ? tableCfg.extraRefTables : List.of();
-        List<OneExample> examples = tableCfg != null ? tableCfg.examples : List.of();
+        AICfg.TableCfg tableCfg = aiCfg.findTable(table);
+        List<String> extraRefTables = tableCfg != null ? tableCfg.extraRefTables() : List.of();
+        List<AICfg.OneExample> examples = tableCfg != null ? tableCfg.examples() : List.of();
         if (isUseRawStructInfo) {
             structInfo = getTableSchemaRelatedCfgStr(tableSchema);
             extra = getTableRelatedEnumCsv(cfgValue, tableSchema, extraRefTables);
@@ -149,15 +132,15 @@ public class GenJsonByAI extends Generator {
         CodeResolver codeResolver = new DirectoryCodeResolver(Path.of("."));
         TemplateEngine templateEngine = TemplateEngine.create(codeResolver, ContentType.Plain);
         TemplateOutput prompt = new StringOutput();
-        templateEngine.render(promptFn, model, prompt);
+        templateEngine.render(promptFile, model, prompt);
 
         String promptStr = prompt.toString();
         System.out.println(promptStr);
 
         // 调用llm
         SimpleOpenAI openAI = SimpleOpenAI.builder()
-                .baseUrl(aiCfg.baseUrl)
-                .apiKey(aiCfg.apiKey)
+                .baseUrl(aiCfg.baseUrl())
+                .apiKey(aiCfg.apiKey())
                 .build();
 
         AskStat stat = new AskStat();
@@ -240,7 +223,7 @@ public class GenJsonByAI extends Generator {
 
     private String ask(List<ChatMessage> messages, SimpleOpenAI openAI) {
         var chatRequest = ChatRequest.builder()
-                .model(aiCfg.model)
+                .model(aiCfg.model())
                 .messages(messages)
                 .temperature(0.0)
                 .build();
@@ -317,17 +300,17 @@ public class GenJsonByAI extends Generator {
         ValueToCsv.writeAsCsv(sb, vTable, fieldNames, "");
     }
 
-    static List<Example> getExamples(List<OneExample> rawExamples, CfgValue.VTable vTable) {
+    static List<Example> getExamples(List<AICfg.OneExample> rawExamples, CfgValue.VTable vTable) {
         List<Example> examples = new ArrayList<>(rawExamples.size());
-        for (OneExample ex : rawExamples) {
+        for (AICfg.OneExample ex : rawExamples) {
             ValueErrs errs = ValueErrs.of();
-            CfgValue.Value pkValue = ValuePack.unpackTablePrimaryKey(ex.id, vTable.schema(), errs);
+            CfgValue.Value pkValue = ValuePack.unpackTablePrimaryKey(ex.id(), vTable.schema(), errs);
 
             if (errs.errs().isEmpty()) {
                 CfgValue.VStruct vRecord = vTable.primaryKeyMap().get(pkValue);
                 if (vRecord != null) {
                     String jsonString = ValueToJson.toJsonStr(vRecord);
-                    examples.add(new Example(ex.id, ex.description, jsonString));
+                    examples.add(new Example(ex.id(), ex.description(), jsonString));
                 }
             }
         }

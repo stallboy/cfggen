@@ -6,6 +6,8 @@ import java.time.format.DateTimeFormatter;
 public class Logger {
     private static int verboseLevel = 0;
     private static boolean profileGcEnabled = false;
+
+
     private static boolean profileEnabled = false;
     private static boolean warningEnabled = true;
 
@@ -15,6 +17,10 @@ public class Logger {
 
     public static void enableProfile() {
         profileEnabled = true;
+    }
+
+    public static boolean isProfileEnabled() {
+        return profileEnabled;
     }
 
     public static void setVerboseLevel(int lvl) {
