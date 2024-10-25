@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 
 public record AICfg(String baseUrl,
                     String apiKey,
@@ -13,8 +14,11 @@ public record AICfg(String baseUrl,
                     List<TableCfg> tableCfgs) {
 
 
+    private static final String DEFAULT_INIT = "请提供ID和描述，我将根据这些信息生成符合结构的JSON配置";
+
     public record TableCfg(String table,
                            String promptFile, // {table}.jte
+                           String init, // 初始对白
                            List<String> extraRefTables,
                            List<OneExample> examples) {
     }
@@ -34,12 +38,23 @@ public record AICfg(String baseUrl,
     }
 
     public String findPromptFile(String table, Path dir) {
-        AICfg.TableCfg tableCfg = findTable(table);
-        if (tableCfg != null && tableCfg.promptFile() != null && !tableCfg.promptFile().isEmpty()) {
-            return tableCfg.promptFile();
-        } else {
+        Objects.requireNonNull(table);
+        TableCfg tc = findTable(table);
+        if (tc != null && tc.promptFile != null && !tc.promptFile.isEmpty()) {
+            return tc.promptFile;
+        } else if (dir != null) {
             return dir.resolve(table + ".jte").toString();
+        } else {
+            return table + ".jte";
         }
+    }
+
+    public String findInit(String table) {
+        TableCfg tc = findTable(table);
+        if (tc != null && tc.init != null && !tc.init.isEmpty()) {
+            return tc.init;
+        }
+        return DEFAULT_INIT;
     }
 
     public static AICfg readFromFile(String cfgFn) {

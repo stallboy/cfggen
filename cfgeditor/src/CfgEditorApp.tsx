@@ -19,9 +19,8 @@ import {useQuery} from "@tanstack/react-query";
 import {HeaderBar} from "./routes/headerbar/HeaderBar.tsx";
 import {FlowGraph} from "./flow/FlowGraph.tsx";
 import {Query} from "./routes/search/Query.tsx";
-import {Chat} from "./routes/search/Chat.tsx";
-import {AddJson} from "./routes/search/AddJson.tsx";
 import {Finder} from "./routes/search/Finder.tsx";
+import {Adder} from "./routes/search/Adder.tsx";
 
 
 export type SchemaTableType = {
@@ -121,11 +120,8 @@ export function CfgEditorApp() {
         } else if (dragPanel == 'finder') {
             dragPage = <Finder schema={schema}/>;
 
-        } else if (dragPanel == 'chat') {
-            dragPage = <Chat schema={schema}/>
-
-        } else if (dragPanel == 'addJson') {
-            dragPage = <AddJson schema={schema}/>
+        } else if (dragPanel == 'adder') {
+            dragPage = <Adder schema={schema}/>
 
         } else if (dragPanel != 'none') {
             const fix = getFixedPage(pageConf, dragPanel);

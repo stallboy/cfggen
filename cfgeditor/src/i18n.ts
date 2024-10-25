@@ -130,6 +130,9 @@ i18n.use(LanguageDetector)
                     addListItemBefore: '前插入',
                     structCopy: '拷贝',
                     structPaste: '粘贴',
+
+                    lastAccessed: '访问历史',
+                    lastModified: '修改历史'
                 }
             }
         }

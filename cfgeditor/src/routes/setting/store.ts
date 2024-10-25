@@ -47,9 +47,6 @@ const storeState: StoreState = {
         baseUrl: '',
         apiKey: '',
         model: '',
-        role: '',
-        examples: [],
-        explains: [],
     },
 
     maxImpl: 10,

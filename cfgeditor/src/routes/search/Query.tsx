@@ -4,6 +4,9 @@ import {SearchValue} from "./SearchValue.tsx";
 import {Chat} from "./Chat.tsx";
 import {Schema} from "../table/schemaUtil.ts";
 import {memo} from "react";
+import {AddJson} from "./AddJson.tsx";
+import {LastAccessed} from "./LastAccessed.tsx";
+import {LastModified} from "./LastModified.tsx";
 
 
 export const Query = memo(function Query({schema}: {
@@ -13,9 +16,24 @@ export const Query = memo(function Query({schema}: {
 
     const items: TabsProps['items'] = [
         {
+            key: 'lastAccessed',
+            label: t('lastAccessed'),
+            children: <LastAccessed schema={schema}/>,
+        },
+        {
+            key: 'lastModified',
+            label: t('lastModified'),
+            children: <LastModified schema={schema}/>,
+        },
+        {
             key: 'search',
             label: t('search'),
             children: <SearchValue/>,
+        },
+        {
+            key: 'addJson',
+            label: t('addJson'),
+            children: <AddJson schema={schema}/>,
         },
         {
             key: 'chat',

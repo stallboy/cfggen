@@ -1,10 +1,10 @@
-import {invalidateAllQueries, navTo, store} from "../setting/store.ts";
+import {invalidateAllQueries, navTo, store, useLocationData} from "../setting/store.ts";
 
 import {memo, useCallback, useState} from "react";
 import {Schema} from "../table/schemaUtil.ts";
 import {useMutation,} from "@tanstack/react-query";
 import {addOrUpdateRecord} from "../api.ts";
-import {Button, Card, Form, Input, List, Result, Select, type SelectProps} from "antd";
+import {Button, Card, Form, Input, List, Result} from "antd";
 
 import {RecordEditResult} from "../record/recordModel.ts";
 import {useNavigate} from "react-router-dom";
@@ -23,16 +23,17 @@ export const AddJson = memo(function AddJson({schema}: {
 }) {
     const {t} = useTranslation();
     const {server} = store;
-
     const navigate = useNavigate();
-
-    const [result, setResult] = useState<RecordEditResult | Error | undefined>();
-    const tableOptions: SelectProps['options'] = []
-    if (schema) {
-        for (const t of schema.getAllEditableSTables()) {
-            tableOptions.push({value: t.name});
+    const {curTableId} = useLocationData();
+    let editable = false;
+    if (schema && schema.isEditable) {
+        const sTable = schema.getSTable(curTableId);
+        if (sTable && sTable.isEditable) {
+            editable = true;
         }
     }
+
+    const [result, setResult] = useState<RecordEditResult | Error | undefined>();
 
     const addOrUpdateRecordMutation = useMutation<RecordEditResult, Error, AddJsonProps>({
         mutationFn: (addJsonProps: AddJsonProps) =>
@@ -55,6 +56,11 @@ export const AddJson = memo(function AddJson({schema}: {
         applyNewEditingObject(JSON.parse(addJsonProps.json));
         // addOrUpdateRecordMutation.mutate(values)
     }, [addOrUpdateRecordMutation]);
+
+
+    if (!editable) {
+        return <Result title={'not editable'}/>;
+    }
 
     let res = <></>
     if (result != undefined) {
@@ -85,15 +91,9 @@ export const AddJson = memo(function AddJson({schema}: {
         }
     }
 
-
     return <>
-        <div style={{height: 32}}/>
-        <Card title={t("addJson")}>
-            <Form name="addJson"  {...formLayout} onFinish={onAddJson}
-                  autoComplete="off">
-                <Form.Item name='table' label={t('addJsonTable')}>
-                    <Select options={tableOptions} style={{maxWidth: 200}}/>
-                </Form.Item>
+        <Card title={curTableId}>
+            <Form name="addJson"  {...formLayout} onFinish={onAddJson} autoComplete="off">
                 <Form.Item name='json' label={t('json')}>
                     <Input.TextArea placeholder="json" autoSize={{minRows: 5, maxRows: 20}}/>
                 </Form.Item>
@@ -105,7 +105,6 @@ export const AddJson = memo(function AddJson({schema}: {
             </Form>
         </Card>
         {res}
-
     </>;
 });
 

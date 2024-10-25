@@ -1,26 +1,12 @@
-export interface PromptRequest {
-    role: string;
-    table: string;
-    examples: AIExample[];
-    explains: string[];
-}
-
-export interface AIExample {
-    id: string;
-    description: string;
-}
-
 export interface PromptResult {
     resultCode: PromptResultCode;
-    prompt: string;
-    answer: string;
+    prompt: string; // user
+    init: string;   // assistant
 }
 
 export type PromptResultCode =
     'ok'
+    | 'AICfgNotSet'
     | 'tableNotSet'
     | 'tableNotFound'
-    | 'tableNotJson'
-    | 'exampleIdParseErr'
-    | 'exampleIdNotFound'
-    | 'exampleDescriptionEmpty';
+    | 'promptFileNotFound';

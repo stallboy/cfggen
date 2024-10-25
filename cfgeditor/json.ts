@@ -50,22 +50,8 @@ export interface TauriConf {
     assetRefTable: string;
 }
 
-export interface AIExample {
-    table: string;
-    id: string;
-    description: string;
-}
-
-export interface AIExplain {
-    table: string;
-    explain: string;
-}
-
 export interface AIConf {
     baseUrl: string;
     apiKey: string;
     model: string;
-    role: string;
-    examples: AIExample[];
-    explains: AIExplain[];
 }

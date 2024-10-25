@@ -17,6 +17,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static configgen.tool.AICfg.*;
 import static io.github.sashirestela.openai.domain.chat.ChatMessage.*;
 
 public class GenJsonByAI extends Generator {
@@ -32,8 +33,6 @@ public class GenJsonByAI extends Generator {
             String extra,
             List<Example> examples) {
     }
-
-    private static final String ANSWER = "请提供ID和描述，我将根据这些信息生成符合结构的JSON配置。";
 
     private final AICfg aiCfg;
     private final List<String> asks;
@@ -58,7 +57,7 @@ public class GenJsonByAI extends Generator {
             throw new RuntimeException("gen jsonByAI with tag=%s not supported".formatted(tag));
         }
 
-        aiCfg = AICfg.readFromFile(cfgFn);
+        aiCfg = readFromFile(cfgFn);
 
         if (!Files.exists(Path.of(askFn))) {
             throw new RuntimeException(askFn + " not exist!");
@@ -85,9 +84,12 @@ public class GenJsonByAI extends Generator {
         CfgValue.VTable vTable = cfgValue.getTable(table);
         Objects.requireNonNull(vTable, "table=%s not found!".formatted(table));
         TableSchema tableSchema = vTable.schema();
+        TableCfg aiTableCfg = aiCfg.findTable(table);
 
-        String promptStr = AIPromptGen.genPrompt(cfgValue, table, promptFile, aiCfg.findTable(table), isUseRawStructInfo);
-        System.out.println(promptStr);
+        String prompt = AIPromptGen.genPrompt(cfgValue, table, promptFile, aiTableCfg, isUseRawStructInfo);
+        System.out.println(prompt);
+        String init = aiCfg.findInit(table);
+        System.out.println(init);
 
         // 调用llm
         SimpleOpenAI openAI = SimpleOpenAI.builder()
@@ -104,8 +106,8 @@ public class GenJsonByAI extends Generator {
             System.out.println();
             System.out.printf("## %s%n", ask);
             List<ChatMessage> messages = List.of(
-                    UserMessage.of(promptStr),
-                    AssistantMessage.of(ANSWER),
+                    UserMessage.of(prompt),
+                    AssistantMessage.of(init),
                     UserMessage.of(ask));
             askWithRetry(messages, retryTimes, stat, tableSchema, openAI,
                     ctx.dataDir(), cfgValue.valueStat());

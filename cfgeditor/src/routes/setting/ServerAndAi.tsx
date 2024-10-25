@@ -1,6 +1,6 @@
 import {memo,} from "react";
 import {useTranslation} from "react-i18next";
-import {Button, Card, type SelectProps, Form, Input, Select, Flex, Space} from "antd";
+import {Button, Card, type SelectProps, Form, Input} from "antd";
 import {
     setServer, setAIConf,
     store
@@ -8,7 +8,6 @@ import {
 
 import {formItemLayoutWithOutLabel, formLayout} from "./BasicSetting.tsx";
 import {Schema} from "../table/schemaUtil.ts";
-import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
 
 
 function onFinishAIConf(values: any) {
@@ -53,70 +52,6 @@ export const ServerAndAi = memo(function ServerAndAi({schema}: {
 
                 <Form.Item name='model' label={t('model')}>
                     <Input placeholder="model"/>
-                </Form.Item>
-
-                <Form.Item name='role' label={t('role')}>
-                    <Input placeholder="role"/>
-                </Form.Item>
-
-                <Form.Item label={t('examples')}>
-                    <Form.List name="examples">
-                        {(fields, {add, remove}) => (
-                            <div style={{display: 'flex', flexDirection: 'column', rowGap: 16}}>
-                                {fields.map(({key, name}) => (
-                                    <Flex key={key} vertical>
-                                        <Space>
-                                            <Form.Item name={[name, 'table']} noStyle>
-                                                <Select options={tableOptions} style={{width:120}}/>
-                                            </Form.Item>
-                                            <Form.Item name={[name, 'id']} noStyle>
-                                                <Input placeholder="id"/>
-                                            </Form.Item>
-                                            <CloseOutlined onClick={() => remove(name)}/>
-                                        </Space>
-
-                                        <Form.Item name={[name, 'description']} noStyle>
-                                            <Input.TextArea placeholder="description"/>
-                                        </Form.Item>
-
-                                    </Flex>
-                                ))}
-
-                                <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined/>}>
-                                    {t('addExample')}
-                                </Button>
-                            </div>
-                        )}
-                    </Form.List>
-                </Form.Item>
-
-                <Form.Item label={t('explains')}>
-                    <Form.List name="explains">
-                        {(fields, {add, remove}) => (
-                            <div style={{display: 'flex', flexDirection: 'column', rowGap: 16}}>
-                                {fields.map(({key, name}) => (
-                                    <Flex key={key} vertical>
-
-                                        <Space>
-                                            <Form.Item name={[name, 'table']} noStyle>
-                                                <Select options={tableOptions} style={{width:120}}/>
-                                            </Form.Item>
-                                            <CloseOutlined onClick={() => remove(name)}/>
-                                        </Space>
-
-                                        <Form.Item name={[name, 'explain']} noStyle>
-                                            <Input.TextArea placeholder="explain"/>
-                                        </Form.Item>
-
-                                    </Flex>
-                                ))}
-
-                                <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined/>}>
-                                    {t('addExplain')}
-                                </Button>
-                            </div>
-                        )}
-                    </Form.List>
                 </Form.Item>
 
                 <Form.Item {...formItemLayoutWithOutLabel}>
