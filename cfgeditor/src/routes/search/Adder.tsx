@@ -13,19 +13,19 @@ export const Adder = memo(function Adder({schema}: {
 
     const items: TabsProps['items'] = [
         {
-            key: 'addJson',
-            label: t('addJson'),
-            children: <AddJson schema={schema}/>,
-        },
-        {
             key: 'chat',
             label: t('chat'),
             children: <Chat schema={schema}/>,
         },
+        {
+            key: 'addJson',
+            label: t('addJson'),
+            children: <AddJson schema={schema}/>,
+        },
     ];
     return <>
         <div style={{height: 32}}/>
-        <Tabs defaultActiveKey="history" items={items}/>
+        <Tabs defaultActiveKey="chat" items={items}/>
     </>
 });
 

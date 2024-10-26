@@ -1,7 +1,6 @@
 package configgen.tool;
 
 import configgen.ctx.Context;
-import configgen.data.Source;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
 import configgen.schema.*;
@@ -146,7 +145,7 @@ public class GenJsonByAI extends Generator {
                 return;
             } else {
                 ValueErrs parseErrs = ValueErrs.of();
-                CfgValue.VStruct record = new ValueJsonParser(tableSchema, parseErrs).fromJson(jsonResult, Source.DFile.of("<server>", table));
+                CfgValue.VStruct record = new ValueJsonParser(tableSchema, parseErrs).fromJson(jsonResult);
                 parseErrs.checkErrors("check json", true, true);
 
                 if (!parseErrs.warns().isEmpty()) {
@@ -165,7 +164,7 @@ public class GenJsonByAI extends Generator {
                     return;
                 } else {
                     messages = new ArrayList<>(messages);
-                    messages.add(UserMessage.of("json不符合结构定义，错误如下：%s，请改正".formatted(parseErrs.toString())));
+                    messages.add(UserMessage.of(FIX_ERROR.formatted(parseErrs.toString())));
 
                     stat.err++;
                 }
@@ -187,15 +186,16 @@ public class GenJsonByAI extends Generator {
         return extractJson(result);
     }
 
+    public static final String FIX_ERROR = "json不符合结构定义，错误如下：%s，请改正";
     private static final Pattern pattern = Pattern.compile("```json\\s*([^`]+)\\s*```");
 
-    static String extractJson(String input) {
+    public static String extractJson(String input) {
         Matcher matcher = pattern.matcher(input);
-
-        if (matcher.find()) {
-            return matcher.group(1).trim();
+        String lastJson = null;
+        while (matcher.find()) {
+            lastJson = matcher.group(1).trim();
         }
-        return null;
+        return lastJson;
     }
 
 }

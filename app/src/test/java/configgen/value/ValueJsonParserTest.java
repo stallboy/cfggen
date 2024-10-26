@@ -85,7 +85,7 @@ class ValueJsonParserTest {
     private static VStruct fromJson(TableSchema tableSchema,
                                     String jsonStr) {
         ValueErrs errs = ValueErrs.of();
-        VStruct vStruct = new ValueJsonParser(tableSchema, errs).fromJson(jsonStr, Source.DFile.of("<file>", tableSchema.name()));
+        VStruct vStruct = new ValueJsonParser(tableSchema, errs).fromJson(jsonStr);
         assertEquals(0, errs.errs().size());
         assertEquals(0, errs.warns().size());
         return vStruct;
@@ -94,7 +94,7 @@ class ValueJsonParserTest {
     private static VStruct fromJson(TableSchema tableSchema,
                                     ValueErrs errs,
                                     String jsonStr) {
-        return new ValueJsonParser(tableSchema, errs).fromJson(jsonStr, Source.DFile.of("<file>", tableSchema.name()));
+        return new ValueJsonParser(tableSchema, errs).fromJson(jsonStr);
     }
 
 

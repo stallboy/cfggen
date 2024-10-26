@@ -62,7 +62,7 @@ public class RecordEditService {
         VTable vTable = cfgValue.vTableMap().get(table);
         TableSchema tableSchema = vTable.schema();
         ValueErrs parseErrs = ValueErrs.of();
-        VStruct thisValue = new ValueJsonParser(vTable.schema(), parseErrs).fromJson(jsonStr, Source.DFile.of("<server>", table));
+        VStruct thisValue = new ValueJsonParser(vTable.schema(), parseErrs).fromJson(jsonStr);
         parseErrs.checkErrors("check json", true, true);
         if (!parseErrs.errs().isEmpty()) {
             return new RecordEditResult(jsonParseErr, table, "",

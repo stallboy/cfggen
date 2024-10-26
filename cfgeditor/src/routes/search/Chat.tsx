@@ -5,11 +5,13 @@ import {OpenAI} from "openai";
 import {store, useLocationData} from "../setting/store.ts";
 import {ChatMessage} from "@ant-design/pro-chat";
 import {AIConf} from "../setting/storageJson.ts";
-import {memo, useRef, useState} from "react";
+import {memo, useCallback, useRef, useState} from "react";
 import {Schema} from "../table/schemaUtil.ts";
-import {useQuery} from "@tanstack/react-query";
-import {getPrompt} from "../api.ts";
-import {Result, Spin} from "antd";
+import {useMutation, useQuery} from "@tanstack/react-query";
+import {checkJson, getPrompt} from "../api.ts";
+import {Button, Result, Spin} from "antd";
+import {CheckJsonResult} from "./chatModel.ts";
+import {applyNewEditingObject} from "../record/editingObject.ts";
 
 export const Chat = memo(function Chat({schema}: {
     schema: Schema | undefined;
@@ -26,16 +28,96 @@ export const Chat = memo(function Chat({schema}: {
     }
 
     // const {t} = useTranslation();
+    const [prompt, setPrompt] = useState<ChatMessage | undefined>();
     const [chats, setChats] = useState<ChatMessage[]>([]);
     const chatRef = useRef<ProChatInstance | undefined>();
 
     const {isLoading, isError, error, data: promptResult} = useQuery({
         queryKey: ['prompt', curTableId],
-        queryFn: ({signal}) => getPrompt(server, curTableId, signal),
+        queryFn: async ({signal}) => {
+            const data = await getPrompt(server, curTableId, signal)
+            setPrompt({
+                id: '1111',
+                createAt: 1234,
+                updateAt: 1235,
+                role: 'user',
+                content: data?.prompt,
+            });
+            setChats([{
+                id: '2222',
+                createAt: 2234,
+                updateAt: 2235,
+                role: 'assistant',
+                content: data?.init,
+            }]);
+            return data;
+        },
         staleTime: Infinity,
         enabled: editable
     })
 
+
+    const checkJsonMutation = useMutation<CheckJsonResult, Error, string>({
+        mutationFn: (raw: string) => checkJson(server, curTableId, raw),
+
+        onError: (error) => {
+            chatRef.current?.setInputAreaValue(error.message);
+        },
+        onSuccess: (result: CheckJsonResult) => {
+            if (result.resultCode == 'ok') {
+                if (curTableId == result.table) {
+                    applyNewEditingObject(JSON.parse(result.jsonResult));
+                } else {
+                    chatRef.current?.setInputAreaValue(`table changed! ${result.table} != ${curTableId}`);
+                }
+            } else {
+                chatRef.current?.setInputAreaValue(result.jsonResult);
+            }
+        },
+    });
+
+    const [lastReply, setLastReply] = useState<string>('');
+    const onChatsChange = useCallback((chatList: ChatMessage[]) => {
+        setChats(chatList);
+        if (chatList.length > 0) {
+            const last = chatList[chatList.length - 1];
+            if (last.isFinished) {
+                const c = last.content as string;
+                if (c != lastReply) {
+                    setLastReply(c);
+                    console.log(c);
+                    checkJsonMutation.mutate(c);
+                }
+            }
+        }
+    }, [setChats, lastReply, setLastReply, chatRef, checkJsonMutation]);
+
+
+    const actionsRender = useCallback(() => {
+        return <div style={{height: 40}}>
+            <Button type={'text'} onClick={() => {
+                chatRef.current?.stopGenerateMessage();
+                setChats([{
+                    id: '2222',
+                    createAt: 2234,
+                    updateAt: 2235,
+                    role: 'assistant',
+                    content: promptResult?.init,
+                }]);
+            }}> {'clear'}</Button>
+        </div>
+    }, [chatRef, setChats, promptResult]);
+
+
+    const sendMessageRequest = useCallback(async () => {
+        let old = chats
+        if (chats.length > 0) {
+            old = chats.slice(0, chats.length - 1)
+        }
+        console.log(chats);
+        const messages = prompt ? [prompt, ...old] : old
+        return askStream(messages, aiConf)
+    }, [prompt, chats, aiConf]);
 
     if (!editable) {
         return <Result title={'not editable'}/>;
@@ -57,35 +139,16 @@ export const Chat = memo(function Chat({schema}: {
         return <Result status={'error'} title={promptResult.resultCode}/>;
     }
 
-    const pre: ChatMessage[] = [{
-        id: '1111',
-        createAt: 1234,
-        updateAt: 1235,
-        role: 'user',
-        content: promptResult.prompt,
-    }, {
-        id: '2222',
-        createAt: 2234,
-        updateAt: 2235,
-        role: 'assistant',
-        content: promptResult.init,
-    }];
+    return <ProChat chatRef={chatRef}
+                    style={{height: 'calc(100vh - 80px)', backgroundColor: theme.colorBgLayout}}
+                    chatList={chats}
+                    onChatsChange={onChatsChange}
+                    actionsRender={actionsRender}
+                    sendMessageRequest={sendMessageRequest}/>
 
-    const showChats = chats.length == 0 ? [pre[1]] : chats;
-
-    return <div style={{backgroundColor: theme.colorBgLayout}}>
-        <ProChat chatRef={chatRef}
-                 style={{height: "85vh"}}
-                 chats={showChats}
-                 onChatsChange={setChats}
-                 request={async (messages: ChatMessage[]) => {
-                     return askStream([pre[0], ...messages], aiConf)
-                 }}
-        />
-    </div>
 });
 
-export async function askStream(messages: ChatMessage[], aiConf: AIConf) {
+async function askStream(messages: ChatMessage[], aiConf: AIConf) {
     const openai = new OpenAI({
         baseURL: aiConf.baseUrl,
         apiKey: aiConf.apiKey,

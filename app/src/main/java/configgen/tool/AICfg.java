@@ -68,6 +68,9 @@ public record AICfg(String baseUrl,
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        if  (jsonStr.isEmpty()) {
+            throw new RuntimeException(cfgFn + " is empty!");
+        }
         return JSON.parseObject(jsonStr, AICfg.class);
     }
 

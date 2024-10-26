@@ -10,3 +10,16 @@ export type PromptResultCode =
     | 'tableNotSet'
     | 'tableNotFound'
     | 'promptFileNotFound';
+
+
+export interface CheckJsonResult {
+    resultCode: CheckJsonResultCode;
+    table: string;
+    jsonResult: string; // or err for ParseJsonError
+}
+
+export type CheckJsonResultCode =
+    'ok'
+    | 'tableNotFound'
+    | 'JsonNotFound'
+    | 'ParseJsonError';

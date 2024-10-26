@@ -4,7 +4,7 @@ import {memo, useCallback, useState} from "react";
 import {Schema} from "../table/schemaUtil.ts";
 import {useMutation,} from "@tanstack/react-query";
 import {addOrUpdateRecord} from "../api.ts";
-import {Button, Card, Form, Input, List, Result} from "antd";
+import {Button, Card, Form, Input, List, Result, Space} from "antd";
 
 import {RecordEditResult} from "../record/recordModel.ts";
 import {useNavigate} from "react-router-dom";
@@ -14,7 +14,6 @@ import {ResultStatusType} from "antd/es/result";
 import {applyNewEditingObject} from "../record/editingObject.ts";
 
 interface AddJsonProps {
-    table: string;
     json: string;
 }
 
@@ -35,9 +34,9 @@ export const AddJson = memo(function AddJson({schema}: {
 
     const [result, setResult] = useState<RecordEditResult | Error | undefined>();
 
-    const addOrUpdateRecordMutation = useMutation<RecordEditResult, Error, AddJsonProps>({
-        mutationFn: (addJsonProps: AddJsonProps) =>
-            addOrUpdateRecord(server, addJsonProps.table, JSON.parse(addJsonProps.json)),
+    const addOrUpdateRecordMutation = useMutation<RecordEditResult, Error, string>({
+        mutationFn: (json: string) =>
+            addOrUpdateRecord(server, curTableId, JSON.parse(json)),
 
 
         onError: (error) => {
@@ -52,9 +51,16 @@ export const AddJson = memo(function AddJson({schema}: {
         },
     });
 
-    const onAddJson = useCallback((addJsonProps: any) => {
-        applyNewEditingObject(JSON.parse(addJsonProps.json));
-        // addOrUpdateRecordMutation.mutate(values)
+    const [form] = Form.useForm();
+
+    const onShow = useCallback(() => {
+        const json = form.getFieldValue('json')
+        applyNewEditingObject(JSON.parse(json));
+    }, [form]);
+
+
+    const onAddJson = useCallback((addJsonProps: AddJsonProps) => {
+        addOrUpdateRecordMutation.mutate(addJsonProps.json)
     }, [addOrUpdateRecordMutation]);
 
 
@@ -93,14 +99,20 @@ export const AddJson = memo(function AddJson({schema}: {
 
     return <>
         <Card title={curTableId}>
-            <Form name="addJson"  {...formLayout} onFinish={onAddJson} autoComplete="off">
+            <Form name="addJson" form={form} {...formLayout} onFinish={onAddJson} autoComplete="off">
                 <Form.Item name='json' label={t('json')}>
                     <Input.TextArea placeholder="json" autoSize={{minRows: 5, maxRows: 20}}/>
                 </Form.Item>
                 <Form.Item wrapperCol={{offset: 4, span: 20}}>
-                    <Button type="primary" htmlType="submit">
-                        {t('addJson')}
-                    </Button>
+                    <Space>
+                        <Button type="primary" htmlType="submit">
+                            {t('addJson')}
+                        </Button>
+
+                        <Button type="primary" onClick={onShow}>
+                            {t('show')}
+                        </Button>
+                    </Space>
                 </Form.Item>
             </Form>
         </Card>

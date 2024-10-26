@@ -1,0 +1,62 @@
+package configgen.editorserver;
+
+import configgen.schema.TableSchema;
+import configgen.tool.GenJsonByAI;
+import configgen.value.CfgValue;
+import configgen.value.ValueErrs;
+import configgen.value.ValueJsonParser;
+import configgen.value.ValueToJson;
+
+import static configgen.editorserver.CheckJsonService.CheckJsonResultCode.*;
+import static configgen.tool.GenJsonByAI.FIX_ERROR;
+
+
+public class CheckJsonService {
+
+    public record CheckJsonResult(CheckJsonResultCode resultCode,
+                                  String table,
+                                  String jsonResult) {
+    }
+
+    public enum CheckJsonResultCode {
+        ok,
+        tableNotFound,
+        JsonNotFound,
+        ParseJsonError,
+    }
+
+
+    public static CheckJsonResult checkJson(CfgValue cfgValue, String table, String raw) {
+        if (table == null || table.isEmpty()) {
+            return new CheckJsonResult(tableNotFound, "", "table not found");
+        }
+
+        CfgValue.VTable vTable = cfgValue.getTable(table);
+        if (vTable == null) {
+            return new CheckJsonResult(tableNotFound, table, "table not found");
+        }
+
+        if (raw == null || raw.isEmpty()) {
+            return new CheckJsonResult(JsonNotFound, table, "json empty");
+        }
+
+        String jsonResult = GenJsonByAI.extractJson(raw);
+        if (jsonResult == null) {
+            return new CheckJsonResult(JsonNotFound, table, "json not found");
+        }
+
+        TableSchema tableSchema = vTable.schema();
+        ValueErrs parseErrs = ValueErrs.of();
+        CfgValue.VStruct record = new ValueJsonParser(tableSchema, parseErrs).fromJson(jsonResult);
+        parseErrs.checkErrors("check json", true, true);
+
+        if (!parseErrs.errs().isEmpty()) {
+            String err = FIX_ERROR.formatted(parseErrs.toString());
+            return new CheckJsonResult(ParseJsonError, table, err);
+        }
+
+        String jsonString = ValueToJson.toJsonStr(record);
+        return new CheckJsonResult(ok, table, jsonString);
+    }
+
+}

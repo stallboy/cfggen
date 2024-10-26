@@ -32,7 +32,7 @@ export const Finder = memo(function Finder({schema}: {
     ];
     return <>
         <div style={{height: 32}}/>
-        <Collapse defaultActiveKey="history" items={items}/>
+        <Collapse defaultActiveKey="lastAccessed" items={items}/>
     </>
 });
 

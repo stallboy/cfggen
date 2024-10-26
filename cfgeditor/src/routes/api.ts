@@ -4,7 +4,7 @@ import axios from 'axios';
 import {Schema} from "./table/schemaUtil.ts";
 import {clearLayoutCache} from "./setting/store.ts";
 import {NoteEditResult, Notes, notesToMap} from "./record/noteModel.ts";
-import {PromptResult} from "./search/chatModel.ts";
+import {CheckJsonResult, PromptResult} from "./search/chatModel.ts";
 
 
 export async function fetchSchema(server: string, signal: AbortSignal) {
@@ -89,6 +89,24 @@ export async function updateNote(server: string, key: string, note: string) {
 
 export async function getPrompt(server: string, table: string, signal: AbortSignal) {
     const url = `http://${server}/prompt?table=${table}`;
-    const response =await axios.get<PromptResult>(url, {signal});
+    const response = await axios.get<PromptResult>(url, {signal});
+    return response.data;
+}
+
+
+export async function checkJson(server: string, tableId: string, raw: string) {
+    const url = `http://${server}/checkJson?table=${tableId}`;
+    // console.log('check json', tableId, raw);
+    const response = await axios.post<CheckJsonResult>(url, raw, {
+        method: 'POST',
+        headers: {
+            cache: "no-cache",
+            mode: "cors",
+            credentials: "same-origin",
+            redirect: "follow",
+            referrerPolicy: "no-referrer",
+            "Content-Type": "text/plain",
+        },
+    });
     return response.data;
 }

@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
+import static configgen.editorserver.CheckJsonService.*;
 import static configgen.editorserver.RecordEditService.ResultCode.*;
 import static configgen.editorserver.RecordService.*;
 import static configgen.editorserver.RecordEditService.*;
@@ -68,6 +69,7 @@ public class EditorServer extends Generator {
 
         handle("/search", this::handleSearch);
         handle("/prompt", this::handlePrompt);
+        handle("/checkJson", this::handleCheckJson);
 
         handle("/record", this::handleRecord);
         handle("/recordAddOrUpdate", this::handleRecordAddOrUpdate);
@@ -215,6 +217,21 @@ public class EditorServer extends Generator {
         sendResponse(exchange, result);
     }
 
+
+    private void handleCheckJson(HttpExchange exchange) throws IOException {
+        if (exchange.getRequestMethod().equals("OPTIONS")) {
+            sendOptionsResponse(exchange);
+            return;
+        }
+        Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
+        String table = query.get("table");
+        byte[] bytes = exchange.getRequestBody().readAllBytes();
+        String raw = new String(bytes, StandardCharsets.UTF_8);
+
+        CheckJsonResult result = CheckJsonService.checkJson(cfgValue, table, raw);
+//        logger.info(result.toString());
+        sendResponse(exchange, result);
+    }
     private void handle(String path, HttpHandler handler) {
         HttpContext context = server.createContext(path, handler);
         context.getFilters().add(logging);

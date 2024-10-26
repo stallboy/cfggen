@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONException;
 import com.alibaba.fastjson2.JSONObject;
 import configgen.ctx.TextI18n;
+import configgen.data.Source;
 import configgen.schema.*;
 
 import java.util.*;
@@ -35,6 +36,10 @@ public class ValueJsonParser {
         this.isTableSchemaPartial = isTableSchemaPartial;
         this.nullableTableI18n = nullableTableI18n;
         this.errs = errs;
+    }
+
+    public VStruct fromJson(String jsonStr) {
+        return fromJson(jsonStr, Source.DFile.of("<server>", tableSchema.name()));
     }
 
     public VStruct fromJson(String jsonStr, DFile source) {
