@@ -1,4 +1,4 @@
-import {Button, Radio, RadioChangeEvent, Select, Skeleton, Space, Typography} from "antd";
+import {Button, Select, Skeleton, Space, Typography} from "antd";
 import {LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
 import {TableList} from "./TableList.tsx";
 import {IdList} from "./IdList.tsx";
