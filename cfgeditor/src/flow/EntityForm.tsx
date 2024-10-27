@@ -15,16 +15,13 @@ import {
     Select,
     Space,
     Switch, Tag,
-    Tooltip,
 } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import {ArrowDownOutlined, ArrowUpOutlined, MinusSquareTwoTone, PlusSquareTwoTone} from "@ant-design/icons";
 import {CSSProperties, memo, useCallback, useEffect, useMemo} from "react";
 import {useTranslation} from "react-i18next";
 import {Handle, Position} from "@xyflow/react";
-import {ActionIcon} from "@ant-design/pro-editor";
 import {getFieldBackgroundColor} from "./colors.ts";
-import {HappyProvider} from '@ant-design/happy-work-theme';
 import {CustomAutoComplete} from "./CustomAutoComplete.tsx";
 
 const formLayout = {
@@ -138,9 +135,8 @@ function FuncAddFormItem({field, bgColor}: {
         backgroundColor: bgColor
     }, [bgColor]);
     return <Flex key={field.name} gap='middle' justify="flex-end" style={thisRowStyle}>
-        <HappyProvider>
-            <Button className='nodrag' onClick={func} icon={<PlusSquareTwoTone/>}> <LabelWithTooltip field={field}/> </Button>
-        </HappyProvider>
+        <Button className='nodrag' onClick={func} icon={<PlusSquareTwoTone/>}> <LabelWithTooltip field={field}/>
+        </Button>
         {field.handleOut && <Handle type='source' position={Position.Right} id={field.name}
                                     style={handleOutStyle}/>}
     </Flex>;
@@ -167,26 +163,11 @@ function PrimitiveFormItem({field, bgColor}: {
     </Form.Item>;
 }
 
-function LabelWithTooltip({field} : {field: EntityEditField}) {
-    let type = '';
-    switch (field.type) {
-        case "arrayOfPrimitive":
-            type = `list<${field.eleType}>`
-            break;
-        case "primitive":
-        case 'structRef':
-            type = field.eleType;
-            break;
-        case "funcAdd":
-            type = `list<${field.eleType}>`
-            break;
-        case "interface":
-            type = field.eleType;
-            break;
-    }
-    return <Tooltip placement="topLeft" title={`${field.name} : ${type} ${field.comment ? field.comment : ""}`}>
-        {field.name}
-    </Tooltip>;
+function LabelWithTooltip({field}: { field: EntityEditField }) {
+    return <span>{field.name}</span>;
+    // return <Tooltip placement="topLeft" title={`${field.name} : ${type} ${field.comment ? field.comment : ""}`}>
+    //     {field.name}
+    // </Tooltip>;
 }
 
 const autoCompleteItemStyle = {style: {width: 170}}
@@ -205,7 +186,7 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: {
     }, [field.name, field.value, form]);
 
     const itemStyle = field.autoCompleteOptions != null ? autoCompleteItemStyle : empty;
-    const iconSize = field.autoCompleteOptions != null ? 10 : 'default';
+    // const iconSize = field.autoCompleteOptions != null ? 10 : 'default';
 
 
     return <Form.List name={field.name} key={field.name} initialValue={field.value as any[]}>
@@ -221,24 +202,24 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: {
                             <Form.Item key={f.key} name={f.name} {...itemStyle}>
                                 {primitiveControl(field, empty)}
                             </Form.Item>
-                            <ActionIcon className='nodrag'
-                                        size={iconSize}
-                                        icon={<MinusSquareTwoTone twoToneColor='red'/>}
-                                        onClick={() => remove(f.name)}
+                            <Button className='nodrag'
+                                // size={iconSize}
+                                    icon={<MinusSquareTwoTone twoToneColor='red'/>}
+                                    onClick={() => remove(f.name)}
                             />
                             {index != 0 &&
-                                <ActionIcon className='nodrag'
-                                            size={iconSize}
-                                            icon={<ArrowUpOutlined/>}
-                                            onClick={() => move(index, index - 1)}/>
+                                <Button className='nodrag'
+                                    // size={iconSize}
+                                        icon={<ArrowUpOutlined/>}
+                                        onClick={() => move(index, index - 1)}/>
                             }
 
                             {
                                 index != fields.length - 1 &&
-                                <ActionIcon className='nodrag'
-                                            size={iconSize}
-                                            icon={<ArrowDownOutlined/>}
-                                            onClick={() => move(index, index + 1)}/>
+                                <Button className='nodrag'
+                                    // size={iconSize}
+                                        icon={<ArrowDownOutlined/>}
+                                        onClick={() => move(index, index + 1)}/>
                             }
 
                         </Space>
@@ -247,9 +228,9 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: {
                 ))}
                 <Form.Item {...(fields.length === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
                            label={fields.length === 0 ? <LabelWithTooltip field={field}/> : ''}>
-                    <ActionIcon className='nodrag'
-                                icon={<PlusSquareTwoTone/>}
-                                onClick={() => add(defaultPrimitiveValue(field))}
+                    <Button className='nodrag'
+                            icon={<PlusSquareTwoTone/>}
+                            onClick={() => add(defaultPrimitiveValue(field))}
                     />
 
                 </Form.Item>
@@ -268,11 +249,9 @@ function FuncSubmitFormItem({field}: {
     const func = field.value as FuncSubmitType;
     return <Form.Item {...formItemLayoutWithOutLabel} key={field.name}>
         <Space size={50}>
-            <HappyProvider>
-                <Button className='nodrag' type="primary" htmlType="submit" onClick={() => func.funcSubmit()}>
-                    {t('addOrUpdate')}
-                </Button>
-            </HappyProvider>
+            <Button className='nodrag' type="primary" htmlType="submit" onClick={() => func.funcSubmit()}>
+                {t('addOrUpdate')}
+            </Button>
             <Button className='nodrag' type="default" onClick={() => func.funcClear()}>
                 {t('setDefaultValue')}
             </Button>
