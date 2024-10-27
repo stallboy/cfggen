@@ -24,11 +24,12 @@ import {addOrUpdateRecord, fetchRecord} from "../api.ts";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
 import {SchemaTableType} from "../../CfgEditorApp.tsx";
 import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
-import {useEffect, useReducer, useState} from "react";
+import {useCallback, useEffect, useReducer, useState} from "react";
 
 
 import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
 import {SInterface, SStruct} from "../table/schemaModel.ts";
+import {queryClient} from "../../main.tsx";
 
 
 function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
@@ -74,15 +75,18 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
         },
     });
 
-
     const [folds, setFolds] = useState<Folds>(new Folds([]));
+    const update = useCallback(() => {
+        queryClient.removeQueries({queryKey: ['layout', pathname]});
+        forceUpdate();
+    }, [pathname, forceUpdate])
 
     const entityMap = new Map<string, Entity>();
     const refId = {table: curTable.name, id: curId};
     const entityId = getId(curTable.name, curId);
     const isEditable = schema.isEditable && curTable.isEditable;
     const isEditing = isEditable && edit;
-    let editSeq: number = 0;
+
     let fitView: boolean = true;
     if (!isEditing) {
         const creator = new RecordEntityCreator(entityMap, schema, refId, recordResult.refs, tauriConf, resourceDir, resMap);
@@ -102,12 +106,8 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
             addOrUpdateRecordMutation.mutate(editState.editingObject);
         };
 
-        const afterEditStateChanged = () => {
-            forceUpdate();  // 触发更新
-        };
-
         // 这是非纯函数，escape hatch，用useRef也能做，这里用全局变量
-        [editSeq, fitView] = startEditingObject(recordResult, afterEditStateChanged, submitEditingObject);
+        fitView = startEditingObject(recordResult, update,  submitEditingObject);
         const creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId, folds, setFolds);
         creator.createThis();
     }
@@ -215,8 +215,8 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
         return mm;
     }
 
-    const ep = pathname + (isEditing ? ',' + editSeq : ''); // 用 editSeq触发layout
-    useEntityToGraph({pathname: ep, entityMap, notes, nodeMenuFunc, paneMenu, fitView});
+    // const ep = pathname + (isEditing ? ',' + editSeq : ''); // 用 editSeq触发layout
+    useEntityToGraph({pathname, entityMap, notes, nodeMenuFunc, paneMenu, fitView});
 
     return <></>;
 }

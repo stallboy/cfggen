@@ -6,39 +6,39 @@ export type EditState = {
     table: string;
     id: string;
     editingObject: JSONObject;
-    seq: number;  // 触发layout
     fitView: boolean;
 
-    afterEditStateChanged: () => void;
+    update: () => void;
     submitEditingObject: () => void;
 
     copiedObject: JSONObject;
 }
 
+const dummyFunc = () => {
+};
+
 export const editState: EditState = {
     table: '',
     id: '',
     editingObject: {'$type': ''},
-    seq: 0,
     fitView: true,
-    afterEditStateChanged: () => {
-    },
-    submitEditingObject: () => {
-    },
+
+    update: dummyFunc,
+    submitEditingObject: dummyFunc,
 
     copiedObject: {'$type': ''},
 };
 
 
 export function startEditingObject(recordResult: RecordResult,
-                                   afterEditStateChanged: () => void,
-                                   submitEditingObject: () => void): [number, boolean] {
-    editState.afterEditStateChanged = afterEditStateChanged;
+                                   update: () => void,
+                                   submitEditingObject: () => void): boolean {
+    editState.update = update;
     editState.submitEditingObject = submitEditingObject;
-    const {table, id, seq, fitView} = editState;
+    const {table, id, fitView} = editState;
     const {table: newTable, id: newId} = recordResult;
     if (newTable == table && newId == id) {
-        return [seq, fitView];
+        return fitView;
     }
 
     const clone: JSONObject = {...recordResult.object}
@@ -46,10 +46,9 @@ export function startEditingObject(recordResult: RecordResult,
     const newEditingObject = structuredClone(clone);
     editState.table = newTable;
     editState.id = newId;
-    editState.seq = 0;
     editState.fitView = true;
     editState.editingObject = newEditingObject;
-    return [0, true];
+    return true;
 }
 
 
@@ -97,9 +96,9 @@ export function onUpdateFold(fold: boolean,
                              fieldChains: (string | number)[]) {
     const obj = getFieldObj(editState.editingObject, fieldChains);
     obj['$fold'] = fold;
-    editState.seq++;
+
     editState.fitView = false;
-    editState.afterEditStateChanged();
+    editState.update();
 }
 
 
@@ -110,9 +109,8 @@ export function onUpdateInterfaceValue(jsonObject: JSONObject,
     const obj = getFieldObj(editState.editingObject, fieldChains.slice(0, fieldChains.length - 1));
     obj[fieldChains[fieldChains.length - 1]] = jsonObject;
 
-    editState.seq++;
     editState.fitView = false;
-    editState.afterEditStateChanged();
+    editState.update();
 }
 
 
@@ -123,9 +121,8 @@ export function onAddItemToArray(defaultItemJsonObject: JSONObject,
     const obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
     obj.push(defaultItemJsonObject);
 
-    editState.seq++;
     editState.fitView = false;
-    editState.afterEditStateChanged();
+    editState.update();
 }
 
 export function onAddItemToArrayIndex(defaultItemJsonObject: JSONObject,
@@ -134,9 +131,8 @@ export function onAddItemToArrayIndex(defaultItemJsonObject: JSONObject,
     const obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
     obj.splice(index, 0, defaultItemJsonObject);
 
-    editState.seq++;
     editState.fitView = false;
-    editState.afterEditStateChanged();
+    editState.update();
 }
 
 
@@ -148,9 +144,8 @@ export function onMoveItemInArray(curIndex: number,
     obj[newIndex] = obj[curIndex]
     obj[curIndex] = o2;
 
-    editState.seq++;
     editState.fitView = false;
-    editState.afterEditStateChanged();
+    editState.update();
 }
 
 
@@ -161,17 +156,17 @@ export function onDeleteItemFromArray(deleteIndex: number,
     const obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
     obj.splice(deleteIndex, 1);
 
-    editState.seq++;
+    // editState.seq++;
     editState.fitView = false;
-    editState.afterEditStateChanged();
+    editState.update();
 }
 
 export function applyNewEditingObject(newEditingObject: JSONObject) {
     editState.editingObject = newEditingObject;
 
-    editState.seq++;
+    // editState.seq++;
     editState.fitView = true;
-    editState.afterEditStateChanged();
+    editState.update();
 }
 
 export function onStructCopy(obj: JSONObject) {
@@ -207,9 +202,8 @@ export function onStructPaste(fieldChains: (string | number)[]) {
         i++;
     }
 
-    editState.seq++;
     editState.fitView = true;
-    editState.afterEditStateChanged();
+    editState.update();
 
 }
 
