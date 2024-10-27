@@ -2,7 +2,7 @@ import {Button, Radio, RadioChangeEvent, Select, Skeleton, Space, Typography} fr
 import {LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
 import {TableList} from "./TableList.tsx";
 import {IdList} from "./IdList.tsx";
-import {historyNext, historyPrev, navTo, setDragPanel, store, useLocationData} from "../setting/store.ts";
+import {historyNext, historyPrev, navTo, PageType, setDragPanel, store, useLocationData} from "../setting/store.ts";
 import {getNextId, Schema} from "../table/schemaUtil.ts";
 import {useHotkeys} from "react-hotkeys-hook";
 import {useNavigate} from "react-router-dom";
@@ -79,8 +79,7 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
     ], [t]);
 
 
-    const onChangeCurPage = useCallback((e: RadioChangeEvent) => {
-        const page = e.target.value;
+    const onChangeCurPage = useCallback((page: PageType) => {
         navigate(navTo(page, curTableId, curId, isEditMode));
     }, [curTableId, curId, isEditMode, navigate]);
 
@@ -90,7 +89,7 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
                 <Button icon={settingIcon} onClick={onSettingClick}/>
                 <Button icon={searchIcon} onClick={onSearchClick}/>
                 <Select options={dragOptions}
-                        style={{width: 100}}
+                        style={{width: 80}}
                         value={dragPanel}
                         onChange={setDragPanel}/>
 
@@ -99,10 +98,7 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
                 {nextId}
             </Space>
             <Space size={'small'}>
-                <Radio.Group value={curPage} onChange={onChangeCurPage}
-                             options={options} optionType={'button'}>
-                </Radio.Group>
-
+                <Select value={curPage} onChange={onChangeCurPage} options={options}/>
                 <Button icon={prevIcon} onClick={prev} disabled={!history.canPrev()}/>
                 <Button icon={nextIcon} onClick={next} disabled={!history.canNext()}/>
             </Space>
