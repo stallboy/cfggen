@@ -15,7 +15,7 @@ import java.util.*;
 
 import static configgen.tool.AICfg.*;
 
-public class AIPromptGen {
+public class PromptGen {
 
 
     public static String genPrompt(CfgValue cfgValue,
@@ -39,7 +39,7 @@ public class AIPromptGen {
             structInfo = new SchemaToTs(cfgValue, tableSchema, extraRefTables, true).generate();
             extra = "";
         }
-        GenJsonByAI.PromptModel model = new GenJsonByAI.PromptModel(structInfo, extra, getExamples(examples, vTable));
+        PromptModel model = new PromptModel(table, structInfo, extra, getExamples(examples, vTable));
 
         // 生成prompt
         CodeResolver codeResolver = new DirectoryCodeResolver(Path.of("."));
@@ -103,8 +103,8 @@ public class AIPromptGen {
         ValueToCsv.writeAsCsv(sb, vTable, fieldNames, "");
     }
 
-    private static List<GenJsonByAI.Example> getExamples(List<OneExample> rawExamples, CfgValue.VTable vTable) {
-        List<GenJsonByAI.Example> examples = new ArrayList<>(rawExamples.size());
+    private static List<PromptModel.Example> getExamples(List<OneExample> rawExamples, CfgValue.VTable vTable) {
+        List<PromptModel.Example> examples = new ArrayList<>(rawExamples.size());
         for (OneExample ex : rawExamples) {
             ValueErrs errs = ValueErrs.of();
             CfgValue.Value pkValue = ValuePack.unpackTablePrimaryKey(ex.id(), vTable.schema(), errs);
@@ -113,7 +113,7 @@ public class AIPromptGen {
                 CfgValue.VStruct vRecord = vTable.primaryKeyMap().get(pkValue);
                 if (vRecord != null) {
                     String jsonString = ValueToJson.toJsonStr(vRecord);
-                    examples.add(new GenJsonByAI.Example(ex.id(), ex.description(), jsonString));
+                    examples.add(new PromptModel.Example(ex.id(), ex.description(), jsonString));
                 }
             }
         }

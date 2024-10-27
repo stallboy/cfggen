@@ -2,13 +2,13 @@ package configgen.editorserver;
 
 import configgen.schema.TableSchema;
 import configgen.tool.GenJsonByAI;
+import configgen.tool.PromptDefault;
 import configgen.value.CfgValue;
 import configgen.value.ValueErrs;
 import configgen.value.ValueJsonParser;
 import configgen.value.ValueToJson;
 
 import static configgen.editorserver.CheckJsonService.CheckJsonResultCode.*;
-import static configgen.tool.GenJsonByAI.FIX_ERROR;
 
 
 public class CheckJsonService {
@@ -51,7 +51,7 @@ public class CheckJsonService {
         parseErrs.checkErrors("check json", true, true);
 
         if (!parseErrs.errs().isEmpty()) {
-            String err = FIX_ERROR.formatted(parseErrs.toString());
+            String err = PromptDefault.FIX_ERROR.formatted(parseErrs.toString());
             return new CheckJsonResult(ParseJsonError, table, err);
         }
 

@@ -1,8 +1,10 @@
 package configgen.tool;
 
 import com.alibaba.fastjson2.JSON;
+import configgen.util.Logger;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -28,6 +30,23 @@ public record AICfg(String baseUrl,
 
     }
 
+    public static AICfg readFromFile(String cfgFn) {
+        Path path = Path.of(cfgFn);
+        if (!Files.exists(path)) {
+            throw new RuntimeException(cfgFn + " not exist!");
+        }
+        String jsonStr;
+        try {
+            jsonStr = Files.readString(path);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        if (jsonStr.isEmpty()) {
+            throw new RuntimeException(cfgFn + " is empty!");
+        }
+        return JSON.parseObject(jsonStr, AICfg.class);
+    }
+
     public TableCfg findTable(String table) {
         for (TableCfg tableCfg : tableCfgs) {
             if (tableCfg.table.equals(table)) {
@@ -49,6 +68,20 @@ public record AICfg(String baseUrl,
         }
     }
 
+    public String assureFindPromptFile(String table, Path dir) {
+        String promptFile = findPromptFile(table, dir);
+        Path path = Path.of(promptFile);
+        if (!Files.exists(path)) {
+            try {
+                Files.writeString(path, PromptDefault.TEMPLATE, StandardCharsets.UTF_8);
+                Logger.log("prompt file [%s] created", promptFile);
+            } catch (IOException e) {
+                throw new RuntimeException("prompt file [%s] create failed".formatted(promptFile), e);
+            }
+        }
+        return promptFile;
+    }
+
     public String findInit(String table) {
         TableCfg tc = findTable(table);
         if (tc != null && tc.init != null && !tc.init.isEmpty()) {
@@ -56,22 +89,4 @@ public record AICfg(String baseUrl,
         }
         return DEFAULT_INIT;
     }
-
-    public static AICfg readFromFile(String cfgFn) {
-        Path path = Path.of(cfgFn);
-        if (!Files.exists(path)) {
-            throw new RuntimeException(cfgFn + " not exist!");
-        }
-        String jsonStr;
-        try {
-            jsonStr = Files.readString(path);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        if  (jsonStr.isEmpty()) {
-            throw new RuntimeException(cfgFn + " is empty!");
-        }
-        return JSON.parseObject(jsonStr, AICfg.class);
-    }
-
 }

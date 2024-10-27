@@ -7,12 +7,14 @@ import {memo} from "react";
 import {AddJson} from "./AddJson.tsx";
 import {LastAccessed} from "./LastAccessed.tsx";
 import {LastModified} from "./LastModified.tsx";
+import {useLocationData} from "../setting/store.ts";
 
 
 export const Query = memo(function Query({schema}: {
     schema: Schema | undefined;
 }) {
     const {t} = useTranslation();
+    const {curTableId} = useLocationData();
 
     const items: TabsProps['items'] = [
         {
@@ -31,17 +33,16 @@ export const Query = memo(function Query({schema}: {
             children: <SearchValue/>,
         },
         {
-            key: 'addJson',
-            label: t('addJson'),
-            children: <AddJson schema={schema}/>,
-        },
-        {
-            key: 'chat',
-            label: t('chat'),
+            key: `chat-${curTableId}`,
+            label: t('chat') + "-" + curTableId,
             children: <Chat schema={schema}/>,
         },
-
+        {
+            key: `addJson-${curTableId}`,
+            label: t('addJson') + "-" + curTableId,
+            children: <AddJson schema={schema}/>,
+        },
     ];
-    return <Tabs defaultActiveKey="search" items={items}/>;
+    return <Tabs defaultActiveKey="lastAccessed" items={items}/>;
 
 });

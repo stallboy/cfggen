@@ -1,7 +1,7 @@
 package configgen.editorserver;
 
 import configgen.tool.AICfg;
-import configgen.tool.AIPromptGen;
+import configgen.tool.PromptGen;
 import configgen.value.*;
 
 import java.nio.file.Files;
@@ -37,12 +37,13 @@ public class PromptService {
         if (vTable == null) {
             return new PromptResult(tableNotFound, table, "");
         }
-        String promptFile = aiCfg.findPromptFile(table, aiDir);
-        if (!Files.exists(Path.of(promptFile))) {
-            return new PromptResult(promptFileNotFound, promptFile, "");
+        String promptFile;
+        try {
+            promptFile = aiCfg.assureFindPromptFile(table, aiDir);
+        } catch (Exception e) {
+            return new PromptResult(promptFileNotFound, table, "");
         }
-
-        String prompt = AIPromptGen.genPrompt(cfgValue, table, promptFile, aiCfg.findTable(table), false);
+        String prompt = PromptGen.genPrompt(cfgValue, table, promptFile, aiCfg.findTable(table), false);
         String init = aiCfg.findInit(table);
         return new PromptResult(ok, prompt, init);
     }

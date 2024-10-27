@@ -21,17 +21,6 @@ import static io.github.sashirestela.openai.domain.chat.ChatMessage.*;
 
 public class GenJsonByAI extends Generator {
 
-    public record Example(
-            String id,
-            String description,
-            String json) {
-    }
-
-    public record PromptModel(
-            String structInfo,
-            String extra,
-            List<Example> examples) {
-    }
 
     private final AICfg aiCfg;
     private final List<String> asks;
@@ -57,7 +46,6 @@ public class GenJsonByAI extends Generator {
         }
 
         aiCfg = readFromFile(cfgFn);
-
         if (!Files.exists(Path.of(askFn))) {
             throw new RuntimeException(askFn + " not exist!");
         }
@@ -68,12 +56,12 @@ public class GenJsonByAI extends Generator {
         }
 
         if (promptFn == null) {
-            promptFile = aiCfg.findPromptFile(table, Path.of(cfgFn).getParent());
+            promptFile = aiCfg.assureFindPromptFile(table, Path.of(cfgFn).getParent());
         } else {
             promptFile = promptFn;
-        }
-        if (!Files.exists(Path.of(promptFile))) {
-            throw new RuntimeException(promptFile + " not exist!");
+            if (!Files.exists(Path.of(promptFile))) {
+                throw new RuntimeException(promptFile + " not exist!");
+            }
         }
     }
 
@@ -85,7 +73,7 @@ public class GenJsonByAI extends Generator {
         TableSchema tableSchema = vTable.schema();
         TableCfg aiTableCfg = aiCfg.findTable(table);
 
-        String prompt = AIPromptGen.genPrompt(cfgValue, table, promptFile, aiTableCfg, isUseRawStructInfo);
+        String prompt = PromptGen.genPrompt(cfgValue, table, promptFile, aiTableCfg, isUseRawStructInfo);
         System.out.println(prompt);
         String init = aiCfg.findInit(table);
         System.out.println(init);
@@ -132,7 +120,6 @@ public class GenJsonByAI extends Generator {
     private void askWithRetry(List<ChatMessage> messages, int retryTimes, AskStat stat,
                               TableSchema tableSchema, SimpleOpenAI openAI,
                               Path dataDir, ValueStat valueStat) {
-
         stat.ask++;
         for (int i = 0; i < retryTimes; i++) {
             String jsonResult = ask(messages, openAI);
@@ -164,7 +151,7 @@ public class GenJsonByAI extends Generator {
                     return;
                 } else {
                     messages = new ArrayList<>(messages);
-                    messages.add(UserMessage.of(FIX_ERROR.formatted(parseErrs.toString())));
+                    messages.add(UserMessage.of(PromptDefault.FIX_ERROR.formatted(parseErrs.toString())));
 
                     stat.err++;
                 }
@@ -186,7 +173,6 @@ public class GenJsonByAI extends Generator {
         return extractJson(result);
     }
 
-    public static final String FIX_ERROR = "json不符合结构定义，错误如下：%s，请改正";
     private static final Pattern pattern = Pattern.compile("```json\\s*([^`]+)\\s*```");
 
     public static String extractJson(String input) {
