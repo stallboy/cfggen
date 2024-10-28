@@ -187,7 +187,6 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: {
     }, [field.name, field.value, form]);
 
     const itemStyle = field.autoCompleteOptions != null ? autoCompleteItemStyle : empty;
-    // const iconSize = field.autoCompleteOptions != null ? 10 : 'default';
 
 
     return <Form.List name={field.name} key={field.name} initialValue={field.value as any[]}>
@@ -204,13 +203,11 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: {
                                 {primitiveControl(field, empty)}
                             </Form.Item>
                             <Button className='nodrag'
-                                // size={iconSize}
                                     icon={<MinusSquareTwoTone twoToneColor='red'/>}
                                     onClick={() => remove(f.name)}
                             />
                             {index != 0 &&
                                 <Button className='nodrag'
-                                    // size={iconSize}
                                         icon={<ArrowUpOutlined/>}
                                         onClick={() => move(index, index - 1)}/>
                             }
@@ -218,7 +215,6 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: {
                             {
                                 index != fields.length - 1 &&
                                 <Button className='nodrag'
-                                    // size={iconSize}
                                         icon={<ArrowDownOutlined/>}
                                         onClick={() => move(index, index + 1)}/>
                             }

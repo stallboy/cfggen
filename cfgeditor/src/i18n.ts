@@ -48,10 +48,10 @@ i18n.use(LanguageDetector)
             zh: {
                 translation: {
                     nextSlot: "空位:",
-                    table: "T",
-                    tableRef: "R",
-                    record: "数据",
-                    recordRef: "关系",
+                    table: "表",
+                    tableRef: "表关系",
+                    record: "记录",
+                    recordRef: "记录关系",
                     fix: "固定",
 
                     serverConnectFail: '服务器连接失败',
