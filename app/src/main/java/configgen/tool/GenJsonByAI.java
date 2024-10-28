@@ -20,8 +20,6 @@ import static configgen.tool.AICfg.*;
 import static io.github.sashirestela.openai.domain.chat.ChatMessage.*;
 
 public class GenJsonByAI extends Generator {
-
-
     private final AICfg aiCfg;
     private final List<String> asks;
     private final String table;

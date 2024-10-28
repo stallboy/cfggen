@@ -14,7 +14,7 @@ import {
     InputNumber,
     Select,
     Space,
-    Switch, Tag,
+    Switch, Tag, Tooltip,
 } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import {ArrowDownOutlined, ArrowUpOutlined, MinusSquareTwoTone, PlusSquareTwoTone} from "@ant-design/icons";
@@ -164,10 +164,11 @@ function PrimitiveFormItem({field, bgColor}: {
 }
 
 function LabelWithTooltip({field}: { field: EntityEditField }) {
-    return <span>{field.name}</span>;
-    // return <Tooltip placement="topLeft" title={`${field.name} : ${type} ${field.comment ? field.comment : ""}`}>
-    //     {field.name}
-    // </Tooltip>;
+    if (field.comment == undefined || field.comment.length == 0) {
+        return <>{field.name}</>;
+    } else {
+        return <Tooltip title={field.comment}> <i>{field.name}</i></Tooltip>
+    }
 }
 
 const autoCompleteItemStyle = {style: {width: 170}}
@@ -278,7 +279,7 @@ function InterfaceFormItem({field, sharedSetting}: {
     const filters = getFilter(false, options.length > 5);
 
     return <>
-        <Form.Item name={field.name} key={field.name} label={<LabelWithTooltip field={field}/>}
+        <Form.Item name={field.name} key={field.name} label={">"}
                    initialValue={field.value}>
             <Select className='nodrag' options={options}
                     {...filters}
