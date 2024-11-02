@@ -10,6 +10,7 @@ export type EditState = {
 
     update: () => void;
     submitEditingObject: () => void;
+    isEdited: boolean;
 
     copiedObject: JSONObject;
 }
@@ -25,20 +26,32 @@ export const editState: EditState = {
 
     update: dummyFunc,
     submitEditingObject: dummyFunc,
+    isEdited: false,
 
     copiedObject: {'$type': ''},
 };
 
+export type EditingObjectRes = {
+    fitView: boolean;
+    isEdited: boolean;
+}
+
 
 export function startEditingObject(recordResult: RecordResult,
                                    update: () => void,
-                                   submitEditingObject: () => void): boolean {
-    editState.update = update;
+                                   submitEditingObject: () => void): EditingObjectRes {
+    editState.update = function () {
+        editState.isEdited = true;
+        update();
+    }
     editState.submitEditingObject = submitEditingObject;
     const {table, id, fitView} = editState;
     const {table: newTable, id: newId} = recordResult;
     if (newTable == table && newId == id) {
-        return fitView;
+        return {
+            fitView, isEdited:
+            editState.isEdited
+        };
     }
 
     const clone: JSONObject = {...recordResult.object}
@@ -48,7 +61,11 @@ export function startEditingObject(recordResult: RecordResult,
     editState.id = newId;
     editState.fitView = true;
     editState.editingObject = newEditingObject;
-    return true;
+    editState.isEdited = false;
+    return {
+        fitView: true,
+        isEdited: false
+    };
 }
 
 

@@ -18,6 +18,7 @@ interface FlowGraphInput {
     nodeDoubleClickFunc?: NodeDoubleClickFunc;
 
     fitView: boolean;
+    isEdited?: boolean;
     setFitViewForPathname?: (pathname: string) => void;
     nodeShow?: NodeShowType;
 }
@@ -55,8 +56,8 @@ function applyWidthHeightToNodes(nodes: EntityNode[], id2RectMap?: Map<string, R
 }
 
 export function useEntityToGraph({
-                                     pathname, entityMap, notes, nodeMenuFunc, paneMenu,
-                                     fitView, setFitViewForPathname, nodeDoubleClickFunc, nodeShow
+                                     pathname, entityMap, notes, nodeMenuFunc, paneMenu, nodeDoubleClickFunc,
+                                     fitView, isEdited, setFitViewForPathname, nodeShow,
                                  }: FlowGraphInput) {
     const flowGraph = useContext(FlowGraphContext);
     const {query, nodeShow: currentNodeShow} = store;
@@ -73,10 +74,12 @@ export function useEntityToGraph({
         sharedSetting: {notes, query, nodeShow: nodeShowSetting}
     }), [entityMap, notes, query, nodeShowSetting]);
 
+    const queryKey = isEdited ? ['layout', pathname, 'e'] : ['layout', pathname]
+    const staleTime = isEdited ? 0 : 1000 * 60 * 5;
     const {data: id2RectMap} = useQuery({
-        queryKey: ['layout', pathname],
+        queryKey: queryKey,
         queryFn: () => layoutAsync(nodes, edges, nodeShowSetting),
-        staleTime: 1000 * 60 * 5,
+        staleTime: staleTime,
     })
 
     const newNodes: EntityNode[] | null = id2RectMap ? applyPositionToNodes(nodes, id2RectMap) : null;

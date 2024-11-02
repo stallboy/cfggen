@@ -77,7 +77,8 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
 
     const [folds, setFolds] = useState<Folds>(new Folds([]));
     const update = useCallback(() => {
-        queryClient.removeQueries({queryKey: ['layout', pathname]});
+        // 让其重新layout，因为可能已经经过编辑，缺少了某些节点的位置信息
+        queryClient.removeQueries({queryKey: ['layout', pathname, 'e']});
         forceUpdate();
     }, [pathname, forceUpdate])
 
@@ -88,6 +89,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const isEditing = isEditable && edit;
 
     let fitView: boolean = true;
+    let isEdited: boolean = false;
     if (!isEditing) {
         const creator = new RecordEntityCreator(entityMap, schema, refId, recordResult.refs, tauriConf, resourceDir, resMap);
         creator.createRecordEntity(entityId, recordResult.object, getId(getLabel(curTable.name), curId));
@@ -107,7 +109,9 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
         };
 
         // 这是非纯函数，escape hatch，用useRef也能做，这里用全局变量
-        fitView = startEditingObject(recordResult, update,  submitEditingObject);
+        const res = startEditingObject(recordResult, update, submitEditingObject);
+        fitView = res.fitView;
+        isEdited = res.isEdited;
         const creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId, folds, setFolds);
         creator.createThis();
     }
@@ -216,7 +220,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     }
 
     // const ep = pathname + (isEditing ? ',' + editSeq : ''); // 用 editSeq触发layout
-    useEntityToGraph({pathname, entityMap, notes, nodeMenuFunc, paneMenu, fitView});
+    useEntityToGraph({pathname, entityMap, notes, nodeMenuFunc, paneMenu, fitView, isEdited});
 
     return <></>;
 }

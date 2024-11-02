@@ -421,6 +421,5 @@ export function useLocationData() {
     if (split.length > idx) {
         curId = split.slice(idx).join("/");
     }
-
     return {curPage, curTableId, curId, edit, pathname};
 }
