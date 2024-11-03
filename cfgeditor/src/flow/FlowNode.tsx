@@ -2,7 +2,7 @@ import {CSSProperties, memo, useCallback, useMemo, useState} from "react";
 import {Handle, Node, NodeProps, Position} from "@xyflow/react";
 import {Entity} from "./entityModel.ts";
 import {getNodeBackgroundColor} from "./colors.ts";
-import {Button, Card, Flex, Popover, Space, Typography} from "antd";
+import {Button, Flex, Popover, Space, Typography} from "antd";
 import {EntityCard, Highlight} from "./EntityCard.tsx";
 import {EntityProperties} from "./EntityProperties.tsx";
 import {EntityForm} from "./EntityForm.tsx";
@@ -22,7 +22,7 @@ import {getResBrief} from "./getResBrief.tsx";
 const {Text} = Typography;
 const bookIcon = <BookOutlined/>;
 const iconButtonStyle = {borderWidth: 0, backgroundColor: 'transparent'};
-const redIconButtonStyle = {borderWidth: 0, backgroundColor: 'cyan'};
+const redIconButtonStyle = {borderWidth: 0, backgroundColor: '#ffd6e7'};
 const titleStyle = {width: '100%'};
 const titleTextStyle = {fontSize: 14, color: "#fff"};
 const closeIcon = <CloseOutlined/>;
@@ -42,6 +42,10 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
     const nodeStyle = useMemo(() => {
         return {width: width, backgroundColor: color}
     }, [width, color]);
+
+    // const nodeWithBorderStyle:CSSProperties = useMemo(() => {
+    //     return {width: width, backgroundColor: color, borderColor: 'cyan', borderWidth: 10}
+    // }, [width, color]);
 
     const [isEditNote, setIsEditNote] = useState<boolean>(false);
     const onEditNote = useCallback(() => {
@@ -181,7 +185,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
     </Flex>
 
 
-    const node = <Flex key={id} vertical gap='small' className='flowNode' style={nodeStyle}>
+    return <div key={id}  className={fold ? 'flowNodeWithBorder' : 'flowNode' } style={nodeStyle}>
         {noteShowOrEdit}
         {title}
 
@@ -193,11 +197,5 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
                               style={handleStyle}/>)}
         {(handleOut && <Handle type='source' position={Position.Right} id='@out'
                                style={handleStyle}/>)}
-    </Flex>;
-
-    if (fold) {
-        return <Card key={id} size='small' style={{backgroundColor: 'cyan'}}> {node}</Card>
-    } else {
-        return node;
-    }
+    </div>;
 });

@@ -25,6 +25,14 @@ svg .react-flow__edge-path{
     min-height: 60px;
 }
 
+.flowNodeWithBorder {
+    outline: 8px solid #ffd6e7;
+    padding: 5px;
+    border-radius: 8px;
+    min-height: 60px;
+}
+
+
 .react-flow__pane {
     cursor: default;
 }

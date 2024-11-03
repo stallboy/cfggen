@@ -27,6 +27,9 @@ export function calcWidthHeight(entity: Entity) {
     } else if (edit) {
         const [cnt, extra] = calcEditFieldsCntAndExtra(edit.editFields)
         height += 20 + 40 * cnt + extra;
+        if (edit.fold) {
+            height += 16;
+        }
     }
 
     const notes = entity.sharedSetting?.notes;
