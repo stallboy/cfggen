@@ -76,7 +76,11 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     });
 
     const [folds, setFolds] = useState<Folds>(new Folds([]));
-    const update = useCallback(() => {
+    const update = useCallback((foldChanged?:boolean) => {
+        if (foldChanged){
+            // fold 改变会影响到下次切换回来再看此record的节点是否存在
+            queryClient.removeQueries({queryKey: ['layout', pathname]});
+        }
         // 让其重新layout，因为可能已经经过编辑，缺少了某些节点的位置信息
         queryClient.removeQueries({queryKey: ['layout', pathname, 'e']});
         forceUpdate();
