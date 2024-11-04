@@ -3,8 +3,8 @@ import {AutoComplete, Input} from 'antd';
 import {EntityEditFieldOption} from "./entityModel.ts";
 
 const suffixStyle: CSSProperties = {
-    color: '#597ef7', fontSize: '0.85em',
-    textOverflow: "clip", whiteSpace: 'nowrap', overflow: 'hidden', maxWidth: 80
+    color: '#597ef7', fontSize: '0.8em',
+    textOverflow: "clip", whiteSpace: 'nowrap', overflow: 'hidden', maxWidth: 85
 }
 
 export interface CustomAutoCompleteProps {
