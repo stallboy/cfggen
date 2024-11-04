@@ -17,8 +17,13 @@ import {
     Switch, Tag, Tooltip,
 } from "antd";
 import TextArea from "antd/es/input/TextArea";
-import {ArrowDownOutlined, ArrowUpOutlined, MinusSquareTwoTone, PlusSquareTwoTone} from "@ant-design/icons";
-import {CSSProperties, memo, useCallback, useEffect, useMemo} from "react";
+import {
+    ArrowDownOutlined,
+    ArrowUpOutlined, RightOutlined,
+    MinusSquareTwoTone,
+    PlusSquareTwoTone,
+} from "@ant-design/icons";
+import {CSSProperties, memo, useCallback, useEffect, useMemo, useState} from "react";
 import {useTranslation} from "react-i18next";
 import {Handle, Position} from "@xyflow/react";
 import {getFieldBackgroundColor} from "./colors.ts";
@@ -202,22 +207,11 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: {
                             <Form.Item key={f.key} name={f.name} {...itemStyle}>
                                 {primitiveControl(field, empty)}
                             </Form.Item>
-                            <Button className='nodrag'
-                                    icon={<MinusSquareTwoTone twoToneColor='red'/>}
-                                    onClick={() => remove(f.name)}
-                            />
-                            {index != 0 &&
-                                <Button className='nodrag'
-                                        icon={<ArrowUpOutlined/>}
-                                        onClick={() => move(index, index - 1)}/>
-                            }
+                            <ArrayItemDropdownButton fold={field.autoCompleteOptions != null}
+                                                     remove={() => remove(f.name)}
+                                                     up={index != 0 ? () => move(index, index - 1) : undefined}
+                                                     down={index != fields.length - 1 ? () => move(index, index + 1) : undefined}/>
 
-                            {
-                                index != fields.length - 1 &&
-                                <Button className='nodrag'
-                                        icon={<ArrowDownOutlined/>}
-                                        onClick={() => move(index, index + 1)}/>
-                            }
 
                         </Space>
 
@@ -238,6 +232,49 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: {
     </Form.List>
 }
 
+
+function ArrayItemDropdownButton({fold, remove, up, down}: {
+    fold: boolean,
+    remove: () => void,
+    up?: () => void,
+    down?: () => void
+}) {
+
+    const [expand, setExpand] = useState<boolean>(false);
+    const toggleExpand = useCallback(() => {
+        setExpand(!expand)
+    }, [expand, setExpand]);
+    const removeB = <Button className='nodrag'
+                            icon={<MinusSquareTwoTone/>}
+                            onClick={remove}/>
+    let upB;
+    if (up) {
+        upB = <Button className='nodrag'
+                      icon={<ArrowUpOutlined/>}
+                      onClick={up}/>
+    }
+
+    let downB;
+    if (down) {
+        downB = <Button className='nodrag'
+                        icon={<ArrowDownOutlined/>}
+                        onClick={down}/>
+    }
+
+    if (upB == undefined && downB == undefined) {
+        return removeB;
+    }
+
+    if (!fold) {
+        return <>{removeB}{upB}{downB}</>
+    }
+
+
+    return <Space size={'small'}>
+        <Button className='nodrag' icon={<RightOutlined/>} onClick={toggleExpand}/>
+        {expand && <>{removeB}{upB}{downB}</>}
+    </Space>
+}
 
 function FuncSubmitFormItem({field}: {
     field: EntityEditField
