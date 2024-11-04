@@ -8,7 +8,7 @@ export type EditState = {
     editingObject: JSONObject;
     fitView: boolean;
 
-    update: (foldChanged?:boolean) => void;
+    update: () => void;
     submitEditingObject: () => void;
     isEdited: boolean;
 
@@ -38,11 +38,11 @@ export type EditingObjectRes = {
 
 
 export function startEditingObject(recordResult: RecordResult,
-                                   update: (foldChanged?:boolean) => void,
+                                   update: () => void,
                                    submitEditingObject: () => void): EditingObjectRes {
-    editState.update = function (foldChanged?:boolean) {
+    editState.update = function () {
         editState.isEdited = true;
-        update(foldChanged);
+        update();
     }
     editState.submitEditingObject = submitEditingObject;
     const {table, id, fitView} = editState;
@@ -115,7 +115,7 @@ export function onUpdateFold(fold: boolean,
     obj['$fold'] = fold;
 
     editState.fitView = false;
-    editState.update(true);
+    editState.update();
 }
 
 
