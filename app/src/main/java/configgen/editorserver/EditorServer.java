@@ -3,12 +3,15 @@ package configgen.editorserver;
 import com.alibaba.fastjson2.JSON;
 import com.sun.net.httpserver.*;
 import configgen.ctx.Context;
+import configgen.ctx.LangSwitch;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
+import configgen.genjava.GenJavaData;
 import configgen.schema.TableSchemaRefGraph;
 import configgen.tool.AICfg;
 import configgen.value.CfgValue;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
@@ -29,13 +32,15 @@ public class EditorServer extends Generator {
     private final String noteCsvPath;
 
     private Path dataDir;
+    private LangSwitch langSwitch;
     private volatile CfgValue cfgValue;  // 可能会被改变
     private TableSchemaRefGraph graph;
     private HttpServer server;
     private NoteEditService noteEditService;
     private AICfg aiCfg;
     private Path aiDir;
-
+    private final String postRun;
+    private final String postRunJavadata;
 
     public EditorServer(Parameter parameter) {
         super(parameter);
@@ -47,11 +52,14 @@ public class EditorServer extends Generator {
             aiDir = Path.of(aiCfgFn).getParent();
             aiCfg = AICfg.readFromFile(aiCfgFn);
         }
+        postRun = parameter.get("postrun", null);
+        postRunJavadata = parameter.get("postrunjavadata", "configdata.zip");
     }
 
     @Override
     public void generate(Context ctx) throws IOException {
         dataDir = ctx.dataDir();
+        langSwitch = ctx.nullableLangSwitch();
         cfgValue = ctx.makeValue(tag, true);
         graph = new TableSchemaRefGraph(cfgValue.schema());
         noteEditService = new NoteEditService(Path.of(noteCsvPath));
@@ -175,12 +183,26 @@ public class EditorServer extends Generator {
 //        logger.info(jsonStr);
 
         RecordEditResult result;
+        boolean ok = false;
         synchronized (this) {
             RecordEditService service = new RecordEditService(dataDir, cfgValue);
             result = service.addOrUpdateRecord(table, jsonStr);
             if (result.resultCode() == addOk || result.resultCode() == updateOk) {
                 cfgValue = service.newCfgValue();
+                ok = true;
             }
+        }
+
+        if (ok && postRun != null) {
+            Thread.startVirtualThread(() -> {
+                try {
+                    GenJavaData.generateToFile(cfgValue, langSwitch, new File(postRunJavadata));
+                    String[] cmds = new String[]{"cmd", "/c", "start", postRun};
+                    Runtime.getRuntime().exec(cmds);
+                } catch (IOException e) {
+                    logger.warning("postrun err: " + e.getMessage());
+                }
+            });
         }
 
 //        logger.info(result.toString());
@@ -232,6 +254,7 @@ public class EditorServer extends Generator {
 //        logger.info(result.toString());
         sendResponse(exchange, result);
     }
+
     private void handle(String path, HttpHandler handler) {
         HttpContext context = server.createContext(path, handler);
         context.getFilters().add(logging);
