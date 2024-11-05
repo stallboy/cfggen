@@ -11,15 +11,14 @@ import configgen.schema.TableSchemaRefGraph;
 import configgen.tool.AICfg;
 import configgen.value.CfgValue;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static configgen.editorserver.CheckJsonService.*;
@@ -197,10 +196,22 @@ public class EditorServer extends Generator {
             Thread.startVirtualThread(() -> {
                 try {
                     GenJavaData.generateToFile(cfgValue, langSwitch, new File(postRunJavadata));
-                    String[] cmds = new String[]{"cmd", "/c", "start", postRun};
-                    Runtime.getRuntime().exec(cmds);
+                    // "cmd", "/c", "start", "/B",
+                    String[] cmds = new String[]{postRun};
+                    Process process = Runtime.getRuntime().exec(cmds);
+
+                    BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                    String line;
+                    while ((line = in.readLine()) != null) {
+                        System.out.println(line);
+                    }
+                    process.waitFor(10, TimeUnit.SECONDS);
+                    System.out.println("postrun ok!");
+                    in.close();
                 } catch (IOException e) {
                     logger.warning("postrun err: " + e.getMessage());
+                } catch (InterruptedException e) {
+                    logger.warning("postrun interrupted: " + e.getMessage());
                 }
             });
         }
