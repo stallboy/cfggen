@@ -22,9 +22,9 @@ export const NoteShow = memo(function NoteShow({note, setIsEdit}: {
     }, [setIsEdit]);
 
     return <div style={noteStyle}>
-        <p>{note} <Button style={noteButtonStyle}
+        {note} <Button style={noteButtonStyle}
                           icon={bookIcon}
-                          onClick={onEditClick}/></p>
+                          onClick={onEditClick}/>
     </div>
 });
 
@@ -101,7 +101,7 @@ export const NoteShowInner = memo(function NoteShowInner({note}: {
     note: string;
 }) {
     return <div style={noteStyle}>
-        <p>{note}</p>
+        {note}
     </div>
 });
 
