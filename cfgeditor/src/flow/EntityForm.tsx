@@ -199,17 +199,17 @@ const ArrayOfPrimitiveFormItem = memo(function ({field, bgColor}: {
     const itemStyle = field.autoCompleteOptions != null ? autoCompleteItemStyle : empty;
 
 
-    return <Form.List name={field.name} key={field.name} initialValue={field.value as any[]}>
-        {(fields, {add, remove, move}) => (
-            <>
-                {fields.map((f, index) => (
-                    <Form.Item {...(index === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
-                               label={index === 0 ? <LabelWithTooltip name={field.name} comment={field.comment}/> : ''}
-                               key={f.key}
-                               style={thisItemStyle}>
+    return <Form.Item {...formItemLayout}
+                      label={<LabelWithTooltip name={field.name} comment={field.comment}/>}
+                      style={thisItemStyle}>
+        <Form.List name={field.name} key={field.name} initialValue={field.value as any[]}>
+            {(fields, {add, remove, move}) => (
+                <>
+                    {fields.map((f, index) => (
 
-                        <Space align='baseline' size={2}>
-                            <Form.Item key={f.key} name={f.name} {...itemStyle}>
+
+                        <Space key={f.key} align='baseline' size={2}>
+                            <Form.Item name={f.name} {...itemStyle}>
                                 {primitiveControl(field.eleType, field.autoCompleteOptions)}
                             </Form.Item>
 
@@ -221,22 +221,19 @@ const ArrayOfPrimitiveFormItem = memo(function ({field, bgColor}: {
 
                         </Space>
 
-                    </Form.Item>
-                ))}
-                <Form.Item {...(fields.length === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
-                           label={fields.length === 0 ?
-                               <LabelWithTooltip name={field.name} comment={field.comment}/> : ''}>
+                    ))}
                     <Button className='nodrag'
                             icon={<PlusSquareTwoTone/>}
                             onClick={() => add(defaultPrimitiveValue(field))}
                     />
 
-                </Form.Item>
-            </>
-        )
-        }
+                </>
+            )
+            }
 
-    </Form.List>
+        </Form.List>
+
+    </Form.Item>
 });
 
 
