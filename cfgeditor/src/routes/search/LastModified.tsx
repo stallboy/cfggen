@@ -90,7 +90,10 @@ export const LastModified = memo(function LastModified({schema}: {
 
     return <Table columns={columns}
                   dataSource={orderedItems}
+                  showHeader={false}
+                  size={'small'}
                   pagination={false}
+                  virtual={orderedItems.length > 30}
                   rowKey={rowKey}/>
 
 });

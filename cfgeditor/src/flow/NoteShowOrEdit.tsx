@@ -13,6 +13,7 @@ import {queryClient} from "../main.tsx";
 const noteButtonStyle: CSSProperties = {float: 'right', borderWidth: 0, backgroundColor: 'transparent'};
 const bookIcon = <BookOutlined/>;
 const noteStyle: CSSProperties = {backgroundColor: "yellow", borderRadius: '8px'}
+
 export const NoteShow = memo(function NoteShow({note, setIsEdit}: {
     note: string;
     setIsEdit: (ie: boolean) => void;
@@ -23,8 +24,8 @@ export const NoteShow = memo(function NoteShow({note, setIsEdit}: {
 
     return <div style={noteStyle}>
         {note} <Button style={noteButtonStyle}
-                          icon={bookIcon}
-                          onClick={onEditClick}/>
+                       icon={bookIcon}
+                       onClick={onEditClick}/>
     </div>
 });
 
@@ -83,9 +84,10 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
         setNewNote(value);
     }, [setNewNote]);
 
-    return <Flex vertical style={{backgroundColor: "yellow", borderRadius: '8px'}}>
-        <TextArea className='nodrag' placeholder='note' autoSize={{minRows: 1, maxRows: 10}}
-                  style={{backgroundColor: "yellow"}}
+    return <Flex vertical style={noteStyle}>
+        <TextArea className='nodrag' placeholder='note'
+                  autoSize={autoSize}
+                  style={textAreaStyle}
                   value={newNote}
                   onChange={onNoteChange}/>
         <Flex justify={'flex-end'} gap={'small'}>
@@ -105,6 +107,8 @@ export const NoteShowInner = memo(function NoteShowInner({note}: {
     </div>
 });
 
+const textAreaStyle = {backgroundColor: "yellow"};
+const autoSize = {minRows: 1, maxRows: 10};
 
 export const NoteEditInner = memo(function NoteEditInner({note, updateNoteInEdit}: {
     note: string;
@@ -115,9 +119,10 @@ export const NoteEditInner = memo(function NoteEditInner({note, updateNoteInEdit
         updateNoteInEdit(value);
     }, [updateNoteInEdit]);
 
-    return <Flex vertical style={{backgroundColor: "yellow", borderRadius: '8px'}}>
-        <TextArea className='nodrag' placeholder='note' autoSize={{minRows: 1, maxRows: 10}}
-                  style={{backgroundColor: "yellow"}}
+    return <Flex vertical style={noteStyle}>
+        <TextArea className='nodrag' placeholder='note'
+                  autoSize={autoSize}
+                  style={textAreaStyle}
                   value={note}
                   onChange={onNoteChange}/>
     </Flex>

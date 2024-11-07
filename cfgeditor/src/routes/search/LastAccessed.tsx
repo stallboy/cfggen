@@ -60,6 +60,8 @@ export const LastAccessed = memo(function LastAccessed({schema}: {
 
     return <Table columns={columns}
                   dataSource={uniqItems}
+                  showHeader={false}
+                  size={'small'}
                   pagination={false}
                   rowKey={rowKey}/>
 

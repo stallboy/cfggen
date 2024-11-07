@@ -21,6 +21,10 @@ export default defineConfig({
         // produce sourcemaps for debug builds
         sourcemap: !!process.env.TAURI_DEBUG,
         chunkSizeWarningLimit: 7000,
+        modulePreload: {
+            polyfill: false
+        },
+
     },
 
 })

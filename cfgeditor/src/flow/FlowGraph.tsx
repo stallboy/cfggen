@@ -1,6 +1,6 @@
 import {Background, Controls, Edge, Node, NodeTypes, ReactFlow, ReactFlowProvider} from "@xyflow/react";
 import {Entity} from "./entityModel.ts";
-import {createContext, MouseEvent as ReactMouseEvent, ReactNode, useCallback, useMemo, useState} from "react";
+import {createContext, memo, MouseEvent as ReactMouseEvent, ReactNode, useCallback, useMemo, useState} from "react";
 import {FlowContextMenu, MenuItem, MenuStyle} from "./FlowContextMenu.tsx";
 import {FlowNode} from "./FlowNode.tsx";
 
@@ -34,7 +34,7 @@ const defaultEdges: EntityEdge[] = [];
 
 const proOptions = {hideAttribution: true};
 
-export function FlowGraph({children}: {
+export const FlowGraph = memo(function FlowGraph({children}: {
     children: ReactNode
 }) {
     const [menuStyle, setMenuStyle] = useState<MenuStyle | undefined>(undefined);
@@ -115,4 +115,4 @@ export function FlowGraph({children}: {
         </FlowGraphContext.Provider>
     </ReactFlowProvider>;
 
-}
+});

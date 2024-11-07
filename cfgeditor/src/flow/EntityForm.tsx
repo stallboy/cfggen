@@ -1,27 +1,19 @@
 import {
     EntityEdit,
     EntityEditField,
-    EntityEditFieldOption,
+    EntityEditFieldOption, EntityEditFieldOptions,
     EntitySharedSetting,
     FuncSubmitType,
     FuncType
 } from "./entityModel.ts";
-import {
-    Button,
-    ConfigProvider,
-    Flex,
-    Form,
-    InputNumber,
-    Select,
-    Space,
-    Switch, Tag, Tooltip,
-} from "antd";
+import {Button, ConfigProvider, Flex, Form, InputNumber, Select, Space, Switch, Tag, Tooltip,} from "antd";
 import TextArea from "antd/es/input/TextArea";
 import {
     ArrowDownOutlined,
-    ArrowUpOutlined, RightOutlined,
+    ArrowUpOutlined,
     MinusSquareTwoTone,
     PlusSquareTwoTone,
+    RightOutlined,
 } from "@ant-design/icons";
 import {CSSProperties, memo, useCallback, useEffect, useMemo, useState} from "react";
 import {useTranslation} from "react-i18next";
@@ -84,10 +76,7 @@ function getFilter(isValueInteger: boolean, useSearch: boolean) {
     }
 }
 
-function primitiveControl(field: EntityEditField,
-                          style: any) {
-
-    const {eleType, autoCompleteOptions} = field;
+function primitiveControl(eleType: string, autoCompleteOptions?: EntityEditFieldOptions, style?: any) {
     if (autoCompleteOptions && autoCompleteOptions.options.length > 0) {
         const {options, isValueInteger, isEnum} = autoCompleteOptions;
         const filters: any = getFilter(isValueInteger, options.length > 5);
@@ -108,46 +97,57 @@ function primitiveControl(field: EntityEditField,
     } else {
         return <TextArea className='nodrag' autoSize={textAreaAutoSize} {...style}/>;
     }
+
 }
 
 const rowFlexStyle: CSSProperties = {marginBottom: 10, position: 'relative'}
 const handleOutStyle: CSSProperties = {position: 'absolute', left: '270px', backgroundColor: 'blue'}
 
-function StructRefItem({field, bgColor}: {
-    field: EntityEditField,
+interface StructRefItemProps {
+    name: string,
+    comment?: string,
+    handleOut?: boolean,
     bgColor?: string
-}) {
+}
+
+const StructRefItem = memo(function ({name, comment, handleOut, bgColor}: StructRefItemProps) {
     const thisRowStyle: CSSProperties = useMemo(() => bgColor == undefined ? rowFlexStyle : {
         marginBottom: 10,
         position: 'relative',
         backgroundColor: bgColor
     }, [bgColor]);
-    return <Flex key={field.name} gap='middle' justify="flex-end" style={thisRowStyle}>
-        <Tag color={'blue'}> <LabelWithTooltip field={field}/> </Tag>
-        {field.handleOut && <Handle type='source' position={Position.Right} id={field.name}
-                                    style={handleOutStyle}/>}
+    return <Flex key={name} gap='middle' justify="flex-end" style={thisRowStyle}>
+        <Tag color={'blue'}>
+            <LabelWithTooltip name={name} comment={comment}/>
+        </Tag>
+        {handleOut &&
+            <Handle id={name} type='source'
+                    position={Position.Right}
+                    style={handleOutStyle}/>}
     </Flex>
+});
+
+interface FuncAddFormItemProps extends StructRefItemProps {
+    func: FuncType;
 }
 
-function FuncAddFormItem({field, bgColor}: {
-    field: EntityEditField,
-    bgColor?: string
-}) {
-    const func = field.value as FuncType;
+const FuncAddFormItem = memo(function ({name, comment, handleOut, bgColor, func}: FuncAddFormItemProps) {
     const thisRowStyle: CSSProperties = useMemo(() => bgColor == undefined ? rowFlexStyle : {
         marginBottom: 10,
         position: 'relative',
         backgroundColor: bgColor
     }, [bgColor]);
-    return <Flex key={field.name} gap='middle' justify="flex-end" style={thisRowStyle}>
-        <Button className='nodrag' onClick={func} icon={<PlusSquareTwoTone/>}> <LabelWithTooltip field={field}/>
+    return <Flex key={name} gap='middle' justify="flex-end" style={thisRowStyle}>
+        <Button className='nodrag' onClick={func} icon={<PlusSquareTwoTone/>}>
+            <LabelWithTooltip name={name} comment={comment}/>
         </Button>
-        {field.handleOut && <Handle type='source' position={Position.Right} id={field.name}
-                                    style={handleOutStyle}/>}
+        {handleOut && <Handle id={name} type='source'
+                              position={Position.Right}
+                              style={handleOutStyle}/>}
     </Flex>;
-}
+});
 
-function PrimitiveFormItem({field, bgColor}: {
+const PrimitiveFormItem = memo(function ({field, bgColor}: {
     field: EntityEditField,
     bgColor?: string
 }) {
@@ -162,23 +162,28 @@ function PrimitiveFormItem({field, bgColor}: {
         return bgColor == undefined ? {} : {style: {backgroundColor: bgColor}}
     }, [bgColor]);
 
-    return <Form.Item name={field.name} key={field.name} label={<LabelWithTooltip field={field}/>}
-                      initialValue={field.value} {...props} {...thisItemStyle}>
-        {primitiveControl(field, thisItemStyle)}
-    </Form.Item>;
-}
+    const primitiveCtrl = useMemo(() => primitiveControl(field.eleType, field.autoCompleteOptions, thisItemStyle),
+        [field.eleType, field.autoCompleteOptions, thisItemStyle]);
 
-function LabelWithTooltip({field}: { field: EntityEditField }) {
-    if (field.comment == undefined || field.comment.length == 0) {
-        return <>{field.name}</>;
-    } else {
-        return <Tooltip title={field.comment}> <i>{field.name}</i></Tooltip>
-    }
-}
+    return <Form.Item name={field.name} key={field.name}
+                      label={<LabelWithTooltip name={field.name} comment={field.comment}/>}
+                      initialValue={field.value}
+                      {...props}
+                      {...thisItemStyle}>
+        {primitiveCtrl}
+    </Form.Item>;
+});
+
+const LabelWithTooltip = memo(function ({name, comment}: { name: string, comment?: string }) {
+    return (comment != undefined && comment.length > 0) ?
+        <Tooltip title={comment}><i>{name}</i></Tooltip> :
+        <>{name}</>;
+});
 
 const autoCompleteItemStyle = {style: {width: 170}}
 
-function ArrayOfPrimitiveFormItem({field, bgColor}: {
+
+const ArrayOfPrimitiveFormItem = memo(function ({field, bgColor}: {
     field: EntityEditField,
     bgColor?: string
 }) {
@@ -199,14 +204,15 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: {
             <>
                 {fields.map((f, index) => (
                     <Form.Item {...(index === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
-                               label={index === 0 ? <LabelWithTooltip field={field}/> : ''}
+                               label={index === 0 ? <LabelWithTooltip name={field.name} comment={field.comment}/> : ''}
                                key={f.key}
                                style={thisItemStyle}>
 
                         <Space align='baseline' size={2}>
                             <Form.Item key={f.key} name={f.name} {...itemStyle}>
-                                {primitiveControl(field, empty)}
+                                {primitiveControl(field.eleType, field.autoCompleteOptions)}
                             </Form.Item>
+
                             <ArrayItemDropdownButton fold={field.autoCompleteOptions != null}
                                                      remove={() => remove(f.name)}
                                                      up={index != 0 ? () => move(index, index - 1) : undefined}
@@ -218,7 +224,8 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: {
                     </Form.Item>
                 ))}
                 <Form.Item {...(fields.length === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
-                           label={fields.length === 0 ? <LabelWithTooltip field={field}/> : ''}>
+                           label={fields.length === 0 ?
+                               <LabelWithTooltip name={field.name} comment={field.comment}/> : ''}>
                     <Button className='nodrag'
                             icon={<PlusSquareTwoTone/>}
                             onClick={() => add(defaultPrimitiveValue(field))}
@@ -230,7 +237,7 @@ function ArrayOfPrimitiveFormItem({field, bgColor}: {
         }
 
     </Form.List>
-}
+});
 
 
 function ArrayItemDropdownButton({fold, remove, up, down}: {
@@ -276,7 +283,7 @@ function ArrayItemDropdownButton({fold, remove, up, down}: {
     </Space>
 }
 
-function FuncSubmitFormItem({field}: {
+const FuncSubmitFormItem = memo(function ({field}: {
     field: EntityEditField
 }) {
     const [t] = useTranslation();
@@ -291,10 +298,10 @@ function FuncSubmitFormItem({field}: {
             </Button>
         </Space>
     </Form.Item>
-}
+});
 
 
-function InterfaceFormItem({field, sharedSetting}: {
+const InterfaceFormItem = memo(function ({field, sharedSetting}: {
     field: EntityEditField,
     sharedSetting?: EntitySharedSetting
 }) {
@@ -311,29 +318,37 @@ function InterfaceFormItem({field, sharedSetting}: {
     const options = field.autoCompleteOptions?.options!;
     const filters = getFilter(false, options.length > 5);
 
-    return <>
+    const formItem = useMemo(() => (
         <Form.Item name={field.name} key={field.name} label={">"}
                    initialValue={field.value}>
             <Select className='nodrag' options={options}
                     {...filters}
                     onChange={onSelectChange}/>
         </Form.Item>
+    ), [field.name, field.value, options, filters, onSelectChange]);
 
+    return <>
+        {formItem}
         {FieldsFormItem(field.implFields as EntityEditField[], sharedSetting)}
     </>
-}
+});
 
 function FieldFormItem(field: EntityEditField, sharedSetting?: EntitySharedSetting) {
     const bgColor = getFieldBackgroundColor(field, sharedSetting?.nodeShow)
     switch (field.type) {
         case "structRef":
-            return <StructRefItem key={field.name} field={field} bgColor={bgColor}/>;
+            return <StructRefItem key={field.name}
+                                  name={field.name} comment={field.comment} handleOut={field.handleOut}
+                                  bgColor={bgColor}/>;
         case "arrayOfPrimitive":
             return <ArrayOfPrimitiveFormItem key={field.name} field={field} bgColor={bgColor}/>;
         case "primitive":
             return <PrimitiveFormItem key={field.name} field={field} bgColor={bgColor}/>;
         case "funcAdd":
-            return <FuncAddFormItem key={field.name} field={field} bgColor={bgColor}/>;
+            return <FuncAddFormItem key={field.name}
+                                    name={field.name} comment={field.comment} handleOut={field.handleOut}
+                                    func={field.value as FuncType}
+                                    bgColor={bgColor}/>;
         case "interface":
             return <InterfaceFormItem key={field.name} field={field} sharedSetting={sharedSetting}/>;
         case "funcSubmit":

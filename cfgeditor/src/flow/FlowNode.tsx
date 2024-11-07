@@ -34,39 +34,39 @@ const unfoldIcon = <ArrowsAltOutlined/>;
 
 const resBriefButtonStyle = {color: '#fff'};
 
+interface TempNote {
+    note: string;
+    entity: Entity;
+}
+
 export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entity: Entity }, "node">>) {
-    const entity = nodeProps.data.entity
+    const entity = nodeProps.data.entity;
     const {id, label, fields, edit, brief, handleIn, handleOut, note, sharedSetting, assets} = entity;
     const color: string = getNodeBackgroundColor(entity);
     const width = edit ? 280 : 240;
     const nodeStyle = useMemo(() => {
-        return {width: width, backgroundColor: color}
+        return {width: width, backgroundColor: color};
     }, [width, color]);
-
-    // const nodeWithBorderStyle:CSSProperties = useMemo(() => {
-    //     return {width: width, backgroundColor: color, borderColor: 'cyan', borderWidth: 10}
-    // }, [width, color]);
 
     const [isEditNote, setIsEditNote] = useState<boolean>(false);
     const onEditNote = useCallback(() => {
         setIsEditNote(true);
     }, [setIsEditNote]);
 
-    // 不能稍微改一下note，就刷新整个树，所以note要缓存下来作为状态
-    const [tmpNote, setTmpNote] = useState<string | undefined>();
-    // 因为list.item的id为index，当删除一项有note的节点后，后面的节点id跟此相同，所以就继承了前面的tmpNote
-    // 所以记录prevEntity，如果entity更改，则重置tmpNote为undefined，
-    const [prevEntity, setPrevEntity] = useState(entity);
-    const onEditNoteInEdit = useCallback(() => {
-        setTmpNote("note：");
-    }, [setTmpNote]);
+    // 当设置note时，会存$note到jsonobject里,会存tmpNote在这里，不会直接网络请求去update json
+    // 同时记录下tmpNote时的entity，因为切换不同record时，可能key相同，此时note不能使用
+    const [tmpNote, setTmpNote] = useState<TempNote | undefined>();
 
-    const updateNoteInEdit = useCallback((v: string) => {
+    const onEditNoteClickInEdit = useCallback(() => {
+        setTmpNote({note: "note：", entity});
+    }, [setTmpNote, entity]);
+
+    const updateNoteInEdit = useCallback((note: string) => {
         if (edit && edit.editOnUpdateNote) {
-            edit.editOnUpdateNote(v);
-            setTmpNote(v);
+            edit.editOnUpdateNote(note);
+            setTmpNote({note, entity});
         }
-    }, [edit, setTmpNote]);
+    }, [edit, setTmpNote, entity]);
 
     const unfoldNode = useCallback(() => {
         if (edit && edit.editOnUpdateFold) {
@@ -88,114 +88,104 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
                            placement='rightTop'
                            trigger='click'>
                 <Button type='text' style={resBriefButtonStyle}>{getResBrief(assets)}</Button>
-            </Popover>
+            </Popover>;
         }
         return [btn, firstImage];
     }, [label, assets]);
 
-
     const handleStyle: CSSProperties = useMemo(() => {
-        return {position: 'absolute', backgroundColor: color}
+        return {position: 'absolute', backgroundColor: color};
     }, [color]);
 
-
-    // 如果entity更改，则重置tmpNote为undefined，让其重新渲染
-    if (entity !== prevEntity) {
-        // console.log("not equal", entity.id, prevEntity.id, "--", note);
-        setPrevEntity(entity);
-        setTmpNote(undefined);
-        return <></>
-    }
-
-    let foldButton;
-    let fold = false;
-    if (edit && edit.hasChild) {
-        if (edit.fold) {
-            foldButton = <Button style={redIconButtonStyle} icon={unfoldIcon}
-                                 onClick={unfoldNode}/>;
-            fold = true;
-        } else {
-            foldButton = <Button style={iconButtonStyle} icon={foldIcon}
-                                 onClick={foldNode}/>;
-        }
-    }
-
-    // 用‘label是否包含空格’做为它是table_id格式的标志
-    const mayHasResOrNote = label.includes('_');
-    let editNoteButton;
-    let noteShowOrEdit;
-    if (mayHasResOrNote) {
-        const notes = sharedSetting?.notes;
-        const recordNote = notes?.get(id) ?? '';
-        if ((recordNote.length > 0) || isEditNote) {
-            if (isEditNote) {
-                noteShowOrEdit = <NoteEdit id={id} note={recordNote} setIsEdit={setIsEditNote}/>
+    const foldButton = useMemo(() => {
+        if (edit && edit.hasChild) {
+            if (edit.fold) {
+                return <Button style={redIconButtonStyle} icon={unfoldIcon} onClick={unfoldNode}/>;
             } else {
-                noteShowOrEdit = <NoteShow note={recordNote} setIsEdit={setIsEditNote}/>;
+                return <Button style={iconButtonStyle} icon={foldIcon} onClick={foldNode}/>;
             }
-        } else if (note) {
-            noteShowOrEdit = <NoteShowInner note={note}/>;
-        } else {
-            editNoteButton = <Button style={iconButtonStyle} icon={bookIcon}
-                                     onClick={onEditNote}/>;
         }
-    } else {
-        if (edit) {
-            let showNote;
-            if (tmpNote != undefined) { // 表明有设置过
-                if (tmpNote.length > 0) {
-                    showNote = tmpNote;
+        return null;
+    }, [edit, unfoldNode, foldNode]);
+
+
+    const editNoteButton = useMemo(() => {
+        const mayHasResOrNote = label.includes('_');
+        if (mayHasResOrNote) {
+            const notes = sharedSetting?.notes;
+            const recordNote = notes?.get(id) ?? '';
+            if (!((recordNote.length > 0) || isEditNote) && !note) {
+                return <Button style={iconButtonStyle} icon={bookIcon} onClick={onEditNote}/>;
+            }
+        } else if (edit && !note) {
+            if (tmpNote && tmpNote.entity === entity && tmpNote.note.length > 0) {
+                return;
+            } else {
+                return <Button style={iconButtonStyle} icon={bookIcon} onClick={onEditNoteClickInEdit}/>;
+            }
+        }
+    }, [sharedSetting, id, isEditNote, note, edit, tmpNote, onEditNote, onEditNoteClickInEdit]);
+
+    const noteShowOrEdit = useMemo(() => {
+        const mayHasResOrNote = label.includes('_');
+        if (mayHasResOrNote) {
+            const notes = sharedSetting?.notes;
+            const recordNote = notes?.get(id) ?? '';
+            if ((recordNote.length > 0) || isEditNote) {
+                if (isEditNote) {
+                    return <NoteEdit id={id} note={recordNote} setIsEdit={setIsEditNote}/>;
+                } else {
+                    return <NoteShow note={recordNote} setIsEdit={setIsEditNote}/>;
                 }
-            } else if (note && note.length > 0) {
-                showNote = note;
+            } else if (note) {
+                return <NoteShowInner note={note}/>;
             }
-            if (showNote) {
-                noteShowOrEdit = <NoteEditInner note={showNote}
-                                                updateNoteInEdit={updateNoteInEdit}/>
-            } else {
-                editNoteButton = <Button style={iconButtonStyle} icon={bookIcon}
-                                         onClick={onEditNoteInEdit}/>;
+        } else {
+            if (edit) {
+                let showNote;
+                if (tmpNote && tmpNote.entity === entity && tmpNote.note.length > 0) {
+                    showNote = tmpNote.note;
+                } else if (note && note.length > 0) {
+                    showNote = note;
+                }
+                if (showNote) {
+                    return <NoteEditInner note={showNote} updateNoteInEdit={updateNoteInEdit}/>;
+                }
+            } else if (note) {
+                return <NoteShowInner note={note}/>;
             }
-
-        } else if (note) {
-            noteShowOrEdit = <NoteShowInner note={note}/>;
         }
-    }
-    const copyable = mayHasResOrNote && sharedSetting?.nodeShow?.showHead == 'showCopyable'
-    const keyword = sharedSetting?.query
+        return null;
+    }, [sharedSetting, id, isEditNote, note, edit, tmpNote, updateNoteInEdit]);
 
-    const title = <Flex justify="space-between" style={titleStyle}>
-        {foldButton}
+    const title = useMemo(() => {
+        const mayHasResOrNote = label.includes('_');
+        return <Flex justify="space-between" style={titleStyle}>
+            {foldButton}
+            <Text strong style={titleTextStyle} ellipsis={false}
+                  copyable={mayHasResOrNote && sharedSetting?.nodeShow?.showHead === 'showCopyable'}>
+                {sharedSetting?.query ? <Highlight text={label} keyword={sharedSetting.query}/> : label}
+            </Text>
+            {editNoteButton}
+            {resBriefButton}
+            <Space size={1}>
+                {edit && edit.editOnMoveUp &&
+                    <Button className='nodrag' style={iconButtonStyle} icon={moveUpIcon} onClick={edit.editOnMoveUp}/>}
+                {edit && edit.editOnMoveDown && <Button className='nodrag' style={iconButtonStyle} icon={moveDownIcon}
+                                                        onClick={edit.editOnMoveDown}/>}
+                {edit && edit.editOnDelete &&
+                    <Button className='nodrag' style={iconButtonStyle} icon={closeIcon} onClick={edit.editOnDelete}/>}
+            </Space>
+        </Flex>
+    }, [foldButton, sharedSetting, label, editNoteButton, resBriefButton, edit]);
 
-        <Text strong style={titleTextStyle} ellipsis={false}
-              copyable={copyable}>
-            {keyword ? <Highlight text={label} keyword={keyword}/> : label}
-        </Text>
-
-        {editNoteButton}
-        {resBriefButton}
-        <Space size={1}>
-            {edit && edit.editOnMoveUp &&
-                <Button className='nodrag' style={iconButtonStyle} icon={moveUpIcon} onClick={edit.editOnMoveUp}/>}
-            {edit && edit.editOnMoveDown &&
-                <Button className='nodrag' style={iconButtonStyle} icon={moveDownIcon} onClick={edit.editOnMoveDown}/>}
-            {edit && edit.editOnDelete &&
-                <Button className='nodrag' style={iconButtonStyle} icon={closeIcon} onClick={edit.editOnDelete}/>}
-        </Space>
-    </Flex>
-
-
-    return <div key={id}  className={fold ? 'flowNodeWithBorder' : 'flowNode' } style={nodeStyle}>
+    return <div key={id} className={edit && edit.fold ? 'flowNodeWithBorder' : 'flowNode'} style={nodeStyle}>
         {noteShowOrEdit}
         {title}
-
         {fields && <EntityProperties fields={fields} sharedSetting={sharedSetting} color={color}/>}
         {brief && <EntityCard entity={nodeProps.data.entity} image={firstImage}/>}
         {edit && <EntityForm edit={edit} sharedSetting={sharedSetting}/>}
-
-        {(handleIn && <Handle type='target' position={Position.Left} id='@in'
-                              style={handleStyle}/>)}
-        {(handleOut && <Handle type='source' position={Position.Right} id='@out'
-                               style={handleStyle}/>)}
+        {(handleIn && <Handle type='target' position={Position.Left} id='@in' style={handleStyle}/>)}
+        {(handleOut && <Handle type='source' position={Position.Right} id='@out' style={handleStyle}/>)}
     </div>;
 });

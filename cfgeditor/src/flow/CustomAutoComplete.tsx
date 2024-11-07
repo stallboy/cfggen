@@ -1,4 +1,4 @@
-import {CSSProperties, memo} from 'react';
+import {CSSProperties, memo, useMemo} from 'react';
 import {AutoComplete, Input} from 'antd';
 import {EntityEditFieldOption} from "./entityModel.ts";
 
@@ -20,13 +20,17 @@ export interface CustomAutoCompleteProps {
 export const CustomAutoComplete = memo(function CustomAutoComplete(
             {id, value, onChange, options, filters}: CustomAutoCompleteProps
         ) {
-            const matchedOptionTitle = options.find(option => option.value == value)?.title ?? '';
+            const input = useMemo(() => {
+                const matchedOptionTitle = options.find(option => option.value == value)?.title ?? '';
+                return <Input suffix={<span style={suffixStyle}>{matchedOptionTitle}</span>}/>
+            }, [value, options]);
+
             return <AutoComplete id={id} className='nodrag' {...filters}
                                  options={options}
                                  value={value}
                                  onSelect={onChange}
                                  onSearch={onChange}>
-                <Input suffix={<span style={suffixStyle}>{matchedOptionTitle}</span>}/>
+                {input}
             </AutoComplete>
         }
     )

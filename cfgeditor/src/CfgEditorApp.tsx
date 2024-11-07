@@ -1,4 +1,4 @@
-import {CSSProperties, useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {CSSProperties, memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {Alert, Drawer, Flex, Form, Input, Modal, Splitter,} from "antd";
 import {RecordRef} from "./routes/record/RecordRef.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
@@ -46,7 +46,7 @@ function onConnectServer(value: string) {
     setServer(value);
 }
 
-export function CfgEditorApp() {
+export const CfgEditorApp = memo(function CfgEditorApp() {
     const {
         server, dragPanel, pageConf,
         recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow,
@@ -199,5 +199,5 @@ export function CfgEditorApp() {
         </Drawer>
     </div>
         ;
-}
+});
 
