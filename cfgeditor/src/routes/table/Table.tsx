@@ -9,6 +9,7 @@ import {useTranslation} from "react-i18next";
 import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
 import {Schema} from "./schemaUtil.ts";
 import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
+import {EFitView} from "../record/editingObject.ts";
 
 
 export function Table() {
@@ -57,7 +58,7 @@ export function Table() {
         return mm;
     }
 
-    useEntityToGraph({pathname, entityMap, notes, nodeMenuFunc, paneMenu, fitView: true});
+    useEntityToGraph({pathname, entityMap, notes, nodeMenuFunc, paneMenu, fitView: EFitView.FitFull});
     return null;
 }
 

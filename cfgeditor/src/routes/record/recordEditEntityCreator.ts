@@ -201,8 +201,8 @@ export class RecordEditEntityCreator {
             onUpdateNote(note, fieldChain);
         };
 
-        const editOnUpdateFold = (fold: boolean) => {
-            onUpdateFold(fold, fieldChain);
+        const editOnUpdateFold = (id: string, fold: boolean) => {
+            onUpdateFold(id, fold, fieldChain);
             const newFolds = this.folds.setFold(fieldChain, fold);
             this.setFolds(newFolds);
         };
@@ -404,7 +404,7 @@ export class RecordEditEntityCreator {
 function getImplNameOptions(sInterface: SInterface): EntityEditFieldOptions {
     const impls = [];
     for (const {name, comment} of sInterface.impls) {
-        impls.push({value: name, label:name, title: comment});
+        impls.push({value: name, label: name, title: comment});
     }
     return {options: impls, isValueInteger: false, isEnum: true};
 }

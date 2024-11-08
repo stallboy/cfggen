@@ -3,6 +3,7 @@ import {Entity} from "./entityModel.ts";
 import {createContext, memo, MouseEvent as ReactMouseEvent, ReactNode, useCallback, useMemo, useState} from "react";
 import {FlowContextMenu, MenuItem, MenuStyle} from "./FlowContextMenu.tsx";
 import {FlowNode} from "./FlowNode.tsx";
+import {ViewportLogger} from "./ViewportLogger.tsx";
 
 
 export type EntityNode = Node<{entity: Entity}, "node">;
@@ -110,9 +111,12 @@ export const FlowGraph = memo(function FlowGraph({children}: {
         {(menuStyle && menuItems && menuItems.length > 0) &&
             <FlowContextMenu menuStyle={menuStyle} menuItems={menuItems} closeMenu={closeMenu}/>}
 
+        <ViewportLogger/>
         <FlowGraphContext.Provider value={ctx}>
             {children}
         </FlowGraphContext.Provider>
     </ReactFlowProvider>;
 
 });
+
+

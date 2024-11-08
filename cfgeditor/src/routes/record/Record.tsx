@@ -6,25 +6,22 @@ import {RecordEntityCreator} from "./recordEntityCreator.ts";
 import {Folds, RecordEditEntityCreator} from "./recordEditEntityCreator.ts";
 import {
     editState,
-    isCopiedFitAllowedType, onAddItemToArrayIndex,
-    onStructCopy, onStructPaste,
+    EFitView,
+    isCopiedFitAllowedType,
+    onAddItemToArrayIndex,
+    onStructCopy,
+    onStructPaste,
     startEditingObject,
 } from "./editingObject.ts";
 import {useTranslation} from "react-i18next";
-import {
-    invalidateAllQueries,
-    navTo,
-    setIsEditMode,
-    store,
-    useLocationData
-} from "../setting/store.ts";
+import {invalidateAllQueries, navTo, setIsEditMode, store, useLocationData} from "../setting/store.ts";
 import {useNavigate, useOutletContext} from "react-router-dom";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {addOrUpdateRecord, fetchRecord} from "../api.ts";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
 import {SchemaTableType} from "../../CfgEditorApp.tsx";
 import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
-import {useCallback, useEffect, useReducer, useState} from "react";
+import {memo, useCallback, useEffect, useReducer, useState} from "react";
 
 
 import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
@@ -32,7 +29,7 @@ import {SInterface, SStruct} from "../table/schemaModel.ts";
 import {queryClient} from "../../main.tsx";
 
 
-function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
+const RecordWithResult = memo(function ({recordResult}: { recordResult: RecordResult }) {
     const {schema, notes, curTable} = useOutletContext<SchemaTableType>();
     const {server, tauriConf, resourceDir, resMap} = store;
     const {notification} = App.useApp();
@@ -75,6 +72,8 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
         },
     });
 
+
+    // folds 信息跟notes信息一样都是临时存下来，而不是直接通知server存成json。
     const [folds, setFolds] = useState<Folds>(new Folds([]));
     const update = useCallback(() => {
         // 让其重新layout，因为可能已经经过编辑，缺少了某些节点的位置信息
@@ -88,7 +87,8 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const isEditable = schema.isEditable && curTable.isEditable;
     const isEditing = isEditable && edit;
 
-    let fitView: boolean = true;
+    let fitView: EFitView = EFitView.FitFull;
+    let fitViewToId;
     let isEdited: boolean = false;
     if (!isEditing) {
         const creator = new RecordEntityCreator(entityMap, schema, refId, recordResult.refs, tauriConf, resourceDir, resMap);
@@ -111,6 +111,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
         // 这是非纯函数，escape hatch，用useRef也能做，这里用全局变量
         const res = startEditingObject(recordResult, update, submitEditingObject);
         fitView = res.fitView;
+        fitViewToId = res.fitViewToId;
         isEdited = res.isEdited;
         const creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId, folds, setFolds);
         creator.createThis();
@@ -211,7 +212,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
                     label: t('structPaste'),
                     key: 'structPaste',
                     handler() {
-                        onStructPaste(editFieldChain)
+                        onStructPaste(entity.id, editFieldChain)
                     }
                 });
             }
@@ -220,13 +221,13 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     }
 
     // const ep = pathname + (isEditing ? ',' + editSeq : ''); // 用 editSeq触发layout
-    useEntityToGraph({pathname, entityMap, notes, nodeMenuFunc, paneMenu, fitView, isEdited});
+    useEntityToGraph({pathname, entityMap, notes, nodeMenuFunc, paneMenu, fitView, fitViewToId, isEdited});
 
     return <></>;
-}
+});
 
 
-export function Record() {
+export const Record = memo(function () {
     const {server} = store;
     const {curTableId, curId} = useLocationData();
     const {isLoading, isError, error, data: recordResult} = useQuery({
@@ -252,5 +253,5 @@ export function Record() {
 
     // 需要key，让不同key的RecordWithResult里folds不会互相影响
     return <RecordWithResult key={`${curTableId}-${curId}`} recordResult={recordResult}/>;
-}
+});
 

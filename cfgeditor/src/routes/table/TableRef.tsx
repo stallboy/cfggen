@@ -10,6 +10,7 @@ import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
 import {getDefaultIdInTable} from "./Table.tsx";
 import {memo, useCallback, useMemo} from "react";
 import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
+import {EFitView} from "../record/editingObject.ts";
 
 
 export const TableRef = memo(function TableRef() {
@@ -52,7 +53,7 @@ export const TableRef = memo(function TableRef() {
         }];
     }, [navigate, schema, curId]);
 
-    useEntityToGraph({pathname, entityMap, notes, nodeMenuFunc, paneMenu, fitView: true, nodeDoubleClickFunc});
+    useEntityToGraph({pathname, entityMap, notes, nodeMenuFunc, paneMenu, fitView: EFitView.FitFull, nodeDoubleClickFunc});
 
     return <></>;
 });

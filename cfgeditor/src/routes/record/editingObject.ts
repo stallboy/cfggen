@@ -2,11 +2,18 @@ import {JSONArray, JSONObject, RecordResult} from "./recordModel.ts";
 import {SItem, SStruct, STable} from "../table/schemaModel.ts";
 import {getField, Schema} from "../table/schemaUtil.ts";
 
+export enum EFitView {
+    FitFull,
+    FitId,
+    FitNone,
+}
+
 export type EditState = {
     table: string;
     id: string;
     editingObject: JSONObject;
-    fitView: boolean;
+    fitView: EFitView;
+    fitViewToId?: string;
 
     update: () => void;
     submitEditingObject: () => void;
@@ -22,7 +29,7 @@ export const editState: EditState = {
     table: '',
     id: '',
     editingObject: {'$type': ''},
-    fitView: true,
+    fitView: EFitView.FitFull,
 
     update: dummyFunc,
     submitEditingObject: dummyFunc,
@@ -32,7 +39,8 @@ export const editState: EditState = {
 };
 
 export type EditingObjectRes = {
-    fitView: boolean;
+    fitView: EFitView;
+    fitViewToId?: string;
     isEdited: boolean;
 }
 
@@ -45,12 +53,13 @@ export function startEditingObject(recordResult: RecordResult,
         update();
     }
     editState.submitEditingObject = submitEditingObject;
-    const {table, id, fitView} = editState;
+    const {table, id, fitView, fitViewToId} = editState;
     const {table: newTable, id: newId} = recordResult;
     if (newTable == table && newId == id) {
         return {
-            fitView, isEdited:
-            editState.isEdited
+            fitView,
+            fitViewToId,
+            isEdited: editState.isEdited
         };
     }
 
@@ -59,12 +68,14 @@ export function startEditingObject(recordResult: RecordResult,
     const newEditingObject = structuredClone(clone);
     editState.table = newTable;
     editState.id = newId;
-    editState.fitView = true;
+    editState.fitView = EFitView.FitFull;
+    editState.fitViewToId = undefined;
     editState.editingObject = newEditingObject;
     editState.isEdited = false;
     return {
-        fitView: true,
-        isEdited: false
+        fitView: editState.fitView,
+        fitViewToId: editState.fitViewToId,
+        isEdited: editState.isEdited
     };
 }
 
@@ -109,12 +120,14 @@ export function onUpdateNote(note: string | undefined,
 }
 
 
-export function onUpdateFold(fold: boolean,
+export function onUpdateFold(id: string,
+                             fold: boolean,
                              fieldChains: (string | number)[]) {
     const obj = getFieldObj(editState.editingObject, fieldChains);
     obj['$fold'] = fold;
 
-    editState.fitView = false;
+    editState.fitView = EFitView.FitId;
+    editState.fitViewToId = id;
     editState.update();
 }
 
@@ -126,7 +139,7 @@ export function onUpdateInterfaceValue(jsonObject: JSONObject,
     const obj = getFieldObj(editState.editingObject, fieldChains.slice(0, fieldChains.length - 1));
     obj[fieldChains[fieldChains.length - 1]] = jsonObject;
 
-    editState.fitView = false;
+    editState.fitView = EFitView.FitNone;
     editState.update();
 }
 
@@ -138,7 +151,7 @@ export function onAddItemToArray(defaultItemJsonObject: JSONObject,
     const obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
     obj.push(defaultItemJsonObject);
 
-    editState.fitView = false;
+    editState.fitView = EFitView.FitNone;
     editState.update();
 }
 
@@ -148,7 +161,7 @@ export function onAddItemToArrayIndex(defaultItemJsonObject: JSONObject,
     const obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
     obj.splice(index, 0, defaultItemJsonObject);
 
-    editState.fitView = false;
+    editState.fitView = EFitView.FitNone;
     editState.update();
 }
 
@@ -161,7 +174,7 @@ export function onMoveItemInArray(curIndex: number,
     obj[newIndex] = obj[curIndex]
     obj[curIndex] = o2;
 
-    editState.fitView = false;
+    editState.fitView = EFitView.FitNone;
     editState.update();
 }
 
@@ -174,7 +187,7 @@ export function onDeleteItemFromArray(deleteIndex: number,
     obj.splice(deleteIndex, 1);
 
     // editState.seq++;
-    editState.fitView = false;
+    editState.fitView = EFitView.FitNone;
     editState.update();
 }
 
@@ -182,7 +195,7 @@ export function applyNewEditingObject(newEditingObject: JSONObject) {
     editState.editingObject = newEditingObject;
 
     // editState.seq++;
-    editState.fitView = true;
+    editState.fitView = EFitView.FitFull;
     editState.update();
 }
 
@@ -203,7 +216,7 @@ export function isCopiedFitAllowedType(allowdType: string) {
     return false;
 }
 
-export function onStructPaste(fieldChains: (string | number)[]) {
+export function onStructPaste(id: string, fieldChains: (string | number)[]) {
     let obj: any = editState.editingObject;
     const copied = editState.copiedObject;
 
@@ -219,7 +232,8 @@ export function onStructPaste(fieldChains: (string | number)[]) {
         i++;
     }
 
-    editState.fitView = true;
+    editState.fitView = EFitView.FitId;
+    editState.fitViewToId = id;
     editState.update();
 
 }

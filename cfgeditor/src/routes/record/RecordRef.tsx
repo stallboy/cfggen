@@ -16,6 +16,7 @@ import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
 
 import {useCallback, useRef} from "react";
 import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
+import {EFitView} from "./editingObject.ts";
 
 
 export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, recordRefResult, inDragPanelAndFix}: {
@@ -113,11 +114,11 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
 
     const lastFitViewForFix = useRef<string | undefined>();
     let pathname = `/recordRef/${curTable.name}/${curId}`;
-    let fitView = true;
+    let fitView = EFitView.FitFull;
     if (inDragPanelAndFix) {
         pathname += '/fix';
         if (lastFitViewForFix.current && lastFitViewForFix.current == pathname) {
-            fitView = false;
+            fitView = EFitView.FitNone;
         }
     }
 

@@ -8,6 +8,7 @@ import {EntityNode, FlowGraphContext, NodeDoubleClickFunc, NodeMenuFunc} from ".
 import {Entity} from "./entityModel.ts";
 import {MenuItem} from "./FlowContextMenu.tsx";
 import {NodeShowType} from "../routes/setting/storageJson.ts";
+import {EFitView} from "../routes/record/editingObject.ts";
 
 interface FlowGraphInput {
     pathname: string;
@@ -17,7 +18,8 @@ interface FlowGraphInput {
     paneMenu: MenuItem[];
     nodeDoubleClickFunc?: NodeDoubleClickFunc;
 
-    fitView: boolean;
+    fitView: EFitView;
+    fitViewToId?: string;
     isEdited?: boolean;
     setFitViewForPathname?: (pathname: string) => void;
     nodeShow?: NodeShowType;
@@ -55,9 +57,15 @@ function applyWidthHeightToNodes(nodes: EntityNode[], id2RectMap?: Map<string, R
     })
 }
 
+interface QueryRes {
+    idXy?: Rect;
+    id2RectMap?: Map<string, Rect>;
+}
+
 export function useEntityToGraph({
                                      pathname, entityMap, notes, nodeMenuFunc, paneMenu, nodeDoubleClickFunc,
-                                     fitView, isEdited, setFitViewForPathname, nodeShow,
+                                     fitView, fitViewToId, isEdited,
+                                     setFitViewForPathname, nodeShow,
                                  }: FlowGraphInput) {
     const flowGraph = useContext(FlowGraphContext);
     const {query, nodeShow: currentNodeShow} = store;
@@ -76,13 +84,25 @@ export function useEntityToGraph({
 
     const queryKey = isEdited ? ['layout', pathname, 'e'] : ['layout', pathname]
     const staleTime = isEdited ? 0 : 1000 * 60 * 5;
-    const {data: id2RectMap} = useQuery({
+    const {data: idAndRectMap} = useQuery({
         queryKey: queryKey,
-        queryFn: () => layoutAsync(nodes, edges, nodeShowSetting),
+        queryFn: async () => {
+            let idXy;
+            if (idAndRectMap && idAndRectMap.id2RectMap && fitView == EFitView.FitId && fitViewToId) {
+                idXy = idAndRectMap.id2RectMap.get(fitViewToId);
+            }
+            let id2RectMap = await layoutAsync(nodes, edges, nodeShowSetting)
+            let res: QueryRes = {
+                idXy: idXy,
+                id2RectMap: id2RectMap
+            };
+            return res;
+        },
         staleTime: staleTime,
     })
 
-    const newNodes: EntityNode[] | null = id2RectMap ? applyPositionToNodes(nodes, id2RectMap) : null;
+    const newNodes: EntityNode[] | null = idAndRectMap && idAndRectMap.id2RectMap ?
+        applyPositionToNodes(nodes, idAndRectMap.id2RectMap) : null;
     // console.log('new nodes', pathname, fitView, newNodes);
 
     useEffect(() => {
@@ -96,20 +116,34 @@ export function useEntityToGraph({
             setNodes(newNodes);
             setEdges(edges);
             // console.log("set nodes", newNodes, edges);
+            if (panZoom && idAndRectMap && idAndRectMap.id2RectMap){
+                if (fitView == EFitView.FitFull) {
+                    const appliedWHNodes = applyWidthHeightToNodes(newNodes, idAndRectMap.id2RectMap);
+                    const bounds = getNodesBounds(appliedWHNodes); //  {useRelativePosition: true}
+                    const viewportForBounds = getViewportForBounds(bounds, width, height, 0.3, 1, 0.2);
+                    panZoom.setViewport(viewportForBounds);
+                    // console.log(pathname, bounds, width, height, viewportForBounds)
+                    if (setFitViewForPathname) {
+                        setFitViewForPathname(pathname);
+                    }
+                } else if (fitView == EFitView.FitId && fitViewToId  && idAndRectMap.idXy) {
+                    const nowXy = idAndRectMap.id2RectMap.get(fitViewToId);
+                    if (nowXy){
+                        const {x, y} = nowXy;
+                        const {x: oldX, y: oldY} = idAndRectMap.idXy;
+                        const {x:viewX, y:viewY, zoom} = panZoom.getViewport();
 
-            if (fitView) {
-                const appliedWHNodes = applyWidthHeightToNodes(newNodes, id2RectMap);
-                const bounds = getNodesBounds(appliedWHNodes); //  {useRelativePosition: true}
-                const viewportForBounds = getViewportForBounds(bounds, width, height, 0.3, 1, 0.2);
-                panZoom?.setViewport(viewportForBounds);
-                // console.log(pathname, bounds, width, height, viewportForBounds)
-                if (setFitViewForPathname) {
-                    setFitViewForPathname(pathname);
+                        panZoom.setViewport({x: viewX + oldX - x, y: viewY + oldY - y, zoom});
+
+                    }
+
+
                 }
             }
 
+
         }
     }, [newNodes, edges, nodeMenuFunc, paneMenu, fitView, flowGraph, nodeDoubleClickFunc,
-        setNodes, setEdges, id2RectMap, width, height, panZoom, setFitViewForPathname, pathname]);
+        setNodes, setEdges, idAndRectMap, width, height, panZoom, setFitViewForPathname, pathname]);
 
 }

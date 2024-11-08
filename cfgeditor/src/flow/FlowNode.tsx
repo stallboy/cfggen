@@ -70,15 +70,15 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
 
     const unfoldNode = useCallback(() => {
         if (edit && edit.editOnUpdateFold) {
-            edit.editOnUpdateFold(false);
+            edit.editOnUpdateFold(id, false);
         }
-    }, [edit]);
+    }, [edit, id]);
 
     const foldNode = useCallback(() => {
         if (edit && edit.editOnUpdateFold) {
-            edit.editOnUpdateFold(true);
+            edit.editOnUpdateFold(id, true);
         }
-    }, [edit]);
+    }, [edit, id]);
 
     const [resBriefButton, firstImage] = useMemo(() => {
         let btn;
