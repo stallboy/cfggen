@@ -1,5 +1,5 @@
 import {makeFixedPage, setFixedPagesConf, store, useLocationData} from "./store.ts";
-import {memo, useEffect} from "react";
+import {memo, useCallback} from "react";
 import {useTranslation} from "react-i18next";
 import {Button, Form, Input, Space} from "antd";
 import {formItemLayoutWithOutLabel, formLayout} from "./BasicSetting.tsx";
@@ -10,7 +10,7 @@ import {FixedPage, FixedPagesConf} from "./storageJson.ts";
 
 
 function onFinishPageConf(values: any) {
-    console.log(values);
+    // console.log(values);
     setFixedPagesConf(values);
 }
 
@@ -22,16 +22,14 @@ export const OpFixPages = memo(function FixedPagesSetting({schema, curTable}: {
     const {t} = useTranslation();
     const {curTableId, curId} = useLocationData();
     const {pageConf} = store;
-    const [form] = Form.useForm();
 
-    function onFixCurrentPageClick() {
+    const onFixCurrentPageClick = useCallback(function () {
         const page = makeFixedPage(curTableId, curId);
         const newPageConf: FixedPagesConf = {pages: [...pageConf.pages, page]};
         setFixedPagesConf(newPageConf);
-        form.setFieldsValue(newPageConf);
-    }
+    }, [curTableId, curId, pageConf]);
 
-    return <Form form={form} name="fixedPagesConf"  {...formLayout} onFinish={onFinishPageConf} autoComplete="off">
+    return <Form name="fixedPagesConf"  {...formLayout} onFinish={onFinishPageConf} autoComplete="off">
         {(schema && curTable && curPage == 'recordRef') &&
             <Form.Item {...formItemLayoutWithOutLabel}>
                 <Button type="primary" onClick={onFixCurrentPageClick}>
@@ -52,10 +50,6 @@ const FixedPages = memo(function FixedPages({pages}: {
     pages: FixedPage[];
 }) {
     const {t} = useTranslation();
-    const form = Form.useFormInstance();
-    useEffect(() => {
-        form.setFieldValue('pages', pages);
-    }, [pages]);
 
     return <Form.Item label={t('pages')}>
         <Form.List name="pages" initialValue={pages}>
