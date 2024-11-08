@@ -15,7 +15,7 @@ import {
     PlusSquareTwoTone,
     RightOutlined,
 } from "@ant-design/icons";
-import {CSSProperties, memo, useCallback, useEffect, useMemo, useState} from "react";
+import {CSSProperties, memo, useCallback, useMemo, useState} from "react";
 import {useTranslation} from "react-i18next";
 import {Handle, Position} from "@xyflow/react";
 import {getFieldBackgroundColor} from "./colors.ts";
@@ -151,11 +151,6 @@ const PrimitiveFormItem = memo(function ({field, bgColor}: {
     field: EntityEditField,
     bgColor?: string
 }) {
-    const form = Form.useFormInstance();
-    useEffect(() => {
-        form.setFieldValue(field.name, field.value);
-    }, [form, field.name, field.value]);
-
     let props = useMemo(() => field.eleType == 'bool' ? {valuePropName: "checked"} : {}, [field.eleType])
 
     const thisItemStyle = useMemo(() => {
@@ -187,17 +182,11 @@ const ArrayOfPrimitiveFormItem = memo(function ({field, bgColor}: {
     field: EntityEditField,
     bgColor?: string
 }) {
-    const form = Form.useFormInstance();
     const thisItemStyle: CSSProperties = useMemo(() => bgColor == undefined ? {} : {
         backgroundColor: bgColor
     }, [bgColor]);
 
-    useEffect(() => {
-        form.setFieldValue(field.name, field.value);
-    }, [field.name, field.value, form]);
-
     const itemStyle = field.autoCompleteOptions != null ? autoCompleteItemStyle : empty;
-
 
     return <Form.Item {...formItemLayout}
                       label={<LabelWithTooltip name={field.name} comment={field.comment}/>}
@@ -302,12 +291,6 @@ const InterfaceFormItem = memo(function ({field, sharedSetting}: {
     field: EntityEditField,
     sharedSetting?: EntitySharedSetting
 }) {
-    const form = Form.useFormInstance();
-    useEffect(() => {
-        form.setFieldValue(field.name, field.value);
-    }, [field.name, field.value, form]);
-
-
     const onSelectChange = useCallback((value: string) => {
         field.interfaceOnChangeImpl!(value);
     }, [field]);
@@ -372,6 +355,8 @@ export const EntityForm = memo(function EntityForm({edit, sharedSetting}: {
 }) {
     const [_form] = Form.useForm();
 
+    // form里单个字段的改变不会引起这个界面更新，只更新jsonObject对象
+    // initialValue放在每个Form.Item里
     const onValuesChange = useCallback((_changedFields: any, allFields: any) => {
         edit.editOnUpdateValues(allFields);
     }, [edit]);

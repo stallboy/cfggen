@@ -117,10 +117,18 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
             if (!((recordNote.length > 0) || isEditNote) && !note) {
                 return <Button style={iconButtonStyle} icon={bookIcon} onClick={onEditNote}/>;
             }
-        } else if (edit && !note) {
-            if (tmpNote && tmpNote.entity === entity && tmpNote.note.length > 0) {
-                return;
-            } else {
+        }
+        if (edit) {
+            let isShowNote = false
+            if (tmpNote && tmpNote.entity === entity) {
+                if (tmpNote.note.length > 0) {
+                    isShowNote = true;
+                }
+            } else if (note && note.length > 0) {
+                isShowNote = true;
+            }
+
+            if (!isShowNote) {
                 return <Button style={iconButtonStyle} icon={bookIcon} onClick={onEditNoteClickInEdit}/>;
             }
         }
@@ -140,21 +148,24 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
             } else if (note) {
                 return <NoteShowInner note={note}/>;
             }
-        } else {
-            if (edit) {
-                let showNote;
-                if (tmpNote && tmpNote.entity === entity && tmpNote.note.length > 0) {
-                    showNote = tmpNote.note;
-                } else if (note && note.length > 0) {
-                    showNote = note;
-                }
-                if (showNote) {
-                    return <NoteEditInner note={showNote} updateNoteInEdit={updateNoteInEdit}/>;
-                }
-            } else if (note) {
-                return <NoteShowInner note={note}/>;
-            }
         }
+
+        if (edit) {
+            let showNote;
+            if (tmpNote && tmpNote.entity === entity) { // 有设置过就用它了
+                if (tmpNote.note.length > 0) {
+                    showNote = tmpNote.note;
+                } // else {} 这样允许设置为空后不显示，虽然此时json里有note
+            } else if (note && note.length > 0) {
+                showNote = note;
+            }
+            if (showNote) {
+                return <NoteEditInner note={showNote} updateNoteInEdit={updateNoteInEdit}/>;
+            }
+        } else if (note) {
+            return <NoteShowInner note={note}/>;
+        }
+
         return null;
     }, [sharedSetting, id, isEditNote, note, edit, tmpNote, updateNoteInEdit]);
 
