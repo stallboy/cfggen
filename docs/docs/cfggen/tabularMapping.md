@@ -1,6 +1,7 @@
 ---
 layout: page
 title: 映射到表格
+parent: 配表系统
 nav_order: 8
 ---
 

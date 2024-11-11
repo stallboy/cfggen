@@ -1,6 +1,7 @@
 ---
 layout: page
 title: 结构定义
+parent: 配表系统
 nav_order: 4
 ---
 

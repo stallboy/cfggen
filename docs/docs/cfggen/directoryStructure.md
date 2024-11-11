@@ -1,6 +1,7 @@
 ---
 layout: page
 title: 目录和数据结构
+parent: 配表系统
 nav_order: 2
 ---
 

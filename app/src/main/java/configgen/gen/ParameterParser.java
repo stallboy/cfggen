@@ -3,12 +3,12 @@ package configgen.gen;
 import java.util.HashMap;
 import java.util.Map;
 
-class Argument implements Parameter {
+class ParameterParser implements Parameter {
     private final String arg;
     final String type;
     private final Map<String, String> params = new HashMap<>();
 
-    Argument(String arg) {
+    ParameterParser(String arg) {
         this.arg = arg;
         String[] sp = arg.split(",");
         type = sp[0];
@@ -47,8 +47,7 @@ class Argument implements Parameter {
         }
     }
 
-    @Override
-    public void end() {
+    void assureNoExtra() {
         if (!params.isEmpty()) {
             throw new AssertionError("-gen " + type + " not support parameter: " + params);
         }

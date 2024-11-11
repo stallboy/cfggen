@@ -45,7 +45,6 @@ public class GenJavaCode extends Generator {
         if (buildersFilename != null) {
             readNeedBuilderTables();
         }
-        parameter.end();
     }
 
     private void readNeedBuilderTables() {

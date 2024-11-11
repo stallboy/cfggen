@@ -26,12 +26,8 @@ public class GenJson extends Generator {
         String tablesStr = parameter.get("tables", "");
         String dstDir = parameter.get("dst", ".");
         dstPath = Path.of(dstDir);
-
         String[] split = tablesStr.split(";");
         tables.addAll(Arrays.asList(split));
-        if (tag != null) {
-            Logger.log("gen json with tag=%s, be careful!!!", tag);
-        }
     }
 
     @Override
@@ -39,6 +35,10 @@ public class GenJson extends Generator {
         if (tables.isEmpty()) {
             return;
         }
+        if (tag != null) {
+            Logger.log("gen json with tag=%s, be careful!!!", tag);
+        }
+
         CfgValue cfgValue = ctx.makeValue(tag);
 
         for (String table : tables) {

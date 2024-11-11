@@ -88,9 +88,9 @@ public final class Main {
                 "parameters in gen are separated by , and the parameter name and parameter value are separated = or :."));
         Generators.getAllProviders().forEach((k, v) -> {
                     System.out.printf("    -gen %s\n", k);
-                    Usage usage = Usage.of(k);
-                    v.create(usage);
-                    usage.print();
+                    ParameterInfoCollector collector = ParameterInfoCollector.of(k);
+                    v.create(collector);
+                    collector.print();
                 }
         );
 
@@ -116,6 +116,9 @@ public final class Main {
 
             throw t;
         }
+    }
+
+    record NamedGenerator(String name, Generator gen) {
     }
 
     private static void main0(String[] args) throws Exception {
@@ -148,8 +151,6 @@ public final class Main {
 
         boolean verify = false;
 
-        record NamedGenerator(String name, Generator gen) {
-        }
         List<NamedGenerator> generators = new ArrayList<>();
 
         boolean binaryToTextLoop = false;

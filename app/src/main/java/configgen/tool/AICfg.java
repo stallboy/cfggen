@@ -15,9 +15,6 @@ public record AICfg(String baseUrl,
                     String model,
                     List<TableCfg> tableCfgs) {
 
-
-    private static final String DEFAULT_INIT = "请提供ID和描述，我将根据这些信息生成符合结构的JSON配置";
-
     public record TableCfg(String table,
                            String promptFile, // {table}.jte
                            String init, // 初始对白
@@ -27,8 +24,9 @@ public record AICfg(String baseUrl,
 
     public record OneExample(String id,
                              String description) {
-
     }
+
+    private static final String DEFAULT_INIT = "请提供ID和描述，我将根据这些信息生成符合结构的JSON配置";
 
     public static AICfg readFromFile(String cfgFn) {
         Path path = Path.of(cfgFn);

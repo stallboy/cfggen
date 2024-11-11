@@ -5,10 +5,11 @@ public interface Parameter {
 
     boolean has(String key);
 
-    default void end() {
-    }
-
     default String get(String key, String def, String messageId) {
         return get(key, def);
+    }
+
+    default boolean has(String key, String messageId) {
+        return has(messageId);
     }
 }

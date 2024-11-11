@@ -1,6 +1,7 @@
 ---
 layout: page
 title: 最佳实践
+parent: 配表系统
 nav_order: 20
 ---
 

@@ -20,22 +20,25 @@ import static configgen.tool.AICfg.*;
 import static io.github.sashirestela.openai.domain.chat.ChatMessage.*;
 
 public class GenJsonByAI extends Generator {
-    private final AICfg aiCfg;
-    private final List<String> asks;
+    private final String cfgFn;
+    private final String askFn;
     private final String table;
-    private final String promptFile;
-    private final int retryTimes;
+    private final String promptFn;
     private final boolean isUseRawStructInfo;
+    private final int retryTimes;
 
     public GenJsonByAI(Parameter parameter) {
         super(parameter);
-        String cfgFn = parameter.get("cfg", "ai.json");
-        String askFn = parameter.get("ask", "ask.txt");
-        table = parameter.get("table", "skill.buff");
-        String promptFn = parameter.get("promptfn", null);
-        isUseRawStructInfo = parameter.has("raw");
-        retryTimes = Integer.parseInt(parameter.get("retry", "1"));
+        cfgFn = parameter.get("cfg", "ai.json", "llm大模型选择，需要兼容openai的api");
+        askFn = parameter.get("ask", "ask.txt", "问题，每行生成一个json");
+        table = parameter.get("table", "skill.buff", "表名称");
+        promptFn = parameter.get("promptfn", null, "一般不用配置，默认为在<cfg>文件目录下的<table>.jte，格式参考https://jte.gg/");
+        isUseRawStructInfo = parameter.has("raw", "false表示是把结构信息转为typescript类型信息提供给llm");
+        retryTimes = Integer.parseInt(parameter.get("retry", "1", "重试llm次数，默认1代表不重试"));
+    }
 
+    @Override
+    public void generate(Context ctx) throws IOException {
         if (retryTimes <= 0) {
             throw new RuntimeException("retry must > 0");
         }
@@ -43,16 +46,19 @@ public class GenJsonByAI extends Generator {
             throw new RuntimeException("gen jsonByAI with tag=%s not supported".formatted(tag));
         }
 
-        aiCfg = readFromFile(cfgFn);
+
+        AICfg aiCfg = readFromFile(cfgFn);
         if (!Files.exists(Path.of(askFn))) {
             throw new RuntimeException(askFn + " not exist!");
         }
+        List<String> asks;
         try {
             asks = Files.readAllLines(Path.of(askFn));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
+        String promptFile;
         if (promptFn == null) {
             promptFile = aiCfg.assureFindPromptFile(table, Path.of(cfgFn).getParent());
         } else {
@@ -61,10 +67,7 @@ public class GenJsonByAI extends Generator {
                 throw new RuntimeException(promptFile + " not exist!");
             }
         }
-    }
 
-    @Override
-    public void generate(Context ctx) throws IOException {
         CfgValue cfgValue = ctx.makeValue();
         CfgValue.VTable vTable = cfgValue.getTable(table);
         Objects.requireNonNull(vTable, "table=%s not found!".formatted(table));
@@ -95,7 +98,7 @@ public class GenJsonByAI extends Generator {
                     AssistantMessage.of(init),
                     UserMessage.of(ask));
             askWithRetry(messages, retryTimes, stat, tableSchema, openAI,
-                    ctx.dataDir(), cfgValue.valueStat());
+                    ctx.dataDir(), cfgValue.valueStat(), aiCfg.model());
         }
         System.out.println(stat);
     }
@@ -117,10 +120,10 @@ public class GenJsonByAI extends Generator {
 
     private void askWithRetry(List<ChatMessage> messages, int retryTimes, AskStat stat,
                               TableSchema tableSchema, SimpleOpenAI openAI,
-                              Path dataDir, ValueStat valueStat) {
+                              Path dataDir, ValueStat valueStat, String model) {
         stat.ask++;
         for (int i = 0; i < retryTimes; i++) {
-            String jsonResult = ask(messages, openAI);
+            String jsonResult = ask(messages, openAI, model);
             if (i > 0) {
                 stat.retry++;
             }
@@ -157,9 +160,9 @@ public class GenJsonByAI extends Generator {
         }
     }
 
-    private String ask(List<ChatMessage> messages, SimpleOpenAI openAI) {
+    private String ask(List<ChatMessage> messages, SimpleOpenAI openAI, String model) {
         var chatRequest = ChatRequest.builder()
-                .model(aiCfg.model())
+                .model(model)
                 .messages(messages)
                 .temperature(0.0)
                 .build();

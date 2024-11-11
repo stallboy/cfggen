@@ -24,12 +24,8 @@ public class GenTs extends Generator {
         String dstDir = parameter.get("dst", ".");
         encoding = parameter.get("encoding", "UTF-8");
         dstPath = Path.of(dstDir);
-
         String[] split = tablesStr.split(";");
         tables.addAll(Arrays.asList(split));
-        if (tag != null) {
-            Logger.log("gen ts with tag=%s, be careful!!!", tag);
-        }
     }
 
     @Override
@@ -37,6 +33,10 @@ public class GenTs extends Generator {
         if (tables.isEmpty()) {
             return;
         }
+        if (tag != null) {
+            Logger.log("gen ts with tag=%s, be careful!!!", tag);
+        }
+
         CfgValue cfgValue = ctx.makeValue(tag);
 
         for (String table : tables) {

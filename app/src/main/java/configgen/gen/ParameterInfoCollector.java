@@ -5,16 +5,16 @@ import configgen.util.LocaleUtil;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-record Usage(String genId,
-             Map<String, Info> infos) implements Parameter {
+record ParameterInfoCollector(String genId,
+                              Map<String, Info> infos) implements Parameter {
 
     private record Info(String def,
                         boolean isFlag,
                         String messageId) {
     }
 
-    static Usage of(String genId) {
-        return new Usage(genId, new LinkedHashMap<>());
+    static ParameterInfoCollector of(String genId) {
+        return new ParameterInfoCollector(genId, new LinkedHashMap<>());
     }
 
     void print() {
@@ -54,5 +54,11 @@ record Usage(String genId,
     public String get(String key, String def, String messageId) {
         infos.put(key, new Info(def, false, messageId));
         return def;
+    }
+
+    @Override
+    public boolean has(String key, String messageId) {
+        infos.put(key, new Info("false", true, messageId));
+        return false;
     }
 }

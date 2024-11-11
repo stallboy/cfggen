@@ -29,6 +29,7 @@ import static configgen.editorserver.RecordEditService.*;
 public class EditorServer extends Generator {
     private final int port;
     private final String noteCsvPath;
+    private final String aiCfgFn;
 
     private Path dataDir;
     private LangSwitch langSwitch;
@@ -43,20 +44,20 @@ public class EditorServer extends Generator {
 
     public EditorServer(Parameter parameter) {
         super(parameter);
-        port = Integer.parseInt(parameter.get("port", "3456"));
+        port = Integer.parseInt(parameter.get("port", "3456", "为cfgeditor.exe提供服务的端口"));
         noteCsvPath = parameter.get("note", "_note.csv");
-
-        String aiCfgFn = parameter.get("aicfg", null);
-        if (aiCfgFn != null) {
-            aiDir = Path.of(aiCfgFn).getParent();
-            aiCfg = AICfg.readFromFile(aiCfgFn);
-        }
-        postRun = parameter.get("postrun", null);
-        postRunJavadata = parameter.get("postrunjavadata", "configdata.zip");
+        aiCfgFn = parameter.get("aicfg", null, "llm大模型选择，需要兼容openai的api");
+        postRun = parameter.get("postrun", null, "可以是个xx.bat，用于自动提交服务器及时生效");
+        postRunJavadata = parameter.get("postrunjavadata", "configdata.zip", "如果设置了postrun，增加或更新json后，会先生成javadata文件，然后运行postrun");
     }
 
     @Override
     public void generate(Context ctx) throws IOException {
+        if (aiCfgFn != null) {
+            aiDir = Path.of(aiCfgFn).getParent();
+            aiCfg = AICfg.readFromFile(aiCfgFn);
+        }
+
         dataDir = ctx.dataDir();
         langSwitch = ctx.nullableLangSwitch();
         cfgValue = ctx.makeValue(tag, true);

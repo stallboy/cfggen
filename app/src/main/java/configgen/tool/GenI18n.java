@@ -19,7 +19,6 @@ public final class GenI18n extends Generator {
     public GenI18n(Parameter parameter) {
         super(parameter);
         file = new File(parameter.get("file", "../i18n/i18n-config.csv"));
-        parameter.end();
     }
 
     @Override

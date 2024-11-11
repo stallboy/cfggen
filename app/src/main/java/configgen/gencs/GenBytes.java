@@ -27,7 +27,6 @@ public class GenBytes extends Generator {
         super(parameter);
         file = new File(parameter.get("file", "config.bytes"));
         cipher = parameter.get("cipher", "");
-        parameter.end();
     }
 
     @Override

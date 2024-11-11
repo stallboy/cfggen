@@ -32,7 +32,6 @@ public class GenCs extends Generator {
         pkg = parameter.get("pkg", "Config");
         encoding = parameter.get("encoding", "GBK");
         prefix = parameter.get("prefix", "Data");
-        parameter.end();
     }
 
     @Override

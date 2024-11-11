@@ -1,6 +1,7 @@
 ---
 layout: page
 title: meta杂项设置
+parent: 配表系统
 nav_order: 9
 ---
 

@@ -49,7 +49,6 @@ public class GenLua extends Generator {
         packBool = parameter.has("packbool");
         rForOldShared = parameter.has("rforoldshared");
         noStr = parameter.has("nostr");
-        parameter.end();
     }
 
     @Override
