@@ -70,13 +70,15 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
 
     const unfoldNode = useCallback(() => {
         if (edit && edit.editOnUpdateFold) {
-            edit.editOnUpdateFold(id, false);
+            // console.log("unfold", nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY);
+            edit.editOnUpdateFold(id, false, {x: nodeProps.positionAbsoluteX, y: nodeProps.positionAbsoluteY});
         }
     }, [edit, id]);
 
     const foldNode = useCallback(() => {
         if (edit && edit.editOnUpdateFold) {
-            edit.editOnUpdateFold(id, true);
+            // console.log("fold", nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY);
+            edit.editOnUpdateFold(id, true, {x: nodeProps.positionAbsoluteX, y: nodeProps.positionAbsoluteY});
         }
     }, [edit, id]);
 

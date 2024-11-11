@@ -9,7 +9,7 @@ import {useTranslation} from "react-i18next";
 import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
 import {Schema} from "./schemaUtil.ts";
 import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
-import {EFitView} from "../record/editingObject.ts";
+import {EntityNode} from "../../flow/FlowGraph.tsx";
 
 
 export function Table() {
@@ -35,8 +35,8 @@ export function Table() {
         }
     }];
 
-    const nodeMenuFunc = (entity: Entity): MenuItem[] => {
-        let userData = entity.userData as UserData;
+    const nodeMenuFunc = (entityNode: EntityNode): MenuItem[] => {
+        let userData = entityNode.data.entity.userData as UserData;
         let mm: MenuItem[] = [];
         if (userData.table != curTable.name) {
             mm.push({
@@ -58,7 +58,7 @@ export function Table() {
         return mm;
     }
 
-    useEntityToGraph({pathname, entityMap, notes, nodeMenuFunc, paneMenu, fitView: EFitView.FitFull});
+    useEntityToGraph({pathname, entityMap, notes, nodeMenuFunc, paneMenu});
     return null;
 }
 

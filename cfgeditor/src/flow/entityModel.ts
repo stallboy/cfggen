@@ -58,12 +58,17 @@ export interface EntityEditFieldOption {
     title: string;
 }
 
+export interface EntityPosition {
+    x:number;
+    y:number;
+}
+
 export interface EntityEdit {
     editFields: EntityEditField[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     editOnUpdateValues: (values: any) => void;
     editOnUpdateNote: (note?: string) => void;
-    editOnUpdateFold: (id: string, fold: boolean) => void;
+    editOnUpdateFold: (id: string,  fold: boolean, position: EntityPosition) => void;
     editOnDelete?: () => void;
     editOnMoveUp?: () => void;
     editOnMoveDown?: () => void;

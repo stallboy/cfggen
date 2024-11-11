@@ -10,7 +10,7 @@ import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
 import {getDefaultIdInTable} from "./Table.tsx";
 import {memo, useCallback, useMemo} from "react";
 import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
-import {EFitView} from "../record/editingObject.ts";
+import {EntityNode} from "../../flow/FlowGraph.tsx";
 
 
 export const TableRef = memo(function TableRef() {
@@ -31,13 +31,13 @@ export const TableRef = memo(function TableRef() {
         }
     }], [navigate, schema, curTable, curId]);
 
-    const nodeDoubleClickFunc = useCallback((entity: Entity): void => {
-        const sItem = entity.userData as SItem;
+    const nodeDoubleClickFunc = useCallback((entityNode: EntityNode): void => {
+        const sItem = entityNode.data.entity.userData as SItem;
         navigate(navTo('table', sItem.name, getDefaultIdInTable(schema, sItem.name, curId)));
     }, [navigate, schema, curId]);
 
-    const nodeMenuFunc = useCallback((entity: Entity): MenuItem[] => {
-        const sItem = entity.userData as SItem;
+    const nodeMenuFunc = useCallback((entityNode: EntityNode): MenuItem[] => {
+        const sItem = entityNode.data.entity.userData as SItem;
         return [{
             label: sItem.name + "\n" + t('tableRef'),
             key: `entityTableRef`,
@@ -53,7 +53,14 @@ export const TableRef = memo(function TableRef() {
         }];
     }, [navigate, schema, curId]);
 
-    useEntityToGraph({pathname, entityMap, notes, nodeMenuFunc, paneMenu, fitView: EFitView.FitFull, nodeDoubleClickFunc});
+    useEntityToGraph({
+        pathname,
+        entityMap,
+        notes,
+        nodeMenuFunc,
+        paneMenu,
+        nodeDoubleClickFunc
+    });
 
     return <></>;
 });

@@ -1,6 +1,7 @@
 import {JSONArray, JSONObject, RecordResult} from "./recordModel.ts";
 import {SItem, SStruct, STable} from "../table/schemaModel.ts";
 import {getField, Schema} from "../table/schemaUtil.ts";
+import {EntityPosition} from "../../flow/entityModel.ts";
 
 export enum EFitView {
     FitFull,
@@ -14,6 +15,7 @@ export type EditState = {
     editingObject: JSONObject;
     fitView: EFitView;
     fitViewToId?: string;
+    fitViewToIdPosition?: EntityPosition;
 
     update: () => void;
     submitEditingObject: () => void;
@@ -41,6 +43,7 @@ export const editState: EditState = {
 export type EditingObjectRes = {
     fitView: EFitView;
     fitViewToId?: string;
+    fitViewToIdPosition?: EntityPosition;
     isEdited: boolean;
 }
 
@@ -53,12 +56,13 @@ export function startEditingObject(recordResult: RecordResult,
         update();
     }
     editState.submitEditingObject = submitEditingObject;
-    const {table, id, fitView, fitViewToId} = editState;
+    const {table, id, fitView, fitViewToId, fitViewToIdPosition} = editState;
     const {table: newTable, id: newId} = recordResult;
     if (newTable == table && newId == id) {
         return {
             fitView,
             fitViewToId,
+            fitViewToIdPosition,
             isEdited: editState.isEdited
         };
     }
@@ -70,11 +74,13 @@ export function startEditingObject(recordResult: RecordResult,
     editState.id = newId;
     editState.fitView = EFitView.FitFull;
     editState.fitViewToId = undefined;
+    editState.fitViewToIdPosition = undefined;
     editState.editingObject = newEditingObject;
     editState.isEdited = false;
     return {
         fitView: editState.fitView,
         fitViewToId: editState.fitViewToId,
+        fitViewToIdPosition: editState.fitViewToIdPosition,
         isEdited: editState.isEdited
     };
 }
@@ -122,12 +128,14 @@ export function onUpdateNote(note: string | undefined,
 
 export function onUpdateFold(id: string,
                              fold: boolean,
-                             fieldChains: (string | number)[]) {
+                             fieldChains: (string | number)[],
+                             position: EntityPosition) {
     const obj = getFieldObj(editState.editingObject, fieldChains);
     obj['$fold'] = fold;
 
     editState.fitView = EFitView.FitId;
     editState.fitViewToId = id;
+    editState.fitViewToIdPosition = position;
     editState.update();
 }
 
@@ -216,7 +224,9 @@ export function isCopiedFitAllowedType(allowdType: string) {
     return false;
 }
 
-export function onStructPaste(id: string, fieldChains: (string | number)[]) {
+export function onStructPaste(id: string,
+                              fieldChains: (string | number)[],
+                              position: EntityPosition) {
     let obj: any = editState.editingObject;
     const copied = editState.copiedObject;
 
@@ -234,6 +244,7 @@ export function onStructPaste(id: string, fieldChains: (string | number)[]) {
 
     editState.fitView = EFitView.FitId;
     editState.fitViewToId = id;
+    editState.fitViewToIdPosition = position;
     editState.update();
 
 }

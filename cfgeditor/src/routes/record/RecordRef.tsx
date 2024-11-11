@@ -16,7 +16,8 @@ import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
 
 import {useCallback, useRef} from "react";
 import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
-import {EFitView} from "./editingObject.ts";
+import {EditingObjectRes, EFitView} from "./editingObject.ts";
+import {EntityNode} from "../../flow/FlowGraph.tsx";
 
 
 export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, recordRefResult, inDragPanelAndFix}: {
@@ -73,14 +74,14 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
         }
     }];
 
-    const nodeDoubleClickFunc = (entity: Entity): void => {
+    const nodeDoubleClickFunc = (entityNode: EntityNode): void => {
         const {isEditMode} = store;
-        const refId = entity.userData as RefId;
+        const refId = entityNode.data.entity.userData as RefId;
         navigate(navTo('record', refId.table, refId.id, isEditMode));
     };
 
-    const nodeMenuFunc = (entity: Entity): MenuItem[] => {
-        const refId = entity.userData as RefId;
+    const nodeMenuFunc = (entityNode: EntityNode): MenuItem[] => {
+        const refId = entityNode.data.entity.userData as RefId;
         const mm = [];
         mm.push({
             label: t('record') + refId.id,
@@ -114,11 +115,11 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
 
     const lastFitViewForFix = useRef<string | undefined>();
     let pathname = `/recordRef/${curTable.name}/${curId}`;
-    let fitView = EFitView.FitFull;
+    let editingObjectRes; // EFitView.FitFull;
     if (inDragPanelAndFix) {
         pathname += '/fix';
         if (lastFitViewForFix.current && lastFitViewForFix.current == pathname) {
-            fitView = EFitView.FitNone;
+            editingObjectRes = fitNone;
         }
     }
 
@@ -128,7 +129,7 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
 
 
     useEntityToGraph({
-        pathname, entityMap, notes, nodeMenuFunc, paneMenu, nodeDoubleClickFunc, fitView,
+        pathname, entityMap, notes, nodeMenuFunc, paneMenu, nodeDoubleClickFunc, editingObjectRes,
         setFitViewForPathname: (inDragPanelAndFix ? setFitViewForPathname : undefined),
         nodeShow,
     });
@@ -136,6 +137,7 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
     return <></>;
 }
 
+const fitNone: EditingObjectRes = {fitView: EFitView.FitNone, isEdited: false}
 
 export function RecordRef({schema, notes, curTable, curId, refIn, refOutDepth, maxNode, nodeShow, inDragPanelAndFix}: {
     schema: Schema;

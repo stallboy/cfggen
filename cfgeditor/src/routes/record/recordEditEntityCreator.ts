@@ -2,7 +2,7 @@ import {
     Entity,
     EntityEdgeType, EntityEdit,
     EntityEditField,
-    EntityEditFieldOptions,
+    EntityEditFieldOptions, EntityPosition,
     EntitySourceEdge,
     EntityType,
     PrimitiveType
@@ -201,8 +201,8 @@ export class RecordEditEntityCreator {
             onUpdateNote(note, fieldChain);
         };
 
-        const editOnUpdateFold = (id: string, fold: boolean) => {
-            onUpdateFold(id, fold, fieldChain);
+        const editOnUpdateFold = (id: string, fold: boolean, position:EntityPosition) => {
+            onUpdateFold(id, fold, fieldChain, position);
             const newFolds = this.folds.setFold(fieldChain, fold);
             this.setFolds(newFolds);
         };

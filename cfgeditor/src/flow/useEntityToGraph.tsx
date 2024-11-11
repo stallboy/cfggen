@@ -8,7 +8,7 @@ import {EntityNode, FlowGraphContext, NodeDoubleClickFunc, NodeMenuFunc} from ".
 import {Entity} from "./entityModel.ts";
 import {MenuItem} from "./FlowContextMenu.tsx";
 import {NodeShowType} from "../routes/setting/storageJson.ts";
-import {EFitView} from "../routes/record/editingObject.ts";
+import {EditingObjectRes, EFitView} from "../routes/record/editingObject.ts";
 
 interface FlowGraphInput {
     pathname: string;
@@ -17,10 +17,8 @@ interface FlowGraphInput {
     nodeMenuFunc: NodeMenuFunc;
     paneMenu: MenuItem[];
     nodeDoubleClickFunc?: NodeDoubleClickFunc;
+    editingObjectRes?: EditingObjectRes;
 
-    fitView: EFitView;
-    fitViewToId?: string;
-    isEdited?: boolean;
     setFitViewForPathname?: (pathname: string) => void;
     nodeShow?: NodeShowType;
 }
@@ -57,14 +55,11 @@ function applyWidthHeightToNodes(nodes: EntityNode[], id2RectMap?: Map<string, R
     })
 }
 
-interface QueryRes {
-    idXy?: Rect;
-    id2RectMap?: Map<string, Rect>;
-}
 
 export function useEntityToGraph({
-                                     pathname, entityMap, notes, nodeMenuFunc, paneMenu, nodeDoubleClickFunc,
-                                     fitView, fitViewToId, isEdited,
+                                     pathname, entityMap, notes,
+                                     nodeMenuFunc, paneMenu, nodeDoubleClickFunc,
+                                     editingObjectRes,
                                      setFitViewForPathname, nodeShow,
                                  }: FlowGraphInput) {
     const flowGraph = useContext(FlowGraphContext);
@@ -82,28 +77,16 @@ export function useEntityToGraph({
         sharedSetting: {notes, query, nodeShow: nodeShowSetting}
     }), [entityMap, notes, query, nodeShowSetting]);
 
-    const queryKey = isEdited ? ['layout', pathname, 'e'] : ['layout', pathname]
-    const staleTime = isEdited ? 0 : 1000 * 60 * 5;
-    const {data: idAndRectMap} = useQuery({
+    const queryKey = editingObjectRes?.isEdited ? ['layout', pathname, 'e'] : ['layout', pathname]
+    const staleTime = editingObjectRes?.isEdited ? 0 : 1000 * 60 * 5;
+    const {data: id2RectMap} = useQuery({
         queryKey: queryKey,
-        queryFn: async () => {
-            let idXy;
-            if (idAndRectMap && idAndRectMap.id2RectMap && fitView == EFitView.FitId && fitViewToId) {
-                idXy = idAndRectMap.id2RectMap.get(fitViewToId);
-            }
-            let id2RectMap = await layoutAsync(nodes, edges, nodeShowSetting)
-            let res: QueryRes = {
-                idXy: idXy,
-                id2RectMap: id2RectMap
-            };
-            return res;
-        },
+        queryFn: async () => await layoutAsync(nodes, edges, nodeShowSetting),
         staleTime: staleTime,
     })
 
-    const newNodes: EntityNode[] | null = idAndRectMap && idAndRectMap.id2RectMap ?
-        applyPositionToNodes(nodes, idAndRectMap.id2RectMap) : null;
-    // console.log('new nodes', pathname, fitView, newNodes);
+    const newNodes = useMemo(() => id2RectMap ? applyPositionToNodes(nodes, id2RectMap) : undefined,
+        [nodes, id2RectMap]);
 
     useEffect(() => {
         if (newNodes) {
@@ -116,9 +99,9 @@ export function useEntityToGraph({
             setNodes(newNodes);
             setEdges(edges);
             // console.log("set nodes", newNodes, edges);
-            if (panZoom && idAndRectMap && idAndRectMap.id2RectMap){
-                if (fitView == EFitView.FitFull) {
-                    const appliedWHNodes = applyWidthHeightToNodes(newNodes, idAndRectMap.id2RectMap);
+            if (panZoom && id2RectMap) {
+                if (editingObjectRes === undefined || editingObjectRes.fitView === EFitView.FitFull) {
+                    const appliedWHNodes = applyWidthHeightToNodes(newNodes, id2RectMap);
                     const bounds = getNodesBounds(appliedWHNodes); //  {useRelativePosition: true}
                     const viewportForBounds = getViewportForBounds(bounds, width, height, 0.3, 1, 0.2);
                     panZoom.setViewport(viewportForBounds);
@@ -126,24 +109,29 @@ export function useEntityToGraph({
                     if (setFitViewForPathname) {
                         setFitViewForPathname(pathname);
                     }
-                } else if (fitView == EFitView.FitId && fitViewToId  && idAndRectMap.idXy) {
-                    const nowXy = idAndRectMap.id2RectMap.get(fitViewToId);
-                    if (nowXy){
-                        const {x, y} = nowXy;
-                        const {x: oldX, y: oldY} = idAndRectMap.idXy;
-                        const {x:viewX, y:viewY, zoom} = panZoom.getViewport();
-
-                        panZoom.setViewport({x: viewX + oldX - x, y: viewY + oldY - y, zoom});
-
+                } else if (editingObjectRes?.fitView === EFitView.FitId
+                    && editingObjectRes.fitViewToId
+                    && editingObjectRes.fitViewToIdPosition) {
+                    const nowXy = id2RectMap.get(editingObjectRes.fitViewToId);
+                    if (nowXy !== undefined) {
+                        const {x: nowX, y: nowY} = nowXy;
+                        const {x, y} = editingObjectRes.fitViewToIdPosition;
+                        const {x: tx, y: ty, zoom} = panZoom.getViewport();
+                        // xyflow的viewport的含义如下：
+                        // screenX = x*zoom + tx
+                        // screenY = y*zoom + ty
+                        // 这里要保证screenX，screenY前后一致
+                        // nowX*zoom + nowTx = x*zoom + tx
+                        const nowTx = x * zoom + tx - nowX * zoom;
+                        const nowTy = y * zoom + ty - nowY * zoom;
+                        panZoom.setViewport({x: nowTx, y: nowTy, zoom});
                     }
-
-
                 }
             }
 
 
         }
-    }, [newNodes, edges, nodeMenuFunc, paneMenu, fitView, flowGraph, nodeDoubleClickFunc,
-        setNodes, setEdges, idAndRectMap, width, height, panZoom, setFitViewForPathname, pathname]);
+    }, [newNodes, edges, nodeMenuFunc, paneMenu, editingObjectRes, flowGraph, nodeDoubleClickFunc,
+        setNodes, setEdges, id2RectMap, width, height, panZoom, setFitViewForPathname, pathname]);
 
 }

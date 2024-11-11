@@ -8,8 +8,8 @@ import {ViewportLogger} from "./ViewportLogger.tsx";
 
 export type EntityNode = Node<{entity: Entity}, "node">;
 export type EntityEdge = Edge;
-export type NodeMenuFunc = (entity: Entity) => MenuItem[];
-export type NodeDoubleClickFunc = (entity: Entity) => void;
+export type NodeMenuFunc = (entityNode: EntityNode) => MenuItem[];
+export type NodeDoubleClickFunc = (entityNode: EntityNode) => void;
 
 export interface FlowGraphContextType {
     setPaneMenu: (menu: MenuItem[]) => void;
@@ -57,12 +57,12 @@ export const FlowGraph = memo(function FlowGraph({children}: {
             event.stopPropagation();
             event.preventDefault();           // Prevent native context menu from showing
             setMenuStyle({top: event.clientY - 30, left: event.clientX - 30,});
-            setMenuItems(nodeMenuFunc ? nodeMenuFunc(flowNode.data.entity) : undefined);
+            setMenuItems(nodeMenuFunc ? nodeMenuFunc(flowNode) : undefined);
         },
         [nodeMenuFunc, setMenuStyle, setMenuItems],
     );
     const onNodeDoubleClick = useCallback((_event: ReactMouseEvent, flowNode: EntityNode) => {
-            nodeDoubleClickFunc?.(flowNode.data.entity);
+            nodeDoubleClickFunc?.(flowNode);
         },
         [nodeDoubleClickFunc],
     );

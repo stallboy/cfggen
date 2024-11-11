@@ -5,6 +5,7 @@ import {createRefEntities, getId, getLabel} from "./recordRefEntity.ts";
 import {RecordEntityCreator} from "./recordEntityCreator.ts";
 import {Folds, RecordEditEntityCreator} from "./recordEditEntityCreator.ts";
 import {
+    EditingObjectRes,
     editState,
     EFitView,
     isCopiedFitAllowedType,
@@ -21,12 +22,13 @@ import {addOrUpdateRecord, fetchRecord} from "../api.ts";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
 import {SchemaTableType} from "../../CfgEditorApp.tsx";
 import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
-import {memo, useCallback, useEffect, useReducer, useState} from "react";
+import {memo, useCallback, useEffect, useMemo, useReducer, useState} from "react";
 
 
 import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
 import {SInterface, SStruct} from "../table/schemaModel.ts";
 import {queryClient} from "../../main.tsx";
+import {EntityNode} from "../../flow/FlowGraph.tsx";
 
 
 const RecordWithResult = memo(function ({recordResult}: { recordResult: RecordResult }) {
@@ -81,44 +83,48 @@ const RecordWithResult = memo(function ({recordResult}: { recordResult: RecordRe
         forceUpdate();
     }, [pathname, forceUpdate])
 
-    const entityMap = new Map<string, Entity>();
-    const refId = {table: curTable.name, id: curId};
-    const entityId = getId(curTable.name, curId);
     const isEditable = schema.isEditable && curTable.isEditable;
     const isEditing = isEditable && edit;
 
-    let fitView: EFitView = EFitView.FitFull;
-    let fitViewToId;
-    let isEdited: boolean = false;
-    if (!isEditing) {
-        const creator = new RecordEntityCreator(entityMap, schema, refId, recordResult.refs, tauriConf, resourceDir, resMap);
-        creator.createRecordEntity(entityId, recordResult.object, getId(getLabel(curTable.name), curId));
-        createRefEntities({
-            entityMap,
-            schema,
-            briefRecordRefs: recordResult.refs,
-            isCreateRefs: false,
-            tauriConf,
-            resourceDir,
-            resMap
-        });
-    } else {
+    const {entityMap, editingObjectRes} = useMemo(() => {
+        const entityMap = new Map<string, Entity>();
+        let editingObjectRes: EditingObjectRes;
 
-        const submitEditingObject = () => {
-            addOrUpdateRecordMutation.mutate(editState.editingObject);
-        };
+        if (!isEditing) {
+            const refId = {table: curTable.name, id: curId};
+            const creator = new RecordEntityCreator(entityMap, schema, refId, recordResult.refs, tauriConf, resourceDir, resMap);
+            creator.createRecordEntity(getId(curTable.name, curId), recordResult.object, getId(getLabel(curTable.name), curId));
+            createRefEntities({
+                entityMap,
+                schema,
+                briefRecordRefs: recordResult.refs,
+                isCreateRefs: false,
+                tauriConf,
+                resourceDir,
+                resMap
+            });
+            editingObjectRes = {
+                fitView: EFitView.FitFull,
+                isEdited: false
+            }
 
-        // 这是非纯函数，escape hatch，用useRef也能做，这里用全局变量
-        const res = startEditingObject(recordResult, update, submitEditingObject);
-        fitView = res.fitView;
-        fitViewToId = res.fitViewToId;
-        isEdited = res.isEdited;
-        const creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId, folds, setFolds);
-        creator.createThis();
-    }
-    fillHandles(entityMap);
+        } else {
+            const submitEditingObject = () => {
+                addOrUpdateRecordMutation.mutate(editState.editingObject);
+            };
 
-    function getEditMenu(table: string, id: string, edit: boolean) {
+            // 这是非纯函数，escape hatch，用useRef也能做，这里用全局变量
+            editingObjectRes = startEditingObject(recordResult, update, submitEditingObject);
+            const creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId, folds, setFolds);
+            creator.createThis();
+        }
+        fillHandles(entityMap);
+        return {entityMap, editingObjectRes}
+    }, [isEditing, curTableId, curId, schema, recordResult, tauriConf, resourceDir, resMap,
+        addOrUpdateRecordMutation, update, folds, setFolds]);
+
+
+    const getEditMenu = useCallback(function (table: string, id: string, edit: boolean) {
         if (edit) {
             return {
                 label: t('edit') + id,
@@ -137,21 +143,26 @@ const RecordWithResult = memo(function ({recordResult}: { recordResult: RecordRe
             };
 
         }
-    }
+    }, [t, navigate]);
 
-    const paneMenu: MenuItem[] = [];
-    if (isEditable) {
-        paneMenu.push(getEditMenu(curTable.name, curId, !edit));
-    }
-    paneMenu.push({
-        label: t('recordRef') + curId,
-        key: 'recordRef',
-        handler() {
-            navigate(navTo('recordRef', curTable.name, curId));
+    const paneMenu = useMemo(() => {
+        const menu: MenuItem[] = [];
+        if (isEditable) {
+            menu.push(getEditMenu(curTable.name, curId, !edit));
         }
-    })
+        menu.push({
+            label: t('recordRef') + curId,
+            key: 'recordRef',
+            handler() {
+                navigate(navTo('recordRef', curTable.name, curId));
+            }
+        });
+        return menu;
+    }, [isEditable, getEditMenu, curTable, curId, edit, t, navigate]);
 
-    const nodeMenuFunc = (entity: Entity): MenuItem[] => {
+
+    const nodeMenuFunc = useCallback(function (entityNode: EntityNode): MenuItem[] {
+        const entity = entityNode.data.entity;
         const refId = entity.userData as RefId;
 
         const mm = [];
@@ -212,16 +223,23 @@ const RecordWithResult = memo(function ({recordResult}: { recordResult: RecordRe
                     label: t('structPaste'),
                     key: 'structPaste',
                     handler() {
-                        onStructPaste(entity.id, editFieldChain)
+                        onStructPaste(entity.id, editFieldChain, {x: entityNode.position.x, y: entityNode.position.y})
                     }
                 });
             }
         }
         return mm;
-    }
+    }, [schema, curTable, curId, edit, getEditMenu, t, navigate]);
 
     // const ep = pathname + (isEditing ? ',' + editSeq : ''); // 用 editSeq触发layout
-    useEntityToGraph({pathname, entityMap, notes, nodeMenuFunc, paneMenu, fitView, fitViewToId, isEdited});
+    useEntityToGraph({
+        pathname,
+        entityMap,
+        notes,
+        nodeMenuFunc,
+        paneMenu,
+        editingObjectRes
+    });
 
     return <></>;
 });
