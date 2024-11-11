@@ -46,20 +46,43 @@ nav_order: 10
 public record AICfg(String baseUrl,
                     String apiKey,
                     String model,
-                    List<TableCfg> tableCfgs) {
+                    List<TableCfg> tableCfgs) { // 可以为空，此时table的提示词将都是默认
 
     public record TableCfg(String table,
-                           String promptFile, // {table}.jte
-                           String init, // 初始对白
-                           List<String> extraRefTables,
-                           List<OneExample> examples) {
+                           String promptFile, // 默认为：{table}.jte
+                           String init, // 初始对白，默认为"请提供ID和描述，我将根据这些信息生成符合结构的JSON配置"
+                           List<String> extraRefTables, // 默认为空
+                           List<OneExample> examples) { // 默认为空
     }
 
     public record OneExample(String id,
                              String description) {
     }
 }
+```
+例子：
 
+```json
+{
+  "baseUrl": "https://api.deepseek.com",
+  "apiKey": "sk-xxxxxxxxxxxxxxx",
+  "model": "deepseek-chat",
+  "tableCfgs": [
+    {
+      "table": "skill.buff",
+      "promptFile": "skill.buff.jte",
+      "extraRefTables": [
+        "skill.skill", "skill.talent"
+      ],
+      "examples": [
+        {
+          "description": "每秒额外回复6点能量",
+          "id": "310325"
+        }
+      ]
+    }
+  ]
+}
 ```
 
 ## PromptModel
