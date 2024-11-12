@@ -22,7 +22,7 @@ export interface EntityEditField extends EntityBaseField {
     value: EditFieldValueType;
     autoCompleteOptions?: EntityEditFieldOptions; // use AutoComplete if it has autoCompleteOptions
     implFields?: EntityEditField[];
-    interfaceOnChangeImpl?: ((impl: string) => void)
+    interfaceOnChangeImpl?: ((impl: string, id: string, position: EntityPosition) => void)
 }
 
 
@@ -59,8 +59,8 @@ export interface EntityEditFieldOption {
 }
 
 export interface EntityPosition {
-    x:number;
-    y:number;
+    x: number;
+    y: number;
 }
 
 export interface EntityEdit {
@@ -68,7 +68,7 @@ export interface EntityEdit {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     editOnUpdateValues: (values: any) => void;
     editOnUpdateNote: (note?: string) => void;
-    editOnUpdateFold: (id: string,  fold: boolean, position: EntityPosition) => void;
+    editOnUpdateFold: (id: string, fold: boolean, position: EntityPosition) => void;
     editOnDelete?: () => void;
     editOnMoveUp?: () => void;
     editOnMoveDown?: () => void;

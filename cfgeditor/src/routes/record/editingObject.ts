@@ -141,13 +141,17 @@ export function onUpdateFold(id: string,
 
 
 export function onUpdateInterfaceValue(jsonObject: JSONObject,
-                                       fieldChains: (string | number)[]) {
+                                       fieldChains: (string | number)[],
+                                       id: string,
+                                       position: EntityPosition) {
     // console.log('updateInterface', fieldChains, jsonObject);
 
     const obj = getFieldObj(editState.editingObject, fieldChains.slice(0, fieldChains.length - 1));
     obj[fieldChains[fieldChains.length - 1]] = jsonObject;
 
-    editState.fitView = EFitView.FitNone;
+    editState.fitView = EFitView.FitId;
+    editState.fitViewToId = id;
+    editState.fitViewToIdPosition = position;
     editState.update();
 }
 

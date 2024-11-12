@@ -1,5 +1,5 @@
 import {CSSProperties, memo, useCallback, useMemo, useState} from "react";
-import {Handle, Node, NodeProps, Position} from "@xyflow/react";
+import {Handle, NodeProps, Position} from "@xyflow/react";
 import {Entity} from "./entityModel.ts";
 import {getNodeBackgroundColor} from "./colors.ts";
 import {Button, Flex, Popover, Space, Typography} from "antd";
@@ -18,6 +18,7 @@ import {ResPopover} from "./ResPopover.tsx";
 import {NoteShow, NoteEdit, NoteShowInner, NoteEditInner} from "./NoteShowOrEdit.tsx";
 import {findFirstImage} from "./calcWidthHeight.ts";
 import {getResBrief} from "./getResBrief.tsx";
+import {EntityNode} from "./FlowGraph.tsx";
 
 const {Text} = Typography;
 const bookIcon = <BookOutlined/>;
@@ -39,7 +40,7 @@ interface TempNote {
     entity: Entity;
 }
 
-export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entity: Entity }, "node">>) {
+export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>) {
     const entity = nodeProps.data.entity;
     const {id, label, fields, edit, brief, handleIn, handleOut, note, sharedSetting, assets} = entity;
     const color: string = useMemo(() => getNodeBackgroundColor(entity), [entity]);
@@ -200,7 +201,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
         {title}
         {fields && <EntityProperties fields={fields} sharedSetting={sharedSetting} color={color}/>}
         {brief && <EntityCard entity={nodeProps.data.entity} image={firstImage}/>}
-        {edit && <EntityForm edit={edit} sharedSetting={sharedSetting}/>}
+        {edit && <EntityForm edit={edit} nodeProps={nodeProps} sharedSetting={sharedSetting} />}
         {(handleIn && <Handle type='target' position={Position.Left} id='@in' style={handleStyle}/>)}
         {(handleOut && <Handle type='source' position={Position.Right} id='@out' style={handleStyle}/>)}
     </div>;

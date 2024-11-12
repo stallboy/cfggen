@@ -17,9 +17,10 @@ import {
 } from "@ant-design/icons";
 import {CSSProperties, memo, useCallback, useMemo, useState} from "react";
 import {useTranslation} from "react-i18next";
-import {Handle, Position} from "@xyflow/react";
+import {Handle, NodeProps, Position} from "@xyflow/react";
 import {getFieldBackgroundColor} from "./colors.ts";
 import {CustomAutoComplete} from "./CustomAutoComplete.tsx";
+import {EntityNode} from "./FlowGraph.tsx";
 
 const formLayout = {
     labelCol: {xs: {span: 24}, sm: {span: 6},},
@@ -281,12 +282,13 @@ const FuncSubmitFormItem = memo(function ({field}: {
 });
 
 
-const InterfaceFormItem = memo(function ({field, sharedSetting}: {
+const InterfaceFormItem = memo(function ({field, nodeProps, sharedSetting}: {
     field: EntityEditField,
+    nodeProps: NodeProps<EntityNode>
     sharedSetting?: EntitySharedSetting
 }) {
     const onSelectChange = useCallback((value: string) => {
-        field.interfaceOnChangeImpl!(value);
+        field.interfaceOnChangeImpl!(value, nodeProps.data.entity.id, {x: nodeProps.positionAbsoluteX, y: nodeProps.positionAbsoluteY});
     }, [field]);
 
     const options = field.autoCompleteOptions?.options!;
@@ -303,11 +305,11 @@ const InterfaceFormItem = memo(function ({field, sharedSetting}: {
 
     return <>
         {formItem}
-        {FieldsFormItem(field.implFields as EntityEditField[], sharedSetting)}
+        {fieldsFormItem(field.implFields as EntityEditField[], nodeProps, sharedSetting)}
     </>
 });
 
-function FieldFormItem(field: EntityEditField, sharedSetting?: EntitySharedSetting) {
+function fieldFormItem(field: EntityEditField, nodeProps: NodeProps<EntityNode>, sharedSetting?: EntitySharedSetting,) {
     const bgColor = getFieldBackgroundColor(field, sharedSetting?.nodeShow)
     switch (field.type) {
         case "structRef":
@@ -324,14 +326,14 @@ function FieldFormItem(field: EntityEditField, sharedSetting?: EntitySharedSetti
                                     func={field.value as FuncType}
                                     bgColor={bgColor}/>;
         case "interface":
-            return <InterfaceFormItem key={field.name} field={field} sharedSetting={sharedSetting}/>;
+            return <InterfaceFormItem key={field.name} field={field} nodeProps={nodeProps} sharedSetting={sharedSetting}/>;
         case "funcSubmit":
             return <FuncSubmitFormItem key={field.name} field={field}/>;
     }
 }
 
-function FieldsFormItem(fields: EntityEditField[], sharedSetting?: EntitySharedSetting) {
-    return fields.map((field) => FieldFormItem(field, sharedSetting));
+function fieldsFormItem(fields: EntityEditField[], nodeProps: NodeProps<EntityNode>, sharedSetting?: EntitySharedSetting) {
+    return fields.map((field) => fieldFormItem(field, nodeProps, sharedSetting,));
 }
 
 const theme = {
@@ -343,8 +345,9 @@ const theme = {
 }
 const formStyle = {backgroundColor: "white", borderRadius: 15, padding: 10}
 
-export const EntityForm = memo(function EntityForm({edit, sharedSetting}: {
+export const EntityForm = memo(function ({edit, nodeProps, sharedSetting}: {
     edit: EntityEdit;
+    nodeProps: NodeProps<EntityNode>
     sharedSetting?: EntitySharedSetting,
 }) {
     const [_form] = Form.useForm();
@@ -360,7 +363,7 @@ export const EntityForm = memo(function EntityForm({edit, sharedSetting}: {
               form={_form}
               onValuesChange={onValuesChange}
               style={formStyle}>
-            {FieldsFormItem(edit.editFields, sharedSetting)}
+            {fieldsFormItem(edit.editFields, nodeProps, sharedSetting)}
         </Form>
     </ConfigProvider>
 });

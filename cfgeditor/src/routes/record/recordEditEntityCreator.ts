@@ -265,7 +265,7 @@ export class RecordEditEntityCreator {
                 value: implName,
                 autoCompleteOptions: getImplNameOptions(sInterface),
                 implFields: this.makeEditFields(impl, obj, fieldChain),
-                interfaceOnChangeImpl: (newImplName: string) => {
+                interfaceOnChangeImpl: (newImplName: string, id:string, position:EntityPosition) => {
                     let newObj: JSONObject;
                     if (newImplName == implName) {
                         newObj = obj;
@@ -273,9 +273,7 @@ export class RecordEditEntityCreator {
                         const newImpl = getImpl(sInterface, newImplName) as SStruct;
                         newObj = this.schema.defaultValueOfStructural(newImpl);
                     }
-
-                    onUpdateInterfaceValue(newObj, fieldChain);
-                    // console.log(newObj);
+                    onUpdateInterfaceValue(newObj, fieldChain, id, position);
                 },
             })
 
