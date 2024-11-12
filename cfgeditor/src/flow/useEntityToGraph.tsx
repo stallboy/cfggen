@@ -104,7 +104,7 @@ export function useEntityToGraph({
         staleTime: staleTime,
     })
 
-    const newNodes = useMemo(() => id2RectMap ? applyPositionToNodes(nodes, id2RectMap) : undefined,
+    const newNodes:EntityNode[] | undefined = useMemo(() => id2RectMap ? applyPositionToNodes(nodes, id2RectMap) : undefined,
         [nodes, id2RectMap]);
 
     useEffect(() => {
@@ -114,7 +114,6 @@ export function useEntityToGraph({
             if (nodeDoubleClickFunc) {
                 flowGraph.setNodeDoubleClickFunc(nodeDoubleClickFunc)
             }
-
             setNodes(newNodes);
             setEdges(edges);
             // console.log("set nodes", newNodes, edges);

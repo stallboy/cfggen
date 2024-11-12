@@ -301,9 +301,9 @@ export function makeFixedPage(curTableId: string, curId: string) {
     return fp;
 }
 
-export function setFixedPagesConf(pageConf: FixedPagesConf) {
-    store.pageConf = pageConf;
-    setPref('pageConf', Convert.fixedPagesConfToJson(pageConf));
+export function setFixedPagesConf(newPageConf: FixedPagesConf) {
+    store.pageConf = newPageConf;
+    setPref('pageConf', Convert.fixedPagesConfToJson(newPageConf));
     clearLayoutCache();
 }
 

@@ -22,7 +22,7 @@ import {addOrUpdateRecord, fetchRecord} from "../api.ts";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
 import {SchemaTableType} from "../../CfgEditorApp.tsx";
 import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
-import {memo, useCallback, useEffect, useMemo, useReducer, useState} from "react";
+import {memo, useCallback, useEffect, useMemo, useState} from "react";
 
 
 import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
@@ -39,7 +39,7 @@ const RecordWithResult = memo(function ({recordResult}: { recordResult: RecordRe
     const navigate = useNavigate();
     const [t] = useTranslation();
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_, forceUpdate] = useReducer(v => v++, 0);
+    const [updateVersion, setUpdateVersion] = useState(0);
 
     useEffect(() => {
         setIsEditMode(edit);
@@ -80,8 +80,8 @@ const RecordWithResult = memo(function ({recordResult}: { recordResult: RecordRe
     const update = useCallback(() => {
         // 让其重新layout，因为可能已经经过编辑，缺少了某些节点的位置信息
         queryClient.removeQueries({queryKey: ['layout', pathname, 'e']});
-        forceUpdate();
-    }, [pathname, forceUpdate])
+        setUpdateVersion(updateVersion + 1);
+    }, [pathname, updateVersion, setUpdateVersion])
 
     const isEditable = schema.isEditable && curTable.isEditable;
     const isEditing = isEditable && edit;
@@ -121,7 +121,7 @@ const RecordWithResult = memo(function ({recordResult}: { recordResult: RecordRe
         fillHandles(entityMap);
         return {entityMap, editingObjectRes}
     }, [isEditing, curTableId, curId, schema, recordResult, tauriConf, resourceDir, resMap,
-        addOrUpdateRecordMutation, update, folds, setFolds]);
+        addOrUpdateRecordMutation, update, folds, setFolds, updateVersion]);
 
 
     const getEditMenu = useCallback(function (table: string, id: string, edit: boolean) {

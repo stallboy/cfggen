@@ -10,12 +10,12 @@ import {Button, ConfigProvider, Flex, Form, InputNumber, Select, Space, Switch, 
 import TextArea from "antd/es/input/TextArea";
 import {
     ArrowDownOutlined,
-    ArrowUpOutlined,
+    ArrowUpOutlined, LeftOutlined,
     MinusSquareTwoTone,
     PlusSquareTwoTone,
     RightOutlined,
 } from "@ant-design/icons";
-import {CSSProperties, memo, useCallback, useMemo, useState} from "react";
+import {CSSProperties, memo, useCallback, useEffect, useMemo, useState} from "react";
 import {useTranslation} from "react-i18next";
 import {Handle, NodeProps, Position} from "@xyflow/react";
 import {getFieldBackgroundColor} from "./colors.ts";
@@ -77,6 +77,18 @@ function getFilter(isValueInteger: boolean, useSearch: boolean) {
     }
 }
 
+function isArrayPrimitiveBoolOrNumber(eleType: string, autoCompleteOptions: EntityEditFieldOptions | undefined) {
+    if (autoCompleteOptions && autoCompleteOptions.options.length > 0) {
+        return false
+    } else if (eleType == 'bool') {
+        return true;
+    } else if (setOfNumber.has(eleType)) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 function primitiveControl(eleType: string, autoCompleteOptions: EntityEditFieldOptions | undefined, style: CSSProperties) {
     if (autoCompleteOptions && autoCompleteOptions.options.length > 0) {
         const {options, isValueInteger, isEnum} = autoCompleteOptions;
@@ -92,11 +104,11 @@ function primitiveControl(eleType: string, autoCompleteOptions: EntityEditFieldO
         // }
 
     } else if (eleType == 'bool') {
-        return <Switch className='nodrag' />;
+        return <Switch className='nodrag'/>;
     } else if (setOfNumber.has(eleType)) {
         return <InputNumber className='nodrag' style={style}/>;
     } else {
-        return <TextArea className='nodrag' autoSize={textAreaAutoSize} style={{width: 90, ...style}}/>;
+        return <TextArea className='nodrag' autoSize={textAreaAutoSize} style={style}/>;
     }
 
 }
@@ -154,6 +166,11 @@ const PrimitiveFormItem = memo(function ({field, bgColor}: {
 }) {
     let props = useMemo(() => field.eleType == 'bool' ? {valuePropName: "checked"} : {}, [field.eleType])
 
+    const form = Form.useFormInstance();
+    useEffect(() => {
+        form.setFieldValue(field.name, field.value);
+    }, [field.name, field.value, form]);
+
     const thisItemStyle: CSSProperties = useMemo(() => {
         return bgColor == undefined ? {} : {backgroundColor: bgColor}
     }, [bgColor]);
@@ -161,7 +178,8 @@ const PrimitiveFormItem = memo(function ({field, bgColor}: {
     const primitiveCtrl = useMemo(() => primitiveControl(field.eleType, field.autoCompleteOptions, thisItemStyle),
         [field.eleType, field.autoCompleteOptions, thisItemStyle]);
 
-    return <Form.Item name={field.name} key={field.name}
+    return <Form.Item key={field.name}
+                      name={field.name}
                       label={<LabelWithTooltip name={field.name} comment={field.comment}/>}
                       initialValue={field.value}
                       {...props}
@@ -183,6 +201,11 @@ const ArrayOfPrimitiveFormItem = memo(function ({field, bgColor}: {
     field: EntityEditField,
     bgColor?: string
 }) {
+    const form = Form.useFormInstance();
+    useEffect(() => {
+        form.setFieldValue(field.name, field.value);
+    }, [field.name, field.value, form]);
+
     const thisItemStyle: CSSProperties = useMemo(() => bgColor == undefined ? {} : {
         backgroundColor: bgColor
     }, [bgColor]);
@@ -200,10 +223,11 @@ const ArrayOfPrimitiveFormItem = memo(function ({field, bgColor}: {
                             <Form.Item name={f.name} {...itemStyle}>
                                 {primitiveControl(field.eleType, field.autoCompleteOptions, thisItemStyle)}
                             </Form.Item>
-                            <ArrayItemDropdownButton fold={field.autoCompleteOptions != null}
-                                                     remove={() => remove(f.name)}
-                                                     up={index != 0 ? () => move(index, index - 1) : undefined}
-                                                     down={index != fields.length - 1 ? () => move(index, index + 1) : undefined}/>
+                            <ArrayItemExpandButton
+                                fold={!isArrayPrimitiveBoolOrNumber(field.eleType, field.autoCompleteOptions)}
+                                remove={() => remove(f.name)}
+                                up={index != 0 ? () => move(index, index - 1) : undefined}
+                                down={index != fields.length - 1 ? () => move(index, index + 1) : undefined}/>
                         </Space>
                     ))}
                     <Button className='nodrag'
@@ -221,7 +245,7 @@ const ArrayOfPrimitiveFormItem = memo(function ({field, bgColor}: {
 });
 
 
-function ArrayItemDropdownButton({fold, remove, up, down}: {
+function ArrayItemExpandButton({fold, remove, up, down}: {
     fold: boolean,
     remove: () => void,
     up?: () => void,
@@ -259,7 +283,7 @@ function ArrayItemDropdownButton({fold, remove, up, down}: {
 
 
     return <Space size={'small'}>
-        <Button className='nodrag' icon={<RightOutlined/>} onClick={toggleExpand}/>
+        <Button className='nodrag' icon={expand ? <LeftOutlined/> : <RightOutlined/>} onClick={toggleExpand}/>
         {expand && <>{removeB}{upB}{downB}</>}
     </Space>
 }
@@ -287,6 +311,13 @@ const InterfaceFormItem = memo(function ({field, nodeProps, sharedSetting}: {
     nodeProps: NodeProps<EntityNode>
     sharedSetting?: EntitySharedSetting
 }) {
+    // 需要这个useEffect，参考https://zhuanlan.zhihu.com/p/375753910
+    // edit后，key又都相同，initialValue改变，所以需要form需要设置回去
+    const form = Form.useFormInstance();
+    useEffect(() => {
+        form.setFieldValue(field.name, field.value);
+    }, [field.name, field.value, form]);
+
     const onSelectChange = useCallback((value: string) => {
         field.interfaceOnChangeImpl!(value, nodeProps.data.entity.id, {
             x: nodeProps.positionAbsoluteX,
@@ -298,7 +329,9 @@ const InterfaceFormItem = memo(function ({field, nodeProps, sharedSetting}: {
     const filters = getFilter(false, options.length > 5);
 
     const formItem = useMemo(() => (
-        <Form.Item name={field.name} key={field.name} label={">"}
+        <Form.Item key={field.name}
+                   name={field.name}
+                   label={">"}
                    initialValue={field.value}>
             <Select className='nodrag' options={options}
                     {...filters}
@@ -320,19 +353,25 @@ function fieldFormItem(field: EntityEditField, nodeProps: NodeProps<EntityNode>,
                                   name={field.name} comment={field.comment} handleOut={field.handleOut}
                                   bgColor={bgColor}/>;
         case "arrayOfPrimitive":
-            return <ArrayOfPrimitiveFormItem key={field.name} field={field} bgColor={bgColor}/>;
+            return <ArrayOfPrimitiveFormItem key={field.name}
+                                             field={field}
+                                             bgColor={bgColor}/>;
         case "primitive":
-            return <PrimitiveFormItem key={field.name} field={field} bgColor={bgColor}/>;
+            return <PrimitiveFormItem key={field.name}
+                                      field={field}
+                                      bgColor={bgColor}/>;
         case "funcAdd":
             return <FuncAddFormItem key={field.name}
                                     name={field.name} comment={field.comment} handleOut={field.handleOut}
                                     func={field.value as FuncType}
                                     bgColor={bgColor}/>;
         case "interface":
-            return <InterfaceFormItem key={field.name} field={field} nodeProps={nodeProps}
+            return <InterfaceFormItem key={field.name}
+                                      field={field} nodeProps={nodeProps}
                                       sharedSetting={sharedSetting}/>;
         case "funcSubmit":
-            return <FuncSubmitFormItem key={field.name} field={field}/>;
+            return <FuncSubmitFormItem key={field.name}
+                                       field={field}/>;
     }
 }
 

@@ -44,7 +44,7 @@ export async function getResourceDirAsync() {
 }
 
 export function joinPath(_baseDir: string, _path: string): [boolean, string] {
-    let path = _path;
+    let selfPath = _path;
     let baseDir = _baseDir;
     if (baseDir.length > 0) {
         const c = baseDir[baseDir.length - 1];
@@ -53,17 +53,17 @@ export function joinPath(_baseDir: string, _path: string): [boolean, string] {
         }
     }
 
-    while (path.startsWith('../') || path.startsWith('..\\')) {
-        path = path.substring(3);
+    while (selfPath.startsWith('../') || selfPath.startsWith('..\\')) {
+        selfPath = selfPath.substring(3);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const [ok, pd, _] = sepParentDirAndFilename(baseDir);
         if (ok) {
             baseDir = pd;
         } else {
-            return [false, path];
+            return [false, selfPath];
         }
     }
-    return [true, baseDir + '/' + path]
+    return [true, baseDir + path.sep() + selfPath]
 }
 
 export const ext2type: Record<string, ResType> = {

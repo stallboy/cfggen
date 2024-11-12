@@ -1,12 +1,13 @@
 import {makeFixedPage, setFixedPagesConf, store, useLocationData} from "./store.ts";
-import {memo, useCallback} from "react";
+import {memo, useCallback, useEffect} from "react";
 import {useTranslation} from "react-i18next";
 import {Button, Form, Input, Space} from "antd";
 import {formItemLayoutWithOutLabel, formLayout} from "./BasicSetting.tsx";
 import {CloseOutlined} from "@ant-design/icons";
 import {Schema} from "../table/schemaUtil.ts";
 import {STable} from "../table/schemaModel.ts";
-import {FixedPage, FixedPagesConf} from "./storageJson.ts";
+import {FixedPagesConf} from "./storageJson.ts";
+import {useForm} from "antd/es/form/Form";
 
 
 function onFinishPageConf(values: any) {
@@ -14,7 +15,7 @@ function onFinishPageConf(values: any) {
     setFixedPagesConf(values);
 }
 
-export const OpFixPages = memo(function FixedPagesSetting({schema, curTable}: {
+export const OpFixPages = memo(function ({schema, curTable}: {
     schema: Schema | undefined;
     curTable: STable | null;
 }) {
@@ -22,55 +23,55 @@ export const OpFixPages = memo(function FixedPagesSetting({schema, curTable}: {
     const {t} = useTranslation();
     const {curTableId, curId} = useLocationData();
     const {pageConf} = store;
+    const [form] = useForm();
 
     const onFixCurrentPageClick = useCallback(function () {
         const page = makeFixedPage(curTableId, curId);
         const newPageConf: FixedPagesConf = {pages: [...pageConf.pages, page]};
         setFixedPagesConf(newPageConf);
-    }, [curTableId, curId, pageConf]);
+    }, [curTableId, curId, pageConf, form]);
 
-    return <Form name="fixedPagesConf"  {...formLayout} onFinish={onFinishPageConf} autoComplete="off">
-        {(schema && curTable && curPage == 'recordRef') &&
-            <Form.Item {...formItemLayoutWithOutLabel}>
-                <Button type="primary" onClick={onFixCurrentPageClick}>
-                    {t('fixCurrentPage')}
-                </Button>
-            </Form.Item>}
+    useEffect(() => {
+        form.resetFields();
+    }, [pageConf, form]);
 
-        <FixedPages pages={pageConf.pages}/>
+    return <Form form={form} name="fixedPagesConf"  {...formLayout} initialValues={pageConf}
+                 onFinish={onFinishPageConf}
+                 autoComplete="off">
+        <Form.Item label={t('pages')}>
+            <Form.List name="pages">
+                {(fields, {remove}) => (
+                    <div style={{display: 'flex', flexDirection: 'column', rowGap: 16}}>
+                        {fields.map(({key, name}) => (
+                            <Space key={key}>
+                                <Form.Item name={[name, 'label']} noStyle>
+                                    <Input placeholder="label"/>
+                                </Form.Item>
+                                <Form.Item name={[name, 'table']} noStyle>
+                                    <Input disabled placeholder="table"/>
+                                </Form.Item>
+                                <Form.Item name={[name, 'id']} noStyle>
+                                    <Input disabled placeholder="id"/>
+                                </Form.Item>
+                                <CloseOutlined onClick={() => remove(name)}/>
+                            </Space>
+                        ))}
+                    </div>
+                )}
+            </Form.List>
+        </Form.Item>
+
         <Form.Item {...formItemLayoutWithOutLabel}>
-            <Button type="primary" htmlType="submit">
-                {t('setFixedPagesConf')}
-            </Button>
+            <Space>
+                <Button type="primary" htmlType="submit">
+                    {t('setFixedPagesConf')}
+                </Button>
+                {(schema && curTable && curPage == 'recordRef') &&
+                    <Button type="primary" onClick={onFixCurrentPageClick}>
+                        {t('fixCurrentPage')}
+                    </Button>}
+            </Space>
         </Form.Item>
     </Form>
-});
 
-const FixedPages = memo(function FixedPages({pages}: {
-    pages: FixedPage[];
-}) {
-    const {t} = useTranslation();
-
-    return <Form.Item label={t('pages')}>
-        <Form.List name="pages" initialValue={pages}>
-            {(fields, {remove}) => (
-                <div style={{display: 'flex', flexDirection: 'column', rowGap: 16}}>
-                    {fields.map(({key, name}) => (
-                        <Space key={key}>
-                            <Form.Item name={[name, 'label']} noStyle>
-                                <Input placeholder="label"/>
-                            </Form.Item>
-                            <Form.Item name={[name, 'table']} noStyle>
-                                <Input disabled placeholder="table"/>
-                            </Form.Item>
-                            <Form.Item name={[name, 'id']} noStyle>
-                                <Input disabled placeholder="id"/>
-                            </Form.Item>
-                            <CloseOutlined onClick={() => remove(name)}/>
-                        </Space>
-                    ))}
-                </div>
-            )}
-        </Form.List>
-    </Form.Item>;
 });

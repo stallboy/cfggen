@@ -56,7 +56,10 @@ export function fillHandles(entityMap: Map<string, Entity>) {
     }
 }
 
-export function convertNodeAndEdges({entityMap, sharedSetting}: EntityGraph) {
+export function convertNodeAndEdges({entityMap, sharedSetting}: EntityGraph): {
+    nodes: EntityNode[],
+    edges: EntityEdge[]
+} {
     const nodes: EntityNode[] = []
     const edges: EntityEdge[] = []
 

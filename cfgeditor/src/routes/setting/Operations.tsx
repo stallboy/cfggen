@@ -1,4 +1,4 @@
-import {memo, RefObject} from "react";
+import {memo, RefObject, useCallback} from "react";
 import {useTranslation} from "react-i18next";
 import {App, Button, Divider, Form, InputNumber} from "antd";
 import {
@@ -60,7 +60,7 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
         },
     });
 
-    function onToPng() {
+    const onToPng = useCallback(function () {
         const {current} = flowRef;
         if (current === null) {
             return
@@ -93,7 +93,7 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
             notification.error({message: "save png failed: limit the max node count", duration: 3});
             console.log(err)
         })
-    }
+    }, [flowRef, imageSizeScale, curPage, curTableId, notification]);
 
 
     return <>
