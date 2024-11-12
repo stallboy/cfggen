@@ -49,7 +49,7 @@ export const LastAccessed = memo(function LastAccessed({schema}: {
                 render: (_text: any, item: LastAccessedItem, _index: number) => {
                     const label = item.id + '-' + item.title;
                     return <Button type={'link'} onClick={() => {
-                        navigate(navTo(curPage, item.table, item.id, isEditMode));
+                        navigate(navTo(curPage, item.table, item.id, isEditMode, false));
                     }}>
                         {label}
                     </Button>;
