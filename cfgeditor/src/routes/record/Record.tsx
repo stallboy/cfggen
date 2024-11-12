@@ -233,6 +233,7 @@ const RecordWithResult = memo(function ({recordResult}: { recordResult: RecordRe
 
     // const ep = pathname + (isEditing ? ',' + editSeq : ''); // 用 editSeq触发layout
     useEntityToGraph({
+        type: isEditing ? 'edit' : 'record',
         pathname,
         entityMap,
         notes,

@@ -62,13 +62,22 @@ const storeState: StoreState = {
     isNextIdShow: false,
 
     nodeShow: {
-        showHead: 'show',
-        showDescription: 'show',
-        containEnum: true,
-        nodePlacementStrategy: 'BRANDES_KOEPF',
-        keywordColors: [],
-        tableHideAndColors: [],
-        fieldColors: [],
+        recordLayout: 'BRANDES_KOEPF',
+        editLayout: 'mrtree',
+        refLayout: 'BRANDES_KOEPF',
+
+        tableLayout: 'BRANDES_KOEPF',
+        tableRefLayout: 'BRANDES_KOEPF',
+
+        nodeColorsByValue: [],
+        nodeColorsByLabel: [],
+        fieldColorsByName: [],
+        editFoldColor: '#ffd6e7',
+
+        refTableHides: [],
+        refIsShowCopyable: false,
+        refShowDescription: 'show',
+        refContainEnum: true,
     },
 
     query: '',

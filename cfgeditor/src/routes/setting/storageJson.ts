@@ -1,11 +1,9 @@
 // To parse this data:
 //
-//   import { Convert, NodeShowType, KeywordColor, TableHideAndColor, ShowHeadType, ShowDescriptionType, NodePlacementStrategyType, FixedPage, FixedPagesConf, ResDir, TauriConf, AIConf } from "./file";
+//   import { Convert, NodeShowType, KeywordColor, ShowDescriptionType, NodePlacementStrategyType, FixedPage, FixedPagesConf, ResDir, TauriConf, AIConf } from "./file";
 //
 //   const nodeShowType = Convert.toNodeShowType(json);
 //   const keywordColor = Convert.toKeywordColor(json);
-//   const tableHideAndColor = Convert.toTableHideAndColor(json);
-//   const showHeadType = Convert.toShowHeadType(json);
 //   const showDescriptionType = Convert.toShowDescriptionType(json);
 //   const nodePlacementStrategyType = Convert.toNodePlacementStrategyType(json);
 //   const fixedPage = Convert.toFixedPage(json);
@@ -32,31 +30,29 @@ export interface FixedPage {
 }
 
 export interface NodeShowType {
-    containEnum:           boolean;
-    fieldColors:           KeywordColor[];
-    keywordColors:         KeywordColor[];
-    nodePlacementStrategy: NodePlacementStrategyType;
-    showDescription:       ShowDescriptionType;
-    showHead:              ShowHeadType;
-    tableHideAndColors:    TableHideAndColor[];
+    editFoldColor:      string;
+    editLayout:         NodePlacementStrategyType;
+    fieldColorsByName:  KeywordColor[];
+    nodeColorsByLabel:  KeywordColor[];
+    nodeColorsByValue:  KeywordColor[];
+    recordLayout:       NodePlacementStrategyType;
+    refContainEnum:     boolean;
+    refIsShowCopyable:  boolean;
+    refLayout:          NodePlacementStrategyType;
+    refShowDescription: ShowDescriptionType;
+    refTableHides:      string[];
+    tableLayout:        NodePlacementStrategyType;
+    tableRefLayout:     NodePlacementStrategyType;
 }
+
+export type NodePlacementStrategyType = "BRANDES_KOEPF" | "LINEAR_SEGMENTS" | "SIMPLE" | "mrtree";
 
 export interface KeywordColor {
     color:   string;
     keyword: string;
 }
 
-export type NodePlacementStrategyType = "BRANDES_KOEPF" | "LINEAR_SEGMENTS" | "SIMPLE" | "mrtree";
-
 export type ShowDescriptionType = "none" | "show" | "showFallbackValue" | "showValue";
-
-export type ShowHeadType = "show" | "showCopyable";
-
-export interface TableHideAndColor {
-    color:   string;
-    hide:    boolean;
-    keyword: string;
-}
 
 export interface TauriConf {
     assetDir:      string;
@@ -93,22 +89,6 @@ export class Convert {
 
     public static keywordColorToJson(value: KeywordColor): string {
         return JSON.stringify(uncast(value, r("KeywordColor")), null, 2);
-    }
-
-    public static toTableHideAndColor(json: string): TableHideAndColor {
-        return cast(JSON.parse(json), r("TableHideAndColor"));
-    }
-
-    public static tableHideAndColorToJson(value: TableHideAndColor): string {
-        return JSON.stringify(uncast(value, r("TableHideAndColor")), null, 2);
-    }
-
-    public static toShowHeadType(json: string): ShowHeadType {
-        return cast(JSON.parse(json), r("ShowHeadType"));
-    }
-
-    public static showHeadTypeToJson(value: ShowHeadType): string {
-        return JSON.stringify(uncast(value, r("ShowHeadType")), null, 2);
     }
 
     public static toShowDescriptionType(json: string): ShowDescriptionType {
@@ -334,21 +314,22 @@ const typeMap: any = {
         { json: "table", js: "table", typ: "" },
     ], false),
     "NodeShowType": o([
-        { json: "containEnum", js: "containEnum", typ: true },
-        { json: "fieldColors", js: "fieldColors", typ: a(r("KeywordColor")) },
-        { json: "keywordColors", js: "keywordColors", typ: a(r("KeywordColor")) },
-        { json: "nodePlacementStrategy", js: "nodePlacementStrategy", typ: r("NodePlacementStrategyType") },
-        { json: "showDescription", js: "showDescription", typ: r("ShowDescriptionType") },
-        { json: "showHead", js: "showHead", typ: r("ShowHeadType") },
-        { json: "tableHideAndColors", js: "tableHideAndColors", typ: a(r("TableHideAndColor")) },
+        { json: "editFoldColor", js: "editFoldColor", typ: "" },
+        { json: "editLayout", js: "editLayout", typ: r("NodePlacementStrategyType") },
+        { json: "fieldColorsByName", js: "fieldColorsByName", typ: a(r("KeywordColor")) },
+        { json: "nodeColorsByLabel", js: "nodeColorsByLabel", typ: a(r("KeywordColor")) },
+        { json: "nodeColorsByValue", js: "nodeColorsByValue", typ: a(r("KeywordColor")) },
+        { json: "recordLayout", js: "recordLayout", typ: r("NodePlacementStrategyType") },
+        { json: "refContainEnum", js: "refContainEnum", typ: true },
+        { json: "refIsShowCopyable", js: "refIsShowCopyable", typ: true },
+        { json: "refLayout", js: "refLayout", typ: r("NodePlacementStrategyType") },
+        { json: "refShowDescription", js: "refShowDescription", typ: r("ShowDescriptionType") },
+        { json: "refTableHides", js: "refTableHides", typ: a("") },
+        { json: "tableLayout", js: "tableLayout", typ: r("NodePlacementStrategyType") },
+        { json: "tableRefLayout", js: "tableRefLayout", typ: r("NodePlacementStrategyType") },
     ], false),
     "KeywordColor": o([
         { json: "color", js: "color", typ: "" },
-        { json: "keyword", js: "keyword", typ: "" },
-    ], false),
-    "TableHideAndColor": o([
-        { json: "color", js: "color", typ: "" },
-        { json: "hide", js: "hide", typ: true },
         { json: "keyword", js: "keyword", typ: "" },
     ], false),
     "TauriConf": o([
@@ -377,9 +358,5 @@ const typeMap: any = {
         "show",
         "showFallbackValue",
         "showValue",
-    ],
-    "ShowHeadType": [
-        "show",
-        "showCopyable",
     ],
 };

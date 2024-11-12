@@ -6,7 +6,7 @@ export function getDsLenAndDesc(brief: EntityBrief, nodeShow?: NodeShowType): [n
     let desc: string | null = null;
     let showDsLen: number = 0;
     if (nodeShow) {
-        switch (nodeShow.showDescription) {
+        switch (nodeShow.refShowDescription) {
             case "show":
                 if (ds && ds.length > 0) {
                     desc = ds[ds.length - 1].value;

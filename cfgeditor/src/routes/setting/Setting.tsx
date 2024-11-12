@@ -1,6 +1,6 @@
 import {Tabs} from "antd";
 
-import {RecordShowSetting} from "./RecordShowSetting.tsx";
+import {NodeShowSetting} from "./NodeShowSetting.tsx";
 import {useTranslation} from "react-i18next";
 import {STable} from "../table/schemaModel.ts";
 import {Schema} from "../table/schemaUtil.ts";
@@ -31,7 +31,7 @@ export const Setting = memo(function Setting({schema, curTable, flowRef}: {
         {
             key: 'recordShowSetting',
             label: t('recordShowSetting'),
-            children: <RecordShowSetting/>,
+            children: <NodeShowSetting/>,
         },
         {
             key: 'serverAndAi',

@@ -22,7 +22,7 @@ import {getResBrief} from "./getResBrief.tsx";
 const {Text} = Typography;
 const bookIcon = <BookOutlined/>;
 const iconButtonStyle = {borderWidth: 0, backgroundColor: 'transparent'};
-const redIconButtonStyle = {borderWidth: 0, backgroundColor: '#ffd6e7'};
+
 const titleStyle = {width: '100%'};
 const titleTextStyle = {fontSize: 14, color: "#fff"};
 const closeIcon = <CloseOutlined/>;
@@ -42,11 +42,15 @@ interface TempNote {
 export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entity: Entity }, "node">>) {
     const entity = nodeProps.data.entity;
     const {id, label, fields, edit, brief, handleIn, handleOut, note, sharedSetting, assets} = entity;
-    const color: string = getNodeBackgroundColor(entity);
+    const color: string = useMemo(() => getNodeBackgroundColor(entity), [entity]);
     const width = edit ? 280 : 240;
-    const nodeStyle = useMemo(() => {
-        return {width: width, backgroundColor: color};
-    }, [width, color]);
+    const nodeStyle: CSSProperties = useMemo(() => {
+        return {width: width, backgroundColor: color, outlineColor: entity.sharedSetting?.nodeShow?.editFoldColor};
+    }, [width, color, entity]);
+
+    const unfoldIconButtonStyle = useMemo(() => {
+        return {borderWidth: 0, backgroundColor: entity.sharedSetting?.nodeShow?.editFoldColor ?? '#ffd6e7'};
+    }, [entity]);
 
     const [isEditNote, setIsEditNote] = useState<boolean>(false);
     const onEditNote = useCallback(() => {
@@ -102,7 +106,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
     const foldButton = useMemo(() => {
         if (edit && edit.hasChild) {
             if (edit.fold) {
-                return <Button style={redIconButtonStyle} icon={unfoldIcon} onClick={unfoldNode}/>;
+                return <Button style={unfoldIconButtonStyle} icon={unfoldIcon} onClick={unfoldNode}/>;
             } else {
                 return <Button style={iconButtonStyle} icon={foldIcon} onClick={foldNode}/>;
             }
@@ -172,11 +176,10 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
     }, [sharedSetting, id, isEditNote, note, edit, tmpNote, updateNoteInEdit]);
 
     const title = useMemo(() => {
-        const mayHasResOrNote = label.includes('_');
         return <Flex justify="space-between" style={titleStyle}>
             {foldButton}
             <Text strong style={titleTextStyle} ellipsis={false}
-                  copyable={mayHasResOrNote && sharedSetting?.nodeShow?.showHead === 'showCopyable'}>
+                  copyable={brief && sharedSetting?.nodeShow?.refIsShowCopyable}>
                 {sharedSetting?.query ? <Highlight text={label} keyword={sharedSetting.query}/> : label}
             </Text>
             {editNoteButton}
@@ -190,7 +193,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<Node<{ entit
                     <Button className='nodrag' style={iconButtonStyle} icon={closeIcon} onClick={edit.editOnDelete}/>}
             </Space>
         </Flex>
-    }, [foldButton, sharedSetting, label, editNoteButton, resBriefButton, edit]);
+    }, [foldButton, sharedSetting, label, brief, editNoteButton, resBriefButton, edit]);
 
     return <div key={id} className={edit && edit.fold ? 'flowNodeWithBorder' : 'flowNode'} style={nodeStyle}>
         {noteShowOrEdit}

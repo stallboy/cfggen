@@ -54,6 +54,7 @@ export const TableRef = memo(function TableRef() {
     }, [navigate, schema, curId]);
 
     useEntityToGraph({
+        type: 'tableRef',
         pathname,
         entityMap,
         notes,

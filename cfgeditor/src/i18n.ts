@@ -35,7 +35,7 @@ i18n.use(LanguageDetector)
                     removeFix: 'remove fix',
                     toPng: 'save relation png',
 
-                    addKeywordColor: 'add keyword color',
+                    addColor: 'add color',
                     setNodeShow: 'set node show',
 
                     search: 'search',
@@ -94,21 +94,29 @@ i18n.use(LanguageDetector)
 
                     deleteCurRecord: '删除当前数据',
 
-                    nodeShowSetting: '节点显示设置',
-                    showHead: '节点标头',
-                    showCopyable: '显示并可复制',
-                    containEnum: '包含枚举',
+                    refIsShowCopyable: '标题复制',
+                    refContainEnum: '包含枚举',
+
+                    refShowDescription: '关系内容',
                     showDescription: '描述',
                     show: '显示',
                     showFallbackValue: '无则显示值',
                     showValue: '全值',
-                    nodePlacementStrategy: '节点布局',
-                    keywordColors: '关键词颜色',
-                    addKeywordColor: '增加',
-                    tableHideAndColors: '表显示',
-                    addTableHideAndColor: '增加',
-                    fieldColors: '字段颜色',
-                    addFieldColor: '增加',
+
+                    recordLayout: '记录布局',
+                    editLayout: '编辑布局',
+                    refLayout: '关系布局',
+                    tableLayout: '表布局',
+                    tableRefLayout: '表关系布局',
+
+                    nodeColorsByLabel: '节点色<标题',
+                    nodeColorsByValue: '节点色<值',
+                    editFoldColor: '折叠背景色',
+                    refTableHides: '表隐藏',
+                    fieldColorsByName: '字段色<名',
+                    addColor: '增加',
+                    addTableHide: '增加',
+
 
                     setNodeShow: '提交',
                     toggleFullScreen: '切换全屏',

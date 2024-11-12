@@ -34,10 +34,10 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
     const {recordRefInShowLinkMaxNode, tauriConf, resourceDir, resMap} = store;
 
     const entityMap = new Map<string, Entity>();
-    const hasContainEnum = nodeShow.containEnum || curTable.entryType == 'eEnum';
+    const hasContainEnum = nodeShow.refContainEnum || curTable.entryType == 'eEnum';
 
     let checkTable;
-    if (!hasContainEnum || nodeShow.tableHideAndColors.length > 0) {
+    if (!hasContainEnum || nodeShow.refTableHides.length > 0) {
         checkTable = (tableName: string) => {
             if (!hasContainEnum) {
                 const sT = schema.getSTable(tableName);
@@ -49,11 +49,9 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
                 }
             }
 
-            for (const {keyword, hide} of nodeShow.tableHideAndColors) {
-                if (hide) {
-                    if (tableName.includes(keyword)) {
-                        return false;
-                    }
+            for (const t of nodeShow.refTableHides) {
+                if (tableName.includes(t)) {
+                    return false;
                 }
             }
             return true;
@@ -129,6 +127,7 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
 
 
     useEntityToGraph({
+        type: 'ref',
         pathname, entityMap, notes, nodeMenuFunc, paneMenu, nodeDoubleClickFunc, editingObjectRes,
         setFitViewForPathname: (inDragPanelAndFix ? setFitViewForPathname : undefined),
         nodeShow,

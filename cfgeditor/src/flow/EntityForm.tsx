@@ -195,21 +195,15 @@ const ArrayOfPrimitiveFormItem = memo(function ({field, bgColor}: {
             {(fields, {add, remove, move}) => (
                 <>
                     {fields.map((f, index) => (
-
-
                         <Space key={f.key} align='baseline' size={2}>
                             <Form.Item name={f.name} {...itemStyle}>
                                 {primitiveControl(field.eleType, field.autoCompleteOptions)}
                             </Form.Item>
-
                             <ArrayItemDropdownButton fold={field.autoCompleteOptions != null}
                                                      remove={() => remove(f.name)}
                                                      up={index != 0 ? () => move(index, index - 1) : undefined}
                                                      down={index != fields.length - 1 ? () => move(index, index + 1) : undefined}/>
-
-
                         </Space>
-
                     ))}
                     <Button className='nodrag'
                             icon={<PlusSquareTwoTone/>}

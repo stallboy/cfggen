@@ -7,10 +7,14 @@ import {layoutAsync} from "./layoutAsync.ts";
 import {EntityNode, FlowGraphContext, NodeDoubleClickFunc, NodeMenuFunc} from "./FlowGraph.tsx";
 import {Entity} from "./entityModel.ts";
 import {MenuItem} from "./FlowContextMenu.tsx";
-import {NodeShowType} from "../routes/setting/storageJson.ts";
+import {NodePlacementStrategyType, NodeShowType} from "../routes/setting/storageJson.ts";
 import {EditingObjectRes, EFitView} from "../routes/record/editingObject.ts";
 
+
+type FlowGraphType = 'record' | 'edit' | 'ref' | 'table' | 'tableRef';
+
 interface FlowGraphInput {
+    type: FlowGraphType;
     pathname: string;
     entityMap: Map<string, Entity>;
     notes?: Map<string, string>;
@@ -21,6 +25,21 @@ interface FlowGraphInput {
 
     setFitViewForPathname?: (pathname: string) => void;
     nodeShow?: NodeShowType;
+}
+
+function getLayoutStrategy(nodeShow: NodeShowType, type: FlowGraphType): NodePlacementStrategyType {
+    switch (type) {
+        case 'record':
+            return nodeShow.recordLayout;
+        case 'edit':
+            return nodeShow.editLayout;
+        case 'ref':
+            return nodeShow.refLayout;
+        case 'table':
+            return nodeShow.tableLayout;
+        case 'tableRef':
+            return nodeShow.tableRefLayout;
+    }
 }
 
 function applyPositionToNodes(nodes: EntityNode[], id2RectMap: Map<string, Rect>) {
@@ -57,7 +76,7 @@ function applyWidthHeightToNodes(nodes: EntityNode[], id2RectMap?: Map<string, R
 
 
 export function useEntityToGraph({
-                                     pathname, entityMap, notes,
+                                     type, pathname, entityMap, notes,
                                      nodeMenuFunc, paneMenu, nodeDoubleClickFunc,
                                      editingObjectRes,
                                      setFitViewForPathname, nodeShow,
@@ -81,7 +100,7 @@ export function useEntityToGraph({
     const staleTime = editingObjectRes?.isEdited ? 0 : 1000 * 60 * 5;
     const {data: id2RectMap} = useQuery({
         queryKey: queryKey,
-        queryFn: async () => await layoutAsync(nodes, edges, nodeShowSetting),
+        queryFn: async () => await layoutAsync(nodes, edges, getLayoutStrategy(nodeShowSetting, type)),
         staleTime: staleTime,
     })
 

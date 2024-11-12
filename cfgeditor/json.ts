@@ -1,12 +1,20 @@
 export interface NodeShowType {
-    showHead: ShowHeadType;
-    showDescription: ShowDescriptionType;
-    containEnum: boolean;
-    nodePlacementStrategy: NodePlacementStrategyType;
-    keywordColors: KeywordColor[];
-    tableHideAndColors: TableHideAndColor[];
+    recordLayout: NodePlacementStrategyType;
+    editLayout: NodePlacementStrategyType;
+    refLayout: NodePlacementStrategyType;
 
-    fieldColors: KeywordColor[];
+    tableLayout: NodePlacementStrategyType;
+    tableRefLayout: NodePlacementStrategyType;
+
+    nodeColorsByValue: KeywordColor[];
+    nodeColorsByLabel: KeywordColor[];
+    fieldColorsByName: KeywordColor[];
+    editFoldColor: string;
+
+    refTableHides: string[];
+    refIsShowCopyable: boolean;
+    refShowDescription: ShowDescriptionType;
+    refContainEnum: boolean;
 }
 
 export interface KeywordColor {
@@ -14,15 +22,8 @@ export interface KeywordColor {
     color: string;
 }
 
-export interface TableHideAndColor {
-    keyword: string;
-    hide: boolean;
-    color: string;
-}
-
-export type ShowHeadType = 'show' | 'showCopyable';
 export type ShowDescriptionType = 'show' | 'showFallbackValue' | 'showValue' | 'none';
-export type NodePlacementStrategyType = 'SIMPLE' | 'LINEAR_SEGMENTS' | 'BRANDES_KOEPF' | "mrtree";;
+export type NodePlacementStrategyType = 'SIMPLE' | 'LINEAR_SEGMENTS' | 'BRANDES_KOEPF' | "mrtree";
 
 export interface FixedPage {
     label: string; // 显示
