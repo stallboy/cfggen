@@ -4,10 +4,11 @@ import {
 } from "../routes/setting/store.ts";
 import {readDir} from "@tauri-apps/plugin-fs";
 import {queryClient} from "../main.tsx";
-import {ext2type, findKeyEndIndex, getResourceDirAsync, joinPath} from "./resUtils.ts";
+import {ext2type, findKeyEndIndex} from "./resUtils.ts";
 import {ResAudioTrack, ResInfo, ResSubtitlesTrack, ResType} from "./resInfo.ts";
 import {isTauri} from "@tauri-apps/api/core";
 import {join} from "@tauri-apps/api/path";
+import {path} from "@tauri-apps/api";
 
 async function processDirRecursively(dir: string,
                                      txtAsSrt: boolean,
@@ -19,7 +20,7 @@ async function processDirRecursively(dir: string,
     for (const {name, isFile, isDirectory} of entries) {
         if (isDirectory) {
             const subDir = await join(dir, name);
-            processDirRecursively(subDir, txtAsSrt, lang, result, stat);
+            await processDirRecursively(subDir, txtAsSrt, lang, result, stat);
         } else if (isFile && !name.endsWith(".meta")) {
             const path = await join(dir, name);
 
@@ -171,19 +172,13 @@ export async function readResInfosAsync() {
     const {tauriConf} = store;
     const result = new Map<string, ResInfo[]>();
     const stat = new Map<string, number>();
-    const baseDir = await getResourceDirAsync();
+    const baseDir = await path.resourceDir();
     store.resourceDir = baseDir;
 
     for (const resDir of tauriConf.resDirs) {
         let dir = resDir.dir;
         if (dir.startsWith('.')) {
-            const [ok, fullDir] = joinPath(baseDir, dir);
-            if (ok) {
-                dir = fullDir;
-            } else {
-                console.log('not ok, ignore', dir);
-                continue;
-            }
+            dir = await path.join(baseDir, dir);
         }
         try {
             await processDirRecursively(dir, !!resDir.txtAsSrt, resDir.lang, result, stat);

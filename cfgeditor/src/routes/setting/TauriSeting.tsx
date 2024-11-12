@@ -9,7 +9,7 @@ import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
 import {Schema} from "../table/schemaUtil.ts";
 import {invalidateResInfos} from "../../res/readResInfosAsync.ts";
 import {summarizeResAsync} from "../../res/summarizeResAsync.ts";
-import {getResourceDirAsync} from "../../res/resUtils.ts";
+import {path} from "@tauri-apps/api";
 
 
 export async function toggleFullScreen() {
@@ -29,7 +29,7 @@ export const TauriSetting = memo(function TauriSetting({schema}: {
     const {t} = useTranslation();
     const {data: resourceDir} = useQuery({
         queryKey: ['tauri', 'resourceDir'],
-        queryFn: getResourceDirAsync,
+        queryFn: path.resourceDir,
     });
     const {tauriConf} = store;
     const {notification} = App.useApp();

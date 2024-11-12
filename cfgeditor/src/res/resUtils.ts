@@ -35,14 +35,6 @@ export function sepParentDirAndFilename(dir: string): [boolean, string, string] 
     return [false, '', dir];
 }
 
-export async function getResourceDirAsync() {
-    let baseDir = await path.resourceDir();
-    if (baseDir.startsWith('\\\\?\\')) {
-        baseDir = baseDir.substring(4);
-    }
-    return baseDir;
-}
-
 export function joinPath(_baseDir: string, _path: string): [boolean, string] {
     let selfPath = _path;
     let baseDir = _baseDir;

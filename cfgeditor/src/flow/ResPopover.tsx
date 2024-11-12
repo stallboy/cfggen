@@ -131,7 +131,7 @@ function getImageEle(name: string, path: string) {
     </Space>;
 }
 
-export const ResPopover = memo(function ResPopover({resInfos}: { resInfos: ResInfo[] }) {
+export const ResPopover = memo(function ({resInfos}: { resInfos: ResInfo[] }) {
     const items: TabsProps['items'] = [];
     for (const r of resInfos) {
         const {type, name, path} = r;

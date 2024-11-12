@@ -15,7 +15,10 @@
       "identifier": "fs:allow-read-text-file",
       "allow": [{ "path": "$RESOURCE/*" }]
     },
-    "fs:read-all",
+    {
+      "identifier": "fs:read-all",
+      "allow": [{ "path": "**" }]
+    },
     "core:window:allow-create",
     "core:window:allow-center",
     "core:window:allow-request-user-attention",

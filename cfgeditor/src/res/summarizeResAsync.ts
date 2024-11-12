@@ -1,9 +1,9 @@
 import {Schema} from "../routes/table/schemaUtil.ts";
 import {store} from "../routes/setting/store.ts";
-import {writeTextFile} from "@tauri-apps/plugin-fs";
-import {getResourceDirAsync, joinPath} from "./resUtils.ts";
+import {BaseDirectory, writeTextFile} from "@tauri-apps/plugin-fs";
 import {ResInfo} from "./resInfo.ts";
 import {getResBrief} from "../flow/getResBrief.tsx";
+import {path} from "@tauri-apps/api";
 
 interface ResEntry {
     id: string;
@@ -59,11 +59,7 @@ export async function summarizeResAsync(schema: Schema) {
             lines.push(`${tableLabel},${id},${brief}`);
         }
     }
-
-    const baseDir = await getResourceDirAsync();
-    const [ok, fullPath] = joinPath(baseDir, '_res.csv');
-    if (ok) {
-        await writeTextFile(fullPath, lines.join("\r\n"));
-    }
-    return fullPath;
+    const fn = '_res.csv';
+    await writeTextFile(fn, lines.join("\r\n"), {baseDir: BaseDirectory.Resource});
+    return await path.join(await path.resourceDir(), fn);
 }
