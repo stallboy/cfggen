@@ -77,7 +77,7 @@ function getFilter(isValueInteger: boolean, useSearch: boolean) {
     }
 }
 
-function primitiveControl(eleType: string, autoCompleteOptions?: EntityEditFieldOptions, style?: any) {
+function primitiveControl(eleType: string, autoCompleteOptions: EntityEditFieldOptions | undefined, style: CSSProperties) {
     if (autoCompleteOptions && autoCompleteOptions.options.length > 0) {
         const {options, isValueInteger, isEnum} = autoCompleteOptions;
         const filters: any = getFilter(isValueInteger, options.length > 5);
@@ -92,11 +92,11 @@ function primitiveControl(eleType: string, autoCompleteOptions?: EntityEditField
         // }
 
     } else if (eleType == 'bool') {
-        return <Switch className='nodrag'/>;
+        return <Switch className='nodrag' />;
     } else if (setOfNumber.has(eleType)) {
-        return <InputNumber className='nodrag'  {...style} />;
+        return <InputNumber className='nodrag' style={style}/>;
     } else {
-        return <TextArea className='nodrag' autoSize={textAreaAutoSize} {...style}/>;
+        return <TextArea className='nodrag' autoSize={textAreaAutoSize} style={{width: 90, ...style}}/>;
     }
 
 }
@@ -154,8 +154,8 @@ const PrimitiveFormItem = memo(function ({field, bgColor}: {
 }) {
     let props = useMemo(() => field.eleType == 'bool' ? {valuePropName: "checked"} : {}, [field.eleType])
 
-    const thisItemStyle = useMemo(() => {
-        return bgColor == undefined ? {} : {style: {backgroundColor: bgColor}}
+    const thisItemStyle: CSSProperties = useMemo(() => {
+        return bgColor == undefined ? {} : {backgroundColor: bgColor}
     }, [bgColor]);
 
     const primitiveCtrl = useMemo(() => primitiveControl(field.eleType, field.autoCompleteOptions, thisItemStyle),
@@ -165,7 +165,7 @@ const PrimitiveFormItem = memo(function ({field, bgColor}: {
                       label={<LabelWithTooltip name={field.name} comment={field.comment}/>}
                       initialValue={field.value}
                       {...props}
-                      {...thisItemStyle}>
+                      style={thisItemStyle}>
         {primitiveCtrl}
     </Form.Item>;
 });
@@ -198,7 +198,7 @@ const ArrayOfPrimitiveFormItem = memo(function ({field, bgColor}: {
                     {fields.map((f, index) => (
                         <Space key={f.key} align='baseline' size={2}>
                             <Form.Item name={f.name} {...itemStyle}>
-                                {primitiveControl(field.eleType, field.autoCompleteOptions)}
+                                {primitiveControl(field.eleType, field.autoCompleteOptions, thisItemStyle)}
                             </Form.Item>
                             <ArrayItemDropdownButton fold={field.autoCompleteOptions != null}
                                                      remove={() => remove(f.name)}
@@ -288,7 +288,10 @@ const InterfaceFormItem = memo(function ({field, nodeProps, sharedSetting}: {
     sharedSetting?: EntitySharedSetting
 }) {
     const onSelectChange = useCallback((value: string) => {
-        field.interfaceOnChangeImpl!(value, nodeProps.data.entity.id, {x: nodeProps.positionAbsoluteX, y: nodeProps.positionAbsoluteY});
+        field.interfaceOnChangeImpl!(value, nodeProps.data.entity.id, {
+            x: nodeProps.positionAbsoluteX,
+            y: nodeProps.positionAbsoluteY
+        });
     }, [field]);
 
     const options = field.autoCompleteOptions?.options!;
@@ -326,7 +329,8 @@ function fieldFormItem(field: EntityEditField, nodeProps: NodeProps<EntityNode>,
                                     func={field.value as FuncType}
                                     bgColor={bgColor}/>;
         case "interface":
-            return <InterfaceFormItem key={field.name} field={field} nodeProps={nodeProps} sharedSetting={sharedSetting}/>;
+            return <InterfaceFormItem key={field.name} field={field} nodeProps={nodeProps}
+                                      sharedSetting={sharedSetting}/>;
         case "funcSubmit":
             return <FuncSubmitFormItem key={field.name} field={field}/>;
     }

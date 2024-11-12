@@ -1,7 +1,20 @@
 {
-	"id":0,
+	"$type":"trigger.instancelogic",
 	"triggers":[
-		
-	],
-	"$type":"trigger.instancelogic"
+		{
+			"$type":"trigger.TriggerFn",
+			"trigger":{
+				"$type":"trigger.Trigger.InstanceOpen"
+			},
+			"actions":[
+				{
+					"$type":"trigger.Action.CreateNpc",
+					"npcId":{
+						"$type":"trigger.ParamInt.Value",
+						"value":12
+					}
+				}
+			]
+		}
+	]
 }
