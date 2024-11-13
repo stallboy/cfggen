@@ -28,9 +28,9 @@ function isPrimitiveType(type: string): boolean {
 
 
 interface ArrayItemParam {
-    onDeleteFunc: () => void;
-    onMoveUpFunc?: () => void;
-    onMoveDownFunc?: () => void;
+    onDeleteFunc: (position: EntityPosition) => void;
+    onMoveUpFunc?: (position: EntityPosition) => void;
+    onMoveDownFunc?: (position: EntityPosition) => void;
 }
 
 export class RecordEditEntityCreator {
@@ -129,21 +129,21 @@ export class RecordEditEntityCreator {
                     const arrayIndex = i;
 
                     const chain = [...fieldChain, fieldKey]
-                    const onDeleteFunc = () => {
-                        onDeleteItemFromArray(arrayIndex, chain);
+                    const onDeleteFunc = (position: EntityPosition) => {
+                        onDeleteItemFromArray(arrayIndex, chain, position);
                     }
 
                     let onMoveUpFunc;
                     if (arrayIndex > 0) {
-                        onMoveUpFunc = () => {
-                            onMoveItemInArray(arrayIndex, arrayIndex - 1, chain);
+                        onMoveUpFunc = (position: EntityPosition) => {
+                            onMoveItemInArray(arrayIndex, arrayIndex - 1, chain, position);
                         }
                     }
 
                     let onMoveDownFunc;
                     if (arrayIndex < fArrLen - 1) {
-                        onMoveDownFunc = () => {
-                            onMoveItemInArray(arrayIndex, arrayIndex + 1, chain);
+                        onMoveDownFunc = (position: EntityPosition) => {
+                            onMoveItemInArray(arrayIndex, arrayIndex + 1, chain, position);
                         }
                     }
 
@@ -201,8 +201,8 @@ export class RecordEditEntityCreator {
             onUpdateNote(note, fieldChain);
         };
 
-        const editOnUpdateFold = (id: string, fold: boolean, position:EntityPosition) => {
-            onUpdateFold(id, fold, fieldChain, position);
+        const editOnUpdateFold = (fold: boolean, position: EntityPosition) => {
+            onUpdateFold(fold, fieldChain, position);
             const newFolds = this.folds.setFold(fieldChain, fold);
             this.setFolds(newFolds);
         };
@@ -265,7 +265,7 @@ export class RecordEditEntityCreator {
                 value: implName,
                 autoCompleteOptions: getImplNameOptions(sInterface),
                 implFields: this.makeEditFields(impl, obj, fieldChain),
-                interfaceOnChangeImpl: (newImplName: string, id:string, position:EntityPosition) => {
+                interfaceOnChangeImpl: (newImplName: string, position: EntityPosition) => {
                     let newObj: JSONObject;
                     if (newImplName == implName) {
                         newObj = obj;
@@ -273,7 +273,7 @@ export class RecordEditEntityCreator {
                         const newImpl = getImpl(sInterface, newImplName) as SStruct;
                         newObj = this.schema.defaultValueOfStructural(newImpl);
                     }
-                    onUpdateInterfaceValue(newObj, fieldChain, id, position);
+                    onUpdateInterfaceValue(newObj, fieldChain, position);
                 },
             })
 
@@ -348,10 +348,10 @@ export class RecordEditEntityCreator {
                         comment: sf.comment,
                         type: 'funcAdd',
                         eleType: itemType,
-                        value: () => {
+                        value: (position: EntityPosition) => {
                             const sFieldable = this.schema.itemIncludeImplMap.get(itemType) as SStruct | SInterface;
                             const defaultValue = this.schema.defaultValue(sFieldable);
-                            onAddItemToArray(defaultValue, [...fieldChain, sf.name]);
+                            onAddItemToArray(defaultValue, [...fieldChain, sf.name], position);
                         }
                     });
                 }

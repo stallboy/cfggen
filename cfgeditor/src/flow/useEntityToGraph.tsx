@@ -128,12 +128,11 @@ export function useEntityToGraph({
                         setFitViewForPathname(pathname);
                     }
                 } else if (editingObjectRes?.fitView === EFitView.FitId
-                    && editingObjectRes.fitViewToId
                     && editingObjectRes.fitViewToIdPosition) {
-                    const nowXy = id2RectMap.get(editingObjectRes.fitViewToId);
-                    if (nowXy !== undefined) {
+                    const {id, x, y} = editingObjectRes.fitViewToIdPosition;
+                    const nowXy = id2RectMap.get(id);
+                    if (nowXy !== undefined) { // onDeleteItemFromArray时，是会遇到undefined情况的
                         const {x: nowX, y: nowY} = nowXy;
-                        const {x, y} = editingObjectRes.fitViewToIdPosition;
                         const {x: tx, y: ty, zoom} = panZoom.getViewport();
                         // xyflow的viewport的含义如下：
                         // screenX = x*zoom + tx

@@ -2,7 +2,7 @@ import {
     EntityEdit,
     EntityEditField,
     EntityEditFieldOption, EntityEditFieldOptions,
-    EntitySharedSetting,
+    EntitySharedSetting, FuncAddType,
     FuncSubmitType,
     FuncType
 } from "./entityModel.ts";
@@ -141,17 +141,27 @@ const StructRefItem = memo(function ({name, comment, handleOut, bgColor}: Struct
 });
 
 interface FuncAddFormItemProps extends StructRefItemProps {
-    func: FuncType;
+    func: FuncAddType;
+    nodeProps: NodeProps<EntityNode>,
 }
 
-const FuncAddFormItem = memo(function ({name, comment, handleOut, bgColor, func}: FuncAddFormItemProps) {
+const FuncAddFormItem = memo(function ({name, comment, handleOut, bgColor, func, nodeProps}: FuncAddFormItemProps) {
     const thisRowStyle: CSSProperties = useMemo(() => bgColor == undefined ? rowFlexStyle : {
         marginBottom: 10,
         position: 'relative',
         backgroundColor: bgColor
     }, [bgColor]);
+
+    const addFunc = useCallback(() => {
+        func({
+            id: nodeProps.data.entity.id,
+            x: nodeProps.positionAbsoluteX,
+            y: nodeProps.positionAbsoluteY
+        });
+    }, [func, nodeProps]);
+
     return <Flex key={name} gap='middle' justify="flex-end" style={thisRowStyle}>
-        <Button className='nodrag' onClick={func} icon={<PlusSquareTwoTone/>}>
+        <Button className='nodrag' onClick={addFunc} icon={<PlusSquareTwoTone/>}>
             <LabelWithTooltip name={name} comment={comment}/>
         </Button>
         {handleOut && <Handle id={name} type='source'
@@ -319,7 +329,8 @@ const InterfaceFormItem = memo(function ({field, nodeProps, sharedSetting}: {
     }, [field.name, field.value, form]);
 
     const onSelectChange = useCallback((value: string) => {
-        field.interfaceOnChangeImpl!(value, nodeProps.data.entity.id, {
+        field.interfaceOnChangeImpl!(value, {
+            id: nodeProps.data.entity.id,
             x: nodeProps.positionAbsoluteX,
             y: nodeProps.positionAbsoluteY
         });
@@ -364,10 +375,12 @@ function fieldFormItem(field: EntityEditField, nodeProps: NodeProps<EntityNode>,
             return <FuncAddFormItem key={field.name}
                                     name={field.name} comment={field.comment} handleOut={field.handleOut}
                                     func={field.value as FuncType}
+                                    nodeProps={nodeProps} // 增加子struct时，本节点位置不变
                                     bgColor={bgColor}/>;
         case "interface":
             return <InterfaceFormItem key={field.name}
-                                      field={field} nodeProps={nodeProps}
+                                      field={field}
+                                      nodeProps={nodeProps} // 改变impl时，本节点位置不变
                                       sharedSetting={sharedSetting}/>;
         case "funcSubmit":
             return <FuncSubmitFormItem key={field.name}

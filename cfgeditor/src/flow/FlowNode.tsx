@@ -76,14 +76,14 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
     const unfoldNode = useCallback(() => {
         if (edit && edit.editOnUpdateFold) {
             // console.log("unfold", nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY);
-            edit.editOnUpdateFold(id, false, {x: nodeProps.positionAbsoluteX, y: nodeProps.positionAbsoluteY});
+            edit.editOnUpdateFold(false, {id, x: nodeProps.positionAbsoluteX, y: nodeProps.positionAbsoluteY});
         }
     }, [edit, id]);
 
     const foldNode = useCallback(() => {
         if (edit && edit.editOnUpdateFold) {
             // console.log("fold", nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY);
-            edit.editOnUpdateFold(id, true, {x: nodeProps.positionAbsoluteX, y: nodeProps.positionAbsoluteY});
+            edit.editOnUpdateFold(true, {id, x: nodeProps.positionAbsoluteX, y: nodeProps.positionAbsoluteY});
         }
     }, [edit, id]);
 
@@ -176,6 +176,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
         return null;
     }, [sharedSetting, id, isEditNote, note, edit, tmpNote, updateNoteInEdit]);
 
+
     const title = useMemo(() => {
         return <Flex justify="space-between" style={titleStyle}>
             {foldButton}
@@ -187,21 +188,42 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
             {resBriefButton}
             <Space size={1}>
                 {edit && edit.editOnMoveUp &&
-                    <Button className='nodrag' style={iconButtonStyle} icon={moveUpIcon} onClick={edit.editOnMoveUp}/>}
-                {edit && edit.editOnMoveDown && <Button className='nodrag' style={iconButtonStyle} icon={moveDownIcon}
-                                                        onClick={edit.editOnMoveDown}/>}
+                    <Button className='nodrag' style={iconButtonStyle} icon={moveUpIcon}
+                            onClick={() => {
+                                edit.editOnMoveUp?.({
+                                    id,
+                                    x: nodeProps.positionAbsoluteX,
+                                    y: nodeProps.positionAbsoluteY
+                                })
+                            }}/>}
+                {edit && edit.editOnMoveDown &&
+                    <Button className='nodrag' style={iconButtonStyle} icon={moveDownIcon}
+                            onClick={() => {
+                                edit.editOnMoveDown?.({
+                                    id,
+                                    x: nodeProps.positionAbsoluteX,
+                                    y: nodeProps.positionAbsoluteY
+                                })
+                            }}/>}
                 {edit && edit.editOnDelete &&
-                    <Button className='nodrag' style={iconButtonStyle} icon={closeIcon} onClick={edit.editOnDelete}/>}
+                    <Button className='nodrag' style={iconButtonStyle} icon={closeIcon}
+                            onClick={() => {
+                                edit.editOnDelete?.({
+                                    id,
+                                    x: nodeProps.positionAbsoluteX,
+                                    y: nodeProps.positionAbsoluteY
+                                })
+                            }}/>}
             </Space>
         </Flex>
-    }, [foldButton, sharedSetting, label, brief, editNoteButton, resBriefButton, edit]);
+    }, [foldButton, sharedSetting, label, brief, editNoteButton, resBriefButton, edit, id, nodeProps]);
 
     return <div key={id} className={edit && edit.fold ? 'flowNodeWithBorder' : 'flowNode'} style={nodeStyle}>
         {noteShowOrEdit}
         {title}
         {fields && <EntityProperties fields={fields} sharedSetting={sharedSetting} color={color}/>}
         {brief && <EntityCard entity={nodeProps.data.entity} image={firstImage}/>}
-        {edit && <EntityForm edit={edit} nodeProps={nodeProps} sharedSetting={sharedSetting} />}
+        {edit && <EntityForm edit={edit} nodeProps={nodeProps} sharedSetting={sharedSetting}/>}
         {(handleIn && <Handle type='target' position={Position.Left} id='@in' style={handleStyle}/>)}
         {(handleOut && <Handle type='source' position={Position.Right} id='@out' style={handleStyle}/>)}
     </div>;

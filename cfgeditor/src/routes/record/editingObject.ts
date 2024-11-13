@@ -14,7 +14,6 @@ export type EditState = {
     id: string;
     editingObject: JSONObject;
     fitView: EFitView;
-    fitViewToId?: string;
     fitViewToIdPosition?: EntityPosition;
 
     update: () => void;
@@ -42,7 +41,6 @@ export const editState: EditState = {
 
 export type EditingObjectRes = {
     fitView: EFitView;
-    fitViewToId?: string;
     fitViewToIdPosition?: EntityPosition;
     isEdited: boolean;
 }
@@ -56,12 +54,11 @@ export function startEditingObject(recordResult: RecordResult,
         update();
     }
     editState.submitEditingObject = submitEditingObject;
-    const {table, id, fitView, fitViewToId, fitViewToIdPosition} = editState;
+    const {table, id, fitView, fitViewToIdPosition} = editState;
     const {table: newTable, id: newId} = recordResult;
     if (newTable == table && newId == id) {
         return {
             fitView,
-            fitViewToId,
             fitViewToIdPosition,
             isEdited: editState.isEdited
         };
@@ -73,13 +70,11 @@ export function startEditingObject(recordResult: RecordResult,
     editState.table = newTable;
     editState.id = newId;
     editState.fitView = EFitView.FitFull;
-    editState.fitViewToId = undefined;
     editState.fitViewToIdPosition = undefined;
     editState.editingObject = newEditingObject;
     editState.isEdited = false;
     return {
         fitView: editState.fitView,
-        fitViewToId: editState.fitViewToId,
         fitViewToIdPosition: editState.fitViewToIdPosition,
         isEdited: editState.isEdited
     };
@@ -126,15 +121,13 @@ export function onUpdateNote(note: string | undefined,
 }
 
 
-export function onUpdateFold(id: string,
-                             fold: boolean,
+export function onUpdateFold(fold: boolean,
                              fieldChains: (string | number)[],
                              position: EntityPosition) {
     const obj = getFieldObj(editState.editingObject, fieldChains);
     obj['$fold'] = fold;
 
     editState.fitView = EFitView.FitId;
-    editState.fitViewToId = id;
     editState.fitViewToIdPosition = position;
     editState.update();
 }
@@ -142,7 +135,6 @@ export function onUpdateFold(id: string,
 
 export function onUpdateInterfaceValue(jsonObject: JSONObject,
                                        fieldChains: (string | number)[],
-                                       id: string,
                                        position: EntityPosition) {
     // console.log('updateInterface', fieldChains, jsonObject);
 
@@ -150,56 +142,64 @@ export function onUpdateInterfaceValue(jsonObject: JSONObject,
     obj[fieldChains[fieldChains.length - 1]] = jsonObject;
 
     editState.fitView = EFitView.FitId;
-    editState.fitViewToId = id;
     editState.fitViewToIdPosition = position;
     editState.update();
 }
 
 
 export function onAddItemToArray(defaultItemJsonObject: JSONObject,
-                                 arrayFieldChains: (string | number)[]) {
+                                 arrayFieldChains: (string | number)[],
+                                 position: EntityPosition) {
     // console.log('addItem', arrayFieldChains, defaultItemJsonObject);
 
     const obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
     obj.push(defaultItemJsonObject);
 
-    editState.fitView = EFitView.FitNone;
+
+    editState.fitView = EFitView.FitId;
+    editState.fitViewToIdPosition = position;
     editState.update();
 }
 
+// 前插入：让插入的节点和当前鼠标所在节点 位置不变
 export function onAddItemToArrayIndex(defaultItemJsonObject: JSONObject,
                                       index: number,
-                                      arrayFieldChains: (string | number)[]) {
+                                      arrayFieldChains: (string | number)[],
+                                      position: EntityPosition) {
     const obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
     obj.splice(index, 0, defaultItemJsonObject);
 
-    editState.fitView = EFitView.FitNone;
+    editState.fitView = EFitView.FitId;
+    editState.fitViewToIdPosition = position;
     editState.update();
 }
 
 
 export function onMoveItemInArray(curIndex: number,
                                   newIndex: number,
-                                  arrayFieldChains: (string | number)[]) {
+                                  arrayFieldChains: (string | number)[],
+                                  position: EntityPosition) {
     const obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
     const o2 = obj[newIndex];
     obj[newIndex] = obj[curIndex]
     obj[curIndex] = o2;
 
-    editState.fitView = EFitView.FitNone;
+    editState.fitView = EFitView.FitId;
+    editState.fitViewToIdPosition = position;
     editState.update();
 }
 
 
 export function onDeleteItemFromArray(deleteIndex: number,
-                                      arrayFieldChains: (string | number)[]) {
+                                      arrayFieldChains: (string | number)[],
+                                      position: EntityPosition) {
     // console.log('delItem', arrayFieldChains, deleteIndex);
 
     const obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
     obj.splice(deleteIndex, 1);
 
-    // editState.seq++;
-    editState.fitView = EFitView.FitNone;
+    editState.fitView = EFitView.FitId;
+    editState.fitViewToIdPosition = position;
     editState.update();
 }
 
@@ -228,8 +228,7 @@ export function isCopiedFitAllowedType(allowdType: string) {
     return false;
 }
 
-export function onStructPaste(id: string,
-                              fieldChains: (string | number)[],
+export function onStructPaste(fieldChains: (string | number)[],
                               position: EntityPosition) {
     let obj: any = editState.editingObject;
     const copied = editState.copiedObject;
@@ -247,10 +246,8 @@ export function onStructPaste(id: string,
     }
 
     editState.fitView = EFitView.FitId;
-    editState.fitViewToId = id;
     editState.fitViewToIdPosition = position;
     editState.update();
-
 }
 
 function getFieldObj(editingObject: JSONObject, fieldChains: (string | number)[]): any {

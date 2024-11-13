@@ -205,7 +205,10 @@ const RecordWithResult = memo(function ({recordResult}: { recordResult: RecordRe
                         handler() {
                             const sFieldable = schema.itemIncludeImplMap.get(editAllowObjType) as SStruct | SInterface;
                             const defaultValue = schema.defaultValue(sFieldable);
-                            onAddItemToArrayIndex(defaultValue, index, editFieldChain.slice(0, editFieldChain.length - 1))
+                            onAddItemToArrayIndex(defaultValue, index,
+                                editFieldChain.slice(0, editFieldChain.length - 1),
+                                {id: entity.id, x: entityNode.position.x, y: entityNode.position.y}
+                            )
                         }
                     });
                 }
@@ -223,7 +226,11 @@ const RecordWithResult = memo(function ({recordResult}: { recordResult: RecordRe
                     label: t('structPaste'),
                     key: 'structPaste',
                     handler() {
-                        onStructPaste(entity.id, editFieldChain, {x: entityNode.position.x, y: entityNode.position.y})
+                        onStructPaste(editFieldChain, {
+                            id: entity.id,
+                            x: entityNode.position.x,
+                            y: entityNode.position.y
+                        })
                     }
                 });
             }

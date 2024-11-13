@@ -22,7 +22,7 @@ export interface EntityEditField extends EntityBaseField {
     value: EditFieldValueType;
     autoCompleteOptions?: EntityEditFieldOptions; // use AutoComplete if it has autoCompleteOptions
     implFields?: EntityEditField[];
-    interfaceOnChangeImpl?: ((impl: string, id: string, position: EntityPosition) => void)
+    interfaceOnChangeImpl?: ((impl: string, position: EntityPosition) => void)
 }
 
 
@@ -36,10 +36,11 @@ export type EditFieldValueType =
     | string[]
     | number[]
     | boolean[]
-    | FuncType
+    | FuncAddType
     | FuncSubmitType;
 
 export type FuncType = () => void;
+export type FuncAddType = (position: EntityPosition) => void;
 
 export interface FuncSubmitType {
     funcSubmit: FuncType;
@@ -59,6 +60,7 @@ export interface EntityEditFieldOption {
 }
 
 export interface EntityPosition {
+    id: string;
     x: number;
     y: number;
 }
@@ -68,10 +70,10 @@ export interface EntityEdit {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     editOnUpdateValues: (values: any) => void;
     editOnUpdateNote: (note?: string) => void;
-    editOnUpdateFold: (id: string, fold: boolean, position: EntityPosition) => void;
-    editOnDelete?: () => void;
-    editOnMoveUp?: () => void;
-    editOnMoveDown?: () => void;
+    editOnUpdateFold: (fold: boolean, position: EntityPosition) => void;
+    editOnDelete?: (position: EntityPosition) => void;
+    editOnMoveUp?: (position: EntityPosition) => void;
+    editOnMoveDown?: (position: EntityPosition) => void;
 
     editFieldChain?: (string | number)[];
     editObj?: JSONObject;
