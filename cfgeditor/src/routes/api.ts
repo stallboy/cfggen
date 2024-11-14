@@ -9,7 +9,7 @@ import {CheckJsonResult, PromptResult} from "./search/chatModel.ts";
 
 export async function fetchSchema(server: string, signal: AbortSignal) {
     const response = await axios.get<RawSchema>(`http://${server}/schemas`, {signal});
-    console.log('fetched schema');
+    // console.log('fetched schema');
     clearLayoutCache();
     return new Schema(response.data);
 }
@@ -65,7 +65,7 @@ export async function deleteRecord(server: string, tableId: string, id: string) 
 
 export async function fetchNotes(server: string, signal: AbortSignal) {
     const response = await axios.get<Notes>(`http://${server}/notes`, {signal});
-    console.log('fetched notes');
+    // console.log('fetched notes');
     clearLayoutCache();
     return notesToMap(response.data);
 }

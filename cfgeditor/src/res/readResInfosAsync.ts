@@ -190,7 +190,7 @@ export async function readResInfosAsync() {
 
     const packed = packAllTracks(result);
     store.resMap = packed;
-    console.log(`read res file for ${packed.size} node`, packed, stat);
+    // console.log(`read res file for ${packed.size} node`, packed, stat);
     return true;
 }
 

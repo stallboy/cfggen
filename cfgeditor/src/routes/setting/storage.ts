@@ -1,4 +1,3 @@
-// import {path} from "@tauri-apps/api";
 import {BaseDirectory, readTextFile, writeTextFile} from "@tauri-apps/plugin-fs";
 import {parse, stringify} from "yaml";
 import {getPrefKeySet, getPrefSelfKeySet} from "./store.ts";
@@ -79,7 +78,6 @@ export async function readPrefAsyncOnce() {
     if (!isTauri()) {
         return true;
     }
-    console.log('read yml file')
     localStorage.clear();
     await readConf("cfgeditor.yml");
     await readConf("cfgeditorSelf.yml");
@@ -87,53 +85,55 @@ export async function readPrefAsyncOnce() {
 }
 
 async function readConf(conf: string) {
-    console.log("read", conf);
+    // console.log("read", conf);
     const settings = parse(await readTextFile(conf, {baseDir: BaseDirectory.Resource}));
     if (typeof settings == "object") {
         for (const key in settings) {
             const value = settings[key];
             localStorage.setItem(key, value);
-            console.log(key, value);
+            // console.log(key, value);
         }
     }
 }
 
-async function savePrefAsync() {
+async function saveKeySetPrefAsync(keySet: Set<string>, fn: string) {
     const settings: Record<string, any> = {};
-    const selfSettings: Record<string, any> = {};
-    const prefKeySet = getPrefKeySet();
-    const prefSelfKeySet = getPrefSelfKeySet();
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key === null) {
-            continue;
-        }
-        if (prefKeySet.has(key)) {
-            settings[key] = localStorage.getItem(key);
-        } else if (prefSelfKeySet.has(key)) {
-            selfSettings[key] = localStorage.getItem(key);
+    for (const key of keySet) {
+        const value = localStorage.getItem(key);
+        if (value) {
+            settings[key] = value;
         }
     }
-    // const conf = await getConf();
-    await writeTextFile("cfgeditor.yml", stringify(settings, {sortMapEntries: true}), {baseDir: BaseDirectory.Resource});
-    // const selfConf = await getSelfConf();
-    await writeTextFile("cfgeditorSelf.yml", stringify(selfSettings, {sortMapEntries: true}), {baseDir: BaseDirectory.Resource});
+    await writeTextFile(fn, stringify(settings, {sortMapEntries: true}), {baseDir: BaseDirectory.Resource});
+}
+
+async function savePrefAsyncIf(changedKey: string) {
+    const prefKeySet = getPrefKeySet();
+    if (prefKeySet.has(changedKey)) {
+        await saveKeySetPrefAsync(prefKeySet, "cfgeditor.yml");
+    }
 }
 
 function log(reason: any) {
     console.log(reason)
 }
 
+export function saveSelfPrefAsync() {
+    const prefSelfKeySet = getPrefSelfKeySet();
+    console.log("save self")
+    saveKeySetPrefAsync(prefSelfKeySet, "cfgeditorSelf.yml").catch(log);
+}
+
 export function setPref(key: string, value: string) {
     localStorage.setItem(key, value);
     if (isTauri()) {
-        savePrefAsync().catch(log);
+        savePrefAsyncIf(key).catch(log);
     }
 }
 
 export function removePref(key: string) {
     localStorage.removeItem(key);
     if (isTauri()) {
-        savePrefAsync().catch(log);
+        savePrefAsyncIf(key).catch(log);
     }
 }

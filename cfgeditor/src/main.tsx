@@ -13,6 +13,9 @@ import {RecordRefRoute} from "./routes/record/RecordRef.tsx";
 import {PathNotFound} from "./routes/PathNotFound.tsx";
 import {TableRef} from "./routes/table/TableRef.tsx";
 import {AppLoader} from "./AppLoader.tsx";
+import {isTauri} from "@tauri-apps/api/core";
+import {saveSelfPrefAsync} from "./routes/setting/storage.ts";
+import {Window} from "@tauri-apps/api/window";
 // import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
 
 export const queryClient = new QueryClient({
@@ -58,6 +61,9 @@ const theme = {
             horizontalMargin: '0,0,0,0'
         },
     },
+}
+if (isTauri()) {
+    Window.getCurrent().onCloseRequested(saveSelfPrefAsync);
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

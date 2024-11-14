@@ -132,7 +132,7 @@ export function readStoreStateOnce() {
         return;
     }
     alreadyRead = true;
-    console.log('read storage')
+    // console.log('read storage')
     for (const k in storeState) {
         const key = k as keyof StoreState;
         const value = storeState[key]
