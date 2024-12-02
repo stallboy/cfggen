@@ -1,6 +1,7 @@
 package configgen.ctx;
 
 import configgen.data.*;
+import configgen.gen.BuildSettings;
 import configgen.util.Logger;
 import configgen.schema.*;
 import configgen.schema.cfg.Cfgs;
@@ -13,24 +14,55 @@ import java.util.Objects;
 
 
 public class Context {
+
+    public record ContextCfg(Path dataDir,
+                             boolean tryUsePoi,
+                             int headRow,
+                             String csvDefaultEncoding,
+
+                             String i18nFilename,
+                             boolean crLfAsLf,
+                             String langSwitchDir,
+                             String langSwitchDefaultLang) {
+
+        public ContextCfg {
+            Objects.requireNonNull(dataDir);
+            if (headRow < 2) {
+                throw new IllegalArgumentException("head row < 2");
+            }
+            Objects.requireNonNull(csvDefaultEncoding);
+        }
+
+        public static ContextCfg of(Path dataDir) {
+            return new ContextCfg(dataDir, false, 2, "GBK", null, false, null, null);
+        }
+    }
+
     private final Path dataDir;
     private final CfgDataReader dataReader;
-    private final TextI18n nullableI18n;
-    private final LangSwitch nullableLangSwitch;
+    private TextI18n nullableI18n;
+    private LangSwitch nullableLangSwitch;
 
     private CfgSchema cfgSchema;
     private CfgData cfgData;
 
     public Context(Path dataDir) {
-        this(dataDir, new CfgDataReader(2, new ReadCsv("GBK"), ReadByFastExcel.INSTANCE),
-                null, null);
+        this(ContextCfg.of(dataDir));
     }
 
-    public Context(Path dataDir, CfgDataReader dataReader, TextI18n nullableI18n, LangSwitch nullableLangSwitch) {
-        this.dataDir = dataDir;
-        this.dataReader = dataReader;
-        this.nullableI18n = nullableI18n;
-        this.nullableLangSwitch = nullableLangSwitch;
+    public Context(ContextCfg cfg) {
+        this.dataDir = cfg.dataDir;
+
+        ExcelReader excelReader = (cfg.tryUsePoi && BuildSettings.isIncludePoi()) ?
+                BuildSettings.getPoiReader() : ReadByFastExcel.INSTANCE;
+        this.dataReader = new CfgDataReader(cfg.headRow, new ReadCsv(cfg.csvDefaultEncoding), excelReader);
+
+        if (cfg.i18nFilename != null) {
+            nullableI18n = TextI18n.loadFromCsvFile(Path.of(cfg.i18nFilename), cfg.crLfAsLf);
+        } else if (cfg.langSwitchDir != null) {
+            nullableLangSwitch = LangSwitch.loadFromDirectory(Path.of(cfg.langSwitchDir),
+                    cfg.langSwitchDefaultLang, cfg.crLfAsLf);
+        }
 
         boolean ok = readSchemaAndData(true);
         if (!ok) {

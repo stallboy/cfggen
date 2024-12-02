@@ -34,7 +34,7 @@ class StatTest {
 
     @Test
     public void merge_exception_if_has_not_integer_field() {
-        StatImpl2 stat1 = new StatImpl2();
+        StatImpl stat1 = new StatImpl();
         stat1.field1 = 10;
         StatImpl2 stat2 = new StatImpl2();
         stat2.field2 = "aa";

@@ -1,8 +1,6 @@
 package configgen.gen;
 
 import configgen.ctx.Context;
-import configgen.ctx.LangSwitch;
-import configgen.ctx.TextI18n;
 import configgen.data.*;
 import configgen.editorserver.EditorServer;
 import configgen.gencs.GenBytes;
@@ -142,12 +140,12 @@ public final class Main {
         boolean comparePoiAndFastExcel = false;
         int headRow = 2;
         boolean usePoi = false;
-        String encoding = "GBK";
+        String csvDefaultEncoding = "GBK";
 
         String i18nfile = null;
         boolean i18ncrlfaslf = false;
         String langSwitchDir = null;
-        String defaultLang = "zh_cn";
+        String langSwitchDefaultLang = "zh_cn";
 
         boolean verify = false;
 
@@ -186,12 +184,12 @@ public final class Main {
                 case "-xmltocfg" -> xmlToCfg = true;
                 case "-headrow" -> headRow = Integer.parseInt(args[++i]);
 
-                case "-encoding" -> encoding = args[++i];
+                case "-encoding" -> csvDefaultEncoding = args[++i];
                 case "-verify" -> verify = true;
                 case "-i18nfile" -> i18nfile = args[++i];
                 case "-i18ncrlfaslf" -> i18ncrlfaslf = true;
                 case "-langswitchdir" -> langSwitchDir = args[++i];
-                case "-defaultlang" -> defaultLang = args[++i];
+                case "-defaultlang" -> langSwitchDefaultLang = args[++i];
                 case "-v" -> Logger.setVerboseLevel(1);
                 case "-vv" -> Logger.setVerboseLevel(2);
                 case "-p" -> Logger.enableProfile();
@@ -262,7 +260,7 @@ public final class Main {
 
         if (comparePoiAndFastExcel) {
             if (BuildSettings.isIncludePoi()) {
-                ReadCsv csvReader = new ReadCsv(encoding);
+                ReadCsv csvReader = new ReadCsv(csvDefaultEncoding);
                 CfgDataReader fastDataReader = new CfgDataReader(headRow, csvReader, ReadByFastExcel.INSTANCE);
                 CfgDataReader poiDataReader = new CfgDataReader(headRow, csvReader, BuildSettings.getPoiReader());
                 ComparePoiAndFastExcel.compareCellData(dataDir, fastDataReader, poiDataReader);
@@ -278,16 +276,8 @@ public final class Main {
 
         Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));
 
-        TextI18n nullableI18n = null;
-        LangSwitch nullableLangSwitch = null;
-        if (i18nfile != null) {
-            nullableI18n = TextI18n.loadFromCsvFile(Path.of(i18nfile), i18ncrlfaslf);
-        } else if (langSwitchDir != null) {
-            nullableLangSwitch = LangSwitch.loadFromDirectory(Path.of(langSwitchDir), defaultLang, i18ncrlfaslf);
-        }
-        ExcelReader excelReader = (usePoi && BuildSettings.isIncludePoi()) ? BuildSettings.getPoiReader() : ReadByFastExcel.INSTANCE;
-        CfgDataReader dataReader = new CfgDataReader(headRow, new ReadCsv(encoding), excelReader);
-        Context context = new Context(dataDir, dataReader, nullableI18n, nullableLangSwitch);
+        Context context = new Context(new Context.ContextCfg(dataDir, usePoi, headRow, csvDefaultEncoding,
+                i18nfile, i18ncrlfaslf, langSwitchDir, langSwitchDefaultLang));
 
 
         if (searchParam != null) {

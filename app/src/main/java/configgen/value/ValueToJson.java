@@ -106,10 +106,9 @@ public class ValueToJson {
             SimpleValue value = e.getValue();
 
             JSONObject entryJson = new JSONObject(2);
+            entryJson.put("$type", "$entry");
             entryJson.put("key", toJson(key));
             entryJson.put("value", toJson(value));
-            entryJson.put("$type", "$entry");
-
             json.add(entryJson);
         }
         return json;

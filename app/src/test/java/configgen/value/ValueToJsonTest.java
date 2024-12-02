@@ -94,7 +94,7 @@ class ValueToJsonTest {
         JSONArray ja = valueToJson.toJson(vList);
 
         String jsonStr = """
-                [{"fieldIntA":123,"fieldStrB":"test str","$type":"structName"},{"fieldIntA":456,"fieldStrB":"bbb","$type":"structName"}]""";
+                [{"$type":"structName","fieldIntA":123,"fieldStrB":"test str"},{"$type":"structName","fieldIntA":456,"fieldStrB":"bbb"}]""";
         assertEquals(jsonStr, ja.toString());
     }
 
@@ -125,7 +125,7 @@ class ValueToJsonTest {
 
         JSONObject json = valueToJson.toJson(vCond);
         String jsonStr = """
-                {"c1":{"id":123,"$type":"condition.checkItem"},"c2":{"id":456,"$type":"condition.checkItem"},"$type":"condition.and"}""";
+                {"$type":"condition.and","c1":{"$type":"condition.checkItem","id":123},"c2":{"$type":"condition.checkItem","id":456}}""";
         assertEquals(jsonStr, json.toString());
         assertEquals("condition.and", json.getString("$type"));
         assertEquals(123, json.getJSONObject("c1").getIntValue("id"));
@@ -169,7 +169,7 @@ class ValueToJsonTest {
 
         JSONObject json = valueToJson.toJson(vStruct);
         String jsonStr = """
-                {"id":666,"c":[{"key":123456,"value":{"c1":{"id":123,"$type":"condition.checkItem"},"c2":{"id":456,"$type":"condition.checkItem"},"$type":"condition.and"},"$type":"$entry"}],"$type":"cond"}""";
+                {"$type":"cond","id":666,"c":[{"$type":"$entry","key":123456,"value":{"$type":"condition.and","c1":{"$type":"condition.checkItem","id":123},"c2":{"$type":"condition.checkItem","id":456}}}]}""";
         assertEquals(jsonStr, json.toString());
     }
 }
