@@ -15,6 +15,7 @@ import static configgen.data.DataUtil.*;
 import static configgen.data.DataUtil.FileFmt.CSV;
 import static configgen.data.DataUtil.FileFmt.EXCEL;
 import static configgen.value.VTableJsonStore.getJsonTableDirName;
+import static java.nio.file.FileVisitResult.*;
 
 /**
  * <p> 目录视为table规则： 首字母是英文字符的视为table目录。 截取.之前的，再截取 _汉字或汉字之前的，作为table名 </p>
@@ -58,6 +59,7 @@ public class DirectoryStructure {
                                Path relativePath) {
     }
 
+
     private final Path rootDir;
     private final Map<String, CfgFileInfo> cfgFiles = new LinkedHashMap<>();  // file path -> info
     private final Map<String, DataFileInfo> dataFiles = new LinkedHashMap<>(); // file path -> info
@@ -70,12 +72,20 @@ public class DirectoryStructure {
         findDataFiles();
     }
 
+    public Path getRootDir() {
+        return rootDir;
+    }
+
     public Map<String, CfgFileInfo> getCfgFiles() {
         return cfgFiles;
     }
 
     public Map<String, DataFileInfo> getDataFiles() {
         return dataFiles;
+    }
+
+    public Map<String, Map<String, JsonFileInfo>> getTableToJsonFiles() {
+        return tableToJsonFiles;
     }
 
     private static void findConfigFilesFromAllSubDirectory(Path source, String ext, String pkgNameDot,
@@ -118,21 +128,25 @@ public class DirectoryStructure {
                 public FileVisitResult visitFile(Path filePath, BasicFileAttributes a) {
                     Path relativePath = rootDir.relativize(filePath);
                     Path path = filePath.toAbsolutePath().normalize();
+                    if (isFileIgnored(path)) {
+                        return CONTINUE;
+                    }
                     FileFmt fmt = getFileFormat(path);
-                    if (fmt != null) {
-                        switch (fmt) {
-                            case CSV -> {
-                                TableNameIndex ti = getTableNameIndex(relativePath);
-                                dataFiles.put(relativePath.toString(),
-                                        new DataFileInfo(path.toFile().lastModified(), path, relativePath, CSV, ti));
-                            }
-                            case EXCEL -> {
-                                dataFiles.put(relativePath.toString(),
-                                        new DataFileInfo(path.toFile().lastModified(), path, relativePath, EXCEL, null));
-                            }
+                    if (fmt == null) {
+                        return CONTINUE;
+                    }
+                    switch (fmt) {
+                        case CSV -> {
+                            TableNameIndex ti = getTableNameIndex(relativePath);
+                            dataFiles.put(relativePath.toString(),
+                                    new DataFileInfo(path.toFile().lastModified(), path, relativePath, CSV, ti));
+                        }
+                        case EXCEL -> {
+                            dataFiles.put(relativePath.toString(),
+                                    new DataFileInfo(path.toFile().lastModified(), path, relativePath, EXCEL, null));
                         }
                     }
-                    return FileVisitResult.CONTINUE;
+                    return CONTINUE;
                 }
             });
         } catch (IOException e) {
@@ -165,5 +179,25 @@ public class DirectoryStructure {
                 }
             }
         }
+    }
+
+    public void addJsonInPlace(Map<String, JsonFileInfo> jsonFiles, Path jsonPath) {
+        Path relativePath = rootDir.relativize(jsonPath);
+        Path path = jsonPath.toAbsolutePath().normalize();
+        jsonFiles.put(relativePath.toString(),
+                new JsonFileInfo(jsonPath.toFile().lastModified(), path, relativePath));
+    }
+
+    public record Care(boolean isCare,
+                       long lastModified) {
+        public static Care NO = new Care(false, 0);
+    }
+
+    public Care getCare(Path filePath) {
+        if (isFileIgnored(filePath)) {
+            return Care.NO;
+        }
+
+        return null;
     }
 }

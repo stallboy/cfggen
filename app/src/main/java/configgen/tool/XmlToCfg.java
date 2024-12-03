@@ -10,7 +10,7 @@ import java.nio.file.Path;
 public class XmlToCfg {
     public static void convertAndCheck(Path dataDir) {
         CfgSchema cfg = Cfgs.readXmlFromRootDir(dataDir);
-        Path cfgPath = dataDir.resolve("config.cfg");
+        Path cfgPath = dataDir.resolve(DirectoryStructure.ROOT_CONFIG_FILENAME);
         Cfgs.writeTo(cfgPath, true, cfg);
 
         DirectoryStructure sourceStructure = new DirectoryStructure(dataDir);

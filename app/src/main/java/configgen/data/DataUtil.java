@@ -11,15 +11,11 @@ public class DataUtil {
         EXCEL;
     }
 
+    public static boolean isFileIgnored(Path path) {
+        return path.toFile().isHidden() || path.getFileName().toString().startsWith("~");
+    }
+
     public static FileFmt getFileFormat(Path path) {
-        if (path.toFile().isHidden()) {
-            return null;
-        }
-
-        if (path.getFileName().toString().startsWith("~")) {
-            return null;
-        }
-
         String fileName = path.getFileName().toString();
         String ext = "";
         int i = fileName.lastIndexOf('.');

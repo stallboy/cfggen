@@ -74,7 +74,6 @@ public class Context {
     }
 
     private boolean readSchemaAndData(boolean autoFix) {
-        Path cfgPath = dataDir.resolve("config.cfg");
         CfgSchema schema = Cfgs.readFromDir(sourceStructure);
         Logger.profile("schema read");
         SchemaErrs errs = schema.resolve();
@@ -101,7 +100,7 @@ public class Context {
         } else if (autoFix) {
             Logger.profile("schema aligned by data");
             // schema.printDiff(alignedSchema);
-            Cfgs.writeTo(cfgPath, true, alignedSchema);
+            Cfgs.writeTo(dataDir.resolve(DirectoryStructure.ROOT_CONFIG_FILENAME), true, alignedSchema);
             Logger.profile("schema write");
             return false;
         } else {
@@ -112,6 +111,10 @@ public class Context {
 
     public Path dataDir() {
         return dataDir;
+    }
+
+    public DirectoryStructure getSourceStructure() {
+        return sourceStructure;
     }
 
     public CfgSchema cfgSchema() {

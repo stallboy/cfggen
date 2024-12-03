@@ -70,7 +70,7 @@ public class CfgValueParser {
                     long start = System.currentTimeMillis();
                     ValueErrs errs = ValueErrs.of();
                     VTableJsonParser parser = new VTableJsonParser(subTable, subSchema.isPartial(),
-                            context.dataDir(), table, tableI18n, errs, cfgValue.valueStat());
+                            context.getSourceStructure(), table, tableI18n, errs, cfgValue.valueStat());
                     VTable vTable = parser.parseTable();
                     if (Logger.isProfileEnabled()) {
                         System.out.printf("%40s: %d%n", name, System.currentTimeMillis() - start);
