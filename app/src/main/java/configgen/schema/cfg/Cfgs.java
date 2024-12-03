@@ -1,61 +1,41 @@
 package configgen.schema.cfg;
 
-import configgen.data.DataUtil;
+import configgen.ctx.DirectoryStructure;
 import configgen.schema.CfgSchema;
 import configgen.util.CachedFiles;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.stream.Stream;
+
+import static configgen.ctx.DirectoryStructure.*;
 
 public class Cfgs {
 
-    public static CfgSchema readFrom(Path source, boolean includeSubDirectory) {
-        return readFrom(source, includeSubDirectory, CfgReader.INSTANCE, "cfg");
-    }
-
-    public static CfgSchema readFromXml(Path source, boolean includeSubDirectory) {
-        return readFrom(source, includeSubDirectory, XmlReader.INSTANCE, "xml");
-    }
-
-
-    private static CfgSchema readFrom(Path source, boolean includeSubDirectory,
-                                      CfgSchemaReader reader, String ext) {
+    public static CfgSchema readFromDir(DirectoryStructure sourceStructure) {
         CfgSchema destination = CfgSchema.of();
-        if (includeSubDirectory) {
-            readFromAllSubDirectory(destination, source, "", reader, ext);
-        } else {
-            reader.readTo(destination, source, "");
+        for (CfgFileInfo c : sourceStructure.getCfgFiles().values()) {
+            CfgReader.INSTANCE.readTo(destination, c.path(), c.pkgNameDot());
         }
         return destination;
     }
 
-    private static void readFromAllSubDirectory(CfgSchema destination, Path source, String pkgNameDot,
-                                                CfgSchemaReader reader, String ext) {
-        if (Files.exists(source)) {
-            reader.readTo(destination, source, pkgNameDot);
-        }
-        try {
-            try (Stream<Path> paths = Files.list(source.toAbsolutePath().getParent())) {
-                for (Path path : paths.toList()) {
-                    if (Files.isDirectory(path)) {
-                        String lastDir = path.getFileName().toString().toLowerCase();
-                        String subPkgName = DataUtil.getCodeName(lastDir);
-
-                        Path subSource = path.resolve(subPkgName + "." + ext);
-                        readFromAllSubDirectory(destination, subSource, pkgNameDot + subPkgName + ".",
-                                reader, ext);
-                    }
-                }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public static CfgSchema readFromOneFile(Path filePath) {
+        CfgSchema destination = CfgSchema.of();
+        CfgReader.INSTANCE.readTo(destination, filePath, "");
+        return destination;
     }
 
+
+    public static CfgSchema readXmlFromRootDir(Path rootDir) {
+        CfgSchema destination = CfgSchema.of();
+        Map<String, CfgFileInfo> allXmlFiles = findAllXmlFiles(rootDir);
+        for (CfgFileInfo c : allXmlFiles.values()) {
+            XmlReader.INSTANCE.readTo(destination, c.path(), c.pkgNameDot());
+        }
+        return destination;
+    }
 
     public static void writeTo(Path destination, boolean isWriteToEachSubDirectory, CfgSchema root) {
         Path absoluteDst = destination.toAbsolutePath().normalize();

@@ -36,7 +36,7 @@ public class VTableJsonStore {
         return dataDir.resolve(getJsonTableDirName(tableSchema));
     }
 
-    static String getJsonTableDirName(TableSchema tableSchema) {
+    public static String getJsonTableDirName(TableSchema tableSchema) {
         return "_" + tableSchema.name().replace(".", "_");
     }
 

@@ -8,6 +8,9 @@ import java.util.Map;
 public class ValueStat implements Stat {
     private final Map<String, Map<String, Long>> lastModifiedMap = new LinkedHashMap<>();
 
+    /**
+     * @return table -> recordId -> lastModified
+     */
     public Map<String, Map<String, Long>> getLastModifiedMap() {
         return lastModifiedMap;
     }

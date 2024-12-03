@@ -39,6 +39,7 @@ public class Context {
     }
 
     private final Path dataDir;
+    private final DirectoryStructure sourceStructure;
     private final CfgDataReader dataReader;
     private TextI18n nullableI18n;
     private LangSwitch nullableLangSwitch;
@@ -52,7 +53,7 @@ public class Context {
 
     public Context(ContextCfg cfg) {
         this.dataDir = cfg.dataDir;
-
+        this.sourceStructure = new DirectoryStructure(dataDir);
         ExcelReader excelReader = (cfg.tryUsePoi && BuildSettings.isIncludePoi()) ?
                 BuildSettings.getPoiReader() : ReadByFastExcel.INSTANCE;
         this.dataReader = new CfgDataReader(cfg.headRow, new ReadCsv(cfg.csvDefaultEncoding), excelReader);
@@ -68,11 +69,13 @@ public class Context {
         if (!ok) {
             readSchemaAndData(false);
         }
+
+        sourceStructure.findJsonFilesFromSchema(cfgSchema);
     }
 
     private boolean readSchemaAndData(boolean autoFix) {
         Path cfgPath = dataDir.resolve("config.cfg");
-        CfgSchema schema = Cfgs.readFrom(cfgPath, true);
+        CfgSchema schema = Cfgs.readFromDir(sourceStructure);
         Logger.profile("schema read");
         SchemaErrs errs = schema.resolve();
         if (!errs.errs().isEmpty()) {
@@ -84,7 +87,7 @@ public class Context {
         }
         Logger.profile("schema resolve");
 
-        CfgData data = dataReader.readCfgData(dataDir, schema);
+        CfgData data = dataReader.readCfgData(sourceStructure, schema);
         data.verbosePrintStat();
 
         SchemaErrs alignErr = SchemaErrs.of();

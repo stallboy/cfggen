@@ -12,6 +12,14 @@ public class DataUtil {
     }
 
     public static FileFmt getFileFormat(Path path) {
+        if (path.toFile().isHidden()) {
+            return null;
+        }
+
+        if (path.getFileName().toString().startsWith("~")) {
+            return null;
+        }
+
         String fileName = path.getFileName().toString();
         String ext = "";
         int i = fileName.lastIndexOf('.');

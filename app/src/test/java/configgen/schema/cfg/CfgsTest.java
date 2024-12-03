@@ -1,6 +1,7 @@
 package configgen.schema.cfg;
 
 import configgen.Resources;
+import configgen.ctx.DirectoryStructure;
 import configgen.schema.CfgSchema;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -39,8 +40,8 @@ class CfgsTest {
 
         Cfgs.writeTo(path, true, cfg1);
         Cfgs.writeTo(path1, false, cfg1);
-        CfgSchema cfgFromAllSubDir = Cfgs.readFrom(path, true);
-        CfgSchema cfgFromOneFile = Cfgs.readFrom(path1, false);
+        CfgSchema cfgFromAllSubDir = Cfgs.readFromDir(new DirectoryStructure(tempFolder));
+        CfgSchema cfgFromOneFile = Cfgs.readFromOneFile(path1);
 
         boolean equals = cfg1.equals(cfgFromAllSubDir);
         if (!equals) {

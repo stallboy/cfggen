@@ -1,14 +1,10 @@
 package configgen.data;
 
+import configgen.ctx.DirectoryStructure;
 import configgen.schema.CfgSchema;
 import configgen.util.Logger;
 import de.siegmar.fastcsv.reader.CsvRow;
 
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
@@ -54,55 +50,36 @@ public class CfgDataReader {
     }
 
 
-    public CfgData readCfgData(Path rootDir, CfgSchema nullableCfgSchema) {
+    public CfgData readCfgData(DirectoryStructure sourceStructure, CfgSchema nullableCfgSchema) {
         try {
-            return _readCfgData(rootDir, nullableCfgSchema);
+            return _readCfgData(sourceStructure, nullableCfgSchema);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private CfgData _readCfgData(Path rootDir, CfgSchema nullableCfgSchema) throws Exception {
+    private CfgData _readCfgData(DirectoryStructure sourceStructure, CfgSchema nullableCfgSchema) throws Exception {
         DataStat stat = new DataStat();
         List<Callable<AllResult>> tasks = new ArrayList<>();
 
-        Files.walkFileTree(rootDir, new SimpleFileVisitor<>() {
-            @Override
-            public FileVisitResult visitFile(Path filePath, BasicFileAttributes a) {
-
-                if (filePath.toFile().isHidden()) {
-                    return FileVisitResult.CONTINUE;
-                }
-
-                if (filePath.getFileName().toString().startsWith("~")) {
-                    return FileVisitResult.CONTINUE;
-                }
-
-                Path relativePath = rootDir.relativize(filePath);
-                Path path = filePath.toAbsolutePath().normalize();
-                DataUtil.FileFmt fmt = DataUtil.getFileFormat(path);
-                switch (fmt) {
-                    case CSV -> {
-                        DataUtil.TableNameIndex ti = DataUtil.getTableNameIndex(relativePath);
-                        if (ti == null) {
-                            Logger.verbose2("%s 名字不符合规范，ignore！", path);
-                            stat.ignoredCsvCount++;
-                            return FileVisitResult.CONTINUE;
-                        } else {
-                            stat.csvCount++;
-                            tasks.add(() -> csvReader.readCsv(path, relativePath, ti.tableName(), ti.index()));
-                        }
-                    }
-                    case EXCEL -> {
-                        tasks.add(() -> excelReader.readExcels(path, relativePath));
-                    }
-                    case null -> {
+        for (DirectoryStructure.DataFileInfo df : sourceStructure.getDataFiles().values()) {
+            switch (df.fmt()) {
+                case CSV -> {
+                    DataUtil.TableNameIndex ti = df.csvTableNameIndex();
+                    if (ti == null) {
+                        Logger.verbose2("%s 名字不符合规范，ignore！", df.path());
+                        stat.ignoredCsvCount++;
+                    } else {
+                        stat.csvCount++;
+                        tasks.add(() -> csvReader.readCsv(df.path(), df.relativePath(),
+                                ti.tableName(), ti.index()));
                     }
                 }
-                return FileVisitResult.CONTINUE;
+                case EXCEL -> {
+                    tasks.add(() -> excelReader.readExcels(df.path(), df.relativePath()));
+                }
             }
-        });
-
+        }
 
         CfgData data = new CfgData(new TreeMap<>(), stat);
 //        try(ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())) {
