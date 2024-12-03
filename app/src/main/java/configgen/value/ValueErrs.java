@@ -130,6 +130,7 @@ public record ValueErrs(List<VErr> errs,
 
     public record ForeignValueNotFound(Value value,
                                        String recordId,
+                                       String foreignTable,
                                        String foreignKey) implements VErr {
     }
 

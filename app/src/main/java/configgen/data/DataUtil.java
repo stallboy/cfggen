@@ -11,6 +11,7 @@ public class DataUtil {
         EXCEL;
     }
 
+
     public static boolean isFileIgnored(Path path) {
         return path.toFile().isHidden() || path.getFileName().toString().startsWith("~");
     }
@@ -85,9 +86,7 @@ public class DataUtil {
         }
 
         // 只接受首字母是英文字母的
-        char firstChar = fileName.charAt(0);
-        boolean startWithAZ = ('a' <= firstChar && firstChar <= 'z') || ('A' <= firstChar && firstChar <= 'Z');
-        if (!startWithAZ) {
+        if (isFirstNotAzChar(fileName)) {
             return null;
         }
 
@@ -96,7 +95,6 @@ public class DataUtil {
         if (i >= 0) {
             fileName = fileName.substring(0, i);
         }
-
 
         // 有没有汉字
         int hanIdx = findFirstHanIndex(fileName);
@@ -112,6 +110,11 @@ public class DataUtil {
         return fileName.substring(0, end).toLowerCase();
     }
 
+    private static boolean isFirstNotAzChar(String name) {
+        char firstChar = name.charAt(0);
+        return ('a' > firstChar || firstChar > 'z') && ('A' > firstChar || firstChar > 'Z');
+    }
+
     private static int findFirstHanIndex(String s) {
         for (int i = 0; i < s.length(); ) {
             int codepoint = s.codePointAt(i);
@@ -122,5 +125,31 @@ public class DataUtil {
         }
         return -1;
     }
+
+
+    public static Path getJsonTableDir(Path dataDir, String tableName) {
+        String dirName = "_" + tableName.replace(".", "_");
+        return dataDir.resolve(dirName);
+    }
+
+    public static String getTableNameFromDir(String dirName) {
+        if (!dirName.startsWith("_")) {
+            return null;
+        }
+        String sub = dirName.substring(1);
+        // _后要是英文字母
+        if (isFirstNotAzChar(sub)) {
+            return null;
+        }
+
+        // 不能含中文
+        int hanIdx = findFirstHanIndex(sub);
+        if (hanIdx != -1) {
+            return null;
+        }
+
+        return sub.replace("_", ".");
+    }
+
 
 }

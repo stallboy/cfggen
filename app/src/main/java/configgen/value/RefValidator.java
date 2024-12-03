@@ -42,7 +42,7 @@ public class RefValidator {
                             }
 
                             if (!foreignKeyValueMap.containsKey(localValue)) {
-                                errs.addErr(new ForeignValueNotFound(localValue, ctx.recordId(), fk.name()));
+                                errs.addErr(new ForeignValueNotFound(localValue, ctx.recordId(), fk.refTable(), fk.name()));
                             }
                         } else {
                             if (ValueUtil.isValueCellsNotAllEmpty(localValue)) {
@@ -59,7 +59,7 @@ public class RefValidator {
                                     continue;
                                 }
                                 if (!foreignKeyValueMap.containsKey(localValue)) {
-                                    errs.addErr(new ForeignValueNotFound(localValue, ctx.recordId(), fk.name()));
+                                    errs.addErr(new ForeignValueNotFound(localValue, ctx.recordId(), fk.refTable(), fk.name()));
                                 }
                             } else {
                                 if (!refSimple.nullable()) {
@@ -77,7 +77,7 @@ public class RefValidator {
                         VList localList = (VList) vStruct.values().get(fk.keyIndices()[0]);
                         for (SimpleValue item : localList.valueList()) {
                             if (!foreignKeyValueMap.containsKey(item)) {
-                                errs.addErr(new ForeignValueNotFound(item, ctx.recordId(), fk.name()));
+                                errs.addErr(new ForeignValueNotFound(item, ctx.recordId(), fk.refTable(), fk.name()));
                             }
                         }
                     }
@@ -90,7 +90,7 @@ public class RefValidator {
                         VMap localMap = (VMap) vStruct.values().get(fk.keyIndices()[0]);
                         for (SimpleValue val : localMap.valueMap().values()) {
                             if (!foreignKeyValueMap.containsKey(val)) {
-                                errs.addErr(new ForeignValueNotFound(val, ctx.recordId(), fk.name()));
+                                errs.addErr(new ForeignValueNotFound(val, ctx.recordId(), fk.refTable(), fk.name()));
                             }
                         }
                     }

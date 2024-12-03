@@ -69,8 +69,6 @@ public class Context {
         if (!ok) {
             readSchemaAndData(false);
         }
-
-        sourceStructure.findJsonFilesFromSchema(cfgSchema);
     }
 
     private boolean readSchemaAndData(boolean autoFix) {

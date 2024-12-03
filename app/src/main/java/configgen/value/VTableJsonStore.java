@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.file.Path;
 
+import static configgen.data.DataUtil.getJsonTableDir;
+
 public class VTableJsonStore {
 
     public static Path addOrUpdateRecordStore(CfgValue.VStruct record,
@@ -15,7 +17,7 @@ public class VTableJsonStore {
                                               String id,
                                               Path dataDir,
                                               ValueStat valueStat) throws IOException {
-        Path jsonDir = getJsonTableDir(tableSchema, dataDir);
+        Path jsonDir = getJsonTableDir(dataDir, tableSchema.name());
         Path recordPath = jsonDir.resolve(id + ".json");
         try (OutputStreamWriter writer = Generator.createUtf8Writer(recordPath.toFile())) {
             String jsonString = ValueToJson.toJsonStr(record);
@@ -26,18 +28,10 @@ public class VTableJsonStore {
     }
 
     public static boolean deleteRecordStore(TableSchema tableSchema, String id, Path dataDir, ValueStat valueStat) {
-        Path jsonDir = getJsonTableDir(tableSchema, dataDir);
+        Path jsonDir = getJsonTableDir(dataDir, tableSchema.name());
         Path recordPath = jsonDir.resolve(id + ".json");
         valueStat.removeLastModified(tableSchema.name(), id);
         return CachedFiles.delete(recordPath.toFile());
-    }
-
-    static Path getJsonTableDir(TableSchema tableSchema, Path dataDir) {
-        return dataDir.resolve(getJsonTableDirName(tableSchema));
-    }
-
-    public static String getJsonTableDirName(TableSchema tableSchema) {
-        return "_" + tableSchema.name().replace(".", "_");
     }
 
 }

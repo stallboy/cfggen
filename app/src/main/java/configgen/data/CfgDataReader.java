@@ -62,7 +62,7 @@ public class CfgDataReader {
         DataStat stat = new DataStat();
         List<Callable<AllResult>> tasks = new ArrayList<>();
 
-        for (DirectoryStructure.DataFileInfo df : sourceStructure.getDataFiles().values()) {
+        for (DirectoryStructure.ExcelFileInfo df : sourceStructure.getExcelFiles().values()) {
             switch (df.fmt()) {
                 case CSV -> {
                     DataUtil.TableNameIndex ti = df.csvTableNameIndex();

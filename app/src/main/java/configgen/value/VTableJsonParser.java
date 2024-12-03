@@ -42,8 +42,9 @@ public class VTableJsonParser {
 
     public VTable parseTable() {
         List<VStruct> valueList = new ArrayList<>();
-        Map<String, Long> idMap = valueStat.getIdLastModifiedMap(tableSchema.name());
-        Map<String, JsonFileInfo> jsonFiles = sourceStructure.getTableToJsonFiles().get(tableSchema.name());
+        String tableName = tableSchema.name();
+        Map<String, Long> idMap = valueStat.getIdLastModifiedMap(tableName);
+        Map<String, JsonFileInfo> jsonFiles = sourceStructure.getTableToJsonFiles().get(tableName);
 
         if (jsonFiles != null) {
             for (JsonFileInfo jf : jsonFiles.values()) {
@@ -58,7 +59,7 @@ public class VTableJsonParser {
                 }
                 if (jsonStr != null) {
                     VStruct vStruct = parser.fromJson(jsonStr,
-                            DFile.of(jf.relativePath().toString(), tableSchema.name()));
+                            DFile.of(jf.relativePath().toString(), tableName));
 
                     valueList.add(vStruct);
                     Value pkValue = ValueUtil.extractPrimaryKeyValue(vStruct, tableSchema);
@@ -67,16 +68,16 @@ public class VTableJsonParser {
                 }
             }
         }
-        if (idMap.isEmpty()) { //创建默认的一个record，供cfgeditor开始update或add
-            VStruct defaultValue = ValueDefault.ofStructural(tableSchema, DFile.of("<new>", tableSchema.name()));
+        if (idMap.isEmpty()) { // no json file
+            //创建默认的一个record，供cfgeditor开始update或add
+            VStruct defaultValue = ValueDefault.ofStructural(tableSchema, DFile.of("<new>", tableName));
             Value pkValue = ValueUtil.extractPrimaryKeyValue(defaultValue, tableSchema);
             String id = pkValue.packStr();
             Path writePath = dataDir;
             try {
                 writePath = VTableJsonStore.addOrUpdateRecordStore(defaultValue, tableSchema, id, dataDir, valueStat);
                 valueList.add(defaultValue);
-                assert jsonFiles != null;
-                sourceStructure.addJsonInPlace(jsonFiles, writePath);
+                sourceStructure.addJsonInPlace(tableName, writePath);
             } catch (Exception e) {
                 errs.addErr(new ValueErrs.JsonFileWriteErr(writePath.toAbsolutePath().toString(), e.getMessage()));
             }
