@@ -1,6 +1,6 @@
 package configgen.schema;
 
-import configgen.schema.SchemaErrs.*;
+import configgen.schema.CfgSchemaErrs.*;
 import configgen.schema.cfg.CfgReader;
 import org.junit.jupiter.api.Test;
 
@@ -34,7 +34,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(1, errs.warns().size());
         assertEquals(0, errs.errs().size());
         Warn warn = errs.warns().getFirst();
@@ -53,7 +53,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(1, errs.warns().size());
         assertEquals(0, errs.errs().size());
         Warn warn = errs.warns().getFirst();
@@ -70,7 +70,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(1, errs.warns().size());
         assertEquals(0, errs.errs().size());
         assertInstanceOf(InterfaceNotUsed.class, errs.warns().getFirst());
@@ -87,7 +87,7 @@ class CfgSchemaResolverTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(0, errs.warns().size());
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
@@ -105,7 +105,7 @@ class CfgSchemaResolverTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
         assertInstanceOf(ImplNamespaceNotEmpty.class, err);
@@ -126,7 +126,7 @@ class CfgSchemaResolverTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
         assertInstanceOf(NameConflict.class, err);
@@ -144,7 +144,7 @@ class CfgSchemaResolverTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
         assertInstanceOf(InnerNameConflict.class, err);
@@ -163,7 +163,7 @@ class CfgSchemaResolverTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
         assertInstanceOf(TypeStructNotFound.class, err);
@@ -183,7 +183,7 @@ class CfgSchemaResolverTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
         assertInstanceOf(PrimitiveFieldFmtMustBeAuto.class, err);
@@ -207,7 +207,7 @@ class CfgSchemaResolverTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
         assertInstanceOf(StructFieldFmtMustBeAutoOrPack.class, err);
@@ -228,7 +228,7 @@ class CfgSchemaResolverTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
         assertInstanceOf(ListFieldFmtMustBePackOrSepOrFixOrBlock.class, err);
@@ -250,7 +250,7 @@ class CfgSchemaResolverTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(2, errs.errs().size());
         Err err = errs.errs().getFirst();
         assertInstanceOf(MapFieldFmtMustBePackOrFixOrBlock.class, err);
@@ -274,7 +274,7 @@ class CfgSchemaResolverTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
         assertInstanceOf(ImplFmtNotSupport.class, err);
@@ -298,7 +298,7 @@ class CfgSchemaResolverTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
         assertInstanceOf(SepFmtStructHasUnPrimitiveField.class, err);
@@ -324,7 +324,7 @@ class CfgSchemaResolverTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
         assertInstanceOf(ListStructSepEqual.class, err);
@@ -343,7 +343,7 @@ class CfgSchemaResolverTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
         assertInstanceOf(EnumRefNotFound.class, err);
@@ -361,7 +361,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
@@ -377,7 +377,7 @@ class CfgSchemaResolverTest {
                 Metadata.of(), List.of());
         CfgSchema cfg = CfgSchema.of();
         cfg.add(action);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
@@ -394,7 +394,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
@@ -412,7 +412,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
@@ -432,7 +432,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
@@ -452,7 +452,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
@@ -469,7 +469,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
@@ -489,7 +489,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
@@ -512,7 +512,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
@@ -530,7 +530,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
@@ -550,7 +550,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
@@ -568,7 +568,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
@@ -586,7 +586,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
@@ -611,7 +611,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
@@ -641,7 +641,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         assertEquals(0, errs.warns().size());
         assertEquals(0, errs.errs().size());
@@ -661,7 +661,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         assertEquals(0, errs.warns().size());
         assertEquals(0, errs.errs().size());
@@ -683,7 +683,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
@@ -708,7 +708,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
@@ -728,7 +728,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
@@ -752,7 +752,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
@@ -776,7 +776,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         assertEquals(1, errs.errs().size());
         Err err = errs.errs().getFirst();
@@ -800,7 +800,7 @@ class CfgSchemaResolverTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(0, errs.warns().size());
         assertEquals(0, errs.errs().size());
     }

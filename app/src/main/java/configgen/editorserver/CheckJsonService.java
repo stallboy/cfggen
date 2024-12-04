@@ -4,7 +4,7 @@ import configgen.schema.TableSchema;
 import configgen.tool.GenJsonByAI;
 import configgen.tool.PromptDefault;
 import configgen.value.CfgValue;
-import configgen.value.ValueErrs;
+import configgen.value.CfgValueErrs;
 import configgen.value.ValueJsonParser;
 import configgen.value.ValueToJson;
 
@@ -46,7 +46,7 @@ public class CheckJsonService {
         }
 
         TableSchema tableSchema = vTable.schema();
-        ValueErrs parseErrs = ValueErrs.of();
+        CfgValueErrs parseErrs = CfgValueErrs.of();
         CfgValue.VStruct record = new ValueJsonParser(tableSchema, parseErrs).fromJson(jsonResult);
         parseErrs.checkErrors("check json", true, true);
 

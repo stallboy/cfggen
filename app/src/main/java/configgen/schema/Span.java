@@ -8,7 +8,7 @@ import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
 import static configgen.schema.FieldType.*;
 import static configgen.schema.Metadata.MetaInt;
-import static configgen.schema.SchemaErrs.*;
+import static configgen.schema.CfgSchemaErrs.*;
 
 /**
  * 在resolved前 预先计算好每个结构占用的excel的列数
@@ -16,7 +16,7 @@ import static configgen.schema.SchemaErrs.*;
  */
 public class Span {
 
-    static void preCalculateAllNeededSpans(CfgSchema cfgSchema, SchemaErrs errs) {
+    static void preCalculateAllNeededSpans(CfgSchema cfgSchema, CfgSchemaErrs errs) {
         SequencedMap<String, Nameable> needSpans = collectNeededCalculateSpans(cfgSchema);
         // 因为needSpans是广度优先拓展得到的，先从需要映射excel的table开始。
         // reverse下，先计算table依赖的struct的span，感觉更好点
@@ -45,7 +45,7 @@ public class Span {
         }
     }
 
-    private static void checkNameableFmt(Nameable nameable, SchemaErrs errs) {
+    private static void checkNameableFmt(Nameable nameable, CfgSchemaErrs errs) {
         switch (nameable) {
             case InterfaceSchema interfaceSchema -> {
                 for (StructSchema impl : interfaceSchema.impls()) {
@@ -63,7 +63,7 @@ public class Span {
         }
     }
 
-    private static void checkFieldFmt(FieldSchema field, SchemaErrs errs, String ctx) {
+    private static void checkFieldFmt(FieldSchema field, CfgSchemaErrs errs, String ctx) {
         FieldType type = field.type();
         FieldFormat fmt = field.fmt();
         switch (type) {

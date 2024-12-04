@@ -19,14 +19,14 @@ import static configgen.value.CfgValue.*;
 public class CfgValueParser {
     private final CfgSchema subSchema;
     private final Context context;
-    private final ValueErrs errs;
+    private final CfgValueErrs errs;
 
     /**
      * @param subSchema 这是返会目标CfgValue对应的schema
      * @param context   全局信息
      * @param errs      错误记录器
      */
-    public CfgValueParser(CfgSchema subSchema, Context context, ValueErrs errs) {
+    public CfgValueParser(CfgSchema subSchema, Context context, CfgValueErrs errs) {
         subSchema.requireResolved();
         context.cfgSchema().requireResolved();
         Objects.requireNonNull(errs);
@@ -53,7 +53,7 @@ public class CfgValueParser {
             if (dTable != null) {
                 tasks.add(() -> {
                     long start = System.currentTimeMillis();
-                    ValueErrs errs = ValueErrs.of();
+                    CfgValueErrs errs = CfgValueErrs.of();
                     VTableParser parser = new VTableParser(subTable, dTable, table, tableI18n, errs);
                     VTable vTable = parser.parseTable();
                     if (Logger.isProfileEnabled()) {
@@ -68,7 +68,7 @@ public class CfgValueParser {
             } else {
                 tasks.add(() -> {
                     long start = System.currentTimeMillis();
-                    ValueErrs errs = ValueErrs.of();
+                    CfgValueErrs errs = CfgValueErrs.of();
                     VTableJsonParser parser = new VTableJsonParser(subTable, subSchema.isPartial(),
                             context.getSourceStructure(), table, tableI18n, errs, cfgValue.valueStat());
                     VTable vTable = parser.parseTable();
@@ -102,7 +102,7 @@ public class CfgValueParser {
     }
 
     record OneTableParserResult(VTable vTable,
-                                ValueErrs errs) {
+                                CfgValueErrs errs) {
     }
 
 }

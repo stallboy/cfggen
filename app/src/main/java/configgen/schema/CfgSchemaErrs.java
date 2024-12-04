@@ -5,13 +5,13 @@ import configgen.util.Logger;
 
 import java.util.*;
 
-public record SchemaErrs(List<Err> errs,
-                         List<Warn> warns) {
-    public static SchemaErrs of() {
-        return new SchemaErrs(new ArrayList<>(), new ArrayList<>());
+public record CfgSchemaErrs(List<Err> errs,
+                            List<Warn> warns) {
+    public static CfgSchemaErrs of() {
+        return new CfgSchemaErrs(new ArrayList<>(), new ArrayList<>());
     }
 
-    public SchemaErrs {
+    public CfgSchemaErrs {
         Objects.requireNonNull(errs);
         Objects.requireNonNull(warns);
     }
@@ -42,7 +42,7 @@ public record SchemaErrs(List<Err> errs,
                 Logger.log("\t" + err.msg());
             }
             Logger.log(LocaleUtil.getLocaleString("FixSchemaErrFirst", "fix schema errors first"));
-            throw new SchemaError(this);
+            throw new CfgSchemaException(this);
         }
     }
 

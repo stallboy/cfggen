@@ -6,7 +6,7 @@ import configgen.data.CfgData;
 import configgen.schema.InterfaceSchema;
 import configgen.schema.TableSchema;
 import configgen.value.CfgValue.*;
-import configgen.value.ValueErrs.*;
+import configgen.value.CfgValueErrs.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -308,7 +308,7 @@ class CfgValueParserTest {
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
         Context ctx = new Context(tempDir);
-        ValueErrs valueErrs = ValueErrs.of();
+        CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
 
@@ -348,7 +348,7 @@ class CfgValueParserTest {
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
         Context ctx = new Context(tempDir);
-        ValueErrs valueErrs = ValueErrs.of();
+        CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
 
@@ -388,7 +388,7 @@ class CfgValueParserTest {
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
         Context ctx = new Context(tempDir);
-        ValueErrs valueErrs = ValueErrs.of();
+        CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
         assertEquals(1, valueErrs.errs().size());
@@ -419,7 +419,7 @@ class CfgValueParserTest {
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
         Context ctx = new Context(tempDir);
-        ValueErrs valueErrs = ValueErrs.of();
+        CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
 
@@ -446,7 +446,7 @@ class CfgValueParserTest {
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
         Context ctx = new Context(tempDir);
-        ValueErrs valueErrs = ValueErrs.of();
+        CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
 
@@ -474,7 +474,7 @@ class CfgValueParserTest {
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
         Context ctx = new Context(tempDir);
-        ValueErrs valueErrs = ValueErrs.of();
+        CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
 
@@ -503,7 +503,7 @@ class CfgValueParserTest {
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
         Context ctx = new Context(tempDir);
-        ValueErrs valueErrs = ValueErrs.of();
+        CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
 
@@ -534,7 +534,7 @@ class CfgValueParserTest {
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
         Context ctx = new Context(tempDir);
-        ValueErrs valueErrs = ValueErrs.of();
+        CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
 
@@ -564,7 +564,7 @@ class CfgValueParserTest {
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
         Context ctx = new Context(tempDir);
-        ValueErrs valueErrs = ValueErrs.of();
+        CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
 

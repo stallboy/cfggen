@@ -1,7 +1,6 @@
 package configgen.data;
 
 import configgen.schema.CfgSchema;
-import configgen.schema.SchemaErrs;
 import configgen.schema.cfg.CfgReader;
 import org.junit.jupiter.api.Test;
 
@@ -57,7 +56,7 @@ class HeadParserTest {
                         new FakeRows.FakeRow(new String[]{"id", "note"})
                 ), new ArrayList<>());
         CfgData.DTable dt = new CfgData.DTable("t1", new ArrayList<>(), List.of(), List.of(sheet));
-        DataStat ds = new DataStat();
+        CfgDataStat ds = new CfgDataStat();
         HeadParser.parse(dt, ds, null);
 
         assertEquals(2, dt.fields().size());
@@ -81,7 +80,7 @@ class HeadParserTest {
                         new FakeRows.FakeRow(new String[]{"id", "", "note"})
                 ), new ArrayList<>());
         CfgData.DTable dt = new CfgData.DTable("t1", new ArrayList<>(), List.of(), List.of(sheet));
-        DataStat ds = new DataStat();
+        CfgDataStat ds = new CfgDataStat();
         HeadParser.parse(dt, ds, null);
 
         assertEquals(2, dt.fields().size());
@@ -106,7 +105,7 @@ class HeadParserTest {
                         new FakeRows.FakeRow(new String[]{"id", "", "note,willIgnored", "value@a"})
                 ), new ArrayList<>());
         CfgData.DTable dt = new CfgData.DTable("t1", new ArrayList<>(), List.of(), List.of(sheet));
-        DataStat ds = new DataStat();
+        CfgDataStat ds = new CfgDataStat();
         HeadParser.parse(dt, ds, null);
 
         assertEquals(3, dt.fields().size());
@@ -130,7 +129,7 @@ class HeadParserTest {
         CfgData.DRawSheet sheet = new CfgData.DRawSheet("t1.csv", "t1", 0,
                 new ArrayList<>(getFakeColumnRows()), new ArrayList<>());
         CfgData.DTable dt = new CfgData.DTable("t1", new ArrayList<>(), List.of(), List.of(sheet));
-        DataStat ds = new DataStat();
+        CfgDataStat ds = new CfgDataStat();
 
         HeadParser.parse(dt, ds, true);
 
@@ -160,7 +159,7 @@ class HeadParserTest {
                 new ArrayList<>(),
                 new ArrayList<>(),
                 new ArrayList<>(List.of(sheet2, sheet1)));
-        DataStat ds = new DataStat();
+        CfgDataStat ds = new CfgDataStat();
         HeadParser.parse(dt, ds, null); // 必须先解析表头
 
         assertEquals(2, dt.rawSheets().size());

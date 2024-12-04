@@ -3,7 +3,7 @@ package configgen.tool;
 import configgen.ctx.DirectoryStructure;
 import configgen.data.*;
 import configgen.schema.CfgSchema;
-import configgen.schema.SchemaErrs;
+import configgen.schema.CfgSchemaErrs;
 import configgen.schema.cfg.Cfgs;
 import configgen.util.Logger;
 
@@ -17,7 +17,7 @@ public class ComparePoiAndFastExcel {
         DirectoryStructure sourceStructure = new DirectoryStructure(dataDir);
         CfgSchema schema = Cfgs.readFromDir(sourceStructure);
         Logger.profile("schema read");
-        SchemaErrs errs = schema.resolve();
+        CfgSchemaErrs errs = schema.resolve();
         if (!errs.errs().isEmpty()) {
             errs.checkErrors();
         }

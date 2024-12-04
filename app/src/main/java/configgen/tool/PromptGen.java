@@ -106,7 +106,7 @@ public class PromptGen {
     private static List<PromptModel.Example> getExamples(List<OneExample> rawExamples, CfgValue.VTable vTable) {
         List<PromptModel.Example> examples = new ArrayList<>(rawExamples.size());
         for (OneExample ex : rawExamples) {
-            ValueErrs errs = ValueErrs.of();
+            CfgValueErrs errs = CfgValueErrs.of();
             CfgValue.Value pkValue = ValuePack.unpackTablePrimaryKey(ex.id(), vTable.schema(), errs);
 
             if (errs.errs().isEmpty()) {

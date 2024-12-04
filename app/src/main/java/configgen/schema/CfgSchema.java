@@ -32,8 +32,8 @@ public class CfgSchema {
         this.isPartial = isPartial;
     }
 
-    public SchemaErrs resolve() {
-        SchemaErrs errs = SchemaErrs.of();
+    public CfgSchemaErrs resolve() {
+        CfgSchemaErrs errs = CfgSchemaErrs.of();
         new CfgSchemaResolver(this, errs).resolve();
         return errs;
     }

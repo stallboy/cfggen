@@ -16,9 +16,9 @@ import static configgen.schema.FieldFormat.AutoOrPack;
 public class CfgSchemaAlignToData {
     private final CfgSchema cfgSchema;
     private final CfgData cfgData;
-    private final SchemaErrs errs;
+    private final CfgSchemaErrs errs;
 
-    public CfgSchemaAlignToData(CfgSchema cfgSchema, CfgData cfgData, SchemaErrs errs) {
+    public CfgSchemaAlignToData(CfgSchema cfgSchema, CfgData cfgData, CfgSchemaErrs errs) {
         this.cfgSchema = cfgSchema;
         this.cfgData = cfgData;
         this.errs = errs;
@@ -45,7 +45,7 @@ public class CfgSchemaAlignToData {
                             for (CfgData.DRawSheet rawSheet : th.rawSheets()) {
                                 sheets.add(String.format("%s[%s]", rawSheet.fileName(), rawSheet.sheetName()));
                             }
-                            errs.addErr(new SchemaErrs.JsonTableNotSupportExcel(table.name(), sheets));
+                            errs.addErr(new CfgSchemaErrs.JsonTableNotSupportExcel(table.name(), sheets));
                         }
                     } else {
                         if (th != null) {
@@ -80,7 +80,7 @@ public class CfgSchemaAlignToData {
                 FieldSchema field = new FieldSchema(hf.name(), Primitive.STRING, AutoOrPack.AUTO, meta);
                 fields.add(field);
             } else {
-                errs.addErr(new SchemaErrs.DataHeadNameNotIdentifier(th.tableName(), hf.name()));
+                errs.addErr(new CfgSchemaErrs.DataHeadNameNotIdentifier(th.tableName(), hf.name()));
             }
         }
 
@@ -199,7 +199,7 @@ public class CfgSchemaAlignToData {
                     Logger.log("%s new field: %s", table.name(), name);
                     alignedFields.put(newField.name(), newField);
                 } else {
-                    errs.addErr(new SchemaErrs.DataHeadNameNotIdentifier(table.name(), name));
+                    errs.addErr(new CfgSchemaErrs.DataHeadNameNotIdentifier(table.name(), name));
                 }
             }
         }

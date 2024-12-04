@@ -12,7 +12,7 @@ import static configgen.data.CfgData.DTable;
 import static configgen.data.CfgData.*;
 
 final class HeadParser {
-    static void parse(DTable table, DataStat stat, CfgSchema cfgSchema) {
+    static void parse(DTable table, CfgDataStat stat, CfgSchema cfgSchema) {
         parse(table, stat, isColumnMode(table, cfgSchema));
     }
 
@@ -29,7 +29,7 @@ final class HeadParser {
         return isColumnMode;
     }
 
-    static void parse(DTable table, DataStat stat, boolean isColumnMode) {
+    static void parse(DTable table, CfgDataStat stat, boolean isColumnMode) {
         List<DField> header = null;
         List<String> names = null;
         DRawSheet headerSheet = null;
@@ -90,7 +90,7 @@ final class HeadParser {
         }
     }
 
-    private static List<DField> parse(DRawSheet sheet, DataStat stat, List<String> comments, List<String> names) {
+    private static List<DField> parse(DRawSheet sheet, CfgDataStat stat, List<String> comments, List<String> names) {
         List<DField> fields = new ArrayList<>();
         int size = names.size();
         List<Integer> fieldIndices = new ArrayList<>();

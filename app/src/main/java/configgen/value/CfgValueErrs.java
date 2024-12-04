@@ -13,11 +13,11 @@ import java.util.Set;
 
 import static configgen.data.Source.*;
 
-public record ValueErrs(List<VErr> errs,
-                        List<VWarn> warns) {
+public record CfgValueErrs(List<VErr> errs,
+                           List<VWarn> warns) {
 
-    public static ValueErrs of() {
-        return new ValueErrs(new ArrayList<>(), new ArrayList<>());
+    public static CfgValueErrs of() {
+        return new CfgValueErrs(new ArrayList<>(), new ArrayList<>());
     }
 
     void addErr(VErr err) {
@@ -28,7 +28,7 @@ public record ValueErrs(List<VErr> errs,
         warns.add(warn);
     }
 
-    void merge(ValueErrs other) {
+    void merge(CfgValueErrs other) {
         errs.addAll(other.errs);
         warns.addAll(other.warns);
     }
@@ -54,7 +54,7 @@ public record ValueErrs(List<VErr> errs,
 
             if (!allowErr) {
                 Logger.log(LocaleUtil.getLocaleString("FixValueErrFirst", "fix value errors first"));
-                throw new ValueError(this);
+                throw new CfgValueException(this);
             }
         }
     }

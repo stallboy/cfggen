@@ -122,11 +122,11 @@ public class RecordService {
             return ofErr(tableNotFound);
         }
 
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         Value pkValue = ValuePack.unpackTablePrimaryKey(id, vTable.schema(), errs);
 
         if (!errs.errs().isEmpty()) {
-            for (ValueErrs.VErr err : errs.errs()) {
+            for (CfgValueErrs.VErr err : errs.errs()) {
                 System.err.println(err);
             }
             return ofErr(idParseErr);

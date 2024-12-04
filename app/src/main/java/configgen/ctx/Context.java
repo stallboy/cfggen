@@ -7,14 +7,13 @@ import configgen.schema.*;
 import configgen.schema.cfg.Cfgs;
 import configgen.value.CfgValue;
 import configgen.value.CfgValueParser;
-import configgen.value.ValueErrs;
+import configgen.value.CfgValueErrs;
 
 import java.nio.file.Path;
 import java.util.Objects;
 
 
 public class Context {
-
     public record ContextCfg(Path dataDir,
                              boolean tryUsePoi,
                              int headRow,
@@ -38,8 +37,9 @@ public class Context {
         }
     }
 
+    private final ContextCfg contextCfg;
     private final Path dataDir;
-    private final DirectoryStructure sourceStructure;
+    private DirectoryStructure sourceStructure;
     private final CfgDataReader dataReader;
     private TextI18n nullableI18n;
     private LangSwitch nullableLangSwitch;
@@ -47,13 +47,24 @@ public class Context {
     private CfgSchema cfgSchema;
     private CfgData cfgData;
 
+    /**
+     * 优化，避免gen多次时，重复生成value
+     */
+    private CfgValue lastCfgValue;
+    private String lastCfgValueTag;
+
     public Context(Path dataDir) {
         this(ContextCfg.of(dataDir));
     }
 
     public Context(ContextCfg cfg) {
+        this(cfg, new DirectoryStructure(cfg.dataDir));
+    }
+
+    public Context(ContextCfg cfg, DirectoryStructure sourceStructure) {
+        this.contextCfg = cfg;
         this.dataDir = cfg.dataDir;
-        this.sourceStructure = new DirectoryStructure(dataDir);
+        this.sourceStructure = sourceStructure;
         ExcelReader excelReader = (cfg.tryUsePoi && BuildSettings.isIncludePoi()) ?
                 BuildSettings.getPoiReader() : ReadByFastExcel.INSTANCE;
         this.dataReader = new CfgDataReader(cfg.headRow, new ReadCsv(cfg.csvDefaultEncoding), excelReader);
@@ -74,11 +85,11 @@ public class Context {
     private boolean readSchemaAndData(boolean autoFix) {
         CfgSchema schema = Cfgs.readFromDir(sourceStructure);
         Logger.profile("schema read");
-        SchemaErrs errs = schema.resolve();
+        CfgSchemaErrs errs = schema.resolve();
         if (!errs.errs().isEmpty()) {
             errs.checkErrors("schema");
         }
-        Stat stat = new SchemaStat(schema);
+        Stat stat = new CfgSchemaStat(schema);
         if (Logger.verboseLevel() > 0) {
             stat.print();
         }
@@ -87,7 +98,7 @@ public class Context {
         CfgData data = dataReader.readCfgData(sourceStructure, schema);
         data.verbosePrintStat();
 
-        SchemaErrs alignErr = SchemaErrs.of();
+        CfgSchemaErrs alignErr = CfgSchemaErrs.of();
         CfgSchema alignedSchema = new CfgSchemaAlignToData(schema, data, alignErr).align();
         new CfgSchemaResolver(alignedSchema, alignErr).resolve();
         alignErr.checkErrors("aligned schema");
@@ -99,6 +110,7 @@ public class Context {
             Logger.profile("schema aligned by data");
             // schema.printDiff(alignedSchema);
             Cfgs.writeTo(dataDir.resolve(DirectoryStructure.ROOT_CONFIG_FILENAME), true, alignedSchema);
+            sourceStructure = new DirectoryStructure(dataDir);
             Logger.profile("schema write");
             return false;
         } else {
@@ -106,6 +118,9 @@ public class Context {
         }
     }
 
+    public ContextCfg getContextCfg() {
+        return contextCfg;
+    }
 
     public Path dataDir() {
         return dataDir;
@@ -137,13 +152,6 @@ public class Context {
         return nullableLangSwitch;
     }
 
-    /**
-     * 优化，避免gen多次时，重复生成value
-     * 注意这里不再立马生成fullValue，因为很费内存，在用到时再生成。
-     */
-    private CfgValue lastCfgValue;
-    private String lastCfgValueTag;
-
     public CfgValue makeValue() {
         return makeValue(null);
     }
@@ -166,7 +174,7 @@ public class Context {
 
         CfgSchema tagSchema;
         if (tag != null) {
-            SchemaErrs errs = SchemaErrs.of();
+            CfgSchemaErrs errs = CfgSchemaErrs.of();
             tagSchema = new CfgSchemaFilterByTag(cfgSchema, tag, errs).filter();
             new CfgSchemaResolver(tagSchema, errs).resolve();
             errs.checkErrors(String.format("[%s] filtered schema", tag));
@@ -175,7 +183,7 @@ public class Context {
             tagSchema = cfgSchema;
         }
 
-        ValueErrs valueErrs = ValueErrs.of();
+        CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(tagSchema, this, valueErrs);
         CfgValue cfgValue = clientValueParser.parseCfgValue();
         String prefix = tag == null ? "value" : String.format("[%s] filtered value", tag);

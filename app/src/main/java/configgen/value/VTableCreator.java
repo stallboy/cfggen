@@ -8,9 +8,9 @@ import static configgen.value.CfgValue.*;
 
 public class VTableCreator {
     private final TableSchema tableSchema;
-    private final ValueErrs errs;
+    private final CfgValueErrs errs;
 
-    public VTableCreator(TableSchema tableSchema, ValueErrs errs) {
+    public VTableCreator(TableSchema tableSchema, CfgValueErrs errs) {
         this.tableSchema = tableSchema;
         this.errs = errs;
     }
@@ -45,18 +45,18 @@ public class VTableCreator {
                 VString vStr = (VString) vStruct.values().get(idx);
                 String e = vStr.value();
                 if (e.contains(" ")) {
-                    errs.addErr(new ValueErrs.EntryContainsSpace(vStr.source(), tableSchema.name()));
+                    errs.addErr(new CfgValueErrs.EntryContainsSpace(vStr.source(), tableSchema.name()));
                     continue;
                 }
 
                 if (e.isEmpty()) {
                     if (entry instanceof EntryType.EEnum) {
-                        errs.addErr(new ValueErrs.EnumEmpty(vStr.source(), tableSchema.name()));
+                        errs.addErr(new CfgValueErrs.EnumEmpty(vStr.source(), tableSchema.name()));
                     }
                 } else {
                     boolean add = names.add(e.toUpperCase());
                     if (!add) {
-                        errs.addErr(new ValueErrs.EntryDuplicated(vStr.source(), tableSchema.name()));
+                        errs.addErr(new CfgValueErrs.EntryDuplicated(vStr.source(), tableSchema.name()));
                     } else {
                         enumNames.add(e);
 
@@ -81,7 +81,7 @@ public class VTableCreator {
             Value keyValue = ValueUtil.extractKeyValue(value, keyIndices);
             VStruct old = keyMap.put(keyValue, value);
             if (old != null) {
-                errs.addErr(new ValueErrs.PrimaryOrUniqueKeyDuplicated(keyValue, tableSchema.name(), key.fields()));
+                errs.addErr(new CfgValueErrs.PrimaryOrUniqueKeyDuplicated(keyValue, tableSchema.name(), key.fields()));
             }
         }
     }

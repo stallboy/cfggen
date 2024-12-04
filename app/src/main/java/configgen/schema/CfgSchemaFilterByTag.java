@@ -3,8 +3,8 @@ package configgen.schema;
 import java.util.*;
 
 import static configgen.schema.EntryType.*;
-import static configgen.schema.SchemaErrs.FilterRefIgnoredByRefKeyNotFound;
-import static configgen.schema.SchemaErrs.FilterRefIgnoredByRefTableNotFound;
+import static configgen.schema.CfgSchemaErrs.FilterRefIgnoredByRefKeyNotFound;
+import static configgen.schema.CfgSchemaErrs.FilterRefIgnoredByRefTableNotFound;
 
 /**
  * tag： 只标注field的就行，不用标注foreign key，
@@ -23,9 +23,9 @@ public class CfgSchemaFilterByTag {
     private final CfgSchema cfg;
     private final String tag;
     private final String minusTag;
-    private final SchemaErrs errs;
+    private final CfgSchemaErrs errs;
 
-    public CfgSchemaFilterByTag(CfgSchema cfg, String tag, SchemaErrs errs) {
+    public CfgSchemaFilterByTag(CfgSchema cfg, String tag, CfgSchemaErrs errs) {
         cfg.requireResolved();
         Objects.requireNonNull(tag);
         if (tag.isEmpty()) {

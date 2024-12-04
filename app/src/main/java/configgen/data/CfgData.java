@@ -12,7 +12,7 @@ import java.util.Objects;
  * 数据模型
  */
 public record CfgData(Map<String, DTable> tables,
-                      DataStat stat) {
+                      CfgDataStat stat) {
 
     public CfgData {
         Objects.requireNonNull(tables);

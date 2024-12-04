@@ -2,7 +2,7 @@ package configgen.data;
 
 import configgen.schema.Stat;
 
-public class DataStat implements Stat {
+public class CfgDataStat implements Stat {
     int tableCount;
     int csvCount;
     int excelCount;

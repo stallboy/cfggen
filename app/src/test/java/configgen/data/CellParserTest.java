@@ -17,7 +17,7 @@ class CellParserTest {
                 new ArrayList<>(fakeRows), new ArrayList<>());
         CfgData.DTable dt = new CfgData.DTable("t1", new ArrayList<>(), new ArrayList<>(), List.of(sheet));
 
-        DataStat ds = new DataStat();
+        CfgDataStat ds = new CfgDataStat();
         HeadParser.parse(dt, ds, null); // 必须先解析表头
 
         CellParser.parse(dt, ds, null, 2);
@@ -48,7 +48,7 @@ class CellParserTest {
                 new ArrayList<>(fakeRows), new ArrayList<>());
         CfgData.DTable dt = new CfgData.DTable("t1", new ArrayList<>(), new ArrayList<>(), List.of(sheet));
 
-        DataStat ds = new DataStat();
+        CfgDataStat ds = new CfgDataStat();
         HeadParser.parse(dt, ds, true); // 必须先解析表头
 
         CellParser.parse(dt, ds, true, 2);
@@ -84,7 +84,7 @@ class CellParserTest {
                 new ArrayList<>(),
                 new ArrayList<>(),
                 new ArrayList<>(List.of(sheet2, sheet1)));
-        DataStat ds = new DataStat();
+        CfgDataStat ds = new CfgDataStat();
         HeadParser.parse(dt, ds, null); // 必须先解析表头
 
         CellParser.parse(dt, ds, null, 2);

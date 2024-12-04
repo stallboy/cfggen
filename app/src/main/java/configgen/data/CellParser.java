@@ -13,11 +13,11 @@ final class CellParser {
      * 无head，去空行，去注释行，去注释列
      * 返回的是规整的相同列数的row
      */
-    static void parse(CfgData.DTable table, DataStat stat, CfgSchema cfgSchema, int headRow) {
+    static void parse(CfgData.DTable table, CfgDataStat stat, CfgSchema cfgSchema, int headRow) {
         parse(table, stat, HeadParser.isColumnMode(table, cfgSchema), headRow);
     }
 
-    static void parse(CfgData.DTable table, DataStat stat, boolean isColumnMode, int headRow) {
+    static void parse(CfgData.DTable table, CfgDataStat stat, boolean isColumnMode, int headRow) {
         List<List<DCell>> result = null;
         if (!isColumnMode) {
 

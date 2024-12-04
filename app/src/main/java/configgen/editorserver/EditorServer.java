@@ -2,8 +2,7 @@ package configgen.editorserver;
 
 import com.alibaba.fastjson2.JSON;
 import com.sun.net.httpserver.*;
-import configgen.ctx.Context;
-import configgen.ctx.LangSwitch;
+import configgen.ctx.*;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
 import configgen.genjava.GenJavaData;
@@ -31,16 +30,19 @@ public class EditorServer extends Generator {
     private final String noteCsvPath;
     private final String aiCfgFn;
 
-    private Path dataDir;
-    private LangSwitch langSwitch;
-    private volatile CfgValue cfgValue;  // 可能会被改变
-    private TableSchemaRefGraph graph;
+    private Context.ContextCfg contextCfg;
+    private volatile DirectoryStructure sourceStructure;
+    private volatile LangSwitch langSwitch;
+    private volatile CfgValue cfgValue;  // 引用可以被改变，指向不同的CfgValue
+    private volatile TableSchemaRefGraph graph;
+
     private HttpServer server;
     private NoteEditService noteEditService;
     private AICfg aiCfg;
     private Path aiDir;
     private final String postRun;
-    private final String postRunJavadata;
+    private final String postRunJavaData;
+    private final int waitSecondsAfterWatchEvt;
 
     public EditorServer(Parameter parameter) {
         super(parameter);
@@ -48,7 +50,8 @@ public class EditorServer extends Generator {
         noteCsvPath = parameter.get("note", "_note.csv");
         aiCfgFn = parameter.get("aicfg", null, "llm大模型选择，需要兼容openai的api");
         postRun = parameter.get("postrun", null, "可以是个xx.bat，用于自动提交服务器及时生效");
-        postRunJavadata = parameter.get("postrunjavadata", "configdata.zip", "如果设置了postrun，增加或更新json后，会先生成javadata文件，然后运行postrun");
+        postRunJavaData = parameter.get("postrunjavadata", "configdata.zip", "如果设置了postrun，增加或更新json后，会先生成javadata文件，然后运行postrun");
+        waitSecondsAfterWatchEvt = Integer.parseInt(parameter.get("watch", "0", "如x>0，则表示x秒后自动重载配置"));
     }
 
     @Override
@@ -58,11 +61,10 @@ public class EditorServer extends Generator {
             aiCfg = AICfg.readFromFile(aiCfgFn);
         }
 
-        dataDir = ctx.dataDir();
-        langSwitch = ctx.nullableLangSwitch();
-        cfgValue = ctx.makeValue(tag, true);
-        graph = new TableSchemaRefGraph(cfgValue.schema());
         noteEditService = new NoteEditService(Path.of(noteCsvPath));
+
+        contextCfg = ctx.getContextCfg();
+        initFromCtx(ctx);
 
         System.gc();
         System.setProperty("java.util.logging.SimpleFormatter.format",
@@ -86,8 +88,38 @@ public class EditorServer extends Generator {
         server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
         server.start();
         logger.info("Server is started at " + listenAddr);
+
+        if (waitSecondsAfterWatchEvt > 0) {
+            Watcher watcher = new Watcher(sourceStructure.getRootDir());
+            WaitWatcher waitWatcher = new WaitWatcher(watcher, this::reloadData, waitSecondsAfterWatchEvt);
+            waitWatcher.start();
+            watcher.start();
+            logger.info("file change watcher started");
+        }
     }
 
+    private void initFromCtx(Context ctx) {
+        sourceStructure = ctx.getSourceStructure();
+        langSwitch = ctx.nullableLangSwitch();
+        cfgValue = ctx.makeValue(tag, true);
+        graph = new TableSchemaRefGraph(cfgValue.schema());
+    }
+
+    private void reloadData() {
+        DirectoryStructure newStructure = new DirectoryStructure(sourceStructure.getRootDir());
+        if (newStructure.lastModifiedEquals(sourceStructure)) {
+            configgen.util.Logger.verbose("lastModified not change");
+            return;
+        }
+        Context newCtx;
+        try {
+            newCtx = new Context(contextCfg, newStructure);
+            initFromCtx(newCtx);
+            logger.info("reload ok");
+        } catch (Exception e) {
+            logger.info("reload ignored");
+        }
+    }
 
     private void handleSchemas(HttpExchange exchange) throws IOException {
         SchemaService.Schema schema = SchemaService.fromCfgValue(cfgValue);
@@ -185,7 +217,7 @@ public class EditorServer extends Generator {
         RecordEditResult result;
         boolean ok = false;
         synchronized (this) {
-            RecordEditService service = new RecordEditService(dataDir, cfgValue);
+            RecordEditService service = new RecordEditService(cfgValue, sourceStructure);
             result = service.addOrUpdateRecord(table, jsonStr);
             if (result.resultCode() == addOk || result.resultCode() == updateOk) {
                 cfgValue = service.newCfgValue();
@@ -196,7 +228,7 @@ public class EditorServer extends Generator {
         if (ok && postRun != null) {
             Thread.startVirtualThread(() -> {
                 try {
-                    GenJavaData.generateToFile(cfgValue, langSwitch, new File(postRunJavadata));
+                    GenJavaData.generateToFile(cfgValue, langSwitch, new File(postRunJavaData));
                     // "cmd", "/c", "start", "/B",
                     String[] cmds = new String[]{postRun};
                     Process process = Runtime.getRuntime().exec(cmds);
@@ -233,7 +265,7 @@ public class EditorServer extends Generator {
 
         RecordEditResult result;
         synchronized (this) {
-            RecordEditService service = new RecordEditService(dataDir, cfgValue);
+            RecordEditService service = new RecordEditService(cfgValue, sourceStructure);
             result = service.deleteRecord(table, id);
             if (result.resultCode() == deleteOk) {
                 cfgValue = service.newCfgValue();

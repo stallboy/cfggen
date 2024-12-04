@@ -120,7 +120,7 @@ public class GenJsonByAI extends Generator {
 
     private void askWithRetry(List<ChatMessage> messages, int retryTimes, AskStat stat,
                               TableSchema tableSchema, SimpleOpenAI openAI,
-                              Path dataDir, ValueStat valueStat, String model) {
+                              Path dataDir, CfgValueStat valueStat, String model) {
         stat.ask++;
         for (int i = 0; i < retryTimes; i++) {
             String jsonResult = ask(messages, openAI, model);
@@ -132,7 +132,7 @@ public class GenJsonByAI extends Generator {
                 stat.noJson++;
                 return;
             } else {
-                ValueErrs parseErrs = ValueErrs.of();
+                CfgValueErrs parseErrs = CfgValueErrs.of();
                 CfgValue.VStruct record = new ValueJsonParser(tableSchema, parseErrs).fromJson(jsonResult);
                 parseErrs.checkErrors("check json", true, true);
 
@@ -145,7 +145,7 @@ public class GenJsonByAI extends Generator {
                     CfgValue.Value pkValue = ValueUtil.extractPrimaryKeyValue(record, tableSchema);
                     String id = pkValue.packStr();
                     try {
-                        VTableJsonStore.addOrUpdateRecordStore(record, tableSchema, id, dataDir, valueStat);
+                        VTableJsonStore.addOrUpdateRecordStore(record, tableSchema, id, dataDir);
                     } catch (IOException e) {
                         System.out.printf("save %s err: %s%n", id, e.getMessage());
                     }

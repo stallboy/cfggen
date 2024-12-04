@@ -1,7 +1,6 @@
 package configgen.value;
 
 import com.alibaba.fastjson2.JSONObject;
-import configgen.data.Source;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgReader;
 import org.junit.jupiter.api.BeforeEach;
@@ -84,7 +83,7 @@ class ValueJsonParserTest {
 
     private static VStruct fromJson(TableSchema tableSchema,
                                     String jsonStr) {
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         VStruct vStruct = new ValueJsonParser(tableSchema, errs).fromJson(jsonStr);
         assertEquals(0, errs.errs().size());
         assertEquals(0, errs.warns().size());
@@ -92,7 +91,7 @@ class ValueJsonParserTest {
     }
 
     private static VStruct fromJson(TableSchema tableSchema,
-                                    ValueErrs errs,
+                                    CfgValueErrs errs,
                                     String jsonStr) {
         return new ValueJsonParser(tableSchema, errs).fromJson(jsonStr);
     }
@@ -116,7 +115,7 @@ class ValueJsonParserTest {
         {
             String jsonStr = """
                     {"$type":"test","id":123,"bool1":"should be bool,but str","long1":1234567890,"float1":3.14,"str1":"abc"}""";
-            ValueErrs errs = ValueErrs.of();
+            CfgValueErrs errs = CfgValueErrs.of();
             VStruct vStruct2 = fromJson(test, errs, jsonStr);
             assertEquals(1, errs.errs().size());
             errs.checkErrors("", true);
@@ -126,7 +125,7 @@ class ValueJsonParserTest {
         {
             String jsonStr = """
                     {"$type":"test","id":123,"bool1":true,"long1":1234567890,"float1":3.14,"str1":123}""";
-            ValueErrs errs = ValueErrs.of();
+            CfgValueErrs errs = CfgValueErrs.of();
             VStruct vStruct2 = fromJson(test, errs, jsonStr);
             assertEquals(1, errs.errs().size());
             errs.checkErrors("", true);
@@ -168,7 +167,7 @@ class ValueJsonParserTest {
         TableSchema ts = cfg.findTable("ts");
         String jsonStr = """
                 {"id":1,"attr":123,"$type":"ts"}""";
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         VStruct vStruct2 = fromJson(ts, errs, jsonStr);
         assertEquals(1, errs.errs().size());
     }
@@ -184,7 +183,7 @@ class ValueJsonParserTest {
                 {"$type":"tl","id":1,"listInt1":[111,222,333]}""";
         assertEquals(jsonStr, json.toString());
 
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         VStruct vStruct2 = fromJson(ts, errs, jsonStr);
         assertEquals(vStruct, vStruct2);
     }
@@ -207,7 +206,7 @@ class ValueJsonParserTest {
         TableSchema ts = cfg.findTable("tl");
         String jsonStr = """
                 {"id":1,"extra":333,"$type":"tl"}""";
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         VStruct vStruct = fromJson(ts, errs, jsonStr);
         assertEquals(1, errs.warns().size());
 
@@ -303,7 +302,7 @@ class ValueJsonParserTest {
         String jsonStr = """
                 {"id":666,"c":[{"key":123456,"value":{"c1":{"id":123},"c2":{"id":456,"$type":"condition.checkItem"},"$type":"condition.and"},"$type":"$entry"}],"$type":"cond"}""";
 
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         fromJson(cond, errs, jsonStr);
         errs.checkErrors("", true);
         assertEquals(1, errs.errs().size());

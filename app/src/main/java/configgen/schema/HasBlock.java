@@ -8,17 +8,17 @@ import static configgen.schema.IncludedStructs.*;
  */
 public class HasBlock {
 
-    static void preCalculateAllHasBlock(CfgSchema schema, SchemaErrs errs) {
+    static void preCalculateAllHasBlock(CfgSchema schema, CfgSchemaErrs errs) {
         ForeachSchema.foreachNameable((nameable -> calcHasBlock(nameable, errs)), schema);
     }
 
-    private static void calcHasBlock(Nameable nameable, SchemaErrs errs) {
+    private static void calcHasBlock(Nameable nameable, CfgSchemaErrs errs) {
         boolean hasBlock = checkAnyOk(nameable, HasBlock::checkIfDirectFieldsHasBlock);
         nameable.meta().putHasBlock(hasBlock);
         if (hasBlock && nameable instanceof TableSchema table) {
             String firstField = table.fields().getFirst().name();
             if (!table.primaryKey().fields().contains(firstField)) {
-                errs.addErr(new SchemaErrs.BlockTableFirstFieldNotInPrimaryKey(table.name()));
+                errs.addErr(new CfgSchemaErrs.BlockTableFirstFieldNotInPrimaryKey(table.name()));
             }
         }
     }

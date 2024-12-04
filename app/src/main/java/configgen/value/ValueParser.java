@@ -23,12 +23,12 @@ public class ValueParser {
     }
 
 
-    private final ValueErrs errs;
+    private final CfgValueErrs errs;
     private final TextI18n.TableI18n nullableTableI18n;
     private final BlockParser blockParser;
     private List<DCell> currentCells;
 
-    public ValueParser(ValueErrs errs, TextI18n.TableI18n nullableTableI18n, BlockParser blockParser) {
+    public ValueParser(CfgValueErrs errs, TextI18n.TableI18n nullableTableI18n, BlockParser blockParser) {
         this.errs = errs;
         this.nullableTableI18n = nullableTableI18n;
         this.blockParser = blockParser;
@@ -54,7 +54,7 @@ public class ValueParser {
                     try {
                         parsed = DCells.parseFunc(cell);
                     } catch (Exception e) {
-                        errs.addErr(new ValueErrs.ParsePackErr(cell, sInterface.name(), e.getMessage()));
+                        errs.addErr(new CfgValueErrs.ParsePackErr(cell, sInterface.name(), e.getMessage()));
                         return null;
                     }
                     canChildBeEmpty = false; // 只要是parse了结构的，内部就不允许为空了
@@ -65,7 +65,7 @@ public class ValueParser {
                 try {
                     parsed = DCells.parseFunc(cell);
                 } catch (Exception e) {
-                    errs.addErr(new ValueErrs.ParsePackErr(cell, sInterface.name(), e.getMessage()));
+                    errs.addErr(new CfgValueErrs.ParsePackErr(cell, sInterface.name(), e.getMessage()));
                     return null;
                 }
                 canChildBeEmpty = false;
@@ -82,7 +82,7 @@ public class ValueParser {
             StructSchema impl = sInterface.nullableDefaultImplStruct();
             StructSchema subImpl = subInterface.nullableDefaultImplStruct();
             if (impl == null) {
-                errs.addErr(new ValueErrs.InterfaceCellEmptyButHasNoDefaultImpl(parsed.getFirst(), sInterface.name()));
+                errs.addErr(new CfgValueErrs.InterfaceCellEmptyButHasNoDefaultImpl(parsed.getFirst(), sInterface.name()));
                 return null;
             }
             require(subImpl != null);
@@ -106,14 +106,14 @@ public class ValueParser {
                     impl = sInterface.findImpl(implName);
                     subImpl = subInterface.findImpl(implName);
                     if (impl == null) {
-                        errs.addErr(new ValueErrs.InterfaceCellImplNotFound(parsed.getFirst(), sInterface.name(), implName));
+                        errs.addErr(new CfgValueErrs.InterfaceCellImplNotFound(parsed.getFirst(), sInterface.name(), implName));
                         return null;
                     }
                 } else {
                     impl = sInterface.nullableDefaultImplStruct();
                     subImpl = subInterface.nullableDefaultImplStruct();
                     if (impl == null) {
-                        errs.addErr(new ValueErrs.InterfaceCellEmptyButHasNoDefaultImpl(parsed.getFirst(), sInterface.name()));
+                        errs.addErr(new CfgValueErrs.InterfaceCellEmptyButHasNoDefaultImpl(parsed.getFirst(), sInterface.name()));
                         return null;
                     }
                 }
@@ -121,7 +121,7 @@ public class ValueParser {
                 require(subImpl != null);
                 int expected = isPack ? 1 : Span.span(impl);
                 if (parsed.size() - 1 < expected) {
-                    errs.addErr(new ValueErrs.InternalError(parsed.getFirst().toString() + " impl span not enough"));
+                    errs.addErr(new CfgValueErrs.InternalError(parsed.getFirst().toString() + " impl span not enough"));
                     return null;
                 }
                 implCells = parsed.subList(1, expected + 1);
@@ -154,7 +154,7 @@ public class ValueParser {
                 try {
                     parsed = DCells.parsePack(cell);
                 } catch (Exception e) {
-                    errs.addErr(new ValueErrs.ParsePackErr(cell, structural.name(), e.getMessage()));
+                    errs.addErr(new CfgValueErrs.ParsePackErr(cell, structural.name(), e.getMessage()));
                     return null;
                 }
                 canChildBeEmpty = false;
@@ -203,7 +203,7 @@ public class ValueParser {
                 if (subField != null) {
                     // 提取单个field
                     if (parsed.size() < startIdx + expected) {
-                        errs.addErr(new ValueErrs.FieldCellSpanNotEnough(
+                        errs.addErr(new CfgValueErrs.FieldCellSpanNotEnough(
                                 Source.of(cells),
                                 structural.name(), field.name(),
                                 expected, parsed.size() - startIdx));
@@ -241,7 +241,7 @@ public class ValueParser {
                     case BOOL -> {
                         boolean v = str.equals("1") || str.equalsIgnoreCase("true");
                         if (!boolStrSet.contains(str.toLowerCase())) {
-                            errs.addErr(new ValueErrs.NotMatchFieldType(cell, nameable, field, type));
+                            errs.addErr(new CfgValueErrs.NotMatchFieldType(cell, nameable, field, type));
                         }
                         return new VBool(v, cell);
                     }
@@ -250,7 +250,7 @@ public class ValueParser {
                         try {
                             v = str.isEmpty() ? 0 : Integer.decode(str);
                         } catch (Exception e) {
-                            errs.addErr(new ValueErrs.NotMatchFieldType(cell, nameable, field, type));
+                            errs.addErr(new CfgValueErrs.NotMatchFieldType(cell, nameable, field, type));
                         }
                         return new VInt(v, cell);
                     }
@@ -259,7 +259,7 @@ public class ValueParser {
                         try {
                             v = str.isEmpty() ? 0 : Long.decode(str);
                         } catch (Exception e) {
-                            errs.addErr(new ValueErrs.NotMatchFieldType(cell, nameable, field, type));
+                            errs.addErr(new CfgValueErrs.NotMatchFieldType(cell, nameable, field, type));
                         }
                         return new VLong(v, cell);
                     }
@@ -268,7 +268,7 @@ public class ValueParser {
                         try {
                             v = str.isEmpty() ? 0f : Float.parseFloat(str);
                         } catch (Exception e) {
-                            errs.addErr(new ValueErrs.NotMatchFieldType(cell, nameable, field, type));
+                            errs.addErr(new CfgValueErrs.NotMatchFieldType(cell, nameable, field, type));
                         }
                         return new VFloat(v, cell);
                     }
@@ -335,7 +335,7 @@ public class ValueParser {
             try {
                 parsed = DCells.parsePack(cell);
             } catch (Exception e) {
-                errs.addErr(new ValueErrs.ParsePackErr(cell, type.toString(), e.getMessage()));
+                errs.addErr(new CfgValueErrs.ParsePackErr(cell, type.toString(), e.getMessage()));
                 return null;
             }
 
@@ -361,7 +361,7 @@ public class ValueParser {
             List<DCell> curLineParsed = block.cells;
             for (int startIdx = 0; startIdx < curLineParsed.size(); startIdx += itemSpan) {
                 if (startIdx + itemSpan > curLineParsed.size()) {
-                    errs.addErr(new ValueErrs.FieldCellSpanNotEnough(
+                    errs.addErr(new CfgValueErrs.FieldCellSpanNotEnough(
                             Source.of(curLineParsed.subList(startIdx, curLineParsed.size())),
                             nameable, field.name(), itemSpan, curLineParsed.size() - startIdx));
                     continue;
@@ -381,7 +381,7 @@ public class ValueParser {
                     if (key != null && value != null) {
                         SimpleValue old = valueMap.put(key, value);
                         if (old != null) {
-                            errs.addErr(new ValueErrs.MapKeyDuplicated(
+                            errs.addErr(new CfgValueErrs.MapKeyDuplicated(
                                     Source.of(keyCells), nameable, field.name()));
                         }
                     }
@@ -410,7 +410,7 @@ public class ValueParser {
             try {
                 parsed = DCells.parsePack(cell);
             } catch (Exception e) {
-                errs.addErr(new ValueErrs.ParsePackErr(cell, type.toString(), e.getMessage()));
+                errs.addErr(new CfgValueErrs.ParsePackErr(cell, type.toString(), e.getMessage()));
                 return null;
             }
 
@@ -437,7 +437,7 @@ public class ValueParser {
             List<DCell> curLineParsed = block.cells;
             for (int startIdx = 0; startIdx < curLineParsed.size(); startIdx += itemSpan) {
                 if (startIdx + itemSpan > curLineParsed.size()) {
-                    errs.addErr(new ValueErrs.FieldCellSpanNotEnough(
+                    errs.addErr(new CfgValueErrs.FieldCellSpanNotEnough(
                             Source.of(curLineParsed.subList(startIdx, curLineParsed.size())),
                             nameable, field.name(), itemSpan, curLineParsed.size() - startIdx));
                     continue;

@@ -113,7 +113,7 @@ class SpanTest {
                 }
                 """;
         cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(0, errs.errs().size());
 
     }

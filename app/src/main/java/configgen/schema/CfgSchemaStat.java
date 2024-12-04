@@ -6,7 +6,7 @@ import static configgen.schema.FieldFormat.*;
 import static configgen.schema.FieldType.*;
 import static configgen.schema.FieldType.Primitive.*;
 
-public class SchemaStat implements Stat {
+public class CfgSchemaStat implements Stat {
     private int structCount;
     private int interfaceCount;
     private int implCount;
@@ -47,7 +47,7 @@ public class SchemaStat implements Stat {
     private int multiGt3KeyCount;
 
 
-    public SchemaStat(CfgSchema cfg) {
+    public CfgSchemaStat(CfgSchema cfg) {
         for (Nameable item : cfg.items()) {
             switch (item) {
                 case InterfaceSchema sInterface -> {

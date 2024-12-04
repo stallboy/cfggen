@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import static configgen.data.DataUtil.*;
@@ -56,7 +57,10 @@ public class DirectoryStructure {
     private final Path rootDir;
     private final Map<String, CfgFileInfo> cfgFiles = new LinkedHashMap<>();  // file path -> info
     private final Map<String, ExcelFileInfo> excelFiles = new LinkedHashMap<>(); // file path -> info
-    private final Map<String, Map<String, JsonFileInfo>> tableToJsonFiles = new LinkedHashMap<>(); // table -> file path -> info
+    /**
+     * 可能被不同的线程访问，所以每次改变就创建新对象，改变引用
+     */
+    private volatile Map<String, Map<String, JsonFileInfo>> tableToJsonFiles = new LinkedHashMap<>(); // table -> file path -> info
 
     public DirectoryStructure(Path rootDir) {
         this.rootDir = rootDir;
@@ -160,7 +164,6 @@ public class DirectoryStructure {
     }
 
     private void findTableToJsonFiles() {
-        tableToJsonFiles.clear();
         try (Stream<Path> paths = Files.list(rootDir)) {
             for (Path path : paths.toList()) {
                 if (isFileIgnored(path)) {
@@ -169,7 +172,6 @@ public class DirectoryStructure {
                 if (!Files.isDirectory(path)) {
                     continue;
                 }
-
 
                 String dirName = path.getFileName().toString();
                 String tableName = getTableNameFromDir(dirName);
@@ -209,24 +211,106 @@ public class DirectoryStructure {
     }
 
 
-    public void addJsonInPlace(String tableName, Path jsonPath) {
-        Map<String, JsonFileInfo> jsonFiles = tableToJsonFiles.computeIfAbsent(tableName, (String j) -> new LinkedHashMap<>());
+    public synchronized JsonFileInfo addJson(String tableName, Path jsonPath) {
+        Map<String, Map<String, JsonFileInfo>> tmp = copyTableToJsonFiles();
+        Map<String, JsonFileInfo> jsonFiles = tmp.computeIfAbsent(tableName, (String j) -> new LinkedHashMap<>());
         Path relativePath = rootDir.relativize(jsonPath);
         Path path = jsonPath.toAbsolutePath().normalize();
-        jsonFiles.put(relativePath.toString(),
-                new JsonFileInfo(jsonPath.toFile().lastModified(), path, relativePath));
+        JsonFileInfo jf = new JsonFileInfo(jsonPath.toFile().lastModified(), path, relativePath);
+        jsonFiles.put(relativePath.toString(), jf);
+
+        tableToJsonFiles = tmp;
+        return jf;
     }
 
-    public record Care(boolean isCare,
-                       long lastModified) {
-        public static Care NO = new Care(false, 0);
-    }
+    public synchronized JsonFileInfo removeJson(String tableName, Path jsonPath) {
+        Map<String, Map<String, JsonFileInfo>> tmp = copyTableToJsonFiles();
 
-    public Care getCare(Path filePath) {
-        if (isFileIgnored(filePath)) {
-            return Care.NO;
+        Map<String, JsonFileInfo> map = tmp.get(tableName);
+        if (map == null) {
+            return null;
+        }
+        Path relativePath = rootDir.relativize(jsonPath);
+        String jsonKey = relativePath.toString();
+        JsonFileInfo jf = map.remove(jsonKey);
+        if (jf == null) {
+            return null;
         }
 
-        return null;
+        tableToJsonFiles = tmp;
+        return jf;
+    }
+
+
+    private Map<String, Map<String, JsonFileInfo>> copyTableToJsonFiles() {
+        Map<String, Map<String, JsonFileInfo>> copy = new LinkedHashMap<>(tableToJsonFiles.size());
+        for (Map.Entry<String, Map<String, JsonFileInfo>> e : tableToJsonFiles.entrySet()) {
+            copy.put(e.getKey(), new LinkedHashMap<>(e.getValue()));
+        }
+        return copy;
+    }
+
+    public boolean lastModifiedEquals(DirectoryStructure other) {
+        Objects.requireNonNull(other);
+
+        if (cfgFiles.size() != other.cfgFiles.size()) {
+            return false;
+        }
+
+        if (excelFiles.size() != other.excelFiles.size()) {
+            return false;
+        }
+
+        Map<String, Map<String, JsonFileInfo>> tmp1 = tableToJsonFiles;
+        Map<String, Map<String, JsonFileInfo>> tmp2 = other.tableToJsonFiles;
+
+        if (tmp1.size() != tmp2.size()) {
+            return false;
+        }
+
+        for (Map.Entry<String, Map<String, JsonFileInfo>> e : tmp1.entrySet()) {
+            Map<String, JsonFileInfo> j2 = tmp2.get(e.getKey());
+            if (j2 == null) {
+                return false;
+            }
+            Map<String, JsonFileInfo> j1 = e.getValue();
+            if (j2.size() != j1.size()) {
+                return false;
+            }
+            for (Map.Entry<String, JsonFileInfo> e2 : j1.entrySet()) {
+                JsonFileInfo jf2 = j2.get(e2.getKey());
+                if (jf2 == null) {
+                    return false;
+                }
+                JsonFileInfo jf1 = e2.getValue();
+                if (jf2.lastModified != jf1.lastModified) {
+                    return false;
+                }
+            }
+        }
+
+        for (Map.Entry<String, CfgFileInfo> e : cfgFiles.entrySet()) {
+            CfgFileInfo f2 = other.cfgFiles.get(e.getKey());
+            if (f2 == null) {
+                return false;
+            }
+            CfgFileInfo f1 = e.getValue();
+            if (f2.lastModified != f1.lastModified) {
+                return false;
+            }
+        }
+
+        for (Map.Entry<String, ExcelFileInfo> e : excelFiles.entrySet()) {
+            ExcelFileInfo f2 = other.excelFiles.get(e.getKey());
+            if (f2 == null) {
+                return false;
+            }
+            ExcelFileInfo f1 = e.getValue();
+            if (f2.lastModified != f1.lastModified) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

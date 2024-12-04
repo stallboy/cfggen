@@ -59,7 +59,7 @@ public class CfgDataReader {
     }
 
     private CfgData _readCfgData(DirectoryStructure sourceStructure, CfgSchema nullableCfgSchema) throws Exception {
-        DataStat stat = new DataStat();
+        CfgDataStat stat = new CfgDataStat();
         List<Callable<AllResult>> tasks = new ArrayList<>();
 
         for (DirectoryStructure.ExcelFileInfo df : sourceStructure.getExcelFiles().values()) {
@@ -97,18 +97,18 @@ public class CfgDataReader {
         }
 
         Logger.profile("data read");
-        List<Callable<DataStat>> parseTasks = new ArrayList<>();
+        List<Callable<CfgDataStat>> parseTasks = new ArrayList<>();
         for (CfgData.DTable table : data.tables().values()) {
             parseTasks.add(() -> {
-                DataStat tStat = new DataStat();
+                CfgDataStat tStat = new CfgDataStat();
                 HeadParser.parse(table, tStat, nullableCfgSchema);
                 CellParser.parse(table, tStat, nullableCfgSchema, headRow);
                 return tStat;
             });
         }
-        List<Future<DataStat>> parseFutures = executor.invokeAll(parseTasks);
-        for (Future<DataStat> future : parseFutures) {
-            DataStat tStat = future.get();
+        List<Future<CfgDataStat>> parseFutures = executor.invokeAll(parseTasks);
+        for (Future<CfgDataStat> future : parseFutures) {
+            CfgDataStat tStat = future.get();
             stat.merge(tStat);
         }
         Logger.profile("data parse");

@@ -8,7 +8,7 @@ import java.util.*;
 
 public record CfgValue(CfgSchema schema,
                        Map<String, VTable> vTableMap,
-                       ValueStat valueStat) {
+                       CfgValueStat valueStat) {
     public CfgValue {
         Objects.requireNonNull(schema);
         Objects.requireNonNull(vTableMap);
@@ -16,7 +16,7 @@ public record CfgValue(CfgSchema schema,
     }
 
     public static CfgValue of(CfgSchema schema) {
-        return new CfgValue(schema, new TreeMap<>(), new ValueStat());
+        return new CfgValue(schema, new TreeMap<>(), new CfgValueStat());
     }
 
     public Iterable<VTable> tables() {

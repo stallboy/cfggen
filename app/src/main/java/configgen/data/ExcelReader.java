@@ -7,7 +7,7 @@ import java.util.List;
 public interface ExcelReader {
 
     record AllResult(List<OneSheetResult> sheets,
-                     DataStat stat) {
+                     CfgDataStat stat) {
     }
 
     record OneSheetResult(String tableName,

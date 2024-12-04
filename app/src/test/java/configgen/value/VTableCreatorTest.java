@@ -30,7 +30,7 @@ class VTableCreatorTest {
 
         VStruct vStruct = ofStruct(t, List.of(ofInt(123), ofStr("abc")));
         VStruct vStruct2 = ofStruct(t, List.of(ofInt(456), ofStr("efg")));
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         List<VStruct> vStructList = List.of(vStruct, vStruct2);
         VTable vTable = new VTableCreator(t, errs).create(vStructList);
 
@@ -60,7 +60,7 @@ class VTableCreatorTest {
 
         VStruct vStruct = ofStruct(t, List.of(ofInt(123), ofStr("abc")));
         VStruct vStruct2 = ofStruct(t, List.of(ofInt(456), ofStr("efg")));
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         List<VStruct> vStructList = List.of(vStruct, vStruct2);
         VTable vTable = new VTableCreator(t, errs).create(vStructList);
 
@@ -84,7 +84,7 @@ class VTableCreatorTest {
 
         VStruct vStruct = ofStruct(t, List.of(ofInt(123), ofStr("abc")));
         VStruct vStruct2 = ofStruct(t, List.of(ofInt(456), ofStr("efg")));
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         List<VStruct> vStructList = List.of(vStruct, vStruct2);
         VTable vTable = new VTableCreator(t, errs).create(vStructList);
 
@@ -111,7 +111,7 @@ class VTableCreatorTest {
 
         VStruct vStruct = ofStruct(t, List.of(ofInt(123), ofStr("abc"), ofLong(123456)));
         VStruct vStruct2 = ofStruct(t, List.of(ofInt(456), ofStr("efg"), ofLong(456789)));
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         List<VStruct> vStructList = List.of(vStruct, vStruct2);
         VTable vTable = new VTableCreator(t, errs).create(vStructList);
 

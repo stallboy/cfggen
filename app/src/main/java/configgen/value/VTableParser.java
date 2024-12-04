@@ -18,12 +18,12 @@ public class VTableParser implements BlockParser {
     private final TableSchema subTableSchema;
     private final DTable dTable;
     private final TableSchema tableSchema;
-    private final ValueErrs errs;
+    private final CfgValueErrs errs;
     private final ValueParser parser;
     private List<DCell> curRow;
 
     public VTableParser(TableSchema subTableSchema, DTable dTable, TableSchema tableSchema,
-                        TableI18n nullableTableI18n, ValueErrs errs) {
+                        TableI18n nullableTableI18n, CfgValueErrs errs) {
         this.subTableSchema = subTableSchema;
         this.dTable = dTable;
         this.tableSchema = tableSchema;

@@ -17,7 +17,7 @@ class CfgSchemaFilterByTagTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(1, cfg.items().size());
 
         CfgSchemaFilterByTag clientCfgSchema = new CfgSchemaFilterByTag(cfg, "c", errs);
@@ -41,14 +41,14 @@ class CfgSchemaFilterByTagTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(1, cfg.items().size());
         TableSchema tab1 = cfg.findTable("tab1");
         assertEquals(3, tab1.fields().size());
 
         CfgSchemaFilterByTag clientCfgSchema = new CfgSchemaFilterByTag(cfg, "c", errs);
         cfg = clientCfgSchema.filter();
-        SchemaErrs errs2 = cfg.resolve();
+        CfgSchemaErrs errs2 = cfg.resolve();
         assertEquals(0, errs.errs().size());
         assertEquals(0, errs2.errs().size());
 
@@ -68,7 +68,7 @@ class CfgSchemaFilterByTagTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         CfgSchemaFilterByTag clientCfgSchema = new CfgSchemaFilterByTag(cfg, "c", errs);
         cfg = clientCfgSchema.filter();
@@ -76,7 +76,7 @@ class CfgSchemaFilterByTagTest {
         assertEquals(0, errs.errs().size());
         errs = cfg.resolve();
 
-        assertInstanceOf(SchemaErrs.KeyNotFound.class, errs.errs().getFirst());
+        assertInstanceOf(CfgSchemaErrs.KeyNotFound.class, errs.errs().getFirst());
         TableSchema tab1 = cfg.findTable("tab1");
         assertEquals(2, tab1.fields().size());
         assertNotNull(tab1.findField("v"));
@@ -95,7 +95,7 @@ class CfgSchemaFilterByTagTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         CfgSchemaFilterByTag clientCfgSchema = new CfgSchemaFilterByTag(cfg, "c", errs);
         cfg = clientCfgSchema.filter();
@@ -116,7 +116,7 @@ class CfgSchemaFilterByTagTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         CfgSchemaFilterByTag clientCfgSchema = new CfgSchemaFilterByTag(cfg, "c", errs);
         cfg = clientCfgSchema.filter();
@@ -140,7 +140,7 @@ class CfgSchemaFilterByTagTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         CfgSchemaFilterByTag clientCfgSchema = new CfgSchemaFilterByTag(cfg, "c", errs);
         cfg = clientCfgSchema.filter();
@@ -164,7 +164,7 @@ class CfgSchemaFilterByTagTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         CfgSchemaFilterByTag clientCfgSchema = new CfgSchemaFilterByTag(cfg, "c", errs);
         cfg = clientCfgSchema.filter();
@@ -186,11 +186,11 @@ class CfgSchemaFilterByTagTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         CfgSchemaFilterByTag clientCfgSchema = new CfgSchemaFilterByTag(cfg, "c", errs);
         cfg = clientCfgSchema.filter();
-        SchemaErrs errs2 = cfg.resolve();
+        CfgSchemaErrs errs2 = cfg.resolve();
         assertEquals(0, errs2.errs().size());
 
         InterfaceSchema action = (InterfaceSchema) cfg.findFieldable("action");
@@ -212,11 +212,11 @@ class CfgSchemaFilterByTagTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         CfgSchemaFilterByTag clientCfgSchema = new CfgSchemaFilterByTag(cfg, "c", errs);
         cfg = clientCfgSchema.filter();
-        SchemaErrs errs2 = cfg.resolve();
+        CfgSchemaErrs errs2 = cfg.resolve();
         assertEquals(0, errs2.errs().size());
 
         InterfaceSchema action = (InterfaceSchema) cfg.findFieldable("action");
@@ -237,11 +237,11 @@ class CfgSchemaFilterByTagTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
 
         CfgSchemaFilterByTag clientCfgSchema = new CfgSchemaFilterByTag(cfg, "c", errs);
         cfg = clientCfgSchema.filter();
-        SchemaErrs errs2 = cfg.resolve();
+        CfgSchemaErrs errs2 = cfg.resolve();
 
         assertEquals(0, errs2.errs().size());
         assertEquals(0, cfg.items().size());
@@ -262,7 +262,7 @@ class CfgSchemaFilterByTagTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(0, errs.warns().size());
         assertEquals(0, errs.errs().size());
 
@@ -271,9 +271,9 @@ class CfgSchemaFilterByTagTest {
 
         assertEquals(1, errs.warns().size());
         assertEquals(0, errs.errs().size());
-        SchemaErrs.Warn warn = errs.warns().getFirst();
-        assertInstanceOf(SchemaErrs.FilterRefIgnoredByRefTableNotFound.class, warn);
-        SchemaErrs.FilterRefIgnoredByRefTableNotFound w = (SchemaErrs.FilterRefIgnoredByRefTableNotFound) warn;
+        CfgSchemaErrs.Warn warn = errs.warns().getFirst();
+        assertInstanceOf(CfgSchemaErrs.FilterRefIgnoredByRefTableNotFound.class, warn);
+        CfgSchemaErrs.FilterRefIgnoredByRefTableNotFound w = (CfgSchemaErrs.FilterRefIgnoredByRefTableNotFound) warn;
         assertEquals("tab1", w.name());
         assertEquals("v", w.foreignKey());
         assertEquals("tab2", w.notFoundRefTable());
@@ -295,7 +295,7 @@ class CfgSchemaFilterByTagTest {
                 """;
 
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs = cfg.resolve();
+        CfgSchemaErrs errs = cfg.resolve();
         assertEquals(0, errs.warns().size());
         assertEquals(0, errs.errs().size());
 
@@ -304,9 +304,9 @@ class CfgSchemaFilterByTagTest {
 
         assertEquals(1, errs.warns().size());
         assertEquals(0, errs.errs().size());
-        SchemaErrs.Warn warn = errs.warns().getFirst();
-        assertInstanceOf(SchemaErrs.FilterRefIgnoredByRefKeyNotFound.class, warn);
-        SchemaErrs.FilterRefIgnoredByRefKeyNotFound w = (SchemaErrs.FilterRefIgnoredByRefKeyNotFound) warn;
+        CfgSchemaErrs.Warn warn = errs.warns().getFirst();
+        assertInstanceOf(CfgSchemaErrs.FilterRefIgnoredByRefKeyNotFound.class, warn);
+        CfgSchemaErrs.FilterRefIgnoredByRefKeyNotFound w = (CfgSchemaErrs.FilterRefIgnoredByRefKeyNotFound) warn;
         assertEquals("tab1", w.name());
         assertEquals("v", w.foreignKey());
         assertEquals("tab2", w.refTable());

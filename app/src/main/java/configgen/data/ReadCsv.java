@@ -25,7 +25,7 @@ public class ReadCsv {
 
     public AllResult readCsv(Path path, Path relativePath, String tableName, int index) throws IOException {
         int count = 0;
-        DataStat stat = new DataStat();
+        CfgDataStat stat = new CfgDataStat();
         List<DRawRow> rows = new ArrayList<>();
         try (CsvReader reader = CsvReader.builder().build(new UnicodeReader(Files.newInputStream(path), defaultEncoding))) {
             for (CsvRow csvRow : reader) {

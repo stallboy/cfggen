@@ -6,13 +6,13 @@ import java.util.Map;
 
 import static configgen.schema.FieldType.*;
 import static configgen.value.CfgValue.*;
-import static configgen.value.ValueErrs.*;
+import static configgen.value.CfgValueErrs.*;
 
 public class RefValidator {
     private final CfgValue cfgValue;
-    private final ValueErrs errs;
+    private final CfgValueErrs errs;
 
-    public RefValidator(CfgValue value, ValueErrs errs) {
+    public RefValidator(CfgValue value, CfgValueErrs errs) {
         this.cfgValue = value;
         this.errs = errs;
     }

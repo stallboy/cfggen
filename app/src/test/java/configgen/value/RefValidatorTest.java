@@ -31,13 +31,13 @@ class RefValidatorTest {
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
         Context ctx = new Context(tempDir);
-        ValueErrs valueErrs = ValueErrs.of();
+        CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
 
         assertEquals(1, valueErrs.errs().size());
-        assertInstanceOf(ValueErrs.RefNotNullableButCellEmpty.class, valueErrs.errs().getFirst());
-        ValueErrs.RefNotNullableButCellEmpty err = (ValueErrs.RefNotNullableButCellEmpty) valueErrs.errs().getFirst();
+        assertInstanceOf(CfgValueErrs.RefNotNullableButCellEmpty.class, valueErrs.errs().getFirst());
+        CfgValueErrs.RefNotNullableButCellEmpty err = (CfgValueErrs.RefNotNullableButCellEmpty) valueErrs.errs().getFirst();
         assertEquals("t-2", err.recordId());
         assertTrue(err.value().source() instanceof CfgData.DCell cell &&
                 cell.rowId().row() == 3 &&
@@ -62,13 +62,13 @@ class RefValidatorTest {
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
         Context ctx = new Context(tempDir);
-        ValueErrs valueErrs = ValueErrs.of();
+        CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
 
         assertEquals(1, valueErrs.errs().size());
-        assertInstanceOf(ValueErrs.ForeignValueNotFound.class, valueErrs.errs().getFirst());
-        ValueErrs.ForeignValueNotFound err = (ValueErrs.ForeignValueNotFound) valueErrs.errs().getFirst();
+        assertInstanceOf(CfgValueErrs.ForeignValueNotFound.class, valueErrs.errs().getFirst());
+        CfgValueErrs.ForeignValueNotFound err = (CfgValueErrs.ForeignValueNotFound) valueErrs.errs().getFirst();
         assertEquals("t-2", err.recordId());
         assertTrue(err.value().source() instanceof CfgData.DCell cell &&
                 cell.rowId().row() == 3 &&
@@ -96,13 +96,13 @@ class RefValidatorTest {
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
         Context ctx = new Context(tempDir);
-        ValueErrs valueErrs = ValueErrs.of();
+        CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
 
         assertEquals(1, valueErrs.errs().size());
-        assertInstanceOf(ValueErrs.ForeignValueNotFound.class, valueErrs.errs().getFirst());
-        ValueErrs.ForeignValueNotFound err = (ValueErrs.ForeignValueNotFound) valueErrs.errs().getFirst();
+        assertInstanceOf(CfgValueErrs.ForeignValueNotFound.class, valueErrs.errs().getFirst());
+        CfgValueErrs.ForeignValueNotFound err = (CfgValueErrs.ForeignValueNotFound) valueErrs.errs().getFirst();
         assertEquals("t-2", err.recordId());
         assertTrue(err.value().source() instanceof CfgData.DCell cell &&
                 cell.rowId().row() == 3 &&
@@ -127,13 +127,13 @@ class RefValidatorTest {
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
         Context ctx = new Context(tempDir);
-        ValueErrs valueErrs = ValueErrs.of();
+        CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
 
         assertEquals(1, valueErrs.errs().size());
-        assertInstanceOf(ValueErrs.ForeignValueNotFound.class, valueErrs.errs().getFirst());
-        ValueErrs.ForeignValueNotFound err = (ValueErrs.ForeignValueNotFound) valueErrs.errs().getFirst();
+        assertInstanceOf(CfgValueErrs.ForeignValueNotFound.class, valueErrs.errs().getFirst());
+        CfgValueErrs.ForeignValueNotFound err = (CfgValueErrs.ForeignValueNotFound) valueErrs.errs().getFirst();
         assertEquals("t-2", err.recordId());
         assertTrue(err.value().source() instanceof CfgData.DCell cell &&
                 cell.rowId().row() == 3 &&
@@ -159,13 +159,13 @@ class RefValidatorTest {
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
         Context ctx = new Context(tempDir);
-        ValueErrs valueErrs = ValueErrs.of();
+        CfgValueErrs valueErrs = CfgValueErrs.of();
         CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
         clientValueParser.parseCfgValue();
 
         assertEquals(1, valueErrs.errs().size());
-        assertInstanceOf(ValueErrs.ForeignValueNotFound.class, valueErrs.errs().getFirst());
-        ValueErrs.ForeignValueNotFound err = (ValueErrs.ForeignValueNotFound) valueErrs.errs().getFirst();
+        assertInstanceOf(CfgValueErrs.ForeignValueNotFound.class, valueErrs.errs().getFirst());
+        CfgValueErrs.ForeignValueNotFound err = (CfgValueErrs.ForeignValueNotFound) valueErrs.errs().getFirst();
         assertEquals("t-2", err.recordId());
         assertTrue(err.value().source() instanceof CfgData.DCell cell &&
                 cell.rowId().row() == 3 &&

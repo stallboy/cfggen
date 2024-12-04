@@ -43,7 +43,7 @@ public enum ReadByPoi implements ExcelReader {
 
     @Override
     public AllResult readExcels(Path path, Path relativePath) throws IOException {
-        DataStat stat = new DataStat();
+        CfgDataStat stat = new CfgDataStat();
         List<OneSheetResult> sheets = new ArrayList<>();
 
         stat.excelCount++;

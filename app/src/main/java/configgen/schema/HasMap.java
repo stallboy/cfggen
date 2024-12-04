@@ -4,15 +4,15 @@ import static configgen.schema.IncludedStructs.*;
 
 public class HasMap {
 
-    static void preCalculateAllHasMap(CfgSchema schema, SchemaErrs errs) {
+    static void preCalculateAllHasMap(CfgSchema schema, CfgSchemaErrs errs) {
         ForeachSchema.foreachNameable((nameable -> calcHasMap(nameable, errs)), schema);
     }
 
-    private static void calcHasMap(Nameable nameable, SchemaErrs errs) {
+    private static void calcHasMap(Nameable nameable, CfgSchemaErrs errs) {
         boolean hasMap = checkAnyOk(nameable, HasMap::checkIfDirectFieldsHasMap);
         nameable.meta().putHasMap(hasMap);
         if (hasMap && nameable instanceof TableSchema tableSchema && nameable.meta().isJson()) {
-            errs.addErr(new SchemaErrs.JsonTableNotSupportMap(tableSchema.name()));
+            errs.addErr(new CfgSchemaErrs.JsonTableNotSupportMap(tableSchema.name()));
         }
     }
 

@@ -19,9 +19,9 @@ public class VTableJsonParser {
     private final TableSchema subTableSchema;
     private final Path dataDir;
     private final TableSchema tableSchema;
-    private final ValueErrs errs;
+    private final CfgValueErrs errs;
     private final ValueJsonParser parser;
-    private final ValueStat valueStat;
+    private final CfgValueStat valueStat;
     private final DirectoryStructure sourceStructure;
 
     public VTableJsonParser(TableSchema subTableSchema,
@@ -29,8 +29,8 @@ public class VTableJsonParser {
                             DirectoryStructure sourceStructure,
                             TableSchema tableSchema,
                             TableI18n nullableTableI18n,
-                            ValueErrs errs,
-                            ValueStat valueStat) {
+                            CfgValueErrs errs,
+                            CfgValueStat valueStat) {
         this.subTableSchema = subTableSchema;
         this.dataDir = sourceStructure.getRootDir();
         this.sourceStructure = sourceStructure;
@@ -55,7 +55,7 @@ public class VTableJsonParser {
                     jsonStr = Files.readString(jf.path());
                     modified = jf.lastModified();
                 } catch (Exception e) {
-                    errs.addErr(new ValueErrs.JsonFileReadErr(jf.path().toString(), e.getMessage()));
+                    errs.addErr(new CfgValueErrs.JsonFileReadErr(jf.path().toString(), e.getMessage()));
                 }
                 if (jsonStr != null) {
                     VStruct vStruct = parser.fromJson(jsonStr,
@@ -75,11 +75,13 @@ public class VTableJsonParser {
             String id = pkValue.packStr();
             Path writePath = dataDir;
             try {
-                writePath = VTableJsonStore.addOrUpdateRecordStore(defaultValue, tableSchema, id, dataDir, valueStat);
+                writePath = VTableJsonStore.addOrUpdateRecordStore(defaultValue, tableSchema, id, dataDir);
                 valueList.add(defaultValue);
-                sourceStructure.addJsonInPlace(tableName, writePath);
+
+                JsonFileInfo jf = sourceStructure.addJson(tableName, writePath);
+                valueStat.addLastModified(tableName, id, jf.lastModified());
             } catch (Exception e) {
-                errs.addErr(new ValueErrs.JsonFileWriteErr(writePath.toAbsolutePath().toString(), e.getMessage()));
+                errs.addErr(new CfgValueErrs.JsonFileWriteErr(writePath.toAbsolutePath().toString(), e.getMessage()));
             }
 
         }

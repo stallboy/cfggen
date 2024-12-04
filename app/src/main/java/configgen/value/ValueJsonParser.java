@@ -14,24 +14,24 @@ import static configgen.data.Source.*;
 import static configgen.schema.FieldType.*;
 import static configgen.schema.FieldType.Primitive.*;
 import static configgen.value.CfgValue.*;
-import static configgen.value.ValueErrs.*;
+import static configgen.value.CfgValueErrs.*;
 
 public class ValueJsonParser {
 
     private final TableSchema tableSchema;
     private final boolean isTableSchemaPartial;
     private final TextI18n.TableI18n nullableTableI18n;
-    private final ValueErrs errs;
+    private final CfgValueErrs errs;
 
     public ValueJsonParser(TableSchema tableSchema,
-                           ValueErrs errs) {
+                           CfgValueErrs errs) {
         this(tableSchema, false, null, errs);
     }
 
     public ValueJsonParser(TableSchema tableSchema,
                            boolean isTableSchemaPartial,
                            TextI18n.TableI18n nullableTableI18n,
-                           ValueErrs errs) {
+                           CfgValueErrs errs) {
         this.tableSchema = tableSchema;
         this.isTableSchemaPartial = isTableSchemaPartial;
         this.nullableTableI18n = nullableTableI18n;

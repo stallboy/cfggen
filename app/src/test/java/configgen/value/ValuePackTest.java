@@ -22,7 +22,7 @@ class ValuePackTest {
             assertEquals("1,2,3", str);
             FList flist = new FList(Primitive.INT);
 
-            ValueErrs errs = ValueErrs.of();
+            CfgValueErrs errs = CfgValueErrs.of();
             Value unpackValue = ValuePack.unpack(str, flist, errs);
             assertEquals(0, errs.errs().size());
             assertEquals(value, unpackValue);
@@ -34,7 +34,7 @@ class ValuePackTest {
             assertEquals("123", str);
             FList flist = new FList(Primitive.INT);
 
-            ValueErrs errs = ValueErrs.of();
+            CfgValueErrs errs = CfgValueErrs.of();
             Value unpackValue = ValuePack.unpack(str, flist, errs);
             assertEquals(0, errs.errs().size());
             assertEquals(value, unpackValue);
@@ -46,16 +46,16 @@ class ValuePackTest {
         String str = "1,2,1.2";
         FList flist = new FList(Primitive.INT);
 
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         VList unpackValue = (VList) ValuePack.unpack(str, flist, errs);
         assertEquals(1, errs.errs().size());
         assertEquals(3, unpackValue.valueList().size());  // 1.2 导致err，但默认用0填充
         assertEquals(0, ((VInt) (unpackValue.valueList().getLast())).value());
 
-        ValueErrs.VErr err = errs.errs().getFirst();
-        assertInstanceOf(ValueErrs.NotMatchFieldType.class, err);
-        assertTrue(((ValueErrs.NotMatchFieldType) err).source() instanceof CfgData.DCell cell &&
-                cell.value().equals("1.2"));
+        CfgValueErrs.VErr err = errs.errs().getFirst();
+        assertInstanceOf(CfgValueErrs.NotMatchFieldType.class, err);
+        assertTrue(((CfgValueErrs.NotMatchFieldType) err).source() instanceof CfgData.DCell cell &&
+                   cell.value().equals("1.2"));
 
     }
 
@@ -65,16 +65,16 @@ class ValuePackTest {
         String str = "(1,2)";
         FList flist = new FList(Primitive.INT);
 
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         VList unpackValue = (VList) ValuePack.unpack(str, flist, errs);
         assertEquals(1, errs.errs().size());
         assertEquals(1, unpackValue.valueList().size());  // 1,2 导致err，但默认用0填充
         assertEquals(0, ((VInt) (unpackValue.valueList().getFirst())).value());
 
-        ValueErrs.VErr err = errs.errs().getFirst();
-        assertInstanceOf(ValueErrs.NotMatchFieldType.class, err);
-        assertTrue(((ValueErrs.NotMatchFieldType) err).source() instanceof CfgData.DCell cell &&
-                cell.value().equals("1,2"));
+        CfgValueErrs.VErr err = errs.errs().getFirst();
+        assertInstanceOf(CfgValueErrs.NotMatchFieldType.class, err);
+        assertTrue(((CfgValueErrs.NotMatchFieldType) err).source() instanceof CfgData.DCell cell &&
+                   cell.value().equals("1,2"));
     }
 
     @Test
@@ -82,21 +82,21 @@ class ValuePackTest {
         String str = "(1,2)3";
         FList flist = new FList(Primitive.INT);
 
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         Value unpackValue = ValuePack.unpack(str, flist, errs);
         assertEquals(1, errs.errs().size());
         assertNull(unpackValue);
-        ValueErrs.VErr err = errs.errs().getFirst();
-        assertInstanceOf(ValueErrs.ParsePackErr.class, err);
-        assertTrue(((ValueErrs.ParsePackErr) err).source() instanceof CfgData.DCell cell &&
-                cell.value().equals(str));
+        CfgValueErrs.VErr err = errs.errs().getFirst();
+        assertInstanceOf(CfgValueErrs.ParsePackErr.class, err);
+        assertTrue(((CfgValueErrs.ParsePackErr) err).source() instanceof CfgData.DCell cell &&
+                   cell.value().equals(str));
     }
 
     @Test
     void packMap() {
         {
             FMap fmap = new FMap(Primitive.INT, Primitive.LONG);
-            ValueErrs errs = ValueErrs.of();
+            CfgValueErrs errs = CfgValueErrs.of();
             Value value = ValuePack.unpack("1,111,2, 222", fmap, errs);
             assertEquals(0, errs.errs().size());
             assertEquals("1,111,2,222", value.packStr());
@@ -104,7 +104,7 @@ class ValuePackTest {
         }
         {
             FMap fmap = new FMap(Primitive.INT, Primitive.STRING);
-            ValueErrs errs = ValueErrs.of();
+            CfgValueErrs errs = CfgValueErrs.of();
             Value value = ValuePack.unpack("1,abc,2, def", fmap, errs);
             assertEquals(0, errs.errs().size());
             assertEquals("1,abc,2,def", value.packStr());
@@ -112,7 +112,7 @@ class ValuePackTest {
         }
         {
             FMap fmap = new FMap(Primitive.INT, Primitive.BOOL);
-            ValueErrs errs = ValueErrs.of();
+            CfgValueErrs errs = CfgValueErrs.of();
             Value value = ValuePack.unpack(" 1, 1, 2, 0", fmap, errs);
             assertEquals(0, errs.errs().size());
             assertEquals("1,true,2,false", value.packStr());
@@ -130,7 +130,7 @@ class ValuePackTest {
         StructRef struct = new StructRef("ss");
         struct.setObj(ss);
 
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         Value value = ValuePack.unpack(" 11, abc", struct, errs);
         assertEquals(0, errs.errs().size());
         assertEquals("11,abc", value.packStr());
@@ -153,7 +153,7 @@ class ValuePackTest {
         StructRef structB = new StructRef("structB");
         structB.setObj(sb);
 
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         Value value = ValuePack.unpack(" 11, (22, abc)", structB, errs);
         assertEquals(0, errs.errs().size());
         assertEquals("11,(22,abc)", value.packStr());
@@ -171,7 +171,7 @@ class ValuePackTest {
         structA.setObj(ss);
         FList flist = new FList(structA);
 
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         Value value = ValuePack.unpack(" (11,aaa), (22, abc)", flist, errs);
         assertEquals(0, errs.errs().size());
         assertEquals("(11,aaa),(22,abc)", value.packStr());
@@ -188,7 +188,7 @@ class ValuePackTest {
         StructRef structA = new StructRef("structA");
         structA.setObj(ss);
 
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         Value value = ValuePack.unpack(" 11, (22, 33,44)", structA, errs);
         assertEquals(0, errs.errs().size());
         assertEquals("11,(22,33,44)", value.packStr());
@@ -216,7 +216,7 @@ class ValuePackTest {
         StructRef struct = new StructRef("ss");
         struct.setObj(cfg.findFieldable("condition"));
 
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         Value value = ValuePack.unpack("checkItem(123)", struct, errs);
         assertEquals(0, errs.errs().size());
         assertEquals("checkItem(123)", value.packStr());
@@ -237,13 +237,13 @@ class ValuePackTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs1 = cfg.resolve();
+        CfgSchemaErrs errs1 = cfg.resolve();
         assertEquals(0, errs1.errs().size());
 
         StructRef struct = new StructRef("ss");
         struct.setObj(cfg.findFieldable("condition"));
 
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         Value value = ValuePack.unpack("and(checkItem(123), checkItem(456))", struct, errs);
         assertEquals(0, errs.errs().size());
         assertEquals("and(checkItem(123),checkItem(456))", value.packStr());
@@ -264,13 +264,13 @@ class ValuePackTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs1 = cfg.resolve();
+        CfgSchemaErrs errs1 = cfg.resolve();
         assertEquals(0, errs1.errs().size());
 
         StructRef struct = new StructRef("ss");
         struct.setObj(cfg.findFieldable("condition"));
 
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         Value value = ValuePack.unpack("and((123), checkItem(456))", struct, errs);
         assertEquals(0, errs.errs().size());
         assertEquals("and((123),checkItem(456))", value.packStr());
@@ -291,13 +291,13 @@ class ValuePackTest {
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
-        SchemaErrs errs1 = cfg.resolve();
+        CfgSchemaErrs errs1 = cfg.resolve();
         assertEquals(0, errs1.errs().size());
 
         StructRef struct = new StructRef("ss");
         struct.setObj(cfg.findFieldable("condition"));
 
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         Value value = ValuePack.unpack("and( ( checkItem(123), checkItem(456 )) )", struct, errs);
         assertEquals(0, errs.errs().size());
         assertEquals("and((checkItem(123),checkItem(456)))", value.packStr());
@@ -317,7 +317,7 @@ class ValuePackTest {
         cfg.resolve().checkErrors();
         TableSchema t = cfg.findTable("t");
 
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         Value value = ValuePack.unpackTablePrimaryKey("11", t, errs);
         assertEquals(0, errs.errs().size());
         assertInstanceOf(VInt.class, value);
@@ -339,7 +339,7 @@ class ValuePackTest {
         cfg.resolve().checkErrors();
         TableSchema t = cfg.findTable("t");
 
-        ValueErrs errs = ValueErrs.of();
+        CfgValueErrs errs = CfgValueErrs.of();
         Value value = ValuePack.unpackTablePrimaryKey("11,22", t, errs);
         assertEquals(0, errs.errs().size());
         assertInstanceOf(VList.class, value);

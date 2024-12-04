@@ -4,11 +4,15 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import static configgen.data.DataUtil.FileFmt.*;
+
 public class DataUtil {
 
     public enum FileFmt {
         CSV,
-        EXCEL;
+        EXCEL,
+        CFG,
+        JSON,
     }
 
 
@@ -21,17 +25,17 @@ public class DataUtil {
         String ext = "";
         int i = fileName.lastIndexOf('.');
         if (i >= 0) {
-            ext = fileName.substring(i + 1);
+            ext = fileName.substring(i + 1).toLowerCase();
         }
 
-        if ("csv".equalsIgnoreCase(ext)) {
-            return FileFmt.CSV;
-        } else if ("xlsx".equalsIgnoreCase(ext)) {
-            return FileFmt.EXCEL;
-        } else if ("xls".equalsIgnoreCase(ext)) {
-            return FileFmt.EXCEL;
-        }
-        return null;
+        return switch (ext) {
+            case "csv" -> CSV;
+            case "xls", "xlsx" -> EXCEL;
+            case "cfg" -> CFG;
+            case "json" -> JSON;
+            default -> null;
+        };
+
     }
 
     public record TableNameIndex(String tableName,
@@ -110,7 +114,7 @@ public class DataUtil {
         return fileName.substring(0, end).toLowerCase();
     }
 
-    private static boolean isFirstNotAzChar(String name) {
+    public static boolean isFirstNotAzChar(String name) {
         char firstChar = name.charAt(0);
         return ('a' > firstChar || firstChar > 'z') && ('A' > firstChar || firstChar > 'Z');
     }
@@ -149,6 +153,24 @@ public class DataUtil {
         }
 
         return sub.replace("_", ".");
+    }
+
+    public static boolean isMaybeTableDirForJson(String dirName) {
+        if (!dirName.startsWith("_")) {
+            return false;
+        }
+        String sub = dirName.substring(1);
+        // _后要是英文字母
+        if (isFirstNotAzChar(sub)) {
+            return false;
+        }
+
+        // 不能含中文
+        int hanIdx = findFirstHanIndex(sub);
+        if (hanIdx != -1) {
+            return false;
+        }
+        return true;
     }
 
 

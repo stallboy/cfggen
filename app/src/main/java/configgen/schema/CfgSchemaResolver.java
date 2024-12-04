@@ -9,19 +9,19 @@ import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
 import static configgen.schema.FieldFormat.Sep;
 import static configgen.schema.FieldType.*;
 import static configgen.schema.FieldType.Primitive.*;
-import static configgen.schema.SchemaErrs.*;
+import static configgen.schema.CfgSchemaErrs.*;
 
 /**
  * 把CfgSchema内部关系给解决了，如果有Errs，就表明有内部矛盾
  */
 public final class CfgSchemaResolver {
     private final CfgSchema cfgSchema;
-    private final SchemaErrs errs;
+    private final CfgSchemaErrs errs;
     private Nameable curTopNameable;
     private Nameable curNameable;
 
 
-    public CfgSchemaResolver(CfgSchema cfg, SchemaErrs errs) {
+    public CfgSchemaResolver(CfgSchema cfg, CfgSchemaErrs errs) {
         this.cfgSchema = cfg;
         this.errs = errs;
     }
