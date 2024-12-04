@@ -4,7 +4,6 @@ import configgen.ctx.DirectoryStructure;
 import configgen.schema.cfg.CfgReader;
 import configgen.schema.cfg.CfgUtil;
 import configgen.schema.cfg.CfgWriter;
-import configgen.schema.cfg.XmlReader;
 import configgen.util.CachedFiles;
 
 import java.io.IOException;
@@ -30,29 +29,20 @@ public class CfgSchemas {
         return destination;
     }
 
-
-    public static CfgSchema readXmlFromRootDir(Path rootDir) {
-        CfgSchema destination = CfgSchema.of();
-        Map<String, CfgFileInfo> allXmlFiles = findAllXmlFiles(rootDir);
-        for (CfgFileInfo c : allXmlFiles.values()) {
-            XmlReader.INSTANCE.readTo(destination, c.path(), c.pkgNameDot());
+    public static void writeToDir(Path destination, CfgSchema root) {
+        Path absoluteDst = destination.toAbsolutePath().normalize();
+        Map<String, CfgSchema> cfgs = CfgUtil.separate(root);
+        for (Map.Entry<String, CfgSchema> entry : cfgs.entrySet()) {
+            String ns = entry.getKey();
+            CfgSchema cfg = entry.getValue();
+            Path dst = CfgUtil.getCfgFilePathByNamespace(ns, absoluteDst);
+            writeToOneFile(dst, cfg, true);
         }
-        return destination;
     }
 
-    public static void writeTo(Path destination, boolean isWriteToEachSubDirectory, CfgSchema root) {
-        Path absoluteDst = destination.toAbsolutePath().normalize();
-        if (isWriteToEachSubDirectory) {
-            Map<String, CfgSchema> cfgs = CfgUtil.separate(root);
-            for (Map.Entry<String, CfgSchema> entry : cfgs.entrySet()) {
-                String ns = entry.getKey();
-                CfgSchema cfg = entry.getValue();
-                Path dst = CfgUtil.getCfgFilePathByNamespace(ns, absoluteDst);
-                writeToOneFile(dst, cfg, true);
-            }
-        } else {
-            writeToOneFile(absoluteDst, root, false);
-        }
+    public static void writeToOneFile(Path dst, CfgSchema cfg) {
+        writeToOneFile(dst, cfg, false);
+
     }
 
     private static void writeToOneFile(Path dst, CfgSchema cfg, boolean useLastName) {

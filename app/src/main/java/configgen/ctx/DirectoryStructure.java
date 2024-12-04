@@ -86,7 +86,7 @@ public class DirectoryStructure {
         return tableToJsonFiles;
     }
 
-    private static void findConfigFilesFromRecursively(Path source, String ext, String pkgNameDot,
+    public static void findConfigFilesFromRecursively(Path source, String ext, String pkgNameDot,
                                                        Path rootDir, Map<String, CfgFileInfo> cfgFiles) {
         if (Files.exists(source)) {
             Path relativizeSource = rootDir.relativize(source);
@@ -113,13 +113,6 @@ public class DirectoryStructure {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static Map<String, CfgFileInfo> findAllXmlFiles(Path rootDir) {
-        Map<String, CfgFileInfo> result = new LinkedHashMap<>();
-        findConfigFilesFromRecursively(rootDir.resolve("config.xml"), "xml", "",
-                rootDir, result);
-        return result;
     }
 
     private void findExcelFilesRecursively(Path dir) {

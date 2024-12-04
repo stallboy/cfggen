@@ -86,10 +86,8 @@ public class Context {
         if (!errs.errs().isEmpty()) {
             errs.checkErrors("schema");
         }
-        Stat stat = new CfgSchemaStat(schema);
-        if (Logger.verboseLevel() > 0) {
-            stat.print();
-        }
+        schema.verbosePrintStat();
+
         Logger.profile("schema resolve");
 
         CfgData data = dataReader.readCfgData(sourceStructure, schema);
@@ -106,7 +104,8 @@ public class Context {
         } else if (autoFix) {
             Logger.profile("schema aligned by data");
             // schema.printDiff(alignedSchema);
-            CfgSchemas.writeTo(sourceStructure.getRootDir().resolve(DirectoryStructure.ROOT_CONFIG_FILENAME), true, alignedSchema);
+            CfgSchemas.writeToDir(sourceStructure.getRootDir().resolve(DirectoryStructure.ROOT_CONFIG_FILENAME),
+                    alignedSchema);
             sourceStructure = new DirectoryStructure(sourceStructure.getRootDir());
             Logger.profile("schema write");
             return false;

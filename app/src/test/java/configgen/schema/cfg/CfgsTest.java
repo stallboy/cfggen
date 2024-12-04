@@ -39,8 +39,8 @@ class CfgsTest {
         Path path = tempFolder.resolve("config.cfg");
         Path path1 = tempFolder.resolve("config1.cfg");
 
-        CfgSchemas.writeTo(path, true, cfg1);
-        CfgSchemas.writeTo(path1, false, cfg1);
+        CfgSchemas.writeToDir(path, cfg1);
+        CfgSchemas.writeToOneFile(path1, cfg1);
         CfgSchema cfgFromAllSubDir = CfgSchemas.readFromDir(new DirectoryStructure(tempFolder));
         CfgSchema cfgFromOneFile = CfgSchemas.readFromOneFile(path1);
 

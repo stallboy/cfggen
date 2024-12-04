@@ -1,6 +1,7 @@
 package configgen.schema;
 
 import configgen.schema.cfg.CfgWriter;
+import configgen.util.Logger;
 
 import java.util.*;
 
@@ -113,6 +114,13 @@ public class CfgSchema {
 
     public String stringify() {
         return CfgWriter.stringify(this);
+    }
+
+    public void verbosePrintStat() {
+        if (Logger.verboseLevel() > 0) {
+            Stat stat = new CfgSchemaStat(this);
+            stat.print();
+        }
     }
 
     @Override
