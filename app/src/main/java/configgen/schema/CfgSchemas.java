@@ -1,7 +1,10 @@
-package configgen.schema.cfg;
+package configgen.schema;
 
 import configgen.ctx.DirectoryStructure;
-import configgen.schema.CfgSchema;
+import configgen.schema.cfg.CfgReader;
+import configgen.schema.cfg.CfgUtil;
+import configgen.schema.cfg.CfgWriter;
+import configgen.schema.cfg.XmlReader;
 import configgen.util.CachedFiles;
 
 import java.io.IOException;
@@ -11,7 +14,7 @@ import java.util.Map;
 
 import static configgen.ctx.DirectoryStructure.*;
 
-public class Cfgs {
+public class CfgSchemas {
 
     public static CfgSchema readFromDir(DirectoryStructure sourceStructure) {
         CfgSchema destination = CfgSchema.of();

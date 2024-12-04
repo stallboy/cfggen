@@ -17,7 +17,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-public enum CfgReader implements CfgSchemaReader {
+public enum CfgReader {
     INSTANCE;
 
     public static CfgSchema parse(String cfgStr) {
@@ -26,7 +26,6 @@ public enum CfgReader implements CfgSchemaReader {
         return cfg;
     }
 
-    @Override
     public void readTo(CfgSchema destination, Path source, String pkgNameDot) {
         CharStream input;
         try {

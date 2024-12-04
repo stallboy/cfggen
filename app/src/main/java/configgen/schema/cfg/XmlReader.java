@@ -15,10 +15,9 @@ import static configgen.schema.FieldFormat.AutoOrPack.PACK;
 import static configgen.schema.FieldType.Primitive.*;
 import static configgen.schema.Metadata.*;
 
-public enum XmlReader implements CfgSchemaReader {
+public enum XmlReader {
     INSTANCE;
 
-    @Override
     public void readTo(CfgSchema destination, Path xml, String pkgNameDot) {
         Element self = DOMUtil.rootElement(xml.toFile());
         for (Element e : DOMUtil.elements(self, "bean")) {

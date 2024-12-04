@@ -3,6 +3,7 @@ package configgen.schema.cfg;
 import configgen.Resources;
 import configgen.ctx.DirectoryStructure;
 import configgen.schema.CfgSchema;
+import configgen.schema.CfgSchemas;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -38,10 +39,10 @@ class CfgsTest {
         Path path = tempFolder.resolve("config.cfg");
         Path path1 = tempFolder.resolve("config1.cfg");
 
-        Cfgs.writeTo(path, true, cfg1);
-        Cfgs.writeTo(path1, false, cfg1);
-        CfgSchema cfgFromAllSubDir = Cfgs.readFromDir(new DirectoryStructure(tempFolder));
-        CfgSchema cfgFromOneFile = Cfgs.readFromOneFile(path1);
+        CfgSchemas.writeTo(path, true, cfg1);
+        CfgSchemas.writeTo(path1, false, cfg1);
+        CfgSchema cfgFromAllSubDir = CfgSchemas.readFromDir(new DirectoryStructure(tempFolder));
+        CfgSchema cfgFromOneFile = CfgSchemas.readFromOneFile(path1);
 
         boolean equals = cfg1.equals(cfgFromAllSubDir);
         if (!equals) {

@@ -3,20 +3,20 @@ package configgen.tool;
 
 import configgen.ctx.DirectoryStructure;
 import configgen.schema.CfgSchema;
-import configgen.schema.cfg.Cfgs;
+import configgen.schema.CfgSchemas;
 
 import java.nio.file.Path;
 
 public class XmlToCfg {
     public static void convertAndCheck(Path dataDir) {
-        CfgSchema cfg = Cfgs.readXmlFromRootDir(dataDir);
+        CfgSchema cfg = CfgSchemas.readXmlFromRootDir(dataDir);
         Path cfgPath = dataDir.resolve(DirectoryStructure.ROOT_CONFIG_FILENAME);
-        Cfgs.writeTo(cfgPath, true, cfg);
+        CfgSchemas.writeTo(cfgPath, true, cfg);
 
         DirectoryStructure sourceStructure = new DirectoryStructure(dataDir);
-        CfgSchema cfg2 = Cfgs.readFromDir(sourceStructure);
-        Cfgs.writeTo(cfgPath, true, cfg2);
-        CfgSchema cfg3 = Cfgs.readFromDir(sourceStructure);
+        CfgSchema cfg2 = CfgSchemas.readFromDir(sourceStructure);
+        CfgSchemas.writeTo(cfgPath, true, cfg2);
+        CfgSchema cfg3 = CfgSchemas.readFromDir(sourceStructure);
 
         if (!cfg2.equals(cfg3)) {
             throw new IllegalStateException("should equal");

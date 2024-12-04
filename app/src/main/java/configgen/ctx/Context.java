@@ -4,7 +4,7 @@ import configgen.data.*;
 import configgen.gen.BuildSettings;
 import configgen.util.Logger;
 import configgen.schema.*;
-import configgen.schema.cfg.Cfgs;
+import configgen.schema.CfgSchemas;
 import configgen.value.CfgValue;
 import configgen.value.CfgValueParser;
 import configgen.value.CfgValueErrs;
@@ -38,12 +38,10 @@ public class Context {
     }
 
     private final ContextCfg contextCfg;
-    private final Path dataDir;
+
     private DirectoryStructure sourceStructure;
-    private final CfgDataReader dataReader;
     private TextI18n nullableI18n;
     private LangSwitch nullableLangSwitch;
-
     private CfgSchema cfgSchema;
     private CfgData cfgData;
 
@@ -63,11 +61,10 @@ public class Context {
 
     public Context(ContextCfg cfg, DirectoryStructure sourceStructure) {
         this.contextCfg = cfg;
-        this.dataDir = cfg.dataDir;
         this.sourceStructure = sourceStructure;
         ExcelReader excelReader = (cfg.tryUsePoi && BuildSettings.isIncludePoi()) ?
                 BuildSettings.getPoiReader() : ReadByFastExcel.INSTANCE;
-        this.dataReader = new CfgDataReader(cfg.headRow, new ReadCsv(cfg.csvDefaultEncoding), excelReader);
+        CfgDataReader dataReader = new CfgDataReader(cfg.headRow, new ReadCsv(cfg.csvDefaultEncoding), excelReader);
 
         if (cfg.i18nFilename != null) {
             nullableI18n = TextI18n.loadFromCsvFile(Path.of(cfg.i18nFilename), cfg.crLfAsLf);
@@ -76,14 +73,14 @@ public class Context {
                     cfg.langSwitchDefaultLang, cfg.crLfAsLf);
         }
 
-        boolean ok = readSchemaAndData(true);
+        boolean ok = readSchemaAndData(dataReader, true);
         if (!ok) {
-            readSchemaAndData(false);
+            readSchemaAndData(dataReader, false);
         }
     }
 
-    private boolean readSchemaAndData(boolean autoFix) {
-        CfgSchema schema = Cfgs.readFromDir(sourceStructure);
+    private boolean readSchemaAndData(CfgDataReader dataReader, boolean autoFix) {
+        CfgSchema schema = CfgSchemas.readFromDir(sourceStructure);
         Logger.profile("schema read");
         CfgSchemaErrs errs = schema.resolve();
         if (!errs.errs().isEmpty()) {
@@ -109,8 +106,8 @@ public class Context {
         } else if (autoFix) {
             Logger.profile("schema aligned by data");
             // schema.printDiff(alignedSchema);
-            Cfgs.writeTo(dataDir.resolve(DirectoryStructure.ROOT_CONFIG_FILENAME), true, alignedSchema);
-            sourceStructure = new DirectoryStructure(dataDir);
+            CfgSchemas.writeTo(sourceStructure.getRootDir().resolve(DirectoryStructure.ROOT_CONFIG_FILENAME), true, alignedSchema);
+            sourceStructure = new DirectoryStructure(sourceStructure.getRootDir());
             Logger.profile("schema write");
             return false;
         } else {
@@ -120,10 +117,6 @@ public class Context {
 
     public ContextCfg getContextCfg() {
         return contextCfg;
-    }
-
-    public Path dataDir() {
-        return dataDir;
     }
 
     public DirectoryStructure getSourceStructure() {

@@ -4,7 +4,7 @@ import configgen.ctx.DirectoryStructure;
 import configgen.data.*;
 import configgen.schema.CfgSchema;
 import configgen.schema.CfgSchemaErrs;
-import configgen.schema.cfg.Cfgs;
+import configgen.schema.CfgSchemas;
 import configgen.util.Logger;
 
 import java.nio.file.Path;
@@ -15,7 +15,7 @@ public class ComparePoiAndFastExcel {
     public static void compareCellData(Path dataDir, CfgDataReader fastDataReader, CfgDataReader poiDataReader) {
 
         DirectoryStructure sourceStructure = new DirectoryStructure(dataDir);
-        CfgSchema schema = Cfgs.readFromDir(sourceStructure);
+        CfgSchema schema = CfgSchemas.readFromDir(sourceStructure);
         Logger.profile("schema read");
         CfgSchemaErrs errs = schema.resolve();
         if (!errs.errs().isEmpty()) {

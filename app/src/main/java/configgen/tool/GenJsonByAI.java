@@ -98,7 +98,7 @@ public class GenJsonByAI extends Generator {
                     AssistantMessage.of(init),
                     UserMessage.of(ask));
             askWithRetry(messages, retryTimes, stat, tableSchema, openAI,
-                    ctx.dataDir(), cfgValue.valueStat(), aiCfg.model());
+                    ctx.getContextCfg().dataDir(), cfgValue.valueStat(), aiCfg.model());
         }
         System.out.println(stat);
     }

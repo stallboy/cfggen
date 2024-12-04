@@ -3,17 +3,16 @@ package configgen.data;
 import configgen.ctx.DirectoryStructure;
 import configgen.schema.CfgSchema;
 import configgen.util.Logger;
-import de.siegmar.fastcsv.reader.CsvRow;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import static configgen.data.CfgData.DRawRow;
 import static configgen.data.CfgData.DRawSheet;
 import static configgen.data.ExcelReader.*;
 
@@ -24,6 +23,8 @@ public class CfgDataReader {
     private final ExcelReader excelReader;
 
     public CfgDataReader(int headRow, ReadCsv csvReader, ExcelReader excelReader) {
+        Objects.requireNonNull(csvReader);
+        Objects.requireNonNull(excelReader);
         this.headRow = headRow;
         this.csvReader = csvReader;
         this.excelReader = excelReader;
@@ -32,25 +33,8 @@ public class CfgDataReader {
         }
     }
 
-    record DRawCsvRow(CsvRow row) implements DRawRow {
-        @Override
-        public String cell(int c) {
-            return c < row.getFieldCount() ? row.getField(c).trim() : "";
-        }
-
-        @Override
-        public boolean isCellNumber(int c) {
-            return false;
-        }
-
-        @Override
-        public int count() {
-            return row.getFieldCount();
-        }
-    }
-
-
     public CfgData readCfgData(DirectoryStructure sourceStructure, CfgSchema nullableCfgSchema) {
+        Objects.requireNonNull(sourceStructure);
         try {
             return _readCfgData(sourceStructure, nullableCfgSchema);
         } catch (Exception e) {

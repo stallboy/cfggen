@@ -17,6 +17,23 @@ import static configgen.data.ExcelReader.*;
 
 public class ReadCsv {
 
+    record DRawCsvRow(CsvRow row) implements DRawRow {
+        @Override
+        public String cell(int c) {
+            return c < row.getFieldCount() ? row.getField(c).trim() : "";
+        }
+
+        @Override
+        public boolean isCellNumber(int c) {
+            return false;
+        }
+
+        @Override
+        public int count() {
+            return row.getFieldCount();
+        }
+    }
+
     private final String defaultEncoding;
 
     public ReadCsv(String defaultEncoding) {
