@@ -279,7 +279,6 @@ public final class Main {
         Context context = new Context(new Context.ContextCfg(dataDir, usePoi, headRow, csvDefaultEncoding,
                 i18nfile, i18ncrlfaslf, langSwitchDir, langSwitchDefaultLang));
 
-
         if (searchParam != null) {
             ValueSearcher searcher = new ValueSearcher(context.makeValue(searchTag), searchTo);
             if (searchParam.isEmpty()) {

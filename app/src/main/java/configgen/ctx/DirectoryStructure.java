@@ -204,7 +204,7 @@ public class DirectoryStructure {
     }
 
 
-    public synchronized JsonFileInfo addJson(String tableName, Path jsonPath) {
+    public synchronized JsonFileInfo addJsonFile(String tableName, Path jsonPath) {
         Map<String, Map<String, JsonFileInfo>> tmp = copyTableToJsonFiles();
         Map<String, JsonFileInfo> jsonFiles = tmp.computeIfAbsent(tableName, (String j) -> new LinkedHashMap<>());
         Path relativePath = rootDir.relativize(jsonPath);
@@ -216,7 +216,7 @@ public class DirectoryStructure {
         return jf;
     }
 
-    public synchronized JsonFileInfo removeJson(String tableName, Path jsonPath) {
+    public synchronized JsonFileInfo removeJsonFile(String tableName, Path jsonPath) {
         Map<String, Map<String, JsonFileInfo>> tmp = copyTableToJsonFiles();
 
         Map<String, JsonFileInfo> map = tmp.get(tableName);

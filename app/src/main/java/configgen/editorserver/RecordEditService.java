@@ -96,7 +96,7 @@ public class RecordEditService {
             return new RecordEditResult(jsonStoreErr, table, id, List.of(e.getMessage()), List.of());
         }
 
-        DirectoryStructure.JsonFileInfo jf = sourceStructure.addJson(table, writePath);
+        DirectoryStructure.JsonFileInfo jf = sourceStructure.addJsonFile(table, writePath);
         CfgValueStat newCfgValueStat = cfgValue.valueStat().newAddLastModified(table, id, jf.lastModified());
         return applyNewRecords(tableSchema, id, newRecordList, newCfgValueStat, code);
     }
@@ -186,7 +186,7 @@ public class RecordEditService {
         copy.remove(pkValue);
         List<VStruct> newRecordList = copy.values().stream().toList();
 
-        sourceStructure.removeJson(table, jsonPath);
+        sourceStructure.removeJsonFile(table, jsonPath);
         CfgValueStat newCfgValueStat = cfgValue.valueStat().newRemoveLastModified(table, id);
 
         return applyNewRecords(tableSchema, id, newRecordList, newCfgValueStat, deleteOk);

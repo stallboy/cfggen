@@ -78,7 +78,7 @@ public class VTableJsonParser {
                 writePath = VTableJsonStore.addOrUpdateRecordStore(defaultValue, tableSchema, id, dataDir);
                 valueList.add(defaultValue);
 
-                JsonFileInfo jf = sourceStructure.addJson(tableName, writePath);
+                JsonFileInfo jf = sourceStructure.addJsonFile(tableName, writePath);
                 valueStat.addLastModified(tableName, id, jf.lastModified());
             } catch (Exception e) {
                 errs.addErr(new CfgValueErrs.JsonFileWriteErr(writePath.toAbsolutePath().toString(), e.getMessage()));

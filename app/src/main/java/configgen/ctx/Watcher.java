@@ -55,10 +55,8 @@ public class Watcher {
         WatchKey key;
         while ((key = watchService.take()) != null) {
             for (WatchEvent<?> event : key.pollEvents()) {
-                @SuppressWarnings("unchecked")
-                WatchEvent<Path> evt = (WatchEvent<Path>) event;
-                Path path = evt.context();
-                Logger.verbose(evt.kind() + "  " + path);
+                Path path = (Path) event.context();
+                Logger.verbose(event.kind() + "  " + path);
                 File file = path.toFile();
                 if (file.isDirectory()) {
                     trigger();
