@@ -43,6 +43,7 @@ public class EditorServer extends Generator {
     private final String postRun;
     private final String postRunJavaData;
     private final int waitSecondsAfterWatchEvt;
+    private Thread postRunThread;
 
     public EditorServer(Parameter parameter) {
         super(parameter);
@@ -116,9 +117,48 @@ public class EditorServer extends Generator {
             newCtx = new Context(contextCfg, newStructure);
             initFromCtx(newCtx);
             logger.info("reload ok");
+            tryPostRun();
         } catch (Exception e) {
             logger.info("reload ignored");
         }
+    }
+
+    private void tryPostRun() {
+        if (postRun == null) {
+            return;
+        }
+
+        if (postRunThread != null) {
+            try {
+                postRunThread.join();
+            } catch (InterruptedException e) {
+                logger.warning("postrun thread join interrupted: " + e.getMessage());
+            }
+
+        }
+        postRunThread = Thread.startVirtualThread(() -> {
+            try {
+                GenJavaData.generateToFile(cfgValue, langSwitch, new File(postRunJavaData));
+                String[] cmds = new String[]{postRun};
+                Process process = Runtime.getRuntime().exec(cmds);
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                String line;
+                while ((line = in.readLine()) != null) {
+                    logger.info("postrun ouput: " + line);
+                }
+                if (process.waitFor(10, TimeUnit.SECONDS)) {
+                    logger.info("postrun ok!");
+                } else {
+                    logger.info("postrun timeout");
+                }
+                in.close();
+            } catch (IOException e) {
+                logger.warning("postrun err: " + e.getMessage());
+            } catch (InterruptedException e) {
+                logger.warning("postrun interrupted: " + e.getMessage());
+            }
+        });
     }
 
     private void handleSchemas(HttpExchange exchange) throws IOException {
@@ -225,28 +265,8 @@ public class EditorServer extends Generator {
             }
         }
 
-        if (ok && postRun != null) {
-            Thread.startVirtualThread(() -> {
-                try {
-                    GenJavaData.generateToFile(cfgValue, langSwitch, new File(postRunJavaData));
-                    // "cmd", "/c", "start", "/B",
-                    String[] cmds = new String[]{postRun};
-                    Process process = Runtime.getRuntime().exec(cmds);
-
-                    BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                    String line;
-                    while ((line = in.readLine()) != null) {
-                        System.out.println(line);
-                    }
-                    process.waitFor(10, TimeUnit.SECONDS);
-                    System.out.println("postrun ok!");
-                    in.close();
-                } catch (IOException e) {
-                    logger.warning("postrun err: " + e.getMessage());
-                } catch (InterruptedException e) {
-                    logger.warning("postrun interrupted: " + e.getMessage());
-                }
-            });
+        if (ok) {
+            tryPostRun();
         }
 
 //        logger.info(result.toString());
