@@ -326,8 +326,8 @@ public class GenLua extends Generator {
 
         int extraSplit = 0;
         Metadata.MetaValue m = table.meta().get("extraSplit");
-        if (m instanceof Metadata.MetaInt mi) {
-            extraSplit = mi.value();
+        if (m instanceof Metadata.MetaInt(int value)) {
+            extraSplit = value;
         }
 
         boolean tryUseShared = useShared && extraSplit == 0;
