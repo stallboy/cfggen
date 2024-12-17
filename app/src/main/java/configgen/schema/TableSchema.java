@@ -1,5 +1,6 @@
 package configgen.schema;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -44,5 +45,26 @@ public record TableSchema(String name,
     @Override
     public FieldFormat fmt() {
         return AUTO;
+    }
+
+    @Override
+    public TableSchema copy() {
+        List<FieldSchema> fieldsCopy = new ArrayList<>(fields.size());
+        for (FieldSchema f : fields) {
+            fieldsCopy.add(f.copy());
+        }
+
+        List<ForeignKeySchema> fksCopy = new ArrayList<>(foreignKeys.size());
+        for (ForeignKeySchema fk : foreignKeys) {
+            fksCopy.add(fk.copy());
+        }
+
+        List<KeySchema> uksCopy = new ArrayList<>(uniqueKeys.size());
+        for (KeySchema uk : uniqueKeys) {
+            uksCopy.add(uk.copy());
+
+        }
+        return new TableSchema(name, primaryKey.copy(), entry.copy(), isColumnMode, meta.copy(),
+                fieldsCopy, fksCopy, uksCopy);
     }
 }

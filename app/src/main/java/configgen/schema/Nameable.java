@@ -44,4 +44,6 @@ public sealed interface Nameable permits Fieldable, Structural, StructSchema, In
     static String makeName(String namespace, String lastName) {
         return namespace + "." + lastName;
     }
+
+    Nameable copy();
 }

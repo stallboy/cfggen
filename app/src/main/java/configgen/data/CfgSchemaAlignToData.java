@@ -39,8 +39,9 @@ public class CfgSchemaAlignToData {
                     CfgData.DTable th = dataHeaders.remove(table.name());
 
                     if (table.meta().isJson()) {
-                        alignedCfg.add(table);
+                        alignedCfg.add(table.copy());
                         if (th != null) {
+                            // 用json，就不能用excel
                             List<String> sheets = new ArrayList<>();
                             for (CfgData.DRawSheet rawSheet : th.rawSheets()) {
                                 sheets.add(String.format("%s[%s]", rawSheet.fileName(), rawSheet.sheetName()));

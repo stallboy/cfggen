@@ -24,7 +24,12 @@ export type StoreState = {
     recordRefInShowLinkMaxNode: number;
     recordRefOutDepth: number;
     recordMaxNode: number;
+
     isNextIdShow: boolean;
+
+    refIdsInDepth: number;
+    refIdsOutDepth: number;
+    refIdsMaxNode: number;
 
     nodeShow: NodeShowType
     query: string;
@@ -60,6 +65,10 @@ const storeState: StoreState = {
     recordRefOutDepth: 5,
     recordMaxNode: 30,
     isNextIdShow: false,
+
+    refIdsInDepth: 2,
+    refIdsOutDepth: 2,
+    refIdsMaxNode: 15,
 
     nodeShow: {
         recordLayout: 'BRANDES_KOEPF',
@@ -266,6 +275,27 @@ export function setRecordMaxNode(value: number | null) {
 export function setIsNextIdShow(checked: boolean) {
     store.isNextIdShow = checked;
     setPref('isNextIdShow', checked ? 'true' : 'false');
+}
+
+export function setRefIdsInDepth(value: number | null) {
+    if (value) {
+        store.refIdsInDepth = value;
+        setPref('refIdsInDepth', value.toString());
+    }
+}
+
+export function setRefIdsOutDepth(value: number | null) {
+    if (value) {
+        store.refIdsOutDepth = value;
+        setPref('refIdsOutDepth', value.toString());
+    }
+}
+
+export function setRefIdsMaxNode(value: number | null) {
+    if (value) {
+        store.refIdsMaxNode = value;
+        setPref('refIdsMaxNode', value.toString());
+    }
 }
 
 export function setSearchMax(value: number | null) {

@@ -17,6 +17,9 @@ import static configgen.editorserver.RecordService.ResultCode.*;
 import static configgen.value.CfgValue.VTable;
 import static configgen.value.CfgValue.Value;
 
+/**
+ * cfgeditor里record关系界面，record展示，和edit界面 需要的数据 都是由这个service提供
+ */
 public class RecordService {
 
     public interface RecordResponse {
@@ -157,13 +160,13 @@ public class RecordService {
         Map<RefId, BriefRecord> result = new LinkedHashMap<>();
 
         while (curDepth <= depth) {
-            Map<RefId, VStruct> newFrontier = new LinkedHashMap<>();
+            Map<RefId, VStruct> newFrontier = new LinkedHashMap<>();  // 新节点
 
             for (Map.Entry<RefId, VStruct> e : frontier.entrySet()) {
                 RefId refId = e.getKey();
                 VStruct record = e.getValue();
 
-                List<FieldRef> fieldRefs = new ArrayList<>();
+                List<FieldRef> fieldRefs = new ArrayList<>();  // 现有到新节点的  链接
                 ValueRefCollector collector = new ValueRefCollector(cfgValue, newFrontier, fieldRefs);
                 collector.collect(record, List.of());
 
@@ -178,27 +181,30 @@ public class RecordService {
                 break;
             }
 
+            // 去重
             for (RefId refId : result.keySet()) {
                 newFrontier.remove(refId);
             }
             newFrontier.remove(thisObjId);
+
             frontier = newFrontier;
             curDepth++;
         }
 
         if (in) {
             ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
-            Map<RefId, VStruct> refIns = refInCollector.collect(vTable, pkValue);
+            Map<RefId, ForeachVStruct.Context> refIns = refInCollector.collect(vTable, pkValue);
             if (!refIns.isEmpty()) {
                 for (RefId r : result.keySet()) {
                     refIns.remove(r);
                 }
             }
 
-            for (Map.Entry<RefId, VStruct> e : refIns.entrySet()) {
+            for (Map.Entry<RefId, ForeachVStruct.Context> e : refIns.entrySet()) {
                 RefId refId = e.getKey();
-                List<FieldRef> fieldRefs = ValueRefCollector.collectRefs(e.getValue(), cfgValue);
-                result.put(refId, vStructToBriefRecord(refId, e.getValue(), fieldRefs, -1));
+                VStruct vStruct = e.getValue().recordValue();
+                List<FieldRef> fieldRefs = ValueRefCollector.collectRefs(vStruct, cfgValue);
+                result.put(refId, vStructToBriefRecord(refId, vStruct, fieldRefs, -1));
                 if (result.size() > maxObjs + 8) {
                     break;
                 }

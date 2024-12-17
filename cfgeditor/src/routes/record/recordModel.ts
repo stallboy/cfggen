@@ -49,6 +49,14 @@ export interface RefId {
     id: string;
 }
 
+
+export interface RecordRefId {
+    table: string;
+    id: string;
+    title: string;
+    depth: number;
+}
+
 export type ResultCode =
     'ok'
     | 'tableNotSet'
@@ -76,6 +84,17 @@ export interface RecordRefsResult {
     maxObjs: number;
     refs: BriefRecord[];
 }
+
+export interface RecordRefIdsResult {
+    resultCode: ResultCode;
+    table: string;
+    id: string;
+    inDepth: number;
+    outDepth: number;
+    maxRefIds: number;
+    recordRefIds: RecordRefId[];
+}
+
 
 export type EditResultCode =
     'addOk'

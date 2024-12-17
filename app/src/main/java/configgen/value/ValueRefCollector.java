@@ -18,27 +18,33 @@ public class ValueRefCollector {
 
     public record FieldRef(
             String firstField,
-            String label,
+            String label,   // 链接的名称
             String toTable,
             String toId) {
     }
 
     private final CfgValue cfgValue;
-    private final Map<RefId, VStruct> refIdToRecordMap;
-    private final List<FieldRef> fieldRefs;
+    /**
+     * 输出：外链到的所有的外部节点（refId-> record）
+     */
+    private final Map<RefId, VStruct> resultRefIdToRecordMap;
+    /**
+     * 输出：外链到的所有的链接（field + refId）
+     */
+    private final List<FieldRef> resultFieldRefs;
 
     public static List<FieldRef> collectRefs(Value record, CfgValue cfgValue) {
-        List<FieldRef> fieldRefs = new ArrayList<>();
+        List<FieldRef> resultFieldRefs = new ArrayList<>();
         Map<RefId, VStruct> newFrontier = new LinkedHashMap<>();
-        ValueRefCollector collector = new ValueRefCollector(cfgValue, newFrontier, fieldRefs);
+        ValueRefCollector collector = new ValueRefCollector(cfgValue, newFrontier, resultFieldRefs);
         collector.collect(record, List.of());
-        return fieldRefs;
+        return resultFieldRefs;
     }
 
-    public ValueRefCollector(CfgValue cfgValue, Map<RefId, VStruct> refIdToRecordMap, List<FieldRef> fieldRefs) {
+    public ValueRefCollector(CfgValue cfgValue, Map<RefId, VStruct> resultRefIdToRecordMap, List<FieldRef> resultFieldRefs) {
         this.cfgValue = cfgValue;
-        this.refIdToRecordMap = refIdToRecordMap;
-        this.fieldRefs = fieldRefs;
+        this.resultRefIdToRecordMap = resultRefIdToRecordMap;
+        this.resultFieldRefs = resultFieldRefs;
     }
 
     public void collect(Value value, List<String> prefix) {
@@ -58,7 +64,7 @@ public class ValueRefCollector {
             pre = String.join(".", prefix) + ".";
         }
 
-        collectStructRef(cfgValue, vStruct, refIdToRecordMap, fieldRefs, pre);
+        collectStructRef(cfgValue, vStruct, resultRefIdToRecordMap, resultFieldRefs, pre);
 
         int i = 0;
         for (Value value : vStruct.values()) {

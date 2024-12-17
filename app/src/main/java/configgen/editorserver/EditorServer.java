@@ -81,6 +81,7 @@ public class EditorServer extends Generator {
         handle("/search", this::handleSearch);
         handle("/prompt", this::handlePrompt);
         handle("/checkJson", this::handleCheckJson);
+        handle("/recordRefIds", this::handleRecordRefIds);
 
         handle("/record", this::handleRecord);
         handle("/recordAddOrUpdate", this::handleRecordAddOrUpdate);
@@ -193,19 +194,40 @@ public class EditorServer extends Generator {
         String q = query.get("q");
         String maxStr = query.get("max");
 
-        int max = 30;
-        if (maxStr != null) {
-            try {
-                max = Integer.parseInt(maxStr);
-            } catch (NumberFormatException e) {
-                // ignore
-            }
-        }
-
+        int max = parseIntAndIgnoreErr(maxStr, 30);
         SearchService.SearchResult result = SearchService.search(cfgValue, q, max);
         sendResponse(exchange, result);
     }
 
+    private static int parseIntAndIgnoreErr(String str, int def){
+        int value = def;
+        if (str != null) {
+            try {
+                value = Integer.parseInt(str);
+            } catch (NumberFormatException e) {
+                // ignore
+            }
+        }
+        return value;
+    }
+
+
+    private void handleRecordRefIds(HttpExchange exchange) throws IOException {
+        Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
+        String table = query.get("table");
+        String id = query.get("id");
+        String inStr = query.get("in");
+        String outStr = query.get("out");
+        String maxIdsStr = query.get("maxIds");
+
+        int inDepth = parseIntAndIgnoreErr(inStr, 1);
+        int outDepth = parseIntAndIgnoreErr(outStr, 1);
+        int maxIds = parseIntAndIgnoreErr(maxIdsStr, 30);
+
+
+        RecordRefIdsService.RecordRefIdsResponse response = new RecordRefIdsService(cfgValue, graph, table, id, inDepth, outDepth, maxIds).retrieve();
+        sendResponse(exchange, response);
+    }
 
     private void handleRecord(HttpExchange exchange) throws IOException {
         Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
@@ -216,24 +238,8 @@ public class EditorServer extends Generator {
         String inStr = query.get("in");
         String refsStr = query.get("refs");
 
-        int depth = 1;
-        if (depthStr != null) {
-            try {
-                depth = Integer.parseInt(depthStr);
-            } catch (NumberFormatException e) {
-                // ignore
-            }
-        }
-
-        int maxObjs = 30;
-        if (depthStr != null) {
-            try {
-                maxObjs = Integer.parseInt(maxObjsStr);
-            } catch (NumberFormatException e) {
-                // ignore
-            }
-        }
-
+        int depth = parseIntAndIgnoreErr(depthStr, 1);
+        int maxObjs = parseIntAndIgnoreErr(maxObjsStr, 30);
         boolean in = inStr != null;
 
         RequestType requestType = refsStr != null ? RequestType.requestRefs : RequestType.requestRecord;

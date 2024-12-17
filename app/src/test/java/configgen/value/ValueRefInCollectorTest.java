@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -48,13 +47,13 @@ class ValueRefInCollectorTest {
         CfgValue.VTable assets = cfgValue.getTable("assets");
 
         ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
-        Map<ValueRefCollector.RefId, CfgValue.VStruct> refIns = refInCollector.collect(assets, Values.ofStr("npc/a.prefab"));
+        var refIns = refInCollector.collect(assets, Values.ofStr("npc/a.prefab"));
 
         assertEquals(1, refIns.size());
         ValueRefCollector.RefId refId = refIns.keySet().iterator().next();
         assertEquals("t", refId.table());
         assertEquals("1", refId.id());
-        CfgValue.VStruct value = refIns.values().iterator().next();
+        CfgValue.VStruct value = refIns.values().iterator().next().recordValue();
         assertEquals(Values.ofInt(1), value.values().get(0));
         assertEquals(Values.ofStr("npc/a.prefab"), value.values().get(1));
 

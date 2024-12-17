@@ -2,7 +2,7 @@ package configgen.value;
 
 import configgen.schema.*;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -18,35 +18,38 @@ public class ValueRefInCollector {
         this.cfgValue = cfgValue;
     }
 
+    public Map<RefId, ForeachVStruct.Context> collect(VTable vTable, Value pkValue) {
+        Map<RefId, ForeachVStruct.Context> result = new LinkedHashMap<>();
+        collectTo(vTable, pkValue, result);
+        return result;
+    }
 
-    public Map<RefId, VStruct> collect(VTable vTable, Value pkValue) {
+    public void collectTo(VTable vTable, Value pkValue, Map<RefId, ForeachVStruct.Context> result) {
         VStruct recordValue = vTable.primaryKeyMap().get(pkValue);
         if (recordValue == null) {
-            return Map.of();
+            return;
         }
 
         TableSchemaRefGraph.Refs refs = graph.refsMap().get(vTable.name());
         if (refs == null) {
-            return Map.of();
+            return;
         }
         Set<String> refInTables = refs.refIn();
         if (refInTables.isEmpty()) {
-            return Map.of();
+            return;
         }
 
-        Map<RefId, VStruct> result = new HashMap<>();
         for (String refInTable : refInTables) {
             VTable vRefInTable = cfgValue.vTableMap().get(refInTable);
-            ForeachVStruct.VStructVisitor vStructVisitor = (vStruct, ctx) -> search(vStruct, ctx, vTable, pkValue, result);
+            ForeachVStruct.VStructVisitor vStructVisitor = (vStruct, ctx) ->
+                    search(vStruct, ctx, vTable, pkValue, result);
             ForeachVStruct.foreachVTable(vStructVisitor, vRefInTable);
         }
-
-        return result;
     }
 
     private static void search(VStruct vStruct, ForeachVStruct.Context ctx,
                                VTable myTable, Value myPkValue,
-                               Map<RefId, VStruct> result) {
+                               Map<RefId, ForeachVStruct.Context> result) {
 
         Structural structural = vStruct.schema();
         for (ForeignKeySchema fk : structural.foreignKeys()) {
@@ -89,7 +92,7 @@ public class ValueRefInCollector {
         }
     }
 
-    private static void addCtx(Map<RefId, VStruct> result, ForeachVStruct.Context ctx) {
-        result.put(new RefId(ctx.fromVTable().name(), ctx.pkValue().packStr()), ctx.recordValue());
+    private static void addCtx(Map<RefId, ForeachVStruct.Context> result, ForeachVStruct.Context ctx) {
+        result.put(new RefId(ctx.fromVTable().name(), ctx.pkValue().packStr()), ctx);
     }
 }

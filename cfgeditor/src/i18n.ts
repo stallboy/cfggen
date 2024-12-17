@@ -77,6 +77,10 @@ i18n.use(LanguageDetector)
                     recordRefOutDepth: '数据出层',
                     recordMaxNode: '数据节点数',
                     isNextIdShow:'显示下一个空Id',
+                    refIdsInDepth: 'Id入层',
+                    refIdsOutDepth: 'Id出层',
+                    refIdsMaxNode: 'Id总数',
+                    refIdList: '关联数据',
 
                     SIMPLE: '中间',
                     LINEAR_SEGMENTS: '中间起伏',

@@ -5,7 +5,7 @@ import {
     setMaxImpl,
     setMaxNode, setRecordMaxNode,
     setRecordRefIn,
-    setRecordRefInShowLinkMaxNode, setRecordRefOutDepth,
+    setRecordRefInShowLinkMaxNode, setRecordRefOutDepth, setRefIdsInDepth, setRefIdsMaxNode, setRefIdsOutDepth,
     setRefIn,
     setRefOutDepth,
     setSearchMax,
@@ -29,16 +29,20 @@ export const formItemLayoutWithOutLabel = {
 export const BasicSetting = memo(function TableSetting() {
     const {t} = useTranslation();
     const {
-        maxImpl, refIn, refOutDepth, maxNode, searchMax,
+        maxImpl, refIn, refOutDepth, maxNode,
         recordRefIn, recordRefInShowLinkMaxNode, recordRefOutDepth, recordMaxNode,
-        isNextIdShow
+        refIdsInDepth, refIdsOutDepth, refIdsMaxNode,
+        isNextIdShow,
+        searchMax
     } = store;
 
     return <Form {...formLayout} layout={'horizontal'}
                  initialValues={{
-                     maxImpl, refIn, refOutDepth, maxNode, searchMax,
+                     maxImpl, refIn, refOutDepth, maxNode,
                      recordRefIn, recordRefInShowLinkMaxNode, recordRefOutDepth, recordMaxNode,
-                     isNextIdShow
+                     isNextIdShow,
+                     refIdsInDepth, refIdsOutDepth, refIdsMaxNode,
+                     searchMax,
                  }}>
         <Form.Item label={t('implsShowCnt')} name='maxImpl'>
             <InputNumber min={1} max={500} onChange={setMaxImpl}/>
@@ -54,10 +58,6 @@ export const BasicSetting = memo(function TableSetting() {
 
         <Form.Item name='maxNode' label={t('maxNode')}>
             <InputNumber min={1} max={500} onChange={setMaxNode}/>
-        </Form.Item>
-
-        <Form.Item name='searchMax' label={t('searchMaxReturn')}>
-            <InputNumber min={1} max={500} onChange={setSearchMax}/>
         </Form.Item>
 
         <Form.Item name='recordRefIn' label={t('recordRefIn')} valuePropName="checked">
@@ -78,6 +78,22 @@ export const BasicSetting = memo(function TableSetting() {
 
         <Form.Item name='isNextIdShow' label={t('isNextIdShow')} valuePropName="checked">
             <Switch onChange={setIsNextIdShow}/>
+        </Form.Item>
+
+        <Form.Item name='refIdsInDepth' label={t('refIdsInDepth')}>
+            <InputNumber min={0} max={5} onChange={setRefIdsInDepth}/>
+        </Form.Item>
+
+        <Form.Item name='refIdsOutDepth' label={t('refIdsOutDepth')}>
+            <InputNumber min={0} max={5} onChange={setRefIdsOutDepth}/>
+        </Form.Item>
+
+        <Form.Item name='refIdsMaxNode' label={t('refIdsMaxNode')}>
+            <InputNumber min={1} max={50} onChange={setRefIdsMaxNode}/>
+        </Form.Item>
+
+        <Form.Item name='searchMax' label={t('searchMaxReturn')}>
+            <InputNumber min={1} max={500} onChange={setSearchMax}/>
         </Form.Item>
 
     </Form>;
