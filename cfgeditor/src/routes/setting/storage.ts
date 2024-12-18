@@ -1,4 +1,4 @@
-import {BaseDirectory, readTextFile, writeTextFile} from "@tauri-apps/plugin-fs";
+import {BaseDirectory, readFile, writeTextFile} from "@tauri-apps/plugin-fs";
 import {parse, stringify} from "yaml";
 import {getPrefKeySet, getPrefSelfKeySet} from "./store.ts";
 import {isTauri} from "@tauri-apps/api/core";
@@ -50,24 +50,6 @@ export function getPrefJson<T>(key: string, parser: (jsonStr: string) => T): T |
 }
 
 
-// let conf: string | undefined = undefined;
-// let selfConf: string | undefined = undefined;
-//
-// async function getConf() {
-//     if (!conf) {
-//         conf = await path.resolveResource("cfgeditor.yml");
-//     }
-//     return conf;
-// }
-//
-// async function getSelfConf() {
-//     if (!selfConf) {
-//         selfConf = await path.resolveResource("cfgeditorSelf.yml");
-//     }
-//     return selfConf;
-// }
-//
-
 let alreadyRead = false;
 
 export async function readPrefAsyncOnce() {
@@ -86,7 +68,12 @@ export async function readPrefAsyncOnce() {
 
 async function readConf(conf: string) {
     // console.log("read", conf);
-    const settings = parse(await readTextFile(conf, {baseDir: BaseDirectory.Resource}));
+    // tauri fs 2.0.1之后的版本，readTextFile出来的是乱码
+    // const txt = await readTextFile(conf, {baseDir: BaseDirectory.Resource});
+    const contentBytes = await readFile(conf, {baseDir: BaseDirectory.Resource});
+    const txt = new TextDecoder().decode(contentBytes);
+    const settings = parse(txt);
+    // console.log("settings", typeof settings, settings)
     if (typeof settings == "object") {
         for (const key in settings) {
             const value = settings[key];

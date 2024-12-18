@@ -2,7 +2,7 @@ import {memo, useCallback, useRef} from "react";
 import {Button, Flex, Space, Tabs, TabsProps} from "antd";
 import {convertFileSrc} from "@tauri-apps/api/core";
 import {Command} from "@tauri-apps/plugin-shell";
-import {readTextFile} from "@tauri-apps/plugin-fs";
+import {readFile} from "@tauri-apps/plugin-fs";
 import {useQuery} from "@tanstack/react-query";
 import {ResInfo} from "../res/resInfo.ts";
 
@@ -18,8 +18,9 @@ async function getSrt2VttUrls(resInfo: ResInfo) {
 
     const urls = [];
     for (const st of subtitlesTracks) {
-        const contents = await readTextFile(st.path);
-        const vtt = srt2vtt(contents);
+        const contentBytes = await readFile(st.path);
+        const txt = new TextDecoder().decode(contentBytes);
+        const vtt = srt2vtt(txt);
         // console.log(st.name, vtt);
         const blobCaption = new Blob([vtt])
         const url = URL.createObjectURL(blobCaption)
