@@ -2,7 +2,16 @@ import {Button, Select, Skeleton, Space, Typography} from "antd";
 import {LeftOutlined, RightOutlined, SearchOutlined, SettingOutlined} from "@ant-design/icons";
 import {TableList} from "./TableList.tsx";
 import {IdList} from "./IdList.tsx";
-import {historyNext, historyPrev, navTo, PageType, setDragPanel, store, useLocationData} from "../setting/store.ts";
+import {
+    historyCanPrev,
+    historyNext,
+    historyPrev,
+    navTo,
+    PageType,
+    setDragPanel,
+    store,
+    useLocationData
+} from "../setting/store.ts";
 import {getNextId, Schema} from "../table/schemaUtil.ts";
 import {useHotkeys} from "react-hotkeys-hook";
 import {useNavigate} from "react-router-dom";
@@ -37,11 +46,11 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
     useHotkeys('alt+enter', toggleFullScreen);
 
     const prev = useCallback(() => {
-        const path = historyPrev(curPage, history, isEditMode);
+        const path = historyPrev(curPage, curTableId, curId, history, isEditMode);
         if (path) {
             navigate(path);
         }
-    }, [curPage, history, isEditMode, navigate]);
+    }, [curPage, curTableId, curId, history, isEditMode, navigate]);
 
     const next = useCallback(() => {
         const path = historyNext(curPage, history, isEditMode);
@@ -99,7 +108,7 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
             </Space>
             <Space size={'small'}>
                 <Select value={curPage} onChange={onChangeCurPage} options={options}/>
-                <Button icon={prevIcon} onClick={prev} disabled={!history.canPrev()}/>
+                <Button icon={prevIcon} onClick={prev} disabled={!historyCanPrev(curTableId, curId, history)}/>
                 <Button icon={nextIcon} onClick={next} disabled={!history.canNext()}/>
             </Space>
         </Space></div>;

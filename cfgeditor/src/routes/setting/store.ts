@@ -367,10 +367,26 @@ export function setAIConf(aiConf: AIConf) {
     setPref('aiConf', Convert.aIConfToJson(aiConf));
 }
 
-export function historyPrev(curPage: PageType, history: History, isEditMode: boolean) {
+export function historyCanPrev(curTableId: string, curId: string, history: History): boolean {
+    let cur = history.cur();
+    if (cur && (cur.table != curTableId || cur.id != curId)) {
+        return true;
+    }
+    return history.canPrev();
+}
+
+export function historyPrev(curPage: PageType, curTableId: string, curId: string,
+                            history: History, isEditMode: boolean) {
+    let cur = history.cur();
+    if (cur && (cur.table != curTableId || cur.id != curId)) {
+        // 点击<关联数据>，<访问历史>里的链接时，不会修改访问历史。
+        // 此时，如果看的页面已经不同于历史中的当前页面，点击回退优先跳回到当前页面。
+        return navTo(curPage, cur.table, cur.id, isEditMode, false);
+    }
+
     const newHistory = history.prev();
     store.history = newHistory;
-    const cur = newHistory.cur();
+    cur = newHistory.cur();
     if (cur) {
         return navTo(curPage, cur.table, cur.id, isEditMode, false);
     }
