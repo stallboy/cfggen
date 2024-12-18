@@ -1,4 +1,4 @@
-import {Button, ColorPicker, Form, Input, Radio, Select, Space, Switch} from "antd";
+import {Button, ColorPicker, Divider, Form, Input, Radio, Select, Space, Switch} from "antd";
 import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 
@@ -64,18 +64,6 @@ export const NodeShowSetting = memo(function () {
 
     return <Form name="node show setting"  {...formLayout} initialValues={nodeShow} onFinish={onFinish}
                  autoComplete="off">
-
-        <Form.Item name='refIsShowCopyable' label={t('refIsShowCopyable')} valuePropName='checked'>
-            <Switch/>
-        </Form.Item>
-
-        <Form.Item name='refShowDescription' label={t('refShowDescription')}>
-            <Radio.Group optionType='button' buttonStyle='solid' options={descOptions}/>
-        </Form.Item>
-
-        <Form.Item name='refContainEnum' label={t('refContainEnum')} valuePropName='checked'>
-            <Switch/>
-        </Form.Item>
 
         <Form.Item name='recordLayout' label={t('recordLayout')}>
             <Select style={selectStyle} options={layoutOptions}/>
@@ -171,6 +159,18 @@ export const NodeShowSetting = memo(function () {
             <ColorPicker/>
         </Form.Item>
 
+        <Divider />
+        <Form.Item name='refIsShowCopyable' label={t('refIsShowCopyable')} valuePropName='checked'>
+            <Switch/>
+        </Form.Item>
+
+        <Form.Item name='refShowDescription' label={t('refShowDescription')}>
+            <Radio.Group optionType='button' buttonStyle='solid' options={descOptions}/>
+        </Form.Item>
+
+        <Form.Item name='refContainEnum' label={t('refContainEnum')} valuePropName='checked'>
+            <Switch/>
+        </Form.Item>
 
         <Form.Item label={t('refTableHides')}>
             <Form.List name="refTableHides">

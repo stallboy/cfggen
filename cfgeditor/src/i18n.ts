@@ -98,10 +98,6 @@ i18n.use(LanguageDetector)
 
                     deleteCurRecord: '删除当前数据',
 
-                    refIsShowCopyable: '标题复制',
-                    refContainEnum: '包含枚举',
-
-                    refShowDescription: '关系内容',
                     showDescription: '描述',
                     show: '显示',
                     showFallbackValue: '无则显示值',
@@ -115,9 +111,13 @@ i18n.use(LanguageDetector)
 
                     nodeColorsByLabel: '节点色<标题',
                     nodeColorsByValue: '节点色<值',
-                    editFoldColor: '折叠背景色',
-                    refTableHides: '表隐藏',
                     fieldColorsByName: '字段色<名',
+                    editFoldColor: '折叠背景色',
+
+                    refIsShowCopyable: 'ref标题复制',
+                    refShowDescription: 'ref内容',
+                    refContainEnum: 'ref显示<枚举',
+                    refTableHides: 'ref隐藏<表名',
                     addColor: '增加',
                     addTableHide: '增加',
 
