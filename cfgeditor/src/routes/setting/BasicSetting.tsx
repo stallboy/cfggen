@@ -88,9 +88,9 @@ export const BasicSetting = memo(function TableSetting() {
         </Form.Item>
 
         <Form.Item name='refIdsMaxNode' label={t('refIdsMaxNode')}>
-            <InputNumber min={1} max={50} onChange={setRefIdsMaxNode}/>
+            <InputNumber min={1} max={500} onChange={setRefIdsMaxNode}/>
         </Form.Item>
-        
+
         <Divider/>
         <Form.Item name='isNextIdShow' label={t('isNextIdShow')} valuePropName="checked">
             <Switch onChange={setIsNextIdShow}/>

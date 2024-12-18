@@ -72,7 +72,7 @@ export const RefIdList = memo(function ({lockedId}: {
     const thisId = lockedId ? lockedId.id : curId;
 
     const {isLoading, isError, error, data: recordResult} = useQuery({
-        queryKey: ['recordRefIds', thisTable, thisId],
+        queryKey: ['recordRefIds', thisTable, thisId, refIdsInDepth, refIdsOutDepth, refIdsMaxNode],
         queryFn: ({signal}) =>
             fetchRecordRefIds(server, thisTable, thisId,
                 refIdsInDepth, refIdsOutDepth, refIdsMaxNode,
