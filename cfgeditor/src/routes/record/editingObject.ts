@@ -2,7 +2,7 @@ import {JSONArray, JSONObject, RecordResult} from "./recordModel.ts";
 import {SItem, SStruct, STable} from "../table/schemaModel.ts";
 import {getField, Schema} from "../table/schemaUtil.tsx";
 import {EntityPosition} from "../../flow/entityModel.ts";
-import {doEdit} from "../setting/store.ts";
+import {setEditingState} from "../setting/store.ts";
 
 // import {doEdit} from "../setting/store.ts";
 
@@ -56,7 +56,7 @@ export function startEditingObject(recordResult: RecordResult,
                                    submitEditingObject: () => void): EditingObjectRes {
     editState.update = function () {
         editState.isEdited = true;
-        notifyEdit()
+        notifyEditingState()
         update();
     }
     editState.submitEditingObject = submitEditingObject;
@@ -66,7 +66,7 @@ export function startEditingObject(recordResult: RecordResult,
         const newEditingObject = structuredClone(recordResult.object);
         delete$refInPlace(newEditingObject);
 
-        if (areDeeplyEqual(editState.originalEditingObject, newEditingObject)){
+        if (isDeeplyEqual(editState.originalEditingObject, newEditingObject)){
             return {
                 fitView,
                 fitViewToIdPosition,
@@ -93,13 +93,8 @@ export function startEditingObject(recordResult: RecordResult,
 }
 
 
-export function invalidateEditingObject() {
-    editState.table = '';
-    editState.id = '';
-}
-
-function notifyEdit() {
-    doEdit(!areDeeplyEqual(editState.editingObject, editState.originalEditingObject));
+export function notifyEditingState() {
+    setEditingState(editState.table, editState.id, !isDeeplyEqual(editState.editingObject, editState.originalEditingObject));
 }
 
 export function onUpdateFormValues(schema: Schema,
@@ -133,14 +128,14 @@ export function onUpdateFormValues(schema: Schema,
         }
     }
     // 当在单个node的form里更改时，因为ui已经更改，不需要再触发Record的更新。
-    notifyEdit();  // 触发'更改提示'
+    notifyEditingState();  // 触发'更改提示'
 }
 
 export function onUpdateNote(note: string | undefined,
                              fieldChains: (string | number)[]) {
     const obj = getFieldObj(editState.editingObject, fieldChains);
     obj['$note'] = note;
-    notifyEdit();
+    notifyEditingState();
 }
 
 
@@ -324,13 +319,13 @@ function toFloat(value: any) {
     }
 }
 
-function areDeeplyEqual(obj1: any, obj2: any): boolean {
+function isDeeplyEqual(obj1: any, obj2: any): boolean {
     if (obj1 === obj2) return true;
 
     if (Array.isArray(obj1) && Array.isArray(obj2)) {
         if (obj1.length !== obj2.length) return false;
         return obj1.every((elem, index) => {
-            return areDeeplyEqual(elem, obj2[index]);
+            return isDeeplyEqual(elem, obj2[index]);
         })
     }
 
@@ -341,7 +336,7 @@ function areDeeplyEqual(obj1: any, obj2: any): boolean {
         if (keys1.length !== keys2.length || !keys1.every(key => keys2.includes(key))) return false;
 
         for (let key in obj1) {
-            let isEqual = areDeeplyEqual(obj1[key], obj2[key])
+            let isEqual = isDeeplyEqual(obj1[key], obj2[key])
             if (!isEqual) {
                 return false;
             }

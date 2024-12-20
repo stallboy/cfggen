@@ -8,14 +8,14 @@ import {
     EditingObjectRes,
     editState,
     EFitView,
-    isCopiedFitAllowedType,
+    isCopiedFitAllowedType, notifyEditingState,
     onAddItemToArrayIndex,
     onStructCopy,
     onStructPaste,
     startEditingObject,
 } from "./editingObject.ts";
 import {useTranslation} from "react-i18next";
-import {invalidateAllQueries, navTo, setIsEditMode, startEditingNew, store, useLocationData} from "../setting/store.ts";
+import {invalidateAllQueries, navTo, setIsEditMode, store, useLocationData} from "../setting/store.ts";
 import {useNavigate, useOutletContext} from "react-router-dom";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {addOrUpdateRecord, fetchRecord} from "../api.ts";
@@ -125,9 +125,9 @@ const RecordWithResult = memo(function RecordWithResult({recordResult}: { record
 
     useEffect(() => {
         if (isEditing){
-            startEditingNew(curTableId, curId, editingObjectRes.isEdited)
+            notifyEditingState()
         }
-    }, [isEditing, editingObjectRes]);
+    }, [isEditing, editState.table, editState.id, editState.editingObject]);
 
 
     const getEditMenu = useCallback(function (table: string, id: string, edit: boolean) {

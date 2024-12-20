@@ -7,7 +7,6 @@ import {useLocation} from "react-router-dom";
 import {queryClient} from "../../main.tsx";
 import {getId} from "../record/recordRefEntity.ts";
 import {ResInfo} from "../../res/resInfo.ts";
-import {invalidateEditingObject} from "../record/editingObject.ts";
 
 export type PageType = 'table' | 'tableRef' | 'record' | 'recordRef';
 export const pageEnums = ['table', 'tableRef', 'record', 'recordRef'];
@@ -211,7 +210,6 @@ export function invalidateAllQueries() {
     queryClient.invalidateQueries({queryKey: [], refetchType: 'all'}).catch((reason: unknown) => {
         console.log(reason);
     });
-    invalidateEditingObject();
 }
 
 export function setQuery(v: string) {
@@ -410,16 +408,11 @@ export function historyNext(curPage: PageType, history: History, isEditMode: boo
     }
 }
 
-export function startEditingNew(editingCurTable: string, editingCurId: string, editingIsEdited: boolean) {
+export function setEditingState(editingCurTable: string, editingCurId: string, editingIsEdited: boolean) {
     store.editingCurTable = editingCurTable;
     store.editingCurId = editingCurId;
     store.editingIsEdited = editingIsEdited;
 }
-
-export function doEdit(editingIsEdited: boolean) {
-    store.editingIsEdited = editingIsEdited;
-}
-
 
 export function getLastOpenIdByTable(schema: Schema, curTableId: string): string | undefined {
     const {history} = store;

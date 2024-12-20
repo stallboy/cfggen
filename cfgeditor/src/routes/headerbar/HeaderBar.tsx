@@ -62,7 +62,7 @@ export const HeaderBar = memo(function ({schema, curTable, setSettingOpen, setSe
     const {editingCurTable, editingCurId, editingIsEdited} = store;
 
     let unsavedSign;
-    if (editingIsEdited && isEditMode && editingCurTable == curTableId && editingCurId == curId){
+    if (editingIsEdited && editingCurTable == curTableId && editingCurId == curId){
         unsavedSign = <Text>{t('unsaved')}</Text>
     }
 
