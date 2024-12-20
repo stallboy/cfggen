@@ -370,8 +370,14 @@ export function isPkInteger(sTable: STable) {
 export function getIdOptions(sTable: STable, valueToInteger: boolean = false): EntityEditFieldOption[] {
     const options = [];
     for (const {id, title} of sTable.recordIds) {
-        const label = (title && title != id) ? `${id}-${title}` : id;
-        options.push({label, value: valueToInteger ? parseInt(id) : id, title: title ?? ''});
+
+        const isShowTitle = title && title != id;
+        options.push({
+            label: isShowTitle ? <>{id} <span style={{fontSize: '0.85em'}}>{title}</span> </> : id,
+            labelStr: isShowTitle ? `${id} ${title}` : id,
+            value: valueToInteger ? parseInt(id) : id,
+            title: title ?? ''
+        });
     }
     return options;
 }

@@ -15,7 +15,7 @@ import {
     startEditingObject,
 } from "./editingObject.ts";
 import {useTranslation} from "react-i18next";
-import {invalidateAllQueries, navTo, setIsEditMode, store, useLocationData} from "../setting/store.ts";
+import {invalidateAllQueries, navTo, setIsEditMode, startEditingNew, store, useLocationData} from "../setting/store.ts";
 import {useNavigate, useOutletContext} from "react-router-dom";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {addOrUpdateRecord, fetchRecord} from "../api.ts";
@@ -31,7 +31,7 @@ import {queryClient} from "../../main.tsx";
 import {EntityNode} from "../../flow/FlowGraph.tsx";
 
 
-const RecordWithResult = memo(function ({recordResult}: { recordResult: RecordResult }) {
+const RecordWithResult = memo(function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const {schema, notes, curTable} = useOutletContext<SchemaTableType>();
     const {server, tauriConf, resourceDir, resMap} = store;
     const {notification} = App.useApp();
@@ -40,10 +40,6 @@ const RecordWithResult = memo(function ({recordResult}: { recordResult: RecordRe
     const [t] = useTranslation();
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [updateVersion, setUpdateVersion] = useState(0);
-
-    useEffect(() => {
-        setIsEditMode(edit);
-    }, [edit]);
 
     const addOrUpdateRecordMutation = useMutation<RecordEditResult, Error, JSONObject>({
         mutationFn: (jsonObject: JSONObject) => addOrUpdateRecord(server, curTableId, jsonObject),
@@ -122,6 +118,16 @@ const RecordWithResult = memo(function ({recordResult}: { recordResult: RecordRe
         return {entityMap, editingObjectRes}
     }, [isEditing, curTableId, curId, schema, recordResult, tauriConf, resourceDir, resMap,
         addOrUpdateRecordMutation, update, folds, setFolds, updateVersion]);
+
+    useEffect(() => {
+        setIsEditMode(edit);
+    }, [edit]);
+
+    useEffect(() => {
+        if (isEditing){
+            startEditingNew(curTableId, curId, editingObjectRes.isEdited)
+        }
+    }, [isEditing, editingObjectRes]);
 
 
     const getEditMenu = useCallback(function (table: string, id: string, edit: boolean) {

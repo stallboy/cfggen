@@ -107,7 +107,6 @@ function log(reason: any) {
 
 export function saveSelfPrefAsync() {
     const prefSelfKeySet = getPrefSelfKeySet();
-    console.log("save self")
     saveKeySetPrefAsync(prefSelfKeySet, "cfgeditorSelf.yml").catch(log);
 }
 

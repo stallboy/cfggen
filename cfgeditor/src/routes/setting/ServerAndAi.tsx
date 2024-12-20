@@ -7,7 +7,7 @@ import {
 } from "./store.ts";
 
 import {formItemLayoutWithOutLabel, formLayout} from "./BasicSetting.tsx";
-import {Schema} from "../table/schemaUtil.ts";
+import {Schema} from "../table/schemaUtil.tsx";
 
 
 function onFinishAIConf(values: any) {

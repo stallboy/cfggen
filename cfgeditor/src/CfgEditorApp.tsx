@@ -4,7 +4,7 @@ import {RecordRef} from "./routes/record/RecordRef.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
 import {useTranslation} from "react-i18next";
 import {Setting} from "./routes/setting/Setting.tsx";
-import {Schema} from "./routes/table/schemaUtil.ts";
+import {Schema} from "./routes/table/schemaUtil.tsx";
 import {
     getFixedPage,
     getLastNavToInLocalStore,

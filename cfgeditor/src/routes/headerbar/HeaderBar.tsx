@@ -12,7 +12,7 @@ import {
     store,
     useLocationData
 } from "../setting/store.ts";
-import {getNextId, Schema} from "../table/schemaUtil.ts";
+import {getNextId, Schema} from "../table/schemaUtil.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
 import {useNavigate} from "react-router-dom";
 import {STable} from "../table/schemaModel.ts";
@@ -27,7 +27,7 @@ const prevIcon = <LeftOutlined/>;
 const nextIcon = <RightOutlined/>;
 
 
-export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOpen, setSearchOpen}: {
+export const HeaderBar = memo(function ({schema, curTable, setSettingOpen, setSearchOpen}: {
     schema: Schema | undefined;
     curTable: STable | null;
     setSettingOpen: (open: boolean) => void;
@@ -58,6 +58,13 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
             navigate(path);
         }
     }, [curPage, history, isEditMode, navigate]);
+
+    const {editingCurTable, editingCurId, editingIsEdited} = store;
+
+    let unsavedSign;
+    if (editingIsEdited && isEditMode && editingCurTable == curTableId && editingCurId == curId){
+        unsavedSign = <Text>{t('unsaved')}</Text>
+    }
 
     let nextId;
     if (isNextIdShow && curTable) {
@@ -104,7 +111,9 @@ export const HeaderBar = memo(function HeaderBar({schema, curTable, setSettingOp
 
                 {schema ? <TableList schema={schema}/> : <Select id='table' loading={true}/>}
                 {curTable ? <IdList curTable={curTable}/> : <Skeleton.Input/>}
+                {unsavedSign}
                 {nextId}
+
             </Space>
             <Space size={'small'}>
                 <Select value={curPage} onChange={onChangeCurPage} options={options}/>

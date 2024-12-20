@@ -2,11 +2,12 @@ import resso from "resso";
 import {AIConf, Convert, FixedPage, FixedPagesConf, NodeShowType, TauriConf} from "./storageJson.ts";
 import {getPrefBool, getPrefEnumStr, getPrefInt, getPrefJson, getPrefStr, setPref} from "./storage.ts";
 import {History} from "../headerbar/historyModel.ts";
-import {Schema} from "../table/schemaUtil.ts";
+import {Schema} from "../table/schemaUtil.tsx";
 import {useLocation} from "react-router-dom";
 import {queryClient} from "../../main.tsx";
 import {getId} from "../record/recordRefEntity.ts";
 import {ResInfo} from "../../res/resInfo.ts";
+import {invalidateEditingObject} from "../record/editingObject.ts";
 
 export type PageType = 'table' | 'tableRef' | 'record' | 'recordRef';
 export const pageEnums = ['table', 'tableRef', 'record', 'recordRef'];
@@ -42,6 +43,10 @@ export type StoreState = {
 
     history: History;
     isEditMode: boolean;
+    editingCurTable: string;
+    editingCurId: string;
+    editingIsEdited: boolean;
+
     resMap: Map<string, ResInfo[]>;
     resourceDir: string;
 }
@@ -103,29 +108,32 @@ const storeState: StoreState = {
         assetRefTable: '',
     },
 
-    history: new History(),
     isEditMode: false,
+    editingCurTable: '',
+    editingCurId: '',
+    editingIsEdited: false,
 
+    history: new History(),
     resMap: new Map<string, ResInfo[]>(),
     resourceDir: '',
 };
 
 let prefKeySet: Set<string> | undefined;
-let prefSelfKeySet: Set<string> = new Set<string>(['curPage', 'curTableId', 'curId', 'query', 'isEditMode',
+const prefSelfKeySet: Set<string> = new Set<string>(['curPage', 'curTableId', 'curId', 'query', 'isEditMode',
     'imageSizeScale', 'dragPanel']);
+
+const notSaveKeySet = new Set<string>(['history', 'resMap', 'resourceDir',
+    'editingCurTable', 'editingCurId', 'editingIsEdited']);
 
 export function getPrefKeySet(): Set<string> {
     if (prefKeySet === undefined) {
         prefKeySet = new Set<string>(Object.keys(storeState));
-        prefKeySet.delete('query');
-
-        prefKeySet.delete('imageSizeScale');
-        prefKeySet.delete('dragPanel');
-
-        prefKeySet.delete('history');
-        prefKeySet.delete('isEditMode');
-        prefKeySet.delete('resMap');
-        prefKeySet.delete('resourceDir');
+        for (const sk of prefSelfKeySet) {
+            prefKeySet.delete(sk);
+        }
+        for (const nk of notSaveKeySet) {
+            prefKeySet.delete(nk);
+        }
     }
     return prefKeySet;
 }
@@ -203,6 +211,7 @@ export function invalidateAllQueries() {
     queryClient.invalidateQueries({queryKey: [], refetchType: 'all'}).catch((reason: unknown) => {
         console.log(reason);
     });
+    invalidateEditingObject();
 }
 
 export function setQuery(v: string) {
@@ -400,6 +409,17 @@ export function historyNext(curPage: PageType, history: History, isEditMode: boo
         return navTo(curPage, cur.table, cur.id, isEditMode, false);
     }
 }
+
+export function startEditingNew(editingCurTable: string, editingCurId: string, editingIsEdited: boolean) {
+    store.editingCurTable = editingCurTable;
+    store.editingCurId = editingCurId;
+    store.editingIsEdited = editingIsEdited;
+}
+
+export function doEdit(editingIsEdited: boolean) {
+    store.editingIsEdited = editingIsEdited;
+}
+
 
 export function getLastOpenIdByTable(schema: Schema, curTableId: string): string | undefined {
     const {history} = store;

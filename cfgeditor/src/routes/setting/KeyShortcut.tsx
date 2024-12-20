@@ -50,6 +50,11 @@ export const KeyShortCut = memo(function KeyShortcut() {
                 label: t('toggleFullScreen'),
                 children: 'alt+enter',
             },
+            {
+                key: '8',
+                label: t('addOrUpdate'),
+                children: 'alt+s',
+            },
         ]}/>
     </>;
 

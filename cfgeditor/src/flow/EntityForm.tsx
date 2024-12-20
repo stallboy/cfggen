@@ -21,6 +21,7 @@ import {Handle, NodeProps, Position} from "@xyflow/react";
 import {getFieldBackgroundColor} from "./colors.ts";
 import {CustomAutoComplete} from "./CustomAutoComplete.tsx";
 import {EntityNode} from "./FlowGraph.tsx";
+import {useHotkeys} from "react-hotkeys-hook";
 
 const formLayout = {
     labelCol: {xs: {span: 24}, sm: {span: 6},},
@@ -40,7 +41,7 @@ const setOfNumber = new Set<string>(['int', 'long', 'float']);
 
 function filterOption(inputValue: string, option?: EntityEditFieldOption): boolean {
     const iv = inputValue.toLowerCase();
-    return (!!option) && (option.value.toString().toLowerCase().includes(iv) || option.label.toLowerCase().includes(iv));
+    return (!!option) && (option.value.toString().toLowerCase().includes(iv) || option.labelStr.includes(iv));
 }
 
 function filterNumberSort(optionA: EntityEditFieldOption, optionB: EntityEditFieldOption): number {
@@ -303,10 +304,11 @@ const FuncSubmitFormItem = memo(function ({field}: {
 }) {
     const [t] = useTranslation();
     const func = field.value as FuncSubmitType;
+    useHotkeys('alt+s', () => func.funcSubmit());
     return <Form.Item {...formItemLayoutWithOutLabel} key={field.name}>
         <Space size={50}>
             <Button className='nodrag' type="primary" htmlType="submit" onClick={() => func.funcSubmit()}>
-                {t('addOrUpdate')}
+                <Tooltip title={t('addOrUpdateTooltip')}> {t('addOrUpdate')}</Tooltip>
             </Button>
             <Button className='nodrag' type="default" onClick={() => func.funcClear()}>
                 {t('setDefaultValue')}

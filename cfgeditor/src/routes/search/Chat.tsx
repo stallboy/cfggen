@@ -6,7 +6,7 @@ import {store, useLocationData} from "../setting/store.ts";
 import {ChatMessage} from "@ant-design/pro-chat";
 import {AIConf} from "../setting/storageJson.ts";
 import {memo, useCallback, useRef, useState} from "react";
-import {Schema} from "../table/schemaUtil.ts";
+import {Schema} from "../table/schemaUtil.tsx";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {checkJson, getPrompt} from "../api.ts";
 import {Button, Result, Spin} from "antd";

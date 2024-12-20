@@ -3,7 +3,7 @@ import {Tabs} from "antd";
 import {NodeShowSetting} from "./NodeShowSetting.tsx";
 import {useTranslation} from "react-i18next";
 import {STable} from "../table/schemaModel.ts";
-import {Schema} from "../table/schemaUtil.ts";
+import {Schema} from "../table/schemaUtil.tsx";
 
 import {KeyShortCut} from "./KeyShortcut.tsx";
 import {BasicSetting} from "./BasicSetting.tsx";

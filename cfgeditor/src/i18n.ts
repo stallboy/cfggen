@@ -51,7 +51,7 @@ i18n.use(LanguageDetector)
                     table: "表",
                     tableRef: "表关系",
                     record: "记录",
-                    recordRef: "记录关系",
+                    recordRef: "关系",
                     fix: "固定",
 
                     serverConnectFail: '服务器连接失败',
@@ -137,6 +137,7 @@ i18n.use(LanguageDetector)
                     edit: '编辑',
                     view: '浏览',
                     addOrUpdate: '更新',
+                    addOrUpdateTooltip: '增加或更新记录,alt+s',
                     setDefaultValue: '清空',
 
                     addListItemBefore: '前插入',
@@ -149,5 +150,3 @@ i18n.use(LanguageDetector)
             }
         }
     });
-
-export default i18n;

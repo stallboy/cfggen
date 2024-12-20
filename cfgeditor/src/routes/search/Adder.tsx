@@ -1,5 +1,5 @@
 import {memo} from "react";
-import {Schema} from "../table/schemaUtil.ts";
+import {Schema} from "../table/schemaUtil.tsx";
 import {useTranslation} from "react-i18next";
 import {Tabs, TabsProps} from "antd";
 import {AddJson} from "./AddJson.tsx";

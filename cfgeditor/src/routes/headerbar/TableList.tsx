@@ -1,8 +1,8 @@
 import {STable} from "../table/schemaModel.ts";
-import {Badge, Select, Space} from "antd";
+import {Select} from "antd";
 import {getLastOpenIdByTable, navTo, store, useLocationData} from "../setting/store.ts";
 import {useNavigate} from "react-router-dom";
-import {Schema} from "../table/schemaUtil.ts";
+import {Schema} from "../table/schemaUtil.tsx";
 import {memo} from "react";
 
 interface TableWithLastName {
@@ -12,7 +12,7 @@ interface TableWithLastName {
 }
 
 
-export const TableList = memo(function TableList({schema}: { schema: Schema }) {
+export const TableList = memo(function ({schema}: { schema: Schema }) {
     const {curPage, curTableId} = useLocationData();
     const navigate = useNavigate();
     const {isEditMode} = store;
@@ -21,6 +21,7 @@ export const TableList = memo(function TableList({schema}: { schema: Schema }) {
         return <Select id='table' loading={true}/>
     }
 
+    const options= [];
     const group2Tables = new Map<string, TableWithLastName[]>();
     for (const item of schema.itemMap.values()) {
         if (item.type == 'table') {
@@ -42,23 +43,14 @@ export const TableList = memo(function TableList({schema}: { schema: Schema }) {
             tables.push({tableId, table, lastName})
         }
     }
-    const options = [];
     for (const group2Table of group2Tables.entries()) {
         const grp = group2Table[0]
         const tls = group2Table[1]
         const subOptions = [];
 
         for (const tl of tls) {
-            let style = {backgroundColor: '#bbbbbb'}
-            if (tl.tableId == curTableId) {
-                style = {backgroundColor: '#52c41a'};
-            }
-
-            const badge = <Badge count={tl.table.recordIds.length} overflowCount={999999}
-                                 style={style}/>
-
             subOptions.push({
-                label: <Space>{tl.lastName}{badge} </Space>,
+                label: <>{tl.lastName} <i style={{fontSize: '0.85em'}}> {tl.table.recordIds.length}</i></>,
                 value: tl.table.name,
             });
         }

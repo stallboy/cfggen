@@ -2,7 +2,7 @@ import {Tabs, TabsProps} from "antd";
 import {useTranslation} from "react-i18next";
 import {SearchValue} from "./SearchValue.tsx";
 import {Chat} from "./Chat.tsx";
-import {Schema} from "../table/schemaUtil.ts";
+import {Schema} from "../table/schemaUtil.tsx";
 import {memo} from "react";
 import {AddJson} from "./AddJson.tsx";
 import {LastAccessed} from "./LastAccessed.tsx";

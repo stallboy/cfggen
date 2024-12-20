@@ -2,6 +2,7 @@ import {BriefDescription, JSONObject} from "../routes/record/recordModel.ts";
 import {NodeShowType} from "../routes/setting/storageJson.ts";
 
 import {ResInfo} from "../res/resInfo.ts";
+import * as React from "react";
 
 export interface EntityBaseField {
     name: string;
@@ -55,7 +56,8 @@ export interface EntityEditFieldOptions {
 
 export interface EntityEditFieldOption {
     value: string | number;
-    label: string;
+    label?: React.ReactNode;
+    labelStr: string;
     title: string;
 }
 

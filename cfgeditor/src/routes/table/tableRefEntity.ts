@@ -1,6 +1,6 @@
 import {SItem, STable} from "./schemaModel.ts";
 import {Entity, EntityEdgeType, EntityType} from "../../flow/entityModel.ts";
-import {Schema} from "./schemaUtil.ts";
+import {Schema} from "./schemaUtil.tsx";
 
 function createEntity(item: SItem, id: string, entityType: EntityType = EntityType.Normal): Entity {
     return {

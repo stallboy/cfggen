@@ -1,5 +1,5 @@
 import {memo, useMemo} from "react";
-import {Schema} from "../table/schemaUtil.ts";
+import {Schema} from "../table/schemaUtil.tsx";
 import {navTo, store, useLocationData} from "../setting/store.ts";
 import {useNavigate} from "react-router-dom";
 import {Button, Table} from "antd";

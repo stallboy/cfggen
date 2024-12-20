@@ -6,7 +6,7 @@ import {useQuery} from "@tanstack/react-query";
 import {App, Button, Card, Checkbox, Form, Input, Space} from "antd";
 import {formLayout} from "./BasicSetting.tsx";
 import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
-import {Schema} from "../table/schemaUtil.ts";
+import {Schema} from "../table/schemaUtil.tsx";
 import {invalidateResInfos} from "../../res/readResInfosAsync.ts";
 import {summarizeResAsync} from "../../res/summarizeResAsync.ts";
 import {path} from "@tauri-apps/api";

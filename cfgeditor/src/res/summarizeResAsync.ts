@@ -1,4 +1,4 @@
-import {Schema} from "../routes/table/schemaUtil.ts";
+import {Schema} from "../routes/table/schemaUtil.tsx";
 import {store} from "../routes/setting/store.ts";
 import {BaseDirectory, writeTextFile} from "@tauri-apps/plugin-fs";
 import {ResInfo} from "./resInfo.ts";

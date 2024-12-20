@@ -10,7 +10,7 @@ import {
 import {SInterface, SItem, SStruct, STable} from "../table/schemaModel.ts";
 import {JSONArray, JSONObject, JSONValue, RefId} from "./recordModel.ts";
 import {getId, getLabel, getLastName} from "./recordRefEntity.ts";
-import {getField, getIdOptions, getImpl, isPkInteger, Schema} from "../table/schemaUtil.ts";
+import {getField, getIdOptions, getImpl, isPkInteger, Schema} from "../table/schemaUtil.tsx";
 import {
     applyNewEditingObject, editState,
     onAddItemToArray,
@@ -402,7 +402,7 @@ export class RecordEditEntityCreator {
 function getImplNameOptions(sInterface: SInterface): EntityEditFieldOptions {
     const impls = [];
     for (const {name, comment} of sInterface.impls) {
-        impls.push({value: name, label: name, title: comment});
+        impls.push({value: name, label: name, labelStr: name, title: comment});
     }
     return {options: impls, isValueInteger: false, isEnum: true};
 }

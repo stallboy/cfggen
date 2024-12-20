@@ -1,7 +1,7 @@
 import {invalidateAllQueries, navTo, store, useLocationData} from "../setting/store.ts";
 
 import {memo, useCallback, useState} from "react";
-import {Schema} from "../table/schemaUtil.ts";
+import {Schema} from "../table/schemaUtil.tsx";
 import {useMutation,} from "@tanstack/react-query";
 import {addOrUpdateRecord} from "../api.ts";
 import {Button, Card, Form, Input, List, Result, Space} from "antd";

@@ -1,7 +1,10 @@
 import {JSONArray, JSONObject, RecordResult} from "./recordModel.ts";
 import {SItem, SStruct, STable} from "../table/schemaModel.ts";
-import {getField, Schema} from "../table/schemaUtil.ts";
+import {getField, Schema} from "../table/schemaUtil.tsx";
 import {EntityPosition} from "../../flow/entityModel.ts";
+import {doEdit} from "../setting/store.ts";
+
+// import {doEdit} from "../setting/store.ts";
 
 export enum EFitView {
     FitFull,
@@ -12,6 +15,7 @@ export enum EFitView {
 export type EditState = {
     table: string;
     id: string;
+    originalEditingObject: JSONObject;
     editingObject: JSONObject;
     fitView: EFitView;
     fitViewToIdPosition?: EntityPosition;
@@ -29,6 +33,7 @@ const dummyFunc = () => {
 export const editState: EditState = {
     table: '',
     id: '',
+    originalEditingObject: {'$type': ''},
     editingObject: {'$type': ''},
     fitView: EFitView.FitFull,
 
@@ -42,7 +47,7 @@ export const editState: EditState = {
 export type EditingObjectRes = {
     fitView: EFitView;
     fitViewToIdPosition?: EntityPosition;
-    isEdited: boolean;
+    isEdited: boolean;   // 是否要重新计算节点的layout
 }
 
 
@@ -51,26 +56,33 @@ export function startEditingObject(recordResult: RecordResult,
                                    submitEditingObject: () => void): EditingObjectRes {
     editState.update = function () {
         editState.isEdited = true;
+        notifyEdit()
         update();
     }
     editState.submitEditingObject = submitEditingObject;
     const {table, id, fitView, fitViewToIdPosition} = editState;
     const {table: newTable, id: newId} = recordResult;
     if (newTable == table && newId == id) {
-        return {
-            fitView,
-            fitViewToIdPosition,
-            isEdited: editState.isEdited
-        };
+        const newEditingObject = structuredClone(recordResult.object);
+        delete$refInPlace(newEditingObject);
+
+        if (areDeeplyEqual(editState.originalEditingObject, newEditingObject)){
+            return {
+                fitView,
+                fitViewToIdPosition,
+                isEdited: editState.isEdited
+            };
+        }
     }
 
-    const clone: JSONObject = {...recordResult.object}
-    delete clone['$refs'];  // inner $ref not deleted
-    const newEditingObject = structuredClone(clone);
+    const newEditingObject = structuredClone(recordResult.object);
+    delete$refInPlace(newEditingObject);
+    // console.log("start editing new", newEditingObject)
     editState.table = newTable;
     editState.id = newId;
     editState.fitView = EFitView.FitFull;
     editState.fitViewToIdPosition = undefined;
+    editState.originalEditingObject = structuredClone(newEditingObject);
     editState.editingObject = newEditingObject;
     editState.isEdited = false;
     return {
@@ -80,6 +92,15 @@ export function startEditingObject(recordResult: RecordResult,
     };
 }
 
+
+export function invalidateEditingObject() {
+    editState.table = '';
+    editState.id = '';
+}
+
+function notifyEdit() {
+    doEdit(!areDeeplyEqual(editState.editingObject, editState.originalEditingObject));
+}
 
 export function onUpdateFormValues(schema: Schema,
                                    values: any,
@@ -112,12 +133,14 @@ export function onUpdateFormValues(schema: Schema,
         }
     }
     // 当在单个node的form里更改时，因为ui已经更改，不需要再触发Record的更新。
+    notifyEdit();  // 触发'更改提示'
 }
 
 export function onUpdateNote(note: string | undefined,
                              fieldChains: (string | number)[]) {
     const obj = getFieldObj(editState.editingObject, fieldChains);
     obj['$note'] = note;
+    notifyEdit();
 }
 
 
@@ -301,3 +324,43 @@ function toFloat(value: any) {
     }
 }
 
+function areDeeplyEqual(obj1: any, obj2: any): boolean {
+    if (obj1 === obj2) return true;
+
+    if (Array.isArray(obj1) && Array.isArray(obj2)) {
+        if (obj1.length !== obj2.length) return false;
+        return obj1.every((elem, index) => {
+            return areDeeplyEqual(elem, obj2[index]);
+        })
+    }
+
+    if (typeof obj1 === "object" && typeof obj2 === "object" && obj1 !== null && obj2 !== null) {
+        if (Array.isArray(obj1) || Array.isArray(obj2)) return false;
+        const keys1 = Object.keys(obj1)
+        const keys2 = Object.keys(obj2)
+        if (keys1.length !== keys2.length || !keys1.every(key => keys2.includes(key))) return false;
+
+        for (let key in obj1) {
+            let isEqual = areDeeplyEqual(obj1[key], obj2[key])
+            if (!isEqual) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    return false;
+}
+
+function delete$refInPlace(obj: any) {
+    if (typeof obj === "object") {
+        delete obj['$refs'];
+        for (const k in obj) {
+            delete$refInPlace(obj[k]);
+        }
+    } else if (Array.isArray(obj)) {
+        for (const item of obj.values()) {
+            delete$refInPlace(item);
+        }
+    }
+}

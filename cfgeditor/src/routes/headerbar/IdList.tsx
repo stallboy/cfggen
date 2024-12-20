@@ -1,6 +1,6 @@
 import {DefaultOptionType} from "antd/es/select/index";
 import {Select} from "antd";
-import {getIdOptions, isPkInteger,} from "../table/schemaUtil.ts";
+import {getIdOptions, isPkInteger,} from "../table/schemaUtil.tsx";
 import {navTo, store, useLocationData} from "../setting/store.ts";
 import {useNavigate} from "react-router-dom";
 import {STable} from "../table/schemaModel.ts";
@@ -15,7 +15,7 @@ const intFilterSorts = {
         parseInt(optionA.value as string) - parseInt(optionB.value as string)
 };
 
-export const IdList = memo(function IdList({curTable}: {
+export const IdList = memo(function ({curTable}: {
     curTable: STable,
 }) {
     const navigate = useNavigate();
