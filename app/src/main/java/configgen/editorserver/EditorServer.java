@@ -51,7 +51,7 @@ public class EditorServer extends Generator {
         noteCsvPath = parameter.get("note", "_note.csv");
         aiCfgFn = parameter.get("aicfg", null, "llm大模型选择，需要兼容openai的api");
         postRun = parameter.get("postrun", null, "可以是个xx.bat，用于自动提交服务器及时生效");
-        postRunJavaData = parameter.get("postrunjavadata", "configdata.zip", "如果设置了postrun，增加或更新json后，会先生成javadata文件，然后运行postrun");
+        postRunJavaData = parameter.get("postrunjavadata", null, "设置postrun，此选项才可能起效，增加或更新json后，会先生成javadata文件，然后运行postrun");
         waitSecondsAfterWatchEvt = Integer.parseInt(parameter.get("watch", "0", "如x>0，则表示x秒后自动重载配置"));
     }
 
@@ -139,7 +139,9 @@ public class EditorServer extends Generator {
         }
         postRunThread = Thread.startVirtualThread(() -> {
             try {
-                GenJavaData.generateToFile(cfgValue, langSwitch, new File(postRunJavaData));
+                if (postRunJavaData != null){
+                    GenJavaData.generateToFile(cfgValue, langSwitch, new File(postRunJavaData));
+                }
                 String[] cmds = new String[]{postRun};
                 Process process = Runtime.getRuntime().exec(cmds);
 

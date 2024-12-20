@@ -201,9 +201,18 @@ const PrimitiveFormItem = memo(function ({field, bgColor}: {
 
 const LabelWithTooltip = memo(function ({name, comment}: { name: string, comment?: string }) {
     return (comment != undefined && comment.length > 0) ?
-        <Tooltip title={comment}><i>{name}</i></Tooltip> :
-        <>{name}</>;
+        <Tooltip title={comment}>{autoSizeName(name, true)}</Tooltip> :
+        autoSizeName(name, false);
 });
+
+const autoSizeName = function (name: string, hasTooltip: boolean) {
+    if (name.length < 9) {
+        return hasTooltip ? <i>{name}</i> : <>{name}</>;
+    } else {
+        return hasTooltip ? <i style={{fontSize: '0.75em'}}>{name}</i> :
+            <span style={{fontSize: '0.75em'}}>{name}</span>;
+    }
+}
 
 const autoCompleteItemStyle = {style: {width: 170}}
 
