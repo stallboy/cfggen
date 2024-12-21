@@ -4,8 +4,8 @@ import com.alibaba.fastjson2.JSON;
 import com.sun.net.httpserver.*;
 import configgen.ctx.*;
 import configgen.gen.Generator;
+import configgen.gen.Generators;
 import configgen.gen.Parameter;
-import configgen.genjava.GenJavaData;
 import configgen.schema.TableSchemaRefGraph;
 import configgen.tool.AICfg;
 import configgen.value.CfgValue;
@@ -13,6 +13,7 @@ import configgen.value.CfgValue;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,8 +31,7 @@ public class EditorServer extends Generator {
     private final String noteCsvPath;
     private final String aiCfgFn;
 
-    private Context.ContextCfg contextCfg;
-    private volatile DirectoryStructure sourceStructure;
+    private Context context;
     private volatile LangSwitch langSwitch;
     private volatile CfgValue cfgValue;  // 引用可以被改变，指向不同的CfgValue
     private volatile TableSchemaRefGraph graph;
@@ -41,7 +41,6 @@ public class EditorServer extends Generator {
     private AICfg aiCfg;
     private Path aiDir;
     private final String postRun;
-    private final String postRunJavaData;
     private final int waitSecondsAfterWatchEvt;
     private Thread postRunThread;
 
@@ -50,8 +49,7 @@ public class EditorServer extends Generator {
         port = Integer.parseInt(parameter.get("port", "3456", "为cfgeditor.exe提供服务的端口"));
         noteCsvPath = parameter.get("note", "_note.csv");
         aiCfgFn = parameter.get("aicfg", null, "llm大模型选择，需要兼容openai的api");
-        postRun = parameter.get("postrun", null, "可以是个xx.bat，用于自动提交服务器及时生效");
-        postRunJavaData = parameter.get("postrunjavadata", null, "设置postrun，此选项才可能起效，增加或更新json后，会先生成javadata文件，然后运行postrun");
+        postRun = parameter.get("postrun", null, "可以是个xx.bat或xx.sh，用于自动提交服务器及时生效， .bat最开始多行的注释可有:: -gen 则会提取用当前上下文生成，.sh则是# -gen ");
         waitSecondsAfterWatchEvt = Integer.parseInt(parameter.get("watch", "0", "如x>0，则表示x秒后自动重载配置"));
     }
 
@@ -63,9 +61,8 @@ public class EditorServer extends Generator {
         }
 
         noteEditService = new NoteEditService(Path.of(noteCsvPath));
-
-        contextCfg = ctx.getContextCfg();
-        initFromCtx(ctx);
+        this.context = ctx;
+        initFromCtx();
 
         System.gc();
         System.setProperty("java.util.logging.SimpleFormatter.format",
@@ -92,7 +89,7 @@ public class EditorServer extends Generator {
         logger.info("Server is started at " + listenAddr);
 
         if (waitSecondsAfterWatchEvt > 0) {
-            Watcher watcher = new Watcher(sourceStructure.getRootDir());
+            Watcher watcher = new Watcher(context.getSourceStructure().getRootDir());
             WaitWatcher waitWatcher = new WaitWatcher(watcher, this::reloadData, waitSecondsAfterWatchEvt);
             waitWatcher.start();
             watcher.start();
@@ -100,23 +97,20 @@ public class EditorServer extends Generator {
         }
     }
 
-    private void initFromCtx(Context ctx) {
-        sourceStructure = ctx.getSourceStructure();
-        langSwitch = ctx.nullableLangSwitch();
-        cfgValue = ctx.makeValue(tag, true);
+    private void initFromCtx() {
+        cfgValue = context.makeValue(tag, true);
         graph = new TableSchemaRefGraph(cfgValue.schema());
     }
 
     private void reloadData() {
-        DirectoryStructure newStructure = new DirectoryStructure(sourceStructure.getRootDir());
-        if (newStructure.lastModifiedEquals(sourceStructure)) {
+        DirectoryStructure newStructure = new DirectoryStructure(context.getSourceStructure().getRootDir());
+        if (newStructure.lastModifiedEquals(context.getSourceStructure())) {
             configgen.util.Logger.verbose("lastModified not change");
             return;
         }
-        Context newCtx;
         try {
-            newCtx = new Context(contextCfg, newStructure);
-            initFromCtx(newCtx);
+            this.context = new Context(context.getContextCfg(), newStructure);
+            initFromCtx();
             logger.info("reload ok");
             tryPostRun();
         } catch (Exception e) {
@@ -139,16 +133,34 @@ public class EditorServer extends Generator {
         }
         postRunThread = Thread.startVirtualThread(() -> {
             try {
-                if (postRunJavaData != null){
-                    GenJavaData.generateToFile(cfgValue, langSwitch, new File(postRunJavaData));
+                String genPrefix = null;
+                if (postRun.endsWith(".bat")) {
+                    genPrefix = ":: -gen ";
+                } else if (postRun.endsWith(".sh")) {
+                    genPrefix = "# -gen ";
                 }
+                if (genPrefix != null) {
+                    for (String line : Files.readAllLines(Path.of(postRun))) {
+                        if (line.startsWith(genPrefix)) {
+                            String parameter = line.substring(genPrefix.length());
+                            Generator generator = Generators.create(parameter);
+                            if (generator != null) {
+                                logger.info("-gen " + parameter);
+                                generator.generate(context);
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                }
+
                 String[] cmds = new String[]{postRun};
                 Process process = Runtime.getRuntime().exec(cmds);
 
                 BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
                 String line;
                 while ((line = in.readLine()) != null) {
-                    logger.info("postrun ouput: " + line);
+                    logger.info("postrun output: " + line);
                 }
                 if (process.waitFor(10, TimeUnit.SECONDS)) {
                     logger.info("postrun ok!");
@@ -201,7 +213,7 @@ public class EditorServer extends Generator {
         sendResponse(exchange, result);
     }
 
-    private static int parseIntAndIgnoreErr(String str, int def){
+    private static int parseIntAndIgnoreErr(String str, int def) {
         int value = def;
         if (str != null) {
             try {
@@ -265,7 +277,7 @@ public class EditorServer extends Generator {
         RecordEditResult result;
         boolean ok = false;
         synchronized (this) {
-            RecordEditService service = new RecordEditService(cfgValue, sourceStructure);
+            RecordEditService service = new RecordEditService(cfgValue, context.getSourceStructure());
             result = service.addOrUpdateRecord(table, jsonStr);
             if (result.resultCode() == addOk || result.resultCode() == updateOk) {
                 cfgValue = service.newCfgValue();
@@ -292,14 +304,20 @@ public class EditorServer extends Generator {
         String id = query.get("id");
 
         RecordEditResult result;
+        boolean ok = false;
         synchronized (this) {
-            RecordEditService service = new RecordEditService(cfgValue, sourceStructure);
+            RecordEditService service = new RecordEditService(cfgValue, context.getSourceStructure());
             result = service.deleteRecord(table, id);
             if (result.resultCode() == deleteOk) {
                 cfgValue = service.newCfgValue();
+                ok = true;
             }
         }
-        logger.info(result.toString());
+        if (ok) {
+            tryPostRun();
+        }
+
+//        logger.info(result.toString());
         sendResponse(exchange, result);
     }
 

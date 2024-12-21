@@ -29,10 +29,6 @@ public final class GenJavaData extends Generator {
     public void generate(Context ctx) throws IOException {
         CfgValue cfgValue = ctx.makeValue(tag);
         LangSwitch langSwitch = ctx.nullableLangSwitch();
-        generateToFile(cfgValue, langSwitch, file);
-    }
-
-    public static void generateToFile(CfgValue cfgValue, LangSwitch langSwitch, File file) throws IOException {
         try (ConfigOutput output = new ConfigOutput(new DataOutputStream(new CachedFileOutputStream(file, 2048 * 1024)))) {
             Schema schema = SchemaParser.parse(cfgValue, langSwitch);
             schema.write(output);
@@ -51,7 +47,6 @@ public final class GenJavaData extends Generator {
                 cnt++;
             }
         }
-
 
         output.writeInt(cnt);
         for (VTable vTable : cfgValue.sortedTables()) {

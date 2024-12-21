@@ -204,6 +204,10 @@ public class DirectoryStructure {
     }
 
 
+    /**
+     * 改变或增加json文件后，会导致watcher触发，
+     * 但这里再在运行时记录下来此json的lastModified，然后通过 lastModifiedEquals 比较来避免全量makeValue
+     */
     public synchronized JsonFileInfo addJsonFile(String tableName, Path jsonPath) {
         Map<String, Map<String, JsonFileInfo>> tmp = copyTableToJsonFiles();
         Map<String, JsonFileInfo> jsonFiles = tmp.computeIfAbsent(tableName, (String j) -> new LinkedHashMap<>());
