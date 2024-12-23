@@ -17,9 +17,7 @@ import java.util.*;
 
 import static configgen.value.CfgValue.*;
 
-/**
- * 重要假设：每个表中的原始中文一样的话，英文也一样
- */
+
 public final class GenI18n2 extends Generator {
 
     record OneText(String fieldChain,
@@ -126,20 +124,18 @@ public final class GenI18n2 extends Generator {
             for (OneRecord record : textTable.records) {
                 boolean hasValue = false;
                 for (OneText text : record.texts) {
-                    String old = originalToTranslated.putIfAbsent(text.originalText, text.translatedText);
-                    if (old == null) {
-                        int idx = findFieldIndex(text);
-                        int c = idx * 2 + 1;
+                    stat.addOneTranslate(textTable.table, text.originalText, text.translatedText);
+                    int idx = findFieldIndex(text);
+                    int c = idx * 2 + 1;
 
-                        ws.inlineString(r, c, text.originalText);
-                        ws.inlineString(r, c + 1, text.translatedText);
+                    ws.inlineString(r, c, text.originalText);
+                    ws.inlineString(r, c + 1, text.translatedText);
 
-                        if (text.translatedText.isEmpty()) {
-                            stat.incNotTranslate(textTable.table);
-                            ws.style(r, c+1).fillColor("FF8800").set();
-                        }
-                        hasValue = true;
-                    } //else: ignore 根据假设忽略
+                    if (text.translatedText.isEmpty()) {
+                        stat.incNotTranslate(textTable.table);
+                        ws.style(r, c + 1).fillColor("FF8800").set();
+                    }
+                    hasValue = true;
                 }
 
                 if (hasValue) {
@@ -160,7 +156,7 @@ public final class GenI18n2 extends Generator {
                 }
             }
 
-            stat.addOneTable(textTable.table, originalToTranslated);
+
 
         }
 
@@ -185,7 +181,7 @@ public final class GenI18n2 extends Generator {
         }
 
         private int notTranslateCount = 0;
-        private int crossTableSameOriginalCount = 0;
+        private int sameOriginalCount = 0;
         private final Map<String, OneT> accumulate = new HashMap<>();
         private final Map<String, List<OneT>> different = new HashMap<>();
         private final Set<String> hasNotTranslateTables = new HashSet<>();
@@ -195,32 +191,28 @@ public final class GenI18n2 extends Generator {
             hasNotTranslateTables.add(table);
         }
 
-        void addOneTable(String table, Map<String, String> originalToTranslated) {
-            for (Map.Entry<String, String> e : originalToTranslated.entrySet()) {
-                String orig = e.getKey();
-                String translated = e.getValue();
-                OneT newT = new OneT(table, translated);
-                OneT old = accumulate.putIfAbsent(orig, newT);
+        void addOneTranslate(String table, String orig, String translated) {
+            OneT newT = new OneT(table, translated);
+            OneT old = accumulate.putIfAbsent(orig, newT);
 
-                if (old != null) {
-                    crossTableSameOriginalCount++;
-                    if (!newT.translatedText.trim().equals(old.translatedText.trim())) {
-                        List<OneT> diffs = different.get(orig);
-                        if (diffs == null) {
-                            diffs = new ArrayList<>();
-                            diffs.add(old);
-                            different.put(orig, diffs);
-                        }
-                        diffs.add(newT);
+            if (old != null) {
+                sameOriginalCount++;
+                if (!newT.translatedText.trim().equals(old.translatedText.trim())) {
+                    List<OneT> diffs = different.get(orig);
+                    if (diffs == null) {
+                        diffs = new ArrayList<>();
+                        diffs.add(old);
+                        different.put(orig, diffs);
                     }
+                    diffs.add(newT);
                 }
             }
         }
 
         void dump() {
-            System.out.printf("notTranslateCount :           %d%n", notTranslateCount);
-            System.out.printf("crossTableSameOriginalCount : %d%n", crossTableSameOriginalCount);
-            System.out.printf("differentTranslate:           %d%n", different.size());
+            System.out.printf("notTranslateCount : %d%n", notTranslateCount);
+            System.out.printf("sameOriginalCount : %d%n", sameOriginalCount);
+            System.out.printf("differentTranslate: %d%n", different.size());
 
             System.out.println("------------ has not translate text: ------------ ");
             for (String table : hasNotTranslateTables) {
