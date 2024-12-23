@@ -4,7 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONException;
 import com.alibaba.fastjson2.JSONObject;
-import configgen.ctx.TextI18n;
+import configgen.ctx.TextFinder;
 import configgen.data.Source;
 import configgen.schema.*;
 
@@ -20,7 +20,7 @@ public class ValueJsonParser {
 
     private final TableSchema tableSchema;
     private final boolean isTableSchemaPartial;
-    private final TextI18n.TableI18n nullableTableI18n;
+    private final TextFinder nullableTableI18n;
     private final CfgValueErrs errs;
 
     public ValueJsonParser(TableSchema tableSchema,
@@ -30,7 +30,7 @@ public class ValueJsonParser {
 
     public ValueJsonParser(TableSchema tableSchema,
                            boolean isTableSchemaPartial,
-                           TextI18n.TableI18n nullableTableI18n,
+                           TextFinder nullableTableI18n,
                            CfgValueErrs errs) {
         this.tableSchema = tableSchema;
         this.isTableSchemaPartial = isTableSchemaPartial;

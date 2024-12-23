@@ -1,6 +1,7 @@
 package configgen.value;
 
 import configgen.ctx.Context;
+import configgen.ctx.TextFinder;
 import configgen.schema.cfg.CfgWriter;
 import configgen.util.Logger;
 import configgen.data.CfgData;
@@ -13,7 +14,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import static configgen.ctx.TextI18n.*;
 import static configgen.value.CfgValue.*;
 
 public class CfgValueParser {
@@ -47,14 +47,14 @@ public class CfgValueParser {
             TableSchema table = context.cfgSchema().findTable(name);
             Objects.requireNonNull(table);
 
-            TableI18n tableI18n = context.nullableI18n() != null ? context.nullableI18n().getTableI18n(name) : null;
+            TextFinder tableTextFinder = context.nullableI18n() != null ? context.nullableI18n().getTableTextFinder(name) : null;
             CfgData.DTable dTable = context.cfgData().tables().get(name);
 
             if (dTable != null) {
                 tasks.add(() -> {
                     long start = System.currentTimeMillis();
                     CfgValueErrs errs = CfgValueErrs.of();
-                    VTableParser parser = new VTableParser(subTable, dTable, table, tableI18n, errs);
+                    VTableParser parser = new VTableParser(subTable, dTable, table, tableTextFinder, errs);
                     VTable vTable = parser.parseTable();
                     if (Logger.isProfileEnabled()) {
                         long e = System.currentTimeMillis() - start;
@@ -70,7 +70,7 @@ public class CfgValueParser {
                     long start = System.currentTimeMillis();
                     CfgValueErrs errs = CfgValueErrs.of();
                     VTableJsonParser parser = new VTableJsonParser(subTable, subSchema.isPartial(),
-                            context.getSourceStructure(), table, tableI18n, errs, cfgValue.valueStat());
+                            context.getSourceStructure(), table, tableTextFinder, errs, cfgValue.valueStat());
                     VTable vTable = parser.parseTable();
                     if (Logger.isProfileEnabled()) {
                         System.out.printf("%40s: %d%n", name, System.currentTimeMillis() - start);

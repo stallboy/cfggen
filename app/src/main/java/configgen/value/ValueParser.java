@@ -1,6 +1,6 @@
 package configgen.value;
 
-import configgen.ctx.TextI18n;
+import configgen.ctx.TextFinder;
 import configgen.data.Source;
 import configgen.schema.*;
 
@@ -24,11 +24,11 @@ public class ValueParser {
 
 
     private final CfgValueErrs errs;
-    private final TextI18n.TableI18n nullableTableI18n;
+    private final TextFinder nullableTableI18n;
     private final BlockParser blockParser;
     private List<DCell> currentCells;
 
-    public ValueParser(CfgValueErrs errs, TextI18n.TableI18n nullableTableI18n, BlockParser blockParser) {
+    public ValueParser(CfgValueErrs errs, TextFinder nullableTableI18n, BlockParser blockParser) {
         this.errs = errs;
         this.nullableTableI18n = nullableTableI18n;
         this.blockParser = blockParser;
@@ -160,13 +160,13 @@ public class ValueParser {
                 canChildBeEmpty = false;
             }
 
-        } else if (structural.fmt() instanceof FieldFormat.Sep sep) {
+        } else if (structural.fmt() instanceof FieldFormat.Sep(char sep)) {
             require(cells.size() == 1, "sep应该只占一格");
             DCell cell = cells.getFirst();
             if (canBeEmpty && cell.isCellEmpty()) {
                 isEmpty = true;
             } else {
-                parsed = DCells.parseList(cell, sep.sep());
+                parsed = DCells.parseList(cell, sep);
                 canChildBeEmpty = false;
             }
             isSep = true;
@@ -417,10 +417,10 @@ public class ValueParser {
         } else if (field.fmt() instanceof FieldFormat.Block ignored) {
             blocks = blockParser.parseBlock(cells, curRowIndex);
 
-        } else if (field.fmt() instanceof FieldFormat.Sep sep) {
+        } else if (field.fmt() instanceof FieldFormat.Sep(char sep)) {
             require(cells.size() == 1);
             DCell cell = cells.getFirst();
-            parsed = DCells.parseList(cell, sep.sep());
+            parsed = DCells.parseList(cell, sep);
 
         } else {
             require(cells.size() == Span.fieldSpan(field));

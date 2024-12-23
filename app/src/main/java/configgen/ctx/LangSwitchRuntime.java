@@ -5,13 +5,13 @@ import java.util.List;
 
 public class LangSwitchRuntime {
     private final LangSwitch langSwitch;
-    private final List<TextI18n.TableI18n> curTableI18nList;
+    private final List<TextFinder> curTableTextFinderList;
     private final String[] tmp;
     private final String[] tmpEmpty;
 
     public LangSwitchRuntime(LangSwitch langSwitch) {
         this.langSwitch = langSwitch;
-        curTableI18nList = new ArrayList<>(langSwitch.lang2i18n().size());
+        curTableTextFinderList = new ArrayList<>(langSwitch.langMap().size());
         int langCnt = langSwitch.languageCount();
         tmp = new String[langCnt];
 
@@ -22,9 +22,9 @@ public class LangSwitchRuntime {
     }
 
     public void enterTable(String table) {
-        curTableI18nList.clear();
-        for (TextI18n i18n : langSwitch.lang2i18n().values()) {
-            curTableI18nList.add(i18n.getTableI18n(table));
+        curTableTextFinderList.clear();
+        for (LangTextFinder i18n : langSwitch.langMap().values()) {
+            curTableTextFinderList.add(i18n.getTableTextFinder(table));
         }
     }
 
@@ -35,10 +35,10 @@ public class LangSwitchRuntime {
 
         tmp[0] = original;
         int i = 1;
-        for (TextI18n.TableI18n i18n : curTableI18nList) {
+        for (TextFinder finder : curTableTextFinderList) {
             String t = null;
-            if (i18n != null) {
-                t = i18n.findText(original);
+            if (finder != null) {
+                t = finder.findText(null, null, original);
             }
             if (t == null) {
                 t = original;

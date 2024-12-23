@@ -13,11 +13,11 @@ import java.util.*;
 
 import static configgen.value.CfgValue.*;
 
-public final class GenI18n extends Generator {
+public final class GenI18nByOrig extends Generator {
     private final File file;
     private List<List<String>> data;
 
-    public GenI18n(Parameter parameter) {
+    public GenI18nByOrig(Parameter parameter) {
         super(parameter);
         file = new File(parameter.get("file", "../i18n/en.csv"));
     }

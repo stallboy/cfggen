@@ -1,6 +1,7 @@
 package configgen.value;
 
 import configgen.ctx.DirectoryStructure;
+import configgen.ctx.TextFinder;
 import configgen.schema.TableSchema;
 
 import java.nio.file.Files;
@@ -10,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import static configgen.ctx.DirectoryStructure.*;
-import static configgen.ctx.TextI18n.*;
 import static configgen.data.Source.*;
 import static configgen.value.CfgValue.*;
 import static configgen.value.CfgValue.VTable;
@@ -28,7 +28,7 @@ public class VTableJsonParser {
                             boolean isPartial,
                             DirectoryStructure sourceStructure,
                             TableSchema tableSchema,
-                            TableI18n nullableTableI18n,
+                            TextFinder nullableTableI18n,
                             CfgValueErrs errs,
                             CfgValueStat valueStat) {
         this.subTableSchema = subTableSchema;

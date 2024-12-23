@@ -40,7 +40,7 @@ public class Context {
     private final ContextCfg contextCfg;
 
     private DirectoryStructure sourceStructure;
-    private TextI18n nullableI18n;
+    private LangTextFinder nullableI18n;
     private LangSwitch nullableLangSwitch;
     private CfgSchema cfgSchema;
     private CfgData cfgData;
@@ -67,9 +67,9 @@ public class Context {
         CfgDataReader dataReader = new CfgDataReader(cfg.headRow, new ReadCsv(cfg.csvDefaultEncoding), excelReader);
 
         if (cfg.i18nFilename != null) {
-            nullableI18n = TextI18n.loadFromCsvFile(Path.of(cfg.i18nFilename), cfg.crLfAsLf);
+            nullableI18n = TextFinderByOrig.loadOneLang(Path.of(cfg.i18nFilename), cfg.crLfAsLf);
         } else if (cfg.langSwitchDir != null) {
-            nullableLangSwitch = LangSwitch.loadFromDirectory(Path.of(cfg.langSwitchDir),
+            nullableLangSwitch = TextFinderByOrig.loadLangSwitch(Path.of(cfg.langSwitchDir),
                     cfg.langSwitchDefaultLang, cfg.crLfAsLf);
         }
 
@@ -133,7 +133,7 @@ public class Context {
     /**
      * 直接国际化,直接改成对应国家语言
      */
-    public TextI18n nullableI18n() {
+    public LangTextFinder nullableI18n() {
         return nullableI18n;
     }
 

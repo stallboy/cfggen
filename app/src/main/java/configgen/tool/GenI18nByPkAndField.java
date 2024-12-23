@@ -18,8 +18,7 @@ import java.util.*;
 import static configgen.value.CfgValue.*;
 
 
-public final class GenI18n2 extends Generator {
-
+public final class GenI18nByPkAndField extends Generator {
     record OneText(String fieldChain,
                    String originalText,
                    String translatedText) {
@@ -39,7 +38,7 @@ public final class GenI18n2 extends Generator {
     private OneRecord curRecord;
     private final I18nStat stat = new I18nStat();
 
-    public GenI18n2(Parameter parameter) {
+    public GenI18nByPkAndField(Parameter parameter) {
         super(parameter);
         outputDir = parameter.get("dir", "../i18n/en");
     }
@@ -62,12 +61,10 @@ public final class GenI18n2 extends Generator {
             String topModule = e.getKey() + ".xlsx";
             List<OneTable> tables = e.getValue();
             try (OutputStream os = new CachedFileOutputStream(Path.of(outputDir, topModule).toFile());
-                 Workbook wb = new Workbook(os, "cfg", "1.0");) {
+                 Workbook wb = new Workbook(os, "cfg", "1.0")) {
                 for (OneTable ot : tables) {
                     Worksheet ws = wb.newWorksheet(ot.table);
-
                     new GenOneTable().gen(ot, ws, stat);
-
                 }
             }
         }
@@ -85,7 +82,7 @@ public final class GenI18n2 extends Generator {
 
             String pkStr = pk.packStr();
             String translatedText = nullableI18n != null ? nullableI18n.trim() : "";
-            String fieldChainStr = fieldChain.size() == 1 ? fieldChain.get(0) : String.join("-", fieldChain);
+            String fieldChainStr = fieldChain.size() == 1 ? fieldChain.getFirst() : String.join("-", fieldChain);
             OneText oneText = new OneText(fieldChainStr, original, translatedText);
 
             if (curRecord != null && curRecord.pk.equals(pkStr)) {
@@ -120,7 +117,6 @@ public final class GenI18n2 extends Generator {
 
         void gen(OneTable textTable, Worksheet ws, I18nStat stat) {
             int r = 1;
-            Map<String, String> originalToTranslated = new LinkedHashMap<>();
             for (OneRecord record : textTable.records) {
                 boolean hasValue = false;
                 for (OneText text : record.texts) {
@@ -155,9 +151,6 @@ public final class GenI18n2 extends Generator {
                     idx++;
                 }
             }
-
-
-
         }
 
         int findFieldIndex(OneText text) {
@@ -182,18 +175,16 @@ public final class GenI18n2 extends Generator {
 
         private int notTranslateCount = 0;
         private int sameOriginalCount = 0;
+        private int textCount = 0;
+
         private final Map<String, OneT> accumulate = new HashMap<>();
         private final Map<String, List<OneT>> different = new HashMap<>();
         private final Set<String> hasNotTranslateTables = new HashSet<>();
 
-        void incNotTranslate(String table) {
-            notTranslateCount++;
-            hasNotTranslateTables.add(table);
-        }
-
         void addOneTranslate(String table, String orig, String translated) {
             OneT newT = new OneT(table, translated);
             OneT old = accumulate.putIfAbsent(orig, newT);
+            textCount++;
 
             if (old != null) {
                 sameOriginalCount++;
@@ -209,7 +200,13 @@ public final class GenI18n2 extends Generator {
             }
         }
 
+        void incNotTranslate(String table) {
+            notTranslateCount++;
+            hasNotTranslateTables.add(table);
+        }
+
         void dump() {
+            System.out.printf("textCount         : %d%n", textCount);
             System.out.printf("notTranslateCount : %d%n", notTranslateCount);
             System.out.printf("sameOriginalCount : %d%n", sameOriginalCount);
             System.out.printf("differentTranslate: %d%n", different.size());

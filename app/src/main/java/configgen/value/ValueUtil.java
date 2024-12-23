@@ -1,6 +1,6 @@
 package configgen.value;
 
-import configgen.ctx.TextI18n;
+import configgen.ctx.TextFinder;
 import configgen.data.CfgData;
 import configgen.data.Source;
 import configgen.schema.*;
@@ -15,7 +15,7 @@ import static configgen.value.CfgValue.*;
 public class ValueUtil {
 
 
-    public static VText createText(String str, Source source, TextI18n.TableI18n nullableTableI18n) {
+    public static VText createText(String str, Source source, TextFinder nullableTableI18n) {
         String i18n = null;
         String value;
         if (nullableTableI18n != null) {

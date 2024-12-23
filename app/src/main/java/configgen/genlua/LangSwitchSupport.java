@@ -1,8 +1,8 @@
 package configgen.genlua;
 
 import configgen.ctx.LangSwitch;
-import configgen.ctx.TextI18n;
-import configgen.ctx.TextI18n.TableI18n;
+import configgen.ctx.LangTextFinder;
+import configgen.ctx.TextFinder;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -17,8 +17,8 @@ class LangSwitchSupport {
 
     private static class LangTexts {
         String lang;
-        TextI18n langI18n;
-        TableI18n curTableI18n;
+        LangTextFinder langI18n;
+        TextFinder curTableTextFinder;
 
         List<String> texts;
     }
@@ -30,8 +30,8 @@ class LangSwitchSupport {
         defaultLangTexts = new ArrayList<>(INIT_SIZE);
         defaultLangTexts.add("");  // 第一个是id为0，表示空字符串
 
-        langTextsList = new ArrayList<>(langSwitch.lang2i18n().size());
-        for (Map.Entry<String, TextI18n> e : langSwitch.lang2i18n().entrySet()) {
+        langTextsList = new ArrayList<>(langSwitch.langMap().size());
+        for (Map.Entry<String, LangTextFinder> e : langSwitch.langMap().entrySet()) {
             List<String> texts = new ArrayList<>(INIT_SIZE);
             texts.add("");
             LangTexts lt = new LangTexts();
@@ -44,7 +44,7 @@ class LangSwitchSupport {
 
     void enterTable(String table) {
         for (LangTexts lt : langTextsList) {
-            lt.curTableI18n = lt.langI18n.getTableI18n(table);
+            lt.curTableTextFinder = lt.langI18n.getTableTextFinder(table);
         }
     }
 
@@ -56,8 +56,8 @@ class LangSwitchSupport {
         defaultLangTexts.add(original);
         for (LangTexts lt : langTextsList) {
             String text = null;
-            if (lt.curTableI18n != null) {
-                text = lt.curTableI18n.findText(original);
+            if (lt.curTableTextFinder != null) {
+                text = lt.curTableTextFinder.findText(original);
             }
             if (text == null) {
                 text = original;
