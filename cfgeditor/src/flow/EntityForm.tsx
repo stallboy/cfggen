@@ -191,7 +191,7 @@ const PrimitiveFormItem = memo(function ({field, bgColor}: {
 
     return <Form.Item key={field.name}
                       name={field.name}
-                      label={<LabelWithTooltip name={field.name} comment={field.comment}/>}
+                      label={<LabelWithTooltip name={field.name} comment={field.comment} isAutoFontSize={true}/>}
                       initialValue={field.value}
                       {...props}
                       style={thisItemStyle}>
@@ -199,14 +199,16 @@ const PrimitiveFormItem = memo(function ({field, bgColor}: {
     </Form.Item>;
 });
 
-const LabelWithTooltip = memo(function ({name, comment}: { name: string, comment?: string }) {
+const LabelWithTooltip = memo(function ({name, comment, isAutoFontSize}: {
+    name: string, comment?: string, isAutoFontSize?: boolean
+}) {
     return (comment != undefined && comment.length > 0) ?
-        <Tooltip title={comment}>{autoSizeName(name, true)}</Tooltip> :
-        autoSizeName(name, false);
+        <Tooltip title={comment}>{autoSizeName(name, true, isAutoFontSize)}</Tooltip> :
+        autoSizeName(name, false, isAutoFontSize);
 });
 
-const autoSizeName = function (name: string, hasTooltip: boolean) {
-    if (name.length < 9) {
+function autoSizeName(name: string, hasTooltip: boolean, autoSizeName?: boolean) {
+    if (name.length < 9 || !autoSizeName) {
         return hasTooltip ? <i>{name}</i> : <>{name}</>;
     } else {
         return hasTooltip ? <i style={{fontSize: '0.75em'}}>{name}</i> :
@@ -233,7 +235,7 @@ const ArrayOfPrimitiveFormItem = memo(function ({field, bgColor}: {
     const itemStyle = field.autoCompleteOptions != null ? autoCompleteItemStyle : empty;
 
     return <Form.Item {...formItemLayout}
-                      label={<LabelWithTooltip name={field.name} comment={field.comment}/>}
+                      label={<LabelWithTooltip name={field.name} comment={field.comment} isAutoFontSize={true}/>}
                       style={thisItemStyle}>
         <Form.List name={field.name} key={field.name} initialValue={field.value as any[]}>
             {(fields, {add, remove, move}) => (
