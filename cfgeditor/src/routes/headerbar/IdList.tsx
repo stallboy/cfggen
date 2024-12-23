@@ -1,19 +1,15 @@
-import {DefaultOptionType} from "antd/es/select/index";
 import {Select} from "antd";
-import {getIdOptions, isPkInteger,} from "../table/schemaUtil.tsx";
+import {getIdOptions} from "../table/schemaUtil.tsx";
 import {navTo, store, useLocationData} from "../setting/store.ts";
 import {useNavigate} from "react-router-dom";
 import {STable} from "../table/schemaModel.ts";
 import {memo, useMemo} from "react";
+import {EntityEditFieldOption} from "../../flow/entityModel.ts";
 
-function filterOption(inputValue: string, option?: DefaultOptionType) {
-    return (option!.label as string).toLowerCase().includes(inputValue.toLowerCase())
+function filterOption(inputValue: string, option?: EntityEditFieldOption) {
+    return option!.labelStr.toLowerCase().includes(inputValue.toLowerCase())
 }
 
-const intFilterSorts = {
-    filterSort: (optionA: DefaultOptionType, optionB: DefaultOptionType) =>
-        parseInt(optionA.value as string) - parseInt(optionB.value as string)
-};
 
 export const IdList = memo(function ({curTable}: {
     curTable: STable,
@@ -21,8 +17,8 @@ export const IdList = memo(function ({curTable}: {
     const navigate = useNavigate();
     const {curPage, curTableId, curId} = useLocationData();
 
-    const options = useMemo(() => getIdOptions(curTable), [curTable]);
-    const filterSorts = useMemo(() => isPkInteger(curTable) ? intFilterSorts : {}, [curTable]);
+    const options = useMemo(() => getIdOptions(curTable),
+        [curTable]);
 
     return <Select id='id'
                    showSearch
@@ -30,7 +26,6 @@ export const IdList = memo(function ({curTable}: {
                    style={{width: 240}}
                    value={curId}
                    placeholder="search a record"
-                   {...filterSorts}
                    filterOption={filterOption}
                    onChange={(value) => {
                        const {isEditMode} = store;

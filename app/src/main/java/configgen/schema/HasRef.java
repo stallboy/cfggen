@@ -20,8 +20,8 @@ public class HasRef {
 
     private static CheckResult checkIfDirectFieldsHasRef(Nameable nameable) {
         Metadata.MetaValue hasRefValue = nameable.meta().getHasRef();
-        if (hasRefValue instanceof Metadata.MetaInt mi) {
-            return mi.value() == 1 ? CheckResult.Ok : CheckResult.Fail;
+        if (hasRefValue instanceof Metadata.MetaInt(int value)) {
+            return value == 1 ? CheckResult.Ok : CheckResult.Fail;
         }
 
         if (nameable instanceof Structural structural && !structural.foreignKeys().isEmpty()) {
@@ -51,8 +51,8 @@ public class HasRef {
 
     public static boolean hasRef(Nameable nameable) {
         Metadata.MetaValue v = nameable.meta().getHasRef();
-        if (v instanceof Metadata.MetaInt mi) {
-            return mi.value() == 1;
+        if (v instanceof Metadata.MetaInt(int value)) {
+            return value == 1;
         }
         throw new IllegalStateException(nameable.fullName() + " has no _hasRef meta value, schema not resolved!");
     }

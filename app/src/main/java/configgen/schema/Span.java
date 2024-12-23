@@ -91,9 +91,9 @@ public class Span {
                             CfgWriter.typeStr(field.type()),
                             CfgWriter.fmtStr(field.fmt())));
                 }
-                if (fmt instanceof FieldFormat.Sep sep && flist.item() instanceof StructRef structRef) {
-                    if (structRef.obj().fmt() instanceof FieldFormat.Sep sep2 && sep.sep() == sep2.sep() ||
-                        structRef.obj().fmt() == PACK && sep.sep() == ',') {
+                if (fmt instanceof FieldFormat.Sep(char sep) && flist.item() instanceof StructRef structRef) {
+                    if (structRef.obj().fmt() instanceof FieldFormat.Sep(char sep1) && sep == sep1 ||
+                        structRef.obj().fmt() == PACK && sep == ',') {
                         errs.addErr(new ListStructSepEqual(ctx, field.name()));
                     }
                 }
@@ -190,8 +190,8 @@ public class Span {
     private static int calcSpanCheckLoop(Nameable nameable, SequencedSet<String> stack) {
         Metadata meta = nameable.meta();
         // 如果已经计算过了，直接返回，用来避免重复计算。
-        if (meta.getSpan() instanceof MetaInt vi) {
-            return vi.value();
+        if (meta.getSpan() instanceof MetaInt(int value)) {
+            return value;
         }
 
         FieldFormat fmt = nameable.fmt();
@@ -236,8 +236,8 @@ public class Span {
         }
 
         Metadata meta = field.meta();
-        if (meta.getSpan() instanceof MetaInt vi) {
-            return vi.value();
+        if (meta.getSpan() instanceof MetaInt(int value)) {
+            return value;
         }
 
         int resultSpan;
@@ -301,8 +301,8 @@ public class Span {
             return 1;
         }
 
-        if (nameable.meta().getSpan() instanceof MetaInt vi) {
-            return vi.value();
+        if (nameable.meta().getSpan() instanceof MetaInt(int value)) {
+            return value;
         }
 
         throw new IllegalStateException(nameable.fullName() + " has no _span meta value, schema may not resolved");
@@ -315,8 +315,8 @@ public class Span {
             return 1;
         }
 
-        if (field.meta().getSpan() instanceof MetaInt vi) {
-            return vi.value();
+        if (field.meta().getSpan() instanceof MetaInt(int value)) {
+            return value;
         }
 
         throw new IllegalStateException(field.name() + " has no _span meta value, schema may not resolved");

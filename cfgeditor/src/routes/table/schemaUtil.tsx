@@ -373,7 +373,7 @@ export function getIdOptions(sTable: STable, valueToInteger: boolean = false): E
 
         const isShowTitle = title && title != id;
         options.push({
-            label: isShowTitle ? <>{id} <span style={{fontSize: '0.85em'}}>{title}</span> </> : id,
+            label: isShowTitle ? <> {id} <span style={{fontSize: '0.85em'}}>{title}</span> </> : id,
             labelStr: isShowTitle ? `${id} ${title}` : id,
             value: valueToInteger ? parseInt(id) : id,
             title: title ?? ''

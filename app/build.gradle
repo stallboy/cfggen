@@ -30,7 +30,8 @@ dependencies {
 
     implementation 'org.antlr:antlr4-runtime:4.13.1'
     // https://mvnrepository.com/artifact/org.dhatim/fastexcel-reader
-    implementation 'org.dhatim:fastexcel-reader:0.18.0'
+    implementation 'org.dhatim:fastexcel-reader:0.18.4'
+    implementation 'org.dhatim:fastexcel:0.18.4'
 
     implementation 'de.siegmar:fastcsv:2.2.2'
     implementation 'com.alibaba.fastjson2:fastjson2:2.0.43'

@@ -36,11 +36,12 @@ public final class CfgSchemaResolver {
         step5_checkUnusedFieldable();
 
         if (errs.errs().isEmpty()) {
-            //预先计算hasRef， hasBlock, span 方便生成时使用
+            //预先计算hasRef， hasBlock, span, hasMap, hasText 方便生成时使用
             Span.preCalculateAllNeededSpans(cfgSchema, errs);
             HasRef.preCalculateAllHasRef(cfgSchema);
             HasBlock.preCalculateAllHasBlock(cfgSchema, errs);
             HasMap.preCalculateAllHasMap(cfgSchema, errs);
+            HasText.preCalculateAllHasText(cfgSchema);
         }
 
         if (errs.errs().isEmpty()) {
@@ -155,7 +156,7 @@ public final class CfgSchemaResolver {
         }
     }
 
-    ////////////////////////////////////////////////////////////////////
+    /// /////////////////////////////////////////////////////////////////
     private void step1_resolveAllFields() {
         resolve_structural(this::resolveFields);
     }
@@ -229,7 +230,7 @@ public final class CfgSchemaResolver {
         return curNameable.fullName();
     }
 
-    ////////////////////////////////////////////////////////////////////
+    /// /////////////////////////////////////////////////////////////////
     private void step2_resolveEachNameable() {
         for (Nameable item : cfgSchema.items()) {
             curNameable = item;
@@ -398,7 +399,7 @@ public final class CfgSchemaResolver {
         errs.addErr(new KeyTypeNotSupport(ctx(), field, errType));
     }
 
-    ////////////////////////////////////////////////////////////////////
+    /// /////////////////////////////////////////////////////////////////
     private void step3_resolveAllForeignKeys() {
         resolve_structural(this::resolveForeignKeys);
     }

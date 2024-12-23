@@ -44,8 +44,8 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
 
     public String getStr(String name, String def) {
         MetaValue metaValue = data.get(name);
-        if (metaValue instanceof MetaStr str) {
-            return str.value;
+        if (metaValue instanceof MetaStr(String value)) {
+            return value;
         }
         return def;
     }
@@ -93,6 +93,14 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         return data.get(HAS_MAP);
     }
 
+    public void putHasText(boolean hasText) {
+        data.putLast(HAS_TEXT, hasText ? new MetaInt(1) : new MetaInt(0));
+    }
+
+    public MetaValue getHasText() {
+        return data.get(HAS_TEXT);
+    }
+
     public void putSpan(int value) {
         data.putLast(SPAN, new MetaInt(value));
     }
@@ -108,7 +116,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     private static final String HAS_REF = "_hasRef";
     private static final String HAS_BLOCK = "_hasBlock";
     private static final String HAS_MAP = "_hasMap";
-
+    private static final String HAS_TEXT = "_hasText";
 
     private static final String JSON = "json"; // 这个表用json来分文件存
     private static final String NULLABLE = "nullable";
@@ -122,28 +130,28 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     private static final String FIX = "fix";
     private static final String BLOCK = "block";
 
-    private static final Set<String> reserved = Set.of(COMMENT, SPAN, HAS_REF, HAS_BLOCK, HAS_MAP,
+    private static final Set<String> reserved = Set.of(COMMENT, SPAN, HAS_REF, HAS_BLOCK, HAS_MAP, HAS_TEXT,
             JSON, NULLABLE, ENUM_REF, DEFAULT_IMPL, ENTRY, ENUM, COLUMN_MODE, PACK, SEP, FIX, BLOCK);
 
     public String getComment() {
-        if (data.get(COMMENT) instanceof MetaStr str) {
-            return str.value;
+        if (data.get(COMMENT) instanceof MetaStr(String value)) {
+            return value;
         }
         return "";
     }
 
     public String putComment(String comment) {
-        MetaValue value = data.putLast(COMMENT, new MetaStr(comment));
-        if (value instanceof MetaStr ms) {
-            return ms.value();
+        MetaValue old = data.putLast(COMMENT, new MetaStr(comment));
+        if (old instanceof MetaStr(String value)) {
+            return value;
         }
         return "";
     }
 
     public String removeComment() {
         MetaValue obj = data.remove(COMMENT);
-        if (obj instanceof MetaStr ms) {
-            return ms.value();
+        if (obj instanceof MetaStr(String value)) {
+            return value;
         }
         return "";
     }
@@ -162,8 +170,8 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
 
     public String removeEnumRef() {
         MetaValue enumRef = data.remove(ENUM_REF);
-        if (enumRef instanceof MetaStr ms) {
-            return ms.value();
+        if (enumRef instanceof MetaStr(String value)) {
+            return value;
         }
         return "";
     }
@@ -174,8 +182,8 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
 
     public String removeDefaultImpl() {
         MetaValue defaultImpl = data.remove(DEFAULT_IMPL);
-        if (defaultImpl instanceof MetaStr ms) {
-            return ms.value();
+        if (defaultImpl instanceof MetaStr(String value)) {
+            return value;
         }
         return "";
     }
@@ -191,13 +199,13 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
 
     public EntryType removeEntry() {
         MetaValue entry = data.remove(ENTRY);
-        if (entry instanceof MetaStr ms) {
-            return new EntryType.EEntry(ms.value());
+        if (entry instanceof MetaStr(String value)) {
+            return new EntryType.EEntry(value);
         }
 
         MetaValue anEnum = data.remove(ENUM);
-        if (anEnum instanceof MetaStr ms) {
-            return new EntryType.EEnum(ms.value());
+        if (anEnum instanceof MetaStr(String value)) {
+            return new EntryType.EEnum(value);
         }
         return EntryType.ENo.NO;
     }
@@ -227,18 +235,18 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         }
 
         MetaValue sep = data.remove(SEP);
-        if (sep instanceof MetaStr ms) {
-            return new FieldFormat.Sep(ms.value().charAt(0));
+        if (sep instanceof MetaStr(String value)) {
+            return new FieldFormat.Sep(value.charAt(0));
         }
 
         MetaValue fix = data.remove(FIX);
-        if (fix instanceof MetaInt mi) {
-            return new FieldFormat.Fix(mi.value());
+        if (fix instanceof MetaInt(int value)) {
+            return new FieldFormat.Fix(value);
         }
 
         MetaValue block = data.remove(BLOCK);
-        if (block instanceof MetaInt mi) {
-            return new FieldFormat.Block(mi.value());
+        if (block instanceof MetaInt(int value)) {
+            return new FieldFormat.Block(value);
         }
 
         return FieldFormat.AutoOrPack.AUTO;

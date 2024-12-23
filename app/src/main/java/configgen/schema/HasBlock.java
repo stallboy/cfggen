@@ -26,8 +26,8 @@ public class HasBlock {
     private static CheckResult checkIfDirectFieldsHasBlock(Nameable nameable) {
         Metadata meta = nameable.meta();
         Metadata.MetaValue hasBlockValue = meta.getHasBlock();
-        if (hasBlockValue instanceof Metadata.MetaInt mi) {
-            return mi.value() == 1 ? CheckResult.Ok : CheckResult.Fail;
+        if (hasBlockValue instanceof Metadata.MetaInt(int value)) {
+            return value == 1 ? CheckResult.Ok : CheckResult.Fail;
         }
 
         if (nameable instanceof Structural structural) {
@@ -42,8 +42,8 @@ public class HasBlock {
 
     public static boolean hasBlock(Nameable nameable) {
         Metadata.MetaValue v = nameable.meta().getHasBlock();
-        if (v instanceof Metadata.MetaInt mi) {
-            return mi.value() == 1;
+        if (v instanceof Metadata.MetaInt(int value)) {
+            return value == 1;
         }
         throw new IllegalStateException(nameable.fullName() + " has no _hasBlock meta value, schema not resolved!");
     }

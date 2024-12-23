@@ -2,6 +2,7 @@ package configgen.tool;
 
 import configgen.ctx.Context;
 import configgen.gen.*;
+import configgen.schema.HasText;
 import configgen.util.CSVUtil;
 import configgen.value.CfgValue;
 import configgen.value.ForeachPrimitiveValue;
@@ -18,7 +19,7 @@ public final class GenI18n extends Generator {
 
     public GenI18n(Parameter parameter) {
         super(parameter);
-        file = new File(parameter.get("file", "../i18n/i18n-config.csv"));
+        file = new File(parameter.get("file", "../i18n/en.csv"));
     }
 
     @Override
@@ -27,11 +28,14 @@ public final class GenI18n extends Generator {
 
         data = new ArrayList<>(64 * 1024);
         for (VTable vTable : cfgValue.sortedTables()) {
-            ForeachPrimitiveValue.foreachVTable(this::visit, vTable);
+            if (HasText.hasText(vTable.schema())) {
+                ForeachPrimitiveValue.foreachVTable(this::visit, vTable);
+            }
         }
 
         CSVUtil.writeToFile(file, data);
     }
+
 
     private void visit(PrimitiveValue primitiveValue, String table, Value pk, List<String> fieldChain) {
         if (primitiveValue instanceof VText vText) {
