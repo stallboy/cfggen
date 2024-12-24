@@ -187,9 +187,9 @@ public final class CfgSchemaResolver {
                 resolveFieldType(item, field);
             }
             case FMap(SimpleType key, SimpleType value) -> {
-                checkMapKey(key, field);
                 resolveFieldType(key, field);
                 resolveFieldType(value, field);
+                checkMapKey(key, field);
             }
             case Primitive ignored -> {
             }
