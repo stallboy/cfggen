@@ -1,18 +1,21 @@
 package configgen.gencs;
 
 import configgen.ctx.Context;
+import configgen.ctx.TextFinderByPkAndField;
 import configgen.gen.Generator;
 import configgen.ctx.LangSwitchRuntime;
 import configgen.gen.Parameter;
 import configgen.util.CachedFileOutputStream;
 import configgen.util.XorCipherOutputStream;
 import configgen.value.CfgValue;
+import configgen.value.ForeachValue;
 
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 
 import static configgen.value.CfgValue.*;
@@ -59,10 +62,18 @@ public class GenBytes extends Generator {
 
         addString(vTable.name());
         addInt(vTable.valueList().size());
-        for (VStruct v : vTable.valueList()) {
-            addValue(v);
+
+        if (langSwitchRuntime == null) {
+            // 不需要多语言切换时，用这个会更高效
+            for (VStruct v : vTable.valueList()) {
+                addValue(v);
+            }
+        } else {
+            // 否则，可能需要 pk  & fieldChain 作为id，去取多语言的text
+            ForeachValue.foreachVTable(new MyValueVisitor(), vTable);
         }
     }
+
 
     private void addValue(Value value) {
         switch (value) {
@@ -71,17 +82,8 @@ public class GenBytes extends Generator {
             case VLong vLong -> addLong(vLong.value());
             case VFloat vFloat -> addFloat(vFloat.value());
             case VString vStr -> addString(vStr.value());
-            case VText vText -> {
-                if (langSwitchRuntime != null) {
-                    //这里全部写进去，作为一个Text的Bean
-                    String[] i18nStrings = langSwitchRuntime.findAllLangText(vText.value());
-                    for (String i18nStr : i18nStrings) {
-                        addString(i18nStr);
-                    }
-                } else {
-                    addString(vText.value());
-                }
-            }
+            case VText vText -> addString(vText.value());
+
             case VStruct vStruct -> {
                 for (Value v : vStruct.values()) {
                     addValue(v);
@@ -157,5 +159,57 @@ public class GenBytes extends Generator {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private class MyValueVisitor implements ForeachValue.ValueVisitor {
+
+        @Override
+        public void visitPrimitive(PrimitiveValue primitiveValue, Value pk, List<String> fieldChain) {
+            switch (primitiveValue) {
+                case VBool vBool -> {
+                    addBool(vBool.value());
+                }
+                case VFloat vFloat -> {
+                    addFloat(vFloat.value());
+                }
+                case VInt vInt -> {
+                    addInt(vInt.value());
+                }
+                case VLong vLong -> {
+                    addLong(vLong.value());
+                }
+                case VString vStr -> {
+                    addString(vStr.value());
+                }
+                case VText vText -> {
+                    //这里全部写进去，作为一个Text的Bean
+                    String fieldChainStr = TextFinderByPkAndField.fieldChainStr(fieldChain);
+                    String[] i18nStrings = langSwitchRuntime.findAllLangText(pk.packStr(), fieldChainStr, vText.value());
+                    for (String i18nStr : i18nStrings) {
+                        addString(i18nStr);
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void visitVList(VList vList, Value pk, List<String> fieldChain) {
+            addInt(vList.valueList().size());
+        }
+
+        @Override
+        public void visitVMap(VMap vMap, Value pk, List<String> fieldChain) {
+            addInt(vMap.valueMap().size());
+        }
+
+        @Override
+        public void visitVInterface(VInterface vInterface, Value pk, List<String> fieldChain) {
+            addString(vInterface.child().name());
+        }
+
+        @Override
+        public void visitVStruct(VStruct vStruct, Value pk, List<String> fieldChain) {
+        }
+
     }
 }

@@ -17,10 +17,11 @@ class ValueShared {
     void iterateShared() {
         ValueSharedLayer layer1 = new ValueSharedLayer(this);
         for (VStruct vStruct : vTable.valueList()) {
-            layer1.visitVStruct(vStruct);
+            layer1.visitSubStructs(vStruct);
         }
         layers.add(layer1);
 
+        // 一层层，提取可shared的子结构
         ValueSharedLayer currLayer = layer1;
         while (true) {
             ValueSharedLayer nextLayer = new ValueSharedLayer(this);
@@ -28,7 +29,7 @@ class ValueShared {
             List<ValueSharedLayer.CompositeValueCnt> currLayerCopy = new ArrayList<>(currLayer.getCompositeValueToCnt().values());
             for (ValueSharedLayer.CompositeValueCnt vc : currLayerCopy) {
                 if (!vc.isTraversed()) {
-                    nextLayer.visit(vc.getFirst());
+                    nextLayer.visitSubStructs(vc.getFirst());
                     vc.setTraversed();
                 }
             }

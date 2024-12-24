@@ -189,8 +189,8 @@ public record CfgValue(CfgSchema schema,
         }
 
         public Source getImplNameSource() {
-            if (source instanceof Source.DCellList list && !list.cells().isEmpty()) {
-                return list.cells().getFirst();
+            if (source instanceof Source.DCellList(List<CfgData.DCell> cells) && !cells.isEmpty()) {
+                return cells.getFirst();
             }
             return source;
         }

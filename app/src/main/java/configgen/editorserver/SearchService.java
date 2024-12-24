@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static configgen.value.ForeachPrimitiveValue.PrimitiveValueVisitor;
-import static configgen.value.ForeachPrimitiveValue.foreachVTable;
+import static configgen.value.ForeachValue.PrimitiveValueVisitor;
+import static configgen.value.ForeachValue.searchVTable;
 
 public class SearchService {
 
@@ -71,7 +71,7 @@ public class SearchService {
         };
 
         for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
-            foreachVTable(visitor, vTable);
+            searchVTable(visitor, vTable);
             if (res.items.size() >= maxItems) {
                 break;
             }
@@ -92,7 +92,7 @@ public class SearchService {
         };
 
         for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
-            foreachVTable(visitor, vTable);
+            searchVTable(visitor, vTable);
             if (res.items.size() >= maxItems) {
                 break;
             }

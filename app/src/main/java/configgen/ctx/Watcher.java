@@ -12,6 +12,9 @@ import java.util.Objects;
 import static configgen.data.DataUtil.*;
 import static java.nio.file.StandardWatchEventKinds.*;
 
+/**
+ * 监控目录rootDir下文件，有变化则设置标记lastEvtSec
+ */
 public class Watcher {
     private final Path rootDir;
     private long lastEvtSec;

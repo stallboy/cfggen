@@ -171,7 +171,6 @@ class ValueStringify {
 
     private void addVInterface(VInterface value) {
         addVStruct(value.child(), value);
-
     }
 
     private void addVStruct(VStruct val, VInterface nullableInterface) {
@@ -233,8 +232,6 @@ class ValueStringify {
                             if (idx != sz) {
                                 res.append(", ");
                             }
-
-
                         }
                     } else {
                         idx++;

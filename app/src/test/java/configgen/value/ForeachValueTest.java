@@ -11,12 +11,12 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ForeachPrimitiveValueTest {
+class ForeachValueTest {
 
     private @TempDir Path tempDir;
 
     @Test
-    void foreach_simple() {
+    void search_simple() {
         String cfgStr = """
                 table t[id] {
                     id:int;
@@ -35,12 +35,12 @@ class ForeachPrimitiveValueTest {
         CfgValue cfgValue = ctx.makeValue();
 
         List<CfgValue.PrimitiveValue> list = new ArrayList<>();
-        ForeachPrimitiveValue.foreach((primitiveValue, table, pk, fieldChain) -> list.add(primitiveValue), cfgValue);
+        ForeachValue.searchCfgValue((primitiveValue, table, pk, fieldChain) -> list.add(primitiveValue), cfgValue);
         assertEquals(4, list.size());
     }
 
     @Test
-    void foreach_VStruct() {
+    void search_VStruct() {
         String cfgStr = """
                 struct s {
                     a:int;
@@ -63,12 +63,12 @@ class ForeachPrimitiveValueTest {
         CfgValue cfgValue = ctx.makeValue();
 
         List<CfgValue.PrimitiveValue> list = new ArrayList<>();
-        ForeachPrimitiveValue.foreach((primitiveValue, table, pk, fieldChain) -> list.add(primitiveValue), cfgValue);
+        ForeachValue.searchCfgValue((primitiveValue, table, pk, fieldChain) -> list.add(primitiveValue), cfgValue);
         assertEquals(6, list.size());
     }
 
     @Test
-    void foreach_VInterface() {
+    void search_VInterface() {
         String cfgStr = """
                 interface action {
                     struct cast{
@@ -102,12 +102,12 @@ class ForeachPrimitiveValueTest {
         CfgValue cfgValue = ctx.makeValue();
 
         List<CfgValue.PrimitiveValue> list = new ArrayList<>();
-        ForeachPrimitiveValue.foreach((primitiveValue, table, pk, fieldChain) -> list.add(primitiveValue), cfgValue);
+        ForeachValue.searchCfgValue((primitiveValue, table, pk, fieldChain) -> list.add(primitiveValue), cfgValue);
         assertEquals(14, list.size());
     }
 
     @Test
-    void foreach_listVStruct() {
+    void search_listVStruct() {
         String cfgStr = """
                 struct s {
                     a:int;
@@ -130,12 +130,12 @@ class ForeachPrimitiveValueTest {
         CfgValue cfgValue = ctx.makeValue();
 
         List<CfgValue.PrimitiveValue> list = new ArrayList<>();
-        ForeachPrimitiveValue.foreach((primitiveValue, table, pk, fieldChain) -> list.add(primitiveValue), cfgValue);
+        ForeachValue.searchCfgValue((primitiveValue, table, pk, fieldChain) -> list.add(primitiveValue), cfgValue);
         assertEquals(5, list.size());
     }
 
     @Test
-    void foreach_mapVStruct() {
+    void search_mapVStruct() {
         String cfgStr = """
                 struct s {
                     a:int;
@@ -158,7 +158,7 @@ class ForeachPrimitiveValueTest {
         CfgValue cfgValue = ctx.makeValue();
 
         List<CfgValue.PrimitiveValue> list = new ArrayList<>();
-        ForeachPrimitiveValue.foreach((primitiveValue, table, pk, fieldChain) -> list.add(primitiveValue), cfgValue);
+        ForeachValue.searchCfgValue((primitiveValue, table, pk, fieldChain) -> list.add(primitiveValue), cfgValue);
         assertEquals(7, list.size());
     }
 

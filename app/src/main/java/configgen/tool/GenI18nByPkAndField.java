@@ -1,12 +1,13 @@
 package configgen.tool;
 
 import configgen.ctx.Context;
+import configgen.ctx.TextFinderByPkAndField;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
 import configgen.schema.HasText;
 import configgen.util.CachedFileOutputStream;
 import configgen.value.CfgValue;
-import configgen.value.ForeachPrimitiveValue;
+import configgen.value.ForeachValue;
 import org.dhatim.fastexcel.Workbook;
 import org.dhatim.fastexcel.Worksheet;
 
@@ -52,7 +53,7 @@ public final class GenI18nByPkAndField extends Generator {
             if (HasText.hasText(vTable.schema())) {
                 curTable = new OneTable(vTable.name(), new ArrayList<>());
                 curRecord = null;
-                ForeachPrimitiveValue.foreachVTable(this::visit, vTable);
+                ForeachValue.searchVTable(this::visit, vTable);
                 textTables.add(curTable);
             }
         }
@@ -82,7 +83,7 @@ public final class GenI18nByPkAndField extends Generator {
 
             String pkStr = pk.packStr();
             String translatedText = nullableI18n != null ? nullableI18n.trim() : "";
-            String fieldChainStr = fieldChain.size() == 1 ? fieldChain.getFirst() : String.join("-", fieldChain);
+            String fieldChainStr = TextFinderByPkAndField.fieldChainStr(fieldChain);
             OneText oneText = new OneText(fieldChainStr, original, translatedText);
 
             if (curRecord != null && curRecord.pk.equals(pkStr)) {

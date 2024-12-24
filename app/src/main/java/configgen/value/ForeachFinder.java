@@ -8,6 +8,9 @@ import java.util.List;
 import static configgen.value.CfgValue.*;
 import static configgen.value.ForeachFinder.FContainerEach.*;
 
+/**
+ * 根据schema路径，来找value
+ */
 public class ForeachFinder {
 
     public interface FinderVisitor {

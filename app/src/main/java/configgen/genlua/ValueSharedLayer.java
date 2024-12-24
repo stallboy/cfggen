@@ -1,5 +1,7 @@
 package configgen.genlua;
 
+import configgen.value.ValueHasText;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -7,8 +9,8 @@ import static configgen.value.CfgValue.*;
 
 class ValueSharedLayer {
     static class CompositeValueCnt {
-        int cnt;
-        CompositeValue first;
+        private int cnt;
+        private final CompositeValue first;
         private boolean traversed = false;
 
         CompositeValueCnt(CompositeValue first) {
@@ -18,6 +20,10 @@ class ValueSharedLayer {
 
         int getCnt() {
             return cnt;
+        }
+
+        void incCnt() {
+            cnt++;
         }
 
         CompositeValue getFirst() {
@@ -35,95 +41,104 @@ class ValueSharedLayer {
 
     private final ValueShared shared;
     private final Map<CompositeValue, CompositeValueCnt> compositeValueToCnt;
-    private final ValueSharedLayer next;
 
-    ValueSharedLayer(ValueShared shared) {
+    public ValueSharedLayer(ValueShared shared) {
         this.shared = shared;
         compositeValueToCnt = new LinkedHashMap<>();
-        next = new ValueSharedLayer(this);
     }
 
-    private ValueSharedLayer(ValueSharedLayer last) {
-        shared = last.shared;
-        compositeValueToCnt = last.compositeValueToCnt;
-        next = null;
-    }
 
-    Map<CompositeValue, CompositeValueCnt> getCompositeValueToCnt() {
+    public Map<CompositeValue, CompositeValueCnt> getCompositeValueToCnt() {
         return compositeValueToCnt;
     }
 
     private void add(CompositeValue v) {
         CompositeValueCnt oldInThisLayer = compositeValueToCnt.get(v);
+        boolean isLangSwitchAndHasText = isLangSwitchAndCompositeValueHasText(v);
         if (oldInThisLayer != null) {
-            oldInThisLayer.cnt++;
-            oldInThisLayer.first.setShared(); //设置上，后面生成代码时会快点
-            v.setShared();
-        } else {
-            CompositeValueCnt oldInPreviousLayer = shared.remove(v); //这个会从之前的layer中删除
-            if (oldInPreviousLayer != null) { //前面的层可能包含了这个v
-                oldInPreviousLayer.cnt++;
-                //挪到这层，这样生成lua代码时已经排序,但要在生成下层shared时不遍历这个，因为已经遍历过
-                compositeValueToCnt.put(v, oldInPreviousLayer);
-
-                oldInPreviousLayer.first.setShared();
+            // 1，本层中包含了
+            if (!isLangSwitchAndHasText){ // 此时是不共享的，因为虽然VText的原始文本一样，但翻译可能不同
+                oldInThisLayer.incCnt();
+                oldInThisLayer.first.setShared(); //设置上，后面生成代码时会快点
                 v.setShared();
+            } // else 忽略
+        } else {
+            CompositeValueCnt oldInPreviousLayer = shared.remove(v); // 这个会从之前的layer中删除
+            if (oldInPreviousLayer != null) {
+                // 2，本层未包含，之前的层包含
+                if (!isLangSwitchAndHasText){
+                    oldInPreviousLayer.incCnt();
+                    // 挪到这层，这样生成lua代码时已经排序,但要在生成下层shared时不遍历这个，因为已经遍历过
+                    compositeValueToCnt.put(v, oldInPreviousLayer);
+
+                    oldInPreviousLayer.first.setShared();
+                    v.setShared();
+                } // else 忽略
 
             } else {
+                // 3，本层未包含，之前层也未包含
                 compositeValueToCnt.put(v, new CompositeValueCnt(v));
             }
         }
     }
 
-    void visit(Value value) {
+    public void visitSubStructs(Value value) {
         switch (value) {
             case PrimitiveValue ignored -> {
             }
-            case VStruct vStruct -> visitVStruct(vStruct);
-            case VInterface vInterface -> visitVInterface(vInterface);
-            case VList vList -> visitVList(vList);
-            case VMap vMap -> visitVMap(vMap);
+            case VStruct vStruct -> {
+                for (Value fv : vStruct.values()) {
+                    visitThis(fv);
+                }
+            }
+            case VInterface vInterface -> {
+                for (Value fv : vInterface.child().values()) {
+                    visitThis(fv);
+                }
+            }
+            case VList vList -> {
+                for (SimpleValue item : vList.valueList()) {
+                    visitThis(item);
+                }
+
+            }
+            case VMap vMap -> {
+                for (Map.Entry<SimpleValue, SimpleValue> entry : vMap.valueMap().entrySet()) {
+                    visitThis(entry.getKey());
+                    visitThis(entry.getValue());
+                }
+            }
         }
     }
 
-    void visitVList(VList value) {
-        if (next != null) {
-            for (SimpleValue item : value.valueList()) {
-                next.visit(item);
+    private void visitThis(Value value) {
+        switch (value) {
+            case PrimitiveValue ignored -> {
             }
-        } else if (!value.valueList().isEmpty()) {
-            add(value);
+            case VStruct vStruct -> {
+                if (!vStruct.values().isEmpty()) {
+                    add(vStruct);
+                }
+            }
+            case VInterface vInterface -> {
+                add(vInterface);
+            }
+            case VList vList -> {
+                if (!vList.valueList().isEmpty()) {
+                    add(vList);
+                }
+            }
+            case VMap vMap -> {
+                if (!vMap.valueMap().isEmpty()) {
+                    add(vMap);
+                }
+            }
         }
     }
 
-    void visitVMap(VMap value) {
-        if (next != null) {
-            for (Map.Entry<SimpleValue, SimpleValue> entry : value.valueMap().entrySet()) {
-                next.visit(entry.getKey());
-                next.visit(entry.getValue());
-            }
-        } else if (!value.valueMap().isEmpty()) {
-            add(value);
-        }
+    private static boolean isLangSwitchAndCompositeValueHasText(CompositeValue value) {
+        return AContext.getInstance().nullableLangSwitchSupport() != null &&
+                ValueHasText.hasText(value);
     }
 
-    void visitVStruct(VStruct value) {
-        if (next != null) {
-            for (Value field : value.values()) {
-                next.visit(field);
-            }
-        } else if (!value.values().isEmpty()) {
-            add(value);
-        }
-    }
-
-    void visitVInterface(VInterface value) {
-        if (next != null) {
-            for (Value field : value.child().values()) {
-                next.visit(field);
-            }
-        } else {
-            add(value);
-        }
-    }
 }

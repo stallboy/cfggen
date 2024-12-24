@@ -2,10 +2,12 @@ package configgen.ctx;
 
 import configgen.util.Logger;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Objects;
 
+/**
+ * 监控watcher下的标记，等标记出现且之后waitSecondsAfterWatchEvt都不再重复出现后，触发listener
+ */
 public class WaitWatcher {
     private final Watcher watcher;
     private final Runnable listener;

@@ -28,7 +28,7 @@ public class LangSwitchRuntime {
         }
     }
 
-    public String[] findAllLangText(String original) {
+    public String[] findAllLangText(String pk, String fieldChain, String original) {
         if (original.isEmpty()) {
             return tmpEmpty;
         }
@@ -38,7 +38,7 @@ public class LangSwitchRuntime {
         for (TextFinder finder : curTableTextFinderList) {
             String t = null;
             if (finder != null) {
-                t = finder.findText(null, null, original);
+                t = finder.findText(pk, fieldChain, original);
             }
             if (t == null) {
                 t = original;

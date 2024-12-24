@@ -8,7 +8,7 @@ import configgen.schema.Nameable;
 import configgen.schema.TableSchema;
 import configgen.util.UTF8Writer;
 import configgen.value.CfgValue;
-import configgen.value.ForeachPrimitiveValue;
+import configgen.value.ForeachValue;
 import configgen.value.RefSearcher;
 
 import java.io.*;
@@ -64,7 +64,7 @@ public class ValueSearcher {
 
 
     public void searchInt(Set<Integer> integers) {
-        ForeachPrimitiveValue.foreach((primitiveValue, table, pk, fieldChain) -> {
+        ForeachValue.searchCfgValue((primitiveValue, table, pk, fieldChain) -> {
             switch (primitiveValue) {
                 case VInt vInt -> {
                     if (integers.contains(vInt.value())) {
@@ -85,7 +85,7 @@ public class ValueSearcher {
     }
 
     public void searchStr(String str) {
-        ForeachPrimitiveValue.foreach((primitiveValue, table, pk, fieldChain) -> {
+        ForeachValue.searchCfgValue((primitiveValue, table, pk, fieldChain) -> {
             if (Objects.requireNonNull(primitiveValue) instanceof StringValue sv) {
                 String v = sv.value();
                 if (v.contains(str)) {

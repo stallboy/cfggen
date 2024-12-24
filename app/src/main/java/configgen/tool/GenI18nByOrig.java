@@ -5,7 +5,7 @@ import configgen.gen.*;
 import configgen.schema.HasText;
 import configgen.util.CSVUtil;
 import configgen.value.CfgValue;
-import configgen.value.ForeachPrimitiveValue;
+import configgen.value.ForeachValue;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +29,7 @@ public final class GenI18nByOrig extends Generator {
         data = new ArrayList<>(64 * 1024);
         for (VTable vTable : cfgValue.sortedTables()) {
             if (HasText.hasText(vTable.schema())) {
-                ForeachPrimitiveValue.foreachVTable(this::visit, vTable);
+                ForeachValue.searchVTable(this::visit, vTable);
             }
         }
 

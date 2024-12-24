@@ -14,7 +14,6 @@ import static configgen.value.CfgValue.*;
 
 public class ValueUtil {
 
-
     public static VText createText(String str, Source source, TextFinder nullableTableI18n) {
         String i18n = null;
         String value;

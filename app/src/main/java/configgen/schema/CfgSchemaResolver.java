@@ -176,19 +176,20 @@ public final class CfgSchemaResolver {
 
     private void resolveFields(Structural structural) {
         for (FieldSchema field : structural.fields()) {
-            resolveFieldType(field, field.type());
+            resolveFieldType(field.type(), field);
         }
     }
 
 
-    private void resolveFieldType(FieldSchema field, FieldType type) {
+    private void resolveFieldType(FieldType type, FieldSchema field) {
         switch (type) {
-            case FList(FieldType item) -> {
-                resolveFieldType(field, item);
+            case FList(SimpleType item) -> {
+                resolveFieldType(item, field);
             }
-            case FMap(FieldType key, FieldType value) -> {
-                resolveFieldType(field, key);
-                resolveFieldType(field, value);
+            case FMap(SimpleType key, SimpleType value) -> {
+                checkMapKey(key, field);
+                resolveFieldType(key, field);
+                resolveFieldType(value, field);
             }
             case Primitive ignored -> {
             }
@@ -345,40 +346,18 @@ public final class CfgSchemaResolver {
         if (fields.size() == 1) {
             FieldSchema field = fields.getFirst();
             FieldType type = field.type();
-
-            String fn = field.name();
-            String tn = type.toString();
-
             switch (type) {
                 case ContainerType ignored -> {
-                    errKeyTypeNotSupport(fn, tn);
+                    errKeyTypeNotSupport(field.name(), type.toString());
                 }
-                case Primitive ignored -> {
-                    if (checkErrFieldAsKey(field)) {
-                        errKeyTypeNotSupport(fn, tn);
-                    }
-                }
-                case StructRef structRef -> {
-                    Fieldable fieldable = structRef.obj();
-
-                    switch (fieldable) {
-                        case InterfaceSchema ignored -> {
-                            errKeyTypeNotSupport(fn, tn);
-                        }
-                        case StructSchema structSchema -> {
-                            if (checkErrFieldListAsKey(structSchema.fields())) {
-                                errKeyTypeNotSupport(fn, tn);
-                            }
-                        }
-                    }
+                case SimpleType simple -> {
+                    checkMapKey(simple, field);
                 }
             }
         } else {
             for (FieldSchema field : fields) {
-                String fn = field.name();
-                String tn = field.type().toString();
-                if (checkErrFieldAsKey(field)) {
-                    errKeyTypeNotSupport(fn, tn);
+                if (checkErrTypeAsKey(field.type())) {
+                    errKeyTypeNotSupport(field.name(), field.type().toString());
                 }
             }
         }
@@ -386,18 +365,36 @@ public final class CfgSchemaResolver {
     }
 
 
-    private boolean checkErrFieldListAsKey(List<FieldSchema> fields) {
-        return fields.stream().anyMatch(this::checkErrFieldAsKey);
-    }
-
-    private boolean checkErrFieldAsKey(FieldSchema field) {
-        FieldType type = field.type();
+    private boolean checkErrTypeAsKey(FieldType type) {
         return !(type == BOOL || type == INT || type == LONG || type == STRING);
     }
 
     private void errKeyTypeNotSupport(String field, String errType) {
         errs.addErr(new KeyTypeNotSupport(ctx(), field, errType));
     }
+
+    private void checkMapKey(SimpleType keyType, FieldSchema field) {
+        boolean err;
+        switch (keyType) {
+            case Primitive primitive -> {
+                err = checkErrTypeAsKey(primitive);
+            }
+            case StructRef structRef -> {
+                switch (structRef.obj()) {
+                    case InterfaceSchema ignored -> {
+                        err = true;
+                    }
+                    case StructSchema structSchema -> {
+                        err = structSchema.fields().stream().anyMatch(f -> checkErrTypeAsKey(f.type()));
+                    }
+                }
+            }
+        }
+        if (err) {
+            errKeyTypeNotSupport(field.name(), keyType.toString());
+        }
+    }
+
 
     /// /////////////////////////////////////////////////////////////////
     private void step3_resolveAllForeignKeys() {

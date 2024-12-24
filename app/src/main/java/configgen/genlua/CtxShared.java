@@ -17,6 +17,9 @@ class CtxShared {
     private final Map<CompositeValue, CompositeValueStr> sharedCompositeValues = new LinkedHashMap<>();
 
 
+    /**
+     * 会生成 [name] = [valueStr] lua代码，供各record内部引用
+     */
     static class CompositeValueStr {
         private String valueStr = null;
         private final String name;

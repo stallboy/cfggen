@@ -2,17 +2,20 @@ package configgen.genjava;
 
 import configgen.ctx.Context;
 import configgen.ctx.LangSwitch;
+import configgen.ctx.TextFinderByPkAndField;
 import configgen.gen.Generator;
 import configgen.ctx.LangSwitchRuntime;
 import configgen.gen.Parameter;
 import configgen.util.CachedFileOutputStream;
 import configgen.util.Logger;
 import configgen.value.CfgValue;
+import configgen.value.ForeachValue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import static configgen.value.CfgValue.*;
@@ -61,9 +64,18 @@ public final class GenJavaData extends Generator {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             try (ConfigOutput otherOutput = new ConfigOutput(new DataOutputStream(byteArrayOutputStream))) {
                 otherOutput.writeInt(vTable.valueList().size());
-                for (VStruct v : vTable.valueList()) {
-                    writeValue(v, otherOutput, langSwitchRuntime);
+
+                if (langSwitchRuntime == null) {
+                    // 不需要多语言切换时，用这个会更高效
+                    for (VStruct v : vTable.valueList()) {
+                        writeValue(v, otherOutput, langSwitchRuntime);
+                    }
+                } else {
+                    // 可能需要pk&fieldChain作为id,去取多语言的text
+                    ForeachValue.foreachVTable(new MyValueVisitor(otherOutput, langSwitchRuntime), vTable);
                 }
+
+
                 byte[] bytes = byteArrayOutputStream.toByteArray();
                 output.writeStr(vTable.name());
                 output.writeInt(bytes.length);
@@ -80,17 +92,8 @@ public final class GenJavaData extends Generator {
             case VLong vLong -> output.writeLong(vLong.value());
             case VFloat vFloat -> output.writeFloat(vFloat.value());
             case VString vStr -> output.writeStr(vStr.value());
-            case VText vText -> {
-                if (langSwitchRuntime != null) {
-                    //这里全部写进去，作为一个Text的Bean
-                    String[] i18nStrings = langSwitchRuntime.findAllLangText(vText.value());
-                    for (String i18nStr : i18nStrings) {
-                        output.writeStr(i18nStr);
-                    }
-                } else {
-                    output.writeStr(vText.value());
-                }
-            }
+            case VText vText -> output.writeStr(vText.value());
+
             case VStruct vStruct -> {
                 for (Value v : vStruct.values()) {
                     writeValue(v, output, langSwitchRuntime);
@@ -116,6 +119,56 @@ public final class GenJavaData extends Generator {
                     writeValue(e.getValue(), output, langSwitchRuntime);
                 }
             }
+        }
+    }
+
+    private static class MyValueVisitor implements ForeachValue.ValueVisitor {
+        private final ConfigOutput output;
+        private final LangSwitchRuntime langSwitchRuntime;
+
+        public MyValueVisitor(ConfigOutput output, LangSwitchRuntime langSwitchRuntime) {
+            this.output = output;
+            this.langSwitchRuntime = langSwitchRuntime;
+
+        }
+
+        @Override
+        public void visitPrimitive(PrimitiveValue primitiveValue, Value pk, List<String> fieldChain) {
+            switch (primitiveValue) {
+                case VBool vBool -> output.writeBool(vBool.value());
+                case VInt vInt -> output.writeInt(vInt.value());
+                case VLong vLong -> output.writeLong(vLong.value());
+                case VFloat vFloat -> output.writeFloat(vFloat.value());
+                case VString vStr -> output.writeStr(vStr.value());
+                case VText vText -> {
+                    //这里全部写进去，作为一个Text的Bean
+                    String fieldChainStr = TextFinderByPkAndField.fieldChainStr(fieldChain);
+                    String[] i18nStrings = langSwitchRuntime.findAllLangText(pk.packStr(), fieldChainStr, vText.value());
+                    for (String i18nStr : i18nStrings) {
+                        output.writeStr(i18nStr);
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void visitVList(VList vList, Value pk, List<String> fieldChain) {
+            output.writeInt(vList.valueList().size());
+        }
+
+        @Override
+        public void visitVMap(VMap vMap, Value pk, List<String> fieldChain) {
+            output.writeInt(vMap.valueMap().size());
+        }
+
+        @Override
+        public void visitVInterface(VInterface vInterface, Value pk, List<String> fieldChain) {
+            output.writeStr(vInterface.child().name());
+        }
+
+        @Override
+        public void visitVStruct(VStruct vStruct, Value pk, List<String> fieldChain) {
+
         }
     }
 }

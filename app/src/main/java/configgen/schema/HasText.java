@@ -1,5 +1,6 @@
 package configgen.schema;
 
+import static configgen.schema.FieldType.*;
 import static configgen.schema.IncludedStructs.CheckResult;
 import static configgen.schema.IncludedStructs.checkAnyOk;
 
@@ -22,12 +23,31 @@ public class HasText {
 
         if (nameable instanceof Structural structural) {
             for (FieldSchema f : structural.fields()) {
-                if (f.type() == FieldType.Primitive.TEXT) {
+                if (f.type() == Primitive.TEXT) {
                     return CheckResult.Ok;
                 }
             }
         }
         return CheckResult.Unknown;
+    }
+
+
+    public static boolean hasText(FieldType type) {
+        switch (type) {
+            case Primitive primitive -> {
+                return primitive == Primitive.TEXT;
+            }
+            case StructRef structRef -> {
+                return hasText(structRef.obj());
+            }
+            case FList fList -> {
+                return hasText(fList.item());
+            }
+
+            case FMap fMap -> {
+                return hasText(fMap.key()) || hasText(fMap.value());
+            }
+        }
     }
 
     public static boolean hasText(Nameable nameable) {
