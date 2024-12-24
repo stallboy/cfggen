@@ -1,7 +1,7 @@
 package configgen.tool;
 
 import configgen.ctx.Context;
-import configgen.ctx.TextFinderByPkAndField;
+import configgen.ctx.TextFinderByPkAndFieldChain;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
 import configgen.schema.HasText;
@@ -19,7 +19,7 @@ import java.util.*;
 import static configgen.value.CfgValue.*;
 
 
-public final class GenI18nByPkAndField extends Generator {
+public final class GenI18nByPkAndFieldChain extends Generator {
     record OneText(String fieldChain,
                    String originalText,
                    String translatedText) {
@@ -39,7 +39,7 @@ public final class GenI18nByPkAndField extends Generator {
     private OneRecord curRecord;
     private final I18nStat stat = new I18nStat();
 
-    public GenI18nByPkAndField(Parameter parameter) {
+    public GenI18nByPkAndFieldChain(Parameter parameter) {
         super(parameter);
         outputDir = parameter.get("dir", "../i18n/en");
     }
@@ -83,7 +83,7 @@ public final class GenI18nByPkAndField extends Generator {
 
             String pkStr = pk.packStr();
             String translatedText = nullableI18n != null ? nullableI18n.trim() : "";
-            String fieldChainStr = TextFinderByPkAndField.fieldChainStr(fieldChain);
+            String fieldChainStr = TextFinderByPkAndFieldChain.fieldChainStr(fieldChain);
             OneText oneText = new OneText(fieldChainStr, original, translatedText);
 
             if (curRecord != null && curRecord.pk.equals(pkStr)) {

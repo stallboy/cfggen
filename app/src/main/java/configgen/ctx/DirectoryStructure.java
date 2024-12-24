@@ -87,7 +87,7 @@ public class DirectoryStructure {
     }
 
     public static void findConfigFilesFromRecursively(Path source, String ext, String pkgNameDot,
-                                                       Path rootDir, Map<String, CfgFileInfo> cfgFiles) {
+                                                      Path rootDir, Map<String, CfgFileInfo> cfgFiles) {
         if (Files.exists(source)) {
             Path relativizeSource = rootDir.relativize(source);
             cfgFiles.put(relativizeSource.toString(),
@@ -220,22 +220,21 @@ public class DirectoryStructure {
         return jf;
     }
 
-    public synchronized JsonFileInfo removeJsonFile(String tableName, Path jsonPath) {
+    public synchronized void removeJsonFile(String tableName, Path jsonPath) {
         Map<String, Map<String, JsonFileInfo>> tmp = copyTableToJsonFiles();
 
         Map<String, JsonFileInfo> map = tmp.get(tableName);
         if (map == null) {
-            return null;
+            return;
         }
         Path relativePath = rootDir.relativize(jsonPath);
         String jsonKey = relativePath.toString();
         JsonFileInfo jf = map.remove(jsonKey);
         if (jf == null) {
-            return null;
+            return;
         }
 
         tableToJsonFiles = tmp;
-        return jf;
     }
 
 

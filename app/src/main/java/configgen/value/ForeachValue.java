@@ -52,7 +52,7 @@ public class ForeachValue {
         public void visitVStruct(VStruct vStruct, Value pk, List<String> fieldChain) {
             String note = vStruct.note();
             if (note != null && !note.isEmpty()) {
-                visitor.visit(new VString(note, vStruct.source()), table, pk, listAddOf(fieldChain, "$note"));
+                visitor.visit(new VString(note, vStruct.source()), table, pk, subChain(fieldChain, "$note"));
             }
         }
 
@@ -87,7 +87,7 @@ public class ForeachValue {
                 int i = 0;
                 for (FieldSchema field : vStruct.schema().fields()) {
                     Value fv = vStruct.values().get(i);
-                    foreachValue(visitor, fv, pk, listAddOf(fieldChain, field.name()));
+                    foreachValue(visitor, fv, pk, subChain(fieldChain, field.name()));
                     i++;
                 }
             }
@@ -96,7 +96,7 @@ public class ForeachValue {
                 int i = 0;
                 for (FieldSchema field : vInterface.child().schema().fields()) {
                     Value fv = vInterface.child().values().get(i);
-                    foreachValue(visitor, fv, pk, listAddOf(fieldChain, field.name()));
+                    foreachValue(visitor, fv, pk, subChain(fieldChain, field.name()));
                     i++;
                 }
             }
@@ -104,7 +104,7 @@ public class ForeachValue {
                 visitor.visitVList(vList, pk, fieldChain);
                 int i = 0;
                 for (SimpleValue sv : vList.valueList()) {
-                    foreachValue(visitor, sv, pk, listAddOf(fieldChain, String.valueOf(i)));
+                    foreachValue(visitor, sv, pk, subChain(fieldChain, String.valueOf(i)));
                     i++;
                 }
             }
@@ -112,15 +112,15 @@ public class ForeachValue {
                 visitor.visitVMap(vMap, pk, fieldChain);
                 int i = 0;
                 for (Map.Entry<SimpleValue, SimpleValue> entry : vMap.valueMap().entrySet()) {
-                    foreachValue(visitor, entry.getKey(), pk, listAddOf(fieldChain, String.format("%dk", i)));
-                    foreachValue(visitor, entry.getValue(), pk, listAddOf(fieldChain, String.format("%dv", i)));
+                    foreachValue(visitor, entry.getKey(), pk, subChain(fieldChain, String.format("%dk", i)));
+                    foreachValue(visitor, entry.getValue(), pk, subChain(fieldChain, String.format("%dv", i)));
                     i++;
                 }
             }
         }
     }
 
-    private static List<String> listAddOf(List<String> old, String e) {
+    private static List<String> subChain(List<String> old, String e) {
         List<String> res = new ArrayList<>(old.size() + 1);
         res.addAll(old);
         res.add(e);

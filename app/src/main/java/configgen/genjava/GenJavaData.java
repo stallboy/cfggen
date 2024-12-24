@@ -2,7 +2,6 @@ package configgen.genjava;
 
 import configgen.ctx.Context;
 import configgen.ctx.LangSwitch;
-import configgen.ctx.TextFinderByPkAndField;
 import configgen.gen.Generator;
 import configgen.ctx.LangSwitchRuntime;
 import configgen.gen.Parameter;
@@ -68,11 +67,11 @@ public final class GenJavaData extends Generator {
                 if (langSwitchRuntime == null) {
                     // 不需要多语言切换时，用这个会更高效
                     for (VStruct v : vTable.valueList()) {
-                        writeValue(v, otherOutput, langSwitchRuntime);
+                        writeValue(v, otherOutput);
                     }
                 } else {
                     // 可能需要pk&fieldChain作为id,去取多语言的text
-                    ForeachValue.foreachVTable(new MyValueVisitor(otherOutput, langSwitchRuntime), vTable);
+                    ForeachValue.foreachVTable(new ValueVisitorWithPkAndFieldChain(otherOutput, langSwitchRuntime), vTable);
                 }
 
 
@@ -85,7 +84,7 @@ public final class GenJavaData extends Generator {
     }
 
 
-    private static void writeValue(Value value, ConfigOutput output, LangSwitchRuntime langSwitchRuntime) {
+    private static void writeValue(Value value, ConfigOutput output) {
         switch (value) {
             case VBool vBool -> output.writeBool(vBool.value());
             case VInt vInt -> output.writeInt(vInt.value());
@@ -96,41 +95,35 @@ public final class GenJavaData extends Generator {
 
             case VStruct vStruct -> {
                 for (Value v : vStruct.values()) {
-                    writeValue(v, output, langSwitchRuntime);
+                    writeValue(v, output);
                 }
             }
             case VInterface vInterface -> {
                 output.writeStr(vInterface.child().name());
                 for (Value v : vInterface.child().values()) {
-                    writeValue(v, output, langSwitchRuntime);
+                    writeValue(v, output);
                 }
             }
             case VList vList -> {
                 output.writeInt(vList.valueList().size());
                 for (SimpleValue v : vList.valueList()) {
-                    writeValue(v, output, langSwitchRuntime);
+                    writeValue(v, output);
                 }
             }
 
             case VMap vMap -> {
                 output.writeInt(vMap.valueMap().size());
                 for (Map.Entry<SimpleValue, SimpleValue> e : vMap.valueMap().entrySet()) {
-                    writeValue(e.getKey(), output, langSwitchRuntime);
-                    writeValue(e.getValue(), output, langSwitchRuntime);
+                    writeValue(e.getKey(), output);
+                    writeValue(e.getValue(), output);
                 }
             }
         }
     }
 
-    private static class MyValueVisitor implements ForeachValue.ValueVisitor {
-        private final ConfigOutput output;
-        private final LangSwitchRuntime langSwitchRuntime;
-
-        public MyValueVisitor(ConfigOutput output, LangSwitchRuntime langSwitchRuntime) {
-            this.output = output;
-            this.langSwitchRuntime = langSwitchRuntime;
-
-        }
+    private record ValueVisitorWithPkAndFieldChain(
+            ConfigOutput output,
+            LangSwitchRuntime langSwitchRuntime) implements ForeachValue.ValueVisitor {
 
         @Override
         public void visitPrimitive(PrimitiveValue primitiveValue, Value pk, List<String> fieldChain) {
@@ -142,8 +135,7 @@ public final class GenJavaData extends Generator {
                 case VString vStr -> output.writeStr(vStr.value());
                 case VText vText -> {
                     //这里全部写进去，作为一个Text的Bean
-                    String fieldChainStr = TextFinderByPkAndField.fieldChainStr(fieldChain);
-                    String[] i18nStrings = langSwitchRuntime.findAllLangText(pk.packStr(), fieldChainStr, vText.value());
+                    String[] i18nStrings = langSwitchRuntime.findAllLangText(pk.packStr(), fieldChain, vText.value());
                     for (String i18nStr : i18nStrings) {
                         output.writeStr(i18nStr);
                     }

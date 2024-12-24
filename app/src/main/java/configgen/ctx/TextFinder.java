@@ -1,5 +1,7 @@
 package configgen.ctx;
 
+import java.util.List;
+
 /**
  * 在一个table中
  */
@@ -7,7 +9,7 @@ public interface TextFinder {
     /**
      * 根据主键，field chain，原始文本 --- 返回映射的 ---> 翻译文本
      */
-    String findText(String pk, String fieldChain, String original);
+    String findText(String pk, List<String> fieldChain, String original);
 
     // TODO remove
     default String findText(String original) {

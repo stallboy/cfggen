@@ -23,7 +23,7 @@ class TextFinderByOrig implements TextFinder {
     }
 
     @Override
-    public String findText(String pk, String fieldChain, String original) {
+    public String findText(String pk, List<String> fieldChain, String original) {
         String normalized = normalize(original, isCrLfAsLf);
         String text = originalToTranslated.get(normalized);
         if (text != null && !text.isEmpty()) {

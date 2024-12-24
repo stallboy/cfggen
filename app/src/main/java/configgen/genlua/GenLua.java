@@ -359,14 +359,30 @@ public class GenLua extends Generator {
         int extraFileCnt;
         {
             ///////////////////////////////////// 正常模式
-            ValueStringify stringify = new ValueStringify(lineCache, ctx, "mk");
             extraFileCnt = ps.enableCache(extraSplit, vTable.valueList().size());
 
-            for (VStruct vStruct : vTable.valueList()) {
-                lineCache.setLength(0);
-                stringify.addValue(vStruct);
-                ps.println(lineCache.toString());
+            boolean hasLangSwitchAndText = AContext.getInstance().nullableLangSwitchSupport() != null &&
+                    HasText.hasText(vTable.schema());
+
+            if (!hasLangSwitchAndText) {
+                // 无多语言切换，或此table没有text，这直接不用走pk & field chain做id，去取多语言翻译
+                ValueStringify stringify = new ValueStringify(lineCache, ctx, "mk", null);
+                for (VStruct vStruct : vTable.valueList()) {
+                    lineCache.setLength(0);
+                    stringify.addValue(vStruct, List.of());
+                    ps.println(lineCache.toString());
+                }
+            } else {
+                // pk & field chain做id, 取多语言翻译
+                for (Map.Entry<CfgValue.Value, VStruct> e : vTable.primaryKeyMap().entrySet()) {
+                    CfgValue.Value pk = e.getKey();
+                    VStruct vStruct = e.getValue();
+                    lineCache.setLength(0);
+                    new ValueStringify(lineCache, ctx, "mk", pk.packStr()).addValue(vStruct, List.of());
+                    ps.println(lineCache.toString());
+                }
             }
+
         }
 
         ps.disableCache();

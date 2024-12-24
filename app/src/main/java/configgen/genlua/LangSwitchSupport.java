@@ -48,7 +48,7 @@ class LangSwitchSupport {
         }
     }
 
-    int enterText(String original) {
+    int enterText(String pkStr, List<String> fieldChain, String original) {
         if (original.isEmpty()) {
             return 0;  // 空字符串
         }
@@ -57,7 +57,7 @@ class LangSwitchSupport {
         for (LangTexts lt : langTextsList) {
             String text = null;
             if (lt.curTableTextFinder != null) {
-                text = lt.curTableTextFinder.findText(original);
+                text = lt.curTableTextFinder.findText(pkStr, fieldChain, original);
             }
             if (text == null) {
                 text = original;

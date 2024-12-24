@@ -1,5 +1,7 @@
 package configgen.genlua;
 
+import configgen.schema.FieldSchema;
+
 import java.util.*;
 
 import static configgen.value.CfgValue.*;
@@ -28,29 +30,40 @@ class ValueStringify {
     private final StringBuilder res;
     private final Ctx ctx;
     private final String beanTypeStr;
+    private final String pkStr;
     private final boolean isKey;
 
     private ValueStringify key;
     private ValueStringify notKey;
 
-    public ValueStringify(StringBuilder res, Ctx ctx, String beanTypeStr) {
+    /**
+     * @param pkStr 可为null。当设置时，此时AContext.getInstance().nullableLangSwitchSupport()！=null，并且此table含有text
+     */
+    public ValueStringify(StringBuilder res, Ctx ctx, String beanTypeStr, String pkStr) {
         this.res = res;
         this.ctx = ctx;
         this.beanTypeStr = beanTypeStr;
+        this.pkStr = pkStr;
+        if (pkStr != null) {
+            if (AContext.getInstance().nullableLangSwitchSupport() == null) {
+                throw new IllegalArgumentException("Don't set pkStr when no LangSwitch");
+            }
+        }
         this.isKey = false;
 
-        key = new ValueStringify(res, ctx, true);
-        notKey = new ValueStringify(res, ctx, false);
+        key = new ValueStringify(res, ctx, pkStr, true);
+        notKey = new ValueStringify(res, ctx, pkStr, false);
         key.key = key;
         key.notKey = notKey;
         notKey.key = key;
         notKey.notKey = notKey;
     }
 
-    private ValueStringify(StringBuilder res, Ctx ctx, boolean isKey) {
+    private ValueStringify(StringBuilder res, Ctx ctx, String pkStr, boolean isKey) {
         this.res = res;
         this.ctx = ctx;
         this.beanTypeStr = null;
+        this.pkStr = pkStr;
         this.isKey = isKey;
     }
 
@@ -63,25 +76,42 @@ class ValueStringify {
         }
     }
 
-    public void addValue(Value value) {
+    private boolean hasLangSwitchAndText() {
+        return pkStr != null;
+    }
+
+    private List<String> subChain(List<String> old, String e) {
+        if (hasLangSwitchAndText()) {
+            List<String> res = new ArrayList<>(old.size() + 1);
+            res.addAll(old);
+            res.add(e);
+            return res;
+        } else {
+            return old; //但pkStr为null时，表示不需要LangSwitch
+        }
+    }
+
+    public void addValue(Value value, List<String> fieldChain) {
         switch (value) {
             case VBool vBool -> add(vBool.value() ? "true" : "false");
             case VInt vInt -> add(String.valueOf(vInt.value()));
             case VLong vLong -> add(String.valueOf(vLong.value()));
             case VFloat vFloat -> add(String.valueOf(vFloat.value()));
             case VString vStr -> addString(vStr.value());
-            case VText vText -> addVText(vText);
-            case VStruct vStruct -> addVStruct(vStruct, null);
-            case VInterface vInterface -> addVInterface(vInterface);
-            case VList vList -> addVList(vList);
-            case VMap vMap -> addVMap(vMap);
+            case VText vText -> addVText(vText, fieldChain);
+            case VStruct vStruct -> addVStruct(vStruct, null, fieldChain);
+            case VInterface vInterface -> addVInterface(vInterface, fieldChain);
+            case VList vList -> addVList(vList, fieldChain);
+            case VMap vMap -> addVMap(vMap, fieldChain);
         }
     }
 
-    private void addVText(VText value) {
-        LangSwitchSupport langSwitchSupport = AContext.getInstance().nullableLangSwitchSupport();
-        if (langSwitchSupport != null) {
-            int id = langSwitchSupport.enterText(value.value()) + 1;
+    /**********************************************************
+     * 之后的实现，需要保证fieldChain的法则跟value.ForeachValue中一致
+     */
+    private void addVText(VText value, List<String> fieldChain) {
+        if (hasLangSwitchAndText()) {
+            int id = AContext.getInstance().nullableLangSwitchSupport().enterText(pkStr, fieldChain, value.value()) + 1;
             res.append(id);
         } else {
             addString(value.value());
@@ -106,7 +136,7 @@ class ValueStringify {
     }
 
 
-    private void addVList(VList value) {
+    private void addVList(VList value, List<String> fieldChain) {
         int sz = value.valueList().size();
         if (sz == 0) { //优化，避免重复创建空table
             ctx.ctxShared().incEmptyTableUseCount();
@@ -122,7 +152,7 @@ class ValueStringify {
                 res.append(AContext.getInstance().getListMapPrefixStr());
                 int idx = 0;
                 for (Value eleValue : value.valueList()) {
-                    notKey.addValue(eleValue);
+                    notKey.addValue(eleValue, subChain(fieldChain, String.valueOf(idx)));
                     idx++;
                     if (idx != sz) {
                         res.append(", ");
@@ -141,7 +171,7 @@ class ValueStringify {
     }
 
 
-    private void addVMap(VMap value) {
+    private void addVMap(VMap value, List<String> fieldChain) {
         int sz = value.valueMap().size();
         if (sz == 0) { //优化，避免重复创建空table
             ctx.ctxShared().incEmptyTableUseCount();
@@ -157,9 +187,9 @@ class ValueStringify {
                 res.append(AContext.getInstance().getListMapPrefixStr());
                 int idx = 0;
                 for (Map.Entry<SimpleValue, SimpleValue> e : value.valueMap().entrySet()) {
-                    key.addValue(e.getKey());
+                    key.addValue(e.getKey(), subChain(fieldChain, String.format("%dk", idx)));
                     res.append(" = ");
-                    notKey.addValue(e.getValue());
+                    notKey.addValue(e.getValue(), subChain(fieldChain, String.format("%dv", idx)));
                     idx++;
                     if (idx != sz) {
                         res.append(", ");
@@ -170,16 +200,16 @@ class ValueStringify {
         }
     }
 
-    private void addVInterface(VInterface value) {
-        addVStruct(value.child(), value);
+    private void addVInterface(VInterface value, List<String> fieldChain) {
+        addVStruct(value.child(), value, fieldChain);
     }
 
-    private void addVStruct(VStruct val, VInterface nullableInterface) {
-        CompositeValue value = nullableInterface != null ? nullableInterface : val;
+    private void addVStruct(VStruct vStruct, VInterface nullableInterface, List<String> fieldChain) {
+        CompositeValue value = nullableInterface != null ? nullableInterface : vStruct;
 
         String beanType = beanTypeStr;
         if (beanType == null) {
-            beanType = ctx.ctxName().getLocalName(Name.fullName(val.schema()));
+            beanType = ctx.ctxName().getLocalName(Name.fullName(vStruct.schema()));
         }
 
         String vstr = getSharedCompositeBriefName(value);
@@ -196,20 +226,23 @@ class ValueStringify {
                 statistics.useStructTable();
             }
             res.append(beanType);
-            int sz = val.values().size();
+            int sz = vStruct.values().size();
             if (sz > 0) { // 这里来个优化，如果没有参数不加()，因为beanType其实直接就是个实例
                 res.append("(");
                 int idx = 0;
                 boolean meetBool = false;
-                boolean doPack = TypeStr.isDoPackBool(val.schema());
-                for (Value fieldValue : val.values()) {
+                boolean doPack = TypeStr.isDoPackBool(vStruct.schema());
+                int i = 0;
+                for (FieldSchema field : vStruct.schema().fields()) {
+                    Value fieldValue = vStruct.values().get(i);
+                    i++;
                     if (doPack && fieldValue instanceof VBool) { //从第一个遇到的bool开始搞
                         if (!meetBool) {
                             meetBool = true;
 
                             BitSet bs = new BitSet();
                             int cnt = 0;
-                            for (Value fv : val.values()) {
+                            for (Value fv : vStruct.values()) {
                                 if (fv instanceof VBool fbv) {
                                     if (fbv.value()) {
                                         bs.set(cnt);
@@ -236,7 +269,7 @@ class ValueStringify {
                         }
                     } else {
                         idx++;
-                        notKey.addValue(fieldValue);
+                        notKey.addValue(fieldValue, subChain(fieldChain, field.name()));
                         if (idx != sz) {
                             res.append(", ");
                         }

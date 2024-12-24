@@ -14,11 +14,11 @@ import static configgen.value.CfgValue.*;
 
 public class ValueUtil {
 
-    public static VText createText(String str, Source source, TextFinder nullableTableI18n) {
+    public static VText createText(String str, Source source, TextFinder nullableTextFinder) {
         String i18n = null;
         String value;
-        if (nullableTableI18n != null) {
-            i18n = nullableTableI18n.findText(str);
+        if (nullableTextFinder != null) {
+            i18n = nullableTextFinder.findText(str);
             value = i18n != null ? i18n : str;
         } else {
             value = str;

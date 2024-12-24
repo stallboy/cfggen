@@ -2,6 +2,7 @@ package configgen.genlua;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static configgen.value.CfgValue.CompositeValue;
@@ -62,7 +63,7 @@ class CtxShared {
         // 生成value的字符串
         for (Map.Entry<CompositeValue, CompositeValueStr> entry : sharedCompositeValues.entrySet()) {
             StringBuilder sb = new StringBuilder();
-            new ValueStringify(sb, ctx, null).addValue(entry.getKey());
+            new ValueStringify(sb, ctx, null, null).addValue(entry.getKey(), List.of());
             entry.getValue().setValueStr(sb.toString());
         }
     }

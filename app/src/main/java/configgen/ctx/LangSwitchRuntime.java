@@ -28,13 +28,14 @@ public class LangSwitchRuntime {
         }
     }
 
-    public String[] findAllLangText(String pk, String fieldChain, String original) {
+    public String[] findAllLangText(String pk, List<String> fieldChain, String original) {
         if (original.isEmpty()) {
             return tmpEmpty;
         }
 
         tmp[0] = original;
         int i = 1;
+
         for (TextFinder finder : curTableTextFinderList) {
             String t = null;
             if (finder != null) {

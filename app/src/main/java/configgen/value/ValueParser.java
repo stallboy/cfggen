@@ -24,13 +24,13 @@ public class ValueParser {
 
 
     private final CfgValueErrs errs;
-    private final TextFinder nullableTableI18n;
+    private final TextFinder nullableTextFinder;
     private final BlockParser blockParser;
     private List<DCell> currentCells;
 
-    public ValueParser(CfgValueErrs errs, TextFinder nullableTableI18n, BlockParser blockParser) {
+    public ValueParser(CfgValueErrs errs, TextFinder nullableTextFinder, BlockParser blockParser) {
         this.errs = errs;
-        this.nullableTableI18n = nullableTableI18n;
+        this.nullableTextFinder = nullableTextFinder;
         this.blockParser = blockParser;
     }
 
@@ -276,7 +276,7 @@ public class ValueParser {
                         return new VString(str, cell);
                     }
                     case TEXT -> {
-                        return ValueUtil.createText(str, cell, nullableTableI18n);
+                        return ValueUtil.createText(str, cell, nullableTextFinder);
                     }
                 }
             }

@@ -121,7 +121,7 @@ public final class Main {
 
     private static void main0(String[] args) throws Exception {
         Generators.addProvider("i18n", GenI18nByOrig::new);
-        Generators.addProvider("i18nbyid", GenI18nByPkAndField::new);
+        Generators.addProvider("i18nbyid", GenI18nByPkAndFieldChain::new);
 
         Generators.addProvider("java", GenJavaCode::new);
         Generators.addProvider("javadata", GenJavaData::new);

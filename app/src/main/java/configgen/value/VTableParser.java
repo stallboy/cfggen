@@ -24,12 +24,12 @@ public class VTableParser implements BlockParser {
     private List<DCell> curRow;
 
     public VTableParser(TableSchema subTableSchema, DTable dTable, TableSchema tableSchema,
-                        TextFinder nullableTableI18n, CfgValueErrs errs) {
+                        TextFinder nullableTextFinder, CfgValueErrs errs) {
         this.subTableSchema = subTableSchema;
         this.dTable = dTable;
         this.tableSchema = tableSchema;
         this.errs = errs;
-        this.parser = new ValueParser(errs, nullableTableI18n, this);
+        this.parser = new ValueParser(errs, nullableTextFinder, this);
     }
 
     public VTable parseTable() {
