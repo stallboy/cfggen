@@ -31,25 +31,6 @@ public class HasText {
         return CheckResult.Unknown;
     }
 
-
-    public static boolean hasText(FieldType type) {
-        switch (type) {
-            case Primitive primitive -> {
-                return primitive == Primitive.TEXT;
-            }
-            case StructRef structRef -> {
-                return hasText(structRef.obj());
-            }
-            case FList fList -> {
-                return hasText(fList.item());
-            }
-
-            case FMap fMap -> {
-                return hasText(fMap.key()) || hasText(fMap.value());
-            }
-        }
-    }
-
     public static boolean hasText(Nameable nameable) {
         Metadata.MetaValue v = nameable.meta().getHasText();
         if (v instanceof Metadata.MetaInt(int value)) {

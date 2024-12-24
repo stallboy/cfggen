@@ -23,7 +23,7 @@ class ValueStringify {
         return val;
     }
 
-    //////////////////////////////////////////// per vtable
+    /// ///////////////////////////////////////// per vtable
 
     private final StringBuilder res;
     private final Ctx ctx;
@@ -33,7 +33,7 @@ class ValueStringify {
     private ValueStringify key;
     private ValueStringify notKey;
 
-    ValueStringify(StringBuilder res, Ctx ctx, String beanTypeStr) {
+    public ValueStringify(StringBuilder res, Ctx ctx, String beanTypeStr) {
         this.res = res;
         this.ctx = ctx;
         this.beanTypeStr = beanTypeStr;
@@ -63,7 +63,7 @@ class ValueStringify {
         }
     }
 
-    void addValue(Value value) {
+    public void addValue(Value value) {
         switch (value) {
             case VBool vBool -> add(vBool.value() ? "true" : "false");
             case VInt vInt -> add(String.valueOf(vInt.value()));
@@ -79,10 +79,11 @@ class ValueStringify {
     }
 
     private void addVText(VText value) {
-        if (AContext.getInstance().nullableLangSwitchSupport() != null && !isKey) { // text字段仅用于asValue，不能用于asKey
-            int id = AContext.getInstance().nullableLangSwitchSupport().enterText(value.value()) + 1;
+        LangSwitchSupport langSwitchSupport = AContext.getInstance().nullableLangSwitchSupport();
+        if (langSwitchSupport != null) {
+            int id = langSwitchSupport.enterText(value.value()) + 1;
             res.append(id);
-        }else{
+        } else {
             addString(value.value());
         }
     }
