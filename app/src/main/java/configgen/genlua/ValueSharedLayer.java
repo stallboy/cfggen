@@ -1,6 +1,6 @@
 package configgen.genlua;
 
-import configgen.value.ValueHasText;
+import configgen.value.TextValue;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -138,7 +138,7 @@ class ValueSharedLayer {
 
     private static boolean isLangSwitchAndCompositeValueHasText(CompositeValue value) {
         return AContext.getInstance().nullableLangSwitchSupport() != null &&
-                ValueHasText.hasText(value);
+                TextValue.hasText(value);
     }
 
 }

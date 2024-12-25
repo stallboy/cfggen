@@ -12,9 +12,9 @@ import java.util.stream.Stream;
 
 /**
  * 每个表中的text字段，原始文本---映射到--->翻译文本。
- * 以原始文本为key，相同的原始文本，必然对应相同的翻译文本
+ * 以原始文本为key，相同的原始文本，必然对应相同翻译文本
  */
-class TextFinderByOrig implements TextFinder {
+public class TextFinderByOrig implements TextFinder {
     private final SequencedMap<String, String> originalToTranslated = new LinkedHashMap<>();
     private final boolean isCrLfAsLf;
 

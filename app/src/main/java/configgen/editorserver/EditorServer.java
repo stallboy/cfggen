@@ -32,7 +32,6 @@ public class EditorServer extends Generator {
     private final String aiCfgFn;
 
     private Context context;
-    private volatile LangSwitch langSwitch;
     private volatile CfgValue cfgValue;  // 引用可以被改变，指向不同的CfgValue
     private volatile TableSchemaRefGraph graph;
 
@@ -277,7 +276,7 @@ public class EditorServer extends Generator {
         RecordEditResult result;
         boolean ok = false;
         synchronized (this) {
-            RecordEditService service = new RecordEditService(cfgValue, context.getSourceStructure());
+            RecordEditService service = new RecordEditService(cfgValue, context);
             result = service.addOrUpdateRecord(table, jsonStr);
             if (result.resultCode() == addOk || result.resultCode() == updateOk) {
                 cfgValue = service.newCfgValue();
@@ -306,7 +305,7 @@ public class EditorServer extends Generator {
         RecordEditResult result;
         boolean ok = false;
         synchronized (this) {
-            RecordEditService service = new RecordEditService(cfgValue, context.getSourceStructure());
+            RecordEditService service = new RecordEditService(cfgValue, context);
             result = service.deleteRecord(table, id);
             if (result.resultCode() == deleteOk) {
                 cfgValue = service.newCfgValue();

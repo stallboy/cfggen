@@ -226,27 +226,8 @@ public class RecordService {
         return new BriefRecord(refId.table(), refId.id(), title, descriptions, value, refs, depth);
     }
 
-    @SuppressWarnings("SameParameterValue")
-    private static String getBriefValue(VStruct vStruct, String briefKey) {
-        String fieldName = vStruct.schema().meta().getStr(briefKey, null);
-        if (fieldName == null) {
-            return null;
-        }
-
-        Value fv = ValueUtil.extractFieldValue(vStruct, fieldName);
-        if (fv == null) {
-            return null;
-        }
-
-        if (fv instanceof CfgValue.StringValue stringValue) {
-            return stringValue.value();
-        } else {
-            return fv.packStr();
-        }
-    }
-
     public static String getBriefTitle(VStruct vStruct) {
-        String title = getBriefValue(vStruct, "title");
+        String title = getBriefValue(vStruct);
 
         String enumName = null;
         if (vStruct.schema() instanceof TableSchema tableSchema &&
@@ -267,6 +248,24 @@ public class RecordService {
             }
         } else {
             return title;
+        }
+    }
+
+    private static String getBriefValue(VStruct vStruct) {
+        String fieldName = vStruct.schema().meta().getStr("title", null);
+        if (fieldName == null) {
+            return null;
+        }
+
+        Value fv = ValueUtil.extractFieldValue(vStruct, fieldName);
+        if (fv == null) {
+            return null;
+        }
+
+        if (fv instanceof CfgValue.StringValue stringValue) {
+            return stringValue.value();
+        } else {
+            return fv.packStr();
         }
     }
 

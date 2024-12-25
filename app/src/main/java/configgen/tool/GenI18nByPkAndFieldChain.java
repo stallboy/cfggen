@@ -76,15 +76,14 @@ public final class GenI18nByPkAndFieldChain extends Generator {
     private void visit(PrimitiveValue primitiveValue, String table, Value pk, List<String> fieldChain) {
         if (primitiveValue instanceof VText vText) {
             String original = vText.original().trim();
-            String nullableI18n = vText.nullableI18n();
-            if (original.isEmpty() && nullableI18n == null) {
+            String translated = vText.translated();
+            if (original.isEmpty() && translated.isEmpty()) {
                 return;
             }
 
             String pkStr = pk.packStr();
-            String translatedText = nullableI18n != null ? nullableI18n.trim() : "";
             String fieldChainStr = TextFinderByPkAndFieldChain.fieldChainStr(fieldChain);
-            OneText oneText = new OneText(fieldChainStr, original, translatedText);
+            OneText oneText = new OneText(fieldChainStr, original, translated);
 
             if (curRecord != null && curRecord.pk.equals(pkStr)) {
                 curRecord.texts.add(oneText);

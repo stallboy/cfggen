@@ -8,11 +8,9 @@ import java.util.List;
 public interface TextFinder {
     /**
      * 根据主键，field chain，原始文本 --- 返回映射的 ---> 翻译文本
+     *
+     * @return 返回翻译文本，如果未找到返回null
      */
     String findText(String pk, List<String> fieldChain, String original);
 
-    // TODO remove
-    default String findText(String original) {
-        return findText(null, null, original);
-    }
 }

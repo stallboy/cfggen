@@ -4,7 +4,6 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONException;
 import com.alibaba.fastjson2.JSONObject;
-import configgen.ctx.TextFinder;
 import configgen.data.Source;
 import configgen.schema.*;
 
@@ -20,21 +19,18 @@ public class ValueJsonParser {
 
     private final TableSchema tableSchema;
     private final boolean isTableSchemaPartial;
-    private final TextFinder nullableTableI18n;
     private final CfgValueErrs errs;
 
     public ValueJsonParser(TableSchema tableSchema,
                            CfgValueErrs errs) {
-        this(tableSchema, false, null, errs);
+        this(tableSchema, false, errs);
     }
 
     public ValueJsonParser(TableSchema tableSchema,
                            boolean isTableSchemaPartial,
-                           TextFinder nullableTableI18n,
                            CfgValueErrs errs) {
         this.tableSchema = tableSchema;
         this.isTableSchemaPartial = isTableSchemaPartial;
-        this.nullableTableI18n = nullableTableI18n;
         this.errs = errs;
     }
 
@@ -228,7 +224,7 @@ public class ValueJsonParser {
                         errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.STR));
                     }
                 }
-                return ValueUtil.createText(sv, source, nullableTableI18n);
+                return new VText(sv, source);
             }
             case FList fList -> {
                 JSONArray jsonArray = JSONArray.of();

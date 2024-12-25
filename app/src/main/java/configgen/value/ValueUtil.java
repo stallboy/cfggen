@@ -1,8 +1,6 @@
 package configgen.value;
 
-import configgen.ctx.TextFinder;
 import configgen.data.CfgData;
-import configgen.data.Source;
 import configgen.schema.*;
 
 import java.util.ArrayList;
@@ -14,17 +12,6 @@ import static configgen.value.CfgValue.*;
 
 public class ValueUtil {
 
-    public static VText createText(String str, Source source, TextFinder nullableTextFinder) {
-        String i18n = null;
-        String value;
-        if (nullableTextFinder != null) {
-            i18n = nullableTextFinder.findText(str);
-            value = i18n != null ? i18n : str;
-        } else {
-            value = str;
-        }
-        return new VText(value, str, i18n, source);
-    }
 
     public static VList createList(List<SimpleValue> valueList) {
         if (valueList.isEmpty()) {

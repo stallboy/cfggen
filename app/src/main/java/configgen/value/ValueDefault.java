@@ -19,7 +19,7 @@ public class ValueDefault {
             case LONG -> new VLong(0, source);
             case FLOAT -> new VFloat(0, source);
             case STRING -> new VString("", source);
-            case TEXT -> new VText("", "", null, source);
+            case TEXT -> new VText("", source);
             case FList ignored -> new VList(List.of(), source);
             case FMap ignored -> new VMap(Map.of(), source);
             case StructRef structRef -> ofNamable(structRef.obj(), source);

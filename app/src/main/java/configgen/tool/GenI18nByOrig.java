@@ -40,9 +40,9 @@ public final class GenI18nByOrig extends Generator {
     private void visit(PrimitiveValue primitiveValue, String table, Value pk, List<String> fieldChain) {
         if (primitiveValue instanceof VText vText) {
             String original = vText.original().trim();
-            String nullableI18n = vText.nullableI18n();
-            if (!original.isEmpty() || nullableI18n != null) {
-                data.add(List.of(table, original, nullableI18n != null ? nullableI18n.trim() : ""));
+            String translated = vText.translated();
+            if (!original.isEmpty() || !translated.isEmpty()) {
+                data.add(List.of(table, original, translated));
             }
         }
     }

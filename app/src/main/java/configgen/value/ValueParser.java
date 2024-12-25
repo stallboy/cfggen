@@ -1,6 +1,5 @@
 package configgen.value;
 
-import configgen.ctx.TextFinder;
 import configgen.data.Source;
 import configgen.schema.*;
 
@@ -24,13 +23,13 @@ public class ValueParser {
 
 
     private final CfgValueErrs errs;
-    private final TextFinder nullableTextFinder;
     private final BlockParser blockParser;
     private List<DCell> currentCells;
 
-    public ValueParser(CfgValueErrs errs, TextFinder nullableTextFinder, BlockParser blockParser) {
+    public ValueParser(CfgValueErrs errs, BlockParser blockParser) {
+        Objects.requireNonNull(errs);
+        Objects.requireNonNull(blockParser);
         this.errs = errs;
-        this.nullableTextFinder = nullableTextFinder;
         this.blockParser = blockParser;
     }
 
@@ -276,7 +275,7 @@ public class ValueParser {
                         return new VString(str, cell);
                     }
                     case TEXT -> {
-                        return ValueUtil.createText(str, cell, nullableTextFinder);
+                        return new VText(str, cell);
                     }
                 }
             }

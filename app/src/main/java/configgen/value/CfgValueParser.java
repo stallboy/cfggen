@@ -1,7 +1,6 @@
 package configgen.value;
 
 import configgen.ctx.Context;
-import configgen.ctx.TextFinder;
 import configgen.schema.cfg.CfgWriter;
 import configgen.util.Logger;
 import configgen.data.CfgData;
@@ -47,15 +46,15 @@ public class CfgValueParser {
             TableSchema table = context.cfgSchema().findTable(name);
             Objects.requireNonNull(table);
 
-            TextFinder tableTextFinder = context.nullableI18n() != null ? context.nullableI18n().getTableTextFinder(name) : null;
             CfgData.DTable dTable = context.cfgData().tables().get(name);
 
             if (dTable != null) {
                 tasks.add(() -> {
                     long start = System.currentTimeMillis();
                     CfgValueErrs errs = CfgValueErrs.of();
-                    VTableParser parser = new VTableParser(subTable, dTable, table, tableTextFinder, errs);
+                    VTableParser parser = new VTableParser(subTable, dTable, table, errs);
                     VTable vTable = parser.parseTable();
+                    TextValue.setTranslatedForTable(vTable, context);
                     if (Logger.isProfileEnabled()) {
                         long e = System.currentTimeMillis() - start;
                         if (e > 10) {
@@ -70,8 +69,9 @@ public class CfgValueParser {
                     long start = System.currentTimeMillis();
                     CfgValueErrs errs = CfgValueErrs.of();
                     VTableJsonParser parser = new VTableJsonParser(subTable, subSchema.isPartial(),
-                            context.getSourceStructure(), table, tableTextFinder, errs, cfgValue.valueStat());
+                            context.getSourceStructure(), table, errs, cfgValue.valueStat());
                     VTable vTable = parser.parseTable();
+                    TextValue.setTranslatedForTable(vTable, context);
                     if (Logger.isProfileEnabled()) {
                         System.out.printf("%40s: %d%n", name, System.currentTimeMillis() - start);
                     }

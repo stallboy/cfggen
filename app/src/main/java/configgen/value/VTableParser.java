@@ -1,6 +1,5 @@
 package configgen.value;
 
-import configgen.ctx.TextFinder;
 import configgen.schema.HasBlock;
 import configgen.schema.TableSchema;
 
@@ -24,12 +23,12 @@ public class VTableParser implements BlockParser {
     private List<DCell> curRow;
 
     public VTableParser(TableSchema subTableSchema, DTable dTable, TableSchema tableSchema,
-                        TextFinder nullableTextFinder, CfgValueErrs errs) {
+                        CfgValueErrs errs) {
         this.subTableSchema = subTableSchema;
         this.dTable = dTable;
         this.tableSchema = tableSchema;
         this.errs = errs;
-        this.parser = new ValueParser(errs, nullableTextFinder, this);
+        this.parser = new ValueParser(errs, this);
     }
 
     public VTable parseTable() {

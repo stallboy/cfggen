@@ -47,7 +47,7 @@ public class ValueToJson {
             case VLong vLong -> vLong.value();
             case VFloat vFloat -> vFloat.value();
             case VString vStr -> vStr.value();
-            case VText vText -> vText.value();
+            case VText vText -> vText.original(); // 用original，因为我们用这个类ValueToJson主要是为了编辑，当保存时需要用原始文本
             case VStruct vStruct -> toJson(vStruct);
             case VInterface vInterface -> toJson(vInterface);
             case VList vList -> toJson(vList);

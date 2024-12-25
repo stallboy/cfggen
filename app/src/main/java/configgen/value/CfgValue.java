@@ -133,9 +133,9 @@ public record CfgValue(CfgSchema schema,
         @Override
         public String toString() {
             return "VStruct[" +
-                   "schema=" + schema + ", " +
-                   "values=" + values + ", " +
-                   "source=" + source + ']';
+                    "schema=" + schema + ", " +
+                    "values=" + values + ", " +
+                    "source=" + source + ']';
         }
 
         public String note() {
@@ -199,9 +199,9 @@ public record CfgValue(CfgSchema schema,
         @Override
         public String toString() {
             return "VInterface[" +
-                   "schema=" + schema + ", " +
-                   "child=" + child + ", " +
-                   "source=" + source + ']';
+                    "schema=" + schema + ", " +
+                    "child=" + child + ", " +
+                    "source=" + source + ']';
         }
     }
 
@@ -235,8 +235,8 @@ public record CfgValue(CfgSchema schema,
         @Override
         public String toString() {
             return "VList[" +
-                   "valueList=" + valueList + ", " +
-                   "source=" + source + ']';
+                    "valueList=" + valueList + ", " +
+                    "source=" + source + ']';
         }
     }
 
@@ -269,8 +269,8 @@ public record CfgValue(CfgSchema schema,
         @Override
         public String toString() {
             return "VMap[" +
-                   "valueMap=" + valueMap + ", " +
-                   "source=" + source + ']';
+                    "valueMap=" + valueMap + ", " +
+                    "source=" + source + ']';
         }
 
     }
@@ -384,11 +384,46 @@ public record CfgValue(CfgSchema schema,
     }
 
 
-    public record VText(String value, String original, String nullableI18n, Source source) implements StringValue {
-        public VText {
-            Objects.requireNonNull(value);
+    /**
+     * value默认为original，translated不为空则为translated
+     */
+    public static final class VText implements StringValue {
+        private final String original;
+        private final Source source;
+        private String value;
+        private String translated;
+
+        public VText(String original, Source source) {
             Objects.requireNonNull(original);
             Objects.requireNonNull(source);
+            this.original = original;
+            this.source = source;
+            this.value = original;
+            this.translated = "";
+        }
+
+        public void setTranslated(String translated) {
+            Objects.requireNonNull(translated);
+            this.translated = translated;
+            if (!translated.isEmpty()) {
+                this.value = translated;
+            }
+        }
+
+        public String original() {
+            return original;
+        }
+
+        public Source source() {
+            return source;
+        }
+
+        public String value() {
+            return value;
+        }
+
+        public String translated() {
+            return translated;
         }
 
         @Override

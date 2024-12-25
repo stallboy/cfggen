@@ -1,5 +1,6 @@
 package configgen.editorserver;
 
+import configgen.ctx.Context;
 import configgen.ctx.DirectoryStructure;
 import configgen.schema.Msg;
 import configgen.schema.TableSchema;
@@ -43,13 +44,15 @@ public class RecordEditService {
     }
 
 
+    private final Context context;
     private final DirectoryStructure sourceStructure;
     private final CfgValue cfgValue;
     private CfgValue newCfgValue;
 
-    public RecordEditService(CfgValue cfgValue, DirectoryStructure sourceStructure) {
+    public RecordEditService(CfgValue cfgValue, Context context) {
         this.cfgValue = cfgValue;
-        this.sourceStructure = sourceStructure;
+        this.context = context;
+        this.sourceStructure = context.getSourceStructure();
     }
 
     public RecordEditResult addOrUpdateRecord(String table, String jsonStr) {
@@ -107,6 +110,7 @@ public class RecordEditService {
         CfgValueErrs errs = CfgValueErrs.of();
         VTableCreator creator = new VTableCreator(tableSchema, errs);
         VTable newVTable = creator.create(newRecordList);
+        TextValue.setTranslatedForTable(newVTable, context);
 
         Map<String, VTable> copy = new LinkedHashMap<>(cfgValue.vTableMap());
         copy.put(newVTable.name(), newVTable);
