@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static configgen.data.CfgData.*;
-import static configgen.data.CfgDataReader.*;
 import static configgen.data.ExcelReader.*;
 
 public class ReadCsv {

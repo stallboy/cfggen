@@ -167,10 +167,7 @@ public class DataUtil {
 
         // 不能含中文
         int hanIdx = findFirstHanIndex(sub);
-        if (hanIdx != -1) {
-            return false;
-        }
-        return true;
+        return hanIdx == -1;
     }
 
 
