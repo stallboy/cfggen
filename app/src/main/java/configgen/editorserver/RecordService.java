@@ -227,12 +227,16 @@ public class RecordService {
     }
 
     public static String getBriefTitle(VStruct vStruct) {
-        String title = getBriefValue(vStruct);
+        String title = null;
+        String titleFieldName = vStruct.schema().meta().getStr("title", null);
+        if (titleFieldName != null) {
+            title = ValueUtil.extractFieldValueStr(vStruct, titleFieldName);
+        }
 
         String enumName = null;
         if (vStruct.schema() instanceof TableSchema tableSchema &&
-            tableSchema.entry() instanceof EntryType.EEnum eEnum &&
-            tableSchema.primaryKey().fieldSchemas().getFirst() != eEnum.fieldSchema()) { // 主键不是enum，才组合enumName
+                tableSchema.entry() instanceof EntryType.EEnum eEnum &&
+                tableSchema.primaryKey().fieldSchemas().getFirst() != eEnum.fieldSchema()) { // 主键不是enum，才组合enumName
 
             Value fv = ValueUtil.extractFieldValue(vStruct, eEnum.field());
             if (fv instanceof CfgValue.VString vString) {
@@ -251,24 +255,6 @@ public class RecordService {
         }
     }
 
-    private static String getBriefValue(VStruct vStruct) {
-        String fieldName = vStruct.schema().meta().getStr("title", null);
-        if (fieldName == null) {
-            return null;
-        }
-
-        Value fv = ValueUtil.extractFieldValue(vStruct, fieldName);
-        if (fv == null) {
-            return null;
-        }
-
-        if (fv instanceof CfgValue.StringValue stringValue) {
-            return stringValue.value();
-        } else {
-            return fv.packStr();
-        }
-    }
-
     public static List<BriefDescription> getBriefDescriptions(VStruct vStruct) {
         String fields = vStruct.schema().meta().getStr("description", null);
         if (fields == null) {
@@ -278,21 +264,14 @@ public class RecordService {
         List<BriefDescription> descriptions = new ArrayList<>();
         for (String f : fields.split(",")) {
             String fieldName = f.trim();
-            Value fv = ValueUtil.extractFieldValue(vStruct, fieldName);
-            if (fv == null) {
+            String value = ValueUtil.extractFieldValueStr(vStruct, fieldName);
+            if (value == null) {
                 continue;
             }
 
             FieldSchema fs = vStruct.schema().findField(fieldName);
             if (fs == null) {
                 continue;
-            }
-
-            String value;
-            if (fv instanceof CfgValue.StringValue stringValue) {
-                value = stringValue.value();
-            } else {
-                value = fv.packStr();
             }
 
             descriptions.add(new BriefDescription(fieldName, value, fs.comment()));

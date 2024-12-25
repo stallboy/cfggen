@@ -1,11 +1,11 @@
 package configgen.ctx;
 
+import org.dhatim.fastexcel.reader.*;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
@@ -13,9 +13,30 @@ import java.util.stream.Stream;
  * 这是最完备的机制，可以相同的原始本文，不同的翻译文本。
  */
 public class TextFinderByPkAndFieldChain implements TextFinder {
+    record OneText(String original,
+                   String translated) {
+    }
+
+    private final Map<String, Integer> fieldChainToIndex = new HashMap<>();
+    private final Map<String, OneText[]> pkToTexts = new HashMap<>();
+
     @Override
     public String findText(String pk, List<String> fieldChain, String original) {
-        return "";
+        String fieldChainStr = fieldChainStr(fieldChain);
+        Integer idx = fieldChainToIndex.get(fieldChainStr);
+        if (idx == null) {
+            return null;
+        }
+        OneText[] line = pkToTexts.get(pk);
+        if (line == null) {
+            return null;
+        }
+        OneText txt = line[idx];
+        if (txt.original.equals(original)) {
+            return txt.translated;
+        } else {
+            return null;
+        }
     }
 
 
@@ -23,14 +44,28 @@ public class TextFinderByPkAndFieldChain implements TextFinder {
         return fieldChain.size() == 1 ? fieldChain.getFirst() : String.join("-", fieldChain);
     }
 
+    public static boolean isLangTextFinderByByPkAndFieldChain(Path path) {
+        return Files.isDirectory(path);
+    }
+
+    /**
+     * 只要有一个文件夹就是byPkAndFieldChain
+     */
+    public static boolean isLangSwitchByPkAndFieldChain(Path path) {
+        try (Stream<Path> plist = Files.list(path)) {
+            return plist.anyMatch(Files::isDirectory);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public static LangSwitch loadLangSwitch(Path path, String defaultLang) {
         Map<String, LangTextFinder> lang2i18n = new TreeMap<>();
         try (Stream<Path> plist = Files.list(path)) {
-            plist.forEach(langFilePath -> {
-                if (Files.isDirectory(langFilePath)) {
-                    String langName = langFilePath.getFileName().toString();
-                    lang2i18n.put(langName, loadOneLang(langFilePath));
+            plist.forEach(langDir -> {
+                if (Files.isDirectory(langDir)) {
+                    String langName = langDir.getFileName().toString();
+                    lang2i18n.put(langName, loadOneLang(langDir));
                 }
 
             });
@@ -41,8 +76,93 @@ public class TextFinderByPkAndFieldChain implements TextFinder {
         return new LangSwitch(lang2i18n, defaultLang);
     }
 
-    public static LangTextFinder loadOneLang(Path path) {
-        return null;
+    public static LangTextFinder loadOneLang(Path langDir) {
+        LangTextFinder langTextFinder = new LangTextFinder();
+        try (Stream<Path> plist = Files.list(langDir)) {
+            plist.forEach(filePath -> {
+                if (Files.isRegularFile(filePath)) {
+                    if (filePath.getFileName().toString().toLowerCase().endsWith(".xlsx")) {
+                        loadOneFile(filePath, langTextFinder);
+                    }
+                }
+            });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return langTextFinder;
+    }
 
+    private static void loadOneFile(Path filePath, LangTextFinder langTextFinder) {
+        try (ReadableWorkbook wb = new ReadableWorkbook(filePath.toFile(), new ReadingOptions(true, false))) {
+            for (Sheet sheet : wb.getSheets().toList()) {
+                String tableName = sheet.getName().trim();
+                List<Row> rawRows = sheet.read();
+                if (rawRows.size() <= 1) {
+                    continue;
+                }
+
+                TextFinderByPkAndFieldChain textFinder = new TextFinderByPkAndFieldChain();
+                langTextFinder.getMap().put(tableName, textFinder);
+                loadOneSheet(rawRows, textFinder);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void loadOneSheet(List<Row> rawRows, TextFinderByPkAndFieldChain textFinder) {
+        Row header = rawRows.getFirst();
+        int columnCount = header.getCellCount();
+        if (columnCount <= 1) {
+            return;
+        }
+        int[] tColumns = new int[columnCount];
+        int tColumnCnt = 0;
+        for (int i = 1; i < columnCount; i++) {
+            Optional<String> cell = header.getCellAsString(i);
+            if (cell.isPresent()) {
+                String field = cell.get();
+                if (field.startsWith("t(") && field.endsWith(")")) {
+                    String fieldChainStr = field.substring(2, field.length() - 1);
+                    textFinder.fieldChainToIndex.put(fieldChainStr, tColumnCnt);
+                    tColumns[tColumnCnt] = i;
+                    tColumnCnt++;
+                }
+            }
+        }
+
+        if (tColumnCnt == 0) {
+            return;
+        }
+
+        for (int r = 1, rowCount = rawRows.size(); r < rowCount; r++) {
+            Row row = rawRows.get(r);
+            Optional<String> pkCell = row.getCellAsString(0);
+            if (pkCell.isEmpty()) {
+                continue;
+            }
+            String pkStr = pkCell.get();
+
+            OneText[] texts = new OneText[tColumnCnt];
+            for (int i = 0; i < tColumnCnt; i++) {
+                int translateCol = tColumns[i];
+                int originalCol = translateCol - 1;
+                Optional<String> oC = row.getCellAsString(originalCol);
+                Optional<String> tC = row.getCellAsString(translateCol);
+
+                String original = oC.orElse("");
+                String translate = tC.orElse("");
+
+                texts[i] = new OneText(original, translate);
+            }
+
+            textFinder.pkToTexts.put(pkStr, texts);
+        }
+    }
+
+    public static void main(String[] args) {
+        Path path = Path.of("../i18n/language");
+        System.out.println(isLangSwitchByPkAndFieldChain(path));
+        loadLangSwitch(path, "zh-cn");
     }
 }

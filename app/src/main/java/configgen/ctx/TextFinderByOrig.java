@@ -38,11 +38,10 @@ public class TextFinderByOrig implements TextFinder {
         try (Stream<Path> plist = Files.list(path)) {
             plist.forEach(langFilePath -> {
                 String langName = langFilePath.getFileName().toString();
-                int i = langName.lastIndexOf(".");
-                if (i >= 0) {
-                    langName = langName.substring(0, i);
+                if (langName.toLowerCase().endsWith(".csv")) {
+                    langName = langName.substring(0, langName.length() - 4);
+                    lang2i18n.put(langName, loadOneLang(langFilePath, isCrLfAsLf));
                 }
-                lang2i18n.put(langName, loadOneLang(langFilePath, isCrLfAsLf));
             });
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -75,7 +74,7 @@ public class TextFinderByOrig implements TextFinder {
                 String translated = row.getField(2);
                 original = normalize(original, isCrLfAsLf);
 
-                TextFinderByOrig map = (TextFinderByOrig) res.getTableTextFinderMap().computeIfAbsent(table, t -> new TextFinderByOrig(isCrLfAsLf));
+                TextFinderByOrig map = (TextFinderByOrig) res.getMap().computeIfAbsent(table, t -> new TextFinderByOrig(isCrLfAsLf));
                 map.originalToTranslated.put(original, translated);
             }
         }

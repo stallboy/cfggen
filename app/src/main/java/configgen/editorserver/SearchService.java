@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static configgen.value.ForeachValue.PrimitiveValueVisitor;
+import static configgen.value.ForeachValue.ValueVisitorForSearch;
 import static configgen.value.ForeachValue.searchVTable;
 
 public class SearchService {
@@ -51,7 +51,7 @@ public class SearchService {
 
     public static SearchResult searchNumber(CfgValue cfgValue, long value, int maxItems) {
         SearchResult res = new SearchResult(ResultCode.ok, String.valueOf(value), maxItems, new ArrayList<>(32));
-        PrimitiveValueVisitor visitor = (primitiveValue, table, pk, fieldChain) -> {
+        ValueVisitorForSearch visitor = (primitiveValue, table, pk, fieldChain) -> {
             switch (primitiveValue) {
                 case CfgValue.VInt vInt -> {
                     if (value == (long) vInt.value()) {
@@ -81,7 +81,7 @@ public class SearchService {
 
     public static SearchResult searchStr(CfgValue cfgValue, String keyword, int maxItems) {
         SearchResult res = new SearchResult(ResultCode.ok, keyword, maxItems, new ArrayList<>(32));
-        PrimitiveValueVisitor visitor = (primitiveValue, table, pk, fieldChain) -> {
+        ValueVisitorForSearch visitor = (primitiveValue, table, pk, fieldChain) -> {
             if (Objects.requireNonNull(primitiveValue) instanceof CfgValue.StringValue sv) {
                 String v = sv.value();
                 if (v.contains(keyword)) {

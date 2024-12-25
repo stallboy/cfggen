@@ -54,7 +54,7 @@ public class CfgValueParser {
                     CfgValueErrs errs = CfgValueErrs.of();
                     VTableParser parser = new VTableParser(subTable, dTable, table, errs);
                     VTable vTable = parser.parseTable();
-                    TextValue.setTranslatedForTable(vTable, context);
+                    TextValue.setTranslatedForTable(vTable, context, cfgValue.valueStat());
                     if (Logger.isProfileEnabled()) {
                         long e = System.currentTimeMillis() - start;
                         if (e > 10) {
@@ -71,7 +71,7 @@ public class CfgValueParser {
                     VTableJsonParser parser = new VTableJsonParser(subTable, subSchema.isPartial(),
                             context.getSourceStructure(), table, errs, cfgValue.valueStat());
                     VTable vTable = parser.parseTable();
-                    TextValue.setTranslatedForTable(vTable, context);
+                    TextValue.setTranslatedForTable(vTable, context, cfgValue.valueStat());
                     if (Logger.isProfileEnabled()) {
                         System.out.printf("%40s: %d%n", name, System.currentTimeMillis() - start);
                     }
@@ -94,6 +94,9 @@ public class CfgValueParser {
             throw new RuntimeException(e);
         }
         Logger.profile("value parse");
+        if (Logger.verboseLevel() > 0) {
+            cfgValue.valueStat().print();
+        }
 
         new RefValidator(cfgValue, errs).validate();
         Logger.profile("value ref validate");

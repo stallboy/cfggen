@@ -37,9 +37,9 @@ public final class Main {
         System.out.println();
         System.out.println("-----i18n support");
         System.out.println("    -i18nfile         " + LocaleUtil.getLocaleString("Usage.I18nFile",
-                "replace all type=text data, must be csv file with 3 columns(table name, original, replaced). default null"));
+                "two choices: 1,csv file use original str as Id per table. 2,directory,has multiply xlsx file and use pk&fieldChain as Id per table. default null"));
         System.out.println("    -i18ncrlfaslf     " + LocaleUtil.getLocaleString("Usage.I18nCrLfAsLf",
-                "replace \\r\\n to \\n, default false."));
+                "replace \\r\\n to \\n. used when -i18nfile is csv file. default false."));
         System.out.println("    -langswitchdir    " + LocaleUtil.getLocaleString("Usage.LangSwitchDir",
                 "language switch support"));
         System.out.println("    -defaultlang      " + LocaleUtil.getLocaleString("Usage.DefaultLang",

@@ -67,6 +67,19 @@ public class ValueUtil {
         return vStruct.values().get(idx);
     }
 
+    public static String extractFieldValueStr(VStruct vStruct, String fieldName) {
+        Value fv = extractFieldValue(vStruct, fieldName);
+        if (fv == null) {
+            return null;
+        }
+
+        if (fv instanceof CfgValue.StringValue stringValue) {
+            return stringValue.value();
+        } else {
+            return fv.packStr();
+        }
+    }
+
     public static Map<Value, VStruct> getForeignKeyValueMap(CfgValue cfgValue, ForeignKeySchema fk) {
         switch (fk.refKey()) {
             case RefKey.RefPrimary ignored -> {

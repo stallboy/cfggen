@@ -4,6 +4,7 @@ import configgen.ctx.Context;
 import configgen.ctx.LangTextFinder;
 import configgen.ctx.TextFinder;
 import configgen.schema.HasText;
+import configgen.value.ForeachValue.ValueVisitorForPrimitive;
 
 import java.util.List;
 
@@ -40,7 +41,7 @@ public class TextValue {
     }
 
 
-    public static void setTranslatedForTable(VTable vTable, Context context) {
+    public static void setTranslatedForTable(VTable vTable, Context context, CfgValueStat cfgValueStat) {
         LangTextFinder langTextFinder = context.nullableLangTextFinder();
         if (langTextFinder == null) {
             return;
@@ -54,16 +55,18 @@ public class TextValue {
             return;
         }
 
-        ForeachValue.foreachVTable(new SetTextTranslatedVisitor(textFinder), vTable);
+        ForeachValue.foreachVTable(new SetTextTranslatedVisitor(textFinder, cfgValueStat), vTable);
 
     }
 
 
-    public static class SetTextTranslatedVisitor implements ForeachValue.ValueVisitor {
+    public static class SetTextTranslatedVisitor extends ValueVisitorForPrimitive {
         private final TextFinder textFinder;
+        private final CfgValueStat cfgValueStat;
 
-        public SetTextTranslatedVisitor(TextFinder textFinder) {
+        public SetTextTranslatedVisitor(TextFinder textFinder, CfgValueStat cfgValueStat) {
             this.textFinder = textFinder;
+            this.cfgValueStat = cfgValueStat;
         }
 
         @Override
@@ -72,28 +75,11 @@ public class TextValue {
                 String translated = textFinder.findText(pk.packStr(), fieldChain, vText.original());
                 if (translated != null) {
                     vText.setTranslated(translated);
+                } else if (cfgValueStat != null){
+                    cfgValueStat.incTranslateMissCount();
                 }
             }
         }
 
-        @Override
-        public void visitVList(VList vList, Value pk, List<String> fieldChain) {
-
-        }
-
-        @Override
-        public void visitVMap(VMap vMap, Value pk, List<String> fieldChain) {
-
-        }
-
-        @Override
-        public void visitVInterface(VInterface vInterface, Value pk, List<String> fieldChain) {
-
-        }
-
-        @Override
-        public void visitVStruct(VStruct vStruct, Value pk, List<String> fieldChain) {
-
-        }
     }
 }

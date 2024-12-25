@@ -67,10 +67,19 @@ public class Context {
         CfgDataReader dataReader = new CfgDataReader(cfg.headRow, new ReadCsv(cfg.csvDefaultEncoding), excelReader);
 
         if (cfg.i18nFilename != null) {
-            nullableLangTextFinder = TextFinderByOrig.loadOneLang(Path.of(cfg.i18nFilename), cfg.crLfAsLf);
+            Path path = Path.of(cfg.i18nFilename);
+            if (TextFinderByPkAndFieldChain.isLangTextFinderByByPkAndFieldChain(path)) {
+                nullableLangTextFinder = TextFinderByPkAndFieldChain.loadOneLang(path);
+            } else {
+                nullableLangTextFinder = TextFinderByOrig.loadOneLang(path, cfg.crLfAsLf);
+            }
         } else if (cfg.langSwitchDir != null) {
-            nullableLangSwitch = TextFinderByOrig.loadLangSwitch(Path.of(cfg.langSwitchDir),
-                    cfg.langSwitchDefaultLang, cfg.crLfAsLf);
+            Path path = Path.of(cfg.langSwitchDir);
+            if (TextFinderByPkAndFieldChain.isLangSwitchByPkAndFieldChain(path)) {
+                nullableLangSwitch = TextFinderByPkAndFieldChain.loadLangSwitch(path, cfg.langSwitchDefaultLang);
+            } else {
+                nullableLangSwitch = TextFinderByOrig.loadLangSwitch(path, cfg.langSwitchDefaultLang, cfg.crLfAsLf);
+            }
         }
 
         boolean ok = readSchemaAndData(dataReader, true);

@@ -9,11 +9,6 @@ import java.util.Map;
 import static configgen.value.CfgValue.*;
 
 public class ForeachValue {
-
-    public interface PrimitiveValueVisitor {
-        void visit(PrimitiveValue primitiveValue, String table, Value pk, List<String> fieldChain);
-    }
-
     public interface ValueVisitor {
         void visitPrimitive(PrimitiveValue primitiveValue, Value pk, List<String> fieldChain);
 
@@ -26,7 +21,30 @@ public class ForeachValue {
         void visitVStruct(VStruct vStruct, Value pk, List<String> fieldChain);
     }
 
-    record ForSearchVisitor(PrimitiveValueVisitor visitor,
+    public static abstract class ValueVisitorForPrimitive implements ValueVisitor {
+
+        @Override
+        public void visitVList(VList vList, Value pk, List<String> fieldChain) {
+        }
+
+        @Override
+        public void visitVMap(VMap vMap, Value pk, List<String> fieldChain) {
+        }
+
+        @Override
+        public void visitVInterface(VInterface vInterface, Value pk, List<String> fieldChain) {
+        }
+
+        @Override
+        public void visitVStruct(VStruct vStruct, Value pk, List<String> fieldChain) {
+        }
+    }
+
+    public interface ValueVisitorForSearch {
+        void visit(PrimitiveValue primitiveValue, String table, Value pk, List<String> fieldChain);
+    }
+
+    record ForSearchVisitor(ValueVisitorForSearch visitor,
                             String table) implements ValueVisitor {
 
         @Override
@@ -58,13 +76,13 @@ public class ForeachValue {
 
     }
 
-    public static void searchCfgValue(PrimitiveValueVisitor visitor, CfgValue cfgValue) {
+    public static void searchCfgValue(ValueVisitorForSearch visitor, CfgValue cfgValue) {
         for (VTable vTable : cfgValue.sortedTables()) {
             searchVTable(visitor, vTable);
         }
     }
 
-    public static void searchVTable(PrimitiveValueVisitor visitor, VTable vTable) {
+    public static void searchVTable(ValueVisitorForSearch visitor, VTable vTable) {
         foreachVTable(new ForSearchVisitor(visitor, vTable.name()), vTable);
     }
 
@@ -76,8 +94,8 @@ public class ForeachValue {
         }
     }
 
-    private static void foreachValue(ValueVisitor visitor, Value value,
-                                     Value pk, List<String> fieldChain) {
+    public static void foreachValue(ValueVisitor visitor, Value value,
+                                    Value pk, List<String> fieldChain) {
         switch (value) {
             case PrimitiveValue primitiveValue -> {
                 visitor.visitPrimitive(primitiveValue, pk, fieldChain);

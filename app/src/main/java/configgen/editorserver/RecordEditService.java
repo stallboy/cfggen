@@ -110,7 +110,7 @@ public class RecordEditService {
         CfgValueErrs errs = CfgValueErrs.of();
         VTableCreator creator = new VTableCreator(tableSchema, errs);
         VTable newVTable = creator.create(newRecordList);
-        TextValue.setTranslatedForTable(newVTable, context);
+        TextValue.setTranslatedForTable(newVTable, context, null);
 
         Map<String, VTable> copy = new LinkedHashMap<>(cfgValue.vTableMap());
         copy.put(newVTable.name(), newVTable);
