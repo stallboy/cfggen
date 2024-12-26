@@ -2,7 +2,7 @@ package configgen.gencs;
 
 import configgen.ctx.Context;
 import configgen.gen.Generator;
-import configgen.ctx.LangSwitchRuntime;
+import configgen.i18n.LangSwitchRuntime;
 import configgen.gen.Parameter;
 import configgen.util.CachedFileOutputStream;
 import configgen.util.XorCipherOutputStream;

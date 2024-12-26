@@ -1,8 +1,8 @@
 package configgen.editorserver;
 
 import configgen.schema.TableSchema;
-import configgen.tool.GenJsonByAI;
-import configgen.tool.PromptDefault;
+import configgen.genjson.GenJsonByAI;
+import configgen.genjson.PromptDefault;
 import configgen.value.CfgValue;
 import configgen.value.CfgValueErrs;
 import configgen.value.ValueJsonParser;

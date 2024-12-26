@@ -1,8 +1,8 @@
 package configgen.value;
 
 import configgen.ctx.Context;
-import configgen.ctx.LangTextFinder;
-import configgen.ctx.TextFinder;
+import configgen.i18n.LangTextFinder;
+import configgen.i18n.TextFinder;
 import configgen.schema.HasText;
 import configgen.value.ForeachValue.ValueVisitorForPrimitive;
 

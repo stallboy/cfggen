@@ -1,6 +1,6 @@
 package configgen.genjava.code;
 
-import configgen.ctx.LangSwitch;
+import configgen.i18n.LangSwitch;
 import configgen.util.CachedIndentPrinter;
 
 import java.util.List;

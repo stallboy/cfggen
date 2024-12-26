@@ -1,7 +1,6 @@
-package configgen.tool;
+package configgen.i18n;
 
 import configgen.ctx.Context;
-import configgen.ctx.TextFinderByPkAndFieldChain;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
 import configgen.schema.HasText;

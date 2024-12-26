@@ -7,7 +7,7 @@ import configgen.gen.Generator;
 import configgen.gen.Generators;
 import configgen.gen.Parameter;
 import configgen.schema.TableSchemaRefGraph;
-import configgen.tool.AICfg;
+import configgen.genjson.AICfg;
 import configgen.value.CfgValue;
 
 import java.io.*;

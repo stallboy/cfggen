@@ -1,8 +1,8 @@
 package configgen.genlua;
 
-import configgen.ctx.LangSwitch;
-import configgen.ctx.LangTextFinder;
-import configgen.ctx.TextFinder;
+import configgen.i18n.LangSwitch;
+import configgen.i18n.LangTextFinder;
+import configgen.i18n.TextFinder;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

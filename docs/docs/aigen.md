@@ -103,8 +103,8 @@ public record PromptModel(String table,
 默认的模板如下，你可以复制它在```<table>.jte```里，然后修改为自己的提示词。
 
 ````markdown
-@import configgen.tool.PromptModel
-@import configgen.tool.PromptModel.Example
+@import configgen.genjson.PromptModel
+@import configgen.genjson.PromptModel.Example
 
 @param PromptModel model
 

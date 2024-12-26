@@ -1,4 +1,4 @@
-package configgen.tool;
+package configgen.genjson;
 
 public class PromptDefault {
     public static final String TEMPLATE = """

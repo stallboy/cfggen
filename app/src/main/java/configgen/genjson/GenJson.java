@@ -1,28 +1,30 @@
-package configgen.tool;
+package configgen.genjson;
 
 import configgen.ctx.Context;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
-import configgen.util.CachedIndentPrinter;
+import configgen.schema.HasMap;
 import configgen.util.Logger;
 import configgen.value.CfgValue;
+import configgen.value.VTableJsonStore;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
-public class GenTs extends Generator {
+import static configgen.value.CfgValue.*;
+
+public class GenJson extends Generator {
     private final List<String> tables = new ArrayList<>();
     private final Path dstPath;
-    private final String encoding;
 
-    public GenTs(Parameter parameter) {
+    public GenJson(Parameter parameter) {
         super(parameter);
         String tablesStr = parameter.get("tables", "");
         String dstDir = parameter.get("dst", ".");
-        encoding = parameter.get("encoding", "UTF-8");
         dstPath = Path.of(dstDir);
         String[] split = tablesStr.split(";");
         tables.addAll(Arrays.asList(split));
@@ -34,20 +36,27 @@ public class GenTs extends Generator {
             return;
         }
         if (tag != null) {
-            Logger.log("gen ts with tag=%s, be careful!!!", tag);
+            Logger.log("gen json with tag=%s, be careful!!!", tag);
         }
 
         CfgValue cfgValue = ctx.makeValue(tag);
 
         for (String table : tables) {
-            CfgValue.VTable vTable = cfgValue.vTableMap().get(table);
+            VTable vTable = cfgValue.getTable(table);
             if (vTable == null) {
-                Logger.log("ignore gen ts: table=%s not found!", table);
+                Logger.log("ignore gen json: table=%s not found!", table);
                 continue;
             }
-            try (CachedIndentPrinter ps = createCode(dstPath.resolve(table + ".ts").toFile(), encoding)) {
-                String generate = new SchemaToTs(cfgValue, vTable.schema(), List.of(), false).generate();
-                ps.println(generate);
+
+            if (HasMap.hasMap(vTable.schema())) {
+                Logger.log("ignore gen json: table=%s has map!", table);
+                continue;
+            }
+
+            for (Map.Entry<Value, VStruct> e : vTable.primaryKeyMap().entrySet()) {
+                Value pk = e.getKey();
+                VStruct record = e.getValue();
+                VTableJsonStore.addOrUpdateRecordStore(record, vTable.schema(), pk.packStr(), dstPath);
             }
         }
     }

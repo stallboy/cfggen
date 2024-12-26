@@ -1,7 +1,7 @@
 package configgen.editorserver;
 
-import configgen.tool.AICfg;
-import configgen.tool.PromptGen;
+import configgen.genjson.AICfg;
+import configgen.genjson.PromptGen;
 import configgen.value.*;
 
 import java.nio.file.Files;

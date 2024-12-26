@@ -1,4 +1,4 @@
-package configgen.tool;
+package configgen.genjson;
 
 import com.alibaba.fastjson2.JSON;
 import configgen.util.Logger;

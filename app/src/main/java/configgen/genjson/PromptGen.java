@@ -1,4 +1,4 @@
-package configgen.tool;
+package configgen.genjson;
 
 import configgen.schema.*;
 import configgen.schema.cfg.CfgWriter;
@@ -13,7 +13,7 @@ import gg.jte.resolve.DirectoryCodeResolver;
 import java.nio.file.Path;
 import java.util.*;
 
-import static configgen.tool.AICfg.*;
+import static configgen.genjson.AICfg.*;
 
 public class PromptGen {
 

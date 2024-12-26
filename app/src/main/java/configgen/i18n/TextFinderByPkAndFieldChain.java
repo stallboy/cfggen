@@ -1,4 +1,4 @@
-package configgen.ctx;
+package configgen.i18n;
 
 import org.dhatim.fastexcel.reader.*;
 
@@ -12,9 +12,9 @@ import java.util.stream.Stream;
  * 每个表中的text字段，pk+fieldChain作为id---映射到--->翻译文本。
  * 这是最完备的机制，可以相同的原始本文，不同的翻译文本。
  */
-public class TextFinderByPkAndFieldChain implements TextFinder {
-    public record OneText(String original,
-                          String translated) {
+class TextFinderByPkAndFieldChain implements TextFinder {
+    record OneText(String original,
+                   String translated) {
     }
 
     private final Map<String, Integer> fieldChainToIndex = new HashMap<>();
@@ -32,37 +32,29 @@ public class TextFinderByPkAndFieldChain implements TextFinder {
             return null;
         }
         OneText txt = line[idx];
-        if (txt.original.equals(original)) {
+        if (txt != null && txt.original.equals(original)) {
             return txt.translated;
         } else {
             return null;
         }
     }
 
-    public Map<String, OneText[]> getPkToTexts() {
-        return pkToTexts;
-    }
-
-    public static String fieldChainStr(List<String> fieldChain) {
-        return fieldChain.size() == 1 ? fieldChain.getFirst() : String.join("-", fieldChain);
-    }
-
-    public static boolean isLangTextFinderByByPkAndFieldChain(Path path) {
-        return Files.isDirectory(path);
-    }
-
-    /**
-     * 只要有一个文件夹就是byPkAndFieldChain
-     */
-    public static boolean isLangSwitchByPkAndFieldChain(Path path) {
-        try (Stream<Path> plist = Files.list(path)) {
-            return plist.anyMatch(Files::isDirectory);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    @Override
+    public void foreachText(TextVisitor visitor) {
+        for (OneText[] line : pkToTexts.values()) {
+            for (OneText t : line) {
+                if (t != null) {
+                    visitor.visit(t.original, t.translated);
+                }
+            }
         }
     }
 
-    public static LangSwitch loadLangSwitch(Path path, String defaultLang) {
+    static String fieldChainStr(List<String> fieldChain) {
+        return fieldChain.size() == 1 ? fieldChain.getFirst() : String.join("-", fieldChain);
+    }
+
+    static LangSwitch loadLangSwitch(Path path, String defaultLang) {
         Map<String, LangTextFinder> lang2i18n = new TreeMap<>();
         try (Stream<Path> plist = Files.list(path)) {
             plist.forEach(langDir -> {
@@ -79,7 +71,7 @@ public class TextFinderByPkAndFieldChain implements TextFinder {
         return new LangSwitch(lang2i18n, defaultLang);
     }
 
-    public static LangTextFinder loadOneLang(Path langDir) {
+    static LangTextFinder loadOneLang(Path langDir) {
         LangTextFinder langTextFinder = new LangTextFinder();
         try (Stream<Path> plist = Files.list(langDir)) {
             plist.forEach(filePath -> {
@@ -153,19 +145,19 @@ public class TextFinderByPkAndFieldChain implements TextFinder {
                 Optional<String> oC = row.getCellAsString(originalCol);
                 Optional<String> tC = row.getCellAsString(translateCol);
 
-                String original = oC.orElse("");
-                String translate = tC.orElse("");
-
-                texts[i] = new OneText(original, translate);
+                OneText ot;
+                if (oC.isEmpty() && tC.isEmpty()) {
+                    ot = null;
+                } else {
+                    String original = oC.orElse("");
+                    String translate = tC.orElse("");
+                    ot = new OneText(original, translate);
+                }
+                texts[i] = ot;
             }
 
             textFinder.pkToTexts.put(pkStr, texts);
         }
     }
 
-    public static void main(String[] args) {
-        Path path = Path.of("../i18n/language");
-        System.out.println(isLangSwitchByPkAndFieldChain(path));
-        loadLangSwitch(path, "zh-cn");
-    }
 }

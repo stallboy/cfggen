@@ -1,4 +1,4 @@
-package configgen.tool;
+package configgen.genjson;
 
 import configgen.ctx.Context;
 import configgen.gen.Generator;
@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static configgen.tool.AICfg.*;
+import static configgen.genjson.AICfg.*;
 import static io.github.sashirestela.openai.domain.chat.ChatMessage.*;
 
 public class GenJsonByAI extends Generator {

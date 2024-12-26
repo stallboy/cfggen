@@ -1,4 +1,4 @@
-package configgen.ctx;
+package configgen.i18n;
 
 import java.util.List;
 
@@ -13,4 +13,10 @@ public interface TextFinder {
      */
     String findText(String pk, List<String> fieldChain, String original);
 
+
+    interface TextVisitor {
+        void visit(String original, String translated);
+    }
+
+    void foreachText(TextVisitor visitor);
 }

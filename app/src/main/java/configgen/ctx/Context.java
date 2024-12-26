@@ -2,6 +2,7 @@ package configgen.ctx;
 
 import configgen.data.*;
 import configgen.gen.BuildSettings;
+import configgen.i18n.*;
 import configgen.util.Logger;
 import configgen.schema.*;
 import configgen.schema.CfgSchemas;
@@ -64,19 +65,9 @@ public class Context {
         this.sourceStructure = sourceStructure;
 
         if (cfg.i18nFilename != null) {
-            Path path = Path.of(cfg.i18nFilename);
-            if (TextFinderByPkAndFieldChain.isLangTextFinderByByPkAndFieldChain(path)) {
-                nullableLangTextFinder = TextFinderByPkAndFieldChain.loadOneLang(path);
-            } else {
-                nullableLangTextFinder = TextFinderByOrig.loadOneLang(path, cfg.crLfAsLf);
-            }
+            nullableLangTextFinder = TextFinders.loadOneLang(cfg.i18nFilename, cfg.crLfAsLf);
         } else if (cfg.langSwitchDir != null) {
-            Path path = Path.of(cfg.langSwitchDir);
-            if (TextFinderByPkAndFieldChain.isLangSwitchByPkAndFieldChain(path)) {
-                nullableLangSwitch = TextFinderByPkAndFieldChain.loadLangSwitch(path, cfg.langSwitchDefaultLang);
-            } else {
-                nullableLangSwitch = TextFinderByOrig.loadLangSwitch(path, cfg.langSwitchDefaultLang, cfg.crLfAsLf);
-            }
+            nullableLangSwitch = TextFinders.loadLangSwitch(cfg.langSwitchDir, cfg.langSwitchDefaultLang, cfg.crLfAsLf);
         }
 
         ExcelReader excelReader = (cfg.tryUsePoi && BuildSettings.isIncludePoi()) ?
