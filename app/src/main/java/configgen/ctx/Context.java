@@ -62,9 +62,6 @@ public class Context {
     public Context(ContextCfg cfg, DirectoryStructure sourceStructure) {
         this.contextCfg = cfg;
         this.sourceStructure = sourceStructure;
-        ExcelReader excelReader = (cfg.tryUsePoi && BuildSettings.isIncludePoi()) ?
-                BuildSettings.getPoiReader() : ReadByFastExcel.INSTANCE;
-        CfgDataReader dataReader = new CfgDataReader(cfg.headRow, new ReadCsv(cfg.csvDefaultEncoding), excelReader);
 
         if (cfg.i18nFilename != null) {
             Path path = Path.of(cfg.i18nFilename);
@@ -82,6 +79,9 @@ public class Context {
             }
         }
 
+        ExcelReader excelReader = (cfg.tryUsePoi && BuildSettings.isIncludePoi()) ?
+                BuildSettings.getPoiReader() : ReadByFastExcel.INSTANCE;
+        CfgDataReader dataReader = new CfgDataReader(cfg.headRow, new ReadCsv(cfg.csvDefaultEncoding), excelReader);
         boolean ok = readSchemaAndData(dataReader, true);
         if (!ok) {
             readSchemaAndData(dataReader, false);

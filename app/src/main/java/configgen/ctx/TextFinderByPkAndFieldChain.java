@@ -13,8 +13,8 @@ import java.util.stream.Stream;
  * 这是最完备的机制，可以相同的原始本文，不同的翻译文本。
  */
 public class TextFinderByPkAndFieldChain implements TextFinder {
-    record OneText(String original,
-                   String translated) {
+    public record OneText(String original,
+                          String translated) {
     }
 
     private final Map<String, Integer> fieldChainToIndex = new HashMap<>();
@@ -39,6 +39,9 @@ public class TextFinderByPkAndFieldChain implements TextFinder {
         }
     }
 
+    public Map<String, OneText[]> getPkToTexts() {
+        return pkToTexts;
+    }
 
     public static String fieldChainStr(List<String> fieldChain) {
         return fieldChain.size() == 1 ? fieldChain.getFirst() : String.join("-", fieldChain);

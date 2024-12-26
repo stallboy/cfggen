@@ -12,7 +12,7 @@ public class LangTextFinder {
      */
     private final Map<String, TextFinder> tableMap = new TreeMap<>();
 
-    Map<String, TextFinder> getMap() {
+    public Map<String, TextFinder> getMap() {
         return tableMap;
     }
 

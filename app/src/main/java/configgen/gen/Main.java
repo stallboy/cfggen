@@ -62,6 +62,8 @@ public final class Main {
                 "enter read-eval-print-loop, 1 param: javadata file"));
         System.out.println("    -xmltocfg         " + LocaleUtil.getLocaleString("Usage.XmlToCfg",
                 "convert schema from .xml to .cfg"));
+        System.out.println("    -compareterm         " + LocaleUtil.getLocaleString("Usage.CompareTerm",
+                "check -i18nfile (2) compatible with term"));
         if (BuildSettings.isIncludePoi()) {
             System.out.println("    -usepoi           " + LocaleUtil.getLocaleString("Usage.UsePoi",
                     "use poi lib to read Excel file, slow speed, default false"));
@@ -138,6 +140,7 @@ public final class Main {
 
         String datadir = null;
         boolean xmlToCfg = false;
+        String compareTerm = null;
         boolean comparePoiAndFastExcel = false;
         int headRow = 2;
         boolean usePoi = false;
@@ -209,6 +212,7 @@ public final class Main {
                     binaryToTextLoop = true;
                     binaryToTextFile = args[++i];
                 }
+                case "-compareterm" -> compareTerm = args[++i];
 
                 case "-searchto" -> searchTo = args[++i];
                 case "-searchtag" -> searchTag = args[++i];
@@ -248,6 +252,16 @@ public final class Main {
             }
             return;
         }
+
+        if (compareTerm != null) {
+            if (i18nfile == null) {
+                usage("请配置-i18nfile");
+                return;
+            }
+            CompareI18nTerm.compare(i18nfile, compareTerm);
+            return;
+        }
+
         if (datadir == null) {
             usage("请配置-datadir");
             return;
