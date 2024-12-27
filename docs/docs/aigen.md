@@ -37,7 +37,6 @@ nav_order: 10
     note=_note.csv       server.note
     aicfg=null           llm大模型选择，需要兼容openai的api
     postrun=null         可以是个xx.bat，用于自动提交服务器及时生效
-    postrunjavadata=configdata.zip 如果设置了postrun，增加或更新json后，会先生成javadata文件，然后运行postrun
 ```
 
 ## ai.json格式
