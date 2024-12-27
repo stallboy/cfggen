@@ -5,16 +5,20 @@ import configgen.gen.Generator;
 import configgen.gen.Parameter;
 import configgen.schema.HasText;
 import configgen.util.CachedFileOutputStream;
+import configgen.util.Logger;
 import configgen.value.CfgValue;
 import configgen.value.ForeachValue;
 import configgen.value.ValueUtil;
 import org.dhatim.fastexcel.Workbook;
 import org.dhatim.fastexcel.Worksheet;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 import static configgen.value.CfgValue.*;
@@ -27,7 +31,7 @@ public final class GenI18nByPkAndFieldChain extends Generator {
     }
 
     /**
-     * @param description：oneTable.nullableDescriptionFieldName != null 时有效
+     * @param description：oneTable.nullableDescriptionName != null 时有效
      */
     record OneRecord(String pk,
                      String description,
@@ -35,10 +39,10 @@ public final class GenI18nByPkAndFieldChain extends Generator {
     }
 
     /**
-     * @param nullableDescriptionFieldName：如果table schema设置了lang，则最后输出文件里加上描述字段列，此列不翻译，仅用于参考
+     * @param nullableDescriptionName：如果table schema设置了lang，则最后输出文件里加上描述字段列，此列不翻译，仅用于参考
      */
     record OneTable(String table,
-                    String nullableDescriptionFieldName,
+                    String nullableDescriptionName,
                     List<OneRecord> records) {
     }
 
@@ -51,11 +55,14 @@ public final class GenI18nByPkAndFieldChain extends Generator {
     public GenI18nByPkAndFieldChain(Parameter parameter) {
         super(parameter);
         outputDir = parameter.get("dir", "../i18n/en");
+        if (tag != null) {
+            throw new IllegalArgumentException("-gen i18nbyid should has no tag, tag=" + tag);
+        }
     }
 
     @Override
     public void generate(Context ctx) throws IOException {
-        CfgValue cfgValue = ctx.makeValue(tag);
+        CfgValue cfgValue = ctx.makeValue();
 
         textTables = new ArrayList<>(16);
         for (VTable vTable : cfgValue.sortedTables()) {
@@ -71,15 +78,40 @@ public final class GenI18nByPkAndFieldChain extends Generator {
 
                     ForeachValue.foreachValue(new TextValueVisitor(description), vStruct, pk, List.of());
                 }
+                if (!curTable.records.isEmpty()){
+                    textTables.add(curTable);
+                    int txtCount = curTable.records.stream().mapToInt(r -> r.texts.size()).sum();
+                    System.out.printf("%40s: %8d %8d%n", curTable.table,  curTable.records.size(), txtCount);
+                }
+            }
+        }
 
-                textTables.add(curTable);
+
+        // 我们用的这个fastexcel lib同样内容写入xlsx，文件会不同，
+        // xlsx里面的core.xml里有dcterms:created，是每次创建时时间，所以每次生成文件内容都不同
+        // 而我们又希望内容不同时生成xlsx，才提交svn，所以需要如下逻辑，需要内容比较
+        LangTextFinder needReplaceFileI18nById = null;
+        String readI18nFilename = ctx.getContextCfg().i18nFilename();
+        if (readI18nFilename != null && readI18nFilename.equals(outputDir)) {
+            needReplaceFileI18nById = ctx.nullableLangTextFinder();
+        }
+
+        String outputDirTemp = outputDir + "_temp";
+        if (Files.isDirectory(Path.of(outputDirTemp))) {
+            throw new RuntimeException("temp directory = %s exist, delete it then retry".formatted(outputDirTemp));
+        }
+        if (needReplaceFileI18nById != null) {
+            if (!new File(outputDirTemp).mkdirs()) {
+                throw new RuntimeException("make temp directory = %s failed".formatted(outputDirTemp));
             }
         }
 
         for (Map.Entry<String, List<OneTable>> e : getTopModuleToTextTables().entrySet()) {
-            String topModule = e.getKey() + ".xlsx";
+            String topModuleFn = e.getKey() + ".xlsx";
             List<OneTable> tables = e.getValue();
-            try (OutputStream os = new CachedFileOutputStream(Path.of(outputDir, topModule).toFile());
+            try (OutputStream os = needReplaceFileI18nById != null ?
+                    new FileOutputStream(new File(outputDirTemp, topModuleFn)) :
+                    new CachedFileOutputStream(new File(outputDir, topModuleFn));
                  Workbook wb = new Workbook(os, "cfg", "1.0")) {
                 for (OneTable ot : tables) {
                     Worksheet ws = wb.newWorksheet(ot.table);
@@ -88,7 +120,95 @@ public final class GenI18nByPkAndFieldChain extends Generator {
             }
         }
 
+        if (needReplaceFileI18nById != null) { // 简化，只有需要replace时才比较
+            // 1.先把 <outputDir> -> <outputDir>_backup
+            String outputDirBackup = outputDir + "_backup";
+            moveDirFilesToAnotherDir(outputDir, outputDirBackup);
+
+            // 2.然后把<outputDir>_temp -> <outputDir>
+            moveDirFilesToAnotherDir(outputDirTemp, outputDir);
+            if (!new File(outputDirTemp).delete()) {
+                throw new RuntimeException("delete temp directory = %s failed".formatted(outputDirTemp));
+            }
+
+            // 3.最后把内容相同的file 从 <outputDir>_backup ---拷贝到---> <outputDir>
+            LangTextFinder curLang = TextFinderByPkAndFieldChain.loadOneLang(Path.of(outputDir));
+            Map<String, OneTranslateFile> curFiles = getTopModulesToTextFinders(curLang);
+            Map<String, OneTranslateFile> oldFiles = getTopModulesToTextFinders(needReplaceFileI18nById);
+
+            for (Map.Entry<String, OneTranslateFile> oe : curFiles.entrySet()) {
+                String topModule = oe.getKey();
+                String fn = topModule + ".xlsx";
+                OneTranslateFile cur = oe.getValue();
+                OneTranslateFile old = oldFiles.get(topModule);
+
+                Path dstPath = Path.of(outputDir, fn);
+                if (cur.equals(old)) {
+                    Files.copy(Path.of(outputDirBackup, fn), dstPath,
+                            StandardCopyOption.REPLACE_EXISTING,
+                            StandardCopyOption.COPY_ATTRIBUTES);
+
+
+                } else {
+                    Logger.log((old != null ? "modify " : "create ") + dstPath.toAbsolutePath().normalize());
+                }
+            }
+        }
+
         stat.dump();
+    }
+
+
+    private static void moveDirFilesToAnotherDir(String from, String to) {
+        File toDir = new File(to);
+        if (toDir.isDirectory()) {
+            for (File file : Objects.requireNonNull(toDir.listFiles())) {
+                if (!file.delete()) {
+                    throw new RuntimeException("delete " + file + " failed");
+                }
+            }
+        } else {
+            if (!toDir.mkdirs()) {
+                throw new RuntimeException("mkdir " + toDir + " failed");
+            }
+        }
+        for (File file : Objects.requireNonNull(new File(from).listFiles())) {
+            if (!file.renameTo(new File(to, file.getName()))) {
+                throw new RuntimeException("rename %s to %s failed".formatted(from, to));
+            }
+        }
+    }
+
+    record OneTranslateFile(Map<String, TextFinderByPkAndFieldChain> tables) {
+    }
+
+    private static Map<String, OneTranslateFile> getTopModulesToTextFinders(LangTextFinder lang) {
+        Map<String, OneTranslateFile> res = new LinkedHashMap<>();
+        for (Map.Entry<String, TextFinder> e : lang.getMap().entrySet()) {
+            String table = e.getKey();
+            TextFinderByPkAndFieldChain finder = (TextFinderByPkAndFieldChain) e.getValue();
+            OneTranslateFile file = res.computeIfAbsent(getTopModule(table),
+                    k -> new OneTranslateFile(new LinkedHashMap<>()));
+            file.tables.put(table, finder);
+        }
+        return res;
+    }
+
+    private Map<String, List<OneTable>> getTopModuleToTextTables() {
+        Map<String, List<OneTable>> res = new LinkedHashMap<>();
+        for (OneTable ot : textTables) {
+            List<OneTable> tables = res.computeIfAbsent(getTopModule(ot.table), k -> new ArrayList<>());
+            tables.add(ot);
+        }
+        return res;
+    }
+
+    private static String getTopModule(String table) {
+        int idx = table.indexOf('.');
+        if (idx != -1) {
+            return table.substring(0, idx);
+        }
+        return "_top";
     }
 
     private class TextValueVisitor extends ForeachValue.ValueVisitorForPrimitive {
@@ -121,25 +241,7 @@ public final class GenI18nByPkAndFieldChain extends Generator {
                 }
             }
         }
-
-
     }
-
-    private Map<String, List<OneTable>> getTopModuleToTextTables() {
-        Map<String, List<OneTable>> res = new LinkedHashMap<>();
-        for (OneTable ot : textTables) {
-            int idx = ot.table.indexOf('.');
-            String topModule = "_top";
-            if (idx != -1) {
-                topModule = ot.table.substring(0, idx);
-            }
-
-            List<OneTable> tables = res.computeIfAbsent(topModule, k -> new ArrayList<>());
-            tables.add(ot);
-        }
-        return res;
-    }
-
 
     static class GenOneTable {
         private final List<String> fields = new ArrayList<>();
@@ -147,7 +249,7 @@ public final class GenI18nByPkAndFieldChain extends Generator {
 
         void gen(OneTable textTable, Worksheet ws, I18nStat stat) {
             int r = 1;
-            boolean hasDescriptionColumn = textTable.nullableDescriptionFieldName != null;
+            boolean hasDescriptionColumn = textTable.nullableDescriptionName != null;
             int offset = hasDescriptionColumn ? 2 : 1;
 
             for (OneRecord record : textTable.records) {
@@ -180,7 +282,7 @@ public final class GenI18nByPkAndFieldChain extends Generator {
             if (r > 1) {
                 ws.inlineString(0, 0, "id");
                 if (hasDescriptionColumn) {
-                    ws.inlineString(0, 1, textTable.nullableDescriptionFieldName);
+                    ws.inlineString(0, 1, textTable.nullableDescriptionName);
                 }
 
                 int idx = 0;
@@ -270,7 +372,7 @@ public final class GenI18nByPkAndFieldChain extends Generator {
     public static void main(String[] args) throws IOException {
         // 结论：没办法保证2次存储的文件相同
         try (OutputStream os = new FileOutputStream("test.xlsx");
-                Workbook wb = new Workbook(os, "MyApplication", "1.0")) {
+             Workbook wb = new Workbook(os, "MyApplication", "1.0")) {
             Worksheet ws = wb.newWorksheet("Sheet 1");
             ws.value(0, 0, "This is a string in A1");
             ws.value(0, 2, 1234);

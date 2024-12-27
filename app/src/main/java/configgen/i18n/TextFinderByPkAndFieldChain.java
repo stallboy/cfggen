@@ -17,8 +17,13 @@ class TextFinderByPkAndFieldChain implements TextFinder {
                    String translated) {
     }
 
-    private final Map<String, Integer> fieldChainToIndex = new HashMap<>();
-    private final Map<String, OneText[]> pkToTexts = new HashMap<>();
+    record OneRecord(String description,
+                     List<OneText> texts) {
+    }
+
+    private String nullableDescriptionName;
+    private final Map<String, Integer> fieldChainToIndex = new LinkedHashMap<>();
+    private final Map<String, OneRecord> pkToTexts = new LinkedHashMap<>();
 
     @Override
     public String findText(String pk, List<String> fieldChain, String original) {
@@ -27,11 +32,11 @@ class TextFinderByPkAndFieldChain implements TextFinder {
         if (idx == null) {
             return null;
         }
-        OneText[] line = pkToTexts.get(pk);
+        OneRecord line = pkToTexts.get(pk);
         if (line == null) {
             return null;
         }
-        OneText txt = line[idx];
+        OneText txt = line.texts.get(idx);
         if (txt != null && txt.original.equals(original)) {
             return txt.translated;
         } else {
@@ -41,13 +46,55 @@ class TextFinderByPkAndFieldChain implements TextFinder {
 
     @Override
     public void foreachText(TextVisitor visitor) {
-        for (OneText[] line : pkToTexts.values()) {
-            for (OneText t : line) {
+        for (OneRecord line : pkToTexts.values()) {
+            for (OneText t : line.texts) {
                 if (t != null) {
                     visitor.visit(t.original, t.translated);
                 }
             }
         }
+    }
+
+    @Override
+    public boolean equals(Object otherObj) {
+        if (!(otherObj instanceof TextFinderByPkAndFieldChain other)) {
+            return false;
+        }
+
+        if (!Objects.equals(nullableDescriptionName, other.nullableDescriptionName)){
+            return false;
+        }
+
+        // 不用fieldChainToIndex.equals，是还要比较顺序一致
+        if (fieldChainToIndex.size() != other.fieldChainToIndex.size()) {
+            return false;
+        }
+
+        if (pkToTexts.size() != other.pkToTexts.size()) {
+            return false;
+        }
+
+        {
+            Iterator<Map.Entry<String, Integer>> f1 = fieldChainToIndex.entrySet().iterator();
+            Iterator<Map.Entry<String, Integer>> f2 = other.fieldChainToIndex.entrySet().iterator();
+            while (f1.hasNext()) {
+                if (!f1.next().equals(f2.next())) {
+                    return false;
+                }
+            }
+        }
+
+        {
+            Iterator<Map.Entry<String, OneRecord>> r1 = pkToTexts.entrySet().iterator();
+            Iterator<Map.Entry<String, OneRecord>> r2 = other.pkToTexts.entrySet().iterator();
+            while (r1.hasNext()) {
+                if (!r1.next().equals(r2.next())) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     static String fieldChainStr(List<String> fieldChain) {
@@ -77,7 +124,7 @@ class TextFinderByPkAndFieldChain implements TextFinder {
             plist.forEach(filePath -> {
                 if (Files.isRegularFile(filePath)) {
                     if (filePath.getFileName().toString().toLowerCase().endsWith(".xlsx")) {
-                        loadOneFile(filePath, langTextFinder);
+                        langTextFinder.getMap().putAll(loadOneFile(filePath));
                     }
                 }
             });
@@ -87,7 +134,8 @@ class TextFinderByPkAndFieldChain implements TextFinder {
         return langTextFinder;
     }
 
-    private static void loadOneFile(Path filePath, LangTextFinder langTextFinder) {
+    private static Map<String, TextFinderByPkAndFieldChain> loadOneFile(Path filePath) {
+        Map<String, TextFinderByPkAndFieldChain> map = new LinkedHashMap<>();
         try (ReadableWorkbook wb = new ReadableWorkbook(filePath.toFile(), new ReadingOptions(true, false))) {
             for (Sheet sheet : wb.getSheets().toList()) {
                 String tableName = sheet.getName().trim();
@@ -97,23 +145,25 @@ class TextFinderByPkAndFieldChain implements TextFinder {
                 }
 
                 TextFinderByPkAndFieldChain textFinder = new TextFinderByPkAndFieldChain();
-                langTextFinder.getMap().put(tableName, textFinder);
                 loadOneSheet(rawRows, textFinder);
+                map.put(tableName, textFinder);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        return map;
     }
 
     private static void loadOneSheet(List<Row> rawRows, TextFinderByPkAndFieldChain textFinder) {
+        // 第一行是表头，分析
         Row header = rawRows.getFirst();
         int columnCount = header.getCellCount();
         if (columnCount <= 1) {
             return;
         }
-        int[] tColumns = new int[columnCount];
+        int[] tColumns = new int[columnCount]; // 翻译后的文本所在的列index
         int tColumnCnt = 0;
-        for (int i = 1; i < columnCount; i++) {
+        for (int i = 2; i < columnCount; i++) { // 没有description列时，翻译文本列从2开始（0是pk，1是原始文本）
             Optional<String> cell = header.getCellAsString(i);
             if (cell.isPresent()) {
                 String field = cell.get();
@@ -130,6 +180,11 @@ class TextFinderByPkAndFieldChain implements TextFinder {
             return;
         }
 
+        boolean hasDescription = tColumns[0] > 2;
+        if (hasDescription) {
+            textFinder.nullableDescriptionName = header.getCellAsString(1).orElse("");
+        }
+
         for (int r = 1, rowCount = rawRows.size(); r < rowCount; r++) {
             Row row = rawRows.get(r);
             Optional<String> pkCell = row.getCellAsString(0);
@@ -138,7 +193,12 @@ class TextFinderByPkAndFieldChain implements TextFinder {
             }
             String pkStr = pkCell.get();
 
-            OneText[] texts = new OneText[tColumnCnt];
+            String description = null;
+            if (hasDescription) {
+                description = row.getCellAsString(1).orElse("");
+            }
+
+            List<OneText> texts = new ArrayList<>(tColumnCnt);
             for (int i = 0; i < tColumnCnt; i++) {
                 int translateCol = tColumns[i];
                 int originalCol = translateCol - 1;
@@ -153,10 +213,10 @@ class TextFinderByPkAndFieldChain implements TextFinder {
                     String translate = tC.orElse("");
                     ot = new OneText(original, translate);
                 }
-                texts[i] = ot;
+                texts.add(ot);
             }
 
-            textFinder.pkToTexts.put(pkStr, texts);
+            textFinder.pkToTexts.put(pkStr, new OneRecord(description, texts));
         }
     }
 
