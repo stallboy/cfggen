@@ -1,7 +1,7 @@
 package configgen.genjava.code;
 
 import configgen.ctx.Context;
-import configgen.gen.Generator;
+import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
 import configgen.genjava.GenJavaUtil;
 import configgen.schema.*;
@@ -22,7 +22,7 @@ import java.util.Set;
 
 import static configgen.value.CfgValue.VTable;
 
-public class GenJavaCode extends Generator {
+public class GenJavaCode extends GeneratorWithTag {
     private File dstDir;
     private final String dir;
     private final String pkg;

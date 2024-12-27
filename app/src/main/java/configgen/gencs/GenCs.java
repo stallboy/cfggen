@@ -2,6 +2,7 @@ package configgen.gencs;
 
 import configgen.ctx.Context;
 import configgen.gen.Generator;
+import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
 import configgen.schema.*;
 import configgen.util.CachedFiles;
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
 import static configgen.schema.FieldType.Primitive.*;
 import static configgen.value.CfgValue.VTable;
 
-public class GenCs extends Generator {
+public class GenCs extends GeneratorWithTag {
     private final String dir;
     private final String pkg;
     private final String encoding;
@@ -367,14 +368,14 @@ public class GenCs extends Generator {
         for (FieldSchema fieldSchema : structural.fields()) {
             String n = fieldSchema.name();
             FieldType t = fieldSchema.type();
-            if (t instanceof FList flist) {
+            if (t instanceof FList(SimpleType item)) {
                 ps.println3("self." + upper1(n) + " = new " + type(t) + "();");
                 ps.println3("for (var c = os.ReadInt32(); c > 0; c--)");
-                ps.println4("self." + upper1(n) + ".Add(" + _create(flist.item()) + ");");
-            } else if (t instanceof FMap fMap) {
+                ps.println4("self." + upper1(n) + ".Add(" + _create(item) + ");");
+            } else if (t instanceof FMap(SimpleType key, SimpleType value)) {
                 ps.println3("self." + upper1(n) + " = new " + type(t) + "();");
                 ps.println3("for (var c = os.ReadInt32(); c > 0; c--)");
-                ps.println4("self." + upper1(n) + ".Add(" + _create((fMap.key())) + ", " + _create(fMap.value()) + ");");
+                ps.println4("self." + upper1(n) + ".Add(" + _create((key)) + ", " + _create(value) + ");");
             } else {
                 ps.println3("self." + upper1(n) + " = " + _create(t) + ";");
             }

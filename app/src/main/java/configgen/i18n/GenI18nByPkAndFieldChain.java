@@ -57,9 +57,6 @@ public final class GenI18nByPkAndFieldChain extends Generator {
         super(parameter);
         outputDir = parameter.get("dir", "../i18n/en");
         backupDir = parameter.get("backup", "../backup");
-        if (tag != null) {
-            throw new IllegalArgumentException("-gen i18nbyid should has no tag, tag=" + tag);
-        }
     }
 
     @Override
@@ -98,7 +95,8 @@ public final class GenI18nByPkAndFieldChain extends Generator {
             needReplaceFileI18nById = ctx.nullableLangTextFinder();
         }
 
-        String lang = Path.of(outputDir).getFileName().toString();
+        Path outputDirPath = Path.of(outputDir);
+        String lang = outputDirPath.getFileName().toString();
         String outputDirTemp = Path.of(backupDir, lang+"_temp").normalize().toString();
         if (Files.isDirectory(Path.of(outputDirTemp))) {
             throw new RuntimeException("temp directory = %s exist, delete it then retry".formatted(outputDirTemp));
@@ -135,7 +133,7 @@ public final class GenI18nByPkAndFieldChain extends Generator {
             }
 
             // 3.最后把内容相同的file 从 <outputDir>_backup ---拷贝到---> <outputDir>
-            LangTextFinder curLang = TextFinderByPkAndFieldChain.loadOneLang(Path.of(outputDir));
+            LangTextFinder curLang = TextFinderByPkAndFieldChain.loadOneLang(outputDirPath);
             Map<String, OneTranslateFile> curFiles = getTopModulesToTextFinders(curLang);
             Map<String, OneTranslateFile> oldFiles = getTopModulesToTextFinders(needReplaceFileI18nById);
 

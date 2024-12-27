@@ -5,13 +5,13 @@ import java.util.Map;
 
 class ParameterParser implements Parameter {
     private final String arg;
-    final String type;
+    private final String genId;
     private final Map<String, String> params = new HashMap<>();
 
     ParameterParser(String arg) {
         this.arg = arg;
         String[] sp = arg.split(",");
-        type = sp[0];
+        genId = sp[0];
         for (int i = 1; i < sp.length; i++) {
             String s = sp[i];
             int c = s.indexOf(':');
@@ -47,9 +47,13 @@ class ParameterParser implements Parameter {
         }
     }
 
+    String genId() {
+        return genId;
+    }
+
     void assureNoExtra() {
         if (!params.isEmpty()) {
-            throw new AssertionError("-gen " + type + " not support parameter: " + params);
+            throw new AssertionError("-gen " + genId + " not support parameter: " + params);
         }
     }
 

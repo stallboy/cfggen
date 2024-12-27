@@ -12,9 +12,9 @@ public class Generators {
 
     public static Generator create(String arg) {
         ParameterParser parameter = new ParameterParser(arg);
-        GeneratorProvider provider = providers.get(parameter.type);
+        GeneratorProvider provider = providers.get(parameter.genId());
         if (provider == null) {
-            System.err.println(parameter.type + " not support");
+            System.err.println(parameter.genId() + " not support");
             return null;
         }
         Generator generator = provider.create(parameter);

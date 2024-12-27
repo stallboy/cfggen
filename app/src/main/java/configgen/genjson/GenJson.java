@@ -2,6 +2,7 @@ package configgen.genjson;
 
 import configgen.ctx.Context;
 import configgen.gen.Generator;
+import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
 import configgen.schema.HasMap;
 import configgen.util.Logger;
@@ -17,7 +18,7 @@ import java.util.Map;
 
 import static configgen.value.CfgValue.*;
 
-public class GenJson extends Generator {
+public class GenJson extends GeneratorWithTag {
     private final List<String> tables = new ArrayList<>();
     private final Path dstPath;
 

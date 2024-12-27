@@ -29,12 +29,12 @@ public class GenJsonByAI extends Generator {
 
     public GenJsonByAI(Parameter parameter) {
         super(parameter);
-        cfgFn = parameter.get("cfg", "ai.json", "llm大模型选择，需要兼容openai的api");
-        askFn = parameter.get("ask", "ask.txt", "问题，每行生成一个json");
-        table = parameter.get("table", "skill.buff", "表名称");
-        promptFn = parameter.get("promptfn", null, "一般不用配置，默认为在<cfg>文件目录下的<table>.jte，格式参考https://jte.gg/");
-        isUseRawStructInfo = parameter.has("raw", "false表示是把结构信息转为typescript类型信息提供给llm");
-        retryTimes = Integer.parseInt(parameter.get("retry", "1", "重试llm次数，默认1代表不重试"));
+        cfgFn = parameter.get("cfg", "ai.json");
+        askFn = parameter.get("ask", "ask.txt");
+        table = parameter.get("table", "skill.buff");
+        promptFn = parameter.get("promptfn", null);
+        isUseRawStructInfo = parameter.has("raw");
+        retryTimes = Integer.parseInt(parameter.get("retry", "1"));
     }
 
     @Override
@@ -42,18 +42,15 @@ public class GenJsonByAI extends Generator {
         if (retryTimes <= 0) {
             throw new RuntimeException("retry must > 0");
         }
-        if (tag != null) {
-            throw new RuntimeException("gen jsonByAI with tag=%s not supported".formatted(tag));
-        }
-
 
         AICfg aiCfg = readFromFile(cfgFn);
-        if (!Files.exists(Path.of(askFn))) {
+        Path askFnPath = Path.of(askFn);
+        if (!Files.exists(askFnPath)) {
             throw new RuntimeException(askFn + " not exist!");
         }
         List<String> asks;
         try {
-            asks = Files.readAllLines(Path.of(askFn));
+            asks = Files.readAllLines(askFnPath);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -98,7 +95,7 @@ public class GenJsonByAI extends Generator {
                     AssistantMessage.of(init),
                     UserMessage.of(ask));
             askWithRetry(messages, retryTimes, stat, tableSchema, openAI,
-                    ctx.getContextCfg().dataDir(), cfgValue.valueStat(), aiCfg.model());
+                    ctx.getContextCfg().dataDir(), aiCfg.model());
         }
         System.out.println(stat);
     }
@@ -120,7 +117,7 @@ public class GenJsonByAI extends Generator {
 
     private void askWithRetry(List<ChatMessage> messages, int retryTimes, AskStat stat,
                               TableSchema tableSchema, SimpleOpenAI openAI,
-                              Path dataDir, CfgValueStat valueStat, String model) {
+                              Path dataDir, String model) {
         stat.ask++;
         for (int i = 0; i < retryTimes; i++) {
             String jsonResult = ask(messages, openAI, model);

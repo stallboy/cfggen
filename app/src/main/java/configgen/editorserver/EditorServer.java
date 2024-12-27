@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.sun.net.httpserver.*;
 import configgen.ctx.*;
 import configgen.gen.Generator;
+import configgen.gen.GeneratorWithTag;
 import configgen.gen.Generators;
 import configgen.gen.Parameter;
 import configgen.schema.TableSchemaRefGraph;
@@ -26,7 +27,7 @@ import static configgen.editorserver.RecordEditService.ResultCode.*;
 import static configgen.editorserver.RecordService.*;
 import static configgen.editorserver.RecordEditService.*;
 
-public class EditorServer extends Generator {
+public class EditorServer extends GeneratorWithTag {
     private final int port;
     private final String noteCsvPath;
     private final String aiCfgFn;
@@ -45,11 +46,11 @@ public class EditorServer extends Generator {
 
     public EditorServer(Parameter parameter) {
         super(parameter);
-        port = Integer.parseInt(parameter.get("port", "3456", "为cfgeditor.exe提供服务的端口"));
+        port = Integer.parseInt(parameter.get("port", "3456"));
         noteCsvPath = parameter.get("note", "_note.csv");
-        aiCfgFn = parameter.get("aicfg", null, "llm大模型选择，需要兼容openai的api");
-        postRun = parameter.get("postrun", null, "可以是个xx.bat或xx.sh，用于自动提交服务器及时生效， .bat最开始多行的注释可有:: -gen 则会提取用当前上下文生成，.sh则是# -gen ");
-        waitSecondsAfterWatchEvt = Integer.parseInt(parameter.get("watch", "0", "如x>0，则表示x秒后自动重载配置"));
+        aiCfgFn = parameter.get("aicfg", null);
+        waitSecondsAfterWatchEvt = Integer.parseInt(parameter.get("watch", "0"));
+        postRun = parameter.get("postrun", null);
     }
 
     @Override

@@ -1,8 +1,8 @@
 package configgen.genjava;
 
 import configgen.ctx.Context;
+import configgen.gen.GeneratorWithTag;
 import configgen.i18n.LangSwitch;
-import configgen.gen.Generator;
 import configgen.i18n.LangSwitchRuntime;
 import configgen.gen.Parameter;
 import configgen.util.CachedFileOutputStream;
@@ -19,7 +19,7 @@ import java.util.Map;
 
 import static configgen.value.CfgValue.*;
 
-public final class GenJavaData extends Generator {
+public final class GenJavaData extends GeneratorWithTag {
     private final File file;
 
     public GenJavaData(Parameter parameter) {

@@ -94,9 +94,9 @@ public final class Main {
                 "parameters in gen are separated by , and the parameter name and parameter value are separated = or :."));
         Generators.getAllProviders().forEach((k, v) -> {
                     System.out.printf("    -gen %s\n", k);
-                    ParameterInfoCollector collector = ParameterInfoCollector.of(k);
-                    v.create(collector);
-                    collector.print();
+                    ParameterInfoCollector parameter = ParameterInfoCollector.of(k);
+                    v.create(parameter);
+                    parameter.print();
                 }
         );
 
@@ -136,12 +136,11 @@ public final class Main {
 
         Generators.addProvider("cs", GenCs::new);
         Generators.addProvider("bytes", GenBytes::new);
-
         Generators.addProvider("lua", GenLua::new);
 
         Generators.addProvider("server", EditorServer::new);
-        Generators.addProvider("json", GenJson::new);
         Generators.addProvider("ts", GenTs::new);
+        Generators.addProvider("json", GenJson::new);
         Generators.addProvider("jsonbyai", GenJsonByAI::new);
 
         String datadir = null;

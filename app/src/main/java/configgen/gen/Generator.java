@@ -10,7 +10,7 @@ import java.nio.file.Path;
 
 public abstract class Generator {
     protected final Parameter parameter;
-    protected String tag;
+
 
     /**
      * @param parameter 此接口有2个实现类，一个用于收集usage，一个用于实际参数解析
@@ -18,7 +18,6 @@ public abstract class Generator {
      */
     public Generator(Parameter parameter) {
         this.parameter = parameter;
-        tag = parameter.get("own", null, "Gen.Tag");
     }
 
     public abstract void generate(Context ctx) throws IOException;
@@ -36,7 +35,7 @@ public abstract class Generator {
         return new OutputStreamWriter(new CachedFileOutputStream(file), StandardCharsets.UTF_8);
     }
 
-    protected static void copyFile(Path dstDir, String file, String dstEncoding) throws IOException {
+    protected static void copySupportFileTo(String file, Path dstDir, String dstEncoding) throws IOException {
         try (InputStream is = Generator.class.getResourceAsStream("/support/" + file);
              BufferedReader br = new BufferedReader(new InputStreamReader(is != null ? is : new FileInputStream("src/support/" + file), StandardCharsets.UTF_8));
              CachedIndentPrinter ps = createCode(dstDir.resolve(file).toFile(), dstEncoding)) {

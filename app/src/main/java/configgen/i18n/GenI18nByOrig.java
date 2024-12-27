@@ -20,9 +20,6 @@ public final class GenI18nByOrig extends Generator {
     public GenI18nByOrig(Parameter parameter) {
         super(parameter);
         file = new File(parameter.get("file", "../i18n/en.csv"));
-        if (tag != null) {
-            throw new IllegalArgumentException("-gen i18n should has no tag, tag=" + tag);
-        }
     }
 
     @Override

@@ -1,7 +1,7 @@
 package configgen.gencs;
 
 import configgen.ctx.Context;
-import configgen.gen.Generator;
+import configgen.gen.GeneratorWithTag;
 import configgen.i18n.LangSwitchRuntime;
 import configgen.gen.Parameter;
 import configgen.util.CachedFileOutputStream;
@@ -19,7 +19,7 @@ import java.util.Map;
 
 import static configgen.value.CfgValue.*;
 
-public class GenBytes extends Generator {
+public class GenBytes extends GeneratorWithTag {
     private final File file;
     private final String cipher;
 

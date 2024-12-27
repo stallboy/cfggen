@@ -24,7 +24,7 @@ record ParameterInfoCollector(String genId,
             String messageId = info.messageId != null ? info.messageId : genId + "." + key;
             if (info.isFlag) {
                 System.out.printf("        %-20s %s,%s\n", key,
-                        LocaleUtil.getLocaleString(messageId, messageId),
+                        LocaleUtil.getLocaleString(messageId, ""),
                         LocaleUtil.getLocaleString("Gen.DefaultFalse", "default false"));
             } else {
                 String def = info.def;
@@ -32,7 +32,7 @@ record ParameterInfoCollector(String genId,
                     def = "null";
                 }
                 System.out.printf("        %-20s %s\n", key + "=" + def,
-                        LocaleUtil.getLocaleString(messageId, messageId)
+                        LocaleUtil.getLocaleString(messageId, "")
                 );
             }
         }

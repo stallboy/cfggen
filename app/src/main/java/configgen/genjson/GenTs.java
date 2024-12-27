@@ -2,6 +2,7 @@ package configgen.genjson;
 
 import configgen.ctx.Context;
 import configgen.gen.Generator;
+import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
 import configgen.util.CachedIndentPrinter;
 import configgen.util.Logger;
@@ -13,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class GenTs extends Generator {
+public class GenTs extends GeneratorWithTag {
     private final List<String> tables = new ArrayList<>();
     private final Path dstPath;
     private final String encoding;

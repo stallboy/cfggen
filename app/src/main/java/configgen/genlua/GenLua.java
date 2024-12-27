@@ -1,7 +1,7 @@
 package configgen.genlua;
 
 import configgen.ctx.Context;
-import configgen.gen.Generator;
+import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
 import configgen.schema.*;
 import configgen.util.CachedFiles;
@@ -17,7 +17,7 @@ import java.util.*;
 import static configgen.value.CfgValue.VStruct;
 import static configgen.value.CfgValue.VTable;
 
-public class GenLua extends Generator {
+public class GenLua extends GeneratorWithTag {
 
     private final String dir;
     private final String pkg;
@@ -100,7 +100,7 @@ public class GenLua extends Generator {
                     generate_lang(ps, texts, lineCache);
                 }
             }
-            copyFile(dstDirPath, "mkcfg.lua", encoding);
+            copySupportFileTo("mkcfg.lua", dstDirPath, encoding);
         }
 
 
