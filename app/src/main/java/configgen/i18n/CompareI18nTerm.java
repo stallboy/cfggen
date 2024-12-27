@@ -29,8 +29,9 @@ public class CompareI18nTerm {
 
     /**
      * 检查翻译文件中，包含原始文本包含原始术语，但翻译文本中却不包含翻译术语的情况，输出
+     *
      * @param i8nFilename 单个语言翻译中间文件或目录
-     * @param termFile 术语表excel文件，第一列时原始术语，第二列是翻译术语
+     * @param termFile    术语表excel文件，第一列时原始术语，第二列是翻译术语
      */
     public static void compare(String i8nFilename, String termFile) {
         List<OneText> terms = loadTerm(termFile);
@@ -109,7 +110,7 @@ public class CompareI18nTerm {
                 return result;
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("read term file=%s error".formatted(termFile), e);
         }
         return null;
     }

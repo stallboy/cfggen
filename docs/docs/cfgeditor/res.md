@@ -1,0 +1,41 @@
+---
+layout: page
+title: 预览资源
+parent: 编辑器
+nav_order: 3
+---
+
+# 预览资源
+{: .no_toc }
+
+## Table of contents
+{: .no_toc .text-delta }
+
+- TOC
+{:toc}
+---
+
+## 关联资源
+
+每个record可以关联资源，资源在编辑器里预览
+
+资源两种寻找模式：
+
+- 显示配置：索引到特定表比如asset.assets，就认为是资源。
+- 隐式约定：配置里不显式声明，而是约定目录，从目录中里搜索 [tableName]_[recordId].[jpg/mp4/...] 作为资源。
+
+## 展示
+
+可展示资源类型：
+- video
+- audio
+- image
+- subtitles
+- other
+
+统计信息显示在节点上，如1v2a2o。
+i表示image，v表示video，a表示audio，o表示other
+
+点击统计信息按钮，展示具体的每个资源和路径。
+
+点击路径，打开explorer到对应文件夹选中此文件。

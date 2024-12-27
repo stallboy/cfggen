@@ -149,13 +149,13 @@ class TextFinderByPkAndFieldChain implements TextFinder {
                 try {
                     loadOneSheet(rawRows, textFinder);
                 } catch (Exception e) {
-                    throw new RuntimeException("%s in %s read err".formatted(tableName,
+                    throw new RuntimeException("%s in %s read error".formatted(tableName,
                             filePath.toAbsolutePath().normalize().toString()), e);
                 }
                 map.put(tableName, textFinder);
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("read %s error".formatted(filePath.toAbsolutePath().normalize().toString()), e);
         }
         return map;
     }
