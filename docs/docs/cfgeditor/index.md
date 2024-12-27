@@ -28,17 +28,33 @@ nav_order: 3
 
 编辑数据会保存成json文件
 
+1. .cfg中设置表用json格式储存
+```
+table effect[id] (json) {
+	id:int;
+	text:str;
+	logic:EffectLogic (pack);
+}
+```
+如上用json来声明。
+
+2, 在编辑器中选择id时，附带说明
+```
+table skillclass[id] (enum='name', title='text') {
+	id:int;
+	name:str;
+	text:text;
+}
+struct FromSkillClass {
+    skillClass:int ->skillclass;
+}
+```
+如何当FromSkillClass 结构里int字段外键到skillclass表，则在编辑器选择下拉菜单是包含id（这里正好是个枚举，所以还包含枚举字符串），
+这里再加上title='text'，则下拉菜单选项上会包含text字段的中文描述。
+
+
 ## 查看表结构
-![](../../assets/images/tableschema.png)
-
-## 查看表关系 
-![](../../assets/images/tableref.png)
-
+## 查看表关系
 ## 查看记录
-![](../../assets/images/record.png)
-
 ## 查看记录关系
-![](../../assets/images/recordref.png)
-
 ## 搜索记录
-![](../../assets/images/search.png)

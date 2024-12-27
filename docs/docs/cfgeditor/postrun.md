@@ -15,18 +15,44 @@ nav_order: 2
 {:toc}
 ---
 
-## 立式生效
+## cfgeditor_server自动重载
 
-作为cfgeditor.exe的服务端，需要额外配置postrun, postrunjavadata
-
-一般postrun设置为bat文件，bat里自动上传```<postrunjavadata>``` 到服务器，服务器立马自动使用，客户端立马生效。
-```
--gen server
-    own=null             提取部分配置，跟cfg中有tag标记的提取
-    port=3456            为cfgeditor.exe提供服务的端口
-    note=_note.csv       server.note
-    aicfg=null           llm大模型选择，需要兼容openai的api
-    postrun=null         可以是个xx.bat，用于自动提交服务器及时生效
-    postrunjavadata=configdata.zip 如果设置了postrun，增加或更新json后，会先生成javadata文件，然后运行postrun
+```bat
+java -jar ../cfggen.jar -datadir ../example/config  -gen server,watch=1
 ```
 
+如上加入watch=1，表明监控 -datadir 目录修改，如有能影响实际配表数据或结构的改动，则自动重读。
+1是则表示变化发生1秒内未有进一步文件变化，则自动重载配置，可以更大一点。
+
+这样当你使用cfgeditor.exe期间，更新svn，或手动更改excel文件或.cfg或.json，就无需重启cfgeditor_server了。
+只要等cfgeditor_server重载完了，在cfgeditor.exe里按F5刷新就可以了。
+
+
+## 游戏服务器或客户端自动重载
+
+```bat
+java -jar ../cfggen.jar -datadir ../example/config  -gen server,watch=1,postrun=upload.bat
+```
+
+使用postrun=upload.bat参数， upload.bat如下
+
+```bat
+:: -gen javadata
+:: -gen lua,dir:../Unity/Lua,own:client,emmylua:true,sharedEmptyTable:true,shared
+
+rem curl -xx upload generated confg.data to server 
+```
+
+则当配置文件更改，则会先解析出postrun里的最开始的注释行
+- 如果是bat，则提取:: -gen 开头的行，来gen
+- 如果是sh，则提取# -gen 开头的行，来gen
+
+解析注释行：是因为这些gen会再当前的server java进程中直接利用已加载好的数据来生成，而不用额外启java进程来做。更高效。
+
+然后执行此bat，加入游戏服务器没开在本机器，可以scp或curl过去。
+
+
+- 游戏服务器需要检测到配置数据变化，自动加载使用
+- 游戏客户端也需要
+
+结合以上就实现了，配置更改服务器无需重启，客户端无需重启，自动生效。策划的修改配表、检验游戏循环基本0延时。
