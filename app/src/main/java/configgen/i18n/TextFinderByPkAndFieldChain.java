@@ -61,7 +61,7 @@ class TextFinderByPkAndFieldChain implements TextFinder {
             return false;
         }
 
-        if (!Objects.equals(nullableDescriptionName, other.nullableDescriptionName)){
+        if (!Objects.equals(nullableDescriptionName, other.nullableDescriptionName)) {
             return false;
         }
 
@@ -136,7 +136,8 @@ class TextFinderByPkAndFieldChain implements TextFinder {
 
     private static Map<String, TextFinderByPkAndFieldChain> loadOneFile(Path filePath) {
         Map<String, TextFinderByPkAndFieldChain> map = new LinkedHashMap<>();
-        try (ReadableWorkbook wb = new ReadableWorkbook(filePath.toFile(), new ReadingOptions(true, false))) {
+        try (ReadableWorkbook wb = new ReadableWorkbook(filePath.toFile(),
+                new ReadingOptions(true, false))) {
             for (Sheet sheet : wb.getSheets().toList()) {
                 String tableName = sheet.getName().trim();
                 List<Row> rawRows = sheet.read();
@@ -145,7 +146,12 @@ class TextFinderByPkAndFieldChain implements TextFinder {
                 }
 
                 TextFinderByPkAndFieldChain textFinder = new TextFinderByPkAndFieldChain();
-                loadOneSheet(rawRows, textFinder);
+                try {
+                    loadOneSheet(rawRows, textFinder);
+                } catch (Exception e) {
+                    throw new RuntimeException("%s in %s read err".formatted(tableName,
+                            filePath.toAbsolutePath().normalize().toString()), e);
+                }
                 map.put(tableName, textFinder);
             }
         } catch (IOException e) {
