@@ -9,7 +9,7 @@ nav_order: 2
 对象数据库结构定义、程序访问代码生成
 
 1. 定义对象结构
-2. 使用excel编辑、或直接编辑json、或使用gui编辑，可以浏览所有对象。
+2. 使用excel编辑、或直接编辑json、或使用基于节点的编辑器编辑，可以浏览所有对象。
 3. 生成访问代码
 
 [View it on GitHub][cfggen repo]{: .btn .fs-5 .mb-4 .mb-md-0 }
