@@ -47,6 +47,7 @@ public final class GenI18nByPkAndFieldChain extends Generator {
     }
 
     private final String outputDir;
+    private final String backupDir;
     private List<OneTable> textTables;
     private OneTable curTable;
     private OneRecord curRecord;
@@ -55,6 +56,7 @@ public final class GenI18nByPkAndFieldChain extends Generator {
     public GenI18nByPkAndFieldChain(Parameter parameter) {
         super(parameter);
         outputDir = parameter.get("dir", "../i18n/en");
+        backupDir = parameter.get("backup", "../backup");
         if (tag != null) {
             throw new IllegalArgumentException("-gen i18nbyid should has no tag, tag=" + tag);
         }
@@ -96,7 +98,8 @@ public final class GenI18nByPkAndFieldChain extends Generator {
             needReplaceFileI18nById = ctx.nullableLangTextFinder();
         }
 
-        String outputDirTemp = outputDir + "_temp";
+        String lang = Path.of(outputDir).getFileName().toString();
+        String outputDirTemp = Path.of(backupDir, lang+"_temp").normalize().toString();
         if (Files.isDirectory(Path.of(outputDirTemp))) {
             throw new RuntimeException("temp directory = %s exist, delete it then retry".formatted(outputDirTemp));
         }
@@ -121,11 +124,11 @@ public final class GenI18nByPkAndFieldChain extends Generator {
         }
 
         if (needReplaceFileI18nById != null) { // 简化，只有需要replace时才比较
-            // 1.先把 <outputDir> -> <outputDir>_backup
-            String outputDirBackup = outputDir + "_backup";
+            // 1.先把 <outputDir> -> <outputDirBackup>
+            String outputDirBackup = Path.of(backupDir, lang).normalize().toString();
             moveDirFilesToAnotherDir(outputDir, outputDirBackup);
 
-            // 2.然后把<outputDir>_temp -> <outputDir>
+            // 2.然后把<outputDirTemp> -> <outputDir>
             moveDirFilesToAnotherDir(outputDirTemp, outputDir);
             if (!new File(outputDirTemp).delete()) {
                 throw new RuntimeException("delete temp directory = %s failed".formatted(outputDirTemp));
