@@ -4,6 +4,7 @@ import configgen.ctx.Context;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
 import configgen.schema.HasText;
+import configgen.util.CSVUtil;
 import configgen.util.CachedFileOutputStream;
 import configgen.util.Logger;
 import configgen.value.CfgValue;
@@ -77,10 +78,10 @@ public final class GenI18nByPkAndFieldChain extends Generator {
 
                     ForeachValue.foreachValue(new TextValueVisitor(description), vStruct, pk, List.of());
                 }
-                if (!curTable.records.isEmpty()){
+                if (!curTable.records.isEmpty()) {
                     textTables.add(curTable);
                     int txtCount = curTable.records.stream().mapToInt(r -> r.texts.size()).sum();
-                    System.out.printf("%40s: %8d %8d%n", curTable.table,  curTable.records.size(), txtCount);
+                    System.out.printf("%40s: %8d %8d%n", curTable.table, curTable.records.size(), txtCount);
                 }
             }
         }
@@ -95,9 +96,10 @@ public final class GenI18nByPkAndFieldChain extends Generator {
             needReplaceFileI18nById = ctx.nullableLangTextFinder();
         }
 
+        // 确保无temp目录，然后创建
         Path outputDirPath = Path.of(outputDir);
         String lang = outputDirPath.getFileName().toString();
-        String outputDirTemp = Path.of(backupDir, lang+"_temp").normalize().toString();
+        String outputDirTemp = Path.of(backupDir, lang + "_temp").normalize().toString();
         if (Files.isDirectory(Path.of(outputDirTemp))) {
             throw new RuntimeException("temp directory = %s exist, delete it then retry".formatted(outputDirTemp));
         }
@@ -107,6 +109,7 @@ public final class GenI18nByPkAndFieldChain extends Generator {
             }
         }
 
+        // 如果不是覆盖，就直接输出到outputDir，如果是覆盖，就输出到temp
         for (Map.Entry<String, List<OneTable>> e : getTopModuleToTextTables().entrySet()) {
             String topModuleFn = e.getKey() + ".xlsx";
             List<OneTable> tables = e.getValue();
@@ -121,7 +124,8 @@ public final class GenI18nByPkAndFieldChain extends Generator {
             }
         }
 
-        if (needReplaceFileI18nById != null) { // 简化，只有需要replace时才比较
+        // 是覆盖，此时需要先备份原有的，然后temp->outputDir（通过3实现内容相同，就用原有的）
+        if (needReplaceFileI18nById != null) {
             // 1.先把 <outputDir> -> <outputDirBackup>
             String outputDirBackup = Path.of(backupDir, lang).normalize().toString();
             moveDirFilesToAnotherDir(outputDir, outputDirBackup);
@@ -132,7 +136,7 @@ public final class GenI18nByPkAndFieldChain extends Generator {
                 throw new RuntimeException("delete temp directory = %s failed".formatted(outputDirTemp));
             }
 
-            // 3.最后把内容相同的file 从 <outputDir>_backup ---拷贝到---> <outputDir>
+            // 3.最后把内容相同的file 从 <outputDirBackup> ---拷贝到---> <outputDir>
             LangTextFinder curLang = TextFinderByPkAndFieldChain.loadOneLang(outputDirPath);
             Map<String, OneTranslateFile> curFiles = getTopModulesToTextFinders(curLang);
             Map<String, OneTranslateFile> oldFiles = getTopModulesToTextFinders(needReplaceFileI18nById);
@@ -157,6 +161,19 @@ public final class GenI18nByPkAndFieldChain extends Generator {
         }
 
         stat.dump();
+
+        // 额外生成一份zzz.csv汇总文件，方便查询
+        List<List<String>> zzz = new ArrayList<>(64 * 1024);
+        for (OneTable oneTable : textTables) {
+            String table = oneTable.table;
+            for (OneRecord record : oneTable.records) {
+                String pk = record.pk;
+                for (OneText ot : record.texts) {
+                    zzz.add(List.of(table, pk, ot.fieldChain, ot.original, ot.translated));
+                }
+            }
+        }
+        CSVUtil.writeToFile(new File(outputDir, "zzz.csv"), zzz);
     }
 
 
@@ -246,7 +263,6 @@ public final class GenI18nByPkAndFieldChain extends Generator {
 
     static class GenOneTable {
         private final List<String> fields = new ArrayList<>();
-
 
         void gen(OneTable textTable, Worksheet ws, I18nStat stat) {
             int r = 1;
@@ -367,18 +383,6 @@ public final class GenI18nByPkAndFieldChain extends Generator {
                     System.out.printf("    %s \t (%s)%n", oneT.translatedText, oneT.table);
                 }
             }
-        }
-    }
-
-    public static void main(String[] args) throws IOException {
-        // 结论：没办法保证2次存储的文件相同
-        try (OutputStream os = new FileOutputStream("test.xlsx");
-             Workbook wb = new Workbook(os, "MyApplication", "1.0")) {
-            Worksheet ws = wb.newWorksheet("Sheet 1");
-            ws.value(0, 0, "This is a string in A1");
-            ws.value(0, 2, 1234);
-            ws.value(0, 3, 123456L);
-            ws.value(0, 4, 1.234);
         }
     }
 
