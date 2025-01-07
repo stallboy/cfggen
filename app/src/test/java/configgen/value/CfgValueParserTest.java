@@ -209,7 +209,10 @@ class CfgValueParserTest {
                 ,,
                 id,intList
                 1,"111,222,333"
-                2,"333,444""";
+                2,"333,444"
+                3,""
+                """;
+
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
 
         Context ctx = new Context(tempDir);
@@ -218,7 +221,7 @@ class CfgValueParserTest {
         TableSchema tSchema = ctx.cfgSchema().findTable("t");
 
         assertEquals(tSchema, tVTable.schema());
-        assertEquals(2, tVTable.valueList().size());
+        assertEquals(3, tVTable.valueList().size());
         {
             VStruct v = tVTable.valueList().getFirst();
             assertEquals(tSchema, v.schema());
@@ -235,6 +238,12 @@ class CfgValueParserTest {
             VList s = (VList) v.values().get(1);
             assertEquals(333, ((VInt) s.valueList().getFirst()).value());
             assertEquals(444, ((VInt) s.valueList().get(1)).value());
+        }
+        {
+            VStruct v = tVTable.valueList().get(2);
+            assertEquals(3, ((VInt) v.values().getFirst()).value());
+            VList s = (VList) v.values().get(1);
+            assertEquals(0, s.valueList().size());
         }
     }
 
