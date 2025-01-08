@@ -33,16 +33,6 @@ public enum SchemaPrimitive implements Schema {
     };
 
     @Override
-    public void accept(Visitor visitor) {
-        visitor.visit(this);
-    }
-
-    @Override
-    public <T> T accept(VisitorT<T> visitor) {
-        return visitor.visit(this);
-    }
-
-    @Override
     public boolean compatible(Schema other) {
         return this == other;
     }

@@ -14,9 +14,6 @@ cp %SDIR%/SchemaMap.java %DIR%
 cp %SDIR%/SchemaPrimitive.java %DIR%
 cp %SDIR%/SchemaRef.java %DIR%
 
-cp %SDIR%/Visitor.java %DIR%
-cp %SDIR%/VisitorT.java %DIR%
-
 cp %SDIR%/BinaryToText.java %DIR%
 cp %SDIR%/ConfigErr.java %DIR%
 cp %SDIR%/ConfigInput.java %DIR%

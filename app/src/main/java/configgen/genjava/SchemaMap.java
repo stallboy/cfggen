@@ -1,6 +1,6 @@
 package configgen.genjava;
 
-public class SchemaMap implements Schema {
+public final class SchemaMap implements Schema {
     public final Schema key;
     public final Schema value;
 
@@ -20,16 +20,6 @@ public class SchemaMap implements Schema {
             return false;
         }
         return key.compatible(sm.key) && value.compatible(sm.value);
-    }
-
-    @Override
-    public void accept(Visitor visitor) {
-        visitor.visit(this);
-    }
-
-    @Override
-    public <T> T accept(VisitorT<T> visitor) {
-        return visitor.visit(this);
     }
 
     @Override

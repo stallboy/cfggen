@@ -5,13 +5,12 @@ import configgen.genjava.*;
 import configgen.util.CachedIndentPrinter;
 import configgen.value.CfgValue;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 final class GenConfigCodeSchema {
-    static void generateAll(GenJavaCode gen, int schemaNumPerFile, CfgValue cfgValue, LangSwitch ls) throws IOException {
+    static void generateAll(GenJavaCode gen, int schemaNumPerFile, CfgValue cfgValue, LangSwitch ls) {
         SchemaInterface schemaInterface = SchemaParser.parse(cfgValue, ls);
         List<Map.Entry<String, Schema>> all = new ArrayList<>(schemaInterface.implementations.entrySet());
         List<Map.Entry<String, Schema>> main;
@@ -55,7 +54,7 @@ final class GenConfigCodeSchema {
 
     static void generateFile(GenJavaCode gen, int idx,
                              List<Map.Entry<String, Schema>> schemas,
-                             List<List<Map.Entry<String, Schema>>> nullableOthers) throws IOException {
+                             List<List<Map.Entry<String, Schema>>> nullableOthers) {
 
         String className = getClassName(idx);
         try (CachedIndentPrinter ps = gen.createCodeFile(className + ".java")) {
@@ -116,7 +115,6 @@ final class GenConfigCodeSchema {
 
     private static void print(List<Map.Entry<String, Schema>> schemas,
                               CachedIndentPrinter ip) {
-        PrintSchemaVisitor visitor = new PrintSchemaVisitor(ip);
 
         for (Map.Entry<String, Schema> stringSchemaEntry : schemas) {
             String key = stringSchemaEntry.getKey();
@@ -127,7 +125,7 @@ final class GenConfigCodeSchema {
             ip.inc();
 
             String name = "s" + ip.indent();
-            stringSchemaEntry.getValue().accept(visitor);
+            printSchema(ip, stringSchemaEntry.getValue());
 
             ip.dec();
             ip.dec();
@@ -137,113 +135,72 @@ final class GenConfigCodeSchema {
         }
     }
 
-    static class PrintSchemaVisitor implements Visitor {
-
-        private final CachedIndentPrinter ip;
-
-        PrintSchemaVisitor(CachedIndentPrinter ip) {
-            this.ip = ip;
-        }
-
-
-        @Override
-        public void visit(SchemaPrimitive schemaPrimitive) {
-            throw new IllegalStateException();
-        }
-
-        @Override
-        public void visit(SchemaRef schemaRef) {
-            throw new IllegalStateException();
-        }
-
-        @Override
-        public void visit(SchemaList schemaList) {
-            throw new IllegalStateException();
-        }
-
-        @Override
-        public void visit(SchemaMap schemaMap) {
-            throw new IllegalStateException();
-        }
-
-        @Override
-        public void visit(SchemaBean schemaBean) {
-            String name = "s" + ip.indent();
-            ip.println("SchemaBean %s = new SchemaBean(%s);", name, schemaBean.isTable ? "true" : "false");
-            for (SchemaBean.Column column : schemaBean.columns) {
-                ip.println("%s.addColumn(\"%s\", %s);", name, column.name(), parse(column.schema()));
-            }
-        }
-
-        @Override
-        public void visit(SchemaInterface schemaInterface) {
-            String name = "s" + ip.indent();
-            ip.println("SchemaInterface %s = new SchemaInterface();", name);
-            for (Map.Entry<String, Schema> stringSchemaEntry : schemaInterface.implementations.entrySet()) {
-                ip.println("{");
-                ip.inc();
-                String subName = "s" + ip.indent();
-                stringSchemaEntry.getValue().accept(this);
-                ip.println("%s.addImp(\"%s\", %s);", name, stringSchemaEntry.getKey(), subName);
-                ip.dec();
-                ip.println("}");
-            }
-        }
-
-        @Override
-        public void visit(SchemaEnum schemaEnum) {
-            String name = "s" + ip.indent();
-            ip.println("SchemaEnum %s = new SchemaEnum(%s, %s);", name, schemaEnum.isEnumPart ? "true" : "false",
-                    schemaEnum.hasIntValue ? "true" : "false");
-            for (Map.Entry<String, Integer> entry : schemaEnum.values.entrySet()) {
-                if (schemaEnum.hasIntValue) {
-                    ip.println("%s.addValue(\"%s\", %d);", name, entry.getKey(), entry.getValue());
-                } else {
-                    ip.println("%s.addValue(\"%s\");", name, entry.getKey());
+    private static void printSchema(CachedIndentPrinter ip, Schema schema) {
+        switch (schema) {
+            case SchemaBean schemaBean -> {
+                String name = "s" + ip.indent();
+                ip.println("SchemaBean %s = new SchemaBean(%s);", name, schemaBean.isTable ? "true" : "false");
+                for (SchemaBean.Column column : schemaBean.columns) {
+                    ip.println("%s.addColumn(\"%s\", %s);", name, column.name(), parse(column.schema()));
                 }
             }
-        }
-
-
-        private static String parse(Schema schema) {
-            return schema.accept(new VisitorT<String>() {
-                @Override
-                public String visit(SchemaPrimitive schemaPrimitive) {
-                    return "SchemaPrimitive." + schemaPrimitive.name();
+            case SchemaEnum schemaEnum -> {
+                String name = "s" + ip.indent();
+                ip.println("SchemaEnum %s = new SchemaEnum(%s, %s);", name, schemaEnum.isEnumPart ? "true" : "false",
+                        schemaEnum.hasIntValue ? "true" : "false");
+                for (Map.Entry<String, Integer> entry : schemaEnum.values.entrySet()) {
+                    if (schemaEnum.hasIntValue) {
+                        ip.println("%s.addValue(\"%s\", %d);", name, entry.getKey(), entry.getValue());
+                    } else {
+                        ip.println("%s.addValue(\"%s\");", name, entry.getKey());
+                    }
                 }
-
-                @Override
-                public String visit(SchemaRef schemaRef) {
-                    return "new SchemaRef(\"" + schemaRef.type + "\")";
+            }
+            case SchemaInterface schemaInterface -> {
+                String name = "s" + ip.indent();
+                ip.println("SchemaInterface %s = new SchemaInterface();", name);
+                for (Map.Entry<String, Schema> stringSchemaEntry : schemaInterface.implementations.entrySet()) {
+                    ip.println("{");
+                    ip.inc();
+                    String subName = "s" + ip.indent();
+                    printSchema(ip, stringSchemaEntry.getValue());
+                    ip.println("%s.addImp(\"%s\", %s);", name, stringSchemaEntry.getKey(), subName);
+                    ip.dec();
+                    ip.println("}");
                 }
-
-                @Override
-                public String visit(SchemaList schemaList) {
-                    return "new SchemaList(" + parse(schemaList.ele) + ")";
-                }
-
-                @Override
-                public String visit(SchemaMap schemaMap) {
-                    return "new SchemaMap(" + parse(schemaMap.key) + ", " + parse(schemaMap.value) + ")";
-                }
-
-                @Override
-                public String visit(SchemaBean schemaBean) {
-                    throw new IllegalStateException();
-                }
-
-                @Override
-                public String visit(SchemaInterface schemaInterface) {
-                    throw new IllegalStateException();
-                }
-
-                @Override
-                public String visit(SchemaEnum schemaEnum) {
-                    throw new IllegalStateException();
-                }
-            });
+            }
+            default -> {
+                throw new IllegalStateException();
+            }
         }
     }
 
-
+    private static String parse(Schema schema) {
+        switch (schema) {
+            case SchemaBean ignored -> {
+                throw new IllegalStateException();
+            }
+            case SchemaEnum ignored -> {
+                throw new IllegalStateException();
+            }
+            case SchemaInterface ignored -> {
+                throw new IllegalStateException();
+            }
+            case SchemaList schemaList -> {
+                return "new SchemaList(" + parse(schemaList.ele) + ")";
+            }
+            case SchemaMap schemaMap -> {
+                return "new SchemaMap(" + parse(schemaMap.key) + ", " + parse(schemaMap.value) + ")";
+            }
+            case SchemaPrimitive schemaPrimitive -> {
+                return "SchemaPrimitive." + schemaPrimitive.name();
+            }
+            case SchemaRef schemaRef -> {
+                return "new SchemaRef(\"" + schemaRef.type + "\")";
+            }
+        }
+    }
 }
+
+
+

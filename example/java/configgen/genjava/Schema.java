@@ -1,16 +1,11 @@
 package configgen.genjava;
 
-public interface Schema {
+public sealed interface Schema permits SchemaBean, SchemaEnum, SchemaInterface, SchemaList, SchemaMap, SchemaPrimitive, SchemaRef {
     /**
      * 比较兼容性，codeSchema.compatible(dataSchema);
      * 参照example/javaload/LoadConfig.java
      */
     boolean compatible(Schema other);
-
-    void accept(Visitor visitor);
-
-    <T> T accept(VisitorT<T> visitor);
-
     void write(ConfigOutput output);
 
     int BOOL = 1;

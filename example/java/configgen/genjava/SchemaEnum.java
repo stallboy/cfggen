@@ -9,7 +9,7 @@ import java.util.Map;
  * 考虑全枚举，在java中switch 自动生成case，这里要保证全枚举的具体的key值完全一样
  * 针对半枚举，要保证代码里的枚举，在数据里都在，并且值一样。
  */
-public class SchemaEnum implements Schema {
+public final class SchemaEnum implements Schema {
     public final boolean isEnumPart;
     public final boolean hasIntValue;
     public final Map<String, Integer> values = new LinkedHashMap<>();
@@ -43,10 +43,9 @@ public class SchemaEnum implements Schema {
 
     @Override
     public boolean compatible(Schema other) {
-        if (!(other instanceof SchemaEnum)) {
+        if (!(other instanceof SchemaEnum newData)) {
             return false;
         }
-        SchemaEnum newData = (SchemaEnum) other;
         if (isEnumPart != newData.isEnumPart) {
             return false;
         }
@@ -75,16 +74,6 @@ public class SchemaEnum implements Schema {
             }
         }
         return true;
-    }
-
-    @Override
-    public void accept(Visitor visitor) {
-        visitor.visit(this);
-    }
-
-    @Override
-    public <T> T accept(VisitorT<T> visitor) {
-        return visitor.visit(this);
     }
 
     @Override

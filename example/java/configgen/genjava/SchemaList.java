@@ -1,6 +1,6 @@
 package configgen.genjava;
 
-public class SchemaList implements Schema {
+public final class SchemaList implements Schema {
     public final Schema ele;
 
     public SchemaList(ConfigInput input) {
@@ -14,16 +14,6 @@ public class SchemaList implements Schema {
     @Override
     public boolean compatible(Schema other) {
         return other instanceof SchemaList os && ele.compatible(os.ele);
-    }
-
-    @Override
-    public void accept(Visitor visitor) {
-        visitor.visit(this);
-    }
-
-    @Override
-    public <T> T accept(VisitorT<T> visitor) {
-        return visitor.visit(this);
     }
 
     @Override

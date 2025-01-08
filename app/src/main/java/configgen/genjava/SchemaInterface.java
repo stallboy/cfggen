@@ -6,7 +6,7 @@ import java.util.Map;
 /**
  * 这个既是总入口，又是多态bean
  */
-public class SchemaInterface implements Schema {
+public final class SchemaInterface implements Schema {
 
     public final Map<String, Schema> implementations = new LinkedHashMap<>(); //包含SchemaBean和SchemaEnum
 
@@ -45,17 +45,6 @@ public class SchemaInterface implements Schema {
             }
         }
         return true;
-    }
-
-
-    @Override
-    public void accept(Visitor visitor) {
-        visitor.visit(this);
-    }
-
-    @Override
-    public <T> T accept(VisitorT<T> visitor) {
-        return visitor.visit(this);
     }
 
     @Override

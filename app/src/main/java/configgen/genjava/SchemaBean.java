@@ -3,7 +3,7 @@ package configgen.genjava;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SchemaBean implements Schema {
+public final class SchemaBean implements Schema {
 
     public record Column(String name, Schema schema) {
         public boolean compatible(Column other) {
@@ -50,16 +50,6 @@ public class SchemaBean implements Schema {
             }
         }
         return true;
-    }
-
-    @Override
-    public void accept(Visitor visitor) {
-        visitor.visit(this);
-    }
-
-    @Override
-    public <T> T accept(VisitorT<T> visitor) {
-        return visitor.visit(this);
     }
 
     @Override

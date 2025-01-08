@@ -43,25 +43,8 @@ public class BinaryToText {
     private static void printTableInfo(String tableName, int tableSize, ConfigInput input) {
         Schema schema = rootSchema.implementations.get(tableName);
 
-        schema.accept(new Visitor() {
-            @Override
-            public void visit(SchemaPrimitive schemaPrimitive) {
-            }
-
-            @Override
-            public void visit(SchemaRef schemaRef) {
-            }
-
-            @Override
-            public void visit(SchemaList schemaList) {
-            }
-
-            @Override
-            public void visit(SchemaMap schemaMap) {
-            }
-
-            @Override
-            public void visit(SchemaBean schemaBean) {
+        switch (schema) {
+            case SchemaBean schemaBean -> {
                 initDepSchemas();
                 printSchemaBean(tableName, schemaBean);
                 printDepSchemas();
@@ -75,13 +58,7 @@ public class BinaryToText {
                 println("%s data(size=%d):", tableName, tableSize);
                 printTableData(input, schemaBean);
             }
-
-            @Override
-            public void visit(SchemaInterface schemaInterface) {
-            }
-
-            @Override
-            public void visit(SchemaEnum schemaEnum) {
+            case SchemaEnum schemaEnum -> {
                 initDepSchemas();
                 printSchemaEnum(tableName, schemaEnum);
                 printDepSchemas();
@@ -93,7 +70,10 @@ public class BinaryToText {
                     printTableData(input, (SchemaBean) realSchema);
                 }
             }
-        });
+            default -> {
+            }
+        }
+
     }
 
     private static void printTableData(ConfigInput input, SchemaBean tableSchema) {
@@ -194,50 +174,70 @@ public class BinaryToText {
 
 
     private static void visitSchemaToPrintSchema(String name, Schema schema) {
-        schema.accept(new Visitor() {
-            @Override
-            public void visit(SchemaPrimitive schemaPrimitive) {
-
-            }
-
-            @Override
-            public void visit(SchemaRef schemaRef) {
-
-            }
-
-            @Override
-            public void visit(SchemaList schemaList) {
-
-            }
-
-            @Override
-            public void visit(SchemaMap schemaMap) {
-
-            }
-
-            @Override
-            public void visit(SchemaBean schemaBean) {
+        switch (schema) {
+            case SchemaBean schemaBean -> {
                 printSchemaBean(name, schemaBean);
             }
-
-            @Override
-            public void visit(SchemaInterface schemaInterface) {
-                printSchemaInterface(name, schemaInterface);
-            }
-
-            @Override
-            public void visit(SchemaEnum schemaEnum) {
+            case SchemaEnum schemaEnum -> {
                 printSchemaEnum(name, schemaEnum);
             }
-
-        });
+            case SchemaInterface schemaInterface -> {
+                printSchemaInterface(name, schemaInterface);
+            }
+            default -> {
+            }
+        }
     }
 
 
     private static void visitSchemaToReadData(Schema sc, ConfigInput input, StringBuilder sb) {
-        sc.accept(new Visitor() {
-            @Override
-            public void visit(SchemaPrimitive schemaPrimitive) {
+        switch (sc) {
+            case SchemaBean schemaBean -> {
+                sb.append("(");
+                int cnt = schemaBean.columns.size();
+                int idx = 0;
+                for (SchemaBean.Column column : schemaBean.columns) {
+                    idx++;
+                    visitSchemaToReadData(column.schema(), input, sb);
+                    if (idx < cnt) {
+                        sb.append(",");
+                    }
+                }
+                sb.append(")");
+            }
+            case SchemaEnum ignored -> {
+            }
+            case SchemaInterface schemaInterface -> {
+                String type = input.readStr();
+                sb.append(type);
+                Schema implSchema = schemaInterface.implementations.get(type);
+                visitSchemaToReadData(implSchema, input, sb);
+            }
+            case SchemaList schemaList -> {
+                sb.append("(");
+                int cnt = input.readInt();
+                for (int i = 0; i < cnt; i++) {
+                    visitSchemaToReadData(schemaList.ele, input, sb);
+                    if (i < cnt - 1) {
+                        sb.append(",");
+                    }
+                }
+                sb.append(")");
+            }
+            case SchemaMap schemaMap -> {
+                sb.append("(");
+                int cnt = input.readInt();
+                for (int i = 0; i < cnt; i++) {
+                    visitSchemaToReadData(schemaMap.key, input, sb);
+                    sb.append("=");
+                    visitSchemaToReadData(schemaMap.value, input, sb);
+                    if (i < cnt - 1) {
+                        sb.append(",");
+                    }
+                }
+                sb.append(")");
+            }
+            case SchemaPrimitive schemaPrimitive -> {
                 switch (schemaPrimitive) {
                     case SBool:
                         sb.append(input.readBool());
@@ -256,69 +256,12 @@ public class BinaryToText {
                         break;
                 }
             }
-
-            @Override
-            public void visit(SchemaRef schemaRef) {
+            case SchemaRef schemaRef -> {
                 Schema deRef = rootSchema.implementations.get(schemaRef.type);
                 visitSchemaToReadData(deRef, input, sb);
             }
+        }
 
-            @Override
-            public void visit(SchemaList schemaList) {
-                sb.append("(");
-                int cnt = input.readInt();
-                for (int i = 0; i < cnt; i++) {
-                    visitSchemaToReadData(schemaList.ele, input, sb);
-                    if (i < cnt - 1) {
-                        sb.append(",");
-                    }
-                }
-                sb.append(")");
-            }
-
-            @Override
-            public void visit(SchemaMap schemaMap) {
-                sb.append("(");
-                int cnt = input.readInt();
-                for (int i = 0; i < cnt; i++) {
-                    visitSchemaToReadData(schemaMap.key, input, sb);
-                    sb.append("=");
-                    visitSchemaToReadData(schemaMap.value, input, sb);
-                    if (i < cnt - 1) {
-                        sb.append(",");
-                    }
-                }
-                sb.append(")");
-            }
-
-            @Override
-            public void visit(SchemaBean schemaBean) {
-                sb.append("(");
-                int cnt = schemaBean.columns.size();
-                int idx = 0;
-                for (SchemaBean.Column column : schemaBean.columns) {
-                    idx++;
-                    visitSchemaToReadData(column.schema(), input, sb);
-                    if (idx < cnt) {
-                        sb.append(",");
-                    }
-                }
-                sb.append(")");
-            }
-
-            @Override
-            public void visit(SchemaInterface schemaInterface) {
-                String type = input.readStr();
-                sb.append(type);
-                Schema implSchema = schemaInterface.implementations.get(type);
-                visitSchemaToReadData(implSchema, input, sb);
-            }
-
-            @Override
-            public void visit(SchemaEnum schemaEnum) {
-
-            }
-        });
     }
 
 
@@ -328,18 +271,18 @@ public class BinaryToText {
     private static void println(String fmt, Object... args) {
         tmp.setLength(0);
         if (args.length > 0) {
-            prefix(tmp, fmt);
+            prefix(fmt);
             System.out.printf(tmp.toString(), args);
         } else {
-            prefix(tmp, fmt);
+            prefix(fmt);
             System.out.print(tmp);
         }
     }
 
-    private static void prefix(StringBuilder sb, String fmt) {
-        sb.append("    ".repeat(Math.max(0, indent)));
-        sb.append(fmt);
-        sb.append('\n');
+    private static void prefix(String fmt) {
+        tmp.append("    ".repeat(Math.max(0, indent)));
+        tmp.append(fmt);
+        tmp.append('\n');
     }
 
 }
