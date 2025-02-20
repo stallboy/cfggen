@@ -17,6 +17,8 @@ import {isTauri} from "@tauri-apps/api/core";
 import {saveSelfPrefAsync} from "./routes/setting/storage.ts";
 import {Window} from "@tauri-apps/api/window";
 // import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
+// import { Monitoring } from "react-scan/monitoring";
+
 
 export const queryClient = new QueryClient({
     defaultOptions: {
@@ -66,15 +68,33 @@ if (isTauri()) {
     Window.getCurrent().onCloseRequested(saveSelfPrefAsync);
 }
 
+
+function MyApp() {
+//     const params = useParams(); // i.e { projectId: "123" }
+//     const {pathname} = useLocation(); // i.e /project/123/page
+
+    return <App>
+        {/* <Monitoring
+          apiKey="2Y6dFSyjCFj9VRWB2DxRpy-NUD3uV2G5" // Safe to expose publically
+          url="https://monitoring.react-scan.com/api/v1/ingest"
+          commit={process.env.GIT_COMMIT_HASH} // optional but recommended
+          branch={process.env.GIT_BRANCH} // optional but recommended
+          params={params}
+          path={pathname}
+            >
+        </Monitoring> */}
+        
+        <QueryClientProvider client={queryClient}>
+              <RouterProvider router={router}/>
+              {/*<ReactQueryDevtools initialIsOpen={false} />*/}
+          </QueryClientProvider>
+    </App>
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <ConfigProvider theme={theme}>
-            <App>
-                <QueryClientProvider client={queryClient}>
-                    <RouterProvider router={router}/>
-                    {/*<ReactQueryDevtools initialIsOpen={false} />*/}
-                </QueryClientProvider>
-            </App>
+            <MyApp/>
         </ConfigProvider>
     </React.StrictMode>
 );
