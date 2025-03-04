@@ -46,6 +46,7 @@ public class ValueParser {
         if (isPack) {
             require(cells.size() == 1, "pack应该只占一格");
             DCell cell = cells.getFirst();
+            cell.setModePackOrSep();
             if (canBeEmpty && cell.isCellEmpty()) {
                 isEmpty = true;
             } else if (sInterface.canBeNumberOrBool()) {
@@ -147,6 +148,7 @@ public class ValueParser {
         if (isPack) {
             require(cells.size() == 1, "pack应该只占一格");
             DCell cell = cells.getFirst();
+            cell.setModePackOrSep();
             if (canBeEmpty && cell.isCellEmpty()) {
                 isEmpty = true;
             } else {
@@ -162,6 +164,7 @@ public class ValueParser {
         } else if (structural.fmt() instanceof FieldFormat.Sep(char sep)) {
             require(cells.size() == 1, "sep应该只占一格");
             DCell cell = cells.getFirst();
+            cell.setModePackOrSep();
             if (canBeEmpty && cell.isCellEmpty()) {
                 isEmpty = true;
             } else {
@@ -331,6 +334,7 @@ public class ValueParser {
         if (isPack) {
             require(cells.size() == 1);
             DCell cell = cells.getFirst();
+            cell.setModePackOrSep();
             try {
                 parsed = DCells.parsePack(cell);
             } catch (Exception e) {
@@ -406,6 +410,7 @@ public class ValueParser {
         if (isPack) {
             require(cells.size() == 1);
             DCell cell = cells.getFirst();
+            cell.setModePackOrSep();
             try {
                 parsed = DCells.parsePack(cell);
             } catch (Exception e) {
@@ -419,6 +424,7 @@ public class ValueParser {
         } else if (field.fmt() instanceof FieldFormat.Sep(char sep)) {
             require(cells.size() == 1);
             DCell cell = cells.getFirst();
+            cell.setModePackOrSep();
             parsed = DCells.parseList(cell, sep);
 
         } else {

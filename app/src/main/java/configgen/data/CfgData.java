@@ -44,28 +44,60 @@ public record CfgData(Map<String, DTable> tables,
                          String comment) {
     }
 
-    /**
-     * @param value 已trim过的value
-     * @param rowId rowId.row，col 是逻辑上的行号和列号，要得到excel文件中具体的行和列需要外界提供isColumnMode
-     * @param col   列号
-     */
-    public record DCell(String value,
-                        DRowId rowId,
-                        int col,
-                        byte mode) implements Source {
+
+    public static final class DCell implements Source {
+        private final String value;
+        private final DRowId rowId;
+        private final int col;
+        private byte mode;
+
+        /**
+         * @param value 已trim过的value
+         * @param rowId rowId.row，col 是逻辑上的行号和列号，要得到excel文件中具体的行和列需要外界提供isColumnMode
+         * @param col   列号
+         */
+        public DCell(String value, DRowId rowId, int col, byte mode) {
+            Objects.requireNonNull(value);
+            Objects.requireNonNull(rowId);
+            this.value = value;
+            this.rowId = rowId;
+            this.col = col;
+            this.mode = mode;
+        }
+
 
         public static DCell of(String content, String fileName) {
             return new DCell(content, new CfgData.DRowId(fileName, "", 0), 0, CELL_FAKE);
         }
 
-        public DCell {
-            Objects.requireNonNull(value);
-            Objects.requireNonNull(rowId);
+        public String value() {
+            return value;
+        }
+
+        public DRowId rowId() {
+            return rowId;
+        }
+
+        public int col() {
+            return col;
+        }
+
+        public byte mode() {
+            return mode;
+        }
+
+        public void setModePackOrSep() {
+            this.mode |= CELL_PACK_OR_SEP;
+        }
+
+        public boolean isModePackOrSep() {
+            return (mode & CELL_PACK_OR_SEP) != 0;
         }
 
         public static final byte COLUMN_MODE = 0x1;
         public static final byte CELL_NUMBER = 0x2;
         public static final byte CELL_FAKE = 0x4;
+        public static final byte CELL_PACK_OR_SEP = 0x8;
 
         public static byte modeOf(boolean isColumnMode, boolean isCellNumber) {
             byte res = 0;

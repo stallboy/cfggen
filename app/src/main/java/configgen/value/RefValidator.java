@@ -32,7 +32,7 @@ public class RefValidator {
                 switch (ft) {
                     case SimpleType ignored -> {
                         Value localValue = ValueUtil.extractKeyValue(vStruct, fk.keyIndices());
-                        if (fromTable.schema().meta().isJson()) {
+                        if (ValueUtil.isValueFromPackOrSepOrJson(localValue)) {
                             if (refSimple.nullable()) {
                                 continue;
                             }
@@ -47,7 +47,7 @@ public class RefValidator {
                         } else {
                             if (ValueUtil.isValueCellsNotAllEmpty(localValue)) {
                                 //主键或唯一键，并且nullableRef，--->则可以格子中有值，但ref不到
-                                //否则，--->格子中有值，就算配置为nullableRef也不行
+                                //否则，--->格子中有值，就算配置为nullableRef, 也必须ref到
                                 boolean can_NotEmpty_And_NullableRef = structural == fromTable.schema() &&
                                         isForeignLocalKeyInPrimaryOrUniq(fk, fromTable.schema()) && refSimple.nullable();
                                 if (can_NotEmpty_And_NullableRef) {

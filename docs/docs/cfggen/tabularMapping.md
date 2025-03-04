@@ -34,7 +34,7 @@ nav_order: 8
 
 适用type: struct, interface, list, map。
 
-推荐使用，使用,()来写任何结构
+推荐使用，使用,;()来写任何结构
 
 > ConditionAnd.cond1 cond2都设置了(pack)，则这两个field各占一列，ConditionAnd 总共占2列。
 >
@@ -42,7 +42,7 @@ nav_order: 8
 >
 > 可以看到compeletecondition下4个struct最多占2列，则compeletecondition占2+1=3列，因为名称KillMonster或TalkNpc...要占第一列。
 >
-> 至于pack如何以,()这三者写任意结构，参考 [复杂结构的单元格]
+> 至于pack如何以,;()写任意结构，参考 [复杂结构的单元格]
 
 ### sep
 

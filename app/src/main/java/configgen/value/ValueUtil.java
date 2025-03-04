@@ -110,4 +110,19 @@ public class ValueUtil {
         }
     }
 
+    public static boolean isValueFromPackOrSepOrJson(Value value) {
+        switch (value.source()) {
+            case CfgData.DCell dCell -> {
+                return dCell.isModePackOrSep();
+            }
+            case DCellList ignored1 -> {
+                return false;
+            }
+            case DFile ignored -> {
+                return true;
+            }
+        }
+    }
+
+
 }

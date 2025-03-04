@@ -18,9 +18,24 @@ public class PackParserTest {
     }
 
     @Test
+    public void parseNestListUseSemicolon() {
+        t1("a", "a");
+        t1("a;b", "a", "b");
+        t1("QingGong(10,(13300100,13300200));RanSe(30,3)", "QingGong(10,(13300100,13300200))", "RanSe(30,3)");
+        t1("QingGong(10, (13300100, 13300200)) ; RanSe(30,3) ", "QingGong(10, (13300100, 13300200))", "RanSe(30,3)");
+    }
+
+
+    @Test
     public void prefixWhitespace_Ignore() {
         t1("a, b, c", "a", "b", "c");
     }
+
+    @Test
+    public void prefixWhitespace_IgnoreUseSemiColon() {
+        t1("a; b, c", "a", "b", "c");
+    }
+
 
     @Test
     public void surfixWhitespace_NotIgnore() {
@@ -30,6 +45,11 @@ public class PackParserTest {
     @Test
     public void parentheses_AsOne() {
         t1("(a,b)", "a,b");
+    }
+
+    @Test
+    public void parentheses_AsOneUseSemicolon() {
+        t1("(a;b)", "a;b");
     }
 
     @Test
@@ -63,6 +83,12 @@ public class PackParserTest {
         t2("abc(b,c,d(e,f))", "abc", "b,c,d(e,f)");
         //assertThrows(Throwable.class, () -> NestListParser.parseFunction("a,b,c"));
     }
+
+    public void parseFunctionUseSemicolon() {
+        t2("a(b;c)", "a", "b;c");
+        t2("abc(b;c,d(e,f))", "abc", "b;c,d(e,f)");
+    }
+
 
     private void t2(String source, String name, String parameters) {
         List<String> a = PackParser.parseFunction(source);

@@ -262,6 +262,8 @@ table task...{
 | KillMonster(1001, 1)                    |
 | CondAnd(TalkNpc(5),KillMonster(101, 3)) |
 
+以上pack结构里的,也可以用;来分割。也可以混用,;但不推荐。
+
 ## 使用举例
 
 ### 物品表

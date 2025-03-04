@@ -9,7 +9,12 @@ public class PackParser {
         START, NO_QUOTE, QUOTE, QUOTE2, IN_PARENTHESES, PARENTHESES_OK
     }
 
-    private static final char separator = ',';
+    // , ;都能用于分割，
+    // excel列类型为list<int>，策划在列的格子里写123,456想表达的是两个数，但被excel自动记录成123456，此时就出错了
+    // 所以这里增加; 也用于分割，策划可以写123;456
+    private static final char separatorComma = ',';
+    private static final char separatorSemicolon = ';';
+
     private static final char quote = '"';
     private static final char whitespace = ' ';
     private static final char leftParentheses = '(';
@@ -32,7 +37,6 @@ public class PackParser {
         int leftNotMatchCount_InParentheses = 0;
         boolean outMostIsFunction = false;
 
-
         for (int i = 0; i < str.length(); i++) {
             char c = str.charAt(i);
             switch (state) {
@@ -40,7 +44,7 @@ public class PackParser {
                     //noinspection StatementWithEmptyBody
                     if (c == whitespace) {
                         // ignore, stay at START state
-                    } else if (c == separator) {
+                    } else if (c == separatorComma || c == separatorSemicolon) {
                         list.add("");
                     } else if (c == quote) {
                         field.setLength(0);
@@ -59,7 +63,7 @@ public class PackParser {
                     break;
 
                 case NO_QUOTE:
-                    if (c == separator) {
+                    if (c == separatorComma || c == separatorSemicolon) {
                         list.add(field.toString());
                         state = NestListState.START;
                     } else if (c == leftParentheses) {
@@ -82,7 +86,7 @@ public class PackParser {
                     break;
 
                 case QUOTE2:
-                    if (c == separator) {
+                    if (c == separatorComma || c == separatorSemicolon) {
                         list.add(field.toString());
                         state = NestListState.START;
                     } else if (c == quote) {
@@ -119,7 +123,7 @@ public class PackParser {
                     //noinspection StatementWithEmptyBody
                     if (c == whitespace) {
                         // ignore, stay at START state
-                    } else if (c == separator) {
+                    } else if (c == separatorComma || c == separatorSemicolon) {
                         list.add(field.toString());
                         state = NestListState.START;
                     } else {
