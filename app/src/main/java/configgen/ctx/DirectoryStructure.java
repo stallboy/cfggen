@@ -15,9 +15,13 @@ import static configgen.data.DataUtil.FileFmt.EXCEL;
  * <p> table目录： 首字母是英文字符。 截取.之前的，再截取 _汉字或汉字之前的，作为table名 </p>
  * <ul>
  * <li> schema文件：根目录下有config.cfg，table目录下有[table].cfg</li>
- * <li> csv/excel文件：根目录或table目录下，忽略~开头的，忽略隐藏的。 截取.之前的，再截取 _汉字或汉字之前的，作为文件名
+ * <li> csv/excel文件：根目录或table目录下，忽略~开头的，忽略隐藏的。
  *      <ul>
- *          <li> 文件.csv后缀：[table]_[idx].csv，或[table].csv</li>
+ *          <li> 文件.csv后缀：截取.之前的，再截取 _汉字或汉字之前的，作为csv名
+ *              <ul>
+ *              <li>csv名：[table]_[idx]，[table]</li>
+ *              </ul>
+ *          </li>
  *          <li> 文件.xls或.xlsx后缀：对每个sheet的名称：截取.之前的，再截取 _汉字或汉字之前的，作为sheet名
  *              <ul>
  *              <li>sheet名：[table]_[idx]，[table]</li>
@@ -122,13 +126,14 @@ public class DirectoryStructure {
                     if (isFileIgnored(path)) {
                         continue;
                     }
-                    String lastSeg = path.getFileName().toString();
-                    String codeName = getCodeName(lastSeg);
-                    if (codeName == null) {
-                        continue;
-                    }
 
                     if (Files.isDirectory(path)) {
+                        String lastSeg = path.getFileName().toString();
+                        String codeName = getCodeName(lastSeg);
+                        if (codeName == null) {
+                            continue;
+                        }
+
                         findExcelFilesRecursively(path);
 
                     } else if (Files.isRegularFile(path)) {
@@ -139,6 +144,12 @@ public class DirectoryStructure {
                         Path relativePath = rootDir.relativize(path);
                         switch (fmt) {
                             case CSV -> {
+                                String lastSeg = path.getFileName().toString();
+                                String codeName = getCodeName(lastSeg);
+                                if (codeName == null) {
+                                    continue;
+                                }
+
                                 TableNameIndex ti = getTableNameIndex(relativePath);
                                 excelFiles.put(relativePath.toString(),
                                         new ExcelFileInfo(path.toFile().lastModified(), path, relativePath, CSV, ti));
