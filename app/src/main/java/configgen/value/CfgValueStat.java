@@ -12,30 +12,43 @@ public class CfgValueStat implements Stat {
     private final Map<String, Map<String, Long>> lastModifiedMap = new LinkedHashMap<>();
     private int translateMissCount = 0;
 
-    public void incTranslateMissCount(){
+    public synchronized void incTranslateMissCount() {
         translateMissCount++;
+    }
+
+
+    public synchronized int getTranslateMissCount() {
+        return translateMissCount;
     }
 
     /**
      * @return table -> recordId -> lastModified
      */
-    public Map<String, Map<String, Long>> getLastModifiedMap() {
+    public synchronized Map<String, Map<String, Long>> getLastModifiedMap() {
         return lastModifiedMap;
     }
 
-    public Map<String, Long> getIdLastModifiedMap(String table) {
+    public synchronized Map<String, Long> getIdLastModifiedMap(String table) {
         return lastModifiedMap.computeIfAbsent(table, k -> new LinkedHashMap<>());
     }
 
-    public void addLastModified(String table, String id, long time) {
+    public synchronized void addLastModified(String table, String id, long time) {
         lastModifiedMap.computeIfAbsent(table, k -> new LinkedHashMap<>()).put(id, time);
     }
 
-    private void removeLastModified(String table, String id) {
+    private synchronized void removeLastModified(String table, String id) {
         Map<String, Long> m = lastModifiedMap.get(table);
         if (m != null) {
             m.remove(id);
         }
+    }
+
+    private synchronized CfgValueStat copy() {
+        CfgValueStat newStat = new CfgValueStat();
+        for (Map.Entry<String, Map<String, Long>> e : lastModifiedMap.entrySet()) {
+            newStat.lastModifiedMap.put(e.getKey(), new LinkedHashMap<>(e.getValue()));
+        }
+        return newStat;
     }
 
     public CfgValueStat newAddLastModified(String table, String id, long time) {
@@ -50,11 +63,5 @@ public class CfgValueStat implements Stat {
         return newStat;
     }
 
-    private CfgValueStat copy() {
-        CfgValueStat newStat = new CfgValueStat();
-        for (Map.Entry<String, Map<String, Long>> e : lastModifiedMap.entrySet()) {
-            newStat.lastModifiedMap.put(e.getKey(), new LinkedHashMap<>(e.getValue()));
-        }
-        return newStat;
-    }
+
 }
