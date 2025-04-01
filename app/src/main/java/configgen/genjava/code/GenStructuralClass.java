@@ -198,6 +198,93 @@ class GenStructuralClass {
 
 
     private static void generateResolve(Structural structural, InterfaceSchema nullableInterface, CachedIndentPrinter ps) {
+        boolean hasDirectRef = !structural.foreignKeys().isEmpty();
+        if (hasDirectRef) {
+            ps.println1("public void _resolveDirect(%s.ConfigMgr mgr) {", Name.codeTopPkg);
+
+            // 2,处理本struct里的refSimple，
+            for (ForeignKeySchema fk : structural.foreignKeys()) {
+                if (!(fk.refKey() instanceof RefKey.RefSimple refSimple)) {
+                    continue;
+                }
+                FieldSchema firstField = fk.key().fieldSchemas().getFirst();
+                String refName = Name.refName(fk);
+                TableSchema refTable = fk.refTableSchema();
+                switch (firstField.type()) {
+                    case SimpleType ignored -> {
+                        ps.println2(refName + " = " + MethodStr.tableGet(refTable, refSimple,
+                                MethodStr.actualParams(fk.key().fields())));
+                        if (!refSimple.nullable())
+                            ps.println2("java.util.Objects.requireNonNull(" + refName + ");");
+                    }
+                    case FList ignored -> {
+                        ps.println2("%s = new java.util.ArrayList<>();", refName);
+                        ps.println2("%s.forEach( e -> {", lower1(firstField.name()));
+                        ps.println3(Name.refType(refTable) + " r = " + MethodStr.tableGet(refTable, refSimple, "e"));
+                        ps.println3("java.util.Objects.requireNonNull(r);");
+                        ps.println3(refName + ".add(r);");
+                        ps.println2("});");
+                    }
+                    case FMap ignored -> {
+                        ps.println2("%s = new java.util.LinkedHashMap<>();", refName);
+                        ps.println2("%s.forEach( (k, v) -> {", lower1(firstField.name()));
+                        ps.println3(Name.refType(refTable) + " rv = " + MethodStr.tableGet(refTable, refSimple, "v"));
+                        ps.println3("java.util.Objects.requireNonNull(rv);");
+                        ps.println3(refName + ".put(k, rv);");
+                        ps.println2("});");
+                    }
+                }
+            }
+
+            // 3,处理本struct里的refList
+            for (ForeignKeySchema fk : structural.foreignKeys()) {
+                if (!(fk.refKey() instanceof RefKey.RefList refList)) {
+                    continue;
+                }
+                String refName = Name.refName(fk);
+                TableSchema refTable = fk.refTableSchema();
+
+                ps.println2("%s = new java.util.ArrayList<>();", refName);
+
+                NameableName refN = new NameableName(refTable);
+                boolean isEnumAndNoDetail = GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(refTable);
+                boolean isEnum = refTable.entry() instanceof EEnum && !isEnumAndNoDetail;
+                if (isEnumAndNoDetail) {
+                    ps.println2("for (%s v : %s.values()) {", refN.fullName, refN.fullName);
+                } else if (isEnum) {
+                    ps.println2("for (%s vv : %s.values()) {", refN.fullName, refN.fullName);
+                    String primK = refTable.primaryKey().fields().getFirst();
+                    ps.println3("%s v = mgr.%sAll.get(vv.get%s());", refN.fullName + "_Detail", refN.containerPrefix,
+                            upper1(primK));
+                } else {
+                    ps.println2("mgr.%sAll.values().forEach( v -> {", refN.containerPrefix); // 为了跟之前兼容
+                }
+
+                List<String> eqs = new ArrayList<>();
+                for (int i = 0; i < fk.key().fields().size(); i++) {
+                    FieldSchema k = fk.key().fieldSchemas().get(i);
+                    String rk = refList.keyNames().get(i); // refKey不可能是refTable的primary key，所以可以直接调用keyNames
+                    eqs.add(MethodStr.equal("v.get" + upper1(rk) + "()", lower1(k.name()), k.type()));
+                }
+                ps.println3("if (" + String.join(" && ", eqs) + ")");
+
+                if (isEnumAndNoDetail) {
+                    ps.println4(refName + ".add(v);");
+                    ps.println2("}");
+                } else if (isEnum) {
+                    ps.println4(refName + ".add(vv);");
+                    ps.println2("}");
+                } else {
+                    ps.println4(refName + ".add(v);");
+                    ps.println2("});");
+                }
+            }
+
+            ps.println1("}");
+            ps.println();
+
+        }
+
         boolean isImpl = nullableInterface != null;
         if (isImpl) {
             ps.println1("@Override");
@@ -231,83 +318,8 @@ class GenStructuralClass {
                 }
             }
         }
-
-        // 2,处理本struct里的refSimple，
-        for (ForeignKeySchema fk : structural.foreignKeys()) {
-            if (!(fk.refKey() instanceof RefKey.RefSimple refSimple)) {
-                continue;
-            }
-            FieldSchema firstField = fk.key().fieldSchemas().getFirst();
-            String refName = Name.refName(fk);
-            TableSchema refTable = fk.refTableSchema();
-            switch (firstField.type()) {
-                case SimpleType ignored -> {
-                    ps.println2(refName + " = " + MethodStr.tableGet(refTable, refSimple,
-                            MethodStr.actualParams(fk.key().fields())));
-                    if (!refSimple.nullable())
-                        ps.println2("java.util.Objects.requireNonNull(" + refName + ");");
-                }
-                case FList ignored -> {
-                    ps.println2("%s = new java.util.ArrayList<>();", refName);
-                    ps.println2("%s.forEach( e -> {", lower1(firstField.name()));
-                    ps.println3(Name.refType(refTable) + " r = " + MethodStr.tableGet(refTable, refSimple, "e"));
-                    ps.println3("java.util.Objects.requireNonNull(r);");
-                    ps.println3(refName + ".add(r);");
-                    ps.println2("});");
-                }
-                case FMap ignored -> {
-                    ps.println2("%s = new java.util.LinkedHashMap<>();", refName);
-                    ps.println2("%s.forEach( (k, v) -> {", lower1(firstField.name()));
-                    ps.println3(Name.refType(refTable) + " rv = " + MethodStr.tableGet(refTable, refSimple, "v"));
-                    ps.println3("java.util.Objects.requireNonNull(rv);");
-                    ps.println3(refName + ".put(k, rv);");
-                    ps.println2("});");
-                }
-            }
-        }
-
-        // 3,处理本struct里的refList
-        for (ForeignKeySchema fk : structural.foreignKeys()) {
-            if (!(fk.refKey() instanceof RefKey.RefList refList)) {
-                continue;
-            }
-            String refName = Name.refName(fk);
-            TableSchema refTable = fk.refTableSchema();
-
-            ps.println2("%s = new java.util.ArrayList<>();", refName);
-
-            NameableName refN = new NameableName(refTable);
-            boolean isEnumAndNoDetail = GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(refTable);
-            boolean isEnum = refTable.entry() instanceof EEnum && !isEnumAndNoDetail;
-            if (isEnumAndNoDetail) {
-                ps.println2("for (%s v : %s.values()) {", refN.fullName, refN.fullName);
-            } else if (isEnum) {
-                ps.println2("for (%s vv : %s.values()) {", refN.fullName, refN.fullName);
-                String primK = refTable.primaryKey().fields().getFirst();
-                ps.println3("%s v = mgr.%sAll.get(vv.get%s());", refN.fullName + "_Detail", refN.containerPrefix,
-                        upper1(primK));
-            } else {
-                ps.println2("mgr.%sAll.values().forEach( v -> {", refN.containerPrefix); // 为了跟之前兼容
-            }
-
-            List<String> eqs = new ArrayList<>();
-            for (int i = 0; i < fk.key().fields().size(); i++) {
-                FieldSchema k = fk.key().fieldSchemas().get(i);
-                String rk = refList.keyNames().get(i); // refKey不可能是refTable的primary key，所以可以直接调用keyNames
-                eqs.add(MethodStr.equal("v.get" + upper1(rk) + "()", lower1(k.name()), k.type()));
-            }
-            ps.println3("if (" + String.join(" && ", eqs) + ")");
-
-            if (isEnumAndNoDetail) {
-                ps.println4(refName + ".add(v);");
-                ps.println2("}");
-            } else if (isEnum) {
-                ps.println4(refName + ".add(vv);");
-                ps.println2("}");
-            } else {
-                ps.println4(refName + ".add(v);");
-                ps.println2("});");
-            }
+        if (hasDirectRef) {
+            ps.println2("_resolveDirect(mgr);");
         }
 
         ps.println1("}");
