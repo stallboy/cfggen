@@ -2,7 +2,7 @@ import {ProChat, ProChatInstance} from "@ant-design/pro-chat";
 
 import {useTheme} from "antd-style";
 import {OpenAI} from "openai";
-import {store, useLocationData} from "../setting/store.ts";
+import {useMyStore, useLocationData} from "../setting/store.ts";
 import {ChatMessage} from "@ant-design/pro-chat";
 import {AIConf} from "../setting/storageJson.ts";
 import {memo, useCallback, useRef, useState} from "react";
@@ -18,7 +18,7 @@ export const Chat = memo(function Chat({schema}: {
         schema: Schema | undefined;
     }) {
         const theme = useTheme();
-        const {server, aiConf} = store;
+        const {server, aiConf} = useMyStore();
         const {curTableId} = useLocationData();
         let editable = false;
         if (schema && schema.isEditable) {

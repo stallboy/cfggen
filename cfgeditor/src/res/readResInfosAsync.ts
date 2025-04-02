@@ -1,6 +1,6 @@
 import {
     readStoreStateOnce,
-    store
+    useMyStore
 } from "../routes/setting/store.ts";
 import {readDir} from "@tauri-apps/plugin-fs";
 import {queryClient} from "../main.tsx";
@@ -169,7 +169,7 @@ export async function readResInfosAsync() {
         return true;
     }
 
-    const {tauriConf} = store;
+    const {tauriConf} = useMyStore();
     const result = new Map<string, ResInfo[]>();
     const stat = new Map<string, number>();
     const baseDir = await path.resourceDir();

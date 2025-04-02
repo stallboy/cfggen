@@ -1,4 +1,4 @@
-import {invalidateAllQueries, navTo, store, useLocationData} from "../setting/store.ts";
+import {invalidateAllQueries, navTo, useMyStore, useLocationData} from "../setting/store.ts";
 
 import {memo, useCallback, useState} from "react";
 import {Schema} from "../table/schemaUtil.tsx";
@@ -21,7 +21,7 @@ export const AddJson = memo(function AddJson({schema}: {
     schema: Schema | undefined;
 }) {
     const {t} = useTranslation();
-    const {server} = store;
+    const {server} = useMyStore();
     const navigate = useNavigate();
     const {curTableId} = useLocationData();
     let editable = false;

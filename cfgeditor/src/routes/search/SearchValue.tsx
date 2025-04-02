@@ -2,7 +2,7 @@ import {memo, useState} from "react";
 import {App, Button, Empty, Input, Result, Table} from "antd";
 import {SearchResult, SearchResultItem} from "./searchModel.ts";
 import {useTranslation} from "react-i18next";
-import {navTo, setQuery, store, useLocationData} from "../setting/store.ts";
+import {navTo, setQuery, useMyStore, useLocationData} from "../setting/store.ts";
 import {useNavigate} from "react-router-dom";
 
 
@@ -12,7 +12,7 @@ function getLabel(table: string, id: string): string {
 }
 
 export const SearchValue = memo(function SearchValue() {
-    const {server, query, searchMax, isEditMode} = store;
+    const {server, query, searchMax, isEditMode} = useMyStore();
     const navigate = useNavigate();
 
     const [loading, setLoading] = useState<boolean>(false);

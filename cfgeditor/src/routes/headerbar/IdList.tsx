@@ -1,6 +1,6 @@
 import {Select} from "antd";
 import {getIdOptions} from "../table/schemaUtil.tsx";
-import {navTo, store, useLocationData} from "../setting/store.ts";
+import {navTo, useMyStore, useLocationData} from "../setting/store.ts";
 import {useNavigate} from "react-router-dom";
 import {STable} from "../table/schemaModel.ts";
 import {memo, useMemo} from "react";
@@ -28,7 +28,7 @@ export const IdList = memo(function ({curTable}: {
                    placeholder="search a record"
                    filterOption={filterOption}
                    onChange={(value) => {
-                       const {isEditMode} = store;
+                       const {isEditMode} = useMyStore();
                        navigate(navTo(curPage, curTableId, value, isEditMode));
                    }}/>
 

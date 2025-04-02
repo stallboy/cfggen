@@ -3,7 +3,7 @@ import {useTranslation} from "react-i18next";
 import {App, Button, Divider, Form, InputNumber} from "antd";
 import {
     setImageSizeScale,
-    store,
+    useMyStore,
     useLocationData,
     invalidateAllQueries,
 } from "./store.ts";
@@ -26,7 +26,7 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
 }) {
     const {curPage} = useLocationData();
     const {t} = useTranslation();
-    const {server, imageSizeScale} = store;
+    const {server, imageSizeScale} = useMyStore();
 
     const {curTableId, curId} = useLocationData();
     const {notification} = App.useApp();

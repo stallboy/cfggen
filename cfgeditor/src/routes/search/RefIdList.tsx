@@ -1,5 +1,5 @@
 import {memo, useMemo} from "react";
-import {navTo, store, useLocationData} from "../setting/store.ts";
+import {navTo, useMyStore, useLocationData} from "../setting/store.ts";
 import {Button, Result, Spin, Table} from "antd";
 import {useNavigate} from "react-router-dom";
 import {useQuery} from "@tanstack/react-query";
@@ -15,7 +15,7 @@ function RefIdListResult({refIdsResult}: {
     refIdsResult: RecordRefIdsResult
 }) {
 
-    const {isEditMode} = store;
+    const {isEditMode} = useMyStore();
     const navigate = useNavigate();
     const {curPage} = useLocationData();
 
@@ -65,7 +65,7 @@ function RefIdListResult({refIdsResult}: {
 export const RefIdList = memo(function ({lockedId}: {
     lockedId: RefId | undefined
 }) {
-    const {server, refIdsInDepth, refIdsOutDepth, refIdsMaxNode} = store;
+    const {server, refIdsInDepth, refIdsOutDepth, refIdsMaxNode} = useMyStore();
     const {curTableId, curId} = useLocationData();
 
     const thisTable = lockedId ? lockedId.table : curTableId;

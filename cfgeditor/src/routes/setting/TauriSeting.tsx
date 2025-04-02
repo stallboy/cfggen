@@ -1,5 +1,5 @@
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
-import {setTauriConf, store} from "./store.ts";
+import {setTauriConf, useMyStore} from "./store.ts";
 import {memo, useCallback} from "react";
 import {useTranslation} from "react-i18next";
 import {useQuery} from "@tanstack/react-query";
@@ -31,7 +31,7 @@ export const TauriSetting = memo(function TauriSetting({schema}: {
         queryKey: ['tauri', 'resourceDir'],
         queryFn: path.resourceDir,
     });
-    const {tauriConf} = store;
+    const {tauriConf} = useMyStore();
     const {notification} = App.useApp();
     const summarizeRes = useCallback(() => {
         if (schema) {

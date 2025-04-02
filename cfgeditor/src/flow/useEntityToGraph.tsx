@@ -1,5 +1,5 @@
 import {useContext, useEffect, useMemo} from "react";
-import {store} from "../routes/setting/store.ts";
+import {useMyStore} from "../routes/setting/store.ts";
 import {getViewportForBounds, Rect, useReactFlow, useStore} from "@xyflow/react";
 import {convertNodeAndEdges} from "./entityToNodeAndEdge.ts";
 import {useQuery} from "@tanstack/react-query";
@@ -82,7 +82,7 @@ export function useEntityToGraph({
                                      setFitViewForPathname, nodeShow,
                                  }: FlowGraphInput) {
     const flowGraph = useContext(FlowGraphContext);
-    const {query, nodeShow: currentNodeShow} = store;
+    const {query, nodeShow: currentNodeShow} = useMyStore();
     const width = useStore((state) => state.width);
     const height = useStore((state) => state.height);
     const setNodes = useStore((state) => state.setNodes);

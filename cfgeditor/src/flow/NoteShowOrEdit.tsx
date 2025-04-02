@@ -5,7 +5,7 @@ import {BookOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 import {useMutation} from "@tanstack/react-query";
 import {updateNote} from "../routes/api.ts";
-import {store} from "../routes/setting/store.ts";
+import {useMyStore} from "../routes/setting/store.ts";
 import {NoteEditResult, notesToMap} from "../routes/record/noteModel.ts";
 import {queryClient} from "../main.tsx";
 
@@ -35,7 +35,7 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
     note: string;
     setIsEdit: (ie: boolean) => void;
 }) {
-    const {server} = store;
+    const {server} = useMyStore();
     const {t} = useTranslation();
     const [newNote, setNewNote] = useState<string>(note);
     const {notification} = App.useApp();

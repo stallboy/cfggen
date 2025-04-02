@@ -3,7 +3,7 @@ import {useTranslation} from "react-i18next";
 import {Button, Card, type SelectProps, Form, Input} from "antd";
 import {
     setServer, setAIConf,
-    store
+    useMyStore
 } from "./store.ts";
 
 import {formItemLayoutWithOutLabel, formLayout} from "./BasicSetting.tsx";
@@ -19,7 +19,7 @@ export const ServerAndAi = memo(function ServerAndAi({schema}: {
     schema: Schema | undefined;
 }) {
     const {t} = useTranslation();
-    const {server, aiConf} = store;
+    const {server, aiConf} = useMyStore();
 
     const tableOptions: SelectProps['options'] = []
     if (schema) {

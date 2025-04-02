@@ -9,7 +9,7 @@ import {
     getFixedPage,
     getLastNavToInLocalStore,
     setServer,
-    store,
+    useMyStore,
     useLocationData
 } from "./routes/setting/store.ts";
 import {Outlet, useNavigate} from "react-router-dom";
@@ -50,7 +50,7 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
     const {
         server, dragPanel, pageConf,
         recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow,
-    } = store;
+    } = useMyStore();
 
     const {curTableId, curId} = useLocationData();
     const [settingOpen, setSettingOpen] = useState<boolean>(false);

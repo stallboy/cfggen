@@ -1,6 +1,6 @@
 import {STable} from "../table/schemaModel.ts";
 import {Select} from "antd";
-import {getLastOpenIdByTable, navTo, store, useLocationData} from "../setting/store.ts";
+import {getLastOpenIdByTable, navTo, useMyStore, useLocationData} from "../setting/store.ts";
 import {useNavigate} from "react-router-dom";
 import {Schema} from "../table/schemaUtil.tsx";
 import {memo} from "react";
@@ -15,7 +15,7 @@ interface TableWithLastName {
 export const TableList = memo(function ({schema}: { schema: Schema }) {
     const {curPage, curTableId} = useLocationData();
     const navigate = useNavigate();
-    const {isEditMode} = store;
+    const {isEditMode} = useMyStore();
 
     if (!schema) {
         return <Select id='table' loading={true}/>

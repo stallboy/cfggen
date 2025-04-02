@@ -1,6 +1,6 @@
 import {memo, useMemo} from "react";
 import {Schema} from "../table/schemaUtil.tsx";
-import {navTo, store, useLocationData} from "../setting/store.ts";
+import {navTo, useMyStore, useLocationData} from "../setting/store.ts";
 import {Button, Table} from "antd";
 import {useNavigate} from "react-router-dom";
 
@@ -14,7 +14,7 @@ class LastAccessedItem {
 export const LastAccessed = memo(function LastAccessed({schema}: {
     schema: Schema | undefined;
 }) {
-    const {history, isEditMode} = store;
+    const {history, isEditMode} = useMyStore();
     const navigate = useNavigate();
     const {curPage} = useLocationData();
 
@@ -26,6 +26,7 @@ export const LastAccessed = memo(function LastAccessed({schema}: {
                 uniq.push(new LastAccessedItem(item.table, item.id, title));
             }
         }
+    
         return uniq;
     }, [history.items, schema]);
 

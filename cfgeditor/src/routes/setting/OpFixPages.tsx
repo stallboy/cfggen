@@ -1,4 +1,4 @@
-import {makeFixedPage, setFixedPagesConf, store, useLocationData} from "./store.ts";
+import {makeFixedPage, setFixedPagesConf, useMyStore, useLocationData} from "./store.ts";
 import {memo, useCallback, useEffect} from "react";
 import {useTranslation} from "react-i18next";
 import {Button, Form, Input, Space} from "antd";
@@ -22,7 +22,7 @@ export const OpFixPages = memo(function ({schema, curTable}: {
     const {curPage} = useLocationData();
     const {t} = useTranslation();
     const {curTableId, curId} = useLocationData();
-    const {pageConf} = store;
+    const {pageConf} = useMyStore();
     const [form] = useForm();
 
     const onFixCurrentPageClick = useCallback(function () {

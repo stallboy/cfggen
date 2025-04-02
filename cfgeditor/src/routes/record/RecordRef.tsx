@@ -6,7 +6,7 @@ import {createRefEntities} from "./recordRefEntity.ts";
 import {useTranslation} from "react-i18next";
 import {Schema} from "../table/schemaUtil.tsx";
 import {NodeShowType} from "../setting/storageJson.ts";
-import {navTo, store, useLocationData} from "../setting/store.ts";
+import {navTo, useMyStore, useLocationData} from "../setting/store.ts";
 import {useNavigate, useOutletContext} from "react-router-dom";
 import {useQuery} from "@tanstack/react-query";
 import {fetchRecordRefs} from "../api.ts";
@@ -31,7 +31,7 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
 }) {
     const [t] = useTranslation();
     const navigate = useNavigate();
-    const {recordRefInShowLinkMaxNode, tauriConf, resourceDir, resMap} = store;
+    const {recordRefInShowLinkMaxNode, tauriConf, resourceDir, resMap} = useMyStore();
 
     const entityMap = new Map<string, Entity>();
     const hasContainEnum = nodeShow.refContainEnum || curTable.entryType == 'eEnum';
@@ -73,7 +73,7 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
     }];
 
     const nodeDoubleClickFunc = (entityNode: EntityNode): void => {
-        const {isEditMode} = store;
+        const {isEditMode} = useMyStore();
         const refId = entityNode.data.entity.userData as RefId;
         navigate(navTo('record', refId.table, refId.id, isEditMode));
     };
@@ -149,7 +149,7 @@ export function RecordRef({schema, notes, curTable, curId, refIn, refOutDepth, m
     nodeShow: NodeShowType;
     inDragPanelAndFix: boolean;
 }) {
-    const {server} = store;
+    const {server} = useMyStore();
     const {isLoading, isError, error, data: recordRefResult} = useQuery({
         queryKey: ['tableRef', curTable.name, curId, refOutDepth, maxNode, refIn],
         queryFn: ({signal}) => fetchRecordRefs(server, curTable.name, curId, refOutDepth, maxNode, refIn, signal),
@@ -182,7 +182,7 @@ export function RecordRef({schema, notes, curTable, curId, refIn, refOutDepth, m
 export function RecordRefRoute() {
     const {schema, notes, curTable} = useOutletContext<SchemaTableType>();
     const {curId} = useLocationData();
-    const {recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow} = store;
+    const {recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow} = useMyStore();
 
     return <RecordRef schema={schema} notes={notes} curTable={curTable} curId={curId}
                       refIn={recordRefIn} refOutDepth={recordRefOutDepth} maxNode={recordMaxNode}

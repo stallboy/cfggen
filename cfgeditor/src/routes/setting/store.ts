@@ -1,4 +1,4 @@
-import resso from "resso";
+import resso from "./resso.ts";
 import {AIConf, Convert, FixedPage, FixedPagesConf, NodeShowType, TauriConf} from "./storageJson.ts";
 import {getPrefBool, getPrefEnumStr, getPrefInt, getPrefJson, getPrefStr, setPref} from "./storage.ts";
 import {History} from "../headerbar/historyModel.ts";
@@ -199,8 +199,12 @@ export function readStoreStateOnce() {
     }
 }
 
-export const store = resso<StoreState>(storeState);
+const store = resso<StoreState>(storeState);
 
+
+export function useMyStore() {
+    return store;
+}
 
 export function clearLayoutCache() {
     queryClient.removeQueries({queryKey: ['layout']});
@@ -325,7 +329,7 @@ export function setDragPanel(value: string) {
 }
 
 export function makeFixedPage(curTableId: string, curId: string) {
-    const {recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow} = store;
+    const {recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow} = useMyStore();
     const fp: FixedPage = {
         label: getId(curTableId, curId),
         table: curTableId,
@@ -415,7 +419,7 @@ export function setEditingState(editingCurTable: string, editingCurId: string, e
 }
 
 export function getLastOpenIdByTable(schema: Schema, curTableId: string): string | undefined {
-    const {history} = store;
+    const {history} = useMyStore();
     const lastOpenId = history.findLastOpenId(curTableId)
     const table = schema.getSTable(curTableId);
     let id;
@@ -436,7 +440,7 @@ export function setIsEditMode(isEditMode: boolean) {
 
 export function navTo(curPage: PageType, tableId: string, id: string,
                       edit: boolean = false, addHistory: boolean = true) {
-    const {history} = store;
+    const {history} = useMyStore();
 
     if (addHistory) {
         const cur = history.cur();

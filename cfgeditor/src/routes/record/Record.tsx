@@ -15,7 +15,7 @@ import {
     startEditingObject,
 } from "./editingObject.ts";
 import {useTranslation} from "react-i18next";
-import {invalidateAllQueries, navTo, setIsEditMode, store, useLocationData} from "../setting/store.ts";
+import {invalidateAllQueries, navTo, setIsEditMode, useMyStore, useLocationData} from "../setting/store.ts";
 import {useNavigate, useOutletContext} from "react-router-dom";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {addOrUpdateRecord, fetchRecord} from "../api.ts";
@@ -33,7 +33,7 @@ import {EntityNode} from "../../flow/FlowGraph.tsx";
 
 const RecordWithResult = memo(function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const {schema, notes, curTable} = useOutletContext<SchemaTableType>();
-    const {server, tauriConf, resourceDir, resMap} = store;
+    const {server, tauriConf, resourceDir, resMap} = useMyStore();
     const {notification} = App.useApp();
     const {curTableId, curId, edit, pathname} = useLocationData();
     const navigate = useNavigate();
@@ -260,7 +260,7 @@ const RecordWithResult = memo(function RecordWithResult({recordResult}: { record
 
 
 export const Record = memo(function () {
-    const {server} = store;
+    const {server} = useMyStore();
     const {curTableId, curId} = useLocationData();
     const {isLoading, isError, error, data: recordResult} = useQuery({
         queryKey: ['table', curTableId, curId],

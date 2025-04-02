@@ -9,7 +9,7 @@ import {
     navTo,
     PageType,
     setDragPanel,
-    store,
+    useMyStore,
     useLocationData
 } from "../setting/store.ts";
 import {getNextId, Schema} from "../table/schemaUtil.tsx";
@@ -34,7 +34,7 @@ export const HeaderBar = memo(function ({schema, curTable, setSettingOpen, setSe
     setSearchOpen: (open: boolean) => void;
 }) {
     const {curPage, curTableId, curId} = useLocationData();
-    const {dragPanel, pageConf, history, isNextIdShow, isEditMode} = store;
+    const {dragPanel, pageConf, history, isNextIdShow, isEditMode} = useMyStore();
     const navigate = useNavigate();
     const {t} = useTranslation();
     useHotkeys('alt+1', () => navigate(navTo('table', curTableId, curId)));
@@ -59,7 +59,7 @@ export const HeaderBar = memo(function ({schema, curTable, setSettingOpen, setSe
         }
     }, [curPage, history, isEditMode, navigate]);
 
-    const {editingCurTable, editingCurId, editingIsEdited} = store;
+    const {editingCurTable, editingCurId, editingIsEdited} = useMyStore();
 
     let unsavedSign;
     if (editingIsEdited && editingCurTable == curTableId && editingCurId == curId){

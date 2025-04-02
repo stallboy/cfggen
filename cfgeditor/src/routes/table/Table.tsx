@@ -1,7 +1,7 @@
 import {Entity} from "../../flow/entityModel.ts";
 import {SchemaTableType} from "../../CfgEditorApp.tsx";
 import {TableEntityCreator, UserData} from "./tableEntityCreator.ts";
-import {navTo, store, useLocationData} from "../setting/store.ts";
+import {navTo, useMyStore, useLocationData} from "../setting/store.ts";
 import {useNavigate, useOutletContext} from "react-router-dom";
 // import {useReactFlow} from "reactflow";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
@@ -14,7 +14,7 @@ import {EntityNode} from "../../flow/FlowGraph.tsx";
 
 export function Table() {
     const {schema, notes, curTable} = useOutletContext<SchemaTableType>();
-    const {maxImpl} = store;
+    const {maxImpl} = useMyStore();
     const {pathname, curId} = useLocationData();
     const {t} = useTranslation();
     const navigate = useNavigate();

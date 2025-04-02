@@ -5,7 +5,7 @@ import {useTranslation} from "react-i18next";
 import {KeywordColor, NodeShowType} from "./storageJson.ts";
 import {
     setNodeShow,
-    store
+    useMyStore
 } from "./store.ts";
 import {CSSProperties, memo, useMemo} from "react";
 import {formItemLayoutWithOutLabel, formLayout} from "./BasicSetting.tsx";
@@ -48,7 +48,7 @@ const selectStyle: CSSProperties = {width: 160};
 
 export const NodeShowSetting = memo(function () {
     const {t} = useTranslation();
-    const {nodeShow} = store;
+    const {nodeShow} = useMyStore();
 
     const descOptions = useMemo(() =>
         [{label: t('show'), value: 'show'},

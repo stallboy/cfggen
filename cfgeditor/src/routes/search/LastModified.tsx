@@ -1,6 +1,6 @@
 import {memo, useMemo} from "react";
 import {Schema} from "../table/schemaUtil.tsx";
-import {navTo, store, useLocationData} from "../setting/store.ts";
+import {navTo, useMyStore, useLocationData} from "../setting/store.ts";
 import {useNavigate} from "react-router-dom";
 import {Button, Table} from "antd";
 import TimeAgo from 'react-timeago'
@@ -18,7 +18,7 @@ export const LastModified = memo(function LastModified({schema}: {
 }) {
     if (!schema) return <></>;
 
-    const {isEditMode} = store;
+    const {isEditMode} = useMyStore();
     const navigate = useNavigate();
     const {curPage} = useLocationData();
 

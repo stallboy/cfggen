@@ -9,7 +9,7 @@ import {
     setRefIn,
     setRefOutDepth,
     setSearchMax,
-    store
+    useMyStore
 } from "./store.ts";
 import {useTranslation} from "react-i18next";
 
@@ -33,7 +33,7 @@ export const BasicSetting = memo(function TableSetting() {
         recordRefIn, recordRefInShowLinkMaxNode, recordRefOutDepth, recordMaxNode,
         refIdsInDepth, refIdsOutDepth, refIdsMaxNode,
         isNextIdShow, searchMax
-    } = store;
+    } = useMyStore();
 
     return <Form {...formLayout} layout={'horizontal'}
                  initialValues={{
