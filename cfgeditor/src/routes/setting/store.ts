@@ -465,6 +465,14 @@ export function getLastNavToInLocalStore() {
     return navTo(page ?? 'table', tableId, id, isEditMode);
 }
 
+export function setResourceDir(resourceDir:string) {
+    store.resourceDir = resourceDir;
+}
+
+export function setResMap(resMap: Map<string, ResInfo[]>) {
+    store.resMap = resMap;
+}
+
 export function useLocationData() {
     const location = useLocation();
     const pathname = location.pathname;

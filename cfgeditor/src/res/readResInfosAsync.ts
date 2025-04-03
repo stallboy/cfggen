@@ -1,6 +1,8 @@
 import {
     readStoreStateOnce,
-    useMyStore
+    useMyStore,
+    setResourceDir,
+    setResMap
 } from "../routes/setting/store.ts";
 import {readDir} from "@tauri-apps/plugin-fs";
 import {queryClient} from "../main.tsx";
@@ -173,7 +175,7 @@ export async function readResInfosAsync() {
     const result = new Map<string, ResInfo[]>();
     const stat = new Map<string, number>();
     const baseDir = await path.resourceDir();
-    store.resourceDir = baseDir;
+    setResourceDir(baseDir);
 
     for (const resDir of tauriConf.resDirs) {
         let dir = resDir.dir;
@@ -189,7 +191,7 @@ export async function readResInfosAsync() {
     }
 
     const packed = packAllTracks(result);
-    store.resMap = packed;
+    setResMap(packed);
     // console.log(`read res file for ${packed.size} node`, packed, stat);
     return true;
 }
