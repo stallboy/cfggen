@@ -291,15 +291,19 @@ public final class CfgSchemaResolver {
 
         KeySchema primaryKey = table.primaryKey();
         if (resolveKey(table, primaryKey)) {
-            checkPrimaryOrUniqKey(primaryKey);
+            checkPrimaryOrUniqueKey(primaryKey);
+            checkPrimaryKeyEnumOrIntIfEnum(table, primaryKey);
         }
         for (KeySchema key : table.uniqueKeys()) {
             if (resolveKey(table, key)) {
-                checkPrimaryOrUniqKey(key);
+                checkPrimaryOrUniqueKey(key);
             }
         }
     }
 
+    /**
+     * 检查entry存在切必须为str类型
+     */
     private void resolveEntry(TableSchema table, EntryType entry) {
         if (entry instanceof EntryBase entryBase) {
             String fn = entryBase.field();
@@ -341,7 +345,7 @@ public final class CfgSchemaResolver {
      *
      * @param key primary or unique key
      */
-    private void checkPrimaryOrUniqKey(KeySchema key) {
+    private void checkPrimaryOrUniqueKey(KeySchema key) {
         List<FieldSchema> fields = key.fieldSchemas();
         if (fields.size() == 1) {
             FieldSchema field = fields.getFirst();
@@ -361,7 +365,26 @@ public final class CfgSchemaResolver {
                 }
             }
         }
+    }
 
+
+    /**
+     * 当table是enum时，主键必须是enum字段，或是int类型的字段
+     */
+    private void checkPrimaryKeyEnumOrIntIfEnum(TableSchema table, KeySchema key) {
+        if (table.entry() instanceof EntryType.EEnum eEnum) {
+            FieldSchema enumField = eEnum.fieldSchema();
+            if (key.fieldSchemas().size() != 1) {
+                errPrimaryKeyNotEnumOrIntWhenEnum(String.join(",", key.fields()),
+                        "size=" + key.fieldSchemas().size(), enumField.name());
+                return;
+            }
+
+            FieldSchema pkField = key.fieldSchemas().getFirst();
+            if (pkField != enumField && pkField.type() != INT ){
+                errPrimaryKeyNotEnumOrIntWhenEnum(pkField.name(), pkField.type().toString(), enumField.name());
+            }
+        }
     }
 
 
@@ -371,6 +394,10 @@ public final class CfgSchemaResolver {
 
     private void errKeyTypeNotSupport(String field, String errType) {
         errs.addErr(new KeyTypeNotSupport(ctx(), field, errType));
+    }
+
+    private void errPrimaryKeyNotEnumOrIntWhenEnum(String field, String errType, String enumField) {
+        errs.addErr(new PrimaryKeyNotEnumOrIntWhenEnum(ctx(), field, errType, enumField));
     }
 
     private void checkMapKey(SimpleType keyType, FieldSchema field) {

@@ -233,6 +233,15 @@ public record CfgSchemaErrs(List<Err> errs,
     }
 
     /**
+     * 当table是enum时，主键必须是enum字段，或是int类型的字段，（限制多一些，java热更schema好写）
+     */
+    public record PrimaryKeyNotEnumOrIntWhenEnum(String structural,
+                                                 String field,
+                                                 String errType,
+                                                 String enumField) implements Err {
+    }
+
+    /**
      * 外键对应的table不存在
      */
     public record RefTableNotFound(String table,
