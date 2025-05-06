@@ -59,17 +59,33 @@ public record CfgSchemaErrs(List<Err> errs,
                                        String name2) implements Warn {
     }
 
+    /**
+     * struct未被使用
+     * @param name 结构名
+     */
     public record StructNotUsed(String name) implements Warn {
     }
 
+    /**
+     * interface未被使用
+     * @param name 接口名
+     */
     public record InterfaceNotUsed(String name) implements Warn {
     }
 
+    /**
+     * 被tag的结构或表[name] 的外键[foreignKey] 链接的表
+     * [notFoundRefTable]未被tag --> 外键被忽略
+     */
     public record FilterRefIgnoredByRefTableNotFound(String name,
                                                      String foreignKey,
                                                      String notFoundRefTable) implements Warn {
     }
 
+    /**
+     * 被tag的结构或表[name] 的外键[foreignKey] 链接的表
+     * [refTable]上的[notFoundRefKey]字段未被tag --> 外键被忽略
+     */
     public record FilterRefIgnoredByRefKeyNotFound(String name,
                                                    String foreignKey,
                                                    String refTable,
