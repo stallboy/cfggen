@@ -5,6 +5,7 @@ import configgen.data.*;
 import configgen.editorserver.EditorServer;
 import configgen.gencs.GenBytes;
 import configgen.gencs.GenCs;
+import configgen.gengo.GenGo;
 import configgen.genjava.BinaryToText;
 import configgen.genjava.GenJavaData;
 import configgen.genjava.code.GenJavaCode;
@@ -137,6 +138,7 @@ public final class Main {
         Generators.addProvider("cs", GenCs::new);
         Generators.addProvider("bytes", GenBytes::new);
         Generators.addProvider("lua", GenLua::new);
+        Generators.addProvider("go", GenGo::new);
 
         Generators.addProvider("server", EditorServer::new);
         Generators.addProvider("ts", GenTs::new);
