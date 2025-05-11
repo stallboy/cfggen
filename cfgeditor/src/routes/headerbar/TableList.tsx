@@ -3,7 +3,7 @@ import {Select} from "antd";
 import {getLastOpenIdByTable, navTo, useMyStore, useLocationData} from "../setting/store.ts";
 import {useNavigate} from "react-router-dom";
 import {Schema} from "../table/schemaUtil.tsx";
-import {memo} from "react";
+import {memo, useMemo, useCallback} from "react";
 
 interface TableWithLastName {
     tableId: string;
@@ -11,70 +11,81 @@ interface TableWithLastName {
     lastName: string;
 }
 
+const SELECT_STYLE = {width: 200} as const;
+const LABEL_COUNT_STYLE = {fontSize: '0.85em'} as const;
+
+const FILTER_OPTION = (input: string, option: any) => option?.value.includes(input) ?? false;
+
+function generateTableOptions(schema: Schema) {
+    const group2Tables = new Map<string, TableWithLastName[]>();
+    
+    // Group tables by their namespace
+    for (const item of schema.itemMap.values()) {
+        if (item.type === 'table') {
+            const table = item as STable;
+            const tableId = item.name;
+            const [group, lastName] = parseTableId(tableId);
+
+            const tables = group2Tables.get(group) ?? [];
+            if (!tables.length) {
+                group2Tables.set(group, tables);
+            }
+            tables.push({tableId, table, lastName});
+        }
+    }
+
+    // Generate options with groups
+    return Array.from(group2Tables.entries()).map(([group, tables]) => ({
+        label: group,
+        value: group,
+        options: tables.map(tl => ({
+            label: <>{tl.lastName} <i style={LABEL_COUNT_STYLE}>{tl.table.recordIds.length}</i></>,
+            value: tl.table.name,
+        }))
+    }));
+}
+
+function parseTableId(tableId: string): [string, string] {
+    const parts = tableId.split('.');
+    if (parts.length > 1) {
+        return [
+            parts.slice(0, -1).join('.'),
+            parts[parts.length - 1]
+        ];
+    }
+    return ['', tableId];
+}
 
 export const TableList = memo(function ({schema}: { schema: Schema }) {
     const {curPage, curTableId} = useLocationData();
     const navigate = useNavigate();
     const {isEditMode} = useMyStore();
 
+    const options = useMemo(() => 
+        schema ? generateTableOptions(schema) : [],
+        [schema]
+    );
+
+    const handleChange = useCallback((tableId: string) => {
+        const id = getLastOpenIdByTable(schema, tableId);
+        navigate(navTo(curPage, tableId, id || '', isEditMode));
+    }, [schema, navigate, curPage, isEditMode]);
+
     if (!schema) {
-        return <Select id='table' loading={true}/>
+        return <Select id='table' loading={true}/>;
     }
 
-    const options= [];
-    const group2Tables = new Map<string, TableWithLastName[]>();
-    for (const item of schema.itemMap.values()) {
-        if (item.type == 'table') {
-            const table = item as STable;
-            const tableId = item.name;
-            let group = ""
-            let lastName = tableId;
-            const sp = lastName.split(".")
-            if (sp.length > 1) {
-                lastName = sp[sp.length - 1]
-                group = sp.slice(0, sp.length - 1).join(".")
-            }
-
-            let tables = group2Tables.get(group);
-            if (!tables) {
-                tables = []
-                group2Tables.set(group, tables)
-            }
-            tables.push({tableId, table, lastName})
-        }
-    }
-    for (const group2Table of group2Tables.entries()) {
-        const grp = group2Table[0]
-        const tls = group2Table[1]
-        const subOptions = [];
-
-        for (const tl of tls) {
-            subOptions.push({
-                label: <>{tl.lastName} <i style={{fontSize: '0.85em'}}> {tl.table.recordIds.length}</i></>,
-                value: tl.table.name,
-            });
-        }
-
-        options.push({
-            label: grp,
-            value: grp,
-            options: subOptions
-        })
-    }
-
-    return <Select id='table'
-                   showSearch
-                   options={options}
-                   style={{width: 200}}
-                   value={curTableId}
-                   placeholder="search a table"
-                   optionFilterProp="children"
-                   filterOption={(inputValue, option) => {
-                       return !!option?.value.includes(inputValue);
-                   }}
-                   onChange={(tableId) => {
-                       const id = getLastOpenIdByTable(schema, tableId);
-                       navigate(navTo(curPage, tableId, id || '', isEditMode));
-                   }}
-    />;
+    return (
+        <Select
+            id='table'
+            showSearch
+            options={options}
+            style={SELECT_STYLE}
+            value={curTableId}
+            placeholder="search a table"
+            optionFilterProp="children"
+            filterOption={FILTER_OPTION}
+            onChange={handleChange}
+        />
+    );
 });

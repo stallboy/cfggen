@@ -26,6 +26,9 @@ const searchIcon = <SearchOutlined/>;
 const prevIcon = <LeftOutlined/>;
 const nextIcon = <RightOutlined/>;
 
+const HEADER_STYLE = {position: 'relative'} as const;
+const SPACE_STYLE = {position: 'absolute', zIndex: 1} as const;
+const DRAG_SELECT_STYLE = {width: 80} as const;
 
 export const HeaderBar = memo(function ({schema, curTable, setSettingOpen, setSearchOpen}: {
     schema: Schema | undefined;
@@ -99,13 +102,13 @@ export const HeaderBar = memo(function ({schema, curTable, setSettingOpen, setSe
         navigate(navTo(page, curTableId, curId, isEditMode));
     }, [curTableId, curId, isEditMode, navigate]);
 
-    return <div style={{position: 'relative'}}>
-        <Space size={'large'} style={{position: 'absolute', zIndex: 1}}>
+    return <div style={HEADER_STYLE}>
+        <Space size={'large'} style={SPACE_STYLE}>
             <Space size={'small'}>
                 <Button icon={settingIcon} onClick={onSettingClick}/>
                 <Button icon={searchIcon} onClick={onSearchClick}/>
                 <Select options={dragOptions}
-                        style={{width: 80}}
+                        style={DRAG_SELECT_STYLE}
                         value={dragPanel}
                         onChange={setDragPanel}/>
 
