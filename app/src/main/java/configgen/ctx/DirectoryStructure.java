@@ -2,37 +2,62 @@ package configgen.ctx;
 
 import java.io.IOException;
 import java.nio.file.*;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static configgen.data.DataUtil.*;
 import static configgen.data.DataUtil.FileFmt.CSV;
 import static configgen.data.DataUtil.FileFmt.EXCEL;
 
-/**
- * <p> table目录： 首字母是英文字符。 截取.之前的，再截取 _汉字或汉字之前的，作为table名 </p>
- * <ul>
- * <li> schema文件：根目录下有config.cfg，table目录下有[table].cfg</li>
- * <li> csv/excel文件：根目录或table目录下，忽略~开头的，忽略隐藏的。
- *      <ul>
- *          <li> 文件.csv后缀：截取.之前的，再截取 _汉字或汉字之前的，作为csv名
- *              <ul>
- *              <li>csv名：[table]_[idx]，[table]</li>
- *              </ul>
- *          </li>
- *          <li> 文件.xls或.xlsx后缀：对每个sheet的名称：截取.之前的，再截取 _汉字或汉字之前的，作为sheet名
- *              <ul>
- *              <li>sheet名：[table]_[idx]，[table]</li>
- *              </ul>
- *          </li>
- *      </ul>
- * </li>
- *
- * <li> json文件：存在于_[table.replace(".", "_")]/目录下，比如table为skill.buff,则目录为_skill_buff</li>
- * <ul>
- */
+/// # 文件目录规范
+///
+/// ## Table目录命名规则
+/// - 首字母必须是英文字符
+/// - 命名解析逻辑：
+///   ```
+///   截取第一个"."之前的内容 → 再截取"_汉字"或汉字之前的部分 → 作为table名
+///```
+///
+/// ## 配置文件结构
+/// - **Schema文件**：
+///   - 根目录下必须存在 `config.cfg`
+///   - 每个table目录下需有 `[table].cfg`
+///
+/// ## 数据文件规则
+/// ### 通用规则
+/// - 忽略以下文件：
+///   - 以`~`开头的文件
+///   - 隐藏文件
+///
+/// ### CSV文件规范
+/// - 文件后缀：`.csv`
+/// - 命名解析逻辑：
+///   ```
+///   截取".csv"之前的内容 → 再截取"_汉字"或汉字之前的部分 → 作为csv名
+///```
+/// - 合法命名格式：
+///   - `[table]_[idx]`
+///   - `[table]`
+///
+/// ### Excel文件规范
+/// - 文件后缀：`.xls` 或 `.xlsx`
+/// - Sheet命名规则：
+///   ```
+///   截取"."之前的内容 → 再截取"_汉字"或汉字之前的部分 → 作为sheet名
+///```
+/// - 合法命名格式：
+///   - `[table]_[idx]`
+///   - `[table]`
+///
+/// ## JSON文件规范
+/// - 目录命名规则：
+///   ```
+///   _[table.replace(".", "_")]/
+///```
+/// - 示例：
+///   - 若table为`skill.buff` → 对应目录为`_skill_buff`
+///
+/// > 注：`[table]`指代通过table目录规则解析出的名称
 public class DirectoryStructure {
     public static final String ROOT_CONFIG_FILENAME = "config.cfg";
     public static final String CONFIG_EXT = "cfg";
@@ -54,17 +79,67 @@ public class DirectoryStructure {
 
     public record JsonFileInfo(long lastModified,
                                Path path,
-                               Path relativePath) {
+                               Path relativePath,
+                               boolean isIntegerId,
+                               int integerId) {
+
+        static JsonFileInfo of(Path absPath, Path relativePath){
+            String fn = relativePath.getFileName().toString();
+            int id = -1;
+            boolean isIntegerId = false;
+            try {
+                id = Integer.parseInt(fn.substring(0, fn.length() - 5));
+                isIntegerId = true;
+            }catch (NumberFormatException ignored){
+            }
+            return new JsonFileInfo(absPath.toFile().lastModified(), absPath, relativePath, isIntegerId, id);
+        }
+    }
+
+
+    static class JsonFileList {
+        List<JsonFileInfo> list = new ArrayList<>();
+        Map<String, JsonFileInfo> map = new LinkedHashMap<>();
+
+
+        void sort() {
+            list = new ArrayList<>(map.values());
+            if (map.values().stream().allMatch(j -> j.isIntegerId)){
+                list.sort(Comparator.comparingInt(o -> o.integerId));
+            }
+        }
+
+        void addFile(JsonFileInfo info) {
+            map.put(info.relativePath.toString(), info);
+        }
+
+        JsonFileList copy() {
+            JsonFileList c = new JsonFileList();
+            c.map = new LinkedHashMap<>(map);
+            c.list = new ArrayList<>(list);
+            return c;
+        }
+
+        public JsonFileInfo removeFile(String jsonFileRelativePath) {
+            return map.remove(jsonFileRelativePath);
+        }
+
     }
 
 
     private final Path rootDir;
+    /**
+     * 配置文件信息
+     */
     private final Map<String, CfgFileInfo> cfgFiles = new LinkedHashMap<>();  // file path -> info
+    /**
+     * excel文件信息
+     */
     private final Map<String, ExcelFileInfo> excelFiles = new LinkedHashMap<>(); // file path -> info
     /**
-     * 可能被不同的线程访问，所以每次改变就创建新对象，改变引用
+     * json文件信息，可能被不同的线程访问，所以每次改变就创建新对象，改变引用
      */
-    private volatile Map<String, Map<String, JsonFileInfo>> tableToJsonFiles = new LinkedHashMap<>(); // table -> file path -> info
+    private volatile Map<String, JsonFileList> jsonFiles = new LinkedHashMap<>(); // table -> json file list
 
     public DirectoryStructure(Path rootDir) {
         this.rootDir = rootDir;
@@ -78,16 +153,20 @@ public class DirectoryStructure {
         return rootDir;
     }
 
-    public Map<String, CfgFileInfo> getCfgFiles() {
-        return cfgFiles;
+    public Collection<CfgFileInfo> getCfgFiles() {
+        return cfgFiles.values();
     }
 
-    public Map<String, ExcelFileInfo> getExcelFiles() {
-        return excelFiles;
+    public Collection<ExcelFileInfo> getExcelFiles() {
+        return excelFiles.values();
     }
 
-    public Map<String, Map<String, JsonFileInfo>> getTableToJsonFiles() {
-        return tableToJsonFiles;
+    public Collection<JsonFileInfo> getJsonFilesByTable(String tableName) {
+        JsonFileList list = jsonFiles.get(tableName);
+        if (list == null) {
+            return List.of();
+        }
+        return list.list;
     }
 
     public static void findConfigFilesFromRecursively(Path source, String ext, String pkgNameDot,
@@ -183,7 +262,7 @@ public class DirectoryStructure {
                     continue;
                 }
 
-                Map<String, JsonFileInfo> jsonFiles = tableToJsonFiles.computeIfAbsent(tableName, (String j) -> new LinkedHashMap<>());
+                JsonFileList jsonFiles = this.jsonFiles.computeIfAbsent(tableName, (String j) -> new JsonFileList());
                 findOneTableJsonFiles(path, jsonFiles);
             }
         } catch (IOException e) {
@@ -191,7 +270,7 @@ public class DirectoryStructure {
         }
     }
 
-    private void findOneTableJsonFiles(Path tableDir, Map<String, JsonFileInfo> jsonFiles) throws IOException {
+    private void findOneTableJsonFiles(Path tableDir, JsonFileList list) throws IOException {
         try (Stream<Path> paths = Files.list(tableDir)) {
             for (Path path : paths.toList()) {
                 if (isFileIgnored(path)) {
@@ -208,9 +287,9 @@ public class DirectoryStructure {
 
                 Path relativePath = rootDir.relativize(tableDir.resolve(fileName));
                 Path absPath = path.toAbsolutePath().normalize();
-                jsonFiles.put(relativePath.toString(),
-                        new JsonFileInfo(path.toFile().lastModified(), absPath, relativePath));
+                list.addFile(JsonFileInfo.of(absPath, relativePath));
             }
+            list.sort();
         }
     }
 
@@ -220,39 +299,43 @@ public class DirectoryStructure {
      * 但这里再在运行时记录下来此json的lastModified，然后通过 lastModifiedEquals 比较来避免全量makeValue
      */
     public synchronized JsonFileInfo addJsonFile(String tableName, Path jsonPath) {
-        Map<String, Map<String, JsonFileInfo>> tmp = copyTableToJsonFiles();
-        Map<String, JsonFileInfo> jsonFiles = tmp.computeIfAbsent(tableName, (String j) -> new LinkedHashMap<>());
+        Map<String, JsonFileList> tmp = copyJsonFiles(tableName);
+        JsonFileList list = tmp.computeIfAbsent(tableName, (String j) -> new JsonFileList());
         Path relativePath = rootDir.relativize(jsonPath);
         Path path = jsonPath.toAbsolutePath().normalize();
-        JsonFileInfo jf = new JsonFileInfo(jsonPath.toFile().lastModified(), path, relativePath);
-        jsonFiles.put(relativePath.toString(), jf);
+        JsonFileInfo jf = JsonFileInfo.of(path, relativePath);
+        list.addFile(jf);
+        list.sort();
 
-        tableToJsonFiles = tmp;
+        this.jsonFiles = tmp;
         return jf;
     }
 
     public synchronized void removeJsonFile(String tableName, Path jsonPath) {
-        Map<String, Map<String, JsonFileInfo>> tmp = copyTableToJsonFiles();
+        Map<String, JsonFileList> tmp = copyJsonFiles(tableName);
 
-        Map<String, JsonFileInfo> map = tmp.get(tableName);
-        if (map == null) {
+        JsonFileList list = tmp.get(tableName);
+        if (list == null) {
             return;
         }
         Path relativePath = rootDir.relativize(jsonPath);
         String jsonKey = relativePath.toString();
-        JsonFileInfo jf = map.remove(jsonKey);
+        JsonFileInfo jf = list.removeFile(jsonKey);
         if (jf == null) {
             return;
         }
+        list.sort();
 
-        tableToJsonFiles = tmp;
+        jsonFiles = tmp;
     }
 
 
-    private Map<String, Map<String, JsonFileInfo>> copyTableToJsonFiles() {
-        Map<String, Map<String, JsonFileInfo>> copy = new LinkedHashMap<>(tableToJsonFiles.size());
-        for (Map.Entry<String, Map<String, JsonFileInfo>> e : tableToJsonFiles.entrySet()) {
-            copy.put(e.getKey(), new LinkedHashMap<>(e.getValue()));
+    private Map<String, JsonFileList> copyJsonFiles(String changedTable) {
+        Map<String, JsonFileList> copy = new LinkedHashMap<>(jsonFiles.size());
+        for (Map.Entry<String, JsonFileList> e : jsonFiles.entrySet()) {
+            String key = e.getKey();
+            JsonFileList list = key.equals(changedTable) ? e.getValue().copy() : e.getValue();
+            copy.put(key, list);
         }
         return copy;
     }
@@ -268,28 +351,27 @@ public class DirectoryStructure {
             return false;
         }
 
-        Map<String, Map<String, JsonFileInfo>> tmp1 = tableToJsonFiles;
-        Map<String, Map<String, JsonFileInfo>> tmp2 = other.tableToJsonFiles;
-
+        Map<String, JsonFileList> tmp1 = jsonFiles;
+        Map<String, JsonFileList> tmp2 = other.jsonFiles;
         if (tmp1.size() != tmp2.size()) {
             return false;
         }
 
-        for (Map.Entry<String, Map<String, JsonFileInfo>> e : tmp1.entrySet()) {
-            Map<String, JsonFileInfo> j2 = tmp2.get(e.getKey());
-            if (j2 == null) {
+        for (Map.Entry<String, JsonFileList> e : tmp1.entrySet()) {
+            JsonFileList t2 = tmp2.get(e.getKey());
+            if (t2 == null) {
                 return false;
             }
-            Map<String, JsonFileInfo> j1 = e.getValue();
+            List<JsonFileInfo> j1 = e.getValue().list;
+            List<JsonFileInfo> j2 = t2.list;
+
             if (j2.size() != j1.size()) {
                 return false;
             }
-            for (Map.Entry<String, JsonFileInfo> e2 : j1.entrySet()) {
-                JsonFileInfo jf2 = j2.get(e2.getKey());
-                if (jf2 == null) {
-                    return false;
-                }
-                JsonFileInfo jf1 = e2.getValue();
+            for (int i = 0, sz = j1.size(); i < sz; i++) {
+                JsonFileInfo jf1 = j1.get(i);
+                JsonFileInfo jf2 = j2.get(i);
+
                 if (jf2.lastModified != jf1.lastModified) {
                     return false;
                 }
