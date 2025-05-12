@@ -19,44 +19,40 @@ export function Table() {
     const {t} = useTranslation();
     const navigate = useNavigate();
 
-    // const flowInstance = useReactFlow();
+    // 工具函数，避免重复获取默认ID
+    const getTableDefaultId = (tableName: string) => getDefaultIdInTable(schema, tableName, curId);
 
     const entityMap = new Map<string, Entity>();
-    let creator = new TableEntityCreator(entityMap, schema, curTable, maxImpl);
+    const creator = new TableEntityCreator(entityMap, schema, curTable, maxImpl);
     creator.includeSubStructs();
     creator.includeRefTables();
     fillHandles(entityMap);
 
-    const paneMenu: MenuItem[] = [{
-        label: curTable.name + "\n" + t('tableRef'),
-        key: 'tableRef',
-        handler() {
-            navigate(navTo('tableRef', curTable.name, getDefaultIdInTable(schema, curTable.name, curId)));
+    const paneMenu: MenuItem[] = [
+        {
+            label: `${curTable.name}\n${t('tableRef')}`,
+            key: 'tableRef',
+            handler: () => navigate(navTo('tableRef', curTable.name, getTableDefaultId(curTable.name)))
         }
-    }];
+    ];
 
     const nodeMenuFunc = (entityNode: EntityNode): MenuItem[] => {
-        let userData = entityNode.data.entity.userData as UserData;
-        let mm: MenuItem[] = [];
-        if (userData.table != curTable.name) {
-            mm.push({
-                label: userData.table + "\n" + t('table'),
-                key: `entityTable`,
-                handler() {
-                    navigate(navTo('table', userData.table, getDefaultIdInTable(schema, userData.table, curId)));
-                }
+        const userData = entityNode.data.entity.userData as UserData;
+        const menuItems: MenuItem[] = [];
+        if (userData.table !== curTable.name) {
+            menuItems.push({
+                label: `${userData.table}\n${t('table')}`,
+                key: 'entityTable',
+                handler: () => navigate(navTo('table', userData.table, getTableDefaultId(userData.table)))
             });
         }
-
-        mm.push({
-            label: userData.table + "\n" + t('tableRef'),
-            key: `entityTableRef`,
-            handler() {
-                navigate(navTo('tableRef', userData.table, getDefaultIdInTable(schema, userData.table, curId)));
-            }
+        menuItems.push({
+            label: `${userData.table}\n${t('tableRef')}`,
+            key: 'entityTableRef',
+            handler: () => navigate(navTo('tableRef', userData.table, getTableDefaultId(userData.table)))
         });
-        return mm;
-    }
+        return menuItems;
+    };
 
     useEntityToGraph({type: 'table', pathname, entityMap, notes, nodeMenuFunc, paneMenu});
     return null;
