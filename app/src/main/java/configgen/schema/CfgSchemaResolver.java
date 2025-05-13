@@ -194,38 +194,41 @@ public final class CfgSchemaResolver {
             case Primitive ignored -> {
             }
             case StructRef structRef -> {
-                String name = structRef.name();
-                // interface里找
-                if (curTopNameable instanceof InterfaceSchema sInterface) {
-                    StructSchema obj = sInterface.findImpl(name);
-                    if (obj != null) {
-                        structRef.setObj(obj);
-                        return;
-                    }
-                }
-
-                // 本模块找
-                String namespace = curTopNameable.namespace();
-                if (!namespace.isEmpty()) {
-                    String fullName = Nameable.makeName(namespace, name);
-                    Fieldable obj = cfgSchema.findFieldable(fullName);
-                    if (obj != null) {
-                        structRef.setObj(obj);
-                        return;
-                    }
-                }
-
-                // 全局找
-                Fieldable obj = cfgSchema.findFieldable(name);
+                Fieldable obj = findStructRefObj(structRef.name());
                 if (obj != null) {
                     structRef.setObj(obj);
-                    return;
+                } else {
+                    errs.addErr(new TypeStructNotFound(ctx(), field.name(), structRef.name()));
                 }
-                errs.addErr(new TypeStructNotFound(ctx(), field.name(), name));
             }
         }
     }
 
+    /**
+     * 查找StructRef对应的对象，查找顺序：interface impl -> 本模块 -> 全局
+     */
+    private Fieldable findStructRefObj(String name) {
+        // interface里找
+        if (curTopNameable instanceof InterfaceSchema sInterface) {
+            StructSchema obj = sInterface.findImpl(name);
+            if (obj != null) {
+                return obj;
+            }
+        }
+
+        // 本模块找
+        String namespace = curTopNameable.namespace();
+        if (!namespace.isEmpty()) {
+            String fullName = Nameable.makeName(namespace, name);
+            Fieldable obj = cfgSchema.findFieldable(fullName);
+            if (obj != null) {
+                return obj;
+            }
+        }
+
+        // 全局找
+        return cfgSchema.findFieldable(name);
+    }
 
     private String ctx() {
         return curNameable.fullName();
