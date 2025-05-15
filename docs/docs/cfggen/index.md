@@ -61,9 +61,9 @@ dotnet run
 ```
 
 ## build cfgeditor.exe
-请参考[(编辑器 cfgeditor 文档)][cfgeditor README]
+请参考[(编辑器 cfgeditor build)][cfgeditor build]
 
 ---
 
 [cfggen repo]: https://github.com/stallboy/cfggen
-[cfgeditor README]: https://github.com/stallboy/cfggen/blob/master/cfgeditor/README.md
+[cfgeditor build]: https://stallboy.github.io/cfggen/docs/cfgeditor/build.html

@@ -12,7 +12,7 @@ nav_order: 30
 {: .no_toc .text-delta }
 
 - TOC
-  {:toc}
+{:toc}
 ---
 
 ## 架构

@@ -12,7 +12,7 @@ nav_order: 2
 {: .no_toc .text-delta }
 
 - TOC
-  {:toc}
+{:toc}
 ---
 
 1. 可视化浏览表结构和记录
