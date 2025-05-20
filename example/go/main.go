@@ -2,9 +2,9 @@ package main
 
 import (
     "os"
-    "fmt"
-    "GO/stream"
-    "config/Task/Completeconditiontype" // 导入 config 包
+//     "fmt"
+    "cfgtest/stream"
+    "cfgtest/config" // 导入 config 包
 //     "encoding/binary"
 )
 
@@ -26,9 +26,6 @@ func main() {
     // 打印读取的字符串
     println("Read string:", result)
 
-    println("age:", Age()) // 调用 main 包中的 age 变量
-
-    var xx = Completeconditiontype{}
-    fmt.Printf("id: %d, name: %d\n", xx.GetId(), xx.GetName())
-
+    var equipJewelrytypeMgr config.EquipJewelrytypeMgr
+    equipJewelrytypeMgr.GetAll()
 }

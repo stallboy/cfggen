@@ -14,7 +14,6 @@ import configgen.schema.StructSchema;
 public class GoName {
     public static String modName;
     public static String topPkg;
-    public static String prefix;
 
     final String fileName;
     final String filePath;

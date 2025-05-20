@@ -8,6 +8,7 @@ import configgen.schema.*;
 import configgen.util.CachedIndentPrinter;
 import configgen.value.CfgValue;
 
+import java.util.Map;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -15,8 +16,10 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import gg.jte.ContentType;
+import gg.jte.CodeResolver;
 import gg.jte.TemplateEngine;
+import gg.jte.ContentType;
+import gg.jte.output.StringOutput;
 
 import static configgen.schema.FieldType.Primitive.*;
 import static configgen.schema.FieldType.Primitive.TEXT;
@@ -28,7 +31,6 @@ public class GenGo extends GeneratorWithTag {
     private CfgSchema cfgSchema;
     private final String encoding;
     private boolean isLangSwitch;
-    private final String prefix;
     TemplateEngine templateEngine;
 
     public GenGo(Parameter parameter) {
@@ -36,10 +38,7 @@ public class GenGo extends GeneratorWithTag {
         dir = parameter.get("dir", "config");
         pkg = parameter.get("pkg", "config");
         encoding = parameter.get("encoding", "GBK");
-        prefix = parameter.get("prefix", null);
         GoName.modName = parameter.get("mod", null);
-        GoName.topPkg = pkg;
-        GoName.prefix = prefix;
     }
 
     @Override
@@ -49,11 +48,6 @@ public class GenGo extends GeneratorWithTag {
         cfgSchema = cfgValue.schema();
 
         templateEngine = TemplateEngine.createPrecompiled(Path.of("jte-classes"), ContentType.Plain);
-
-        //gen beans
-        for (Fieldable fieldable : cfgSchema.sortedFieldables()) {
-
-        }
 
         for (Fieldable fieldable : cfgSchema.sortedFieldables()) {
             switch (fieldable) {
@@ -85,7 +79,7 @@ public class GenGo extends GeneratorWithTag {
     }
 
     private void generateInterface(InterfaceSchema sInterface, GoName name, CachedIndentPrinter ps) {
-        ps.println("package %s", name.topPkg);
+        ps.println("package %s", pkg);
         ps.println("type %s interface", name.className);
         ps.println("{");
         ps.println("}");
@@ -101,7 +95,7 @@ public class GenGo extends GeneratorWithTag {
 
     private void generateStructClass(Structural structural, CfgValue.VTable vTable, GoName name, CachedIndentPrinter ps) {
         TableSchema table = vTable != null ? vTable.schema() : null;
-        ps.println("package %s", name.topPkg);
+        ps.println("package %s", pkg);
         ps.println();
 
         InterfaceSchema nullableInterface = structural instanceof StructSchema struct ? struct.nullableInterface() : null;
@@ -158,11 +152,18 @@ public class GenGo extends GeneratorWithTag {
             ps.println();
         }
 
-
-        List<FieldSchema> keys = table != null ? table.primaryKey().fieldSchemas() : structural.fields();
-
-        String csv = "\"" + structural.name() + "\"";
         if (table != null) {
+            //gen all,GenAll
+            String template = """
+type ${name}Mgr struct {
+    all []${name}
+}
+
+func(t *${name}Mgr) GetAll() []${name} {
+    return t.all
+}
+                    """;
+            ps.println(template.replace("${name}",name.className));
         }
     }
 
@@ -176,7 +177,7 @@ public class GenGo extends GeneratorWithTag {
             case TEXT -> isLangSwitch ? pkg + ".Text" : "string";
             case StructRef structRef -> ClassName(structRef.obj());
             case FList fList -> "[]" + type(fList.item());
-            case FMap fMap -> String.format("map[%s]%s",type(fMap.key()),type(fMap.value()));
+            case FMap fMap -> String.format("map[%s]%s", type(fMap.key()), type(fMap.value()));
         };
     }
 
@@ -206,10 +207,10 @@ public class GenGo extends GeneratorWithTag {
                 FieldSchema firstLocal = fk.key().fieldSchemas().getFirst();
                 switch (firstLocal.type()) {
                     case SimpleType ignored2 -> {
-                        return "*"+refTableName.className;
+                        return "*" + refTableName.className;
                     }
                     case FList ignored2 -> {
-                        return "[]" + ClassName( fk.refTableSchema());
+                        return "[]" + ClassName(fk.refTableSchema());
                     }
                     case FMap fMap -> {
                         return String.format("map[%s]%s", type(fMap.key()), ClassName(fk.refTableSchema()));
@@ -289,5 +290,5 @@ public class GenGo extends GeneratorWithTag {
         String mapName = isPrimaryKey ? "all" : uniqueKeyMapName(keySchema);
         ps.println4(mapName + ".Add(" + actualParamsKeySelf(keySchema) + ", self);");
     }
-
 }
+
