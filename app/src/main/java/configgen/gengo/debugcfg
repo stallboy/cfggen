@@ -1,0 +1,1 @@
+-datadir config -gen go,dir:go,mod=cfgtest,encoding:UTF-8 -gen bytes,file=go/config.bytes
