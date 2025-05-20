@@ -6,7 +6,6 @@ import (
     "GO/stream"
     "config/Task/Completeconditiontype" // 导入 config 包
 //     "encoding/binary"
-//     "GO/config" // 导入 LevelRank 所在的包
 )
 
 func main() {
