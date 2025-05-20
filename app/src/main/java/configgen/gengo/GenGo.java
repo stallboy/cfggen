@@ -4,6 +4,7 @@ import configgen.ctx.Context;
 import configgen.gen.Generator;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
+import configgen.gencs.GenCs;
 import configgen.schema.*;
 import configgen.util.CachedIndentPrinter;
 import configgen.value.CfgValue;
@@ -20,11 +21,14 @@ import gg.jte.CodeResolver;
 import gg.jte.TemplateEngine;
 import gg.jte.ContentType;
 import gg.jte.output.StringOutput;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static configgen.schema.FieldType.Primitive.*;
 import static configgen.schema.FieldType.Primitive.TEXT;
 
 public class GenGo extends GeneratorWithTag {
+    private static final Logger log = LoggerFactory.getLogger(GenGo.class);
     private final String dir;
     private File dstDir;
     private final String pkg;
@@ -154,16 +158,23 @@ public class GenGo extends GeneratorWithTag {
 
         if (table != null) {
             //gen all,GenAll
-            String template = """
-type ${name}Mgr struct {
-    all []${name}
-}
-
-func(t *${name}Mgr) GetAll() []${name} {
-    return t.all
-}
-                    """;
-            ps.println(template.replace("${name}",name.className));
+            ps.println("""
+                    type ${name}Mgr struct {
+                        all []${name}
+                        allMap map[${IdType}]${name}
+                    }
+                    
+                    func(t *${name}Mgr) GetAll() []${name} {
+                        return t.all
+                    }
+                    
+                    func(t *${name}Mgr) Get(key ${IdType}) (*${name},bool) {
+                        return t.allMap[key]
+                    }
+                    """.
+                    replace("${name}", name.className).
+                    replace("${IdType}", keyClassName(table.primaryKey())));
+            System.out.println(name.className);
         }
     }
 
@@ -186,7 +197,8 @@ func(t *${name}Mgr) GetAll() []${name} {
         ps.println1("%s %s%s", lower1(varName), t, comment != null && !comment.isEmpty() ? " //" + comment : "");
     }
 
-    private void printGoVarGetter(CachedIndentPrinter ps, String className, String varName, String t, String comment) {
+    private void printGoVarGetter(CachedIndentPrinter ps, String className, String varName, String t, String
+            comment) {
         ps.println("func (t *%s) Get%s() %s {", className, upper1(varName), t);
         ps.println1("return t.%s", lower1(varName));
         ps.println("}");
@@ -235,26 +247,6 @@ func(t *${name}Mgr) GetAll() []${name} {
         }
     }
 
-    private void generateMapGetBy(KeySchema keySchema, GoName name, CachedIndentPrinter ps, boolean isPrimaryKey) {
-        //todo 多主键
-        //generateKeyClassIf(keySchema, ps);
-
-        //static all，list
-        String mapName = isPrimaryKey ? "all" : uniqueKeyMapName(keySchema);
-
-        ps.println("var all []%s", name.className);
-        ps.println("func GetAll() []%s {", name.className);
-        ps.println1("return all[:len(all)]:len(all)]");
-        ps.println("}");
-        ps.println();
-
-        //static get
-        ps.println("var allMap map[%s]%s", keyClassName(keySchema), name.className);
-        ps.println("func Get(key %s) (%s,bool){", keyClassName(keySchema), name.className);
-        ps.println1("return allMap[key]");
-        ps.println("}");
-    }
-
     private String uniqueKeyMapName(KeySchema keySchema) {
         return lower1(keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()) + "Map");
     }
@@ -262,7 +254,7 @@ func(t *${name}Mgr) GetAll() []${name} {
     private String keyClassName(KeySchema keySchema) {
         if (keySchema.fieldSchemas().size() > 1)
             return keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()) + "Key";
-        else return null;
+        else return type(keySchema.fieldSchemas().getFirst().type());
     }
 
     private String uniqueKeyGetByName(KeySchema keySchema) {
