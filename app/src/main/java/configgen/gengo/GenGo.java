@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -114,32 +113,19 @@ public class GenGo extends GeneratorWithTag {
         // field property
         if (!structural.fields().isEmpty()) {
             for (FieldSchema fieldSchema : structural.fields()) {
-                printGoVar(ps, fieldSchema.name(), type(name, fieldSchema.type()), fieldSchema.comment());
+                printGoVar(ps, fieldSchema.name(), type(fieldSchema.type()), fieldSchema.comment());
             }
         }
 
         // ref property
         if (!structural.foreignKeys().isEmpty()) {
             for (ForeignKeySchema fk : structural.foreignKeys()) {
-                printGoVar(ps, refName(fk), refType(name, fk), null);
+                printGoVar(ps, refName(fk), refType(fk), null);
             }
         }
 
         ps.println("}");
         ps.println();
-
-
-        //impl type
-        if (isImpl) {
-            ps.println("//is %s", RefName(name, nullableInterface));
-            TableSchema enumRefTable = nullableInterface.nullableEnumRefTable();
-            if (enumRefTable != null) {
-                ps.println("func getType() string {");
-                ps.println1("return \"%s\"", name.className);
-                ps.println("}");
-                ps.println();
-            }
-        }
 
         // entry
         boolean isTableEnumOrEntry = (table != null && table.entry() instanceof EntryType.EntryBase);
@@ -158,7 +144,7 @@ public class GenGo extends GeneratorWithTag {
         if (!structural.fields().isEmpty()) {
             ps.println("//getters");
             for (FieldSchema fieldSchema : structural.fields()) {
-                printGoVarGetter(ps, name.className, fieldSchema.name(), type(name, fieldSchema.type()), fieldSchema.comment());
+                printGoVarGetter(ps, name.className, fieldSchema.name(), type(fieldSchema.type()), fieldSchema.comment());
                 ps.println();
             }
         }
@@ -167,7 +153,7 @@ public class GenGo extends GeneratorWithTag {
         if (!structural.foreignKeys().isEmpty()) {
             ps.println("//ref properties");
             for (ForeignKeySchema fk : structural.foreignKeys()) {
-                printGoVarGetter(ps, structural.name(), refName(fk), refType(name, fk), null);
+                printGoVarGetter(ps, name.className, refName(fk), refType(fk), null);
             }
             ps.println();
         }
@@ -180,17 +166,17 @@ public class GenGo extends GeneratorWithTag {
         }
     }
 
-    private String type(GoName className, FieldType t) {
+    private String type(FieldType t) {
         return switch (t) {
             case BOOL -> "bool";
             case INT -> "int";
             case LONG -> "long";
-            case FLOAT -> "float";
+            case FLOAT -> "float64";
             case STRING -> "string";
             case TEXT -> isLangSwitch ? pkg + ".Text" : "string";
-            case StructRef structRef -> RefName(className, structRef.obj());
-            case FList fList -> "[]" + type(className, fList.item());
-            case FMap fMap -> "KeyedList<" + type(className, fMap.key()) + ", " + type(className, fMap.value()) + ">";
+            case StructRef structRef -> ClassName(structRef.obj());
+            case FList fList -> "[]" + type(fList.item());
+            case FMap fMap -> String.format("map[%s]%s",type(fMap.key()),type(fMap.value()));
         };
     }
 
@@ -205,28 +191,28 @@ public class GenGo extends GeneratorWithTag {
         ps.println("}");
     }
 
-    private String RefName(GoName className, Nameable variable) {
+    private String ClassName(Nameable variable) {
         var varName = new GoName(variable);
         return varName.className;
     }
 
-    private String refType(GoName className, ForeignKeySchema fk) {
+    private String refType(ForeignKeySchema fk) {
         GoName refTableName = new GoName(fk.refTableSchema());
         switch (fk.refKey()) {
             case RefKey.RefList ignored -> {
-                return "List<" + RefName(className, fk.refTableSchema()) + ">";
+                return "[]" + ClassName(fk.refTableSchema());
             }
             case RefKey.RefSimple ignored -> {
                 FieldSchema firstLocal = fk.key().fieldSchemas().getFirst();
                 switch (firstLocal.type()) {
                     case SimpleType ignored2 -> {
-                        return refTableName.className;
+                        return "*"+refTableName.className;
                     }
                     case FList ignored2 -> {
-                        return "List<" + RefName(className, fk.refTableSchema()) + ">";
+                        return "[]" + ClassName( fk.refTableSchema());
                     }
                     case FMap fMap -> {
-                        return "KeyedList<" + type(className, fMap.key()) + ", " + RefName(className, fk.refTableSchema()) + ">";
+                        return String.format("map[%s]%s", type(fMap.key()), ClassName(fk.refTableSchema()));
                     }
                 }
             }
@@ -275,7 +261,6 @@ public class GenGo extends GeneratorWithTag {
     private String keyClassName(KeySchema keySchema) {
         if (keySchema.fieldSchemas().size() > 1)
             return keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()) + "Key";
-//        else return type(keySchema.fieldSchemas().getFirst().type());
         else return null;
     }
 
