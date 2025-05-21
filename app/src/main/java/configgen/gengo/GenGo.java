@@ -95,6 +95,13 @@ public class GenGo extends GeneratorWithTag {
         TableSchema table = vTable != null ? vTable.schema() : null;
         ps.println("package %s", pkg);
         ps.println();
+        ps.println("""                
+                import (
+                	"cfgtest/stream"
+                	"fmt"
+                	"os"
+                )
+                """);
 
         InterfaceSchema nullableInterface = structural instanceof StructSchema struct ? struct.nullableInterface() : null;
         boolean isImpl = nullableInterface != null;
@@ -160,7 +167,7 @@ public class GenGo extends GeneratorWithTag {
             }
 
             String mapTemplate = """
-                        ${mapName}Map map[${IdType}]*${name}
+                        ${mapName}Map map[${IdType}]*${className}
                     """;
 
             StringBuilder mapDefines = new StringBuilder();
@@ -168,20 +175,20 @@ public class GenGo extends GeneratorWithTag {
                 var mapDefine = mapTemplate.
                         replace("${mapName}", mapName(keySchema)).
                         replace("${IdType}", keyClassName(keySchema)).
-                        replace("${name}", name.className);
+                        replace("${className}", name.className);
                 mapDefines.append(mapDefine);
             }
 
             String varDefineTemplate = "${varName} ${varType}";
             String mapGetTemplate_Multi = """
-                    func(t *${name}Mgr) GetBy${IdType}(${varDefines}) (*${name},bool) {
+                    func(t *${className}Mgr) GetBy${IdType}(${varDefines}) (*${className},bool) {
                         v, ok := t.${mapName}Map[${IdType}{${paramVars}}]
                         return v, ok
                     }
                     
                     """;
             String mapGetTemplate_Single = """
-                    func(t *${name}Mgr) GetBy${paramVars}(${varDefines}) (*${name},bool) {
+                    func(t *${className}Mgr) GetBy${paramVars}(${varDefines}) (*${className},bool) {
                         v, ok := t.${mapName}Map[${paramVars}]
                         return v, ok
                     }
@@ -206,7 +213,7 @@ public class GenGo extends GeneratorWithTag {
                 }
                 var template = fieldSchemas.size() > 1 ? mapGetTemplate_Multi : mapGetTemplate_Single;
                 mapGetBy.append(template.
-                        replace("${name}", name.className).
+                        replace("${className}", name.className).
                         replace("${IdType}", keyClassName(keySchema)).
                         replace("${mapName}", mapName(keySchema)).
                         replace("${varDefines}", varDefines).
@@ -215,21 +222,46 @@ public class GenGo extends GeneratorWithTag {
 
             //gen all,GenAll
             ps.println("""
-                    type ${name}Mgr struct {
-                        all []*${name}
+                    type ${className}Mgr struct {
+                        all []*${className}
                     ${mapDefines}}
                     
-                    func(t *${name}Mgr) GetAll() []*${name} {
+                    func(t *${className}Mgr) GetAll() []*${className} {
                         return t.all
                     }
                     
                     ${mapGetBy}
                     """.
-                    replace("${name}", name.className).
+                    replace("${className}", name.className).
                     replace("${IdType}", keyClassName(table.primaryKey())).
                     replace("${mapDefines}", mapDefines.toString()).
                     replace("${mapGetBy}", mapGetBy.toString())
             );
+
+            //gen Init
+            String initTemplate = """
+    func (t *${className}Mgr) Init(file *os.File) {
+        cnt := stream.ReadInt32(file)
+        t.all = make([]*AiAi, 0, cnt)
+        for i := 0; i < int(cnt); i++ {
+            v := &AiAi{}
+    ${ReadValue}
+            break
+        }
+    }
+                    """;
+            StringBuilder readValue = new StringBuilder();
+            String readValueTemplate = """
+                            v.${varName} = stream.Read${varType}(file)
+                    """;
+            for (FieldSchema fieldSchema : structural.fields()) {
+                String varName = Generator.lower1(fieldSchema.name());
+                String varType = Generator.upper1(type(fieldSchema.type()));
+                String readValueLine = readValueTemplate.replace("${varName}", varName).replace("${varType}", varType);
+                readValue.append(readValueLine);
+            }
+
+            ps.println(initTemplate.replace("${ReadValue}", readValue).replace("${className}", name.className));
         }
     }
 
@@ -247,7 +279,7 @@ public class GenGo extends GeneratorWithTag {
     private String type(FieldType t) {
         return switch (t) {
             case BOOL -> "bool";
-            case INT -> "int";
+            case INT -> "int32";
             case LONG -> "long";
             case FLOAT -> "float64";
             case STRING -> "string";
