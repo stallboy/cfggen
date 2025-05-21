@@ -1,20 +1,31 @@
 package config
 
 import (
-    "fmt"
+	"cfgtest/stream"
+	"fmt"
+	"os"
 )
 
 type ConfigMgr struct {
-
+	aiAiMgr *AiAiMgr
 }
 
 func (t *ConfigMgr) Init() {
-    cfgs := []string{
-        "ai_ai",
-        "ai_ai_action",
-    }
+	file, err := os.Open("config.bytes") // Go 1.16+
+	if err != nil {
+		return
+	}
+	defer file.Close()
 
-    for _, cfg := range cfgs {
-        fmt.Printf("Loading config: %s\n", cfg)
-    }
+	for {
+		cfgName := stream.ReadString(file)
+		fmt.Println("load:", cfgName)
+		switch cfgName {
+		case "ai.ai":
+			t.aiAiMgr = &AiAiMgr{}
+			t.aiAiMgr.Init(file)
+			break
+		}
+		return
+	}
 }

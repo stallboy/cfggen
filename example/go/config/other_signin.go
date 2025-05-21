@@ -42,15 +42,23 @@ type KeyIdViplevel struct {
 
 type OtherSigninMgr struct {
     all []*OtherSignin
-    allMap map[int]*OtherSignin
+    idMap map[int]*OtherSignin
+    idViplevelMap map[KeyIdViplevel]*OtherSignin
 }
 
 func(t *OtherSigninMgr) GetAll() []*OtherSignin {
     return t.all
 }
 
-func(t *OtherSigninMgr) Get(key int) (*OtherSignin,bool) {
-    v, ok := t.allMap[key]
+func(t *OtherSigninMgr) GetByid(id int) (*OtherSignin,bool) {
+    v, ok := t.idMap[id]
     return v, ok
 }
+
+func(t *OtherSigninMgr) GetByKeyIdViplevel(id int, viplevel int) (*OtherSignin,bool) {
+    v, ok := t.idViplevelMap[KeyIdViplevel{id, viplevel}]
+    return v, ok
+}
+
+
 

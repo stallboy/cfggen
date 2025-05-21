@@ -61,15 +61,17 @@ func (t *EquipJewelrysuit) GetSuitList() []int {
 
 type EquipJewelrysuitMgr struct {
     all []*EquipJewelrysuit
-    allMap map[int]*EquipJewelrysuit
+    suitIDMap map[int]*EquipJewelrysuit
 }
 
 func(t *EquipJewelrysuitMgr) GetAll() []*EquipJewelrysuit {
     return t.all
 }
 
-func(t *EquipJewelrysuitMgr) Get(key int) (*EquipJewelrysuit,bool) {
-    v, ok := t.allMap[key]
+func(t *EquipJewelrysuitMgr) GetBySuitID(SuitID int) (*EquipJewelrysuit,bool) {
+    v, ok := t.suitIDMap[SuitID]
     return v, ok
 }
+
+
 

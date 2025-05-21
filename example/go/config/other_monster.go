@@ -16,15 +16,17 @@ func (t *OtherMonster) GetPosList() []Position {
 
 type OtherMonsterMgr struct {
     all []*OtherMonster
-    allMap map[int]*OtherMonster
+    idMap map[int]*OtherMonster
 }
 
 func(t *OtherMonsterMgr) GetAll() []*OtherMonster {
     return t.all
 }
 
-func(t *OtherMonsterMgr) Get(key int) (*OtherMonster,bool) {
-    v, ok := t.allMap[key]
+func(t *OtherMonsterMgr) GetByid(id int) (*OtherMonster,bool) {
+    v, ok := t.idMap[id]
     return v, ok
 }
+
+
 

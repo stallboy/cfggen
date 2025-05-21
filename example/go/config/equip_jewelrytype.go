@@ -19,15 +19,17 @@ func (t *EquipJewelrytype) GetTypeName() string {
 
 type EquipJewelrytypeMgr struct {
     all []*EquipJewelrytype
-    allMap map[string]*EquipJewelrytype
+    typeNameMap map[string]*EquipJewelrytype
 }
 
 func(t *EquipJewelrytypeMgr) GetAll() []*EquipJewelrytype {
     return t.all
 }
 
-func(t *EquipJewelrytypeMgr) Get(key string) (*EquipJewelrytype,bool) {
-    v, ok := t.allMap[key]
+func(t *EquipJewelrytypeMgr) GetByTypeName(TypeName string) (*EquipJewelrytype,bool) {
+    v, ok := t.typeNameMap[TypeName]
     return v, ok
 }
+
+
 

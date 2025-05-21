@@ -46,15 +46,17 @@ func (t *TaskTaskextraexp) GetFieldd() string {
 
 type TaskTaskextraexpMgr struct {
     all []*TaskTaskextraexp
-    allMap map[int]*TaskTaskextraexp
+    taskidMap map[int]*TaskTaskextraexp
 }
 
 func(t *TaskTaskextraexpMgr) GetAll() []*TaskTaskextraexp {
     return t.all
 }
 
-func(t *TaskTaskextraexpMgr) Get(key int) (*TaskTaskextraexp,bool) {
-    v, ok := t.allMap[key]
+func(t *TaskTaskextraexpMgr) GetBytaskid(taskid int) (*TaskTaskextraexp,bool) {
+    v, ok := t.taskidMap[taskid]
     return v, ok
 }
+
+
 

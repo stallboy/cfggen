@@ -36,15 +36,17 @@ type KeyLootidItemid struct {
 
 type OtherLootitemMgr struct {
     all []*OtherLootitem
-    allMap map[KeyLootidItemid]*OtherLootitem
+    lootidItemidMap map[KeyLootidItemid]*OtherLootitem
 }
 
 func(t *OtherLootitemMgr) GetAll() []*OtherLootitem {
     return t.all
 }
 
-func(t *OtherLootitemMgr) Get(key KeyLootidItemid) (*OtherLootitem,bool) {
-    v, ok := t.allMap[key]
+func(t *OtherLootitemMgr) GetByKeyLootidItemid(lootid int, itemid int) (*OtherLootitem,bool) {
+    v, ok := t.lootidItemidMap[KeyLootidItemid{lootid, itemid}]
     return v, ok
 }
+
+
 

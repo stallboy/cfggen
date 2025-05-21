@@ -30,15 +30,17 @@ func (t *EquipRank) GetRankShowName() string {
 
 type EquipRankMgr struct {
     all []*EquipRank
-    allMap map[int]*EquipRank
+    rankIDMap map[int]*EquipRank
 }
 
 func(t *EquipRankMgr) GetAll() []*EquipRank {
     return t.all
 }
 
-func(t *EquipRankMgr) Get(key int) (*EquipRank,bool) {
-    v, ok := t.allMap[key]
+func(t *EquipRankMgr) GetByRankID(RankID int) (*EquipRank,bool) {
+    v, ok := t.rankIDMap[RankID]
     return v, ok
 }
+
+
 

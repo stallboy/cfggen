@@ -32,15 +32,17 @@ func (t *OtherLoot) GetListRefLootid() []OtherLootitem {
 
 type OtherLootMgr struct {
     all []*OtherLoot
-    allMap map[int]*OtherLoot
+    lootidMap map[int]*OtherLoot
 }
 
 func(t *OtherLootMgr) GetAll() []*OtherLoot {
     return t.all
 }
 
-func(t *OtherLootMgr) Get(key int) (*OtherLoot,bool) {
-    v, ok := t.allMap[key]
+func(t *OtherLootMgr) GetBylootid(lootid int) (*OtherLoot,bool) {
+    v, ok := t.lootidMap[lootid]
     return v, ok
 }
+
+
 

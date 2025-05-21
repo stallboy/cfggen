@@ -26,15 +26,17 @@ func (t *TaskCompleteconditiontype) GetName() string {
 
 type TaskCompleteconditiontypeMgr struct {
     all []*TaskCompleteconditiontype
-    allMap map[int]*TaskCompleteconditiontype
+    idMap map[int]*TaskCompleteconditiontype
 }
 
 func(t *TaskCompleteconditiontypeMgr) GetAll() []*TaskCompleteconditiontype {
     return t.all
 }
 
-func(t *TaskCompleteconditiontypeMgr) Get(key int) (*TaskCompleteconditiontype,bool) {
-    v, ok := t.allMap[key]
+func(t *TaskCompleteconditiontypeMgr) GetByid(id int) (*TaskCompleteconditiontype,bool) {
+    v, ok := t.idMap[id]
     return v, ok
 }
+
+
 

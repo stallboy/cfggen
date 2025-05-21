@@ -31,15 +31,17 @@ func (t *AiAi_condition) GetArgSList() []int {
 
 type AiAi_conditionMgr struct {
     all []*AiAi_condition
-    allMap map[int]*AiAi_condition
+    iDMap map[int]*AiAi_condition
 }
 
 func(t *AiAi_conditionMgr) GetAll() []*AiAi_condition {
     return t.all
 }
 
-func(t *AiAi_conditionMgr) Get(key int) (*AiAi_condition,bool) {
-    v, ok := t.allMap[key]
+func(t *AiAi_conditionMgr) GetByID(ID int) (*AiAi_condition,bool) {
+    v, ok := t.iDMap[ID]
     return v, ok
 }
+
+
 

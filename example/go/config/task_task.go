@@ -46,15 +46,17 @@ func (t *TaskTask) GetNullableRefNexttask() *TaskTask {
 
 type TaskTaskMgr struct {
     all []*TaskTask
-    allMap map[int]*TaskTask
+    taskidMap map[int]*TaskTask
 }
 
 func(t *TaskTaskMgr) GetAll() []*TaskTask {
     return t.all
 }
 
-func(t *TaskTaskMgr) Get(key int) (*TaskTask,bool) {
-    v, ok := t.allMap[key]
+func(t *TaskTaskMgr) GetBytaskid(taskid int) (*TaskTask,bool) {
+    v, ok := t.taskidMap[taskid]
     return v, ok
 }
+
+
 

@@ -74,15 +74,17 @@ func (t *EquipJewelry) GetRefKeyAbility() *EquipAbility {
 
 type EquipJewelryMgr struct {
     all []*EquipJewelry
-    allMap map[int]*EquipJewelry
+    iDMap map[int]*EquipJewelry
 }
 
 func(t *EquipJewelryMgr) GetAll() []*EquipJewelry {
     return t.all
 }
 
-func(t *EquipJewelryMgr) Get(key int) (*EquipJewelry,bool) {
-    v, ok := t.allMap[key]
+func(t *EquipJewelryMgr) GetByID(ID int) (*EquipJewelry,bool) {
+    v, ok := t.iDMap[ID]
     return v, ok
 }
+
+
 

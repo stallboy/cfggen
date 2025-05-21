@@ -42,15 +42,17 @@ func (t *EquipEquipconfig) GetWeek_reward_mailid() int {
 
 type EquipEquipconfigMgr struct {
     all []*EquipEquipconfig
-    allMap map[string]*EquipEquipconfig
+    entryMap map[string]*EquipEquipconfig
 }
 
 func(t *EquipEquipconfigMgr) GetAll() []*EquipEquipconfig {
     return t.all
 }
 
-func(t *EquipEquipconfigMgr) Get(key string) (*EquipEquipconfig,bool) {
-    v, ok := t.allMap[key]
+func(t *EquipEquipconfigMgr) GetByentry(entry string) (*EquipEquipconfig,bool) {
+    v, ok := t.entryMap[entry]
     return v, ok
 }
+
+
 
