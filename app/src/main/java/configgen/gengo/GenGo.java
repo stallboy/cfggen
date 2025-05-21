@@ -9,6 +9,7 @@ import configgen.schema.*;
 import configgen.util.CachedIndentPrinter;
 import configgen.value.CfgValue;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.io.File;
 import java.io.IOException;
@@ -16,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -149,35 +151,86 @@ public class GenGo extends GeneratorWithTag {
         }
 
         if (table != null) {
-            generateMapGetBy(table.primaryKey(), ps);
-            for (KeySchema uk : table.uniqueKeys()) {
-                generateMapGetBy(uk, ps);
+            List<KeySchema> keySchemas = new ArrayList<>();
+            keySchemas.add(table.primaryKey());
+            keySchemas.addAll(table.uniqueKeys());
+
+            for (KeySchema keySchema : keySchemas) {
+                genKeyClassIf(keySchema, ps);
+            }
+
+            String mapTemplate = """
+                        ${mapName}Map map[${IdType}]*${name}
+                    """;
+
+            StringBuilder mapDefines = new StringBuilder();
+            for (KeySchema keySchema : keySchemas) {
+                var mapDefine = mapTemplate.
+                        replace("${mapName}", mapName(keySchema)).
+                        replace("${IdType}", keyClassName(keySchema)).
+                        replace("${name}", name.className);
+                mapDefines.append(mapDefine);
+            }
+
+            String varDefineTemplate = "${varName} ${varType}";
+            String mapGetTemplate_Multi = """
+                    func(t *${name}Mgr) GetBy${IdType}(${varDefines}) (*${name},bool) {
+                        v, ok := t.${mapName}Map[${IdType}{${paramVars}}]
+                        return v, ok
+                    }
+                    
+                    """;
+            String mapGetTemplate_Single = """
+                    func(t *${name}Mgr) GetBy${paramVars}(${varDefines}) (*${name},bool) {
+                        v, ok := t.${mapName}Map[${paramVars}]
+                        return v, ok
+                    }
+                    
+                    """;
+            StringBuilder mapGetBy = new StringBuilder();
+            for (KeySchema keySchema : keySchemas) {
+                StringBuilder varDefines = new StringBuilder();
+                StringBuilder paramVars = new StringBuilder();
+                var fieldSchemas = keySchema.fieldSchemas();
+                for (int i = 0; i < fieldSchemas.size(); i++) {
+                    var fieldSchema = fieldSchemas.get(i);
+                    String varName = fieldSchema.name();
+                    String varType = type(fieldSchema.type());
+                    String varDefine = varDefineTemplate.replace("${varName}", varName).replace("${varType}", varType);
+                    varDefines.append(varDefine);
+                    paramVars.append(fieldSchema.name());
+                    if (i < fieldSchemas.size() - 1) {
+                        varDefines.append(", ");
+                        paramVars.append(", ");
+                    }
+                }
+                var template = fieldSchemas.size() > 1 ? mapGetTemplate_Multi : mapGetTemplate_Single;
+                mapGetBy.append(template.
+                        replace("${name}", name.className).
+                        replace("${IdType}", keyClassName(keySchema)).
+                        replace("${mapName}", mapName(keySchema)).
+                        replace("${varDefines}", varDefines).
+                        replace("${paramVars}", paramVars));
             }
 
             //gen all,GenAll
             ps.println("""
                     type ${name}Mgr struct {
                         all []*${name}
-                        allMap map[${IdType}]*${name}
-                    }
+                    ${mapDefines}}
                     
                     func(t *${name}Mgr) GetAll() []*${name} {
                         return t.all
                     }
                     
-                    func(t *${name}Mgr) Get(key ${IdType}) (*${name},bool) {
-                        v, ok := t.allMap[key]
-                        return v, ok
-                    }
+                    ${mapGetBy}
                     """.
                     replace("${name}", name.className).
-                    replace("${IdType}", keyClassName(table.primaryKey())));
-            System.out.println(name.className);
+                    replace("${IdType}", keyClassName(table.primaryKey())).
+                    replace("${mapDefines}", mapDefines.toString()).
+                    replace("${mapGetBy}", mapGetBy.toString())
+            );
         }
-    }
-
-    private void generateMapGetBy(KeySchema keySchema, CachedIndentPrinter ps) {
-        genKeyClassIf(keySchema, ps);
     }
 
     private void genKeyClassIf(KeySchema keySchema, CachedIndentPrinter ps) {
@@ -266,8 +319,16 @@ public class GenGo extends GeneratorWithTag {
 
     private String keyClassName(KeySchema keySchema) {
         if (keySchema.fieldSchemas().size() > 1)
-            return "Key"+keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining());
+            return "Key" + keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining());
         else return type(keySchema.fieldSchemas().getFirst().type());
+    }
+
+    private String mapName(KeySchema keySchema) {
+        if (keySchema.fieldSchemas().size() > 1) {
+            return Generator.lower1(keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()));
+        } else {
+            return Generator.lower1(keySchema.fields().getFirst());
+        }
     }
 
     private String uniqueKeyGetByName(KeySchema keySchema) {
