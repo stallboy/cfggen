@@ -16,11 +16,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import gg.jte.CodeResolver;
-import gg.jte.TemplateEngine;
-import gg.jte.ContentType;
-import gg.jte.output.StringOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +30,6 @@ public class GenGo extends GeneratorWithTag {
     private CfgSchema cfgSchema;
     private final String encoding;
     private boolean isLangSwitch;
-    TemplateEngine templateEngine;
 
     public GenGo(Parameter parameter) {
         super(parameter);
@@ -50,8 +44,6 @@ public class GenGo extends GeneratorWithTag {
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/')).toFile();
         CfgValue cfgValue = ctx.makeValue(tag);
         cfgSchema = cfgValue.schema();
-
-        templateEngine = TemplateEngine.createPrecompiled(Path.of("jte-classes"), ContentType.Plain);
 
         for (Fieldable fieldable : cfgSchema.sortedFieldables()) {
             switch (fieldable) {
@@ -157,24 +149,45 @@ public class GenGo extends GeneratorWithTag {
         }
 
         if (table != null) {
+            generateMapGetBy(table.primaryKey(), ps);
+            for (KeySchema uk : table.uniqueKeys()) {
+                generateMapGetBy(uk, ps);
+            }
+
             //gen all,GenAll
             ps.println("""
                     type ${name}Mgr struct {
-                        all []${name}
-                        allMap map[${IdType}]${name}
+                        all []*${name}
+                        allMap map[${IdType}]*${name}
                     }
                     
-                    func(t *${name}Mgr) GetAll() []${name} {
+                    func(t *${name}Mgr) GetAll() []*${name} {
                         return t.all
                     }
                     
                     func(t *${name}Mgr) Get(key ${IdType}) (*${name},bool) {
-                        return t.allMap[key]
+                        v, ok := t.allMap[key]
+                        return v, ok
                     }
                     """.
                     replace("${name}", name.className).
                     replace("${IdType}", keyClassName(table.primaryKey())));
             System.out.println(name.className);
+        }
+    }
+
+    private void generateMapGetBy(KeySchema keySchema, CachedIndentPrinter ps) {
+        genKeyClassIf(keySchema, ps);
+    }
+
+    private void genKeyClassIf(KeySchema keySchema, CachedIndentPrinter ps) {
+        if (keySchema.fieldSchemas().size() > 1) {
+            ps.println("type %s struct {", keyClassName(keySchema));
+            for (FieldSchema field : keySchema.fieldSchemas()) {
+                printGoVar(ps, field.name(), type(field.type()), null);
+            }
+            ps.println("}");
+            ps.println();
         }
     }
 
@@ -253,7 +266,7 @@ public class GenGo extends GeneratorWithTag {
 
     private String keyClassName(KeySchema keySchema) {
         if (keySchema.fieldSchemas().size() > 1)
-            return keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()) + "Key";
+            return "Key"+keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining());
         else return type(keySchema.fieldSchemas().getFirst().type());
     }
 
