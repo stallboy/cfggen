@@ -26,5 +26,6 @@ func main() {
 	// 打印读取的字符串
 	println("Read string:", result)
 
-	config.cfgmgr.Init()
+    cfgMgr := &config.ConfigMgr{}
+    cfgMgr.Init()
 }
