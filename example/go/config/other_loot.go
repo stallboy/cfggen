@@ -52,9 +52,8 @@ func(t *OtherLootMgr) GetAll() []*OtherLoot {
     return t.all
 }
 
-func(t *OtherLootMgr) GetBylootid(lootid int32) (*OtherLoot,bool) {
-    v, ok := t.lootidMap[lootid]
-    return v, ok
+func(t *OtherLootMgr) GetBylootid(lootid int32) *OtherLoot {
+    return t.lootidMap[lootid]
 }
 
 

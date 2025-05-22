@@ -56,9 +56,8 @@ func(t *AiAi_actionMgr) GetAll() []*AiAi_action {
     return t.all
 }
 
-func(t *AiAi_actionMgr) GetByID(ID int32) (*AiAi_action,bool) {
-    v, ok := t.iDMap[ID]
-    return v, ok
+func(t *AiAi_actionMgr) GetByID(ID int32) *AiAi_action {
+    return t.iDMap[ID]
 }
 
 

@@ -60,9 +60,8 @@ func(t *EquipEquipconfigMgr) GetAll() []*EquipEquipconfig {
     return t.all
 }
 
-func(t *EquipEquipconfigMgr) GetByentry(entry string) (*EquipEquipconfig,bool) {
-    v, ok := t.entryMap[entry]
-    return v, ok
+func(t *EquipEquipconfigMgr) GetByentry(entry string) *EquipEquipconfig {
+    return t.entryMap[entry]
 }
 
 

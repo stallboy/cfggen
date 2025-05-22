@@ -41,9 +41,8 @@ func(t *EquipAbilityMgr) GetAll() []*EquipAbility {
     return t.all
 }
 
-func(t *EquipAbilityMgr) GetByid(id int32) (*EquipAbility,bool) {
-    v, ok := t.idMap[id]
-    return v, ok
+func(t *EquipAbilityMgr) GetByid(id int32) *EquipAbility {
+    return t.idMap[id]
 }
 
 

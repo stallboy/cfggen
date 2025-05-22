@@ -53,9 +53,8 @@ func(t *OtherLootitemMgr) GetAll() []*OtherLootitem {
     return t.all
 }
 
-func(t *OtherLootitemMgr) GetByKeyLootidItemid(lootid int32, itemid int32) (*OtherLootitem,bool) {
-    v, ok := t.lootidItemidMap[KeyLootidItemid{lootid, itemid}]
-    return v, ok
+func(t *OtherLootitemMgr) GetByKeyLootidItemid(lootid int32, itemid int32) *OtherLootitem {
+    return t.lootidItemidMap[KeyLootidItemid{lootid, itemid}]
 }
 
 

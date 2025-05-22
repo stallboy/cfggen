@@ -66,9 +66,8 @@ func(t *TaskTaskextraexpMgr) GetAll() []*TaskTaskextraexp {
     return t.all
 }
 
-func(t *TaskTaskextraexpMgr) GetBytaskid(taskid int32) (*TaskTaskextraexp,bool) {
-    v, ok := t.taskidMap[taskid]
-    return v, ok
+func(t *TaskTaskextraexpMgr) GetBytaskid(taskid int32) *TaskTaskextraexp {
+    return t.taskidMap[taskid]
 }
 
 

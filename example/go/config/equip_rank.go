@@ -45,9 +45,8 @@ func(t *EquipRankMgr) GetAll() []*EquipRank {
     return t.all
 }
 
-func(t *EquipRankMgr) GetByRankID(RankID int32) (*EquipRank,bool) {
-    v, ok := t.rankIDMap[RankID]
-    return v, ok
+func(t *EquipRankMgr) GetByRankID(RankID int32) *EquipRank {
+    return t.rankIDMap[RankID]
 }
 
 

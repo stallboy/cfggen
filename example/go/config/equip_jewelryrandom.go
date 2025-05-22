@@ -50,9 +50,8 @@ func(t *EquipJewelryrandomMgr) GetAll() []*EquipJewelryrandom {
     return t.all
 }
 
-func(t *EquipJewelryrandomMgr) GetByLvlRank(LvlRank *LevelRank) (*EquipJewelryrandom,bool) {
-    v, ok := t.lvlRankMap[LvlRank]
-    return v, ok
+func(t *EquipJewelryrandomMgr) GetByLvlRank(LvlRank *LevelRank) *EquipJewelryrandom {
+    return t.lvlRankMap[LvlRank]
 }
 
 

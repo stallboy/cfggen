@@ -58,14 +58,12 @@ func(t *OtherSigninMgr) GetAll() []*OtherSignin {
     return t.all
 }
 
-func(t *OtherSigninMgr) GetByid(id int32) (*OtherSignin,bool) {
-    v, ok := t.idMap[id]
-    return v, ok
+func(t *OtherSigninMgr) GetByid(id int32) *OtherSignin {
+    return t.idMap[id]
 }
 
-func(t *OtherSigninMgr) GetByKeyIdViplevel(id int32, viplevel int32) (*OtherSignin,bool) {
-    v, ok := t.idViplevelMap[KeyIdViplevel{id, viplevel}]
-    return v, ok
+func(t *OtherSigninMgr) GetByKeyIdViplevel(id int32, viplevel int32) *OtherSignin {
+    return t.idViplevelMap[KeyIdViplevel{id, viplevel}]
 }
 
 

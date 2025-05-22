@@ -32,9 +32,8 @@ func(t *EquipJewelrytypeMgr) GetAll() []*EquipJewelrytype {
     return t.all
 }
 
-func(t *EquipJewelrytypeMgr) GetByTypeName(TypeName string) (*EquipJewelrytype,bool) {
-    v, ok := t.typeNameMap[TypeName]
-    return v, ok
+func(t *EquipJewelrytypeMgr) GetByTypeName(TypeName string) *EquipJewelrytype {
+    return t.typeNameMap[TypeName]
 }
 
 

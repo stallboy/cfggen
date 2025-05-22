@@ -54,24 +54,20 @@ func(t *OtherKeytestMgr) GetAll() []*OtherKeytest {
     return t.all
 }
 
-func(t *OtherKeytestMgr) GetByKeyId1Id2(id1 int32, id2 int64) (*OtherKeytest,bool) {
-    v, ok := t.id1Id2Map[KeyId1Id2{id1, id2}]
-    return v, ok
+func(t *OtherKeytestMgr) GetByKeyId1Id2(id1 int32, id2 int64) *OtherKeytest {
+    return t.id1Id2Map[KeyId1Id2{id1, id2}]
 }
 
-func(t *OtherKeytestMgr) GetByKeyId1Id3(id1 int32, id3 int32) (*OtherKeytest,bool) {
-    v, ok := t.id1Id3Map[KeyId1Id3{id1, id3}]
-    return v, ok
+func(t *OtherKeytestMgr) GetByKeyId1Id3(id1 int32, id3 int32) *OtherKeytest {
+    return t.id1Id3Map[KeyId1Id3{id1, id3}]
 }
 
-func(t *OtherKeytestMgr) GetByid2(id2 int64) (*OtherKeytest,bool) {
-    v, ok := t.id2Map[id2]
-    return v, ok
+func(t *OtherKeytestMgr) GetByid2(id2 int64) *OtherKeytest {
+    return t.id2Map[id2]
 }
 
-func(t *OtherKeytestMgr) GetByKeyId2Id3(id2 int64, id3 int32) (*OtherKeytest,bool) {
-    v, ok := t.id2Id3Map[KeyId2Id3{id2, id3}]
-    return v, ok
+func(t *OtherKeytestMgr) GetByKeyId2Id3(id2 int64, id3 int32) *OtherKeytest {
+    return t.id2Id3Map[KeyId2Id3{id2, id3}]
 }
 
 

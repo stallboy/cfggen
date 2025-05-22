@@ -56,9 +56,8 @@ func(t *AiAi_conditionMgr) GetAll() []*AiAi_condition {
     return t.all
 }
 
-func(t *AiAi_conditionMgr) GetByID(ID int32) (*AiAi_condition,bool) {
-    v, ok := t.iDMap[ID]
-    return v, ok
+func(t *AiAi_conditionMgr) GetByID(ID int32) *AiAi_condition {
+    return t.iDMap[ID]
 }
 
 

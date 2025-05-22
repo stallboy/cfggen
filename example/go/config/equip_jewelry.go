@@ -96,9 +96,8 @@ func(t *EquipJewelryMgr) GetAll() []*EquipJewelry {
     return t.all
 }
 
-func(t *EquipJewelryMgr) GetByID(ID int32) (*EquipJewelry,bool) {
-    v, ok := t.iDMap[ID]
-    return v, ok
+func(t *EquipJewelryMgr) GetByID(ID int32) *EquipJewelry {
+    return t.iDMap[ID]
 }
 
 

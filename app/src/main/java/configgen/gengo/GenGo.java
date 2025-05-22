@@ -203,16 +203,14 @@ public class GenGo extends GeneratorWithTag {
 
             String varDefineTemplate = "${varName} ${varType}";
             String mapGetTemplate_Multi = """
-                    func(t *${className}Mgr) GetBy${IdType}(${varDefines}) (*${className},bool) {
-                        v, ok := t.${mapName}Map[${IdType}{${paramVars}}]
-                        return v, ok
+                    func(t *${className}Mgr) GetBy${IdType}(${varDefines}) *${className} {
+                        return t.${mapName}Map[${IdType}{${paramVars}}]
                     }
                     
                     """;
             String mapGetTemplate_Single = """
-                    func(t *${className}Mgr) GetBy${paramVars}(${varDefines}) (*${className},bool) {
-                        v, ok := t.${mapName}Map[${paramVars}]
-                        return v, ok
+                    func(t *${className}Mgr) GetBy${paramVars}(${varDefines}) *${className} {
+                        return t.${mapName}Map[${paramVars}]
                     }
                     
                     """;

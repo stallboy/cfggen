@@ -40,9 +40,8 @@ func(t *TaskCompleteconditiontypeMgr) GetAll() []*TaskCompleteconditiontype {
     return t.all
 }
 
-func(t *TaskCompleteconditiontypeMgr) GetByid(id int32) (*TaskCompleteconditiontype,bool) {
-    v, ok := t.idMap[id]
-    return v, ok
+func(t *TaskCompleteconditiontypeMgr) GetByid(id int32) *TaskCompleteconditiontype {
+    return t.idMap[id]
 }
 
 

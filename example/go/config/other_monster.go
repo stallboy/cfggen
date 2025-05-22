@@ -34,9 +34,8 @@ func(t *OtherMonsterMgr) GetAll() []*OtherMonster {
     return t.all
 }
 
-func(t *OtherMonsterMgr) GetByid(id int32) (*OtherMonster,bool) {
-    v, ok := t.idMap[id]
-    return v, ok
+func(t *OtherMonsterMgr) GetByid(id int32) *OtherMonster {
+    return t.idMap[id]
 }
 
 

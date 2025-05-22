@@ -45,9 +45,8 @@ func(t *OtherDropMgr) GetAll() []*OtherDrop {
     return t.all
 }
 
-func(t *OtherDropMgr) GetBydropid(dropid int32) (*OtherDrop,bool) {
-    v, ok := t.dropidMap[dropid]
-    return v, ok
+func(t *OtherDropMgr) GetBydropid(dropid int32) *OtherDrop {
+    return t.dropidMap[dropid]
 }
 
 

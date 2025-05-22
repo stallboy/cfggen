@@ -68,9 +68,8 @@ func(t *TaskTaskMgr) GetAll() []*TaskTask {
     return t.all
 }
 
-func(t *TaskTaskMgr) GetBytaskid(taskid int32) (*TaskTask,bool) {
-    v, ok := t.taskidMap[taskid]
-    return v, ok
+func(t *TaskTaskMgr) GetBytaskid(taskid int32) *TaskTask {
+    return t.taskidMap[taskid]
 }
 
 
