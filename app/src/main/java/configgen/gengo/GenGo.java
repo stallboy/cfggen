@@ -77,10 +77,36 @@ public class GenGo extends GeneratorWithTag {
     }
 
     private void generateInterface(InterfaceSchema sInterface, GoName name, CachedIndentPrinter ps) {
-        ps.println("package %s", pkg);
-        ps.println("type %s interface", name.className);
-        ps.println("{");
-        ps.println("}");
+        String template = """
+                package ${pkg}
+                type ${className} interface {}
+                func create${className}(stream *Stream) ${className}{
+                    var typeName = stream.ReadString()
+                    switch typeName {
+                ${caseImpls}
+                    default:
+                            panic("unexpected ${className} type: " + typeName)
+                    }
+                }
+                """;
+
+        StringBuilder caseImpls = new StringBuilder();
+        String caseImpl = """
+                        case "${implName}":
+                            return create${implClassName}(stream)
+                    """;
+        for (StructSchema impl : sInterface.impls()) {
+            caseImpls.append(caseImpl.
+                    replace("${implName}", impl.name()).
+                    replace("${implClassName}",new GoName(impl).className)
+            );
+        }
+
+        ps.println(template.
+                replace("${pkg}", pkg).
+                replace("${className}", name.className).
+                replace("${caseImpls}", caseImpls)
+        );
     }
 
     private void generateStruct(Structural structural, CfgValue.VTable vTable) {
@@ -97,7 +123,6 @@ public class GenGo extends GeneratorWithTag {
         ps.println();
         ps.println("""                
                 import (
-                	"cfgtest/stream"
                 	"fmt"
                 	"os"
                 )
@@ -125,6 +150,9 @@ public class GenGo extends GeneratorWithTag {
 
         ps.println("}");
         ps.println();
+
+        String createStructCode = genCreateStruct(structural, name);
+        ps.println(createStructCode);
 
         // entry
         boolean isTableEnumOrEntry = (table != null && table.entry() instanceof EntryType.EntryBase);
@@ -240,29 +268,39 @@ public class GenGo extends GeneratorWithTag {
 
             //gen Init
             String initTemplate = """
-    func (t *${className}Mgr) Init(file *os.File) {
-        cnt := stream.ReadInt32(file)
-        t.all = make([]*AiAi, 0, cnt)
-        for i := 0; i < int(cnt); i++ {
-            v := &AiAi{}
-    ${ReadValue}
-            break
+                    func (t *${className}Mgr) Init(stream *Stream) {
+                        cnt := stream.ReadInt32()
+                        t.all = make([]*AiAi, 0, cnt)
+                        for i := 0; i < int(cnt); i++ {
+                            v := &AiAi{}
+                            v := create${className}(stream)
+                            break
+                        }
+                    }
+                    """;
+            ps.println(initTemplate.replace("${className}", name.className));
         }
     }
-                    """;
-            StringBuilder readValue = new StringBuilder();
-            String readValueTemplate = """
-                            v.${varName} = stream.Read${varType}(file)
-                    """;
-            for (FieldSchema fieldSchema : structural.fields()) {
-                String varName = Generator.lower1(fieldSchema.name());
-                String varType = Generator.upper1(type(fieldSchema.type()));
-                String readValueLine = readValueTemplate.replace("${varName}", varName).replace("${varType}", varType);
-                readValue.append(readValueLine);
-            }
 
-            ps.println(initTemplate.replace("${ReadValue}", readValue).replace("${className}", name.className));
+    private String genCreateStruct(Structural structural, GoName name) {
+        String templateCreate = """
+                func create${className}(stream *Stream) *${className} {
+                    v := &${className}{}
+                ${readValues}   return v
+                }
+                """;
+        String templateRead = """
+                    v.${varName} = stream.Read${varType}()
+                """;
+        StringBuilder readValues = new StringBuilder();
+
+        for (FieldSchema fieldSchema : structural.fields()) {
+            String varName = Generator.lower1(fieldSchema.name());
+            String varType = Generator.upper1(type(fieldSchema.type()));
+            String readValueLine = templateRead.replace("${varName}", varName).replace("${varType}", varType);
+            readValues.append(readValueLine);
         }
+        return templateCreate.replace("${className}", name.className).replace("${readValues}", readValues);
     }
 
     private void genKeyClassIf(KeySchema keySchema, CachedIndentPrinter ps) {
@@ -280,10 +318,10 @@ public class GenGo extends GeneratorWithTag {
         return switch (t) {
             case BOOL -> "bool";
             case INT -> "int32";
-            case LONG -> "long";
-            case FLOAT -> "float64";
+            case LONG -> "int64";
+            case FLOAT -> "float32";
             case STRING -> "string";
-            case TEXT -> isLangSwitch ? pkg + ".Text" : "string";
+            case TEXT -> "string";
             case StructRef structRef -> ClassName(structRef.obj());
             case FList fList -> "[]" + type(fList.item());
             case FMap fMap -> String.format("map[%s]%s", type(fMap.key()), type(fMap.value()));
