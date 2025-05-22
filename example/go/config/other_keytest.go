@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type OtherKeytest struct {
     id1 int32
     id2 int64
@@ -16,7 +11,7 @@ func createOtherKeytest(stream *Stream) *OtherKeytest {
     v.id1 = stream.ReadInt32()
     v.id2 = stream.ReadInt64()
     v.id3 = stream.ReadInt32()
-   return v
+    return v
 }
 
 //getters
@@ -83,11 +78,10 @@ func(t *OtherKeytestMgr) GetByKeyId2Id3(id2 int64, id3 int32) (*OtherKeytest,boo
 
 func (t *OtherKeytestMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
-    t.all = make([]*AiAi, 0, cnt)
+    t.all = make([]*OtherKeytest, 0, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := &AiAi{}
         v := createOtherKeytest(stream)
-        break
+        t.all = append(t.all, v)
     }
 }
 

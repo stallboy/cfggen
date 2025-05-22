@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type AiTriggertickConstValue struct {
     value int32
 }
@@ -12,7 +7,7 @@ type AiTriggertickConstValue struct {
 func createAiTriggertickConstValue(stream *Stream) *AiTriggertickConstValue {
     v := &AiTriggertickConstValue{}
     v.value = stream.ReadInt32()
-   return v
+    return v
 }
 
 //getters

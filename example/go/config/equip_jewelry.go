@@ -1,15 +1,10 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type EquipJewelry struct {
     iD int32 //首饰ID
     name string //首饰名称
     iconFile string //图标ID
-    lvlRank LevelRank //首饰等级
+    lvlRank *LevelRank //首饰等级
     jType string //首饰类型
     suitID int32 //套装ID（为0是没有不属于套装，首饰品级为4的首饰该参数为套装id，其余情况为0,引用JewelrySuit.csv）
     keyAbility int32 //关键属性类型
@@ -27,14 +22,14 @@ func createEquipJewelry(stream *Stream) *EquipJewelry {
     v.iD = stream.ReadInt32()
     v.name = stream.ReadString()
     v.iconFile = stream.ReadString()
-    v.lvlRank = stream.ReadLevelRank()
+    v.lvlRank = createLevelRank(stream)
     v.jType = stream.ReadString()
     v.suitID = stream.ReadInt32()
     v.keyAbility = stream.ReadInt32()
     v.keyAbilityValue = stream.ReadInt32()
     v.salePrice = stream.ReadInt32()
     v.description = stream.ReadString()
-   return v
+    return v
 }
 
 //getters
@@ -50,7 +45,7 @@ func (t *EquipJewelry) GetIconFile() string {
     return t.iconFile
 }
 
-func (t *EquipJewelry) GetLvlRank() LevelRank {
+func (t *EquipJewelry) GetLvlRank() *LevelRank {
     return t.lvlRank
 }
 
@@ -110,11 +105,10 @@ func(t *EquipJewelryMgr) GetByID(ID int32) (*EquipJewelry,bool) {
 
 func (t *EquipJewelryMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
-    t.all = make([]*AiAi, 0, cnt)
+    t.all = make([]*EquipJewelry, 0, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := &AiAi{}
         v := createEquipJewelry(stream)
-        break
+        t.all = append(t.all, v)
     }
 }
 

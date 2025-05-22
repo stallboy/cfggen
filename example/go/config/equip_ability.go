@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type EquipAbility struct {
     id int32 //属性类型
     name string //程序用名字
@@ -14,7 +9,7 @@ func createEquipAbility(stream *Stream) *EquipAbility {
     v := &EquipAbility{}
     v.id = stream.ReadInt32()
     v.name = stream.ReadString()
-   return v
+    return v
 }
 
 //entries
@@ -55,11 +50,10 @@ func(t *EquipAbilityMgr) GetByid(id int32) (*EquipAbility,bool) {
 
 func (t *EquipAbilityMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
-    t.all = make([]*AiAi, 0, cnt)
+    t.all = make([]*EquipAbility, 0, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := &AiAi{}
         v := createEquipAbility(stream)
-        break
+        t.all = append(t.all, v)
     }
 }
 

@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type EquipEquipconfig struct {
     entry string //入口，程序填
     stone_count_for_set int32 //形成套装的音石数量
@@ -22,7 +17,7 @@ func createEquipEquipconfig(stream *Stream) *EquipEquipconfig {
     v.broadcastid = stream.ReadInt32()
     v.broadcast_least_quality = stream.ReadInt32()
     v.week_reward_mailid = stream.ReadInt32()
-   return v
+    return v
 }
 
 //entries
@@ -74,11 +69,10 @@ func(t *EquipEquipconfigMgr) GetByentry(entry string) (*EquipEquipconfig,bool) {
 
 func (t *EquipEquipconfigMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
-    t.all = make([]*AiAi, 0, cnt)
+    t.all = make([]*EquipEquipconfig, 0, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := &AiAi{}
         v := createEquipEquipconfig(stream)
-        break
+        t.all = append(t.all, v)
     }
 }
 

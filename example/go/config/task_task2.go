@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type TaskTask2 struct {
     taskid int32 //任务完成条件类型（id的范围为1-100）
     name []string
@@ -13,9 +8,9 @@ type TaskTask2 struct {
     exp int32
     testBool bool
     testString string
-    testStruct Position
+    testStruct *Position
     testList []int32
-    testListStruct []Position
+    testListStruct []*Position
     testListInterface []AiTriggerTick
     nullableRefTaskid *TaskTaskextraexp
     nullableRefNexttask *TaskTask
@@ -24,17 +19,33 @@ type TaskTask2 struct {
 func createTaskTask2(stream *Stream) *TaskTask2 {
     v := &TaskTask2{}
     v.taskid = stream.ReadInt32()
-    v.name = stream.Read[]string()
+    nameSize := stream.ReadInt32()
+    v.name = make([]string, nameSize)
+    for i := 0; i < int(nameSize); i++ {
+        v.name = append(v.name, stream.ReadString())
+    }
     v.nexttask = stream.ReadInt32()
-    v.completecondition = stream.ReadTaskCompletecondition()
+    v.completecondition = createTaskCompletecondition(stream)
     v.exp = stream.ReadInt32()
     v.testBool = stream.ReadBool()
     v.testString = stream.ReadString()
-    v.testStruct = stream.ReadPosition()
-    v.testList = stream.Read[]int32()
-    v.testListStruct = stream.Read[]Position()
-    v.testListInterface = stream.Read[]AiTriggerTick()
-   return v
+    v.testStruct = createPosition(stream)
+    testListSize := stream.ReadInt32()
+    v.testList = make([]int32, testListSize)
+    for i := 0; i < int(testListSize); i++ {
+        v.testList = append(v.testList, stream.ReadInt32())
+    }
+    testListStructSize := stream.ReadInt32()
+    v.testListStruct = make([]*Position, testListStructSize)
+    for i := 0; i < int(testListStructSize); i++ {
+        v.testListStruct = append(v.testListStruct, createPosition(stream))
+    }
+    testListInterfaceSize := stream.ReadInt32()
+    v.testListInterface = make([]AiTriggerTick, testListInterfaceSize)
+    for i := 0; i < int(testListInterfaceSize); i++ {
+        v.testListInterface = append(v.testListInterface, createAiTriggerTick(stream))
+    }
+    return v
 }
 
 //getters
@@ -66,7 +77,7 @@ func (t *TaskTask2) GetTestString() string {
     return t.testString
 }
 
-func (t *TaskTask2) GetTestStruct() Position {
+func (t *TaskTask2) GetTestStruct() *Position {
     return t.testStruct
 }
 
@@ -74,7 +85,7 @@ func (t *TaskTask2) GetTestList() []int32 {
     return t.testList
 }
 
-func (t *TaskTask2) GetTestListStruct() []Position {
+func (t *TaskTask2) GetTestListStruct() []*Position {
     return t.testListStruct
 }
 
@@ -108,11 +119,10 @@ func(t *TaskTask2Mgr) GetBytaskid(taskid int32) (*TaskTask2,bool) {
 
 func (t *TaskTask2Mgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
-    t.all = make([]*AiAi, 0, cnt)
+    t.all = make([]*TaskTask2, 0, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := &AiAi{}
         v := createTaskTask2(stream)
-        break
+        t.all = append(t.all, v)
     }
 }
 

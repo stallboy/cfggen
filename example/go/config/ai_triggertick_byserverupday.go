@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type AiTriggertickByServerUpDay struct {
     init int32
     coefficient1 float32
@@ -16,7 +11,7 @@ func createAiTriggertickByServerUpDay(stream *Stream) *AiTriggertickByServerUpDa
     v.init = stream.ReadInt32()
     v.coefficient1 = stream.ReadFloat32()
     v.coefficient2 = stream.ReadFloat32()
-   return v
+    return v
 }
 
 //getters

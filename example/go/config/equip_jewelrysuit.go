@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type EquipJewelrysuit struct {
     suitID int32 //饰品套装ID
     ename string
@@ -29,8 +24,12 @@ func createEquipJewelrysuit(stream *Stream) *EquipJewelrysuit {
     v.ability2Value = stream.ReadInt32()
     v.ability3 = stream.ReadInt32()
     v.ability3Value = stream.ReadInt32()
-    v.suitList = stream.Read[]int32()
-   return v
+    suitListSize := stream.ReadInt32()
+    v.suitList = make([]int32, suitListSize)
+    for i := 0; i < int(suitListSize); i++ {
+        v.suitList = append(v.suitList, stream.ReadInt32())
+    }
+    return v
 }
 
 //entries
@@ -97,11 +96,10 @@ func(t *EquipJewelrysuitMgr) GetBySuitID(SuitID int32) (*EquipJewelrysuit,bool) 
 
 func (t *EquipJewelrysuitMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
-    t.all = make([]*AiAi, 0, cnt)
+    t.all = make([]*EquipJewelrysuit, 0, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := &AiAi{}
         v := createEquipJewelrysuit(stream)
-        break
+        t.all = append(t.all, v)
     }
 }
 

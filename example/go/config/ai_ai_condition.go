@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type AiAi_condition struct {
     iD int32
     desc string //描述
@@ -18,9 +13,17 @@ func createAiAi_condition(stream *Stream) *AiAi_condition {
     v.iD = stream.ReadInt32()
     v.desc = stream.ReadString()
     v.formulaID = stream.ReadInt32()
-    v.argIList = stream.Read[]int32()
-    v.argSList = stream.Read[]int32()
-   return v
+    argIListSize := stream.ReadInt32()
+    v.argIList = make([]int32, argIListSize)
+    for i := 0; i < int(argIListSize); i++ {
+        v.argIList = append(v.argIList, stream.ReadInt32())
+    }
+    argSListSize := stream.ReadInt32()
+    v.argSList = make([]int32, argSListSize)
+    for i := 0; i < int(argSListSize); i++ {
+        v.argSList = append(v.argSList, stream.ReadInt32())
+    }
+    return v
 }
 
 //getters
@@ -62,11 +65,10 @@ func(t *AiAi_conditionMgr) GetByID(ID int32) (*AiAi_condition,bool) {
 
 func (t *AiAi_conditionMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
-    t.all = make([]*AiAi, 0, cnt)
+    t.all = make([]*AiAi_condition, 0, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := &AiAi{}
         v := createAiAi_condition(stream)
-        break
+        t.all = append(t.all, v)
     }
 }
 

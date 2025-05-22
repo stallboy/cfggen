@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type OtherLootitem struct {
     lootid int32 //掉落id
     itemid int32 //掉落物品
@@ -20,7 +15,7 @@ func createOtherLootitem(stream *Stream) *OtherLootitem {
     v.chance = stream.ReadInt32()
     v.countmin = stream.ReadInt32()
     v.countmax = stream.ReadInt32()
-   return v
+    return v
 }
 
 //getters
@@ -67,11 +62,10 @@ func(t *OtherLootitemMgr) GetByKeyLootidItemid(lootid int32, itemid int32) (*Oth
 
 func (t *OtherLootitemMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
-    t.all = make([]*AiAi, 0, cnt)
+    t.all = make([]*OtherLootitem, 0, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := &AiAi{}
         v := createOtherLootitem(stream)
-        break
+        t.all = append(t.all, v)
     }
 }
 

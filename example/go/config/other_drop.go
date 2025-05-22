@@ -1,14 +1,9 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type OtherDrop struct {
     dropid int32 //序号
     name string //名字
-    items []OtherDropItem //掉落概率
+    items []*OtherDropItem //掉落概率
     testmap map[int32]int32 //测试map block
 }
 
@@ -16,9 +11,12 @@ func createOtherDrop(stream *Stream) *OtherDrop {
     v := &OtherDrop{}
     v.dropid = stream.ReadInt32()
     v.name = stream.ReadString()
-    v.items = stream.Read[]OtherDropItem()
-    v.testmap = stream.ReadMap[int32]int32()
-   return v
+    itemsSize := stream.ReadInt32()
+    v.items = make([]*OtherDropItem, itemsSize)
+    for i := 0; i < int(itemsSize); i++ {
+        v.items = append(v.items, createOtherDropItem(stream))
+    }
+    return v
 }
 
 //getters
@@ -30,7 +28,7 @@ func (t *OtherDrop) GetName() string {
     return t.name
 }
 
-func (t *OtherDrop) GetItems() []OtherDropItem {
+func (t *OtherDrop) GetItems() []*OtherDropItem {
     return t.items
 }
 
@@ -56,11 +54,10 @@ func(t *OtherDropMgr) GetBydropid(dropid int32) (*OtherDrop,bool) {
 
 func (t *OtherDropMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
-    t.all = make([]*AiAi, 0, cnt)
+    t.all = make([]*OtherDrop, 0, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := &AiAi{}
         v := createOtherDrop(stream)
-        break
+        t.all = append(t.all, v)
     }
 }
 

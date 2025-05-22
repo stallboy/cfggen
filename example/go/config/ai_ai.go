@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type AiAi struct {
     iD int32
     desc string //描述----这里测试下多行效果--再来一行
@@ -20,11 +15,15 @@ func createAiAi(stream *Stream) *AiAi {
     v.iD = stream.ReadInt32()
     v.desc = stream.ReadString()
     v.condID = stream.ReadString()
-    v.trigTick = stream.ReadAiTriggerTick()
+    v.trigTick = createAiTriggerTick(stream)
     v.trigOdds = stream.ReadInt32()
-    v.actionID = stream.Read[]int32()
+    actionIDSize := stream.ReadInt32()
+    v.actionID = make([]int32, actionIDSize)
+    for i := 0; i < int(actionIDSize); i++ {
+        v.actionID = append(v.actionID, stream.ReadInt32())
+    }
     v.deathRemove = stream.ReadBool()
-   return v
+    return v
 }
 
 //getters
@@ -76,9 +75,8 @@ func (t *AiAiMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*AiAi, 0, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := &AiAi{}
         v := createAiAi(stream)
-        break
+        t.all = append(t.all, v)
     }
 }
 

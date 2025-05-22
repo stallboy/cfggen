@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type TaskCompleteconditionConditionAnd struct {
     cond1 TaskCompletecondition
     cond2 TaskCompletecondition
@@ -12,9 +7,9 @@ type TaskCompleteconditionConditionAnd struct {
 
 func createTaskCompleteconditionConditionAnd(stream *Stream) *TaskCompleteconditionConditionAnd {
     v := &TaskCompleteconditionConditionAnd{}
-    v.cond1 = stream.ReadTaskCompletecondition()
-    v.cond2 = stream.ReadTaskCompletecondition()
-   return v
+    v.cond1 = createTaskCompletecondition(stream)
+    v.cond2 = createTaskCompletecondition(stream)
+    return v
 }
 
 //getters

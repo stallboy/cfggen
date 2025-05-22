@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type OtherDropItem struct {
     chance int32 //掉落概率
     itemids []int32 //掉落物品
@@ -15,10 +10,14 @@ type OtherDropItem struct {
 func createOtherDropItem(stream *Stream) *OtherDropItem {
     v := &OtherDropItem{}
     v.chance = stream.ReadInt32()
-    v.itemids = stream.Read[]int32()
+    itemidsSize := stream.ReadInt32()
+    v.itemids = make([]int32, itemidsSize)
+    for i := 0; i < int(itemidsSize); i++ {
+        v.itemids = append(v.itemids, stream.ReadInt32())
+    }
     v.countmin = stream.ReadInt32()
     v.countmax = stream.ReadInt32()
-   return v
+    return v
 }
 
 //getters

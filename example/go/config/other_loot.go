@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type OtherLoot struct {
     lootid int32 //序号
     ename string
@@ -18,8 +13,12 @@ func createOtherLoot(stream *Stream) *OtherLoot {
     v.lootid = stream.ReadInt32()
     v.ename = stream.ReadString()
     v.name = stream.ReadString()
-    v.chanceList = stream.Read[]int32()
-   return v
+    chanceListSize := stream.ReadInt32()
+    v.chanceList = make([]int32, chanceListSize)
+    for i := 0; i < int(chanceListSize); i++ {
+        v.chanceList = append(v.chanceList, stream.ReadInt32())
+    }
+    return v
 }
 
 //getters
@@ -62,11 +61,10 @@ func(t *OtherLootMgr) GetBylootid(lootid int32) (*OtherLoot,bool) {
 
 func (t *OtherLootMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
-    t.all = make([]*AiAi, 0, cnt)
+    t.all = make([]*OtherLoot, 0, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := &AiAi{}
         v := createOtherLoot(stream)
-        break
+        t.all = append(t.all, v)
     }
 }
 

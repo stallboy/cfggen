@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type TaskCompleteconditionKillMonster struct {
     monsterid int32
     count int32
@@ -15,7 +10,7 @@ func createTaskCompleteconditionKillMonster(stream *Stream) *TaskCompleteconditi
     v := &TaskCompleteconditionKillMonster{}
     v.monsterid = stream.ReadInt32()
     v.count = stream.ReadInt32()
-   return v
+    return v
 }
 
 //getters

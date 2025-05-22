@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type TaskTaskextraexp struct {
     taskid int32 //任务完成条件类型（id的范围为1-100）
     extraexp int32 //额外奖励经验
@@ -26,7 +21,7 @@ func createTaskTaskextraexp(stream *Stream) *TaskTaskextraexp {
     v.fieldb = stream.ReadString()
     v.fieldc = stream.ReadString()
     v.fieldd = stream.ReadString()
-   return v
+    return v
 }
 
 //getters
@@ -80,11 +75,10 @@ func(t *TaskTaskextraexpMgr) GetBytaskid(taskid int32) (*TaskTaskextraexp,bool) 
 
 func (t *TaskTaskextraexpMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
-    t.all = make([]*AiAi, 0, cnt)
+    t.all = make([]*TaskTaskextraexp, 0, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := &AiAi{}
         v := createTaskTaskextraexp(stream)
-        break
+        t.all = append(t.all, v)
     }
 }
 

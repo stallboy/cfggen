@@ -1,17 +1,12 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type TaskTask struct {
     taskid int32 //任务完成条件类型（id的范围为1-100）
     name []string //程序用名字
     nexttask int32
     completecondition TaskCompletecondition
     exp int32
-    testDefaultBean TaskTestDefaultBean //测试
+    testDefaultBean *TaskTestDefaultBean //测试
     nullableRefTaskid *TaskTaskextraexp
     nullableRefNexttask *TaskTask
 }
@@ -19,12 +14,16 @@ type TaskTask struct {
 func createTaskTask(stream *Stream) *TaskTask {
     v := &TaskTask{}
     v.taskid = stream.ReadInt32()
-    v.name = stream.Read[]string()
+    nameSize := stream.ReadInt32()
+    v.name = make([]string, nameSize)
+    for i := 0; i < int(nameSize); i++ {
+        v.name = append(v.name, stream.ReadString())
+    }
     v.nexttask = stream.ReadInt32()
-    v.completecondition = stream.ReadTaskCompletecondition()
+    v.completecondition = createTaskCompletecondition(stream)
     v.exp = stream.ReadInt32()
-    v.testDefaultBean = stream.ReadTaskTestDefaultBean()
-   return v
+    v.testDefaultBean = createTaskTestDefaultBean(stream)
+    return v
 }
 
 //getters
@@ -48,7 +47,7 @@ func (t *TaskTask) GetExp() int32 {
     return t.exp
 }
 
-func (t *TaskTask) GetTestDefaultBean() TaskTestDefaultBean {
+func (t *TaskTask) GetTestDefaultBean() *TaskTestDefaultBean {
     return t.testDefaultBean
 }
 
@@ -78,11 +77,10 @@ func(t *TaskTaskMgr) GetBytaskid(taskid int32) (*TaskTask,bool) {
 
 func (t *TaskTaskMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
-    t.all = make([]*AiAi, 0, cnt)
+    t.all = make([]*TaskTask, 0, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := &AiAi{}
         v := createTaskTask(stream)
-        break
+        t.all = append(t.all, v)
     }
 }
 

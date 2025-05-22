@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type LevelRank struct {
     level int32 //等级
     rank int32 //品质
@@ -15,7 +10,7 @@ func createLevelRank(stream *Stream) *LevelRank {
     v := &LevelRank{}
     v.level = stream.ReadInt32()
     v.rank = stream.ReadInt32()
-   return v
+    return v
 }
 
 //getters

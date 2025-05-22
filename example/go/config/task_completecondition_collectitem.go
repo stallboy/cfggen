@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type TaskCompleteconditionCollectItem struct {
     itemid int32
     count int32
@@ -14,7 +9,7 @@ func createTaskCompleteconditionCollectItem(stream *Stream) *TaskCompleteconditi
     v := &TaskCompleteconditionCollectItem{}
     v.itemid = stream.ReadInt32()
     v.count = stream.ReadInt32()
-   return v
+    return v
 }
 
 //getters

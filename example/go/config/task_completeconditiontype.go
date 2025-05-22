@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type TaskCompleteconditiontype struct {
     id int32 //任务完成条件类型（id的范围为1-100）
     name string //程序用名字
@@ -14,7 +9,7 @@ func createTaskCompleteconditiontype(stream *Stream) *TaskCompleteconditiontype 
     v := &TaskCompleteconditiontype{}
     v.id = stream.ReadInt32()
     v.name = stream.ReadString()
-   return v
+    return v
 }
 
 //entries
@@ -54,11 +49,10 @@ func(t *TaskCompleteconditiontypeMgr) GetByid(id int32) (*TaskCompleteconditiont
 
 func (t *TaskCompleteconditiontypeMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
-    t.all = make([]*AiAi, 0, cnt)
+    t.all = make([]*TaskCompleteconditiontype, 0, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := &AiAi{}
         v := createTaskCompleteconditiontype(stream)
-        break
+        t.all = append(t.all, v)
     }
 }
 

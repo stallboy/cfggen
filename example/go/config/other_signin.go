@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type OtherSignin struct {
     id int32 //礼包ID
     item2countMap map[int32]int32 //普通奖励
@@ -17,11 +12,9 @@ type OtherSignin struct {
 func createOtherSignin(stream *Stream) *OtherSignin {
     v := &OtherSignin{}
     v.id = stream.ReadInt32()
-    v.item2countMap = stream.ReadMap[int32]int32()
-    v.vipitem2vipcountMap = stream.ReadMap[int32]int32()
     v.viplevel = stream.ReadInt32()
     v.iconFile = stream.ReadString()
-   return v
+    return v
 }
 
 //getters
@@ -79,11 +72,10 @@ func(t *OtherSigninMgr) GetByKeyIdViplevel(id int32, viplevel int32) (*OtherSign
 
 func (t *OtherSigninMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
-    t.all = make([]*AiAi, 0, cnt)
+    t.all = make([]*OtherSignin, 0, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := &AiAi{}
         v := createOtherSignin(stream)
-        break
+        t.all = append(t.all, v)
     }
 }
 

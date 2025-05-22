@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type AiTriggertickByLevel struct {
     init int32
     coefficient float32
@@ -14,7 +9,7 @@ func createAiTriggertickByLevel(stream *Stream) *AiTriggertickByLevel {
     v := &AiTriggertickByLevel{}
     v.init = stream.ReadInt32()
     v.coefficient = stream.ReadFloat32()
-   return v
+    return v
 }
 
 //getters

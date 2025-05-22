@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type EquipJewelrytype struct {
     typeName string //程序用名字
 }
@@ -12,7 +7,7 @@ type EquipJewelrytype struct {
 func createEquipJewelrytype(stream *Stream) *EquipJewelrytype {
     v := &EquipJewelrytype{}
     v.typeName = stream.ReadString()
-   return v
+    return v
 }
 
 //entries
@@ -46,11 +41,10 @@ func(t *EquipJewelrytypeMgr) GetByTypeName(TypeName string) (*EquipJewelrytype,b
 
 func (t *EquipJewelrytypeMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
-    t.all = make([]*AiAi, 0, cnt)
+    t.all = make([]*EquipJewelrytype, 0, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := &AiAi{}
         v := createEquipJewelrytype(stream)
-        break
+        t.all = append(t.all, v)
     }
 }
 

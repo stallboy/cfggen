@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type TaskCompleteconditionTalkNpc struct {
     npcid int32
 }
@@ -12,7 +7,7 @@ type TaskCompleteconditionTalkNpc struct {
 func createTaskCompleteconditionTalkNpc(stream *Stream) *TaskCompleteconditionTalkNpc {
     v := &TaskCompleteconditionTalkNpc{}
     v.npcid = stream.ReadInt32()
-   return v
+    return v
 }
 
 //getters

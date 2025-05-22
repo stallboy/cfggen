@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type Position struct {
     x int32
     y int32
@@ -16,7 +11,7 @@ func createPosition(stream *Stream) *Position {
     v.x = stream.ReadInt32()
     v.y = stream.ReadInt32()
     v.z = stream.ReadInt32()
-   return v
+    return v
 }
 
 //getters

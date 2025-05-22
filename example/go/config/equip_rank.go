@@ -1,10 +1,5 @@
 package config
 
-import (
-	"fmt"
-	"os"
-)
-
 type EquipRank struct {
     rankID int32 //稀有度
     rankName string //程序用名字
@@ -16,7 +11,7 @@ func createEquipRank(stream *Stream) *EquipRank {
     v.rankID = stream.ReadInt32()
     v.rankName = stream.ReadString()
     v.rankShowName = stream.ReadString()
-   return v
+    return v
 }
 
 //entries
@@ -59,11 +54,10 @@ func(t *EquipRankMgr) GetByRankID(RankID int32) (*EquipRank,bool) {
 
 func (t *EquipRankMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
-    t.all = make([]*AiAi, 0, cnt)
+    t.all = make([]*EquipRank, 0, cnt)
     for i := 0; i < int(cnt); i++ {
-        v := &AiAi{}
         v := createEquipRank(stream)
-        break
+        t.all = append(t.all, v)
     }
 }
 
