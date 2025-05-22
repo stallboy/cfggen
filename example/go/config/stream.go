@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/binary"
 	"fmt"
-	"io"
 	"os"
 )
 
@@ -13,7 +12,7 @@ type Stream struct {
 }
 
 func (s *Stream) ReadBool() bool {
-	var value int32
+	var value byte
 	if err := binary.Read(s.file, binary.LittleEndian, &value); err != nil {
 		panic(fmt.Errorf("read bool: %w", err))
 	}
@@ -46,21 +45,17 @@ func (s *Stream) ReadFloat32() float32 {
 
 // ReadString 从 io.Reader 中读取格式为 [int32长度][UTF-8内容] 的字符串
 func (s *Stream) ReadString() string {
-	length := s.ReadInt32()
-
-	if length < 0 {
-		panic(fmt.Errorf("invalid string length: %d", length))
+	length := s.ReadInt32() // 先读取字符串长度
+	if length <= 0 {
+		return ""
 	}
-
-	if cap(s.stringBuf) < int(length) {
-		s.stringBuf = make([]byte, length)
-	} else {
-		s.stringBuf = s.stringBuf[:length]
+	buf := make([]byte, length)
+	n, err := s.file.Read(buf)
+	if err != nil {
+		panic(fmt.Errorf("read string: %w", err))
 	}
-
-	if _, err := io.ReadFull(s.file, s.stringBuf); err != nil {
-		panic(fmt.Errorf("read string content: %w", err))
+	if int32(n) != length {
+		panic(fmt.Errorf("read string: expected %d bytes, got %d", length, n))
 	}
-
-	return string(s.stringBuf)
+	return string(buf)
 }

@@ -24,6 +24,10 @@ func (t *ConfigMgr) Init() {
 		case "ai.ai":
 			t.aiAiMgr = &AiAiMgr{}
 			t.aiAiMgr.Init(myStream)
+			for _, v := range t.aiAiMgr.GetAll() {
+				fmt.Println("id:", v.GetID())
+				fmt.Println("desc:", v.GetDesc())
+			}
 			break
 		}
 		return

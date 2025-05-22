@@ -5,6 +5,6 @@ import (
 )
 
 func main() {
-    cfgMgr := &config.ConfigMgr{}
-    cfgMgr.Init()
+	cfgMgr := &config.ConfigMgr{}
+	cfgMgr.Init()
 }

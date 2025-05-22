@@ -92,13 +92,13 @@ public class GenGo extends GeneratorWithTag {
 
         StringBuilder caseImpls = new StringBuilder();
         String caseImpl = """
-                        case "${implName}":
-                            return create${implClassName}(stream)
-                    """;
+                    case "${implName}":
+                        return create${implClassName}(stream)
+                """;
         for (StructSchema impl : sInterface.impls()) {
             caseImpls.append(caseImpl.
                     replace("${implName}", impl.name()).
-                    replace("${implClassName}",new GoName(impl).className)
+                    replace("${implClassName}", new GoName(impl).className)
             );
         }
 
@@ -121,12 +121,6 @@ public class GenGo extends GeneratorWithTag {
         TableSchema table = vTable != null ? vTable.schema() : null;
         ps.println("package %s", pkg);
         ps.println();
-        ps.println("""                
-                import (
-                	"fmt"
-                	"os"
-                )
-                """);
 
         InterfaceSchema nullableInterface = structural instanceof StructSchema struct ? struct.nullableInterface() : null;
         boolean isImpl = nullableInterface != null;
@@ -270,11 +264,10 @@ public class GenGo extends GeneratorWithTag {
             String initTemplate = """
                     func (t *${className}Mgr) Init(stream *Stream) {
                         cnt := stream.ReadInt32()
-                        t.all = make([]*AiAi, 0, cnt)
+                        t.all = make([]*${className}, 0, cnt)
                         for i := 0; i < int(cnt); i++ {
-                            v := &AiAi{}
                             v := create${className}(stream)
-                            break
+                            t.all = append(t.all, v)
                         }
                     }
                     """;
@@ -286,21 +279,56 @@ public class GenGo extends GeneratorWithTag {
         String templateCreate = """
                 func create${className}(stream *Stream) *${className} {
                     v := &${className}{}
-                ${readValues}   return v
+                ${readValues}    return v
                 }
                 """;
-        String templateRead = """
-                    v.${varName} = stream.Read${varType}()
-                """;
         StringBuilder readValues = new StringBuilder();
-
         for (FieldSchema fieldSchema : structural.fields()) {
-            String varName = Generator.lower1(fieldSchema.name());
-            String varType = Generator.upper1(type(fieldSchema.type()));
-            String readValueLine = templateRead.replace("${varName}", varName).replace("${varType}", varType);
-            readValues.append(readValueLine);
+            readValues.append(genReadValue(fieldSchema));
         }
         return templateCreate.replace("${className}", name.className).replace("${readValues}", readValues);
+    }
+
+    private String genReadValue(FieldSchema fieldSchema) {
+        String varName = Generator.lower1(fieldSchema.name());
+        String varType = Generator.upper1(type(fieldSchema.type()));
+        switch (fieldSchema.type()) {
+            case StructRef structRef:
+                return """
+                            v.${varName} = ${genReadField}
+                        """.
+                        replace("${varName}", varName).
+                        replace("${genReadField}", genReadField(structRef));
+            case FList fList:
+                return """
+                            ${varName}Size := stream.ReadInt32()
+                            v.${varName} = make([]${ElemType}, ${varName}Size)
+                            for i := 0; i < int(${varName}Size); i++ {
+                                v.${varName} = append(v.${varName}, ${ReadElem})
+                            }
+                        """.
+                        replace("${varName}", varName).
+                        replace("${ElemType}", type(fList.item())).
+                        replace("${ReadElem}", genReadField(fList.item()));
+            case FMap fMap:
+                return "";
+            default:
+                return """
+                            v.${varName} = ${genReadField}
+                        """.replace("${varName}", varName).
+                        replace("${genReadField}", genReadField(fieldSchema.type()));
+
+        }
+    }
+
+    private String genReadField(FieldType fieldType) {
+        return switch (fieldType) {
+            case StructRef structRef -> "create${varType}(stream)".
+                    replace("${varType}", ClassName(structRef.obj()));
+            case FList ignore -> null;
+            case FMap ignore -> null;
+            default -> "stream.Read${varType}()".replace("${varType}", Generator.upper1(type(fieldType)));
+        };
     }
 
     private void genKeyClassIf(KeySchema keySchema, CachedIndentPrinter ps) {
@@ -322,7 +350,13 @@ public class GenGo extends GeneratorWithTag {
             case FLOAT -> "float32";
             case STRING -> "string";
             case TEXT -> "string";
-            case StructRef structRef -> ClassName(structRef.obj());
+            case StructRef structRef -> {
+                Fieldable fieldable = structRef.obj();
+                yield switch (fieldable) {
+                    case StructSchema ignored -> "*" +ClassName(fieldable);
+                    case InterfaceSchema ignored ->  ClassName(fieldable);
+                };
+            }
             case FList fList -> "[]" + type(fList.item());
             case FMap fMap -> String.format("map[%s]%s", type(fMap.key()), type(fMap.value()));
         };
