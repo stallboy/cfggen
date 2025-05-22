@@ -1,10 +1,24 @@
 package config
 
+import (
+	"fmt"
+	"os"
+)
+
 type EquipJewelryrandom struct {
     lvlRank LevelRank //等级
     attackRange Range //最小攻击力
     otherRange []Range //最小防御力
     testPack []EquipTestPackBean //测试pack
+}
+
+func createEquipJewelryrandom(stream *Stream) *EquipJewelryrandom {
+    v := &EquipJewelryrandom{}
+    v.lvlRank = stream.ReadLevelRank()
+    v.attackRange = stream.ReadRange()
+    v.otherRange = stream.Read[]Range()
+    v.testPack = stream.Read[]EquipTestPackBean()
+   return v
 }
 
 //getters
@@ -39,4 +53,14 @@ func(t *EquipJewelryrandomMgr) GetByLvlRank(LvlRank LevelRank) (*EquipJewelryran
 }
 
 
+
+func (t *EquipJewelryrandomMgr) Init(stream *Stream) {
+    cnt := stream.ReadInt32()
+    t.all = make([]*AiAi, 0, cnt)
+    for i := 0; i < int(cnt); i++ {
+        v := &AiAi{}
+        v := createEquipJewelryrandom(stream)
+        break
+    }
+}
 

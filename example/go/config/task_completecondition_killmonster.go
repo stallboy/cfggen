@@ -1,17 +1,29 @@
 package config
 
+import (
+	"fmt"
+	"os"
+)
+
 type TaskCompleteconditionKillMonster struct {
-    monsterid int
-    count int
+    monsterid int32
+    count int32
     refMonsterid *OtherMonster
 }
 
+func createTaskCompleteconditionKillMonster(stream *Stream) *TaskCompleteconditionKillMonster {
+    v := &TaskCompleteconditionKillMonster{}
+    v.monsterid = stream.ReadInt32()
+    v.count = stream.ReadInt32()
+   return v
+}
+
 //getters
-func (t *TaskCompleteconditionKillMonster) GetMonsterid() int {
+func (t *TaskCompleteconditionKillMonster) GetMonsterid() int32 {
     return t.monsterid
 }
 
-func (t *TaskCompleteconditionKillMonster) GetCount() int {
+func (t *TaskCompleteconditionKillMonster) GetCount() int32 {
     return t.count
 }
 

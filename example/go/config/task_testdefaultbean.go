@@ -1,17 +1,34 @@
 package config
 
+import (
+	"fmt"
+	"os"
+)
+
 type TaskTestDefaultBean struct {
-    testInt int
+    testInt int32
     testBool bool
     testString string
     testSubBean Position
-    testList []int
-    testList2 []int
-    testMap map[int]string
+    testList []int32
+    testList2 []int32
+    testMap map[int32]string
+}
+
+func createTaskTestDefaultBean(stream *Stream) *TaskTestDefaultBean {
+    v := &TaskTestDefaultBean{}
+    v.testInt = stream.ReadInt32()
+    v.testBool = stream.ReadBool()
+    v.testString = stream.ReadString()
+    v.testSubBean = stream.ReadPosition()
+    v.testList = stream.Read[]int32()
+    v.testList2 = stream.Read[]int32()
+    v.testMap = stream.ReadMap[int32]string()
+   return v
 }
 
 //getters
-func (t *TaskTestDefaultBean) GetTestInt() int {
+func (t *TaskTestDefaultBean) GetTestInt() int32 {
     return t.testInt
 }
 
@@ -27,15 +44,15 @@ func (t *TaskTestDefaultBean) GetTestSubBean() Position {
     return t.testSubBean
 }
 
-func (t *TaskTestDefaultBean) GetTestList() []int {
+func (t *TaskTestDefaultBean) GetTestList() []int32 {
     return t.testList
 }
 
-func (t *TaskTestDefaultBean) GetTestList2() []int {
+func (t *TaskTestDefaultBean) GetTestList2() []int32 {
     return t.testList2
 }
 
-func (t *TaskTestDefaultBean) GetTestMap() map[int]string {
+func (t *TaskTestDefaultBean) GetTestMap() map[int32]string {
     return t.testMap
 }
 

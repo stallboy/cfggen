@@ -1,9 +1,22 @@
 package config
 
+import (
+	"fmt"
+	"os"
+)
+
 type EquipRank struct {
-    rankID int //稀有度
+    rankID int32 //稀有度
     rankName string //程序用名字
     rankShowName string //显示名称
+}
+
+func createEquipRank(stream *Stream) *EquipRank {
+    v := &EquipRank{}
+    v.rankID = stream.ReadInt32()
+    v.rankName = stream.ReadString()
+    v.rankShowName = stream.ReadString()
+   return v
 }
 
 //entries
@@ -16,7 +29,7 @@ var (
 )
 
 //getters
-func (t *EquipRank) GetRankID() int {
+func (t *EquipRank) GetRankID() int32 {
     return t.rankID
 }
 
@@ -30,17 +43,27 @@ func (t *EquipRank) GetRankShowName() string {
 
 type EquipRankMgr struct {
     all []*EquipRank
-    rankIDMap map[int]*EquipRank
+    rankIDMap map[int32]*EquipRank
 }
 
 func(t *EquipRankMgr) GetAll() []*EquipRank {
     return t.all
 }
 
-func(t *EquipRankMgr) GetByRankID(RankID int) (*EquipRank,bool) {
+func(t *EquipRankMgr) GetByRankID(RankID int32) (*EquipRank,bool) {
     v, ok := t.rankIDMap[RankID]
     return v, ok
 }
 
 
+
+func (t *EquipRankMgr) Init(stream *Stream) {
+    cnt := stream.ReadInt32()
+    t.all = make([]*AiAi, 0, cnt)
+    for i := 0; i < int(cnt); i++ {
+        v := &AiAi{}
+        v := createEquipRank(stream)
+        break
+    }
+}
 

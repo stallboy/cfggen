@@ -1,7 +1,18 @@
 package config
 
+import (
+	"fmt"
+	"os"
+)
+
 type TaskCompleteconditionChat struct {
     msg string
+}
+
+func createTaskCompleteconditionChat(stream *Stream) *TaskCompleteconditionChat {
+    v := &TaskCompleteconditionChat{}
+    v.msg = stream.ReadString()
+   return v
 }
 
 //getters

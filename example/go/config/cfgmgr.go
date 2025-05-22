@@ -1,7 +1,6 @@
 package config
 
 import (
-	"cfgtest/stream"
 	"fmt"
 	"os"
 )
@@ -17,13 +16,14 @@ func (t *ConfigMgr) Init() {
 	}
 	defer file.Close()
 
+	myStream := &Stream{file: file}
 	for {
-		cfgName := stream.ReadString(file)
+		cfgName := myStream.ReadString()
 		fmt.Println("load:", cfgName)
 		switch cfgName {
 		case "ai.ai":
 			t.aiAiMgr = &AiAiMgr{}
-			t.aiAiMgr.Init(file)
+			t.aiAiMgr.Init(myStream)
 			break
 		}
 		return

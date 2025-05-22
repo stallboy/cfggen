@@ -1,83 +1,84 @@
 package config
 
 import (
-	"cfgtest/stream"
 	"fmt"
 	"os"
 )
 
 type AiAi struct {
-	iD          int
-	desc        string        //描述----这里测试下多行效果--再来一行
-	condID      string        //触发公式
-	trigTick    AiTriggerTick //触发间隔(帧)
-	trigOdds    int           //触发几率
-	actionID    []int         //触发行为
-	deathRemove bool          //死亡移除
+    iD int32
+    desc string //描述----这里测试下多行效果--再来一行
+    condID string //触发公式
+    trigTick AiTriggerTick //触发间隔(帧)
+    trigOdds int32 //触发几率
+    actionID []int32 //触发行为
+    deathRemove bool //死亡移除
 }
 
-// getters
-func (t *AiAi) GetID() int {
-	return t.iD
+func createAiAi(stream *Stream) *AiAi {
+    v := &AiAi{}
+    v.iD = stream.ReadInt32()
+    v.desc = stream.ReadString()
+    v.condID = stream.ReadString()
+    v.trigTick = stream.ReadAiTriggerTick()
+    v.trigOdds = stream.ReadInt32()
+    v.actionID = stream.Read[]int32()
+    v.deathRemove = stream.ReadBool()
+   return v
+}
+
+//getters
+func (t *AiAi) GetID() int32 {
+    return t.iD
 }
 
 func (t *AiAi) GetDesc() string {
-	return t.desc
+    return t.desc
 }
 
 func (t *AiAi) GetCondID() string {
-	return t.condID
+    return t.condID
 }
 
 func (t *AiAi) GetTrigTick() AiTriggerTick {
-	return t.trigTick
+    return t.trigTick
 }
 
-func (t *AiAi) GetTrigOdds() int {
-	return t.trigOdds
+func (t *AiAi) GetTrigOdds() int32 {
+    return t.trigOdds
 }
 
-func (t *AiAi) GetActionID() []int {
-	return t.actionID
+func (t *AiAi) GetActionID() []int32 {
+    return t.actionID
 }
 
 func (t *AiAi) GetDeathRemove() bool {
-	return t.deathRemove
+    return t.deathRemove
 }
 
 type AiAiMgr struct {
-	all   []*AiAi
-	iDMap map[int]*AiAi
+    all []*AiAi
+    iDMap map[int32]*AiAi
 }
 
-func (t *AiAiMgr) GetAll() []*AiAi {
-	return t.all
+func(t *AiAiMgr) GetAll() []*AiAi {
+    return t.all
 }
 
-func (t *AiAiMgr) GetByID(ID int) (*AiAi, bool) {
-	v, ok := t.iDMap[ID]
-	return v, ok
+func(t *AiAiMgr) GetByID(ID int32) (*AiAi,bool) {
+    v, ok := t.iDMap[ID]
+    return v, ok
 }
 
-func (t *AiAiMgr) Init(file *os.File) {
-	cnt := stream.ReadInt32(file)
-	for i := 0; i < int(cnt); i++ {
-		aiAi := &AiAi{}
-		aiAi.iD = int(stream.ReadInt32(file))
-		aiAi.desc = stream.ReadString(file)
-		aiAi.condID = stream.ReadString(file)
-		fmt.Println("aiAi.iD:", aiAi.iD)
-		fmt.Println("aiAi.desc:", aiAi.desc)
-		fmt.Println("aiAi.condID:", aiAi.condID)
 
-		break
-		// aiAi.trigTick = AiTriggerTick(stream.ReadInt32(file))
-		// aiAi.trigOdds = int(stream.ReadInt32(file))
-		// aiAi.deathRemove = stream.ReadInt32(file) != 0
-		// actionIDCnt := stream.ReadInt32(file)
-		// for j := 0; j < int(actionIDCnt); j++ {
-		// 	aiAi.actionID = append(aiAi.actionID, int(stream.ReadInt32(file)))
-		// }
-		// t.all = append(t.all, aiAi)
-	}
+
+func (t *AiAiMgr) Init(stream *Stream) {
+    cnt := stream.ReadInt32()
+    t.all = make([]*AiAi, 0, cnt)
+    for i := 0; i < int(cnt); i++ {
+        v := &AiAi{}
+        v := createAiAi(stream)
+        break
+    }
 }
+

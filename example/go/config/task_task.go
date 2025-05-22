@@ -1,18 +1,34 @@
 package config
 
+import (
+	"fmt"
+	"os"
+)
+
 type TaskTask struct {
-    taskid int //任务完成条件类型（id的范围为1-100）
+    taskid int32 //任务完成条件类型（id的范围为1-100）
     name []string //程序用名字
-    nexttask int
+    nexttask int32
     completecondition TaskCompletecondition
-    exp int
+    exp int32
     testDefaultBean TaskTestDefaultBean //测试
     nullableRefTaskid *TaskTaskextraexp
     nullableRefNexttask *TaskTask
 }
 
+func createTaskTask(stream *Stream) *TaskTask {
+    v := &TaskTask{}
+    v.taskid = stream.ReadInt32()
+    v.name = stream.Read[]string()
+    v.nexttask = stream.ReadInt32()
+    v.completecondition = stream.ReadTaskCompletecondition()
+    v.exp = stream.ReadInt32()
+    v.testDefaultBean = stream.ReadTaskTestDefaultBean()
+   return v
+}
+
 //getters
-func (t *TaskTask) GetTaskid() int {
+func (t *TaskTask) GetTaskid() int32 {
     return t.taskid
 }
 
@@ -20,7 +36,7 @@ func (t *TaskTask) GetName() []string {
     return t.name
 }
 
-func (t *TaskTask) GetNexttask() int {
+func (t *TaskTask) GetNexttask() int32 {
     return t.nexttask
 }
 
@@ -28,7 +44,7 @@ func (t *TaskTask) GetCompletecondition() TaskCompletecondition {
     return t.completecondition
 }
 
-func (t *TaskTask) GetExp() int {
+func (t *TaskTask) GetExp() int32 {
     return t.exp
 }
 
@@ -46,17 +62,27 @@ func (t *TaskTask) GetNullableRefNexttask() *TaskTask {
 
 type TaskTaskMgr struct {
     all []*TaskTask
-    taskidMap map[int]*TaskTask
+    taskidMap map[int32]*TaskTask
 }
 
 func(t *TaskTaskMgr) GetAll() []*TaskTask {
     return t.all
 }
 
-func(t *TaskTaskMgr) GetBytaskid(taskid int) (*TaskTask,bool) {
+func(t *TaskTaskMgr) GetBytaskid(taskid int32) (*TaskTask,bool) {
     v, ok := t.taskidMap[taskid]
     return v, ok
 }
 
 
+
+func (t *TaskTaskMgr) Init(stream *Stream) {
+    cnt := stream.ReadInt32()
+    t.all = make([]*AiAi, 0, cnt)
+    for i := 0; i < int(cnt); i++ {
+        v := &AiAi{}
+        v := createTaskTask(stream)
+        break
+    }
+}
 

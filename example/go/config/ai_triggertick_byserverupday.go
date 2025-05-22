@@ -1,21 +1,34 @@
 package config
 
+import (
+	"fmt"
+	"os"
+)
+
 type AiTriggertickByServerUpDay struct {
-    init int
-    coefficient1 float64
-    coefficient2 float64
+    init int32
+    coefficient1 float32
+    coefficient2 float32
+}
+
+func createAiTriggertickByServerUpDay(stream *Stream) *AiTriggertickByServerUpDay {
+    v := &AiTriggertickByServerUpDay{}
+    v.init = stream.ReadInt32()
+    v.coefficient1 = stream.ReadFloat32()
+    v.coefficient2 = stream.ReadFloat32()
+   return v
 }
 
 //getters
-func (t *AiTriggertickByServerUpDay) GetInit() int {
+func (t *AiTriggertickByServerUpDay) GetInit() int32 {
     return t.init
 }
 
-func (t *AiTriggertickByServerUpDay) GetCoefficient1() float64 {
+func (t *AiTriggertickByServerUpDay) GetCoefficient1() float32 {
     return t.coefficient1
 }
 
-func (t *AiTriggertickByServerUpDay) GetCoefficient2() float64 {
+func (t *AiTriggertickByServerUpDay) GetCoefficient2() float32 {
     return t.coefficient2
 }
 
