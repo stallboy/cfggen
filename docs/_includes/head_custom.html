@@ -1,0 +1,18 @@
+{% if site.search_enabled != false %}
+
+<script src="{{ '/assets/js/vendor/lunr.multi.js' | relative_url }}"></script>
+<script src="{{ '/assets/js/vendor/lunr.stemmer.support.js' | relative_url }}"></script>
+<script src="{{ '/assets/js/vendor/lunr.zh.jieba_wasm.js' | relative_url }}"></script>
+
+<script type="module">
+       import init, { cut } from 'https://cdn.jsdelivr.net/npm/jieba-wasm@2.2.0/pkg/web/jieba_rs_wasm.js';
+       await init();
+       if (window.setupLunrZh) {
+              window.setupLunrZh(lunr, { cut });
+              if (window.onLunrZhOk) {
+                     window.onLunrZhOk();
+              }
+       }
+</script>
+
+{% endif %}

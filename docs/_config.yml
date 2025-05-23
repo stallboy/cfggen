@@ -1,7 +1,8 @@
 title: cfggen
 description: excel/CSV/JSON object mapping. object database viewer and editor. generate reading code.
-#theme: just-the-docs
-remote_theme: just-the-docs/just-the-docs
+theme: just-the-docs
+# remote_theme: just-the-docs/just-the-docs
+language: zh-CN
 
 url: https://stallboy.github.io/cfggen
 
