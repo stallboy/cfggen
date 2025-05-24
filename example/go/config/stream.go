@@ -3,17 +3,17 @@ package config
 import (
 	"encoding/binary"
 	"fmt"
-	"os"
+	"io"
 )
 
 type Stream struct {
-	file      *os.File
+	reader    io.Reader
 	stringBuf []byte
 }
 
 func (s *Stream) ReadBool() bool {
 	var value byte
-	if err := binary.Read(s.file, binary.LittleEndian, &value); err != nil {
+	if err := binary.Read(s.reader, binary.LittleEndian, &value); err != nil {
 		panic(fmt.Errorf("read bool: %w", err))
 	}
 	return value != 0
@@ -21,7 +21,7 @@ func (s *Stream) ReadBool() bool {
 
 func (s *Stream) ReadInt32() int32 {
 	var value int32
-	if err := binary.Read(s.file, binary.LittleEndian, &value); err != nil {
+	if err := binary.Read(s.reader, binary.LittleEndian, &value); err != nil {
 		panic(fmt.Errorf("read int32: %w", err))
 	}
 	return value
@@ -29,7 +29,7 @@ func (s *Stream) ReadInt32() int32 {
 
 func (s *Stream) ReadInt64() int64 {
 	var value int64
-	if err := binary.Read(s.file, binary.LittleEndian, &value); err != nil {
+	if err := binary.Read(s.reader, binary.LittleEndian, &value); err != nil {
 		panic(fmt.Errorf("read int64: %w", err))
 	}
 	return value
@@ -37,7 +37,7 @@ func (s *Stream) ReadInt64() int64 {
 
 func (s *Stream) ReadFloat32() float32 {
 	var value float32
-	if err := binary.Read(s.file, binary.LittleEndian, &value); err != nil {
+	if err := binary.Read(s.reader, binary.LittleEndian, &value); err != nil {
 		panic(fmt.Errorf("read float32: %w", err))
 	}
 	return value
@@ -50,7 +50,7 @@ func (s *Stream) ReadString() string {
 		return ""
 	}
 	buf := make([]byte, length)
-	n, err := s.file.Read(buf)
+	n, err := io.ReadFull(s.reader, buf)
 	if err != nil {
 		panic(fmt.Errorf("read string: %w", err))
 	}
