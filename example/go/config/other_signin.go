@@ -12,6 +12,18 @@ type OtherSignin struct {
 func createOtherSignin(stream *Stream) *OtherSignin {
     v := &OtherSignin{}
     v.id = stream.ReadInt32()
+	item2countMapSize := stream.ReadInt32()
+	v.item2countMap = make(map[int32]int32, item2countMapSize)
+	for i := 0; i < int(item2countMapSize); i++ {
+		var k = stream.ReadInt32()
+		v.item2countMap[k] = stream.ReadInt32()
+	}
+	vipitem2vipcountMapSize := stream.ReadInt32()
+	v.vipitem2vipcountMap = make(map[int32]int32, vipitem2vipcountMapSize)
+	for i := 0; i < int(vipitem2vipcountMapSize); i++ {
+		var k = stream.ReadInt32()
+		v.vipitem2vipcountMap[k] = stream.ReadInt32()
+	}
     v.viplevel = stream.ReadInt32()
     v.iconFile = stream.ReadString()
     return v

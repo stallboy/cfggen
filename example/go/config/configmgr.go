@@ -29,6 +29,9 @@ func (t *ConfigMgr) Init(reader io.Reader) {
     myStream := &Stream{reader: reader}
     for {
         cfgName := myStream.ReadString()
+        if cfgName == "" {
+            break
+        }
         switch cfgName {
         case "ai.ai":
                 t.AiAiMgr = &AiAiMgr{}

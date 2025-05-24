@@ -16,6 +16,12 @@ func createOtherDrop(stream *Stream) *OtherDrop {
     for i := 0; i < int(itemsSize); i++ {
         v.items = append(v.items, createOtherDropItem(stream))
     }
+	testmapSize := stream.ReadInt32()
+	v.testmap = make(map[int32]int32, testmapSize)
+	for i := 0; i < int(testmapSize); i++ {
+		var k = stream.ReadInt32()
+		v.testmap[k] = stream.ReadInt32()
+	}
     return v
 }
 

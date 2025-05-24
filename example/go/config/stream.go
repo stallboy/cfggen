@@ -22,6 +22,9 @@ func (s *Stream) ReadBool() bool {
 func (s *Stream) ReadInt32() int32 {
 	var value int32
 	if err := binary.Read(s.reader, binary.LittleEndian, &value); err != nil {
+		if err == io.EOF || err == io.ErrUnexpectedEOF {
+			return 0
+		}
 		panic(fmt.Errorf("read int32: %w", err))
 	}
 	return value

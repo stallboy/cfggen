@@ -17,7 +17,7 @@ func main() {
 
 	// 使用cfgMgr
 	for _, v := range cfgMgr.AiAiMgr.GetAll() {
-		print(v.GetCondID(), v.GetDesc())
+		println(v.GetCondID(), v.GetDesc())
 	}
 
 }

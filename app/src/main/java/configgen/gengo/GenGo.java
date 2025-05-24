@@ -313,7 +313,18 @@ public class GenGo extends GeneratorWithTag {
                         replace("${ElemType}", type(fList.item())).
                         replace("${ReadElem}", genReadField(fList.item()));
             case FMap fMap:
-                return "";
+                return """
+                        	${varName}Size := stream.ReadInt32()
+                        	v.${varName} = make(map[${KeyType}]${ValueType}, ${varName}Size)
+                        	for i := 0; i < int(${varName}Size); i++ {
+                        		var k = ${ReadKey}
+                        		v.${varName}[k] = ${ReadValue}
+                        	}
+                        """.replace("${varName}", varName).
+                        replace("${KeyType}", type(fMap.key())).
+                        replace("${ValueType}", type(fMap.value())).
+                        replace("${ReadValue}", genReadField(fMap.value())).
+                        replace("${ReadKey}", genReadField(fMap.key()));
             default:
                 return """
                             v.${varName} = ${genReadField}
@@ -401,6 +412,9 @@ public class GenGo extends GeneratorWithTag {
                     myStream := &Stream{reader: reader}
                     for {
                         cfgName := myStream.ReadString()
+                        if cfgName == "" {
+                            break
+                        }
                         switch cfgName {
                 ${templateCases}
                     }
