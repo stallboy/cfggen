@@ -1,3 +1,8 @@
+# cfgMgr.go 的设计
+每个table文件里，怎么提供访问接口。
+先提供唯一名字的mgr，由mgr来提供访问。
+否则容易重名。
+
 # 主键，副键，联合形态
 
 最常见的主键，一般只用一个filed来定义。
@@ -21,5 +26,3 @@ Primary是主要的意思，Unique跟它不能对应。
 联合键的说法像是多个键组合成一个键，但设计上并非如此。
 比如signin的viplevel并不能作为一个独立的键。
 而是可以由多个field联合。
-
-tableSchema里，感觉也不用拆分成primaryKey和uniqueKeys，都归为keys，第一个key就是主key。

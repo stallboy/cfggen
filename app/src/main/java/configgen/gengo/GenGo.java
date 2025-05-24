@@ -47,6 +47,8 @@ public class GenGo extends GeneratorWithTag {
         CfgValue cfgValue = ctx.makeValue(tag);
         cfgSchema = cfgValue.schema();
 
+        GenCfgMgrFile(cfgValue);
+
         for (Fieldable fieldable : cfgSchema.sortedFieldables()) {
             switch (fieldable) {
                 case StructSchema structSchema -> {
@@ -275,7 +277,7 @@ public class GenGo extends GeneratorWithTag {
 
     private String genCreateStruct(Structural structural, GoName name) {
         String templateCreate = """
-                func create${className}(stream *Stream) *${className} {
+                func create${className}(${streamIf} *Stream) *${className} {
                     v := &${className}{}
                 ${readValues}    return v
                 }
@@ -284,7 +286,9 @@ public class GenGo extends GeneratorWithTag {
         for (FieldSchema fieldSchema : structural.fields()) {
             readValues.append(genReadValue(fieldSchema));
         }
-        return templateCreate.replace("${className}", name.className).replace("${readValues}", readValues);
+        return templateCreate.replace("${className}", name.className).
+                replace("${readValues}", readValues).
+                replace("${streamIf}", structural.fields().size() > 0 ? "stream" : "_");
     }
 
     private String genReadValue(FieldSchema fieldSchema) {
@@ -351,8 +355,8 @@ public class GenGo extends GeneratorWithTag {
             case StructRef structRef -> {
                 Fieldable fieldable = structRef.obj();
                 yield switch (fieldable) {
-                    case StructSchema ignored -> "*" +ClassName(fieldable);
-                    case InterfaceSchema ignored ->  ClassName(fieldable);
+                    case StructSchema ignored -> "*" + ClassName(fieldable);
+                    case InterfaceSchema ignored -> ClassName(fieldable);
                 };
             }
             case FList fList -> "[]" + type(fList.item());
@@ -370,6 +374,60 @@ public class GenGo extends GeneratorWithTag {
         ps.println("func (t *%s) Get%s() %s {", className, upper1(varName), t);
         ps.println1("return t.%s", lower1(varName));
         ps.println("}");
+    }
+
+    private void GenCfgMgrFile(CfgValue cfgValue) {
+        String mgrFileName = Generator.lower1(pkg) + "mgr";
+        String mgrClassName = Generator.upper1(pkg) + "Mgr";
+        File csFile = dstDir.toPath().resolve(mgrFileName + ".go").toFile();
+
+        String templateDefine = """
+                    ${ClassName}Mgr *${ClassName}Mgr
+                """;
+        String templateCase = """
+                        case "${ClassReadName}":
+                                t.${ClassName}Mgr = &${ClassName}Mgr{}
+                                t.${ClassName}Mgr.Init(myStream)
+                """;
+        String template = """
+                package ${pkg}
+                
+                import "io"
+                
+                type ${mgrClassName} struct {
+                ${templateDefines}}
+                
+                func (t *${mgrClassName}) Init(reader io.Reader) {
+                    myStream := &Stream{reader: reader}
+                    for {
+                        cfgName := myStream.ReadString()
+                        switch cfgName {
+                ${templateCases}
+                    }
+                    }
+                }
+                """;
+
+        try (CachedIndentPrinter ps = createCode(csFile, encoding)) {
+            StringBuilder templateDefines = new StringBuilder();
+            StringBuilder templateCases = new StringBuilder();
+            for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
+                GoName name = new GoName(vTable.schema());
+                templateDefines.append(
+                        templateDefine.replace("${ClassName}", name.className)
+                );
+                templateCases.append(
+                        templateCase.replace("${ClassName}", name.className).
+                                replace("${ClassReadName}", name.pkgName)
+                );
+            }
+            ps.println(template.
+                    replace("${pkg}", pkg).
+                    replace("${mgrClassName}", mgrClassName).
+                    replace("${templateDefines}", templateDefines).
+                    replace("${templateCases}", templateCases)
+            );
+        }
     }
 
     private String ClassName(Nameable variable) {

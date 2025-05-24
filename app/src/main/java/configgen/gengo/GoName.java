@@ -18,6 +18,7 @@ public class GoName {
     final String fileName;
     final String filePath;
     final String className;
+    final String pkgName;
 
     GoName(Nameable nameable) {
         String name;
@@ -27,6 +28,7 @@ public class GoName {
         } else {
             name = nameable.name();
         }
+        pkgName = nameable.name();
         String[] seps = name.split("\\.");
         fileName = seps[seps.length - 1].toLowerCase() + ".go";
 
