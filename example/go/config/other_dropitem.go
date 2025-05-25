@@ -13,7 +13,7 @@ func createOtherDropItem(stream *Stream) *OtherDropItem {
     itemidsSize := stream.ReadInt32()
     v.itemids = make([]int32, itemidsSize)
     for i := 0; i < int(itemidsSize); i++ {
-        v.itemids = append(v.itemids, stream.ReadInt32())
+        v.itemids[i] = stream.ReadInt32()
     }
     v.countmin = stream.ReadInt32()
     v.countmax = stream.ReadInt32()

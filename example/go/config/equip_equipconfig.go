@@ -69,9 +69,12 @@ func(t *EquipEquipconfigMgr) GetByentry(entry string) *EquipEquipconfig {
 func (t *EquipEquipconfigMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*EquipEquipconfig, 0, cnt)
+    t.entryMap = make(map[string]*EquipEquipconfig, cnt)
+
     for i := 0; i < int(cnt); i++ {
         v := createEquipEquipconfig(stream)
         t.all = append(t.all, v)
+        t.entryMap[v.entry] = v
     }
 }
 

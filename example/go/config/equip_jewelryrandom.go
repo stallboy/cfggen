@@ -14,12 +14,12 @@ func createEquipJewelryrandom(stream *Stream) *EquipJewelryrandom {
     otherRangeSize := stream.ReadInt32()
     v.otherRange = make([]*Range, otherRangeSize)
     for i := 0; i < int(otherRangeSize); i++ {
-        v.otherRange = append(v.otherRange, createRange(stream))
+        v.otherRange[i] = createRange(stream)
     }
     testPackSize := stream.ReadInt32()
     v.testPack = make([]*EquipTestPackBean, testPackSize)
     for i := 0; i < int(testPackSize); i++ {
-        v.testPack = append(v.testPack, createEquipTestPackBean(stream))
+        v.testPack[i] = createEquipTestPackBean(stream)
     }
     return v
 }
@@ -50,8 +50,8 @@ func(t *EquipJewelryrandomMgr) GetAll() []*EquipJewelryrandom {
     return t.all
 }
 
-func(t *EquipJewelryrandomMgr) GetByLvlRank(LvlRank *LevelRank) *EquipJewelryrandom {
-    return t.lvlRankMap[LvlRank]
+func(t *EquipJewelryrandomMgr) GetBylvlRank(lvlRank *LevelRank) *EquipJewelryrandom {
+    return t.lvlRankMap[lvlRank]
 }
 
 
@@ -59,9 +59,12 @@ func(t *EquipJewelryrandomMgr) GetByLvlRank(LvlRank *LevelRank) *EquipJewelryran
 func (t *EquipJewelryrandomMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*EquipJewelryrandom, 0, cnt)
+    t.lvlRankMap = make(map[*LevelRank]*EquipJewelryrandom, cnt)
+
     for i := 0; i < int(cnt); i++ {
         v := createEquipJewelryrandom(stream)
         t.all = append(t.all, v)
+        t.lvlRankMap[v.lvlRank] = v
     }
 }
 

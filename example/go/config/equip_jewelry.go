@@ -96,8 +96,8 @@ func(t *EquipJewelryMgr) GetAll() []*EquipJewelry {
     return t.all
 }
 
-func(t *EquipJewelryMgr) GetByID(ID int32) *EquipJewelry {
-    return t.iDMap[ID]
+func(t *EquipJewelryMgr) GetByiD(iD int32) *EquipJewelry {
+    return t.iDMap[iD]
 }
 
 
@@ -105,9 +105,12 @@ func(t *EquipJewelryMgr) GetByID(ID int32) *EquipJewelry {
 func (t *EquipJewelryMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*EquipJewelry, 0, cnt)
+    t.iDMap = make(map[int32]*EquipJewelry, cnt)
+
     for i := 0; i < int(cnt); i++ {
         v := createEquipJewelry(stream)
         t.all = append(t.all, v)
+        t.iDMap[v.iD] = v
     }
 }
 

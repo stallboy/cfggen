@@ -32,8 +32,8 @@ func(t *EquipJewelrytypeMgr) GetAll() []*EquipJewelrytype {
     return t.all
 }
 
-func(t *EquipJewelrytypeMgr) GetByTypeName(TypeName string) *EquipJewelrytype {
-    return t.typeNameMap[TypeName]
+func(t *EquipJewelrytypeMgr) GetBytypeName(typeName string) *EquipJewelrytype {
+    return t.typeNameMap[typeName]
 }
 
 
@@ -41,9 +41,12 @@ func(t *EquipJewelrytypeMgr) GetByTypeName(TypeName string) *EquipJewelrytype {
 func (t *EquipJewelrytypeMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*EquipJewelrytype, 0, cnt)
+    t.typeNameMap = make(map[string]*EquipJewelrytype, cnt)
+
     for i := 0; i < int(cnt); i++ {
         v := createEquipJewelrytype(stream)
         t.all = append(t.all, v)
+        t.typeNameMap[v.typeName] = v
     }
 }
 

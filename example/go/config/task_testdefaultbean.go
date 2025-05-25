@@ -19,12 +19,12 @@ func createTaskTestDefaultBean(stream *Stream) *TaskTestDefaultBean {
     testListSize := stream.ReadInt32()
     v.testList = make([]int32, testListSize)
     for i := 0; i < int(testListSize); i++ {
-        v.testList = append(v.testList, stream.ReadInt32())
+        v.testList[i] = stream.ReadInt32()
     }
     testList2Size := stream.ReadInt32()
     v.testList2 = make([]int32, testList2Size)
     for i := 0; i < int(testList2Size); i++ {
-        v.testList2 = append(v.testList2, stream.ReadInt32())
+        v.testList2[i] = stream.ReadInt32()
     }
 	testMapSize := stream.ReadInt32()
 	v.testMap = make(map[int32]string, testMapSize)

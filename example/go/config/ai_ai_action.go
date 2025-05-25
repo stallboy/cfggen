@@ -16,12 +16,12 @@ func createAiAi_action(stream *Stream) *AiAi_action {
     argIListSize := stream.ReadInt32()
     v.argIList = make([]int32, argIListSize)
     for i := 0; i < int(argIListSize); i++ {
-        v.argIList = append(v.argIList, stream.ReadInt32())
+        v.argIList[i] = stream.ReadInt32()
     }
     argSListSize := stream.ReadInt32()
     v.argSList = make([]int32, argSListSize)
     for i := 0; i < int(argSListSize); i++ {
-        v.argSList = append(v.argSList, stream.ReadInt32())
+        v.argSList[i] = stream.ReadInt32()
     }
     return v
 }
@@ -56,8 +56,8 @@ func(t *AiAi_actionMgr) GetAll() []*AiAi_action {
     return t.all
 }
 
-func(t *AiAi_actionMgr) GetByID(ID int32) *AiAi_action {
-    return t.iDMap[ID]
+func(t *AiAi_actionMgr) GetByiD(iD int32) *AiAi_action {
+    return t.iDMap[iD]
 }
 
 
@@ -65,9 +65,12 @@ func(t *AiAi_actionMgr) GetByID(ID int32) *AiAi_action {
 func (t *AiAi_actionMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*AiAi_action, 0, cnt)
+    t.iDMap = make(map[int32]*AiAi_action, cnt)
+
     for i := 0; i < int(cnt); i++ {
         v := createAiAi_action(stream)
         t.all = append(t.all, v)
+        t.iDMap[v.iD] = v
     }
 }
 

@@ -75,9 +75,18 @@ func(t *OtherKeytestMgr) GetByKeyId2Id3(id2 int64, id3 int32) *OtherKeytest {
 func (t *OtherKeytestMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*OtherKeytest, 0, cnt)
+    t.id1Id2Map = make(map[KeyId1Id2]*OtherKeytest, cnt)
+    t.id1Id3Map = make(map[KeyId1Id3]*OtherKeytest, cnt)
+    t.id2Map = make(map[int64]*OtherKeytest, cnt)
+    t.id2Id3Map = make(map[KeyId2Id3]*OtherKeytest, cnt)
+
     for i := 0; i < int(cnt); i++ {
         v := createOtherKeytest(stream)
         t.all = append(t.all, v)
+        t.id1Id2Map[KeyId1Id2{v.id1, v.id2}] = v
+        t.id1Id3Map[KeyId1Id3{v.id1, v.id3}] = v
+        t.id2Map[v.id2] = v
+        t.id2Id3Map[KeyId2Id3{v.id2, v.id3}] = v
     }
 }
 

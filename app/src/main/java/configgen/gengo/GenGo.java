@@ -203,43 +203,77 @@ public class GenGo extends GeneratorWithTag {
                 mapDefines.append(mapDefine);
             }
 
-            String varDefineTemplate = "${varName} ${varType}";
-            String mapGetTemplate_Multi = """
-                    func(t *${className}Mgr) GetBy${IdType}(${varDefines}) *${className} {
-                        return t.${mapName}Map[${IdType}{${paramVars}}]
-                    }
-                    
-                    """;
-            String mapGetTemplate_Single = """
-                    func(t *${className}Mgr) GetBy${paramVars}(${varDefines}) *${className} {
-                        return t.${mapName}Map[${paramVars}]
-                    }
-                    
-                    """;
             StringBuilder mapGetBy = new StringBuilder();
+            StringBuilder createMaps = new StringBuilder();
+            StringBuilder setMaps = new StringBuilder();
             for (KeySchema keySchema : keySchemas) {
                 StringBuilder varDefines = new StringBuilder();
                 StringBuilder paramVars = new StringBuilder();
+                StringBuilder paramVarsInV = new StringBuilder();//t.id1Id2Map[KeyId1Id2{v.id1, v.id2}] = v 里面的v.id1, v.id2
                 var fieldSchemas = keySchema.fieldSchemas();
-                for (int i = 0; i < fieldSchemas.size(); i++) {
+                var fieldCnt = fieldSchemas.size();
+                for (int i = 0; i < fieldCnt; i++) {
                     var fieldSchema = fieldSchemas.get(i);
-                    String varName = fieldSchema.name();
-                    String varType = type(fieldSchema.type());
-                    String varDefine = varDefineTemplate.replace("${varName}", varName).replace("${varType}", varType);
-                    varDefines.append(varDefine);
-                    paramVars.append(fieldSchema.name());
-                    if (i < fieldSchemas.size() - 1) {
+                    String varName = Generator.lower1(fieldSchema.name());
+                    varDefines.append("${varName} ${varType}".
+                            replace("${varName}", varName).
+                            replace("${varType}", type(fieldSchema.type())));
+                    paramVars.append(varName);
+                    paramVarsInV.append("v." + varName);
+                    if (i < fieldCnt - 1) {
                         varDefines.append(", ");
                         paramVars.append(", ");
+                        paramVarsInV.append(", ");
                     }
                 }
-                var template = fieldSchemas.size() > 1 ? mapGetTemplate_Multi : mapGetTemplate_Single;
-                mapGetBy.append(template.
+                String templateGetBy = keySchema == table.primaryKey() ? """
+                        func(t *${className}Mgr) Get(${varDefines}) *${className} {
+                            return t.${mapName}Map[${IdType}{${paramVars}}]
+                        }
+                        
+                        """ : fieldCnt > 1 ? """
+                        func(t *${className}Mgr) GetBy${IdType}(${varDefines}) *${className} {
+                            return t.${mapName}Map[${IdType}{${paramVars}}]
+                        }
+                        
+                        """ : """
+                        func(t *${className}Mgr) GetBy${paramVars}(${varDefines}) *${className} {
+                            return t.${mapName}Map[${paramVars}]
+                        }
+                        
+                        """;
+                mapGetBy.append((fieldCnt > 1 ? """
+                        func(t *${className}Mgr) GetBy${IdType}(${varDefines}) *${className} {
+                            return t.${mapName}Map[${IdType}{${paramVars}}]
+                        }
+                        
+                        """ : """
+                        func(t *${className}Mgr) GetBy${paramVars}(${varDefines}) *${className} {
+                            return t.${mapName}Map[${paramVars}]
+                        }
+                        
+                        """).
                         replace("${className}", name.className).
                         replace("${IdType}", keyClassName(keySchema)).
                         replace("${mapName}", mapName(keySchema)).
                         replace("${varDefines}", varDefines).
                         replace("${paramVars}", paramVars));
+                createMaps.append("""
+                            t.${mapName}Map = make(map[${IdType}]*${className}, cnt)
+                        """.
+                        replace("${mapName}", mapName(keySchema)).
+                        replace("${IdType}", keyClassName(keySchema)).
+                        replace("${className}", name.className)
+                );
+                setMaps.append((fieldCnt > 1 ? """
+                                t.${mapName}Map[${IdType}{${paramVarsInV}}] = v                        
+                        """ : """
+                                t.${mapName}Map[${paramVarsInV}] = v
+                        """).
+                        replace("${mapName}", mapName(keySchema)).
+                        replace("${IdType}", keyClassName(keySchema)).
+                        replace("${paramVarsInV}", paramVarsInV)
+                );
             }
 
             //gen all,GenAll
@@ -256,22 +290,26 @@ public class GenGo extends GeneratorWithTag {
                     """.
                     replace("${className}", name.className).
                     replace("${IdType}", keyClassName(table.primaryKey())).
-                    replace("${mapDefines}", mapDefines.toString()).
-                    replace("${mapGetBy}", mapGetBy.toString())
+                    replace("${mapDefines}", mapDefines).
+                    replace("${mapGetBy}", mapGetBy)
             );
 
             //gen Init
-            String initTemplate = """
+            ps.println("""
                     func (t *${className}Mgr) Init(stream *Stream) {
                         cnt := stream.ReadInt32()
                         t.all = make([]*${className}, 0, cnt)
+                    ${createMaps}
                         for i := 0; i < int(cnt); i++ {
                             v := create${className}(stream)
                             t.all = append(t.all, v)
-                        }
+                    ${setMaps}    }
                     }
-                    """;
-            ps.println(initTemplate.replace("${className}", name.className));
+                    """.
+                    replace("${className}", name.className).
+                    replace("${createMaps}", createMaps).
+                    replace("${setMaps}", setMaps)
+            );
         }
     }
 
@@ -306,7 +344,7 @@ public class GenGo extends GeneratorWithTag {
                             ${varName}Size := stream.ReadInt32()
                             v.${varName} = make([]${ElemType}, ${varName}Size)
                             for i := 0; i < int(${varName}Size); i++ {
-                                v.${varName} = append(v.${varName}, ${ReadElem})
+                                v.${varName}[i] = ${ReadElem}
                             }
                         """.
                         replace("${varName}", varName).
@@ -397,20 +435,20 @@ public class GenGo extends GeneratorWithTag {
                 
                 func Get${ClassName}Mgr() *${ClassName}Mgr {
                     return ${className}Mgr
-                }                
+                }
+                
                 """;
         String templateCase = """
                         case "${ClassReadName}":
-                                ${className}Mgr = &${ClassName}Mgr{}
-                                ${className}Mgr.Init(myStream)
+                            ${className}Mgr = &${ClassName}Mgr{}
+                            ${className}Mgr.Init(myStream)
                 """;
         String template = """
                 package ${pkg}
                 
                 import "io"
                 
-                ${templateDefines}                
-                func Init(reader io.Reader) {
+                ${templateDefines}func Init(reader io.Reader) {
                     myStream := &Stream{reader: reader}
                     for {
                         cfgName := myStream.ReadString()

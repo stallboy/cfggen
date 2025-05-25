@@ -22,7 +22,7 @@ func createTaskTask2(stream *Stream) *TaskTask2 {
     nameSize := stream.ReadInt32()
     v.name = make([]string, nameSize)
     for i := 0; i < int(nameSize); i++ {
-        v.name = append(v.name, stream.ReadString())
+        v.name[i] = stream.ReadString()
     }
     v.nexttask = stream.ReadInt32()
     v.completecondition = createTaskCompletecondition(stream)
@@ -33,17 +33,17 @@ func createTaskTask2(stream *Stream) *TaskTask2 {
     testListSize := stream.ReadInt32()
     v.testList = make([]int32, testListSize)
     for i := 0; i < int(testListSize); i++ {
-        v.testList = append(v.testList, stream.ReadInt32())
+        v.testList[i] = stream.ReadInt32()
     }
     testListStructSize := stream.ReadInt32()
     v.testListStruct = make([]*Position, testListStructSize)
     for i := 0; i < int(testListStructSize); i++ {
-        v.testListStruct = append(v.testListStruct, createPosition(stream))
+        v.testListStruct[i] = createPosition(stream)
     }
     testListInterfaceSize := stream.ReadInt32()
     v.testListInterface = make([]AiTriggerTick, testListInterfaceSize)
     for i := 0; i < int(testListInterfaceSize); i++ {
-        v.testListInterface = append(v.testListInterface, createAiTriggerTick(stream))
+        v.testListInterface[i] = createAiTriggerTick(stream)
     }
     return v
 }
@@ -119,9 +119,12 @@ func(t *TaskTask2Mgr) GetBytaskid(taskid int32) *TaskTask2 {
 func (t *TaskTask2Mgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*TaskTask2, 0, cnt)
+    t.taskidMap = make(map[int32]*TaskTask2, cnt)
+
     for i := 0; i < int(cnt); i++ {
         v := createTaskTask2(stream)
         t.all = append(t.all, v)
+        t.taskidMap[v.taskid] = v
     }
 }
 

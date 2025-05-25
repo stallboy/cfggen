@@ -62,9 +62,12 @@ func(t *OtherLootitemMgr) GetByKeyLootidItemid(lootid int32, itemid int32) *Othe
 func (t *OtherLootitemMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*OtherLootitem, 0, cnt)
+    t.lootidItemidMap = make(map[KeyLootidItemid]*OtherLootitem, cnt)
+
     for i := 0; i < int(cnt); i++ {
         v := createOtherLootitem(stream)
         t.all = append(t.all, v)
+        t.lootidItemidMap[KeyLootidItemid{v.lootid, v.itemid}] = v
     }
 }
 

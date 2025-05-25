@@ -49,9 +49,12 @@ func(t *TaskCompleteconditiontypeMgr) GetByid(id int32) *TaskCompleteconditionty
 func (t *TaskCompleteconditiontypeMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*TaskCompleteconditiontype, 0, cnt)
+    t.idMap = make(map[int32]*TaskCompleteconditiontype, cnt)
+
     for i := 0; i < int(cnt); i++ {
         v := createTaskCompleteconditiontype(stream)
         t.all = append(t.all, v)
+        t.idMap[v.id] = v
     }
 }
 

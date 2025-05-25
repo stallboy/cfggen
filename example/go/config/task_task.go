@@ -17,7 +17,7 @@ func createTaskTask(stream *Stream) *TaskTask {
     nameSize := stream.ReadInt32()
     v.name = make([]string, nameSize)
     for i := 0; i < int(nameSize); i++ {
-        v.name = append(v.name, stream.ReadString())
+        v.name[i] = stream.ReadString()
     }
     v.nexttask = stream.ReadInt32()
     v.completecondition = createTaskCompletecondition(stream)
@@ -77,9 +77,12 @@ func(t *TaskTaskMgr) GetBytaskid(taskid int32) *TaskTask {
 func (t *TaskTaskMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*TaskTask, 0, cnt)
+    t.taskidMap = make(map[int32]*TaskTask, cnt)
+
     for i := 0; i < int(cnt); i++ {
         v := createTaskTask(stream)
         t.all = append(t.all, v)
+        t.taskidMap[v.taskid] = v
     }
 }
 

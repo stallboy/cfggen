@@ -20,7 +20,7 @@ func createAiAi(stream *Stream) *AiAi {
     actionIDSize := stream.ReadInt32()
     v.actionID = make([]int32, actionIDSize)
     for i := 0; i < int(actionIDSize); i++ {
-        v.actionID = append(v.actionID, stream.ReadInt32())
+        v.actionID[i] = stream.ReadInt32()
     }
     v.deathRemove = stream.ReadBool()
     return v
@@ -64,8 +64,8 @@ func(t *AiAiMgr) GetAll() []*AiAi {
     return t.all
 }
 
-func(t *AiAiMgr) GetByID(ID int32) *AiAi {
-    return t.iDMap[ID]
+func(t *AiAiMgr) GetByiD(iD int32) *AiAi {
+    return t.iDMap[iD]
 }
 
 
@@ -73,9 +73,12 @@ func(t *AiAiMgr) GetByID(ID int32) *AiAi {
 func (t *AiAiMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*AiAi, 0, cnt)
+    t.iDMap = make(map[int32]*AiAi, cnt)
+
     for i := 0; i < int(cnt); i++ {
         v := createAiAi(stream)
         t.all = append(t.all, v)
+        t.iDMap[v.iD] = v
     }
 }
 

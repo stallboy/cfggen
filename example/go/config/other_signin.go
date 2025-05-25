@@ -83,9 +83,14 @@ func(t *OtherSigninMgr) GetByKeyIdViplevel(id int32, viplevel int32) *OtherSigni
 func (t *OtherSigninMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*OtherSignin, 0, cnt)
+    t.idMap = make(map[int32]*OtherSignin, cnt)
+    t.idViplevelMap = make(map[KeyIdViplevel]*OtherSignin, cnt)
+
     for i := 0; i < int(cnt); i++ {
         v := createOtherSignin(stream)
         t.all = append(t.all, v)
+        t.idMap[v.id] = v
+        t.idViplevelMap[KeyIdViplevel{v.id, v.viplevel}] = v
     }
 }
 
