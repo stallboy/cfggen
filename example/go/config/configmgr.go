@@ -190,7 +190,6 @@ func Init(reader io.Reader) {
 		case "task.taskextraexp":
 			taskTaskextraexpMgr = &TaskTaskextraexpMgr{}
 			taskTaskextraexpMgr.Init(myStream)
-
 		}
 	}
 }

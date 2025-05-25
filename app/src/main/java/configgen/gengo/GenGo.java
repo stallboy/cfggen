@@ -456,10 +456,9 @@ public class GenGo extends GeneratorWithTag {
                             break
                         }
                         switch cfgName {
-                ${templateCases}
-                        }
+                ${templateCases}        }
                     }
-                }                """;
+                }""";
 
         try (CachedIndentPrinter ps = createCode(csFile, encoding)) {
             StringBuilder templateDefines = new StringBuilder();
