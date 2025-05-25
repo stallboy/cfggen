@@ -44,13 +44,14 @@ func (t *EquipJewelryrandom) GetTestPack() []*EquipTestPackBean {
 type EquipJewelryrandomMgr struct {
     all []*EquipJewelryrandom
     lvlRankMap map[*LevelRank]*EquipJewelryrandom
+
 }
 
 func(t *EquipJewelryrandomMgr) GetAll() []*EquipJewelryrandom {
     return t.all
 }
 
-func(t *EquipJewelryrandomMgr) GetBylvlRank(lvlRank *LevelRank) *EquipJewelryrandom {
+func(t *EquipJewelryrandomMgr) Get(lvlRank *LevelRank) *EquipJewelryrandom {
     return t.lvlRankMap[lvlRank]
 }
 

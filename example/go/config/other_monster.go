@@ -28,13 +28,14 @@ func (t *OtherMonster) GetPosList() []*Position {
 type OtherMonsterMgr struct {
     all []*OtherMonster
     idMap map[int32]*OtherMonster
+
 }
 
 func(t *OtherMonsterMgr) GetAll() []*OtherMonster {
     return t.all
 }
 
-func(t *OtherMonsterMgr) GetByid(id int32) *OtherMonster {
+func(t *OtherMonsterMgr) Get(id int32) *OtherMonster {
     return t.idMap[id]
 }
 

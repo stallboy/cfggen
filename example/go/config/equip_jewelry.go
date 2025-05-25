@@ -74,29 +74,46 @@ func (t *EquipJewelry) GetDescription() string {
 }
 
 //ref properties
-func (t *EquipJewelry) GetRefLvlRank() *EquipJewelryrandom {
+func (t *EquipJewelry) GetrefLvlRank() *EquipJewelryrandom {
+    if t.refLvlRank == nil {
+        t.refLvlRank = GetEquipJewelryrandomMgr().Get(t.lvlRank)
+    }
     return t.refLvlRank
 }
-func (t *EquipJewelry) GetRefJType() *EquipJewelrytype {
+
+func (t *EquipJewelry) GetrefJType() *EquipJewelrytype {
+    if t.refJType == nil {
+        t.refJType = GetEquipJewelrytypeMgr().Get(t.jType)
+    }
     return t.refJType
 }
-func (t *EquipJewelry) GetNullableRefSuitID() *EquipJewelrysuit {
+
+func (t *EquipJewelry) GetnullableRefSuitID() *EquipJewelrysuit {
+    if t.nullableRefSuitID == nil {
+        t.nullableRefSuitID = GetEquipJewelrysuitMgr().Get(t.suitID)
+    }
     return t.nullableRefSuitID
 }
-func (t *EquipJewelry) GetRefKeyAbility() *EquipAbility {
+
+func (t *EquipJewelry) GetrefKeyAbility() *EquipAbility {
+    if t.refKeyAbility == nil {
+        t.refKeyAbility = GetEquipAbilityMgr().Get(t.keyAbility)
+    }
     return t.refKeyAbility
 }
+
 
 type EquipJewelryMgr struct {
     all []*EquipJewelry
     iDMap map[int32]*EquipJewelry
+
 }
 
 func(t *EquipJewelryMgr) GetAll() []*EquipJewelry {
     return t.all
 }
 
-func(t *EquipJewelryMgr) GetByiD(iD int32) *EquipJewelry {
+func(t *EquipJewelryMgr) Get(iD int32) *EquipJewelry {
     return t.iDMap[iD]
 }
 

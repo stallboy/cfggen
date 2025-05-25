@@ -39,13 +39,14 @@ func (t *EquipRank) GetRankShowName() string {
 type EquipRankMgr struct {
     all []*EquipRank
     rankIDMap map[int32]*EquipRank
+
 }
 
 func(t *EquipRankMgr) GetAll() []*EquipRank {
     return t.all
 }
 
-func(t *EquipRankMgr) GetByrankID(rankID int32) *EquipRank {
+func(t *EquipRankMgr) Get(rankID int32) *EquipRank {
     return t.rankIDMap[rankID]
 }
 

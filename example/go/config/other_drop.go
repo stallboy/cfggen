@@ -45,13 +45,14 @@ func (t *OtherDrop) GetTestmap() map[int32]int32 {
 type OtherDropMgr struct {
     all []*OtherDrop
     dropidMap map[int32]*OtherDrop
+
 }
 
 func(t *OtherDropMgr) GetAll() []*OtherDrop {
     return t.all
 }
 
-func(t *OtherDropMgr) GetBydropid(dropid int32) *OtherDrop {
+func(t *OtherDropMgr) Get(dropid int32) *OtherDrop {
     return t.dropidMap[dropid]
 }
 

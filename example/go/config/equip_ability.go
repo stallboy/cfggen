@@ -35,13 +35,14 @@ func (t *EquipAbility) GetName() string {
 type EquipAbilityMgr struct {
     all []*EquipAbility
     idMap map[int32]*EquipAbility
+
 }
 
 func(t *EquipAbilityMgr) GetAll() []*EquipAbility {
     return t.all
 }
 
-func(t *EquipAbilityMgr) GetByid(id int32) *EquipAbility {
+func(t *EquipAbilityMgr) Get(id int32) *EquipAbility {
     return t.idMap[id]
 }
 

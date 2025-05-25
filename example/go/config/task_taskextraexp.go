@@ -60,13 +60,14 @@ func (t *TaskTaskextraexp) GetFieldd() string {
 type TaskTaskextraexpMgr struct {
     all []*TaskTaskextraexp
     taskidMap map[int32]*TaskTaskextraexp
+
 }
 
 func(t *TaskTaskextraexpMgr) GetAll() []*TaskTaskextraexp {
     return t.all
 }
 
-func(t *TaskTaskextraexpMgr) GetBytaskid(taskid int32) *TaskTaskextraexp {
+func(t *TaskTaskextraexpMgr) Get(taskid int32) *TaskTaskextraexp {
     return t.taskidMap[taskid]
 }
 

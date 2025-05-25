@@ -52,23 +52,32 @@ func (t *TaskTask) GetTestDefaultBean() *TaskTestDefaultBean {
 }
 
 //ref properties
-func (t *TaskTask) GetNullableRefTaskid() *TaskTaskextraexp {
+func (t *TaskTask) GetnullableRefTaskid() *TaskTaskextraexp {
+    if t.nullableRefTaskid == nil {
+        t.nullableRefTaskid = GetTaskTaskextraexpMgr().Get(t.taskid)
+    }
     return t.nullableRefTaskid
 }
-func (t *TaskTask) GetNullableRefNexttask() *TaskTask {
+
+func (t *TaskTask) GetnullableRefNexttask() *TaskTask {
+    if t.nullableRefNexttask == nil {
+        t.nullableRefNexttask = GetTaskTaskMgr().Get(t.nexttask)
+    }
     return t.nullableRefNexttask
 }
+
 
 type TaskTaskMgr struct {
     all []*TaskTask
     taskidMap map[int32]*TaskTask
+
 }
 
 func(t *TaskTaskMgr) GetAll() []*TaskTask {
     return t.all
 }
 
-func(t *TaskTaskMgr) GetBytaskid(taskid int32) *TaskTask {
+func(t *TaskTaskMgr) Get(taskid int32) *TaskTask {
     return t.taskidMap[taskid]
 }
 

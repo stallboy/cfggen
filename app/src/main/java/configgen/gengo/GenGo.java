@@ -4,16 +4,13 @@ import configgen.ctx.Context;
 import configgen.gen.Generator;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
-import configgen.gencs.GenCs;
 import configgen.schema.*;
 import configgen.util.CachedIndentPrinter;
 import configgen.value.CfgValue;
 
 import java.util.ArrayList;
-import java.util.Map;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -176,141 +173,124 @@ public class GenGo extends GeneratorWithTag {
         if (!structural.foreignKeys().isEmpty()) {
             ps.println("//ref properties");
             for (ForeignKeySchema fk : structural.foreignKeys()) {
-                printGoVarGetter(ps, name.className, refName(fk), refType(fk), null);
+                String codeGetFuncName = "";
+                switch (fk.refKey()) {
+                    case RefKey.RefPrimary ignored -> {
+                        KeySchemaCode keySchemaCode = new KeySchemaCode(fk.key(), name, true);
+                        codeGetFuncName = keySchemaCode.codeGetFuncName;
+                    }
+                    case RefKey.RefUniq ignored -> {
+                        codeGetFuncName = "RefUniq";
+                    }
+                    case RefKey.RefList ignored -> {
+                        PrimarySubKeyCode primarySubKeyCode = new PrimarySubKeyCode(name, fk.key().fieldSchemas().getFirst());
+                        codeGetFuncName = primarySubKeyCode.codeGetByFuncName;
+                    }
+                }
+                GoName refTbName = new GoName(fk.refTableSchema());
+                String getRefCode = """
+                        func (t *${className}) Get${refName}() ${refType} {
+                            if t.${refName} == nil {
+                                t.${refName} = Get${refTableClassName}Mgr().${codeGetFuncName}(t.${varName})
+                            }
+                            return t.${refName}
+                        }
+                        """.replace("${className}", name.className).
+                        replace("${refName}", Generator.lower1(refName(fk))).
+                        replace("${refTableClassName}", refTbName.className).
+                        replace("${codeGetFuncName}", codeGetFuncName).
+                        replace("${varName}", Generator.lower1(fk.name())).
+                        replace("${refType}", refType(fk));
+                ;
+                ps.println(getRefCode);
             }
             ps.println();
         }
 
         if (table != null) {
-            List<KeySchema> keySchemas = new ArrayList<>();
-            keySchemas.add(table.primaryKey());
-            keySchemas.addAll(table.uniqueKeys());
-
-            for (KeySchema keySchema : keySchemas) {
-                genKeyClassIf(keySchema, ps);
-            }
-
-            String mapTemplate = """
-                        ${mapName}Map map[${IdType}]*${className}
-                    """;
-
-            StringBuilder mapDefines = new StringBuilder();
-            for (KeySchema keySchema : keySchemas) {
-                var mapDefine = mapTemplate.
-                        replace("${mapName}", mapName(keySchema)).
-                        replace("${IdType}", keyClassName(keySchema)).
-                        replace("${className}", name.className);
-                mapDefines.append(mapDefine);
-            }
-
-            StringBuilder mapGetBy = new StringBuilder();
-            StringBuilder createMaps = new StringBuilder();
-            StringBuilder setMaps = new StringBuilder();
-            for (KeySchema keySchema : keySchemas) {
-                StringBuilder varDefines = new StringBuilder();
-                StringBuilder paramVars = new StringBuilder();
-                StringBuilder paramVarsInV = new StringBuilder();//t.id1Id2Map[KeyId1Id2{v.id1, v.id2}] = v 里面的v.id1, v.id2
-                var fieldSchemas = keySchema.fieldSchemas();
-                var fieldCnt = fieldSchemas.size();
-                for (int i = 0; i < fieldCnt; i++) {
-                    var fieldSchema = fieldSchemas.get(i);
-                    String varName = Generator.lower1(fieldSchema.name());
-                    varDefines.append("${varName} ${varType}".
-                            replace("${varName}", varName).
-                            replace("${varType}", type(fieldSchema.type())));
-                    paramVars.append(varName);
-                    paramVarsInV.append("v." + varName);
-                    if (i < fieldCnt - 1) {
-                        varDefines.append(", ");
-                        paramVars.append(", ");
-                        paramVarsInV.append(", ");
-                    }
-                }
-                String templateGetBy = keySchema == table.primaryKey() ? """
-                        func(t *${className}Mgr) Get(${varDefines}) *${className} {
-                            return t.${mapName}Map[${IdType}{${paramVars}}]
-                        }
-                        
-                        """ : fieldCnt > 1 ? """
-                        func(t *${className}Mgr) GetBy${IdType}(${varDefines}) *${className} {
-                            return t.${mapName}Map[${IdType}{${paramVars}}]
-                        }
-                        
-                        """ : """
-                        func(t *${className}Mgr) GetBy${paramVars}(${varDefines}) *${className} {
-                            return t.${mapName}Map[${paramVars}]
-                        }
-                        
-                        """;
-                mapGetBy.append((fieldCnt > 1 ? """
-                        func(t *${className}Mgr) GetBy${IdType}(${varDefines}) *${className} {
-                            return t.${mapName}Map[${IdType}{${paramVars}}]
-                        }
-                        
-                        """ : """
-                        func(t *${className}Mgr) GetBy${paramVars}(${varDefines}) *${className} {
-                            return t.${mapName}Map[${paramVars}]
-                        }
-                        
-                        """).
-                        replace("${className}", name.className).
-                        replace("${IdType}", keyClassName(keySchema)).
-                        replace("${mapName}", mapName(keySchema)).
-                        replace("${varDefines}", varDefines).
-                        replace("${paramVars}", paramVars));
-                createMaps.append("""
-                            t.${mapName}Map = make(map[${IdType}]*${className}, cnt)
-                        """.
-                        replace("${mapName}", mapName(keySchema)).
-                        replace("${IdType}", keyClassName(keySchema)).
-                        replace("${className}", name.className)
-                );
-                setMaps.append((fieldCnt > 1 ? """
-                                t.${mapName}Map[${IdType}{${paramVarsInV}}] = v                        
-                        """ : """
-                                t.${mapName}Map[${paramVarsInV}] = v
-                        """).
-                        replace("${mapName}", mapName(keySchema)).
-                        replace("${IdType}", keyClassName(keySchema)).
-                        replace("${paramVarsInV}", paramVarsInV)
-                );
-            }
-
-            //gen all,GenAll
-            ps.println("""
-                    type ${className}Mgr struct {
-                        all []*${className}
-                    ${mapDefines}}
-                    
-                    func(t *${className}Mgr) GetAll() []*${className} {
-                        return t.all
-                    }
-                    
-                    ${mapGetBy}
-                    """.
-                    replace("${className}", name.className).
-                    replace("${IdType}", keyClassName(table.primaryKey())).
-                    replace("${mapDefines}", mapDefines).
-                    replace("${mapGetBy}", mapGetBy)
-            );
-
-            //gen Init
-            ps.println("""
-                    func (t *${className}Mgr) Init(stream *Stream) {
-                        cnt := stream.ReadInt32()
-                        t.all = make([]*${className}, 0, cnt)
-                    ${createMaps}
-                        for i := 0; i < int(cnt); i++ {
-                            v := create${className}(stream)
-                            t.all = append(t.all, v)
-                    ${setMaps}    }
-                    }
-                    """.
-                    replace("${className}", name.className).
-                    replace("${createMaps}", createMaps).
-                    replace("${setMaps}", setMaps)
-            );
+            GenMapGetCode(name, ps, table);
         }
+    }
+
+    private void GenMapGetCode(GoName name, CachedIndentPrinter ps, TableSchema table) {
+        List<KeySchema> keySchemas = new ArrayList<>();
+        keySchemas.add(table.primaryKey());
+        keySchemas.addAll(table.uniqueKeys());
+
+        for (KeySchema keySchema : keySchemas) {
+            genKeyClassIf(keySchema, ps);
+        }
+
+        String mapTemplate = """
+                    ${mapName}Map map[${IdType}]*${className}
+                """;
+
+        StringBuilder mapDefines = new StringBuilder();
+        for (KeySchema keySchema : keySchemas) {
+            var mapDefine = mapTemplate.
+                    replace("${mapName}", mapName(keySchema)).
+                    replace("${IdType}", keyClassName(keySchema)).
+                    replace("${className}", name.className);
+            mapDefines.append(mapDefine);
+        }
+
+        StringBuilder subKeyDefines = new StringBuilder();
+        StringBuilder subKeyGetBy = new StringBuilder();
+        if (table.primaryKey().fieldSchemas().size() > 1) {
+            for (FieldSchema fieldSchema : table.primaryKey().fieldSchemas()) {
+                PrimarySubKeyCode primarySubKeyCode = new PrimarySubKeyCode(name, fieldSchema);
+                subKeyDefines.append(primarySubKeyCode.codeMapDefine);
+                subKeyGetBy.append(primarySubKeyCode.codeGetByDefine);
+            }
+        }
+
+        StringBuilder mapGetBy = new StringBuilder();
+        StringBuilder createMaps = new StringBuilder();
+        StringBuilder setMaps = new StringBuilder();
+        for (KeySchema keySchema : keySchemas) {
+            KeySchemaCode keySchemaCode = new KeySchemaCode(keySchema, name, keySchema.equals(table.primaryKey()));
+            mapGetBy.append(keySchemaCode.codeGetBy);
+            createMaps.append(keySchemaCode.codeCreateMap);
+            setMaps.append(keySchemaCode.codeSetMap);
+        }
+
+        //gen all,GenAll
+        ps.println("""
+                type ${className}Mgr struct {
+                    all []*${className}
+                ${mapDefines}
+                ${subKeyDefines}}
+                
+                func(t *${className}Mgr) GetAll() []*${className} {
+                    return t.all
+                }
+                
+                ${mapGetBy}${subKeyGetBy}
+                """.
+                replace("${className}", name.className).
+                replace("${IdType}", keyClassName(table.primaryKey())).
+                replace("${mapDefines}", mapDefines).
+                replace("${mapGetBy}", mapGetBy).
+                replace("${subKeyDefines}", subKeyDefines).
+                replace("${subKeyGetBy}", subKeyGetBy)
+        );
+
+        //gen Init
+        ps.println("""
+                func (t *${className}Mgr) Init(stream *Stream) {
+                    cnt := stream.ReadInt32()
+                    t.all = make([]*${className}, 0, cnt)
+                ${createMaps}
+                    for i := 0; i < int(cnt); i++ {
+                        v := create${className}(stream)
+                        t.all = append(t.all, v)
+                ${setMaps}    }
+                }
+                """.
+                replace("${className}", name.className).
+                replace("${createMaps}", createMaps).
+                replace("${setMaps}", setMaps)
+        );
     }
 
     private String genCreateStruct(Structural structural, GoName name) {
@@ -393,7 +373,7 @@ public class GenGo extends GeneratorWithTag {
         }
     }
 
-    private String type(FieldType t) {
+    public static String type(FieldType t) {
         return switch (t) {
             case BOOL -> "bool";
             case INT -> "int32";
@@ -484,7 +464,7 @@ public class GenGo extends GeneratorWithTag {
         }
     }
 
-    private String ClassName(Nameable variable) {
+    private static String ClassName(Nameable variable) {
         var varName = new GoName(variable);
         return varName.className;
     }
@@ -493,7 +473,7 @@ public class GenGo extends GeneratorWithTag {
         GoName refTableName = new GoName(fk.refTableSchema());
         switch (fk.refKey()) {
             case RefKey.RefList ignored -> {
-                return "[]" + ClassName(fk.refTableSchema());
+                return "[]*" + ClassName(fk.refTableSchema());
             }
             case RefKey.RefSimple ignored -> {
                 FieldSchema firstLocal = fk.key().fieldSchemas().getFirst();
@@ -531,13 +511,13 @@ public class GenGo extends GeneratorWithTag {
         return lower1(keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()) + "Map");
     }
 
-    private String keyClassName(KeySchema keySchema) {
+    public static String keyClassName(KeySchema keySchema) {
         if (keySchema.fieldSchemas().size() > 1)
             return "Key" + keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining());
         else return type(keySchema.fieldSchemas().getFirst().type());
     }
 
-    private String mapName(KeySchema keySchema) {
+    public static String mapName(KeySchema keySchema) {
         if (keySchema.fieldSchemas().size() > 1) {
             return Generator.lower1(keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()));
         } else {

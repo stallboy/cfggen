@@ -48,13 +48,16 @@ type OtherKeytestMgr struct {
     id1Id3Map map[KeyId1Id3]*OtherKeytest
     id2Map map[int64]*OtherKeytest
     id2Id3Map map[KeyId2Id3]*OtherKeytest
+
+    id1MapList map[int32][]*OtherKeytest
+    id2MapList map[int64][]*OtherKeytest
 }
 
 func(t *OtherKeytestMgr) GetAll() []*OtherKeytest {
     return t.all
 }
 
-func(t *OtherKeytestMgr) GetByKeyId1Id2(id1 int32, id2 int64) *OtherKeytest {
+func(t *OtherKeytestMgr) Get(id1 int32, id2 int64) *OtherKeytest {
     return t.id1Id2Map[KeyId1Id2{id1, id2}]
 }
 
@@ -70,6 +73,24 @@ func(t *OtherKeytestMgr) GetByKeyId2Id3(id2 int64, id3 int32) *OtherKeytest {
     return t.id2Id3Map[KeyId2Id3{id2, id3}]
 }
 
+func (t *OtherKeytestMgr) GetAllById1(id1 int32) []*OtherKeytest {
+	if t.id1MapList == nil {
+		t.id1MapList = make(map[int32][]*OtherKeytest)
+		for _, item := range t.all {
+			t.id1MapList[item.id1] = append(t.id1MapList[item.id1], item)
+		}
+	}
+	return t.id1MapList[id1]
+}
+func (t *OtherKeytestMgr) GetAllById2(id2 int64) []*OtherKeytest {
+	if t.id2MapList == nil {
+		t.id2MapList = make(map[int64][]*OtherKeytest)
+		for _, item := range t.all {
+			t.id2MapList[item.id2] = append(t.id2MapList[item.id2], item)
+		}
+	}
+	return t.id2MapList[id2]
+}
 
 
 func (t *OtherKeytestMgr) Init(stream *Stream) {

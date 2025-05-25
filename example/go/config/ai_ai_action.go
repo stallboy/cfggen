@@ -50,13 +50,14 @@ func (t *AiAi_action) GetArgSList() []int32 {
 type AiAi_actionMgr struct {
     all []*AiAi_action
     iDMap map[int32]*AiAi_action
+
 }
 
 func(t *AiAi_actionMgr) GetAll() []*AiAi_action {
     return t.all
 }
 
-func(t *AiAi_actionMgr) GetByiD(iD int32) *AiAi_action {
+func(t *AiAi_actionMgr) Get(iD int32) *AiAi_action {
     return t.iDMap[iD]
 }
 

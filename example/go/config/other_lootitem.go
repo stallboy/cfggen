@@ -47,16 +47,37 @@ type KeyLootidItemid struct {
 type OtherLootitemMgr struct {
     all []*OtherLootitem
     lootidItemidMap map[KeyLootidItemid]*OtherLootitem
+
+    lootidMapList map[int32][]*OtherLootitem
+    itemidMapList map[int32][]*OtherLootitem
 }
 
 func(t *OtherLootitemMgr) GetAll() []*OtherLootitem {
     return t.all
 }
 
-func(t *OtherLootitemMgr) GetByKeyLootidItemid(lootid int32, itemid int32) *OtherLootitem {
+func(t *OtherLootitemMgr) Get(lootid int32, itemid int32) *OtherLootitem {
     return t.lootidItemidMap[KeyLootidItemid{lootid, itemid}]
 }
 
+func (t *OtherLootitemMgr) GetAllByLootid(lootid int32) []*OtherLootitem {
+	if t.lootidMapList == nil {
+		t.lootidMapList = make(map[int32][]*OtherLootitem)
+		for _, item := range t.all {
+			t.lootidMapList[item.lootid] = append(t.lootidMapList[item.lootid], item)
+		}
+	}
+	return t.lootidMapList[lootid]
+}
+func (t *OtherLootitemMgr) GetAllByItemid(itemid int32) []*OtherLootitem {
+	if t.itemidMapList == nil {
+		t.itemidMapList = make(map[int32][]*OtherLootitem)
+		for _, item := range t.all {
+			t.itemidMapList[item.itemid] = append(t.itemidMapList[item.itemid], item)
+		}
+	}
+	return t.itemidMapList[itemid]
+}
 
 
 func (t *OtherLootitemMgr) Init(stream *Stream) {
