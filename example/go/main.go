@@ -2,6 +2,7 @@ package main
 
 import (
 	"cfgtest/config" // 导入 config 包
+	"cfgtest/test"
 	"os"
 )
 
@@ -12,12 +13,8 @@ func main() {
 		return
 	}
 	defer file.Close()
-	cfgMgr := &config.ConfigMgr{}
-	cfgMgr.Init(file)
+	config.Init(file)
 
-	// 使用cfgMgr
-	for _, v := range cfgMgr.AiAiMgr.GetAll() {
-		println(v.GetCondID(), v.GetDesc())
-	}
+	test.DoTest()
 
 }

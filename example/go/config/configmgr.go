@@ -2,99 +2,195 @@ package config
 
 import "io"
 
-type ConfigMgr struct {
-    AiAiMgr *AiAiMgr
-    AiAi_actionMgr *AiAi_actionMgr
-    AiAi_conditionMgr *AiAi_conditionMgr
-    EquipAbilityMgr *EquipAbilityMgr
-    EquipEquipconfigMgr *EquipEquipconfigMgr
-    EquipJewelryMgr *EquipJewelryMgr
-    EquipJewelryrandomMgr *EquipJewelryrandomMgr
-    EquipJewelrysuitMgr *EquipJewelrysuitMgr
-    EquipJewelrytypeMgr *EquipJewelrytypeMgr
-    EquipRankMgr *EquipRankMgr
-    OtherDropMgr *OtherDropMgr
-    OtherKeytestMgr *OtherKeytestMgr
-    OtherLootMgr *OtherLootMgr
-    OtherLootitemMgr *OtherLootitemMgr
-    OtherMonsterMgr *OtherMonsterMgr
-    OtherSigninMgr *OtherSigninMgr
-    TaskCompleteconditiontypeMgr *TaskCompleteconditiontypeMgr
-    TaskTaskMgr *TaskTaskMgr
-    TaskTask2Mgr *TaskTask2Mgr
-    TaskTaskextraexpMgr *TaskTaskextraexpMgr
+var aiAiMgr *AiAiMgr
+
+func GetAiAiMgr() *AiAiMgr {
+	return aiAiMgr
 }
 
-func (t *ConfigMgr) Init(reader io.Reader) {
-    myStream := &Stream{reader: reader}
-    for {
-        cfgName := myStream.ReadString()
-        if cfgName == "" {
-            break
-        }
-        switch cfgName {
-        case "ai.ai":
-                t.AiAiMgr = &AiAiMgr{}
-                t.AiAiMgr.Init(myStream)
-        case "ai.ai_action":
-                t.AiAi_actionMgr = &AiAi_actionMgr{}
-                t.AiAi_actionMgr.Init(myStream)
-        case "ai.ai_condition":
-                t.AiAi_conditionMgr = &AiAi_conditionMgr{}
-                t.AiAi_conditionMgr.Init(myStream)
-        case "equip.ability":
-                t.EquipAbilityMgr = &EquipAbilityMgr{}
-                t.EquipAbilityMgr.Init(myStream)
-        case "equip.equipconfig":
-                t.EquipEquipconfigMgr = &EquipEquipconfigMgr{}
-                t.EquipEquipconfigMgr.Init(myStream)
-        case "equip.jewelry":
-                t.EquipJewelryMgr = &EquipJewelryMgr{}
-                t.EquipJewelryMgr.Init(myStream)
-        case "equip.jewelryrandom":
-                t.EquipJewelryrandomMgr = &EquipJewelryrandomMgr{}
-                t.EquipJewelryrandomMgr.Init(myStream)
-        case "equip.jewelrysuit":
-                t.EquipJewelrysuitMgr = &EquipJewelrysuitMgr{}
-                t.EquipJewelrysuitMgr.Init(myStream)
-        case "equip.jewelrytype":
-                t.EquipJewelrytypeMgr = &EquipJewelrytypeMgr{}
-                t.EquipJewelrytypeMgr.Init(myStream)
-        case "equip.rank":
-                t.EquipRankMgr = &EquipRankMgr{}
-                t.EquipRankMgr.Init(myStream)
-        case "other.drop":
-                t.OtherDropMgr = &OtherDropMgr{}
-                t.OtherDropMgr.Init(myStream)
-        case "other.keytest":
-                t.OtherKeytestMgr = &OtherKeytestMgr{}
-                t.OtherKeytestMgr.Init(myStream)
-        case "other.loot":
-                t.OtherLootMgr = &OtherLootMgr{}
-                t.OtherLootMgr.Init(myStream)
-        case "other.lootitem":
-                t.OtherLootitemMgr = &OtherLootitemMgr{}
-                t.OtherLootitemMgr.Init(myStream)
-        case "other.monster":
-                t.OtherMonsterMgr = &OtherMonsterMgr{}
-                t.OtherMonsterMgr.Init(myStream)
-        case "other.signin":
-                t.OtherSigninMgr = &OtherSigninMgr{}
-                t.OtherSigninMgr.Init(myStream)
-        case "task.completeconditiontype":
-                t.TaskCompleteconditiontypeMgr = &TaskCompleteconditiontypeMgr{}
-                t.TaskCompleteconditiontypeMgr.Init(myStream)
-        case "task.task":
-                t.TaskTaskMgr = &TaskTaskMgr{}
-                t.TaskTaskMgr.Init(myStream)
-        case "task.task2":
-                t.TaskTask2Mgr = &TaskTask2Mgr{}
-                t.TaskTask2Mgr.Init(myStream)
-        case "task.taskextraexp":
-                t.TaskTaskextraexpMgr = &TaskTaskextraexpMgr{}
-                t.TaskTaskextraexpMgr.Init(myStream)
+var aiAi_actionMgr *AiAi_actionMgr
 
-    }
-    }
+func GetAiAi_actionMgr() *AiAi_actionMgr {
+	return aiAi_actionMgr
 }
 
+var aiAi_conditionMgr *AiAi_conditionMgr
+
+func GetAiAi_conditionMgr() *AiAi_conditionMgr {
+	return aiAi_conditionMgr
+}
+
+var equipAbilityMgr *EquipAbilityMgr
+
+func GetEquipAbilityMgr() *EquipAbilityMgr {
+	return equipAbilityMgr
+}
+
+var equipEquipconfigMgr *EquipEquipconfigMgr
+
+func GetEquipEquipconfigMgr() *EquipEquipconfigMgr {
+	return equipEquipconfigMgr
+}
+
+var equipJewelryMgr *EquipJewelryMgr
+
+func GetEquipJewelryMgr() *EquipJewelryMgr {
+	return equipJewelryMgr
+}
+
+var equipJewelryrandomMgr *EquipJewelryrandomMgr
+
+func GetEquipJewelryrandomMgr() *EquipJewelryrandomMgr {
+	return equipJewelryrandomMgr
+}
+
+var equipJewelrysuitMgr *EquipJewelrysuitMgr
+
+func GetEquipJewelrysuitMgr() *EquipJewelrysuitMgr {
+	return equipJewelrysuitMgr
+}
+
+var equipJewelrytypeMgr *EquipJewelrytypeMgr
+
+func GetEquipJewelrytypeMgr() *EquipJewelrytypeMgr {
+	return equipJewelrytypeMgr
+}
+
+var equipRankMgr *EquipRankMgr
+
+func GetEquipRankMgr() *EquipRankMgr {
+	return equipRankMgr
+}
+
+var otherDropMgr *OtherDropMgr
+
+func GetOtherDropMgr() *OtherDropMgr {
+	return otherDropMgr
+}
+
+var otherKeytestMgr *OtherKeytestMgr
+
+func GetOtherKeytestMgr() *OtherKeytestMgr {
+	return otherKeytestMgr
+}
+
+var otherLootMgr *OtherLootMgr
+
+func GetOtherLootMgr() *OtherLootMgr {
+	return otherLootMgr
+}
+
+var otherLootitemMgr *OtherLootitemMgr
+
+func GetOtherLootitemMgr() *OtherLootitemMgr {
+	return otherLootitemMgr
+}
+
+var otherMonsterMgr *OtherMonsterMgr
+
+func GetOtherMonsterMgr() *OtherMonsterMgr {
+	return otherMonsterMgr
+}
+
+var otherSigninMgr *OtherSigninMgr
+
+func GetOtherSigninMgr() *OtherSigninMgr {
+	return otherSigninMgr
+}
+
+var taskCompleteconditiontypeMgr *TaskCompleteconditiontypeMgr
+
+func GetTaskCompleteconditiontypeMgr() *TaskCompleteconditiontypeMgr {
+	return taskCompleteconditiontypeMgr
+}
+
+var taskTaskMgr *TaskTaskMgr
+
+func GetTaskTaskMgr() *TaskTaskMgr {
+	return taskTaskMgr
+}
+
+var taskTask2Mgr *TaskTask2Mgr
+
+func GetTaskTask2Mgr() *TaskTask2Mgr {
+	return taskTask2Mgr
+}
+
+var taskTaskextraexpMgr *TaskTaskextraexpMgr
+
+func GetTaskTaskextraexpMgr() *TaskTaskextraexpMgr {
+	return taskTaskextraexpMgr
+}
+
+func Init(reader io.Reader) {
+	myStream := &Stream{reader: reader}
+	for {
+		cfgName := myStream.ReadString()
+		if cfgName == "" {
+			break
+		}
+		switch cfgName {
+		case "ai.ai":
+			aiAiMgr = &AiAiMgr{}
+			aiAiMgr.Init(myStream)
+		case "ai.ai_action":
+			aiAi_actionMgr = &AiAi_actionMgr{}
+			aiAi_actionMgr.Init(myStream)
+		case "ai.ai_condition":
+			aiAi_conditionMgr = &AiAi_conditionMgr{}
+			aiAi_conditionMgr.Init(myStream)
+		case "equip.ability":
+			equipAbilityMgr = &EquipAbilityMgr{}
+			equipAbilityMgr.Init(myStream)
+		case "equip.equipconfig":
+			equipEquipconfigMgr = &EquipEquipconfigMgr{}
+			equipEquipconfigMgr.Init(myStream)
+		case "equip.jewelry":
+			equipJewelryMgr = &EquipJewelryMgr{}
+			equipJewelryMgr.Init(myStream)
+		case "equip.jewelryrandom":
+			equipJewelryrandomMgr = &EquipJewelryrandomMgr{}
+			equipJewelryrandomMgr.Init(myStream)
+		case "equip.jewelrysuit":
+			equipJewelrysuitMgr = &EquipJewelrysuitMgr{}
+			equipJewelrysuitMgr.Init(myStream)
+		case "equip.jewelrytype":
+			equipJewelrytypeMgr = &EquipJewelrytypeMgr{}
+			equipJewelrytypeMgr.Init(myStream)
+		case "equip.rank":
+			equipRankMgr = &EquipRankMgr{}
+			equipRankMgr.Init(myStream)
+		case "other.drop":
+			otherDropMgr = &OtherDropMgr{}
+			otherDropMgr.Init(myStream)
+		case "other.keytest":
+			otherKeytestMgr = &OtherKeytestMgr{}
+			otherKeytestMgr.Init(myStream)
+		case "other.loot":
+			otherLootMgr = &OtherLootMgr{}
+			otherLootMgr.Init(myStream)
+		case "other.lootitem":
+			otherLootitemMgr = &OtherLootitemMgr{}
+			otherLootitemMgr.Init(myStream)
+		case "other.monster":
+			otherMonsterMgr = &OtherMonsterMgr{}
+			otherMonsterMgr.Init(myStream)
+		case "other.signin":
+			otherSigninMgr = &OtherSigninMgr{}
+			otherSigninMgr.Init(myStream)
+		case "task.completeconditiontype":
+			taskCompleteconditiontypeMgr = &TaskCompleteconditiontypeMgr{}
+			taskCompleteconditiontypeMgr.Init(myStream)
+		case "task.task":
+			taskTaskMgr = &TaskTaskMgr{}
+			taskTaskMgr.Init(myStream)
+		case "task.task2":
+			taskTask2Mgr = &TaskTask2Mgr{}
+			taskTask2Mgr.Init(myStream)
+		case "task.taskextraexp":
+			taskTaskextraexpMgr = &TaskTaskextraexpMgr{}
+			taskTaskextraexpMgr.Init(myStream)
+
+		}
+	}
+}

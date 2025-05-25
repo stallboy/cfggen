@@ -393,22 +393,24 @@ public class GenGo extends GeneratorWithTag {
         File csFile = dstDir.toPath().resolve(mgrFileName + ".go").toFile();
 
         String templateDefine = """
-                    ${ClassName}Mgr *${ClassName}Mgr
+                var ${className}Mgr *${ClassName}Mgr
+                
+                func Get${ClassName}Mgr() *${ClassName}Mgr {
+                    return ${className}Mgr
+                }                
                 """;
         String templateCase = """
                         case "${ClassReadName}":
-                                t.${ClassName}Mgr = &${ClassName}Mgr{}
-                                t.${ClassName}Mgr.Init(myStream)
+                                ${className}Mgr = &${ClassName}Mgr{}
+                                ${className}Mgr.Init(myStream)
                 """;
         String template = """
                 package ${pkg}
                 
                 import "io"
                 
-                type ${mgrClassName} struct {
-                ${templateDefines}}
-                
-                func (t *${mgrClassName}) Init(reader io.Reader) {
+                ${templateDefines}                
+                func Init(reader io.Reader) {
                     myStream := &Stream{reader: reader}
                     for {
                         cfgName := myStream.ReadString()
@@ -427,12 +429,14 @@ public class GenGo extends GeneratorWithTag {
             StringBuilder templateCases = new StringBuilder();
             for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
                 GoName name = new GoName(vTable.schema());
-                templateDefines.append(
-                        templateDefine.replace("${ClassName}", name.className)
+                templateDefines.append(templateDefine.
+                        replace("${ClassName}", name.className).
+                        replace("${className}", Generator.lower1(name.className))
                 );
-                templateCases.append(
-                        templateCase.replace("${ClassName}", name.className).
-                                replace("${ClassReadName}", name.pkgName)
+                templateCases.append(templateCase.
+                        replace("${ClassName}", name.className).
+                        replace("${className}", Generator.lower1(name.className)).
+                        replace("${ClassReadName}", name.pkgName)
                 );
             }
             ps.println(template.
