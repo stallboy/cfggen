@@ -227,12 +227,155 @@ func testEnum() {
 	// assert(t.KillMonster.name == "KillMonster")
 	var t = config.GetTaskCompleteconditiontypeMgr()
 	var killMonster = t.GetKillMonster()
-	println(killMonster.GetId(), killMonster.GetName())
 	if killMonster.GetId() != 1 || killMonster.GetName() != "KillMonster" {
 		println("fail: testEnum")
 		return
 	}
 	println("pass: testEnum")
+}
+
+func testEntry() {
+	// local t = cfg.equip.equipconfig.Instance
+	// local gt = cfg.equip.equipconfig.get("Instance")
+	// print(t.broadcastid, t.draw_protect_name)
+	// assert(t.broadcastid == 9500, "配置为入口，也可以直接tequipconfig.Instance访问，不用字符串")
+	// assert(gt == t, "entry")
+	var t = config.GetEquipEquipconfigMgr().GetInstance()
+	if t.GetBroadcastid() != 9500 || t.GetDraw_protect_name() != "测试" {
+		println("fail: testEntry")
+		return
+	}
+	println("pass: testEntry")
+}
+
+func testCsvColumnMode() {
+	// local t = cfg.equip.equipconfig.Instance2
+	// assert(t.week_reward_mailid == 33, "csv可以一列一列配置，而不用一行一行")
+
+	t := config.GetEquipEquipconfigMgr().GetInstance2()
+	if t.GetWeek_reward_mailid() != 33 {
+		println("fail: testCsvColumnMode")
+		return
+	}
+	println("pass: testCsvColumnMode")
+}
+
+func testBeanAsPrimaryKey() {
+	// local all = cfg.equip.jewelryrandom.all
+	// local firstK
+	// for k, _ in pairs(all) do
+	//     firstK = k
+	//     break
+	// end
+	// local t = cfg.equip.jewelryrandom.get(Beans.levelrank(5, 1))
+	// assert(t == nil, "bean做为主键，虽然能生成，但不好取到，因为lua的table的key如果是table，比较用的是引用比较")
+	// assert(cfg.equip.jewelryrandom.get(firstK) ~= nil, "只能先拿到引用")
+
+	var lv *config.LevelRank
+	lv = config.GetEquipJewelryMgr().Get(1).GetLvlRank()
+	var t = config.GetEquipJewelryrandomMgr().Get(lv)
+	var s *config.LevelRank
+	s = config.GetEquipJewelryrandomMgr().GetAll()[0].GetLvlRank()
+	println(s.GetLevel(), s.GetRank(), lv.GetLevel(), lv.GetRank(), lv, s, lv == s)
+	// println(lv.GetLevel(), lv.GetRank())
+	// println(lv, s, lv == s)
+	if t == nil {
+		println("fail: testBeanAsPrimaryKey 为了性能我返回Struct的时候都是返回的引用。")
+		return
+	}
+	println("pass: testBeanAsPrimaryKey")
+}
+
+func testMapValueRef() {
+	// local t = cfg.other.signin.get(4)
+	// assert(t.vipitem2vipcountMap[10001] == 10)
+	// assert(t.RefVipitem2vipcountMap[10001] == cfg.other.loot.get(10))
+	t := config.GetOtherSigninMgr().Get(4)
+	if t.GetVipitem2vipcountMap()[10001] != 10 {
+		println("fail: testMapValueRef")
+		return
+	}
+	if t.GetRefVipitem2vipcountMap()[10001] != config.GetOtherLootMgr().Get(10) {
+		println("fail: testMapValueRef")
+		return
+	}
+	println("pass: testMapValueRef")
+}
+
+func testDefaultBean() {
+	// local t = cfg.task.task.get(1)
+	// assert(t.testDefaultBean.testInt == 0)
+	// assert(t.testDefaultBean.testBool == false)
+	// assert(t.testDefaultBean.testString == '')
+	// assert(t.testDefaultBean.testSubBean.x == 0)
+	// assert(t.testDefaultBean.testSubBean.y == 0)
+	// assert(#t.testDefaultBean.testList == 0)
+	// assert(#t.testDefaultBean.testList2 == 0)
+	// assert(#t.testDefaultBean.testMap == 0)
+	t := config.GetTaskTaskMgr().Get(1)
+	if t.GetTestDefaultBean().GetTestInt() != 0 ||
+		t.GetTestDefaultBean().GetTestBool() != false ||
+		t.GetTestDefaultBean().GetTestString() != "" ||
+		t.GetTestDefaultBean().GetTestSubBean().GetX() != 0 ||
+		t.GetTestDefaultBean().GetTestSubBean().GetY() != 0 ||
+		len(t.GetTestDefaultBean().GetTestList()) != 0 ||
+		len(t.GetTestDefaultBean().GetTestList2()) != 0 ||
+		len(t.GetTestDefaultBean().GetTestMap()) != 0 {
+		println("fail: testDefaultBean")
+	} else {
+		println("pass: testDefaultBean")
+	}
+}
+
+func testSwitchBean(aiai *config.AiAi) {
+	switch x := aiai.GetTrigTick().(type) {
+	case *config.AiTriggertickConstValue:
+		if x.GetValue() == 30000 {
+			println("pass: testSwitchBean")
+			return
+		}
+	case *config.AiTriggertickByLevel:
+		if x.GetCoefficient() == 0.1 {
+			println("pass: testSwitchBean")
+			return
+		}
+	case *config.AiTriggerTick:
+		println("fail: testSwitchBean")
+		return
+	case *config.AiTriggertickByServerUpDay:
+		if x.GetCoefficient2() == 0.2 {
+			println("pass: testSwitchBean")
+			return
+		}
+	}
+}
+
+func testCellNumberAsInterface() {
+	// local ai = cfg.ai.ai
+	// local t = ai.get(10019)
+	// assertEqual(t.trigTick.type(), "ConstValue")
+	// assertEqual(t.trigTick.value, 30000)
+
+	// t = ai.get(10020)
+	// assertEqual(t.trigTick.type(), "ByLevel")
+	// assertEqual(t.trigTick.coefficient, 0.1)
+
+	// t = ai.get(10021)
+	// assertEqual(t.trigTick.type(), "ByServerUpDay")
+	// assertEqual(t.trigTick.coefficient2, 0.2)
+	ai := config.GetAiAiMgr()
+	testSwitchBean(ai.Get(10019))
+	testSwitchBean(ai.Get(10020))
+	testSwitchBean(ai.Get(10021))
+
+	if v, ok := ai.Get(10019).GetTrigTick().(*config.AiTriggertickConstValue); ok {
+		if v.GetValue() == 30000 {
+			println("pass: testCellNumberAsInterface")
+		} else {
+			println("fail: testCellNumberAsInterface")
+		}
+	}
+
 }
 
 func DoTest() {
@@ -250,4 +393,9 @@ func DoTest() {
 	testNullableRef()
 	testListRef()
 	testEnum()
+	testEntry()
+	testCsvColumnMode()
+	testBeanAsPrimaryKey()
+	testMapValueRef()
+	testCellNumberAsInterface()
 }
