@@ -1,5 +1,5 @@
 首饰ID,首饰名称,图标ID,首饰等级,首饰品级(0-4，分别为白，绿，蓝，紫，黄),首饰类型,"套装ID（为0是没有不属于套装，首饰品级为4的首饰该参数为套装id，其余情况为0,引用JewelrySuit.csv）",关键属性类型,关键属性数值,售卖价格,"描述,根据Lvl和Rank来随机3个属性，第一个属性由Lvl,Rank行随机，剩下2个由Lvl和小于Rank的行里随机。Rank最小的时候都从Lvl，Rank里随机。"
-ID,Name,IconFile,LvlRank@Lvl,Rank,Type,SuitID,KeyAbility,KeyAbilityValue,SalePrice,Description
+ID,Name,IconFile,LvlRank@Lvl,Rank,JType,SuitID,KeyAbility,KeyAbilityValue,SalePrice,Description
 1,香木珮,texture/t_jew_1_010.bundle,5,1,Jade,,2,25,1000,
 2,人雄·香木珮,texture/t_jew_1_010.bundle,5,2,Jade,,2,30,1000,
 3,地魁·香木珮,texture/t_jew_1_010.bundle,5,3,Jade,,2,40,1000,
