@@ -34,7 +34,11 @@ public class Context {
         }
 
         public static ContextCfg of(Path dataDir) {
-            return new ContextCfg(dataDir, false, 2, "GBK", null, false, null, null);
+            return of(dataDir, "UTF-8");
+        }
+
+        public static ContextCfg of(Path dataDir, String csvDefaultEncoding) {
+            return new ContextCfg(dataDir, false, 2, csvDefaultEncoding, null, false, null, null);
         }
     }
 

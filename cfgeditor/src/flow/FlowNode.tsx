@@ -1,11 +1,11 @@
-import {CSSProperties, memo, useCallback, useMemo, useState} from "react";
-import {Handle, NodeProps, Position} from "@xyflow/react";
-import {Entity} from "./entityModel.ts";
-import {getNodeBackgroundColor} from "./colors.ts";
-import {Button, Flex, Popover, Space, Typography} from "antd";
-import {EntityCard, Highlight} from "./EntityCard.tsx";
-import {EntityProperties} from "./EntityProperties.tsx";
-import {EntityForm} from "./EntityForm.tsx";
+import { CSSProperties, memo, useCallback, useMemo, useState } from "react";
+import { Handle, NodeProps, Position } from "@xyflow/react";
+import { Entity } from "./entityModel.ts";
+import { getNodeBackgroundColor } from "./colors.ts";
+import { Button, Flex, Popover, Space, Typography } from "antd";
+import { EntityCard, Highlight } from "./EntityCard.tsx";
+import { EntityProperties } from "./EntityProperties.tsx";
+import { EntityForm } from "./EntityForm.tsx";
 import {
     ArrowDownOutlined,
     ArrowsAltOutlined,
@@ -14,26 +14,26 @@ import {
     CloseOutlined,
     ShrinkOutlined
 } from "@ant-design/icons";
-import {ResPopover} from "./ResPopover.tsx";
-import {NoteShow, NoteEdit, NoteShowInner, NoteEditInner} from "./NoteShowOrEdit.tsx";
-import {findFirstImage} from "./calcWidthHeight.ts";
-import {getResBrief} from "./getResBrief.tsx";
-import {EntityNode} from "./FlowGraph.tsx";
+import { ResPopover } from "./ResPopover.tsx";
+import { NoteShow, NoteEdit, NoteShowInner, NoteEditInner } from "./NoteShowOrEdit.tsx";
+import { findFirstImage } from "./calcWidthHeight.ts";
+import { getResBrief } from "./getResBrief.tsx";
+import { EntityNode } from "./FlowGraph.tsx";
 
-const {Text} = Typography;
-const bookIcon = <BookOutlined/>;
-const iconButtonStyle = {borderWidth: 0, backgroundColor: 'transparent'};
+const { Text } = Typography;
+const bookIcon = <BookOutlined />;
+const iconButtonStyle = { borderWidth: 0, backgroundColor: 'transparent' };
 
-const titleStyle = {width: '100%'};
-const titleTextStyle = {fontSize: 14, color: "#fff"};
-const closeIcon = <CloseOutlined/>;
-const moveUpIcon = <ArrowUpOutlined/>;
-const moveDownIcon = <ArrowDownOutlined/>;
+const titleStyle = { width: '100%' };
+const titleTextStyle = { fontSize: 14, color: "#fff" };
+const closeIcon = <CloseOutlined />;
+const moveUpIcon = <ArrowUpOutlined />;
+const moveDownIcon = <ArrowDownOutlined />;
 
-const foldIcon = <ShrinkOutlined/>;
-const unfoldIcon = <ArrowsAltOutlined/>;
+const foldIcon = <ShrinkOutlined />;
+const unfoldIcon = <ArrowsAltOutlined />;
 
-const resBriefButtonStyle = {color: '#fff'};
+const resBriefButtonStyle = { color: '#fff' };
 
 interface TempNote {
     note: string;
@@ -42,15 +42,15 @@ interface TempNote {
 
 export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>) {
     const entity = nodeProps.data.entity;
-    const {id, label, fields, edit, brief, handleIn, handleOut, note, sharedSetting, assets} = entity;
+    const { id, label, fields, edit, brief, handleIn, handleOut, note, sharedSetting, assets } = entity;
     const color: string = useMemo(() => getNodeBackgroundColor(entity), [entity]);
     const width = edit ? 280 : 240;
     const nodeStyle: CSSProperties = useMemo(() => {
-        return {width: width, backgroundColor: color, outlineColor: entity.sharedSetting?.nodeShow?.editFoldColor};
+        return { width: width, backgroundColor: color, outlineColor: entity.sharedSetting?.nodeShow?.editFoldColor };
     }, [width, color, entity]);
 
     const unfoldIconButtonStyle = useMemo(() => {
-        return {borderWidth: 0, backgroundColor: entity.sharedSetting?.nodeShow?.editFoldColor ?? '#ffd6e7'};
+        return { borderWidth: 0, backgroundColor: entity.sharedSetting?.nodeShow?.editFoldColor ?? '#ffd6e7' };
     }, [entity]);
 
     const [isEditNote, setIsEditNote] = useState<boolean>(false);
@@ -63,83 +63,67 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
     const [tmpNote, setTmpNote] = useState<TempNote | undefined>();
 
     const onEditNoteClickInEdit = useCallback(() => {
-        setTmpNote({note: "note：", entity});
+        setTmpNote({ note: "note：", entity });
     }, [setTmpNote, entity]);
 
     const updateNoteInEdit = useCallback((note: string) => {
         if (edit && edit.editOnUpdateNote) {
             edit.editOnUpdateNote(note);
-            setTmpNote({note, entity});
+            setTmpNote({ note, entity });
         }
-    }, [edit, setTmpNote, entity]);
-
-    const unfoldNode = useCallback(() => {
+    }, [edit, setTmpNote, entity]); const unfoldNode = useCallback(() => {
         if (edit && edit.editOnUpdateFold) {
-            // console.log("unfold", nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY);
-            edit.editOnUpdateFold(false, {id, x: nodeProps.positionAbsoluteX, y: nodeProps.positionAbsoluteY});
+            edit.editOnUpdateFold(false, { id, x: nodeProps.positionAbsoluteX, y: nodeProps.positionAbsoluteY });
         }
-    }, [edit, id]);
-
-    const foldNode = useCallback(() => {
+    }, [edit, id, nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY]); const foldNode = useCallback(() => {
         if (edit && edit.editOnUpdateFold) {
-            // console.log("fold", nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY);
-            edit.editOnUpdateFold(true, {id, x: nodeProps.positionAbsoluteX, y: nodeProps.positionAbsoluteY});
+            edit.editOnUpdateFold(true, { id, x: nodeProps.positionAbsoluteX, y: nodeProps.positionAbsoluteY });
         }
-    }, [edit, id]);
-
-    const [resBriefButton, firstImage] = useMemo(() => {
+    }, [edit, id, nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY]); const [resBriefButton, firstImage] = useMemo(() => {
         let btn;
         const firstImage = findFirstImage(assets);
         if (assets) {
-            btn = <Popover content={<ResPopover resInfos={assets}/>}
-                           placement='rightTop'
-                           trigger='click'>
+            btn = <Popover content={<ResPopover resInfos={assets} />}
+                placement='rightTop'
+                trigger='click'>
                 <Button type='text' style={resBriefButtonStyle}>{getResBrief(assets)}</Button>
             </Popover>;
         }
         return [btn, firstImage];
-    }, [label, assets]);
+    }, [assets]);
 
     const handleStyle: CSSProperties = useMemo(() => {
-        return {position: 'absolute', backgroundColor: color};
+        return { position: 'absolute', backgroundColor: color };
     }, [color]);
 
     const foldButton = useMemo(() => {
         if (edit && edit.hasChild) {
             if (edit.fold) {
-                return <Button style={unfoldIconButtonStyle} icon={unfoldIcon} onClick={unfoldNode}/>;
+                return <Button style={unfoldIconButtonStyle} icon={unfoldIcon} onClick={unfoldNode} />;
             } else {
-                return <Button style={iconButtonStyle} icon={foldIcon} onClick={foldNode}/>;
+                return <Button style={iconButtonStyle} icon={foldIcon} onClick={foldNode} />;
             }
         }
         return null;
     }, [edit, unfoldNode, foldNode]);
-
-
     const editNoteButton = useMemo(() => {
         const mayHasResOrNote = label.includes('_');
-        if (mayHasResOrNote) {
-            const notes = sharedSetting?.notes;
-            const recordNote = notes?.get(id) ?? '';
+        if (mayHasResOrNote && !edit) {
+            const recordNote = sharedSetting?.notes?.get(id) ?? '';
             if (!((recordNote.length > 0) || isEditNote) && !note) {
-                return <Button style={iconButtonStyle} icon={bookIcon} onClick={onEditNote}/>;
+                return <Button style={iconButtonStyle} icon={bookIcon} onClick={onEditNote} />;
             }
         }
-        if (edit) {
-            let isShowNote = false
-            if (tmpNote && tmpNote.entity === entity) {
-                if (tmpNote.note.length > 0) {
-                    isShowNote = true;
-                }
-            } else if (note && note.length > 0) {
-                isShowNote = true;
-            }
+        const hasExistingNote =
+            (tmpNote && tmpNote.entity === entity && tmpNote.note.length > 0) ||
+            (note && note.length > 0);
 
-            if (!isShowNote) {
-                return <Button style={iconButtonStyle} icon={bookIcon} onClick={onEditNoteClickInEdit}/>;
-            }
+        if (edit && !hasExistingNote) {
+            return <Button style={iconButtonStyle} icon={bookIcon} onClick={onEditNoteClickInEdit} />;
         }
-    }, [sharedSetting, id, isEditNote, note, edit, tmpNote, onEditNote, onEditNoteClickInEdit]);
+
+        return null;
+    }, [sharedSetting, id, isEditNote, note, edit, tmpNote, entity, label, onEditNote, onEditNoteClickInEdit]);
 
     const noteShowOrEdit = useMemo(() => {
         const mayHasResOrNote = label.includes('_');
@@ -148,12 +132,12 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
             const recordNote = notes?.get(id) ?? '';
             if ((recordNote.length > 0) || isEditNote) {
                 if (isEditNote) {
-                    return <NoteEdit id={id} note={recordNote} setIsEdit={setIsEditNote}/>;
+                    return <NoteEdit id={id} note={recordNote} setIsEdit={setIsEditNote} />;
                 } else {
-                    return <NoteShow note={recordNote} setIsEdit={setIsEditNote}/>;
+                    return <NoteShow note={recordNote} setIsEdit={setIsEditNote} />;
                 }
             } else if (note) {
-                return <NoteShowInner note={note}/>;
+                return <NoteShowInner note={note} />;
             }
         }
 
@@ -167,10 +151,10 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
                 showNote = note;
             }
             if (showNote) {
-                return <NoteEditInner note={showNote} updateNoteInEdit={updateNoteInEdit}/>;
+                return <NoteEditInner note={showNote} updateNoteInEdit={updateNoteInEdit} />;
             }
         } else if (note) {
-            return <NoteShowInner note={note}/>;
+            return <NoteShowInner note={note} />;
         }
 
         return null;
@@ -181,39 +165,39 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
         return <Flex justify="space-between" style={titleStyle}>
             {foldButton}
             <Text strong style={titleTextStyle} ellipsis={false}
-                  copyable={brief && sharedSetting?.nodeShow?.refIsShowCopyable}>
-                {sharedSetting?.query ? <Highlight text={label} keyword={sharedSetting.query}/> : label}
+                copyable={brief && sharedSetting?.nodeShow?.refIsShowCopyable}>
+                {sharedSetting?.query ? <Highlight text={label} keyword={sharedSetting.query} /> : label}
             </Text>
             {editNoteButton}
             {resBriefButton}
             <Space size={1}>
                 {edit && edit.editOnMoveUp &&
                     <Button className='nodrag' style={iconButtonStyle} icon={moveUpIcon}
-                            onClick={() => {
-                                edit.editOnMoveUp?.({
-                                    id,
-                                    x: nodeProps.positionAbsoluteX,
-                                    y: nodeProps.positionAbsoluteY
-                                })
-                            }}/>}
+                        onClick={() => {
+                            edit.editOnMoveUp?.({
+                                id,
+                                x: nodeProps.positionAbsoluteX,
+                                y: nodeProps.positionAbsoluteY
+                            })
+                        }} />}
                 {edit && edit.editOnMoveDown &&
                     <Button className='nodrag' style={iconButtonStyle} icon={moveDownIcon}
-                            onClick={() => {
-                                edit.editOnMoveDown?.({
-                                    id,
-                                    x: nodeProps.positionAbsoluteX,
-                                    y: nodeProps.positionAbsoluteY
-                                })
-                            }}/>}
+                        onClick={() => {
+                            edit.editOnMoveDown?.({
+                                id,
+                                x: nodeProps.positionAbsoluteX,
+                                y: nodeProps.positionAbsoluteY
+                            })
+                        }} />}
                 {edit && edit.editOnDelete &&
                     <Button className='nodrag' style={iconButtonStyle} icon={closeIcon}
-                            onClick={() => {
-                                edit.editOnDelete?.({
-                                    id,
-                                    x: nodeProps.positionAbsoluteX,
-                                    y: nodeProps.positionAbsoluteY
-                                })
-                            }}/>}
+                        onClick={() => {
+                            edit.editOnDelete?.({
+                                id,
+                                x: nodeProps.positionAbsoluteX,
+                                y: nodeProps.positionAbsoluteY
+                            })
+                        }} />}
             </Space>
         </Flex>
     }, [foldButton, sharedSetting, label, brief, editNoteButton, resBriefButton, edit, id, nodeProps]);
@@ -221,10 +205,10 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
     return <div key={id} className={edit && edit.fold ? 'flowNodeWithBorder' : 'flowNode'} style={nodeStyle}>
         {noteShowOrEdit}
         {title}
-        {fields && <EntityProperties fields={fields} sharedSetting={sharedSetting} color={color}/>}
-        {brief && <EntityCard entity={nodeProps.data.entity} image={firstImage}/>}
-        {edit && <EntityForm edit={edit} nodeProps={nodeProps} sharedSetting={sharedSetting}/>}
-        {(handleIn && <Handle type='target' position={Position.Left} id='@in' style={handleStyle}/>)}
-        {(handleOut && <Handle type='source' position={Position.Right} id='@out' style={handleStyle}/>)}
+        {fields && <EntityProperties fields={fields} sharedSetting={sharedSetting} color={color} />}
+        {brief && <EntityCard entity={nodeProps.data.entity} image={firstImage} />}
+        {edit && <EntityForm edit={edit} nodeProps={nodeProps} sharedSetting={sharedSetting} />}
+        {(handleIn && <Handle type='target' position={Position.Left} id='@in' style={handleStyle} />)}
+        {(handleOut && <Handle type='source' position={Position.Right} id='@out' style={handleStyle} />)}
     </div>;
 });

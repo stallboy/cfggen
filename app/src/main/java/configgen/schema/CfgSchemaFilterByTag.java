@@ -34,18 +34,12 @@ public class CfgSchemaFilterByTag {
         Objects.requireNonNull(errs);
         this.cfg = cfg;
         this.tag = tag;
-        minusTag = "-" + tag;
+        this.minusTag = "-" + tag;
         this.errs = errs;
     }
 
     public CfgSchema filter() {
-        Map<String, TableRule> tableMap = new HashMap<>();
-        for (Nameable item : cfg.items()) {
-            if (item instanceof TableSchema tableSchema && hasTag(tableSchema)) {
-                TableRule tr = filterTablePhase1(tableSchema);
-                tableMap.put(tr.table.name(), tr);
-            }
-        }
+        Map<String, TableRule> tableMap = buildTableRuleMap();
 
         CfgSchema filtered = CfgSchema.ofPartial();
         for (Nameable item : cfg.items()) {
@@ -63,8 +57,7 @@ public class CfgSchemaFilterByTag {
                 case TableSchema tableSchema -> {
                     TableRule tr = tableMap.get(tableSchema.name());
                     if (tr != null) {
-                        TableSchema table = filterTablePhase2(tableSchema, tr, tableMap);
-                        filtered.items().add(table);
+                        filtered.items().add(filterTablePhase2(tableSchema, tr, tableMap));
                     }
                 }
             }
@@ -72,6 +65,17 @@ public class CfgSchemaFilterByTag {
         return filtered;
     }
 
+    // 构建TableRule映射
+    private Map<String, TableRule> buildTableRuleMap() {
+        Map<String, TableRule> tableMap = new HashMap<>();
+        for (Nameable item : cfg.items()) {
+            if (item instanceof TableSchema tableSchema && hasTag(tableSchema)) {
+                TableRule tr = filterTablePhase1(tableSchema);
+                tableMap.put(tr.table.name(), tr);
+            }
+        }
+        return tableMap;
+    }
 
     private boolean hasTag(Structural struct) {
         if (struct.meta().hasTag(tag)) {

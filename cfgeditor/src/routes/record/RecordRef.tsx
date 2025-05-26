@@ -1,26 +1,26 @@
-import {STable} from "../table/schemaModel.ts";
-import {Entity} from "../../flow/entityModel.ts";
-import {RecordRefsResult, RefId} from "./recordModel.ts";
-import {Result} from "antd";
-import {createRefEntities} from "./recordRefEntity.ts";
-import {useTranslation} from "react-i18next";
-import {Schema} from "../table/schemaUtil.tsx";
-import {NodeShowType} from "../setting/storageJson.ts";
-import {navTo, useMyStore, useLocationData} from "../setting/store.ts";
-import {useNavigate, useOutletContext} from "react-router-dom";
-import {useQuery} from "@tanstack/react-query";
-import {fetchRecordRefs} from "../api.ts";
-import {MenuItem} from "../../flow/FlowContextMenu.tsx";
-import {SchemaTableType} from "../../CfgEditorApp.tsx";
-import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
+import { STable } from "../table/schemaModel.ts";
+import { Entity } from "../../flow/entityModel.ts";
+import { RecordRefsResult, RefId } from "./recordModel.ts";
+import { Result } from "antd";
+import { createRefEntities } from "./recordRefEntity.ts";
+import { useTranslation } from "react-i18next";
+import { Schema } from "../table/schemaUtil.tsx";
+import { NodeShowType } from "../setting/storageJson.ts";
+import { navTo, useMyStore, useLocationData } from "../setting/store.ts";
+import { useNavigate, useOutletContext } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { fetchRecordRefs } from "../api.ts";
+import { MenuItem } from "../../flow/FlowContextMenu.tsx";
+import { SchemaTableType } from "../../CfgEditorApp.tsx";
+import { fillHandles } from "../../flow/entityToNodeAndEdge.ts";
 
-import {useCallback, useRef} from "react";
-import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
-import {EditingObjectRes, EFitView} from "./editingObject.ts";
-import {EntityNode} from "../../flow/FlowGraph.tsx";
+import { useCallback, useRef, useMemo } from "react";
+import { useEntityToGraph } from "../../flow/useEntityToGraph.tsx";
+import { EditingObjectRes, EFitView } from "./editingObject.ts";
+import { EntityNode } from "../../flow/FlowGraph.tsx";
 
 
-export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, recordRefResult, inDragPanelAndFix}: {
+export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, recordRefResult, inDragPanelAndFix }: {
     schema: Schema;
     notes: Map<string, string> | undefined;
     curTable: STable;
@@ -31,84 +31,79 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
 }) {
     const [t] = useTranslation();
     const navigate = useNavigate();
-    const {recordRefInShowLinkMaxNode, tauriConf, resourceDir, resMap} = useMyStore();
+    const { recordRefInShowLinkMaxNode, tauriConf, resourceDir, resMap } = useMyStore();
 
-    const entityMap = new Map<string, Entity>();
-    const hasContainEnum = nodeShow.refContainEnum || curTable.entryType == 'eEnum';
+    // Memoize checkTable function
+    const checkTable = useMemo(() => {
+        if (!nodeShow.refContainEnum && !nodeShow.refTableHides.length) return undefined;
 
-    let checkTable;
-    if (!hasContainEnum || nodeShow.refTableHides.length > 0) {
-        checkTable = (tableName: string) => {
-            if (!hasContainEnum) {
+        return (tableName: string) => {
+            if (!nodeShow.refContainEnum) {
                 const sT = schema.getSTable(tableName);
-                if (sT == null) {
-                    return false;
-                }
-                if (sT.entryType == 'eEnum') {
-                    return false;
-                }
+                if (!sT || sT.entryType === 'eEnum') return false;
             }
+            return !nodeShow.refTableHides.some(t => tableName.includes(t));
+        };
+    }, [nodeShow.refContainEnum, nodeShow.refTableHides, schema]);
 
-            for (const t of nodeShow.refTableHides) {
-                if (tableName.includes(t)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-    }
+    // Memoize entityMap creation
+    const entityMap = useMemo(() => {
+        const map = new Map<string, Entity>();
+        createRefEntities({
+            entityMap: map,
+            schema,
+            briefRecordRefs: recordRefResult.refs,
+            isCreateRefs: true,
+            checkTable,
+            recordRefInShowLinkMaxNode,
+            tauriConf,
+            resourceDir,
+            resMap
+        });
+        fillHandles(map);
+        return map;
+    }, [schema, recordRefResult.refs, checkTable, recordRefInShowLinkMaxNode, tauriConf, resourceDir, resMap]);
 
-    createRefEntities({
-        entityMap, schema, briefRecordRefs: recordRefResult.refs, isCreateRefs: true,
-        checkTable, recordRefInShowLinkMaxNode, tauriConf, resourceDir, resMap
-    });
-    fillHandles(entityMap);
-
-    const paneMenu: MenuItem[] = [{
+    // Extract menu creation functions
+    const createPaneMenu = useCallback((): MenuItem[] => [{
         label: t('record') + curId,
         key: 'record',
-        handler() {
-            navigate(navTo('record', curTable.name, curId));
-        }
-    }];
+        handler: () => navigate(navTo('record', curTable.name, curId))
+    }], [t, curId, curTable.name, navigate]);
 
-    const nodeDoubleClickFunc = (entityNode: EntityNode): void => {
-        const {isEditMode} = useMyStore();
+    const createNodeMenu = useCallback((entityNode: EntityNode): MenuItem[] => {
         const refId = entityNode.data.entity.userData as RefId;
-        navigate(navTo('record', refId.table, refId.id, isEditMode));
-    };
+        const isEntityEditable = schema.isEditable && schema.getSTable(refId.table)?.isEditable;
 
-    const nodeMenuFunc = (entityNode: EntityNode): MenuItem[] => {
-        const refId = entityNode.data.entity.userData as RefId;
-        const mm = [];
-        mm.push({
+        const menuItems: MenuItem[] = [{
             label: t('record') + refId.id,
             key: 'entityRecord',
-            handler() {
-                navigate(navTo('record', refId.table, refId.id));
-            }
-        });
+            handler: () => navigate(navTo('record', refId.table, refId.id))
+        }];
 
-        const isEntityEditable = schema.isEditable && !!(schema.getSTable(refId.table)?.isEditable);
         if (isEntityEditable) {
-            mm.push({
+            menuItems.push({
                 label: t('edit') + refId.id,
                 key: 'entityEdit',
-                handler() {
-                    navigate(navTo('record', refId.table, refId.id, true));
-                }
+                handler: () => navigate(navTo('record', refId.table, refId.id, true))
             });
         }
-        if (refId.table != recordRefResult.table || refId.id != recordRefResult.id) {
-            mm.push({
+
+        if (refId.table !== recordRefResult.table || refId.id !== recordRefResult.id) {
+            menuItems.push({
                 label: t('recordRef') + refId.id,
                 key: 'entityRecordRef',
-                handler() {
-                    navigate(navTo('recordRef', refId.table, refId.id));
-                }
+                handler: () => navigate(navTo('recordRef', refId.table, refId.id))
             });
         }
-        return mm;
+
+        return menuItems;
+    }, [t, schema, navigate, recordRefResult]);
+
+    const nodeDoubleClickFunc = (entityNode: EntityNode): void => {
+        const { isEditMode } = useMyStore();
+        const refId = entityNode.data.entity.userData as RefId;
+        navigate(navTo('record', refId.table, refId.id, isEditMode));
     };
 
     const lastFitViewForFix = useRef<string | undefined>();
@@ -128,17 +123,17 @@ export function RecordRefWithResult({schema, notes, curTable, curId, nodeShow, r
 
     useEntityToGraph({
         type: 'ref',
-        pathname, entityMap, notes, nodeMenuFunc, paneMenu, nodeDoubleClickFunc, editingObjectRes,
+        pathname, entityMap, notes, nodeMenuFunc: createNodeMenu, paneMenu: createPaneMenu(), nodeDoubleClickFunc, editingObjectRes,
         setFitViewForPathname: (inDragPanelAndFix ? setFitViewForPathname : undefined),
         nodeShow,
     });
 
-    return <></>;
+    return null;
 }
 
-const fitNone: EditingObjectRes = {fitView: EFitView.FitNone, isEdited: false}
+const fitNone: EditingObjectRes = { fitView: EFitView.FitNone, isEdited: false }
 
-export function RecordRef({schema, notes, curTable, curId, refIn, refOutDepth, maxNode, nodeShow, inDragPanelAndFix}: {
+export function RecordRef({ schema, notes, curTable, curId, refIn, refOutDepth, maxNode, nodeShow, inDragPanelAndFix }: {
     schema: Schema;
     notes: Map<string, string> | undefined;
     curTable: STable;
@@ -149,10 +144,10 @@ export function RecordRef({schema, notes, curTable, curId, refIn, refOutDepth, m
     nodeShow: NodeShowType;
     inDragPanelAndFix: boolean;
 }) {
-    const {server} = useMyStore();
-    const {isLoading, isError, error, data: recordRefResult} = useQuery({
+    const { server } = useMyStore();
+    const { isLoading, isError, error, data: recordRefResult } = useQuery({
         queryKey: ['tableRef', curTable.name, curId, refOutDepth, maxNode, refIn],
-        queryFn: ({signal}) => fetchRecordRefs(server, curTable.name, curId, refOutDepth, maxNode, refIn, signal),
+        queryFn: ({ signal }) => fetchRecordRefs(server, curTable.name, curId, refOutDepth, maxNode, refIn, signal),
         staleTime: 1000 * 10,
     })
 
@@ -162,31 +157,31 @@ export function RecordRef({schema, notes, curTable, curId, refIn, refOutDepth, m
     }
 
     if (isError) {
-        return <Result status={'error'} title={error.message}/>;
+        return <Result status={'error'} title={error.message} />;
     }
 
     if (!recordRefResult) {
-        return <Result title={'recordRef result empty'}/>;
+        return <Result title={'recordRef result empty'} />;
     }
 
     if (recordRefResult.resultCode != 'ok') {
-        return <Result status={'error'} title={recordRefResult.resultCode}/>;
+        return <Result status={'error'} title={recordRefResult.resultCode} />;
     }
 
     return <RecordRefWithResult schema={schema} notes={notes} curTable={curTable} curId={curId}
-                                nodeShow={nodeShow} recordRefResult={recordRefResult}
-                                inDragPanelAndFix={inDragPanelAndFix}/>
+        nodeShow={nodeShow} recordRefResult={recordRefResult}
+        inDragPanelAndFix={inDragPanelAndFix} />
 
 }
 
 export function RecordRefRoute() {
-    const {schema, notes, curTable} = useOutletContext<SchemaTableType>();
-    const {curId} = useLocationData();
-    const {recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow} = useMyStore();
+    const { schema, notes, curTable } = useOutletContext<SchemaTableType>();
+    const { curId } = useLocationData();
+    const { recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow } = useMyStore();
 
     return <RecordRef schema={schema} notes={notes} curTable={curTable} curId={curId}
-                      refIn={recordRefIn} refOutDepth={recordRefOutDepth} maxNode={recordMaxNode}
-                      nodeShow={nodeShow}
-                      inDragPanelAndFix={false}/>
+        refIn={recordRefIn} refOutDepth={recordRefOutDepth} maxNode={recordMaxNode}
+        nodeShow={nodeShow}
+        inDragPanelAndFix={false} />
 }
 

@@ -6,6 +6,7 @@ import configgen.schema.TableSchema;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -42,30 +43,28 @@ public class VTableJsonParser {
         List<VStruct> valueList = new ArrayList<>();
         String tableName = tableSchema.name();
         Map<String, Long> idMap = valueStat.getIdLastModifiedMap(tableName);
-        Map<String, JsonFileInfo> jsonFiles = sourceStructure.getTableToJsonFiles().get(tableName);
+        Collection<JsonFileInfo> jsonFiles = sourceStructure.getJsonFilesByTable(tableName);
 
-        if (jsonFiles != null) {
-            for (JsonFileInfo jf : jsonFiles.values()) {
+        for (JsonFileInfo jf : jsonFiles) {
+            String jsonStr = null;
+            long modified = 0;
+            try {
+                jsonStr = Files.readString(jf.path());
+                modified = jf.lastModified();
+            } catch (Exception e) {
+                errs.addErr(new CfgValueErrs.JsonFileReadErr(jf.path().toString(), e.getMessage()));
+            }
+            if (jsonStr != null) {
+                VStruct vStruct = parser.fromJson(jsonStr,
+                        DFile.of(jf.relativePath().toString(), tableName));
 
-                String jsonStr = null;
-                long modified = 0;
-                try {
-                    jsonStr = Files.readString(jf.path());
-                    modified = jf.lastModified();
-                } catch (Exception e) {
-                    errs.addErr(new CfgValueErrs.JsonFileReadErr(jf.path().toString(), e.getMessage()));
-                }
-                if (jsonStr != null) {
-                    VStruct vStruct = parser.fromJson(jsonStr,
-                            DFile.of(jf.relativePath().toString(), tableName));
-
-                    valueList.add(vStruct);
-                    Value pkValue = ValueUtil.extractPrimaryKeyValue(vStruct, tableSchema);
-                    String id = pkValue.packStr();
-                    idMap.put(id, modified);
-                }
+                valueList.add(vStruct);
+                Value pkValue = ValueUtil.extractPrimaryKeyValue(vStruct, tableSchema);
+                String id = pkValue.packStr();
+                idMap.put(id, modified);
             }
         }
+
         if (idMap.isEmpty()) { // no json file
             //创建默认的一个record，供cfgeditor开始update或add
             VStruct defaultValue = ValueDefault.ofStructural(tableSchema, DFile.of("<new>", tableName));

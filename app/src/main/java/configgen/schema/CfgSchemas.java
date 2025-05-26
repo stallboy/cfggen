@@ -17,7 +17,7 @@ public class CfgSchemas {
 
     public static CfgSchema readFromDir(DirectoryStructure sourceStructure) {
         CfgSchema destination = CfgSchema.of();
-        for (CfgFileInfo c : sourceStructure.getCfgFiles().values()) {
+        for (CfgFileInfo c : sourceStructure.getCfgFiles()) {
             CfgReader.INSTANCE.readTo(destination, c.path(), c.pkgNameDot());
         }
         return destination;

@@ -1,0 +1,69 @@
+@startuml
+' hide the spot
+hide circle
+
+package "configgen" {
+  component "ctx" as ctx #lightblue
+  component "data" as data
+  component "editorserver" as editorserver
+  component "i18n" as i18n
+  component "schema" as schema
+  component "tool" as tool
+  component "value" as value
+
+  package "gen.java" {
+    component "genjava" as genjava
+    component "genjava.code" as genjavacode
+    genjava --> genjavacode : contains code details
+  }
+
+  package "gen.cs" {
+    component "gencs" as gencs
+  }
+
+  package "gen.json" {
+    component "genjson" as genjson
+  }
+
+  package "gen.lua" {
+    component "genlua" as genlua
+  }
+
+  package "schema.cfg" {
+    component "schemacfg" as schemacfg
+  }
+}
+
+' External Components
+component "cfgeditor" as cfgeditor #lightgreen
+component "LLM" as LLM #ffe0b2 
+
+
+' Representing dependencies
+
+' Core components managed by ctx
+ctx --> schema : manages
+ctx --> data : manages
+ctx --> value : manages/provides access
+
+schema --> schemacfg : parses .cfg/.xml files
+data --> value : produces processed values
+
+' Packages interacting through ctx
+genjava --> ctx : interacts through
+gencs --> ctx : interacts through
+genjson --> ctx : interacts through
+genlua --> ctx : interacts through
+tool --> ctx : interacts through
+i18n --> ctx : interacts through
+
+' Editor Server interactions
+editorserver --> ctx : uses context
+' The editorserver handles requests from the external editor and uses core components
+
+' Communication between external components and configgen
+cfgeditor --> editorserver : communicates with
+genjson --> LLM : uses for AI generation
+
+
+@enduml

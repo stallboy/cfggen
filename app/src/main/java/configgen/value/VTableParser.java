@@ -86,15 +86,20 @@ public class VTableParser implements BlockParser {
         for (int row = curRowIndex + 1; row < rowSize; row++) {
             List<DCell> line = dTable.rows().get(row);
 
-            // 属于上一个record的block
-            if (line.getFirst().isCellEmpty()) {
-                // 上一格为空，本格不为空 -》 是这个block了
-                if (line.get(firstColIndex - 1).isCellEmpty() && !line.get(firstColIndex).isCellEmpty()) {
-                    res.add(new CellsWithRowIndex(line.subList(firstColIndex, firstColIndex + colSize), row));
+            if (line.getFirst().isCellEmpty()) {  // 第一格为空，还是本record
+                DCell prevCell = line.get(firstColIndex - 1);
+                DCell thisCell = line.get(firstColIndex);
+
+                if (prevCell.isCellEmpty()) { // 上一格为空，
+                    //noinspection StatementWithEmptyBody
+                    if (thisCell.isCellEmpty()) { // 本格也为空，内部的嵌套block，忽略
+                    } else { //本格不为空 -》 是这个block了
+                        res.add(new CellsWithRowIndex(line.subList(firstColIndex, firstColIndex + colSize), row));
+                    }
+                } else {// 上一个不为空，结束
+                    break;
                 }
-                // else 这里不会break，这样来支持嵌套
-            } else {
-                // 下一个record了
+            } else { // 下一个record，结束
                 break;
             }
         }

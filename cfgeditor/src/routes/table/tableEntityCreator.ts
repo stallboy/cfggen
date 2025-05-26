@@ -3,165 +3,172 @@ import {Entity, EntityEdgeType, EntityType} from "../../flow/entityModel.ts";
 import {Schema} from "./schemaUtil.tsx";
 
 export class UserData {
-    constructor(public table: string, public item: SItem) {
-    }
+    constructor(public table: string, public item: SItem) {}
 }
 
-function eid(id: string) {
-    return 't-' + id;
+// 统一 ID 前缀处理
+const PREFIX = {
+    TABLE: 't-',
+    IN: '@in',
+    OUT: '@out'
+} as const;
+
+function eid(id: string): string {
+    return PREFIX.TABLE + id;
 }
 
-function createEntity(item: SItem, id: string, table: string, entityType: EntityType = EntityType.Normal): Entity {
-    const fields = [];
-    if (item.type != "interface") {
-        const st = item as STable | SStruct;
-        for (const field of st.fields) {
-            fields.push({
-                key: field.name,
-                name: field.name,
-                comment: field.comment,
-                value: field.type
-            });
-        }
-    }
-
+function createEntity(
+    item: SItem, 
+    id: string, 
+    table: string, 
+    entityType: EntityType = EntityType.Normal
+): Entity {
+    const fields = item.type === "interface" ? [] : (item as STable | SStruct).fields.map(field => ({
+        key: field.name,
+        name: field.name,
+        comment: field.comment,
+        value: field.type
+    }));
 
     return {
         id: eid(id),
         label: item.name,
-        fields: fields,
+        fields,
         sourceEdges: [],
-        entityType: entityType,
+        entityType,
         userData: new UserData(table, item),
     };
 }
 
 export class TableEntityCreator {
+    constructor(
+        public entityMap: Map<string, Entity>,
+        public schema: Schema,
+        public curTable: STable,
+        public maxImpl: number
+    ) {}
 
-    constructor(public entityMap: Map<string, Entity>,
-                public schema: Schema,
-                public curTable: STable,
-                public maxImpl: number
-    ) {
+    private addEntityToMap(entity: Entity): void {
+        this.entityMap.set(entity.id, entity);
     }
 
-    includeSubStructs() {
-        let frontier: (STable | SStruct)[] = [this.curTable];
+    includeSubStructs(): void {
+        const frontier: (STable | SStruct)[] = [this.curTable];
         const curEntity = createEntity(this.curTable, this.curTable.name, this.curTable.name);
-        this.entityMap.set(curEntity.id, curEntity);
+        this.addEntityToMap(curEntity);
 
         while (frontier.length > 0) {
-            const oldFrontier = frontier;
+            const oldFrontier = frontier.slice();
             const depStructNames = this.schema.getDirectDepStructsByItems(frontier);
-            frontier = [];
+            frontier.length = 0;
+
+            // 处理依赖结构
             for (const depName of depStructNames) {
-                let depEntity = this.entityMap.get(eid(depName));
-                if (depEntity) {
-                    continue;
-                }
+                const entityId = eid(depName);
+                if (this.entityMap.has(entityId)) continue;
+
                 const dep = this.schema.itemMap.get(depName);
-                if (!dep) {
-                    continue; //不会发生
-                }
+                if (!dep) continue;
 
-                depEntity = createEntity(dep, dep.name, this.curTable.name);
-                this.entityMap.set(depEntity.id, depEntity);
+                const depEntity = createEntity(dep, dep.name, this.curTable.name);
+                this.addEntityToMap(depEntity);
 
-                if (dep.type == 'interface') {
-
-                    const depInterface = dep as SInterface;
-
-                    let cnt = 0;
-                    for (const impl of depInterface.impls) {
-                        const implEntity = createEntity(impl, impl.id ?? impl.name, this.curTable.name);
-                        this.entityMap.set(implEntity.id, implEntity);
-                        frontier.push(impl);
-
-                        depEntity.sourceEdges.push({
-                            sourceHandle: '@out',
-                            target: implEntity.id,
-                            targetHandle: '@in',
-                            type: EntityEdgeType.Normal,
-                        })
-
-                        cnt++;
-                        if (cnt >= this.maxImpl) {
-                            break;
-                        }
-                    }
-
+                if (dep.type === 'interface') {
+                    this.handleInterface(dep as SInterface, depEntity, frontier);
                 } else {
                     frontier.push(dep as SStruct);
                 }
             }
 
-            for (const oldF of oldFrontier) {
-                const oldFEntity = this.entityMap.get(eid(oldF.id ?? oldF.name));
-                if (!oldFEntity) {
-                    console.log("old frontier " + (oldF.id ?? oldF.name) + " not found!");
-                    continue;
-                }
-                const deps = this.schema.getDirectDepStructsMapByItem(oldF);
-                for (const [type, name] of deps) {
-                    oldFEntity.sourceEdges.push({
-                        sourceHandle: name,
-                        target: eid(type),
-                        targetHandle: '@in',
-                        type: EntityEdgeType.Normal,
-                    })
-                }
-            }
+            // 处理旧的前沿节点
+            this.processOldFrontier(oldFrontier);
         }
     }
 
+    private handleInterface(depInterface: SInterface, depEntity: Entity, frontier: (STable | SStruct)[]): void {
+        depInterface.impls
+            .slice(0, this.maxImpl)
+            .forEach(impl => {
+                const implEntity = createEntity(impl, impl.id ?? impl.name, this.curTable.name);
+                this.addEntityToMap(implEntity);
+                frontier.push(impl);
 
-    includeRefTables() {
-        const entityFrontier = [];
-        for (const e of this.entityMap.values()) {
-            entityFrontier.push(e);
-        }
+                depEntity.sourceEdges.push({
+                    sourceHandle: PREFIX.OUT,
+                    target: implEntity.id,
+                    targetHandle: PREFIX.IN,
+                    type: EntityEdgeType.Normal,
+                });
+            });
+    }
 
-        for (const oldEntity of entityFrontier) {
-            const item = (oldEntity.userData as UserData).item;
+    private processOldFrontier(oldFrontier: (STable | SStruct)[]): void {
+        oldFrontier.forEach(oldF => {
+            const entityId = eid(oldF.id ?? oldF.name);
+            const oldFEntity = this.entityMap.get(entityId);
+            
+            if (!oldFEntity) {
+                console.warn(`Old frontier ${oldF.id ?? oldF.name} not found!`);
+                return;
+            }
 
-            if (item.type == 'interface') {
-                const ii = item as SInterface;
-                if (ii.enumRef) {
-                    this.addRefToEntityMapIf(ii.enumRef);
-                    oldEntity.sourceEdges.push({
-                        sourceHandle: '@out',
-                        target: eid(ii.enumRef),
-                        targetHandle: "@in",
-                        type: EntityEdgeType.Ref,
-                    });
-                }
+            const deps = this.schema.getDirectDepStructsMapByItem(oldF);
+            for (const [type, name] of deps) {
+                oldFEntity.sourceEdges.push({
+                    sourceHandle: name,
+                    target: eid(type),
+                    targetHandle: PREFIX.IN,
+                    type: EntityEdgeType.Normal,
+                });
+            }
+        });
+    }
 
+    includeRefTables(): void {
+        Array.from(this.entityMap.values()).forEach(oldEntity => {
+            const item = oldEntity.userData as UserData;
+            
+            if (item.item.type === 'interface') {
+                this.handleInterfaceRef(item.item as SInterface, oldEntity);
             } else {
-                const si = item as (SStruct | STable)
-                if (si.foreignKeys) {
-                    for (const fk of si.foreignKeys) {
-                        this.addRefToEntityMapIf(fk.refTable);
-                        oldEntity.sourceEdges.push({
-                            sourceHandle: fk.keys[0],
-                            target: eid(fk.refTable),
-                            targetHandle: this.schema.getFkTargetHandle(fk),
-                            type: EntityEdgeType.Ref,
-                        });
-                    }
-                }
+                this.handleStructOrTableRef(item.item as (SStruct | STable), oldEntity);
             }
+        });
+    }
+
+    private handleInterfaceRef(ii: SInterface, entity: Entity): void {
+        if (ii.enumRef) {
+            this.addRefToEntityMapIf(ii.enumRef);
+            entity.sourceEdges.push({
+                sourceHandle: PREFIX.OUT,
+                target: eid(ii.enumRef),
+                targetHandle: PREFIX.IN,
+                type: EntityEdgeType.Ref,
+            });
         }
     }
 
-    addRefToEntityMapIf(tableName: string) {
-        let entity = this.entityMap.get(eid(tableName));
-        if (!entity) {
+    private handleStructOrTableRef(si: SStruct | STable, entity: Entity): void {
+        if (si.foreignKeys) {
+            si.foreignKeys.forEach(fk => {
+                this.addRefToEntityMapIf(fk.refTable);
+                entity.sourceEdges.push({
+                    sourceHandle: fk.keys[0],
+                    target: eid(fk.refTable),
+                    targetHandle: this.schema.getFkTargetHandle(fk),
+                    type: EntityEdgeType.Ref,
+                });
+            });
+        }
+    }
+
+    private addRefToEntityMapIf(tableName: string): void {
+        if (!this.entityMap.has(eid(tableName))) {
             const sTable = this.schema.getSTable(tableName);
             if (sTable) {
-                entity = createEntity(sTable, sTable.name, sTable.name, EntityType.Ref);
-                this.entityMap.set(entity.id, entity);
+                const entity = createEntity(sTable, sTable.name, sTable.name, EntityType.Ref);
+                this.addEntityToMap(entity);
             }
         }
     }
-
 }

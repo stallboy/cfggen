@@ -61,22 +61,6 @@ class CfgSchemaAlignToDataTest {
     }
 
 
-    @Test
-    void align_primaryKeyChanged_enumKeep() {
-        String str = """
-                table rank[id] (enum='RankName') {
-                    id:int;
-                    RankName:str;
-                }
-                """;
-        CfgSchema aligned = getAlignedCfgSchema(str);
-
-        assertEquals(1, aligned.items().size());
-        TableSchema t = aligned.findTable("rank");
-        assertEquals(List.of("RankID"), t.primaryKey().fields());
-        assertTrue(t.entry() instanceof EntryType.EEnum enumEntry && enumEntry.field().equals("RankName"));
-        assertEquals(3, t.fields().size());
-    }
 
     @Test
     void align_entryRemovedIfNotExist() {
@@ -181,6 +165,27 @@ class CfgSchemaAlignToDataTest {
         CfgSchemaErrs.DataHeadNameNotIdentifier e = (CfgSchemaErrs.DataHeadNameNotIdentifier) err;
         assertEquals("err", e.table());
         assertEquals("中RankName", e.notIdentifierName());
+    }
+
+    @Test
+    void error_PrimaryKeyNotEnumOrIntWhenEnum() {
+        String str = """
+                table rank[id] (enum='RankName') {
+                    id:int;
+                    RankName:str;
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        cfg.resolve().checkErrors();
+
+        CfgData cfgData = CfgDataReaderTest.readFile("rank.csv", tempDir);
+        CfgSchemaErrs errs = CfgSchemaErrs.of();
+        CfgSchema aligned = new CfgSchemaAlignToData(cfg, cfgData, errs).align();
+        new CfgSchemaResolver(aligned, errs).resolve();
+
+        assertEquals(1, errs.errs().size());
+        CfgSchemaErrs.Err err = errs.errs().getFirst();
+        assertInstanceOf(CfgSchemaErrs.PrimaryKeyNotEnumOrIntWhenEnum.class, err);
     }
 
 

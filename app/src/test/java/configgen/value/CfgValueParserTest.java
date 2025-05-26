@@ -291,6 +291,87 @@ class CfgValueParserTest {
         }
     }
 
+    @Test
+    void parseCfgValue_nestedListBlock() {
+        String cfgStr = """
+                table t[id] {
+                    id:int;
+                    rewardList:list<Reward> (block=1);
+                }
+                
+                struct Reward {
+                    rewardName:text;
+                    chestList:list<Chest> (block=1);
+                }
+                
+                struct Chest {
+                    chestName:text;
+                    itemList:list<Item> (block=1);
+                }
+                
+                struct Item {
+                    itemId:int;
+                    name:text;
+                }
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+        String csvStr = """
+                ,,,
+                id,rewardList.rewardName,chestName,itemId,itemName
+                1,地狱熔炉奖励,罗格的宝箱,30001,末日毁灭者
+                ,,,30002,风之力
+                ,,血鸟宝箱,30010,法力药水
+                ,,,30011,暴风之盾
+                2,安雅的奖励,普通宝箱,30021,乔丹之石
+                ,,,30022,彩虹刻面""";
+        Resources.addTempFileFromText("t.csv", tempDir, csvStr);
+
+        Context ctx = new Context(tempDir);
+        CfgValue cfgValue = ctx.makeValue();
+        VTable tVTable = cfgValue.getTable("t");
+        TableSchema tSchema = ctx.cfgSchema().findTable("t");
+
+        assertEquals(tSchema, tVTable.schema());
+        assertEquals(2, tVTable.valueList().size());
+        {
+            VStruct first = tVTable.valueList().getFirst();
+            VStruct firstReward = (VStruct) ((VList)(first.values().get(1))).valueList().get(0);
+            assertEquals("1,((地狱熔炉奖励,((罗格的宝箱,((30001,末日毁灭者),(30002,风之力))),(血鸟宝箱,((30010,法力药水),(30011,暴风之盾))))))", first.packStr());
+
+            VText rewardName = (VText) firstReward.values().getFirst();
+            assertEquals("地狱熔炉奖励",rewardName.value());
+            VList chestList = (VList) firstReward.values().get(1);
+            assertEquals(2, chestList.valueList().size());
+            VStruct chest1 = (VStruct) chestList.valueList().getFirst();
+            VText chestName = (VText) chest1.values().getFirst();
+            assertEquals("罗格的宝箱", chestName.value());
+            VList itemList = (VList) chest1.values().get(1);
+            assertEquals(2, itemList.valueList().size());
+            VStruct item2 = (VStruct) itemList.valueList().get(1);
+            assertEquals(30002, ((VInt)item2.values().getFirst()).value());
+            assertEquals("风之力", ((VText)item2.values().get(1)).value());
+
+            VStruct chest2 = (VStruct) chestList.valueList().getFirst();
+            VList itemList2 = (VList) chest2.values().get(1);
+            assertEquals(2, itemList2.valueList().size());
+        }
+        {
+            VStruct second = tVTable.valueList().get(1);
+            VStruct firstReward = (VStruct) ((VList)(second.values().get(1))).valueList().get(0);
+            assertEquals("2,((安雅的奖励,((普通宝箱,((30021,乔丹之石),(30022,彩虹刻面))))))", second.packStr());
+
+            VText rewardName = (VText) firstReward.values().getFirst();
+            assertEquals("安雅的奖励",rewardName.value());
+            VList chestList = (VList) firstReward.values().get(1);
+            assertEquals(1, chestList.valueList().size());
+            VStruct chest1 = (VStruct) chestList.valueList().getFirst();
+            VText chestName = (VText) chest1.values().getFirst();
+            assertEquals("普通宝箱", chestName.value());
+            VList itemList = (VList) chest1.values().get(1);
+            assertEquals(2, itemList.valueList().size());
+        }
+    }
+
 
     @Test
     void error_InterfaceCellEmptyButHasNoDefaultImpl() {
