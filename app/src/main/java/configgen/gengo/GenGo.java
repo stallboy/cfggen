@@ -173,9 +173,17 @@ public class GenGo extends GeneratorWithTag {
         if (!structural.foreignKeys().isEmpty()) {
             ps.println("//ref properties");
             for (ForeignKeySchema fk : structural.foreignKeys()) {
-                String codeGetFuncName = "";
+                String codeGetFuncName;
                 switch (fk.refKey()) {
                     case RefKey.RefPrimary ignored -> {
+                        switch (fk.key().fieldSchemas().getFirst().type()){
+                            case FMap ign -> {
+                                String keyType = type(fk.key().fieldSchemas().getFirst().type());
+                                String valueType = ClassName(fk.refTableSchema());
+                                MapRefCode mapRefCode = new MapRefCode(name, keyType, valueType);
+                                ps.println(mapRefCode.codeGetByDefine);
+                            }
+                        }
                         KeySchemaCode keySchemaCode = new KeySchemaCode(fk.key(), name, true);
                         codeGetFuncName = keySchemaCode.codeGetFuncName;
                     }
@@ -507,10 +515,6 @@ public class GenGo extends GeneratorWithTag {
         }
     }
 
-    private String uniqueKeyMapName(KeySchema keySchema) {
-        return lower1(keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()) + "Map");
-    }
-
     public static String keyClassName(KeySchema keySchema) {
         if (keySchema.fieldSchemas().size() > 1)
             return "Key" + keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining());
@@ -525,30 +529,5 @@ public class GenGo extends GeneratorWithTag {
         }
     }
 
-    private String uniqueKeyGetByName(KeySchema keySchema) {
-        return "GetBy" + keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining());
-    }
-
-    private String actualParamsKey(KeySchema keySchema) {
-        String p = keySchema.fields().stream().map(Generator::lower1).collect(Collectors.joining(", "));
-        return keySchema.fields().size() > 1 ? "new " + keyClassName(keySchema) + "(" + p + ")" : p;
-    }
-
-    private String actualParamsKeySelf(KeySchema keySchema) {
-        String p = keySchema.fields().stream().map(n -> "self." + upper1(n)).collect(Collectors.joining(", "));
-        return keySchema.fields().size() > 1 ? "new " + keyClassName(keySchema) + "(" + p + ")" : p;
-    }
-
-    private void generateAllMapPut(TableSchema table, CachedIndentPrinter ps) {
-        generateMapPut(table.primaryKey(), ps, true);
-        for (KeySchema uniqueKey : table.uniqueKeys()) {
-            generateMapPut(uniqueKey, ps, false);
-        }
-    }
-
-    private void generateMapPut(KeySchema keySchema, CachedIndentPrinter ps, boolean isPrimaryKey) {
-        String mapName = isPrimaryKey ? "all" : uniqueKeyMapName(keySchema);
-        ps.println4(mapName + ".Add(" + actualParamsKeySelf(keySchema) + ", self);");
-    }
 }
 

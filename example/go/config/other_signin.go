@@ -6,7 +6,7 @@ type OtherSignin struct {
 	vipitem2vipcountMap    map[int32]int32 //vip奖励
 	viplevel               int32           //领取vip奖励的最低等级
 	iconFile               string          //礼包图标
-	refVipitem2vipcountMap map[int32]OtherLoot
+	refVipitem2vipcountMap map[int32]*OtherLoot
 }
 
 func createOtherSignin(stream *Stream) *OtherSignin {
@@ -51,9 +51,12 @@ func (t *OtherSignin) GetIconFile() string {
 }
 
 // ref properties
-func (t *OtherSignin) GetrefVipitem2vipcountMap() map[int32]OtherLoot {
+func (t *OtherSignin) GetRefVipitem2vipcountMap() map[int32]*OtherLoot {
 	if t.refVipitem2vipcountMap == nil {
-		t.refVipitem2vipcountMap = GetOtherLootMgr().Get(t.vipitem2vipcountMap)
+		t.refVipitem2vipcountMap = make(map[int32]*OtherLoot, len(t.vipitem2vipcountMap))
+		for k, v := range t.vipitem2vipcountMap {
+			t.refVipitem2vipcountMap[k] = GetOtherLootMgr().Get(v)
+		}
 	}
 	return t.refVipitem2vipcountMap
 }
