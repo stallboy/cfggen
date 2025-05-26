@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Config
 {
-    public static class CSVProcessor
+    public static class Processor
     {
         public static readonly LoadErrors Errors = new LoadErrors();
 
@@ -126,8 +126,8 @@ namespace Config
             Config.Other.DataSignin.Resolve(Errors);
             Config.Task.DataTask.Resolve(Errors);
             Config.Task.DataTask2.Resolve(Errors);
+            
         }
 
     }
 }
-

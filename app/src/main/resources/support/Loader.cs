@@ -71,7 +71,7 @@ namespace Config
     }
 
 
-    public static class CSVLoader
+    public static class Loader
     {
         public delegate void ProcessConfigStream(Stream os);
 
