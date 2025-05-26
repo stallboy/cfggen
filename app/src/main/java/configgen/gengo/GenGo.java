@@ -219,7 +219,7 @@ public class GenGo extends GeneratorWithTag {
                 }
                 GoName refTbName = new GoName(fk.refTableSchema());
                 String getRefCode = """
-                        func (t *${className}) Get${refName}() ${refType} {
+                        func (t *${className}) Get${RefName}() ${refType} {
                             if t.${refName} == nil {
                                 t.${refName} = Get${refTableClassName}Mgr().${codeGetFuncName}(t.${varName})
                             }
@@ -227,6 +227,7 @@ public class GenGo extends GeneratorWithTag {
                         }
                         """.replace("${className}", name.className).
                         replace("${refName}", Generator.lower1(refName(fk))).
+                        replace("${RefName}", Generator.upper1(refName(fk))).
                         replace("${refTableClassName}", refTbName.className).
                         replace("${codeGetFuncName}", codeGetFuncName).
                         replace("${varName}", Generator.lower1(fk.name())).

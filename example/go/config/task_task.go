@@ -52,14 +52,14 @@ func (t *TaskTask) GetTestDefaultBean() *TaskTestDefaultBean {
 }
 
 //ref properties
-func (t *TaskTask) GetnullableRefTaskid() *TaskTaskextraexp {
+func (t *TaskTask) GetNullableRefTaskid() *TaskTaskextraexp {
     if t.nullableRefTaskid == nil {
         t.nullableRefTaskid = GetTaskTaskextraexpMgr().Get(t.taskid)
     }
     return t.nullableRefTaskid
 }
 
-func (t *TaskTask) GetnullableRefNexttask() *TaskTask {
+func (t *TaskTask) GetNullableRefNexttask() *TaskTask {
     if t.nullableRefNexttask == nil {
         t.nullableRefNexttask = GetTaskTaskMgr().Get(t.nexttask)
     }

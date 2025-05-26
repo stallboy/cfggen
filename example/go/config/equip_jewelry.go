@@ -74,28 +74,28 @@ func (t *EquipJewelry) GetDescription() string {
 }
 
 //ref properties
-func (t *EquipJewelry) GetrefLvlRank() *EquipJewelryrandom {
+func (t *EquipJewelry) GetRefLvlRank() *EquipJewelryrandom {
     if t.refLvlRank == nil {
         t.refLvlRank = GetEquipJewelryrandomMgr().Get(t.lvlRank)
     }
     return t.refLvlRank
 }
 
-func (t *EquipJewelry) GetrefJType() *EquipJewelrytype {
+func (t *EquipJewelry) GetRefJType() *EquipJewelrytype {
     if t.refJType == nil {
         t.refJType = GetEquipJewelrytypeMgr().Get(t.jType)
     }
     return t.refJType
 }
 
-func (t *EquipJewelry) GetnullableRefSuitID() *EquipJewelrysuit {
+func (t *EquipJewelry) GetNullableRefSuitID() *EquipJewelrysuit {
     if t.nullableRefSuitID == nil {
         t.nullableRefSuitID = GetEquipJewelrysuitMgr().Get(t.suitID)
     }
     return t.nullableRefSuitID
 }
 
-func (t *EquipJewelry) GetrefKeyAbility() *EquipAbility {
+func (t *EquipJewelry) GetRefKeyAbility() *EquipAbility {
     if t.refKeyAbility == nil {
         t.refKeyAbility = GetEquipAbilityMgr().Get(t.keyAbility)
     }

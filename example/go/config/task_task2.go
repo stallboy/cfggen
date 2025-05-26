@@ -94,14 +94,14 @@ func (t *TaskTask2) GetTestListInterface() []AiTriggerTick {
 }
 
 //ref properties
-func (t *TaskTask2) GetnullableRefTaskid() *TaskTaskextraexp {
+func (t *TaskTask2) GetNullableRefTaskid() *TaskTaskextraexp {
     if t.nullableRefTaskid == nil {
         t.nullableRefTaskid = GetTaskTaskextraexpMgr().Get(t.taskid)
     }
     return t.nullableRefTaskid
 }
 
-func (t *TaskTask2) GetnullableRefNexttask() *TaskTask {
+func (t *TaskTask2) GetNullableRefNexttask() *TaskTask {
     if t.nullableRefNexttask == nil {
         t.nullableRefNexttask = GetTaskTaskMgr().Get(t.nexttask)
     }

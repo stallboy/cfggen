@@ -133,7 +133,7 @@ func testRef() {
 	cc := t.GetCompletecondition()
 	if killMonster, ok := cc.(*config.TaskCompleteconditionKillMonster); ok {
 		rawGet := config.GetOtherMonsterMgr().Get(killMonster.GetMonsterid())
-		if rawGet != killMonster.GetrefMonsterid() {
+		if rawGet != killMonster.GetRefMonsterid() {
 			println("fail: testRef")
 		} else {
 			println("pass: testRef")

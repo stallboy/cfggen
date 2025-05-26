@@ -39,7 +39,7 @@ func (t *OtherLoot) GetChanceList() []int32 {
 }
 
 //ref properties
-func (t *OtherLoot) GetlistRefLootid() []*OtherLootitem {
+func (t *OtherLoot) GetListRefLootid() []*OtherLootitem {
     if t.listRefLootid == nil {
         t.listRefLootid = GetOtherLootitemMgr().GetAllByLootid(t.lootid)
     }
