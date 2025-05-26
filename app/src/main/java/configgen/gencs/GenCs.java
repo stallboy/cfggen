@@ -10,6 +10,8 @@ import configgen.util.CachedIndentPrinter;
 import configgen.value.CfgValue;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,34 +21,34 @@ import static configgen.schema.FieldType.Primitive.*;
 import static configgen.value.CfgValue.VTable;
 
 public class GenCs extends GeneratorWithTag {
-    private final String dir;
-    private final String pkg;
-    private final String encoding;
-    private final String prefix;
-    private File dstDir;
+    public final String pkg;
+    public final String encoding;
+    public final String prefix;
+    public final Path dstDir;
     private CfgSchema cfgSchema;
     private boolean isLangSwitch;
 
     public GenCs(Parameter parameter) {
         super(parameter);
-        dir = parameter.get("dir", "Config");
+        String dir = parameter.get("dir", "Config");
         pkg = parameter.get("pkg", "Config");
         encoding = parameter.get("encoding", "GBK");
         prefix = parameter.get("prefix", "Data");
+
+        dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
     }
 
     @Override
     public void generate(Context ctx) throws IOException {
-        dstDir = Paths.get(dir).resolve(pkg.replace('.', '/')).toFile();
         CfgValue cfgValue = ctx.makeValue(tag);  // 这里只需要schema，生成value只用于检验数据
         cfgSchema = cfgValue.schema();
 
         isLangSwitch = ctx.nullableLangSwitch() != null;
-        //copyFile("CSV.cs");
-        //copyFile("CSVLoader.cs");
-        //copyFile("LoadErrors.cs");
-        //copyFile("KeyedList.cs");
-        genCSVProcessor();
+        copyFileIfNotExist("CSV.cs");
+        copyFileIfNotExist("Loader.cs");
+        copyFileIfNotExist("LoadErrors.cs");
+        copyFileIfNotExist("KeyedList.cs");
+        GenProcessor.generate(this, cfgSchema);
 
         for (Fieldable fieldable : cfgSchema.sortedFieldables()) {
             switch (fieldable) {
@@ -54,7 +56,7 @@ public class GenCs extends GeneratorWithTag {
                     generateStructClass(structSchema, null);
                 }
                 case InterfaceSchema interfaceSchema -> {
-                    generateInterface(interfaceSchema);
+                    GenInterface.generate(this, interfaceSchema);
                     for (StructSchema impl : interfaceSchema.impls()) {
                         generateStructClass(impl, null);
                     }
@@ -67,103 +69,20 @@ public class GenCs extends GeneratorWithTag {
         }
 
         if (isLangSwitch) { //生成Text这个Bean
-            try (CachedIndentPrinter ps = createCode(new File(dstDir, "Text.cs"), encoding)) {
-                GenText.generate(ctx.nullableLangSwitch(), pkg, ps);
-            }
+            GenText.generate(this, ctx.nullableLangSwitch());
         }
 
 
-        CachedFiles.keepMetaAndDeleteOtherFiles(dstDir);
-    }
-
-    private static class Name {
-        final String pkg;
-        final String className;
-        final String fullName;
-        final String path;
-
-        Name(String topPkg, String prefix, Nameable nameable) {
-            String name;
-            InterfaceSchema nullableInterface = nameable instanceof StructSchema struct ? struct.nullableInterface() : null;
-            if (nullableInterface != null) {
-                name = nullableInterface.name().toLowerCase() + "." + nameable.name();
-            } else {
-                name = nameable.name();
-            }
-            String[] seps = name.split("\\.");
-            String[] pks = new String[seps.length - 1];
-            for (int i = 0; i < pks.length; i++)
-                pks[i] = upper1Only(seps[i]);
-            className = prefix + upper1Only(seps[seps.length - 1]);
-
-            if (pks.length == 0)
-                pkg = topPkg;
-            else
-                pkg = topPkg + "." + String.join(".", pks);
-
-            if (pkg.isEmpty())
-                fullName = className;
-            else
-                fullName = pkg + "." + className;
-
-            if (pks.length == 0)
-                path = className + ".cs";
-            else
-                path = String.join("/", pks) + "/" + className + ".cs";
-        }
+        CachedFiles.keepMetaAndDeleteOtherFiles(dstDir.toFile());
     }
 
     private void generateStructClass(Structural structural, VTable vTable) {
         Name name = new Name(pkg, prefix, structural);
-        File csFile = dstDir.toPath().resolve(name.path).toFile();
-        try (CachedIndentPrinter ps = createCode(csFile, encoding)) {
+        try (CachedIndentPrinter ps = new CachedIndentPrinter(dstDir.resolve(name.path), encoding)) {
             generateStructClass(structural, vTable, name, ps);
         }
     }
 
-    private void generateInterface(InterfaceSchema sInterface) {
-        Name name = new Name(pkg, prefix, sInterface);
-        File csFile = dstDir.toPath().resolve(name.path).toFile();
-        try (CachedIndentPrinter ps = createCode(csFile, encoding)) {
-            generateInterface(sInterface, name, ps);
-        }
-    }
-
-    private void generateInterface(InterfaceSchema sInterface, Name name, CachedIndentPrinter ps) {
-        ps.println("using System;");
-        ps.println("using System.Collections.Generic;");
-        if (!pkg.equals("Config")) {
-            ps.println("using Config;");
-        }
-        ps.println("namespace " + name.pkg);
-        ps.println("{");
-        ps.println("public abstract class " + name.className);
-        ps.println("{");
-        if (sInterface.nullableEnumRefTable() != null) {
-            ps.println1("public abstract " + fullName(sInterface.nullableEnumRefTable()) + " type();");
-            ps.println();
-        }
-
-        if (HasRef.hasRef(sInterface)) {
-            ps.println1("internal virtual void _resolve(Config.LoadErrors errors)");
-            ps.println1("{");
-            ps.println1("}");
-            ps.println();
-        }
-
-        ps.println1("internal static " + name.className + " _create(Config.Stream os) {");
-        ps.println2("switch(os.ReadString()) {");
-        for (StructSchema impl : sInterface.impls()) {
-            ps.println3("case \"" + impl.name() + "\":");
-            ps.println4("return " + fullName(impl) + "._create(os);");
-        }
-
-        ps.println2("}");
-        ps.println2("return null;");
-        ps.println1("}");
-        ps.println("}");
-        ps.println("}");
-    }
 
     private void generateStructClass(Structural structural, VTable vTable, Name name, CachedIndentPrinter ps) {
         TableSchema table = vTable != null ? vTable.schema() : null;
@@ -486,7 +405,7 @@ public class GenCs extends GeneratorWithTag {
 
     }
 
-    private void generateMapGetBy(KeySchema keySchema, GenCs.Name name, CachedIndentPrinter ps, boolean isPrimaryKey) {
+    private void generateMapGetBy(KeySchema keySchema, Name name, CachedIndentPrinter ps, boolean isPrimaryKey) {
         generateKeyClassIf(keySchema, ps);
 
         //static all
@@ -657,7 +576,7 @@ public class GenCs extends GeneratorWithTag {
         }
     }
 
-    private String fullName(Nameable nameable) {
+    String fullName(Nameable nameable) {
         return new Name(pkg, prefix, nameable).fullName;
     }
 
@@ -690,75 +609,21 @@ public class GenCs extends GeneratorWithTag {
         };
     }
 
-    private void copyFile(String file) throws IOException {
+    private void copyFileIfNotExist(String file) throws IOException {
+        Path dst = dstDir.resolve(file);
+        if (Files.exists(dst)) {
+            CachedFiles.keepFile(dst);
+            return;
+        }
+
         try (InputStream is = getClass().getResourceAsStream("/support/" + file);
              BufferedReader br = new BufferedReader(new InputStreamReader(is != null ? is : new FileInputStream("src/support/" + file), "GBK"));
-             CachedIndentPrinter ps = createCode(new File(dstDir, file), encoding)) {
+             CachedIndentPrinter ps = new CachedIndentPrinter(dst, encoding)) {
             for (String line = br.readLine(); line != null; line = br.readLine()) {
                 ps.println(line);
             }
         }
     }
 
-    private void genCSVProcessor() {
-        try (CachedIndentPrinter ps = createCode(new File(dstDir, "CSVProcessor.cs"), encoding)) {
-            ps.println("using System.Collections.Generic;");
-            if (!pkg.equals("Config")) {
-                ps.println("using Config;");
-            }
-            ps.println();
-            ps.println("namespace " + pkg);
-            ps.println("{");
-
-            ps.println1("public static class CSVProcessor");
-            ps.println1("{");
-            ps.println2("public static readonly LoadErrors Errors = new LoadErrors();");
-            ps.println();
-            ps.println2("public static void Process(Config.Stream os)");
-            ps.println2("{");
-            ps.println3("var configNulls = new List<string>");
-            ps.println3("{");
-            Iterable<TableSchema> tableSchemas = cfgSchema.sortedTables();
-            for (TableSchema table : tableSchemas) {
-                ps.println4("\"" + table.name() + "\",");
-            }
-            ps.println3("};");
-
-            ps.println3("for(;;)");
-            ps.println3("{");
-            ps.println4("var csv = os.ReadCfg();");
-            ps.println4("if (csv == null)");
-            ps.println5("break;");
-
-            ps.println4("switch(csv)");
-            ps.println4("{");
-            for (TableSchema table : tableSchemas) {
-                ps.println5("case \"" + table.name() + "\":");
-                ps.println6("configNulls.Remove(csv);");
-                ps.println6(fullName(table) + ".Initialize(os, Errors);");
-                ps.println6("break;");
-            }
-            ps.println5("default:");
-            ps.println6("Errors.ConfigDataAdd(csv);");
-            ps.println6("break;");
-            ps.println4("}");
-            ps.println3("}");
-
-            ps.println3("foreach (var csv in configNulls)");
-            ps.println4("Errors.ConfigNull(csv);");
-
-            for (TableSchema table : tableSchemas) {
-                if (HasRef.hasRef(table)) {
-                    ps.println3(fullName(table) + ".Resolve(Errors);");
-                }
-            }
-
-            ps.println2("}");
-            ps.println();
-            ps.println1("}");
-            ps.println("}");
-            ps.println();
-        }
-    }
 
 }

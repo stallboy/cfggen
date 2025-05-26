@@ -29,7 +29,7 @@ public class CachedFiles {
     }
 
     public static void writeFile(Path path, byte[] data) throws IOException {
-        filename_set.add(fileKey(path));
+        keepFile(path);
         if (!path.toFile().exists()) {
             Logger.log("create file: " + path);
             mkdirs(path.getParent().toFile());
@@ -45,6 +45,10 @@ public class CachedFiles {
             Files.write(path, data, StandardOpenOption.CREATE,
                     StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
         }
+    }
+
+    public static void keepFile(Path path) {
+        filename_set.add(fileKey(path));
     }
 
     private static boolean arrayEquals(byte[] a, int aSize, byte[] a2, int a2Size) {

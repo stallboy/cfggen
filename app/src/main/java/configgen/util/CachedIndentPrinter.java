@@ -1,5 +1,7 @@
 package configgen.util;
 
+import gg.jte.TemplateOutput;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -7,7 +9,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CachedIndentPrinter implements Closeable {
+public class CachedIndentPrinter implements Closeable, TemplateOutput {
     private final Path path;
     private final String encoding;
     private final StringBuilder dst;
@@ -178,6 +180,16 @@ public class CachedIndentPrinter implements Closeable {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void writeContent(String value) {
+        to().append(value);
+    }
+
+    @Override
+    public void writeContent(String value, int beginIndex, int endIndex) {
+        to().append(value, beginIndex, endIndex);
     }
 }
 
