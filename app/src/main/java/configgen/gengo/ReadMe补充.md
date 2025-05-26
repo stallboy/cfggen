@@ -15,7 +15,9 @@
 请参考other.lootitem。
 
 所有的Key变量需要类型检查，只支持bool int long string四种类型，不支持struct作为键。
-
+wait?! 
+table jewelryrandom[LvlRank]
+LvlRank:LevelRank;
 
 主键、唯一键、联合键的说法容易产生概念混淆。
 
@@ -26,3 +28,6 @@ Primary是主要的意思，Unique跟它不能对应。
 联合键的说法像是多个键组合成一个键，但设计上并非如此。
 比如signin的viplevel并不能作为一个独立的键。
 而是可以由多个field联合。
+
+如果主键是联合形态，不能被ref，只能=>到其中的一个field，会返回所有符合这个key的容器。
+

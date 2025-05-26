@@ -137,7 +137,7 @@ public class GenGo extends GeneratorWithTag {
         // ref property
         if (!structural.foreignKeys().isEmpty()) {
             for (ForeignKeySchema fk : structural.foreignKeys()) {
-                printGoVar(ps, refName(fk), refType(fk), null);
+                ps.println1("%s %s", lower1(refName(fk)), refType(fk));
             }
         }
 
@@ -172,25 +172,47 @@ public class GenGo extends GeneratorWithTag {
         // ref property
         if (!structural.foreignKeys().isEmpty()) {
             ps.println("//ref properties");
+
+            //list ref 和 map ref
+            for (ForeignKeySchema fk : structural.foreignKeys()) {
+                FieldSchema keyShema = fk.key().fieldSchemas().getFirst();
+                switch (keyShema.type()) {
+                    case FMap ign -> {
+                        MapRefCode mapRefCode = new MapRefCode(name, fk);
+                        ps.println(mapRefCode.codeGetByDefine);
+                    }
+                    case FList ign -> {
+                        ListRefCode listRefCode = new ListRefCode(name, fk);
+                        ps.println(listRefCode.codeGetByDefine);
+                    }
+                    default -> {
+                        continue;
+                    }
+                }
+            }
+
             for (ForeignKeySchema fk : structural.foreignKeys()) {
                 String codeGetFuncName;
                 switch (fk.refKey()) {
                     case RefKey.RefPrimary ignored -> {
-                        switch (fk.key().fieldSchemas().getFirst().type()){
+                        switch (fk.key().fieldSchemas().getFirst().type()) {
                             case FMap ign -> {
-                                String keyType = type(fk.key().fieldSchemas().getFirst().type());
-                                String valueType = ClassName(fk.refTableSchema());
-                                MapRefCode mapRefCode = new MapRefCode(name, keyType, valueType);
-                                ps.println(mapRefCode.codeGetByDefine);
+                                continue;
+                            }
+                            case FList ign ->{
+                                continue;
+                            }
+                            default -> {
+                                KeySchemaCode keySchemaCode = new KeySchemaCode(fk.key(), name, true);
+                                codeGetFuncName = keySchemaCode.codeGetFuncName;
                             }
                         }
-                        KeySchemaCode keySchemaCode = new KeySchemaCode(fk.key(), name, true);
-                        codeGetFuncName = keySchemaCode.codeGetFuncName;
                     }
                     case RefKey.RefUniq ignored -> {
                         codeGetFuncName = "RefUniq";
                     }
                     case RefKey.RefList ignored -> {
+                        // => ref到联合键，返回符合key的集合
                         PrimarySubKeyCode primarySubKeyCode = new PrimarySubKeyCode(name, fk.key().fieldSchemas().getFirst());
                         codeGetFuncName = primarySubKeyCode.codeGetByFuncName;
                     }
@@ -490,10 +512,10 @@ public class GenGo extends GeneratorWithTag {
                         return "*" + refTableName.className;
                     }
                     case FList ignored2 -> {
-                        return "[]" + ClassName(fk.refTableSchema());
+                        return "[]*" + ClassName(fk.refTableSchema());
                     }
                     case FMap fMap -> {
-                        return String.format("map[%s]%s", type(fMap.key()), ClassName(fk.refTableSchema()));
+                        return String.format("map[%s]*%s", type(fMap.key()), ClassName(fk.refTableSchema()));
                     }
                 }
             }

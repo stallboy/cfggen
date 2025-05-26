@@ -4,6 +4,8 @@ type OtherKeytest struct {
     id1 int32
     id2 int64
     id3 int32
+    ids []int32
+    refIds []*OtherSignin
 }
 
 func createOtherKeytest(stream *Stream) *OtherKeytest {
@@ -11,6 +13,11 @@ func createOtherKeytest(stream *Stream) *OtherKeytest {
     v.id1 = stream.ReadInt32()
     v.id2 = stream.ReadInt64()
     v.id3 = stream.ReadInt32()
+    idsSize := stream.ReadInt32()
+    v.ids = make([]int32, idsSize)
+    for i := 0; i < int(idsSize); i++ {
+        v.ids[i] = stream.ReadInt32()
+    }
     return v
 }
 
@@ -26,6 +33,22 @@ func (t *OtherKeytest) GetId2() int64 {
 func (t *OtherKeytest) GetId3() int32 {
     return t.id3
 }
+
+func (t *OtherKeytest) GetIds() []int32 {
+    return t.ids
+}
+
+//ref properties
+func (t *OtherKeytest) GetRefIds() []*OtherSignin {
+	if t.refIds == nil {
+		t.refIds = make([]*OtherSignin, len(t.ids))
+		for i, v := range t.ids {
+			t.refIds[i] = GetOtherSigninMgr().Get(v)
+		}
+	}
+	return t.refIds
+}
+
 
 type KeyId1Id2 struct {
     id1 int32
