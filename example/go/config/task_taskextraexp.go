@@ -82,6 +82,7 @@ func (t *TaskTaskextraexpMgr) Init(stream *Stream) {
         v := createTaskTaskextraexp(stream)
         t.all = append(t.all, v)
         t.taskidMap[v.taskid] = v
+
     }
 }
 

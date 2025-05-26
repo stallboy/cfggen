@@ -78,6 +78,10 @@ func (t *EquipJewelrysuit) GetSuitList() []int32 {
     return t.suitList
 }
 
+func (t *EquipJewelrysuitMgr) GetSpecialSuit() *EquipJewelrysuit {
+	return &specialSuit
+}
+
 type EquipJewelrysuitMgr struct {
     all []*EquipJewelrysuit
     suitIDMap map[int32]*EquipJewelrysuit
@@ -103,6 +107,12 @@ func (t *EquipJewelrysuitMgr) Init(stream *Stream) {
         v := createEquipJewelrysuit(stream)
         t.all = append(t.all, v)
         t.suitIDMap[v.suitID] = v
+
+        switch v.ename {
+        case "SpecialSuit":
+            specialSuit = *v
+
+        }
     }
 }
 

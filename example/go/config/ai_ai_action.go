@@ -72,6 +72,7 @@ func (t *AiAi_actionMgr) Init(stream *Stream) {
         v := createAiAi_action(stream)
         t.all = append(t.all, v)
         t.iDMap[v.iD] = v
+
     }
 }
 

@@ -72,6 +72,7 @@ func (t *AiAi_conditionMgr) Init(stream *Stream) {
         v := createAiAi_condition(stream)
         t.all = append(t.all, v)
         t.iDMap[v.iD] = v
+
     }
 }
 

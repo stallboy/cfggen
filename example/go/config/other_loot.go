@@ -72,6 +72,7 @@ func (t *OtherLootMgr) Init(stream *Stream) {
         v := createOtherLoot(stream)
         t.all = append(t.all, v)
         t.lootidMap[v.lootid] = v
+
     }
 }
 

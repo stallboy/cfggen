@@ -32,6 +32,34 @@ func (t *EquipAbility) GetName() string {
     return t.name
 }
 
+func (t *EquipAbilityMgr) GetAttack() *EquipAbility {
+	return &attack
+}
+
+func (t *EquipAbilityMgr) GetDefence() *EquipAbility {
+	return &defence
+}
+
+func (t *EquipAbilityMgr) GetHp() *EquipAbility {
+	return &hp
+}
+
+func (t *EquipAbilityMgr) GetCritical() *EquipAbility {
+	return &critical
+}
+
+func (t *EquipAbilityMgr) GetCritical_resist() *EquipAbility {
+	return &critical_resist
+}
+
+func (t *EquipAbilityMgr) GetBlock() *EquipAbility {
+	return &block
+}
+
+func (t *EquipAbilityMgr) GetBreak_armor() *EquipAbility {
+	return &break_armor
+}
+
 type EquipAbilityMgr struct {
     all []*EquipAbility
     idMap map[int32]*EquipAbility
@@ -57,6 +85,24 @@ func (t *EquipAbilityMgr) Init(stream *Stream) {
         v := createEquipAbility(stream)
         t.all = append(t.all, v)
         t.idMap[v.id] = v
+
+        switch v.name {
+        case "Attack":
+            attack = *v
+        case "Defence":
+            defence = *v
+        case "Hp":
+            hp = *v
+        case "Critical":
+            critical = *v
+        case "Critical_resist":
+            critical_resist = *v
+        case "Block":
+            block = *v
+        case "Break_armor":
+            break_armor = *v
+
+        }
     }
 }
 

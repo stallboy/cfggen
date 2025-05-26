@@ -80,6 +80,7 @@ func (t *AiAiMgr) Init(stream *Stream) {
         v := createAiAi(stream)
         t.all = append(t.all, v)
         t.iDMap[v.iD] = v
+
     }
 }
 

@@ -199,7 +199,7 @@ public class GenGo extends GeneratorWithTag {
                             case FMap ign -> {
                                 continue;
                             }
-                            case FList ign ->{
+                            case FList ign -> {
                                 continue;
                             }
                             default -> {
@@ -239,11 +239,25 @@ public class GenGo extends GeneratorWithTag {
         }
 
         if (table != null) {
-            GenMapGetCode(name, ps, table);
+            GenEnumOrEntryCode(vTable, ps);
+            GenMapGetCode(name, ps, vTable);
         }
     }
 
-    private void GenMapGetCode(GoName name, CachedIndentPrinter ps, TableSchema table) {
+    private void GenEnumOrEntryCode(CfgValue.VTable vTable, CachedIndentPrinter ps) {
+        if (!(vTable.schema().entry() instanceof EntryType.EntryBase)) {
+            return;
+        }
+        if (vTable.enumNames().size() < 1)
+            return;
+        vTable.enumNames().forEach(enumName -> {
+            EnumGetCode enumGetCode = new EnumGetCode(new GoName(vTable.schema()), enumName);
+            ps.println(enumGetCode.getEnumGetFunctionCode());
+        });
+    }
+
+    private void GenMapGetCode(GoName name, CachedIndentPrinter ps, CfgValue.VTable vTable) {
+        TableSchema table = vTable.schema();
         List<KeySchema> keySchemas = new ArrayList<>();
         keySchemas.add(table.primaryKey());
         keySchemas.addAll(table.uniqueKeys());
@@ -306,6 +320,8 @@ public class GenGo extends GeneratorWithTag {
                 replace("${subKeyGetBy}", subKeyGetBy)
         );
 
+        EnumInitCode enumInitCode = new EnumInitCode(name, vTable);
+
         //gen Init
         ps.println("""
                 func (t *${className}Mgr) Init(stream *Stream) {
@@ -315,11 +331,13 @@ public class GenGo extends GeneratorWithTag {
                     for i := 0; i < int(cnt); i++ {
                         v := create${className}(stream)
                         t.all = append(t.all, v)
-                ${setMaps}    }
+                ${setMaps}
+                ${enumInit}    }
                 }
                 """.
                 replace("${className}", name.className).
                 replace("${createMaps}", createMaps).
+                replace("${enumInit}", enumInitCode.getEnumInitFunctionCode()).
                 replace("${setMaps}", setMaps)
         );
     }

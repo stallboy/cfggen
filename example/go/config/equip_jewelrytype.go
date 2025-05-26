@@ -23,6 +23,22 @@ func (t *EquipJewelrytype) GetTypeName() string {
     return t.typeName
 }
 
+func (t *EquipJewelrytypeMgr) GetJade() *EquipJewelrytype {
+	return &jade
+}
+
+func (t *EquipJewelrytypeMgr) GetBracelet() *EquipJewelrytype {
+	return &bracelet
+}
+
+func (t *EquipJewelrytypeMgr) GetMagic() *EquipJewelrytype {
+	return &magic
+}
+
+func (t *EquipJewelrytypeMgr) GetBottle() *EquipJewelrytype {
+	return &bottle
+}
+
 type EquipJewelrytypeMgr struct {
     all []*EquipJewelrytype
     typeNameMap map[string]*EquipJewelrytype
@@ -48,6 +64,18 @@ func (t *EquipJewelrytypeMgr) Init(stream *Stream) {
         v := createEquipJewelrytype(stream)
         t.all = append(t.all, v)
         t.typeNameMap[v.typeName] = v
+
+        switch v.typeName {
+        case "Jade":
+            jade = *v
+        case "Bracelet":
+            bracelet = *v
+        case "Magic":
+            magic = *v
+        case "Bottle":
+            bottle = *v
+
+        }
     }
 }
 

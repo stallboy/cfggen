@@ -128,6 +128,7 @@ func (t *EquipJewelryMgr) Init(stream *Stream) {
         v := createEquipJewelry(stream)
         t.all = append(t.all, v)
         t.iDMap[v.iD] = v
+
     }
 }
 

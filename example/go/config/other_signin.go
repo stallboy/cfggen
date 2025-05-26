@@ -99,6 +99,7 @@ func (t *OtherSigninMgr) Init(stream *Stream) {
         t.all = append(t.all, v)
         t.idMap[v.id] = v
         t.idViplevelMap[KeyIdViplevel{v.id, v.viplevel}] = v
+
     }
 }
 

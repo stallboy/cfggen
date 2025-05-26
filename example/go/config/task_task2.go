@@ -134,6 +134,7 @@ func (t *TaskTask2Mgr) Init(stream *Stream) {
         v := createTaskTask2(stream)
         t.all = append(t.all, v)
         t.taskidMap[v.taskid] = v
+
     }
 }
 

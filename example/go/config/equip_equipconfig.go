@@ -51,6 +51,14 @@ func (t *EquipEquipconfig) GetWeek_reward_mailid() int32 {
     return t.week_reward_mailid
 }
 
+func (t *EquipEquipconfigMgr) GetInstance() *EquipEquipconfig {
+	return &instance
+}
+
+func (t *EquipEquipconfigMgr) GetInstance2() *EquipEquipconfig {
+	return &instance2
+}
+
 type EquipEquipconfigMgr struct {
     all []*EquipEquipconfig
     entryMap map[string]*EquipEquipconfig
@@ -76,6 +84,14 @@ func (t *EquipEquipconfigMgr) Init(stream *Stream) {
         v := createEquipEquipconfig(stream)
         t.all = append(t.all, v)
         t.entryMap[v.entry] = v
+
+        switch v.entry {
+        case "Instance":
+            instance = *v
+        case "Instance2":
+            instance2 = *v
+
+        }
     }
 }
 

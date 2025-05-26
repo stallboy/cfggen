@@ -131,6 +131,7 @@ func (t *OtherKeytestMgr) Init(stream *Stream) {
         t.id1Id3Map[KeyId1Id3{v.id1, v.id3}] = v
         t.id2Map[v.id2] = v
         t.id2Id3Map[KeyId2Id3{v.id2, v.id3}] = v
+
     }
 }
 

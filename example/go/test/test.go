@@ -225,7 +225,14 @@ func testEnum() {
 	// assert(t.get(1) == t.KillMonster)
 	// assert(t.KillMonster.id == 1, "配置为枚举，可以直接completeconditiontype.KillMonster访问，不用字符串")
 	// assert(t.KillMonster.name == "KillMonster")
-
+	var t = config.GetTaskCompleteconditiontypeMgr()
+	var killMonster = t.GetKillMonster()
+	println(killMonster.GetId(), killMonster.GetName())
+	if killMonster.GetId() != 1 || killMonster.GetName() != "KillMonster" {
+		println("fail: testEnum")
+		return
+	}
+	println("pass: testEnum")
 }
 
 func DoTest() {

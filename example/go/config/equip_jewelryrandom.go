@@ -66,6 +66,7 @@ func (t *EquipJewelryrandomMgr) Init(stream *Stream) {
         v := createEquipJewelryrandom(stream)
         t.all = append(t.all, v)
         t.lvlRankMap[v.lvlRank] = v
+
     }
 }
 

@@ -36,6 +36,26 @@ func (t *EquipRank) GetRankShowName() string {
     return t.rankShowName
 }
 
+func (t *EquipRankMgr) GetWhite() *EquipRank {
+	return &white
+}
+
+func (t *EquipRankMgr) GetGreen() *EquipRank {
+	return &green
+}
+
+func (t *EquipRankMgr) GetBlue() *EquipRank {
+	return &blue
+}
+
+func (t *EquipRankMgr) GetPurple() *EquipRank {
+	return &purple
+}
+
+func (t *EquipRankMgr) GetYellow() *EquipRank {
+	return &yellow
+}
+
 type EquipRankMgr struct {
     all []*EquipRank
     rankIDMap map[int32]*EquipRank
@@ -61,6 +81,20 @@ func (t *EquipRankMgr) Init(stream *Stream) {
         v := createEquipRank(stream)
         t.all = append(t.all, v)
         t.rankIDMap[v.rankID] = v
+
+        switch v.rankName {
+        case "White":
+            white = *v
+        case "Green":
+            green = *v
+        case "Blue":
+            blue = *v
+        case "Purple":
+            purple = *v
+        case "Yellow":
+            yellow = *v
+
+        }
     }
 }
 

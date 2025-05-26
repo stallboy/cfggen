@@ -50,6 +50,7 @@ func (t *OtherMonsterMgr) Init(stream *Stream) {
         v := createOtherMonster(stream)
         t.all = append(t.all, v)
         t.idMap[v.id] = v
+
     }
 }
 

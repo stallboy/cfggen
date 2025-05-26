@@ -67,6 +67,7 @@ func (t *OtherDropMgr) Init(stream *Stream) {
         v := createOtherDrop(stream)
         t.all = append(t.all, v)
         t.dropidMap[v.dropid] = v
+
     }
 }
 

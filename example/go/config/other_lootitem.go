@@ -89,6 +89,7 @@ func (t *OtherLootitemMgr) Init(stream *Stream) {
         v := createOtherLootitem(stream)
         t.all = append(t.all, v)
         t.lootidItemidMap[KeyLootidItemid{v.lootid, v.itemid}] = v
+
     }
 }
 
