@@ -8,7 +8,6 @@ nav_order: 8
 # 映射到表格
 {: .no_toc }
 
-## Table of contents
 {: .no_toc .text-delta }
 
 - TOC
@@ -43,6 +42,8 @@ nav_order: 8
 > 可以看到compeletecondition下4个struct最多占2列，则compeletecondition占2+1=3列，因为名称KillMonster或TalkNpc...要占第一列。
 >
 > 至于pack如何以,;()写任意结构，参考 [复杂结构的单元格]
+
+
 
 ### sep
 
@@ -79,3 +80,205 @@ nav_order: 8
 * 本身纵向随意扩展，会占用任意多行。
 
 > task.rewardItems 配置block=1，list里的RewardItem占5列，所以此field占5*1=5列。
+
+
+
+## auto示例
+
+```
+table weapon[id] {
+    id:int;
+    weaponAttrs:weaponAttr; // Damage
+}
+
+interface weaponAttr{
+    struct Damage {
+        value:int;
+    }
+}
+```
+
+| id  | Damage      | Damage      |
+| --- | ----------- | ----------- |
+| id  | weaponAttrs | weaponAttrs |
+| 1   | Damage      | 2           |
+| 2   | Damage      | 2           |
+
+没有pack，此时类型和数值需要拆分到2格
+
+
+
+## Fix 设置list
+
+```
+interface weaponAttr (pack){
+	struct Damage{
+		value:int;
+	}
+}
+
+table test[id] {
+	id:str; // 注释行
+	weaponAttrs:list<weaponAttr>(fix=2); // Damage
+}
+```
+
+| id  |             |             |             |             |
+| --- | ----------- | ----------- | ----------- | ----------- |
+| id  | weaponAttrs | weaponAttrs | weaponAttrs | weaponAttrs |
+| 1   | Damage      | 2           |             |             |
+| 2   | Damage      | 2           |             |             |
+
+## Pack Struct
+
+有两种做法，一个是标注在struct上，一个是标注在变量上
+
+```
+struct DmgRatio1 {
+	playerAttr:int;
+	ratio:int;
+}
+
+struct DmgRatio2 (pack) {
+	playerAttr:int;
+	ratio:int;
+}
+struct DmgRatio3 {
+	playerAttr:int;
+	ratio:int;
+}
+table test[id] {
+	id:int; // 注释行
+	DmgRatio1:DmgRatio1; // Damage
+	DmgRatio2:DmgRatio2;
+	DmgRatio3:DmgRatio3(pack);
+}
+```
+
+| id  |           |           |           |           |
+| --- | --------- | --------- | --------- | --------- |
+| id  | DmgRatio1 | DmgRatio1 | DmgRatio2 | DmgRatio3 |
+| 1   | 1         | 1         | 2,2       | 3,3       |
+
+## Interface
+
+出现Interface时，配置里必须要表明struct的类型。
+
+```
+interface IDmgRatio{
+    struct DmgRatio1 {
+        playerAttr:int;
+        ratio:int;
+    }
+
+    struct DmgRatio2 {
+    	playerAttr:int;
+    	ratio:int;
+    }
+}
+
+table test[id] {
+	id:int; // 注释行
+	DmgRatio1:IDmgRatio;
+	DmgRatio2:IDmgRatio;
+}
+```
+
+| id  |           |           |           |           |           |           |
+| --- | --------- | --------- | --------- | --------- | --------- | --------- |
+| id  | DmgRatio1 | DmgRatio1 | DmgRatio1 | DmgRatio2 | DmgRatio2 | DmgRatio2 |
+| 1   | DmgRatio1 | 1         | 1         | DmgRatio2 | 2         | 2         |
+
+## Pack Interface
+
+出现interface时，pack只能标注在interface上，不能标注在struct上。导致所有类型都变成1格。
+
+```
+interface IDmgRatio(pack){
+    struct DmgRatio1 {
+        playerAttr:int;
+        ratio:int;
+    }
+
+    struct DmgRatio2 {
+    	playerAttr:int;
+    	ratio:int;
+    }
+}
+
+table test[id] {
+	id:int; // 注释行
+	DmgRatio1:IDmgRatio;
+	DmgRatio2:IDmgRatio;
+}
+```
+
+
+
+## Pack list
+
+先看原始的：
+
+```
+interface TestAttr (pack) {
+	struct Damage {
+		value:int;
+	}
+
+	struct Range {
+		value:int;
+	}
+
+}
+
+struct TestStruct (pack) {
+	playerAttr:int;
+	ratio:int;
+}
+
+table test[id] {
+	id:int; // 注释行
+	TestStruct:list<TestStruct> (pack);
+	attrs:list<TestAttr>(pack);
+	sepAttr:list<TestAttr>(sep=';');
+}
+
+
+```
+
+| id  | TestStruct | TestStruct | attrs  | attrs | attrs | attrs |
+| --- | ---------- | ---------- | ------ | ----- | ----- | ----- |
+| 1   | 1,2        | 1,2        | Damage | 50    | Range | 6     |
+
+## 对Interface和struct做pack，sep
+
+```
+interface TestAttr (pack) {
+	struct Damage {
+		value:int;
+	}
+
+	struct Range {
+		value:int;
+	}
+
+}
+
+struct TestStruct (pack) {
+	playerAttr:int;
+	ratio:int;
+}
+
+table test[id] {
+	id:int; // 注释行
+	TestStruct:list<TestStruct> (pack);
+	attrs:list<TestAttr>(pack);
+	sepAttr:list<TestAttr>(sep=';');
+}
+
+
+```
+
+| id  | TestStruct  | attrs               | sepAttr             |
+| --- | ----------- | ------------------- | ------------------- |
+| 1   | (1,2),(2,4) | Damage(50),Range(6) | Damage(50);Range(6) |
