@@ -167,8 +167,7 @@ public record CfgSchemaErrs(List<Err> errs,
     }
 
     /**
-     * 为了简单和一致性，在interface的impl上不支持配置fmt
-     * 因为如果配置了pack或sep，则这第一列就有些是impl的名字，有些不是，不一致。
+     * 为了简单，在interface的impl上不支持配置fmt
      */
     public record ImplFmtNotSupport(String inInterface,
                                     String impl,

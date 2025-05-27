@@ -7,13 +7,12 @@ namespace Config.Equip
     {
         public static DataEquipconfig Instance { get; private set; }
         public static DataEquipconfig Instance2 { get; private set; }
-
-        public string Entry { get; private set; } /* 入口，程序填*/
-        public int Stone_count_for_set { get; private set; } /* 形成套装的音石数量*/
-        public string Draw_protect_name { get; private set; } /* 保底策略名称*/
-        public int Broadcastid { get; private set; } /* 公告Id*/
-        public int Broadcast_least_quality { get; private set; } /* 公告的最低品质*/
-        public int Week_reward_mailid { get; private set; } /* 抽卡周奖励的邮件id*/
+        public string Entry { get; private set; } /* 入口，程序填 */
+        public int Stone_count_for_set { get; private set; } /* 形成套装的音石数量 */
+        public string Draw_protect_name { get; private set; } /* 保底策略名称 */
+        public int Broadcastid { get; private set; } /* 公告Id */
+        public int Broadcast_least_quality { get; private set; } /* 公告的最低品质 */
+        public int Week_reward_mailid { get; private set; } /* 抽卡周奖励的邮件id */
 
         public override int GetHashCode()
         {
@@ -33,6 +32,7 @@ namespace Config.Equip
             return "(" + Entry + "," + Stone_count_for_set + "," + Draw_protect_name + "," + Broadcastid + "," + Broadcast_least_quality + "," + Week_reward_mailid + ")";
         }
 
+        
         static Config.KeyedList<string, DataEquipconfig> all = null;
 
         public static DataEquipconfig Get(string entry)
@@ -60,7 +60,8 @@ namespace Config.Equip
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<string, DataEquipconfig>();
-            for (var c = os.ReadInt32(); c > 0; c--) {
+            for (var c = os.ReadInt32(); c > 0; c--)
+            {
                 var self = _create(os);
                 all.Add(self.Entry, self);
                 if (self.Entry.Trim().Length == 0)
@@ -82,6 +83,7 @@ namespace Config.Equip
                         break;
                 }
             }
+
             if (Instance == null)
                 errors.EnumNull("equip.equipconfig", "Instance");
             if (Instance2 == null)

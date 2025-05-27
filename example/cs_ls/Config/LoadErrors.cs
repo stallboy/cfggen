@@ -1,4 +1,4 @@
-锘縰sing System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Config
 {

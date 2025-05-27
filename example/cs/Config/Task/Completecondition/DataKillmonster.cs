@@ -49,9 +49,8 @@ namespace Config.Task.Completecondition
 
         internal override void _resolve(Config.LoadErrors errors)
         {
-            RefMonsterid = Config.Other.DataMonster.Get(Monsterid);
+            RefMonsterid = Config.Other.DataMonster.Get(Monsterid);;
             if (RefMonsterid == null) errors.RefNull("KillMonster", ToString(), "monsterid");
-	    }
-
+        }
     }
 }

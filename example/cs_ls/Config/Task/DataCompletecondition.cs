@@ -6,7 +6,7 @@ namespace Config.Task
     public abstract class DataCompletecondition
     {
         public abstract Config.Task.DataCompleteconditiontype type();
-        
+
         internal virtual void _resolve(Config.LoadErrors errors)
         {
         }

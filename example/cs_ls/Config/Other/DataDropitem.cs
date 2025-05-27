@@ -5,10 +5,10 @@ namespace Config.Other
 {
     public partial class DataDropitem
     {
-        public int Chance { get; private set; } /* 掉落概率*/
-        public List<int> Itemids { get; private set; } /* 掉落物品*/
-        public int Countmin { get; private set; } /* 数量下限*/
-        public int Countmax { get; private set; } /* 数量上限*/
+        public int Chance { get; private set; } /* 掉落概率 */
+        public List<int> Itemids { get; private set; } /* 掉落物品 */
+        public int Countmin { get; private set; } /* 数量下限 */
+        public int Countmax { get; private set; } /* 数量上限 */
 
         public DataDropitem() {
         }

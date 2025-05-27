@@ -5,7 +5,7 @@ namespace Config.Task
 {
     public partial class DataTask2
     {
-        public int Taskid { get; private set; } /* 任务完成条件类型（id的范围为1-100）*/
+        public int Taskid { get; private set; } /* 任务完成条件类型（id的范围为1-100） */
         public List<Config.Text> Name { get; private set; }
         public int Nexttask { get; private set; }
         public Config.Task.DataCompletecondition Completecondition { get; private set; }
@@ -37,6 +37,7 @@ namespace Config.Task
             return "(" + Taskid + "," + CSV.ToString(Name) + "," + Nexttask + "," + Completecondition + "," + Exp + "," + TestBool + "," + TestString + "," + TestStruct + "," + CSV.ToString(TestList) + "," + CSV.ToString(TestListStruct) + "," + CSV.ToString(TestListInterface) + ")";
         }
 
+        
         static Config.KeyedList<int, DataTask2> all = null;
 
         public static DataTask2 Get(int taskid)
@@ -64,17 +65,19 @@ namespace Config.Task
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<int, DataTask2>();
-            for (var c = os.ReadInt32(); c > 0; c--) {
+            for (var c = os.ReadInt32(); c > 0; c--)
+            {
                 var self = _create(os);
                 all.Add(self.Taskid, self);
             }
+
         }
 
-        internal static void Resolve(Config.LoadErrors errors) {
+        internal static void Resolve(Config.LoadErrors errors)
+        {
             foreach (var v in All())
                 v._resolve(errors);
         }
-
         internal static DataTask2 _create(Config.Stream os)
         {
             var self = new DataTask2();
@@ -103,9 +106,8 @@ namespace Config.Task
         internal void _resolve(Config.LoadErrors errors)
         {
             Completecondition._resolve(errors);
-            NullableRefTaskid = Config.Task.DataTaskextraexp.Get(Taskid);
-            NullableRefNexttask = Config.Task.DataTask.Get(Nexttask);
-	    }
-
+            NullableRefTaskid = Config.Task.DataTaskextraexp.Get(Taskid);;
+            NullableRefNexttask = Config.Task.DataTask.Get(Nexttask);;
+        }
     }
 }

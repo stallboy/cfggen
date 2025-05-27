@@ -5,8 +5,8 @@ namespace Config
 {
     public partial class DataLevelrank
     {
-        public int Level { get; private set; } /* 等级*/
-        public int Rank { get; private set; } /* 品质*/
+        public int Level { get; private set; } /* 等级 */
+        public int Rank { get; private set; } /* 品质 */
         public Config.Equip.DataRank RefRank { get; private set; }
 
         public DataLevelrank() {
@@ -45,9 +45,8 @@ namespace Config
 
         internal void _resolve(Config.LoadErrors errors)
         {
-            RefRank = Config.Equip.DataRank.Get(Rank);
+            RefRank = Config.Equip.DataRank.Get(Rank);;
             if (RefRank == null) errors.RefNull("LevelRank", ToString(), "Rank");
-	    }
-
+        }
     }
 }

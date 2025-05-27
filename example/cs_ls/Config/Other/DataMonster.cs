@@ -26,6 +26,7 @@ namespace Config.Other
             return "(" + Id + "," + CSV.ToString(PosList) + ")";
         }
 
+        
         static Config.KeyedList<int, DataMonster> all = null;
 
         public static DataMonster Get(int id)
@@ -53,10 +54,12 @@ namespace Config.Other
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<int, DataMonster>();
-            for (var c = os.ReadInt32(); c > 0; c--) {
+            for (var c = os.ReadInt32(); c > 0; c--)
+            {
                 var self = _create(os);
                 all.Add(self.Id, self);
             }
+
         }
 
         internal static DataMonster _create(Config.Stream os)

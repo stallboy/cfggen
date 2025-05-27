@@ -6,19 +6,19 @@ namespace Config.Equip
     public partial class DataTestpackbean
     {
         public string Name { get; private set; }
-        public Config.DataRange Range { get; private set; }
+        public Config.DataRange IRange { get; private set; }
 
         public DataTestpackbean() {
         }
 
-        public DataTestpackbean(string name, Config.DataRange range) {
+        public DataTestpackbean(string name, Config.DataRange iRange) {
             this.Name = name;
-            this.Range = range;
+            this.IRange = iRange;
         }
 
         public override int GetHashCode()
         {
-            return Name.GetHashCode() + Range.GetHashCode();
+            return Name.GetHashCode() + IRange.GetHashCode();
         }
 
         public override bool Equals(object obj)
@@ -26,19 +26,19 @@ namespace Config.Equip
             if (obj == null) return false;
             if (obj == this) return true;
             var o = obj as DataTestpackbean;
-            return o != null && Name.Equals(o.Name) && Range.Equals(o.Range);
+            return o != null && Name.Equals(o.Name) && IRange.Equals(o.IRange);
         }
 
         public override string ToString()
         {
-            return "(" + Name + "," + Range + ")";
+            return "(" + Name + "," + IRange + ")";
         }
 
         internal static DataTestpackbean _create(Config.Stream os)
         {
             var self = new DataTestpackbean();
             self.Name = os.ReadString();
-            self.Range = Config.DataRange._create(os);
+            self.IRange = Config.DataRange._create(os);
             return self;
         }
 

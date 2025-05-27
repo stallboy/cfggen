@@ -11,9 +11,8 @@ namespace Config.Task
         public static DataCompleteconditiontype ConditionAnd { get; private set; }
         public static DataCompleteconditiontype Chat { get; private set; }
         public static DataCompleteconditiontype TestNoColumn { get; private set; }
-
-        public int Id { get; private set; } /* 任务完成条件类型（id的范围为1-100）*/
-        public string Name { get; private set; } /* 程序用名字*/
+        public int Id { get; private set; } /* 任务完成条件类型（id的范围为1-100） */
+        public string Name { get; private set; } /* 程序用名字 */
 
         public override int GetHashCode()
         {
@@ -33,6 +32,7 @@ namespace Config.Task
             return "(" + Id + "," + Name + ")";
         }
 
+        
         static Config.KeyedList<int, DataCompleteconditiontype> all = null;
 
         public static DataCompleteconditiontype Get(int id)
@@ -60,7 +60,8 @@ namespace Config.Task
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<int, DataCompleteconditiontype>();
-            for (var c = os.ReadInt32(); c > 0; c--) {
+            for (var c = os.ReadInt32(); c > 0; c--)
+            {
                 var self = _create(os);
                 all.Add(self.Id, self);
                 if (self.Name.Trim().Length == 0)
@@ -102,6 +103,7 @@ namespace Config.Task
                         break;
                 }
             }
+
             if (KillMonster == null)
                 errors.EnumNull("task.completeconditiontype", "KillMonster");
             if (TalkNpc == null)

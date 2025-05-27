@@ -12,9 +12,8 @@ namespace Config.Equip
         public static DataAbility Critical_resist { get; private set; }
         public static DataAbility Block { get; private set; }
         public static DataAbility Break_armor { get; private set; }
-
-        public int Id { get; private set; } /* 属性类型*/
-        public string Name { get; private set; } /* 程序用名字*/
+        public int Id { get; private set; } /* 属性类型 */
+        public string Name { get; private set; } /* 程序用名字 */
 
         public override int GetHashCode()
         {
@@ -34,6 +33,7 @@ namespace Config.Equip
             return "(" + Id + "," + Name + ")";
         }
 
+        
         static Config.KeyedList<int, DataAbility> all = null;
 
         public static DataAbility Get(int id)
@@ -61,7 +61,8 @@ namespace Config.Equip
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<int, DataAbility>();
-            for (var c = os.ReadInt32(); c > 0; c--) {
+            for (var c = os.ReadInt32(); c > 0; c--)
+            {
                 var self = _create(os);
                 all.Add(self.Id, self);
                 if (self.Name.Trim().Length == 0)
@@ -108,6 +109,7 @@ namespace Config.Equip
                         break;
                 }
             }
+
             if (Attack == null)
                 errors.EnumNull("equip.ability", "attack");
             if (Defence == null)

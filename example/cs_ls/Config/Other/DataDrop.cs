@@ -5,10 +5,10 @@ namespace Config.Other
 {
     public partial class DataDrop
     {
-        public int Dropid { get; private set; } /* 序号*/
-        public Config.Text Name { get; private set; } /* 名字*/
-        public List<Config.Other.DataDropitem> Items { get; private set; } /* 掉落概率*/
-        public KeyedList<int, int> Testmap { get; private set; } /* 测试map block*/
+        public int Dropid { get; private set; } /* 序号 */
+        public Config.Text Name { get; private set; } /* 名字 */
+        public List<Config.Other.DataDropitem> Items { get; private set; } /* 掉落概率 */
+        public KeyedList<int, int> Testmap { get; private set; } /* 测试map block */
 
         public override int GetHashCode()
         {
@@ -28,6 +28,7 @@ namespace Config.Other
             return "(" + Dropid + "," + Name + "," + CSV.ToString(Items) + "," + Testmap + ")";
         }
 
+        
         static Config.KeyedList<int, DataDrop> all = null;
 
         public static DataDrop Get(int dropid)
@@ -55,10 +56,12 @@ namespace Config.Other
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<int, DataDrop>();
-            for (var c = os.ReadInt32(); c > 0; c--) {
+            for (var c = os.ReadInt32(); c > 0; c--)
+            {
                 var self = _create(os);
                 all.Add(self.Dropid, self);
             }
+
         }
 
         internal static DataDrop _create(Config.Stream os)
@@ -71,7 +74,9 @@ namespace Config.Other
                 self.Items.Add(Config.Other.DataDropitem._create(os));
             self.Testmap = new KeyedList<int, int>();
             for (var c = os.ReadInt32(); c > 0; c--)
+            {
                 self.Testmap.Add(os.ReadInt32(), os.ReadInt32());
+            }
             return self;
         }
 

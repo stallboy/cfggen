@@ -50,7 +50,6 @@ namespace Config.Task.Completecondition
         {
             Cond1._resolve(errors);
             Cond2._resolve(errors);
-	    }
-
+        }
     }
 }

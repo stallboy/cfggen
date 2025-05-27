@@ -59,7 +59,9 @@ namespace Config.Task
                 self.TestList2.Add(os.ReadInt32());
             self.TestMap = new KeyedList<int, string>();
             for (var c = os.ReadInt32(); c > 0; c--)
+            {
                 self.TestMap.Add(os.ReadInt32(), os.ReadString());
+            }
             return self;
         }
 

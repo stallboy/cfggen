@@ -4,8 +4,8 @@
     {
         byte[] bytes = File.ReadAllBytes("config.bytes");
 
-        Config.CSVLoader.Processor = Config.CSVProcessor.Process;
-        Config.CSVLoader.LoadBytes(bytes);
+        Config.Loader.Processor = Config.Processor.Process;
+        Config.Loader.LoadBytes(bytes);
 
         Console.WriteLine(Config.Task.DataTask.Get(1));
     }

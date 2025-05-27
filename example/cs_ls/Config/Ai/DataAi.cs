@@ -6,12 +6,12 @@ namespace Config.Ai
     public partial class DataAi
     {
         public int ID { get; private set; }
-        public string Desc { get; private set; } /* 描述----这里测试下多行效果--再来一行*/
-        public string CondID { get; private set; } /* 触发公式*/
-        public Config.Ai.DataTriggertick TrigTick { get; private set; } /* 触发间隔(帧)*/
-        public int TrigOdds { get; private set; } /* 触发几率*/
-        public List<int> ActionID { get; private set; } /* 触发行为*/
-        public bool DeathRemove { get; private set; } /* 死亡移除*/
+        public string Desc { get; private set; } /* 描述----这里测试下多行效果--再来一行 */
+        public string CondID { get; private set; } /* 触发公式 */
+        public Config.Ai.DataTriggertick TrigTick { get; private set; } /* 触发间隔(帧) */
+        public int TrigOdds { get; private set; } /* 触发几率 */
+        public List<int> ActionID { get; private set; } /* 触发行为 */
+        public bool DeathRemove { get; private set; } /* 死亡移除 */
 
         public override int GetHashCode()
         {
@@ -31,6 +31,7 @@ namespace Config.Ai
             return "(" + ID + "," + Desc + "," + CondID + "," + TrigTick + "," + TrigOdds + "," + CSV.ToString(ActionID) + "," + DeathRemove + ")";
         }
 
+        
         static Config.KeyedList<int, DataAi> all = null;
 
         public static DataAi Get(int iD)
@@ -58,10 +59,12 @@ namespace Config.Ai
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<int, DataAi>();
-            for (var c = os.ReadInt32(); c > 0; c--) {
+            for (var c = os.ReadInt32(); c > 0; c--)
+            {
                 var self = _create(os);
                 all.Add(self.ID, self);
             }
+
         }
 
         internal static DataAi _create(Config.Stream os)

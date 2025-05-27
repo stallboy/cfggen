@@ -5,6 +5,7 @@ namespace Config.Ai
 {
     public abstract class DataTriggertick
     {
+
         internal static DataTriggertick _create(Config.Stream os)
         {
             switch(os.ReadString())

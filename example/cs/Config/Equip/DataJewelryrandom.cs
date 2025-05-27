@@ -5,10 +5,10 @@ namespace Config.Equip
 {
     public partial class DataJewelryrandom
     {
-        public Config.DataLevelrank LvlRank { get; private set; } /* 等级*/
-        public Config.DataRange AttackRange { get; private set; } /* 最小攻击力*/
-        public List<Config.DataRange> OtherRange { get; private set; } /* 最小防御力*/
-        public List<Config.Equip.DataTestpackbean> TestPack { get; private set; } /* 测试pack*/
+        public Config.DataLevelrank LvlRank { get; private set; } /* 等级 */
+        public Config.DataRange AttackRange { get; private set; } /* 最小攻击力 */
+        public List<Config.DataRange> OtherRange { get; private set; } /* 最小防御力 */
+        public List<Config.Equip.DataTestpackbean> TestPack { get; private set; } /* 测试pack */
 
         public override int GetHashCode()
         {
@@ -28,6 +28,7 @@ namespace Config.Equip
             return "(" + LvlRank + "," + AttackRange + "," + CSV.ToString(OtherRange) + "," + CSV.ToString(TestPack) + ")";
         }
 
+        
         static Config.KeyedList<Config.DataLevelrank, DataJewelryrandom> all = null;
 
         public static DataJewelryrandom Get(Config.DataLevelrank lvlRank)
@@ -55,17 +56,19 @@ namespace Config.Equip
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<Config.DataLevelrank, DataJewelryrandom>();
-            for (var c = os.ReadInt32(); c > 0; c--) {
+            for (var c = os.ReadInt32(); c > 0; c--)
+            {
                 var self = _create(os);
                 all.Add(self.LvlRank, self);
             }
+
         }
 
-        internal static void Resolve(Config.LoadErrors errors) {
+        internal static void Resolve(Config.LoadErrors errors)
+        {
             foreach (var v in All())
                 v._resolve(errors);
         }
-
         internal static DataJewelryrandom _create(Config.Stream os)
         {
             var self = new DataJewelryrandom();
@@ -83,7 +86,6 @@ namespace Config.Equip
         internal void _resolve(Config.LoadErrors errors)
         {
             LvlRank._resolve(errors);
-	    }
-
+        }
     }
 }

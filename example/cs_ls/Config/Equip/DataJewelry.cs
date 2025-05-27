@@ -5,18 +5,18 @@ namespace Config.Equip
 {
     public partial class DataJewelry
     {
-        public int ID { get; private set; } /* 首饰ID*/
-        public string Name { get; private set; } /* 首饰名称*/
-        public string IconFile { get; private set; } /* 图标ID*/
-        public Config.DataLevelrank LvlRank { get; private set; } /* 首饰等级*/
-        public string Type { get; private set; } /* 首饰类型*/
-        public int SuitID { get; private set; } /* 套装ID（为0是没有不属于套装，首饰品级为4的首饰该参数为套装id，其余情况为0,引用JewelrySuit.csv）*/
-        public int KeyAbility { get; private set; } /* 关键属性类型*/
-        public int KeyAbilityValue { get; private set; } /* 关键属性数值*/
-        public int SalePrice { get; private set; } /* 售卖价格*/
-        public string Description { get; private set; } /* 描述,根据Lvl和Rank来随机3个属性，第一个属性由Lvl,Rank行随机，剩下2个由Lvl和小于Rank的行里随机。Rank最小的时候都从Lvl，Rank里随机。*/
+        public int ID { get; private set; } /* 首饰ID */
+        public string Name { get; private set; } /* 首饰名称 */
+        public string IconFile { get; private set; } /* 图标ID */
+        public Config.DataLevelrank LvlRank { get; private set; } /* 首饰等级 */
+        public string JType { get; private set; } /* 首饰类型 */
+        public int SuitID { get; private set; } /* 套装ID（为0是没有不属于套装，首饰品级为4的首饰该参数为套装id，其余情况为0,引用JewelrySuit.csv） */
+        public int KeyAbility { get; private set; } /* 关键属性类型 */
+        public int KeyAbilityValue { get; private set; } /* 关键属性数值 */
+        public int SalePrice { get; private set; } /* 售卖价格 */
+        public string Description { get; private set; } /* 描述,根据Lvl和Rank来随机3个属性，第一个属性由Lvl,Rank行随机，剩下2个由Lvl和小于Rank的行里随机。Rank最小的时候都从Lvl，Rank里随机。 */
         public Config.Equip.DataJewelryrandom RefLvlRank { get; private set; }
-        public Config.Equip.DataJewelrytype RefType { get; private set; }
+        public Config.Equip.DataJewelrytype RefJType { get; private set; }
         public Config.Equip.DataJewelrysuit NullableRefSuitID { get; private set; }
         public Config.Equip.DataAbility RefKeyAbility { get; private set; }
 
@@ -35,9 +35,10 @@ namespace Config.Equip
 
         public override string ToString()
         {
-            return "(" + ID + "," + Name + "," + IconFile + "," + LvlRank + "," + Type + "," + SuitID + "," + KeyAbility + "," + KeyAbilityValue + "," + SalePrice + "," + Description + ")";
+            return "(" + ID + "," + Name + "," + IconFile + "," + LvlRank + "," + JType + "," + SuitID + "," + KeyAbility + "," + KeyAbilityValue + "," + SalePrice + "," + Description + ")";
         }
 
+        
         static Config.KeyedList<int, DataJewelry> all = null;
 
         public static DataJewelry Get(int iD)
@@ -65,17 +66,19 @@ namespace Config.Equip
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<int, DataJewelry>();
-            for (var c = os.ReadInt32(); c > 0; c--) {
+            for (var c = os.ReadInt32(); c > 0; c--)
+            {
                 var self = _create(os);
                 all.Add(self.ID, self);
             }
+
         }
 
-        internal static void Resolve(Config.LoadErrors errors) {
+        internal static void Resolve(Config.LoadErrors errors)
+        {
             foreach (var v in All())
                 v._resolve(errors);
         }
-
         internal static DataJewelry _create(Config.Stream os)
         {
             var self = new DataJewelry();
@@ -83,7 +86,7 @@ namespace Config.Equip
             self.Name = os.ReadString();
             self.IconFile = os.ReadString();
             self.LvlRank = Config.DataLevelrank._create(os);
-            self.Type = os.ReadString();
+            self.JType = os.ReadString();
             self.SuitID = os.ReadInt32();
             self.KeyAbility = os.ReadInt32();
             self.KeyAbilityValue = os.ReadInt32();
@@ -95,14 +98,13 @@ namespace Config.Equip
         internal void _resolve(Config.LoadErrors errors)
         {
             LvlRank._resolve(errors);
-            RefLvlRank = Config.Equip.DataJewelryrandom.Get(LvlRank);
+            RefLvlRank = Config.Equip.DataJewelryrandom.Get(LvlRank);;
             if (RefLvlRank == null) errors.RefNull("equip.jewelry", ToString(), "LvlRank");
-            RefType = Config.Equip.DataJewelrytype.Get(Type);
-            if (RefType == null) errors.RefNull("equip.jewelry", ToString(), "Type");
-            NullableRefSuitID = Config.Equip.DataJewelrysuit.Get(SuitID);
-            RefKeyAbility = Config.Equip.DataAbility.Get(KeyAbility);
+            RefJType = Config.Equip.DataJewelrytype.Get(JType);;
+            if (RefJType == null) errors.RefNull("equip.jewelry", ToString(), "JType");
+            NullableRefSuitID = Config.Equip.DataJewelrysuit.Get(SuitID);;
+            RefKeyAbility = Config.Equip.DataAbility.Get(KeyAbility);;
             if (RefKeyAbility == null) errors.RefNull("equip.jewelry", ToString(), "KeyAbility");
-	    }
-
+        }
     }
 }

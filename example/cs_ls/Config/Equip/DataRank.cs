@@ -10,10 +10,9 @@ namespace Config.Equip
         public static DataRank Blue { get; private set; }
         public static DataRank Purple { get; private set; }
         public static DataRank Yellow { get; private set; }
-
-        public int RankID { get; private set; } /* 稀有度*/
-        public string RankName { get; private set; } /* 程序用名字*/
-        public string RankShowName { get; private set; } /* 显示名称*/
+        public int RankID { get; private set; } /* 稀有度 */
+        public string RankName { get; private set; } /* 程序用名字 */
+        public string RankShowName { get; private set; } /* 显示名称 */
 
         public override int GetHashCode()
         {
@@ -33,6 +32,7 @@ namespace Config.Equip
             return "(" + RankID + "," + RankName + "," + RankShowName + ")";
         }
 
+        
         static Config.KeyedList<int, DataRank> all = null;
 
         public static DataRank Get(int rankID)
@@ -60,7 +60,8 @@ namespace Config.Equip
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<int, DataRank>();
-            for (var c = os.ReadInt32(); c > 0; c--) {
+            for (var c = os.ReadInt32(); c > 0; c--)
+            {
                 var self = _create(os);
                 all.Add(self.RankID, self);
                 if (self.RankName.Trim().Length == 0)
@@ -97,6 +98,7 @@ namespace Config.Equip
                         break;
                 }
             }
+
             if (White == null)
                 errors.EnumNull("equip.rank", "white");
             if (Green == null)

@@ -9,8 +9,7 @@ namespace Config.Equip
         public static DataJewelrytype Bracelet { get; private set; }
         public static DataJewelrytype Magic { get; private set; }
         public static DataJewelrytype Bottle { get; private set; }
-
-        public string TypeName { get; private set; } /* 程序用名字*/
+        public string TypeName { get; private set; } /* 程序用名字 */
 
         public override int GetHashCode()
         {
@@ -30,6 +29,7 @@ namespace Config.Equip
             return "(" + TypeName + ")";
         }
 
+        
         static Config.KeyedList<string, DataJewelrytype> all = null;
 
         public static DataJewelrytype Get(string typeName)
@@ -57,7 +57,8 @@ namespace Config.Equip
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<string, DataJewelrytype>();
-            for (var c = os.ReadInt32(); c > 0; c--) {
+            for (var c = os.ReadInt32(); c > 0; c--)
+            {
                 var self = _create(os);
                 all.Add(self.TypeName, self);
                 if (self.TypeName.Trim().Length == 0)
@@ -89,6 +90,7 @@ namespace Config.Equip
                         break;
                 }
             }
+
             if (Jade == null)
                 errors.EnumNull("equip.jewelrytype", "Jade");
             if (Bracelet == null)

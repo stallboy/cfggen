@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Config
 {
-    public static class CSVProcessor
+    public static class Processor
     {
         public static readonly LoadErrors Errors = new LoadErrors();
 
@@ -21,6 +21,7 @@ namespace Config
                 "equip.jewelrytype",
                 "equip.rank",
                 "other.drop",
+                "other.keytest",
                 "other.loot",
                 "other.lootitem",
                 "other.monster",
@@ -81,6 +82,10 @@ namespace Config
                         configNulls.Remove(csv);
                         Config.Other.DataDrop.Initialize(os, Errors);
                         break;
+                    case "other.keytest":
+                        configNulls.Remove(csv);
+                        Config.Other.DataKeytest.Initialize(os, Errors);
+                        break;
                     case "other.loot":
                         configNulls.Remove(csv);
                         Config.Other.DataLoot.Initialize(os, Errors);
@@ -122,6 +127,7 @@ namespace Config
                 Errors.ConfigNull(csv);
             Config.Equip.DataJewelry.Resolve(Errors);
             Config.Equip.DataJewelryrandom.Resolve(Errors);
+            Config.Other.DataKeytest.Resolve(Errors);
             Config.Other.DataLoot.Resolve(Errors);
             Config.Other.DataSignin.Resolve(Errors);
             Config.Task.DataTask.Resolve(Errors);
@@ -130,4 +136,3 @@ namespace Config
 
     }
 }
-

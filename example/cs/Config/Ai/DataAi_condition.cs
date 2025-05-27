@@ -6,10 +6,10 @@ namespace Config.Ai
     public partial class DataAi_condition
     {
         public int ID { get; private set; }
-        public string Desc { get; private set; } /* 描述*/
-        public int FormulaID { get; private set; } /* 公式*/
-        public List<int> ArgIList { get; private set; } /* 参数(int)1*/
-        public List<int> ArgSList { get; private set; } /* 参数(string)1*/
+        public string Desc { get; private set; } /* 描述 */
+        public int FormulaID { get; private set; } /* 公式 */
+        public List<int> ArgIList { get; private set; } /* 参数(int)1 */
+        public List<int> ArgSList { get; private set; } /* 参数(string)1 */
 
         public override int GetHashCode()
         {
@@ -29,6 +29,7 @@ namespace Config.Ai
             return "(" + ID + "," + Desc + "," + FormulaID + "," + CSV.ToString(ArgIList) + "," + CSV.ToString(ArgSList) + ")";
         }
 
+        
         static Config.KeyedList<int, DataAi_condition> all = null;
 
         public static DataAi_condition Get(int iD)
@@ -56,10 +57,12 @@ namespace Config.Ai
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<int, DataAi_condition>();
-            for (var c = os.ReadInt32(); c > 0; c--) {
+            for (var c = os.ReadInt32(); c > 0; c--)
+            {
                 var self = _create(os);
                 all.Add(self.ID, self);
             }
+
         }
 
         internal static DataAi_condition _create(Config.Stream os)

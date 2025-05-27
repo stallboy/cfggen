@@ -5,10 +5,10 @@ namespace Config.Other
 {
     public partial class DataLoot
     {
-        public int Lootid { get; private set; } /* 序号*/
+        public int Lootid { get; private set; } /* 序号 */
         public string Ename { get; private set; }
-        public string Name { get; private set; } /* 名字*/
-        public List<int> ChanceList { get; private set; } /* 掉落0件物品的概率*/
+        public string Name { get; private set; } /* 名字 */
+        public List<int> ChanceList { get; private set; } /* 掉落0件物品的概率 */
         public List<Config.Other.DataLootitem> ListRefLootid { get; private set; }
 
         public override int GetHashCode()
@@ -29,6 +29,7 @@ namespace Config.Other
             return "(" + Lootid + "," + Ename + "," + Name + "," + CSV.ToString(ChanceList) + ")";
         }
 
+        
         static Config.KeyedList<int, DataLoot> all = null;
 
         public static DataLoot Get(int lootid)
@@ -56,17 +57,19 @@ namespace Config.Other
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<int, DataLoot>();
-            for (var c = os.ReadInt32(); c > 0; c--) {
+            for (var c = os.ReadInt32(); c > 0; c--)
+            {
                 var self = _create(os);
                 all.Add(self.Lootid, self);
             }
+
         }
 
-        internal static void Resolve(Config.LoadErrors errors) {
+        internal static void Resolve(Config.LoadErrors errors)
+        {
             foreach (var v in All())
                 v._resolve(errors);
         }
-
         internal static DataLoot _create(Config.Stream os)
         {
             var self = new DataLoot();
@@ -84,10 +87,9 @@ namespace Config.Other
             ListRefLootid = new List<Config.Other.DataLootitem>();
             foreach (var v in Config.Other.DataLootitem.All())
             {
-            if (v.Lootid.Equals(Lootid))
-                ListRefLootid.Add(v);
+                if (v.Lootid.Equals(Lootid))
+                    ListRefLootid.Add(v);
             }
-	    }
-
+        }
     }
 }

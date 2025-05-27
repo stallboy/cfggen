@@ -5,11 +5,11 @@ namespace Config.Other
 {
     public partial class DataSignin
     {
-        public int Id { get; private set; } /* 礼包ID*/
-        public KeyedList<int, int> Item2countMap { get; private set; } /* 普通奖励*/
-        public KeyedList<int, int> Vipitem2vipcountMap { get; private set; } /* vip奖励*/
-        public int Viplevel { get; private set; } /* 领取vip奖励的最低等级*/
-        public string IconFile { get; private set; } /* 礼包图标*/
+        public int Id { get; private set; } /* 礼包ID */
+        public KeyedList<int, int> Item2countMap { get; private set; } /* 普通奖励 */
+        public KeyedList<int, int> Vipitem2vipcountMap { get; private set; } /* vip奖励 */
+        public int Viplevel { get; private set; } /* 领取vip奖励的最低等级 */
+        public string IconFile { get; private set; } /* 礼包图标 */
         public KeyedList<int, Config.Other.DataLoot> RefVipitem2vipcountMap { get; private set; }
 
         public override int GetHashCode()
@@ -30,6 +30,7 @@ namespace Config.Other
             return "(" + Id + "," + Item2countMap + "," + Vipitem2vipcountMap + "," + Viplevel + "," + IconFile + ")";
         }
 
+        
         static Config.KeyedList<int, DataSignin> all = null;
 
         public static DataSignin Get(int id)
@@ -38,11 +39,11 @@ namespace Config.Other
             return all.TryGetValue(id, out v) ? v : null;
         }
 
+        
         class IdViplevelKey
         {
             readonly int Id;
             readonly int Viplevel;
-
             public IdViplevelKey(int id, int viplevel)
             {
                 this.Id = id;
@@ -53,6 +54,7 @@ namespace Config.Other
             {
                 return Id.GetHashCode() + Viplevel.GetHashCode();
             }
+
             public override bool Equals(object obj)
             {
                 if (obj == null) return false;
@@ -90,28 +92,34 @@ namespace Config.Other
         {
             all = new Config.KeyedList<int, DataSignin>();
             idViplevelMap = new Config.KeyedList<IdViplevelKey, DataSignin>();
-            for (var c = os.ReadInt32(); c > 0; c--) {
+            for (var c = os.ReadInt32(); c > 0; c--)
+            {
                 var self = _create(os);
                 all.Add(self.Id, self);
                 idViplevelMap.Add(new IdViplevelKey(self.Id, self.Viplevel), self);
             }
+
         }
 
-        internal static void Resolve(Config.LoadErrors errors) {
+        internal static void Resolve(Config.LoadErrors errors)
+        {
             foreach (var v in All())
                 v._resolve(errors);
         }
-
         internal static DataSignin _create(Config.Stream os)
         {
             var self = new DataSignin();
             self.Id = os.ReadInt32();
             self.Item2countMap = new KeyedList<int, int>();
             for (var c = os.ReadInt32(); c > 0; c--)
+            {
                 self.Item2countMap.Add(os.ReadInt32(), os.ReadInt32());
+            }
             self.Vipitem2vipcountMap = new KeyedList<int, int>();
             for (var c = os.ReadInt32(); c > 0; c--)
+            {
                 self.Vipitem2vipcountMap.Add(os.ReadInt32(), os.ReadInt32());
+            }
             self.Viplevel = os.ReadInt32();
             self.IconFile = os.ReadString();
             return self;
@@ -120,14 +128,13 @@ namespace Config.Other
         internal void _resolve(Config.LoadErrors errors)
         {
             RefVipitem2vipcountMap = new KeyedList<int, Config.Other.DataLoot>();
-            foreach (var kv in Vipitem2vipcountMap.Map)
+            foreach(var kv in Vipitem2vipcountMap.Map)
             {
                 var k = kv.Key;
-                var v = Config.Other.DataLoot.Get(kv.Value);
+                var v = Config.Other.DataLoot.Get(kv.Value);;
                 if (v == null) errors.RefNull("other.signin", ToString(), "vipitem2vipcountMap");
                 RefVipitem2vipcountMap.Add(k, v);
             }
-	    }
-
+        }
     }
 }

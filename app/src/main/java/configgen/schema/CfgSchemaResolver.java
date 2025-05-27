@@ -580,7 +580,6 @@ public final class CfgSchemaResolver {
                 case InterfaceSchema interfaceSchema -> {
                     // interface的fmt只能配置为pack，或auto，再构造时已经检测
                     // 为了简单和一致性，在interface的impl上不支持配置fmt
-                    // 因为如果配置了pack或sep，则这第一列就不是impl的名字了，不一致。
                     for (StructSchema impl : interfaceSchema.impls()) {
                         if (impl.fmt() != AUTO) {
                             errs.addErr(new ImplFmtNotSupport(interfaceSchema.name(), impl.name(), CfgWriter.fmtStr(impl.fmt())));

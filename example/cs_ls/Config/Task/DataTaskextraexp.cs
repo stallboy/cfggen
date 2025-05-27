@@ -5,8 +5,8 @@ namespace Config.Task
 {
     public partial class DataTaskextraexp
     {
-        public int Taskid { get; private set; } /* 任务完成条件类型（id的范围为1-100）*/
-        public int Extraexp { get; private set; } /* 额外奖励经验*/
+        public int Taskid { get; private set; } /* 任务完成条件类型（id的范围为1-100） */
+        public int Extraexp { get; private set; } /* 额外奖励经验 */
         public string Test1 { get; private set; }
         public string Test2 { get; private set; }
         public string Fielda { get; private set; }
@@ -32,6 +32,7 @@ namespace Config.Task
             return "(" + Taskid + "," + Extraexp + "," + Test1 + "," + Test2 + "," + Fielda + "," + Fieldb + "," + Fieldc + "," + Fieldd + ")";
         }
 
+        
         static Config.KeyedList<int, DataTaskextraexp> all = null;
 
         public static DataTaskextraexp Get(int taskid)
@@ -59,10 +60,12 @@ namespace Config.Task
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<int, DataTaskextraexp>();
-            for (var c = os.ReadInt32(); c > 0; c--) {
+            for (var c = os.ReadInt32(); c > 0; c--)
+            {
                 var self = _create(os);
                 all.Add(self.Taskid, self);
             }
+
         }
 
         internal static DataTaskextraexp _create(Config.Stream os)

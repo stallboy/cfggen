@@ -47,3 +47,7 @@
 /cfgeditor/cfgeditorSelf.yml
 /cfgeditor/cfgeditor.yml
 /app/bin
+/app/src/repomix-output.xml
+/app/src/test/test.iml
+/docs/Gemfile.lock
+/example/jte-classes

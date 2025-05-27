@@ -5,8 +5,8 @@ namespace Config
 {
     public partial class DataRange
     {
-        public int Min { get; private set; } /* 最小*/
-        public int Max { get; private set; } /* 最大*/
+        public int Min { get; private set; } /* 最小 */
+        public int Max { get; private set; } /* 最大 */
 
         public DataRange() {
         }

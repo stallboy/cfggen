@@ -5,11 +5,11 @@ namespace Config.Other
 {
     public partial class DataLootitem
     {
-        public int Lootid { get; private set; } /* 掉落id*/
-        public int Itemid { get; private set; } /* 掉落物品*/
-        public int Chance { get; private set; } /* 掉落概率*/
-        public int Countmin { get; private set; } /* 数量下限*/
-        public int Countmax { get; private set; } /* 数量上限*/
+        public int Lootid { get; private set; } /* 掉落id */
+        public int Itemid { get; private set; } /* 掉落物品 */
+        public int Chance { get; private set; } /* 掉落概率 */
+        public int Countmin { get; private set; } /* 数量下限 */
+        public int Countmax { get; private set; } /* 数量上限 */
 
         public override int GetHashCode()
         {
@@ -29,11 +29,11 @@ namespace Config.Other
             return "(" + Lootid + "," + Itemid + "," + Chance + "," + Countmin + "," + Countmax + ")";
         }
 
+        
         class LootidItemidKey
         {
             readonly int Lootid;
             readonly int Itemid;
-
             public LootidItemidKey(int lootid, int itemid)
             {
                 this.Lootid = lootid;
@@ -44,6 +44,7 @@ namespace Config.Other
             {
                 return Lootid.GetHashCode() + Itemid.GetHashCode();
             }
+
             public override bool Equals(object obj)
             {
                 if (obj == null) return false;
@@ -80,10 +81,12 @@ namespace Config.Other
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<LootidItemidKey, DataLootitem>();
-            for (var c = os.ReadInt32(); c > 0; c--) {
+            for (var c = os.ReadInt32(); c > 0; c--)
+            {
                 var self = _create(os);
                 all.Add(new LootidItemidKey(self.Lootid, self.Itemid), self);
             }
+
         }
 
         internal static DataLootitem _create(Config.Stream os)

@@ -1,9 +1,13 @@
-@import configgen.gencs.GenProcessor.ProcessorModel
+@import configgen.gencs.ProcessorModel
 @import configgen.schema.HasRef
 @import configgen.schema.TableSchema
 @param ProcessorModel model
 using System.Collections.Generic;
-@if(!model.topPkg.equals("Config"))using Config;@endif
+@if(!model.topPkg.equals("Config"))
+    using Config;
+@endif
+
+
 namespace ${model.topPkg}
 {
     public static class Processor
@@ -13,8 +17,10 @@ namespace ${model.topPkg}
         public static void Process(Config.Stream os)
         {
             var configNulls = new List<string>
-            {@for(TableSchema table : model.tableSchemas)
-                "${table.name()}",@endfor
+            {
+                @for(TableSchema table : model.tableSchemas)
+                    "${table.name()}",
+                @endfor
             };
             for(;;)
             {
@@ -22,11 +28,13 @@ namespace ${model.topPkg}
                 if (csv == null)
                     break;
                 switch(csv)
-                {@for(TableSchema table : model.tableSchemas)
-                    case "${table.name()}":
-                        configNulls.Remove(csv);
-                        ${model.fullName(table)}.Initialize(os, Errors);
-                        break;@endfor
+                {
+                    @for(TableSchema table : model.tableSchemas)
+                        case "${table.name()}":
+                            configNulls.Remove(csv);
+                            ${model.fullName(table)}.Initialize(os, Errors);
+                            break;
+                    @endfor
                     default:
                         Errors.ConfigDataAdd(csv);
                         break;
@@ -34,8 +42,11 @@ namespace ${model.topPkg}
             }
             foreach (var csv in configNulls)
                 Errors.ConfigNull(csv);
-            @for(TableSchema table : model.tableSchemas)@if(HasRef.hasRef(table))${model.fullName(table)}.Resolve(Errors);
-            @endif@endfor
+            @for(TableSchema table : model.tableSchemas)
+                @if(HasRef.hasRef(table))
+                    ${model.fullName(table)}.Resolve(Errors);
+                @endif
+            @endfor
         }
 
     }
