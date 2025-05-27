@@ -1,6 +1,8 @@
 package config
-type TaskCompletecondition interface {}
-func createTaskCompletecondition(stream *Stream) TaskCompletecondition{
+
+type TaskCompletecondition interface{}
+
+func createTaskCompletecondition(stream *Stream) TaskCompletecondition {
     var typeName = stream.ReadString()
     switch typeName {
     case "KillMonster":
@@ -15,9 +17,7 @@ func createTaskCompletecondition(stream *Stream) TaskCompletecondition{
         return createTaskCompleteconditionConditionAnd(stream)
     case "CollectItem":
         return createTaskCompleteconditionCollectItem(stream)
-
     default:
-            panic("unexpected TaskCompletecondition type: " + typeName)
+        panic("unexpected TaskCompletecondition type: " + typeName)
     }
 }
-

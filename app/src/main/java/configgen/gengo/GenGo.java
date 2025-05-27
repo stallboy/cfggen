@@ -4,8 +4,10 @@ import configgen.ctx.Context;
 import configgen.gen.Generator;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
+import configgen.gengo.model.InterfaceModel;
 import configgen.schema.*;
 import configgen.util.CachedIndentPrinter;
+import configgen.util.JteEngine;
 import configgen.value.CfgValue;
 
 import java.util.ArrayList;
@@ -68,44 +70,11 @@ public class GenGo extends GeneratorWithTag {
 
     private void generateInterface(InterfaceSchema sInterface) {
         GoName name = new GoName(sInterface);
-//        File csFile = dstDir.toPath(). .toFile();
+        InterfaceModel model = new InterfaceModel(pkg,name,sInterface);
         File file = dstDir.toPath().resolve(name.filePath).toFile();
-        try (CachedIndentPrinter ps = createCode(file, encoding)) {
-            generateInterface(sInterface, name, ps);
+        try (CachedIndentPrinter ps = new CachedIndentPrinter(file, encoding)) {
+            JteEngine.render("go/GenInterface.jte", model, ps);
         }
-    }
-
-    private void generateInterface(InterfaceSchema sInterface, GoName name, CachedIndentPrinter ps) {
-        String template = """
-                package ${pkg}
-                type ${className} interface {}
-                func create${className}(stream *Stream) ${className}{
-                    var typeName = stream.ReadString()
-                    switch typeName {
-                ${caseImpls}
-                    default:
-                            panic("unexpected ${className} type: " + typeName)
-                    }
-                }
-                """;
-
-        StringBuilder caseImpls = new StringBuilder();
-        String caseImpl = """
-                    case "${implName}":
-                        return create${implClassName}(stream)
-                """;
-        for (StructSchema impl : sInterface.impls()) {
-            caseImpls.append(caseImpl.
-                    replace("${implName}", impl.name()).
-                    replace("${implClassName}", new GoName(impl).className)
-            );
-        }
-
-        ps.println(template.
-                replace("${pkg}", pkg).
-                replace("${className}", name.className).
-                replace("${caseImpls}", caseImpls)
-        );
     }
 
     private void generateStruct(Structural structural, CfgValue.VTable vTable) {
