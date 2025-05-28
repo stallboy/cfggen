@@ -42,7 +42,6 @@ dependencies {
     // https://mvnrepository.com/artifact/io.github.sashirestela/simple-openai
     implementation 'io.github.sashirestela:simple-openai:3.8.2'
 
-
     implementation("gg.jte:jte:3.2.1")
 
     if (!project.hasProperty("noPoi")) {

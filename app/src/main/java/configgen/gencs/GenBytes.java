@@ -9,10 +9,7 @@ import configgen.util.XorCipherOutputStream;
 import configgen.value.CfgValue;
 import configgen.value.ForeachValue;
 
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -22,31 +19,48 @@ import static configgen.value.CfgValue.*;
 public class GenBytes extends GeneratorWithTag {
     private final File file;
     private final String cipher;
-
+    private final boolean isStringPool;
     private LangSwitchRuntime langSwitchRuntime;
+    private StringPool stringPool;
 
     public GenBytes(Parameter parameter) {
         super(parameter);
         file = new File(parameter.get("file", "config.bytes"));
         cipher = parameter.get("cipher", "");
+        isStringPool = parameter.has("stringpool");
+
     }
 
     @Override
     public void generate(Context ctx) throws IOException {
         CfgValue cfgValue = ctx.makeValue(tag);
-
         if (ctx.nullableLangSwitch() != null) {
             langSwitchRuntime = new LangSwitchRuntime(ctx.nullableLangSwitch());
         }
+        if (isStringPool) {
+            stringPool = new StringPool();
+        }
 
         try (CachedFileOutputStream stream = new CachedFileOutputStream(file, 2048 * 1024)) {
-            OutputStream st = stream;
+            OutputStream fileStream = stream;
             if (!cipher.isEmpty()) {
-                st = new XorCipherOutputStream(stream, cipher);
+                fileStream = new XorCipherOutputStream(stream, cipher);
             }
-            this.stream = new DataOutputStream(st);
-            for (VTable vTable : cfgValue.sortedTables()) {
-                addVTable(vTable);
+
+            if (isStringPool) {
+                ByteArrayOutputStream content = new ByteArrayOutputStream(1024 * 16);
+                this.stream = new DataOutputStream(content);
+                for (VTable vTable : cfgValue.sortedTables()) {
+                    addVTable(vTable);
+                }
+                stringPool.writeToStream(new DataOutputStream(fileStream));
+                fileStream.write(content.toByteArray());
+            } else {
+
+                this.stream = new DataOutputStream(fileStream);
+                for (VTable vTable : cfgValue.sortedTables()) {
+                    addVTable(vTable);
+                }
             }
         }
     }
@@ -152,9 +166,14 @@ public class GenBytes extends GeneratorWithTag {
 
     private void addString(String v) {
         try {
-            byte[] b = v.getBytes(StandardCharsets.UTF_8);
-            addInt(b.length);
-            stream.write(b);
+            if (isStringPool) {
+                int idx = stringPool.add(v);
+                stream.writeInt(idx);
+            } else {
+                byte[] b = v.getBytes(StandardCharsets.UTF_8);
+                addInt(b.length);
+                stream.write(b);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
