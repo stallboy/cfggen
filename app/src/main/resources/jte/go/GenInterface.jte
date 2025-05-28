@@ -3,10 +3,12 @@
 @import configgen.schema.Structural
 @param InterfaceModel model
 package ${model.pkg}
+!{String className = model.name.className;}
 
-type ${model.className} interface{}
 
-func create${model.className}(stream *Stream) ${model.className} {
+type ${className} interface{}
+
+func create${className}(stream *Stream) ${className} {
     var typeName = stream.ReadString()
     switch typeName {
     @for(Structural impl : model.sInterface.impls())
@@ -14,6 +16,6 @@ func create${model.className}(stream *Stream) ${model.className} {
         return create${new GoName(impl).className}(stream)
     @endfor
     default:
-        panic("unexpected ${model.className} type: " + typeName)
+        panic("unexpected ${className} type: " + typeName)
     }
 }
