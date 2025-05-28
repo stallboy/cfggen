@@ -5,6 +5,7 @@ import configgen.gen.Generator;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
 import configgen.gengo.model.InterfaceModel;
+import configgen.gengo.model.StructModel;
 import configgen.schema.*;
 import configgen.util.CachedIndentPrinter;
 import configgen.util.JteEngine;
@@ -70,7 +71,7 @@ public class GenGo extends GeneratorWithTag {
 
     private void generateInterface(InterfaceSchema sInterface) {
         GoName name = new GoName(sInterface);
-        InterfaceModel model = new InterfaceModel(pkg,name,sInterface);
+        InterfaceModel model = new InterfaceModel(pkg, name, sInterface);
         File file = dstDir.toPath().resolve(name.filePath).toFile();
         try (CachedIndentPrinter ps = new CachedIndentPrinter(file, encoding)) {
             JteEngine.render("go/GenInterface.jte", model, ps);
@@ -79,9 +80,11 @@ public class GenGo extends GeneratorWithTag {
 
     private void generateStruct(Structural structural, CfgValue.VTable vTable) {
         GoName name = new GoName(structural);
+        StructModel model = new StructModel(pkg, name, structural);
         File csFile = dstDir.toPath().resolve(name.filePath).toFile();
         try (CachedIndentPrinter ps = createCode(csFile, encoding)) {
             generateStructClass(structural, vTable, name, ps);
+//            JteEngine.render("go/GenStruct.jte", model, ps);
         }
     }
 
@@ -487,7 +490,7 @@ public class GenGo extends GeneratorWithTag {
         return varName.className;
     }
 
-    private String refType(ForeignKeySchema fk) {
+    public static String refType(ForeignKeySchema fk) {
         GoName refTableName = new GoName(fk.refTableSchema());
         switch (fk.refKey()) {
             case RefKey.RefList ignored -> {
@@ -510,7 +513,7 @@ public class GenGo extends GeneratorWithTag {
         }
     }
 
-    private String refName(ForeignKeySchema fk) {
+    public static String refName(ForeignKeySchema fk) {
         switch (fk.refKey()) {
             case RefKey.RefList ignored -> {
                 return "ListRef" + upper1(fk.name());
