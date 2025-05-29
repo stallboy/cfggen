@@ -80,11 +80,11 @@ public class GenGo extends GeneratorWithTag {
 
     private void generateStruct(Structural structural, CfgValue.VTable vTable) {
         GoName name = new GoName(structural);
-        StructModel model = new StructModel(pkg, name, structural);
+        StructModel model = new StructModel(pkg, name, structural,vTable);
         File csFile = dstDir.toPath().resolve(name.filePath).toFile();
         try (CachedIndentPrinter ps = createCode(csFile, encoding)) {
-            generateStructClass(structural, vTable, name, ps);
-//            JteEngine.render("go/GenStruct.jte", model, ps);
+//            generateStructClass(structural, vTable, name, ps);
+            JteEngine.render("go/GenStruct.jte", model, ps);
         }
     }
 
@@ -373,7 +373,7 @@ public class GenGo extends GeneratorWithTag {
         }
     }
 
-    private String genReadField(FieldType fieldType) {
+    public static String genReadField(FieldType fieldType) {
         return switch (fieldType) {
             case StructRef structRef -> "create${varType}(stream)".
                     replace("${varType}", ClassName(structRef.obj()));
@@ -485,7 +485,7 @@ public class GenGo extends GeneratorWithTag {
         }
     }
 
-    private static String ClassName(Nameable variable) {
+    public static String ClassName(Nameable variable) {
         var varName = new GoName(variable);
         return varName.className;
     }
