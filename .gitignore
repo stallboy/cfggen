@@ -51,3 +51,6 @@
 /app/src/test/test.iml
 /docs/Gemfile.lock
 /example/jte-classes
+/example/ts/.idea
+/example/ts/node_modules
+/example/ts/package-lock.json
