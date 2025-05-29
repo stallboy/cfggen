@@ -38,6 +38,7 @@ public class GenTs extends GeneratorWithTag {
         try (CachedIndentPrinter ps = new CachedIndentPrinter(dstFile, encoding)) {
             JteEngine.render("ts/Config.jte", this, ps);
         }
+        copySupportFileIfNotExist("ConfigUtil.ts", dstFile.getParent(), encoding);
     }
 
     public String className(Nameable nameable) {

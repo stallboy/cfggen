@@ -11,6 +11,6 @@
     !{String getByName = isPrimaryKey ? "Get" : model.uniqueKeyGetByName(keySchema);}
     private static ${mapName} : Map<${model.mapKeyType(keySchema)}, ${className}> | undefined;
 
-    static ${getByName}(${model.formalParams(keySchema.fieldSchemas())}) : ${className} {
+    static ${getByName}(${model.formalParams(keySchema.fieldSchemas())}) : ${className} | undefined {
         return this.${mapName}.get(${model.actualParamsKey(keySchema)})
     }

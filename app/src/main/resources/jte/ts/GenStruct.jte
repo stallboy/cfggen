@@ -2,15 +2,11 @@
 @import configgen.schema.FieldType.*
 @import configgen.gents.StructModel
 @param StructModel model
-using System;
-using System.Collections.Generic;
-
-
 !{String className = model.className(model.structural);}
 !{InterfaceSchema nullableInterface = model.structural instanceof StructSchema struct ? struct.nullableInterface() : null;}
 !{boolean isImpl = nullableInterface != null;}
 @if(isImpl)
-    class ${className} extends ${model.className(nullableInterface)} {
+    export class ${className} extends ${model.className(nullableInterface)} {
         !{var enumRefTable = nullableInterface.nullableEnumRefTable();}
         @if(enumRefTable != null)
             type() : ${model.className(enumRefTable)} {
@@ -19,14 +15,14 @@ using System.Collections.Generic;
 
         @endif
 @else
-    class ${className} {
+    export class ${className} {
 @endif
 
     <%--static enum--%>
     @if(model._vTable != null && model._vTable.schema().entry() instanceof EntryType.EntryBase)
         @for(String enumName : model._vTable.enumNames())
             private static _${enumName} : ${className};
-            static get ${model.upper1(enumName)} :${className} { return this._${enumName}; }
+            static get ${model.upper1(enumName)}() :${className} { return this._${enumName}; }
 
         @endfor
     @endif
@@ -35,11 +31,11 @@ using System.Collections.Generic;
     @for(FieldSchema field : model.structural.fields())
         !{String t = model.type(field.type());}
         !{String n = field.name();}
-        private _${n} : ${t} | undefined;
+        private _${n}: ${t} | undefined;
         @if(!field.comment().isEmpty())
             /* ${field.comment()} */
         @endif
-        get ${model.upper1(n)} : ${t} { return this._${n} as ${t}; }
+        get ${model.upper1(n)}(): ${t} { return this._${n} as ${t}; }
     @endfor
 
 
@@ -47,53 +43,55 @@ using System.Collections.Generic;
     @for(ForeignKeySchema fk : model.structural.foreignKeys())
         !{String t = model.refType(fk);}
         !{String n = model.refName(fk);}
-        private _${n} : ${t} | undefined;
-        get ${n} : ${t} { return this._${n} as ${t}; }
+        private _${n}: ${t} | undefined;
+        get ${n}(): ${t} { return this._${n} as ${t}; }
     @endfor
 
+    ToString() : string {
+        return "(" + ${model.toStrings(model.structural.fields())} + ")";
+    }
 
     <%--table static Get,All,Initialize,Resolve--%>
     @if(model._vTable != null)
         !{TableSchema table = model._vTable.schema();}
-        @template.cs.GenMapGetBy(model = model, keySchema = table.primaryKey(), isPrimaryKey = true)
+        @template.ts.GenMapGetBy(model = model, keySchema = table.primaryKey(), isPrimaryKey = true)
         @for(KeySchema uk : table.uniqueKeys())
-            @template.cs.GenMapGetBy(model = model, keySchema = uk, isPrimaryKey = false)
+            @template.ts.GenMapGetBy(model = model, keySchema = uk, isPrimaryKey = false)
         @endfor
 
         static All() : Map<${model.mapKeyType(table.primaryKey())}, ${className}> {
-            return all;
+            return this.all;
         }
 
-        internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
-        {
-            all = new Map<${model.mapKeyType(table.primaryKey())}, ${className}>();
+        static Initialize(os: Stream, errors: LoadErrors) {
+            this.all = new Map<${model.mapKeyType(table.primaryKey())}, ${className}>();
             @for(KeySchema uk : table.uniqueKeys())
-                ${model.uniqueKeyMapName(uk)} = new Config.KeyedList<${model.mapKeyType(uk)}, ${className}>();
+                this.${model.uniqueKeyMapName(uk)} = new Map<${model.mapKeyType(uk)}, ${className}>();
             @endfor
 
-            for (var c = os.ReadInt32(); c > 0; c--)
+            for (let c = os.ReadInt32(); c > 0; c--)
             {
-                var self = _create(os);
-                all.Add(${model.actualParamsKeySelf(table.primaryKey())}, self);
+                let self = this._create(os);
+                this.all.set(${model.actualParamsKeySelf(table.primaryKey())}, self);
                 @for(KeySchema uk : table.uniqueKeys())
-                    ${model.uniqueKeyMapName(uk)}.Add(${model.actualParamsKeySelf(uk)}, self);
+                    this.${model.uniqueKeyMapName(uk)}.set(${model.actualParamsKeySelf(uk)}, self);
                 @endfor
 
                 @if(table.entry() instanceof EntryType.EntryBase entryBase)
-                    !{String ef = model.upper1(entryBase.field());}
-                    if (self.${ef}.Trim().Length == 0)
+                    !{String ef = entryBase.field();}
+                    if (self._${ef}.trim().length === 0) {
                         continue;
-                    switch(self.${ef}.Trim())
-                    {
+                    }
+                    switch(self._${ef}.trim()) {
                         @for(String enumName : model._vTable.enumNames())
                             case "${enumName}":
-                                if (${model.upper1(enumName)} != null)
-                                    errors.EnumDup("${model.structural.name()}", self.ToString());
-                                ${model.upper1(enumName)} = self;
+                                if (this._${enumName} != null)
+                                    errors.EnumDup("${model.structural.name()}", "${enumName}");
+                                this._${enumName} = self;
                                 break;
                         @endfor
                         default:
-                            errors.EnumDataAdd("${model.structural.name()}", self.ToString());
+                            errors.EnumDataAdd("${model.structural.name()}", self._${ef});
                             break;
                     }
                 @endif
@@ -101,41 +99,40 @@ using System.Collections.Generic;
 
             @if(table.entry() instanceof EntryType.EntryBase)
                 @for(String enumName : model._vTable.enumNames())
-                    if (${model.upper1(enumName)} == null)
+                    if (this._${enumName} == null) {
                         errors.EnumNull("${model.structural.name()}", "${enumName}");
+                    }
                 @endfor
             @endif
         }
 
         @if(HasRef.hasRef(model.structural))
-            internal static void Resolve(Config.LoadErrors errors)
-            {
-                foreach (var v in All())
+            static Resolve(errors: LoadErrors) {
+                for (const v of this.all.values()) {
                     v._resolve(errors);
+                }
             }
         @endif
 
     @endif
 
     <%--static create--%>
-    internal ${isImpl ? "new " : ""}static ${className} _create(Config.Stream os)
-    {
-        var self = new ${className}();
+    static _create(os: Stream) : ${className} {
+        const self = new ${className}();
         @for(FieldSchema field : model.structural.fields())
             !{String n = field.name();}
             !{FieldType t = field.type();}
             @if(t instanceof FList(SimpleType item))
-                self.${model.upper1(n)} = new ${model.type(t)}();
-                for (var c = os.ReadInt32(); c > 0; c--)
-                    self.${model.upper1(n)}.Add(${model.create(item)});
+                self._${(n)} = [];
+                for (let c = os.ReadInt32(); c > 0; c--)
+                    self._${n}.push(${model.create(item)});
             @elseif(field.type() instanceof FMap(SimpleType key, SimpleType value))
-                self.${model.upper1(n)} = new ${model.type(t)}();
-                for (var c = os.ReadInt32(); c > 0; c--)
-                {
-                    self.${model.upper1(n)}.Add(${model.create(key)}, ${model.create(value)});
+                self._${(n)}  = new ${model.type(t)}();
+                for (let c = os.ReadInt32(); c > 0; c--) {
+                    self._${n}.set(${model.create(key)}, ${model.create(value)});
                 }
             @else
-                self.${model.upper1(n)} = ${model.create(t)};
+                self._${n} = ${model.create(t)};
             @endif
         @endfor
         return self;
@@ -143,19 +140,21 @@ using System.Collections.Generic;
 
     <%--resolve--%>
     @if(HasRef.hasRef(model.structural))
-        internal ${isImpl ? "override " : ""}void _resolve(Config.LoadErrors errors)
-        {
+        _resolve(errors: LoadErrors) {
             @for(FieldSchema field : model.structural.fields())
-                !{FieldType type = field.type();}
-                @if(HasRef.hasRef(type))
-                    @if(type instanceof StructRef)
-                        ${model.upper1(field.name())}._resolve(errors);
-                    @elseif(type instanceof FList)
-                        foreach(var e in ${model.upper1(field.name())})
+                !{String n = field.name();}
+                !{FieldType t = field.type();}
+                @if(HasRef.hasRef(t))
+                    @if(t instanceof StructRef)
+                        this._${n}._resolve(errors);
+                    @elseif(t instanceof FList)
+                        for (const e of this._${n}) {
                             e._resolve(errors);
-                    @elseif(type instanceof FMap)
-                        foreach(var e in ${model.upper1(field.name())}.Values)
+                        }
+                    @elseif(t instanceof FMap)
+                        for (const e of this._${n}.values()) {
                             e._resolve(errors);
+                        }
                     @endif
                 @endif
             @endfor
@@ -164,29 +163,31 @@ using System.Collections.Generic;
                 @if(fk.refKey() instanceof RefKey.RefSimple refSimple)
                     !{var firstField = fk.key().fieldSchemas().getFirst();}
                     !{var refName = model.refName(fk);}
-                    !{var fkStr = "\"" + fk.name() + "\"";}
 
                     @if(firstField.type() instanceof SimpleType)
-                        ${refName} = ${model.tableGet(fk.refTableSchema(), refSimple, model.actualParams(fk.key()))};
+                        this._${refName} = ${model.tableGet(fk.refTableSchema(), refSimple, model.actualParamsKeyThis(fk.key()))};
                         @if(!refSimple.nullable())
-                            if (${refName} == null) errors.RefNull("${model.structural.name()}", ToString(), ${fkStr});
+                            if (this._${refName} === undefined) {
+                                errors.RefNull("${model.structural.name()}", this.ToString(), "${fk.name()}");
+                            }
                         @endif
                     @elseif(firstField.type() instanceof FList)
-                        ${refName} = new ${model.refType(fk)}();
-                        foreach(var e in ${model.upper1(firstField.name())})
-                        {
-                            var r = ${model.tableGet(fk.refTableSchema(), refSimple, "e")};
-                            if (r == null) errors.RefNull("${model.structural.name()}", ToString(), ${fkStr});
-                            ${refName}.Add(r);
+                        this._${refName} = [];
+                        for (const e of this._${firstField.name()}) {
+                            const r = ${model.tableGet(fk.refTableSchema(), refSimple, "e")};
+                            if (r === undefined) {
+                                errors.RefNull("${model.structural.name()}", this.ToString(), "${fk.name()}");
+                            }
+                            this._${refName}.push(r);
                         }
                     @elseif(firstField.type() instanceof FMap)
-                        ${refName} = new ${model.refType(fk)}();
-                        foreach(var kv in ${model.upper1(firstField.name())}.Map)
-                        {
-                            var k = kv.Key;
-                            var v = ${model.tableGet(fk.refTableSchema(), refSimple, "kv.Value")};
-                            if (v == null) errors.RefNull("${model.structural.name()}", ToString(), ${fkStr});
-                            ${refName}.Add(k, v);
+                        this._${refName} = new ${model.refType(fk)}();
+                        for (const e of this._${firstField.name()}.entries()) {
+                            const v = ${model.tableGet(fk.refTableSchema(), refSimple, "e[1]")};
+                            if (v === undefined) {
+                                errors.RefNull("${model.structural.name()}", this.ToString(), "${fk.name()}");
+                            }
+                            this._${refName}.set(e[0], v);
                         }
                     @endif
                 @endif
@@ -195,15 +196,15 @@ using System.Collections.Generic;
             @for(ForeignKeySchema fk : model.structural.foreignKeys())
                 @if(fk.refKey() instanceof RefKey.RefList refList)
                     !{var refName = model.refName(fk);}
-                    ${refName} = new List<${model.className(fk.refTableSchema())}>();
-                    foreach (var v in ${model.className(fk.refTableSchema())}.All())
+                    this._${refName} = [];
+                    for (const v of ${model.className(fk.refTableSchema())}.All().values())
                     {
                         !{var eqs = new java.util.ArrayList<String>();}
                         @for(int i = 0; i < fk.key().fields().size(); i++)
-                            !{eqs.add("v." + model.upper1(refList.keyNames().get(i)) + ".Equals(" + model.upper1(fk.key().fields().get(i)) + ")");}
+                            !{eqs.add("v." + model.upper1(refList.keyNames().get(i)) + " === this._" + (fk.key().fields().get(i)));}
                         @endfor
                         if (${String.join(" && ", eqs)})
-                            ${refName}.Add(v);
+                            this._${refName}.push(v);
                     }
                 @endif
             @endfor

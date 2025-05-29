@@ -48,12 +48,21 @@ public class GenBytes extends GeneratorWithTag {
             }
 
             if (isStringPool) {
+                // value -> 内容
                 ByteArrayOutputStream content = new ByteArrayOutputStream(1024 * 16);
                 this.stream = new DataOutputStream(content);
                 for (VTable vTable : cfgValue.sortedTables()) {
                     addVTable(vTable);
                 }
-                stringPool.writeToStream(new DataOutputStream(fileStream));
+
+                // stringPool -> file
+                writeLittleEndianInt(fileStream, stringPool.getStrings().size());
+                for (String str : stringPool.getStrings()) {
+                    byte[] b = str.getBytes(StandardCharsets.UTF_8);
+                    writeLittleEndianInt(fileStream, b.length);
+                    fileStream.write(b);
+                }
+                // 内容 -> file
                 fileStream.write(content.toByteArray());
             } else {
 
@@ -133,17 +142,28 @@ public class GenBytes extends GeneratorWithTag {
         }
     }
 
+    /**
+     * Little-Endian， 方便c#读
+     */
     private void addInt(int v) {
+        writeLittleEndianInt(stream, v);
+    }
+
+    private static void writeLittleEndianInt(OutputStream output, int v) {
         try {
-            stream.write((v) & 0xFF);
-            stream.write((v >>> 8) & 0xFF);
-            stream.write((v >>> 16) & 0xFF);
-            stream.write((v >>> 24) & 0xFF);
+            output.write((v) & 0xFF);
+            output.write((v >>> 8) & 0xFF);
+            output.write((v >>> 16) & 0xFF);
+            output.write((v >>> 24) & 0xFF);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+
+    /**
+     * Little-Endian， 方便c#读
+     */
     private void addLong(long v) {
         writeBuffer[0] = (byte) (v);
         writeBuffer[1] = (byte) (v >>> 8);
@@ -168,7 +188,7 @@ public class GenBytes extends GeneratorWithTag {
         try {
             if (isStringPool) {
                 int idx = stringPool.add(v);
-                stream.writeInt(idx);
+                addInt(idx);
             } else {
                 byte[] b = v.getBytes(StandardCharsets.UTF_8);
                 addInt(b.length);

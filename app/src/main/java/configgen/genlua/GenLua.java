@@ -100,7 +100,7 @@ public class GenLua extends GeneratorWithTag {
                     generate_lang(ps, texts, lineCache);
                 }
             }
-            copySupportFileTo("mkcfg.lua", dstDirPath, encoding);
+            copySupportFileIfNotExist("mkcfg.lua", dstDirPath, encoding);
         }
 
 

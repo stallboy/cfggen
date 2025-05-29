@@ -2,52 +2,39 @@
 @import configgen.schema.HasRef
 @import configgen.schema.TableSchema
 @param GenTs model
-using System.Collections.Generic;
-@if(!model.topPkg.equals("Config"))
-    using Config;
-@endif
 
-
-namespace ${model.topPkg}
-{
-    public static class Processor
-    {
-        public static readonly LoadErrors Errors = new LoadErrors();
-
-        public static void Process(Config.Stream os)
-        {
-            var configNulls = new List<string>
-            {
-                @for(TableSchema table : model.tableSchemas)
-                    "${table.name()}",
-                @endfor
-            };
-            for(;;)
-            {
-                var csv = os.ReadCfg();
-                if (csv == null)
-                    break;
-                switch(csv)
-                {
-                    @for(TableSchema table : model.tableSchemas)
-                        case "${table.name()}":
-                            configNulls.Remove(csv);
-                            ${model.fullName(table)}.Initialize(os, Errors);
-                            break;
-                    @endfor
-                    default:
-                        Errors.ConfigDataAdd(csv);
-                        break;
-                }
-            }
-            foreach (var csv in configNulls)
-                Errors.ConfigNull(csv);
-            @for(TableSchema table : model.tableSchemas)
-                @if(HasRef.hasRef(table))
-                    ${model.fullName(table)}.Resolve(Errors);
-                @endif
+export class Processor {
+    static Process(os: Stream, errors: LoadErrors) {
+        !{var sortedTables = model.cfgSchema.sortedTables();}
+        const configs = new Set<string>([
+            @for(TableSchema table : sortedTables)
+                "${table.name()}",
             @endfor
-        }
+        ]);
 
+        for(;;) {
+            const cfg = os.ReadCfg();
+            if (cfg === null) {
+                break;
+            }
+            switch(cfg) {
+                @for(TableSchema table : sortedTables)
+                    case "${table.name()}":
+                        configs.delete(cfg);
+                        ${model.className(table)}.Initialize(os, errors);
+                        break;
+                @endfor
+                default:
+                    errors.ConfigDataAdd(cfg);
+                    break;
+            }
+        }
+        errors.ConfigsNull(configs);
+
+        @for(TableSchema table : sortedTables)
+            @if(HasRef.hasRef(table))
+                ${model.className(table)}.Resolve(errors);
+            @endif
+        @endfor
     }
 }

@@ -1,8 +1,5 @@
 package configgen.gencs;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,12 +17,8 @@ class StringPool {
         });
     }
 
-    public void writeToStream(DataOutputStream stream) throws IOException {
-        stream.writeInt(strings.size());
-        for (String str : strings) {
-            byte[] b = str.getBytes(StandardCharsets.UTF_8);
-            stream.writeInt(b.length);
-            stream.write(b);
-        }
+    public List<String> getStrings() {
+        return strings;
     }
+
 }
