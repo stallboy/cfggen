@@ -27,7 +27,7 @@ type ${className} struct {
 @endfor
 <%--ref property--%>
 @for (ForeignKeySchema fk : structural.foreignKeys())
-    ${GenGo.refName(fk)} ${GenGo.refType(fk)}
+    ${Generator.lower1(GenGo.refName(fk))} ${GenGo.refType(fk)}
 @endfor
 }
 
@@ -60,5 +60,46 @@ func create${className}(${streamIf} *Stream) *${className} {
 
 @if (!structural.foreignKeys().isEmpty())
     //ref properties
+    <%--list ref 和 map ref--%>
+    @for(ForeignKeySchema fk : structural.foreignKeys())
+        !{FieldSchema keyShema = fk.key().fieldSchemas().getFirst();}
+        @if(keyShema.type() instanceof FieldType.FMap)
+            @template.go.GenMapRef(name = name, foreignKeySchema = fk)
+        @endif
+        @if (keyShema.type() instanceof FieldType.FList)
+            @template.go.GenListRef(name = name, foreignKeySchema = fk)
+        @endif
+    @endfor
+
+
+    @for(ForeignKeySchema fk : structural.foreignKeys())
+        !{
+           var RefName = GenGo.refName(fk);
+           var refName = Generator.lower1(RefName);
+           var varName = Generator.lower1(fk.name());
+           var refType = GenGo.refType(fk);
+           GoName refTbName = new GoName(fk.refTableSchema());
+           var refTableClassName = refTbName.className;
+        }
+        func (t *${className}) Get${RefName}() ${refType} {
+            if t.${refName} == nil {
+                t.${refName} = Get${refTableClassName}Mgr().${codeGetFuncName}(t.${varName})
+            }
+            return t.${refName}
+        }
+
+        @if (fk.refKey() instanceof RefKey.RefPrimary)
+            !{var keySchemaType = fk.key().fieldSchemas().getFirst().type();}
+            @if(!(keySchemaType instanceof FieldType.FMap)&&(keySchemaType instanceof FieldType.FList))
+
+            @endif
+            func (t *${name.className}) Get${GenGo.refName(fk)}() *${GenGo.refType(fk)} {
+                return t.${Generator.lower1(GenGo.refName(fk))}
+            }
+        @endif
+    @endfor
+
 @endif
+
+
 
