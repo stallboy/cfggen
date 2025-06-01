@@ -114,16 +114,13 @@ func(t *EquipJewelryMgr) Get(iD int32) *EquipJewelry {
     return t.iDMap[iD]
 }
 
-
 func (t *EquipJewelryMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*EquipJewelry, 0, cnt)
     t.iDMap = make(map[int32]*EquipJewelry, cnt)
-
     for i := 0; i < int(cnt); i++ {
         v := createEquipJewelry(stream)
         t.all = append(t.all, v)
         t.iDMap[v.iD] = v
-
     }
 }

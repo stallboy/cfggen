@@ -38,16 +38,13 @@ func(t *OtherMonsterMgr) Get(id int32) *OtherMonster {
     return t.idMap[id]
 }
 
-
 func (t *OtherMonsterMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*OtherMonster, 0, cnt)
     t.idMap = make(map[int32]*OtherMonster, cnt)
-
     for i := 0; i < int(cnt); i++ {
         v := createOtherMonster(stream)
         t.all = append(t.all, v)
         t.idMap[v.id] = v
-
     }
 }

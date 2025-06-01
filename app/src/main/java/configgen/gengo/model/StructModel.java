@@ -18,7 +18,8 @@ public class StructModel {
     public final Structural structural;
     public final String className;
     public final CfgValue.VTable vTable;
-    public StructModel(String pkg,GoName name,Structural structural,CfgValue.VTable vTable) {
+
+    public StructModel(String pkg, GoName name, Structural structural, CfgValue.VTable vTable) {
         this.pkg = pkg;
         this.name = name;
         this.structural = structural;
@@ -34,7 +35,7 @@ public class StructModel {
             case LONG -> "stream.ReadInt64()";
             case FLOAT -> "stream.ReadFloat32()";
             case STRING, TEXT -> "stream.ReadString()";
-            case StructRef structRef -> String.format("create%s(stream)",ClassName(structRef.obj()));
+            case StructRef structRef -> String.format("create%s(stream)", ClassName(structRef.obj()));
             case FList ignored -> null;
             case FMap ignored -> null;
         };
@@ -122,6 +123,36 @@ public class StructModel {
             return Generator.lower1(keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()));
         } else {
             return Generator.lower1(keySchema.fields().getFirst());
+        }
+    }
+
+    public static String GetParamVars(KeySchema keySchema) {
+        return keySchema.fieldSchemas().stream()
+                .map(f -> Generator.lower1(f.name()))
+                .collect(Collectors.joining(", "));
+    }
+
+    public static String GetParamVarsInV(KeySchema keySchema, String tempVarName) {
+        return keySchema.fieldSchemas().stream()
+                .map(f -> tempVarName + "." + Generator.lower1(f.name()))
+                .collect(Collectors.joining(", "));
+    }
+
+    public static String GetVarDefines(KeySchema keySchema) {
+        return keySchema.fieldSchemas().stream()
+                .map(f -> Generator.lower1(f.name()) + " " + GenGo.type(f.type()))
+                .collect(Collectors.joining(", "));
+    }
+
+    public static String GetFuncName(KeySchema keySchema, boolean refPrimary) {
+        var fieldSchemas = keySchema.fieldSchemas();
+        var fieldCnt = fieldSchemas.size();
+        if (refPrimary) {
+            return "Get";
+        } else if (fieldCnt > 1) {
+            return "GetBy" + GenGo.keyClassName(keySchema);
+        } else {
+            return "GetBy" + GetParamVars(keySchema);
         }
     }
 }

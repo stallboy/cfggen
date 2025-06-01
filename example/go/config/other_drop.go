@@ -55,16 +55,13 @@ func(t *OtherDropMgr) Get(dropid int32) *OtherDrop {
     return t.dropidMap[dropid]
 }
 
-
 func (t *OtherDropMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*OtherDrop, 0, cnt)
     t.dropidMap = make(map[int32]*OtherDrop, cnt)
-
     for i := 0; i < int(cnt); i++ {
         v := createOtherDrop(stream)
         t.all = append(t.all, v)
         t.dropidMap[v.dropid] = v
-
     }
 }

@@ -1,7 +1,6 @@
 @import configgen.gen.Generator
 @import configgen.gengo.*
 @import configgen.gengo.GoName
-@import configgen.gengo.KeySchemaCode
 @import configgen.gengo.PrimarySubKeyCode
 @import configgen.schema.*
 @import configgen.schema.FieldType.*
@@ -105,7 +104,7 @@ var (
         }
         @if (refKey instanceof RefKey.RefPrimary)
             @if (!(fieldType instanceof FMap || fieldType instanceof FList))
-                !{ getFuncName = new KeySchemaCode(fk.key(), name, true).codeGetFuncName; }
+                !{ getFuncName = model.GetFuncName(fk.key(),true); }
             @endif
         @elseif (refKey instanceof RefKey.RefList)
             !{ getFuncName = new PrimarySubKeyCode(name, fk.key().fieldSchemas().getFirst()).codeGetByFuncName; }
@@ -164,8 +163,28 @@ var (
     }
 
     @for (KeySchema keySchema : keySchemas)
-    !{KeySchemaCode keySchemaCode = new KeySchemaCode(keySchema, name, keySchema.equals(table.primaryKey()));}
-    ${keySchemaCode.codeGetBy}
+    !{
+        var isPrimaryKey = keySchema.equals(table.primaryKey());
+        var fieldSchemas = keySchema.fieldSchemas();
+        var fieldCnt = fieldSchemas.size();
+        var paramVars = model.GetParamVars(keySchema);
+        var varDefines = model.GetVarDefines(keySchema);
+        var getFuncName = model.GetFuncName(keySchema,isPrimaryKey);
+        var IdType = GenGo.keyClassName(keySchema);
+        var mapName = GenGo.mapName(keySchema);
+    }
+    @if (fieldCnt > 1)
+        func(t *${className}Mgr) ${getFuncName}(${varDefines}) *${className} {
+            return t.${mapName}Map[${IdType}{${paramVars}}]
+        }
+
+    @else
+        func(t *${className}Mgr) ${getFuncName}(${varDefines}) *${className} {
+            return t.${mapName}Map[${paramVars}]
+        }
+
+    @endif
+
     @endfor
     @if(table.primaryKey().fieldSchemas().size() > 1)
         @for(FieldSchema fieldSchema : table.primaryKey().fieldSchemas())
@@ -190,15 +209,28 @@ var (
         cnt := stream.ReadInt32()
         t.all = make([]*${className}, 0, cnt)
         @for (KeySchema keySchema : keySchemas)
-        !{KeySchemaCode keySchemaCode = new KeySchemaCode(keySchema, name, keySchema.equals(table.primaryKey()));}
-        ${keySchemaCode.codeCreateMap}
+        !{
+            var mapName = GenGo.mapName(keySchema);
+            var IdType = GenGo.keyClassName(keySchema);
+        }
+        t.${mapName}Map = make(map[${IdType}]*${className}, cnt)
         @endfor
         for i := 0; i < int(cnt); i++ {
             v := create${className}(stream)
             t.all = append(t.all, v)
             @for (KeySchema keySchema : keySchemas)
-            !{KeySchemaCode keySchemaCode = new KeySchemaCode(keySchema, name, keySchema.equals(table.primaryKey()));}
-            ${keySchemaCode.codeSetMap}
+            !{
+                var fieldSchemas = keySchema.fieldSchemas();
+                var fieldCnt = fieldSchemas.size();
+                var mapName = GenGo.mapName(keySchema);
+                var IdType = GenGo.keyClassName(keySchema);
+                var paramVarsInV = model.GetParamVarsInV(keySchema, "v");
+            }
+            @if (fieldCnt > 1)
+                t.${mapName}Map[${IdType}{${paramVarsInV}}] = v
+            @else
+                t.${mapName}Map[${paramVarsInV}] = v
+            @endif
             @endfor
             @if (vTable.enumNames() != null)
             !{

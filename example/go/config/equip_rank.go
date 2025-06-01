@@ -69,17 +69,14 @@ func(t *EquipRankMgr) Get(rankID int32) *EquipRank {
     return t.rankIDMap[rankID]
 }
 
-
 func (t *EquipRankMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*EquipRank, 0, cnt)
     t.rankIDMap = make(map[int32]*EquipRank, cnt)
-
     for i := 0; i < int(cnt); i++ {
         v := createEquipRank(stream)
         t.all = append(t.all, v)
         t.rankIDMap[v.rankID] = v
-
         switch v.rankName {
         case "White":
             white = *v

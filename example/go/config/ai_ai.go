@@ -68,16 +68,13 @@ func(t *AiAiMgr) Get(iD int32) *AiAi {
     return t.iDMap[iD]
 }
 
-
 func (t *AiAiMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*AiAi, 0, cnt)
     t.iDMap = make(map[int32]*AiAi, cnt)
-
     for i := 0; i < int(cnt); i++ {
         v := createAiAi(stream)
         t.all = append(t.all, v)
         t.iDMap[v.iD] = v
-
     }
 }

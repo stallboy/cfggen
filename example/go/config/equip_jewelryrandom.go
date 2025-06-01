@@ -54,16 +54,13 @@ func(t *EquipJewelryrandomMgr) Get(lvlRank *LevelRank) *EquipJewelryrandom {
     return t.lvlRankMap[lvlRank]
 }
 
-
 func (t *EquipJewelryrandomMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*EquipJewelryrandom, 0, cnt)
     t.lvlRankMap = make(map[*LevelRank]*EquipJewelryrandom, cnt)
-
     for i := 0; i < int(cnt); i++ {
         v := createEquipJewelryrandom(stream)
         t.all = append(t.all, v)
         t.lvlRankMap[v.lvlRank] = v
-
     }
 }

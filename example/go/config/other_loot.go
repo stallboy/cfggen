@@ -58,16 +58,13 @@ func(t *OtherLootMgr) Get(lootid int32) *OtherLoot {
     return t.lootidMap[lootid]
 }
 
-
 func (t *OtherLootMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*OtherLoot, 0, cnt)
     t.lootidMap = make(map[int32]*OtherLoot, cnt)
-
     for i := 0; i < int(cnt); i++ {
         v := createOtherLoot(stream)
         t.all = append(t.all, v)
         t.lootidMap[v.lootid] = v
-
     }
 }

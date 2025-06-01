@@ -70,16 +70,13 @@ func(t *TaskTaskextraexpMgr) Get(taskid int32) *TaskTaskextraexp {
     return t.taskidMap[taskid]
 }
 
-
 func (t *TaskTaskextraexpMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*TaskTaskextraexp, 0, cnt)
     t.taskidMap = make(map[int32]*TaskTaskextraexp, cnt)
-
     for i := 0; i < int(cnt); i++ {
         v := createTaskTaskextraexp(stream)
         t.all = append(t.all, v)
         t.taskidMap[v.taskid] = v
-
     }
 }

@@ -3,16 +3,10 @@ package configgen.gengo;
 import configgen.schema.FieldSchema;
 
 public class PrimarySubKeyCode {
-    public final String codeMapDefine;
-    public final String codeGetByDefine;
     public final String codeGetByFuncName;
+    public final String codeGetByDefine;
 
     public PrimarySubKeyCode(GoName name, FieldSchema fieldSchema) {
-        codeMapDefine = """
-                    ${mapName}MapList map[${IdType}][]*${className}
-                """.replace("${mapName}", fieldSchema.name())
-                .replace("${IdType}", GenGo.type(fieldSchema.type()))
-                .replace("${className}", name.className);
         codeGetByFuncName = "GetAllBy" + GenGo.upper1(fieldSchema.name());
         codeGetByDefine = """
                 func (t *${className}Mgr) ${codeGetByFuncName}(${mapName} ${IdType}) []*${className} {
