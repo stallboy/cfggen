@@ -29,4 +29,3 @@ func (t *LevelRank) GetRefRank() *EquipRank {
     return t.refRank
 }
 
-

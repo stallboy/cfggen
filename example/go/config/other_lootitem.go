@@ -49,7 +49,6 @@ type OtherLootitemMgr struct {
     lootidItemidMap map[KeyLootidItemid]*OtherLootitem
     lootidMapList map[int32][]*OtherLootitem
     itemidMapList map[int32][]*OtherLootitem
-
 }
 
 func(t *OtherLootitemMgr) GetAll() []*OtherLootitem {
@@ -79,7 +78,6 @@ func (t *OtherLootitemMgr) GetAllByItemid(itemid int32) []*OtherLootitem {
     }
     return t.itemidMapList[itemid]
 }
-
 func (t *OtherLootitemMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*OtherLootitem, 0, cnt)
@@ -92,4 +90,3 @@ func (t *OtherLootitemMgr) Init(stream *Stream) {
 
     }
 }
-

@@ -71,7 +71,6 @@ type OtherKeytestMgr struct {
     id2Id3Map map[KeyId2Id3]*OtherKeytest
     id1MapList map[int32][]*OtherKeytest
     id2MapList map[int64][]*OtherKeytest
-
 }
 
 func(t *OtherKeytestMgr) GetAll() []*OtherKeytest {
@@ -116,7 +115,6 @@ func (t *OtherKeytestMgr) GetAllById2(id2 int64) []*OtherKeytest {
     }
     return t.id2MapList[id2]
 }
-
 func (t *OtherKeytestMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*OtherKeytest, 0, cnt)
@@ -141,4 +139,3 @@ func (t *OtherKeytestMgr) Init(stream *Stream) {
 
     }
 }
-

@@ -21,4 +21,3 @@ func (t *Range) GetMax() int32 {
     return t.max
 }
 
-

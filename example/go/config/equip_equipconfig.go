@@ -62,7 +62,6 @@ func (t *EquipEquipconfigMgr) GetInstance2() *EquipEquipconfig {
 type EquipEquipconfigMgr struct {
     all []*EquipEquipconfig
     entryMap map[string]*EquipEquipconfig
-
 }
 
 func(t *EquipEquipconfigMgr) GetAll() []*EquipEquipconfig {
@@ -72,7 +71,6 @@ func(t *EquipEquipconfigMgr) GetAll() []*EquipEquipconfig {
 func(t *EquipEquipconfigMgr) Get(entry string) *EquipEquipconfig {
     return t.entryMap[entry]
 }
-
 
 
 func (t *EquipEquipconfigMgr) Init(stream *Stream) {
@@ -94,4 +92,3 @@ func (t *EquipEquipconfigMgr) Init(stream *Stream) {
         }
     }
 }
-

@@ -64,4 +64,3 @@ func (t *TaskTestDefaultBean) GetTestMap() map[int32]string {
     return t.testMap
 }
 
-

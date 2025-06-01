@@ -63,7 +63,6 @@ func (t *EquipAbilityMgr) GetBreak_armor() *EquipAbility {
 type EquipAbilityMgr struct {
     all []*EquipAbility
     idMap map[int32]*EquipAbility
-
 }
 
 func(t *EquipAbilityMgr) GetAll() []*EquipAbility {
@@ -73,7 +72,6 @@ func(t *EquipAbilityMgr) GetAll() []*EquipAbility {
 func(t *EquipAbilityMgr) Get(id int32) *EquipAbility {
     return t.idMap[id]
 }
-
 
 
 func (t *EquipAbilityMgr) Init(stream *Stream) {
@@ -105,4 +103,3 @@ func (t *EquipAbilityMgr) Init(stream *Stream) {
         }
     }
 }
-

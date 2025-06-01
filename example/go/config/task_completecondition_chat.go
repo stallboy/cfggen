@@ -15,4 +15,3 @@ func (t *TaskCompleteconditionChat) GetMsg() string {
     return t.msg
 }
 
-

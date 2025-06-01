@@ -69,7 +69,6 @@ type OtherSigninMgr struct {
     all []*OtherSignin
     idMap map[int32]*OtherSignin
     idViplevelMap map[KeyIdViplevel]*OtherSignin
-
 }
 
 func(t *OtherSigninMgr) GetAll() []*OtherSignin {
@@ -84,7 +83,6 @@ func(t *OtherSigninMgr) Get(id int32) *OtherSignin {
 func(t *OtherSigninMgr) GetByKeyIdViplevel(id int32, viplevel int32) *OtherSignin {
     return t.idViplevelMap[KeyIdViplevel{id, viplevel}]
 }
-
 
 
 func (t *OtherSigninMgr) Init(stream *Stream) {
@@ -103,4 +101,3 @@ func (t *OtherSigninMgr) Init(stream *Stream) {
 
     }
 }
-

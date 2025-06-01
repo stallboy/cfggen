@@ -68,7 +68,6 @@ func (t *TaskTask) GetNullableRefNexttask() *TaskTask {
 type TaskTaskMgr struct {
     all []*TaskTask
     taskidMap map[int32]*TaskTask
-
 }
 
 func(t *TaskTaskMgr) GetAll() []*TaskTask {
@@ -78,7 +77,6 @@ func(t *TaskTaskMgr) GetAll() []*TaskTask {
 func(t *TaskTaskMgr) Get(taskid int32) *TaskTask {
     return t.taskidMap[taskid]
 }
-
 
 
 func (t *TaskTaskMgr) Init(stream *Stream) {
@@ -93,4 +91,3 @@ func (t *TaskTaskMgr) Init(stream *Stream) {
 
     }
 }
-

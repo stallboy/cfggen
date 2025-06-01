@@ -45,7 +45,6 @@ func (t *OtherDrop) GetTestmap() map[int32]int32 {
 type OtherDropMgr struct {
     all []*OtherDrop
     dropidMap map[int32]*OtherDrop
-
 }
 
 func(t *OtherDropMgr) GetAll() []*OtherDrop {
@@ -55,7 +54,6 @@ func(t *OtherDropMgr) GetAll() []*OtherDrop {
 func(t *OtherDropMgr) Get(dropid int32) *OtherDrop {
     return t.dropidMap[dropid]
 }
-
 
 
 func (t *OtherDropMgr) Init(stream *Stream) {
@@ -70,4 +68,3 @@ func (t *OtherDropMgr) Init(stream *Stream) {
 
     }
 }
-

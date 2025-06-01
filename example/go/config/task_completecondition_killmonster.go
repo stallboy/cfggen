@@ -29,4 +29,3 @@ func (t *TaskCompleteconditionKillMonster) GetRefMonsterid() *OtherMonster {
     return t.refMonsterid
 }
 
-

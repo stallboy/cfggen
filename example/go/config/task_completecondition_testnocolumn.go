@@ -8,4 +8,3 @@ func createTaskCompleteconditionTestNoColumn(_ *Stream) *TaskCompleteconditionTe
     return v
 }
 
-

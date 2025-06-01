@@ -28,7 +28,6 @@ func (t *OtherMonster) GetPosList() []*Position {
 type OtherMonsterMgr struct {
     all []*OtherMonster
     idMap map[int32]*OtherMonster
-
 }
 
 func(t *OtherMonsterMgr) GetAll() []*OtherMonster {
@@ -38,7 +37,6 @@ func(t *OtherMonsterMgr) GetAll() []*OtherMonster {
 func(t *OtherMonsterMgr) Get(id int32) *OtherMonster {
     return t.idMap[id]
 }
-
 
 
 func (t *OtherMonsterMgr) Init(stream *Stream) {
@@ -53,4 +51,3 @@ func (t *OtherMonsterMgr) Init(stream *Stream) {
 
     }
 }
-

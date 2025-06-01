@@ -104,7 +104,6 @@ func (t *EquipJewelry) GetRefKeyAbility() *EquipAbility {
 type EquipJewelryMgr struct {
     all []*EquipJewelry
     iDMap map[int32]*EquipJewelry
-
 }
 
 func(t *EquipJewelryMgr) GetAll() []*EquipJewelry {
@@ -114,7 +113,6 @@ func(t *EquipJewelryMgr) GetAll() []*EquipJewelry {
 func(t *EquipJewelryMgr) Get(iD int32) *EquipJewelry {
     return t.iDMap[iD]
 }
-
 
 
 func (t *EquipJewelryMgr) Init(stream *Stream) {
@@ -129,4 +127,3 @@ func (t *EquipJewelryMgr) Init(stream *Stream) {
 
     }
 }
-

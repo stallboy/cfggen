@@ -44,7 +44,6 @@ func (t *EquipJewelryrandom) GetTestPack() []*EquipTestPackBean {
 type EquipJewelryrandomMgr struct {
     all []*EquipJewelryrandom
     lvlRankMap map[*LevelRank]*EquipJewelryrandom
-
 }
 
 func(t *EquipJewelryrandomMgr) GetAll() []*EquipJewelryrandom {
@@ -54,7 +53,6 @@ func(t *EquipJewelryrandomMgr) GetAll() []*EquipJewelryrandom {
 func(t *EquipJewelryrandomMgr) Get(lvlRank *LevelRank) *EquipJewelryrandom {
     return t.lvlRankMap[lvlRank]
 }
-
 
 
 func (t *EquipJewelryrandomMgr) Init(stream *Stream) {
@@ -69,4 +67,3 @@ func (t *EquipJewelryrandomMgr) Init(stream *Stream) {
 
     }
 }
-

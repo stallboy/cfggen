@@ -70,7 +70,6 @@ var (
 )
 
 @endif
-
 <%--getters--%>
 @if (!structural.fields().isEmpty())
     //getters
@@ -92,7 +91,6 @@ var (
             @template.go.GenListRef(name = name, foreignKeySchema = fk)
         @endif
     @endfor
-
     @for(ForeignKeySchema fk : structural.foreignKeys())
         !{
            var RefName = GenGo.refName(fk);
@@ -103,31 +101,24 @@ var (
            var refTableClassName = refTbName.className;
            var refKey = fk.refKey();
            var fieldType = fk.key().fieldSchemas().getFirst().type();
+           String getFuncName = null;
         }
         @if (refKey instanceof RefKey.RefPrimary)
-            @if (fieldType instanceof FMap)
-            @elseif (fieldType instanceof FList)
-            @else
-            !{KeySchemaCode keySchemaCode = new KeySchemaCode(fk.key(), name, true);}
-            func (t *${className}) Get${RefName}() ${refType} {
-                if t.${refName} == nil {
-                    t.${refName} = Get${refTableClassName}Mgr().${keySchemaCode.codeGetFuncName}(t.${varName})
-                }
-                return t.${refName}
-            }
-
+            @if (!(fieldType instanceof FMap || fieldType instanceof FList))
+                !{ getFuncName = new KeySchemaCode(fk.key(), name, true).codeGetFuncName; }
             @endif
-        @elseif (refKey instanceof RefKey.RefUniq)
         @elseif (refKey instanceof RefKey.RefList)
-            //foreign ref key RefList
+            !{ getFuncName = new PrimarySubKeyCode(name, fk.key().fieldSchemas().getFirst()).codeGetByFuncName; }
+        @endif
+        @if (getFuncName != null)
             func (t *${className}) Get${RefName}() ${refType} {
                 if t.${refName} == nil {
-                    t.${refName} = Get${refTableClassName}Mgr().${GenGo.genGetFuncName(fk,name,false)}(t.${varName})
+                    t.${refName} = Get${refTableClassName}Mgr().${getFuncName}(t.${varName})
                 }
                 return t.${refName}
             }
-        @endif
 
+        @endif
     @endfor
 @endif
 @if(table!=null)
@@ -135,16 +126,12 @@ var (
     @if(vTable.schema().entry() instanceof EntryType.EntryBase)
         !{var tableName = new GoName(vTable.schema());}
         @for (String e : vTable.enumNames())
-    <%--            //enum getter--%>
         func (t *${tableName.className}Mgr) Get${GenGo.upper1(e)}() *${tableName.className} {
         	return &${GenGo.lower1(e)}
         }
 
         @endfor
-
     @endif
-
-    <%--mapGet--%>
    !{
         List<KeySchema> keySchemas = new ArrayList<>();
         keySchemas.add(table.primaryKey());
@@ -160,20 +147,16 @@ var (
 
         @endif
     @endfor
-<%--    //cfgMgr--%>
     type ${className}Mgr struct {
         all []*${className}
-<%--        //keySchema Map--%>
         @for (KeySchema keySchema : keySchemas)
             ${GenGo.mapName(keySchema)}Map map[${GenGo.keyClassName(keySchema)}]*${name.className}
         @endfor
-<%--        //subKeySchema Map--%>
         @if(table.primaryKey().fieldSchemas().size() > 1)
             @for (FieldSchema fieldSchema : table.primaryKey().fieldSchemas())
                 ${fieldSchema.name()}MapList map[${GenGo.type(fieldSchema.type())}][]*${className}
             @endfor
         @endif
-    @raw@endraw
     }
 
     func(t *${className}Mgr) GetAll() []*${className} {
@@ -182,7 +165,6 @@ var (
 
     @for (KeySchema keySchema : keySchemas)
     !{KeySchemaCode keySchemaCode = new KeySchemaCode(keySchema, name, keySchema.equals(table.primaryKey()));}
-<%--    //mapGetBy--%>
     ${keySchemaCode.codeGetBy}
     @endfor
     @if(table.primaryKey().fieldSchemas().size() > 1)
@@ -192,7 +174,6 @@ var (
                 var codeGetByFuncName = "GetAllBy" + GenGo.upper1(fieldSchema.name());
                 var IdType= GenGo.type(fieldSchema.type());
             }
-<%--            //subKeyGetBy--%>
             func (t *${className}Mgr) ${codeGetByFuncName}(${mapName} ${IdType}) []*${className} {
                 if t.${mapName}MapList == nil {
                     t.${mapName}MapList = make(map[${IdType}][]*${className})
@@ -206,7 +187,6 @@ var (
     @endif
     <%--gen Init--%>
     !{configgen.gengo.EnumInitCode enumInitCode = new EnumInitCode(name, vTable);}
-    @raw@endraw
     func (t *${className}Mgr) Init(stream *Stream) {
         cnt := stream.ReadInt32()
         t.all = make([]*${className}, 0, cnt)
@@ -227,5 +207,3 @@ var (
         }
     }
 @endif
-
-
