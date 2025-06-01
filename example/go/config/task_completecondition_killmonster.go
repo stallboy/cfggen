@@ -22,7 +22,7 @@ func (t *TaskCompleteconditionKillMonster) Count() int32 {
     return t.count
 }
 
-func (t *TaskCompleteconditionKillMonster) GetRefMonsterid() *OtherMonster {
+func (t *TaskCompleteconditionKillMonster) RefMonsterid() *OtherMonster {
     if t.refMonsterid == nil {
         t.refMonsterid = GetOtherMonsterMgr().Get(t.monsterid)
     }

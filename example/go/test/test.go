@@ -133,7 +133,7 @@ func testRef() {
 	cc := t.Completecondition()
 	if killMonster, ok := cc.(*config.TaskCompleteconditionKillMonster); ok {
 		rawGet := config.GetOtherMonsterMgr().Get(killMonster.Monsterid())
-		if rawGet != killMonster.GetRefMonsterid() || killMonster.GetRefMonsterid().PosList()[1].Y() != 22 {
+		if rawGet != killMonster.RefMonsterid() || killMonster.RefMonsterid().PosList()[1].Y() != 22 {
 			println("fail: testRef")
 		} else {
 			println("pass: testRef")
@@ -150,8 +150,8 @@ func testRefNotCache() {
 	// assert(rawget(t.completecondition, "RefMonsterid") == nil, "Ref不会缓存，rawget一直拿到的都是nil，内存小点，这是个实现上的细节，将来可能会改变")
 	t := config.GetTaskTaskMgr().Get(1)
 	killMonster, _ := t.Completecondition().(*config.TaskCompleteconditionKillMonster)
-	refM := killMonster.GetRefMonsterid()
-	if refM == nil || killMonster.GetRefMonsterid() != nil {
+	refM := killMonster.RefMonsterid()
+	if refM == nil || killMonster.RefMonsterid() != nil {
 		println("fail: testRefNotCache 实际上我不知道这个是在做什么")
 	} else {
 		println("pass: testRefNotCache")
@@ -171,20 +171,20 @@ func testNullableRef() {
 		println("fail: testNullableRef")
 		return
 	}
-	if t.GetNullableRefNexttask() != config.GetTaskTaskMgr().Get(2) {
+	if t.NullableRefNexttask() != config.GetTaskTaskMgr().Get(2) {
 		println("fail: testNullableRef")
 		return
 	}
-	if t.GetNullableRefTaskid() != config.GetTaskTaskextraexpMgr().Get(1) {
+	if t.NullableRefTaskid() != config.GetTaskTaskextraexpMgr().Get(1) {
 		println("fail: testNullableRef")
 		return
 	}
 	t = config.GetTaskTaskMgr().Get(3)
-	if t.GetNullableRefNexttask() != nil {
+	if t.NullableRefNexttask() != nil {
 		println("fail: testNullableRef")
 		return
 	}
-	if t.GetNullableRefTaskid() != nil {
+	if t.NullableRefTaskid() != nil {
 		println("fail: testNullableRef")
 		return
 	}
@@ -207,11 +207,11 @@ func testListRef() {
 
 	// assert(rawget(t, "ListRefLootid") ~= nil, "listRef 会缓存起来，取过一次之后就可以直接rawget了")
 	t := config.GetOtherLootMgr().Get(2)
-	if len(t.GetListRefLootid()) != 7 {
+	if len(t.ListRefLootid()) != 7 {
 		println("fail: testListRef")
 		return
 	}
-	if t.GetListRefLootid()[0].Itemid() != 22 {
+	if t.ListRefLootid()[0].Itemid() != 22 {
 		println("fail: testListRef")
 		return
 	}

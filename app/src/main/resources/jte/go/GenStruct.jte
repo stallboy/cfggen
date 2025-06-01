@@ -110,7 +110,7 @@ var (
             }
         }
         @if (getFuncName != null)
-            func (t *${className}) Get${RefName}() ${refType} {
+            func (t *${className}) ${RefName}() ${refType} {
                 if t.${refName} == nil {
                     t.${refName} = Get${refTableClassName}Mgr().${getFuncName}(t.${varName})
                 }
