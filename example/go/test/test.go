@@ -378,6 +378,14 @@ func testCellNumberAsInterface() {
 
 }
 
+func testRefList() {
+	if config.GetOtherKeytestMgr().Get(1, 2).RefIds()[1].Id() == 12 {
+		println("pass: testRefList")
+	} else {
+		println("fail: testRefList")
+	}
+}
+
 func DoTest() {
 	testReadOnly()
 	testToString()
@@ -398,4 +406,5 @@ func DoTest() {
 	testBeanAsPrimaryKey()
 	testMapValueRef()
 	testCellNumberAsInterface()
+	testRefList()
 }
