@@ -186,7 +186,6 @@ var (
         @endfor
     @endif
     <%--gen Init--%>
-    !{configgen.gengo.EnumInitCode enumInitCode = new EnumInitCode(name, vTable);}
     func (t *${className}Mgr) Init(stream *Stream) {
         cnt := stream.ReadInt32()
         t.all = make([]*${className}, 0, cnt)
@@ -202,7 +201,20 @@ var (
             ${keySchemaCode.codeSetMap}
             @endfor
             @if (vTable.enumNames() != null)
-            ${enumInitCode.getEnumInitFunctionCode()}
+            !{
+                var entry = vTable.schema().entry();
+                String entryVarName = switch (entry) {
+                    case EntryType.EEntry eEntry -> eEntry.field();
+                    case EntryType.EEnum eEnum -> eEnum.field();
+                    default -> null; // Default case, use a generic name
+                };
+            }
+            switch v.${Generator.lower1(entryVarName)} {
+            @for (String enumName : vTable.enumNames())
+            case "${Generator.upper1(enumName)}":
+                ${Generator.lower1(enumName)} = *v
+            @endfor
+            }
             @endif
         }
     }

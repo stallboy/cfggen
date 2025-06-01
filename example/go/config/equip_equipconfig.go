@@ -88,7 +88,6 @@ func (t *EquipEquipconfigMgr) Init(stream *Stream) {
             instance = *v
         case "Instance2":
             instance2 = *v
-
         }
     }
 }

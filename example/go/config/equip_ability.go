@@ -99,7 +99,6 @@ func (t *EquipAbilityMgr) Init(stream *Stream) {
             block = *v
         case "Break_armor":
             break_armor = *v
-
         }
     }
 }

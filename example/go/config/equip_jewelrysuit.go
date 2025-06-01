@@ -109,7 +109,6 @@ func (t *EquipJewelrysuitMgr) Init(stream *Stream) {
         switch v.ename {
         case "SpecialSuit":
             specialSuit = *v
-
         }
     }
 }

@@ -92,7 +92,6 @@ func (t *TaskCompleteconditiontypeMgr) Init(stream *Stream) {
             chat = *v
         case "TestNoColumn":
             testNoColumn = *v
-
         }
     }
 }

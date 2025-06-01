@@ -91,7 +91,6 @@ func (t *EquipRankMgr) Init(stream *Stream) {
             purple = *v
         case "Yellow":
             yellow = *v
-
         }
     }
 }

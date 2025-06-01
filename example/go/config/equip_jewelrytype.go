@@ -72,7 +72,6 @@ func (t *EquipJewelrytypeMgr) Init(stream *Stream) {
             magic = *v
         case "Bottle":
             bottle = *v
-
         }
     }
 }
