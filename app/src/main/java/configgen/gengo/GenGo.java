@@ -7,6 +7,7 @@ import configgen.gen.Parameter;
 import configgen.gengo.model.InterfaceModel;
 import configgen.gengo.model.StructModel;
 import configgen.schema.*;
+import configgen.util.CachedFiles;
 import configgen.util.CachedIndentPrinter;
 import configgen.util.JteEngine;
 import configgen.value.CfgValue;
@@ -46,7 +47,7 @@ public class GenGo extends GeneratorWithTag {
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/')).toFile();
         CfgValue cfgValue = ctx.makeValue(tag);
         cfgSchema = cfgValue.schema();
-
+        copySupportFileIfNotExist("stream.go", dstDir.toPath(), encoding);
         GenCfgMgrFile(cfgValue);
 
         for (Fieldable fieldable : cfgSchema.sortedFieldables()) {
@@ -66,7 +67,7 @@ public class GenGo extends GeneratorWithTag {
         for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
             generateStruct(vTable.schema(), vTable);
         }
-
+        CachedFiles.deleteOtherFiles(dstDir);
     }
 
     private void generateInterface(InterfaceSchema sInterface) {
