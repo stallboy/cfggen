@@ -1,7 +1,6 @@
 @import configgen.gen.Generator
 @import configgen.gengo.*
 @import configgen.gengo.GoName
-@import configgen.gengo.PrimarySubKeyCode
 @import configgen.schema.*
 @import configgen.schema.FieldType.*
 @import configgen.gengo.model.StructModel
@@ -92,23 +91,24 @@ var (
     @endfor
     @for(ForeignKeySchema fk : structural.foreignKeys())
         !{
-           var RefName = model.refName(fk);
-           var refName = model.lower1(RefName);
-           var varName = model.lower1(fk.name());
-           var refType = model.refType(fk);
-           GoName refTbName = new GoName(fk.refTableSchema());
-           var refTableClassName = refTbName.className;
-           var refKey = fk.refKey();
-           var fieldType = fk.key().fieldSchemas().getFirst().type();
-           String getFuncName = null;
+            var RefName = model.refName(fk);
+            var refName = model.lower1(RefName);
+            var varName = model.lower1(fk.name());
+            var refType = model.refType(fk);
+            GoName refTbName = new GoName(fk.refTableSchema());
+            var refTableClassName = refTbName.className;
+            var fieldType = fk.key().fieldSchemas().getFirst().type();
+            var refKey = fk.refKey();
+
+            String getFuncName = null;
+            if (refKey instanceof RefKey.RefPrimary) {
+                if (!(fieldType instanceof FMap || fieldType instanceof FList)) {
+                    getFuncName = model.GetFuncName(fk.key(), true);
+                }
+            } else if (refKey instanceof RefKey.RefList) {
+                getFuncName = "GetAllBy" + GenGo.upper1(fk.key().fieldSchemas().getFirst().name());
+            }
         }
-        @if (refKey instanceof RefKey.RefPrimary)
-            @if (!(fieldType instanceof FMap || fieldType instanceof FList))
-                !{ getFuncName = model.GetFuncName(fk.key(),true); }
-            @endif
-        @elseif (refKey instanceof RefKey.RefList)
-            !{ getFuncName = new PrimarySubKeyCode(name, fk.key().fieldSchemas().getFirst()).codeGetByFuncName; }
-        @endif
         @if (getFuncName != null)
             func (t *${className}) Get${RefName}() ${refType} {
                 if t.${refName} == nil {
