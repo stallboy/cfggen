@@ -4,6 +4,7 @@ import configgen.ctx.Context;
 import configgen.gen.Generator;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
+import configgen.gengo.model.CfgMgrModel;
 import configgen.gengo.model.InterfaceModel;
 import configgen.gengo.model.StructModel;
 import configgen.schema.*;
@@ -84,7 +85,6 @@ public class GenGo extends GeneratorWithTag {
         StructModel model = new StructModel(pkg, name, structural,vTable);
         File csFile = dstDir.toPath().resolve(name.filePath).toFile();
         try (CachedIndentPrinter ps = createCode(csFile, encoding)) {
-//            generateStructClass(structural, vTable, name, ps);
             JteEngine.render("go/GenStruct.jte", model, ps);
         }
     }
@@ -124,60 +124,10 @@ public class GenGo extends GeneratorWithTag {
 
     private void GenCfgMgrFile(CfgValue cfgValue) {
         String mgrFileName = Generator.lower1(pkg) + "mgr";
-        String mgrClassName = Generator.upper1(pkg) + "Mgr";
+        var model = new CfgMgrModel(pkg, cfgValue);
         File csFile = dstDir.toPath().resolve(mgrFileName + ".go").toFile();
-
-        String templateDefine = """
-                var ${className}Mgr *${ClassName}Mgr
-                
-                func Get${ClassName}Mgr() *${ClassName}Mgr {
-                    return ${className}Mgr
-                }
-                
-                """;
-        String templateCase = """
-                        case "${ClassReadName}":
-                            ${className}Mgr = &${ClassName}Mgr{}
-                            ${className}Mgr.Init(myStream)
-                """;
-        String template = """
-                package ${pkg}
-                
-                import "io"
-                
-                ${templateDefines}func Init(reader io.Reader) {
-                    myStream := &Stream{reader: reader}
-                    for {
-                        cfgName := myStream.ReadString()
-                        if cfgName == "" {
-                            break
-                        }
-                        switch cfgName {
-                ${templateCases}        }
-                    }
-                }""";
-
         try (CachedIndentPrinter ps = createCode(csFile, encoding)) {
-            StringBuilder templateDefines = new StringBuilder();
-            StringBuilder templateCases = new StringBuilder();
-            for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
-                GoName name = new GoName(vTable.schema());
-                templateDefines.append(templateDefine.
-                        replace("${ClassName}", name.className).
-                        replace("${className}", Generator.lower1(name.className))
-                );
-                templateCases.append(templateCase.
-                        replace("${ClassName}", name.className).
-                        replace("${className}", Generator.lower1(name.className)).
-                        replace("${ClassReadName}", name.pkgName)
-                );
-            }
-            ps.println(template.
-                    replace("${pkg}", pkg).
-                    replace("${mgrClassName}", mgrClassName).
-                    replace("${templateDefines}", templateDefines).
-                    replace("${templateCases}", templateCases)
-            );
+            JteEngine.render("go/GenCfgMgr.jte", model, ps);
         }
     }
 
