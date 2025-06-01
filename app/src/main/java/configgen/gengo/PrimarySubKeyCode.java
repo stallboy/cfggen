@@ -7,7 +7,7 @@ public class PrimarySubKeyCode {
     public final String codeGetByDefine;
     public final String codeGetByFuncName;
 
-    PrimarySubKeyCode(GoName name, FieldSchema fieldSchema) {
+    public PrimarySubKeyCode(GoName name, FieldSchema fieldSchema) {
         codeMapDefine = """
                     ${mapName}MapList map[${IdType}][]*${className}
                 """.replace("${mapName}", fieldSchema.name())

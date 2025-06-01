@@ -15,3 +15,4 @@ func (t *TaskCompleteconditionTalkNpc) GetNpcid() int32 {
     return t.npcid
 }
 
+

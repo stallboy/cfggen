@@ -21,3 +21,4 @@ func (t *TaskCompleteconditionConditionAnd) GetCond2() TaskCompletecondition {
     return t.cond2
 }
 
+

@@ -14,6 +14,7 @@
     String VarName =Generator.upper1(fieldSchema.name());
     var ValueType = refTableName.className;
 }
+//list ref
 func (t *${className}) GetRef${VarName}() []*${ValueType} {
     if t.ref${VarName} == nil {
         t.ref${VarName} = make([]*${ValueType}, len(t.${varName}))

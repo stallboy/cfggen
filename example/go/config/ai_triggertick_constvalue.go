@@ -15,3 +15,4 @@ func (t *AiTriggertickConstValue) GetValue() int32 {
     return t.value
 }
 
+

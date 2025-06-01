@@ -10,7 +10,7 @@ public class KeySchemaCode {
     public final String codeSetMap;
     public final String codeGetFuncName;
 
-    KeySchemaCode(KeySchema keySchema, GoName name, boolean refPrimary) {
+    public KeySchemaCode(KeySchema keySchema, GoName name, boolean refPrimary) {
         StringBuilder varDefines = new StringBuilder();
         StringBuilder paramVars = new StringBuilder();
         StringBuilder paramVarsInV = new StringBuilder();//t.id1Id2Map[KeyId1Id2{v.id1, v.id2}] = v 里面的v.id1, v.id2
@@ -53,16 +53,16 @@ public class KeySchemaCode {
                 replace("${varDefines}", varDefines).
                 replace("${paramVars}", paramVars));
         codeCreateMap = ("""
-                    t.${mapName}Map = make(map[${IdType}]*${className}, cnt)
+                t.${mapName}Map = make(map[${IdType}]*${className}, cnt)
                 """.
                 replace("${mapName}", GenGo.mapName(keySchema)).
                 replace("${IdType}", GenGo.keyClassName(keySchema)).
                 replace("${className}", name.className)
         );
         codeSetMap = ((fieldCnt > 1 ? """
-                        t.${mapName}Map[${IdType}{${paramVarsInV}}] = v                        
+                t.${mapName}Map[${IdType}{${paramVarsInV}}] = v                        
                 """ : """
-                        t.${mapName}Map[${paramVarsInV}] = v
+                t.${mapName}Map[${paramVarsInV}] = v
                 """).
                 replace("${mapName}", GenGo.mapName(keySchema)).
                 replace("${IdType}", GenGo.keyClassName(keySchema)).

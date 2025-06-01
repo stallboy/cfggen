@@ -21,3 +21,4 @@ func (t *AiTriggertickByLevel) GetCoefficient() float32 {
     return t.coefficient
 }
 
+

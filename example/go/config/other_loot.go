@@ -38,15 +38,13 @@ func (t *OtherLoot) GetChanceList() []int32 {
     return t.chanceList
 }
 
-//ref properties
+//foreign ref key RefList
 func (t *OtherLoot) GetListRefLootid() []*OtherLootitem {
     if t.listRefLootid == nil {
         t.listRefLootid = GetOtherLootitemMgr().GetAllByLootid(t.lootid)
     }
     return t.listRefLootid
 }
-
-
 type OtherLootMgr struct {
     all []*OtherLoot
     lootidMap map[int32]*OtherLoot

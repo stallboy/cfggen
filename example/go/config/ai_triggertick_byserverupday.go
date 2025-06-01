@@ -27,3 +27,4 @@ func (t *AiTriggertickByServerUpDay) GetCoefficient2() float32 {
     return t.coefficient2
 }
 
+

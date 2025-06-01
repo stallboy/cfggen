@@ -37,3 +37,4 @@ func (t *OtherDropItem) GetCountmax() int32 {
     return t.countmax
 }
 
+

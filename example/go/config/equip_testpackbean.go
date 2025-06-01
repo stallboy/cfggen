@@ -21,3 +21,4 @@ func (t *EquipTestPackBean) GetIRange() *Range {
     return t.iRange
 }
 
+

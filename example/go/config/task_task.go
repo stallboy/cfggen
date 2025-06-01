@@ -51,7 +51,6 @@ func (t *TaskTask) GetTestDefaultBean() *TaskTestDefaultBean {
     return t.testDefaultBean
 }
 
-//ref properties
 func (t *TaskTask) GetNullableRefTaskid() *TaskTaskextraexp {
     if t.nullableRefTaskid == nil {
         t.nullableRefTaskid = GetTaskTaskextraexpMgr().Get(t.taskid)
@@ -65,7 +64,6 @@ func (t *TaskTask) GetNullableRefNexttask() *TaskTask {
     }
     return t.nullableRefNexttask
 }
-
 
 type TaskTaskMgr struct {
     all []*TaskTask

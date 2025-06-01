@@ -19,3 +19,11 @@
 主键可以直接=>到联合键。
 
 GO版本不支持直接ref到一个struct类型的主键
+
+# 外键
+“外键”（Foreign Key）是数据库中的一个重要概念，用来表示一个表中的字段引用了另一个表的主键，从而在两个表之间建立起数据的关联关系。
+cfggen的外键有多种类型，包括RefList, RefPrimary, RefUniq
+当ForeignKeySchema的refKey()是RefList时，表示它是一个列表引用，意味着当前表中的一个记录可以关联到目标表中的多个记录。
+在cfg文件里，通过=>来表示这种关联关系。
+比如，lootid:int =>lootitem[lootid] 中的 => 表示一种外键关联逻辑。
+lootid 是当前表的一个字段，它通过外键关联到 lootitem 表中的 lootid 字段，将返回所有符合这个条件的 lootitem 记录。

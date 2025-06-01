@@ -21,3 +21,4 @@ func (t *TaskCompleteconditionCollectItem) GetCount() int32 {
     return t.count
 }
 
+

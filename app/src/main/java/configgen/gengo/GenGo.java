@@ -184,7 +184,7 @@ public class GenGo extends GeneratorWithTag {
                         codeGetFuncName = "RefUniq";
                     }
                     case RefKey.RefList ignored -> {
-                        // => ref到联合键，返回符合key的集合
+                        // => 返回list
                         PrimarySubKeyCode primarySubKeyCode = new PrimarySubKeyCode(name, fk.key().fieldSchemas().getFirst());
                         codeGetFuncName = primarySubKeyCode.codeGetByFuncName;
                     }
@@ -373,13 +373,29 @@ public class GenGo extends GeneratorWithTag {
         }
     }
 
-    public static String genReadField(FieldType fieldType) {
-        return switch (fieldType) {
-            case StructRef structRef -> "create${varType}(stream)".
-                    replace("${varType}", ClassName(structRef.obj()));
-            case FList ignore -> null;
-            case FMap ignore -> null;
-            default -> "stream.Read${varType}()".replace("${varType}", Generator.upper1(type(fieldType)));
+    public static String genGetFuncName(ForeignKeySchema fk, GoName name,boolean refPrimary) {
+       return switch (fk.refKey()) {
+            case RefKey.RefPrimary ignored -> switch (fk.key().fieldSchemas().getFirst().type()) {
+                case FMap ign-> null;
+                case FList ign-> null;
+                default -> new KeySchemaCode(fk.key(), name, refPrimary).codeGetFuncName;
+            };
+            case RefKey.RefUniq ignored -> null;
+            case RefKey.RefList ignored -> new PrimarySubKeyCode(name, fk.key().fieldSchemas().getFirst()).codeGetByFuncName;
+        };
+    }
+
+    public static String genReadField(FieldType t) {
+        return switch (t) {
+            case BOOL -> "stream.ReadBool()";
+            case INT -> "stream.ReadInt32()";
+            case LONG -> "stream.ReadInt64()";
+            case FLOAT -> "stream.ReadFloat32()";
+            case STRING -> "stream.ReadString()";
+            case TEXT -> "stream.ReadString()";
+            case StructRef structRef -> String.format("create%s(stream)",ClassName(structRef.obj()));
+            case FList ignored -> null;
+            case FMap ignored -> null;
         };
     }
 
