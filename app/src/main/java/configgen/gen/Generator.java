@@ -2,10 +2,12 @@ package configgen.gen;
 
 import configgen.ctx.Context;
 import configgen.util.CachedFileOutputStream;
+import configgen.util.CachedFiles;
 import configgen.util.CachedIndentPrinter;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 public abstract class Generator {
@@ -35,10 +37,15 @@ public abstract class Generator {
         return new OutputStreamWriter(new CachedFileOutputStream(file), StandardCharsets.UTF_8);
     }
 
-    protected static void copySupportFileTo(String file, Path dstDir, String dstEncoding) throws IOException {
+    protected static void copySupportFileIfNotExist(String file, Path dstDir, String dstEncoding) throws IOException {
+        Path dst = dstDir.resolve(file);
+        if (Files.exists(dst)) {
+            CachedFiles.keepFile(dst);
+            return;
+        }
         try (InputStream is = Generator.class.getResourceAsStream("/support/" + file);
              BufferedReader br = new BufferedReader(new InputStreamReader(is != null ? is : new FileInputStream("src/support/" + file), StandardCharsets.UTF_8));
-             CachedIndentPrinter ps = createCode(dstDir.resolve(file).toFile(), dstEncoding)) {
+             CachedIndentPrinter ps = new CachedIndentPrinter(dst, dstEncoding)) {
             for (String line = br.readLine(); line != null; line = br.readLine()) {
                 ps.println(line);
             }

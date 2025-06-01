@@ -111,19 +111,7 @@ public class GenCs extends GeneratorWithTag {
     }
 
     private void copyFileIfNotExist(String file) throws IOException {
-        Path dst = dstDir.resolve(file);
-        if (Files.exists(dst)) {
-            CachedFiles.keepFile(dst);
-            return;
-        }
-
-        try (InputStream is = getClass().getResourceAsStream("/support/" + file);
-             BufferedReader br = new BufferedReader(new InputStreamReader(is != null ? is : new FileInputStream("src/support/" + file), StandardCharsets.UTF_8));
-             CachedIndentPrinter ps = new CachedIndentPrinter(dst, encoding)) {
-            for (String line = br.readLine(); line != null; line = br.readLine()) {
-                ps.println(line);
-            }
-        }
+        copySupportFileIfNotExist(file, dstDir, encoding);
     }
 
 

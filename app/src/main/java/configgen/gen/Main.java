@@ -5,13 +5,14 @@ import configgen.data.*;
 import configgen.editorserver.EditorServer;
 import configgen.gencs.GenBytes;
 import configgen.gencs.GenCs;
+import configgen.gents.GenTs;
 import configgen.gengo.GenGo;
 import configgen.genjava.BinaryToText;
 import configgen.genjava.GenJavaData;
 import configgen.genjava.code.GenJavaCode;
 import configgen.genjson.GenJson;
 import configgen.genjson.GenJsonByAI;
-import configgen.genjson.GenTs;
+import configgen.genjson.GenTsSchema;
 import configgen.genlua.GenLua;
 import configgen.i18n.CompareI18nTerm;
 import configgen.i18n.GenI18nByOrig;
@@ -138,10 +139,11 @@ public final class Main {
         Generators.addProvider("cs", GenCs::new);
         Generators.addProvider("bytes", GenBytes::new);
         Generators.addProvider("lua", GenLua::new);
+        Generators.addProvider("ts", GenTs::new);
         Generators.addProvider("go", GenGo::new);
 
         Generators.addProvider("server", EditorServer::new);
-        Generators.addProvider("ts", GenTs::new);
+        Generators.addProvider("tsschema", GenTsSchema::new);
         Generators.addProvider("json", GenJson::new);
         Generators.addProvider("jsonbyai", GenJsonByAI::new);
 

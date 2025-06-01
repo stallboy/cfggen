@@ -9,10 +9,7 @@ import configgen.util.XorCipherOutputStream;
 import configgen.value.CfgValue;
 import configgen.value.ForeachValue;
 
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -22,31 +19,57 @@ import static configgen.value.CfgValue.*;
 public class GenBytes extends GeneratorWithTag {
     private final File file;
     private final String cipher;
-
+    private final boolean isStringPool;
     private LangSwitchRuntime langSwitchRuntime;
+    private StringPool stringPool;
 
     public GenBytes(Parameter parameter) {
         super(parameter);
         file = new File(parameter.get("file", "config.bytes"));
         cipher = parameter.get("cipher", "");
+        isStringPool = parameter.has("stringpool");
+
     }
 
     @Override
     public void generate(Context ctx) throws IOException {
         CfgValue cfgValue = ctx.makeValue(tag);
-
         if (ctx.nullableLangSwitch() != null) {
             langSwitchRuntime = new LangSwitchRuntime(ctx.nullableLangSwitch());
         }
+        if (isStringPool) {
+            stringPool = new StringPool();
+        }
 
         try (CachedFileOutputStream stream = new CachedFileOutputStream(file, 2048 * 1024)) {
-            OutputStream st = stream;
+            OutputStream fileStream = stream;
             if (!cipher.isEmpty()) {
-                st = new XorCipherOutputStream(stream, cipher);
+                fileStream = new XorCipherOutputStream(stream, cipher);
             }
-            this.stream = new DataOutputStream(st);
-            for (VTable vTable : cfgValue.sortedTables()) {
-                addVTable(vTable);
+
+            if (isStringPool) {
+                // value -> 内容
+                ByteArrayOutputStream content = new ByteArrayOutputStream(1024 * 16);
+                this.stream = new DataOutputStream(content);
+                for (VTable vTable : cfgValue.sortedTables()) {
+                    addVTable(vTable);
+                }
+
+                // stringPool -> file
+                writeLittleEndianInt(fileStream, stringPool.getStrings().size());
+                for (String str : stringPool.getStrings()) {
+                    byte[] b = str.getBytes(StandardCharsets.UTF_8);
+                    writeLittleEndianInt(fileStream, b.length);
+                    fileStream.write(b);
+                }
+                // 内容 -> file
+                fileStream.write(content.toByteArray());
+            } else {
+
+                this.stream = new DataOutputStream(fileStream);
+                for (VTable vTable : cfgValue.sortedTables()) {
+                    addVTable(vTable);
+                }
             }
         }
     }
@@ -119,17 +142,28 @@ public class GenBytes extends GeneratorWithTag {
         }
     }
 
+    /**
+     * Little-Endian， 方便c#读
+     */
     private void addInt(int v) {
+        writeLittleEndianInt(stream, v);
+    }
+
+    private static void writeLittleEndianInt(OutputStream output, int v) {
         try {
-            stream.write((v) & 0xFF);
-            stream.write((v >>> 8) & 0xFF);
-            stream.write((v >>> 16) & 0xFF);
-            stream.write((v >>> 24) & 0xFF);
+            output.write((v) & 0xFF);
+            output.write((v >>> 8) & 0xFF);
+            output.write((v >>> 16) & 0xFF);
+            output.write((v >>> 24) & 0xFF);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+
+    /**
+     * Little-Endian， 方便c#读
+     */
     private void addLong(long v) {
         writeBuffer[0] = (byte) (v);
         writeBuffer[1] = (byte) (v >>> 8);
@@ -152,9 +186,14 @@ public class GenBytes extends GeneratorWithTag {
 
     private void addString(String v) {
         try {
-            byte[] b = v.getBytes(StandardCharsets.UTF_8);
-            addInt(b.length);
-            stream.write(b);
+            if (isStringPool) {
+                int idx = stringPool.add(v);
+                addInt(idx);
+            } else {
+                byte[] b = v.getBytes(StandardCharsets.UTF_8);
+                addInt(b.length);
+                stream.write(b);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
