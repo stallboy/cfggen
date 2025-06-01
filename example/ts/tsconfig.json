@@ -1,9 +1,0 @@
-{
-  "compilerOptions": {
-    "target": "ES2015",       // 或 "ES6"、"ES2020" 等
-    "lib": [
-      "ES2015",
-      "dom"
-    ]
-  }
-}

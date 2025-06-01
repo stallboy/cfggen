@@ -13,5 +13,8 @@
   "private": true,
   "dependencies": {
     "@types/node": "^22.15.24"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.4"
   }
 }
