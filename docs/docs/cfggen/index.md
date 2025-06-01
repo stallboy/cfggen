@@ -18,9 +18,9 @@ nav_order: 2
 
 * 通过配置外键，取值范围，使策划可以随时检测数据一致性
 
-* 通过生成代码，来访问类型化数据，生成外键引用，生成entry、enum，支持java、c#、lua
+* 通过生成代码，来访问类型化数据，生成外键引用，生成entry、enum，支持java、c#、lua、go、typescript
 
-* 支持多态结构、嵌套结构，可在一个单元格里写任意复杂的结构数据，让csv有了xml的灵活性
+* 支持多态结构、嵌套结构，可在一个单元格里写任意复杂的结构数据，让excel有了xml的灵活性
 
 * 生成java注重安全
 
@@ -58,6 +58,23 @@ lua.exe test.lua
 gencshape.bat 
 cd cs
 dotnet run
+```
+
+* 测试go
+
+```bash
+gengo.bat 
+cd go
+go run .
+```
+
+* 测试typescript
+
+```bash
+gents.bat 
+cd ts
+pnpm i -D tsx
+npx tsx main.ts
 ```
 
 ## build cfgeditor.exe
