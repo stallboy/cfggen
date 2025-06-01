@@ -27,27 +27,27 @@ var (
 )
 
 //getters
-func (t *EquipEquipconfig) GetEntry() string {
+func (t *EquipEquipconfig) Entry() string {
     return t.entry
 }
 
-func (t *EquipEquipconfig) GetStone_count_for_set() int32 {
+func (t *EquipEquipconfig) Stone_count_for_set() int32 {
     return t.stone_count_for_set
 }
 
-func (t *EquipEquipconfig) GetDraw_protect_name() string {
+func (t *EquipEquipconfig) Draw_protect_name() string {
     return t.draw_protect_name
 }
 
-func (t *EquipEquipconfig) GetBroadcastid() int32 {
+func (t *EquipEquipconfig) Broadcastid() int32 {
     return t.broadcastid
 }
 
-func (t *EquipEquipconfig) GetBroadcast_least_quality() int32 {
+func (t *EquipEquipconfig) Broadcast_least_quality() int32 {
     return t.broadcast_least_quality
 }
 
-func (t *EquipEquipconfig) GetWeek_reward_mailid() int32 {
+func (t *EquipEquipconfig) Week_reward_mailid() int32 {
     return t.week_reward_mailid
 }
 
@@ -72,23 +72,19 @@ func(t *EquipEquipconfigMgr) Get(entry string) *EquipEquipconfig {
     return t.entryMap[entry]
 }
 
-
 func (t *EquipEquipconfigMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*EquipEquipconfig, 0, cnt)
     t.entryMap = make(map[string]*EquipEquipconfig, cnt)
-
     for i := 0; i < int(cnt); i++ {
         v := createEquipEquipconfig(stream)
         t.all = append(t.all, v)
         t.entryMap[v.entry] = v
-
         switch v.entry {
         case "Instance":
             instance = *v
         case "Instance2":
             instance2 = *v
-
         }
     }
 }

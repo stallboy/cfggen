@@ -23,11 +23,11 @@ var (
 )
 
 //getters
-func (t *TaskCompleteconditiontype) GetId() int32 {
+func (t *TaskCompleteconditiontype) Id() int32 {
     return t.id
 }
 
-func (t *TaskCompleteconditiontype) GetName() string {
+func (t *TaskCompleteconditiontype) Name() string {
     return t.name
 }
 
@@ -68,17 +68,14 @@ func(t *TaskCompleteconditiontypeMgr) Get(id int32) *TaskCompleteconditiontype {
     return t.idMap[id]
 }
 
-
 func (t *TaskCompleteconditiontypeMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*TaskCompleteconditiontype, 0, cnt)
     t.idMap = make(map[int32]*TaskCompleteconditiontype, cnt)
-
     for i := 0; i < int(cnt); i++ {
         v := createTaskCompleteconditiontype(stream)
         t.all = append(t.all, v)
         t.idMap[v.id] = v
-
         switch v.name {
         case "KillMonster":
             killMonster = *v
@@ -92,7 +89,6 @@ func (t *TaskCompleteconditiontypeMgr) Init(stream *Stream) {
             chat = *v
         case "TestNoColumn":
             testNoColumn = *v
-
         }
     }
 }

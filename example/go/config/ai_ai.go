@@ -27,31 +27,31 @@ func createAiAi(stream *Stream) *AiAi {
 }
 
 //getters
-func (t *AiAi) GetID() int32 {
+func (t *AiAi) ID() int32 {
     return t.iD
 }
 
-func (t *AiAi) GetDesc() string {
+func (t *AiAi) Desc() string {
     return t.desc
 }
 
-func (t *AiAi) GetCondID() string {
+func (t *AiAi) CondID() string {
     return t.condID
 }
 
-func (t *AiAi) GetTrigTick() AiTriggerTick {
+func (t *AiAi) TrigTick() AiTriggerTick {
     return t.trigTick
 }
 
-func (t *AiAi) GetTrigOdds() int32 {
+func (t *AiAi) TrigOdds() int32 {
     return t.trigOdds
 }
 
-func (t *AiAi) GetActionID() []int32 {
+func (t *AiAi) ActionID() []int32 {
     return t.actionID
 }
 
-func (t *AiAi) GetDeathRemove() bool {
+func (t *AiAi) DeathRemove() bool {
     return t.deathRemove
 }
 
@@ -68,16 +68,13 @@ func(t *AiAiMgr) Get(iD int32) *AiAi {
     return t.iDMap[iD]
 }
 
-
 func (t *AiAiMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*AiAi, 0, cnt)
     t.iDMap = make(map[int32]*AiAi, cnt)
-
     for i := 0; i < int(cnt); i++ {
         v := createAiAi(stream)
         t.all = append(t.all, v)
         t.iDMap[v.iD] = v
-
     }
 }

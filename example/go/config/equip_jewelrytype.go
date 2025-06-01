@@ -19,7 +19,7 @@ var (
 )
 
 //getters
-func (t *EquipJewelrytype) GetTypeName() string {
+func (t *EquipJewelrytype) TypeName() string {
     return t.typeName
 }
 
@@ -52,17 +52,14 @@ func(t *EquipJewelrytypeMgr) Get(typeName string) *EquipJewelrytype {
     return t.typeNameMap[typeName]
 }
 
-
 func (t *EquipJewelrytypeMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*EquipJewelrytype, 0, cnt)
     t.typeNameMap = make(map[string]*EquipJewelrytype, cnt)
-
     for i := 0; i < int(cnt); i++ {
         v := createEquipJewelrytype(stream)
         t.all = append(t.all, v)
         t.typeNameMap[v.typeName] = v
-
         switch v.typeName {
         case "Jade":
             jade = *v
@@ -72,7 +69,6 @@ func (t *EquipJewelrytypeMgr) Init(stream *Stream) {
             magic = *v
         case "Bottle":
             bottle = *v
-
         }
     }
 }

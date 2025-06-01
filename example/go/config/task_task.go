@@ -27,38 +27,38 @@ func createTaskTask(stream *Stream) *TaskTask {
 }
 
 //getters
-func (t *TaskTask) GetTaskid() int32 {
+func (t *TaskTask) Taskid() int32 {
     return t.taskid
 }
 
-func (t *TaskTask) GetName() []string {
+func (t *TaskTask) Name() []string {
     return t.name
 }
 
-func (t *TaskTask) GetNexttask() int32 {
+func (t *TaskTask) Nexttask() int32 {
     return t.nexttask
 }
 
-func (t *TaskTask) GetCompletecondition() TaskCompletecondition {
+func (t *TaskTask) Completecondition() TaskCompletecondition {
     return t.completecondition
 }
 
-func (t *TaskTask) GetExp() int32 {
+func (t *TaskTask) Exp() int32 {
     return t.exp
 }
 
-func (t *TaskTask) GetTestDefaultBean() *TaskTestDefaultBean {
+func (t *TaskTask) TestDefaultBean() *TaskTestDefaultBean {
     return t.testDefaultBean
 }
 
-func (t *TaskTask) GetNullableRefTaskid() *TaskTaskextraexp {
+func (t *TaskTask) NullableRefTaskid() *TaskTaskextraexp {
     if t.nullableRefTaskid == nil {
         t.nullableRefTaskid = GetTaskTaskextraexpMgr().Get(t.taskid)
     }
     return t.nullableRefTaskid
 }
 
-func (t *TaskTask) GetNullableRefNexttask() *TaskTask {
+func (t *TaskTask) NullableRefNexttask() *TaskTask {
     if t.nullableRefNexttask == nil {
         t.nullableRefNexttask = GetTaskTaskMgr().Get(t.nexttask)
     }
@@ -78,16 +78,13 @@ func(t *TaskTaskMgr) Get(taskid int32) *TaskTask {
     return t.taskidMap[taskid]
 }
 
-
 func (t *TaskTaskMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*TaskTask, 0, cnt)
     t.taskidMap = make(map[int32]*TaskTask, cnt)
-
     for i := 0; i < int(cnt); i++ {
         v := createTaskTask(stream)
         t.all = append(t.all, v)
         t.taskidMap[v.taskid] = v
-
     }
 }

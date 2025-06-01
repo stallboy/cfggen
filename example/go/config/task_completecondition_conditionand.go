@@ -13,11 +13,11 @@ func createTaskCompleteconditionConditionAnd(stream *Stream) *TaskCompletecondit
 }
 
 //getters
-func (t *TaskCompleteconditionConditionAnd) GetCond1() TaskCompletecondition {
+func (t *TaskCompleteconditionConditionAnd) Cond1() TaskCompletecondition {
     return t.cond1
 }
 
-func (t *TaskCompleteconditionConditionAnd) GetCond2() TaskCompletecondition {
+func (t *TaskCompleteconditionConditionAnd) Cond2() TaskCompletecondition {
     return t.cond2
 }
 

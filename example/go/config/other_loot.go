@@ -22,23 +22,23 @@ func createOtherLoot(stream *Stream) *OtherLoot {
 }
 
 //getters
-func (t *OtherLoot) GetLootid() int32 {
+func (t *OtherLoot) Lootid() int32 {
     return t.lootid
 }
 
-func (t *OtherLoot) GetEname() string {
+func (t *OtherLoot) Ename() string {
     return t.ename
 }
 
-func (t *OtherLoot) GetName() string {
+func (t *OtherLoot) Name() string {
     return t.name
 }
 
-func (t *OtherLoot) GetChanceList() []int32 {
+func (t *OtherLoot) ChanceList() []int32 {
     return t.chanceList
 }
 
-func (t *OtherLoot) GetListRefLootid() []*OtherLootitem {
+func (t *OtherLoot) ListRefLootid() []*OtherLootitem {
     if t.listRefLootid == nil {
         t.listRefLootid = GetOtherLootitemMgr().GetAllByLootid(t.lootid)
     }
@@ -58,16 +58,13 @@ func(t *OtherLootMgr) Get(lootid int32) *OtherLoot {
     return t.lootidMap[lootid]
 }
 
-
 func (t *OtherLootMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*OtherLoot, 0, cnt)
     t.lootidMap = make(map[int32]*OtherLoot, cnt)
-
     for i := 0; i < int(cnt); i++ {
         v := createOtherLoot(stream)
         t.all = append(t.all, v)
         t.lootidMap[v.lootid] = v
-
     }
 }

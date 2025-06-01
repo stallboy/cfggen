@@ -15,7 +15,7 @@
     var ValueType = refTableName.className;
 }
 //list ref
-func (t *${className}) GetRef${VarName}() []*${ValueType} {
+func (t *${className}) Ref${VarName}() []*${ValueType} {
     if t.ref${VarName} == nil {
         t.ref${VarName} = make([]*${ValueType}, len(t.${varName}))
         for i, v := range t.${varName} {

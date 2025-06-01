@@ -33,68 +33,68 @@ func createEquipJewelry(stream *Stream) *EquipJewelry {
 }
 
 //getters
-func (t *EquipJewelry) GetID() int32 {
+func (t *EquipJewelry) ID() int32 {
     return t.iD
 }
 
-func (t *EquipJewelry) GetName() string {
+func (t *EquipJewelry) Name() string {
     return t.name
 }
 
-func (t *EquipJewelry) GetIconFile() string {
+func (t *EquipJewelry) IconFile() string {
     return t.iconFile
 }
 
-func (t *EquipJewelry) GetLvlRank() *LevelRank {
+func (t *EquipJewelry) LvlRank() *LevelRank {
     return t.lvlRank
 }
 
-func (t *EquipJewelry) GetJType() string {
+func (t *EquipJewelry) JType() string {
     return t.jType
 }
 
-func (t *EquipJewelry) GetSuitID() int32 {
+func (t *EquipJewelry) SuitID() int32 {
     return t.suitID
 }
 
-func (t *EquipJewelry) GetKeyAbility() int32 {
+func (t *EquipJewelry) KeyAbility() int32 {
     return t.keyAbility
 }
 
-func (t *EquipJewelry) GetKeyAbilityValue() int32 {
+func (t *EquipJewelry) KeyAbilityValue() int32 {
     return t.keyAbilityValue
 }
 
-func (t *EquipJewelry) GetSalePrice() int32 {
+func (t *EquipJewelry) SalePrice() int32 {
     return t.salePrice
 }
 
-func (t *EquipJewelry) GetDescription() string {
+func (t *EquipJewelry) Description() string {
     return t.description
 }
 
-func (t *EquipJewelry) GetRefLvlRank() *EquipJewelryrandom {
+func (t *EquipJewelry) RefLvlRank() *EquipJewelryrandom {
     if t.refLvlRank == nil {
         t.refLvlRank = GetEquipJewelryrandomMgr().Get(t.lvlRank)
     }
     return t.refLvlRank
 }
 
-func (t *EquipJewelry) GetRefJType() *EquipJewelrytype {
+func (t *EquipJewelry) RefJType() *EquipJewelrytype {
     if t.refJType == nil {
         t.refJType = GetEquipJewelrytypeMgr().Get(t.jType)
     }
     return t.refJType
 }
 
-func (t *EquipJewelry) GetNullableRefSuitID() *EquipJewelrysuit {
+func (t *EquipJewelry) NullableRefSuitID() *EquipJewelrysuit {
     if t.nullableRefSuitID == nil {
         t.nullableRefSuitID = GetEquipJewelrysuitMgr().Get(t.suitID)
     }
     return t.nullableRefSuitID
 }
 
-func (t *EquipJewelry) GetRefKeyAbility() *EquipAbility {
+func (t *EquipJewelry) RefKeyAbility() *EquipAbility {
     if t.refKeyAbility == nil {
         t.refKeyAbility = GetEquipAbilityMgr().Get(t.keyAbility)
     }
@@ -114,16 +114,13 @@ func(t *EquipJewelryMgr) Get(iD int32) *EquipJewelry {
     return t.iDMap[iD]
 }
 
-
 func (t *EquipJewelryMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*EquipJewelry, 0, cnt)
     t.iDMap = make(map[int32]*EquipJewelry, cnt)
-
     for i := 0; i < int(cnt); i++ {
         v := createEquipJewelry(stream)
         t.all = append(t.all, v)
         t.iDMap[v.iD] = v
-
     }
 }

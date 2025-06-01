@@ -13,11 +13,11 @@ func createTaskCompleteconditionCollectItem(stream *Stream) *TaskCompleteconditi
 }
 
 //getters
-func (t *TaskCompleteconditionCollectItem) GetItemid() int32 {
+func (t *TaskCompleteconditionCollectItem) Itemid() int32 {
     return t.itemid
 }
 
-func (t *TaskCompleteconditionCollectItem) GetCount() int32 {
+func (t *TaskCompleteconditionCollectItem) Count() int32 {
     return t.count
 }
 

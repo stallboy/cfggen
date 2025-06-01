@@ -27,23 +27,23 @@ func createAiAi_action(stream *Stream) *AiAi_action {
 }
 
 //getters
-func (t *AiAi_action) GetID() int32 {
+func (t *AiAi_action) ID() int32 {
     return t.iD
 }
 
-func (t *AiAi_action) GetDesc() string {
+func (t *AiAi_action) Desc() string {
     return t.desc
 }
 
-func (t *AiAi_action) GetFormulaID() int32 {
+func (t *AiAi_action) FormulaID() int32 {
     return t.formulaID
 }
 
-func (t *AiAi_action) GetArgIList() []int32 {
+func (t *AiAi_action) ArgIList() []int32 {
     return t.argIList
 }
 
-func (t *AiAi_action) GetArgSList() []int32 {
+func (t *AiAi_action) ArgSList() []int32 {
     return t.argSList
 }
 
@@ -60,16 +60,13 @@ func(t *AiAi_actionMgr) Get(iD int32) *AiAi_action {
     return t.iDMap[iD]
 }
 
-
 func (t *AiAi_actionMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*AiAi_action, 0, cnt)
     t.iDMap = make(map[int32]*AiAi_action, cnt)
-
     for i := 0; i < int(cnt); i++ {
         v := createAiAi_action(stream)
         t.all = append(t.all, v)
         t.iDMap[v.iD] = v
-
     }
 }

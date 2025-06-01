@@ -14,15 +14,15 @@ func createLevelRank(stream *Stream) *LevelRank {
 }
 
 //getters
-func (t *LevelRank) GetLevel() int32 {
+func (t *LevelRank) Level() int32 {
     return t.level
 }
 
-func (t *LevelRank) GetRank() int32 {
+func (t *LevelRank) Rank() int32 {
     return t.rank
 }
 
-func (t *LevelRank) GetRefRank() *EquipRank {
+func (t *LevelRank) RefRank() *EquipRank {
     if t.refRank == nil {
         t.refRank = GetEquipRankMgr().Get(t.rank)
     }

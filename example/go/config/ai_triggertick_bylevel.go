@@ -13,11 +13,11 @@ func createAiTriggertickByLevel(stream *Stream) *AiTriggertickByLevel {
 }
 
 //getters
-func (t *AiTriggertickByLevel) GetInit() int32 {
+func (t *AiTriggertickByLevel) Init() int32 {
     return t.init
 }
 
-func (t *AiTriggertickByLevel) GetCoefficient() float32 {
+func (t *AiTriggertickByLevel) Coefficient() float32 {
     return t.coefficient
 }
 

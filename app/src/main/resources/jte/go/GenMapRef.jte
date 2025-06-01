@@ -15,7 +15,7 @@
     var MapValueType = refTableName.className;
 }
 //map ref
-func (t *${className}) GetRef${MapName}() map[int32]*${MapValueType} {
+func (t *${className}) Ref${MapName}() map[int32]*${MapValueType} {
     if t.ref${MapName} == nil {
         t.ref${MapName} = make(map[int32]*OtherLoot, len(t.${mapName}))
         for k, v := range t.${mapName} {

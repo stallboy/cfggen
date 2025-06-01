@@ -30,28 +30,28 @@ func createOtherSignin(stream *Stream) *OtherSignin {
 }
 
 //getters
-func (t *OtherSignin) GetId() int32 {
+func (t *OtherSignin) Id() int32 {
     return t.id
 }
 
-func (t *OtherSignin) GetItem2countMap() map[int32]int32 {
+func (t *OtherSignin) Item2countMap() map[int32]int32 {
     return t.item2countMap
 }
 
-func (t *OtherSignin) GetVipitem2vipcountMap() map[int32]int32 {
+func (t *OtherSignin) Vipitem2vipcountMap() map[int32]int32 {
     return t.vipitem2vipcountMap
 }
 
-func (t *OtherSignin) GetViplevel() int32 {
+func (t *OtherSignin) Viplevel() int32 {
     return t.viplevel
 }
 
-func (t *OtherSignin) GetIconFile() string {
+func (t *OtherSignin) IconFile() string {
     return t.iconFile
 }
 
 //map ref
-func (t *OtherSignin) GetRefVipitem2vipcountMap() map[int32]*OtherLoot {
+func (t *OtherSignin) RefVipitem2vipcountMap() map[int32]*OtherLoot {
     if t.refVipitem2vipcountMap == nil {
         t.refVipitem2vipcountMap = make(map[int32]*OtherLoot, len(t.vipitem2vipcountMap))
         for k, v := range t.vipitem2vipcountMap {
@@ -79,25 +79,19 @@ func(t *OtherSigninMgr) Get(id int32) *OtherSignin {
     return t.idMap[id]
 }
 
-
 func(t *OtherSigninMgr) GetByKeyIdViplevel(id int32, viplevel int32) *OtherSignin {
     return t.idViplevelMap[KeyIdViplevel{id, viplevel}]
 }
-
 
 func (t *OtherSigninMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*OtherSignin, 0, cnt)
     t.idMap = make(map[int32]*OtherSignin, cnt)
-
     t.idViplevelMap = make(map[KeyIdViplevel]*OtherSignin, cnt)
-
     for i := 0; i < int(cnt); i++ {
         v := createOtherSignin(stream)
         t.all = append(t.all, v)
         t.idMap[v.id] = v
-
         t.idViplevelMap[KeyIdViplevel{v.id, v.viplevel}] = v
-
     }
 }

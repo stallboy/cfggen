@@ -36,31 +36,31 @@ func createTaskTestDefaultBean(stream *Stream) *TaskTestDefaultBean {
 }
 
 //getters
-func (t *TaskTestDefaultBean) GetTestInt() int32 {
+func (t *TaskTestDefaultBean) TestInt() int32 {
     return t.testInt
 }
 
-func (t *TaskTestDefaultBean) GetTestBool() bool {
+func (t *TaskTestDefaultBean) TestBool() bool {
     return t.testBool
 }
 
-func (t *TaskTestDefaultBean) GetTestString() string {
+func (t *TaskTestDefaultBean) TestString() string {
     return t.testString
 }
 
-func (t *TaskTestDefaultBean) GetTestSubBean() *Position {
+func (t *TaskTestDefaultBean) TestSubBean() *Position {
     return t.testSubBean
 }
 
-func (t *TaskTestDefaultBean) GetTestList() []int32 {
+func (t *TaskTestDefaultBean) TestList() []int32 {
     return t.testList
 }
 
-func (t *TaskTestDefaultBean) GetTestList2() []int32 {
+func (t *TaskTestDefaultBean) TestList2() []int32 {
     return t.testList2
 }
 
-func (t *TaskTestDefaultBean) GetTestMap() map[int32]string {
+func (t *TaskTestDefaultBean) TestMap() map[int32]string {
     return t.testMap
 }
 

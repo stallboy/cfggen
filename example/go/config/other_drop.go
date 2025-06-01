@@ -26,19 +26,19 @@ func createOtherDrop(stream *Stream) *OtherDrop {
 }
 
 //getters
-func (t *OtherDrop) GetDropid() int32 {
+func (t *OtherDrop) Dropid() int32 {
     return t.dropid
 }
 
-func (t *OtherDrop) GetName() string {
+func (t *OtherDrop) Name() string {
     return t.name
 }
 
-func (t *OtherDrop) GetItems() []*OtherDropItem {
+func (t *OtherDrop) Items() []*OtherDropItem {
     return t.items
 }
 
-func (t *OtherDrop) GetTestmap() map[int32]int32 {
+func (t *OtherDrop) Testmap() map[int32]int32 {
     return t.testmap
 }
 
@@ -55,16 +55,13 @@ func(t *OtherDropMgr) Get(dropid int32) *OtherDrop {
     return t.dropidMap[dropid]
 }
 
-
 func (t *OtherDropMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*OtherDrop, 0, cnt)
     t.dropidMap = make(map[int32]*OtherDrop, cnt)
-
     for i := 0; i < int(cnt); i++ {
         v := createOtherDrop(stream)
         t.all = append(t.all, v)
         t.dropidMap[v.dropid] = v
-
     }
 }

@@ -31,10 +31,10 @@ func testMultiColumnAsPrimaryKeyGet() {
 	// local rawT = all[2 + 40007 * 100000000]
 	// assert(rawT == t, "主键是k + j * 100000000")
 	t := config.GetOtherLootitemMgr().Get(2, 40007)
-	if t.GetLootid() != 2 {
+	if t.Lootid() != 2 {
 		println("fail: testMultiColumnAsPrimaryKeyGet")
 	}
-	if t.GetItemid() != 40007 {
+	if t.Itemid() != 40007 {
 		println("fail: testMultiColumnAsPrimaryKeyGet")
 	}
 
@@ -49,7 +49,7 @@ func testUniqueKeyGet() {
 	// local rawT = cfg.other.lootitem.all[40007]
 	// assert(rawT == t, "主键是k")
 	t := config.GetOtherLootitemMgr().Get(4, 22)
-	if t.GetItemid() != 22 {
+	if t.Itemid() != 22 {
 		println("fail: testUniqueKeyGet")
 	} else {
 		println("pass: testUniqueKeyGet ,但是我改了这个测试用例的含义")
@@ -65,10 +65,10 @@ func testField() {
 	// assert(t.name[1] == "杀个怪");
 	// assert(#t.name == 2, "task.name is list");
 	t := config.GetTaskTaskMgr().Get(1)
-	if t.GetName()[0] != "杀个怪" &&
-		t.GetTaskid() != 1 &&
-		t.GetNexttask() != 2 &&
-		len(t.GetName()) != 2 {
+	if t.Name()[0] != "杀个怪" &&
+		t.Taskid() != 1 &&
+		t.Nexttask() != 2 &&
+		len(t.Name()) != 2 {
 		println("fail: testField")
 	} else {
 		println("pass: testField")
@@ -80,7 +80,7 @@ func testListField() {
 	// assert(#t.name == 2, "支持列表list");
 	// assert(t.name[1] == "杀个怪");
 	var t = config.GetTaskTaskMgr().Get(1)
-	if len(t.GetName()) != 2 || t.GetName()[0] != "杀个怪" {
+	if len(t.Name()) != 2 || t.Name()[0] != "杀个怪" {
 		println("fail: testListField")
 	} else {
 		println("pass: testListField")
@@ -97,7 +97,7 @@ func testMapField() {
 	// assert(cnt == 3, "支持字典map")
 	// assert(t.item2countMap[10001] == 5)
 	t := config.GetOtherSigninMgr().Get(4)
-	if len(t.GetItem2countMap()) != 3 || t.GetItem2countMap()[10001] != 5 {
+	if len(t.Item2countMap()) != 3 || t.Item2countMap()[10001] != 5 {
 		println("fail: testMapField")
 	} else {
 		println("pass: testMapField")
@@ -112,10 +112,10 @@ func testDynamicBeanField() {
 	// assert(t.completecondition.monsterid == 1, "monsterid")
 	// assert(t.completecondition.count == 3, "count")
 	t := config.GetTaskTaskMgr().Get(1)
-	cc := t.GetCompletecondition()
+	cc := t.Completecondition()
 	if killMonster, ok := cc.(*config.TaskCompleteconditionKillMonster); ok {
 		println("pass: 类型是 TaskCompleteconditionKillMonster")
-		if killMonster.GetMonsterid() != 1 || killMonster.GetCount() != 3 {
+		if killMonster.Monsterid() != 1 || killMonster.Count() != 3 {
 			println("fail: testDynamicBeanField")
 		} else {
 			println("pass: testDynamicBeanField")
@@ -130,10 +130,10 @@ func testRef() {
 	// local rawGet = cfg.other.monster.get(t.completecondition.monsterid)
 	// assert(rawGet == t.completecondition.RefMonsterid, "Ref可以直接拿到另一个表的一行，不需要再去get")
 	t := config.GetTaskTaskMgr().Get(1)
-	cc := t.GetCompletecondition()
+	cc := t.Completecondition()
 	if killMonster, ok := cc.(*config.TaskCompleteconditionKillMonster); ok {
-		rawGet := config.GetOtherMonsterMgr().Get(killMonster.GetMonsterid())
-		if rawGet != killMonster.GetRefMonsterid() || killMonster.GetRefMonsterid().GetPosList()[1].GetY() != 22 {
+		rawGet := config.GetOtherMonsterMgr().Get(killMonster.Monsterid())
+		if rawGet != killMonster.RefMonsterid() || killMonster.RefMonsterid().PosList()[1].Y() != 22 {
 			println("fail: testRef")
 		} else {
 			println("pass: testRef")
@@ -149,9 +149,9 @@ func testRefNotCache() {
 	// assert(refM ~= nil)
 	// assert(rawget(t.completecondition, "RefMonsterid") == nil, "Ref不会缓存，rawget一直拿到的都是nil，内存小点，这是个实现上的细节，将来可能会改变")
 	t := config.GetTaskTaskMgr().Get(1)
-	killMonster, _ := t.GetCompletecondition().(*config.TaskCompleteconditionKillMonster)
-	refM := killMonster.GetRefMonsterid()
-	if refM == nil || killMonster.GetRefMonsterid() != nil {
+	killMonster, _ := t.Completecondition().(*config.TaskCompleteconditionKillMonster)
+	refM := killMonster.RefMonsterid()
+	if refM == nil || killMonster.RefMonsterid() != nil {
 		println("fail: testRefNotCache 实际上我不知道这个是在做什么")
 	} else {
 		println("pass: testRefNotCache")
@@ -167,24 +167,24 @@ func testNullableRef() {
 	// assert(t.NullableRefNexttask == nil)
 	// assert(t.NullableRefTaskid == nil)
 	t := config.GetTaskTaskMgr().Get(1)
-	if t.GetNexttask() != 2 {
+	if t.Nexttask() != 2 {
 		println("fail: testNullableRef")
 		return
 	}
-	if t.GetNullableRefNexttask() != config.GetTaskTaskMgr().Get(2) {
+	if t.NullableRefNexttask() != config.GetTaskTaskMgr().Get(2) {
 		println("fail: testNullableRef")
 		return
 	}
-	if t.GetNullableRefTaskid() != config.GetTaskTaskextraexpMgr().Get(1) {
+	if t.NullableRefTaskid() != config.GetTaskTaskextraexpMgr().Get(1) {
 		println("fail: testNullableRef")
 		return
 	}
 	t = config.GetTaskTaskMgr().Get(3)
-	if t.GetNullableRefNexttask() != nil {
+	if t.NullableRefNexttask() != nil {
 		println("fail: testNullableRef")
 		return
 	}
-	if t.GetNullableRefTaskid() != nil {
+	if t.NullableRefTaskid() != nil {
 		println("fail: testNullableRef")
 		return
 	}
@@ -207,11 +207,11 @@ func testListRef() {
 
 	// assert(rawget(t, "ListRefLootid") ~= nil, "listRef 会缓存起来，取过一次之后就可以直接rawget了")
 	t := config.GetOtherLootMgr().Get(2)
-	if len(t.GetListRefLootid()) != 7 {
+	if len(t.ListRefLootid()) != 7 {
 		println("fail: testListRef")
 		return
 	}
-	if t.GetListRefLootid()[0].GetItemid() != 22 {
+	if t.ListRefLootid()[0].Itemid() != 22 {
 		println("fail: testListRef")
 		return
 	}
@@ -227,7 +227,7 @@ func testEnum() {
 	// assert(t.KillMonster.name == "KillMonster")
 	var t = config.GetTaskCompleteconditiontypeMgr()
 	var killMonster = t.GetKillMonster()
-	if killMonster.GetId() != 1 || killMonster.GetName() != "KillMonster" {
+	if killMonster.Id() != 1 || killMonster.Name() != "KillMonster" {
 		println("fail: testEnum")
 		return
 	}
@@ -241,7 +241,7 @@ func testEntry() {
 	// assert(t.broadcastid == 9500, "配置为入口，也可以直接tequipconfig.Instance访问，不用字符串")
 	// assert(gt == t, "entry")
 	var t = config.GetEquipEquipconfigMgr().GetInstance()
-	if t.GetBroadcastid() != 9500 || t.GetDraw_protect_name() != "测试" {
+	if t.Broadcastid() != 9500 || t.Draw_protect_name() != "测试" {
 		println("fail: testEntry")
 		return
 	}
@@ -253,7 +253,7 @@ func testCsvColumnMode() {
 	// assert(t.week_reward_mailid == 33, "csv可以一列一列配置，而不用一行一行")
 
 	t := config.GetEquipEquipconfigMgr().GetInstance2()
-	if t.GetWeek_reward_mailid() != 33 {
+	if t.Week_reward_mailid() != 33 {
 		println("fail: testCsvColumnMode")
 		return
 	}
@@ -272,11 +272,11 @@ func testBeanAsPrimaryKey() {
 	// assert(cfg.equip.jewelryrandom.get(firstK) ~= nil, "只能先拿到引用")
 
 	var lv *config.LevelRank
-	lv = config.GetEquipJewelryMgr().Get(1).GetLvlRank()
+	lv = config.GetEquipJewelryMgr().Get(1).LvlRank()
 	var t = config.GetEquipJewelryrandomMgr().Get(lv)
 	var s *config.LevelRank
-	s = config.GetEquipJewelryrandomMgr().GetAll()[0].GetLvlRank()
-	println(s.GetLevel(), s.GetRank(), lv.GetLevel(), lv.GetRank(), lv, s, lv == s)
+	s = config.GetEquipJewelryrandomMgr().GetAll()[0].LvlRank()
+	println(s.Level(), s.Rank(), lv.Level(), lv.Rank(), lv, s, lv == s)
 	// println(lv.GetLevel(), lv.GetRank())
 	// println(lv, s, lv == s)
 	if t == nil {
@@ -291,11 +291,11 @@ func testMapValueRef() {
 	// assert(t.vipitem2vipcountMap[10001] == 10)
 	// assert(t.RefVipitem2vipcountMap[10001] == cfg.other.loot.get(10))
 	t := config.GetOtherSigninMgr().Get(4)
-	if t.GetVipitem2vipcountMap()[10001] != 10 {
+	if t.Vipitem2vipcountMap()[10001] != 10 {
 		println("fail: testMapValueRef")
 		return
 	}
-	if t.GetRefVipitem2vipcountMap()[10001] != config.GetOtherLootMgr().Get(10) {
+	if t.RefVipitem2vipcountMap()[10001] != config.GetOtherLootMgr().Get(10) {
 		println("fail: testMapValueRef")
 		return
 	}
@@ -313,14 +313,14 @@ func testDefaultBean() {
 	// assert(#t.testDefaultBean.testList2 == 0)
 	// assert(#t.testDefaultBean.testMap == 0)
 	t := config.GetTaskTaskMgr().Get(1)
-	if t.GetTestDefaultBean().GetTestInt() != 0 ||
-		t.GetTestDefaultBean().GetTestBool() != false ||
-		t.GetTestDefaultBean().GetTestString() != "" ||
-		t.GetTestDefaultBean().GetTestSubBean().GetX() != 0 ||
-		t.GetTestDefaultBean().GetTestSubBean().GetY() != 0 ||
-		len(t.GetTestDefaultBean().GetTestList()) != 0 ||
-		len(t.GetTestDefaultBean().GetTestList2()) != 0 ||
-		len(t.GetTestDefaultBean().GetTestMap()) != 0 {
+	if t.TestDefaultBean().TestInt() != 0 ||
+		t.TestDefaultBean().TestBool() != false ||
+		t.TestDefaultBean().TestString() != "" ||
+		t.TestDefaultBean().TestSubBean().X() != 0 ||
+		t.TestDefaultBean().TestSubBean().Y() != 0 ||
+		len(t.TestDefaultBean().TestList()) != 0 ||
+		len(t.TestDefaultBean().TestList2()) != 0 ||
+		len(t.TestDefaultBean().TestMap()) != 0 {
 		println("fail: testDefaultBean")
 	} else {
 		println("pass: testDefaultBean")
@@ -328,14 +328,14 @@ func testDefaultBean() {
 }
 
 func testSwitchBean(aiai *config.AiAi) {
-	switch x := aiai.GetTrigTick().(type) {
+	switch x := aiai.TrigTick().(type) {
 	case *config.AiTriggertickConstValue:
-		if x.GetValue() == 30000 {
+		if x.Value() == 30000 {
 			println("pass: testSwitchBean")
 			return
 		}
 	case *config.AiTriggertickByLevel:
-		if x.GetCoefficient() == 0.1 {
+		if x.Coefficient() == 0.1 {
 			println("pass: testSwitchBean")
 			return
 		}
@@ -343,7 +343,7 @@ func testSwitchBean(aiai *config.AiAi) {
 		println("fail: testSwitchBean")
 		return
 	case *config.AiTriggertickByServerUpDay:
-		if x.GetCoefficient2() == 0.2 {
+		if x.Coefficient2() == 0.2 {
 			println("pass: testSwitchBean")
 			return
 		}
@@ -368,14 +368,22 @@ func testCellNumberAsInterface() {
 	testSwitchBean(ai.Get(10020))
 	testSwitchBean(ai.Get(10021))
 
-	if v, ok := ai.Get(10019).GetTrigTick().(*config.AiTriggertickConstValue); ok {
-		if v.GetValue() == 30000 {
+	if v, ok := ai.Get(10019).TrigTick().(*config.AiTriggertickConstValue); ok {
+		if v.Value() == 30000 {
 			println("pass: testCellNumberAsInterface")
 		} else {
 			println("fail: testCellNumberAsInterface")
 		}
 	}
 
+}
+
+func testRefList() {
+	if config.GetOtherKeytestMgr().Get(1, 2).RefIds()[1].Id() == 12 {
+		println("pass: testRefList")
+	} else {
+		println("fail: testRefList")
+	}
 }
 
 func DoTest() {
@@ -398,4 +406,5 @@ func DoTest() {
 	testBeanAsPrimaryKey()
 	testMapValueRef()
 	testCellNumberAsInterface()
+	testRefList()
 }

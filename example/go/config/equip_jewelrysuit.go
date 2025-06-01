@@ -38,43 +38,43 @@ var (
 )
 
 //getters
-func (t *EquipJewelrysuit) GetSuitID() int32 {
+func (t *EquipJewelrysuit) SuitID() int32 {
     return t.suitID
 }
 
-func (t *EquipJewelrysuit) GetEname() string {
+func (t *EquipJewelrysuit) Ename() string {
     return t.ename
 }
 
-func (t *EquipJewelrysuit) GetName() string {
+func (t *EquipJewelrysuit) Name() string {
     return t.name
 }
 
-func (t *EquipJewelrysuit) GetAbility1() int32 {
+func (t *EquipJewelrysuit) Ability1() int32 {
     return t.ability1
 }
 
-func (t *EquipJewelrysuit) GetAbility1Value() int32 {
+func (t *EquipJewelrysuit) Ability1Value() int32 {
     return t.ability1Value
 }
 
-func (t *EquipJewelrysuit) GetAbility2() int32 {
+func (t *EquipJewelrysuit) Ability2() int32 {
     return t.ability2
 }
 
-func (t *EquipJewelrysuit) GetAbility2Value() int32 {
+func (t *EquipJewelrysuit) Ability2Value() int32 {
     return t.ability2Value
 }
 
-func (t *EquipJewelrysuit) GetAbility3() int32 {
+func (t *EquipJewelrysuit) Ability3() int32 {
     return t.ability3
 }
 
-func (t *EquipJewelrysuit) GetAbility3Value() int32 {
+func (t *EquipJewelrysuit) Ability3Value() int32 {
     return t.ability3Value
 }
 
-func (t *EquipJewelrysuit) GetSuitList() []int32 {
+func (t *EquipJewelrysuit) SuitList() []int32 {
     return t.suitList
 }
 
@@ -95,21 +95,17 @@ func(t *EquipJewelrysuitMgr) Get(suitID int32) *EquipJewelrysuit {
     return t.suitIDMap[suitID]
 }
 
-
 func (t *EquipJewelrysuitMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*EquipJewelrysuit, 0, cnt)
     t.suitIDMap = make(map[int32]*EquipJewelrysuit, cnt)
-
     for i := 0; i < int(cnt); i++ {
         v := createEquipJewelrysuit(stream)
         t.all = append(t.all, v)
         t.suitIDMap[v.suitID] = v
-
         switch v.ename {
         case "SpecialSuit":
             specialSuit = *v
-
         }
     }
 }

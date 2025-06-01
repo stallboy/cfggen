@@ -49,58 +49,58 @@ func createTaskTask2(stream *Stream) *TaskTask2 {
 }
 
 //getters
-func (t *TaskTask2) GetTaskid() int32 {
+func (t *TaskTask2) Taskid() int32 {
     return t.taskid
 }
 
-func (t *TaskTask2) GetName() []string {
+func (t *TaskTask2) Name() []string {
     return t.name
 }
 
-func (t *TaskTask2) GetNexttask() int32 {
+func (t *TaskTask2) Nexttask() int32 {
     return t.nexttask
 }
 
-func (t *TaskTask2) GetCompletecondition() TaskCompletecondition {
+func (t *TaskTask2) Completecondition() TaskCompletecondition {
     return t.completecondition
 }
 
-func (t *TaskTask2) GetExp() int32 {
+func (t *TaskTask2) Exp() int32 {
     return t.exp
 }
 
-func (t *TaskTask2) GetTestBool() bool {
+func (t *TaskTask2) TestBool() bool {
     return t.testBool
 }
 
-func (t *TaskTask2) GetTestString() string {
+func (t *TaskTask2) TestString() string {
     return t.testString
 }
 
-func (t *TaskTask2) GetTestStruct() *Position {
+func (t *TaskTask2) TestStruct() *Position {
     return t.testStruct
 }
 
-func (t *TaskTask2) GetTestList() []int32 {
+func (t *TaskTask2) TestList() []int32 {
     return t.testList
 }
 
-func (t *TaskTask2) GetTestListStruct() []*Position {
+func (t *TaskTask2) TestListStruct() []*Position {
     return t.testListStruct
 }
 
-func (t *TaskTask2) GetTestListInterface() []AiTriggerTick {
+func (t *TaskTask2) TestListInterface() []AiTriggerTick {
     return t.testListInterface
 }
 
-func (t *TaskTask2) GetNullableRefTaskid() *TaskTaskextraexp {
+func (t *TaskTask2) NullableRefTaskid() *TaskTaskextraexp {
     if t.nullableRefTaskid == nil {
         t.nullableRefTaskid = GetTaskTaskextraexpMgr().Get(t.taskid)
     }
     return t.nullableRefTaskid
 }
 
-func (t *TaskTask2) GetNullableRefNexttask() *TaskTask {
+func (t *TaskTask2) NullableRefNexttask() *TaskTask {
     if t.nullableRefNexttask == nil {
         t.nullableRefNexttask = GetTaskTaskMgr().Get(t.nexttask)
     }
@@ -120,16 +120,13 @@ func(t *TaskTask2Mgr) Get(taskid int32) *TaskTask2 {
     return t.taskidMap[taskid]
 }
 
-
 func (t *TaskTask2Mgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*TaskTask2, 0, cnt)
     t.taskidMap = make(map[int32]*TaskTask2, cnt)
-
     for i := 0; i < int(cnt); i++ {
         v := createTaskTask2(stream)
         t.all = append(t.all, v)
         t.taskidMap[v.taskid] = v
-
     }
 }
