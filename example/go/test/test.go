@@ -295,7 +295,7 @@ func testMapValueRef() {
 		println("fail: testMapValueRef")
 		return
 	}
-	if t.GetRefVipitem2vipcountMap()[10001] != config.GetOtherLootMgr().Get(10) {
+	if t.RefVipitem2vipcountMap()[10001] != config.GetOtherLootMgr().Get(10) {
 		println("fail: testMapValueRef")
 		return
 	}

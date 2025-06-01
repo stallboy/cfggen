@@ -51,7 +51,7 @@ func (t *OtherSignin) IconFile() string {
 }
 
 //map ref
-func (t *OtherSignin) GetRefVipitem2vipcountMap() map[int32]*OtherLoot {
+func (t *OtherSignin) RefVipitem2vipcountMap() map[int32]*OtherLoot {
     if t.refVipitem2vipcountMap == nil {
         t.refVipitem2vipcountMap = make(map[int32]*OtherLoot, len(t.vipitem2vipcountMap))
         for k, v := range t.vipitem2vipcountMap {

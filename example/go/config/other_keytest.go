@@ -39,7 +39,7 @@ func (t *OtherKeytest) Ids() []int32 {
 }
 
 //list ref
-func (t *OtherKeytest) GetRefIds() []*OtherSignin {
+func (t *OtherKeytest) RefIds() []*OtherSignin {
     if t.refIds == nil {
         t.refIds = make([]*OtherSignin, len(t.ids))
         for i, v := range t.ids {
