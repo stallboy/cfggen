@@ -15,12 +15,12 @@ public class GoName {
     public static String modName;
     public static String topPkg;
 
-    final String fileName;
-    final String filePath;
-    final String className;
-    final String pkgName;
+    public final String fileName;
+    public final String filePath;
+    public final String className;
+    public final String pkgName;
 
-    GoName(Nameable nameable) {
+    public GoName(Nameable nameable) {
         String name;
         InterfaceSchema nullableInterface = nameable instanceof StructSchema struct ? struct.nullableInterface() : null;
         if (nullableInterface != null) {

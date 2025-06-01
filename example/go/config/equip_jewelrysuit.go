@@ -85,7 +85,6 @@ func (t *EquipJewelrysuitMgr) GetSpecialSuit() *EquipJewelrysuit {
 type EquipJewelrysuitMgr struct {
     all []*EquipJewelrysuit
     suitIDMap map[int32]*EquipJewelrysuit
-
 }
 
 func(t *EquipJewelrysuitMgr) GetAll() []*EquipJewelrysuit {
@@ -95,7 +94,6 @@ func(t *EquipJewelrysuitMgr) GetAll() []*EquipJewelrysuit {
 func(t *EquipJewelrysuitMgr) Get(suitID int32) *EquipJewelrysuit {
     return t.suitIDMap[suitID]
 }
-
 
 
 func (t *EquipJewelrysuitMgr) Init(stream *Stream) {
@@ -115,4 +113,3 @@ func (t *EquipJewelrysuitMgr) Init(stream *Stream) {
         }
     }
 }
-

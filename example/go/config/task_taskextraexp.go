@@ -60,7 +60,6 @@ func (t *TaskTaskextraexp) GetFieldd() string {
 type TaskTaskextraexpMgr struct {
     all []*TaskTaskextraexp
     taskidMap map[int32]*TaskTaskextraexp
-
 }
 
 func(t *TaskTaskextraexpMgr) GetAll() []*TaskTaskextraexp {
@@ -70,7 +69,6 @@ func(t *TaskTaskextraexpMgr) GetAll() []*TaskTaskextraexp {
 func(t *TaskTaskextraexpMgr) Get(taskid int32) *TaskTaskextraexp {
     return t.taskidMap[taskid]
 }
-
 
 
 func (t *TaskTaskextraexpMgr) Init(stream *Stream) {
@@ -85,4 +83,3 @@ func (t *TaskTaskextraexpMgr) Init(stream *Stream) {
 
     }
 }
-

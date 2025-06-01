@@ -38,7 +38,6 @@ func (t *OtherLoot) GetChanceList() []int32 {
     return t.chanceList
 }
 
-//ref properties
 func (t *OtherLoot) GetListRefLootid() []*OtherLootitem {
     if t.listRefLootid == nil {
         t.listRefLootid = GetOtherLootitemMgr().GetAllByLootid(t.lootid)
@@ -46,11 +45,9 @@ func (t *OtherLoot) GetListRefLootid() []*OtherLootitem {
     return t.listRefLootid
 }
 
-
 type OtherLootMgr struct {
     all []*OtherLoot
     lootidMap map[int32]*OtherLoot
-
 }
 
 func(t *OtherLootMgr) GetAll() []*OtherLoot {
@@ -60,7 +57,6 @@ func(t *OtherLootMgr) GetAll() []*OtherLoot {
 func(t *OtherLootMgr) Get(lootid int32) *OtherLoot {
     return t.lootidMap[lootid]
 }
-
 
 
 func (t *OtherLootMgr) Init(stream *Stream) {
@@ -75,4 +71,3 @@ func (t *OtherLootMgr) Init(stream *Stream) {
 
     }
 }
-

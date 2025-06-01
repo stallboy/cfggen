@@ -9,10 +9,9 @@ public class EnumInitCode {
     CfgValue.VTable vTable;
 
     String templateSwitch = """
-                    switch v.${varName} {
+            switch v.${varName} {
             ${casesCode}
-                    }
-            """;
+                    }""";
     String templateCase = """
                     case "${EnumName}":
                         ${enumName} = *v

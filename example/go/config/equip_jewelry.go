@@ -73,7 +73,6 @@ func (t *EquipJewelry) GetDescription() string {
     return t.description
 }
 
-//ref properties
 func (t *EquipJewelry) GetRefLvlRank() *EquipJewelryrandom {
     if t.refLvlRank == nil {
         t.refLvlRank = GetEquipJewelryrandomMgr().Get(t.lvlRank)
@@ -102,11 +101,9 @@ func (t *EquipJewelry) GetRefKeyAbility() *EquipAbility {
     return t.refKeyAbility
 }
 
-
 type EquipJewelryMgr struct {
     all []*EquipJewelry
     iDMap map[int32]*EquipJewelry
-
 }
 
 func(t *EquipJewelryMgr) GetAll() []*EquipJewelry {
@@ -116,7 +113,6 @@ func(t *EquipJewelryMgr) GetAll() []*EquipJewelry {
 func(t *EquipJewelryMgr) Get(iD int32) *EquipJewelry {
     return t.iDMap[iD]
 }
-
 
 
 func (t *EquipJewelryMgr) Init(stream *Stream) {
@@ -131,4 +127,3 @@ func (t *EquipJewelryMgr) Init(stream *Stream) {
 
     }
 }
-

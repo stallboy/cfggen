@@ -22,12 +22,10 @@ func (t *LevelRank) GetRank() int32 {
     return t.rank
 }
 
-//ref properties
 func (t *LevelRank) GetRefRank() *EquipRank {
     if t.refRank == nil {
         t.refRank = GetEquipRankMgr().Get(t.rank)
     }
     return t.refRank
 }
-
 

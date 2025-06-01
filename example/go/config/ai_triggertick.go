@@ -1,6 +1,8 @@
 package config
-type AiTriggerTick interface {}
-func createAiTriggerTick(stream *Stream) AiTriggerTick{
+
+type AiTriggerTick interface{}
+
+func createAiTriggerTick(stream *Stream) AiTriggerTick {
     var typeName = stream.ReadString()
     switch typeName {
     case "ConstValue":
@@ -9,9 +11,7 @@ func createAiTriggerTick(stream *Stream) AiTriggerTick{
         return createAiTriggertickByLevel(stream)
     case "ByServerUpDay":
         return createAiTriggertickByServerUpDay(stream)
-
     default:
-            panic("unexpected AiTriggerTick type: " + typeName)
+        panic("unexpected AiTriggerTick type: " + typeName)
     }
 }
-

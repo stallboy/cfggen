@@ -59,7 +59,6 @@ func (t *EquipRankMgr) GetYellow() *EquipRank {
 type EquipRankMgr struct {
     all []*EquipRank
     rankIDMap map[int32]*EquipRank
-
 }
 
 func(t *EquipRankMgr) GetAll() []*EquipRank {
@@ -69,7 +68,6 @@ func(t *EquipRankMgr) GetAll() []*EquipRank {
 func(t *EquipRankMgr) Get(rankID int32) *EquipRank {
     return t.rankIDMap[rankID]
 }
-
 
 
 func (t *EquipRankMgr) Init(stream *Stream) {
@@ -97,4 +95,3 @@ func (t *EquipRankMgr) Init(stream *Stream) {
         }
     }
 }
-

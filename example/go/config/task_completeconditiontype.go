@@ -58,7 +58,6 @@ func (t *TaskCompleteconditiontypeMgr) GetTestNoColumn() *TaskCompleteconditiont
 type TaskCompleteconditiontypeMgr struct {
     all []*TaskCompleteconditiontype
     idMap map[int32]*TaskCompleteconditiontype
-
 }
 
 func(t *TaskCompleteconditiontypeMgr) GetAll() []*TaskCompleteconditiontype {
@@ -68,7 +67,6 @@ func(t *TaskCompleteconditiontypeMgr) GetAll() []*TaskCompleteconditiontype {
 func(t *TaskCompleteconditiontypeMgr) Get(id int32) *TaskCompleteconditiontype {
     return t.idMap[id]
 }
-
 
 
 func (t *TaskCompleteconditiontypeMgr) Init(stream *Stream) {
@@ -98,4 +96,3 @@ func (t *TaskCompleteconditiontypeMgr) Init(stream *Stream) {
         }
     }
 }
-

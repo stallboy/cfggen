@@ -42,7 +42,6 @@ func (t *EquipJewelrytypeMgr) GetBottle() *EquipJewelrytype {
 type EquipJewelrytypeMgr struct {
     all []*EquipJewelrytype
     typeNameMap map[string]*EquipJewelrytype
-
 }
 
 func(t *EquipJewelrytypeMgr) GetAll() []*EquipJewelrytype {
@@ -52,7 +51,6 @@ func(t *EquipJewelrytypeMgr) GetAll() []*EquipJewelrytype {
 func(t *EquipJewelrytypeMgr) Get(typeName string) *EquipJewelrytype {
     return t.typeNameMap[typeName]
 }
-
 
 
 func (t *EquipJewelrytypeMgr) Init(stream *Stream) {
@@ -78,4 +76,3 @@ func (t *EquipJewelrytypeMgr) Init(stream *Stream) {
         }
     }
 }
-

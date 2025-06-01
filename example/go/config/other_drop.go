@@ -16,12 +16,12 @@ func createOtherDrop(stream *Stream) *OtherDrop {
     for i := 0; i < int(itemsSize); i++ {
         v.items[i] = createOtherDropItem(stream)
     }
-	testmapSize := stream.ReadInt32()
-	v.testmap = make(map[int32]int32, testmapSize)
-	for i := 0; i < int(testmapSize); i++ {
-		var k = stream.ReadInt32()
-		v.testmap[k] = stream.ReadInt32()
-	}
+    testmapSize := stream.ReadInt32()
+    v.testmap = make(map[int32]int32, testmapSize)
+    for i := 0; i < int(testmapSize); i++ {
+        var k = stream.ReadInt32()
+        v.testmap[k] = stream.ReadInt32()
+    }
     return v
 }
 
@@ -45,7 +45,6 @@ func (t *OtherDrop) GetTestmap() map[int32]int32 {
 type OtherDropMgr struct {
     all []*OtherDrop
     dropidMap map[int32]*OtherDrop
-
 }
 
 func(t *OtherDropMgr) GetAll() []*OtherDrop {
@@ -55,7 +54,6 @@ func(t *OtherDropMgr) GetAll() []*OtherDrop {
 func(t *OtherDropMgr) Get(dropid int32) *OtherDrop {
     return t.dropidMap[dropid]
 }
-
 
 
 func (t *OtherDropMgr) Init(stream *Stream) {
@@ -70,4 +68,3 @@ func (t *OtherDropMgr) Init(stream *Stream) {
 
     }
 }
-

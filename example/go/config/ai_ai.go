@@ -58,7 +58,6 @@ func (t *AiAi) GetDeathRemove() bool {
 type AiAiMgr struct {
     all []*AiAi
     iDMap map[int32]*AiAi
-
 }
 
 func(t *AiAiMgr) GetAll() []*AiAi {
@@ -68,7 +67,6 @@ func(t *AiAiMgr) GetAll() []*AiAi {
 func(t *AiAiMgr) Get(iD int32) *AiAi {
     return t.iDMap[iD]
 }
-
 
 
 func (t *AiAiMgr) Init(stream *Stream) {
@@ -83,4 +81,3 @@ func (t *AiAiMgr) Init(stream *Stream) {
 
     }
 }
-

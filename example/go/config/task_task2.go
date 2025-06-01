@@ -93,7 +93,6 @@ func (t *TaskTask2) GetTestListInterface() []AiTriggerTick {
     return t.testListInterface
 }
 
-//ref properties
 func (t *TaskTask2) GetNullableRefTaskid() *TaskTaskextraexp {
     if t.nullableRefTaskid == nil {
         t.nullableRefTaskid = GetTaskTaskextraexpMgr().Get(t.taskid)
@@ -108,11 +107,9 @@ func (t *TaskTask2) GetNullableRefNexttask() *TaskTask {
     return t.nullableRefNexttask
 }
 
-
 type TaskTask2Mgr struct {
     all []*TaskTask2
     taskidMap map[int32]*TaskTask2
-
 }
 
 func(t *TaskTask2Mgr) GetAll() []*TaskTask2 {
@@ -122,7 +119,6 @@ func(t *TaskTask2Mgr) GetAll() []*TaskTask2 {
 func(t *TaskTask2Mgr) Get(taskid int32) *TaskTask2 {
     return t.taskidMap[taskid]
 }
-
 
 
 func (t *TaskTask2Mgr) Init(stream *Stream) {
@@ -137,4 +133,3 @@ func (t *TaskTask2Mgr) Init(stream *Stream) {
 
     }
 }
-
