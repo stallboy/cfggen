@@ -76,6 +76,13 @@ gencshape.bat
 cd cs
 run.bat
 ```
+* 测试go
+
+```bash
+gengo.bat 
+cd go
+go run .
+```
 
 ## 编辑器cfgeditor.exe
 请参考[(编辑器 cfgeditor 文档)](cfgeditor/README.md)
