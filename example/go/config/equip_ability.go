@@ -24,11 +24,11 @@ var (
 )
 
 //getters
-func (t *EquipAbility) GetId() int32 {
+func (t *EquipAbility) Id() int32 {
     return t.id
 }
 
-func (t *EquipAbility) GetName() string {
+func (t *EquipAbility) Name() string {
     return t.name
 }
 

@@ -26,19 +26,19 @@ func createOtherDrop(stream *Stream) *OtherDrop {
 }
 
 //getters
-func (t *OtherDrop) GetDropid() int32 {
+func (t *OtherDrop) Dropid() int32 {
     return t.dropid
 }
 
-func (t *OtherDrop) GetName() string {
+func (t *OtherDrop) Name() string {
     return t.name
 }
 
-func (t *OtherDrop) GetItems() []*OtherDropItem {
+func (t *OtherDrop) Items() []*OtherDropItem {
     return t.items
 }
 
-func (t *OtherDrop) GetTestmap() map[int32]int32 {
+func (t *OtherDrop) Testmap() map[int32]int32 {
     return t.testmap
 }
 

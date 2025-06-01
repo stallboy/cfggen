@@ -27,23 +27,23 @@ func createAiAi_condition(stream *Stream) *AiAi_condition {
 }
 
 //getters
-func (t *AiAi_condition) GetID() int32 {
+func (t *AiAi_condition) ID() int32 {
     return t.iD
 }
 
-func (t *AiAi_condition) GetDesc() string {
+func (t *AiAi_condition) Desc() string {
     return t.desc
 }
 
-func (t *AiAi_condition) GetFormulaID() int32 {
+func (t *AiAi_condition) FormulaID() int32 {
     return t.formulaID
 }
 
-func (t *AiAi_condition) GetArgIList() []int32 {
+func (t *AiAi_condition) ArgIList() []int32 {
     return t.argIList
 }
 
-func (t *AiAi_condition) GetArgSList() []int32 {
+func (t *AiAi_condition) ArgSList() []int32 {
     return t.argSList
 }
 

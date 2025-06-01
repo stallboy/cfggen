@@ -27,27 +27,27 @@ var (
 )
 
 //getters
-func (t *EquipEquipconfig) GetEntry() string {
+func (t *EquipEquipconfig) Entry() string {
     return t.entry
 }
 
-func (t *EquipEquipconfig) GetStone_count_for_set() int32 {
+func (t *EquipEquipconfig) Stone_count_for_set() int32 {
     return t.stone_count_for_set
 }
 
-func (t *EquipEquipconfig) GetDraw_protect_name() string {
+func (t *EquipEquipconfig) Draw_protect_name() string {
     return t.draw_protect_name
 }
 
-func (t *EquipEquipconfig) GetBroadcastid() int32 {
+func (t *EquipEquipconfig) Broadcastid() int32 {
     return t.broadcastid
 }
 
-func (t *EquipEquipconfig) GetBroadcast_least_quality() int32 {
+func (t *EquipEquipconfig) Broadcast_least_quality() int32 {
     return t.broadcast_least_quality
 }
 
-func (t *EquipEquipconfig) GetWeek_reward_mailid() int32 {
+func (t *EquipEquipconfig) Week_reward_mailid() int32 {
     return t.week_reward_mailid
 }
 

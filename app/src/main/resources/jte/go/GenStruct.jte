@@ -72,7 +72,7 @@ var (
 @if (!structural.fields().isEmpty())
     //getters
     @for (FieldSchema fieldSchema : structural.fields())
-    func (t *${name.className}) Get${model.upper1(fieldSchema.name())}() ${model.type(fieldSchema.type())} {
+    func (t *${name.className}) ${model.upper1(fieldSchema.name())}() ${model.type(fieldSchema.type())} {
         return t.${model.lower1(fieldSchema.name())}
     }
 

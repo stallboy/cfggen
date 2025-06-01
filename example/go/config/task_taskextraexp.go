@@ -25,35 +25,35 @@ func createTaskTaskextraexp(stream *Stream) *TaskTaskextraexp {
 }
 
 //getters
-func (t *TaskTaskextraexp) GetTaskid() int32 {
+func (t *TaskTaskextraexp) Taskid() int32 {
     return t.taskid
 }
 
-func (t *TaskTaskextraexp) GetExtraexp() int32 {
+func (t *TaskTaskextraexp) Extraexp() int32 {
     return t.extraexp
 }
 
-func (t *TaskTaskextraexp) GetTest1() string {
+func (t *TaskTaskextraexp) Test1() string {
     return t.test1
 }
 
-func (t *TaskTaskextraexp) GetTest2() string {
+func (t *TaskTaskextraexp) Test2() string {
     return t.test2
 }
 
-func (t *TaskTaskextraexp) GetFielda() string {
+func (t *TaskTaskextraexp) Fielda() string {
     return t.fielda
 }
 
-func (t *TaskTaskextraexp) GetFieldb() string {
+func (t *TaskTaskextraexp) Fieldb() string {
     return t.fieldb
 }
 
-func (t *TaskTaskextraexp) GetFieldc() string {
+func (t *TaskTaskextraexp) Fieldc() string {
     return t.fieldc
 }
 
-func (t *TaskTaskextraexp) GetFieldd() string {
+func (t *TaskTaskextraexp) Fieldd() string {
     return t.fieldd
 }
 

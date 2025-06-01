@@ -49,47 +49,47 @@ func createTaskTask2(stream *Stream) *TaskTask2 {
 }
 
 //getters
-func (t *TaskTask2) GetTaskid() int32 {
+func (t *TaskTask2) Taskid() int32 {
     return t.taskid
 }
 
-func (t *TaskTask2) GetName() []string {
+func (t *TaskTask2) Name() []string {
     return t.name
 }
 
-func (t *TaskTask2) GetNexttask() int32 {
+func (t *TaskTask2) Nexttask() int32 {
     return t.nexttask
 }
 
-func (t *TaskTask2) GetCompletecondition() TaskCompletecondition {
+func (t *TaskTask2) Completecondition() TaskCompletecondition {
     return t.completecondition
 }
 
-func (t *TaskTask2) GetExp() int32 {
+func (t *TaskTask2) Exp() int32 {
     return t.exp
 }
 
-func (t *TaskTask2) GetTestBool() bool {
+func (t *TaskTask2) TestBool() bool {
     return t.testBool
 }
 
-func (t *TaskTask2) GetTestString() string {
+func (t *TaskTask2) TestString() string {
     return t.testString
 }
 
-func (t *TaskTask2) GetTestStruct() *Position {
+func (t *TaskTask2) TestStruct() *Position {
     return t.testStruct
 }
 
-func (t *TaskTask2) GetTestList() []int32 {
+func (t *TaskTask2) TestList() []int32 {
     return t.testList
 }
 
-func (t *TaskTask2) GetTestListStruct() []*Position {
+func (t *TaskTask2) TestListStruct() []*Position {
     return t.testListStruct
 }
 
-func (t *TaskTask2) GetTestListInterface() []AiTriggerTick {
+func (t *TaskTask2) TestListInterface() []AiTriggerTick {
     return t.testListInterface
 }
 

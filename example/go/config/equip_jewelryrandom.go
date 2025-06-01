@@ -25,19 +25,19 @@ func createEquipJewelryrandom(stream *Stream) *EquipJewelryrandom {
 }
 
 //getters
-func (t *EquipJewelryrandom) GetLvlRank() *LevelRank {
+func (t *EquipJewelryrandom) LvlRank() *LevelRank {
     return t.lvlRank
 }
 
-func (t *EquipJewelryrandom) GetAttackRange() *Range {
+func (t *EquipJewelryrandom) AttackRange() *Range {
     return t.attackRange
 }
 
-func (t *EquipJewelryrandom) GetOtherRange() []*Range {
+func (t *EquipJewelryrandom) OtherRange() []*Range {
     return t.otherRange
 }
 
-func (t *EquipJewelryrandom) GetTestPack() []*EquipTestPackBean {
+func (t *EquipJewelryrandom) TestPack() []*EquipTestPackBean {
     return t.testPack
 }
 

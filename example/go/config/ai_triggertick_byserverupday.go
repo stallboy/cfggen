@@ -15,15 +15,15 @@ func createAiTriggertickByServerUpDay(stream *Stream) *AiTriggertickByServerUpDa
 }
 
 //getters
-func (t *AiTriggertickByServerUpDay) GetInit() int32 {
+func (t *AiTriggertickByServerUpDay) Init() int32 {
     return t.init
 }
 
-func (t *AiTriggertickByServerUpDay) GetCoefficient1() float32 {
+func (t *AiTriggertickByServerUpDay) Coefficient1() float32 {
     return t.coefficient1
 }
 
-func (t *AiTriggertickByServerUpDay) GetCoefficient2() float32 {
+func (t *AiTriggertickByServerUpDay) Coefficient2() float32 {
     return t.coefficient2
 }
 

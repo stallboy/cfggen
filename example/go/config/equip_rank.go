@@ -24,15 +24,15 @@ var (
 )
 
 //getters
-func (t *EquipRank) GetRankID() int32 {
+func (t *EquipRank) RankID() int32 {
     return t.rankID
 }
 
-func (t *EquipRank) GetRankName() string {
+func (t *EquipRank) RankName() string {
     return t.rankName
 }
 
-func (t *EquipRank) GetRankShowName() string {
+func (t *EquipRank) RankShowName() string {
     return t.rankShowName
 }
 

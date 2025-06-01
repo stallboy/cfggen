@@ -15,15 +15,15 @@ func createPosition(stream *Stream) *Position {
 }
 
 //getters
-func (t *Position) GetX() int32 {
+func (t *Position) X() int32 {
     return t.x
 }
 
-func (t *Position) GetY() int32 {
+func (t *Position) Y() int32 {
     return t.y
 }
 
-func (t *Position) GetZ() int32 {
+func (t *Position) Z() int32 {
     return t.z
 }
 

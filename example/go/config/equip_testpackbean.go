@@ -13,11 +13,11 @@ func createEquipTestPackBean(stream *Stream) *EquipTestPackBean {
 }
 
 //getters
-func (t *EquipTestPackBean) GetName() string {
+func (t *EquipTestPackBean) Name() string {
     return t.name
 }
 
-func (t *EquipTestPackBean) GetIRange() *Range {
+func (t *EquipTestPackBean) IRange() *Range {
     return t.iRange
 }
 

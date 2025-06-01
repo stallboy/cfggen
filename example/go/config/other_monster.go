@@ -17,11 +17,11 @@ func createOtherMonster(stream *Stream) *OtherMonster {
 }
 
 //getters
-func (t *OtherMonster) GetId() int32 {
+func (t *OtherMonster) Id() int32 {
     return t.id
 }
 
-func (t *OtherMonster) GetPosList() []*Position {
+func (t *OtherMonster) PosList() []*Position {
     return t.posList
 }
 

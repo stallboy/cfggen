@@ -27,31 +27,31 @@ func createAiAi(stream *Stream) *AiAi {
 }
 
 //getters
-func (t *AiAi) GetID() int32 {
+func (t *AiAi) ID() int32 {
     return t.iD
 }
 
-func (t *AiAi) GetDesc() string {
+func (t *AiAi) Desc() string {
     return t.desc
 }
 
-func (t *AiAi) GetCondID() string {
+func (t *AiAi) CondID() string {
     return t.condID
 }
 
-func (t *AiAi) GetTrigTick() AiTriggerTick {
+func (t *AiAi) TrigTick() AiTriggerTick {
     return t.trigTick
 }
 
-func (t *AiAi) GetTrigOdds() int32 {
+func (t *AiAi) TrigOdds() int32 {
     return t.trigOdds
 }
 
-func (t *AiAi) GetActionID() []int32 {
+func (t *AiAi) ActionID() []int32 {
     return t.actionID
 }
 
-func (t *AiAi) GetDeathRemove() bool {
+func (t *AiAi) DeathRemove() bool {
     return t.deathRemove
 }
 

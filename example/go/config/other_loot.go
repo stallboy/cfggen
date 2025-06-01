@@ -22,19 +22,19 @@ func createOtherLoot(stream *Stream) *OtherLoot {
 }
 
 //getters
-func (t *OtherLoot) GetLootid() int32 {
+func (t *OtherLoot) Lootid() int32 {
     return t.lootid
 }
 
-func (t *OtherLoot) GetEname() string {
+func (t *OtherLoot) Ename() string {
     return t.ename
 }
 
-func (t *OtherLoot) GetName() string {
+func (t *OtherLoot) Name() string {
     return t.name
 }
 
-func (t *OtherLoot) GetChanceList() []int32 {
+func (t *OtherLoot) ChanceList() []int32 {
     return t.chanceList
 }
 

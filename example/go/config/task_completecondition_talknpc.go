@@ -11,7 +11,7 @@ func createTaskCompleteconditionTalkNpc(stream *Stream) *TaskCompleteconditionTa
 }
 
 //getters
-func (t *TaskCompleteconditionTalkNpc) GetNpcid() int32 {
+func (t *TaskCompleteconditionTalkNpc) Npcid() int32 {
     return t.npcid
 }
 

@@ -27,27 +27,27 @@ func createTaskTask(stream *Stream) *TaskTask {
 }
 
 //getters
-func (t *TaskTask) GetTaskid() int32 {
+func (t *TaskTask) Taskid() int32 {
     return t.taskid
 }
 
-func (t *TaskTask) GetName() []string {
+func (t *TaskTask) Name() []string {
     return t.name
 }
 
-func (t *TaskTask) GetNexttask() int32 {
+func (t *TaskTask) Nexttask() int32 {
     return t.nexttask
 }
 
-func (t *TaskTask) GetCompletecondition() TaskCompletecondition {
+func (t *TaskTask) Completecondition() TaskCompletecondition {
     return t.completecondition
 }
 
-func (t *TaskTask) GetExp() int32 {
+func (t *TaskTask) Exp() int32 {
     return t.exp
 }
 
-func (t *TaskTask) GetTestDefaultBean() *TaskTestDefaultBean {
+func (t *TaskTask) TestDefaultBean() *TaskTestDefaultBean {
     return t.testDefaultBean
 }
 

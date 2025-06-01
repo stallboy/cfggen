@@ -11,7 +11,7 @@ func createTaskCompleteconditionChat(stream *Stream) *TaskCompleteconditionChat 
 }
 
 //getters
-func (t *TaskCompleteconditionChat) GetMsg() string {
+func (t *TaskCompleteconditionChat) Msg() string {
     return t.msg
 }
 

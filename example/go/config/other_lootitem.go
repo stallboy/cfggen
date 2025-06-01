@@ -19,23 +19,23 @@ func createOtherLootitem(stream *Stream) *OtherLootitem {
 }
 
 //getters
-func (t *OtherLootitem) GetLootid() int32 {
+func (t *OtherLootitem) Lootid() int32 {
     return t.lootid
 }
 
-func (t *OtherLootitem) GetItemid() int32 {
+func (t *OtherLootitem) Itemid() int32 {
     return t.itemid
 }
 
-func (t *OtherLootitem) GetChance() int32 {
+func (t *OtherLootitem) Chance() int32 {
     return t.chance
 }
 
-func (t *OtherLootitem) GetCountmin() int32 {
+func (t *OtherLootitem) Countmin() int32 {
     return t.countmin
 }
 
-func (t *OtherLootitem) GetCountmax() int32 {
+func (t *OtherLootitem) Countmax() int32 {
     return t.countmax
 }
 

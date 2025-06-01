@@ -11,7 +11,7 @@ func createAiTriggertickConstValue(stream *Stream) *AiTriggertickConstValue {
 }
 
 //getters
-func (t *AiTriggertickConstValue) GetValue() int32 {
+func (t *AiTriggertickConstValue) Value() int32 {
     return t.value
 }
 

@@ -30,23 +30,23 @@ func createOtherSignin(stream *Stream) *OtherSignin {
 }
 
 //getters
-func (t *OtherSignin) GetId() int32 {
+func (t *OtherSignin) Id() int32 {
     return t.id
 }
 
-func (t *OtherSignin) GetItem2countMap() map[int32]int32 {
+func (t *OtherSignin) Item2countMap() map[int32]int32 {
     return t.item2countMap
 }
 
-func (t *OtherSignin) GetVipitem2vipcountMap() map[int32]int32 {
+func (t *OtherSignin) Vipitem2vipcountMap() map[int32]int32 {
     return t.vipitem2vipcountMap
 }
 
-func (t *OtherSignin) GetViplevel() int32 {
+func (t *OtherSignin) Viplevel() int32 {
     return t.viplevel
 }
 
-func (t *OtherSignin) GetIconFile() string {
+func (t *OtherSignin) IconFile() string {
     return t.iconFile
 }
 

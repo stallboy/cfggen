@@ -21,19 +21,19 @@ func createOtherDropItem(stream *Stream) *OtherDropItem {
 }
 
 //getters
-func (t *OtherDropItem) GetChance() int32 {
+func (t *OtherDropItem) Chance() int32 {
     return t.chance
 }
 
-func (t *OtherDropItem) GetItemids() []int32 {
+func (t *OtherDropItem) Itemids() []int32 {
     return t.itemids
 }
 
-func (t *OtherDropItem) GetCountmin() int32 {
+func (t *OtherDropItem) Countmin() int32 {
     return t.countmin
 }
 
-func (t *OtherDropItem) GetCountmax() int32 {
+func (t *OtherDropItem) Countmax() int32 {
     return t.countmax
 }
 

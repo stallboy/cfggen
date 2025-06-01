@@ -19,7 +19,7 @@ var (
 )
 
 //getters
-func (t *EquipJewelrytype) GetTypeName() string {
+func (t *EquipJewelrytype) TypeName() string {
     return t.typeName
 }
 

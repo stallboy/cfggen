@@ -22,19 +22,19 @@ func createOtherKeytest(stream *Stream) *OtherKeytest {
 }
 
 //getters
-func (t *OtherKeytest) GetId1() int32 {
+func (t *OtherKeytest) Id1() int32 {
     return t.id1
 }
 
-func (t *OtherKeytest) GetId2() int64 {
+func (t *OtherKeytest) Id2() int64 {
     return t.id2
 }
 
-func (t *OtherKeytest) GetId3() int32 {
+func (t *OtherKeytest) Id3() int32 {
     return t.id3
 }
 
-func (t *OtherKeytest) GetIds() []int32 {
+func (t *OtherKeytest) Ids() []int32 {
     return t.ids
 }
 

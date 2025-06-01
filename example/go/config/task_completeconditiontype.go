@@ -23,11 +23,11 @@ var (
 )
 
 //getters
-func (t *TaskCompleteconditiontype) GetId() int32 {
+func (t *TaskCompleteconditiontype) Id() int32 {
     return t.id
 }
 
-func (t *TaskCompleteconditiontype) GetName() string {
+func (t *TaskCompleteconditiontype) Name() string {
     return t.name
 }
 

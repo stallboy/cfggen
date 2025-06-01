@@ -13,11 +13,11 @@ func createRange(stream *Stream) *Range {
 }
 
 //getters
-func (t *Range) GetMin() int32 {
+func (t *Range) Min() int32 {
     return t.min
 }
 
-func (t *Range) GetMax() int32 {
+func (t *Range) Max() int32 {
     return t.max
 }
 
