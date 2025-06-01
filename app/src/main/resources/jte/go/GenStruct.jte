@@ -23,11 +23,11 @@ type ${className} struct {
     <%--field property--%>
     @for (FieldSchema fieldSchema : structural.fields())
         !{String comment = fieldSchema.comment();}
-        ${GenGo.lower1(fieldSchema.name())} ${GenGo.type(fieldSchema.type())}${comment != null && !comment.isEmpty() ? " //" + comment : ""}
+        ${model.lower1(fieldSchema.name())} ${model.type(fieldSchema.type())}${comment != null && !comment.isEmpty() ? " //" + comment : ""}
     @endfor
     <%--ref property--%>
     @for (ForeignKeySchema fk : structural.foreignKeys())
-        ${GenGo.lower1(GenGo.refName(fk))} ${GenGo.refType(fk)}
+        ${model.lower1(model.refName(fk))} ${model.refType(fk)}
     @endfor
 }
 
@@ -37,24 +37,24 @@ func create${className}(${streamIf} *Stream) *${className} {
     v := &${className}{}
     @for (FieldSchema fieldSchema : structural.fields())
         !{var t = fieldSchema.type();}
-        !{var n = GenGo.lower1(fieldSchema.name());}
+        !{var n = model.lower1(fieldSchema.name());}
         @if (t instanceof StructRef structRef)
-            v.${n} = create${GenGo.ClassName(structRef.obj())}(stream)
+            v.${n} = create${model.ClassName(structRef.obj())}(stream)
         @elseif(t instanceof FList (SimpleType item))
             ${n}Size := stream.ReadInt32()
-            v.${n} = make([]${GenGo.type(item)}, ${n}Size)
+            v.${n} = make([]${model.type(item)}, ${n}Size)
             for i := 0; i < int(${n}Size); i++ {
-                v.${n}[i] = ${GenGo.genReadField(item)}
+                v.${n}[i] = ${model.genReadField(item)}
             }
         @elseif (t instanceof FieldType.FMap (FieldType.SimpleType key, SimpleType value))
             ${n}Size := stream.ReadInt32()
-            v.${n} = make(map[${GenGo.type(key)}]${GenGo.type(value)}, ${n}Size)
+            v.${n} = make(map[${model.type(key)}]${model.type(value)}, ${n}Size)
             for i := 0; i < int(${n}Size); i++ {
-                var k = ${GenGo.genReadField(key)}
-                v.${n}[k] = ${GenGo.genReadField(value)}
+                var k = ${model.genReadField(key)}
+                v.${n}[k] = ${model.genReadField(value)}
             }
         @else
-            v.${n} = ${GenGo.genReadField(t)}
+            v.${n} = ${model.genReadField(t)}
         @endif
     @endfor
     return v
@@ -65,7 +65,7 @@ func create${className}(${streamIf} *Stream) *${className} {
 //entries
 var (
     @for (String e : vTable.enumNames())
-    ${GenGo.lower1(e)} ${name.className}
+    ${model.lower1(e)} ${name.className}
     @endfor
 )
 
@@ -74,8 +74,8 @@ var (
 @if (!structural.fields().isEmpty())
     //getters
     @for (FieldSchema fieldSchema : structural.fields())
-    func (t *${name.className}) Get${GenGo.upper1(fieldSchema.name())}() ${GenGo.type(fieldSchema.type())} {
-        return t.${GenGo.lower1(fieldSchema.name())}
+    func (t *${name.className}) Get${model.upper1(fieldSchema.name())}() ${model.type(fieldSchema.type())} {
+        return t.${model.lower1(fieldSchema.name())}
     }
 
     @endfor
@@ -93,10 +93,10 @@ var (
     @endfor
     @for(ForeignKeySchema fk : structural.foreignKeys())
         !{
-           var RefName = GenGo.refName(fk);
-           var refName = GenGo.lower1(RefName);
-           var varName = GenGo.lower1(fk.name());
-           var refType = GenGo.refType(fk);
+           var RefName = model.refName(fk);
+           var refName = model.lower1(RefName);
+           var varName = model.lower1(fk.name());
+           var refType = model.refType(fk);
            GoName refTbName = new GoName(fk.refTableSchema());
            var refTableClassName = refTbName.className;
            var refKey = fk.refKey();
@@ -126,8 +126,8 @@ var (
     @if(vTable.schema().entry() instanceof EntryType.EntryBase)
         !{var tableName = new GoName(vTable.schema());}
         @for (String e : vTable.enumNames())
-        func (t *${tableName.className}Mgr) Get${GenGo.upper1(e)}() *${tableName.className} {
-        	return &${GenGo.lower1(e)}
+        func (t *${tableName.className}Mgr) Get${model.upper1(e)}() *${tableName.className} {
+        	return &${model.lower1(e)}
         }
 
         @endfor
@@ -139,9 +139,9 @@ var (
     }
     @for (KeySchema keySchema : keySchemas)
         @if (keySchema.fieldSchemas().size() > 1)
-            type ${GenGo.keyClassName(keySchema)} struct {
+            type ${model.keyClassName(keySchema)} struct {
                 @for (FieldSchema field : keySchema.fieldSchemas())
-                    ${GenGo.lower1(field.name())} ${GenGo.type(field.type())}
+                    ${model.lower1(field.name())} ${model.type(field.type())}
                 @endfor
             }
 
@@ -150,11 +150,11 @@ var (
     type ${className}Mgr struct {
         all []*${className}
         @for (KeySchema keySchema : keySchemas)
-            ${GenGo.mapName(keySchema)}Map map[${GenGo.keyClassName(keySchema)}]*${name.className}
+            ${model.mapName(keySchema)}Map map[${model.keyClassName(keySchema)}]*${name.className}
         @endfor
         @if(table.primaryKey().fieldSchemas().size() > 1)
             @for (FieldSchema fieldSchema : table.primaryKey().fieldSchemas())
-                ${fieldSchema.name()}MapList map[${GenGo.type(fieldSchema.type())}][]*${className}
+                ${fieldSchema.name()}MapList map[${model.type(fieldSchema.type())}][]*${className}
             @endfor
         @endif
     }
@@ -171,8 +171,8 @@ var (
         @for(FieldSchema fieldSchema : table.primaryKey().fieldSchemas())
             !{
                 var mapName =fieldSchema.name();
-                var codeGetByFuncName = "GetAllBy" + GenGo.upper1(fieldSchema.name());
-                var IdType= GenGo.type(fieldSchema.type());
+                var codeGetByFuncName = "GetAllBy" + model.upper1(fieldSchema.name());
+                var IdType= model.type(fieldSchema.type());
             }
             func (t *${className}Mgr) ${codeGetByFuncName}(${mapName} ${IdType}) []*${className} {
                 if t.${mapName}MapList == nil {

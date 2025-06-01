@@ -89,17 +89,28 @@ public class GenGo extends GeneratorWithTag {
         }
     }
 
-    public static String genReadField(FieldType t) {
-        return switch (t) {
-            case BOOL -> "stream.ReadBool()";
-            case INT -> "stream.ReadInt32()";
-            case LONG -> "stream.ReadInt64()";
-            case FLOAT -> "stream.ReadFloat32()";
-            case STRING, TEXT -> "stream.ReadString()";
-            case StructRef structRef -> String.format("create%s(stream)",ClassName(structRef.obj()));
-            case FList ignored -> null;
-            case FMap ignored -> null;
-        };
+    private void GenCfgMgrFile(CfgValue cfgValue) {
+        String mgrFileName = Generator.lower1(pkg) + "mgr";
+        var model = new CfgMgrModel(pkg, cfgValue);
+        File csFile = dstDir.toPath().resolve(mgrFileName + ".go").toFile();
+        try (CachedIndentPrinter ps = createCode(csFile, encoding)) {
+            JteEngine.render("go/GenCfgMgr.jte", model, ps);
+        }
+    }
+
+
+    public static String keyClassName(KeySchema keySchema) {
+        if (keySchema.fieldSchemas().size() > 1)
+            return "Key" + keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining());
+        else return type(keySchema.fieldSchemas().getFirst().type());
+    }
+
+    public static String mapName(KeySchema keySchema) {
+        if (keySchema.fieldSchemas().size() > 1) {
+            return Generator.lower1(keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()));
+        } else {
+            return Generator.lower1(keySchema.fields().getFirst());
+        }
     }
 
     public static String type(FieldType t) {
@@ -121,72 +132,10 @@ public class GenGo extends GeneratorWithTag {
             case FMap fMap -> String.format("map[%s]%s", type(fMap.key()), type(fMap.value()));
         };
     }
-
-    private void GenCfgMgrFile(CfgValue cfgValue) {
-        String mgrFileName = Generator.lower1(pkg) + "mgr";
-        var model = new CfgMgrModel(pkg, cfgValue);
-        File csFile = dstDir.toPath().resolve(mgrFileName + ".go").toFile();
-        try (CachedIndentPrinter ps = createCode(csFile, encoding)) {
-            JteEngine.render("go/GenCfgMgr.jte", model, ps);
-        }
-    }
-
+    
     public static String ClassName(Nameable variable) {
         var varName = new GoName(variable);
         return varName.className;
     }
-
-    public static String refType(ForeignKeySchema fk) {
-        GoName refTableName = new GoName(fk.refTableSchema());
-        switch (fk.refKey()) {
-            case RefKey.RefList ignored -> {
-                return "[]*" + ClassName(fk.refTableSchema());
-            }
-            case RefKey.RefSimple ignored -> {
-                FieldSchema firstLocal = fk.key().fieldSchemas().getFirst();
-                switch (firstLocal.type()) {
-                    case SimpleType ignored2 -> {
-                        return "*" + refTableName.className;
-                    }
-                    case FList ignored2 -> {
-                        return "[]*" + ClassName(fk.refTableSchema());
-                    }
-                    case FMap fMap -> {
-                        return String.format("map[%s]*%s", type(fMap.key()), ClassName(fk.refTableSchema()));
-                    }
-                }
-            }
-        }
-    }
-
-    public static String refName(ForeignKeySchema fk) {
-        switch (fk.refKey()) {
-            case RefKey.RefList ignored -> {
-                return "ListRef" + upper1(fk.name());
-            }
-            case RefKey.RefSimple refSimple -> {
-                if (refSimple.nullable()) {
-                    return "NullableRef" + upper1(fk.name());
-                } else {
-                    return "Ref" + upper1(fk.name());
-                }
-            }
-        }
-    }
-
-    public static String keyClassName(KeySchema keySchema) {
-        if (keySchema.fieldSchemas().size() > 1)
-            return "Key" + keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining());
-        else return type(keySchema.fieldSchemas().getFirst().type());
-    }
-
-    public static String mapName(KeySchema keySchema) {
-        if (keySchema.fieldSchemas().size() > 1) {
-            return Generator.lower1(keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()));
-        } else {
-            return Generator.lower1(keySchema.fields().getFirst());
-        }
-    }
-
 }
 
