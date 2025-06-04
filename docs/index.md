@@ -6,7 +6,7 @@ nav_order: 1
 
 # 策划配置解决方案
 
-![intro](../assets/intro.png)
+![intro](assets/intro.png)
 
 包含两个系统
 
