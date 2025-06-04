@@ -6,6 +6,8 @@ nav_order: 2
 
 # 策划配表系统
 
+![intro](../../assets/intro.png)
+
 对象数据库结构定义、程序访问代码生成
 
 1. 定义对象结构
@@ -28,9 +30,10 @@ nav_order: 2
 
 ## build & test
 
-* 生成configgen.jar
+* 生成cfggen.jar
+
 ```bash
-gradle fatjar  # 打出app/build/libs/configgen.jar
+genjar.bat  # 生成cfggen.jar
 ```
 
 * 测试java：生成java代码和数据

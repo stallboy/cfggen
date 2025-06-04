@@ -1,5 +1,7 @@
 # cfggen
 
+![intro](docs/assets/intro.png)
+
 an object database viewer, editor, reading code generator
 
 * define object schema.
@@ -55,7 +57,7 @@ gradle build
 java -jar build/libs/example.jar 
 ```
 
-* generate lua code, test lua
+* generate & test lua
 
 ```bash
 genlua.bat 
@@ -64,7 +66,7 @@ chcp 65001
 lua.exe test.lua
 ```
 
-* generate c# code, test c#
+* generate & test c#
 
 ```bash
 gencshape.bat 
@@ -72,6 +74,22 @@ cd cs
 run.bat
 ```
 
+* generate & test go
+
+```bash
+gengo.bat 
+cd go
+go run .
+```
+
+* generate & test typescript
+
+```bash
+gents.bat 
+cd ts
+pnpm i -D tsx
+npx tsx main.ts
+```
 
 ## cfgeditor.exe
 read [(cfgeditor readme)](cfgeditor/README_EN.md)
