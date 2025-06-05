@@ -68,37 +68,37 @@ public class CfgDataReader {
         CfgData data = new CfgData(new TreeMap<>(), stat);
 //        try(ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())) {
 //        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
-        ExecutorService executor = Executors.newWorkStealingPool();
-        List<Future<AllResult>> futures = executor.invokeAll(tasks);
-        for (Future<AllResult> future : futures) {
-            AllResult result = future.get();
-            for (OneSheetResult sheet : result.sheets()) {
-                addSheet(data, sheet.tableName(), sheet.sheet());
+        try (ExecutorService executor = Executors.newWorkStealingPool()) {
+            List<Future<AllResult>> futures = executor.invokeAll(tasks);
+            for (Future<AllResult> future : futures) {
+                AllResult result = future.get();
+                for (OneSheetResult sheet : result.sheets()) {
+                    addSheet(data, sheet.tableName(), sheet.sheet());
+                }
+                if (result.stat() != null) {
+                    stat.merge(result.stat());
+                }
             }
-            if (result.stat() != null) {
-                stat.merge(result.stat());
+
+            Logger.profile("data read");
+            List<Callable<CfgDataStat>> parseTasks = new ArrayList<>();
+            for (CfgData.DTable table : data.tables().values()) {
+                parseTasks.add(() -> {
+                    CfgDataStat tStat = new CfgDataStat();
+                    HeadParser.parse(table, tStat, nullableCfgSchema);
+                    CellParser.parse(table, tStat, nullableCfgSchema, headRow);
+                    return tStat;
+                });
             }
-        }
+            List<Future<CfgDataStat>> parseFutures = executor.invokeAll(parseTasks);
+            for (Future<CfgDataStat> future : parseFutures) {
+                CfgDataStat tStat = future.get();
+                stat.merge(tStat);
+            }
+            Logger.profile("data parse");
 
-        Logger.profile("data read");
-        List<Callable<CfgDataStat>> parseTasks = new ArrayList<>();
-        for (CfgData.DTable table : data.tables().values()) {
-            parseTasks.add(() -> {
-                CfgDataStat tStat = new CfgDataStat();
-                HeadParser.parse(table, tStat, nullableCfgSchema);
-                CellParser.parse(table, tStat, nullableCfgSchema, headRow);
-                return tStat;
-            });
+            stat.tableCount = data.tables().size();
         }
-        List<Future<CfgDataStat>> parseFutures = executor.invokeAll(parseTasks);
-        for (Future<CfgDataStat> future : parseFutures) {
-            CfgDataStat tStat = future.get();
-            stat.merge(tStat);
-        }
-        Logger.profile("data parse");
-
-        stat.tableCount = data.tables().size();
-        executor.close();
         return data;
     }
 

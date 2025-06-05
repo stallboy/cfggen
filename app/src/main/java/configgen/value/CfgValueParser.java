@@ -80,8 +80,7 @@ public class CfgValueParser {
             }
         }
 
-        try {
-            ExecutorService executor = Executors.newWorkStealingPool();
+        try (ExecutorService executor = Executors.newWorkStealingPool()) {
             List<Future<OneTableParserResult>> futures = executor.invokeAll(tasks);
             for (Future<OneTableParserResult> future : futures) {
                 OneTableParserResult result = future.get();
@@ -89,7 +88,6 @@ public class CfgValueParser {
                 cfgValue.vTableMap().put(vTable.schema().name(), vTable);
                 errs.merge(result.errs);
             }
-            executor.close();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

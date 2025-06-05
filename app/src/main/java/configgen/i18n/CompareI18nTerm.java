@@ -41,8 +41,7 @@ public class CompareI18nTerm {
         LangTextFinder langTextFinder = TextFinders.loadOneLang(i8nFilename, false);
         List<Callable<OneTableResult>> tasks = makeTasks(langTextFinder, terms);
         Map<String, OneTableResult> orderedResult = new TreeMap<>();
-        try {
-            ExecutorService executor = Executors.newWorkStealingPool();
+        try (ExecutorService executor = Executors.newWorkStealingPool()) {
             List<Future<OneTableResult>> futures = executor.invokeAll(tasks);
             for (Future<OneTableResult> future : futures) {
                 OneTableResult result = future.get();
@@ -50,7 +49,6 @@ public class CompareI18nTerm {
                     orderedResult.put(result.table, result);
                 }
             }
-            executor.close();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
