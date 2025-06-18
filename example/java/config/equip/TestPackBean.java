@@ -2,20 +2,20 @@ package config.equip;
 
 public class TestPackBean {
     private String name;
-    private config.Range range;
+    private config.Range iRange;
 
     private TestPackBean() {
     }
 
-    public TestPackBean(String name, config.Range range) {
+    public TestPackBean(String name, config.Range iRange) {
         this.name = name;
-        this.range = range;
+        this.iRange = iRange;
     }
 
     public static TestPackBean _create(configgen.genjava.ConfigInput input) {
         TestPackBean self = new TestPackBean();
         self.name = input.readStr();
-        self.range = config.Range._create(input);
+        self.iRange = config.Range._create(input);
         return self;
     }
 
@@ -23,13 +23,13 @@ public class TestPackBean {
         return name;
     }
 
-    public config.Range getRange() {
-        return range;
+    public config.Range getIRange() {
+        return iRange;
     }
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(name, range);
+        return java.util.Objects.hash(name, iRange);
     }
 
     @Override
@@ -37,12 +37,12 @@ public class TestPackBean {
         if (!(other instanceof TestPackBean))
             return false;
         TestPackBean o = (TestPackBean) other;
-        return name.equals(o.name) && range.equals(o.range);
+        return name.equals(o.name) && iRange.equals(o.iRange);
     }
 
     @Override
     public String toString() {
-        return "(" + name + "," + range + ")";
+        return "(" + name + "," + iRange + ")";
     }
 
 }

@@ -1,10 +1,14 @@
 package configgen.value;
 
+import configgen.Resources;
+import configgen.ctx.Context;
 import configgen.data.CfgData;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgReader;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Path;
 import java.util.List;
 
 import static configgen.schema.FieldFormat.AutoOrPack.AUTO;
@@ -14,6 +18,8 @@ import static configgen.value.Values.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ValuePackTest {
+    private @TempDir Path tempDir;
+
     @Test
     void packList() {
         {
@@ -177,6 +183,127 @@ class ValuePackTest {
         assertEquals("(11,aaa),(22,abc)", value.packStr());
         assertTrue(value instanceof VList v && v.valueList().size() == 2);
     }
+
+    @Test
+    void packList_Struct_2Layer() {
+        String cfgStr = """
+                struct ItemToCnt {
+                	itemId:int; // ->item;
+                	cnt:int;
+                }
+                struct Reward {
+                	items:list<ItemToCnt>;
+                }
+                table t1[id] {
+                    id:int;
+                    item2CntList:list<ItemToCnt> (pack);
+                }
+                
+                table t2[id] {
+                    id:int;
+                    oneReward:Reward (pack);
+                }
+                
+                table t3[id] {
+                    id:int;
+                    rewardList:list<Reward> (pack);
+                }
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+        String csv1Str = """
+                ,,
+                id,item2CntList
+                1,"(10001,1)"
+                2,"(10001,1),(10031,2)"
+                """;
+        Resources.addTempFileFromText("t1.csv", tempDir, csv1Str);
+        String csv2Str = """
+                ,,
+                id,oneReward
+                1,"((10001,1),(10031,2))"
+                """;
+        Resources.addTempFileFromText("t2.csv", tempDir, csv2Str);
+
+        String csv3Str = """
+                ,,
+                id,rewardList
+                1,"(((10001,1),(10031,2)))"
+                2,"(((10001,1),(10031,2))),(((10002,11),(10032,22)))"
+                """;
+        Resources.addTempFileFromText("t3.csv", tempDir, csv3Str);
+
+        Context ctx = new Context(tempDir);
+        CfgValue cfgValue = ctx.makeValue();
+        {
+            VTable tVTable = cfgValue.getTable("t1");
+            Value value = tVTable.valueList().get(1).values().get(1);
+            assertEquals("(10001,1),(10031,2)", value.packStr());
+        }
+
+        {
+            VTable tVTable = cfgValue.getTable("t2");
+            Value value = tVTable.valueList().get(0).values().get(1);
+            assertEquals("((10001,1),(10031,2))", value.packStr());
+        }
+
+        {
+            VTable tVTable = cfgValue.getTable("t3");
+            Value value = tVTable.valueList().get(0).values().get(1);
+            assertEquals("(((10001,1),(10031,2)))", value.packStr());
+            Value value2 = tVTable.valueList().get(1).values().get(1);
+            assertEquals("(((10001,1),(10031,2))),(((10002,11),(10032,22)))", value2.packStr());
+        }
+
+    }
+
+    /**
+     * 如果makeValue(tag), 则不会检测这个错误
+     */
+    @Test
+    void error_FieldCellNotUsed_packList_Struct_2Layer() {
+        String cfgStr = """
+                struct ItemToCnt {
+                	itemId:int; // ->item;
+                	cnt:int;
+                }
+                struct Reward {
+                	items:list<ItemToCnt>;
+                }
+
+                table t3[id] {
+                    id:int;
+                    rewardList:list<Reward> (pack);
+                }
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+
+        String csv3Str = """
+                ,,
+                id,rewardList
+                2,"(((10001,1),(10031,2)),((10002,11),(10032,22)))"
+                """;
+        Resources.addTempFileFromText("t3.csv", tempDir, csv3Str);
+
+        Context ctx = new Context(tempDir);
+        CfgValueErrs valueErrs = CfgValueErrs.of();
+        CfgValueParser parser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
+        CfgValue cfgValue = parser.parseCfgValue();
+
+        assertEquals(1, valueErrs.errs().size());
+        assertInstanceOf(CfgValueErrs.FieldCellNotUsed.class, valueErrs.errs().getFirst());
+        CfgValueErrs.FieldCellNotUsed err = (CfgValueErrs.FieldCellNotUsed) valueErrs.errs().getFirst();
+        assertEquals("Reward", err.nameable());
+        assertEquals("(10002,11),(10032,22)", err.unused().getFirst());
+
+        {
+            VTable tVTable = cfgValue.getTable("t3");
+            Value value = tVTable.valueList().get(0).values().get(1);
+            assertEquals("(((10001,1),(10031,2)))", value.packStr());
+        }
+
+    }
+
+
 
     @Test
     void packStruct_hasListIn() {

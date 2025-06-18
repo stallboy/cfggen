@@ -5,7 +5,7 @@ public class JewelryBuilder {
     public String name;
     public String iconFile;
     public config.LevelRank lvlRank;
-    public String type;
+    public String jType;
     public int suitID;
     public int keyAbility;
     public int keyAbilityValue;
@@ -20,8 +20,8 @@ public class JewelryBuilder {
             iconFile = "";
         }
         java.util.Objects.requireNonNull(lvlRank);
-        if (type == null) {
-            type = "";
+        if (jType == null) {
+            jType = "";
         }
         if (description == null) {
             description = "";

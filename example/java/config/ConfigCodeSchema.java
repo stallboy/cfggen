@@ -28,6 +28,7 @@ public class ConfigCodeSchema {
         schema.addImp("equip.rank", equip_rank());
         schema.addImp("equip.rank_Detail", equip_rank_Detail());
         schema.addImp("other.drop", other_drop());
+        schema.addImp("other.keytest", other_keytest());
         schema.addImp("other.loot", other_loot());
         schema.addImp("other.lootitem", other_lootitem());
         schema.addImp("other.monster", other_monster());
@@ -87,7 +88,7 @@ public class ConfigCodeSchema {
     static Schema equip_TestPackBean() {
         SchemaBean s2 = new SchemaBean(false);
         s2.addColumn("name", SchemaPrimitive.SStr);
-        s2.addColumn("range", new SchemaRef("Range"));
+        s2.addColumn("iRange", new SchemaRef("Range"));
         return s2;
     }
 
@@ -217,7 +218,7 @@ public class ConfigCodeSchema {
         s2.addColumn("Name", SchemaPrimitive.SStr);
         s2.addColumn("IconFile", SchemaPrimitive.SStr);
         s2.addColumn("LvlRank", new SchemaRef("LevelRank"));
-        s2.addColumn("Type", SchemaPrimitive.SStr);
+        s2.addColumn("JType", SchemaPrimitive.SStr);
         s2.addColumn("SuitID", SchemaPrimitive.SInt);
         s2.addColumn("KeyAbility", SchemaPrimitive.SInt);
         s2.addColumn("KeyAbilityValue", SchemaPrimitive.SInt);
@@ -289,6 +290,15 @@ public class ConfigCodeSchema {
         s2.addColumn("name", SchemaPrimitive.SStr);
         s2.addColumn("items", new SchemaList(new SchemaRef("other.DropItem")));
         s2.addColumn("testmap", new SchemaMap(SchemaPrimitive.SInt, SchemaPrimitive.SInt));
+        return s2;
+    }
+
+    static Schema other_keytest() {
+        SchemaBean s2 = new SchemaBean(true);
+        s2.addColumn("id1", SchemaPrimitive.SInt);
+        s2.addColumn("id2", SchemaPrimitive.SLong);
+        s2.addColumn("id3", SchemaPrimitive.SInt);
+        s2.addColumn("ids", new SchemaList(SchemaPrimitive.SInt));
         return s2;
     }
 

@@ -65,6 +65,24 @@ public class ConfigMgr {
 
     public java.util.Collection<config.other.Drop> allOtherDrop() { return other_drop_All.values(); }
 
+    public final java.util.Map<config.other.Keytest.Id1Id2Key, config.other.Keytest> other_keytest_All = new java.util.LinkedHashMap<>();
+
+    public config.other.Keytest getOtherKeytest(int id1, long id2) { return other_keytest_All.get(new config.other.Keytest.Id1Id2Key(id1, id2)); }
+
+    public final java.util.Map<config.other.Keytest.Id1Id3Key, config.other.Keytest> other_keytest_Id1Id3Map = new java.util.LinkedHashMap<>();
+
+    public config.other.Keytest getOtherKeytestById1Id3(int id1, int id3) { return other_keytest_Id1Id3Map.get(new config.other.Keytest.Id1Id3Key(id1, id3)); }
+
+    public final java.util.Map<Long, config.other.Keytest> other_keytest_Id2Map = new java.util.LinkedHashMap<>();
+
+    public config.other.Keytest getOtherKeytestById2(long id2) { return other_keytest_Id2Map.get(id2); }
+
+    public final java.util.Map<config.other.Keytest.Id2Id3Key, config.other.Keytest> other_keytest_Id2Id3Map = new java.util.LinkedHashMap<>();
+
+    public config.other.Keytest getOtherKeytestById2Id3(long id2, int id3) { return other_keytest_Id2Id3Map.get(new config.other.Keytest.Id2Id3Key(id2, id3)); }
+
+    public java.util.Collection<config.other.Keytest> allOtherKeytest() { return other_keytest_All.values(); }
+
     public final java.util.Map<Integer, config.other.Loot> other_loot_All = new java.util.LinkedHashMap<>();
 
     public config.other.Loot getOtherLoot(int lootid) { return other_loot_All.get(lootid); }

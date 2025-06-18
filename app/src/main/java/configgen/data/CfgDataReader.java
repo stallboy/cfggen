@@ -103,9 +103,9 @@ public class CfgDataReader {
     }
 
     private void addSheet(CfgData cfgData, String tableName, DRawSheet sheetData) {
-        CfgData.DTable DTable = cfgData.tables().get(tableName);
-        if (DTable != null) {
-            DTable.rawSheets().add(sheetData);
+        CfgData.DTable dTable = cfgData.tables().get(tableName);
+        if (dTable != null) {
+            dTable.rawSheets().add(sheetData);
         } else {
             List<DRawSheet> sheets = new ArrayList<>();
             sheets.add(sheetData);

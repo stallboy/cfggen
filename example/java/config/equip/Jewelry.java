@@ -5,7 +5,7 @@ public class Jewelry {
     private String name;
     private String iconFile;
     private config.LevelRank lvlRank;
-    private String type;
+    private String jType;
     private int suitID;
     private int keyAbility;
     private int keyAbilityValue;
@@ -19,7 +19,7 @@ public class Jewelry {
         this.name = b.name;
         this.iconFile = b.iconFile;
         this.lvlRank = b.lvlRank;
-        this.type = b.type;
+        this.jType = b.jType;
         this.suitID = b.suitID;
         this.keyAbility = b.keyAbility;
         this.keyAbilityValue = b.keyAbilityValue;
@@ -33,7 +33,7 @@ public class Jewelry {
         self.name = input.readStr();
         self.iconFile = input.readStr();
         self.lvlRank = config.LevelRank._create(input);
-        self.type = input.readStr();
+        self.jType = input.readStr();
         self.suitID = input.readInt();
         self.keyAbility = input.readInt();
         self.keyAbilityValue = input.readInt();
@@ -73,8 +73,8 @@ public class Jewelry {
     /**
      * 首饰类型
      */
-    public String getType() {
-        return type;
+    public String getJType() {
+        return jType;
     }
 
     /**
@@ -114,7 +114,7 @@ public class Jewelry {
 
     @Override
     public String toString() {
-        return "(" + iD + "," + name + "," + iconFile + "," + lvlRank + "," + type + "," + suitID + "," + keyAbility + "," + keyAbilityValue + "," + salePrice + "," + description + ")";
+        return "(" + iD + "," + name + "," + iconFile + "," + lvlRank + "," + jType + "," + suitID + "," + keyAbility + "," + keyAbilityValue + "," + salePrice + "," + description + ")";
     }
 
     public static Jewelry get(int iD) {

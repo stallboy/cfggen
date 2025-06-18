@@ -56,12 +56,16 @@ public class Loot {
         return "(" + lootid + "," + ename + "," + name + "," + chanceList + ")";
     }
 
-    public void _resolve(config.ConfigMgr mgr) {
+    public void _resolveDirect(config.ConfigMgr mgr) {
         ListRefLootid = new java.util.ArrayList<>();
         mgr.other_lootitem_All.values().forEach( v -> {
             if (v.getLootid() == lootid)
                 ListRefLootid.add(v);
         });
+    }
+
+    public void _resolve(config.ConfigMgr mgr) {
+        _resolveDirect(mgr);
     }
 
     public static Loot get(int lootid) {

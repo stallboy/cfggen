@@ -12,7 +12,7 @@ public class ConfigMgrLoader {
 
     public static ConfigMgr load(ConfigMgr mgr, configgen.genjava.ConfigInput input) {
         int c = input.readInt();
-        if (c < 16) {
+        if (c < 17) {
             throw new IllegalArgumentException();
         }
 
@@ -46,6 +46,7 @@ public class ConfigMgrLoader {
         allConfigLoaders.put("equip.jewelrysuit", new config.equip.Jewelrysuit._ConfigLoader());
         allConfigLoaders.put("equip.rank", new config.equip.Rank_Detail._ConfigLoader());
         allConfigLoaders.put("other.drop", new config.other.Drop._ConfigLoader());
+        allConfigLoaders.put("other.keytest", new config.other.Keytest._ConfigLoader());
         allConfigLoaders.put("other.loot", new config.other.Loot._ConfigLoader());
         allConfigLoaders.put("other.lootitem", new config.other.Lootitem._ConfigLoader());
         allConfigLoaders.put("other.monster", new config.other.Monster._ConfigLoader());

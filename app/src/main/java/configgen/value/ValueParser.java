@@ -4,6 +4,7 @@ import configgen.data.Source;
 import configgen.schema.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static configgen.data.CfgData.DCell;
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
@@ -15,22 +16,22 @@ public class ValueParser {
                                     int rowIndex) {
     }
 
-    public interface BlockParser {
+    public interface ValueParserContext {
         List<CellsWithRowIndex> parseBlock(List<DCell> cells, int curRowIndex);
 
-        BlockParser dummy = (cells, curRowIndex) -> List.of(new CellsWithRowIndex(cells, curRowIndex));
+        ValueParserContext dummy = (cells, curRowIndex) -> List.of(new CellsWithRowIndex(cells, curRowIndex));
     }
 
 
     private final CfgValueErrs errs;
-    private final BlockParser blockParser;
+    private final ValueParserContext parserContext;
     private List<DCell> currentCells;
 
-    public ValueParser(CfgValueErrs errs, BlockParser blockParser) {
+    public ValueParser(CfgValueErrs errs, ValueParserContext parserContext) {
         Objects.requireNonNull(errs);
-        Objects.requireNonNull(blockParser);
+        Objects.requireNonNull(parserContext);
         this.errs = errs;
-        this.blockParser = blockParser;
+        this.parserContext = parserContext;
     }
 
 
@@ -224,6 +225,13 @@ public class ValueParser {
 
                 startIdx += expected;
             }
+
+            if (subStructural == structural) { // 说明没有filtered
+                if (startIdx < parsed.size()){
+                    errs.addErr(new CfgValueErrs.FieldCellNotUsed( Source.of(cells),
+                            structural.name(), parsed.subList(startIdx, parsed.size()).stream().map(DCell::value).toList()));
+                }
+            }
         }
 
         return new VStruct(subStructural, values, Source.of(cells));
@@ -343,7 +351,7 @@ public class ValueParser {
             }
 
         } else if (field.fmt() instanceof FieldFormat.Block ignored) {
-            blocks = blockParser.parseBlock(cells, curRowIndex);
+            blocks = parserContext.parseBlock(cells, curRowIndex);
 
         } else {
             require(cells.size() == Span.fieldSpan(field));
@@ -419,7 +427,7 @@ public class ValueParser {
             }
 
         } else if (field.fmt() instanceof FieldFormat.Block ignored) {
-            blocks = blockParser.parseBlock(cells, curRowIndex);
+            blocks = parserContext.parseBlock(cells, curRowIndex);
 
         } else if (field.fmt() instanceof FieldFormat.Sep(char sep)) {
             require(cells.size() == 1);

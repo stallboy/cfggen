@@ -56,9 +56,13 @@ public class LevelRank {
         return "(" + level + "," + rank + ")";
     }
 
-    public void _resolve(config.ConfigMgr mgr) {
+    public void _resolveDirect(config.ConfigMgr mgr) {
         RefRank = config.equip.Rank.get(rank);
         java.util.Objects.requireNonNull(RefRank);
+    }
+
+    public void _resolve(config.ConfigMgr mgr) {
+        _resolveDirect(mgr);
     }
 
 }

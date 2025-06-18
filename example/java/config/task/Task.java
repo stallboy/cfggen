@@ -73,10 +73,14 @@ public class Task {
         return "(" + taskid + "," + name + "," + nexttask + "," + completecondition + "," + exp + "," + testDefaultBean + ")";
     }
 
-    public void _resolve(config.ConfigMgr mgr) {
-        completecondition._resolve(mgr);
+    public void _resolveDirect(config.ConfigMgr mgr) {
         NullableRefTaskid = mgr.task_taskextraexp_All.get(taskid);
         NullableRefNexttask = mgr.task_task_All.get(nexttask);
+    }
+
+    public void _resolve(config.ConfigMgr mgr) {
+        completecondition._resolve(mgr);
+        _resolveDirect(mgr);
     }
 
     public static Task get(int taskid) {

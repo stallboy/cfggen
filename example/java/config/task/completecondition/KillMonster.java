@@ -55,10 +55,14 @@ public final class KillMonster implements config.task.completecondition.Complete
         return "KillMonster(" + monsterid + "," + count + ")";
     }
 
-    @Override
-    public void _resolve(config.ConfigMgr mgr) {
+    public void _resolveDirect(config.ConfigMgr mgr) {
         RefMonsterid = mgr.other_monster_All.get(monsterid);
         java.util.Objects.requireNonNull(RefMonsterid);
+    }
+
+    @Override
+    public void _resolve(config.ConfigMgr mgr) {
+        _resolveDirect(mgr);
     }
 
 }

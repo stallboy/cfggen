@@ -105,6 +105,15 @@ public record CfgValueErrs(List<VErr> errs,
     }
 
     /**
+     * 需要的cell比实际提供的少，信息会丢失，可能是配错了
+     */
+    public record FieldCellNotUsed(Source source,
+                                   String nameable,
+                                   List<String> unused) implements VErr {
+    }
+
+
+    /**
      * 类型不匹配
      */
     public record NotMatchFieldType(Source source,
