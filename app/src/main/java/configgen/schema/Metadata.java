@@ -54,6 +54,10 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         return hasTag(JSON);
     }
 
+    public boolean isLowercase() {
+        return hasTag(LOWER_CASE);
+    }
+
     public void putTag(String tag) {
         if (reserved.contains(tag)) {
             throw new IllegalArgumentException(String.format("'%s' reserved", tag));
@@ -129,9 +133,11 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     private static final String SEP = "sep";
     private static final String FIX = "fix";
     private static final String BLOCK = "block";
+    private static final String LOWER_CASE = "lowercase";
+
 
     private static final Set<String> reserved = Set.of(COMMENT, SPAN, HAS_REF, HAS_BLOCK, HAS_MAP, HAS_TEXT,
-            JSON, NULLABLE, ENUM_REF, DEFAULT_IMPL, ENTRY, ENUM, COLUMN_MODE, PACK, SEP, FIX, BLOCK);
+            JSON, NULLABLE, ENUM_REF, DEFAULT_IMPL, ENTRY, ENUM, COLUMN_MODE, PACK, SEP, FIX, BLOCK, LOWER_CASE);
 
     public String getComment() {
         if (data.get(COMMENT) instanceof MetaStr(String value)) {

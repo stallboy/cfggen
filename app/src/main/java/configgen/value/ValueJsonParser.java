@@ -86,7 +86,7 @@ public class ValueJsonParser {
 
             DFile fieldSource = thisSource.child(fs.name());
             if (fieldObj != null) {
-                fieldValue = parse(fs.type(), fieldObj, fieldSource);
+                fieldValue = parse(fs.type(), fieldObj, fieldSource, fs);
             } else {
                 // not throw exception, but use default value
                 // save compactly and make it easy to add field in future
@@ -161,7 +161,7 @@ public class ValueJsonParser {
         }
     }
 
-    private Value parse(FieldType type, Object obj, DFile source) {
+    private Value parse(FieldType type, Object obj, DFile source, FieldSchema fieldSchema) {
         switch (type) {
             case BOOL -> {
                 return new VBool(parseBool(obj, source), source);
@@ -207,6 +207,9 @@ public class ValueJsonParser {
                 switch (obj) {
                     case String str -> {
                         sv = str;
+                        if (fieldSchema.meta().isLowercase()){
+                            sv = sv.toLowerCase();
+                        }
                     }
                     default -> {
                         errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.STR));
@@ -219,6 +222,9 @@ public class ValueJsonParser {
                 switch (obj) {
                     case String str -> {
                         sv = str;
+                        if (fieldSchema.meta().isLowercase()){
+                            sv = sv.toLowerCase();
+                        }
                     }
                     default -> {
                         errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.STR));
@@ -240,7 +246,7 @@ public class ValueJsonParser {
                 VList vList = new VList(new ArrayList<>(jsonArray.size()), source);
                 int i = 0;
                 for (Object itemObj : jsonArray) {
-                    Value v = parse(fList.item(), itemObj, source.child("[" + i + "]"));
+                    Value v = parse(fList.item(), itemObj, source.child("[" + i + "]"), fieldSchema);
                     if (v instanceof SimpleValue sv) {
                         vList.valueList().add(sv);
                     }   // else里的异常，会被parseNameable记录
@@ -286,8 +292,8 @@ public class ValueJsonParser {
                         }
 
                         if (keyObj != null && valueObj != null) {
-                            Value key = parse(fMap.key(), keyObj, ks);
-                            Value value = parse(fMap.value(), valueObj, vs);
+                            Value key = parse(fMap.key(), keyObj, ks, fieldSchema);
+                            Value value = parse(fMap.value(), valueObj, vs, fieldSchema);
                             if (key instanceof SimpleValue kk && value instanceof SimpleValue vv) {
                                 vMap.valueMap().put(kk, vv);
                             } // else里的异常，会被parseNameable记录

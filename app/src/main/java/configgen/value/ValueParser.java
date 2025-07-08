@@ -4,7 +4,6 @@ import configgen.data.Source;
 import configgen.schema.*;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static configgen.data.CfgData.DCell;
 import static configgen.schema.FieldFormat.AutoOrPack.PACK;
@@ -22,6 +21,11 @@ public class ValueParser {
         ValueParserContext dummy = (cells, curRowIndex) -> List.of(new CellsWithRowIndex(cells, curRowIndex));
     }
 
+    public record ParseContext(String nameable,
+                               boolean pack,
+                               boolean canBeEmpty,
+                               int curRowIndex) {
+    }
 
     private final CfgValueErrs errs;
     private final ValueParserContext parserContext;
@@ -36,19 +40,19 @@ public class ValueParser {
 
 
     VInterface parseInterface(InterfaceSchema subInterface, List<DCell> cells, InterfaceSchema sInterface,
-                              boolean pack, boolean canBeEmpty, int curRowIndex) {
+                              ParseContext parseContext) {
         List<DCell> parsed = cells;
         currentCells = cells;
 
         boolean isEmpty = false; // 支持excel里的cell为空，并且它还是个复合结构；但不支持非empty的cell里部分结构为空
         boolean isNumberOrBool = false;
-        boolean canChildBeEmpty = canBeEmpty;
-        boolean isPack = pack || sInterface.fmt() == PACK;
+        boolean canChildBeEmpty = parseContext.canBeEmpty;
+        boolean isPack = parseContext.pack || sInterface.fmt() == PACK;
         if (isPack) {
             require(cells.size() == 1, "pack应该只占一格");
             DCell cell = cells.getFirst();
             cell.setModePackOrSep();
-            if (canBeEmpty && cell.isCellEmpty()) {
+            if (parseContext.canBeEmpty && cell.isCellEmpty()) {
                 isEmpty = true;
             } else if (sInterface.canBeNumberOrBool()) {
                 if (DCells.isFunc(cell)) {
@@ -89,7 +93,8 @@ public class ValueParser {
             require(subImpl != null);
 
             // 之后按pack为true来处理，因为反正parsed里都是单个cell，并且里面value为空
-            vImpl = parseStructural(subImpl, parsed, impl, true, true, curRowIndex);
+            vImpl = parseStructural(subImpl, parsed, impl,
+                    new ParseContext(parseContext.nameable, true, true, parseContext.curRowIndex));
 
         } else {
             StructSchema impl;
@@ -127,7 +132,8 @@ public class ValueParser {
                 }
                 implCells = parsed.subList(1, expected + 1);
             }
-            vImpl = parseStructural(subImpl, implCells, impl, isPack, canChildBeEmpty, curRowIndex);
+            vImpl = parseStructural(subImpl, implCells, impl,
+                    new ParseContext(parseContext.nameable, isPack, canChildBeEmpty, parseContext.curRowIndex));
         }
 
         if (vImpl == null) {
@@ -138,19 +144,19 @@ public class ValueParser {
     }
 
     public VStruct parseStructural(Structural subStructural, List<DCell> cells, Structural structural,
-                                   boolean pack, boolean canBeEmpty, int curRowIndex) {
+                                   ParseContext parseContext) {
         currentCells = cells;
 
         List<DCell> parsed = cells;
         boolean isEmpty = false; // 支持excel里的cell为空，并且它还是个复合结构；但不支持非empty的cell里部分结构为空
-        boolean canChildBeEmpty = canBeEmpty;
-        boolean isPack = pack || structural.fmt() == PACK;
+        boolean canChildBeEmpty = parseContext.canBeEmpty;
+        boolean isPack = parseContext.pack || structural.fmt() == PACK;
         boolean isSep = false;
         if (isPack) {
             require(cells.size() == 1, "pack应该只占一格");
             DCell cell = cells.getFirst();
             cell.setModePackOrSep();
-            if (canBeEmpty && cell.isCellEmpty()) {
+            if (parseContext.canBeEmpty && cell.isCellEmpty()) {
                 isEmpty = true;
             } else {
                 try {
@@ -166,7 +172,7 @@ public class ValueParser {
             require(cells.size() == 1, "sep应该只占一格");
             DCell cell = cells.getFirst();
             cell.setModePackOrSep();
-            if (canBeEmpty && cell.isCellEmpty()) {
+            if (parseContext.canBeEmpty && cell.isCellEmpty()) {
                 isEmpty = true;
             } else {
                 parsed = DCells.parseList(cell, sep);
@@ -184,7 +190,8 @@ public class ValueParser {
                 FieldSchema field = structural.findField(subField.name());
                 require(field != null);
                 Value v = parseField(subField, parsed, field,
-                        true, true, curRowIndex, structural.name());
+                        new ParseContext(structural.name(), true, true, parseContext.curRowIndex));
+
                 if (v != null) {
                     values.add(v);
                 } else {
@@ -215,7 +222,8 @@ public class ValueParser {
 
                     List<DCell> fieldCells = parsed.subList(startIdx, startIdx + expected);
                     Value v = parseField(subField, fieldCells, field,
-                            isPack || field.fmt() == PACK, canChildBeEmpty, curRowIndex, structural.name());
+                            new ParseContext(structural.name(), isPack || field.fmt() == PACK,
+                                    canChildBeEmpty, parseContext.curRowIndex));
                     if (v != null) {
                         values.add(v);
                     } else {
@@ -227,8 +235,8 @@ public class ValueParser {
             }
 
             if (subStructural == structural) { // 说明没有filtered
-                if (startIdx < parsed.size()){
-                    errs.addErr(new CfgValueErrs.FieldCellNotUsed( Source.of(cells),
+                if (startIdx < parsed.size()) {
+                    errs.addErr(new CfgValueErrs.FieldCellNotUsed(Source.of(cells),
                             structural.name(), parsed.subList(startIdx, parsed.size()).stream().map(DCell::value).toList()));
                 }
             }
@@ -238,8 +246,7 @@ public class ValueParser {
     }
 
     SimpleValue parseSimpleType(FieldType.SimpleType subType, List<DCell> cells, FieldType.SimpleType type,
-                                boolean pack, boolean canBeEmpty, int curRowIndex,
-                                String nameable, String field) {
+                                ParseContext parseContext, FieldSchema fieldSchema) {
         currentCells = cells;
 
         switch (type) {
@@ -247,11 +254,13 @@ public class ValueParser {
                 require(cells.size() == 1);
                 DCell cell = cells.getFirst();
                 String str = cell.value().trim();
+                CfgValueErrs.NotMatchFieldType err = new CfgValueErrs.NotMatchFieldType(cell,
+                        parseContext.nameable, fieldSchema.name(), type);
                 switch (primitive) {
                     case BOOL -> {
                         boolean v = str.equals("1") || str.equalsIgnoreCase("true");
                         if (!boolStrSet.contains(str.toLowerCase())) {
-                            errs.addErr(new CfgValueErrs.NotMatchFieldType(cell, nameable, field, type));
+                            errs.addErr(err);
                         }
                         return new VBool(v, cell);
                     }
@@ -260,7 +269,7 @@ public class ValueParser {
                         try {
                             v = str.isEmpty() ? 0 : Integer.decode(str);
                         } catch (Exception e) {
-                            errs.addErr(new CfgValueErrs.NotMatchFieldType(cell, nameable, field, type));
+                            errs.addErr(err);
                         }
                         return new VInt(v, cell);
                     }
@@ -269,7 +278,7 @@ public class ValueParser {
                         try {
                             v = str.isEmpty() ? 0 : Long.decode(str);
                         } catch (Exception e) {
-                            errs.addErr(new CfgValueErrs.NotMatchFieldType(cell, nameable, field, type));
+                            errs.addErr(err);
                         }
                         return new VLong(v, cell);
                     }
@@ -278,14 +287,20 @@ public class ValueParser {
                         try {
                             v = str.isEmpty() ? 0f : Float.parseFloat(str);
                         } catch (Exception e) {
-                            errs.addErr(new CfgValueErrs.NotMatchFieldType(cell, nameable, field, type));
+                            errs.addErr(err);
                         }
                         return new VFloat(v, cell);
                     }
                     case STRING -> {
+                        if (fieldSchema.meta().isLowercase()) {
+                            str = str.toLowerCase();
+                        }
                         return new VString(str, cell);
                     }
                     case TEXT -> {
+                        if (fieldSchema.meta().isLowercase()) {
+                            str = str.toLowerCase();
+                        }
                         return new VText(str, cell);
                     }
                 }
@@ -297,12 +312,12 @@ public class ValueParser {
                         InterfaceSchema subInterface = (InterfaceSchema) (((FieldType.StructRef) subType).obj());
 
                         return parseInterface(subInterface, cells, sInterface,
-                                pack, canBeEmpty, curRowIndex);
+                                parseContext);
                     }
                     case StructSchema struct -> {
                         StructSchema subStruct = (StructSchema) (((FieldType.StructRef) subType).obj());
                         return parseStructural(subStruct, cells, struct,
-                                pack, canBeEmpty, curRowIndex);
+                                parseContext);
                     }
                 }
             }
@@ -310,28 +325,26 @@ public class ValueParser {
         return null;
     }
 
-    Value parseField(FieldSchema subField, List<DCell> cells, FieldSchema field,
-                     boolean pack, boolean canBeEmpty, int curRowIndex,
-                     String nameable) {
+
+    public Value parseField(FieldSchema subField, List<DCell> cells, FieldSchema field, ParseContext parseContext) {
         currentCells = cells;
 
         switch (field.type()) {
             case FieldType.SimpleType simple -> {
-                return parseSimpleType((FieldType.SimpleType) subField.type(), cells, simple, pack, canBeEmpty, curRowIndex, nameable, field.name());
+                return parseSimpleType((FieldType.SimpleType) subField.type(), cells, simple, parseContext, field);
             }
             case FieldType.FList ignored -> {
-                return parseList(subField, cells, field, pack, curRowIndex, nameable);
+                return parseList(subField, cells, field, parseContext);
             }
 
             case FieldType.FMap ignored -> {
-                return parseMap(subField, cells, field, pack, curRowIndex, nameable);
+                return parseMap(subField, cells, field, parseContext);
             }
         }
     }
 
     VMap parseMap(FieldSchema subField, List<DCell> cells, FieldSchema field,
-                  boolean isPack, int curRowIndex,
-                  String nameable) {
+                  ParseContext parseContext) {
         currentCells = cells;
 
         FieldType.FMap subType = (FieldType.FMap) subField.type();
@@ -339,7 +352,7 @@ public class ValueParser {
 
         List<DCell> parsed = null;
         List<CellsWithRowIndex> blocks = null;
-        if (isPack) {
+        if (parseContext.pack) {
             require(cells.size() == 1);
             DCell cell = cells.getFirst();
             cell.setModePackOrSep();
@@ -351,7 +364,7 @@ public class ValueParser {
             }
 
         } else if (field.fmt() instanceof FieldFormat.Block ignored) {
-            blocks = parserContext.parseBlock(cells, curRowIndex);
+            blocks = parserContext.parseBlock(cells, parseContext.curRowIndex);
 
         } else {
             require(cells.size() == Span.fieldSpan(field));
@@ -359,13 +372,13 @@ public class ValueParser {
         }
 
         if (blocks == null) {
-            blocks = List.of(new CellsWithRowIndex(parsed, curRowIndex));
+            blocks = List.of(new CellsWithRowIndex(parsed, parseContext.curRowIndex));
         }
 
         Map<SimpleValue, SimpleValue> valueMap = new LinkedHashMap<>();
 
-        int kc = isPack ? 1 : Span.simpleTypeSpan(type.key());
-        int vc = isPack ? 1 : Span.simpleTypeSpan(type.value());
+        int kc = parseContext.pack ? 1 : Span.simpleTypeSpan(type.key());
+        int vc = parseContext.pack ? 1 : Span.simpleTypeSpan(type.value());
         int itemSpan = kc + vc;
 
         for (CellsWithRowIndex block : blocks) {
@@ -374,7 +387,7 @@ public class ValueParser {
                 if (startIdx + itemSpan > curLineParsed.size()) {
                     errs.addErr(new CfgValueErrs.FieldCellSpanNotEnough(
                             Source.of(curLineParsed.subList(startIdx, curLineParsed.size())),
-                            nameable, field.name(), itemSpan, curLineParsed.size() - startIdx));
+                            parseContext.nameable, field.name(), itemSpan, curLineParsed.size() - startIdx));
                     continue;
                 }
                 List<DCell> keyCells = curLineParsed.subList(startIdx, startIdx + kc);
@@ -382,18 +395,17 @@ public class ValueParser {
 
                 // 可部分为空，全为空则忽略
                 if (isCellNotAllEmpty(keyCells) || isCellNotAllEmpty(valueCells)) {
+                    ParseContext ctx = new ParseContext(parseContext.nameable, parseContext.pack, false, block.rowIndex);
                     SimpleValue key = parseSimpleType(subType.key(), keyCells, type.key(),
-                            isPack, false, block.rowIndex,
-                            nameable, field.name());
+                            ctx, field);
                     SimpleValue value = parseSimpleType(subType.value(), valueCells, type.value(),
-                            isPack, false, block.rowIndex,
-                            nameable, field.name());
+                            ctx, field);
 
                     if (key != null && value != null) {
                         SimpleValue old = valueMap.put(key, value);
                         if (old != null) {
                             errs.addErr(new CfgValueErrs.MapKeyDuplicated(
-                                    Source.of(keyCells), nameable, field.name()));
+                                    Source.of(keyCells), parseContext.nameable, field.name()));
                         }
                     }
                 }
@@ -405,8 +417,7 @@ public class ValueParser {
 
 
     VList parseList(FieldSchema subField, List<DCell> cells, FieldSchema field,
-                    boolean isPack, int curRowIndex,
-                    String nameable) {
+                    ParseContext parseContext) {
         currentCells = cells;
 
         FieldType.FList subType = (FieldType.FList) subField.type();
@@ -415,7 +426,7 @@ public class ValueParser {
 
         List<DCell> parsed = null;
         List<CellsWithRowIndex> blocks = null;
-        if (isPack) {
+        if (parseContext.pack) {
             require(cells.size() == 1);
             DCell cell = cells.getFirst();
             cell.setModePackOrSep();
@@ -427,7 +438,7 @@ public class ValueParser {
             }
 
         } else if (field.fmt() instanceof FieldFormat.Block ignored) {
-            blocks = parserContext.parseBlock(cells, curRowIndex);
+            blocks = parserContext.parseBlock(cells, parseContext.curRowIndex);
 
         } else if (field.fmt() instanceof FieldFormat.Sep(char sep)) {
             require(cells.size() == 1);
@@ -441,26 +452,26 @@ public class ValueParser {
         }
 
         if (blocks == null) {
-            blocks = List.of(new CellsWithRowIndex(parsed, curRowIndex));
+            blocks = List.of(new CellsWithRowIndex(parsed, parseContext.curRowIndex));
         }
 
         List<SimpleValue> valueList = new ArrayList<>();
-        int itemSpan = isPack ? 1 : Span.simpleTypeSpan(type.item());
+        int itemSpan = parseContext.pack ? 1 : Span.simpleTypeSpan(type.item());
         for (CellsWithRowIndex block : blocks) {
             List<DCell> curLineParsed = block.cells;
             for (int startIdx = 0; startIdx < curLineParsed.size(); startIdx += itemSpan) {
                 if (startIdx + itemSpan > curLineParsed.size()) {
                     errs.addErr(new CfgValueErrs.FieldCellSpanNotEnough(
                             Source.of(curLineParsed.subList(startIdx, curLineParsed.size())),
-                            nameable, field.name(), itemSpan, curLineParsed.size() - startIdx));
+                            parseContext.nameable, field.name(), itemSpan, curLineParsed.size() - startIdx));
                     continue;
                 }
                 List<DCell> itemCells = curLineParsed.subList(startIdx, startIdx + itemSpan);
                 // 全为空，可忽略
                 if (isCellNotAllEmpty(itemCells)) {
                     SimpleValue value = parseSimpleType(subType.item(), itemCells, type.item(),
-                            isPack, false, block.rowIndex,
-                            nameable, field.name());
+                            new ParseContext(parseContext.nameable, parseContext.pack, false, block.rowIndex),
+                            field);
                     if (value != null) {
                         valueList.add(value);
                     }

@@ -38,7 +38,8 @@ public class VTableParser implements ValueParserContext {
         List<VStruct> valueList = new ArrayList<>(); //可能会多，无所谓
         for (int curRecordRow = 0; curRecordRow < rowCnt; ) {
             curRow = dTable.rows().get(curRecordRow);
-            VStruct vStruct = parser.parseStructural(subTableSchema, curRow, tableSchema, false, true, curRecordRow);
+            VStruct vStruct = parser.parseStructural(subTableSchema, curRow, tableSchema,
+                    new ValueParser.ParseContext(tableSchema.fullName(), false, true, curRecordRow));
             if (vStruct != null) {
                 valueList.add(vStruct);
             }

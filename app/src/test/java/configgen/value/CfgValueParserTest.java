@@ -12,6 +12,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -52,6 +53,57 @@ class CfgValueParserTest {
             assertEquals(5, ((VInt) v.values().getFirst()).value());
             assertEquals("yellow", ((VString) v.values().get(1)).value());
             assertEquals("准神", ((VText) v.values().get(2)).value());
+        }
+    }
+
+    @Test
+    void parseCfgValue_strLowercase() {
+        String cfgStr = """
+                table t[id] {
+                    id:int;
+                    s:str(lowercase);
+                    s2:text(lowercase);
+                    s3:list<str>(lowercase, fix=1);
+                    s4:map<int,str>(lowercase, fix=1);
+                }
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+        String csvStr = """
+                ,,
+                id,s,s2,s3,s4.k,s4.v
+                1,ABc,ABCD,AA,11,VV
+                2,中文A,中文B,,,""";
+        Resources.addTempFileFromText("t.csv", tempDir, csvStr);
+
+        Context ctx = new Context(tempDir);
+        CfgValue cfgValue = ctx.makeValue();
+        VTable tVTable = cfgValue.getTable("t");
+        TableSchema tSchema = ctx.cfgSchema().findTable("t");
+
+        assertEquals(tSchema, tVTable.schema());
+        assertEquals(2, tVTable.valueList().size());
+        {
+            VStruct v = tVTable.valueList().getFirst();
+
+            VString s = (VString) v.values().get(1);
+            assertEquals("abc", s.value());
+            VText s2 = (VText) v.values().get(2);
+            assertEquals("abcd", s2.value());
+
+            VList s3 = (VList) v.values().get(3);
+            assertEquals("aa", ((VString)s3.valueList().getFirst()).value());
+
+            VMap s4 = (VMap) v.values().get(4);
+            Map.Entry<SimpleValue, SimpleValue> e = s4.valueMap().entrySet().iterator().next();
+            assertEquals("vv", ((VString)e.getValue()).value());
+        }
+        {
+            VStruct v = tVTable.valueList().get(1);
+            assertEquals(2, ((VInt) v.values().getFirst()).value());
+            VString s = (VString) v.values().get(1);
+            assertEquals("中文a", s.value());
+            VText s2 = (VText) v.values().get(2);
+            assertEquals("中文b", s2.value());
         }
     }
 

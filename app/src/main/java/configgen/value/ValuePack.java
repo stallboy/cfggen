@@ -66,7 +66,8 @@ public class ValuePack {
         ValueParser parser = new ValueParser(errs, ValueParser.ValueParserContext.dummy);
 
         CfgData.DCell dCell = CfgData.DCell.of(content, fileName);
-        return parser.parseField(field, List.of(dCell), field, true, true, 0, fileName);
+        return parser.parseField(field, List.of(dCell), field,
+                new ValueParser.ParseContext(fileName, true, true, 0));
     }
 
     /**
