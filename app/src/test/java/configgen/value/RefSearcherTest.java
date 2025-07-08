@@ -22,7 +22,7 @@ class RefSearcherTest {
         String cfgStr = """
                 table t[id] {
                     id:int;
-                    asset:str ->assets;
+                    asset:str ->assets(lowercase);
                 }
                 table assets[path] {
                     path:str;
@@ -33,7 +33,7 @@ class RefSearcherTest {
         String csvStr = """
                 ,
                 id,asset
-                1,npc/a.prefab
+                1,npc/A.prefab
                 """;
         Resources.addTempFileFromText("t.csv", tempDir, csvStr);
         String assetStr = """
