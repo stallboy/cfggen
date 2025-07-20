@@ -227,7 +227,7 @@ public class GenLua extends GeneratorWithTag {
                     if (useEmmyLua) {
                         ps.println("---@class %s", full);
                         if (setHandlerName != null && handlerName != null) {
-                            ps.println("---@field %s fun(self:%s)", handlerName, full);
+                            ps.println("---@field %s fun(self:%s, ...)", handlerName, full);
                         }
                         ps.println();
                         ps.println("---@type %s", full);
