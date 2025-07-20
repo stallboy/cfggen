@@ -23,6 +23,8 @@ public class GenLua extends GeneratorWithTag {
     private final String pkg;
     private final String encoding;
     private final boolean useEmmyLua;
+    private String setHandlerName;
+    private String handlerName;
     private final boolean preload;
     private final boolean useShared;
     private final boolean useSharedEmptyTable;
@@ -42,6 +44,10 @@ public class GenLua extends GeneratorWithTag {
         encoding = parameter.get("encoding", "UTF-8");
 
         useEmmyLua = parameter.has("emmylua");
+        if (useEmmyLua) {
+            setHandlerName = parameter.get("sethandlername", null);
+            handlerName = parameter.get("handlername", null);
+        }
         preload = parameter.has("preload");
         useSharedEmptyTable = parameter.has("sharedemptytable");
         useShared = parameter.has("shared");
@@ -220,6 +226,9 @@ public class GenLua extends GeneratorWithTag {
                 case InterfaceSchema sInterface -> {
                     if (useEmmyLua) {
                         ps.println("---@class %s", full);
+                        if (setHandlerName != null && handlerName != null) {
+                            ps.println("---@field %s fun(self:%s)", handlerName, full);
+                        }
                         ps.println();
                         ps.println("---@type %s", full);
                     }
@@ -242,6 +251,10 @@ public class GenLua extends GeneratorWithTag {
 
                         if (useEmmyLua) {
                             ps.println("---@class %s : %s", fulln, full);
+                            if (setHandlerName != null && handlerName != null) {
+                                ps.println("---@field %s fun(%s :fun, ...)", setHandlerName, handlerName);
+                                ps.println("---@field %s fun(self: %s, ...)", handlerName, fulln);
+                            }
                             ps.printlnIf(TypeStr.getLuaFieldsStringEmmyLua(impl));
                             ps.printlnIf(TypeStr.getLuaRefsStringEmmyLua(impl));
                             ps.println();
