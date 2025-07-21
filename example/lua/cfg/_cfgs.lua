@@ -28,6 +28,8 @@ cfg.equip.rank = pre("cfg.equip.rank")
 cfg.other = {}
 ---@type cfg.other.drop
 cfg.other.drop = pre("cfg.other.drop")
+---@type cfg.other.keytest
+cfg.other.keytest = pre("cfg.other.keytest")
 ---@type cfg.other.loot
 cfg.other.loot = pre("cfg.other.loot")
 ---@type cfg.other.lootitem

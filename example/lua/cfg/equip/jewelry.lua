@@ -6,7 +6,7 @@ local Beans = cfg._beans
 ---@field name string , 首饰名称
 ---@field iconFile string , 图标ID
 ---@field lvlRank Beans.levelrank , 首饰等级
----@field type string , 首饰类型
+---@field jType string , 首饰类型
 ---@field suitID number , 套装ID（为0是没有不属于套装，首饰品级为4的首饰该参数为套装id，其余情况为0,引用JewelrySuit.csv）
 ---@field keyAbility number , 关键属性类型
 ---@field keyAbilityValue number , 关键属性数值
@@ -15,7 +15,7 @@ local Beans = cfg._beans
 ---@field get fun(ID:number):cfg.equip.jewelry
 ---@field all table<any,cfg.equip.jewelry>
 ---@field RefLvlRank cfg.equip.jewelryrandom
----@field RefType cfg.equip.jewelrytype
+---@field RefJType cfg.equip.jewelrytype
 ---@field NullableRefSuitID cfg.equip.jewelrysuit
 ---@field RefKeyAbility cfg.equip.ability
 
@@ -23,14 +23,14 @@ local this = cfg.equip.jewelry
 
 local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, { 
     { 'RefLvlRank', 0, cfg.equip.jewelryrandom, 'get', 4 }, 
-    { 'RefType', 0, cfg.equip.jewelrytype, 'get', 5 }, 
+    { 'RefJType', 0, cfg.equip.jewelrytype, 'get', 5 }, 
     { 'NullableRefSuitID', 0, cfg.equip.jewelrysuit, 'get', 6 }, 
     { 'RefKeyAbility', 0, cfg.equip.ability, 'get', 7 }, }, 
     'iD', -- int, 首饰ID
     'name', -- str, 首饰名称
     'iconFile', -- str, 图标ID
     'lvlRank', -- LevelRank, 首饰等级
-    'type', -- str, 首饰类型
+    'jType', -- str, 首饰类型
     'suitID', -- int, 套装ID（为0是没有不属于套装，首饰品级为4的首饰该参数为套装id，其余情况为0,引用JewelrySuit.csv）
     'keyAbility', -- int, 关键属性类型
     'keyAbilityValue', -- int, 关键属性数值
