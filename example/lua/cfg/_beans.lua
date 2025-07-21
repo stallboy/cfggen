@@ -42,14 +42,11 @@ Beans.range = bean(nil,
 
 Beans.ai = {}
 ---@class Beans.ai.triggertick
----@field handle fun(self:Beans.ai.triggertick)
 
 ---@type Beans.ai.triggertick
 Beans.ai.triggertick = {}
 
 ---@class Beans.ai.triggertick.constvalue : Beans.ai.triggertick
----@field setHandler fun(handle :fun, ...)
----@field handle fun(self: Beans.ai.triggertick.constvalue, ...)
 ---@field value number 
 
 ---@type Beans.ai.triggertick.constvalue
@@ -58,8 +55,6 @@ Beans.ai.triggertick.constvalue = action("ConstValue", nil,
     )
 
 ---@class Beans.ai.triggertick.bylevel : Beans.ai.triggertick
----@field setHandler fun(handle :fun, ...)
----@field handle fun(self: Beans.ai.triggertick.bylevel, ...)
 ---@field init number 
 ---@field coefficient number 
 
@@ -70,8 +65,6 @@ Beans.ai.triggertick.bylevel = action("ByLevel", nil,
     )
 
 ---@class Beans.ai.triggertick.byserverupday : Beans.ai.triggertick
----@field setHandler fun(handle :fun, ...)
----@field handle fun(self: Beans.ai.triggertick.byserverupday, ...)
 ---@field init number 
 ---@field coefficient1 number 
 ---@field coefficient2 number 
@@ -131,14 +124,11 @@ Beans.task.testdefaultbean = bean(nil,
     )
 
 ---@class Beans.task.completecondition
----@field handle fun(self:Beans.task.completecondition)
 
 ---@type Beans.task.completecondition
 Beans.task.completecondition = {}
 
 ---@class Beans.task.completecondition.killmonster : Beans.task.completecondition
----@field setHandler fun(handle :fun, ...)
----@field handle fun(self: Beans.task.completecondition.killmonster, ...)
 ---@field monsterid number 
 ---@field count number 
 ---@field RefMonsterid cfg.other.monster
@@ -151,8 +141,6 @@ Beans.task.completecondition.killmonster = action("KillMonster", {
     )
 
 ---@class Beans.task.completecondition.talknpc : Beans.task.completecondition
----@field setHandler fun(handle :fun, ...)
----@field handle fun(self: Beans.task.completecondition.talknpc, ...)
 ---@field npcid number 
 
 ---@type Beans.task.completecondition.talknpc
@@ -161,15 +149,11 @@ Beans.task.completecondition.talknpc = action("TalkNpc", nil,
     )
 
 ---@class Beans.task.completecondition.testnocolumn : Beans.task.completecondition
----@field setHandler fun(handle :fun, ...)
----@field handle fun(self: Beans.task.completecondition.testnocolumn, ...)
 
 ---@type Beans.task.completecondition.testnocolumn
 Beans.task.completecondition.testnocolumn = action("TestNoColumn")()
 
 ---@class Beans.task.completecondition.chat : Beans.task.completecondition
----@field setHandler fun(handle :fun, ...)
----@field handle fun(self: Beans.task.completecondition.chat, ...)
 ---@field msg string 
 
 ---@type Beans.task.completecondition.chat
@@ -178,8 +162,6 @@ Beans.task.completecondition.chat = action("Chat", nil,
     )
 
 ---@class Beans.task.completecondition.conditionand : Beans.task.completecondition
----@field setHandler fun(handle :fun, ...)
----@field handle fun(self: Beans.task.completecondition.conditionand, ...)
 ---@field cond1 Beans.task.completecondition 
 ---@field cond2 Beans.task.completecondition 
 
@@ -190,8 +172,6 @@ Beans.task.completecondition.conditionand = action("ConditionAnd", nil,
     )
 
 ---@class Beans.task.completecondition.collectitem : Beans.task.completecondition
----@field setHandler fun(handle :fun, ...)
----@field handle fun(self: Beans.task.completecondition.collectitem, ...)
 ---@field itemid number 
 ---@field count number 
 
