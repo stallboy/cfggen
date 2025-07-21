@@ -219,6 +219,10 @@ function mkcfg.i18n_action(typeName, refs, textFields, ...)
     I.type = function()
         return typeName
     end
+    --需要handler时开启
+    --I.setHandler = function(handle)
+    --    I.handle = handle
+    --end
     I.__index = function(t, k)
         local f = rawget(I, k)
         if f then
@@ -253,6 +257,8 @@ function mkcfg.i18n_action(typeName, refs, textFields, ...)
         setmetatable(v, I)
         return v
     end
+    --需要handler时开启
+    --mk.setHandler = I.setHandler
     setmetatable(mk, mk)
 
     return mk
