@@ -17,6 +17,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 
+import static configgen.i18n.LangTextInfo.*;
+
 
 /**
  * by Pk and FieldChain
@@ -43,7 +45,7 @@ public final class GenI18nById extends Generator {
         LangTextInfo needReplace = null;
         String readI18nFilename = ctx.getContextCfg().i18nFilename();
         if (readI18nFilename != null && readI18nFilename.equals(outputDir)) {
-            needReplace = LangTextInfo.of(ctx.nullableLangTextFinder().getMap());
+            needReplace = of(ctx.nullableLangTextFinder().getMap());
         }
 
         // 确保无temp目录，然后创建
@@ -73,7 +75,7 @@ public final class GenI18nById extends Generator {
 
         { // 测试：fastexcel的xlsx文件写入是否正确（用再读取一次，然后比较的方式）
             LangTextFinder wrote = TextFinderById.loadOneLang(wrotePath);
-            LangTextInfo wroteInfo = LangTextInfo.of(wrote.getMap());
+            LangTextInfo wroteInfo = of(wrote.getMap());
             if (!wroteInfo.equals(extracted)) {
                 throw new RuntimeException("wrote files not match extracted files, SHOULD NOT HAPPEN");
             }
@@ -134,13 +136,6 @@ public final class GenI18nById extends Generator {
                 throw new RuntimeException("rename %s to %s failed".formatted(from, to));
             }
         }
-    }
-
-
-    static class GenOneTable {
-        private final List<String> fields = new ArrayList<>();
-
-
     }
 
 }
