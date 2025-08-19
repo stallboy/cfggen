@@ -4,7 +4,7 @@ import configgen.ctx.Context;
 import configgen.gen.Generator;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
-import configgen.i18n.LangSwitch;
+import configgen.i18n.LangSwitchable;
 import configgen.schema.*;
 import configgen.util.CachedFiles;
 import configgen.util.CachedIndentPrinter;
@@ -12,8 +12,6 @@ import configgen.util.JteEngine;
 import configgen.value.CfgValue;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -103,7 +101,7 @@ public class GenCs extends GeneratorWithTag {
         }
     }
 
-    private void generateText(LangSwitch langSwitch) {
+    private void generateText(LangSwitchable langSwitch) {
         try (CachedIndentPrinter ps = new CachedIndentPrinter(dstDir.resolve("Text.cs"), encoding)) {
             List<String> languages = langSwitch.languages().stream().map(Generator::upper1).toList();
             JteEngine.render("cs/Text.jte", Map.of("pkg", pkg, "languages", languages), ps);

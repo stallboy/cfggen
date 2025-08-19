@@ -1,6 +1,6 @@
 package configgen.genjava.code;
 
-import configgen.i18n.LangSwitch;
+import configgen.i18n.LangSwitchable;
 import configgen.genjava.*;
 import configgen.util.CachedIndentPrinter;
 import configgen.value.CfgValue;
@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 final class GenConfigCodeSchema {
-    static void generateAll(GenJavaCode gen, int schemaNumPerFile, CfgValue cfgValue, LangSwitch ls) {
+    static void generateAll(GenJavaCode gen, int schemaNumPerFile, CfgValue cfgValue, LangSwitchable ls) {
         SchemaInterface schemaInterface = SchemaParser.parse(cfgValue, ls);
         List<Map.Entry<String, Schema>> all = new ArrayList<>(schemaInterface.implementations.entrySet());
         List<Map.Entry<String, Schema>> main;

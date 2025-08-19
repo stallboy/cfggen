@@ -6,27 +6,26 @@ import configgen.gen.Parameter;
 import configgen.util.Logger;
 
 import java.io.IOException;
-import java.util.*;
 
 
 /**
  * 内部测试，怕fastexcel write会有问题
  */
-public final class GenI18nByPkAndFieldChainTest extends Generator {
+public final class GenI18nByIdTest extends Generator {
 
-    public GenI18nByPkAndFieldChainTest(Parameter parameter) {
+    public GenI18nByIdTest(Parameter parameter) {
         super(parameter);
-        new GenI18nByPkAndFieldChain(parameter);
+        new GenI18nById(parameter);
     }
 
     @Override
     public void generate(Context ctx) throws IOException {
-        new GenI18nByPkAndFieldChain(parameter.copy()).generate(ctx.copy());
+        new GenI18nById(parameter.copy()).generate(ctx.copy());
 
         // 只要没打印 create或modify就说明没问题
         for (int i = 0; i < 100; i++) {
             Logger.log("%d", i + 2);
-            new GenI18nByPkAndFieldChain(parameter.copy()).generate(ctx.copy());
+            new GenI18nById(parameter.copy()).generate(ctx.copy());
         }
     }
 

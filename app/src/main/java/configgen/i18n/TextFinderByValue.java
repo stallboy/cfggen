@@ -14,11 +14,11 @@ import java.util.stream.Stream;
  * 每个表中的text字段，原始文本---映射到--->翻译文本。
  * 以原始文本为key，相同的原始文本，必然对应相同翻译文本
  */
-class TextFinderByOrig implements TextFinder {
+class TextFinderByValue implements TextFinder {
     private final SequencedMap<String, String> originalToTranslated = new LinkedHashMap<>();
     private final boolean isCrLfAsLf;
 
-    public TextFinderByOrig(boolean isCrLfAsLf) {
+    public TextFinderByValue(boolean isCrLfAsLf) {
         this.isCrLfAsLf = isCrLfAsLf;
     }
 
@@ -40,7 +40,7 @@ class TextFinderByOrig implements TextFinder {
     }
 
 
-    static LangSwitch loadLangSwitch(Path path, String defaultLang, boolean isCrLfAsLf) {
+    public static LangSwitchable loadLangSwitch(Path path, String defaultLang, boolean isCrLfAsLf) {
         Map<String, LangTextFinder> lang2i18n = new TreeMap<>();
         try (Stream<Path> plist = Files.list(path)) {
             plist.forEach(langFilePath -> {
@@ -54,10 +54,10 @@ class TextFinderByOrig implements TextFinder {
             throw new RuntimeException(e);
         }
 
-        return new LangSwitch(lang2i18n, defaultLang);
+        return new LangSwitchable(lang2i18n, defaultLang);
     }
 
-    static LangTextFinder loadOneLang(Path path, boolean isCrLfAsLf) {
+    public static LangTextFinder loadOneLang(Path path, boolean isCrLfAsLf) {
         List<CsvRow> rows = CSVUtil.read(path, "UTF-8");
 
         if (rows.isEmpty()) {
@@ -81,7 +81,7 @@ class TextFinderByOrig implements TextFinder {
                 String translated = row.getField(2);
                 original = normalize(original, isCrLfAsLf);
 
-                TextFinderByOrig map = (TextFinderByOrig) res.getMap().computeIfAbsent(table, t -> new TextFinderByOrig(isCrLfAsLf));
+                TextFinderByValue map = (TextFinderByValue) res.getMap().computeIfAbsent(table, t -> new TextFinderByValue(isCrLfAsLf));
                 map.originalToTranslated.put(original, translated);
             }
         }

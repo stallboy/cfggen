@@ -7,32 +7,32 @@ import java.util.stream.Stream;
 
 public class TextFinders {
 
-    public static LangSwitch loadLangSwitch(String langSwitchDir, String defaultLang, boolean isCrLfAsLf) {
+    public static LangSwitchable loadLangSwitch(String langSwitchDir, String defaultLang, boolean isCrLfAsLf) {
         Path path = Path.of(langSwitchDir);
-        if (isLangSwitchByPkAndFieldChain(path)) {
-            return TextFinderByPkAndFieldChain.loadLangSwitch(path, defaultLang);
+        if (isLangSwitchById(path)) {
+            return TextFinderById.loadLangSwitch(path, defaultLang);
         } else {
-            return TextFinderByOrig.loadLangSwitch(path, defaultLang, isCrLfAsLf);
+            return TextFinderByValue.loadLangSwitch(path, defaultLang, isCrLfAsLf);
         }
     }
 
     public static LangTextFinder loadOneLang(String i18nFilename, boolean isCrLfAsLf) {
         Path path = Path.of(i18nFilename);
-        if (isLangTextFinderByByPkAndFieldChain(path)) {
-            return TextFinderByPkAndFieldChain.loadOneLang(path);
+        if (isLangTextFinderById(path)) {
+            return TextFinderById.loadOneLang(path);
         } else {
-            return TextFinderByOrig.loadOneLang(path, isCrLfAsLf);
+            return TextFinderByValue.loadOneLang(path, isCrLfAsLf);
         }
     }
 
-    private static boolean isLangTextFinderByByPkAndFieldChain(Path path) {
+    private static boolean isLangTextFinderById(Path path) {
         return Files.isDirectory(path);
     }
 
     /**
-     * 只要有一个文件夹就是byPkAndFieldChain
+     * 只要有一个文件夹就是byId
      */
-    private static boolean isLangSwitchByPkAndFieldChain(Path path) {
+    private static boolean isLangSwitchById(Path path) {
         try (Stream<Path> plist = Files.list(path)) {
             return plist.anyMatch(Files::isDirectory);
         } catch (IOException e) {

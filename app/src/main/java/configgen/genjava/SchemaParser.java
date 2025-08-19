@@ -1,6 +1,6 @@
 package configgen.genjava;
 
-import configgen.i18n.LangSwitch;
+import configgen.i18n.LangSwitchable;
 import configgen.schema.*;
 import configgen.value.CfgValue;
 
@@ -17,7 +17,7 @@ import static configgen.value.CfgValue.*;
 
 public final class SchemaParser {
 
-    public static SchemaInterface parse(CfgValue cfgValue, LangSwitch langSwitch) {
+    public static SchemaInterface parse(CfgValue cfgValue, LangSwitchable langSwitch) {
         SchemaInterface root = new SchemaInterface();
         if (langSwitch != null) {
             root.addImp("Text", parseLangSwitch(langSwitch)); //这里国际化的字段当作一个Bean
@@ -52,7 +52,7 @@ public final class SchemaParser {
         return root;
     }
 
-    private static Schema parseLangSwitch(LangSwitch ls) {
+    private static Schema parseLangSwitch(LangSwitchable ls) {
         SchemaBean sb = new SchemaBean(false);
         for (String lang : ls.languages()) {
             sb.addColumn(lang, SStr);

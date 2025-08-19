@@ -2,8 +2,8 @@ package configgen.genjava;
 
 import configgen.ctx.Context;
 import configgen.gen.GeneratorWithTag;
-import configgen.i18n.LangSwitch;
-import configgen.i18n.LangSwitchRuntime;
+import configgen.i18n.LangSwitchable;
+import configgen.i18n.LangSwitchableRuntime;
 import configgen.gen.Parameter;
 import configgen.util.CachedFileOutputStream;
 import configgen.util.Logger;
@@ -30,17 +30,17 @@ public final class GenJavaData extends GeneratorWithTag {
     @Override
     public void generate(Context ctx) throws IOException {
         CfgValue cfgValue = ctx.makeValue(tag);
-        LangSwitch langSwitch = ctx.nullableLangSwitch();
+        LangSwitchable langSwitch = ctx.nullableLangSwitch();
         try (ConfigOutput output = new ConfigOutput(new DataOutputStream(new CachedFileOutputStream(file, 2048 * 1024)))) {
             Schema schema = SchemaParser.parse(cfgValue, langSwitch);
             schema.write(output);
-            LangSwitchRuntime langSwitchRuntime = langSwitch != null ?
-                    new LangSwitchRuntime(langSwitch) : null;
+            LangSwitchableRuntime langSwitchRuntime = langSwitch != null ?
+                    new LangSwitchableRuntime(langSwitch) : null;
             writeCfgValue(cfgValue, output, langSwitchRuntime);
         }
     }
 
-    private static void writeCfgValue(CfgValue cfgValue, ConfigOutput output, LangSwitchRuntime langSwitchRuntime) throws IOException {
+    private static void writeCfgValue(CfgValue cfgValue, ConfigOutput output, LangSwitchableRuntime langSwitchRuntime) throws IOException {
         int cnt = 0;
         for (VTable vTable : cfgValue.tables()) {
             if (GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(vTable.schema())) {
@@ -123,7 +123,7 @@ public final class GenJavaData extends GeneratorWithTag {
 
     private record ValueVisitorWithPkAndFieldChain(
             ConfigOutput output,
-            LangSwitchRuntime langSwitchRuntime) implements ForeachValue.ValueVisitor {
+            LangSwitchableRuntime langSwitchRuntime) implements ForeachValue.ValueVisitor {
 
         @Override
         public void visitPrimitive(PrimitiveValue primitiveValue, Value pk, List<String> fieldChain) {

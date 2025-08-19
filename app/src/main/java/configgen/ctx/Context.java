@@ -46,7 +46,7 @@ public class Context {
 
     private DirectoryStructure sourceStructure;
     private LangTextFinder nullableLangTextFinder;
-    private LangSwitch nullableLangSwitch;
+    private LangSwitchable nullableLangSwitch;
     private CfgSchema cfgSchema;
     private CfgData cfgData;
 
@@ -148,7 +148,7 @@ public class Context {
     /**
      * 这个是要实现客户端可在多国语言间切换语言，所以客户端服务器都需要完整的多国语言信息，而不能如i18n那样直接替换
      */
-    public LangSwitch nullableLangSwitch() {
+    public LangSwitchable nullableLangSwitch() {
         return nullableLangSwitch;
     }
 

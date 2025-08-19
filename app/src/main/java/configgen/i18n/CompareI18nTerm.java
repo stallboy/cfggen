@@ -14,7 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
-import static configgen.i18n.TextFinderByPkAndFieldChain.*;
+import static configgen.i18n.TextFinderById.*;
 
 
 public class CompareI18nTerm {

@@ -4,7 +4,7 @@ import configgen.ctx.Context;
 import configgen.gen.Generator;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
-import configgen.i18n.LangSwitch;
+import configgen.i18n.LangSwitchable;
 import configgen.schema.*;
 import configgen.util.CachedIndentPrinter;
 import configgen.util.JteEngine;
@@ -20,7 +20,7 @@ public class GenTs extends GeneratorWithTag {
     private final Path dstFile;
     public CfgValue cfgValue;
     public CfgSchema cfgSchema;
-    public LangSwitch nullableLanguageSwitch;
+    public LangSwitchable nullableLanguageSwitch;
 
     public GenTs(Parameter parameter) {
         super(parameter);

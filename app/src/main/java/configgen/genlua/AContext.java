@@ -1,6 +1,6 @@
 package configgen.genlua;
 
-import configgen.i18n.LangSwitch;
+import configgen.i18n.LangSwitchable;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -32,7 +32,7 @@ class AContext {
 
     private AStat statistics;
 
-    void init(String pkg, LangSwitch ls, boolean shareEmptyTable, boolean share,
+    void init(String pkg, LangSwitchable ls, boolean shareEmptyTable, boolean share,
               boolean packBool, boolean noStr, boolean rForOldShared) {
 
         nullableLangSwitchSupport = ls != null ? new LangSwitchSupport(ls) : null;

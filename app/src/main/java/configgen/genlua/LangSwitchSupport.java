@@ -1,6 +1,6 @@
 package configgen.genlua;
 
-import configgen.i18n.LangSwitch;
+import configgen.i18n.LangSwitchable;
 import configgen.i18n.LangTextFinder;
 import configgen.i18n.TextFinder;
 
@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 class LangSwitchSupport {
-    private final LangSwitch langSwitch;
+    private final LangSwitchable langSwitch;
     private final List<String> defaultLangTexts;
     private final List<LangTexts> langTextsList;
     private int index = 0;
@@ -25,7 +25,7 @@ class LangSwitchSupport {
 
     private static final int INIT_SIZE = 1024 * 32;
 
-    LangSwitchSupport(LangSwitch langSwitch) {
+    LangSwitchSupport(LangSwitchable langSwitch) {
         this.langSwitch = langSwitch;
         defaultLangTexts = new ArrayList<>(INIT_SIZE);
         defaultLangTexts.add("");  // 第一个是id为0，表示空字符串

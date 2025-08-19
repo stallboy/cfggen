@@ -1,6 +1,6 @@
 package configgen.genjava.code;
 
-import configgen.i18n.LangSwitch;
+import configgen.i18n.LangSwitchable;
 import configgen.util.CachedIndentPrinter;
 
 import java.util.List;
@@ -11,7 +11,7 @@ import static configgen.gen.Generator.upper1;
 
 class GenText {
 
-    static void generate(LangSwitch ls, CachedIndentPrinter ps) {
+    static void generate(LangSwitchable ls, CachedIndentPrinter ps) {
         ps.println("package %s;", Name.codeTopPkg);
         ps.println();
 

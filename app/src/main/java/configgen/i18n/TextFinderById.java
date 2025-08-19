@@ -12,18 +12,26 @@ import java.util.stream.Stream;
  * 每个表中的text字段，pk+fieldChain作为id---映射到--->翻译文本。
  * 这是最完备的机制，可以相同的原始本文，不同的翻译文本。
  */
-class TextFinderByPkAndFieldChain implements TextFinder {
+class TextFinderById implements TextFinder {
     record OneText(String original,
                    String translated) {
     }
 
+    /**
+     * @param description 可以为null
+     * @param texts 里面元素可以为null
+     */
     record OneRecord(String description,
                      List<OneText> texts) {
     }
 
-    private String nullableDescriptionName;
-    private final Map<String, Integer> fieldChainToIndex = new LinkedHashMap<>();
-    private final Map<String, OneRecord> pkToTexts = new LinkedHashMap<>();
+    String nullableDescriptionName;
+    /**
+     * 这个map的key是fieldChain的字符串表示
+     * value是oneRecord.texts的index
+     */
+    final Map<String, Integer> fieldChainToIndex = new LinkedHashMap<>();
+    final Map<String, OneRecord> pkToTexts = new LinkedHashMap<>();
 
     @Override
     public String findText(String pk, List<String> fieldChain, String original) {
@@ -36,6 +44,11 @@ class TextFinderByPkAndFieldChain implements TextFinder {
         if (line == null) {
             return null;
         }
+
+        if (idx >= line.texts.size()) {
+            return null;
+        }
+
         OneText txt = line.texts.get(idx);
         if (txt != null && txt.original.equals(original)) {
             return txt.translated;
@@ -57,7 +70,7 @@ class TextFinderByPkAndFieldChain implements TextFinder {
 
     @Override
     public boolean equals(Object otherObj) {
-        if (!(otherObj instanceof TextFinderByPkAndFieldChain other)) {
+        if (!(otherObj instanceof TextFinderById other)) {
             return false;
         }
 
@@ -101,7 +114,7 @@ class TextFinderByPkAndFieldChain implements TextFinder {
         return fieldChain.size() == 1 ? fieldChain.getFirst() : String.join("-", fieldChain);
     }
 
-    static LangSwitch loadLangSwitch(Path path, String defaultLang) {
+    public static LangSwitchable loadLangSwitch(Path path, String defaultLang) {
         Map<String, LangTextFinder> lang2i18n = new TreeMap<>();
         try (Stream<Path> plist = Files.list(path)) {
             plist.forEach(langDir -> {
@@ -115,10 +128,10 @@ class TextFinderByPkAndFieldChain implements TextFinder {
             throw new RuntimeException(e);
         }
 
-        return new LangSwitch(lang2i18n, defaultLang);
+        return new LangSwitchable(lang2i18n, defaultLang);
     }
 
-    static LangTextFinder loadOneLang(Path langDir) {
+    public static LangTextFinder loadOneLang(Path langDir) {
         LangTextFinder langTextFinder = new LangTextFinder();
         try (Stream<Path> plist = Files.list(langDir)) {
             plist.forEach(filePath -> {
@@ -134,8 +147,8 @@ class TextFinderByPkAndFieldChain implements TextFinder {
         return langTextFinder;
     }
 
-    private static Map<String, TextFinderByPkAndFieldChain> loadOneFile(Path filePath) {
-        Map<String, TextFinderByPkAndFieldChain> map = new LinkedHashMap<>();
+    private static Map<String, TextFinderById> loadOneFile(Path filePath) {
+        Map<String, TextFinderById> map = new LinkedHashMap<>();
         try (ReadableWorkbook wb = new ReadableWorkbook(filePath.toFile(),
                 new ReadingOptions(true, false))) {
             for (Sheet sheet : wb.getSheets().toList()) {
@@ -145,7 +158,7 @@ class TextFinderByPkAndFieldChain implements TextFinder {
                     continue;
                 }
 
-                TextFinderByPkAndFieldChain textFinder = new TextFinderByPkAndFieldChain();
+                TextFinderById textFinder = new TextFinderById();
                 try {
                     loadOneSheet(rawRows, textFinder);
                 } catch (Exception e) {
@@ -160,7 +173,7 @@ class TextFinderByPkAndFieldChain implements TextFinder {
         return map;
     }
 
-    private static void loadOneSheet(List<Row> rawRows, TextFinderByPkAndFieldChain textFinder) {
+    private static void loadOneSheet(List<Row> rawRows, TextFinderById textFinder) {
         // 第一行是表头，分析
         Row header = rawRows.getFirst();
         int columnCount = header.getCellCount();
@@ -188,7 +201,7 @@ class TextFinderByPkAndFieldChain implements TextFinder {
 
         boolean hasDescription = tColumns[0] > 2;
         if (hasDescription) {
-            textFinder.nullableDescriptionName = getCellAsString(header,1).orElse("");
+            textFinder.nullableDescriptionName = getCellAsString(header, 1).orElse("");
         }
 
         for (int r = 1, rowCount = rawRows.size(); r < rowCount; r++) {
@@ -227,7 +240,7 @@ class TextFinderByPkAndFieldChain implements TextFinder {
     }
 
     /**
-     * 让number类型也返回string
+     * 让number类型也返回string，因为翻译返回的excel有些格子是数字默认用了number
      */
     static private Optional<String> getCellAsString(Row row, int c) {
         Optional<Cell> cell = row.getOptionalCell(c);

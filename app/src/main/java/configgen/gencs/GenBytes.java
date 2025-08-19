@@ -2,7 +2,7 @@ package configgen.gencs;
 
 import configgen.ctx.Context;
 import configgen.gen.GeneratorWithTag;
-import configgen.i18n.LangSwitchRuntime;
+import configgen.i18n.LangSwitchableRuntime;
 import configgen.gen.Parameter;
 import configgen.util.CachedFileOutputStream;
 import configgen.util.XorCipherOutputStream;
@@ -20,7 +20,7 @@ public class GenBytes extends GeneratorWithTag {
     private final File file;
     private final String cipher;
     private final boolean isStringPool;
-    private LangSwitchRuntime langSwitchRuntime;
+    private LangSwitchableRuntime langSwitchRuntime;
     private StringPool stringPool;
 
     public GenBytes(Parameter parameter) {
@@ -35,7 +35,7 @@ public class GenBytes extends GeneratorWithTag {
     public void generate(Context ctx) throws IOException {
         CfgValue cfgValue = ctx.makeValue(tag);
         if (ctx.nullableLangSwitch() != null) {
-            langSwitchRuntime = new LangSwitchRuntime(ctx.nullableLangSwitch());
+            langSwitchRuntime = new LangSwitchableRuntime(ctx.nullableLangSwitch());
         }
         if (isStringPool) {
             stringPool = new StringPool();

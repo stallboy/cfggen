@@ -16,9 +16,9 @@ import configgen.genjson.GenJsonByAI;
 import configgen.genjson.GenTsSchema;
 import configgen.genlua.GenLua;
 import configgen.i18n.CompareI18nTerm;
-import configgen.i18n.GenI18nByOrig;
-import configgen.i18n.GenI18nByPkAndFieldChain;
-import configgen.i18n.GenI18nByPkAndFieldChainTest;
+import configgen.i18n.GenI18nByValue;
+import configgen.i18n.GenI18nById;
+import configgen.i18n.GenI18nByIdTest;
 import configgen.schema.CfgSchema;
 import configgen.schema.CfgSchemaErrs;
 import configgen.schema.CfgSchemas;
@@ -135,9 +135,9 @@ public final class Main {
     }
 
     private static void main0(String[] args) throws Exception {
-        Generators.addProvider("i18n", GenI18nByOrig::new);
-        Generators.addProvider("i18nbyid", GenI18nByPkAndFieldChain::new);
-        Generators.addProvider("i18ntest", GenI18nByPkAndFieldChainTest::new);
+        Generators.addProvider("i18n", GenI18nByValue::new);
+        Generators.addProvider("i18nbyid", GenI18nById::new);
+        Generators.addProvider("i18ntest", GenI18nByIdTest::new);
 
         Generators.addProvider("java", GenJavaCode::new);
         Generators.addProvider("javadata", GenJavaData::new);

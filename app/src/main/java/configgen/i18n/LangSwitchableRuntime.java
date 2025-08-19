@@ -3,13 +3,13 @@ package configgen.i18n;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LangSwitchRuntime {
-    private final LangSwitch langSwitch;
+public class LangSwitchableRuntime {
+    private final LangSwitchable langSwitch;
     private final List<TextFinder> curTableTextFinderList;
     private final String[] tmp;
     private final String[] tmpEmpty;
 
-    public LangSwitchRuntime(LangSwitch langSwitch) {
+    public LangSwitchableRuntime(LangSwitchable langSwitch) {
         this.langSwitch = langSwitch;
         curTableTextFinderList = new ArrayList<>(langSwitch.langMap().size());
         int langCnt = langSwitch.languageCount();
