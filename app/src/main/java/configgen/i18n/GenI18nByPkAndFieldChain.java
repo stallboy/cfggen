@@ -26,17 +26,17 @@ import static configgen.value.CfgValue.*;
 
 
 public final class GenI18nByPkAndFieldChain extends Generator {
-    record OneText(String fieldChain,
-                   String original,
-                   String translated) {
-    }
 
-    /**
-     * @param description：oneTable.nullableDescriptionName != null 时有效
-     */
-    record OneRecord(String pk,
-                     String description,
-                     List<OneText> texts) {
+
+    static class TopModuleToTextTables extends LinkedHashMap<String, List<OneTable>> {
+        static TopModuleToTextTables of(List<OneTable> textTables) {
+            TopModuleToTextTables res = new TopModuleToTextTables();
+            for (OneTable ot : textTables) {
+                List<OneTable> tables = res.computeIfAbsent(getTopModule(ot.table), k -> new ArrayList<>());
+                tables.add(ot);
+            }
+            return res;
+        }
     }
 
     /**
@@ -46,10 +46,40 @@ public final class GenI18nByPkAndFieldChain extends Generator {
                     String nullableDescriptionName,
                     List<OneRecord> records) {
     }
+    /**
+     * @param description：oneTable.nullableDescriptionName != null 时有效
+     */
+    record OneRecord(String pk,
+                     String description,
+                     List<OneText> texts) {
+    }
+    record OneText(String fieldChain,
+                   String original,
+                   String translated) {
+    }
+
+
+    static class TopModuleToTranslateFiles extends LinkedHashMap<String, OneTranslateFile> {
+
+        static TopModuleToTranslateFiles of(LangTextFinder lang) {
+            TopModuleToTranslateFiles res = new TopModuleToTranslateFiles();
+            for (Map.Entry<String, TextFinder> e : lang.getMap().entrySet()) {
+                String table = e.getKey();
+                TextFinderByPkAndFieldChain finder = (TextFinderByPkAndFieldChain) e.getValue();
+                OneTranslateFile file = res.computeIfAbsent(getTopModule(table),
+                        k -> new OneTranslateFile());
+                file.put(table, finder);
+            }
+            return res;
+        }
+    }
+
+    static class OneTranslateFile extends LinkedHashMap<String, TextFinderByPkAndFieldChain> {
+
+    }
 
     private final String outputDir;
     private final String backupDir;
-    private List<OneTable> textTables;
     private OneTable curTable;
     private OneRecord curRecord;
     private final I18nStat stat = new I18nStat();
@@ -63,8 +93,7 @@ public final class GenI18nByPkAndFieldChain extends Generator {
     @Override
     public void generate(Context ctx) throws IOException {
         CfgValue cfgValue = ctx.makeValue();
-
-        textTables = new ArrayList<>(16);
+        List<OneTable> textTables = new ArrayList<>(16);
         for (VTable vTable : cfgValue.sortedTables()) {
             if (HasText.hasText(vTable.schema())) {
                 String descriptionFieldName = vTable.schema().meta().getStr("lang", null);
@@ -81,7 +110,7 @@ public final class GenI18nByPkAndFieldChain extends Generator {
                 if (!curTable.records.isEmpty()) {
                     textTables.add(curTable);
                     int txtCount = curTable.records.stream().mapToInt(r -> r.texts.size()).sum();
-                    System.out.printf("%40s: %8d %8d%n", curTable.table, curTable.records.size(), txtCount);
+                    Logger.verbose("%40s: %8d %8d", curTable.table, curTable.records.size(), txtCount);
                 }
             }
         }
@@ -99,7 +128,8 @@ public final class GenI18nByPkAndFieldChain extends Generator {
         // 确保无temp目录，然后创建
         Path outputDirPath = Path.of(outputDir);
         String lang = outputDirPath.getFileName().toString();
-        String outputDirTemp = Path.of(backupDir, lang + "_temp").normalize().toString();
+        Path outputDirTempPath = Path.of(backupDir, lang + "_temp");
+        String outputDirTemp = outputDirTempPath.normalize().toString();
         if (Files.isDirectory(Path.of(outputDirTemp))) {
             throw new RuntimeException("temp directory = %s exist, delete it then retry".formatted(outputDirTemp));
         }
@@ -110,9 +140,11 @@ public final class GenI18nByPkAndFieldChain extends Generator {
         }
 
         // 如果不是覆盖，就直接输出到outputDir，如果是覆盖，就输出到temp
-        for (Map.Entry<String, List<OneTable>> e : getTopModuleToTextTables().entrySet()) {
+        TopModuleToTextTables needWriteTables = TopModuleToTextTables.of(textTables);
+        for (Map.Entry<String, List<OneTable>> e : needWriteTables.entrySet()) {
             String topModuleFn = e.getKey() + ".xlsx";
             List<OneTable> tables = e.getValue();
+
             try (OutputStream os = needReplaceFileI18nById != null ?
                     new FileOutputStream(new File(outputDirTemp, topModuleFn)) :
                     new CachedFileOutputStream(new File(outputDir, topModuleFn));
@@ -123,6 +155,29 @@ public final class GenI18nByPkAndFieldChain extends Generator {
                 }
             }
         }
+        ////// 测试：fastexcel的xlsx文件写入是否正确（用再读取一次，然后比较的方式）
+        {
+//            Path wrotePath = needReplaceFileI18nById != null ? outputDirTempPath : outputDirPath;
+//            LangTextFinder wrote = TextFinderByPkAndFieldChain.loadOneLang(wrotePath);
+//            TopModuleToTranslateFiles wroteFiles = TopModuleToTranslateFiles.of(wrote);
+//
+//            for (Map.Entry<String, OneTranslateFile> oe : wroteFiles.entrySet()) {
+//                String topModule = oe.getKey();
+//                OneTranslateFile wroteFile = oe.getValue();
+//                OneTranslateFile old = oldFiles.get(topModule);
+//
+//                if (cur.equals(old)) {
+//                    Files.copy(Path.of(outputDirBackup, fn), dstPath,
+//                            StandardCopyOption.REPLACE_EXISTING,
+//                            StandardCopyOption.COPY_ATTRIBUTES);
+//
+//
+//                } else {
+//                    Logger.log((old != null ? "modify " : "create ") + dstPath.toAbsolutePath().normalize());
+//                }
+//            }
+        }
+
 
         // 是覆盖，此时需要先备份原有的，然后temp->outputDir（通过3实现内容相同，就用原有的）
         if (needReplaceFileI18nById != null) {
@@ -138,8 +193,8 @@ public final class GenI18nByPkAndFieldChain extends Generator {
 
             // 3.最后把内容相同的file 从 <outputDirBackup> ---拷贝到---> <outputDir>
             LangTextFinder curLang = TextFinderByPkAndFieldChain.loadOneLang(outputDirPath);
-            Map<String, OneTranslateFile> curFiles = getTopModulesToTextFinders(curLang);
-            Map<String, OneTranslateFile> oldFiles = getTopModulesToTextFinders(needReplaceFileI18nById);
+            Map<String, OneTranslateFile> curFiles = TopModuleToTranslateFiles.of(curLang);
+            Map<String, OneTranslateFile> oldFiles = TopModuleToTranslateFiles.of(needReplaceFileI18nById);
 
             for (Map.Entry<String, OneTranslateFile> oe : curFiles.entrySet()) {
                 String topModule = oe.getKey();
@@ -197,29 +252,6 @@ public final class GenI18nByPkAndFieldChain extends Generator {
         }
     }
 
-    record OneTranslateFile(Map<String, TextFinderByPkAndFieldChain> tables) {
-    }
-
-    private static Map<String, OneTranslateFile> getTopModulesToTextFinders(LangTextFinder lang) {
-        Map<String, OneTranslateFile> res = new LinkedHashMap<>();
-        for (Map.Entry<String, TextFinder> e : lang.getMap().entrySet()) {
-            String table = e.getKey();
-            TextFinderByPkAndFieldChain finder = (TextFinderByPkAndFieldChain) e.getValue();
-            OneTranslateFile file = res.computeIfAbsent(getTopModule(table),
-                    k -> new OneTranslateFile(new LinkedHashMap<>()));
-            file.tables.put(table, finder);
-        }
-        return res;
-    }
-
-    private Map<String, List<OneTable>> getTopModuleToTextTables() {
-        Map<String, List<OneTable>> res = new LinkedHashMap<>();
-        for (OneTable ot : textTables) {
-            List<OneTable> tables = res.computeIfAbsent(getTopModule(ot.table), k -> new ArrayList<>());
-            tables.add(ot);
-        }
-        return res;
-    }
 
     private static String getTopModule(String table) {
         int idx = table.indexOf('.');
@@ -365,22 +397,22 @@ public final class GenI18nByPkAndFieldChain extends Generator {
         }
 
         void dump() {
-            System.out.printf("textCount         : %d%n", textCount);
-            System.out.printf("notTranslateCount : %d%n", notTranslateCount);
-            System.out.printf("sameOriginalCount : %d%n", sameOriginalCount);
-            System.out.printf("differentTranslate: %d%n", different.size());
+            Logger.verbose("textCount         : %d", textCount);
+            Logger.verbose("notTranslateCount : %d", notTranslateCount);
+            Logger.verbose("sameOriginalCount : %d", sameOriginalCount);
+            Logger.verbose("differentTranslate: %d", different.size());
 
-            System.out.println("------------ has not translate text: ------------ ");
+            Logger.verbose("------------ has not translate text: ------------ ");
             for (String table : hasNotTranslateTables) {
-                System.out.println(table);
+                Logger.verbose(table);
             }
 
-            System.out.println("------------ different translate: ------------ ");
+            Logger.verbose("------------ different translate: ------------ ");
             for (Map.Entry<String, List<OneT>> e : different.entrySet()) {
                 String orig = e.getKey();
-                System.out.println(orig);
+                Logger.verbose(orig);
                 for (OneT oneT : e.getValue()) {
-                    System.out.printf("    %s \t (%s)%n", oneT.translatedText, oneT.table);
+                    Logger.verbose("    %s \t (%s)", oneT.translatedText, oneT.table);
                 }
             }
         }

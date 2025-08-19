@@ -170,7 +170,7 @@ class TextFinderByPkAndFieldChain implements TextFinder {
         int[] tColumns = new int[columnCount]; // 翻译后的文本所在的列index
         int tColumnCnt = 0;
         for (int i = 2; i < columnCount; i++) { // 没有description列时，翻译文本列从2开始（0是pk，1是原始文本）
-            Optional<String> cell = header.getCellAsString(i);
+            Optional<String> cell = getCellAsString(header, i);
             if (cell.isPresent()) {
                 String field = cell.get();
                 if (field.startsWith("t(") && field.endsWith(")")) {
@@ -188,12 +188,12 @@ class TextFinderByPkAndFieldChain implements TextFinder {
 
         boolean hasDescription = tColumns[0] > 2;
         if (hasDescription) {
-            textFinder.nullableDescriptionName = header.getCellAsString(1).orElse("");
+            textFinder.nullableDescriptionName = getCellAsString(header,1).orElse("");
         }
 
         for (int r = 1, rowCount = rawRows.size(); r < rowCount; r++) {
             Row row = rawRows.get(r);
-            Optional<String> pkCell = row.getCellAsString(0);
+            Optional<String> pkCell = getCellAsString(row, 0);
             if (pkCell.isEmpty()) {
                 continue;
             }
@@ -201,15 +201,15 @@ class TextFinderByPkAndFieldChain implements TextFinder {
 
             String description = null;
             if (hasDescription) {
-                description = row.getCellAsString(1).orElse("");
+                description = getCellAsString(row, 1).orElse("");
             }
 
             List<OneText> texts = new ArrayList<>(tColumnCnt);
             for (int i = 0; i < tColumnCnt; i++) {
                 int translateCol = tColumns[i];
                 int originalCol = translateCol - 1;
-                Optional<String> oC = row.getCellAsString(originalCol);
-                Optional<String> tC = row.getCellAsString(translateCol);
+                Optional<String> oC = getCellAsString(row, originalCol);
+                Optional<String> tC = getCellAsString(row, translateCol);
 
                 OneText ot;
                 if (oC.isEmpty() && tC.isEmpty()) {
@@ -226,4 +226,22 @@ class TextFinderByPkAndFieldChain implements TextFinder {
         }
     }
 
+    /**
+     * 让number类型也返回string
+     */
+    static private Optional<String> getCellAsString(Row row, int c) {
+        Optional<Cell> cell = row.getOptionalCell(c);
+        if (cell.isPresent()) {
+            if (cell.get().getType() == CellType.STRING) {
+                return Optional.of(cell.get().asString());
+            }
+            if (cell.get().getType() == CellType.NUMBER) {
+                return Optional.of(cell.get().asNumber().toPlainString());
+            } else {
+                throw new IllegalArgumentException("不支持的单元格类型: " + cell.get().getType());
+            }
+        } else {
+            return Optional.empty();
+        }
+    }
 }

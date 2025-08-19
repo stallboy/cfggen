@@ -27,6 +27,12 @@ class ParameterParser implements Parameter {
         }
     }
 
+
+    @Override
+    public Parameter copy() {
+        return new ParameterParser(arg);
+    }
+
     @Override
     public String get(String key, String def) {
         String v = params.remove(key.toLowerCase());

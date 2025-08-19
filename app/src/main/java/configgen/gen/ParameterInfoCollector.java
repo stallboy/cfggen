@@ -39,6 +39,11 @@ record ParameterInfoCollector(String genId,
     }
 
     @Override
+    public Parameter copy() {
+        return new ParameterInfoCollector(genId, infos);
+    }
+
+    @Override
     public String get(String key, String def) {
         infos.put(key, new Info(def, false, null));
         return def;

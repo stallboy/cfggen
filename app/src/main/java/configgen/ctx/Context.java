@@ -83,6 +83,10 @@ public class Context {
         }
     }
 
+    public Context copy() {
+        return new Context(contextCfg, sourceStructure);
+    }
+
     private boolean readSchemaAndData(CfgDataReader dataReader, boolean autoFix) {
         CfgSchema schema = CfgSchemas.readFromDir(sourceStructure);
         Logger.profile("schema read");

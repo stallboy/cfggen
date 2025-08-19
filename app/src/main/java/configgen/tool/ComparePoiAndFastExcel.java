@@ -12,20 +12,7 @@ import java.util.List;
 
 public class ComparePoiAndFastExcel {
 
-    public static void compareCellData(Path dataDir, CfgDataReader fastDataReader, CfgDataReader poiDataReader) {
-
-        DirectoryStructure sourceStructure = new DirectoryStructure(dataDir);
-        CfgSchema schema = CfgSchemas.readFromDir(sourceStructure);
-        Logger.profile("schema read");
-        CfgSchemaErrs errs = schema.resolve();
-        if (!errs.errs().isEmpty()) {
-            errs.checkErrors();
-        }
-
-        new DirectoryStructure(dataDir);
-        CfgData dataByFastExcel = fastDataReader.readCfgData(sourceStructure, schema);
-        CfgData dataByPoi = poiDataReader.readCfgData(sourceStructure, schema);
-
+    public static void compareCellData(CfgData dataByPoi, CfgData dataByFastExcel) {
         int notMatchCount = 0;
 
         for (CfgData.DTable tableByFastExcel : dataByFastExcel.tables().values()) {

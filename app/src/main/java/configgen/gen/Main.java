@@ -1,6 +1,7 @@
 package configgen.gen;
 
 import configgen.ctx.Context;
+import configgen.ctx.DirectoryStructure;
 import configgen.data.*;
 import configgen.editorserver.EditorServer;
 import configgen.gencs.GenBytes;
@@ -17,6 +18,10 @@ import configgen.genlua.GenLua;
 import configgen.i18n.CompareI18nTerm;
 import configgen.i18n.GenI18nByOrig;
 import configgen.i18n.GenI18nByPkAndFieldChain;
+import configgen.i18n.GenI18nByPkAndFieldChainTest;
+import configgen.schema.CfgSchema;
+import configgen.schema.CfgSchemaErrs;
+import configgen.schema.CfgSchemas;
 import configgen.tool.*;
 import configgen.util.CachedFiles;
 import configgen.util.LocaleUtil;
@@ -132,6 +137,7 @@ public final class Main {
     private static void main0(String[] args) throws Exception {
         Generators.addProvider("i18n", GenI18nByOrig::new);
         Generators.addProvider("i18nbyid", GenI18nByPkAndFieldChain::new);
+        Generators.addProvider("i18ntest", GenI18nByPkAndFieldChainTest::new);
 
         Generators.addProvider("java", GenJavaCode::new);
         Generators.addProvider("javadata", GenJavaData::new);
@@ -283,11 +289,25 @@ public final class Main {
         }
 
         if (comparePoiAndFastExcel) {
+            // 测试fastexcel和poi读取数据的一致性
             if (BuildSettings.isIncludePoi()) {
+                DirectoryStructure sourceStructure = new DirectoryStructure(dataDir);
+                CfgSchema schema = CfgSchemas.readFromDir(sourceStructure);
+                Logger.profile("schema read");
+                CfgSchemaErrs errs = schema.resolve();
+                if (!errs.errs().isEmpty()) {
+                    errs.checkErrors();
+                }
                 ReadCsv csvReader = new ReadCsv(csvDefaultEncoding);
-                CfgDataReader fastDataReader = new CfgDataReader(headRow, csvReader, ReadByFastExcel.INSTANCE);
                 CfgDataReader poiDataReader = new CfgDataReader(headRow, csvReader, BuildSettings.getPoiReader());
-                ComparePoiAndFastExcel.compareCellData(dataDir, fastDataReader, poiDataReader);
+                CfgDataReader fastDataReader = new CfgDataReader(headRow, csvReader, ReadByFastExcel.INSTANCE);
+
+                CfgData dataByPoi = poiDataReader.readCfgData(sourceStructure, schema);
+
+                for (int i = 0; i < 200; i++) {
+                    CfgData dataByFastExcel = fastDataReader.readCfgData(sourceStructure, schema);
+                    ComparePoiAndFastExcel.compareCellData(dataByPoi, dataByFastExcel);
+                }
             } else {
                 usage("-comparePoiAndFastExcel，但jar里没有包含poi包");
             }

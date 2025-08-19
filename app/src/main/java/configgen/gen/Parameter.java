@@ -1,6 +1,8 @@
 package configgen.gen;
 
 public interface Parameter {
+    Parameter copy();
+
     String get(String key, String def);
 
     boolean has(String key);
