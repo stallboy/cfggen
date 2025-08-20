@@ -288,13 +288,19 @@ class TextFinderById implements TextFinder {
     static private Optional<String> getCellAsString(Row row, int c) {
         Optional<Cell> cell = row.getOptionalCell(c);
         if (cell.isPresent()) {
-            if (cell.get().getType() == CellType.STRING) {
-                return Optional.of(cell.get().asString());
-            }
-            if (cell.get().getType() == CellType.NUMBER) {
-                return Optional.of(cell.get().asNumber().toPlainString());
-            } else {
-                throw new IllegalArgumentException("不支持的单元格类型: " + cell.get().getType());
+            switch (cell.get().getType()){
+                case NUMBER -> {
+                    return Optional.of(cell.get().asNumber().toPlainString());
+                }
+                case STRING -> {
+                    return Optional.of(cell.get().asString());
+                }
+                case EMPTY -> {
+                    return Optional.of("");
+                }
+                default -> {
+                    throw new IllegalArgumentException("不支持的单元格类型: " + cell.get().getType());
+                }
             }
         } else {
             return Optional.empty();
