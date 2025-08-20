@@ -18,6 +18,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 import static configgen.i18n.LangTextInfo.*;
+import static configgen.i18n.TextFinderById.*;
 
 
 /**
@@ -45,7 +46,7 @@ public final class GenI18nById extends Generator {
         LangTextInfo needReplace = null;
         String readI18nFilename = ctx.getContextCfg().i18nFilename();
         if (readI18nFilename != null && readI18nFilename.equals(outputDir)) {
-            needReplace = of(ctx.nullableLangTextFinder().getMap());
+            needReplace = LangTextInfo.of(ctx.nullableLangTextFinder().getMap());
         }
 
         // 确保无temp目录，然后创建
@@ -74,9 +75,8 @@ public final class GenI18nById extends Generator {
         }
 
         { // 测试：fastexcel的xlsx文件写入是否正确（用再读取一次，然后比较的方式）
-            LangTextFinder wrote = TextFinderById.loadOneLang(wrotePath);
-            LangTextInfo wroteInfo = of(wrote.getMap());
-            if (!wroteInfo.equals(extracted)) {
+            LangTextInfo wrote = LangTextInfo.of(loadOneLang(wrotePath).getMap());
+            if (!equalsLang(wrote, extracted)) {
                 throw new RuntimeException("wrote files not match extracted files, SHOULD NOT HAPPEN");
             }
         }
@@ -85,10 +85,10 @@ public final class GenI18nById extends Generator {
         if (needReplace != null) {
             // 1.先把 <outputDir> -> <outputDirBackup>
             String outputDirBackup = Path.of(backupDir, lang).normalize().toString();
-            moveDirFilesToAnotherDir(outputDir, outputDirBackup);
+            Utils.moveDirFilesToAnotherDir(outputDir, outputDirBackup);
 
             // 2.然后把<outputDirTemp> -> <outputDir>
-            moveDirFilesToAnotherDir(outputDirTemp, outputDir);
+            Utils.moveDirFilesToAnotherDir(outputDirTemp, outputDir);
             if (!new File(outputDirTemp).delete()) {
                 throw new RuntimeException("delete temp directory = %s failed".formatted(outputDirTemp));
             }
@@ -118,24 +118,40 @@ public final class GenI18nById extends Generator {
     }
 
 
-    private static void moveDirFilesToAnotherDir(String from, String to) {
-        File toDir = new File(to);
-        if (toDir.isDirectory()) {
-            for (File file : Objects.requireNonNull(toDir.listFiles())) {
-                if (!file.delete()) {
-                    throw new RuntimeException("delete " + file + " failed");
-                }
-            }
-        } else {
-            if (!toDir.mkdirs()) {
-                throw new RuntimeException("mkdir " + toDir + " failed");
-            }
+    /**
+     * 可以直接用equals，但这里为了调试方便，打印出不匹配的table
+     */
+    private static boolean equalsLang(LangTextInfo wrote, LangTextInfo extracted) {
+        if (wrote.size() != extracted.size()) {
+            return false;
         }
-        for (File file : Objects.requireNonNull(new File(from).listFiles())) {
-            if (!file.renameTo(new File(to, file.getName()))) {
-                throw new RuntimeException("rename %s to %s failed".formatted(from, to));
+        for (var e : wrote.entrySet()) {
+            String topModule = e.getKey();
+            TopModuleTextInfo wroteTop = e.getValue();
+            TopModuleTextInfo extractedTop = extracted.get(topModule);
+            if (extractedTop == null) {
+                return false;
             }
-        }
-    }
 
+            if (wroteTop.size() != extractedTop.size()) {
+                return false;
+            }
+
+            for (var w : wroteTop.entrySet()) {
+                String table = w.getKey();
+                TextFinderById wroteTable = w.getValue();
+                TextFinderById extractedTable = extractedTop.get(table);
+                if (!wroteTable.equals(extractedTable)) {
+                    Logger.log("%s NOT match", table);
+//                    wroteTable.equals(extractedTable);
+                    return false;
+                }
+//                else {
+//                    Logger.log("%s match", table);
+//                }
+            }
+        }
+        return true;
+
+    }
 }

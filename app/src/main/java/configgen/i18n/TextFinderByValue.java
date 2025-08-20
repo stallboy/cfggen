@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
@@ -16,15 +15,11 @@ import java.util.stream.Stream;
  */
 class TextFinderByValue implements TextFinder {
     private final SequencedMap<String, String> originalToTranslated = new LinkedHashMap<>();
-    private final boolean isCrLfAsLf;
 
-    public TextFinderByValue(boolean isCrLfAsLf) {
-        this.isCrLfAsLf = isCrLfAsLf;
-    }
 
     @Override
     public String findText(String pk, List<String> fieldChain, String original) {
-        String normalized = normalize(original, isCrLfAsLf);
+        String normalized = Utils.normalize(original);
         String text = originalToTranslated.get(normalized);
         if (text != null && !text.isEmpty()) {
             return text;
@@ -40,14 +35,14 @@ class TextFinderByValue implements TextFinder {
     }
 
 
-    public static LangSwitchable loadLangSwitch(Path path, String defaultLang, boolean isCrLfAsLf) {
+    public static LangSwitchable loadLangSwitch(Path path, String defaultLang) {
         Map<String, LangTextFinder> lang2i18n = new TreeMap<>();
         try (Stream<Path> plist = Files.list(path)) {
             plist.forEach(langFilePath -> {
                 String langName = langFilePath.getFileName().toString();
                 if (langName.toLowerCase().endsWith(".csv")) {
                     langName = langName.substring(0, langName.length() - 4);
-                    lang2i18n.put(langName, loadOneLang(langFilePath, isCrLfAsLf));
+                    lang2i18n.put(langName, loadOneLang(langFilePath));
                 }
             });
         } catch (IOException e) {
@@ -57,7 +52,7 @@ class TextFinderByValue implements TextFinder {
         return new LangSwitchable(lang2i18n, defaultLang);
     }
 
-    public static LangTextFinder loadOneLang(Path path, boolean isCrLfAsLf) {
+    public static LangTextFinder loadOneLang(Path path) {
         List<CsvRow> rows = CSVUtil.read(path, "UTF-8");
 
         if (rows.isEmpty()) {
@@ -79,24 +74,14 @@ class TextFinderByValue implements TextFinder {
                 String table = row.getField(0);
                 String original = row.getField(1);
                 String translated = row.getField(2);
-                original = normalize(original, isCrLfAsLf);
+                String normalized = Utils.normalize(original);
 
-                TextFinderByValue map = (TextFinderByValue) res.getMap().computeIfAbsent(table, t -> new TextFinderByValue(isCrLfAsLf));
-                map.originalToTranslated.put(original, translated);
+                TextFinderByValue map = (TextFinderByValue) res.getMap().computeIfAbsent(table, t -> new TextFinderByValue());
+                map.originalToTranslated.put(normalized, translated);
             }
         }
         return res;
     }
 
-
-    private static final Pattern pattern = Pattern.compile("\r\n");
-
-    private static String normalize(String text, boolean isCRLFAsLF) {
-        if (isCRLFAsLF) {
-            return pattern.matcher(text).replaceAll("\n");
-        } else {
-            return text;
-        }
-    }
 
 }

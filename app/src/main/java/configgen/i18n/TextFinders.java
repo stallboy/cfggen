@@ -7,21 +7,21 @@ import java.util.stream.Stream;
 
 public class TextFinders {
 
-    public static LangSwitchable loadLangSwitch(String langSwitchDir, String defaultLang, boolean isCrLfAsLf) {
+    public static LangSwitchable loadLangSwitch(String langSwitchDir, String defaultLang) {
         Path path = Path.of(langSwitchDir);
         if (isLangSwitchById(path)) {
             return TextFinderById.loadLangSwitch(path, defaultLang);
         } else {
-            return TextFinderByValue.loadLangSwitch(path, defaultLang, isCrLfAsLf);
+            return TextFinderByValue.loadLangSwitch(path, defaultLang);
         }
     }
 
-    public static LangTextFinder loadOneLang(String i18nFilename, boolean isCrLfAsLf) {
+    public static LangTextFinder loadOneLang(String i18nFilename) {
         Path path = Path.of(i18nFilename);
         if (isLangTextFinderById(path)) {
             return TextFinderById.loadOneLang(path);
         } else {
-            return TextFinderByValue.loadOneLang(path, isCrLfAsLf);
+            return TextFinderByValue.loadOneLang(path);
         }
     }
 
@@ -39,4 +39,6 @@ public class TextFinders {
             throw new RuntimeException(e);
         }
     }
+
+
 }

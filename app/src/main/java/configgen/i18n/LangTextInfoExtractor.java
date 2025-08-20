@@ -64,9 +64,11 @@ class LangTextInfoExtractor {
                     return;
                 }
 
-                String fieldChainStr = fieldChainStr(fieldChain);
-                OneText oneText = new OneText(original, translated);
+                // 存之前也normalize
+                String normalized = Utils.normalize(original);
+                OneText oneText = new OneText(normalized, translated);
 
+                String fieldChainStr = fieldChainStr(fieldChain);
                 int idx = finder.fieldChainToIndex.computeIfAbsent(fieldChainStr, k -> finder.fieldChainToIndex.size());
                 // 保证中间塞上null
                 while (record.texts().size() <= idx) {

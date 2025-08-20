@@ -21,7 +21,6 @@ public class Context {
                              String csvDefaultEncoding,
 
                              String i18nFilename,
-                             boolean crLfAsLf,
                              String langSwitchDir,
                              String langSwitchDefaultLang) {
 
@@ -38,7 +37,7 @@ public class Context {
         }
 
         public static ContextCfg of(Path dataDir, String csvDefaultEncoding) {
-            return new ContextCfg(dataDir, false, 2, csvDefaultEncoding, null, false, null, null);
+            return new ContextCfg(dataDir, false, 2, csvDefaultEncoding, null, null, null);
         }
     }
 
@@ -69,9 +68,9 @@ public class Context {
         this.sourceStructure = sourceStructure;
 
         if (cfg.i18nFilename != null) {
-            nullableLangTextFinder = TextFinders.loadOneLang(cfg.i18nFilename, cfg.crLfAsLf);
+            nullableLangTextFinder = TextFinders.loadOneLang(cfg.i18nFilename);
         } else if (cfg.langSwitchDir != null) {
-            nullableLangSwitch = TextFinders.loadLangSwitch(cfg.langSwitchDir, cfg.langSwitchDefaultLang, cfg.crLfAsLf);
+            nullableLangSwitch = TextFinders.loadLangSwitch(cfg.langSwitchDir, cfg.langSwitchDefaultLang);
         }
 
         ExcelReader excelReader = (cfg.tryUsePoi && BuildSettings.isIncludePoi()) ?

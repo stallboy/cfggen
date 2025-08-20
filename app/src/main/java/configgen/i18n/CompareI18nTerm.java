@@ -38,7 +38,7 @@ public class CompareI18nTerm {
         if (terms == null || terms.isEmpty()) {
             return;
         }
-        LangTextFinder langTextFinder = TextFinders.loadOneLang(i8nFilename, false);
+        LangTextFinder langTextFinder = TextFinders.loadOneLang(i8nFilename);
         List<Callable<OneTableResult>> tasks = makeTasks(langTextFinder, terms);
         Map<String, OneTableResult> orderedResult = new TreeMap<>();
         try (ExecutorService executor = Executors.newWorkStealingPool()) {
@@ -101,8 +101,9 @@ public class CompareI18nTerm {
                 for (Row row : rows) {
                     String c0 = row.getCellAsString(0).orElse("");
                     String c1 = row.getCellAsString(1).orElse("");
+                    String normalized = Utils.normalize(c0);
                     if (!c0.isEmpty() && !c1.isEmpty()) {
-                        result.add(new OneText(c0, c1));
+                        result.add(new OneText(normalized, c1));
                     }
                 }
                 return result;

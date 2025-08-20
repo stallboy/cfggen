@@ -15,6 +15,11 @@ import java.util.stream.Stream;
 class TextFinderById implements TextFinder {
     record OneText(String original,
                    String translated) {
+        public OneText {
+            if (original == null || translated == null) {
+                throw new IllegalArgumentException("original和translated都不能为null");
+            }
+        }
     }
 
     /**
@@ -23,6 +28,42 @@ class TextFinderById implements TextFinder {
      */
     record OneRecord(String description,
                      List<OneText> texts) {
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof OneRecord(String otherDescription, List<OneText> otherTexts))) {
+                return false;
+            }
+            if (!Objects.equals(description, otherDescription)) {
+                return false;
+            }
+            // 可能一个里面有多余的null
+            // <a,null,b>要跟<a,null,b,null>相等
+            if (texts.size() == otherTexts.size()) {
+                return texts.equals(otherTexts);
+            }
+
+            List<OneText> larger;
+            List<OneText> smaller;
+            if (texts.size() < otherTexts.size()) {
+                smaller = texts;
+                larger = otherTexts;
+            } else {
+                smaller = otherTexts;
+                larger = texts;
+            }
+
+            if (!larger.subList(0, smaller.size()).equals(smaller)) {
+                return false;
+            }
+
+            for (int i = smaller.size(); i < larger.size(); i++) {
+                if (larger.get(i) != null) {
+                    return false; // larger有多余的非null
+                }
+            }
+            return true;
+        }
     }
 
     String nullableDescriptionName;
@@ -50,7 +91,8 @@ class TextFinderById implements TextFinder {
         }
 
         OneText txt = line.texts.get(idx);
-        if (txt != null && txt.original.equals(original)) {
+        String normalized = Utils.normalize(original);
+        if (txt != null && txt.original.equals(normalized)) {
             return txt.translated;
         } else {
             return null;
@@ -230,7 +272,8 @@ class TextFinderById implements TextFinder {
                 } else {
                     String original = oC.orElse("");
                     String translate = tC.orElse("");
-                    ot = new OneText(original, translate);
+                    String normalized = Utils.normalize(original);
+                    ot = new OneText(normalized, translate);
                 }
                 texts.add(ot);
             }

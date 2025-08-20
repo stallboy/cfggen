@@ -51,8 +51,6 @@ public final class Main {
         System.out.println("-----i18n support");
         System.out.println("    -i18nfile         " + LocaleUtil.getLocaleString("Usage.I18nFile",
                 "two choices: 1,csv file use original str as Id per table. 2,directory,has multiply xlsx file and use pk&fieldChain as Id per table. default null"));
-        System.out.println("    -i18ncrlfaslf     " + LocaleUtil.getLocaleString("Usage.I18nCrLfAsLf",
-                "replace \\r\\n to \\n. used when -i18nfile is csv file. default false."));
         System.out.println("    -langswitchdir    " + LocaleUtil.getLocaleString("Usage.LangSwitchDir",
                 "language switch support"));
         System.out.println("    -defaultlang      " + LocaleUtil.getLocaleString("Usage.DefaultLang",
@@ -137,7 +135,7 @@ public final class Main {
     private static void main0(String[] args) throws Exception {
         Generators.addProvider("i18n", GenI18nByValue::new);
         Generators.addProvider("i18nbyid", GenI18nById::new);
-        Generators.addProvider("i18ntest", GenI18nByIdTest::new);
+        Generators.addProvider("i18nbyidtest", GenI18nByIdTest::new);
 
         Generators.addProvider("java", GenJavaCode::new);
         Generators.addProvider("javadata", GenJavaData::new);
@@ -162,7 +160,6 @@ public final class Main {
         String csvDefaultEncoding = "GBK";
 
         String i18nfile = null;
-        boolean i18ncrlfaslf = false;
         String langSwitchDir = null;
         String langSwitchDefaultLang = "zh_cn";
 
@@ -206,7 +203,6 @@ public final class Main {
                 case "-encoding" -> csvDefaultEncoding = args[++i];
                 case "-verify" -> verify = true;
                 case "-i18nfile" -> i18nfile = args[++i];
-                case "-i18ncrlfaslf" -> i18ncrlfaslf = true;
                 case "-langswitchdir" -> langSwitchDir = args[++i];
                 case "-defaultlang" -> langSwitchDefaultLang = args[++i];
                 case "-v" -> Logger.setVerboseLevel(1);
@@ -321,7 +317,7 @@ public final class Main {
         Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));
 
         Context context = new Context(new Context.ContextCfg(dataDir, usePoi, headRow, csvDefaultEncoding,
-                i18nfile, i18ncrlfaslf, langSwitchDir, langSwitchDefaultLang));
+                i18nfile, langSwitchDir, langSwitchDefaultLang));
 
         if (searchParam != null) {
             ValueSearcher searcher = new ValueSearcher(context.makeValue(searchTag), searchTo);
