@@ -72,7 +72,7 @@ public final class GenI18nById extends Generator {
         if (needReplace) {
             // 测试：fastexcel的xlsx文件写入是否正确（用再读取一次，然后比较的方式）, 可以不做
             LangTextInfo wrote = LangTextInfo.of(TextFinderById.loadOneLang(wrotePath));
-            if (!equalsLang(wrote, extracted)) {
+            if (!wrote.equalsWithLog(extracted)) {
                 throw new RuntimeException("wrote files not match extracted files, SHOULD NOT HAPPEN");
             }
         }
@@ -140,41 +140,4 @@ public final class GenI18nById extends Generator {
         }
     }
 
-
-    /**
-     * 可以直接用equals，但这里为了调试方便，打印出不匹配的table
-     */
-    private static boolean equalsLang(LangTextInfo wrote, LangTextInfo extracted) {
-        if (wrote.size() != extracted.size()) {
-            return false;
-        }
-        for (var e : wrote.entrySet()) {
-            String topModule = e.getKey();
-            LangTextInfo.TopModuleTextInfo wroteTop = e.getValue();
-            LangTextInfo.TopModuleTextInfo extractedTop = extracted.get(topModule);
-            if (extractedTop == null) {
-                return false;
-            }
-
-            if (wroteTop.size() != extractedTop.size()) {
-                return false;
-            }
-
-            for (var w : wroteTop.entrySet()) {
-                String table = w.getKey();
-                TextFinderById wroteTable = w.getValue();
-                TextFinderById extractedTable = extractedTop.get(table);
-                if (!wroteTable.equals(extractedTable)) {
-                    Logger.log("%s NOT match", table);
-//                    wroteTable.equals(extractedTable);
-                    return false;
-                }
-//                else {
-//                    Logger.log("%s match", table);
-//                }
-            }
-        }
-        return true;
-
-    }
 }

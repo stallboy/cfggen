@@ -1,5 +1,6 @@
 package configgen.i18n;
 
+import configgen.util.Logger;
 import org.dhatim.fastexcel.Workbook;
 import org.dhatim.fastexcel.Worksheet;
 
@@ -108,6 +109,42 @@ class LangTextInfo extends LinkedHashMap<String, LangTextInfo.TopModuleTextInfo>
                 topModule.save(os, stat);
             }
         }
+    }
+
+    /**
+     * 可以直接用equals，但这里为了调试方便，打印出不匹配的table
+     */
+    public boolean equalsWithLog(LangTextInfo other) {
+        if (size() != other.size()) {
+            return false;
+        }
+        for (var e : entrySet()) {
+            String topModule = e.getKey();
+            LangTextInfo.TopModuleTextInfo thisTop = e.getValue();
+            LangTextInfo.TopModuleTextInfo otherTop = other.get(topModule);
+            if (otherTop == null) {
+                return false;
+            }
+
+            if (thisTop.size() != otherTop.size()) {
+                return false;
+            }
+
+            for (var w : thisTop.entrySet()) {
+                String table = w.getKey();
+                TextFinderById wroteTable = w.getValue();
+                TextFinderById extractedTable = otherTop.get(table);
+                if (!wroteTable.equals(extractedTable)) {
+                    Logger.log("%s NOT match", table);
+//                    wroteTable.equals(extractedTable);
+                    return false;
+                }
+//                else {
+//                    Logger.log("%s match", table);
+//                }
+            }
+        }
+        return true;
     }
 
 
