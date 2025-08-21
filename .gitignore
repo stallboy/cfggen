@@ -55,3 +55,4 @@
 /example/ts/node_modules
 /example/ts/package-lock.json
 /example/ts/pnpm-lock.yaml
+/example/i18n/backup

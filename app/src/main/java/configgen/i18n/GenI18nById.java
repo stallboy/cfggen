@@ -3,6 +3,7 @@ package configgen.i18n;
 import configgen.ctx.Context;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
+import configgen.i18n.TodoById.TodoFileInfo;
 import configgen.util.Logger;
 import configgen.value.CfgValue;
 
@@ -76,10 +77,10 @@ public final class GenI18nById extends Generator {
             }
         }
 
+        String outputDirBackup = Path.of(backupDir, lang).normalize().toString();
         // 是覆盖，此时需要先备份原有的，然后temp->outputDir（通过3实现内容相同，就用原有的）
         if (needReplace) {
             // 1.先把 <outputDir> -> <outputDirBackup>
-            String outputDirBackup = Path.of(backupDir, lang).normalize().toString();
             Utils.moveDirFilesToAnotherDir(outputDir, outputDirBackup);
 
             // 2.然后把<outputDirTemp> -> <outputDir>
@@ -109,12 +110,33 @@ public final class GenI18nById extends Generator {
             }
         }
 
+        // 额外生成一份_todo_[lang].xlsx汇总文件，包含todo和done两个分页，
+        {
+            String todoFileName = TodoById.getTodoFileName(lang);
+            Path todoFilePath = outputDirPath.resolve(todoFileName);
+            TodoFileInfo todoFileInfo = TodoFileInfo.of(extracted);
 
-        // 翻译工作流
-        // 额外生成一份_todo.xlsx汇总文件，包含todo和done两个分页，
-        File todoFile = outputDirPath.resolve(LangTextInfo.getTodoFileName(lang)).toFile();
-        try (OutputStream os = new BufferedOutputStream(new FileOutputStream(todoFile))) {
-            extracted.saveTodo(os);
+            boolean isKeepSame = false;
+            boolean exist = false;
+            if (needReplace) {
+                Path backupFile = Path.of(outputDirBackup, todoFileName);
+                if (Files.exists(backupFile)) {
+                    TodoFileInfo oldInBackup = TodoFileInfo.read(backupFile.toFile());
+                    if (oldInBackup.equals(todoFileInfo)) {
+                        Files.copy(backupFile, todoFilePath, StandardCopyOption.REPLACE_EXISTING,
+                                StandardCopyOption.COPY_ATTRIBUTES);
+                        isKeepSame = true;
+                    }
+                    exist = true;
+                }
+            }
+
+            if (!isKeepSame) {
+                try (OutputStream os = new BufferedOutputStream(new FileOutputStream(todoFilePath.toFile()))) {
+                    TodoById.saveTodo(os, todoFileInfo);
+                }
+                Logger.log("%s %s", exist ? "modify" : "create", todoFilePath.toAbsolutePath().normalize());
+            }
         }
     }
 

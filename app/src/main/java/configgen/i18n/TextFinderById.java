@@ -179,7 +179,7 @@ class TextFinderById implements TextFinder {
     public static LangTextFinder loadOneLang(Path langDir) {
         LangTextFinder langTextFinder = new LangTextFinder();
         String langName = langDir.getFileName().toString();
-        String todoFilename = LangTextInfo.getTodoFileName(langName);
+        String todoFilename = TodoById.getTodoFileName(langName);
 
         // 加载正常的xlsx文件
         try (Stream<Path> plist = Files.list(langDir)) {
@@ -198,7 +198,7 @@ class TextFinderById implements TextFinder {
         // 合并_todo_[lang].xlsx文件
         File todoFile = langDir.resolve(todoFilename).toFile();
         if (todoFile.exists()) {
-            LangTextInfo.mergeTodo(langTextFinder, todoFile);
+            TodoById.mergeTodo(langTextFinder, todoFile);
         }
         return langTextFinder;
     }
