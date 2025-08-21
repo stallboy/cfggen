@@ -2,11 +2,13 @@ package configgen.i18n;
 
 import org.dhatim.fastexcel.reader.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
+
 
 /**
  * 每个表中的text字段，pk+fieldChain作为id---映射到--->翻译文本。
@@ -91,6 +93,7 @@ class TextFinderById implements TextFinder {
         }
 
         OneText txt = line.texts.get(idx);
+        // normalize 只在查找i18n时本着尽量找到的原则,对original做normalize.
         String normalized = Utils.normalize(original);
         if (txt != null && txt.original.equals(normalized)) {
             return txt.translated;
@@ -175,10 +178,15 @@ class TextFinderById implements TextFinder {
 
     public static LangTextFinder loadOneLang(Path langDir) {
         LangTextFinder langTextFinder = new LangTextFinder();
+        String langName = langDir.getFileName().toString();
+        String todoFilename = LangTextInfo.getTodoFileName(langName);
+
+        // 加载正常的xlsx文件
         try (Stream<Path> plist = Files.list(langDir)) {
             plist.forEach(filePath -> {
                 if (Files.isRegularFile(filePath)) {
-                    if (filePath.getFileName().toString().toLowerCase().endsWith(".xlsx")) {
+                    String fileName = filePath.getFileName().toString().toLowerCase();
+                    if (fileName.endsWith(".xlsx") && !fileName.equals(todoFilename)) {
                         langTextFinder.getMap().putAll(loadOneFile(filePath));
                     }
                 }
@@ -186,10 +194,16 @@ class TextFinderById implements TextFinder {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        // 合并_todo_[lang].xlsx文件
+        File todoFile = langDir.resolve(todoFilename).toFile();
+        if (todoFile.exists()) {
+            LangTextInfo.mergeTodo(langTextFinder, todoFile);
+        }
         return langTextFinder;
     }
 
-    private static Map<String, TextFinderById> loadOneFile(Path filePath) {
+    static Map<String, TextFinderById> loadOneFile(Path filePath) {
         Map<String, TextFinderById> map = new LinkedHashMap<>();
         try (ReadableWorkbook wb = new ReadableWorkbook(filePath.toFile(),
                 new ReadingOptions(true, false))) {
@@ -214,6 +228,7 @@ class TextFinderById implements TextFinder {
         }
         return map;
     }
+
 
     private static void loadOneSheet(List<Row> rawRows, TextFinderById textFinder) {
         // 第一行是表头，分析
@@ -272,6 +287,7 @@ class TextFinderById implements TextFinder {
                 } else {
                     String original = oC.orElse("");
                     String translate = tC.orElse("");
+                    // 读进来的时候就normalize，方便查找
                     String normalized = Utils.normalize(original);
                     ot = new OneText(normalized, translate);
                 }
@@ -285,7 +301,7 @@ class TextFinderById implements TextFinder {
     /**
      * 让number类型也返回string，因为翻译返回的excel有些格子是数字默认用了number
      */
-    static private Optional<String> getCellAsString(Row row, int c) {
+    static Optional<String> getCellAsString(Row row, int c) {
         Optional<Cell> cell = row.getOptionalCell(c);
         if (cell.isPresent()) {
             switch (cell.get().getType()){

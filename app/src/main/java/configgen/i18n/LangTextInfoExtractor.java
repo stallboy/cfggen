@@ -38,7 +38,7 @@ class LangTextInfoExtractor {
 
                     long txtCount = finder.pkToTexts.values().stream().mapToLong(
                             r -> r.texts().stream().filter(Objects::nonNull).count()).sum();
-                    Logger.verbose("%40s: %8d %8d", tableName, finder.pkToTexts.size(), txtCount);
+                    Logger.verbose("extract %20s: %8d pks %8d texts", tableName, finder.pkToTexts.size(), txtCount);
                 }
             }
         }

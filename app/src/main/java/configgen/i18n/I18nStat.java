@@ -42,10 +42,10 @@ class I18nStat {
     }
 
     public void dump() {
-        Logger.verbose("textCount         : %d", textCount);
-        Logger.verbose("notTranslateCount : %d", notTranslateCount);
-        Logger.verbose("sameOriginalCount : %d", sameOriginalCount);
-        Logger.verbose("differentTranslate: %d", different.size());
+        Logger.verbose("              textCount : %d", textCount);
+        Logger.verbose("      notTranslateCount : %d", notTranslateCount);
+        Logger.verbose("      sameOriginalCount : %d", sameOriginalCount);
+        Logger.verbose("differentTranslateCount : %d", different.size());
 
         Logger.verbose("------------ has not translate text: ------------ ");
         for (String table : hasNotTranslateTables) {
