@@ -76,7 +76,7 @@ class TextFinderByValue implements TextFinder {
                 String translated = row.getField(2);
                 String normalized = Utils.normalize(original);
 
-                TextFinderByValue map = (TextFinderByValue) res.getMap().computeIfAbsent(table, t -> new TextFinderByValue());
+                TextFinderByValue map = (TextFinderByValue) res.computeIfAbsent(table, t -> new TextFinderByValue());
                 map.originalToTranslated.put(normalized, translated);
             }
         }

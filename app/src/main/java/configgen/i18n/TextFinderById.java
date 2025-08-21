@@ -187,7 +187,7 @@ class TextFinderById implements TextFinder {
                 if (Files.isRegularFile(filePath)) {
                     String fileName = filePath.getFileName().toString().toLowerCase();
                     if (fileName.endsWith(".xlsx") && !fileName.equals(todoFilename)) {
-                        langTextFinder.getMap().putAll(loadOneFile(filePath));
+                        langTextFinder.putAll(loadOneFile(filePath));
                     }
                 }
             });

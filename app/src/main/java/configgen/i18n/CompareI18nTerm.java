@@ -67,7 +67,7 @@ public class CompareI18nTerm {
 
     private static List<Callable<OneTableResult>> makeTasks(LangTextFinder langTextFinder, List<OneText> terms) {
         List<Callable<OneTableResult>> tasks = new ArrayList<>();
-        for (Map.Entry<String, TextFinder> e : langTextFinder.getMap().entrySet()) {
+        for (Map.Entry<String, TextFinder> e : langTextFinder.entrySet()) {
             String table = e.getKey();
             TextFinder finder = e.getValue();
 

@@ -44,7 +44,7 @@ class LangSwitchSupport {
 
     void enterTable(String table) {
         for (LangTexts lt : langTextsList) {
-            lt.curTableTextFinder = lt.langI18n.getTableTextFinder(table);
+            lt.curTableTextFinder = lt.langI18n.getTextFinder(table);
         }
     }
 

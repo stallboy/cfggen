@@ -24,7 +24,7 @@ public class LangSwitchableRuntime {
     public void enterTable(String table) {
         curTableTextFinderList.clear();
         for (LangTextFinder i18n : langSwitch.langMap().values()) {
-            curTableTextFinderList.add(i18n.getTableTextFinder(table));
+            curTableTextFinderList.add(i18n.getTextFinder(table));
         }
     }
 

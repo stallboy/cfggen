@@ -71,7 +71,7 @@ public final class GenI18nById extends Generator {
 
         if (needReplace) {
             // 测试：fastexcel的xlsx文件写入是否正确（用再读取一次，然后比较的方式）, 可以不做
-            LangTextInfo wrote = LangTextInfo.of(TextFinderById.loadOneLang(wrotePath).getMap());
+            LangTextInfo wrote = LangTextInfo.of(TextFinderById.loadOneLang(wrotePath));
             if (!equalsLang(wrote, extracted)) {
                 throw new RuntimeException("wrote files not match extracted files, SHOULD NOT HAPPEN");
             }

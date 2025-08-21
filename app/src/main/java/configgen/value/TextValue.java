@@ -46,7 +46,7 @@ public class TextValue {
         if (langTextFinder == null) {
             return;
         }
-        TextFinder textFinder = langTextFinder.getTableTextFinder(vTable.name());
+        TextFinder textFinder = langTextFinder.getTextFinder(vTable.name());
         if (textFinder == null) {
             return;
         }

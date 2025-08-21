@@ -68,7 +68,7 @@ class TodoById {
 
                 // 当一个翻译项在item.xlsx和TODO文件都存在时，优先用TODO里的，在TODO的翻译为空时，会用item.xlsx里的
                 if (!translated.isEmpty()) {
-                    TextFinderById finder = (TextFinderById) langTextFinder.getTableTextFinder(table);
+                    TextFinderById finder = (TextFinderById) langTextFinder.getTextFinder(table);
                     if (finder != null) {
                         // 查找对应的记录并更新翻译
                         TextFinderById.OneRecord record = finder.pkToTexts.get(pk);

@@ -3,21 +3,13 @@ package configgen.i18n;
 import java.util.*;
 
 /**
- * 一种语言
+ * 一种语言,包含多个table的翻译信息
  */
-public class LangTextFinder {
+public class LangTextFinder extends TreeMap<String, TextFinder>{
 
-    /**
-     * 包含多个table的翻译信息
-     */
-    private final Map<String, TextFinder> tableMap = new TreeMap<>();
 
-    Map<String, TextFinder> getMap() {
-        return tableMap;
-    }
-
-    public TextFinder getTableTextFinder(String table) {
-        return tableMap.get(table);
+    public TextFinder getTextFinder(String table) {
+        return get(table);
     }
 
 }
