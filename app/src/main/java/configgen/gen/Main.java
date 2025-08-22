@@ -269,7 +269,7 @@ public final class Main {
                 usage("请配置-i18nfile");
                 return;
             }
-            TermChecker.compare(i18nfile, compareTerm);
+            TermChecker.compare(Path.of(i18nfile), Path.of(compareTerm));
             return;
         }
 

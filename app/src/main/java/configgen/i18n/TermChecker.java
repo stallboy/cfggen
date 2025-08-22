@@ -5,8 +5,8 @@ import org.dhatim.fastexcel.reader.ReadingOptions;
 import org.dhatim.fastexcel.reader.Row;
 import org.dhatim.fastexcel.reader.Sheet;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -30,15 +30,15 @@ public class TermChecker {
     /**
      * 检查翻译文件中，包含原始文本包含原始术语，但翻译文本中却不包含翻译术语的情况，输出
      *
-     * @param i8nFilename 单个语言翻译中间文件或目录
-     * @param termFile    术语表excel文件，第一列时原始术语，第二列是翻译术语
+     * @param i8nFilepath 单个语言翻译中间文件或目录
+     * @param termFilepath    术语表excel文件，第一列时原始术语，第二列是翻译术语
      */
-    public static void compare(String i8nFilename, String termFile) {
-        List<OneText> terms = loadTerm(termFile);
+    public static void compare(Path i8nFilepath, Path termFilepath) {
+        List<OneText> terms = loadTerm(termFilepath);
         if (terms == null || terms.isEmpty()) {
             return;
         }
-        LangTextFinder langFinder = LangTextFinder.read(i8nFilename);
+        LangTextFinder langFinder = LangTextFinder.read(i8nFilepath);
         List<Callable<OneTableResult>> tasks = makeTasks(langFinder, terms);
         Map<String, OneTableResult> orderedResult = new TreeMap<>();
         try (ExecutorService executor = Executors.newWorkStealingPool()) {
@@ -93,8 +93,8 @@ public class TermChecker {
         return tasks;
     }
 
-    static List<OneText> loadTerm(String termFile) {
-        try (ReadableWorkbook wb = new ReadableWorkbook(new File(termFile), new ReadingOptions(true, false))) {
+    static List<OneText> loadTerm(Path termFilepath) {
+        try (ReadableWorkbook wb = new ReadableWorkbook(termFilepath.toFile(), new ReadingOptions(true, false))) {
             for (Sheet sheet : wb.getSheets().toList()) {
                 List<Row> rows = sheet.read();
                 List<OneText> result = new ArrayList<>(rows.size());
@@ -109,7 +109,7 @@ public class TermChecker {
                 return result;
             }
         } catch (IOException e) {
-            throw new RuntimeException("read term file=%s error".formatted(termFile), e);
+            throw new RuntimeException("read term file=%s error".formatted(termFilepath), e);
         }
         return null;
     }

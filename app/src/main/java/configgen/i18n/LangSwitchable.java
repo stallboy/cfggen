@@ -31,11 +31,10 @@ public record LangSwitchable(Map<String, LangTextFinder> langMap,
         return langMap.size() + 1;
     }
 
-    public static LangSwitchable read(String langSwitchDir, String defaultLang) {
-        Path path = Path.of(langSwitchDir);
-        Map<String, LangTextFinder> langMap = isById(path) ?
-                TextByIdFinder.loadMultiLang(path) :
-                TextByValueFinder.loadMultiLang(path);
+    public static LangSwitchable read(Path dir, String defaultLang) {
+        Map<String, LangTextFinder> langMap = isById(dir) ?
+                TextByIdFinder.loadMultiLang(dir) :
+                TextByValueFinder.loadMultiLang(dir);
         return new LangSwitchable(langMap, defaultLang);
     }
 

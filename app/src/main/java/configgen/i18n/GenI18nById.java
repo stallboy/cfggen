@@ -161,7 +161,7 @@ public final class GenI18nById extends Generator {
         boolean exist = false;
         if (needReplace) {
             if (Files.exists(todoInBackup)) {
-                Todo oldInBackup = Todo.read(todoInBackup.toFile());
+                Todo oldInBackup = Todo.read(todoInBackup);
                 if (oldInBackup.equals(todo)) {
                     Files.copy(todoInBackup, todoFilePath, StandardCopyOption.REPLACE_EXISTING,
                             StandardCopyOption.COPY_ATTRIBUTES);
@@ -171,9 +171,7 @@ public final class GenI18nById extends Generator {
             }
         }
         if (!isKeepSame) {
-            try (OutputStream os = new BufferedOutputStream(new FileOutputStream(todoFilePath.toFile()))) {
-                todo.save(os);
-            }
+            todo.save(todoFilePath);
             Logger.log("%s %s", exist ? "modify" : "create", todoFilePath.toAbsolutePath().normalize());
         }
 

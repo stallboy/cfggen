@@ -176,7 +176,7 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
     }
 
     public static LangTextFinder loadOneLang(Path langDir) {
-        LangTextFinder translationFinder = new LangTextFinder();
+        LangTextFinder langFinder = new LangTextFinder();
         String langName = langDir.getFileName().toString();
         String todoFilename = Todo.getTodoFileName(langName);
 
@@ -186,7 +186,7 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
                 if (Files.isRegularFile(filePath)) {
                     String fileName = filePath.getFileName().toString().toLowerCase();
                     if (fileName.endsWith(".xlsx") && !fileName.equals(todoFilename)) {
-                        translationFinder.putAll(loadOneFile(filePath));
+                        langFinder.putAll(loadOneFile(filePath));
                     }
                 }
             });
@@ -198,9 +198,9 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
         Path langsDir = langDir.getParent();
         File todoFile = langsDir.resolve(todoFilename).toFile();
         if (todoFile.exists()) {
-            Todo.mergeTodo(translationFinder, todoFile);
+            Todo.readAndMergeToFinder(todoFile, langFinder);
         }
-        return translationFinder;
+        return langFinder;
     }
 
     static Map<String, TextByIdFinder> loadOneFile(Path filePath) {

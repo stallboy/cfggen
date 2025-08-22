@@ -68,9 +68,9 @@ public class Context {
         this.sourceStructure = sourceStructure;
 
         if (cfg.i18nFilename != null) {
-            nullableLangTextFinder = LangTextFinder.read(cfg.i18nFilename);
+            nullableLangTextFinder = LangTextFinder.read(Path.of(cfg.i18nFilename));
         } else if (cfg.langSwitchDir != null) {
-            nullableLangSwitch = LangSwitchable.read(cfg.langSwitchDir, cfg.langSwitchDefaultLang);
+            nullableLangSwitch = LangSwitchable.read(Path.of(cfg.langSwitchDir), cfg.langSwitchDefaultLang);
         }
 
         ExcelReader excelReader = (cfg.tryUsePoi && BuildSettings.isIncludePoi()) ?

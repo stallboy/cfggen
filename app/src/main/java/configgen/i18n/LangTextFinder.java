@@ -34,8 +34,7 @@ public class LangTextFinder extends TreeMap<String, LangTextFinder.TextFinder> {
     }
 
 
-    public static LangTextFinder read(String i18nFilename) {
-        Path path = Path.of(i18nFilename);
+    public static LangTextFinder read(Path path) {
         if (isById(path)) {
             return TextByIdFinder.loadOneLang(path);
         } else {

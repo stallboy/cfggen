@@ -8,9 +8,8 @@ import org.dhatim.fastexcel.reader.ReadingOptions;
 import org.dhatim.fastexcel.reader.Row;
 import org.dhatim.fastexcel.reader.Sheet;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -74,8 +73,8 @@ public record Todo(List<Line> todo,
     }
 
 
-    public static Todo read(File todoFile) {
-        try (ReadableWorkbook wb = new ReadableWorkbook(todoFile,
+    public static Todo read(Path todoFile) {
+        try (ReadableWorkbook wb = new ReadableWorkbook(todoFile.toFile(),
                 new ReadingOptions(true, false))) {
 
             Optional<Sheet> todoSheet = wb.findSheet(TODO_SHEET_NAME);
@@ -96,7 +95,7 @@ public record Todo(List<Line> todo,
 
             return new Todo(todo, done);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to read " + todoFile.getPath(), e);
+            throw new RuntimeException("Failed to read " + todoFile, e);
         }
     }
 
@@ -117,8 +116,13 @@ public record Todo(List<Line> todo,
 
     }
 
+    public void save(Path todoFilePath) throws IOException {
+        try (OutputStream os = new BufferedOutputStream(new FileOutputStream(todoFilePath.toFile()))) {
+            save(os);
+        }
+    }
 
-    public void save(OutputStream os) throws IOException {
+    private void save(OutputStream os) throws IOException {
         try (Workbook wb = new Workbook(os, "cfg", "1.0")) {
             // Create todo sheet (not translated texts)
             Worksheet todoWs = wb.newWorksheet(TODO_SHEET_NAME);
@@ -143,7 +147,7 @@ public record Todo(List<Line> todo,
     }
 
 
-    public static void mergeTodo(LangTextFinder langFinder, File todoFile) {
+    public static void readAndMergeToFinder(File todoFile, LangTextFinder langFinder) {
         try (ReadableWorkbook wb = new ReadableWorkbook(todoFile,
                 new ReadingOptions(true, false))) {
 
