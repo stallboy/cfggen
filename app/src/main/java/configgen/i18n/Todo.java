@@ -34,6 +34,13 @@ public record Todo(List<Line> todo,
     private static final Line HEADER = new Line("table", "id", "fieldChain", "original", "translated");
 
 
+    public static String getTodoFileName(String lang) {
+        return "_todo_" + lang + ".xlsx";
+    }
+
+    private static final String TODO_SHEET_NAME = "todo";
+    private static final String DONE_SHEET_NAME = "参考用";
+
     public static Todo ofLangText(LangText lang) {
         java.util.List<Line> todoLines = new ArrayList<>(32);
         java.util.List<Line> doneLines = new ArrayList<>(32);
@@ -110,12 +117,6 @@ public record Todo(List<Line> todo,
 
     }
 
-    public static String getTodoFileName(String lang) {
-        return "_todo_" + lang + ".xlsx";
-    }
-
-    private static final String TODO_SHEET_NAME = "todo";
-    private static final String DONE_SHEET_NAME = "done(参考用)";
 
     public void save(OutputStream os) throws IOException {
         try (Workbook wb = new Workbook(os, "cfg", "1.0")) {

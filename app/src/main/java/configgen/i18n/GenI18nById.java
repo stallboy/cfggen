@@ -107,7 +107,7 @@ public final class GenI18nById extends Generator {
         }
 
         // 如果不是覆盖，就直接输出到outputDir，如果是覆盖，就输出到temp
-        I18nStat stat = new I18nStat();
+        LangStat stat = new LangStat();
         Path wrotePath = needReplace ? outputTempDir : outputDir;
         extracted.save(wrotePath, stat);
         stat.dump();
@@ -120,10 +120,14 @@ public final class GenI18nById extends Generator {
             }
         }
 
+        String todoFileName = Todo.getTodoFileName(lang);
+        Path todoFilePath = langsDir.resolve(todoFileName);
+        Path todoInBackup = backupDir.resolve(todoFileName);
         // 是覆盖，此时需要先备份原有的，然后temp->outputDir（通过3实现内容相同，就用原有的）
         if (needReplace) {
             // 1.先把 <outputDir> -> <outputBackupDir>
             Utils.moveDirFilesToAnotherDir(outputDir, outputBackupDir);
+            Utils.moveOneFile(todoFilePath, todoInBackup);
 
             // 2.然后把<outputTempDir> -> <outputDir> ，删除<outputTempDir>
             Utils.moveDirFilesToAnotherDir(outputTempDir, outputDir);
@@ -151,19 +155,15 @@ public final class GenI18nById extends Generator {
             }
         }
 
-        // 额外生成一份_todo_[lang].xlsx汇总文件
-        String todoFileName = Todo.getTodoFileName(lang);
-        Path todoFilePath = outputDir.resolve(todoFileName);
+        // 额外生成一份_todo_[lang].xlsx汇总文件，跟[lang]文件夹在同一级目录，方便多个语言_todo文件一起选择打包发送
         Todo todo = Todo.ofLangText(extracted);
-
         boolean isKeepSame = false;
         boolean exist = false;
         if (needReplace) {
-            Path backupFile = outputBackupDir.resolve(todoFileName);
-            if (Files.exists(backupFile)) {
-                Todo oldInBackup = Todo.read(backupFile.toFile());
+            if (Files.exists(todoInBackup)) {
+                Todo oldInBackup = Todo.read(todoInBackup.toFile());
                 if (oldInBackup.equals(todo)) {
-                    Files.copy(backupFile, todoFilePath, StandardCopyOption.REPLACE_EXISTING,
+                    Files.copy(todoInBackup, todoFilePath, StandardCopyOption.REPLACE_EXISTING,
                             StandardCopyOption.COPY_ATTRIBUTES);
                     isKeepSame = true;
                 }

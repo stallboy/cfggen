@@ -24,7 +24,7 @@ public class LangText extends LinkedHashMap<String, LangText.TopModuleText> {
      */
     public static class TopModuleText extends LinkedHashMap<String, TextByIdFinder> {
 
-        public void save(OutputStream os, I18nStat stat) throws IOException {
+        public void save(OutputStream os, LangStat stat) throws IOException {
             try (Workbook wb = new Workbook(os, "cfg", "1.0")) {
                 for (var e : entrySet()) {
                     String table = e.getKey();
@@ -35,7 +35,7 @@ public class LangText extends LinkedHashMap<String, LangText.TopModuleText> {
             }
         }
 
-        void saveSheet(TextByIdFinder finder, Worksheet ws, String table, I18nStat stat) {
+        void saveSheet(TextByIdFinder finder, Worksheet ws, String table, LangStat stat) {
             boolean hasDescriptionColumn = finder.nullableDescriptionName != null;
             int offset = hasDescriptionColumn ? 2 : 1;
 
@@ -84,7 +84,7 @@ public class LangText extends LinkedHashMap<String, LangText.TopModuleText> {
         }
     }
 
-    public void save(Path wroteDir, I18nStat stat) throws IOException {
+    public void save(Path wroteDir, LangStat stat) throws IOException {
         for (var e : entrySet()) {
             String topModuleFn = e.getKey() + ".xlsx";
             File dst = wroteDir.resolve(topModuleFn).toFile();

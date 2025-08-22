@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 import static configgen.i18n.TextByIdFinder.*;
 
 
-public class I18nTermChecker {
+public class TermChecker {
     record OneNoMatch(String original,
                       String translated,
                       List<OneText> noMatchTerms) {

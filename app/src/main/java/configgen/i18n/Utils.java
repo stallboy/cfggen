@@ -32,6 +32,22 @@ public class Utils {
         }
     }
 
+    public static void moveOneFile(Path from, Path to) {
+        File toFile = to.toFile();
+        if (toFile.exists() && toFile.isFile()) {
+            if (!toFile.delete()) {
+                throw new RuntimeException("delete " + toFile + " failed");
+            }
+        }
+
+        File fromFile = from.toFile();
+        if (fromFile.exists() && fromFile.isFile()) {
+            if (!fromFile.renameTo(toFile)) {
+                throw new RuntimeException("rename %s to %s failed".formatted(from, to));
+            }
+        }
+    }
+
     public static boolean hasFiles(Path dir) {
         File file = dir.toFile();
         if (!file.exists()) {

@@ -195,7 +195,8 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
         }
 
         // 合并_todo_[lang].xlsx文件
-        File todoFile = langDir.resolve(todoFilename).toFile();
+        Path langsDir = langDir.getParent();
+        File todoFile = langsDir.resolve(todoFilename).toFile();
         if (todoFile.exists()) {
             Todo.mergeTodo(translationFinder, todoFile);
         }

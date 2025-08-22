@@ -15,7 +15,7 @@ import configgen.genjson.GenJson;
 import configgen.genjson.GenJsonByAI;
 import configgen.genjson.GenTsSchema;
 import configgen.genlua.GenLua;
-import configgen.i18n.I18nTermChecker;
+import configgen.i18n.TermChecker;
 import configgen.i18n.GenI18nByValue;
 import configgen.i18n.GenI18nById;
 import configgen.i18n.GenI18nByIdTest;
@@ -269,7 +269,7 @@ public final class Main {
                 usage("请配置-i18nfile");
                 return;
             }
-            I18nTermChecker.compare(i18nfile, compareTerm);
+            TermChecker.compare(i18nfile, compareTerm);
             return;
         }
 
