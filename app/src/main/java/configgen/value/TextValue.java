@@ -1,8 +1,6 @@
 package configgen.value;
 
-import configgen.ctx.Context;
 import configgen.i18n.LangTextFinder;
-import configgen.i18n.TextFinder;
 import configgen.schema.HasText;
 import configgen.value.ForeachValue.ValueVisitorForPrimitive;
 
@@ -40,13 +38,11 @@ public class TextValue {
         }
     }
 
-
-    public static void setTranslatedForTable(VTable vTable, Context context, CfgValueStat cfgValueStat) {
-        LangTextFinder langTextFinder = context.nullableLangTextFinder();
-        if (langTextFinder == null) {
+    public static void setTranslatedForTable(VTable vTable, LangTextFinder langFinder) {
+        if (langFinder == null) {
             return;
         }
-        TextFinder textFinder = langTextFinder.getTextFinder(vTable.name());
+        LangTextFinder.TextFinder textFinder = langFinder.getTextFinder(vTable.name());
         if (textFinder == null) {
             return;
         }
@@ -55,29 +51,22 @@ public class TextValue {
             return;
         }
 
-        ForeachValue.foreachVTable(new SetTextTranslatedVisitor(textFinder, cfgValueStat), vTable);
-
+        ForeachValue.foreachVTable(new SetTextTranslatedVisitor(textFinder), vTable);
     }
 
 
-    public static class SetTextTranslatedVisitor extends ValueVisitorForPrimitive {
-        private final TextFinder textFinder;
-        private final CfgValueStat cfgValueStat;
+    private static class SetTextTranslatedVisitor extends ValueVisitorForPrimitive {
+        private final LangTextFinder.TextFinder textFinder;
 
-        public SetTextTranslatedVisitor(TextFinder textFinder, CfgValueStat cfgValueStat) {
+        public SetTextTranslatedVisitor(LangTextFinder.TextFinder textFinder) {
             this.textFinder = textFinder;
-            this.cfgValueStat = cfgValueStat;
         }
 
         @Override
         public void visitPrimitive(PrimitiveValue primitiveValue, Value pk, List<String> fieldChain) {
             if (primitiveValue instanceof VText vText) {
                 String translated = textFinder.findText(pk.packStr(), fieldChain, vText.original());
-                if (translated != null) {
-                    vText.setTranslated(translated);
-                } else if (cfgValueStat != null){
-                    cfgValueStat.incTranslateMissCount();
-                }
+                vText.setTranslated(translated);
             }
         }
 

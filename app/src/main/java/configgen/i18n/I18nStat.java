@@ -4,7 +4,7 @@ import configgen.util.Logger;
 
 import java.util.*;
 
-class I18nStat {
+public class I18nStat {
     private record OneT(String table,
                 String translatedText) {
     }

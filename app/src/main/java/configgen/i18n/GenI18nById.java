@@ -3,7 +3,6 @@ package configgen.i18n;
 import configgen.ctx.Context;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
-import configgen.i18n.TodoById.TodoFileInfo;
 import configgen.util.Logger;
 import configgen.value.CfgValue;
 
@@ -31,18 +30,20 @@ import java.util.*;
 public final class GenI18nById extends Generator {
     private final String outputDir;
     private final String backupDir;
+    private final boolean checkWrite;
     private final I18nStat stat = new I18nStat();
 
     public GenI18nById(Parameter parameter) {
         super(parameter);
         outputDir = parameter.get("dir", "../i18n/en");
         backupDir = parameter.get("backup", "../backup");
+        checkWrite = parameter.has("checkWrite");
     }
 
     @Override
     public void generate(Context ctx) throws IOException {
         CfgValue cfgValue = ctx.makeValue();
-        LangTextInfo extracted = LangTextInfoExtractor.extract(cfgValue);
+        LangText extracted = LangText.extract(cfgValue);
 
         // 我们用的这个fastexcel lib同样内容写入xlsx，文件会不同，
         // xlsx里面的core.xml里有dcterms:created，是每次创建时时间，所以每次生成文件内容都不同
@@ -69,9 +70,9 @@ public final class GenI18nById extends Generator {
         extracted.save(wrotePath, stat);
         stat.dump();
 
-        if (needReplace) {
+        if (needReplace && checkWrite) {
             // 测试：fastexcel的xlsx文件写入是否正确（用再读取一次，然后比较的方式）, 可以不做
-            LangTextInfo wrote = LangTextInfo.of(TextFinderById.loadOneLang(wrotePath));
+            LangText wrote = LangText.ofFinder(TextByIdFinder.loadOneLang(wrotePath));
             if (!wrote.equalsWithLog(extracted)) {
                 throw new RuntimeException("wrote files not match extracted files, SHOULD NOT HAPPEN");
             }
@@ -93,11 +94,11 @@ public final class GenI18nById extends Generator {
             for (var e : extracted.entrySet()) {
                 String topModule = e.getKey();
                 String fn = topModule + ".xlsx";
-                Map<String, TextFinderById> cur = e.getValue();
+                Map<String, TextByIdFinder> cur = e.getValue();
                 Path dstPath = Path.of(outputDir, fn);
                 Path backupFile = Path.of(outputDirBackup, fn);
                 if (Files.exists(backupFile)) {
-                    Map<String, TextFinderById> oldInBackup = TextFinderById.loadOneFile(backupFile);
+                    Map<String, TextByIdFinder> oldInBackup = TextByIdFinder.loadOneFile(backupFile);
                     if (oldInBackup.equals(cur)) {
                         Files.copy(backupFile, dstPath, StandardCopyOption.REPLACE_EXISTING,
                                 StandardCopyOption.COPY_ATTRIBUTES);
@@ -112,17 +113,17 @@ public final class GenI18nById extends Generator {
 
         // 额外生成一份_todo_[lang].xlsx汇总文件，包含todo和done两个分页，
         {
-            String todoFileName = TodoById.getTodoFileName(lang);
+            String todoFileName = Todo.getTodoFileName(lang);
             Path todoFilePath = outputDirPath.resolve(todoFileName);
-            TodoFileInfo todoFileInfo = TodoFileInfo.of(extracted);
+            Todo todo = Todo.ofLangText(extracted);
 
             boolean isKeepSame = false;
             boolean exist = false;
             if (needReplace) {
                 Path backupFile = Path.of(outputDirBackup, todoFileName);
                 if (Files.exists(backupFile)) {
-                    TodoFileInfo oldInBackup = TodoFileInfo.read(backupFile.toFile());
-                    if (oldInBackup.equals(todoFileInfo)) {
+                    Todo oldInBackup = Todo.read(backupFile.toFile());
+                    if (oldInBackup.equals(todo)) {
                         Files.copy(backupFile, todoFilePath, StandardCopyOption.REPLACE_EXISTING,
                                 StandardCopyOption.COPY_ATTRIBUTES);
                         isKeepSame = true;
@@ -130,14 +131,17 @@ public final class GenI18nById extends Generator {
                     exist = true;
                 }
             }
-
             if (!isKeepSame) {
                 try (OutputStream os = new BufferedOutputStream(new FileOutputStream(todoFilePath.toFile()))) {
-                    TodoById.saveTodo(os, todoFileInfo);
+                    todo.save(os);
                 }
                 Logger.log("%s %s", exist ? "modify" : "create", todoFilePath.toAbsolutePath().normalize());
             }
         }
+    }
+
+    private static void generateForValue(CfgValue value, String lang, String outputDir, String backupDir) throws IOException {
+
     }
 
 }

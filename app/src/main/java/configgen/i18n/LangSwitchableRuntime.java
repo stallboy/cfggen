@@ -5,7 +5,7 @@ import java.util.List;
 
 public class LangSwitchableRuntime {
     private final LangSwitchable langSwitch;
-    private final List<TextFinder> curTableTextFinderList;
+    private final List<LangTextFinder.TextFinder> curTableTextFinderList;
     private final String[] tmp;
     private final String[] tmpEmpty;
 
@@ -36,7 +36,7 @@ public class LangSwitchableRuntime {
         tmp[0] = original;
         int i = 1;
 
-        for (TextFinder finder : curTableTextFinderList) {
+        for (LangTextFinder.TextFinder finder : curTableTextFinderList) {
             String t = null;
             if (finder != null) {
                 t = finder.findText(pk, fieldChain, original);

@@ -13,7 +13,7 @@ import java.util.stream.Stream;
  * 每个表中的text字段，原始文本---映射到--->翻译文本。
  * 以原始文本为key，相同的原始文本，必然对应相同翻译文本
  */
-class TextFinderByValue implements TextFinder {
+public class TextByValueFinder implements LangTextFinder.TextFinder {
     private final SequencedMap<String, String> originalToTranslated = new LinkedHashMap<>();
 
 
@@ -28,28 +28,28 @@ class TextFinderByValue implements TextFinder {
     }
 
     @Override
-    public void foreachText(TextVisitor visitor) {
+    public void foreachText(LangTextFinder.TextVisitor visitor) {
         for (Map.Entry<String, String> e : originalToTranslated.entrySet()) {
             visitor.visit(e.getKey(), e.getValue());
         }
     }
 
 
-    public static LangSwitchable loadLangSwitch(Path path, String defaultLang) {
-        Map<String, LangTextFinder> lang2i18n = new TreeMap<>();
+    public static Map<String, LangTextFinder> loadMultiLang(Path path) {
+        Map<String, LangTextFinder> langMap = new TreeMap<>();
         try (Stream<Path> plist = Files.list(path)) {
             plist.forEach(langFilePath -> {
                 String langName = langFilePath.getFileName().toString();
                 if (langName.toLowerCase().endsWith(".csv")) {
                     langName = langName.substring(0, langName.length() - 4);
-                    lang2i18n.put(langName, loadOneLang(langFilePath));
+                    langMap.put(langName, loadOneLang(langFilePath));
                 }
             });
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        return new LangSwitchable(lang2i18n, defaultLang);
+        return langMap;
     }
 
     public static LangTextFinder loadOneLang(Path path) {
@@ -76,7 +76,7 @@ class TextFinderByValue implements TextFinder {
                 String translated = row.getField(2);
                 String normalized = Utils.normalize(original);
 
-                TextFinderByValue map = (TextFinderByValue) res.computeIfAbsent(table, t -> new TextFinderByValue());
+                TextByValueFinder map = (TextByValueFinder) res.computeIfAbsent(table, t -> new TextByValueFinder());
                 map.originalToTranslated.put(normalized, translated);
             }
         }

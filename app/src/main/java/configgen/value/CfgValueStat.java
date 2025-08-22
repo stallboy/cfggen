@@ -10,16 +10,6 @@ import java.util.Map;
  */
 public class CfgValueStat implements Stat {
     private final Map<String, Map<String, Long>> lastModifiedMap = new LinkedHashMap<>();
-    private int translateMissCount = 0;
-
-    public synchronized void incTranslateMissCount() {
-        translateMissCount++;
-    }
-
-
-    public synchronized int getTranslateMissCount() {
-        return translateMissCount;
-    }
 
     /**
      * @return table -> recordId -> lastModified

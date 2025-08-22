@@ -403,10 +403,13 @@ public record CfgValue(CfgSchema schema,
         }
 
         public void setTranslated(String translated) {
-            Objects.requireNonNull(translated);
-            this.translated = translated;
-            if (!translated.isEmpty()) {
-                this.value = translated;
+            if (translated == null) {
+                this.translated = "";
+            }else {
+                this.translated = translated;
+                if (!translated.isEmpty()) {
+                    this.value = translated;
+                }
             }
         }
 

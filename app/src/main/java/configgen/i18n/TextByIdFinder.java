@@ -14,7 +14,7 @@ import java.util.stream.Stream;
  * 每个表中的text字段，pk+fieldChain作为id---映射到--->翻译文本。
  * 这是最完备的机制，可以相同的原始本文，不同的翻译文本。
  */
-class TextFinderById implements TextFinder {
+public class TextByIdFinder implements LangTextFinder.TextFinder {
     record OneText(String original,
                    String translated) {
         public OneText {
@@ -103,7 +103,7 @@ class TextFinderById implements TextFinder {
     }
 
     @Override
-    public void foreachText(TextVisitor visitor) {
+    public void foreachText(LangTextFinder.TextVisitor visitor) {
         for (OneRecord line : pkToTexts.values()) {
             for (OneText t : line.texts) {
                 if (t != null) {
@@ -115,7 +115,7 @@ class TextFinderById implements TextFinder {
 
     @Override
     public boolean equals(Object otherObj) {
-        if (!(otherObj instanceof TextFinderById other)) {
+        if (!(otherObj instanceof TextByIdFinder other)) {
             return false;
         }
 
@@ -159,7 +159,7 @@ class TextFinderById implements TextFinder {
         return fieldChain.size() == 1 ? fieldChain.getFirst() : String.join("-", fieldChain);
     }
 
-    public static LangSwitchable loadLangSwitch(Path path, String defaultLang) {
+    public static Map<String, LangTextFinder> loadMultiLang(Path path) {
         Map<String, LangTextFinder> lang2i18n = new TreeMap<>();
         try (Stream<Path> plist = Files.list(path)) {
             plist.forEach(langDir -> {
@@ -172,14 +172,13 @@ class TextFinderById implements TextFinder {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        return new LangSwitchable(lang2i18n, defaultLang);
+        return lang2i18n;
     }
 
     public static LangTextFinder loadOneLang(Path langDir) {
-        LangTextFinder langTextFinder = new LangTextFinder();
+        LangTextFinder translationFinder = new LangTextFinder();
         String langName = langDir.getFileName().toString();
-        String todoFilename = TodoById.getTodoFileName(langName);
+        String todoFilename = Todo.getTodoFileName(langName);
 
         // 加载正常的xlsx文件
         try (Stream<Path> plist = Files.list(langDir)) {
@@ -187,7 +186,7 @@ class TextFinderById implements TextFinder {
                 if (Files.isRegularFile(filePath)) {
                     String fileName = filePath.getFileName().toString().toLowerCase();
                     if (fileName.endsWith(".xlsx") && !fileName.equals(todoFilename)) {
-                        langTextFinder.putAll(loadOneFile(filePath));
+                        translationFinder.putAll(loadOneFile(filePath));
                     }
                 }
             });
@@ -198,13 +197,13 @@ class TextFinderById implements TextFinder {
         // 合并_todo_[lang].xlsx文件
         File todoFile = langDir.resolve(todoFilename).toFile();
         if (todoFile.exists()) {
-            TodoById.mergeTodo(langTextFinder, todoFile);
+            Todo.mergeTodo(translationFinder, todoFile);
         }
-        return langTextFinder;
+        return translationFinder;
     }
 
-    static Map<String, TextFinderById> loadOneFile(Path filePath) {
-        Map<String, TextFinderById> map = new LinkedHashMap<>();
+    static Map<String, TextByIdFinder> loadOneFile(Path filePath) {
+        Map<String, TextByIdFinder> map = new LinkedHashMap<>();
         try (ReadableWorkbook wb = new ReadableWorkbook(filePath.toFile(),
                 new ReadingOptions(true, false))) {
             for (Sheet sheet : wb.getSheets().toList()) {
@@ -214,7 +213,7 @@ class TextFinderById implements TextFinder {
                     continue;
                 }
 
-                TextFinderById textFinder = new TextFinderById();
+                TextByIdFinder textFinder = new TextByIdFinder();
                 try {
                     loadOneSheet(rawRows, textFinder);
                 } catch (Exception e) {
@@ -230,7 +229,7 @@ class TextFinderById implements TextFinder {
     }
 
 
-    private static void loadOneSheet(List<Row> rawRows, TextFinderById textFinder) {
+    private static void loadOneSheet(List<Row> rawRows, TextByIdFinder textFinder) {
         // 第一行是表头，分析
         Row header = rawRows.getFirst();
         int columnCount = header.getCellCount();

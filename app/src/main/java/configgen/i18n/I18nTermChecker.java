@@ -14,10 +14,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
-import static configgen.i18n.TextFinderById.*;
+import static configgen.i18n.TextByIdFinder.*;
 
 
-public class CompareI18nTerm {
+public class I18nTermChecker {
     record OneNoMatch(String original,
                       String translated,
                       List<OneText> noMatchTerms) {
@@ -38,8 +38,8 @@ public class CompareI18nTerm {
         if (terms == null || terms.isEmpty()) {
             return;
         }
-        LangTextFinder langTextFinder = TextFinders.loadOneLang(i8nFilename);
-        List<Callable<OneTableResult>> tasks = makeTasks(langTextFinder, terms);
+        LangTextFinder langFinder = LangTextFinder.read(i8nFilename);
+        List<Callable<OneTableResult>> tasks = makeTasks(langFinder, terms);
         Map<String, OneTableResult> orderedResult = new TreeMap<>();
         try (ExecutorService executor = Executors.newWorkStealingPool()) {
             List<Future<OneTableResult>> futures = executor.invokeAll(tasks);
@@ -65,11 +65,11 @@ public class CompareI18nTerm {
         }
     }
 
-    private static List<Callable<OneTableResult>> makeTasks(LangTextFinder langTextFinder, List<OneText> terms) {
+    private static List<Callable<OneTableResult>> makeTasks(LangTextFinder translationFinder, List<OneText> terms) {
         List<Callable<OneTableResult>> tasks = new ArrayList<>();
-        for (Map.Entry<String, TextFinder> e : langTextFinder.entrySet()) {
+        for (Map.Entry<String, LangTextFinder.TextFinder> e : translationFinder.entrySet()) {
             String table = e.getKey();
-            TextFinder finder = e.getValue();
+            LangTextFinder.TextFinder finder = e.getValue();
 
             tasks.add(() -> {
                 OneTableResult result = new OneTableResult(table, new ArrayList<>());

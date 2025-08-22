@@ -2,7 +2,6 @@ package configgen.genlua;
 
 import configgen.i18n.LangSwitchable;
 import configgen.i18n.LangTextFinder;
-import configgen.i18n.TextFinder;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -18,7 +17,7 @@ class LangSwitchSupport {
     private static class LangTexts {
         String lang;
         LangTextFinder langI18n;
-        TextFinder curTableTextFinder;
+        LangTextFinder.TextFinder curTableTextFinder;
 
         List<String> texts;
     }
