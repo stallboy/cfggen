@@ -1,6 +1,7 @@
 package configgen.i18n;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -11,8 +12,8 @@ public class Utils {
         return pattern.matcher(text).replaceAll("\n");
     }
 
-    public static void moveDirFilesToAnotherDir(String from, String to) {
-        File toDir = new File(to);
+    public static void moveDirFilesToAnotherDir(Path from, Path to) {
+        File toDir = to.toFile();
         if (toDir.isDirectory()) {
             for (File file : Objects.requireNonNull(toDir.listFiles())) {
                 if (!file.delete()) {
@@ -24,10 +25,22 @@ public class Utils {
                 throw new RuntimeException("mkdir " + toDir + " failed");
             }
         }
-        for (File file : Objects.requireNonNull(new File(from).listFiles())) {
-            if (!file.renameTo(new File(to, file.getName()))) {
+        for (File file : Objects.requireNonNull(from.toFile().listFiles())) {
+            if (!file.renameTo(to.resolve(file.getName()).toFile())) {
                 throw new RuntimeException("rename %s to %s failed".formatted(from, to));
             }
         }
+    }
+
+    public static boolean hasFiles(Path dir) {
+        File file = dir.toFile();
+        if (!file.exists()) {
+            return false;
+        }
+        if (!file.isDirectory()) {
+            return false;
+        }
+        String[] files = file.list();
+        return files != null && files.length > 0;
     }
 }

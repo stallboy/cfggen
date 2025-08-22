@@ -56,3 +56,5 @@
 /example/ts/package-lock.json
 /example/ts/pnpm-lock.yaml
 /example/i18n/backup
+/example/log_tw.txt
+/example/log_en.txt

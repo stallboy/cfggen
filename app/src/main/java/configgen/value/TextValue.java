@@ -38,6 +38,12 @@ public class TextValue {
         }
     }
 
+    public static void setTranslated(CfgValue cfgValue, LangTextFinder langFinder){
+        for (VTable vTable : cfgValue.tables()) {
+            setTranslatedForTable(vTable, langFinder);
+        }
+    }
+
     public static void setTranslatedForTable(VTable vTable, LangTextFinder langFinder) {
         if (langFinder == null) {
             return;

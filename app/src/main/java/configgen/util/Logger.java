@@ -1,12 +1,13 @@
 package configgen.util;
 
+import java.io.PrintStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class Logger {
     private static int verboseLevel = 0;
+    private static PrintStream verboseStream = null;
     private static boolean profileGcEnabled = false;
-
 
     private static boolean profileEnabled = false;
     private static boolean warningEnabled = true;
@@ -39,15 +40,32 @@ public class Logger {
         return warningEnabled;
     }
 
+    public static PrintStream setVerboseStream(PrintStream stream) {
+        PrintStream old = verboseStream;
+        verboseStream = stream;
+        return old;
+    }
+
     public static void verbose(String fmt, Object... args) {
-        if (verboseLevel > 0) {
-            log(fmt, args);
+        if (verboseStream != null) {
+            logTo(verboseStream, fmt, args);
+        }else if (verboseLevel > 0) {
+            logTo(System.out, fmt, args);
         }
     }
 
     public static void verbose2(String fmt, Object... args) {
-        if (verboseLevel > 1) {
-            log(fmt, args);
+        if (verboseStream != null) {
+            logTo(verboseStream, fmt, args);
+        }else if (verboseLevel > 1) {
+            logTo(System.out, fmt, args);
+        }
+    }
+
+    public static void log(String fmt, Object... args) {
+        logTo(System.out, fmt, args);
+        if (verboseStream != null) {
+            logTo(verboseStream, fmt, args);
         }
     }
 
@@ -55,11 +73,12 @@ public class Logger {
     private static long time;
     private static long firstTime;
 
-    public static void log(String fmt, Object... args) {
+
+    public static void logTo(PrintStream ps, String fmt, Object... args) {
         if (args.length == 0) {
-            System.out.println(fmt);
+            ps.println(fmt);
         } else {
-            System.out.printf((fmt) + System.lineSeparator(), args);
+            ps.printf((fmt) + System.lineSeparator(), args);
         }
     }
 
