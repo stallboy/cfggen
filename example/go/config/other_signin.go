@@ -60,15 +60,9 @@ func (t *OtherSignin) RefVipitem2vipcountMap() map[int32]*OtherLoot {
     }
     return t.refVipitem2vipcountMap
 }
-type KeyIdViplevel struct {
-    id int32
-    viplevel int32
-}
-
 type OtherSigninMgr struct {
     all []*OtherSignin
     idMap map[int32]*OtherSignin
-    idViplevelMap map[KeyIdViplevel]*OtherSignin
 }
 
 func(t *OtherSigninMgr) GetAll() []*OtherSignin {
@@ -79,19 +73,13 @@ func(t *OtherSigninMgr) Get(id int32) *OtherSignin {
     return t.idMap[id]
 }
 
-func(t *OtherSigninMgr) GetByKeyIdViplevel(id int32, viplevel int32) *OtherSignin {
-    return t.idViplevelMap[KeyIdViplevel{id, viplevel}]
-}
-
 func (t *OtherSigninMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*OtherSignin, 0, cnt)
     t.idMap = make(map[int32]*OtherSignin, cnt)
-    t.idViplevelMap = make(map[KeyIdViplevel]*OtherSignin, cnt)
     for i := 0; i < int(cnt); i++ {
         v := createOtherSignin(stream)
         t.all = append(t.all, v)
         t.idMap[v.id] = v
-        t.idViplevelMap[KeyIdViplevel{v.id, v.viplevel}] = v
     }
 }

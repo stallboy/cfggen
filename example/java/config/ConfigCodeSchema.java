@@ -325,6 +325,8 @@ public class ConfigCodeSchema {
         SchemaBean s2 = new SchemaBean(true);
         s2.addColumn("id", SchemaPrimitive.SInt);
         s2.addColumn("posList", new SchemaList(new SchemaRef("Position")));
+        s2.addColumn("lootId", SchemaPrimitive.SInt);
+        s2.addColumn("lootItemId", SchemaPrimitive.SInt);
         return s2;
     }
 

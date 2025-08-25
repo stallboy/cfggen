@@ -39,39 +39,6 @@ namespace Config.Other
             return all.TryGetValue(id, out v) ? v : null;
         }
 
-        
-        class IdViplevelKey
-        {
-            readonly int Id;
-            readonly int Viplevel;
-            public IdViplevelKey(int id, int viplevel)
-            {
-                this.Id = id;
-                this.Viplevel = viplevel;
-            }
-
-            public override int GetHashCode()
-            {
-                return Id.GetHashCode() + Viplevel.GetHashCode();
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (obj == null) return false;
-                if (obj == this) return true;
-                var o = obj as IdViplevelKey;
-                return o != null && Id.Equals(o.Id) && Viplevel.Equals(o.Viplevel);
-            }
-        }
-
-        static Config.KeyedList<IdViplevelKey, DataSignin> idViplevelMap = null;
-
-        public static DataSignin GetByIdViplevel(int id, int viplevel)
-        {
-            DataSignin v;
-            return idViplevelMap.TryGetValue(new IdViplevelKey(id, viplevel), out v) ? v : null;
-        }
-
         public static List<DataSignin> All()
         {
             return all.OrderedValues;
@@ -91,12 +58,10 @@ namespace Config.Other
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<int, DataSignin>();
-            idViplevelMap = new Config.KeyedList<IdViplevelKey, DataSignin>();
             for (var c = os.ReadInt32(); c > 0; c--)
             {
                 var self = _create(os);
                 all.Add(self.Id, self);
-                idViplevelMap.Add(new IdViplevelKey(self.Id, self.Viplevel), self);
             }
 
         }

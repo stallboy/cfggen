@@ -3,6 +3,10 @@ package config
 type OtherMonster struct {
     id int32
     posList []*Position
+    lootId int32 //loot
+    lootItemId int32 //item
+    refLoot *OtherLootitem
+    refAllLoot *OtherLoot
 }
 
 func createOtherMonster(stream *Stream) *OtherMonster {
@@ -13,6 +17,8 @@ func createOtherMonster(stream *Stream) *OtherMonster {
     for i := 0; i < int(posListSize); i++ {
         v.posList[i] = createPosition(stream)
     }
+    v.lootId = stream.ReadInt32()
+    v.lootItemId = stream.ReadInt32()
     return v
 }
 
@@ -23,6 +29,28 @@ func (t *OtherMonster) Id() int32 {
 
 func (t *OtherMonster) PosList() []*Position {
     return t.posList
+}
+
+func (t *OtherMonster) LootId() int32 {
+    return t.lootId
+}
+
+func (t *OtherMonster) LootItemId() int32 {
+    return t.lootItemId
+}
+
+func (t *OtherMonster) RefLoot() *OtherLootitem {
+    if t.refLoot == nil {
+        t.refLoot = GetOtherLootitemMgr().Get(t.loot)
+    }
+    return t.refLoot
+}
+
+func (t *OtherMonster) RefAllLoot() *OtherLoot {
+    if t.refAllLoot == nil {
+        t.refAllLoot = GetOtherLootMgr().Get(t.allLoot)
+    }
+    return t.refAllLoot
 }
 
 type OtherMonsterMgr struct {

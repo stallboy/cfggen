@@ -1524,9 +1524,19 @@ export class Other_Monster {
     get Id(): number { return this._id as number; }
     private _posList: Position[] | undefined;
     get PosList(): Position[] { return this._posList as Position[]; }
+    private _lootId: number | undefined;
+    /* loot */
+    get LootId(): number { return this._lootId as number; }
+    private _lootItemId: number | undefined;
+    /* item */
+    get LootItemId(): number { return this._lootItemId as number; }
 
+    private _RefLoot: Other_Lootitem | undefined;
+    get RefLoot(): Other_Lootitem { return this._RefLoot as Other_Lootitem; }
+    private _RefAllLoot: Other_Loot | undefined;
+    get RefAllLoot(): Other_Loot { return this._RefAllLoot as Other_Loot; }
     ToString() : string {
-        return "(" + this._id + "," + this._posList + ")";
+        return "(" + this._id + "," + this._posList + "," + this._lootId + "," + this._lootItemId + ")";
     }
 
     
@@ -1550,15 +1560,32 @@ export class Other_Monster {
 
     }
 
+    static Resolve(errors: LoadErrors) {
+        for (const v of this.all.values()) {
+            v._resolve(errors);
+        }
+    }
     static _create(os: Stream) : Other_Monster {
         const self = new Other_Monster();
         self._id = os.ReadInt32();
         self._posList = [];
         for (let c = os.ReadInt32(); c > 0; c--)
             self._posList.push(Position._create(os));
+        self._lootId = os.ReadInt32();
+        self._lootItemId = os.ReadInt32();
         return self;
     }
 
+    _resolve(errors: LoadErrors) {
+        this._RefLoot = Other_Lootitem.Get(this._lootId, this.lootItemId);
+        if (this._RefLoot === undefined) {
+            errors.RefNull("other.monster", this.ToString(), "Loot");
+        }
+        this._RefAllLoot = Other_Loot.Get(this._lootId);
+        if (this._RefAllLoot === undefined) {
+            errors.RefNull("other.monster", this.ToString(), "AllLoot");
+        }
+    }
 }
 
 export class Other_Signin {
@@ -1591,25 +1618,16 @@ export class Other_Signin {
         return this.all.get(id)
     }
 
-    
-    private static idViplevelMap : Map<number, Other_Signin> | undefined;
-
-    static GetByIdViplevel(id: number, viplevel: number) : Other_Signin | undefined {
-        return this.idViplevelMap.get(id + viplevel * 100000000)
-    }
-
     static All() : Map<number, Other_Signin> {
         return this.all;
     }
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<number, Other_Signin>();
-        this.idViplevelMap = new Map<number, Other_Signin>();
         for (let c = os.ReadInt32(); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._id, self);
-            this.idViplevelMap.set(self._id + self._viplevel * 100000000, self);
         }
 
     }
@@ -2107,6 +2125,7 @@ export class Processor {
         Equip_Jewelryrandom.Resolve(errors);
         Other_Keytest.Resolve(errors);
         Other_Loot.Resolve(errors);
+        Other_Monster.Resolve(errors);
         Other_Signin.Resolve(errors);
         Task_Task.Resolve(errors);
         Task_Task2.Resolve(errors);

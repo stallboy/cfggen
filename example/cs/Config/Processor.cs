@@ -129,6 +129,7 @@ namespace Config
             Config.Equip.DataJewelryrandom.Resolve(Errors);
             Config.Other.DataKeytest.Resolve(Errors);
             Config.Other.DataLoot.Resolve(Errors);
+            Config.Other.DataMonster.Resolve(Errors);
             Config.Other.DataSignin.Resolve(Errors);
             Config.Task.DataTask.Resolve(Errors);
             Config.Task.DataTask2.Resolve(Errors);

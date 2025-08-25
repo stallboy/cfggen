@@ -78,34 +78,6 @@ public class Signin {
         return mgr.getOtherSignin(id);
     }
 
-    public static class IdViplevelKey {
-        private final int id;
-        private final int viplevel;
-
-        public IdViplevelKey(int id, int viplevel) {
-            this.id = id;
-            this.viplevel = viplevel;
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(id, viplevel);
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            if (!(other instanceof IdViplevelKey))
-                return false;
-            IdViplevelKey o = (IdViplevelKey) other;
-            return id == o.id && viplevel == o.viplevel;
-        }
-    }
-
-    public static Signin getByIdViplevel(int id, int viplevel) {
-        config.ConfigMgr mgr = config.ConfigMgr.getMgr();
-        return mgr.getOtherSigninByIdViplevel(id, viplevel);
-    }
-
     public static java.util.Collection<Signin> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allOtherSignin();
@@ -118,7 +90,6 @@ public class Signin {
             for (int c = input.readInt(); c > 0; c--) {
                 Signin self = Signin._create(input);
                 mgr.other_signin_All.put(self.id, self);
-                mgr.other_signin_IdViplevelMap.put(new IdViplevelKey(self.id, self.viplevel), self);
             }
         }
 

@@ -7,6 +7,10 @@ namespace Config.Other
     {
         public int Id { get; private set; }
         public List<Config.DataPosition> PosList { get; private set; }
+        public int LootId { get; private set; } /* loot */
+        public int LootItemId { get; private set; } /* item */
+        public Config.Other.DataLootitem RefLoot { get; private set; }
+        public Config.Other.DataLoot RefAllLoot { get; private set; }
 
         public override int GetHashCode()
         {
@@ -23,7 +27,7 @@ namespace Config.Other
 
         public override string ToString()
         {
-            return "(" + Id + "," + CSV.ToString(PosList) + ")";
+            return "(" + Id + "," + CSV.ToString(PosList) + "," + LootId + "," + LootItemId + ")";
         }
 
         
@@ -62,6 +66,11 @@ namespace Config.Other
 
         }
 
+        internal static void Resolve(Config.LoadErrors errors)
+        {
+            foreach (var v in All())
+                v._resolve(errors);
+        }
         internal static DataMonster _create(Config.Stream os)
         {
             var self = new DataMonster();
@@ -69,8 +78,17 @@ namespace Config.Other
             self.PosList = new List<Config.DataPosition>();
             for (var c = os.ReadInt32(); c > 0; c--)
                 self.PosList.Add(Config.DataPosition._create(os));
+            self.LootId = os.ReadInt32();
+            self.LootItemId = os.ReadInt32();
             return self;
         }
 
+        internal void _resolve(Config.LoadErrors errors)
+        {
+            RefLoot = Config.Other.DataLootitem.Get(LootId, LootItemId);;
+            if (RefLoot == null) errors.RefNull("other.monster", ToString(), "Loot");
+            RefAllLoot = Config.Other.DataLoot.Get(LootId);;
+            if (RefAllLoot == null) errors.RefNull("other.monster", ToString(), "AllLoot");
+        }
     }
 }

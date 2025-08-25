@@ -105,10 +105,6 @@ public class ConfigMgr {
 
     public config.other.Signin getOtherSignin(int id) { return other_signin_All.get(id); }
 
-    public final java.util.Map<config.other.Signin.IdViplevelKey, config.other.Signin> other_signin_IdViplevelMap = new java.util.LinkedHashMap<>();
-
-    public config.other.Signin getOtherSigninByIdViplevel(int id, int viplevel) { return other_signin_IdViplevelMap.get(new config.other.Signin.IdViplevelKey(id, viplevel)); }
-
     public java.util.Collection<config.other.Signin> allOtherSignin() { return other_signin_All.values(); }
 
     public final java.util.Map<Integer, config.task.Task> task_task_All = new java.util.LinkedHashMap<>();
