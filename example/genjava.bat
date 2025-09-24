@@ -1,4 +1,4 @@
-java -jar ../cfggen.jar -datadir config -gen java,dir:java,sealed,builders:config/builders.txt -gen javadata
+java -jar ../cfggen.jar -datadir config -gen java,own:-noserver,dir:java,sealed,builders:config/builders.txt -gen javadata,own:-noserver
 
 set DIR=java\configgen\genjava
 if not exist %DIR% mkdir %DIR%

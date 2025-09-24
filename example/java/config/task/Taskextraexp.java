@@ -8,7 +8,6 @@ public class Taskextraexp {
     private String fielda;
     private String fieldb;
     private String fieldc;
-    private String fieldd;
 
     private Taskextraexp() {
     }
@@ -22,7 +21,6 @@ public class Taskextraexp {
         self.fielda = input.readStr();
         self.fieldb = input.readStr();
         self.fieldc = input.readStr();
-        self.fieldd = input.readStr();
         return self;
     }
 
@@ -60,13 +58,9 @@ public class Taskextraexp {
         return fieldc;
     }
 
-    public String getFieldd() {
-        return fieldd;
-    }
-
     @Override
     public String toString() {
-        return "(" + taskid + "," + extraexp + "," + test1 + "," + test2 + "," + fielda + "," + fieldb + "," + fieldc + "," + fieldd + ")";
+        return "(" + taskid + "," + extraexp + "," + test1 + "," + test2 + "," + fielda + "," + fieldb + "," + fieldc + ")";
     }
 
     public static Taskextraexp get(int taskid) {
