@@ -22,8 +22,11 @@ import static configgen.schema.CfgSchemaErrs.FilterRefIgnoredByRefTableNotFound;
 public class CfgSchemaFilterByTag {
     private final CfgSchema cfg;
     private final String tag;
+    private final boolean isMinusTag;
     private final String minusTag;
+    private final String noMinusTag;
     private final CfgSchemaErrs errs;
+
 
     public CfgSchemaFilterByTag(CfgSchema cfg, String tag, CfgSchemaErrs errs) {
         cfg.requireResolved();
@@ -34,30 +37,32 @@ public class CfgSchemaFilterByTag {
         Objects.requireNonNull(errs);
         this.cfg = cfg;
         this.tag = tag;
+        this.isMinusTag = tag.startsWith("-");
         this.minusTag = "-" + tag;
+        this.noMinusTag = isMinusTag ? tag.substring(1) : tag;
         this.errs = errs;
     }
 
     public CfgSchema filter() {
-        Map<String, TableRule> tableMap = buildTableRuleMap();
+        Map<String, TableSchema> tableMap = buildFilteredTableMap();
 
         CfgSchema filtered = CfgSchema.ofPartial();
         for (Nameable item : cfg.items()) {
             switch (item) {
                 case InterfaceSchema interfaceSchema -> {
-                    if (interfaceSchema.meta().hasTag(tag)) {
+                    if (hasTagForInterface(interfaceSchema)) {
                         filtered.add(filterInterface(interfaceSchema, tableMap));
                     }
                 }
                 case StructSchema structSchema -> {
-                    if (hasTag(structSchema)) {
+                    if (hasTagForStructural(structSchema)) {
                         filtered.add(filterStruct(structSchema, false, tableMap));
                     }
                 }
                 case TableSchema tableSchema -> {
-                    TableRule tr = tableMap.get(tableSchema.name());
-                    if (tr != null) {
-                        filtered.items().add(filterTablePhase2(tableSchema, tr, tableMap));
+                    TableSchema ts = tableMap.get(tableSchema.name());
+                    if (ts != null) {
+                        filtered.items().add(tablePhase2_handleForeignKey(tableSchema, ts, tableMap));
                     }
                 }
             }
@@ -65,37 +70,94 @@ public class CfgSchemaFilterByTag {
         return filtered;
     }
 
-    // 构建TableRule映射
-    private Map<String, TableRule> buildTableRuleMap() {
-        Map<String, TableRule> tableMap = new HashMap<>();
+    private Map<String, TableSchema> buildFilteredTableMap() {
+        Map<String, TableSchema> tableMap = new HashMap<>();
         for (Nameable item : cfg.items()) {
-            if (item instanceof TableSchema tableSchema && hasTag(tableSchema)) {
-                TableRule tr = filterTablePhase1(tableSchema);
-                tableMap.put(tr.table.name(), tr);
+            if (item instanceof TableSchema tableSchema && hasTagForStructural(tableSchema)) {
+                TableSchema ts = tablePhase1_filter(tableSchema);
+                tableMap.put(ts.name(), ts);
             }
         }
         return tableMap;
     }
 
-    private boolean hasTag(Structural struct) {
-        if (struct.meta().hasTag(tag)) {
-            return true;
+    /////////////////////////////// filter by tag 规则
+    private boolean hasTagForInterface(InterfaceSchema interfaceSchema) {
+        if (isMinusTag) {
+            return !interfaceSchema.meta().hasTag(noMinusTag);
+        } else {
+            return interfaceSchema.meta().hasTag(tag);
         }
-        for (FieldSchema field : struct.fields()) {
-            if (field.meta().hasTag(tag)) {
+    }
+
+    private boolean hasTagForStructural(Structural struct) {
+        if (isMinusTag) {
+            return !struct.meta().hasTag(noMinusTag);
+        } else {
+            if (struct.meta().hasTag(tag)) {
                 return true;
             }
+            for (FieldSchema field : struct.fields()) {
+                if (field.meta().hasTag(tag)) {
+                    return true;
+                }
+            }
+            return false;
         }
-        return false;
     }
 
-    private StructSchema filterStruct(StructSchema struct, boolean isImpl, Map<String, TableRule> tableMap) {
-        FieldsRule fieldsRule = filterFields(struct, isImpl);
-        List<ForeignKeySchema> fks = filterForeignKeys(struct, fieldsRule, tableMap);
-        return new StructSchema(struct.name(), struct.fmt(), struct.meta().copy(), fieldsRule.filteredFields, fks);
+    private List<FieldSchema> filterFields(Structural structural, boolean isImpl) {
+        if (isMinusTag) {
+            List<FieldSchema> filteredFields = new ArrayList<>();
+            for (FieldSchema field : structural.fields()) {
+                if (!field.meta().hasTag(noMinusTag)) {
+                    filteredFields.add(field.copy());
+                }
+            }
+            return filteredFields;
+
+        } else {
+            List<FieldSchema> withTagFields = new ArrayList<>();
+            int withMinusTagFieldCount = 0;
+            for (FieldSchema field : structural.fields()) {
+                if (field.meta().hasTag(tag)) {
+                    withTagFields.add(field.copy());
+                } else if (field.meta().hasTag(minusTag)) {
+                    withMinusTagFieldCount++;
+                }
+            }
+
+            @SuppressWarnings("UnnecessaryLocalVariable")
+            List<FieldSchema> filteredFields = withTagFields;
+            if (withTagFields.isEmpty()) {
+                //noinspection StatementWithEmptyBody
+                if (isImpl && structural.meta().hasTag(tag)) {
+                    //一般情况下，impl不需要设置tag，
+                    // 如果impl上设置tag，则则是为了能filter出空结构，相当于只用此impl类名字做标志，
+                } else if (withMinusTagFieldCount > 0) {
+                    for (FieldSchema field : structural.fields()) {
+                        if (!field.meta().hasTag(minusTag)) {
+                            filteredFields.add(field.copy());
+                        }
+                    }
+                } else {
+                    for (FieldSchema field : structural.fields()) {
+                        filteredFields.add(field.copy());
+                    }
+                }
+            }
+            return filteredFields;
+        }
+    }
+    ///////////////////////////////
+
+    private StructSchema filterStruct(StructSchema struct, boolean isImpl, Map<String, TableSchema> tableMap) {
+        List<FieldSchema> filteredFields = filterFields(struct, isImpl);
+        List<ForeignKeySchema> fks = filterForeignKeys(struct, filteredFields, tableMap);
+        return new StructSchema(struct.name(), struct.fmt(), struct.meta().copy(), filteredFields, fks);
     }
 
-    private InterfaceSchema filterInterface(InterfaceSchema sInterface, Map<String, TableRule> tableMap) {
+    private InterfaceSchema filterInterface(InterfaceSchema sInterface, Map<String, TableSchema> tableMap) {
         List<StructSchema> impls = new ArrayList<>(sInterface.impls().size());
         for (StructSchema impl : sInterface.impls()) {
             impls.add(filterStruct(impl, true, tableMap));
@@ -105,95 +167,47 @@ public class CfgSchemaFilterByTag {
     }
 
 
-    private enum IncludeRule {
-        ALL,
-        WITH_TAG,
-        WITH_NO_MINUS_TAG,
-        IMPL_EMPTY //只有interface下的struct，可以为空
+    private static boolean isFieldIn(String name, List<FieldSchema> filteredFields) {
+        return filteredFields.stream().anyMatch(f -> f.name().equals(name));
     }
 
-    private record FieldsRule(List<FieldSchema> filteredFields,
-                              IncludeRule rule) {
-
-        boolean hasField(String name) {
-            return filteredFields.stream().anyMatch(f -> f.name().equals(name));
-        }
-
-        boolean hasKey(KeySchema key) {
-            return key.fields().stream().allMatch(this::hasField);
-        }
-    }
-
-    private record TableRule(TableSchema table,
-                             FieldsRule fieldsRule) {
+    private static boolean isKeyIn(KeySchema key, List<FieldSchema> filteredFields) {
+        return key.fields().stream().allMatch(name -> isFieldIn(name, filteredFields));
     }
 
 
-    private TableRule filterTablePhase1(TableSchema table) {
-        FieldsRule ff = filterFields(table, false);
+    /**
+     * 阶段1，外键未处理，其他都处理了
+     */
+    private TableSchema tablePhase1_filter(TableSchema table) {
+        List<FieldSchema> filteredFields = filterFields(table, false);
         EntryType entry = ENo.NO;
         switch (table.entry()) {
             case ENo.NO -> {
             }
             case EEntry ee -> {
-                if (ff.hasField(ee.field)) {
+                if (isFieldIn(ee.field, filteredFields)) {
                     entry = new EEntry(ee.field);
                 }
             }
             case EEnum ee -> {
-                if (ff.hasField(ee.field)) {
+                if (isFieldIn(ee.field, filteredFields)) {
                     entry = new EEnum(ee.field);
                 }
             }
         }
-        List<KeySchema> uks = filterUniqKeys(table, ff);
-        TableSchema t = new TableSchema(table.name(), table.primaryKey().copy(), entry, table.isColumnMode(),
-                table.meta().copy(), ff.filteredFields(), List.of(), uks);
-        return new TableRule(t, ff);
+        List<KeySchema> uks = filterUniqKeys(table, filteredFields);
+        return new TableSchema(table.name(), table.primaryKey().copy(), entry, table.isColumnMode(),
+                table.meta().copy(), filteredFields, List.of(), uks);
     }
 
-    private FieldsRule filterFields(Structural structural, boolean isImpl) {
-        List<FieldSchema> withTagFields = new ArrayList<>();
-        int withMinusTagFieldCount = 0;
-        for (FieldSchema field : structural.fields()) {
-            if (field.meta().hasTag(tag)) {
-                withTagFields.add(field.copy());
-            } else if (field.meta().hasTag(minusTag)) {
-                withMinusTagFieldCount++;
-            }
-        }
-
-        IncludeRule rule;
-        @SuppressWarnings("UnnecessaryLocalVariable")
-        List<FieldSchema> filteredFields = withTagFields;
-        if (withTagFields.isEmpty()) {
-            if (isImpl && structural.meta().hasTag(tag)) {
-                rule = IncludeRule.IMPL_EMPTY;
-            } else if (withMinusTagFieldCount > 0) {
-                for (FieldSchema field : structural.fields()) {
-                    if (!field.meta().hasTag(minusTag)) {
-                        filteredFields.add(field.copy());
-                    }
-                }
-                rule = IncludeRule.WITH_NO_MINUS_TAG;
-            } else {
-                for (FieldSchema field : structural.fields()) {
-                    filteredFields.add(field.copy());
-                }
-                rule = IncludeRule.ALL;
-
-            }
-        } else {
-            rule = IncludeRule.WITH_TAG;
-        }
-
-        return new FieldsRule(filteredFields, rule);
-    }
-
-    private TableSchema filterTablePhase2(TableSchema originalTable, TableRule tr,
-                                          Map<String, TableRule> phase1TableMap) {
-        TableSchema table = tr.table;
-        List<ForeignKeySchema> fks = filterForeignKeys(originalTable, tr.fieldsRule, phase1TableMap);
+    /**
+     * 阶段2，处理外键
+     */
+    private TableSchema tablePhase2_handleForeignKey(TableSchema originalTable,
+                                                     TableSchema table,
+                                                     Map<String, TableSchema> phase1TableMap) {
+        List<ForeignKeySchema> fks = filterForeignKeys(originalTable, table.fields(), phase1TableMap);
 
         return new TableSchema(table.name(), table.primaryKey(), table.entry(), table.isColumnMode(),
                 table.meta(), table.fields(), fks, table.uniqueKeys());
@@ -202,31 +216,19 @@ public class CfgSchemaFilterByTag {
 
 
     private List<ForeignKeySchema> filterForeignKeys(Structural originalStructural,
-                                                     FieldsRule fieldsRule,
-                                                     Map<String, TableRule> phase1TableMap) {
+                                                     List<FieldSchema> filteredFields,
+                                                     Map<String, TableSchema> phase1FilteredTableMap) {
         List<ForeignKeySchema> resultFks = new ArrayList<>();
-        switch (fieldsRule.rule) {
-            case ALL -> {
-                for (ForeignKeySchema fk : originalStructural.foreignKeys()) {
-                    recordForeignKeyIfOk(resultFks, fk, originalStructural, phase1TableMap);
-                }
-            }
-            case IMPL_EMPTY -> {
-            }
-
-            default -> {
-                for (ForeignKeySchema fk : originalStructural.foreignKeys()) {
-                    if (fieldsRule.hasKey(fk.key())) {
-                        recordForeignKeyIfOk(resultFks, fk, originalStructural, phase1TableMap);
-                    }
-                }
+        for (ForeignKeySchema fk : originalStructural.foreignKeys()) {
+            if (isKeyIn(fk.key(), filteredFields)) {
+                recordForeignKeyIfOk(resultFks, fk, originalStructural, phase1FilteredTableMap);
             }
         }
         return resultFks;
     }
 
     private void recordForeignKeyIfOk(List<ForeignKeySchema> resultFks, ForeignKeySchema fk,
-                                      Structural structural, Map<String, TableRule> phase1TableMap) {
+                                      Structural structural, Map<String, TableSchema> phase1TableMap) {
         RefErr err = isForeignKeyIn(structural, fk, phase1TableMap);
         switch (err) {
             case OK -> resultFks.add(fk.copy());
@@ -243,8 +245,8 @@ public class CfgSchemaFilterByTag {
         KEY_NOT_FOUND
     }
 
-    private RefErr isForeignKeyIn(Structural structural, ForeignKeySchema fk, Map<String, TableRule> phase1TableMap) {
-        TableRule refTable = null;
+    private RefErr isForeignKeyIn(Structural structural, ForeignKeySchema fk, Map<String, TableSchema> phase1TableMap) {
+        TableSchema refTable = null;
         // 本模块找
         String namespace = structural.namespace();
         if (!namespace.isEmpty()) {
@@ -266,7 +268,7 @@ public class CfgSchemaFilterByTag {
                 return RefErr.OK;
             }
             case RefKey.RefUniq refUniq -> {
-                KeySchema uk = refTable.table.findUniqueKey(refUniq.key());
+                KeySchema uk = refTable.findUniqueKey(refUniq.key());
                 if (uk != null) {
                     return RefErr.OK;
                 } else {
@@ -275,7 +277,7 @@ public class CfgSchemaFilterByTag {
             }
             case RefKey.RefList refList -> {
                 Set<String> names = new HashSet<>();
-                for (FieldSchema field : refTable.table.fields()) {
+                for (FieldSchema field : refTable.fields()) {
                     names.add(field.name());
                 }
                 if (names.containsAll(refList.key().fields())) {
@@ -287,22 +289,11 @@ public class CfgSchemaFilterByTag {
         }
     }
 
-    private List<KeySchema> filterUniqKeys(TableSchema table, FieldsRule ff) {
+    private List<KeySchema> filterUniqKeys(TableSchema table, List<FieldSchema> ff) {
         List<KeySchema> uks = new ArrayList<>();
-        switch (ff.rule) {
-            case ALL -> {
-                for (KeySchema uk : table.uniqueKeys()) {
-                    uks.add(uk.copy());
-                }
-            }
-            case WITH_TAG, WITH_NO_MINUS_TAG -> {
-                for (KeySchema uk : table.uniqueKeys()) {
-                    if (ff.hasKey(uk)) {
-                        uks.add(uk.copy());
-                    }
-                }
-            }
-            case IMPL_EMPTY -> {
+        for (KeySchema uk : table.uniqueKeys()) {
+            if (isKeyIn(uk, ff)) {
+                uks.add(uk.copy());
             }
         }
         return uks;
