@@ -92,16 +92,30 @@ class GenStructuralClass {
                     ps.println2("self.%s = %s;", ln, TypeStr.readValue(simpleType));
                 }
                 case FList fList -> {
-                    ps.println2("self.%s = new java.util.ArrayList<>();", ln);
-                    ps.println2("for (int c = input.readInt(); c > 0; c--) {");
-                    ps.println3("self.%s.add(%s);", ln, TypeStr.readValue((fList.item())));
+                    ps.println2("{");
+                    ps.println3("int c = input.readInt();");
+                    ps.println3("if (c == 0) {");
+                    ps.println4("self.%s = java.util.Collections.emptyList();", ln);
+                    ps.println3("} else {");
+                    ps.println4("self.%s = new java.util.ArrayList<>(c);", ln);
+                    ps.println4("for (; c > 0; c--) {");
+                    ps.println5("self.%s.add(%s);", ln, TypeStr.readValue((fList.item())));
+                    ps.println4("}");
+                    ps.println3("}");
                     ps.println2("}");
                 }
                 case FMap fMap -> {
-                    ps.println2("self.%s = new java.util.LinkedHashMap<>();", ln);
-                    ps.println2("for (int c = input.readInt(); c > 0; c--) {");
-                    ps.println3("self.%s.put(%s, %s);", ln, TypeStr.readValue(fMap.key()),
+                    ps.println2("{");
+                    ps.println3("int c = input.readInt();");
+                    ps.println3("if (c == 0) {");
+                    ps.println4("self.%s = java.util.Collections.emptyMap();", ln);
+                    ps.println3("} else {");
+                    ps.println4("self.%s = new java.util.LinkedHashMap<>(c);", ln);
+                    ps.println4("for (; c > 0; c--) {");
+                    ps.println5("self.%s.put(%s, %s);", ln, TypeStr.readValue(fMap.key()),
                             TypeStr.readValue((fMap.value())));
+                    ps.println4("}");
+                    ps.println3("}");
                     ps.println2("}");
                 }
             }
@@ -218,20 +232,30 @@ class GenStructuralClass {
                             ps.println2("java.util.Objects.requireNonNull(" + refName + ");");
                     }
                     case FList ignored -> {
-                        ps.println2("%s = new java.util.ArrayList<>();", refName);
-                        ps.println2("%s.forEach( e -> {", lower1(firstField.name()));
-                        ps.println3(Name.refType(refTable) + " r = " + MethodStr.tableGet(refTable, refSimple, "e"));
-                        ps.println3("java.util.Objects.requireNonNull(r);");
-                        ps.println3(refName + ".add(r);");
-                        ps.println2("});");
+                        String firstFieldName = lower1(firstField.name());
+                        ps.println2("if (%s.isEmpty()) {", firstFieldName);
+                        ps.println3("%s = java.util.Collections.emptyList();", refName);
+                        ps.println2("} else {");
+                        ps.println3("%s = new java.util.ArrayList<>(%s.size());", refName, firstFieldName);
+                        ps.println3("%s.forEach( e -> {", firstFieldName);
+                        ps.println4(Name.refType(refTable) + " r = " + MethodStr.tableGet(refTable, refSimple, "e"));
+                        ps.println4("java.util.Objects.requireNonNull(r);");
+                        ps.println4(refName + ".add(r);");
+                        ps.println3("});");
+                        ps.println2("}");
                     }
                     case FMap ignored -> {
-                        ps.println2("%s = new java.util.LinkedHashMap<>();", refName);
-                        ps.println2("%s.forEach( (k, v) -> {", lower1(firstField.name()));
-                        ps.println3(Name.refType(refTable) + " rv = " + MethodStr.tableGet(refTable, refSimple, "v"));
-                        ps.println3("java.util.Objects.requireNonNull(rv);");
-                        ps.println3(refName + ".put(k, rv);");
-                        ps.println2("});");
+                        String firstFieldName = lower1(firstField.name());
+                        ps.println2("if (%s.isEmpty()) {", firstFieldName);
+                        ps.println3("%s = java.util.Collections.emptyMap();", refName);
+                        ps.println2("} else {");
+                        ps.println3("%s = new java.util.LinkedHashMap<>(%s.size());", refName, firstFieldName);
+                        ps.println3("%s.forEach( (k, v) -> {", firstFieldName);
+                        ps.println4(Name.refType(refTable) + " rv = " + MethodStr.tableGet(refTable, refSimple, "v"));
+                        ps.println4("java.util.Objects.requireNonNull(rv);");
+                        ps.println4(refName + ".put(k, rv);");
+                        ps.println3("});");
+                        ps.println2("}");
                     }
                 }
             }
@@ -278,6 +302,7 @@ class GenStructuralClass {
                     ps.println4(refName + ".add(v);");
                     ps.println2("});");
                 }
+                ps.println1("%s = %s.isEmpty() ? java.util.Collections.emptyList() : new java.util.ArrayList<>(%s);", refName, refName, refName);
             }
 
             ps.println1("}");
