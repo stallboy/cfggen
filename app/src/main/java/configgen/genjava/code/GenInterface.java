@@ -34,7 +34,7 @@ class GenInterface {
 
         ps.println("static %s _create(configgen.genjava.ConfigInput input) {", name.className);
         ps.inc();
-        ps.println("switch(input.readStr()) {");
+        ps.println("switch (input.readStr()) {");
         for (StructSchema impl : sInterface.impls()) {
             ps.println1("case \"%s\":", impl.name());
             ps.println2("return %s._create(input);", Name.fullName(impl));
