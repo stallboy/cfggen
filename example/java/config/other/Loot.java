@@ -69,7 +69,7 @@ public class Loot {
             if (v.getLootid() == lootid)
                 ListRefLootid.add(v);
         }
-    ListRefLootid = ListRefLootid.isEmpty() ? java.util.Collections.emptyList() : new java.util.ArrayList<>(ListRefLootid);
+        ListRefLootid = ListRefLootid.isEmpty() ? java.util.Collections.emptyList() : new java.util.ArrayList<>(ListRefLootid);
     }
 
     public void _resolve(config.ConfigMgr mgr) {
