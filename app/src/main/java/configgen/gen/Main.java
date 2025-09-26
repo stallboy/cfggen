@@ -93,6 +93,8 @@ public final class Main {
                 "profiler, gc before print memory usage"));
         System.out.println("    -nowarn           " + LocaleUtil.getLocaleString("Usage.NOWARN",
                 "do not print warning"));
+        System.out.println("    -weakwarn           " + LocaleUtil.getLocaleString("Usage.WEAKWARN",
+                "print weak warning"));
 
         System.out.println();
         System.out.println("-----" + LocaleUtil.getLocaleString("Usage.GenStart",
@@ -213,6 +215,7 @@ public final class Main {
                     Logger.enableProfileGc();
                 }
                 case "-nowarn" -> Logger.setWarningEnabled(false);
+                case "-weakwarn" -> Logger.setWeakWarningEnabled(true);
                 case "-binarytotext" -> {
                     binaryToTextFile = args[++i];
                     if (i + 1 < args.length && !args[i + 1].startsWith("-")) {

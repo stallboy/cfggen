@@ -11,6 +11,7 @@ public class Logger {
 
     private static boolean profileEnabled = false;
     private static boolean warningEnabled = true;
+    private static boolean weakWarningEnabled = false;
 
     public static void enableProfileGc() {
         profileGcEnabled = true;
@@ -38,6 +39,15 @@ public class Logger {
 
     public static boolean isWarningEnabled() {
         return warningEnabled;
+    }
+
+
+    public static void setWeakWarningEnabled(boolean isWeakWarningEnabled) {
+        weakWarningEnabled = isWeakWarningEnabled;
+    }
+
+    public static boolean isWeakWarningEnabled() {
+        return weakWarningEnabled;
     }
 
     public static PrintStream setVerboseStream(PrintStream stream) {

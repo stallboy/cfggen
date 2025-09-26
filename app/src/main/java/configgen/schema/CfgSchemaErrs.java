@@ -32,6 +32,9 @@ public record CfgSchemaErrs(List<Err> errs,
         if (Logger.isWarningEnabled() && !warns.isEmpty()) {
             Logger.log("%s warnings %d:", prefix, warns.size());
             for (Warn warn : warns) {
+                if (!Logger.isWeakWarningEnabled() && warn instanceof WeakWarn) {
+                    continue;
+                }
                 Logger.log("\t" + warn.msg());
             }
         }
@@ -47,6 +50,9 @@ public record CfgSchemaErrs(List<Err> errs,
     }
 
     public sealed interface Warn extends Msg {
+    }
+
+    public sealed interface WeakWarn extends Warn {
     }
 
 
@@ -79,7 +85,7 @@ public record CfgSchemaErrs(List<Err> errs,
      */
     public record FilterRefIgnoredByRefTableNotFound(String name,
                                                      String foreignKey,
-                                                     String notFoundRefTable) implements Warn {
+                                                     String notFoundRefTable) implements WeakWarn {
     }
 
     /**
@@ -89,7 +95,7 @@ public record CfgSchemaErrs(List<Err> errs,
     public record FilterRefIgnoredByRefKeyNotFound(String name,
                                                    String foreignKey,
                                                    String refTable,
-                                                   List<String> notFoundRefKey) implements Warn {
+                                                   List<String> notFoundRefKey) implements WeakWarn {
     }
 
     public sealed interface Err extends Msg {

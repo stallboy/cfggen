@@ -302,7 +302,7 @@ class GenStructuralClass {
                     ps.println4(refName + ".add(v);");
                     ps.println2("}");
                 }
-                ps.println1("%s = %s.isEmpty() ? java.util.Collections.emptyList() : new java.util.ArrayList<>(%s);", refName, refName, refName);
+                ps.println2("%s = %s.isEmpty() ? java.util.Collections.emptyList() : new java.util.ArrayList<>(%s);", refName, refName, refName);
             }
 
             ps.println1("}");
