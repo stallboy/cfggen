@@ -15,9 +15,16 @@ public class Loot {
         self.lootid = input.readInt();
         self.ename = input.readStr();
         self.name = input.readStr();
-        self.chanceList = new java.util.ArrayList<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.chanceList.add(input.readInt());
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.chanceList = java.util.Collections.emptyList();
+            } else {
+                self.chanceList = new java.util.ArrayList<>(c);
+                for (; c > 0; c--) {
+                    self.chanceList.add(input.readInt());
+                }
+            }
         }
         return self;
     }
@@ -58,10 +65,11 @@ public class Loot {
 
     public void _resolveDirect(config.ConfigMgr mgr) {
         ListRefLootid = new java.util.ArrayList<>();
-        mgr.other_lootitem_All.values().forEach( v -> {
+        for (config.other.Lootitem v : mgr.other_lootitem_All.values()) {
             if (v.getLootid() == lootid)
                 ListRefLootid.add(v);
-        });
+        }
+    ListRefLootid = ListRefLootid.isEmpty() ? java.util.Collections.emptyList() : new java.util.ArrayList<>(ListRefLootid);
     }
 
     public void _resolve(config.ConfigMgr mgr) {

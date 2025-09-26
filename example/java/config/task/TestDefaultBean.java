@@ -28,17 +28,38 @@ public class TestDefaultBean {
         self.testBool = input.readBool();
         self.testString = input.readStr();
         self.testSubBean = config.Position._create(input);
-        self.testList = new java.util.ArrayList<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.testList.add(input.readInt());
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.testList = java.util.Collections.emptyList();
+            } else {
+                self.testList = new java.util.ArrayList<>(c);
+                for (; c > 0; c--) {
+                    self.testList.add(input.readInt());
+                }
+            }
         }
-        self.testList2 = new java.util.ArrayList<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.testList2.add(input.readInt());
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.testList2 = java.util.Collections.emptyList();
+            } else {
+                self.testList2 = new java.util.ArrayList<>(c);
+                for (; c > 0; c--) {
+                    self.testList2.add(input.readInt());
+                }
+            }
         }
-        self.testMap = new java.util.LinkedHashMap<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.testMap.put(input.readInt(), input.readStr());
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.testMap = java.util.Collections.emptyMap();
+            } else {
+                self.testMap = new java.util.LinkedHashMap<>(c);
+                for (; c > 0; c--) {
+                    self.testMap.put(input.readInt(), input.readStr());
+                }
+            }
         }
         return self;
     }

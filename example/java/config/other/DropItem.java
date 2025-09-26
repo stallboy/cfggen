@@ -19,9 +19,16 @@ public class DropItem {
     public static DropItem _create(configgen.genjava.ConfigInput input) {
         DropItem self = new DropItem();
         self.chance = input.readInt();
-        self.itemids = new java.util.ArrayList<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.itemids.add(input.readInt());
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.itemids = java.util.Collections.emptyList();
+            } else {
+                self.itemids = new java.util.ArrayList<>(c);
+                for (; c > 0; c--) {
+                    self.itemids.add(input.readInt());
+                }
+            }
         }
         self.countmin = input.readInt();
         self.countmax = input.readInt();

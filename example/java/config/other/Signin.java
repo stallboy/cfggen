@@ -20,13 +20,27 @@ public class Signin {
     public static Signin _create(configgen.genjava.ConfigInput input) {
         Signin self = new Signin();
         self.id = input.readInt();
-        self.item2countMap = new java.util.LinkedHashMap<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.item2countMap.put(input.readInt(), input.readInt());
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.item2countMap = java.util.Collections.emptyMap();
+            } else {
+                self.item2countMap = new java.util.LinkedHashMap<>(c);
+                for (; c > 0; c--) {
+                    self.item2countMap.put(input.readInt(), input.readInt());
+                }
+            }
         }
-        self.vipitem2vipcountMap = new java.util.LinkedHashMap<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.vipitem2vipcountMap.put(input.readInt(), input.readInt());
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.vipitem2vipcountMap = java.util.Collections.emptyMap();
+            } else {
+                self.vipitem2vipcountMap = new java.util.LinkedHashMap<>(c);
+                for (; c > 0; c--) {
+                    self.vipitem2vipcountMap.put(input.readInt(), input.readInt());
+                }
+            }
         }
         self.viplevel = input.readInt();
         self.iconFile = input.readStr();

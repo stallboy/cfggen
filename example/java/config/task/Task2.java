@@ -21,9 +21,16 @@ public class Task2 {
     public static Task2 _create(configgen.genjava.ConfigInput input) {
         Task2 self = new Task2();
         self.taskid = input.readInt();
-        self.name = new java.util.ArrayList<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.name.add(input.readStr());
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.name = java.util.Collections.emptyList();
+            } else {
+                self.name = new java.util.ArrayList<>(c);
+                for (; c > 0; c--) {
+                    self.name.add(input.readStr());
+                }
+            }
         }
         self.nexttask = input.readInt();
         self.completecondition = config.task.completecondition.Completecondition._create(input);
@@ -31,17 +38,38 @@ public class Task2 {
         self.testBool = input.readBool();
         self.testString = input.readStr();
         self.testStruct = config.Position._create(input);
-        self.testList = new java.util.ArrayList<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.testList.add(input.readInt());
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.testList = java.util.Collections.emptyList();
+            } else {
+                self.testList = new java.util.ArrayList<>(c);
+                for (; c > 0; c--) {
+                    self.testList.add(input.readInt());
+                }
+            }
         }
-        self.testListStruct = new java.util.ArrayList<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.testListStruct.add(config.Position._create(input));
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.testListStruct = java.util.Collections.emptyList();
+            } else {
+                self.testListStruct = new java.util.ArrayList<>(c);
+                for (; c > 0; c--) {
+                    self.testListStruct.add(config.Position._create(input));
+                }
+            }
         }
-        self.testListInterface = new java.util.ArrayList<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.testListInterface.add(config.ai.triggertick.TriggerTick._create(input));
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.testListInterface = java.util.Collections.emptyList();
+            } else {
+                self.testListInterface = new java.util.ArrayList<>(c);
+                for (; c > 0; c--) {
+                    self.testListInterface.add(config.ai.triggertick.TriggerTick._create(input));
+                }
+            }
         }
         return self;
     }

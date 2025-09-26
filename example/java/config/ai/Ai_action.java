@@ -15,13 +15,27 @@ public class Ai_action {
         self.iD = input.readInt();
         self.desc = input.readStr();
         self.formulaID = input.readInt();
-        self.argIList = new java.util.ArrayList<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.argIList.add(input.readInt());
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.argIList = java.util.Collections.emptyList();
+            } else {
+                self.argIList = new java.util.ArrayList<>(c);
+                for (; c > 0; c--) {
+                    self.argIList.add(input.readInt());
+                }
+            }
         }
-        self.argSList = new java.util.ArrayList<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.argSList.add(input.readInt());
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.argSList = java.util.Collections.emptyList();
+            } else {
+                self.argSList = new java.util.ArrayList<>(c);
+                for (; c > 0; c--) {
+                    self.argSList.add(input.readInt());
+                }
+            }
         }
         return self;
     }

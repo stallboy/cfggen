@@ -22,7 +22,7 @@ public final class TestNoColumn implements config.task.completecondition.Complet
 
     @Override
     public boolean equals(Object other) {
-        return this == other || other instanceof TestNoColumn;
+        return other instanceof TestNoColumn;
     }
 
     @Override

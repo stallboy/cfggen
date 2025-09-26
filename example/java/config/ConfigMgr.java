@@ -3,11 +3,11 @@ package config;
 public class ConfigMgr {
     private static volatile ConfigMgr mgr;
 
-    public static ConfigMgr getMgr(){
+    public static ConfigMgr getMgr() {
         return mgr;
     }
 
-    public static void setMgr(ConfigMgr newMgr){
+    public static void setMgr(ConfigMgr newMgr) {
         mgr = newMgr;
     }
 

@@ -26,9 +26,16 @@ public class Jewelrysuit {
         self.ability2Value = input.readInt();
         self.ability3 = input.readInt();
         self.ability3Value = input.readInt();
-        self.suitList = new java.util.ArrayList<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.suitList.add(input.readInt());
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.suitList = java.util.Collections.emptyList();
+            } else {
+                self.suitList = new java.util.ArrayList<>(c);
+                for (; c > 0; c--) {
+                    self.suitList.add(input.readInt());
+                }
+            }
         }
         return self;
     }

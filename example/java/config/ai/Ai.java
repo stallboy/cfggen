@@ -28,9 +28,16 @@ public class Ai {
         self.condID = input.readStr();
         self.trigTick = config.ai.triggertick.TriggerTick._create(input);
         self.trigOdds = input.readInt();
-        self.actionID = new java.util.ArrayList<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.actionID.add(input.readInt());
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.actionID = java.util.Collections.emptyList();
+            } else {
+                self.actionID = new java.util.ArrayList<>(c);
+                for (; c > 0; c--) {
+                    self.actionID.add(input.readInt());
+                }
+            }
         }
         self.deathRemove = input.readBool();
         return self;

@@ -13,13 +13,27 @@ public class Jewelryrandom {
         Jewelryrandom self = new Jewelryrandom();
         self.lvlRank = config.LevelRank._create(input);
         self.attackRange = config.Range._create(input);
-        self.otherRange = new java.util.ArrayList<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.otherRange.add(config.Range._create(input));
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.otherRange = java.util.Collections.emptyList();
+            } else {
+                self.otherRange = new java.util.ArrayList<>(c);
+                for (; c > 0; c--) {
+                    self.otherRange.add(config.Range._create(input));
+                }
+            }
         }
-        self.testPack = new java.util.ArrayList<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.testPack.add(config.equip.TestPackBean._create(input));
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.testPack = java.util.Collections.emptyList();
+            } else {
+                self.testPack = new java.util.ArrayList<>(c);
+                for (; c > 0; c--) {
+                    self.testPack.add(config.equip.TestPackBean._create(input));
+                }
+            }
         }
         return self;
     }

@@ -16,9 +16,16 @@ public class Task {
     public static Task _create(configgen.genjava.ConfigInput input) {
         Task self = new Task();
         self.taskid = input.readInt();
-        self.name = new java.util.ArrayList<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.name.add(input.readStr());
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.name = java.util.Collections.emptyList();
+            } else {
+                self.name = new java.util.ArrayList<>(c);
+                for (; c > 0; c--) {
+                    self.name.add(input.readStr());
+                }
+            }
         }
         self.nexttask = input.readInt();
         self.completecondition = config.task.completecondition.Completecondition._create(input);

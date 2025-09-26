@@ -15,9 +15,16 @@ public class Keytest {
         self.id1 = input.readInt();
         self.id2 = input.readLong();
         self.id3 = input.readInt();
-        self.ids = new java.util.ArrayList<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.ids.add(input.readInt());
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.ids = java.util.Collections.emptyList();
+            } else {
+                self.ids = new java.util.ArrayList<>(c);
+                for (; c > 0; c--) {
+                    self.ids.add(input.readInt());
+                }
+            }
         }
         return self;
     }
@@ -48,12 +55,16 @@ public class Keytest {
     }
 
     public void _resolveDirect(config.ConfigMgr mgr) {
-        RefIds = new java.util.ArrayList<>();
-        ids.forEach( e -> {
-            config.other.Signin r = mgr.other_signin_All.get(e);
-            java.util.Objects.requireNonNull(r);
-            RefIds.add(r);
-        });
+        if (ids.isEmpty()) {
+            RefIds = java.util.Collections.emptyList();
+        } else {
+            RefIds = new java.util.ArrayList<>(ids.size());
+            for (Integer e : ids) {
+                config.other.Signin r = mgr.other_signin_All.get(e);
+                java.util.Objects.requireNonNull(r);
+                RefIds.add(r);
+            }
+        }
     }
 
     public void _resolve(config.ConfigMgr mgr) {

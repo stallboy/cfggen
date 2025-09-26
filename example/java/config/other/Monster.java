@@ -14,9 +14,16 @@ public class Monster {
     public static Monster _create(configgen.genjava.ConfigInput input) {
         Monster self = new Monster();
         self.id = input.readInt();
-        self.posList = new java.util.ArrayList<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.posList.add(config.Position._create(input));
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.posList = java.util.Collections.emptyList();
+            } else {
+                self.posList = new java.util.ArrayList<>(c);
+                for (; c > 0; c--) {
+                    self.posList.add(config.Position._create(input));
+                }
+            }
         }
         self.lootId = input.readInt();
         self.lootItemId = input.readInt();

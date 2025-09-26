@@ -13,13 +13,27 @@ public class Drop {
         Drop self = new Drop();
         self.dropid = input.readInt();
         self.name = input.readStr();
-        self.items = new java.util.ArrayList<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.items.add(config.other.DropItem._create(input));
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.items = java.util.Collections.emptyList();
+            } else {
+                self.items = new java.util.ArrayList<>(c);
+                for (; c > 0; c--) {
+                    self.items.add(config.other.DropItem._create(input));
+                }
+            }
         }
-        self.testmap = new java.util.LinkedHashMap<>();
-        for (int c = input.readInt(); c > 0; c--) {
-            self.testmap.put(input.readInt(), input.readInt());
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.testmap = java.util.Collections.emptyMap();
+            } else {
+                self.testmap = new java.util.LinkedHashMap<>(c);
+                for (; c > 0; c--) {
+                    self.testmap.put(input.readInt(), input.readInt());
+                }
+            }
         }
         return self;
     }
