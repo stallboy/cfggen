@@ -6,14 +6,16 @@ import configgen.util.Logger;
 import java.util.*;
 
 public record CfgSchemaErrs(List<Err> errs,
-                            List<Warn> warns) {
+                            List<Warn> warns,
+                            List<WeakWarn> weakWarns) {
     public static CfgSchemaErrs of() {
-        return new CfgSchemaErrs(new ArrayList<>(), new ArrayList<>());
+        return new CfgSchemaErrs(new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
     }
 
     public CfgSchemaErrs {
         Objects.requireNonNull(errs);
         Objects.requireNonNull(warns);
+        Objects.requireNonNull(weakWarns);
     }
 
     public void addErr(Err err) {
@@ -23,18 +25,25 @@ public record CfgSchemaErrs(List<Err> errs,
     public void addWarn(Warn warn) {
         warns.add(Objects.requireNonNull(warn));
     }
+    public void addWeakWarn(WeakWarn weakWarn) {
+        weakWarns.add(Objects.requireNonNull(weakWarn));
+    }
 
     public void checkErrors() {
         checkErrors("schema");
     }
 
     public void checkErrors(String prefix) {
+        if (Logger.isWeakWarningEnabled() && !weakWarns.isEmpty()){
+            Logger.log("%s weak warnings %d:", prefix, weakWarns.size());
+            for (WeakWarn weakWarn : weakWarns) {
+                Logger.log("\t" + weakWarn.msg());
+            }
+        }
+
         if (Logger.isWarningEnabled() && !warns.isEmpty()) {
             Logger.log("%s warnings %d:", prefix, warns.size());
             for (Warn warn : warns) {
-                if (!Logger.isWeakWarningEnabled() && warn instanceof WeakWarn) {
-                    continue;
-                }
                 Logger.log("\t" + warn.msg());
             }
         }
@@ -49,12 +58,30 @@ public record CfgSchemaErrs(List<Err> errs,
         }
     }
 
+    public sealed interface WeakWarn extends Msg {
+    }
+
+    /**
+     * 被tag的结构或表[name] 的外键[foreignKey] 链接的表
+     * [notFoundRefTable]未被tag --> 外键被忽略
+     */
+    public record FilterRefIgnoredByRefTableNotFound(String name,
+                                                     String foreignKey,
+                                                     String notFoundRefTable) implements WeakWarn {
+    }
+
+    /**
+     * 被tag的结构或表[name] 的外键[foreignKey] 链接的表
+     * [refTable]上的[notFoundRefKey]字段未被tag --> 外键被忽略
+     */
+    public record FilterRefIgnoredByRefKeyNotFound(String name,
+                                                   String foreignKey,
+                                                   String refTable,
+                                                   List<String> notFoundRefKey) implements WeakWarn {
+    }
+
     public sealed interface Warn extends Msg {
     }
-
-    public sealed interface WeakWarn extends Warn {
-    }
-
 
     /**
      * 检查局部名字空间和全局名字空间潜在的冲突
@@ -77,25 +104,6 @@ public record CfgSchemaErrs(List<Err> errs,
      * @param name 接口名
      */
     public record InterfaceNotUsed(String name) implements Warn {
-    }
-
-    /**
-     * 被tag的结构或表[name] 的外键[foreignKey] 链接的表
-     * [notFoundRefTable]未被tag --> 外键被忽略
-     */
-    public record FilterRefIgnoredByRefTableNotFound(String name,
-                                                     String foreignKey,
-                                                     String notFoundRefTable) implements WeakWarn {
-    }
-
-    /**
-     * 被tag的结构或表[name] 的外键[foreignKey] 链接的表
-     * [refTable]上的[notFoundRefKey]字段未被tag --> 外键被忽略
-     */
-    public record FilterRefIgnoredByRefKeyNotFound(String name,
-                                                   String foreignKey,
-                                                   String refTable,
-                                                   List<String> notFoundRefKey) implements WeakWarn {
     }
 
     public sealed interface Err extends Msg {

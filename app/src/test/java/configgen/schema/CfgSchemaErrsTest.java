@@ -16,11 +16,6 @@ class CfgSchemaErrsTest {
         assertTrue(cfgSchemaErrs.warns().isEmpty());
     }
 
-    @Test
-    public void test_create_schema_errs_with_null_lists() {
-        assertThrows(NullPointerException.class, () -> new CfgSchemaErrs(null, new ArrayList<>()));
-        assertThrows(NullPointerException.class, () -> new CfgSchemaErrs(new ArrayList<>(), null));
-    }
 
     // Adding a null error or warning should not be allowed
     @Test

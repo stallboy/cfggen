@@ -232,9 +232,9 @@ public class CfgSchemaFilterByTag {
         RefErr err = isForeignKeyIn(structural, fk, phase1TableMap);
         switch (err) {
             case OK -> resultFks.add(fk.copy());
-            case TABLE_NOT_FOUND -> errs.addWarn(new FilterRefIgnoredByRefTableNotFound(
+            case TABLE_NOT_FOUND -> errs.addWeakWarn(new FilterRefIgnoredByRefTableNotFound(
                     structural.name(), fk.name(), fk.refTable()));
-            case KEY_NOT_FOUND -> errs.addWarn(new FilterRefIgnoredByRefKeyNotFound(
+            case KEY_NOT_FOUND -> errs.addWeakWarn(new FilterRefIgnoredByRefKeyNotFound(
                     structural.name(), fk.name(), fk.refTable(), fk.refKey().keyNames()));
         }
     }
