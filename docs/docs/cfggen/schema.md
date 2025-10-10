@@ -154,3 +154,13 @@ table task[taskid] (entry='entry') {
 > taskexptype表中的(enum='name')，表明这是个枚举表，excel数据要包含3行，第二列name里的字符串要分别是taskexp中的struct名字：ByLevel，ByServerUpDay，ConstValue
 
 
+### (nullable) 外键
+
+- nullable 表示可以找不到此外键，生成代码会是nullableRefXXX
+- nullable的field，如果在excel格子中，则加强了以下约束：格子中为空才可以nullable，只要格子有内容必须能找到外键。以下两种情况例外
+    1. field是此table主键或唯一键的一部分。
+    2. field类型是数值（int、long、float），且内容为0 
+
+    > task.taskid 是情况1 
+    > 
+    > task.nexttask 是情况2
