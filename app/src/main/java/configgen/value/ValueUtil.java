@@ -73,7 +73,7 @@ public class ValueUtil {
             return null;
         }
 
-        if (fv instanceof CfgValue.StringValue stringValue) {
+        if (fv instanceof StringValue stringValue) {
             return stringValue.value();
         } else {
             return fv.packStr();
@@ -106,6 +106,23 @@ public class ValueUtil {
             }
             case DFile ignored -> {
                 return true;
+            }
+        }
+    }
+
+    public static boolean isValueNumber0(Value value) {
+        switch (value) {
+            case VInt vInt -> {
+                return vInt.value() == 0;
+            }
+            case VLong vLong -> {
+                return vLong.value() == 0;
+            }
+            case VFloat vFloat -> {
+                return vFloat.value() == 0;
+            }
+            default -> {
+                return false;
             }
         }
     }

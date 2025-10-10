@@ -45,12 +45,18 @@ public class RefValidator {
                                 errs.addErr(new ForeignValueNotFound(localValue, ctx.recordId(), fk.refTable(), fk.name()));
                             }
                         } else {
-                            if (ValueUtil.isValueCellsNotAllEmpty(localValue)) {
-                                //主键或唯一键，并且nullableRef，--->则可以格子中有值，但ref不到
-                                //否则，--->格子中有值，就算配置为nullableRef, 也必须ref到
-                                boolean can_NotEmpty_And_NullableRef = structural == fromTable.schema() &&
+                            if (ValueUtil.isValueCellsNotAllEmpty(localValue)) { // 格子中有值
+                                // 1. 主键或唯一键，并且nullableRef，---> 则可以格子中有值，但ref不到
+                                // 2. localValue是int,并且nullableRef，---> 则可以格子中为0，但ref不到
+                                // 否则，---> 格子中有值，就算配置为nullableRef, 也必须ref到
+                                boolean key_NotEmpty_And_NullableRef = structural == fromTable.schema() &&
                                         isForeignLocalKeyInPrimaryOrUniq(fk, fromTable.schema()) && refSimple.nullable();
-                                if (can_NotEmpty_And_NullableRef) {
+                                if (key_NotEmpty_And_NullableRef) {
+                                    continue;
+                                }
+
+                                boolean number_Be0_And_NullableRef = ValueUtil.isValueNumber0(localValue) && refSimple.nullable();
+                                if (number_Be0_And_NullableRef){
                                     continue;
                                 }
 
