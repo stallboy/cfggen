@@ -207,7 +207,7 @@ public class ValueJsonParser {
                 switch (obj) {
                     case String str -> {
                         sv = str;
-                        if (fieldSchema.meta().isLowercase()){
+                        if (fieldSchema.isLowercase()){
                             sv = sv.toLowerCase();
                         }
                     }
@@ -222,7 +222,7 @@ public class ValueJsonParser {
                 switch (obj) {
                     case String str -> {
                         sv = str;
-                        if (fieldSchema.meta().isLowercase()){
+                        if (fieldSchema.isLowercase()){
                             sv = sv.toLowerCase();
                         }
                     }

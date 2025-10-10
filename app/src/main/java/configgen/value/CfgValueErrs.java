@@ -161,6 +161,12 @@ public record CfgValueErrs(List<VErr> errs,
 
 
     /**
+     * 声明mustFill的字段，excel格子不能为空
+     */
+    public record MustFillButCellEmpty(Value value) implements VErr {
+    }
+
+    /**
      * 有外键的字段，excel格子不能为空
      */
     public record RefNotNullableButCellEmpty(Value value,

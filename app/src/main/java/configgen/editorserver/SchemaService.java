@@ -166,7 +166,7 @@ public class SchemaService {
                 fromFields(ts.fields()),
                 fromFks(ts.foreignKeys()),
                 recordIds,
-                ts.meta().isJson());
+                ts.isJson());
     }
 
     public static List<RecordId> getRecordIds(VTable vTable) {

@@ -183,24 +183,35 @@ public final class CfgSchemaResolver {
 
     private void resolveFieldType(FieldType type, FieldSchema field) {
         switch (type) {
-            case FList(SimpleType item) -> {
-                resolveFieldType(item, field);
+            case STRING, TEXT -> {
             }
-            case FMap(SimpleType key, SimpleType value) -> {
-                resolveFieldType(key, field);
-                resolveFieldType(value, field);
-                checkMapKey(key, field);
-            }
-            case Primitive ignored -> {
-            }
-            case StructRef structRef -> {
-                Fieldable obj = findStructRefObj(structRef.name());
-                if (obj != null) {
-                    structRef.setObj(obj);
-                } else {
-                    errs.addErr(new TypeStructNotFound(ctx(), field.name(), structRef.name()));
+            default -> {
+                if (field.isLowercase()) {
+                    errs.addWarn(new LowercaseNotOnStrOrText(ctx(), field.name(), field.type().toString()));
+                }
+
+                switch (type) {
+                    case FList(SimpleType item) -> {
+                        resolveFieldType(item, field);
+                    }
+                    case FMap(SimpleType key, SimpleType value) -> {
+                        resolveFieldType(key, field);
+                        resolveFieldType(value, field);
+                        checkMapKey(key, field);
+                    }
+                    case Primitive ignored -> {
+                    }
+                    case StructRef structRef -> {
+                        Fieldable obj = findStructRefObj(structRef.name());
+                        if (obj != null) {
+                            structRef.setObj(obj);
+                        } else {
+                            errs.addErr(new TypeStructNotFound(ctx(), field.name(), structRef.name()));
+                        }
+                    }
                 }
             }
+
         }
     }
 
@@ -384,7 +395,7 @@ public final class CfgSchemaResolver {
             }
 
             FieldSchema pkField = key.fieldSchemas().getFirst();
-            if (pkField != enumField && pkField.type() != INT ){
+            if (pkField != enumField && pkField.type() != INT) {
                 errPrimaryKeyNotEnumOrIntWhenEnum(pkField.name(), pkField.type().toString(), enumField.name());
             }
         }

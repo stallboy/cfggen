@@ -38,7 +38,7 @@ public class CfgSchemaAlignToData {
                 case TableSchema table -> {
                     CfgData.DTable th = dataHeaders.remove(table.name());
 
-                    if (table.meta().isJson()) {
+                    if (table.isJson()) {
                         alignedCfg.add(table.copy());
                         if (th != null) {
                             // 用json，就不能用excel

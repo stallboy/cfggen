@@ -15,27 +15,30 @@ public class ValueParser {
                                     int rowIndex) {
     }
 
-    public interface ValueParserContext {
+    public interface BlockParser {
         List<CellsWithRowIndex> parseBlock(List<DCell> cells, int curRowIndex);
 
-        ValueParserContext dummy = (cells, curRowIndex) -> List.of(new CellsWithRowIndex(cells, curRowIndex));
+        BlockParser dummy = (cells, curRowIndex) -> List.of(new CellsWithRowIndex(cells, curRowIndex));
     }
 
     public record ParseContext(String nameable,
                                boolean pack,
                                boolean canBeEmpty,
                                int curRowIndex) {
+        public ParseContext {
+            Objects.requireNonNull(nameable);
+        }
     }
 
     private final CfgValueErrs errs;
-    private final ValueParserContext parserContext;
+    private final BlockParser blockParser;
     private List<DCell> currentCells;
 
-    public ValueParser(CfgValueErrs errs, ValueParserContext parserContext) {
+    public ValueParser(CfgValueErrs errs, BlockParser blockParser) {
         Objects.requireNonNull(errs);
-        Objects.requireNonNull(parserContext);
+        Objects.requireNonNull(blockParser);
         this.errs = errs;
-        this.parserContext = parserContext;
+        this.blockParser = blockParser;
     }
 
 
@@ -245,6 +248,7 @@ public class ValueParser {
         return new VStruct(subStructural, values, Source.of(cells));
     }
 
+    @SuppressWarnings("DuplicateExpressions")
     SimpleValue parseSimpleType(FieldType.SimpleType subType, List<DCell> cells, FieldType.SimpleType type,
                                 ParseContext parseContext, FieldSchema fieldSchema) {
         currentCells = cells;
@@ -254,13 +258,12 @@ public class ValueParser {
                 require(cells.size() == 1);
                 DCell cell = cells.getFirst();
                 String str = cell.value().trim();
-                CfgValueErrs.NotMatchFieldType err = new CfgValueErrs.NotMatchFieldType(cell,
-                        parseContext.nameable, fieldSchema.name(), type);
                 switch (primitive) {
                     case BOOL -> {
                         boolean v = str.equals("1") || str.equalsIgnoreCase("true");
                         if (!boolStrSet.contains(str.toLowerCase())) {
-                            errs.addErr(err);
+                            errs.addErr(new CfgValueErrs.NotMatchFieldType(cell,
+                                    parseContext.nameable, fieldSchema.name(), type));
                         }
                         return new VBool(v, cell);
                     }
@@ -269,7 +272,8 @@ public class ValueParser {
                         try {
                             v = str.isEmpty() ? 0 : Integer.decode(str);
                         } catch (Exception e) {
-                            errs.addErr(err);
+                            errs.addErr(new CfgValueErrs.NotMatchFieldType(cell,
+                                    parseContext.nameable, fieldSchema.name(), type));
                         }
                         return new VInt(v, cell);
                     }
@@ -278,7 +282,8 @@ public class ValueParser {
                         try {
                             v = str.isEmpty() ? 0 : Long.decode(str);
                         } catch (Exception e) {
-                            errs.addErr(err);
+                            errs.addErr(new CfgValueErrs.NotMatchFieldType(cell,
+                                    parseContext.nameable, fieldSchema.name(), type));
                         }
                         return new VLong(v, cell);
                     }
@@ -287,18 +292,19 @@ public class ValueParser {
                         try {
                             v = str.isEmpty() ? 0f : Float.parseFloat(str);
                         } catch (Exception e) {
-                            errs.addErr(err);
+                            errs.addErr(new CfgValueErrs.NotMatchFieldType(cell,
+                                    parseContext.nameable, fieldSchema.name(), type));
                         }
                         return new VFloat(v, cell);
                     }
                     case STRING -> {
-                        if (fieldSchema.meta().isLowercase()) {
+                        if (fieldSchema.isLowercase()) {
                             str = str.toLowerCase();
                         }
                         return new VString(str, cell);
                     }
                     case TEXT -> {
-                        if (fieldSchema.meta().isLowercase()) {
+                        if (fieldSchema.isLowercase()) {
                             str = str.toLowerCase();
                         }
                         return new VText(str, cell);
@@ -331,14 +337,26 @@ public class ValueParser {
 
         switch (field.type()) {
             case FieldType.SimpleType simple -> {
-                return parseSimpleType((FieldType.SimpleType) subField.type(), cells, simple, parseContext, field);
+                SimpleValue v = parseSimpleType((FieldType.SimpleType) subField.type(), cells, simple, parseContext, field);
+                if (field.isMustFill() && cells.stream().allMatch(DCell::isCellEmpty)) {
+                    errs.addErr(new CfgValueErrs.MustFillButCellEmpty(v));
+                }
+                return v;
             }
             case FieldType.FList ignored -> {
-                return parseList(subField, cells, field, parseContext);
+                VList vList = parseList(subField, cells, field, parseContext);
+                if (field.isMustFill() && vList.valueList().isEmpty()) {
+                    errs.addErr(new CfgValueErrs.MustFillButCellEmpty(vList));
+                }
+                return vList;
             }
 
             case FieldType.FMap ignored -> {
-                return parseMap(subField, cells, field, parseContext);
+                VMap vMap = parseMap(subField, cells, field, parseContext);
+                if (field.isMustFill() && vMap.valueMap().isEmpty()) {
+                    errs.addErr(new CfgValueErrs.MustFillButCellEmpty(vMap));
+                }
+                return vMap;
             }
         }
     }
@@ -364,7 +382,7 @@ public class ValueParser {
             }
 
         } else if (field.fmt() instanceof FieldFormat.Block ignored) {
-            blocks = parserContext.parseBlock(cells, parseContext.curRowIndex);
+            blocks = blockParser.parseBlock(cells, parseContext.curRowIndex);
 
         } else {
             require(cells.size() == Span.fieldSpan(field));
@@ -438,7 +456,7 @@ public class ValueParser {
             }
 
         } else if (field.fmt() instanceof FieldFormat.Block ignored) {
-            blocks = parserContext.parseBlock(cells, parseContext.curRowIndex);
+            blocks = blockParser.parseBlock(cells, parseContext.curRowIndex);
 
         } else if (field.fmt() instanceof FieldFormat.Sep(char sep)) {
             require(cells.size() == 1);
@@ -478,6 +496,7 @@ public class ValueParser {
                 }
             }
         }
+
         return new VList(valueList, Source.of(cells));
 
     }

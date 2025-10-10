@@ -25,6 +25,7 @@ public record CfgSchemaErrs(List<Err> errs,
     public void addWarn(Warn warn) {
         warns.add(Objects.requireNonNull(warn));
     }
+
     public void addWeakWarn(WeakWarn weakWarn) {
         weakWarns.add(Objects.requireNonNull(weakWarn));
     }
@@ -34,7 +35,7 @@ public record CfgSchemaErrs(List<Err> errs,
     }
 
     public void checkErrors(String prefix) {
-        if (Logger.isWeakWarningEnabled() && !weakWarns.isEmpty()){
+        if (Logger.isWeakWarningEnabled() && !weakWarns.isEmpty()) {
             Logger.log("%s weak warnings %d:", prefix, weakWarns.size());
             for (WeakWarn weakWarn : weakWarns) {
                 Logger.log("\t" + weakWarn.msg());
@@ -104,6 +105,14 @@ public record CfgSchemaErrs(List<Err> errs,
      * @param name 接口名
      */
     public record InterfaceNotUsed(String name) implements Warn {
+    }
+
+    /**
+     * lowercase只能用于str或text
+     */
+    public record LowercaseNotOnStrOrText(String struct,
+                                          String field,
+                                          String unMatchedType) implements Warn {
     }
 
     public sealed interface Err extends Msg {

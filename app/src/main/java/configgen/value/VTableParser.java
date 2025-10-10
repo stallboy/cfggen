@@ -11,10 +11,10 @@ import static configgen.data.CfgData.DTable;
 import static configgen.value.CfgValue.VStruct;
 import static configgen.value.CfgValue.VTable;
 
-import static configgen.value.ValueParser.ValueParserContext;
+import static configgen.value.ValueParser.BlockParser;
 import static configgen.value.ValueParser.CellsWithRowIndex;
 
-public class VTableParser implements ValueParserContext {
+public class VTableParser implements BlockParser {
     private final TableSchema subTableSchema;
     private final DTable dTable;
     private final TableSchema tableSchema;

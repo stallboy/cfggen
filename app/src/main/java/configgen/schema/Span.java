@@ -118,7 +118,7 @@ public class Span {
         List<FieldSchema> fieldFrontiers = new ArrayList<>();
         for (TableSchema table : cfgSchema.tableMap().values()) {
             // json存储的不需要计算span
-            if (!table.meta().isJson()) {
+            if (!table.isJson()) {
                 collectedNeedSpans.put(table.name(), table);
                 fieldFrontiers.addAll(table.fields());
             }

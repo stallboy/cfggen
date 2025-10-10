@@ -26,4 +26,12 @@ public record FieldSchema(String name,
     public FieldSchema copy() {
         return new FieldSchema(name, type.copy(), fmt, meta.copy());
     }
+
+    public boolean isLowercase() {
+        return meta.isLowercase();
+    }
+
+    public boolean isMustFill() {
+        return meta.isMustFill();
+    }
 }

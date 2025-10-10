@@ -67,4 +67,9 @@ public record TableSchema(String name,
         return new TableSchema(name, primaryKey.copy(), entry.copy(), isColumnMode, meta.copy(),
                 fieldsCopy, fksCopy, uksCopy);
     }
+
+    public boolean isJson() {
+        return meta.isJson();
+    }
 }
+

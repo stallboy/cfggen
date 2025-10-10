@@ -135,7 +135,7 @@ public class RecordEditService {
         if (vTable == null) {
             return ofErr(tableNotFound, table);
         }
-        if (!vTable.schema().meta().isJson()) {
+        if (!vTable.schema().isJson()) {
             return ofErr(tableNotEditable, table);
         }
         return null;

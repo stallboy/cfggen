@@ -11,7 +11,7 @@ public class HasMap {
     private static void calcHasMap(Nameable nameable, CfgSchemaErrs errs) {
         boolean hasMap = checkAnyOk(nameable, HasMap::checkIfDirectFieldsHasMap);
         nameable.meta().putHasMap(hasMap);
-        if (hasMap && nameable instanceof TableSchema tableSchema && nameable.meta().isJson()) {
+        if (hasMap && nameable instanceof TableSchema tableSchema && tableSchema.isJson()) {
             errs.addErr(new CfgSchemaErrs.JsonTableNotSupportMap(tableSchema.name()));
         }
     }
