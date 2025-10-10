@@ -154,9 +154,9 @@ table task[taskid] (entry='entry') {
 > taskexptype表中的(enum='name')，表明这是个枚举表，excel数据要包含3行，第二列name里的字符串要分别是taskexp中的struct名字：ByLevel，ByServerUpDay，ConstValue
 
 
-### (nullable) 外键
+### nullable 外键
 
-- 可以在配置了ref的field上加(nullable)，表示可以找不到此外键，生成代码会是nullableRefXXX
+- 可以在配置了ref的field上加nullable，表示可以找不到此外键，生成代码会是nullableRefXXX
 - nullable的field，如果在excel格子中，则加强了以下约束：格子中为空才可以nullable，只要格子有内容必须能找到外键。以下两种情况例外
     1. field是此table主键或唯一键的一部分。
     2. field类型是数值（int、long、float），且内容为0 
@@ -205,9 +205,9 @@ if (line.getFirst().isCellEmpty()) {  // 第一格为空，还是本record
 假如以上第4行的aebb，e这个excel格子为空，则地4.5行只提取出来了bb信息，合并到第1行整体的aeb结构里，而不是从第四行又新建了个aeb结构。
 这个容易引起bug，如何避免？下节引入mustFill
 
-### (mustFill)
+### mustFill
 
-- 可以在field上加(mustFill)。list、map类型表示元素个数必须大于0，其他类型表示格子不能为空。
+- 可以在field上加mustFill。list、map类型表示元素个数必须大于0，其他类型表示格子不能为空。
 - 为避免上一节aeb里的e格子可为空，导致的惊讶，可以设置e对应的field (mustFill)，这样万一忘了填e格子，会报错
 
 > task.exp 设置了mustFill，表示必须配置，不能省略
