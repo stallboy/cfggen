@@ -228,11 +228,11 @@ public class CfgSchemaAlignToData {
         String listName = String.format("%sList", nam);
         FieldSchema listField = curFields.get(listName);
         if (listField != null
-                && listField.type() instanceof FieldType.FList fList && Span.simpleTypeSpan(fList.item()) == 1
-                && listField.fmt() instanceof FieldFormat.Fix fix && headers.size() > index + fix.count() - 1) {
+                && listField.type() instanceof FieldType.FList(FieldType.SimpleType item) && Span.simpleTypeSpan(item) == 1
+                && listField.fmt() instanceof FieldFormat.Fix(int count) && headers.size() > index + count - 1) {
 
             boolean ok = true;
-            for (int i = 2; i <= fix.count(); i++) {
+            for (int i = 2; i <= count; i++) {
                 if (!headers.get(index + i - 1).name().equals(String.format("%s%d", nam, i))) {
                     ok = false;
                     break;
@@ -255,13 +255,13 @@ public class CfgSchemaAlignToData {
         String mapName = String.format("%s2%sMap", nam, nam2);
         FieldSchema mapField = curFields.get(mapName);
         if (mapField != null
-                && mapField.type() instanceof FieldType.FMap fMap
-                && Span.simpleTypeSpan(fMap.key()) == 1 && Span.simpleTypeSpan(fMap.value()) == 1
-                && mapField.fmt() instanceof FieldFormat.Fix fix
-                && headers.size() > index + fix.count() * 2 - 1) {
+                && mapField.type() instanceof FieldType.FMap(FieldType.SimpleType key, FieldType.SimpleType value)
+                && Span.simpleTypeSpan(key) == 1 && Span.simpleTypeSpan(value) == 1
+                && mapField.fmt() instanceof FieldFormat.Fix(int count)
+                && headers.size() > index + count * 2 - 1) {
 
             boolean ok = true;
-            for (int i = 2; i <= fix.count(); i++) {
+            for (int i = 2; i <= count; i++) {
                 if (!headers.get(index + (i - 1) * 2).name().equals(String.format("%s%d", nam, i))) {
                     ok = false;
                     break;

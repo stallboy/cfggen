@@ -12,7 +12,6 @@ import static configgen.value.CfgValue.*;
 
 public class ValueUtil {
 
-
     public static VList createList(List<SimpleValue> valueList) {
         if (valueList.isEmpty()) {
             return new VList(valueList, of());
