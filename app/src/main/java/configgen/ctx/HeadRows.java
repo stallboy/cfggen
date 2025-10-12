@@ -126,10 +126,9 @@ public class HeadRows {
 
         @Override
         public ParseBoolResult parseBool(String str) {
-            return str.equals("0") ? ParseBoolResult.FALSE : ParseBoolResult.TRUE;
+            return str.equals("0") || str.equalsIgnoreCase("false") ? ParseBoolResult.FALSE : ParseBoolResult.TRUE;
         }
     };
-
 
 
     private static long parseLongImpl(String str) {
