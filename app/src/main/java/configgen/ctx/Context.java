@@ -18,7 +18,7 @@ public class Context {
     public record ContextCfg(Path dataDir,
                              ExplicitDir explicitDir,
                              boolean tryUsePoi,
-                             int headRow,
+                             HeadRow headRow,
                              String csvOrTsvDefaultEncoding,
 
                              String i18nFilename,
@@ -27,14 +27,12 @@ public class Context {
 
         public ContextCfg {
             Objects.requireNonNull(dataDir);
-            if (headRow < 2) {
-                throw new IllegalArgumentException("head row < 2");
-            }
+            Objects.requireNonNull(headRow);
             Objects.requireNonNull(csvOrTsvDefaultEncoding);
         }
 
         public static ContextCfg of(Path dataDir) {
-            return new ContextCfg(dataDir, null, false, 2, "UTF-8", null, null, null);
+            return new ContextCfg(dataDir, null, false, HeadRows.A2_Default, "UTF-8", null, null, null);
         }
     }
 
@@ -98,7 +96,7 @@ public class Context {
         data.verbosePrintStat();
 
         CfgSchemaErrs alignErr = CfgSchemaErrs.of();
-        CfgSchema alignedSchema = new CfgSchemaAlignToData(schema, data, alignErr).align();
+        CfgSchema alignedSchema = new CfgSchemaAlignToData(schema, data, contextCfg.headRow(), alignErr).align();
         new CfgSchemaResolver(alignedSchema, alignErr).resolve();
         alignErr.checkErrors("aligned schema");
         if (schema.equals(alignedSchema)) {

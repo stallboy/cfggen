@@ -2,6 +2,7 @@ package configgen.data;
 
 import configgen.Resources;
 import configgen.ctx.DirectoryStructure;
+import configgen.ctx.HeadRows;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -15,7 +16,7 @@ class CfgDataReaderTest {
     static CfgData readFile(String fn, Path tempDir) {
         Resources.addTempFileFromResourceFile(fn, tempDir);
         ReadCsv csvReader = new ReadCsv("GBK");
-        CfgDataReader fastDataReader = new CfgDataReader(2, csvReader, ReadByFastExcel.INSTANCE);
+        CfgDataReader fastDataReader = new CfgDataReader(HeadRows.A2_Default, csvReader, ReadByFastExcel.INSTANCE);
         return fastDataReader.readCfgData(new DirectoryStructure(tempDir), null);
     }
 

@@ -1,6 +1,7 @@
 package configgen.data;
 
 import configgen.ctx.DirectoryStructure;
+import configgen.ctx.HeadRow;
 import configgen.schema.CfgSchema;
 import configgen.schema.TableSchema;
 import configgen.util.Logger;
@@ -18,20 +19,14 @@ import static configgen.data.CfgData.DRawSheet;
 import static configgen.data.ExcelReader.*;
 
 
-public class CfgDataReader {
-    private final int headRow;
-    private final ReadCsv csvReader;
-    private final ExcelReader excelReader;
+public record CfgDataReader(HeadRow headRow,
+                            ReadCsv csvReader,
+                            ExcelReader excelReader) {
 
-    public CfgDataReader(int headRow, ReadCsv csvReader, ExcelReader excelReader) {
+    public CfgDataReader {
+        Objects.requireNonNull(headRow);
         Objects.requireNonNull(csvReader);
         Objects.requireNonNull(excelReader);
-        this.headRow = headRow;
-        this.csvReader = csvReader;
-        this.excelReader = excelReader;
-        if (headRow < 2) {
-            throw new IllegalArgumentException(String.format("headRow =%d < 2", headRow));
-        }
     }
 
     public CfgData readCfgData(DirectoryStructure sourceStructure, CfgSchema nullableCfgSchema) {
@@ -89,7 +84,7 @@ public class CfgDataReader {
                     CfgDataStat tStat = new CfgDataStat();
                     boolean isColumnMode = isColumnMode(nullableCfgSchema, table.tableName());
                     HeadParser.parse(table, tStat, headRow, isColumnMode);
-                    CellParser.parse(table, tStat, headRow, isColumnMode);
+                    CellParser.parse(table, tStat, headRow.rowCount(), isColumnMode);
                     return tStat;
                 });
             }
@@ -125,7 +120,7 @@ public class CfgDataReader {
         } else {
             List<DRawSheet> sheets = new ArrayList<>();
             sheets.add(sheetData);
-            CfgData.DTable newTable = CfgData.DTable.of(tableName,  sheets, nullableAddTag);
+            CfgData.DTable newTable = CfgData.DTable.of(tableName, sheets, nullableAddTag);
             cfgData.tables().put(tableName, newTable);
         }
     }

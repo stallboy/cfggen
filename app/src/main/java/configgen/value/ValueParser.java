@@ -1,6 +1,6 @@
 package configgen.value;
 
-import configgen.ctx.HeadStructure;
+import configgen.ctx.HeadRow;
 import configgen.data.Source;
 import configgen.schema.*;
 
@@ -32,13 +32,16 @@ public class ValueParser {
     }
 
     private final CfgValueErrs errs;
+    private final HeadRow headRow;
     private final BlockParser blockParser;
     private List<DCell> currentCells;
 
-    public ValueParser(CfgValueErrs errs, BlockParser blockParser) {
+    public ValueParser(CfgValueErrs errs, HeadRow headRow, BlockParser blockParser) {
         Objects.requireNonNull(errs);
+        Objects.requireNonNull(headRow);
         Objects.requireNonNull(blockParser);
         this.errs = errs;
+        this.headRow = headRow;
         this.blockParser = blockParser;
     }
 
@@ -261,12 +264,13 @@ public class ValueParser {
                 String str = cell.value().trim();
                 switch (primitive) {
                     case BOOL -> {
-                        boolean v = str.equals("1") || str.equalsIgnoreCase("true");
-                        if (!boolStrSet.contains(str.toLowerCase())) {
+                        HeadRow.ParseBoolResult result = headRow.parseBool(str);
+
+                        if (result == HeadRow.ParseBoolResult.INVALID) {
                             errs.addErr(new CfgValueErrs.NotMatchFieldType(cell,
                                     parseContext.nameable, fieldSchema.name(), type));
                         }
-                        return new VBool(v, cell);
+                        return new VBool(result == HeadRow.ParseBoolResult.TRUE, cell);
                     }
                     case INT -> {
                         int v = 0;
@@ -281,8 +285,7 @@ public class ValueParser {
                     case LONG -> {
                         long v = 0;
                         try {
-                            v = HeadStructure.parseLong(str);
-//                            v = str.isEmpty() ? 0 : Long.decode(str);
+                            v = headRow.parseLong(str);
                         } catch (Exception e) {
                             errs.addErr(new CfgValueErrs.NotMatchFieldType(cell,
                                     parseContext.nameable, fieldSchema.name(), type));
@@ -506,8 +509,6 @@ public class ValueParser {
     private static boolean isCellNotAllEmpty(List<DCell> cells) {
         return cells.stream().anyMatch(c -> !c.isCellEmpty());
     }
-
-    private static final Set<String> boolStrSet = Set.of("false", "true", "1", "0", "");
 
     private void require(boolean cond) {
         if (!cond)

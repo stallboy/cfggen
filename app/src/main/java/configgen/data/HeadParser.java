@@ -1,6 +1,7 @@
 package configgen.data;
 
-import configgen.ctx.HeadStructure;
+import configgen.ctx.HeadRow;
+import configgen.ctx.HeadRows;
 import configgen.util.LocaleUtil;
 
 import java.util.ArrayList;
@@ -8,26 +9,24 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import static configgen.ctx.HeadStructure.DEFAULT_COMMENT_NAME;
-import static configgen.ctx.HeadStructure.ROW4_NAME_TYPE_E_COMMENT;
 import static configgen.data.CfgData.DTable;
 import static configgen.data.CfgData.*;
 
 public final class HeadParser {
-    public static void parse(DTable table, CfgDataStat stat, int headRow, boolean isColumnMode) {
+
+    public static void parse(DTable table, CfgDataStat stat, HeadRow headRow, boolean isColumnMode) {
         List<DField> header = null;
         List<String> names = null;
         DRawSheet headerSheet = null;
         if (table.rawSheets().size() > 1) {
             table.rawSheets().sort(Comparator.comparingInt(DRawSheet::index));
         }
-        HeadStructure headStructure = headRow == 4 ? ROW4_NAME_TYPE_E_COMMENT : DEFAULT_COMMENT_NAME;
 
         for (DRawSheet sheet : table.rawSheets()) {
-            List<String> comments = getLogicRow(sheet, headStructure.commentRow(), isColumnMode);
-            List<String> curNames = getLogicRow(sheet, headStructure.nameRow(), isColumnMode);
-            List<String> suggestedTypes = headStructure.suggestedTypeRow() >= 0 ?
-                    getLogicRow(sheet, headStructure.suggestedTypeRow(), isColumnMode) : Collections.emptyList();
+            List<String> comments = getLogicRow(sheet, headRow.commentRow(), isColumnMode);
+            List<String> curNames = getLogicRow(sheet, headRow.nameRow(), isColumnMode);
+            List<String> suggestedTypes = headRow.suggestedTypeRow() >= 0 ?
+                    getLogicRow(sheet, headRow.suggestedTypeRow(), isColumnMode) : Collections.emptyList();
 
 
             List<DField> h = parseFields(sheet, stat, comments, curNames, suggestedTypes);
@@ -51,7 +50,7 @@ public final class HeadParser {
     }
 
     public static void parse(DTable table, CfgDataStat stat) {
-        parse(table, stat, 2, false);
+        parse(table, stat, HeadRows.A2_Default, false);
     }
 
     private static List<String> getLogicRow(DRawSheet sheet, int rowIndex, boolean isColumnMode) {
@@ -105,22 +104,7 @@ public final class HeadParser {
             }
             stat.columnCount++;
 
-            String comment = "";
-            if (i < comments.size()) {
-                comment = comments.get(i);
-                if (comment == null) {
-                    comment = "";
-                } else {
-                    comment = getComment(comment);
-                    if (i == 0 && comment.startsWith("#")) { // 第一列是注释列
-                        comment = comment.substring(1);
-                    }
-                    comment = comment.trim();
-                }
-            }
-            if (comment.equalsIgnoreCase(name)) { // 忽略重复信息
-                comment = "";
-            }
+            String comment = getComment(comments, i, name);
 
             String suggestedType = "";
             if (i < suggestedTypes.size()) {
@@ -136,6 +120,26 @@ public final class HeadParser {
         sheet.fieldIndices().clear();
         sheet.fieldIndices().addAll(fieldIndices);
         return fields;
+    }
+
+    private static String getComment(List<String> comments, int i, String name) {
+        String comment = "";
+        if (i < comments.size()) {
+            comment = comments.get(i);
+            if (comment == null) {
+                comment = "";
+            } else {
+                comment = comment.replaceAll("\r\n|\r|\n", "--");
+                if (i == 0 && comment.startsWith("#")) { // 第一列是注释列
+                    comment = comment.substring(1);
+                }
+                comment = comment.trim();
+            }
+        }
+        if (comment.equalsIgnoreCase(name)) { // 忽略重复信息
+            comment = "";
+        }
+        return comment;
     }
 
     private static String getColumnName(String name) {
@@ -155,10 +159,5 @@ public final class HeadParser {
         }
         return name.trim();
     }
-
-    private static String getComment(String comment) {
-        return comment.replaceAll("\r\n|\r|\n", "--");
-    }
-
 
 }

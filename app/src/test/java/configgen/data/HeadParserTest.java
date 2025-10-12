@@ -1,5 +1,6 @@
 package configgen.data;
 
+import configgen.ctx.HeadRows;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -92,7 +93,7 @@ class HeadParserTest {
         CfgData.DTable dt = CfgData.DTable.of("t1", List.of(sheet));
         CfgDataStat ds = new CfgDataStat();
 
-        HeadParser.parse(dt, ds, 2, true);
+        HeadParser.parse(dt, ds, HeadRows.A2_Default, true);
 
         assertEquals(2, dt.fields().size());
         CfgData.DField f1 = dt.fields().get(0);

@@ -1,8 +1,6 @@
 package configgen.gen;
 
-import configgen.ctx.Context;
-import configgen.ctx.DirectoryStructure;
-import configgen.ctx.ExplicitDir;
+import configgen.ctx.*;
 import configgen.data.*;
 import configgen.editorserver.EditorServer;
 import configgen.gencs.GenBytes;
@@ -44,9 +42,9 @@ public final class Main {
         System.out.println("    -datadir          " + LocaleUtil.getLocaleString("Usage.DataDir",
                 "configuration data directory, must contains file:config.cfg"));
         System.out.println("    -headrow          " + LocaleUtil.getLocaleString("Usage.HeadRow",
-                "csv/Excel file head row count, default 2"));
+                "csv/txt/excel file head row type, default 2"));
         System.out.println("    -encoding         " + LocaleUtil.getLocaleString("Usage.Encoding",
-                "csv encoding, default GBK, if csv file has BOM head, use that encoding"));
+                "csv/txt encoding, default GBK, if csv file has BOM head, use that encoding"));
         System.out.println("    -asroot           " + LocaleUtil.getLocaleString("Usage.AsRoot",
                 "ExplicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map， default null, can be 'ClientTables:-server,PublicTables,ServerTables:-client'"));
         System.out.println("    -exceldirs        " + LocaleUtil.getLocaleString("Usage.ExcelDirs",
@@ -162,7 +160,7 @@ public final class Main {
         Generators.addProvider("jsonbyai", GenJsonByAI::new);
 
         String datadir = null;
-        int headRow = 2;
+        String headRowId = System.getProperty("configgen.headrow");
         String csvDefaultEncoding = "GBK";
         String asRoot = null;
         String excelDirs = null;
@@ -190,15 +188,6 @@ public final class Main {
         String searchTag = null;
         List<String> searchParam = null;
 
-        String row = System.getProperty("configgen.headrow");
-        //noinspection StatementWithEmptyBody
-        if (row == null || row.equals("2")) {
-        } else if (row.equals("3")) {
-            headRow = 3; //第三行可以是类型信息，随便，这里不会读取这个数据，会忽略掉，也就是说类型的权威数据在xml里
-        } else {
-            System.err.printf("-Dconfiggen.headrow，设置为[%s], 它只能设置为2或3，不设置的话默认是2\n", row);
-        }
-
         for (int i = 0; i < args.length; ++i) {
             String paramType = args[i].toLowerCase();
             switch (paramType) {
@@ -212,7 +201,7 @@ public final class Main {
                     LocaleUtil.setLocale(locale);
                 }
                 case "-datadir" -> datadir = args[++i];
-                case "-headrow" -> headRow = Integer.parseInt(args[++i]);
+                case "-headrow" -> headRowId = args[++i];
                 case "-encoding" -> csvDefaultEncoding = args[++i];
 
                 case "-asroot" -> asRoot = args[++i];
@@ -303,6 +292,8 @@ public final class Main {
             XmlToCfg.convertAndCheck(dataDir);
             return;
         }
+
+        HeadRow headRow = HeadRows.getById(headRowId);
 
         ExplicitDir explicitDir = ExplicitDir.parse(asRoot, excelDirs, jsonDirs);
         if (comparePoiAndFastExcel) {

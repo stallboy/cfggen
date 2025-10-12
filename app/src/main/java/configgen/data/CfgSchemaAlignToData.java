@@ -1,6 +1,6 @@
 package configgen.data;
 
-import configgen.ctx.HeadStructure;
+import configgen.ctx.HeadRow;
 import configgen.util.Logger;
 import configgen.schema.*;
 import configgen.schema.EntryType.EEntry;
@@ -14,15 +14,16 @@ import static configgen.data.CfgData.DField;
 import static configgen.schema.EntryType.ENo.NO;
 import static configgen.schema.FieldFormat.AutoOrPack.*;
 
-public class CfgSchemaAlignToData {
-    private final CfgSchema cfgSchema;
-    private final CfgData cfgData;
-    private final CfgSchemaErrs errs;
+public record CfgSchemaAlignToData(CfgSchema cfgSchema,
+                                   CfgData cfgData,
+                                   HeadRow headRow,
+                                   CfgSchemaErrs errs) {
 
-    public CfgSchemaAlignToData(CfgSchema cfgSchema, CfgData cfgData, CfgSchemaErrs errs) {
-        this.cfgSchema = cfgSchema;
-        this.cfgData = cfgData;
-        this.errs = errs;
+    public CfgSchemaAlignToData {
+        Objects.requireNonNull(cfgSchema);
+        Objects.requireNonNull(cfgData);
+        Objects.requireNonNull(headRow);
+        Objects.requireNonNull(errs);
     }
 
     /**
@@ -95,15 +96,15 @@ public class CfgSchemaAlignToData {
                 metadata, fields, List.of(), List.of());
     }
 
-    private FieldSchema newFieldSchema(CfgData.DField hf, String tableName) {
+    private FieldSchema newFieldSchema(DField hf, String tableName) {
         Metadata meta = Metadata.of();
         if (!hf.comment().isEmpty()) {
             meta.putComment(hf.comment());
         }
-        Primitive type;
+        FieldType type;
         String typeStr = hf.suggestedType();
         if (typeStr != null && !typeStr.isEmpty()) {
-            type = HeadStructure.parseType(typeStr);
+            type = headRow.parseType(typeStr);
             if (type == null) {
                 errs.addWarn(new CfgSchemaErrs.SuggestTypeUnknown(tableName, hf.name(), typeStr));
                 type = Primitive.STRING;
@@ -248,7 +249,7 @@ public class CfgSchemaAlignToData {
                 && listField.type() instanceof FieldType.FList(
                 FieldType.SimpleType item
         ) && Span.simpleTypeSpan(item) == 1
-                && listField.fmt() instanceof FieldFormat.Fix(int count) && headers.size() > index + count - 1) {
+                && listField.fmt() instanceof Fix(int count) && headers.size() > index + count - 1) {
 
             boolean ok = true;
             for (int i = 2; i <= count; i++) {
@@ -276,7 +277,7 @@ public class CfgSchemaAlignToData {
         if (mapField != null
                 && mapField.type() instanceof FieldType.FMap(FieldType.SimpleType key, FieldType.SimpleType value)
                 && Span.simpleTypeSpan(key) == 1 && Span.simpleTypeSpan(value) == 1
-                && mapField.fmt() instanceof FieldFormat.Fix(int count)
+                && mapField.fmt() instanceof Fix(int count)
                 && headers.size() > index + count * 2 - 1) {
 
             boolean ok = true;

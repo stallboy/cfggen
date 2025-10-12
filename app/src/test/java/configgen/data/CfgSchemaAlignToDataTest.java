@@ -1,5 +1,6 @@
 package configgen.data;
 
+import configgen.ctx.HeadRows;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgReader;
 import org.junit.jupiter.api.Test;
@@ -13,7 +14,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class CfgSchemaAlignToDataTest {
 
-    @TempDir Path tempDir;
+    @TempDir
+    Path tempDir;
 
     @Test
     void align_addRemoveTable_firstFieldAsPrimaryKey() {
@@ -59,7 +61,6 @@ class CfgSchemaAlignToDataTest {
         assertEquals(STRING, t.findField("RankName").type());
         assertEquals(STRING, t.findField("RankShowName").type());
     }
-
 
 
     @Test
@@ -124,7 +125,7 @@ class CfgSchemaAlignToDataTest {
 
         CfgData cfgData = CfgDataReaderTest.readFile("rank.csv", tempDir);
         CfgSchemaErrs errs = CfgSchemaErrs.of();
-        CfgSchema aligned = new CfgSchemaAlignToData(cfg, cfgData, errs).align();
+        CfgSchema aligned = new CfgSchemaAlignToData(cfg, cfgData, HeadRows.A2_Default, errs).align();
         new CfgSchemaResolver(aligned, errs).resolve();
 
         assertEquals(1, errs.errs().size());
@@ -153,10 +154,10 @@ class CfgSchemaAlignToDataTest {
         check_DataHeadNameNotIdentifier(cfg);
     }
 
-    private void check_DataHeadNameNotIdentifier(CfgSchema cfg){
+    private void check_DataHeadNameNotIdentifier(CfgSchema cfg) {
         CfgData cfgData = CfgDataReaderTest.readFile("err.csv", tempDir);
         CfgSchemaErrs errs = CfgSchemaErrs.of();
-        CfgSchema aligned = new CfgSchemaAlignToData(cfg, cfgData, errs).align();
+        CfgSchema aligned = new CfgSchemaAlignToData(cfg, cfgData, HeadRows.A2_Default, errs).align();
         new CfgSchemaResolver(aligned, errs).resolve();
 
         assertEquals(1, errs.errs().size());
@@ -180,7 +181,7 @@ class CfgSchemaAlignToDataTest {
 
         CfgData cfgData = CfgDataReaderTest.readFile("rank.csv", tempDir);
         CfgSchemaErrs errs = CfgSchemaErrs.of();
-        CfgSchema aligned = new CfgSchemaAlignToData(cfg, cfgData, errs).align();
+        CfgSchema aligned = new CfgSchemaAlignToData(cfg, cfgData, HeadRows.A2_Default, errs).align();
         new CfgSchemaResolver(aligned, errs).resolve();
 
         assertEquals(1, errs.errs().size());
@@ -195,7 +196,7 @@ class CfgSchemaAlignToDataTest {
 
         CfgData cfgData = CfgDataReaderTest.readFile("rank.csv", tempDir);
         CfgSchemaErrs errs = CfgSchemaErrs.of();
-        CfgSchema aligned = new CfgSchemaAlignToData(cfg, cfgData, errs).align();
+        CfgSchema aligned = new CfgSchemaAlignToData(cfg, cfgData, HeadRows.A2_Default, errs).align();
         new CfgSchemaResolver(aligned, errs).resolve();
         errs.checkErrors("align");
         return aligned;

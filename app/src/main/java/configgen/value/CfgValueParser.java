@@ -15,23 +15,20 @@ import java.util.concurrent.Future;
 
 import static configgen.value.CfgValue.*;
 
-public class CfgValueParser {
-    private final CfgSchema subSchema;
-    private final Context context;
-    private final CfgValueErrs errs;
-
+public record CfgValueParser(CfgSchema subSchema,
+                             Context context,
+                             CfgValueErrs errs) {
     /**
      * @param subSchema 这是返会目标CfgValue对应的schema
      * @param context   全局信息
      * @param errs      错误记录器
      */
-    public CfgValueParser(CfgSchema subSchema, Context context, CfgValueErrs errs) {
+    public CfgValueParser {
+        Objects.requireNonNull(subSchema);
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(errs);
         subSchema.requireResolved();
         context.cfgSchema().requireResolved();
-        Objects.requireNonNull(errs);
-        this.subSchema = subSchema;
-        this.context = context;
-        this.errs = errs;
     }
 
     public CfgValue parseCfgValue() {
@@ -40,7 +37,7 @@ public class CfgValueParser {
         }
 
         List<Callable<OneTableParserResult>> tasks = new ArrayList<>();
-        CfgValue cfgValue = CfgValue.of(subSchema);
+        CfgValue cfgValue = of(subSchema);
         for (TableSchema subTable : subSchema.tableMap().values()) {
             String name = subTable.name();
             TableSchema table = context.cfgSchema().findTable(name);
@@ -52,7 +49,7 @@ public class CfgValueParser {
                 tasks.add(() -> {
                     long start = System.currentTimeMillis();
                     CfgValueErrs errs = CfgValueErrs.of();
-                    VTableParser parser = new VTableParser(subTable, dTable, table, errs);
+                    VTableParser parser = new VTableParser(subTable, dTable, table, context.getContextCfg().headRow(), errs);
                     VTable vTable = parser.parseTable();
                     TextValue.setTranslatedForTable(vTable, context.nullableLangTextFinder());
                     if (Logger.isProfileEnabled()) {

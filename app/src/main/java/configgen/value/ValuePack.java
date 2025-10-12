@@ -1,5 +1,6 @@
 package configgen.value;
 
+import configgen.ctx.HeadRows;
 import configgen.data.CfgData;
 import configgen.schema.*;
 
@@ -63,7 +64,7 @@ public class ValuePack {
 
     private static Value unpack(String content, FieldType type, String fileName, CfgValueErrs errs) {
         FieldSchema field = new FieldSchema("<field>", type, AUTO, Metadata.of());
-        ValueParser parser = new ValueParser(errs, ValueParser.BlockParser.dummy);
+        ValueParser parser = new ValueParser(errs, HeadRows.A2_Default, ValueParser.BlockParser.dummy);
 
         CfgData.DCell dCell = CfgData.DCell.of(content, fileName);
         return parser.parseField(field, List.of(dCell), field,

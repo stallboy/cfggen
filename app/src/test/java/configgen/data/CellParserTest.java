@@ -1,5 +1,6 @@
 package configgen.data;
 
+import configgen.ctx.HeadRows;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -49,7 +50,7 @@ class CellParserTest {
         CfgData.DTable dt = CfgData.DTable.of("t1", List.of(sheet));
 
         CfgDataStat ds = new CfgDataStat();
-        HeadParser.parse(dt, ds, 2, true); // 必须先解析表头
+        HeadParser.parse(dt, ds, HeadRows.A2_Default, true); // 必须先解析表头
 
         CellParser.parse(dt, ds, 2, true);
         assertEquals(2, dt.rows().size());

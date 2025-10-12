@@ -1,5 +1,6 @@
 package configgen.value;
 
+import configgen.ctx.HeadRow;
 import configgen.schema.HasBlock;
 import configgen.schema.TableSchema;
 
@@ -20,15 +21,20 @@ public class VTableParser implements BlockParser {
     private final TableSchema tableSchema;
     private final CfgValueErrs errs;
     private final ValueParser parser;
+    private final HeadRow headRow;
     private List<DCell> curRow;
 
-    public VTableParser(TableSchema subTableSchema, DTable dTable, TableSchema tableSchema,
+    public VTableParser(TableSchema subTableSchema,
+                        DTable dTable,
+                        TableSchema tableSchema,
+                        HeadRow headRow,
                         CfgValueErrs errs) {
         this.subTableSchema = subTableSchema;
         this.dTable = dTable;
         this.tableSchema = tableSchema;
+        this.headRow = headRow;
         this.errs = errs;
-        this.parser = new ValueParser(errs, this);
+        this.parser = new ValueParser(errs, headRow, this);
     }
 
     public VTable parseTable() {
