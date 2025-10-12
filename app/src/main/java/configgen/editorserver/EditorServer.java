@@ -89,7 +89,7 @@ public class EditorServer extends GeneratorWithTag {
         logger.info("Server is started at " + listenAddr);
 
         if (waitSecondsAfterWatchEvt > 0) {
-            Watcher watcher = new Watcher(context.getSourceStructure().getRootDir());
+            Watcher watcher = new Watcher(context.getSourceStructure().getRootDir(), context.getContextCfg().explicitDir());
             WaitWatcher waitWatcher = new WaitWatcher(watcher, this::reloadData, waitSecondsAfterWatchEvt);
             waitWatcher.start();
             watcher.start();

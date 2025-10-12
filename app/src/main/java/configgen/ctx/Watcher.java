@@ -17,12 +17,14 @@ import static java.nio.file.StandardWatchEventKinds.*;
  */
 public class Watcher {
     private final Path rootDir;
+    private final ExplicitDir explicitDir;
     private long lastEvtSec;
     private final Object lock = new Object();
 
-    public Watcher(Path rootDir) {
+    public Watcher(Path rootDir, ExplicitDir explicitDir) {
         Objects.requireNonNull(rootDir);
         this.rootDir = rootDir;
+        this.explicitDir = explicitDir;
     }
 
     public Thread start() {
@@ -43,8 +45,8 @@ public class Watcher {
         }
     }
 
-    private void trigger(){
-        synchronized (lock){
+    private void trigger() {
+        synchronized (lock) {
             lastEvtSec = Instant.now().getEpochSecond();
         }
     }
@@ -72,16 +74,39 @@ public class Watcher {
                     if (fmt == null) {
                         continue;
                     }
-                    if (fmt == FileFmt.CSV) {
-                        if (isFirstNotAzChar(fileName.toString())) {
-                            continue;
+
+                    switch (fmt) {
+                        case CSV, EXCEL -> {
+                            if (explicitDir != null){
+                                Path relativePath = rootDir.relativize(path);
+                                Path topDir = relativePath.getName(0);
+                                String dirName = topDir.getFileName().toString();
+                                if (!explicitDir.excelFileDirs().contains(dirName)) {
+                                    continue;
+                                }
+                            }
                         }
-                    } else if (fmt == FileFmt.JSON) {
-                        String dirName = path.getParent().getFileName().toString();
-                        if (!isTableDirForJson(dirName)) {
-                            continue;
+                        case JSON -> {
+                            String dirName = path.getParent().getFileName().toString();
+                            if (!isTableDirForJson(dirName)) {
+                                continue;
+                            }
+                            if (explicitDir != null && !explicitDir.jsonFileDirs().contains(dirName)) {
+                                continue;
+                            }
+                        }
+                        case TXT_AS_TSV -> {
+                            if (explicitDir == null) {
+                                continue;
+                            }
+
+                            String dirName = path.getParent().getFileName().toString();
+                            if (!explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map().containsKey(dirName)) {
+                                continue;
+                            }
                         }
                     }
+
                     trigger();
                 }
             }
@@ -91,7 +116,7 @@ public class Watcher {
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        Thread t = new Watcher(Path.of(".")).start();
+        Thread t = new Watcher(Path.of("."), null).start();
         t.join();
     }
 }

@@ -37,7 +37,6 @@ public class DataUtil {
             case "json" -> JSON;
             default -> null;
         };
-
     }
 
     public record TableNameIndex(String tableName,
