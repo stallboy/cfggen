@@ -2,6 +2,7 @@ package configgen.data;
 
 import configgen.ctx.DirectoryStructure;
 import configgen.schema.CfgSchema;
+import configgen.schema.TableSchema;
 import configgen.util.Logger;
 
 import java.util.ArrayList;
@@ -48,15 +49,16 @@ public class CfgDataReader {
 
         for (DirectoryStructure.ExcelFileInfo df : sourceStructure.getExcelFiles()) {
             switch (df.fmt()) {
-                case CSV -> {
-                    DataUtil.TableNameIndex ti = df.csvTableNameIndex();
+                case CSV, TXT_AS_TSV -> {
+                    DataUtil.TableNameIndex ti = df.csvOrTsvTableNameIndex();
                     if (ti == null) {
                         Logger.verbose2("%s 名字不符合规范，ignore！", df.path());
                         stat.ignoredCsvCount++;
                     } else {
                         stat.csvCount++;
+                        char fieldSeparator = df.fmt() == DataUtil.FileFmt.CSV ? ',' : '\t';
                         tasks.add(() -> csvReader.readCsv(df.path(), df.relativePath(),
-                                ti.tableName(), ti.index()));
+                                ti.tableName(), ti.index(), fieldSeparator, df.nullableAddTag()));
                     }
                 }
                 case EXCEL -> {
@@ -73,7 +75,7 @@ public class CfgDataReader {
             for (Future<AllResult> future : futures) {
                 AllResult result = future.get();
                 for (OneSheetResult sheet : result.sheets()) {
-                    addSheet(data, sheet.tableName(), sheet.sheet());
+                    addSheet(data, sheet.tableName(), sheet.sheet(), result.nullableAddTag());
                 }
                 if (result.stat() != null) {
                     stat.merge(result.stat());
@@ -81,12 +83,13 @@ public class CfgDataReader {
             }
 
             Logger.profile("data read");
-            List<Callable<CfgDataStat>> parseTasks = new ArrayList<>();
+            List<Callable<CfgDataStat>> parseTasks = new ArrayList<>(data.tables().size());
             for (CfgData.DTable table : data.tables().values()) {
                 parseTasks.add(() -> {
                     CfgDataStat tStat = new CfgDataStat();
-                    HeadParser.parse(table, tStat, nullableCfgSchema);
-                    CellParser.parse(table, tStat, nullableCfgSchema, headRow);
+                    boolean isColumnMode = isColumnMode(nullableCfgSchema, table.tableName());
+                    HeadParser.parse(table, tStat, headRow, isColumnMode);
+                    CellParser.parse(table, tStat, headRow, isColumnMode);
                     return tStat;
                 });
             }
@@ -102,14 +105,27 @@ public class CfgDataReader {
         return data;
     }
 
-    private void addSheet(CfgData cfgData, String tableName, DRawSheet sheetData) {
+
+    private static boolean isColumnMode(CfgSchema cfgSchema, String tableName) {
+        boolean isColumnMode = false;
+        if (cfgSchema != null) {
+            cfgSchema.requireResolved();
+            TableSchema schema = cfgSchema.findTable(tableName);
+            if (schema != null) {
+                isColumnMode = schema.isColumnMode();
+            }
+        }
+        return isColumnMode;
+    }
+
+    private void addSheet(CfgData cfgData, String tableName, DRawSheet sheetData, String nullableAddTag) {
         CfgData.DTable dTable = cfgData.tables().get(tableName);
         if (dTable != null) {
             dTable.rawSheets().add(sheetData);
         } else {
             List<DRawSheet> sheets = new ArrayList<>();
             sheets.add(sheetData);
-            CfgData.DTable newTable = new CfgData.DTable(tableName, new ArrayList<>(), new ArrayList<>(), sheets);
+            CfgData.DTable newTable = CfgData.DTable.of(tableName,  sheets, nullableAddTag);
             cfgData.tables().put(tableName, newTable);
         }
     }

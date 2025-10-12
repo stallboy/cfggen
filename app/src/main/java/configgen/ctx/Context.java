@@ -16,9 +16,10 @@ import java.util.Objects;
 
 public class Context {
     public record ContextCfg(Path dataDir,
+                             ExplicitDir explicitDir,
                              boolean tryUsePoi,
                              int headRow,
-                             String csvDefaultEncoding,
+                             String csvOrTsvDefaultEncoding,
 
                              String i18nFilename,
                              String langSwitchDir,
@@ -29,15 +30,11 @@ public class Context {
             if (headRow < 2) {
                 throw new IllegalArgumentException("head row < 2");
             }
-            Objects.requireNonNull(csvDefaultEncoding);
+            Objects.requireNonNull(csvOrTsvDefaultEncoding);
         }
 
         public static ContextCfg of(Path dataDir) {
-            return of(dataDir, "UTF-8");
-        }
-
-        public static ContextCfg of(Path dataDir, String csvDefaultEncoding) {
-            return new ContextCfg(dataDir, false, 2, csvDefaultEncoding, null, null, null);
+            return new ContextCfg(dataDir, null, false, 2, "UTF-8", null, null, null);
         }
     }
 
@@ -60,7 +57,7 @@ public class Context {
     }
 
     public Context(ContextCfg cfg) {
-        this(cfg, new DirectoryStructure(cfg.dataDir));
+        this(cfg, new DirectoryStructure(cfg.dataDir, cfg.explicitDir));
     }
 
     public Context(ContextCfg cfg, DirectoryStructure sourceStructure) {
@@ -75,7 +72,7 @@ public class Context {
 
         ExcelReader excelReader = (cfg.tryUsePoi && BuildSettings.isIncludePoi()) ?
                 BuildSettings.getPoiReader() : ReadByFastExcel.INSTANCE;
-        CfgDataReader dataReader = new CfgDataReader(cfg.headRow, new ReadCsv(cfg.csvDefaultEncoding), excelReader);
+        CfgDataReader dataReader = new CfgDataReader(cfg.headRow, new ReadCsv(cfg.csvOrTsvDefaultEncoding), excelReader);
         boolean ok = readSchemaAndData(dataReader, true);
         if (!ok) {
             readSchemaAndData(dataReader, false);
@@ -113,7 +110,7 @@ public class Context {
             // schema.printDiff(alignedSchema);
             CfgSchemas.writeToDir(sourceStructure.getRootDir().resolve(DirectoryStructure.ROOT_CONFIG_FILENAME),
                     alignedSchema);
-            sourceStructure = new DirectoryStructure(sourceStructure.getRootDir());
+            sourceStructure = sourceStructure.reload();
             Logger.profile("schema write");
             return false;
         } else {

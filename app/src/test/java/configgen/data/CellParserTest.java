@@ -15,15 +15,15 @@ class CellParserTest {
         List<FakeRows.FakeRow> fakeRows = getFakeRows();
         CfgData.DRawSheet sheet = new CfgData.DRawSheet("t1.csv", "t1", 0,
                 new ArrayList<>(fakeRows), new ArrayList<>());
-        CfgData.DTable dt = new CfgData.DTable("t1", new ArrayList<>(), new ArrayList<>(), List.of(sheet));
+        CfgData.DTable dt = CfgData.DTable.of("t1", List.of(sheet));
 
         CfgDataStat ds = new CfgDataStat();
-        HeadParser.parse(dt, ds, null); // 必须先解析表头
+        HeadParser.parse(dt, ds); // 必须先解析表头
 
-        CellParser.parse(dt, ds, null, 2);
+        CellParser.parse(dt, ds, 2);
         assertEquals(2, dt.rows().size());
         {
-            List<CfgData.DCell> r1 = dt.rows().get(0);
+            List<CfgData.DCell> r1 = dt.rows().getFirst();
             assertEquals("1", r1.get(0).value());
             assertEquals(0, r1.get(0).col());
             assertEquals("note1", r1.get(1).value());
@@ -46,15 +46,15 @@ class CellParserTest {
         List<FakeRows.FakeRow> fakeRows = getFakeColumnRows();
         CfgData.DRawSheet sheet = new CfgData.DRawSheet("t1.csv", "t1", 0,
                 new ArrayList<>(fakeRows), new ArrayList<>());
-        CfgData.DTable dt = new CfgData.DTable("t1", new ArrayList<>(), new ArrayList<>(), List.of(sheet));
+        CfgData.DTable dt = CfgData.DTable.of("t1", List.of(sheet));
 
         CfgDataStat ds = new CfgDataStat();
-        HeadParser.parse(dt, ds, true); // 必须先解析表头
+        HeadParser.parse(dt, ds, 2, true); // 必须先解析表头
 
-        CellParser.parse(dt, ds, true, 2);
+        CellParser.parse(dt, ds, 2, true);
         assertEquals(2, dt.rows().size());
         {
-            List<CfgData.DCell> r1 = dt.rows().get(0);
+            List<CfgData.DCell> r1 = dt.rows().getFirst();
             assertEquals("1", r1.get(0).value());
             assertEquals(0, r1.get(0).col());
             assertEquals("note1", r1.get(1).value());
@@ -80,17 +80,14 @@ class CellParserTest {
         CfgData.DRawSheet sheet2 = new CfgData.DRawSheet("t1.csv", "t2", 1,
                 new ArrayList<>(getFakeRows2()), new ArrayList<>());
 
-        CfgData.DTable dt = new CfgData.DTable("t1",
-                new ArrayList<>(),
-                new ArrayList<>(),
-                new ArrayList<>(List.of(sheet2, sheet1)));
+        CfgData.DTable dt = CfgData.DTable.of("t1", List.of(sheet2, sheet1));
         CfgDataStat ds = new CfgDataStat();
-        HeadParser.parse(dt, ds, null); // 必须先解析表头
+        HeadParser.parse(dt, ds); // 必须先解析表头
 
-        CellParser.parse(dt, ds, null, 2);
+        CellParser.parse(dt, ds, 2);
         assertEquals(4, dt.rows().size());
         {
-            List<CfgData.DCell> r1 = dt.rows().get(0);
+            List<CfgData.DCell> r1 = dt.rows().getFirst();
             assertEquals("1", r1.get(0).value());
             assertEquals(0, r1.get(0).col());
             assertEquals("note1", r1.get(1).value());
@@ -122,8 +119,6 @@ class CellParserTest {
 
         assertEquals(4, ds.rowCount);
     }
-
-
 
 
 }

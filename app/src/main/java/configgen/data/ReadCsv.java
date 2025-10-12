@@ -39,11 +39,16 @@ public class ReadCsv {
         this.defaultEncoding = defaultEncoding;
     }
 
-    public AllResult readCsv(Path path, Path relativePath, String tableName, int index) throws IOException {
+
+    public AllResult readCsv(Path path, Path relativePath,
+                             String tableName, int index,
+                             char fieldSeparator,
+                             String nullableAddTag) throws IOException {
         int count = 0;
         CfgDataStat stat = new CfgDataStat();
         List<DRawRow> rows = new ArrayList<>();
-        try (CsvReader reader = CsvReader.builder().build(new UnicodeReader(Files.newInputStream(path), defaultEncoding))) {
+        try (CsvReader reader = CsvReader.builder().fieldSeparator(fieldSeparator)
+                .build(new UnicodeReader(Files.newInputStream(path), defaultEncoding))) {
             for (CsvRow csvRow : reader) {
                 stat.cellCsvCount += csvRow.getFieldCount();
                 if (count == 0) {
@@ -56,6 +61,6 @@ public class ReadCsv {
             }
         }
         DRawSheet sheet = new DRawSheet(relativePath.toString(), "", index, rows, new ArrayList<>());
-        return new AllResult(List.of(new OneSheetResult(tableName, sheet)), stat);
+        return new AllResult(List.of(new OneSheetResult(tableName, sheet)), stat, nullableAddTag);
     }
 }

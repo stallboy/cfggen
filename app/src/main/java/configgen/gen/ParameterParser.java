@@ -1,32 +1,21 @@
 package configgen.gen;
 
+import configgen.util.ArgParser;
+
 import java.util.HashMap;
 import java.util.Map;
 
 class ParameterParser implements Parameter {
     private final String arg;
     private final String genId;
-    private final Map<String, String> params = new HashMap<>();
+    private final Map<String, String> params;
 
     ParameterParser(String arg) {
         this.arg = arg;
-        String[] sp = arg.split(",");
-        genId = sp[0];
-        for (int i = 1; i < sp.length; i++) {
-            String s = sp[i];
-            int c = s.indexOf(':');
-            if (c == -1) {
-                c = s.indexOf('=');
-            }
-
-            if (c == -1) {
-                params.put(s.trim().toLowerCase(), null);
-            } else {
-                params.put(s.substring(0, c).trim().toLowerCase(), s.substring(c + 1).trim());
-            }
-        }
+        ArgParser.IdAndMap im = ArgParser.parseToIdAndMap(arg);
+        genId = im.id();
+        params = im.map();
     }
-
 
     @Override
     public Parameter copy() {

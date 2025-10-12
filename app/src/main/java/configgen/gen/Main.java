@@ -2,6 +2,7 @@ package configgen.gen;
 
 import configgen.ctx.Context;
 import configgen.ctx.DirectoryStructure;
+import configgen.ctx.ExplicitDir;
 import configgen.data.*;
 import configgen.editorserver.EditorServer;
 import configgen.gencs.GenBytes;
@@ -46,6 +47,13 @@ public final class Main {
                 "csv/Excel file head row count, default 2"));
         System.out.println("    -encoding         " + LocaleUtil.getLocaleString("Usage.Encoding",
                 "csv encoding, default GBK, if csv file has BOM head, use that encoding"));
+        System.out.println("    -asroot           " + LocaleUtil.getLocaleString("Usage.AsRoot",
+                "ExplicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map， default null, can be 'ClientTables:-server,PublicTables,ServerTables:-client'"));
+        System.out.println("    -exceldirs        " + LocaleUtil.getLocaleString("Usage.ExcelDirs",
+                "ExplicitDir.excelFileDirs， default null"));
+        System.out.println("    -jsondirs         " + LocaleUtil.getLocaleString("Usage.ExcelDirs",
+                "ExplicitDir.jsonFileDirs， default null"));
+
 
         System.out.println();
         System.out.println("-----i18n support");
@@ -154,12 +162,17 @@ public final class Main {
         Generators.addProvider("jsonbyai", GenJsonByAI::new);
 
         String datadir = null;
+        int headRow = 2;
+        String csvDefaultEncoding = "GBK";
+        String asRoot = null;
+        String excelDirs = null;
+        String jsonDirs = null;
+
+
         boolean xmlToCfg = false;
         String compareTerm = null;
         boolean comparePoiAndFastExcel = false;
-        int headRow = 2;
         boolean usePoi = false;
-        String csvDefaultEncoding = "GBK";
 
         String i18nfile = null;
         String langSwitchDir = null;
@@ -199,10 +212,14 @@ public final class Main {
                     LocaleUtil.setLocale(locale);
                 }
                 case "-datadir" -> datadir = args[++i];
-                case "-xmltocfg" -> xmlToCfg = true;
                 case "-headrow" -> headRow = Integer.parseInt(args[++i]);
-
                 case "-encoding" -> csvDefaultEncoding = args[++i];
+
+                case "-asroot" -> asRoot = args[++i];
+                case "-exceldirs" -> excelDirs = args[++i];
+                case "-jsondirs" -> jsonDirs = args[++i];
+
+                case "-xmltocfg" -> xmlToCfg = true;
                 case "-verify" -> verify = true;
                 case "-i18nfile" -> i18nfile = args[++i];
                 case "-langswitchdir" -> langSwitchDir = args[++i];
@@ -287,10 +304,11 @@ public final class Main {
             return;
         }
 
+        ExplicitDir explicitDir = ExplicitDir.parse(asRoot, excelDirs, jsonDirs);
         if (comparePoiAndFastExcel) {
             // 测试fastexcel和poi读取数据的一致性
             if (BuildSettings.isIncludePoi()) {
-                DirectoryStructure sourceStructure = new DirectoryStructure(dataDir);
+                DirectoryStructure sourceStructure = new DirectoryStructure(dataDir, explicitDir);
                 CfgSchema schema = CfgSchemas.readFromDir(sourceStructure);
                 Logger.profile("schema read");
                 CfgSchemaErrs errs = schema.resolve();
@@ -319,7 +337,7 @@ public final class Main {
 
         Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));
 
-        Context context = new Context(new Context.ContextCfg(dataDir, usePoi, headRow, csvDefaultEncoding,
+        Context context = new Context(new Context.ContextCfg(dataDir, explicitDir, usePoi, headRow, csvDefaultEncoding,
                 i18nfile, langSwitchDir, langSwitchDefaultLang));
 
         if (searchParam != null) {

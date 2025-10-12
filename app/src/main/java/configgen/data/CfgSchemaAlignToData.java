@@ -1,5 +1,6 @@
 package configgen.data;
 
+import configgen.ctx.HeadStructure;
 import configgen.util.Logger;
 import configgen.schema.*;
 import configgen.schema.EntryType.EEntry;
@@ -11,7 +12,7 @@ import java.util.*;
 
 import static configgen.data.CfgData.DField;
 import static configgen.schema.EntryType.ENo.NO;
-import static configgen.schema.FieldFormat.AutoOrPack;
+import static configgen.schema.FieldFormat.AutoOrPack.*;
 
 public class CfgSchemaAlignToData {
     private final CfgSchema cfgSchema;
@@ -59,37 +60,58 @@ public class CfgSchemaAlignToData {
         }
 
         for (CfgData.DTable th : dataHeaders.values()) {
-            TableSchema newTable = newTable(th);
+            TableSchema newTable = newTableSchema(th);
             alignedCfg.add(newTable);
         }
         return alignedCfg;
     }
 
-    TableSchema newTable(CfgData.DTable th) {
-        if (th.fields().isEmpty()) {
-            Logger.log("%s header empty, ignored!", th.tableName());
-            return null;
-        }
-
+    TableSchema newTableSchema(CfgData.DTable th) {
         List<FieldSchema> fields = new ArrayList<>(th.fields().size());
         for (DField hf : th.fields()) {
-            Metadata meta = Metadata.of();
-            if (!hf.comment().isEmpty()) {
-                meta.putComment(hf.comment());
-            }
             if (CfgUtil.isIdentifier(hf.name())) {
-                FieldSchema field = new FieldSchema(hf.name(), Primitive.STRING, AutoOrPack.AUTO, meta);
+                FieldSchema field = newFieldSchema(hf, th.tableName());
                 fields.add(field);
             } else {
                 errs.addErr(new CfgSchemaErrs.DataHeadNameNotIdentifier(th.tableName(), hf.name()));
             }
         }
 
+        if (fields.isEmpty()) {
+            Logger.log("%s header empty, ignored!", th.tableName());
+            return null;
+        }
+
         String first = fields.getFirst().name();
         KeySchema primaryKey = new KeySchema(List.of(first));
 
+        Metadata metadata = Metadata.of();
+        String tag = th.nullableAddTag();
+        if (tag != null && !tag.isEmpty()) {
+            metadata.putTag(tag);
+        }
+
         return new TableSchema(th.tableName(), primaryKey, NO, false,
-                Metadata.of(), fields, List.of(), List.of());
+                metadata, fields, List.of(), List.of());
+    }
+
+    private FieldSchema newFieldSchema(CfgData.DField hf, String tableName) {
+        Metadata meta = Metadata.of();
+        if (!hf.comment().isEmpty()) {
+            meta.putComment(hf.comment());
+        }
+        Primitive type;
+        String typeStr = hf.suggestedType();
+        if (typeStr != null && !typeStr.isEmpty()) {
+            type = HeadStructure.parseType(typeStr);
+            if (type == null) {
+                errs.addWarn(new CfgSchemaErrs.SuggestTypeUnknown(tableName, hf.name(), typeStr));
+                type = Primitive.STRING;
+            }
+        } else {
+            type = Primitive.STRING;
+        }
+        return new FieldSchema(hf.name(), type, AUTO, meta);
     }
 
     TableSchema alignTable(TableSchema table, List<DField> header) {
@@ -164,7 +186,6 @@ public class CfgSchemaAlignToData {
         int size = header.size();
         for (int idx = 0; idx < size; ) {
             DField hf = header.get(idx);
-            String name = hf.name();
             String comment = hf.comment();
 
             FieldSchema newField;
@@ -191,16 +212,12 @@ public class CfgSchemaAlignToData {
             } else {
                 idx++;
 
-                if (CfgUtil.isIdentifier(name)) {
-                    Metadata meta = Metadata.of();
-                    if (!comment.isEmpty()) {
-                        meta.putComment(comment);
-                    }
-                    newField = new FieldSchema(name, Primitive.STRING, AutoOrPack.AUTO, meta);
-                    Logger.log("%s new field: %s", table.name(), name);
+                if (CfgUtil.isIdentifier(hf.name())) {
+                    newField = newFieldSchema(hf, table.fullName());
+                    Logger.log("%s new field: %s", table.name(), hf.name());
                     alignedFields.put(newField.name(), newField);
                 } else {
-                    errs.addErr(new CfgSchemaErrs.DataHeadNameNotIdentifier(table.name(), name));
+                    errs.addErr(new CfgSchemaErrs.DataHeadNameNotIdentifier(table.name(), hf.name()));
                 }
             }
         }
@@ -228,7 +245,9 @@ public class CfgSchemaAlignToData {
         String listName = String.format("%sList", nam);
         FieldSchema listField = curFields.get(listName);
         if (listField != null
-                && listField.type() instanceof FieldType.FList(FieldType.SimpleType item) && Span.simpleTypeSpan(item) == 1
+                && listField.type() instanceof FieldType.FList(
+                FieldType.SimpleType item
+        ) && Span.simpleTypeSpan(item) == 1
                 && listField.fmt() instanceof FieldFormat.Fix(int count) && headers.size() > index + count - 1) {
 
             boolean ok = true;

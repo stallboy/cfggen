@@ -23,8 +23,8 @@ public enum XmlReader {
     public static CfgSchema readFromDir(Path rootDir) {
         CfgSchema destination = CfgSchema.of();
         Map<String, DirectoryStructure.CfgFileInfo> allXmlFiles = new LinkedHashMap<>();
-        findConfigFilesFromRecursively(rootDir.resolve("config.xml"), "xml", "",
-                rootDir, allXmlFiles);
+        findConfigFilesFromRecursively(rootDir.resolve("config.xml"), null,
+                "xml", "", rootDir, allXmlFiles);
 
         for (DirectoryStructure.CfgFileInfo c : allXmlFiles.values()) {
             INSTANCE.readTo(destination, c.path(), c.pkgNameDot());

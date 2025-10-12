@@ -1,29 +1,27 @@
 package configgen.data;
 
-import configgen.schema.CfgSchema;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import static configgen.data.CfgData.*;
 
-final class CellParser {
+public final class CellParser {
 
     /**
      * 无head，去空行，去注释行，去注释列
      * 返回的是规整的相同列数的row
      */
-    static void parse(CfgData.DTable table, CfgDataStat stat, CfgSchema cfgSchema, int headRow) {
-        parse(table, stat, HeadParser.isColumnMode(table, cfgSchema), headRow);
-    }
-
-    static void parse(CfgData.DTable table, CfgDataStat stat, boolean isColumnMode, int headRow) {
+    public static void parse(CfgData.DTable table, CfgDataStat stat, int headRow, boolean isColumnMode) {
         List<List<DCell>> result = null;
         if (!isColumnMode) {
 
             for (DRawSheet sheet : table.rawSheets()) {
                 if (result == null) {
-                    result = new ArrayList<>(sheet.rows().size() - headRow);
+                    int size = sheet.rows().size() - headRow;
+                    if (size < 0) {
+                        size = 0;
+                    }
+                    result = new ArrayList<>(size);
                 }
 
                 for (int rowIndex = headRow; rowIndex < sheet.rows().size(); rowIndex++) {
@@ -79,6 +77,10 @@ final class CellParser {
             table.rows().clear();
             table.rows().addAll(result);
         }
+    }
+
+    public static void parse(CfgData.DTable table, CfgDataStat stat, int headRow) {
+        parse(table, stat, headRow, false);
     }
 
     private static List<DCell> getCellsInColumnMode(DRawSheet sheet, int logicRowIdx) {

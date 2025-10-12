@@ -100,6 +100,6 @@ public enum ReadByFastExcel implements ExcelReader {
                 }
             }
         }
-        return new AllResult(sheets, stat);
+        return new AllResult(sheets, stat, null);
     }
 }

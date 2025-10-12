@@ -88,11 +88,13 @@ class DataUtilTest {
         assertEquals(DataUtil.FileFmt.EXCEL, getFileFormat(Path.of("aa.xls")));
 
         assertEquals(DataUtil.FileFmt.CSV, getFileFormat(Path.of("../n/m/item.csv")));
+
+        assertEquals(DataUtil.FileFmt.TXT_AS_TSV, getFileFormat(Path.of("aa.txt")));
     }
 
     @Test
     void getFileFormat_null() {
-        assertNull(getFileFormat(Path.of("aa.txt")));
+        assertNull(getFileFormat(Path.of("aa.bin")));
     }
 
 }

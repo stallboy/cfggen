@@ -1,45 +1,36 @@
 package configgen.data;
 
-import configgen.schema.CfgSchema;
-import configgen.schema.TableSchema;
+import configgen.ctx.HeadStructure;
 import configgen.util.LocaleUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import static configgen.ctx.HeadStructure.DEFAULT_COMMENT_NAME;
+import static configgen.ctx.HeadStructure.ROW4_NAME_TYPE_E_COMMENT;
 import static configgen.data.CfgData.DTable;
 import static configgen.data.CfgData.*;
 
-final class HeadParser {
-    static void parse(DTable table, CfgDataStat stat, CfgSchema cfgSchema) {
-        parse(table, stat, isColumnMode(table, cfgSchema));
-    }
-
-    static boolean isColumnMode(DTable table, CfgSchema cfgSchema) {
-        boolean isColumnMode = false;
-        if (cfgSchema != null) {
-            cfgSchema.requireResolved();
-            String name = table.tableName();
-            TableSchema schema = cfgSchema.findTable(name);
-            if (schema != null) {
-                isColumnMode = schema.isColumnMode();
-            }
-        }
-        return isColumnMode;
-    }
-
-    static void parse(DTable table, CfgDataStat stat, boolean isColumnMode) {
+public final class HeadParser {
+    public static void parse(DTable table, CfgDataStat stat, int headRow, boolean isColumnMode) {
         List<DField> header = null;
         List<String> names = null;
         DRawSheet headerSheet = null;
         if (table.rawSheets().size() > 1) {
             table.rawSheets().sort(Comparator.comparingInt(DRawSheet::index));
         }
+        HeadStructure headStructure = headRow == 4 ? ROW4_NAME_TYPE_E_COMMENT : DEFAULT_COMMENT_NAME;
+
         for (DRawSheet sheet : table.rawSheets()) {
-            List<String> comments = getLogicRow(sheet, 0, isColumnMode);
-            List<String> curNames = getLogicRow(sheet, 1, isColumnMode);
-            List<DField> h = parse(sheet, stat, comments, curNames);
+            List<String> comments = getLogicRow(sheet, headStructure.commentRow(), isColumnMode);
+            List<String> curNames = getLogicRow(sheet, headStructure.nameRow(), isColumnMode);
+            List<String> suggestedTypes = headStructure.suggestedTypeRow() >= 0 ?
+                    getLogicRow(sheet, headStructure.suggestedTypeRow(), isColumnMode) : Collections.emptyList();
+
+
+            List<DField> h = parseFields(sheet, stat, comments, curNames, suggestedTypes);
 
             if (header == null) {
                 names = curNames;
@@ -57,6 +48,10 @@ final class HeadParser {
             table.fields().clear();
             table.fields().addAll(header);
         }
+    }
+
+    public static void parse(DTable table, CfgDataStat stat) {
+        parse(table, stat, 2, false);
     }
 
     private static List<String> getLogicRow(DRawSheet sheet, int rowIndex, boolean isColumnMode) {
@@ -90,7 +85,10 @@ final class HeadParser {
         }
     }
 
-    private static List<DField> parse(DRawSheet sheet, CfgDataStat stat, List<String> comments, List<String> names) {
+    private static List<DField> parseFields(DRawSheet sheet, CfgDataStat stat,
+                                            List<String> comments,
+                                            List<String> names,
+                                            List<String> suggestedTypes) {
         List<DField> fields = new ArrayList<>();
         int size = names.size();
         List<Integer> fieldIndices = new ArrayList<>();
@@ -114,12 +112,22 @@ final class HeadParser {
                     comment = "";
                 } else {
                     comment = getComment(comment);
+                    if (i == 0 && comment.startsWith("#")) { // 第一列是注释列
+                        comment = comment.substring(1);
+                    }
+                    comment = comment.trim();
                 }
             }
             if (comment.equalsIgnoreCase(name)) { // 忽略重复信息
                 comment = "";
             }
-            DField field = new DField(name, comment);
+
+            String suggestedType = "";
+            if (i < suggestedTypes.size()) {
+                suggestedType = suggestedTypes.get(i);
+            }
+
+            DField field = new DField(name, comment, suggestedType);
             fields.add(field);
             fieldIndices.add(i);
         }

@@ -115,6 +115,14 @@ public record CfgSchemaErrs(List<Err> errs,
                                           String unMatchedType) implements Warn {
     }
 
+    /**
+     * lowercase只能用于str或text
+     */
+    public record SuggestTypeUnknown(String table,
+                                     String field,
+                                     String unknownType) implements Warn {
+    }
+
     public sealed interface Err extends Msg {
     }
 

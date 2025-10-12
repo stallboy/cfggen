@@ -1,5 +1,6 @@
 package configgen.value;
 
+import configgen.ctx.HeadStructure;
 import configgen.data.Source;
 import configgen.schema.*;
 
@@ -280,7 +281,8 @@ public class ValueParser {
                     case LONG -> {
                         long v = 0;
                         try {
-                            v = str.isEmpty() ? 0 : Long.decode(str);
+                            v = HeadStructure.parseLong(str);
+//                            v = str.isEmpty() ? 0 : Long.decode(str);
                         } catch (Exception e) {
                             errs.addErr(new CfgValueErrs.NotMatchFieldType(cell,
                                     parseContext.nameable, fieldSchema.name(), type));

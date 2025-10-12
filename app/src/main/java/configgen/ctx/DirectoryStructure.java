@@ -6,8 +6,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static configgen.data.DataUtil.*;
-import static configgen.data.DataUtil.FileFmt.CSV;
-import static configgen.data.DataUtil.FileFmt.EXCEL;
+import static configgen.data.DataUtil.FileFmt.*;
 
 /// # 文件目录规范
 ///
@@ -21,7 +20,7 @@ import static configgen.data.DataUtil.FileFmt.EXCEL;
 /// ## 配置文件结构
 /// - **Schema文件**：
 ///   - 根目录下必须存在 `config.cfg`
-///   - 每个table目录下需有 `[table].cfg`
+///   - 每个module目录下需有 `[module].cfg`
 ///
 /// ## 数据文件规则
 /// ### 通用规则
@@ -74,7 +73,13 @@ public class DirectoryStructure {
                                 Path path,
                                 Path relativePath,
                                 FileFmt fmt,
-                                TableNameIndex csvTableNameIndex /*can be null*/) {
+                                TableNameIndex csvOrTsvTableNameIndex,/*can be null*/
+                                String nullableAddTag) {
+        public ExcelFileInfo {
+            Objects.requireNonNull(path);
+            Objects.requireNonNull(relativePath);
+            Objects.requireNonNull(fmt);
+        }
     }
 
     public record JsonFileInfo(long lastModified,
@@ -83,14 +88,14 @@ public class DirectoryStructure {
                                boolean isIntegerId,
                                int integerId) {
 
-        static JsonFileInfo of(Path absPath, Path relativePath){
+        static JsonFileInfo of(Path absPath, Path relativePath) {
             String fn = relativePath.getFileName().toString();
             int id = -1;
             boolean isIntegerId = false;
             try {
                 id = Integer.parseInt(fn.substring(0, fn.length() - 5));
                 isIntegerId = true;
-            }catch (NumberFormatException ignored){
+            } catch (NumberFormatException ignored) {
             }
             return new JsonFileInfo(absPath.toFile().lastModified(), absPath, relativePath, isIntegerId, id);
         }
@@ -104,7 +109,7 @@ public class DirectoryStructure {
 
         void sort() {
             list = new ArrayList<>(map.values());
-            if (map.values().stream().allMatch(j -> j.isIntegerId)){
+            if (map.values().stream().allMatch(j -> j.isIntegerId)) {
                 list.sort(Comparator.comparingInt(o -> o.integerId));
             }
         }
@@ -128,6 +133,7 @@ public class DirectoryStructure {
 
 
     private final Path rootDir;
+    private final ExplicitDir explicitDir;
     /**
      * 配置文件信息
      */
@@ -142,11 +148,48 @@ public class DirectoryStructure {
     private volatile Map<String, JsonFileList> jsonFiles = new LinkedHashMap<>(); // table -> json file list
 
     public DirectoryStructure(Path rootDir) {
+        this(rootDir, null);
+    }
+
+    public DirectoryStructure(Path rootDir, ExplicitDir explicitDir) {
         this.rootDir = rootDir;
-        findConfigFilesFromRecursively(rootDir.resolve(ROOT_CONFIG_FILENAME), CONFIG_EXT, "",
+        this.explicitDir = explicitDir;
+
+        findConfigFilesFromRecursively(rootDir.resolve(ROOT_CONFIG_FILENAME),
+                explicitDir != null ? explicitDir.excelFileDirs() : null,
+                CONFIG_EXT, "",
                 rootDir, cfgFiles);
-        findExcelFilesRecursively(rootDir);
-        findTableToJsonFiles();
+
+        if (explicitDir == null) {
+            findExcelFilesRecursively(rootDir);
+        } else {
+            for (Map.Entry<String, String> e : explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map().entrySet()) {
+                Path dir = rootDir.resolve(e.getKey());
+                if (Files.exists(dir) && Files.isDirectory(dir)) {
+                    findTxtAsTsvFiles(dir, e.getValue());
+                }
+            }
+
+            for (String p : explicitDir.excelFileDirs()) {
+                Path dir = rootDir.resolve(p);
+                if (Files.exists(dir) && Files.isDirectory(dir)) {
+                    findExcelFilesRecursively(dir);
+                }
+            }
+        }
+
+        if (explicitDir == null) {
+            findTableToJsonFiles();
+        } else {
+            for (String p : explicitDir.jsonFileDirs()) {
+                findOneTableJsonFilesInDir(rootDir.resolve(p));
+            }
+
+        }
+    }
+
+    public DirectoryStructure reload() {
+        return new DirectoryStructure(rootDir, explicitDir);
     }
 
     public Path getRootDir() {
@@ -169,8 +212,12 @@ public class DirectoryStructure {
         return list.list;
     }
 
-    public static void findConfigFilesFromRecursively(Path source, String ext, String pkgNameDot,
-                                                      Path rootDir, Map<String, CfgFileInfo> cfgFiles) {
+    public static void findConfigFilesFromRecursively(Path source,
+                                                      Set<String> nullableWhiteListSubDirs,
+                                                      String ext,
+                                                      String pkgNameDot,
+                                                      Path rootDir,
+                                                      Map<String, CfgFileInfo> cfgFiles) {
         if (Files.exists(source)) {
             Path relativizeSource = rootDir.relativize(source);
             cfgFiles.put(relativizeSource.toString(),
@@ -182,6 +229,12 @@ public class DirectoryStructure {
                     if (!Files.isDirectory(path)) {
                         continue;
                     }
+
+                    if (nullableWhiteListSubDirs != null &&
+                            !nullableWhiteListSubDirs.contains(path.getFileName().toString())) {
+                        continue;
+                    }
+
                     String lastDir = path.getFileName().toString().toLowerCase();
                     String subPkgName = getCodeName(lastDir);
                     if (subPkgName == null) {
@@ -189,7 +242,7 @@ public class DirectoryStructure {
                     }
                     Path subSource = path.resolve(subPkgName + "." + ext);
                     String subPkgNameDot = pkgNameDot + subPkgName + ".";
-                    findConfigFilesFromRecursively(subSource, ext, subPkgNameDot,
+                    findConfigFilesFromRecursively(subSource, null, ext, subPkgNameDot,
                             rootDir, cfgFiles);
                 }
             }
@@ -199,47 +252,74 @@ public class DirectoryStructure {
     }
 
     private void findExcelFilesRecursively(Path dir) {
-        try {
-            try (Stream<Path> paths = Files.list(dir)) {
-                for (Path path : paths.toList()) {
-                    if (isFileIgnored(path)) {
+        try (Stream<Path> paths = Files.list(dir)) {
+            for (Path path : paths.toList()) {
+                if (isFileIgnored(path)) {
+                    continue;
+                }
+
+                if (Files.isDirectory(path)) {
+                    String lastSeg = path.getFileName().toString();
+                    String codeName = getCodeName(lastSeg);
+                    if (codeName == null) {
                         continue;
                     }
 
-                    if (Files.isDirectory(path)) {
-                        String lastSeg = path.getFileName().toString();
-                        String codeName = getCodeName(lastSeg);
-                        if (codeName == null) {
-                            continue;
-                        }
+                    findExcelFilesRecursively(path);
 
-                        findExcelFilesRecursively(path);
-
-                    } else if (Files.isRegularFile(path)) {
-                        FileFmt fmt = getFileFormat(path);
-                        if (fmt == null) {
-                            continue;
-                        }
-                        Path relativePath = rootDir.relativize(path);
-                        switch (fmt) {
-                            case CSV -> {
-                                String lastSeg = path.getFileName().toString();
-                                String codeName = getCodeName(lastSeg);
-                                if (codeName == null) {
-                                    continue;
-                                }
-
-                                TableNameIndex ti = getTableNameIndex(relativePath);
-                                excelFiles.put(relativePath.toString(),
-                                        new ExcelFileInfo(path.toFile().lastModified(), path, relativePath, CSV, ti));
+                } else if (Files.isRegularFile(path)) {
+                    FileFmt fmt = getFileFormat(path);
+                    if (fmt == null) {
+                        continue;
+                    }
+                    Path relativePath = rootDir.relativize(path);
+                    switch (fmt) {
+                        case CSV -> {
+                            String lastSeg = path.getFileName().toString();
+                            String codeName = getCodeName(lastSeg);
+                            if (codeName == null) {
+                                continue;
                             }
-                            case EXCEL -> {
-                                excelFiles.put(relativePath.toString(),
-                                        new ExcelFileInfo(path.toFile().lastModified(), path, relativePath, EXCEL, null));
-                            }
+
+                            TableNameIndex ti = getTableNameIndex(relativePath);
+                            excelFiles.put(relativePath.toString(),
+                                    new ExcelFileInfo(path.toFile().lastModified(), path, relativePath, CSV, ti, null));
+                        }
+                        case EXCEL -> {
+                            excelFiles.put(relativePath.toString(),
+                                    new ExcelFileInfo(path.toFile().lastModified(), path, relativePath, EXCEL, null, null));
                         }
                     }
                 }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void findTxtAsTsvFiles(Path dir, String nullableAddTag) {
+        try (Stream<Path> paths = Files.list(dir)) {
+            for (Path path : paths.toList()) {
+                if (isFileIgnored(path)) {
+                    continue;
+                }
+                if (Files.isRegularFile(path)) {
+                    FileFmt fmt = getFileFormat(path);
+                    if (fmt != TXT_AS_TSV) {
+                        continue;
+                    }
+                    Path relativePath = path.getFileName();
+                    String lastSeg = relativePath.toString();
+                    String codeName = getCodeName(lastSeg);
+                    if (codeName == null) {
+                        continue;
+                    }
+
+                    TableNameIndex ti = getTableNameIndex(relativePath);
+                    excelFiles.put(relativePath.toString(),
+                            new ExcelFileInfo(path.toFile().lastModified(), path, relativePath, TXT_AS_TSV, ti, nullableAddTag));
+                }
+
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -249,28 +329,33 @@ public class DirectoryStructure {
     private void findTableToJsonFiles() {
         try (Stream<Path> paths = Files.list(rootDir)) {
             for (Path path : paths.toList()) {
-                if (isFileIgnored(path)) {
-                    continue;
-                }
-                if (!Files.isDirectory(path)) {
-                    continue;
-                }
-
-                String dirName = path.getFileName().toString();
-                String tableName = getTableNameFromDir(dirName);
-                if (tableName == null) {
-                    continue;
-                }
-
-                JsonFileList jsonFiles = this.jsonFiles.computeIfAbsent(tableName, (String j) -> new JsonFileList());
-                findOneTableJsonFiles(path, jsonFiles);
+                findOneTableJsonFilesInDir(path);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void findOneTableJsonFiles(Path tableDir, JsonFileList list) throws IOException {
+    private void findOneTableJsonFilesInDir(Path path) {
+        if (isFileIgnored(path)) {
+            return;
+        }
+        if (!Files.isDirectory(path)) {
+            return;
+        }
+
+        String dirName = path.getFileName().toString();
+        String tableName = getTableNameIfTableDirForJson(dirName);
+        if (tableName == null) {
+            return;
+        }
+
+        JsonFileList jsonFiles = this.jsonFiles.computeIfAbsent(tableName, (String j) -> new JsonFileList());
+        findOneTableJsonFiles(path, jsonFiles);
+    }
+
+
+    private void findOneTableJsonFiles(Path tableDir, JsonFileList list) {
         try (Stream<Path> paths = Files.list(tableDir)) {
             for (Path path : paths.toList()) {
                 if (isFileIgnored(path)) {
@@ -290,6 +375,8 @@ public class DirectoryStructure {
                 list.addFile(JsonFileInfo.of(absPath, relativePath));
             }
             list.sort();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

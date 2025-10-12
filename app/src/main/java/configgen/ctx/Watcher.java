@@ -78,7 +78,7 @@ public class Watcher {
                         }
                     } else if (fmt == FileFmt.JSON) {
                         String dirName = path.getParent().getFileName().toString();
-                        if (!isMaybeTableDirForJson(dirName)) {
+                        if (!isTableDirForJson(dirName)) {
                             continue;
                         }
                     }

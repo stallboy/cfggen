@@ -269,9 +269,9 @@ class CfgSchemaFilterByTagTest {
         CfgSchemaFilterByTag clientCfgSchema = new CfgSchemaFilterByTag(cfg, "c", errs);
         clientCfgSchema.filter();
 
-        assertEquals(1, errs.warns().size());
+        assertEquals(1, errs.weakWarns().size());
         assertEquals(0, errs.errs().size());
-        CfgSchemaErrs.Warn warn = errs.warns().getFirst();
+        CfgSchemaErrs.WeakWarn warn = errs.weakWarns().getFirst();
         assertInstanceOf(CfgSchemaErrs.FilterRefIgnoredByRefTableNotFound.class, warn);
         CfgSchemaErrs.FilterRefIgnoredByRefTableNotFound w = (CfgSchemaErrs.FilterRefIgnoredByRefTableNotFound) warn;
         assertEquals("tab1", w.name());
@@ -302,9 +302,9 @@ class CfgSchemaFilterByTagTest {
         CfgSchemaFilterByTag clientCfgSchema = new CfgSchemaFilterByTag(cfg, "c", errs);
         clientCfgSchema.filter();
 
-        assertEquals(1, errs.warns().size());
+        assertEquals(1, errs.weakWarns().size());
         assertEquals(0, errs.errs().size());
-        CfgSchemaErrs.Warn warn = errs.warns().getFirst();
+        CfgSchemaErrs.WeakWarn warn = errs.weakWarns().getFirst();
         assertInstanceOf(CfgSchemaErrs.FilterRefIgnoredByRefKeyNotFound.class, warn);
         CfgSchemaErrs.FilterRefIgnoredByRefKeyNotFound w = (CfgSchemaErrs.FilterRefIgnoredByRefKeyNotFound) warn;
         assertEquals("tab1", w.name());

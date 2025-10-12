@@ -9,6 +9,7 @@ import static configgen.data.DataUtil.FileFmt.*;
 public class DataUtil {
 
     public enum FileFmt {
+        TXT_AS_TSV,
         CSV,
         EXCEL,
         CFG,
@@ -29,6 +30,7 @@ public class DataUtil {
         }
 
         return switch (ext) {
+            case "txt" -> TXT_AS_TSV; // 之前的tsv文件存成了txt
             case "csv" -> CSV;
             case "xls", "xlsx" -> EXCEL;
             case "cfg" -> CFG;
@@ -136,7 +138,7 @@ public class DataUtil {
         return dataDir.resolve(dirName);
     }
 
-    public static String getTableNameFromDir(String dirName) {
+    public static String getTableNameIfTableDirForJson(String dirName) {
         if (!dirName.startsWith("_")) {
             return null;
         }
@@ -155,7 +157,7 @@ public class DataUtil {
         return sub.replace("_", ".");
     }
 
-    public static boolean isMaybeTableDirForJson(String dirName) {
+    public static boolean isTableDirForJson(String dirName) {
         if (!dirName.startsWith("_")) {
             return false;
         }

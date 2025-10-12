@@ -103,7 +103,7 @@ public class EditorServer extends GeneratorWithTag {
     }
 
     private void reloadData() {
-        DirectoryStructure newStructure = new DirectoryStructure(context.getSourceStructure().getRootDir());
+        DirectoryStructure newStructure = context.getSourceStructure().reload();
         if (newStructure.lastModifiedEquals(context.getSourceStructure())) {
             configgen.util.Logger.verbose("lastModified not change");
             return;
