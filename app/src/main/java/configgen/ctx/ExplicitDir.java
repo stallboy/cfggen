@@ -9,7 +9,7 @@ import java.util.Set;
 /**
  * 明确指定子目录，只用这些
  * @param txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map 这些目录的文件被视为在rootDir下，当这些目录下有新的文件添加时，自动加上tag
- *                                                    一般为ClientTables:-server,PublicTables,ServerTables:-client
+ *                                                    一般为ClientTables:noserver,PublicTables,ServerTables:noclient
  * @param excelFileDirs 用这些目录下的excel文件
  * @param jsonFileDirs 用这些目录下的json文件
  */

@@ -46,7 +46,7 @@ public final class Main {
         System.out.println("    -encoding         " + LocaleUtil.getLocaleString("Usage.Encoding",
                 "csv/txt encoding, default GBK, if csv file has BOM head, use that encoding"));
         System.out.println("    -asroot           " + LocaleUtil.getLocaleString("Usage.AsRoot",
-                "ExplicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map， default null, can be 'ClientTables:-server,PublicTables,ServerTables:-client'"));
+                "ExplicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map， default null, can be 'ClientTables:noserver,PublicTables,ServerTables:noclient'"));
         System.out.println("    -exceldirs        " + LocaleUtil.getLocaleString("Usage.ExcelDirs",
                 "ExplicitDir.excelFileDirs， default null"));
         System.out.println("    -jsondirs         " + LocaleUtil.getLocaleString("Usage.ExcelDirs",
