@@ -80,7 +80,7 @@ class CellParserTest {
         CfgData.DRawSheet sheet2 = new CfgData.DRawSheet("t1.csv", "t2", 1,
                 new ArrayList<>(getFakeRows2()), new ArrayList<>());
 
-        CfgData.DTable dt = CfgData.DTable.of("t1", List.of(sheet2, sheet1));
+        CfgData.DTable dt = CfgData.DTable.of("t1", new ArrayList<>(List.of(sheet2, sheet1)));
         CfgDataStat ds = new CfgDataStat();
         HeadParser.parse(dt, ds); // 必须先解析表头
 
