@@ -2,7 +2,7 @@
 layout: page
 title: 映射到表格
 parent: 配表系统
-nav_order: 8
+nav_order: 5
 ---
 
 # 映射到表格
@@ -82,6 +82,51 @@ nav_order: 8
 > task.rewardItems 配置block=1，list里的RewardItem占5列，所以此field占5*1=5列。
 
 
+## block
+
+- 读取block的算法如下：
+```java
+if (line.getFirst().isCellEmpty()) {  // 第一格为空，还是本record
+    DCell prevCell = line.get(firstColIndex - 1);
+    DCell thisCell = line.get(firstColIndex);
+
+    if (prevCell.isCellEmpty()) { // 上一格为空，
+        if (thisCell.isCellEmpty()) { // 本格也为空，内部的嵌套block，忽略
+        } else { //本格不为空 -》 是这个block了
+            res.add(new CellsWithRowIndex(line.subList(firstColIndex, firstColIndex + colSize), row));
+        }
+    } else {// 上一个不为空，结束
+        break;
+    }
+} else { // 下一个record，结束
+    break;
+}
+```
+
+- block支持嵌套
+```
+// 要允许block<struct>,struct里仍然有block，如下所示
+//1. xxxaebbxccc
+//2.      bb cc
+//3.      bb
+//4.    aebb
+//5.      bb
+// 这里aeb是个block=1，b是个block=2，c是个block=3
+// aebb前面一列要有空格，bb前一列格子也要是空，ccc前一列也是有个空，
+// 用这个空来做为标记，支持block aebb嵌套block bb，来判断此行bb是否属于嵌套的bb还是新起的aabb
+// 这样也强制了2个同级的block不要直接衔接，视觉上不好区分，
+// 可以在中间加入一个列，比如以上的aebb和ccc直接有x来分割
+// 以上规则现在没有做检测，要检测有点复杂，人工保证吧。
+```
+假如以上第4行的aebb，e这个excel格子为空，则地4.5行只提取出来了bb信息，合并到第1行整体的aeb结构里，而不是从第四行又新建了个aeb结构。
+这个容易引起bug，如何避免？下节引入mustFill
+
+## mustFill
+
+- 可以在field上加mustFill。list、map类型表示元素个数必须大于0，其他类型表示格子不能为空。
+- 为避免上一节aeb里的e格子可为空，导致的惊讶，可以设置e对应的field (mustFill)，这样万一忘了填e格子，会报错
+
+> task.exp 设置了mustFill，表示必须配置，不能省略
 
 ## auto示例
 

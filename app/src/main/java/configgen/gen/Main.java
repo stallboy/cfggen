@@ -49,7 +49,7 @@ public final class Main {
                 "ExplicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map， default null, can be 'ClientTables:noserver,PublicTables,ServerTables:noclient'"));
         System.out.println("    -exceldirs        " + LocaleUtil.getLocaleString("Usage.ExcelDirs",
                 "ExplicitDir.excelFileDirs， default null"));
-        System.out.println("    -jsondirs         " + LocaleUtil.getLocaleString("Usage.ExcelDirs",
+        System.out.println("    -jsondirs         " + LocaleUtil.getLocaleString("Usage.JsonDirs",
                 "ExplicitDir.jsonFileDirs， default null"));
 
 
@@ -79,7 +79,7 @@ public final class Main {
                 "enter read-eval-print-loop, 1 param: javadata file"));
         System.out.println("    -xmltocfg         " + LocaleUtil.getLocaleString("Usage.XmlToCfg",
                 "convert schema from .xml to .cfg"));
-        System.out.println("    -compareterm         " + LocaleUtil.getLocaleString("Usage.CompareTerm",
+        System.out.println("    -compareterm      " + LocaleUtil.getLocaleString("Usage.CompareTerm",
                 "check -i18nfile (2) compatible with term"));
         if (BuildSettings.isIncludePoi()) {
             System.out.println("    -usepoi           " + LocaleUtil.getLocaleString("Usage.UsePoi",
@@ -99,7 +99,7 @@ public final class Main {
                 "profiler, gc before print memory usage"));
         System.out.println("    -nowarn           " + LocaleUtil.getLocaleString("Usage.NOWARN",
                 "do not print warning"));
-        System.out.println("    -weakwarn           " + LocaleUtil.getLocaleString("Usage.WEAKWARN",
+        System.out.println("    -weakwarn         " + LocaleUtil.getLocaleString("Usage.WEAKWARN",
                 "print weak warning"));
 
         System.out.println();

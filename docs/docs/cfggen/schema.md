@@ -15,6 +15,20 @@ nav_order: 4
 {:toc}
 ---
 
+```
+我们的目的是要表达结构化的信息。
+
+int,float,string,bool等基础类型是构建的基本块
+struct来聚合成新结构，struct可以嵌套
+list,map表达列表
+interface来表达多态，比如任务完成条件，有多重类型
+table则既表达了struct，也具体的信息数据所在。
+    通过主键、唯一键、enum、entry来索引到具体一行
+
+每个field，又通过设置外键，来连成数据的网络。
+```
+
+
 
 ## 例子：任务表
 以下是个任务表的结构，通过这个例子来说明
@@ -153,61 +167,3 @@ table task[taskid] (entry='entry') {
 > 
 > taskexptype表中的(enum='name')，表明这是个枚举表，excel数据要包含3行，第二列name里的字符串要分别是taskexp中的struct名字：ByLevel，ByServerUpDay，ConstValue
 
-
-### nullable 外键
-
-- 可以在配置了ref的field上加nullable，表示可以找不到此外键，生成代码会是nullableRefXXX
-- nullable的field，如果在excel格子中，则加强了以下约束：格子中为空才可以nullable，只要格子有内容必须能找到外键。以下两种情况例外
-    1. field是此table主键或唯一键的一部分。
-    2. field类型是数值（int、long、float），且内容为0 
-
-    > task.taskid 是情况1 
-    > 
-    > task.nexttask 是情况2
-
-
-### block
-
-- 读取block的算法如下：
-```java
-if (line.getFirst().isCellEmpty()) {  // 第一格为空，还是本record
-    DCell prevCell = line.get(firstColIndex - 1);
-    DCell thisCell = line.get(firstColIndex);
-
-    if (prevCell.isCellEmpty()) { // 上一格为空，
-        if (thisCell.isCellEmpty()) { // 本格也为空，内部的嵌套block，忽略
-        } else { //本格不为空 -》 是这个block了
-            res.add(new CellsWithRowIndex(line.subList(firstColIndex, firstColIndex + colSize), row));
-        }
-    } else {// 上一个不为空，结束
-        break;
-    }
-} else { // 下一个record，结束
-    break;
-}
-```
-
-- block支持嵌套
-```
-// 要允许block<struct>,struct里仍然有block，如下所示
-//1. xxxaebbxccc
-//2.      bb cc
-//3.      bb
-//4.    aebb
-//5.      bb
-// 这里aeb是个block=1，b是个block=2，c是个block=3
-// aebb前面一列要有空格，bb前一列格子也要是空，ccc前一列也是有个空，
-// 用这个空来做为标记，支持block aebb嵌套block bb，来判断此行bb是否属于嵌套的bb还是新起的aabb
-// 这样也强制了2个同级的block不要直接衔接，视觉上不好区分，
-// 可以在中间加入一个列，比如以上的aebb和ccc直接有x来分割
-// 以上规则现在没有做检测，要检测有点复杂，人工保证吧。
-```
-假如以上第4行的aebb，e这个excel格子为空，则地4.5行只提取出来了bb信息，合并到第1行整体的aeb结构里，而不是从第四行又新建了个aeb结构。
-这个容易引起bug，如何避免？下节引入mustFill
-
-### mustFill
-
-- 可以在field上加mustFill。list、map类型表示元素个数必须大于0，其他类型表示格子不能为空。
-- 为避免上一节aeb里的e格子可为空，导致的惊讶，可以设置e对应的field (mustFill)，这样万一忘了填e格子，会报错
-
-> task.exp 设置了mustFill，表示必须配置，不能省略

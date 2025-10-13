@@ -1,11 +1,11 @@
 ---
 layout: page
-title: 目录和数据结构
+title: 文件目录结构
 parent: 配表系统
 nav_order: 2
 ---
 
-# 目录和数据结构
+# 文件目录结构
 {: .no_toc }
 
 ## Table of contents
@@ -57,7 +57,7 @@ table levelup[id] (client) {
 
 然后交给程序就ok了
 
-    程序使用configgen.jar 来完善cfg，如果cfg不满足需求，则手动修改cfg，
+    程序使用cfggen 来完善cfg，如果cfg不满足需求，则手动修改cfg，
     比如修改类型，主键，增加唯一键，外键，枚举，取值约束等
 
 
@@ -107,3 +107,133 @@ table levelup[id] (client) {
 上例中，第2列、第4行、第6行 都会被忽略
 
 
+## 文件名、目录名规范
+
+### 目录命名规则
+- 首字母必须是英文字符
+- 命名解析逻辑：
+   ```
+   截取第一个"."之前的内容 → 再截取"_汉字"或汉字之前的部分 → 作为module名
+   ```
+
+### CFG文件
+- 根目录下必须存在 `config.cfg`
+- 每个module目录下需有 `[module].cfg`
+
+### 通用忽略规则
+- 忽略以下文件：
+  - 以`~`开头的文件
+  - 隐藏文件
+
+### CSV文件
+- 文件后缀：`.csv`
+- 文件名称不是a-z，A-Z开头的就忽略
+- 命名解析逻辑：
+  ```
+  截取".csv"之前的内容 → 再截取"_汉字"或汉字之前的部分 → 作为table名
+  ```
+- 合法命名格式：
+  - `[table]_[idx]`
+  - `[table]`
+
+### Excel文件
+- 文件后缀：`.xls` 或 `.xlsx`
+- Sheet名称不是a-z，A-Z开头的就忽略
+- Sheet命名规则：
+  ```
+  截取"."之前的内容 → 再截取"_汉字"或汉字之前的部分 → 作为table名
+  ```
+- 合法命名格式：
+  - `[table]_[idx]`
+  - `[table]`
+
+### JSON文件
+- 目录命名规则：
+  ```
+  _[table.replace(".", "_")]/
+  ```
+  若table为`skill.buff` → 对应目录为`_skill_buff`
+- 文件命名则是以主键pack为字符串来命名。比如1.json
+
+### example/config
+```
+│   config.cfg
+│
+├───ai_行为
+│       ai.cfg
+│       ai行为.xlsx
+│
+├───equip
+│       ability.csv
+│       equip.cfg
+│       equipconfig.csv
+│       jewelry.csv
+│       jewelryrandom.csv
+│       jewelrysuit.csv
+│       jewelrytype.csv
+│       rank.csv
+│
+├───other
+│       drop.csv
+│       loot.csv
+│       lootitem.csv
+│       lootitem_1.csv
+│       lootitem_2.csv
+│       monster.csv
+│       other.cfg
+│       signin.csv
+│
+├───task
+│       completeconditiontype任务完成条件类型.csv
+│       task.cfg
+│       taskextraexp.csv
+│       task_任务.csv
+│
+├───_other_keytest
+│       0.json
+│       1,2.json
+│
+└───_task_task2
+        1.json
+        2.json
+        3.json
+        4.json
+        5.json
+        6.json
+        7.json
+        8.json
+```
+
+## 兼容老的表格
+
+这个功能是为了兼容老的表格，但是个通用功能可以用于只读datadir目录下的部分目录功能。
+
+涉及到4个参数
+
+- -asroot  
+    ```
+    兼容之前的目录结构，有ClientTables、PublicTables、ServerTables目录，目录下是.txt后缀的tsv文件。
+    可以配置为'ClientTables:noserver,PublicTables,ServerTables:noclient',
+    配合gen的own:-noclient来提取客户端数据, own:-noserver来提取服务器数据
+    （注意noclient前的-，配合no实现了双重否定，忽略设置了noclient的ServerTables）
+    ```
+
+- -exceldirs 
+    ```
+    excel目录，以,分隔
+    ```
+
+- -jsondirs
+    ```
+    json目录以,分隔，
+    -asroot、-exceldirs、-jsondirs一旦有一个配置，说明要明确只用-datadir下的部分目录，而不是全部。
+    ```
+
+- -headrow
+    ```
+    老的配置，.txt后缀的tsv文件里，head是4行
+    第一行是程序用名
+    第二行是类型（INT，SHORT，BYTE，INT64，FLOAT，BOOL，STRING）
+    第三行是其他信息
+    第四行是中文描述
+    ```

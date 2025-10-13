@@ -1,0 +1,155 @@
+---
+layout: page
+title: 主键、枚举、外键
+parent: 配表系统
+nav_order: 3
+---
+
+# 主键、枚举、外键
+{: .no_toc }
+
+## Table of contents
+{: .no_toc .text-delta }
+
+- TOC
+{:toc}
+---
+
+
+## 主键
+
+每个table必须有主键，逻辑代码通过主键拿到对应的table中具体行。
+
+主键可以分为以下情况
+
+- 简单主键
+    ```
+    table task[taskid] {
+        taskid:int;
+        text:text;
+    }
+    ```
+    绝大多数table应该都是简单主键，类型为int，long，str
+
+- 复合结构做为主键
+    ```
+    struct LevelRank {
+        level:int;
+        rank:int;
+    }
+    
+    table jewelryrandom[lvlRank] {
+        lvlRank:LevelRank;
+        attack:int; 
+    }
+    ```
+    lvlRank作为一个复合结构可以作为主键。
+    - 但在现在的生成lua代码中，是以引用（内存地址）而非内容比较的，需要生成lua的话不要用它
+
+
+- 多个field作为主键
+    ```
+    table jewelryrandom[level,rank] {
+        level:int;
+        rank:int
+        attack:int; 
+    }
+    ```
+  level,rank两列做为主键
+  - 在lua中,2个都是数字的话是可以的，只要保证第一个<1亿，第二个<1万。底层以`k + j * 100000000`为key
+
+
+## 唯一键
+
+当逻辑代码希望以多个不同的方式找到到同一行时，要选择一个方式为主键，其他方式为唯一键
+
+```
+table task[taskid] {
+	taskid:int; // 任务id
+	text:text;
+	nexttask:int;
+	rewardItems:list<RewardItem> (block=1); // 物品奖励
+	[nexttask];
+}
+```
+table中如果一行以`[`开始，以`]`结束， 则表示是在定义唯一键。
+
+以上nexttask为唯一键，需要定义唯一键的情况应该很少。
+
+## 枚举、入口
+
+为了不在代码中留下很多配表的主键的`魔数`，我们直接在配表中引入程序用的一列，里面是程序英文名，会生成到代码里。
+
+- 枚举
+    ```
+    table itemtype[id] (enum='type'){
+        id:int;
+        type:str;
+    }
+    ```
+    以上`enum='type'`，完成对枚举的声明，type这一列里将都是英文名称，不能重复，不能为空，由程序填写
+
+- 入口 
+    ```
+    table scene[id] (entry='entry') {
+        id:int;
+        entry:str;
+        info:text;
+    }
+    ```
+  以上`entry='entry'`完成对入口的声明，entry这一列，大部分都是空，但有几行，应该是英文名称，由程序填写。
+
+
+## 外健
+
+- 索引到主键
+    ```
+    struct RewardItem {
+        chance:int; // 掉落概率
+        itemids:list<int> ->item.item; // 掉落物品
+        range:Range; // 数量下限
+    }
+    ```
+    以上`->item.item`完成对`list<int>`每个int的外键声明
+
+
+- 索引到唯一键
+    ```
+    struct AA {
+        taskid:int ->task[nexttask];
+    }
+    ```
+    以上`->task[nexttask]`,表示索引到task表的nexttask唯一键
+    
+
+- 单独一行声明
+    ```
+    table monster[id] {
+        id:int;
+        lootId:int; // loot
+        lootItemId:int; // item
+        ->Loot:[lootId,lootItemId] ->lootitem;
+        ->AllLoot:[lootId] ->loot[id];
+    }
+    ```
+    如上`->Loot:[lootId,lootItemId] ->lootitem`
+    - `->`：表示现在是外键定义
+    - `Loot`是此外键的名称
+    - `[lootId,lootItemId]` 表示本地的key由是两个field组成
+    - `->lootitem` 表名索引到`lootitem`表
+  
+
+
+## nullable
+```
+table task[taskid] (entry='entry') {
+	taskid:int ->task.taskextraexp (nullable); // 任务id
+	entry:str;
+	text:text; 
+	nexttask:int ->task (nullable);
+}
+```
+- 可以在配置了ref的field上加nullable，表示可以找不到此外键，生成代码会是nullableRefXXX
+- nullable的field，如果在excel格子中，则加强了以下约束：格子中为空才可以nullable，只要格子有内容必须能找到外键。以下两种情况例外
+    1. field是此table主键或唯一键的一部分。`task.taskid`
+    2. field类型是数值（int、long、float），且内容为0。`task.nexttask`

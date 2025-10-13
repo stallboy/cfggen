@@ -33,11 +33,16 @@
 
 ## build & test
 
-### 生成cfggen.jar
+### 生成cfggen.jar，cfggen.exe
 
 ```bash
 genjar.bat  # 生成cfggen.jar
 ```
+
+```bash
+mkexe.bat  # 生成cfggen.zip，里面有exe
+```
+
 
 ### test
 
