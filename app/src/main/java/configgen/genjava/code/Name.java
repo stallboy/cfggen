@@ -14,7 +14,7 @@ public class Name {
 
     static String codeTopPkg;
 
-    static String GetByKeyFunctionNameInConfigMgr(KeySchema keySchema, boolean isPrimaryKey, Nameable nameable) {
+    public static String GetByKeyFunctionNameInConfigMgr(KeySchema keySchema, boolean isPrimaryKey, Nameable nameable) {
         String name = "get" + Arrays.stream(nameable.name().split("\\.")).map(Generator::upper1).collect(Collectors.joining());
 
         if (isPrimaryKey){
@@ -23,22 +23,22 @@ public class Name {
         return name + "By" + keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining());
     }
 
-    static String GetByKeyFunctionName(KeySchema keySchema, boolean isPrimaryKey) {
+    public static String GetByKeyFunctionName(KeySchema keySchema, boolean isPrimaryKey) {
         if (isPrimaryKey){
             return "get";
         }
         return "getBy" + keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining());
     }
 
-    static String uniqueKeyMapName(KeySchema keySchema) {
+    public static String uniqueKeyMapName(KeySchema keySchema) {
         return keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()) + "Map";
     }
 
-    static String keyClassName(KeySchema keySchema){
+    public static String keyClassName(KeySchema keySchema){
         return keyClassName(keySchema, null);
     }
 
-    static String keyClassName(KeySchema keySchema, NameableName nullableName) {
+    public static String keyClassName(KeySchema keySchema, NameableName nullableName) {
         if (keySchema.fields().size() > 1) {
             String klsName = keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()) + "Key";
             if (nullableName != null) {
@@ -57,11 +57,11 @@ public class Name {
     }
 
 
-    static String fullName(Nameable nameable) {
+    public static String fullName(Nameable nameable) {
         return new NameableName(nameable).fullName;
     }
 
-    static String tableDataFullName(TableSchema table) {
+    public static String tableDataFullName(TableSchema table) {
         String fn = fullName(table);
         if (table.entry() instanceof EntryType.EEnum && !GenJavaUtil.isEnumAndHasOnlyPrimaryKeyAndEnumStr(table)) {
             fn = fn + "_Detail";
@@ -70,11 +70,11 @@ public class Name {
     }
 
 
-    static String refType(TableSchema table) {
+    public static String refType(TableSchema table) {
         return new NameableName(table).fullName;
     }
 
-    static String refType(ForeignKeySchema fk) {
+    public static String refType(ForeignKeySchema fk) {
         switch (fk.refKey()) {
             case RefKey.RefList ignored -> {
                 return "java.util.List<" + refType(fk.refTableSchema()) + ">";
@@ -99,7 +99,7 @@ public class Name {
         }
     }
 
-    static String refName(ForeignKeySchema fk) {
+    public static String refName(ForeignKeySchema fk) {
         String prefix = switch (fk.refKey()) {
             case RefKey.RefList ignored -> "ListRef";
             case RefKey.RefSimple refSimple -> refSimple.nullable() ? "NullableRef" : "Ref";

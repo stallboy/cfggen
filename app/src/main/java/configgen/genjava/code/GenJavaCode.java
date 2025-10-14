@@ -17,10 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static configgen.value.CfgValue.VTable;
 
@@ -71,19 +68,19 @@ public class GenJavaCode extends GeneratorWithTag {
 
         Name.codeTopPkg = pkg;
         NameableName.isSealedInterface = sealed;
-        GenStructuralClassTablePart.mapsInMgr.clear();
+        List<String> mapsInMgr = new ArrayList<>();
         boolean isLangSwitch = ctx.nullableLangSwitch() != null;
         TypeStr.isLangSwitch = isLangSwitch; //辅助Text的类型声明和创建
 
         for (Nameable nameable : cfgValue.schema().items()) {
             switch (nameable) {
                 case StructSchema structSchema -> {
-                    generateStructClass(structSchema);
+                    generateStructClass(structSchema, mapsInMgr);
                 }
                 case InterfaceSchema interfaceSchema -> {
                     generateInterfaceClass(interfaceSchema);
                     for (StructSchema impl : interfaceSchema.impls()) {
-                        generateStructClass(impl);
+                        generateStructClass(impl, mapsInMgr);
                     }
                 }
                 case TableSchema ignored -> {
@@ -91,7 +88,7 @@ public class GenJavaCode extends GeneratorWithTag {
             }
         }
         for (VTable vtable : cfgValue.tables()) {
-            generateTableClass(vtable);
+            generateTableClass(vtable, mapsInMgr);
         }
 
         if (isLangSwitch) { //生成Text这个Bean
@@ -103,7 +100,7 @@ public class GenJavaCode extends GeneratorWithTag {
 
         try (CachedIndentPrinter ps = createCode(new File(dstDir, "ConfigMgr.java"), encoding)) {
             JteEngine.render("java/ConfigMgr.jte",
-                    Map.of("pkg", Name.codeTopPkg, "mapsInMgr", GenStructuralClassTablePart.mapsInMgr), ps);
+                    Map.of("pkg", Name.codeTopPkg, "mapsInMgr", mapsInMgr), ps);
         }
 
         try (CachedIndentPrinter ps = createCode(new File(dstDir, "ConfigLoader.java"), encoding)) {
@@ -126,10 +123,11 @@ public class GenJavaCode extends GeneratorWithTag {
     }
 
 
-    private void generateStructClass(StructSchema struct) {
+    private void generateStructClass(StructSchema struct, List<String> mapsInMgr) {
         NameableName name = new NameableName(struct);
         try (CachedIndentPrinter ps = createCode(dstDir.toPath().resolve(name.path).toFile(), encoding)) {
-            GenStructuralClass.generate(struct, null, name, ps, false);
+            StructuralClassModel model = new StructuralClassModel(struct, name, false, mapsInMgr);
+            JteEngine.render("java/GenStructuralClass.jte", model, ps);
         }
     }
 
@@ -141,7 +139,7 @@ public class GenJavaCode extends GeneratorWithTag {
         }
     }
 
-    private void generateTableClass(VTable vTable) {
+    private void generateTableClass(VTable vTable, List<String> mapsInMgr) {
         boolean isNeedReadData = true;
         String dataPostfix = "";
         TableSchema schema = vTable.schema();
@@ -171,14 +169,16 @@ public class GenJavaCode extends GeneratorWithTag {
             boolean isTableNeedBuilder = needBuilderTables != null && needBuilderTables.contains(vTable.name());
             File javaFile = dstDir.toPath().resolve(name.path).toFile();
             try (CachedIndentPrinter ps = createCode(javaFile, encoding)) {
-                GenStructuralClass.generate(vTable.schema(), vTable, name, ps, isTableNeedBuilder);
+                StructuralClassModel model = new StructuralClassModel(vTable.schema(), name, isTableNeedBuilder, mapsInMgr);
+                JteEngine.render("java/GenStructuralClass.jte", model, ps);
             }
 
             if (isTableNeedBuilder) {
                 String builderPath = name.path.substring(0, name.path.length() - 5) + "Builder.java";
                 File builderFile = dstDir.toPath().resolve(builderPath).toFile();
                 try (CachedIndentPrinter ps = createCode(builderFile, encoding)) {
-                    GenStructuralClassTablePart.generateTableBuilder(vTable.schema(), name, ps);
+                    JteEngine.render("java/GenTableBuilder.jte",
+                            Map.of("table", vTable.schema(), "name", name), ps);
                 }
             }
 

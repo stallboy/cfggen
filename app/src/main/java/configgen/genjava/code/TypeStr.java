@@ -5,14 +5,14 @@ import configgen.schema.FieldType;
 import static configgen.schema.FieldType.Primitive.*;
 
 
-class TypeStr {
+public class TypeStr {
     static boolean isLangSwitch = false;
 
-    static String type(FieldType t) {
+    public static String type(FieldType t) {
         return _type(t, false);
     }
 
-    static String boxType(FieldType t) {
+    public static String boxType(FieldType t) {
         return _type(t, true);
     }
 
@@ -30,7 +30,7 @@ class TypeStr {
         };
     }
 
-    static String readValue(FieldType t) {
+    public static String readValue(FieldType t) {
         return switch (t) {
             case BOOL -> "input.readBool()";
             case INT -> "input.readInt()";
@@ -44,7 +44,7 @@ class TypeStr {
         };
     }
 
-    static String defaultValue(FieldType t) {
+    public static String defaultValue(FieldType t) {
         return switch (t) {
             case BOOL -> "false";
             case INT, LONG, FLOAT -> "0";
@@ -56,7 +56,7 @@ class TypeStr {
     }
 
 
-    static boolean isJavaPrimitive(FieldType t) {
+    public static boolean isJavaPrimitive(FieldType t) {
         return switch (t) {
             case BOOL, INT, LONG, FLOAT -> true;
             default -> false;

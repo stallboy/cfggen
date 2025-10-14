@@ -8,22 +8,22 @@ import java.util.Arrays;
 
 import static configgen.gen.Generator.upper1;
 
-class NameableName {
+public class NameableName {
 
     static boolean isSealedInterface = false;
 
-    final Nameable nameable;
-    final String pkg;
-    final String className;
-    final String fullName;
-    final String path;
-    final String containerPrefix;
+    public final Nameable nameable;
+    public final String pkg;
+    public final String className;
+    public final String fullName;
+    public final String path;
+    public final String containerPrefix;
 
-    NameableName(Nameable nameable) {
+    public NameableName(Nameable nameable) {
         this(nameable, "");
     }
 
-    NameableName(Nameable nameable, String postfix) {
+    public NameableName(Nameable nameable, String postfix) {
         this.nameable = nameable;
         InterfaceSchema nullableInterface = nameable instanceof StructSchema struct ? struct.nullableInterface() : null;
         String topPkg = Name.codeTopPkg;
