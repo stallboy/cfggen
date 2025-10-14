@@ -61,3 +61,5 @@
 /build
 /exe
 /cfggen.zip
+/example/i18n/log_en.txt
+/example/i18n/log_tw.txt

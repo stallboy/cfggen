@@ -293,6 +293,9 @@ public final class Main {
             return;
         }
 
+        if (headRowId == null){
+            headRowId = "2";
+        }
         HeadRow headRow = HeadRows.getById(headRowId);
 
         ExplicitDir explicitDir = ExplicitDir.parse(asRoot, excelDirs, jsonDirs);

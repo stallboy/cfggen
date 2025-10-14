@@ -18,8 +18,8 @@ other.loot,剧情任务测试2,
 other.loot,通告栏掉落染色模板1,
 other.loot,通告栏掉落染色模板2,
 other.loot,通告栏掉落染色模板3,
-task.task,杀个怪,
-task.task,杀怪,
+task.task,杀个怪,kill a monster
+task.task,杀怪,kill monster
 task.task,和npc对话,
 task.task,和npc对话,
 task.task,收集物品,
