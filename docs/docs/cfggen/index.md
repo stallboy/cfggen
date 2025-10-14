@@ -29,59 +29,61 @@ nav_order: 2
 ## build & test
 
 * 生成cfggen.jar
+    ```bash
+    genjar.bat  # 生成cfggen.jar
+    ```
 
-```bash
-genjar.bat  # 生成cfggen.jar
-```
+    ```bash
+    mkexe.bat  # 生成cfggen.zip，里面有exe
+    ```
 
 * 测试java：生成java代码和数据
-```bash
-cd example
-genjavasealed.bat # genjava 也可以，sealed需要java 17或以上才支持
-```
+
+    ```bash
+    cd example
+    genjavasealed.bat # genjava 也可以，sealed需要java 17或以上才支持
+    ```
 
 * 测试java：检验java生成
-```bash
-gradle build 
-java -jar build/libs/example.jar # 进入命令行，输入q退出，输入其他比如ai会打印表名称以ai开头的结构定义和数据
-```
+
+    ```bash
+    gradle build 
+    java -jar build/libs/example.jar # 进入命令行，输入q退出，输入其他比如ai会打印表名称以ai开头的结构定义和数据
+    ```
 
 * 测试lua
-```bash
-genlua.bat 
-cd lua
-chcp 65001
-lua.exe test.lua
-```
+
+    ```bash
+    genlua.bat 
+    cd lua
+    chcp 65001
+    lua.exe test.lua
+    ```
 
 * 测试csharp
-```bash
-gencshape.bat 
-cd cs
-dotnet run
-```
+
+    ```bash
+    gencshape.bat 
+    cd cs
+    dotnet run
+    ```
 
 * 测试go
 
-```bash
-gengo.bat 
-cd go
-go run .
-```
+    ```bash
+    gengo.bat 
+    cd go
+    go run .
+    ```
 
 * 测试typescript
 
-```bash
-gents.bat 
-cd ts
-pnpm i -D tsx
-npx tsx main.ts
-```
+    ```bash
+    gents.bat 
+    cd ts
+    pnpm i -D tsx
+    npx tsx main.ts
+    ```
 
-## build cfgeditor.exe
-请参考[(编辑器 cfgeditor build)][cfgeditor build]
-
----
 
 [cfggen repo]: https://github.com/stallboy/cfggen
-[cfgeditor build]: https://stallboy.github.io/cfggen/docs/cfgeditor/build.html
