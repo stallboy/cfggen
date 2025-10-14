@@ -4,13 +4,13 @@
 @import configgen.gen.Generator
 @param TableSchema table
 @param NameableName name
-
 package ${name.pkg};
 
 public class ${name.className}Builder {
     @for(FieldSchema field : table.fields())
-    public ${TypeStr.type(field.type())} ${Generator.lower1(field.name())};
+        public ${TypeStr.type(field.type())} ${Generator.lower1(field.name())};
     @endfor
+
 
     public ${name.className} build() {
         @for(FieldSchema field : table.fields())
