@@ -4,7 +4,7 @@ title: 配表系统
 nav_order: 2
 ---
 
-# 策划配表系统
+# 配表系统
 
 对象数据库结构定义、程序访问代码生成
 
@@ -29,6 +29,7 @@ nav_order: 2
 ## build & test
 
 * 生成cfggen.jar
+
     ```bash
     genjar.bat  # 生成cfggen.jar
     ```
