@@ -30,7 +30,7 @@ class GenStructuralClassTablePart {
         // static all
         String primaryMapName = name.containerPrefix + "All";
         String functionAllName = "all" + Arrays.stream(structural.name().split("\\.")).map(Generator::upper1).collect(Collectors.joining());
-        mapsInMgr.add(String.format("    public java.util.Collection<%s> %s() { return %s.values(); }",
+        mapsInMgr.add(String.format("public java.util.Collection<%s> %s() { return %s.values(); }",
                 name.fullName, functionAllName, primaryMapName));
 
         ps.println1("public static java.util.Collection<" + name.className + "> all() {");
@@ -80,10 +80,10 @@ class GenStructuralClassTablePart {
         String mapName = name.containerPrefix + (isPrimaryKey ? "All" : Name.uniqueKeyMapName(keySchema));
         String keyTypeName = Name.keyClassName(keySchema, name);
 
-        mapsInMgr.add(String.format("    public final java.util.Map<%s, %s> %s = new java.util.LinkedHashMap<>();", keyTypeName, name.fullName, mapName));
+        mapsInMgr.add(String.format("public final java.util.Map<%s, %s> %s = new java.util.LinkedHashMap<>();", keyTypeName, name.fullName, mapName));
 
         var methodName = Name.GetByKeyFunctionNameInConfigMgr(keySchema, isPrimaryKey, name.nameable);
-        mapsInMgr.add(String.format("    public %s %s(%s) { return %s.get(%s); }", name.fullName, methodName,
+        mapsInMgr.add(String.format("public %s %s(%s) { return %s.get(%s); }", name.fullName, methodName,
                 MethodStr.formalParams(keySchema.fieldSchemas()), mapName, MethodStr.actualParamsKey(keySchema, "", name)));
 
         String getByName = Name.GetByKeyFunctionName(keySchema, isPrimaryKey);

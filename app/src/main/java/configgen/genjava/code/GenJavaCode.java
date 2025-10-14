@@ -7,6 +7,7 @@ import configgen.genjava.GenJavaUtil;
 import configgen.schema.*;
 import configgen.util.CachedFiles;
 import configgen.util.CachedIndentPrinter;
+import configgen.util.JteEngine;
 import configgen.util.Logger;
 import configgen.value.CfgValue;
 
@@ -18,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static configgen.value.CfgValue.VTable;
@@ -94,12 +96,13 @@ public class GenJavaCode extends GeneratorWithTag {
 
         if (isLangSwitch) { //生成Text这个Bean
             try (CachedIndentPrinter ps = createCode(new File(dstDir, "Text.java"), encoding)) {
-                GenText.generate(ctx.nullableLangSwitch(), ps);
+                JteEngine.render("java/Text.jte", new TextModel(pkg,  ctx.nullableLangSwitch().languages()), ps);
             }
         }
 
         try (CachedIndentPrinter ps = createCode(new File(dstDir, "ConfigMgr.java"), encoding)) {
-            GenConfigMgr.generate(ps);
+            JteEngine.render("java/ConfigMgr.jte",
+                    Map.of("pkg", Name.codeTopPkg, "mapsInMgr", GenStructuralClassTablePart.mapsInMgr), ps);
         }
 
         try (CachedIndentPrinter ps = createCode(new File(dstDir, "ConfigLoader.java"), encoding)) {
@@ -130,7 +133,7 @@ public class GenJavaCode extends GeneratorWithTag {
     private void generateInterfaceClass(InterfaceSchema interfaceSchema) {
         NameableName name = new NameableName(interfaceSchema);
         try (CachedIndentPrinter ps = createCode(dstDir.toPath().resolve(name.path).toFile(), encoding)) {
-            GenInterface.generate(interfaceSchema, name, ps);
+            JteEngine.render("java/GenInterface.jte", new InterfaceModel(interfaceSchema, name), ps);
         }
     }
 
