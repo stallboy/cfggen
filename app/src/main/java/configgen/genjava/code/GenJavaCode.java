@@ -96,7 +96,8 @@ public class GenJavaCode extends GeneratorWithTag {
 
         if (isLangSwitch) { //生成Text这个Bean
             try (CachedIndentPrinter ps = createCode(new File(dstDir, "Text.java"), encoding)) {
-                JteEngine.render("java/Text.jte", new TextModel(pkg,  ctx.nullableLangSwitch().languages()), ps);
+                JteEngine.render("java/Text.jte",
+                        new TextModel(pkg,  ctx.nullableLangSwitch().languages()), ps);
             }
         }
 
@@ -106,11 +107,13 @@ public class GenJavaCode extends GeneratorWithTag {
         }
 
         try (CachedIndentPrinter ps = createCode(new File(dstDir, "ConfigLoader.java"), encoding)) {
-            GenConfigLoader.generate(ps);
+            JteEngine.render("java/ConfigLoader.jte",
+                    Map.of("pkg", Name.codeTopPkg), ps);
         }
 
         try (CachedIndentPrinter ps = createCode(new File(dstDir, "ConfigMgrLoader.java"), encoding)) {
-            GenConfigMgrLoader.generate(cfgValue, ps);
+            JteEngine.render("java/ConfigMgrLoader.jte",
+                    new ConfigMgrLoaderModel(cfgValue), ps);
         }
 
         GenConfigCodeSchema.generateAll(this, schemaNumPerFile, cfgValue, ctx.nullableLangSwitch());
@@ -133,7 +136,8 @@ public class GenJavaCode extends GeneratorWithTag {
     private void generateInterfaceClass(InterfaceSchema interfaceSchema) {
         NameableName name = new NameableName(interfaceSchema);
         try (CachedIndentPrinter ps = createCode(dstDir.toPath().resolve(name.path).toFile(), encoding)) {
-            JteEngine.render("java/GenInterface.jte", new InterfaceModel(interfaceSchema, name), ps);
+            JteEngine.render("java/GenInterface.jte",
+                    new InterfaceModel(interfaceSchema, name), ps);
         }
     }
 

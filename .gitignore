@@ -63,3 +63,5 @@
 /cfggen.zip
 /example/i18n/log_en.txt
 /example/i18n/log_tw.txt
+/app/.claude/settings.local.json
+/app/CLAUDE.md
