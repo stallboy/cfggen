@@ -123,21 +123,21 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
             return ref;
         }
 
-        void setRef() {
-            ref = ${model.dataNameFullName}.get(value);
+        void setRef(${model.codeTopPkg}.ConfigMgr mgr) {
+            ref = mgr.${model.name.containerPrefix}All.get(value);
             java.util.Objects.requireNonNull(ref);
         }
 
         @if(model.isEnum)
-            public static void setAllRefs() {
+            public static void setAllRefs(${model.codeTopPkg}.ConfigMgr mgr) {
                 for(${model.className} e : ${model.className}.values()) {
-                    e.setRef();
+                    e.setRef(mgr);
                 }
             }
         @else
-            public static void setAllRefs() {
+            public static void setAllRefs(${model.codeTopPkg}.ConfigMgr mgr) {
                 @for(String enumName : model.enumNames)
-                    ${enumName.toUpperCase()}.setRef();
+                    ${enumName.toUpperCase()}.setRef(mgr);
                 @endfor
             }
         @endif

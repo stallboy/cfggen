@@ -32,9 +32,9 @@ public class ConfigMgrLoader {
             configLoader.resolveAll(mgr);
         }
 
-        config.equip.Equipconfig_Entry.setAllRefs();
-        config.equip.Jewelrysuit_Entry.setAllRefs();
-        config.equip.Rank.setAllRefs();
+        config.equip.Equipconfig_Entry.setAllRefs(mgr);
+        config.equip.Jewelrysuit_Entry.setAllRefs(mgr);
+        config.equip.Rank.setAllRefs(mgr);
 
         return mgr;
     }

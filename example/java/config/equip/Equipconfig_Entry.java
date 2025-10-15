@@ -15,13 +15,13 @@ public class Equipconfig_Entry {
         return ref;
     }
 
-    void setRef() {
-        ref = config.equip.Equipconfig.get(value);
+    void setRef(config.ConfigMgr mgr) {
+        ref = mgr.equip_equipconfig_All.get(value);
         java.util.Objects.requireNonNull(ref);
     }
 
-    public static void setAllRefs() {
-        INSTANCE.setRef();
-        INSTANCE2.setRef();
+    public static void setAllRefs(config.ConfigMgr mgr) {
+        INSTANCE.setRef(mgr);
+        INSTANCE2.setRef(mgr);
     }
 }

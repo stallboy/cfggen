@@ -53,14 +53,14 @@ public enum Rank {
         return ref;
     }
 
-    void setRef() {
-        ref = config.equip.Rank_Detail.get(value);
+    void setRef(config.ConfigMgr mgr) {
+        ref = mgr.equip_rank_All.get(value);
         java.util.Objects.requireNonNull(ref);
     }
 
-    public static void setAllRefs() {
+    public static void setAllRefs(config.ConfigMgr mgr) {
         for(Rank e : Rank.values()) {
-            e.setRef();
+            e.setRef(mgr);
         }
     }
 }

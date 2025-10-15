@@ -16,12 +16,12 @@ public class Jewelrysuit_Entry {
         return ref;
     }
 
-    void setRef() {
-        ref = config.equip.Jewelrysuit.get(value);
+    void setRef(config.ConfigMgr mgr) {
+        ref = mgr.equip_jewelrysuit_All.get(value);
         java.util.Objects.requireNonNull(ref);
     }
 
-    public static void setAllRefs() {
-        SPECIALSUIT.setRef();
+    public static void setAllRefs(config.ConfigMgr mgr) {
+        SPECIALSUIT.setRef(mgr);
     }
 }

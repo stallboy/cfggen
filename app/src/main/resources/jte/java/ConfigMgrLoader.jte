@@ -35,7 +35,7 @@ public class ConfigMgrLoader {
         }
 
         @for(String fc : model.setAllRefs_FullClassNames)
-            ${fc}.setAllRefs();
+            ${fc}.setAllRefs(mgr);
         @endfor
 
 
