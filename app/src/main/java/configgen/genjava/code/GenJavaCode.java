@@ -160,7 +160,8 @@ public class GenJavaCode extends GeneratorWithTag {
             NameableName dataName = new NameableName(schema, dataPostfix);
             File javaFile = dstDir.toPath().resolve(name.path).toFile();
             try (CachedIndentPrinter ps = createCode(javaFile, encoding)) {
-                GenEntryOrEnumClass.generate(vTable, entryBase, name, ps, isNeedReadData, dataName);
+                JteEngine.render("java/GenEntryOrEnumClass.jte",
+                        new EntryOrEnumModel(vTable, entryBase, name, isNeedReadData, dataName), ps);
             }
         }
 
