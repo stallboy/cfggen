@@ -33,6 +33,10 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
 
 
         private final String value;
+        @if(model.isNeedReadData)
+            private volatile ${model.dataNameFullName} ref;
+        @endif
+
 
         ${model.className}(String value) {
             this.value = value;
@@ -63,6 +67,10 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
 
         private final String name;
         private final int value;
+        @if(model.isNeedReadData)
+            private volatile ${model.dataNameFullName} ref;
+        @endif
+
 
         ${model.className}(String name, int value) {
             this.name = name;
@@ -96,7 +104,7 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
                 @elseif(field == model.entryBase.fieldSchema())
                     return name;
                 @else
-                    return ref().get${Generator.upper1(field.name())}();
+                    return ref.get${Generator.upper1(field.name())}();
                 @endif
             }
 
@@ -104,7 +112,7 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
 
         @for(ForeignKeySchema fk : model.table.foreignKeys())
             public ${Name.refType(fk)} ${Generator.lower1(Name.refName(fk))}() {
-                return ref().${Generator.lower1(Name.refName(fk))}();
+                return ref.${Generator.lower1(Name.refName(fk))}();
             }
 
         @endfor
@@ -112,8 +120,27 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
 
     @if(model.isNeedReadData)
         public ${model.dataNameFullName} ref() {
-            return ${model.dataNameFullName}.get(value);
+            return ref;
         }
+
+        void setRef() {
+            ref = ${model.dataNameFullName}.get(value);
+            java.util.Objects.requireNonNull(ref);
+        }
+
+        @if(model.isEnum)
+            public static void setAllRefs() {
+                for(${model.className} e : ${model.className}.values()) {
+                    e.setRef();
+                }
+            }
+        @else
+            public static void setAllRefs() {
+                @for(String enumName : model.enumNames)
+                    ${enumName.toUpperCase()}.setRef();
+                @endfor
+            }
+        @endif
 
     @endif
 }

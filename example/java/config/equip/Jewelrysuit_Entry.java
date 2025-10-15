@@ -5,6 +5,7 @@ public class Jewelrysuit_Entry {
 
     private final String name;
     private final int value;
+    private volatile config.equip.Jewelrysuit ref;
 
     Jewelrysuit_Entry(String name, int value) {
         this.name = name;
@@ -12,7 +13,15 @@ public class Jewelrysuit_Entry {
     }
 
     public config.equip.Jewelrysuit ref() {
-        return config.equip.Jewelrysuit.get(value);
+        return ref;
     }
 
+    void setRef() {
+        ref = config.equip.Jewelrysuit.get(value);
+        java.util.Objects.requireNonNull(ref);
+    }
+
+    public static void setAllRefs() {
+        SPECIALSUIT.setRef();
+    }
 }

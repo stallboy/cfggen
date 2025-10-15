@@ -34,6 +34,11 @@ public class ConfigMgrLoader {
             configLoader.resolveAll(mgr);
         }
 
+        @for(String fc : model.setAllRefs_FullClassNames)
+            ${fc}.setAllRefs();
+        @endfor
+
+
         return mgr;
     }
 

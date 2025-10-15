@@ -11,13 +11,15 @@ import static configgen.value.CfgValue.VTable;
 public class ConfigMgrLoaderModel {
     public final String pkg;
     public final List<TableInfo> tables;
+    public final List<String> setAllRefs_FullClassNames;
 
     public record TableInfo(String name,
                             String fullName) {
     }
 
-    public ConfigMgrLoaderModel(CfgValue cfgValue) {
+    public ConfigMgrLoaderModel(CfgValue cfgValue, List<String> setAllRefsInMgrLoader) {
         this.pkg = Name.codeTopPkg;
+        this.setAllRefs_FullClassNames = setAllRefsInMgrLoader;
 
         tables = new ArrayList<>(cfgValue.vTableMap().size());
         for (VTable vTable : cfgValue.tables()) {

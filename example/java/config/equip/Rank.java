@@ -9,6 +9,7 @@ public enum Rank {
 
     private final String name;
     private final int value;
+    private volatile config.equip.Rank_Detail ref;
 
     Rank(String name, int value) {
         this.name = name;
@@ -45,11 +46,21 @@ public enum Rank {
      * 显示名称
      */
     public String getRankShowName() {
-        return ref().getRankShowName();
+        return ref.getRankShowName();
     }
 
     public config.equip.Rank_Detail ref() {
-        return config.equip.Rank_Detail.get(value);
+        return ref;
     }
 
+    void setRef() {
+        ref = config.equip.Rank_Detail.get(value);
+        java.util.Objects.requireNonNull(ref);
+    }
+
+    public static void setAllRefs() {
+        for(Rank e : Rank.values()) {
+            e.setRef();
+        }
+    }
 }

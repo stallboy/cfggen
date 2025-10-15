@@ -68,9 +68,12 @@ public class GenJavaCode extends GeneratorWithTag {
 
         Name.codeTopPkg = pkg;
         NameableName.isSealedInterface = sealed;
-        List<String> mapsInMgr = new ArrayList<>();
         boolean isLangSwitch = ctx.nullableLangSwitch() != null;
         TypeStr.isLangSwitch = isLangSwitch; //辅助Text的类型声明和创建
+
+        List<String> mapsInMgr = new ArrayList<>();
+        List<String> setAllRefsInMgrLoader = new ArrayList<>();
+
 
         for (Nameable nameable : cfgValue.schema().items()) {
             switch (nameable) {
@@ -88,7 +91,7 @@ public class GenJavaCode extends GeneratorWithTag {
             }
         }
         for (VTable vtable : cfgValue.tables()) {
-            generateTableClass(vtable, mapsInMgr);
+            generateTableClass(vtable, mapsInMgr, setAllRefsInMgrLoader);
         }
 
         if (isLangSwitch) { //生成Text这个Bean
@@ -110,7 +113,7 @@ public class GenJavaCode extends GeneratorWithTag {
 
         try (CachedIndentPrinter ps = createCode(new File(dstDir, "ConfigMgrLoader.java"), encoding)) {
             JteEngine.render("java/ConfigMgrLoader.jte",
-                    new ConfigMgrLoaderModel(cfgValue), ps);
+                    new ConfigMgrLoaderModel(cfgValue, setAllRefsInMgrLoader), ps);
         }
 
         GenConfigCodeSchema.generateAll(this, schemaNumPerFile, cfgValue, ctx.nullableLangSwitch());
@@ -139,7 +142,7 @@ public class GenJavaCode extends GeneratorWithTag {
         }
     }
 
-    private void generateTableClass(VTable vTable, List<String> mapsInMgr) {
+    private void generateTableClass(VTable vTable, List<String> mapsInMgr, List<String> setAllRefsInMgrLoader) {
         boolean isNeedReadData = true;
         String dataPostfix = "";
         TableSchema schema = vTable.schema();
@@ -157,6 +160,9 @@ public class GenJavaCode extends GeneratorWithTag {
             }
 
             NameableName name = new NameableName(schema, entryPostfix);
+            if (isNeedReadData){
+                setAllRefsInMgrLoader.add(name.fullName);
+            }
             NameableName dataName = new NameableName(schema, dataPostfix);
             File javaFile = dstDir.toPath().resolve(name.path).toFile();
             try (CachedIndentPrinter ps = createCode(javaFile, encoding)) {
