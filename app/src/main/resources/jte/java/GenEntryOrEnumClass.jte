@@ -57,7 +57,7 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
             @if(model.isEnum)
                 ${enumName.toUpperCase()}("${enumName}", ${value})${fix}
             @else
-                public static final ${model.className} ${enumName.toUpperCase()} = new ${model.className}("${enumName}", ${value})${fix}
+                public static final ${model.className} ${enumName.toUpperCase()} = new ${model.className}("${enumName}", ${value});
             @endif
         @endfor
         @if(model.isEnum && 0 == c)
