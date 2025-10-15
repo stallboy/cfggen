@@ -45,25 +45,25 @@ public class MethodStr {
         NameableName name = new NameableName(refTable);
 
         if (refTable.entry() instanceof EntryType.EEnum) {
-            return name.fullName + ".get(" + actualParam + ");";
+            return name.fullName + ".get(" + actualParam + ")";
         } else {
             String pre = "mgr." + name.containerPrefix;
             switch (refSimple) {
                 case RefPrimary ignored -> {
                     if (refTable.primaryKey().fieldSchemas().size() == 1) {
-                        return pre + "All.get(" + actualParam + ");";
+                        return pre + "All.get(" + actualParam + ")";
                     } else {
                         return pre + "All.get(new " + Name.keyClassName(refTable.primaryKey(), name) +
-                                "(" + actualParam + ") );";
+                                "(" + actualParam + ") )";
                     }
                 }
 
                 case RefUniq refUniq -> {
                     if (refUniq.key().fields().size() == 1) {
-                        return pre + Name.uniqueKeyMapName(refUniq.key()) + ".get(" + actualParam + ");";
+                        return pre + Name.uniqueKeyMapName(refUniq.key()) + ".get(" + actualParam + ")";
                     } else {
                         return pre + Name.uniqueKeyMapName(refUniq.key()) + ".get( new " +
-                                Name.keyClassName(refUniq.key(), name) + "(" + actualParam + ") );";
+                                Name.keyClassName(refUniq.key(), name) + "(" + actualParam + ") )";
                     }
                 }
             }

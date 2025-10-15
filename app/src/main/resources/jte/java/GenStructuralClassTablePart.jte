@@ -6,25 +6,18 @@
 @import java.util.Arrays
 @import java.util.stream.Collectors
 @param StructuralClassModel model
-
-
     !{
         TableSchema table = (TableSchema) model.structural;
     }
     @if(table.primaryKey().fields().size() > 1)
-        @template.java.GenKeyClass(keySchema = table.primaryKey())
-    @endif
-    @template.java.GenMapGetBy(keySchema = table.primaryKey(), name = model.name, isPrimaryKey = true, codeTopPkg = model.codeTopPkg, mapsInMgr = model.mapsInMgr)
-
+@template.java.GenKeyClass(keySchema = table.primaryKey())
+    @endif@template.java.GenMapGetBy(keySchema = table.primaryKey(), name = model.name, isPrimaryKey = true, codeTopPkg = model.codeTopPkg, mapsInMgr = model.mapsInMgr)
     @for(KeySchema keySchema : table.uniqueKeys())
-        @if(keySchema.fields().size() > 1)
-            @template.java.GenKeyClass(keySchema = keySchema)
-        @endif
-        @template.java.GenMapGetBy(keySchema = keySchema, name = model.name, isPrimaryKey = false, codeTopPkg = model.codeTopPkg, mapsInMgr = model.mapsInMgr)
+        @if(keySchema.fields().size() > 1)@template.java.GenKeyClass(keySchema = keySchema)
+        @endif@template.java.GenMapGetBy(keySchema = keySchema, name = model.name, isPrimaryKey = false, codeTopPkg = model.codeTopPkg, mapsInMgr = model.mapsInMgr)
     @endfor
-
     !{
-        String primaryMapName = model.className + "All";
+        String primaryMapName = model.name.containerPrefix  + "All";
         String functionAllName = "all" + Arrays.stream(model.structural.name().split("\\.")).map(Generator::upper1).collect(Collectors.joining());
         model.mapsInMgr.add(String.format("public java.util.Collection<%s> %s() { return %s.values(); }",
                 model.name.fullName, functionAllName, primaryMapName));
@@ -42,7 +35,7 @@
                 ${model.className} self = ${model.className}._create(input);
                 mgr.${primaryMapName}.put(${MethodStr.actualParamsKey(table.primaryKey(), "self.", null)}, self);
                 @for(KeySchema uk : table.uniqueKeys())
-                    mgr.${model.className + Name.uniqueKeyMapName(uk)}.put(${MethodStr.actualParamsKey(uk, "self.", null)}, self);
+                    mgr.${model.name.containerPrefix + Name.uniqueKeyMapName(uk)}.put(${MethodStr.actualParamsKey(uk, "self.", null)}, self);
                 @endfor
             }
         }

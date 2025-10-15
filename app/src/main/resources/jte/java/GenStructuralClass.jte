@@ -1,7 +1,6 @@
 @import configgen.genjava.code.Name
 @import configgen.genjava.code.TypeStr
 @import configgen.gen.Generator
-@import configgen.genjava.code.ResolveModel
 @import configgen.genjava.code.StructuralClassModel
 @import configgen.genjava.code.StructuralClassModel.FieldInfo
 @import configgen.genjava.code.StructuralClassModel.ForeignKeyInfo
@@ -10,13 +9,14 @@
 package ${model.pkg};
 
 @if(model.isImpl)
-    public ${model.isSealedInterface?"final ":""}final class ${model.className} implements ${model.nullableInterfaceFullName} {
-    @if(model.enumRefTable != null)
-        @Override
-        public ${Name.refType(model.enumRefTable)} type() {
-            return ${Name.refType(model.enumRefTable)}.${model.structural.name().toUpperCase()};
-        }
-    @endif
+    public ${model.isSealedInterface?"final ":""}class ${model.className} implements ${model.nullableInterfaceFullName} {
+        @if(model.enumRefTable != null)
+            @Override
+            public ${Name.refType(model.enumRefTable)} type() {
+                return ${Name.refType(model.enumRefTable)}.${model.structural.name().toUpperCase()};
+            }
+
+        @endif
 @else
     public class ${model.className} {
 @endif
@@ -25,11 +25,11 @@ package ${model.pkg};
         private ${field.type()} ${field.name()};
     @endfor
 
-
     @if(!model.isTableAndNeedBuilder)
         @for(ForeignKeyInfo fk : model.foreignKeys)
-        private ${fk.type()} ${fk.name()};
+            private ${fk.type()} ${fk.name()};
         @endfor
+
 
     @endif
 
@@ -47,7 +47,7 @@ package ${model.pkg};
         }
 
     @elseif(model.isTableAndNeedBuilder)
-        public ${model.className}(${model.className}Builder b) {
+        ${model.className}(${model.className}Builder b) {
             @for(FieldInfo field : model.fields)
                 this.${field.name()} = b.${field.name()};
             @endfor
@@ -123,7 +123,8 @@ package ${model.pkg};
         public boolean equals(Object other) {
             return other instanceof ${model.className};
         }
-        @elseif(!model.isTable)
+
+    @elseif(!model.isTable)
         @Override
         public int hashCode() {
             return ${model.hashCodes()};
@@ -149,10 +150,17 @@ package ${model.pkg};
     }
 
     @if(model.hasRef && !model.isTableAndNeedBuilder)
-        @template.java.GenResolve(model = new ResolveModel(model.structural, model.nullableInterface))
+        @if(!model.structural.foreignKeys().isEmpty())
+            @template.java.GenResolveDirect(codeTopPkg = model.codeTopPkg, structural = model.structural)
+        @endif
+
+        @if(model.nullableInterface!=null)
+            @Override
+        @endif
+        @template.java.GenResolve(codeTopPkg = model.codeTopPkg, structural = model.structural)
     @endif
 
     @if(model.isTable)
-        @template.java.GenStructuralClassTablePart(model = model)
+            @template.java.GenStructuralClassTablePart(model = model)
     @endif
 }
