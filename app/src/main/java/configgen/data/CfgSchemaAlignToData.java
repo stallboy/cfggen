@@ -150,14 +150,14 @@ public record CfgSchemaAlignToData(CfgSchema cfgSchema,
         Metadata meta = table.meta().copy();
         List<FieldSchema> fields = new ArrayList<>(fieldSchemas.values());
 
-        List<ForeignKeySchema> fks = new ArrayList<>();
+        List<ForeignKeySchema> fks = new ArrayList<>(table.foreignKeys().size());
         for (ForeignKeySchema fk : table.foreignKeys()) {
             if (isKeyInSchemaList(fk.key(), fieldSchemas)) {
                 fks.add(fk.copy());
             }
         }
 
-        List<KeySchema> uks = new ArrayList<>();
+        List<KeySchema> uks = new ArrayList<>(table.uniqueKeys().size());
         for (KeySchema uk : table.uniqueKeys()) {
             if (isKeyInSchemaList(uk, fieldSchemas)) {
                 uks.add(uk.copy());
@@ -178,12 +178,12 @@ public record CfgSchemaAlignToData(CfgSchema cfgSchema,
 
 
     private Map<String, FieldSchema> alignFields(TableSchema table, List<DField> header) {
-        Map<String, FieldSchema> curFields = new LinkedHashMap<>();
+        Map<String, FieldSchema> curFields = new LinkedHashMap<>(table.fields().size());
         for (FieldSchema field : table.fields()) {
             curFields.put(field.name(), field);
         }
 
-        Map<String, FieldSchema> alignedFields = new LinkedHashMap<>();
+        Map<String, FieldSchema> alignedFields = new LinkedHashMap<>(table.fields().size());
         int size = header.size();
         for (int idx = 0; idx < size; ) {
             DField hf = header.get(idx);
@@ -208,7 +208,10 @@ public record CfgSchemaAlignToData(CfgSchema cfgSchema,
                     }
                 }
                 newField = new FieldSchema(fieldName, curField.type().copy(), curField.fmt(), meta);
-                alignedFields.put(newField.name(), newField);
+                FieldSchema old = alignedFields.put(newField.name(), newField);
+                if (old != null){
+                    errs.addErr(new CfgSchemaErrs.DataHeadNameDuplicated(table.name(), fieldName));
+                }
 
             } else {
                 idx++;
@@ -216,7 +219,11 @@ public record CfgSchemaAlignToData(CfgSchema cfgSchema,
                 if (CfgUtil.isIdentifier(hf.name())) {
                     newField = newFieldSchema(hf, table.fullName());
                     Logger.log("%s new field: %s", table.name(), hf.name());
-                    alignedFields.put(newField.name(), newField);
+                    FieldSchema old = alignedFields.put(newField.name(), newField);
+                    if (old != null){
+                        errs.addErr(new CfgSchemaErrs.DataHeadNameDuplicated(table.name(), newField.name()));
+                    }
+
                 } else {
                     errs.addErr(new CfgSchemaErrs.DataHeadNameNotIdentifier(table.name(), hf.name()));
                 }
@@ -237,7 +244,9 @@ public record CfgSchemaAlignToData(CfgSchema cfgSchema,
             return fs;
         }
 
-        //// 以下是为兼容之前的做法
+        //// 以下是为兼容之前的做法,
+        //// - 允许a1,a2,a3..代表aList
+        //// - 允许a1,b1, a2, b2,..代表a2bMap
         if (!name.endsWith("1")) {
             return null;
         }

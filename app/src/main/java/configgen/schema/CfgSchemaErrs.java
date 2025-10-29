@@ -343,6 +343,14 @@ public record CfgSchemaErrs(List<Err> errs,
     }
 
     /**
+     * csv或excel的第二行名称有重复
+     */
+    public record DataHeadNameDuplicated(String table,
+                                         String duplicatedName) implements Err {
+    }
+
+
+    /**
      * 标记了json的table不能有对应的excel文件
      */
     public record JsonTableNotSupportExcel(String table,
