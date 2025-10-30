@@ -104,6 +104,11 @@ const storeState: StoreState = {
         mrtreeSpacing: 100,
         layeredSpacing: 60,
         layeredNodeSpacing: 80,
+        // NEW: Node color defaults
+        nodeColor: '#0898b5',
+        nodeRefColor: '#207b4a',
+        nodeRef2Color: '#006d75',
+        nodeRefInColor: '#003eb3',
     },
 
     query: '',

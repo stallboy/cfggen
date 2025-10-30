@@ -18,6 +18,10 @@ export interface NodeShowType {
     // Flow Visualization Properties
     nodeWidth: number;           // Default: 240px
     editNodeWidth: number;       // Default: 280px
+    nodeColor: string;
+    nodeRefColor: string;
+    nodeRef2Color: string;
+    nodeRefInColor: string;
     edgeColor: string;           // Default: '#0898b5'
     edgeStrokeWidth: number;     // Default: 3
     editFoldColor:      string;

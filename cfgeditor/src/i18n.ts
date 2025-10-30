@@ -74,7 +74,13 @@ i18n.use(LanguageDetector)
                     layeredSpacing: 'Nodes Spacing In Same Layer ',
                     layeredSpacingTooltip: 'Spacing between nodes in layered layout',
                     layeredNodeSpacing: 'Layers Spacing',
-                    layeredNodeSpacingTooltip: 'Spacing between nodes in different layers'
+                    layeredNodeSpacingTooltip: 'Spacing between nodes in different layers',
+                    // Node Colors
+                    nodeColors: 'Node Colors',
+                    nodeColor: 'Node Color',
+                    nodeRefColor: 'Ref1 Color',
+                    nodeRef2Color: 'Ref2 Color',
+                    nodeRefInColor: 'RefIn Color'
                 }
             },
             zh: {
@@ -209,7 +215,13 @@ i18n.use(LanguageDetector)
                     layeredSpacing: '分层上下间距',
                     layeredSpacingTooltip: '分层布局中同一层节点之间的间距',
                     layeredNodeSpacing: '分层左右间距',
-                    layeredNodeSpacingTooltip: '不同层之间节点的间距'
+                    layeredNodeSpacingTooltip: '不同层之间节点的间距',
+                    // Node Colors
+                    nodeColors: '节点颜色',
+                    nodeColor: '节点颜色',
+                    nodeRefColor: '引出1颜色',
+                    nodeRef2Color: '引出2颜色',
+                    nodeRefInColor: '引入颜色'
                 }
             }
         }

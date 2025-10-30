@@ -43,15 +43,15 @@ interface TempNote {
 export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>) {
     const entity = nodeProps.data.entity;
     const { id, label, fields, edit, brief, handleIn, handleOut, note, sharedSetting, assets } = entity;
-    const color: string = useMemo(() => getNodeBackgroundColor(entity), [entity]);
+    const color: string = useMemo(() => getNodeBackgroundColor(entity), [entity, entity.sharedSetting?.nodeShow]);
     const width = edit ? (entity.sharedSetting?.nodeShow?.editNodeWidth ?? 280) : (entity.sharedSetting?.nodeShow?.nodeWidth ?? 240);
     const nodeStyle: CSSProperties = useMemo(() => {
         return { width: width, backgroundColor: color, outlineColor: entity.sharedSetting?.nodeShow?.editFoldColor };
-    }, [width, color, entity]);
+    }, [width, color, entity.sharedSetting?.nodeShow?.editFoldColor]);
 
     const unfoldIconButtonStyle = useMemo(() => {
         return { borderWidth: 0, backgroundColor: entity.sharedSetting?.nodeShow?.editFoldColor ?? '#ffd6e7' };
-    }, [entity]);
+    }, [entity.sharedSetting?.nodeShow?.editFoldColor]);
 
     const [isEditNote, setIsEditNote] = useState<boolean>(false);
     const onEditNote = useCallback(() => {

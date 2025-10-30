@@ -194,3 +194,4 @@ pnpm run lint
 - React Query 提供统一的错误处理
 - 组件级别的错误边界
 - 用户友好的错误提示
+- 不要编辑storageJson.ts文件，此文件由json.ts通过genwo JsonParser.bat生成，生成后注释掉未使用的函数。

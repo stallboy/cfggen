@@ -40,8 +40,12 @@ export interface NodeShowType {
     layeredNodeSpacing: number;
     layeredSpacing:     number;
     mrtreeSpacing:      number;
+    nodeColor:          string;
     nodeColorsByLabel:  KeywordColor[];
     nodeColorsByValue:  KeywordColor[];
+    nodeRef2Color:      string;
+    nodeRefColor:       string;
+    nodeRefInColor:     string;
     nodeWidth:          number;
     recordLayout:       NodePlacementStrategyType;
     refContainEnum:     boolean;
@@ -343,8 +347,12 @@ const typeMap: any = {
         { json: "layeredNodeSpacing", js: "layeredNodeSpacing", typ: 3.14 },
         { json: "layeredSpacing", js: "layeredSpacing", typ: 3.14 },
         { json: "mrtreeSpacing", js: "mrtreeSpacing", typ: 3.14 },
+        { json: "nodeColor", js: "nodeColor", typ: "" },
         { json: "nodeColorsByLabel", js: "nodeColorsByLabel", typ: a(r("KeywordColor")) },
         { json: "nodeColorsByValue", js: "nodeColorsByValue", typ: a(r("KeywordColor")) },
+        { json: "nodeRef2Color", js: "nodeRef2Color", typ: "" },
+        { json: "nodeRefColor", js: "nodeRefColor", typ: "" },
+        { json: "nodeRefInColor", js: "nodeRefInColor", typ: "" },
         { json: "nodeWidth", js: "nodeWidth", typ: 3.14 },
         { json: "recordLayout", js: "recordLayout", typ: r("NodePlacementStrategyType") },
         { json: "refContainEnum", js: "refContainEnum", typ: true },

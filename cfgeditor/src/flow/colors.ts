@@ -25,13 +25,13 @@ export function getNodeBackgroundColor(entity: Entity): string {
 
     switch (entity.entityType) {
         case EntityType.Ref:
-            return '#207b4a'; // '#237804';
+            return nodeShow?.nodeRefColor ?? '#207b4a';
         case EntityType.Ref2:
-            return '#006d75';
+            return nodeShow?.nodeRef2Color ?? '#006d75';
         case EntityType.RefIn:
-            return '#003eb3';
+            return nodeShow?.nodeRefInColor ?? '#003eb3';
         default:
-            return '#0898b5';//'#005bbb', '#3271ae';
+            return nodeShow?.nodeColor ?? '#0898b5';
     }
 }
 

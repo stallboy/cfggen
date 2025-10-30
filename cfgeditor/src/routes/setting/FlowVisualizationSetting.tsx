@@ -3,6 +3,7 @@ import { Form, InputNumber, ColorPicker, Space, Divider, Typography } from "antd
 import { useTranslation } from "react-i18next";
 import { useMyStore, setNodeShow } from "./store.ts";
 import { fixColor } from "./colorUtils.ts";
+import { NodeShowType } from "./storageJson.ts";
 
 const { Title } = Typography;
 
@@ -10,12 +11,16 @@ export const FlowVisualizationSetting = memo(function FlowVisualizationSetting()
     const { t } = useTranslation();
     const { nodeShow } = useMyStore();
 
-    function onValuesChange(_changedValues: any, allValues: any) {
-        const newNodeShow = {
+    function onValuesChange(_changedValues: Partial<NodeShowType>, allValues: Partial<NodeShowType>) {
+        const newNodeShow: NodeShowType = {
             ...nodeShow,
             ...allValues,
             edgeColor: fixColor(allValues.edgeColor),
-            editFoldColor: fixColor(allValues.editFoldColor)
+            editFoldColor: fixColor(allValues.editFoldColor),
+            nodeColor: fixColor(allValues.nodeColor),
+            nodeRefColor: fixColor(allValues.nodeRefColor),
+            nodeRef2Color: fixColor(allValues.nodeRef2Color),
+            nodeRefInColor: fixColor(allValues.nodeRefInColor)
         };
         setNodeShow(newNodeShow);
     }
@@ -70,6 +75,40 @@ export const FlowVisualizationSetting = memo(function FlowVisualizationSetting()
                 </Form.Item>
 
                 <Form.Item label={t('editFoldColor')} name="editFoldColor">
+                    <ColorPicker
+                        format="hex"
+                        showText
+                    />
+                </Form.Item>
+            </Space>
+
+            <Divider />
+
+            <Title level={4}>{t('nodeColors')}</Title>
+
+            <Space direction="vertical" style={{ width: '100%' }}>
+                <Form.Item label={t('nodeColor')} name="nodeColor">
+                    <ColorPicker
+                        format="hex"
+                        showText
+                    />
+                </Form.Item>
+
+                <Form.Item label={t('nodeRefColor')} name="nodeRefColor">
+                    <ColorPicker
+                        format="hex"
+                        showText
+                    />
+                </Form.Item>
+
+                <Form.Item label={t('nodeRef2Color')} name="nodeRef2Color">
+                    <ColorPicker
+                        format="hex"
+                        showText
+                    />
+                </Form.Item>
+
+                <Form.Item label={t('nodeRefInColor')} name="nodeRefInColor">
                     <ColorPicker
                         format="hex"
                         showText
