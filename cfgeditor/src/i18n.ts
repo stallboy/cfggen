@@ -43,6 +43,23 @@ i18n.use(LanguageDetector)
                     view: 'view',
                     addOrUpdate: 'add or update',
                     setDefaultValue: 'clear',
+
+                    themeSetting: 'Theme Setting',
+                    themeFile: 'Theme File',
+                    themeFileHelp: 'Theme file name, e.g. colourpurple.json',
+                    themeFileNotFound: 'Theme file not found',
+                    themeFileExists: 'Theme file exists',
+                    themeFileValid: 'Theme file is valid',
+                    themeFileInvalid: 'Theme file is invalid',
+                    themeSettingSaved: 'Theme setting saved',
+                    themeSettingFailed: 'Theme setting failed',
+                    themeTestFailed: 'Theme test failed',
+                    themeChangeHint: 'Theme updated, may need to refresh page',
+                    themeSettingNote: 'Theme Setting Note',
+                    themeSettingDescription: 'Set theme file name, theme files should be placed in the same directory as cfgeditor.yml',
+                    pleaseSetThemeFile: 'Please set theme file first',
+                    testTheme: 'Test Theme',
+                    save: 'Save'
                 }
             },
             zh: {
@@ -145,7 +162,24 @@ i18n.use(LanguageDetector)
                     structPaste: '粘贴',
 
                     lastAccessed: '访问历史',
-                    lastModified: '修改历史'
+                    lastModified: '修改历史',
+
+                    themeSetting: '主题设置',
+                    themeFile: '主题文件',
+                    themeFileHelp: '主题文件名，如 colourpurple.json',
+                    themeFileNotFound: '主题文件不存在',
+                    themeFileExists: '主题文件存在',
+                    themeFileValid: '主题文件有效',
+                    themeFileInvalid: '主题文件无效',
+                    themeSettingSaved: '主题设置已保存',
+                    themeSettingFailed: '主题设置失败',
+                    themeTestFailed: '主题测试失败',
+                    themeChangeHint: '主题已更新，可能需要刷新页面',
+                    themeSettingNote: '主题设置说明',
+                    themeSettingDescription: '设置主题文件名称，主题文件应放在与 cfgeditor.yml 相同的目录中',
+                    pleaseSetThemeFile: '请先设置主题文件',
+                    testTheme: '测试主题',
+                    save: '保存'
                 }
             }
         }

@@ -12,6 +12,7 @@ import {memo, RefObject} from "react";
 import {TauriSetting} from "./TauriSeting.tsx";
 import {ServerAndAi} from "./ServerAndAi.tsx";
 import {isTauri} from "@tauri-apps/api/core";
+import {ThemeSetting} from "./ThemeSetting.tsx";
 
 
 export const Setting = memo(function Setting({schema, curTable, flowRef}: {
@@ -32,6 +33,11 @@ export const Setting = memo(function Setting({schema, curTable, flowRef}: {
             key: 'recordShowSetting',
             label: t('recordShowSetting'),
             children: <NodeShowSetting/>,
+        },
+        {
+            key: 'themeSetting',
+            label: t('themeSetting'),
+            children: <ThemeSetting/>,
         },
         {
             key: 'serverAndAi',

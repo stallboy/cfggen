@@ -72,6 +72,10 @@ export interface AIConf {
     model:   string;
 }
 
+export interface ThemeConfig {
+    themeFile?: string;
+}
+
 // Converts JSON strings to/from your types
 // and asserts the results of JSON.parse at runtime
 export class Convert {
@@ -145,6 +149,14 @@ export class Convert {
 
     public static aIConfToJson(value: AIConf): string {
         return JSON.stringify(uncast(value, r("AIConf")), null, 2);
+    }
+
+    public static toThemeConfig(json: string): ThemeConfig {
+        return cast(JSON.parse(json), r("ThemeConfig"));
+    }
+
+    public static themeConfigToJson(value: ThemeConfig): string {
+        return JSON.stringify(uncast(value, r("ThemeConfig")), null, 2);
     }
 }
 
@@ -346,6 +358,9 @@ const typeMap: any = {
         { json: "apiKey", js: "apiKey", typ: "" },
         { json: "baseUrl", js: "baseUrl", typ: "" },
         { json: "model", js: "model", typ: "" },
+    ], false),
+    "ThemeConfig": o([
+        { json: "themeFile", js: "themeFile", typ: u(undefined, "") },
     ], false),
     "NodePlacementStrategyType": [
         "BRANDES_KOEPF",

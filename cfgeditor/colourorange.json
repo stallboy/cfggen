@@ -1,0 +1,11 @@
+{
+  "token": {
+    "colorPrimary": "#ef6f48",
+    "colorInfo": "#ef6f48",
+    "wireframe": false,
+    "colorError": "#ff1d21",
+    "colorSuccess": "#50e904",
+    "colorWarning": "#f9c90b",
+    "colorWarningText": "#d9af09"
+  }
+}

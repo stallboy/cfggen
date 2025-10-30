@@ -1,5 +1,5 @@
 import resso from "./resso.ts";
-import {AIConf, Convert, FixedPage, FixedPagesConf, NodeShowType, TauriConf} from "./storageJson.ts";
+import {AIConf, Convert, FixedPage, FixedPagesConf, NodeShowType, TauriConf, ThemeConfig} from "./storageJson.ts";
 import {getPrefBool, getPrefEnumStr, getPrefInt, getPrefJson, getPrefStr, setPref} from "./storage.ts";
 import {History} from "../headerbar/historyModel.ts";
 import {Schema} from "../table/schemaUtil.tsx";
@@ -14,6 +14,7 @@ export const pageEnums = ['table', 'tableRef', 'record', 'recordRef'];
 export type StoreState = {
     server: string;
     aiConf: AIConf;
+    themeConfig: ThemeConfig;
 
     maxImpl: number;
     refIn: boolean;
@@ -56,6 +57,9 @@ const storeState: StoreState = {
         baseUrl: '',
         apiKey: '',
         model: '',
+    },
+    themeConfig: {
+        themeFile: '',
     },
 
     maxImpl: 10,
@@ -178,6 +182,13 @@ export function readStoreStateOnce() {
                 const tc = getPrefJson<TauriConf>('tauriConf', Convert.toTauriConf);
                 if (tc) {
                     store.tauriConf = tc;
+                }
+                break;
+            case 'themeConfig':
+                // eslint-disable-next-line no-case-declarations
+                const theme = getPrefJson<ThemeConfig>('themeConfig', Convert.toThemeConfig);
+                if (theme) {
+                    store.themeConfig = theme;
                 }
                 break;
             default:
@@ -376,6 +387,11 @@ export function setTauriConf(tauriConf: TauriConf) {
 export function setAIConf(aiConf: AIConf) {
     store.aiConf = aiConf;
     setPref('aiConf', Convert.aIConfToJson(aiConf));
+}
+
+export function setThemeConfig(themeConfig: ThemeConfig) {
+    store.themeConfig = themeConfig;
+    setPref('themeConfig', Convert.themeConfigToJson(themeConfig));
 }
 
 export function historyCanPrev(curTableId: string, curId: string, history: History): boolean {
