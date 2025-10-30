@@ -1,6 +1,6 @@
 // To parse this data:
 //
-//   import { Convert, NodeShowType, KeywordColor, ShowDescriptionType, NodePlacementStrategyType, FixedPage, FixedPagesConf, ResDir, TauriConf, AIConf } from "./file";
+//   import { Convert, NodeShowType, KeywordColor, ShowDescriptionType, NodePlacementStrategyType, FixedPage, FixedPagesConf, ResDir, TauriConf, AIConf, ThemeConfig } from "./file";
 //
 //   const nodeShowType = Convert.toNodeShowType(json);
 //   const keywordColor = Convert.toKeywordColor(json);
@@ -11,6 +11,7 @@
 //   const resDir = Convert.toResDir(json);
 //   const tauriConf = Convert.toTauriConf(json);
 //   const aIConf = Convert.toAIConf(json);
+//   const themeConfig = Convert.toThemeConfig(json);
 //
 // These functions will throw an error if the JSON doesn't
 // match the expected interface, even if the JSON is valid.
@@ -30,11 +31,18 @@ export interface FixedPage {
 }
 
 export interface NodeShowType {
+    edgeColor:          string;
+    edgeStrokeWidth:    number;
     editFoldColor:      string;
     editLayout:         NodePlacementStrategyType;
+    editNodeWidth:      number;
     fieldColorsByName:  KeywordColor[];
+    layeredNodeSpacing: number;
+    layeredSpacing:     number;
+    mrtreeSpacing:      number;
     nodeColorsByLabel:  KeywordColor[];
     nodeColorsByValue:  KeywordColor[];
+    nodeWidth:          number;
     recordLayout:       NodePlacementStrategyType;
     refContainEnum:     boolean;
     refIsShowCopyable:  boolean;
@@ -326,11 +334,18 @@ const typeMap: any = {
         { json: "table", js: "table", typ: "" },
     ], false),
     "NodeShowType": o([
+        { json: "edgeColor", js: "edgeColor", typ: "" },
+        { json: "edgeStrokeWidth", js: "edgeStrokeWidth", typ: 3.14 },
         { json: "editFoldColor", js: "editFoldColor", typ: "" },
         { json: "editLayout", js: "editLayout", typ: r("NodePlacementStrategyType") },
+        { json: "editNodeWidth", js: "editNodeWidth", typ: 3.14 },
         { json: "fieldColorsByName", js: "fieldColorsByName", typ: a(r("KeywordColor")) },
+        { json: "layeredNodeSpacing", js: "layeredNodeSpacing", typ: 3.14 },
+        { json: "layeredSpacing", js: "layeredSpacing", typ: 3.14 },
+        { json: "mrtreeSpacing", js: "mrtreeSpacing", typ: 3.14 },
         { json: "nodeColorsByLabel", js: "nodeColorsByLabel", typ: a(r("KeywordColor")) },
         { json: "nodeColorsByValue", js: "nodeColorsByValue", typ: a(r("KeywordColor")) },
+        { json: "nodeWidth", js: "nodeWidth", typ: 3.14 },
         { json: "recordLayout", js: "recordLayout", typ: r("NodePlacementStrategyType") },
         { json: "refContainEnum", js: "refContainEnum", typ: true },
         { json: "refIsShowCopyable", js: "refIsShowCopyable", typ: true },

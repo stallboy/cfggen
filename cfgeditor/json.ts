@@ -9,12 +9,21 @@ export interface NodeShowType {
     nodeColorsByValue: KeywordColor[];
     nodeColorsByLabel: KeywordColor[];
     fieldColorsByName: KeywordColor[];
-    editFoldColor: string;
 
     refTableHides: string[];
     refIsShowCopyable: boolean;
     refShowDescription: ShowDescriptionType;
     refContainEnum: boolean;
+
+    // Flow Visualization Properties
+    nodeWidth: number;           // Default: 240px
+    editNodeWidth: number;       // Default: 280px
+    edgeColor: string;           // Default: '#0898b5'
+    edgeStrokeWidth: number;     // Default: 3
+    editFoldColor:      string;
+    mrtreeSpacing: number;       // Default: 100
+    layeredSpacing: number;      // Default: 60
+    layeredNodeSpacing: number;  // Default: 80
 }
 
 export interface KeywordColor {
@@ -55,4 +64,8 @@ export interface AIConf {
     baseUrl: string;
     apiKey: string;
     model: string;
+}
+
+export interface ThemeConfig {
+    themeFile?: string;
 }

@@ -14,7 +14,7 @@ mark {
 }
 
 svg .react-flow__edge-path{
-    stroke-width: 3;
+    stroke-width: var(--edge-stroke-width, 3);
 }
 
 

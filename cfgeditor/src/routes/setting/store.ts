@@ -95,6 +95,15 @@ const storeState: StoreState = {
         refIsShowCopyable: false,
         refShowDescription: 'show',
         refContainEnum: true,
+
+        // NEW: Flow visualization defaults
+        nodeWidth: 240,
+        editNodeWidth: 280,
+        edgeColor: '#0898b5',
+        edgeStrokeWidth: 3,
+        mrtreeSpacing: 100,
+        layeredSpacing: 60,
+        layeredNodeSpacing: 80,
     },
 
     query: '',

@@ -1,8 +1,9 @@
 import { memo, useState, useEffect } from "react";
-import { Form, Input, Button, message, Space, Typography, Alert } from "antd";
+import { Form, Input, Button, message, Space, Typography, Alert, Divider } from "antd";
 import { useTranslation } from "react-i18next";
 import { useMyStore, setThemeConfig } from "./store.ts";
 import { themeService } from "./themeService.ts";
+import { FlowVisualizationSetting } from "./FlowVisualizationSetting.tsx";
 
 const { Text } = Typography;
 
@@ -134,6 +135,10 @@ export const ThemeSetting = memo(function ThemeSetting() {
                 type="info"
                 showIcon
             />
+
+            <Divider />
+
+            <FlowVisualizationSetting />
         </Form>
     );
 });

@@ -1,5 +1,5 @@
 import {Entity, EntityBaseField, EntityEdgeType, EntityGraph} from "./entityModel.ts";
-import {edgeStorkColor} from "./colors.ts";
+import {getEdgeColor} from "./colors.ts";
 import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
 
 function findField({fields, edit}: Entity, name: string) {
@@ -64,6 +64,8 @@ export function convertNodeAndEdges({entityMap, sharedSetting}: EntityGraph): {
     const edges: EntityEdge[] = []
 
     let ei = 1;
+    const edgeColor = getEdgeColor(sharedSetting?.nodeShow);
+
     for (const entity of entityMap.values()) {
         entity.sharedSetting = sharedSetting;
 
@@ -83,7 +85,7 @@ export function convertNodeAndEdges({entityMap, sharedSetting}: EntityGraph): {
 
                 type: 'simplebezier',
                 style: {
-                    stroke: edgeStorkColor,
+                    stroke: edgeColor,
                 },
             }
 

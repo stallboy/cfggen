@@ -59,7 +59,22 @@ i18n.use(LanguageDetector)
                     themeSettingDescription: 'Set theme file name, theme files should be placed in the same directory as cfgeditor.yml',
                     pleaseSetThemeFile: 'Please set theme file first',
                     testTheme: 'Test Theme',
-                    save: 'Save'
+                    save: 'Save',
+
+                    // Flow Visualization Settings
+                    nodeDimensions: 'Node Dimensions',
+                    nodeWidth: 'Node Width',
+                    editNodeWidth: 'Edit Node Width',
+                    edgeStyling: 'Edge Styling',
+                    edgeColor: 'Edge Color',
+                    edgeStrokeWidth: 'Edge Stroke Width',
+                    layoutSpacing: 'Layout Spacing',
+                    mrtreeSpacing: 'Tree Layout Spacing',
+                    mrtreeSpacingTooltip: 'Spacing between nodes in tree layout',
+                    layeredSpacing: 'Nodes Spacing In Same Layer ',
+                    layeredSpacingTooltip: 'Spacing between nodes in layered layout',
+                    layeredNodeSpacing: 'Layers Spacing',
+                    layeredNodeSpacingTooltip: 'Spacing between nodes in different layers'
                 }
             },
             zh: {
@@ -179,7 +194,22 @@ i18n.use(LanguageDetector)
                     themeSettingDescription: '设置主题文件名称，主题文件应放在与 cfgeditor.yml 相同的目录中',
                     pleaseSetThemeFile: '请先设置主题文件',
                     testTheme: '测试主题',
-                    save: '保存'
+                    save: '保存',
+
+                    // Flow Visualization Settings
+                    nodeDimensions: '节点尺寸',
+                    nodeWidth: '节点宽度',
+                    editNodeWidth: '编辑节点宽度',
+                    edgeStyling: '边样式',
+                    edgeColor: '边颜色',
+                    edgeStrokeWidth: '边粗细',
+                    layoutSpacing: '布局间距',
+                    mrtreeSpacing: '树状布局间距',
+                    mrtreeSpacingTooltip: '树状布局中节点之间的间距',
+                    layeredSpacing: '分层上下间距',
+                    layeredSpacingTooltip: '分层布局中同一层节点之间的间距',
+                    layeredNodeSpacing: '分层左右间距',
+                    layeredNodeSpacingTooltip: '不同层之间节点的间距'
                 }
             }
         }

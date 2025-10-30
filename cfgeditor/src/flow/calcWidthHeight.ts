@@ -7,7 +7,7 @@ import {getDsLenAndDesc} from "./getDsLenAndDesc.tsx";
 // 放弃放弃，还是预先估算好。
 export function calcWidthHeight(entity: Entity) {
     const {id, label, fields, brief, edit} = entity;
-    const width = edit ? 280 : 240;
+    const width = edit ? (entity.sharedSetting?.nodeShow?.editNodeWidth ?? 280) : (entity.sharedSetting?.nodeShow?.nodeWidth ?? 240);
     let height = 40;
 
     if (fields) {

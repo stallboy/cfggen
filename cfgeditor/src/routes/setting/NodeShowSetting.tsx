@@ -2,53 +2,32 @@ import {Button, ColorPicker, Divider, Form, Input, Radio, Select, Space, Switch}
 import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 
-import {KeywordColor, NodeShowType} from "./storageJson.ts";
+import {NodeShowType} from "./storageJson.ts";
 import {
     setNodeShow,
     useMyStore
 } from "./store.ts";
 import {CSSProperties, memo, useMemo} from "react";
 import {formItemLayoutWithOutLabel, formLayout} from "./BasicSetting.tsx";
-
-
-function fixColor(color: any) {
-    let c;
-    if (typeof color == 'object') {
-        c = color.toHexString();
-    } else if (typeof color == 'string') {
-        c = color;
-    } else {
-        c = '#1677ff';
-    }
-    return c;
-}
-
-function fixColors(keywordColors: any[]): KeywordColor[] {
-    const colors = [];
-    for (const {keyword, color} of keywordColors) {
-        colors.push({keyword: keyword, color: fixColor(color)})
-    }
-    return colors;
-}
-
-
-function onFinish(values: any) {
-    // console.log(values);
-    const newNodeShow: NodeShowType = {
-        ...values,
-        nodeColorsByValue: fixColors(values.nodeColorsByValue),
-        nodeColorsByLabel: fixColors(values.nodeColorsByLabel),
-        fieldColorsByName: fixColors(values.fieldColorsByName),
-        editFoldColor: fixColor(values.editFoldColor)
-    };
-    setNodeShow(newNodeShow);
-}
+import { fixColors } from "./colorUtils.ts";
 
 const selectStyle: CSSProperties = {width: 160};
 
 export const NodeShowSetting = memo(function () {
     const {t} = useTranslation();
     const {nodeShow} = useMyStore();
+
+    function onFinish(values: any) {
+        // console.log(values);
+        const newNodeShow: NodeShowType = {
+            ...nodeShow,
+            ...values,
+            nodeColorsByValue: fixColors(values.nodeColorsByValue),
+            nodeColorsByLabel: fixColors(values.nodeColorsByLabel),
+            fieldColorsByName: fixColors(values.fieldColorsByName)
+        };
+        setNodeShow(newNodeShow);
+    }
 
     const descOptions = useMemo(() =>
         [{label: t('show'), value: 'show'},
@@ -93,7 +72,7 @@ export const NodeShowSetting = memo(function () {
                                     <Input placeholder="keyword"/>
                                 </Form.Item>
                                 <Form.Item name={[name, 'color']} noStyle>
-                                    <ColorPicker/>
+                                    <ColorPicker format="hex"/>
                                 </Form.Item>
                                 <CloseOutlined onClick={() => remove(name)}/>
                             </Space>
@@ -117,7 +96,7 @@ export const NodeShowSetting = memo(function () {
                                     <Input placeholder="keyword"/>
                                 </Form.Item>
                                 <Form.Item name={[name, 'color']} noStyle>
-                                    <ColorPicker/>
+                                    <ColorPicker format="hex"/>
                                 </Form.Item>
                                 <CloseOutlined onClick={() => remove(name)}/>
                             </Space>
@@ -141,7 +120,7 @@ export const NodeShowSetting = memo(function () {
                                     <Input placeholder="field"/>
                                 </Form.Item>
                                 <Form.Item name={[name, 'color']} noStyle>
-                                    <ColorPicker/>
+                                    <ColorPicker format="hex"/>
                                 </Form.Item>
                                 <CloseOutlined onClick={() => remove(name)}/>
                             </Space>
@@ -153,10 +132,6 @@ export const NodeShowSetting = memo(function () {
                     </div>
                 )}
             </Form.List>
-        </Form.Item>
-
-        <Form.Item name='editFoldColor' label={t('editFoldColor')}>
-            <ColorPicker/>
         </Form.Item>
 
         <Divider />

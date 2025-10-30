@@ -84,6 +84,8 @@ pnpm run lint
 - `src/flow/FlowNode.tsx` - 节点渲染
 - `src/flow/EntityCard.tsx` - 实体显示卡片
 - `src/flow/EntityForm.tsx` - 实体编辑表单
+- `src/flow/FlowStyleManager.tsx` - 样式管理
+- `src/flow/FlowVisualizationSetting.tsx` - 可视化配置
 
 ### 数据模型
 
@@ -157,6 +159,13 @@ pnpm run lint
 - 记录视图 (单个数据显示)
 - 引用视图 (关系探索)
 - 编辑模式 (数据修改)
+
+#### 5. 可视化配置系统
+- 节点尺寸配置 (编辑/非编辑模式宽度)
+- 边样式配置 (颜色、粗细)
+- 布局间距配置 (树状/分层布局)
+- 实时配置更新
+- 国际化支持
 
 ## 开发注意事项
 

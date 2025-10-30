@@ -96,16 +96,21 @@ export function useEntityToGraph({
         sharedSetting: {notes, query, nodeShow: nodeShowSetting}
     }), [entityMap, notes, query, nodeShowSetting]);
 
-    const queryKey = editingObjectRes?.isEdited ? ['layout', pathname, 'e'] : ['layout', pathname]
+    const queryKey = editingObjectRes?.isEdited ? ['layout', pathname, 'e', nodeShowSetting] : ['layout', pathname, nodeShowSetting]
     const staleTime = editingObjectRes?.isEdited ? 0 : 1000 * 60 * 5;
     const {data: id2RectMap} = useQuery({
         queryKey: queryKey,
-        queryFn: async () => await layoutAsync(nodes, edges, getLayoutStrategy(nodeShowSetting, type)),
+        queryFn: async () => await layoutAsync(nodes, edges, getLayoutStrategy(nodeShowSetting, type), nodeShowSetting),
         staleTime: staleTime,
     })
 
-    const newNodes:EntityNode[] | undefined = useMemo(() => id2RectMap ? applyPositionToNodes(nodes, id2RectMap) : undefined,
-        [nodes, id2RectMap]);
+    const newNodes:EntityNode[] | undefined = useMemo(() => {
+        if (id2RectMap) {
+            const positionedNodes = applyPositionToNodes(nodes, id2RectMap);
+            return applyWidthHeightToNodes(positionedNodes, id2RectMap);
+        }
+        return undefined;
+    }, [nodes, id2RectMap]);
 
     useEffect(() => {
         if (newNodes) {
@@ -119,8 +124,7 @@ export function useEntityToGraph({
             // console.log("set nodes", newNodes, edges);
             if (panZoom && id2RectMap) {
                 if (editingObjectRes === undefined || editingObjectRes.fitView === EFitView.FitFull) {
-                    const appliedWHNodes = applyWidthHeightToNodes(newNodes, id2RectMap);
-                    const bounds = getNodesBounds(appliedWHNodes); //  {useRelativePosition: true}
+                    const bounds = getNodesBounds(newNodes); //  {useRelativePosition: true}
                     const viewportForBounds = getViewportForBounds(bounds, width, height, 0.3, 1, 0.2);
                     panZoom.setViewport(viewportForBounds);
                     // console.log(pathname, bounds, width, height, viewportForBounds)

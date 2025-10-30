@@ -41,8 +41,9 @@ export const EntityProperties = memo(function EntityProperties({fields, sharedSe
         return {position: 'absolute', left: '-10px', backgroundColor: color}
     }, [color]);
     const handleOutStyle: CSSProperties = useMemo(() => {
-        return {position: 'absolute', left: '238px', backgroundColor: color}
-    }, [color]);
+        const width = sharedSetting?.nodeShow?.nodeWidth ?? 240;
+        return {position: 'absolute', left: `${width - 2}px`, backgroundColor: color}
+    }, [color, sharedSetting?.nodeShow?.nodeWidth]);
 
     if (fields.length == 0) {
         return <></>;

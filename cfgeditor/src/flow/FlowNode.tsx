@@ -44,7 +44,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
     const entity = nodeProps.data.entity;
     const { id, label, fields, edit, brief, handleIn, handleOut, note, sharedSetting, assets } = entity;
     const color: string = useMemo(() => getNodeBackgroundColor(entity), [entity]);
-    const width = edit ? 280 : 240;
+    const width = edit ? (entity.sharedSetting?.nodeShow?.editNodeWidth ?? 280) : (entity.sharedSetting?.nodeShow?.nodeWidth ?? 240);
     const nodeStyle: CSSProperties = useMemo(() => {
         return { width: width, backgroundColor: color, outlineColor: entity.sharedSetting?.nodeShow?.editFoldColor };
     }, [width, color, entity]);

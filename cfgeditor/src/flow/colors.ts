@@ -72,4 +72,6 @@ export function getFieldBackgroundColor(field: EntityBaseField, nodeShow?: NodeS
     }
 }
 
-export const edgeStorkColor = '#0898b5';//'#1677ff';
+export function getEdgeColor(nodeShow?: NodeShowType): string {
+    return nodeShow?.edgeColor ?? '#0898b5';
+}

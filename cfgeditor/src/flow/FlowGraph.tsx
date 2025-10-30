@@ -3,6 +3,7 @@ import {Entity} from "./entityModel.ts";
 import {createContext, memo, MouseEvent as ReactMouseEvent, ReactNode, useCallback, useMemo, useState} from "react";
 import {FlowContextMenu, MenuItem, MenuStyle} from "./FlowContextMenu.tsx";
 import {FlowNode} from "./FlowNode.tsx";
+import {FlowStyleManager} from "./FlowStyleManager.tsx";
 
 export type EntityNode = Node<{ entity: Entity }, "node">;
 export type EntityEdge = Edge;
@@ -87,6 +88,7 @@ export const FlowGraph = memo(function FlowGraph({children}: {
 
 
     return <ReactFlowProvider>
+        <FlowStyleManager />
         <ReactFlow
             defaultNodes={defaultNodes}
             defaultEdges={defaultEdges}

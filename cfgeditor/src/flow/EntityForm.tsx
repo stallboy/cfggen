@@ -115,21 +115,27 @@ function primitiveControl(eleType: string, autoCompleteOptions: EntityEditFieldO
 }
 
 const rowFlexStyle: CSSProperties = {marginBottom: 10, position: 'relative'}
-const handleOutStyle: CSSProperties = {position: 'absolute', left: '270px', backgroundColor: 'blue'}
 
 interface StructRefItemProps {
     name: string,
     comment?: string,
     handleOut?: boolean,
-    bgColor?: string
+    bgColor?: string,
+    width?: number
 }
 
-const StructRefItem = memo(function ({name, comment, handleOut, bgColor}: StructRefItemProps) {
+const StructRefItem = memo(function ({name, comment, handleOut, bgColor, width}: StructRefItemProps) {
     const thisRowStyle: CSSProperties = useMemo(() => bgColor == undefined ? rowFlexStyle : {
         marginBottom: 10,
         position: 'relative',
         backgroundColor: bgColor
     }, [bgColor]);
+
+    const handleOutStyle: CSSProperties = useMemo(() => {
+        const nodeWidth = width ?? 280;
+        return {position: 'absolute', left: `${nodeWidth - 10}px`, backgroundColor: 'blue'}
+    }, [width]);
+
     return <Flex key={name} gap='middle' justify="flex-end" style={thisRowStyle}>
         <Tag color={'blue'}>
             <LabelWithTooltip name={name} comment={comment}/>
@@ -146,12 +152,17 @@ interface FuncAddFormItemProps extends StructRefItemProps {
     nodeProps: NodeProps<EntityNode>,
 }
 
-const FuncAddFormItem = memo(function ({name, comment, handleOut, bgColor, func, nodeProps}: FuncAddFormItemProps) {
+const FuncAddFormItem = memo(function ({name, comment, handleOut, bgColor, func, nodeProps, width}: FuncAddFormItemProps) {
     const thisRowStyle: CSSProperties = useMemo(() => bgColor == undefined ? rowFlexStyle : {
         marginBottom: 10,
         position: 'relative',
         backgroundColor: bgColor
     }, [bgColor]);
+
+    const handleOutStyle: CSSProperties = useMemo(() => {
+        const nodeWidth = width ?? 280;
+        return {position: 'absolute', left: `${nodeWidth - 10}px`, backgroundColor: 'blue'}
+    }, [width]);
 
     const addFunc = useCallback(() => {
         func({
@@ -375,7 +386,7 @@ function fieldFormItem(field: EntityEditField, nodeProps: NodeProps<EntityNode>,
         case "structRef":
             return <StructRefItem key={field.name}
                                   name={field.name} comment={field.comment} handleOut={field.handleOut}
-                                  bgColor={bgColor}/>;
+                                  bgColor={bgColor} width={sharedSetting?.nodeShow?.editNodeWidth}/>;
         case "arrayOfPrimitive":
             return <ArrayOfPrimitiveFormItem key={field.name}
                                              field={field}
@@ -389,7 +400,7 @@ function fieldFormItem(field: EntityEditField, nodeProps: NodeProps<EntityNode>,
                                     name={field.name} comment={field.comment} handleOut={field.handleOut}
                                     func={field.value as FuncType}
                                     nodeProps={nodeProps} // 增加子struct时，本节点位置不变
-                                    bgColor={bgColor}/>;
+                                    bgColor={bgColor} width={sharedSetting?.nodeShow?.editNodeWidth}/>;
         case "interface":
             return <InterfaceFormItem key={field.name}
                                       field={field}
