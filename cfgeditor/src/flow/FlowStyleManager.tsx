@@ -1,5 +1,5 @@
 import { memo, useEffect } from "react";
-import { useMyStore } from "../routes/setting/store.ts";
+import { useMyStore } from "../store/store.ts";
 
 /**
  * 管理流程可视化相关的 CSS 变量

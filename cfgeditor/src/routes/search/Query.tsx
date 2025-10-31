@@ -7,7 +7,7 @@ import {memo} from "react";
 import {AddJson} from "./AddJson.tsx";
 import {LastAccessed} from "./LastAccessed.tsx";
 import {LastModified} from "./LastModified.tsx";
-import {useLocationData} from "../setting/store.ts";
+import {useLocationData} from "../../store/store.ts";
 
 
 export const Query = memo(function Query({schema}: {

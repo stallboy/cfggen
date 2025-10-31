@@ -8,7 +8,7 @@ import {
 } from "./record/recordModel.ts";
 import axios from 'axios';
 import {Schema} from "./table/schemaUtil.tsx";
-import {clearLayoutCache} from "./setting/store.ts";
+import {clearLayoutCache} from "../store/store.ts";
 import {NoteEditResult, Notes, notesToMap} from "./record/noteModel.ts";
 import {CheckJsonResult, PromptResult} from "./search/chatModel.ts";
 

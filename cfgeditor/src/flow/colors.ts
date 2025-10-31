@@ -1,5 +1,5 @@
 import {Entity, EntityBaseField, EntityEditField, EntityType} from "./entityModel.ts";
-import {NodeShowType} from "../routes/setting/storageJson.ts";
+import {NodeShowType} from "../store/storageJson.ts";
 
 
 export function getNodeBackgroundColor(entity: Entity): string {

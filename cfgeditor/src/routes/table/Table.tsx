@@ -1,7 +1,7 @@
 import {Entity} from "../../flow/entityModel.ts";
 import {SchemaTableType} from "../../CfgEditorApp.tsx";
 import {TableEntityCreator, UserData} from "./tableEntityCreator.ts";
-import {navTo, useMyStore, useLocationData} from "../setting/store.ts";
+import {navTo, useMyStore, useLocationData} from "../../store/store.ts";
 import {useNavigate, useOutletContext} from "react-router-dom";
 // import {useReactFlow} from "reactflow";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
@@ -19,7 +19,7 @@ export function Table() {
     const {t} = useTranslation();
     const navigate = useNavigate();
 
-    // ¹¤¾ßº¯Êý£¬±ÜÃâÖØ¸´»ñÈ¡Ä¬ÈÏID
+    // ï¿½ï¿½ï¿½ßºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½È¡Ä¬ï¿½ï¿½ID
     const getTableDefaultId = (tableName: string) => getDefaultIdInTable(schema, tableName, curId);
 
     const entityMap = new Map<string, Entity>();

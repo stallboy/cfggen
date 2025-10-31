@@ -1,6 +1,6 @@
 import {memo, useMemo} from "react";
 import {Schema} from "../table/schemaUtil.tsx";
-import {navTo, useMyStore, useLocationData} from "../setting/store.ts";
+import {navTo, useMyStore, useLocationData} from "../../store/store.ts";
 import {useNavigate} from "react-router-dom";
 import {Button, Table} from "antd";
 import TimeAgo from 'react-timeago'

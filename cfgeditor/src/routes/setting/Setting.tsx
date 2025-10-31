@@ -5,13 +5,10 @@ import {useTranslation} from "react-i18next";
 import {STable} from "../table/schemaModel.ts";
 import {Schema} from "../table/schemaUtil.tsx";
 
-import {KeyShortCut} from "./KeyShortcut.tsx";
 import {BasicSetting} from "./BasicSetting.tsx";
 import {Operations} from "./Operations.tsx";
 import {memo, RefObject} from "react";
-import {TauriSetting} from "./TauriSeting.tsx";
-import {ServerAndAi} from "./ServerAndAi.tsx";
-import {isTauri} from "@tauri-apps/api/core";
+import {AiAndResource} from "./AiAndResource.tsx";
 import {ThemeSetting} from "./ThemeSetting.tsx";
 
 
@@ -40,29 +37,16 @@ export const Setting = memo(function Setting({schema, curTable, flowRef}: {
             children: <ThemeSetting/>,
         },
         {
-            key: 'serverAndAi',
-            label: t('serverAndAi'),
-            children: <ServerAndAi schema={schema}/>,
-        },
-
-
-        {
             key: 'operations',
             label: t('operations'),
             children: <Operations schema={schema} curTable={curTable} flowRef={flowRef}/>,
         },
         {
-            key: 'keySetting',
-            label: t('keySetting'),
-            children: <KeyShortCut/>
+            key: 'AiAndResource',
+            label: t('AiAndResource'),
+            children: <AiAndResource schema={schema}/>,
         },
     ]
-    if (isTauri()) {
-        items.push({
-            key: 'appSetting',
-            label: t('appSetting'),
-            children: <TauriSetting schema={schema}/>
-        });
-    }
+
     return <Tabs items={items} tabPosition='left'/>;
 });

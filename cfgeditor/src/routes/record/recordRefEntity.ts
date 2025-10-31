@@ -3,7 +3,7 @@ import {Entity, EntityEdgeType, EntityType} from "../../flow/entityModel.ts";
 
 import {Schema} from "../table/schemaUtil.tsx";
 import {findAllResInfos} from "../../res/findAllResInfos.ts";
-import {TauriConf} from "../setting/storageJson.ts";
+import {TauriConf} from "../../store/storageJson.ts";
 import {ResInfo} from "../../res/resInfo.ts";
 
 export function getLastName(id: string): string {

@@ -7,7 +7,7 @@ import {Collapse} from "antd/lib";
 import {LastAccessed} from "./LastAccessed.tsx";
 import {LastModified} from "./LastModified.tsx";
 import {RefIdList} from "./RefIdList.tsx";
-import {useLocationData} from "../setting/store.ts";
+import {useLocationData} from "../../store/store.ts";
 import {RefId} from "../record/recordModel.ts";
 import {LockOutlined, SyncOutlined, UnlockOutlined} from "@ant-design/icons";
 

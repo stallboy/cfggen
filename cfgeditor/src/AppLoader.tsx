@@ -1,5 +1,5 @@
 import {useQuery} from "@tanstack/react-query";
-import {readPrefAsyncOnce} from "./routes/setting/storage.ts";
+import {readPrefAsyncOnce} from "./store/storage.ts";
 import {CfgEditorApp} from "./CfgEditorApp.tsx";
 import {readResInfosAsync} from "./res/readResInfosAsync.ts";
 

@@ -1,9 +1,9 @@
 import { memo } from "react";
 import { Form, InputNumber, ColorPicker, Space, Divider, Typography } from "antd";
 import { useTranslation } from "react-i18next";
-import { useMyStore, setNodeShow } from "./store.ts";
+import { useMyStore, setNodeShow } from "../../store/store.ts";
 import { fixColor } from "./colorUtils.ts";
-import { NodeShowType } from "./storageJson.ts";
+import { NodeShowType } from "../../store/storageJson.ts";
 
 const { Title } = Typography;
 

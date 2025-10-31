@@ -1,13 +1,15 @@
 import {memo,} from "react";
 import {useTranslation} from "react-i18next";
-import {Button, Card, type SelectProps, Form, Input} from "antd";
+import {Button, Card, Divider, Form, Input} from "antd";
 import {
-    setServer, setAIConf,
+    setAIConf,
     useMyStore
-} from "./store.ts";
+} from "../../store/store.ts";
 
 import {formItemLayoutWithOutLabel, formLayout} from "./BasicSetting.tsx";
 import {Schema} from "../table/schemaUtil.tsx";
+import {TauriSetting} from "./TauriSeting.tsx";
+import {isTauri} from "@tauri-apps/api/core";
 
 
 function onFinishAIConf(values: any) {
@@ -15,31 +17,15 @@ function onFinishAIConf(values: any) {
     setAIConf(values);
 }
 
-export const ServerAndAi = memo(function ServerAndAi({schema}: {
+export const AiAndResource = memo(function ({schema}: {
     schema: Schema | undefined;
 }) {
     const {t} = useTranslation();
-    const {server, aiConf} = useMyStore();
+    const {aiConf} = useMyStore();
 
-    const tableOptions: SelectProps['options'] = []
-    if (schema) {
-        for (const t of schema.getAllEditableSTables()) {
-            tableOptions.push({value: t.name});
-        }
-    }
 
     return <>
-        <Form {...formLayout} layout={'horizontal'}
-              initialValues={{server}}>
-
-            <Form.Item label={t('curServer')}>
-                {server}
-            </Form.Item>
-            <Form.Item name='server' label={t('newServer')}>
-                <Input.Search enterButton={t('connect')} onSearch={(value: string) => setServer(value)}/>
-            </Form.Item>
-        </Form>
-
+        <Divider/>
         <Card title={t("aiConf")}>
             <Form name="aiConf"  {...formLayout} initialValues={aiConf} onFinish={onFinishAIConf}
                   autoComplete="off">
@@ -61,6 +47,8 @@ export const ServerAndAi = memo(function ServerAndAi({schema}: {
                 </Form.Item>
             </Form>
         </Card>
+        <Divider/>
+        {isTauri() && <TauriSetting schema={schema}/>}
     </>;
 
 });

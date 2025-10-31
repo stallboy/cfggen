@@ -1,5 +1,5 @@
 import {BriefDescription, JSONObject} from "../routes/record/recordModel.ts";
-import {NodeShowType} from "../routes/setting/storageJson.ts";
+import {NodeShowType} from "../store/storageJson.ts";
 
 import {ResInfo} from "../res/resInfo.ts";
 import * as React from "react";

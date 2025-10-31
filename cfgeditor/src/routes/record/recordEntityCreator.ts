@@ -4,7 +4,7 @@ import {BriefRecord, JSONArray, JSONObject, JSONValue, RefId, Refs} from "./reco
 import {createRefs, getLabel} from "./recordRefEntity.ts";
 import {getField, Schema} from "../table/schemaUtil.tsx";
 import {findAllResInfos} from "../../res/findAllResInfos.ts";
-import {TauriConf} from "../setting/storageJson.ts";
+import {TauriConf} from "../../store/storageJson.ts";
 import {ResInfo} from "../../res/resInfo.ts";
 
 

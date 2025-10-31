@@ -1,12 +1,12 @@
 import resso from "./resso.ts";
 import {AIConf, Convert, FixedPage, FixedPagesConf, NodeShowType, TauriConf, ThemeConfig} from "./storageJson.ts";
 import {getPrefBool, getPrefEnumStr, getPrefInt, getPrefJson, getPrefStr, setPref} from "./storage.ts";
-import {History} from "../headerbar/historyModel.ts";
-import {Schema} from "../table/schemaUtil.tsx";
+import {History} from "../routes/headerbar/historyModel.ts";
+import {Schema} from "../routes/table/schemaUtil.tsx";
 import {useLocation} from "react-router-dom";
-import {queryClient} from "../../main.tsx";
-import {getId} from "../record/recordRefEntity.ts";
-import {ResInfo} from "../../res/resInfo.ts";
+import {queryClient} from "../main.tsx";
+import {getId} from "../routes/record/recordRefEntity.ts";
+import {ResInfo} from "../res/resInfo.ts";
 
 export type PageType = 'table' | 'tableRef' | 'record' | 'recordRef';
 export const pageEnums = ['table', 'tableRef', 'record', 'recordRef'];
@@ -368,6 +368,23 @@ export function makeFixedPage(curTableId: string, curId: string) {
 }
 
 export function setFixedPagesConf(newPageConf: FixedPagesConf) {
+    // Check if current dragPanel references a page that no longer exists
+    const currentDragPanel = store.dragPanel;
+    if (currentDragPanel &&
+        currentDragPanel !== 'none' &&
+        currentDragPanel !== 'recordRef' &&
+        currentDragPanel !== 'finder' &&
+        currentDragPanel !== 'adder' &&
+        currentDragPanel !== 'setting') {
+
+        const pageExists = newPageConf.pages.some(page => page.label === currentDragPanel);
+        if (!pageExists) {
+            // Reset dragPanel to 'none' if the referenced page was removed
+            store.dragPanel = 'none';
+            setPref('dragPanel', 'none');
+        }
+    }
+
     store.pageConf = newPageConf;
     setPref('pageConf', Convert.fixedPagesConfToJson(newPageConf));
     clearLayoutCache();
@@ -495,7 +512,7 @@ export function getLastNavToInLocalStore() {
     return navTo(page ?? 'table', tableId, id, isEditMode);
 }
 
-export function setResourceDir(resourceDir:string) {
+export function setResourceDir(resourceDir: string) {
     store.resourceDir = resourceDir;
 }
 

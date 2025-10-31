@@ -3,7 +3,7 @@ import {
     useMyStore,
     setResourceDir,
     setResMap
-} from "../routes/setting/store.ts";
+} from "../store/store.ts";
 import {readDir} from "@tauri-apps/plugin-fs";
 import {queryClient} from "../main.tsx";
 import {ext2type, findKeyEndIndex} from "./resUtils.ts";

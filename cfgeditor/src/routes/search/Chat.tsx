@@ -2,9 +2,9 @@ import {ProChat, ProChatInstance} from "@ant-design/pro-chat";
 
 import {useTheme} from "antd-style";
 import {OpenAI} from "openai";
-import {useMyStore, useLocationData} from "../setting/store.ts";
+import {useMyStore, useLocationData} from "../../store/store.ts";
 import {ChatMessage} from "@ant-design/pro-chat";
-import {AIConf} from "../setting/storageJson.ts";
+import {AIConf} from "../../store/storageJson.ts";
 import {memo, useCallback, useRef, useState} from "react";
 import {Schema} from "../table/schemaUtil.tsx";
 import {useMutation, useQuery} from "@tanstack/react-query";

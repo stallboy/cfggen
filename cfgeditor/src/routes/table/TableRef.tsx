@@ -1,7 +1,7 @@
 import { Entity } from "../../flow/entityModel.ts";
 import { SchemaTableType } from "../../CfgEditorApp.tsx";
 import { includeRefTables } from "./tableRefEntity.ts";
-import { navTo, useMyStore, useLocationData } from "../setting/store.ts";
+import { navTo, useMyStore, useLocationData } from "../../store/store.ts";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { MenuItem } from "../../flow/FlowContextMenu.tsx";
 import { useTranslation } from "react-i18next";
@@ -22,7 +22,7 @@ export const TableRef = memo(function TableRef() {
     includeRefTables(entityMap, curTable, schema, refIn, refOutDepth, maxNode);
     fillHandles(entityMap);
 
-    // ÌáÈ¡¾Ö²¿¹¤¾ßº¯Êý£¬¼õÉÙÖØ¸´
+    // ï¿½ï¿½È¡ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ßºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½
     const getTableDefaultId = useCallback((tableName: string) => getDefaultIdInTable(schema, tableName, curId), [schema, curId]);
 
     const paneMenu: MenuItem[] = useMemo(() => [{

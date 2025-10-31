@@ -15,7 +15,7 @@ import {
     startEditingObject,
 } from "./editingObject.ts";
 import {useTranslation} from "react-i18next";
-import {invalidateAllQueries, navTo, setIsEditMode, useMyStore, useLocationData} from "../setting/store.ts";
+import {invalidateAllQueries, navTo, setIsEditMode, useMyStore, useLocationData} from "../../store/store.ts";
 import {useNavigate, useOutletContext} from "react-router-dom";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {addOrUpdateRecord, fetchRecord} from "../api.ts";

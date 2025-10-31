@@ -1,4 +1,4 @@
-import {useLocationData} from "./setting/store.ts";
+import {useLocationData} from "../store/store.ts";
 import {Alert, Flex} from "antd";
 import {Link} from "react-router-dom";
 

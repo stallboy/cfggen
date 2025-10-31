@@ -1,7 +1,6 @@
-import {CSSProperties, memo, useCallback, useEffect, useMemo, useRef, useState} from "react";
-import {Alert, Drawer, Flex, Form, Input, Modal, Splitter,} from "antd";
+import {CSSProperties, memo, useCallback, useEffect, useMemo, useRef} from "react";
+import {Alert, Flex, Form, Input, Modal, Splitter,} from "antd";
 import {RecordRef} from "./routes/record/RecordRef.tsx";
-import {useHotkeys} from "react-hotkeys-hook";
 import {useTranslation} from "react-i18next";
 import {Setting} from "./routes/setting/Setting.tsx";
 import {Schema} from "./routes/table/schemaUtil.tsx";
@@ -11,14 +10,13 @@ import {
     setServer,
     useMyStore,
     useLocationData
-} from "./routes/setting/store.ts";
+} from "./store/store.ts";
 import {Outlet, useNavigate} from "react-router-dom";
 import {STable} from "./routes/table/schemaModel.ts";
 import {fetchNotes, fetchSchema} from "./routes/api.ts";
 import {useQuery} from "@tanstack/react-query";
 import {HeaderBar} from "./routes/headerbar/HeaderBar.tsx";
 import {FlowGraph} from "./flow/FlowGraph.tsx";
-import {Query} from "./routes/search/Query.tsx";
 import {Finder} from "./routes/search/Finder.tsx";
 import {Adder} from "./routes/search/Adder.tsx";
 
@@ -53,11 +51,7 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
     } = useMyStore();
 
     const {curTableId, curId} = useLocationData();
-    const [settingOpen, setSettingOpen] = useState<boolean>(false);
-    const [queryOpen, setQueryOpen] = useState<boolean>(false);
     const navigate = useNavigate();
-
-    useHotkeys('alt+x', () => setQueryOpen(true));
 
     const {t} = useTranslation();
     const ref = useRef<HTMLDivElement>(null)
@@ -86,13 +80,7 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
         return {schema, notes, curTable}
     }, [schema, notes, curTable]);
 
-    const onSettingClose = useCallback(() => {
-        setSettingOpen(false);
-    }, [setSettingOpen]);
 
-    const onQueryClose = useCallback(() => {
-        setQueryOpen(false);
-    }, [setQueryOpen]);
 
 
     const handleModalOk = useCallback(() => {
@@ -122,6 +110,9 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
 
         } else if (dragPanel == 'adder') {
             dragPage = <Adder schema={schema}/>
+
+        } else if (dragPanel == 'setting') {
+            dragPage = <Setting schema={schema} curTable={curTable} flowRef={ref}/>
 
         } else if (dragPanel != 'none') {
             const fix = getFixedPage(pageConf, dragPanel);
@@ -168,8 +159,7 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
     }
 
     return <div>
-        <HeaderBar schema={schema} curTable={curTable}
-                   setSettingOpen={setSettingOpen} setSearchOpen={setQueryOpen}/>
+        <HeaderBar schema={schema} curTable={curTable}/>
 
         {content}
 
@@ -190,13 +180,7 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
             </Flex>
         </Modal>
 
-        <Drawer title={t("setting")} placement="left" onClose={onSettingClose} open={settingOpen} size='large'>
-            <Setting schema={schema} curTable={curTable} flowRef={ref}/>
-        </Drawer>
 
-        <Drawer title={t("query")} placement="left" onClose={onQueryClose} open={queryOpen} size='large'>
-            <Query schema={schema}/>
-        </Drawer>
     </div>
         ;
 });

@@ -1,4 +1,4 @@
-import {invalidateAllQueries, navTo, useMyStore, useLocationData} from "../setting/store.ts";
+import {invalidateAllQueries, navTo, useMyStore, useLocationData} from "../../store/store.ts";
 
 import {memo, useCallback, useState} from "react";
 import {Schema} from "../table/schemaUtil.tsx";

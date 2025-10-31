@@ -1,6 +1,6 @@
 import {Select} from "antd";
 import {getIdOptions} from "../table/schemaUtil.tsx";
-import {navTo, useMyStore, useLocationData} from "../setting/store.ts";
+import {navTo, useMyStore, useLocationData} from "../../store/store.ts";
 import {useNavigate} from "react-router-dom";
 import {STable} from "../table/schemaModel.ts";
 import {memo, useMemo, useCallback} from "react";

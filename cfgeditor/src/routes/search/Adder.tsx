@@ -4,7 +4,7 @@ import {useTranslation} from "react-i18next";
 import {Tabs, TabsProps} from "antd";
 import {AddJson} from "./AddJson.tsx";
 import {Chat} from "./Chat.tsx";
-import {useLocationData} from "../setting/store.ts";
+import {useLocationData} from "../../store/store.ts";
 
 export const Adder = memo(function Adder({schema}: {
     schema: Schema | undefined;

@@ -1,5 +1,4 @@
-import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
-import {setTauriConf, useMyStore} from "./store.ts";
+import {setTauriConf, useMyStore} from "../../store/store.ts";
 import {memo, useCallback} from "react";
 import {useTranslation} from "react-i18next";
 import {useQuery} from "@tanstack/react-query";
@@ -12,18 +11,13 @@ import {summarizeResAsync} from "../../res/summarizeResAsync.ts";
 import {path} from "@tauri-apps/api";
 
 
-export async function toggleFullScreen() {
-    const appWindow = getCurrentWebviewWindow()
-    const isFullScreen = await appWindow.isFullscreen();
-    await appWindow.setFullscreen(!isFullScreen);
-}
 
 function onFinishTauriConf(values: any) {
     console.log(values);
     setTauriConf(values);
 }
 
-export const TauriSetting = memo(function TauriSetting({schema}: {
+export const TauriSetting = memo(function ({schema}: {
     schema: Schema | undefined
 }) {
     const {t} = useTranslation();
@@ -47,7 +41,6 @@ export const TauriSetting = memo(function TauriSetting({schema}: {
 
     return <>
         <p>resourceDir: {resourceDir}</p>
-        <Button onClick={toggleFullScreen}> {t('toggleFullScreen')}</Button>
 
         <Card title={t("tauriConf")}>
             <Form name="tauriConf"  {...formLayout} initialValues={tauriConf} onFinish={onFinishTauriConf}

@@ -1,5 +1,5 @@
 import {useContext, useEffect, useMemo} from "react";
-import {useMyStore} from "../routes/setting/store.ts";
+import {useMyStore} from "../store/store.ts";
 import {getViewportForBounds, Rect, useReactFlow, useStore} from "@xyflow/react";
 import {convertNodeAndEdges} from "./entityToNodeAndEdge.ts";
 import {useQuery} from "@tanstack/react-query";
@@ -7,7 +7,7 @@ import {layoutAsync} from "./layoutAsync.ts";
 import {EntityNode, FlowGraphContext, NodeDoubleClickFunc, NodeMenuFunc} from "./FlowGraph.tsx";
 import {Entity} from "./entityModel.ts";
 import {MenuItem} from "./FlowContextMenu.tsx";
-import {NodePlacementStrategyType, NodeShowType} from "../routes/setting/storageJson.ts";
+import {NodePlacementStrategyType, NodeShowType} from "../store/storageJson.ts";
 import {EditingObjectRes, EFitView} from "../routes/record/editingObject.ts";
 
 

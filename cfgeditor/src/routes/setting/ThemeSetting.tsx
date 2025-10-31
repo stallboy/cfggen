@@ -1,7 +1,7 @@
 import { memo, useState, useEffect } from "react";
 import { Form, Input, Button, message, Space, Typography, Alert, Divider } from "antd";
 import { useTranslation } from "react-i18next";
-import { useMyStore, setThemeConfig } from "./store.ts";
+import { useMyStore, setThemeConfig } from "../../store/store.ts";
 import { themeService } from "./themeService.ts";
 import { FlowVisualizationSetting } from "./FlowVisualizationSetting.tsx";
 
@@ -91,6 +91,14 @@ export const ThemeSetting = memo(function ThemeSetting() {
             initialValues={themeConfig}
             onFinish={handleThemeChange}
         >
+            <Divider/>
+            <Alert
+                message={t('themeSettingNote')}
+                description={t('themeSettingDescription')}
+                type="info"
+                showIcon
+            />
+
             <Form.Item
                 label={t('themeFile')}
                 name="themeFile"
@@ -129,12 +137,7 @@ export const ThemeSetting = memo(function ThemeSetting() {
                 </Space>
             </Form.Item>
 
-            <Alert
-                message={t('themeSettingNote')}
-                description={t('themeSettingDescription')}
-                type="info"
-                showIcon
-            />
+
 
             <Divider />
 

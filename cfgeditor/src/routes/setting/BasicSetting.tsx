@@ -10,7 +10,7 @@ import {
     setRefOutDepth,
     setSearchMax,
     useMyStore
-} from "./store.ts";
+} from "../../store/store.ts";
 import {useTranslation} from "react-i18next";
 
 export const formLayout = {

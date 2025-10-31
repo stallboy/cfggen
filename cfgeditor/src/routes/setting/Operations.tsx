@@ -1,12 +1,12 @@
 import {memo, RefObject, useCallback} from "react";
+import {useNavigate} from "react-router-dom";
 import {useTranslation} from "react-i18next";
-import {App, Button, Divider, Form, InputNumber} from "antd";
+import {App, Button, Divider, Form, Input, InputNumber, Radio} from "antd";
 import {
     setImageSizeScale,
     useMyStore,
-    useLocationData,
-    invalidateAllQueries,
-} from "./store.ts";
+    invalidateAllQueries, setServer,
+} from "../../store/store.ts";
 import {CloseOutlined} from "@ant-design/icons";
 import {Schema} from "../table/schemaUtil.tsx";
 import {STable} from "../table/schemaModel.ts";
@@ -17,6 +17,15 @@ import {toBlob} from "html-to-image";
 import {saveAs} from "file-saver";
 import {formItemLayoutWithOutLabel, formLayout} from "./BasicSetting.tsx";
 import {OpFixPages} from "./OpFixPages.tsx";
+import {PageType, navTo, useLocationData} from "../../store/store.ts";
+import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
+import {KeyShortCut} from "./KeyShortcut.tsx";
+
+export async function toggleFullScreen() {
+    const appWindow = getCurrentWebviewWindow()
+    const isFullScreen = await appWindow.isFullscreen();
+    await appWindow.setFullscreen(!isFullScreen);
+}
 
 
 export const Operations = memo(function Operations({schema, curTable, flowRef}: {
@@ -24,12 +33,12 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
     curTable: STable | null;
     flowRef: RefObject<HTMLDivElement>;
 }) {
-    const {curPage} = useLocationData();
     const {t} = useTranslation();
     const {server, imageSizeScale} = useMyStore();
 
-    const {curTableId, curId} = useLocationData();
+    const {curTableId, curId, curPage} = useLocationData();
     const {notification} = App.useApp();
+    const navigate = useNavigate();
 
     const deleteRecordMutation = useMutation<RecordEditResult, Error>({
         mutationFn: () => deleteRecord(server, curTableId, curId),
@@ -95,9 +104,44 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
         })
     }, [flowRef, imageSizeScale, curPage, curTableId, notification]);
 
+    const options = [
+        {label: t('table'), value: 'table'},
+        {label: t('tableRef'), value: 'tableRef'},
+        {label: t('record'), value: 'record'},
+        {label: t('recordRef'), value: 'recordRef'}
+    ];
+
+    const onChangeCurPage = useCallback((page: PageType) => {
+        navigate(navTo(page, curTableId, curId));
+    }, [curTableId, curId, navigate]);
+
 
     return <>
+        <Divider/>
+        <Form {...formLayout} layout={'horizontal'}
+              initialValues={{server}}>
+
+            <Form.Item label={t('curServer')}>
+                {server}
+            </Form.Item>
+            <Form.Item name='server' label={t('newServer')}>
+                <Input.Search enterButton={t('connect')} onSearch={(value: string) => setServer(value)}/>
+            </Form.Item>
+        </Form>
+        <Divider/>
+
         <OpFixPages schema={schema} curTable={curTable}/>
+        <Divider/>
+
+        <div style={{marginBottom: 16}}>
+            <div style={{marginBottom: 8}}>{t('pageType')}</div>
+            <Radio.Group optionType="button"
+                         value={curPage}
+                         options={options}
+                         onChange={(e) => onChangeCurPage(e.target.value)}/>
+        </div>
+        <Divider/>
+
         <Form {...formLayout} layout={'horizontal'} initialValues={{imageSizeScale}}>
             <Form.Item name='imageSizeScale' label={t('imageSizeScale')}>
                 <InputNumber min={1} max={256} onChange={setImageSizeScale}/>
@@ -119,8 +163,12 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
                     </Button>
                 </Form.Item>
             }
-
         </Form>
+        <Divider/>
 
+        <Button onClick={toggleFullScreen}> {t('toggleFullScreen')}</Button>
+        <Divider/>
+
+        <KeyShortCut/>
     </>;
 });

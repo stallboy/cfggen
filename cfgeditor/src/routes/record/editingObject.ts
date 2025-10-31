@@ -2,7 +2,7 @@ import {JSONArray, JSONObject, RecordResult} from "./recordModel.ts";
 import {SItem, SStruct, STable} from "../table/schemaModel.ts";
 import {getField, Schema} from "../table/schemaUtil.tsx";
 import {EntityPosition} from "../../flow/entityModel.ts";
-import {setEditingState} from "../setting/store.ts";
+import {setEditingState} from "../../store/store.ts";
 
 // import {doEdit} from "../setting/store.ts";
 

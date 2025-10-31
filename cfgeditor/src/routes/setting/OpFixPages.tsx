@@ -1,4 +1,4 @@
-import {makeFixedPage, setFixedPagesConf, useMyStore, useLocationData} from "./store.ts";
+import {makeFixedPage, setFixedPagesConf, useMyStore, useLocationData} from "../../store/store.ts";
 import {memo, useCallback, useEffect} from "react";
 import {useTranslation} from "react-i18next";
 import {Button, Form, Input, Space} from "antd";
@@ -6,7 +6,7 @@ import {formItemLayoutWithOutLabel, formLayout} from "./BasicSetting.tsx";
 import {CloseOutlined} from "@ant-design/icons";
 import {Schema} from "../table/schemaUtil.tsx";
 import {STable} from "../table/schemaModel.ts";
-import {FixedPagesConf} from "./storageJson.ts";
+import {FixedPagesConf} from "../../store/storageJson.ts";
 import {useForm} from "antd/es/form/Form";
 
 
