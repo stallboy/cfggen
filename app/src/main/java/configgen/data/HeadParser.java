@@ -2,7 +2,7 @@ package configgen.data;
 
 import configgen.ctx.HeadRow;
 import configgen.ctx.HeadRows;
-import configgen.util.LocaleUtil;
+import configgen.schema.CfgSchemaErrs;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,7 +14,7 @@ import static configgen.data.CfgData.*;
 
 public final class HeadParser {
 
-    public static void parse(DTable table, CfgDataStat stat, HeadRow headRow, boolean isColumnMode) {
+    public static void parse(DTable table, CfgDataStat stat, HeadRow headRow, boolean isColumnMode, CfgSchemaErrs errs) {
         List<DField> header = null;
         List<String> names = null;
         DRawSheet headerSheet = null;
@@ -36,10 +36,7 @@ public final class HeadParser {
                 header = h;
                 headerSheet = sheet;
             } else if (!curNames.equals(names)) {
-                throw new IllegalStateException(
-                        LocaleUtil.getFormatedLocaleString("SplitDataHeaderNotEqual",
-                                "{0} header: {1},\\n{2} header: {3} not equal!",
-                                sheet.id(), curNames, headerSheet.id(), names));
+                errs.addErr(new CfgSchemaErrs.SplitDataHeaderNotEqual(sheet.id(), curNames, headerSheet.id(), names));
             }
         }
 
@@ -50,7 +47,15 @@ public final class HeadParser {
     }
 
     public static void parse(DTable table, CfgDataStat stat) {
-        parse(table, stat, HeadRows.A2_Default, false);
+        CfgSchemaErrs errs = CfgSchemaErrs.of();
+        parse(table, stat, HeadRows.A2_Default, false, errs);
+        errs.checkErrors();
+    }
+
+    public static void parse(DTable table, CfgDataStat stat, HeadRow headRow, boolean isColumnMode) {
+        CfgSchemaErrs errs = CfgSchemaErrs.of();
+        parse(table, stat, headRow, isColumnMode, errs);
+        errs.checkErrors();
     }
 
     private static List<String> getLogicRow(DRawSheet sheet, int rowIndex, boolean isColumnMode) {

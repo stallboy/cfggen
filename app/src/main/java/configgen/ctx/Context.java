@@ -84,21 +84,21 @@ public class Context {
     private boolean readSchemaAndData(CfgDataReader dataReader, boolean autoFix) {
         CfgSchema schema = CfgSchemas.readFromDir(sourceStructure);
         Logger.profile("schema read");
-        CfgSchemaErrs errs = schema.resolve();
-        if (!errs.errs().isEmpty()) {
-            errs.checkErrors("schema");
-        }
-        schema.verbosePrintStat();
 
+        CfgSchemaErrs errs = schema.resolve();
+        errs.checkErrors("schema");
+        schema.verbosePrintStat();
         Logger.profile("schema resolve");
 
-        CfgData data = dataReader.readCfgData(sourceStructure, schema);
-        data.verbosePrintStat();
 
         CfgSchemaErrs alignErr = CfgSchemaErrs.of();
-        CfgSchema alignedSchema = new CfgSchemaAlignToData(schema, data, contextCfg.headRow(), alignErr).align();
+        CfgData data = dataReader.readCfgData(sourceStructure, schema, alignErr);
+        data.verbosePrintStat();
+        CfgSchema alignedSchema = new CfgSchemaAlignToData(contextCfg.headRow()).align(schema, data, alignErr);
         new CfgSchemaResolver(alignedSchema, alignErr).resolve();
         alignErr.checkErrors("aligned schema");
+
+
         if (schema.equals(alignedSchema)) {
             this.cfgData = data;
             this.cfgSchema = schema;

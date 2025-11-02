@@ -3,6 +3,7 @@ package configgen.data;
 import configgen.ctx.DirectoryStructure;
 import configgen.ctx.HeadRow;
 import configgen.schema.CfgSchema;
+import configgen.schema.CfgSchemaErrs;
 import configgen.schema.TableSchema;
 import configgen.util.Logger;
 
@@ -29,16 +30,17 @@ public record CfgDataReader(HeadRow headRow,
         Objects.requireNonNull(excelReader);
     }
 
-    public CfgData readCfgData(DirectoryStructure sourceStructure, CfgSchema nullableCfgSchema) {
+    public CfgData readCfgData(DirectoryStructure sourceStructure, CfgSchema nullableCfgSchema, CfgSchemaErrs errs) {
         Objects.requireNonNull(sourceStructure);
+        Objects.requireNonNull(errs);
         try {
-            return _readCfgData(sourceStructure, nullableCfgSchema);
+            return _readCfgData(sourceStructure, nullableCfgSchema, errs);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private CfgData _readCfgData(DirectoryStructure sourceStructure, CfgSchema nullableCfgSchema) throws Exception {
+    private CfgData _readCfgData(DirectoryStructure sourceStructure, CfgSchema nullableCfgSchema, CfgSchemaErrs errs) throws Exception {
         CfgDataStat stat = new CfgDataStat();
         List<Callable<AllResult>> tasks = new ArrayList<>();
 
@@ -83,7 +85,7 @@ public record CfgDataReader(HeadRow headRow,
                 parseTasks.add(() -> {
                     CfgDataStat tStat = new CfgDataStat();
                     boolean isColumnMode = isColumnMode(nullableCfgSchema, table.tableName());
-                    HeadParser.parse(table, tStat, headRow, isColumnMode);
+                    HeadParser.parse(table, tStat, headRow, isColumnMode, errs);
                     CellParser.parse(table, tStat, headRow.rowCount(), isColumnMode);
                     return tStat;
                 });

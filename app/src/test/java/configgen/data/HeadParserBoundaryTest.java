@@ -1,5 +1,7 @@
 package configgen.data;
 
+import configgen.schema.CfgSchemaErrs;
+import configgen.schema.CfgSchemaException;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -105,14 +107,21 @@ class HeadParserBoundaryTest {
         CfgDataStat ds = new CfgDataStat();
 
         // When & Then: 解析表头应该抛出异常
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+        CfgSchemaException exception = assertThrows(CfgSchemaException.class, () -> {
             HeadParser.parse(dt, ds);
         });
 
         // 验证异常消息包含正确的信息
-        assertTrue(exception.getMessage().contains("不匹配"));
-        assertTrue(exception.getMessage().contains("multi.csv[sheet1]"));
-        assertTrue(exception.getMessage().contains("multi.csv[sheet2]"));
+        CfgSchemaErrs errs = exception.getErrs();
+        assertEquals(1, errs.errs().size());
+        CfgSchemaErrs.Err err = errs.errs().getFirst();
+        assertInstanceOf(CfgSchemaErrs.SplitDataHeaderNotEqual.class, err);
+        CfgSchemaErrs.SplitDataHeaderNotEqual splitErr = (CfgSchemaErrs.SplitDataHeaderNotEqual) err;
+        // Debug: print actual values
+        System.out.println("sheet1: " + splitErr.sheet1());
+        System.out.println("sheet2: " + splitErr.sheet2());
+        assertEquals("multi.csv[sheet2]", splitErr.sheet1());
+        assertEquals("multi.csv[sheet1]", splitErr.sheet2());
     }
 
     @Test
