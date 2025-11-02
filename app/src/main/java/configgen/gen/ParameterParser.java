@@ -5,12 +5,12 @@ import configgen.util.ArgParser;
 import java.util.HashMap;
 import java.util.Map;
 
-class ParameterParser implements Parameter {
+public class ParameterParser implements Parameter {
     private final String arg;
     private final String genId;
     private final Map<String, String> params;
 
-    ParameterParser(String arg) {
+    public ParameterParser(String arg) {
         this.arg = arg;
         ArgParser.IdAndMap im = ArgParser.parseToIdAndMap(arg);
         genId = im.id();

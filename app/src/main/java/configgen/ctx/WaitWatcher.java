@@ -2,7 +2,6 @@ package configgen.ctx;
 
 import configgen.util.Logger;
 
-import java.time.Instant;
 import java.util.Objects;
 
 /**
@@ -46,7 +45,6 @@ public class WaitWatcher {
         return Thread.startVirtualThread(() -> {
             evtVersion = watcher.getEventVersion();
             lastEvtMillis = watcher.getLastEventMillis();
-            //noinspection InfiniteLoopStatement
             while (true) {
                 try {
                     //noinspection BusyWait
@@ -54,6 +52,7 @@ public class WaitWatcher {
                     tick();
                 } catch (InterruptedException e) {
                     Logger.log("WaitWatcher stopped by %s", e.toString());
+                    return;
                 }
             }
         });
@@ -62,11 +61,9 @@ public class WaitWatcher {
 
     private void tick() {
         int version = watcher.getEventVersion();
-//        System.out.printf("tick v %d\n", version);
         if (evtVersion != version) {
-//            System.out.printf("detected %d  %d\n", evtVersion, version);
             evtVersion = version;
-            lastEvtMillis = watcher.getLastEventMillis();
+            lastEvtMillis = watcher.getLastEventMillis(); // 这里跟getEventVersion时机可能不一致，但没关系。
             Logger.verbose2("detected evt");
 
         } else if (lastEvtMillis > 0) {

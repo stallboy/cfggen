@@ -5,7 +5,6 @@ import configgen.util.Logger;
 
 import java.io.IOException;
 import java.nio.file.*;
-import java.time.Instant;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -48,7 +47,7 @@ public class Watcher {
     private void trigger() {
         lastEvtMillis = System.currentTimeMillis();
         eventVersion.incrementAndGet();
-//        System.out.printf("trigger %d\n", eventVersion.get());
+        // System.out.printf("trigger %d\n", eventVersion.get());
     }
 
     private void watchLoop() throws IOException, InterruptedException {
