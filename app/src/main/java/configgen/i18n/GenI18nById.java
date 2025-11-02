@@ -75,9 +75,10 @@ public final class GenI18nById extends Generator {
                                                 Path langsDir,
                                                 Path backupDir) throws IOException {
         try (PrintStream verboseStream = new PrintStream("log_" + lang + ".txt")) {
-            PrintStream old = Logger.setVerboseStream(verboseStream);
+            Logger.Printer old = Logger.getPrinter();
+            Logger.setPrinter(Logger.Printer.ofSeq(old, Logger.Printer.of(verboseStream)));
             generateForValue(cfgValue, lang, checkWrite, langsDir, backupDir);
-            Logger.setVerboseStream(old);
+            Logger.setPrinter(old);
         }
     }
 

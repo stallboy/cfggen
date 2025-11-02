@@ -3,10 +3,34 @@ package configgen.util;
 import java.io.PrintStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 
 public class Logger {
+    public interface Printer {
+        void printf(String fmt, Object... args);
+
+
+        Printer nullPrinter = (fmt, args) -> {
+            // do nothing
+        };
+        Printer outPrinter = System.out::printf;
+
+        static Printer of(PrintStream stream){
+            return stream::printf;
+        }
+
+        static Printer ofSeq(Printer... printers){
+            return (fmt, args) -> {
+                for (Printer p : printers) {
+                    p.printf(fmt, args);
+                }
+            };
+        }
+    }
+
+
     private static int verboseLevel = 0;
-    private static PrintStream verboseStream = null;
+    private static Printer printer = Printer.outPrinter;
     private static boolean profileGcEnabled = false;
 
     private static boolean profileEnabled = false;
@@ -50,33 +74,30 @@ public class Logger {
         return weakWarningEnabled;
     }
 
-    public static PrintStream setVerboseStream(PrintStream stream) {
-        PrintStream old = verboseStream;
-        verboseStream = stream;
-        return old;
+    public static Printer getPrinter(){
+        return printer;
+    }
+
+    public static void setPrinter(Printer newPrinter) {
+        Objects.requireNonNull(newPrinter);
+        printer = newPrinter;
     }
 
     public static void verbose(String fmt, Object... args) {
-        if (verboseStream != null) {
-            logTo(verboseStream, fmt, args);
-        }else if (verboseLevel > 0) {
-            logTo(System.out, fmt, args);
+        if (verboseLevel > 0) {
+            logTo(fmt, args);
         }
     }
 
     public static void verbose2(String fmt, Object... args) {
-        if (verboseStream != null) {
-            logTo(verboseStream, fmt, args);
-        }else if (verboseLevel > 1) {
-            logTo(System.out, fmt, args);
+        if (verboseLevel > 1) {
+            logTo(fmt, args);
         }
     }
 
     public static void log(String fmt, Object... args) {
-        logTo(System.out, fmt, args);
-        if (verboseStream != null) {
-            logTo(verboseStream, fmt, args);
-        }
+        logTo(fmt, args);
+
     }
 
     private final static DateTimeFormatter df = DateTimeFormatter.ofPattern("HH.mm.ss.SSS");
@@ -84,12 +105,8 @@ public class Logger {
     private static long firstTime;
 
 
-    public static void logTo(PrintStream ps, String fmt, Object... args) {
-        if (args.length == 0) {
-            ps.println(fmt);
-        } else {
-            ps.printf((fmt) + System.lineSeparator(), args);
-        }
+    public static void logTo(String fmt, Object... args) {
+        printer.printf((fmt) + System.lineSeparator(), args);
     }
 
     public static void profile(String step) {
@@ -108,7 +125,7 @@ public class Logger {
                 time = System.currentTimeMillis();
                 elapse = String.format("%.1f/%.1f seconds", (time - old) / 1000f, (time - firstTime) / 1000f);
             }
-            System.out.printf("%30s: %4dm %s%n", step, memory, elapse);
+            log("%30s: %4dm %s%n", step, memory, elapse);
         }
     }
 
