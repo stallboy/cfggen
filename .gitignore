@@ -66,3 +66,5 @@
 /app/.claude/settings.local.json
 /app/CLAUDE.md
 /.claude-trace
+/.claude
+/app/jte-classes

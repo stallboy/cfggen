@@ -23,6 +23,7 @@ import configgen.util.CachedFiles;
 import configgen.util.LocaleUtil;
 import configgen.util.Logger;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ import java.util.List;
 import java.util.Locale;
 
 public final class Main {
-    private static void usage(String reason) {
+    private static int usage(String reason) {
         System.out.println(reason);
 
         System.out.println("Usage: java -jar cfggen.jar [options] -datadir [dir] [options] [gens]");
@@ -110,34 +111,36 @@ public final class Main {
                 }
         );
 
-
-        Runtime.getRuntime().exit(1);
+        return 1;
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         try {
-            main0(args);
+            int ret = main0(args);
+            if (ret != 0) {
+                System.exit(ret);
+            }
         } catch (Throwable t) {
             String newLine = System.lineSeparator();
             StringBuilder sb = new StringBuilder();
             sb.append("-------------------------错误描述-------------------------").append(newLine);
             int stackCnt = 0;
             Throwable curr = t;
-            while (curr != null && ++stackCnt < 10) {
+            while (curr != null && ++stackCnt < 30) {
                 sb.append(curr.getMessage()).append(newLine);
                 curr = curr.getCause();
             }
             sb.append("-------------------------错误堆栈-------------------------").append(newLine);
             System.out.print(sb);
 
-            throw t;
+            System.exit(1);
         }
     }
 
     record NamedGenerator(String name, Generator gen) {
     }
 
-    private static void main0(String[] args) throws Exception {
+    public static int main0(String[] args) {
         Generators.addProvider("i18n", GenI18nByValue::new);
         Generators.addProvider("i18nbyid", GenI18nById::new);
         Generators.addProvider("i18nbyidtest", GenI18nByIdTest::new);
@@ -193,7 +196,7 @@ public final class Main {
                     Locale locale = Locale.of(language);
                     if (!LocaleUtil.isSupported(locale)) {
                         System.err.println("Specified Locale is not supported: " + locale.toString());
-                        return;
+                        return 1;
                     }
                     LocaleUtil.setLocale(locale);
                 }
@@ -243,8 +246,9 @@ public final class Main {
                 case "-gen" -> {
                     String name = args[++i];
                     Generator generator = Generators.create(name);
-                    if (generator == null)
-                        usage("");
+                    if (generator == null) {
+                        return usage("");
+                    }
                     generators.add(new NamedGenerator(name, generator));
                 }
                 default -> {
@@ -252,10 +256,12 @@ public final class Main {
                         switch (paramType) {
                             case "-usepoi" -> usePoi = true;
                             case "-comparepoiandfastexcel" -> comparePoiAndFastExcel = true;
-                            default -> usage("unknown args " + args[i]);
+                            default -> {
+                                return usage("unknown args " + args[i]);
+                            }
                         }
                     } else {
-                        usage("unknown args " + args[i]);
+                        return usage("unknown args " + args[i]);
                     }
                 }
             }
@@ -267,30 +273,29 @@ public final class Main {
             } else {
                 BinaryToText.parse(binaryToTextFile, match);
             }
-            return;
+            return 0;
         }
 
         if (compareTerm != null) {
             if (i18nfile == null) {
-                usage("请配置-i18nfile");
-                return;
+                return usage("请配置-i18nfile");
+
             }
             TermChecker.compare(Path.of(i18nfile), Path.of(compareTerm));
-            return;
+            return 0;
         }
 
         if (datadir == null) {
-            usage("请配置-datadir");
-            return;
+            return usage("请配置-datadir");
         }
 
         Path dataDir = Paths.get(datadir);
         if (xmlToCfg) {
             XmlToCfg.convertAndCheck(dataDir);
-            return;
+            return 0;
         }
 
-        if (headRowId == null){
+        if (headRowId == null) {
             headRowId = "2";
         }
         HeadRow headRow = HeadRows.getById(headRowId);
@@ -301,13 +306,13 @@ public final class Main {
             if (BuildSettings.isIncludePoi()) {
                 ComparePoiAndFastExcel.compare(dataDir, explicitDir, csvDefaultEncoding, headRow);
             } else {
-                usage("-comparePoiAndFastExcel，但jar里没有包含poi包");
+                return usage("-comparePoiAndFastExcel，但jar里没有包含poi包");
             }
         }
 
         if (i18nfile != null && langSwitchDir != null) {
-            usage("-不能同时配置-i18nfile和-langswitchdir");
-            return;
+            return usage("-不能同时配置-i18nfile和-langswitchdir");
+
         }
 
         Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));
@@ -332,12 +337,17 @@ public final class Main {
 
         for (NamedGenerator ng : generators) {
             Logger.verbose("-----generate " + ng.gen.parameter);
-            ng.gen.generate(context);
+            try {
+                ng.gen.generate(context);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             Logger.profile("generate " + ng.name);
         }
 
         CachedFiles.finalExit();
         Logger.profile("end");
+        return 0;
     }
 
 

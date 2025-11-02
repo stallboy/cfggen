@@ -14,13 +14,13 @@ public class BinaryToText {
                     break;
                 }
                 parse(javaDataFile, input);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
         }
     }
 
-    public static void parse(String javaDataFile, String match) throws IOException {
+    public static void parse(String javaDataFile, String match) {
         try (ConfigInput input = new ConfigInput(new DataInputStream(new BufferedInputStream(new FileInputStream(javaDataFile))))) {
             rootSchema = (SchemaInterface) Schema.create(input);
 
@@ -35,6 +35,8 @@ public class BinaryToText {
                     input.skipBytes(tableSize);
                 }
             }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
