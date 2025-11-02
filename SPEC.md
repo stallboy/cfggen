@@ -26,3 +26,11 @@
 - Test Behavior, Not Implementation: Focus tests on what the code does, not how it does it, to reduce brittleness
 - Clear Test Names: Use descriptive names that explain what's being tested and the expected outcome
 ```
+
+
+```
+用中文，完善configgen.value package下的单元测试，挨个文件去检查是否需要补充测试。再feature-dev过程中对关键phase的结果保存到thoughts目录下方便我查看。
+测试要遵循以下准则：
+- Test Behavior, Not Implementation: Focus tests on what the code does, not how it does it, to reduce brittleness
+- Clear Test Names: Use descriptive names that explain what's being tested and the expected outcome
+```

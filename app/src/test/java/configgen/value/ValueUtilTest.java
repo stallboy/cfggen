@@ -133,4 +133,130 @@ class ValueUtilTest {
             assertEquals(rank.uniqueKeyMaps().values().iterator().next(), foreignKeyValueMap);
         }
     }
+
+    @Test
+    void should_extractComplexKeyValue_when_multipleFieldIndexesProvided() {
+        String str = """
+                struct st{
+                    i:int;
+                    s:str;
+                    b:bool;
+                    f:float;
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        cfg.resolve();
+        VStruct vStruct = ofStruct((Structural) cfg.findItem("st"),
+            List.of(ofInt(1), ofStr("abc"), ofBool(true), ofFloat(3.14f)));
+
+        {
+            Value keyValue = ValueUtil.extractKeyValue(vStruct, new int[]{0, 1});
+            assertTrue(keyValue instanceof VList);
+            VList keyList = (VList) keyValue;
+            assertEquals(2, keyList.valueList().size());
+            assertEquals(1, ((VInt) keyList.valueList().get(0)).value());
+            assertEquals("abc", ((VString) keyList.valueList().get(1)).value());
+        }
+
+        {
+            Value keyValue = ValueUtil.extractKeyValue(vStruct, new int[]{1, 2, 3});
+            assertTrue(keyValue instanceof VList);
+            VList keyList = (VList) keyValue;
+            assertEquals(3, keyList.valueList().size());
+            assertEquals("abc", ((VString) keyList.valueList().get(0)).value());
+            assertTrue(((VBool) keyList.valueList().get(1)).value());
+            assertEquals(3.14f, ((VFloat) keyList.valueList().get(2)).value(), 0.001);
+        }
+    }
+
+    @Test
+    void should_extractFieldValueFromNestedStructure_when_complexPathProvided() {
+        String str = """
+                struct Inner {
+                    value:int;
+                    text:str;
+                }
+                struct Outer {
+                    id:int;
+                    inner:Inner;
+                    flag:bool;
+                }
+                table t[id] {
+                    id:int;
+                    outer:Outer;
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        cfg.resolve().checkErrors();
+
+        VStruct inner = ofStruct((Structural) cfg.findItem("Inner"),
+            List.of(ofInt(100), ofStr("inner text")));
+        VStruct outer = ofStruct((Structural) cfg.findItem("Outer"),
+            List.of(ofInt(1), inner, ofBool(true)));
+        VStruct vStruct = ofStruct(cfg.findTable("t"),
+            List.of(ofInt(999), outer));
+
+        {
+            Value idValue = ValueUtil.extractFieldValue(vStruct, "id");
+            assertEquals(999, ((VInt) idValue).value());
+        }
+
+        {
+            Value outerValue = ValueUtil.extractFieldValue(vStruct, "outer");
+            assertTrue(outerValue instanceof VStruct);
+            assertEquals(1, ((VInt) ((VStruct) outerValue).values().getFirst()).value());
+
+            Value innerValue = ValueUtil.extractFieldValue((VStruct) outerValue, "inner");
+            assertTrue(innerValue instanceof VStruct);
+            assertEquals(100, ((VInt) ((VStruct) innerValue).values().getFirst()).value());
+
+            Value innerTextValue = ValueUtil.extractFieldValue((VStruct) innerValue, "text");
+            assertEquals("inner text", ((VString) innerTextValue).value());
+        }
+    }
+
+    @Test
+    void should_handleEdgeCases_when_extractingFieldValues() {
+        String str = """
+                table t[id] {
+                    id:int;
+                    emptyStr:str;
+                    nullStr:str (nullable);
+                    zeroInt:int;
+                    falseBool:bool;
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        cfg.resolve().checkErrors();
+        TableSchema t = cfg.findTable("t");
+
+        VStruct vStruct = ofStruct(t, List.of(
+            ofInt(1),
+            ofStr(""),  // 空字符串
+            ofStr(""),  // 可为空的空字符串
+            ofInt(0),   // 零值
+            ofBool(false) // false布尔值
+        ));
+
+        {
+            Value emptyStrValue = ValueUtil.extractFieldValue(vStruct, "emptyStr");
+            assertEquals("", ((VString) emptyStrValue).value());
+        }
+
+        {
+            Value nullStrValue = ValueUtil.extractFieldValue(vStruct, "nullStr");
+            assertEquals("", ((VString) nullStrValue).value());
+        }
+
+        {
+            Value zeroIntValue = ValueUtil.extractFieldValue(vStruct, "zeroInt");
+            assertEquals(0, ((VInt) zeroIntValue).value());
+        }
+
+        {
+            Value falseBoolValue = ValueUtil.extractFieldValue(vStruct, "falseBool");
+            assertFalse(((VBool) falseBoolValue).value());
+        }
+    }
+
 }

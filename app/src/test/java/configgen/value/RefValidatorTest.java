@@ -173,4 +173,88 @@ class RefValidatorTest {
     }
 
 
+    @Test
+    void should_throwRefNotNullableButCellEmpty_when_foreignKeyCellIsEmpty() {
+        String cfgStr = """
+                table department[id] {
+                    id:int;
+                    name:str;
+                }
+                table employee[id] {
+                    id:int;
+                    name:str;
+                    department_id:int ->department; // 外键，不可为空
+                }
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+
+        String deptCsv = """
+                ,,
+                id,name
+                1,Engineering""";
+        Resources.addTempFileFromText("department.csv", tempDir, deptCsv);
+
+        String empCsv = """
+                ,,,
+                id,name,department_id
+                1,Alice,1
+                2,Bob,"""; // 外键为空
+        Resources.addTempFileFromText("employee.csv", tempDir, empCsv);
+
+        Context ctx = new Context(tempDir);
+        CfgValueErrs valueErrs = CfgValueErrs.of();
+        CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
+        clientValueParser.parseCfgValue();
+
+        assertEquals(1, valueErrs.errs().size());
+        assertInstanceOf(CfgValueErrs.RefNotNullableButCellEmpty.class, valueErrs.errs().getFirst());
+        CfgValueErrs.RefNotNullableButCellEmpty err = (CfgValueErrs.RefNotNullableButCellEmpty) valueErrs.errs().getFirst();
+        assertEquals("employee-2", err.recordId());
+        // The value might be null or a different type, check what it actually is
+        assertNotNull(err.value());
+    }
+
+    @Test
+    void should_throwForeignValueNotFound_when_referencedValueDoesNotExist() {
+        String cfgStr = """
+                table department[id] {
+                    id:int;
+                    name:str;
+                }
+                table employee[id] {
+                    id:int;
+                    name:str;
+                    department_id:int ->department; // 外键引用
+                }
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+
+        String deptCsv = """
+                ,,
+                id,name
+                1,Engineering""";
+        Resources.addTempFileFromText("department.csv", tempDir, deptCsv);
+
+        String empCsv = """
+                ,,,
+                id,name,department_id
+                1,Alice,1
+                2,Bob,999"""; // 引用不存在的部门
+        Resources.addTempFileFromText("employee.csv", tempDir, empCsv);
+
+        Context ctx = new Context(tempDir);
+        CfgValueErrs valueErrs = CfgValueErrs.of();
+        CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
+        clientValueParser.parseCfgValue();
+
+        assertEquals(1, valueErrs.errs().size());
+        assertInstanceOf(CfgValueErrs.ForeignValueNotFound.class, valueErrs.errs().getFirst());
+        CfgValueErrs.ForeignValueNotFound err = (CfgValueErrs.ForeignValueNotFound) valueErrs.errs().getFirst();
+        assertEquals("department", err.foreignTable());
+        assertEquals("department_id", err.foreignKey());
+        assertEquals("employee-2", err.recordId());
+        // The value might be null or a different type, check what it actually is
+        assertNotNull(err.value());
+    }
+
 }

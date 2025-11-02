@@ -719,4 +719,39 @@ class CfgValueParserTest {
                 cell.col() == 1);
     }
 
+    @Test
+    void should_parseSimplePackFormat_when_nestedStructureProvided() {
+        String cfgStr = """
+                struct SimpleStruct {
+                    value:int;
+                    text:str;
+                }
+                table t[id] {
+                    id:int;
+                    data:SimpleStruct (pack);
+                }
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+
+        String csvStr = """
+                ,,
+                id,data
+                1,"123,hello"
+                """;
+        Resources.addTempFileFromText("t.csv", tempDir, csvStr);
+
+        Context ctx = new Context(tempDir);
+        CfgValue cfgValue = ctx.makeValue();
+        VTable tVTable = cfgValue.getTable("t");
+
+        assertEquals(1, tVTable.valueList().size());
+        VStruct v = tVTable.valueList().getFirst();
+        assertEquals(1, ((VInt) v.values().getFirst()).value());
+
+        VStruct data = (VStruct) v.values().get(1);
+        assertEquals(123, ((VInt) data.values().getFirst()).value());
+        assertEquals("hello", ((VString) data.values().get(1)).value());
+    }
+
+
 }

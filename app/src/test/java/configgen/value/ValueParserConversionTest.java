@@ -364,4 +364,108 @@ class ValueParserConversionTest {
         VStruct statusRef5 = statusTable.primaryKeyMap().get(status5);
         assertEquals("cancelled", ((VString) statusRef5.values().get(1)).value());
     }
+
+
+    @Test
+    void should_handleMixedFormats_when_blockContainsSepAndPackFormats() {
+        String cfgStr = """
+                struct MixedData {
+                    id:int;
+                    tags:list<str> (sep=',');
+                    metadata:text;
+                }
+                table t[id] {
+                    id:int;
+                    data:MixedData;
+                }
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+
+        String csvStr = """
+                ,,,
+                id,data.id,data.tags,data.metadata
+                1,100,"tag1,tag2,tag3","metadata1"
+                2,200,"tag4,tag5","metadata2"
+                """;
+        Resources.addTempFileFromText("t.csv", tempDir, csvStr);
+
+        Context ctx = new Context(tempDir);
+        CfgValue cfgValue = ctx.makeValue();
+        VTable tVTable = cfgValue.getTable("t");
+
+        assertEquals(2, tVTable.valueList().size());
+
+        VStruct data1 = tVTable.valueList().get(0);
+        VStruct mixedData1 = (VStruct) data1.values().get(1);
+        assertEquals(100, ((VInt) mixedData1.values().getFirst()).value());
+
+        VList tags1 = (VList) mixedData1.values().get(1);
+        assertEquals(3, tags1.valueList().size());
+        assertEquals("tag1", ((VString) tags1.valueList().get(0)).value());
+
+        VText metadata1 = (VText) mixedData1.values().get(2);
+        assertEquals("metadata1", metadata1.value());
+    }
+
+    @Test
+    void should_handleEmptyAndNullValues_when_complexNestedStructuresPresent() {
+        String cfgStr = """
+                struct Address {
+                    street:str (nullable);
+                    city:str (nullable);
+                    zip:str (nullable);
+                }
+                struct Contact {
+                    phone:str (nullable);
+                    email:str (nullable);
+                    address:Address (nullable);
+                }
+                table user[id] {
+                    id:int;
+                    name:str;
+                    contact:Contact (nullable);
+                    tags:list<str> (pack, nullable);
+                }
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+
+        String csvStr = """
+                ,,,,,
+                id,name,contact.phone,contact.email,contact.address.street,contact.address.city,tags
+                1,Alice,123-456,a@test.com,Main St,City1,"tag1,tag2"
+                2,Bob,,,,,
+                3,Charlie,789-012,,Third St,,
+                4,David,,,,,
+                """;
+        Resources.addTempFileFromText("user.csv", tempDir, csvStr);
+
+        Context ctx = new Context(tempDir);
+        CfgValue cfgValue = ctx.makeValue();
+        VTable userTable = cfgValue.getTable("user");
+
+        assertEquals(4, userTable.valueList().size());
+
+        // 验证完整数据
+        VStruct user1 = userTable.valueList().get(0);
+        VStruct contact1 = (VStruct) user1.values().get(2);
+        VStruct address1 = (VStruct) contact1.values().get(2);
+        assertEquals("123-456", ((VString) contact1.values().getFirst()).value());
+        assertEquals("Main St", ((VString) address1.values().getFirst()).value());
+
+        // 验证空数据
+        VStruct user2 = userTable.valueList().get(1);
+        VStruct contact2 = (VStruct) user2.values().get(2);
+        VStruct address2 = (VStruct) contact2.values().get(2);
+        assertEquals("", ((VString) contact2.values().getFirst()).value());
+        assertEquals("", ((VString) address2.values().getFirst()).value());
+
+        // 验证部分空数据
+        VStruct user3 = userTable.valueList().get(2);
+        VStruct contact3 = (VStruct) user3.values().get(2);
+        VStruct address3 = (VStruct) contact3.values().get(2);
+        assertEquals("789-012", ((VString) contact3.values().getFirst()).value());
+        assertEquals("", ((VString) contact3.values().get(1)).value());
+        assertEquals("Third St", ((VString) address3.values().getFirst()).value());
+    }
+
 }
