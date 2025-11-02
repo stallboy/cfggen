@@ -85,29 +85,24 @@ public class Logger {
 
     public static void verbose(String fmt, Object... args) {
         if (verboseLevel > 0) {
-            logTo(fmt, args);
+            log(fmt, args);
         }
     }
 
     public static void verbose2(String fmt, Object... args) {
         if (verboseLevel > 1) {
-            logTo(fmt, args);
+            log(fmt, args);
         }
     }
 
     public static void log(String fmt, Object... args) {
-        logTo(fmt, args);
-
+        printer.printf((fmt) + System.lineSeparator(), args);
     }
 
     private final static DateTimeFormatter df = DateTimeFormatter.ofPattern("HH.mm.ss.SSS");
     private static long time;
     private static long firstTime;
 
-
-    public static void logTo(String fmt, Object... args) {
-        printer.printf((fmt) + System.lineSeparator(), args);
-    }
 
     public static void profile(String step) {
         if (profileEnabled) {

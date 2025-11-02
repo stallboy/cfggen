@@ -90,7 +90,7 @@ public class EditorServer extends GeneratorWithTag {
 
         if (waitSecondsAfterWatchEvt > 0) {
             Watcher watcher = new Watcher(context.getSourceStructure().getRootDir(), context.getContextCfg().explicitDir());
-            WaitWatcher waitWatcher = new WaitWatcher(watcher, this::reloadData, waitSecondsAfterWatchEvt);
+            WaitWatcher waitWatcher = new WaitWatcher(watcher, this::reloadData, waitSecondsAfterWatchEvt * 1000);
             waitWatcher.start();
             watcher.start();
             logger.info("file change watcher started");
