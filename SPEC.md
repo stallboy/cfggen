@@ -29,8 +29,23 @@
 
 
 ```
-用中文，完善configgen.value package下的单元测试，挨个文件去检查是否需要补充测试。再feature-dev过程中对关键phase的结果保存到thoughts目录下方便我查看。
+用中文，完善configgen.value package下的单元测试，挨个文件去检查是否需要补充测试，在feature-dev过程中对关键phase的结果保存到thoughts目录下方便我查看。
 测试要遵循以下准则：
 - Test Behavior, Not Implementation: Focus tests on what the code does, not how it does it, to reduce brittleness
 - Clear Test Names: Use descriptive names that explain what's being tested and the expected outcome
+```
+
+
+
+minimax m2
+
+```
+用中文，完善app目录下 configgen.genjava 模块下的单元测试，主要是GenJavaData和GenJavaCode两个文件。
+- GenJavaData产出的文件可以由BinaryToText来读取，可以用于验证生成数据的正确性。
+- GenJavaCode主要验证生成了特定的java文件。文件名对应上就行。
+
+测试要遵循以下准则：
+- Test Behavior, Not Implementation: Focus tests on what the code does, not how it does it, to reduce brittleness
+- Clear Test Names: Use descriptive names that explain what's being tested and the expected outcome
+- 测试函数要加中文注释，函数体内有given/when/then中文注释
 ```
