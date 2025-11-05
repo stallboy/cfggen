@@ -22,11 +22,11 @@ public class Generators {
         return generator;
     }
 
-    static void addProvider(String name, GeneratorProvider provider) {
+    public static void addProvider(String name, GeneratorProvider provider) {
         providers.put(name, provider);
     }
 
-    static Map<String, GeneratorProvider> getAllProviders() {
+    public static Map<String, GeneratorProvider> getAllProviders() {
         return providers;
     }
 }

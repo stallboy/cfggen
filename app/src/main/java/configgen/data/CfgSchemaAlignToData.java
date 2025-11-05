@@ -14,22 +14,20 @@ import static configgen.data.CfgData.DField;
 import static configgen.schema.EntryType.ENo.NO;
 import static configgen.schema.FieldFormat.AutoOrPack.*;
 
-public record CfgSchemaAlignToData(CfgSchema cfgSchema,
-                                   CfgData cfgData,
-                                   HeadRow headRow,
-                                   CfgSchemaErrs errs) {
+public record CfgSchemaAlignToData(HeadRow headRow) {
 
     public CfgSchemaAlignToData {
-        Objects.requireNonNull(cfgSchema);
-        Objects.requireNonNull(cfgData);
         Objects.requireNonNull(headRow);
-        Objects.requireNonNull(errs);
     }
 
     /**
      * @return align到cfgData后的cfgSchema，未resolve
      */
-    public CfgSchema align() {
+    public CfgSchema align(CfgSchema cfgSchema, CfgData cfgData, CfgSchemaErrs errs) {
+        Objects.requireNonNull(cfgSchema);
+        Objects.requireNonNull(cfgData);
+        Objects.requireNonNull(errs);
+
         TreeMap<String, CfgData.DTable> dataHeaders = new TreeMap<>(cfgData.tables());
         CfgSchema alignedCfg = CfgSchema.of();
         for (Nameable item : cfgSchema.items()) {
@@ -52,7 +50,7 @@ public record CfgSchemaAlignToData(CfgSchema cfgSchema,
                         }
                     } else {
                         if (th != null) {
-                            TableSchema alignedTable = alignTable(table, th.fields());
+                            TableSchema alignedTable = alignTable(table, th.fields(), errs);
                             alignedCfg.add(alignedTable);
                         }
                     }
@@ -61,17 +59,17 @@ public record CfgSchemaAlignToData(CfgSchema cfgSchema,
         }
 
         for (CfgData.DTable th : dataHeaders.values()) {
-            TableSchema newTable = newTableSchema(th);
+            TableSchema newTable = newTableSchema(th, errs);
             alignedCfg.add(newTable);
         }
         return alignedCfg;
     }
 
-    TableSchema newTableSchema(CfgData.DTable th) {
+    TableSchema newTableSchema(CfgData.DTable th, CfgSchemaErrs errs) {
         List<FieldSchema> fields = new ArrayList<>(th.fields().size());
         for (DField hf : th.fields()) {
             if (CfgUtil.isIdentifier(hf.name())) {
-                FieldSchema field = newFieldSchema(hf, th.tableName());
+                FieldSchema field = newFieldSchema(hf, th.tableName(), errs);
                 fields.add(field);
             } else {
                 errs.addErr(new CfgSchemaErrs.DataHeadNameNotIdentifier(th.tableName(), hf.name()));
@@ -96,7 +94,7 @@ public record CfgSchemaAlignToData(CfgSchema cfgSchema,
                 metadata, fields, List.of(), List.of());
     }
 
-    private FieldSchema newFieldSchema(DField hf, String tableName) {
+    private FieldSchema newFieldSchema(DField hf, String tableName, CfgSchemaErrs errs) {
         Metadata meta = Metadata.of();
         if (!hf.comment().isEmpty()) {
             meta.putComment(hf.comment());
@@ -115,9 +113,9 @@ public record CfgSchemaAlignToData(CfgSchema cfgSchema,
         return new FieldSchema(hf.name(), type, AUTO, meta);
     }
 
-    TableSchema alignTable(TableSchema table, List<DField> header) {
+    TableSchema alignTable(TableSchema table, List<DField> header, CfgSchemaErrs errs) {
         String name = table.name();
-        Map<String, FieldSchema> fieldSchemas = alignFields(table, header);
+        Map<String, FieldSchema> fieldSchemas = alignFields(table, header, errs);
         if (fieldSchemas.isEmpty()) {
             return null;
         }
@@ -177,7 +175,7 @@ public record CfgSchemaAlignToData(CfgSchema cfgSchema,
     }
 
 
-    private Map<String, FieldSchema> alignFields(TableSchema table, List<DField> header) {
+    private Map<String, FieldSchema> alignFields(TableSchema table, List<DField> header, CfgSchemaErrs errs) {
         Map<String, FieldSchema> curFields = new LinkedHashMap<>(table.fields().size());
         for (FieldSchema field : table.fields()) {
             curFields.put(field.name(), field);
@@ -209,7 +207,7 @@ public record CfgSchemaAlignToData(CfgSchema cfgSchema,
                 }
                 newField = new FieldSchema(fieldName, curField.type().copy(), curField.fmt(), meta);
                 FieldSchema old = alignedFields.put(newField.name(), newField);
-                if (old != null){
+                if (old != null) {
                     errs.addErr(new CfgSchemaErrs.DataHeadNameDuplicated(table.name(), fieldName));
                 }
 
@@ -217,10 +215,10 @@ public record CfgSchemaAlignToData(CfgSchema cfgSchema,
                 idx++;
 
                 if (CfgUtil.isIdentifier(hf.name())) {
-                    newField = newFieldSchema(hf, table.fullName());
+                    newField = newFieldSchema(hf, table.fullName(), errs);
                     Logger.log("%s new field: %s", table.name(), hf.name());
                     FieldSchema old = alignedFields.put(newField.name(), newField);
-                    if (old != null){
+                    if (old != null) {
                         errs.addErr(new CfgSchemaErrs.DataHeadNameDuplicated(table.name(), newField.name()));
                     }
 

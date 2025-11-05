@@ -125,7 +125,7 @@ class CfgSchemaAlignToDataTest {
 
         CfgData cfgData = CfgDataReaderTest.readFile("rank.csv", tempDir);
         CfgSchemaErrs errs = CfgSchemaErrs.of();
-        CfgSchema aligned = new CfgSchemaAlignToData(cfg, cfgData, HeadRows.A2_Default, errs).align();
+        CfgSchema aligned = new CfgSchemaAlignToData(HeadRows.A2_Default).align(cfg, cfgData, errs);
         new CfgSchemaResolver(aligned, errs).resolve();
 
         assertEquals(1, errs.errs().size());
@@ -157,7 +157,7 @@ class CfgSchemaAlignToDataTest {
     private void check_DataHeadNameNotIdentifier(CfgSchema cfg) {
         CfgData cfgData = CfgDataReaderTest.readFile("err.csv", tempDir);
         CfgSchemaErrs errs = CfgSchemaErrs.of();
-        CfgSchema aligned = new CfgSchemaAlignToData(cfg, cfgData, HeadRows.A2_Default, errs).align();
+        CfgSchema aligned = new CfgSchemaAlignToData(HeadRows.A2_Default).align(cfg, cfgData, errs);
         new CfgSchemaResolver(aligned, errs).resolve();
 
         assertEquals(1, errs.errs().size());
@@ -181,7 +181,7 @@ class CfgSchemaAlignToDataTest {
 
         CfgData cfgData = CfgDataReaderTest.readFile("rank.csv", tempDir);
         CfgSchemaErrs errs = CfgSchemaErrs.of();
-        CfgSchema aligned = new CfgSchemaAlignToData(cfg, cfgData, HeadRows.A2_Default, errs).align();
+        CfgSchema aligned = new CfgSchemaAlignToData(HeadRows.A2_Default).align(cfg, cfgData, errs);
         new CfgSchemaResolver(aligned, errs).resolve();
 
         assertEquals(1, errs.errs().size());
@@ -196,7 +196,7 @@ class CfgSchemaAlignToDataTest {
 
         CfgData cfgData = CfgDataReaderTest.readFile("rank.csv", tempDir);
         CfgSchemaErrs errs = CfgSchemaErrs.of();
-        CfgSchema aligned = new CfgSchemaAlignToData(cfg, cfgData, HeadRows.A2_Default, errs).align();
+        CfgSchema aligned = new CfgSchemaAlignToData(HeadRows.A2_Default).align(cfg, cfgData, errs);
         new CfgSchemaResolver(aligned, errs).resolve();
         errs.checkErrors("align");
         return aligned;

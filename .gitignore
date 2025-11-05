@@ -65,3 +65,8 @@
 /example/i18n/log_tw.txt
 /app/.claude/settings.local.json
 /app/CLAUDE.md
+/.claude-trace
+/.claude
+/app/jte-classes
+/app/.claude-trace
+/cfgeditor/.claude-trace

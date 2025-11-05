@@ -351,6 +351,15 @@ public record CfgSchemaErrs(List<Err> errs,
 
 
     /**
+     * 分表数据表头不一致
+     */
+    public record SplitDataHeaderNotEqual(String sheet1,
+                                          List<String> header1,
+                                          String sheet2,
+                                          List<String> header2) implements Err {
+    }
+
+    /**
      * 标记了json的table不能有对应的excel文件
      */
     public record JsonTableNotSupportExcel(String table,
