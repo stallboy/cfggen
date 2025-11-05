@@ -207,24 +207,27 @@ cfggen 项目采用模块化设计，每个模块负责特定的功能领域。�
 ## 7. editorserver - 编辑器服务器
 
 ### 功能描述
-提供Web编辑器服务，支持在线配置编辑和预览。
+提供Web编辑器服务，支持在线配置编辑和预览，与cfgeditor工具集成。
 
 ### 核心类
 
 #### EditorServer
 - **功能**：编辑器服务器主类
 - **特性**：
-  - HTTP服务
-  - 实时预览
-  - 配置验证
+  - HTTP服务：提供RESTful API接口
+  - 实时预览：配置变更实时预览
+  - 配置验证：Schema和数据完整性验证
+  - 热重载：支持开发时热重载
 
 #### 各种Service类
 - **功能**：提供特定编辑功能
 - **包含**：
-  - SchemaService：Schema管理
-  - RecordService：记录操作
-  - SearchService：搜索功能
-  - PromptService：AI提示
+  - SchemaService：Schema管理和验证
+  - RecordService：记录操作和CRUD功能
+  - SearchService：全文搜索和过滤
+  - PromptService：AI提示和智能建议
+  - FileService：文件管理和同步
+  - ContextService：上下文信息管理
 
 ## 8. tool - 工具模块
 
@@ -283,4 +286,4 @@ cfggen 项目采用模块化设计，每个模块负责特定的功能领域。�
   - 格式处理
 
 ---
-*最后更新：2025-11-04*
+*最后更新：2025-11-05*

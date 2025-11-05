@@ -16,23 +16,23 @@ public class Values {
         return CfgData.DCell.of(content, "<file>");
     }
 
-    static VInt ofInt(int v) {
+    public static VInt ofInt(int v) {
         return new VInt(v, ofCell(String.valueOf(v)));
     }
 
-    static VLong ofLong(long v) {
+    public static VLong ofLong(long v) {
         return new VLong(v, ofCell(String.valueOf(v)));
     }
 
-    static VString ofStr(String v) {
+    public static VString ofStr(String v) {
         return new VString(v, ofCell(v));
     }
 
-    static VBool ofBool(boolean v) {
+    public static VBool ofBool(boolean v) {
         return new VBool(v, ofCell(String.valueOf(v)));
     }
 
-    static VFloat ofFloat(float v) {
+    public static VFloat ofFloat(float v) {
         return new VFloat(v, ofCell(String.valueOf(v)));
     }
 

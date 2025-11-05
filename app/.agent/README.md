@@ -10,11 +10,11 @@
 ### 📋 System - 系统文档
 包含项目的整体架构、技术栈和核心功能说明。
 
-- [项目概述](System/ProjectOverview.md) - 项目背景、目标和核心功能
-- [技术栈说明](System/TechStack.md) - 使用的技术、依赖库和工具
-- [架构设计](System/Architecture.md) - 系统架构和模块关系
-- [核心模块说明](System/CoreModules.md) - 各模块功能详解
-- [配置说明](System/Configuration.md) - 构建和运行时配置
+- [项目概述](System/ProjectOverview.md) - 项目背景、目标和核心功能（更新：2025-11-05）
+- [技术栈说明](System/TechStack.md) - 使用的技术、依赖库和工具（更新：2025-11-05）
+- [架构设计](System/Architecture.md) - 系统架构和模块关系（更新：2025-11-05）
+- [核心模块说明](System/CoreModules.md) - 各模块功能详解（更新：2025-11-05）
+- [配置说明](System/Configuration.md) - 构建和运行时配置（更新：2025-11-05）
 
 
 ### 🎯 Tasks - 功能任务文档
@@ -23,15 +23,16 @@
 ### 📋 SOP - 标准操作流程
 开发、测试和部署的标准操作指南。
 
-- [添加新生成器](SOP/AddingNewGenerator.md) - 如何扩展支持新语言
-- [测试](SOP/TestingGuide.md) - 测试
+- [添加新生成器](SOP/AddingNewGenerator.md) - 如何扩展支持新语言（更新：2025-11-05）
+- [测试指南](SOP/TestingGuide.md) - 测试框架使用和最佳实践（更新：2025-11-05）
 
 ## 快速开始
 
 1. **新成员入门**：从 [项目概述](System/ProjectOverview.md) 开始了解项目
 2. **开发环境**：参考 [技术栈说明](System/TechStack.md) 配置环境
-3. **功能开发**：查看相关 [Tasks文档](Tasks/) 了解需求
-4. **操作流程**：遵循 [SOP指南](SOP/) 进行标准化操作
+3. **架构理解**：阅读 [架构设计](System/Architecture.md) 了解系统结构
+6. **功能开发**：查看相关 [Tasks文档](Tasks/) 了解需求
+7. **操作流程**：遵循 [SOP指南](SOP/) 进行标准化操作
 
 ## 文档维护
 
@@ -49,4 +50,4 @@
 - 提交前检查拼写和格式
 
 ---
-*最后更新：2025-11-04*
+*最后更新：2025-11-05*
