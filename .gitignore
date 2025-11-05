@@ -68,3 +68,5 @@
 /.claude-trace
 /.claude
 /app/jte-classes
+/app/.claude-trace
+/cfgeditor/.claude-trace
