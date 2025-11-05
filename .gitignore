@@ -70,3 +70,5 @@
 /app/jte-classes
 /app/.claude-trace
 /cfgeditor/.claude-trace
+/thoughts
+/SPEC.md
