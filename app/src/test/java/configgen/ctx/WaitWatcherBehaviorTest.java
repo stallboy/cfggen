@@ -1,6 +1,7 @@
 package configgen.ctx;
 
 import configgen.util.Logger;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -25,33 +26,21 @@ class WaitWatcherBehaviorTest {
         Logger.setPrinter(Logger.Printer.nullPrinter);
     }
 
-    @Test
-    void shouldStartWaitWatcherThreadWhenStartMethodIsCalled() {
-        // Given: WaitWatcher 实例
-        Watcher watcher = new Watcher(tempDir, null);
-        AtomicInteger listenerCallCount = new AtomicInteger(0);
-        WaitWatcher waitWatcher = new WaitWatcher(watcher, listenerCallCount::incrementAndGet, 100);
-
-        // When: 启动等待监控器
-        Thread waitWatcherThread = waitWatcher.start();
-
-        // Then: 应该返回有效的线程
-        assertNotNull(waitWatcherThread, "应该返回有效的线程");
-        assertTrue(waitWatcherThread.isAlive(), "等待监控器线程应该是活动的");
-
-        // 清理：停止线程
-        waitWatcherThread.interrupt();
+    @AfterAll
+    static void setDefaultLogger(){
+        Logger.setPrinter(Logger.Printer.outPrinter);
     }
+
 
     @Test
     void shouldTriggerListenerAfterWaitPeriodWhenSingleEventOccurs() throws IOException, InterruptedException {
         // Given: WaitWatcher 和监听器
         Watcher watcher = new Watcher(tempDir, null);
-        Thread watcherThread = watcher.start();
+        watcher.start();
 
         AtomicInteger listenerCallCount = new AtomicInteger(0);
         WaitWatcher waitWatcher = new WaitWatcher(watcher, listenerCallCount::incrementAndGet, 50, 50);
-        Thread waitWatcherThread = waitWatcher.start();
+        waitWatcher.start();
 
         try {
             // 等待监控器初始化
@@ -67,8 +56,8 @@ class WaitWatcherBehaviorTest {
             // Then: 监听器应该被调用一次
             assertEquals(1, listenerCallCount.get(), "监听器应该被调用一次");
         } finally {
-            watcherThread.interrupt();
-            waitWatcherThread.interrupt();
+            watcher.stop();
+            waitWatcher.stop();
         }
     }
 
@@ -76,11 +65,11 @@ class WaitWatcherBehaviorTest {
     void shouldAggregateMultipleEventsWithinWaitPeriod() throws IOException, InterruptedException {
         // Given: WaitWatcher 和监听器
         Watcher watcher = new Watcher(tempDir, null);
-        Thread watcherThread = watcher.start();
+        watcher.start();
 
         AtomicInteger listenerCallCount = new AtomicInteger(0);
         WaitWatcher waitWatcher = new WaitWatcher(watcher, listenerCallCount::incrementAndGet, 50, 50);
-        Thread waitWatcherThread = waitWatcher.start();
+        waitWatcher.start();
 
         try {
             // 等待监控器初始化
@@ -97,13 +86,13 @@ class WaitWatcherBehaviorTest {
             Files.writeString(file3, "content3");
 
             // 等待超过等待时间
-            Thread.sleep(100);
+            Thread.sleep(110);
 
             // Then: 监听器应该只被调用一次（事件聚合）
             assertEquals(1, listenerCallCount.get(), "多个事件应该被聚合为一次调用");
         } finally {
-            watcherThread.interrupt();
-            waitWatcherThread.interrupt();
+            watcher.stop();
+            waitWatcher.stop();
         }
     }
 
@@ -111,11 +100,11 @@ class WaitWatcherBehaviorTest {
     void shouldNotTriggerListenerWhenNoEventsOccur() throws InterruptedException {
         // Given: WaitWatcher 和监听器
         Watcher watcher = new Watcher(tempDir, null);
-        Thread watcherThread = watcher.start();
+        watcher.start();
 
         AtomicInteger listenerCallCount = new AtomicInteger(0);
         WaitWatcher waitWatcher = new WaitWatcher(watcher, listenerCallCount::incrementAndGet, 50, 50);
-        Thread waitWatcherThread = waitWatcher.start();
+        waitWatcher.start();
 
         try {
             // When: 等待超过等待时间（没有事件发生）
@@ -124,8 +113,8 @@ class WaitWatcherBehaviorTest {
             // Then: 监听器不应该被调用
             assertEquals(0, listenerCallCount.get(), "没有事件时监听器不应该被调用");
         } finally {
-            watcherThread.interrupt();
-            waitWatcherThread.interrupt();
+            watcher.stop();
+            waitWatcher.stop();
         }
     }
 
@@ -133,11 +122,11 @@ class WaitWatcherBehaviorTest {
     void shouldTriggerTwice() throws IOException, InterruptedException {
         // Given: WaitWatcher 和监听器
         Watcher watcher = new Watcher(tempDir, null);
-        Thread watcherThread = watcher.start();
+        watcher.start();
 
         AtomicInteger listenerCallCount = new AtomicInteger(0);
         WaitWatcher waitWatcher = new WaitWatcher(watcher, listenerCallCount::incrementAndGet, 50, 50);
-        Thread waitWatcherThread = waitWatcher.start();
+        waitWatcher.start();
 
         try {
             // 等待监控器初始化
@@ -159,8 +148,8 @@ class WaitWatcherBehaviorTest {
             // Then: 监听器应该被调用两次
             assertEquals(2, listenerCallCount.get(), "监听器应该被调用两次");
         } finally {
-            watcherThread.interrupt();
-            waitWatcherThread.interrupt();
+            watcher.stop();
+            waitWatcher.stop();
         }
     }
 
@@ -214,11 +203,11 @@ class WaitWatcherBehaviorTest {
     void shouldRespectConfiguredWaitTimeForEventAggregation() throws IOException, InterruptedException {
         // Given: 配置了较长等待时间的 WaitWatcher
         Watcher watcher = new Watcher(tempDir, null);
-        Thread watcherThread = watcher.start();
+        watcher.start();
 
         AtomicInteger listenerCallCount = new AtomicInteger(0);
         WaitWatcher waitWatcher = new WaitWatcher(watcher, listenerCallCount::incrementAndGet, 50, 50);
-        Thread waitWatcherThread = waitWatcher.start();
+        waitWatcher.start();
 
         try {
             // 等待监控器初始化
@@ -240,8 +229,8 @@ class WaitWatcherBehaviorTest {
             // 监听器应该被调用
             assertEquals(1, listenerCallCount.get(), "等待时间足够时监听器应该被调用");
         } finally {
-            watcherThread.interrupt();
-            waitWatcherThread.interrupt();
+            watcher.stop();
+            waitWatcher.stop();
         }
     }
 
@@ -249,7 +238,7 @@ class WaitWatcherBehaviorTest {
     void shouldHandleMultipleWaitWatchersIndependently() throws IOException, InterruptedException {
         // Given: 两个独立的 WaitWatcher
         Watcher watcher = new Watcher(tempDir, null);
-        Thread watcherThread = watcher.start();
+        watcher.start();
 
         AtomicInteger listener1CallCount = new AtomicInteger(0);
         AtomicInteger listener2CallCount = new AtomicInteger(0);
@@ -257,8 +246,8 @@ class WaitWatcherBehaviorTest {
         WaitWatcher waitWatcher1 = new WaitWatcher(watcher, listener1CallCount::incrementAndGet, 50, 50);
         WaitWatcher waitWatcher2 = new WaitWatcher(watcher, listener2CallCount::incrementAndGet, 150, 50);
 
-        Thread waitWatcherThread1 = waitWatcher1.start();
-        Thread waitWatcherThread2 = waitWatcher2.start();
+        waitWatcher1.start();
+        waitWatcher2.start();
 
         try {
             // 等待监控器初始化
@@ -281,9 +270,9 @@ class WaitWatcherBehaviorTest {
             // 第二个监听器应该被调用
             assertEquals(1, listener2CallCount.get(), "第二个监听器应该被调用");
         } finally {
-            watcherThread.interrupt();
-            waitWatcherThread1.interrupt();
-            waitWatcherThread2.interrupt();
+            watcher.stop();
+            waitWatcher1.stop();
+            waitWatcher2.stop();
         }
     }
 }

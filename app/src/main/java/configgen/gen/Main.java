@@ -32,79 +32,79 @@ import java.util.Locale;
 
 public final class Main {
     private static int usage(String reason) {
-        System.out.println(reason);
+        Logger.log(reason);
 
-        System.out.println("Usage: java -jar cfggen.jar [options] -datadir [dir] [options] [gens]");
-        System.out.println();
-        System.out.println("-----schema & data");
-        System.out.println("    -datadir          " + LocaleUtil.getLocaleString("Usage.DataDir",
+        Logger.log("Usage: java -jar cfggen.jar [options] -datadir [dir] [options] [gens]");
+        Logger.log("");
+        Logger.log("-----schema & data");
+        Logger.log("    -datadir          " + LocaleUtil.getLocaleString("Usage.DataDir",
                 "configuration data directory, must contains file:config.cfg"));
-        System.out.println("    -headrow          " + LocaleUtil.getLocaleString("Usage.HeadRow",
+        Logger.log("    -headrow          " + LocaleUtil.getLocaleString("Usage.HeadRow",
                 "csv/txt/excel file head row type, default 2"));
-        System.out.println("    -encoding         " + LocaleUtil.getLocaleString("Usage.Encoding",
+        Logger.log("    -encoding         " + LocaleUtil.getLocaleString("Usage.Encoding",
                 "csv/txt encoding, default GBK, if csv file has BOM head, use that encoding"));
-        System.out.println("    -asroot           " + LocaleUtil.getLocaleString("Usage.AsRoot",
+        Logger.log("    -asroot           " + LocaleUtil.getLocaleString("Usage.AsRoot",
                 "ExplicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map， default null, can be 'ClientTables:noserver,PublicTables,ServerTables:noclient'"));
-        System.out.println("    -exceldirs        " + LocaleUtil.getLocaleString("Usage.ExcelDirs",
+        Logger.log("    -exceldirs        " + LocaleUtil.getLocaleString("Usage.ExcelDirs",
                 "ExplicitDir.excelFileDirs， default null"));
-        System.out.println("    -jsondirs         " + LocaleUtil.getLocaleString("Usage.JsonDirs",
+        Logger.log("    -jsondirs         " + LocaleUtil.getLocaleString("Usage.JsonDirs",
                 "ExplicitDir.jsonFileDirs， default null"));
 
 
-        System.out.println();
-        System.out.println("-----i18n support");
-        System.out.println("    -i18nfile         " + LocaleUtil.getLocaleString("Usage.I18nFile",
+        Logger.log("");
+        Logger.log("-----i18n support");
+        Logger.log("    -i18nfile         " + LocaleUtil.getLocaleString("Usage.I18nFile",
                 "two choices: 1,csv file use original str as Id per table. 2,directory,has multiply xlsx file and use pk&fieldChain as Id per table. default null"));
-        System.out.println("    -langswitchdir    " + LocaleUtil.getLocaleString("Usage.LangSwitchDir",
+        Logger.log("    -langswitchdir    " + LocaleUtil.getLocaleString("Usage.LangSwitchDir",
                 "language switch support"));
-        System.out.println("    -defaultlang      " + LocaleUtil.getLocaleString("Usage.DefaultLang",
+        Logger.log("    -defaultlang      " + LocaleUtil.getLocaleString("Usage.DefaultLang",
                 "the default language when use lang switch"));
 
-        System.out.println();
-        System.out.println("-----tools");
-        System.out.println("    -verify           " + LocaleUtil.getLocaleString("Usage.Verify",
+        Logger.log("");
+        Logger.log("-----tools");
+        Logger.log("    -verify           " + LocaleUtil.getLocaleString("Usage.Verify",
                 "validate all data"));
-        System.out.println("    -searchto         " + LocaleUtil.getLocaleString("Usage.SearchTo",
+        Logger.log("    -searchto         " + LocaleUtil.getLocaleString("Usage.SearchTo",
                 "save search result to file, default stdout"));
-        System.out.println("    -searchtag        " + LocaleUtil.getLocaleString("Usage.SearchTag",
+        Logger.log("    -searchtag        " + LocaleUtil.getLocaleString("Usage.SearchTag",
                 "search value with tag, default full value."));
-        System.out.println("    -search           " + LocaleUtil.getLocaleString("Usage.Search",
+        Logger.log("    -search           " + LocaleUtil.getLocaleString("Usage.Search",
                 "enter read-eval-print-loop if no param after this"));
         ValueSearcher.printUsage("        ");
-        System.out.println("    -binarytotext     " + LocaleUtil.getLocaleString("Usage.BinaryToText",
+        Logger.log("    -binarytotext     " + LocaleUtil.getLocaleString("Usage.BinaryToText",
                 "print table schema & data, 1/2 params. 1:javadata file, 2:table name(use startsWith to match)"));
-        System.out.println("    -binarytotextloop " + LocaleUtil.getLocaleString("Usage.BinaryToTextLoop",
+        Logger.log("    -binarytotextloop " + LocaleUtil.getLocaleString("Usage.BinaryToTextLoop",
                 "enter read-eval-print-loop, 1 param: javadata file"));
-        System.out.println("    -xmltocfg         " + LocaleUtil.getLocaleString("Usage.XmlToCfg",
+        Logger.log("    -xmltocfg         " + LocaleUtil.getLocaleString("Usage.XmlToCfg",
                 "convert schema from .xml to .cfg"));
-        System.out.println("    -compareterm      " + LocaleUtil.getLocaleString("Usage.CompareTerm",
+        Logger.log("    -compareterm      " + LocaleUtil.getLocaleString("Usage.CompareTerm",
                 "check -i18nfile (2) compatible with term"));
         if (BuildSettings.isIncludePoi()) {
-            System.out.println("    -usepoi           " + LocaleUtil.getLocaleString("Usage.UsePoi",
+            Logger.log("    -usepoi           " + LocaleUtil.getLocaleString("Usage.UsePoi",
                     "use poi lib to read Excel file, slow speed, default false"));
-            System.out.println("    -comparepoiandfastexcel   " + LocaleUtil.getLocaleString("Usage.ComparePoiAndFastExcel",
+            Logger.log("    -comparepoiandfastexcel   " + LocaleUtil.getLocaleString("Usage.ComparePoiAndFastExcel",
                     "compare fastexcel lib read to poi lib read"));
         }
 
-        System.out.println("-----options");
-        System.out.println("    -v                " + LocaleUtil.getLocaleString("Usage.V",
+        Logger.log("-----options");
+        Logger.log("    -v                " + LocaleUtil.getLocaleString("Usage.V",
                 "verbose level 1, print statistic & warning"));
-        System.out.println("    -vv               " + LocaleUtil.getLocaleString("Usage.VV",
+        Logger.log("    -vv               " + LocaleUtil.getLocaleString("Usage.VV",
                 "verbose level 2, print extra info"));
-        System.out.println("    -p                " + LocaleUtil.getLocaleString("Usage.P",
+        Logger.log("    -p                " + LocaleUtil.getLocaleString("Usage.P",
                 "profiler, print memory usage & time elapsed"));
-        System.out.println("    -pp               " + LocaleUtil.getLocaleString("Usage.PP",
+        Logger.log("    -pp               " + LocaleUtil.getLocaleString("Usage.PP",
                 "profiler, gc before print memory usage"));
-        System.out.println("    -nowarn           " + LocaleUtil.getLocaleString("Usage.NOWARN",
+        Logger.log("    -nowarn           " + LocaleUtil.getLocaleString("Usage.NOWARN",
                 "do not print warning"));
-        System.out.println("    -weakwarn         " + LocaleUtil.getLocaleString("Usage.WEAKWARN",
+        Logger.log("    -weakwarn         " + LocaleUtil.getLocaleString("Usage.WEAKWARN",
                 "print weak warning"));
 
-        System.out.println();
-        System.out.println("-----" + LocaleUtil.getLocaleString("Usage.GenStart",
+        Logger.log("");
+        Logger.log("-----" + LocaleUtil.getLocaleString("Usage.GenStart",
                 "parameters in gen are separated by , and the parameter name and parameter value are separated = or :."));
         Generators.getAllProviders().forEach((k, v) -> {
-                    System.out.printf("    -gen %s\n", k);
+                    Logger.log("    -gen %s", k);
                     ParameterInfoCollector parameter = ParameterInfoCollector.of(k);
                     v.create(parameter);
                     parameter.print();
@@ -113,6 +113,8 @@ public final class Main {
 
         return 1;
     }
+
+
 
     public static void main(String[] args) {
         try {

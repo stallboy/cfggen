@@ -1,5 +1,8 @@
 package configgen.gen;
 
+import configgen.util.Logger;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Files;
@@ -10,6 +13,16 @@ class GeneratorFileTest {
 
     @TempDir
     Path tempDir;
+
+    @BeforeAll
+    static void setupLogger() {
+        Logger.setPrinter(Logger.Printer.nullPrinter);
+    }
+
+    @AfterAll
+    static void setDefaultLogger(){
+        Logger.setPrinter(Logger.Printer.outPrinter);
+    }
 
     @Test
     void shouldCreateUtf8Writer_whenFileProvided() throws Exception {

@@ -5,8 +5,11 @@ import configgen.ctx.Context;
 import configgen.data.CfgData;
 import configgen.data.Source;
 import configgen.schema.TableSchema;
+import configgen.util.Logger;
 import configgen.value.CfgValue.*;
 import configgen.value.CfgValueErrs.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -19,6 +22,17 @@ import static org.junit.jupiter.api.Assertions.*;
 class ValueParserConversionTest {
 
     private @TempDir Path tempDir;
+
+    @BeforeAll
+    static void setupLogger() {
+        Logger.setPrinter(Logger.Printer.nullPrinter);
+    }
+
+    @AfterAll
+    static void setDefaultLogger(){
+        Logger.setPrinter(Logger.Printer.outPrinter);
+    }
+
 
     @Test
     void shouldConvertComplexJsonStructures() {
@@ -77,7 +91,7 @@ class ValueParserConversionTest {
                     id:int;
                     name:str;
                 }
-
+                
                 table employee[id] {
                     id:int;
                     name:str;
@@ -223,13 +237,13 @@ class ValueParserConversionTest {
                     street:str;
                     city:str;
                 }
-
+                
                 struct contact {
                     phone:str;
                     email:str;
                     addr:address;
                 }
-
+                
                 table customer[id] {
                     id:int;
                     name:str;
@@ -293,7 +307,7 @@ class ValueParserConversionTest {
                     description:text;
                     color:str (nullable);
                 }
-
+                
                 table order[order_id] {
                     order_id:int;
                     customer_name:str;
@@ -350,7 +364,7 @@ class ValueParserConversionTest {
             // 验证优先级值
             VInt priority = (VInt) order.values().get(3);
             assertTrue(priority.value() >= 1 && priority.value() <= 4,
-                "Priority should be between 1 and 4, got " + priority.value());
+                    "Priority should be between 1 and 4, got " + priority.value());
         }
 
         // 验证具体订单的状态

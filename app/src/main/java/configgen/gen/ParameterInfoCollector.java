@@ -1,6 +1,7 @@
 package configgen.gen;
 
 import configgen.util.LocaleUtil;
+import configgen.util.Logger;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -23,7 +24,7 @@ record ParameterInfoCollector(String genId,
             Info info = entry.getValue();
             String messageId = info.messageId != null ? info.messageId : genId + "." + key;
             if (info.isFlag) {
-                System.out.printf("        %-20s %s,%s%n", key,
+                Logger.log("        %-20s %s,%s", key,
                         LocaleUtil.getLocaleString(messageId, ""),
                         LocaleUtil.getLocaleString("Gen.DefaultFalse", "default false"));
             } else {
@@ -31,7 +32,7 @@ record ParameterInfoCollector(String genId,
                 if (def == null) {
                     def = "null";
                 }
-                System.out.printf("        %-20s %s%n", key + "=" + def,
+                Logger.log("        %-20s %s", key + "=" + def,
                         LocaleUtil.getLocaleString(messageId, "")
                 );
             }

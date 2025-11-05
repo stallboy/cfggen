@@ -5,6 +5,7 @@ import configgen.gen.Parameter;
 import configgen.gen.ParameterParser;
 import configgen.Resources;
 import configgen.util.Logger;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -26,6 +27,11 @@ class GenJavaDataTest {
     @BeforeAll
     static void setupLogger() {
         Logger.setPrinter(Logger.Printer.nullPrinter);
+    }
+
+    @AfterAll
+    static void setDefaultLogger(){
+        Logger.setPrinter(Logger.Printer.outPrinter);
     }
 
     @Test
@@ -179,9 +185,6 @@ class GenJavaDataTest {
 
             // 获取捕获的输出
             return baos.toString(StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            System.setOut(originalOut);
-            return null;
         } finally {
             System.setOut(originalOut);
         }

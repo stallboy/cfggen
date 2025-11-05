@@ -2,14 +2,14 @@ package configgen.value;
 
 import configgen.Resources;
 import configgen.ctx.Context;
-import configgen.data.CfgDataReader;
-import configgen.data.ReadByFastExcel;
-import configgen.data.ReadCsv;
 import configgen.schema.CfgSchema;
 import configgen.schema.ForeignKeySchema;
 import configgen.schema.Structural;
 import configgen.schema.TableSchema;
 import configgen.schema.cfg.CfgReader;
+import configgen.util.Logger;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -22,6 +22,15 @@ import static configgen.value.Values.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ValueUtilTest {
+    @BeforeAll
+    static void setupLogger() {
+        Logger.setPrinter(Logger.Printer.nullPrinter);
+    }
+
+    @AfterAll
+    static void setDefaultLogger() {
+        Logger.setPrinter(Logger.Printer.outPrinter);
+    }
 
     @Test
     void extractKeyValue() {
@@ -41,7 +50,7 @@ class ValueUtilTest {
         {
             Value keyValue = ValueUtil.extractKeyValue(vStruct, new int[]{0, 1});
             assertTrue(keyValue instanceof VList vList && vList.valueList().size() == 2 &&
-                       ((VString) vList.valueList().get(1)).value().equals("abc"));
+                    ((VString) vList.valueList().get(1)).value().equals("abc"));
         }
         {
             assertThrows(Exception.class, () -> ValueUtil.extractKeyValue(vStruct, new int[]{2}));
@@ -147,7 +156,7 @@ class ValueUtilTest {
         CfgSchema cfg = CfgReader.parse(str);
         cfg.resolve();
         VStruct vStruct = ofStruct((Structural) cfg.findItem("st"),
-            List.of(ofInt(1), ofStr("abc"), ofBool(true), ofFloat(3.14f)));
+                List.of(ofInt(1), ofStr("abc"), ofBool(true), ofFloat(3.14f)));
 
         {
             Value keyValue = ValueUtil.extractKeyValue(vStruct, new int[]{0, 1});
@@ -190,11 +199,11 @@ class ValueUtilTest {
         cfg.resolve().checkErrors();
 
         VStruct inner = ofStruct((Structural) cfg.findItem("Inner"),
-            List.of(ofInt(100), ofStr("inner text")));
+                List.of(ofInt(100), ofStr("inner text")));
         VStruct outer = ofStruct((Structural) cfg.findItem("Outer"),
-            List.of(ofInt(1), inner, ofBool(true)));
+                List.of(ofInt(1), inner, ofBool(true)));
         VStruct vStruct = ofStruct(cfg.findTable("t"),
-            List.of(ofInt(999), outer));
+                List.of(ofInt(999), outer));
 
         {
             Value idValue = ValueUtil.extractFieldValue(vStruct, "id");
@@ -231,11 +240,11 @@ class ValueUtilTest {
         TableSchema t = cfg.findTable("t");
 
         VStruct vStruct = ofStruct(t, List.of(
-            ofInt(1),
-            ofStr(""),  // 空字符串
-            ofStr(""),  // 可为空的空字符串
-            ofInt(0),   // 零值
-            ofBool(false) // false布尔值
+                ofInt(1),
+                ofStr(""),  // 空字符串
+                ofStr(""),  // 可为空的空字符串
+                ofInt(0),   // 零值
+                ofBool(false) // false布尔值
         ));
 
         {

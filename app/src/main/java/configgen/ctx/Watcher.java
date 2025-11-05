@@ -19,6 +19,7 @@ public class Watcher {
     private final ExplicitDir explicitDir;
     private volatile long lastEvtMillis;
     private final AtomicInteger eventVersion = new AtomicInteger(0);
+    private Thread startedThread;
 
     public Watcher(Path rootDir, ExplicitDir explicitDir) {
         Objects.requireNonNull(rootDir);
@@ -26,14 +27,28 @@ public class Watcher {
         this.explicitDir = explicitDir;
     }
 
-    public Thread start() {
-        return Thread.startVirtualThread(() -> {
+    public void start() {
+        startedThread = Thread.startVirtualThread(() -> {
             try {
                 watchLoop();
             } catch (IOException | InterruptedException e) {
                 Logger.log("Watcher stopped by %s", e.toString());
             }
         });
+    }
+
+    public void stop() {
+        if (startedThread == null) {
+            return;
+        }
+        startedThread.interrupt();
+        try {
+            startedThread.join();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            startedThread = null;
+        }
     }
 
     public long getLastEventMillis() {
@@ -134,9 +149,5 @@ public class Watcher {
         trigger();
     }
 
-    public static void main(String[] args) throws InterruptedException {
-        Thread t = new Watcher(Path.of("."), null).start();
-        t.join();
-    }
 }
 

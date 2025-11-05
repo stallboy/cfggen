@@ -15,6 +15,7 @@ public class WaitWatcher {
 
     private long lastEvtMillis;
     private int evtVersion;
+    private Thread startedThread;
 
     public WaitWatcher(Watcher watcher,
                        Runnable listener,
@@ -41,8 +42,11 @@ public class WaitWatcher {
         this.sleepMillis = sleepMillis;
     }
 
-    public Thread start() {
-        return Thread.startVirtualThread(() -> {
+    public void start() {
+        if (startedThread != null) {
+            throw new IllegalStateException("already started");
+        }
+        startedThread = Thread.startVirtualThread(() -> {
             evtVersion = watcher.getEventVersion();
             lastEvtMillis = watcher.getLastEventMillis();
             while (true) {
@@ -71,6 +75,20 @@ public class WaitWatcher {
                 lastEvtMillis = 0;
                 listener.run();
             }
+        }
+    }
+
+    public void stop() {
+        if (startedThread == null) {
+            return;
+        }
+        startedThread.interrupt();
+        try {
+            startedThread.join();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            startedThread = null;
         }
     }
 

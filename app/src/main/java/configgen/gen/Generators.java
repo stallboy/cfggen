@@ -1,5 +1,7 @@
 package configgen.gen;
 
+import configgen.util.Logger;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -14,7 +16,7 @@ public class Generators {
         ParameterParser parameter = new ParameterParser(arg);
         GeneratorProvider provider = providers.get(parameter.genId());
         if (provider == null) {
-            System.err.println(parameter.genId() + " not support");
+            Logger.log(parameter.genId() + " not support");
             return null;
         }
         Generator generator = provider.create(parameter);

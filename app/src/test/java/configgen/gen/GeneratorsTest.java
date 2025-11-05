@@ -1,9 +1,22 @@
 package configgen.gen;
 
+import configgen.util.Logger;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class GeneratorsTest {
+
+    @BeforeAll
+    static void setupLogger() {
+        Logger.setPrinter(Logger.Printer.nullPrinter);
+    }
+
+    @AfterAll
+    static void setDefaultLogger(){
+        Logger.setPrinter(Logger.Printer.outPrinter);
+    }
 
     @Test
     void shouldCreateGenerator_whenRegisteredGeneratorNameProvided() {

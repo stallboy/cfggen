@@ -3,6 +3,9 @@ package configgen.value;
 import com.alibaba.fastjson2.JSONObject;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgReader;
+import configgen.util.Logger;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -16,6 +19,16 @@ import static org.junit.jupiter.api.Assertions.*;
 class ValueJsonParserTest {
 
     private CfgSchema cfg;
+
+    @BeforeAll
+    static void setupLogger() {
+        Logger.setPrinter(Logger.Printer.nullPrinter);
+    }
+
+    @AfterAll
+    static void setDefaultLogger(){
+        Logger.setPrinter(Logger.Printer.outPrinter);
+    }
 
     @BeforeEach
     void beforeAll() {

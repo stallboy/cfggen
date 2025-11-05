@@ -23,8 +23,8 @@ class CfgReaderTest {
         assertEquals(1, cfg.items().size());
 
         TableSchema table = (TableSchema) cfg.items().getFirst();
-        assertEquals(table.name(), "ability");
-//        System.out.println(table);
+        assertEquals("ability", table.name());
+
         /*
             TableSchema[name=ability, primaryKey=KeySchema{name=[id]}, entry=EEnum{field='name'},
             isColumnMode=false, meta=Metadata[data={}], fields=[
@@ -38,24 +38,24 @@ class CfgReaderTest {
         assertFalse(table.isColumnMode());
         assertTrue(table.meta().data().isEmpty());
 
-        assertEquals(table.fields().size(), 2);
+        assertEquals(2, table.fields().size());
         {
             FieldSchema f1 = table.fields().getFirst();
-            assertEquals(f1.name(), "id");
-            assertEquals(f1.type(), Primitive.INT);
-            assertEquals(f1.fmt(), AUTO);
-            assertEquals(f1.meta().data().size(), 1);
-            assertTrue(f1.meta().data().get("_comment") instanceof Metadata.MetaStr ms &&
-                    ms.value().equals("属性类型"));
+            assertEquals("id", f1.name());
+            assertEquals(Primitive.INT, f1.type());
+            assertEquals(AUTO, f1.fmt());
+            assertEquals(1, f1.meta().data().size());
+            assertTrue(f1.meta().data().get("_comment") instanceof Metadata.MetaStr(String value) &&
+                    value.equals("属性类型"));
         }
         {
             FieldSchema f2 = table.fields().get(1);
-            assertEquals(f2.name(), "name");
-            assertEquals(f2.type(), Primitive.STRING);
-            assertEquals(f2.fmt(), AUTO);
-            assertEquals(f2.meta().data().size(), 1);
-            assertTrue(f2.meta().data().get("_comment") instanceof Metadata.MetaStr ms &&
-                    ms.value().equals("程序用名字"));
+            assertEquals("name", f2.name());
+            assertEquals(Primitive.STRING, f2.type());
+            assertEquals(AUTO, f2.fmt());
+            assertEquals(1, f2.meta().data().size());
+            assertTrue(f2.meta().data().get("_comment") instanceof Metadata.MetaStr(String value) &&
+                    value.equals("程序用名字"));
         }
     }
 
@@ -72,9 +72,8 @@ class CfgReaderTest {
         assertEquals(1, cfg.items().size());
 
         StructSchema struct = (StructSchema) cfg.items().get(0);
-        assertEquals(struct.name(), "AttrRandom");
+        assertEquals("AttrRandom", struct.name());
 
-//        System.out.println(table);
         /*
         StructSchema[name=AttrRandom, fmt=AUTO, meta=Metadata[data={}], fields=[
             FieldSchema[name=Attr, type=INT, fmt=AUTO, meta=Metadata[data={__comment=MetaStr[value=属性id]}]],
@@ -84,13 +83,13 @@ class CfgReaderTest {
                 refTable='common.fightattrs', refKey=RefPrimary[nullable=false], meta=Metadata[data={}]}]]
          */
 
-        assertEquals(struct.fmt(), AUTO);
-        assertEquals(struct.foreignKeys().size(), 1);
+        assertEquals(AUTO, struct.fmt());
+        assertEquals(1, struct.foreignKeys().size());
         ForeignKeySchema fk = struct.foreignKeys().get(0);
-        assertEquals(fk.name(), "Attr");
+        assertEquals("Attr", fk.name());
         assertEquals(fk.key().fields(), List.of("Attr"));
-        assertEquals(fk.refTable(), "common.fightattrs");
-        assertTrue(fk.refKey() instanceof RefKey.RefPrimary p && !p.nullable() && fk.meta().data().isEmpty());
+        assertEquals("common.fightattrs", fk.refTable());
+        assertTrue(fk.refKey() instanceof RefKey.RefPrimary(boolean nullable) && !nullable && fk.meta().data().isEmpty());
     }
 
 
@@ -106,8 +105,8 @@ class CfgReaderTest {
         assertEquals(1, cfg.items().size());
 
         StructSchema struct = (StructSchema) cfg.items().getFirst();
-        assertEquals(struct.name(), "AddMonsterBuff");
-//        System.out.println(struct);
+        assertEquals("AddMonsterBuff", struct.name());
+
         /*
         StructSchema[name=AddMonsterBuff, fmt=AUTO, meta=Metadata[data={}], fields=[
             FieldSchema[name=monsterlist, type=FList[item=INT], fmt=Sep[sep=;],
@@ -117,8 +116,8 @@ class CfgReaderTest {
          */
 
         FieldSchema f1 = struct.fields().getFirst();
-        assertTrue(f1.type() instanceof FieldType.FList flist && flist.item() == Primitive.INT);
-        assertTrue(f1.fmt() instanceof FieldFormat.Sep sep && sep.sep() == ';');
+        assertTrue(f1.type() instanceof FieldType.FList(FieldType.SimpleType item) && item == Primitive.INT);
+        assertTrue(f1.fmt() instanceof FieldFormat.Sep(char sep) && sep == ';');
     }
 
     @Test
@@ -128,7 +127,7 @@ class CfgReaderTest {
                 	struct BiographyAchievement {
                 		biographyid:int ->biography.biographyinfo;
                 	}
-                                
+
                 	struct TitleItemAchievement {
                 		commonitemid:int ->item.commonitem;
                 	}
@@ -167,7 +166,6 @@ class CfgReaderTest {
         assertEquals(1, cfg.items().size());
 
         InterfaceSchema sInterface = (InterfaceSchema) cfg.items().getFirst();
-//        System.out.println(sInterface);
         /*
         InterfaceSchema{name='achievement.Achievementtype', enumRef='achievement.achievementtype', defaultImpl='',
             fmt=AUTO, meta=Metadata[data={}], impls=[
@@ -178,10 +176,10 @@ class CfgReaderTest {
             ...
          */
 
-        assertEquals(sInterface.enumRef(), "achievement.achievementtype");
-        assertEquals(sInterface.defaultImpl(), "");
-        assertEquals(sInterface.fmt(), AUTO);
-        assertEquals(sInterface.impls().size(), 9);
+        assertEquals("achievement.achievementtype", sInterface.enumRef());
+        assertEquals("", sInterface.defaultImpl());
+        assertEquals(AUTO, sInterface.fmt());
+        assertEquals(9, sInterface.impls().size());
     }
 
     @Test
@@ -197,7 +195,7 @@ class CfgReaderTest {
         assertEquals(1, cfg.items().size());
 
         TableSchema table = (TableSchema) cfg.items().getFirst();
-//        System.out.print(table);
+
         /*
         TableSchema[name=attrtype, primaryKey=KeySchema{name=[Id]}, entry=EEnum{field='Ename'},
         isColumnMode=false, meta=Metadata[data={}], fields=[
@@ -209,6 +207,6 @@ class CfgReaderTest {
                 meta=Metadata[data={}]}], uniqueKeys=[]]
          */
         ForeignKeySchema fk = table.foreignKeys().getFirst();
-        assertTrue(fk.refKey() instanceof RefKey.RefList rl && rl.key().fields().equals(List.of("AttrType")));
+        assertTrue(fk.refKey() instanceof RefKey.RefList(KeySchema key) && key.fields().equals(List.of("AttrType")));
     }
 }

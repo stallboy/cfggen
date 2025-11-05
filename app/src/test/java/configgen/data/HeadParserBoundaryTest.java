@@ -2,6 +2,9 @@ package configgen.data;
 
 import configgen.schema.CfgSchemaErrs;
 import configgen.schema.CfgSchemaException;
+import configgen.util.Logger;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -11,6 +14,16 @@ import static configgen.data.FakeRows.FakeRow;
 import static org.junit.jupiter.api.Assertions.*;
 
 class HeadParserBoundaryTest {
+
+    @BeforeAll
+    static void setupLogger() {
+        Logger.setPrinter(Logger.Printer.nullPrinter);
+    }
+
+    @AfterAll
+    static void setDefaultLogger(){
+        Logger.setPrinter(Logger.Printer.outPrinter);
+    }
 
     @Test
     void shouldParseHeadersWithSpecialCharacters() {
@@ -118,8 +131,6 @@ class HeadParserBoundaryTest {
         assertInstanceOf(CfgSchemaErrs.SplitDataHeaderNotEqual.class, err);
         CfgSchemaErrs.SplitDataHeaderNotEqual splitErr = (CfgSchemaErrs.SplitDataHeaderNotEqual) err;
         // Debug: print actual values
-        System.out.println("sheet1: " + splitErr.sheet1());
-        System.out.println("sheet2: " + splitErr.sheet2());
         assertEquals("multi.csv[sheet2]", splitErr.sheet1());
         assertEquals("multi.csv[sheet1]", splitErr.sheet2());
     }

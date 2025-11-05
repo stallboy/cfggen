@@ -3,8 +3,11 @@ package configgen.value;
 import configgen.Resources;
 import configgen.ctx.Context;
 import configgen.schema.InterfaceSchema;
+import configgen.util.Logger;
 import configgen.value.ForeachFinder.FStructField;
 import configgen.value.ForeachFinder.Finder;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -18,6 +21,16 @@ import static org.junit.jupiter.api.Assertions.*;
 class ForeachFinderTest {
 
     private @TempDir Path tempDir;
+
+    @BeforeAll
+    static void setupLogger() {
+        Logger.setPrinter(Logger.Printer.nullPrinter);
+    }
+
+    @AfterAll
+    static void setDefaultLogger() {
+        Logger.setPrinter(Logger.Printer.outPrinter);
+    }
 
     @Test
     void foreach_simple() {

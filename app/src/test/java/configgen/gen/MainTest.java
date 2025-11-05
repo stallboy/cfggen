@@ -2,6 +2,7 @@ package configgen.gen;
 
 import configgen.Resources;
 import configgen.util.Logger;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -22,6 +23,12 @@ class MainTest {
     static void setupLogger() {
         Logger.setPrinter(Logger.Printer.nullPrinter);
     }
+
+    @AfterAll
+    static void setDefaultLogger(){
+        Logger.setPrinter(Logger.Printer.outPrinter);
+    }
+
 
     @Test
     void shouldPrintUsage_whenNoArgumentsProvided() {

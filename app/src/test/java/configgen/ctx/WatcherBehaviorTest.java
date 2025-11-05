@@ -1,6 +1,7 @@
 package configgen.ctx;
 
 import configgen.util.Logger;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -24,27 +25,16 @@ class WatcherBehaviorTest {
         Logger.setPrinter(Logger.Printer.nullPrinter);
     }
 
-    @Test
-    void shouldStartWatcherThreadWhenStartMethodIsCalled() {
-        // Given: Watcher 实例
-        Watcher watcher = new Watcher(tempDir, null);
-
-        // When: 启动监控器
-        Thread watcherThread = watcher.start();
-
-        // Then: 应该返回有效的线程
-        assertNotNull(watcherThread, "应该返回有效的线程");
-        assertTrue(watcherThread.isAlive(), "监控器线程应该是活动的");
-
-        // 清理：停止线程
-        watcherThread.interrupt();
+    @AfterAll
+    static void setDefaultLogger(){
+        Logger.setPrinter(Logger.Printer.outPrinter);
     }
-
+    
     @Test
     void shouldDetectFileCreationWhenNewFileIsCreatedInWatchedDirectory() throws IOException, InterruptedException {
         // Given: 启动的 Watcher
         Watcher watcher = new Watcher(tempDir, null);
-        Thread watcherThread = watcher.start();
+        watcher.start();
 
         try {
             // 等待监控器初始化
@@ -65,7 +55,7 @@ class WatcherBehaviorTest {
             assertTrue(version > 0, "应该检测到文件创建事件");
 
         } finally {
-            watcherThread.interrupt();
+            watcher.stop();
         }
     }
 
@@ -76,7 +66,7 @@ class WatcherBehaviorTest {
         Files.writeString(existingFile, "initial content");
 
         Watcher watcher = new Watcher(tempDir, null);
-        Thread watcherThread = watcher.start();
+        watcher.start();
 
         try {
             // 等待监控器初始化
@@ -95,7 +85,7 @@ class WatcherBehaviorTest {
             long version = watcher.getEventVersion();
             assertTrue(version > 0, "应该检测到文件修改事件");
         } finally {
-            watcherThread.interrupt();
+            watcher.stop();
         }
     }
 
@@ -106,7 +96,7 @@ class WatcherBehaviorTest {
         Files.writeString(fileToDelete, "content");
 
         Watcher watcher = new Watcher(tempDir, null);
-        Thread watcherThread = watcher.start();
+        watcher.start();
 
         try {
             // 等待监控器初始化
@@ -125,7 +115,7 @@ class WatcherBehaviorTest {
             long version = watcher.getEventVersion();
             assertTrue(version > 0, "应该检测到文件删除事件");
         } finally {
-            watcherThread.interrupt();
+            watcher.stop();
         }
     }
 
@@ -133,7 +123,7 @@ class WatcherBehaviorTest {
     void shouldFindLastEventTimeEqualWhenGetLastEventSecCalledMultipleTimes() throws IOException, InterruptedException {
         // Given: 有事件的 Watcher
         Watcher watcher = new Watcher(tempDir, null);
-        Thread watcherThread = watcher.start();
+        watcher.start();
 
         try {
             // 等待监控器初始化
@@ -151,7 +141,7 @@ class WatcherBehaviorTest {
             // Then: 第一次调用应该返回事件时间和第二次应该返回相同
             assertEquals(firstCall, secondCall, "连续调用返回相同的事件时间");
         } finally {
-            watcherThread.interrupt();
+            watcher.stop();
         }
     }
 
@@ -159,7 +149,7 @@ class WatcherBehaviorTest {
     void shouldIgnoreHiddenFilesWhenDetectingFileChanges() throws IOException, InterruptedException {
         // Given: 启动的 Watcher
         Watcher watcher = new Watcher(tempDir, null);
-        Thread watcherThread = watcher.start();
+        watcher.start();
 
         try {
             // 等待监控器初始化
@@ -176,7 +166,7 @@ class WatcherBehaviorTest {
             long lastEventTime = watcher.getLastEventMillis();
             assertEquals(0, lastEventTime, "应该忽略隐藏文件");
         } finally {
-            watcherThread.interrupt();
+            watcher.stop();
         }
     }
 
@@ -184,7 +174,7 @@ class WatcherBehaviorTest {
     void shouldDetectDirectoryCreationWhenNewDirectoryIsCreated() throws IOException, InterruptedException {
         // Given: 启动的 Watcher
         Watcher watcher = new Watcher(tempDir, null);
-        Thread watcherThread = watcher.start();
+        watcher.start();
 
         try {
             // 等待监控器初始化
@@ -204,7 +194,7 @@ class WatcherBehaviorTest {
             long version = watcher.getEventVersion();
             assertTrue(version > 0, "应该检测到目录创建事件");
         } finally {
-            watcherThread.interrupt();
+            watcher.stop();
         }
     }
 
@@ -223,7 +213,7 @@ class WatcherBehaviorTest {
         );
 
         Watcher watcher = new Watcher(tempDir, explicitDir);
-        Thread watcherThread = watcher.start();
+        watcher.start();
 
         try {
             // 等待监控器初始化
@@ -247,7 +237,7 @@ class WatcherBehaviorTest {
             // 注意：由于文件系统事件的异步性，我们无法精确测试排除的文件是否被忽略
             // 但显式目录配置应该影响监控器的行为
         } finally {
-            watcherThread.interrupt();
+            watcher.stop();
         }
     }
 
@@ -255,7 +245,7 @@ class WatcherBehaviorTest {
     void shouldHandleMultipleFileOperationsSequentially() throws IOException, InterruptedException {
         // Given: 启动的 Watcher
         Watcher watcher = new Watcher(tempDir, null);
-        Thread watcherThread = watcher.start();
+        watcher.start();
 
         try {
             // 等待监控器初始化
@@ -281,7 +271,7 @@ class WatcherBehaviorTest {
             long lastEventTime = watcher.getLastEventMillis();
             assertTrue(lastEventTime > 0, "应该检测到多个文件操作事件");
         } finally {
-            watcherThread.interrupt();
+            watcher.stop();
         }
     }
 
@@ -289,7 +279,7 @@ class WatcherBehaviorTest {
     void shouldReturnZeroWhenNoEventsHaveOccurred() throws InterruptedException {
         // Given: 没有事件的 Watcher
         Watcher watcher = new Watcher(tempDir, null);
-        Thread watcherThread = watcher.start();
+        watcher.start();
         try {
             Thread.sleep(20);
             // When: 获取最后事件时间
@@ -298,7 +288,7 @@ class WatcherBehaviorTest {
             // Then: 应该返回 0
             assertEquals(0, lastEventTime, "没有事件时应该返回 0");
         } finally {
-            watcherThread.interrupt();
+            watcher.stop();
         }
     }
 
@@ -313,7 +303,7 @@ class WatcherBehaviorTest {
         assertNotNull(watcher, "应该成功创建带有 null 显式目录的 Watcher");
 
         // 启动和停止线程
-        Thread watcherThread = watcher.start();
-        watcherThread.interrupt();
+        watcher.start();
+        watcher.stop();
     }
 }

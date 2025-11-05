@@ -140,9 +140,6 @@ class CfgSchemaResolverAdvancedTest {
         CfgSchemaErrs errs = cfg.resolve();
 
         // Then: 验证类型解析正确
-        if (!errs.errs().isEmpty()) {
-            System.out.println("Errors found: " + errs.errs());
-        }
         assertEquals(0, errs.errs().size(), "Should have no errors");
         assertEquals(0, errs.warns().size(), "Should have no warnings");
 

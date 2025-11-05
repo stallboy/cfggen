@@ -3,6 +3,9 @@ package configgen.data;
 import configgen.ctx.HeadRows;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgReader;
+import configgen.util.Logger;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -16,6 +19,16 @@ class CfgSchemaAlignToDataTest {
 
     @TempDir
     Path tempDir;
+
+    @BeforeAll
+    static void setupLogger() {
+        Logger.setPrinter(Logger.Printer.nullPrinter);
+    }
+
+    @AfterAll
+    static void setDefaultLogger(){
+        Logger.setPrinter(Logger.Printer.outPrinter);
+    }
 
     @Test
     void align_addRemoveTable_firstFieldAsPrimaryKey() {

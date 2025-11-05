@@ -3,7 +3,10 @@ package configgen;
 import configgen.ctx.Context;
 import configgen.schema.CfgSchema;
 import configgen.schema.cfg.CfgReader;
+import configgen.util.Logger;
 import configgen.value.CfgValue;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -15,6 +18,17 @@ class IntegrationTest {
 
     @TempDir
     Path tempDir;
+
+    @BeforeAll
+    static void setupLogger() {
+        Logger.setPrinter(Logger.Printer.nullPrinter);
+    }
+
+    @AfterAll
+    static void setDefaultLogger(){
+        Logger.setPrinter(Logger.Printer.outPrinter);
+    }
+
 
     @Test
     void shouldCompleteWorkflowFromSchemaToValues() {
@@ -66,7 +80,7 @@ class IntegrationTest {
                     id:int;
                     name:str;
                 }
-
+                
                 table employee[id] {
                     id:int;
                     name:str;

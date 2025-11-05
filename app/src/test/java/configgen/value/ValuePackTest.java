@@ -5,6 +5,9 @@ import configgen.ctx.Context;
 import configgen.data.CfgData;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgReader;
+import configgen.util.Logger;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -19,6 +22,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ValuePackTest {
     private @TempDir Path tempDir;
+
+    @BeforeAll
+    static void setupLogger() {
+        Logger.setPrinter(Logger.Printer.nullPrinter);
+    }
+
+    @AfterAll
+    static void setDefaultLogger(){
+        Logger.setPrinter(Logger.Printer.outPrinter);
+    }
 
     @Test
     void packList() {

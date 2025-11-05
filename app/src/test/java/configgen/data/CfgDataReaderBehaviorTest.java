@@ -4,6 +4,9 @@ import configgen.Resources;
 import configgen.ctx.DirectoryStructure;
 import configgen.ctx.HeadRows;
 import configgen.schema.CfgSchemaErrs;
+import configgen.util.Logger;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -20,6 +23,16 @@ import static org.junit.jupiter.api.Assertions.*;
 class CfgDataReaderBehaviorTest {
 
     private @TempDir Path tempDir;
+
+    @BeforeAll
+    static void setupLogger() {
+        Logger.setPrinter(Logger.Printer.nullPrinter);
+    }
+
+    @AfterAll
+    static void setDefaultLogger(){
+        Logger.setPrinter(Logger.Printer.outPrinter);
+    }
 
     static CfgData readFile(String fn, Path tempDir) {
         Resources.addTempFileFromResourceFile(fn, tempDir);

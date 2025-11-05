@@ -5,8 +5,11 @@ import configgen.ctx.Context;
 import configgen.data.CfgData;
 import configgen.schema.InterfaceSchema;
 import configgen.schema.TableSchema;
+import configgen.util.Logger;
 import configgen.value.CfgValue.*;
 import configgen.value.CfgValueErrs.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -19,6 +22,16 @@ import static org.junit.jupiter.api.Assertions.*;
 class CfgValueParserTest {
 
     private @TempDir Path tempDir;
+
+    @BeforeAll
+    static void setupLogger() {
+        Logger.setPrinter(Logger.Printer.nullPrinter);
+    }
+
+    @AfterAll
+    static void setDefaultLogger(){
+        Logger.setPrinter(Logger.Printer.outPrinter);
+    }
 
     @Test
     void parseCfgValue_simple() {

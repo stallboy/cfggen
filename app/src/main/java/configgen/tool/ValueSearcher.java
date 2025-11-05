@@ -6,6 +6,7 @@ import configgen.editorserver.SchemaService;
 import configgen.schema.CfgSchema;
 import configgen.schema.Nameable;
 import configgen.schema.TableSchema;
+import configgen.util.Logger;
 import configgen.util.UTF8Writer;
 import configgen.value.CfgValue;
 import configgen.value.ForeachValue;
@@ -221,17 +222,17 @@ public class ValueSearcher {
     }
 
     public static void printUsage(String prefix) {
-        System.out.println(prefix + "int <int> <int> ...: search integers");
-        System.out.println(prefix + "str <str>: search string");
-        System.out.println(prefix + "ref <refTable<[uniqKeys]>?> <IgnoredTables>: search ref");
+        Logger.log(prefix + "int <int> <int> ...: search integers");
+        Logger.log(prefix + "str <str>: search string");
+        Logger.log(prefix + "ref <refTable<[uniqKeys]>?> <IgnoredTables>: search ref");
 
-        System.out.println(prefix + "sl  <name>?: list name of schemas");
-        System.out.println(prefix + "sll <name>?: list schemas");
-        System.out.println(prefix + "slljson <name>?: list schemas. use json");
+        Logger.log(prefix + "sl  <name>?: list name of schemas");
+        Logger.log(prefix + "sll <name>?: list schemas");
+        Logger.log(prefix + "slljson <name>?: list schemas. use json");
 
 
-        System.out.println(prefix + "h: help");
-        System.out.println(prefix + "q: quit");
+        Logger.log(prefix + "h: help");
+        Logger.log(prefix + "q: quit");
     }
 
     public void loop() {
@@ -256,7 +257,7 @@ public class ValueSearcher {
                     search(func, Arrays.asList(args).subList(1, args.length));
                 }
             } catch (IOException e) {
-                System.out.println(e.getMessage());
+                Logger.log(e.getMessage());
             }
         }
     }
