@@ -8,11 +8,13 @@ local cfg = require "cfg._cfgs"
 ---@field get fun(lootid:number):cfg.other.loot
 ---@field all table<any,cfg.other.loot>
 ---@field ListRefLootid table<number,cfg.other.lootitem>
+---@field ListRefAnotherWay table<number,cfg.other.lootitem>
 
 local this = cfg.other.loot
 
 local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, { 
-    { 'ListRefLootid', 2, cfg.other.lootitem, 'all', 1, 1 }, }, 
+    { 'ListRefLootid', 2, cfg.other.lootitem, 'all', 1, 1 }, 
+    { 'ListRefAnotherWay', 2, cfg.other.lootitem, 'all', 1, 1 }, }, 
     'lootid', -- int, 序号
     'ename', -- str
     'name', -- text, 名字

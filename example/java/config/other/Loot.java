@@ -6,6 +6,7 @@ public class Loot {
     private String name;
     private java.util.List<Integer> chanceList;
     private java.util.List<config.other.Lootitem> ListRefLootid;
+    private java.util.List<config.other.Lootitem> ListRefAnotherWay;
 
     private Loot() {
     }
@@ -58,6 +59,10 @@ public class Loot {
         return ListRefLootid;
     }
 
+    public java.util.List<config.other.Lootitem> listRefAnotherWay() {
+        return ListRefAnotherWay;
+    }
+
     @Override
     public String toString() {
         return "(" + lootid + "," + ename + "," + name + "," + chanceList + ")";
@@ -70,6 +75,12 @@ public class Loot {
                 ListRefLootid.add(v);
         }
         ListRefLootid = ListRefLootid.isEmpty() ? java.util.Collections.emptyList() : new java.util.ArrayList<>(ListRefLootid);
+        ListRefAnotherWay = new java.util.ArrayList<>();
+        for (config.other.Lootitem v : mgr.other_lootitem_All.values()) {
+            if (v.getLootid() == lootid)
+                ListRefAnotherWay.add(v);
+        }
+        ListRefAnotherWay = ListRefAnotherWay.isEmpty() ? java.util.Collections.emptyList() : new java.util.ArrayList<>(ListRefAnotherWay);
     }
 
     public void _resolve(config.ConfigMgr mgr) {

@@ -1414,6 +1414,8 @@ export class Other_Loot {
 
     private _ListRefLootid: Other_Lootitem[] | undefined;
     get ListRefLootid(): Other_Lootitem[] { return this._ListRefLootid as Other_Lootitem[]; }
+    private _ListRefAnotherWay: Other_Lootitem[] | undefined;
+    get ListRefAnotherWay(): Other_Lootitem[] { return this._ListRefAnotherWay as Other_Lootitem[]; }
     ToString() : string {
         return "(" + this._lootid + "," + this._ename + "," + this._name + "," + this._chanceList + ")";
     }
@@ -1461,6 +1463,12 @@ export class Other_Loot {
         {
             if (v.Lootid === this._lootid)
                 this._ListRefLootid.push(v);
+        }
+        this._ListRefAnotherWay = [];
+        for (const v of Other_Lootitem.All().values())
+        {
+            if (v.Lootid === this._lootid)
+                this._ListRefAnotherWay.push(v);
         }
     }
 }

@@ -10,6 +10,7 @@ namespace Config.Other
         public string Name { get; private set; } /* 名字 */
         public List<int> ChanceList { get; private set; } /* 掉落0件物品的概率 */
         public List<Config.Other.DataLootitem> ListRefLootid { get; private set; }
+        public List<Config.Other.DataLootitem> ListRefAnotherWay { get; private set; }
 
         public override int GetHashCode()
         {
@@ -89,6 +90,12 @@ namespace Config.Other
             {
                 if (v.Lootid.Equals(Lootid))
                     ListRefLootid.Add(v);
+            }
+            ListRefAnotherWay = new List<Config.Other.DataLootitem>();
+            foreach (var v in Config.Other.DataLootitem.All())
+            {
+                if (v.Lootid.Equals(Lootid))
+                    ListRefAnotherWay.Add(v);
             }
         }
     }
