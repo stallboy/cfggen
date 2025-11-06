@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git fetch:*)",
+      "Bash(.specify/scripts/powershell/create-new-feature.ps1:*)",
+      "Bash(git checkout:*)",
+      "Bash(mkdir:*)",
+      "Bash(.specify/scripts/powershell/setup-plan.ps1:*)",
+      "Bash(.specify/scripts/powershell/check-prerequisites.ps1:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(npm run compile)",
+      "Bash(npm install)",
+      "Bash(powershell.exe -File:*)",
+      "Bash(npm run generate-parser)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
