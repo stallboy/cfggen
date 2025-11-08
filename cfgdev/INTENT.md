@@ -106,7 +106,7 @@ table task[id] {
 
 
 
- /speckit.implement is running… Cfg.g4从 ../app/src/main/java/configgen/schema/cfg/Cfg.g4里复制得到！！非常重要
+ /speckit.implement Cfg.g4从 ../app/src/main/java/configgen/schema/cfg/Cfg.g4里复制得到！！非常重要
 
 
 补充CfgHighlightListener 实现，参照specs\001-cfg-editor-support\contracts\vscode-extension-api.md
@@ -115,4 +115,9 @@ table task[id] {
  完整阅读specs\001-cfg-editor-support\contracts\vscode-extension-api.md
 
 
- /speckit.implement 继续来实现，你已经实现了Phase 3: User Story 1 - Syntax Highlighting (P1)
+ /speckit.implement 忽略check-prerequisites，和check checklists，继续来实现，你已经实现了Phase 3: User Story 1 - Syntax Highlighting (P1)
+
+
+阅读specs下相关文档，参考vscode-cfg-extension\src\grammar\cfgHighlightListener.ts，这里逻辑基本正确，还有
+vscode-cfg-extension\src\providers\themeConfig.ts，这里的7种颜色类型，正对应我们要实现的7中高亮。不要额外加类型， 实现
+DocumentSemanticTokensProvider，不要提供.tmLanguage.json。最后实现registerDocumentSemanticTokensProvider

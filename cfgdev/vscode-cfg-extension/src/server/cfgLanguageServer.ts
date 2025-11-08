@@ -13,18 +13,23 @@ import {
     HoverParams,
     Hover,
     ReferenceParams,
+    SemanticTokensParams,
+    SemanticTokens,
 } from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import {
     createConnection,
     ProposedFeatures,
     TextDocuments,
+    SemanticTokensBuilder,
+    SemanticTokensRequest,
 } from 'vscode-languageserver/node';
 import { CfgParserService } from '../services/cfgParserService';
 import { SymbolTableService } from '../services/symbolTableService';
 import { CacheService } from '../services/cacheService';
 import { ModuleResolverService } from '../services/moduleResolverService';
 import { SyntaxHighlightingProvider } from '../providers/syntaxHighlightingProvider';
+import { SemanticTokensProvider } from '../providers/semanticTokensProvider';
 import { CompletionProvider } from '../providers/completionProvider';
 import { DefinitionProvider } from '../providers/definitionProvider';
 import { HoverProvider } from '../providers/hoverProvider';
@@ -43,6 +48,7 @@ let symbolTableService: SymbolTableService;
 let cacheService: CacheService;
 let moduleResolverService: ModuleResolverService;
 let syntaxHighlightingProvider: SyntaxHighlightingProvider;
+let semanticTokensProvider: SemanticTokensProvider;
 let completionProvider: CompletionProvider;
 let definitionProvider: DefinitionProvider;
 let hoverProvider: HoverProvider;
@@ -64,6 +70,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 
     // 初始化提供器
     syntaxHighlightingProvider = new SyntaxHighlightingProvider(parserService, logger);
+    semanticTokensProvider = new SemanticTokensProvider(parserService, logger);
     completionProvider = new CompletionProvider(parserService, symbolTableService, logger);
     definitionProvider = new DefinitionProvider(parserService, symbolTableService, moduleResolverService, logger);
     hoverProvider = new HoverProvider(parserService, symbolTableService, logger);
@@ -78,6 +85,13 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
 
         // 语法高亮
         documentHighlightProvider: true,
+
+        // 语义令牌高亮
+        semanticTokensProvider: {
+            legend: SemanticTokensProvider.legend,
+            full: true,
+            range: false
+        },
 
         // 自动补全
         completionProvider: {
@@ -171,6 +185,21 @@ connection.onDocumentHighlight((params: DocumentHighlightParams): DocumentHighli
     } catch (error) {
         logger.error(`Document highlight error: ${error}`);
         return [];
+    }
+});
+
+// 语义令牌高亮
+connection.onRequest(SemanticTokensRequest.type, (params: any): any => {
+    logger.debug(`Semantic tokens request: ${params.textDocument.uri}`);
+    try {
+        const document = documents.get(params.textDocument.uri);
+        if (!document) {
+            return null;
+        }
+        return semanticTokensProvider.provideSemanticTokens(document);
+    } catch (error) {
+        logger.error(`Semantic tokens error: ${error}`);
+        return null;
     }
 });
 
