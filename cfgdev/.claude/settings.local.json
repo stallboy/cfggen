@@ -18,7 +18,13 @@
       "Bash(bash .specify/scripts/bash/setup-plan.sh --json)",
       "Bash(cp .specify/templates/plan-template.md ./specs/001-cfg-editor-support/plan.md)",
       "WebSearch",
-      "Bash(.specify/scripts/bash/update-agent-context.sh claude)"
+      "Bash(.specify/scripts/bash/update-agent-context.sh claude)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh --json)",
+      "Bash(bash -c '.specify/scripts/bash/check-prerequisites.sh --json')",
+      "SlashCommand(/speckit.tasks)",
+      "Bash(cat /d/work/mygithub/cfggen/cfgdev/specs/001-cfg-editor-support/plan.md)",
+      "Bash(cat /d/work/mygithub/cfggen/cfgdev/specs/001-cfg-editor-support/spec.md)",
+      "Bash(cat /d/work/mygithub/cfggen/cfgdev/specs/001-cfg-editor-support/data-model.md)"
     ],
     "deny": [],
     "ask": []

@@ -41,40 +41,54 @@
 
 ### 3. Theme Color System Design
 
-**Decision**: 实现两套主题色系统（默认 + 中国古典色）
+**Decision**: 实现两套主题色系统（默认 + 中国古典色），中国古典色为默认主题
 **Rationale**:
-- 默认主题：VSCode标准配色，确保兼容性
-- 中国古典色：符合本地化需求，提升用户体验
+- 默认主题：VSCode标准配色（蓝、绿、青等），确保兼容性
+- 中国古典色：黛青、苍青、竹青、胭脂、琥珀、玄灰，符合本地化需求，提升用户体验
+- 颜色选择通过插件配置 `cfg.theme` 实现
 
-**Color Palette**:
+**Color Categories and Palette**:
 ```json
 {
-  "default": {
-    "keyword": "#0000FF",      // 蓝色关键字
-    "type": "#267F99",         // 青色类型
-    "comment": "#008000",      // 绿色注释
-    "string": "#A31515",       // 红色字符串
-    "number": "#098658",       // 绿色数字
-    "operator": "#000000"      // 黑色操作符
-  },
-  "chineseClassical": {
-    "keyword": "#1E3A8A",      // 黛青（深蓝）
-    "type": "#0F766E",         // 苍青（青绿）
-    "comment": "#166534",      // 竹青（深绿）
-    "string": "#991B1B",       // 胭脂（深红）
-    "number": "#854D0E",       // 琥珀（深黄）
-    "operator": "#3F3F46"      // 玄灰（深灰）
-  }
+  "structureDefinition": "#0000FF",    // struct/interface/table + 名称
+  "complexType": "#267F99",            // 非基本类型 (Position等)
+  "primaryKey": "#C586C0",             // PK字段名
+  "uniqueKey": "#C586C0",              // UK字段名
+  "foreignKey": "#AF00DB",             // -> tt, -> tt[kk], => tt[kk]
+  "comment": "#008000",                // 绿色注释
+  "metadata": "#808080"                // nullable等元数据
 }
 ```
+
+**chineseClassical Theme**:
+```json
+{
+  "structureDefinition": "#1E3A8A",    // 黛青 - struct/interface/table + 名称
+  "complexType": "#0F766E",            // 苍青 - 自定义类型
+  "primaryKey": "#7E22CE",             // 紫棠 - PK字段
+  "uniqueKey": "#7E22CE",              // 紫棠 - UK字段
+  "foreignKey": "#BE185D",             // 桃红 - 外键引用
+  "comment": "#166534",                // 竹青 - 注释
+  "metadata": "#6B7280"                // 墨灰 - 元数据
+}
+```
+
+**Color Origins**:
+- 黛青 (#1E3A8A): 传统青黛染料色，深蓝偏青，象征深邃优雅
+- 苍青 (#0F766E): 天空青蓝色，象征广阔与稳重
+- 紫棠 (#7E22CE): 紫棠花色，深紫偏粉，用于主键和唯一键
+- 桃红 (#BE185D): 桃花粉色，温润柔和，用于外键引用
+- 竹青 (#166534): 竹叶青绿色，自然清新，用于注释
+- 墨灰 (#6B7280): 墨色配灰，沉稳内敛，用于元数据
 
 **Alternatives Considered**:
 - 动态主题：根据时间/季节自动切换：不实用
 - 用户自定义颜色：增加复杂度，默认两套足够
+- 纯TextMate规则：无法实现基于语法树的高亮，准确性差
 
 ### 4. Performance Optimization for Large Files
 
-**Decision**: 增量解析 + 符号表缓存 + 虚拟文件系统
+**Decision**: 增量解析 + 符号表缓存
 **Rationale**:
 - 大型配置可能有数千行，实时解析性能关键
 - 增量解析避免重复工作
@@ -83,12 +97,13 @@
 **Key Strategies**:
 1. **增量解析**: 仅解析变化的文件和依赖
 2. **符号表缓存**: 内存中维护已解析符号，支持快速查找
-3. **后台解析**: 使用VSCode worker thread避免阻塞UI
-4. **分块处理**: 大文件分块解析，平衡内存和速度
+3. **缓存失效**: 基于文件修改时间自动失效
+4. **后台解析**: 异步解析避免阻塞UI
 
 **Alternatives Considered**:
 - 全量缓存：内存占用过高，不适合大项目
 - 纯实时解析：性能差，用户体验差
+- 分块解析：增加复杂度，保持简单
 
 ### 5. Cross-Module Reference Resolution
 

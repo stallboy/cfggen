@@ -3,7 +3,7 @@
 - 如果需要了解语义，参考../docs/docs/cfggen/03.schema.md
 
 ### 语法高亮规则
-- 
+
 以下.cfg文件元素需要语法高亮显示：
 
 - **结构定义**：`struct xx`, `interface xx`, `table xx`，只高亮xx
@@ -97,3 +97,9 @@ table task[id] {
 
 完整review ### 5. ANTLR-Based Syntax Highlighting 这一段。1，Example Implementation
   逻辑我看基本正确，但最好不要用re来获取信息，而是用Cfg.g4里的结构来获得。2，Syntax Node Types and Colors 这一段不知道有什么用，如果无用请删除。
+
+
+读specs，quickstart.md里### 2. 语法高亮 一节不对。参考...
+
+
+ 更新research.md里的Theme Color System Design，参照specs\001-cfg-editor-support\contracts\vscode-extension-api.md
