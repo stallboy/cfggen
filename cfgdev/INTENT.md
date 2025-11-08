@@ -103,3 +103,13 @@ table task[id] {
 
 
  更新research.md里的Theme Color System Design，参照specs\001-cfg-editor-support\contracts\vscode-extension-api.md
+
+
+
+ /speckit.implement is running… Cfg.g4从 ../app/src/main/java/configgen/schema/cfg/Cfg.g4里复制得到！！非常重要
+
+
+补充CfgHighlightListener 实现，参照specs\001-cfg-editor-support\contracts\vscode-extension-api.md
+
+
+ 完整阅读specs\001-cfg-editor-support\contracts\vscode-extension-api.md

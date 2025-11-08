@@ -1,0 +1,103 @@
+{
+  "name": "cfg-language-support",
+  "displayName": "CFG Language Support",
+  "description": "VSCode extension for .cfg configuration files with syntax highlighting, go-to-definition, and autocompletion",
+  "version": "1.0.0",
+  "publisher": "your-publisher-name",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Extension Packs"
+  ],
+  "keywords": [
+    "cfg",
+    "configuration",
+    "language-support",
+    "syntax-highlighting"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/cfg-language-support.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/cfg-language-support/issues"
+  },
+  "homepage": "https://github.com/your-username/cfg-language-support#readme",
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "type": "object",
+      "title": "CFG Language Support",
+      "properties": {
+        "cfg.theme": {
+          "type": "string",
+          "default": "chineseClassical",
+          "enum": [
+            "default",
+            "chineseClassical"
+          ],
+          "description": "Color theme for CFG syntax highlighting"
+        },
+        "cfg.enableCache": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable caching for better performance"
+        },
+        "cfg.maxFileSize": {
+          "type": "number",
+          "default": 10485760,
+          "description": "Maximum file size to process (in bytes)"
+        }
+      }
+    },
+    "languages": [
+      {
+        "id": "cfg",
+        "aliases": [
+          "CFG",
+          "cfg"
+        ],
+        "extensions": [
+          ".cfg"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package",
+    "generate-parser": "antlr4ts -o src/grammar -listener -visitor src/grammar/Cfg.g4",
+    "postinstall": "npm run generate-parser"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "@vscode/test-electron": "^2.3.8",
+    "@vscode/vsce": "^2.22.0",
+    "antlr4ts": "^0.5.0-alpha.4",
+    "antlr4ts-cli": "^0.5.0-alpha.4",
+    "eslint": "^8.56.0",
+    "glob": "^8.1.0",
+    "mocha": "^10.2.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "antlr4ts": "^0.5.0-alpha.4",
+    "node": "^25.1.0",
+    "vscode-languageclient": "^9.0.1",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-protocol": "^3.17.5",
+    "vscode-languageserver-textdocument": "^1.0.12"
+  }
+}
