@@ -64,44 +64,46 @@ vscode-cfg-extension/
 ├── src/
 │   ├── extension.ts                 # 扩展入口点
 │   ├── grammar/
-│   │   ├── Cfg.g4                   # ANTLR4语法定义
-│   │   ├── CfgLexer.ts             # ANTLR4词法分析器
-│   │   ├── CfgParser.ts            # ANTLR4语法分析器
-│   │   ├── CfgListener.ts          # ANTLR4语法监听器
-│   │   └── CfgBaseListener.ts      # 自定义监听器（用于语法高亮）
-│   ├── models/                     # 数据模型
-│   │   ├── configFile.ts           # 配置文件模型
-│   │   ├── structDefinition.ts     # 结构定义模型
-│   │   ├── tableDefinition.ts      # 表定义模型
-│   │   ├── interfaceDefinition.ts  # 接口定义模型
-│   │   ├── fieldDefinition.ts      # 字段定义模型
-│   │   ├── foreignKeyDefinition.ts # 外键定义模型
-│   │   ├── metadataDefinition.ts   # 元数据定义模型
-│   │   └── index.ts                # 模型导出
-│   ├── services/                   # 核心服务
-│   │   ├── cacheService.ts         # 缓存服务
-│   │   ├── fileIndexService.ts     # 文件索引服务
-│   │   ├── symbolTable.ts          # 符号表
-│   │   └── moduleResolver.ts       # 模块解析器
-│   ├── providers/                  # LSP提供器
-│   │   ├── completionProvider.ts   # 自动补全
-│   │   ├── definitionProvider.ts   # 跳转定义
-│   │   ├── hoverProvider.ts        # 悬停提示
-│   │   ├── foreignKeyProvider.ts   # 外键导航
+│   │   └── Cfg.g4                   # ANTLR4语法定义（手动创建）
+│   │   └── *.ts                     # 自动生成：CfgLexer.ts, CfgParser.ts, CfgListener.ts, CfgBaseListener.ts
+│   ├── models/                      # 数据模型
+│   │   ├── configFile.ts            # 配置文件模型
+│   │   ├── structDefinition.ts      # 结构定义模型
+│   │   ├── tableDefinition.ts       # 表定义模型
+│   │   ├── interfaceDefinition.ts   # 接口定义模型
+│   │   ├── fieldDefinition.ts       # 字段定义模型
+│   │   ├── foreignKeyDefinition.ts  # 外键定义模型
+│   │   ├── metadataDefinition.ts    # 元数据定义模型
+│   │   └── index.ts                 # 模型导出
+│   ├── services/                    # 核心服务
+│   │   ├── cacheService.ts          # 缓存服务
+│   │   ├── fileIndexService.ts      # 文件索引服务
+│   │   ├── symbolTable.ts           # 符号表
+│   │   └── moduleResolver.ts        # 模块解析器
+│   ├── providers/                   # LSP提供器
+│   │   ├── completionProvider.ts    # 自动补全
+│   │   ├── definitionProvider.ts    # 跳转定义
+│   │   ├── hoverProvider.ts         # 悬停提示
+│   │   ├── referenceProvider.ts     # 引用查找
 │   │   └── syntaxHighlightingProvider.ts # ANTLR语法高亮
-│   └── utils/                      # 工具函数
-│       ├── logger.ts               # 日志工具
-│       ├── performance.ts          # 性能监控
-│       └── namespaceUtils.ts       # 命名空间工具
-│       └── tokenHighlighter.ts     # ANTLR token高亮器
-├── package.json                    # 扩展配置
-├── tsconfig.json                   # TypeScript配置
-├── .vscode-test/                   # VSCode测试配置
-└── test/                           # 测试文件
-    ├── fixtures/                   # 测试用例
-    ├── unit/                       # 单元测试
-    └── integration/                # 集成测试
+│   └── utils/                       # 工具函数
+│       ├── logger.ts                # 日志工具
+│       ├── performance.ts           # 性能监控
+│       └── namespaceUtils.ts        # 命名空间工具
+├── package.json                     # 扩展配置
+├── tsconfig.json                    # TypeScript配置
+├── .vscode-test/                    # VSCode测试配置
+└── test/                            # 测试文件
+    ├── fixtures/                    # 测试用例
+    ├── unit/                        # 单元测试
+    └── integration/                 # 集成测试
 ```
+
+**ANTLR4文件生成说明**:
+- `CfgLexer.ts`, `CfgParser.ts`, `CfgListener.ts`, `CfgBaseListener.ts` 由ANTLR4工具从`Cfg.g4`自动生成
+- 通过`npm run generate-parser`命令生成（见package.json scripts）
+- 生成的TypeScript文件使用antlr4ts运行时库
+- 无需手动创建或修改这些自动生成的文件
 
 **Structure Decision**: 选择单项目结构，所有源代码集中在vscode-cfg-extension目录。模块化设计将语法解析、数据模型、核心服务和LSP提供器分离，确保代码清晰和维护性。**统一使用ANTLR4进行语法解析和语法高亮**，无需TextMate语法文件，确保语法规则的一致性。遵循VSCode扩展标准目录结构，集成ANTLR4运行时和LSP协议实现。
 
