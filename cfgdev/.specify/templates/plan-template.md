@@ -31,7 +31,20 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+### Core Principles Verification
+
+- [ ] **Grammar-First Development**: All features are based on ANTLR Cfg.g4 grammar
+- [ ] **Minimal Dependencies**: Every dependency justified with clear value and license review
+- [ ] **LSP Compliance**: Language features follow LSP specification (completion, go-to-definition, hover)
+- [ ] **Performance-Focused**: Large .cfg file handling with incremental parsing and caching
+- [ ] **Robust Error Handling**: Clear error messages for syntax errors and edge cases
+
+### Technical Constraints
+
+- [ ] TypeScript as primary language
+- [ ] VSCode Extension API and LSP standard libraries
+- [ ] ANTLR4 runtime for syntax parsing
+- [ ] No unverified or incompatible license dependencies
 
 ## Project Structure
 

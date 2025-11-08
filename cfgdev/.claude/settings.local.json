@@ -11,7 +11,14 @@
       "Bash(npm run compile)",
       "Bash(npm install)",
       "Bash(powershell.exe -File:*)",
-      "Bash(npm run generate-parser)"
+      "Bash(npm run generate-parser)",
+      "Bash(git branch -r --contains HEAD)",
+      "Bash(tree specs/)",
+      "Bash(.specify/scripts/bash/setup-plan.sh --json)",
+      "Bash(bash .specify/scripts/bash/setup-plan.sh --json)",
+      "Bash(cp .specify/templates/plan-template.md ./specs/001-cfg-editor-support/plan.md)",
+      "WebSearch",
+      "Bash(.specify/scripts/bash/update-agent-context.sh claude)"
     ],
     "deny": [],
     "ask": []
