@@ -71,11 +71,11 @@
 
 **Independent Test Criteria**: 在.cfg文件的多个上下文中触发自动补全（输入表名、字段名、类型名时），提示列表包含正确的候选项
 
-- [ ] T025 Implement completion provider (completionProvider.ts) with context awareness
-- [ ] T026 Provide type completion (basic types + custom types)
-- [ ] T027 Provide foreign key table reference completion
-- [ ] T028 Provide metadata keyword completion (nullable, mustFill, pack, etc.)
-- [ ] T029 Test autocompletion in all contexts (types, foreign keys, metadata)
+- [x] T025 Implement completion provider (completionProvider.ts) with context awareness
+- [x] T026 Provide type completion (basic types + custom types)
+- [x] T027 Provide foreign key table reference completion
+- [x] T028 Provide metadata keyword completion (nullable, mustFill, pack, etc.)
+- [x] T029 Test autocompletion in all contexts (types, foreign keys, metadata)
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
@@ -83,12 +83,12 @@
 
 **Independent Test Criteria**: 大文件性能测试通过（<2秒响应），错误提示清晰，主题切换正常
 
-- [ ] T030 Implement hover provider (hoverProvider.ts) for documentation display
-- [ ] T031 Implement reference provider (referenceProvider.ts) to find all symbol references
-- [ ] T032 Add diagnostic collection for syntax errors and warnings
-- [ ] T033 Implement incremental parsing and cache invalidation for large files
-- [ ] T034 Add configuration settings UI (cfg.theme, cfg.enableCache, cfg.maxFileSize)
-- [ ] T035 Add performance monitoring and logging for LSP operations
+- [x] T030 Implement hover provider (hoverProvider.ts) for documentation display
+- [x] T031 Implement reference provider (referenceProvider.ts) to find all symbol references
+- [x] T032 Add diagnostic collection for syntax errors and warnings
+- [x] T033 Implement incremental parsing and cache invalidation for large files
+- [x] T034 Add configuration settings UI (cfg.theme, cfg.enableCache, cfg.maxFileSize)
+- [x] T035 Add performance monitoring and logging for LSP operations
 
 ## Dependency Graph
 

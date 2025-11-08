@@ -1,0 +1,34 @@
+# Compiled output
+out/
+dist/
+build/
+
+# ANTLR4 generated files
+src/grammar/*.ts
+src/grammar/*.js
+
+# Node modules
+node_modules/
+
+# Test files
+out/test/
+test-output/
+
+# Logs
+*.log
+logs/
+
+# VSCode test directory
+.vscode-test/
+
+# Coverage
+coverage/
+*.lcov
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Environment files
+.env*
