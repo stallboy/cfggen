@@ -1,13 +1,13 @@
 import { TextRange } from './configFile';
-import { FieldMetadata } from './fieldMetadata';
+import { Metadata } from './metadataDefinition';
 import { TableDefinition } from './tableDefinition';
 
-export interface ForeignKey {
+export interface ForeignKeyDefinition {
     name?: string;              // 外键名（可省略）
     referenceType: 'single' | 'list';  // 单值或列表引用
     operator: '->' | '=>';      // 引用操作符
     target: ReferenceTarget;    // 引用目标
-    metadata: FieldMetadata[];  // 元数据
+    metadata: Metadata[];       // 元数据
     position: TextRange;        // 位置
 }
 

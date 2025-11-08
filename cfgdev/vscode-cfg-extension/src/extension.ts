@@ -1,109 +1,113 @@
-import * as vscode from 'vscode';
-import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
-
-let client: LanguageClient;
-
 /**
- * 激活扩展
- * @param context 扩展上下文
+ * CFG Language Support Extension
+ * Activates the extension and registers all language features
+ * Implements two-layer syntax highlighting: TextMate + Semantic Tokens
  */
-export async function activate(context: vscode.ExtensionContext): Promise<void> {
-    console.log('[CFG] Extension is now active');
 
-    // 注册语言标识符 'cfg'
-    const cfgLanguageId = 'cfg';
+import * as vscode from 'vscode';
+import { ThemeManager } from './providers/themeManager';
+import { ThemeService } from './services/themeService';
+import { SemanticTokensProvider } from './providers/semanticTokensProvider';
 
-    // 配置语言客户端
-    const clientOptions: LanguageClientOptions = {
-        // 注册的文档类型
-        documentSelector: [
-            {
-                scheme: 'file',
-                language: cfgLanguageId
-            }
-        ],
-        // 同步配置
-        synchronize: {
-            // 文件更改时通知服务器
-            fileEvents: vscode.workspace.createFileSystemWatcher('**/*.cfg')
-        }
-    };
+// This method is called when your extension is activated
+export function activate(context: vscode.ExtensionContext) {
+    console.log('CFG Language Support extension is now active');
 
-    // 配置服务器选项
-    const serverOptions: ServerOptions = {
-        run: {
-            module: context.asAbsolutePath('./out/server/cfgLanguageServer.js'),
-            transport: TransportKind.ipc,
-            args: []
-        },
-        debug: {
-            module: context.asAbsolutePath('./out/server/cfgLanguageServer.js'),
-            transport: TransportKind.ipc,
-            args: ['--debug']
-        }
-    };
+    // 1. Initialize theme system (critical for two-layer highlighting)
+    const themeManager = ThemeManager.getInstance();
+    themeManager.initialize();
 
-    // 创建语言客户端
-    client = new LanguageClient(
-        'cfgLanguageServer',
-        'CFG Language Server',
-        serverOptions,
-        clientOptions
+    const themeService = themeManager.getThemeService();
+
+    // 2. Apply current theme
+    const currentTheme = themeManager.getCurrentTheme();
+    themeService.applyTheme(currentTheme);
+
+    // 3. Listen for theme changes and refresh providers
+    themeManager.subscribe((theme) => {
+        console.log(`Theme changed to: ${theme}`);
+        themeService.applyTheme(theme);
+        refreshAllProviders();
+    });
+
+    // 4. Register semantic tokens provider (Layer 2 of two-layer highlighting)
+    const semanticTokensProvider = new SemanticTokensProvider(themeService);
+    context.subscriptions.push(
+        vscode.languages.registerDocumentSemanticTokensProvider(
+            { language: 'cfg' },
+            semanticTokensProvider,
+            semanticTokensProvider.getLegend()
+        )
     );
 
-    // 启动客户端
-    try {
-        await client.start();
-        console.log('[CFG] Language client started successfully');
-    } catch (error) {
-        console.error('[CFG] Failed to start language client:', error);
-        vscode.window.showErrorMessage('CFG Language Server 启动失败: ' + (error as Error).message);
-        throw error;
-    }
+    // 5. Register completion provider (User Story 3 - Autocompletion)
+    // TODO: Implement in Phase 5
+    context.subscriptions.push(
+        vscode.languages.registerCompletionItemProvider(
+            { language: 'cfg' },
+            {
+                provideCompletionItems: () => []
+            }
+        )
+    );
 
-    // 注册命令：重新加载当前文件的符号表
-    const reloadCommand = vscode.commands.registerCommand('cfg.reload', async () => {
-        const editor = vscode.window.activeTextEditor;
-        if (editor && editor.document.languageId === 'cfg') {
-            // 发送重新加载请求到服务器
-            await client.sendRequest('workspace/executeCommand', {
-                command: 'cfg/reload',
-                arguments: [editor.document.uri.toString()]
-            });
-            vscode.window.showInformationMessage('CFG 文件已重新加载');
-        } else {
-            vscode.window.showWarningMessage('当前没有打开的 CFG 文件');
-        }
-    });
+    // 6. Register definition provider (User Story 2 - Go-to-Definition)
+    // TODO: Implement in Phase 4
+    context.subscriptions.push(
+        vscode.languages.registerDefinitionProvider(
+            { language: 'cfg' },
+            {
+                provideDefinition: () => null
+            }
+        )
+    );
 
-    // 注册命令：显示引用
-    const showReferencesCommand = vscode.commands.registerCommand('cfg.showReferences', async () => {
-        const editor = vscode.window.activeTextEditor;
-        if (editor) {
-            const position = editor.selection.active;
-            await client.sendRequest('workspace/executeCommand', {
-                command: 'cfg/showReferences',
-                arguments: [editor.document.uri.toString(), position.line, position.character]
-            });
-        }
-    });
+    // 7. Register hover provider (Polish Phase)
+    // TODO: Implement in Phase 6
+    context.subscriptions.push(
+        vscode.languages.registerHoverProvider(
+            { language: 'cfg' },
+            {
+                provideHover: () => null
+            }
+        )
+    );
 
-    // 添加到订阅列表
-    context.subscriptions.push(reloadCommand);
-    context.subscriptions.push(showReferencesCommand);
-    context.subscriptions.push(client);
+    // 8. Register reference provider (Polish Phase)
+    // TODO: Implement in Phase 6
+    context.subscriptions.push(
+        vscode.languages.registerReferenceProvider(
+            { language: 'cfg' },
+            {
+                provideReferences: () => []
+            }
+        )
+    );
 
-    // 显示激活信息
-    vscode.window.showInformationMessage('CFG Language Support 扩展已激活');
+    console.log('CFG extension activated successfully with two-layer syntax highlighting');
+    console.log('Language ID: cfg');
+    console.log('TextMate grammar: source.cfg');
+    console.log('Semantic tokens: 8 token types');
+    console.log(`Current theme: ${currentTheme}`);
+}
+
+// This method is called when your extension is deactivated
+export function deactivate() {
+    console.log('CFG Language Support extension is now deactivated');
 }
 
 /**
- * 停用扩展
+ * Force refresh all providers
+ * Called when theme changes
  */
-export function deactivate(): Thenable<void> | undefined {
-    console.log('[CFG] Extension is being deactivated');
-    if (!client) {
-        return undefined;
-    }
-    return client.stop();
+function refreshAllProviders(): void {
+    // Force VSCode to refresh semantic tokens
+    vscode.workspace.textDocuments.forEach(doc => {
+        if (doc.languageId === 'cfg') {
+            vscode.commands.executeCommand(
+                'vscode.refreshSemanticTokens',
+                doc.uri
+            );
+        }
+    });
 }

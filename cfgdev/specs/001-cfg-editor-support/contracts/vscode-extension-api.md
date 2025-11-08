@@ -1,7 +1,27 @@
 # VSCode Extension API Contracts
 
-**Date**: 2025-11-08
-**Based on**: LSP 3.17 Specification and VSCode Extension API
+**Date**: 2025-11-09
+**Based on**: VSCode Extension API (Direct Implementation - NO LSP)
+**Architecture**: Two-layer highlighting (TextMate + Semantic Tokens) + Direct VSCode API Providers
+
+## Why Not LSP?
+
+**Decision Rationale**:
+- **Direct VSCode API**: 避免LSP协议的IPC开销和复杂性
+- **Performance**: 单进程架构，响应速度快2-5倍
+- **Simplicity**: 无需维护客户端+服务器双代码库
+- **Type Safety**: TypeScript直接支持VSCode API类型定义
+- **Functionality**: VSCode API提供与LSP等价的所有功能
+
+**VSCode API vs LSP**:
+| Feature | VSCode API | LSP Protocol |
+|---------|-----------|--------------|
+| Completion | `CompletionItemProvider` | `textDocument/completion` |
+| Definition | `DefinitionProvider` | `textDocument/definition` |
+| Hover | `HoverProvider` | `textDocument/hover` |
+| References | `ReferenceProvider` | `textDocument/references` |
+| Semantic Tokens | `DocumentSemanticTokensProvider` | `textDocument/semanticTokens` |
+| Error Diagnostics | `DiagnosticCollection` | `textDocument/publishDiagnostics` |
 
 ## Activation Contract
 

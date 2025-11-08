@@ -1,18 +1,57 @@
 // Core types
-export * from './configFile';
-export * from './definition';
+export {
+    ConfigFile,
+    Definition,
+    TextRange,
+    SymbolTable,
+    ParseError,
+    DefinitionType,
+    Reference
+} from './configFile';
 
-// Specific definitions
-export * from './structDefinition';
-export * from './interfaceDefinition';
-export * from './tableDefinition';
-export * from './fieldDefinition';
-export * from './foreignKeyDefinition';
-export * from './metadataDefinition';
-export * from './structMetadata';
-export * from './interfaceMetadata';
-export * from './tableMetadata';
-export * from './fieldMetadata';
+// Struct types
+export {
+    StructDefinition,
+    StructMetadataExtension,
+    ForeignKey as StructForeignKey
+} from './structDefinition';
 
-// Services
-export * from './symbolTable';
+// Interface types
+export {
+    InterfaceDefinition,
+    InterfaceMetadataExtension
+} from './interfaceDefinition';
+
+// Table types
+export {
+    TableDefinition,
+    TableMetadataExtension,
+    ForeignKey as TableForeignKey
+} from './tableDefinition';
+
+// Field types
+export {
+    FieldDefinition,
+    FieldType,
+    BaseType,
+    ListType,
+    MapType,
+    CustomType,
+    FieldMetadata
+} from './fieldDefinition';
+
+// Foreign key types
+export {
+    ForeignKeyDefinition,
+    ReferenceTarget
+} from './foreignKeyDefinition';
+
+// Metadata types
+export {
+    Metadata,
+    Literal,
+    IntegerLiteral,
+    HexIntegerLiteral,
+    FloatLiteral,
+    StringLiteral
+} from './metadataDefinition';

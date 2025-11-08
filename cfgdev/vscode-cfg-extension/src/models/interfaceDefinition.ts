@@ -1,29 +1,19 @@
-import { Definition } from './definition';
+import { Definition, TextRange } from './configFile';
+import { Metadata } from './metadataDefinition';
 import { StructDefinition } from './structDefinition';
-import { InterfaceMetadata } from './interfaceMetadata';
-import { TextRange } from './configFile';
 
-export class InterfaceDefinition extends Definition {
-    type: 'interface' = 'interface';
+export interface InterfaceDefinition extends Definition {
+    type: 'interface';
     implementations: StructDefinition[];  // 实现类
-    metadata: InterfaceMetadata;          // interface特有元数据
-
-    constructor(
-        name: string,
-        namespace: string,
-        position: TextRange
-    ) {
-        super(name, namespace, position, 'interface');
-        this.implementations = [];
-        this.metadata = {};
-    }
+    metadata: Metadata[];      // interface元数据
 
     // 多态访问器
-    getImplementation(name: string): StructDefinition | null {
-        return this.implementations.find(impl => impl.name === name) || null;
-    }
+    getImplementation(name: string): StructDefinition | null;
+    getAllImplementations(): StructDefinition[];
+}
 
-    getAllImplementations(): StructDefinition[] {
-        return [...this.implementations];
-    }
+// Interface-specific metadata fields
+export interface InterfaceMetadataExtension {
+    enumRef?: string;          // 枚举引用
+    defaultImpl?: string;      // 默认实现
 }

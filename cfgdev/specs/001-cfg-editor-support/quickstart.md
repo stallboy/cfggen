@@ -1,8 +1,9 @@
 # Quick Start Guide: VSCode CFG Extension
 
-**Date**: 2025-11-08
+**Date**: 2025-11-09
 **Version**: 1.0.0
 **目标用户**: 游戏策划人员、配置开发工程师
+**架构**: VSCode Extension API (无LSP) + 双层语法高亮 (TextMate + Semantic Tokens)
 
 ## 目录
 - [安装](#安装)
@@ -102,9 +103,20 @@ code --install-extension cfg-language-support-1.0.0.vsix
 example/config/task/task.cfg
 ```
 
-### 2. 语法高亮
+### 2. 双层语法高亮
 
-扩展提供基于ANTLR4的精确语法高亮，使用两套主题色（中国古典色为默认）。
+扩展采用**双层语法高亮架构**，提供最佳性能和准确性：
+
+**Layer 1 - TextMate (基础高亮)**:
+- 毫秒级响应，零延迟
+- 关键字、字符串、数字、注释、运算符、标点符号
+- VSCode原生优化
+
+**Layer 2 - Semantic (语义高亮)**:
+- 基于ANTLR4精确分析
+- struct/interface/table名称、非基本类型、外键引用、主键/唯一键
+- 应用主题色（默认+中国古典色）
+- 20-50ms响应时间
 
 **高亮元素**:
 

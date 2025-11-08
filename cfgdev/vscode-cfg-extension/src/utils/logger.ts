@@ -1,63 +1,48 @@
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export enum LogLevel {
+    DEBUG = 0,
+    INFO = 1,
+    WARN = 2,
+    ERROR = 3
+}
 
 export class Logger {
-    private context: string;
-    private logLevel: LogLevel;
+    private static instance: Logger;
+    private logLevel: LogLevel = LogLevel.INFO;
 
-    constructor(context: string, logLevel: LogLevel = 'info') {
-        this.context = context;
-        this.logLevel = logLevel;
-    }
+    private constructor() {}
 
-    debug(message: string, ...args: any[]): void {
-        if (this.shouldLog('debug')) {
-            console.debug(`[${this.context}] DEBUG: ${message}`, ...args);
+    public static getInstance(): Logger {
+        if (!Logger.instance) {
+            Logger.instance = new Logger();
         }
+        return Logger.instance;
     }
 
-    info(message: string, ...args: any[]): void {
-        if (this.shouldLog('info')) {
-            console.info(`[${this.context}] INFO: ${message}`, ...args);
-        }
-    }
-
-    warn(message: string, ...args: any[]): void {
-        if (this.shouldLog('warn')) {
-            console.warn(`[${this.context}] WARN: ${message}`, ...args);
-        }
-    }
-
-    error(message: string, error?: Error | any, ...args: any[]): void {
-        if (this.shouldLog('error')) {
-            if (error instanceof Error) {
-                console.error(`[${this.context}] ERROR: ${message}`, error, ...args);
-            } else {
-                console.error(`[${this.context}] ERROR: ${message}`, error, ...args);
-            }
-        }
-    }
-
-    private shouldLog(level: LogLevel): boolean {
-        const levels: LogLevel[] = ['debug', 'info', 'warn', 'error'];
-        const currentIndex = levels.indexOf(this.logLevel);
-        const messageIndex = levels.indexOf(level);
-        return messageIndex >= currentIndex;
-    }
-
-    setLogLevel(level: LogLevel): void {
+    public setLogLevel(level: LogLevel): void {
         this.logLevel = level;
     }
 
-    getLogLevel(): LogLevel {
-        return this.logLevel;
+    public debug(message: string, ...args: any[]): void {
+        if (this.logLevel <= LogLevel.DEBUG) {
+            console.log(`[DEBUG] ${message}`, ...args);
+        }
     }
 
-    // 性能计时器
-    startTimer(label: string): void {
-        console.time(`[${this.context}] ${label}`);
+    public info(message: string, ...args: any[]): void {
+        if (this.logLevel <= LogLevel.INFO) {
+            console.log(`[INFO] ${message}`, ...args);
+        }
     }
 
-    endTimer(label: string): void {
-        console.timeEnd(`[${this.context}] ${label}`);
+    public warn(message: string, ...args: any[]): void {
+        if (this.logLevel <= LogLevel.WARN) {
+            console.warn(`[WARN] ${message}`, ...args);
+        }
+    }
+
+    public error(message: string, ...args: any[]): void {
+        if (this.logLevel <= LogLevel.ERROR) {
+            console.error(`[ERROR] ${message}`, ...args);
+        }
     }
 }

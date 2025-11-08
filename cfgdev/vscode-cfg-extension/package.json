@@ -65,6 +65,13 @@
         ],
         "configuration": "./language-configuration.json"
       }
+    ],
+    "grammars": [
+      {
+        "language": "cfg",
+        "scopeName": "source.cfg",
+        "path": "./syntaxes/cfg.tmLanguage.json"
+      }
     ]
   },
   "scripts": {
@@ -93,11 +100,6 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "antlr4ts": "^0.5.0-alpha.4",
-    "node": "^25.1.0",
-    "vscode-languageclient": "^9.0.1",
-    "vscode-languageserver": "^9.0.1",
-    "vscode-languageserver-protocol": "^3.17.5",
-    "vscode-languageserver-textdocument": "^1.0.12"
+    "antlr4ts": "^0.5.0-alpha.4"
   }
 }

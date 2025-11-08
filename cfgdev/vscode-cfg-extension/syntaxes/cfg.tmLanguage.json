@@ -1,0 +1,65 @@
+{
+	"name": "CFG",
+	"scopeName": "source.cfg",
+	"fileTypes": [
+		"cfg"
+	],
+	"patterns": [
+		{
+			"name": "keyword.control.cfg",
+			"match": "\\b(struct|interface|table|int|str|bool|list|map|long|float|text)\\b"
+		},
+		{
+			"name": "string.quoted.double.cfg",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.cfg",
+					"match": "\\\\."
+				}
+			]
+		},
+		{
+			"name": "string.quoted.single.cfg",
+			"begin": "'",
+			"end": "'",
+			"patterns": [
+				{
+					"name": "constant.character.escape.cfg",
+					"match": "\\\\."
+				}
+			]
+		},
+		{
+			"name": "constant.numeric.cfg",
+			"match": "\\b\\d+(\\.\\d+)?\\b"
+		},
+		{
+			"name": "comment.line.double-slash.cfg",
+			"begin": "//",
+			"end": "$"
+		},
+		{
+			"name": "keyword.operator.cfg",
+			"match": "(\\-\\>|\\=\\>|\\=|\\:)"
+		},
+		{
+			"name": "punctuation.cfg",
+			"match": "[{}\\[\\]\\(\\),;]"
+		},
+		{
+			"name": "meta.definition.cfg",
+			"match": "\\b(struct|interface|table)\\s+\\w+"
+		},
+		{
+			"name": "variable.name.cfg",
+			"match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*:"
+		},
+		{
+			"name": "entity.name.type.custom.cfg",
+			"match": "\\b[A-Z][a-zA-Z0-9_]*\\b"
+		}
+	],
+	"repository": {}
+}

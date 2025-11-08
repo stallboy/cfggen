@@ -1,5 +1,4 @@
-import { SymbolTable } from '../models/symbolTable';
-import { ConfigFile } from '../models/configFile';
+import { ConfigFile } from '../models';
 
 export interface CachedFileData {
     // 解析后的符号
@@ -14,118 +13,195 @@ export interface CachedFileData {
     lastParsed: number;        // 最后解析时间戳
     fileVersion: number;       // 文件内容版本（基于文件修改时间或哈希）
     size: number;              // 缓存大小（字节）
-    lastAccessed: number;      // 最后访问时间
 }
 
-export class CacheService {
-    private cache = new Map<string, CachedFileData>();
-    private maxCacheSize = 100; // 最大缓存文件数
-    private maxMemorySize = 50 * 1024 * 1024; // 50MB
-    private currentMemorySize = 0;
-
+export interface CacheManager {
     // 获取缓存
+    get(uri: string): CachedFileData | null;
+
+    // 设置缓存
+    set(uri: string, data: CachedFileData): void;
+
+    // 失效缓存
+    invalidate(uri: string): void;
+
+    // 清除所有缓存
+    clear(): void;
+
+    // 清除依赖链
+    invalidateDependencies(uri: string): void;
+}
+
+export class CacheService implements CacheManager {
+    private cache: Map<string, CachedFileData> = new Map();
+    private maxCacheSize: number;
+    private maxMemorySize: number;
+    private currentMemorySize: number = 0;
+
+    constructor() {
+        this.maxCacheSize = 100;         // 最多缓存100个文件
+        this.maxMemorySize = 50 * 1024 * 1024; // 50MB
+    }
+
+    /**
+     * 获取缓存
+     */
     get(uri: string): CachedFileData | null {
         const cached = this.cache.get(uri);
         if (!cached) {
             return null;
         }
 
-        // 更新访问时间
-        cached.lastAccessed = Date.now();
+        // 检查版本号是否匹配
+        const currentVersion = this.getFileVersion(uri);
+        if (currentVersion !== cached.fileVersion) {
+            this.cache.delete(uri);
+            this.currentMemorySize -= this.estimateSize(cached);
+            return null;
+        }
+
         return cached;
     }
 
-    // 设置缓存
+    /**
+     * 设置缓存
+     */
     set(uri: string, data: CachedFileData): void {
-        // 检查内存限制
+        // 检查文件数量限制
         if (this.cache.size >= this.maxCacheSize) {
             this.evictLRU();
         }
 
-        this.cache.set(uri, {
-            ...data,
-            lastAccessed: Date.now()
-        });
-        this.currentMemorySize += this.calculateSize(data);
+        // 检查内存限制
+        const dataSize = this.estimateSize(data);
+        if (this.currentMemorySize + dataSize > this.maxMemorySize) {
+            this.evictLRU();
+        }
+
+        this.cache.set(uri, data);
+        this.currentMemorySize += dataSize;
     }
 
-    // 失效缓存
+    /**
+     * 失效缓存
+     */
     invalidate(uri: string): void {
         const cached = this.cache.get(uri);
         if (cached) {
-            this.currentMemorySize -= this.calculateSize(cached);
             this.cache.delete(uri);
+            this.currentMemorySize -= this.estimateSize(cached);
         }
     }
 
-    // 清除所有缓存
+    /**
+     * 清除所有缓存
+     */
     clear(): void {
         this.cache.clear();
         this.currentMemorySize = 0;
     }
 
-    // 清除依赖链
+    /**
+     * 清除依赖链
+     */
     invalidateDependencies(uri: string): void {
-        const cached = this.cache.get(uri);
-        if (!cached) {
+        const toInvalidate = new Set<string>();
+        toInvalidate.add(uri);
+
+        // 递归查找所有依赖
+        for (const [cachedUri, cachedData] of this.cache) {
+            if (cachedData.dependencies.includes(uri)) {
+                toInvalidate.add(cachedUri);
+            }
+        }
+
+        // 清除所有依赖
+        for (const depUri of toInvalidate) {
+            this.invalidate(depUri);
+        }
+    }
+
+    /**
+     * LRU淘汰策略
+     */
+    private evictLRU(): void {
+        if (this.cache.size === 0) {
             return;
         }
 
-        // 递归清除依赖此文件的文件
-        const dependents = this.findDependents(uri);
-        for (const dependent of dependents) {
-            this.invalidate(dependent);
-        }
-
-        // 清除当前文件
-        this.invalidate(uri);
-    }
-
-    // 查找依赖此文件的文件
-    private findDependents(uri: string): string[] {
-        const dependents: string[] = [];
-        this.cache.forEach((cached, cachedUri) => {
-            if (cached.dependencies.includes(uri)) {
-                dependents.push(cachedUri);
-            }
-        });
-        return dependents;
-    }
-
-    // LRU淘汰策略
-    private evictLRU(): void {
-        let oldestUri: string | null = null;
-        let oldestTime = Date.now();
-
-        this.cache.forEach((cached, uri) => {
-            if (cached.lastAccessed < oldestTime) {
-                oldestTime = cached.lastAccessed;
-                oldestUri = uri;
-            }
-        });
-
-        if (oldestUri) {
-            this.invalidate(oldestUri);
+        // 简单的LRU实现：删除第一个条目
+        const oldest = this.cache.keys().next().value;
+        if (oldest) {
+            this.invalidate(oldest);
         }
     }
 
-    // 计算数据大小
-    private calculateSize(data: CachedFileData): number {
-        // 简化的大小计算
-        return JSON.stringify(data).length;
+    /**
+     * 获取文件版本号（基于修改时间）
+     */
+    private getFileVersion(uri: string): number {
+        try {
+            const fs = require('fs');
+            const stats = fs.statSync(uri);
+            return stats.mtime.getTime();
+        } catch (error) {
+            console.error(`Error getting file version for ${uri}:`, error);
+            return 0;
+        }
     }
 
-    // 获取缓存统计
-    getStats(): { count: number; size: number; maxSize: number } {
+    /**
+     * 估算缓存数据大小
+     */
+    private estimateSize(data: CachedFileData): number {
+        // 简单的内存估算
+        const symbolsSize = data.symbols.size * 100; // 估算每个符号100字节
+        const moduleSize = data.symbolsByModule.size * 100;
+        const fileSize = data.symbolsByFile.size * 100;
+        const depsSize = data.dependencies.length * 100;
+
+        return symbolsSize + moduleSize + fileSize + depsSize + 1000; // +1000字节基本开销
+    }
+
+    /**
+     * 获取缓存统计信息
+     */
+    public getStats() {
         return {
-            count: this.cache.size,
-            size: this.currentMemorySize,
-            maxSize: this.maxMemorySize
+            fileCount: this.cache.size,
+            memorySize: this.currentMemorySize,
+            maxFiles: this.maxCacheSize,
+            maxMemory: this.maxMemorySize,
+            utilization: {
+                files: this.cache.size / this.maxCacheSize,
+                memory: this.currentMemorySize / this.maxMemorySize
+            }
         };
     }
 
-    // 检查是否应该启用缓存
-    shouldEnableCache(fileSize: number): boolean {
-        return fileSize < this.maxMemorySize * 0.1; // 文件小于可用内存的10%
+    /**
+     * 清理过期缓存
+     */
+    public cleanExpired(): void {
+        const now = Date.now();
+        const maxAge = 10 * 60 * 1000; // 10分钟
+
+        for (const [uri, data] of this.cache) {
+            if (now - data.lastParsed > maxAge) {
+                this.invalidate(uri);
+            }
+        }
+    }
+
+    /**
+     * 预热缓存（为已打开的文件）
+     */
+    public async warmup(openFiles: string[]): Promise<void> {
+        for (const uri of openFiles) {
+            const cached = this.get(uri);
+            if (!cached) {
+                // TODO: 解析并缓存文件
+            }
+        }
     }
 }

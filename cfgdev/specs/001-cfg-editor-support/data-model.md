@@ -1,7 +1,8 @@
 # Data Model: VSCode CFG Extension
 
-**Date**: 2025-11-08
-**Based on**: Cfg.g4 grammar and feature specification
+**Date**: 2025-11-09
+**Based on**: Cfg.g4 grammar, feature specification, and updated technical decisions
+**Architecture**: VSCode Extension API (no LSP) + Two-layer highlighting (TextMate + Semantic Tokens)
 
 ## Core Entities
 
@@ -216,7 +217,6 @@ interface ReferenceTarget {
 interface Metadata {
   name: string;               // 元数据名
   value?: Literal;            // 可选值
-  isNegative: boolean;        // 是否为负标识（-前缀）
   position: TextRange;        // 位置
 }
 
@@ -363,3 +363,76 @@ interface ParseError {
 - `P004`: 类型不匹配
 - `P005`: 无效元数据
 - `P006`: 模块不存在
+
+## Two-Layer Syntax Highlighting Data Model
+
+### 1. TextMate Grammar Rules
+
+**Description**: 基础语法高亮规则，定义基础token类型
+
+```typescript
+interface TextMateRule {
+  name: string;                // token名称
+  match: string;               // 正则表达式
+  captures: Captures;          // 捕获组
+}
+
+interface Captures {
+  [key: number]: {
+    name: string;              // 捕获组名称
+  };
+}
+```
+
+**TextMate规则**:
+```json
+{
+  "keywords": "struct|interface|table|int|str|bool|list|map",
+  "strings": "\"[^\"]*\"",
+  "numbers": "\d+",
+  "comments": "//.*",
+  "operators": "->|=>|=|:",
+  "punctuation": "{ } [ ] ( ) , ;"
+}
+```
+
+### 2. Semantic Token Information
+
+**Description**: 语义高亮信息，基于ANTLR4解析树
+
+```typescript
+interface SemanticToken {
+  line: number;                // 行号
+  startCharacter: number;      // 起始字符
+  length: number;              // 长度
+  tokenType: number;           // token类型索引
+  tokenModifiers: number;      // 修饰符
+}
+
+enum SemanticTokenTypes {
+  structureDefinition = 0,    // struct/interface/table名称
+  typeIdentifier = 1,         // 类型名
+  fieldName = 2,              // 字段名
+  foreignKey = 3,             // 外键引用
+  comment = 4,                // 注释
+  metadata = 5                // 元数据
+}
+```
+
+### 3. Combined Highlighting Strategy
+
+**TextMate Layer职责**:
+- 快速响应用户输入（毫秒级）
+- 基础token识别（关键字、字符串、数字、注释、运算符、标点）
+- 零性能开销（VSCode原生优化）
+
+**Semantic Layer职责**:
+- 复杂语义结构高亮（struct/interface/table名称、非基本类型、主键/唯一键、外键引用）
+- 基于ANTLR4解析树精确分析
+- 主题色应用（默认+中国古典色）
+- 20-50ms响应时间
+
+**叠加规则**:
+- Semantic层颜色覆盖TextMate层
+- 但保留TextMate的即时性
+- 两者共同作用于同一个视觉结果

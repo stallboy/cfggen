@@ -1,11 +1,12 @@
-import { TextRange, Position } from './configFile';
-import { ForeignKey } from './foreignKeyDefinition';
-import { FieldMetadata } from './fieldMetadata';
+import { TextRange } from './configFile';
+import { Metadata } from './metadataDefinition';
+import { ForeignKeyDefinition } from './foreignKeyDefinition';
+import { Definition } from './configFile';
 
 export interface FieldDefinition {
     name: string;               // 字段名
     type: FieldType;            // 字段类型
-    foreignKey?: ForeignKey;    // 可选外键引用
+    foreignKey?: ForeignKeyDefinition;    // 可选外键引用
     metadata: FieldMetadata[];  // 元数据列表
     comment?: string;           // 注释
     position: TextRange;        // 位置
@@ -37,5 +38,7 @@ export interface CustomType {
     kind: 'custom';
     namespace: string;          // 完整类型名
     shortName: string;          // 短名称
-    definition?: any;    // 解析后的定义引用
+    definition?: Definition;    // 解析后的定义引用
 }
+
+export type FieldMetadata = Metadata;
