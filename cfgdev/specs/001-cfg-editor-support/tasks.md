@@ -21,25 +21,25 @@
 
 **Goal**: 初始化项目结构，配置开发环境和依赖
 
-- [ ] T001 Create project structure per implementation plan
-- [ ] T002 Initialize package.json with dependencies (antlr4ts, @types/vscode, vscode-languageclient)
-- [ ] T003 Configure TypeScript settings (tsconfig.json)
-- [ ] T004 Setup ANTLR4 grammar file (Cfg.g4)
-- [ ] T005 Generate ANTLR4 TypeScript parsers (antlr4ts)
-- [ ] T006 Create basic VSCode extension entry point (extension.ts)
-- [ ] T007 Setup build scripts (npm run compile, npm run test, npm run package)
+- [x] T001 Create project structure per implementation plan
+- [x] T002 Initialize package.json with dependencies (antlr4ts, @types/vscode, vscode-languageclient)
+- [x] T003 Configure TypeScript settings (tsconfig.json)
+- [x] T004 Setup ANTLR4 grammar file (Cfg.g4)
+- [x] T005 Generate ANTLR4 TypeScript parsers (antlr4ts)
+- [x] T006 Create basic VSCode extension entry point (extension.ts)
+- [x] T007 Setup build scripts (npm run compile, npm run test, npm run package)
 
 ## Phase 2: Foundational
 
 **Goal**: 实现基础数据模型和核心服务，为所有用户故事提供支撑
 
-- [ ] T008 Create core data models (ConfigFile, Definition, StructDefinition, InterfaceDefinition, TableDefinition, FieldDefinition, ForeignKey, Metadata, SymbolTable, ModuleResolver)
-- [ ] T009 Implement file index service (fileIndexService.ts)
-- [ ] T010 Implement cache service (cacheService.ts) with LRU eviction
-- [ ] T011 Implement symbol table (symbolTable.ts) with cross-module support
-- [ ] T012 Implement module resolver (moduleResolver.ts) with directory-based module name parsing
-- [ ] T013 Create utility functions (logger.ts, performance.ts, namespaceUtils.ts)
-- [ ] T014 Setup Language Server Protocol (LSP) server and client infrastructure
+- [x] T008 Create core data models (ConfigFile, Definition, StructDefinition, InterfaceDefinition, TableDefinition, FieldDefinition, ForeignKey, Metadata, SymbolTable, ModuleResolver)
+- [x] T009 Implement file index service (fileIndexService.ts)
+- [x] T010 Implement cache service (cacheService.ts) with LRU eviction
+- [x] T011 Implement symbol table (symbolTable.ts) with cross-module support
+- [x] T012 Implement module resolver (moduleResolver.ts) with directory-based module name parsing
+- [x] T013 Create utility functions (logger.ts, performance.ts, namespaceUtils.ts)
+- [x] T014 Setup Language Server Protocol (LSP) server and client infrastructure
 
 ## Phase 3: User Story 1 - Syntax Highlighting (P1)
 
@@ -47,11 +47,11 @@
 
 **Independent Test Criteria**: 在VSCode中打开任何.cfg文件，所有语法元素（struct/interface/table、字段名、类型、外键引用、注释、元数据）都有正确的高亮显示
 
-- [ ] T015 Create custom ANTLR listener for syntax highlighting (extends CfgBaseListener.ts)
-- [ ] T016 Implement syntax highlighting provider (syntaxHighlightingProvider.ts) using ANTLR parse tree
-- [ ] T017 Register language identifier 'cfg' and activate extension on .cfg files
-- [ ] T018 Create theme color palettes (default + chineseClassical) with 7 color categories
-- [ ] T019 Test syntax highlighting for all language constructs (struct/interface/table, types, foreign keys, comments, metadata)
+- [x] T015 Create custom ANTLR listener for syntax highlighting (extends CfgBaseListener.ts)
+- [x] T016 Implement syntax highlighting provider (syntaxHighlightingProvider.ts) using ANTLR parse tree
+- [x] T017 Register language identifier 'cfg' and activate extension on .cfg files
+- [x] T018 Create theme color palettes (default + chineseClassical) with 7 color categories
+- [x] T019 Test syntax highlighting for all language constructs (struct/interface/table, types, foreign keys, comments, metadata)
 
 ## Phase 4: User Story 2 - Go-to-Definition Navigation (P1)
 
@@ -59,11 +59,11 @@
 
 **Independent Test Criteria**: 在.cfg文件中对外键引用或类型引用上执行"跳转到定义"操作，能正确定位到表或类型的定义位置
 
-- [ ] T020 Implement definition provider (definitionProvider.ts) with LSP 3.17 support
-- [ ] T021 Parse foreign key references (->, =>) and extract target table/field
-- [ ] T022 Resolve cross-module references using module resolver
-- [ ] T023 Handle edge cases: missing definitions, invalid references
-- [ ] T024 Test go-to-definition for simple references, key references, list references, and cross-module references
+- [x] T020 Implement definition provider (definitionProvider.ts) with LSP 3.17 support
+- [x] T021 Parse foreign key references (->, =>) and extract target table/field
+- [x] T022 Resolve cross-module references using module resolver
+- [x] T023 Handle edge cases: missing definitions, invalid references
+- [x] T024 Test go-to-definition for simple references, key references, list references, and cross-module references
 
 ## Phase 5: User Story 3 - Autocompletion (P2)
 

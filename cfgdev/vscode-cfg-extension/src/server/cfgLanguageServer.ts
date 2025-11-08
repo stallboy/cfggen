@@ -65,7 +65,7 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
     // 初始化提供器
     syntaxHighlightingProvider = new SyntaxHighlightingProvider(parserService, logger);
     completionProvider = new CompletionProvider(parserService, symbolTableService, logger);
-    definitionProvider = new DefinitionProvider(parserService, symbolTableService, logger);
+    definitionProvider = new DefinitionProvider(parserService, symbolTableService, moduleResolverService, logger);
     hoverProvider = new HoverProvider(parserService, symbolTableService, logger);
     referenceProvider = new ReferenceProvider(parserService, symbolTableService, logger);
 
