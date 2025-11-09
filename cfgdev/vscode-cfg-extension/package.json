@@ -32,15 +32,6 @@
       "type": "object",
       "title": "CFG Language Support",
       "properties": {
-        "cfg.theme": {
-          "type": "string",
-          "default": "chineseClassical",
-          "enum": [
-            "default",
-            "chineseClassical"
-          ],
-          "description": "Color theme for CFG syntax highlighting"
-        },
         "cfg.enableCache": {
           "type": "boolean",
           "default": true,
@@ -71,6 +62,80 @@
         "language": "cfg",
         "scopeName": "source.cfg",
         "path": "./syntaxes/cfg.tmLanguage.json"
+      }
+    ],
+    "semanticTokenTypes": [
+      {
+        "id": "structureDefinition",
+        "description": "Structure definition (struct/interface/table names)"
+      },
+      {
+        "id": "typeIdentifier",
+        "description": "Custom type identifiers (non-basic types)"
+      },
+      {
+        "id": "foreignKey",
+        "description": "Foreign key references"
+      },
+      {
+        "id": "comment",
+        "description": "Comments"
+      },
+      {
+        "id": "metadata",
+        "description": "Metadata keywords"
+      },
+      {
+        "id": "primaryKey",
+        "description": "Primary key field names"
+      },
+      {
+        "id": "uniqueKey",
+        "description": "Unique key field names"
+      }
+    ],
+    "semanticTokenScopes": [
+      {
+        "language": "cfg",
+        "scopes": {
+          "structureDefinition": [ "entity.name.type" ],
+          "typeIdentifier": [ "entity.name.type.class" ],
+          "foreignKey": [ "entity.name.type" ],
+          "comment": [ "comment" ],
+          "metadata": [ "entity.name.function" ],
+          "primaryKey": [ "variable.other.readwrite" ],
+          "uniqueKey": [ "entity.name.property" ]
+        }
+      }
+    ],
+    "tokenColors": [
+      {
+        "name": "CFG Keywords",
+        "scope": "keyword.control.cfg, keyword.operator.cfg",
+        "settings": {
+          "foreground": "#569CD6"
+        }
+      },
+      {
+        "name": "CFG Strings",
+        "scope": "string.quoted.double.cfg, string.quoted.single.cfg",
+        "settings": {
+          "foreground": "#CE9178"
+        }
+      },
+      {
+        "name": "CFG Numbers",
+        "scope": "constant.numeric.cfg",
+        "settings": {
+          "foreground": "#B5CEA8"
+        }
+      },
+      {
+        "name": "CFG Comments",
+        "scope": "comment.line.double-slash.cfg",
+        "settings": {
+          "foreground": "#6A9955"
+        }
       }
     ]
   },

@@ -8,7 +8,6 @@ import * as vscode from 'vscode';
 import { AbstractParseTreeVisitor, ParseTree, TerminalNode } from 'antlr4ts/tree';
 import { CfgVisitor } from '../grammar/CfgVisitor';
 import { CfgParser } from '../grammar/CfgParser';
-import { ThemeConfig } from '../services/themeService';
 import { Struct_declContext } from '../grammar/CfgParser';
 import { Interface_declContext } from '../grammar/CfgParser';
 import { Table_declContext } from '../grammar/CfgParser';
@@ -35,18 +34,15 @@ const TOKEN_TYPES = {
 export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> implements CfgVisitor<void> {
     private builder: vscode.SemanticTokensBuilder;
     private document: vscode.TextDocument;
-    private theme: ThemeConfig;
     private primaryKeyFields: Set<string> = new Set();
 
     constructor(
         builder: vscode.SemanticTokensBuilder,
-        document: vscode.TextDocument,
-        theme: ThemeConfig
+        document: vscode.TextDocument
     ) {
         super();
         this.builder = builder;
         this.document = document;
-        this.theme = theme;
     }
 
     public walk(tree: ParseTree): void {

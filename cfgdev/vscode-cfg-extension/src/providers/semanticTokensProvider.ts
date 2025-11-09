@@ -1,7 +1,7 @@
 /**
  * Semantic Tokens Provider
  * Provides semantic highlighting for CFG files using ANTLR4 parser
- * Works with ThemeService to apply theme colors
+ * Semantic tokens use VSCode's built-in themes automatically
  */
 
 import * as vscode from 'vscode';
@@ -10,13 +10,11 @@ import { CharStreams } from 'antlr4ts';
 import { CfgLexer } from '../grammar/CfgLexer';
 import { CfgParser } from '../grammar/CfgParser';
 import { CfgHighlightingListener } from './semanticTokensProvider.highlightListener';
-import { ThemeService } from '../services/themeService';
 
 export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProvider {
-    private themeService: ThemeService;
     private legend: vscode.SemanticTokensLegend;
 
-    // Semantic token types as per the Constitution
+    // Semantic token types
     public static readonly TOKEN_TYPES = [
         'structureDefinition',  // 0: struct/interface/table names
         'typeIdentifier',       // 1: custom types (non-basic)
@@ -27,8 +25,7 @@ export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProv
         'uniqueKey'             // 6: unique key fields
     ];
 
-    constructor(themeService: ThemeService) {
-        this.themeService = themeService;
+    constructor() {
         this.legend = new vscode.SemanticTokensLegend(
             SemanticTokensProvider.TOKEN_TYPES,
             []  // modifiers
@@ -39,7 +36,6 @@ export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProv
      * Get the semantic tokens legend
      */
     public getLegend(): vscode.SemanticTokensLegend {
-        console.log('[SemanticTokens] getLegend called, token types:', this.legend.tokenTypes);
         return this.legend;
     }
 
@@ -50,9 +46,6 @@ export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProv
         document: vscode.TextDocument,
         _token: vscode.CancellationToken
     ): vscode.ProviderResult<vscode.SemanticTokens> {
-        console.log('[SemanticTokens] provideDocumentSemanticTokens called for:', document.fileName);
-        console.log('[SemanticTokens] Document content length:', document.getText().length);
-
         try {
             // Create ANTLR4 input stream from document using CharStreams (replaces deprecated ANTLRInputStream)
             const inputStream = CharStreams.fromString(document.getText());
@@ -63,33 +56,21 @@ export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProv
             const parser = new CfgParser(tokenStream);
             const parseTree = parser.schema();
 
-            console.log('[SemanticTokens] Parse tree created successfully');
-
-            // Get theme colors
-            const theme = this.themeService.getThemeColors();
-            console.log('[SemanticTokens] Theme:', this.themeService.getCurrentTheme());
-            console.log('[SemanticTokens] Theme colors loaded:', Object.keys(theme.colors.semanticTokens));
-
             // Create builder with legend
             const builder = new vscode.SemanticTokensBuilder(this.legend);
 
-            // Create highlighting listener with theme service
+            // Create highlighting listener
+            // Semantic tokens use VSCode's built-in themes automatically
             const listener = new CfgHighlightingListener(
                 builder,
-                document,
-                theme
+                document
             );
 
             // Walk the parse tree to collect semantic tokens
-            console.log('[SemanticTokens] Walking parse tree...');
             listener.walk(parseTree);
-            console.log('[SemanticTokens] Parse tree walk completed');
 
             // Build the semantic tokens
             const tokens = builder.build();
-
-            // Debug: Print semantic tokens for debugging
-            this.debugPrintTokens(document, tokens);
 
             return tokens;
         } catch (error) {
@@ -100,82 +81,13 @@ export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProv
     }
 
     /**
-     * Debug: Print semantic tokens for debugging purposes
-     * Note: VSCode uses delta encoding for semantic tokens.
-     * data format: [deltaLine, deltaStartChar, length, tokenType, tokenModifiers]
-     * We need to decode these deltas to get absolute positions.
-     */
-    private debugPrintTokens(document: vscode.TextDocument, tokens: vscode.SemanticTokens | null): void {
-        if (!tokens) {
-            console.log('[SemanticTokens] No tokens generated');
-            return;
-        }
-
-        console.log('[SemanticTokens] Document:', document.fileName);
-        console.log('[SemanticTokens] Token count:', tokens.data.length / 5);
-
-        // Print first 10 tokens for debugging
-        const maxTokens = Math.min(20, tokens.data.length / 5);
-
-        // Also print the raw data for debugging
-        console.log('[SemanticTokens] Raw data (first 50 values):', Array.from(tokens.data.slice(0, 50)));
-
-        // Decode delta encoding to get absolute positions
-        let currentLine = 0;
-        let currentChar = 0;
-
-        for (let i = 0; i < maxTokens; i++) {
-            const offset = i * 5;
-            const deltaLine = tokens.data[offset];
-            const deltaStartChar = tokens.data[offset + 1];
-            const length = tokens.data[offset + 2];
-            const tokenType = tokens.data[offset + 3];
-            const tokenModifiers = tokens.data[offset + 4];
-
-            // Decode delta to absolute position
-            const absLine = currentLine + deltaLine;
-            const absChar = deltaLine === 0 ? currentChar + deltaStartChar : deltaStartChar;
-
-            // Get token type name
-            const tokenTypeName = tokenType < SemanticTokensProvider.TOKEN_TYPES.length
-                ? SemanticTokensProvider.TOKEN_TYPES[tokenType]
-                : `Unknown(${tokenType})`;
-
-            // Get the actual token text from the document
-            const startPos = new vscode.Position(absLine, absChar);
-            const endPos = new vscode.Position(absLine, absChar + length);
-            const tokenText = document.getText(new vscode.Range(startPos, endPos));
-
-            console.log(`[SemanticTokens] Token ${i + 1}:`, {
-                absLine,
-                absChar,
-                length,
-                text: tokenText,
-                tokenType: tokenTypeName,
-                tokenModifiers
-            });
-
-            // Update current position for next token
-            currentLine = absLine;
-            currentChar = absChar;
-        }
-
-        if (tokens.data.length / 5 > maxTokens) {
-            console.log(`[SemanticTokens] ... and ${tokens.data.length / 5 - maxTokens} more tokens`);
-        }
-    }
-
-    /**
      * Refresh semantic tokens for all CFG documents
+     * Note: vscode.refreshSemanticTokens is not a standard command
+     * The semantic tokens will automatically refresh when the document changes
      */
     public refreshAll(): void {
-        vscode.workspace.textDocuments.forEach(doc => {
-            if (doc.languageId === 'cfg') {
-                vscode.commands.executeCommand(
-                    'vscode.refreshSemanticTokens',
-                    doc.uri
-                );
-            }
-        });
+        // Semantic tokens refresh automatically when the document is modified
+        // or when VSCode requests new tokens
+        // No manual refresh needed - VSCode handles this internally
     }
 }
