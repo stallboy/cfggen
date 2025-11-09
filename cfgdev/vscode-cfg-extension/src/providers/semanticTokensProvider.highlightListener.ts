@@ -7,6 +7,7 @@
 import * as vscode from 'vscode';
 import { AbstractParseTreeVisitor, ParseTree, TerminalNode } from 'antlr4ts/tree';
 import { CfgVisitor } from '../grammar/CfgVisitor';
+import { CfgParser } from '../grammar/CfgParser';
 import { ThemeConfig } from '../services/themeService';
 import { Struct_declContext } from '../grammar/CfgParser';
 import { Interface_declContext } from '../grammar/CfgParser';
@@ -71,11 +72,12 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
                 const startLine = firstTerminal.symbol.line - 1;
                 const startChar = firstTerminal.symbol.charPositionInLine;
                 const endChar = lastTerminal.symbol.charPositionInLine + this.getText(lastTerminal).length;
+                const tokenLength = endChar - startChar;
 
                 this.builder.push(
                     startLine,
                     startChar,
-                    endChar - startChar,
+                    tokenLength,
                     this.getTokenTypeIndex('STRUCTURE_DEFINITION'),
                     0
                 );
@@ -85,8 +87,16 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
 
     private getText(ctx: ParseTree | TerminalNode): string {
         if (!ctx) return '';
-        const ctxWithText = ctx as { text?: string };
-        return ctxWithText.text || ctx.toString() || '';
+        // For TerminalNode, use the text property directly
+        if ('text' in ctx) {
+            const terminal = ctx as TerminalNode;
+            if (terminal.text) {
+                return terminal.text;
+            }
+        }
+        // Fallback to toString for other node types
+        const text = ctx.toString();
+        return text || '';
     }
 
     private getTokenTypeIndex(type: keyof typeof TOKEN_TYPES): number {
@@ -353,22 +363,6 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
     }
 
     // ============================================================
-    // Comments
-    // ============================================================
-
-    public visitCOMMENT(ctx: TerminalNode): void {
-        if (ctx && ctx.symbol) {
-            this.builder.push(
-                ctx.symbol.line - 1,
-                ctx.symbol.charPositionInLine,
-                this.getText(ctx).length,
-                this.getTokenTypeIndex('COMMENT'),
-                0
-            );
-        }
-    }
-
-    // ============================================================
     // Metadata
     // ============================================================
 
@@ -406,5 +400,46 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
                 }
             });
         }
+    }
+
+    // ============================================================
+    // Terminal Node Visitor (for tokens)
+    // ============================================================
+
+    /**
+     * Visit terminal nodes (tokens like COMMENT, IDENT, etc.)
+     * This is the correct way to access tokens in ANTLR4 Visitor pattern
+     */
+    public visitTerminal(node: TerminalNode): void {
+        // Access token property from the terminal node
+        // TypeScript doesn't have proper type definitions for TerminalNode.token
+        // We need to use 'unknown' as an intermediate type
+        const token = (node as unknown as { token: { type: number; line: number; charPositionInLine: number } }).token;
+        if (!token) {
+            return;
+        }
+
+        const tokenType = token.type;
+
+        // Get token type name from the parser
+        const tokenName = CfgParser.VOCABULARY.getSymbolicName(tokenType);
+
+        // Handle COMMENT tokens
+        if (tokenName === 'COMMENT' && token) {
+            this.builder.push(
+                token.line - 1,
+                token.charPositionInLine,
+                this.getText(node).length,
+                this.getTokenTypeIndex('COMMENT'),
+                0
+            );
+        }
+    }
+
+    /**
+     * Visit error nodes (for debugging parsing errors)
+     */
+    public visitErrorNode(_node: unknown): void {
+        console.error('[SemanticTokens] Error node:', _node);
     }
 }

@@ -86,6 +86,9 @@ export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProv
 
     /**
      * Debug: Print semantic tokens for debugging purposes
+     * Note: VSCode uses delta encoding for semantic tokens.
+     * data format: [deltaLine, deltaStartChar, length, tokenType, tokenModifiers]
+     * We need to decode these deltas to get absolute positions.
      */
     private debugPrintTokens(document: vscode.TextDocument, tokens: vscode.SemanticTokens | null): void {
         if (!tokens) {
@@ -98,13 +101,25 @@ export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProv
 
         // Print first 10 tokens for debugging
         const maxTokens = Math.min(20, tokens.data.length / 5);
+
+        // Also print the raw data for debugging
+        console.log('[SemanticTokens] Raw data (first 50 values):', Array.from(tokens.data.slice(0, 50)));
+
+        // Decode delta encoding to get absolute positions
+        let currentLine = 0;
+        let currentChar = 0;
+
         for (let i = 0; i < maxTokens; i++) {
             const offset = i * 5;
-            const line = tokens.data[offset];
-            const char = tokens.data[offset + 1];
+            const deltaLine = tokens.data[offset];
+            const deltaStartChar = tokens.data[offset + 1];
             const length = tokens.data[offset + 2];
             const tokenType = tokens.data[offset + 3];
             const tokenModifiers = tokens.data[offset + 4];
+
+            // Decode delta to absolute position
+            const absLine = currentLine + deltaLine;
+            const absChar = deltaLine === 0 ? currentChar + deltaStartChar : deltaStartChar;
 
             // Get token type name
             const tokenTypeName = tokenType < SemanticTokensProvider.TOKEN_TYPES.length
@@ -112,18 +127,22 @@ export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProv
                 : `Unknown(${tokenType})`;
 
             // Get the actual token text from the document
-            const startPos = new vscode.Position(line, char);
-            const endPos = new vscode.Position(line, char + length);
+            const startPos = new vscode.Position(absLine, absChar);
+            const endPos = new vscode.Position(absLine, absChar + length);
             const tokenText = document.getText(new vscode.Range(startPos, endPos));
 
             console.log(`[SemanticTokens] Token ${i + 1}:`, {
-                line,
-                char,
+                absLine,
+                absChar,
                 length,
                 text: tokenText,
                 tokenType: tokenTypeName,
                 tokenModifiers
             });
+
+            // Update current position for next token
+            currentLine = absLine;
+            currentChar = absChar;
         }
 
         if (tokens.data.length / 5 > maxTokens) {
