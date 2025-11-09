@@ -79,15 +79,4 @@ export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProv
             return new vscode.SemanticTokens(new Uint32Array(0), undefined);
         }
     }
-
-    /**
-     * Refresh semantic tokens for all CFG documents
-     * Note: vscode.refreshSemanticTokens is not a standard command
-     * The semantic tokens will automatically refresh when the document changes
-     */
-    public refreshAll(): void {
-        // Semantic tokens refresh automatically when the document is modified
-        // or when VSCode requests new tokens
-        // No manual refresh needed - VSCode handles this internally
-    }
 }

@@ -1,53 +1,49 @@
 # .vscodeignore 控制 VSIX 包中包含的文件
 
-# 需要包含的文件（重要！）
-# ✅ LICENSE - 许可证文件
-# ✅ README.md - 项目文档
-# ✅ language-configuration.json - 语言配置
-# ✅ package.json - 包配置
-# ✅ out/ - 编译后的代码
-
-# 版本控制（不需要）
-.gitignore
-
-# 开发工具配置（不需要）
+# 开发工具配置
 .vscode/
 .eslintrc.json
 .eslintignore
+
+# 构建配置
+webpack.config.js
 tsconfig.json
 tsconfig.tsbuildinfo
 
-# 源码目录（只保留编译后的 out/）
+# 源码目录
 src/
 
-# 测试文件（不需要）
+# 中间输出目录
+out/
+
+# 依赖目录（不需要，因为依赖已经被 webpack 打包）
+node_modules/
+
+# 测试文件
 test/
 test-results/
 test-output/
 
-# 依赖（会在 VSIX 内部重新安装）
-node_modules/
-
-# 锁文件（不需要）
+# 锁文件
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
 
-# 日志和缓存（不需要）
+# 日志和缓存
 *.log
 logs/
 .eslintcache
 *.tsbuildinfo
 
-# 临时文件（不需要）
+# 临时文件
 .tmp/
 temp/
 
-# 操作系统文件（不需要）
+# 操作系统文件
 .DS_Store
 Thumbs.db
 
-# 开发环境文件（不需要）
+# 开发环境文件
 .idea/
 *.swp
 *.swo

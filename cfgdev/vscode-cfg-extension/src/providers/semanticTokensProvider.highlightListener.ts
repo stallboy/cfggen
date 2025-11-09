@@ -7,7 +7,6 @@
 import * as vscode from 'vscode';
 import { AbstractParseTreeVisitor, ParseTree, TerminalNode } from 'antlr4ts/tree';
 import { CfgVisitor } from '../grammar/CfgVisitor';
-import { CfgParser } from '../grammar/CfgParser';
 import { Struct_declContext } from '../grammar/CfgParser';
 import { Interface_declContext } from '../grammar/CfgParser';
 import { Table_declContext } from '../grammar/CfgParser';
@@ -445,39 +444,6 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
         }
     }
 
-    // ============================================================
-    // Terminal Node Visitor (for tokens)
-    // ============================================================
-
-    /**
-     * Visit terminal nodes (tokens like COMMENT, IDENT, etc.)
-     * This is the correct way to access tokens in ANTLR4 Visitor pattern
-     */
-    public visitTerminal(node: TerminalNode): void {
-        // Access token property from the terminal node
-        // TypeScript doesn't have proper type definitions for TerminalNode.token
-        // We need to use 'unknown' as an intermediate type
-        const token = (node as unknown as { token: { type: number; line: number; charPositionInLine: number } }).token;
-        if (!token) {
-            return;
-        }
-
-        const tokenType = token.type;
-
-        // Get token type name from the parser
-        const tokenName = CfgParser.VOCABULARY.getSymbolicName(tokenType);
-
-        // Handle COMMENT tokens
-        if (tokenName === 'COMMENT' && token) {
-            this.builder.push(
-                token.line - 1,
-                token.charPositionInLine,
-                this.getText(node).length,
-                this.getTokenTypeIndex('COMMENT'),
-                0
-            );
-        }
-    }
 
     /**
      * Visit error nodes (for debugging parsing errors)

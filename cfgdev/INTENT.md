@@ -121,3 +121,11 @@ table task[id] {
 阅读specs下相关文档，参考vscode-cfg-extension\src\grammar\cfgHighlightListener.ts，这里逻辑基本正确，还有
 vscode-cfg-extension\src\providers\themeConfig.ts，这里的7种颜色类型，正对应我们要实现的7中高亮。不要额外加类型， 实现
 DocumentSemanticTokensProvider，不要提供.tmLanguage.json。最后实现registerDocumentSemanticTokensProvider
+
+
+
+1，运行lint，修复其中的错误。2，修正代码中的any。3，不要修改任何vscode-cfg-extension\src\grammar目录，因为这个目录都是生成代码
+
+
+阅读 vscodedoc.md, 然后完整查看theme
+相关的代码看是否ok，现在结果是semantic token解析ok，但theme没有起作用（semantic 的forground color没取到）

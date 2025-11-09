@@ -1,15 +1,14 @@
 {
-  "name": "cfg-language-support",
-  "displayName": "CFG Language Support",
+  "name": "cfg-support",
+  "displayName": "thy.cfg-support",
   "description": "VSCode extension for .cfg configuration files with syntax highlighting, go-to-definition, and autocompletion",
-  "version": "1.0.0",
-  "publisher": "your-publisher-name",
+  "version": "1.1.0",
+  "publisher": "thy",
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
-    "Programming Languages",
-    "Extension Packs"
+    "Programming Languages"
   ],
   "keywords": [
     "cfg",
@@ -26,7 +25,7 @@
     "url": "https://github.com/your-username/cfg-language-support/issues"
   },
   "homepage": "https://github.com/your-username/cfg-language-support#readme",
-  "main": "./out/extension.js",
+  "main": "./dist/extension.js",
   "contributes": {
     "configuration": {
       "type": "object",
@@ -52,7 +51,9 @@
           "cfg"
         ],
         "extensions": [
-          ".cfg"
+          ".cfg",
+          ".CFG",
+          ".Cfg"
         ],
         "configuration": "./language-configuration.json"
       }
@@ -157,13 +158,15 @@
     "onLanguage:cfg"
   ],
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run webpack",
     "compile": "tsc -p ./",
+    "webpack": "webpack --mode production",
+    "webpack-dev": "webpack --mode development",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
-    "package": "vsce package",
+    "package": "npm run webpack && vsce package",
     "generate-parser": "antlr4ts -o src/grammar -listener -visitor src/grammar/Cfg.g4",
     "postinstall": "npm run generate-parser"
   },
@@ -179,7 +182,10 @@
     "eslint": "^8.56.0",
     "glob": "^8.1.0",
     "mocha": "^10.2.0",
-    "typescript": "^5.3.3"
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.3.3",
+    "webpack": "^5.102.1",
+    "webpack-cli": "^6.0.1"
   },
   "dependencies": {
     "antlr4ts": "^0.5.0-alpha.4"
