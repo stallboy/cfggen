@@ -317,33 +317,55 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
 
     private highlightForeignKey(ref: RefContext): void {
         // Highlight the entire foreign key reference as one unit
-        // This includes ->, module, and key if present
+        // Format: (REF | LISTREF) ns_ident key?
+        // Examples: ->item.item, ->item.item[key], =>item, =>item[key]
+
         const operator = ref.REF() || ref.LISTREF();
         if (operator && operator.symbol) {
-            // Get the range of the entire foreign key reference
             const nsIdent = ref.ns_ident();
             if (nsIdent && nsIdent.identifier().length > 0) {
                 const firstIdent = nsIdent.identifier()[0];
                 const firstTerminal = firstIdent.IDENT();
 
                 if (firstTerminal && firstTerminal.symbol) {
+                    // Calculate the start position (from operator)
+                    const startLine = operator.symbol.line - 1;
+                    const startChar = operator.symbol.charPositionInLine;
+
                     // Calculate the end position
+                    // 1. Check if there's a key
                     const key = ref.key();
-                    let endChar = firstTerminal.symbol.charPositionInLine + this.getText(firstTerminal).length;
+                    let endChar: number;
 
                     if (key && key.identifier().length > 0) {
+                        // Has key: end at the last key identifier
                         const lastKeyId = key.identifier()[key.identifier().length - 1];
                         const lastKeyTerminal = lastKeyId.IDENT();
                         if (lastKeyTerminal && lastKeyTerminal.symbol) {
                             endChar = lastKeyTerminal.symbol.charPositionInLine + this.getText(lastKeyTerminal).length;
+                        } else {
+                            // Fallback: use first terminal
+                            endChar = firstTerminal.symbol.charPositionInLine + this.getText(firstTerminal).length;
+                        }
+                    } else {
+                        // No key: end at the last ns_ident
+                        const lastIdent = nsIdent.identifier()[nsIdent.identifier().length - 1];
+                        const lastTerminal = lastIdent.IDENT();
+                        if (lastTerminal && lastTerminal.symbol) {
+                            endChar = lastTerminal.symbol.charPositionInLine + this.getText(lastTerminal).length;
+                        } else {
+                            // Fallback
+                            endChar = firstTerminal.symbol.charPositionInLine + this.getText(firstTerminal).length;
                         }
                     }
 
                     // Highlight from the operator to the end
+                    const length = endChar - startChar;
+
                     this.builder.push(
-                        operator.symbol.line - 1,
-                        operator.symbol.charPositionInLine,
-                        endChar - operator.symbol.charPositionInLine,
+                        startLine,
+                        startChar,
+                        length,
                         this.getTokenTypeIndex('FOREIGN_KEY'),
                         0
                     );
