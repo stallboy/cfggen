@@ -5,8 +5,8 @@
  */
 
 import * as vscode from 'vscode';
-import { CommonTokenStream } from 'antlr4ts';
-import { CharStreams } from 'antlr4ts';
+import { CommonTokenStream } from 'antlr4ng';
+import { CharStream } from 'antlr4ng';
 import { CfgLexer } from '../grammar/CfgLexer';
 import { CfgParser } from '../grammar/CfgParser';
 import { CfgHighlightingListener } from './semanticTokensProvider.highlightListener';
@@ -47,8 +47,8 @@ export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProv
         _token: vscode.CancellationToken
     ): vscode.ProviderResult<vscode.SemanticTokens> {
         try {
-            // Create ANTLR4 input stream from document using CharStreams (replaces deprecated ANTLRInputStream)
-            const inputStream = CharStreams.fromString(document.getText());
+            // Create ANTLR4 input stream from document
+            const inputStream = CharStream.fromString(document.getText());
             const lexer = new CfgLexer(inputStream);
             const tokenStream = new CommonTokenStream(lexer);
 

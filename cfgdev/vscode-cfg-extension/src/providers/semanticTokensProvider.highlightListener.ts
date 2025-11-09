@@ -5,7 +5,7 @@
  */
 
 import * as vscode from 'vscode';
-import { AbstractParseTreeVisitor, ParseTree, TerminalNode } from 'antlr4ts/tree';
+import { AbstractParseTreeVisitor, ParseTree, TerminalNode } from 'antlr4ng';
 import { CfgVisitor } from '../grammar/CfgVisitor';
 import { Struct_declContext } from '../grammar/CfgParser';
 import { Interface_declContext } from '../grammar/CfgParser';
@@ -65,8 +65,8 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
 
             if (firstTerminal && lastTerminal && firstTerminal.symbol && lastTerminal.symbol) {
                 const startLine = firstTerminal.symbol.line - 1;
-                const startChar = firstTerminal.symbol.charPositionInLine;
-                const endChar = lastTerminal.symbol.charPositionInLine + this.getText(lastTerminal).length;
+                const startChar = firstTerminal.symbol.column;
+                const endChar = lastTerminal.symbol.column + this.getText(lastTerminal).length;
                 const tokenLength = endChar - startChar;
 
                 this.builder.push(
@@ -82,12 +82,9 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
 
     private getText(ctx: ParseTree | TerminalNode): string {
         if (!ctx) return '';
-        // For TerminalNode, use the text property directly
-        if ('text' in ctx) {
-            const terminal = ctx as TerminalNode;
-            if (terminal.text) {
-                return terminal.text;
-            }
+        // For TerminalNode, use the getText method
+        if (ctx instanceof TerminalNode) {
+            return ctx.getText();
         }
         // Fallback to toString for other node types
         const text = ctx.toString();
@@ -168,7 +165,7 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
                 if (tokenType) {
                     this.builder.push(
                         terminal.symbol.line - 1,
-                        terminal.symbol.charPositionInLine,
+                        terminal.symbol.column,
                         this.getText(terminal).length,
                         this.getTokenTypeIndex(tokenType as keyof typeof TOKEN_TYPES),
                         0
@@ -232,7 +229,7 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
                     const lastTerminal = lastIdent.IDENT();
 
                     if (lastTerminal && lastTerminal.symbol) {
-                        endChar = lastTerminal.symbol.charPositionInLine + this.getText(lastTerminal).length;
+                        endChar = lastTerminal.symbol.column + this.getText(lastTerminal).length;
                     } else {
                         return; // Can't determine end position
                     }
@@ -243,7 +240,7 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
                     if (terminals && terminals.length > 0) {
                         const lastTerminal = terminals[terminals.length - 1];
                         if (lastTerminal.symbol) {
-                            endChar = lastTerminal.symbol.charPositionInLine + this.getText(lastTerminal).length;
+                            endChar = lastTerminal.symbol.column + this.getText(lastTerminal).length;
                         } else {
                             return; // Can't determine end position
                         }
@@ -255,7 +252,7 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
                 // Highlight from the keyword (list/map) to the end position
                 if (keywordToken && keywordToken.symbol) {
                     const startLine = keywordToken.symbol.line - 1;
-                    const startChar = keywordToken.symbol.charPositionInLine;
+                    const startChar = keywordToken.symbol.column;
 
                     this.builder.push(
                         startLine,
@@ -281,8 +278,8 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
                         const typeText = this.getText(lastTerminal);
                         if (!this.isBaseType(typeText)) {
                             const startLine = firstTerminal.symbol.line - 1;
-                            const startChar = firstTerminal.symbol.charPositionInLine;
-                            const endChar = lastTerminal.symbol.charPositionInLine + this.getText(lastTerminal).length;
+                            const startChar = firstTerminal.symbol.column;
+                            const endChar = lastTerminal.symbol.column + this.getText(lastTerminal).length;
 
                             this.builder.push(
                                 startLine,
@@ -325,7 +322,7 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
                 if (firstTerminal && firstTerminal.symbol) {
                     // Calculate the start position (from operator)
                     const startLine = operator.symbol.line - 1;
-                    const startChar = operator.symbol.charPositionInLine;
+                    const startChar = operator.symbol.column;
 
                     // Calculate the end position
                     // 1. Check if there's a key
@@ -337,20 +334,20 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
                         const lastKeyId = key.identifier()[key.identifier().length - 1];
                         const lastKeyTerminal = lastKeyId.IDENT();
                         if (lastKeyTerminal && lastKeyTerminal.symbol) {
-                            endChar = lastKeyTerminal.symbol.charPositionInLine + this.getText(lastKeyTerminal).length;
+                            endChar = lastKeyTerminal.symbol.column + this.getText(lastKeyTerminal).length;
                         } else {
                             // Fallback: use first terminal
-                            endChar = firstTerminal.symbol.charPositionInLine + this.getText(firstTerminal).length;
+                            endChar = firstTerminal.symbol.column + this.getText(firstTerminal).length;
                         }
                     } else {
                         // No key: end at the last ns_ident
                         const lastIdent = nsIdent.identifier()[nsIdent.identifier().length - 1];
                         const lastTerminal = lastIdent.IDENT();
                         if (lastTerminal && lastTerminal.symbol) {
-                            endChar = lastTerminal.symbol.charPositionInLine + this.getText(lastTerminal).length;
+                            endChar = lastTerminal.symbol.column + this.getText(lastTerminal).length;
                         } else {
                             // Fallback
-                            endChar = firstTerminal.symbol.charPositionInLine + this.getText(firstTerminal).length;
+                            endChar = firstTerminal.symbol.column + this.getText(firstTerminal).length;
                         }
                     }
 
@@ -394,7 +391,7 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
                 if (terminal.symbol) {
                     this.builder.push(
                         terminal.symbol.line - 1,
-                        terminal.symbol.charPositionInLine,
+                        terminal.symbol.column,
                         this.getText(terminal).length,
                         this.getTokenTypeIndex(tokenType as keyof typeof TOKEN_TYPES),
                         0
@@ -432,7 +429,7 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
                         if (specialMetadata.includes(metadataName)) {
                             this.builder.push(
                                 terminal.symbol.line - 1,
-                                terminal.symbol.charPositionInLine,
+                                terminal.symbol.column,
                                 this.getText(terminal).length,
                                 this.getTokenTypeIndex('METADATA'),
                                 0

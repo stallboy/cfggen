@@ -3,11 +3,12 @@
 'use strict';
 
 const path = require('path');
+const webpack = require('webpack');
 
 /**@type {import('webpack').Configuration}*/
 const config = {
     target: 'webworker', // vscode extensions run in webworker context for VS Code web
-    mode: 'production',
+    mode: 'development',
     entry: './src/extension.ts',
     output: {
         path: path.resolve(__dirname, 'dist'),
@@ -36,5 +37,10 @@ const config = {
             }]
         }]
     },
+    plugins: [
+        new webpack.DefinePlugin({
+            'util.inspect.custom': JSON.stringify('inspect')
+        })
+    ],
 }
 module.exports = config;
