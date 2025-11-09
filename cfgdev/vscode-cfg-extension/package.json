@@ -98,13 +98,27 @@
       {
         "language": "cfg",
         "scopes": {
-          "structureDefinition": [ "entity.name.type" ],
-          "typeIdentifier": [ "entity.name.type.class" ],
-          "foreignKey": [ "entity.name.type" ],
-          "comment": [ "comment" ],
-          "metadata": [ "entity.name.function" ],
-          "primaryKey": [ "variable.other.readwrite" ],
-          "uniqueKey": [ "entity.name.property" ]
+          "structureDefinition": [
+            "entity.name.type"
+          ],
+          "typeIdentifier": [
+            "entity.name.type.class"
+          ],
+          "foreignKey": [
+            "entity.name.type"
+          ],
+          "comment": [
+            "comment"
+          ],
+          "metadata": [
+            "entity.name.function"
+          ],
+          "primaryKey": [
+            "variable.other.readwrite"
+          ],
+          "uniqueKey": [
+            "entity.name.property"
+          ]
         }
       }
     ],
@@ -159,7 +173,7 @@
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "@typescript-eslint/parser": "^6.15.0",
     "@vscode/test-electron": "^2.3.8",
-    "@vscode/vsce": "^2.22.0",
+    "@vscode/vsce": "^3.7.0",
     "antlr4ts": "^0.5.0-alpha.4",
     "antlr4ts-cli": "^0.5.0-alpha.4",
     "eslint": "^8.56.0",
