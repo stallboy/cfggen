@@ -31,11 +31,13 @@ export function activate(context: vscode.ExtensionContext) {
 
     // 4. Register semantic tokens provider (Layer 2 of two-layer highlighting)
     const semanticTokensProvider = new SemanticTokensProvider(themeService);
+    const legend = semanticTokensProvider.getLegend();
+    console.log('[Extension] Registering semantic tokens provider with legend:', legend.tokenTypes);
     context.subscriptions.push(
         vscode.languages.registerDocumentSemanticTokensProvider(
             { language: 'cfg' },
             semanticTokensProvider,
-            semanticTokensProvider.getLegend()
+            legend
         )
     );
 
@@ -86,7 +88,7 @@ export function activate(context: vscode.ExtensionContext) {
     console.log('CFG extension activated successfully with two-layer syntax highlighting');
     console.log('Language ID: cfg');
     console.log('TextMate grammar: source.cfg');
-    console.log('Semantic tokens: 8 token types');
+    console.log('Semantic tokens: 7 token types');
     console.log(`Current theme: ${currentTheme}`);
 }
 
@@ -98,15 +100,12 @@ export function deactivate() {
 /**
  * Force refresh all providers
  * Called when theme changes
+ * Note: vscode.refreshSemanticTokens is not a standard command
+ * The semantic tokens will automatically refresh when the document changes
  */
 function refreshAllProviders(): void {
-    // Force VSCode to refresh semantic tokens
-    vscode.workspace.textDocuments.forEach(doc => {
-        if (doc.languageId === 'cfg') {
-            vscode.commands.executeCommand(
-                'vscode.refreshSemanticTokens',
-                doc.uri
-            );
-        }
-    });
+    // Semantic tokens refresh automatically when the document is modified
+    // or when VSCode requests new tokens
+    // No manual refresh needed - VSCode handles this internally
+    console.log('[CFG] Theme changed, semantic tokens will refresh on next document update');
 }

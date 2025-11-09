@@ -39,6 +39,7 @@ export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProv
      * Get the semantic tokens legend
      */
     public getLegend(): vscode.SemanticTokensLegend {
+        console.log('[SemanticTokens] getLegend called, token types:', this.legend.tokenTypes);
         return this.legend;
     }
 
@@ -49,6 +50,9 @@ export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProv
         document: vscode.TextDocument,
         _token: vscode.CancellationToken
     ): vscode.ProviderResult<vscode.SemanticTokens> {
+        console.log('[SemanticTokens] provideDocumentSemanticTokens called for:', document.fileName);
+        console.log('[SemanticTokens] Document content length:', document.getText().length);
+
         try {
             // Create ANTLR4 input stream from document using CharStreams (replaces deprecated ANTLRInputStream)
             const inputStream = CharStreams.fromString(document.getText());
@@ -59,9 +63,17 @@ export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProv
             const parser = new CfgParser(tokenStream);
             const parseTree = parser.schema();
 
-            // Create highlighting listener with theme service
+            console.log('[SemanticTokens] Parse tree created successfully');
+
+            // Get theme colors
             const theme = this.themeService.getThemeColors();
+            console.log('[SemanticTokens] Theme:', this.themeService.getCurrentTheme());
+            console.log('[SemanticTokens] Theme colors loaded:', Object.keys(theme.colors.semanticTokens));
+
+            // Create builder with legend
             const builder = new vscode.SemanticTokensBuilder(this.legend);
+
+            // Create highlighting listener with theme service
             const listener = new CfgHighlightingListener(
                 builder,
                 document,
@@ -69,7 +81,9 @@ export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProv
             );
 
             // Walk the parse tree to collect semantic tokens
+            console.log('[SemanticTokens] Walking parse tree...');
             listener.walk(parseTree);
+            console.log('[SemanticTokens] Parse tree walk completed');
 
             // Build the semantic tokens
             const tokens = builder.build();
@@ -79,7 +93,8 @@ export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProv
 
             return tokens;
         } catch (error) {
-            console.error('Error providing semantic tokens:', error);
+            console.error('[SemanticTokens] Error providing semantic tokens:', error);
+            console.error('[SemanticTokens] Stack:', error instanceof Error ? error.stack : '');
             return new vscode.SemanticTokens(new Uint32Array(0), undefined);
         }
     }

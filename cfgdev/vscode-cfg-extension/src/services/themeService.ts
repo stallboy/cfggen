@@ -20,15 +20,15 @@ export interface ThemeColors {
         punctuation: string;
     };
 
-    // Semantic layer colors
+    // Semantic layer colors (must match SemanticTokensProvider.TOKEN_TYPES)
     semanticTokens: {
-        structureDefinition: string;  // struct/interface/table names
-        typeIdentifier: string;       // custom types (non-basic)
-        fieldName: string;            // field names
-        foreignKey: string;           // foreign key references
-        primaryKey: string;           // primary key fields
-        uniqueKey: string;            // unique key fields
-        metadata: string;             // metadata keywords
+        structureDefinition: string;  // 0: struct/interface/table names
+        typeIdentifier: string;       // 1: custom types (non-basic)
+        foreignKey: string;           // 2: foreign key references
+        comment: string;              // 3: comments
+        metadata: string;             // 4: metadata keywords
+        primaryKey: string;           // 5: primary key fields
+        uniqueKey: string;            // 6: unique key fields
     };
 }
 
@@ -66,11 +66,11 @@ export class ThemeService {
                 semanticTokens: {
                     structureDefinition: '#0000FF',    // blue - struct/interface/table
                     typeIdentifier: '#267F99',         // teal - custom types
-                    fieldName: '#001080',              // dark blue - field names
                     foreignKey: '#AF00DB',             // purple - foreign keys
+                    comment: '#008000',                // green - comments
+                    metadata: '#808080',               // gray - metadata
                     primaryKey: '#C586C0',             // purple - primary keys
-                    uniqueKey: '#C586C0',              // purple - unique keys
-                    metadata: '#808080'                // gray - metadata
+                    uniqueKey: '#C586C0'               // purple - unique keys
                 }
             }
         },
@@ -94,11 +94,11 @@ export class ThemeService {
                 semanticTokens: {
                     structureDefinition: '#1E3A8A',  // 黛青 - struct/interface/table
                     typeIdentifier: '#0F766E',       // 苍青 - custom types
-                    fieldName: '#0369A1',            // 天蓝 (sky blue) - field names
                     foreignKey: '#BE185D',           // 桃红 (pink) - foreign keys
+                    comment: '#166534',              // 竹青 - comments
+                    metadata: '#6B7280',             // 墨灰 - metadata
                     primaryKey: '#7E22CE',           // 紫棠 - primary keys
-                    uniqueKey: '#7E22CE',            // 紫棠 - unique keys
-                    metadata: '#6B7280'              // 墨灰 - metadata
+                    uniqueKey: '#7E22CE'             // 紫棠 - unique keys
                 }
             }
         }
@@ -135,13 +135,14 @@ export class ThemeService {
     }
 
     /**
-     * Apply theme to VSCode (TextMate layer)
-     * Uses tokenColorCustomizations to apply colors to TextMate scopes
+     * Apply theme to VSCode (TextMate + Semantic layers)
+     * Updates both TextMate scopes and semantic token colors
      */
     public applyTheme(themeName: ThemeName): void {
         this.currentTheme = themeName;
         const theme = this.themes[themeName];
 
+        // Apply TextMate layer colors
         const tokenColors = this.generateTokenColorCustomizations(theme);
         const configuration = vscode.workspace.getConfiguration();
 
@@ -151,7 +152,7 @@ export class ThemeService {
             vscode.ConfigurationTarget.Global
         );
 
-        // Also update semantic token colors if supported
+        // Apply semantic token colors
         this.updateSemanticTokenColors(theme);
     }
 
@@ -211,10 +212,50 @@ export class ThemeService {
 
     /**
      * Update semantic token colors
+     * Applies semantic token color customizations to VSCode settings
      */
-    private updateSemanticTokenColors(_theme: ThemeConfig): void {
-        // Note: Semantic token colors are applied directly in the provider
-        // This method can be used for future extensions or for theme preview
+    private updateSemanticTokenColors(theme: ThemeConfig): void {
+        const semanticColors = theme.colors.semanticTokens;
+
+        // Configure semantic token color customizations
+        const semanticTokenColorCustomizations = {
+            '[*]': {
+                'semanticTokenColorCustomizations': {
+                    '[cfg]': {
+                        'rules': {
+                            'structureDefinition': {
+                                'foreground': semanticColors.structureDefinition
+                            },
+                            'typeIdentifier': {
+                                'foreground': semanticColors.typeIdentifier
+                            },
+                            'foreignKey': {
+                                'foreground': semanticColors.foreignKey
+                            },
+                            'comment': {
+                                'foreground': semanticColors.comment
+                            },
+                            'metadata': {
+                                'foreground': semanticColors.metadata
+                            },
+                            'primaryKey': {
+                                'foreground': semanticColors.primaryKey
+                            },
+                            'uniqueKey': {
+                                'foreground': semanticColors.uniqueKey
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        const configuration = vscode.workspace.getConfiguration();
+        configuration.update(
+            'editor.semanticTokenColorCustomizations',
+            semanticTokenColorCustomizations,
+            vscode.ConfigurationTarget.Global
+        );
     }
 
     /**
@@ -234,18 +275,19 @@ export class ThemeService {
 
     /**
      * Get color for a specific semantic token type
+     * tokenType index must match SemanticTokensProvider.TOKEN_TYPES
      */
     public getColorForTokenType(tokenType: number, themeName?: ThemeName): string {
         const colors = this.getSemanticTokenColors(themeName);
+        // Color map matches SemanticTokensProvider.TOKEN_TYPES index
         const colorMap: string[] = [
-            colors.structureDefinition,  // 0
-            colors.typeIdentifier,        // 1
-            colors.fieldName,             // 2
-            colors.foreignKey,            // 3
-            colors.metadata,              // 4 (used as comment color - comments share with metadata)
-            colors.metadata,              // 5
-            colors.primaryKey,            // 6
-            colors.uniqueKey              // 7
+            colors.structureDefinition,  // 0: structureDefinition
+            colors.typeIdentifier,        // 1: typeIdentifier
+            colors.foreignKey,            // 2: foreignKey
+            colors.comment,               // 3: comment
+            colors.metadata,              // 4: metadata
+            colors.primaryKey,            // 5: primaryKey
+            colors.uniqueKey              // 6: uniqueKey
         ];
         return colorMap[tokenType] || '#000000';
     }
