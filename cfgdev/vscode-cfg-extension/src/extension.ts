@@ -6,7 +6,6 @@
 
 import * as vscode from 'vscode';
 import { ThemeManager } from './providers/themeManager';
-import { ThemeService } from './services/themeService';
 import { SemanticTokensProvider } from './providers/semanticTokensProvider';
 
 // This method is called when your extension is activated

@@ -23,11 +23,15 @@ export class SymbolTable {
         this.byModule.get(definition.namespace)!.push(definition);
 
         // 按类型分组
-        const type = (definition as any).type;
-        if (!this.byType.has(type)) {
-            this.byType.set(type, []);
+        // Use type assertion to access the 'type' property from concrete implementations
+        const defWithType = definition as { type?: DefinitionType };
+        const type = defWithType.type;
+        if (type) {
+            if (!this.byType.has(type)) {
+                this.byType.set(type, []);
+            }
+            this.byType.get(type)!.push(definition);
         }
-        this.byType.get(type)!.push(definition);
     }
 
     /**
@@ -59,7 +63,7 @@ export class SymbolTable {
     /**
      * 获取引用关系
      */
-    getReferences(target: Definition): Reference[] {
+    getReferences(_target: Definition): Reference[] {
         // TODO: 实现引用查找
         return [];
     }

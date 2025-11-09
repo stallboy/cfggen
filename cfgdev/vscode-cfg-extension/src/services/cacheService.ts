@@ -1,10 +1,10 @@
-import { ConfigFile } from '../models';
+import * as fs from 'fs';
 
 export interface CachedFileData {
     // 解析后的符号
-    symbols: Map<string, any>;
-    symbolsByModule: Map<string, any[]>;
-    symbolsByFile: Map<string, any[]>;
+    symbols: Map<string, unknown>;
+    symbolsByModule: Map<string, unknown[]>;
+    symbolsByFile: Map<string, unknown[]>;
 
     // 依赖关系
     dependencies: string[];    // 依赖的其他文件路径
@@ -141,7 +141,6 @@ export class CacheService implements CacheManager {
      */
     private getFileVersion(uri: string): number {
         try {
-            const fs = require('fs');
             const stats = fs.statSync(uri);
             return stats.mtime.getTime();
         } catch (error) {

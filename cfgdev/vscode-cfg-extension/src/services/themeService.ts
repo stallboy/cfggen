@@ -158,7 +158,7 @@ export class ThemeService {
     /**
      * Generate tokenColorCustomizations for TextMate layer
      */
-    private generateTokenColorCustomizations(theme: ThemeConfig): any {
+    private generateTokenColorCustomizations(theme: ThemeConfig): unknown {
         return {
             '[*]': {
                 'textMateRules': [
@@ -212,7 +212,7 @@ export class ThemeService {
     /**
      * Update semantic token colors
      */
-    private updateSemanticTokenColors(theme: ThemeConfig): void {
+    private updateSemanticTokenColors(_theme: ThemeConfig): void {
         // Note: Semantic token colors are applied directly in the provider
         // This method can be used for future extensions or for theme preview
     }

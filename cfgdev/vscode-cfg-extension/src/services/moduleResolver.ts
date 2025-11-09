@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
 
 export class ModuleResolver {
     private rootPath: string | null = null;
@@ -58,10 +57,10 @@ export class ModuleResolver {
         }
 
         // 在工作区中搜索
-        const pattern = new vscode.RelativePattern(
-            this.workspaceRoot,
-            `**/${moduleName}/${moduleName}.cfg`
-        );
+        // const pattern = new vscode.RelativePattern(
+        //     this.workspaceRoot,
+        //     `**/${moduleName}/${moduleName}.cfg`
+        // );
 
         // TODO: 异步搜索
         return null;
@@ -70,7 +69,7 @@ export class ModuleResolver {
     /**
      * 加载模块
      */
-    async loadModule(moduleName: string): Promise<any> {
+    async loadModule(moduleName: string): Promise<unknown> {
         const modulePath = this.resolveModule(moduleName);
         if (!modulePath) {
             return null;
@@ -95,7 +94,7 @@ export class ModuleResolver {
     /**
      * 解析模块文档
      */
-    private parseModule(document: vscode.TextDocument, moduleName: string): any {
+    private parseModule(document: vscode.TextDocument, moduleName: string): unknown {
         // TODO: 使用ANTLR4解析模块
         return {
             moduleName,
@@ -153,8 +152,13 @@ export class ModuleResolver {
     /**
      * 获取模块中的所有定义
      */
-    async getModuleDefinitions(moduleName: string): Promise<any[]> {
+    async getModuleDefinitions(moduleName: string): Promise<unknown[]> {
         const module = await this.loadModule(moduleName);
-        return module ? module.definitions : [];
+        if (!module) {
+            return [];
+        }
+        // Type assertion to access definitions property
+        const moduleWithDefs = module as { definitions?: unknown[] };
+        return moduleWithDefs.definitions || [];
     }
 }

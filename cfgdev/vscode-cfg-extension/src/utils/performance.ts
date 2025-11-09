@@ -56,7 +56,7 @@ export class PerformanceMonitor {
      */
     static printStats(): void {
         console.log('\n=== Performance Statistics ===');
-        for (const [operation, measurements] of this.measurements) {
+        for (const [operation, _measurements] of this.measurements) {
             const stats = this.getStats(operation);
             if (stats) {
                 console.log(`${operation}:`);

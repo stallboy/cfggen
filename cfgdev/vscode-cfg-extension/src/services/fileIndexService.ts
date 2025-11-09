@@ -60,7 +60,13 @@ export class FileIndexService {
             path: filePath,
             moduleName,
             definitions: [], // TODO: 填充定义
-            symbols: new SymbolTable(), // TODO: 实现SymbolTable
+            symbols: {
+                add: (_definition: Definition): void => { },
+                find: (_name: string, _module?: string): Definition | null => null,
+                findAll: (_type?: string): Definition[] => [],
+                findInModule: (_module: string, _name: string): Definition | null => null,
+                getReferences: (_target: Definition): import('../models').Reference[] => []
+            },
             errors: [], // TODO: 填充错误
             lastModified
         };
@@ -140,35 +146,5 @@ export class FileIndexService {
      */
     public clear(): void {
         this.files.clear();
-    }
-}
-
-class SymbolTable {
-    private definitions: Map<string, Definition[]> = new Map();
-    private byModule: Map<string, Definition[]> = new Map();
-    private byType: Map<string, Definition[]> = new Map();
-
-    add(definition: Definition): void {
-        // TODO: 实现符号表
-    }
-
-    find(name: string, module?: string): Definition | null {
-        // TODO: 实现查找
-        return null;
-    }
-
-    findAll(type?: string): Definition[] {
-        // TODO: 实现查找所有
-        return [];
-    }
-
-    findInModule(module: string, name: string): Definition | null {
-        // TODO: 实现模块内查找
-        return null;
-    }
-
-    getReferences(target: Definition): any[] {
-        // TODO: 实现引用查找
-        return [];
     }
 }

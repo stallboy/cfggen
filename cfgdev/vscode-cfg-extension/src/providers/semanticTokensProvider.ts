@@ -5,11 +5,12 @@
  */
 
 import * as vscode from 'vscode';
-import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
+import { CommonTokenStream } from 'antlr4ts';
+import { CharStreams } from 'antlr4ts';
 import { CfgLexer } from '../grammar/CfgLexer';
 import { CfgParser } from '../grammar/CfgParser';
 import { CfgHighlightingListener } from './semanticTokensProvider.highlightListener';
-import { ThemeService, ThemeName } from '../services/themeService';
+import { ThemeService } from '../services/themeService';
 
 export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProvider {
     private themeService: ThemeService;
@@ -19,12 +20,11 @@ export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProv
     public static readonly TOKEN_TYPES = [
         'structureDefinition',  // 0: struct/interface/table names
         'typeIdentifier',       // 1: custom types (non-basic)
-        'fieldName',            // 2: field names
-        'foreignKey',           // 3: foreign key references
-        'comment',              // 4: comments
-        'metadata',             // 5: metadata keywords
-        'primaryKey',           // 6: primary key fields
-        'uniqueKey'             // 7: unique key fields
+        'foreignKey',           // 2: foreign key references
+        'comment',              // 3: comments
+        'metadata',             // 4: metadata keywords
+        'primaryKey',           // 5: primary key fields
+        'uniqueKey'             // 6: unique key fields
     ];
 
     constructor(themeService: ThemeService) {
@@ -47,11 +47,11 @@ export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProv
      */
     public provideDocumentSemanticTokens(
         document: vscode.TextDocument,
-        token: vscode.CancellationToken
+        _token: vscode.CancellationToken
     ): vscode.ProviderResult<vscode.SemanticTokens> {
         try {
-            // Create ANTLR4 input stream from document
-            const inputStream = new ANTLRInputStream(document.getText());
+            // Create ANTLR4 input stream from document using CharStreams (replaces deprecated ANTLRInputStream)
+            const inputStream = CharStreams.fromString(document.getText());
             const lexer = new CfgLexer(inputStream);
             const tokenStream = new CommonTokenStream(lexer);
 
@@ -71,10 +71,63 @@ export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProv
             // Walk the parse tree to collect semantic tokens
             listener.walk(parseTree);
 
-            return builder.build();
+            // Build the semantic tokens
+            const tokens = builder.build();
+
+            // Debug: Print semantic tokens for debugging
+            this.debugPrintTokens(document, tokens);
+
+            return tokens;
         } catch (error) {
             console.error('Error providing semantic tokens:', error);
             return new vscode.SemanticTokens(new Uint32Array(0), undefined);
+        }
+    }
+
+    /**
+     * Debug: Print semantic tokens for debugging purposes
+     */
+    private debugPrintTokens(document: vscode.TextDocument, tokens: vscode.SemanticTokens | null): void {
+        if (!tokens) {
+            console.log('[SemanticTokens] No tokens generated');
+            return;
+        }
+
+        console.log('[SemanticTokens] Document:', document.fileName);
+        console.log('[SemanticTokens] Token count:', tokens.data.length / 5);
+
+        // Print first 10 tokens for debugging
+        const maxTokens = Math.min(20, tokens.data.length / 5);
+        for (let i = 0; i < maxTokens; i++) {
+            const offset = i * 5;
+            const line = tokens.data[offset];
+            const char = tokens.data[offset + 1];
+            const length = tokens.data[offset + 2];
+            const tokenType = tokens.data[offset + 3];
+            const tokenModifiers = tokens.data[offset + 4];
+
+            // Get token type name
+            const tokenTypeName = tokenType < SemanticTokensProvider.TOKEN_TYPES.length
+                ? SemanticTokensProvider.TOKEN_TYPES[tokenType]
+                : `Unknown(${tokenType})`;
+
+            // Get the actual token text from the document
+            const startPos = new vscode.Position(line, char);
+            const endPos = new vscode.Position(line, char + length);
+            const tokenText = document.getText(new vscode.Range(startPos, endPos));
+
+            console.log(`[SemanticTokens] Token ${i + 1}:`, {
+                line,
+                char,
+                length,
+                text: tokenText,
+                tokenType: tokenTypeName,
+                tokenModifiers
+            });
+        }
+
+        if (tokens.data.length / 5 > maxTokens) {
+            console.log(`[SemanticTokens] ... and ${tokens.data.length / 5 - maxTokens} more tokens`);
         }
     }
 

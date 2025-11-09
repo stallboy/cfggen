@@ -1,28 +1,37 @@
 /**
  * ANTLR4 Highlighting Listener
- * Extends CfgBaseListener to identify semantic tokens in the parse tree
- * Works with SemanticTokensBuilder to create semantic highlighting
+ * Implements CfgVisitor to identify semantic tokens in the parse tree
+ * Implements highlighting rules as per HighlightRule.md
  */
 
 import * as vscode from 'vscode';
-import { AbstractParseTreeVisitor } from 'antlr4ts/tree';
-import { CfgParser } from '../grammar/CfgParser';
-import { CfgListener } from '../grammar/CfgListener';
+import { AbstractParseTreeVisitor, ParseTree, TerminalNode } from 'antlr4ts/tree';
+import { CfgVisitor } from '../grammar/CfgVisitor';
 import { ThemeConfig } from '../services/themeService';
+import { Struct_declContext } from '../grammar/CfgParser';
+import { Interface_declContext } from '../grammar/CfgParser';
+import { Table_declContext } from '../grammar/CfgParser';
+import { Field_declContext } from '../grammar/CfgParser';
+import { Foreign_declContext } from '../grammar/CfgParser';
+import { RefContext } from '../grammar/CfgParser';
+import { Key_declContext } from '../grammar/CfgParser';
+import { KeyContext } from '../grammar/CfgParser';
+import { MetadataContext } from '../grammar/CfgParser';
+import { Type_Context } from '../grammar/CfgParser';
+import { Ns_identContext } from '../grammar/CfgParser';
 
-// Import the token types from the provider
+// Token types for semantic highlighting
 const TOKEN_TYPES = {
-    STRUCTURE_DEFINITION: 0,
-    TYPE_IDENTIFIER: 1,
-    FIELD_NAME: 2,
-    FOREIGN_KEY: 3,
-    COMMENT: 4,
-    METADATA: 5,
-    PRIMARY_KEY: 6,
-    UNIQUE_KEY: 7
+    STRUCTURE_DEFINITION: 0,  // struct/interface/table names
+    TYPE_IDENTIFIER: 1,       // custom types and generic types
+    FOREIGN_KEY: 2,           // foreign key references (->xxx)
+    COMMENT: 3,               // comments
+    METADATA: 4,              // metadata keywords
+    PRIMARY_KEY: 5,           // primary key field names
+    UNIQUE_KEY: 6             // unique key field names
 };
 
-export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> implements CfgListener {
+export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> implements CfgVisitor<void> {
     private builder: vscode.SemanticTokensBuilder;
     private document: vscode.TextDocument;
     private theme: ThemeConfig;
@@ -39,127 +48,97 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
         this.theme = theme;
     }
 
-    /**
-     * Walk the parse tree
-     */
-    public walk(tree: any): void {
+    public walk(tree: ParseTree): void {
         tree.accept(this);
     }
 
-    /**
-     * Default result for visitor
-     */
     protected defaultResult(): void {
         // No result needed for semantic token collection
     }
 
     /**
-     * Get range for a token
+     * Highlight an ns_ident (namespace identifier) from first to last identifier
      */
-    private getRange(startToken: any, stopToken?: any): vscode.Range {
-        if (!startToken || !startToken.symbol) {
-            return new vscode.Range(0, 0, 0, 0);
+    private highlightNsIdent(nsIdent: Ns_identContext | null | undefined): void {
+        if (nsIdent && nsIdent.identifier().length > 0) {
+            const firstIdent = nsIdent.identifier()[0];
+            const lastIdent = nsIdent.identifier()[nsIdent.identifier().length - 1];
+
+            const firstTerminal = firstIdent.IDENT();
+            const lastTerminal = lastIdent.IDENT();
+
+            if (firstTerminal && lastTerminal && firstTerminal.symbol && lastTerminal.symbol) {
+                const startLine = firstTerminal.symbol.line - 1;
+                const startChar = firstTerminal.symbol.charPositionInLine;
+                const endChar = lastTerminal.symbol.charPositionInLine + this.getText(lastTerminal).length;
+
+                this.builder.push(
+                    startLine,
+                    startChar,
+                    endChar - startChar,
+                    this.getTokenTypeIndex('STRUCTURE_DEFINITION'),
+                    0
+                );
+            }
         }
-
-        const line = startToken.symbol.line - 1;
-        const char = startToken.symbol.charPositionInLine;
-
-        const start = new vscode.Position(line, char);
-        const end = stopToken && stopToken.symbol
-            ? new vscode.Position(
-                stopToken.symbol.line - 1,
-                stopToken.symbol.charPositionInLine + this.getText(stopToken).length
-              )
-            : new vscode.Position(
-                line,
-                char + this.getText(startToken).length
-              );
-
-        return new vscode.Range(start, end);
     }
 
-    /**
-     * Get text from a context
-     */
-    private getText(ctx: any): string {
+    private getText(ctx: ParseTree | TerminalNode): string {
         if (!ctx) return '';
-        return ctx.text || ctx.toString() || '';
+        const ctxWithText = ctx as { text?: string };
+        return ctxWithText.text || ctx.toString() || '';
     }
 
-    /**
-     * Check if a type is a base type
-     */
-    private isBaseType(typeText: string): boolean {
-        const baseTypes = ['bool', 'int', 'long', 'float', 'str', 'text', 'list', 'map'];
-        return baseTypes.includes(typeText);
-    }
-
-    /**
-     * Get token type index for a semantic type
-     */
     private getTokenTypeIndex(type: keyof typeof TOKEN_TYPES): number {
         return TOKEN_TYPES[type];
+    }
+
+    /**
+     * Check if a type is a basic type
+     */
+    private isBaseType(typeText: string): boolean {
+        const baseTypes = ['int', 'float', 'long', 'bool', 'str', 'text'];
+        return baseTypes.includes(typeText);
     }
 
     // ============================================================
     // Structure Definitions (struct/interface/table)
     // ============================================================
 
-    /**
-     * Highlight struct declaration name
-     */
-    public visitStructDecl(ctx: any): void {
-        const name = ctx.ns_ident();
-        if (name && name.symbol) {
-            this.builder.push(
-                name.symbol.line - 1,
-                name.symbol.charPositionInLine,
-                this.getText(name).length,
-                this.getTokenTypeIndex('STRUCTURE_DEFINITION'),
-                0
-            );
-        }
+    public visitStruct_decl(ctx: Struct_declContext): void {
+        // Clear previous primary key fields when entering a new struct
+        this.primaryKeyFields.clear();
+
+        // Highlight the entire ns_ident, not 'struct' keyword
+        this.highlightNsIdent(ctx.ns_ident());
         this.visitChildren(ctx);
     }
 
-    /**
-     * Highlight interface declaration name
-     */
-    public visitInterfaceDecl(ctx: any): void {
-        const name = ctx.ns_ident();
-        if (name && name.symbol) {
-            this.builder.push(
-                name.symbol.line - 1,
-                name.symbol.charPositionInLine,
-                this.getText(name).length,
-                this.getTokenTypeIndex('STRUCTURE_DEFINITION'),
-                0
-            );
-        }
+    public visitInterface_decl(ctx: Interface_declContext): void {
+        // Clear previous primary key fields when entering a new interface
+        this.primaryKeyFields.clear();
+
+        // Highlight the entire ns_ident, not 'interface' keyword
+        this.highlightNsIdent(ctx.ns_ident());
         this.visitChildren(ctx);
     }
 
-    /**
-     * Highlight table declaration name
-     */
-    public visitTableDecl(ctx: any): void {
-        const name = ctx.ns_ident();
-        if (name && name.symbol) {
-            this.builder.push(
-                name.symbol.line - 1,
-                name.symbol.charPositionInLine,
-                this.getText(name).length,
-                this.getTokenTypeIndex('STRUCTURE_DEFINITION'),
-                0
-            );
-        }
+    public visitTable_decl(ctx: Table_declContext): void {
+        // Clear previous primary key fields when entering a new table
+        this.primaryKeyFields.clear();
 
-        // Record primary key fields from the key declaration
+        // Highlight the entire ns_ident, not 'table' keyword
+        this.highlightNsIdent(ctx.ns_ident());
+
+        // Record ONLY the first primary key field name from table declaration
         const key = ctx.key();
-        if (key && key.identifier()) {
-            key.identifier().forEach((id: any) => {
-                this.primaryKeyFields.add(this.getText(id));
-            });
+        if (key && key.identifier().length > 0) {
+            // Only record the first identifier as primary key
+            const firstId = key.identifier()[0];
+            const terminal = firstId.IDENT();
+            if (terminal) {
+                this.primaryKeyFields.add(this.getText(terminal));
+            }
         }
         this.visitChildren(ctx);
     }
@@ -168,42 +147,34 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
     // Field Declarations
     // ============================================================
 
-    /**
-     * Highlight field name and type
-     */
-    public visitFieldDecl(ctx: any): void {
+    public visitField_decl(ctx: Field_declContext): void {
         // Highlight field name
         const identifier = ctx.identifier();
-        if (identifier && identifier.symbol) {
-            this.builder.push(
-                identifier.symbol.line - 1,
-                identifier.symbol.charPositionInLine,
-                this.getText(identifier).length,
-                this.getTokenTypeIndex('FIELD_NAME'),
-                0
-            );
-        }
+        if (identifier) {
+            const terminal = identifier.IDENT();
+            if (terminal && terminal.symbol) {
+                const fieldName = this.getText(terminal);
+                const tokenType = this.primaryKeyFields.has(fieldName)
+                    ? 'PRIMARY_KEY'
+                    : null;
 
-        // Highlight custom type (non-base type)
-        const type = ctx.type_();
-        if (type) {
-            const typeText = this.getText(type);
-            if (!this.isBaseType(typeText)) {
-                // This is a custom type, highlight it
-                const lastChild = type.type_ele()[type.type_ele().length - 1];
-                if (lastChild && lastChild.ns_ident) {
-                    const nsIdent = lastChild.ns_ident();
-                    if (nsIdent && nsIdent.symbol) {
-                        this.builder.push(
-                            nsIdent.symbol.line - 1,
-                            nsIdent.symbol.charPositionInLine,
-                            this.getText(nsIdent).length,
-                            this.getTokenTypeIndex('TYPE_IDENTIFIER'),
-                            0
-                        );
-                    }
+                // Only highlight if this is a primary key field
+                if (tokenType) {
+                    this.builder.push(
+                        terminal.symbol.line - 1,
+                        terminal.symbol.charPositionInLine,
+                        this.getText(terminal).length,
+                        this.getTokenTypeIndex(tokenType as keyof typeof TOKEN_TYPES),
+                        0
+                    );
                 }
             }
+        }
+
+        // Highlight complex type declarations (non-base types)
+        const type = ctx.type_();
+        if (type) {
+            this.highlightType(type);
         }
 
         // Highlight foreign key reference
@@ -211,17 +182,97 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
         if (ref) {
             this.highlightForeignKey(ref);
         }
-        this.visitChildren(ctx);
+
+        // Highlight metadata
+        const metadata = ctx.metadata();
+        if (metadata) {
+            this.highlightMetadata(metadata);
+        }
     }
 
     // ============================================================
-    // Foreign Key Declarations
+    // Type Highlighting
     // ============================================================
 
-    /**
-     * Highlight foreign key in struct
-     */
-    public visitForeignDecl(ctx: any): void {
+    private highlightType(type: Type_Context): void {
+        // Handle three cases:
+        // 1. TLIST '<' type_ele '>'  - e.g., list<int>
+        // 2. TMAP '<' type_ele ',' type_ele '>'  - e.g., map<string, int>
+        // 3. type_ele  - e.g., Range, RewardItem
+
+        const typeElems = type.type_ele();
+        if (typeElems && typeElems.length > 0) {
+            // Check if this is a TLIST or TMAP
+            const isListOrMap = type.TLIST() !== undefined || type.TMAP() !== undefined;
+
+            if (isListOrMap) {
+                // For TLIST/TMAP, highlight the entire expression from the keyword to the last type_ele
+                const firstElem = typeElems[0];
+                const lastElem = typeElems[typeElems.length - 1];
+                const firstNsIdent = firstElem.ns_ident();
+                const lastNsIdent = lastElem.ns_ident();
+
+                if (firstNsIdent && lastNsIdent &&
+                    firstNsIdent.identifier().length > 0 &&
+                    lastNsIdent.identifier().length > 0) {
+
+                    const firstIdent = firstNsIdent.identifier()[0];
+                    const lastIdent = lastNsIdent.identifier()[lastNsIdent.identifier().length - 1];
+                    const firstTerminal = firstIdent.IDENT();
+                    const lastTerminal = lastIdent.IDENT();
+
+                    if (firstTerminal && lastTerminal && firstTerminal.symbol && lastTerminal.symbol) {
+                        const startLine = firstTerminal.symbol.line - 1;
+                        const startChar = firstTerminal.symbol.charPositionInLine;
+                        const endChar = lastTerminal.symbol.charPositionInLine + this.getText(lastTerminal).length;
+
+                        this.builder.push(
+                            startLine,
+                            startChar,
+                            endChar - startChar,
+                            this.getTokenTypeIndex('TYPE_IDENTIFIER'),
+                            0
+                        );
+                    }
+                }
+            } else {
+                // For simple types (type_ele), highlight the entire namespace identifier if it's NOT a basic type
+                const lastElem = typeElems[typeElems.length - 1];
+                const nsIdent = lastElem.ns_ident();
+
+                if (nsIdent && nsIdent.identifier().length > 0) {
+                    const firstIdent = nsIdent.identifier()[0];
+                    const lastIdent = nsIdent.identifier()[nsIdent.identifier().length - 1];
+                    const firstTerminal = firstIdent.IDENT();
+                    const lastTerminal = lastIdent.IDENT();
+
+                    if (firstTerminal && lastTerminal && firstTerminal.symbol && lastTerminal.symbol) {
+                        // Only highlight if this is NOT a basic type
+                        const typeText = this.getText(lastTerminal);
+                        if (!this.isBaseType(typeText)) {
+                            const startLine = firstTerminal.symbol.line - 1;
+                            const startChar = firstTerminal.symbol.charPositionInLine;
+                            const endChar = lastTerminal.symbol.charPositionInLine + this.getText(lastTerminal).length;
+
+                            this.builder.push(
+                                startLine,
+                                startChar,
+                                endChar - startChar,
+                                this.getTokenTypeIndex('TYPE_IDENTIFIER'),
+                                0
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ============================================================
+    // Foreign Key Highlighting
+    // ============================================================
+
+    public visitForeign_decl(ctx: Foreign_declContext): void {
         const ref = ctx.ref();
         if (ref) {
             this.highlightForeignKey(ref);
@@ -229,36 +280,40 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
         this.visitChildren(ctx);
     }
 
-    /**
-     * Highlight foreign key reference
-     */
-    private highlightForeignKey(ref: any): void {
+    private highlightForeignKey(ref: RefContext): void {
+        // Highlight the entire foreign key reference as one unit
+        // This includes ->, module, and key if present
         const operator = ref.REF() || ref.LISTREF();
         if (operator && operator.symbol) {
-            this.builder.push(
-                operator.symbol.line - 1,
-                operator.symbol.charPositionInLine,
-                this.getText(operator).length,
-                this.getTokenTypeIndex('FOREIGN_KEY'),
-                0
-            );
-        }
+            // Get the range of the entire foreign key reference
+            const nsIdent = ref.ns_ident();
+            if (nsIdent && nsIdent.identifier().length > 0) {
+                const firstIdent = nsIdent.identifier()[0];
+                const firstTerminal = firstIdent.IDENT();
 
-        const nsIdent = ref.ns_ident();
-        if (nsIdent && nsIdent.symbol) {
-            this.builder.push(
-                nsIdent.symbol.line - 1,
-                nsIdent.symbol.charPositionInLine,
-                this.getText(nsIdent).length,
-                this.getTokenTypeIndex('FOREIGN_KEY'),
-                0
-            );
-        }
+                if (firstTerminal && firstTerminal.symbol) {
+                    // Calculate the end position
+                    const key = ref.key();
+                    let endChar = firstTerminal.symbol.charPositionInLine + this.getText(firstTerminal).length;
 
-        // Highlight key if present
-        const key = ref.key();
-        if (key) {
-            this.highlightKey(key, true);
+                    if (key && key.identifier().length > 0) {
+                        const lastKeyId = key.identifier()[key.identifier().length - 1];
+                        const lastKeyTerminal = lastKeyId.IDENT();
+                        if (lastKeyTerminal && lastKeyTerminal.symbol) {
+                            endChar = lastKeyTerminal.symbol.charPositionInLine + this.getText(lastKeyTerminal).length;
+                        }
+                    }
+
+                    // Highlight from the operator to the end
+                    this.builder.push(
+                        operator.symbol.line - 1,
+                        operator.symbol.charPositionInLine,
+                        endChar - operator.symbol.charPositionInLine,
+                        this.getTokenTypeIndex('FOREIGN_KEY'),
+                        0
+                    );
+                }
+            }
         }
     }
 
@@ -266,10 +321,7 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
     // Key Declarations
     // ============================================================
 
-    /**
-     * Highlight key declarations (primary and unique keys)
-     */
-    public visitKeyDecl(ctx: any): void {
+    public visitKey_decl(ctx: Key_declContext): void {
         const key = ctx.key();
         if (key) {
             this.highlightKey(key, false);
@@ -277,25 +329,25 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
         this.visitChildren(ctx);
     }
 
-    /**
-     * Highlight a key and its fields
-     */
-    private highlightKey(key: any, isForeignKey: boolean): void {
+    private highlightKey(key: KeyContext, isForeignKey: boolean): void {
         const identifiers = key.identifier();
-        identifiers.forEach((id: any) => {
-            const fieldName = this.getText(id);
-            const tokenType = this.primaryKeyFields.has(fieldName) && !isForeignKey
-                ? 'PRIMARY_KEY'
-                : 'UNIQUE_KEY';
+        identifiers.forEach((id) => {
+            const terminal = id.IDENT();
+            if (terminal) {
+                const fieldName = this.getText(terminal);
+                const tokenType = this.primaryKeyFields.has(fieldName) && !isForeignKey
+                    ? 'PRIMARY_KEY'
+                    : 'UNIQUE_KEY';
 
-            if (id && id.symbol) {
-                this.builder.push(
-                    id.symbol.line - 1,
-                    id.symbol.charPositionInLine,
-                    this.getText(id).length,
-                    this.getTokenTypeIndex(tokenType as keyof typeof TOKEN_TYPES),
-                    0
-                );
+                if (terminal.symbol) {
+                    this.builder.push(
+                        terminal.symbol.line - 1,
+                        terminal.symbol.charPositionInLine,
+                        this.getText(terminal).length,
+                        this.getTokenTypeIndex(tokenType as keyof typeof TOKEN_TYPES),
+                        0
+                    );
+                }
             }
         });
     }
@@ -304,10 +356,7 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
     // Comments
     // ============================================================
 
-    /**
-     * Highlight comments
-     */
-    public visitCOMMENT(ctx: any): void {
+    public visitCOMMENT(ctx: TerminalNode): void {
         if (ctx && ctx.symbol) {
             this.builder.push(
                 ctx.symbol.line - 1,
@@ -317,32 +366,45 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
                 0
             );
         }
-        this.visitChildren(ctx);
     }
 
     // ============================================================
     // Metadata
     // ============================================================
 
-    /**
-     * Highlight metadata
-     */
-    public visitMetadata(ctx: any): void {
+    public visitMetadata(ctx: MetadataContext): void {
+        this.highlightMetadata(ctx);
+        this.visitChildren(ctx);
+    }
+
+    private highlightMetadata(ctx: MetadataContext): void {
         const identWithOpt = ctx.ident_with_opt_single_value();
         if (identWithOpt) {
-            identWithOpt.forEach((identCtx: any) => {
+            identWithOpt.forEach((identCtx) => {
                 const identifier = identCtx.identifier();
-                if (identifier && identifier.symbol) {
-                    this.builder.push(
-                        identifier.symbol.line - 1,
-                        identifier.symbol.charPositionInLine,
-                        this.getText(identifier).length,
-                        this.getTokenTypeIndex('METADATA'),
-                        0
-                    );
+                if (identifier) {
+                    const terminal = identifier.IDENT();
+                    if (terminal && terminal.symbol) {
+                        const metadataName = this.getText(terminal);
+
+                        // Check if this is a special metadata keyword
+                        const specialMetadata = [
+                            'nullable', 'mustFill', 'enumRef', 'enum',
+                            'entry', 'sep', 'pack', 'fix', 'block'
+                        ];
+
+                        if (specialMetadata.includes(metadataName)) {
+                            this.builder.push(
+                                terminal.symbol.line - 1,
+                                terminal.symbol.charPositionInLine,
+                                this.getText(terminal).length,
+                                this.getTokenTypeIndex('METADATA'),
+                                0
+                            );
+                        }
+                    }
                 }
             });
         }
-        this.visitChildren(ctx);
     }
 }

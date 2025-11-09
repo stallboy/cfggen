@@ -1,4 +1,4 @@
-import { Definition, TextRange } from './configFile';
+import { Definition } from './configFile';
 import { Metadata } from './metadataDefinition';
 import { FieldDefinition } from './fieldDefinition';
 import { ForeignKeyDefinition } from './foreignKeyDefinition';
