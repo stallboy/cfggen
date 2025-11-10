@@ -26,7 +26,14 @@
 - 主键字段名称高亮
 - 唯一键字段名称高亮
 
-### 3. 解析器
+### 3. 跳转到定义
+- 支持外键引用跳转 (`->table1`, `=>table1[field2]`)
+- 支持类型定义跳转 (类型名称)
+- 支持多级包名解析 (`pkg1.pkg2.table`)
+- 支持嵌套作用域查找 (interface内优先)
+- 支持两种搜索策略 (从当前目录/从根目录)
+
+### 4. 解析器
 - 使用ANTLR4语法解析器
 - 自动生成解析器代码
 - 支持复杂类型系统
@@ -36,16 +43,22 @@
 ```
 vscode-cfg-extension/
 ├── src/
-│   ├── extension.ts              # 扩展入口点
-│   ├── providers/
+│   ├── definition/               # 跳转功能目录
+│   │   ├── definitionProvider.ts        # 定义提供者 (跳转到定义)
+│   │   ├── symbolTableManager.ts        # 符号表管理器
+│   │   ├── locationVisitor.ts           # 位置访问者
+│   │   ├── scopeManager.ts              # 作用域管理器
+│   │   └── moduleResolver.ts            # 模块解析器
+│   ├── highlight/                # 高亮功能目录
 │   │   ├── semanticTokensProvider.ts    # 语义标记提供者
 │   │   ├── HighlightingVisitor.ts       # 语法高亮访问者
 │   │   └── tokenTypes.ts                # 标记类型定义
-│   └── grammar/
-│       ├── Cfg.g4                # ANTLR4语法定义
-│       ├── CfgLexer.ts           # 生成的词法分析器
-│       ├── CfgParser.ts          # 生成的解析器
-│       └── CfgVisitor.ts         # 生成的访问者接口
+│   ├── grammar/                 # 语法文件目录 (共享)
+│   │   ├── Cfg.g4                # ANTLR4语法定义
+│   │   ├── CfgLexer.ts           # 生成的词法分析器
+│   │   ├── CfgParser.ts          # 生成的解析器
+│   │   └── CfgVisitor.ts         # 生成的访问者接口
+│   └── extension.ts              # 扩展入口点
 ├── syntaxes/
 │   └── cfg.tmLanguage.json       # TextMate语法定义
 ├── language-configuration.json   # 语言配置
@@ -88,10 +101,10 @@ vscode-cfg-extension/
 - ✅ 语法高亮 (TextMate语法)
 - ✅ 语义标记 (6种标记类型)
 - ✅ ANTLR4解析器集成
+- ✅ 跳转到定义 (类型+外键引用)
 - ✅ 扩展打包和发布
 
 ### 待实现功能
-- ⏳ 跳转到定义 (类型+外键引用) - 已规划但未实现
 - ⏳ 自动补全
 - ⏳ 错误检查
 - ⏳ 代码格式化
