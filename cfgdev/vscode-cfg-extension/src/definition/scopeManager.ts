@@ -67,28 +67,14 @@ export class ScopeManager {
         for (const symbol of symbols) {
             if (symbol.type === 'interface' && symbol.range.contains(position)) {
                 // If we find an interface that contains the position, and it's deeper than the current one
-                if (!currentInterface || this.isDeeperScope(symbol.name, currentInterface, position, symbol.range)) {
+                if (!currentInterface) {
                     currentInterface = symbol.name;
+                    break;
                 }
             }
         }
 
         return currentInterface;
-    }
-
-    /**
-     * Check if one scope is deeper than another based on position
-     */
-    private isDeeperScope(
-        newScope: string,
-        currentScope: string,
-        position: vscode.Position,
-        newScopeRange: vscode.Range
-    ): boolean {
-        // For now, we'll use a simple heuristic: if the new scope's range is more specific
-        // (smaller range) and contains the position, it's deeper
-        // In a more sophisticated implementation, we could track the scope hierarchy
-        return newScopeRange.contains(position);
     }
 
     /**
