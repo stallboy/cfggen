@@ -4,8 +4,6 @@ import { SemanticTokensProvider } from './providers/semanticTokensProvider';
 
 export function activate(context: vscode.ExtensionContext) {
     // 1. Register semantic tokens provider (Layer 2 of two-layer highlighting)
-    console.log('🎉 CFG 扩展已被激活！');
-
     const semanticTokensProvider = new SemanticTokensProvider();
     const legend = semanticTokensProvider.getLegend();
     context.subscriptions.push(
@@ -18,5 +16,4 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-    console.log('CFG 扩展已被停用');
 }

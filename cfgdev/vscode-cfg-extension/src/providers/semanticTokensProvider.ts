@@ -9,25 +9,15 @@ import { CommonTokenStream } from 'antlr4ng';
 import { CharStream } from 'antlr4ng';
 import { CfgLexer } from '../grammar/CfgLexer';
 import { CfgParser } from '../grammar/CfgParser';
-import { CfgHighlightingListener } from './semanticTokensProvider.highlightListener';
+import { HighlightingVisitor } from './HighlightingVisitor';
+import { TOKEN_TYPE_NAMES } from './tokenTypes';
 
 export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProvider {
     private legend: vscode.SemanticTokensLegend;
 
-    // Semantic token types
-    public static readonly TOKEN_TYPES = [
-        'structureDefinition',  // 0: struct/interface/table names
-        'typeIdentifier',       // 1: custom types (non-basic)
-        'foreignKey',           // 2: foreign key references
-        'comment',              // 3: comments
-        'metadata',             // 4: metadata keywords
-        'primaryKey',           // 5: primary key fields
-        'uniqueKey'             // 6: unique key fields
-    ];
-
     constructor() {
         this.legend = new vscode.SemanticTokensLegend(
-            SemanticTokensProvider.TOKEN_TYPES,
+            TOKEN_TYPE_NAMES,
             []  // modifiers
         );
     }
@@ -59,15 +49,15 @@ export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProv
             // Create builder with legend
             const builder = new vscode.SemanticTokensBuilder(this.legend);
 
-            // Create highlighting listener
+            // Create highlighting visitor
             // Semantic tokens use VSCode's built-in themes automatically
-            const listener = new CfgHighlightingListener(
+            const visitor = new HighlightingVisitor(
                 builder,
                 document
             );
 
             // Walk the parse tree to collect semantic tokens
-            listener.walk(parseTree);
+            visitor.walk(parseTree);
 
             // Build the semantic tokens
             const tokens = builder.build();

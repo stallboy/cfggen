@@ -1,9 +1,3 @@
-/**
- * ANTLR4 Highlighting Listener
- * Implements CfgVisitor to identify semantic tokens in the parse tree
- * Implements highlighting rules as per HighlightRule.md
- */
-
 import * as vscode from 'vscode';
 import { AbstractParseTreeVisitor, ParseTree, TerminalNode } from 'antlr4ng';
 import { CfgVisitor } from '../grammar/CfgVisitor';
@@ -18,19 +12,9 @@ import { KeyContext } from '../grammar/CfgParser';
 import { MetadataContext } from '../grammar/CfgParser';
 import { Type_Context } from '../grammar/CfgParser';
 import { Ns_identContext } from '../grammar/CfgParser';
+import { TOKEN_TYPES, TokenType } from './tokenTypes';
 
-// Token types for semantic highlighting
-const TOKEN_TYPES = {
-    STRUCTURE_DEFINITION: 0,  // struct/interface/table names
-    TYPE_IDENTIFIER: 1,       // custom types and generic types
-    FOREIGN_KEY: 2,           // foreign key references (->xxx)
-    COMMENT: 3,               // comments
-    METADATA: 4,              // metadata keywords
-    PRIMARY_KEY: 5,           // primary key field names
-    UNIQUE_KEY: 6             // unique key field names
-};
-
-export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> implements CfgVisitor<void> {
+export class HighlightingVisitor extends AbstractParseTreeVisitor<void> implements CfgVisitor<void> {
     private builder: vscode.SemanticTokensBuilder;
     private document: vscode.TextDocument;
     private primaryKeyFields: Set<string> = new Set();
@@ -91,7 +75,7 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
         return text || '';
     }
 
-    private getTokenTypeIndex(type: keyof typeof TOKEN_TYPES): number {
+    private getTokenTypeIndex(type: TokenType): number {
         return TOKEN_TYPES[type];
     }
 
@@ -157,7 +141,7 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
             const terminal = identifier.IDENT();
             if (terminal && terminal.symbol) {
                 const fieldName = this.getText(terminal);
-                const tokenType = this.primaryKeyFields.has(fieldName)
+                const tokenType: TokenType | null = this.primaryKeyFields.has(fieldName)
                     ? 'PRIMARY_KEY'
                     : null;
 
@@ -167,7 +151,7 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
                         terminal.symbol.line - 1,
                         terminal.symbol.column,
                         this.getText(terminal).length,
-                        this.getTokenTypeIndex(tokenType as keyof typeof TOKEN_TYPES),
+                        this.getTokenTypeIndex(tokenType),
                         0
                     );
                 }
@@ -384,7 +368,7 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
             const terminal = id.IDENT();
             if (terminal) {
                 const fieldName = this.getText(terminal);
-                const tokenType = this.primaryKeyFields.has(fieldName) && !isForeignKey
+                const tokenType: TokenType = this.primaryKeyFields.has(fieldName) && !isForeignKey
                     ? 'PRIMARY_KEY'
                     : 'UNIQUE_KEY';
 
@@ -393,7 +377,7 @@ export class CfgHighlightingListener extends AbstractParseTreeVisitor<void> impl
                         terminal.symbol.line - 1,
                         terminal.symbol.column,
                         this.getText(terminal).length,
-                        this.getTokenTypeIndex(tokenType as keyof typeof TOKEN_TYPES),
+                        this.getTokenTypeIndex(tokenType),
                         0
                     );
                 }

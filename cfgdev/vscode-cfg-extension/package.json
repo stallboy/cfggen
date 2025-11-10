@@ -29,7 +29,7 @@
   "contributes": {
     "configuration": {
       "type": "object",
-      "title": "CFG Language Support",
+      "title": "CFG Support",
       "properties": {
         "cfg.enableCache": {
           "type": "boolean",
@@ -79,10 +79,6 @@
         "description": "Foreign key references"
       },
       {
-        "id": "comment",
-        "description": "Comments"
-      },
-      {
         "id": "metadata",
         "description": "Metadata keywords"
       },
@@ -103,60 +99,25 @@
             "entity.name.type"
           ],
           "typeIdentifier": [
-            "entity.name.type.class"
+            "storage.type"
           ],
           "foreignKey": [
             "entity.name.type"
           ],
-          "comment": [
-            "comment"
-          ],
           "metadata": [
-            "entity.name.function"
+            "storage.modifier"
           ],
           "primaryKey": [
-            "variable.other.readwrite"
+            "variable.other.pk"
           ],
           "uniqueKey": [
-            "entity.name.property"
+            "variable.other.uk"
           ]
-        }
-      }
-    ],
-    "tokenColors": [
-      {
-        "name": "CFG Keywords",
-        "scope": "keyword.control.cfg, keyword.operator.cfg",
-        "settings": {
-          "foreground": "#569CD6"
-        }
-      },
-      {
-        "name": "CFG Strings",
-        "scope": "string.quoted.double.cfg, string.quoted.single.cfg",
-        "settings": {
-          "foreground": "#CE9178"
-        }
-      },
-      {
-        "name": "CFG Numbers",
-        "scope": "constant.numeric.cfg",
-        "settings": {
-          "foreground": "#B5CEA8"
-        }
-      },
-      {
-        "name": "CFG Comments",
-        "scope": "comment.line.double-slash.cfg",
-        "settings": {
-          "foreground": "#6A9955"
         }
       }
     ]
   },
-  "activationEvents": [
-    "onLanguage:cfg"
-  ],
+  "activationEvents": [],
   "scripts": {
     "vscode:prepublish": "npm run webpack",
     "compile": "tsc -p ./",
@@ -167,7 +128,7 @@
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
     "package": "npm run webpack && vsce package",
-    "generate-parser": "npx antlr-ng src/grammar/Cfg.g4 -o src/grammar -listener -visitor -D language=TypeScript",
+    "generate-parser": "npx antlr-ng src/grammar/Cfg.g4 -o src/grammar -v true -l false -D language=TypeScript",
     "postinstall": "npm run generate-parser"
   },
   "devDependencies": {

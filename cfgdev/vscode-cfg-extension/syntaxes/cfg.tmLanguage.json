@@ -6,8 +6,12 @@
 	],
 	"patterns": [
 		{
-			"name": "keyword.control.cfg",
-			"match": "\\b(struct|interface|table|int|str|bool|list|map|long|float|text)\\b"
+			"name": "storage.type.primitive.cfg",
+			"match": "\\b(int|str|bool|long|float|text)\\b"
+		},
+		{
+			"name": "storage.type.class.cfg",
+			"match": "\\b(struct|interface|table)\\b"
 		},
 		{
 			"name": "string.quoted.double.cfg",
@@ -33,23 +37,16 @@
 		},
 		{
 			"name": "constant.numeric.cfg",
-			"match": "\\b\\d+(\\.\\d+)?\\b"
+			"match": "\\b(\\d+(\\.\\d+)?|0[xX][0-9a-fA-F]+|inf|nan|true|false)\\b"
 		},
 		{
 			"name": "comment.line.double-slash.cfg",
 			"begin": "//",
 			"end": "$"
 		},
+
 		{
-			"name": "keyword.operator.cfg",
-			"match": "(\\-\\>|\\=\\>|\\=|\\:)"
-		},
-		{
-			"name": "punctuation.cfg",
-			"match": "[{}\\[\\]\\(\\),;]"
-		},
-		{
-			"name": "meta.definition.cfg",
+			"name": "meta.definition",
 			"match": "\\b(struct|interface|table)\\s+\\w+"
 		},
 		{
@@ -57,8 +54,8 @@
 			"match": "\\b([a-zA-Z_][a-zA-Z0-9_]*)\\s*:"
 		},
 		{
-			"name": "entity.name.type.class.cfg",
-			"match": "\\b[A-Z][a-zA-Z0-9_]*\\b"
+			"name": "entity.name.type.cfg",
+			"match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b"
 		}
 	],
 	"repository": {}
