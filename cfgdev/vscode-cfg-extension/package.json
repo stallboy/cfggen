@@ -1,8 +1,8 @@
 {
   "name": "cfg-support",
-  "displayName": "thy.cfg-support",
-  "description": "VSCode extension for .cfg configuration files with syntax highlighting, go-to-definition, and autocompletion",
-  "version": "1.1.0",
+  "displayName": "cfg-support",
+  "description": "VSCode extension for .cfg files with syntax highlighting, go-to-definition",
+  "version": "1.0.0",
   "publisher": "thy",
   "engines": {
     "vscode": "^1.85.0"
@@ -13,18 +13,18 @@
   "keywords": [
     "cfg",
     "configuration",
-    "language-support",
-    "syntax-highlighting"
+    "syntax-highlighting",
+    "go-to-definition"
   ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/cfg-language-support.git"
+    "url": "https://github.com/stallboy/cfggen.git"
   },
   "bugs": {
-    "url": "https://github.com/your-username/cfg-language-support/issues"
+    "url": "https://github.com/stallboy/cfggen/issues"
   },
-  "homepage": "https://github.com/your-username/cfg-language-support#readme",
+  "homepage": "https://github.com/stallboy/cfggen/cfgdev/vscode-cfg-extension#readme",
   "main": "./dist/extension.js",
   "contributes": {
     "languages": [
@@ -113,13 +113,13 @@
   "activationEvents": [],
   "scripts": {
     "vscode:prepublish": "npm run webpack",
-    "compile": "tsc -p ./",
-    "webpack": "webpack",
+    "compile": "webpack --mode development",
+    "webpack": "webpack --mode production",
     "webpack-dev": "webpack --mode development",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
+    "watch": "webpack --mode development --watch",
+    "pretest": "npm run webpack-dev && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js",
+    "test": "node ./dist/test/runTest.js",
     "package": "npm run webpack && vsce package",
     "generate-parser": "npx antlr-ng src/grammar/Cfg.g4 -o src/grammar -v true -l false -D language=TypeScript",
     "postinstall": "npm run generate-parser"

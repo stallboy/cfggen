@@ -8,7 +8,7 @@ const webpack = require('webpack');
 /**@type {import('webpack').Configuration}*/
 const config = {
     target: 'webworker', // vscode extensions run in webworker context for VS Code web
-    mode: 'development',
+    mode: 'production',
     entry: './src/extension.ts',
     output: {
         path: path.resolve(__dirname, 'dist'),

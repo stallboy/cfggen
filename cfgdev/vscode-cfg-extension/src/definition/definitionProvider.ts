@@ -58,7 +58,7 @@ export class CfgDefinitionProvider implements vscode.DefinitionProvider {
         const { isRefType, name: typeName, inInterfaceName } = positionRef;
         const { modulePath, typeOrTableName } = this.moduleResolver.parseReference(typeName);
 
-        if (positionRef.isRefType) {
+        if (isRefType) {
             // 0. 如果当前在interface内，先在当前interface内查找
             if (inInterfaceName) {
                 const interfaceDefs = currentFileDef.getDefinitionInInterface(inInterfaceName);
@@ -96,7 +96,7 @@ export class CfgDefinitionProvider implements vscode.DefinitionProvider {
                 const configFile = this.joinPath(rootDir, 'config.cfg');
                 const configFileDef = await this.ensureFileParsed(configFile);
                 if (configFileDef) {
-                    const range = currentFileDef.getDefinition(typeOrTableName);
+                    const range = configFileDef.getDefinition(typeOrTableName);
                     if (range) {
                         return { filePath: configFile, range };
                     }
