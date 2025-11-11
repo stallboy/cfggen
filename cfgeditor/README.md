@@ -1,26 +1,26 @@
 [(English Documents Available)](README_EN.md)
 
-# 编辑器 cfgeditor
+# 🎨 编辑器 cfgeditor
 
-1. 可视化浏览表结构和记录
-2. 编辑记录
+1. 👁️ 可视化浏览表结构和记录
+2. ✏️ 编辑记录
 
-## Prerequisites
+## 📋 Prerequisites
 
 1. nodejs, pnpm
 2. `pnpm config set --global registry https://registry.npm.taobao.org`
 3. `pnpm install`
 
 
-## 准备工作：启动对象数据服务器
+## 🚀 准备工作：启动对象数据服务器
 
 ```bash
 java -jar ../cfggen.jar -datadir ../example/config  -gen server
 ```
 
-## build
+## 🔨 build
 
-### 开发期，启动调试
+### 🛠️ 开发期，启动调试
 
 ```bash
 pnpm run dev
@@ -29,7 +29,7 @@ pnpm run dev
 使用浏览器查看 http://localhost:5173/
 
 
-### 发布
+### 📦 发布
 ```bash
 pnpm run build
 ```
@@ -43,12 +43,12 @@ jwebserver
 
 实际部署请选择更成熟的web服务器。
 
-## build exe
+## 💻 build exe
 
-### Prerequisites
+### 📋 Prerequisites
 1. rust
 
-### 生成cfgeditor.exe
+### 🛠️ 生成cfgeditor.exe
 
 ```bash
 pnpm tauri build

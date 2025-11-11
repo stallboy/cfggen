@@ -4,7 +4,7 @@ title: ai生成
 nav_order: 10
 ---
 
-# ai生成
+# 🤖 ai生成
 {: .no_toc }
 
 ## Table of contents
@@ -14,7 +14,7 @@ nav_order: 10
 {:toc}
 ---
 
-## 批量生成json
+## 📦 批量生成json
 
 ```
 -gen jsonbyai
@@ -27,7 +27,7 @@ nav_order: 10
     retry=1              重试llm次数，默认1代表不重试
 ```
 
-## 交互式生成
+## 💬 交互式生成
 
 作为cfgeditor.exe的服务端，需要额外配置aicfg，一般配置为ai.json
 ```
@@ -39,7 +39,7 @@ nav_order: 10
     postrun=null         可以是个xx.bat，用于自动提交服务器及时生效
 ```
 
-## ai.json格式
+## 📄 ai.json格式
 
 ```java
 public record AICfg(String baseUrl,
@@ -84,7 +84,7 @@ public record AICfg(String baseUrl,
 }
 ```
 
-## PromptModel
+## 🎯 PromptModel
 
 ```java
 public record PromptModel(String table,

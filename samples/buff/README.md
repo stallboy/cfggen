@@ -1,26 +1,26 @@
-# 技能系统
+# ⚔️ 技能系统
 
-## 核心概念
+## 🎯 核心概念
 
 跟星际争霸的abe技能架构相同，a： ability，b：behavior，e：effect。
 这里为了跟mmorpg里的习惯用语对齐，a叫skill，b叫buff，e保留叫effect
 
-- buff
+- 🛡️ buff
 
   这是actor身上的状态效果，包括了buff和debuff，也叫status effect。会保留状态记录。这个状态大部分与战斗相关，
   但也可扩展到行为状态，比如BeHit表示受击动画状态中，比如ClientControlReverse让客户端上下左右控制逆转。
 
-- effect
+- ⚡ effect
 
   这是直接效果，比如伤害，治疗，增加buff等表示要做一个动作。
 
-- skill
+- 🎯 skill
 
   这是actor的技能列表，actor可以castSkill来释放技能。技能效果就是个effect
 
 这三个概念构成了技能系统。
 
-## 上下文 ctx
+## 🔄 上下文 ctx
 
 Effect执行时的上下文，Buff持有时的上下文，两者结构基本相同，我们称之为ctx，主要包含以下成员
 
@@ -46,7 +46,7 @@ record Ctx(Actor self,
 - LockedTarget
     * 锁定Actor或Pos，一般最初是CastSkill传进来的
 
-例子:
+💡 例子:
 
 A使用技能选择B对B头上放个3秒后爆炸的炸弹，对C造成了Damage。
 Damage执行时的Context为
@@ -55,13 +55,13 @@ Damage执行时的Context为
 （self=C，sender=B，caster=A，lockedTarget=B）
 ```
 
-## 正交组合
+## 🧩 正交组合
 
 这个技能配置系统的灵活性来源于可以自由的组合```effect触发时刻```，```effect触发条件```，```effect作用目标```。
 
-### effect触发时刻：时间或事件
+### ⏰ effect触发时刻：时间或事件
 
-#### 按时触发：TimelineBuff
+#### 🕒 按时触发：TimelineBuff
 
 ```
 interface BuffLogic {
@@ -81,7 +81,7 @@ struct EffectOnTime {
 
 技能大多是```给自己add一个TimelineBuff```的effect。
 
-#### 事件触发：TriggerBuff
+#### 🎯 事件触发：TriggerBuff
 
 ```
 interface BuffLogic {
@@ -101,7 +101,7 @@ struct EffectOnTrigger {
 
 比如要实现```受到伤害时给自己加个盾```的buff，这个```受到伤害```就是个事件。
 
-### effect触发条件：Condition
+### ✅ effect触发条件：Condition
 
 ```
 interface EffectLogic {
@@ -114,7 +114,7 @@ interface EffectLogic {
 }
 ```
 
-### effect作用目标：TargetSelector
+### 🎯 effect作用目标：TargetSelector
 
 目标默认是self，如果要修改，请用EffectTarget，或在触发这个effect的地方会有TargetSelector，让你选择。
 
@@ -130,7 +130,7 @@ interface EffectLogic {
 
 这里TargetSelector既包含，self, sender, caster, lockedTarget, 也包含区域目标Cube，Cylinder，Ring，FullScene
 
-## 创建子物体和运行轨迹
+## 🚀 创建子物体和运行轨迹
 
 ```
 interface EffectLogic {
@@ -152,15 +152,15 @@ interface EffectLogic {
 
 运行轨迹有很多，在ObjCreateInfo里去扩展，比如陷阱是Static，跟随自身旋转的法球是Bind，直线子弹是Line，追踪子弹是Chase。
 
-### 同步方案
+### 🔄 同步方案
 
 之前说了skill大多数是 ```给自己add一个TimelineBuff```的effect。
 
-- 预播放
+- ⏩ 预播放
     * 暗黑3是客户端只预播放动作，其他都等服务器
-    * 武林是预播放TimelineBuff下属于“表现”那一列的Effect；CreateObj如果是没有逻辑的特效或绑定特效则也预播放
+    * 武林是预播放TimelineBuff下属于"表现"那一列的Effect；CreateObj如果是没有逻辑的特效或绑定特效则也预播放
 
-- 预播放Effect和服务器Effect的同步
+- 🔄 预播放Effect和服务器Effect的同步
     * 服务器提前一个RTT（Round-Trip Time）来触发TimelineBuff下的各个逻辑Effect
 
 
