@@ -3,7 +3,7 @@
   "displayName": "cfg-support",
   "description": "VSCode extension for .cfg files with syntax highlighting, go-to-definition",
   "version": "1.0.0",
-  "publisher": "pwthy",
+  "publisher": "thyai",
   "engines": {
     "vscode": "^1.85.0"
   },

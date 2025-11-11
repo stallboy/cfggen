@@ -4,6 +4,9 @@
 .vscode/
 .eslintrc.json
 .eslintignore
+.claude/
+.agent/
+CLAUDE.md
 
 # 构建配置
 webpack.config.js
@@ -48,6 +51,3 @@ Thumbs.db
 *.swp
 *.swo
 *~
-.agent/
-CLAUDE.md
-

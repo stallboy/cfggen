@@ -2,6 +2,8 @@
 
 一个专为 `.cfg` 配置文件设计的 VSCode 扩展，提供语法高亮、智能跳转和语义标记功能。
 
+> **项目背景**: 本扩展是 [cfggen 策划配置系统](https://github.com/stallboy/cfggen) 的配套工具，为 cfggen 的配置文件提供完整的 IDE 支持。
+
 ## ✨ 功能特性
 
 ### 🎨 语法高亮
@@ -31,6 +33,15 @@
 
 ## 🚀 快速开始
 
+### 配合 cfggen 使用
+
+1. **安装 cfggen**: 从 [cfggen 仓库](https://github.com/stallboy/cfggen) 获取配置系统工具
+2. **安装本扩展**: 在 VSCode 扩展商店中搜索 "CFG Support" 并安装
+3. **打开 CFG 文件**: 打开任何 `.cfg` 文件即可享受语法高亮
+4. **使用跳转功能**: 按住 Ctrl 键并点击类型名称跳转到定义
+
+### 独立使用
+
 1. **安装扩展**：在 VSCode 扩展商店中搜索 "CFG Support" 并安装
 2. **打开 CFG 文件**：打开任何 `.cfg` 文件即可享受语法高亮
 3. **使用跳转功能**：按住 Ctrl 键并点击类型名称跳转到定义
@@ -59,10 +70,10 @@ interface GameData {
     }
 }
 
-table Player {
+table player[id] {
     id: int;
     name: str;
-} [id]
+} 
 ```
 
 ### 外键引用
@@ -76,7 +87,6 @@ complex: Item ->item.item[id];   // 带键的外键
 ```cfg
 name: str (nullable);           // 可为空
 count: int (mustFill);          // 必须填充
-type: ItemType (enumRef);       // 枚举引用
 ```
 
 ## 🎯 使用技巧
@@ -86,22 +96,28 @@ type: ItemType (enumRef);       // 枚举引用
 - **外键跳转**：Ctrl+点击外键引用跳转到目标表
 - **接口内跳转**：在接口内部定义的 struct 优先在当前接口内查找
 
-### 模块支持
-- 支持包名映射到文件路径，如 `pkg1.pkg2.table` → `pkg1/pkg2.cfg`
-- 自动识别项目根目录（包含 `config.cfg` 的目录）
-
 ## 🔧 配置选项
 
 扩展会自动为 CFG 文件启用以下配置：
 - 智能代码提示
-- 语法错误检查
 - 语义高亮
 
 ## 🤝 问题反馈
 
 如果您在使用过程中遇到任何问题或有功能建议，请通过以下方式联系我们：
-- 在扩展商店页面提交评价
-- 在 GitHub 仓库提交 Issue
+- **扩展相关问题**: 在 [本扩展仓库](https://github.com/stallboy/cfggen) 提交 Issue
+- **配置系统问题**: 在 [cfggen 主仓库](https://github.com/stallboy/cfggen) 提交 Issue
+- **功能建议**: 在扩展商店页面提交评价
+
+## 🌟 cfggen 生态系统
+
+本扩展是 cfggen 配置系统生态的一部分，与以下组件协同工作：
+
+- **[cfggen 核心工具](https://github.com/stallboy/cfggen)**: 配置系统生成器和运行时
+- **本 VSCode 扩展**: 提供 IDE 支持和开发体验
+- **cfgeditor**: 基于节点的编辑器和查看器
+
+完整的 cfggen 生态系统提供从配置定义到数据读取、数据编辑和浏览、再到代码生成的全链路解决方案。
 
 ## 📄 许可证
 
