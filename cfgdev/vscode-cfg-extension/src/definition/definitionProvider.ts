@@ -150,4 +150,11 @@ export class CfgDefinitionProvider implements vscode.DefinitionProvider {
         return paths.join('/');
     }
 
+    /**
+     * 清理资源
+     */
+    dispose(): void {
+        this.fileCache.clearAll();
+    }
+
 }
