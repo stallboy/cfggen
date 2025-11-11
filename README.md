@@ -24,82 +24,23 @@
 
 请阅读[详细文档](https://stallboy.github.io/cfggen)
 
-## Prerequisites
+## 快速开始
 
-* jdk21
-* gradle
-* 设置 git/bin 路径到Path环境变量中
+### 配表系统 cfggen
 
+请参考 [配置系统 文档](app/README.md)。
 
-## build & test
+### 编辑器 cfgeditor.exe
 
-### 生成cfggen.jar，cfggen.exe
-
-```bash
-genjar.bat  # 生成cfggen.jar
-```
-
-```bash
-mkexe.bat  # 生成cfggen.zip，里面有exe
-```
+请参考 [编辑器 cfgeditor 文档](cfgeditor/README.md)
 
 
-### test
+### VSCode插件：cfg-support 
 
-* 查看使用说明
+我们为 `.cfg` 配置文件提供了专门的 VSCode 插件，包含以下功能：
 
-```bash
-cd example
-usage.bat  # 打印使用说明
-```
+- **语法高亮**: 结构定义、类型标识符、外键引用等
+- **跳转到定义**: Ctrl+点击类型名称或外键引用跳转到定义位置
 
-* 测试java：生成java代码和数据
+详细功能和使用说明请参考 [VSCode CFG 扩展文档](cfgdev/vscode-cfg-extension/README.md)。
 
-```bash
-cd example
-genjava.bat # sealed需要java 17或以上才支持，也可以去掉sealed
-```
-
-* 测试java：检验java生成
-
-```bash
-gradle build 
-java -jar build/libs/example.jar 
-# 进入命令行，输入q退出，输入其他比如"ai"会打印表名称以ai开头的结构定义和数据
-```
-
-* 测试lua
-
-```bash
-genlua.bat 
-cd lua
-chcp 65001
-lua.exe test.lua
-```
-
-* 测试csharp
-
-```bash
-gencshape.bat 
-cd cs
-run.bat
-```
-* 测试go
-
-```bash
-gengo.bat 
-cd go
-go run .
-```
-
-* 测试typescript
-
-```bash
-gents.bat 
-cd ts
-pnpm i -D tsx
-npx tsx main.ts
-```
-
-## 编辑器cfgeditor.exe
-请参考[(编辑器 cfgeditor 文档)](cfgeditor/README.md)

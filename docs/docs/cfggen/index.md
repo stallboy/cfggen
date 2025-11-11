@@ -1,5 +1,5 @@
 ---
-layout: home
+layout: page
 title: 配表系统
 nav_order: 2
 ---

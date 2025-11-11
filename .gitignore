@@ -75,3 +75,4 @@
 /cfgdev/.claude/settings.local.json
 /cfgdev/vscode-cfg-extension/*.vsix
 /cfgdev/vscode-cfg-extension/.claude/settings.local.json
+/example/bin
