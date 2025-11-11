@@ -1,9 +1,3 @@
-/**
- * Location Visitor
- * Extends HighlightingVisitor to collect symbol definition locations
- * for jump-to-definition functionality
- */
-
 import * as vscode from 'vscode';
 import { AbstractParseTreeVisitor, ParseTree, TerminalNode } from 'antlr4ng';
 import { CfgVisitor } from '../grammar/CfgVisitor';
@@ -11,19 +5,24 @@ import { Struct_declContext } from '../grammar/CfgParser';
 import { Interface_declContext } from '../grammar/CfgParser';
 import { Table_declContext } from '../grammar/CfgParser';
 import { Field_declContext } from '../grammar/CfgParser';
+import { Foreign_declContext } from '../grammar/CfgParser';
+import { RefContext } from '../grammar/CfgParser';
 import { Type_Context } from '../grammar/CfgParser';
 import { Ns_identContext } from '../grammar/CfgParser';
-import { SymbolTableManager, SymbolType, SymbolLocation } from './symbolTableManager';
+import { FileDefinitionAndRef, Ref } from './types';
+import { TypeUtils } from '../utls/typeUtils';
 
+/**
+ * 位置访问者 - 收集定义和引用信息
+ */
 export class LocationVisitor extends AbstractParseTreeVisitor<void> implements CfgVisitor<void> {
-    private document: vscode.TextDocument;
-    private symbolTableManager: SymbolTableManager;
-    private currentScope: string | undefined;
+    private fileDef: FileDefinitionAndRef;
+    private currentInterface?: string;
+    private currentInterfaceDefs?: Map<string, vscode.Range>;
 
-    constructor(document: vscode.TextDocument) {
+    constructor(fileDef: FileDefinitionAndRef) {
         super();
-        this.document = document;
-        this.symbolTableManager = SymbolTableManager.getInstance();
+        this.fileDef = fileDef;
     }
 
     public walk(tree: ParseTree): void {
@@ -31,7 +30,7 @@ export class LocationVisitor extends AbstractParseTreeVisitor<void> implements C
     }
 
     protected defaultResult(): void {
-        // No result needed for location collection
+        // No result needed
     }
 
     private getText(ctx: ParseTree | TerminalNode): string {
@@ -43,118 +42,99 @@ export class LocationVisitor extends AbstractParseTreeVisitor<void> implements C
         return text || '';
     }
 
-    private createRange(startLine: number, startChar: number, endLine?: number, endChar?: number): vscode.Range {
-        const startPosition = new vscode.Position(startLine, startChar);
-        const endPosition = endLine !== undefined && endChar !== undefined
-            ? new vscode.Position(endLine, endChar)
-            : new vscode.Position(startLine, startChar + 1); // Default 1 char length
-        return new vscode.Range(startPosition, endPosition);
+    private createRange(line: number, startChar: number, endChar: number): vscode.Range {
+        return new vscode.Range(
+            new vscode.Position(line - 1, startChar),
+            new vscode.Position(line - 1, endChar)
+        );
     }
 
-    private extractNameFromNsIdent(nsIdent: Ns_identContext | null | undefined): string | undefined {
-        if (!nsIdent || nsIdent.identifier().length === 0) {
-            return undefined;
-        }
-
+    private getNsIdentText(nsIdent: Ns_identContext | null | undefined): string {
+        if (!nsIdent) return '';
         const identifiers = nsIdent.identifier();
-        const names = identifiers.map(id => {
+        if (identifiers.length === 0) return '';
+
+        return identifiers.map(id => {
             const terminal = id.IDENT();
             return terminal ? this.getText(terminal) : '';
-        }).filter(name => name.length > 0);
-
-        return names.join('.');
+        }).filter(text => text).join('.');
     }
 
-    private getRangeFromNsIdent(nsIdent: Ns_identContext | null | undefined): vscode.Range | undefined {
-        if (!nsIdent || nsIdent.identifier().length === 0) {
-            return undefined;
-        }
+    private getNsIdentRange(nsIdent: Ns_identContext | null | undefined): vscode.Range | null {
+        if (!nsIdent) return null;
+        const identifiers = nsIdent.identifier();
+        if (identifiers.length === 0) return null;
 
-        const firstIdent = nsIdent.identifier()[0];
-        const lastIdent = nsIdent.identifier()[nsIdent.identifier().length - 1];
-
+        const firstIdent = identifiers[0];
+        const lastIdent = identifiers[identifiers.length - 1];
         const firstTerminal = firstIdent.IDENT();
         const lastTerminal = lastIdent.IDENT();
 
         if (firstTerminal && lastTerminal && firstTerminal.symbol && lastTerminal.symbol) {
-            const startLine = firstTerminal.symbol.line - 1;
+            const startLine = firstTerminal.symbol.line;
             const startChar = firstTerminal.symbol.column;
-            const endLine = lastTerminal.symbol.line - 1;
             const endChar = lastTerminal.symbol.column + this.getText(lastTerminal).length;
-
-            return this.createRange(startLine, startChar, endLine, endChar);
+            return this.createRange(startLine, startChar, endChar);
         }
-
-        return undefined;
+        return null;
     }
 
     // ============================================================
-    // Structure Definitions
+    // Structure Definitions (struct/interface/table)
     // ============================================================
 
     public visitStruct_decl(ctx: Struct_declContext): void {
-        const name = this.extractNameFromNsIdent(ctx.ns_ident());
-        const range = this.getRangeFromNsIdent(ctx.ns_ident());
+        const nsIdent = ctx.ns_ident();
+        const name = this.getNsIdentText(nsIdent);
+        const range = this.getNsIdentRange(nsIdent);
 
         if (name && range) {
-            const symbol: Omit<SymbolLocation, 'uri'> = {
-                name,
-                type: SymbolType.STRUCT,
-                range,
-                scope: this.currentScope
-            };
-
-            this.symbolTableManager.addSymbol(this.document.uri, symbol);
+            if (this.currentInterfaceDefs) {
+                // interface 内的struct
+                this.currentInterfaceDefs.set(name, range);
+            } else {
+                // 全局struct
+                this.fileDef.definitions.set(name, range);
+            }
         }
-
-        // Visit children to collect field definitions
         this.visitChildren(ctx);
     }
 
     public visitInterface_decl(ctx: Interface_declContext): void {
-        const name = this.extractNameFromNsIdent(ctx.ns_ident());
-        const range = this.getRangeFromNsIdent(ctx.ns_ident());
+        const nsIdent = ctx.ns_ident();
+        const name = this.getNsIdentText(nsIdent);
+        const range = this.getNsIdentRange(nsIdent);
 
         if (name && range) {
-            const symbol: Omit<SymbolLocation, 'uri'> = {
-                name,
-                type: SymbolType.INTERFACE,
-                range,
-                scope: this.currentScope
-            };
+            // 全局interface
+            this.fileDef.definitions.set(name, range);
 
-            this.symbolTableManager.addSymbol(this.document.uri, symbol);
+            // 进入interface作用域
+            const interfaceDefs = new Map();
+            this.fileDef.definitionsInInterface.set(name, interfaceDefs);
 
-            // Set current scope for nested types within this interface
-            const previousScope = this.currentScope;
-            this.currentScope = name;
+            this.currentInterface = name;
+            this.currentInterfaceDefs = interfaceDefs;
 
-            // Visit children to collect nested type definitions
             this.visitChildren(ctx);
 
-            // Restore previous scope
-            this.currentScope = previousScope;
+            // 退出interface作用域
+            this.currentInterface = undefined;
+            this.currentInterfaceDefs = undefined;
         } else {
             this.visitChildren(ctx);
         }
     }
 
     public visitTable_decl(ctx: Table_declContext): void {
-        const name = this.extractNameFromNsIdent(ctx.ns_ident());
-        const range = this.getRangeFromNsIdent(ctx.ns_ident());
+        const nsIdent = ctx.ns_ident();
+        const name = this.getNsIdentText(nsIdent);
+        const range = this.getNsIdentRange(nsIdent);
 
         if (name && range) {
-            const symbol: Omit<SymbolLocation, 'uri'> = {
-                name,
-                type: SymbolType.TABLE,
-                range,
-                scope: this.currentScope
-            };
-
-            this.symbolTableManager.addSymbol(this.document.uri, symbol);
+            // 全局table
+            this.fileDef.definitions.set(name, range);
         }
-
-        // Visit children to collect field definitions
         this.visitChildren(ctx);
     }
 
@@ -163,43 +143,104 @@ export class LocationVisitor extends AbstractParseTreeVisitor<void> implements C
     // ============================================================
 
     public visitField_decl(ctx: Field_declContext): void {
-        // Collect field definition
-        const identifier = ctx.identifier();
-        if (identifier) {
-            const terminal = identifier.IDENT();
-            if (terminal && terminal.symbol) {
-                const fieldName = this.getText(terminal);
-                const startLine = terminal.symbol.line - 1;
-                const startChar = terminal.symbol.column;
-                const range = this.createRange(startLine, startChar);
-
-                const symbol: Omit<SymbolLocation, 'uri'> = {
-                    name: fieldName,
-                    type: SymbolType.FIELD,
-                    range,
-                    scope: this.currentScope
-                };
-
-                this.symbolTableManager.addSymbol(this.document.uri, symbol);
-            }
+        const line = ctx.start?.line;
+        if (!line) {
+            this.visitChildren(ctx);
+            return;
         }
 
-        // Visit children to collect type references
+        const ref = new Ref();
+        ref.inInterfaceName = this.currentInterface;
+
+        // 处理类型引用
+        const type = ctx.type_();
+        if (type) {
+            this.processType(type, ref);
+        }
+
+        // 处理外键引用
+        const foreignRef = ctx.ref();
+        if (foreignRef) {
+            this.processRef(foreignRef, ref);
+        }
+
+        // 如果有关键引用信息，记录到lineToRefs
+        // VSCode行号从0开始，所以需要减1
+        if (ref.refType || ref.refTable) {
+            this.fileDef.lineToRefs.set(line - 1, ref);
+        }
+
         this.visitChildren(ctx);
     }
 
     // ============================================================
-    // Type Declarations
+    // Foreign Key Declarations
     // ============================================================
 
-    public visitType_(ctx: Type_Context): void {
-        // IMPORTANT: Do NOT collect type references as symbols
-        // Type references (e.g., LvlRank:LevelRank) are USAGES, not definitions
-        // We should only collect actual definitions (struct, interface, table)
-        // This prevents jumping to usage locations instead of definition locations
+    public visitForeign_decl(ctx: Foreign_declContext): void {
+        const line = ctx.start?.line;
+        if (!line) {
+            this.visitChildren(ctx);
+            return;
+        }
 
-        // Simply visit children without collecting type references
+        const ref = new Ref();
+        ref.inInterfaceName = this.currentInterface;
+
+        const foreignRef = ctx.ref();
+        if (foreignRef) {
+            this.processRef(foreignRef, ref);
+        }
+
+        // 如果有关键引用信息，记录到lineToRefs
+        // VSCode行号从0开始，所以需要减1
+        if (ref.refTable) {
+            this.fileDef.lineToRefs.set(line - 1, ref);
+        }
+
         this.visitChildren(ctx);
+    }
+
+    // ============================================================
+    // Type Processing
+    // ============================================================
+
+    private processType(type: Type_Context, ref: Ref): void {
+        const typeElems = type.type_ele();
+        if (!typeElems || typeElems.length === 0) return;
+
+        // 处理最后一个type_ele（可能是自定义类型）
+        const lastElem = typeElems[typeElems.length - 1];
+        const nsIdent = lastElem.ns_ident();
+
+        if (nsIdent && nsIdent.identifier().length > 0) {
+            const typeName = this.getNsIdentText(nsIdent);
+            const range = this.getNsIdentRange(nsIdent);
+
+            if (typeName && range && TypeUtils.isCustomType(typeName)) {
+                ref.refType = typeName;
+                ref.refTypeStart = range.start.character;
+                ref.refTypeEnd = range.end.character;
+            }
+        }
+    }
+
+    // ============================================================
+    // Foreign Key Reference Processing
+    // ============================================================
+
+    private processRef(refCtx: RefContext, ref: Ref): void {
+        const nsIdent = refCtx.ns_ident();
+        if (!nsIdent) return;
+
+        const tableName = this.getNsIdentText(nsIdent);
+        const range = this.getNsIdentRange(nsIdent);
+
+        if (tableName && range) {
+            ref.refTable = tableName;
+            ref.refTableStart = range.start.character;
+            ref.refTableEnd = range.end.character;
+        }
     }
 
     /**

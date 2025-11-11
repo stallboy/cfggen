@@ -13,6 +13,7 @@ import { MetadataContext } from '../grammar/CfgParser';
 import { Type_Context } from '../grammar/CfgParser';
 import { Ns_identContext } from '../grammar/CfgParser';
 import { TOKEN_TYPES, TokenType } from './tokenTypes';
+import { TypeUtils } from '../utls/typeUtils';
 
 export class HighlightingVisitor extends AbstractParseTreeVisitor<void> implements CfgVisitor<void> {
     private builder: vscode.SemanticTokensBuilder;
@@ -79,13 +80,6 @@ export class HighlightingVisitor extends AbstractParseTreeVisitor<void> implemen
         return TOKEN_TYPES[type];
     }
 
-    /**
-     * Check if a type is a basic type
-     */
-    private isBaseType(typeText: string): boolean {
-        const baseTypes = ['int', 'float', 'long', 'bool', 'str', 'text'];
-        return baseTypes.includes(typeText);
-    }
 
     // ============================================================
     // Structure Definitions (struct/interface/table)
@@ -260,7 +254,7 @@ export class HighlightingVisitor extends AbstractParseTreeVisitor<void> implemen
                     if (firstTerminal && lastTerminal && firstTerminal.symbol && lastTerminal.symbol) {
                         // Only highlight if this is NOT a basic type
                         const typeText = this.getText(lastTerminal);
-                        if (!this.isBaseType(typeText)) {
+                        if (TypeUtils.isCustomType(typeText)) {
                             const startLine = firstTerminal.symbol.line - 1;
                             const startChar = firstTerminal.symbol.column;
                             const endChar = lastTerminal.symbol.column + this.getText(lastTerminal).length;

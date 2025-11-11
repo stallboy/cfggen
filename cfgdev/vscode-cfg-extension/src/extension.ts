@@ -1,7 +1,7 @@
 
 import * as vscode from 'vscode';
 import { SemanticTokensProvider } from './highlight/semanticTokensProvider';
-import { DefinitionProvider } from './definition/definitionProvider';
+import { CfgDefinitionProvider } from './definition/definitionProvider';
 
 export function activate(context: vscode.ExtensionContext) {
     // 1. Register semantic tokens provider (Layer 2 of two-layer highlighting)
@@ -16,7 +16,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     // 2. Register definition provider for jump-to-definition
-    const definitionProvider = new DefinitionProvider();
+    const definitionProvider = new CfgDefinitionProvider();
     context.subscriptions.push(
         vscode.languages.registerDefinitionProvider(
             { language: 'cfg' },

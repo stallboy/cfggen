@@ -32,6 +32,8 @@
 - 支持多级包名解析 (`pkg1.pkg2.table`)
 - 支持嵌套作用域查找 (interface内优先)
 - 支持两种搜索策略 (从当前目录/从根目录)
+- 智能缓存机制 (基于文件修改时间和大小)
+- 模块解析器 (包名到文件路径映射)
 
 ### 4. 解析器
 - 使用ANTLR4语法解析器
@@ -44,11 +46,11 @@
 vscode-cfg-extension/
 ├── src/
 │   ├── definition/               # 跳转功能目录
-│   │   ├── definitionProvider.ts        # 定义提供者 (跳转到定义)
-│   │   ├── symbolTableManager.ts        # 符号表管理器
-│   │   ├── locationVisitor.ts           # 位置访问者
-│   │   ├── scopeManager.ts              # 作用域管理器
-│   │   └── moduleResolver.ts            # 模块解析器
+│   │   ├── definitionProvider.ts # 定义提供者主类
+│   │   ├── locationVisitor.ts    # 位置访问者 (收集定义和引用)
+│   │   ├── moduleResolver.ts     # 模块解析器 (包名映射)
+│   │   ├── fileCache.ts          # 文件缓存管理器
+│   │   └── types.ts              # 类型定义
 │   ├── highlight/                # 高亮功能目录
 │   │   ├── semanticTokensProvider.ts    # 语义标记提供者
 │   │   ├── HighlightingVisitor.ts       # 语法高亮访问者
@@ -101,13 +103,11 @@ vscode-cfg-extension/
 - ✅ 语法高亮 (TextMate语法)
 - ✅ 语义标记 (6种标记类型)
 - ✅ ANTLR4解析器集成
-- ✅ 跳转到定义 (类型+外键引用)
 - ✅ 扩展打包和发布
+- ✅ 跳转到定义 (类型+外键引用)
 
 ### 待实现功能
-- ⏳ 自动补全
-- ⏳ 错误检查
-- ⏳ 代码格式化
+- 暂无
 
 ## 版本信息
 

@@ -21,7 +21,6 @@
 
 ### 外键跳转解析规则
 
-**当前状态**: ✅ 已实现
 
 #### 1. 优先查找本模块内引用 
 - 若是`->table1`, 在当前.cfg文件中查找名为`table1`的表定义
@@ -35,13 +34,12 @@
 - 如果找到，跳转到该表的定义位置
 
 ### 3. 其他
-- 引用也包括`=>table1[field2]`，点击`field2`跳转到table1对应的field2字段定义处
+- 引用也包括`=>table1[field2]`
 - pkg可以有多级，这里只用了2级来举例
 
 
 
 ### 类型定义跳转解析规则
-**当前状态**: ✅ 已实现
 
 例子：
 
@@ -84,3 +82,42 @@ table t[id] {
 - `pkg1.pkg2.StructD`：从当前.cfg文件所在目录开始查找`pkg1.pkg2`对应的.cfg文件，在那里找`StructD`的定义
 - 如果找到，跳转到定义位置
 
+
+
+### implementation
+
+```typescript
+
+class Ref {
+  refType?:string;
+  refTypeStart:int;
+  refTypeEnd:int;
+
+  refTable?:string;
+  refTableStart:int;
+  refTableEnd:int;
+
+  inInterfaceName?:string;
+}
+
+class FileDefinitionAndRef {
+  definitions: Map<string， Range>； // name -> range;
+  definitionsInInterface: Map<string， Map<string， Range>>; // interfaceName -> structName -> range
+
+  lineToRefs: Map<int, Ref> ;  //line ->  ref, 一行只能配置一个类型+一个外键，所以以line为key
+
+ // 用于判断cache是否失效
+  lastModified:long; 
+  fileSize:long; 
+}
+
+
+class FileCache {
+  Map<string, FileDefinitionAndRef>； // filepath -> file definition and ref
+}
+```
+
+- 参照以上数据结构，名称可以修改，但核心逻辑保留
+- 一次CfgVisitor就填上FileDefinitionAndRef
+- cache用lastModified和fileSize判断是否失效
+- 根据位置在lineToRefs查找要寻找的ref信息，然后在相应的definitions中寻找到定义的位置
