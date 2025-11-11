@@ -1,0 +1,53 @@
+# .vscodeignore 控制 VSIX 包中包含的文件
+
+# 开发工具配置
+.vscode/
+.eslintrc.json
+.eslintignore
+.claude/
+.agent/
+CLAUDE.md
+
+# 构建配置
+webpack.config.js
+tsconfig.json
+tsconfig.tsbuildinfo
+
+# 源码目录
+src/
+
+# 中间输出目录
+out/
+
+# 依赖目录（不需要，因为依赖已经被 webpack 打包）
+node_modules/
+
+# 测试文件
+test/
+test-results/
+test-output/
+
+# 锁文件
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# 日志和缓存
+*.log
+logs/
+.eslintcache
+*.tsbuildinfo
+
+# 临时文件
+.tmp/
+temp/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 开发环境文件
+.idea/
+*.swp
+*.swo
+*~

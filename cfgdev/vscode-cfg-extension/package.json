@@ -1,0 +1,144 @@
+{
+  "name": "cfg-support",
+  "displayName": "cfg-support",
+  "description": "VSCode extension for .cfg files with syntax highlighting, go-to-definition",
+  "version": "1.0.0",
+  "publisher": "thyai",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "cfg",
+    "configuration",
+    "syntax-highlighting",
+    "go-to-definition"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stallboy/cfggen.git"
+  },
+  "bugs": {
+    "url": "https://github.com/stallboy/cfggen/issues"
+  },
+  "homepage": "https://github.com/stallboy/cfggen/cfgdev/vscode-cfg-extension#readme",
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "cfg",
+        "aliases": [
+          "CFG",
+          "cfg"
+        ],
+        "extensions": [
+          ".cfg",
+          ".CFG",
+          ".Cfg"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "cfg",
+        "scopeName": "source.cfg",
+        "path": "./syntaxes/cfg.tmLanguage.json"
+      }
+    ],
+    "semanticTokenTypes": [
+      {
+        "id": "structureDefinition",
+        "description": "Structure definition (struct/interface/table names)"
+      },
+      {
+        "id": "typeIdentifier",
+        "description": "Custom type identifiers (non-basic types)"
+      },
+      {
+        "id": "foreignKey",
+        "description": "Foreign key references"
+      },
+      {
+        "id": "metadata",
+        "description": "Metadata keywords"
+      },
+      {
+        "id": "primaryKey",
+        "description": "Primary key field names"
+      },
+      {
+        "id": "uniqueKey",
+        "description": "Unique key field names"
+      }
+    ],
+    "semanticTokenScopes": [
+      {
+        "language": "cfg",
+        "scopes": {
+          "structureDefinition": [
+            "entity.name.type"
+          ],
+          "typeIdentifier": [
+            "storage.type"
+          ],
+          "foreignKey": [
+            "entity.name.type"
+          ],
+          "metadata": [
+            "storage.modifier"
+          ],
+          "primaryKey": [
+            "variable.other.pk"
+          ],
+          "uniqueKey": [
+            "variable.other.uk"
+          ]
+        }
+      }
+    ],
+    "configurationDefaults": {
+      "[cfg]": {
+        "editor.quickSuggestions": {
+          "comments": "off",
+          "strings": "off",
+          "other": "on"
+        }
+      }
+    }
+  },
+  "activationEvents": [],
+  "scripts": {
+    "vscode:prepublish": "npm run webpack",
+    "compile": "webpack --mode development",
+    "webpack": "webpack --mode production",
+    "webpack-dev": "webpack --mode development",
+    "watch": "webpack --mode development --watch",
+    "pretest": "npm run webpack-dev && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./dist/test/runTest.js",
+    "package": "npm run webpack && vsce package",
+    "generate-parser": "npx antlr-ng src/grammar/Cfg.g4 -o src/grammar -v true -l false -D language=TypeScript",
+    "postinstall": "npm run generate-parser"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "@vscode/test-electron": "^2.3.8",
+    "@vscode/vsce": "^3.7.0",
+    "antlr-ng": "^1.0.10",
+    "antlr4ng": "^3.0.16",
+    "eslint": "^8.56.0",
+    "glob": "^8.1.0",
+    "mocha": "^10.2.0",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.3.3",
+    "webpack": "^5.102.1",
+    "webpack-cli": "^6.0.1"
+  }
+}
