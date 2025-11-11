@@ -13,7 +13,7 @@ import { MetadataContext } from '../grammar/CfgParser';
 import { Type_Context } from '../grammar/CfgParser';
 import { Ns_identContext } from '../grammar/CfgParser';
 import { TOKEN_TYPES, TokenType } from './tokenTypes';
-import { TypeUtils } from '../utls/typeUtils';
+import { TypeUtils } from '../utils/typeUtils';
 
 export class HighlightingVisitor extends AbstractParseTreeVisitor<void> implements CfgVisitor<void> {
     private builder: vscode.SemanticTokensBuilder;

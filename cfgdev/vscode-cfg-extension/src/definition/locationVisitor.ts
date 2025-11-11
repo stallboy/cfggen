@@ -10,7 +10,7 @@ import { RefContext } from '../grammar/CfgParser';
 import { Type_Context } from '../grammar/CfgParser';
 import { Ns_identContext } from '../grammar/CfgParser';
 import { FileDefinitionAndRef, Ref } from './types';
-import { TypeUtils } from '../utls/typeUtils';
+import { TypeUtils } from '../utils/typeUtils';
 
 /**
  * 位置访问者 - 收集定义和引用信息
