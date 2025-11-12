@@ -35,10 +35,10 @@ cfggen 采用以Context为核心的模块化架构，所有组件都通过Contex
 作为系统的核心，负责协调所有其他模块的交互和数据流。
 
 - **Context**：全局上下文管理
+   - **模块协调**：管理schema、data、value等模块的交互
 - **DirectoryStructure**：目录结构管理
 - **ExplicitDir**：显式目录配置
 - **HeadRow**：表头行处理
-- **模块协调**：管理schema、data、value等模块的交互
 
 ### 2. Schema管理模块 (schema)
 负责配置Schema的定义、解析和验证。
