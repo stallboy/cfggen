@@ -1,95 +1,41 @@
-# cfggen
+# Configuration Table Generation System
 
 ![intro](docs/assets/intro.png)
 
-an object database viewer, editor, reading code generator
+An object database browser, editor, and program access code generator
 
-* define object schema.
-* use Excel file to edit and store object. 
-* use node based gui editor to view and edit object, store as json file
-* generate reading code.
+1. Define object structure
+2. Use Excel to edit, or use node-based interface to edit and browse all objects
+3. Generate access code
 
-## Features
+## Main Features
 
-* polymorphic and nested structure.
-* primary/unique key, foreign key, enum, entry. and generate code accordingly.  
+* Support for polymorphic and nested structures
+* Configure foreign keys, and detect data consistency
+* Generate typed data access code, foreign key references, entries, and enums (eliminating magic numbers in programs)
+* Support for Java, C#, Lua, Go, TypeScript
+* Structure data can be configured in Excel or JSON, providing node-based interface for editing and browsing
+* Java generation focuses on hot update safety, Lua generation focuses on memory size
 
 ## Documentation
 
-read [document](https://stallboy.github.io/cfggen)
+Please read the [detailed documentation](https://stallboy.github.io/cfggen)
 
+## Quick Start
 
-## Prerequisites
+### Configuration System cfggen
 
-* jdk21
-* gradle
-* set git/bin directory to Path
+Please refer to [Configuration System Documentation](app/README.md).
 
-## build & test
+### Editor cfgeditor.exe
 
-### build, generate cfggen.jar.
+Please refer to [Editor cfgeditor Documentation](cfgeditor/README.md)
 
-```bash
-genjar.bat
-```
+### VSCode Extension: cfg-support
 
-### test
+We provide a specialized VSCode extension for `.cfg` configuration files with the following features:
 
-first `cd example` 
+- **Syntax Highlighting**: Structure definitions, type identifiers, foreign key references, etc.
+- **Go to Definition**: Ctrl+click on type names or foreign key references to jump to definition locations
 
-* show usage 
-
-```bash
-usage.bat  
-```
-
-* generate java code
-
-```bash
-cd example
-genjava.bat 
-```
-
-* test java code
-
-```bash
-gradle build 
-java -jar build/libs/example.jar 
-```
-
-* generate & test lua
-
-```bash
-genlua.bat 
-cd lua
-chcp 65001
-lua.exe test.lua
-```
-
-* generate & test c#
-
-```bash
-gencshape.bat 
-cd cs
-run.bat
-```
-
-* generate & test go
-
-```bash
-gengo.bat 
-cd go
-go run .
-```
-
-* generate & test typescript
-
-```bash
-gents.bat 
-cd ts
-pnpm i -D tsx
-npx tsx main.ts
-```
-
-## cfgeditor.exe
-read [(cfgeditor readme)](cfgeditor/README_EN.md)
+For detailed features and usage instructions, please refer to [VSCode CFG Extension Documentation](cfgdev/vscode-cfg-extension/README.md).
