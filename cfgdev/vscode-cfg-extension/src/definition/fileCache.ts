@@ -10,7 +10,23 @@ import { FileDefinitionAndRef } from './types';
  * 文件缓存管理器
  */
 export class FileCache {
+    private static instance: FileCache;
     private cache: Map<string, FileDefinitionAndRef> = new Map();
+
+    /**
+     * 私有构造函数，确保只能通过getInstance创建实例
+     */
+    private constructor() {}
+
+    /**
+     * 获取FileCache单例实例
+     */
+    public static getInstance(): FileCache {
+        if (!FileCache.instance) {
+            FileCache.instance = new FileCache();
+        }
+        return FileCache.instance;
+    }
 
     /**
      * 获取或解析文件的定义和引用信息

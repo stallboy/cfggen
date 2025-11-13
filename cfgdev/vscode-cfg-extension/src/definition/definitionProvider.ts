@@ -7,11 +7,9 @@ import { FileDefinitionAndRef, PositionRef, ResolvedLocation } from './types';
  * CFG定义提供者 - 实现跳转功能
  */
 export class CfgDefinitionProvider implements vscode.DefinitionProvider {
-    private fileCache: FileCache;
     private moduleResolver: ModuleResolver;
 
     constructor() {
-        this.fileCache = new FileCache();
         this.moduleResolver = new ModuleResolver();
     }
 
@@ -25,7 +23,7 @@ export class CfgDefinitionProvider implements vscode.DefinitionProvider {
     ): Promise<vscode.Location[] | undefined> {
         try {
             // 确保文件已解析
-            const fileDef = await this.fileCache.getOrParseDefinitionAndRef(document);
+            const fileDef = await FileCache.getInstance().getOrParseDefinitionAndRef(document);
 
             // 获取指定位置的引用信息
             const positionRef = fileDef.getRefAtPosition(position);
@@ -132,7 +130,7 @@ export class CfgDefinitionProvider implements vscode.DefinitionProvider {
     private async ensureFileParsed(filePath: string): Promise<FileDefinitionAndRef | undefined> {
         try {
             const document = await vscode.workspace.openTextDocument(vscode.Uri.file(filePath));
-            return await this.fileCache.getOrParseDefinitionAndRef(document);
+            return await FileCache.getInstance().getOrParseDefinitionAndRef(document);
         } catch (error) {
             console.error(`Error parsing module file ${filePath}:`, error);
         }
@@ -148,13 +146,6 @@ export class CfgDefinitionProvider implements vscode.DefinitionProvider {
 
     private joinPath(...paths: string[]): string {
         return paths.join('/');
-    }
-
-    /**
-     * 清理资源
-     */
-    dispose(): void {
-        this.fileCache.clearAll();
     }
 
 }

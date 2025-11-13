@@ -113,7 +113,7 @@ class FileDefinitionAndRef {
 
 
 class FileCache {
-  Map<string, FileDefinitionAndRef>； // filepath -> file definition and ref
+  cache:Map<string, FileDefinitionAndRef>； // filepath -> file definition and ref
 }
 ```
 
@@ -121,3 +121,11 @@ class FileCache {
 - 一次CfgVisitor就填上FileDefinitionAndRef
 - cache用lastModified和fileSize判断是否失效
 - 根据位置在lineToRefs查找要寻找的ref信息，然后在相应的definitions中寻找到定义的位置
+
+
+
+### 实现outline
+
+用DocumentSymbolProvider 来实现
+
+使用FileDefinitionAndRef里的definitions和definitionsInInterface来做

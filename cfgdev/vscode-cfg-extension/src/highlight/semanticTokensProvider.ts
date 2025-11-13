@@ -9,7 +9,7 @@ import { CommonTokenStream } from 'antlr4ng';
 import { CharStream } from 'antlr4ng';
 import { CfgLexer } from '../grammar/CfgLexer';
 import { CfgParser } from '../grammar/CfgParser';
-import { HighlightingVisitor } from './HighlightingVisitor';
+import { HighlightingVisitor } from './highlightingVisitor';
 import { TOKEN_TYPE_NAMES } from './tokenTypes';
 
 export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProvider {

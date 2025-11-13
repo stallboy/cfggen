@@ -17,7 +17,6 @@ import { TypeUtils } from '../utils/typeUtils';
 
 export class HighlightingVisitor extends AbstractParseTreeVisitor<void> implements CfgVisitor<void> {
     private builder: vscode.SemanticTokensBuilder;
-    private document: vscode.TextDocument;
     private primaryKeyFields: Set<string> = new Set();
 
     constructor(
@@ -26,7 +25,6 @@ export class HighlightingVisitor extends AbstractParseTreeVisitor<void> implemen
     ) {
         super();
         this.builder = builder;
-        this.document = document;
     }
 
     public walk(tree: ParseTree): void {

@@ -29,18 +29,11 @@ export class FileDefinitionAndRef {
         return this.definitions.get(name);
     }
 
-    /**
-     * 获取指定行的引用信息
-     */
-    getRefAtLine(line: number): Ref | undefined {
-        return this.lineToRefs.get(line);
-    }
-
-    /**
+     /**
      * 获取指定位置的引用信息
      */
     getRefAtPosition(position: vscode.Position): PositionRef | undefined {
-        const ref = this.getRefAtLine(position.line);
+        const ref = this.lineToRefs.get(position.line);
         if (!ref) {
             return undefined;
         }
