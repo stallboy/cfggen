@@ -2,7 +2,7 @@
   "name": "cfg-support",
   "displayName": "cfg-support",
   "description": "VSCode extension for .cfg files with syntax highlighting, go-to-definition, go-to-references, outline",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "publisher": "thyai",
   "engines": {
     "vscode": "^1.85.0"
