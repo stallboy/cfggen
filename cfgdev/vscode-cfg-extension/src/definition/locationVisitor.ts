@@ -9,8 +9,9 @@ import { Foreign_declContext } from '../grammar/CfgParser';
 import { RefContext } from '../grammar/CfgParser';
 import { Type_Context } from '../grammar/CfgParser';
 import { Ns_identContext } from '../grammar/CfgParser';
-import { FileDefinitionAndRef, Ref, TRange, DefinitionType } from './fileDefinitionAndRef';
+import { FileDefinitionAndRef, Ref, TRange } from './fileDefinitionAndRef';
 import { TypeUtils } from '../utils/typeUtils';
+import { ErrorHandler } from '../utils/errorHandler';
 
 /**
  * 位置访问者 - 收集定义和引用信息
@@ -250,6 +251,6 @@ export class LocationVisitor extends AbstractParseTreeVisitor<void> implements C
      * Visit error nodes (for debugging parsing errors)
      */
     public visitErrorNode(_node: unknown): void {
-        console.error('[LocationVisitor] Error node:', _node);
+        ErrorHandler.logError('LocationVisitor', `Error node: ${_node}`);
     }
 }

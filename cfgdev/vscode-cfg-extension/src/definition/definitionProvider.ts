@@ -2,15 +2,15 @@ import * as vscode from 'vscode';
 import { FileCache } from './fileCache';
 import { ModuleResolver } from './moduleResolver';
 import { FileDefinitionAndRef, PositionRef, ResolvedLocation } from './fileDefinitionAndRef';
+import { PathUtils } from '../utils/pathUtils';
+import { ErrorHandler } from '../utils/errorHandler';
 
 /**
  * CFG定义提供者 - 实现跳转功能
  */
 export class CfgDefinitionProvider implements vscode.DefinitionProvider {
-    private moduleResolver: ModuleResolver;
-
     constructor() {
-        this.moduleResolver = new ModuleResolver();
+        // 不再需要实例化 ModuleResolver，所有方法都是静态的
     }
 
     /**
@@ -19,7 +19,7 @@ export class CfgDefinitionProvider implements vscode.DefinitionProvider {
     async provideDefinition(
         document: vscode.TextDocument,
         position: vscode.Position,
-        token: vscode.CancellationToken
+        _token: vscode.CancellationToken
     ): Promise<vscode.Location[] | undefined> {
         try {
             // 确保文件已解析
@@ -42,7 +42,7 @@ export class CfgDefinitionProvider implements vscode.DefinitionProvider {
                 resolvedLocation.range
             )];
         } catch (error) {
-            console.error('Error in provideDefinition:', error);
+            ErrorHandler.logError('CfgDefinitionProvider.provideDefinition', error);
             return undefined;
         }
     }
@@ -54,7 +54,7 @@ export class CfgDefinitionProvider implements vscode.DefinitionProvider {
     private async findDefinition(positionRef: PositionRef, currentFileDef: FileDefinitionAndRef, currentFilePath: string): Promise<ResolvedLocation | undefined> {
 
         const { isRefType, name: typeName, inInterfaceName } = positionRef;
-        const { modulePath, typeOrTableName } = this.moduleResolver.parseReference(typeName);
+        const { modulePath, typeOrTableName } = ModuleResolver.parseReference(typeName);
 
         if (isRefType) {
             // 0. 如果当前在interface内，先在当前interface内查找
@@ -68,14 +68,14 @@ export class CfgDefinitionProvider implements vscode.DefinitionProvider {
         }
 
         // 1. 当前文件内查找
-        let tRange = currentFileDef.getDefinition(typeOrTableName);
+        const tRange = currentFileDef.getDefinition(typeOrTableName);
         if (tRange) {
             return { filePath: currentFilePath, range: tRange.range };
         }
 
         // 2. 模块内查找
         if (modulePath) {
-            const baseDir = this.getDirname(currentFilePath);
+            const baseDir = PathUtils.getDirname(currentFilePath);
             const result = await this.findDefinitionInDir(modulePath, typeOrTableName, baseDir);
             if (result) {
                 return result;
@@ -83,7 +83,7 @@ export class CfgDefinitionProvider implements vscode.DefinitionProvider {
         }
 
         // 3. 根目录查找
-        const rootDir = await this.moduleResolver.findRootDirectory(currentFilePath);
+        const rootDir = await ModuleResolver.findRootDirectory(currentFilePath);
         if (rootDir) {
             if (modulePath) {
                 const result = await this.findDefinitionInDir(modulePath, typeOrTableName, rootDir);
@@ -91,8 +91,8 @@ export class CfgDefinitionProvider implements vscode.DefinitionProvider {
                     return result;
                 }
             } else {
-                const configFile = this.joinPath(rootDir, 'config.cfg');
-                const configFileDef = await this.ensureFileParsed(configFile);
+                const configFile = PathUtils.joinPath(rootDir, 'config.cfg');
+                const configFileDef = await FileCache.getInstance().getOrParse(configFile);
                 if (configFileDef) {
                     const tRange = configFileDef.getDefinition(typeOrTableName);
                     if (tRange) {
@@ -111,10 +111,10 @@ export class CfgDefinitionProvider implements vscode.DefinitionProvider {
         typeOrTableName: string,
         baseDir: string
     ): Promise<ResolvedLocation | undefined> {
-        const moduleFile = await this.moduleResolver.findModuleFile(modulePath, baseDir);
+        const moduleFile = await ModuleResolver.findModuleFile(modulePath, baseDir);
         if (moduleFile) {
             // 确保模块文件已解析
-            const moduleFileDef = await this.ensureFileParsed(moduleFile);
+            const moduleFileDef = await FileCache.getInstance().getOrParse(moduleFile);
             if (moduleFileDef) {
                 const tRange = moduleFileDef.getDefinition(typeOrTableName);
                 if (tRange) {
@@ -122,30 +122,6 @@ export class CfgDefinitionProvider implements vscode.DefinitionProvider {
                 }
             }
         }
-    }
-
-    /**
-     * 确保文件已解析
-     */
-    private async ensureFileParsed(filePath: string): Promise<FileDefinitionAndRef | undefined> {
-        try {
-            const document = await vscode.workspace.openTextDocument(vscode.Uri.file(filePath));
-            return await FileCache.getInstance().getOrParseDefinitionAndRef(document);
-        } catch (error) {
-            console.error(`Error parsing module file ${filePath}:`, error);
-        }
-    }
-
-
-    // 路径处理辅助方法
-    private getDirname(filePath: string): string {
-        const parts = filePath.split(/[\\/]/);
-        parts.pop();
-        return parts.join('/');
-    }
-
-    private joinPath(...paths: string[]): string {
-        return paths.join('/');
     }
 
 }

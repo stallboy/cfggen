@@ -29,19 +29,42 @@ export interface TRange {
 }
 
 /**
+ * 名称信息
+ */
+export interface TName extends TRange {
+    name: string;
+}
+
+/**
+ * 接口内定义名称
+ */
+export interface ImplName {
+    name: string;
+    inInterfaceName: string;
+    range: vscode.Range;
+}
+
+/**
  * 文件定义和引用信息
  */
 export class FileDefinitionAndRef {
-    constructor(
-        // name -> TRange;
-        public definitions: Map<string, TRange> = new Map(),
-        // interfaceName -> structName -> range (保持原来的Range类型)
-        public definitionsInInterface: Map<string, Map<string, vscode.Range>> = new Map(),
-        // line ->  ref, 一行只能配置一个类型+一个外键，所以以line为key
-        public lineToRefs: Map<number, Ref> = new Map(),
-        public lastModified: number = 0,
-        public fileSize: number = 0
-    ) { }
+    public filePath: string;
+    public definitions: Map<string, TRange> = new Map();
+    public definitionsInInterface: Map<string, Map<string, vscode.Range>> = new Map();
+    public lineToRefs: Map<number, Ref> = new Map();
+    public lastModified: number = 0;
+    public fileSize: number = 0;
+    public moduleName: string = "";
+
+    private _lineToDefinitions?: Map<number, TName>;
+    private _lineToDefinitionInInterfaces?: Map<number, ImplName>;
+
+    /**
+     * 创建新的 FileDefinitionAndRef 实例
+     */
+    constructor(filePath: string) {
+        this.filePath = filePath;
+    }
 
 
     /**
@@ -58,9 +81,9 @@ export class FileDefinitionAndRef {
         return this.definitions.get(name);
     }
 
-     /**
-     * 获取指定位置的引用信息
-     */
+    /**
+    * 获取指定位置的引用信息
+    */
     getRefAtPosition(position: vscode.Position): PositionRef | undefined {
         const ref = this.lineToRefs.get(position.line);
         if (!ref) {
@@ -86,9 +109,71 @@ export class FileDefinitionAndRef {
                 inInterfaceName: ref.inInterfaceName
             };
         }
-
-        return undefined;
     }
+    /**
+     * 获取指定位置的定义信息
+     * @param position 位置信息
+     * @returns 定义信息，如果没有找到则返回 undefined
+     */
+    getDefinitionAtPosition(position: vscode.Position): PositionDef | undefined {
+        const line = position.line;
+        const character = position.character;
+        // 首先检查全局定义
+        const def = this.lineToDefinitions.get(line);
+        if (def) {
+            if (character >= def.range.start.character && character <= def.range.end.character) {
+                return def;
+            }
+        } else {
+            // 然后检查接口内定义
+            const idef = this.lineToDefinitionInInterfaces.get(line);
+            if (idef && character >= idef.range.start.character && character <= idef.range.end.character) {
+                return idef;
+            }
+        }
+    }
+
+    /**
+     * 获取行到定义的映射（延迟初始化）
+     */
+    get lineToDefinitions(): Map<number, TName> {
+        if (!this._lineToDefinitions) {
+            this._lineToDefinitions = new Map();
+            // 从definitions构造lineToDefinitions
+            for (const [name, tRange] of this.definitions) {
+                const line = tRange.range.start.line;
+                this._lineToDefinitions.set(line, {
+                    type: tRange.type,
+                    name: name,
+                    range: tRange.range
+                });
+            }
+        }
+        return this._lineToDefinitions;
+    }
+
+    /**
+     * 获取行到接口内定义的映射（延迟初始化）
+     */
+    get lineToDefinitionInInterfaces(): Map<number, ImplName> {
+        if (!this._lineToDefinitionInInterfaces) {
+            this._lineToDefinitionInInterfaces = new Map();
+            // 从definitionsInInterface构造lineToDefinitionInInterfaces
+            for (const [interfaceName, structMap] of this.definitionsInInterface) {
+                for (const [structName, range] of structMap) {
+                    const line = range.start.line;
+                    this._lineToDefinitionInInterfaces.set(line, {
+                        name: structName,
+                        inInterfaceName: interfaceName,
+                        range: range
+                    });
+                }
+            }
+        }
+        return this._lineToDefinitionInInterfaces;
+    }
+
+
 }
 
 
@@ -97,6 +182,14 @@ export class FileDefinitionAndRef {
  */
 export interface PositionRef {
     isRefType: boolean;           // true表示类型引用，false表示外键引用
+    name: string;                 // 引用名称
+    inInterfaceName?: string;     // 所在接口名称
+}
+
+/**
+ * 位置类型定义信息
+ */
+export interface PositionDef {
     name: string;                 // 引用名称
     inInterfaceName?: string;     // 所在接口名称
 }

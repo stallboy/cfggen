@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { SemanticTokensProvider } from './highlight/semanticTokensProvider';
 import { CfgDefinitionProvider } from './definition/definitionProvider';
 import { CfgDocumentSymbolProvider } from './outline/outlineProvider';
+import { CfgReferenceProvider } from './definition/referenceProvider';
 import { FileCache } from './definition/fileCache';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -30,6 +31,14 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.languages.registerDocumentSymbolProvider(
             { language: 'cfg' },
             new CfgDocumentSymbolProvider()
+        )
+    );
+
+    // 4. Register reference provider for find all references
+    context.subscriptions.push(
+        vscode.languages.registerReferenceProvider(
+            { language: 'cfg' },
+            new CfgReferenceProvider()
         )
     );
 }

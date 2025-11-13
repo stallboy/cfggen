@@ -1,6 +1,6 @@
 ### 文件和模块
 
-#### 文件名->模块名
+#### 目录名->模块名
 
 对于目录名称，按以下规则提取模块名：
 1. 截取第一个"."之前的内容
@@ -88,7 +88,7 @@ table t[id] {
 
 ```typescript
 
-class Ref {
+interface Ref {
   refType?:string;
   refTypeStart:int;
   refTypeEnd:int;
@@ -135,3 +135,51 @@ class FileCache {
 用DocumentSymbolProvider 来实现
 
 使用FileDefinitionAndRef里的definitions和definitionsInInterface来做
+
+
+### 实现GoToReference
+
+用ReferenceProvider  来实现
+
+```typescript
+interface TName {
+  type:  'struct' | 'interface' | 'table';
+  name: string;
+}
+interface ImplName{
+  name: string;
+  inInterfaceName: string;
+}
+
+class FileDefinitionAndRef {
+  lineToDefinitions?: Map<int, string>;  // line ->  name,
+  lineToDefinitionInInterfaces?: Map<int, ImplName>;  // line -> implName
+  moduleName: string; // 根目录下则为空，`pkg1_中文1/pkg2中文2/pkg2.cfg` 则为pkg1.pkg2
+}
+```
+
+FileDefinitionAndRef增加以上3字段。
+lineToDefinitions，lineToDefinitionInInterfaces，延迟初始化，get时如果undefined则从definitions和definitionsInInterface中构造出来
+
+
+provideReferences的逻辑：
+1. getOrParseDefinitionAndRef得到curDef
+
+2. 从lineToDefinitions查position.line得到tname，如果ok，否则跳到3
+
+    1. 找到<本配置所属根目录>，同时找到文件所在的模块全称，
+       比如`pkg1_中文1/pkg2中文2/pkg2.cfg`的模块全称为pkg1.pkg2，
+       如此这个definition的全称就是pkg1.pkg2.[tname.name]
+       
+    2. 遍历<本配置所属根目录>，depth最多2层，目录名要符合能提取模块名的规则，目录下也有[模块名].cfg文件，
+       根目录下读config.cfg。对这些.cfg文件做getOrParseDefinitionAndRef得到def:FileDefinitionAndRef
+       对每个def，遍历lineToRefs，
+        - 如果 refType == tname.name 放到refs里
+        - 如果 refTable == tname.name也放到refs
+        - 如果 curDef.module.length > 0 且 curDef.module.startWith(def.module + ".") 则找到relativeModuleName
+          - 如果 refType == tname.name 放到refs里
+          - 如果 refTable == tname.name也放到refs
+    
+
+3. 从lineToDefinitionInInterfaces得到implName，如果ok，
+  遍历lineToRefs，如果inInterfaceName == implName.inInterfaceName，且refType == implName.name则加到refs里

@@ -5,6 +5,8 @@ import { CfgLexer } from '../grammar/CfgLexer';
 import { CfgParser } from '../grammar/CfgParser';
 import { LocationVisitor } from './locationVisitor';
 import { FileDefinitionAndRef } from './fileDefinitionAndRef';
+import { PathUtils } from '../utils/pathUtils';
+import { ErrorHandler } from '../utils/errorHandler';
 
 /**
  * 文件缓存管理器
@@ -16,7 +18,7 @@ export class FileCache {
     /**
      * 私有构造函数，确保只能通过getInstance创建实例
      */
-    private constructor() {}
+    private constructor() { }
 
     /**
      * 获取FileCache单例实例
@@ -28,36 +30,49 @@ export class FileCache {
         return FileCache.instance;
     }
 
+    
+    /**
+     * 获取文件定义
+     */
+    async getOrParse(filePath: string): Promise<FileDefinitionAndRef | undefined> {
+        try {
+            const document = await vscode.workspace.openTextDocument(vscode.Uri.file(filePath));
+            return await this.getOrParseDefinitionAndRef(document);
+        } catch (error) {
+            ErrorHandler.logError('FileCache.getFileDefinition', `Error parsing file ${filePath}: ${error}`);
+            return undefined;
+        }
+    }
+
     /**
      * 获取或解析文件的定义和引用信息
      * 如果缓存有效则返回缓存，否则解析文件并缓存结果
      */
     async getOrParseDefinitionAndRef(document: vscode.TextDocument): Promise<FileDefinitionAndRef> {
         const filePath = document.uri.fsPath;
-
-        // get from cache
+        let stats;
+        // 从缓存中读
         const cached = this.cache.get(filePath);
         if (cached) {
-            const stats = await this.getFileStats(filePath);
+            stats = await this.getFileStats(filePath);
             if (stats && stats.mtime === cached.lastModified && stats.size === cached.fileSize) {
                 return cached;
             }
+
             this.cache.delete(filePath);
         }
 
-
-        // 缓存失效或不存在，解析文件
+        // parse
         const fileDef = await this.parseFile(document);
 
-        // set to cache
-        const stats = await this.getFileStats(filePath);
+        // 缓存
+        if (!cached) {
+            stats = await this.getFileStats(filePath);
+        }
         if (stats) {
             fileDef.lastModified = stats.mtime;
             fileDef.fileSize = stats.size;
-        } else {
-            fileDef.lastModified = 0;
-            fileDef.fileSize = 0;
-        }
+        } 
         this.cache.set(filePath, fileDef);
 
         return fileDef;
@@ -80,7 +95,7 @@ export class FileCache {
      * 解析文件，收集定义和引用
      */
     private async parseFile(document: vscode.TextDocument): Promise<FileDefinitionAndRef> {
-        const fileDef = new FileDefinitionAndRef();
+        const fileDef = new FileDefinitionAndRef(document.uri.fsPath);
 
         try {
             // 创建语法树
@@ -97,11 +112,12 @@ export class FileCache {
             visitor.walk(tree);
 
         } catch (error) {
-            console.error('Error parsing file:', error);
+            ErrorHandler.logError('FileCache.parseFile', error);
         }
 
         return fileDef;
     }
+
 
     /**
      * 清除所有缓存
