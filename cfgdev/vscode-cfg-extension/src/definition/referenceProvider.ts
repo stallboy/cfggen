@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { FileCache } from './fileCache';
-import { FileDefinitionAndRef, TName, ImplName, Ref, PositionDef, RefLoc } from './fileDefinitionAndRef';
+import { FileDefinitionAndRef, Ref, PositionDef, RefLoc } from './fileDefinitionAndRef';
 import { ModuleResolver } from '../utils/moduleResolver';
 import { ErrorHandler } from '../utils/errorHandler';
 

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { FileCache } from '../definition/fileCache';
-import { TRange, DefinitionType } from '../definition/fileDefinitionAndRef';
+import { DefinitionType } from '../definition/fileDefinitionAndRef';
 
 /**
  * CFG文档符号提供者 - 实现outline功能
@@ -12,7 +12,7 @@ export class CfgDocumentSymbolProvider implements vscode.DocumentSymbolProvider 
      */
     async provideDocumentSymbols(
         document: vscode.TextDocument,
-        token: vscode.CancellationToken
+        _token: vscode.CancellationToken
     ): Promise<vscode.DocumentSymbol[]> {
         try {
             // 获取文件的定义信息

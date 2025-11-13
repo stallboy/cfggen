@@ -45,18 +45,8 @@ export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProv
             // Parse the document
             const parser = new CfgParser(tokenStream);
             const parseTree = parser.schema();
-
-            // Create builder with legend
             const builder = new vscode.SemanticTokensBuilder(this.legend);
-
-            // Create highlighting visitor
-            // Semantic tokens use VSCode's built-in themes automatically
-            const visitor = new HighlightingVisitor(
-                builder,
-                document
-            );
-
-            // Walk the parse tree to collect semantic tokens
+            const visitor = new HighlightingVisitor(builder);
             visitor.walk(parseTree);
 
             // Build the semantic tokens
