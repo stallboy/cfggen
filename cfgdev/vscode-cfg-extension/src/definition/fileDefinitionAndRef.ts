@@ -1,6 +1,21 @@
 import * as vscode from 'vscode';
 
 /**
+ * 引用信息
+ */
+export class Ref {
+    constructor(
+        public refType?: string,
+        public refTypeStart: number = 0,
+        public refTypeEnd: number = 0,
+        public refTable?: string,
+        public refTableStart: number = 0,
+        public refTableEnd: number = 0,
+        public inInterfaceName?: string
+    ) { }
+}
+
+/**
  * 定义类型
  */
 export type DefinitionType = 'struct' | 'interface' | 'table';
@@ -76,20 +91,6 @@ export class FileDefinitionAndRef {
     }
 }
 
-/**
- * 引用信息
- */
-export class Ref {
-    constructor(
-        public refType?: string,
-        public refTypeStart: number = 0,
-        public refTypeEnd: number = 0,
-        public refTable?: string,
-        public refTableStart: number = 0,
-        public refTableEnd: number = 0,
-        public inInterfaceName?: string
-    ) { }
-}
 
 /**
  * 位置引用信息

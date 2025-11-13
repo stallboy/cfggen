@@ -4,7 +4,7 @@ import { CharStream } from 'antlr4ng';
 import { CfgLexer } from '../grammar/CfgLexer';
 import { CfgParser } from '../grammar/CfgParser';
 import { LocationVisitor } from './locationVisitor';
-import { FileDefinitionAndRef } from './types';
+import { FileDefinitionAndRef } from './fileDefinitionAndRef';
 
 /**
  * 文件缓存管理器

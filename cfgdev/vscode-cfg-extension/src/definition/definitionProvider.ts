@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { FileCache } from './fileCache';
 import { ModuleResolver } from './moduleResolver';
-import { FileDefinitionAndRef, PositionRef, ResolvedLocation } from './types';
+import { FileDefinitionAndRef, PositionRef, ResolvedLocation } from './fileDefinitionAndRef';
 
 /**
  * CFG定义提供者 - 实现跳转功能

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { FileCache } from '../definition/fileCache';
-import { TRange, DefinitionType } from '../definition/types';
+import { TRange, DefinitionType } from '../definition/fileDefinitionAndRef';
 
 /**
  * CFG文档符号提供者 - 实现outline功能

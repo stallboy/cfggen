@@ -9,7 +9,7 @@ import { Foreign_declContext } from '../grammar/CfgParser';
 import { RefContext } from '../grammar/CfgParser';
 import { Type_Context } from '../grammar/CfgParser';
 import { Ns_identContext } from '../grammar/CfgParser';
-import { FileDefinitionAndRef, Ref, TRange, DefinitionType } from './types';
+import { FileDefinitionAndRef, Ref, TRange, DefinitionType } from './fileDefinitionAndRef';
 import { TypeUtils } from '../utils/typeUtils';
 
 /**
