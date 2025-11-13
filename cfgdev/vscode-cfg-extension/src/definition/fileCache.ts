@@ -5,7 +5,6 @@ import { CfgLexer } from '../grammar/CfgLexer';
 import { CfgParser } from '../grammar/CfgParser';
 import { LocationVisitor } from './locationVisitor';
 import { FileDefinitionAndRef } from './fileDefinitionAndRef';
-import { PathUtils } from '../utils/pathUtils';
 import { ErrorHandler } from '../utils/errorHandler';
 
 /**

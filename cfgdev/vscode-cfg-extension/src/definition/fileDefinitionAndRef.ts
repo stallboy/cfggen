@@ -1,4 +1,11 @@
 import * as vscode from 'vscode';
+import { ModuleResolver } from '../utils/moduleResolver';
+
+
+export interface RefLoc {
+    start: number
+    end: number
+}
 
 /**
  * 引用信息
@@ -13,6 +20,23 @@ export class Ref {
         public refTableEnd: number = 0,
         public inInterfaceName?: string
     ) { }
+
+    match(defintion: string): RefLoc | undefined {
+        if (this.refType === defintion) {
+            return {
+                start: this.refTypeStart,
+                end: this.refTypeEnd
+            };
+        }
+
+        // 如果 refTable == tname.name也放到refs
+        if (this.refTable === defintion) {
+            return {
+                start: this.refTableStart,
+                end: this.refTableEnd
+            };
+        }
+    }
 }
 
 /**
@@ -66,6 +90,9 @@ export class FileDefinitionAndRef {
         this.filePath = filePath;
     }
 
+    setModuleNameByRootDir(rootDir: string) {
+        this.moduleName = ModuleResolver.resolvePathToFullModuleName(this.filePath, rootDir);
+    }
 
     /**
      * 获取指定接口的定义
