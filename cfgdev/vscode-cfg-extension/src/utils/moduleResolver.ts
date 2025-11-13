@@ -122,7 +122,7 @@ export class ModuleResolver {
     static resolvePathToModule(filePath: string): string {
         // 步骤1：截取第一个"."之前的内容
         const firstDotIndex = filePath.indexOf('.');
-        let moduleName = firstDotIndex >= 0 ? filePath.substring(0, firstDotIndex) : filePath;
+        const moduleName = firstDotIndex >= 0 ? filePath.substring(0, firstDotIndex) : filePath;
 
         // 步骤2：截取"_汉字"或"汉字"之前的部分
         // 匹配中文字符（包括带下划线和不带下划线的情况）
@@ -135,10 +135,10 @@ export class ModuleResolver {
             if (chineseIndex > 0 && moduleName[chineseIndex - 1] === '_') {
                 endIndex = chineseIndex - 1;
             }
-            return moduleName.substring(0, endIndex);
+            return moduleName.substring(0, endIndex).toLowerCase();
         }
 
-        return moduleName;
+        return moduleName.toLowerCase();
     }
 
 
@@ -166,7 +166,7 @@ export class ModuleResolver {
             }
 
         }
-        return moduleParts.join('.');
+        return moduleParts.join('.').toLowerCase();
     }
 
 
