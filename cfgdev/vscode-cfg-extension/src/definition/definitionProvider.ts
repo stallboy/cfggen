@@ -68,9 +68,9 @@ export class CfgDefinitionProvider implements vscode.DefinitionProvider {
         }
 
         // 1. 当前文件内查找
-        let range = currentFileDef.getDefinition(typeOrTableName);
-        if (range) {
-            return { filePath: currentFilePath, range };
+        let tRange = currentFileDef.getDefinition(typeOrTableName);
+        if (tRange) {
+            return { filePath: currentFilePath, range: tRange.range };
         }
 
         // 2. 模块内查找
@@ -94,9 +94,9 @@ export class CfgDefinitionProvider implements vscode.DefinitionProvider {
                 const configFile = this.joinPath(rootDir, 'config.cfg');
                 const configFileDef = await this.ensureFileParsed(configFile);
                 if (configFileDef) {
-                    const range = configFileDef.getDefinition(typeOrTableName);
-                    if (range) {
-                        return { filePath: configFile, range };
+                    const tRange = configFileDef.getDefinition(typeOrTableName);
+                    if (tRange) {
+                        return { filePath: configFile, range: tRange.range };
                     }
                 }
             }
@@ -116,9 +116,9 @@ export class CfgDefinitionProvider implements vscode.DefinitionProvider {
             // 确保模块文件已解析
             const moduleFileDef = await this.ensureFileParsed(moduleFile);
             if (moduleFileDef) {
-                const range = moduleFileDef.getDefinition(typeOrTableName);
-                if (range) {
-                    return { filePath: moduleFile, range };
+                const tRange = moduleFileDef.getDefinition(typeOrTableName);
+                if (tRange) {
+                    return { filePath: moduleFile, range: tRange.range };
                 }
             }
         }

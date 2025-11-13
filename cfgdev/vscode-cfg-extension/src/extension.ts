@@ -2,6 +2,7 @@
 import * as vscode from 'vscode';
 import { SemanticTokensProvider } from './highlight/semanticTokensProvider';
 import { CfgDefinitionProvider } from './definition/definitionProvider';
+import { CfgDocumentSymbolProvider } from './outline/outlineProvider';
 import { FileCache } from './definition/fileCache';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -21,6 +22,14 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.languages.registerDefinitionProvider(
             { language: 'cfg' },
             new CfgDefinitionProvider()
+        )
+    );
+
+    // 3. Register document symbol provider for outline
+    context.subscriptions.push(
+        vscode.languages.registerDocumentSymbolProvider(
+            { language: 'cfg' },
+            new CfgDocumentSymbolProvider()
         )
     );
 }

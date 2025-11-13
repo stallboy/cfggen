@@ -100,8 +100,14 @@ class Ref {
   inInterfaceName?:string;
 }
 
+
+interface TRange {
+  type:  'struct' | 'interface' | 'table';
+  range: Range;
+}
+
 class FileDefinitionAndRef {
-  definitions: Map<string， Range>； // name -> range;
+  definitions: Map<string， TRange>； // name -> range;
   definitionsInInterface: Map<string， Map<string， Range>>; // interfaceName -> structName -> range
 
   lineToRefs: Map<int, Ref> ;  //line ->  ref, 一行只能配置一个类型+一个外键，所以以line为key

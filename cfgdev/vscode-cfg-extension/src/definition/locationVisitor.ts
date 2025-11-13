@@ -9,7 +9,7 @@ import { Foreign_declContext } from '../grammar/CfgParser';
 import { RefContext } from '../grammar/CfgParser';
 import { Type_Context } from '../grammar/CfgParser';
 import { Ns_identContext } from '../grammar/CfgParser';
-import { FileDefinitionAndRef, Ref } from './types';
+import { FileDefinitionAndRef, Ref, TRange, DefinitionType } from './types';
 import { TypeUtils } from '../utils/typeUtils';
 
 /**
@@ -90,11 +90,12 @@ export class LocationVisitor extends AbstractParseTreeVisitor<void> implements C
 
         if (name && range) {
             if (this.currentInterfaceDefs) {
-                // interface 内的struct
+                // interface 内的struct - 保持原来的Range类型
                 this.currentInterfaceDefs.set(name, range);
             } else {
                 // 全局struct
-                this.fileDef.definitions.set(name, range);
+                const tRange: TRange = { type: 'struct', range };
+                this.fileDef.definitions.set(name, tRange);
             }
         }
         this.visitChildren(ctx);
@@ -107,7 +108,8 @@ export class LocationVisitor extends AbstractParseTreeVisitor<void> implements C
 
         if (name && range) {
             // 全局interface
-            this.fileDef.definitions.set(name, range);
+            const tRange: TRange = { type: 'interface', range };
+            this.fileDef.definitions.set(name, tRange);
 
             // 进入interface作用域
             const interfaceDefs = new Map();
@@ -133,7 +135,8 @@ export class LocationVisitor extends AbstractParseTreeVisitor<void> implements C
 
         if (name && range) {
             // 全局table
-            this.fileDef.definitions.set(name, range);
+            const tRange: TRange = { type: 'table', range };
+            this.fileDef.definitions.set(name, tRange);
         }
         this.visitChildren(ctx);
     }

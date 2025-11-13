@@ -1,14 +1,28 @@
 import * as vscode from 'vscode';
 
+/**
+ * 定义类型
+ */
+export type DefinitionType = 'struct' | 'interface' | 'table';
 
+/**
+ * 定义范围信息
+ */
+export interface TRange {
+    type: DefinitionType;
+    range: vscode.Range;
+}
 
 /**
  * 文件定义和引用信息
  */
 export class FileDefinitionAndRef {
     constructor(
-        public definitions: Map<string, vscode.Range> = new Map(),
+        // name -> TRange;
+        public definitions: Map<string, TRange> = new Map(),
+        // interfaceName -> structName -> range (保持原来的Range类型)
         public definitionsInInterface: Map<string, Map<string, vscode.Range>> = new Map(),
+        // line ->  ref, 一行只能配置一个类型+一个外键，所以以line为key
         public lineToRefs: Map<number, Ref> = new Map(),
         public lastModified: number = 0,
         public fileSize: number = 0
@@ -25,7 +39,7 @@ export class FileDefinitionAndRef {
     /**
      * 获取全局定义
      */
-    getDefinition(name: string): vscode.Range | undefined {
+    getDefinition(name: string): TRange | undefined {
         return this.definitions.get(name);
     }
 
