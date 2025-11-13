@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { FileCache } from '../definition/fileCache';
 import { DefinitionType } from '../definition/fileDefinitionAndRef';
+import { ErrorHandler } from '../utils/errorHandler';
 
 /**
  * CFG文档符号提供者 - 实现outline功能
@@ -54,7 +55,7 @@ export class CfgDocumentSymbolProvider implements vscode.DocumentSymbolProvider 
 
             return symbols;
         } catch (error) {
-            console.error('Error in provideDocumentSymbols:', error);
+            ErrorHandler.logError('CfgDocumentSymbolProvider.provideDocumentSymbols', error);
             return [];
         }
     }

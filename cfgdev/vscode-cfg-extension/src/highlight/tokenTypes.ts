@@ -3,7 +3,7 @@
  * These types must match the definitions in package.json
  */
 
-// Token type names for VSCode semantic tokens legend
+// VSCode语义标记图例的标记类型名称
 export const TOKEN_TYPE_NAMES: string[] = [
     'structureDefinition',  // 0: struct/interface/table names
     'typeIdentifier',       // 1: custom types (non-basic)
@@ -13,7 +13,7 @@ export const TOKEN_TYPE_NAMES: string[] = [
     'uniqueKey'             // 5: unique key fields
 ];
 
-// Token type constants for internal use
+// 内部使用的标记类型常量
 export const TOKEN_TYPES = {
     STRUCTURE_DEFINITION: 0,  // struct/interface/table names
     TYPE_IDENTIFIER: 1,       // custom types and generic types

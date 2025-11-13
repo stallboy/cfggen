@@ -7,7 +7,7 @@ import { CfgReferenceProvider } from './definition/referenceProvider';
 import { FileCache } from './definition/fileCache';
 
 export function activate(context: vscode.ExtensionContext) {
-    // 1. Register semantic tokens provider (Layer 2 of two-layer highlighting)
+    // 1. 注册语义标记提供者（两层高亮中的第二层）
     const semanticTokensProvider = new SemanticTokensProvider();
     const legend = semanticTokensProvider.getLegend();
     context.subscriptions.push(
@@ -18,7 +18,7 @@ export function activate(context: vscode.ExtensionContext) {
         )
     );
 
-    // 2. Register definition provider for jump-to-definition
+    // 2. 注册定义提供者用于跳转到定义
     context.subscriptions.push(
         vscode.languages.registerDefinitionProvider(
             { language: 'cfg' },
@@ -26,7 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
         )
     );
 
-    // 3. Register document symbol provider for outline
+    // 3. 注册文档符号提供者用于大纲视图
     context.subscriptions.push(
         vscode.languages.registerDocumentSymbolProvider(
             { language: 'cfg' },
@@ -34,7 +34,7 @@ export function activate(context: vscode.ExtensionContext) {
         )
     );
 
-    // 4. Register reference provider for find all references
+    // 4. 注册引用提供者用于查找所有引用
     context.subscriptions.push(
         vscode.languages.registerReferenceProvider(
             { language: 'cfg' },

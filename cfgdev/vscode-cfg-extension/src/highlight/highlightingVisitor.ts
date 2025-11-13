@@ -14,6 +14,7 @@ import { Type_Context } from '../grammar/CfgParser';
 import { Ns_identContext } from '../grammar/CfgParser';
 import { TOKEN_TYPES, TokenType } from './tokenTypes';
 import { TypeUtils } from '../utils/typeUtils';
+import { ErrorHandler } from '../utils/errorHandler';
 
 export class HighlightingVisitor extends AbstractParseTreeVisitor<void> implements CfgVisitor<void> {
     private builder: vscode.SemanticTokensBuilder;
@@ -31,7 +32,7 @@ export class HighlightingVisitor extends AbstractParseTreeVisitor<void> implemen
     }
 
     protected defaultResult(): void {
-        // No result needed for semantic token collection
+        // 语义标记收集不需要返回结果
     }
 
     /**
@@ -418,9 +419,9 @@ export class HighlightingVisitor extends AbstractParseTreeVisitor<void> implemen
 
 
     /**
-     * Visit error nodes (for debugging parsing errors)
+     * 访问错误节点（用于调试解析错误）
      */
     public visitErrorNode(_node: unknown): void {
-        console.error('[SemanticTokens] Error node:', _node);
+        ErrorHandler.logError('HighlightingVisitor.visitErrorNode', `Error node: ${_node}`);
     }
 }

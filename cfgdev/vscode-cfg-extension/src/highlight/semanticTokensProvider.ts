@@ -1,7 +1,7 @@
 /**
- * Semantic Tokens Provider
- * Provides semantic highlighting for CFG files using ANTLR4 parser
- * Semantic tokens use VSCode's built-in themes automatically
+ * 语义标记提供者
+ * 使用ANTLR4解析器为CFG文件提供语义高亮
+ * 语义标记自动使用VSCode内置主题
  */
 
 import * as vscode from 'vscode';
@@ -11,6 +11,7 @@ import { CfgLexer } from '../grammar/CfgLexer';
 import { CfgParser } from '../grammar/CfgParser';
 import { HighlightingVisitor } from './highlightingVisitor';
 import { TOKEN_TYPE_NAMES } from './tokenTypes';
+import { ErrorHandler } from '../utils/errorHandler';
 
 export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProvider {
     private legend: vscode.SemanticTokensLegend;
@@ -18,44 +19,43 @@ export class SemanticTokensProvider implements vscode.DocumentSemanticTokensProv
     constructor() {
         this.legend = new vscode.SemanticTokensLegend(
             TOKEN_TYPE_NAMES,
-            []  // modifiers
+            []  // 修饰符
         );
     }
 
     /**
-     * Get the semantic tokens legend
+     * 获取语义标记图例
      */
     public getLegend(): vscode.SemanticTokensLegend {
         return this.legend;
     }
 
     /**
-     * Provide semantic tokens for a document
+     * 为文档提供语义标记
      */
     public provideDocumentSemanticTokens(
         document: vscode.TextDocument,
         _token: vscode.CancellationToken
     ): vscode.ProviderResult<vscode.SemanticTokens> {
         try {
-            // Create ANTLR4 input stream from document
+            // 从文档创建ANTLR4输入流
             const inputStream = CharStream.fromString(document.getText());
             const lexer = new CfgLexer(inputStream);
             const tokenStream = new CommonTokenStream(lexer);
 
-            // Parse the document
+            // 解析文档
             const parser = new CfgParser(tokenStream);
             const parseTree = parser.schema();
             const builder = new vscode.SemanticTokensBuilder(this.legend);
             const visitor = new HighlightingVisitor(builder);
             visitor.walk(parseTree);
 
-            // Build the semantic tokens
+            // 构建语义标记
             const tokens = builder.build();
 
             return tokens;
         } catch (error) {
-            console.error('[SemanticTokens] Error providing semantic tokens:', error);
-            console.error('[SemanticTokens] Stack:', error instanceof Error ? error.stack : '');
+            ErrorHandler.logError('SemanticTokensProvider.provideDocumentSemanticTokens', error);
             return new vscode.SemanticTokens(new Uint32Array(0), undefined);
         }
     }

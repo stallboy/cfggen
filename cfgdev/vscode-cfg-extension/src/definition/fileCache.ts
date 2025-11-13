@@ -61,7 +61,7 @@ export class FileCache {
             this.cache.delete(filePath);
         }
 
-        // parse
+        // 解析文件
         const fileDef = await this.parseFile(document);
 
         // 缓存
