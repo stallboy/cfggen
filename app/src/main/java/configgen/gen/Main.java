@@ -3,6 +3,7 @@ package configgen.gen;
 import configgen.ctx.*;
 import configgen.data.*;
 import configgen.editorserver.EditorServer;
+import configgen.mcpserver.McpServer;
 import configgen.gencs.GenBytes;
 import configgen.gencs.GenCs;
 import configgen.gents.GenTs;
@@ -157,6 +158,7 @@ public final class Main {
         Generators.addProvider("go", GenGo::new);
 
         Generators.addProvider("server", EditorServer::new);
+        Generators.addProvider("mcpserver", McpServer::new);
         Generators.addProvider("tsschema", GenTsSchema::new);
         Generators.addProvider("json", GenJson::new);
         Generators.addProvider("jsonbyai", GenJsonByAI::new);
