@@ -35,10 +35,16 @@ public class McpServer extends GeneratorWithTag {
     private static final Logger logger = Logger.getLogger("mcp");
 
     // MCP 标准端点
+    private static final String INITIALIZE_PATH = "/initialize";
+    private static final String HEALTH_PATH = "/health";
     private static final String TOOLS_LIST_PATH = "/tools/list";
     private static final String TOOLS_CALL_PATH = "/tools/call";
     private static final String RESOURCES_LIST_PATH = "/resources/list";
     private static final String RESOURCES_READ_PATH = "/resources/read";
+
+    // MCP 协议版本
+    private static final String MCP_PROTOCOL_VERSION = "2024-11-05";
+    private static final String SERVER_VERSION = "1.0.0";
 
     // 工具名称
     private static final String TOOL_SCHEMA_QUERY = "schema_query";
@@ -60,15 +66,21 @@ public class McpServer extends GeneratorWithTag {
     private Context context;
     private CfgValue cfgValue;
     private HttpServer server;
+    private long startTime;
 
     public McpServer(Parameter parameter) {
         super(parameter);
         aiCfgFn = parameter.get("aicfg", null);
         port = Integer.parseInt(parameter.get("port", "3000"));
+        logger.info("McpServer constructor called with port: " + port);
+        System.out.println("DEBUG: McpServer constructor called with port: " + port);
     }
 
     @Override
     public void generate(Context ctx) throws IOException {
+        System.out.println("DEBUG: McpServer.generate() called");
+        logger.info("McpServer.generate() called");
+
         if (aiCfgFn != null) {
             aiDir = Path.of(aiCfgFn).getParent();
             aiCfg = AICfg.readFromFile(aiCfgFn);
@@ -86,10 +98,13 @@ public class McpServer extends GeneratorWithTag {
      * 启动MCP服务器
      */
     private void startMcpServer() throws IOException {
+        startTime = System.currentTimeMillis();
         InetSocketAddress listenAddr = new InetSocketAddress(port);
         server = HttpServer.create(listenAddr, 0);
 
         // 设置MCP标准端点
+        handle(INITIALIZE_PATH, this::handleInitialize);
+        handle(HEALTH_PATH, this::handleHealth);
         handle(TOOLS_LIST_PATH, this::handleToolsList);
         handle(TOOLS_CALL_PATH, this::handleToolsCall);
         handle(RESOURCES_LIST_PATH, this::handleResourcesList);
@@ -100,11 +115,24 @@ public class McpServer extends GeneratorWithTag {
 
         logger.info(String.format("MCP Server started on port %d", port));
         logger.info("Available tables: " + cfgValue.vTableMap().keySet());
+        logger.info("Registered endpoints: " +
+            INITIALIZE_PATH + ", " +
+            HEALTH_PATH + ", " +
+            TOOLS_LIST_PATH + ", " +
+            TOOLS_CALL_PATH + ", " +
+            RESOURCES_LIST_PATH + ", " +
+            RESOURCES_READ_PATH);
     }
 
     private void handle(String path, HttpHandler handler) {
-        HttpContext context = server.createContext(path, handler);
-        context.getFilters().add(logging);
+        try {
+            HttpContext context = server.createContext(path, handler);
+            context.getFilters().add(logging);
+            logger.info("Successfully registered endpoint: " + path);
+        } catch (Exception e) {
+            logger.severe("Failed to register endpoint " + path + ": " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private static final Filter logging = new Filter() {
@@ -124,6 +152,60 @@ public class McpServer extends GeneratorWithTag {
             return "logging";
         }
     };
+
+    /**
+     * 处理初始化请求
+     */
+    private void handleInitialize(HttpExchange exchange) throws IOException {
+        if (!HTTP_GET.equals(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method not allowed");
+            return;
+        }
+
+        Map<String, Object> response = Map.of(
+            "protocolVersion", MCP_PROTOCOL_VERSION,
+            "serverVersion", SERVER_VERSION,
+            "capabilities", Map.of(
+                "tools", Map.of(
+                    "listChanged", false,
+                    "subscribe", false
+                ),
+                "resources", Map.of(
+                    "listChanged", false,
+                    "subscribe", false
+                )
+            ),
+            "serverInfo", Map.of(
+                "name", "cfggen-mcp-server",
+                "version", SERVER_VERSION
+            )
+        );
+
+        sendJsonResponse(exchange, response);
+    }
+
+    /**
+     * 处理健康检查请求
+     */
+    private void handleHealth(HttpExchange exchange) throws IOException {
+        if (!HTTP_GET.equals(exchange.getRequestMethod())) {
+            sendError(exchange, 405, "Method not allowed");
+            return;
+        }
+
+        Map<String, Object> response = Map.of(
+            "status", "healthy",
+            "timestamp", System.currentTimeMillis(),
+            "uptime", System.currentTimeMillis() - startTime,
+            "tables", cfgValue.vTableMap().size(),
+            "memory", Map.of(
+                "used", Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory(),
+                "total", Runtime.getRuntime().totalMemory()
+            )
+        );
+
+        sendJsonResponse(exchange, response);
+    }
 
     /**
      * 处理工具列表请求
