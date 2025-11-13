@@ -29,7 +29,7 @@
 
 - 🏗️ **系统架构**: 查看[System.md](System/System.md)
 - 🎨 **高亮规则**: 查看[HighlightRule.md](Tasks/HighlightRule.md)
-- 🔗 **跳转功能**: 查看[JumpRule.md](Tasks/JumpRule.md)
+- 🔗 **跳转和引用**: 查看[JumpRule.md](Tasks/JumpRule.md)
 - 📚 **技术参考**: 查看[ref/](ref/)目录
 
 ## 维护说明

@@ -1,7 +1,7 @@
 {
   "name": "cfg-support",
   "displayName": "cfg-support",
-  "description": "VSCode extension for .cfg files with syntax highlighting, go-to-definition",
+  "description": "VSCode extension for .cfg files with syntax highlighting, go-to-definition, go-to-references, outline",
   "version": "1.0.0",
   "publisher": "thyai",
   "engines": {
@@ -14,7 +14,10 @@
     "cfg",
     "configuration",
     "syntax-highlighting",
-    "go-to-definition"
+    "go-to-definition",
+    "go-to-references",
+    "outline"
+
   ],
   "license": "MIT",
   "repository": {

@@ -35,6 +35,17 @@
 - 智能缓存机制 (基于文件修改时间和大小)
 - 模块解析器 (包名到文件路径映射)
 
+### 4. 大纲视图
+- 使用DocumentSymbolProvider实现
+- 显示结构定义层级关系
+- 支持快速导航到定义位置
+
+### 5. 查找引用
+- 使用ReferenceProvider实现
+- 支持查找类型和表的所有引用位置
+- 跨文件引用查找
+- 智能模块解析
+
 ### 4. 解析器
 - 使用ANTLR4语法解析器
 - 自动生成解析器代码
@@ -60,6 +71,10 @@ vscode-cfg-extension/
 │   │   ├── CfgLexer.ts           # 生成的词法分析器
 │   │   ├── CfgParser.ts          # 生成的解析器
 │   │   └── CfgVisitor.ts         # 生成的访问者接口
+│   ├── outline/                  # 大纲功能目录
+│   │   └── outlineProvider.ts    # 大纲提供者
+│   ├── reference/                # 引用功能目录
+│   │   └── referenceProvider.ts  # 引用提供者
 │   └── extension.ts              # 扩展入口点
 ├── syntaxes/
 │   └── cfg.tmLanguage.json       # TextMate语法定义
@@ -105,12 +120,14 @@ vscode-cfg-extension/
 - ✅ ANTLR4解析器集成
 - ✅ 扩展打包和发布
 - ✅ 跳转到定义 (类型+外键引用)
+- ✅ 大纲视图 (DocumentSymbolProvider)
+- ✅ 查找引用 (ReferenceProvider)
 
 ### 待实现功能
 - 暂无
 
 ## 版本信息
 
-- 当前版本: 1.1.0
+- 当前版本: 1.0.0
 - VSCode引擎: ^1.85.0
-- 发布者: thy
+- 发布者: thyai
