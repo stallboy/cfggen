@@ -7,10 +7,14 @@ import configgen.ctx.Context;
 import configgen.editorserver.RecordEditService;
 import configgen.editorserver.RecordService;
 import configgen.editorserver.SchemaService;
+import configgen.ctx.DirectoryStructure;
+import configgen.ctx.WaitWatcher;
+import configgen.ctx.Watcher;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
 import configgen.genjson.AICfg;
 import configgen.schema.*;
+import configgen.schema.cfg.CfgWriter;
 import configgen.value.CfgValue;
 import configgen.value.CfgValue.VStruct;
 import configgen.value.CfgValue.VTable;
@@ -24,15 +28,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.Executors;
-import java.util.logging.Logger;
+import configgen.util.Logger;
 
 /**
  * MCP (Model Context Protocol) 服务器实现
  * 提供配置数据的标准化访问接口
  */
 public class McpServer extends GeneratorWithTag {
-
-    private static final Logger logger = Logger.getLogger("mcp");
 
     // MCP 标准端点
     private static final String INITIALIZE_PATH = "/initialize";
@@ -67,19 +69,21 @@ public class McpServer extends GeneratorWithTag {
     private CfgValue cfgValue;
     private HttpServer server;
     private long startTime;
+    private final int waitSecondsAfterWatchEvt;
 
     public McpServer(Parameter parameter) {
         super(parameter);
         aiCfgFn = parameter.get("aicfg", null);
         port = Integer.parseInt(parameter.get("port", "3000"));
-        logger.info("McpServer constructor called with port: " + port);
+        waitSecondsAfterWatchEvt = Integer.parseInt(parameter.get("watch", "0"));
+        Logger.log("McpServer constructor called with port: " + port);
         System.out.println("DEBUG: McpServer constructor called with port: " + port);
     }
 
     @Override
     public void generate(Context ctx) throws IOException {
         System.out.println("DEBUG: McpServer.generate() called");
-        logger.info("McpServer.generate() called");
+        Logger.log("McpServer.generate() called");
 
         if (aiCfgFn != null) {
             aiDir = Path.of(aiCfgFn).getParent();
@@ -113,25 +117,32 @@ public class McpServer extends GeneratorWithTag {
         server.setExecutor(Executors.newCachedThreadPool());
         server.start();
 
-        logger.info(String.format("MCP Server started on port %d", port));
-        logger.info("Available tables: " + cfgValue.vTableMap().keySet());
-        logger.info("Registered endpoints: " +
+        Logger.log(String.format("MCP Server started on port %d", port));
+        Logger.log("Available tables: " + cfgValue.vTableMap().keySet());
+        Logger.log("Registered endpoints: " +
             INITIALIZE_PATH + ", " +
             HEALTH_PATH + ", " +
             TOOLS_LIST_PATH + ", " +
             TOOLS_CALL_PATH + ", " +
             RESOURCES_LIST_PATH + ", " +
             RESOURCES_READ_PATH);
+
+        if (waitSecondsAfterWatchEvt > 0) {
+            Watcher watcher = new Watcher(context.getSourceStructure().getRootDir(), context.getContextCfg().explicitDir());
+            WaitWatcher waitWatcher = new WaitWatcher(watcher, this::reloadData, waitSecondsAfterWatchEvt * 1000);
+            waitWatcher.start();
+            watcher.start();
+            Logger.log("file change watcher started");
+        }
     }
 
     private void handle(String path, HttpHandler handler) {
         try {
             HttpContext context = server.createContext(path, handler);
             context.getFilters().add(logging);
-            logger.info("Successfully registered endpoint: " + path);
+            Logger.log("Successfully registered endpoint: " + path);
         } catch (Exception e) {
-            logger.severe("Failed to register endpoint " + path + ": " + e.getMessage());
-            e.printStackTrace();
+            Logger.verbose("Failed to register endpoint " + path + ": " + e.getMessage());
         }
     }
 
@@ -141,7 +152,7 @@ public class McpServer extends GeneratorWithTag {
             try {
                 chain.doFilter(http);
             } finally {
-                logger.info(String.format("%s %s",
+                Logger.log(String.format("%s %s",
                         http.getRequestMethod(),
                         http.getRequestURI()));
             }
@@ -293,7 +304,7 @@ public class McpServer extends GeneratorWithTag {
             )));
 
         } catch (Exception e) {
-            logger.severe("Error handling tool call: " + e.getMessage());
+            Logger.log("Error handling tool call: " + e.getMessage());
             sendError(exchange, 500, "Internal server error: " + e.getMessage());
         }
     }
@@ -368,11 +379,15 @@ public class McpServer extends GeneratorWithTag {
         try {
             SchemaService.SNameable schemaItem = SchemaService.fromNameable(vTable.schema(), cfgValue);
             if (schemaItem instanceof SchemaService.STable sTable) {
-                return formatSchemaResponse(sTable);
+                Map<String, Object> res = formatSchemaResponse(sTable);
+                TableSchema mainTable = (TableSchema) vTable.schema();
+                String schemaText = buildSchemaText(mainTable);
+                res.put("schemaText", schemaText);
+                return res;
             }
             return Map.of("error", "Unexpected schema type");
         } catch (Exception e) {
-            logger.severe("Error processing schema: " + e.getMessage());
+            Logger.log("Error processing schema: " + e.getMessage());
             return Map.of("error", "Error processing schema: " + e.getMessage());
         }
     }
@@ -394,7 +409,7 @@ public class McpServer extends GeneratorWithTag {
             List<VStruct> results = filterRecords(vTable, condition);
             return formatDataResponse(table, results);
         } catch (Exception e) {
-            logger.severe("Error querying data: " + e.getMessage());
+            Logger.log("Error querying data: " + e.getMessage());
             return Map.of("error", "Error querying data: " + e.getMessage());
         }
     }
@@ -420,7 +435,7 @@ public class McpServer extends GeneratorWithTag {
             RecordEditService.RecordEditResult result = editService.addOrUpdateRecord(table, newValue);
             return formatEditResponse(result);
         } catch (Exception e) {
-            logger.severe("Error updating data: " + e.getMessage());
+            Logger.log("Error updating data: " + e.getMessage());
             return Map.of("error", "Error updating data: " + e.getMessage());
         }
     }
@@ -442,7 +457,7 @@ public class McpServer extends GeneratorWithTag {
             RecordEditService.RecordEditResult result = editService.deleteRecord(table, id);
             return formatEditResponse(result);
         } catch (Exception e) {
-            logger.severe("Error removing data: " + e.getMessage());
+            Logger.log("Error removing data: " + e.getMessage());
             return Map.of("error", "Error removing data: " + e.getMessage());
         }
     }
@@ -507,6 +522,50 @@ public class McpServer extends GeneratorWithTag {
         response.put("foreignKeys", foreignKeys);
 
         return response;
+    }
+
+    private void reloadData() {
+        DirectoryStructure newStructure = context.getSourceStructure().reload();
+        if (newStructure.lastModifiedEquals(context.getSourceStructure())) {
+            configgen.util.Logger.verbose("lastModified not change");
+            return;
+        }
+        try {
+            this.context = new Context(context.getContextCfg(), newStructure);
+            this.cfgValue = context.makeValue();
+            Logger.log("reload ok");
+        } catch (Exception e) {
+            Logger.log("reload ignored");
+        }
+    }
+
+    private String buildSchemaText(TableSchema mainTable) {
+        Set<String> visited = new LinkedHashSet<>();
+        List<TableSchema> ordered = new ArrayList<>();
+
+        visited.add(mainTable.name());
+        ordered.add(mainTable);
+
+        TableSchemaRefGraph graph = new TableSchemaRefGraph(context.cfgSchema());
+        TableSchemaRefGraph.Refs refs = graph.refsMap().get(mainTable.name());
+        if (refs != null) {
+            for (TableSchema t : refs.refOutTables().values()) {
+                if (visited.add(t.name())) {
+                    ordered.add(t);
+                }
+            }
+            for (TableSchema t : refs.refInTables().values()) {
+                if (visited.add(t.name())) {
+                    ordered.add(t);
+                }
+            }
+        }
+
+        CfgSchema sub = CfgSchema.ofPartial();
+        for (TableSchema t : ordered) {
+            sub.add(t);
+        }
+        return CfgWriter.stringify(sub, true, false);
     }
 
     /**

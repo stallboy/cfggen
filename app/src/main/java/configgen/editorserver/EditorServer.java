@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
+import configgen.util.Logger;
 
 import static configgen.editorserver.CheckJsonService.*;
 import static configgen.editorserver.RecordEditService.ResultCode.*;
@@ -86,14 +86,14 @@ public class EditorServer extends GeneratorWithTag {
 
         server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
         server.start();
-        logger.info("Server is started at " + listenAddr);
+        Logger.log("Server is started at " + listenAddr);
 
         if (waitSecondsAfterWatchEvt > 0) {
             Watcher watcher = new Watcher(context.getSourceStructure().getRootDir(), context.getContextCfg().explicitDir());
             WaitWatcher waitWatcher = new WaitWatcher(watcher, this::reloadData, waitSecondsAfterWatchEvt * 1000);
             waitWatcher.start();
             watcher.start();
-            logger.info("file change watcher started");
+            Logger.log("file change watcher started");
         }
     }
 
@@ -111,10 +111,10 @@ public class EditorServer extends GeneratorWithTag {
         try {
             this.context = new Context(context.getContextCfg(), newStructure);
             initFromCtx();
-            logger.info("reload ok");
+            Logger.log("reload ok");
             tryPostRun();
         } catch (Exception e) {
-            logger.info("reload ignored");
+            Logger.log("reload ignored");
         }
     }
 
@@ -127,7 +127,7 @@ public class EditorServer extends GeneratorWithTag {
             try {
                 postRunThread.join();
             } catch (InterruptedException e) {
-                logger.warning("postrun thread join interrupted: " + e.getMessage());
+                Logger.log("postrun thread join interrupted: " + e.getMessage());
             }
 
         }
@@ -145,7 +145,7 @@ public class EditorServer extends GeneratorWithTag {
                             String parameter = line.substring(genPrefix.length());
                             Generator generator = Generators.create(parameter);
                             if (generator != null) {
-                                logger.info("-gen " + parameter);
+                                Logger.log("-gen " + parameter);
                                 generator.generate(context);
                             }
                         } else {
@@ -160,18 +160,18 @@ public class EditorServer extends GeneratorWithTag {
                 BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
                 String line;
                 while ((line = in.readLine()) != null) {
-                    logger.info("postrun output: " + line);
+                    Logger.log("postrun output: " + line);
                 }
                 if (process.waitFor(10, TimeUnit.SECONDS)) {
-                    logger.info("postrun ok!");
+                    Logger.log("postrun ok!");
                 } else {
-                    logger.info("postrun timeout");
+                    Logger.log("postrun timeout");
                 }
                 in.close();
             } catch (IOException e) {
-                logger.warning("postrun err: " + e.getMessage());
+                Logger.log("postrun err: " + e.getMessage());
             } catch (InterruptedException e) {
-                logger.warning("postrun interrupted: " + e.getMessage());
+                Logger.log("postrun interrupted: " + e.getMessage());
             }
         });
     }
@@ -197,7 +197,7 @@ public class EditorServer extends GeneratorWithTag {
 
         byte[] bytes = exchange.getRequestBody().readAllBytes();
         String note = new String(bytes, StandardCharsets.UTF_8).trim();
-        logger.info(note);
+        Logger.log(note);
 
         NoteEditService.NoteEditResult result = noteEditService.updateNote(key, note);
         sendResponse(exchange, result);
@@ -350,14 +350,13 @@ public class EditorServer extends GeneratorWithTag {
         context.getFilters().add(logging);
     }
 
-    private static final Logger logger = Logger.getLogger("http");
     private static final Filter logging = new Filter() {
         @Override
         public void doFilter(HttpExchange http, Chain chain) throws IOException {
             try {
                 chain.doFilter(http);
             } finally {
-                logger.info(String.format("%s %s %s",
+                Logger.log(String.format("%s %s %s",
                         http.getRequestMethod(),
                         http.getRequestURI(),
                         http.getRemoteAddress()));
