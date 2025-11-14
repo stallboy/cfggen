@@ -1,6 +1,5 @@
 package configgen.ctx;
 
-import com.sun.nio.file.ExtendedWatchEventModifier;
 import configgen.util.Logger;
 
 import java.io.IOException;
@@ -62,64 +61,88 @@ public class Watcher {
     private void trigger() {
         lastEvtMillis = System.currentTimeMillis();
         eventVersion.incrementAndGet();
-        // System.out.printf("trigger %d\n", eventVersion.get());
+        Logger.verbose("Watcher triggered, version: " + eventVersion.get());
     }
 
     private void watchLoop() throws IOException, InterruptedException {
         WatchService watchService = FileSystems.getDefault().newWatchService();
-        rootDir.register(watchService, new WatchEvent.Kind<?>[]{ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY},
-                ExtendedWatchEventModifier.FILE_TREE);
 
-
-        WatchKey key;
-        while ((key = watchService.take()) != null) {
-            for (WatchEvent<?> event : key.pollEvents()) {
-                Path relativePath = (Path) event.context();
-                Logger.verbose(event.kind() + "  " + relativePath);
-
-                // 构建完整路径
-                Path fullPath = rootDir.resolve(relativePath);
-
-                // 通过事件类型和文件扩展名判断，避免不必要的文件系统调用
-                WatchEvent.Kind<?> kind = event.kind();
-
-                if (kind == ENTRY_DELETE) {
-                    // 对于删除事件，文件已不存在，只能通过路径判断
-                    handleFileEvent(relativePath);
-                } else {
-                    // 对于创建和修改事件，可以检查文件属性
-                    if (Files.isDirectory(fullPath)) {
-                        trigger();
-                    } else if (Files.isRegularFile(fullPath)) {
-                        handleFileEvent(relativePath);
-                    }
-                }
+        // 跨平台兼容的目录注册方式
+        try {
+            // 尝试使用FILE_TREE（仅Windows支持）
+            try {
+                @SuppressWarnings("unchecked")
+                WatchEvent.Modifier modifier = (WatchEvent.Modifier) Class
+                    .forName("com.sun.nio.file.ExtendedWatchEventModifier")
+                    .getField("FILE_TREE")
+                    .get(null);
+                rootDir.register(watchService, new WatchEvent.Kind<?>[]{ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY}, modifier);
+                Logger.verbose("Using FILE_TREE modifier for recursive directory watching");
+            } catch (Exception e) {
+                // 回退到非递归监控
+                rootDir.register(watchService, new WatchEvent.Kind<?>[]{ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY});
+                Logger.verbose("Using standard directory watching (non-recursive)");
             }
 
-            key.reset();
+            WatchKey key;
+            while ((key = watchService.take()) != null) {
+                for (WatchEvent<?> event : key.pollEvents()) {
+                    Path relativePath = (Path) event.context();
+                    Logger.verbose(event.kind() + "  " + relativePath);
+
+                    // 构建完整路径
+                    Path fullPath = rootDir.resolve(relativePath);
+
+                    // 通过事件类型和文件扩展名判断，避免不必要的文件系统调用
+                    WatchEvent.Kind<?> kind = event.kind();
+
+                    if (kind == ENTRY_DELETE) {
+                        // 对于删除事件，文件已不存在，只能通过路径判断
+                        handleFileEvent(relativePath);
+                    } else {
+                        // 对于创建和修改事件，可以检查文件属性
+                        if (Files.isDirectory(fullPath)) {
+                            trigger();
+                        } else if (Files.isRegularFile(fullPath)) {
+                            handleFileEvent(relativePath);
+                        }
+                    }
+                }
+
+                key.reset();
+            }
+        } catch (ClosedWatchServiceException e) {
+            // 正常关闭，忽略异常
+            Logger.verbose("WatchService closed normally");
         }
     }
 
     private void handleFileEvent(Path relativePath) {
         if (isFileIgnored(relativePath)) {
+            Logger.verbose("File ignored: " + relativePath);
             return;
         }
 
         Path fileName = relativePath.getFileName();
         FileFmt fmt = getFileFormat(fileName);
         if (fmt == null) {
+            Logger.verbose("File format not supported: " + relativePath);
             return;
         }
 
         // 原有的格式判断逻辑...
         switch (fmt) {
             case CSV, EXCEL -> {
+                Logger.verbose("Processing CSV/Excel file: " + relativePath);
                 if (explicitDir != null) {
                     Path topDir = relativePath.getName(0);
                     String dirName = topDir.getFileName().toString();
                     if (!explicitDir.excelFileDirs().contains(dirName)) {
+                        Logger.verbose("CSV/Excel file directory not in explicitDir: " + dirName);
                         return;
                     }
+                } else {
+                    Logger.verbose("explicitDir is null, accepting CSV/Excel file");
                 }
             }
             case JSON -> {
@@ -146,6 +169,7 @@ public class Watcher {
             }
         }
 
+        Logger.verbose("Triggering watcher for file: " + relativePath);
         trigger();
     }
 
