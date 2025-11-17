@@ -15,6 +15,7 @@ import configgen.gen.Parameter;
 import configgen.genjson.AICfg;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgWriter;
+import static configgen.schema.FieldType.*;
 import configgen.value.CfgValue;
 import configgen.value.CfgValue.VStruct;
 import configgen.value.CfgValue.VTable;
@@ -28,6 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.Executors;
+import java.util.UUID;
 import configgen.util.Logger;
 
 /**
@@ -82,7 +84,6 @@ public class McpServer extends GeneratorWithTag {
 
     @Override
     public void generate(Context ctx) throws IOException {
-        System.out.println("DEBUG: McpServer.generate() called");
         Logger.log("McpServer.generate() called");
 
         if (aiCfgFn != null) {
@@ -258,45 +259,47 @@ public class McpServer extends GeneratorWithTag {
             return;
         }
 
+        String requestId = generateRequestId();
+
         try {
             String requestBody = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
             if (requestBody.isEmpty()) {
-                sendError(exchange, 400, "Request body is empty");
+                sendErrorWithRequestId(exchange, 400, "Request body is empty", requestId);
                 return;
             }
 
             JSONObject request = JSON.parseObject(requestBody);
             if (request == null) {
-                sendError(exchange, 400, "Invalid JSON request");
+                sendErrorWithRequestId(exchange, 400, "Invalid JSON request", requestId);
                 return;
             }
 
             String toolName = request.getString("name");
             if (toolName == null || toolName.isEmpty()) {
-                sendError(exchange, 400, "Tool name is required");
+                sendErrorWithRequestId(exchange, 400, "Tool name is required", requestId);
                 return;
             }
 
             JSONObject arguments = request.getJSONObject("arguments");
             if (arguments == null) {
-                sendError(exchange, 400, "Arguments are required");
+                sendErrorWithRequestId(exchange, 400, "Arguments are required", requestId);
                 return;
             }
 
             Map<String, Object> result = switch (toolName) {
                 case TOOL_SCHEMA_QUERY -> handleSchemaQuery(
-                    arguments.getString("table"));
+                    arguments.getString("table"), requestId);
                 case TOOL_DATA_QUERY -> handleDataQuery(
                     arguments.getString("table"),
-                    arguments.getString("condition"));
+                    arguments.getString("condition"), requestId);
                 case TOOL_DATA_UPDATE -> handleDataUpdate(
                     arguments.getString("table"),
                     arguments.getString("id"),
-                    arguments.getString("newValue"));
+                    arguments.getString("newValue"), requestId);
                 case TOOL_DATA_REMOVE -> handleDataRemove(
                     arguments.getString("table"),
-                    arguments.getString("id"));
-                default -> Map.of("error", "Unknown tool: " + toolName);
+                    arguments.getString("id"), requestId);
+                default -> createErrorResponse(400, "Unknown tool: " + toolName, requestId);
             };
 
             sendJsonResponse(exchange, Map.of("content", List.of(
@@ -305,7 +308,7 @@ public class McpServer extends GeneratorWithTag {
 
         } catch (Exception e) {
             Logger.log("Error handling tool call: " + e.getMessage());
-            sendError(exchange, 500, "Internal server error: " + e.getMessage());
+            sendErrorWithRequestId(exchange, 500, "Internal server error: " + e.getMessage(), requestId);
         }
     }
 
@@ -352,7 +355,8 @@ public class McpServer extends GeneratorWithTag {
             return;
         }
 
-        Map<String, Object> result = handleDataQuery(tableName, "");
+        String requestId = generateRequestId();
+        Map<String, Object> result = handleDataQuery(tableName, "", requestId);
 
         sendJsonResponse(exchange, Map.of(
             "contents", List.of(Map.of(
@@ -366,99 +370,100 @@ public class McpServer extends GeneratorWithTag {
     /**
      * 查询表结构信息
      */
-    private Map<String, Object> handleSchemaQuery(String table) {
+    private Map<String, Object> handleSchemaQuery(String table, String requestId) {
         if (table == null || table.isEmpty()) {
-            return Map.of("error", "Table name is required");
+            return createErrorResponse(400, "Table name is required", requestId);
         }
 
         VTable vTable = cfgValue.vTableMap().get(table);
         if (vTable == null) {
-            return Map.of("error", "Table not found: " + table);
+            return createErrorResponse(400, "Table not found: " + table, requestId);
         }
 
         try {
             SchemaService.SNameable schemaItem = SchemaService.fromNameable(vTable.schema(), cfgValue);
             if (schemaItem instanceof SchemaService.STable sTable) {
-                Map<String, Object> res = formatSchemaResponse(sTable);
                 TableSchema mainTable = (TableSchema) vTable.schema();
                 String schemaText = buildSchemaText(mainTable);
-                res.put("schemaText", schemaText);
-                return res;
+                return createSuccessResponse(Map.of("schema", schemaText), requestId);
             }
-            return Map.of("error", "Unexpected schema type");
+            return createErrorResponse(500, "Unexpected schema type", requestId);
         } catch (Exception e) {
             Logger.log("Error processing schema: " + e.getMessage());
-            return Map.of("error", "Error processing schema: " + e.getMessage());
+            return createErrorResponse(500, "Error processing schema: " + e.getMessage(), requestId);
         }
     }
 
     /**
      * 查询数据
      */
-    private Map<String, Object> handleDataQuery(String table, String condition) {
+    private Map<String, Object> handleDataQuery(String table, String condition, String requestId) {
         if (table == null || table.isEmpty()) {
-            return Map.of("error", "Table name is required");
+            return createErrorResponse(400, "Table name is required", requestId);
         }
 
         VTable vTable = cfgValue.vTableMap().get(table);
         if (vTable == null) {
-            return Map.of("error", "Table not found: " + table);
+            return createErrorResponse(400, "Table not found: " + table, requestId);
         }
 
         try {
             List<VStruct> results = filterRecords(vTable, condition);
-            return formatDataResponse(table, results);
+            Map<String, Object> data = formatDataResponse(table, results);
+            return createSuccessResponse(data, requestId);
         } catch (Exception e) {
             Logger.log("Error querying data: " + e.getMessage());
-            return Map.of("error", "Error querying data: " + e.getMessage());
+            return createErrorResponse(500, "Error querying data: " + e.getMessage(), requestId);
         }
     }
 
     /**
      * 更新数据
      */
-    private Map<String, Object> handleDataUpdate(String table, String id, String newValue) {
+    private Map<String, Object> handleDataUpdate(String table, String id, String newValue, String requestId) {
         if (table == null || table.isEmpty()) {
-            return Map.of("error", "Table name is required");
+            return createErrorResponse(400, "Table name is required", requestId);
         }
 
         if (id == null || id.isEmpty()) {
-            return Map.of("error", "Record ID is required");
+            return createErrorResponse(400, "Record ID is required", requestId);
         }
 
         if (newValue == null || newValue.isEmpty()) {
-            return Map.of("error", "New value is required");
+            return createErrorResponse(400, "New value is required", requestId);
         }
 
         try {
             RecordEditService editService = new RecordEditService(cfgValue, context);
             RecordEditService.RecordEditResult result = editService.addOrUpdateRecord(table, newValue);
-            return formatEditResponse(result);
+            Map<String, Object> data = formatEditResponse(result);
+            return createSuccessResponse(data, requestId);
         } catch (Exception e) {
             Logger.log("Error updating data: " + e.getMessage());
-            return Map.of("error", "Error updating data: " + e.getMessage());
+            return createErrorResponse(500, "Error updating data: " + e.getMessage(), requestId);
         }
     }
 
     /**
      * 删除数据
      */
-    private Map<String, Object> handleDataRemove(String table, String id) {
+    private Map<String, Object> handleDataRemove(String table, String id, String requestId) {
         if (table == null || table.isEmpty()) {
-            return Map.of("error", "Table name is required");
+            return createErrorResponse(400, "Table name is required", requestId);
         }
 
         if (id == null || id.isEmpty()) {
-            return Map.of("error", "Record ID is required");
+            return createErrorResponse(400, "Record ID is required", requestId);
         }
 
         try {
             RecordEditService editService = new RecordEditService(cfgValue, context);
             RecordEditService.RecordEditResult result = editService.deleteRecord(table, id);
-            return formatEditResponse(result);
+            Map<String, Object> data = formatEditResponse(result);
+            return createSuccessResponse(data, requestId);
         } catch (Exception e) {
             Logger.log("Error removing data: " + e.getMessage());
-            return Map.of("error", "Error removing data: " + e.getMessage());
+            return createErrorResponse(500, "Error removing data: " + e.getMessage(), requestId);
         }
     }
 
@@ -541,7 +546,7 @@ public class McpServer extends GeneratorWithTag {
 
     private String buildSchemaText(TableSchema mainTable) {
         Set<String> visited = new LinkedHashSet<>();
-        List<TableSchema> ordered = new ArrayList<>();
+        List<Nameable> ordered = new ArrayList<>();
 
         visited.add(mainTable.name());
         ordered.add(mainTable);
@@ -561,11 +566,83 @@ public class McpServer extends GeneratorWithTag {
             }
         }
 
+        // 收集所有相关的结构体定义
+        Set<StructSchema> relatedStructs = new LinkedHashSet<>();
+        for (Nameable item : ordered) {
+            if (item instanceof TableSchema table) {
+                collectRelatedStructs(table, relatedStructs);
+            }
+        }
+
+        Logger.log("Collected structs: " + relatedStructs.size());
+        for (StructSchema struct : relatedStructs) {
+            Logger.log("Struct: " + struct.name());
+        }
+
         CfgSchema sub = CfgSchema.ofPartial();
-        for (TableSchema t : ordered) {
-            sub.add(t);
+        // 先添加结构体定义
+        for (StructSchema struct : relatedStructs) {
+            sub.add(struct);
+        }
+        // 再添加表定义
+        for (Nameable item : ordered) {
+            sub.add(item);
         }
         return CfgWriter.stringify(sub, true, false);
+    }
+
+    /**
+     * 收集表相关的所有结构体定义
+     */
+    private void collectRelatedStructs(TableSchema table, Set<StructSchema> structs) {
+        // 收集表字段中使用的结构体类型
+        for (FieldSchema field : table.fields()) {
+            collectStructsFromFieldType(field.type(), structs);
+        }
+
+        // 收集外键引用中使用的结构体
+        for (ForeignKeySchema fk : table.foreignKeys()) {
+            // 外键本身不直接包含结构体，但引用的表可能包含
+            TableSchema refTable = fk.refTableSchema();
+            if (refTable != null) {
+                collectRelatedStructs(refTable, structs);
+            }
+        }
+    }
+
+    /**
+     * 从字段类型中收集结构体定义
+     */
+    private void collectStructsFromFieldType(FieldType fieldType, Set<StructSchema> structs) {
+        Logger.log("collectStructsFromFieldType: " + fieldType.getClass().getSimpleName());
+        switch (fieldType) {
+            case StructRef structRef -> {
+                Logger.log("Found StructRef: " + structRef.name());
+                Nameable ref = structRef.obj();
+                Logger.log("Ref obj type: " + (ref != null ? ref.getClass().getSimpleName() : "null"));
+                if (ref instanceof StructSchema structSchema) {
+                    Logger.log("Adding struct: " + structSchema.name());
+                    structs.add(structSchema);
+                    // 递归收集该结构体的字段中的结构体
+                    for (FieldSchema field : structSchema.fields()) {
+                        collectStructsFromFieldType(field.type(), structs);
+                    }
+                }
+            }
+            case FList fList -> {
+                Logger.log("Found FList");
+                collectStructsFromFieldType(fList.item(), structs);
+            }
+            case FMap fMap -> {
+                Logger.log("Found FMap");
+                collectStructsFromFieldType(fMap.key(), structs);
+                collectStructsFromFieldType(fMap.value(), structs);
+            }
+            default -> {
+                Logger.log("Basic type: " + fieldType);
+                // 基本类型，不需要处理
+            }
+        }
     }
 
     /**
@@ -658,5 +735,50 @@ public class McpServer extends GeneratorWithTag {
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(jsonResponse.getBytes(StandardCharsets.UTF_8));
         }
+    }
+
+    /**
+     * 发送带请求ID的错误响应
+     */
+    private void sendErrorWithRequestId(HttpExchange exchange, int code, String message, String requestId) throws IOException {
+        Map<String, Object> errorResponse = createErrorResponse(code, message, requestId);
+        String jsonResponse = JSON.toJSONString(errorResponse);
+
+        exchange.getResponseHeaders().set("Content-Type", "application/json");
+        exchange.sendResponseHeaders(code, jsonResponse.getBytes(StandardCharsets.UTF_8).length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(jsonResponse.getBytes(StandardCharsets.UTF_8));
+        }
+    }
+
+    /**
+     * 生成请求ID
+     */
+    private String generateRequestId() {
+        return UUID.randomUUID().toString();
+    }
+
+    /**
+     * 创建成功响应
+     */
+    private Map<String, Object> createSuccessResponse(Object data, String requestId) {
+        return Map.of(
+            "request_id", requestId,
+            "code", 200,
+            "message", "success",
+            "data", data
+        );
+    }
+
+    /**
+     * 创建失败响应
+     */
+    private Map<String, Object> createErrorResponse(int code, String message, String requestId) {
+        return Map.of(
+            "request_id", requestId,
+            "code", code,
+            "message", message,
+            "data", Map.of()
+        );
     }
 }
