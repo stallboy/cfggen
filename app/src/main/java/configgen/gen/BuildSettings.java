@@ -20,12 +20,29 @@ public final class BuildSettings {
         }
     }
 
-
     public static boolean isIncludePoi() {
         return isIncludePoi;
     }
 
     public static ExcelReader getPoiReader() {
         return poiReader;
+    }
+
+    // 新增方法：获取POI写入器
+    public static ExcelReader getPoiWriter() {
+        if (!isIncludePoi) {
+            return null;
+        }
+        try {
+            Class<?> writeByPoiClass = Class.forName("configgen.data.WriteByPoi");
+            Object[] enumConstants = writeByPoiClass.getEnumConstants();
+            Object instance = enumConstants[0];
+            if (instance instanceof ExcelReader writer) {
+                return writer;
+            }
+        } catch (ClassNotFoundException e) {
+            // ignore
+        }
+        return null;
     }
 }
