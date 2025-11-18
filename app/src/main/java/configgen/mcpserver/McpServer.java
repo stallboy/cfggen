@@ -94,6 +94,9 @@ public class McpServer extends GeneratorWithTag {
         this.context = ctx;
         this.cfgValue = ctx.makeValue();
 
+        // Debug schema state to understand struct resolution
+        debugSchemaState();
+
         System.gc();
 
         startMcpServer();
@@ -618,14 +621,32 @@ public class McpServer extends GeneratorWithTag {
         switch (fieldType) {
             case StructRef structRef -> {
                 Logger.log("Found StructRef: " + structRef.name());
-                Nameable ref = structRef.obj();
-                Logger.log("Ref obj type: " + (ref != null ? ref.getClass().getSimpleName() : "null"));
-                if (ref instanceof StructSchema structSchema) {
-                    Logger.log("Adding struct: " + structSchema.name());
+
+                // 使用fieldableMap直接获取结构体定义，避免依赖StructRef.obj()
+                String structName = structRef.name();
+                Fieldable fieldable = context.cfgSchema().fieldableMap().get(structName);
+                Logger.log("Fieldable from map: " + (fieldable != null ? fieldable.getClass().getSimpleName() : "null"));
+
+                if (fieldable instanceof StructSchema structSchema) {
+                    Logger.log("Adding struct from fieldableMap: " + structSchema.name());
                     structs.add(structSchema);
                     // 递归收集该结构体的字段中的结构体
                     for (FieldSchema field : structSchema.fields()) {
                         collectStructsFromFieldType(field.type(), structs);
+                    }
+                } else {
+                    // 如果fieldableMap中没有找到，尝试使用原始的StructRef.obj()作为后备
+                    Nameable ref = structRef.obj();
+                    Logger.log("Ref obj type: " + (ref != null ? ref.getClass().getSimpleName() : "null"));
+                    if (ref instanceof StructSchema structSchema) {
+                        Logger.log("Adding struct from StructRef.obj(): " + structSchema.name());
+                        structs.add(structSchema);
+                        // 递归收集该结构体的字段中的结构体
+                        for (FieldSchema field : structSchema.fields()) {
+                            collectStructsFromFieldType(field.type(), structs);
+                        }
+                    } else {
+                        Logger.log("WARNING: Could not find struct definition for: " + structName);
                     }
                 }
             }
@@ -669,6 +690,30 @@ public class McpServer extends GeneratorWithTag {
         response.put("records", recordList);
 
         return response;
+    }
+
+    /**
+     * 调试schema状态，了解结构体解析情况
+     */
+    private void debugSchemaState() {
+        CfgSchema schema = context.cfgSchema();
+        Logger.log("Fieldable map size: " + schema.fieldableMap().size());
+
+        // Log all available structs
+        int structCount = 0;
+        for (Map.Entry<String, Fieldable> entry : schema.fieldableMap().entrySet()) {
+            if (entry.getValue() instanceof StructSchema) {
+                Logger.log("Available struct: " + entry.getKey());
+                structCount++;
+            }
+        }
+        Logger.log("Total structs in schema: " + structCount);
+
+        // Log all tables
+        Logger.log("Total tables in schema: " + schema.tableMap().size());
+        for (String tableName : schema.tableMap().keySet()) {
+            Logger.log("Available table: " + tableName);
+        }
     }
 
     /**
