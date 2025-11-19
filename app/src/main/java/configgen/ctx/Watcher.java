@@ -4,6 +4,9 @@ import configgen.util.Logger;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -19,6 +22,7 @@ public class Watcher {
     private volatile long lastEvtMillis;
     private final AtomicInteger eventVersion = new AtomicInteger(0);
     private Thread startedThread;
+    private final Map<WatchKey, Path> keys = new HashMap<>();
 
     public Watcher(Path rootDir, ExplicitDir explicitDir) {
         Objects.requireNonNull(rootDir);
@@ -61,59 +65,108 @@ public class Watcher {
     private void trigger() {
         lastEvtMillis = System.currentTimeMillis();
         eventVersion.incrementAndGet();
-        Logger.verbose("Watcher triggered, version: " + eventVersion.get());
+    }
+
+    private void register(Path dir, WatchService watcher) throws IOException {
+        WatchKey key = dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
+        keys.put(key, dir);
+    }
+
+    private void registerAll(final Path start, WatchService watcher) throws IOException {
+        Files.walkFileTree(start, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+                    throws IOException {
+                register(dir, watcher);
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 
     private void watchLoop() throws IOException, InterruptedException {
         WatchService watchService = FileSystems.getDefault().newWatchService();
+        keys.clear();
+        boolean recursiveSupport = false;
 
         // 跨平台兼容的目录注册方式
         try {
             // 尝试使用FILE_TREE（仅Windows支持）
-            try {
-                @SuppressWarnings("unchecked")
-                WatchEvent.Modifier modifier = (WatchEvent.Modifier) Class
+            WatchEvent.Modifier modifier = (WatchEvent.Modifier) Class
                     .forName("com.sun.nio.file.ExtendedWatchEventModifier")
                     .getField("FILE_TREE")
                     .get(null);
-                rootDir.register(watchService, new WatchEvent.Kind<?>[]{ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY}, modifier);
-                Logger.verbose("Using FILE_TREE modifier for recursive directory watching");
-            } catch (Exception e) {
-                // 回退到非递归监控
-                rootDir.register(watchService, new WatchEvent.Kind<?>[]{ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY});
-                Logger.verbose("Using standard directory watching (non-recursive)");
+            rootDir.register(watchService, new WatchEvent.Kind<?>[]{ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY},
+                    modifier);
+            recursiveSupport = true;
+        } catch (Exception e) {
+            // 回退到手动递归监控
+            registerAll(rootDir, watchService);
+        }
+
+        WatchKey key;
+        while ((key = watchService.take()) != null) {
+            Path dir = keys.get(key);
+            if (dir == null) {
+                // 如果是FILE_TREE模式，key没有存入map，dir默认为rootDir
+                // 如果是标准模式，理论上不应该为null，除非有未预期的key
+                dir = rootDir;
             }
 
-            WatchKey key;
-            while ((key = watchService.take()) != null) {
-                for (WatchEvent<?> event : key.pollEvents()) {
-                    Path relativePath = (Path) event.context();
-                    Logger.verbose(event.kind() + "  " + relativePath);
+            for (WatchEvent<?> event : key.pollEvents()) {
+                WatchEvent.Kind<?> kind = event.kind();
+                if (kind == OVERFLOW) {
+                    continue;
+                }
 
-                    // 构建完整路径
-                    Path fullPath = rootDir.resolve(relativePath);
+                @SuppressWarnings("unchecked")
+                WatchEvent<Path> ev = (WatchEvent<Path>) event;
+                Path contextPath = ev.context();
 
-                    // 通过事件类型和文件扩展名判断，避免不必要的文件系统调用
-                    WatchEvent.Kind<?> kind = event.kind();
+                Path fullPath;
+                Path relativePath;
 
-                    if (kind == ENTRY_DELETE) {
-                        // 对于删除事件，文件已不存在，只能通过路径判断
-                        handleFileEvent(relativePath);
-                    } else {
-                        // 对于创建和修改事件，可以检查文件属性
-                        if (Files.isDirectory(fullPath)) {
-                            trigger();
-                        } else if (Files.isRegularFile(fullPath)) {
-                            handleFileEvent(relativePath);
+                if (recursiveSupport) {
+                    // FILE_TREE模式下，contextPath是相对于rootDir的路径
+                    relativePath = contextPath;
+                    fullPath = rootDir.resolve(relativePath);
+                } else {
+                    // 标准模式下，contextPath是文件名
+                    fullPath = dir.resolve(contextPath);
+                    relativePath = rootDir.relativize(fullPath);
+                }
+
+                Logger.verbose(kind + "  " + relativePath);
+
+                // 如果是标准模式，且是新建目录，需要注册
+                if (!recursiveSupport && kind == ENTRY_CREATE) {
+                    try {
+                        if (Files.isDirectory(fullPath, LinkOption.NOFOLLOW_LINKS)) {
+                            registerAll(fullPath, watchService);
                         }
+                    } catch (IOException ignored) {
                     }
                 }
 
-                key.reset();
+                if (kind == ENTRY_DELETE) {
+                    // 对于删除事件，文件已不存在，只能通过路径判断
+                    handleFileEvent(relativePath);
+                } else {
+                    // 对于创建和修改事件，可以检查文件属性
+                    if (Files.isDirectory(fullPath)) {
+                        trigger();
+                    } else if (Files.isRegularFile(fullPath)) {
+                        handleFileEvent(relativePath);
+                    }
+                }
             }
-        } catch (ClosedWatchServiceException e) {
-            // 正常关闭，忽略异常
-            Logger.verbose("WatchService closed normally");
+
+            boolean valid = key.reset();
+            if (!valid && !recursiveSupport) {
+                keys.remove(key);
+                if (keys.isEmpty()) {
+                    break;
+                }
+            }
         }
     }
 
@@ -126,28 +179,23 @@ public class Watcher {
         Path fileName = relativePath.getFileName();
         FileFmt fmt = getFileFormat(fileName);
         if (fmt == null) {
-            Logger.verbose("File format not supported: " + relativePath);
             return;
         }
 
-        // 原有的格式判断逻辑...
         switch (fmt) {
-            case CSV, EXCEL -> {
-                Logger.verbose("Processing CSV/Excel file: " + relativePath);
+            case CSV, EXCEL, CFG -> {
                 if (explicitDir != null) {
                     Path topDir = relativePath.getName(0);
                     String dirName = topDir.getFileName().toString();
                     if (!explicitDir.excelFileDirs().contains(dirName)) {
-                        Logger.verbose("CSV/Excel file directory not in explicitDir: " + dirName);
                         return;
                     }
-                } else {
-                    Logger.verbose("explicitDir is null, accepting CSV/Excel file");
                 }
             }
             case JSON -> {
                 Path parent = relativePath.getParent();
-                if (parent == null) return;
+                if (parent == null)
+                    return;
                 String dirName = parent.getFileName().toString();
                 if (!isTableDirForJson(dirName)) {
                     return;
@@ -161,7 +209,8 @@ public class Watcher {
                     return;
                 }
                 Path parent = relativePath.getParent();
-                if (parent == null) return;
+                if (parent == null)
+                    return;
                 String dirName = parent.getFileName().toString();
                 if (!explicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map().containsKey(dirName)) {
                     return;
@@ -174,4 +223,3 @@ public class Watcher {
     }
 
 }
-

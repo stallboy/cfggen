@@ -36,7 +36,7 @@ public class SchemaQueryTool implements McpTool {
         }
 
         try {
-            TableSchema mainTable = (TableSchema) vTable.schema();
+            TableSchema mainTable = vTable.schema();
             String schemaText = schemaService.buildSchemaText(mainTable);
             return McpResponse.success(Map.of("schema", schemaText), requestId);
         } catch (Exception e) {

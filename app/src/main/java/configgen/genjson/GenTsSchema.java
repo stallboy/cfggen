@@ -21,13 +21,13 @@ public class GenTsSchema extends GeneratorWithTag {
 
     public GenTsSchema(Parameter parameter) {
         super(parameter);
-        String tablestr = parameter.get("table", "");
+        String tableStr = parameter.get("table", "");
         String refsStr = parameter.get("refs", "");
 
         String dstDir = parameter.get("dst", ".");
         encoding = parameter.get("encoding", "UTF-8");
         dstPath = Path.of(dstDir);
-        String[] split = tablestr.split(";");
+        String[] split = tableStr.split(";");
         table = split.length > 0 ? split[0] : "";
         refTables = new ArrayList<>();
         if (split.length > 1) {

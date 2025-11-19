@@ -59,22 +59,8 @@ class CfgsTest {
 
         boolean equals = cfg1.equals(cfgFromAllSubDir);
         if (!equals) {
-            System.out.println("=== Schema Differences Detected ===");
-            System.out.println("Original schema hash: " + cfg1.hashCode());
-            System.out.println("Deserialized schema hash: " + cfgFromAllSubDir.hashCode());
-            System.out.println("Original schema item count: " + cfg1.items().size());
-            System.out.println("Deserialized schema item count: " + cfgFromAllSubDir.items().size());
-
             // 打印详细的差异信息
             cfg1.printDiff(cfgFromAllSubDir);
-
-            // 打印前几个项目的详细信息
-            System.out.println("\n=== First few items comparison ===");
-            int maxItemsToCompare = Math.min(5, Math.min(cfg1.items().size(), cfgFromAllSubDir.items().size()));
-            for (int i = 0; i < maxItemsToCompare; i++) {
-                System.out.println("Item " + i + " original: " + cfg1.items().get(i).name());
-                System.out.println("Item " + i + " deserialized: " + cfgFromAllSubDir.items().get(i).name());
-            }
         }
 
         assertEquals(cfg1, cfgFromAllSubDir);
