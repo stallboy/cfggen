@@ -24,6 +24,9 @@ import static configgen.editorserver.RecordEditService.ResultCode.*;
 import static configgen.editorserver.RecordService.*;
 import static configgen.editorserver.RecordEditService.*;
 
+/**
+ * 为cfgeditor提供restful api
+ */
 public class EditorServer extends GeneratorWithTag {
     private final int port;
     private final String noteCsvPath;
@@ -90,12 +93,13 @@ public class EditorServer extends GeneratorWithTag {
             if (postRun != null) {
                 WatchAndPostRun.INSTANCE.registerPostRunBat(postRun);
             }
-
         }
     }
 
     private void initFromCtx(Context newContext) {
         this.context = newContext;
+        // 可以包含tag，这样更灵活，方便查看filter过后的数据
+        // 此时所有的修改指令将返回错误 serverNotEditable
         cfgValue = context.makeValue(tag, true);
         graph = new TableSchemaRefGraph(cfgValue.schema());
     }

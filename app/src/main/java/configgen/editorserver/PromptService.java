@@ -4,7 +4,6 @@ import configgen.genjson.AICfg;
 import configgen.genjson.PromptGen;
 import configgen.value.*;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static configgen.editorserver.PromptService.PromptResultCode.*;
@@ -26,7 +25,10 @@ public class PromptService {
     }
 
 
-    public static PromptResult gen(CfgValue cfgValue, AICfg aiCfg, Path aiDir, String table) {
+    public static PromptResult gen(CfgValue cfgValue,
+                                   AICfg aiCfg,
+                                   Path aiDir,
+                                   String table) {
         if (aiCfg == null) {
             return new PromptResult(AICfgNotSet, "", "");
         }

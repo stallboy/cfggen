@@ -5,6 +5,11 @@ package configgen.schema;
  * 格式为：name = [namespace.]lastName
  */
 public sealed interface Nameable permits Fieldable, Structural, StructSchema, InterfaceSchema, TableSchema {
+
+    /**
+     * @return 一般 == fullName，包含完整的namespace前缀
+     * 只在interface里struct时，name不含namespace前缀
+     */
     String name();
 
     FieldFormat fmt();
@@ -30,7 +35,10 @@ public sealed interface Nameable permits Fieldable, Structural, StructSchema, In
         }
         return name().substring(idx + 1);
     }
-
+    /**
+     * @return 一般 == name
+     * 在interface里的struct的会再加上interface.name作为namespace前缀
+     */
     default String fullName() {
         return name();
     }

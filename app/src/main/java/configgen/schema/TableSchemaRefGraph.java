@@ -9,12 +9,12 @@ public class TableSchemaRefGraph {
 
     /**
      * table依赖中的一个节点
-     *
      * @param refInTables  引用到我的所有的table
      * @param refOutTables 我引用到的所有table
      */
     public record Refs(Map<String, TableSchema> refInTables,
                        Map<String, TableSchema> refOutTables) {
+
         public Set<String> refIn() {
             return refInTables.keySet();
         }
@@ -35,7 +35,7 @@ public class TableSchemaRefGraph {
 
     private void buildGraph() {
         for (TableSchema table : schema.tableMap().values()) {
-            refsMap.put(table.name(), new Refs(new HashMap<>(), getAllRefOuts(table)));
+            refsMap.put(table.name(), new Refs(new HashMap<>(), findAllRefOuts(table)));
         }
 
         for (Map.Entry<String, Refs> e : refsMap.entrySet()) {
@@ -52,15 +52,7 @@ public class TableSchemaRefGraph {
         return refsMap;
     }
 
-    public Collection<TableSchema> getRefOutTables(TableSchema table) {
-        Refs refs = refsMap.get(table.name());
-        if (refs != null) {
-            return refs.refOutTables.values();
-        }
-        return null;
-    }
-
-    private Map<String, TableSchema> getAllRefOuts(TableSchema tableSchema) {
+    public static Map<String, TableSchema> findAllRefOuts(TableSchema tableSchema) {
         Map<String, TableSchema> refOut = new HashMap<>();
         Map<String, Nameable> allIncludedStructs = IncludedStructs.findAllIncludedStructs(tableSchema);
         for (Nameable item : allIncludedStructs.values()) {
@@ -69,13 +61,6 @@ public class TableSchemaRefGraph {
                     TableSchema ref = interfaceSchema.nullableEnumRefTable();
                     if (ref != null) {
                         refOut.put(ref.name(), ref);
-                    }
-
-                    for (StructSchema impl : interfaceSchema.impls()) {
-                        for (ForeignKeySchema fk : impl.foreignKeys()) {
-                            TableSchema t = fk.refTableSchema();
-                            refOut.put(t.name(), t);
-                        }
                     }
                 }
                 case Structural structural -> {
