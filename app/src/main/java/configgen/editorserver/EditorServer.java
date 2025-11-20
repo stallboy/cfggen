@@ -3,9 +3,7 @@ package configgen.editorserver;
 import com.alibaba.fastjson2.JSON;
 import com.sun.net.httpserver.*;
 import configgen.ctx.*;
-import configgen.gen.Generator;
 import configgen.gen.GeneratorWithTag;
-import configgen.gen.Generators;
 import configgen.gen.Parameter;
 import configgen.schema.TableSchemaRefGraph;
 import configgen.genjson.AICfg;
@@ -14,12 +12,11 @@ import configgen.value.CfgValue;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+
 import configgen.util.Logger;
 
 import static configgen.editorserver.CheckJsonService.*;
@@ -42,7 +39,6 @@ public class EditorServer extends GeneratorWithTag {
     private Path aiDir;
     private final String postRun;
     private final int waitSecondsAfterWatchEvt;
-    private Thread postRunThread;
 
     public EditorServer(Parameter parameter) {
         super(parameter);
@@ -61,8 +57,7 @@ public class EditorServer extends GeneratorWithTag {
         }
 
         noteEditService = new NoteEditService(Path.of(noteCsvPath));
-        this.context = ctx;
-        initFromCtx();
+        initFromCtx(ctx);
 
         System.gc();
         System.setProperty("java.util.logging.SimpleFormatter.format",
@@ -88,92 +83,21 @@ public class EditorServer extends GeneratorWithTag {
         server.start();
         Logger.log("Server is started at " + listenAddr);
 
+
         if (waitSecondsAfterWatchEvt > 0) {
-            Watcher watcher = new Watcher(context.getSourceStructure().getRootDir(), context.getContextCfg().explicitDir());
-            WaitWatcher waitWatcher = new WaitWatcher(watcher, this::reloadData, waitSecondsAfterWatchEvt * 1000);
-            waitWatcher.start();
-            watcher.start();
-            Logger.log("file change watcher started");
+            WatchAndPostRun.INSTANCE.startWatch(context, waitSecondsAfterWatchEvt);
+            WatchAndPostRun.INSTANCE.registerPostRunCallback(this::initFromCtx);
+            if (postRun != null) {
+                WatchAndPostRun.INSTANCE.registerPostRunBat(postRun);
+            }
+
         }
     }
 
-    private void initFromCtx() {
+    private void initFromCtx(Context newContext) {
+        this.context = newContext;
         cfgValue = context.makeValue(tag, true);
         graph = new TableSchemaRefGraph(cfgValue.schema());
-    }
-
-    private void reloadData() {
-        DirectoryStructure newStructure = context.getSourceStructure().reload();
-        if (newStructure.lastModifiedEquals(context.getSourceStructure())) {
-            configgen.util.Logger.verbose("lastModified not change");
-            return;
-        }
-        try {
-            this.context = new Context(context.getContextCfg(), newStructure);
-            initFromCtx();
-            Logger.log("reload ok");
-            tryPostRun();
-        } catch (Exception e) {
-            Logger.log("reload ignored");
-        }
-    }
-
-    private void tryPostRun() {
-        if (postRun == null) {
-            return;
-        }
-
-        if (postRunThread != null) {
-            try {
-                postRunThread.join();
-            } catch (InterruptedException e) {
-                Logger.log("postrun thread join interrupted: " + e.getMessage());
-            }
-
-        }
-        postRunThread = Thread.startVirtualThread(() -> {
-            try {
-                String genPrefix = null;
-                if (postRun.endsWith(".bat")) {
-                    genPrefix = ":: -gen ";
-                } else if (postRun.endsWith(".sh")) {
-                    genPrefix = "# -gen ";
-                }
-                if (genPrefix != null) {
-                    for (String line : Files.readAllLines(Path.of(postRun))) {
-                        if (line.startsWith(genPrefix)) {
-                            String parameter = line.substring(genPrefix.length());
-                            Generator generator = Generators.create(parameter);
-                            if (generator != null) {
-                                Logger.log("-gen " + parameter);
-                                generator.generate(context);
-                            }
-                        } else {
-                            break;
-                        }
-                    }
-                }
-
-                String[] cmds = new String[]{postRun};
-                Process process = Runtime.getRuntime().exec(cmds);
-
-                BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                String line;
-                while ((line = in.readLine()) != null) {
-                    Logger.log("postrun output: " + line);
-                }
-                if (process.waitFor(10, TimeUnit.SECONDS)) {
-                    Logger.log("postrun ok!");
-                } else {
-                    Logger.log("postrun timeout");
-                }
-                in.close();
-            } catch (IOException e) {
-                Logger.log("postrun err: " + e.getMessage());
-            } catch (InterruptedException e) {
-                Logger.log("postrun interrupted: " + e.getMessage());
-            }
-        });
     }
 
     private void handleSchemas(HttpExchange exchange) throws IOException {
@@ -275,18 +199,12 @@ public class EditorServer extends GeneratorWithTag {
 //        logger.info(jsonStr);
 
         RecordEditResult result;
-        boolean ok = false;
         synchronized (this) {
             RecordEditService service = new RecordEditService(cfgValue, context);
             result = service.addOrUpdateRecord(table, jsonStr);
             if (result.resultCode() == addOk || result.resultCode() == updateOk) {
                 cfgValue = service.newCfgValue();
-                ok = true;
             }
-        }
-
-        if (ok) {
-            tryPostRun();
         }
 
 //        logger.info(result.toString());
@@ -304,17 +222,12 @@ public class EditorServer extends GeneratorWithTag {
         String id = query.get("id");
 
         RecordEditResult result;
-        boolean ok = false;
         synchronized (this) {
             RecordEditService service = new RecordEditService(cfgValue, context);
             result = service.deleteRecord(table, id);
             if (result.resultCode() == deleteOk) {
                 cfgValue = service.newCfgValue();
-                ok = true;
             }
-        }
-        if (ok) {
-            tryPostRun();
         }
 
 //        logger.info(result.toString());

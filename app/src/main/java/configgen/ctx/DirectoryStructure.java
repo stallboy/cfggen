@@ -196,6 +196,10 @@ public class DirectoryStructure {
         return rootDir;
     }
 
+    public ExplicitDir getExplicitDir() {
+        return explicitDir;
+    }
+
     public Collection<CfgFileInfo> getCfgFiles() {
         // Return sorted collection to ensure consistent ordering across platforms
         return cfgFiles.values().stream()

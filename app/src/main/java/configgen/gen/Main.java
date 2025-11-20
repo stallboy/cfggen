@@ -1,9 +1,8 @@
 package configgen.gen;
 
 import configgen.ctx.*;
-import configgen.data.*;
 import configgen.editorserver.EditorServer;
-import configgen.mcpserver.McpServer;
+import configgen.mcpserver2.McpServer;
 import configgen.gencs.GenBytes;
 import configgen.gencs.GenCs;
 import configgen.gents.GenTs;
