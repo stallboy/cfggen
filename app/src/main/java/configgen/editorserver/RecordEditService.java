@@ -94,7 +94,7 @@ public class RecordEditService {
         Path writePath;
         try {
             // 最后确定其他都对的时候再存储
-            writePath = VTableJsonStore.addOrUpdateRecordStore(thisValue, tableSchema, id, sourceStructure.getRootDir());
+            writePath = VTableJsonStore.addOrUpdateRecordStore(thisValue, table, id, sourceStructure.getRootDir());
         } catch (Exception e) {
             return new RecordEditResult(jsonStoreErr, table, id, List.of(e.getMessage()), List.of());
         }
@@ -178,7 +178,7 @@ public class RecordEditService {
         Path jsonPath;
         try {
             // 最后确定其他都对的时候再存储
-            jsonPath = VTableJsonStore.deleteRecordStore(tableSchema, id, sourceStructure.getRootDir());
+            jsonPath = VTableJsonStore.deleteRecordStore(table, id, sourceStructure.getRootDir());
             if (jsonPath == null) {
                 return new RecordEditResult(jsonStoreErr, table, id, List.of("delete fail"), List.of());
             }

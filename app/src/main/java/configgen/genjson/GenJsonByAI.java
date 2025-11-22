@@ -142,7 +142,7 @@ public class GenJsonByAI extends Generator {
                     CfgValue.Value pkValue = ValueUtil.extractPrimaryKeyValue(record, tableSchema);
                     String id = pkValue.packStr();
                     try {
-                        VTableJsonStore.addOrUpdateRecordStore(record, tableSchema, id, dataDir);
+                        VTableJsonStore.addOrUpdateRecordStore(record, tableSchema.name(), id, dataDir);
                     } catch (IOException e) {
                         System.out.printf("save %s err: %s%n", id, e.getMessage());
                     }

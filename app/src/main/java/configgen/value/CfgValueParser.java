@@ -49,7 +49,8 @@ public record CfgValueParser(CfgSchema subSchema,
                 tasks.add(() -> {
                     long start = System.currentTimeMillis();
                     CfgValueErrs errs = CfgValueErrs.of();
-                    VTableParser parser = new VTableParser(subTable, dTable, table, context.getContextCfg().headRow(), errs);
+                    VTableParser parser = new VTableParser(subTable, dTable, table,
+                            context.getContextCfg().headRow(), errs);
                     VTable vTable = parser.parseTable();
                     TextValue.setTranslatedForTable(vTable, context.nullableLangTextFinder());
                     if (Logger.isProfileEnabled()) {

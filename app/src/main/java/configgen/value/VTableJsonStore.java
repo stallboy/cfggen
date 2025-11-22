@@ -3,6 +3,7 @@ package configgen.value;
 import configgen.gen.Generator;
 import configgen.schema.TableSchema;
 import configgen.util.CachedFiles;
+import configgen.value.CfgValue.VStruct;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -16,11 +17,11 @@ import static configgen.data.DataUtil.getJsonTableDir;
  */
 public class VTableJsonStore {
 
-    public static Path addOrUpdateRecordStore(CfgValue.VStruct record,
-                                              TableSchema tableSchema,
+    public static Path addOrUpdateRecordStore(VStruct record,
+                                              String table,
                                               String id,
                                               Path dataDir) throws IOException {
-        Path jsonDir = getJsonTableDir(dataDir, tableSchema.name());
+        Path jsonDir = getJsonTableDir(dataDir, table);
         Path recordPath = jsonDir.resolve(id + ".json");
         try (OutputStreamWriter writer = Generator.createUtf8Writer(recordPath.toFile())) {
             String jsonString = ValueToJson.toJsonStr(record);
@@ -32,10 +33,12 @@ public class VTableJsonStore {
     /**
      * @return 如果为null，表示删除失败，否则表示成功，返回路径
      */
-    public static Path deleteRecordStore(TableSchema tableSchema, String id, Path dataDir) {
-        Path jsonDir = getJsonTableDir(dataDir, tableSchema.name());
+    public static Path deleteRecordStore(String table,
+                                         String id,
+                                         Path dataDir) {
+        Path jsonDir = getJsonTableDir(dataDir, table);
         Path recordPath = jsonDir.resolve(id + ".json");
-        if (CachedFiles.delete(recordPath.toFile())){
+        if (CachedFiles.delete(recordPath.toFile())) {
             return recordPath;
         }
         return null;

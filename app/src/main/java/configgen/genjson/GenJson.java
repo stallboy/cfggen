@@ -57,7 +57,7 @@ public class GenJson extends GeneratorWithTag {
             for (Map.Entry<Value, VStruct> e : vTable.primaryKeyMap().entrySet()) {
                 Value pk = e.getKey();
                 VStruct record = e.getValue();
-                VTableJsonStore.addOrUpdateRecordStore(record, vTable.schema(), pk.packStr(), dstPath);
+                VTableJsonStore.addOrUpdateRecordStore(record, table, pk.packStr(), dstPath);
             }
         }
     }
