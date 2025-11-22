@@ -32,8 +32,10 @@ public class PromptGen {
         List<String> extraRefTables = nullableTableCfg != null ? nullableTableCfg.extraRefTables() : List.of();
         List<OneExample> examples = nullableTableCfg != null ? nullableTableCfg.examples() : List.of();
         if (isUseRawStructInfo) {
-            structInfo = TableRelatedInfoFinder.findRelatedCfgStr(tableSchema);
-            extra = TableRelatedInfoFinder.findRelatedEnumCsv(cfgValue, tableSchema, extraRefTables);
+
+            var relatedInfo = TableRelatedInfoFinder.findRelatedInfo(cfgValue, tableSchema, extraRefTables);
+            structInfo = relatedInfo.relatedCfg();
+            extra = formatExtra(relatedInfo);
         } else {
             structInfo = new SchemaToTs(cfgValue, tableSchema, extraRefTables, true).generate();
             extra = "";
@@ -47,6 +49,21 @@ public class PromptGen {
         templateEngine.render(promptFile, model, prompt);
 
         return prompt.toString();
+    }
+
+    private static String formatExtra(TableRelatedInfoFinder.RelatedInfo relatedInfo) {
+        StringBuilder sb = new StringBuilder(2048);
+        for (TableRelatedInfoFinder.TableBrief info : relatedInfo.relatedTableCsv()) {
+            sb.append("- %s%n".formatted(info.table()));
+            sb.append("```%n".formatted());
+            sb.append(info.contentInCsvFormat());
+            sb.append("```%n%n".formatted());
+        }
+
+        for (TableRelatedInfoFinder.TableCount info : relatedInfo.otherTableCounts()) {
+            sb.append("- %s: %d records%n".formatted(info.table(), info.recordCount()));
+        }
+        return sb.toString();
     }
 
 
