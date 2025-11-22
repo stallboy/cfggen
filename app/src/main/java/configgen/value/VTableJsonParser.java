@@ -72,7 +72,7 @@ public class VTableJsonParser {
             String id = pkValue.packStr();
             Path writePath = dataDir;
             try {
-                writePath = VTableJsonStore.addOrUpdateRecordStore(defaultValue, tableName, id, dataDir);
+                writePath = VTableJsonStorage.addOrUpdateRecord(defaultValue, tableName, id, dataDir);
                 valueList.add(defaultValue);
 
                 JsonFileInfo jf = sourceStructure.addJsonFile(tableName, writePath);

@@ -6,6 +6,10 @@ import java.util.List;
 import static configgen.data.CfgData.*;
 import static configgen.data.Source.*;
 
+/**
+ * DCell、DCellList：来自于csv或excel文件
+ * DFile：来自于json文件
+ */
 public sealed interface Source permits DCell, DCellList, DFile {
 
     static DCellList of() {
@@ -19,7 +23,6 @@ public sealed interface Source permits DCell, DCellList, DFile {
             return new DCellList(cells);
         }
     }
-
 
     record DCellList(List<DCell> cells) implements Source {
     }
@@ -55,7 +58,5 @@ public sealed interface Source permits DCell, DCellList, DFile {
             List<String> parent = path.subList(0, path.size() - 1);
             return new DFile(fileName, inStruct, parent);
         }
-
-
     }
 }

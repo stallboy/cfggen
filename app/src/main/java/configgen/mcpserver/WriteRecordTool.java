@@ -3,6 +3,7 @@ package configgen.mcpserver;
 import com.github.codeboyzhou.mcp.declarative.annotation.McpTool;
 import com.github.codeboyzhou.mcp.declarative.annotation.McpToolParam;
 import configgen.ctx.Context;
+import configgen.data.CfgData;
 import configgen.schema.TableSchema;
 import configgen.value.*;
 
@@ -43,7 +44,7 @@ public class WriteRecordTool {
             Path writePath;
             try {
                 // 最后确定其他都对的时候再存储
-                writePath = VTableJsonStore.addOrUpdateRecordStore(thisValue, tableName, id,
+                writePath = VTableJsonStorage.addOrUpdateRecord(thisValue, tableName, id,
                         context.getSourceStructure().getRootDir());
             } catch (Exception e) {
                 return "record store error: %s".formatted(e.getMessage());
@@ -51,7 +52,8 @@ public class WriteRecordTool {
 
             return "record stored success at %s".formatted(writePath.toString());
         } else {
-            boolean ok = VTableWriter.addOrUpdateRecord(cfgValue, vTable, pkValue, thisValue);
+            CfgData.DTable dTable = context.cfgData().tables().get(tableName);
+            boolean ok = VTableStorage.addOrUpdateRecord(cfgValue, vTable, dTable, pkValue, thisValue);
             return ok ? "record stored success" : "record store failed";
         }
     }
@@ -87,7 +89,7 @@ public class WriteRecordTool {
             Path jsonPath;
             try {
                 // 最后确定其他都对的时候再存储
-                jsonPath = VTableJsonStore.deleteRecordStore(tableName, recordId,
+                jsonPath = VTableJsonStorage.deleteRecord(tableName, recordId,
                         context.getSourceStructure().getRootDir());
                 if (jsonPath == null) {
                     return "delete record file failed";
@@ -97,7 +99,7 @@ public class WriteRecordTool {
             }
             return "record deleted success at %s".formatted(jsonPath.toString());
         } else {
-            boolean ok = VTableWriter.deleteRecord(cfgValue, vTable, pkValue);
+            boolean ok = VTableStorage.deleteRecord(cfgValue, vTable, old);
             return ok ? "record deleted success" : "record delete failed";
         }
     }
