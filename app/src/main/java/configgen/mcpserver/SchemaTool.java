@@ -9,7 +9,7 @@ import configgen.value.CfgValue;
 
 import java.util.List;
 
-public class McpTools {
+public class SchemaTool {
 
 
     @McpTool(description = "read table schema")
