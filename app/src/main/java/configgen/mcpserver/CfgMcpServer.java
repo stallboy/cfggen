@@ -7,7 +7,6 @@ import configgen.ctx.Context;
 import configgen.ctx.WatchAndPostRun;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
-import configgen.schema.TableSchemaRefGraph;
 import configgen.value.CfgValue;
 
 import java.io.IOException;

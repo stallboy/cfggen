@@ -53,7 +53,7 @@ public class PromptGen {
 
     private static String formatExtra(TableRelatedInfoFinder.RelatedInfo relatedInfo) {
         StringBuilder sb = new StringBuilder(2048);
-        for (TableRelatedInfoFinder.TableBrief info : relatedInfo.relatedTableCsv()) {
+        for (TableRelatedInfoFinder.TableRecordList info : relatedInfo.relatedTableRecordListInCsv()) {
             sb.append("- %s%n".formatted(info.table()));
             sb.append("```%n".formatted());
             sb.append(info.contentInCsvFormat());

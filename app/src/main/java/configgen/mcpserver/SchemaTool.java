@@ -11,7 +11,6 @@ import java.util.List;
 
 public class SchemaTool {
 
-
     @McpTool(description = "read table schema")
     public String readTableSchema(@McpToolParam(name = "table", description = "table full name", required = true)
                                   String tableName) {
