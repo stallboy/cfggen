@@ -47,9 +47,6 @@ public class ReadRecordTool {
         CfgValue.Value pkValue = ValuePack.unpackTablePrimaryKey(recordId, vTable.schema(), errs);
 
         if (!errs.errs().isEmpty()) {
-            for (CfgValueErrs.VErr err : errs.errs()) {
-                System.err.println(err);
-            }
             return "recordId=%s parse error: %s".formatted(recordId, errs.errs().stream()
                     .map(CfgValueErrs.VErr::toString)
                     .collect(Collectors.joining("; ")));
