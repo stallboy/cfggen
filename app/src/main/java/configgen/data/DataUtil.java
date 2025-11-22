@@ -171,14 +171,4 @@ public class DataUtil {
         return hanIdx == -1;
     }
 
-    // 在DataUtil类中添加写入器选择方法
-    public static ExcelReader getExcelWriter(boolean useFastExcel) {
-        if (useFastExcel) {
-            return WriteByFastExcel.INSTANCE;
-        } else {
-            ExcelReader poiWriter = configgen.gen.BuildSettings.getPoiWriter();
-            return poiWriter != null ? poiWriter : WriteByFastExcel.INSTANCE;
-        }
-    }
-
 }

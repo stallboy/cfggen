@@ -51,7 +51,8 @@ public class WriteRecordTool {
 
             return "record stored success at %s".formatted(writePath.toString());
         } else {
-            return "todo";
+            boolean ok = VTableWriter.addOrUpdateRecord(cfgValue, vTable, pkValue, thisValue);
+            return ok ? "record stored success" : "record store failed";
         }
     }
 
@@ -96,7 +97,8 @@ public class WriteRecordTool {
             }
             return "record deleted success at %s".formatted(jsonPath.toString());
         } else {
-            return "todo";
+            boolean ok = VTableWriter.deleteRecord(cfgValue, vTable, pkValue);
+            return ok ? "record deleted success" : "record delete failed";
         }
     }
 }

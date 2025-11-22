@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static org.apache.poi.ss.usermodel.CellType.NUMERIC;
 
@@ -98,16 +97,4 @@ public enum ReadByPoi implements ExcelReader {
 
         return new AllResult(sheets, stat, null);
     }
-
-    @Override
-    public WriteResult writeRecord(String tableName, Map<String, Object> data, Path excelDir) throws IOException {
-        throw new UnsupportedOperationException("ReadByPoi does not support writing");
-    }
-
-    @Override
-    public List<WriteResult> writeRecords(String tableName, List<Map<String, Object>> dataList, Path excelDir) throws IOException {
-        throw new UnsupportedOperationException("ReadByPoi does not support writing");
-    }
-
-
 }
