@@ -50,6 +50,16 @@ public record CfgData(Map<String, DTable> tables,
         public static DTable of(String tableName, List<DRawSheet> rawSheets, String nullableAddTag) {
             return new DTable(tableName, new ArrayList<>(), new ArrayList<>(), rawSheets, nullableAddTag);
         }
+
+        public DRawSheet getByRowId(DRowId rowId){
+            for (DRawSheet sheet : rawSheets) {
+                if (sheet.fileName().equals(rowId.fileName)
+                        && sheet.sheetName().equals(rowId.sheetName)) {
+                    return sheet;
+                }
+            }
+            throw new IllegalArgumentException("Cannot find DRawSheet by DRowId: " + rowId);
+        }
     }
 
     public record DField(String name,

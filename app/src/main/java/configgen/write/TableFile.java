@@ -1,5 +1,6 @@
 package configgen.write;
 
+import configgen.write.RecordBlock.RecordBlockTransformed;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -20,7 +21,7 @@ public interface TableFile {
      * @param emptyRowCount 可用的空行数
      * @param content 记录块内容
      */
-    void insertRecordBlock(int startRow, int emptyRowCount, @NotNull RecordBlock content);
+    void insertRecordBlock(int startRow, int emptyRowCount, @NotNull RecordBlockTransformed content);
 
     /**
      * 保存文件并关闭

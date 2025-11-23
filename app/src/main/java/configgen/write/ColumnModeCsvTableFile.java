@@ -1,5 +1,6 @@
 package configgen.write;
 
+import configgen.write.RecordBlock.RecordBlockTransformed;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
@@ -44,7 +45,7 @@ public class ColumnModeCsvTableFile extends AbstractCsvTableFile {
      * @param content 记录块内容
      */
     @Override
-    public void insertRecordBlock(int startCol, int emptyColCount, @NotNull RecordBlock content) {
+    public void insertRecordBlock(int startCol, int emptyColCount, @NotNull RecordBlockTransformed content) {
         if (content.getRowCount() <= 0) {
             return;
         }

@@ -36,50 +36,46 @@ public class TableFileLocator {
     /**
      * 从dTable中获取文件位置信息
      */
-    public static DRowId getLocFromDTable(@NotNull CfgData.DTable dTable) {
+    public static CfgData.DRawSheet getSheetFromDTable(@NotNull CfgData.DTable dTable) {
         if (dTable.rawSheets().isEmpty()) {
             throw new IllegalArgumentException("DTable has no rawSheets: " + dTable.tableName());
         }
 
         // 使用最后一个rawSheet
-        CfgData.DRawSheet lastSheet = dTable.rawSheets().getLast();
-        String fileName = lastSheet.fileName();
-        String sheetName = lastSheet.sheetName();
-
-        // 对于新增记录，行号设为-1表示放到最后
-        return new DRowId(fileName, sheetName, -1);
+        return dTable.rawSheets().getLast();
     }
 
     /**
      * 创建TableFile实例
      */
-    public static TableFile createTableFile(@NotNull DRowId location,
+    public static TableFile createTableFile(@NotNull String fileName,
+                                            @NotNull String sheetName,
                                             @NotNull Context context,
                                             boolean isColumnMode) {
         Path dataDir = context.getContextCfg().dataDir();
         int headRow = context.getContextCfg().headRow().rowCount();
 
-        Path filePath = dataDir.resolve(location.fileName());
+        Path filePath = dataDir.resolve(fileName);
 
         // 根据文件扩展名判断文件类型
-        String fileName = location.fileName().toLowerCase();
-        if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls")) {
+        String toLowerFileName = fileName.toLowerCase();
+        if (toLowerFileName.endsWith(".xlsx") || toLowerFileName.endsWith(".xls")) {
             try {
                 if (isColumnMode) {
-                    return new ColumnModeExcelTableFile(filePath, location.sheetName(), headRow);
+                    return new ColumnModeExcelTableFile(filePath, sheetName, headRow);
                 } else {
-                    return new ExcelTableFile(filePath, location.sheetName(), headRow);
+                    return new ExcelTableFile(filePath, sheetName, headRow);
                 }
             } catch (Exception e) {
                 throw new RuntimeException("Failed to create ExcelTableFile: " + filePath, e);
             }
-        } else if (fileName.endsWith(".csv")) {
+        } else if (toLowerFileName.endsWith(".csv")) {
             try {
-                // 根据是否为列模式创建不同的CSV表格文件实例
+                String encoding = context.getContextCfg().csvOrTsvDefaultEncoding();
                 if (isColumnMode) {
-                    return new ColumnModeCsvTableFile(filePath, context.getContextCfg().csvOrTsvDefaultEncoding(), headRow);
+                    return new ColumnModeCsvTableFile(filePath, encoding, headRow);
                 } else {
-                    return new CsvTableFile(filePath, context.getContextCfg().csvOrTsvDefaultEncoding(), headRow);
+                    return new CsvTableFile(filePath, encoding, headRow);
                 }
             } catch (Exception e) {
                 throw new RuntimeException("Failed to create CsvTableFile: " + filePath, e);

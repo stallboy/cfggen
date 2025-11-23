@@ -1,5 +1,6 @@
 package configgen.write;
 
+import configgen.write.RecordBlock.RecordBlockTransformed;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.jetbrains.annotations.NotNull;
@@ -54,7 +55,7 @@ public class ColumnModeExcelTableFile extends AbstractExcelTableFile {
      * @param content 记录块内容，包含要插入的数据
      */
     @Override
-    public void insertRecordBlock(int startRow, int emptyRowCount, @NotNull RecordBlock content) {
+    public void insertRecordBlock(int startRow, int emptyRowCount, @NotNull RecordBlockTransformed content) {
         if (content.getRowCount() <= 0) {
             return;
         }

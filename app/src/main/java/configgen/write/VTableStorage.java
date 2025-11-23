@@ -1,6 +1,7 @@
 package configgen.write;
 
 import configgen.ctx.Context;
+import configgen.data.CfgData;
 import configgen.data.CfgData.DRowId;
 import configgen.data.CfgData.DTable;
 import configgen.schema.TableSchema;
@@ -8,6 +9,7 @@ import configgen.value.CfgValue;
 import configgen.value.CfgValue.VStruct;
 import configgen.value.CfgValue.VTable;
 import configgen.value.CfgValue.Value;
+import configgen.write.RecordBlock.RecordBlockTransformed;
 import org.jetbrains.annotations.NotNull;
 
 public class VTableStorage {
@@ -24,19 +26,28 @@ public class VTableStorage {
         CfgValue.VStruct oldRecord = vTable.primaryKeyMap().get(pkValue);
 
         // 1. 文件定位
-        RecordLoc recordLoc;
+        TableFile tableFile;
+        int startRow;
+        int rowCount;
+        CfgData.DRawSheet sheet;
         if (oldRecord != null) {
             // 更新操作：从oldRecord获取文件位置，然后删除旧记录
-            recordLoc = deleteRecordNoSave(context, oldRecord);
+            RecordLoc loc = deleteRecordNoSave(context, oldRecord);
+            tableFile = loc.tableFile();
+            startRow = loc.startRow;
+            rowCount = loc.rowCount;
+            sheet = dTable.getByRowId(loc.rowId);
+
         } else {
             // 新增操作：从dTable获取文件位置
-            DRowId loc = TableFileLocator.getLocFromDTable(dTable);
+            sheet = TableFileLocator.getSheetFromDTable(dTable);
             boolean isColumnMode = vTable.schema().isColumnMode();
-            TableFile tableFile = TableFileLocator.createTableFile(loc, context, isColumnMode);
-            recordLoc = new RecordLoc(tableFile, -1, -1);
+            tableFile = TableFileLocator.createTableFile(sheet.fileName(), sheet.sheetName(), context, isColumnMode);
+            startRow = -1; // 放到最后
+            rowCount = 0; // 不预留空行
         }
-        TableFile tableFile = recordLoc.tableFile();
-        tableFile.insertRecordBlock(recordLoc.startRow, recordLoc.rowCount, block);
+
+        tableFile.insertRecordBlock(startRow, rowCount, new RecordBlockTransformed(block, sheet.fieldIndices()));
         tableFile.saveAndClose();
     }
 
@@ -51,19 +62,20 @@ public class VTableStorage {
     private static RecordLoc deleteRecordNoSave(@NotNull Context context,
                                                 @NotNull VStruct oldRecord) {
 
-        DRowId location = TableFileLocator.getLocFromRecord(oldRecord);
+        DRowId rowId = TableFileLocator.getLocFromRecord(oldRecord);
         boolean isColumnMode = ((TableSchema) oldRecord.schema()).isColumnMode();
-        TableFile tableFile = TableFileLocator.createTableFile(location, context, isColumnMode);
+        TableFile tableFile = TableFileLocator.createTableFile(rowId.fileName(), rowId.sheetName(), context, isColumnMode);
 
-        int startRow = location.row();
+        int startRow = rowId.row();
         int rowCount = tableFile.findRecordRowCount(startRow);
         tableFile.emptyRows(startRow, rowCount);
 
-        return new RecordLoc(tableFile, startRow, rowCount);
+        return new RecordLoc(tableFile, rowId, startRow, rowCount);
     }
 
 
     private record RecordLoc(TableFile tableFile,
+                             DRowId rowId,
                              int startRow,
                              int rowCount) {
     }

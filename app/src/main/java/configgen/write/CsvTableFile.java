@@ -1,5 +1,6 @@
 package configgen.write;
 
+import configgen.write.RecordBlock.RecordBlockTransformed;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
@@ -49,7 +50,7 @@ public class CsvTableFile extends AbstractCsvTableFile {
      * @param content 记录块内容
      */
     @Override
-    public void insertRecordBlock(int startRow, int emptyRowCount, @NotNull RecordBlock content) {
+    public void insertRecordBlock(int startRow, int emptyRowCount, @NotNull RecordBlockTransformed content) {
         if (content.getRowCount() <= 0) {
             return;
         }
@@ -100,12 +101,6 @@ public class CsvTableFile extends AbstractCsvTableFile {
         return new ArrayList<>(Collections.nCopies(fixedMaxColumnCount, ""));
     }
 
-    /**
-     * 获取指定单元格的值
-     * @param row 行号（从0开始）
-     * @param col 列号（从0开始）
-     * @return 单元格的字符串值
-     */
     @Override
     public String getCell(int row, int col) {
         return getCellValue(row, col);

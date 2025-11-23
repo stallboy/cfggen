@@ -1,5 +1,6 @@
 package configgen.write;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -12,7 +13,7 @@ public class RecordBlock {
 
     public RecordBlock(int maxColumns) {
         this.maxColumns = maxColumns;
-        this.cells = new String[16][];
+        this.cells = new String[4][];
     }
 
     /**
@@ -52,18 +53,49 @@ public class RecordBlock {
         }
     }
 
-    public String[] getRow(int row) {
-        if (row < 0 || row > maxRow) {
-            throw new IllegalArgumentException("Invalid row index");
+    public static class RecordBlockTransformed {
+        private final RecordBlock block;
+        private final List<Integer> fieldIndices;
+        private final int dataMaxColumns;
+
+        public RecordBlockTransformed(RecordBlock block, List<Integer> fieldIndices) {
+            this.block = block;
+            this.fieldIndices = fieldIndices;
+            this.dataMaxColumns = fieldIndices.getLast() + 1;
+            if (block.maxColumns != fieldIndices.size()) {
+                throw new IllegalArgumentException("fieldIndices size does not match block columns");
+            }
         }
-        return cells[row];
+
+
+        public String[] getRow(int row) {
+            if (row < 0 || row > block.maxRow) {
+                throw new IllegalArgumentException("Invalid row index");
+            }
+            String[] rowCells = block.cells[row];
+            if (rowCells == null) {
+                return null;
+            }
+            String[] trans = new String[dataMaxColumns];
+            for (int i = 0; i < block.maxColumns; i++) {
+                String cell = rowCells[i];
+                if (cell != null) {
+                    int fi = fieldIndices.get(i);
+                    trans[fi] = cell;
+                }
+            }
+            return trans;
+        }
+
+        /**
+         * 获取记录块的行数
+         * @return 行数
+         */
+        public int getRowCount() {
+            return block.maxRow + 1;
+        }
+
+
     }
 
-    /**
-     * 获取记录块的行数
-     * @return 行数
-     */
-    public int getRowCount() {
-        return maxRow + 1;
-    }
 }
