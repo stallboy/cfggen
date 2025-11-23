@@ -2,6 +2,7 @@ package configgen.write;
 
 import configgen.util.Logger;
 import de.siegmar.fastcsv.writer.CsvWriter;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -27,6 +28,11 @@ public class CsvTableFile implements TableFile {
         if (Files.exists(filePath)) {
             loadExistingFile();
         }
+    }
+
+    // 向后兼容的构造函数，忽略headRow参数
+    public CsvTableFile(Path filePath, char fieldSeparator, int headRow) throws IOException {
+        this(filePath, fieldSeparator);
     }
 
     private void loadExistingFile() throws IOException {
@@ -84,8 +90,8 @@ public class CsvTableFile implements TableFile {
     }
 
     @Override
-    public void insertRecordBlock(int startLine, int emptyRowCount, RecordBlock content) {
-        if (content == null || content.getRowCount() <= 0) {
+    public void insertRecordBlock(int startLine, int emptyRowCount, @NotNull RecordBlock content) {
+        if (content.getRowCount() <= 0) {
             return;
         }
 
@@ -130,7 +136,7 @@ public class CsvTableFile implements TableFile {
     }
 
     @Override
-    public void save() {
+    public void saveAndClose() {
         if (!modified) {
             return;
         }

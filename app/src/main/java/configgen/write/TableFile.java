@@ -1,5 +1,7 @@
 package configgen.write;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * TableFile接口用于表示表格文件（Excel或CSV），提供写入操作
  */
@@ -18,12 +20,12 @@ public interface TableFile {
      * @param emptyRowCount 可用的空行数
      * @param content 记录块内容
      */
-    void insertRecordBlock(int startRow, int emptyRowCount, RecordBlock content);
+    void insertRecordBlock(int startRow, int emptyRowCount, @NotNull RecordBlock content);
 
     /**
-     * 保存文件
+     * 保存文件并关闭
      */
-    void save();
+    void saveAndClose();
 
 
     /**

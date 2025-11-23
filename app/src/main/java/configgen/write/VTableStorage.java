@@ -1,9 +1,9 @@
 package configgen.write;
 
 import configgen.ctx.Context;
-import configgen.data.CfgData;
 import configgen.data.CfgData.DRowId;
 import configgen.data.CfgData.DTable;
+import configgen.schema.TableSchema;
 import configgen.value.CfgValue;
 import configgen.value.CfgValue.VStruct;
 import configgen.value.CfgValue.VTable;
@@ -19,7 +19,6 @@ public class VTableStorage {
                                          @NotNull DTable dTable,
                                          @NotNull Value pkValue,
                                          @NotNull VStruct newRecord) {
-
         RecordBlockMapper mapper = RecordBlockMapper.of(newRecord);
         mapper.map();
         RecordBlock block = mapper.block();
@@ -35,12 +34,14 @@ public class VTableStorage {
             // 新增操作：从dTable获取文件位置
             DRowId loc = TableFileLocator.getLocFromDTable(dTable);
             Path dataDir = context.getContextCfg().dataDir();
-            TableFile tableFile = TableFileLocator.createTableFile(loc, dataDir);
+            boolean isColumnMode = vTable.schema().isColumnMode();
+            int headRow = context.getContextCfg().headRow().rowCount();
+            TableFile tableFile = TableFileLocator.createTableFile(loc, dataDir, isColumnMode, headRow);
             recordLoc = new RecordLoc(tableFile, -1, -1);
         }
         TableFile tableFile = recordLoc.tableFile();
         tableFile.insertRecordBlock(recordLoc.startRow, recordLoc.rowCount, block);
-        tableFile.save();
+        tableFile.saveAndClose();
     }
 
 
@@ -48,7 +49,7 @@ public class VTableStorage {
                                     @NotNull VStruct oldRecord) {
 
         RecordLoc r = deleteRecordNoSave(context, oldRecord);
-        r.tableFile.save();
+        r.tableFile.saveAndClose();
     }
 
     private static RecordLoc deleteRecordNoSave(@NotNull Context context,
@@ -56,20 +57,20 @@ public class VTableStorage {
 
         DRowId location = TableFileLocator.getLocFromRecord(oldRecord);
         Path dataDir = context.getContextCfg().dataDir();
-        TableFile tableFile = TableFileLocator.createTableFile(location, dataDir);
+        boolean isColumnMode = ((TableSchema)oldRecord.schema()).isColumnMode();
+        int headRow = context.getContextCfg().headRow().rowCount();
+        TableFile tableFile = TableFileLocator.createTableFile(location, dataDir, isColumnMode, headRow);
 
         int startRow = location.row();
         int rowCount = tableFile.findRecordRowCount(startRow);
         tableFile.emptyRows(startRow, rowCount);
 
         return new RecordLoc(tableFile, startRow, rowCount);
-
     }
 
 
     private record RecordLoc(TableFile tableFile,
                              int startRow,
                              int rowCount) {
-
     }
 }

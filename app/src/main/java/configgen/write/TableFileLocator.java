@@ -54,25 +54,28 @@ public class TableFileLocator {
     /**
      * 创建TableFile实例
      */
-    public static TableFile createTableFile(DRowId location, Path dataDir) {
-        if (location == null) {
-            return null;
-        }
-
+    public static TableFile createTableFile(@NotNull DRowId location,
+                                            @NotNull Path dataDir,
+                                            boolean isColumnMode,
+                                            int headRow) {
         Path filePath = dataDir.resolve(location.fileName());
 
         // 根据文件扩展名判断文件类型
         String fileName = location.fileName().toLowerCase();
         if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls")) {
             try {
-                return new ExcelTableFile(filePath, location.sheetName());
+                if (isColumnMode) {
+                    return new ColumnModeExcelTableFile(filePath, location.sheetName(), headRow);
+                } else {
+                    return new ExcelTableFile(filePath, location.sheetName(), headRow);
+                }
             } catch (Exception e) {
                 throw new RuntimeException("Failed to create ExcelTableFile: " + filePath, e);
             }
         } else if (fileName.endsWith(".csv")) {
             try {
-                // 默认使用逗号作为分隔符
-                return new CsvTableFile(filePath, ',');
+                // 默认使用逗号作为分隔符，传递headRow参数
+                return new CsvTableFile(filePath, ',', headRow);
             } catch (Exception e) {
                 throw new RuntimeException("Failed to create CsvTableFile: " + filePath, e);
             }
@@ -80,5 +83,6 @@ public class TableFileLocator {
             throw new IllegalArgumentException("Unsupported file type: " + fileName);
         }
     }
+
 
 }
