@@ -6,7 +6,7 @@ import configgen.gen.Parameter;
 import configgen.schema.HasMap;
 import configgen.util.Logger;
 import configgen.value.CfgValue;
-import configgen.value.VTableJsonStorage;
+import configgen.write.VTableJsonStorage;
 
 import java.io.IOException;
 import java.nio.file.Path;

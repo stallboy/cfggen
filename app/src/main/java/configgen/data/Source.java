@@ -1,5 +1,7 @@
 package configgen.data;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +26,7 @@ public sealed interface Source permits DCell, DCellList, DFile {
         }
     }
 
-    record DCellList(List<DCell> cells) implements Source {
+    record DCellList(@NotNull List<DCell> cells) implements Source {
     }
 
     record DFile(String fileName, String inStruct, List<String> path) implements Source {

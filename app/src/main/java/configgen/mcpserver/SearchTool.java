@@ -2,8 +2,8 @@ package configgen.mcpserver;
 
 import com.github.codeboyzhou.mcp.declarative.annotation.McpTool;
 import com.github.codeboyzhou.mcp.declarative.annotation.McpToolParam;
-import configgen.editorserver.SearchService;
-import configgen.editorserver.SearchService.SearchResult;
+import configgen.tool.SearchService;
+import configgen.tool.SearchService.SearchResult;
 import configgen.value.*;
 
 public class SearchTool {

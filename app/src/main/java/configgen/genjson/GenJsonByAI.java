@@ -5,6 +5,7 @@ import configgen.gen.Generator;
 import configgen.gen.Parameter;
 import configgen.schema.*;
 import configgen.value.*;
+import configgen.write.VTableJsonStorage;
 import io.github.sashirestela.openai.SimpleOpenAI;
 import io.github.sashirestela.openai.domain.chat.ChatMessage;
 import io.github.sashirestela.openai.domain.chat.ChatRequest;

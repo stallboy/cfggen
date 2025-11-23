@@ -6,6 +6,8 @@ import configgen.ctx.Context;
 import configgen.data.CfgData;
 import configgen.schema.TableSchema;
 import configgen.value.*;
+import configgen.write.VTableJsonStorage;
+import configgen.write.VTableStorage;
 
 import java.nio.file.Path;
 import java.util.stream.Collectors;
@@ -53,8 +55,12 @@ public class WriteRecordTool {
             return "record stored success at %s".formatted(writePath.toString());
         } else {
             CfgData.DTable dTable = context.cfgData().tables().get(tableName);
-            boolean ok = VTableStorage.addOrUpdateRecord(cfgValue, vTable, dTable, pkValue, thisValue);
-            return ok ? "record stored success" : "record store failed";
+            try {
+                VTableStorage.addOrUpdateRecord(context, vTable, dTable, pkValue, thisValue);
+            } catch (Exception e) {
+                return "record store error: %s".formatted(e.getMessage());
+            }
+            return "record stored success";
         }
     }
 
@@ -99,8 +105,12 @@ public class WriteRecordTool {
             }
             return "record deleted success at %s".formatted(jsonPath.toString());
         } else {
-            boolean ok = VTableStorage.deleteRecord(cfgValue, vTable, old);
-            return ok ? "record deleted success" : "record delete failed";
+            try {
+                VTableStorage.deleteRecord(context, old);
+            } catch (Exception e2) {
+                return "record delete error: %s".formatted(e2.getMessage());
+            }
+            return "record deleted success";
         }
     }
 }

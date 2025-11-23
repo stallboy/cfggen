@@ -6,6 +6,7 @@ import configgen.schema.Msg;
 import configgen.schema.TableSchema;
 import configgen.util.Logger;
 import configgen.value.*;
+import configgen.write.VTableJsonStorage;
 
 import java.nio.file.Path;
 import java.util.ArrayList;

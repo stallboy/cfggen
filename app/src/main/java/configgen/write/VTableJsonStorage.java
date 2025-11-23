@@ -1,8 +1,9 @@
-package configgen.value;
+package configgen.write;
 
 import configgen.gen.Generator;
 import configgen.util.CachedFiles;
 import configgen.value.CfgValue.VStruct;
+import configgen.value.ValueToJson;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;

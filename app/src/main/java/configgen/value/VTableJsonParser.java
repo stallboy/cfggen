@@ -2,6 +2,7 @@ package configgen.value;
 
 import configgen.ctx.DirectoryStructure;
 import configgen.schema.TableSchema;
+import configgen.write.VTableJsonStorage;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
