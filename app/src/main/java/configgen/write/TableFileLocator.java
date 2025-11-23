@@ -1,5 +1,6 @@
 package configgen.write;
 
+import configgen.ctx.Context;
 import configgen.data.CfgData;
 import configgen.data.CfgData.DRowId;
 import configgen.data.Source;
@@ -14,24 +15,22 @@ import java.nio.file.Path;
  */
 public class TableFileLocator {
 
-    /**
-     * 从oldRecord中获取文件位置信息
-     */
     public static DRowId getLocFromRecord(@NotNull VStruct record) {
-        DRowId rowId = null;
         switch (record.source()) {
             case CfgData.DCell dCell -> {
-                rowId = dCell.rowId();
+                return dCell.rowId();
             }
             case Source.DCellList dCellList -> {
                 if (!dCellList.cells().isEmpty()) {
-                    rowId = dCellList.cells().getFirst().rowId();
+                    return dCellList.cells().getFirst().rowId();
+                } else {
+                    throw new IllegalArgumentException("DCellList is empty in record: " + record);
                 }
             }
             case Source.DFile ignored -> {
+                throw new IllegalArgumentException("Record source is DFile, cannot get row location: " + record);
             }
         }
-        return rowId;
     }
 
     /**
@@ -39,7 +38,7 @@ public class TableFileLocator {
      */
     public static DRowId getLocFromDTable(@NotNull CfgData.DTable dTable) {
         if (dTable.rawSheets().isEmpty()) {
-            return null;
+            throw new IllegalArgumentException("DTable has no rawSheets: " + dTable.tableName());
         }
 
         // 使用最后一个rawSheet
@@ -55,9 +54,11 @@ public class TableFileLocator {
      * 创建TableFile实例
      */
     public static TableFile createTableFile(@NotNull DRowId location,
-                                            @NotNull Path dataDir,
-                                            boolean isColumnMode,
-                                            int headRow) {
+                                            @NotNull Context context,
+                                            boolean isColumnMode) {
+        Path dataDir = context.getContextCfg().dataDir();
+        int headRow = context.getContextCfg().headRow().rowCount();
+
         Path filePath = dataDir.resolve(location.fileName());
 
         // 根据文件扩展名判断文件类型
@@ -74,8 +75,12 @@ public class TableFileLocator {
             }
         } else if (fileName.endsWith(".csv")) {
             try {
-                // 默认使用逗号作为分隔符，传递headRow参数
-                return new CsvTableFile(filePath, ',', headRow);
+                // 根据是否为列模式创建不同的CSV表格文件实例
+                if (isColumnMode) {
+                    return new ColumnModeCsvTableFile(filePath, context.getContextCfg().csvOrTsvDefaultEncoding(), headRow);
+                } else {
+                    return new CsvTableFile(filePath, context.getContextCfg().csvOrTsvDefaultEncoding(), headRow);
+                }
             } catch (Exception e) {
                 throw new RuntimeException("Failed to create CsvTableFile: " + filePath, e);
             }

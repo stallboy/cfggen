@@ -99,7 +99,7 @@ public class TableRelatedInfoFinder {
         if (title != null) {
             fieldNames.add(title);
         }
-        ValueToCsv.writeAsCsv(sb, vTable, fieldNames, "");
+        ValueToCsv.writeAsCsv(sb, vTable, fieldNames);
 
         return new TableRecordList(schema.name(), sb.toString());
     }

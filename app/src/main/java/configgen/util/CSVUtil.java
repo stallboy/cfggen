@@ -8,11 +8,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.OptionalInt;
 
 public class CSVUtil {
 
     public static List<CsvRow> read(Path path, String defaultEncoding) {
-        try (CsvReader reader = CsvReader.builder().build(new UnicodeReader(Files.newInputStream(path), defaultEncoding))) {
+        try (CsvReader reader = CsvReader.builder().skipEmptyRows(false).build(
+                new UnicodeReader(Files.newInputStream(path), defaultEncoding))) {
             List<CsvRow> rows = new ArrayList<>();
             for (CsvRow csvRow : reader) {
                 rows.add(csvRow);
@@ -21,6 +23,29 @@ public class CSVUtil {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static List<List<String>> readAndNormalize(Path path, String defaultEncoding) {
+        List<CsvRow> rows = read(path, defaultEncoding);
+
+        List<List<String>> result = new ArrayList<>(rows.size());
+        OptionalInt cols = rows.stream().mapToInt(CsvRow::getFieldCount).max();
+        if (cols.isEmpty()) {
+            return result;
+        }
+        int colCount = cols.getAsInt();
+        for (CsvRow csvRow : rows) {
+            List<String> row = new ArrayList<>(colCount);
+            for (int c = 0; c < colCount; c++) {
+                if (c < csvRow.getFieldCount()) {
+                    row.add(csvRow.getField(c));
+                } else {
+                    row.add("");
+                }
+            }
+            result.add(row);
+        }
+        return result;
     }
 
 
@@ -38,16 +63,16 @@ public class CSVUtil {
 
        "aaa","b""bb","ccc"
        */
-    public static void write(UTF8Writer writer, List<List<String>> rows)  {
+    public static void write(UTF8Writer writer, List<List<String>> rows) {
         if (rows.isEmpty()) {
             return;
         }
         StringBuilder sb = new StringBuilder(256);
-        write(sb, rows, "");
+        write(sb, rows);
         writer.write(sb.toString());
     }
 
-    public static void write(StringBuilder sb, List<List<String>> rows, String prefix) {
+    public static void write(StringBuilder sb, List<List<String>> rows) {
         int columnCount = rows.getFirst().size();
 
         for (int r = 0; r < rows.size(); r++) {
@@ -56,7 +81,6 @@ public class CSVUtil {
                 throw new IllegalArgumentException("csv里每行数据个数应该相同，但这里第" + r + "行，数据有" + row.size() + "个,跟第一行" + columnCount + ",个数不符合");
             }
 
-            sb.append(prefix);
             for (int c = 0; c < row.size(); c++) {
                 String cell = row.get(c);
                 boolean enclose = false;

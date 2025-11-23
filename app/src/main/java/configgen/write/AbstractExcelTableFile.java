@@ -71,7 +71,6 @@ public abstract class AbstractExcelTableFile implements TableFile {
         try (FileOutputStream fos = new FileOutputStream(filePath.toFile())) {
             workbook.write(fos);
         } catch (IOException e) {
-            Logger.log("Failed to save Excel file: " + filePath + " - " + e.getMessage());
             throw new RuntimeException("Failed to save Excel file: " + filePath, e);
         } finally {
             // 确保Workbook资源被释放

@@ -10,8 +10,6 @@ import configgen.value.CfgValue.VTable;
 import configgen.value.CfgValue.Value;
 import org.jetbrains.annotations.NotNull;
 
-import java.nio.file.Path;
-
 public class VTableStorage {
 
     public static void addOrUpdateRecord(@NotNull Context context,
@@ -33,10 +31,8 @@ public class VTableStorage {
         } else {
             // 新增操作：从dTable获取文件位置
             DRowId loc = TableFileLocator.getLocFromDTable(dTable);
-            Path dataDir = context.getContextCfg().dataDir();
             boolean isColumnMode = vTable.schema().isColumnMode();
-            int headRow = context.getContextCfg().headRow().rowCount();
-            TableFile tableFile = TableFileLocator.createTableFile(loc, dataDir, isColumnMode, headRow);
+            TableFile tableFile = TableFileLocator.createTableFile(loc, context, isColumnMode);
             recordLoc = new RecordLoc(tableFile, -1, -1);
         }
         TableFile tableFile = recordLoc.tableFile();
@@ -56,10 +52,8 @@ public class VTableStorage {
                                                 @NotNull VStruct oldRecord) {
 
         DRowId location = TableFileLocator.getLocFromRecord(oldRecord);
-        Path dataDir = context.getContextCfg().dataDir();
-        boolean isColumnMode = ((TableSchema)oldRecord.schema()).isColumnMode();
-        int headRow = context.getContextCfg().headRow().rowCount();
-        TableFile tableFile = TableFileLocator.createTableFile(location, dataDir, isColumnMode, headRow);
+        boolean isColumnMode = ((TableSchema) oldRecord.schema()).isColumnMode();
+        TableFile tableFile = TableFileLocator.createTableFile(location, context, isColumnMode);
 
         int startRow = location.row();
         int rowCount = tableFile.findRecordRowCount(startRow);

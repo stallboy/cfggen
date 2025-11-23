@@ -1,223 +1,113 @@
 package configgen.write;
 
-import configgen.util.Logger;
-import de.siegmar.fastcsv.writer.CsvWriter;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+/**
+ * CSV表格文件实现（行模式）
+ */
+public class CsvTableFile extends AbstractCsvTableFile {
+    private final int fixedMaxColumnCount;
 
-public class CsvTableFile implements TableFile {
-    private final Path filePath;
-    private final char fieldSeparator;
-    private final List<List<String>> rows;
-    private boolean modified = false;
-
-    public CsvTableFile(Path filePath, char fieldSeparator) throws IOException {
-        this.filePath = filePath;
-        this.fieldSeparator = fieldSeparator;
-        this.rows = new ArrayList<>();
-
-        // 读取现有文件或创建新文件
-        if (Files.exists(filePath)) {
-            loadExistingFile();
+    public CsvTableFile(Path filePath, String defaultEncoding, int headRow) {
+        super(filePath, defaultEncoding, headRow);
+        if (rows.isEmpty()) {
+            throw new IllegalArgumentException("CSV file has no data: " + filePath);
         }
-    }
-
-    // 向后兼容的构造函数，忽略headRow参数
-    public CsvTableFile(Path filePath, char fieldSeparator, int headRow) throws IOException {
-        this(filePath, fieldSeparator);
-    }
-
-    private void loadExistingFile() throws IOException {
-        List<String> lines = Files.readAllLines(filePath, StandardCharsets.UTF_8);
-
-        // 使用简单的CSV解析
-        for (String line : lines) {
-            List<String> fields = parseCsvLine(line, fieldSeparator);
-            rows.add(new ArrayList<>(fields));
-        }
+        fixedMaxColumnCount = rows.getFirst().size();
     }
 
     /**
-     * 简单的CSV行解析
+     * 清空指定行范围的数据
+     * @param startRow 起始行号（从0开始）
+     * @param count 要清空的行数
      */
-    private List<String> parseCsvLine(String line, char separator) {
-        List<String> fields = new ArrayList<>();
-        StringBuilder currentField = new StringBuilder();
-        boolean inQuotes = false;
-
-        for (int i = 0; i < line.length(); i++) {
-            char c = line.charAt(i);
-
-            if (c == '"') {
-                inQuotes = !inQuotes;
-            } else if (c == separator && !inQuotes) {
-                fields.add(currentField.toString().trim());
-                currentField = new StringBuilder();
-            } else {
-                currentField.append(c);
-            }
-        }
-
-        // 添加最后一个字段
-        fields.add(currentField.toString().trim());
-        return fields;
-    }
-
     @Override
-    public void emptyRows(int startLine, int count) {
-        if (startLine < 0 || count <= 0 || startLine >= rows.size()) {
+    public void emptyRows(int startRow, int count) {
+        if (startRow < 0 || count <= 0 || startRow >= rows.size()) {
             return;
         }
 
-        int endLine = Math.min(startLine + count, rows.size());
+        int end = Math.min(startRow + count, rows.size());
 
         // 清空指定范围内的行
-        for (int i = startLine; i < endLine; i++) {
+        for (int i = startRow; i < end; i++) {
             List<String> row = rows.get(i);
-            for (int j = 0; j < row.size(); j++) {
-                row.set(j, "");
-            }
+            Collections.fill(row, "");
         }
-        modified = true;
+        markModified();
     }
 
+    /**
+     * 插入记录块到指定位置
+     * @param startRow 起始行号，-1表示放到最后
+     * @param emptyRowCount 可用的空行数
+     * @param content 记录块内容
+     */
     @Override
-    public void insertRecordBlock(int startLine, int emptyRowCount, @NotNull RecordBlock content) {
+    public void insertRecordBlock(int startRow, int emptyRowCount, @NotNull RecordBlock content) {
         if (content.getRowCount() <= 0) {
             return;
         }
 
-        int actualStartLine;
-        if (startLine == -1) {
+        int actualStartRow;
+        if (startRow == -1) {
             // 放到最后
-            actualStartLine = rows.size();
+            actualStartRow = Math.max(rows.size(), headRow);
         } else {
-            actualStartLine = startLine;
+            actualStartRow = startRow;
         }
 
-        int contentLineCount = content.getRowCount();
+        int contentRowCount = content.getRowCount();
 
         // 如果内容行数大于可用空行数，需要插入新行
-        if (contentLineCount > emptyRowCount && startLine != -1) {
-            int insertCount = contentLineCount - emptyRowCount;
+        if (contentRowCount > emptyRowCount && startRow != -1) {
+            int insertCount = contentRowCount - emptyRowCount;
             for (int i = 0; i < insertCount; i++) {
-                rows.add(actualStartLine + emptyRowCount + i, createEmptyRow());
+                rows.add(actualStartRow + emptyRowCount + i, createEmptyRow());
             }
         }
 
         // 确保有足够的行
-        while (rows.size() < actualStartLine + contentLineCount) {
+        while (rows.size() < actualStartRow + contentRowCount) {
             rows.add(createEmptyRow());
         }
 
         // 写入记录块内容
-        for (int rowOffset = 0; rowOffset < contentLineCount; rowOffset++) {
-            int rowNum = actualStartLine + rowOffset;
+        for (int rowOffset = 0; rowOffset < contentRowCount; rowOffset++) {
+            int rowNum = actualStartRow + rowOffset;
             List<String> row = rows.get(rowNum);
 
-            // 确保行有足够的列
-            int maxCols = getMaxColumnCount();
-            while (row.size() < maxCols) {
-                row.add("");
+            // 写入该行的数据
+            String[] rowData = content.getRow(rowOffset);
+            if (rowData != null) {
+                for (int col = 0; col < rowData.length; col++) {
+                    String cellValue = rowData[col];
+                    if (cellValue != null) {
+                        row.set(col, cellValue);
+                    }
+                }
             }
-
-            // 具体的单元格写入逻辑在RecordBlock实现中处理
-            // RecordBlock会通过cell方法设置具体的值
         }
-        modified = true;
+        markModified();
     }
 
-    @Override
-    public void saveAndClose() {
-        if (!modified) {
-            return;
-        }
-
-        try (CsvWriter writer = CsvWriter.builder()
-                .fieldSeparator(fieldSeparator)
-                .build(filePath, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-
-            for (List<String> row : rows) {
-                writer.writeRow(row);
-            }
-
-        } catch (IOException e) {
-            Logger.log("Failed to save CSV file: " + filePath + " - " + e.getMessage());
-            throw new RuntimeException("Failed to save CSV file: " + filePath, e);
-        }
-
-        modified = false;
+    private List<String> createEmptyRow() {
+        return new ArrayList<>(Collections.nCopies(fixedMaxColumnCount, ""));
     }
 
+    /**
+     * 获取指定单元格的值
+     * @param row 行号（从0开始）
+     * @param col 列号（从0开始）
+     * @return 单元格的字符串值
+     */
     @Override
     public String getCell(int row, int col) {
-        return "";
-    }
-
-    /**
-     * 获取最大列数
-     */
-    private int getMaxColumnCount() {
-        int maxCols = 0;
-        for (List<String> row : rows) {
-            maxCols = Math.max(maxCols, row.size());
-        }
-        return maxCols;
-    }
-
-    /**
-     * 创建空行
-     */
-    private List<String> createEmptyRow() {
-        int maxCols = getMaxColumnCount();
-        List<String> row = new ArrayList<>(maxCols);
-        for (int i = 0; i < maxCols; i++) {
-            row.add("");
-        }
-        return row;
-    }
-
-    /**
-     * 设置单元格的值
-     */
-    public void setCellValue(int row, int col, String value) {
-        // 确保行存在
-        while (rows.size() <= row) {
-            rows.add(createEmptyRow());
-        }
-
-        List<String> rowData = rows.get(row);
-
-        // 确保列存在
-        while (rowData.size() <= col) {
-            rowData.add("");
-        }
-
-        rowData.set(col, value != null ? value : "");
-        modified = true;
-    }
-
-    /**
-     * 获取单元格的值
-     */
-    public String getCellValue(int row, int col) {
-        if (row < 0 || row >= rows.size()) {
-            return "";
-        }
-
-        List<String> rowData = rows.get(row);
-        if (col < 0 || col >= rowData.size()) {
-            return "";
-        }
-
-        return rowData.get(col);
+        return getCellValue(row, col);
     }
 }
