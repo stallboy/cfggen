@@ -1,5 +1,6 @@
 package configgen.util;
 
+import de.siegmar.fastcsv.reader.CommentStrategy;
 import de.siegmar.fastcsv.reader.CsvReader;
 import de.siegmar.fastcsv.reader.CsvRow;
 
@@ -13,8 +14,15 @@ import java.util.OptionalInt;
 public class CSVUtil {
 
     public static List<CsvRow> read(Path path, String defaultEncoding) {
-        try (CsvReader reader = CsvReader.builder().skipEmptyRows(false).build(
-                new UnicodeReader(Files.newInputStream(path), defaultEncoding))) {
+        return read(path, defaultEncoding, ',');
+    }
+
+    public static List<CsvRow> read(Path path, String defaultEncoding, char fieldSeparator) {
+        try (CsvReader reader = CsvReader.builder()
+                .skipEmptyRows(false)
+                .commentStrategy(CommentStrategy.NONE)
+                .fieldSeparator(fieldSeparator)
+                .build(new UnicodeReader(Files.newInputStream(path), defaultEncoding))) {
             List<CsvRow> rows = new ArrayList<>();
             for (CsvRow csvRow : reader) {
                 rows.add(csvRow);

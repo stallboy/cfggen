@@ -38,7 +38,7 @@ public class TableRelatedInfoFinder {
             sb.append("<related_schema>\n");
             sb.append("```\n");
             sb.append(relatedCfg);
-            sb.append("```\n</related_schema>\n");
+            sb.append("```\n</related_schema>\n\n");
 
             for (TableRecordList info : relatedTableRecordListInCsv) {
                 info.prompt(sb);

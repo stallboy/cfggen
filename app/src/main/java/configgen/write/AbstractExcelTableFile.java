@@ -4,6 +4,7 @@ import configgen.util.Logger;
 import org.apache.poi.ss.usermodel.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -34,7 +35,7 @@ public abstract class AbstractExcelTableFile implements TableFile {
 
         if (java.nio.file.Files.exists(filePath)) {
             try {
-                this.workbook = WorkbookFactory.create(filePath.toFile(), null, true);
+                this.workbook = WorkbookFactory.create(filePath.toFile(), null, false);
             } catch (IOException e) {
                 throw new RuntimeException("Failed to open Excel file: " + filePath, e);
             }
@@ -68,22 +69,45 @@ public abstract class AbstractExcelTableFile implements TableFile {
      */
     @Override
     public void saveAndClose() {
-        try (FileOutputStream fos = new FileOutputStream(filePath.toFile())) {
-            workbook.write(fos);
+        // 1. 确定临时文件路径
+        File originalFile = filePath.toFile();
+        File tempFile = new File(filePath + ".tmp");
+
+        try {
+            // 2. 显式写入临时文件 (这是真正保存数据的时刻)
+            try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+                workbook.write(fos);
+            }
         } catch (IOException e) {
-            throw new RuntimeException("Failed to save Excel file: " + filePath, e);
+            throw new RuntimeException("Failed to save to temp file", e);
         } finally {
-            // 确保Workbook资源被释放
+            // 3. 关闭 Workbook
+            // 目的：主要是为了释放对 originalFile 的文件锁
+            // 技巧：为了防止 close() 再次尝试写回原文件导致冲突，
             try {
                 workbook.close();
             } catch (IOException e) {
                 Logger.log("Failed to close workbook: " + e.getMessage());
             }
         }
+
+        // 4. 【关键缺失步骤】用临时文件覆盖源文件
+        if (tempFile.exists()) {
+            // 如果源文件存在，先删除（或者使用原子移动）
+            if (originalFile.exists()) {
+                if (!originalFile.delete()) {
+                    throw new RuntimeException("无法删除原文件，可能被占用: " + originalFile);
+                }
+            }
+            // 重命名临时文件 -> 原文件
+            if (!tempFile.renameTo(originalFile)) {
+                throw new RuntimeException("无法重命名临时文件");
+            }
+        }
     }
 
 
-    protected String getCellValue(int row, int col){
+    protected String getCellValue(int row, int col) {
         // 行模式：正常读取
         Row sheetRow = sheet.getRow(row);
         if (sheetRow == null) {

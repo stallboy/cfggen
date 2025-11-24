@@ -26,7 +26,7 @@ public class ReadRecordTool {
         }
 
         TableRecordList list = TableRelatedInfoFinder.getTableRecordListInCsv(vTable);
-        return list.toString();
+        return list.prompt();
     }
 
     @McpTool(description = "read one record")
