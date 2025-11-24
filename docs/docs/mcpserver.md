@@ -182,7 +182,7 @@ java -jar cfggen.jar -datadir [配置目录] -gen mcpserver,watch=5,postrun=relo
 claude mcp add --transport http cfggen http:/localhost:3457/mcp
 ```
 
--删除
+- 删除
 
 ```bash
 claude mcp remove cfggen

@@ -1,93 +1,123 @@
-# 🗂️ Configuration System
+# 🗂️ Configuration System (cfggen)
 
-## ✨ Main Features
+## ✨ Core Features
 
-- 🔗 Detect data consistency through foreign key configuration
-- 💻 Generate typed data access code, foreign key references, entries, and enums
-- 🏗️ Support polymorphic structures and nested structures, allowing writing arbitrarily complex structured data in a single cell, giving Excel the flexibility of XML
-- ⚡ Java generation focuses on hot-reload safety, Lua generation focuses on memory size
+- 🔗 **Data Consistency Checking** - Automatically detect data reference integrity through foreign key relationships
+- 💻 **Multi-language Code Generation** - Generate typed data access code for multiple programming languages
+- 🏗️ **Flexible Data Structures** - Support polymorphic structures, nested structures, write complex configuration data in Excel cells
+- 🔧 **Editor Service** - Provide RESTful API to support configuration editor (cfgeditor.exe)
+- 🤖 **AI Integration** - MCP service to support AI-generated configurations
 
-## 📋 Prerequisites
+### 🎯 Supported Languages and Formats
 
-* JDK 21
-* Gradle
-* Set git/bin path to PATH environment variable
+| Language/Format | Description | Main Use Cases |
+|-----------------|-------------|----------------|
+| **Java** | Type-safe configuration access, supports sealed classes | Backend services, Android applications |
+| **C#** | .NET platform configuration access | Unity games, .NET applications |
+| **TypeScript** | Typed configuration for frontend and Node.js | Web applications, frontend projects |
+| **Go** | Configuration structs for Go language | Go backend services |
+| **Lua** | Lua table configuration data | Game scripting, embedded systems |
+| **JSON** | Universal configuration data format | Data exchange, API configuration |
 
-## 🔨 Build & Test
+## 📋 Environment Requirements
 
-In the root directory
+* **JDK 21** - Java development environment
+* **Gradle** - Build tool
+* **Git** - Version control tool (ensure git/bin path is added to PATH environment variable)
 
-### 📦 Generate cfggen.jar, cfggen.exe
+## 🚀 Quick Start
+
+### 📦 Build Project
+
+Execute in the project root directory:
 
 ```bash
-genjar.bat  # Generate cfggen.jar
+# Generate executable JAR file
+genjar.bat
+
+# Generate Windows executable (contained in cfggen.zip)
+mkexe.bat
 ```
+
+### 🎯 Basic Usage
 
 ```bash
-mkexe.bat  # Generate cfggen.zip containing exe
+# Use the generated JAR file
+java -jar cfggen.jar -datadir [config_directory] -gen [language]
+
+# Example: Generate Java code
+java -jar cfggen.jar -datadir example -gen java
+
+# Example: Generate TypeScript code
+java -jar cfggen.jar -datadir example -gen ts
 ```
 
-### 🧪 Testing
+## 🧪 Testing Examples
 
-#### 📖 View Usage Instructions
+### 📖 View Usage Instructions
 
 ```bash
 cd example
-usage.bat  # Print usage instructions
+usage.bat
 ```
 
-#### ☕ Test Java: Generate Java Code and Data
+### Multi-language Code Generation Testing
 
+#### ☕ Java Testing
 ```bash
 cd example
-genjava.bat # sealed requires Java 17 or above, can also remove sealed
-```
-
-#### ✅ Test Java: Verify Java Generation
-
-```bash
-gradle build
+genjava.bat    # Generate Java code and data
+gradle build   # Build project
 java -jar build/libs/example.jar
-# Enter command line, type 'q' to quit, type other inputs like "ai" to print table names starting with ai structure definitions and data
+# Enter command line interactive mode, type 'q' to exit, type table name prefix (like "ai") to view related data
 ```
 
-#### 📜 Test Lua
+> **Note**: Java 17+ supports sealed classes, remove sealed keyword if compatibility with older versions is needed
 
+#### 📜 Lua Testing
 ```bash
+cd example
 genlua.bat
 cd lua
-chcp 65001
+chcp 65001     # Set UTF-8 encoding (Windows)
 lua.exe test.lua
 ```
 
-#### 🔷 Test C#
-
+#### 🔷 C# Testing
 ```bash
+cd example
 gencshape.bat
 cd cs
 run.bat
 ```
 
-#### 🐹 Test Go
-
+#### 🐹 Go Testing
 ```bash
+cd example
 gengo.bat
 cd go
 go run .
 ```
 
-#### 🔷 Test TypeScript
-
+#### 🔷 TypeScript Testing
 ```bash
+cd example
 gents.bat
 cd ts
-pnpm i -D tsx
+pnpm i -D tsx  # Install TypeScript runtime environment
 npx tsx main.ts
 ```
 
-## 🔗 Related Links
+## 📚 Additional Resources
 
-* 📖 [Main Project README](../README.md)
-* 📚 [Detailed Documentation](https://stallboy.github.io/cfggen)
-* 🔌 [VSCode CFG Extension](../cfgdev/vscode-cfg-extension/README.md)
-* 🎨 [Editor cfgeditor Documentation](../cfgeditor/README.md)
+* 📖 [Main Project Documentation](../README.md) - Complete project introduction and architecture description
+* 📚 [Detailed Documentation](https://stallboy.github.io/cfggen) - Online documentation and API reference
+* 🔌 [VSCode Extension](../cfgdev/vscode-cfg-extension/README.md) - Configuration editing and syntax highlighting
+* 🎨 [Configuration Editor](../cfgeditor/README.md) - Graphical configuration editing tool
+
+## 💡 Use Cases
+
+- **Game Development** - Game configuration data management and code generation
+- **Application Configuration** - Structured management and validation of complex business configurations
+- **Multi-language Projects** - Provide type-safe configuration access for different technology stacks
+- **Data-driven Development** - Drive business logic and behavior through configurations
