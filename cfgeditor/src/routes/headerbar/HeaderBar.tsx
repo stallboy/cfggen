@@ -60,7 +60,7 @@ export const HeaderBar = memo(function ({schema, curTable}: {
     const {editingCurTable, editingCurId, editingIsEdited} = useMyStore();
 
     let unsavedSign;
-    if (editingIsEdited && editingCurTable == curTableId && editingCurId == curId){
+    if (editingIsEdited && editingCurTable == curTableId && editingCurId == curId) {
         unsavedSign = <Text>{t('unsaved')}</Text>
     }
 
@@ -85,7 +85,7 @@ export const HeaderBar = memo(function ({schema, curTable}: {
 
 
     return <div style={HEADER_STYLE}>
-        <Space size={'large'} style={SPACE_STYLE}>
+        <Space size={'small'} style={SPACE_STYLE}>
             <Space size={'small'}>
                 <Select options={dragOptions}
                         style={DRAG_SELECT_STYLE}
@@ -102,5 +102,6 @@ export const HeaderBar = memo(function ({schema, curTable}: {
                 <Button icon={prevIcon} onClick={prev} disabled={!historyCanPrev(curTableId, curId, history)}/>
                 <Button icon={nextIcon} onClick={next} disabled={!history.canNext()}/>
             </Space>
-        </Space></div>;
+        </Space>
+    </div>;
 });

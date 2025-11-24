@@ -1,7 +1,7 @@
 import {memo, RefObject, useCallback} from "react";
 import {useNavigate} from "react-router-dom";
 import {useTranslation} from "react-i18next";
-import {App, Button, Divider, Form, Input, InputNumber, Radio} from "antd";
+import {App, Button, Divider, Form, Input, InputNumber, Radio, Space} from "antd";
 import {
     setImageSizeScale,
     useMyStore,
@@ -15,7 +15,6 @@ import {RecordEditResult} from "../record/recordModel.ts";
 import {deleteRecord} from "../api.ts";
 import {toBlob} from "html-to-image";
 import {saveAs} from "file-saver";
-import {formItemLayoutWithOutLabel, formLayout} from "./BasicSetting.tsx";
 import {OpFixPages} from "./OpFixPages.tsx";
 import {PageType, navTo, useLocationData} from "../../store/store.ts";
 import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
@@ -45,7 +44,7 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
 
         onError: (error) => {
             notification.error({
-                message: `deleteRecord ${curTableId}/${curId} err: ${error.message}`,
+                title: `deleteRecord ${curTableId}/${curId} err: ${error.message}`,
                 placement: 'topRight',
                 duration: 4
             });
@@ -54,14 +53,14 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
             if (editResult.resultCode == 'deleteOk') {
                 // console.log(editResult);
                 notification.info({
-                    message: `deleteRecord ${curTableId}/${curId} ${editResult.resultCode}`,
+                    title: `deleteRecord ${curTableId}/${curId} ${editResult.resultCode}`,
                     placement: 'topRight',
                     duration: 3
                 });
                 invalidateAllQueries();
             } else {
                 notification.warning({
-                    message: `deleteRecord ${curTableId}/${curId}  ${editResult.resultCode}`,
+                    title: `deleteRecord ${curTableId}/${curId}  ${editResult.resultCode}`,
                     placement: 'topRight',
                     duration: 4
                 });
@@ -96,10 +95,10 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
                     fn = `${curPage}_${curTableId}_${curId}.png`;
                 }
                 saveAs(blob, fn);
-                notification.info({message: "save png to " + fn, duration: 3});
+                notification.info({title: "save png to " + fn, duration: 3});
             }
         }).catch((err) => {
-            notification.error({message: "save png failed: limit the max node count", duration: 3});
+            notification.error({title: "save png failed: limit the max node count", duration: 3});
             console.log(err)
         })
     }, [flowRef, imageSizeScale, curPage, curTableId, notification]);
@@ -117,10 +116,7 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
 
 
     return <>
-        <Divider/>
-        <Form {...formLayout} layout={'horizontal'}
-              initialValues={{server}}>
-
+        <Form layout={'vertical'} initialValues={{server}}>
             <Form.Item label={t('curServer')}>
                 {server}
             </Form.Item>
@@ -128,35 +124,31 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
                 <Input.Search enterButton={t('connect')} onSearch={(value: string) => setServer(value)}/>
             </Form.Item>
         </Form>
-        <Divider/>
 
+        <Divider/>
         <OpFixPages schema={schema} curTable={curTable}/>
+
+
+        <Radio.Group optionType="button"
+                     value={curPage}
+                     options={options}
+                     onChange={(e) => onChangeCurPage(e.target.value)}/>
         <Divider/>
 
-        <div style={{marginBottom: 16}}>
-            <div style={{marginBottom: 8}}>{t('pageType')}</div>
-            <Radio.Group optionType="button"
-                         value={curPage}
-                         options={options}
-                         onChange={(e) => onChangeCurPage(e.target.value)}/>
-        </div>
-        <Divider/>
-
-        <Form {...formLayout} layout={'horizontal'} initialValues={{imageSizeScale}}>
+        <Form layout={'vertical'} initialValues={{imageSizeScale}}>
             <Form.Item name='imageSizeScale' label={t('imageSizeScale')}>
-                <InputNumber min={1} max={256} onChange={setImageSizeScale}/>
+                <Space>
+                    <InputNumber min={1} max={256} onChange={setImageSizeScale}/>
+                    <Button type="primary" onClick={onToPng}>
+                        {t('toPng')}
+                    </Button>
+                </Space>
             </Form.Item>
 
-            <Form.Item {...formItemLayoutWithOutLabel}>
-                <Button type="primary" onClick={onToPng}>
-                    {t('toPng')}
-                </Button>
-            </Form.Item>
-
-            <Divider/>
 
             {(schema && curTable && schema.isEditable && curTable.isEditable) &&
-                <Form.Item {...formItemLayoutWithOutLabel}>
+                <Form.Item>
+                    <Divider/>
                     <Button type="primary" danger
                             onClick={() => deleteRecordMutation.mutate()}>
                         <CloseOutlined/>{t('deleteCurRecord')}
@@ -165,7 +157,6 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
             }
         </Form>
         <Divider/>
-
         <Button onClick={toggleFullScreen}> {t('toggleFullScreen')}</Button>
         <Divider/>
 

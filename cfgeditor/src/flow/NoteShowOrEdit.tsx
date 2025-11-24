@@ -45,7 +45,7 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
 
         onError: (error, variables) => {
             notification.error({
-                message: `updateNote  ${id} ${variables} err: ${error.toString()}`,
+                title: `updateNote  ${id} ${variables} err: ${error.toString()}`,
                 placement: 'topRight', duration: 4
             });
             setIsEdit(false);
@@ -55,14 +55,14 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
             const {resultCode, notes} = editResult;
             if (resultCode == 'updateOk' || resultCode == 'addOk' || resultCode == 'deleteOk') {
                 notification.info({
-                    message: `updateNote  ${resultCode} ${id} ${variables}`,
+                    title: `updateNote  ${resultCode} ${id} ${variables}`,
                     placement: 'topRight',
                     duration: 3
                 });
                 queryClient.setQueryData(['notes'], notesToMap(notes));
             } else {
                 notification.warning({
-                    message: `updateNote ${resultCode} ${id} ${variables}`,
+                    title: `updateNote ${resultCode} ${id} ${variables}`,
                     placement: 'topRight',
                     duration: 4
                 });

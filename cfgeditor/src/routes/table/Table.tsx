@@ -19,7 +19,6 @@ export function Table() {
     const {t} = useTranslation();
     const navigate = useNavigate();
 
-    // ���ߺ����������ظ���ȡĬ��ID
     const getTableDefaultId = (tableName: string) => getDefaultIdInTable(schema, tableName, curId);
 
     const entityMap = new Map<string, Entity>();

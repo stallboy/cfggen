@@ -1,16 +1,16 @@
 import {memo,} from "react";
 import {useTranslation} from "react-i18next";
-import {Button, Card, Divider, Form, Input} from "antd";
+import {Button, Form, Input, Typography} from "antd";
 import {
     setAIConf,
     useMyStore
 } from "../../store/store.ts";
 
-import {formItemLayoutWithOutLabel, formLayout} from "./BasicSetting.tsx";
 import {Schema} from "../table/schemaUtil.tsx";
 import {TauriSetting} from "./TauriSeting.tsx";
 import {isTauri} from "@tauri-apps/api/core";
 
+const {Title} = Typography;
 
 function onFinishAIConf(values: any) {
     console.log(values);
@@ -25,29 +25,29 @@ export const AiAndResource = memo(function ({schema}: {
 
 
     return <>
-        <Divider/>
-        <Card title={t("aiConf")}>
-            <Form name="aiConf"  {...formLayout} initialValues={aiConf} onFinish={onFinishAIConf}
-                  autoComplete="off">
-                <Form.Item name='baseUrl' label={t('baseUrl')}>
-                    <Input placeholder="base url"/>
-                </Form.Item>
-                <Form.Item name='apiKey' label={t('apiKey')}>
-                    <Input placeholder="api key"/>
-                </Form.Item>
+        <Form name="aiConf" layout={"vertical"} size={"small"}
+              initialValues={aiConf} onFinish={onFinishAIConf}
+              autoComplete="off">
+            <Title level={4} style={{marginTop: -4}}>{t('aiConf')}</Title>
 
-                <Form.Item name='model' label={t('model')}>
-                    <Input placeholder="model"/>
-                </Form.Item>
+            <Form.Item name='baseUrl' label={t('baseUrl')}>
+                <Input placeholder="base url"/>
+            </Form.Item>
+            <Form.Item name='apiKey' label={t('apiKey')}>
+                <Input placeholder="api key"/>
+            </Form.Item>
 
-                <Form.Item {...formItemLayoutWithOutLabel}>
-                    <Button type="primary" htmlType="submit">
-                        {t('setAIConf')}
-                    </Button>
-                </Form.Item>
-            </Form>
-        </Card>
-        <Divider/>
+            <Form.Item name='model' label={t('model')}>
+                <Input placeholder="model"/>
+            </Form.Item>
+
+            <Form.Item>
+                <Button type="primary" htmlType="submit">
+                    {t('setAIConf')}
+                </Button>
+            </Form.Item>
+        </Form>
+
         {isTauri() && <TauriSetting schema={schema}/>}
     </>;
 

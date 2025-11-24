@@ -87,48 +87,35 @@ export const ThemeSetting = memo(function ThemeSetting() {
     };
 
     return (
-        <Form layout="vertical"
+        <Form layout="vertical" size={"small"}
               initialValues={themeConfig}
               onFinish={handleThemeChange}>
 
-            <Title level={4}>{t('themeSetting')}</Title>
-            <Form.Item
-                label={t('themeFile')}
-                name="themeFile"
-                help={
-                    themeExists === false ? (
-                        <Text type="danger">{t('themeFileNotFound')}</Text>
-                    ) : themeExists === true ? (
-                        <Text type="success">{t('themeFileExists')}</Text>
-                    ) : (
-                        t('themeFileHelp')
-                    )
-                }>
-                <Input
-                    placeholder="colourpurple.json"
-                    allowClear
-                />
+            <Title level={4} style={{marginTop: -4}}>{t('themeSetting')}</Title>
+            <Form.Item label={t('themeFile')}
+                       name="themeFile"
+                       help={
+                           themeExists === false ? (
+                               <Text type="danger">{t('themeFileNotFound')}</Text>
+                           ) : themeExists === true ? (
+                               <Text type="success">{t('themeFileExists')}</Text>
+                           ) : (
+                               t('themeFileHelp')
+                           )
+                       }>
+                <Input placeholder="colourpurple.json" allowClear/>
             </Form.Item>
 
             <Form.Item>
                 <Space>
-                    <Button
-                        type="primary"
-                        htmlType="submit"
-                        loading={loading}
-                    >
+                    <Button type="primary" htmlType="submit" loading={loading}>
                         {t('save')}
                     </Button>
-                    <Button
-                        onClick={testTheme}
-                        loading={loading}
-                        disabled={!themeConfig.themeFile}
-                    >
+                    <Button onClick={testTheme} loading={loading} disabled={!themeConfig.themeFile}>
                         {t('testTheme')}
                     </Button>
                 </Space>
             </Form.Item>
-
 
             <Divider/>
 

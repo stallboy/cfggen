@@ -119,7 +119,7 @@ i18n.use(LanguageDetector)
                     recordRefIn: '数据入层',
                     recordRefOutDepth: '数据出层',
                     recordMaxNode: '数据节点数',
-                    isNextIdShow:'显示下一个空Id',
+                    isNextIdShow: '显示下一个空Id',
                     refIdSettingTitle: "导航-关联数据",
                     refIdsInDepth: 'Id入层',
                     refIdsOutDepth: 'Id出层',
@@ -129,7 +129,7 @@ i18n.use(LanguageDetector)
                     SIMPLE: '中间',
                     LINEAR_SEGMENTS: '中间起伏',
                     BRANDES_KOEPF: '默认',
-                    mrtree:'树状',
+                    mrtree: '树状',
 
                     searchMaxReturn: '搜索返回数',
                     imageSizeScale: '图片缩放倍数',
@@ -141,18 +141,21 @@ i18n.use(LanguageDetector)
                     toPng: '保存图片',
 
                     deleteCurRecord: '删除当前数据',
+                    keyCode: "快捷键",
 
                     showDescription: '描述',
                     show: '显示',
                     showFallbackValue: '无则显示值',
                     showValue: '全值',
 
+                    layoutSettingTitle: "布局",
                     recordLayout: '记录布局',
                     editLayout: '编辑布局',
                     refLayout: '关系布局',
                     tableLayout: '表布局',
                     tableRefLayout: '表关系布局',
 
+                    colorSettingTitle: "颜色",
                     nodeColorsByLabel: '节点色<标题',
                     nodeColorsByValue: '节点色<值',
                     fieldColorsByName: '字段色<名',
@@ -165,6 +168,8 @@ i18n.use(LanguageDetector)
                     addColor: '增加',
                     addTableHide: '增加',
 
+                    aiConf: "AI服务",
+                    setAIConf: "提交",
 
                     setNodeShow: '提交',
                     toggleFullScreen: '切换全屏',

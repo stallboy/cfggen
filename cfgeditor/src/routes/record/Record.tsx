@@ -46,14 +46,14 @@ const RecordWithResult = memo(function RecordWithResult({recordResult}: { record
 
         onError: (error) => {
             notification.error({
-                message: `addOrUpdateRecord  ${curTableId}  err: ${error.toString()}`,
+                title: `addOrUpdateRecord  ${curTableId}  err: ${error.toString()}`,
                 placement: 'topRight', duration: 4
             });
         },
         onSuccess: (editResult) => {
             if (editResult.resultCode == 'updateOk' || editResult.resultCode == 'addOk') {
                 notification.info({
-                    message: `addOrUpdateRecord  ${curTableId} ${editResult.resultCode}`,
+                    title: `addOrUpdateRecord  ${curTableId} ${editResult.resultCode}`,
                     placement: 'topRight',
                     duration: 3
                 });
@@ -62,7 +62,7 @@ const RecordWithResult = memo(function RecordWithResult({recordResult}: { record
                 // navigate(0);
             } else {
                 notification.warning({
-                    message: `addOrUpdateRecord ${curTableId} ${editResult.resultCode}`,
+                    title: `addOrUpdateRecord ${curTableId} ${editResult.resultCode}`,
                     placement: 'topRight',
                     duration: 4
                 });

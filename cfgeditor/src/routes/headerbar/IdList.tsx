@@ -8,8 +8,11 @@ import {EntityEditFieldOption} from "../../flow/entityModel.ts";
 
 const SELECT_STYLE = {width: 240} as const;
 
-const FILTER_OPTION = (inputValue: string, option?: EntityEditFieldOption) => 
-    option?.labelStr.toLowerCase().includes(inputValue.toLowerCase()) ?? false;
+const SEARCH_CONFIG = {
+    filterOption: (inputValue: string, option?: EntityEditFieldOption) =>
+        option?.labelStr.toLowerCase().includes(inputValue.toLowerCase()) ?? false
+};
+
 
 export const IdList = memo(function ({curTable}: {
     curTable: STable,
@@ -19,19 +22,16 @@ export const IdList = memo(function ({curTable}: {
     const {isEditMode} = useMyStore();
 
     const options = useMemo(() => getIdOptions(curTable), [curTable]);
-    
+
     const handleChange = useCallback((value: string) => {
         navigate(navTo(curPage, curTableId, value, isEditMode));
     }, [navigate, curPage, curTableId, isEditMode]);
 
-    return <Select 
-        id='id'
-        showSearch
-        options={options}
-        style={SELECT_STYLE}
-        value={curId}
-        placeholder="search a record"
-        filterOption={FILTER_OPTION}
-        onChange={handleChange}
-    />;
+    return <Select id='id'
+                   showSearch={SEARCH_CONFIG}
+                   options={options}
+                   style={SELECT_STYLE}
+                   value={curId}
+                   placeholder="search a record"
+                   onChange={handleChange}/>;
 });

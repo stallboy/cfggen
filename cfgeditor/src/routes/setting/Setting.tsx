@@ -51,6 +51,6 @@ export const Setting = memo(function Setting({schema, curTable, flowRef}: {
     return <>
         <div style={{height: 16}}/>
         <Divider/>
-        <Tabs items={items} tabPosition='left'/>
+        <Tabs items={items} tabPlacement='start'/>
     </>
 });

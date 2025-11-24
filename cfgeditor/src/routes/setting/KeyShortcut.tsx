@@ -7,7 +7,7 @@ import {LeftOutlined, RightOutlined} from "@ant-design/icons";
 export const KeyShortCut = memo(function () {
     const {t} = useTranslation();
 
-    return <Descriptions title="Key Shortcut" bordered column={2} items={[
+    return <Descriptions title={t("keyCode")} size={"small"} bordered column={2} items={[
         {
             key: '1',
             label: <LeftOutlined/>,

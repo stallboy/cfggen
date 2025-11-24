@@ -33,7 +33,7 @@ export const SearchValue = memo(function SearchValue() {
             setLoading(false);
         }
         fetchData().catch((err) => {
-            notification.error({message: `fetch ${url} err: ${err.toString()}`, placement: 'topRight', duration: 4});
+            notification.error({title: `fetch ${url} err: ${err.toString()}`, placement: 'topRight', duration: 4});
             setLoading(false);
         });
     }

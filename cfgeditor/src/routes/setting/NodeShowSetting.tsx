@@ -1,4 +1,4 @@
-import {Button, ColorPicker, Divider, Form, Input, Radio, Select, Space, Switch} from "antd";
+import {Button, ColorPicker, Divider, Form, Input, Radio, Select, Space, Switch, Typography} from "antd";
 import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 
@@ -8,9 +8,10 @@ import {
     useMyStore
 } from "../../store/store.ts";
 import {CSSProperties, memo, useMemo} from "react";
-import {formItemLayoutWithOutLabel} from "./BasicSetting.tsx";
+
 import { fixColors } from "./colorUtils.ts";
 
+const {Title} = Typography;
 const selectStyle: CSSProperties = {width: 160};
 
 export const NodeShowSetting = memo(function () {
@@ -41,9 +42,11 @@ export const NodeShowSetting = memo(function () {
             {label: t('BRANDES_KOEPF'), value: 'BRANDES_KOEPF'},
             {label: t('mrtree'), value: 'mrtree'}], [t]);
 
-    return <Form name="node show setting"  layout={"vertical"} initialValues={nodeShow} onFinish={onFinish}
+    return <Form name="node show setting"  layout={"vertical"}
+                 initialValues={nodeShow} onFinish={onFinish} size={"small"}
                  autoComplete="off">
 
+        <Title level={4} style={{ marginTop: -4 }}>{t('layoutSettingTitle')}</Title>
         <Form.Item name='recordLayout' label={t('recordLayout')}>
             <Select style={selectStyle} options={layoutOptions}/>
         </Form.Item>
@@ -61,6 +64,10 @@ export const NodeShowSetting = memo(function () {
         <Form.Item name='tableRefLayout' label={t('tableRefLayout')}>
             <Select style={selectStyle} options={layoutOptions}/>
         </Form.Item>
+
+
+        <Divider/>
+        <Title level={4}>{t('colorSettingTitle')}</Title>
 
         <Form.Item label={t('nodeColorsByValue')}>
             <Form.List name="nodeColorsByValue">
@@ -135,6 +142,8 @@ export const NodeShowSetting = memo(function () {
         </Form.Item>
 
         <Divider />
+        <Title level={4}>{t('otherSetting')}</Title>
+
         <Form.Item name='refIsShowCopyable' label={t('refIsShowCopyable')} valuePropName='checked'>
             <Switch/>
         </Form.Item>
@@ -168,7 +177,7 @@ export const NodeShowSetting = memo(function () {
             </Form.List>
         </Form.Item>
 
-        <Form.Item {...formItemLayoutWithOutLabel}>
+        <Form.Item>
             <Button type="primary" htmlType="submit">
                 {t('setNodeShow')}
             </Button>

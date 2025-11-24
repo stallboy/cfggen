@@ -1,5 +1,5 @@
 import {memo} from "react";
-import {Divider, Form, InputNumber, Switch} from "antd";
+import {Divider, Form, InputNumber, Switch, Typography} from "antd";
 import {
     setIsNextIdShow,
     setMaxImpl,
@@ -12,6 +12,8 @@ import {
     useMyStore
 } from "../../store/store.ts";
 import {useTranslation} from "react-i18next";
+
+const {Title} = Typography;
 
 export const formLayout = {
     labelCol: {xs: {span: 24}, sm: {span: 4}},
@@ -35,7 +37,7 @@ export const BasicSetting = memo(function TableSetting() {
         isNextIdShow, searchMax
     } = useMyStore();
 
-    return <Form layout="vertical"
+    return <Form layout="vertical" size={"small"}
                  initialValues={{
                      maxImpl, refIn, refOutDepth, maxNode,
                      recordRefIn, recordRefInShowLinkMaxNode, recordRefOutDepth, recordMaxNode,
@@ -43,7 +45,7 @@ export const BasicSetting = memo(function TableSetting() {
                      isNextIdShow, searchMax,
                  }}>
 
-        <Divider>{t('tableRefSettingTitle')}</Divider>
+        <Title level={4} style={{marginTop: -4}}>{t('tableRefSettingTitle')}</Title>
         <Form.Item label={t('implsShowCnt')} name='maxImpl'>
             <InputNumber min={1} max={500} onChange={setMaxImpl}/>
         </Form.Item>
@@ -60,7 +62,8 @@ export const BasicSetting = memo(function TableSetting() {
             <InputNumber min={1} max={500} onChange={setMaxNode}/>
         </Form.Item>
 
-        <Divider>{t('recordRefSettingTitle')}</Divider>
+        <Divider/>
+        <Title level={4}>{t('recordRefSettingTitle')}</Title>
         <Form.Item name='recordRefIn' label={t('recordRefIn')} valuePropName="checked">
             <Switch onChange={setRecordRefIn}/>
         </Form.Item>
@@ -77,7 +80,9 @@ export const BasicSetting = memo(function TableSetting() {
             <InputNumber min={1} max={500} onChange={setRecordMaxNode}/>
         </Form.Item>
 
-        <Divider>{t('refIdSettingTitle')}</Divider>
+
+        <Divider/>
+        <Title level={4}>{t('refIdSettingTitle')}</Title>
         <Form.Item name='refIdsInDepth' label={t('refIdsInDepth')}>
             <InputNumber min={0} max={5} onChange={setRefIdsInDepth}/>
         </Form.Item>
@@ -90,7 +95,9 @@ export const BasicSetting = memo(function TableSetting() {
             <InputNumber min={1} max={500} onChange={setRefIdsMaxNode}/>
         </Form.Item>
 
-        <Divider>{t('otherSetting')}</Divider>
+
+        <Divider/>
+        <Title level={4}>{t('otherSetting')}</Title>
         <Form.Item name='isNextIdShow' label={t('isNextIdShow')} valuePropName="checked">
             <Switch onChange={setIsNextIdShow}/>
         </Form.Item>

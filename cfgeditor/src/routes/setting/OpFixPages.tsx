@@ -2,7 +2,6 @@ import {makeFixedPage, setFixedPagesConf, useMyStore, useLocationData} from "../
 import {memo, useCallback, useEffect} from "react";
 import {useTranslation} from "react-i18next";
 import {Button, Form, Input, Space} from "antd";
-import {formItemLayoutWithOutLabel, formLayout} from "./BasicSetting.tsx";
 import {CloseOutlined} from "@ant-design/icons";
 import {Schema} from "../table/schemaUtil.tsx";
 import {STable} from "../table/schemaModel.ts";
@@ -35,8 +34,8 @@ export const OpFixPages = memo(function ({schema, curTable}: {
         form.resetFields();
     }, [pageConf, form]);
 
-    return <Form form={form} name="fixedPagesConf"  {...formLayout} initialValues={pageConf}
-                 onFinish={onFinishPageConf}
+    return <Form form={form} name="fixedPagesConf"  initialValues={pageConf}
+                 onFinish={onFinishPageConf} layout={"vertical"}
                  autoComplete="off">
         <Form.Item label={t('pages')}>
             <Form.List name="pages">
@@ -61,7 +60,7 @@ export const OpFixPages = memo(function ({schema, curTable}: {
             </Form.List>
         </Form.Item>
 
-        <Form.Item {...formItemLayoutWithOutLabel}>
+        <Form.Item>
             <Space>
                 <Button type="primary" htmlType="submit">
                     {t('setFixedPagesConf')}

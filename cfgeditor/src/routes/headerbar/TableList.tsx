@@ -14,11 +14,14 @@ interface TableWithLastName {
 const SELECT_STYLE = {width: 200} as const;
 const LABEL_COUNT_STYLE = {fontSize: '0.85em'} as const;
 
-const FILTER_OPTION = (input: string, option: any) => option?.value.includes(input) ?? false;
+const SEARCH_CONFIG = {
+    optionFilterProp: "children",
+    filterOption: (input: string, option: any) => option?.value.includes(input) ?? false
+};
 
 function generateTableOptions(schema: Schema) {
     const group2Tables = new Map<string, TableWithLastName[]>();
-    
+
     // Group tables by their namespace
     for (const item of schema.itemMap.values()) {
         if (item.type === 'table') {
@@ -61,8 +64,8 @@ export const TableList = memo(function ({schema}: { schema: Schema }) {
     const navigate = useNavigate();
     const {isEditMode} = useMyStore();
 
-    const options = useMemo(() => 
-        schema ? generateTableOptions(schema) : [],
+    const options = useMemo(() =>
+            schema ? generateTableOptions(schema) : [],
         [schema]
     );
 
@@ -76,16 +79,13 @@ export const TableList = memo(function ({schema}: { schema: Schema }) {
     }
 
     return (
-        <Select
-            id='table'
-            showSearch
-            options={options}
-            style={SELECT_STYLE}
-            value={curTableId}
-            placeholder="search a table"
-            optionFilterProp="children"
-            filterOption={FILTER_OPTION}
-            onChange={handleChange}
+        <Select id='table'
+                showSearch={SEARCH_CONFIG}
+                options={options}
+                style={SELECT_STYLE}
+                value={curTableId}
+                placeholder="search a table"
+                onChange={handleChange}
         />
     );
 });
