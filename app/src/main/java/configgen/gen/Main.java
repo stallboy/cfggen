@@ -1,7 +1,6 @@
 package configgen.gen;
 
 import configgen.ctx.*;
-import configgen.data.*;
 import configgen.editorserver.EditorServer;
 import configgen.gencs.GenBytes;
 import configgen.gencs.GenCs;
@@ -18,6 +17,7 @@ import configgen.i18n.TermChecker;
 import configgen.i18n.GenI18nByValue;
 import configgen.i18n.GenI18nById;
 import configgen.i18n.GenI18nByIdTest;
+import configgen.mcpserver.CfgMcpServer;
 import configgen.tool.*;
 import configgen.util.CachedFiles;
 import configgen.util.LocaleUtil;
@@ -157,6 +157,7 @@ public final class Main {
         Generators.addProvider("go", GenGo::new);
 
         Generators.addProvider("server", EditorServer::new);
+        Generators.addProvider("mcpserver", CfgMcpServer::new);
         Generators.addProvider("tsschema", GenTsSchema::new);
         Generators.addProvider("json", GenJson::new);
         Generators.addProvider("jsonbyai", GenJsonByAI::new);

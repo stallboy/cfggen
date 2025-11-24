@@ -59,6 +59,7 @@ class CfgsTest {
 
         boolean equals = cfg1.equals(cfgFromAllSubDir);
         if (!equals) {
+            // 打印详细的差异信息
             cfg1.printDiff(cfgFromAllSubDir);
         }
 

@@ -1,7 +1,6 @@
 package configgen.genjson;
 
 import configgen.schema.*;
-import configgen.schema.cfg.CfgWriter;
 import configgen.value.*;
 import gg.jte.CodeResolver;
 import gg.jte.ContentType;
@@ -33,8 +32,10 @@ public class PromptGen {
         List<String> extraRefTables = nullableTableCfg != null ? nullableTableCfg.extraRefTables() : List.of();
         List<OneExample> examples = nullableTableCfg != null ? nullableTableCfg.examples() : List.of();
         if (isUseRawStructInfo) {
-            structInfo = getTableSchemaRelatedCfgStr(tableSchema);
-            extra = getTableRelatedEnumCsv(cfgValue, tableSchema, extraRefTables);
+
+            var relatedInfo = TableRelatedInfoFinder.findRelatedInfo(cfgValue, tableSchema, extraRefTables);
+            structInfo = relatedInfo.relatedCfg();
+            extra = formatExtra(relatedInfo);
         } else {
             structInfo = new SchemaToTs(cfgValue, tableSchema, extraRefTables, true).generate();
             extra = "";
@@ -50,58 +51,21 @@ public class PromptGen {
         return prompt.toString();
     }
 
-
-    private static String getTableSchemaRelatedCfgStr(TableSchema tableSchema) {
+    private static String formatExtra(TableRelatedInfoFinder.RelatedInfo relatedInfo) {
         StringBuilder sb = new StringBuilder(2048);
-        Map<String, Nameable> allIncludedStructs = IncludedStructs.findAllIncludedStructs(tableSchema);
-        for (Nameable s : allIncludedStructs.values()) {
-            if (s instanceof StructSchema ss && ss.nullableInterface() != null) {
-                continue;
-            }
-            CfgWriter cfgWriter = new CfgWriter(sb, false, false);
-            cfgWriter.writeNamable(s, "");
+        for (TableRelatedInfoFinder.TableRecordList info : relatedInfo.relatedTableRecordListInCsv()) {
+            sb.append("- %s%n".formatted(info.table()));
+            sb.append("```%n".formatted());
+            sb.append(info.contentInCsvFormat());
+            sb.append("```%n%n".formatted());
+        }
+
+        for (TableRelatedInfoFinder.TableCount info : relatedInfo.otherTableCounts()) {
+            sb.append("- %s: %d records%n".formatted(info.table(), info.recordCount()));
         }
         return sb.toString();
     }
 
-    private static String getTableRelatedEnumCsv(CfgValue cfgValue, TableSchema tableSchema, List<String> extraRefTables) {
-        StringBuilder sb = new StringBuilder(2048);
-        TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
-        Collection<TableSchema> refOutTables = graph.getRefOutTables(tableSchema);
-        if (refOutTables != null) {
-            for (TableSchema refOutTable : refOutTables) {
-                boolean use = false;
-                EntryType.EEnum eEnum = null;
-                if (refOutTable.entry() instanceof EntryType.EEnum en) {
-                    eEnum = en;
-                    use = true;
-                } else if (extraRefTables.contains(refOutTable.name())) {
-                    use = true;
-                }
-                if (use) {
-                    sb.append("- %s%n".formatted(refOutTable.name()));
-                    sb.append("```%n".formatted());
-                    addOneRelatedCsv(sb, cfgValue, refOutTable, eEnum);
-                    sb.append("```%n%n".formatted());
-                }
-            }
-        }
-        return sb.toString();
-    }
-
-    private static void addOneRelatedCsv(StringBuilder sb, CfgValue cfgValue, TableSchema tableSchema, EntryType.EEnum en) {
-        Set<String> fieldNames = new LinkedHashSet<>(tableSchema.primaryKey().fields());
-        if (en != null) {
-            fieldNames.add(en.field());
-        }
-        String title = tableSchema.meta().getStr("title", null);
-        if (title != null) {
-            fieldNames.add(title);
-        }
-
-        CfgValue.VTable vTable = cfgValue.getTable(tableSchema.name());
-        ValueToCsv.writeAsCsv(sb, vTable, fieldNames, "");
-    }
 
     private static List<PromptModel.Example> getExamples(List<OneExample> rawExamples, CfgValue.VTable vTable) {
         List<PromptModel.Example> examples = new ArrayList<>(rawExamples.size());

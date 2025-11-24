@@ -171,5 +171,4 @@ public class DataUtil {
         return hanIdx == -1;
     }
 
-
 }

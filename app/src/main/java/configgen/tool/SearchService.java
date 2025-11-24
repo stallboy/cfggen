@@ -1,4 +1,4 @@
-package configgen.editorserver;
+package configgen.tool;
 
 import configgen.value.CfgValue;
 

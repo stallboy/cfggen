@@ -5,6 +5,7 @@ import configgen.gen.Generator;
 import configgen.gen.Parameter;
 import configgen.schema.*;
 import configgen.value.*;
+import configgen.write.VTableJsonStorage;
 import io.github.sashirestela.openai.SimpleOpenAI;
 import io.github.sashirestela.openai.domain.chat.ChatMessage;
 import io.github.sashirestela.openai.domain.chat.ChatRequest;
@@ -142,7 +143,7 @@ public class GenJsonByAI extends Generator {
                     CfgValue.Value pkValue = ValueUtil.extractPrimaryKeyValue(record, tableSchema);
                     String id = pkValue.packStr();
                     try {
-                        VTableJsonStore.addOrUpdateRecordStore(record, tableSchema, id, dataDir);
+                        VTableJsonStorage.addOrUpdateRecord(record, tableSchema.name(), id, dataDir);
                     } catch (IOException e) {
                         System.out.printf("save %s err: %s%n", id, e.getMessage());
                     }

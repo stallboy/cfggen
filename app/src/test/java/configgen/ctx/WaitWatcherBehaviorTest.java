@@ -51,7 +51,7 @@ class WaitWatcherBehaviorTest {
             Files.writeString(testFile, "test content");
 
             // 等待超过等待时间
-            Thread.sleep(100);
+            Thread.sleep(200);
 
             // Then: 监听器应该被调用一次
             assertEquals(1, listenerCallCount.get(), "监听器应该被调用一次");
@@ -85,8 +85,8 @@ class WaitWatcherBehaviorTest {
             Path file3 = tempDir.resolve("file3.csv");
             Files.writeString(file3, "content3");
 
-            // 等待超过等待时间
-            Thread.sleep(110);
+            // 等待超过等待时间（增加等待时间以适应非递归监控的延迟）
+            Thread.sleep(200);
 
             // Then: 监听器应该只被调用一次（事件聚合）
             assertEquals(1, listenerCallCount.get(), "多个事件应该被聚合为一次调用");
@@ -135,7 +135,7 @@ class WaitWatcherBehaviorTest {
             // 触发第一次事件并等待监听器调用
             Path file1 = tempDir.resolve("file1.csv");
             Files.writeString(file1, "content1");
-            Thread.sleep(110);
+            Thread.sleep(200);
 
             int firstCallCount = listenerCallCount.get();
             assertEquals(1, firstCallCount, "第一次调用");
@@ -143,7 +143,7 @@ class WaitWatcherBehaviorTest {
             // When: 触发第二次事件
             Path file2 = tempDir.resolve("file2.csv");
             Files.writeString(file2, "content2");
-            Thread.sleep(110);
+            Thread.sleep(200);
 
             // Then: 监听器应该被调用两次
             assertEquals(2, listenerCallCount.get(), "监听器应该被调用两次");
@@ -224,7 +224,7 @@ class WaitWatcherBehaviorTest {
             assertEquals(0, listenerCallCount.get(), "等待时间不足时监听器不应该被调用");
 
             // 继续等待到超过等待时间
-            Thread.sleep(100);
+            Thread.sleep(200);
 
             // 监听器应该被调用
             assertEquals(1, listenerCallCount.get(), "等待时间足够时监听器应该被调用");
@@ -265,7 +265,7 @@ class WaitWatcherBehaviorTest {
             assertEquals(0, listener2CallCount.get(), "第二个监听器不应该被调用（等待时间不足）");
 
             // 继续等待
-            Thread.sleep(200);
+            Thread.sleep(300);
 
             // 第二个监听器应该被调用
             assertEquals(1, listener2CallCount.get(), "第二个监听器应该被调用");

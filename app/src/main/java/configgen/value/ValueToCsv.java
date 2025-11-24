@@ -8,7 +8,7 @@ import java.util.Set;
 
 public class ValueToCsv {
 
-    public static void writeAsCsv(StringBuilder sb, CfgValue.VTable vTable, Set<String> fieldNames, String prefix) {
+    public static void writeAsCsv(StringBuilder sb, CfgValue.VTable vTable, Set<String> fieldNames) {
         List<List<String>> result = new ArrayList<>(vTable.valueList().size() + 1);
         result.add(new ArrayList<>(fieldNames));
 
@@ -20,7 +20,7 @@ public class ValueToCsv {
             result.add(line);
         }
 
-        CSVUtil.write(sb, result, prefix);
+        CSVUtil.write(sb, result);
     }
 
     private static String getFieldValueStr(CfgValue.VStruct vStruct, String fieldName) {

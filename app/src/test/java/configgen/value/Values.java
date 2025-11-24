@@ -4,6 +4,7 @@ import configgen.data.CfgData;
 import configgen.data.Source;
 import configgen.schema.InterfaceSchema;
 import configgen.schema.Structural;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.Map;
 import static configgen.value.CfgValue.*;
 
 public class Values {
-    static CfgData.DCell ofCell(String content) {
+    static CfgData.DCell ofCell(@NotNull String content) {
         return CfgData.DCell.of(content, "<file>");
     }
 

@@ -3,30 +3,31 @@ package configgen.editorserver;
 import com.alibaba.fastjson2.JSON;
 import com.sun.net.httpserver.*;
 import configgen.ctx.*;
-import configgen.gen.Generator;
 import configgen.gen.GeneratorWithTag;
-import configgen.gen.Generators;
 import configgen.gen.Parameter;
 import configgen.schema.TableSchemaRefGraph;
 import configgen.genjson.AICfg;
+import configgen.tool.SearchService;
 import configgen.value.CfgValue;
 
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
+
+import configgen.util.Logger;
 
 import static configgen.editorserver.CheckJsonService.*;
 import static configgen.editorserver.RecordEditService.ResultCode.*;
 import static configgen.editorserver.RecordService.*;
 import static configgen.editorserver.RecordEditService.*;
 
+/**
+ * 为cfgeditor提供restful api
+ */
 public class EditorServer extends GeneratorWithTag {
     private final int port;
     private final String noteCsvPath;
@@ -42,7 +43,6 @@ public class EditorServer extends GeneratorWithTag {
     private Path aiDir;
     private final String postRun;
     private final int waitSecondsAfterWatchEvt;
-    private Thread postRunThread;
 
     public EditorServer(Parameter parameter) {
         super(parameter);
@@ -61,8 +61,7 @@ public class EditorServer extends GeneratorWithTag {
         }
 
         noteEditService = new NoteEditService(Path.of(noteCsvPath));
-        this.context = ctx;
-        initFromCtx();
+        initFromCtx(ctx);
 
         System.gc();
         System.setProperty("java.util.logging.SimpleFormatter.format",
@@ -86,94 +85,24 @@ public class EditorServer extends GeneratorWithTag {
 
         server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
         server.start();
-        logger.info("Server is started at " + listenAddr);
+        Logger.log("Server is started at " + listenAddr);
+
 
         if (waitSecondsAfterWatchEvt > 0) {
-            Watcher watcher = new Watcher(context.getSourceStructure().getRootDir(), context.getContextCfg().explicitDir());
-            WaitWatcher waitWatcher = new WaitWatcher(watcher, this::reloadData, waitSecondsAfterWatchEvt * 1000);
-            waitWatcher.start();
-            watcher.start();
-            logger.info("file change watcher started");
+            WatchAndPostRun.INSTANCE.startWatch(context, waitSecondsAfterWatchEvt);
+            WatchAndPostRun.INSTANCE.registerPostRunCallback(this::initFromCtx);
+            if (postRun != null) {
+                WatchAndPostRun.INSTANCE.registerPostRunBat(postRun);
+            }
         }
     }
 
-    private void initFromCtx() {
+    private void initFromCtx(Context newContext) {
+        this.context = newContext;
+        // 可以包含tag，这样更灵活，方便查看filter过后的数据
+        // 此时所有的修改指令将返回错误 serverNotEditable
         cfgValue = context.makeValue(tag, true);
         graph = new TableSchemaRefGraph(cfgValue.schema());
-    }
-
-    private void reloadData() {
-        DirectoryStructure newStructure = context.getSourceStructure().reload();
-        if (newStructure.lastModifiedEquals(context.getSourceStructure())) {
-            configgen.util.Logger.verbose("lastModified not change");
-            return;
-        }
-        try {
-            this.context = new Context(context.getContextCfg(), newStructure);
-            initFromCtx();
-            logger.info("reload ok");
-            tryPostRun();
-        } catch (Exception e) {
-            logger.info("reload ignored");
-        }
-    }
-
-    private void tryPostRun() {
-        if (postRun == null) {
-            return;
-        }
-
-        if (postRunThread != null) {
-            try {
-                postRunThread.join();
-            } catch (InterruptedException e) {
-                logger.warning("postrun thread join interrupted: " + e.getMessage());
-            }
-
-        }
-        postRunThread = Thread.startVirtualThread(() -> {
-            try {
-                String genPrefix = null;
-                if (postRun.endsWith(".bat")) {
-                    genPrefix = ":: -gen ";
-                } else if (postRun.endsWith(".sh")) {
-                    genPrefix = "# -gen ";
-                }
-                if (genPrefix != null) {
-                    for (String line : Files.readAllLines(Path.of(postRun))) {
-                        if (line.startsWith(genPrefix)) {
-                            String parameter = line.substring(genPrefix.length());
-                            Generator generator = Generators.create(parameter);
-                            if (generator != null) {
-                                logger.info("-gen " + parameter);
-                                generator.generate(context);
-                            }
-                        } else {
-                            break;
-                        }
-                    }
-                }
-
-                String[] cmds = new String[]{postRun};
-                Process process = Runtime.getRuntime().exec(cmds);
-
-                BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                String line;
-                while ((line = in.readLine()) != null) {
-                    logger.info("postrun output: " + line);
-                }
-                if (process.waitFor(10, TimeUnit.SECONDS)) {
-                    logger.info("postrun ok!");
-                } else {
-                    logger.info("postrun timeout");
-                }
-                in.close();
-            } catch (IOException e) {
-                logger.warning("postrun err: " + e.getMessage());
-            } catch (InterruptedException e) {
-                logger.warning("postrun interrupted: " + e.getMessage());
-            }
-        });
     }
 
     private void handleSchemas(HttpExchange exchange) throws IOException {
@@ -197,7 +126,7 @@ public class EditorServer extends GeneratorWithTag {
 
         byte[] bytes = exchange.getRequestBody().readAllBytes();
         String note = new String(bytes, StandardCharsets.UTF_8).trim();
-        logger.info(note);
+        Logger.log(note);
 
         NoteEditService.NoteEditResult result = noteEditService.updateNote(key, note);
         sendResponse(exchange, result);
@@ -275,18 +204,12 @@ public class EditorServer extends GeneratorWithTag {
 //        logger.info(jsonStr);
 
         RecordEditResult result;
-        boolean ok = false;
         synchronized (this) {
             RecordEditService service = new RecordEditService(cfgValue, context);
             result = service.addOrUpdateRecord(table, jsonStr);
             if (result.resultCode() == addOk || result.resultCode() == updateOk) {
                 cfgValue = service.newCfgValue();
-                ok = true;
             }
-        }
-
-        if (ok) {
-            tryPostRun();
         }
 
 //        logger.info(result.toString());
@@ -304,17 +227,12 @@ public class EditorServer extends GeneratorWithTag {
         String id = query.get("id");
 
         RecordEditResult result;
-        boolean ok = false;
         synchronized (this) {
             RecordEditService service = new RecordEditService(cfgValue, context);
             result = service.deleteRecord(table, id);
             if (result.resultCode() == deleteOk) {
                 cfgValue = service.newCfgValue();
-                ok = true;
             }
-        }
-        if (ok) {
-            tryPostRun();
         }
 
 //        logger.info(result.toString());
@@ -350,14 +268,13 @@ public class EditorServer extends GeneratorWithTag {
         context.getFilters().add(logging);
     }
 
-    private static final Logger logger = Logger.getLogger("http");
     private static final Filter logging = new Filter() {
         @Override
         public void doFilter(HttpExchange http, Chain chain) throws IOException {
             try {
                 chain.doFilter(http);
             } finally {
-                logger.info(String.format("%s %s %s",
+                Logger.log(String.format("%s %s %s",
                         http.getRequestMethod(),
                         http.getRequestURI(),
                         http.getRemoteAddress()));

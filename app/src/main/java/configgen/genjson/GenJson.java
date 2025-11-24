@@ -1,13 +1,12 @@
 package configgen.genjson;
 
 import configgen.ctx.Context;
-import configgen.gen.Generator;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
 import configgen.schema.HasMap;
 import configgen.util.Logger;
 import configgen.value.CfgValue;
-import configgen.value.VTableJsonStore;
+import configgen.write.VTableJsonStorage;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -57,7 +56,7 @@ public class GenJson extends GeneratorWithTag {
             for (Map.Entry<Value, VStruct> e : vTable.primaryKeyMap().entrySet()) {
                 Value pk = e.getKey();
                 VStruct record = e.getValue();
-                VTableJsonStore.addOrUpdateRecordStore(record, vTable.schema(), pk.packStr(), dstPath);
+                VTableJsonStorage.addOrUpdateRecord(record, table, pk.packStr(), dstPath);
             }
         }
     }

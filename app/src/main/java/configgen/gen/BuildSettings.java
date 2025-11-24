@@ -20,7 +20,6 @@ public final class BuildSettings {
         }
     }
 
-
     public static boolean isIncludePoi() {
         return isIncludePoi;
     }

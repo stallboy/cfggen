@@ -2,6 +2,7 @@ package configgen.value;
 
 import configgen.ctx.DirectoryStructure;
 import configgen.schema.TableSchema;
+import configgen.write.VTableJsonStorage;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -72,7 +73,7 @@ public class VTableJsonParser {
             String id = pkValue.packStr();
             Path writePath = dataDir;
             try {
-                writePath = VTableJsonStore.addOrUpdateRecordStore(defaultValue, tableSchema, id, dataDir);
+                writePath = VTableJsonStorage.addOrUpdateRecord(defaultValue, tableName, id, dataDir);
                 valueList.add(defaultValue);
 
                 JsonFileInfo jf = sourceStructure.addJsonFile(tableName, writePath);

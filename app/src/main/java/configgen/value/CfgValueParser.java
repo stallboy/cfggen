@@ -49,13 +49,14 @@ public record CfgValueParser(CfgSchema subSchema,
                 tasks.add(() -> {
                     long start = System.currentTimeMillis();
                     CfgValueErrs errs = CfgValueErrs.of();
-                    VTableParser parser = new VTableParser(subTable, dTable, table, context.getContextCfg().headRow(), errs);
+                    VTableParser parser = new VTableParser(subTable, dTable, table,
+                            context.getContextCfg().headRow(), errs);
                     VTable vTable = parser.parseTable();
                     TextValue.setTranslatedForTable(vTable, context.nullableLangTextFinder());
                     if (Logger.isProfileEnabled()) {
                         long e = System.currentTimeMillis() - start;
                         if (e > 10) {
-                            System.out.printf("%40s: %d%n", name, e);
+                            Logger.log("%40s: %d%n", name, e);
                         }
                     }
                     return new OneTableParserResult(vTable, errs);
@@ -70,7 +71,7 @@ public record CfgValueParser(CfgSchema subSchema,
                     VTable vTable = parser.parseTable();
                     TextValue.setTranslatedForTable(vTable, context.nullableLangTextFinder());
                     if (Logger.isProfileEnabled()) {
-                        System.out.printf("%40s: %d%n", name, System.currentTimeMillis() - start);
+                        Logger.log("%40s: %d%n", name, System.currentTimeMillis() - start);
                     }
                     return new OneTableParserResult(vTable, errs);
                 });

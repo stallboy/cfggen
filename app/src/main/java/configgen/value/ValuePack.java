@@ -33,11 +33,7 @@ public class ValuePack {
 
     private static String packStr(Value value, boolean hasParenthesesAround) {
         return switch (value) {
-            case StringValue stringValue -> stringValue.value();
-            case VBool vBool -> vBool.value() ? "true" : "false";
-            case VFloat vFloat -> vFloat.repr();
-            case VInt vInt -> String.valueOf(vInt.value());
-            case VLong vLong -> String.valueOf(vLong.value());
+            case PrimitiveValue pv -> pv.toStr();
 
             case VList vList -> vList.valueList().stream().map(v -> packStr(v, true))
                     .collect(getJoin(hasParenthesesAround));

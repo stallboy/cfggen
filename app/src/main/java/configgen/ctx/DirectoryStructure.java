@@ -196,8 +196,15 @@ public class DirectoryStructure {
         return rootDir;
     }
 
+    public ExplicitDir getExplicitDir() {
+        return explicitDir;
+    }
+
     public Collection<CfgFileInfo> getCfgFiles() {
-        return cfgFiles.values();
+        // Return sorted collection to ensure consistent ordering across platforms
+        return cfgFiles.values().stream()
+                .sorted(Comparator.comparing(CfgFileInfo::pkgNameDot))
+                .toList();
     }
 
     public Collection<ExcelFileInfo> getExcelFiles() {

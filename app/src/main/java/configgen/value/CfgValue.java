@@ -3,6 +3,7 @@ package configgen.value;
 import configgen.data.CfgData;
 import configgen.data.Source;
 import configgen.schema.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -88,6 +89,17 @@ public record CfgValue(CfgSchema schema,
     }
 
     public sealed interface PrimitiveValue extends SimpleValue {
+
+        default String toStr() {
+            return switch (this) {
+                case StringValue stringValue -> stringValue.value();
+                case VBool vBool -> vBool.value() ? "true" : "false";
+                case VFloat vFloat -> vFloat.repr();
+                case VInt vInt -> String.valueOf(vInt.value());
+                case VLong vLong -> String.valueOf(vLong.value());
+            };
+        }
+
     }
 
     public static final class VStruct extends CompositeValue implements SimpleValue {
@@ -96,9 +108,9 @@ public record CfgValue(CfgSchema schema,
         private String note;  // 用json存储的内部结构也要克注释，cfgeditor使用
         private boolean fold; // 用json存储的结构可被折叠，cfgeditor使用
 
-        public VStruct(Structural schema,
-                       List<Value> values,
-                       Source source) {
+        public VStruct(@NotNull Structural schema,
+                       @NotNull List<Value> values,
+                       @NotNull Source source) {
             this.schema = schema;
             this.values = values;
             this.source = source;
@@ -159,9 +171,9 @@ public record CfgValue(CfgSchema schema,
         private final InterfaceSchema schema;
         private final VStruct child;
 
-        public VInterface(InterfaceSchema schema,
-                          VStruct child,
-                          Source source) {
+        public VInterface(@NotNull InterfaceSchema schema,
+                          @NotNull VStruct child,
+                          @NotNull Source source) {
             this.schema = schema;
             this.child = child;
             this.source = source;
@@ -208,8 +220,8 @@ public record CfgValue(CfgSchema schema,
     public static final class VList extends CompositeValue implements ContainerValue {
         private final List<SimpleValue> valueList;
 
-        public VList(List<SimpleValue> valueList,
-                     Source source) {
+        public VList(@NotNull List<SimpleValue> valueList,
+                     @NotNull Source source) {
             this.valueList = valueList;
             this.source = source;
         }
@@ -243,8 +255,8 @@ public record CfgValue(CfgSchema schema,
     public static final class VMap extends CompositeValue implements ContainerValue {
         private final Map<SimpleValue, SimpleValue> valueMap;
 
-        public VMap(Map<SimpleValue, SimpleValue> valueMap,
-                    Source source) {
+        public VMap(@NotNull Map<SimpleValue, SimpleValue> valueMap,
+                    @NotNull Source source) {
             this.valueMap = valueMap;
             this.source = source;
         }
@@ -276,7 +288,7 @@ public record CfgValue(CfgSchema schema,
     }
 
 
-    public record VBool(boolean value, Source source) implements PrimitiveValue {
+    public record VBool(boolean value, @NotNull Source source) implements PrimitiveValue {
         public VBool {
             Objects.requireNonNull(source);
         }
@@ -295,7 +307,7 @@ public record CfgValue(CfgSchema schema,
         }
     }
 
-    public record VInt(int value, Source source) implements PrimitiveValue {
+    public record VInt(int value, @NotNull Source source) implements PrimitiveValue {
         public VInt {
             Objects.requireNonNull(source);
         }
@@ -314,7 +326,7 @@ public record CfgValue(CfgSchema schema,
         }
     }
 
-    public record VLong(long value, Source source) implements PrimitiveValue {
+    public record VLong(long value, @NotNull Source source) implements PrimitiveValue {
         public VLong {
             Objects.requireNonNull(source);
         }
@@ -333,7 +345,7 @@ public record CfgValue(CfgSchema schema,
         }
     }
 
-    public record VFloat(float value, Source source) implements PrimitiveValue {
+    public record VFloat(float value, @NotNull Source source) implements PrimitiveValue {
         public VFloat {
             Objects.requireNonNull(source);
         }
@@ -364,8 +376,9 @@ public record CfgValue(CfgSchema schema,
         String value();
     }
 
-    public record VString(String value, Source source) implements StringValue {
+    public record VString(@NotNull String value, @NotNull Source source) implements StringValue {
         public VString {
+            Objects.requireNonNull(value);
             Objects.requireNonNull(source);
         }
 
@@ -393,7 +406,7 @@ public record CfgValue(CfgSchema schema,
         private String value;
         private String translated;
 
-        public VText(String original, Source source) {
+        public VText(@NotNull String original, @NotNull Source source) {
             Objects.requireNonNull(original);
             Objects.requireNonNull(source);
             this.original = original;
@@ -405,7 +418,7 @@ public record CfgValue(CfgSchema schema,
         public void setTranslated(String translated) {
             if (translated == null) {
                 this.translated = "";
-            }else {
+            } else {
                 this.translated = translated;
                 if (!translated.isEmpty()) {
                     this.value = translated;
