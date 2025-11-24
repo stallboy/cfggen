@@ -8,6 +8,7 @@ import configgen.genjson.TableRelatedInfoFinder.TableRecordList;
 import configgen.value.*;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -15,7 +16,9 @@ public class ReadRecordTool {
 
     @McpTool(description = "list table record")
     public String listTableRecord(@McpToolParam(name = "table", description = "table full name", required = true)
-                             String tableName) {
+                                  String tableName,
+                                  @McpToolParam(name = "extraFields", description = "extra fields to show")
+                                  List<String> extraFields) {
 
         CfgMcpServer.CfgValueWithContext vc = CfgMcpServer.getInstance().cfgValueWithContext();
         CfgValue cfgValue = vc.cfgValue();
@@ -25,7 +28,7 @@ public class ReadRecordTool {
             return "table=%s not found".formatted(tableName);
         }
 
-        TableRecordList list = TableRelatedInfoFinder.getTableRecordListInCsv(vTable);
+        TableRecordList list = TableRelatedInfoFinder.getTableRecordListInCsv(vTable, extraFields);
         return list.prompt();
     }
 

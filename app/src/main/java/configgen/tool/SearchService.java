@@ -1,13 +1,14 @@
 package configgen.tool;
 
 import configgen.value.CfgValue;
+import configgen.value.ForeachValue;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 import static configgen.value.ForeachValue.ValueVisitorForSearch;
-import static configgen.value.ForeachValue.searchVTable;
 
 public class SearchService {
 
@@ -49,54 +50,97 @@ public class SearchService {
         }
     }
 
-    public static SearchResult searchNumber(CfgValue cfgValue, long value, int maxItems) {
-        SearchResult res = new SearchResult(ResultCode.ok, String.valueOf(value), maxItems, new ArrayList<>(32));
-        ValueVisitorForSearch visitor = (primitiveValue, table, pk, fieldChain) -> {
+    /**
+     * @param maxItems <=0 means no limit
+     */
+    public static SearchResult searchNumber(@NotNull CfgValue cfgValue, long value, int maxItems) {
+        NumberVisitor visitor = NumberVisitor.of(value);
+
+        for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
+            ForeachValue.searchVTable(visitor, vTable);
+            if (maxItems > 0 && visitor.result.size() >= maxItems) {
+                break;
+            }
+        }
+
+        List<SearchResultItem> items = maxItems > 0 ? visitor.result.subList(0, Math.min(maxItems, visitor.result.size()))
+                : visitor.result;
+        return new SearchResult(ResultCode.ok, String.valueOf(value), maxItems, items);
+    }
+
+    public static SearchResult searchNumber(@NotNull CfgValue.VTable vTable, long value, int maxItems) {
+        NumberVisitor visitor = NumberVisitor.of(value);
+        ForeachValue.searchVTable(visitor, vTable);
+        List<SearchResultItem> items = maxItems > 0 ? visitor.result.subList(0, Math.min(maxItems, visitor.result.size()))
+                : visitor.result;
+        return new SearchResult(ResultCode.ok, String.valueOf(value), maxItems, items);
+    }
+
+
+    public static SearchResult searchStr(@NotNull CfgValue cfgValue, String keyword, int maxItems) {
+        StringVisitor visitor = StringVisitor.of(keyword);
+        for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
+            ForeachValue.searchVTable(visitor, vTable);
+            if (maxItems > 0 && visitor.result.size() >= maxItems) {
+                break;
+            }
+        }
+        List<SearchResultItem> items = maxItems > 0 ? visitor.result.subList(0, Math.min(maxItems, visitor.result.size()))
+                : visitor.result;
+        return new SearchResult(ResultCode.ok, keyword, maxItems, items);
+    }
+
+
+    public static SearchResult searchStr(@NotNull CfgValue.VTable vTable, String keyword, int maxItems) {
+        StringVisitor visitor = StringVisitor.of(keyword);
+        ForeachValue.searchVTable(visitor, vTable);
+        List<SearchResultItem> items = maxItems > 0 ? visitor.result.subList(0, Math.min(maxItems, visitor.result.size()))
+                : visitor.result;
+        return new SearchResult(ResultCode.ok, keyword, maxItems, items);
+    }
+
+
+    public record NumberVisitor(long q, List<SearchResultItem> result) implements ValueVisitorForSearch {
+        public static NumberVisitor of(long q) {
+            return new NumberVisitor(q, new ArrayList<>(32));
+        }
+
+        @Override
+        public void visit(CfgValue.PrimitiveValue primitiveValue, String table, CfgValue.Value pk, List<String> fieldChain) {
             switch (primitiveValue) {
                 case CfgValue.VInt vInt -> {
-                    if (value == (long) vInt.value()) {
-                        res.items.add(new SearchResultItem(
+                    if (q == (long) vInt.value()) {
+                        result.add(new SearchResultItem(
                                 table, pk.packStr(), String.join(".", fieldChain), String.valueOf(vInt.value())));
                     }
                 }
                 case CfgValue.VLong vLong -> {
-                    if (value == vLong.value()) {
-                        res.items.add(new SearchResultItem(
+                    if (q == vLong.value()) {
+                        result.add(new SearchResultItem(
                                 table, pk.packStr(), String.join(".", fieldChain), String.valueOf(vLong.value())));
                     }
                 }
                 default -> {
                 }
             }
-        };
-
-        for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
-            searchVTable(visitor, vTable);
-            if (res.items.size() >= maxItems) {
-                break;
-            }
         }
-        return res;
     }
 
-    public static SearchResult searchStr(CfgValue cfgValue, String keyword, int maxItems) {
-        SearchResult res = new SearchResult(ResultCode.ok, keyword, maxItems, new ArrayList<>(32));
-        ValueVisitorForSearch visitor = (primitiveValue, table, pk, fieldChain) -> {
+    public record StringVisitor(String q, List<SearchResultItem> result) implements ValueVisitorForSearch {
+        public static StringVisitor of(String q) {
+            return new StringVisitor(q, new ArrayList<>(32));
+        }
+
+        @Override
+        public void visit(CfgValue.PrimitiveValue primitiveValue, String table, CfgValue.Value pk, List<String> fieldChain) {
             if (Objects.requireNonNull(primitiveValue) instanceof CfgValue.StringValue sv) {
                 String v = sv.value();
-                if (v.contains(keyword)) {
-                    res.items.add(new SearchResultItem(
+                if (v.contains(q)) {
+                    result.add(new SearchResultItem(
                             table, pk.packStr(), String.join(".", fieldChain), v));
                 }
             }
-        };
-
-        for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
-            searchVTable(visitor, vTable);
-            if (res.items.size() >= maxItems) {
-                break;
-            }
         }
-        return res;
     }
+
 }

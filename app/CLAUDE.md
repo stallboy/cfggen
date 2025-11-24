@@ -47,6 +47,7 @@ gradle compileTestJava
 - **`configgen.data`** - 数据读取模块（Excel、CSV、JSON）
 - **`configgen.value`** - 配置值模型和解析
 - **`configgen.i18n`** - 国际化支持
+- **`configgen.write`** - 写入excel和json
 
 ### 生成器模块
 - **`configgen.genjava`** - Java代码和数据生成
@@ -83,6 +84,8 @@ java -jar configgen.jar -datadir [配置目录] [选项] [生成器]
 - `-gen json`：生成JSON数据
 - `-gen tsschema`：生成TypeScript schema
 - `-gen jsonbyai`：AI生成的JSON
+- `-gen editorserver`：编辑器服务
+- `-gen mcpserver`：mcp服务
 
 ### 国际化支持
 - `-i18nfile`：国际化文件（CSV或目录）

@@ -65,7 +65,7 @@ public class TableRelatedInfoFinder {
         for (TableSchema schema : refOutTables.values()) {
             CfgValue.VTable vTable = cfgValue.getTable(schema.name());
             if (schema.entry() instanceof EntryType.EEnum || extraRefTables.contains(schema.name())) {
-                relatedInfo.relatedTableRecordListInCsv.add(getTableRecordListInCsv(vTable));
+                relatedInfo.relatedTableRecordListInCsv.add(getTableRecordListInCsv(vTable, null));
             } else {
                 relatedInfo.otherTableCounts.add(new TableCount(schema.name(), vTable.valueList().size()));
             }
@@ -86,7 +86,7 @@ public class TableRelatedInfoFinder {
         return sb.toString();
     }
 
-    public static TableRecordList getTableRecordListInCsv(CfgValue.VTable vTable) {
+    public static TableRecordList getTableRecordListInCsv(CfgValue.VTable vTable, List<String> extraFields) {
         TableSchema schema = vTable.schema();
 
         StringBuilder sb = new StringBuilder(2048);
@@ -99,6 +99,15 @@ public class TableRelatedInfoFinder {
         if (title != null) {
             fieldNames.add(title);
         }
+
+        if (extraFields != null){
+            for (String extraField : extraFields) {
+                if (vTable.schema().findField(extraField) != null){
+                    fieldNames.add(extraField);
+                }
+            }
+        }
+
         ValueToCsv.writeAsCsv(sb, vTable, fieldNames);
 
         return new TableRecordList(schema.name(), sb.toString());
