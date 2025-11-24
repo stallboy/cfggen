@@ -1,15 +1,16 @@
-import { memo, useState, useEffect } from "react";
-import { Form, Input, Button, message, Space, Typography, Alert, Divider } from "antd";
-import { useTranslation } from "react-i18next";
-import { useMyStore, setThemeConfig } from "../../store/store.ts";
-import { themeService } from "./themeService.ts";
-import { FlowVisualizationSetting } from "./FlowVisualizationSetting.tsx";
+import {memo, useState, useEffect} from "react";
+import {Form, Input, Button, message, Space, Typography, Divider} from "antd";
+import {useTranslation} from "react-i18next";
+import {useMyStore, setThemeConfig} from "../../store/store.ts";
+import {themeService} from "./themeService.ts";
+import {FlowVisualizationSetting} from "./FlowVisualizationSetting.tsx";
+import Title from "antd/lib/typography/Title";
 
-const { Text } = Typography;
+const {Text} = Typography;
 
 export const ThemeSetting = memo(function ThemeSetting() {
-    const { t } = useTranslation();
-    const { themeConfig } = useMyStore();
+    const {t} = useTranslation();
+    const {themeConfig} = useMyStore();
     const [loading, setLoading] = useState(false);
     const [themeExists, setThemeExists] = useState<boolean | null>(null);
 
@@ -86,19 +87,11 @@ export const ThemeSetting = memo(function ThemeSetting() {
     };
 
     return (
-        <Form
-            layout="vertical"
-            initialValues={themeConfig}
-            onFinish={handleThemeChange}
-        >
-            <Divider/>
-            <Alert
-                message={t('themeSettingNote')}
-                description={t('themeSettingDescription')}
-                type="info"
-                showIcon
-            />
+        <Form layout="vertical"
+              initialValues={themeConfig}
+              onFinish={handleThemeChange}>
 
+            <Title level={4}>{t('themeSetting')}</Title>
             <Form.Item
                 label={t('themeFile')}
                 name="themeFile"
@@ -110,8 +103,7 @@ export const ThemeSetting = memo(function ThemeSetting() {
                     ) : (
                         t('themeFileHelp')
                     )
-                }
-            >
+                }>
                 <Input
                     placeholder="colourpurple.json"
                     allowClear
@@ -138,10 +130,9 @@ export const ThemeSetting = memo(function ThemeSetting() {
             </Form.Item>
 
 
+            <Divider/>
 
-            <Divider />
-
-            <FlowVisualizationSetting />
+            <FlowVisualizationSetting/>
         </Form>
     );
 });

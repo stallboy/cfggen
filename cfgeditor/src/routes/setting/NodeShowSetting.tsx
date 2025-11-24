@@ -8,7 +8,7 @@ import {
     useMyStore
 } from "../../store/store.ts";
 import {CSSProperties, memo, useMemo} from "react";
-import {formItemLayoutWithOutLabel, formLayout} from "./BasicSetting.tsx";
+import {formItemLayoutWithOutLabel} from "./BasicSetting.tsx";
 import { fixColors } from "./colorUtils.ts";
 
 const selectStyle: CSSProperties = {width: 160};
@@ -41,7 +41,7 @@ export const NodeShowSetting = memo(function () {
             {label: t('BRANDES_KOEPF'), value: 'BRANDES_KOEPF'},
             {label: t('mrtree'), value: 'mrtree'}], [t]);
 
-    return <Form name="node show setting"  {...formLayout} initialValues={nodeShow} onFinish={onFinish}
+    return <Form name="node show setting"  layout={"vertical"} initialValues={nodeShow} onFinish={onFinish}
                  autoComplete="off">
 
         <Form.Item name='recordLayout' label={t('recordLayout')}>

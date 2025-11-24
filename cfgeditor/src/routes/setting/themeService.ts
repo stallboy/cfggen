@@ -108,33 +108,6 @@ export class ThemeService {
             (config.components === undefined || typeof config.components === 'object')
         );
     }
-
-    /**
-     * 获取可用主题列表
-     */
-    async getAvailableThemes(): Promise<string[]> {
-        if (!isTauri()) {
-            // Web 环境返回空列表
-            return [];
-        }
-
-        try {
-            // 这里需要实现扫描 themes 目录的功能
-            // 由于 Tauri 文件系统 API 的限制，暂时返回空列表
-            // 实际实现可能需要后端支持
-            return [];
-        } catch (error) {
-            console.error('获取主题列表失败:', error);
-            return [];
-        }
-    }
-
-    /**
-     * 清除缓存
-     */
-    clearCache(): void {
-        this.cache.clear();
-    }
 }
 
 // 导出单例实例

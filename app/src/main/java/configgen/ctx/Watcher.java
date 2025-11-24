@@ -1,6 +1,7 @@
 package configgen.ctx;
 
 import configgen.util.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -75,7 +76,8 @@ public class Watcher {
     private void registerAll(final Path start, WatchService watcher) throws IOException {
         Files.walkFileTree(start, new SimpleFileVisitor<>() {
             @Override
-            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+            public @NotNull FileVisitResult preVisitDirectory(@NotNull Path dir,
+                                                              @NotNull BasicFileAttributes attrs)
                     throws IOException {
                 register(dir, watcher);
                 return FileVisitResult.CONTINUE;

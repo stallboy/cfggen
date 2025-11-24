@@ -92,25 +92,25 @@ public class WriteRecordTool {
             return "record not found by id=%s".formatted(recordId);
         }
         if (vTable.schema().isJson()) {
-            Path jsonPath;
             try {
                 // 最后确定其他都对的时候再存储
-                jsonPath = VTableJsonStorage.deleteRecord(tableName, recordId,
+                Path jsonPath = VTableJsonStorage.deleteRecord(tableName, recordId,
                         context.getSourceStructure().getRootDir());
                 if (jsonPath == null) {
                     return "delete record file failed";
                 }
+                return "record deleted success at %s".formatted(jsonPath.toString());
             } catch (Exception e) {
                 return "record delete error: %s".formatted(e.getMessage());
             }
-            return "record deleted success at %s".formatted(jsonPath.toString());
+
         } else {
             try {
                 VTableStorage.deleteRecord(context, old);
+                return "record deleted success";
             } catch (Exception e2) {
                 return "record delete error: %s".formatted(e2.getMessage());
             }
-            return "record deleted success";
         }
     }
 }

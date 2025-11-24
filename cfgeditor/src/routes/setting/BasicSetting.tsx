@@ -35,7 +35,7 @@ export const BasicSetting = memo(function TableSetting() {
         isNextIdShow, searchMax
     } = useMyStore();
 
-    return <Form {...formLayout} layout={'horizontal'}
+    return <Form layout="vertical"
                  initialValues={{
                      maxImpl, refIn, refOutDepth, maxNode,
                      recordRefIn, recordRefInShowLinkMaxNode, recordRefOutDepth, recordMaxNode,
@@ -43,7 +43,7 @@ export const BasicSetting = memo(function TableSetting() {
                      isNextIdShow, searchMax,
                  }}>
 
-
+        <Divider>{t('tableRefSettingTitle')}</Divider>
         <Form.Item label={t('implsShowCnt')} name='maxImpl'>
             <InputNumber min={1} max={500} onChange={setMaxImpl}/>
         </Form.Item>
@@ -60,7 +60,7 @@ export const BasicSetting = memo(function TableSetting() {
             <InputNumber min={1} max={500} onChange={setMaxNode}/>
         </Form.Item>
 
-        <Divider/>
+        <Divider>{t('recordRefSettingTitle')}</Divider>
         <Form.Item name='recordRefIn' label={t('recordRefIn')} valuePropName="checked">
             <Switch onChange={setRecordRefIn}/>
         </Form.Item>
@@ -77,8 +77,7 @@ export const BasicSetting = memo(function TableSetting() {
             <InputNumber min={1} max={500} onChange={setRecordMaxNode}/>
         </Form.Item>
 
-
-        <Divider/>
+        <Divider>{t('refIdSettingTitle')}</Divider>
         <Form.Item name='refIdsInDepth' label={t('refIdsInDepth')}>
             <InputNumber min={0} max={5} onChange={setRefIdsInDepth}/>
         </Form.Item>
@@ -91,7 +90,7 @@ export const BasicSetting = memo(function TableSetting() {
             <InputNumber min={1} max={500} onChange={setRefIdsMaxNode}/>
         </Form.Item>
 
-        <Divider/>
+        <Divider>{t('otherSetting')}</Divider>
         <Form.Item name='isNextIdShow' label={t('isNextIdShow')} valuePropName="checked">
             <Switch onChange={setIsNextIdShow}/>
         </Form.Item>

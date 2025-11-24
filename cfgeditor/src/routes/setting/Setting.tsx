@@ -1,4 +1,4 @@
-import {Tabs} from "antd";
+import {Divider, Tabs} from "antd";
 
 import {NodeShowSetting} from "./NodeShowSetting.tsx";
 import {useTranslation} from "react-i18next";
@@ -48,5 +48,9 @@ export const Setting = memo(function Setting({schema, curTable, flowRef}: {
         },
     ]
 
-    return <Tabs items={items} tabPosition='left'/>;
+    return <>
+        <div style={{height: 16}}/>
+        <Divider/>
+        <Tabs items={items} tabPosition='left'/>
+    </>
 });
