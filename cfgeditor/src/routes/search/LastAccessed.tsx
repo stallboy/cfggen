@@ -20,13 +20,13 @@ export const LastAccessed = memo(function LastAccessed({schema}: {
 
     const uniqItems: LastAccessedItem[] = useMemo(() => {
         const uniq: LastAccessedItem[] = [];
-        for (let item of history.items.toReversed()) {
+        for (const item of history.items.toReversed()) {
             if (!uniq.some((it: LastAccessedItem) => it.table === item.table && it.id === item.id)) {
                 const title = schema?.getIdTitle(item.table, item.id) || '';
                 uniq.push(new LastAccessedItem(item.table, item.id, title));
             }
         }
-    
+
         return uniq;
     }, [history.items, schema]);
 
@@ -47,7 +47,7 @@ export const LastAccessed = memo(function LastAccessed({schema}: {
                 ellipsis: {
                     showTitle: false
                 },
-                render: (_text: any, item: LastAccessedItem, _index: number) => {
+                render: (_text: unknown, item: LastAccessedItem) => {
                     const label = item.id + '-' + item.title;
                     return <Button type={'link'} onClick={() => {
                         navigate(navTo(curPage, item.table, item.id, isEditMode, false));
@@ -57,7 +57,7 @@ export const LastAccessed = memo(function LastAccessed({schema}: {
                 }
             },
         ];
-    }, [schema, navigate, curPage, isEditMode]);
+    }, [navigate, curPage, isEditMode]);
 
     return <Table columns={columns}
                   dataSource={uniqItems}

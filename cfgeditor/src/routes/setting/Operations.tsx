@@ -17,20 +17,15 @@ import {toBlob} from "html-to-image";
 import {saveAs} from "file-saver";
 import {OpFixPages} from "./OpFixPages.tsx";
 import {PageType, navTo, useLocationData} from "../../store/store.ts";
-import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
 import {KeyShortCut} from "./KeyShortcut.tsx";
+import {toggleFullScreen} from "./colorUtils.ts";
 
-export async function toggleFullScreen() {
-    const appWindow = getCurrentWebviewWindow()
-    const isFullScreen = await appWindow.isFullscreen();
-    await appWindow.setFullscreen(!isFullScreen);
-}
 
 
 export const Operations = memo(function Operations({schema, curTable, flowRef}: {
     schema: Schema | undefined;
     curTable: STable | null;
-    flowRef: RefObject<HTMLDivElement>;
+    flowRef: RefObject<HTMLDivElement | null>;
 }) {
     const {t} = useTranslation();
     const {server, imageSizeScale} = useMyStore();
@@ -101,7 +96,7 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
             notification.error({title: "save png failed: limit the max node count", duration: 3});
             console.log(err)
         })
-    }, [flowRef, imageSizeScale, curPage, curTableId, notification]);
+    }, [flowRef, imageSizeScale, curPage, notification, curTableId, curId]);
 
     const options = [
         {label: t('table'), value: 'table'},

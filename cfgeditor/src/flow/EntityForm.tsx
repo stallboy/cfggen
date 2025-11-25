@@ -65,12 +65,19 @@ function defaultPrimitiveValue(field: EntityEditField) {
 
 const textAreaAutoSize = {minRows: 1, maxRows: 10}
 
+
 const empty = {}
 const filter_integer = {filterSort: filterNumberSort}
 const filter_search = {showSearch: true, filterOption: filterOption}
 const filter_integerAndSearch = {filterSort: filterNumberSort, showSearch: true, filterOption: filterOption}
 
-function getFilter(isValueInteger: boolean, useSearch: boolean) {
+interface FilterOption {
+    filterSort?: (optionA: EntityEditFieldOption, optionB: EntityEditFieldOption) => number;
+    showSearch?: boolean;
+    filterOption?: (inputValue: string, option?: EntityEditFieldOption) => boolean
+}
+
+function getFilter(isValueInteger: boolean, useSearch: boolean): FilterOption {
     if (isValueInteger) {
         return useSearch ? filter_integerAndSearch : filter_integer;
     } else {
@@ -83,17 +90,15 @@ function isArrayPrimitiveBoolOrNumber(eleType: string, autoCompleteOptions: Enti
         return false
     } else if (eleType == 'bool') {
         return true;
-    } else if (setOfNumber.has(eleType)) {
-        return true;
     } else {
-        return false;
+        return setOfNumber.has(eleType);
     }
 }
 
 function primitiveControl(eleType: string, autoCompleteOptions: EntityEditFieldOptions | undefined, style: CSSProperties) {
     if (autoCompleteOptions && autoCompleteOptions.options.length > 0) {
         const {options, isValueInteger, isEnum} = autoCompleteOptions;
-        const filters: any = getFilter(isValueInteger, options.length > 5);
+        const filters = getFilter(isValueInteger, options.length > 5);
 
         if (isEnum) {
             return <Select className='nodrag' options={options} {...filters}/>
@@ -152,7 +157,15 @@ interface FuncAddFormItemProps extends StructRefItemProps {
     nodeProps: NodeProps<EntityNode>,
 }
 
-const FuncAddFormItem = memo(function ({name, comment, handleOut, bgColor, func, nodeProps, width}: FuncAddFormItemProps) {
+const FuncAddFormItem = memo(function ({
+                                           name,
+                                           comment,
+                                           handleOut,
+                                           bgColor,
+                                           func,
+                                           nodeProps,
+                                           width
+                                       }: FuncAddFormItemProps) {
     const thisRowStyle: CSSProperties = useMemo(() => bgColor == undefined ? rowFlexStyle : {
         marginBottom: 10,
         position: 'relative',
@@ -186,7 +199,7 @@ const PrimitiveFormItem = memo(function ({field, bgColor}: {
     field: EntityEditField,
     bgColor?: string
 }) {
-    let props = useMemo(() => field.eleType == 'bool' ? {valuePropName: "checked"} : {}, [field.eleType])
+    const props = useMemo(() => field.eleType == 'bool' ? {valuePropName: "checked"} : {}, [field.eleType])
 
     const form = Form.useFormInstance();
     useEffect(() => {
@@ -248,7 +261,7 @@ const ArrayOfPrimitiveFormItem = memo(function ({field, bgColor}: {
     return <Form.Item {...formItemLayout}
                       label={<LabelWithTooltip name={field.name} comment={field.comment} isAutoFontSize={true}/>}
                       style={thisItemStyle}>
-        <Form.List name={field.name} key={field.name} initialValue={field.value as any[]}>
+        <Form.List name={field.name} key={field.name} initialValue={field.value as unknown[]}>
             {(fields, {add, remove, move}) => (
                 <>
                     {fields.map((f, index) => (
@@ -358,10 +371,10 @@ const InterfaceFormItem = memo(function ({field, nodeProps, sharedSetting}: {
             x: nodeProps.positionAbsoluteX,
             y: nodeProps.positionAbsoluteY
         });
-    }, [field]);
+    }, [field.interfaceOnChangeImpl, nodeProps.data.entity.id, nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY]);
 
-    const options = field.autoCompleteOptions?.options!;
-    const filters = getFilter(false, options.length > 5);
+    const options = field.autoCompleteOptions?.options;
+    const filters = getFilter(false, !!options && options.length > 5);
 
     const formItem = useMemo(() => (
         <Form.Item key={field.name}
@@ -434,14 +447,13 @@ export const EntityForm = memo(function ({edit, nodeProps, sharedSetting}: {
 
     // form里单个字段的改变不会引起这个界面更新，只更新jsonObject对象
     // initialValue放在每个Form.Item里
-    const onValuesChange = useCallback((_changedFields: any, allFields: any) => {
-        edit.editOnUpdateValues(allFields);
-    }, [edit]);
 
     return <ConfigProvider theme={theme}>
         <Form {...formLayout}
               form={_form}
-              onValuesChange={onValuesChange}
+              onValuesChange={(_changedFields, allFields) => {
+                  edit.editOnUpdateValues(allFields);
+              }}
               style={formStyle}>
             {fieldsFormItem(edit.editFields, nodeProps, sharedSetting)}
         </Form>

@@ -9,11 +9,6 @@ import {FixedPagesConf} from "../../store/storageJson.ts";
 import {useForm} from "antd/es/form/Form";
 
 
-function onFinishPageConf(values: any) {
-    // console.log(values);
-    setFixedPagesConf(values);
-}
-
 export const OpFixPages = memo(function ({schema, curTable}: {
     schema: Schema | undefined;
     curTable: STable | null;
@@ -28,14 +23,14 @@ export const OpFixPages = memo(function ({schema, curTable}: {
         const page = makeFixedPage(curTableId, curId);
         const newPageConf: FixedPagesConf = {pages: [...pageConf.pages, page]};
         setFixedPagesConf(newPageConf);
-    }, [curTableId, curId, pageConf, form]);
+    }, [curTableId, curId, pageConf]);
 
     useEffect(() => {
         form.resetFields();
     }, [pageConf, form]);
 
-    return <Form form={form} name="fixedPagesConf"  initialValues={pageConf}
-                 onFinish={onFinishPageConf} layout={"vertical"}
+    return <Form form={form} name="fixedPagesConf" initialValues={pageConf}
+                 onFinish={(values) => setFixedPagesConf(values)} layout={"vertical"}
                  autoComplete="off">
         <Form.Item label={t('pages')}>
             <Form.List name="pages">

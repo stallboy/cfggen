@@ -11,7 +11,7 @@ import {path} from "@tauri-apps/api";
 
 const {Title} = Typography;
 
-function onFinishTauriConf(values: any) {
+function onFinishTauriConf(values: never) {
     console.log(values);
     setTauriConf(values);
 }
@@ -24,11 +24,11 @@ export const TauriSetting = memo(function ({schema}: {
         queryKey: ['tauri', 'resourceDir'],
         queryFn: path.resourceDir,
     });
-    const {tauriConf} = useMyStore();
+    const {resMap, tauriConf} = useMyStore();
     const {notification} = App.useApp();
     const summarizeRes = useCallback(() => {
         if (schema) {
-            summarizeResAsync(schema).then((fullPath: string) => {
+            summarizeResAsync(schema, resMap).then((fullPath: string) => {
                 notification.info({
                     title: `saveTo ${fullPath}`,
                     placement: 'topRight',

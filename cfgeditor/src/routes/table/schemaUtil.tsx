@@ -387,3 +387,11 @@ function obj2map(v: any): any {
     if (Array.isArray(v)) return v.map(obj2map);
     return v && typeof v == "object" ? new Map(Object.entries(v).map(([k, v]) => [k, obj2map(v)])) : v;
 }
+
+export function getDefaultIdInTable(schema: Schema, tableId: string, curId: string) {
+    const sTable = schema.getSTable(tableId);
+    if (sTable && sTable.recordIds.length > 0) {
+        return sTable.recordIds[0].id;
+    }
+    return curId;
+}

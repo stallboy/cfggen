@@ -50,7 +50,7 @@ function getEntityValueStr({brief, fields, edit}: Entity): string | undefined {
 }
 
 function fillEditFieldsVec(vec: string[], editFields: EntityEditField[]) {
-    for (let {type, value, implFields} of editFields) {
+    for (const {type, value, implFields} of editFields) {
         if (type == 'primitive'){
             vec.push(value.toString());
         }else if (type == 'arrayOfPrimitive'){

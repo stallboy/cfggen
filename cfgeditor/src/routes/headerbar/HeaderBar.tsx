@@ -17,7 +17,7 @@ import {useNavigate} from "react-router-dom";
 import {STable} from "../table/schemaModel.ts";
 import {useTranslation} from "react-i18next";
 import {memo, useCallback, useMemo} from "react";
-import {toggleFullScreen} from "../setting/Operations.tsx";
+import {toggleFullScreen} from "../setting/colorUtils.ts";
 
 const {Text} = Typography;
 const prevIcon = <LeftOutlined/>;
@@ -39,8 +39,6 @@ export const HeaderBar = memo(function ({schema, curTable}: {
     useHotkeys('alt+2', () => navigate(navTo('tableRef', curTableId, curId)));
     useHotkeys('alt+3', () => navigate(navTo('record', curTableId, curId, isEditMode)));
     useHotkeys('alt+4', () => navigate(navTo('recordRef', curTableId, curId)));
-    useHotkeys('alt+c', () => prev());
-    useHotkeys('alt+v', () => next());
     useHotkeys('alt+enter', toggleFullScreen);
 
     const prev = useCallback(() => {
@@ -56,6 +54,8 @@ export const HeaderBar = memo(function ({schema, curTable}: {
             navigate(path);
         }
     }, [curPage, history, isEditMode, navigate]);
+    useHotkeys('alt+c', () => prev());
+    useHotkeys('alt+v', () => next());
 
     const {editingCurTable, editingCurId, editingIsEdited} = useMyStore();
 

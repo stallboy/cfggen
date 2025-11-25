@@ -30,7 +30,7 @@ export const Chat = memo(function Chat({schema}: {
 
         // const {t} = useTranslation();
         const [chats, setChats] = useState<ChatMessage[]>([]);
-        const chatRef = useRef<ProChatInstance | undefined>();
+        const chatRef = useRef<ProChatInstance | undefined>(undefined);
 
         const {isLoading, isError, error, data: promptRes} = useQuery({
             queryKey: ['prompt', curTableId],
@@ -106,11 +106,11 @@ export const Chat = memo(function Chat({schema}: {
         }, [chatRef, setChats, promptRes]);
 
 
-        const sendMessageRequest = useCallback(async (message:ChatMessage[]) => {
+        const sendMessageRequest = useCallback(async (message: ChatMessage[]) => {
             let old = chats
             if (chats.length == 0) {
                 old = promptRes?.init ? [promptRes?.init, ...message] : message
-            }else{
+            } else {
                 old = chats.slice(0, chats.length - 1)
             }
             const messages = promptRes?.prompt ? [promptRes.prompt, ...old] : old
@@ -159,11 +159,11 @@ async function askStream(messages: ChatMessage[], aiConf: AIConf) {
     });
 
     const msgs: Array<OpenAI.ChatCompletionMessageParam> = []
-    for (let m of messages) {
+    for (const m of messages) {
         msgs.push({
-            role: m.role as any,
+            role: m.role,
             content: m.content as string,
-        })
+        } as OpenAI.ChatCompletionMessageParam)
     }
     const stream = await openai.chat.completions.create({
         messages: msgs,

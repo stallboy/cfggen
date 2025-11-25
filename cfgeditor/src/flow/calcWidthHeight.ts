@@ -56,11 +56,12 @@ function calcEditFieldsCntAndExtra(editFields: EntityEditField[]) {
     let extra = 0;
     for (const editField of editFields) {
         switch (editField.type) {
-            case "arrayOfPrimitive":
+            case "arrayOfPrimitive": {
                 const len = (editField.value as never[]).length
                 cnt += len + 1;
                 extra += len * 8
                 break;
+            }
 
             case "interface":
                 cnt++;

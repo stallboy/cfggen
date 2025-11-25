@@ -4,15 +4,6 @@ import {navTo, useMyStore, useLocationData} from "../../store/store.ts";
 import {useNavigate} from "react-router-dom";
 import {STable} from "../table/schemaModel.ts";
 import {memo, useMemo, useCallback} from "react";
-import {EntityEditFieldOption} from "../../flow/entityModel.ts";
-
-const SELECT_STYLE = {width: 240} as const;
-
-const SEARCH_CONFIG = {
-    filterOption: (inputValue: string, option?: EntityEditFieldOption) =>
-        option?.labelStr.toLowerCase().includes(inputValue.toLowerCase()) ?? false
-};
-
 
 export const IdList = memo(function ({curTable}: {
     curTable: STable,
@@ -28,9 +19,12 @@ export const IdList = memo(function ({curTable}: {
     }, [navigate, curPage, curTableId, isEditMode]);
 
     return <Select id='id'
-                   showSearch={SEARCH_CONFIG}
+                   showSearch={{
+                       filterOption: (inputValue, option) =>
+                           option?.labelStr.toLowerCase().includes(inputValue.toLowerCase()) ?? false
+                   }}
                    options={options}
-                   style={SELECT_STYLE}
+                   style={{width: 240}}
                    value={curId}
                    placeholder="search a record"
                    onChange={handleChange}/>;

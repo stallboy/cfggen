@@ -12,11 +12,6 @@ import {isTauri} from "@tauri-apps/api/core";
 
 const {Title} = Typography;
 
-function onFinishAIConf(values: any) {
-    console.log(values);
-    setAIConf(values);
-}
-
 export const AiAndResource = memo(function ({schema}: {
     schema: Schema | undefined;
 }) {
@@ -25,9 +20,12 @@ export const AiAndResource = memo(function ({schema}: {
 
 
     return <>
-        <Form name="aiConf" layout={"vertical"} size={"small"}
-              initialValues={aiConf} onFinish={onFinishAIConf}
-              autoComplete="off">
+        <Form name="aiConf" layout={"vertical"} size={"small"} initialValues={aiConf} autoComplete="off" onFinish={
+            (values) => {
+                console.log(values);
+                setAIConf(values);
+            }}>
+
             <Title level={4} style={{marginTop: -4}}>{t('aiConf')}</Title>
 
             <Form.Item name='baseUrl' label={t('baseUrl')}>

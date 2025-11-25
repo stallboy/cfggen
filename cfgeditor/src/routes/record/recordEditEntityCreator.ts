@@ -193,9 +193,10 @@ export class RecordEditEntityCreator {
         }
 
 
-        const editOnUpdateValues = (values: any) => {
-            onUpdateFormValues(this.schema, values, fieldChain);
-        };
+        const editOnUpdateValues = (values: Record<string, unknown>) => {
+                onUpdateFormValues(this.schema, values, fieldChain);
+            }
+        ;
 
         const editOnUpdateNote = (note?: string) => {
             onUpdateNote(note, fieldChain);
@@ -428,7 +429,7 @@ export class Folds {
         }
 
         const newList: ChainFold[] = [];
-        for (let c of this.list) {
+        for (const c of this.list) {
             if (isChainEqual(c.chain, chain)) {
                 newList.push({chain, fold});
             } else {
@@ -439,7 +440,7 @@ export class Folds {
     }
 
     isFold(chain: (string | number)[]): boolean | undefined {
-        for (let c of this.list) {
+        for (const c of this.list) {
             if (isChainEqual(c.chain, chain)) {
                 return c.fold;
             }

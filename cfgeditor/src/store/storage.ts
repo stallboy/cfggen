@@ -84,7 +84,7 @@ async function readConf(conf: string) {
 }
 
 async function saveKeySetPrefAsync(keySet: Set<string>, fn: string) {
-    const settings: Record<string, any> = {};
+    const settings: Record<string, string> = {};
     for (const key of keySet) {
         const value = localStorage.getItem(key);
         if (value) {
@@ -101,7 +101,7 @@ async function savePrefAsyncIf(changedKey: string) {
     }
 }
 
-function log(reason: any) {
+function log(reason: string) {
     console.log(reason)
 }
 

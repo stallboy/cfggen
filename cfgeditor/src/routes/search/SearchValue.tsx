@@ -53,7 +53,7 @@ export const SearchValue = memo(function SearchValue() {
                 ellipsis: {
                     showTitle: false
                 },
-                render: (_text: any, item: SearchResultItem, _index: number) => {
+                render: (_text: unknown, item: SearchResultItem) => {
                     const label = getLabel(item.table, item.pk);
                     return <Button type={'link'} onClick={() => {
                         navigate(navTo(curPage, item.table, item.pk, isEditMode));

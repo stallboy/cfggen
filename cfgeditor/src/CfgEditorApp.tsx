@@ -171,7 +171,7 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
                onOk={handleModalOk}>
 
             <Flex vertical>
-                <Alert message={error ? error.message : ''} type='error'/>
+                <Alert title={error ? error.message : ''} type='error'/>
                 <p> {t('netErrFixTip')} </p>
                 <p> {t('curServer')}: {server}</p>
                 <Form.Item label={t('newServer') + ':'}>

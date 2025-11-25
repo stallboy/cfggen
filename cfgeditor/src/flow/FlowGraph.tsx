@@ -1,29 +1,15 @@
 import {Background, Controls, Edge, Node, NodeTypes, ReactFlow, ReactFlowProvider} from "@xyflow/react";
 import {Entity} from "./entityModel.ts";
-import {createContext, memo, MouseEvent as ReactMouseEvent, ReactNode, useCallback, useMemo, useState} from "react";
+import {memo, MouseEvent as ReactMouseEvent, ReactNode, useCallback, useMemo, useState} from "react";
 import {FlowContextMenu, MenuItem, MenuStyle} from "./FlowContextMenu.tsx";
 import {FlowNode} from "./FlowNode.tsx";
 import {FlowStyleManager} from "./FlowStyleManager.tsx";
+import {FlowGraphContext as FlowGraphContext1} from "./FlowGraphContext.ts";
 
 export type EntityNode = Node<{ entity: Entity }, "node">;
 export type EntityEdge = Edge;
 export type NodeMenuFunc = (entityNode: EntityNode) => MenuItem[];
 export type NodeDoubleClickFunc = (entityNode: EntityNode) => void;
-
-export interface FlowGraphContextType {
-    setPaneMenu: (menu: MenuItem[]) => void;
-    setNodeMenuFunc: (func: NodeMenuFunc) => void;
-    setNodeDoubleClickFunc: (func: NodeDoubleClickFunc) => void;
-}
-
-function dummy() {
-}
-
-export const FlowGraphContext = createContext<FlowGraphContextType>({
-    setPaneMenu: dummy,
-    setNodeMenuFunc: dummy,
-    setNodeDoubleClickFunc: dummy,
-});
 
 const nodeTypes: NodeTypes = {
     node: FlowNode,
@@ -111,9 +97,9 @@ export const FlowGraph = memo(function FlowGraph({children}: {
         {(menuStyle && menuItems && menuItems.length > 0) &&
             <FlowContextMenu menuStyle={menuStyle} menuItems={menuItems} closeMenu={closeMenu}/>}
 
-        <FlowGraphContext.Provider value={ctx}>
+        <FlowGraphContext1 value={ctx}>
             {children}
-        </FlowGraphContext.Provider>
+        </FlowGraphContext1>
     </ReactFlowProvider>;
 
 });

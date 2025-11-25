@@ -28,7 +28,7 @@ function RefIdListResult({refIdsResult}: {
                 width: 70,
                 key: 'table',
                 ellipsis: true,
-                render: (_text: any, item: RecordRefId) =>{
+                render: (_text: unknown, item: RecordRefId) =>{
                     return item.depth + ' ' + item.table;
                 }
             },
@@ -40,7 +40,7 @@ function RefIdListResult({refIdsResult}: {
                 ellipsis: {
                     showTitle: false
                 },
-                render: (_text: any, item: RecordRefId, _index: number) => {
+                render: (_text: unknown, item: RecordRefId) => {
                     const label = item.title ? item.id + '-' + item.title : item.id;
                     return <Button type={'link'} onClick={() => {
                         navigate(navTo(curPage, item.table, item.id, isEditMode, false));

@@ -16,7 +16,6 @@ class LastModifiedItem {
 export const LastModified = memo(function LastModified({schema}: {
     schema: Schema | undefined;
 }) {
-    if (!schema) return <></>;
 
     const {isEditMode} = useMyStore();
     const navigate = useNavigate();
@@ -27,14 +26,14 @@ export const LastModified = memo(function LastModified({schema}: {
             return [];
         }
         const ordered: LastModifiedItem[] = [];
-        for (let e of schema.lastModifiedMap.entries()) {
+        for (const e of schema.lastModifiedMap.entries()) {
             const table: string = e[0]
             const idMap = e[1];
             const sTable = schema.getSTable(table);
             if (sTable == null) {
                 continue;
             }
-            for (let it of idMap.entries()) {
+            for (const it of idMap.entries()) {
                 const id: string = it[0];
                 const lastModified: number = it[1]
                 const title: string = sTable.idMap?.get(id)?.title || '';
@@ -63,7 +62,7 @@ export const LastModified = memo(function LastModified({schema}: {
                 ellipsis: {
                     showTitle: false
                 },
-                render: (_text: any, item: LastModifiedItem, _index: number) => {
+                render: (_text: unknown, item: LastModifiedItem) => {
                     const label = item.id + '-' + item.title;
 
                     return <Button type={'link'} onClick={() => {
@@ -81,12 +80,15 @@ export const LastModified = memo(function LastModified({schema}: {
                 ellipsis: {
                     showTitle: false
                 },
-                render: (_text: any, item: LastModifiedItem, _index: number) => {
+                render: (_text: unknown, item: LastModifiedItem) => {
                     return <TimeAgo date={item.lastModified}/> ;
                 }
             }
         ];
-    }, [schema, navigate, curPage, isEditMode]);
+    }, [navigate, curPage, isEditMode]);
+
+
+    if (!schema) return <></>;
 
     return <Table columns={columns}
                   dataSource={orderedItems}

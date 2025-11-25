@@ -1,5 +1,4 @@
 import {Schema} from "../routes/table/schemaUtil.tsx";
-import {useMyStore} from "../store/store.ts";
 import {BaseDirectory, writeTextFile} from "@tauri-apps/plugin-fs";
 import {ResInfo} from "./resInfo.ts";
 import {getResBrief} from "../flow/getResBrief.tsx";
@@ -12,8 +11,7 @@ interface ResEntry {
 }
 
 
-export async function summarizeResAsync(schema: Schema) {
-    const {resMap} = useMyStore();
+export async function summarizeResAsync(schema: Schema, resMap: Map<string, ResInfo[]>) {
     const table2entries = new Map<string, ResEntry[]>();
     for (const [key, infos] of resMap.entries()) {
         const i = key.indexOf('_');

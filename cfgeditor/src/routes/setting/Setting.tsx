@@ -15,7 +15,7 @@ import {ThemeSetting} from "./ThemeSetting.tsx";
 export const Setting = memo(function Setting({schema, curTable, flowRef}: {
     schema: Schema | undefined;
     curTable: STable | null;
-    flowRef: RefObject<HTMLDivElement>;
+    flowRef: RefObject<HTMLDivElement | null>;
 }) {
 
     const {t} = useTranslation();

@@ -9,7 +9,7 @@ import {
 } from "../../store/store.ts";
 import {CSSProperties, memo, useMemo} from "react";
 
-import { fixColors } from "./colorUtils.ts";
+import {fixColors} from "./colorUtils.ts";
 
 const {Title} = Typography;
 const selectStyle: CSSProperties = {width: 160};
@@ -17,18 +17,6 @@ const selectStyle: CSSProperties = {width: 160};
 export const NodeShowSetting = memo(function () {
     const {t} = useTranslation();
     const {nodeShow} = useMyStore();
-
-    function onFinish(values: any) {
-        // console.log(values);
-        const newNodeShow: NodeShowType = {
-            ...nodeShow,
-            ...values,
-            nodeColorsByValue: fixColors(values.nodeColorsByValue),
-            nodeColorsByLabel: fixColors(values.nodeColorsByLabel),
-            fieldColorsByName: fixColors(values.fieldColorsByName)
-        };
-        setNodeShow(newNodeShow);
-    }
 
     const descOptions = useMemo(() =>
         [{label: t('show'), value: 'show'},
@@ -42,11 +30,21 @@ export const NodeShowSetting = memo(function () {
             {label: t('BRANDES_KOEPF'), value: 'BRANDES_KOEPF'},
             {label: t('mrtree'), value: 'mrtree'}], [t]);
 
-    return <Form name="node show setting"  layout={"vertical"}
-                 initialValues={nodeShow} onFinish={onFinish} size={"small"}
-                 autoComplete="off">
+    return <Form name="node show setting" layout={"vertical"}
+                 initialValues={nodeShow} size={"small"} autoComplete="off"
+                 onFinish={(values) => {
+                     // console.log(values);
+                     const newNodeShow: NodeShowType = {
+                         ...nodeShow,
+                         ...values,
+                         nodeColorsByValue: fixColors(values.nodeColorsByValue),
+                         nodeColorsByLabel: fixColors(values.nodeColorsByLabel),
+                         fieldColorsByName: fixColors(values.fieldColorsByName)
+                     };
+                     setNodeShow(newNodeShow);
+                 }}>
 
-        <Title level={4} style={{ marginTop: -4 }}>{t('layoutSettingTitle')}</Title>
+        <Title level={4} style={{marginTop: -4}}>{t('layoutSettingTitle')}</Title>
         <Form.Item name='recordLayout' label={t('recordLayout')}>
             <Select style={selectStyle} options={layoutOptions}/>
         </Form.Item>
@@ -141,7 +139,7 @@ export const NodeShowSetting = memo(function () {
             </Form.List>
         </Form.Item>
 
-        <Divider />
+        <Divider/>
         <Title level={4}>{t('otherSetting')}</Title>
 
         <Form.Item name='refIsShowCopyable' label={t('refIsShowCopyable')} valuePropName='checked'>

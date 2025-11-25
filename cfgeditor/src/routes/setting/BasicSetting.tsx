@@ -15,19 +15,6 @@ import {useTranslation} from "react-i18next";
 
 const {Title} = Typography;
 
-export const formLayout = {
-    labelCol: {xs: {span: 24}, sm: {span: 4}},
-    wrapperCol: {xs: {span: 24}, sm: {span: 20}},
-};
-
-export const formItemLayoutWithOutLabel = {
-    wrapperCol: {
-        xs: {span: 24, offset: 0},
-        sm: {span: 20, offset: 4},
-    },
-};
-
-
 export const BasicSetting = memo(function TableSetting() {
     const {t} = useTranslation();
     const {

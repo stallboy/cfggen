@@ -14,11 +14,6 @@ interface TableWithLastName {
 const SELECT_STYLE = {width: 200} as const;
 const LABEL_COUNT_STYLE = {fontSize: '0.85em'} as const;
 
-const SEARCH_CONFIG = {
-    optionFilterProp: "children",
-    filterOption: (input: string, option: any) => option?.value.includes(input) ?? false
-};
-
 function generateTableOptions(schema: Schema) {
     const group2Tables = new Map<string, TableWithLastName[]>();
 
@@ -80,7 +75,11 @@ export const TableList = memo(function ({schema}: { schema: Schema }) {
 
     return (
         <Select id='table'
-                showSearch={SEARCH_CONFIG}
+                showSearch={{
+                    optionFilterProp: "children",
+                    filterOption: (input, option) =>
+                        option?.value.includes(input) ?? false
+                }}
                 options={options}
                 style={SELECT_STYLE}
                 value={curTableId}

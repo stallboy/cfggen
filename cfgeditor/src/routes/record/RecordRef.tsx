@@ -31,7 +31,7 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
 }) {
     const [t] = useTranslation();
     const navigate = useNavigate();
-    const { recordRefInShowLinkMaxNode, tauriConf, resourceDir, resMap } = useMyStore();
+    const { recordRefInShowLinkMaxNode, tauriConf, resourceDir, resMap, isEditMode } = useMyStore();
 
     // Memoize checkTable function
     const checkTable = useMemo(() => {
@@ -101,12 +101,11 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
     }, [t, schema, navigate, recordRefResult]);
 
     const nodeDoubleClickFunc = (entityNode: EntityNode): void => {
-        const { isEditMode } = useMyStore();
         const refId = entityNode.data.entity.userData as RefId;
         navigate(navTo('record', refId.table, refId.id, isEditMode));
     };
 
-    const lastFitViewForFix = useRef<string | undefined>();
+    const lastFitViewForFix = useRef<string | undefined>(undefined);
     let pathname = `/recordRef/${curTable.name}/${curId}`;
     let editingObjectRes; // EFitView.FitFull;
     if (inDragPanelAndFix) {

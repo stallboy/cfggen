@@ -162,6 +162,6 @@ export const ResPopover = memo(function ({resInfos}: { resInfos: ResInfo[] }) {
         return items[0].children;
     }
 
-    return <Tabs tabPosition={items.length < 4 ? 'top' : 'left'} items={items}/>
+    return <Tabs tabPlacement={items.length < 4 ? 'top' : 'start'} items={items}/>
 });
 

@@ -1,13 +1,13 @@
 import {Entity} from "../../flow/entityModel.ts";
 import {SchemaTableType} from "../../CfgEditorApp.tsx";
 import {TableEntityCreator, UserData} from "./tableEntityCreator.ts";
-import {navTo, useMyStore, useLocationData} from "../../store/store.ts";
+import {navTo, useLocationData, useMyStore} from "../../store/store.ts";
 import {useNavigate, useOutletContext} from "react-router-dom";
 // import {useReactFlow} from "reactflow";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
 import {useTranslation} from "react-i18next";
 import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
-import {Schema} from "./schemaUtil.tsx";
+import {getDefaultIdInTable} from "./schemaUtil.tsx";
 import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
 import {EntityNode} from "../../flow/FlowGraph.tsx";
 
@@ -58,10 +58,3 @@ export function Table() {
 }
 
 
-export function getDefaultIdInTable(schema: Schema, tableId: string, curId: string) {
-    const sTable = schema.getSTable(tableId);
-    if (sTable && sTable.recordIds.length > 0) {
-        return sTable.recordIds[0].id;
-    }
-    return curId;
-}

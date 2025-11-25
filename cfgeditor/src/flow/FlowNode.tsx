@@ -43,7 +43,7 @@ interface TempNote {
 export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>) {
     const entity = nodeProps.data.entity;
     const { id, label, fields, edit, brief, handleIn, handleOut, note, sharedSetting, assets } = entity;
-    const color: string = useMemo(() => getNodeBackgroundColor(entity), [entity, entity.sharedSetting?.nodeShow]);
+    const color: string = useMemo(() => getNodeBackgroundColor(entity), [entity]);
     const width = edit ? (entity.sharedSetting?.nodeShow?.editNodeWidth ?? 280) : (entity.sharedSetting?.nodeShow?.nodeWidth ?? 240);
     const nodeStyle: CSSProperties = useMemo(() => {
         return { width: width, backgroundColor: color, outlineColor: entity.sharedSetting?.nodeShow?.editFoldColor };
@@ -105,7 +105,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
             }
         }
         return null;
-    }, [edit, unfoldNode, foldNode]);
+    }, [edit, unfoldIconButtonStyle, unfoldNode, foldNode]);
     const editNoteButton = useMemo(() => {
         const mayHasResOrNote = label.includes('_');
         if (mayHasResOrNote && !edit) {
@@ -158,7 +158,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
         }
 
         return null;
-    }, [sharedSetting, id, isEditNote, note, edit, tmpNote, updateNoteInEdit]);
+    }, [label, edit, note, sharedSetting?.notes, id, isEditNote, tmpNote, entity, updateNoteInEdit]);
 
 
     const title = useMemo(() => {

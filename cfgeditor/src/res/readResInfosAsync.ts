@@ -1,6 +1,6 @@
 import {
     readStoreStateOnce,
-    useMyStore,
+    getMyStore,
     setResourceDir,
     setResMap
 } from "../store/store.ts";
@@ -155,7 +155,7 @@ function packAllTracks(raws: Map<string, ResInfo[]>) {
 let alreadyRead = false;
 
 export function invalidateResInfos() {
-    queryClient.invalidateQueries({queryKey: ['setting', 'resInfo'], refetchType: 'all'}).catch((reason: any) => {
+    queryClient.invalidateQueries({queryKey: ['setting', 'resInfo'], refetchType: 'all'}).catch((reason: unknown) => {
         console.log(reason);
     });
     alreadyRead = false;
@@ -171,7 +171,7 @@ export async function readResInfosAsync() {
         return true;
     }
 
-    const {tauriConf} = useMyStore();
+    const {tauriConf} = getMyStore();
     const result = new Map<string, ResInfo[]>();
     const stat = new Map<string, number>();
     const baseDir = await path.resourceDir();
@@ -184,8 +184,7 @@ export async function readResInfosAsync() {
         }
         try {
             await processDirRecursively(dir, !!resDir.txtAsSrt, resDir.lang, result, stat);
-
-        } catch (reason: any) {
+        } catch (reason: unknown) {
             console.error(reason);
         }
     }

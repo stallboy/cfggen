@@ -12,7 +12,7 @@ export interface AntdThemeConfig {
         // 更多 token 配置...
     };
     components?: {
-        [key: string]: any;
+        [key: string]: never;
     };
 }
 
@@ -100,7 +100,7 @@ export class ThemeService {
     /**
      * 验证主题配置格式
      */
-    private validateThemeConfig(config: any): config is AntdThemeConfig {
+    private validateThemeConfig(config: AntdThemeConfig): config is AntdThemeConfig {
         return (
             typeof config === 'object' &&
             config !== null &&

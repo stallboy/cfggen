@@ -171,40 +171,41 @@ export function readStoreStateOnce() {
         const key = k as keyof StoreState;
         const value = storeState[key]
         switch (key) {
-            case 'nodeShow':
-                // eslint-disable-next-line no-case-declarations
+            case 'nodeShow': {
                 const ns = getPrefJson<NodeShowType>('nodeShow', Convert.toNodeShowType);
                 if (ns) {
                     store.nodeShow = ns;
                 }
                 break;
-            case 'aiConf':
+            }
+            case 'aiConf': {
                 const ac = getPrefJson<AIConf>('aiConf', Convert.toAIConf);
                 if (ac) {
                     store.aiConf = ac;
                 }
                 break;
-            case 'pageConf':
-                // eslint-disable-next-line no-case-declarations
+            }
+            case 'pageConf': {
                 const pc = getPrefJson<FixedPagesConf>('pageConf', Convert.toFixedPagesConf);
                 if (pc) {
                     store.pageConf = pc;
                 }
                 break;
-            case 'tauriConf':
-                // eslint-disable-next-line no-case-declarations
+            }
+            case 'tauriConf': {
                 const tc = getPrefJson<TauriConf>('tauriConf', Convert.toTauriConf);
                 if (tc) {
                     store.tauriConf = tc;
                 }
                 break;
-            case 'themeConfig':
-                // eslint-disable-next-line no-case-declarations
+            }
+            case 'themeConfig': {
                 const theme = getPrefJson<ThemeConfig>('themeConfig', Convert.toThemeConfig);
                 if (theme) {
                     store.themeConfig = theme;
                 }
                 break;
+            }
             default:
                 switch (typeof value) {
                     case "boolean":
@@ -228,6 +229,10 @@ const store = resso<StoreState>(storeState);
 
 
 export function useMyStore() {
+    return store;
+}
+
+export function getMyStore() {
     return store;
 }
 
@@ -354,7 +359,7 @@ export function setDragPanel(value: string) {
 }
 
 export function makeFixedPage(curTableId: string, curId: string) {
-    const {recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow} = useMyStore();
+    const {recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow} = store;
     const fp: FixedPage = {
         label: getId(curTableId, curId),
         table: curTableId,
@@ -426,7 +431,7 @@ export function setThemeConfig(themeConfig: ThemeConfig) {
 }
 
 export function historyCanPrev(curTableId: string, curId: string, history: History): boolean {
-    let cur = history.cur();
+    const cur = history.cur();
     if (cur && (cur.table != curTableId || cur.id != curId)) {
         return true;
     }
@@ -466,7 +471,7 @@ export function setEditingState(editingCurTable: string, editingCurId: string, e
 }
 
 export function getLastOpenIdByTable(schema: Schema, curTableId: string): string | undefined {
-    const {history} = useMyStore();
+    const {history} = store;
     const lastOpenId = history.findLastOpenId(curTableId)
     const table = schema.getSTable(curTableId);
     let id;
@@ -487,7 +492,7 @@ export function setIsEditMode(isEditMode: boolean) {
 
 export function navTo(curPage: PageType, tableId: string, id: string,
                       edit: boolean = false, addHistory: boolean = true) {
-    const {history} = useMyStore();
+    const {history} = store;
 
     if (addHistory) {
         const cur = history.cur();

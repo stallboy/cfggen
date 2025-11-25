@@ -116,18 +116,18 @@ const RecordWithResult = memo(function RecordWithResult({recordResult}: { record
         }
         fillHandles(entityMap);
         return {entityMap, editingObjectRes}
-    }, [isEditing, curTableId, curId, schema, recordResult, tauriConf, resourceDir, resMap,
-        addOrUpdateRecordMutation, update, folds, setFolds, updateVersion]);
+    }, [isEditing, curId, schema, recordResult, tauriConf, resourceDir, resMap, curTable,
+        addOrUpdateRecordMutation, update, folds, setFolds]);
 
     useEffect(() => {
         setIsEditMode(edit);
     }, [edit]);
 
     useEffect(() => {
-        if (isEditing){
+        if (isEditing) {
             notifyEditingState()
         }
-    }, [isEditing, editState.table, editState.id, editState.editingObject]);
+    }, [isEditing]); // editState.table, editState.id, editState.editingObject
 
 
     const getEditMenu = useCallback(function (table: string, id: string, edit: boolean) {
@@ -242,7 +242,7 @@ const RecordWithResult = memo(function RecordWithResult({recordResult}: { record
             }
         }
         return mm;
-    }, [schema, curTable, curId, edit, getEditMenu, t, navigate]);
+    }, [curTable.name, curId, t, isEditing, isEditable, getEditMenu, edit, schema, navigate]);
 
     // const ep = pathname + (isEditing ? ',' + editSeq : ''); // 用 editSeq触发layout
     useEntityToGraph({

@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(pnpm run build)",
-      "Bash(pnpm run dev)"
+      "Bash(pnpm run dev)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

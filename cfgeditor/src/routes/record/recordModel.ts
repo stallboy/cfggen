@@ -13,8 +13,7 @@ export interface JSONObject {
     "$type": string;
 }
 
-export interface JSONArray extends Array<JSONValue> {
-}
+export type JSONArray = Array<JSONValue>
 
 export interface Refs {
     "$refs"?: FieldRef[];

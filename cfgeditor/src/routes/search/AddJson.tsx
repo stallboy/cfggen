@@ -8,7 +8,6 @@ import {Button, Card, Form, Input, List, Result, Space} from "antd";
 
 import {RecordEditResult} from "../record/recordModel.ts";
 import {useNavigate} from "react-router-dom";
-import {formLayout} from "../setting/BasicSetting.tsx";
 import {useTranslation} from "react-i18next";
 import {ResultStatusType} from "antd/es/result";
 import {applyNewEditingObject} from "../record/editingObject.ts";
@@ -99,7 +98,7 @@ export const AddJson = memo(function AddJson({schema}: {
 
     return <>
         <Card title={curTableId}>
-            <Form name="addJson" form={form} {...formLayout} onFinish={onAddJson} autoComplete="off">
+            <Form name="addJson" form={form} layout={"vertical"} onFinish={onAddJson} autoComplete="off">
                 <Form.Item name='json' label={t('json')}>
                     <Input.TextArea placeholder="json" autoSize={{minRows: 5, maxRows: 20}}/>
                 </Form.Item>

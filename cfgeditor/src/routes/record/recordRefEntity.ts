@@ -33,7 +33,7 @@ function isRefIdInBriefRecords(toTable: string, toId: string, briefRecords: Brie
     return false;
 }
 
-function alwaysOk(_t: string) {
+function alwaysOk() {
     return true;
 }
 

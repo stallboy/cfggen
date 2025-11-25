@@ -98,7 +98,7 @@ export function notifyEditingState() {
 }
 
 export function onUpdateFormValues(schema: Schema,
-                                   values: any,
+                                   values: Record<string, unknown>,
                                    fieldChains: (string | number)[]) {
     // console.log('formChange', fieldChains, values);
 
