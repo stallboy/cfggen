@@ -14,7 +14,7 @@ interface OnePage {
     id: string;
 }
 
-export const OpFixPages = memo(function ({schema, curTable}: {
+export const FixPages = memo(function ({schema, curTable}: {
     schema: Schema | undefined;
     curTable: STable | null;
 }) {
@@ -48,7 +48,13 @@ export const OpFixPages = memo(function ({schema, curTable}: {
             return null;
         }).filter((p): p is FixedPage => p !== null);
 
-        setFixedPagesConf({pages: newPages});
+        // 处理重复的 label，只保留最后一个
+        const uniquePages = new Map<string, FixedPage>();
+        newPages.forEach(page => {
+            uniquePages.set(page.label, page);
+        });
+
+        setFixedPagesConf({pages: Array.from(uniquePages.values())});
     }
 
     useEffect(() => {

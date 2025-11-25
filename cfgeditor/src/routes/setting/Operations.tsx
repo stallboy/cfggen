@@ -15,7 +15,7 @@ import {RecordEditResult} from "../record/recordModel.ts";
 import {deleteRecord} from "../api.ts";
 import {toBlob} from "html-to-image";
 import {saveAs} from "file-saver";
-import {OpFixPages} from "./OpFixPages.tsx";
+import {FixPages} from "./FixPages.tsx";
 import {PageType, navTo, useLocationData} from "../../store/store.ts";
 import {KeyShortCut} from "./KeyShortcut.tsx";
 import {toggleFullScreen} from "./colorUtils.ts";
@@ -121,7 +121,7 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
         </Form>
 
         <Divider/>
-        <OpFixPages schema={schema} curTable={curTable}/>
+        <FixPages schema={schema} curTable={curTable}/>
 
 
         <Radio.Group optionType="button"

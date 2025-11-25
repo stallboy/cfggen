@@ -1,4 +1,4 @@
-import {Button, ColorPicker, Divider, Form, Input, Radio, Select, Space, Switch, Typography} from "antd";
+import {Button, ColorPicker, Form, Input, Radio, Select, Space, Switch, Typography} from "antd";
 import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 
@@ -63,8 +63,6 @@ export const NodeShowSetting = memo(function () {
             <Select style={selectStyle} options={layoutOptions}/>
         </Form.Item>
 
-
-        <Divider/>
         <Title level={4}>{t('colorSettingTitle')}</Title>
 
         <Form.Item label={t('nodeColorsByValue')}>
@@ -139,7 +137,6 @@ export const NodeShowSetting = memo(function () {
             </Form.List>
         </Form.Item>
 
-        <Divider/>
         <Title level={4}>{t('otherSetting')}</Title>
 
         <Form.Item name='refIsShowCopyable' label={t('refIsShowCopyable')} valuePropName='checked'>
