@@ -1,6 +1,7 @@
 import {CSSProperties, memo, useMemo} from 'react';
 import {AutoComplete, Input} from 'antd';
 import {EntityEditFieldOption} from "./entityModel.ts";
+import {FilterOption} from "./EntityForm.tsx";
 
 const suffixStyle: CSSProperties = {
     color: '#597ef7', fontSize: '0.8em',
@@ -13,7 +14,7 @@ export interface CustomAutoCompleteProps {
     onChange?: (value: string | number) => void;
 
     options: EntityEditFieldOption[];
-    filters: any;
+    filters: FilterOption;
 }
 
 // https://ant-design.antgroup.com/components/form-cn#form-demo-customized-form-controls
@@ -29,7 +30,7 @@ export const CustomAutoComplete = memo(function CustomAutoComplete(
                                  options={options}
                                  value={value}
                                  onSelect={onChange}
-                                 onSearch={onChange}>
+                                 showSearch={{onSearch: onChange}}>
                 {input}
             </AutoComplete>
         }

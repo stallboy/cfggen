@@ -18,7 +18,6 @@ import {useQuery} from "@tanstack/react-query";
 import {HeaderBar} from "./routes/headerbar/HeaderBar.tsx";
 import {FlowGraph} from "./flow/FlowGraph.tsx";
 import {Finder} from "./routes/search/Finder.tsx";
-import {Adder} from "./routes/search/Adder.tsx";
 
 
 export type SchemaTableType = {
@@ -109,7 +108,7 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
             dragPage = <Finder schema={schema}/>;
 
         } else if (dragPanel == 'adder') {
-            dragPage = <Adder schema={schema}/>
+            dragPage = <Finder schema={schema}/> //TODO
 
         } else if (dragPanel == 'setting') {
             dragPage = <Setting schema={schema} curTable={curTable} flowRef={ref}/>

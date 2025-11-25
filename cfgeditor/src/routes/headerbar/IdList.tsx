@@ -21,7 +21,7 @@ export const IdList = memo(function ({curTable}: {
     return <Select id='id'
                    showSearch={{
                        filterOption: (inputValue, option) =>
-                           option?.labelStr.toLowerCase().includes(inputValue.toLowerCase()) ?? false
+                           option?.labelstr.toLowerCase().includes(inputValue.toLowerCase()) ?? false
                    }}
                    options={options}
                    style={{width: 240}}

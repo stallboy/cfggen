@@ -14,7 +14,7 @@ import { MenuItem } from "../../flow/FlowContextMenu.tsx";
 import { SchemaTableType } from "../../CfgEditorApp.tsx";
 import { fillHandles } from "../../flow/entityToNodeAndEdge.ts";
 
-import { useCallback, useRef, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useEntityToGraph } from "../../flow/useEntityToGraph.tsx";
 import { EditingObjectRes, EFitView } from "./editingObject.ts";
 import { EntityNode } from "../../flow/FlowGraph.tsx";
@@ -105,19 +105,19 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
         navigate(navTo('record', refId.table, refId.id, isEditMode));
     };
 
-    const lastFitViewForFix = useRef<string | undefined>(undefined);
+    const [lastFitViewPath, setLastFitViewPath] = useState<string | undefined>(undefined);
     let pathname = `/recordRef/${curTable.name}/${curId}`;
     let editingObjectRes; // EFitView.FitFull;
     if (inDragPanelAndFix) {
         pathname += '/fix';
-        if (lastFitViewForFix.current && lastFitViewForFix.current == pathname) {
+        if (lastFitViewPath && lastFitViewPath === pathname) {
             editingObjectRes = fitNone;
         }
     }
 
     const setFitViewForPathname = useCallback((pathname: string) => {
-        lastFitViewForFix.current = pathname;
-    }, [lastFitViewForFix]);
+        setLastFitViewPath(pathname);
+    }, []);
 
 
     useEntityToGraph({
@@ -152,7 +152,7 @@ export function RecordRef({ schema, notes, curTable, curId, refIn, refOutDepth, 
 
 
     if (isLoading) {
-        return;
+        return null;
     }
 
     if (isError) {
@@ -183,4 +183,3 @@ export function RecordRefRoute() {
         nodeShow={nodeShow}
         inDragPanelAndFix={false} />
 }
-

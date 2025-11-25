@@ -45,6 +45,7 @@ export function getPrefJson<T>(key: string, parser: (jsonStr: string) => T): T |
             return parser(v);
         } catch (e) {
             console.log(e);
+            return undefined;
         }
     }
 }

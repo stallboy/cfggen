@@ -86,7 +86,7 @@ export const ThemeSetting = memo(function ThemeSetting() {
         }
     };
 
-    return (
+    return <>
         <Form layout="vertical" size={"small"}
               initialValues={themeConfig}
               onFinish={handleThemeChange}>
@@ -116,10 +116,9 @@ export const ThemeSetting = memo(function ThemeSetting() {
                     </Button>
                 </Space>
             </Form.Item>
-
-            <Divider/>
-
-            <FlowVisualizationSetting/>
         </Form>
-    );
+
+        <Divider/>
+        <FlowVisualizationSetting/>
+    </>;
 });

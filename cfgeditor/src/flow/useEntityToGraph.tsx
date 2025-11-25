@@ -97,7 +97,8 @@ export function useEntityToGraph({
         sharedSetting: {notes, query, nodeShow: nodeShowSetting}
     }), [entityMap, notes, query, nodeShowSetting]);
 
-    const queryKey = editingObjectRes?.isEdited ? ['layout', pathname, 'e', nodeShowSetting] : ['layout', pathname, nodeShowSetting]
+    const queryKey = editingObjectRes?.isEdited ?
+        ['layout', pathname, 'e', nodeShowSetting] : ['layout', pathname, nodeShowSetting]
     const staleTime = editingObjectRes?.isEdited ? 0 : 1000 * 60 * 5;
     const {data: id2RectMap} = useQuery({
         queryKey: queryKey,
@@ -105,7 +106,7 @@ export function useEntityToGraph({
         staleTime: staleTime,
     })
 
-    const newNodes:EntityNode[] | undefined = useMemo(() => {
+    const newNodes: EntityNode[] | undefined = useMemo(() => {
         if (id2RectMap) {
             const positionedNodes = applyPositionToNodes(nodes, id2RectMap);
             return applyWidthHeightToNodes(positionedNodes, id2RectMap);

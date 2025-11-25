@@ -38,7 +38,6 @@ const RecordWithResult = memo(function RecordWithResult({recordResult}: { record
     const {curTableId, curId, edit, pathname} = useLocationData();
     const navigate = useNavigate();
     const {t} = useTranslation();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [updateVersion, setUpdateVersion] = useState(0);
 
     const addOrUpdateRecordMutation = useMutation<RecordEditResult, Error, JSONObject>({

@@ -403,7 +403,7 @@ export class RecordEditEntityCreator {
 function getImplNameOptions(sInterface: SInterface): EntityEditFieldOptions {
     const impls = [];
     for (const {name, comment} of sInterface.impls) {
-        impls.push({value: name, label: name, labelStr: name, title: comment});
+        impls.push({value: name, label: name, labelstr: name, title: comment});
     }
     return {options: impls, isValueInteger: false, isEnum: true};
 }

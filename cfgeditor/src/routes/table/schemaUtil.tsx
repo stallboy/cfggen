@@ -374,7 +374,7 @@ export function getIdOptions(sTable: STable, valueToInteger: boolean = false): E
         const isShowTitle = title && title != id;
         options.push({
             label: isShowTitle ? <> {id} <span style={{fontSize: '0.85em'}}>{title}</span> </> : id,
-            labelStr: isShowTitle ? `${id} ${title}` : id,
+            labelstr: isShowTitle ? `${id} ${title}` : id,
             value: valueToInteger ? parseInt(id) : id,
             title: title ?? ''
         });
@@ -383,6 +383,7 @@ export function getIdOptions(sTable: STable, valueToInteger: boolean = false): E
 }
 
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function obj2map(v: any): any {
     if (Array.isArray(v)) return v.map(obj2map);
     return v && typeof v == "object" ? new Map(Object.entries(v).map(([k, v]) => [k, obj2map(v)])) : v;

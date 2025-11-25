@@ -41,7 +41,7 @@ const setOfNumber = new Set<string>(['int', 'long', 'float']);
 
 function filterOption(inputValue: string, option?: EntityEditFieldOption): boolean {
     const iv = inputValue.toLowerCase();
-    return (!!option) && option.labelStr.toLowerCase().includes(iv);
+    return (!!option) && option.labelstr.toLowerCase().includes(iv);
 }
 
 function filterNumberSort(optionA: EntityEditFieldOption, optionB: EntityEditFieldOption): number {
@@ -71,7 +71,7 @@ const filter_integer = {filterSort: filterNumberSort}
 const filter_search = {showSearch: true, filterOption: filterOption}
 const filter_integerAndSearch = {filterSort: filterNumberSort, showSearch: true, filterOption: filterOption}
 
-interface FilterOption {
+export interface FilterOption {
     filterSort?: (optionA: EntityEditFieldOption, optionB: EntityEditFieldOption) => number;
     showSearch?: boolean;
     filterOption?: (inputValue: string, option?: EntityEditFieldOption) => boolean

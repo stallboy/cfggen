@@ -32,6 +32,7 @@ export type EditFieldType = 'arrayOfPrimitive' | 'primitive' | 'structRef' |
 export type PrimitiveType = 'bool' | 'int' | 'long' | 'float' | 'str' | 'text';
 export type EditFieldValueType =
     string
+
     | number
     | boolean
     | string[]
@@ -57,7 +58,7 @@ export interface EntityEditFieldOptions {
 export interface EntityEditFieldOption {
     value: string | number;
     label?: React.ReactNode;
-    labelStr: string;
+    labelstr: string;
     title: string;
 }
 
