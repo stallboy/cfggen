@@ -105,7 +105,8 @@ i18n.use(LanguageDetector)
 
                     basicSetting: '基础',
                     recordShowSetting: '显示',
-                    AiAndResource: 'ai+资源',
+                    aiSetting: 'ai',
+                    resourceSetting:"资源",
                     operations: '操作',
                     keySetting: '快捷键',
                     appSetting: '资源',
@@ -197,7 +198,7 @@ i18n.use(LanguageDetector)
                     lastAccessed: '访问历史',
                     lastModified: '修改历史',
 
-                    themeSetting: '主题设置',
+                    themeSetting: '主题',
                     themeFile: '主题文件',
                     themeFileHelp: '主题文件名，如 colourpurple.json',
                     themeFileNotFound: '主题文件不存在',

@@ -6,15 +6,9 @@ import {
     useMyStore
 } from "../../store/store.ts";
 
-import {Schema} from "../table/schemaUtil.tsx";
-import {TauriSetting} from "./TauriSeting.tsx";
-import {isTauri} from "@tauri-apps/api/core";
-
 const {Title} = Typography;
 
-export const AiAndResource = memo(function ({schema}: {
-    schema: Schema | undefined;
-}) {
+export const AiSetting = memo(function () {
     const {t} = useTranslation();
     const {aiConf} = useMyStore();
 
@@ -45,8 +39,6 @@ export const AiAndResource = memo(function ({schema}: {
                 </Button>
             </Form.Item>
         </Form>
-
-        {isTauri() && <TauriSetting schema={schema}/>}
     </>;
 
 });

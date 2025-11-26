@@ -8,27 +8,17 @@ import {
 import type {BubbleListProps} from "@ant-design/x";
 import {Bubble, Sender, Welcome} from "@ant-design/x";
 import XMarkdown from "@ant-design/x-markdown";
-import {
-    OpenAIChatProvider,
-    useXChat,
-    XModelMessage,
-    XModelParams,
-    XModelResponse,
-    AbstractXRequestClass,
-    SSEFields,
-} from "@ant-design/x-sdk";
+import {DeepSeekChatProvider, SSEFields, useXChat, XModelParams, XModelResponse, XRequest} from "@ant-design/x-sdk";
 import {Button, Flex, Space} from "antd";
 import {createStyles} from "antd-style";
 import {useState} from "react";
 
 import {useMyStore, useLocationData} from "../../store/store.ts";
-import {AIConf} from "../../store/storageJson.ts";
 import {memo} from "react";
 import {Schema} from "../table/schemaUtil.tsx";
 import {useQuery} from "@tanstack/react-query";
 import {getPrompt} from "../api.ts";
 import {Result, Spin} from "antd";
-import {OpenAI} from "openai";
 
 const useChatStyle = createStyles(({token, css}) => {
     return {
@@ -93,95 +83,6 @@ const role: BubbleListProps["role"] = {
     user: {placement: "end"},
 };
 
-// 自定义 OpenAI 请求类
-class CustomOpenAIRequest extends AbstractXRequestClass<
-    XModelParams,
-    Partial<Record<SSEFields, XModelResponse>>
-> {
-    private openai: OpenAI;
-    private aiConf: AIConf;
-    private _asyncHandler: Promise<any>;
-    private _isTimeout = false;
-    private _isStreamTimeout = false;
-    private _isRequesting = false;
-    private _manual = true;
-
-    constructor(aiConf: AIConf) {
-        super(aiConf.baseUrl, {
-            manual: true,
-            params: {
-                stream: true,
-            },
-        });
-        this.aiConf = aiConf;
-        this.openai = new OpenAI({
-            baseURL: aiConf.baseUrl,
-            apiKey: aiConf.apiKey,
-            dangerouslyAllowBrowser: true,
-        });
-        this._asyncHandler = Promise.resolve();
-    }
-
-    get asyncHandler(): Promise<any> {
-        return this._asyncHandler;
-    }
-
-    get isTimeout(): boolean {
-        return this._isTimeout;
-    }
-
-    get isStreamTimeout(): boolean {
-        return this._isStreamTimeout;
-    }
-
-    get isRequesting(): boolean {
-        return this._isRequesting;
-    }
-
-    get manual(): boolean {
-        return this._manual;
-    }
-
-    async run(input?: XModelParams): Promise<void> {
-        const {callbacks} = this.options;
-        this._isRequesting = true;
-
-        try {
-            const stream = await this.openai.chat.completions.create({
-                messages:
-                    input?.messages?.map((msg) => ({
-                        role: msg.role as "user" | "assistant" | "system",
-                        content:
-                            typeof msg.content === "string" ? msg.content : msg.content.text,
-                    })) || [],
-                model: this.aiConf.model,
-                stream: true,
-            });
-
-            const chunks: Partial<Record<SSEFields, XModelResponse>>[] = [];
-
-            for await (const chunk of stream) {
-                const sseChunk: Partial<Record<SSEFields, XModelResponse>> = {
-                    data: chunk as unknown as XModelResponse,
-                };
-                chunks.push(sseChunk);
-                callbacks?.onUpdate?.(sseChunk, new Headers());
-            }
-
-            callbacks?.onSuccess?.(chunks, new Headers());
-        } catch (error: any) {
-            callbacks?.onError?.(error);
-        } finally {
-            this._isRequesting = false;
-        }
-    }
-
-    abort(): void {
-        // OpenAI SDK 目前不支持中止流式请求
-        // 可以在这里实现中止逻辑
-    }
-}
-
 export const Chat = memo(function Chat({
                                            schema,
                                        }: {
@@ -232,13 +133,27 @@ export const Chat = memo(function Chat({
         enabled: editable,
     });
 
-    // 创建 provider
-    const provider = new OpenAIChatProvider<XModelMessage, XModelParams, Partial<Record<SSEFields, XModelResponse>>>({
-        request: new CustomOpenAIRequest(aiConf),
-    });
 
+    const isAiSet = aiConf.baseUrl.length > 0;
+    const baseUrl = isAiSet ? aiConf.baseUrl : 'https://api.x.ant.design/api/big_model_glm-4.5-flash';
+    const model = isAiSet ? aiConf.model : 'glm-4.5-flash';
+    const apiKey = isAiSet ? aiConf.apiKey : 'xxx';
     const {onRequest, messages, isRequesting, abort} = useXChat({
-        provider,
+        provider: new DeepSeekChatProvider({
+            request: XRequest<XModelParams, Partial<Record<SSEFields, XModelResponse>>>(
+                baseUrl,
+                {
+                    headers: {
+                        Authorization: "Bearer " + apiKey
+                    },
+                    manual: true,
+                    params: {
+                        stream: true,
+                        model: model,
+                    },
+                },
+            ),
+        }),
         requestPlaceholder: () => {
             return {
                 content: "Thinking...",

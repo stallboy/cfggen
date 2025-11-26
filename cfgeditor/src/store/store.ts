@@ -529,7 +529,7 @@ export function useLocationData() {
     const location = useLocation();
     const pathname = location.pathname;
     const split = pathname.split('/');
-    let curPage: PageType = 'table';
+    let curPage: PageType = 'record';
     let curTableId = '';
     let curId = '';
     let edit = false;

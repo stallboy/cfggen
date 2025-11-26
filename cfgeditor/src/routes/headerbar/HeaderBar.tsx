@@ -1,5 +1,5 @@
-import {Button, Select, Skeleton, Space, Typography} from "antd";
-import {LeftOutlined, RightOutlined} from "@ant-design/icons";
+import {Button, Dropdown, Select, Skeleton, Space, Typography} from "antd";
+import {DownOutlined, LeftOutlined, RightOutlined} from "@ant-design/icons";
 import {TableList} from "./TableList.tsx";
 import {IdList} from "./IdList.tsx";
 import {
@@ -25,7 +25,7 @@ const nextIcon = <RightOutlined/>;
 
 const HEADER_STYLE = {position: 'relative'} as const;
 const SPACE_STYLE = {position: 'absolute', zIndex: 1} as const;
-const DRAG_SELECT_STYLE = {width: 120} as const;
+
 
 export const HeaderBar = memo(function ({schema, curTable}: {
     schema: Schema | undefined;
@@ -72,25 +72,25 @@ export const HeaderBar = memo(function ({schema, curTable}: {
         }
     }
 
-    const dragOptions = useMemo(() => [
+    const menuItems = useMemo(() => [
         ...(pageConf.pages.map(fp => {
-            return {label: fp.label, value: fp.label};
+            return {label: fp.label, key: fp.label};
         })),
-        {label: t('recordRef'), value: 'recordRef'},
-        {label: t('finder'), value: 'finder'},
-        {label: t('adder'), value: 'adder'},
-        {label: t('setting'), value: 'setting'},
-        {label: t('none'), value: 'none'},
+        {label: t('recordRef'), key: 'recordRef'},
+        {label: t('finder'), key: 'finder'},
+        {label: t('adder'), key: 'adder'},
+        {label: t('setting'), key: 'setting'},
+        {label: t('none'), key: 'none'},
     ], [pageConf.pages, t]);
-
 
     return <div style={HEADER_STYLE}>
         <Space size={'small'} style={SPACE_STYLE}>
             <Space size={'small'}>
-                <Select options={dragOptions}
-                        style={DRAG_SELECT_STYLE}
-                        value={dragPanel}
-                        onChange={setDragPanel}/>
+                <Dropdown menu={{items: menuItems, onClick: (e) => setDragPanel(e.key), selectedKeys: [dragPanel]}}>
+                    <Button style={{width: 120}}>
+                        {dragPanel} <DownOutlined/>
+                    </Button>
+                </Dropdown>
 
                 {schema ? <TableList schema={schema}/> : <Select id='table' loading={true}/>}
                 {curTable ? <IdList curTable={curTable}/> : <Skeleton.Input/>}

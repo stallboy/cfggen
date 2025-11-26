@@ -8,8 +8,10 @@ import {Schema} from "../table/schemaUtil.tsx";
 import {BasicSetting} from "./BasicSetting.tsx";
 import {Operations} from "./Operations.tsx";
 import {memo, RefObject} from "react";
-import {AiAndResource} from "./AiAndResource.tsx";
+import {AiSetting} from "./AiSetting.tsx";
 import {ThemeSetting} from "./ThemeSetting.tsx";
+import {isTauri} from "@tauri-apps/api/core";
+import {TauriSetting} from "./TauriSeting.tsx";
 
 
 export const Setting = memo(function Setting({schema, curTable, flowRef}: {
@@ -42,11 +44,20 @@ export const Setting = memo(function Setting({schema, curTable, flowRef}: {
             children: <Operations schema={schema} curTable={curTable} flowRef={flowRef}/>,
         },
         {
-            key: 'AiAndResource',
-            label: t('AiAndResource'),
-            children: <AiAndResource schema={schema}/>,
+            key: 'ai',
+            label: t('aiSetting'),
+            children: <AiSetting/>,
         },
     ]
+
+
+    if (isTauri()) {
+        items.push({
+            key: 'resource',
+            label: t('resourceSetting'),
+            children: <TauriSetting schema={schema}/>,
+        })
+    }
 
     return <>
         <div style={{height: 16}}/>
