@@ -42,7 +42,7 @@ public class ValueDefault {
         };
     }
 
-    public static Value ofNamable(Nameable nameable, Source source) {
+    public static SimpleValue ofNamable(Nameable nameable, Source source) {
         return switch (nameable) {
             case Structural structural -> ofStructural(structural, source);
             case InterfaceSchema interfaceSchema -> ofInterface(interfaceSchema, source);

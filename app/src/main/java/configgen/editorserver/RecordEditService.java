@@ -2,11 +2,13 @@ package configgen.editorserver;
 
 import configgen.ctx.Context;
 import configgen.ctx.DirectoryStructure;
+import configgen.data.CfgData;
 import configgen.schema.Msg;
 import configgen.schema.TableSchema;
 import configgen.util.Logger;
 import configgen.value.*;
 import configgen.write.VTableJsonStorage;
+import configgen.write.VTableStorage;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -29,7 +31,6 @@ public class RecordEditService {
         tableNotSet,
         idNotSet,
         tableNotFound,
-        tableNotEditable,
         idParseErr,
         idNotFound,
         jsonParseErr,
@@ -91,17 +92,25 @@ public class RecordEditService {
             newRecordList.add(thisValue);
         }
 
-
-        Path writePath;
-        try {
-            // 最后确定其他都对的时候再存储
-            writePath = VTableJsonStorage.addOrUpdateRecord(thisValue, table, id, sourceStructure.getRootDir());
-        } catch (Exception e) {
-            return new RecordEditResult(jsonStoreErr, table, id, List.of(e.getMessage()), List.of());
+        CfgValueStat newCfgValueStat = cfgValue.valueStat();
+        if (vTable.schema().isJson()) {
+            try {
+                // 最后确定其他都对的时候再存储
+                Path writePath = VTableJsonStorage.addOrUpdateRecord(thisValue, table, id, sourceStructure.getRootDir());
+                DirectoryStructure.JsonFileInfo jf = sourceStructure.addJsonFile(table, writePath);
+                newCfgValueStat = newCfgValueStat.newAddLastModified(table, id, jf.lastModified());
+            } catch (Exception e) {
+                return new RecordEditResult(jsonStoreErr, table, id, List.of(e.getMessage()), List.of());
+            }
+        } else {
+            CfgData.DTable dTable = context.cfgData().tables().get(table);
+            try {
+                VTableStorage.addOrUpdateRecord(context, vTable, dTable, pkValue, thisValue);
+            } catch (Exception e) {
+                return new RecordEditResult(jsonStoreErr, table, id, List.of(e.getMessage()), List.of());
+            }
         }
 
-        DirectoryStructure.JsonFileInfo jf = sourceStructure.addJsonFile(table, writePath);
-        CfgValueStat newCfgValueStat = cfgValue.valueStat().newAddLastModified(table, id, jf.lastModified());
         return applyNewRecords(tableSchema, id, newRecordList, newCfgValueStat, code);
     }
 
@@ -135,9 +144,6 @@ public class RecordEditService {
         VTable vTable = cfgValue.vTableMap().get(table);
         if (vTable == null) {
             return ofErr(tableNotFound, table);
-        }
-        if (!vTable.schema().isJson()) {
-            return ofErr(tableNotEditable, table);
         }
         return null;
     }
@@ -176,23 +182,30 @@ public class RecordEditService {
             return new RecordEditResult(idNotFound, table, id, List.of(), List.of());
         }
 
-        Path jsonPath;
-        try {
-            // 最后确定其他都对的时候再存储
-            jsonPath = VTableJsonStorage.deleteRecord(table, id, sourceStructure.getRootDir());
-            if (jsonPath == null) {
-                return new RecordEditResult(jsonStoreErr, table, id, List.of("delete fail"), List.of());
+        CfgValueStat newCfgValueStat = cfgValue.valueStat();
+        if (vTable.schema().isJson()) {
+            try {
+                // 最后确定其他都对的时候再存储
+                Path jsonPath = VTableJsonStorage.deleteRecord(table, id, sourceStructure.getRootDir());
+                if (jsonPath == null) {
+                    return new RecordEditResult(jsonStoreErr, table, id, List.of("delete fail"), List.of());
+                }
+                sourceStructure.removeJsonFile(table, jsonPath);
+                newCfgValueStat = newCfgValueStat.newRemoveLastModified(table, id);
+            } catch (Exception e) {
+                return new RecordEditResult(jsonStoreErr, table, id, List.of(e.getMessage()), List.of());
             }
-        } catch (Exception e) {
-            return new RecordEditResult(jsonStoreErr, table, id, List.of(e.getMessage()), List.of());
+        } else {
+            try {
+                VTableStorage.deleteRecord(context, old);
+            } catch (Exception e2) {
+                return new RecordEditResult(jsonStoreErr, table, id, List.of(e2.getMessage()), List.of());
+            }
         }
 
         Map<Value, VStruct> copy = new LinkedHashMap<>(vTable.primaryKeyMap());
         copy.remove(pkValue);
         List<VStruct> newRecordList = copy.values().stream().toList();
-
-        sourceStructure.removeJsonFile(table, jsonPath);
-        CfgValueStat newCfgValueStat = cfgValue.valueStat().newRemoveLastModified(table, id);
 
         return applyNewRecords(tableSchema, id, newRecordList, newCfgValueStat, deleteOk);
     }

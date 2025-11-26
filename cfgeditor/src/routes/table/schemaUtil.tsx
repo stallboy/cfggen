@@ -11,9 +11,11 @@ export class Schema {
     constructor(public rawSchema: RawSchema) {
         this.isEditable = rawSchema.isEditable;
         this.lastModifiedMap = obj2map(rawSchema.lastModifiedMap);
+        // 结构名称->结构  方便查找
         for (const item of rawSchema.items) {
             if (item.type == 'interface') {
                 const ii = item as SInterface;
+                // impl 附带上接口名称
                 for (const impl of ii.impls) {
                     impl.extends = ii;
                     impl.id = ii.name + "." + impl.name;
@@ -25,6 +27,40 @@ export class Schema {
             this.itemIncludeImplMap.set(item.name, item);
         }
 
+        // 构造map entry type
+        const mapEntryTypes = new Map<string, SStruct>();
+        for (const item of this.itemIncludeImplMap.values()) {
+            if (item.type != "interface") {
+                const ss = item as SStruct | STable;
+                for (const {name, type} of ss.fields) {
+                    if (type.startsWith("map<")) {
+                        const split = type.substring(4, type.length - 1).split(",");
+
+                        const entryTypeName = getMapEntryTypeName(ss, name);
+                        const entryType: SStruct = {
+                            name: entryTypeName,
+                            type: "struct",
+                            comment: '',
+                            fields: [{
+                                name: 'key',
+                                type: split[0],
+                                comment: '',
+                            }, {
+                                name: 'value',
+                                type: split[1],
+                                comment: '',
+                            }],
+                        }
+                        mapEntryTypes.set(entryTypeName, entryType);
+                    }
+                }
+            }
+        }
+        for (const item of mapEntryTypes.values()) {
+            this.itemIncludeImplMap.set(item.name, item);
+        }
+
+        // table内 id -> (id,title?) 方便查找
         for (const item of rawSchema.items) {
             this.getAllRefTablesByItem(item);
             if (item.type == 'table') {
@@ -37,6 +73,7 @@ export class Schema {
             }
         }
 
+        // table 被哪些表 外键连接
         for (const item of rawSchema.items) {
             if (item.type == 'table') {
                 const st = item as STable;
@@ -47,15 +84,6 @@ export class Schema {
                 }
             }
         }
-    }
-
-    getFirstSTable(): STable | null {
-        for (const item of this.itemMap.values()) {
-            if (item.type == 'table') {
-                return item as STable;
-            }
-        }
-        return null;
     }
 
     getSTable(name: string): STable | null {
@@ -279,19 +307,6 @@ export class Schema {
         }
     }
 
-    getAllEditableSTables(): STable[] {
-        const res: STable[] = [];
-        for (const item of this.itemMap.values()) {
-            if (item.type == 'table') {
-                const t = item as STable;
-                if (t.isEditable) {
-                    res.push(t);
-                }
-            }
-        }
-        return res;
-    }
-
     getIdTitle(table: string, id: string): string | undefined {
         const t = this.getSTable(table);
         if (t && t.idMap) {
@@ -395,4 +410,8 @@ export function getDefaultIdInTable(schema: Schema, tableId: string, curId: stri
         return sTable.recordIds[0].id;
     }
     return curId;
+}
+
+export function getMapEntryTypeName(sItem: SItem, fieldName: string) {
+    return "$" + (sItem.id ?? sItem.name) + "-" + fieldName; // 构造特殊名称
 }

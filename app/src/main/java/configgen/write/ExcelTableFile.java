@@ -105,6 +105,11 @@ public class ExcelTableFile extends AbstractExcelTableFile {
         return getCellValue(row, col);
     }
 
+    @Override
+    public int getMaxRowCount() {
+        return getDataLastRowNum();
+    }
+
     /**
      * 将指定行及后续行向下移动指定行数
      *
@@ -119,6 +124,9 @@ public class ExcelTableFile extends AbstractExcelTableFile {
         sheet.shiftRows(startRow, lastRowNum, shiftCount);
     }
 
+    /**
+     * @return last row contained on this sheet (0-based) or -1 if no row exists
+     */
     private int getDataLastRowNum() {
         return sheet.getLastRowNum();
     }

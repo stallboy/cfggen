@@ -33,29 +33,36 @@ public interface TableFile {
      * 获取指定单元格的值
      * @param row 行号（从0开始）
      * @param col 列号（从0开始）
-     * @return 单元格的字符串值
+     * @return null or 单元格的字符串值
      */
     String getCell(int row, int col);
+
+
+    /**
+     * @return 逻辑上的最大行数
+     */
+    int getMaxRowCount();
 
     /**
      * 确定一个record占的行数
      */
     default int findRecordRowCount(int startRow) {
-        // 算法：从row开始，往下看每行第一cell如果为空，则行数+1
-        int rowCount = 1;
+        int max = getMaxRowCount();
+        if (startRow >= max) {
+            throw new IllegalArgumentException("startRow >= maxRowCount");
+        }
 
         // 检查后续行，如果第一列为空，则继续计数
         int currentRow = startRow + 1;
-        while (true) {
+        while (currentRow < max) {
             String firstCellValue = getCell(currentRow, 0);
             if (firstCellValue == null || firstCellValue.trim().isEmpty()) {
-                rowCount++;
                 currentRow++;
             } else {
                 break;
             }
         }
-        return rowCount;
+        return currentRow - startRow;
     }
 
 

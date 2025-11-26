@@ -33,7 +33,7 @@ importers:
         specifier: ^2.2.1
         version: 2.3.3
       '@xyflow/react':
-        specifier: ^12.5.3
+        specifier: ^12.9.3
         version: 12.9.3(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       antd:
         specifier: ^6.0.0

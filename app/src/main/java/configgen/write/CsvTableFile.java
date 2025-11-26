@@ -105,4 +105,9 @@ public class CsvTableFile extends AbstractCsvTableFile {
     public String getCell(int row, int col) {
         return getCellValue(row, col);
     }
+
+    @Override
+    public int getMaxRowCount() {
+        return rows.size();
+    }
 }

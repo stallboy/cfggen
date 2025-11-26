@@ -26,7 +26,7 @@ export const AddJson = memo(function AddJson({schema}: {
     let editable = false;
     if (schema && schema.isEditable) {
         const sTable = schema.getSTable(curTableId);
-        if (sTable && sTable.isEditable) {
+        if (sTable) {
             editable = true;
         }
     }

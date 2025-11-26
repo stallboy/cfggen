@@ -141,7 +141,7 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
             </Form.Item>
 
 
-            {(schema && curTable && schema.isEditable && curTable.isEditable) &&
+            {(schema && curTable && schema.isEditable) &&
                 <Form.Item>
                     <Divider/>
                     <Button type="primary" danger

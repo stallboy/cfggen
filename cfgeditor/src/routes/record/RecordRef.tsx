@@ -73,7 +73,7 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
 
     const createNodeMenu = useCallback((entityNode: EntityNode): MenuItem[] => {
         const refId = entityNode.data.entity.userData as RefId;
-        const isEntityEditable = schema.isEditable && schema.getSTable(refId.table)?.isEditable;
+        const isEntityEditable = schema.isEditable;
 
         const menuItems: MenuItem[] = [{
             label: t('record') + refId.id,

@@ -103,7 +103,6 @@ export type EditResultCode =
     | 'tableNotSet'
     | 'idNotSet'
     | 'tableNotFound'
-    | 'tableNotEditable'
     | 'idParseErr'
     | 'idNotFound'
     | 'jsonParseErr'

@@ -62,7 +62,7 @@ public abstract class AbstractCsvTableFile implements TableFile {
      */
     protected String getCellValue(int row, int col) {
         if (row < 0 || row >= rows.size()) {
-            return "";
+            return null;
         }
 
         List<String> rowData = rows.get(row);

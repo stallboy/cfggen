@@ -21,7 +21,7 @@ public class ColumnModeCsvTableFile extends AbstractCsvTableFile {
      */
     @Override
     public void emptyRows(int startCol, int count) {
-        int maxColumnCount = getMaxColumnCount();
+        int maxColumnCount = getMaxRowCount();
         if (startCol < 0 || count <= 0 || startCol >= maxColumnCount) {
             return;
         }
@@ -53,7 +53,7 @@ public class ColumnModeCsvTableFile extends AbstractCsvTableFile {
         int actualStartCol;
         if (startCol == -1) {
             // 放到最后一列
-            actualStartCol = Math.max(getMaxColumnCount(), headRow);
+            actualStartCol = Math.max(getMaxRowCount(), headRow);
         } else {
             actualStartCol = startCol;
         }
@@ -97,6 +97,7 @@ public class ColumnModeCsvTableFile extends AbstractCsvTableFile {
         return getCellValue(col, row);
     }
 
+
     private void insertColumn(int colIndex) {
         for (List<String> row : rows) {
             if (colIndex < row.size()) {
@@ -113,7 +114,7 @@ public class ColumnModeCsvTableFile extends AbstractCsvTableFile {
      * @param requiredCols 需要的列数
      */
     private void ensureColumns(int requiredCols) {
-        int currentMaxCols = getMaxColumnCount();
+        int currentMaxCols = getMaxRowCount();
         if (requiredCols <= currentMaxCols) {
             return;
         }
@@ -126,7 +127,8 @@ public class ColumnModeCsvTableFile extends AbstractCsvTableFile {
         }
     }
 
-    protected int getMaxColumnCount() {
+    @Override
+    public int getMaxRowCount() {
         return rows.getFirst().size();
     }
 }

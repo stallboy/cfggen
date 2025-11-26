@@ -10,7 +10,7 @@ import {
 import {SInterface, SItem, SStruct, STable} from "../table/schemaModel.ts";
 import {JSONArray, JSONObject, JSONValue, RefId} from "./recordModel.ts";
 import {getId, getLabel, getLastName} from "./recordRefEntity.ts";
-import {getField, getIdOptions, getImpl, isPkInteger, Schema} from "../table/schemaUtil.tsx";
+import {getField, getIdOptions, getImpl, getMapEntryTypeName, isPkInteger, Schema} from "../table/schemaUtil.tsx";
 import {
     applyNewEditingObject, editState,
     onAddItemToArray,
@@ -62,6 +62,13 @@ export class RecordEditEntityCreator {
             console.error('$type missing');
             return null;
         }
+        let structural: STable | SStruct;
+        if ('impls' in sItem) {
+            structural = this.schema.itemIncludeImplMap.get(type) as SStruct;
+        } else {
+            structural = sItem;
+        }
+
         const note: string | undefined = obj['$note'] as string | undefined;
         let fold: boolean | undefined = this.folds.isFold(fieldChain);
         if (fold === undefined) { // 只有本地状态没有设置时才用服务器的
@@ -72,14 +79,6 @@ export class RecordEditEntityCreator {
 
         const editFields: EntityEditField[] = this.makeEditFields(sItem, obj, fieldChain);
         const sourceEdges: EntitySourceEdge[] = [];
-
-
-        let structural: STable | SStruct;
-        if ('impls' in sItem) {
-            structural = this.schema.itemIncludeImplMap.get(type) as SStruct;
-        } else {
-            structural = sItem;
-        }
 
 
         for (const fieldKey in obj) {
@@ -108,10 +107,11 @@ export class RecordEditEntityCreator {
                     continue;
                 }
 
-                if (!sField.type.startsWith("list<")) {  // 不支持map
+                const itemTypeId = getItemTypeId(sField.type, structural, fieldKey);
+                if (itemTypeId == undefined) {
                     continue;
                 }
-                const itemTypeId = sField.type.substring(5, sField.type.length - 1);
+
                 const itemType = this.schema.itemIncludeImplMap.get(itemTypeId);
                 if (itemType == null) {
                     continue;
@@ -121,7 +121,7 @@ export class RecordEditEntityCreator {
                     continue;
                 }
 
-                // list of struct/interface
+                // list of struct/interface, or map
                 let i = 0;
                 for (const e of fArr) {
                     const itemObj = e as JSONObject;
@@ -254,7 +254,7 @@ export class RecordEditEntityCreator {
         EntityEditField[] {
         const fields: EntityEditField[] = [];
         const type: string = obj['$type'] as string;
-        if ('impls' in sItem) {
+        if ('impls' in sItem) { // is interface
             const implName = getLastName(type);
             const sInterface = sItem as SInterface;
             const impl = getImpl(sInterface, implName) as SStruct;
@@ -331,40 +331,42 @@ export class RecordEditEntityCreator {
                     value: v,
                     autoCompleteOptions: this.getAutoCompleteOptions(structural, sf.name),
                 });
-            } else if (sf.type.startsWith('list<')) {
-                const itemType = sf.type.substring(5, sf.type.length - 1);
-                if (isPrimitiveType(itemType)) {
-                    const v = fieldValue ? fieldValue as (boolean | number | string) : [];
+            } else {
+                const itemTypeId = getItemTypeId(sf.type, structural, sf.name);
+                if (itemTypeId != undefined) { // list or map
+                    if (isPrimitiveType(itemTypeId)) {
+                        const v = fieldValue ? fieldValue as (boolean | number | string) : [];
+                        fields.push({
+                            name: sf.name,
+                            comment: sf.comment,
+                            type: 'arrayOfPrimitive',
+                            eleType: itemTypeId as PrimitiveType,
+                            value: v,
+                            autoCompleteOptions: this.getAutoCompleteOptions(structural, sf.name),
+                        });
+                    } else {
+                        fields.push({
+                            name: sf.name,
+                            comment: sf.comment,
+                            type: 'funcAdd',
+                            eleType: itemTypeId,
+                            value: (position: EntityPosition) => {
+                                const sFieldable = this.schema.itemIncludeImplMap.get(itemTypeId) as SStruct | SInterface;
+                                const defaultValue = this.schema.defaultValue(sFieldable);
+                                onAddItemToArray(defaultValue, [...fieldChain, sf.name], position);
+                            }
+                        });
+                    }
+                } else { // struct or interface
                     fields.push({
                         name: sf.name,
                         comment: sf.comment,
-                        type: 'arrayOfPrimitive',
-                        eleType: itemType as PrimitiveType,
-                        value: v,
-                        autoCompleteOptions: this.getAutoCompleteOptions(structural, sf.name),
-                    });
-                } else {
-                    fields.push({
-                        name: sf.name,
-                        comment: sf.comment,
-                        type: 'funcAdd',
-                        eleType: itemType,
-                        value: (position: EntityPosition) => {
-                            const sFieldable = this.schema.itemIncludeImplMap.get(itemType) as SStruct | SInterface;
-                            const defaultValue = this.schema.defaultValue(sFieldable);
-                            onAddItemToArray(defaultValue, [...fieldChain, sf.name], position);
-                        }
+                        type: 'structRef',
+                        eleType: sf.type,
+                        value: '[]',
                     });
                 }
 
-            } else { // struct or interface or 不支持的map<
-                fields.push({
-                    name: sf.name,
-                    comment: sf.comment,
-                    type: 'structRef',
-                    eleType: sf.type,
-                    value: '[]',
-                });
             }
         }
 
@@ -399,6 +401,14 @@ export class RecordEditEntityCreator {
     }
 }
 
+
+function getItemTypeId(type: string, structural: SStruct | STable, fieldName: string) {
+    if (type.startsWith("list<")) {  // list
+        return type.substring(5, type.length - 1);
+    } else if (type.startsWith("map<")) { //map
+        return getMapEntryTypeName(structural, fieldName);
+    }
+}
 
 function getImplNameOptions(sInterface: SInterface): EntityEditFieldOptions {
     const impls = [];

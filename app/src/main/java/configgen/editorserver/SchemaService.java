@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.annotation.JSONField;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgWriter;
 import configgen.value.CfgValue;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,9 +19,9 @@ public class SchemaService {
         String name();
     }
 
-    public record SField(String name,
-                         String type,
-                         String comment) {
+    public record SField(@NotNull String name,
+                         @NotNull String type,
+                         @NotNull String comment) {
     }
 
     public enum SRefType {
@@ -38,10 +39,10 @@ public class SchemaService {
                               List<String> refKeys) {
     }
 
-    public record SStruct(String name,
-                          String comment,
-                          List<SField> fields,
-                          List<SForeignKey> foreignKeys) implements SNameable {
+    public record SStruct(@NotNull String name,
+                          @NotNull String comment,
+                          @NotNull List<SField> fields,
+                          @NotNull List<SForeignKey> foreignKeys) implements SNameable {
 
         @JSONField
         public String type() {
@@ -80,8 +81,7 @@ public class SchemaService {
                          String entryField,
                          List<SField> fields,
                          List<SForeignKey> foreignKeys,
-                         List<RecordId> recordIds,
-                         boolean isEditable) implements SNameable {
+                         List<RecordId> recordIds) implements SNameable {
         @JSONField
         public String type() {
             return "table";
@@ -165,8 +165,7 @@ public class SchemaService {
                 entryField,
                 fromFields(ts.fields()),
                 fromFks(ts.foreignKeys()),
-                recordIds,
-                ts.isJson());
+                recordIds);
     }
 
     public static List<RecordId> getRecordIds(VTable vTable) {

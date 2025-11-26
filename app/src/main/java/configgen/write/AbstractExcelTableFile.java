@@ -111,12 +111,12 @@ public abstract class AbstractExcelTableFile implements TableFile {
         // 行模式：正常读取
         Row sheetRow = sheet.getRow(row);
         if (sheetRow == null) {
-            return "";
+            return null;
         }
 
         Cell cell = sheetRow.getCell(col);
         if (cell == null) {
-            return "";
+            return null;
         }
 
         return formatter.formatCellValue(cell, evaluator);

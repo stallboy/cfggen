@@ -53,7 +53,7 @@ public class ValueJsonParser {
     }
 
 
-    private CompositeValue parseNameable(Nameable nameable, JSONObject jsonObject, DFile source) {
+    private SimpleValue parseNameable(Nameable nameable, JSONObject jsonObject, DFile source) {
         switch (nameable) {
             case InterfaceSchema interfaceSchema -> {
                 return parseInterface(interfaceSchema, jsonObject, source);
@@ -161,7 +161,7 @@ public class ValueJsonParser {
         }
     }
 
-    private Value parse(FieldType type, Object obj, DFile source, FieldSchema fieldSchema) {
+    private SimpleValue parseSimpleType(SimpleType type, Object obj, DFile source, FieldSchema fieldSchema) {
         switch (type) {
             case BOOL -> {
                 return new VBool(parseBool(obj, source), source);
@@ -207,7 +207,7 @@ public class ValueJsonParser {
                 switch (obj) {
                     case String str -> {
                         sv = str;
-                        if (fieldSchema.isLowercase()){
+                        if (fieldSchema.isLowercase()) {
                             sv = sv.toLowerCase();
                         }
                     }
@@ -222,7 +222,7 @@ public class ValueJsonParser {
                 switch (obj) {
                     case String str -> {
                         sv = str;
-                        if (fieldSchema.isLowercase()){
+                        if (fieldSchema.isLowercase()) {
                             sv = sv.toLowerCase();
                         }
                     }
@@ -232,6 +232,32 @@ public class ValueJsonParser {
                 }
                 return new VText(sv, source);
             }
+            case StructRef structRef -> {
+                JSONObject ov = null;
+                switch (obj) {
+                    case JSONObject jsonObject -> {
+                        ov = jsonObject;
+                    }
+                    default -> {
+                        errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.STRUCT));
+                    }
+                }
+                if (ov != null) {
+                    return parseNameable(structRef.obj(), ov, source);
+                } else {
+                    return ValueDefault.ofNamable(structRef.obj(), source);
+                }
+            }
+        }
+
+    }
+
+    private Value parse(FieldType type, Object obj, DFile source, FieldSchema fieldSchema) {
+        switch (type) {
+            case SimpleType simpleType -> {
+                return parseSimpleType(simpleType, obj, source, fieldSchema);
+            }
+
             case FList fList -> {
                 JSONArray jsonArray = JSONArray.of();
                 switch (obj) {
@@ -292,33 +318,16 @@ public class ValueJsonParser {
                         }
 
                         if (keyObj != null && valueObj != null) {
-                            Value key = parse(fMap.key(), keyObj, ks, fieldSchema);
-                            Value value = parse(fMap.value(), valueObj, vs, fieldSchema);
-                            if (key instanceof SimpleValue kk && value instanceof SimpleValue vv) {
-                                vMap.valueMap().put(kk, vv);
-                            } // else里的异常，会被parseNameable记录
+                            SimpleValue key = parseSimpleType(fMap.key(), keyObj, ks, fieldSchema);
+                            SimpleValue value = parseSimpleType(fMap.value(), valueObj, vs, fieldSchema);
+                            vMap.valueMap().put(key, value);
                         }
                     }
                     i++;
                 }
                 return vMap;
             }
-            case StructRef structRef -> {
-                JSONObject ov = null;
-                switch (obj) {
-                    case JSONObject jsonObject -> {
-                        ov = jsonObject;
-                    }
-                    default -> {
-                        errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.STRUCT));
-                    }
-                }
-                if (ov != null) {
-                    return parseNameable(structRef.obj(), ov, source);
-                } else {
-                    return ValueDefault.ofNamable(structRef.obj(), source);
-                }
-            }
+
         }
     }
 

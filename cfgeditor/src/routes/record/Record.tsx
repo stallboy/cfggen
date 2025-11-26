@@ -78,7 +78,7 @@ const RecordWithResult = memo(function RecordWithResult({recordResult}: { record
         setUpdateVersion(updateVersion + 1);
     }, [pathname, updateVersion, setUpdateVersion])
 
-    const isEditable = schema.isEditable && curTable.isEditable;
+    const isEditable = schema.isEditable;
     const isEditing = isEditable && edit;
 
     const {entityMap, editingObjectRes} = useMemo(() => {
@@ -178,7 +178,7 @@ const RecordWithResult = memo(function RecordWithResult({recordResult}: { record
                 mm.push(getEditMenu(curTable.name, curId, !edit));
             }
         } else {
-            const isEntityEditable = schema.isEditable && !!(schema.getSTable(refId.table)?.isEditable);
+            const isEntityEditable = schema.isEditable;
             if (isEntityEditable) {
                 mm.push(getEditMenu(refId.table, refId.id, false));
                 mm.push(getEditMenu(refId.table, refId.id, true));

@@ -43,24 +43,23 @@ public class WriteRecordTool {
         String id = pkValue.packStr();
 
         if (vTable.schema().isJson()) {
-            Path writePath;
             try {
                 // 最后确定其他都对的时候再存储
-                writePath = VTableJsonStorage.addOrUpdateRecord(thisValue, tableName, id,
+                Path writePath = VTableJsonStorage.addOrUpdateRecord(thisValue, tableName, id,
                         context.getSourceStructure().getRootDir());
+                return "record stored success at %s".formatted(writePath.toString());
             } catch (Exception e) {
                 return "record store error: %s".formatted(e.getMessage());
             }
 
-            return "record stored success at %s".formatted(writePath.toString());
         } else {
             CfgData.DTable dTable = context.cfgData().tables().get(tableName);
             try {
                 VTableStorage.addOrUpdateRecord(context, vTable, dTable, pkValue, thisValue);
+                return "record stored success";
             } catch (Exception e) {
                 return "record store error: %s".formatted(e.getMessage());
             }
-            return "record stored success";
         }
     }
 
