@@ -101,13 +101,4 @@ public class CsvTableFile extends AbstractCsvTableFile {
         return new ArrayList<>(Collections.nCopies(fixedMaxColumnCount, ""));
     }
 
-    @Override
-    public String getCell(int row, int col) {
-        return getCellValue(row, col);
-    }
-
-    @Override
-    public int getMaxRowCount() {
-        return rows.size();
-    }
 }

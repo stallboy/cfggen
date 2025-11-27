@@ -71,5 +71,6 @@ public record TableSchema(String name,
     public boolean isJson() {
         return meta.isJson();
     }
+
 }
 

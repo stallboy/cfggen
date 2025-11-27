@@ -18,11 +18,19 @@ import static configgen.schema.FieldFormat.AutoOrPack.PACK;
  * VStruct到RecordBlock的映射引擎
  * 基于mapping.md中的5种映射规则：auto、pack、sep、fix、block
  */
-public record RecordBlockMapper(@NotNull VStruct record,
-                                @NotNull RecordBlock block) {
+public class RecordBlockMapper {
+    private final VStruct record;
+    private final RecordBlock block;
 
-    public static RecordBlockMapper of(VStruct record) {
-        return new RecordBlockMapper(record, new RecordBlock(Span.span(record.schema())));
+    public static RecordBlock mapToBlock(VStruct record) {
+        RecordBlockMapper mapper = new RecordBlockMapper(record);
+        mapper.map();
+        return mapper.block;
+    }
+
+    public RecordBlockMapper(VStruct record) {
+        this.record = record;
+        this.block = new RecordBlock(Span.span(record.schema()));
     }
 
     public void map() {

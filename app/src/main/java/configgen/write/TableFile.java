@@ -28,42 +28,4 @@ public interface TableFile {
      */
     void saveAndClose();
 
-
-    /**
-     * 获取指定单元格的值
-     * @param row 行号（从0开始）
-     * @param col 列号（从0开始）
-     * @return null or 单元格的字符串值
-     */
-    String getCell(int row, int col);
-
-
-    /**
-     * @return 逻辑上的最大行数
-     */
-    int getMaxRowCount();
-
-    /**
-     * 确定一个record占的行数
-     */
-    default int findRecordRowCount(int startRow) {
-        int max = getMaxRowCount();
-        if (startRow >= max) {
-            throw new IllegalArgumentException("startRow >= maxRowCount");
-        }
-
-        // 检查后续行，如果第一列为空，则继续计数
-        int currentRow = startRow + 1;
-        while (currentRow < max) {
-            String firstCellValue = getCell(currentRow, 0);
-            if (firstCellValue == null || firstCellValue.trim().isEmpty()) {
-                currentRow++;
-            } else {
-                break;
-            }
-        }
-        return currentRow - startRow;
-    }
-
-
 }

@@ -19,9 +19,7 @@ public class VTableStorage {
                                          @NotNull DTable dTable,
                                          @NotNull Value pkValue,
                                          @NotNull VStruct newRecord) {
-        RecordBlockMapper mapper = RecordBlockMapper.of(newRecord);
-        mapper.map();
-        RecordBlock block = mapper.block();
+        RecordBlock block = RecordBlockMapper.mapToBlock(newRecord);
 
         CfgValue.VStruct oldRecord = vTable.primaryKeyMap().get(pkValue);
 
@@ -67,7 +65,7 @@ public class VTableStorage {
         TableFile tableFile = TableFileLocator.createTableFile(rowId.fileName(), rowId.sheetName(), context, isColumnMode);
 
         int startRow = rowId.row();
-        int rowCount = tableFile.findRecordRowCount(startRow);
+        int rowCount = RecordBlockMapper.mapToBlock(oldRecord).getRowCount();
         tableFile.emptyRows(startRow, rowCount);
 
         return new RecordLoc(tableFile, rowId, startRow, rowCount);

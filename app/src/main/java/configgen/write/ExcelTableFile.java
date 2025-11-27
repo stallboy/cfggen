@@ -97,17 +97,6 @@ public class ExcelTableFile extends AbstractExcelTableFile {
                 }
             }
         }
-
-    }
-
-    @Override
-    public String getCell(int row, int col) {
-        return getCellValue(row, col);
-    }
-
-    @Override
-    public int getMaxRowCount() {
-        return getDataLastRowNum();
     }
 
     /**

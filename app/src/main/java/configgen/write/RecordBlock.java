@@ -53,6 +53,14 @@ public class RecordBlock {
         }
     }
 
+    /**
+     * 获取记录块的行数
+     * @return 行数
+     */
+    public int getRowCount() {
+        return maxRow + 1;
+    }
+
     public static class RecordBlockTransformed {
         private final RecordBlock block;
         private final List<Integer> fieldIndices;
@@ -92,7 +100,7 @@ public class RecordBlock {
          * @return 行数
          */
         public int getRowCount() {
-            return block.maxRow + 1;
+            return block.getRowCount();
         }
 
 

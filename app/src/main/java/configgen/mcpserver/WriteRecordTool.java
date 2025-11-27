@@ -12,6 +12,8 @@ import configgen.write.VTableStorage;
 import java.nio.file.Path;
 import java.util.stream.Collectors;
 
+import static configgen.editorserver.RecordEditService.ResultCode.serverNotEditable;
+
 public class WriteRecordTool {
 
     @McpTool(description = "add or update record")
@@ -71,6 +73,10 @@ public class WriteRecordTool {
         CfgMcpServer.CfgValueWithContext vc = CfgMcpServer.getInstance().cfgValueWithContext();
         Context context = vc.context();
         CfgValue cfgValue = vc.cfgValue();
+
+        if (cfgValue.schema().isPartial()) {
+            return "cfgValue is partial not editable";
+        }
 
         CfgValue.VTable vTable = cfgValue.getTable(tableName);
         if (vTable == null) {

@@ -57,19 +57,4 @@ public abstract class AbstractCsvTableFile implements TableFile {
         this.modified = true;
     }
 
-    /**
-     * 获取单元格的值
-     */
-    protected String getCellValue(int row, int col) {
-        if (row < 0 || row >= rows.size()) {
-            return null;
-        }
-
-        List<String> rowData = rows.get(row);
-        if (col < 0 || col >= rowData.size()) {
-            return "";
-        }
-
-        return rowData.get(col);
-    }
 }

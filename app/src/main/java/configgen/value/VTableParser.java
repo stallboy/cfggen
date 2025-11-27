@@ -1,7 +1,9 @@
 package configgen.value;
 
 import configgen.ctx.HeadRow;
+import configgen.schema.FieldSchema;
 import configgen.schema.HasBlock;
+import configgen.schema.Span;
 import configgen.schema.TableSchema;
 
 import java.util.ArrayList;
@@ -21,6 +23,7 @@ public class VTableParser implements BlockParser {
     private final TableSchema tableSchema;
     private final CfgValueErrs errs;
     private final ValueParser parser;
+    private final List<Integer> pkColumnIndices;
     private List<DCell> curRow;
 
     public VTableParser(TableSchema subTableSchema,
@@ -33,6 +36,7 @@ public class VTableParser implements BlockParser {
         this.tableSchema = tableSchema;
         this.errs = errs;
         this.parser = new ValueParser(errs, headRow, this);
+        this.pkColumnIndices = getPkColumnIndices(tableSchema);
     }
 
     public VTable parseTable() {
@@ -52,8 +56,8 @@ public class VTableParser implements BlockParser {
             if (hasBlock) {
                 while (curRecordRow < rowCnt) {
                     List<DCell> nr = dTable.rows().get(curRecordRow);
-                    // 用第一列 格子是否为空来判断这行是属于上一个record的block，还是新的一格record
-                    if (nr.getFirst().value().isEmpty()) {
+                    // 用主键所在格子是否全为空  来判断这行是属于上一个record的block，还是新的一格record
+                    if (isPkCellAllEmpty(nr)) {
                         curRecordRow++;  // 具体提取让VList，VMap，通郭parseBlock自己去提取
                     } else {
                         break;
@@ -65,6 +69,17 @@ public class VTableParser implements BlockParser {
         return new VTableCreator(subTableSchema, errs).create(valueList);
     }
 
+
+    // 主键所在格子是否全为空
+    private boolean isPkCellAllEmpty(List<DCell> row) {
+        for (Integer pkIndex : pkColumnIndices) {
+            DCell dCell = row.get(pkIndex);
+            if (!dCell.value().isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     // 要允许block<struct>,struct里仍然有block，如下所示
     // xxxaabbxccc
@@ -91,7 +106,7 @@ public class VTableParser implements BlockParser {
         for (int row = curRowIndex + 1; row < rowSize; row++) {
             List<DCell> line = dTable.rows().get(row);
 
-            if (line.getFirst().isCellEmpty()) {  // 第一格为空，还是本record
+            if (isPkCellAllEmpty(line)) {  // 主键所在格子为空，还是本record
                 DCell prevCell = line.get(firstColIndex - 1);
                 DCell thisCell = line.get(firstColIndex);
 
@@ -123,5 +138,25 @@ public class VTableParser implements BlockParser {
         }
         return i;
     }
+
+    public static List<Integer> getPkColumnIndices(TableSchema schema) {
+        List<FieldSchema> pks = schema.primaryKey().fieldSchemas();
+        List<Integer> pkIndices = new ArrayList<>(pks.size());
+        for (FieldSchema pk : pks) {
+            int idx = 0;
+            for (FieldSchema f : schema.fields()) {
+                int span = Span.fieldSpan(f);
+                if (f == pk) {
+                    for (int i = 0; i < span; i++) {
+                        pkIndices.add(idx + i);
+                    }
+                    break;
+                }
+                idx += span;
+            }
+        }
+        return pkIndices;
+    }
+
 
 }

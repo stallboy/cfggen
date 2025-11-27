@@ -28,7 +28,7 @@ public class ColumnModeExcelTableFile extends AbstractExcelTableFile {
         }
 
         // 列模式：清空指定列范围的数据
-        int lastColNum = getMaxRowCount() - 1;
+        int lastColNum = getColumnCount() - 1;
         if (startRow > lastColNum) {
             return;
         }
@@ -64,7 +64,7 @@ public class ColumnModeExcelTableFile extends AbstractExcelTableFile {
         int actualStartCol;
         if (startRow == -1) {
             // 放到最后一列
-            actualStartCol = Math.max(getMaxRowCount(), headRow);
+            actualStartCol = Math.max(getColumnCount(), headRow);
         } else {
             actualStartCol = startRow;
         }
@@ -103,18 +103,7 @@ public class ColumnModeExcelTableFile extends AbstractExcelTableFile {
 
     }
 
-    @Override
-    public String getCell(int row, int col) {
-        return getCellValue(col, row);
-    }
-
-    /**
-     * 获取工作表中的最大列数
-     *
-     * @return 工作表中的最大列数
-     */
-    @Override
-    public int getMaxRowCount() {
+    public int getColumnCount() {
         int maxCols = 0;
         for (Row row : sheet) {
             maxCols = Math.max(maxCols, row.getLastCellNum());
@@ -129,7 +118,7 @@ public class ColumnModeExcelTableFile extends AbstractExcelTableFile {
      * @param shiftCount 要移动的列数
      */
     private void shiftColumnsRight(int startCol, int shiftCount) {
-        int maxCols = getMaxRowCount();
+        int maxCols = getColumnCount();
         if (startCol >= maxCols) {
             return;
         }
