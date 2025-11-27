@@ -415,3 +415,22 @@ export function getDefaultIdInTable(schema: Schema, tableId: string, curId: stri
 export function getMapEntryTypeName(sItem: SItem, fieldName: string) {
     return "$" + (sItem.id ?? sItem.name) + "-" + fieldName; // 构造特殊名称
 }
+
+export const NEW_RECORD_ID = "+new";
+export const NEW_RECORD_EMOJI = "➕";
+
+export function getIdOptionsWithNew(sTable: STable, valueToInteger: boolean = false): EntityEditFieldOption[] {
+    const options = getIdOptions(sTable, valueToInteger);
+
+    // 当没有记录时添加新记录选项
+    if (options.length === 0) {
+        options.push({
+            label: <>{NEW_RECORD_EMOJI} new</>,
+            labelstr: "new",
+            value: NEW_RECORD_ID,
+            title: 'Create new record'
+        });
+    }
+
+    return options;
+}

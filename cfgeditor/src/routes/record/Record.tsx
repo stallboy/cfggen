@@ -29,6 +29,7 @@ import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
 import {SInterface, SStruct} from "../table/schemaModel.ts";
 import {queryClient} from "../../main.tsx";
 import {EntityNode} from "../../flow/FlowGraph.tsx";
+import {NEW_RECORD_ID} from "../table/schemaUtil.tsx";
 
 
 const RecordWithResult = memo(function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
@@ -261,10 +262,28 @@ const RecordWithResult = memo(function RecordWithResult({recordResult}: { record
 export const Record = memo(function () {
     const {server} = useMyStore();
     const {curTableId, curId} = useLocationData();
+    const {schema, curTable} = useOutletContext<SchemaTableType>();
+
+    // 对于现有记录，使用API获取数据
     const {isLoading, isError, error, data: recordResult} = useQuery({
         queryKey: ['table', curTableId, curId],
         queryFn: ({signal}) => fetchRecord(server, curTableId, curId, signal),
+        enabled: curId !== NEW_RECORD_ID, // 只在非新记录时启用查询
     })
+
+    // 如果是新记录，使用默认数据
+    if (curId === NEW_RECORD_ID) {
+        const defaultData = schema.defaultValueOfStructural(curTable);
+        const mockRecordResult: RecordResult = {
+            resultCode: 'ok',
+            table: curTableId,
+            id: NEW_RECORD_ID,
+            maxObjs: 0,
+            object: defaultData,
+            refs: []
+        };
+        return <RecordWithResult key={`${curTableId}-${NEW_RECORD_ID}`} recordResult={mockRecordResult}/>;
+    }
 
     if (isLoading) {
         return;

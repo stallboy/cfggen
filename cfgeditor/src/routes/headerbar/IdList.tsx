@@ -1,5 +1,5 @@
 import {Select} from "antd";
-import {getIdOptions} from "../table/schemaUtil.tsx";
+import {getIdOptionsWithNew, NEW_RECORD_ID} from "../table/schemaUtil.tsx";
 import {navTo, useMyStore, useLocationData} from "../../store/store.ts";
 import {useNavigate} from "react-router-dom";
 import {STable} from "../table/schemaModel.ts";
@@ -12,7 +12,15 @@ export const IdList = memo(function ({curTable}: {
     const {curPage, curTableId, curId} = useLocationData();
     const {isEditMode} = useMyStore();
 
-    const options = useMemo(() => getIdOptions(curTable), [curTable]);
+    const options = useMemo(() => getIdOptionsWithNew(curTable), [curTable]);
+
+    // 当options为空且当前没有选中任何ID时，默认选中"+new"
+    const defaultCurId = useMemo(() => {
+        if (!curId && options.length > 0 && options[0].value === NEW_RECORD_ID) {
+            return NEW_RECORD_ID;
+        }
+        return curId;
+    }, [curId, options]);
 
     const handleChange = useCallback((value: string) => {
         navigate(navTo(curPage, curTableId, value, isEditMode));
@@ -25,7 +33,7 @@ export const IdList = memo(function ({curTable}: {
                    }}
                    options={options}
                    style={{width: 240}}
-                   value={curId}
+                   value={defaultCurId}
                    placeholder="search a record"
                    onChange={handleChange}/>;
 });

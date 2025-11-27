@@ -2,10 +2,8 @@ package configgen.value;
 
 import configgen.ctx.DirectoryStructure;
 import configgen.schema.TableSchema;
-import configgen.write.VTableJsonStorage;
 
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -18,7 +16,6 @@ import static configgen.value.CfgValue.VTable;
 
 public class VTableJsonParser {
     private final TableSchema subTableSchema;
-    private final Path dataDir;
     private final TableSchema tableSchema;
     private final CfgValueErrs errs;
     private final ValueJsonParser parser;
@@ -32,7 +29,6 @@ public class VTableJsonParser {
                             CfgValueErrs errs,
                             CfgValueStat valueStat) {
         this.subTableSchema = subTableSchema;
-        this.dataDir = sourceStructure.getRootDir();
         this.sourceStructure = sourceStructure;
         this.tableSchema = tableSchema;
         this.parser = new ValueJsonParser(subTableSchema, isPartial, errs);
@@ -64,24 +60,6 @@ public class VTableJsonParser {
                 String id = pkValue.packStr();
                 idMap.put(id, modified);
             }
-        }
-
-        if (idMap.isEmpty()) { // no json file
-            //创建默认的一个record，供cfgeditor开始update或add
-            VStruct defaultValue = ValueDefault.ofStructural(tableSchema, DFile.of("<new>", tableName));
-            Value pkValue = ValueUtil.extractPrimaryKeyValue(defaultValue, tableSchema);
-            String id = pkValue.packStr();
-            Path writePath = dataDir;
-            try {
-                writePath = VTableJsonStorage.addOrUpdateRecord(defaultValue, tableName, id, dataDir);
-                valueList.add(defaultValue);
-
-                JsonFileInfo jf = sourceStructure.addJsonFile(tableName, writePath);
-                valueStat.addLastModified(tableName, id, jf.lastModified());
-            } catch (Exception e) {
-                errs.addErr(new CfgValueErrs.JsonFileWriteErr(writePath.toAbsolutePath().toString(), e.getMessage()));
-            }
-
         }
         return new VTableCreator(subTableSchema, errs).create(valueList);
     }
