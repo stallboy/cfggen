@@ -83,9 +83,7 @@ const role: BubbleListProps["role"] = {
     user: {placement: "end"},
 };
 
-export const Chat = memo(function Chat({
-                                           schema,
-                                       }: {
+export const Chat = memo(function Chat({schema}: {
     schema: Schema | undefined;
 }) {
     const {styles} = useChatStyle();
@@ -102,12 +100,7 @@ export const Chat = memo(function Chat({
 
     const [inputValue, setInputValue] = useState("");
 
-    const {
-        isLoading,
-        isError,
-        error,
-        data: promptRes,
-    } = useQuery({
+    const {isLoading, isError, error, data: promptRes} = useQuery({
         queryKey: ["prompt", curTableId],
         queryFn: async ({signal}) => {
             const result = await getPrompt(server, curTableId, signal);

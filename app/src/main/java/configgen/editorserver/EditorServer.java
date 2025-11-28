@@ -6,7 +6,6 @@ import configgen.ctx.*;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
 import configgen.schema.TableSchemaRefGraph;
-import configgen.genjson.AICfg;
 import configgen.tool.SearchService;
 import configgen.value.CfgValue;
 
@@ -31,7 +30,6 @@ import static configgen.editorserver.RecordEditService.*;
 public class EditorServer extends GeneratorWithTag {
     private final int port;
     private final String noteCsvPath;
-    private final String aiCfgFn;
 
     private Context context;
     private volatile CfgValue cfgValue;  // 引用可以被改变，指向不同的CfgValue
@@ -39,8 +37,6 @@ public class EditorServer extends GeneratorWithTag {
 
     private HttpServer server;
     private NoteEditService noteEditService;
-    private AICfg aiCfg;
-    private Path aiDir;
     private final String postRun;
     private final int waitSecondsAfterWatchEvt;
 
@@ -48,18 +44,12 @@ public class EditorServer extends GeneratorWithTag {
         super(parameter);
         port = Integer.parseInt(parameter.get("port", "3456"));
         noteCsvPath = parameter.get("note", "_note.csv");
-        aiCfgFn = parameter.get("aicfg", null);
         waitSecondsAfterWatchEvt = Integer.parseInt(parameter.get("watch", "0"));
         postRun = parameter.get("postrun", null);
     }
 
     @Override
     public void generate(Context ctx) throws IOException {
-        if (aiCfgFn != null) {
-            aiDir = Path.of(aiCfgFn).getParent();
-            aiCfg = AICfg.readFromFile(aiCfgFn);
-        }
-
         noteEditService = new NoteEditService(Path.of(noteCsvPath));
         initFromCtx(ctx);
 
@@ -243,7 +233,7 @@ public class EditorServer extends GeneratorWithTag {
     private void handlePrompt(HttpExchange exchange) throws IOException {
         Map<String, String> query = queryToMap(exchange.getRequestURI().getQuery());
         String table = query.get("table");
-        PromptService.PromptResult result = PromptService.gen(cfgValue, aiCfg, aiDir, table);
+        PromptService.PromptResult result = PromptService.gen(context, cfgValue, table);
         sendResponse(exchange, result);
     }
 

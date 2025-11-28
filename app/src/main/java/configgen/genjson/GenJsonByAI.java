@@ -1,5 +1,6 @@
 package configgen.genjson;
 
+import com.alibaba.fastjson2.JSON;
 import configgen.ctx.Context;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
@@ -17,15 +18,14 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static configgen.genjson.AICfg.*;
 import static io.github.sashirestela.openai.domain.chat.ChatMessage.*;
 
 public class GenJsonByAI extends Generator {
+
+
     private final String cfgFn;
     private final String askFn;
     private final String table;
-    private final String promptFn;
-    private final boolean isUseRawStructInfo;
     private final int retryTimes;
 
     public GenJsonByAI(Parameter parameter) {
@@ -33,10 +33,9 @@ public class GenJsonByAI extends Generator {
         cfgFn = parameter.get("cfg", "ai.json");
         askFn = parameter.get("ask", "ask.txt");
         table = parameter.get("table", "skill.buff");
-        promptFn = parameter.get("promptfn", null);
-        isUseRawStructInfo = parameter.has("raw");
         retryTimes = Integer.parseInt(parameter.get("retry", "1"));
     }
+
 
     @Override
     public void generate(Context ctx) throws IOException {
@@ -44,7 +43,7 @@ public class GenJsonByAI extends Generator {
             throw new RuntimeException("retry must > 0");
         }
 
-        AICfg aiCfg = readFromFile(cfgFn);
+        AICfg aiCfg = AICfg.readFromFile(cfgFn);
         Path askFnPath = Path.of(askFn);
         if (!Files.exists(askFnPath)) {
             throw new RuntimeException(askFn + " not exist!");
@@ -56,26 +55,14 @@ public class GenJsonByAI extends Generator {
             throw new RuntimeException(e);
         }
 
-        String promptFile;
-        if (promptFn == null) {
-            promptFile = aiCfg.assureFindPromptFile(table, Path.of(cfgFn).getParent());
-        } else {
-            promptFile = promptFn;
-            if (!Files.exists(Path.of(promptFile))) {
-                throw new RuntimeException(promptFile + " not exist!");
-            }
-        }
-
         CfgValue cfgValue = ctx.makeValue();
         CfgValue.VTable vTable = cfgValue.getTable(table);
         Objects.requireNonNull(vTable, "table=%s not found!".formatted(table));
         TableSchema tableSchema = vTable.schema();
-        TableCfg aiTableCfg = aiCfg.findTable(table);
 
-        String prompt = PromptGen.genPrompt(cfgValue, table, promptFile, aiTableCfg, isUseRawStructInfo);
-        System.out.println(prompt);
-        String init = aiCfg.findInit(table);
-        System.out.println(init);
+        PromptGen.Prompt prompt = PromptGen.genPrompt(ctx, cfgValue, vTable);
+        System.out.println(prompt.prompt());
+        System.out.println(prompt.init());
 
         // 调用llm
         SimpleOpenAI openAI = SimpleOpenAI.builder()
@@ -92,8 +79,8 @@ public class GenJsonByAI extends Generator {
             System.out.println();
             System.out.printf("## %s%n", ask);
             List<ChatMessage> messages = List.of(
-                    UserMessage.of(prompt),
-                    AssistantMessage.of(init),
+                    UserMessage.of(prompt.prompt()),
+                    AssistantMessage.of(prompt.init()),
                     UserMessage.of(ask));
             askWithRetry(messages, retryTimes, stat, tableSchema, openAI,
                     ctx.getContextCfg().dataDir(), aiCfg.model());
@@ -181,6 +168,27 @@ public class GenJsonByAI extends Generator {
             lastJson = matcher.group(1).trim();
         }
         return lastJson;
+    }
+
+    private record AICfg(String baseUrl,
+                         String apiKey,
+                         String model) {
+        public static AICfg readFromFile(String cfgFn) {
+            Path path = Path.of(cfgFn);
+            if (!Files.exists(path)) {
+                throw new RuntimeException(cfgFn + " not exist!");
+            }
+            String jsonStr;
+            try {
+                jsonStr = Files.readString(path);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            if (jsonStr.isEmpty()) {
+                throw new RuntimeException(cfgFn + " is empty!");
+            }
+            return JSON.parseObject(jsonStr, AICfg.class);
+        }
     }
 
 }

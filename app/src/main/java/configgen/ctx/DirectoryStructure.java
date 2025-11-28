@@ -207,6 +207,16 @@ public class DirectoryStructure {
                 .toList();
     }
 
+    public Path getCfgFilePathByPkgName(String pkgName) {
+        String pkgNameDot = pkgName.isEmpty() ? "" : pkgName + ".";
+        for (CfgFileInfo c : cfgFiles.values()) {
+            if (c.pkgNameDot.equals(pkgNameDot)) {
+                return c.path;
+            }
+        }
+        return null;
+    }
+
     public Collection<ExcelFileInfo> getExcelFiles() {
         return excelFiles.values();
     }

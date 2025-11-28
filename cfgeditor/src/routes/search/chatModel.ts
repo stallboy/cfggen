@@ -6,10 +6,8 @@ export interface PromptResult {
 
 export type PromptResultCode =
     'ok'
-    | 'AICfgNotSet'
     | 'tableNotSet'
-    | 'tableNotFound'
-    | 'promptFileNotFound';
+    | 'tableNotFound';
 
 
 export interface CheckJsonResult {

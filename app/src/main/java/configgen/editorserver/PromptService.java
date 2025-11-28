@@ -1,10 +1,9 @@
 package configgen.editorserver;
 
-import configgen.genjson.AICfg;
+import configgen.ctx.Context;
 import configgen.genjson.PromptGen;
+import configgen.genjson.PromptGen.Prompt;
 import configgen.value.*;
-
-import java.nio.file.Path;
 
 import static configgen.editorserver.PromptService.PromptResultCode.*;
 
@@ -25,13 +24,10 @@ public class PromptService {
     }
 
 
-    public static PromptResult gen(CfgValue cfgValue,
-                                   AICfg aiCfg,
-                                   Path aiDir,
+    public static PromptResult gen(Context context,
+                                   CfgValue cfgValue,
                                    String table) {
-        if (aiCfg == null) {
-            return new PromptResult(AICfgNotSet, "", "");
-        }
+
         if (table == null || table.isEmpty()) {
             return new PromptResult(tableNotSet, "", "");
         }
@@ -39,15 +35,9 @@ public class PromptService {
         if (vTable == null) {
             return new PromptResult(tableNotFound, table, "");
         }
-        String promptFile;
-        try {
-            promptFile = aiCfg.assureFindPromptFile(table, aiDir);
-        } catch (Exception e) {
-            return new PromptResult(promptFileNotFound, table, "");
-        }
-        String prompt = PromptGen.genPrompt(cfgValue, table, promptFile, aiCfg.findTable(table), false);
-        String init = aiCfg.findInit(table);
-        return new PromptResult(ok, prompt, init);
+
+        Prompt prompt = PromptGen.genPrompt(context, cfgValue, vTable);
+        return new PromptResult(ok, prompt.prompt(), prompt.init());
     }
 
 }
