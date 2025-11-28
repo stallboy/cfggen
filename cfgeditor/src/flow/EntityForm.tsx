@@ -265,8 +265,8 @@ const ArrayOfPrimitiveFormItem = memo(function ({field, bgColor}: {
             {(fields, {add, remove, move}) => (
                 <>
                     {fields.map((f, index) => (
-                        <Space key={f.key} align='baseline' size={2}>
-                            <Form.Item name={f.name} {...itemStyle}>
+                        <Flex key={f.key} align='center' justify='space-between' style={{width: '100%'}}>
+                            <Form.Item name={f.name} {...itemStyle} style={{flex: 1, marginBottom: 0}}>
                                 {primitiveControl(field.eleType, field.autoCompleteOptions, thisItemStyle)}
                             </Form.Item>
                             <ArrayItemExpandButton
@@ -274,7 +274,7 @@ const ArrayOfPrimitiveFormItem = memo(function ({field, bgColor}: {
                                 remove={() => remove(f.name)}
                                 up={index != 0 ? () => move(index, index - 1) : undefined}
                                 down={index != fields.length - 1 ? () => move(index, index + 1) : undefined}/>
-                        </Space>
+                        </Flex>
                     ))}
                     <Button className='nodrag'
                             icon={<PlusSquareTwoTone/>}
