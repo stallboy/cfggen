@@ -1,26 +1,22 @@
-import {
-    CloseOutlined,
-    CopyOutlined,
-    LikeOutlined,
-    DislikeOutlined,
-    ReloadOutlined,
-} from "@ant-design/icons";
-import type {BubbleListProps} from "@ant-design/x";
-import {Bubble, Sender, Welcome} from "@ant-design/x";
+import { CloseOutlined, CopyOutlined, LikeOutlined, DislikeOutlined, ReloadOutlined } from "@ant-design/icons";
+import type { BubbleListProps } from "@ant-design/x";
+import { Bubble, Sender, Welcome } from "@ant-design/x";
 import XMarkdown from "@ant-design/x-markdown";
-import {DeepSeekChatProvider, SSEFields, useXChat, XModelParams, XModelResponse, XRequest} from "@ant-design/x-sdk";
-import {Button, Flex, Space} from "antd";
-import {createStyles} from "antd-style";
-import {useState} from "react";
+import { OpenAIChatProvider, SSEFields, useXChat, XModelParams, XModelResponse, XRequest } from "@ant-design/x-sdk";
+import { Button, Flex, Space } from "antd";
+import { createStyles } from "antd-style";
+import { useState } from "react";
 
-import {useMyStore, useLocationData} from "../../store/store.ts";
-import {memo} from "react";
-import {Schema} from "../table/schemaUtil.tsx";
-import {useQuery} from "@tanstack/react-query";
-import {getPrompt} from "../api.ts";
-import {Result, Spin} from "antd";
+import { useMyStore, useLocationData } from "../../store/store.ts";
+import { memo, useRef } from "react";
+import { Schema } from "../table/schemaUtil.tsx";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { getPrompt, checkJson } from "../api.ts";
+import { Result, Spin } from "antd";
+import { CheckJsonResult } from "./chatModel.ts";
+import { applyNewEditingObject } from "../record/editingObject.ts";
 
-const useChatStyle = createStyles(({token, css}) => {
+const useChatStyle = createStyles(({ token, css }) => {
     return {
         chatContainer: css`
             display: flex;
@@ -68,27 +64,25 @@ const role: BubbleListProps["role"] = {
     assistant: {
         placement: "start",
         footer: (
-            <div style={{display: "flex"}}>
-                <Button type="text" size="small" icon={<ReloadOutlined/>}/>
-                <Button type="text" size="small" icon={<CopyOutlined/>}/>
-                <Button type="text" size="small" icon={<LikeOutlined/>}/>
-                <Button type="text" size="small" icon={<DislikeOutlined/>}/>
+            <div style={{ display: "flex" }}>
+                <Button type="text" size="small" icon={<ReloadOutlined />} />
+                <Button type="text" size="small" icon={<CopyOutlined />} />
+                <Button type="text" size="small" icon={<LikeOutlined />} />
+                <Button type="text" size="small" icon={<DislikeOutlined />} />
             </div>
         ),
         contentRender(content: string) {
             const newContent = content.replace("/\n\n/g", "<br/><br/>");
-            return <XMarkdown content={newContent}/>;
+            return <XMarkdown content={newContent} />;
         },
     },
-    user: {placement: "end"},
+    user: { placement: "end" },
 };
 
-export const Chat = memo(function Chat({schema}: {
-    schema: Schema | undefined;
-}) {
-    const {styles} = useChatStyle();
-    const {server, aiConf} = useMyStore();
-    const {curTableId} = useLocationData();
+export const Chat = memo(function Chat({ schema }: { schema: Schema | undefined; }) {
+    const { styles } = useChatStyle();
+    const { server, aiConf } = useMyStore();
+    const { curTableId } = useLocationData();
 
     let editable = false;
     if (schema && schema.isEditable) {
@@ -99,31 +93,32 @@ export const Chat = memo(function Chat({schema}: {
     }
 
     const [inputValue, setInputValue] = useState("");
+    const chatRef = useRef<any>(null);
 
-    const {isLoading, isError, error, data: promptRes} = useQuery({
+    const { isLoading, isError, error, data: promptRes } = useQuery({
         queryKey: ["prompt", curTableId],
-        queryFn: async ({signal}) => {
-            const result = await getPrompt(server, curTableId, signal);
-            return {
-                result: result,
-                prompt: {
-                    id: "1111",
-                    createAt: 1234,
-                    updateAt: 1235,
-                    role: "user",
-                    content: result.prompt,
-                },
-                init: {
-                    id: "2222",
-                    createAt: 2234,
-                    updateAt: 2235,
-                    role: "assistant",
-                    content: result.init,
-                },
-            };
-        },
+        queryFn: ({ signal }) => getPrompt(server, curTableId, signal),
         staleTime: Infinity,
         enabled: editable,
+    });
+
+    const checkJsonMutation = useMutation<CheckJsonResult, Error, string>({
+        mutationFn: (raw: string) => checkJson(server, curTableId, raw),
+
+        onError: (error) => {
+            chatRef.current?.setInputAreaValue(error.message);
+        },
+        onSuccess: (result: CheckJsonResult) => {
+            if (result.resultCode == 'ok') {
+                if (curTableId == result.table) {
+                    applyNewEditingObject(JSON.parse(result.jsonResult));
+                } else {
+                    chatRef.current?.setInputAreaValue(`table changed! ${result.table} != ${curTableId}`);
+                }
+            } else {
+                chatRef.current?.setInputAreaValue(result.jsonResult);
+            }
+        },
     });
 
 
@@ -131,8 +126,26 @@ export const Chat = memo(function Chat({schema}: {
     const baseUrl = isAiSet ? aiConf.baseUrl : 'https://api.x.ant.design/api/big_model_glm-4.5-flash';
     const model = isAiSet ? aiConf.model : 'glm-4.5-flash';
     const apiKey = isAiSet ? aiConf.apiKey : 'xxx';
-    const {onRequest, messages, isRequesting, abort} = useXChat({
-        provider: new DeepSeekChatProvider({
+    const { onRequest, messages, isRequesting, abort } = useXChat({
+        defaultMessages: promptRes ? [
+            {
+                id: "1111",
+                message: {
+                    role: "user",
+                    content: promptRes.prompt,
+                },
+                status: 'success' as const,
+            },
+            {
+                id: "2222",
+                message: {
+                    role: "assistant",
+                    content: promptRes.init,
+                },
+                status: 'success' as const,
+            },
+        ] : [],
+        provider: new OpenAIChatProvider({
             request: XRequest<XModelParams, Partial<Record<SSEFields, XModelResponse>>>(
                 baseUrl,
                 {
@@ -144,6 +157,43 @@ export const Chat = memo(function Chat({schema}: {
                         stream: true,
                         model: model,
                     },
+                    callbacks: {
+                        onSuccess: (chunks) => {
+                            console.log('Stream chunks:', chunks)
+                            // 处理流式响应数据数组
+                            if (Array.isArray(chunks)) {
+                                let fullContent = '';
+
+                                // 累积流式内容，遇到 finish_reason 就停止
+                                for (const chunk of chunks) {
+
+                                    const choices = (chunk as any).choices;
+                                    if (Array.isArray(choices) && choices.length > 0) {
+                                        const choice = choices[0];
+
+                                        // 累积内容
+                                        if (choice.delta?.content) {
+                                            fullContent += choice.delta.content;
+                                        }
+
+                                        // 检查是否完成
+                                        if (choice.finish_reason) {
+                                            // 调用 checkJsonMutation 验证生成的 JSON
+                                            const finalContent = fullContent.trim();
+                                            if (finalContent) {
+                                                checkJsonMutation.mutate(finalContent);
+                                            }
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        onError: (err) => {
+                            console.error(err);
+                        }
+                    }
+
                 },
             ),
         }),
@@ -153,7 +203,7 @@ export const Chat = memo(function Chat({schema}: {
                 role: "assistant",
             };
         },
-        requestFallback: (_, {error}) => {
+        requestFallback: (_, { error }) => {
             if (error.name === "AbortError") {
                 return {
                     content: "Request was cancelled",
@@ -169,7 +219,7 @@ export const Chat = memo(function Chat({schema}: {
 
     const handleUserSubmit = (val: string) => {
         onRequest({
-            messages: [{role: "user", content: val}],
+            messages: [{ role: "user", content: val }],
         });
     };
 
@@ -178,32 +228,32 @@ export const Chat = memo(function Chat({schema}: {
     };
 
     if (!editable) {
-        return <Result title={"not editable"}/>;
+        return <Result title={"not editable"} />;
     }
 
     if (isLoading) {
-        return <Spin/>;
+        return <Spin />;
     }
 
     if (isError) {
-        return <Result status={"error"} title={error.message}/>;
+        return <Result status={"error"} title={error.message} />;
     }
 
     if (!promptRes) {
-        return <Result title={"promptResult result empty"}/>;
+        return <Result title={"promptResult result empty"} />;
     }
 
-    if (promptRes.result.resultCode != "ok") {
-        return <Result status={"error"} title={promptRes.result.resultCode}/>;
+    if (promptRes.resultCode != "ok") {
+        return <Result status={"error"} title={promptRes.resultCode} />;
     }
 
     const chatHeader = (
         <div className={styles.chatHeader}>
-            <div className={styles.headerTitle}>✨ AI Chat</div>
+            <div className={styles.headerTitle}>AI Chat</div>
             <Space size={0}>
                 <Button
                     type="text"
-                    icon={<CloseOutlined/>}
+                    icon={<CloseOutlined />}
                     onClick={handleClearChat}
                     className={styles.headerButton}
                 />
@@ -215,7 +265,7 @@ export const Chat = memo(function Chat({schema}: {
         <div className={styles.chatList}>
             {messages.length ? (
                 <Bubble.List
-                    style={{paddingInline: 16}}
+                    style={{ paddingInline: 16 }}
                     items={messages.map((i) => ({
                         ...i.message,
                         key: i.id,
@@ -240,6 +290,7 @@ export const Chat = memo(function Chat({schema}: {
     const chatSender = (
         <Flex vertical gap={12} className={styles.chatSend}>
             <Sender
+                ref={chatRef}
                 loading={isRequesting}
                 value={inputValue}
                 onChange={(v) => setInputValue(v)}

@@ -101,14 +101,14 @@ export async function updateNote(server: string, key: string, note: string) {
     return response.data;
 }
 
-export async function getPrompt(server: string, table: string, signal: AbortSignal) {
+export async function getPrompt(server: string, table: string, signal: AbortSignal): Promise<PromptResult> {
     const url = `http://${server}/prompt?table=${table}`;
     const response = await axios.get<PromptResult>(url, {signal});
     return response.data;
 }
 
 
-export async function checkJson(server: string, tableId: string, raw: string) {
+export async function checkJson(server: string, tableId: string, raw: string): Promise<CheckJsonResult> {
     const url = `http://${server}/checkJson?table=${tableId}`;
     // console.log('check json', tableId, raw);
     const response = await axios.post<CheckJsonResult>(url, raw, {

@@ -39,7 +39,7 @@ public class PromptGen {
         // 先找<mod>.md
         Path modDir = cfgFilePath.getParent();
         StringBuilder rule = new StringBuilder();
-        Path modFile = modDir.resolve("<mod>.md");
+        Path modFile = modDir.resolve("$mod.md");
         if (Files.exists(modFile)) {
             MarkdownDocument doc = MarkdownReader.read(modFile);
             rule.append(doc.content());
