@@ -37,7 +37,7 @@ export type StoreState = {
     searchMax: number;
     imageSizeScale: number;
 
-    dragPanel: string;  // 'recordRef', 'none', 'finder', 'chat', 'addJson', page.label（page的label前面的）
+    dragPanel: string;  // 'recordRef', 'setting', 'none', 'finder', 'chat',  page.label（page的label前面的）
     pageConf: FixedPagesConf;
     tauriConf: TauriConf;
 
@@ -54,9 +54,9 @@ export type StoreState = {
 const storeState: StoreState = {
     server: 'localhost:3456',
     aiConf: {
-        baseUrl: '',
+        baseUrl: 'https://api.deepseek.com/chat/completions',
         apiKey: '',
-        model: '',
+        model: 'deepseek-chat',
     },
     themeConfig: {
         themeFile: '',

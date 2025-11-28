@@ -78,7 +78,7 @@ export const HeaderBar = memo(function ({schema, curTable}: {
         })),
         {label: t('recordRef'), key: 'recordRef'},
         {label: t('finder'), key: 'finder'},
-        {label: t('adder'), key: 'adder'},
+        {label: t('chat'), key: 'chat'},
         {label: t('setting'), key: 'setting'},
         {label: t('none'), key: 'none'},
     ], [pageConf.pages, t]);

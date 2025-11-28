@@ -12,6 +12,7 @@ import {AiSetting} from "./AiSetting.tsx";
 import {ThemeSetting} from "./ThemeSetting.tsx";
 import {isTauri} from "@tauri-apps/api/core";
 import {TauriSetting} from "./TauriSeting.tsx";
+import {AddJson} from "../add/AddJson.tsx";
 
 
 export const Setting = memo(function Setting({schema, curTable, flowRef}: {
@@ -43,6 +44,12 @@ export const Setting = memo(function Setting({schema, curTable, flowRef}: {
             label: t('operations'),
             children: <Operations schema={schema} curTable={curTable} flowRef={flowRef}/>,
         },
+        {
+            key: 'addJson',
+            label: t('addJson'),
+            children: <AddJson schema={schema}/>,
+        },
+
         {
             key: 'ai',
             label: t('aiSetting'),

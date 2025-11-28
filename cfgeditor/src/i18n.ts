@@ -92,7 +92,7 @@ i18n.use(LanguageDetector)
                     recordRef: "关系",
                     fix: "固定",
                     finder: "导航",
-                    adder: "修改",
+                    chat: "AI➕",
                     setting: "设置",
 
                     serverConnectFail: '服务器连接失败',
@@ -106,10 +106,12 @@ i18n.use(LanguageDetector)
                     basicSetting: '基础',
                     recordShowSetting: '显示',
                     aiSetting: 'ai',
-                    resourceSetting:"资源",
+                    resourceSetting: "资源",
                     operations: '操作',
                     keySetting: '快捷键',
                     appSetting: '资源',
+                    addJson: "➕",
+
                     tableRefSettingTitle: "表关系节点扩展",
                     implsShowCnt: '接口实现数',
                     refIn: '入层',

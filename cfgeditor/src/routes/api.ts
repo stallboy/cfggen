@@ -10,7 +10,7 @@ import axios from 'axios';
 import {Schema} from "./table/schemaUtil.tsx";
 import {clearLayoutCache} from "../store/store.ts";
 import {NoteEditResult, Notes, notesToMap} from "./record/noteModel.ts";
-import {CheckJsonResult, PromptResult} from "./search/chatModel.ts";
+import {CheckJsonResult, PromptResult} from "./add/chatModel.ts";
 
 
 export async function fetchSchema(server: string, signal: AbortSignal) {

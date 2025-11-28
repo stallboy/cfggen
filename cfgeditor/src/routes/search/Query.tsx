@@ -1,10 +1,10 @@
 import {Tabs, TabsProps} from "antd";
 import {useTranslation} from "react-i18next";
 import {SearchValue} from "./SearchValue.tsx";
-import {Chat} from "./Chat.tsx";
+import {Chat} from "../add/Chat.tsx";
 import {Schema} from "../table/schemaUtil.tsx";
 import {memo} from "react";
-import {AddJson} from "./AddJson.tsx";
+import {AddJson} from "../add/AddJson.tsx";
 import {LastAccessed} from "./LastAccessed.tsx";
 import {LastModified} from "./LastModified.tsx";
 import {useLocationData} from "../../store/store.ts";

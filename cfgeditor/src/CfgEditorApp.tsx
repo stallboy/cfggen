@@ -17,8 +17,8 @@ import {fetchNotes, fetchSchema} from "./routes/api.ts";
 import {useQuery} from "@tanstack/react-query";
 import {HeaderBar} from "./routes/headerbar/HeaderBar.tsx";
 import {FlowGraph} from "./flow/FlowGraph.tsx";
+import {Chat} from "./routes/add/Chat.tsx";
 import {Finder} from "./routes/search/Finder.tsx";
-import {Adder} from "./routes/search/Adder.tsx";
 
 
 export type SchemaTableType = {
@@ -81,8 +81,6 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
     }, [schema, notes, curTable]);
 
 
-
-
     const handleModalOk = useCallback(() => {
         onConnectServer(server);
     }, [server]);
@@ -107,9 +105,8 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
             </FlowGraph>;
         } else if (dragPanel == 'finder') {
             dragPage = <Finder schema={schema}/>;
-
-        } else if (dragPanel == 'adder') {
-            dragPage = <Adder schema={schema}/>
+        } else if (dragPanel == 'chat') {
+            dragPage = <Chat schema={schema} key={'chat-' + curTableId}/>;
 
         } else if (dragPanel == 'setting') {
             dragPage = <Setting schema={schema} curTable={curTable} flowRef={ref}/>

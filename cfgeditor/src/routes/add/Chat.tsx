@@ -1,22 +1,21 @@
-import { CloseOutlined, CopyOutlined, LikeOutlined, DislikeOutlined, ReloadOutlined } from "@ant-design/icons";
-import type { BubbleListProps } from "@ant-design/x";
-import { Bubble, Sender, Welcome } from "@ant-design/x";
+import type {BubbleListProps} from "@ant-design/x";
+import {Bubble, Sender, Welcome} from "@ant-design/x";
 import XMarkdown from "@ant-design/x-markdown";
-import { OpenAIChatProvider, SSEFields, useXChat, XModelParams, XModelResponse, XRequest } from "@ant-design/x-sdk";
-import { Button, Flex, Space } from "antd";
-import { createStyles } from "antd-style";
-import { useState } from "react";
+import {OpenAIChatProvider, useXChat, XModelParams, XModelResponse, XRequest} from "@ant-design/x-sdk";
+import {Flex} from "antd";
+import {createStyles} from "antd-style";
+import {useState, useEffect} from "react";
 
-import { useMyStore, useLocationData } from "../../store/store.ts";
-import { memo, useRef } from "react";
-import { Schema } from "../table/schemaUtil.tsx";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { getPrompt, checkJson } from "../api.ts";
-import { Result, Spin } from "antd";
-import { CheckJsonResult } from "./chatModel.ts";
-import { applyNewEditingObject } from "../record/editingObject.ts";
+import {useMyStore, useLocationData} from "../../store/store.ts";
+import {memo, useRef} from "react";
+import {Schema} from "../table/schemaUtil.tsx";
+import {useQuery, useMutation} from "@tanstack/react-query";
+import {getPrompt, checkJson} from "../api.ts";
+import {Result, Spin} from "antd";
+import {CheckJsonResult} from "./chatModel.ts";
+import {applyNewEditingObject} from "../record/editingObject.ts";
 
-const useChatStyle = createStyles(({ token, css }) => {
+const useChatStyle = createStyles(({token, css}) => {
     return {
         chatContainer: css`
             display: flex;
@@ -44,7 +43,7 @@ const useChatStyle = createStyles(({ token, css }) => {
         chatList: css`
             margin-block-start: ${token.margin}px;
             display: flex;
-            height: calc(100% - 194px);
+            height: calc(100% - 114px);
             flex-direction: column;
         `,
         chatWelcome: css`
@@ -63,26 +62,18 @@ const useChatStyle = createStyles(({ token, css }) => {
 const role: BubbleListProps["role"] = {
     assistant: {
         placement: "start",
-        footer: (
-            <div style={{ display: "flex" }}>
-                <Button type="text" size="small" icon={<ReloadOutlined />} />
-                <Button type="text" size="small" icon={<CopyOutlined />} />
-                <Button type="text" size="small" icon={<LikeOutlined />} />
-                <Button type="text" size="small" icon={<DislikeOutlined />} />
-            </div>
-        ),
         contentRender(content: string) {
             const newContent = content.replace("/\n\n/g", "<br/><br/>");
-            return <XMarkdown content={newContent} />;
+            return <XMarkdown content={newContent}/>;
         },
     },
-    user: { placement: "end" },
+    user: {placement: "end"},
 };
 
-export const Chat = memo(function Chat({ schema }: { schema: Schema | undefined; }) {
-    const { styles } = useChatStyle();
-    const { server, aiConf } = useMyStore();
-    const { curTableId } = useLocationData();
+export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }) {
+    const {styles} = useChatStyle();
+    const {server, aiConf} = useMyStore();
+    const {curTableId} = useLocationData();
 
     let editable = false;
     if (schema && schema.isEditable) {
@@ -93,11 +84,12 @@ export const Chat = memo(function Chat({ schema }: { schema: Schema | undefined;
     }
 
     const [inputValue, setInputValue] = useState("");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const chatRef = useRef<any>(null);
 
-    const { isLoading, isError, error, data: promptRes } = useQuery({
+    const {isLoading, isError, error, data: promptRes} = useQuery({
         queryKey: ["prompt", curTableId],
-        queryFn: ({ signal }) => getPrompt(server, curTableId, signal),
+        queryFn: ({signal}) => getPrompt(server, curTableId, signal),
         staleTime: Infinity,
         enabled: editable,
     });
@@ -126,27 +118,10 @@ export const Chat = memo(function Chat({ schema }: { schema: Schema | undefined;
     const baseUrl = isAiSet ? aiConf.baseUrl : 'https://api.x.ant.design/api/big_model_glm-4.5-flash';
     const model = isAiSet ? aiConf.model : 'glm-4.5-flash';
     const apiKey = isAiSet ? aiConf.apiKey : 'xxx';
-    const { onRequest, messages, isRequesting, abort } = useXChat({
-        defaultMessages: promptRes ? [
-            {
-                id: "1111",
-                message: {
-                    role: "user",
-                    content: promptRes.prompt,
-                },
-                status: 'success' as const,
-            },
-            {
-                id: "2222",
-                message: {
-                    role: "assistant",
-                    content: promptRes.init,
-                },
-                status: 'success' as const,
-            },
-        ] : [],
+    const {onRequest, messages, isRequesting, abort, setMessages} = useXChat({
+        defaultMessages: [],
         provider: new OpenAIChatProvider({
-            request: XRequest<XModelParams, Partial<Record<SSEFields, XModelResponse>>>(
+            request: XRequest<XModelParams, XModelResponse>(
                 baseUrl,
                 {
                     headers: {
@@ -159,7 +134,6 @@ export const Chat = memo(function Chat({ schema }: { schema: Schema | undefined;
                     },
                     callbacks: {
                         onSuccess: (chunks) => {
-                            console.log('Stream chunks:', chunks)
                             // 处理流式响应数据数组
                             if (Array.isArray(chunks)) {
                                 let fullContent = '';
@@ -167,8 +141,10 @@ export const Chat = memo(function Chat({ schema }: { schema: Schema | undefined;
                                 // 累积流式内容，遇到 finish_reason 就停止
                                 for (const chunk of chunks) {
 
-                                    const choices = (chunk as any).choices;
-                                    if (Array.isArray(choices) && choices.length > 0) {
+                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                    const data = JSON.parse((chunk as any).data);
+                                    const choices = data.choices;
+                                    if (choices && Array.isArray(choices) && choices.length > 0) {
                                         const choice = choices[0];
 
                                         // 累积内容
@@ -203,7 +179,7 @@ export const Chat = memo(function Chat({ schema }: { schema: Schema | undefined;
                 role: "assistant",
             };
         },
-        requestFallback: (_, { error }) => {
+        requestFallback: (_, {error}) => {
             if (error.name === "AbortError") {
                 return {
                     content: "Request was cancelled",
@@ -217,47 +193,59 @@ export const Chat = memo(function Chat({ schema }: { schema: Schema | undefined;
         },
     });
 
+    // 当 promptRes 可用时，设置初始消息
+    useEffect(() => {
+        if (promptRes && messages.length === 0) {
+            setMessages([
+                {
+                    id: "1111",
+                    message: {
+                        role: "user",
+                        content: promptRes.prompt,
+                    },
+                    status: 'success' as const,
+                },
+                {
+                    id: "2222",
+                    message: {
+                        role: "assistant",
+                        content: promptRes.init,
+                    },
+                    status: 'success' as const,
+                },
+            ]);
+        }
+    }, [promptRes, messages.length, setMessages]);
+
     const handleUserSubmit = (val: string) => {
         onRequest({
-            messages: [{ role: "user", content: val }],
+            messages: [{role: "user", content: val}],
         });
     };
 
-    const handleClearChat = () => {
-        abort();
-    };
-
     if (!editable) {
-        return <Result title={"not editable"} />;
+        return <Result title={"not editable"}/>;
     }
 
     if (isLoading) {
-        return <Spin />;
+        return <Spin/>;
     }
 
     if (isError) {
-        return <Result status={"error"} title={error.message} />;
+        return <Result status={"error"} title={error.message}/>;
     }
 
     if (!promptRes) {
-        return <Result title={"promptResult result empty"} />;
+        return <Result title={"promptResult result empty"}/>;
     }
 
     if (promptRes.resultCode != "ok") {
-        return <Result status={"error"} title={promptRes.resultCode} />;
+        return <Result status={"error"} title={promptRes.resultCode}/>;
     }
 
     const chatHeader = (
         <div className={styles.chatHeader}>
             <div className={styles.headerTitle}>AI Chat</div>
-            <Space size={0}>
-                <Button
-                    type="text"
-                    icon={<CloseOutlined />}
-                    onClick={handleClearChat}
-                    className={styles.headerButton}
-                />
-            </Space>
         </div>
     );
 
@@ -265,7 +253,7 @@ export const Chat = memo(function Chat({ schema }: { schema: Schema | undefined;
         <div className={styles.chatList}>
             {messages.length ? (
                 <Bubble.List
-                    style={{ paddingInline: 16 }}
+                    style={{paddingInline: 16}}
                     items={messages.map((i) => ({
                         ...i.message,
                         key: i.id,
@@ -306,11 +294,12 @@ export const Chat = memo(function Chat({ schema }: { schema: Schema | undefined;
         </Flex>
     );
 
-    return (
+    return (<>
+        <div style={{height: 32}}/>
         <div className={styles.chatContainer}>
             {chatHeader}
             {chatList}
             {chatSender}
         </div>
-    );
+    </>);
 });
