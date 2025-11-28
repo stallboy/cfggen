@@ -47,7 +47,7 @@ export const Setting = memo(function Setting({schema, curTable, flowRef}: {
         {
             key: 'addJson',
             label: t('addJson'),
-            children: <AddJson schema={schema}/>,
+            children: <AddJson schema={schema} key={"addJson-" + (curTable?.name || "$")}/>,
         },
 
         {
@@ -66,9 +66,9 @@ export const Setting = memo(function Setting({schema, curTable, flowRef}: {
         })
     }
 
-    return <>
+    return <div style={{paddingRight: 24}}>
         <div style={{height: 16}}/>
         <Divider/>
         <Tabs items={items} tabPlacement='start'/>
-    </>
+    </div>
 });

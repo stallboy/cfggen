@@ -4,13 +4,15 @@ import {memo, useCallback, useState} from "react";
 import {Schema} from "../table/schemaUtil.tsx";
 import {useMutation,} from "@tanstack/react-query";
 import {addOrUpdateRecord} from "../api.ts";
-import {Button, Card, Form, Input, List, Result, Space} from "antd";
+import {Button, Typography, Form, Input, List, Result, Space} from "antd";
 
 import {RecordEditResult} from "../record/recordModel.ts";
 import {useNavigate} from "react-router-dom";
 import {useTranslation} from "react-i18next";
 import {ResultStatusType} from "antd/es/result";
 import {applyNewEditingObject} from "../record/editingObject.ts";
+
+const {Title} = Typography;
 
 interface AddJsonProps {
     json: string;
@@ -97,26 +99,27 @@ export const AddJson = memo(function AddJson({schema}: {
     }
 
     return <>
-        <Card title={curTableId}>
-            <Form name="addJson" form={form} layout={"vertical"} onFinish={onAddJson} autoComplete="off">
-                <Form.Item name='json' label={t('json')}>
-                    <Input.TextArea placeholder="json" autoSize={{minRows: 5, maxRows: 20}}/>
-                </Form.Item>
-                <Form.Item wrapperCol={{offset: 4, span: 20}}>
-                    <Space>
-                        <Button type="primary" htmlType="submit">
-                            {t('addJson')}
-                        </Button>
+        <Title level={4} style={{marginTop: -4}}>{curTableId}</Title>
+        <Form name="addJson" form={form} layout={"vertical"} onFinish={onAddJson} autoComplete="off">
+            <Form.Item name='json' label={t('json')}>
+                <Input.TextArea placeholder="json" autoSize={{minRows: 8, maxRows: 20}}/>
+            </Form.Item>
+            <Form.Item wrapperCol={{offset: 4, span: 20}}>
+                <Space>
+                    <Button type="primary" htmlType="submit">
+                        {t('addJson')}
+                    </Button>
 
-                        <Button type="primary" onClick={onShow}>
-                            {t('show')}
-                        </Button>
-                    </Space>
-                </Form.Item>
-            </Form>
-        </Card>
+                    <Button type="primary" onClick={onShow}>
+                        {t('show')}
+                    </Button>
+                </Space>
+            </Form.Item>
+        </Form>
+
         {res}
-    </>;
+    </>
+        ;
 });
 
 
