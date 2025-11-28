@@ -382,22 +382,6 @@ export function isPkInteger(sTable: STable) {
     return field.type == 'int' || field.type == 'long';
 }
 
-export function getIdOptions(sTable: STable, valueToInteger: boolean = false): EntityEditFieldOption[] {
-    const options = [];
-    for (const {id, title} of sTable.recordIds) {
-
-        const isShowTitle = title && title != id;
-        options.push({
-            label: isShowTitle ? <> {id} <span style={{fontSize: '0.85em'}}>{title}</span> </> : id,
-            labelstr: isShowTitle ? `${id} ${title}` : id,
-            value: valueToInteger ? parseInt(id) : id,
-            title: title ?? ''
-        });
-    }
-    return options;
-}
-
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function obj2map(v: any): any {
     if (Array.isArray(v)) return v.map(obj2map);
@@ -416,8 +400,21 @@ export function getMapEntryTypeName(sItem: SItem, fieldName: string) {
     return "$" + (sItem.id ?? sItem.name) + "-" + fieldName; // 构造特殊名称
 }
 
+export function getIdOptions(sTable: STable, valueToInteger: boolean = false): EntityEditFieldOption[] {
+    const options = [];
+    for (const {id, title} of sTable.recordIds) {
+        const isShowTitle = title && title != id;
+        options.push({
+            label: isShowTitle ? <> {id} <span style={{fontSize: '0.85em'}}>{title}</span> </> : id,
+            labelstr: isShowTitle ? `${id} ${title}` : id,
+            value: valueToInteger ? parseInt(id) : id,
+            title: title ?? ''
+        });
+    }
+    return options;
+}
+
 export const NEW_RECORD_ID = "+new";
-export const NEW_RECORD_EMOJI = "➕";
 
 export function getIdOptionsWithNew(sTable: STable, valueToInteger: boolean = false): EntityEditFieldOption[] {
     const options = getIdOptions(sTable, valueToInteger);
@@ -425,8 +422,8 @@ export function getIdOptionsWithNew(sTable: STable, valueToInteger: boolean = fa
     // 当没有记录时添加新记录选项
     if (options.length === 0) {
         options.push({
-            label: <>{NEW_RECORD_EMOJI} new</>,
-            labelstr: "new",
+            label: <>➕ new</>,
+            labelstr: NEW_RECORD_ID,
             value: NEW_RECORD_ID,
             title: 'Create new record'
         });

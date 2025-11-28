@@ -14,7 +14,7 @@ export const IdList = memo(function ({curTable}: {
 
     const options = useMemo(() => getIdOptionsWithNew(curTable), [curTable]);
 
-    // 当options为空且当前没有选中任何ID时，默认选中"+new"
+    // 当只有new record时，选中它
     const defaultCurId = useMemo(() => {
         if (!curId && options.length > 0 && options[0].value === NEW_RECORD_ID) {
             return NEW_RECORD_ID;

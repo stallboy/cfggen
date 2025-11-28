@@ -264,15 +264,17 @@ export const Record = memo(function () {
     const {curTableId, curId} = useLocationData();
     const {schema, curTable} = useOutletContext<SchemaTableType>();
 
+    // 只要recordIds大于0就没有 + new 的选项
+    const isNewRecord = curTable.recordIds.length == 0;
     // 对于现有记录，使用API获取数据
     const {isLoading, isError, error, data: recordResult} = useQuery({
         queryKey: ['table', curTableId, curId],
         queryFn: ({signal}) => fetchRecord(server, curTableId, curId, signal),
-        enabled: curId !== NEW_RECORD_ID, // 只在非新记录时启用查询
+        enabled: !isNewRecord,
     })
 
     // 如果是新记录，使用默认数据
-    if (curId === NEW_RECORD_ID) {
+    if (isNewRecord) {
         const defaultData = schema.defaultValueOfStructural(curTable);
         const mockRecordResult: RecordResult = {
             resultCode: 'ok',

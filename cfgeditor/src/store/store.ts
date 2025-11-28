@@ -2,7 +2,7 @@ import resso from "./resso.ts";
 import {AIConf, Convert, FixedPage, FixedPagesConf, NodeShowType, TauriConf, ThemeConfig} from "./storageJson.ts";
 import {getPrefBool, getPrefEnumStr, getPrefInt, getPrefJson, getPrefStr, setPref} from "./storage.ts";
 import {History} from "../routes/headerbar/historyModel.ts";
-import {Schema} from "../routes/table/schemaUtil.tsx";
+import {NEW_RECORD_ID, Schema} from "../routes/table/schemaUtil.tsx";
 import {useLocation} from "react-router-dom";
 import {queryClient} from "../main.tsx";
 import {getId} from "../routes/record/recordRefEntity.ts";
@@ -480,6 +480,8 @@ export function getLastOpenIdByTable(schema: Schema, curTableId: string): string
             id = lastOpenId;
         } else if (table.recordIds.length > 0) {
             id = table.recordIds[0].id;
+        } else {
+            id = NEW_RECORD_ID;
         }
     }
     return id;
