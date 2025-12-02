@@ -9,6 +9,7 @@ import configgen.util.Logger;
 import configgen.value.*;
 import configgen.write.VTableJsonStorage;
 import configgen.write.VTableStorage;
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 import static configgen.editorserver.RecordEditService.ResultCode.*;
 import static configgen.value.CfgValue.*;
 
-public class RecordEditService {
+public final class RecordEditService {
 
     public enum ResultCode {
         addOk,
@@ -34,33 +35,27 @@ public class RecordEditService {
         idParseErr,
         idNotFound,
         jsonParseErr,
-        jsonStoreErr,
+        storeErr,
     }
 
-    public record RecordEditResult(
-            ResultCode resultCode,
-            String table,
-            String id,
-            List<String> valueErrs, // 即使有错，也更新，只是这里提示
-            List<SchemaService.RecordId> recordIds) {
+    public record RecordEditResult(ResultCode resultCode,
+                                   String table,
+                                   String id,
+                                   List<String> valueErrs) {// 即使有错，也更新，只是这里提示
+    }
+
+    public record ResultWithNewCfgValue(RecordEditResult result,
+                                        CfgValue newCfgValue) {
     }
 
 
-    private final Context context;
-    private final DirectoryStructure sourceStructure;
-    private final CfgValue cfgValue;
-    private CfgValue newCfgValue;
-
-    public RecordEditService(CfgValue cfgValue, Context context) {
-        this.cfgValue = cfgValue;
-        this.context = context;
-        this.sourceStructure = context.getSourceStructure();
-    }
-
-    public RecordEditResult addOrUpdateRecord(String table, String jsonStr) {
-        RecordEditResult err = checkErr(table);
+    public static ResultWithNewCfgValue addOrUpdateRecord(@NotNull Context context,
+                                                          @NotNull CfgValue cfgValue,
+                                                          String table,
+                                                          String jsonStr) {
+        RecordEditResult err = checkErr(cfgValue, table);
         if (err != null) {
-            return err;
+            return new ResultWithNewCfgValue(err, cfgValue);
         }
 
         Logger.log("addOrUpdateRecord %s", jsonStr);
@@ -70,8 +65,10 @@ public class RecordEditService {
         VStruct thisValue = new ValueJsonParser(vTable.schema(), parseErrs).fromJson(jsonStr);
         parseErrs.checkErrors("check json", true, true);
         if (!parseErrs.errs().isEmpty()) {
-            return new RecordEditResult(jsonParseErr, table, "",
-                    parseErrs.errs().stream().map(Msg::msg).toList(), List.of());
+            return new ResultWithNewCfgValue(
+                    new RecordEditResult(jsonParseErr, table, "",
+                            parseErrs.errs().stream().map(Msg::msg).toList()),
+                    cfgValue);
         }
 
         Value pkValue = ValueUtil.extractPrimaryKeyValue(thisValue, tableSchema);
@@ -93,30 +90,37 @@ public class RecordEditService {
         }
 
         CfgValueStat newCfgValueStat = cfgValue.valueStat();
-        if (vTable.schema().isJson()) {
-            try {
-                // 最后确定其他都对的时候再存储
-                Path writePath = VTableJsonStorage.addOrUpdateRecord(thisValue, table, id, sourceStructure.getRootDir());
-                DirectoryStructure.JsonFileInfo jf = sourceStructure.addJsonFile(table, writePath);
+        try {
+            // 最后确定其他都对的时候再存储
+            if (vTable.schema().isJson()) {
+                Path writePath = VTableJsonStorage.addOrUpdateRecord(thisValue, table, id,
+                        context.getSourceStructure().getRootDir());
+                DirectoryStructure.JsonFileInfo jf = context.getSourceStructure().addJsonFile(table, writePath);
                 newCfgValueStat = newCfgValueStat.newAddLastModified(table, id, jf.lastModified());
-            } catch (Exception e) {
-                return new RecordEditResult(jsonStoreErr, table, id, List.of(e.getMessage()), List.of());
-            }
-        } else {
-            CfgData.DTable dTable = context.cfgData().tables().get(table);
-            try {
+            } else {
+                CfgData.DTable dTable = context.cfgData().getDTable(table);
                 VTableStorage.addOrUpdateRecord(context, vTable, dTable, pkValue, thisValue);
-            } catch (Exception e) {
-                return new RecordEditResult(jsonStoreErr, table, id, List.of(e.getMessage()), List.of());
             }
+        } catch (Exception e) {
+            return new ResultWithNewCfgValue(
+                    new RecordEditResult(storeErr, table, id, List.of(e.getMessage())),
+                    cfgValue);
         }
 
-        return applyNewRecords(tableSchema, id, newRecordList, newCfgValueStat, code);
+
+        return applyNewRecords(context, cfgValue,
+                tableSchema, id,
+                newRecordList, newCfgValueStat,
+                code);
     }
 
-    private RecordEditResult applyNewRecords(TableSchema tableSchema, String id,
-                                             List<VStruct> newRecordList, CfgValueStat newCfgValueStat,
-                                             ResultCode code) {
+    private static ResultWithNewCfgValue applyNewRecords(Context context,
+                                                         CfgValue cfgValue,
+                                                         TableSchema tableSchema,
+                                                         String id,
+                                                         List<VStruct> newRecordList,
+                                                         CfgValueStat newCfgValueStat,
+                                                         ResultCode code) {
         CfgValueErrs errs = CfgValueErrs.of();
         VTableCreator creator = new VTableCreator(tableSchema, errs);
         VTable newVTable = creator.create(newRecordList);
@@ -124,16 +128,17 @@ public class RecordEditService {
 
         Map<String, VTable> copy = new LinkedHashMap<>(cfgValue.vTableMap());
         copy.put(newVTable.name(), newVTable);
-        newCfgValue = new CfgValue(cfgValue.schema(), copy, newCfgValueStat);
+        CfgValue newCfgValue = new CfgValue(cfgValue.schema(), copy, newCfgValueStat);
         new RefValidator(newCfgValue, errs).validate();
         errs.checkErrors("validate", true);
-
         List<String> errStrList = errs.errs().stream().map(Object::toString).toList();
-        List<SchemaService.RecordId> recordIds = SchemaService.getRecordIds(newCfgValue.vTableMap().get(tableSchema.name()));
-        return new RecordEditResult(code, tableSchema.name(), id, errStrList, recordIds);
+
+        return new ResultWithNewCfgValue(
+                new RecordEditResult(code, tableSchema.name(), id, errStrList),
+                newCfgValue);
     }
 
-    private RecordEditResult checkErr(String table) {
+    private static RecordEditResult checkErr(CfgValue cfgValue, String table) {
         if (cfgValue.schema().isPartial()) {
             return ofErr(serverNotEditable, table);
         }
@@ -148,23 +153,24 @@ public class RecordEditService {
         return null;
     }
 
-    private RecordEditResult ofErr(ResultCode code, String table) {
-        return new RecordEditResult(code, table == null ? "" : table, "", List.of(), List.of());
-    }
-
-    public CfgValue newCfgValue() {
-        return newCfgValue;
+    private static RecordEditResult ofErr(ResultCode code, String table) {
+        return new RecordEditResult(code, table == null ? "" : table, "", List.of());
     }
 
 
-    public RecordEditResult deleteRecord(String table, String id) {
-        RecordEditResult err = checkErr(table);
+    public static ResultWithNewCfgValue deleteRecord(@NotNull Context context,
+                                                     @NotNull CfgValue cfgValue,
+                                                     String table,
+                                                     String id) {
+        var err = checkErr(cfgValue, table);
         if (err != null) {
-            return err;
+            return new ResultWithNewCfgValue(err, cfgValue);
         }
 
         if (id == null) {
-            return ofErr(idNotSet, table);
+            return new ResultWithNewCfgValue(
+                    ofErr(idNotSet, table),
+                    cfgValue);
         }
 
         VTable vTable = cfgValue.vTableMap().get(table);
@@ -174,40 +180,51 @@ public class RecordEditService {
 
         if (!errs.errs().isEmpty()) {
             List<String> idParseErrs = errs.errs().stream().map(Object::toString).collect(Collectors.toList());
-            return new RecordEditResult(idParseErr, table, id, idParseErrs, List.of());
+            return new ResultWithNewCfgValue(
+                    new RecordEditResult(idParseErr, table, id, idParseErrs),
+                    cfgValue);
         }
 
         VStruct old = vTable.primaryKeyMap().get(pkValue);
         if (old == null) {
-            return new RecordEditResult(idNotFound, table, id, List.of(), List.of());
+            return new ResultWithNewCfgValue(
+                    new RecordEditResult(idNotFound, table, id, List.of()),
+                    cfgValue);
         }
 
         CfgValueStat newCfgValueStat = cfgValue.valueStat();
-        if (vTable.schema().isJson()) {
-            try {
+        try {
+            if (vTable.schema().isJson()) {
                 // 最后确定其他都对的时候再存储
-                Path jsonPath = VTableJsonStorage.deleteRecord(table, id, sourceStructure.getRootDir());
+                Path jsonPath = VTableJsonStorage.deleteRecord(table, id,
+                        context.getSourceStructure().getRootDir());
                 if (jsonPath == null) {
-                    return new RecordEditResult(jsonStoreErr, table, id, List.of("delete fail"), List.of());
+                    return new ResultWithNewCfgValue(
+                            new RecordEditResult(storeErr, table, id, List.of("delete fail")),
+                            cfgValue);
                 }
-                sourceStructure.removeJsonFile(table, jsonPath);
+                context.getSourceStructure().removeJsonFile(table, jsonPath);
                 newCfgValueStat = newCfgValueStat.newRemoveLastModified(table, id);
-            } catch (Exception e) {
-                return new RecordEditResult(jsonStoreErr, table, id, List.of(e.getMessage()), List.of());
-            }
-        } else {
-            try {
+
+            } else {
+
                 VTableStorage.deleteRecord(context, old);
-            } catch (Exception e2) {
-                return new RecordEditResult(jsonStoreErr, table, id, List.of(e2.getMessage()), List.of());
             }
+        } catch (Exception e) {
+            return new ResultWithNewCfgValue(
+                    new RecordEditResult(storeErr, table, id, List.of(e.getMessage())),
+                    cfgValue);
         }
+
 
         Map<Value, VStruct> copy = new LinkedHashMap<>(vTable.primaryKeyMap());
         copy.remove(pkValue);
         List<VStruct> newRecordList = copy.values().stream().toList();
 
-        return applyNewRecords(tableSchema, id, newRecordList, newCfgValueStat, deleteOk);
+        return applyNewRecords(context, cfgValue,
+                tableSchema, id,
+                newRecordList, newCfgValueStat,
+                deleteOk);
     }
 
 }

@@ -44,7 +44,7 @@ public class ComparePoiAndFastExcel {
 
         for (CfgData.DTable tableByFastExcel : dataByFastExcel.tables().values()) {
             String tableName = tableByFastExcel.tableName();
-            CfgData.DTable tableByPoi = dataByPoi.tables().get(tableName);
+            CfgData.DTable tableByPoi = dataByPoi.getDTable(tableName);
             if (tableByPoi == null) {
                 Logger.log("table not found: %s", tableName);
                 continue;

@@ -1,0 +1,73 @@
+@startuml cfggen
+' hide the spot
+hide circle
+
+package "cfggen" {
+  component "ctx" as ctx #lightblue
+  component "data" as data
+  component "schema" as schema
+  component "value" as value
+
+  package "mcpserver" {
+    component "CfgMcpServer" as cfgmcpserver #ffcc99
+    component "WriteRecordTool" as writerecordtool #ffcc99
+    component "ReadRecordTool" as readrecordtool #ffcc99
+    component "SearchTool" as searchtool #ffcc99
+    component "SchemaTool" as schematool #ffcc99
+    cfgmcpserver --> writerecordtool : contains
+    cfgmcpserver --> readrecordtool : contains
+    cfgmcpserver --> searchtool : contains
+    cfgmcpserver --> schematool : contains
+  }
+
+  package "write" {
+    component "VTableJsonStorage" as vtablejsonstorage #ffcc99
+    component "VTableStorage" as vtablestorage #ffcc99
+    component "RecordBlockMapper" as recordblockmapper #ffcc99
+    component "RecordBlock" as recordblock #ffcc99
+    component "TableFile" as tablefile #ffcc99
+    component "ExcelTableFile" as exceltablefile #ffcc99
+    component "CsvTableFile" as csvtablefile #ffcc99
+    component "ColumnModeExcelTableFile" as columnmodeexceltablefile #ffcc99
+    component "ColumnModeCsvTableFile" as columnmodecsvtablefile #ffcc99
+
+    vtablestorage --> recordblockmapper : uses
+    vtablestorage --> recordblock : uses
+    vtablestorage --> tablefile : uses
+    tablefile --> exceltablefile : implements
+    tablefile --> csvtablefile : implements
+    tablefile --> columnmodeexceltablefile : implements
+    tablefile --> columnmodecsvtablefile : implements
+  }
+}
+
+component "AI agent" as LLM #LightPink
+folder "config" {
+  [.cfg] as schemafile
+  [.csv, .xlsx] as datafile
+  [.json] as jsonfile
+}
+
+' Representing dependencies
+
+' Core components managed by ctx
+ctx --> schema : manages
+ctx --> data : manages
+ctx --> value : manages/provides access
+data --> value : produces processed values
+
+' MCP Server interactions
+cfgmcpserver --> ctx : uses context
+cfgmcpserver --> value : uses for data operations
+writerecordtool --> vtablestorage : calls for write operations
+readrecordtool --> value : reads from value layer
+
+' Write module interactions
+recordblockmapper --> value : maps VStruct to RecordBlock
+vtablestorage --> datafile : reads/writes VTable data
+vtablejsonstorage --> jsonfile : reads/writes VTable data
+
+' Communication between external components and configgen
+LLM --> cfgmcpserver : queries through MCP protocol
+
+@enduml

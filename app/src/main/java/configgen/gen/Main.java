@@ -10,13 +10,12 @@ import configgen.genjava.BinaryToText;
 import configgen.genjava.GenJavaData;
 import configgen.genjava.code.GenJavaCode;
 import configgen.genjson.GenJson;
-import configgen.genjson.GenJsonByAI;
-import configgen.genjson.GenTsSchema;
+import configgen.genbyai.GenByAI;
+import configgen.genbyai.GenTsSchema;
 import configgen.genlua.GenLua;
 import configgen.i18n.TermChecker;
 import configgen.i18n.GenI18nByValue;
 import configgen.i18n.GenI18nById;
-import configgen.i18n.GenI18nByIdTest;
 import configgen.mcpserver.CfgMcpServer;
 import configgen.tool.*;
 import configgen.util.CachedFiles;
@@ -145,7 +144,7 @@ public final class Main {
     public static int main0(String[] args) {
         Generators.addProvider("i18n", GenI18nByValue::new);
         Generators.addProvider("i18nbyid", GenI18nById::new);
-        Generators.addProvider("i18nbyidtest", GenI18nByIdTest::new);
+//        Generators.addProvider("i18nbyidtest", GenI18nByIdTest::new);
 
         Generators.addProvider("java", GenJavaCode::new);
         Generators.addProvider("javadata", GenJavaData::new);
@@ -155,12 +154,12 @@ public final class Main {
         Generators.addProvider("lua", GenLua::new);
         Generators.addProvider("ts", GenTs::new);
         Generators.addProvider("go", GenGo::new);
+        Generators.addProvider("tsschema", GenTsSchema::new);
+        Generators.addProvider("json", GenJson::new);
 
         Generators.addProvider("server", EditorServer::new);
         Generators.addProvider("mcpserver", CfgMcpServer::new);
-        Generators.addProvider("tsschema", GenTsSchema::new);
-        Generators.addProvider("json", GenJson::new);
-        Generators.addProvider("jsonbyai", GenJsonByAI::new);
+        Generators.addProvider("byai", GenByAI::new);
 
         String datadir = null;
         String headRowId = System.getProperty("configgen.headrow");

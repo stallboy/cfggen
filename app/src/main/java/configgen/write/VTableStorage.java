@@ -12,6 +12,10 @@ import configgen.value.CfgValue.Value;
 import configgen.write.RecordBlock.RecordBlockTransformed;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * 对csv/excel类别的table做add、update、delete
+ * 不做任何内存数据结构的修改，只读。
+ */
 public class VTableStorage {
 
     public static void addOrUpdateRecord(@NotNull Context context,

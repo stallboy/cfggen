@@ -1,4 +1,4 @@
-package configgen.genjson;
+package configgen.genbyai;
 
 public class PromptDefault {
     public static final String DEFAULT_INIT = "请提供ID和描述，我将根据这些信息生成符合结构的JSON配置";

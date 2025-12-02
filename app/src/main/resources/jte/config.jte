@@ -1,5 +1,5 @@
-@import configgen.genjson.PromptModel
-@import configgen.genjson.PromptModel.Example
+@import configgen.genbyai.PromptModel
+@import configgen.genbyai.PromptModel.Example
 
 @param PromptModel model
 

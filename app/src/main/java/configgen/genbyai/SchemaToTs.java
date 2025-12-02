@@ -1,4 +1,4 @@
-package configgen.genjson;
+package configgen.genbyai;
 
 import configgen.schema.*;
 import configgen.value.CfgValue;

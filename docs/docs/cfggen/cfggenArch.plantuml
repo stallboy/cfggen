@@ -1,43 +1,37 @@
-@startuml
+@startuml cfggen
 ' hide the spot
 hide circle
 
-package "configgen" {
+package "cfggen" {
   component "ctx" as ctx #lightblue
   component "data" as data
-  component "editorserver" as editorserver
   component "i18n" as i18n
   component "schema" as schema
-  component "tool" as tool
   component "value" as value
+  component "write" as write
+  component "genjava" as genjava
+  component "gencs" as gencs
+  component "genjson" as genjson
+  component "genlua" as genlua
+  component "gengo" as gengo
+  component "gents" as gents
+  component "schema.cfg" as schemacfg
+  component "genbyai" as genbyai
+  component "editorserver" as editorserver #lightgreen
+  component "mcpserver" as mcpserver #LightPink
+} 
 
-  package "gen.java" {
-    component "genjava" as genjava
-    component "genjava.code" as genjavacode
-    genjava --> genjavacode : contains code details
-  }
-
-  package "gen.cs" {
-    component "gencs" as gencs
-  }
-
-  package "gen.json" {
-    component "genjson" as genjson
-  }
-
-  package "gen.lua" {
-    component "genlua" as genlua
-  }
-
-  package "schema.cfg" {
-    component "schemacfg" as schemacfg
-  }
-}
-
-' External Components
+' External Components//ffcc99
 component "cfgeditor" as cfgeditor #lightgreen
-component "LLM" as LLM #ffe0b2 
+component "LLM" as LLM #LightPink
+component "AI agent" as agent #LightPink
+component "vscode-cfg-extension" as cfgsupport #LightSalmon
 
+folder "config" {
+  [.cfg] as schemafile
+  [.csv, .xlsx] as datafile
+  [.json] as jsonfile
+}
 
 ' Representing dependencies
 
@@ -54,16 +48,33 @@ genjava --> ctx : interacts through
 gencs --> ctx : interacts through
 genjson --> ctx : interacts through
 genlua --> ctx : interacts through
-tool --> ctx : interacts through
+gengo --> ctx : interacts through
+gents --> ctx : interacts through
 i18n --> ctx : interacts through
+genbyai --> ctx : interacts through
 
 ' Editor Server interactions
 editorserver --> ctx : uses context
-' The editorserver handles requests from the external editor and uses core components
+' MCP Server interactions
+mcpserver --> ctx : read
+mcpserver --> write : json
+write --> datafile : write through value
+write --> jsonfile : write through value
+
+data -> schemafile : write by align
+data --> datafile : read
+schemacfg --> schemafile : read
+value --> jsonfile : read
+
+cfgsupport --> schemafile : highlight、go to definition、find references
 
 ' Communication between external components and configgen
 cfgeditor --> editorserver : communicates with
-genjson --> LLM : uses for AI generation
+agent --> mcpserver : queries through MCP protocol
+genbyai --> LLM : uses
+genbyai --> write : json
+editorserver --> LLM: uses
+editorserver --> write: json
 
 
 @enduml

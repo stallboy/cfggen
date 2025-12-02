@@ -12,8 +12,7 @@ import configgen.write.VTableStorage;
 import java.nio.file.Path;
 import java.util.stream.Collectors;
 
-import static configgen.editorserver.RecordEditService.ResultCode.serverNotEditable;
-
+@SuppressWarnings("unused")
 public class WriteRecordTool {
 
     @McpTool(description = "add or update record")
@@ -43,25 +42,18 @@ public class WriteRecordTool {
 
         CfgValue.Value pkValue = ValueUtil.extractPrimaryKeyValue(thisValue, tableSchema);
         String id = pkValue.packStr();
-
-        if (vTable.schema().isJson()) {
-            try {
-                // 最后确定其他都对的时候再存储
+        try {
+            if (vTable.schema().isJson()) {
                 Path writePath = VTableJsonStorage.addOrUpdateRecord(thisValue, tableName, id,
                         context.getSourceStructure().getRootDir());
                 return "record stored success at %s".formatted(writePath.toString());
-            } catch (Exception e) {
-                return "record store error: %s".formatted(e.getMessage());
-            }
-
-        } else {
-            CfgData.DTable dTable = context.cfgData().tables().get(tableName);
-            try {
+            } else {
+                CfgData.DTable dTable = context.cfgData().getDTable(tableName);
                 VTableStorage.addOrUpdateRecord(context, vTable, dTable, pkValue, thisValue);
                 return "record stored success";
-            } catch (Exception e) {
-                return "record store error: %s".formatted(e.getMessage());
             }
+        } catch (Exception e) {
+            return "record store error: %s".formatted(e.getMessage());
         }
     }
 
@@ -96,26 +88,22 @@ public class WriteRecordTool {
         if (old == null) {
             return "record not found by id=%s".formatted(recordId);
         }
-        if (vTable.schema().isJson()) {
-            try {
-                // 最后确定其他都对的时候再存储
+        try {
+            if (vTable.schema().isJson()) {
                 Path jsonPath = VTableJsonStorage.deleteRecord(tableName, recordId,
                         context.getSourceStructure().getRootDir());
                 if (jsonPath == null) {
                     return "delete record file failed";
                 }
                 return "record deleted success at %s".formatted(jsonPath.toString());
-            } catch (Exception e) {
-                return "record delete error: %s".formatted(e.getMessage());
-            }
+            } else {
 
-        } else {
-            try {
                 VTableStorage.deleteRecord(context, old);
                 return "record deleted success";
-            } catch (Exception e2) {
-                return "record delete error: %s".formatted(e2.getMessage());
+
             }
+        } catch (Exception e) {
+            return "record delete error: %s".formatted(e.getMessage());
         }
     }
 }

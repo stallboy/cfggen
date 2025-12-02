@@ -1,8 +1,8 @@
 package configgen.editorserver;
 
 import configgen.schema.TableSchema;
-import configgen.genjson.GenJsonByAI;
-import configgen.genjson.PromptDefault;
+import configgen.genbyai.GenByAI;
+import configgen.genbyai.PromptDefault;
 import configgen.value.CfgValue;
 import configgen.value.CfgValueErrs;
 import configgen.value.ValueJsonParser;
@@ -40,7 +40,7 @@ public class CheckJsonService {
             return new CheckJsonResult(JsonNotFound, table, "json empty");
         }
 
-        String jsonResult = GenJsonByAI.extractJson(raw);
+        String jsonResult = GenByAI.extractJson(raw);
         if (jsonResult == null) {
             return new CheckJsonResult(JsonNotFound, table, "json not found");
         }

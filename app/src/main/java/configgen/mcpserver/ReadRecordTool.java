@@ -3,8 +3,8 @@ package configgen.mcpserver;
 import com.alibaba.fastjson2.JSONObject;
 import com.github.codeboyzhou.mcp.declarative.annotation.McpTool;
 import com.github.codeboyzhou.mcp.declarative.annotation.McpToolParam;
-import configgen.genjson.TableRelatedInfoFinder;
-import configgen.genjson.TableRelatedInfoFinder.TableRecordList;
+import configgen.genbyai.TableRelatedInfoFinder;
+import configgen.genbyai.TableRelatedInfoFinder.TableRecordList;
 import configgen.value.*;
 
 import java.util.LinkedHashMap;
@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
 public class ReadRecordTool {
 
     @McpTool(description = "list table record")

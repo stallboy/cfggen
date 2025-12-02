@@ -57,8 +57,8 @@ public class EditorServer extends GeneratorWithTag {
         System.setProperty("java.util.logging.SimpleFormatter.format",
                 "[%1$tF %1$tT] %5$s %n");
 
-        InetSocketAddress listenAddr = new InetSocketAddress(port);
-        server = HttpServer.create(listenAddr, 0);
+        InetSocketAddress listenAddress = new InetSocketAddress(port);
+        server = HttpServer.create(listenAddress, 0);
 
         handle("/schemas", this::handleSchemas);
         handle("/notes", this::handleNotes);
@@ -75,7 +75,7 @@ public class EditorServer extends GeneratorWithTag {
 
         server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
         server.start();
-        Logger.log("Server is started at " + listenAddr);
+        Logger.log("Server is started at " + listenAddress);
 
 
         if (waitSecondsAfterWatchEvt > 0) {
@@ -195,10 +195,10 @@ public class EditorServer extends GeneratorWithTag {
 
         RecordEditResult result;
         synchronized (this) {
-            RecordEditService service = new RecordEditService(cfgValue, context);
-            result = service.addOrUpdateRecord(table, jsonStr);
+            var res = RecordEditService.addOrUpdateRecord(context, cfgValue, table, jsonStr);
+            result = res.result();
             if (result.resultCode() == addOk || result.resultCode() == updateOk) {
-                cfgValue = service.newCfgValue();
+                cfgValue = res.newCfgValue();
             }
         }
 
@@ -218,10 +218,10 @@ public class EditorServer extends GeneratorWithTag {
 
         RecordEditResult result;
         synchronized (this) {
-            RecordEditService service = new RecordEditService(cfgValue, context);
-            result = service.deleteRecord(table, id);
+            var res = RecordEditService.deleteRecord(context, cfgValue, table, id);
+            result = res.result();
             if (result.resultCode() == deleteOk) {
-                cfgValue = service.newCfgValue();
+                cfgValue = res.newCfgValue();
             }
         }
 
@@ -260,7 +260,7 @@ public class EditorServer extends GeneratorWithTag {
 
     private static final Filter logging = new Filter() {
         @Override
-        public void doFilter(HttpExchange http, Chain chain) throws IOException {
+        public void doFilter(HttpExchange http, Chain chain) {
             try {
                 chain.doFilter(http);
             } catch (Throwable e) {

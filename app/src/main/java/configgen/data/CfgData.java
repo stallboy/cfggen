@@ -21,6 +21,10 @@ public record CfgData(Map<String, DTable> tables,
         Objects.requireNonNull(stat);
     }
 
+    public DTable getDTable(String table) {
+        return tables.get(table);
+    }
+
     /**
      * @param tableName 程序员的表名称
      * @param fields    head信息
@@ -51,7 +55,7 @@ public record CfgData(Map<String, DTable> tables,
             return new DTable(tableName, new ArrayList<>(), new ArrayList<>(), rawSheets, nullableAddTag);
         }
 
-        public DRawSheet getByRowId(DRowId rowId){
+        public DRawSheet getByRowId(DRowId rowId) {
             for (DRawSheet sheet : rawSheets) {
                 if (sheet.fileName().equals(rowId.fileName)
                         && sheet.sheetName().equals(rowId.sheetName)) {

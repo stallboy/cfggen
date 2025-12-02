@@ -1,12 +1,14 @@
-package configgen.genjson;
+package configgen.genbyai;
 
 import com.alibaba.fastjson2.JSON;
 import configgen.ctx.Context;
+import configgen.data.CfgData;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
 import configgen.schema.*;
 import configgen.value.*;
 import configgen.write.VTableJsonStorage;
+import configgen.write.VTableStorage;
 import io.github.sashirestela.openai.SimpleOpenAI;
 import io.github.sashirestela.openai.domain.chat.ChatMessage;
 import io.github.sashirestela.openai.domain.chat.ChatRequest;
@@ -20,15 +22,13 @@ import java.util.regex.Pattern;
 
 import static io.github.sashirestela.openai.domain.chat.ChatMessage.*;
 
-public class GenJsonByAI extends Generator {
-
-
+public class GenByAI extends Generator {
     private final String cfgFn;
     private final String askFn;
     private final String table;
     private final int retryTimes;
 
-    public GenJsonByAI(Parameter parameter) {
+    public GenByAI(Parameter parameter) {
         super(parameter);
         cfgFn = parameter.get("cfg", "ai.json");
         askFn = parameter.get("ask", "ask.txt");
@@ -58,7 +58,6 @@ public class GenJsonByAI extends Generator {
         CfgValue cfgValue = ctx.makeValue();
         CfgValue.VTable vTable = cfgValue.getTable(table);
         Objects.requireNonNull(vTable, "table=%s not found!".formatted(table));
-        TableSchema tableSchema = vTable.schema();
 
         PromptGen.Prompt prompt = PromptGen.genPrompt(ctx, cfgValue, vTable);
         System.out.println(prompt.prompt());
@@ -82,8 +81,9 @@ public class GenJsonByAI extends Generator {
                     UserMessage.of(prompt.prompt()),
                     AssistantMessage.of(prompt.init()),
                     UserMessage.of(ask));
-            askWithRetry(messages, retryTimes, stat, tableSchema, openAI,
-                    ctx.getContextCfg().dataDir(), aiCfg.model());
+            askWithRetry(messages, retryTimes, stat,
+                    ctx, vTable,
+                    openAI, aiCfg.model());
         }
         System.out.println(stat);
     }
@@ -104,9 +104,10 @@ public class GenJsonByAI extends Generator {
     }
 
     private void askWithRetry(List<ChatMessage> messages, int retryTimes, AskStat stat,
-                              TableSchema tableSchema, SimpleOpenAI openAI,
-                              Path dataDir, String model) {
+                              Context context, CfgValue.VTable vTable,
+                              SimpleOpenAI openAI, String model) {
         stat.ask++;
+        TableSchema tableSchema = vTable.schema();
         for (int i = 0; i < retryTimes; i++) {
             String jsonResult = ask(messages, openAI, model);
             if (i > 0) {
@@ -130,7 +131,14 @@ public class GenJsonByAI extends Generator {
                     CfgValue.Value pkValue = ValueUtil.extractPrimaryKeyValue(record, tableSchema);
                     String id = pkValue.packStr();
                     try {
-                        VTableJsonStorage.addOrUpdateRecord(record, tableSchema.name(), id, dataDir);
+                        if (tableSchema.isJson()) {
+                            VTableJsonStorage.addOrUpdateRecord(record, tableSchema.name(), id,
+                                    context.getSourceStructure().getRootDir());
+                        } else {
+                            CfgData.DTable dTable = context.cfgData().getDTable(table);
+                            VTableStorage.addOrUpdateRecord(context, vTable, dTable, pkValue, record);
+                        }
+
                     } catch (IOException e) {
                         System.out.printf("save %s err: %s%n", id, e.getMessage());
                     }
@@ -170,9 +178,9 @@ public class GenJsonByAI extends Generator {
         return lastJson;
     }
 
-    private record AICfg(String baseUrl,
-                         String apiKey,
-                         String model) {
+    public record AICfg(String baseUrl,
+                        String apiKey,
+                        String model) {
         public static AICfg readFromFile(String cfgFn) {
             Path path = Path.of(cfgFn);
             if (!Files.exists(path)) {

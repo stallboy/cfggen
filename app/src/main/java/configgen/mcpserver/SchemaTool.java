@@ -2,13 +2,14 @@ package configgen.mcpserver;
 
 import com.github.codeboyzhou.mcp.declarative.annotation.McpTool;
 import com.github.codeboyzhou.mcp.declarative.annotation.McpToolParam;
-import configgen.genjson.TableRelatedInfoFinder;
-import configgen.genjson.TableRelatedInfoFinder.RelatedInfo;
+import configgen.genbyai.TableRelatedInfoFinder;
+import configgen.genbyai.TableRelatedInfoFinder.RelatedInfo;
 import configgen.mcpserver.CfgMcpServer.CfgValueWithContext;
 import configgen.value.CfgValue;
 
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class SchemaTool {
 
     @McpTool(description = "read table schema")

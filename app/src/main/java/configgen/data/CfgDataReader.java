@@ -116,7 +116,7 @@ public record CfgDataReader(HeadRow headRow,
     }
 
     private void addSheet(CfgData cfgData, String tableName, DRawSheet sheetData, String nullableAddTag) {
-        CfgData.DTable dTable = cfgData.tables().get(tableName);
+        CfgData.DTable dTable = cfgData.getDTable(tableName);
         if (dTable != null) {
             dTable.rawSheets().add(sheetData);
         } else {

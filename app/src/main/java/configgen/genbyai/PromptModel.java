@@ -1,4 +1,4 @@
-package configgen.genjson;
+package configgen.genbyai;
 
 import org.jetbrains.annotations.NotNull;
 

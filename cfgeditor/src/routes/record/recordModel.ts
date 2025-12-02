@@ -1,5 +1,3 @@
-import {RecordId} from "../table/schemaModel.ts";
-
 export type JSONValue =
     | string
     | number
@@ -106,12 +104,11 @@ export type EditResultCode =
     | 'idParseErr'
     | 'idNotFound'
     | 'jsonParseErr'
-    | 'jsonStoreErr';
+    | 'storeErr';
 
 export interface RecordEditResult {
     resultCode: EditResultCode;
     table: string;
     id: string;
     valueErrs: string[];
-    recordIds: RecordId[];  // 并没有用上，而是返回后直接invalid所有的cache
 }

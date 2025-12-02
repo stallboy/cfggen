@@ -1,8 +1,8 @@
 package configgen.editorserver;
 
 import configgen.ctx.Context;
-import configgen.genjson.PromptGen;
-import configgen.genjson.PromptGen.Prompt;
+import configgen.genbyai.PromptGen;
+import configgen.genbyai.PromptGen.Prompt;
 import configgen.value.*;
 
 import static configgen.editorserver.PromptService.PromptResultCode.*;

@@ -13,7 +13,7 @@ import {NoteEditResult, Notes, notesToMap} from "./record/noteModel.ts";
 import {CheckJsonResult, PromptResult} from "./add/chatModel.ts";
 
 
-export async function fetchSchema(server: string, signal: AbortSignal) {
+export async function fetchSchema(server: string, signal: AbortSignal): Promise<Schema> {
     const response = await axios.get<RawSchema>(`http://${server}/schemas`, {signal});
     // console.log('fetched schema');
     clearLayoutCache();
@@ -22,13 +22,13 @@ export async function fetchSchema(server: string, signal: AbortSignal) {
 
 export async function fetchRecordRefIds(server: string, tableId: string, id: string,
                                         refInDepth: number, refOutDepth: number, maxIds: number,
-                                        signal: AbortSignal) {
+                                        signal: AbortSignal): Promise<RecordRefIdsResult> {
     const url = `http://${server}/recordRefIds?table=${tableId}&id=${id}&in=${refInDepth}&out=${refOutDepth}&maxIds=${maxIds}`;
     const response = await axios.get<RecordRefIdsResult>(url, {signal});
     return response.data;
 }
 
-export async function fetchRecord(server: string, tableId: string, id: string, signal: AbortSignal) {
+export async function fetchRecord(server: string, tableId: string, id: string, signal: AbortSignal): Promise<RecordResult> {
     const url = `http://${server}/record?table=${tableId}&id=${id}&depth=1`;
     const response = await axios.get<RecordResult>(url, {signal});
     return response.data;
@@ -36,7 +36,7 @@ export async function fetchRecord(server: string, tableId: string, id: string, s
 
 export async function fetchRecordRefs(server: string, tableId: string, id: string,
                                       refOutDepth: number, maxNode: number, refIn: boolean,
-                                      signal: AbortSignal) {
+                                      signal: AbortSignal): Promise<RecordRefsResult> {
     const url = `http://${server}/record?table=${tableId}&id=${id}&depth=${refOutDepth}&maxObjs=${maxNode}&refs${refIn ? '&in' : ''}`;
     // console.log('fetch refs', tableId, id);
     const response = await axios.get<RecordRefsResult>(url, {signal});
@@ -44,7 +44,7 @@ export async function fetchRecordRefs(server: string, tableId: string, id: strin
     return response.data;
 }
 
-export async function addOrUpdateRecord(server: string, tableId: string, editingObject: JSONObject) {
+export async function addOrUpdateRecord(server: string, tableId: string, editingObject: JSONObject): Promise<RecordEditResult> {
     const url = `http://${server}/recordAddOrUpdate?table=${tableId}`;
     // console.log('add or update', tableId, editingObject);
     const response = await axios.post<RecordEditResult>(url, editingObject, {
@@ -62,7 +62,7 @@ export async function addOrUpdateRecord(server: string, tableId: string, editing
 }
 
 
-export async function deleteRecord(server: string, tableId: string, id: string) {
+export async function deleteRecord(server: string, tableId: string, id: string): Promise<RecordEditResult> {
     const url = `http://${server}/recordDelete?table=${tableId}&id=${id}`;
     const response = await axios.post<RecordEditResult>(url, null, {
         method: 'POST',
@@ -77,14 +77,14 @@ export async function deleteRecord(server: string, tableId: string, id: string) 
     return response.data;
 }
 
-export async function fetchNotes(server: string, signal: AbortSignal) {
+export async function fetchNotes(server: string, signal: AbortSignal): Promise<Map<string, string>> {
     const response = await axios.get<Notes>(`http://${server}/notes`, {signal});
     // console.log('fetched notes');
     clearLayoutCache();
     return notesToMap(response.data);
 }
 
-export async function updateNote(server: string, key: string, note: string) {
+export async function updateNote(server: string, key: string, note: string): Promise<NoteEditResult> {
     const url = `http://${server}/noteUpdate?key=${key}`;
     // console.log('add or update note', key, note);
     const response = await axios.post<NoteEditResult>(url, note, {

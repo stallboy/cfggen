@@ -43,7 +43,7 @@ public record CfgValueParser(CfgSchema subSchema,
             TableSchema table = context.cfgSchema().findTable(name);
             Objects.requireNonNull(table);
 
-            CfgData.DTable dTable = context.cfgData().tables().get(name);
+            CfgData.DTable dTable = context.cfgData().getDTable(name);
 
             if (dTable != null) {
                 tasks.add(() -> {

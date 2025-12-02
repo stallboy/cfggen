@@ -199,3 +199,7 @@ claude mcp list
 
 MCP服务器遵循标准的Model Context Protocol协议，可以与任何兼容的MCP客户端集成。
 
+### inside
+
+
+![mcp server arch](mcpserverArch.png)
