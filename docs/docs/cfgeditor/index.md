@@ -4,68 +4,33 @@ title: 编辑器
 nav_order: 3
 ---
 
-# 🎮 编辑器
-{: .no_toc }
-
-## Table of contents
-{: .no_toc .text-delta }
-
-- TOC
-{:toc}
----
-
-## ❓ why？
-一般游戏开发组会为任务、行为树、技能等复杂的结构，做专门的编辑器工具。
-这个工具本意是要做基于节点的通用编辑工具，只要定义好结构，以上的专用编辑器都不用写了。
-
-### 🔍 浏览数据
-
-以下节点都可以右键点击跳转。
-这样方便查看各个表，各个记录的链接关系，通过这个链接的节点方便的导航查看整个数据，
-再加上一个全局数据搜索功能，这比打开excel来浏览应该是要方便很多。
-
-### ✏️ 编辑数据
-
-编辑数据会保存成json文件
-
-1. .cfg中设置表用json格式储存
-```
-table effect[id] (json) {
-	id:int;
-	text:str;
-	logic:EffectLogic (pack);
-}
-```
-如上用json来声明。
-
-2. 在编辑器中选择id时，附带说明
-```
-table skillclass[id] (enum='name', title='text') {
-	id:int;
-	name:str;
-	text:text;
-}
-struct FromSkillClass {
-    skillClass:int ->skillclass;
-}
-```
-如何当FromSkillClass 结构里int字段外键到skillclass表，则在编辑器选择下拉菜单是包含id（这里正好是个枚举，所以还包含枚举字符串），
-这里再加上title='text'，则下拉菜单选项上会包含text字段的中文描述。
+# 🎮 配置编辑器
 
 
+## 📋 概述
 
-## ✏️ 编辑记录
-![edit](edit.png)
+配置编辑器是一个基于节点的通用编辑工具，旨在简化游戏开发中复杂数据结构的编辑工作。通过定义数据结构，您可以快速创建用于任务、行为树、技能等系统的专用编辑器，无需为每个系统单独开发编辑工具。
 
-## 📄 查看记录
-![view](view.png)
 
-## 🔍 查看记录关系
-![view ref](viewRef.png)
+## 📸 界面展示
 
-## 📊 查看表结构
-![table](table.png)
+### ✏️ 编辑记录
+![编辑记录界面](edit.png)
+*图：编辑单个记录的界面，支持字段编辑和保存*
 
-## 🔗 查看表关系
-![table ref](tableRef.png)
+### 📄 查看记录详情
+![查看记录界面](view.png)
+*图：查看记录详细信息的界面*
+
+### 🔍 记录关系视图
+![记录关系图](viewRef.png)
+*图：可视化展示记录之间的关联关系*
+
+### 📊 表结构管理
+![表结构界面](table.png)
+*图：管理数据库表结构的界面*
+
+### 🔗 表关系视图
+![表关系图](tableRef.png)
+*图：展示表与表之间关系的可视化界面*
 
