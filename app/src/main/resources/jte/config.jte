@@ -32,8 +32,8 @@ ${model.structInfo()}
 - json中不要包含```//```开头的注释
 
 ## Workflow
-1. 用户指定id和描述
-2. 针对用户给定的id和描述输出json格式的配置
+
+针对用户描述输出json格式的配置(若描述中不含ID，则自动选择)
 
 @if(!model.examples().isEmpty())
     ## Examples

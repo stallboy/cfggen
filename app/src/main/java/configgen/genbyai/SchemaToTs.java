@@ -41,7 +41,7 @@ public class SchemaToTs {
                 for (ForeignKeySchema fk : structural.foreignKeys()) {
                     // 简单一点: 1.只处理单字段，2.只考虑枚举table或在extraRefTables中的table
                     if (fk.key().fields().size() == 1
-                        && (fk.refTableSchema().entry() instanceof EntryType.EEnum
+                            && (fk.refTableSchema().entry() instanceof EntryType.EEnum
                             || extraRefTables.contains(fk.refTableNormalized()))) {
                         TableSchema refTable = fk.refTableSchema();
                         KeySchema refKey = null;
@@ -70,6 +70,8 @@ public class SchemaToTs {
             }
         }
 
+        int nsCount = namespaces.size();
+        int nsIdx = 0;
         for (Map.Entry<String, Map<String, Struct>> ns : namespaces.entrySet()) {
             String nsName = ns.getKey();
             println("namespace %s {", nsName);
@@ -82,12 +84,14 @@ public class SchemaToTs {
                 } else {
                     generateUnionTypeByValues(structName, struct.nameable, struct.tableKey);
                 }
-
-                println("");
             }
 
-            println("}");
-            println("");
+            nsIdx++;
+            if (nsIdx < nsCount) {
+                println("}");
+            } else {
+                sb.append("}");
+            }
         }
 
         return sb.toString();
@@ -112,7 +116,7 @@ public class SchemaToTs {
             sb.append(String.format(fmt, args));
         }
 
-        sb.append("\r\n");
+        sb.append(System.lineSeparator());
     }
 
     private void generateTypeDeclaration(String structName, Nameable struct) {

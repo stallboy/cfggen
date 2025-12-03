@@ -49,12 +49,13 @@ public class PromptGen {
         List<String> extraRefTables = new ArrayList<>();
         List<OneExample> examples = new ArrayList<>();
         Path tabFile = modDir.resolve(tableSchema.lastName() + ".md");
+        extraRefTables.add(table); // 把自己加上，方便自动生成下一个id（rule里可以给id生成规则）
         if (Files.exists(tabFile)) {
             MarkdownDocument doc = MarkdownReader.read(tabFile);
             String refTables = doc.frontmatter().get("refTables");
             if (refTables != null && !refTables.isBlank()) {
                 String trim = refTables.trim();
-                extraRefTables.addAll(Arrays.asList(trim.split(";")));
+                extraRefTables.addAll(Arrays.asList(trim.split("[;,]")));
             }
             String exampleId = doc.frontmatter().get("exampleId");
             String exampleDescription = doc.frontmatter().get("exampleDescription");
