@@ -121,13 +121,15 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
         </Form>
 
         <Divider/>
-        <FixPages schema={schema} curTable={curTable}/>
-
 
         <Radio.Group optionType="button"
                      value={curPage}
                      options={options}
                      onChange={(e) => onChangeCurPage(e.target.value)}/>
+        <Divider/>
+
+        <FixPages schema={schema} curTable={curTable}/>
+
         <Divider/>
 
         <Form layout={'vertical'} initialValues={{imageSizeScale}}>
