@@ -17,8 +17,8 @@ import java.util.Optional;
 import static configgen.i18n.TextByIdFinder.*;
 import static configgen.i18n.TextByIdFinder.getCellAsString;
 
-public record Todo(List<Line> todo,
-                   List<Line> done) {
+public record TodoFile(List<Line> todo,
+                       List<Line> done) {
 
     /**
      * 用于存储todo文件中的一行数据
@@ -40,7 +40,7 @@ public record Todo(List<Line> todo,
     private static final String TODO_SHEET_NAME = "todo";
     private static final String DONE_SHEET_NAME = "参考用";
 
-    public static Todo ofLangText(LangText lang) {
+    public static TodoFile ofLangText(LangText lang) {
         java.util.List<Line> todoLines = new ArrayList<>(32);
         java.util.List<Line> doneLines = new ArrayList<>(32);
         todoLines.add(HEADER);
@@ -69,11 +69,11 @@ public record Todo(List<Line> todo,
                 }
             }
         }
-        return new Todo(todoLines, doneLines);
+        return new TodoFile(todoLines, doneLines);
     }
 
 
-    public static Todo read(Path todoFile) {
+    public static TodoFile read(Path todoFile) {
         try (ReadableWorkbook wb = new ReadableWorkbook(todoFile.toFile(),
                 new ReadingOptions(true, false))) {
 
@@ -93,7 +93,7 @@ public record Todo(List<Line> todo,
                 done = List.of();
             }
 
-            return new Todo(todo, done);
+            return new TodoFile(todo, done);
         } catch (IOException e) {
             throw new RuntimeException("Failed to read " + todoFile, e);
         }
@@ -134,7 +134,7 @@ public record Todo(List<Line> todo,
         }
     }
 
-    private void saveSheet(Worksheet ws, List<Line> lines) {
+    private static void saveSheet(Worksheet ws, List<Line> lines) {
         int row = 0;
         for (Line line : lines) {
             ws.inlineString(row, 0, line.table());

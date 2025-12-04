@@ -3,19 +3,18 @@ package configgen.i18n;
 import configgen.gen.Parameter;
 import configgen.gen.Tool;
 import configgen.genbyai.AICfg;
+import configgen.i18n.TermFile.TermEntry;
+import configgen.i18n.TermUpdateModel.Translated;
+import configgen.i18n.TextByIdFinder.OneText;
 import configgen.util.JteEngine;
 import configgen.util.Logger;
 import io.github.sashirestela.openai.SimpleOpenAI;
 import io.github.sashirestela.openai.domain.chat.ChatMessage;
 import io.github.sashirestela.openai.domain.chat.ChatRequest;
-import org.dhatim.fastexcel.reader.ReadableWorkbook;
-import org.dhatim.fastexcel.reader.ReadingOptions;
-import org.dhatim.fastexcel.reader.Row;
-import org.dhatim.fastexcel.reader.Sheet;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static io.github.sashirestela.openai.domain.chat.ChatMessage.*;
 
@@ -45,16 +44,13 @@ public class TermUpdater extends Tool {
     public void call() {
         aiCfg = AICfg.readFromFile(aiCfgFile);
         // 1. 读取现有术语表
-        List<TermFile.TermEntry> existingTerms = TermFile.readTermFile(termFile);
+        TermFile termFileObj = TermFile.readTermFile(termFile);
 
         // 2. 读取 TODO 文件的 "参考用" sheet，按table分组并去重
-        Map<String, List<TodoEntry>> todoEntriesByTable = readTodoFile(todoFile);
+        var todoEntriesByTable = readTodoFile(todoFile);
 
-        // 3. 准备 AI 请求数据
-        TermUpdateModel updateModel = prepareUpdateModel(existingTerms, todoEntriesByTable);
-
-        // 4. 如果数据量太大，分批处理
-        List<TermUpdateModel> batches = splitIntoBatches(updateModel, splitChars);
+        // 3. 准备 AI 请求数据并分批处理
+        List<ModelWithSources> batches = prepareBatches(termFileObj, todoEntriesByTable, splitChars);
         Logger.log("split to %d parts", batches.size());
 
         // 5. 初始化 OpenAI 客户端
@@ -64,83 +60,33 @@ public class TermUpdater extends Tool {
                 .build();
 
         // 6. 对每个批次调用 AI 并更新术语表
-        for (TermUpdateModel batch : batches) {
-            List<TermFile.TermEntry> newTerms = callAIForBatch(batch, openAI);
+        List<TermEntry> existingTerms = termFileObj.terms();
+        Map<String, List<OneText>> sources = termFileObj.sources();
+
+        for (ModelWithSources batch : batches) {
+            List<TermEntry> newTerms = callAIForBatch(batch.model(), openAI);
             existingTerms = TermFile.mergeTerms(existingTerms, newTerms);
-        }
-
-        // 7. 写回术语表文件
-        TermFile.writeTermFile(termFile, existingTerms);
-    }
-
-
-    record TodoEntry(String original,
-                     String translated) {
-    }
-
-
-    private Map<String, List<TodoEntry>> readTodoFile(Path todoFile) {
-        try (ReadableWorkbook wb = new ReadableWorkbook(todoFile.toFile(), new ReadingOptions(true, false))) {
-            Optional<Sheet> doneSheet = wb.findSheet("参考用");
-            if (doneSheet.isEmpty()) {
-                throw new RuntimeException("TODO 文件中未找到 '参考用' sheet: " + todoFile);
-            }
-            List<Row> rows = doneSheet.get().read();
-            // 使用Map按table分组，每个table内用Set去重（基于original+translated）
-            Map<String, Map<String, TodoEntry>> tableMap = new HashMap<>();
-            // 跳过表头行（第一行）
-            for (int i = 1; i < rows.size(); i++) {
-                Row row = rows.get(i);
-                String table = row.getCellAsString(0).orElse("");
-                // id 和 fieldChain 不需要
-                String original = row.getCellAsString(3).orElse("");
-                String translated = row.getCellAsString(4).orElse("");
-                // 规范化原始文本
-                String normalized = Utils.normalize(original);
-                if (!original.isEmpty() && !translated.isEmpty()) {
-                    TodoEntry entry = new TodoEntry(normalized, translated);
-                    String key = normalized + "|" + translated;
-                    tableMap.computeIfAbsent(table, k -> new HashMap<>()).put(key, entry);
-                }
-            }
-            // 转换为Map<String, List<TodoEntry>>
-            Map<String, List<TodoEntry>> result = new HashMap<>();
-            for (Map.Entry<String, Map<String, TodoEntry>> entry : tableMap.entrySet()) {
-                result.put(entry.getKey(), new ArrayList<>(entry.getValue().values()));
-            }
-            return result;
-        } catch (IOException e) {
-            throw new RuntimeException("读取 TODO 文件失败: " + todoFile, e);
+            // 每个批次合并后都保存到术语表文件
+            TermFile updatedTermFile = new TermFile(existingTerms,  batch.newSources());
+            TermFile.writeTermFile(termFile, updatedTermFile);
         }
     }
 
-
-    private static TermUpdateModel prepareUpdateModel(List<TermFile.TermEntry> existingTerms, Map<String, List<TodoEntry>> todoEntriesByTable) {
-        // 将现有术语转换为 CSV 格式：original,translated,category,note
-        StringBuilder termsCsv = new StringBuilder();
-        for (TermFile.TermEntry term : existingTerms) {
-            // 转义 CSV 特殊字符（简化处理，使用引号包裹）
-            String escapedOriginal = escapeCsv(term.original());
-            String escapedTranslated = escapeCsv(term.translated());
-            termsCsv.append(escapedOriginal).append(",")
-                    .append(escapedTranslated).append("\n");
-        }
-
-        // 为每个 table 生成 Translated 记录
-        List<TermUpdateModel.Translated> translatedList = new ArrayList<>();
-        for (Map.Entry<String, List<TodoEntry>> entry : todoEntriesByTable.entrySet()) {
-            String table = entry.getKey();
-            StringBuilder tableCsv = new StringBuilder();
-            for (TodoEntry todo : entry.getValue()) {
-                String escapedOriginal = escapeCsv(todo.original());
-                String escapedTranslated = escapeCsv(todo.translated());
-                tableCsv.append(escapedOriginal).append(",").append(escapedTranslated).append("\n");
+    private Map<String, Map<String, OneText>> readTodoFile(Path todoFile) {
+        TodoFile todo = TodoFile.read(todoFile);
+        Map<String, Map<String, OneText>> tableMap = new HashMap<>();
+        for (TodoFile.Line line : todo.done()) {
+            String original = line.original();
+            String translated = line.translated();
+            if (!original.isEmpty() && !translated.isEmpty()) {
+                String key = original + "|" + translated;
+                tableMap.computeIfAbsent(line.table(), k -> new HashMap<>())
+                        .put(key, new OneText(original, translated));
             }
-            translatedList.add(new TermUpdateModel.Translated(table, tableCsv.toString()));
         }
-
-        return new TermUpdateModel(termsCsv.toString(), translatedList);
+        return tableMap;
     }
+
 
     static String escapeCsv(String value) {
         if (value == null || value.isEmpty()) {
@@ -153,46 +99,132 @@ public class TermUpdater extends Tool {
         return value;
     }
 
-    private static List<TermUpdateModel> splitIntoBatches(TermUpdateModel updateModel, int maxChars) {
-        // 计算总字符数
-        int totalChars = updateModel.termsInCsv().length();
-        for (TermUpdateModel.Translated trans : updateModel.tableTranslatedList()) {
-            totalChars += trans.translatedInCsv().length();
+    private record ModelWithSources(TermUpdateModel model,
+                                    Map<String, List<OneText>> newSources) {
+
+    }
+
+    private static List<ModelWithSources> prepareBatches(TermFile termFile,
+                                                         Map<String, Map<String, OneText>> todoEntriesByTable,
+                                                         int maxChars) {
+        List<TermEntry> existingTerms = termFile.terms();
+        Map<String, List<OneText>> sources = termFile.sources();
+
+        // 构建 existingTerms 的映射：original -> CSV 行，并计算完整术语CSV的总长度
+        Map<String, String> termCsvLines = new HashMap<>();
+        for (TermEntry term : existingTerms) {
+            String escapedOriginal = escapeCsv(term.original());
+            String escapedTranslated = escapeCsv(term.translated());
+            String csvLine = escapedOriginal + "," + escapedTranslated;
+            termCsvLines.put(term.original(), csvLine);
         }
 
-        // 如果总字符数不超过限制，返回单个批次
-        if (totalChars <= maxChars) {
-            return List.of(updateModel);
-        }
+        // 处理每个 table，过滤 sources 并准备数据
+        List<TableProcessedData> tableDataList = new ArrayList<>();
 
-        // 否则按 table 拆分
-        List<TermUpdateModel> batches = new ArrayList<>();
-        List<TermUpdateModel.Translated> currentBatchTrans = new ArrayList<>();
-        int currentChars = updateModel.termsInCsv().length();
+        for (var entry : todoEntriesByTable.entrySet()) {
+            String table = entry.getKey();
+            var todoEntries = entry.getValue();
 
-        for (TermUpdateModel.Translated trans : updateModel.tableTranslatedList()) {
-            int transChars = trans.translatedInCsv().length();
-            // 如果当前批次不为空且添加此表会超出限制，则创建新批次
-            if (!currentBatchTrans.isEmpty() && currentChars + transChars > maxChars) {
-                batches.add(new TermUpdateModel(updateModel.termsInCsv(), new ArrayList<>(currentBatchTrans)));
-                currentBatchTrans.clear();
-                currentChars = updateModel.termsInCsv().length();
+            // 过滤掉已经在 sources 中存在的项
+            List<OneText> tableSources = sources.get(table);
+            Set<String> existingSourceKeys = new HashSet<>();
+            if (tableSources != null) {
+                for (OneText source : tableSources) {
+                    existingSourceKeys.add(source.original() + "|" + source.translated());
+                }
             }
-            currentBatchTrans.add(trans);
-            currentChars += transChars;
+
+            StringBuilder tableCsv = new StringBuilder();
+            List<OneText> newTextsInTable = new ArrayList<>();
+
+            for (var e : todoEntries.entrySet()) {
+                String key = e.getKey();
+                OneText todo = e.getValue();
+                if (existingSourceKeys.contains(key)) {
+                    continue;
+                }
+                String escapedOriginal = escapeCsv(todo.original());
+                String escapedTranslated = escapeCsv(todo.translated());
+                tableCsv.append(escapedOriginal).append(",").append(escapedTranslated).append("\n");
+                newTextsInTable.add(todo);
+            }
+
+            if (!tableCsv.isEmpty()) {
+                tableDataList.add(new TableProcessedData(table, tableCsv.toString(), newTextsInTable));
+            }
+        }
+
+        // 如果没有任何数据，返回空列表
+        if (tableDataList.isEmpty()) {
+            // 根据原有逻辑，如果没有 translated 数据，就不生成批次
+            return List.of();
+        }
+
+        // 分批处理
+        List<ModelWithSources> batches = new ArrayList<>();
+        List<Translated> currentBatchTrans = new ArrayList<>();
+        Set<String> currentBatchOriginals = new HashSet<>();
+        Map<String, List<OneText>> currentBatchNewSources = new HashMap<>(sources);
+        int currentChars = 0;
+
+        for (TableProcessedData tableData : tableDataList) {
+            int tableChars = tableData.csv().length();
+
+            // 如果当前批次不为空且添加此表会超出限制，则创建新批次
+            if (!currentBatchTrans.isEmpty() && currentChars + tableChars > maxChars) {
+                // 构建当前批次的过滤后术语CSV
+                String filteredTermsCsv = buildFilteredTermsCsv(termCsvLines, currentBatchOriginals);
+                TermUpdateModel model = new TermUpdateModel(filteredTermsCsv, new ArrayList<>(currentBatchTrans));
+                batches.add(new ModelWithSources(model, currentBatchNewSources));
+
+                // 重置当前批次
+                currentBatchTrans.clear();
+                currentBatchOriginals.clear();
+                currentBatchNewSources = new HashMap<>(sources);
+                currentChars = 0;
+            }
+
+            // 添加当前 table 到批次
+            currentBatchTrans.add(new Translated(tableData.table(), tableData.csv()));
+            for (OneText newText : tableData.newTexts()) {
+                currentBatchOriginals.add(newText.original());
+            }
+
+            List<OneText> oneTexts = currentBatchNewSources.get(tableData.table);
+            if (oneTexts == null) {
+                currentBatchNewSources.put(tableData.table, tableData.newTexts);
+            } else {
+                oneTexts.addAll(tableData.newTexts);
+            }
+
+            currentChars += tableChars;
         }
 
         // 添加最后一个批次
-        if (!currentBatchTrans.isEmpty()) {
-            batches.add(new TermUpdateModel(updateModel.termsInCsv(), currentBatchTrans));
-        }
+        String filteredTermsCsv = buildFilteredTermsCsv(termCsvLines, currentBatchOriginals);
+        TermUpdateModel model = new TermUpdateModel(filteredTermsCsv, currentBatchTrans);
+        batches.add(new ModelWithSources(model, currentBatchNewSources));
 
         return batches;
     }
 
+    private static String buildFilteredTermsCsv(Map<String, String> termCsvLines, Set<String> originals) {
+        if (originals.isEmpty()) {
+            return "";
+        }
+        return termCsvLines.entrySet().stream().parallel()
+                .filter(s -> originals.stream().parallel().anyMatch(o -> o.contains(s.getKey())))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.joining("\n"));
+    }
 
-    private List<TermFile.TermEntry> callAIForBatch(TermUpdateModel batch,
-                                                    SimpleOpenAI openAI) {
+    private record TableProcessedData(String table, String csv, List<OneText> newTexts) {
+    }
+
+
+    private List<TermEntry> callAIForBatch(TermUpdateModel batch,
+                                           SimpleOpenAI openAI) {
         // 使用 JTE 模板引擎渲染提示词
         String prompt = JteEngine.renderTryFileFirst(promptJteFile, "termupdate.jte", batch);
 
@@ -218,8 +250,8 @@ public class TermUpdater extends Tool {
         return parseMarkdownTable(result);
     }
 
-    static List<TermFile.TermEntry> parseMarkdownTable(String markdown) {
-        List<TermFile.TermEntry> entries = new ArrayList<>();
+    static List<TermEntry> parseMarkdownTable(String markdown) {
+        List<TermEntry> entries = new ArrayList<>();
         // 简化解析：寻找以 | 开头的行，跳过表头分隔行
         boolean seenHeader = false;
         String[] lines = markdown.split("\n");
@@ -241,13 +273,12 @@ public class TermUpdater extends Tool {
                         String original = cells[0];
                         String translated = cells[1];
                         if (!original.isBlank() && !translated.isBlank()) {
-
                             String category = cells.length > 2 ? cells[2] : "";
                             String confidence = cells.length > 3 ? cells[3] : "";
                             String note = cells.length > 4 ? cells[4] : "";
                             // 规范化原始文本
                             String normalized = Utils.normalize(original);
-                            entries.add(new TermFile.TermEntry(normalized, translated, category, confidence, note));
+                            entries.add(new TermEntry(normalized, translated, category, confidence, note));
                         }
                     }
                 }

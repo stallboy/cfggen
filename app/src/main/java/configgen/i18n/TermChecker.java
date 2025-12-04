@@ -37,7 +37,7 @@ public class TermChecker extends Tool {
     @Override
     public void call() {
         List<OneText> terms = TermFile.loadTerm(termFilepath);
-        if (terms == null || terms.isEmpty()) {
+        if (terms.isEmpty()) {
             return;
         }
         LangTextFinder langFinder = LangTextFinder.read(i8nFilepath);

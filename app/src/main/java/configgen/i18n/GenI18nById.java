@@ -121,7 +121,7 @@ public final class GenI18nById extends Generator {
             }
         }
 
-        String todoFileName = Todo.getTodoFileName(lang);
+        String todoFileName = TodoFile.getTodoFileName(lang);
         Path todoFilePath = langsDir.resolve(todoFileName);
         Path todoInBackup = backupDir.resolve(todoFileName);
         // 是覆盖，此时需要先备份原有的，然后temp->outputDir（通过3实现内容相同，就用原有的）
@@ -157,13 +157,13 @@ public final class GenI18nById extends Generator {
         }
 
         // 额外生成一份_todo_[lang].xlsx汇总文件，跟[lang]文件夹在同一级目录，方便多个语言_todo文件一起选择打包发送
-        Todo todo = Todo.ofLangText(extracted);
+        TodoFile todoFile = TodoFile.ofLangText(extracted);
         boolean isKeepSame = false;
         boolean exist = false;
         if (needReplace) {
             if (Files.exists(todoInBackup)) {
-                Todo oldInBackup = Todo.read(todoInBackup);
-                if (oldInBackup.equals(todo)) {
+                TodoFile oldInBackup = TodoFile.read(todoInBackup);
+                if (oldInBackup.equals(todoFile)) {
                     Files.copy(todoInBackup, todoFilePath, StandardCopyOption.REPLACE_EXISTING,
                             StandardCopyOption.COPY_ATTRIBUTES);
                     isKeepSame = true;
@@ -172,7 +172,7 @@ public final class GenI18nById extends Generator {
             }
         }
         if (!isKeepSame) {
-            todo.save(todoFilePath);
+            todoFile.save(todoFilePath);
             Logger.log("%s %s", exist ? "modify" : "create", todoFilePath.toAbsolutePath().normalize());
         }
 
