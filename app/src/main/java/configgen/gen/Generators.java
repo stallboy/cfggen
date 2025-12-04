@@ -14,9 +14,9 @@ public class Generators {
 
     public static Generator create(String arg) {
         ParameterParser parameter = new ParameterParser(arg);
-        GeneratorProvider provider = providers.get(parameter.genId());
+        GeneratorProvider provider = providers.get(parameter.id());
         if (provider == null) {
-            Logger.log(parameter.genId() + " not support");
+            Logger.log(parameter.id() + " not support");
             return null;
         }
         Generator generator = provider.create(parameter);

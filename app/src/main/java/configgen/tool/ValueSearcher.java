@@ -2,7 +2,10 @@ package configgen.tool;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONWriter;
+import configgen.ctx.Context;
 import configgen.editorserver.SchemaService;
+import configgen.gen.GeneratorWithTag;
+import configgen.gen.Parameter;
 import configgen.schema.CfgSchema;
 import configgen.schema.Nameable;
 import configgen.schema.TableSchema;
@@ -18,6 +21,45 @@ import java.util.*;
 import static configgen.value.CfgValue.*;
 
 public class ValueSearcher {
+
+    public static class GenValueSearcher extends GeneratorWithTag {
+        private final String searchTo;
+        private final List<String> query;
+
+        public GenValueSearcher(Parameter parameter) {
+            super(parameter);
+            searchTo = parameter.get("to", null);
+            String q = parameter.get("q", null);
+
+            if (q != null) {
+                String[] split = q.trim().split("\\s+");
+                if (split.length > 0) {
+                    query = Arrays.stream(split).toList();
+                } else {
+                    query = null;
+                }
+            } else {
+                query = null;
+            }
+
+            parameter.extra(ValueSearcher.usage());
+        }
+
+        @Override
+        public void generate(Context ctx) throws IOException {
+            CfgValue value = ctx.makeValue(tag);
+            ValueSearcher searcher = new ValueSearcher(value, searchTo);
+
+            if (query == null) {
+                searcher.loop();
+            } else {
+                searcher.search(query.getFirst(), query.subList(1, query.size()));
+
+            }
+            searcher.close();
+        }
+    }
+
     private final CfgValue cfgValue;
     private final UTF8Writer fileWriter;
 
@@ -221,22 +263,30 @@ public class ValueSearcher {
         }
     }
 
-    public static void printUsage(String prefix) {
-        Logger.log(prefix + "int <int> <int> ...: search integers");
-        Logger.log(prefix + "str <str>: search string");
-        Logger.log(prefix + "ref <refTable<[uniqKeys]>?> <IgnoredTables>: search ref");
+    private static void printUsage() {
+        for (String s : usage()) {
+            Logger.log(s);
+        }
+    }
 
-        Logger.log(prefix + "sl  <name>?: list name of schemas");
-        Logger.log(prefix + "sll <name>?: list schemas");
-        Logger.log(prefix + "slljson <name>?: list schemas. use json");
+    public static List<String> usage() {
+        List<String> res = new ArrayList<>(8);
+        res.add("int <int> <int> ...: search integers");
+        res.add("str <str>: search string");
+        res.add("ref <refTable<[uniqKeys]>?> <IgnoredTables>: search ref");
+
+        res.add("sl  <name>?: list name of schemas");
+        res.add("sll <name>?: list schemas");
+        res.add("slljson <name>?: list schemas. use json");
 
 
-        Logger.log(prefix + "h: help");
-        Logger.log(prefix + "q: quit");
+        res.add("h: help");
+        res.add("q: quit");
+        return res;
     }
 
     public void loop() {
-        printUsage("");
+        printUsage();
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         while (true) {
             try {
@@ -252,7 +302,7 @@ public class ValueSearcher {
                     break;
                 }
                 if (func.equals("h")) {
-                    printUsage("");
+                    printUsage();
                 } else {
                     search(func, Arrays.asList(args).subList(1, args.length));
                 }

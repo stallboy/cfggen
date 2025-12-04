@@ -2,14 +2,25 @@ package configgen.tool;
 
 
 import configgen.ctx.DirectoryStructure;
+import configgen.gen.Parameter;
+import configgen.gen.Tool;
 import configgen.schema.CfgSchema;
 import configgen.schema.CfgSchemas;
 import configgen.schema.cfg.XmlReader;
 
 import java.nio.file.Path;
 
-public class XmlToCfg {
-    public static void convertAndCheck(Path dataDir) {
+public class XmlToCfg extends Tool {
+
+    private final Path dataDir;
+
+    public XmlToCfg(Parameter parameter) {
+        super(parameter);
+        dataDir = Path.of(parameter.get("datadir", "."));
+    }
+
+    @Override
+    public void call() {
         CfgSchema cfg = XmlReader.readFromDir(dataDir);
         Path cfgPath = dataDir.resolve(DirectoryStructure.ROOT_CONFIG_FILENAME);
         CfgSchemas.writeToDir(cfgPath, cfg);

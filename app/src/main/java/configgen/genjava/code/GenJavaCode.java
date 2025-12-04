@@ -40,23 +40,6 @@ public class GenJavaCode extends GeneratorWithTag {
         buildersFilename = parameter.get("builders", null);
         schemaNumPerFile = Integer.parseInt(
                 parameter.get("schemanumperfile", "100"));
-
-        if (buildersFilename != null) {
-            readNeedBuilderTables();
-        }
-    }
-
-    private void readNeedBuilderTables() {
-        Path fn = Path.of(buildersFilename).normalize();
-        if (Files.exists(fn)) {
-            try {
-                needBuilderTables = new HashSet<>();
-                List<String> lines = Files.readAllLines(fn, StandardCharsets.UTF_8);
-                needBuilderTables.addAll(lines);
-            } catch (IOException e) {
-                Logger.log("读文件异常, 忽略此文件", fn.toAbsolutePath());
-            }
-        }
     }
 
 
@@ -74,6 +57,9 @@ public class GenJavaCode extends GeneratorWithTag {
         List<String> mapsInMgr = new ArrayList<>();
         List<String> setAllRefsInMgrLoader = new ArrayList<>();
 
+        if (buildersFilename != null) {
+            readNeedBuilderTables();
+        }
 
         for (Nameable nameable : cfgValue.schema().items()) {
             switch (nameable) {
@@ -97,7 +83,7 @@ public class GenJavaCode extends GeneratorWithTag {
         if (isLangSwitch) { //生成Text这个Bean
             try (CachedIndentPrinter ps = createCode(new File(dstDir, "Text.java"), encoding)) {
                 JteEngine.render("java/Text.jte",
-                        new TextModel(pkg,  ctx.nullableLangSwitch().languages()), ps);
+                        new TextModel(pkg, ctx.nullableLangSwitch().languages()), ps);
             }
         }
 
@@ -119,6 +105,19 @@ public class GenJavaCode extends GeneratorWithTag {
         GenConfigCodeSchema.generateAll(this, schemaNumPerFile, cfgValue, ctx.nullableLangSwitch());
 
         CachedFiles.deleteOtherFiles(dstDir);
+    }
+
+    private void readNeedBuilderTables() {
+        Path fn = Path.of(buildersFilename).normalize();
+        if (Files.exists(fn)) {
+            try {
+                needBuilderTables = new HashSet<>();
+                List<String> lines = Files.readAllLines(fn, StandardCharsets.UTF_8);
+                needBuilderTables.addAll(lines);
+            } catch (IOException e) {
+                Logger.log("读文件异常, 忽略此文件", fn.toAbsolutePath());
+            }
+        }
     }
 
     CachedIndentPrinter createCodeFile(String fileName) {
@@ -160,7 +159,7 @@ public class GenJavaCode extends GeneratorWithTag {
             }
 
             NameableName name = new NameableName(schema, entryPostfix);
-            if (isNeedReadData){
+            if (isNeedReadData) {
                 setAllRefsInMgrLoader.add(name.fullName);
             }
             NameableName dataName = new NameableName(schema, dataPostfix);

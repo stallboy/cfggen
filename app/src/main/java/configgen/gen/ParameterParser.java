@@ -2,34 +2,28 @@ package configgen.gen;
 
 import configgen.util.ArgParser;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class ParameterParser implements Parameter {
     private final String arg;
-    private final String genId;
+    private final String id;
     private final Map<String, String> params;
 
     public ParameterParser(String arg) {
         this.arg = arg;
         ArgParser.IdAndMap im = ArgParser.parseToIdAndMap(arg);
-        genId = im.id();
+        id = im.id();
         params = im.map();
     }
 
     @Override
-    public Parameter copy() {
-        return new ParameterParser(arg);
-    }
-
-    @Override
-    public String get(String key, String def) {
+    public String get(String key, String def, String messageId) {
         String v = params.remove(key.toLowerCase());
         return v != null ? v : def;
     }
 
     @Override
-    public boolean has(String key) {
+    public boolean has(String key, String messageId) {
         if (params.containsKey(key.toLowerCase())) {
             String v = params.remove(key.toLowerCase());
             if (v != null) {
@@ -42,13 +36,13 @@ public class ParameterParser implements Parameter {
         }
     }
 
-    String genId() {
-        return genId;
+    public String id() {
+        return id;
     }
 
     void assureNoExtra() {
         if (!params.isEmpty()) {
-            throw new AssertionError("-gen " + genId + " not support parameter: " + params);
+            throw new AssertionError("-gen " + id + " not support parameter: " + params);
         }
     }
 

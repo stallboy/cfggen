@@ -24,6 +24,6 @@ class ErrorHandlingTest {
         ParameterParser parser = new ParameterParser(arg);
 
         // Then: 验证空名称处理
-        assertEquals("", parser.genId());
+        assertEquals("", parser.id());
     }
 }

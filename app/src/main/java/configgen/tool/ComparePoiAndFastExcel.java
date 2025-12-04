@@ -1,10 +1,12 @@
 package configgen.tool;
 
 import configgen.ctx.DirectoryStructure;
-import configgen.ctx.ExplicitDir;
 import configgen.ctx.HeadRow;
+import configgen.ctx.HeadRows;
 import configgen.data.*;
 import configgen.gen.BuildSettings;
+import configgen.gen.Parameter;
+import configgen.gen.Tool;
 import configgen.schema.CfgSchema;
 import configgen.schema.CfgSchemaErrs;
 import configgen.schema.CfgSchemas;
@@ -13,10 +15,24 @@ import configgen.util.Logger;
 import java.nio.file.Path;
 import java.util.List;
 
-public class ComparePoiAndFastExcel {
+public class ComparePoiAndFastExcel extends Tool {
+    private final Path dataDir;
+    private final String csvDefaultEncoding;
+    private final HeadRow headRow;
 
-    public static void compare(Path dataDir, ExplicitDir explicitDir, String csvDefaultEncoding, HeadRow headRow) {
-        DirectoryStructure sourceStructure = new DirectoryStructure(dataDir, explicitDir);
+
+    public ComparePoiAndFastExcel(Parameter parameter) {
+        super(parameter);
+        dataDir = Path.of(parameter.get("datadir", "."));
+        csvDefaultEncoding = parameter.get("csvencoding", "GBK");
+        headRow = HeadRows.getById(parameter.get("headrow", "2"));
+
+        parameter.title("compare fastexcel lib read to poi lib read");
+    }
+
+    @Override
+    public void call() {
+        DirectoryStructure sourceStructure = new DirectoryStructure(dataDir);
         CfgSchema schema = CfgSchemas.readFromDir(sourceStructure);
         Logger.profile("schema read");
         CfgSchemaErrs errs = schema.resolve();
@@ -31,7 +47,7 @@ public class ComparePoiAndFastExcel {
         CfgData dataByPoi = poiDataReader.readCfgData(sourceStructure, schema, dataErrs);
         dataErrs.checkErrors();
 
-        for (int i = 0; i < 200; i++) {
+        for (int i = 0; i < 10; i++) {
             CfgSchemaErrs fastErr = CfgSchemaErrs.of();
             CfgData dataByFastExcel = fastDataReader.readCfgData(sourceStructure, schema, fastErr);
             fastErr.checkErrors();
@@ -94,6 +110,7 @@ public class ComparePoiAndFastExcel {
         }
         return notMatch;
     }
+
 
 }
 

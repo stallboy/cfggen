@@ -2,6 +2,9 @@ package configgen.gen;
 
 import configgen.data.ExcelReader;
 
+/**
+ * 因为write的需求，现在必然包含poi
+ */
 public final class BuildSettings {
     private static boolean isIncludePoi = false;
     private static ExcelReader poiReader;

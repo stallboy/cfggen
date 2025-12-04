@@ -1,6 +1,5 @@
 package configgen.genbyai;
 
-import com.alibaba.fastjson2.JSON;
 import configgen.ctx.Context;
 import configgen.data.CfgData;
 import configgen.gen.Generator;
@@ -176,27 +175,6 @@ public class GenByAI extends Generator {
             lastJson = matcher.group(1).trim();
         }
         return lastJson;
-    }
-
-    public record AICfg(String baseUrl,
-                        String apiKey,
-                        String model) {
-        public static AICfg readFromFile(String cfgFn) {
-            Path path = Path.of(cfgFn);
-            if (!Files.exists(path)) {
-                throw new RuntimeException(cfgFn + " not exist!");
-            }
-            String jsonStr;
-            try {
-                jsonStr = Files.readString(path);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            if (jsonStr.isEmpty()) {
-                throw new RuntimeException(cfgFn + " is empty!");
-            }
-            return JSON.parseObject(jsonStr, AICfg.class);
-        }
     }
 
 }

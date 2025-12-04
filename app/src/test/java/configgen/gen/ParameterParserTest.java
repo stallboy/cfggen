@@ -14,7 +14,7 @@ class ParameterParserTest {
         ParameterParser parser = new ParameterParser(arg);
 
         // Then: 验证解析结果
-        assertEquals("java", parser.genId());
+        assertEquals("java", parser.id());
         assertEquals("default", parser.get("unknown", "default"));
     }
 
@@ -37,7 +37,7 @@ class ParameterParserTest {
         ParameterParser parser = new ParameterParser(arg);
 
         // Then: 验证参数解析
-        assertEquals("java", parser.genId());
+        assertEquals("java", parser.id());
         assertEquals("src", parser.get("output", ""));
         assertEquals("true", parser.get("verbose", ""));
         assertEquals("utf8", parser.get("encoding", ""));

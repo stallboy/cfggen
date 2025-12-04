@@ -1,5 +1,7 @@
 package configgen.i18n;
 
+import configgen.gen.Parameter;
+import configgen.gen.Tool;
 import org.dhatim.fastexcel.reader.ReadableWorkbook;
 import org.dhatim.fastexcel.reader.ReadingOptions;
 import org.dhatim.fastexcel.reader.Row;
@@ -17,23 +19,28 @@ import java.util.stream.Collectors;
 import static configgen.i18n.TextByIdFinder.*;
 
 
-public class TermChecker {
-    record OneNoMatch(String original,
-                      String translated,
-                      List<OneText> noMatchTerms) {
-    }
-
-    record OneTableResult(String table,
-                          List<OneNoMatch> noMatches) {
-    }
+/**
+ * 检查翻译文件中，包含原始文本包含原始术语，但翻译文本中却不包含翻译术语的情况，输出
+ */
+public class TermChecker extends Tool {
 
     /**
-     * 检查翻译文件中，包含原始文本包含原始术语，但翻译文本中却不包含翻译术语的情况，输出
-     *
-     * @param i8nFilepath 单个语言翻译中间文件或目录
-     * @param termFilepath    术语表excel文件，第一列时原始术语，第二列是翻译术语
+     * 单个语言翻译中间文件或目录
      */
-    public static void compare(Path i8nFilepath, Path termFilepath) {
+    private final Path i8nFilepath;
+    /**
+     * 术语表excel文件，第一列时原始术语，第二列是翻译术语
+     */
+    private final Path termFilepath;
+
+    public TermChecker(Parameter parameter) {
+        super(parameter);
+        i8nFilepath = Path.of(parameter.get("i18n", "language/en"));
+        termFilepath = Path.of(parameter.get("term", "term_en.xlsx"));
+    }
+
+    @Override
+    public void call() {
         List<OneText> terms = loadTerm(termFilepath);
         if (terms == null || terms.isEmpty()) {
             return;
@@ -64,6 +71,17 @@ public class TermChecker {
             System.out.println();
         }
     }
+
+
+    record OneNoMatch(String original,
+                      String translated,
+                      List<OneText> noMatchTerms) {
+    }
+
+    record OneTableResult(String table,
+                          List<OneNoMatch> noMatches) {
+    }
+
 
     private static List<Callable<OneTableResult>> makeTasks(LangTextFinder translationFinder, List<OneText> terms) {
         List<Callable<OneTableResult>> tasks = new ArrayList<>();

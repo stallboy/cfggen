@@ -181,7 +181,7 @@ class GenJavaDataTest {
             System.setOut(new PrintStream(baos, true, StandardCharsets.UTF_8));
 
             // 调用BinaryToText的解析方法
-            BinaryToText.parse(dataFile, null);
+            new JavaData(dataFile).match(null);
 
             // 获取捕获的输出
             return baos.toString(StandardCharsets.UTF_8);

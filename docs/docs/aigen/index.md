@@ -44,7 +44,7 @@ config/
         3.json
 ```
 
-- `config.jte`是生成每个配置都会使用的提示测模板
+- `config.jte`是生成每个配置都会使用的提示词模板
 
 - `init.md` 则是初始的assistant回答
 

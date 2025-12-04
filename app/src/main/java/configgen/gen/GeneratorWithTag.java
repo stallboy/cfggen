@@ -5,6 +5,6 @@ public abstract class GeneratorWithTag extends Generator {
 
     public GeneratorWithTag(Parameter parameter) {
         super(parameter);
-        tag = parameter.get("own", null, "Gen.Tag");
+        tag = parameter.get("own", null);
     }
 }

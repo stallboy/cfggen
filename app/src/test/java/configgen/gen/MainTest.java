@@ -67,34 +67,6 @@ class MainTest {
     }
 
     @Test
-    void shouldHandleVerify_whenValidDataDirProvided() {
-        // Given: 有效的验证参数
-        String cfgStr = """
-                table user[id] {
-                    id:int;
-                    name:str;
-                }
-                """;
-
-        String csvData = """
-                用户ID,姓名
-                id,name
-                1,Alice
-                2,Bob
-                """;
-
-        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
-        Resources.addTempFileFromText("user.csv", tempDir, csvData);
-
-        // When: 执行验证
-        String[] args = {"-datadir", tempDir.toString(), "-encoding", "UTF-8", "-verify"};
-        int result = Main.main0(args);
-
-        // Then: 验证成功执行
-        assertEquals(0, result);
-    }
-
-    @Test
     void shouldHandleGenerator_whenValidGeneratorAndDataDirProvided() {
         // Given: 有效的生成器和数据目录
         String cfgStr = """

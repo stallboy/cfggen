@@ -1,10 +1,44 @@
 package configgen.genjava;
 
+import configgen.gen.Parameter;
+import configgen.gen.Tool;
+
 import java.io.*;
 import java.util.*;
 
-public class BinaryToText {
-    public static void loop(String javaDataFile) {
+public class JavaData {
+
+    public static class ToolJavaData extends Tool {
+        private final String javaDataFile;
+        private final String match;
+
+        public ToolJavaData(Parameter parameter) {
+            super(parameter);
+            javaDataFile = parameter.get("javadata", "config.data");
+            match = parameter.get("match", null, "loop when match not set");
+        }
+
+        @Override
+        public void call() {
+            JavaData jd = new JavaData(javaDataFile);
+            if (match == null) {
+                jd.loop();
+            } else {
+                jd.match(match);
+            }
+        }
+    }
+
+    private final String javaDataFile;
+
+    private SchemaInterface rootSchema;
+
+    public JavaData(String javaDataFile) {
+        this.javaDataFile = javaDataFile;
+    }
+
+
+    public void loop() {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         while (true) {
             try {
@@ -13,14 +47,14 @@ public class BinaryToText {
                 if (input.equals("q")) {
                     break;
                 }
-                parse(javaDataFile, input);
+                match(input);
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
         }
     }
 
-    public static void parse(String javaDataFile, String match) {
+    public void match(String match) {
         try (ConfigInput input = new ConfigInput(new DataInputStream(new BufferedInputStream(new FileInputStream(javaDataFile))))) {
             rootSchema = (SchemaInterface) Schema.create(input);
 
@@ -40,9 +74,8 @@ public class BinaryToText {
         }
     }
 
-    private static SchemaInterface rootSchema;
 
-    private static void printTableInfo(String tableName, int tableSize, ConfigInput input) {
+    private void printTableInfo(String tableName, int tableSize, ConfigInput input) {
         Schema schema = rootSchema.implementations.get(tableName);
 
         switch (schema) {
@@ -78,7 +111,7 @@ public class BinaryToText {
 
     }
 
-    private static void printTableData(ConfigInput input, SchemaBean tableSchema) {
+    private void printTableData(ConfigInput input, SchemaBean tableSchema) {
         for (int c = input.readInt(); c > 0; c--) {
             StringBuilder sb = new StringBuilder();
             visitSchemaToReadData(tableSchema, input, sb);
@@ -87,14 +120,14 @@ public class BinaryToText {
     }
 
 
-    private static final Set<Schema> printedSchemas = new HashSet<>();
-    private static HashMap<String, Schema> needSchemas = new LinkedHashMap<>();
+    private final Set<Schema> printedSchemas = new HashSet<>();
+    private HashMap<String, Schema> needSchemas = new LinkedHashMap<>();
 
-    private static void initDepSchemas() {
+    private void initDepSchemas() {
         needSchemas = new LinkedHashMap<>();
     }
 
-    private static void printDepSchemas() {
+    private void printDepSchemas() {
         HashMap<String, Schema> old = needSchemas;
         needSchemas = new LinkedHashMap<>();
 
@@ -103,7 +136,7 @@ public class BinaryToText {
         }
     }
 
-    private static void printSchemaBean(String name, SchemaBean schemaBean) {
+    private void printSchemaBean(String name, SchemaBean schemaBean) {
         println(name + " {");
         indent++;
 
@@ -127,7 +160,7 @@ public class BinaryToText {
         println("}");
     }
 
-    private static void printSchemaInterface(String name, SchemaInterface schemaInterface) {
+    private void printSchemaInterface(String name, SchemaInterface schemaInterface) {
         boolean isNotRoot = name != null;
         if (isNotRoot) {
             if (printedSchemas.contains(schemaInterface)) {
@@ -157,7 +190,7 @@ public class BinaryToText {
     }
 
 
-    private static void printSchemaEnum(String name, SchemaEnum schemaEnum) {
+    private void printSchemaEnum(String name, SchemaEnum schemaEnum) {
         println("%s(isEnumPart=%s, hasIntValue=%s) {", name, schemaEnum.isEnumPart, schemaEnum.hasIntValue);
         indent++;
 
@@ -175,7 +208,7 @@ public class BinaryToText {
     }
 
 
-    private static void visitSchemaToPrintSchema(String name, Schema schema) {
+    private void visitSchemaToPrintSchema(String name, Schema schema) {
         switch (schema) {
             case SchemaBean schemaBean -> {
                 printSchemaBean(name, schemaBean);
@@ -192,7 +225,7 @@ public class BinaryToText {
     }
 
 
-    private static void visitSchemaToReadData(Schema sc, ConfigInput input, StringBuilder sb) {
+    private void visitSchemaToReadData(Schema sc, ConfigInput input, StringBuilder sb) {
         switch (sc) {
             case SchemaBean schemaBean -> {
                 sb.append("(");
@@ -267,10 +300,10 @@ public class BinaryToText {
     }
 
 
-    private static int indent = 0;
-    private static final StringBuilder tmp = new StringBuilder();
+    private int indent = 0;
+    private final StringBuilder tmp = new StringBuilder();
 
-    private static void println(String fmt, Object... args) {
+    private void println(String fmt, Object... args) {
         tmp.setLength(0);
         if (args.length > 0) {
             prefix(fmt);
@@ -281,7 +314,7 @@ public class BinaryToText {
         }
     }
 
-    private static void prefix(String fmt) {
+    private void prefix(String fmt) {
         tmp.append("    ".repeat(Math.max(0, indent)));
         tmp.append(fmt);
         tmp.append('\n');
