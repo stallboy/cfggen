@@ -15,8 +15,8 @@ import java.util.stream.Stream;
  * 这是最完备的机制，可以相同的原始本文，不同的翻译文本。
  */
 public class TextByIdFinder implements LangTextFinder.TextFinder {
-    record OneText(String original,
-                   String translated) {
+    public record OneText(String original,
+                          String translated) {
         public OneText {
             if (original == null || translated == null) {
                 throw new IllegalArgumentException("original和translated都不能为null");
@@ -26,7 +26,7 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
 
     /**
      * @param description 可以为null
-     * @param texts 里面元素可以为null
+     * @param texts       里面元素可以为null
      */
     record OneRecord(String description,
                      List<OneText> texts) {
@@ -304,7 +304,7 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
     static Optional<String> getCellAsString(Row row, int c) {
         Optional<Cell> cell = row.getOptionalCell(c);
         if (cell.isPresent()) {
-            switch (cell.get().getType()){
+            switch (cell.get().getType()) {
                 case NUMBER -> {
                     return Optional.of(cell.get().asNumber().toPlainString());
                 }

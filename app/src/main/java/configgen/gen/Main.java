@@ -16,7 +16,7 @@ import configgen.genlua.GenLua;
 import configgen.i18n.TermChecker;
 import configgen.i18n.GenI18nByValue;
 import configgen.i18n.GenI18nById;
-import configgen.i18n.TermExtractor;
+import configgen.i18n.TermUpdater;
 import configgen.mcpserver.CfgMcpServer;
 import configgen.tool.*;
 import configgen.util.CachedFiles;
@@ -144,7 +144,7 @@ public final class Main {
         }
         Tools.addProvider("readjavadata", JavaData.ToolJavaData::new);
         Tools.addProvider("termcheck", TermChecker::new);
-        Tools.addProvider("termupdate", TermExtractor::new);
+        Tools.addProvider("termupdate", TermUpdater::new);
 
         Generators.addProvider("verify", GenVerifier::new);
         Generators.addProvider("search", ValueSearcher.GenValueSearcher::new);

@@ -1,5 +1,4 @@
-@import configgen.i18n.TermExtractor.TermUpdateModel
-@import configgen.i18n.TermExtractor.Translated
+@import configgen.i18n.TermUpdateModel
 
 @param TermUpdateModel model
 
@@ -9,7 +8,7 @@
 你是一个专业的游戏本地化术语提取专家，擅长从游戏文本翻译中识别和提取专业术语，并建立一致的术语表。
 
 ## 现有术语表
-以下是当前术语表（CSV格式，列：原文术语,目标语言术语,类别,备注）：
+以下是当前术语表（CSV格式，列：原文术语,目标语言术语）：
 ```
 ${model.termsInCsv()}
 ```
@@ -17,7 +16,7 @@ ${model.termsInCsv()}
 ## 待分析的翻译文本
 以下是按数据表分组的翻译文本（CSV格式，每行：原文,翻译）：
 
-@for(Translated trans : model.tableTranslatedList())
+@for(var trans : model.tableTranslatedList())
 ### 表：${trans.table()}
 ```
 ${trans.translatedInCsv()}
@@ -33,16 +32,16 @@ ${trans.translatedInCsv()}
    - 物品（装备、道具、材料等）
    - 系统（系统名称、界面文本、功能名称等）
    - 其他（不属于以上类别的专业术语）
-3. **处理歧义和上下文**：对于有歧义或需要上下文才能准确翻译的术语，请在备注中说明
-4. **保持术语一致性**：相同的原文术语应有相同的翻译，如果发现不一致的情况，请在备注中标注
+3. **confidence**: high/medium/low
+4. **处理歧义和上下文**：对于有歧义或需要上下文才能准确翻译的术语，请在备注中说明
+5. **保持术语一致性**：相同的原文术语应有相同的翻译，如果发现不一致的情况，请在备注中标注
 
 ## 输出格式
 请以 Markdown 表格形式输出提取结果，表格包含以下列：
-| 原文术语 | 目标语言术语 | 类别 | 备注 |
+| 原文术语 | 目标语言术语 | 类别 | confidence | 备注 |
 
 **注意**：
 - 只输出新发现的术语，不需要输出已有术语表中已经存在的术语
-- 如果某个原文术语在现有术语表中已存在，但翻译不同，请作为新术语输出并在备注中说明"与现有翻译不一致"
 - 如果某个术语在多个表中出现，合并为一行输出
 - 备注栏可以留空，或简要说明术语的特殊性、歧义、建议等
 

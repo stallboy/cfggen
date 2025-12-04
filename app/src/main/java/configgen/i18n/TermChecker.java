@@ -2,12 +2,7 @@ package configgen.i18n;
 
 import configgen.gen.Parameter;
 import configgen.gen.Tool;
-import org.dhatim.fastexcel.reader.ReadableWorkbook;
-import org.dhatim.fastexcel.reader.ReadingOptions;
-import org.dhatim.fastexcel.reader.Row;
-import org.dhatim.fastexcel.reader.Sheet;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -41,7 +36,7 @@ public class TermChecker extends Tool {
 
     @Override
     public void call() {
-        List<OneText> terms = loadTerm(termFilepath);
+        List<OneText> terms = TermFile.loadTerm(termFilepath);
         if (terms == null || terms.isEmpty()) {
             return;
         }
@@ -111,24 +106,4 @@ public class TermChecker extends Tool {
         return tasks;
     }
 
-    static List<OneText> loadTerm(Path termFilepath) {
-        try (ReadableWorkbook wb = new ReadableWorkbook(termFilepath.toFile(), new ReadingOptions(true, false))) {
-            for (Sheet sheet : wb.getSheets().toList()) {
-                List<Row> rows = sheet.read();
-                List<OneText> result = new ArrayList<>(rows.size());
-                for (Row row : rows) {
-                    String c0 = row.getCellAsString(0).orElse("");
-                    String c1 = row.getCellAsString(1).orElse("");
-                    String normalized = Utils.normalize(c0);
-                    if (!c0.isEmpty() && !c1.isEmpty()) {
-                        result.add(new OneText(normalized, c1));
-                    }
-                }
-                return result;
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("read term file=%s error".formatted(termFilepath), e);
-        }
-        return null;
-    }
 }

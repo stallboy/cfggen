@@ -6,12 +6,6 @@ import configgen.util.JteEngine;
 import configgen.util.MarkdownReader;
 import configgen.util.MarkdownReader.MarkdownDocument;
 import configgen.value.*;
-import gg.jte.CodeResolver;
-import gg.jte.ContentType;
-import gg.jte.TemplateEngine;
-import gg.jte.TemplateOutput;
-import gg.jte.output.StringOutput;
-import gg.jte.resolve.DirectoryCodeResolver;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Files;
@@ -71,15 +65,9 @@ public class PromptGen {
         PromptModel model = new PromptModel(table, structInfo, rule.toString().trim(), getExamples(examples, vTable));
 
         // 生成prompt
-        TemplateOutput prompt = new StringOutput();
         Path rootDir = context.getSourceStructure().getRootDir();
-        if (Files.exists(rootDir.resolve("config.jte"))) {
-            CodeResolver codeResolver = new DirectoryCodeResolver(rootDir);
-            TemplateEngine templateEngine = TemplateEngine.create(codeResolver, ContentType.Plain);
-            templateEngine.render("config.jte", model, prompt);
-        } else { //内置的
-            JteEngine.render("config.jte", model, prompt);
-        }
+        String prompt = JteEngine.renderTryFileFirst(rootDir.resolve("config.jte").toString(),
+                "config.jte", model);
 
         String init = PromptDefault.DEFAULT_INIT;
         Path initFile = rootDir.resolve("init.md");
@@ -91,7 +79,7 @@ public class PromptGen {
             }
         }
 
-        return new Prompt(prompt.toString(), init);
+        return new Prompt(prompt, init);
     }
 
     private record OneExample(String id,
