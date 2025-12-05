@@ -41,9 +41,17 @@ public record TodoEdit(List<TodoEntry> todo,
         }
     }
 
+    public static class TodoOriginalsByTable extends LinkedHashMap<String, Set<String>> {
 
-    public Map<String, Map<String, String>> parseDoneByTable() {
-        Map<String, Map<String, String>> doneByTable = new HashMap<>();
+    }
+
+    public static class DoneByTable extends LinkedHashMap<String, Map<String, String>> {
+
+    }
+
+
+    public DoneByTable parseDoneByTable() {
+        DoneByTable doneByTable = new DoneByTable();
         if (done.size() < 2) {
             return doneByTable;
         }
@@ -63,10 +71,10 @@ public record TodoEdit(List<TodoEntry> todo,
     /**
      * 使用done里的已翻译内容填到todo，返回仍需要翻译的
      * @param doneByTable done里的已翻译内容
-     * @return todo里需要翻译的todoOriginals
+     * @return Map<String, Set<String>> key是table，value是todoOriginals
      */
-    public Set<String> useTranslationsInDoneIfSameOriginal(Map<String, Map<String, String>> doneByTable) {
-        Set<String> todoOriginals = new LinkedHashSet<>();
+    public TodoOriginalsByTable useTranslationsInDoneIfSameOriginal(DoneByTable doneByTable) {
+        TodoOriginalsByTable todoOriginalsByTable = new TodoOriginalsByTable();
         for (TodoEntry entry : todo) {
             if (entry.hasTranslated()) {
                 continue;
@@ -81,32 +89,35 @@ public record TodoEdit(List<TodoEntry> todo,
                     continue;
                 }
             }
-            // 添加到结果映射中
-            todoOriginals.add(entry.original);
+            // 按table分组添加到结果映射中
+            todoOriginalsByTable.computeIfAbsent(entry.table, k -> new LinkedHashSet<>())
+                    .add(entry.original);
         }
-        return todoOriginals;
+        return todoOriginalsByTable;
     }
 
     /**
      * AI返回的翻译结果
      */
-    public record TranslationResult(String translated,
-                                    String confidence,
-                                    String note) {
+    public record AITranslationEntry(String translated,
+                                     String confidence,
+                                     String note) {
     }
 
+    public static class AITranslationResult extends LinkedHashMap<String, AITranslationEntry> {
 
+    }
     /**
      * 使用ai返回结果，填到todo里
      * @param aiResult ai返回的结果
      */
-    public void useAITranslationResult(Map<String, TranslationResult> aiResult) {
+    public void useAITranslationResult(AITranslationResult aiResult) {
         for (TodoEntry entry : todo) {
             if (entry.hasTranslated()) {
                 continue;
             }
 
-            TranslationResult t = aiResult.get(entry.original);
+            AITranslationEntry t = aiResult.get(entry.original);
             if (t != null) {
                 entry.aiTranslated = t.translated;
                 entry.confidence = t.confidence;

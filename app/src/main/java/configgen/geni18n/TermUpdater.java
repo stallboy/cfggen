@@ -235,9 +235,9 @@ public class TermUpdater extends Tool {
         var futureChat = openAI.chatCompletions().create(chatRequest);
         var chatResponse = futureChat.join();
         String result = chatResponse.firstContent();
-        System.out.println("AI 响应:");
-        System.out.println(result);
-        System.out.println(chatResponse.getUsage().toString());
+        Logger.log("AI 响应:");
+        Logger.log(result);
+        Logger.log(chatResponse.getUsage().toString());
 
         // 解析结果中的 Markdown 表格
         return parseMarkdownTable(result);

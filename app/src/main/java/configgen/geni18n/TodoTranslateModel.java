@@ -5,6 +5,7 @@ package configgen.geni18n;
  */
 public record TodoTranslateModel(String sourceLang,
                                  String targetLang,
+                                 String todoOriginalsInCsv,
                                  String relatedTermsInCsv,
-                                 String todoOriginalsInCsv) {
+                                 String relatedTranslationsInCsv) {
 }

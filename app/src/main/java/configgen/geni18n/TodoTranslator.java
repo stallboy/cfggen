@@ -3,7 +3,10 @@ package configgen.geni18n;
 import configgen.gen.Parameter;
 import configgen.gen.Tool;
 import configgen.genbyai.AICfg;
-import configgen.geni18n.TodoEdit.TranslationResult;
+import configgen.geni18n.TodoEdit.AITranslationEntry;
+import configgen.geni18n.TodoEdit.AITranslationResult;
+import configgen.geni18n.TodoEdit.DoneByTable;
+import configgen.geni18n.TodoEdit.TodoOriginalsByTable;
 import configgen.i18n.TextByIdFinder.OneText;
 import configgen.util.CSVUtil;
 import configgen.util.FileUtils;
@@ -13,6 +16,7 @@ import configgen.i18n.I18nUtils;
 import io.github.sashirestela.openai.SimpleOpenAI;
 import io.github.sashirestela.openai.domain.chat.ChatMessage;
 import io.github.sashirestela.openai.domain.chat.ChatRequest;
+import org.apache.commons.text.similarity.LevenshteinDistance;
 
 import java.nio.file.Path;
 import java.util.*;
@@ -43,7 +47,7 @@ public class TodoTranslator extends Tool {
         termFile = parameter.get("term", null);
         aiCfgFile = parameter.get("ai", "ai.json");
         promptJteFile = parameter.get("prompt", null);
-        maxLines = Integer.parseInt(parameter.get("maxlines", "50"));
+        maxLines = Integer.parseInt(parameter.get("maxlines", "10"));
     }
 
     @Override
@@ -64,17 +68,19 @@ public class TodoTranslator extends Tool {
         TodoEdit todoEdit = TodoEdit.read(todoFilePath);
 
         // 2. 构建done sheet的映射：table -> (original -> translated)
-        Map<String, Map<String, String>> doneByTable = todoEdit.parseDoneByTable();
+        DoneByTable doneByTable = todoEdit.parseDoneByTable();
 
         // 3. 收集需要翻译的todo行
-        Set<String> todoOriginals = todoEdit.useTranslationsInDoneIfSameOriginal(doneByTable);
-        if (todoOriginals.isEmpty()) {
+        TodoOriginalsByTable todoOriginalsByTable = todoEdit.useTranslationsInDoneIfSameOriginal(doneByTable);
+
+        // 检查是否有需要翻译的文本
+        if (todoOriginalsByTable.isEmpty()) {
             Logger.log("没有需要翻译的文本");
             return;
         }
 
-        // 4. 分批处理
-        List<List<String>> batches = splitIntoBatches(new ArrayList<>(todoOriginals), maxLines);
+        // 4. 按table为单位进行分批处理
+        List<TodoOriginalsByTable> batches = splitIntoBatchesByTable(todoOriginalsByTable, maxLines);
 
         Logger.log("split to %d parts", batches.size());
 
@@ -85,19 +91,45 @@ public class TodoTranslator extends Tool {
                 .build();
 
         // 6. 处理每个批次
-        for (List<String> batch : batches) {
-            // 构建待翻译文本CSV
-            String todoOriginalsCsv = buildTodoOriginalsCsv(batch);
+        for (TodoOriginalsByTable batchMap : batches) {
+            // 收集批次中所有table的待翻译文本
+            List<String> allBatchOriginals = new ArrayList<>();
+            Map<String, String> mostSimilarResult = new HashMap<>();
+
+            // 遍历批次中的每个table
+            for (Map.Entry<String, Set<String>> entry : batchMap.entrySet()) {
+                String table = entry.getKey();
+                Set<String> originals = entry.getValue();
+                allBatchOriginals.addAll(originals);
+
+                Map<String, String> done = doneByTable.get(table);
+                if (done != null) {
+                    collectMostSimilarInDone(mostSimilarResult, originals, done);
+                }
+            }
+
+            if (allBatchOriginals.isEmpty()) {
+                continue;
+            }
+
+            // 构建待翻译文本CSV（包含所有table的文本）
+            String todoOriginalsCsv = buildTodoOriginalsCsv(allBatchOriginals);
 
             // 构建相关术语CSV
             String relatedTermsCsv = buildRelatedTermsCsv(todoOriginalsCsv, terms);
 
+            // 获取合并后的相关翻译CSV
+            String relatedTranslationsCsv = buildRelatedTranslationsCsv(mostSimilarResult);
+
             // 创建TranslateModel
-            TodoTranslateModel model = new TodoTranslateModel(sourceLang, targetLang, relatedTermsCsv, todoOriginalsCsv);
+            TodoTranslateModel model = new TodoTranslateModel(sourceLang, targetLang,
+                    todoOriginalsCsv,
+                    relatedTermsCsv,
+                    relatedTranslationsCsv);
             // 渲染提示词
             String prompt = JteEngine.renderTryFileFirst(promptJteFile, "translate.jte", model);
             // 调用AI
-            Map<String, TranslationResult> aiResult = callAI(prompt, openAI);
+            AITranslationResult aiResult = callAI(prompt, openAI);
 
             todoEdit.useAITranslationResult(aiResult);
             // 更新todo sheet
@@ -107,40 +139,34 @@ public class TodoTranslator extends Tool {
         Logger.log("翻译完成");
     }
 
-    private List<List<String>> splitIntoBatches(List<String> originals, int batchSize) {
-        List<List<String>> batches = new ArrayList<>();
-        for (int i = 0; i < originals.size(); i += batchSize) {
-            int end = Math.min(originals.size(), i + batchSize);
-            batches.add(originals.subList(i, end));
+
+    private List<TodoOriginalsByTable> splitIntoBatchesByTable(Map<String, Set<String>> todoOriginalsByTable, int maxBatchSize) {
+        List<TodoOriginalsByTable> batches = new ArrayList<>();
+
+        TodoOriginalsByTable batch = new TodoOriginalsByTable();
+        batches.add(batch);
+        int batchSize = 0;
+
+        for (Map.Entry<String, Set<String>> entry : todoOriginalsByTable.entrySet()) {
+            String table = entry.getKey();
+            Set<String> originals = entry.getValue();
+
+
+            batch.put(table, originals);
+            batchSize += originals.size();
+
+            if (batchSize >= maxBatchSize) {
+                batch = new TodoOriginalsByTable();
+                batches.add(batch);
+                batchSize = 0;
+            }
         }
         return batches;
     }
 
-    private String buildRelatedTermsCsv(String todoOriginalsCsv, List<OneText> terms) {
-        if (terms == null) {
-            return "";
-        }
 
-        StringBuilder sb = new StringBuilder();
-        for (OneText term : terms) {
-            if (todoOriginalsCsv.contains(term.original())) {
-                sb.append(CSVUtil.escapeCsv(term.original())).append(",");
-                sb.append(CSVUtil.escapeCsv(term.translated())).append("\n");
-            }
-        }
-        return sb.toString();
-    }
-
-    private String buildTodoOriginalsCsv(List<String> originals) {
-        // 构建CSV格式：每行一个original
-        StringBuilder sb = new StringBuilder();
-        for (String original : originals) {
-            sb.append(CSVUtil.escapeCsv(original)).append("\n");
-        }
-        return sb.toString();
-    }
-
-    private Map<String, TranslationResult> callAI(String prompt, SimpleOpenAI openAI) {
+    private AITranslationResult callAI(String prompt, SimpleOpenAI openAI) {
+        Logger.log("AI请求:\n%s", prompt);
         List<ChatMessage> messages = List.of(UserMessage.of(prompt));
         var chatRequest = ChatRequest.builder()
                 .model(aiCfg.model())
@@ -151,13 +177,14 @@ public class TodoTranslator extends Tool {
         var chatResponse = futureChat.join();
         String result = chatResponse.firstContent();
         Logger.log("AI响应:\n%s", result);
+        Logger.log(chatResponse.getUsage().toString());
         // 解析结果
         return parseAIResult(result);
     }
 
 
-    private Map<String, TranslationResult> parseAIResult(String markdown) {
-        Map<String, TranslationResult> entries = new LinkedHashMap<>();
+    private static AITranslationResult parseAIResult(String markdown) {
+        AITranslationResult entries = new AITranslationResult();
         // 简化解析：寻找以 | 开头的行，跳过表头分隔行
         boolean seenHeader = false;
         String[] lines = markdown.split("\n");
@@ -183,7 +210,7 @@ public class TodoTranslator extends Tool {
                         if (!original.isBlank() && !translated.isBlank()) {
                             // 规范化原始文本
                             String normalized = I18nUtils.normalize(original);
-                            entries.put(normalized, new TranslationResult(translated, confidence, note));
+                            entries.put(normalized, new AITranslationEntry(translated, confidence, note));
                         }
                     }
                 }
@@ -191,4 +218,111 @@ public class TodoTranslator extends Tool {
         }
         return entries;
     }
+
+    private static String buildRelatedTermsCsv(String todoOriginalsCsv, List<OneText> terms) {
+        if (terms == null) {
+            return "";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (OneText term : terms) {
+            if (todoOriginalsCsv.contains(term.original())) {
+                sb.append(CSVUtil.escapeCsv(term.original())).append(",");
+                sb.append(CSVUtil.escapeCsv(term.translated())).append("\n");
+            }
+        }
+        return sb.toString();
+    }
+
+    private static String buildTodoOriginalsCsv(List<String> originals) {
+        // 构建CSV格式：每行一个original
+        StringBuilder sb = new StringBuilder();
+        for (String original : originals) {
+            sb.append(CSVUtil.escapeCsv(original)).append("\n");
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 构建单个table的相关翻译CSV
+     */
+    private static String buildRelatedTranslationsCsv(Map<String, String> mostSimilarResult) {
+        // 将Map转换为CSV
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, String> entry : mostSimilarResult.entrySet()) {
+            sb.append(CSVUtil.escapeCsv(entry.getKey())).append(",");
+            sb.append(CSVUtil.escapeCsv(entry.getValue())).append("\n");
+        }
+
+        return sb.toString();
+    }
+
+
+    private static void collectMostSimilarInDone(Map<String, String> mostSimilarResult, Set<String> originals, Map<String, String> done) {
+        for (String original : originals) {
+            Map.Entry<String, String> bestMatch = findMostSimilarTranslation(original, done);
+
+            if (bestMatch != null) {
+                // 只添加不重复的翻译
+                mostSimilarResult.put(bestMatch.getKey(), bestMatch.getValue());
+            }
+        }
+    }
+
+    /**
+     * 查找最相似的一个翻译
+     */
+    private static Map.Entry<String, String> findMostSimilarTranslation(String todoOriginal,
+                                                                        Map<String, String> doneTranslations) {
+        if (doneTranslations == null || doneTranslations.isEmpty()) {
+            return null;
+        }
+
+        Map.Entry<String, String> bestMatch = null;
+        double bestSimilarity = -1.0;
+
+        for (Map.Entry<String, String> entry : doneTranslations.entrySet()) {
+            double similarity = calculateSimilarity(todoOriginal, entry.getKey());
+            if (similarity > bestSimilarity) {
+                bestSimilarity = similarity;
+                bestMatch = entry;
+            }
+        }
+
+//        System.out.printf("%f\n", bestSimilarity);
+        if (bestSimilarity > 0.5){
+            return bestMatch;
+        }
+
+        return null;
+
+    }
+
+    /**
+     * 计算两个字符串的相似度（使用Levenshtein距离）
+     * 相似度 = 1 - (编辑距离 / max(len1, len2))
+     */
+    private static double calculateSimilarity(String str1, String str2) {
+        if (str1 == null || str2 == null || str1.isEmpty() || str2.isEmpty()) {
+            return 0.0;
+        }
+
+        int len1 = str1.length();
+        int len2 = str2.length();
+
+
+        // 使用Apache Commons Text的LevenshteinDistance
+        LevenshteinDistance levenshtein = LevenshteinDistance.getDefaultInstance();
+        Integer distance = levenshtein.apply(str1, str2);
+
+        if (distance == null) {
+            return 0.0;
+        }
+
+        int maxLen = Math.max(len1, len2);
+
+        // 计算相似度：1 - (距离/最大长度)
+        return 1.0 - ((double) distance / maxLen);
+    }
+
 }

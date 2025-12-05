@@ -111,22 +111,34 @@ public final class Main {
 
     public static void main(String[] args) {
         try {
-            int ret = main0(args);
+            int ret = main0(args); // 假设 main0 是实际的业务入口
             if (ret != 0) {
                 System.exit(ret);
             }
         } catch (Throwable t) {
             String newLine = System.lineSeparator();
             StringBuilder sb = new StringBuilder();
+
+            // 1. 打印错误描述
             sb.append("-------------------------错误描述-------------------------").append(newLine);
-            int stackCnt = 0;
             Throwable curr = t;
+            int stackCnt = 0;
             while (curr != null && ++stackCnt < 30) {
-                sb.append(curr.getMessage()).append(newLine);
+                // 打印异常类型和消息
+                sb.append(curr.getClass().getName()).append(": ").append(curr.getMessage()).append(newLine);
                 curr = curr.getCause();
             }
+
+            // 2. 打印错误堆栈（新增的部分）
             sb.append("-------------------------错误堆栈-------------------------").append(newLine);
-            System.out.print(sb);
+
+            // 获取并遍历堆栈元素
+            for (StackTraceElement element : t.getStackTrace()) {
+                sb.append("\tat ").append(element.toString()).append(newLine);
+            }
+
+            // 3. 打印最终结果并退出
+            System.out.print(sb); // 使用 System.out 或 System.err 取决于你的需求
 
             System.exit(1);
         }
