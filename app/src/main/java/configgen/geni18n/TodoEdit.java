@@ -8,6 +8,7 @@ import org.dhatim.fastexcel.reader.ReadableWorkbook;
 import org.dhatim.fastexcel.reader.ReadingOptions;
 import org.dhatim.fastexcel.reader.Row;
 import org.dhatim.fastexcel.reader.Sheet;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -99,7 +100,7 @@ public record TodoEdit(List<TodoEntry> todo,
     /**
      * AI返回的翻译结果
      */
-    public record AITranslationEntry(String translated,
+    public record AITranslationEntry(@NotNull String translated,
                                      String confidence,
                                      String note) {
     }
@@ -107,6 +108,7 @@ public record TodoEdit(List<TodoEntry> todo,
     public static class AITranslationResult extends LinkedHashMap<String, AITranslationEntry> {
 
     }
+
     /**
      * 使用ai返回结果，填到todo里
      * @param aiResult ai返回的结果
@@ -117,11 +119,12 @@ public record TodoEdit(List<TodoEntry> todo,
                 continue;
             }
 
-            AITranslationEntry t = aiResult.get(entry.original);
+            String normalized = I18nUtils.normalize(entry.original);
+            AITranslationEntry t = aiResult.get(normalized);
             if (t != null) {
                 entry.aiTranslated = t.translated;
-                entry.confidence = t.confidence;
-                entry.note = t.note;
+                entry.confidence = t.confidence == null ? "" : t.confidence;
+                entry.note = t.note == null ? "" : t.note;
             }
         }
     }

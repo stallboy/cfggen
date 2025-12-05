@@ -20,10 +20,12 @@ ${model.relatedTranslationsInCsv()}
 ```
 
 ## 待翻译文本
-以下是待翻译的原文文本（每行一个原文）：
-```
-${model.todoOriginalsInCsv()}
-```
+以下是待翻译的原文文本（使用XML分隔符分隔）：
+!{int index = 1;}
+@for (var original : model.todoOriginals())
+    <original_${index}>${original}</original_${index}>
+    !{index++;}
+@endfor
 
 ## 翻译要求
 1. **准确性**：准确传达原文含义，符合游戏上下文
@@ -33,11 +35,27 @@ ${model.todoOriginalsInCsv()}
 5. **文化适应性**：考虑文化差异，进行适当本地化调整
 
 ## 输出格式
-请以 Markdown 表格形式输出翻译结果，表格包含以下列：
-| 原文 | 目标语言 | confidence | 备注 |
+请以JSON数组格式输出翻译结果，每个item是一个包含以下字段的结构：
+```json
+[
+  {
+    "original": "原文1",
+    "translated": "翻译1",
+    "confidence": "high/medium/low",
+    "note": "备注（可选）"
+  },
+  {
+    "original": "原文2",
+    "translated": "翻译2",
+    "confidence": "high/medium/low",
+    "note": "备注（可选）"
+  }
+]
+```
 
 **注意**：
 - **confidence**：表示翻译置信度，可选值：high（高置信度）、medium（中等置信度）、low（低置信度）
-- **备注**：可以留空，或简要说明翻译难点、歧义、上下文依赖等
+- **note**：可以留空，或简要说明翻译难点、歧义、上下文依赖等
+- 请严格按照上述JSON格式输出，不要包含其他文本
 
 请开始翻译并输出结果：
