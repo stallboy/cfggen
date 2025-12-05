@@ -80,3 +80,4 @@
 /app/.claude
 /cfgeditor/.claude
 /app/.gradle
+/app/.idea/gradle.xml
