@@ -17,6 +17,7 @@ import configgen.geni18n.TermChecker;
 import configgen.geni18n.GenI18nByValue;
 import configgen.geni18n.GenI18nById;
 import configgen.geni18n.TermUpdater;
+import configgen.geni18n.TodoTranslator;
 import configgen.mcpserver.CfgMcpServer;
 import configgen.tool.*;
 import configgen.util.CachedFiles;
@@ -145,6 +146,7 @@ public final class Main {
         Tools.addProvider("readjavadata", JavaData.ToolJavaData::new);
         Tools.addProvider("termcheck", TermChecker::new);
         Tools.addProvider("termupdate", TermUpdater::new);
+        Tools.addProvider("todotranslate", TodoTranslator::new);
 
         Generators.addProvider("verify", GenVerifier::new);
         Generators.addProvider("search", ValueSearcher.GenValueSearcher::new);
@@ -236,11 +238,10 @@ public final class Main {
                 }
                 default -> {
                     if (BuildSettings.isIncludePoi()) {
-                        switch (paramType) {
-                            case "-usepoi" -> usePoi = true;
-                            default -> {
-                                return usage("unknown args " + args[i]);
-                            }
+                        if (paramType.equals("-usepoi")) {
+                            usePoi = true;
+                        } else {
+                            return usage("unknown args " + args[i]);
                         }
                     } else {
                         return usage("unknown args " + args[i]);
@@ -293,6 +294,5 @@ public final class Main {
         Logger.profile("end");
         return 0;
     }
-
 
 }

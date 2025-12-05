@@ -1,0 +1,194 @@
+package configgen.geni18n;
+
+import configgen.gen.Parameter;
+import configgen.gen.Tool;
+import configgen.genbyai.AICfg;
+import configgen.geni18n.TodoEdit.TranslationResult;
+import configgen.i18n.TextByIdFinder.OneText;
+import configgen.util.CSVUtil;
+import configgen.util.FileUtils;
+import configgen.util.JteEngine;
+import configgen.util.Logger;
+import configgen.i18n.I18nUtils;
+import io.github.sashirestela.openai.SimpleOpenAI;
+import io.github.sashirestela.openai.domain.chat.ChatMessage;
+import io.github.sashirestela.openai.domain.chat.ChatRequest;
+
+import java.nio.file.Path;
+import java.util.*;
+
+import static io.github.sashirestela.openai.domain.chat.ChatMessage.UserMessage;
+
+/**
+ * 使用AI翻译TODO文件中的待翻译文本。
+ */
+public class TodoTranslator extends Tool {
+    private final String sourceLang;
+    private final String targetLang;
+
+    private final String termFile;
+    private final String todoFile;
+    private final String aiCfgFile;
+    private final String promptJteFile; // 文件路径或null（使用默认模板）
+
+    private final int maxLines;
+    private AICfg aiCfg;
+
+    public TodoTranslator(Parameter parameter) {
+        super(parameter);
+        sourceLang = parameter.get("source", "中文");
+        targetLang = parameter.get("target", "英文");
+
+        todoFile = parameter.get("todo", "language/_todo_en.xlsx");
+        termFile = parameter.get("term", null);
+        aiCfgFile = parameter.get("ai", "ai.json");
+        promptJteFile = parameter.get("prompt", null);
+        maxLines = Integer.parseInt(parameter.get("maxlines", "50"));
+    }
+
+    @Override
+    public void call() {
+        FileUtils.assureFileExistIf(promptJteFile);
+
+        aiCfg = AICfg.readFromFile(aiCfgFile);
+        Logger.log("开始翻译TODO文件: %s", todoFile);
+
+        List<OneText> terms = null;
+        if (termFile != null) {
+            terms = TermFile.loadTerm(Path.of(termFile));
+        }
+
+
+        // 1. 读取todo文件
+        Path todoFilePath = Path.of(todoFile);
+        TodoEdit todoEdit = TodoEdit.read(todoFilePath);
+
+        // 2. 构建done sheet的映射：table -> (original -> translated)
+        Map<String, Map<String, String>> doneByTable = todoEdit.parseDoneByTable();
+
+        // 3. 收集需要翻译的todo行
+        Set<String> todoOriginals = todoEdit.useTranslationsInDoneIfSameOriginal(doneByTable);
+        if (todoOriginals.isEmpty()) {
+            Logger.log("没有需要翻译的文本");
+            return;
+        }
+
+        // 4. 分批处理
+        List<List<String>> batches = splitIntoBatches(new ArrayList<>(todoOriginals), maxLines);
+
+        Logger.log("split to %d parts", batches.size());
+
+        // 5. 初始化OpenAI客户端
+        SimpleOpenAI openAI = SimpleOpenAI.builder()
+                .baseUrl(aiCfg.baseUrl())
+                .apiKey(aiCfg.apiKey())
+                .build();
+
+        // 6. 处理每个批次
+        for (List<String> batch : batches) {
+            // 构建待翻译文本CSV
+            String todoOriginalsCsv = buildTodoOriginalsCsv(batch);
+
+            // 构建相关术语CSV
+            String relatedTermsCsv = buildRelatedTermsCsv(todoOriginalsCsv, terms);
+
+            // 创建TranslateModel
+            TodoTranslateModel model = new TodoTranslateModel(sourceLang, targetLang, relatedTermsCsv, todoOriginalsCsv);
+            // 渲染提示词
+            String prompt = JteEngine.renderTryFileFirst(promptJteFile, "translate.jte", model);
+            // 调用AI
+            Map<String, TranslationResult> aiResult = callAI(prompt, openAI);
+
+            todoEdit.useAITranslationResult(aiResult);
+            // 更新todo sheet
+            todoEdit.save(todoFilePath);
+        }
+
+        Logger.log("翻译完成");
+    }
+
+    private List<List<String>> splitIntoBatches(List<String> originals, int batchSize) {
+        List<List<String>> batches = new ArrayList<>();
+        for (int i = 0; i < originals.size(); i += batchSize) {
+            int end = Math.min(originals.size(), i + batchSize);
+            batches.add(originals.subList(i, end));
+        }
+        return batches;
+    }
+
+    private String buildRelatedTermsCsv(String todoOriginalsCsv, List<OneText> terms) {
+        if (terms == null) {
+            return "";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (OneText term : terms) {
+            if (todoOriginalsCsv.contains(term.original())) {
+                sb.append(CSVUtil.escapeCsv(term.original())).append(",");
+                sb.append(CSVUtil.escapeCsv(term.translated())).append("\n");
+            }
+        }
+        return sb.toString();
+    }
+
+    private String buildTodoOriginalsCsv(List<String> originals) {
+        // 构建CSV格式：每行一个original
+        StringBuilder sb = new StringBuilder();
+        for (String original : originals) {
+            sb.append(CSVUtil.escapeCsv(original)).append("\n");
+        }
+        return sb.toString();
+    }
+
+    private Map<String, TranslationResult> callAI(String prompt, SimpleOpenAI openAI) {
+        List<ChatMessage> messages = List.of(UserMessage.of(prompt));
+        var chatRequest = ChatRequest.builder()
+                .model(aiCfg.model())
+                .messages(messages)
+                .temperature(0.0)
+                .build();
+        var futureChat = openAI.chatCompletions().create(chatRequest);
+        var chatResponse = futureChat.join();
+        String result = chatResponse.firstContent();
+        Logger.log("AI响应:\n%s", result);
+        // 解析结果
+        return parseAIResult(result);
+    }
+
+
+    private Map<String, TranslationResult> parseAIResult(String markdown) {
+        Map<String, TranslationResult> entries = new LinkedHashMap<>();
+        // 简化解析：寻找以 | 开头的行，跳过表头分隔行
+        boolean seenHeader = false;
+        String[] lines = markdown.split("\n");
+        for (String line : lines) {
+            line = line.trim();
+            if (line.startsWith("|") && line.endsWith("|")) {
+                // 移除首尾的 |
+                String trimmed = line.substring(1, line.length() - 1).trim();
+                String[] cells = trimmed.split("\\|");
+                // 清理每个单元格的空白
+                for (int i = 0; i < cells.length; i++) {
+                    cells[i] = cells[i].trim();
+                }
+                if (cells.length > 1) {
+                    // 跳过表头分隔行（通常包含 --- 或 :-- 等）
+                    if (cells[0].matches("^[-:]+$")) {
+                        seenHeader = true;
+                    } else if (seenHeader) {
+                        String original = cells[0];
+                        String translated = cells[1];
+                        String confidence = cells.length > 2 ? cells[2] : "";
+                        String note = cells.length > 3 ? cells[3] : "";
+                        if (!original.isBlank() && !translated.isBlank()) {
+                            // 规范化原始文本
+                            String normalized = I18nUtils.normalize(original);
+                            entries.put(normalized, new TranslationResult(translated, confidence, note));
+                        }
+                    }
+                }
+            }
+        }
+        return entries;
+    }
+}

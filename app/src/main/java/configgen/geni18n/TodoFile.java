@@ -36,8 +36,8 @@ public record TodoFile(List<Line> todo,
     private static final Line HEADER = new Line("table", "id", "fieldChain", "original", "translated");
 
 
-    private static final String TODO_SHEET_NAME = "todo";
-    private static final String DONE_SHEET_NAME = "参考用";
+    public static final String TODO_SHEET_NAME = "todo";
+    public static final String DONE_SHEET_NAME = "参考用";
 
     public static TodoFile ofLangText(LangText lang) {
         java.util.List<Line> todoLines = new ArrayList<>(32);
@@ -80,14 +80,14 @@ public record TodoFile(List<Line> todo,
             Optional<Sheet> doneSheet = wb.findSheet(DONE_SHEET_NAME);
             List<Line> todo;
             if (todoSheet.isPresent()) {
-                todo = readSheet(todoSheet.get());
+                todo = readSheetToLines(todoSheet.get());
             } else {
                 todo = List.of();
             }
 
             List<Line> done;
             if (doneSheet.isPresent()) {
-                done = readSheet(doneSheet.get());
+                done = readSheetToLines(doneSheet.get());
             } else {
                 done = List.of();
             }
@@ -98,7 +98,7 @@ public record TodoFile(List<Line> todo,
         }
     }
 
-    private static List<Line> readSheet(Sheet sheet) throws IOException {
+    static List<Line> readSheetToLines(Sheet sheet) throws IOException {
         List<Row> rows = sheet.read();
         List<Line> lines = new ArrayList<>(rows.size());
         for (Row row : rows) {
@@ -115,9 +115,11 @@ public record TodoFile(List<Line> todo,
 
     }
 
-    public void save(Path todoFilePath) throws IOException {
+    public void save(Path todoFilePath) {
         try (OutputStream os = new BufferedOutputStream(new FileOutputStream(todoFilePath.toFile()))) {
             save(os);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -125,15 +127,15 @@ public record TodoFile(List<Line> todo,
         try (Workbook wb = new Workbook(os, "cfg", "1.0")) {
             // Create todo sheet (not translated texts)
             Worksheet todoWs = wb.newWorksheet(TODO_SHEET_NAME);
-            saveSheet(todoWs, todo);
+            saveLinesToSheet(todoWs, todo);
 
             // Create done sheet (already translated texts)
             Worksheet doneWs = wb.newWorksheet(DONE_SHEET_NAME);
-            saveSheet(doneWs, done);
+            saveLinesToSheet(doneWs, done);
         }
     }
 
-    private static void saveSheet(Worksheet ws, List<Line> lines) {
+    static void saveLinesToSheet(Worksheet ws, List<Line> lines) {
         int row = 0;
         for (Line line : lines) {
             ws.inlineString(row, 0, line.table());
@@ -156,7 +158,7 @@ public record TodoFile(List<Line> todo,
                 return;
             }
 
-            List<Line> lines = readSheet(todoSheet.get());
+            List<Line> lines = readSheetToLines(todoSheet.get());
             for (int i = 1; i < lines.size(); i++) {
                 Line line = lines.get(i);
                 String table = line.table();

@@ -1,6 +1,7 @@
 package configgen.util;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -54,4 +55,12 @@ public class FileUtils {
         return files != null && files.length > 0;
     }
 
+    public static void assureFileExistIf(String filePath) {
+        if (filePath != null) {
+            Path root = Path.of(".");
+            if (!Files.exists(root.resolve(filePath))) {
+                throw new IllegalArgumentException(filePath + " not exist");
+            }
+        }
+    }
 }

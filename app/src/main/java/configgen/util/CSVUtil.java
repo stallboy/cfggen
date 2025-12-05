@@ -124,4 +124,14 @@ public class CSVUtil {
         }
     }
 
+    public static String escapeCsv(String value) {
+        if (value == null || value.isEmpty()) {
+            return "";
+        }
+        // 如果包含逗号、双引号或换行符，用双引号包裹，并且双引号转义为两个双引号
+        if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+            return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+        return value;
+    }
 }

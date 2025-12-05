@@ -14,7 +14,7 @@ import java.nio.file.Path;
 import java.util.*;
 
 public record TermFile(List<TermEntry> terms,
-                       Map<String, List<OneText>> sources ) { // table -> list<original, translated>
+                       Map<String, List<OneText>> sources) { // table -> list<original, translated>
 
     public record TermEntry(String original,
                             String translated,

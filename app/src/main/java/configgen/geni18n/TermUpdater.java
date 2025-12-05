@@ -7,6 +7,8 @@ import configgen.geni18n.TermFile.TermEntry;
 import configgen.geni18n.TermUpdateModel.Translated;
 import configgen.i18n.I18nUtils;
 import configgen.i18n.TextByIdFinder.OneText;
+import configgen.util.CSVUtil;
+import configgen.util.FileUtils;
 import configgen.util.JteEngine;
 import configgen.util.Logger;
 import io.github.sashirestela.openai.SimpleOpenAI;
@@ -43,6 +45,8 @@ public class TermUpdater extends Tool {
 
     @Override
     public void call() {
+        FileUtils.assureFileExistIf(promptJteFile);
+
         aiCfg = AICfg.readFromFile(aiCfgFile);
         // 1. 读取现有术语表
         TermFile termFileObj = TermFile.readTermFile(termFile);
@@ -67,7 +71,7 @@ public class TermUpdater extends Tool {
             List<TermEntry> newTerms = callAIForBatch(batch.model(), openAI);
             existingTerms = TermFile.mergeTerms(existingTerms, newTerms);
             // 每个批次合并后都保存到术语表文件
-            TermFile updatedTermFile = new TermFile(existingTerms,  batch.newSources());
+            TermFile updatedTermFile = new TermFile(existingTerms, batch.newSources());
             TermFile.writeTermFile(termFile, updatedTermFile);
         }
     }
@@ -88,17 +92,6 @@ public class TermUpdater extends Tool {
     }
 
 
-    static String escapeCsv(String value) {
-        if (value == null || value.isEmpty()) {
-            return "";
-        }
-        // 如果包含逗号、双引号或换行符，用双引号包裹，并且双引号转义为两个双引号
-        if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
-            return "\"" + value.replace("\"", "\"\"") + "\"";
-        }
-        return value;
-    }
-
     private record ModelWithSources(TermUpdateModel model,
                                     Map<String, List<OneText>> newSources) {
 
@@ -113,8 +106,8 @@ public class TermUpdater extends Tool {
         // 构建 existingTerms 的映射：original -> CSV 行，并计算完整术语CSV的总长度
         Map<String, String> termCsvLines = new HashMap<>();
         for (TermEntry term : existingTerms) {
-            String escapedOriginal = escapeCsv(term.original());
-            String escapedTranslated = escapeCsv(term.translated());
+            String escapedOriginal = CSVUtil.escapeCsv(term.original());
+            String escapedTranslated = CSVUtil.escapeCsv(term.translated());
             String csvLine = escapedOriginal + "," + escapedTranslated;
             termCsvLines.put(term.original(), csvLine);
         }
@@ -144,8 +137,8 @@ public class TermUpdater extends Tool {
                 if (existingSourceKeys.contains(key)) {
                     continue;
                 }
-                String escapedOriginal = escapeCsv(todo.original());
-                String escapedTranslated = escapeCsv(todo.translated());
+                String escapedOriginal = CSVUtil.escapeCsv(todo.original());
+                String escapedTranslated = CSVUtil.escapeCsv(todo.translated());
                 tableCsv.append(escapedOriginal).append(",").append(escapedTranslated).append("\n");
                 newTextsInTable.add(todo);
             }
@@ -174,7 +167,7 @@ public class TermUpdater extends Tool {
             // 如果当前批次不为空且添加此表会超出限制，则创建新批次
             if (!currentBatchTrans.isEmpty() && currentChars + tableChars > maxChars) {
                 // 构建当前批次的过滤后术语CSV
-                String filteredTermsCsv = buildFilteredTermsCsv(termCsvLines, currentBatchOriginals);
+                String filteredTermsCsv = buildRelatedTermsCsv(termCsvLines, currentBatchOriginals);
                 TermUpdateModel model = new TermUpdateModel(filteredTermsCsv, new ArrayList<>(currentBatchTrans));
                 batches.add(new ModelWithSources(model, currentBatchNewSources));
 
@@ -202,14 +195,14 @@ public class TermUpdater extends Tool {
         }
 
         // 添加最后一个批次
-        String filteredTermsCsv = buildFilteredTermsCsv(termCsvLines, currentBatchOriginals);
-        TermUpdateModel model = new TermUpdateModel(filteredTermsCsv, currentBatchTrans);
+        String relatedTermsCsv = buildRelatedTermsCsv(termCsvLines, currentBatchOriginals);
+        TermUpdateModel model = new TermUpdateModel(relatedTermsCsv, currentBatchTrans);
         batches.add(new ModelWithSources(model, currentBatchNewSources));
 
         return batches;
     }
 
-    private static String buildFilteredTermsCsv(Map<String, String> termCsvLines, Set<String> originals) {
+    private static String buildRelatedTermsCsv(Map<String, String> termCsvLines, Set<String> originals) {
         if (originals.isEmpty()) {
             return "";
         }
