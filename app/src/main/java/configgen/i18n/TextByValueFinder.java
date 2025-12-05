@@ -19,7 +19,7 @@ public class TextByValueFinder implements LangTextFinder.TextFinder {
 
     @Override
     public String findText(String pk, List<String> fieldChain, String original) {
-        String normalized = Utils.normalize(original);
+        String normalized = I18nUtils.normalize(original);
         String text = originalToTranslated.get(normalized);
         if (text != null && !text.isEmpty()) {
             return text;
@@ -74,7 +74,7 @@ public class TextByValueFinder implements LangTextFinder.TextFinder {
                 String table = row.getField(0);
                 String original = row.getField(1);
                 String translated = row.getField(2);
-                String normalized = Utils.normalize(original);
+                String normalized = I18nUtils.normalize(original);
 
                 TextByValueFinder map = (TextByValueFinder) res.computeIfAbsent(table, t -> new TextByValueFinder());
                 map.originalToTranslated.put(normalized, translated);

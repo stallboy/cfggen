@@ -1,4 +1,4 @@
-@import configgen.i18n.TermUpdateModel
+@import configgen.geni18n.TermUpdateModel
 
 @param TermUpdateModel model
 

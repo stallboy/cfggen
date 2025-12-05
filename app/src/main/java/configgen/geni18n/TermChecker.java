@@ -1,7 +1,8 @@
-package configgen.i18n;
+package configgen.geni18n;
 
 import configgen.gen.Parameter;
 import configgen.gen.Tool;
+import configgen.i18n.LangTextFinder;
 
 import java.nio.file.Path;
 import java.util.*;

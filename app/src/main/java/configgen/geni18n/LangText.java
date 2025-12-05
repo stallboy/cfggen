@@ -1,5 +1,8 @@
-package configgen.i18n;
+package configgen.geni18n;
 
+import configgen.i18n.I18nUtils;
+import configgen.i18n.LangTextFinder;
+import configgen.i18n.TextByIdFinder;
 import configgen.schema.HasText;
 import configgen.util.Logger;
 import configgen.value.CfgValue;
@@ -36,16 +39,16 @@ public class LangText extends LinkedHashMap<String, LangText.TopModuleText> {
         }
 
         void saveSheet(TextByIdFinder finder, Worksheet ws, String table, LangStat stat) {
-            boolean hasDescriptionColumn = finder.nullableDescriptionName != null;
+            boolean hasDescriptionColumn = finder.getNullableDescriptionName() != null;
             int offset = hasDescriptionColumn ? 2 : 1;
 
             { // 写第一行，header
                 ws.inlineString(0, 0, "id");
                 if (hasDescriptionColumn) {
-                    ws.inlineString(0, 1, finder.nullableDescriptionName);
+                    ws.inlineString(0, 1, finder.getNullableDescriptionName());
                 }
                 int idx = 0;
-                for (String field : finder.fieldChainToIndex.keySet()) {
+                for (String field : finder.getFieldChainToIndex().keySet()) {
                     int c = idx * 2 + offset;
                     ws.inlineString(0, c, field);
                     ws.inlineString(0, c + 1, "t(" + field + ")");
@@ -54,7 +57,7 @@ public class LangText extends LinkedHashMap<String, LangText.TopModuleText> {
             }
 
             int r = 1;
-            for (var e : finder.pkToTexts.entrySet()) {
+            for (var e : finder.getPkToTexts().entrySet()) {
                 String pk = e.getKey();
                 OneRecord record = e.getValue();
 
@@ -152,27 +155,27 @@ public class LangText extends LinkedHashMap<String, LangText.TopModuleText> {
         for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
             if (HasText.hasText(vTable.schema())) {
                 TextByIdFinder finder = new TextByIdFinder();
-                finder.nullableDescriptionName = vTable.schema().meta().getStr("lang", null);
+                finder.setNullableDescriptionName( vTable.schema().meta().getStr("lang", null));
                 for (Map.Entry<CfgValue.Value, CfgValue.VStruct> e : vTable.primaryKeyMap().entrySet()) {
                     CfgValue.Value pk = e.getKey();
                     String pkStr = pk.packStr();
                     CfgValue.VStruct vStruct = e.getValue();
-                    String description = finder.nullableDescriptionName != null ?
-                            ValueUtil.extractFieldValueStr(vStruct, finder.nullableDescriptionName) : null;
+                    String description = finder.getNullableDescriptionName() != null ?
+                            ValueUtil.extractFieldValueStr(vStruct, finder.getNullableDescriptionName()) : null;
 
-                    OneRecord record = new OneRecord(description, new ArrayList<>(finder.fieldChainToIndex.size()));
+                    OneRecord record = new OneRecord(description, new ArrayList<>(finder.getFieldChainToIndex().size()));
                     ForeachValue.foreachValue(new TextValueVisitor(finder, record), vStruct, pk, List.of());
                     if (!record.texts().isEmpty()) {
-                        finder.pkToTexts.put(pkStr, record);
+                        finder.getPkToTexts().put(pkStr, record);
                     }
                 }
-                if (!finder.pkToTexts.isEmpty()) {
+                if (!finder.getPkToTexts().isEmpty()) {
                     String tableName = vTable.name();
                     tableMap.put(tableName, finder);
 
-                    long txtCount = finder.pkToTexts.values().stream().mapToLong(
+                    long txtCount = finder.getPkToTexts().values().stream().mapToLong(
                             r -> r.texts().stream().filter(Objects::nonNull).count()).sum();
-                    Logger.verbose("extract %20s: %8d pks %8d texts", tableName, finder.pkToTexts.size(), txtCount);
+                    Logger.verbose("extract %20s: %8d pks %8d texts", tableName, finder.getPkToTexts().size(), txtCount);
                 }
             }
         }
@@ -199,11 +202,11 @@ public class LangText extends LinkedHashMap<String, LangText.TopModuleText> {
                 }
 
                 // 存之前也normalize
-                String normalized = Utils.normalize(original);
+                String normalized = I18nUtils.normalize(original);
                 OneText oneText = new OneText(normalized, translated);
 
-                String fieldChainStr = fieldChainStr(fieldChain);
-                int idx = finder.fieldChainToIndex.computeIfAbsent(fieldChainStr, k -> finder.fieldChainToIndex.size());
+                String fieldChainStr = I18nUtils.fieldChainStr(fieldChain);
+                int idx = finder.getFieldChainToIndex().computeIfAbsent(fieldChainStr, k -> finder.getFieldChainToIndex().size());
                 // 保证中间塞上null
                 while (record.texts().size() <= idx) {
                     record.texts().add(null);

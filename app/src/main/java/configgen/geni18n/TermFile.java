@@ -1,6 +1,7 @@
-package configgen.i18n;
+package configgen.geni18n;
 
 import configgen.i18n.TextByIdFinder.OneText;
+import configgen.i18n.I18nUtils;
 import org.dhatim.fastexcel.Workbook;
 import org.dhatim.fastexcel.Worksheet;
 import org.dhatim.fastexcel.reader.ReadableWorkbook;
@@ -22,11 +23,6 @@ public record TermFile(List<TermEntry> terms,
                             String note) {
     }
 
-    public record SourceEntry(String table,
-                              String original,
-                              String translated) {
-    }
-
 
     private static final String TERM_SHEET_NAME = "term";
     private static final String SOURCE_SHEET_NAME = "source";
@@ -45,7 +41,7 @@ public record TermFile(List<TermEntry> terms,
                     String confidence = row.getCellAsString(3).orElse("");
                     String note = row.getCellAsString(4).orElse("");
                     // 规范化原始文本（与 TermChecker 保持一致）
-                    String normalized = Utils.normalize(original);
+                    String normalized = I18nUtils.normalize(original);
                     if (!original.isEmpty() && !translated.isEmpty()) {
                         terms.add(new TermEntry(normalized, translated, category, confidence, note));
                     }
@@ -62,7 +58,7 @@ public record TermFile(List<TermEntry> terms,
                     String original = row.getCellAsString(1).orElse("");
                     String translated = row.getCellAsString(2).orElse("");
                     if (!table.isEmpty() && !original.isEmpty() && !translated.isEmpty()) {
-                        String normalized = Utils.normalize(original);
+                        String normalized = I18nUtils.normalize(original);
                         sources.computeIfAbsent(table, k -> new ArrayList<>())
                                 .add(new OneText(normalized, translated));
                     }
@@ -146,7 +142,7 @@ public record TermFile(List<TermEntry> terms,
             for (Row row : rows) {
                 String c0 = row.getCellAsString(0).orElse("");
                 String c1 = row.getCellAsString(1).orElse("");
-                String normalized = Utils.normalize(c0);
+                String normalized = I18nUtils.normalize(c0);
                 if (!c0.isEmpty() && !c1.isEmpty()) {
                     result.add(new OneText(normalized, c1));
                 }

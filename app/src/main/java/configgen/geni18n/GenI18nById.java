@@ -1,12 +1,13 @@
-package configgen.i18n;
+package configgen.geni18n;
 
 import configgen.ctx.Context;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
+import configgen.i18n.*;
+import configgen.util.FileUtils;
 import configgen.util.Logger;
 import configgen.value.CfgValue;
 import configgen.value.TextValue;
-
 
 import java.io.*;
 import java.nio.file.Files;
@@ -96,7 +97,7 @@ public final class GenI18nById extends Generator {
         Path outputTempDir = backupDir.resolve(lang + "_temp");
         Path outputBackupDir = backupDir.resolve(lang);
 
-        boolean needReplace = Utils.hasFiles(outputDir);
+        boolean needReplace = FileUtils.hasFiles(outputDir);
         // 确保无temp目录，然后创建
         if (Files.isDirectory(outputTempDir)) {
             throw new RuntimeException("temp directory = %s exist, delete it then retry".formatted(outputTempDir));
@@ -121,17 +122,17 @@ public final class GenI18nById extends Generator {
             }
         }
 
-        String todoFileName = TodoFile.getTodoFileName(lang);
+        String todoFileName = TextByIdFinder.getTodoFileName(lang);
         Path todoFilePath = langsDir.resolve(todoFileName);
         Path todoInBackup = backupDir.resolve(todoFileName);
         // 是覆盖，此时需要先备份原有的，然后temp->outputDir（通过3实现内容相同，就用原有的）
         if (needReplace) {
             // 1.先把 <outputDir> -> <outputBackupDir>
-            Utils.moveDirFilesToAnotherDir(outputDir, outputBackupDir);
-            Utils.moveOneFile(todoFilePath, todoInBackup);
+            FileUtils.moveDirFilesToAnotherDir(outputDir, outputBackupDir);
+            FileUtils.moveOneFile(todoFilePath, todoInBackup);
 
             // 2.然后把<outputTempDir> -> <outputDir> ，删除<outputTempDir>
-            Utils.moveDirFilesToAnotherDir(outputTempDir, outputDir);
+            FileUtils.moveDirFilesToAnotherDir(outputTempDir, outputDir);
             if (!outputTempDir.toFile().delete()) {
                 throw new RuntimeException("delete temp directory = %s failed".formatted(outputTempDir));
             }

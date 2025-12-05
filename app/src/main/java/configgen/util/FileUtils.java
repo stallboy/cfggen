@@ -1,16 +1,10 @@
-package configgen.i18n;
+package configgen.util;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
-public class Utils {
-    private static final Pattern pattern = Pattern.compile("\r\n");
-
-    public static String normalize(String text) {
-        return pattern.matcher(text).replaceAll("\n");
-    }
+public class FileUtils {
 
     public static void moveDirFilesToAnotherDir(Path from, Path to) {
         File toDir = to.toFile();
@@ -59,4 +53,5 @@ public class Utils {
         String[] files = file.list();
         return files != null && files.length > 0;
     }
+
 }

@@ -1,4 +1,4 @@
-package configgen.i18n;
+package configgen.geni18n;
 
 import configgen.ctx.Context;
 import configgen.gen.*;

@@ -1,5 +1,8 @@
-package configgen.i18n;
+package configgen.geni18n;
 
+import configgen.i18n.LangTextFinder;
+import configgen.i18n.TextByIdFinder;
+import configgen.i18n.I18nUtils;
 import configgen.util.Logger;
 import org.dhatim.fastexcel.Workbook;
 import org.dhatim.fastexcel.Worksheet;
@@ -15,7 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static configgen.i18n.TextByIdFinder.*;
-import static configgen.i18n.TextByIdFinder.getCellAsString;
+import static configgen.i18n.I18nUtils.getCellAsString;
 
 public record TodoFile(List<Line> todo,
                        List<Line> done) {
@@ -33,10 +36,6 @@ public record TodoFile(List<Line> todo,
     private static final Line HEADER = new Line("table", "id", "fieldChain", "original", "translated");
 
 
-    public static String getTodoFileName(String lang) {
-        return "_todo_" + lang + ".xlsx";
-    }
-
     private static final String TODO_SHEET_NAME = "todo";
     private static final String DONE_SHEET_NAME = "参考用";
 
@@ -50,8 +49,8 @@ public record TodoFile(List<Line> todo,
             for (var t : e.getValue().entrySet()) {
                 String table = t.getKey();
                 TextByIdFinder finder = t.getValue();
-                java.util.List<String> fieldChainList = finder.fieldChainToIndex.keySet().stream().toList();
-                for (var r : finder.pkToTexts.entrySet()) {
+                java.util.List<String> fieldChainList = finder.getFieldChainToIndex().keySet().stream().toList();
+                for (var r : finder.getPkToTexts().entrySet()) {
                     String pk = r.getKey();
                     OneRecord record = r.getValue();
                     int idx = 0;
@@ -109,7 +108,7 @@ public record TodoFile(List<Line> todo,
             String original = getCellAsString(row, 3).orElse("");
             String translated = getCellAsString(row, 4).orElse("");
             // 原则，original读进来就做normalize
-            String normalized = Utils.normalize(original);
+            String normalized = I18nUtils.normalize(original);
             lines.add(new Line(table, id, fieldChain, normalized, translated));
         }
         return lines;
@@ -177,7 +176,7 @@ public record TodoFile(List<Line> todo,
                     continue;
                 }
 
-                OneRecord record = finder.pkToTexts.get(pk);
+                OneRecord record = finder.getPkToTexts().get(pk);
                 if (record == null) {
                     Logger.log("Record with pk %s not found in table %s, skipping row %d",
                             pk, table, i + 1);
@@ -185,7 +184,7 @@ public record TodoFile(List<Line> todo,
                 }
 
                 List<OneText> texts = record.texts();
-                Integer fieldIndex = finder.fieldChainToIndex.get(fieldChain);
+                Integer fieldIndex = finder.getFieldChainToIndex().get(fieldChain);
                 if (fieldIndex == null || fieldIndex >= texts.size()) {
                     Logger.log("Field chain %s not found in table %s, skipping row %d",
                             fieldChain, table, i + 1);

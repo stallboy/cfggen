@@ -1,10 +1,11 @@
-package configgen.i18n;
+package configgen.geni18n;
 
 import configgen.gen.Parameter;
 import configgen.gen.Tool;
 import configgen.genbyai.AICfg;
-import configgen.i18n.TermFile.TermEntry;
-import configgen.i18n.TermUpdateModel.Translated;
+import configgen.geni18n.TermFile.TermEntry;
+import configgen.geni18n.TermUpdateModel.Translated;
+import configgen.i18n.I18nUtils;
 import configgen.i18n.TextByIdFinder.OneText;
 import configgen.util.JteEngine;
 import configgen.util.Logger;
@@ -61,7 +62,6 @@ public class TermUpdater extends Tool {
 
         // 6. 对每个批次调用 AI 并更新术语表
         List<TermEntry> existingTerms = termFileObj.terms();
-        Map<String, List<OneText>> sources = termFileObj.sources();
 
         for (ModelWithSources batch : batches) {
             List<TermEntry> newTerms = callAIForBatch(batch.model(), openAI);
@@ -277,7 +277,7 @@ public class TermUpdater extends Tool {
                             String confidence = cells.length > 3 ? cells[3] : "";
                             String note = cells.length > 4 ? cells[4] : "";
                             // 规范化原始文本
-                            String normalized = Utils.normalize(original);
+                            String normalized = I18nUtils.normalize(original);
                             entries.add(new TermEntry(normalized, translated, category, confidence, note));
                         }
                     }

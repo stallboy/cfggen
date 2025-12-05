@@ -1,5 +1,6 @@
 package configgen.i18n;
 
+import configgen.geni18n.TodoFile;
 import org.dhatim.fastexcel.reader.*;
 
 import java.io.File;
@@ -28,8 +29,8 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
      * @param description 可以为null
      * @param texts       里面元素可以为null
      */
-    record OneRecord(String description,
-                     List<OneText> texts) {
+    public record OneRecord(String description,
+                            List<OneText> texts) {
 
         @Override
         public boolean equals(Object obj) {
@@ -68,17 +69,17 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
         }
     }
 
-    String nullableDescriptionName;
+    private String nullableDescriptionName;
     /**
      * 这个map的key是fieldChain的字符串表示
      * value是oneRecord.texts的index
      */
-    final Map<String, Integer> fieldChainToIndex = new LinkedHashMap<>();
-    final Map<String, OneRecord> pkToTexts = new LinkedHashMap<>();
+    private final Map<String, Integer> fieldChainToIndex = new LinkedHashMap<>();
+    private final Map<String, OneRecord> pkToTexts = new LinkedHashMap<>();
 
     @Override
     public String findText(String pk, List<String> fieldChain, String original) {
-        String fieldChainStr = fieldChainStr(fieldChain);
+        String fieldChainStr = I18nUtils.fieldChainStr(fieldChain);
         Integer idx = fieldChainToIndex.get(fieldChainStr);
         if (idx == null) {
             return null;
@@ -94,7 +95,7 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
 
         OneText txt = line.texts.get(idx);
         // normalize 只在查找i18n时本着尽量找到的原则,对original做normalize.
-        String normalized = Utils.normalize(original);
+        String normalized = I18nUtils.normalize(original);
         if (txt != null && txt.original.equals(normalized)) {
             return txt.translated;
         } else {
@@ -155,10 +156,6 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
         return true;
     }
 
-    static String fieldChainStr(List<String> fieldChain) {
-        return fieldChain.size() == 1 ? fieldChain.getFirst() : String.join("-", fieldChain);
-    }
-
     public static Map<String, LangTextFinder> loadMultiLang(Path path) {
         Map<String, LangTextFinder> lang2i18n = new TreeMap<>();
         try (Stream<Path> plist = Files.list(path)) {
@@ -178,7 +175,7 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
     public static LangTextFinder loadOneLang(Path langDir) {
         LangTextFinder langFinder = new LangTextFinder();
         String langName = langDir.getFileName().toString();
-        String todoFilename = TodoFile.getTodoFileName(langName);
+        String todoFilename = getTodoFileName(langName);
 
         // 加载正常的xlsx文件
         try (Stream<Path> plist = Files.list(langDir)) {
@@ -203,7 +200,7 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
         return langFinder;
     }
 
-    static Map<String, TextByIdFinder> loadOneFile(Path filePath) {
+    public static Map<String, TextByIdFinder> loadOneFile(Path filePath) {
         Map<String, TextByIdFinder> map = new LinkedHashMap<>();
         try (ReadableWorkbook wb = new ReadableWorkbook(filePath.toFile(),
                 new ReadingOptions(true, false))) {
@@ -240,7 +237,7 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
         int[] tColumns = new int[columnCount]; // 翻译后的文本所在的列index
         int tColumnCnt = 0;
         for (int i = 2; i < columnCount; i++) { // 没有description列时，翻译文本列从2开始（0是pk，1是原始文本）
-            Optional<String> cell = getCellAsString(header, i);
+            Optional<String> cell = I18nUtils.getCellAsString(header, i);
             if (cell.isPresent()) {
                 String field = cell.get();
                 if (field.startsWith("t(") && field.endsWith(")")) {
@@ -258,12 +255,12 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
 
         boolean hasDescription = tColumns[0] > 2;
         if (hasDescription) {
-            textFinder.nullableDescriptionName = getCellAsString(header, 1).orElse("");
+            textFinder.nullableDescriptionName = I18nUtils.getCellAsString(header, 1).orElse("");
         }
 
         for (int r = 1, rowCount = rawRows.size(); r < rowCount; r++) {
             Row row = rawRows.get(r);
-            Optional<String> pkCell = getCellAsString(row, 0);
+            Optional<String> pkCell = I18nUtils.getCellAsString(row, 0);
             if (pkCell.isEmpty()) {
                 continue;
             }
@@ -271,15 +268,15 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
 
             String description = null;
             if (hasDescription) {
-                description = getCellAsString(row, 1).orElse("");
+                description = I18nUtils.getCellAsString(row, 1).orElse("");
             }
 
             List<OneText> texts = new ArrayList<>(tColumnCnt);
             for (int i = 0; i < tColumnCnt; i++) {
                 int translateCol = tColumns[i];
                 int originalCol = translateCol - 1;
-                Optional<String> oC = getCellAsString(row, originalCol);
-                Optional<String> tC = getCellAsString(row, translateCol);
+                Optional<String> oC = I18nUtils.getCellAsString(row, originalCol);
+                Optional<String> tC = I18nUtils.getCellAsString(row, translateCol);
 
                 OneText ot;
                 if (oC.isEmpty() && tC.isEmpty()) {
@@ -288,7 +285,7 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
                     String original = oC.orElse("");
                     String translate = tC.orElse("");
                     // 读进来的时候就normalize，方便查找
-                    String normalized = Utils.normalize(original);
+                    String normalized = I18nUtils.normalize(original);
                     ot = new OneText(normalized, translate);
                 }
                 texts.add(ot);
@@ -298,28 +295,23 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
         }
     }
 
-    /**
-     * 让number类型也返回string，因为翻译返回的excel有些格子是数字默认用了number
-     */
-    static Optional<String> getCellAsString(Row row, int c) {
-        Optional<Cell> cell = row.getOptionalCell(c);
-        if (cell.isPresent()) {
-            switch (cell.get().getType()) {
-                case NUMBER -> {
-                    return Optional.of(cell.get().asNumber().toPlainString());
-                }
-                case STRING -> {
-                    return Optional.of(cell.get().asString());
-                }
-                case EMPTY -> {
-                    return Optional.of("");
-                }
-                default -> {
-                    throw new IllegalArgumentException("不支持的单元格类型: " + cell.get().getType());
-                }
-            }
-        } else {
-            return Optional.empty();
-        }
+    public static String getTodoFileName(String lang) {
+        return "_todo_" + lang + ".xlsx";
+    }
+
+    public String getNullableDescriptionName() {
+        return nullableDescriptionName;
+    }
+
+    public void setNullableDescriptionName(String name) {
+        nullableDescriptionName = name;
+    }
+
+    public Map<String, Integer> getFieldChainToIndex() {
+        return fieldChainToIndex;
+    }
+
+    public Map<String, OneRecord> getPkToTexts() {
+        return pkToTexts;
     }
 }
