@@ -2,6 +2,7 @@ package configgen.geni18n;
 
 import configgen.geni18n.TodoFile.Line;
 import configgen.i18n.I18nUtils;
+import configgen.util.Logger;
 import org.dhatim.fastexcel.Workbook;
 import org.dhatim.fastexcel.Worksheet;
 import org.dhatim.fastexcel.reader.ReadableWorkbook;
@@ -63,7 +64,7 @@ public record TodoEdit(List<TodoEntry> todo,
             String translated = line.translated();
             if (!original.isEmpty() && !translated.isEmpty()) {
                 doneByTable.computeIfAbsent(table, k -> new HashMap<>())
-                        .put(original, translated);
+                        .put(I18nUtils.normalize(original), translated);
             }
         }
         return doneByTable;
@@ -75,25 +76,34 @@ public record TodoEdit(List<TodoEntry> todo,
      * @return Map<String, Set<String>> key是table，value是todoOriginals
      */
     public TodoOriginalsByTable useTranslationsInDoneIfSameOriginal(DoneByTable doneByTable) {
+        int alreadyTranslated = 0;
+        int sameOriginalCount = 0;
+        int needTranslateCount = 0;
+
         TodoOriginalsByTable todoOriginalsByTable = new TodoOriginalsByTable();
         for (TodoEntry entry : todo) {
             if (entry.hasTranslated()) {
+                alreadyTranslated++;
                 continue;
             }
             Map<String, String> map = doneByTable.get(entry.table);
             if (map != null) {
                 // 如果done sheet中已有相同original的翻译，则使用该翻译
-                String translated = map.get(entry.original);
+                String translated = map.get(I18nUtils.normalize(entry.original));
                 if (translated != null) {
                     // 更新entry的translated字段
                     entry.aiTranslated = translated;
+                    sameOriginalCount++;
                     continue;
                 }
             }
             // 按table分组添加到结果映射中
             todoOriginalsByTable.computeIfAbsent(entry.table, k -> new LinkedHashSet<>())
                     .add(entry.original);
+            needTranslateCount++;
         }
+        Logger.log("translated = %d, same original = %d, need translate = %d",
+                alreadyTranslated, sameOriginalCount, needTranslateCount);
         return todoOriginalsByTable;
     }
 

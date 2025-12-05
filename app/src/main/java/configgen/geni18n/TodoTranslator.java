@@ -51,7 +51,7 @@ public class TodoTranslator extends Tool {
         termFile = parameter.get("term", null);
         aiCfgFile = parameter.get("ai", "ai.json");
         promptJteFile = parameter.get("prompt", null);
-        maxLines = Integer.parseInt(parameter.get("maxlines", "10"));
+        maxLines = Integer.parseInt(parameter.get("maxlines", "30"));
     }
 
     @Override
@@ -84,9 +84,8 @@ public class TodoTranslator extends Tool {
         }
 
         // 4. 按table为单位进行分批处理
-        List<TodoOriginalsByTable> batches = splitIntoBatchesByTable(todoOriginalsByTable, maxLines);
+        List<List<TableOriginal>> batches = splitIntoBatchesByTable(todoOriginalsByTable, maxLines);
 
-        Logger.log("split to %d parts", batches.size());
 
         // 5. 初始化OpenAI客户端
         SimpleOpenAI openAI = SimpleOpenAI.builder()
@@ -95,20 +94,17 @@ public class TodoTranslator extends Tool {
                 .build();
 
         // 6. 处理每个批次
-        for (TodoOriginalsByTable batchMap : batches) {
+        for (List<TableOriginal> batch : batches) {
             // 收集批次中所有table的待翻译文本
-            List<String> todoOriginals = new ArrayList<>();
+            Set<String> todoOriginals = new LinkedHashSet<>();
             Map<String, String> mostSimilarResult = new HashMap<>();
 
-            // 遍历批次中的每个table
-            for (Map.Entry<String, Set<String>> entry : batchMap.entrySet()) {
-                String table = entry.getKey();
-                Set<String> originals = entry.getValue();
-                todoOriginals.addAll(originals);
-
-                Map<String, String> done = doneByTable.get(table);
-                if (done != null) {
-                    collectMostSimilarInDone(mostSimilarResult, originals, done);
+            for (TableOriginal to : batch) {
+                todoOriginals.add(to.original);
+                Map.Entry<String, String> bestMatch = findMostSimilarTranslation(to.original, doneByTable.get(to.table));
+                if (bestMatch != null) {
+                    // 只添加不重复的翻译
+                    mostSimilarResult.put(bestMatch.getKey(), bestMatch.getValue());
                 }
             }
 
@@ -124,7 +120,7 @@ public class TodoTranslator extends Tool {
 
             // 创建TranslateModel
             TodoTranslateModel model = new TodoTranslateModel(sourceLang, targetLang,
-                    todoOriginals,
+                    todoOriginals.stream().toList(),
                     relatedTermsCsv,
                     relatedTranslationsCsv);
             // 渲染提示词
@@ -140,27 +136,30 @@ public class TodoTranslator extends Tool {
         Logger.log("翻译完成");
     }
 
+    private record TableOriginal(String table,
+                                 String original) {
+    }
 
-    private List<TodoOriginalsByTable> splitIntoBatchesByTable(Map<String, Set<String>> todoOriginalsByTable, int maxBatchSize) {
-        List<TodoOriginalsByTable> batches = new ArrayList<>();
-
-        TodoOriginalsByTable batch = new TodoOriginalsByTable();
-        batches.add(batch);
-        int batchSize = 0;
-
+    private List<List<TableOriginal>> splitIntoBatchesByTable(TodoOriginalsByTable todoOriginalsByTable,
+                                                              int maxBatchSize) {
+        // 1. 先展开成List，每个item是(table, original)
+        List<TableOriginal> allItems = new ArrayList<>();
         for (Map.Entry<String, Set<String>> entry : todoOriginalsByTable.entrySet()) {
             String table = entry.getKey();
-            Set<String> originals = entry.getValue();
-
-            batch.put(table, originals);
-            batchSize += originals.size();
-
-            if (batchSize >= maxBatchSize) {
-                batch = new TodoOriginalsByTable();
-                batches.add(batch);
-                batchSize = 0;
+            for (String original : entry.getValue()) {
+                allItems.add(new TableOriginal(table, original));
             }
         }
+
+        // 2. 按maxBatchSize拆分
+        List<List<TableOriginal>> batches = new ArrayList<>();
+        for (int i = 0; i < allItems.size(); i += maxBatchSize) {
+            int end = Math.min(i + maxBatchSize, allItems.size());
+            List<TableOriginal> batch = allItems.subList(i, end);
+            batches.add(batch);
+        }
+
+        Logger.log("allItems = %d, split to %d parts", allItems.size(), batches.size());
         return batches;
     }
 
@@ -210,7 +209,7 @@ public class TodoTranslator extends Tool {
         return entries;
     }
 
-    private static String buildRelatedTermsCsv(List<String> todoOriginals, List<OneText> terms) {
+    private static String buildRelatedTermsCsv(Set<String> todoOriginals, List<OneText> terms) {
         if (terms == null) {
             return "";
         }
@@ -247,18 +246,6 @@ public class TodoTranslator extends Tool {
         return sb.toString();
     }
 
-
-    private static void collectMostSimilarInDone(Map<String, String> mostSimilarResult, Set<String> originals, Map<String, String> done) {
-        for (String original : originals) {
-            Map.Entry<String, String> bestMatch = findMostSimilarTranslation(original, done);
-
-            if (bestMatch != null) {
-                // 只添加不重复的翻译
-                mostSimilarResult.put(bestMatch.getKey(), bestMatch.getValue());
-            }
-        }
-    }
-
     /**
      * 查找最相似的一个翻译
      */
@@ -279,7 +266,7 @@ public class TodoTranslator extends Tool {
             }
         }
 
-//        System.out.printf("%f\n", bestSimilarity);
+
         if (bestSimilarity > 0.5) {
             return bestMatch;
         }
@@ -297,9 +284,6 @@ public class TodoTranslator extends Tool {
             return 0.0;
         }
 
-        int len1 = str1.length();
-        int len2 = str2.length();
-
 
         // 使用Apache Commons Text的LevenshteinDistance
         LevenshteinDistance levenshtein = LevenshteinDistance.getDefaultInstance();
@@ -309,10 +293,15 @@ public class TodoTranslator extends Tool {
             return 0.0;
         }
 
+        int len1 = str1.length();
+        int len2 = str2.length();
         int maxLen = Math.max(len1, len2);
 
         // 计算相似度：1 - (距离/最大长度)
-        return 1.0 - ((double) distance / maxLen);
+        //noinspection UnnecessaryLocalVariable
+        double res = 1.0 - ((double) distance / maxLen);
+//        System.out.printf("%s ----- %s ----- %f\n", str1, str2, res);
+        return res;
     }
 
 }
