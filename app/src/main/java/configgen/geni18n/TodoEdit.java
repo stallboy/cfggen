@@ -70,12 +70,19 @@ public record TodoEdit(List<TodoEntry> todo,
         return doneByTable;
     }
 
+    public record StatAndTodo(int alreadyTranslated,
+                              int sameOriginalCount,
+                              int needTranslateCount,
+                              @NotNull TodoOriginalsByTable todo) {
+
+    }
+
     /**
      * 使用done里的已翻译内容填到todo，返回仍需要翻译的
      * @param doneByTable done里的已翻译内容
      * @return Map<String, Set<String>> key是table，value是todoOriginals
      */
-    public TodoOriginalsByTable useTranslationsInDoneIfSameOriginal(DoneByTable doneByTable) {
+    public StatAndTodo useTranslationsInDoneIfSameOriginal(DoneByTable doneByTable) {
         int alreadyTranslated = 0;
         int sameOriginalCount = 0;
         int needTranslateCount = 0;
@@ -102,9 +109,7 @@ public record TodoEdit(List<TodoEntry> todo,
                     .add(entry.original);
             needTranslateCount++;
         }
-        Logger.log("translated = %d, same original = %d, need translate = %d",
-                alreadyTranslated, sameOriginalCount, needTranslateCount);
-        return todoOriginalsByTable;
+        return new StatAndTodo(alreadyTranslated, sameOriginalCount, needTranslateCount, todoOriginalsByTable);
     }
 
     /**

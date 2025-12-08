@@ -13,10 +13,9 @@ import configgen.genjson.GenJson;
 import configgen.genbyai.GenByAI;
 import configgen.genbyai.GenTsSchema;
 import configgen.genlua.GenLua;
-import configgen.geni18n.TermChecker;
+import configgen.geni18n.TodoTermListerAndChecker;
 import configgen.geni18n.GenI18nByValue;
 import configgen.geni18n.GenI18nById;
-import configgen.geni18n.TermUpdater;
 import configgen.geni18n.TodoTranslator;
 import configgen.mcpserver.CfgMcpServer;
 import configgen.tool.*;
@@ -156,9 +155,8 @@ public final class Main {
             Tools.addProvider("fastexcelcheck", ComparePoiAndFastExcel::new);
         }
         Tools.addProvider("readjavadata", JavaData.ToolJavaData::new);
-        Tools.addProvider("termcheck", TermChecker::new);
-        Tools.addProvider("termupdate", TermUpdater::new);
-        Tools.addProvider("todotranslate", TodoTranslator::new);
+        Tools.addProvider("term", TodoTermListerAndChecker::new);
+        Tools.addProvider("translate", TodoTranslator::new);
 
         Generators.addProvider("verify", GenVerifier::new);
         Generators.addProvider("search", ValueSearcher.GenValueSearcher::new);

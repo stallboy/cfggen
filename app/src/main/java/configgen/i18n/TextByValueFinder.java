@@ -53,7 +53,7 @@ public class TextByValueFinder implements LangTextFinder.TextFinder {
     }
 
     public static LangTextFinder loadOneLang(Path path) {
-        List<CsvRow> rows = CSVUtil.read(path, "UTF-8");
+        List<CsvRow> rows = CSVUtil.read(path);
 
         if (rows.isEmpty()) {
             throw new IllegalArgumentException("国际化i18n文件为空");

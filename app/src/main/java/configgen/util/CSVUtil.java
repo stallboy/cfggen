@@ -13,6 +13,11 @@ import java.util.OptionalInt;
 
 public class CSVUtil {
 
+    public static List<CsvRow> read(Path path) {
+        return read(path, "UTF-8", ',');
+    }
+
+
     public static List<CsvRow> read(Path path, String defaultEncoding) {
         return read(path, defaultEncoding, ',');
     }

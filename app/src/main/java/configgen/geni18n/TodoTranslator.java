@@ -4,11 +4,7 @@ import configgen.gen.Parameter;
 import configgen.gen.Tool;
 import configgen.genbyai.AICfg;
 import configgen.genbyai.GenByAI;
-import configgen.geni18n.TodoEdit.AITranslationEntry;
-import configgen.geni18n.TodoEdit.AITranslationResult;
-import configgen.geni18n.TodoEdit.DoneByTable;
-import configgen.geni18n.TodoEdit.TodoOriginalsByTable;
-import configgen.i18n.TextByIdFinder.OneText;
+import configgen.geni18n.TodoEdit.*;
 import configgen.util.CSVUtil;
 import configgen.util.FileUtils;
 import configgen.util.JteEngine;
@@ -34,12 +30,12 @@ public class TodoTranslator extends Tool {
     private final String sourceLang;
     private final String targetLang;
 
-    private final String termFile;
+    private final String termCfgFile;
     private final String todoFile;
     private final String aiCfgFile;
     private final String promptJteFile; // 文件路径或null（使用默认模板）
 
-    private final int maxLines;
+    private final int batch;
     private AICfg aiCfg;
 
     public TodoTranslator(Parameter parameter) {
@@ -48,10 +44,10 @@ public class TodoTranslator extends Tool {
         targetLang = parameter.get("target", "英文");
 
         todoFile = parameter.get("todo", "language/_todo_en.xlsx");
-        termFile = parameter.get("term", null);
+        termCfgFile = parameter.get("term", null);
         aiCfgFile = parameter.get("ai", "ai.json");
         promptJteFile = parameter.get("prompt", null);
-        maxLines = Integer.parseInt(parameter.get("maxlines", "30"));
+        batch = Integer.parseInt(parameter.get("batch", "30"));
     }
 
     @Override
@@ -61,21 +57,28 @@ public class TodoTranslator extends Tool {
         aiCfg = AICfg.readFromFile(aiCfgFile);
         Logger.log("开始翻译TODO文件: %s", todoFile);
 
-        List<OneText> terms = null;
-        if (termFile != null) {
-            terms = TermFile.loadTerm(Path.of(termFile));
-        }
-
 
         // 1. 读取todo文件
         Path todoFilePath = Path.of(todoFile);
         TodoEdit todoEdit = TodoEdit.read(todoFilePath);
 
+        Map<String, String> terms = null;
+        if (termCfgFile != null) {
+            terms = TermCfg.load(Path.of(termCfgFile)).extractTermsAndOthers(todoEdit.done()).terms();
+        }
+
         // 2. 构建done sheet的映射：table -> (original -> translated)
         DoneByTable doneByTable = todoEdit.parseDoneByTable();
 
         // 3. 收集需要翻译的todo行
-        TodoOriginalsByTable todoOriginalsByTable = todoEdit.useTranslationsInDoneIfSameOriginal(doneByTable);
+        StatAndTodo st = todoEdit.useTranslationsInDoneIfSameOriginal(doneByTable);
+        Logger.log("translated = %d, same original = %d, need translate = %d",
+                st.alreadyTranslated(), st.sameOriginalCount(), st.needTranslateCount());
+        TodoOriginalsByTable todoOriginalsByTable = st.todo();
+
+        if (st.sameOriginalCount() > 0 ){
+            todoEdit.save(todoFilePath);
+        }
 
         // 检查是否有需要翻译的文本
         if (todoOriginalsByTable.isEmpty()) {
@@ -84,7 +87,7 @@ public class TodoTranslator extends Tool {
         }
 
         // 4. 按table为单位进行分批处理
-        List<List<TableOriginal>> batches = splitIntoBatchesByTable(todoOriginalsByTable, maxLines);
+        List<List<TableOriginal>> batches = splitIntoBatchesByTable(todoOriginalsByTable, batch);
 
 
         // 5. 初始化OpenAI客户端
@@ -209,24 +212,24 @@ public class TodoTranslator extends Tool {
         return entries;
     }
 
-    private static String buildRelatedTermsCsv(Set<String> todoOriginals, List<OneText> terms) {
+    private static String buildRelatedTermsCsv(Set<String> todoOriginals, Map<String, String> terms) {
         if (terms == null) {
             return "";
         }
 
         StringBuilder sb = new StringBuilder();
-        for (OneText term : terms) {
+        for (var term : terms.entrySet()) {
             // 检查术语是否出现在任何待翻译文本中
             boolean found = false;
             for (String original : todoOriginals) {
-                if (original.contains(term.original())) {
+                if (original.contains(term.getKey())) {
                     found = true;
                     break;
                 }
             }
             if (found) {
-                sb.append(CSVUtil.escapeCsv(term.original())).append(",");
-                sb.append(CSVUtil.escapeCsv(term.translated())).append("\n");
+                sb.append(CSVUtil.escapeCsv(term.getKey())).append(",");
+                sb.append(CSVUtil.escapeCsv(term.getValue())).append("\n");
             }
         }
         return sb.toString();
@@ -265,7 +268,6 @@ public class TodoTranslator extends Tool {
                 bestMatch = entry;
             }
         }
-
 
         if (bestSimilarity > 0.5) {
             return bestMatch;

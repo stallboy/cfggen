@@ -41,7 +41,7 @@ public class NoteEditService {
         this.noteCsvPath = noteCsvPath;
         noteMap = new LinkedHashMap<>(256);
         if (Files.exists(noteCsvPath)) {
-            List<CsvRow> rows = CSVUtil.read(noteCsvPath, "UTF-8");
+            List<CsvRow> rows = CSVUtil.read(noteCsvPath);
             for (CsvRow row : rows) {
                 if (row.getFieldCount() == 2) {
                     noteMap.put(row.getField(0), row.getField(1));

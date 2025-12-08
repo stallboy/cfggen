@@ -77,7 +77,6 @@ public record TodoFile(List<Line> todo,
                 new ReadingOptions(true, false))) {
 
             Optional<Sheet> todoSheet = wb.findSheet(TODO_SHEET_NAME);
-            Optional<Sheet> doneSheet = wb.findSheet(DONE_SHEET_NAME);
             List<Line> todo;
             if (todoSheet.isPresent()) {
                 todo = readSheetToLines(todoSheet.get());
@@ -85,6 +84,7 @@ public record TodoFile(List<Line> todo,
                 todo = List.of();
             }
 
+            Optional<Sheet> doneSheet = wb.findSheet(DONE_SHEET_NAME);
             List<Line> done;
             if (doneSheet.isPresent()) {
                 done = readSheetToLines(doneSheet.get());

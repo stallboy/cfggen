@@ -81,3 +81,5 @@
 /cfgeditor/.claude
 /app/.gradle
 /app/.idea/gradle.xml
+/app/.vscode
+/app/spec.md
