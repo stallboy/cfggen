@@ -5,6 +5,7 @@ import configgen.gen.Tool;
 import configgen.genbyai.AICfg;
 import configgen.geni18n.TermFile.TermEntry;
 import configgen.geni18n.TermUpdateModel.Translated;
+import configgen.geni18n.TermUpdateWithRefModel;
 import configgen.i18n.I18nUtils;
 import configgen.i18n.TextByIdFinder.OneText;
 import configgen.util.CSVUtil;
@@ -27,6 +28,7 @@ import static io.github.sashirestela.openai.domain.chat.ChatMessage.*;
 public class TermUpdater extends Tool {
     private final Path termFile;
     private final Path todoFile;
+    private final Path referenceTermFile;
     private final String aiCfgFile;
     private final String promptJteFile; // 文件路径或 null（使用默认模板）
     private final int splitChars;
@@ -38,6 +40,9 @@ public class TermUpdater extends Tool {
         String todo = parameter.get("todo", "language/_todo_en.xlsx");
         termFile = Path.of(term);
         todoFile = Path.of(todo);
+
+        String referenceTerm = parameter.get("reference", null);
+        referenceTermFile = (referenceTerm != null) ? Path.of(referenceTerm) : null;
         aiCfgFile = parameter.get("ai", "ai.json");
         promptJteFile = parameter.get("prompt", null);
         splitChars = Integer.parseInt(parameter.get("maxchars", "96000"));
@@ -45,6 +50,83 @@ public class TermUpdater extends Tool {
 
     @Override
     public void call() {
+        if (referenceTermFile == null) {
+            updateTermFileWithNoReference();
+        } else {
+            updateTermFileWithReference();
+        }
+    }
+
+    public void updateTermFileWithReference() {
+        FileUtils.assureFileExistIf(promptJteFile);
+
+        aiCfg = AICfg.readFromFile(aiCfgFile);
+
+        // 1. 读取当前术语文件（只读term部分）
+        TermFile termFileObj = TermFile.readTermOnlyInTermFile(termFile);
+        List<TermEntry> existingTerms = termFileObj.terms();
+
+        // 2. 读取参考术语文件
+        TermFile referenceTermFileObj = TermFile.readTermOnlyInTermFile(referenceTermFile);
+        List<TermEntry> referenceTerms = referenceTermFileObj.terms();
+
+        // 3. 收集需要翻译的术语
+        Set<String> needTranslateTerms = new HashSet<>();
+        for (TermEntry referenceTerm : referenceTerms) {
+            boolean found = false;
+            for (TermEntry existingTerm : existingTerms) {
+                if (existingTerm.original().equals(referenceTerm.original())) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                needTranslateTerms.add(referenceTerm.original());
+            }
+        }
+
+        // 4. 读取todo文件的sources（参考用sheet）
+        Map<String, List<OneText>> sourcePairs = readTodoFileSources(todoFile);
+
+        // 5. 精简needTranslateTerms，找到包含关系且长度最小的source pair
+        List<OneText> relatedTranslatedPairs = new ArrayList<>();
+        Set<String> processedTerms = new HashSet<>();
+
+        for (String term : needTranslateTerms) {
+            OneText bestMatch = findBestSourceMatch(term, sourcePairs);
+            if (bestMatch != null) {
+                relatedTranslatedPairs.add(bestMatch);
+                processedTerms.add(term);
+            }
+        }
+
+        // 6. 构建术语CSV
+        String termsInCsv = buildTermsCsv(needTranslateTerms);
+
+        // 7. 构建相关翻译对CSV
+        String relatedTranslatedPairsCsv = buildRelatedTranslatedPairsCsv(relatedTranslatedPairs);
+
+        // 8. 准备AI请求数据
+        TermUpdateWithRefModel model = new TermUpdateWithRefModel(termsInCsv, relatedTranslatedPairsCsv);
+
+        // 9. 初始化OpenAI客户端
+        SimpleOpenAI openAI = SimpleOpenAI.builder()
+                .baseUrl(aiCfg.baseUrl())
+                .apiKey(aiCfg.apiKey())
+                .build();
+
+        // 10. 调用AI
+        String prompt = JteEngine.renderTryFileFirst(promptJteFile, "termupdatewithref.jte", model);
+        List<TermEntry> newTerms = callAI(prompt, openAI, aiCfg.model());
+
+        // 11. 合并并保存术语表
+        List<TermEntry> mergedTerms = TermFile.mergeTerms(existingTerms, newTerms);
+        TermFile updatedTermFile = new TermFile(mergedTerms, termFileObj.sources());
+        TermFile.writeTermFile(termFile, updatedTermFile);
+    }
+
+
+    public void updateTermFileWithNoReference() {
         FileUtils.assureFileExistIf(promptJteFile);
 
         aiCfg = AICfg.readFromFile(aiCfgFile);
@@ -58,17 +140,19 @@ public class TermUpdater extends Tool {
         List<ModelWithSources> batches = prepareBatches(termFileObj, todoEntriesByTable, splitChars);
         Logger.log("split to %d parts", batches.size());
 
-        // 5. 初始化 OpenAI 客户端
+        // 4. 初始化 OpenAI 客户端
         SimpleOpenAI openAI = SimpleOpenAI.builder()
                 .baseUrl(aiCfg.baseUrl())
                 .apiKey(aiCfg.apiKey())
                 .build();
 
-        // 6. 对每个批次调用 AI 并更新术语表
+        // 5. 对每个批次调用 AI 并更新术语表
         List<TermEntry> existingTerms = termFileObj.terms();
-
         for (ModelWithSources batch : batches) {
-            List<TermEntry> newTerms = callAIForBatch(batch.model(), openAI);
+            // 使用 JTE 模板引擎渲染提示词
+            String prompt = JteEngine.renderTryFileFirst(promptJteFile, "termupdate.jte", batch);
+
+            List<TermEntry> newTerms = callAI(prompt, openAI, aiCfg.model());
             existingTerms = TermFile.mergeTerms(existingTerms, newTerms);
             // 每个批次合并后都保存到术语表文件
             TermFile updatedTermFile = new TermFile(existingTerms, batch.newSources());
@@ -215,12 +299,68 @@ public class TermUpdater extends Tool {
     private record TableProcessedData(String table, String csv, List<OneText> newTexts) {
     }
 
+    private Map<String, List<OneText>> readTodoFileSources(Path todoFile) {
+        TodoFile todo = TodoFile.read(todoFile);
+        Map<String, List<OneText>> sourceMap = new HashMap<>();
+        for (TodoFile.Line line : todo.done()) {
+            String original = line.original();
+            String translated = line.translated();
+            if (!original.isEmpty() && !translated.isEmpty()) {
+                sourceMap.computeIfAbsent(line.table(), k -> new ArrayList<>())
+                        .add(new OneText(original, translated));
+            }
+        }
+        return sourceMap;
+    }
 
-    private List<TermEntry> callAIForBatch(TermUpdateModel batch,
-                                           SimpleOpenAI openAI) {
-        // 使用 JTE 模板引擎渲染提示词
-        String prompt = JteEngine.renderTryFileFirst(promptJteFile, "termupdate.jte", batch);
+    private OneText findBestSourceMatch(String term, Map<String, List<OneText>> sourcePairs) {
+        OneText bestMatch = null;
+        int bestLength = Integer.MAX_VALUE;
 
+        // 遍历所有source pairs
+        for (List<OneText> pairs : sourcePairs.values()) {
+            for (OneText pair : pairs) {
+                String original = pair.original();
+                // 检查是否包含该术语
+                if (original.contains(term)) {
+                    // 选择长度最小的匹配
+                    if (original.length() < bestLength) {
+                        bestLength = original.length();
+                        bestMatch = pair;
+                    }
+                }
+            }
+        }
+        return bestMatch;
+    }
+
+    private String buildTermsCsv(Set<String> terms) {
+        if (terms.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (String term : terms) {
+            String escapedTerm = CSVUtil.escapeCsv(term);
+            sb.append(escapedTerm).append(",\n"); // 只有原文，翻译为空
+        }
+        return sb.toString();
+    }
+
+    private String buildRelatedTranslatedPairsCsv(List<OneText> pairs) {
+        if (pairs.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (OneText pair : pairs) {
+            String escapedOriginal = CSVUtil.escapeCsv(pair.original());
+            String escapedTranslated = CSVUtil.escapeCsv(pair.translated());
+            sb.append(escapedOriginal).append(",").append(escapedTranslated).append("\n");
+        }
+        return sb.toString();
+    }
+
+
+    private static List<TermEntry> callAI(String prompt, SimpleOpenAI openAI, String model) {
         // 构建聊天消息
         List<ChatMessage> messages = List.of(
                 UserMessage.of(prompt)
@@ -228,7 +368,7 @@ public class TermUpdater extends Tool {
 
         // 调用 AI
         var chatRequest = ChatRequest.builder()
-                .model(aiCfg.model())
+                .model(model)
                 .messages(messages)
                 .temperature(0.0)
                 .build();

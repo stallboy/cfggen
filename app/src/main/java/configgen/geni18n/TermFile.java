@@ -28,6 +28,14 @@ public record TermFile(List<TermEntry> terms,
     private static final String SOURCE_SHEET_NAME = "source";
 
     public static TermFile readTermFile(Path termFile) {
+        return readTermFile(termFile, false);
+    }
+
+    public static TermFile readTermOnlyInTermFile(Path termFile) {
+        return readTermFile(termFile, true);
+    }
+
+    private static TermFile readTermFile(Path termFile, boolean readTermOnly) {
         try (ReadableWorkbook wb = new ReadableWorkbook(termFile.toFile(), new ReadingOptions(true, false))) {
             // 读取 term sheet
             Optional<Sheet> termSheet = wb.findSheet(TERM_SHEET_NAME);
@@ -48,19 +56,21 @@ public record TermFile(List<TermEntry> terms,
                 }
             }
 
-            // 读取 source sheet
-            Optional<Sheet> sourceSheet = wb.findSheet(SOURCE_SHEET_NAME);
             Map<String, List<OneText>> sources = new HashMap<>();
-            if (sourceSheet.isPresent()) {
-                List<Row> rows = sourceSheet.get().read();
-                for (Row row : rows) {
-                    String table = row.getCellAsString(0).orElse("");
-                    String original = row.getCellAsString(1).orElse("");
-                    String translated = row.getCellAsString(2).orElse("");
-                    if (!table.isEmpty() && !original.isEmpty() && !translated.isEmpty()) {
-                        String normalized = I18nUtils.normalize(original);
-                        sources.computeIfAbsent(table, k -> new ArrayList<>())
-                                .add(new OneText(normalized, translated));
+            if (!readTermOnly) {
+                // 读取 source sheet
+                Optional<Sheet> sourceSheet = wb.findSheet(SOURCE_SHEET_NAME);
+                if (sourceSheet.isPresent()) {
+                    List<Row> rows = sourceSheet.get().read();
+                    for (Row row : rows) {
+                        String table = row.getCellAsString(0).orElse("");
+                        String original = row.getCellAsString(1).orElse("");
+                        String translated = row.getCellAsString(2).orElse("");
+                        if (!table.isEmpty() && !original.isEmpty() && !translated.isEmpty()) {
+                            String normalized = I18nUtils.normalize(original);
+                            sources.computeIfAbsent(table, k -> new ArrayList<>())
+                                    .add(new OneText(normalized, translated));
+                        }
                     }
                 }
             }
@@ -89,16 +99,18 @@ public record TermFile(List<TermEntry> terms,
                 }
 
                 // 写入 source sheet
-                Worksheet sourceWs = wb.newWorksheet(SOURCE_SHEET_NAME);
                 Map<String, List<OneText>> sources = termFileData.sources();
-                int rowIndex = 0;
-                for (Map.Entry<String, List<OneText>> entry : sources.entrySet()) {
-                    String table = entry.getKey();
-                    for (OneText source : entry.getValue()) {
-                        sourceWs.inlineString(rowIndex, 0, table);
-                        sourceWs.inlineString(rowIndex, 1, source.original());
-                        sourceWs.inlineString(rowIndex, 2, source.translated());
-                        rowIndex++;
+                if (!sources.isEmpty()) {
+                    Worksheet sourceWs = wb.newWorksheet(SOURCE_SHEET_NAME);
+                    int rowIndex = 0;
+                    for (Map.Entry<String, List<OneText>> entry : sources.entrySet()) {
+                        String table = entry.getKey();
+                        for (OneText source : entry.getValue()) {
+                            sourceWs.inlineString(rowIndex, 0, table);
+                            sourceWs.inlineString(rowIndex, 1, source.original());
+                            sourceWs.inlineString(rowIndex, 2, source.translated());
+                            rowIndex++;
+                        }
                     }
                 }
             }
@@ -155,3 +167,5 @@ public record TermFile(List<TermEntry> terms,
     }
 
 }
+
+
