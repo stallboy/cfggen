@@ -47,7 +47,7 @@ public class TodoTranslator extends Tool {
         termCfgFile = parameter.get("term", null);
         aiCfgFile = parameter.get("ai", "ai.json");
         promptJteFile = parameter.get("prompt", null);
-        batch = Integer.parseInt(parameter.get("batch", "30"));
+        batch = Integer.parseInt(parameter.get("batch", "10"));
     }
 
     @Override
