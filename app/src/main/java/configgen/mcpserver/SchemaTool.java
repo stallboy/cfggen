@@ -27,4 +27,15 @@ public class SchemaTool {
     }
 
 
+    @McpTool(description = "list table names")
+    public String listTable() {
+        CfgValueWithContext vc = CfgMcpServer.getInstance().cfgValueWithContext();
+        CfgValue cfgValue = vc.cfgValue();
+
+        StringBuilder sb = new StringBuilder(2048);
+        for (CfgValue.VTable table : cfgValue.sortedTables()) {
+            sb.append(table.name()).append("\n");
+        }
+        return "```\n%s```".formatted(sb.toString());
+    }
 }
