@@ -7,6 +7,7 @@ import configgen.ctx.Context;
 import configgen.ctx.WatchAndPostRun;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
+import configgen.util.Logger;
 import configgen.value.CfgValue;
 
 import java.io.IOException;
@@ -45,7 +46,7 @@ public class CfgMcpServer extends GeneratorWithTag {
         INSTANCE = this;
         if (waitSecondsAfterWatchEvt > 0) {
             WatchAndPostRun.INSTANCE.startWatch(ctx, waitSecondsAfterWatchEvt);
-            WatchAndPostRun.INSTANCE.registerPostRunCallback(this::initFromCtx);
+            WatchAndPostRun.INSTANCE.registerPostRunCallback(this::reloadCfgValue);
             if (postRun != null) {
                 WatchAndPostRun.INSTANCE.registerPostRunBat(postRun);
             }
@@ -63,6 +64,11 @@ public class CfgMcpServer extends GeneratorWithTag {
         // 此时所有的修改指令将返回错误 serverNotEditable
         CfgValue cfgValue = newContext.makeValue(tag, true);
         cfgValueWithContext = new CfgValueWithContext(cfgValue, newContext);
+    }
+
+    private void reloadCfgValue(Context newContext) {
+        initFromCtx(newContext);
+        Logger.log("reload ok");
     }
 
     public CfgValueWithContext cfgValueWithContext() {
