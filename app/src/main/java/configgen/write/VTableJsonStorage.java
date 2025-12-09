@@ -1,13 +1,13 @@
 package configgen.write;
 
 import configgen.gen.Generator;
-import configgen.util.CachedFiles;
 import configgen.value.CfgValue.VStruct;
 import configgen.value.ValueToJson;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static configgen.data.DataUtil.getJsonTableDir;
@@ -32,18 +32,14 @@ public class VTableJsonStorage {
         }
     }
 
-    /**
-     * @return 如果为null，表示删除失败，否则表示成功，返回路径
-     */
+
     public static Path deleteRecord(@NotNull String table,
                                     @NotNull String id,
-                                    @NotNull Path dataDir) {
+                                    @NotNull Path dataDir) throws IOException {
         Path jsonDir = getJsonTableDir(dataDir, table);
         Path recordPath = jsonDir.resolve(id + ".json");
-        if (CachedFiles.delete(recordPath.toFile())) {
-            return recordPath;
-        }
-        return null;
+        Files.delete(recordPath);
+        return recordPath;
     }
 
 }

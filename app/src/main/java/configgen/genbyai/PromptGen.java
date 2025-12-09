@@ -35,7 +35,7 @@ public class PromptGen {
 
         PromptModel.Example example = TableRelatedInfoFinder.getExample(rule, vTable);
         PromptModel model = new PromptModel(table, structInfo,
-                rule != null ? rule.getRule() : "",
+                rule != null ? rule.combineRule() : "",
                 example != null ? List.of(example) : List.of());
 
         // 生成prompt

@@ -198,11 +198,6 @@ public final class RecordEditService {
                 // 最后确定其他都对的时候再存储
                 Path jsonPath = VTableJsonStorage.deleteRecord(table, id,
                         context.getSourceStructure().getRootDir());
-                if (jsonPath == null) {
-                    return new ResultWithNewCfgValue(
-                            new RecordEditResult(storeErr, table, id, List.of("delete fail")),
-                            cfgValue);
-                }
                 context.getSourceStructure().removeJsonFile(table, jsonPath);
                 newCfgValueStat = newCfgValueStat.newRemoveLastModified(table, id);
 

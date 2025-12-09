@@ -46,7 +46,7 @@ public class SearchService {
         if (isNumber) {
             return searchNumber(cfgValue, value, maxItems);
         } else {
-            return searchStr(cfgValue, q, maxItems);
+            return searchStrInTable(cfgValue, q, maxItems);
         }
     }
 
@@ -77,7 +77,7 @@ public class SearchService {
     }
 
 
-    public static SearchResult searchStr(@NotNull CfgValue cfgValue, String keyword, int maxItems) {
+    public static SearchResult searchStrInTable(@NotNull CfgValue cfgValue, String keyword, int maxItems) {
         StringVisitor visitor = StringVisitor.of(keyword);
         for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
             ForeachValue.searchVTable(visitor, vTable);
@@ -91,7 +91,7 @@ public class SearchService {
     }
 
 
-    public static SearchResult searchStr(@NotNull CfgValue.VTable vTable, String keyword, int maxItems) {
+    public static SearchResult searchStrInTable(@NotNull CfgValue.VTable vTable, String keyword, int maxItems) {
         StringVisitor visitor = StringVisitor.of(keyword);
         ForeachValue.searchVTable(visitor, vTable);
         List<SearchResultItem> items = maxItems > 0 ? visitor.result.subList(0, Math.min(maxItems, visitor.result.size()))

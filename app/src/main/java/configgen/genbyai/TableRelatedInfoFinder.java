@@ -1,6 +1,7 @@
 package configgen.genbyai;
 
 import configgen.ctx.Context;
+import configgen.genbyai.PromptModel.Example;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgWriter;
 import configgen.util.MarkdownReader;
@@ -13,42 +14,24 @@ import java.util.*;
 
 public class TableRelatedInfoFinder {
 
-
-    public record TableRecordList(String table,
-                                  String contentInCsvFormat) {
-
-        public void prompt(StringBuilder sb) {
-            sb.append("```csv table=%s record list\n".formatted(table));
-            sb.append(contentInCsvFormat);
-            sb.append("```\n\n");
-        }
-
-        public String prompt() {
-            StringBuilder sb = new StringBuilder(512);
-            prompt(sb);
-            return sb.toString();
-        }
-    }
-
-    public record TableCount(String table,
-                             int recordCount) {
-    }
-
-    public record RelatedInfo(String relatedCfg,
+    public record RelatedInfo(String relatedSchema,
                               List<TableRecordList> relatedTableRecordListInCsv,
                               List<TableCount> otherTableCounts,
+                              String moduleRule,
                               String rule,
-                              String example) {
+                              Example example) {
 
-        public String prompt() {
+        public String asTextContent() {
             StringBuilder sb = new StringBuilder(2048);
             sb.append("<related_schema>\n");
             sb.append("```\n");
-            sb.append(relatedCfg);
+            sb.append(relatedSchema);
             sb.append("```\n</related_schema>\n\n");
 
             for (TableRecordList info : relatedTableRecordListInCsv) {
-                info.prompt(sb);
+                sb.append("```csv table=%s record list\n".formatted(info.table));
+                sb.append(info.contentInCsvFormat);
+                sb.append("```\n\n");
             }
 
             if (!otherTableCounts.isEmpty()) {
@@ -56,7 +39,13 @@ public class TableRelatedInfoFinder {
                 for (TableCount info : otherTableCounts) {
                     sb.append("%s,%d records\n".formatted(info.table(), info.recordCount()));
                 }
-                sb.append("```\n");
+                sb.append("```\n\n");
+            }
+
+            if (moduleRule != null && !moduleRule.isBlank()) {
+                sb.append("<module_rule>\n");
+                sb.append(moduleRule);
+                sb.append("</module_rule>\n\n");
             }
 
             if (rule != null && !rule.isBlank()) {
@@ -65,14 +54,22 @@ public class TableRelatedInfoFinder {
                 sb.append("</rule>\n\n");
             }
 
-            if (example != null && !example.isBlank()) {
+            if (example != null) {
                 sb.append("<example>\n");
-                sb.append(example);
+                sb.append(example.toPrompt());
                 sb.append("</example>\n\n");
             }
 
             return sb.toString();
         }
+    }
+
+    public record TableRecordList(String table,
+                                  String contentInCsvFormat) {
+    }
+
+    public record TableCount(String table,
+                             int recordCount) {
     }
 
     public record Rule(String rule,
@@ -81,7 +78,7 @@ public class TableRelatedInfoFinder {
                        String exampleId,
                        String exampleDescription) {
 
-        public String getRule() {
+        public String combineRule() {
             if (rule == null && moduleRule == null) {
                 return "";
             }
@@ -104,19 +101,15 @@ public class TableRelatedInfoFinder {
         TableSchema tableSchema = vTable.schema();
         String relatedCfg = findRelatedCfgStr(tableSchema);
         Rule rule = findRule(context, tableSchema);
-        String ruleStr = null;
-        String exampleStr = null;
-        if (rule != null) {
-            ruleStr = rule.getRule();
-            var example = getExample(rule, vTable);
-            if (example != null) {
-                exampleStr = example.toPrompt();
-            }
-        }
-        List<String> extraRefTables = rule != null ? rule.extraRefTables() : List.of();
 
-        RelatedInfo relatedInfo = new RelatedInfo(relatedCfg, new ArrayList<>(), new ArrayList<>(), ruleStr, exampleStr);
+
+        RelatedInfo relatedInfo = new RelatedInfo(relatedCfg, new ArrayList<>(), new ArrayList<>(),
+                rule != null ? rule.moduleRule : null,
+                rule != null ? rule.rule : null,
+                getExample(rule, vTable));
+
         var refOutTables = TableSchemaRefGraph.findAllRefOuts(tableSchema);
+        List<String> extraRefTables = rule != null ? rule.extraRefTables() : List.of();
         for (TableSchema schema : refOutTables.values()) {
             VTable vt = cfgValue.getTable(schema.name());
             if (schema.entry() instanceof EntryType.EEnum || extraRefTables.contains(schema.name())) {
@@ -184,7 +177,7 @@ public class TableRelatedInfoFinder {
         return sb.toString();
     }
 
-    public static TableRecordList getTableRecordListInCsv(VTable vTable, List<String> extraFields) {
+    public static TableRecordList getTableRecordListInCsv(VTable vTable, String[] extraFields) {
         TableSchema schema = vTable.schema();
 
         StringBuilder sb = new StringBuilder(2048);
@@ -212,7 +205,7 @@ public class TableRelatedInfoFinder {
     }
 
 
-    public static PromptModel.Example getExample(Rule rule, VTable vTable) {
+    public static Example getExample(Rule rule, VTable vTable) {
         if (rule == null || vTable == null) {
             return null;
         }
@@ -226,7 +219,7 @@ public class TableRelatedInfoFinder {
             CfgValue.VStruct vRecord = vTable.primaryKeyMap().get(pkValue);
             if (vRecord != null) {
                 String jsonString = ValueToJson.toJsonStr(vRecord);
-                return new PromptModel.Example(rule.exampleId(), rule.exampleDescription(), jsonString);
+                return new Example(rule.exampleId(), rule.exampleDescription(), jsonString);
             }
         }
 
