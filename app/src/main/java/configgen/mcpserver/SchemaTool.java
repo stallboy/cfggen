@@ -7,8 +7,6 @@ import configgen.genbyai.TableRelatedInfoFinder.RelatedInfo;
 import configgen.mcpserver.CfgMcpServer.CfgValueWithContext;
 import configgen.value.CfgValue;
 
-import java.util.List;
-
 @SuppressWarnings("unused")
 public class SchemaTool {
 
@@ -22,18 +20,24 @@ public class SchemaTool {
             return "table %s not found".formatted(tableName);
         }
 
-        RelatedInfo relatedInfo = TableRelatedInfoFinder.findRelatedInfo(cfgValue, vTable.schema(), List.of());
+        RelatedInfo relatedInfo = TableRelatedInfoFinder.findRelatedInfo(vc.context(), cfgValue, vTable);
         return relatedInfo.prompt();
     }
 
 
     @McpTool(description = "list table names")
-    public String listTable() {
+    public String listTable(@McpToolParam(name = "inModule", description = "in module")
+                            String inModule) {
         CfgValueWithContext vc = CfgMcpServer.getInstance().cfgValueWithContext();
         CfgValue cfgValue = vc.cfgValue();
 
         StringBuilder sb = new StringBuilder(2048);
         for (CfgValue.VTable table : cfgValue.sortedTables()) {
+            if (inModule != null && !inModule.isEmpty()) {
+                if (!table.name().startsWith(inModule)) {
+                    continue;
+                }
+            }
             sb.append(table.name()).append("\n");
         }
         return "```\n%s```".formatted(sb.toString());
