@@ -9,7 +9,9 @@ import configgen.mcpserver.CfgMcpServer.CfgValueWithContext;
 import configgen.value.CfgValue;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @SuppressWarnings("unused")
 public class SchemaTool {
@@ -58,8 +60,8 @@ public class SchemaTool {
     }
 
 
-    @McpTool(description = "list table names")
-    public ListTableResult listTable(@McpToolParam(name = "inModule", description = "in module")
+    @McpTool(description = "list table names in module")
+    public ListTableResult listTable(@McpToolParam(name = "inModule", description = "in module, if not set, return all tables")
                                      String inModule) {
         CfgValueWithContext vc = CfgMcpServer.getInstance().cfgValueWithContext();
         CfgValue cfgValue = vc.cfgValue();
@@ -74,5 +76,24 @@ public class SchemaTool {
             tableNames.add(table.name());
         }
         return new ListTableResult(inModule, tableNames);
+    }
+
+    public record ListModuleResult(List<String> moduleNames) implements McpStructuredContent {
+    }
+
+    @McpTool(description = "list module names")
+    public ListModuleResult listModule() {
+        CfgValueWithContext vc = CfgMcpServer.getInstance().cfgValueWithContext();
+        CfgValue cfgValue = vc.cfgValue();
+        Set<String> moduleNames = new LinkedHashSet<>(16);
+        StringBuilder sb = new StringBuilder(2048);
+        for (CfgValue.VTable table : cfgValue.sortedTables()) {
+            String namespace = table.schema().namespace();
+            if (!namespace.isEmpty()) {
+                moduleNames.add(namespace);
+            }
+            moduleNames.add(namespace);
+        }
+        return new ListModuleResult(moduleNames.stream().toList());
     }
 }
