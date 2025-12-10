@@ -92,7 +92,6 @@ public class SchemaTool {
             if (!namespace.isEmpty()) {
                 moduleNames.add(namespace);
             }
-            moduleNames.add(namespace);
         }
         return new ListModuleResult(moduleNames.stream().toList());
     }
