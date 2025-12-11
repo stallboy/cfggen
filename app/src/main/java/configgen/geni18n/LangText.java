@@ -1,7 +1,7 @@
 package configgen.geni18n;
 
 import configgen.i18n.I18nUtils;
-import configgen.i18n.LangTextFinder;
+import configgen.i18n.LangTextFinder.TextFinder;
 import configgen.i18n.TextByIdFinder;
 import configgen.schema.HasText;
 import configgen.util.Logger;
@@ -18,21 +18,21 @@ import java.util.*;
 import static configgen.i18n.TextByIdFinder.*;
 
 /**
- * key：top module name
+ * key：module name
  */
-public class LangText extends LinkedHashMap<String, LangText.TopModuleText> {
+public class LangText extends LinkedHashMap<String, LangText.ModuleText> {
 
     /**
      * key：table name
      */
-    public static class TopModuleText extends LinkedHashMap<String, TextByIdFinder> {
+    public static class ModuleText extends LinkedHashMap<String, TextByIdFinder> {
 
         public void save(OutputStream os, LangStat stat) throws IOException {
             try (Workbook wb = new Workbook(os, "cfg", "1.0")) {
                 for (var e : entrySet()) {
                     String table = e.getKey();
                     TextByIdFinder tf = e.getValue();
-                    Worksheet ws = wb.newWorksheet(table);
+                    Worksheet ws = wb.newWorksheet(getSheetName(table));
                     saveSheet(tf, ws, table, stat);
                 }
             }
@@ -89,11 +89,11 @@ public class LangText extends LinkedHashMap<String, LangText.TopModuleText> {
 
     public void save(Path wroteDir, LangStat stat) throws IOException {
         for (var e : entrySet()) {
-            String topModuleFn = e.getKey() + ".xlsx";
-            File dst = wroteDir.resolve(topModuleFn).toFile();
-            TopModuleText topModule = e.getValue();
+            String moduleFn = e.getKey() + ".xlsx";
+            File dst = wroteDir.resolve(moduleFn).toFile();
+            ModuleText module = e.getValue();
             try (OutputStream os = new BufferedOutputStream(new FileOutputStream(dst))) {
-                topModule.save(os, stat);
+                module.save(os, stat);
             }
         }
     }
@@ -106,9 +106,9 @@ public class LangText extends LinkedHashMap<String, LangText.TopModuleText> {
             return false;
         }
         for (var e : entrySet()) {
-            String topModule = e.getKey();
-            TopModuleText thisTop = e.getValue();
-            TopModuleText otherTop = other.get(topModule);
+            String module = e.getKey();
+            ModuleText thisTop = e.getValue();
+            ModuleText otherTop = other.get(module);
             if (otherTop == null) {
                 return false;
             }
@@ -130,32 +130,46 @@ public class LangText extends LinkedHashMap<String, LangText.TopModuleText> {
         return true;
     }
 
-    public static LangText ofFinder(Map<String, LangTextFinder.TextFinder> tableMap) {
+    public static LangText ofFinder(Map<String, TextFinder> tableMap) {
         LangText res = new LangText();
-        for (Map.Entry<String, LangTextFinder.TextFinder> e : tableMap.entrySet()) {
+        for (Map.Entry<String, TextFinder> e : tableMap.entrySet()) {
             String table = e.getKey();
             TextByIdFinder finder = (TextByIdFinder) e.getValue();
-            TopModuleText file = res.computeIfAbsent(getTopModule(table),
-                    k -> new TopModuleText());
+            ModuleText file = res.computeIfAbsent(getModule(table),
+                    k -> new ModuleText());
             file.put(table, finder);
         }
         return res;
     }
 
-    private static String getTopModule(String table) {
-        int idx = table.indexOf('.');
+    private static String getModule(String table) {
+        int idx = table.lastIndexOf('.');
         if (idx != -1) {
             return table.substring(0, idx);
         }
         return "_top";
     }
 
+    private static String getSheetName(String table) {
+        if (table.length() < 32) { // sheet name 最长31字符
+            return table;
+        }
+        int idx = table.lastIndexOf('.');
+        if (idx != -1) {
+            String tableName = table.substring(idx + 1);
+            if (tableName.length() < 32) {
+                return tableName;
+            }
+        }
+        throw new RuntimeException("table name too long for sheet name: " + table);
+    }
+
     public static LangText extract(CfgValue cfgValue) {
-        Map<String, LangTextFinder.TextFinder> tableMap = new LinkedHashMap<>(16);
+        Map<String, TextFinder> tableMap = new LinkedHashMap<>(16);
         for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
             if (HasText.hasText(vTable.schema())) {
                 TextByIdFinder finder = new TextByIdFinder();
-                finder.setNullableDescriptionName( vTable.schema().meta().getStr("lang", null));
+                finder.setNullableDescriptionName(vTable.schema().meta().getStr("lang", null));
                 for (Map.Entry<CfgValue.Value, CfgValue.VStruct> e : vTable.primaryKeyMap().entrySet()) {
                     CfgValue.Value pk = e.getKey();
                     String pkStr = pk.packStr();

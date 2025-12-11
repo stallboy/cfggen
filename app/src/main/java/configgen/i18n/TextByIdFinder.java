@@ -173,16 +173,17 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
     }
 
     public static LangTextFinder loadOneLang(Path langDir) {
-        LangTextFinder langFinder = new LangTextFinder();
         String langName = langDir.getFileName().toString();
         String todoFilename = getTodoFileName(langName);
 
+        LangTextFinder langFinder = new LangTextFinder();
         // 加载正常的xlsx文件
         try (Stream<Path> plist = Files.list(langDir)) {
             plist.forEach(filePath -> {
                 if (Files.isRegularFile(filePath)) {
                     String fileName = filePath.getFileName().toString().toLowerCase();
                     if (fileName.endsWith(".xlsx") && !fileName.equals(todoFilename)) {
+
                         langFinder.putAll(loadOneFile(filePath));
                     }
                 }
@@ -201,24 +202,31 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
     }
 
     public static Map<String, TextByIdFinder> loadOneFile(Path filePath) {
+        String fileName = filePath.getFileName().toString().toLowerCase();
+        if (!fileName.endsWith(".xlsx")) {
+            throw new IllegalArgumentException("file %s is not .xlsx".formatted(
+                    filePath.toAbsolutePath().normalize().toString()));
+        }
+        String moduleName = fileName.substring(0, fileName.length() - 5);
+
         Map<String, TextByIdFinder> map = new LinkedHashMap<>();
         try (ReadableWorkbook wb = new ReadableWorkbook(filePath.toFile(),
                 new ReadingOptions(true, false))) {
             for (Sheet sheet : wb.getSheets().toList()) {
-                String tableName = sheet.getName().trim();
+                String sheetName = sheet.getName().trim();
+                String tableName = getTableName(moduleName, sheetName);
                 List<Row> rawRows = sheet.read();
                 if (rawRows.size() <= 1) {
                     continue;
                 }
-
-                TextByIdFinder textFinder = new TextByIdFinder();
                 try {
-                    loadOneSheet(rawRows, textFinder);
+                    TextByIdFinder textFinder = loadOneSheet(rawRows);
+                    map.put(tableName, textFinder);
                 } catch (Exception e) {
                     throw new RuntimeException("%s in %s read error".formatted(tableName,
                             filePath.toAbsolutePath().normalize().toString()), e);
                 }
-                map.put(tableName, textFinder);
+
             }
         } catch (IOException e) {
             throw new RuntimeException("read %s error".formatted(filePath.toAbsolutePath().normalize().toString()), e);
@@ -226,13 +234,22 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
         return map;
     }
 
+    private static String getTableName(String moduleName, String sheetName) {
+        if (sheetName.contains(".")) {
+            return sheetName;
+        } else {
+            return moduleName + "." + sheetName;
+        }
+    }
 
-    private static void loadOneSheet(List<Row> rawRows, TextByIdFinder textFinder) {
+
+    private static TextByIdFinder loadOneSheet(List<Row> rawRows) {
+        TextByIdFinder textFinder = new TextByIdFinder();
         // 第一行是表头，分析
         Row header = rawRows.getFirst();
         int columnCount = header.getCellCount();
         if (columnCount <= 1) {
-            return;
+            return textFinder;
         }
         int[] tColumns = new int[columnCount]; // 翻译后的文本所在的列index
         int tColumnCnt = 0;
@@ -250,7 +267,7 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
         }
 
         if (tColumnCnt == 0) {
-            return;
+            return textFinder;
         }
 
         boolean hasDescription = tColumns[0] > 2;
@@ -293,6 +310,8 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
 
             textFinder.pkToTexts.put(pkStr, new OneRecord(description, texts));
         }
+
+        return textFinder;
     }
 
     public static String getTodoFileName(String lang) {
