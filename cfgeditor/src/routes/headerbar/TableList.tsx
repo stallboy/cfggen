@@ -1,9 +1,9 @@
 import {STable} from "../table/schemaModel.ts";
-import {Select} from "antd";
+import {Flex, Select} from "antd";
 import {getLastOpenIdByTable, navTo, useMyStore, useLocationData} from "../../store/store.ts";
 import {useNavigate} from "react-router-dom";
 import {Schema} from "../table/schemaUtil.tsx";
-import {memo, useMemo, useCallback} from "react";
+import {memo, useMemo, useCallback, CSSProperties} from "react";
 
 interface TableWithLastName {
     tableId: string;
@@ -12,7 +12,11 @@ interface TableWithLastName {
 }
 
 const SELECT_STYLE = {width: 200} as const;
-const LABEL_COUNT_STYLE = {fontSize: '0.85em'} as const;
+const LABEL_COUNT_STYLE: CSSProperties = {
+    color: '#597ef7', fontSize: '0.9em',
+    textOverflow: "clip", whiteSpace: 'nowrap', overflow: 'hidden', maxWidth: 60
+}
+
 
 function generateTableOptions(schema: Schema) {
     const group2Tables = new Map<string, TableWithLastName[]>();
@@ -37,7 +41,7 @@ function generateTableOptions(schema: Schema) {
         label: group,
         value: group,
         options: tables.map(tl => ({
-            label: <>{tl.lastName} <i style={LABEL_COUNT_STYLE}>{tl.table.recordIds.length}</i></>,
+            label: <Flex justify="space-between" align={"flex-end"}>{tl.lastName} <i style={LABEL_COUNT_STYLE}>{tl.table.recordIds.length}</i></Flex>,
             value: tl.table.name,
         }))
     }));

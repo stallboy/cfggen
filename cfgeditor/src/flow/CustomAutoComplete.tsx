@@ -29,6 +29,7 @@ export const CustomAutoComplete = memo(function CustomAutoComplete(
             return <AutoComplete id={id} className='nodrag' {...filters}
                                  options={options}
                                  value={value}
+                                 onChange={onChange}
                                  onSelect={onChange}
                                  showSearch={{onSearch: onChange}}>
                 {input}

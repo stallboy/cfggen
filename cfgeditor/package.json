@@ -19,7 +19,7 @@
     "@tauri-apps/plugin-fs": "^2.2.1",
     "@tauri-apps/plugin-shell": "^2.2.1",
     "@xyflow/react": "^12.9.3",
-    "antd": "^6.0.0",
+    "antd": "^6.1.0",
     "antd-style": "^3.7.1",
     "axios": "^1.13.2",
     "elkjs": "^0.9.3",

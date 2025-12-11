@@ -1,6 +1,8 @@
 import {JSONObject} from "../record/recordModel.ts";
 import {RawSchema, RecordId, SField, SForeignKey, SInterface, SItem, SStruct, STable} from "./schemaModel.ts";
 import {EntityEditFieldOption} from "../../flow/entityModel.ts";
+import {CSSProperties} from "react";
+import {Flex} from "antd";
 
 export class Schema {
     isEditable: boolean;
@@ -400,12 +402,17 @@ export function getMapEntryTypeName(sItem: SItem, fieldName: string) {
     return "$" + (sItem.id ?? sItem.name) + "-" + fieldName; // 构造特殊名称
 }
 
+const suffixStyle: CSSProperties = {
+    color: '#597ef7', fontSize: '0.85em',
+    textOverflow: "clip", whiteSpace: 'nowrap', overflow: 'hidden', maxWidth: 100
+}
+
 export function getIdOptions(sTable: STable, valueToInteger: boolean = false): EntityEditFieldOption[] {
     const options = [];
     for (const {id, title} of sTable.recordIds) {
         const isShowTitle = title && title != id;
         options.push({
-            label: isShowTitle ? <> {id} <span style={{fontSize: '0.85em'}}>{title}</span> </> : id,
+            label: isShowTitle ? <Flex justify="space-between" align={"flex-end"}>{id} <span style={suffixStyle}>{title}</span></Flex> : id,
             labelstr: isShowTitle ? `${id} ${title}` : id,
             value: valueToInteger ? parseInt(id) : id,
             title: title ?? ''

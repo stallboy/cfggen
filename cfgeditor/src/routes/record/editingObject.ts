@@ -248,7 +248,7 @@ export function isCopiedFitAllowedType(allowdType: string) {
 
 export function onStructPaste(fieldChains: (string | number)[],
                               position: EntityPosition) {
-    let obj: any = editState.editingObject;
+    let obj = editState.editingObject;
     const copied = editState.copiedObject;
 
     let i = 0;

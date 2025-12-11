@@ -6,7 +6,18 @@ import {
     FuncSubmitType,
     FuncType
 } from "./entityModel.ts";
-import {Button, ConfigProvider, Flex, Form, InputNumber, Select, Space, Switch, Tag, Tooltip,} from "antd";
+import {
+    Button,
+    ConfigProvider,
+    Flex,
+    Form,
+    InputNumber,
+    Select,
+    Space,
+    Switch,
+    Tag,
+    Tooltip,
+} from "antd";
 import TextArea from "antd/es/input/TextArea";
 import {
     ArrowDownOutlined,
@@ -359,7 +370,7 @@ const InterfaceFormItem = memo(function ({field, nodeProps, sharedSetting}: {
     sharedSetting?: EntitySharedSetting
 }) {
     // 需要这个useEffect，参考https://zhuanlan.zhihu.com/p/375753910
-    // edit后，key又都相同，initialValue改变，所以需要form需要设置回去
+    // edit后，key又都相同，initialValue改变，所以form需要设置回去
     const form = Form.useFormInstance();
     useEffect(() => {
         form.setFieldValue(field.name, field.value);
@@ -447,12 +458,13 @@ export const EntityForm = memo(function ({edit, nodeProps, sharedSetting}: {
 
     // form里单个字段的改变不会引起这个界面更新，只更新jsonObject对象
     // initialValue放在每个Form.Item里
-
+    // 参考https://github.com/ant-design/ant-design/issues/56102
     return <ConfigProvider theme={theme}>
         <Form {...formLayout}
               form={_form}
-              onValuesChange={(_changedFields, allFields) => {
-                  edit.editOnUpdateValues(allFields);
+              onValuesChange={(/*_changedFields, _allFields*/) => {
+                  // console.log("changed", allFields, _form.getFieldsValue(true));
+                  edit.editOnUpdateValues(_form.getFieldsValue(true));
               }}
               style={formStyle}>
             {fieldsFormItem(edit.editFields, nodeProps, sharedSetting)}
