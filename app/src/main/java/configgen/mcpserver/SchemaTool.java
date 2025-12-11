@@ -9,10 +9,7 @@ import configgen.genbyai.TableRelatedInfoFinder.RelatedInfo;
 import configgen.mcpserver.CfgMcpServer.CfgValueWithContext;
 import configgen.value.CfgValue;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 3级信息披露
@@ -64,7 +61,6 @@ public class SchemaTool {
         OK,
         ModuleNotSet,
         ModuleNotFound,
-        NoTablesInModule,
     }
 
     public record ListTableInModuleResult(ListTableInModuleErrorCode errorCode,
@@ -85,20 +81,15 @@ public class SchemaTool {
 
         CfgValueWithContext vc = CfgMcpServer.getInstance().cfgValueWithContext();
         CfgValue cfgValue = vc.cfgValue();
-        Set<String> moduleSet = getModuleSet(cfgValue);
-        if (!moduleSet.contains(inModule)) {
-            return new ListTableInModuleResult(ListTableInModuleErrorCode.ModuleNotFound, inModule, List.of(), "", "");
-        }
-
 
         boolean isTop = TOP.equals(inModule);
         List<String> tableNames = new ArrayList<>(8);
         StringBuilder sb = new StringBuilder(2048);
         CfgValue.VTable firstTableInModule = null;
         for (CfgValue.VTable table : cfgValue.sortedTables()) {
-            if ((isTop && table.schema().namespace().isEmpty()) ||
-                    table.schema().namespace().equals(inModule)
-            ) {
+            boolean isMatch = (isTop && table.schema().namespace().isEmpty()) ||
+                    table.schema().namespace().equals(inModule);
+            if (isMatch) {
                 tableNames.add(table.name());
                 if (firstTableInModule == null) {
                     firstTableInModule = table;
@@ -107,7 +98,7 @@ public class SchemaTool {
         }
 
         if (firstTableInModule == null) {
-            return new ListTableInModuleResult(ListTableInModuleErrorCode.NoTablesInModule, inModule, tableNames, "", "");
+            return new ListTableInModuleResult(ListTableInModuleErrorCode.ModuleNotFound, inModule, tableNames, "", "");
         }
 
         ModuleRule moduleRule = TableRelatedInfoFinder.findModuleRuleForTable(vc.context(), firstTableInModule.schema());
@@ -117,29 +108,52 @@ public class SchemaTool {
         return new ListTableInModuleResult(ListTableInModuleErrorCode.OK, inModule, tableNames, description, rule);
     }
 
-    public record ListModuleResult(Set<String> moduleNames) implements McpStructuredContent {
+    public record ModuleDescription(String moduleName,
+                                    String description) {
+    }
+
+    public record ListModuleResult(List<ModuleDescription> modules) implements McpStructuredContent {
+
+        @Override
+        public String asTextContent() {
+            StringBuilder sb = new StringBuilder(2048);
+            for (ModuleDescription mi : modules) {
+                if (mi.description == null || mi.description.isBlank()) {
+                    sb.append("- ").append(mi.moduleName).append("\n");
+                } else {
+                    sb.append("- ").append(mi.moduleName).append(": ").append(mi.description).append("\n");
+                }
+            }
+            return sb.toString();
+        }
     }
 
     @McpTool(description = "list module names. information entry point")
     public ListModuleResult listModule() {
         CfgValueWithContext vc = CfgMcpServer.getInstance().cfgValueWithContext();
         CfgValue cfgValue = vc.cfgValue();
-        return new ListModuleResult(getModuleSet(cfgValue));
+        Map<String, String> moduleDescriptionMap = new LinkedHashMap<>();
+
+        for (CfgValue.VTable table : cfgValue.sortedTables()) {
+            String namespace = table.schema().namespace();
+            String moduleName = namespace.isEmpty() ? TOP : namespace;
+
+            if (!moduleDescriptionMap.containsKey(moduleName)) {
+                ModuleRule moduleRule = TableRelatedInfoFinder.findModuleRuleForTable(vc.context(), table.schema());
+                String description = moduleRule != null && moduleRule.description() != null ?
+                        moduleRule.description() : "";
+                moduleDescriptionMap.put(moduleName, description);
+            }
+
+        }
+
+        return new ListModuleResult(moduleDescriptionMap.entrySet().stream()
+                .map(e -> new ModuleDescription(e.getKey(), e.getValue()))
+                .toList());
     }
 
 
     private static final String TOP = "_top";
 
-    private static Set<String> getModuleSet(CfgValue cfgValue) {
-        Set<String> moduleNames = new LinkedHashSet<>(16);
-        for (CfgValue.VTable table : cfgValue.sortedTables()) {
-            String namespace = table.schema().namespace();
-            if (!namespace.isEmpty()) {
-                moduleNames.add(namespace);
-            } else {
-                moduleNames.add(TOP);
-            }
-        }
-        return moduleNames;
-    }
+
 }
