@@ -17,7 +17,6 @@ public class TableRelatedInfoFinder {
     public record RelatedInfo(String relatedSchema,
                               List<TableRecordList> relatedTableRecordListInCsv,
                               List<TableCount> otherTableCounts,
-                              String moduleRule,
                               String rule,
                               Example example) {
 
@@ -40,12 +39,6 @@ public class TableRelatedInfoFinder {
                     sb.append("%s,%d records\n".formatted(info.table(), info.recordCount()));
                 }
                 sb.append("```\n\n");
-            }
-
-            if (moduleRule != null && !moduleRule.isBlank()) {
-                sb.append("<module_rule>\n");
-                sb.append(moduleRule);
-                sb.append("</module_rule>\n\n");
             }
 
             if (rule != null && !rule.isBlank()) {
@@ -72,26 +65,14 @@ public class TableRelatedInfoFinder {
                              int recordCount) {
     }
 
-    public record Rule(String rule,
-                       String moduleRule,
-                       List<String> extraRefTables,
-                       String exampleId,
-                       String exampleDescription) {
+    public record ModuleRule(String description,
+                             String rule) {
+    }
 
-        public String combineRule() {
-            if (rule == null && moduleRule == null) {
-                return "";
-            }
-            if (rule == null) {
-                return moduleRule.trim();
-            }
-
-            if (moduleRule == null) {
-                return rule.trim();
-            }
-
-            return moduleRule.trim() + "\n\n" + rule.trim();
-        }
+    public record TableRule(String rule,
+                            List<String> extraRefTables,
+                            String exampleId,
+                            String exampleDescription) {
     }
 
 
@@ -100,11 +81,10 @@ public class TableRelatedInfoFinder {
                                               VTable vTable) {
         TableSchema tableSchema = vTable.schema();
         String relatedCfg = findRelatedCfgStr(tableSchema);
-        Rule rule = findRule(context, tableSchema);
+        TableRule rule = findTableRule(context, tableSchema);
 
 
         RelatedInfo relatedInfo = new RelatedInfo(relatedCfg, new ArrayList<>(), new ArrayList<>(),
-                rule != null ? rule.moduleRule : null,
                 rule != null ? rule.rule : null,
                 getExample(rule, vTable));
 
@@ -122,22 +102,36 @@ public class TableRelatedInfoFinder {
     }
 
 
-    public static Rule findRule(Context context, TableSchema tableSchema) {
+    public static ModuleRule findModuleRuleForTable(Context context, TableSchema tableSchema) {
         String namespace = tableSchema.namespace();
         Path cfgFilePath = context.getSourceStructure().getCfgFilePathByPkgName(namespace);
         if (cfgFilePath == null) {
             return null;
         }
-        // 先找<mod>.md
+
+        // $mod.md
         Path modDir = cfgFilePath.getParent();
         String moduleRule = null;
         Path modFile = modDir.resolve("$mod.md");
-        if (Files.exists(modFile)) {
-            MarkdownReader.MarkdownDocument doc = MarkdownReader.read(modFile);
-            moduleRule = doc.content();
+        if (!Files.exists(modFile)) {
+            return null;
         }
 
-        // 再找对应table的md
+        MarkdownReader.MarkdownDocument doc = MarkdownReader.read(modFile);
+        String description = doc.frontmatter().get("description");
+        moduleRule = doc.content();
+        return new ModuleRule(description, moduleRule);
+    }
+
+    public static TableRule findTableRule(Context context, TableSchema tableSchema) {
+        String namespace = tableSchema.namespace();
+        Path cfgFilePath = context.getSourceStructure().getCfgFilePathByPkgName(namespace);
+        if (cfgFilePath == null) {
+            return null;
+        }
+        Path modDir = cfgFilePath.getParent();
+
+        // 找对应table的md
         String rule = null;
         List<String> extraRefTables = new ArrayList<>();
         String exampleId = null;
@@ -157,10 +151,8 @@ public class TableRelatedInfoFinder {
 
             rule = doc.content();
         }
-        if (rule == null && moduleRule == null) {
-            return null;
-        }
-        return new Rule(rule, moduleRule, extraRefTables, exampleId, exampleDescription);
+
+        return new TableRule(rule, extraRefTables, exampleId, exampleDescription);
     }
 
 
@@ -205,7 +197,7 @@ public class TableRelatedInfoFinder {
     }
 
 
-    public static Example getExample(Rule rule, VTable vTable) {
+    public static Example getExample(TableRule rule, VTable vTable) {
         if (rule == null || vTable == null) {
             return null;
         }

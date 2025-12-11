@@ -1,7 +1,8 @@
 package configgen.genbyai;
 
 import configgen.ctx.Context;
-import configgen.genbyai.TableRelatedInfoFinder.Rule;
+import configgen.genbyai.TableRelatedInfoFinder.ModuleRule;
+import configgen.genbyai.TableRelatedInfoFinder.TableRule;
 import configgen.schema.*;
 import configgen.util.JteEngine;
 import configgen.util.MarkdownReader;
@@ -26,7 +27,8 @@ public class PromptGen {
         String table = vTable.name();
         TableSchema tableSchema = vTable.schema();
 
-        Rule rule = TableRelatedInfoFinder.findRule(context, tableSchema);
+        ModuleRule moduleRule = TableRelatedInfoFinder.findModuleRuleForTable(context, tableSchema);
+        TableRule rule = TableRelatedInfoFinder.findTableRule(context, tableSchema);
 
 
         String structInfo = new SchemaToTs(cfgValue, tableSchema,
@@ -35,7 +37,7 @@ public class PromptGen {
 
         PromptModel.Example example = TableRelatedInfoFinder.getExample(rule, vTable);
         PromptModel model = new PromptModel(table, structInfo,
-                rule != null ? rule.combineRule() : "",
+                combineRule(moduleRule, rule),
                 example != null ? List.of(example) : List.of());
 
         // 生成prompt
@@ -54,5 +56,18 @@ public class PromptGen {
         }
 
         return new Prompt(prompt, init);
+    }
+
+    private static String combineRule(ModuleRule moduleRule, TableRule rule) {
+        String mr = (moduleRule != null && moduleRule.rule() != null) ? moduleRule.rule().trim() : "";
+        String r = (rule != null && rule.rule() != null) ? rule.rule().trim() : "";
+
+        if (mr.isEmpty()) {
+            return r;
+        } else if (r.isEmpty()) {
+            return mr;
+        } else {
+            return mr + "\n\n" + r;
+        }
     }
 }

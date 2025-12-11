@@ -20,9 +20,12 @@ public class VTableCreator {
         SequencedMap<Value, VStruct> primaryKeyMap = new LinkedHashMap<>();
         SequencedMap<List<String>, SequencedMap<Value, VStruct>> uniqueKeyValueSetMap = new LinkedHashMap<>();
         extractKeyValues(primaryKeyMap, valueList, tableSchema.primaryKey());
+
+        // 如果主键是int类型，则按主键int值排序，否则保持原顺序
+        primaryKeyMap = sortIfPKIsNumber(primaryKeyMap);
         for (KeySchema uniqueKey : tableSchema.uniqueKeys()) {
             SequencedMap<Value, VStruct> ukMap = new LinkedHashMap<>();
-            extractKeyValues(ukMap, valueList, uniqueKey);
+            extractKeyValues(ukMap, primaryKeyMap.values(), uniqueKey);
             uniqueKeyValueSetMap.put(uniqueKey.fields(), ukMap);
         }
 
@@ -75,7 +78,7 @@ public class VTableCreator {
     }
 
 
-    private void extractKeyValues(SequencedMap<Value, VStruct> keyMap, List<VStruct> valueList, KeySchema key) {
+    private void extractKeyValues(SequencedMap<Value, VStruct> keyMap, Collection<VStruct> valueList, KeySchema key) {
         int[] keyIndices = FindFieldIndex.findFieldIndices(tableSchema, key);
         for (VStruct value : valueList) {
             Value keyValue = ValueUtil.extractKeyValue(value, keyIndices);
@@ -86,5 +89,23 @@ public class VTableCreator {
         }
     }
 
+    private static SequencedMap<Value, VStruct> sortIfPKIsNumber(SequencedMap<Value, VStruct> keyMap){
+        if (keyMap.size() <= 1) {
+            return keyMap;
+        }
+
+        Value firstKey = keyMap.firstEntry().getKey();
+        if (firstKey instanceof VInt) {
+            List<Map.Entry<Value, VStruct>> entryList = new ArrayList<>(keyMap.entrySet());
+            entryList.sort(Comparator.comparingInt(e -> ((VInt) e.getKey()).value()));
+            SequencedMap<Value, VStruct> sortedMap = new LinkedHashMap<>();
+            for (Map.Entry<Value, VStruct> e : entryList) {
+                sortedMap.put(e.getKey(), e.getValue());
+            }
+            return sortedMap;
+        } else {
+            return keyMap;
+        }
+    }
 
 }
