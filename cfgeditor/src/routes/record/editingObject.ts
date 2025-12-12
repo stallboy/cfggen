@@ -105,6 +105,11 @@ export function onUpdateFormValues(schema: Schema,
 
     const obj = getFieldObj(editState.editingObject, fieldChains);
     const name = obj['$type'] as string;
+    if (name == undefined) {
+        console.log("type undefined", obj, fieldChains, values);
+        return;
+    }
+
     if ("$impl" in values) {
         const impl = values["$impl"] as string;
         const idx = name.lastIndexOf(".");
@@ -302,25 +307,23 @@ function getFieldObj(editingObject: JSONObject, fieldChains: (string | number)[]
 function getFieldPrimitiveTypeConverter(fieldName: string, sItem: SItem) {
     const structural = sItem as SStruct | STable;
     const field = getField(structural, fieldName);
-    if (field) {
-        const ft = field.type;
-        if (ft == 'int') {
-            return toInt;
-        } else if (ft == 'long' || ft == 'float') {
-            return toFloat;
-        } else if (ft.startsWith('list<')) {
-            const itemType = ft.slice(5, ft.length - 1);
-            if (itemType == 'int') {
-                return toInt;
-            } else if (itemType == 'long' || itemType == 'float') {
-                return toFloat;
-            }
-        } else {
-            return same;
-        }
-    } else {
+    if (field == null) {
         return null;
     }
+    const ft = field.type;
+    if (ft == 'int') {
+        return toInt;
+    } else if (ft == 'long' || ft == 'float') {
+        return toFloat;
+    } else if (ft.startsWith('list<')) {
+        const itemType = ft.slice(5, ft.length - 1);
+        if (itemType == 'int') {
+            return toInt;
+        } else if (itemType == 'long' || itemType == 'float') {
+            return toFloat;
+        }
+    }
+     return same;
 }
 
 function same(value: any) {
