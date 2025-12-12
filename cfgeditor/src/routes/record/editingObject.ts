@@ -66,7 +66,7 @@ export function startEditingObject(recordResult: RecordResult,
         const newEditingObject = structuredClone(recordResult.object);
         delete$refInPlace(newEditingObject);
 
-        if (isDeeplyEqual(editState.originalEditingObject, newEditingObject)){
+        if (isDeeplyEqual(editState.originalEditingObject, newEditingObject)) {
             return {
                 fitView,
                 fitViewToIdPosition,
@@ -105,15 +105,37 @@ export function onUpdateFormValues(schema: Schema,
 
     const obj = getFieldObj(editState.editingObject, fieldChains);
     const name = obj['$type'] as string;
+    if ("$impl" in values) {
+        const impl = values["$impl"] as string;
+        const idx = name.lastIndexOf(".");
+        let typeName = name;
+        if (idx != -1) {
+            typeName = name.substring(idx + 1);
+        }
+        if (impl != typeName) {
+            return; // impl变化由onUpdateInterfaceImpl处理，这里不处理
+        }
+    }
     const sItem = schema.itemIncludeImplMap.get(name);
-
+    if (sItem == undefined) {
+        console.log("%s not found", name);
+        return;
+    }
+    // console.log("valuesChange", obj, fieldChains, values);
     for (const key in values) {
         if (key.startsWith("$")) { // $impl
             continue;
         }
         const conv = getFieldPrimitiveTypeConverter(key, sItem);
 
+        if (conv == null) {
+            // antd 会保留上一个form的值，用于下一个，所以这里忽略掉这些field
+            // console.log("field ignore %s[%s]", name, key);
+            continue;
+        }
+
         const fieldValue = values[key];
+        // console.log(key, fieldValue);
         if (Array.isArray(fieldValue)) {
             // antd form 会返回[undefined, .. ], 这里忽略掉undefined 的item
             const fArr: JSONArray = fieldValue as JSONArray;
@@ -277,27 +299,28 @@ function getFieldObj(editingObject: JSONObject, fieldChains: (string | number)[]
     return obj;
 }
 
-function getFieldPrimitiveTypeConverter(fieldName: string, sItem?: SItem): ((value: any) => any) {
-    if (sItem) {
-        const structural = sItem as SStruct | STable;
-        const field = getField(structural, fieldName);
-        if (field) {
-            const ft = field.type;
-            if (ft == 'int') {
+function getFieldPrimitiveTypeConverter(fieldName: string, sItem: SItem) {
+    const structural = sItem as SStruct | STable;
+    const field = getField(structural, fieldName);
+    if (field) {
+        const ft = field.type;
+        if (ft == 'int') {
+            return toInt;
+        } else if (ft == 'long' || ft == 'float') {
+            return toFloat;
+        } else if (ft.startsWith('list<')) {
+            const itemType = ft.slice(5, ft.length - 1);
+            if (itemType == 'int') {
                 return toInt;
-            } else if (ft == 'long' || ft == 'float') {
+            } else if (itemType == 'long' || itemType == 'float') {
                 return toFloat;
-            } else if (ft.startsWith('list<')) {
-                const itemType = ft.slice(5, ft.length - 1);
-                if (itemType == 'int') {
-                    return toInt;
-                } else if (itemType == 'long' || itemType == 'float') {
-                    return toFloat;
-                }
             }
+        } else {
+            return same;
         }
+    } else {
+        return null;
     }
-    return same;
 }
 
 function same(value: any) {
@@ -306,7 +329,11 @@ function same(value: any) {
 
 function toInt(value: any) {
     if (typeof value == 'string') {
-        return parseInt(value);
+        try {
+            return parseInt(value);
+        } catch {
+            return 0;
+        }
     } else {
         return value;
     }
@@ -314,7 +341,11 @@ function toInt(value: any) {
 
 function toFloat(value: any) {
     if (typeof value == 'string') {
-        return parseFloat(value);
+        try {
+            return parseFloat(value);
+        } catch {
+            return 0.0;
+        }
     } else {
         return value;
     }
