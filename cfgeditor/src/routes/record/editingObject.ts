@@ -85,6 +85,7 @@ export function startEditingObject(recordResult: RecordResult,
     editState.originalEditingObject = structuredClone(newEditingObject);
     editState.editingObject = newEditingObject;
     editState.isEdited = false;
+    notifyEditingState();
     return {
         fitView: editState.fitView,
         fitViewToIdPosition: editState.fitViewToIdPosition,
@@ -258,7 +259,7 @@ export function onStructPaste(fieldChains: (string | number)[],
         if (i == len - 1) {
             obj[field] = structuredClone(copied);
         } else {
-            obj = obj[field];  // as 只是为了跳过ts类型检查
+            obj = obj[field] as JSONObject;  // as 只是为了跳过ts类型检查
         }
         i++;
     }
