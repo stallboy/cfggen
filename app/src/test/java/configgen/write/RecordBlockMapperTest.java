@@ -54,7 +54,7 @@ class RecordBlockMapperTest {
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         CfgValue.VTable table = cfgValue.getTable("simple");
-        CfgValue.VStruct record = (CfgValue.VStruct) table.valueList().get(0);
+        CfgValue.VStruct record = table.valueList().get(0);
 
         RecordBlock block = RecordBlockMapper.mapToBlock(record);
 
@@ -141,7 +141,7 @@ class RecordBlockMapperTest {
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         CfgValue.VTable table = cfgValue.getTable("entity");
-        CfgValue.VStruct record = (CfgValue.VStruct) table.valueList().get(0);
+        CfgValue.VStruct record = table.valueList().get(0);
 
         RecordBlock block = RecordBlockMapper.mapToBlock(record);
 
@@ -177,7 +177,7 @@ class RecordBlockMapperTest {
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         CfgValue.VTable table = cfgValue.getTable("item");
-        CfgValue.VStruct record = (CfgValue.VStruct) table.valueList().get(0);
+        CfgValue.VStruct record = table.valueList().get(0);
 
         RecordBlock block = RecordBlockMapper.mapToBlock(record);
 
@@ -213,7 +213,7 @@ class RecordBlockMapperTest {
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         CfgValue.VTable table = cfgValue.getTable("item");
-        CfgValue.VStruct record = (CfgValue.VStruct) table.valueList().get(0);
+        CfgValue.VStruct record = table.valueList().get(0);
 
         RecordBlock block = RecordBlockMapper.mapToBlock(record);
 
@@ -253,7 +253,7 @@ class RecordBlockMapperTest {
         Context ctx = new Context(tempDir);
         CfgValue cfgValue = ctx.makeValue();
         CfgValue.VTable table = cfgValue.getTable("item");
-        CfgValue.VStruct record = (CfgValue.VStruct) table.valueList().get(0);
+        CfgValue.VStruct record = table.valueList().get(0);
 
         RecordBlock block = RecordBlockMapper.mapToBlock(record);
 

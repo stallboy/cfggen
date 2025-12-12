@@ -6,6 +6,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
+import java.util.List;
 
 public class ColumnModeExcelTableFile extends AbstractExcelTableFile {
     public ColumnModeExcelTableFile(@NotNull Path filePath,
@@ -19,10 +20,11 @@ public class ColumnModeExcelTableFile extends AbstractExcelTableFile {
      * 清空指定行范围的数据
      *
      * @param startRow 起始行号（从0开始）
-     * @param count 要清空的行数
+     * @param count    要清空的行数
+     * @param fieldIndices 如果为null表示第一行全部清空，如果不为null表示第一行只清空指定indices下的数据
      */
     @Override
-    public void emptyRows(int startRow, int count) {
+    public void emptyRows(int startRow, int count, List<Integer> fieldIndices) {
         if (startRow < 0 || count <= 0) {
             return;
         }
@@ -35,12 +37,25 @@ public class ColumnModeExcelTableFile extends AbstractExcelTableFile {
 
         int endColPlus1 = Math.min(startRow + count, lastColNum + 1);
 
-        // 清空指定范围内的列
-        for (Row row : sheet) {
-            for (int col = startRow; col < endColPlus1; col++) {
-                Cell cell = row.getCell(col);
-                if (cell != null) {
-                    cell.setBlank();
+        for (int col = startRow; col < endColPlus1; col++) {
+            if (col == startRow && fieldIndices != null) {
+                // 只清空指定 indices下的数据
+                for (int rowIndex : fieldIndices) {
+                    Row row = sheet.getRow(rowIndex);
+                    if (row != null) {
+                        Cell cell = row.getCell(col);
+                        if (cell != null) {
+                            cell.setBlank();
+                        }
+                    }
+                }
+            } else {
+                // 清空指定范围内的列
+                for (Row row : sheet) {
+                    Cell cell = row.getCell(col);
+                    if (cell != null) {
+                        cell.setBlank();
+                    }
                 }
             }
         }

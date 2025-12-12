@@ -54,7 +54,7 @@ class ColumnModeExcelTableFileTest {
 
         // Test emptyRows - 在列模式下，emptyRows实际上是清空列
         // 清空第2列（从0开始），即清空数据列"1,A"
-        tableFile.emptyRows(2, 1);
+        tableFile.emptyRows(2, 1, null);
         tableFile.saveAndClose();
 
         // Verify

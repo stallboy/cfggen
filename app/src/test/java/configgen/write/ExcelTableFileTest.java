@@ -46,7 +46,7 @@ class ExcelTableFileTest {
         ExcelTableFile tableFile = new ExcelTableFile(excelPath, "Sheet1", 2);
 
         // Empty row 2
-        tableFile.emptyRows(2, 1);
+        tableFile.emptyRows(2, 1, null);
         tableFile.saveAndClose();
 
         // Verify

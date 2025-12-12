@@ -24,11 +24,13 @@ public class CsvTableFile extends AbstractCsvTableFile {
 
     /**
      * 清空指定行范围的数据
+     *
      * @param startRow 起始行号（从0开始）
-     * @param count 要清空的行数
+     * @param count    要清空的行数
+     * @param fieldIndices 如果为null表示第一行全部清空，如果不为null表示第一行只清空指定indices下的数据
      */
     @Override
-    public void emptyRows(int startRow, int count) {
+    public void emptyRows(int startRow, int count, List<Integer> fieldIndices) {
         if (startRow < 0 || count <= 0 || startRow >= rows.size()) {
             return;
         }
@@ -38,7 +40,18 @@ public class CsvTableFile extends AbstractCsvTableFile {
         // 清空指定范围内的行
         for (int i = startRow; i < end; i++) {
             List<String> row = rows.get(i);
-            Collections.fill(row, "");
+
+            if (i == startRow && fieldIndices != null) {
+                // 只清空指定 indices下的数据
+                for (int colIndex : fieldIndices) {
+                    if (colIndex >= 0 && colIndex < row.size()) {
+                        row.set(colIndex, "");
+                    }
+                }
+            } else {
+                // 清空行中的所有单元格
+                Collections.fill(row, "");
+            }
         }
         markModified();
     }

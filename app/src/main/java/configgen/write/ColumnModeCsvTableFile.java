@@ -10,17 +10,19 @@ import java.util.List;
  * CSV表格文件实现（列模式）
  */
 public class ColumnModeCsvTableFile extends AbstractCsvTableFile {
-    public ColumnModeCsvTableFile(Path filePath, String defaultEncoding, int headRow)  {
+    public ColumnModeCsvTableFile(Path filePath, String defaultEncoding, int headRow) {
         super(filePath, defaultEncoding, headRow);
     }
 
     /**
      * 清空指定列范围的数据
+     *
      * @param startCol 起始列号（从0开始）
-     * @param count 要清空的列数
+     * @param count    要清空的列数
+     * @param fieldIndices 如果为null表示第一行全部清空，如果不为null表示第一行只清空指定indices下的数据
      */
     @Override
-    public void emptyRows(int startCol, int count) {
+    public void emptyRows(int startCol, int count, List<Integer> fieldIndices) {
         int maxColumnCount = getColumnCount();
         if (startCol < 0 || count <= 0 || startCol >= maxColumnCount) {
             return;
@@ -28,13 +30,28 @@ public class ColumnModeCsvTableFile extends AbstractCsvTableFile {
 
         int end = Math.min(startCol + count, maxColumnCount);
         // 清空指定范围内的列
-        for (List<String> row : rows) {
-            for (int col = startCol; col < end; col++) {
-                if (col < row.size()) {
-                    row.set(col, "");
+        for (int col = startCol; col < end; col++) {
+            if (col == startCol && fieldIndices != null) {
+                // 只清空指定 indices下的数据
+                for (int rowIndex : fieldIndices) {
+                    if (rowIndex >= 0 && rowIndex < rows.size()) {
+                        List<String> row = rows.get(rowIndex);
+                        if (col < row.size()) {
+                            row.set(col, "");
+                        }
+                    }
+                }
+            } else {
+                // 清空列中的所有单元格
+                for (List<String> row : rows) {
+                    if (col < row.size()) {
+                        row.set(col, "");
+                    }
                 }
             }
         }
+
+
         markModified();
     }
 
@@ -75,7 +92,7 @@ public class ColumnModeCsvTableFile extends AbstractCsvTableFile {
         for (int colOffset = 0; colOffset < contentColCount; colOffset++) {
             int colNum = actualStartCol + colOffset;
 
-            // 获取RecordBlock中该列的数据
+            // 获取 RecordBlock中该列的数据
             String[] colData = content.getRow(colOffset);
             if (colData != null) {
                 // 写入该列的所有单元格

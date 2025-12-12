@@ -27,18 +27,18 @@ public class VTableStorage {
 
         CfgValue.VStruct oldRecord = vTable.primaryKeyMap().get(pkValue);
 
-        // 1. 文件定位
         TableFile tableFile;
         int startRow;
         int rowCount;
         CfgData.DRawSheet sheet;
         if (oldRecord != null) {
             // 更新操作：从oldRecord获取文件位置，然后删除旧记录
-            RecordLoc loc = deleteRecordNoSave(context, oldRecord);
+            RecordLoc loc = findRecordLoc(context, oldRecord);
             tableFile = loc.tableFile();
             startRow = loc.startRow;
             rowCount = loc.rowCount;
-            sheet = dTable.getByRowId(loc.rowId);
+            sheet = dTable.getSheetByRowId(loc.rowId);
+            tableFile.emptyRows(startRow, rowCount, sheet.fieldIndices());
 
         } else {
             // 新增操作：从dTable获取文件位置
@@ -57,21 +57,21 @@ public class VTableStorage {
     public static void deleteRecord(@NotNull Context context,
                                     @NotNull VStruct oldRecord) {
 
-        RecordLoc r = deleteRecordNoSave(context, oldRecord);
+        RecordLoc r = findRecordLoc(context, oldRecord);
+        r.tableFile.emptyRows(r.startRow, r.rowCount, null);
         r.tableFile.saveAndClose();
     }
 
-    private static RecordLoc deleteRecordNoSave(@NotNull Context context,
-                                                @NotNull VStruct oldRecord) {
+
+    private static RecordLoc findRecordLoc(@NotNull Context context,
+                                           @NotNull VStruct oldRecord) {
 
         DRowId rowId = TableFileLocator.getLocFromRecord(oldRecord);
-        boolean isColumnMode = ((TableSchema) oldRecord.schema()).isColumnMode();
-        TableFile tableFile = TableFileLocator.createTableFile(rowId.fileName(), rowId.sheetName(), context, isColumnMode);
-
         int startRow = rowId.row();
         int rowCount = RecordBlockMapper.mapToBlock(oldRecord).getRowCount();
-        tableFile.emptyRows(startRow, rowCount);
 
+        boolean isColumnMode = ((TableSchema) oldRecord.schema()).isColumnMode();
+        TableFile tableFile = TableFileLocator.createTableFile(rowId.fileName(), rowId.sheetName(), context, isColumnMode);
         return new RecordLoc(tableFile, rowId, startRow, rowCount);
     }
 

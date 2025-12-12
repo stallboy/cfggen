@@ -31,7 +31,7 @@ class CsvTableFileTest {
 
         // Test emptyRows
         // Data starts at row 2. Row 2 is "1,A", Row 3 is "2,B"
-        tableFile.emptyRows(3, 1);
+        tableFile.emptyRows(3, 1, null);
 
         // Save and verify
         tableFile.saveAndClose();

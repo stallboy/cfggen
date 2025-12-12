@@ -10,7 +10,7 @@ rm -rf app/bin
 
 REM Step 2: Use jlink to create a custom JRE
 echo Creating custom JRE...
-jlink --add-modules java.base,java.logging,java.xml,jdk.httpserver,jdk.unsupported --strip-debug --no-header-files --no-man-pages --output custom-jre
+jlink --add-modules java.base,java.logging,java.xml,jdk.httpserver,jdk.unsupported,java.compiler --bind-services --strip-debug --no-header-files --no-man-pages --output custom-jre
 
 IF %ERRORLEVEL% NEQ 0 (
     echo jlink command failed!

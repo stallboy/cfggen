@@ -55,7 +55,7 @@ public record CfgData(Map<String, DTable> tables,
             return new DTable(tableName, new ArrayList<>(), new ArrayList<>(), rawSheets, nullableAddTag);
         }
 
-        public DRawSheet getByRowId(DRowId rowId) {
+        public DRawSheet getSheetByRowId(DRowId rowId) {
             for (DRawSheet sheet : rawSheets) {
                 if (sheet.fileName().equals(rowId.fileName)
                         && sheet.sheetName().equals(rowId.sheetName)) {

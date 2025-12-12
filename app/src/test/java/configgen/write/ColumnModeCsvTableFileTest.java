@@ -38,7 +38,7 @@ class ColumnModeCsvTableFileTest {
 
         // Test emptyRows - 在列模式下，emptyRows实际上是清空列
         // 清空第2列（从0开始），即清空数据列"1,2"
-        tableFile.emptyRows(2, 1);
+        tableFile.emptyRows(2, 1, null);
 
         // Save and verify
         tableFile.saveAndClose();
