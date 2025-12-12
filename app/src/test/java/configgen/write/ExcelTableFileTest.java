@@ -229,4 +229,72 @@ class ExcelTableFileTest {
             assertEquals("D", row5.getCell(1).getStringCellValue());
         }
     }
+
+    @Test
+    void testEmptyRowsAndKeepCommentCell() throws Exception {
+        Path excelPath = tempDir.resolve("test_comment.xlsx");
+        try (Workbook wb = new XSSFWorkbook()) {
+            Sheet sheet = wb.createSheet("Sheet1");
+            Row row0 = sheet.createRow(0);
+            row0.createCell(0).setCellValue("ID");
+            row0.createCell(1).setCellValue("注释");
+            row0.createCell(2).setCellValue("名字");
+
+            Row row1 = sheet.createRow(1);
+            row1.createCell(0).setCellValue("id");
+            // row1 cell(1) is empty (comment header)
+            row1.createCell(2).setCellValue("name");
+
+            Row row2 = sheet.createRow(2);
+            row2.createCell(0).setCellValue("1");
+            row2.createCell(1).setCellValue("注释1");
+            row2.createCell(2).setCellValue("A");
+
+            Row row3 = sheet.createRow(3);
+            row3.createCell(0).setCellValue("2");
+            row3.createCell(1).setCellValue("注释2");
+            row3.createCell(2).setCellValue("B");
+
+            try (FileOutputStream fos = new FileOutputStream(excelPath.toFile())) {
+                wb.write(fos);
+            }
+        }
+
+        ExcelTableFile tableFile = new ExcelTableFile(excelPath, "Sheet1", 2);
+
+        // Test emptyRows with fieldIndices - 清空第3行（从0开始），即清空数据行"2,注释2,B"，但只清空第0列（id）和第2列（名字），保留注释列（索引1）
+        tableFile.emptyRows(3, 1, List.of(0, 2));
+        tableFile.saveAndClose();
+
+        // Verify
+        try (Workbook wb = new XSSFWorkbook(excelPath.toFile())) {
+            Sheet sheet = wb.getSheet("Sheet1");
+            Row row3 = sheet.getRow(3);
+
+            if (row3 != null) {
+                // 检查第0列（id）应该为空
+                Cell c0 = row3.getCell(0);
+                if (c0 != null) {
+                    assertEquals(CellType.BLANK, c0.getCellType());
+                }
+
+                // 检查第1列（注释）应该保持不变
+                Cell c1 = row3.getCell(1);
+                assertNotNull(c1);
+                assertEquals("注释2", c1.getStringCellValue());
+
+                // 检查第2列（名字）应该为空
+                Cell c2 = row3.getCell(2);
+                if (c2 != null) {
+                    assertEquals(CellType.BLANK, c2.getCellType());
+                }
+            }
+
+            // 其他行应该保持不变
+            Row row2 = sheet.getRow(2);
+            assertEquals("1", row2.getCell(0).getStringCellValue());
+            assertEquals("注释1", row2.getCell(1).getStringCellValue());
+            assertEquals("A", row2.getCell(2).getStringCellValue());
+        }
+    }
 }

@@ -285,4 +285,88 @@ class ColumnModeExcelTableFileTest {
             assertEquals("D", row1.getCell(5).getStringCellValue());  // 原始数据被移动
         }
     }
+
+    @Test
+    void testEmptyRowsAndKeepCommentCellColumnMode() throws Exception {
+        Path excelPath = tempDir.resolve("test_column_comment.xlsx");
+        // 创建列模式的Excel文件，包含注释列
+        try (Workbook wb = new XSSFWorkbook()) {
+            Sheet sheet = wb.createSheet("Sheet1");
+            // 列0: ["ID", "注释", "名字"]
+            Row row0 = sheet.createRow(0);
+            row0.createCell(0).setCellValue("ID");
+            Row row1 = sheet.createRow(1);
+            row1.createCell(0).setCellValue("注释");
+            Row row2 = sheet.createRow(2);
+            row2.createCell(0).setCellValue("名字");
+
+            // 列1: ["id", "", "name"]
+            row0.createCell(1).setCellValue("id");
+            // row1 cell(1) is empty (comment header)
+            row2.createCell(1).setCellValue("name");
+
+            // 列2: ["1", "注释1", "A"]
+            row0.createCell(2).setCellValue("1");
+            row1.createCell(2).setCellValue("注释1");
+            row2.createCell(2).setCellValue("A");
+
+            // 列3: ["2", "注释2", "B"]
+            row0.createCell(3).setCellValue("2");
+            row1.createCell(3).setCellValue("注释2");
+            row2.createCell(3).setCellValue("B");
+
+            try (FileOutputStream fos = new FileOutputStream(excelPath.toFile())) {
+                wb.write(fos);
+            }
+        }
+
+        ColumnModeExcelTableFile tableFile = new ColumnModeExcelTableFile(excelPath, "Sheet1", 2);
+
+        // Test emptyRows with fieldIndices - 在列模式下，emptyRows实际上是清空列
+        // 清空第2列（从0开始），即清空数据列"1,注释1,A"，但只清空第0列（id）和第2列（名字），保留注释列（索引1）
+        tableFile.emptyRows(2, 1, List.of(0, 2));
+        tableFile.saveAndClose();
+
+        // Verify
+        try (Workbook wb = new XSSFWorkbook(excelPath.toFile())) {
+            Sheet sheet = wb.getSheet("Sheet1");
+
+            // 检查第2列是否被部分清空
+            Row row0 = sheet.getRow(0);
+            Row row1 = sheet.getRow(1);
+            Row row2 = sheet.getRow(2);
+
+            // 第2列的第0行（id）应该为空
+            Cell cell20 = row0.getCell(2);
+            if (cell20 != null) {
+                assertEquals(CellType.BLANK, cell20.getCellType());
+            }
+
+            // 第2列的第1行（注释）应该保持不变
+            Cell cell21 = row1.getCell(2);
+            assertNotNull(cell21);
+            assertEquals("注释1", cell21.getStringCellValue());
+
+            // 第2列的第2行（名字）应该为空
+            Cell cell22 = row2.getCell(2);
+            if (cell22 != null) {
+                assertEquals(CellType.BLANK, cell22.getCellType());
+            }
+
+            // 第3列应该保持不变
+            assertEquals("2", row0.getCell(3).getStringCellValue());
+            assertEquals("注释2", row1.getCell(3).getStringCellValue());
+            assertEquals("B", row2.getCell(3).getStringCellValue());
+
+            // 其他列应该保持不变
+            assertEquals("ID", row0.getCell(0).getStringCellValue());
+            assertEquals("id", row0.getCell(1).getStringCellValue());
+
+            assertEquals("注释", row1.getCell(0).getStringCellValue());
+            // row1 cell(1) is empty
+
+            assertEquals("名字", row2.getCell(0).getStringCellValue());
+            assertEquals("name", row2.getCell(1).getStringCellValue());
+        }
+    }
 }

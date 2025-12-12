@@ -49,6 +49,36 @@ class CsvTableFileTest {
         assertEquals(",", lines.get(3)); // Cleared row
     }
 
+
+    @Test
+    void testEmptyRowsAndKeepCommentCell() throws IOException {
+        Path csvPath = tempDir.resolve("test.csv");
+        String content = """
+                ID,注释,名字
+                id,,name
+                1,注释1,A
+                2,注释2,B
+                """;
+        Files.writeString(csvPath, content);
+
+        CsvTableFile tableFile = new CsvTableFile(csvPath, "UTF-8", 2);
+
+        // Test emptyRows
+        tableFile.emptyRows(3, 1, List.of(0,2)); // Keep comment cell (index 1)
+
+        // Save and verify
+        tableFile.saveAndClose();
+
+        List<String> lines = Files.readAllLines(csvPath);
+        assertEquals(4, lines.size());
+        // Handle potential BOM in first line
+        String firstLine = lines.get(0);
+        if (firstLine.startsWith("\uFEFF")) {
+            firstLine = firstLine.substring(1);
+        }
+        assertEquals(",注释2,", lines.get(3)); // Cleared row
+    }
+
     @Test
     void testInsertRecordBlock() throws IOException {
         Path csvPath = tempDir.resolve("insert.csv");
@@ -87,6 +117,7 @@ class CsvTableFileTest {
         assertEquals("2,B", lines.get(3));
         assertEquals("3,C", lines.get(4));
     }
+
 
     @Test
     void testInsertWithShift() throws IOException {

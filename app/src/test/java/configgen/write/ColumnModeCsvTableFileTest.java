@@ -188,4 +188,47 @@ class ColumnModeCsvTableFileTest {
         assertEquals("ID,id,2,3,1,4", firstLine);
         assertEquals("名字,name,B,C,A,D", lines.get(1));
     }
+
+    @Test
+    void testEmptyRowsAndKeepCommentCellColumnMode() throws IOException {
+        Path csvPath = tempDir.resolve("test_column_comment.csv");
+        // 列模式：数据完全按列存储
+        // 逻辑层（RecordBlock）的数据：
+        // 行0: ["1", "注释1", "A"]
+        // 行1: ["2", "注释2", "B"]
+        // 列模式物理存储（转置后）：
+        // 列0: ["ID", "注释", "名字"]
+        // 列1: ["id", "", "name"]
+        // 列2: ["1", "注释1", "A"]
+        // 列3: ["2", "注释2", "B"]
+        String content = """
+                ID,id,1,2
+                注释,,注释1,注释2
+                名字,name,A,B
+                """;
+        Files.writeString(csvPath, content);
+
+        ColumnModeCsvTableFile tableFile = new ColumnModeCsvTableFile(csvPath, "UTF-8", 2);
+
+        // Test emptyRows with fieldIndices - 在列模式下，emptyRows实际上是清空列
+        // 清空第2列（从0开始），即清空数据列"1,注释1,A"，但只清空第0列（id）和第2列（名字），保留注释列（索引1）
+        tableFile.emptyRows(2, 1, List.of(0, 2));
+
+        // Save and verify
+        tableFile.saveAndClose();
+
+        List<String> lines = Files.readAllLines(csvPath);
+        assertEquals(3, lines.size());
+        // Handle potential BOM in first line
+        String firstLine = lines.get(0);
+        if (firstLine.startsWith("\uFEFF")) {
+            firstLine = firstLine.substring(1);
+        }
+        // 验证：第2列的第0列（id）和第2列（名字）被清空，第1列（注释）保持不变
+        // 原始：列2: ["1", "注释1", "A"]
+        // 清空后：列2: ["", "注释1", ""]
+        assertEquals("ID,id,,2", firstLine); // 第2列的第0列被清空
+        assertEquals("注释,,注释1,注释2", lines.get(1)); // 第2列的第1列保持不变
+        assertEquals("名字,name,,B", lines.get(2)); // 第2列的第2列被清空
+    }
 }
