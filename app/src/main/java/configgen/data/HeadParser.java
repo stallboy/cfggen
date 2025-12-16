@@ -14,6 +14,10 @@ import static configgen.data.CfgData.*;
 
 public final class HeadParser {
 
+    /**
+     * 更新 sheet的 fieldIndices信息
+     *     table的 fields信息
+     */
     public static void parse(DTable table, CfgDataStat stat, HeadRow headRow, boolean isColumnMode, CfgSchemaErrs errs) {
         List<DField> header = null;
         List<String> names = null;

@@ -2,6 +2,7 @@ package configgen.write;
 
 import configgen.ctx.Context;
 import configgen.data.CfgData;
+import configgen.data.CfgData.DRawSheet;
 import configgen.data.CfgData.DRowId;
 import configgen.data.CfgData.DTable;
 import configgen.schema.TableSchema;
@@ -18,11 +19,11 @@ import org.jetbrains.annotations.NotNull;
  */
 public class VTableStorage {
 
-    public static void addOrUpdateRecord(@NotNull Context context,
-                                         @NotNull VTable vTable,
-                                         @NotNull DTable dTable,
-                                         @NotNull Value pkValue,
-                                         @NotNull VStruct newRecord) {
+    public static DRawSheet addOrUpdateRecord(@NotNull Context context,
+                                              @NotNull VTable vTable,
+                                              @NotNull DTable dTable,
+                                              @NotNull Value pkValue,
+                                              @NotNull VStruct newRecord) {
         RecordBlock block = RecordBlockMapper.mapToBlock(newRecord);
 
         CfgValue.VStruct oldRecord = vTable.primaryKeyMap().get(pkValue);
@@ -30,7 +31,7 @@ public class VTableStorage {
         TableFile tableFile;
         int startRow;
         int rowCount;
-        CfgData.DRawSheet sheet;
+        DRawSheet sheet;
         if (oldRecord != null) {
             // 更新操作：从oldRecord获取文件位置，然后删除旧记录
             RecordLoc loc = findRecordLoc(context, oldRecord);
@@ -51,15 +52,19 @@ public class VTableStorage {
 
         tableFile.insertRecordBlock(startRow, rowCount, new RecordBlockTransformed(block, sheet.fieldIndices()));
         tableFile.saveAndClose();
+
+        return sheet;
     }
 
 
-    public static void deleteRecord(@NotNull Context context,
-                                    @NotNull VStruct oldRecord) {
+    public static DRawSheet deleteRecord(@NotNull Context context,
+                                         @NotNull DTable dTable,
+                                         @NotNull VStruct oldRecord) {
 
-        RecordLoc r = findRecordLoc(context, oldRecord);
-        r.tableFile.emptyRows(r.startRow, r.rowCount, null);
-        r.tableFile.saveAndClose();
+        RecordLoc loc = findRecordLoc(context, oldRecord);
+        loc.tableFile.emptyRows(loc.startRow, loc.rowCount, null);
+        loc.tableFile.saveAndClose();
+        return dTable.getSheetByRowId(loc.rowId);
     }
 
 

@@ -1,7 +1,9 @@
 package configgen.data;
 
+import configgen.data.ReadResult.OneSheet;
 import configgen.util.Logger;
 import org.apache.poi.ss.usermodel.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -15,9 +17,11 @@ public enum ReadByPoi implements ExcelReader {
 
 
     @Override
-    public AllResult readExcels(Path path, Path relativePath) throws IOException {
+    public ReadResult readExcels(@NotNull Path path,
+                                 @NotNull Path relativePath,
+                                 String readSheet) {
         CfgDataStat stat = new CfgDataStat();
-        List<OneSheetResult> sheets = new ArrayList<>();
+        List<OneSheet> sheets = new ArrayList<>();
 
         stat.excelCount++;
 
@@ -33,6 +37,12 @@ public enum ReadByPoi implements ExcelReader {
                     stat.ignoredSheetCount++;
                     continue;
                 }
+
+                if (readSheet != null && !readSheet.equals(sheetName)) {
+                    // 只用于更新，此时不管stat
+                    continue;
+                }
+
 
                 stat.sheetCount++;
                 List<CfgData.DRawRow> rows = new ArrayList<>(sheet.getLastRowNum() + 1);
@@ -61,13 +71,15 @@ public enum ReadByPoi implements ExcelReader {
                         }
                     }
                 }
-                OneSheetResult oneSheet = new OneSheetResult(ti.tableName(),
+                OneSheet oneSheet = new OneSheet(ti.tableName(),
                         new CfgData.DRawSheet(relativePath.toString(), sheetName, ti.index(), rows, new ArrayList<>()));
                 sheets.add(oneSheet);
             }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
-        return new AllResult(sheets, stat, null);
+        return new ReadResult(sheets, stat, null);
     }
 
 

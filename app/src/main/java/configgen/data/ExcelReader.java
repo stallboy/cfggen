@@ -1,20 +1,16 @@
 package configgen.data;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
 
 public interface ExcelReader {
 
-    record AllResult(List<OneSheetResult> sheets,
-                     CfgDataStat stat,
-                     String nullableAddTag) {
-    }
-
-    record OneSheetResult(String tableName,
-                          CfgData.DRawSheet sheet) {
-    }
-
-    AllResult readExcels(Path path, Path relativePath) throws IOException;
+    /**
+     * @param sheet 指定读取的sheet名称，null表示读取所有sheet
+     */
+    ReadResult readExcels(@NotNull Path path,
+                          @NotNull Path relativePath,
+                          String sheet) ;
 }

@@ -63,7 +63,7 @@ public class WriteRecordTool {
         try {
             if (vTable.schema().isJson()) {
                 Path writePath = VTableJsonStorage.addOrUpdateRecord(thisValue, tableName, id,
-                        context.getSourceStructure().getRootDir());
+                        context.sourceStructure().getRootDir());
             } else {
                 CfgData.DTable dTable = context.cfgData().getDTable(tableName);
                 VTableStorage.addOrUpdateRecord(context, vTable, dTable, pkValue, thisValue);
@@ -123,9 +123,10 @@ public class WriteRecordTool {
         try {
             if (vTable.schema().isJson()) {
                 VTableJsonStorage.deleteRecord(tableName, recordId,
-                        context.getSourceStructure().getRootDir());
+                        context.sourceStructure().getRootDir());
             } else {
-                VTableStorage.deleteRecord(context, old);
+                CfgData.DTable dTable = context.cfgData().getDTable(tableName);
+                VTableStorage.deleteRecord(context, dTable, old);
             }
             return new DeleteRecordResult(DeleteErrorCode.OK, tableName, recordId, List.of());
         } catch (Exception e) {

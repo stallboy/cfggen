@@ -94,8 +94,8 @@ public final class RecordEditService {
             // 最后确定其他都对的时候再存储
             if (vTable.schema().isJson()) {
                 Path writePath = VTableJsonStorage.addOrUpdateRecord(thisValue, table, id,
-                        context.getSourceStructure().getRootDir());
-                DirectoryStructure.JsonFileInfo jf = context.getSourceStructure().addJsonFile(table, writePath);
+                        context.sourceStructure().getRootDir());
+                DirectoryStructure.JsonFileInfo jf = context.sourceStructure().addJsonFile(table, writePath);
                 newCfgValueStat = newCfgValueStat.newAddLastModified(table, id, jf.lastModified());
             } else {
                 CfgData.DTable dTable = context.cfgData().getDTable(table);
@@ -197,13 +197,13 @@ public final class RecordEditService {
             if (vTable.schema().isJson()) {
                 // 最后确定其他都对的时候再存储
                 Path jsonPath = VTableJsonStorage.deleteRecord(table, id,
-                        context.getSourceStructure().getRootDir());
-                context.getSourceStructure().removeJsonFile(table, jsonPath);
+                        context.sourceStructure().getRootDir());
+                context.sourceStructure().removeJsonFile(table, jsonPath);
                 newCfgValueStat = newCfgValueStat.newRemoveLastModified(table, id);
 
             } else {
-
-                VTableStorage.deleteRecord(context, old);
+                CfgData.DTable dTable = context.cfgData().getDTable(table);
+                VTableStorage.deleteRecord(context, dTable, old);
             }
         } catch (Exception e) {
             return new ResultWithNewCfgValue(

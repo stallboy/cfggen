@@ -41,7 +41,7 @@ public class PromptGen {
                 example != null ? List.of(example) : List.of());
 
         // 生成prompt
-        Path rootDir = context.getSourceStructure().getRootDir();
+        Path rootDir = context.sourceStructure().getRootDir();
         String prompt = JteEngine.renderTryFileFirst(rootDir.resolve("config.jte").toString(),
                 "config.jte", model);
 

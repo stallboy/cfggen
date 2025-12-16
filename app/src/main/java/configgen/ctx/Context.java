@@ -41,6 +41,9 @@ public class Context {
     private DirectoryStructure sourceStructure;
     private LangTextFinder nullableLangTextFinder;
     private LangSwitchable nullableLangSwitch;
+
+    private final ExcelReader excelReader;
+    private final ReadCsv csvReader;
     private CfgSchema cfgSchema;
     private CfgData cfgData;
 
@@ -68,17 +71,14 @@ public class Context {
             nullableLangSwitch = LangSwitchable.read(Path.of(cfg.langSwitchDir), cfg.langSwitchDefaultLang);
         }
 
-        ExcelReader excelReader = (cfg.tryUsePoi && BuildSettings.isIncludePoi()) ?
+        excelReader = (cfg.tryUsePoi && BuildSettings.isIncludePoi()) ?
                 BuildSettings.getPoiReader() : ReadByFastExcel.INSTANCE;
-        CfgDataReader dataReader = new CfgDataReader(cfg.headRow, new ReadCsv(cfg.csvOrTsvDefaultEncoding), excelReader);
+        csvReader = new ReadCsv(cfg.csvOrTsvDefaultEncoding);
+        CfgDataReader dataReader = new CfgDataReader(cfg.headRow, csvReader, excelReader);
         boolean ok = readSchemaAndData(dataReader, true);
         if (!ok) {
             readSchemaAndData(dataReader, false);
         }
-    }
-
-    public Context copy() {
-        return new Context(contextCfg, sourceStructure);
     }
 
     private boolean readSchemaAndData(CfgDataReader dataReader, boolean autoFix) {
@@ -116,12 +116,20 @@ public class Context {
         }
     }
 
-    public ContextCfg getContextCfg() {
+    public ContextCfg contextCfg() {
         return contextCfg;
     }
 
-    public DirectoryStructure getSourceStructure() {
+    public DirectoryStructure sourceStructure() {
         return sourceStructure;
+    }
+
+    public ExcelReader excelReader() {
+        return excelReader;
+    }
+
+    public ReadCsv csvReader() {
+        return csvReader;
     }
 
     public CfgSchema cfgSchema() {

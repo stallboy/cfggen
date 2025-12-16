@@ -120,7 +120,7 @@ public class Logger {
                 time = System.currentTimeMillis();
                 elapse = String.format("%.1f/%.1f seconds", (time - old) / 1000f, (time - firstTime) / 1000f);
             }
-            log("%30s: %4dm %s%n", step, memory, elapse);
+            log("%30s: %4dm %s", step, memory, elapse);
         }
     }
 

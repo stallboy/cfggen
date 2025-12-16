@@ -193,7 +193,7 @@ public record CfgData(Map<String, DTable> tables,
     }
 
     /**
-     * @param fileName     文件名，支持csv和excel
+     * @param fileName     文件名，支持csv和excel. relative path of root data dir
      * @param sheetName    当文件时csv时，为空
      * @param index        支持多个csv或sheet组成一个逻辑的table，此时index用于数据排序
      * @param rows         原始每个格子里的数据
@@ -203,9 +203,8 @@ public record CfgData(Map<String, DTable> tables,
     public record DRawSheet(@NotNull String fileName,
                             @NotNull String sheetName,
                             int index,
-                            @NotNull List<DRawRow> rows,
-                            // HeaderParser填写
-                            @NotNull List<Integer> fieldIndices) {
+                            @NotNull List<DRawRow> rows,  // by reader
+                            @NotNull List<Integer> fieldIndices /* by HeadParser */) {
         public DRawSheet {
             Objects.requireNonNull(fileName);
             Objects.requireNonNull(sheetName);

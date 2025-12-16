@@ -51,7 +51,7 @@ public enum WatchAndPostRun {
         this.context = context;
         started = true;
 
-        DirectoryStructure ss = context.getSourceStructure();
+        DirectoryStructure ss = context.sourceStructure();
         Watcher watcher = new Watcher(ss.getRootDir(), ss.getExplicitDir());
         WaitWatcher waitWatcher = new WaitWatcher(watcher, this::reloadData, waitSecondsAfterWatchEvt * 1000);
         waitWatcher.start();
@@ -93,17 +93,17 @@ public enum WatchAndPostRun {
      * 这是在virtual thread里执行的
      */
     private void reloadData() {
-        DirectoryStructure newStructure = context.getSourceStructure().reload();
-        if (newStructure.lastModifiedEquals(context.getSourceStructure())) {
+        DirectoryStructure newStructure = context.sourceStructure().reload();
+        if (newStructure.lastModifiedEquals(context.sourceStructure())) {
             configgen.util.Logger.verbose("lastModified not change");
             return;
         }
         try {
-            this.context = new Context(context.getContextCfg(), newStructure);
-            Logger.log("reload ok");
+            this.context = new Context(context.contextCfg(), newStructure);
+            Logger.log("reload context ok");
             onNewContextReloaded();
         } catch (Exception e) {
-            Logger.log("reload ignored");
+            Logger.log("reload context ignored: %s", e.getMessage());
         }
 
     }

@@ -204,42 +204,6 @@ class ContextTest {
     }
 
     @Test
-    void shouldSupportCopyOperation() {
-        // Given: 有效的配置目录和Context
-        String cfgStr = """
-                table user[id] {
-                    id:int;
-                    name:str;
-                    age:int;
-                }
-                """;
-
-        String csvData = """
-                用户ID,姓名,年龄
-                id,name,age
-                1,Alice,25
-                2,Bob,30
-                """;
-
-        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
-        Resources.addTempFileFromText("user.csv", tempDir, csvData);
-
-        Context originalCtx = new Context(tempDir);
-
-        // When: 复制Context
-        Context copiedCtx = originalCtx.copy();
-
-        // Then: 复制的Context应该具有相同的配置但独立的缓存
-        assertNotNull(copiedCtx);
-        assertNotSame(originalCtx, copiedCtx);
-
-        CfgValue originalValue = originalCtx.makeValue("test");
-        CfgValue copiedValue = copiedCtx.makeValue("test");
-
-        assertNotSame(originalValue, copiedValue);
-    }
-
-    @Test
     void shouldAllowErrorInMakeValueWhenRequested() {
         // Given: 包含错误的配置目录
         String cfgStr = """
@@ -322,7 +286,7 @@ class ContextTest {
         Context ctx = new Context(tempDir);
 
         // When: 获取Context配置
-        Context.ContextCfg cfg = ctx.getContextCfg();
+        Context.ContextCfg cfg = ctx.contextCfg();
 
         // Then: 配置信息应该正确返回
         assertNotNull(cfg);

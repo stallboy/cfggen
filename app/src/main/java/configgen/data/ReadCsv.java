@@ -2,13 +2,13 @@ package configgen.data;
 
 import configgen.util.CSVUtil;
 import de.siegmar.fastcsv.reader.CsvRow;
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 import static configgen.data.CfgData.*;
-import static configgen.data.ExcelReader.*;
 
 public class ReadCsv {
     private final String defaultEncoding;
@@ -18,10 +18,12 @@ public class ReadCsv {
     }
 
 
-    public AllResult readCsv(Path path, Path relativePath,
-                             String tableName, int index,
-                             char fieldSeparator,
-                             String nullableAddTag) {
+    public ReadResult readCsv(@NotNull Path path,
+                              @NotNull Path relativePath,
+                              @NotNull String tableName,
+                              int index,
+                              char fieldSeparator,
+                              String nullableAddTag) {
         CfgDataStat stat = new CfgDataStat();
         List<DRawRow> rows = new ArrayList<>();
         List<CsvRow> read = CSVUtil.read(path, defaultEncoding, fieldSeparator);
@@ -31,7 +33,7 @@ public class ReadCsv {
         }
 
         DRawSheet sheet = new DRawSheet(relativePath.toString(), "", index, rows, new ArrayList<>());
-        return new AllResult(List.of(new OneSheetResult(tableName, sheet)), stat, nullableAddTag);
+        return new ReadResult(List.of(new ReadResult.OneSheet(tableName, sheet)), stat, nullableAddTag);
     }
 
     record DRawCsvRow(CsvRow row) implements DRawRow {

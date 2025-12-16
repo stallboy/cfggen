@@ -104,7 +104,7 @@ public class TableRelatedInfoFinder {
 
     public static ModuleRule findModuleRuleForTable(Context context, TableSchema tableSchema) {
         String namespace = tableSchema.namespace();
-        Path cfgFilePath = context.getSourceStructure().getCfgFilePathByPkgName(namespace);
+        Path cfgFilePath = context.sourceStructure().getCfgFilePathByPkgName(namespace);
         if (cfgFilePath == null) {
             return null;
         }
@@ -125,7 +125,7 @@ public class TableRelatedInfoFinder {
 
     public static TableRule findTableRule(Context context, TableSchema tableSchema) {
         String namespace = tableSchema.namespace();
-        Path cfgFilePath = context.getSourceStructure().getCfgFilePathByPkgName(namespace);
+        Path cfgFilePath = context.sourceStructure().getCfgFilePathByPkgName(namespace);
         if (cfgFilePath == null) {
             return null;
         }

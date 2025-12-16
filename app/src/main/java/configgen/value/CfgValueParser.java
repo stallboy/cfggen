@@ -50,13 +50,13 @@ public record CfgValueParser(CfgSchema subSchema,
                     long start = System.currentTimeMillis();
                     CfgValueErrs errs = CfgValueErrs.of();
                     VTableParser parser = new VTableParser(subTable, dTable, table,
-                            context.getContextCfg().headRow(), errs);
+                            context.contextCfg().headRow(), errs);
                     VTable vTable = parser.parseTable();
                     TextValue.setTranslatedForTable(vTable, context.nullableLangTextFinder());
                     if (Logger.isProfileEnabled()) {
                         long e = System.currentTimeMillis() - start;
                         if (e > 10) {
-                            Logger.log("%40s: %d%n", name, e);
+                            Logger.log("%40s: %d", name, e);
                         }
                     }
                     return new OneTableParserResult(vTable, errs);
@@ -67,11 +67,11 @@ public record CfgValueParser(CfgSchema subSchema,
                     long start = System.currentTimeMillis();
                     CfgValueErrs errs = CfgValueErrs.of();
                     VTableJsonParser parser = new VTableJsonParser(subTable, subSchema.isPartial(),
-                            context.getSourceStructure(), table, errs, cfgValue.valueStat());
+                            context.sourceStructure(), table, errs, cfgValue.valueStat());
                     VTable vTable = parser.parseTable();
                     TextValue.setTranslatedForTable(vTable, context.nullableLangTextFinder());
                     if (Logger.isProfileEnabled()) {
-                        Logger.log("%40s: %d%n", name, System.currentTimeMillis() - start);
+                        Logger.log("%40s: %d", name, System.currentTimeMillis() - start);
                     }
                     return new OneTableParserResult(vTable, errs);
                 });

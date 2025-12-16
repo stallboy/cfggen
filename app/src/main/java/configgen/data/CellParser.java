@@ -8,8 +8,8 @@ import static configgen.data.CfgData.*;
 public final class CellParser {
 
     /**
-     * 无head，去空行，去注释行，去注释列
-     * 返回的是规整的相同列数的row
+     * 去head，去空行，去注释行，去注释列
+     * 清除sheet的 原始rows信息 --> 汇集到table的 rows中
      */
     public static void parse(CfgData.DTable table, CfgDataStat stat, int headRow, boolean isColumnMode) {
         List<List<DCell>> result = null;
@@ -38,7 +38,7 @@ public final class CellParser {
                         stat.ignoredRowCount++;
                     }
                 }
-                sheet.rows().clear();
+                sheet.rows().clear();  // 清理内存
             }
 
         } else { // column mode

@@ -132,7 +132,7 @@ public class GenByAI extends Generator {
                     try {
                         if (tableSchema.isJson()) {
                             VTableJsonStorage.addOrUpdateRecord(record, tableSchema.name(), id,
-                                    context.getSourceStructure().getRootDir());
+                                    context.sourceStructure().getRootDir());
                         } else {
                             CfgData.DTable dTable = context.cfgData().getDTable(table);
                             VTableStorage.addOrUpdateRecord(context, vTable, dTable, pkValue, record);

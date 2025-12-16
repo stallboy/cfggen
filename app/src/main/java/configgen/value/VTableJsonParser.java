@@ -4,10 +4,7 @@ import configgen.ctx.DirectoryStructure;
 import configgen.schema.TableSchema;
 
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static configgen.ctx.DirectoryStructure.*;
 import static configgen.data.Source.*;
@@ -39,7 +36,7 @@ public class VTableJsonParser {
     public VTable parseTable() {
         List<VStruct> valueList = new ArrayList<>();
         String tableName = tableSchema.name();
-        Map<String, Long> idMap = valueStat.getIdLastModifiedMap(tableName);
+        Map<String, Long> idMap = new LinkedHashMap<>();
         Collection<JsonFileInfo> jsonFiles = sourceStructure.getJsonFilesByTable(tableName);
 
         for (JsonFileInfo jf : jsonFiles) {
@@ -61,6 +58,8 @@ public class VTableJsonParser {
                 idMap.put(id, modified);
             }
         }
+
+        valueStat.newTableLastModified(tableName, idMap);
         return new VTableCreator(subTableSchema, errs).create(valueList);
     }
 

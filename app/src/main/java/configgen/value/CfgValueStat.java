@@ -18,11 +18,11 @@ public class CfgValueStat implements Stat {
         return lastModifiedMap;
     }
 
-    public synchronized Map<String, Long> getIdLastModifiedMap(String table) {
-        return lastModifiedMap.computeIfAbsent(table, k -> new LinkedHashMap<>());
+    public synchronized void newTableLastModified(String table, Map<String, Long> lastModified) {
+        lastModifiedMap.put(table, lastModified);
     }
 
-    public synchronized void addLastModified(String table, String id, long time) {
+    private synchronized void addLastModified(String table, String id, long time) {
         lastModifiedMap.computeIfAbsent(table, k -> new LinkedHashMap<>()).put(id, time);
     }
 

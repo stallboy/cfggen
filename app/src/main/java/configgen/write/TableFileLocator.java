@@ -52,8 +52,8 @@ public class TableFileLocator {
                                             @NotNull String sheetName,
                                             @NotNull Context context,
                                             boolean isColumnMode) {
-        Path dataDir = context.getContextCfg().dataDir();
-        int headRow = context.getContextCfg().headRow().rowCount();
+        Path dataDir = context.contextCfg().dataDir();
+        int headRow = context.contextCfg().headRow().rowCount();
 
         Path filePath = dataDir.resolve(fileName);
 
@@ -71,7 +71,7 @@ public class TableFileLocator {
             }
         } else if (toLowerFileName.endsWith(".csv")) {
             try {
-                String encoding = context.getContextCfg().csvOrTsvDefaultEncoding();
+                String encoding = context.contextCfg().csvOrTsvDefaultEncoding();
                 if (isColumnMode) {
                     return new ColumnModeCsvTableFile(filePath, encoding, headRow);
                 } else {

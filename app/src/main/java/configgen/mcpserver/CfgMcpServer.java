@@ -39,7 +39,8 @@ public class CfgMcpServer extends GeneratorWithTag {
     @Override
     public void generate(Context ctx) throws IOException {
         if (INSTANCE != null) {
-            throw new IllegalStateException("CfgMcpServer INSTANCE already exists!");
+            Logger.log("CfgMcpServer instance already exists! ignore this");
+            return;
         }
 
         initFromCtx(ctx);
@@ -68,7 +69,7 @@ public class CfgMcpServer extends GeneratorWithTag {
 
     private void reloadCfgValue(Context newContext) {
         initFromCtx(newContext);
-        Logger.log("reload ok");
+        Logger.log("reload value ok");
     }
 
     public CfgValueWithContext cfgValueWithContext() {

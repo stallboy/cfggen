@@ -29,7 +29,10 @@ public sealed interface Source permits DCell, DCellList, DFile {
     record DCellList(@NotNull List<DCell> cells) implements Source {
     }
 
-    record DFile(String fileName, String inStruct, List<String> path) implements Source {
+    record DFile(String fileName,
+                 String inStruct,
+                 List<String> path) implements Source {
+
         public static DFile of(String fileName, String inStruct) {
             return new DFile(fileName, inStruct, List.of());
         }

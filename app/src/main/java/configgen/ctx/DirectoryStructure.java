@@ -73,7 +73,6 @@ public class DirectoryStructure {
                                 Path path,
                                 Path relativePath,
                                 FileFmt fmt,
-                                TableNameIndex csvOrTsvTableNameIndex,/*can be null*/
                                 String nullableAddTag) {
         public ExcelFileInfo {
             Objects.requireNonNull(path);
@@ -137,11 +136,11 @@ public class DirectoryStructure {
     /**
      * 配置文件信息
      */
-    private final Map<String, CfgFileInfo> cfgFiles = new LinkedHashMap<>();  // file path -> info
+    private final Map<String, CfgFileInfo> cfgFiles = new LinkedHashMap<>();  // relative file path -> info
     /**
      * excel文件信息
      */
-    private final Map<String, ExcelFileInfo> excelFiles = new LinkedHashMap<>(); // file path -> info
+    private volatile Map<String, ExcelFileInfo> excelFiles = new LinkedHashMap<>(); // relative file path -> info
     /**
      * json文件信息，可能被不同的线程访问，所以每次改变就创建新对象，改变引用
      */
@@ -297,14 +296,12 @@ public class DirectoryStructure {
                             if (codeName == null) {
                                 continue;
                             }
-
-                            TableNameIndex ti = getTableNameIndex(relativePath);
                             excelFiles.put(relativePath.toString(),
-                                    new ExcelFileInfo(path.toFile().lastModified(), path, relativePath, CSV, ti, null));
+                                    new ExcelFileInfo(path.toFile().lastModified(), path, relativePath, CSV, null));
                         }
                         case EXCEL -> {
                             excelFiles.put(relativePath.toString(),
-                                    new ExcelFileInfo(path.toFile().lastModified(), path, relativePath, EXCEL, null, null));
+                                    new ExcelFileInfo(path.toFile().lastModified(), path, relativePath, EXCEL, null));
                         }
                     }
                 }
@@ -332,9 +329,8 @@ public class DirectoryStructure {
                         continue;
                     }
 
-                    TableNameIndex ti = getTableNameIndex(relativePath);
                     excelFiles.put(relativePath.toString(),
-                            new ExcelFileInfo(path.toFile().lastModified(), path, relativePath, TXT_AS_TSV, ti, nullableAddTag));
+                            new ExcelFileInfo(path.toFile().lastModified(), path, relativePath, TXT_AS_TSV, nullableAddTag));
                 }
 
             }
@@ -411,7 +407,7 @@ public class DirectoryStructure {
         list.addFile(jf);
         list.sort();
 
-        this.jsonFiles = tmp;
+        jsonFiles = tmp;
         return jf;
     }
 
@@ -432,6 +428,27 @@ public class DirectoryStructure {
 
         jsonFiles = tmp;
     }
+
+    public synchronized void updateExcelFileLastModified(Path excelPath) {
+        Path relativePath = rootDir.relativize(excelPath);
+        String key = relativePath.toString();
+        ExcelFileInfo oldInfo = excelFiles.get(key);
+        if (oldInfo == null) {
+            return;
+        }
+        ExcelFileInfo newInfo = new ExcelFileInfo(
+                excelPath.toFile().lastModified(),
+                excelPath,
+                relativePath,
+                oldInfo.fmt,
+                oldInfo.nullableAddTag
+        );
+        Map<String, ExcelFileInfo> tmp = new LinkedHashMap<>(excelFiles);
+        tmp.put(key, newInfo);
+        excelFiles = tmp;
+    }
+
+
     //------------------------------
 
     private Map<String, JsonFileList> copyJsonFiles(String changedTable) {

@@ -2,6 +2,7 @@ package configgen.data;
 
 import configgen.util.Logger;
 import org.dhatim.fastexcel.reader.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -13,9 +14,11 @@ public enum ReadByFastExcel implements ExcelReader {
     INSTANCE;
 
     @Override
-    public AllResult readExcels(Path path, Path relativePath) throws IOException {
+    public ReadResult readExcels(@NotNull Path path,
+                                 @NotNull Path relativePath,
+                                 String readSheet) {
         CfgDataStat stat = new CfgDataStat();
-        List<OneSheetResult> sheets = new ArrayList<>();
+        List<ReadResult.OneSheet> sheets = new ArrayList<>();
 
         stat.excelCount++;
         try (ReadableWorkbook wb = new ReadableWorkbook(path.toFile(),
@@ -29,6 +32,11 @@ public enum ReadByFastExcel implements ExcelReader {
                     continue;
                 }
 
+                if (readSheet != null && !readSheet.equals(sheetName)) {
+                    // 只用于更新，此时不管stat
+                    continue;
+                }
+
                 stat.sheetCount++;
                 List<Row> rawRows = sheet.read();
                 int formula = addStatAndReturnFormulaCount(rawRows, stat);
@@ -39,12 +47,14 @@ public enum ReadByFastExcel implements ExcelReader {
                 // rawRows会忽略空行，这里要fix下
                 List<CfgData.DRawRow> rows = fixRows(rawRows);
 
-                OneSheetResult oneSheet = new OneSheetResult(ti.tableName(),
+                ReadResult.OneSheet oneSheet = new ReadResult.OneSheet(ti.tableName(),
                         new CfgData.DRawSheet(relativePath.toString(), sheetName, ti.index(), rows, new ArrayList<>()));
                 sheets.add(oneSheet);
             }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        return new AllResult(sheets, stat, null);
+        return new ReadResult(sheets, stat, null);
     }
 
 
@@ -124,7 +134,7 @@ public enum ReadByFastExcel implements ExcelReader {
         }
     }
 
-    static CfgData.DRawRow EMPTY_ROW = new CfgData.DRawRow() {
+    static final CfgData.DRawRow EMPTY_ROW = new CfgData.DRawRow() {
         @Override
         public String cell(int c) {
             return "";
