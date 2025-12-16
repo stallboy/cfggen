@@ -12,15 +12,19 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 import static configgen.data.DataUtil.getTableNameIndex;
 
-public class UpdateOneTable {
+public class DataUpdater {
 
-    public static CfgData update(@NotNull Context context,
-                                 @NotNull DTable dTable) {
+    public record NewCfgDataResult(@NotNull CfgData newCfgData,
+                                   @NotNull List<String> errStrList) {
+    }
 
+    public static NewCfgDataResult updateByReloadTable(@NotNull Context context,
+                                                       @NotNull DTable dTable) {
 
         DTable newTable = DTable.of(dTable.tableName(), new ArrayList<>(), dTable.nullableAddTag());
         Path rootDir = context.contextCfg().dataDir();
@@ -61,14 +65,10 @@ public class UpdateOneTable {
         HeadParser.parse(newTable, tStat, headRow, isColumnMode, errs);
         CellParser.parse(newTable, tStat, headRow.rowCount(), isColumnMode);
 
-        if (!errs.errs().isEmpty()) {
-            throw new IllegalArgumentException("Errors when updating table: " + dTable.tableName()
-                    + ", errs: " + errs);
-        }
-
         CfgData cfgData = context.cfgData();
         var newTables = new HashMap<>(cfgData.tables());
         newTables.put(newTable.tableName(), newTable);
-        return new CfgData(newTables, cfgData.stat());
+        return new NewCfgDataResult(new CfgData(newTables, cfgData.stat()),
+                errs.errs().stream().map(Object::toString).toList());
     }
 }

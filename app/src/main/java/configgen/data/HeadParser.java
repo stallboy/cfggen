@@ -32,7 +32,6 @@ public final class HeadParser {
             List<String> suggestedTypes = headRow.suggestedTypeRow() >= 0 ?
                     getLogicRow(sheet, headRow.suggestedTypeRow(), isColumnMode) : Collections.emptyList();
 
-
             List<DField> h = parseFields(sheet, stat, comments, curNames, suggestedTypes);
 
             if (header == null) {
@@ -40,6 +39,7 @@ public final class HeadParser {
                 header = h;
                 headerSheet = sheet;
             } else if (!curNames.equals(names)) {
+                // 多个sheet的表头不一致，但还是接着处理，按第一个header来处理，数据可能完全错位
                 errs.addErr(new CfgSchemaErrs.SplitDataHeaderNotEqual(sheet.id(), curNames, headerSheet.id(), names));
             }
         }

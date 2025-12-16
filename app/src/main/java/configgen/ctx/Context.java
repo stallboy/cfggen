@@ -45,7 +45,7 @@ public class Context {
     private final ExcelReader excelReader;
     private final ReadCsv csvReader;
     private CfgSchema cfgSchema;
-    private CfgData cfgData;
+    private volatile CfgData cfgData;
 
     /**
      * 优化，避免gen多次时，重复生成value
@@ -132,10 +132,16 @@ public class Context {
         return csvReader;
     }
 
+    /**
+     * @return 完整的（非partial）schema
+     */
     public CfgSchema cfgSchema() {
         return cfgSchema;
     }
 
+    /**
+     * @return 完整的data
+     */
     public CfgData cfgData() {
         return cfgData;
     }
