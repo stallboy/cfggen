@@ -1,5 +1,5 @@
 import {Button, Dropdown, Select, Skeleton, Space, Typography} from "antd";
-import {DownOutlined, LeftOutlined, RightOutlined} from "@ant-design/icons";
+import {LeftOutlined, RightOutlined, AppstoreOutlined} from "@ant-design/icons";
 import {TableList} from "./TableList.tsx";
 import {IdList} from "./IdList.tsx";
 import {
@@ -86,10 +86,11 @@ export const HeaderBar = memo(function ({schema, curTable}: {
     return <div style={HEADER_STYLE}>
         <Space size={'small'} style={SPACE_STYLE}>
             <Space size={'small'}>
-                <Dropdown menu={{items: menuItems, onClick: (e) => setDragPanel(e.key), selectedKeys: [dragPanel]}}>
-                    <Button style={{width: 120}}>
-                        {dragPanel} <DownOutlined/>
-                    </Button>
+                <Dropdown menu={{
+                    items: menuItems,
+                    onClick: (e) => setDragPanel(e.key), selectedKeys: [dragPanel]
+                }} trigger={['click']}>
+                    <Button icon={<AppstoreOutlined/>} title={t('panelMenu')}/>
                 </Dropdown>
 
                 {schema ? <TableList schema={schema}/> : <Select id='table' loading={true}/>}

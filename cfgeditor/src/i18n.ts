@@ -15,6 +15,8 @@ i18n.use(LanguageDetector)
             en: {
                 translation: {
                     nextSlot: "next slot:",
+                    unsaved: "unsaved",
+                    panelMenu: "Panel Menu",
                     table: "table",
                     tableRef: "table relation",
                     record: "record",
@@ -86,6 +88,8 @@ i18n.use(LanguageDetector)
             zh: {
                 translation: {
                     nextSlot: "空位:",
+                    unsaved: "未保存",
+                    panelMenu: "面板菜单",
                     table: "表",
                     tableRef: "表关系",
                     record: "记录",
