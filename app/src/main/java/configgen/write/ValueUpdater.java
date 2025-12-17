@@ -39,10 +39,10 @@ public class ValueUpdater {
         }
 
         NewCfgDataResult newDataResult = DataUpdater.updateByReloadTable(context, dTable);
-
+        CfgData newCfgData = newDataResult.newCfgData();
         CfgValueErrs errs = CfgValueErrs.of();
-        VTableParser parser = new VTableParser(vTable.schema(), dTable, vTable.schema(),
-                context.contextCfg().headRow(), errs);
+        VTableParser parser = new VTableParser(vTable.schema(), newCfgData.getDTable(vTable.name()),
+                vTable.schema(), context.contextCfg().headRow(), errs);
         VTable newVTable = parser.parseTable();
         TextValue.setTranslatedForTable(newVTable, context.nullableLangTextFinder());
 
@@ -54,7 +54,7 @@ public class ValueUpdater {
 
         List<String> errStrList = new ArrayList<>(newDataResult.errStrList());
         errStrList.addAll(errs.errs().stream().map(Object::toString).toList());
-        return new NewCfgValueResult(newCfgValue, newDataResult.newCfgData(), errStrList);
+        return new NewCfgValueResult(newCfgValue, newCfgData, errStrList);
     }
 
 
@@ -89,10 +89,10 @@ public class ValueUpdater {
     }
 
     public static NewCfgValueResult updateByJsonFileDelete(@NotNull Context context,
-                                                                @NotNull CfgValue cfgValue,
-                                                                @NotNull VTable vTable,
-                                                                @NotNull Value pkValue,
-                                                                @NotNull String id) {
+                                                           @NotNull CfgValue cfgValue,
+                                                           @NotNull VTable vTable,
+                                                           @NotNull Value pkValue,
+                                                           @NotNull String id) {
         CfgSchema schema = cfgValue.schema();
         if (schema.isPartial()) {
             throw new IllegalArgumentException("update only supports full value");

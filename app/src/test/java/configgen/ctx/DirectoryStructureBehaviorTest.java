@@ -128,7 +128,7 @@ class DirectoryStructureBehaviorTest {
         String jsonData = "{\"id\": 2, \"name\": \"Bob\"}";
         Files.writeString(newJsonFile, jsonData);
 
-        DirectoryStructure.JsonFileInfo addedFile = structure.addJsonFile("user", newJsonFile);
+        DirectoryStructure.JsonFileInfo addedFile = structure.addJsonFile("user", Path.of("_user/2.json"));
 
         // Then: 应该成功添加 JSON 文件
         assertNotNull(addedFile, "应该返回添加的 JSON 文件信息");
@@ -142,17 +142,18 @@ class DirectoryStructureBehaviorTest {
     @Test
     void shouldRemoveJsonFileWhenJsonFileIsRemovedFromTableDirectory() throws IOException {
         // Given: 包含 JSON 文件的 DirectoryStructure
+        Path relativePath = Path.of("_user/1.json");
         Path jsonDir = tempDir.resolve("_user");
         Files.createDirectories(jsonDir);
 
         String jsonData = "{\"id\": 1, \"name\": \"Alice\"}";
-        Path jsonFile = jsonDir.resolve("1.json");
+        Path jsonFile = tempDir.resolve(relativePath);
         Files.writeString(jsonFile, jsonData);
 
         DirectoryStructure structure = new DirectoryStructure(tempDir);
 
         // When: 移除 JSON 文件
-        structure.removeJsonFile("user", jsonFile);
+        structure.removeJsonFile("user", relativePath);
 
         // Then: 应该成功移除 JSON 文件
         Collection<DirectoryStructure.JsonFileInfo> jsonFiles = structure.getJsonFilesByTable("user");

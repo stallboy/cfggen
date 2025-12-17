@@ -26,22 +26,27 @@ public class WriteRecordTool {
                                           List<String> errorMessages) implements McpStructuredContent {
     }
 
+    private static final Object lock = new Object();
+
     @McpTool(description = "add or update record")
     public AddOrUpdateRecordResult addOrUpdateRecord(@McpToolParam(name = "table", description = "table full name", required = true)
-                                                     String tableName,
-                                                     @McpToolParam(name = "recordJsonStr", description = "record json string", required = true)
-                                                     String recordJsonStr) {
+                                                                  String tableName,
+                                                                  @McpToolParam(name = "recordJsonStr", description = "record json string", required = true)
+                                                                  String recordJsonStr) {
 
-        CfgMcpServer.CfgValueWithContext vc = CfgMcpServer.getInstance().cfgValueWithContext();
-        Context context = vc.context();
-        CfgValue cfgValue = vc.cfgValue();
+        synchronized (lock) {
+            CfgMcpServer.CfgValueWithContext vc = CfgMcpServer.getInstance().cfgValueWithContext();
+            Context context = vc.context();
+            CfgValue cfgValue = vc.cfgValue();
 
-        AddOrUpdateService.AddOrUpdateRecordResult ar = AddOrUpdateService.addOrUpdateRecord(context, cfgValue, tableName, recordJsonStr);
-        if (ar.newCfgValue() != null) {
-            CfgMcpServer.getInstance().updateCfgValue(ar.newCfgValue());
+            AddOrUpdateService.AddOrUpdateRecordResult ar = AddOrUpdateService.addOrUpdateRecord(context, cfgValue, tableName, recordJsonStr);
+            if (ar.newCfgValue() != null) {
+                CfgMcpServer.getInstance().updateCfgValue(ar.newCfgValue());
+            }
+
+            return new AddOrUpdateRecordResult(ar.errorCode(), tableName, ar.recordId(), ar.errorMessages());
         }
 
-        return new AddOrUpdateRecordResult(ar.errorCode(), tableName, ar.recordId(), ar.errorMessages());
     }
 
     public record DeleteRecordResult(DeleteService.DeleteErrorCode errorCode,
@@ -52,17 +57,19 @@ public class WriteRecordTool {
 
     @McpTool(description = "delete record")
     public DeleteRecordResult deleteRecord(@McpToolParam(name = "table", description = "table full name", required = true)
-                                           String tableName,
+                                                        String tableName,
                                            @McpToolParam(name = "recordId", description = "record id", required = true)
-                                           String recordId) {
-        CfgMcpServer.CfgValueWithContext vc = CfgMcpServer.getInstance().cfgValueWithContext();
-        Context context = vc.context();
-        CfgValue cfgValue = vc.cfgValue();
+                                                        String recordId) {
+        synchronized (lock) {
+            CfgMcpServer.CfgValueWithContext vc = CfgMcpServer.getInstance().cfgValueWithContext();
+            Context context = vc.context();
+            CfgValue cfgValue = vc.cfgValue();
 
-        DeleteService.DeleteRecordResult dr = DeleteService.deleteRecord(context, cfgValue, tableName, recordId);
-        if (dr.newCfgValue() != null) {
-            CfgMcpServer.getInstance().updateCfgValue(dr.newCfgValue());
+            DeleteService.DeleteRecordResult dr = DeleteService.deleteRecord(context, cfgValue, tableName, recordId);
+            if (dr.newCfgValue() != null) {
+                CfgMcpServer.getInstance().updateCfgValue(dr.newCfgValue());
+            }
+            return new DeleteRecordResult(dr.errorCode(), tableName, recordId, dr.errorMessages());
         }
-        return new DeleteRecordResult(dr.errorCode(), tableName, recordId, dr.errorMessages());
     }
 }

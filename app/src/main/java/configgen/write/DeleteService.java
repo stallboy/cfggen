@@ -3,6 +3,7 @@ package configgen.write;
 import configgen.ctx.Context;
 import configgen.data.CfgData.DRawSheet;
 import configgen.data.CfgData.DTable;
+import configgen.util.Logger;
 import configgen.value.CfgValue;
 import configgen.value.CfgValueErrs;
 import configgen.value.ValuePack;
@@ -55,30 +56,28 @@ public class DeleteService {
             return new DeleteRecordResult(DeleteErrorCode.RecordIdNotFound, null, List.of());
         }
         try {
+            NewCfgValueResult nr;
             if (vTable.schema().isJson()) {
                 Path relativeJsonPath = VTableJsonStorage.deleteRecord(tableName, recordId, context.rootDir());
-
-                NewCfgValueResult nr = ValueUpdater.updateByJsonFileDelete(context, cfgValue, vTable, pkValue, recordId);
-
+                nr = ValueUpdater.updateByJsonFileDelete(context, cfgValue, vTable, pkValue, recordId);
                 context.sourceStructure().removeJsonFile(tableName, relativeJsonPath);
-                context.updateDataAndValue(nr.newCfgData(), nr.newCfgValue());
-
-                return new DeleteRecordResult(DeleteErrorCode.OK,
-                        nr.newCfgValue(), nr.errStrList());
 
             } else {
                 DTable dTable = context.cfgData().getDTable(tableName);
                 DRawSheet dRawSheet = VTableStorage.deleteRecord(context, dTable, old);
-
-                NewCfgValueResult nr = ValueUpdater.updateByReloadTableData(context, cfgValue, vTable);
-
+                nr = ValueUpdater.updateByReloadTableData(context, cfgValue, vTable);
                 context.sourceStructure().updateExcelFileLastModified(Path.of(dRawSheet.relativeFilePath()));
-                context.updateDataAndValue(nr.newCfgData(), nr.newCfgValue());
-
-                return new DeleteRecordResult(DeleteErrorCode.OK, nr.newCfgValue(),
-                        nr.errStrList());
             }
+
+            context.updateDataAndValue(nr.newCfgData(), nr.newCfgValue());
+
+            Logger.log("Deleted record: table=%s, id=%s".formatted(tableName, recordId));
+            return new DeleteRecordResult(DeleteErrorCode.OK,
+                    nr.newCfgValue(), nr.errStrList());
+
         } catch (Exception e) {
+            Logger.log("Failed to delete record: table=%s, id=%s, error=%s",
+                    tableName, recordId, e.getMessage());
             return new DeleteRecordResult(DeleteErrorCode.IOException, null,
                     List.of(e.getMessage()));
         }

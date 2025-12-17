@@ -4,6 +4,7 @@ import configgen.ctx.Context;
 import configgen.data.CfgData.DRawSheet;
 import configgen.data.CfgData.DTable;
 import configgen.schema.TableSchema;
+import configgen.util.Logger;
 import configgen.value.*;
 import configgen.write.ValueUpdater.NewCfgValueResult;
 import org.jetbrains.annotations.NotNull;
@@ -60,32 +61,35 @@ public class AddOrUpdateService {
 
 
         try {
+            NewCfgValueResult nr;
+
             if (vTable.schema().isJson()) {
                 Path relatveiJsonPath = VTableJsonStorage.addOrUpdateRecord(thisValue, tableName, id,
                         context.rootDir());
 
-                NewCfgValueResult nr = ValueUpdater.updateByJsonFileAddOrUpdate(context, cfgValue, vTable, relatveiJsonPath);
+                nr = ValueUpdater.updateByJsonFileAddOrUpdate(context, cfgValue, vTable, relatveiJsonPath);
 
                 context.sourceStructure().addJsonFile(tableName, relatveiJsonPath);
-                context.updateDataAndValue(nr.newCfgData(), nr.newCfgValue());
-
-                return new AddOrUpdateRecordResult(code, id,
-                        nr.newCfgValue(), nr.errStrList());
 
             } else {
                 DTable dTable = context.cfgData().getDTable(tableName);
                 DRawSheet dRawSheet = VTableStorage.addOrUpdateRecord(context, vTable, dTable, pkValue, thisValue);
 
-                NewCfgValueResult nr = ValueUpdater.updateByReloadTableData(context, cfgValue, vTable);
+                nr = ValueUpdater.updateByReloadTableData(context, cfgValue, vTable);
 
                 context.sourceStructure().updateExcelFileLastModified(Path.of(dRawSheet.relativeFilePath()));
-                context.updateDataAndValue(nr.newCfgData(), nr.newCfgValue());
-
-                return new AddOrUpdateRecordResult(code, id,
-                        nr.newCfgValue(), nr.errStrList());
             }
 
+            context.updateDataAndValue(nr.newCfgData(), nr.newCfgValue());
+
+            Logger.log("addOrUpdateRecord: table=%s, id=%s, result=%s",
+                    tableName, id, code);
+            return new AddOrUpdateRecordResult(code, id,
+                    nr.newCfgValue(), nr.errStrList());
+
+
         } catch (IOException e) {
+            Logger.log("Failed to addOrUpdate table=%s, id=%s, error=%s", tableName, id, e.getMessage());
             return new AddOrUpdateRecordResult(AddOrUpdateErrorCode.IOException, id, null,
                     List.of(e.getMessage()));
         }
