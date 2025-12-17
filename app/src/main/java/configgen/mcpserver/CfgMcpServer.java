@@ -75,5 +75,10 @@ public class CfgMcpServer extends GeneratorWithTag {
     public CfgValueWithContext cfgValueWithContext() {
         return cfgValueWithContext;
     }
+
+    public void updateCfgValue(CfgValue newCfgValue) {
+        CfgValueWithContext old = cfgValueWithContext;
+        cfgValueWithContext = new CfgValueWithContext(newCfgValue, old.context());
+    }
 }
 

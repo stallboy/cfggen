@@ -1,7 +1,6 @@
 package configgen.write;
 
 import configgen.ctx.Context;
-import configgen.ctx.DirectoryStructure.JsonFileInfo;
 import configgen.data.CfgData;
 import configgen.data.DataUpdater;
 import configgen.data.DataUpdater.NewCfgDataResult;
@@ -15,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 public class ValueUpdater {
@@ -61,33 +61,34 @@ public class ValueUpdater {
     public static NewCfgValueResult updateByJsonFileAddOrUpdate(@NotNull Context context,
                                                                 @NotNull CfgValue cfgValue,
                                                                 @NotNull VTable vTable,
-                                                                @NotNull JsonFileInfo jsonFile) {
+                                                                @NotNull Path relativeJsonPath) {
         CfgSchema schema = cfgValue.schema();
         if (schema.isPartial()) {
             throw new IllegalArgumentException("update only supports full value");
         }
 
+        Path path = context.rootDir().resolve(relativeJsonPath).toAbsolutePath().normalize();
         String jsonStr;
         try {
-            jsonStr = Files.readString(jsonFile.path());
+            jsonStr = Files.readString(path);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         CfgValueErrs parseErrs = CfgValueErrs.of();
         CfgValue.VStruct vStruct = new ValueJsonParser(vTable.schema(), parseErrs).fromJson(jsonStr,
-                Source.DFile.of(jsonFile.relativePath().toString(), vTable.name()));
+                Source.DFile.of(relativeJsonPath.toString(), vTable.name()));
         Value pkValue = ValueUtil.extractPrimaryKeyValue(vStruct, vTable.schema());
         String id = pkValue.packStr();
         Map<Value, VStruct> newPrimaryKeyMap = new LinkedHashMap<>(vTable.primaryKeyMap());
         newPrimaryKeyMap.put(pkValue, vStruct);
         List<VStruct> newRecordList = newPrimaryKeyMap.values().stream().toList();
         CfgValueStat newCfgValueStat = cfgValue.valueStat().newAddLastModified(vTable.name(), id,
-                jsonFile.lastModified());
+                path.toFile().lastModified());
 
         return updateByNewRecords(context, cfgValue, vTable, newRecordList, newCfgValueStat);
     }
 
-    public static NewCfgValueResult updateByJsonFileAddOrUpdate(@NotNull Context context,
+    public static NewCfgValueResult updateByJsonFileDelete(@NotNull Context context,
                                                                 @NotNull CfgValue cfgValue,
                                                                 @NotNull VTable vTable,
                                                                 @NotNull Value pkValue,

@@ -50,8 +50,8 @@ public class Context {
     /**
      * 优化，避免gen多次时，重复生成value
      */
-    private CfgValue lastCfgValue;
-    private String lastCfgValueTag;
+    private volatile CfgValue lastCfgValue;
+    private volatile String lastCfgValueTag;
 
     public Context(Path dataDir) {
         this(ContextCfg.of(dataDir));
@@ -106,7 +106,7 @@ public class Context {
         } else if (autoFix) {
             Logger.profile("schema aligned by data");
             // schema.printDiff(alignedSchema);
-            CfgSchemas.writeToDir(sourceStructure.getRootDir().resolve(DirectoryStructure.ROOT_CONFIG_FILENAME),
+            CfgSchemas.writeToDir(rootDir().resolve(DirectoryStructure.ROOT_CONFIG_FILENAME),
                     alignedSchema);
             sourceStructure = sourceStructure.reload();
             Logger.profile("schema write");
@@ -122,6 +122,10 @@ public class Context {
 
     public DirectoryStructure sourceStructure() {
         return sourceStructure;
+    }
+
+    public Path rootDir() {
+        return sourceStructure.getRootDir();
     }
 
     public ExcelReader excelReader() {
@@ -200,5 +204,11 @@ public class Context {
         lastCfgValue = cfgValue;
         lastCfgValueTag = tag;
         return lastCfgValue;
+    }
+
+    public void updateDataAndValue(CfgData cfgData, CfgValue cfgValue) {
+        this.cfgData = cfgData;
+        this.lastCfgValue = cfgValue;
+        this.lastCfgValueTag = null;
     }
 }

@@ -25,7 +25,7 @@ class ReadByFastExcelTest {
             ReadResult.OneSheet o = readResult.sheets().get(0);
             assertEquals("ai", o.tableName());
             CfgData.DRawSheet sheet = o.sheet();
-            assertEquals(fn, sheet.fileName());
+            assertEquals(fn, sheet.relativeFilePath());
             assertEquals(55, sheet.rows().size());
         }
 

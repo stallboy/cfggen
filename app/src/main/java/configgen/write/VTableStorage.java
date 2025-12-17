@@ -1,7 +1,6 @@
 package configgen.write;
 
 import configgen.ctx.Context;
-import configgen.data.CfgData;
 import configgen.data.CfgData.DRawSheet;
 import configgen.data.CfgData.DRowId;
 import configgen.data.CfgData.DTable;
@@ -45,7 +44,7 @@ public class VTableStorage {
             // 新增操作：从dTable获取文件位置
             sheet = TableFileLocator.getSheetFromDTable(dTable);
             boolean isColumnMode = vTable.schema().isColumnMode();
-            tableFile = TableFileLocator.createTableFile(sheet.fileName(), sheet.sheetName(), context, isColumnMode);
+            tableFile = TableFileLocator.createTableFile(sheet.relativeFilePath(), sheet.sheetName(), context, isColumnMode);
             startRow = -1; // 放到最后
             rowCount = 0; // 不预留空行
         }

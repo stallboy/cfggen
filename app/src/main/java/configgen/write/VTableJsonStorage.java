@@ -1,5 +1,6 @@
 package configgen.write;
 
+import configgen.data.DataUtil;
 import configgen.gen.Generator;
 import configgen.value.CfgValue.VStruct;
 import configgen.value.ValueToJson;
@@ -10,8 +11,6 @@ import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static configgen.data.DataUtil.getJsonTableDir;
-
 /**
  * 对json类别的table做add、update、delete
  * 不做任何内存数据结构的修改，只读。
@@ -19,27 +18,36 @@ import static configgen.data.DataUtil.getJsonTableDir;
  */
 public class VTableJsonStorage {
 
+    /**
+     * @return relative path of the record file
+     */
     public static Path addOrUpdateRecord(@NotNull VStruct record,
                                          @NotNull String table,
                                          @NotNull String id,
                                          @NotNull Path dataDir) throws IOException {
-        Path jsonDir = getJsonTableDir(dataDir, table);
-        Path recordPath = jsonDir.resolve(id + ".json");
+
+        String jsonDirName = DataUtil.getJsonTableDirName(table);
+        Path relativePath = Path.of(jsonDirName).resolve(id + ".json");
+
+        Path recordPath = dataDir.resolve(relativePath);
         try (OutputStreamWriter writer = Generator.createUtf8Writer(recordPath.toFile())) {
             String jsonString = ValueToJson.toJsonStr(record);
             writer.write(jsonString);
-            return recordPath;
+            return relativePath;
         }
     }
 
-
+    /**
+     * @return relative path of the record file
+     */
     public static Path deleteRecord(@NotNull String table,
                                     @NotNull String id,
                                     @NotNull Path dataDir) throws IOException {
-        Path jsonDir = getJsonTableDir(dataDir, table);
-        Path recordPath = jsonDir.resolve(id + ".json");
+        String jsonDirName = DataUtil.getJsonTableDirName(table);
+        Path relativePath = Path.of(jsonDirName).resolve(id + ".json");
+        Path recordPath = dataDir.resolve(relativePath);
         Files.delete(recordPath);
-        return recordPath;
+        return relativePath;
     }
 
 }

@@ -44,7 +44,7 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
                             // 用json，就不能用excel
                             List<String> sheets = new ArrayList<>();
                             for (CfgData.DRawSheet rawSheet : th.rawSheets()) {
-                                sheets.add(String.format("%s[%s]", rawSheet.fileName(), rawSheet.sheetName()));
+                                sheets.add(String.format("%s[%s]", rawSheet.relativeFilePath(), rawSheet.sheetName()));
                             }
                             errs.addErr(new CfgSchemaErrs.JsonTableNotSupportExcel(table.name(), sheets));
                         }

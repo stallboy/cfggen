@@ -398,12 +398,11 @@ public class DirectoryStructure {
      * 改变或增加json文件后，会导致watcher触发，
      * 但这里再在运行时记录下来此json的lastModified，然后通过 lastModifiedEquals 比较来避免全量makeValue
      */
-    public synchronized JsonFileInfo addJsonFile(String tableName, Path jsonPath) {
+    public synchronized JsonFileInfo addJsonFile(String tableName, Path relativeJsonPath) {
         Map<String, JsonFileList> tmp = copyJsonFiles(tableName);
         JsonFileList list = tmp.computeIfAbsent(tableName, (String j) -> new JsonFileList());
-        Path relativePath = rootDir.relativize(jsonPath);
-        Path path = jsonPath.toAbsolutePath().normalize();
-        JsonFileInfo jf = JsonFileInfo.of(path, relativePath);
+        Path path = rootDir.resolve(relativeJsonPath).toAbsolutePath().normalize();
+        JsonFileInfo jf = JsonFileInfo.of(path, relativeJsonPath);
         list.addFile(jf);
         list.sort();
 
@@ -411,15 +410,13 @@ public class DirectoryStructure {
         return jf;
     }
 
-    public synchronized void removeJsonFile(String tableName, Path jsonPath) {
+    public synchronized void removeJsonFile(String tableName, Path relativeJsonPath) {
         Map<String, JsonFileList> tmp = copyJsonFiles(tableName);
-
         JsonFileList list = tmp.get(tableName);
         if (list == null) {
             return;
         }
-        Path relativePath = rootDir.relativize(jsonPath);
-        String jsonKey = relativePath.toString();
+        String jsonKey = relativeJsonPath.toString();
         JsonFileInfo jf = list.removeFile(jsonKey);
         if (jf == null) {
             return;
@@ -429,17 +426,16 @@ public class DirectoryStructure {
         jsonFiles = tmp;
     }
 
-    public synchronized void updateExcelFileLastModified(Path excelPath) {
-        Path relativePath = rootDir.relativize(excelPath);
-        String key = relativePath.toString();
+    public synchronized void updateExcelFileLastModified(Path relativeExcelPath) {
+        String key = relativeExcelPath.toString();
         ExcelFileInfo oldInfo = excelFiles.get(key);
         if (oldInfo == null) {
             return;
         }
         ExcelFileInfo newInfo = new ExcelFileInfo(
-                excelPath.toFile().lastModified(),
-                excelPath,
-                relativePath,
+                oldInfo.path.toFile().lastModified(),
+                oldInfo.path,
+                relativeExcelPath,
                 oldInfo.fmt,
                 oldInfo.nullableAddTag
         );

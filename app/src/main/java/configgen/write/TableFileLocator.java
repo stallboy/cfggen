@@ -52,7 +52,7 @@ public class TableFileLocator {
                                             @NotNull String sheetName,
                                             @NotNull Context context,
                                             boolean isColumnMode) {
-        Path dataDir = context.contextCfg().dataDir();
+        Path dataDir = context.rootDir();
         int headRow = context.contextCfg().headRow().rowCount();
 
         Path filePath = dataDir.resolve(fileName);

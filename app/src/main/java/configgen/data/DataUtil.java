@@ -132,9 +132,8 @@ public class DataUtil {
     }
 
 
-    public static Path getJsonTableDir(Path dataDir, String tableName) {
-        String dirName = "_" + tableName.replace(".", "_");
-        return dataDir.resolve(dirName);
+    public static String getJsonTableDirName(String tableName) {
+        return "_" + tableName.replace(".", "_");
     }
 
     public static String getTableNameIfTableDirForJson(String dirName) {

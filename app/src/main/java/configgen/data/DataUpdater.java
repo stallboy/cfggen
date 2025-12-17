@@ -27,10 +27,10 @@ public class DataUpdater {
                                                        @NotNull DTable dTable) {
 
         DTable newTable = DTable.of(dTable.tableName(), new ArrayList<>(), dTable.nullableAddTag());
-        Path rootDir = context.contextCfg().dataDir();
+        Path rootDir = context.rootDir();
         for (DRawSheet sheet : dTable.rawSheets()) {
-            Path path = rootDir.resolve(sheet.fileName());
-            Path relativePath = Path.of(sheet.fileName());
+            Path path = rootDir.resolve(sheet.relativeFilePath());
+            Path relativePath = Path.of(sheet.relativeFilePath());
             DataUtil.FileFmt fmt = DataUtil.getFileFormat(path);
             if (fmt == null) {
                 throw new IllegalArgumentException("Unknown file: " + relativePath);

@@ -85,7 +85,7 @@ public final class CellParser {
 
     private static List<DCell> getCellsInColumnMode(DRawSheet sheet, int logicRowIdx) {
         List<DCell> logicRow = new ArrayList<>(sheet.fieldIndices().size());
-        DRowId logicRowId = new DRowId(sheet.fileName(), sheet.sheetName(), logicRowIdx);
+        DRowId logicRowId = new DRowId(sheet.relativeFilePath(), sheet.sheetName(), logicRowIdx);
         for (int col : sheet.fieldIndices()) {
             DRawRow rawRow = sheet.rows().get(col);
             String val = rawRow.cell(logicRowIdx);
@@ -97,7 +97,7 @@ public final class CellParser {
 
     private static List<DCell> getCellsInRowMode(DRawSheet sheet, DRawRow rawRow, int rowIndex) {
         List<DCell> logicRow = new ArrayList<>(sheet.fieldIndices().size());
-        DRowId logicRowId = new DRowId(sheet.fileName(), sheet.sheetName(), rowIndex);
+        DRowId logicRowId = new DRowId(sheet.relativeFilePath(), sheet.sheetName(), rowIndex);
         for (int col : sheet.fieldIndices()) {
             String val = rawRow.cell(col);
             boolean isNumber = rawRow.isCellNumber(col);

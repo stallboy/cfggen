@@ -37,7 +37,7 @@ class CfgDataReaderTest {
 
         CfgData.DRawSheet sheet = dt.rawSheets().getFirst();
 
-        assertEquals("rank.csv", sheet.fileName());
+        assertEquals("rank.csv", sheet.relativeFilePath());
         assertEquals("", sheet.sheetName());
         assertEquals(0, sheet.index());
         assertEquals(0, sheet.rows().size()); // 因为为省内存，删除中间对象
