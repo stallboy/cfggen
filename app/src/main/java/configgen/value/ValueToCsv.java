@@ -8,11 +8,18 @@ import java.util.Set;
 
 public class ValueToCsv {
 
-    public static void writeAsCsv(StringBuilder sb, CfgValue.VTable vTable, Set<String> fieldNames) {
-        List<List<String>> result = new ArrayList<>(vTable.valueList().size() + 1);
-        result.add(new ArrayList<>(fieldNames));
+    public static void writeAsCsv(StringBuilder sb, CfgValue.VTable vTable, Set<String> fieldNames, int offset, int limit) {
+        if (offset < 0 || limit <= 0 || offset >= vTable.valueList().size()) {
+            return;
+        }
 
-        for (CfgValue.VStruct vStruct : vTable.valueList()) {
+        if (offset + limit > vTable.valueList().size()) {
+            limit = vTable.valueList().size() - offset;
+        }
+
+        List<List<String>> result = new ArrayList<>(limit + 1);
+        result.add(new ArrayList<>(fieldNames));
+        for (CfgValue.VStruct vStruct : vTable.valueList().subList(offset, offset + limit)) {
             List<String> line = new ArrayList<>(fieldNames.size());
             for (String fieldName : fieldNames) {
                 line.add(getFieldValueStr(vStruct, fieldName));

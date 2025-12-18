@@ -28,15 +28,15 @@ public class TableRelatedInfoFinder {
             sb.append("```\n</related_schema>\n\n");
 
             for (TableRecordList info : relatedTableRecordListInCsv) {
-                sb.append("```csv table=%s record list\n".formatted(info.table));
+                sb.append("```csv table=%s recordCount=%d\n".formatted(info.table, info.recordCount));
                 sb.append(info.contentInCsvFormat);
                 sb.append("```\n\n");
             }
 
             if (!otherTableCounts.isEmpty()) {
-                sb.append("```csv table, record count\n");
+                sb.append("```csv table,recordCount\n");
                 for (TableCount info : otherTableCounts) {
-                    sb.append("%s,%d records\n".formatted(info.table(), info.recordCount()));
+                    sb.append("%s,%d\n".formatted(info.table(), info.recordCount()));
                 }
                 sb.append("```\n\n");
             }
@@ -58,6 +58,7 @@ public class TableRelatedInfoFinder {
     }
 
     public record TableRecordList(String table,
+                                  int recordCount,
                                   String contentInCsvFormat) {
     }
 
@@ -93,7 +94,7 @@ public class TableRelatedInfoFinder {
         for (TableSchema schema : refOutTables.values()) {
             VTable vt = cfgValue.getTable(schema.name());
             if (schema.entry() instanceof EntryType.EEnum || extraRefTables.contains(schema.name())) {
-                relatedInfo.relatedTableRecordListInCsv.add(getTableRecordListInCsv(vt, null));
+                relatedInfo.relatedTableRecordListInCsv.add(getTableRecordListInCsv(vt, null, 0, 20));
             } else {
                 relatedInfo.otherTableCounts.add(new TableCount(schema.name(), vt.valueList().size()));
             }
@@ -137,7 +138,6 @@ public class TableRelatedInfoFinder {
         String exampleId = null;
         String exampleDescription = null;
         Path tabFile = modDir.resolve(tableSchema.lastName() + ".md");
-        extraRefTables.add(tableSchema.name()); // 把自己加上，方便自动生成下一个id（rule里可以给id生成规则）
         if (Files.exists(tabFile)) {
             MarkdownReader.MarkdownDocument doc = MarkdownReader.read(tabFile);
             String refTables = doc.frontmatter().get("refTables");
@@ -169,7 +169,7 @@ public class TableRelatedInfoFinder {
         return sb.toString();
     }
 
-    public static TableRecordList getTableRecordListInCsv(VTable vTable, String[] extraFields) {
+    public static TableRecordList getTableRecordListInCsv(VTable vTable, String[] extraFields, int offset, int limit) {
         TableSchema schema = vTable.schema();
 
         StringBuilder sb = new StringBuilder(2048);
@@ -191,9 +191,9 @@ public class TableRelatedInfoFinder {
             }
         }
 
-        ValueToCsv.writeAsCsv(sb, vTable, fieldNames);
+        ValueToCsv.writeAsCsv(sb, vTable, fieldNames, offset, limit);
 
-        return new TableRecordList(schema.name(), sb.toString());
+        return new TableRecordList(schema.name(), vTable.valueList().size(), sb.toString());
     }
 
 

@@ -1,7 +1,5 @@
-package configgen.tool;
+package configgen.value;
 
-import configgen.value.CfgValue;
-import configgen.value.ForeachValue;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;

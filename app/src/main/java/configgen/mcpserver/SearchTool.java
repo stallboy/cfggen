@@ -3,9 +3,9 @@ package configgen.mcpserver;
 import com.github.codeboyzhou.mcp.declarative.annotation.McpTool;
 import com.github.codeboyzhou.mcp.declarative.annotation.McpToolParam;
 import com.github.codeboyzhou.mcp.declarative.server.McpStructuredContent;
-import configgen.tool.SearchService;
-import configgen.tool.SearchService.SearchResult;
-import configgen.tool.SearchService.SearchResultItem;
+import configgen.value.SearchService;
+import configgen.value.SearchService.SearchResult;
+import configgen.value.SearchService.SearchResultItem;
 import configgen.util.CSVUtil;
 import configgen.value.*;
 

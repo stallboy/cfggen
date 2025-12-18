@@ -29,7 +29,14 @@ public class ReadRecordTool {
     public ListTableRecordResult listTableRecord(@McpToolParam(name = "table", description = "table full name", required = true)
                                                  String tableName,
                                                  @McpToolParam(name = "extraFields", description = "extra fields to show, use comma to separate")
-                                                 String extraFields) {
+                                                 String extraFields,
+                                                 @McpToolParam(name = "offset", description = "record offset, if not set, default to 0")
+                                                 int offset,
+                                                 @McpToolParam(name = "limit", description = "record count, if not set, default to 20")
+                                                 int limit) {
+        if (limit <= 0) {
+            limit = 20;
+        }
 
         CfgMcpServer.CfgValueWithContext vc = CfgMcpServer.getInstance().cfgValueWithContext();
         CfgValue cfgValue = vc.cfgValue();
@@ -40,7 +47,7 @@ public class ReadRecordTool {
         }
 
         TableRecordList list = TableRelatedInfoFinder.getTableRecordListInCsv(vTable,
-                extraFields != null ? extraFields.split(",") : null);
+                extraFields != null ? extraFields.split(",") : null, offset, limit);
         return new ListTableRecordResult(ErrorCode.OK, tableName, list.contentInCsvFormat());
     }
 

@@ -159,7 +159,7 @@ public final class Main {
         Tools.addProvider("translate", TodoTranslator::new);
 
         Generators.addProvider("verify", GenVerifier::new);
-        Generators.addProvider("search", ValueSearcher.GenValueSearcher::new);
+        Generators.addProvider("search", GenValueSearcher::new);
         Generators.addProvider("i18n", GenI18nByValue::new);
         Generators.addProvider("i18nbyid", GenI18nById::new);
 

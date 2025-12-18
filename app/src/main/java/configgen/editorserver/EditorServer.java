@@ -6,7 +6,7 @@ import configgen.ctx.*;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
 import configgen.schema.TableSchemaRefGraph;
-import configgen.tool.SearchService;
+import configgen.value.SearchService;
 import configgen.value.CfgValue;
 
 import java.io.*;
