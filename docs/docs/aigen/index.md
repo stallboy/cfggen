@@ -144,3 +144,26 @@ ${model.structInfo()}
 ```markdown
 请提供描述,我将根据这些信息生成符合结构的JSON配置
 ```
+
+## MCP服务器中的使用
+
+上述文档文件（`$mod.md` 和 `[table].md`）在MCP服务器中也有重要作用：
+
+### 与MCP工具的配合
+
+- **`listModule` 工具**：读取 `$mod.md` 中的 `description` 字段显示模块描述
+- **`listTable` 工具**：读取 `$mod.md` 的content部分作为模块规则
+- **`readTableSchema` 工具**：读取 `[table].md` 提供额外信息和规则
+
+### 文档作用
+
+1. **`$mod.md`**：
+   - `description`：显示在模块列表中
+   - content：作为模块规则，帮助AI理解模块的整体设计
+
+2. **`[table].md`**：
+   - `refTables`：指定额外的引用表，这些表的记录会完整显示
+   - `exampleId` 和 `exampleDescription`：提供示例记录
+   - content：作为表规则，帮助AI理解表的业务含义和使用规范
+
+详细使用方法请参考 [MCP服务器文档](03.mcpserver.md)。
