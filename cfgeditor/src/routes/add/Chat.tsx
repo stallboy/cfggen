@@ -32,6 +32,7 @@ const useChatStyle = createStyles(({token, css}) => {
             align-items: center;
             justify-content: space-between;
             padding: 0 10px 0 16px;
+            flex-shrink: 0;
         `,
         headerTitle: css`
             font-weight: 600;
@@ -43,8 +44,10 @@ const useChatStyle = createStyles(({token, css}) => {
         chatList: css`
             margin-block-start: ${token.margin}px;
             display: flex;
-            height: calc(100% - 114px);
+            flex: 1;
             flex-direction: column;
+            overflow-y: auto;
+            padding-bottom: ${token.margin}px;
         `,
         chatWelcome: css`
             margin-inline: ${token.margin}px;
@@ -55,6 +58,9 @@ const useChatStyle = createStyles(({token, css}) => {
         `,
         chatSend: css`
             padding: ${token.padding}px;
+            flex-shrink: 0;
+            border-top: 1px solid ${token.colorBorder};
+            background: ${token.colorBgContainer};
         `,
     };
 });
@@ -98,17 +104,17 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
         mutationFn: (raw: string) => checkJson(server, curTableId, raw),
 
         onError: (error) => {
-            chatRef.current?.setInputAreaValue(error.message);
+            setInputValue(error.message);
         },
         onSuccess: (result: CheckJsonResult) => {
             if (result.resultCode == 'ok') {
                 if (curTableId == result.table) {
                     applyNewEditingObject(JSON.parse(result.jsonResult));
                 } else {
-                    chatRef.current?.setInputAreaValue(`table changed! ${result.table} != ${curTableId}`);
+                    setInputValue(`table changed! ${result.table} != ${curTableId}`);
                 }
             } else {
-                chatRef.current?.setInputAreaValue(result.jsonResult);
+                setInputValue(result.jsonResult);
             }
         },
     });
@@ -154,9 +160,9 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
 
                                         // 检查是否完成
                                         if (choice.finish_reason) {
-                                            // 调用 checkJsonMutation 验证生成的 JSON
                                             const finalContent = fullContent.trim();
                                             if (finalContent) {
+                                                // 验证生成的 JSON
                                                 checkJsonMutation.mutate(finalContent);
                                             }
                                             break;
@@ -167,6 +173,11 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
                         },
                         onError: (err) => {
                             console.error(err);
+                        },
+                        onUpdate: (chunk) => {
+                            // 处理流式更新
+                            console.log('sse object', chunk);
+                            // 这里应该更新流式内容，但需要更多上下文
                         }
                     }
 
@@ -196,9 +207,11 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
     // 当 promptRes 可用时，设置初始消息
     useEffect(() => {
         if (promptRes && messages.length === 0) {
+            // 使用时间戳作为ID，避免重复
+            const timestamp = Date.now();
             setMessages([
                 {
-                    id: "1111",
+                    id: `user-${timestamp}`,
                     message: {
                         role: "user",
                         content: promptRes.prompt,
@@ -206,7 +219,7 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
                     status: 'success' as const,
                 },
                 {
-                    id: "2222",
+                    id: `assistant-${timestamp}`,
                     message: {
                         role: "assistant",
                         content: promptRes.init,
@@ -218,8 +231,10 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
     }, [promptRes, messages.length, setMessages]);
 
     const handleUserSubmit = (val: string) => {
+        // 直接调用 onRequest，useXChat 会自动管理消息
+        // 不需要手动更新 messages 数组
         onRequest({
-            messages: [{role: "user", content: val}],
+            messages: [{ role: "user", content: val }],
         });
     };
 
