@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.apache.poi.ss.usermodel.CellType.FORMULA;
 import static org.apache.poi.ss.usermodel.CellType.NUMERIC;
 
 public enum ReadByPoi implements ExcelReader {
@@ -88,9 +89,34 @@ public enum ReadByPoi implements ExcelReader {
                            FormulaEvaluator evaluator) implements CfgData.DRawRow {
         @Override
         public String cell(int c) {
+
             Cell cell = row.getCell(c);
             if (cell != null) {
-                return formatter.formatCellValue(cell, evaluator).trim();
+                try {
+                    return formatter.formatCellValue(cell, evaluator).trim();
+                } catch (Throwable e) {
+                    String res;
+                    try {
+                        res = cell.getStringCellValue();
+                    } catch (Throwable e1) {
+                        try {
+                            res = cell.getNumericCellValue() + "";
+                        } catch (Throwable e2) {
+                            try {
+                                res = cell.getBooleanCellValue() + "";
+                            } catch (Throwable e3) {
+                                res = "";
+                            }
+                        }
+                    }
+
+                    Logger.log("format cell failed: [%s] row %d col %d type %s formula %s use %s",
+                            row.getSheet().getSheetName(), row.getRowNum(), c, cell.getCellType(),
+                            cell.getCellType() == FORMULA ? cell.getCellFormula() : "",
+                            res);
+
+                    return res;
+                }
             } else {
                 return "";
             }

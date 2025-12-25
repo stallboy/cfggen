@@ -47,7 +47,7 @@ public class ComparePoiAndFastExcel extends Tool {
         CfgData dataByPoi = poiDataReader.readCfgData(sourceStructure, schema, dataErrs);
         dataErrs.checkErrors();
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 1; i++) {
             CfgSchemaErrs fastErr = CfgSchemaErrs.of();
             CfgData dataByFastExcel = fastDataReader.readCfgData(sourceStructure, schema, fastErr);
             fastErr.checkErrors();

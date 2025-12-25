@@ -1,12 +1,12 @@
 package configgen.data;
 
 import configgen.ctx.DirectoryStructure;
+import configgen.ctx.DirectoryStructure.ExcelFileInfo;
 import configgen.ctx.HeadRow;
 import configgen.data.DataUtil.TableNameIndex;
 import configgen.schema.CfgSchema;
 import configgen.schema.CfgSchemaErrs;
 import configgen.schema.SchemaUtil;
-import configgen.schema.TableSchema;
 import configgen.util.Logger;
 
 import java.util.ArrayList;
@@ -52,7 +52,7 @@ public record CfgDataReader(HeadRow headRow,
 
             // read all csv/excel files
             List<Callable<ReadResult>> tasks = new ArrayList<>();
-            for (DirectoryStructure.ExcelFileInfo df : sourceStructure.getExcelFiles()) {
+            for (ExcelFileInfo df : sourceStructure.getExcelFiles()) {
                 switch (df.fmt()) {
                     case CSV, TXT_AS_TSV -> {
                         TableNameIndex ti = getTableNameIndex(df.relativePath());
@@ -62,12 +62,24 @@ public record CfgDataReader(HeadRow headRow,
                         } else {
                             stat.csvCount++;
                             char fieldSeparator = df.fmt() == DataUtil.FileFmt.CSV ? ',' : '\t';
-                            tasks.add(() -> csvReader.readCsv(df.path(), df.relativePath(),
-                                    ti.tableName(), ti.index(), fieldSeparator, df.nullableAddTag()));
+                            tasks.add(() -> {
+                                try {
+                                    return csvReader.readCsv(df.path(), df.relativePath(),
+                                            ti.tableName(), ti.index(), fieldSeparator, df.nullableAddTag());
+                                } catch (Exception e) {
+                                    throw new RuntimeException("read csv failed: " + df.path(), e);
+                                }
+                            });
                         }
                     }
                     case EXCEL -> {
-                        tasks.add(() -> excelReader.readExcels(df.path(), df.relativePath(), null));
+                        tasks.add(() -> {
+                            try {
+                                return excelReader.readExcels(df.path(), df.relativePath(), null);
+                            } catch (Exception e) {
+                                throw new RuntimeException("read excel failed: " + df.path(), e);
+                            }
+                        });
                     }
                 }
             }
@@ -87,8 +99,12 @@ public record CfgDataReader(HeadRow headRow,
                 parseTasks.add(() -> {
                     CfgDataStat tStat = new CfgDataStat();
                     boolean isColumnMode = SchemaUtil.isColumnMode(nullableCfgSchema, table.tableName());
-                    HeadParser.parse(table, tStat, headRow, isColumnMode, errs);
-                    CellParser.parse(table, tStat, headRow.rowCount(), isColumnMode);
+                    try {
+                        HeadParser.parse(table, tStat, headRow, isColumnMode, errs);
+                        CellParser.parse(table, tStat, headRow.rowCount(), isColumnMode);
+                    }catch (Exception e) {
+                        throw new RuntimeException("parse table failed: " + table.tableName(), e);
+                    }
                     return tStat;
                 });
             }
@@ -102,7 +118,6 @@ public record CfgDataReader(HeadRow headRow,
             return data;
         }
     }
-
 
 
     private void addSheet(CfgData cfgData, String tableName, DRawSheet sheetData, String nullableAddTag) {
