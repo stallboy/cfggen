@@ -219,4 +219,4 @@ java -jar configgen.jar -datadir [配置目录] [选项] [生成器]
 ### 错误排查
 1. 查看错误收集：`CfgSchemaErrs.getErrors()`, `CfgValueErrs.getErrors()`
 2. 启用详细日志：添加调试参数或修改日志级别
-3. 验证数据完整性：使用`-verify`参数
+3. 验证数据完整性：使用`-gen verify`参数
