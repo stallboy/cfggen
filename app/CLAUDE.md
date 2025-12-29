@@ -38,10 +38,9 @@ gradle clean
 ### 开发环境
 - **Java版本**: 21
 - **构建工具**: Gradle
-- **主要依赖**: FastExcel、POI（可选）、FastJSON2、JTE模板引擎、ANTLR、Simple-OpenAI、MCP SDK
+- **主要依赖**: FastExcel、POI、FastJSON2、JTE模板引擎、ANTLR、Simple-OpenAI、MCP SDK
 
 ### 构建选项
-- `-PnoPoi`：构建时不包含POI库，减小jar包大小（从20M降至2M）
 - 默认使用FastExcel库读取Excel文件，性能更高
 
 ### 脚本工具
@@ -100,38 +99,8 @@ gradle clean
 
 ### 基本用法
 ```bash
-java -jar configgen.jar -datadir [配置目录] [选项] [生成器]
+java -jar cfggen.jar [tools] -datadir [dir] [options] [gens]
 ```
-
-### 主要参数
-- `-datadir`：配置数据目录，必须包含config.cfg文件
-- `-headrow`：CSV/TXT/Excel文件表头行类型，默认2
-- `-encoding`：CSV/TXT编码，默认GBK
-- `-gen`：指定生成器（java、cs、lua、ts、go、json等）
-
-### 生成器选项
-- `-gen java`：生成Java代码
-- `-gen javadata`：生成Java二进制数据
-- `-gen cs`：生成C#代码
-- `-gen lua`：生成Lua代码
-- `-gen ts`：生成TypeScript代码
-- `-gen go`：生成Go代码
-- `-gen json`：生成JSON数据
-- `-gen tsschema`：生成TypeScript schema
-- `-gen jsonbyai`：AI生成的JSON
-- `-gen editorserver`：编辑器服务
-- `-gen mcpserver`：mcp服务
-
-### 国际化支持
-- `-i18nfile`：国际化文件（CSV或目录）
-- `-langswitchdir`：语言切换支持目录
-- `-defaultlang`：默认语言，默认zh_cn
-
-### 工具功能
-- `-verify`：验证所有数据
-- `-search`：进入搜索模式
-- `-binarytotext`：二进制数据转文本
-- `-xmltocfg`：XML schema转CFG格式
 
 ## 配置Schema定义
 
@@ -145,14 +114,14 @@ java -jar configgen.jar -datadir [配置目录] [选项] [生成器]
 
 ## 开发注意事项
 
-1. **数据读取**：默认使用FastExcel库，如需POI功能需包含POI依赖（通过`-PnoPoi`排除）
+1. **数据读取**：默认使用FastExcel库
 2. **编码处理**：CSV文件默认使用GBK编码，支持带BOM的UTF-8，自动检测编码
 3. **并发处理**：数据读取使用工作窃取线程池（ForkJoinPool）优化性能
 4. **缓存机制**：使用缓存文件输出流（CachedIndentPrinter）提高生成性能
 5. **错误处理**：完善的错误收集和验证机制（CfgSchemaErrs, CfgValueErrs）
 6. **国际化**：支持两种模式 - 直接文本替换（i18nfile）和语言切换（langswitchdir）
 7. **外键关联**：支持单向外键（->）和多向外键（=>），自动验证引用完整性
-8. **模板引擎**：JTE模板支持热加载，文件系统模板优先于资源文件
+8. **模板引擎**：JTE模板支持热加载，默认从资源文件加载模板。部分功能（AI生成、翻译）支持文件系统模板优先于资源文件
 9. **参数解析**：统一的Parameter接口，支持嵌套参数和国际化描述
 10. **性能优化**：Schema和数据对齐避免重复解析，缓存计算结果
 
@@ -160,8 +129,6 @@ java -jar configgen.jar -datadir [配置目录] [选项] [生成器]
 
 - 使用JUnit 5进行单元测试
 - 支持JaCoCo代码覆盖率报告
-- 可通过`-verify`参数进行数据验证
-- 支持Excel读取一致性检查（POI vs FastExcel）
 
 ## 扩展开发
 
@@ -177,7 +144,7 @@ java -jar configgen.jar -datadir [配置目录] [选项] [生成器]
 3. 实现数据读取接口，支持并发读取
 
 ### 模板引擎使用
-- 模板位置：`src/main/resources/jte/`（内置模板），文件系统优先（便于自定义）
+- 模板位置：`src/main/resources/jte/`
 - 渲染示例：
   ```java
   try (CachedIndentPrinter ps = createCode(outputFile, encoding)) {
@@ -199,22 +166,12 @@ java -jar configgen.jar -datadir [配置目录] [选项] [生成器]
 ### 调试生成器
 1. 设置断点在`Main.main0`或具体生成器的`generate`方法
 2. 使用示例配置目录：`example/`
-3. 运行命令：`java -jar configgen.jar -datadir example -gen java`
+3. 运行命令：`java -jar cfggen.jar -datadir example -gen java`
 
 ### 修改模板
 1. 模板文件位置：`src/main/resources/jte/`或文件系统自定义位置
 2. 修改后无需重新编译，JTE支持热加载
 3. 测试模板修改：运行生成器查看输出
-
-### 添加新数据类型
-1. 在`configgen.schema`包中扩展类型系统
-2. 在`configgen.value`包中添加值解析逻辑
-3. 更新各语言生成器的模板支持新类型
-
-### 性能调优
-1. 数据读取：使用FastExcel替代POI
-2. 并发处理：调整工作窃取线程池大小
-3. 缓存优化：检查Context中的缓存命中率
 
 ### 错误排查
 1. 查看错误收集：`CfgSchemaErrs.getErrors()`, `CfgValueErrs.getErrors()`

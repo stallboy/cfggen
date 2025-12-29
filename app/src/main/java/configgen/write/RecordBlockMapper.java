@@ -5,7 +5,6 @@ import configgen.schema.FieldFormat.Sep;
 import configgen.schema.FieldType.FMap;
 import configgen.schema.FieldType.SimpleType;
 import configgen.value.CfgValue.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
