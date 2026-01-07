@@ -118,26 +118,55 @@ public final class Main {
             String newLine = System.lineSeparator();
             StringBuilder sb = new StringBuilder();
 
-            // 1. 打印错误描述
-            sb.append("-------------------------错误描述-------------------------").append(newLine);
+            // 定义最大遍历深度，防止循环引用导致死循环
+            int MAX_DEPTH = 30;
             Throwable curr = t;
-            int stackCnt = 0;
-            while (curr != null && ++stackCnt < 30) {
+            int depth = 0;
+
+            // --- 循环遍历异常链 ---
+            while (curr != null && depth < MAX_DEPTH) {
+                depth++;
+
+                // 1. 打印当前异常的标题栏
+                // 对于第一个异常打印 "Exception"，后续打印 "Caused by"
+                if (depth == 1) {
+                    sb.append("-------------------------异常描述-------------------------").append(newLine);
+                } else {
+                    sb.append("Caused by: ");
+                }
+
                 // 打印异常类型和消息
-                sb.append(curr.getClass().getName()).append(": ").append(curr.getMessage()).append(newLine);
+                sb.append(curr.getClass().getName());
+                String msg = curr.getMessage();
+                if (msg != null) {
+                    sb.append(": ").append(msg);
+                }
+                sb.append(newLine);
+
+                // 2. 打印当前异常的堆栈轨迹
+                // 获取当前这个异常对象自己的堆栈
+                StackTraceElement[] stackTrace = curr.getStackTrace();
+                if (stackTrace != null) {
+                    for (StackTraceElement element : stackTrace) {
+                        sb.append("\tat ").append(element).append(newLine);
+                    }
+                }
+
+                // 3. 处理 "Suppressed" 异常（可选，通常与 try-with-resources 相关）
+                // 如果需要打印被抑制的异常，可以在这里遍历 curr.getSuppressed()
+
+                // 4. 移动到下一个异常
                 curr = curr.getCause();
+
+                // 如果还有下一个异常，且不是第一个，加个空行分隔（可选，为了好看）
+                if (curr != null) {
+                    sb.append(newLine);
+                }
             }
 
-            // 2. 打印错误堆栈（新增的部分）
-            sb.append("-------------------------错误堆栈-------------------------").append(newLine);
-
-            // 获取并遍历堆栈元素
-            for (StackTraceElement element : t.getStackTrace()) {
-                sb.append("\tat ").append(element.toString()).append(newLine);
-            }
-
-            // 3. 打印最终结果并退出
-            System.out.print(sb); // 使用 System.out 或 System.err 取决于你的需求
+            // 4. 打印最终结果并退出
+            // 建议使用 System.err 打印错误，这样方便重定向日志
+            System.err.print(sb);
 
             System.exit(1);
         }
