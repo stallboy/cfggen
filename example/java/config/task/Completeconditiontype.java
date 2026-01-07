@@ -6,7 +6,8 @@ public enum Completeconditiontype {
     COLLECTITEM("CollectItem", 3),
     CONDITIONAND("ConditionAnd", 4),
     CHAT("Chat", 5),
-    TESTNOCOLUMN("TestNoColumn", 6);
+    TESTNOCOLUMN("TestNoColumn", 6),
+    AA("aa", 7);
 
     private final String name;
     private final int value;

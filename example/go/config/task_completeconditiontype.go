@@ -20,6 +20,7 @@ var (
     conditionAnd TaskCompleteconditiontype
     chat TaskCompleteconditiontype
     testNoColumn TaskCompleteconditiontype
+    aa TaskCompleteconditiontype
 )
 
 //getters
@@ -53,6 +54,10 @@ func (t *TaskCompleteconditiontypeMgr) GetChat() *TaskCompleteconditiontype {
 
 func (t *TaskCompleteconditiontypeMgr) GetTestNoColumn() *TaskCompleteconditiontype {
 	return &testNoColumn
+}
+
+func (t *TaskCompleteconditiontypeMgr) GetAa() *TaskCompleteconditiontype {
+	return &aa
 }
 
 type TaskCompleteconditiontypeMgr struct {
@@ -89,6 +94,8 @@ func (t *TaskCompleteconditiontypeMgr) Init(stream *Stream) {
             chat = *v
         case "TestNoColumn":
             testNoColumn = *v
+        case "Aa":
+            aa = *v
         }
     }
 }

@@ -147,6 +147,10 @@ public class ConfigCodeSchema {
             s3.addColumn("count", SchemaPrimitive.SInt);
             s2.addImp("CollectItem", s3);
         }
+        {
+            SchemaBean s3 = new SchemaBean(false);
+            s2.addImp("aa", s3);
+        }
         return s2;
     }
 
@@ -348,6 +352,7 @@ public class ConfigCodeSchema {
         s2.addValue("ConditionAnd", 4);
         s2.addValue("Chat", 5);
         s2.addValue("TestNoColumn", 6);
+        s2.addValue("aa", 7);
         return s2;
     }
 

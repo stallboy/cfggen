@@ -17,6 +17,8 @@ func createTaskCompletecondition(stream *Stream) TaskCompletecondition {
         return createTaskCompleteconditionConditionAnd(stream)
     case "CollectItem":
         return createTaskCompleteconditionCollectItem(stream)
+    case "aa":
+        return createTaskCompleteconditionAa(stream)
     default:
         panic("unexpected TaskCompletecondition type: " + typeName)
     }

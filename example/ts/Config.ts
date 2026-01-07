@@ -258,6 +258,8 @@ export abstract class Task_Completecondition {
                 return Task_Completecondition_ConditionAnd._create(os);
             case "CollectItem":
                 return Task_Completecondition_CollectItem._create(os);
+            case "aa":
+                return Task_Completecondition_Aa._create(os);
         }
     }
 }
@@ -396,6 +398,23 @@ export class Task_Completecondition_CollectItem extends Task_Completecondition {
         const self = new Task_Completecondition_CollectItem();
         self._itemid = os.ReadInt32();
         self._count = os.ReadInt32();
+        return self;
+    }
+
+}
+
+export class Task_Completecondition_Aa extends Task_Completecondition {
+    type() : Task_Completeconditiontype {
+        return Task_Completeconditiontype.aa;
+    }
+
+
+    ToString() : string {
+        return "(" +  + ")";
+    }
+
+    static _create(os: Stream) : Task_Completecondition_Aa {
+        const self = new Task_Completecondition_Aa();
         return self;
     }
 
@@ -1692,6 +1711,9 @@ export class Task_Completeconditiontype {
     private static _TestNoColumn : Task_Completeconditiontype;
     static get TestNoColumn() :Task_Completeconditiontype { return this._TestNoColumn; }
 
+    private static _aa : Task_Completeconditiontype;
+    static get Aa() :Task_Completeconditiontype { return this._aa; }
+
     private _id: number | undefined;
     /* 任务完成条件类型（id的范围为1-100） */
     get Id(): number { return this._id as number; }
@@ -1754,6 +1776,11 @@ export class Task_Completeconditiontype {
                         errors.EnumDup("task.completeconditiontype", "TestNoColumn");
                     this._TestNoColumn = self;
                     break;
+                case "aa":
+                    if (this._aa != null)
+                        errors.EnumDup("task.completeconditiontype", "aa");
+                    this._aa = self;
+                    break;
                 default:
                     errors.EnumDataAdd("task.completeconditiontype", self._name);
                     break;
@@ -1777,6 +1804,9 @@ export class Task_Completeconditiontype {
         }
         if (this._TestNoColumn == null) {
             errors.EnumNull("task.completeconditiontype", "TestNoColumn");
+        }
+        if (this._aa == null) {
+            errors.EnumNull("task.completeconditiontype", "aa");
         }
     }
 

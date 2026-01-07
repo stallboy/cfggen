@@ -181,5 +181,10 @@ Beans.task.completecondition.collectitem = action("CollectItem", nil,
     'count' -- int
     )
 
+---@class Beans.task.completecondition.aa : Beans.task.completecondition
+
+---@type Beans.task.completecondition.aa
+Beans.task.completecondition.aa = action("aa")()
+
 
 return Beans

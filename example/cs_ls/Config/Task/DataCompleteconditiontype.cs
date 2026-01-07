@@ -11,6 +11,7 @@ namespace Config.Task
         public static DataCompleteconditiontype ConditionAnd { get; private set; }
         public static DataCompleteconditiontype Chat { get; private set; }
         public static DataCompleteconditiontype TestNoColumn { get; private set; }
+        public static DataCompleteconditiontype Aa { get; private set; }
         public int Id { get; private set; } /* 任务完成条件类型（id的范围为1-100） */
         public string Name { get; private set; } /* 程序用名字 */
 
@@ -98,6 +99,11 @@ namespace Config.Task
                             errors.EnumDup("task.completeconditiontype", self.ToString());
                         TestNoColumn = self;
                         break;
+                    case "aa":
+                        if (Aa != null)
+                            errors.EnumDup("task.completeconditiontype", self.ToString());
+                        Aa = self;
+                        break;
                     default:
                         errors.EnumDataAdd("task.completeconditiontype", self.ToString());
                         break;
@@ -116,6 +122,8 @@ namespace Config.Task
                 errors.EnumNull("task.completeconditiontype", "Chat");
             if (TestNoColumn == null)
                 errors.EnumNull("task.completeconditiontype", "TestNoColumn");
+            if (Aa == null)
+                errors.EnumNull("task.completeconditiontype", "aa");
         }
 
         internal static DataCompleteconditiontype _create(Config.Stream os)

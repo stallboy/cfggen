@@ -21,7 +21,7 @@ namespace ${model.name.pkg}
             !{var enumRefTable = nullableInterface.nullableEnumRefTable();}
             @if(enumRefTable != null)
                 public override ${model.fullName(enumRefTable)} type() {
-                    return ${model.fullName(enumRefTable)}.${model.structural.name()};
+                    return ${model.fullName(enumRefTable)}.${model.upper1(model.structural.name())};
                 }
 
             @endif

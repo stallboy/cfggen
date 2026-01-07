@@ -10,6 +10,7 @@ local cfg = require "cfg._cfgs"
 ---@field ConditionAnd cfg.task.completeconditiontype
 ---@field Chat cfg.task.completeconditiontype
 ---@field TestNoColumn cfg.task.completeconditiontype
+---@field aa cfg.task.completeconditiontype
 ---@field all table<any,cfg.task.completeconditiontype>
 
 local this = cfg.task.completeconditiontype
@@ -25,5 +26,6 @@ mk(3, "CollectItem")
 mk(4, "ConditionAnd")
 mk(5, "Chat")
 mk(6, "TestNoColumn")
+mk(7, "aa")
 
 return this

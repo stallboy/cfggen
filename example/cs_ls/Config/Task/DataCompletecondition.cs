@@ -26,6 +26,8 @@ namespace Config.Task
                     return Config.Task.Completecondition.DataConditionand._create(os);
                 case "CollectItem":
                     return Config.Task.Completecondition.DataCollectitem._create(os);
+                case "aa":
+                    return Config.Task.Completecondition.DataAa._create(os);
             }
             return null;
         }

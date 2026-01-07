@@ -1,6 +1,6 @@
 package config.task.completecondition;
 
-public sealed interface Completecondition permits KillMonster, TalkNpc, TestNoColumn, Chat, ConditionAnd, CollectItem {
+public sealed interface Completecondition permits KillMonster, TalkNpc, TestNoColumn, Chat, ConditionAnd, CollectItem, Aa {
     config.task.Completeconditiontype type();
 
     default void _resolve(config.ConfigMgr mgr) {
@@ -20,6 +20,8 @@ public sealed interface Completecondition permits KillMonster, TalkNpc, TestNoCo
                 return config.task.completecondition.ConditionAnd._create(input);
             case "CollectItem":
                 return config.task.completecondition.CollectItem._create(input);
+            case "aa":
+                return config.task.completecondition.Aa._create(input);
         }
         throw new IllegalArgumentException();
     }
