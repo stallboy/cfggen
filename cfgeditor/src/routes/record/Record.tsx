@@ -1,4 +1,4 @@
-import {Entity} from "../../flow/entityModel.ts";
+import {Entity, isEditableEntity} from "../../flow/entityModel.ts";
 import {JSONObject, RecordEditResult, RecordResult, RefId} from "./recordModel.ts";
 import {App, Result} from "antd";
 import {createRefEntities, getId, getLabel} from "./recordRefEntity.ts";
@@ -200,7 +200,7 @@ const RecordWithResult = memo(function RecordWithResult({recordResult}: { record
                 navigate(navTo('recordRef', refId.table, refId.id));
             }
         })
-        if (isEditing && entity.edit) {
+        if (isEditing && isEditableEntity(entity)) {
             const {editObj, editFieldChain, editAllowObjType} = entity.edit;
             if (editObj) {
                 if (editFieldChain && editAllowObjType && entity.edit.editOnDelete) { // 有editOnDelete表明是list的成员

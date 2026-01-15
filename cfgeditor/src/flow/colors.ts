@@ -1,4 +1,4 @@
-import {Entity, EntityBaseField, EntityEditField, EntityType} from "./entityModel.ts";
+import {Entity, DisplayField, EntityEditField, EntityType, isReadOnlyEntity, isEditableEntity, isCardEntity} from "./entityModel.ts";
 import {NodeShowType} from "../store/storageJson.ts";
 
 
@@ -35,34 +35,38 @@ export function getNodeBackgroundColor(entity: Entity): string {
     }
 }
 
-function getEntityValueStr({brief, fields, edit}: Entity): string | undefined {
-    let value;
-    if (brief) {
-        value = brief.value
-    } else if (fields) {
-        value = fields.map(f => f.value).join(',')
-    } else if (edit) {
-        const vec:string[] = [];
-        fillEditFieldsVec(vec, edit.editFields);
-        value = vec.join(',')
+function getEntityValueStr(entity: Entity): string | undefined {
+    if (isCardEntity(entity)) {
+        return entity.brief.value;
     }
-    return value;
+
+    if (isReadOnlyEntity(entity)) {
+        return entity.fields.map(f => f.value).join(',');
+    }
+
+    if (isEditableEntity(entity)) {
+        const vec: string[] = [];
+        fillEditFieldsVec(vec, entity.edit.fields);
+        return vec.join(',');
+    }
+
+    return undefined;
 }
 
 function fillEditFieldsVec(vec: string[], editFields: EntityEditField[]) {
-    for (const {type, value, implFields} of editFields) {
-        if (type == 'primitive'){
-            vec.push(value.toString());
-        }else if (type == 'arrayOfPrimitive'){
-            vec.push(value.toString());
-        }else if (type == 'interface' && implFields) {
-            vec.push(value.toString());
-            fillEditFieldsVec(vec, implFields);
+    for (const editField of editFields) {
+        if (editField.type == 'primitive'){
+            vec.push(editField.value.toString());
+        }else if (editField.type == 'arrayOfPrimitive'){
+            vec.push(editField.value.toString());
+        }else if (editField.type == 'interface') {
+            vec.push(editField.value.toString());
+            fillEditFieldsVec(vec, editField.implFields);
         }
     }
 }
 
-export function getFieldBackgroundColor(field: EntityBaseField, nodeShow?: NodeShowType): string | undefined {
+export function getFieldBackgroundColor(field: DisplayField | EntityEditField, nodeShow?: NodeShowType): string | undefined {
     if (nodeShow && nodeShow.fieldColorsByName.length > 0) {
         for (const keywordColor of nodeShow.fieldColorsByName) {
             if (field.name == keywordColor.keyword) {

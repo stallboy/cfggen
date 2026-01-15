@@ -1,4 +1,4 @@
-import {Entity, EntityEditField} from "./entityModel.ts";
+import {Entity, EntityEditField, isReadOnlyEntity, isEditableEntity, isCardEntity} from "./entityModel.ts";
 import {ResInfo} from "../res/resInfo.ts";
 import {getDsLenAndDesc} from "./getDsLenAndDesc.tsx";
 
@@ -6,14 +6,15 @@ import {getDsLenAndDesc} from "./getDsLenAndDesc.tsx";
 // 在一次又一次尝试了等待node准备好，直接用node的computed理的width，height后，增加这一个异步，太容易有闪烁和被代码绕晕了。
 // 放弃放弃，还是预先估算好。
 export function calcWidthHeight(entity: Entity) {
-    const {id, label, fields, brief, edit} = entity;
-    const width = edit ? (entity.sharedSetting?.nodeShow?.editNodeWidth ?? 280) : (entity.sharedSetting?.nodeShow?.nodeWidth ?? 240);
+    const {id, label} = entity;
+    const width = isEditableEntity(entity) ? (entity.sharedSetting?.nodeShow?.editNodeWidth ?? 280) : (entity.sharedSetting?.nodeShow?.nodeWidth ?? 240);
     let height = 40;
 
-    if (fields) {
-        height += 41 * fields.length;
+    if (isReadOnlyEntity(entity)) {
+        height += 41 * entity.fields.length;
 
-    } else if (brief) {
+    } else if (isCardEntity(entity)) {
+        const brief = entity.brief;
         height += 48 + (brief.title ? 32 : 0);
         const [showDsLen, desc] = getDsLenAndDesc(brief, entity.sharedSetting?.nodeShow);
         height += showDsLen * 38;
@@ -24,8 +25,9 @@ export function calcWidthHeight(entity: Entity) {
             height += 200;
         }
 
-    } else if (edit) {
-        const [cnt, extra] = calcEditFieldsCntAndExtra(edit.editFields)
+    } else if (isEditableEntity(entity)) {
+        const edit = entity.edit;
+        const [cnt, extra] = calcEditFieldsCntAndExtra(edit.fields)
         height += 20 + 40 * cnt + extra;
         if (edit.fold) {
             height += 16;

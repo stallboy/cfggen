@@ -1,4 +1,4 @@
-import {Entity, EntityEdgeType, EntityField, EntitySourceEdge, EntityType} from "../../flow/entityModel.ts";
+import {Entity, ReadOnlyEntity, DisplayField, EntityEdgeType, EntitySourceEdge, EntityType} from "../../flow/entityModel.ts";
 import {SField, SStruct, STable} from "../table/schemaModel.ts";
 import {BriefRecord, JSONArray, JSONObject, JSONValue, RefId, Refs} from "./recordModel.ts";
 import {createRefs, getLabel} from "./recordRefEntity.ts";
@@ -21,9 +21,9 @@ export class RecordEntityCreator {
     createRecordEntity(id: string,
                        obj: JSONObject & Refs,
                        label?: string,
-                       arrayIndex?: number): Entity | null {
+                       arrayIndex?: number): ReadOnlyEntity | null {
 
-        const fields: EntityField[] = [];
+        const fields: DisplayField[] = [];
         const type: string = obj['$type'] as string;
         if (type == null) {
             console.error('$type missing');
@@ -120,10 +120,11 @@ export class RecordEntityCreator {
         let thisLabel = label ?? getLabel(type);
         thisLabel = arrayIndex === undefined ? thisLabel : thisLabel + '.' + arrayIndex;
 
-        const entity: Entity = {
+        const entity: ReadOnlyEntity = {
             id: id,
             label: thisLabel,
-            fields: fields,
+            type: 'readonly',
+            fields: fields as DisplayField[],
             sourceEdges: sourceEdges,
             entityType: EntityType.Normal,
             note: note,

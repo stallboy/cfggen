@@ -1,5 +1,5 @@
 import {
-    Entity,
+    EditableEntity, Entity, PrimitiveValue,
     EntityEdgeType, EntityEdit,
     EntityEditField,
     EntityEditFieldOptions, EntityPosition,
@@ -36,7 +36,7 @@ interface ArrayItemParam {
 export class RecordEditEntityCreator {
     curRefId: RefId;
 
-    constructor(public entityMap: Map<string, Entity>,
+    constructor(public entityMap: Map<string, EditableEntity | Entity>,
                 public schema: Schema,
                 public curTable: STable,
                 public curId: string,
@@ -55,7 +55,7 @@ export class RecordEditEntityCreator {
                  sItem: SItem,
                  obj: JSONObject,
                  fieldChain: (string | number)[],
-                 arrayItemParam?: ArrayItemParam): Entity | null {
+                 arrayItemParam?: ArrayItemParam): EditableEntity | null {
 
         const type: string = obj['$type'] as string;
         if (type == null) {
@@ -216,7 +216,7 @@ export class RecordEditEntityCreator {
         }
 
         const edit: EntityEdit = {
-            editFields,
+            fields: editFields,  // 重命名：editFields -> fields
             editOnDelete: arrayItemParam?.onDeleteFunc,
             editOnMoveUp: arrayItemParam?.onMoveUpFunc,
             editOnMoveDown: arrayItemParam?.onMoveDownFunc,
@@ -233,9 +233,10 @@ export class RecordEditEntityCreator {
             edit.editAllowObjType = sItem.id ?? sItem.name;
         }
 
-        const entity: Entity = {
+        const entity: EditableEntity = {
             id: id,
             label: label,
+            type: 'editable',
             edit: edit,
             sourceEdges: sourceEdges,
 
@@ -287,7 +288,7 @@ export class RecordEditEntityCreator {
                 applyNewEditingObject(defaultValue);
             };
 
-            if ('pk' in structural) {
+            if ('pk' in structural) { // is STable
                 fields.push({
                     name: '$submit',
                     comment: '',
@@ -335,7 +336,7 @@ export class RecordEditEntityCreator {
                 const itemTypeId = getItemTypeId(sf.type, structural, sf.name);
                 if (itemTypeId != undefined) { // list or map
                     if (isPrimitiveType(itemTypeId)) {
-                        const v = fieldValue ? fieldValue as (boolean | number | string) : [];
+                        const v: PrimitiveValue[] = fieldValue ? fieldValue as PrimitiveValue[] : [];
                         fields.push({
                             name: sf.name,
                             comment: sf.comment,

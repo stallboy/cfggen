@@ -1,4 +1,4 @@
-import {Entity} from "../../flow/entityModel.ts";
+import {ReadOnlyEntity} from "../../flow/entityModel.ts";
 import {SchemaTableType} from "../../CfgEditorApp.tsx";
 import {TableEntityCreator, UserData} from "./tableEntityCreator.ts";
 import {navTo, useLocationData, useMyStore} from "../../store/store.ts";
@@ -21,7 +21,7 @@ export function Table() {
 
     const getTableDefaultId = (tableName: string) => getDefaultIdInTable(schema, tableName, curId);
 
-    const entityMap = new Map<string, Entity>();
+    const entityMap = new Map<string, ReadOnlyEntity>();
     const creator = new TableEntityCreator(entityMap, schema, curTable, maxImpl);
     creator.includeSubStructs();
     creator.includeRefTables();

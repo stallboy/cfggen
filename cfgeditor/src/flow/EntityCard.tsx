@@ -1,5 +1,5 @@
 import {Card, Descriptions, Tooltip} from "antd";
-import {Entity} from "./entityModel.ts";
+import {Entity, isCardEntity} from "./entityModel.ts";
 import {DescriptionsItemType} from "antd/es/descriptions";
 import {CSSProperties, memo, ReactElement} from "react";
 import {convertFileSrc, isTauri} from "@tauri-apps/api/core";
@@ -15,13 +15,13 @@ export const EntityCard = memo(function EntityCard({entity, image}: {
     entity: Entity,
     image?: string;
 }) {
+    if (!isCardEntity(entity) || !entity.brief) {
+        return <></>;
+    }
+
     const {brief, sharedSetting} = entity;
     const query = sharedSetting?.query;
     const nodeShow = sharedSetting?.nodeShow;
-
-    if (!brief) {
-        return <></>;
-    }
 
     let info = 0;
     let hasCover = false;

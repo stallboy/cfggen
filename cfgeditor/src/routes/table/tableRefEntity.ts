@@ -6,6 +6,10 @@ function createEntity(item: SItem, id: string, entityType: EntityType = EntityTy
     return {
         id: id,
         label: item.name,
+        type: 'card',
+        brief: {
+            value: '',
+        },
         sourceEdges: [],
         entityType: entityType,
         userData: item,

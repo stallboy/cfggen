@@ -132,6 +132,7 @@ export function createRefEntities({
         const entity: Entity = {
             id: eid,
             label: label,
+            type: 'card',
             brief: {
                 title: briefRecord.title,
                 descriptions: briefRecord.descriptions,

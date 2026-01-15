@@ -1,5 +1,5 @@
 import {SInterface, SItem, SStruct, STable} from "./schemaModel.ts";
-import {Entity, EntityEdgeType, EntityType} from "../../flow/entityModel.ts";
+import {ReadOnlyEntity, DisplayField, EntityEdgeType, EntityType} from "../../flow/entityModel.ts";
 import {Schema} from "./schemaUtil.tsx";
 
 export class UserData {
@@ -18,21 +18,24 @@ function eid(id: string): string {
 }
 
 function createEntity(
-    item: SItem, 
-    id: string, 
-    table: string, 
+    item: SItem,
+    id: string,
+    table: string,
     entityType: EntityType = EntityType.Normal
-): Entity {
-    const fields = item.type === "interface" ? [] : (item as STable | SStruct).fields.map(field => ({
+): ReadOnlyEntity {
+    const fields: DisplayField[] = item.type === "interface" ? [] : (item as STable | SStruct).fields.map(field => ({
         key: field.name,
         name: field.name,
         comment: field.comment,
-        value: field.type
+        value: field.type,
+        handleIn: false,
+        handleOut: false,
     }));
 
     return {
         id: eid(id),
         label: item.name,
+        type: 'readonly',
         fields,
         sourceEdges: [],
         entityType,
@@ -42,13 +45,13 @@ function createEntity(
 
 export class TableEntityCreator {
     constructor(
-        public entityMap: Map<string, Entity>,
+        public entityMap: Map<string, ReadOnlyEntity>,
         public schema: Schema,
         public curTable: STable,
         public maxImpl: number
     ) {}
 
-    private addEntityToMap(entity: Entity): void {
+    private addEntityToMap(entity: ReadOnlyEntity): void {
         this.entityMap.set(entity.id, entity);
     }
 
@@ -85,7 +88,7 @@ export class TableEntityCreator {
         }
     }
 
-    private handleInterface(depInterface: SInterface, depEntity: Entity, frontier: (STable | SStruct)[]): void {
+    private handleInterface(depInterface: SInterface, depEntity: ReadOnlyEntity, frontier: (STable | SStruct)[]): void {
         depInterface.impls
             .slice(0, this.maxImpl)
             .forEach(impl => {
@@ -136,7 +139,7 @@ export class TableEntityCreator {
         });
     }
 
-    private handleInterfaceRef(ii: SInterface, entity: Entity): void {
+    private handleInterfaceRef(ii: SInterface, entity: ReadOnlyEntity): void {
         if (ii.enumRef) {
             this.addRefToEntityMapIf(ii.enumRef);
             entity.sourceEdges.push({
@@ -148,7 +151,7 @@ export class TableEntityCreator {
         }
     }
 
-    private handleStructOrTableRef(si: SStruct | STable, entity: Entity): void {
+    private handleStructOrTableRef(si: SStruct | STable, entity: ReadOnlyEntity): void {
         if (si.foreignKeys) {
             si.foreignKeys.forEach(fk => {
                 this.addRefToEntityMapIf(fk.refTable);

@@ -1,6 +1,6 @@
 import { CSSProperties, memo, useCallback, useMemo, useState } from "react";
 import { Handle, NodeProps, Position } from "@xyflow/react";
-import { Entity } from "./entityModel.ts";
+import { Entity, isReadOnlyEntity, isEditableEntity, isCardEntity } from "./entityModel.ts";
 import { getNodeBackgroundColor } from "./colors.ts";
 import { Button, Flex, Popover, Space, Typography } from "antd";
 import { EntityCard, Highlight } from "./EntityCard.tsx";
@@ -42,7 +42,27 @@ interface TempNote {
 
 export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>) {
     const entity = nodeProps.data.entity;
-    const { id, label, fields, edit, brief, handleIn, handleOut, note, sharedSetting, assets } = entity;
+    const { id, label, handleIn, handleOut, sharedSetting } = entity;
+
+    // 使用类型守卫确定 Entity 类型并获取相应属性
+    let fields = undefined;
+    let edit = undefined;
+    let brief = undefined;
+    let note = undefined;
+    let assets = undefined;
+
+    if (isReadOnlyEntity(entity)) {
+        fields = entity.fields;
+        note = entity.note;
+        assets = entity.assets;
+    } else if (isEditableEntity(entity)) {
+        edit = entity.edit;
+        note = entity.note;
+    } else if (isCardEntity(entity)) {
+        brief = entity.brief;
+        note = entity.note;
+    }
+
     const color: string = useMemo(() => getNodeBackgroundColor(entity), [entity]);
     const width = edit ? (entity.sharedSetting?.nodeShow?.editNodeWidth ?? 280) : (entity.sharedSetting?.nodeShow?.nodeWidth ?? 240);
     const nodeStyle: CSSProperties = useMemo(() => {

@@ -1,5 +1,5 @@
 import {Handle, Position} from "@xyflow/react";
-import {EntityField, EntitySharedSetting} from "./entityModel.ts";
+import {DisplayField, EntitySharedSetting} from "./entityModel.ts";
 import {Flex, List, Tooltip, Typography} from "antd";
 import {CSSProperties, memo, useMemo} from "react";
 import {getFieldBackgroundColor} from "./colors.ts";
@@ -28,7 +28,7 @@ const ellipsis = {tooltip: true};
 const itemValueStyle = {maxWidth: '70%'};
 
 export const EntityProperties = memo(function EntityProperties({fields, sharedSetting, color}: {
-    fields: EntityField[],
+    fields: DisplayField[],
     sharedSetting?: EntitySharedSetting,
     color: string,
 }) {

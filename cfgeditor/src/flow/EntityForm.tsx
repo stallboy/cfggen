@@ -4,8 +4,15 @@ import {
     EntityEditFieldOption, EntityEditFieldOptions,
     EntitySharedSetting, FuncAddType,
     FuncSubmitType,
-    FuncType
+    FuncType,
+    InterfaceEditField
 } from "./entityModel.ts";
+
+// 类型守卫函数
+function hasAutoCompleteOptions(field: EntityEditField): field is EntityEditField & { autoCompleteOptions: EntityEditFieldOptions } {
+    return field.type === 'primitive' || field.type === 'arrayOfPrimitive' || field.type === 'interface';
+}
+
 import {
     Button,
     ConfigProvider,
@@ -61,9 +68,9 @@ function filterNumberSort(optionA: EntityEditFieldOption, optionB: EntityEditFie
 
 
 function defaultPrimitiveValue(field: EntityEditField) {
-    const {eleType, autoCompleteOptions} = field;
-    if (autoCompleteOptions && autoCompleteOptions.options.length > 0) {
-        const {options} = autoCompleteOptions;
+    const {eleType} = field;
+    if (hasAutoCompleteOptions(field) && field.autoCompleteOptions && field.autoCompleteOptions.options.length > 0) {
+        const {options} = field.autoCompleteOptions;
         return options[0].value
     } else if (eleType == 'bool') {
         return false;
@@ -96,17 +103,19 @@ function getFilter(isValueInteger: boolean, useSearch: boolean): FilterOption {
     }
 }
 
-function isArrayPrimitiveBoolOrNumber(eleType: string, autoCompleteOptions: EntityEditFieldOptions | undefined) {
-    if (autoCompleteOptions && autoCompleteOptions.options.length > 0) {
+function isArrayPrimitiveBoolOrNumber(field: EntityEditField) {
+    if (hasAutoCompleteOptions(field) && field.autoCompleteOptions && field.autoCompleteOptions.options.length > 0) {
         return false
-    } else if (eleType == 'bool') {
+    } else if (field.eleType == 'bool') {
         return true;
     } else {
-        return setOfNumber.has(eleType);
+        return setOfNumber.has(field.eleType);
     }
 }
 
-function primitiveControl(eleType: string, autoCompleteOptions: EntityEditFieldOptions | undefined, style: CSSProperties) {
+function primitiveControl(field: EntityEditField, style: CSSProperties) {
+    const {eleType} = field;
+    const autoCompleteOptions = hasAutoCompleteOptions(field) ? field.autoCompleteOptions : undefined;
     if (autoCompleteOptions && autoCompleteOptions.options.length > 0) {
         const {options, isValueInteger, isEnum} = autoCompleteOptions;
         const filters = getFilter(isValueInteger, options.length > 5);
@@ -221,8 +230,8 @@ const PrimitiveFormItem = memo(function ({field, bgColor}: {
         return bgColor == undefined ? {} : {backgroundColor: bgColor}
     }, [bgColor]);
 
-    const primitiveCtrl = useMemo(() => primitiveControl(field.eleType, field.autoCompleteOptions, thisItemStyle),
-        [field.eleType, field.autoCompleteOptions, thisItemStyle]);
+    const primitiveCtrl = useMemo(() => primitiveControl(field, thisItemStyle),
+        [field, thisItemStyle]);
 
     return <Form.Item key={field.name}
                       name={field.name}
@@ -267,7 +276,7 @@ const ArrayOfPrimitiveFormItem = memo(function ({field, bgColor}: {
         backgroundColor: bgColor
     }, [bgColor]);
 
-    const itemStyle = field.autoCompleteOptions != null ? autoCompleteItemStyle : empty;
+    const itemStyle = hasAutoCompleteOptions(field) && field.autoCompleteOptions != null ? autoCompleteItemStyle : empty;
 
     return <Form.Item {...formItemLayout}
                       label={<LabelWithTooltip name={field.name} comment={field.comment} isAutoFontSize={true}/>}
@@ -278,10 +287,10 @@ const ArrayOfPrimitiveFormItem = memo(function ({field, bgColor}: {
                     {fields.map((f, index) => (
                         <Flex key={f.key} align='center' justify='space-between' style={{width: '100%'}}>
                             <Form.Item name={f.name} {...itemStyle} style={{flex: 1, marginBottom: 0}}>
-                                {primitiveControl(field.eleType, field.autoCompleteOptions, thisItemStyle)}
+                                {primitiveControl(field, thisItemStyle)}
                             </Form.Item>
                             <ArrayItemExpandButton
-                                fold={!isArrayPrimitiveBoolOrNumber(field.eleType, field.autoCompleteOptions)}
+                                fold={!isArrayPrimitiveBoolOrNumber(field)}
                                 remove={() => remove(f.name)}
                                 up={index != 0 ? () => move(index, index - 1) : undefined}
                                 down={index != fields.length - 1 ? () => move(index, index + 1) : undefined}/>
@@ -365,7 +374,7 @@ const FuncSubmitFormItem = memo(function ({field}: {
 
 
 const InterfaceFormItem = memo(function ({field, nodeProps, sharedSetting}: {
-    field: EntityEditField,
+    field: InterfaceEditField,
     nodeProps: NodeProps<EntityNode>
     sharedSetting?: EntitySharedSetting
 }) {
@@ -377,12 +386,12 @@ const InterfaceFormItem = memo(function ({field, nodeProps, sharedSetting}: {
     }, [field.name, field.value, form]);
 
     const onSelectChange = useCallback((value: string) => {
-        field.interfaceOnChangeImpl!(value, {
+        field.interfaceOnChangeImpl(value, {
             id: nodeProps.data.entity.id,
             x: nodeProps.positionAbsoluteX,
             y: nodeProps.positionAbsoluteY
         });
-    }, [field.interfaceOnChangeImpl, nodeProps.data.entity.id, nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY]);
+    }, [field, nodeProps.data.entity.id, nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY]);
 
     const options = field.autoCompleteOptions?.options;
     const filters = getFilter(false, !!options && options.length > 5);
@@ -400,7 +409,7 @@ const InterfaceFormItem = memo(function ({field, nodeProps, sharedSetting}: {
 
     return <>
         {formItem}
-        {fieldsFormItem(field.implFields as EntityEditField[], nodeProps, sharedSetting)}
+        {fieldsFormItem(field.implFields, nodeProps, sharedSetting)}
     </>
 });
 
@@ -467,7 +476,7 @@ export const EntityForm = memo(function ({edit, nodeProps, sharedSetting}: {
                   edit.editOnUpdateValues(_form.getFieldsValue(true));
               }}
               style={formStyle}>
-            {fieldsFormItem(edit.editFields, nodeProps, sharedSetting)}
+            {fieldsFormItem(edit.fields, nodeProps, sharedSetting)}
         </Form>
     </ConfigProvider>
 });

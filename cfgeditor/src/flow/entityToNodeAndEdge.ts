@@ -1,26 +1,26 @@
-import {Entity, EntityBaseField, EntityEdgeType, EntityGraph} from "./entityModel.ts";
+import {Entity, DisplayField, EntityEditField, isReadOnlyEntity, isEditableEntity, EntityEdgeType, EntityGraph} from "./entityModel.ts";
 import {getEdgeColor} from "./colors.ts";
 import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
 
-function findField({fields, edit}: Entity, name: string) {
-    let fs: EntityBaseField[] | undefined = fields;
-    if (!fs && edit) {
-        fs = edit.editFields;
-    }
-    const eq = ((f: EntityBaseField) => f.name == name);
-    const f = fs && fs.find(eq);
-    if (f) {
-        return f;
+function findField(entity: Entity, name: string): DisplayField | EntityEditField | undefined {
+    if (isReadOnlyEntity(entity)) {
+        return entity.fields.find(f => f.name === name);
     }
 
-    if (edit) {
-        for (const {implFields} of edit.editFields) {
-            const f = implFields && implFields.find(eq);
-            if (f) {
-                return f;
+    if (isEditableEntity(entity)) {
+        const field = entity.edit.fields.find(f => f.name === name);
+        if (field) return field;
+
+        // 检查 interface 的 implFields
+        for (const editField of entity.edit.fields) {
+            if (editField.type === 'interface') {
+                const implField = editField.implFields.find(f => f.name === name);
+                if (implField) return implField;
             }
         }
     }
+
+    return undefined;
 }
 
 export function fillHandles(entityMap: Map<string, Entity>) {
