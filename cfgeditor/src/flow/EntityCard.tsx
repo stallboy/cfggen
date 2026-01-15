@@ -1,18 +1,78 @@
 import {Card, Descriptions, Tooltip} from "antd";
-import {Entity, isCardEntity} from "./entityModel.ts";
-import {DescriptionsItemType} from "antd/es/descriptions";
-import {CSSProperties, memo, ReactElement} from "react";
+import type {DescriptionsItemType} from "antd/es/descriptions";
 import {convertFileSrc, isTauri} from "@tauri-apps/api/core";
+import {CSSProperties, memo, ReactElement} from "react";
+import {CardEntity, Entity, isCardEntity} from "./entityModel.ts";
 import {getDsLenAndDesc} from "./getDsLenAndDesc.tsx";
 
-const imageStyle: CSSProperties = {maxHeight: '220px', objectFit: 'scale-down'};
+// ============================================================================
+// 常量定义
+// ============================================================================
 
-interface Props {
-    [prop: string]: string | ReactElement;
+const IMAGE_STYLE: CSSProperties = {maxHeight: "220px", objectFit: "scale-down"};
+
+const DESC_STYLE: CSSProperties = {whiteSpace: "break-spaces"};
+
+// ============================================================================
+// 高亮组件
+// ============================================================================
+
+export function Highlight({text, keyword}: {text: string; keyword: string}): ReactElement {
+    const parts = text.split(new RegExp(`(${keyword})`, "gi"));
+    return <>{parts.map((part, i) =>
+        part.toLowerCase() === keyword.toLowerCase() ? <mark key={i}>{part}</mark> : part
+    )}</>;
 }
 
+// ============================================================================
+// 描述构建函数
+// ============================================================================
+
+function buildDescriptionItems(
+    descriptions: CardEntity["brief"]["descriptions"],
+    count: number
+): DescriptionsItemType[] {
+    if (!descriptions || count <= 0) return [];
+
+    return Array.from({length: count}, (_, i) => {
+        const d = descriptions[i];
+        return {
+            key: i,
+            label: <Tooltip title={d.comment}>{d.field}</Tooltip>,
+            children: d.value,
+        };
+    });
+}
+
+function buildCardDescription(
+    descriptions: CardEntity["brief"]["descriptions"],
+    showCount: number,
+    text: string,
+    keyword?: string
+): ReactElement | undefined {
+    if (!text) return undefined;
+
+    const content = keyword ? <Highlight text={text} keyword={keyword}/> : text;
+
+    if (showCount > 0 && descriptions) {
+        const items = buildDescriptionItems(descriptions, showCount);
+        return (
+            <>
+                <Descriptions column={1} bordered size="small" items={items}/>
+                <div style={DESC_STYLE}>{content}</div>
+            </>
+        );
+    }
+
+    return <div style={DESC_STYLE}>{content}</div>;
+}
+
+// ============================================================================
+// 主组件
+// ============================================================================
+
 export const EntityCard = memo(function EntityCard({entity, image}: {
-    entity: Entity,
+    entity: Entity;
     image?: string;
 }) {
     if (!isCardEntity(entity) || !entity.brief) {
@@ -20,88 +80,37 @@ export const EntityCard = memo(function EntityCard({entity, image}: {
     }
 
     const {brief, sharedSetting} = entity;
-    const query = sharedSetting?.query;
-    const nodeShow = sharedSetting?.nodeShow;
+    const {query, nodeShow} = sharedSetting ?? {};
 
-    let info = 0;
-    let hasCover = false;
-    let cover: Props = {};
-    if (image && isTauri()) {
-        const imageUrl = convertFileSrc(image);
-        cover = {cover: <img alt="img" style={imageStyle} src={imageUrl}/>}
-        hasCover = true;
-        info++;
+    // 构建封面
+    const coverEl = image && isTauri()
+        ? <img alt="img" style={IMAGE_STYLE} src={convertFileSrc(image)}/>
+        : undefined;
+
+    // 构建标题
+    const titleEl = brief.title
+        ? (query ? <Highlight text={brief.title} keyword={query}/> : brief.title)
+        : undefined;
+
+    // 构建描述
+    const [showDsLen, descText] = getDsLenAndDesc(brief, nodeShow);
+    const descEl = buildCardDescription(brief.descriptions, showDsLen, descText ?? "", query);
+
+    // 计算有效内容数量
+    const hasContent = [coverEl, titleEl, descEl].filter(Boolean).length;
+    if (hasContent === 0) return <></>;
+
+    // 单项内容直接返回
+    if (hasContent === 1) {
+        if (coverEl) return coverEl;
+        if (titleEl) return <Card title={titleEl}/>;
+        if (descEl) return <Card>{descEl}</Card>;
     }
 
-    let hasTitle = false;
-    let title: Props = {};
-    if (brief.title) {
-        if (query) {
-            title = {title: <Highlight text={brief.title} keyword={query}/>};
-        } else {
-            title = {title: brief.title};
-        }
-        hasTitle = true;
-        info++;
-    }
-
-
-    let description: Props = {}
-    const ds = brief.descriptions;
-    const [showDsLen, desc] = getDsLenAndDesc(brief, nodeShow);
-    if (desc && ds && showDsLen > 0) {
-        const items: DescriptionsItemType[] = [];
-
-        for (let i = 0; i < showDsLen; i++) {
-            const d = ds[i];
-            items.push({
-                key: i,
-                label: <Tooltip title={d.comment}> {d.field} </Tooltip>,
-                children: d.value,
-            })
-        }
-
-        description = {
-            description: <>
-                <Descriptions column={1} bordered size={"small"} items={items}/>
-                <div style={{whiteSpace: "break-spaces"}}>{
-                    query ? <Highlight text={desc} keyword={query}/> : desc}
-                </div>
-            </>
-        }
-        info++;
-    } else if (desc) {
-        description = {
-            description: <div style={{whiteSpace: "break-spaces"}}>{
-                query ? <Highlight text={desc} keyword={query}/> : desc}
-            </div>
-        }
-        info++;
-    }
-
-    if (info > 1) {
-        return <Card {...cover}>
-            <Card.Meta {...title} {...description}/>
-        </Card>;
-    } else if (info == 1) {
-        if (hasCover) {
-            return cover.cover;
-        } else if (hasTitle) {
-            return <Card title={title.title}/>;
-        } else {
-            return <Card>{description.description}</Card>;
-        }
-    } else {
-        return <></>;
-    }
-
+    // 多项内容使用 Card + Meta
+    return (
+        <Card cover={coverEl}>
+            <Card.Meta title={titleEl} description={descEl}/>
+        </Card>
+    );
 });
-
-export function Highlight({text, keyword}: {
-    text: string;
-    keyword: string;
-}) {
-    return text.split(new RegExp(`(${keyword})`, "gi"))
-        .map((c, i) => c === keyword ? <mark key={i}>{c}</mark> : c);
-}
-
