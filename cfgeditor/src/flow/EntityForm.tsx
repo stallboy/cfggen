@@ -1,5 +1,5 @@
 import {
-    ArrowDownOutlined,
+    ArrowDownOutlined, ArrowsAltOutlined,
     ArrowUpOutlined,
     LeftOutlined,
     MinusSquareTwoTone,
@@ -36,7 +36,7 @@ import {
     FuncSubmitType,
     FuncType,
     InterfaceEditField,
-    PrimitiveValue,
+    PrimitiveValue, StructRefEditField,
 } from "./entityModel.ts";
 import {EntityNode} from "./FlowGraph.tsx";
 
@@ -269,6 +269,89 @@ const StructRefItem = memo(function StructRefItem({
 });
 
 // ============================================================================
+// 内嵌原始类型字段组件
+// ============================================================================
+
+interface EmbeddedSimpleStructuralItemProps {
+    field: StructRefEditField;
+    edit: EntityEdit,
+    nodeProps: NodeProps<EntityNode>,
+    bgColor?: string;
+}
+
+const EmbeddedSimpleStructuralItem = memo(
+    function EmbeddedSimpleStructuralItem({field, edit, nodeProps}: EmbeddedSimpleStructuralItemProps) {
+        const embeddedField = field.embeddedField as EntityEditField & { type: 'primitive' };
+
+        // 黄色背景(有note时)
+        const hasNote = embeddedField.comment && embeddedField.comment.length > 0;
+
+        // 点击展开
+        const handleExpand = useCallback(() => {
+            if (field.embeddedFieldChain && edit.editOnUpdateFold) {
+                // 设置为展开状态 (fold=false)，传入 embeddedFieldChain 参数
+                edit.editOnUpdateFold(
+                    false,
+                    {
+                        id: nodeProps.data.entity.id,
+                        x: nodeProps.positionAbsoluteX,
+                        y: nodeProps.positionAbsoluteY,
+                    },
+                    field.embeddedFieldChain
+                );
+            }
+        }, [field.embeddedFieldChain, edit, nodeProps.data.entity.id, nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY]);
+
+        // 格式化显示值
+        const displayValue = useMemo(() => {
+            const value = embeddedField.value;
+            if (value === undefined || value === null) {
+                return '-';
+            }
+            if (typeof value === 'boolean') {
+                return value ? '✓' : '✗';  // 使用 emoji 对勾和叉
+            }
+            return String(value);
+        }, [embeddedField.value]);
+
+        // 值的样式（空值时灰色）
+        const valueStyle: CSSProperties = useMemo(() => ({
+            color: (embeddedField.value === undefined || embeddedField.value === null || embeddedField.value === '')
+                ? '#999'
+                : undefined,
+        }), [embeddedField.value]);
+
+        // 值的Tag颜色（有note时为黄色）
+        const valueTagColor = hasNote ? '#fff566' : 'blue';
+
+        return (
+            <Flex gap="small" justify="flex-end" align="center">
+                {/* 显示字段名称（蓝色 Tag） */}
+                <Tag color="blue">
+                    <LabelWithTooltip name={field.name} comment={field.comment}/>
+                </Tag>
+
+                {/* 显示值（蓝色或黄色 Tag） */}
+                <Tag color={valueTagColor} style={valueStyle}>
+                    <LabelWithTooltip
+                        name={displayValue}
+                        comment={hasNote ? embeddedField.comment : undefined}
+                    />
+                </Tag>
+
+                {/* 展开按钮（蓝色） */}
+                <Button
+                    className="nodrag"
+                    type="text"
+                    style={{color: '#1890ff'}}
+                    icon={<ArrowsAltOutlined />}
+                    onClick={handleExpand}
+                />
+            </Flex>
+        );
+    });
+
+// ============================================================================
 // 函数添加表单项组件
 // ============================================================================
 
@@ -488,49 +571,51 @@ const FuncSubmitFormItem = memo(function FuncSubmitFormItem({field}: PrimitiveFo
 
 interface InterfaceFormItemProps {
     field: InterfaceEditField;
+    edit: EntityEdit,
     nodeProps: NodeProps<EntityNode>;
     sharedSetting?: EntitySharedSetting;
 }
 
-const InterfaceFormItem = memo(function InterfaceFormItem({field, nodeProps, sharedSetting}: InterfaceFormItemProps) {
-    const form = Form.useFormInstance();
+const InterfaceFormItem = memo(
+    function InterfaceFormItem({field, edit, nodeProps, sharedSetting}: InterfaceFormItemProps) {
+        const form = Form.useFormInstance();
 
-    // edit后，key又都相同，initialValue改变，所以form需要设置回去
-    // 参考: https://zhuanlan.zhihu.com/p/375753910
-    useEffect(() => {
-        form.setFieldValue(field.name, field.value);
-    }, [field.name, field.value, form]);
+        // edit后，key又都相同，initialValue改变，所以form需要设置回去
+        // 参考: https://zhuanlan.zhihu.com/p/375753910
+        useEffect(() => {
+            form.setFieldValue(field.name, field.value);
+        }, [field.name, field.value, form]);
 
-    const handleSelectChange = useCallback(
-        (value: string) => {
-            field.interfaceOnChangeImpl(value, {
-                id: nodeProps.data.entity.id,
-                x: nodeProps.positionAbsoluteX,
-                y: nodeProps.positionAbsoluteY,
-            });
-        },
-        [field, nodeProps.data.entity.id, nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY]
-    );
+        const handleSelectChange = useCallback(
+            (value: string) => {
+                field.interfaceOnChangeImpl(value, {
+                    id: nodeProps.data.entity.id,
+                    x: nodeProps.positionAbsoluteX,
+                    y: nodeProps.positionAbsoluteY,
+                });
+            },
+            [field, nodeProps.data.entity.id, nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY]
+        );
 
-    const options = field.autoCompleteOptions?.options;
-    const filters = getFilter(false, (options?.length ?? 0) > 5);
+        const options = field.autoCompleteOptions?.options;
+        const filters = getFilter(false, (options?.length ?? 0) > 5);
 
-    const formItem = useMemo(
-        () => (
-            <Form.Item key={field.name} name={field.name} label=">" initialValue={field.value}>
-                <Select className="nodrag" options={options} {...filters} onChange={handleSelectChange}/>
-            </Form.Item>
-        ),
-        [field.name, field.value, options, filters, handleSelectChange]
-    );
+        const formItem = useMemo(
+            () => (
+                <Form.Item key={field.name} name={field.name} label=">" initialValue={field.value}>
+                    <Select className="nodrag" options={options} {...filters} onChange={handleSelectChange}/>
+                </Form.Item>
+            ),
+            [field.name, field.value, options, filters, handleSelectChange]
+        );
 
-    return (
-        <>
-            {formItem}
-            {renderFieldItems(field.implFields, nodeProps, sharedSetting)}
-        </>
-    );
-});
+        return (
+            <>
+                {formItem}
+                {renderFieldItems(field.implFields, edit, nodeProps, sharedSetting)}
+            </>
+        );
+    });
 
 // ============================================================================
 // 字段渲染函数
@@ -538,16 +623,31 @@ const InterfaceFormItem = memo(function InterfaceFormItem({field, nodeProps, sha
 
 interface FieldRenderProps {
     field: EntityEditField;
+    edit: EntityEdit,
     nodeProps: NodeProps<EntityNode>;
     sharedSetting?: EntitySharedSetting;
 }
 
-function renderFieldItem({field, nodeProps, sharedSetting}: FieldRenderProps) {
+function renderFieldItem({field, edit, nodeProps, sharedSetting}: FieldRenderProps) {
     const bgColor = getFieldBackgroundColor(field, sharedSetting?.nodeShow);
     const width = sharedSetting?.nodeShow?.editNodeWidth;
 
     switch (field.type) {
         case "structRef":
+            // 判断是否为内嵌模式
+            if (field.isEmbedded && field.embeddedField) {
+                return (
+                    <EmbeddedSimpleStructuralItem
+                        key={field.name}
+                        field={field}
+                        edit={edit}
+                        nodeProps={nodeProps}
+                        bgColor={bgColor}
+                    />
+                );
+            }
+
+            // 正常structRef显示
             return (
                 <StructRefItem
                     key={field.name}
@@ -585,7 +685,8 @@ function renderFieldItem({field, nodeProps, sharedSetting}: FieldRenderProps) {
 
         case "interface":
             return (
-                <InterfaceFormItem key={field.name} field={field} nodeProps={nodeProps} sharedSetting={sharedSetting}/>
+                <InterfaceFormItem key={field.name} field={field} edit={edit}
+                                   nodeProps={nodeProps} sharedSetting={sharedSetting}/>
             );
 
         case "funcSubmit":
@@ -599,8 +700,9 @@ function renderFieldItem({field, nodeProps, sharedSetting}: FieldRenderProps) {
     }
 }
 
-function renderFieldItems(fields: EntityEditField[], nodeProps: NodeProps<EntityNode>, sharedSetting?: EntitySharedSetting) {
-    return fields.map((field) => renderFieldItem({field, nodeProps, sharedSetting}));
+function renderFieldItems(fields: EntityEditField[], edit: EntityEdit,
+                          nodeProps: NodeProps<EntityNode>, sharedSetting?: EntitySharedSetting) {
+    return fields.map((field) => renderFieldItem({field, edit, nodeProps, sharedSetting}));
 }
 
 // ============================================================================
@@ -629,7 +731,7 @@ export const EntityForm = memo(function EntityForm({edit, nodeProps, sharedSetti
                 }}
                 style={FORM_STYLE}
             >
-                {renderFieldItems(edit.fields, nodeProps, sharedSetting)}
+                {renderFieldItems(edit.fields, edit, nodeProps, sharedSetting)}
             </Form>
         </ConfigProvider>
     );

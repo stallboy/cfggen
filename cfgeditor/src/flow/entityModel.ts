@@ -71,6 +71,11 @@ export interface StructRefEditField extends FieldBase {
     type: 'structRef';
     eleType: string;
     value: string;  // 占位符，如 '<>'
+
+    // 内嵌模式相关字段
+    isEmbedded?: boolean;                    // 是否为内嵌模式
+    embeddedField?: PrimitiveEditField;       // 内嵌时的单字段定义
+    embeddedFieldChain?: (string | number)[]; // 内嵌字段的完整路径
 }
 
 /**
@@ -175,7 +180,7 @@ export interface EntityEdit {
     fields: EntityEditField[];
     editOnUpdateValues: (values: Record<string, unknown>) => void;
     editOnUpdateNote: (note?: string) => void;
-    editOnUpdateFold: (fold: boolean, position: EntityPosition) => void;
+    editOnUpdateFold: (fold: boolean, position: EntityPosition, embeddedFieldChain?: (string | number)[]) => void;
     editOnDelete?: (position: EntityPosition) => void;
     editOnMoveUp?: (position: EntityPosition) => void;
     editOnMoveDown?: (position: EntityPosition) => void;
@@ -184,6 +189,7 @@ export interface EntityEdit {
     editAllowObjType?: string;
     fold?: boolean;
     hasChild: boolean;
+    canBeEmbedded?: boolean;  // 标识是否可以被内嵌
 }
 
 // ============================================================================

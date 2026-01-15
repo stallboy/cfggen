@@ -117,13 +117,19 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
     }, [color]);
 
     const foldButton = useMemo(() => {
-        if (edit && edit.hasChild) {
-            if (edit.fold) {
-                return <Button style={unfoldIconButtonStyle} icon={unfoldIcon} onClick={unfoldNode} />;
-            } else {
-                return <Button style={iconButtonStyle} icon={foldIcon} onClick={foldNode} />;
+        if (edit) {
+            // 显示 fold 按钮的条件：
+            // 1. 有子节点，或
+            // 2. 可以被内嵌（从内嵌展开的节点）
+            if (edit.hasChild || edit.canBeEmbedded) {
+                if (edit.fold) {
+                    return <Button style={unfoldIconButtonStyle} icon={unfoldIcon} onClick={unfoldNode} />;
+                } else {
+                    return <Button style={iconButtonStyle} icon={foldIcon} onClick={foldNode} />;
+                }
             }
         }
+
         return null;
     }, [edit, unfoldIconButtonStyle, unfoldNode, foldNode]);
     const editNoteButton = useMemo(() => {
