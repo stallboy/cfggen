@@ -402,9 +402,17 @@ export function getMapEntryTypeName(sItem: SItem, fieldName: string) {
     return "$" + (sItem.id ?? sItem.name) + "-" + fieldName; // 构造特殊名称
 }
 
+
 const suffixStyle: CSSProperties = {
-    color: '#597ef7', fontSize: '0.85em',
-    textOverflow: "clip", whiteSpace: 'nowrap', overflow: 'hidden', maxWidth: 100
+    color: '#597ef7', 
+    fontSize: '0.85em',
+    textOverflow: "ellipsis", // 建议用 ellipsis (省略号) 比 clip 更友好
+    whiteSpace: 'nowrap', 
+    overflow: 'hidden', 
+    flex: 1,                // 核心：占据剩余所有空间
+    minWidth: 0,            // 核心：允许收缩，触发截断
+    textAlign: 'right',     // 让 title 依然靠右展示
+    marginLeft: '8px'       // 给 ID 和 Title 之间留一点固定间距
 }
 
 export function getIdOptions(sTable: STable, valueToInteger: boolean = false): EntityEditFieldOption[] {
@@ -412,7 +420,10 @@ export function getIdOptions(sTable: STable, valueToInteger: boolean = false): E
     for (const {id, title} of sTable.recordIds) {
         const isShowTitle = title && title != id;
         options.push({
-            label: isShowTitle ? <Flex justify="space-between" align={"flex-end"}>{id} <span style={suffixStyle}>{title}</span></Flex> : id,
+            label: isShowTitle ? <Flex align="flex-end" style={{ width: '100%' }}>
+                    <span style={{ flexShrink: 0 }}>{id}</span> 
+                    <span style={suffixStyle}>{title}</span>
+                </Flex> : id,
             labelstr: isShowTitle ? `${id} ${title}` : id,
             value: valueToInteger ? parseInt(id) : id,
             title: title ?? ''
