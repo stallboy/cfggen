@@ -179,7 +179,12 @@ export class RecordEditEntityCreator {
                 const canEmbed = canBeEmbeddedCheck(fieldValue as JSONObject, sField, this.schema);
 
                 if (canEmbed) {
-                    const isFolded = this.folds.isFold([...fieldChain, fieldKey]);
+                    let isFolded = this.folds.isFold([...fieldChain, fieldKey]);
+                    if (isFolded === undefined) {
+                        // 本地状态没有设置时，读取对象的$fold字段
+                        const fieldObj = fieldValue as JSONObject;
+                        isFolded = fieldObj['$fold'] as boolean | undefined;
+                    }
                     if (isFolded !== false) {
                         // fold=true 或 undefined，内嵌模式，不创建子节点
                         continue;
@@ -293,12 +298,13 @@ export class RecordEditEntityCreator {
                 autoCompleteOptions: getImplNameOptions(sInterface),
                 implFields: this.makeEditFields(impl, obj, fieldChain),
                 interfaceOnChangeImpl: (newImplName: string, position: EntityPosition) => {
-                    let newObj: JSONObject;
+                        let newObj: JSONObject;
                     if (newImplName == implName) {
                         newObj = obj;
                     } else {
                         const newImpl = getImpl(sInterface, newImplName) as SStruct;
                         newObj = this.schema.defaultValueOfStructural(newImpl);
+                        newObj['$fold'] = false;  // 明确设置为展开状态，避免自动内嵌
                     }
                     onUpdateInterfaceValue(newObj, fieldChain, position);
                 },
@@ -400,7 +406,11 @@ export class RecordEditEntityCreator {
 
                     // 判断是否可以内嵌
                     if (canBeEmbeddedCheck(fieldObj, sf, this.schema)) {
-                        const isFolded = this.folds.isFold([...fieldChain, sf.name]);
+                        let isFolded = this.folds.isFold([...fieldChain, sf.name]);
+                        if (isFolded === undefined) {
+                            // 本地状态没有设置时，读取对象的$fold字段
+                            isFolded = fieldObj['$fold'] as boolean | undefined;
+                        }
 
                         if (isFolded !== false) {
                             // fold=true 或 undefined，内嵌模式
