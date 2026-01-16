@@ -21,7 +21,7 @@ public class ParameterInfoCollector implements Parameter {
     }
 
 
-    private record Info(String def,
+    public record Info(String def,
                         boolean isFlag,
                         String messageId) {
     }
@@ -81,5 +81,9 @@ public class ParameterInfoCollector implements Parameter {
     @Override
     public void extra(List<String> extra) {
         this.extra = extra;
+    }
+
+    public Map<String, Info> getInfos() {
+        return infos;
     }
 }

@@ -1,2 +1,2 @@
-java -jar ../cfggen.jar
+java -jar ../cfggen.jar -tool,usage
 pause

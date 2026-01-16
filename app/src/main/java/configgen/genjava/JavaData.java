@@ -8,11 +8,11 @@ import java.util.*;
 
 public class JavaData {
 
-    public static class ToolJavaData extends Tool {
+    public static class ReadJavaData extends Tool {
         private final String javaDataFile;
         private final String match;
 
-        public ToolJavaData(Parameter parameter) {
+        public ReadJavaData(Parameter parameter) {
             super(parameter);
             javaDataFile = parameter.get("javadata", "config.data");
             match = parameter.get("match", null, "loop when match not set");

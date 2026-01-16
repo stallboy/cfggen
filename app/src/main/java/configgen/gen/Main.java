@@ -32,88 +32,70 @@ import java.util.Locale;
 
 public final class Main {
     private static int usage(String reason) {
-        if (reason != null && !reason.isBlank()) {
-            Logger.log(reason);
-        }
-
-        Logger.log("Usage: java -jar cfggen.jar [tools] -datadir [dir] [options] [gens]");
-        Logger.log("");
-        Logger.log("-----schema & data");
-        Logger.log("    -datadir          " + LocaleUtil.getLocaleString("Usage.DataDir",
-                "configuration data directory, must contains file:config.cfg"));
-        Logger.log("    -headrow          " + LocaleUtil.getLocaleString("Usage.HeadRow",
-                "csv/txt/excel file head row type, default 2"));
-        Logger.log("    -encoding         " + LocaleUtil.getLocaleString("Usage.Encoding",
-                "csv/txt encoding, default GBK, if csv file has BOM head, use that encoding"));
-        if (BuildSettings.isIncludePoi()) {
-            Logger.log("    -usepoi           " + LocaleUtil.getLocaleString("Usage.UsePoi",
-                    "use poi lib to read Excel file, slow speed, default false"));
-        }
-
-        Logger.log("    -asroot           " + LocaleUtil.getLocaleString("Usage.AsRoot",
-                "ExplicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map， default null, can be 'ClientTables:noserver,PublicTables,ServerTables:noclient'"));
-        Logger.log("    -exceldirs        " + LocaleUtil.getLocaleString("Usage.ExcelDirs",
-                "ExplicitDir.excelFileDirs， default null"));
-        Logger.log("    -jsondirs         " + LocaleUtil.getLocaleString("Usage.JsonDirs",
-                "ExplicitDir.jsonFileDirs， default null"));
-
-
-        Logger.log("");
-        Logger.log("-----i18n support");
-        Logger.log("    -i18nfile         " + LocaleUtil.getLocaleString("Usage.I18nFile",
-                "two choices: 1,csv file use original str as Id per table. 2,directory,has multiply xlsx file and use pk&fieldChain as Id per table. default null"));
-        Logger.log("    -langswitchdir    " + LocaleUtil.getLocaleString("Usage.LangSwitchDir",
-                "language switch support"));
-        Logger.log("    -defaultlang      " + LocaleUtil.getLocaleString("Usage.DefaultLang",
-                "the default language when use lang switch"));
-
-        Logger.log("");
-        Logger.log("-----options");
-        Logger.log("    -v                " + LocaleUtil.getLocaleString("Usage.V",
-                "verbose level 1, print statistic & warning"));
-        Logger.log("    -vv               " + LocaleUtil.getLocaleString("Usage.VV",
-                "verbose level 2, print extra info"));
-        Logger.log("    -p                " + LocaleUtil.getLocaleString("Usage.P",
-                "profiler, print memory usage & time elapsed"));
-        Logger.log("    -pp               " + LocaleUtil.getLocaleString("Usage.PP",
-                "profiler, gc before print memory usage"));
-        Logger.log("    -nowarn           " + LocaleUtil.getLocaleString("Usage.NOWARN",
-                "do not print warning"));
-        Logger.log("    -weakwarn         " + LocaleUtil.getLocaleString("Usage.WEAKWARN",
-                "print weak warning"));
-
-        Logger.log("");
-        Logger.log("-----" + LocaleUtil.getLocaleString("Usage.ToolGenStart",
-                "parameters in tool/gen are separated by , and the parameter name and parameter value are separated = or :."));
-
-        Logger.log("");
-        Logger.log("-----tools");
-        Tools.getAllProviders().forEach((k, v) -> {
-                    ParameterInfoCollector info = new ParameterInfoCollector("tool", k);
-                    v.create(info);
-                    info.print();
-                }
-        );
-
-        Logger.log("");
-        Logger.log("-----generators");
-        Generators.getAllProviders().forEach((k, v) -> {
-                    ParameterInfoCollector info = new ParameterInfoCollector("gen", k);
-                    v.create(info);
-                    info.print();
-                }
-        );
-
+        Usage.printUsage(reason);
         return 1;
     }
 
 
     public static void main(String[] args) {
+        // 先注册所有的 tools 和 generators
+        registerAllProviders();
+
+        // 如果没有参数，启动 GUI
+        if (args.length == 0) {
+            GuiLauncher.launch();
+            return;
+        }
+
+        int ret = runWithCatch(args);
+        if (ret != 0) {
+            System.exit(ret);
+        }
+    }
+
+    record NamedTool(String name, Tool tool) {
+    }
+
+    record NamedGenerator(String name, Generator gen) {
+    }
+
+    /**
+     * 注册所有的 Tools 和 Generators
+     * 这个方法需要在启动 GUI 之前调用，以便 GUI 能够获取完整的注册信息
+     */
+    public static void registerAllProviders() {
+        Tools.addProvider("xmltocfg", XmlToCfg::new);
+        if (BuildSettings.isIncludePoi()) {
+            Tools.addProvider("fastexcelcheck", ComparePoiAndFastExcel::new);
+        }
+        Tools.addProvider("readjavadata", JavaData.ReadJavaData::new);
+        Tools.addProvider("term", TodoTermListerAndChecker::new);
+        Tools.addProvider("translate", TodoTranslator::new);
+        Tools.addProvider("usage", Usage::new);
+
+        Generators.addProvider("verify", GenVerifier::new);
+        Generators.addProvider("search", GenValueSearcher::new);
+        Generators.addProvider("i18n", GenI18nByValue::new);
+        Generators.addProvider("i18nbyid", GenI18nById::new);
+
+        Generators.addProvider("java", GenJavaCode::new);
+        Generators.addProvider("javadata", GenJavaData::new);
+        Generators.addProvider("cs", GenCs::new);
+        Generators.addProvider("bytes", GenBytes::new);
+        Generators.addProvider("lua", GenLua::new);
+        Generators.addProvider("ts", GenTs::new);
+        Generators.addProvider("go", GenGo::new);
+        Generators.addProvider("tsschema", GenTsSchema::new);
+        Generators.addProvider("json", GenJson::new);
+
+        Generators.addProvider("server", EditorServer::new);
+        Generators.addProvider("mcpserver", CfgMcpServer::new);
+        Generators.addProvider("byai", GenByAI::new);
+    }
+
+    public static int runWithCatch(String[] args) {
         try {
-            int ret = main0(args); // 假设 main0 是实际的业务入口
-            if (ret != 0) {
-                System.exit(ret);
-            }
+            return run(args);
         } catch (Throwable t) {
             String newLine = System.lineSeparator();
             StringBuilder sb = new StringBuilder();
@@ -167,45 +149,11 @@ public final class Main {
             // 4. 打印最终结果并退出
             // 建议使用 System.err 打印错误，这样方便重定向日志
             System.err.print(sb);
-
-            System.exit(1);
+            return 1;
         }
     }
 
-    record NamedTool(String name, Tool tool) {
-    }
-
-    record NamedGenerator(String name, Generator gen) {
-    }
-
-    public static int main0(String[] args) {
-        Tools.addProvider("xmltocfg", XmlToCfg::new);
-        if (BuildSettings.isIncludePoi()) {
-            Tools.addProvider("fastexcelcheck", ComparePoiAndFastExcel::new);
-        }
-        Tools.addProvider("readjavadata", JavaData.ToolJavaData::new);
-        Tools.addProvider("term", TodoTermListerAndChecker::new);
-        Tools.addProvider("translate", TodoTranslator::new);
-
-        Generators.addProvider("verify", GenVerifier::new);
-        Generators.addProvider("search", GenValueSearcher::new);
-        Generators.addProvider("i18n", GenI18nByValue::new);
-        Generators.addProvider("i18nbyid", GenI18nById::new);
-
-        Generators.addProvider("java", GenJavaCode::new);
-        Generators.addProvider("javadata", GenJavaData::new);
-        Generators.addProvider("cs", GenCs::new);
-        Generators.addProvider("bytes", GenBytes::new);
-        Generators.addProvider("lua", GenLua::new);
-        Generators.addProvider("ts", GenTs::new);
-        Generators.addProvider("go", GenGo::new);
-        Generators.addProvider("tsschema", GenTsSchema::new);
-        Generators.addProvider("json", GenJson::new);
-
-        Generators.addProvider("server", EditorServer::new);
-        Generators.addProvider("mcpserver", CfgMcpServer::new);
-        Generators.addProvider("byai", GenByAI::new);
-
+    private static int run(String[] args) {
         String datadir = null;
         String headRowId = System.getProperty("configgen.headrow");
         String csvDefaultEncoding = "GBK";
