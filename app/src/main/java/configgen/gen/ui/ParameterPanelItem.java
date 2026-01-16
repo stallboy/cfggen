@@ -1,9 +1,8 @@
-package configgen.gen.ui.panel;
+package configgen.gen.ui;
 
 import configgen.gen.Generators;
 import configgen.gen.ParameterInfoCollector;
 import configgen.gen.Tools;
-import configgen.gen.ui.UIConstants;
 import configgen.util.LocaleUtil;
 
 import javax.swing.*;

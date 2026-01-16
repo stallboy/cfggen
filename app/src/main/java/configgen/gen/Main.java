@@ -2,6 +2,7 @@ package configgen.gen;
 
 import configgen.ctx.*;
 import configgen.editorserver.EditorServer;
+import configgen.gen.ui.GuiLauncher;
 import configgen.gencs.GenBytes;
 import configgen.gencs.GenCs;
 import configgen.gents.GenTs;

@@ -1,9 +1,6 @@
-package configgen.gen;
+package configgen.gen.ui;
 
-import configgen.gen.ui.UIConstants;
-import configgen.gen.ui.command.CommandLineBuilder;
-import configgen.gen.ui.panel.ParameterPanelItem;
-import configgen.gen.ui.panel.ProviderPanelFactory;
+import configgen.gen.Main;
 import configgen.util.Logger;
 import configgen.util.LocaleUtil;
 
@@ -15,38 +12,36 @@ import java.awt.event.ActionEvent;
 import java.io.PrintStream;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class GuiLauncher {
     private JFrame mainFrame;
     private JTextArea outputArea;
     private JTextArea commandPreview;
 
-    private JTextField datadirField;
-    private JTextField encodingField;
-    private JTextField headRowField;
-    private JCheckBox usePoiCheckBox;
-    private JTextField asRootField;
-    private JTextField excelDirsField;
-    private JTextField jsonDirsField;
-    private JTextField i18nfileField;
-    private JTextField langSwitchDirField;
-    private JTextField defaultLangField;
-    private JRadioButton i18nFileRadio;
-    private JRadioButton langSwitchRadio;
-    private JCheckBox verboseCheckBox;
-    private JCheckBox verbose2CheckBox;
-    private JCheckBox profileCheckBox;
-    private JCheckBox profileGcCheckBox;
-    private JCheckBox noWarnCheckBox;
-    private JCheckBox weakWarnCheckBox;
+    // 包级私有成员变量，供CommandLineBuilder直接访问
+    JTextField datadirField;
+    JTextField encodingField;
+    JTextField headRowField;
+    JCheckBox usePoiCheckBox;
+    JTextField asRootField;
+    JTextField excelDirsField;
+    JTextField jsonDirsField;
+    JTextField i18nfileField;
+    JTextField langSwitchDirField;
+    JTextField defaultLangField;
+    JRadioButton i18nFileRadio;
+    JRadioButton langSwitchRadio;
+    JCheckBox verboseCheckBox;
+    JCheckBox verbose2CheckBox;
+    JCheckBox profileCheckBox;
+    JCheckBox profileGcCheckBox;
+    JCheckBox noWarnCheckBox;
+    JCheckBox weakWarnCheckBox;
 
-    private final List<ParameterPanelItem> toolPanels = new ArrayList<>();
-    private final List<ParameterPanelItem> generatorPanels = new ArrayList<>();
+    final List<ParameterPanelItem> toolPanels = new ArrayList<>();
+    final List<ParameterPanelItem> generatorPanels = new ArrayList<>();
     private final CommandLineBuilder commandBuilder = new CommandLineBuilder(this);
-
-    // 面板引用，用于添加参数面板
-    private JPanel toolsPanel;
-    private JPanel generatorsPanel;
 
     private JButton runButton;
 
@@ -336,19 +331,25 @@ public class GuiLauncher {
     }
 
     private JPanel createToolsPanel() {
-        JPanel panel = ProviderPanelFactory.createToolsPanel(toolPanels,
-                (panels, name) -> addParameterPanel(panels, toolsPanel, "tool", name));
-        // 提取toolsPanel引用，用于后续操作
-        toolsPanel = (JPanel) ((JPanel) panel.getComponent(0)).getComponent(0);
-        return panel;
+        // 使用AtomicReference保存容器引用，以便lambda可以访问
+        final AtomicReference<JPanel> containerRef = new AtomicReference<>();
+        ProviderPanelFactory.ProviderPanelResult result = ProviderPanelFactory.createToolsPanel(
+                toolPanels,
+                (panels, name) -> addParameterPanel(panels, containerRef.get(), "tool", name)
+        );
+        containerRef.set(result.getContainerPanel());
+        return result.getMainPanel();
     }
 
     private JPanel createGeneratorsPanel() {
-        JPanel panel = ProviderPanelFactory.createGeneratorsPanel(generatorPanels,
-                (panels, name) -> addParameterPanel(panels, generatorsPanel, "gen", name));
-        // 提取generatorsPanel引用，用于后续操作
-        generatorsPanel = (JPanel) ((JPanel) panel.getComponent(0)).getComponent(0);
-        return panel;
+        // 使用AtomicReference保存容器引用，以便lambda可以访问
+        final AtomicReference<JPanel> containerRef = new AtomicReference<>();
+        ProviderPanelFactory.ProviderPanelResult result = ProviderPanelFactory.createGeneratorsPanel(
+                generatorPanels,
+                (panels, name) -> addParameterPanel(panels, containerRef.get(), "gen", name)
+        );
+        containerRef.set(result.getContainerPanel());
+        return result.getMainPanel();
     }
 
     private JPanel createCommandPreviewPanel() {
@@ -546,88 +547,6 @@ public class GuiLauncher {
                 textArea.setCaretPosition(textArea.getDocument().getLength());
             });
         }
-    }
-
-    // Getter方法供CommandLineBuilder和I18nConfig使用
-    public JTextField getDatadirField() {
-        return datadirField;
-    }
-
-    public JTextField getEncodingField() {
-        return encodingField;
-    }
-
-    public JTextField getHeadRowField() {
-        return headRowField;
-    }
-
-    public JCheckBox getUsePoiCheckBox() {
-        return usePoiCheckBox;
-    }
-
-    public JTextField getAsRootField() {
-        return asRootField;
-    }
-
-    public JTextField getExcelDirsField() {
-        return excelDirsField;
-    }
-
-    public JTextField getJsonDirsField() {
-        return jsonDirsField;
-    }
-
-    public JCheckBox getVerboseCheckBox() {
-        return verboseCheckBox;
-    }
-
-    public JCheckBox getVerbose2CheckBox() {
-        return verbose2CheckBox;
-    }
-
-    public JCheckBox getProfileCheckBox() {
-        return profileCheckBox;
-    }
-
-    public JCheckBox getProfileGcCheckBox() {
-        return profileGcCheckBox;
-    }
-
-    public JCheckBox getNoWarnCheckBox() {
-        return noWarnCheckBox;
-    }
-
-    public JCheckBox getWeakWarnCheckBox() {
-        return weakWarnCheckBox;
-    }
-
-    public List<ParameterPanelItem> getToolPanels() {
-        return toolPanels;
-    }
-
-    public List<ParameterPanelItem> getGeneratorPanels() {
-        return generatorPanels;
-    }
-
-    // I18n相关的getter方法供CommandLineBuilder使用
-    public JRadioButton getI18nFileRadio() {
-        return i18nFileRadio;
-    }
-
-    public JRadioButton getLangSwitchRadio() {
-        return langSwitchRadio;
-    }
-
-    public JTextField getI18nfileField() {
-        return i18nfileField;
-    }
-
-    public JTextField getLangSwitchDirField() {
-        return langSwitchDirField;
-    }
-
-    public JTextField getDefaultLangField() {
-        return defaultLangField;
     }
 
     private record SimpleDocumentListener(Runnable callback) implements DocumentListener {
