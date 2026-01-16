@@ -5,7 +5,9 @@ import {
     EntityEditFieldOptions, EntityPosition,
     EntitySourceEdge,
     EntityType,
-    PrimitiveType
+    PrimitiveType,
+    PrimitiveEditField,
+    StructRefEditField
 } from "../../flow/entityModel.ts";
 import {SField, SInterface, SItem, SStruct, STable} from "../table/schemaModel.ts";
 import {JSONArray, JSONObject, JSONValue, RefId} from "./recordModel.ts";
@@ -18,74 +20,12 @@ import {
     onUpdateFormValues,
     onUpdateInterfaceValue, onUpdateNote
 } from "./editingObject.ts";
-
-
-const setOfPrimitive = new Set<string>(['bool', 'int', 'long', 'float', 'str', 'text']);
-
-function isPrimitiveType(type: string): boolean {
-    return setOfPrimitive.has(type);
-}
-
-/**
- * 过滤掉空list字段
- * @param fields 字段定义数组
- * @param obj 实际数据对象
- * @returns 过滤后的字段数组
- */
-function filterEmptyListFields(fields: SField[], obj: JSONObject): SField[] {
-    return fields.filter(field => {
-        // 检查是否为list类型
-        if (!field.type.startsWith('list<')) {
-            return true; // 非list类型，保留
-        }
-
-        // list类型，检查实际值是否为空数组
-        const fieldValue = obj[field.name];
-        if (!Array.isArray(fieldValue)) {
-            return true; // 不是数组，保留
-        }
-
-        // 是空数组，过滤掉
-        if (fieldValue.length === 0) {
-            return false;
-        }
-
-        // 非空数组，保留
-        return true;
-    });
-}
-
-// 检查是否为number类型
-function isNumberType(type: string): boolean {
-    return ['int', 'long', 'float'].includes(type);
-}
-
-// 统计字段类型分布
-function analyzeFieldTypes(fields: SField[]): {
-    boolCount: number;
-    numberCount: number;
-    primitiveCount: number;
-    allPrimitive: boolean;
-} {
-    let boolCount = 0;
-    let numberCount = 0;
-    let primitiveCount = 0;
-
-    for (const field of fields) {
-        if (isPrimitiveType(field.type)) {
-            primitiveCount++;
-            if (field.type === 'bool') boolCount++;
-            if (isNumberType(field.type)) numberCount++;
-        }
-    }
-
-    return {
-        boolCount,
-        numberCount,
-        primitiveCount,
-        allPrimitive: primitiveCount === fields.length,
-    };
-}
+// 导入新的embedding模块
+import { canBeEmbeddedCheck } from "./embedding/embeddingChecker";
+import { EmbeddingFieldExtractor } from "./embedding/embeddingFieldExtractor";
+import { isPrimitiveType } from "./embedding/embeddingConfig";
+// 导入Fold状态管理助手
+import { FoldStateHelper } from "../../flow/embedded/FoldStateHelper";
 
 
 interface ArrayItemParam {
@@ -436,211 +376,291 @@ export class RecordEditEntityCreator {
                              obj: JSONObject,
                              fieldChain: (string | number)[]) {
         for (const sf of structural.fields) {
-            const fieldValue = obj[sf.name];
-            if (isPrimitiveType(sf.type)) {
-                let v;
-                if (fieldValue) {
-                    v = fieldValue as (boolean | number | string);
-                } else if (sf.type == 'bool') {
-                    v = false;
-                } else if (sf.type == 'str' || sf.type == 'text') {
-                    v = '';
-                } else {
-                    v = 0;
+            const editField = this.createEditField(sf, obj, fieldChain, structural);
+            if (editField) {
+                fields.push(editField);
+            }
+        }
+    }
+
+    /**
+     * 创建单个字段的编辑字段
+     */
+    private createEditField(
+        sField: SField,
+        obj: JSONObject,
+        fieldChain: (string | number)[],
+        structural: SStruct | STable
+    ): EntityEditField | null {
+        const fieldValue = obj[sField.name];
+
+        if (isPrimitiveType(sField.type)) {
+            return this.createPrimitiveEditField(sField, fieldValue, structural);
+        }
+
+        const itemTypeId = getItemTypeId(sField.type, structural, sField.name);
+        if (itemTypeId != undefined) {
+            // list or map
+            return this.createListOrMapEditField(sField, fieldValue, itemTypeId, fieldChain, structural);
+        } else {
+            // struct or interface
+            return this.createStructuralRefEditField(sField, fieldValue, fieldChain);
+        }
+    }
+
+    /**
+     * 创建原始类型编辑字段
+     */
+    private createPrimitiveEditField(
+        sField: SField,
+        fieldValue: unknown,
+        structural: SStruct | STable
+    ): PrimitiveEditField {
+        const value = this.getPrimitiveValue(fieldValue, sField.type);
+
+        return {
+            name: sField.name,
+            comment: sField.comment,
+            type: 'primitive',
+            eleType: sField.type as PrimitiveType,
+            value,
+            autoCompleteOptions: this.getAutoCompleteOptions(structural, sField.name),
+        };
+    }
+
+    /**
+     * 获取原始类型的值（带默认值处理）
+     */
+    private getPrimitiveValue(fieldValue: unknown, fieldType: string): PrimitiveValue {
+        if (fieldValue) {
+            return fieldValue as PrimitiveValue;
+        }
+        switch (fieldType) {
+            case 'bool': return false;
+            case 'str':
+            case 'text': return '';
+            default: return 0;
+        }
+    }
+
+    /**
+     * 创建list或map类型编辑字段
+     */
+    private createListOrMapEditField(
+        sField: SField,
+        fieldValue: unknown,
+        itemTypeId: string,
+        fieldChain: (string | number)[],
+        structural: SStruct | STable
+    ): EntityEditField {
+        if (isPrimitiveType(itemTypeId)) {
+            // list<primitive> or map<primitive>
+            const v: PrimitiveValue[] = fieldValue ? fieldValue as PrimitiveValue[] : [];
+            return {
+                name: sField.name,
+                comment: sField.comment,
+                type: 'arrayOfPrimitive',
+                eleType: itemTypeId as PrimitiveType,
+                value: v,
+                autoCompleteOptions: this.getAutoCompleteOptions(structural, sField.name),
+            };
+        } else {
+            // list<struct> 或 list<interface>
+            const v = fieldValue as JSONArray;
+
+            // 尝试内嵌单元素list
+            const embeddedField = this.tryCreateEmbeddedFieldForList(
+                sField, v, itemTypeId, fieldChain
+            );
+            if (embeddedField) {
+                return embeddedField;
+            }
+
+            // 非单元素list或不可内嵌，按现有逻辑处理（显示添加按钮）
+            return {
+                name: sField.name,
+                comment: sField.comment,
+                type: 'funcAdd',
+                eleType: itemTypeId,
+                value: (position: EntityPosition) => {
+                    const sFieldable = this.schema.itemIncludeImplMap.get(itemTypeId) as SStruct | SInterface;
+                    const defaultValue = this.schema.defaultValue(sFieldable);
+                    onAddItemToArray(defaultValue, [...fieldChain, sField.name], position);
                 }
+            };
+        }
+    }
 
-                fields.push({
-                    name: sf.name,
-                    comment: sf.comment,
-                    type: 'primitive',
-                    eleType: sf.type as PrimitiveType,
-                    value: v,
-                    autoCompleteOptions: this.getAutoCompleteOptions(structural, sf.name),
-                });
-            } else {
-                const itemTypeId = getItemTypeId(sf.type, structural, sf.name);
-                if (itemTypeId != undefined) { // list or map
-                    if (isPrimitiveType(itemTypeId)) {
-                        const v: PrimitiveValue[] = fieldValue ? fieldValue as PrimitiveValue[] : [];
-                        fields.push({
-                            name: sf.name,
-                            comment: sf.comment,
-                            type: 'arrayOfPrimitive',
-                            eleType: itemTypeId as PrimitiveType,
-                            value: v,
-                            autoCompleteOptions: this.getAutoCompleteOptions(structural, sf.name),
-                        });
-                    } else {
-                        // list<struct> 或 list<interface>
-                        const v = fieldValue as JSONArray;
+    /**
+     * 尝试为list创建内嵌字段
+     */
+    private tryCreateEmbeddedFieldForList(
+        sField: SField,
+        v: JSONArray,
+        itemTypeId: string,
+        fieldChain: (string | number)[]
+    ): StructRefEditField | null {
+        if (!v || v.length !== 1) {
+            return null;
+        }
 
-                        // 检查是否为单元素list
-                        if (v && v.length === 1) {
-                            const itemObj = v[0] as JSONObject;
-                            const itemType = this.schema.itemIncludeImplMap.get(itemTypeId);
+        const itemObj = v[0] as JSONObject;
+        const itemType = this.schema.itemIncludeImplMap.get(itemTypeId);
+        if (!itemType) {
+            return null;
+        }
 
-                            if (itemType) {
-                                // 构造临时SField用于内嵌检查（类型去掉list包装）
-                                const tempSField: SField = {
-                                    ...sf,
-                                    type: itemTypeId, // 去掉list<...>包装
-                                };
+        // 构造临时SField用于内嵌检查（类型去掉list包装）
+        const tempSField: SField = {
+            ...sField,
+            type: itemTypeId, // 去掉list<...>包装
+        };
 
-                                // 判断元素是否可以内嵌
-                                if (canBeEmbeddedCheck(itemObj, tempSField, this.schema)) {
-                                    // 读取元素的fold状态
-                                    let isFolded = this.folds.isFold([...fieldChain, sf.name, 0]);
-                                    if (isFolded === undefined) {
-                                        // 本地状态没有设置时，读取元素的$fold字段
-                                        isFolded = itemObj['$fold'] as boolean | undefined;
-                                    }
+        // 判断元素是否可以内嵌
+        if (!canBeEmbeddedCheck(itemObj, tempSField, this.schema)) {
+            return null;
+        }
 
-                                    if (isFolded !== false) {
-                                        // 内嵌模式
-                                        let embeddedFields: ReturnType<typeof getEmbeddedFieldValues> | null = null;
-                                        let implNameToDisplay: string | undefined = undefined;
+        // 读取元素的fold状态
+        const isFolded = this.getFoldState([...fieldChain, sField.name, 0], itemObj);
+        if (isFolded === false) {
+            return null; // 展开状态，不内嵌
+        }
 
-                                        if (itemType.type === 'struct') {
-                                            const struct = itemType as SStruct;
-                                            embeddedFields = getEmbeddedFieldValues(struct, itemObj);
-                                        } else if (itemType.type === 'interface') {
-                                            const iface = itemType as SInterface;
-                                            const type = itemObj['$type'] as string;
-                                            const implName = getLastName(type);
-                                            const impl = getImpl(iface, implName);
+        // 提取内嵌字段数据
+        const embeddedData = this.extractEmbeddedFieldData(itemType, itemObj, [...fieldChain, sField.name, 0]);
+        if (!embeddedData) {
+            return null;
+        }
 
-                                            if (impl) {
-                                                embeddedFields = getEmbeddedFieldValues(impl, itemObj);
+        return {
+            name: sField.name,
+            comment: sField.comment,
+            type: 'structRef',
+            eleType: sField.type,
+            value: '<>',
+            handleOut: true,
+            embeddedField: embeddedData,
+        };
+    }
 
-                                                // 记录implName（非defaultImpl时需要显示）
-                                                if (implName !== iface.defaultImpl) {
-                                                    implNameToDisplay = implName;
-                                                }
-                                            }
-                                        }
+    /**
+     * 创建struct或interface引用编辑字段
+     */
+    private createStructuralRefEditField(
+        sField: SField,
+        fieldValue: unknown,
+        fieldChain: (string | number)[]
+    ): StructRefEditField {
+        const fieldType = this.schema.itemIncludeImplMap.get(sField.type);
+        if (!fieldType) {
+            return {
+                name: sField.name,
+                comment: sField.comment,
+                type: 'structRef',
+                eleType: sField.type,
+                value: '[]',
+            };
+        }
 
-                                        if (embeddedFields) {
-                                            // 从元素获取note
-                                            const note = itemObj['$note'] as string | undefined;
+        const fieldObj = fieldValue as JSONObject;
 
-                                            fields.push({
-                                                name: sf.name,
-                                                comment: sf.comment,
-                                                type: 'structRef',
-                                                eleType: sf.type,
-                                                value: '<>',
-                                                handleOut: true,
-                                                embeddedField: {
-                                                    fields: embeddedFields,
-                                                    note: note,
-                                                    implName: implNameToDisplay,
-                                                    embeddedFieldChain: [...fieldChain, sf.name, 0],  // 包含索引0
-                                                },
-                                            });
-                                            continue;  // 跳过后续的funcAdd逻辑
-                                        }
-                                    }
-                                }
-                            }
-                        }
+        // 尝试内嵌
+        const embeddedField = this.tryCreateEmbeddedFieldForStruct(sField, fieldObj, fieldType, fieldChain);
+        if (embeddedField) {
+            return embeddedField;
+        }
 
-                        // 非单元素list或不可内嵌，按现有逻辑处理（显示添加按钮）
-                        fields.push({
-                            name: sf.name,
-                            comment: sf.comment,
-                            type: 'funcAdd',
-                            eleType: itemTypeId,
-                            value: (position: EntityPosition) => {
-                                const sFieldable = this.schema.itemIncludeImplMap.get(itemTypeId) as SStruct | SInterface;
-                                const defaultValue = this.schema.defaultValue(sFieldable);
-                                onAddItemToArray(defaultValue, [...fieldChain, sf.name], position);
-                            }
-                        });
-                    }
-                } else { // struct or interface
-                    const fieldType = this.schema.itemIncludeImplMap.get(sf.type);
-                    if (!fieldType) {
-                        fields.push({
-                            name: sf.name,
-                            comment: sf.comment,
-                            type: 'structRef',
-                            eleType: sf.type,
-                            value: '[]',
-                        });
-                        continue;
-                    }
+        // 正常模式: 创建独立子节点
+        return {
+            name: sField.name,
+            comment: sField.comment,
+            type: 'structRef',
+            eleType: sField.type,
+            value: '[]',
+        };
+    }
 
-                    const fieldObj = fieldValue as JSONObject;
+    /**
+     * 尝试为struct/interface创建内嵌字段
+     */
+    private tryCreateEmbeddedFieldForStruct(
+        sField: SField,
+        fieldObj: JSONObject,
+        fieldType: SStruct | SInterface,
+        fieldChain: (string | number)[]
+    ): StructRefEditField | null {
+        // 判断是否可以内嵌
+        if (!canBeEmbeddedCheck(fieldObj, sField, this.schema)) {
+            return null;
+        }
 
-                    // 判断是否可以内嵌
-                    if (canBeEmbeddedCheck(fieldObj, sf, this.schema)) {
-                        let isFolded = this.folds.isFold([...fieldChain, sf.name]);
-                        if (isFolded === undefined) {
-                            // 本地状态没有设置时，读取对象的$fold字段
-                            isFolded = fieldObj['$fold'] as boolean | undefined;
-                        }
+        const isFolded = this.getFoldState([...fieldChain, sField.name], fieldObj);
+        if (isFolded === false) {
+            return null; // 展开状态，不内嵌
+        }
 
-                        if (isFolded !== false) {
-                            // fold=true 或 undefined，内嵌模式
-                            let embeddedFields: ReturnType<typeof getEmbeddedFieldValues> | null = null;
-                            let implNameToDisplay: string | undefined = undefined;
+        // 提取内嵌字段数据
+        const embeddedData = this.extractEmbeddedFieldData(fieldType, fieldObj, [...fieldChain, sField.name]);
+        if (!embeddedData) {
+            return null;
+        }
 
-                            if (fieldType.type === 'struct') {
-                                const struct = fieldType as SStruct;
-                                embeddedFields = getEmbeddedFieldValues(struct, fieldObj);
-                            } else if (fieldType.type === 'interface') {
-                                const iface = fieldType as SInterface;
-                                const type = fieldObj['$type'] as string;
-                                const implName = getLastName(type);
-                                const impl = getImpl(iface, implName);
+        return {
+            name: sField.name,
+            comment: sField.comment,
+            type: 'structRef',
+            eleType: sField.type,
+            value: '<>',
+            handleOut: true,
+            embeddedField: embeddedData,
+        };
+    }
 
-                                if (impl) {
-                                    embeddedFields = getEmbeddedFieldValues(impl, fieldObj);
+    /**
+     * 提取内嵌字段数据
+     */
+    private extractEmbeddedFieldData(
+        fieldType: SStruct | SInterface,
+        obj: JSONObject,
+        embeddedFieldChain: (string | number)[]
+    ): { fields: Array<{value: PrimitiveValue; type: PrimitiveType; name: string; comment?: string}>; note?: string; implName?: string; embeddedFieldChain: (string | number)[] } | null {
+        let embeddedFields: ReturnType<typeof getEmbeddedFieldValues> | null = null;
+        let implNameToDisplay: string | undefined = undefined;
 
-                                    // 记录implName（非defaultImpl时需要显示）
-                                    if (implName !== iface.defaultImpl) {
-                                        implNameToDisplay = implName;
-                                    }
-                                }
-                            }
-
-                            if (embeddedFields) {
-                                // 直接从 obj 获取 note
-                                const note = fieldObj['$note'] as string | undefined;
-
-                                fields.push({
-                                    name: sf.name,
-                                    comment: sf.comment,
-                                    type: 'structRef',
-                                    eleType: sf.type,
-                                    value: '<>',
-                                    handleOut: true,
-                                    embeddedField: {
-                                        fields: embeddedFields,
-                                        note: note,
-                                        implName: implNameToDisplay,
-                                        embeddedFieldChain: [...fieldChain, sf.name],
-                                    },
-                                });
-                                continue;
-                            }
-                        }
-                        // 如果 isFolded=false，则走正常流程创建独立子节点
-                    }
-
-                    // 正常模式: 创建独立子节点
-                    fields.push({
-                        name: sf.name,
-                        comment: sf.comment,
-                        type: 'structRef',
-                        eleType: sf.type,
-                        value: '[]',
-                    });
-                }
-
+        if (fieldType.type === 'struct') {
+            const struct = fieldType as SStruct;
+            embeddedFields = getEmbeddedFieldValues(struct, obj);
+        } else if (fieldType.type === 'interface') {
+            const iface = fieldType as SInterface;
+            const result = EmbeddingFieldExtractor.extractFromInterface(iface, obj);
+            if (result) {
+                embeddedFields = result.fields;
+                implNameToDisplay = result.implName;
             }
         }
 
+        if (!embeddedFields) {
+            return null;
+        }
+
+        // 获取note
+        const note = obj['$note'] as string | undefined;
+
+        return {
+            fields: embeddedFields,
+            note: note,
+            implName: implNameToDisplay,
+            embeddedFieldChain: embeddedFieldChain,
+        };
+    }
+
+    /**
+     * 获取fold状态（优先本地状态，其次对象字段）
+     * 使用FoldStateHelper统一管理
+     */
+    private getFoldState(fieldChain: (string | number)[], obj?: JSONObject): boolean | undefined {
+        return FoldStateHelper.getFoldState(this.folds, fieldChain, obj);
     }
 
     getAutoCompleteOptions(structural: SStruct | STable,
@@ -747,201 +767,12 @@ function isChainEqual(a: (string | number)[], b: (string | number)[]) {
 }
 
 /**
- * 判断字段是否可以内嵌显示
- * 条件1a: struct没有字段
- * 条件1b: struct只有1个primitive字段
- * 条件1c: struct只有≤3个number字段
- * 条件1d: struct只有≤4个bool字段
- * 条件1e: struct只有1个bool和1个number字段
- * 条件2a: impl没有字段
- * 条件2b: impl只有1个primitive字段
- * 条件2c: impl只有≤2个number字段
- * 条件2d: impl只有≤3个bool字段
- * 条件2e: impl只有1个bool和1个number字段
- */
-function canBeEmbeddedCheck(fieldValue: JSONObject, sField: SField, schema: Schema): boolean {
-    const fieldType = schema.itemIncludeImplMap.get(sField.type);
-    if (!fieldType) return false;
-
-    if (fieldType.type === 'struct') {
-        const struct = fieldType as SStruct;
-        // 先过滤空list字段
-        const filteredFields = filterEmptyListFields(struct.fields, fieldValue);
-        const analysis = analyzeFieldTypes(filteredFields);
-
-        // 条件1a: struct没有字段（过滤后）
-        if (filteredFields.length === 0) {
-            return true;
-        }
-
-        // 条件1b: struct只有1个primitive字段
-        if (filteredFields.length === 1 && analysis.allPrimitive) {
-            return true;
-        }
-
-        // 条件1c: struct只有≤3个number字段
-        if (filteredFields.length <= 3 &&
-            filteredFields.length === analysis.numberCount &&
-            analysis.allPrimitive) {
-            return true;
-        }
-
-        // 条件1d: struct只有≤4个bool字段
-        if (filteredFields.length <= 4 &&
-            filteredFields.length === analysis.boolCount &&
-            analysis.allPrimitive) {
-            return true;
-        }
-
-        // 条件1e: struct只有1个bool和1个number字段
-        if (filteredFields.length === 2 &&
-            analysis.boolCount === 1 &&
-            analysis.numberCount === 1 &&
-            analysis.allPrimitive) {
-            return true;
-        }
-
-        return false;
-    }
-
-    if (fieldType.type === 'interface') {
-        const iface = fieldType as SInterface;
-        const type = fieldValue['$type'] as string;
-        const implName = getLastName(type);
-        const impl = getImpl(iface, implName);
-        if (!impl) return false;
-
-        // 先过滤空list字段
-        const filteredFields = filterEmptyListFields(impl.fields, fieldValue);
-        const analysis = analyzeFieldTypes(filteredFields);
-
-        // 条件2a: impl没有字段（过滤后）
-        if (filteredFields.length === 0) {
-            return true;
-        }
-
-        // 条件2b: impl只有1个primitive字段
-        if (filteredFields.length === 1 && analysis.allPrimitive) {
-            return true;
-        }
-
-        // 条件2c: impl只有≤2个number字段
-        if (filteredFields.length <= 2 &&
-            filteredFields.length === analysis.numberCount &&
-            analysis.allPrimitive) {
-            return true;
-        }
-
-        // 条件2d: impl只有≤3个bool字段
-        if (filteredFields.length <= 3 &&
-            filteredFields.length === analysis.boolCount &&
-            analysis.allPrimitive) {
-            return true;
-        }
-
-        // 条件2e: impl只有1个bool和1个number字段
-        if (filteredFields.length === 2 &&
-            analysis.boolCount === 1 &&
-            analysis.numberCount === 1 &&
-            analysis.allPrimitive) {
-            return true;
-        }
-
-        return false;
-    }
-
-    return false;
-}
-
-/**
- * 从struct中提取内嵌字段的值
- * @returns 返回内嵌字段的值数组，不可内嵌时返回null
+ * 从struct或interface中提取内嵌字段的值
+ * 使用新的embedding模块统一处理
  */
 function getEmbeddedFieldValues(
     struct: SStruct,
     obj: JSONObject
 ): Array<{value: PrimitiveValue; type: PrimitiveType; name: string; comment?: string}> | null {
-    // 先过滤空list字段
-    const filteredFields = filterEmptyListFields(struct.fields, obj);
-
-    if (filteredFields.length === 0) {
-        // 条件1a/2a: 过滤后没有字段，返回空数组
-        return [];
-    }
-
-    const analysis = analyzeFieldTypes(filteredFields);
-
-    // 单字段情况（条件1b, 2b）
-    if (filteredFields.length === 1 && analysis.allPrimitive) {
-        const onlyField = filteredFields[0];
-        const fieldValue = obj[onlyField.name];
-
-        let v: PrimitiveValue;
-        if (fieldValue !== undefined && fieldValue !== null) {
-            v = fieldValue as PrimitiveValue;
-        } else if (onlyField.type === 'bool') {
-            v = false;
-        } else if (onlyField.type === 'str' || onlyField.type === 'text') {
-            v = '';
-        } else {
-            v = 0;
-        }
-
-        return [{
-            value: v,
-            type: onlyField.type as PrimitiveType,
-            name: onlyField.name,
-            comment: onlyField.comment,
-        }];
-    }
-
-    // 多字段情况（条件1c, 1d, 1e, 2c, 2d, 2e）
-    if (analysis.allPrimitive) {
-        // struct的条件：≤3个number, ≤4个bool, 1个bool+1个number
-        const isStructNumberFields = filteredFields.length === analysis.numberCount && filteredFields.length <= 3;
-        const isStructBoolFields = filteredFields.length === analysis.boolCount && filteredFields.length <= 4;
-        const isStructBoolAndNumber = filteredFields.length === 2 &&
-                                      analysis.boolCount === 1 &&
-                                      analysis.numberCount === 1;
-
-        // interface的条件：≤2个number, ≤3个bool, 1个bool+1个number
-        const isInterfaceNumberFields = filteredFields.length === analysis.numberCount && filteredFields.length <= 2;
-        const isInterfaceBoolFields = filteredFields.length === analysis.boolCount && filteredFields.length <= 3;
-        const isInterfaceBoolAndNumber = filteredFields.length === 2 &&
-                                         analysis.boolCount === 1 &&
-                                         analysis.numberCount === 1;
-
-        // 满足任一条件即可内嵌
-        if (isStructNumberFields || isStructBoolFields || isStructBoolAndNumber ||
-            isInterfaceNumberFields || isInterfaceBoolFields || isInterfaceBoolAndNumber) {
-
-            const fields: Array<{value: PrimitiveValue; type: PrimitiveType; name: string; comment?: string}> = [];
-
-            for (const field of filteredFields) {
-                const fieldValue = obj[field.name];
-
-                let v: PrimitiveValue;
-                if (fieldValue !== undefined && fieldValue !== null) {
-                    v = fieldValue as PrimitiveValue;
-                } else if (field.type === 'bool') {
-                    v = false;
-                } else if (field.type === 'str' || field.type === 'text') {
-                    v = '';
-                } else {
-                    v = 0;
-                }
-
-                fields.push({
-                    value: v,
-                    type: field.type as PrimitiveType,
-                    name: field.name,
-                    comment: field.comment,
-                });
-            }
-
-            return fields;
-        }
-    }
-
-    return null;
+    return EmbeddingFieldExtractor.extractFromStruct(struct, obj);
 }
