@@ -1,5 +1,10 @@
 package configgen.gen;
 
+import configgen.gen.ui.UIConstants;
+import configgen.gen.ui.command.CommandLineBuilder;
+import configgen.gen.ui.command.I18nConfig;
+import configgen.gen.ui.panel.ParameterPanelItem;
+import configgen.gen.ui.panel.ProviderPanelFactory;
 import configgen.util.Logger;
 import configgen.util.LocaleUtil;
 
@@ -36,11 +41,10 @@ public class GuiLauncher {
     private JCheckBox noWarnCheckBox;
     private JCheckBox weakWarnCheckBox;
 
-    private final List<ParameterPanel> toolPanels = new ArrayList<>();
-    private final List<ParameterPanel> generatorPanels = new ArrayList<>();
+    private final List<ParameterPanelItem> toolPanels = new ArrayList<>();
+    private final List<ParameterPanelItem> generatorPanels = new ArrayList<>();
+    private final CommandLineBuilder commandBuilder = new CommandLineBuilder(this);
 
-    private JPanel toolsPanel;
-    private JPanel generatorsPanel;
     private JButton runButton;
 
     private final PrintStream originalOut = System.out;
@@ -63,12 +67,12 @@ public class GuiLauncher {
 
         mainFrame = new JFrame(title);
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        mainFrame.setSize(1400, 800);
+        mainFrame.setSize(UIConstants.WINDOW_WIDTH, UIConstants.WINDOW_HEIGHT);
         mainFrame.setLocationRelativeTo(null);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        splitPane.setDividerLocation(900);
-        splitPane.setResizeWeight(0.6);
+        splitPane.setDividerLocation(UIConstants.SPLIT_PANE_DIVIDER_LOCATION);
+        splitPane.setResizeWeight(UIConstants.SPLIT_PANE_RESIZE_WEIGHT);
 
         JPanel leftPanel = new JPanel();
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
@@ -82,9 +86,9 @@ public class GuiLauncher {
         mainFrame.add(splitPane, BorderLayout.CENTER);
 
         leftPanel.add(createToolsPanel());
-        leftPanel.add(Box.createVerticalStrut(10));
+        leftPanel.add(Box.createVerticalStrut(UIConstants.VERTICAL_STRUT_LARGE));
         leftPanel.add(createBasicParametersPanel());
-        leftPanel.add(Box.createVerticalStrut(10));
+        leftPanel.add(Box.createVerticalStrut(UIConstants.VERTICAL_STRUT_LARGE));
         leftPanel.add(createGeneratorsPanel());
 
         mainFrame.setVisible(true);
@@ -92,14 +96,14 @@ public class GuiLauncher {
 
     private JPanel createRightPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setPreferredSize(new Dimension(450, 0));
+        panel.setPreferredSize(new Dimension(UIConstants.RIGHT_PANEL_PREFERRED_WIDTH, 0));
 
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
         topPanel.add(createCommandPreviewPanel());
-        topPanel.add(Box.createVerticalStrut(10));
+        topPanel.add(Box.createVerticalStrut(UIConstants.VERTICAL_STRUT_LARGE));
         topPanel.add(createRunButtonPanel());
-        topPanel.add(Box.createVerticalStrut(10));
+        topPanel.add(Box.createVerticalStrut(UIConstants.VERTICAL_STRUT_LARGE));
 
         panel.add(topPanel, BorderLayout.NORTH);
         panel.add(createOutputPanel(), BorderLayout.CENTER);
@@ -110,7 +114,7 @@ public class GuiLauncher {
     private JPanel createAdvancedDirPanel() {
         JPanel content = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = UIConstants.PANEL_INSETS;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
@@ -163,7 +167,7 @@ public class GuiLauncher {
     private JPanel createI18nPanel() {
         JPanel content = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = UIConstants.PANEL_INSETS;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
@@ -218,7 +222,7 @@ public class GuiLauncher {
 
         gbc.gridx = 3;
         gbc.weightx = 0.5;
-        defaultLangField = new JTextField("zh_cn");
+        defaultLangField = new JTextField(UIConstants.DEFAULT_LANG);
         defaultLangField.getDocument().addDocumentListener(new SimpleDocumentListener(this::updateCommandPreview));
         defaultLangField.setEnabled(false);
         content.add(defaultLangField, gbc);
@@ -259,31 +263,31 @@ public class GuiLauncher {
         JPanel datadirPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         datadirPanel.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.DataDir", "Data Dir:*")));
         datadirField = createTextField();
-        datadirField.setPreferredSize(new Dimension(300, 25));
+        datadirField.setPreferredSize(UIConstants.TEXT_FIELD_DATADIR_SIZE);
         datadirPanel.add(datadirField);
         JButton browseButton = new JButton(LocaleUtil.getLocaleString("GuiLauncher.Browse", "Browse..."));
         browseButton.addActionListener(this::browseDataDir);
         datadirPanel.add(browseButton);
         panel.add(datadirPanel);
-        panel.add(Box.createVerticalStrut(3));
+        panel.add(Box.createVerticalStrut(UIConstants.VERTICAL_STRUT_SMALL));
 
         JPanel encodingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         encodingPanel.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.Encoding", "Encoding:")));
-        encodingField = new JTextField("GBK");
-        encodingField.setPreferredSize(new Dimension(150, 25));
+        encodingField = new JTextField(UIConstants.DEFAULT_ENCODING);
+        encodingField.setPreferredSize(UIConstants.TEXT_FIELD_ENCODING_SIZE);
         encodingField.getDocument().addDocumentListener(new SimpleDocumentListener(this::updateCommandPreview));
         encodingPanel.add(encodingField);
         panel.add(encodingPanel);
-        panel.add(Box.createVerticalStrut(3));
+        panel.add(Box.createVerticalStrut(UIConstants.VERTICAL_STRUT_SMALL));
 
         JPanel headRowPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         headRowPanel.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.HeadRow", "Head Row:")));
-        headRowField = new JTextField("2");
-        headRowField.setPreferredSize(new Dimension(100, 25));
+        headRowField = new JTextField(UIConstants.DEFAULT_HEAD_ROW);
+        headRowField.setPreferredSize(UIConstants.TEXT_FIELD_HEADROW_SIZE);
         headRowField.getDocument().addDocumentListener(new SimpleDocumentListener(this::updateCommandPreview));
         headRowPanel.add(headRowField);
         panel.add(headRowPanel);
-        panel.add(Box.createVerticalStrut(3));
+        panel.add(Box.createVerticalStrut(UIConstants.VERTICAL_STRUT_SMALL));
 
         JPanel usePoiPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         usePoiPanel.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.UsePOI", "Use POI:")));
@@ -292,13 +296,13 @@ public class GuiLauncher {
         usePoiPanel.add(usePoiCheckBox);
         panel.add(usePoiPanel);
 
-        panel.add(Box.createVerticalStrut(5));
+        panel.add(Box.createVerticalStrut(UIConstants.VERTICAL_STRUT_MEDIUM));
         panel.add(createAdvancedDirPanel());
 
-        panel.add(Box.createVerticalStrut(5));
+        panel.add(Box.createVerticalStrut(UIConstants.VERTICAL_STRUT_MEDIUM));
         panel.add(createI18nPanel());
 
-        panel.add(Box.createVerticalStrut(5));
+        panel.add(Box.createVerticalStrut(UIConstants.VERTICAL_STRUT_MEDIUM));
 
         JPanel optionsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         verboseCheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.Verbose", "Verbose (-v)"));
@@ -329,82 +333,32 @@ public class GuiLauncher {
     }
 
     private JPanel createToolsPanel() {
-        toolsPanel = new JPanel();
-        toolsPanel.setLayout(new BoxLayout(toolsPanel, BoxLayout.Y_AXIS));
-        toolsPanel.setBorder(BorderFactory.createTitledBorder("Tools"));
-
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-
-        Map<String, Tools.ToolProvider> toolProviders = Tools.getAllProviders();
-        JComboBox<String> toolCombo = new JComboBox<>();
-        String selectPrompt = LocaleUtil.getLocaleString("GuiLauncher.SelectTool", "Select tool...");
-        toolCombo.addItem(selectPrompt);
-        for (String toolName : toolProviders.keySet()) {
-            toolCombo.addItem(toolName);
-        }
-
-        JButton addButton = new JButton(LocaleUtil.getLocaleString("GuiLauncher.Add", "Add"));
-        addButton.addActionListener(e -> {
-            String selected = (String) toolCombo.getSelectedItem();
-            if (selected != null && !selected.equals(selectPrompt)) {
-                addParameterPanel(toolPanels, toolsPanel, "tool", selected);
-                toolCombo.setSelectedItem(selectPrompt);
-            }
-        });
-
-        buttonPanel.add(toolCombo);
-        buttonPanel.add(addButton);
-        toolsPanel.add(buttonPanel);
-
-        JPanel container = new JPanel(new BorderLayout());
-        container.add(toolsPanel, BorderLayout.NORTH);
-        return container;
+        JPanel panel = ProviderPanelFactory.createToolsPanel(toolPanels,
+                this::addParameterPanel);
+        // 提取toolsPanel引用，用于后续操作
+        JPanel toolsPanel = (JPanel) ((JPanel) panel.getComponent(0)).getComponent(0);
+        return panel;
     }
 
     private JPanel createGeneratorsPanel() {
-        generatorsPanel = new JPanel();
-        generatorsPanel.setLayout(new BoxLayout(generatorsPanel, BoxLayout.Y_AXIS));
-        generatorsPanel.setBorder(BorderFactory.createTitledBorder("Generators"));
-
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-
-        Map<String, Generators.GeneratorProvider> genProviders = Generators.getAllProviders();
-        JComboBox<String> genCombo = new JComboBox<>();
-        String selectPrompt = LocaleUtil.getLocaleString("GuiLauncher.SelectGenerator", "Select generator...");
-        genCombo.addItem(selectPrompt);
-        for (String genName : genProviders.keySet()) {
-            genCombo.addItem(genName);
-        }
-
-        JButton addButton = new JButton(LocaleUtil.getLocaleString("GuiLauncher.Add", "Add"));
-        addButton.addActionListener(e -> {
-            String selected = (String) genCombo.getSelectedItem();
-            if (selected != null && !selected.equals(selectPrompt)) {
-                addParameterPanel(generatorPanels, generatorsPanel, "gen", selected);
-                genCombo.setSelectedItem(selectPrompt);
-            }
-        });
-
-        buttonPanel.add(genCombo);
-        buttonPanel.add(addButton);
-        generatorsPanel.add(buttonPanel);
-
-        JPanel container = new JPanel(new BorderLayout());
-        container.add(generatorsPanel, BorderLayout.NORTH);
-        return container;
+        JPanel panel = ProviderPanelFactory.createGeneratorsPanel(generatorPanels,
+                this::addParameterPanel);
+        // 提取generatorsPanel引用，用于后续操作
+        JPanel generatorsPanel = (JPanel) ((JPanel) panel.getComponent(0)).getComponent(0);
+        return panel;
     }
 
     private JPanel createCommandPreviewPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createTitledBorder(LocaleUtil.getLocaleString("GuiLauncher.CommandPreview", "Command Preview")));
-        panel.setPreferredSize(new Dimension(0, 80));
+        panel.setPreferredSize(new Dimension(0, UIConstants.COMMAND_PREVIEW_HEIGHT));
 
         commandPreview = new JTextArea();
         commandPreview.setEditable(false);
-        commandPreview.setBackground(new Color(240, 240, 240));
+        commandPreview.setBackground(UIConstants.COMMAND_PREVIEW_BG);
         commandPreview.setLineWrap(true);
         commandPreview.setWrapStyleWord(true);
-        commandPreview.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 11));
+        commandPreview.setFont(new Font(Font.MONOSPACED, Font.PLAIN, UIConstants.COMMAND_PREVIEW_FONT_SIZE));
 
         JScrollPane scrollPane = new JScrollPane(commandPreview);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -421,7 +375,7 @@ public class GuiLauncher {
             String command = commandPreview.getText();
             if (!command.isEmpty()) {
                 java.awt.Toolkit.getDefaultToolkit().getSystemClipboard()
-                    .setContents(new java.awt.datatransfer.StringSelection(command), null);
+                        .setContents(new java.awt.datatransfer.StringSelection(command), null);
             }
         });
         panel.add(copyButton);
@@ -443,8 +397,8 @@ public class GuiLauncher {
 
         outputArea = new JTextArea();
         outputArea.setEditable(false);
-        outputArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
-        outputArea.setBackground(new Color(250, 250, 250));
+        outputArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, UIConstants.OUTPUT_AREA_FONT_SIZE));
+        outputArea.setBackground(UIConstants.OUTPUT_AREA_BG);
 
         JScrollPane scrollPane = new JScrollPane(outputArea);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
@@ -453,8 +407,13 @@ public class GuiLauncher {
         return panel;
     }
 
-    private void addParameterPanel(List<ParameterPanel> panels, JPanel container, String type, String name) {
-        ParameterPanel panel = new ParameterPanel(type, name);
+    private void addParameterPanel(List<ParameterPanelItem> panels, JPanel container, String type, String name) {
+        ParameterPanelItem panel = new ParameterPanelItem(type, name,
+                new SimpleDocumentListener(this::updateCommandPreview));
+
+        panel.setChangeListener(this::updateCommandPreview);
+        panel.setDeleteListener(() -> removeParameterPanel(panels, container, panel));
+
         panels.add(panel);
         container.add(panel.getPanel());
         container.revalidate();
@@ -471,99 +430,21 @@ public class GuiLauncher {
             updateCommandPreview();
         }
     }
+
     private void updateCommandPreview() {
-        StringBuilder cmd = new StringBuilder("java -jar cfggen.jar");
-
-        appendQuotedIfNotEmpty(cmd, "-datadir", datadirField.getText().trim());
-        appendIfNotDefault(cmd, "-encoding", encodingField.getText().trim(), "GBK");
-        appendIfNotDefault(cmd, "-headrow", headRowField.getText().trim(), "2");
-
-        if (usePoiCheckBox.isSelected()) {
-            cmd.append(" -usepoi");
-        }
-
-        appendQuotedIfNotEmpty(cmd, "-asroot", asRootField.getText().trim());
-        appendQuotedIfNotEmpty(cmd, "-exceldirs", excelDirsField.getText().trim());
-        appendQuotedIfNotEmpty(cmd, "-jsondirs", jsonDirsField.getText().trim());
-
-        appendI18nArgs(cmd);
-
-        if (verboseCheckBox.isSelected()) {
-            cmd.append(" -v");
-        }
-        if (verbose2CheckBox.isSelected()) {
-            cmd.append(" -vv");
-        }
-        if (profileCheckBox.isSelected()) {
-            cmd.append(" -p");
-        }
-        if (profileGcCheckBox.isSelected()) {
-            cmd.append(" -pp");
-        }
-        if (noWarnCheckBox.isSelected()) {
-            cmd.append(" -nowarn");
-        }
-        if (weakWarnCheckBox.isSelected()) {
-            cmd.append(" -weakwarn");
-        }
-
-        for (ParameterPanel panel : toolPanels) {
-            String panelCmd = panel.buildCommand();
-            if (!panelCmd.isEmpty()) {
-                cmd.append(" -tool ").append(panelCmd);
-            }
-        }
-
-        for (ParameterPanel panel : generatorPanels) {
-            String panelCmd = panel.buildCommand();
-            if (!panelCmd.isEmpty()) {
-                cmd.append(" -gen ").append(panelCmd);
-            }
-        }
-
-        commandPreview.setText(cmd.toString());
-    }
-
-    private void appendQuotedIfNotEmpty(StringBuilder cmd, String flag, String value) {
-        if (!value.isEmpty()) {
-            cmd.append(" ").append(flag).append(" \"").append(value).append("\"");
-        }
-    }
-
-    private void appendIfNotDefault(StringBuilder cmd, String flag, String value, String defaultValue) {
-        if (!value.isEmpty() && !value.equals(defaultValue)) {
-            cmd.append(" ").append(flag).append(" ").append(value);
-        }
-    }
-
-    private void appendI18nArgs(StringBuilder cmd) {
-        if (i18nFileRadio.isSelected()) {
-            String i18nfile = i18nfileField.getText().trim();
-            if (!i18nfile.isEmpty()) {
-                cmd.append(" -i18nfile \"").append(i18nfile).append("\"");
-            }
-        } else if (langSwitchRadio.isSelected()) {
-            String langSwitchDir = langSwitchDirField.getText().trim();
-            if (!langSwitchDir.isEmpty()) {
-                cmd.append(" -langswitchdir \"").append(langSwitchDir).append("\"");
-            }
-            String defaultLang = defaultLangField.getText().trim();
-            if (!defaultLang.isEmpty() && !defaultLang.equals("zh_cn")) {
-                cmd.append(" -defaultlang ").append(defaultLang);
-            }
-        }
+        commandPreview.setText(commandBuilder.buildPreviewCommand());
     }
 
     private void runGeneration(ActionEvent e) {
         if (datadirField.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(mainFrame, LocaleUtil.getLocaleString("GuiLauncher.PleaseSetDataDirectory", "Please set data directory"),
-                LocaleUtil.getLocaleString("GuiLauncher.Error", "Error"), JOptionPane.ERROR_MESSAGE);
+                    LocaleUtil.getLocaleString("GuiLauncher.Error", "Error"), JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         if (generatorPanels.isEmpty()) {
             JOptionPane.showMessageDialog(mainFrame, LocaleUtil.getLocaleString("GuiLauncher.PleaseAddAtLeastOneGenerator", "Please add at least one generator"),
-                LocaleUtil.getLocaleString("GuiLauncher.Error", "Error"), JOptionPane.ERROR_MESSAGE);
+                    LocaleUtil.getLocaleString("GuiLauncher.Error", "Error"), JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -588,86 +469,7 @@ public class GuiLauncher {
     }
 
     private List<String> buildCommandLineArgs() {
-        List<String> args = new ArrayList<>();
-
-        addIfNotEmpty(args, "-datadir", datadirField.getText().trim());
-        addIfNotEmpty(args, "-encoding", encodingField.getText().trim());
-        addIfNotEmpty(args, "-headrow", headRowField.getText().trim());
-
-        if (usePoiCheckBox.isSelected()) {
-            args.add("-usepoi");
-        }
-
-        addIfNotEmpty(args, "-asroot", asRootField.getText().trim());
-        addIfNotEmpty(args, "-exceldirs", excelDirsField.getText().trim());
-        addIfNotEmpty(args, "-jsondirs", jsonDirsField.getText().trim());
-
-        addI18nArgs(args);
-
-        if (verboseCheckBox.isSelected()) {
-            args.add("-v");
-        }
-        if (verbose2CheckBox.isSelected()) {
-            args.add("-vv");
-        }
-        if (profileCheckBox.isSelected()) {
-            args.add("-p");
-        }
-        if (profileGcCheckBox.isSelected()) {
-            args.add("-pp");
-        }
-        if (noWarnCheckBox.isSelected()) {
-            args.add("-nowarn");
-        }
-        if (weakWarnCheckBox.isSelected()) {
-            args.add("-weakwarn");
-        }
-
-        for (ParameterPanel panel : toolPanels) {
-            String panelCmd = panel.buildCommand();
-            if (!panelCmd.isEmpty()) {
-                args.add("-tool");
-                args.add(panelCmd);
-            }
-        }
-
-        for (ParameterPanel panel : generatorPanels) {
-            String panelCmd = panel.buildCommand();
-            if (!panelCmd.isEmpty()) {
-                args.add("-gen");
-                args.add(panelCmd);
-            }
-        }
-
-        return args;
-    }
-
-    private void addIfNotEmpty(List<String> args, String flag, String value) {
-        if (!value.isEmpty()) {
-            args.add(flag);
-            args.add(value);
-        }
-    }
-
-    private void addI18nArgs(List<String> args) {
-        if (i18nFileRadio.isSelected()) {
-            String i18nfile = i18nfileField.getText().trim();
-            if (!i18nfile.isEmpty()) {
-                args.add("-i18nfile");
-                args.add(i18nfile);
-            }
-        } else if (langSwitchRadio.isSelected()) {
-            String langSwitchDir = langSwitchDirField.getText().trim();
-            if (!langSwitchDir.isEmpty()) {
-                args.add("-langswitchdir");
-                args.add(langSwitchDir);
-            }
-            String defaultLang = defaultLangField.getText().trim();
-            if (!defaultLang.isEmpty()) {
-                args.add("-defaultlang");
-                args.add(defaultLang);
-            }
-        }
+        return commandBuilder.buildArgs();
     }
 
     private void redirectOutput() {
@@ -688,144 +490,12 @@ public class GuiLauncher {
         return field;
     }
 
-    private JButton createDeleteButton(Runnable action) {
-        JButton button = new JButton(LocaleUtil.getLocaleString("GuiLauncher.Remove", "Remove"));
-
-        // 使用统一宽度，兼容中英文文本
-        int buttonWidth = 100;
-
-        button.setPreferredSize(new Dimension(buttonWidth, 25));
-        button.setMaximumSize(new Dimension(buttonWidth, 25));
-        button.setMinimumSize(new Dimension(buttonWidth, 25));
-        button.setForeground(new Color(200, 50, 50));
-        button.addActionListener(e -> action.run());
-        return button;
-    }
-
-    private void removeParameterPanel(List<ParameterPanel> panels, JPanel container, ParameterPanel panel) {
+    private void removeParameterPanel(List<ParameterPanelItem> panels, JPanel container, ParameterPanelItem panel) {
         panels.remove(panel);
         container.remove(panel.getPanel());
         container.revalidate();
         container.repaint();
         updateCommandPreview();
-    }
-
-    private class ParameterPanel {
-        private final String name;
-        private final String type;
-        private final JPanel panel;
-        private final Map<String, JComponent> paramComponents = new LinkedHashMap<>();
-
-        public ParameterPanel(String type, String name) {
-            this.type = type;
-            this.name = name;
-            this.panel = new JPanel(new GridBagLayout());
-            panel.setBorder(BorderFactory.createTitledBorder(name));
-
-            ParameterInfoCollector info = new ParameterInfoCollector(type, name);
-
-            if ("tool".equals(type)) {
-                Tools.ToolProvider provider = Tools.getAllProviders().get(name);
-                if (provider != null) {
-                    provider.create(info);
-                }
-            } else {
-                Generators.GeneratorProvider provider = Generators.getAllProviders().get(name);
-                if (provider != null) {
-                    provider.create(info);
-                }
-            }
-
-            buildParameterComponents(info);
-        }
-
-        private void buildParameterComponents(ParameterInfoCollector info) {
-            GridBagConstraints gbc = new GridBagConstraints();
-            gbc.insets = new Insets(3, 3, 3, 3);
-            gbc.anchor = GridBagConstraints.WEST;
-            gbc.fill = GridBagConstraints.HORIZONTAL;
-
-            int row = 0;
-            int columns = 3;
-            int col = 0;
-
-            for (var entry : info.getInfos().entrySet()) {
-                String paramName = entry.getKey();
-                var paramInfo = entry.getValue();
-
-                gbc.gridx = col * 2;
-                gbc.gridy = row;
-                gbc.weightx = 0;
-                gbc.insets = new Insets(3, 3, 3, 0);
-                panel.add(new JLabel(paramName + ":"), gbc);
-
-                gbc.gridx = col * 2 + 1;
-                gbc.weightx = 1.0;
-                gbc.insets = new Insets(3, 2, 3, 3);
-
-                JComponent component;
-                if (paramInfo.isFlag()) {
-                    JCheckBox checkBox = new JCheckBox();
-                    checkBox.addActionListener(e -> updateCommandPreview());
-                    component = checkBox;
-                } else {
-                    JTextField textField = new JTextField(paramInfo.def() != null ? paramInfo.def() : "");
-                    textField.getDocument().addDocumentListener(new SimpleDocumentListener(GuiLauncher.this::updateCommandPreview));
-                    component = textField;
-                }
-
-                panel.add(component, gbc);
-                paramComponents.put(paramName, component);
-
-                col++;
-                if (col >= columns) {
-                    col = 0;
-                    row++;
-                }
-            }
-
-            gbc.gridx = 0;
-            gbc.gridy = row + 1;
-            gbc.gridwidth = 1;
-            gbc.weightx = 0;
-            gbc.fill = GridBagConstraints.NONE;
-            gbc.anchor = GridBagConstraints.WEST;
-            gbc.insets = new Insets(3, 3, 3, 3);
-
-            List<ParameterPanel> parentList = "tool".equals(type) ? toolPanels : generatorPanels;
-            JPanel parentContainer = "tool".equals(type) ? toolsPanel : generatorsPanel;
-            JButton deleteButton = createDeleteButton(() -> removeParameterPanel(parentList, parentContainer, this));
-            panel.add(deleteButton, gbc);
-
-            gbc.gridx = 1;
-            gbc.weightx = 1.0;
-            gbc.fill = GridBagConstraints.HORIZONTAL;
-            panel.add(Box.createHorizontalGlue(), gbc);
-        }
-
-        public JPanel getPanel() {
-            return panel;
-        }
-
-        public String buildCommand() {
-            StringBuilder cmd = new StringBuilder(name);
-            for (var entry : paramComponents.entrySet()) {
-                String paramName = entry.getKey();
-                JComponent component = entry.getValue();
-
-                if (component instanceof JCheckBox checkBox) {
-                    if (checkBox.isSelected()) {
-                        cmd.append(",").append(paramName);
-                    }
-                } else if (component instanceof JTextField textField) {
-                    String value = textField.getText().trim();
-                    if (!value.isEmpty()) {
-                        cmd.append(",").append(paramName).append("=").append(value);
-                    }
-                }
-            }
-            return cmd.toString();
-        }
     }
 
     private class GuiPrinter implements Logger.Printer {
@@ -875,21 +545,86 @@ public class GuiLauncher {
         }
     }
 
+    // Getter方法供CommandLineBuilder和I18nConfig使用
+    public JTextField getDatadirField() {
+        return datadirField;
+    }
+
+    public JTextField getEncodingField() {
+        return encodingField;
+    }
+
+    public JTextField getHeadRowField() {
+        return headRowField;
+    }
+
+    public JCheckBox getUsePoiCheckBox() {
+        return usePoiCheckBox;
+    }
+
+    public JTextField getAsRootField() {
+        return asRootField;
+    }
+
+    public JTextField getExcelDirsField() {
+        return excelDirsField;
+    }
+
+    public JTextField getJsonDirsField() {
+        return jsonDirsField;
+    }
+
+    public JCheckBox getVerboseCheckBox() {
+        return verboseCheckBox;
+    }
+
+    public JCheckBox getVerbose2CheckBox() {
+        return verbose2CheckBox;
+    }
+
+    public JCheckBox getProfileCheckBox() {
+        return profileCheckBox;
+    }
+
+    public JCheckBox getProfileGcCheckBox() {
+        return profileGcCheckBox;
+    }
+
+    public JCheckBox getNoWarnCheckBox() {
+        return noWarnCheckBox;
+    }
+
+    public JCheckBox getWeakWarnCheckBox() {
+        return weakWarnCheckBox;
+    }
+
+    public List<ParameterPanelItem> getToolPanels() {
+        return toolPanels;
+    }
+
+    public List<ParameterPanelItem> getGeneratorPanels() {
+        return generatorPanels;
+    }
+
+    public I18nConfig getI18nConfig() {
+        return new I18nConfig(i18nFileRadio, langSwitchRadio, i18nfileField, langSwitchDirField, defaultLangField);
+    }
+
     private record SimpleDocumentListener(Runnable callback) implements DocumentListener {
 
         @Override
-            public void insertUpdate(DocumentEvent e) {
-                callback.run();
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                callback.run();
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                callback.run();
-            }
+        public void insertUpdate(DocumentEvent e) {
+            callback.run();
         }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            callback.run();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            callback.run();
+        }
+    }
 }
