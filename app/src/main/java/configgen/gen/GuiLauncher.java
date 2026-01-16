@@ -1,6 +1,7 @@
 package configgen.gen;
 
 import configgen.util.Logger;
+import configgen.util.LocaleUtil;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -46,12 +47,6 @@ public class GuiLauncher {
     private final PrintStream originalErr = System.err;
     private final Logger.Printer originalPrinter = Logger.getPrinter();
 
-    private final boolean isChineseLocale = Locale.getDefault().getLanguage().equals("zh");
-
-    private String text(String zh, String en) {
-        return isChineseLocale ? zh : en;
-    }
-
     public static void launch() {
         SwingUtilities.invokeLater(() -> {
             try {
@@ -64,7 +59,7 @@ public class GuiLauncher {
 
     private void init() {
         String currentDir = System.getProperty("user.dir");
-        String title = text("配置生成器", "Configuration Generator") + " - " + currentDir;
+        String title = LocaleUtil.getLocaleString("GuiLauncher.Title", "Configuration Generator") + " - " + currentDir;
 
         mainFrame = new JFrame(title);
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -123,7 +118,7 @@ public class GuiLauncher {
 
         gbc.gridx = 0;
         gbc.gridy = row;
-        content.add(new JLabel("As Root:"), gbc);
+        content.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.AsRoot", "As Root:")), gbc);
         gbc.gridx = 1;
         gbc.weightx = 1.0;
         asRootField = createTextField();
@@ -133,7 +128,7 @@ public class GuiLauncher {
         gbc.gridx = 0;
         gbc.gridy = row;
         gbc.weightx = 0;
-        content.add(new JLabel("Excel Dirs:"), gbc);
+        content.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.ExcelDirs", "Excel Dirs:")), gbc);
         gbc.gridx = 1;
         gbc.weightx = 1.0;
         excelDirsField = createTextField();
@@ -143,18 +138,18 @@ public class GuiLauncher {
         gbc.gridx = 0;
         gbc.gridy = row;
         gbc.weightx = 0;
-        content.add(new JLabel("Json Dirs:"), gbc);
+        content.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.JsonDirs", "Json Dirs:")), gbc);
         gbc.gridx = 1;
         gbc.weightx = 1.0;
         jsonDirsField = createTextField();
         content.add(jsonDirsField, gbc);
 
-        JButton toggleButton = new JButton("▶ " + text("高级目录配置", "Advanced Directories"));
+        JButton toggleButton = new JButton("▶ " + LocaleUtil.getLocaleString("GuiLauncher.AdvancedDirectories", "Advanced Directories"));
         toggleButton.addActionListener(e -> {
             boolean visible = !content.isVisible();
             content.setVisible(visible);
             String prefix = visible ? "▼ " : "▶ ";
-            toggleButton.setText(prefix + text("高级目录配置", "Advanced Directories"));
+            toggleButton.setText(prefix + LocaleUtil.getLocaleString("GuiLauncher.AdvancedDirectories", "Advanced Directories"));
         });
 
         JPanel wrapper = new JPanel(new BorderLayout());
@@ -174,7 +169,7 @@ public class GuiLauncher {
 
         int row = 0;
 
-        JRadioButton i18nNoneRadio = new JRadioButton(text("无需", "None"));
+        JRadioButton i18nNoneRadio = new JRadioButton(LocaleUtil.getLocaleString("GuiLauncher.None", "None"));
         i18nNoneRadio.setSelected(true);
         i18nNoneRadio.addActionListener(e -> onI18nModeChanged());
 
@@ -183,7 +178,7 @@ public class GuiLauncher {
         content.add(i18nNoneRadio, gbc);
         row++;
 
-        i18nFileRadio = new JRadioButton(text("I18n 文件:", "I18n File:"));
+        i18nFileRadio = new JRadioButton(LocaleUtil.getLocaleString("GuiLauncher.I18nFile", "I18n File:"));
         i18nFileRadio.addActionListener(e -> onI18nModeChanged());
 
         gbc.gridx = 0;
@@ -197,7 +192,7 @@ public class GuiLauncher {
         content.add(i18nfileField, gbc);
         row++;
 
-        langSwitchRadio = new JRadioButton(text("语言切换:", "Lang Switch:"));
+        langSwitchRadio = new JRadioButton(LocaleUtil.getLocaleString("GuiLauncher.LangSwitch", "Lang Switch:"));
         langSwitchRadio.addActionListener(e -> onI18nModeChanged());
 
         gbc.gridx = 0;
@@ -209,7 +204,7 @@ public class GuiLauncher {
         gbc.gridx = 0;
         gbc.gridy = row;
         gbc.weightx = 0;
-        content.add(new JLabel(text("  目录:", "  Dir:")), gbc);
+        content.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.Dir", "  Dir:")), gbc);
 
         gbc.gridx = 1;
         gbc.weightx = 0.5;
@@ -219,7 +214,7 @@ public class GuiLauncher {
 
         gbc.gridx = 2;
         gbc.weightx = 0;
-        content.add(new JLabel(text("默认语言:", "Default Lang:")), gbc);
+        content.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.DefaultLang", "Default Lang:")), gbc);
 
         gbc.gridx = 3;
         gbc.weightx = 0.5;
@@ -233,12 +228,12 @@ public class GuiLauncher {
         group.add(i18nFileRadio);
         group.add(langSwitchRadio);
 
-        JButton toggleButton = new JButton("▶ " + text("国际化配置", "I18n Configuration"));
+        JButton toggleButton = new JButton("▶ " + LocaleUtil.getLocaleString("GuiLauncher.I18nConfiguration", "I18n Configuration"));
         toggleButton.addActionListener(e -> {
             boolean visible = !content.isVisible();
             content.setVisible(visible);
             String prefix = visible ? "▼ " : "▶ ";
-            toggleButton.setText(prefix + text("国际化配置", "I18n Configuration"));
+            toggleButton.setText(prefix + LocaleUtil.getLocaleString("GuiLauncher.I18nConfiguration", "I18n Configuration"));
         });
 
         JPanel wrapper = new JPanel(new BorderLayout());
@@ -259,21 +254,21 @@ public class GuiLauncher {
     private JPanel createBasicParametersPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBorder(BorderFactory.createTitledBorder(text("基础配置", "Basic Configuration")));
+        panel.setBorder(BorderFactory.createTitledBorder(LocaleUtil.getLocaleString("GuiLauncher.BasicConfiguration", "Basic Configuration")));
 
         JPanel datadirPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        datadirPanel.add(new JLabel(text("数据目录:*", "Data Dir:*")));
+        datadirPanel.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.DataDir", "Data Dir:*")));
         datadirField = createTextField();
         datadirField.setPreferredSize(new Dimension(300, 25));
         datadirPanel.add(datadirField);
-        JButton browseButton = new JButton(text("浏览...", "Browse..."));
+        JButton browseButton = new JButton(LocaleUtil.getLocaleString("GuiLauncher.Browse", "Browse..."));
         browseButton.addActionListener(this::browseDataDir);
         datadirPanel.add(browseButton);
         panel.add(datadirPanel);
         panel.add(Box.createVerticalStrut(3));
 
         JPanel encodingPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        encodingPanel.add(new JLabel(text("编码:", "Encoding:")));
+        encodingPanel.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.Encoding", "Encoding:")));
         encodingField = new JTextField("GBK");
         encodingField.setPreferredSize(new Dimension(150, 25));
         encodingField.getDocument().addDocumentListener(new SimpleDocumentListener(this::updateCommandPreview));
@@ -282,7 +277,7 @@ public class GuiLauncher {
         panel.add(Box.createVerticalStrut(3));
 
         JPanel headRowPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        headRowPanel.add(new JLabel(text("表头行:", "Head Row:")));
+        headRowPanel.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.HeadRow", "Head Row:")));
         headRowField = new JTextField("2");
         headRowField.setPreferredSize(new Dimension(100, 25));
         headRowField.getDocument().addDocumentListener(new SimpleDocumentListener(this::updateCommandPreview));
@@ -291,7 +286,7 @@ public class GuiLauncher {
         panel.add(Box.createVerticalStrut(3));
 
         JPanel usePoiPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        usePoiPanel.add(new JLabel(text("使用 POI:", "Use POI:")));
+        usePoiPanel.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.UsePOI", "Use POI:")));
         usePoiCheckBox = new JCheckBox();
         usePoiCheckBox.addActionListener(e -> updateCommandPreview());
         usePoiPanel.add(usePoiCheckBox);
@@ -306,12 +301,12 @@ public class GuiLauncher {
         panel.add(Box.createVerticalStrut(5));
 
         JPanel optionsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        verboseCheckBox = createCheckBox(text("详细", "Verbose") + " (-v)");
-        verbose2CheckBox = createCheckBox(text("详细2", "Verbose2") + " (-vv)");
-        profileCheckBox = createCheckBox(text("性能分析", "Profile") + " (-p)");
-        profileGcCheckBox = createCheckBox(text("性能分析+GC", "Profile+GC") + " (-pp)");
-        noWarnCheckBox = createCheckBox(text("无警告", "No Warn"));
-        weakWarnCheckBox = createCheckBox(text("弱警告", "Weak Warn"));
+        verboseCheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.Verbose", "Verbose (-v)"));
+        verbose2CheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.Verbose2", "Verbose2 (-vv)"));
+        profileCheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.Profile", "Profile (-p)"));
+        profileGcCheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.ProfileGC", "Profile+GC (-pp)"));
+        noWarnCheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.NoWarn", "No Warn"));
+        weakWarnCheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.WeakWarn", "Weak Warn"));
 
         optionsPanel.add(verboseCheckBox);
         optionsPanel.add(verbose2CheckBox);
@@ -342,13 +337,13 @@ public class GuiLauncher {
 
         Map<String, Tools.ToolProvider> toolProviders = Tools.getAllProviders();
         JComboBox<String> toolCombo = new JComboBox<>();
-        String selectPrompt = text("选择工具...", "Select tool...");
+        String selectPrompt = LocaleUtil.getLocaleString("GuiLauncher.SelectTool", "Select tool...");
         toolCombo.addItem(selectPrompt);
         for (String toolName : toolProviders.keySet()) {
             toolCombo.addItem(toolName);
         }
 
-        JButton addButton = new JButton(text("添加", "Add"));
+        JButton addButton = new JButton(LocaleUtil.getLocaleString("GuiLauncher.Add", "Add"));
         addButton.addActionListener(e -> {
             String selected = (String) toolCombo.getSelectedItem();
             if (selected != null && !selected.equals(selectPrompt)) {
@@ -375,13 +370,13 @@ public class GuiLauncher {
 
         Map<String, Generators.GeneratorProvider> genProviders = Generators.getAllProviders();
         JComboBox<String> genCombo = new JComboBox<>();
-        String selectPrompt = text("选择生成器...", "Select generator...");
+        String selectPrompt = LocaleUtil.getLocaleString("GuiLauncher.SelectGenerator", "Select generator...");
         genCombo.addItem(selectPrompt);
         for (String genName : genProviders.keySet()) {
             genCombo.addItem(genName);
         }
 
-        JButton addButton = new JButton(text("添加", "Add"));
+        JButton addButton = new JButton(LocaleUtil.getLocaleString("GuiLauncher.Add", "Add"));
         addButton.addActionListener(e -> {
             String selected = (String) genCombo.getSelectedItem();
             if (selected != null && !selected.equals(selectPrompt)) {
@@ -401,7 +396,7 @@ public class GuiLauncher {
 
     private JPanel createCommandPreviewPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createTitledBorder(text("命令预览", "Command Preview")));
+        panel.setBorder(BorderFactory.createTitledBorder(LocaleUtil.getLocaleString("GuiLauncher.CommandPreview", "Command Preview")));
         panel.setPreferredSize(new Dimension(0, 80));
 
         commandPreview = new JTextArea();
@@ -421,7 +416,7 @@ public class GuiLauncher {
     private JPanel createRunButtonPanel() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
-        JButton copyButton = new JButton(text("复制", "Copy"));
+        JButton copyButton = new JButton(LocaleUtil.getLocaleString("GuiLauncher.Copy", "Copy"));
         copyButton.addActionListener(e -> {
             String command = commandPreview.getText();
             if (!command.isEmpty()) {
@@ -431,11 +426,11 @@ public class GuiLauncher {
         });
         panel.add(copyButton);
 
-        runButton = new JButton(text("运行", "Run"));
+        runButton = new JButton(LocaleUtil.getLocaleString("GuiLauncher.Run", "Run"));
         runButton.addActionListener(this::runGeneration);
         panel.add(runButton);
 
-        JButton clearButton = new JButton(text("清空输出", "Clear Output"));
+        JButton clearButton = new JButton(LocaleUtil.getLocaleString("GuiLauncher.ClearOutput", "Clear Output"));
         clearButton.addActionListener(e -> outputArea.setText(""));
         panel.add(clearButton);
 
@@ -444,7 +439,7 @@ public class GuiLauncher {
 
     private JPanel createOutputPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createTitledBorder(text("输出", "Output")));
+        panel.setBorder(BorderFactory.createTitledBorder(LocaleUtil.getLocaleString("GuiLauncher.Output", "Output")));
 
         outputArea = new JTextArea();
         outputArea.setEditable(false);
@@ -470,7 +465,7 @@ public class GuiLauncher {
     private void browseDataDir(ActionEvent e) {
         JFileChooser chooser = new JFileChooser();
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        chooser.setDialogTitle("选择数据目录 (Select Data Directory)");
+        chooser.setDialogTitle(LocaleUtil.getLocaleString("GuiLauncher.SelectDataDirectory", "Select Data Directory"));
         if (chooser.showOpenDialog(mainFrame) == JFileChooser.APPROVE_OPTION) {
             datadirField.setText(chooser.getSelectedFile().getAbsolutePath());
             updateCommandPreview();
@@ -561,14 +556,14 @@ public class GuiLauncher {
 
     private void runGeneration(ActionEvent e) {
         if (datadirField.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(mainFrame, text("请设置数据目录", "Please set data directory"),
-                text("错误", "Error"), JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(mainFrame, LocaleUtil.getLocaleString("GuiLauncher.PleaseSetDataDirectory", "Please set data directory"),
+                LocaleUtil.getLocaleString("GuiLauncher.Error", "Error"), JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         if (generatorPanels.isEmpty()) {
-            JOptionPane.showMessageDialog(mainFrame, text("请至少添加一个生成器", "Please add at least one generator"),
-                text("错误", "Error"), JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(mainFrame, LocaleUtil.getLocaleString("GuiLauncher.PleaseAddAtLeastOneGenerator", "Please add at least one generator"),
+                LocaleUtil.getLocaleString("GuiLauncher.Error", "Error"), JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -694,8 +689,11 @@ public class GuiLauncher {
     }
 
     private JButton createDeleteButton(Runnable action) {
-        JButton button = new JButton(text("删除", "Remove"));
-        int buttonWidth = isChineseLocale ? 100 : 90;
+        JButton button = new JButton(LocaleUtil.getLocaleString("GuiLauncher.Remove", "Remove"));
+
+        // 使用统一宽度，兼容中英文文本
+        int buttonWidth = 100;
+
         button.setPreferredSize(new Dimension(buttonWidth, 25));
         button.setMaximumSize(new Dimension(buttonWidth, 25));
         button.setMinimumSize(new Dimension(buttonWidth, 25));
