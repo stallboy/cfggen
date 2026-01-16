@@ -92,7 +92,7 @@ const FORM_STYLE = {backgroundColor: "white", borderRadius: 15, padding: 10};
 // 类型定义
 // ============================================================================
 
-interface FilterOption {
+export interface FilterOption {
     filterSort?: (a: EntityEditFieldOption, b: EntityEditFieldOption) => number;
     showSearch?: boolean;
     filterOption?: (input: string, option?: EntityEditFieldOption) => boolean;
