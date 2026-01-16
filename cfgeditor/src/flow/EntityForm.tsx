@@ -22,7 +22,7 @@ import TextArea from "antd/es/input/TextArea";
 import {Handle, NodeProps, Position} from "@xyflow/react";
 import {useHotkeys} from "react-hotkeys-hook";
 import {useTranslation} from "react-i18next";
-import {CSSProperties, memo, useCallback, useEffect, useMemo, useState} from "react";
+import {CSSProperties, Fragment, memo, useCallback, useEffect, useMemo, useState} from "react";
 
 import {CustomAutoComplete} from "./CustomAutoComplete.tsx";
 import {getFieldBackgroundColor} from "./colors.ts";
@@ -35,7 +35,7 @@ import {
     FuncAddType,
     FuncSubmitType,
     FuncType,
-    InterfaceEditField,
+    InterfaceEditField, PrimitiveType,
     PrimitiveValue, StructRefEditField,
 } from "./entityModel.ts";
 import {EntityNode} from "./FlowGraph.tsx";
@@ -281,65 +281,98 @@ interface EmbeddedSimpleStructuralItemProps {
 
 const EmbeddedSimpleStructuralItem = memo(
     function EmbeddedSimpleStructuralItem({field, edit, nodeProps}: EmbeddedSimpleStructuralItemProps) {
-        const embeddedField = field.embeddedField as EntityEditField & { type: 'primitive' };
+        const entity = nodeProps.data.entity;
+        const embeddedData = field.embeddedField!;
 
-        // 黄色背景(有note时)
-        const hasNote = embeddedField.comment && embeddedField.comment.length > 0;
+        // 组合comment：field.comment + embeddedData.note
+        const fieldComment = useMemo(() => {
+            const parts: string[] = [];
+            if (field.comment) parts.push(field.comment);
+            if (embeddedData.note) parts.push(embeddedData.note);
+            return parts.join(' ');
+        }, [field.comment, embeddedData.note]);
+
+        // 字段名称Tag颜色（有note时黄色）
+        const fieldNameTagColor = embeddedData.note ? '#876800' : 'blue';
 
         // 点击展开
         const handleExpand = useCallback(() => {
-            if (field.embeddedFieldChain && edit.editOnUpdateFold) {
-                // 设置为展开状态 (fold=false)，传入 embeddedFieldChain 参数
+            if (embeddedData.embeddedFieldChain && edit.editOnUpdateFold) {
                 edit.editOnUpdateFold(
                     false,
                     {
-                        id: nodeProps.data.entity.id,
+                        id: entity.id,
                         x: nodeProps.positionAbsoluteX,
                         y: nodeProps.positionAbsoluteY,
                     },
-                    field.embeddedFieldChain
+                    embeddedData.embeddedFieldChain
                 );
             }
-        }, [field.embeddedFieldChain, edit, nodeProps.data.entity.id, nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY]);
+        }, [embeddedData.embeddedFieldChain, edit, entity.id, nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY]);
 
-        // 格式化显示值
-        const displayValue = useMemo(() => {
-            const value = embeddedField.value;
+        // 格式化单个值的显示
+        const formatDisplayValue = useCallback((value: PrimitiveValue, type: PrimitiveType): string => {
             if (value === undefined || value === null) {
                 return '-';
             }
-            if (typeof value === 'boolean') {
-                return value ? '✓' : '✗';  // 使用 emoji 对勾和叉
+            if (type === 'bool') {
+                return value ? '✓' : '✗';
             }
             return String(value);
-        }, [embeddedField.value]);
+        }, []);
 
-        // 值的样式（空值时灰色）
-        const valueStyle: CSSProperties = useMemo(() => ({
-            color: (embeddedField.value === undefined || embeddedField.value === null || embeddedField.value === '')
-                ? '#999'
-                : undefined,
-        }), [embeddedField.value]);
+        // 渲染单个值Tag
+        const renderValueTag = useCallback((
+            value: PrimitiveValue,
+            type: PrimitiveType,
+            name: string,
+            comment?: string
+        ) => {
+            const displayValue = formatDisplayValue(value, type);
+            const valueStyle: CSSProperties = {
+                color: (value === undefined || value === null || value === '')
+                    ? '#999'
+                    : undefined,
+            };
 
-        // 值的Tag颜色（有note时为黄色）
-        const valueTagColor = hasNote ? '#fff566' : 'blue';
+            // 值的comment组合：name + comment
+            const valueComment = comment ? `${name}: ${comment}` : name;
+
+            return (
+                <Tag color="blue" style={valueStyle}>
+                    <LabelWithTooltip
+                        name={displayValue}
+                        comment={valueComment}
+                    />
+                </Tag>
+            );
+        }, [formatDisplayValue]);
 
         return (
             <Flex gap="small" justify="flex-end" align="center">
-                {/* 显示字段名称（蓝色 Tag） */}
-                <Tag color="blue">
-                    <LabelWithTooltip name={field.name} comment={field.comment}/>
-                </Tag>
-
-                {/* 显示值（蓝色或黄色 Tag） */}
-                <Tag color={valueTagColor} style={valueStyle}>
+                {/* 显示字段名称（根据note显示黄色或蓝色Tag） */}
+                <Tag color={fieldNameTagColor}>
                     <LabelWithTooltip
-                        name={displayValue}
-                        comment={hasNote ? embeddedField.comment : undefined}
+                        name={field.name}
+                        comment={fieldComment || undefined}
                     />
                 </Tag>
 
-                {/* 展开按钮（蓝色） */}
+                {/* 显示implName（如果存在且非defaultImpl） */}
+                {embeddedData.implName && (
+                    <Tag color="cyan">
+                        {embeddedData.implName}
+                    </Tag>
+                )}
+
+                {/* 显示值（可能有多个） */}
+                {embeddedData.fields.map(f => (
+                    <Fragment key={f.name}>
+                        {renderValueTag(f.value, f.type, f.name, f.comment)}
+                    </Fragment>
+                ))}
+
+                {/* 展开按钮 */}
                 <Button
                     className="nodrag"
                     type="text"
@@ -635,7 +668,7 @@ function renderFieldItem({field, edit, nodeProps, sharedSetting}: FieldRenderPro
     switch (field.type) {
         case "structRef":
             // 判断是否为内嵌模式
-            if (field.isEmbedded && field.embeddedField) {
+            if (field.embeddedField) {
                 return (
                     <EmbeddedSimpleStructuralItem
                         key={field.name}

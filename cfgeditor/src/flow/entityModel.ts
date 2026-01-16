@@ -65,6 +65,25 @@ export interface ArrayPrimitiveEditField extends FieldBase {
 }
 
 /**
+ * 内嵌字段数据（包含所有相关信息）
+ */
+export interface EmbeddedFieldData {
+    /** 内嵌的字段列表 */
+    fields: Array<{
+        value: PrimitiveValue;
+        type: PrimitiveType;
+        name: string;
+        comment?: string;
+    }>;
+    /** 节点的备注（来自 entity.note） */
+    note?: string;
+    /** interface 的实现名称（非 defaultImpl 时显示） */
+    implName?: string;
+    /** 内嵌字段的完整路径 */
+    embeddedFieldChain?: (string | number)[];
+}
+
+/**
  * 结构体引用编辑字段
  */
 export interface StructRefEditField extends FieldBase {
@@ -72,10 +91,8 @@ export interface StructRefEditField extends FieldBase {
     eleType: string;
     value: string;  // 占位符，如 '<>'
 
-    // 内嵌模式相关字段
-    isEmbedded?: boolean;                    // 是否为内嵌模式
-    embeddedField?: PrimitiveEditField;       // 内嵌时的单字段定义
-    embeddedFieldChain?: (string | number)[]; // 内嵌字段的完整路径
+    /** 内嵌字段数据（包含 fields, note, implName, embeddedFieldChain） */
+    embeddedField?: EmbeddedFieldData;
 }
 
 /**

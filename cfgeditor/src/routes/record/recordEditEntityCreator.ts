@@ -5,7 +5,7 @@ import {
     EntityEditFieldOptions, EntityPosition,
     EntitySourceEdge,
     EntityType,
-    PrimitiveType, PrimitiveEditField
+    PrimitiveType
 } from "../../flow/entityModel.ts";
 import {SField, SInterface, SItem, SStruct, STable} from "../table/schemaModel.ts";
 import {JSONArray, JSONObject, JSONValue, RefId} from "./recordModel.ts";
@@ -24,6 +24,38 @@ const setOfPrimitive = new Set<string>(['bool', 'int', 'long', 'float', 'str', '
 
 function isPrimitiveType(type: string): boolean {
     return setOfPrimitive.has(type);
+}
+
+// 检查是否为number类型
+function isNumberType(type: string): boolean {
+    return ['int', 'long', 'float'].includes(type);
+}
+
+// 统计字段类型分布
+function analyzeFieldTypes(fields: SField[]): {
+    boolCount: number;
+    numberCount: number;
+    primitiveCount: number;
+    allPrimitive: boolean;
+} {
+    let boolCount = 0;
+    let numberCount = 0;
+    let primitiveCount = 0;
+
+    for (const field of fields) {
+        if (isPrimitiveType(field.type)) {
+            primitiveCount++;
+            if (field.type === 'bool') boolCount++;
+            if (isNumberType(field.type)) numberCount++;
+        }
+    }
+
+    return {
+        boolCount,
+        numberCount,
+        primitiveCount,
+        allPrimitive: primitiveCount === fields.length,
+    };
 }
 
 
@@ -414,60 +446,47 @@ export class RecordEditEntityCreator {
 
                         if (isFolded !== false) {
                             // fold=true 或 undefined，内嵌模式
-                            let embeddedField: EntityEditField | null = null;
+                            let embeddedFields: ReturnType<typeof getEmbeddedFieldValues> | null = null;
+                            let implNameToDisplay: string | undefined = undefined;
 
                             if (fieldType.type === 'struct') {
                                 const struct = fieldType as SStruct;
-                                if (struct.fields.length === 0) {
-                                    // 条件1a: struct没有字段 - 创建空的占位字段
-                                    embeddedField = {
-                                        name: sf.name,
-                                        comment: sf.comment,
-                                        type: 'primitive',
-                                        eleType: 'str',
-                                        value: '<>', // 空字段，无实际值
-
-                                    };
-                                } else {
-                                    // 条件1b: struct只有一个primitive字段
-                                    embeddedField = getEmbeddedFieldFromStruct(struct, fieldObj);
-                                }
+                                embeddedFields = getEmbeddedFieldValues(struct, fieldObj);
                             } else if (fieldType.type === 'interface') {
                                 const iface = fieldType as SInterface;
                                 const type = fieldObj['$type'] as string;
                                 const implName = getLastName(type);
                                 const impl = getImpl(iface, implName);
 
-                                if (impl && impl.fields.length === 0) {
-                                    // 条件2: interface无字段impl
-                                    embeddedField = {
-                                        name: sf.name,
-                                        comment: sf.comment,
-                                        type: 'primitive',
-                                        eleType: 'str',
-                                        value: implName,
-                                    };
-                                } else if (impl && impl.fields.length === 1) {
-                                    // 条件3: interface的defaultImpl且只有一个primitive字段
-                                    embeddedField = getEmbeddedFieldFromStruct(impl, fieldObj);
+                                if (impl) {
+                                    embeddedFields = getEmbeddedFieldValues(impl, fieldObj);
+
+                                    // 记录implName（非defaultImpl时需要显示）
+                                    if (implName !== iface.defaultImpl) {
+                                        implNameToDisplay = implName;
+                                    }
                                 }
                             }
 
-                            if (embeddedField) {
+                            if (embeddedFields) {
+                                // 直接从 obj 获取 note
+                                const note = fieldObj['$note'] as string | undefined;
+
                                 fields.push({
                                     name: sf.name,
                                     comment: sf.comment,
                                     type: 'structRef',
                                     eleType: sf.type,
-                                    value: '[]',
+                                    value: '<>',
                                     handleOut: true,
-
-                                    // 新增字段
-                                    isEmbedded: true,
-                                    embeddedField: embeddedField as PrimitiveEditField,
-                                    embeddedFieldChain: [...fieldChain, sf.name],
+                                    embeddedField: {
+                                        fields: embeddedFields,
+                                        note: note,
+                                        implName: implNameToDisplay,
+                                        embeddedFieldChain: [...fieldChain, sf.name],
+                                    },
                                 });
-                                continue; // 跳过后续处理
+                                continue;
                             }
                         }
                         // 如果 isFolded=false，则走正常流程创建独立子节点
@@ -594,9 +613,12 @@ function isChainEqual(a: (string | number)[], b: (string | number)[]) {
 /**
  * 判断字段是否可以内嵌显示
  * 条件1a: struct没有字段
- * 条件1b: struct只有一个primitive字段
- * 条件2: interface的impl没有字段
- * 条件3: interface的impl是defaultImpl且只有一个primitive字段
+ * 条件1b: struct只有1个primitive字段
+ * 条件1c: struct只有≤3个number字段
+ * 条件1d: struct只有≤4个bool字段
+ * 条件1e: struct只有1个bool和1个number字段
+ * 条件2a: impl没有字段
+ * 条件2b: impl只有1个primitive字段（移除defaultImpl限制）
  */
 function canBeEmbeddedCheck(fieldValue: JSONObject, sField: SField, schema: Schema): boolean {
     const fieldType = schema.itemIncludeImplMap.get(sField.type);
@@ -604,15 +626,40 @@ function canBeEmbeddedCheck(fieldValue: JSONObject, sField: SField, schema: Sche
 
     if (fieldType.type === 'struct') {
         const struct = fieldType as SStruct;
+        const analysis = analyzeFieldTypes(struct.fields);
+
         // 条件1a: struct没有字段
         if (struct.fields.length === 0) {
             return true;
         }
-        // 条件1b: struct只有一个primitive字段
-        if (struct.fields.length === 1) {
-            const onlyField = struct.fields[0];
-            return isPrimitiveType(onlyField.type);
+
+        // 条件1b: struct只有1个primitive字段
+        if (struct.fields.length === 1 && analysis.allPrimitive) {
+            return true;
         }
+
+        // 条件1c: struct只有≤3个number字段
+        if (struct.fields.length <= 3 &&
+            struct.fields.length === analysis.numberCount &&
+            analysis.allPrimitive) {
+            return true;
+        }
+
+        // 条件1d: struct只有≤4个bool字段
+        if (struct.fields.length <= 4 &&
+            struct.fields.length === analysis.boolCount &&
+            analysis.allPrimitive) {
+            return true;
+        }
+
+        // 条件1e: struct只有1个bool和1个number字段
+        if (struct.fields.length === 2 &&
+            analysis.boolCount === 1 &&
+            analysis.numberCount === 1 &&
+            analysis.allPrimitive) {
+            return true;
+        }
+
         return false;
     }
 
@@ -623,15 +670,16 @@ function canBeEmbeddedCheck(fieldValue: JSONObject, sField: SField, schema: Sche
         const impl = getImpl(iface, implName);
         if (!impl) return false;
 
-        // 条件2: impl没有字段
+        const analysis = analyzeFieldTypes(impl.fields);
+
+        // 条件2a: impl没有字段
         if (impl.fields.length === 0) {
             return true;
         }
 
-        // 条件3: impl是defaultImpl且只有一个primitive字段
-        if (implName === iface.defaultImpl && impl.fields.length === 1) {
-            const onlyField = impl.fields[0];
-            return isPrimitiveType(onlyField.type);
+        // 条件2b: impl只有1个primitive字段（移除defaultImpl限制）
+        if (impl.fields.length === 1 && analysis.allPrimitive) {
+            return true;
         }
 
         return false;
@@ -641,18 +689,28 @@ function canBeEmbeddedCheck(fieldValue: JSONObject, sField: SField, schema: Sche
 }
 
 /**
- * 从struct中提取内嵌字段
+ * 从struct中提取内嵌字段的值
+ * @returns 返回内嵌字段的值数组，不可内嵌时返回null
  */
-function getEmbeddedFieldFromStruct(struct: SStruct, obj: JSONObject): PrimitiveEditField | null {
-    if (struct.fields.length !== 1) return null;
+function getEmbeddedFieldValues(
+    struct: SStruct,
+    obj: JSONObject
+): Array<{value: PrimitiveValue; type: PrimitiveType; name: string; comment?: string}> | null {
+    if (struct.fields.length === 0) {
+        // 条件1a: 空struct，返回空数组
+        return [];
+    }
 
-    const onlyField = struct.fields[0];
-    const fieldValue = obj[onlyField.name];
+    const analysis = analyzeFieldTypes(struct.fields);
 
-    if (isPrimitiveType(onlyField.type)) {
-        let v;
-        if (fieldValue) {
-            v = fieldValue as (boolean | number | string);
+    // 单字段情况（条件1b, 2b）
+    if (struct.fields.length === 1 && analysis.allPrimitive) {
+        const onlyField = struct.fields[0];
+        const fieldValue = obj[onlyField.name];
+
+        let v: PrimitiveValue;
+        if (fieldValue !== undefined && fieldValue !== null) {
+            v = fieldValue as PrimitiveValue;
         } else if (onlyField.type === 'bool') {
             v = false;
         } else if (onlyField.type === 'str' || onlyField.type === 'text') {
@@ -661,13 +719,51 @@ function getEmbeddedFieldFromStruct(struct: SStruct, obj: JSONObject): Primitive
             v = 0;
         }
 
-        return {
+        return [{
+            value: v,
+            type: onlyField.type as PrimitiveType,
             name: onlyField.name,
             comment: onlyField.comment,
-            type: 'primitive',
-            eleType: onlyField.type as PrimitiveType,
-            value: v,
-        };
+        }];
     }
+
+    // 多字段情况（条件1c, 1d, 1e）
+    if (analysis.allPrimitive) {
+        // 验证是否满足多字段内嵌条件
+        const isNumberFields = struct.fields.length === analysis.numberCount && struct.fields.length <= 3;
+        const isBoolFields = struct.fields.length === analysis.boolCount && struct.fields.length <= 4;
+        const isBoolAndNumber = struct.fields.length === 2 &&
+                                analysis.boolCount === 1 &&
+                                analysis.numberCount === 1;
+
+        if (isNumberFields || isBoolFields || isBoolAndNumber) {
+            const fields: Array<{value: PrimitiveValue; type: PrimitiveType; name: string; comment?: string}> = [];
+
+            for (const field of struct.fields) {
+                const fieldValue = obj[field.name];
+
+                let v: PrimitiveValue;
+                if (fieldValue !== undefined && fieldValue !== null) {
+                    v = fieldValue as PrimitiveValue;
+                } else if (field.type === 'bool') {
+                    v = false;
+                } else if (field.type === 'str' || field.type === 'text') {
+                    v = '';
+                } else {
+                    v = 0;
+                }
+
+                fields.push({
+                    value: v,
+                    type: field.type as PrimitiveType,
+                    name: field.name,
+                    comment: field.comment,
+                });
+            }
+
+            return fields;
+        }
+    }
+
     return null;
 }
