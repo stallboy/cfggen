@@ -151,10 +151,6 @@ public class ParameterPanelItem {
         return panel;
     }
 
-    public Map<String, JComponent> getParamComponents() {
-        return paramComponents;
-    }
-
     public String getName() {
         return name;
     }

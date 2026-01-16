@@ -12,33 +12,13 @@ import java.util.function.BiConsumer;
 
 /**
  * 统一创建Tools和Generators面板的工厂类
- * 消除createToolsPanel()和createGeneratorsPanel()的重复代码
+ * 直接返回可用的面板，消除不必要的包装层
  */
 public class ProviderPanelFactory {
 
     /**
-     * Provider面板创建结果
-     */
-    public static class ProviderPanelResult {
-        private final JPanel mainPanel;
-        private final JPanel containerPanel;
-
-        public ProviderPanelResult(JPanel mainPanel, JPanel containerPanel) {
-            this.mainPanel = mainPanel;
-            this.containerPanel = containerPanel;
-        }
-
-        public JPanel getMainPanel() {
-            return mainPanel;
-        }
-
-        public JPanel getContainerPanel() {
-            return containerPanel;
-        }
-    }
-
-    /**
      * 通用的Provider面板创建方法
+     * 直接返回可以使用的面板
      */
     private static JPanel createProviderPanel(
             Map<?, ?> providers,
@@ -74,46 +54,32 @@ public class ProviderPanelFactory {
         buttonPanel.add(addButton);
         mainPanel.add(buttonPanel);
 
-        JPanel container = new JPanel(new BorderLayout());
-        container.add(mainPanel, BorderLayout.NORTH);
-        return container;
+        return mainPanel;
     }
 
     /**
      * 创建Tools面板
      */
-    public static ProviderPanelResult createToolsPanel(List<ParameterPanelItem> toolPanels,
-                                                       BiConsumer<List<ParameterPanelItem>, String> onAdd) {
-        JPanel mainPanel = createProviderPanel(
+    public static JPanel createToolsPanel(List<ParameterPanelItem> toolPanels,
+                                          BiConsumer<List<ParameterPanelItem>, String> onAdd) {
+        return createProviderPanel(
                 Tools.getAllProviders(),
                 toolPanels,
                 "Tools",
                 "GuiLauncher.SelectTool",
-                onAdd
-        );
-
-        JPanel container = new JPanel(new BorderLayout());
-        container.add(mainPanel, BorderLayout.NORTH);
-
-        return new ProviderPanelResult(container, mainPanel);
+                onAdd);
     }
 
     /**
      * 创建Generators面板
      */
-    public static ProviderPanelResult createGeneratorsPanel(List<ParameterPanelItem> generatorPanels,
-                                                           BiConsumer<List<ParameterPanelItem>, String> onAdd) {
-        JPanel mainPanel = createProviderPanel(
+    public static JPanel createGeneratorsPanel(List<ParameterPanelItem> generatorPanels,
+                                               BiConsumer<List<ParameterPanelItem>, String> onAdd) {
+        return createProviderPanel(
                 Generators.getAllProviders(),
                 generatorPanels,
                 "Generators",
                 "GuiLauncher.SelectGenerator",
-                onAdd
-        );
-
-        JPanel container = new JPanel(new BorderLayout());
-        container.add(mainPanel, BorderLayout.NORTH);
-
-        return new ProviderPanelResult(container, mainPanel);
+                onAdd);
     }
 }

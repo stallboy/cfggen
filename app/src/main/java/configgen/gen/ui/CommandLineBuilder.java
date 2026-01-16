@@ -5,13 +5,16 @@ import java.util.List;
 
 /**
  * 统一管理命令行参数的构建逻辑
- * 消除updateCommandPreview()和buildCommandLineArgs()的重复代码
+ * 使用统一的参数收集方法消除重复代码
  */
-public class CommandLineBuilder {
-    private final GuiLauncher launcher;
-
-    public CommandLineBuilder(GuiLauncher launcher) {
-        this.launcher = launcher;
+public record CommandLineBuilder(GuiLauncher launcher) {
+    /**
+     * 命令参数的简单封装
+     */
+    private record CmdArg(String name, String value, boolean quoteSpaces) {
+        CmdArg(String name, String value) {
+            this(name, value, false);
+        }
     }
 
     /**
@@ -19,13 +22,9 @@ public class CommandLineBuilder {
      */
     public String buildPreviewCommand() {
         StringBuilder cmd = new StringBuilder("java -jar cfggen.jar");
-        appendDatadir(cmd);
-        appendEncoding(cmd);
-        appendHeadRow(cmd);
-        appendUsePoi(cmd);
-        appendAdvancedDirs(cmd);
-        appendI18n(cmd);
-        appendOptions(cmd);
+        for (CmdArg arg : collectCmdArgs()) {
+            appendTo(cmd, arg);
+        }
         appendToolsAndGenerators(cmd);
         return cmd.toString();
     }
@@ -35,103 +34,90 @@ public class CommandLineBuilder {
      */
     public List<String> buildArgs() {
         List<String> args = new ArrayList<>();
-        addDatadir(args);
-        addEncoding(args);
-        addHeadRow(args);
-        addUsePoi(args);
-        addAdvancedDirs(args);
-        addI18n(args);
-        addOptions(args);
+        for (CmdArg arg : collectCmdArgs()) {
+            addToList(args, arg);
+        }
         addToolsAndGenerators(args);
         return args;
     }
 
-    // StringBuilder版本的方法
+    /**
+     * 收集所有需要添加的命令行参数
+     */
+    private List<CmdArg> collectCmdArgs() {
+        List<CmdArg> args = new ArrayList<>();
 
-    private void appendDatadir(StringBuilder cmd) {
-        String value = launcher.datadirField.getText().trim();
-        if (!value.isEmpty()) {
-            cmd.append(" -datadir \"").append(value).append("\"");
-        }
-    }
+        // 基本参数
+        addIf(args, "-datadir", launcher.datadirField.getText().trim(), null, true);
+        addIf(args, "-encoding", launcher.encodingField.getText().trim(),
+                UIConstants.DEFAULT_ENCODING, false);
+        addIf(args, "-headrow", launcher.headRowField.getText().trim(),
+                UIConstants.DEFAULT_HEAD_ROW, false);
 
-    private void appendEncoding(StringBuilder cmd) {
-        String value = launcher.encodingField.getText().trim();
-        if (!value.isEmpty() && !value.equals(UIConstants.DEFAULT_ENCODING)) {
-            cmd.append(" -encoding ").append(value);
-        }
-    }
-
-    private void appendHeadRow(StringBuilder cmd) {
-        String value = launcher.headRowField.getText().trim();
-        if (!value.isEmpty() && !value.equals(UIConstants.DEFAULT_HEAD_ROW)) {
-            cmd.append(" -headrow ").append(value);
-        }
-    }
-
-    private void appendUsePoi(StringBuilder cmd) {
         if (launcher.usePoiCheckBox.isSelected()) {
-            cmd.append(" -usepoi");
-        }
-    }
-
-    private void appendAdvancedDirs(StringBuilder cmd) {
-        String asRoot = launcher.asRootField.getText().trim();
-        if (!asRoot.isEmpty()) {
-            cmd.append(" -asroot \"").append(asRoot).append("\"");
+            args.add(new CmdArg("-usepoi", null));
         }
 
-        String excelDirs = launcher.excelDirsField.getText().trim();
-        if (!excelDirs.isEmpty()) {
-            cmd.append(" -exceldirs \"").append(excelDirs).append("\"");
-        }
+        // 高级目录参数
+        addIf(args, "-asroot", launcher.asRootField.getText().trim(), null, true);
+        addIf(args, "-exceldirs", launcher.excelDirsField.getText().trim(), null, true);
+        addIf(args, "-jsondirs", launcher.jsonDirsField.getText().trim(), null, true);
 
-        String jsonDirs = launcher.jsonDirsField.getText().trim();
-        if (!jsonDirs.isEmpty()) {
-            cmd.append(" -jsondirs \"").append(jsonDirs).append("\"");
-        }
-    }
-
-    private void appendI18n(StringBuilder cmd) {
+        // I18n参数
         if (launcher.i18nFileRadio.isSelected()) {
-            String i18nfile = launcher.i18nfileField.getText().trim();
-            if (!i18nfile.isEmpty()) {
-                cmd.append(" -i18nfile \"").append(i18nfile).append("\"");
-            }
+            addIf(args, "-i18nfile", launcher.i18nfileField.getText().trim(), null, true);
         } else if (launcher.langSwitchRadio.isSelected()) {
-            String langSwitchDir = launcher.langSwitchDirField.getText().trim();
-            if (!langSwitchDir.isEmpty()) {
-                cmd.append(" -langswitchdir \"").append(langSwitchDir).append("\"");
-            }
+            addIf(args, "-langswitchdir", launcher.langSwitchDirField.getText().trim(), null, true);
+            addIf(args, "-defaultlang", launcher.defaultLangField.getText().trim(),
+                    UIConstants.DEFAULT_LANG, false);
+        }
 
-            String defaultLang = launcher.defaultLangField.getText().trim();
-            if (!defaultLang.isEmpty() && !defaultLang.equals(UIConstants.DEFAULT_LANG)) {
-                cmd.append(" -defaultlang ").append(defaultLang);
-            }
+        // 选项参数
+        if (launcher.verboseCheckBox.isSelected()) args.add(new CmdArg("-v", null));
+        if (launcher.verbose2CheckBox.isSelected()) args.add(new CmdArg("-vv", null));
+        if (launcher.profileCheckBox.isSelected()) args.add(new CmdArg("-p", null));
+        if (launcher.profileGcCheckBox.isSelected()) args.add(new CmdArg("-pp", null));
+        if (launcher.noWarnCheckBox.isSelected()) args.add(new CmdArg("-nowarn", null));
+        if (launcher.weakWarnCheckBox.isSelected()) args.add(new CmdArg("-weakwarn", null));
+
+        return args;
+    }
+
+    /**
+     * 条件添加参数的辅助方法
+     */
+    private void addIf(List<CmdArg> args, String name, String value, String defaultValue, boolean quoteSpaces) {
+        if (value != null && !value.isEmpty() && !value.equals(defaultValue)) {
+            args.add(new CmdArg(name, value, quoteSpaces));
         }
     }
 
-    private void appendOptions(StringBuilder cmd) {
-        if (launcher.verboseCheckBox.isSelected()) {
-            cmd.append(" -v");
-        }
-        if (launcher.verbose2CheckBox.isSelected()) {
-            cmd.append(" -vv");
-        }
-        if (launcher.profileCheckBox.isSelected()) {
-            cmd.append(" -p");
-        }
-        if (launcher.profileGcCheckBox.isSelected()) {
-            cmd.append(" -pp");
-        }
-        if (launcher.noWarnCheckBox.isSelected()) {
-            cmd.append(" -nowarn");
-        }
-        if (launcher.weakWarnCheckBox.isSelected()) {
-            cmd.append(" -weakwarn");
+    /**
+     * 格式化参数到StringBuilder（用于预览命令）
+     */
+    private void appendTo(StringBuilder cmd, CmdArg arg) {
+        if (arg.value() == null) {
+            cmd.append(" ").append(arg.name());
+        } else if (arg.quoteSpaces()) {
+            cmd.append(" ").append(arg.name()).append(" \"").append(arg.value()).append("\"");
+        } else {
+            cmd.append(" ").append(arg.name()).append(" ").append(arg.value());
         }
     }
 
+    /**
+     * 添加参数到List（用于执行命令）
+     */
+    private void addToList(List<String> args, CmdArg arg) {
+        args.add(arg.name());
+        if (arg.value() != null) {
+            args.add(arg.value());
+        }
+    }
+
+    /**
+     * 添加Tools和Generators参数到StringBuilder
+     */
     private void appendToolsAndGenerators(StringBuilder cmd) {
         for (var panel : launcher.toolPanels) {
             String panelCmd = panel.buildCommand();
@@ -148,101 +134,9 @@ public class CommandLineBuilder {
         }
     }
 
-    // List版本的方法
-
-    private void addDatadir(List<String> args) {
-        String value = launcher.datadirField.getText().trim();
-        if (!value.isEmpty()) {
-            args.add("-datadir");
-            args.add(value);
-        }
-    }
-
-    private void addEncoding(List<String> args) {
-        String value = launcher.encodingField.getText().trim();
-        if (!value.isEmpty() && !value.equals(UIConstants.DEFAULT_ENCODING)) {
-            args.add("-encoding");
-            args.add(value);
-        }
-    }
-
-    private void addHeadRow(List<String> args) {
-        String value = launcher.headRowField.getText().trim();
-        if (!value.isEmpty() && !value.equals(UIConstants.DEFAULT_HEAD_ROW)) {
-            args.add("-headrow");
-            args.add(value);
-        }
-    }
-
-    private void addUsePoi(List<String> args) {
-        if (launcher.usePoiCheckBox.isSelected()) {
-            args.add("-usepoi");
-        }
-    }
-
-    private void addAdvancedDirs(List<String> args) {
-        String asRoot = launcher.asRootField.getText().trim();
-        if (!asRoot.isEmpty()) {
-            args.add("-asroot");
-            args.add(asRoot);
-        }
-
-        String excelDirs = launcher.excelDirsField.getText().trim();
-        if (!excelDirs.isEmpty()) {
-            args.add("-exceldirs");
-            args.add(excelDirs);
-        }
-
-        String jsonDirs = launcher.jsonDirsField.getText().trim();
-        if (!jsonDirs.isEmpty()) {
-            args.add("-jsondirs");
-            args.add(jsonDirs);
-        }
-    }
-
-    private void addI18n(List<String> args) {
-        if (launcher.i18nFileRadio.isSelected()) {
-            String i18nfile = launcher.i18nfileField.getText().trim();
-            if (!i18nfile.isEmpty()) {
-                args.add("-i18nfile");
-                args.add(i18nfile);
-            }
-        } else if (launcher.langSwitchRadio.isSelected()) {
-            String langSwitchDir = launcher.langSwitchDirField.getText().trim();
-            if (!langSwitchDir.isEmpty()) {
-                args.add("-langswitchdir");
-                args.add(langSwitchDir);
-            }
-
-            String defaultLang = launcher.defaultLangField.getText().trim();
-            if (!defaultLang.isEmpty()) {
-                args.add("-defaultlang");
-                args.add(defaultLang);
-            }
-        }
-    }
-
-    private void addOptions(List<String> args) {
-        if (launcher.verboseCheckBox.isSelected()) {
-            args.add("-v");
-        }
-        if (launcher.verbose2CheckBox.isSelected()) {
-            args.add("-vv");
-        }
-        if (launcher.profileCheckBox.isSelected()) {
-            args.add("-p");
-        }
-        if (launcher.profileGcCheckBox.isSelected()) {
-            args.add("-pp");
-        }
-        if (launcher.noWarnCheckBox.isSelected()) {
-            args.add("-nowarn");
-        }
-        if (launcher.weakWarnCheckBox.isSelected()) {
-            args.add("-weakwarn");
-        }
-    }
-
+    /**
+     * 添加Tools和Generators参数到List
+     */
     private void addToolsAndGenerators(List<String> args) {
         for (var panel : launcher.toolPanels) {
             String panelCmd = panel.buildCommand();

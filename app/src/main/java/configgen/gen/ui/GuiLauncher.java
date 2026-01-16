@@ -12,7 +12,6 @@ import java.awt.event.ActionEvent;
 import java.io.PrintStream;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class GuiLauncher {
     private JFrame mainFrame;
@@ -331,25 +330,23 @@ public class GuiLauncher {
     }
 
     private JPanel createToolsPanel() {
-        // 使用AtomicReference保存容器引用，以便lambda可以访问
-        final AtomicReference<JPanel> containerRef = new AtomicReference<>();
-        ProviderPanelFactory.ProviderPanelResult result = ProviderPanelFactory.createToolsPanel(
+        final JPanel container = new JPanel(new BorderLayout());
+        JPanel panel = ProviderPanelFactory.createToolsPanel(
                 toolPanels,
-                (panels, name) -> addParameterPanel(panels, containerRef.get(), "tool", name)
+                (panels, name) -> addParameterPanel(panels, container, "tool", name)
         );
-        containerRef.set(result.getContainerPanel());
-        return result.getMainPanel();
+        container.add(panel, BorderLayout.NORTH);
+        return container;
     }
 
     private JPanel createGeneratorsPanel() {
-        // 使用AtomicReference保存容器引用，以便lambda可以访问
-        final AtomicReference<JPanel> containerRef = new AtomicReference<>();
-        ProviderPanelFactory.ProviderPanelResult result = ProviderPanelFactory.createGeneratorsPanel(
+        final JPanel container = new JPanel(new BorderLayout());
+        JPanel panel = ProviderPanelFactory.createGeneratorsPanel(
                 generatorPanels,
-                (panels, name) -> addParameterPanel(panels, containerRef.get(), "gen", name)
+                (panels, name) -> addParameterPanel(panels, container, "gen", name)
         );
-        containerRef.set(result.getContainerPanel());
-        return result.getMainPanel();
+        container.add(panel, BorderLayout.NORTH);
+        return container;
     }
 
     private JPanel createCommandPreviewPanel() {
