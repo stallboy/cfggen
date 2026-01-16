@@ -31,17 +31,16 @@ import java.util.List;
 import java.util.Locale;
 
 public final class Main {
+    private static final int MAX_EXCEPTION_DEPTH = 30;
+
     private static int usage(String reason) {
         Usage.printUsage(reason);
         return 1;
     }
 
-
     public static void main(String[] args) {
-        // 先注册所有的 tools 和 generators
         registerAllProviders();
 
-        // 如果没有参数，启动 GUI
         if (args.length == 0) {
             GuiLauncher.launch();
             return;
@@ -59,10 +58,6 @@ public final class Main {
     record NamedGenerator(String name, Generator gen) {
     }
 
-    /**
-     * 注册所有的 Tools 和 Generators
-     * 这个方法需要在启动 GUI 之前调用，以便 GUI 能够获取完整的注册信息
-     */
     public static void registerAllProviders() {
         Tools.addProvider("xmltocfg", XmlToCfg::new);
         if (BuildSettings.isIncludePoi()) {
@@ -97,60 +92,48 @@ public final class Main {
         try {
             return run(args);
         } catch (Throwable t) {
-            String newLine = System.lineSeparator();
-            StringBuilder sb = new StringBuilder();
+            System.err.print(formatException(t));
+            return 1;
+        }
+    }
 
-            // 定义最大遍历深度，防止循环引用导致死循环
-            int MAX_DEPTH = 30;
-            Throwable curr = t;
-            int depth = 0;
+    private static String formatException(Throwable t) {
+        String newLine = System.lineSeparator();
+        StringBuilder sb = new StringBuilder();
+        Throwable curr = t;
+        int depth = 0;
 
-            // --- 循环遍历异常链 ---
-            while (curr != null && depth < MAX_DEPTH) {
-                depth++;
+        while (curr != null && depth < MAX_EXCEPTION_DEPTH) {
+            depth++;
 
-                // 1. 打印当前异常的标题栏
-                // 对于第一个异常打印 "Exception"，后续打印 "Caused by"
-                if (depth == 1) {
-                    sb.append("-------------------------异常描述-------------------------").append(newLine);
-                } else {
-                    sb.append("Caused by: ");
-                }
+            if (depth == 1) {
+                sb.append("-------------------------异常描述-------------------------").append(newLine);
+            } else {
+                sb.append("Caused by: ");
+            }
 
-                // 打印异常类型和消息
-                sb.append(curr.getClass().getName());
-                String msg = curr.getMessage();
-                if (msg != null) {
-                    sb.append(": ").append(msg);
-                }
-                sb.append(newLine);
+            sb.append(curr.getClass().getName());
+            String msg = curr.getMessage();
+            if (msg != null) {
+                sb.append(": ").append(msg);
+            }
+            sb.append(newLine);
 
-                // 2. 打印当前异常的堆栈轨迹
-                // 获取当前这个异常对象自己的堆栈
-                StackTraceElement[] stackTrace = curr.getStackTrace();
-                if (stackTrace != null) {
-                    for (StackTraceElement element : stackTrace) {
-                        sb.append("\tat ").append(element).append(newLine);
-                    }
-                }
-
-                // 3. 处理 "Suppressed" 异常（可选，通常与 try-with-resources 相关）
-                // 如果需要打印被抑制的异常，可以在这里遍历 curr.getSuppressed()
-
-                // 4. 移动到下一个异常
-                curr = curr.getCause();
-
-                // 如果还有下一个异常，且不是第一个，加个空行分隔（可选，为了好看）
-                if (curr != null) {
-                    sb.append(newLine);
+            StackTraceElement[] stackTrace = curr.getStackTrace();
+            if (stackTrace != null) {
+                for (StackTraceElement element : stackTrace) {
+                    sb.append("\tat ").append(element).append(newLine);
                 }
             }
 
-            // 4. 打印最终结果并退出
-            // 建议使用 System.err 打印错误，这样方便重定向日志
-            System.err.print(sb);
-            return 1;
+            curr = curr.getCause();
+
+            if (curr != null) {
+                sb.append(newLine);
+            }
         }
+
+        return sb.toString();
     }
 
     private static int run(String[] args) {
@@ -224,12 +207,8 @@ public final class Main {
                     generators.add(new NamedGenerator(name, generator));
                 }
                 default -> {
-                    if (BuildSettings.isIncludePoi()) {
-                        if (paramType.equals("-usepoi")) {
-                            usePoi = true;
-                        } else {
-                            return usage("unknown args " + args[i]);
-                        }
+                    if (BuildSettings.isIncludePoi() && paramType.equals("-usepoi")) {
+                        usePoi = true;
                     } else {
                         return usage("unknown args " + args[i]);
                     }
@@ -243,11 +222,10 @@ public final class Main {
         }
 
         if (datadir == null) {
-            if (tools.isEmpty()) {
-                return usage("");
-            } else {
-                return 0;
+            if (!generators.isEmpty()) {
+                return usage("-datadir is required");
             }
+            return 0;
         }
         Path dataDir = Paths.get(datadir);
 
