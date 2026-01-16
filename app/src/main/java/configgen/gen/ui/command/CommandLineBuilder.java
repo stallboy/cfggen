@@ -23,7 +23,14 @@ public class CommandLineBuilder {
      */
     public String buildPreviewCommand() {
         StringBuilder cmd = new StringBuilder("java -jar cfggen.jar");
-        buildCommand(new StringBuilderAppender(cmd));
+        appendDatadir(cmd);
+        appendEncoding(cmd);
+        appendHeadRow(cmd);
+        appendUsePoi(cmd);
+        appendAdvancedDirs(cmd);
+        appendI18n(cmd);
+        appendOptions(cmd);
+        appendToolsAndGenerators(cmd);
         return cmd.toString();
     }
 
@@ -32,191 +39,229 @@ public class CommandLineBuilder {
      */
     public List<String> buildArgs() {
         List<String> args = new ArrayList<>();
-        buildCommand(new ListAppender(args));
+        addDatadir(args);
+        addEncoding(args);
+        addHeadRow(args);
+        addUsePoi(args);
+        addAdvancedDirs(args);
+        addI18n(args);
+        addOptions(args);
+        addToolsAndGenerators(args);
         return args;
     }
 
-    /**
-     * 核心构建逻辑，使用策略模式避免重复
-     */
-    private void buildCommand(CommandAppender appender) {
-        appendDatadir(appender);
-        appendEncoding(appender);
-        appendHeadRow(appender);
-        appendUsePoi(appender);
-        appendAdvancedDirs(appender);
-        appendI18n(appender);
-        appendOptions(appender);
-        appendToolsAndGenerators(appender);
-    }
+    // StringBuilder版本的方法
 
-    private void appendDatadir(CommandAppender appender) {
+    private void appendDatadir(StringBuilder cmd) {
         String value = launcher.getDatadirField().getText().trim();
         if (!value.isEmpty()) {
-            appender.append("-datadir", value, true);
+            cmd.append(" -datadir \"").append(value).append("\"");
         }
     }
 
-    private void appendEncoding(CommandAppender appender) {
+    private void appendEncoding(StringBuilder cmd) {
         String value = launcher.getEncodingField().getText().trim();
         if (!value.isEmpty() && !value.equals(UIConstants.DEFAULT_ENCODING)) {
-            appender.append("-encoding", value, false);
+            cmd.append(" -encoding ").append(value);
         }
     }
 
-    private void appendHeadRow(CommandAppender appender) {
+    private void appendHeadRow(StringBuilder cmd) {
         String value = launcher.getHeadRowField().getText().trim();
         if (!value.isEmpty() && !value.equals(UIConstants.DEFAULT_HEAD_ROW)) {
-            appender.append("-headrow", value, false);
+            cmd.append(" -headrow ").append(value);
         }
     }
 
-    private void appendUsePoi(CommandAppender appender) {
+    private void appendUsePoi(StringBuilder cmd) {
         if (launcher.getUsePoiCheckBox().isSelected()) {
-            appender.appendFlag("-usepoi");
+            cmd.append(" -usepoi");
         }
     }
 
-    private void appendAdvancedDirs(CommandAppender appender) {
+    private void appendAdvancedDirs(StringBuilder cmd) {
         String asRoot = launcher.getAsRootField().getText().trim();
         if (!asRoot.isEmpty()) {
-            appender.append("-asroot", asRoot, true);
+            cmd.append(" -asroot \"").append(asRoot).append("\"");
         }
 
         String excelDirs = launcher.getExcelDirsField().getText().trim();
         if (!excelDirs.isEmpty()) {
-            appender.append("-exceldirs", excelDirs, true);
+            cmd.append(" -exceldirs \"").append(excelDirs).append("\"");
         }
 
         String jsonDirs = launcher.getJsonDirsField().getText().trim();
         if (!jsonDirs.isEmpty()) {
-            appender.append("-jsondirs", jsonDirs, true);
+            cmd.append(" -jsondirs \"").append(jsonDirs).append("\"");
         }
     }
 
-    private void appendI18n(CommandAppender appender) {
-        I18nConfig i18n = launcher.getI18nConfig();
-
-        if (i18n.isI18nFileMode()) {
-            String i18nfile = i18n.getI18nFile().trim();
+    private void appendI18n(StringBuilder cmd) {
+        if (launcher.getI18nFileRadio().isSelected()) {
+            String i18nfile = launcher.getI18nfileField().getText().trim();
             if (!i18nfile.isEmpty()) {
-                appender.append("-i18nfile", i18nfile, true);
+                cmd.append(" -i18nfile \"").append(i18nfile).append("\"");
             }
-        } else if (i18n.isLangSwitchMode()) {
-            String langSwitchDir = i18n.getLangSwitchDir().trim();
+        } else if (launcher.getLangSwitchRadio().isSelected()) {
+            String langSwitchDir = launcher.getLangSwitchDirField().getText().trim();
             if (!langSwitchDir.isEmpty()) {
-                appender.append("-langswitchdir", langSwitchDir, true);
+                cmd.append(" -langswitchdir \"").append(langSwitchDir).append("\"");
             }
 
-            String defaultLang = i18n.getDefaultLang().trim();
+            String defaultLang = launcher.getDefaultLangField().getText().trim();
             if (!defaultLang.isEmpty() && !defaultLang.equals(UIConstants.DEFAULT_LANG)) {
-                appender.append("-defaultlang", defaultLang, false);
+                cmd.append(" -defaultlang ").append(defaultLang);
             }
         }
     }
 
-    private void appendOptions(CommandAppender appender) {
+    private void appendOptions(StringBuilder cmd) {
         if (launcher.getVerboseCheckBox().isSelected()) {
-            appender.appendFlag("-v");
+            cmd.append(" -v");
         }
         if (launcher.getVerbose2CheckBox().isSelected()) {
-            appender.appendFlag("-vv");
+            cmd.append(" -vv");
         }
         if (launcher.getProfileCheckBox().isSelected()) {
-            appender.appendFlag("-p");
+            cmd.append(" -p");
         }
         if (launcher.getProfileGcCheckBox().isSelected()) {
-            appender.appendFlag("-pp");
+            cmd.append(" -pp");
         }
         if (launcher.getNoWarnCheckBox().isSelected()) {
-            appender.appendFlag("-nowarn");
+            cmd.append(" -nowarn");
         }
         if (launcher.getWeakWarnCheckBox().isSelected()) {
-            appender.appendFlag("-weakwarn");
+            cmd.append(" -weakwarn");
         }
     }
 
-    private void appendToolsAndGenerators(CommandAppender appender) {
+    private void appendToolsAndGenerators(StringBuilder cmd) {
         for (var panel : launcher.getToolPanels()) {
             String panelCmd = panel.buildCommand();
             if (!panelCmd.isEmpty()) {
-                appender.appendFlag("-tool");
-                appender.appendRawValue(panelCmd);
+                cmd.append(" -tool ").append(panelCmd);
             }
         }
 
         for (var panel : launcher.getGeneratorPanels()) {
             String panelCmd = panel.buildCommand();
             if (!panelCmd.isEmpty()) {
-                appender.appendFlag("-gen");
-                appender.appendRawValue(panelCmd);
+                cmd.append(" -gen ").append(panelCmd);
             }
         }
     }
 
-    /**
-     * 策略接口：统一命令行参数的追加操作
-     */
-    private interface CommandAppender {
-        void append(String flag, String value, boolean quoted);
-        void appendFlag(String flag);
-        void appendRawValue(String value);
+    // List版本的方法
+
+    private void addDatadir(List<String> args) {
+        String value = launcher.getDatadirField().getText().trim();
+        if (!value.isEmpty()) {
+            args.add("-datadir");
+            args.add(value);
+        }
     }
 
-    /**
-     * StringBuilder实现：用于生成命令行预览字符串
-     */
-    private static class StringBuilderAppender implements CommandAppender {
-        private final StringBuilder cmd;
+    private void addEncoding(List<String> args) {
+        String value = launcher.getEncodingField().getText().trim();
+        if (!value.isEmpty() && !value.equals(UIConstants.DEFAULT_ENCODING)) {
+            args.add("-encoding");
+            args.add(value);
+        }
+    }
 
-        StringBuilderAppender(StringBuilder cmd) {
-            this.cmd = cmd;
+    private void addHeadRow(List<String> args) {
+        String value = launcher.getHeadRowField().getText().trim();
+        if (!value.isEmpty() && !value.equals(UIConstants.DEFAULT_HEAD_ROW)) {
+            args.add("-headrow");
+            args.add(value);
+        }
+    }
+
+    private void addUsePoi(List<String> args) {
+        if (launcher.getUsePoiCheckBox().isSelected()) {
+            args.add("-usepoi");
+        }
+    }
+
+    private void addAdvancedDirs(List<String> args) {
+        String asRoot = launcher.getAsRootField().getText().trim();
+        if (!asRoot.isEmpty()) {
+            args.add("-asroot");
+            args.add(asRoot);
         }
 
-        @Override
-        public void append(String flag, String value, boolean quoted) {
-            if (quoted) {
-                cmd.append(" ").append(flag).append(" \"").append(value).append("\"");
-            } else {
-                cmd.append(" ").append(flag).append(" ").append(value);
+        String excelDirs = launcher.getExcelDirsField().getText().trim();
+        if (!excelDirs.isEmpty()) {
+            args.add("-exceldirs");
+            args.add(excelDirs);
+        }
+
+        String jsonDirs = launcher.getJsonDirsField().getText().trim();
+        if (!jsonDirs.isEmpty()) {
+            args.add("-jsondirs");
+            args.add(jsonDirs);
+        }
+    }
+
+    private void addI18n(List<String> args) {
+        if (launcher.getI18nFileRadio().isSelected()) {
+            String i18nfile = launcher.getI18nfileField().getText().trim();
+            if (!i18nfile.isEmpty()) {
+                args.add("-i18nfile");
+                args.add(i18nfile);
+            }
+        } else if (launcher.getLangSwitchRadio().isSelected()) {
+            String langSwitchDir = launcher.getLangSwitchDirField().getText().trim();
+            if (!langSwitchDir.isEmpty()) {
+                args.add("-langswitchdir");
+                args.add(langSwitchDir);
+            }
+
+            String defaultLang = launcher.getDefaultLangField().getText().trim();
+            if (!defaultLang.isEmpty()) {
+                args.add("-defaultlang");
+                args.add(defaultLang);
+            }
+        }
+    }
+
+    private void addOptions(List<String> args) {
+        if (launcher.getVerboseCheckBox().isSelected()) {
+            args.add("-v");
+        }
+        if (launcher.getVerbose2CheckBox().isSelected()) {
+            args.add("-vv");
+        }
+        if (launcher.getProfileCheckBox().isSelected()) {
+            args.add("-p");
+        }
+        if (launcher.getProfileGcCheckBox().isSelected()) {
+            args.add("-pp");
+        }
+        if (launcher.getNoWarnCheckBox().isSelected()) {
+            args.add("-nowarn");
+        }
+        if (launcher.getWeakWarnCheckBox().isSelected()) {
+            args.add("-weakwarn");
+        }
+    }
+
+    private void addToolsAndGenerators(List<String> args) {
+        for (var panel : launcher.getToolPanels()) {
+            String panelCmd = panel.buildCommand();
+            if (!panelCmd.isEmpty()) {
+                args.add("-tool");
+                args.add(panelCmd);
             }
         }
 
-        @Override
-        public void appendFlag(String flag) {
-            cmd.append(" ").append(flag);
-        }
-
-        @Override
-        public void appendRawValue(String value) {
-            cmd.append(" ").append(value);
-        }
-    }
-
-    /**
-     * List实现：用于生成命令行参数列表
-     */
-    private static class ListAppender implements CommandAppender {
-        private final List<String> args;
-
-        ListAppender(List<String> args) {
-            this.args = args;
-        }
-
-        @Override
-        public void append(String flag, String value, boolean quoted) {
-            args.add(flag);
-            args.add(value);
-        }
-
-        @Override
-        public void appendFlag(String flag) {
-            args.add(flag);
-        }
-
-        @Override
-        public void appendRawValue(String value) {
-            args.add(value);
+        for (var panel : launcher.getGeneratorPanels()) {
+            String panelCmd = panel.buildCommand();
+            if (!panelCmd.isEmpty()) {
+                args.add("-gen");
+                args.add(panelCmd);
+            }
         }
     }
 }

@@ -168,6 +168,24 @@ public class ParameterPanelItem {
      * 构建命令行参数字符串
      */
     public String buildCommand() {
-        return ParameterPanelBuilderFactory.buildCommand(name, paramComponents);
+        StringBuilder cmd = new StringBuilder(name);
+
+        for (var entry : paramComponents.entrySet()) {
+            String paramName = entry.getKey();
+            JComponent component = entry.getValue();
+
+            if (component instanceof JCheckBox checkBox) {
+                if (checkBox.isSelected()) {
+                    cmd.append(",").append(paramName);
+                }
+            } else if (component instanceof JTextField textField) {
+                String value = textField.getText().trim();
+                if (!value.isEmpty()) {
+                    cmd.append(",").append(paramName).append("=").append(value);
+                }
+            }
+        }
+
+        return cmd.toString();
     }
 }

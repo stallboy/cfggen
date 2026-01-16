@@ -19,70 +19,68 @@ public class ProviderPanelFactory {
      * 创建Tools面板
      */
     public static JPanel createToolsPanel(List<ParameterPanelItem> toolPanels,
-                                         ParameterPanelCallback callback) {
-        return createProviderPanel(
-            toolPanels,
-            "Tools",
-            "GuiLauncher.SelectTool",
-            "Select tool...",
-            Tools.getAllProviders(),
-            "tool",
-            callback
-        );
+                                         java.util.function.BiConsumer<List<ParameterPanelItem>, String> onAdd) {
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setBorder(BorderFactory.createTitledBorder("Tools"));
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+
+        Map<String, Tools.ToolProvider> toolProviders = Tools.getAllProviders();
+        JComboBox<String> toolCombo = new JComboBox<>();
+        String selectPrompt = LocaleUtil.getLocaleString("GuiLauncher.SelectTool", "Select tool...");
+        toolCombo.addItem(selectPrompt);
+        for (String toolName : toolProviders.keySet()) {
+            toolCombo.addItem(toolName);
+        }
+
+        JButton addButton = new JButton(LocaleUtil.getLocaleString("GuiLauncher.Add", "Add"));
+        addButton.addActionListener(e -> {
+            String selected = (String) toolCombo.getSelectedItem();
+            if (selected != null && !selected.equals(selectPrompt)) {
+                onAdd.accept(toolPanels, selected);
+                toolCombo.setSelectedItem(selectPrompt);
+            }
+        });
+
+        buttonPanel.add(toolCombo);
+        buttonPanel.add(addButton);
+        mainPanel.add(buttonPanel);
+
+        JPanel container = new JPanel(new BorderLayout());
+        container.add(mainPanel, BorderLayout.NORTH);
+        return container;
     }
 
     /**
      * 创建Generators面板
      */
     public static JPanel createGeneratorsPanel(List<ParameterPanelItem> generatorPanels,
-                                              ParameterPanelCallback callback) {
-        return createProviderPanel(
-            generatorPanels,
-            "Generators",
-            "GuiLauncher.SelectGenerator",
-            "Select generator...",
-            Generators.getAllProviders(),
-            "gen",
-            callback
-        );
-    }
-
-    /**
-     * 统一的Provider面板创建逻辑
-     */
-    private static JPanel createProviderPanel(
-            List<ParameterPanelItem> panels,
-            String title,
-            String selectKey,
-            String defaultSelect,
-            Map<String, ?> providers,
-            String type,
-            ParameterPanelCallback callback) {
-
+                                              java.util.function.BiConsumer<List<ParameterPanelItem>, String> onAdd) {
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-        mainPanel.setBorder(BorderFactory.createTitledBorder(title));
+        mainPanel.setBorder(BorderFactory.createTitledBorder("Generators"));
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
-        JComboBox<String> providerCombo = new JComboBox<>();
-        String selectPrompt = LocaleUtil.getLocaleString(selectKey, defaultSelect);
-        providerCombo.addItem(selectPrompt);
-
-        for (String providerName : providers.keySet()) {
-            providerCombo.addItem(providerName);
+        Map<String, Generators.GeneratorProvider> genProviders = Generators.getAllProviders();
+        JComboBox<String> genCombo = new JComboBox<>();
+        String selectPrompt = LocaleUtil.getLocaleString("GuiLauncher.SelectGenerator", "Select generator...");
+        genCombo.addItem(selectPrompt);
+        for (String genName : genProviders.keySet()) {
+            genCombo.addItem(genName);
         }
 
         JButton addButton = new JButton(LocaleUtil.getLocaleString("GuiLauncher.Add", "Add"));
         addButton.addActionListener(e -> {
-            String selected = (String) providerCombo.getSelectedItem();
+            String selected = (String) genCombo.getSelectedItem();
             if (selected != null && !selected.equals(selectPrompt)) {
-                callback.onAddParameterPanel(panels, mainPanel, type, selected);
-                providerCombo.setSelectedItem(selectPrompt);
+                onAdd.accept(generatorPanels, selected);
+                genCombo.setSelectedItem(selectPrompt);
             }
         });
 
-        buttonPanel.add(providerCombo);
+        buttonPanel.add(genCombo);
         buttonPanel.add(addButton);
         mainPanel.add(buttonPanel);
 

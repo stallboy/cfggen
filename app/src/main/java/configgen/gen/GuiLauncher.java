@@ -2,7 +2,6 @@ package configgen.gen;
 
 import configgen.gen.ui.UIConstants;
 import configgen.gen.ui.command.CommandLineBuilder;
-import configgen.gen.ui.command.I18nConfig;
 import configgen.gen.ui.panel.ParameterPanelItem;
 import configgen.gen.ui.panel.ProviderPanelFactory;
 import configgen.util.Logger;
@@ -44,6 +43,10 @@ public class GuiLauncher {
     private final List<ParameterPanelItem> toolPanels = new ArrayList<>();
     private final List<ParameterPanelItem> generatorPanels = new ArrayList<>();
     private final CommandLineBuilder commandBuilder = new CommandLineBuilder(this);
+
+    // 面板引用，用于添加参数面板
+    private JPanel toolsPanel;
+    private JPanel generatorsPanel;
 
     private JButton runButton;
 
@@ -334,17 +337,17 @@ public class GuiLauncher {
 
     private JPanel createToolsPanel() {
         JPanel panel = ProviderPanelFactory.createToolsPanel(toolPanels,
-                this::addParameterPanel);
+                (panels, name) -> addParameterPanel(panels, toolsPanel, "tool", name));
         // 提取toolsPanel引用，用于后续操作
-        JPanel toolsPanel = (JPanel) ((JPanel) panel.getComponent(0)).getComponent(0);
+        toolsPanel = (JPanel) ((JPanel) panel.getComponent(0)).getComponent(0);
         return panel;
     }
 
     private JPanel createGeneratorsPanel() {
         JPanel panel = ProviderPanelFactory.createGeneratorsPanel(generatorPanels,
-                this::addParameterPanel);
+                (panels, name) -> addParameterPanel(panels, generatorsPanel, "gen", name));
         // 提取generatorsPanel引用，用于后续操作
-        JPanel generatorsPanel = (JPanel) ((JPanel) panel.getComponent(0)).getComponent(0);
+        generatorsPanel = (JPanel) ((JPanel) panel.getComponent(0)).getComponent(0);
         return panel;
     }
 
@@ -606,8 +609,25 @@ public class GuiLauncher {
         return generatorPanels;
     }
 
-    public I18nConfig getI18nConfig() {
-        return new I18nConfig(i18nFileRadio, langSwitchRadio, i18nfileField, langSwitchDirField, defaultLangField);
+    // I18n相关的getter方法供CommandLineBuilder使用
+    public JRadioButton getI18nFileRadio() {
+        return i18nFileRadio;
+    }
+
+    public JRadioButton getLangSwitchRadio() {
+        return langSwitchRadio;
+    }
+
+    public JTextField getI18nfileField() {
+        return i18nfileField;
+    }
+
+    public JTextField getLangSwitchDirField() {
+        return langSwitchDirField;
+    }
+
+    public JTextField getDefaultLangField() {
+        return defaultLangField;
     }
 
     private record SimpleDocumentListener(Runnable callback) implements DocumentListener {
