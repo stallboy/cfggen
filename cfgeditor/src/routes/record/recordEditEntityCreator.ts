@@ -26,6 +26,35 @@ function isPrimitiveType(type: string): boolean {
     return setOfPrimitive.has(type);
 }
 
+/**
+ * 过滤掉空list字段
+ * @param fields 字段定义数组
+ * @param obj 实际数据对象
+ * @returns 过滤后的字段数组
+ */
+function filterEmptyListFields(fields: SField[], obj: JSONObject): SField[] {
+    return fields.filter(field => {
+        // 检查是否为list类型
+        if (!field.type.startsWith('list<')) {
+            return true; // 非list类型，保留
+        }
+
+        // list类型，检查实际值是否为空数组
+        const fieldValue = obj[field.name];
+        if (!Array.isArray(fieldValue)) {
+            return true; // 不是数组，保留
+        }
+
+        // 是空数组，过滤掉
+        if (fieldValue.length === 0) {
+            return false;
+        }
+
+        // 非空数组，保留
+        return true;
+    });
+}
+
 // 检查是否为number类型
 function isNumberType(type: string): boolean {
     return ['int', 'long', 'float'].includes(type);
@@ -618,7 +647,10 @@ function isChainEqual(a: (string | number)[], b: (string | number)[]) {
  * 条件1d: struct只有≤4个bool字段
  * 条件1e: struct只有1个bool和1个number字段
  * 条件2a: impl没有字段
- * 条件2b: impl只有1个primitive字段（移除defaultImpl限制）
+ * 条件2b: impl只有1个primitive字段
+ * 条件2c: impl只有≤2个number字段
+ * 条件2d: impl只有≤3个bool字段
+ * 条件2e: impl只有1个bool和1个number字段
  */
 function canBeEmbeddedCheck(fieldValue: JSONObject, sField: SField, schema: Schema): boolean {
     const fieldType = schema.itemIncludeImplMap.get(sField.type);
@@ -626,34 +658,36 @@ function canBeEmbeddedCheck(fieldValue: JSONObject, sField: SField, schema: Sche
 
     if (fieldType.type === 'struct') {
         const struct = fieldType as SStruct;
-        const analysis = analyzeFieldTypes(struct.fields);
+        // 先过滤空list字段
+        const filteredFields = filterEmptyListFields(struct.fields, fieldValue);
+        const analysis = analyzeFieldTypes(filteredFields);
 
-        // 条件1a: struct没有字段
-        if (struct.fields.length === 0) {
+        // 条件1a: struct没有字段（过滤后）
+        if (filteredFields.length === 0) {
             return true;
         }
 
         // 条件1b: struct只有1个primitive字段
-        if (struct.fields.length === 1 && analysis.allPrimitive) {
+        if (filteredFields.length === 1 && analysis.allPrimitive) {
             return true;
         }
 
         // 条件1c: struct只有≤3个number字段
-        if (struct.fields.length <= 3 &&
-            struct.fields.length === analysis.numberCount &&
+        if (filteredFields.length <= 3 &&
+            filteredFields.length === analysis.numberCount &&
             analysis.allPrimitive) {
             return true;
         }
 
         // 条件1d: struct只有≤4个bool字段
-        if (struct.fields.length <= 4 &&
-            struct.fields.length === analysis.boolCount &&
+        if (filteredFields.length <= 4 &&
+            filteredFields.length === analysis.boolCount &&
             analysis.allPrimitive) {
             return true;
         }
 
         // 条件1e: struct只有1个bool和1个number字段
-        if (struct.fields.length === 2 &&
+        if (filteredFields.length === 2 &&
             analysis.boolCount === 1 &&
             analysis.numberCount === 1 &&
             analysis.allPrimitive) {
@@ -670,15 +704,39 @@ function canBeEmbeddedCheck(fieldValue: JSONObject, sField: SField, schema: Sche
         const impl = getImpl(iface, implName);
         if (!impl) return false;
 
-        const analysis = analyzeFieldTypes(impl.fields);
+        // 先过滤空list字段
+        const filteredFields = filterEmptyListFields(impl.fields, fieldValue);
+        const analysis = analyzeFieldTypes(filteredFields);
 
-        // 条件2a: impl没有字段
-        if (impl.fields.length === 0) {
+        // 条件2a: impl没有字段（过滤后）
+        if (filteredFields.length === 0) {
             return true;
         }
 
-        // 条件2b: impl只有1个primitive字段（移除defaultImpl限制）
-        if (impl.fields.length === 1 && analysis.allPrimitive) {
+        // 条件2b: impl只有1个primitive字段
+        if (filteredFields.length === 1 && analysis.allPrimitive) {
+            return true;
+        }
+
+        // 条件2c: impl只有≤2个number字段
+        if (filteredFields.length <= 2 &&
+            filteredFields.length === analysis.numberCount &&
+            analysis.allPrimitive) {
+            return true;
+        }
+
+        // 条件2d: impl只有≤3个bool字段
+        if (filteredFields.length <= 3 &&
+            filteredFields.length === analysis.boolCount &&
+            analysis.allPrimitive) {
+            return true;
+        }
+
+        // 条件2e: impl只有1个bool和1个number字段
+        if (filteredFields.length === 2 &&
+            analysis.boolCount === 1 &&
+            analysis.numberCount === 1 &&
+            analysis.allPrimitive) {
             return true;
         }
 
@@ -696,16 +754,19 @@ function getEmbeddedFieldValues(
     struct: SStruct,
     obj: JSONObject
 ): Array<{value: PrimitiveValue; type: PrimitiveType; name: string; comment?: string}> | null {
-    if (struct.fields.length === 0) {
-        // 条件1a: 空struct，返回空数组
+    // 先过滤空list字段
+    const filteredFields = filterEmptyListFields(struct.fields, obj);
+
+    if (filteredFields.length === 0) {
+        // 条件1a/2a: 过滤后没有字段，返回空数组
         return [];
     }
 
-    const analysis = analyzeFieldTypes(struct.fields);
+    const analysis = analyzeFieldTypes(filteredFields);
 
     // 单字段情况（条件1b, 2b）
-    if (struct.fields.length === 1 && analysis.allPrimitive) {
-        const onlyField = struct.fields[0];
+    if (filteredFields.length === 1 && analysis.allPrimitive) {
+        const onlyField = filteredFields[0];
         const fieldValue = obj[onlyField.name];
 
         let v: PrimitiveValue;
@@ -727,19 +788,29 @@ function getEmbeddedFieldValues(
         }];
     }
 
-    // 多字段情况（条件1c, 1d, 1e）
+    // 多字段情况（条件1c, 1d, 1e, 2c, 2d, 2e）
     if (analysis.allPrimitive) {
-        // 验证是否满足多字段内嵌条件
-        const isNumberFields = struct.fields.length === analysis.numberCount && struct.fields.length <= 3;
-        const isBoolFields = struct.fields.length === analysis.boolCount && struct.fields.length <= 4;
-        const isBoolAndNumber = struct.fields.length === 2 &&
-                                analysis.boolCount === 1 &&
-                                analysis.numberCount === 1;
+        // struct的条件：≤3个number, ≤4个bool, 1个bool+1个number
+        const isStructNumberFields = filteredFields.length === analysis.numberCount && filteredFields.length <= 3;
+        const isStructBoolFields = filteredFields.length === analysis.boolCount && filteredFields.length <= 4;
+        const isStructBoolAndNumber = filteredFields.length === 2 &&
+                                      analysis.boolCount === 1 &&
+                                      analysis.numberCount === 1;
 
-        if (isNumberFields || isBoolFields || isBoolAndNumber) {
+        // interface的条件：≤2个number, ≤3个bool, 1个bool+1个number
+        const isInterfaceNumberFields = filteredFields.length === analysis.numberCount && filteredFields.length <= 2;
+        const isInterfaceBoolFields = filteredFields.length === analysis.boolCount && filteredFields.length <= 3;
+        const isInterfaceBoolAndNumber = filteredFields.length === 2 &&
+                                         analysis.boolCount === 1 &&
+                                         analysis.numberCount === 1;
+
+        // 满足任一条件即可内嵌
+        if (isStructNumberFields || isStructBoolFields || isStructBoolAndNumber ||
+            isInterfaceNumberFields || isInterfaceBoolFields || isInterfaceBoolAndNumber) {
+
             const fields: Array<{value: PrimitiveValue; type: PrimitiveType; name: string; comment?: string}> = [];
 
-            for (const field of struct.fields) {
+            for (const field of filteredFields) {
                 const fieldValue = obj[field.name];
 
                 let v: PrimitiveValue;
