@@ -178,6 +178,37 @@ export class RecordEditEntityCreator {
                 if (itemType == null) {
                     continue;
                 }
+
+                // 检查单元素list是否可以被内嵌
+                let itemCanBeEmbedded = false;
+                if (fArrLen === 1) {
+                    const itemObj = fArr[0] as JSONObject;
+
+                    // 构造临时SField用于内嵌检查（类型去掉list包装）
+                    const tempSField: SField = {
+                        ...sField,
+                        type: itemTypeId, // 去掉list<...>包装
+                    };
+
+                    // 判断元素是否可以内嵌
+                    if (canBeEmbeddedCheck(itemObj, tempSField, this.schema)) {
+                        itemCanBeEmbedded = true;
+
+                        // 读取元素的fold状态
+                        let isItemFolded = this.folds.isFold([...fieldChain, fieldKey, 0]);
+                        if (isItemFolded === undefined) {
+                            // 本地状态没有设置时，读取元素的$fold字段
+                            isItemFolded = itemObj['$fold'] as boolean | undefined;
+                        }
+
+                        if (isItemFolded !== false) {
+                            // 元素被内嵌，不创建子entity，但标记有子节点（因为内嵌字段也算子节点）
+                            hasChild = true;
+                            continue;
+                        }
+                    }
+                }
+
                 hasChild = true;
                 if (fold) {
                     continue;
@@ -217,7 +248,9 @@ export class RecordEditEntityCreator {
                             onDeleteFunc,
                             onMoveUpFunc,
                             onMoveDownFunc,
-                        });
+                        },
+                        itemCanBeEmbedded  // 传递canBeEmbedded标志
+                    );
                     i++;
 
                     if (childEntity) {
@@ -438,6 +471,80 @@ export class RecordEditEntityCreator {
                             autoCompleteOptions: this.getAutoCompleteOptions(structural, sf.name),
                         });
                     } else {
+                        // list<struct> 或 list<interface>
+                        const v = fieldValue as JSONArray;
+
+                        // 检查是否为单元素list
+                        if (v && v.length === 1) {
+                            const itemObj = v[0] as JSONObject;
+                            const itemType = this.schema.itemIncludeImplMap.get(itemTypeId);
+
+                            if (itemType) {
+                                // 构造临时SField用于内嵌检查（类型去掉list包装）
+                                const tempSField: SField = {
+                                    ...sf,
+                                    type: itemTypeId, // 去掉list<...>包装
+                                };
+
+                                // 判断元素是否可以内嵌
+                                if (canBeEmbeddedCheck(itemObj, tempSField, this.schema)) {
+                                    // 读取元素的fold状态
+                                    let isFolded = this.folds.isFold([...fieldChain, sf.name, 0]);
+                                    if (isFolded === undefined) {
+                                        // 本地状态没有设置时，读取元素的$fold字段
+                                        isFolded = itemObj['$fold'] as boolean | undefined;
+                                    }
+
+                                    if (isFolded !== false) {
+                                        // 内嵌模式
+                                        let embeddedFields: ReturnType<typeof getEmbeddedFieldValues> | null = null;
+                                        let implNameToDisplay: string | undefined = undefined;
+
+                                        if (itemType.type === 'struct') {
+                                            const struct = itemType as SStruct;
+                                            embeddedFields = getEmbeddedFieldValues(struct, itemObj);
+                                        } else if (itemType.type === 'interface') {
+                                            const iface = itemType as SInterface;
+                                            const type = itemObj['$type'] as string;
+                                            const implName = getLastName(type);
+                                            const impl = getImpl(iface, implName);
+
+                                            if (impl) {
+                                                embeddedFields = getEmbeddedFieldValues(impl, itemObj);
+
+                                                // 记录implName（非defaultImpl时需要显示）
+                                                if (implName !== iface.defaultImpl) {
+                                                    implNameToDisplay = implName;
+                                                }
+                                            }
+                                        }
+
+                                        if (embeddedFields) {
+                                            // 从元素获取note
+                                            const note = itemObj['$note'] as string | undefined;
+
+                                            fields.push({
+                                                name: sf.name,
+                                                comment: sf.comment,
+                                                type: 'structRef',
+                                                eleType: sf.type,
+                                                value: '<>',
+                                                handleOut: true,
+                                                embeddedField: {
+                                                    fields: embeddedFields,
+                                                    note: note,
+                                                    implName: implNameToDisplay,
+                                                    embeddedFieldChain: [...fieldChain, sf.name, 0],  // 包含索引0
+                                                },
+                                            });
+                                            continue;  // 跳过后续的funcAdd逻辑
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // 非单元素list或不可内嵌，按现有逻辑处理（显示添加按钮）
                         fields.push({
                             name: sf.name,
                             comment: sf.comment,
