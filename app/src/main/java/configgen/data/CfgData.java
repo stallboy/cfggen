@@ -237,7 +237,8 @@ public record CfgData(Map<String, DTable> tables,
             stat.print();
         }
         if (Logger.verboseLevel() > 1) {
-            Logger.log("table count: %d", tables.size());
+            Logger.log(LocaleUtil.getFormatedLocaleString("CfgData.TableCount",
+                "table count: {0}", tables.size()));
             for (DTable table : tables.values()) {
                 Logger.log(table.tableName);
                 for (DRawSheet sheet : table.rawSheets) {

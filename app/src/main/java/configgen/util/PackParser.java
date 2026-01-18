@@ -127,7 +127,8 @@ public class PackParser {
                         list.add(field.toString());
                         state = NestListState.START;
                     } else {
-                        throw new RuntimeException("最外层的()之后应该是空格和逗号");
+                        throw new RuntimeException(LocaleUtil.getLocaleString("PackParser.ExpectedSpaceAfterParentheses",
+                            "Expected whitespace after outermost parentheses"));
                     }
 
                     break;
@@ -172,9 +173,11 @@ public class PackParser {
                     if (c == whitespace) {
                         // ignore, stay at START state
                     } else if (parameters_ok) {
-                        throw new RuntimeException("已经解析出参数了，后面不能继续有非空字符了");
+                        throw new RuntimeException(LocaleUtil.getLocaleString("PackParser.ExtraCharsAfterParams",
+                            "Extra characters after parsed parameters"));
                     } else if (c == leftParentheses) {
-                        throw new RuntimeException("缺少函数名字");
+                        throw new RuntimeException(LocaleUtil.getLocaleString("PackParser.MissingFunctionName",
+                            "Missing function name"));
                     } else {
                         field.setLength(0);
                         field.append(c);
@@ -222,7 +225,8 @@ public class PackParser {
         }
 
         if (list.size() != 2) {
-            throw new RuntimeException("个数不符" + list.size());
+            throw new RuntimeException(LocaleUtil.getFormatedLocaleString("PackParser.ParameterCountMismatch",
+                "Parameter count mismatch, got {0}, expected 2", list.size()));
         }
         return list;
     }

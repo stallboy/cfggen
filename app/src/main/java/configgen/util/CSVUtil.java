@@ -91,7 +91,9 @@ public class CSVUtil {
         for (int r = 0; r < rows.size(); r++) {
             List<String> row = rows.get(r);
             if (row.size() != columnCount) {
-                throw new IllegalArgumentException("csv里每行数据个数应该相同，但这里第" + r + "行，数据有" + row.size() + "个,跟第一行" + columnCount + ",个数不符合");
+                throw new IllegalArgumentException(LocaleUtil.getFormatedLocaleString("CsvUtil.RowColumnCountMismatch",
+                    "CSV row {0} has {1} columns, but first row has {2} columns",
+                    r, row.size(), columnCount));
             }
 
             for (int c = 0; c < row.size(); c++) {

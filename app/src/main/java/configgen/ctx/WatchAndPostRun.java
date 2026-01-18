@@ -2,6 +2,7 @@ package configgen.ctx;
 
 import configgen.gen.Generator;
 import configgen.gen.Generators;
+import configgen.util.LocaleUtil;
 import configgen.util.Logger;
 
 import java.io.BufferedReader;
@@ -41,11 +42,13 @@ public enum WatchAndPostRun {
      */
     public void startWatch(Context context, int waitSecondsAfterWatchEvt) {
         if (started) {
-            Logger.log("file change watcher already started");
+            Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.WatcherAlreadyStarted",
+                "file change watcher already started"));
             return;
         }
         if (waitSecondsAfterWatchEvt < 0) {
-            Logger.log("watcher waitSecondsAfterWatchEvt < 0, ignore start");
+            Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.WatcherWaitSecondsInvalid",
+                "watcher waitSecondsAfterWatchEvt < 0, ignore start"));
             return;
         }
         this.context = context;
@@ -57,7 +60,8 @@ public enum WatchAndPostRun {
         waitWatcher.start();
         watcher.start();
 
-        Logger.log("file change watcher started");
+        Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.WatcherStarted",
+            "file change watcher started"));
     }
 
     /**
@@ -71,7 +75,8 @@ public enum WatchAndPostRun {
 
         for (PostRunBat ob : postRunBats) {
             if (ob.batFile.equals(batchFile)) {
-                Logger.log("batch file %s already registered for post run", batchFile);
+                Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.BatchFileAlreadyRegistered",
+                    "batch file {0} already registered for post run", batchFile));
                 return;
             }
         }
@@ -95,15 +100,18 @@ public enum WatchAndPostRun {
     private void reloadData() {
         DirectoryStructure newStructure = context.sourceStructure().reload();
         if (newStructure.lastModifiedEquals(context.sourceStructure())) {
-            configgen.util.Logger.verbose("lastModified not change");
+            configgen.util.Logger.verbose(LocaleUtil.getLocaleString("WatchAndPostRun.LastModifiedNotChanged",
+                "lastModified not change"));
             return;
         }
         try {
             this.context = new Context(context.contextCfg(), newStructure);
-            Logger.log("reload context ok");
+            Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.ReloadContextOk",
+                "reload context ok"));
             onNewContextReloaded();
         } catch (Exception e) {
-            Logger.log("reload context ignored: %s", e.getMessage());
+            Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.ReloadContextIgnored",
+                "reload context ignored: {0}", e.getMessage()));
         }
 
     }
@@ -113,7 +121,8 @@ public enum WatchAndPostRun {
             try {
                 callback.onNewContextLoaded(context);
             } catch (Exception e) {
-                Logger.log("failed to run post run task: %s", e.getMessage());
+                Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.FailedToRunPostRun",
+                    "failed to run post run task: {0}", e.getMessage()));
             }
         }
 
@@ -130,7 +139,8 @@ public enum WatchAndPostRun {
             try {
                 batThread.join();
             } catch (InterruptedException e) {
-                Logger.log("post run thread join interrupted: " + e.getMessage());
+                Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.PostRunThreadJoinInterrupted",
+                    "post run thread join interrupted: {0}", e.getMessage()));
             }
         }
 
@@ -162,18 +172,23 @@ public enum WatchAndPostRun {
                 BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
                 String line;
                 while ((line = in.readLine()) != null) {
-                    Logger.log("post run output: " + line);
+                    Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.PostRunOutput",
+                        "post run output: {0}", line));
                 }
                 if (process.waitFor(10, TimeUnit.SECONDS)) {
-                    Logger.log("post run ok!");
+                    Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.PostRunOk",
+                        "post run ok!"));
                 } else {
-                    Logger.log("post run timeout");
+                    Logger.log(LocaleUtil.getLocaleString("WatchAndPostRun.PostRunTimeout",
+                        "post run timeout"));
                 }
                 in.close();
             } catch (IOException e) {
-                Logger.log("post run err: " + e.getMessage());
+                Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.PostRunErr",
+                    "post run err: {0}", e.getMessage()));
             } catch (InterruptedException e) {
-                Logger.log("post run interrupted: " + e.getMessage());
+                Logger.log(LocaleUtil.getFormatedLocaleString("WatchAndPostRun.PostRunInterrupted",
+                    "post run interrupted: {0}", e.getMessage()));
             }
         });
     }
