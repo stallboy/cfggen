@@ -433,14 +433,8 @@ public class GuiLauncher {
     }
 
     private void runGeneration(ActionEvent e) {
-        if (datadirField.getText().trim().isEmpty()) {
+        if (!generatorPanels.isEmpty() && datadirField.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(mainFrame, LocaleUtil.getLocaleString("GuiLauncher.PleaseSetDataDirectory", "Please set data directory"),
-                    LocaleUtil.getLocaleString("GuiLauncher.Error", "Error"), JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        if (generatorPanels.isEmpty()) {
-            JOptionPane.showMessageDialog(mainFrame, LocaleUtil.getLocaleString("GuiLauncher.PleaseAddAtLeastOneGenerator", "Please add at least one generator"),
                     LocaleUtil.getLocaleString("GuiLauncher.Error", "Error"), JOptionPane.ERROR_MESSAGE);
             return;
         }

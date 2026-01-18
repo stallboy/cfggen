@@ -37,6 +37,8 @@ public class Usage extends Tool {
         Logger.log("   or: java -jar cfggen.jar  (launch GUI)");
         Logger.log("");
         Logger.log("Parameters can be in any order, but -datadir is required when using generators.");
+        Logger.log(LocaleUtil.getLocaleString("Usage.ToolGenStart",
+                "parameters in tool/gen are separated by , and the parameter name and parameter value are separated = or :."));
 
         Logger.log("");
         Logger.log("-----language & logging options");
@@ -88,8 +90,6 @@ public class Usage extends Tool {
                 "the default language when use lang switch"));
 
         Logger.log("");
-        Logger.log("-----" + LocaleUtil.getLocaleString("Usage.ToolGenStart",
-                "parameters in tool/gen are separated by , and the parameter name and parameter value are separated = or :."));
 
         Logger.log("");
         Logger.log("-----generators");
