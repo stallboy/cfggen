@@ -22,10 +22,33 @@ public record CommandLineBuilder(GuiLauncher launcher) {
      */
     public String buildPreviewCommand() {
         StringBuilder cmd = new StringBuilder("java -jar cfggen.jar");
-        for (CmdArg arg : collectCmdArgs()) {
+
+        // 1. 语言和日志选项
+        for (CmdArg arg : collectLanguageAndLoggingOptions()) {
             appendTo(cmd, arg);
         }
-        appendToolsAndGenerators(cmd);
+
+        // 2. Tools
+        for (var panel : launcher.toolPanels) {
+            String panelCmd = panel.buildCommand();
+            if (!panelCmd.isEmpty()) {
+                cmd.append(" -tool ").append(panelCmd);
+            }
+        }
+
+        // 3. 数据相关参数
+        for (CmdArg arg : collectDataOptions()) {
+            appendTo(cmd, arg);
+        }
+
+        // 4. Generators
+        for (var panel : launcher.generatorPanels) {
+            String panelCmd = panel.buildCommand();
+            if (!panelCmd.isEmpty()) {
+                cmd.append(" -gen ").append(panelCmd);
+            }
+        }
+
         return cmd.toString();
     }
 
@@ -34,36 +57,72 @@ public record CommandLineBuilder(GuiLauncher launcher) {
      */
     public List<String> buildArgs() {
         List<String> args = new ArrayList<>();
-        for (CmdArg arg : collectCmdArgs()) {
+
+        // 1. 语言和日志选项
+        for (CmdArg arg : collectLanguageAndLoggingOptions()) {
             addToList(args, arg);
         }
-        addToolsAndGenerators(args);
+
+        // 2. Tools
+        for (var panel : launcher.toolPanels) {
+            String panelCmd = panel.buildCommand();
+            if (!panelCmd.isEmpty()) {
+                args.add("-tool");
+                args.add(panelCmd);
+            }
+        }
+
+        // 3. 数据相关参数
+        for (CmdArg arg : collectDataOptions()) {
+            addToList(args, arg);
+        }
+
+        // 4. Generators
+        for (var panel : launcher.generatorPanels) {
+            String panelCmd = panel.buildCommand();
+            if (!panelCmd.isEmpty()) {
+                args.add("-gen");
+                args.add(panelCmd);
+            }
+        }
+
         return args;
     }
 
     /**
-     * 收集所有需要添加的命令行参数
+     * 收集语言和日志选项（在tools之前）
      */
-    private List<CmdArg> collectCmdArgs() {
+    private List<CmdArg> collectLanguageAndLoggingOptions() {
+        List<CmdArg> args = new ArrayList<>();
+        // 对应Main.java: 163-181
+        if (launcher.verboseCheckBox.isSelected()) args.add(new CmdArg("-v", null));
+        if (launcher.verbose2CheckBox.isSelected()) args.add(new CmdArg("-vv", null));
+        if (launcher.profileCheckBox.isSelected()) args.add(new CmdArg("-p", null));
+        if (launcher.profileGcCheckBox.isSelected()) args.add(new CmdArg("-pp", null));
+        if (launcher.noWarnCheckBox.isSelected()) args.add(new CmdArg("-nowarn", null));
+        if (launcher.weakWarnCheckBox.isSelected()) args.add(new CmdArg("-weakwarn", null));
+        return args;
+    }
+
+    /**
+     * 收集数据相关参数（在tools之后，generators之前）
+     */
+    private List<CmdArg> collectDataOptions() {
         List<CmdArg> args = new ArrayList<>();
 
-        // 基本参数
+        // 数据相关 (对应Main.java: 192-194)
         addIf(args, "-datadir", launcher.datadirField.getText().trim(), null, true);
         addIf(args, "-encoding", launcher.encodingField.getText().trim(),
                 UIConstants.DEFAULT_ENCODING, false);
         addIf(args, "-headrow", launcher.headRowField.getText().trim(),
                 UIConstants.DEFAULT_HEAD_ROW, false);
 
-        if (launcher.usePoiCheckBox.isSelected()) {
-            args.add(new CmdArg("-usepoi", null));
-        }
-
-        // 高级目录参数
+        // 目录映射 (对应Main.java: 196-198)
         addIf(args, "-asroot", launcher.asRootField.getText().trim(), null, true);
         addIf(args, "-exceldirs", launcher.excelDirsField.getText().trim(), null, true);
         addIf(args, "-jsondirs", launcher.jsonDirsField.getText().trim(), null, true);
 
-        // I18n参数
+        // 国际化 (对应Main.java: 200-202)
         if (launcher.i18nFileRadio.isSelected()) {
             addIf(args, "-i18nfile", launcher.i18nfileField.getText().trim(), null, true);
         } else if (launcher.langSwitchRadio.isSelected()) {
@@ -71,14 +130,6 @@ public record CommandLineBuilder(GuiLauncher launcher) {
             addIf(args, "-defaultlang", launcher.defaultLangField.getText().trim(),
                     UIConstants.DEFAULT_LANG, false);
         }
-
-        // 选项参数
-        if (launcher.verboseCheckBox.isSelected()) args.add(new CmdArg("-v", null));
-        if (launcher.verbose2CheckBox.isSelected()) args.add(new CmdArg("-vv", null));
-        if (launcher.profileCheckBox.isSelected()) args.add(new CmdArg("-p", null));
-        if (launcher.profileGcCheckBox.isSelected()) args.add(new CmdArg("-pp", null));
-        if (launcher.noWarnCheckBox.isSelected()) args.add(new CmdArg("-nowarn", null));
-        if (launcher.weakWarnCheckBox.isSelected()) args.add(new CmdArg("-weakwarn", null));
 
         return args;
     }
@@ -112,46 +163,6 @@ public record CommandLineBuilder(GuiLauncher launcher) {
         args.add(arg.name());
         if (arg.value() != null) {
             args.add(arg.value());
-        }
-    }
-
-    /**
-     * 添加Tools和Generators参数到StringBuilder
-     */
-    private void appendToolsAndGenerators(StringBuilder cmd) {
-        for (var panel : launcher.toolPanels) {
-            String panelCmd = panel.buildCommand();
-            if (!panelCmd.isEmpty()) {
-                cmd.append(" -tool ").append(panelCmd);
-            }
-        }
-
-        for (var panel : launcher.generatorPanels) {
-            String panelCmd = panel.buildCommand();
-            if (!panelCmd.isEmpty()) {
-                cmd.append(" -gen ").append(panelCmd);
-            }
-        }
-    }
-
-    /**
-     * 添加Tools和Generators参数到List
-     */
-    private void addToolsAndGenerators(List<String> args) {
-        for (var panel : launcher.toolPanels) {
-            String panelCmd = panel.buildCommand();
-            if (!panelCmd.isEmpty()) {
-                args.add("-tool");
-                args.add(panelCmd);
-            }
-        }
-
-        for (var panel : launcher.generatorPanels) {
-            String panelCmd = panel.buildCommand();
-            if (!panelCmd.isEmpty()) {
-                args.add("-gen");
-                args.add(panelCmd);
-            }
         }
     }
 }

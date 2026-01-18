@@ -1,6 +1,5 @@
 package configgen.tool;
 
-import configgen.gen.BuildSettings;
 import configgen.gen.Generators;
 import configgen.gen.Parameter;
 import configgen.gen.ParameterInfoCollector;
@@ -33,41 +32,15 @@ public class Usage extends Tool {
             Logger.log(reason);
         }
 
-        Logger.log("Usage: java -jar cfggen.jar [tools] -datadir [dir] [options] [gens]");
-        Logger.log(LocaleUtil.getLocaleString("Usage.NoArgs",
-                "    (no args)        launch GUI for interactive configuration"));
+        Logger.log("Usage: java -jar cfggen.jar [options] [-tool toolname[,param=value...]] -datadir <dir> [-gen genname[,param=value...]]");
         Logger.log("");
-        Logger.log("-----schema & data");
-        Logger.log("    -datadir          " + LocaleUtil.getLocaleString("Usage.DataDir",
-                "configuration data directory, must contains file:config.cfg"));
-        Logger.log("    -headrow          " + LocaleUtil.getLocaleString("Usage.HeadRow",
-                "csv/txt/excel file head row type, default 2"));
-        Logger.log("    -encoding         " + LocaleUtil.getLocaleString("Usage.Encoding",
-                "csv/txt encoding, default GBK, if csv file has BOM head, use that encoding"));
-        if (BuildSettings.isIncludePoi()) {
-            Logger.log("    -usepoi           " + LocaleUtil.getLocaleString("Usage.UsePoi",
-                    "use poi lib to read Excel file, slow speed, default false"));
-        }
-
-        Logger.log("    -asroot           " + LocaleUtil.getLocaleString("Usage.AsRoot",
-                "ExplicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map， default null, can be 'ClientTables:noserver,PublicTables,ServerTables:noclient'"));
-        Logger.log("    -exceldirs        " + LocaleUtil.getLocaleString("Usage.ExcelDirs",
-                "ExplicitDir.excelFileDirs， default null"));
-        Logger.log("    -jsondirs         " + LocaleUtil.getLocaleString("Usage.JsonDirs",
-                "ExplicitDir.jsonFileDirs， default null"));
-
+        Logger.log("   or: java -jar cfggen.jar  (launch GUI)");
+        Logger.log("");
+        Logger.log("Parameters can be in any order, but -datadir is required when using generators.");
 
         Logger.log("");
-        Logger.log("-----i18n support");
-        Logger.log("    -i18nfile         " + LocaleUtil.getLocaleString("Usage.I18nFile",
-                "two choices: 1,csv file use original str as Id per table. 2,directory,has multiply xlsx file and use pk&fieldChain as Id per table. default null"));
-        Logger.log("    -langswitchdir    " + LocaleUtil.getLocaleString("Usage.LangSwitchDir",
-                "language switch support"));
-        Logger.log("    -defaultlang      " + LocaleUtil.getLocaleString("Usage.DefaultLang",
-                "the default language when use lang switch"));
-
-        Logger.log("");
-        Logger.log("-----options");
+        Logger.log("-----language & logging options");
+        Logger.log("    -locale           " + LocaleUtil.getLocaleString("Usage.Locale", "locale, default system locale"));
         Logger.log("    -v                " + LocaleUtil.getLocaleString("Usage.V",
                 "verbose level 1, print statistic & warning"));
         Logger.log("    -vv               " + LocaleUtil.getLocaleString("Usage.VV",
@@ -82,10 +55,6 @@ public class Usage extends Tool {
                 "print weak warning"));
 
         Logger.log("");
-        Logger.log("-----" + LocaleUtil.getLocaleString("Usage.ToolGenStart",
-                "parameters in tool/gen are separated by , and the parameter name and parameter value are separated = or :."));
-
-        Logger.log("");
         Logger.log("-----tools");
         Tools.getAllProviders().forEach((k, v) -> {
                     ParameterInfoCollector info = new ParameterInfoCollector("tool", k);
@@ -93,6 +62,34 @@ public class Usage extends Tool {
                     info.print();
                 }
         );
+
+        Logger.log("");
+        Logger.log("-----schema & data");
+        Logger.log("    -datadir          " + LocaleUtil.getLocaleString("Usage.DataDir",
+                "configuration data directory, must contains file:config.cfg"));
+        Logger.log("    -headrow          " + LocaleUtil.getLocaleString("Usage.HeadRow",
+                "csv/txt/excel file head row type, default 2"));
+        Logger.log("    -encoding         " + LocaleUtil.getLocaleString("Usage.Encoding",
+                "csv/txt encoding, default GBK, if csv file has BOM head, use that encoding"));
+        Logger.log("    -asroot           " + LocaleUtil.getLocaleString("Usage.AsRoot",
+                "ExplicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map， default null, can be 'ClientTables:noserver,PublicTables,ServerTables:noclient'"));
+        Logger.log("    -exceldirs        " + LocaleUtil.getLocaleString("Usage.ExcelDirs",
+                "ExplicitDir.excelFileDirs， default null"));
+        Logger.log("    -jsondirs         " + LocaleUtil.getLocaleString("Usage.JsonDirs",
+                "ExplicitDir.jsonFileDirs， default null"));
+
+        Logger.log("");
+        Logger.log("-----i18n support");
+        Logger.log("    -i18nfile         " + LocaleUtil.getLocaleString("Usage.I18nFile",
+                "two choices: 1,csv file use original str as Id per table. 2,directory,has multiply xlsx file and use pk&fieldChain as Id per table. default null"));
+        Logger.log("    -langswitchdir    " + LocaleUtil.getLocaleString("Usage.LangSwitchDir",
+                "language switch support"));
+        Logger.log("    -defaultlang      " + LocaleUtil.getLocaleString("Usage.DefaultLang",
+                "the default language when use lang switch"));
+
+        Logger.log("");
+        Logger.log("-----" + LocaleUtil.getLocaleString("Usage.ToolGenStart",
+                "parameters in tool/gen are separated by , and the parameter name and parameter value are separated = or :."));
 
         Logger.log("");
         Logger.log("-----generators");

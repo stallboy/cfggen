@@ -10,17 +10,17 @@ public final class UIConstants {
     // 窗口尺寸
     public static final int WINDOW_WIDTH = 1400;
     public static final int WINDOW_HEIGHT = 800;
-    public static final int SPLIT_PANE_DIVIDER_LOCATION = 900;
-    public static final double SPLIT_PANE_RESIZE_WEIGHT = 0.6;
+    public static final int SPLIT_PANE_DIVIDER_LOCATION = 700;
+    public static final double SPLIT_PANE_RESIZE_WEIGHT = 0.5;
 
     // 右侧面板
     public static final int RIGHT_PANEL_PREFERRED_WIDTH = 450;
     public static final int COMMAND_PREVIEW_HEIGHT = 80;
 
     // 组件尺寸
-    public static final Dimension TEXT_FIELD_DATADIR_SIZE = new Dimension(300, 25);
-    public static final Dimension TEXT_FIELD_ENCODING_SIZE = new Dimension(150, 25);
-    public static final Dimension TEXT_FIELD_HEADROW_SIZE = new Dimension(100, 25);
+    public static final Dimension TEXT_FIELD_DATADIR_SIZE = new Dimension(250, 25);
+    public static final Dimension TEXT_FIELD_ENCODING_SIZE = new Dimension(120, 25);
+    public static final Dimension TEXT_FIELD_HEADROW_SIZE = new Dimension(80, 25);
     public static final Dimension BUTTON_SIZE = new Dimension(100, 25);
 
     // 颜色

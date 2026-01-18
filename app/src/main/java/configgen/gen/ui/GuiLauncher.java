@@ -22,7 +22,6 @@ public class GuiLauncher {
     JTextField datadirField;
     JTextField encodingField;
     JTextField headRowField;
-    JCheckBox usePoiCheckBox;
     JTextField asRootField;
     JTextField excelDirsField;
     JTextField jsonDirsField;
@@ -82,6 +81,8 @@ public class GuiLauncher {
         splitPane.setRightComponent(rightPanel);
         mainFrame.add(splitPane, BorderLayout.CENTER);
 
+        leftPanel.add(createOptionsPanel());
+        leftPanel.add(Box.createVerticalStrut(UIConstants.VERTICAL_STRUT_LARGE));
         leftPanel.add(createToolsPanel());
         leftPanel.add(Box.createVerticalStrut(UIConstants.VERTICAL_STRUT_LARGE));
         leftPanel.add(createBasicParametersPanel());
@@ -284,24 +285,21 @@ public class GuiLauncher {
         headRowField.getDocument().addDocumentListener(new SimpleDocumentListener(this::updateCommandPreview));
         headRowPanel.add(headRowField);
         panel.add(headRowPanel);
-        panel.add(Box.createVerticalStrut(UIConstants.VERTICAL_STRUT_SMALL));
-
-        JPanel usePoiPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        usePoiPanel.add(new JLabel(LocaleUtil.getLocaleString("GuiLauncher.UsePOI", "Use POI:")));
-        usePoiCheckBox = new JCheckBox();
-        usePoiCheckBox.addActionListener(e -> updateCommandPreview());
-        usePoiPanel.add(usePoiCheckBox);
-        panel.add(usePoiPanel);
-
         panel.add(Box.createVerticalStrut(UIConstants.VERTICAL_STRUT_MEDIUM));
         panel.add(createAdvancedDirPanel());
 
         panel.add(Box.createVerticalStrut(UIConstants.VERTICAL_STRUT_MEDIUM));
         panel.add(createI18nPanel());
 
-        panel.add(Box.createVerticalStrut(UIConstants.VERTICAL_STRUT_MEDIUM));
+        datadirField.setText(".");
 
-        JPanel optionsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        return panel;
+    }
+
+    private JPanel createOptionsPanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panel.setBorder(BorderFactory.createTitledBorder(LocaleUtil.getLocaleString("GuiLauncher.LogOptions", "Log Options")));
+
         verboseCheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.Verbose", "Verbose (-v)"));
         verbose2CheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.Verbose2", "Verbose2 (-vv)"));
         profileCheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.Profile", "Profile (-p)"));
@@ -309,16 +307,12 @@ public class GuiLauncher {
         noWarnCheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.NoWarn", "No Warn"));
         weakWarnCheckBox = createCheckBox(LocaleUtil.getLocaleString("GuiLauncher.WeakWarn", "Weak Warn"));
 
-        optionsPanel.add(verboseCheckBox);
-        optionsPanel.add(verbose2CheckBox);
-        optionsPanel.add(profileCheckBox);
-        optionsPanel.add(profileGcCheckBox);
-        optionsPanel.add(noWarnCheckBox);
-        optionsPanel.add(weakWarnCheckBox);
-
-        panel.add(optionsPanel);
-
-        datadirField.setText(".");
+        panel.add(verboseCheckBox);
+        panel.add(verbose2CheckBox);
+        panel.add(profileCheckBox);
+        panel.add(profileGcCheckBox);
+        panel.add(noWarnCheckBox);
+        panel.add(weakWarnCheckBox);
 
         return panel;
     }
@@ -330,22 +324,24 @@ public class GuiLauncher {
     }
 
     private JPanel createToolsPanel() {
-        final JPanel container = new JPanel(new BorderLayout());
+        final JPanel container = new JPanel();
+        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
         JPanel panel = ProviderPanelFactory.createToolsPanel(
                 toolPanels,
                 (panels, name) -> addParameterPanel(panels, container, "tool", name)
         );
-        container.add(panel, BorderLayout.NORTH);
+        container.add(panel);
         return container;
     }
 
     private JPanel createGeneratorsPanel() {
-        final JPanel container = new JPanel(new BorderLayout());
+        final JPanel container = new JPanel();
+        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
         JPanel panel = ProviderPanelFactory.createGeneratorsPanel(
                 generatorPanels,
                 (panels, name) -> addParameterPanel(panels, container, "gen", name)
         );
-        container.add(panel, BorderLayout.NORTH);
+        container.add(panel);
         return container;
     }
 

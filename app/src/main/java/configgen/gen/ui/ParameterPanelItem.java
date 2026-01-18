@@ -61,7 +61,7 @@ public class ParameterPanelItem {
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         int row = 0;
-        int columns = 3;
+        int columns = 2;
         int col = 0;
 
         for (var entry : info.getInfos().entrySet()) {
@@ -72,7 +72,15 @@ public class ParameterPanelItem {
             gbc.gridy = row;
             gbc.weightx = 0;
             gbc.insets = UIConstants.PARAM_LABEL_INSETS;
-            panel.add(new JLabel(paramName + ":"), gbc);
+
+            // 创建带有tooltip的label
+            String messageId = paramInfo.messageId() != null ? paramInfo.messageId() : (name + "." + paramName);
+            String tooltip = LocaleUtil.getLocaleString(messageId, "");
+            JLabel label = new JLabel(paramName + ":");
+            if (tooltip != null && !tooltip.isEmpty()) {
+                label.setToolTipText(tooltip);
+            }
+            panel.add(label, gbc);
 
             gbc.gridx = col * 2 + 1;
             gbc.weightx = 1.0;

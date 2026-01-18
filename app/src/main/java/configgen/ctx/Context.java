@@ -1,7 +1,6 @@
 package configgen.ctx;
 
 import configgen.data.*;
-import configgen.gen.BuildSettings;
 import configgen.i18n.*;
 import configgen.util.Logger;
 import configgen.schema.*;
@@ -17,7 +16,6 @@ import java.util.Objects;
 public class Context {
     public record ContextCfg(Path dataDir,
                              ExplicitDir explicitDir,
-                             boolean tryUsePoi,
                              HeadRow headRow,
                              String csvOrTsvDefaultEncoding,
 
@@ -32,7 +30,7 @@ public class Context {
         }
 
         public static ContextCfg of(Path dataDir) {
-            return new ContextCfg(dataDir, null, false, HeadRows.A2_Default, "UTF-8", null, null, null);
+            return new ContextCfg(dataDir, null, HeadRows.A2_Default, "UTF-8", null, null, null);
         }
     }
 
@@ -71,8 +69,7 @@ public class Context {
             nullableLangSwitch = LangSwitchable.read(Path.of(cfg.langSwitchDir), cfg.langSwitchDefaultLang);
         }
 
-        excelReader = (cfg.tryUsePoi && BuildSettings.isIncludePoi()) ?
-                BuildSettings.getPoiReader() : ReadByFastExcel.INSTANCE;
+        excelReader = ReadByFastExcel.INSTANCE;
         csvReader = new ReadCsv(cfg.csvOrTsvDefaultEncoding);
         CfgDataReader dataReader = new CfgDataReader(cfg.headRow, csvReader, excelReader);
         boolean ok = readSchemaAndData(dataReader, true);

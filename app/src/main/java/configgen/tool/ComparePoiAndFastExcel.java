@@ -4,7 +4,6 @@ import configgen.ctx.DirectoryStructure;
 import configgen.ctx.HeadRow;
 import configgen.ctx.HeadRows;
 import configgen.data.*;
-import configgen.gen.BuildSettings;
 import configgen.gen.Parameter;
 import configgen.gen.Tool;
 import configgen.schema.CfgSchema;
@@ -40,7 +39,7 @@ public class ComparePoiAndFastExcel extends Tool {
             errs.checkErrors();
         }
         ReadCsv csvReader = new ReadCsv(csvDefaultEncoding);
-        CfgDataReader poiDataReader = new CfgDataReader(headRow, csvReader, BuildSettings.getPoiReader());
+        CfgDataReader poiDataReader = new CfgDataReader(headRow, csvReader, ReadByPoi.INSTANCE);
         CfgDataReader fastDataReader = new CfgDataReader(headRow, csvReader, ReadByFastExcel.INSTANCE);
 
         CfgSchemaErrs dataErrs = CfgSchemaErrs.of();

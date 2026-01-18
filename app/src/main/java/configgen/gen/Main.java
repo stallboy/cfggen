@@ -61,9 +61,7 @@ public final class Main {
 
     public static void registerAllProviders() {
         Tools.addProvider("xmltocfg", XmlToCfg::new);
-        if (BuildSettings.isIncludePoi()) {
-            Tools.addProvider("fastexcelcheck", ComparePoiAndFastExcel::new);
-        }
+        Tools.addProvider("fastexcelcheck", ComparePoiAndFastExcel::new);
         Tools.addProvider("readjavadata", JavaData.ReadJavaData::new);
         Tools.addProvider("term", TodoTermListerAndChecker::new);
         Tools.addProvider("translate", TodoTranslator::new);
@@ -145,9 +143,6 @@ public final class Main {
         String excelDirs = null;
         String jsonDirs = null;
 
-
-        boolean usePoi = false;
-
         String i18nfile = null;
         String langSwitchDir = null;
         String langSwitchDefaultLang = "zh_cn";
@@ -169,18 +164,7 @@ public final class Main {
                     }
                     LocaleUtil.setLocale(locale);
                 }
-                case "-datadir" -> datadir = args[++i];
-                case "-headrow" -> headRowId = args[++i];
-                case "-encoding" -> csvDefaultEncoding = args[++i];
 
-                case "-asroot" -> asRoot = args[++i];
-                case "-exceldirs" -> excelDirs = args[++i];
-                case "-jsondirs" -> jsonDirs = args[++i];
-
-
-                case "-i18nfile" -> i18nfile = args[++i];
-                case "-langswitchdir" -> langSwitchDir = args[++i];
-                case "-defaultlang" -> langSwitchDefaultLang = args[++i];
                 case "-v" -> Logger.setVerboseLevel(1);
                 case "-vv" -> Logger.setVerboseLevel(2);
                 case "-p" -> Logger.enableProfile();
@@ -199,6 +183,19 @@ public final class Main {
                     }
                     tools.add(new NamedTool(name, tool));
                 }
+
+                case "-datadir" -> datadir = args[++i];
+                case "-headrow" -> headRowId = args[++i];
+                case "-encoding" -> csvDefaultEncoding = args[++i];
+
+                case "-asroot" -> asRoot = args[++i];
+                case "-exceldirs" -> excelDirs = args[++i];
+                case "-jsondirs" -> jsonDirs = args[++i];
+
+                case "-i18nfile" -> i18nfile = args[++i];
+                case "-langswitchdir" -> langSwitchDir = args[++i];
+                case "-defaultlang" -> langSwitchDefaultLang = args[++i];
+
                 case "-gen" -> {
                     String name = args[++i];
                     Generator generator = Generators.create(name);
@@ -208,11 +205,7 @@ public final class Main {
                     generators.add(new NamedGenerator(name, generator));
                 }
                 default -> {
-                    if (BuildSettings.isIncludePoi() && paramType.equals("-usepoi")) {
-                        usePoi = true;
-                    } else {
-                        return usage("unknown args " + args[i]);
-                    }
+                    return usage("unknown args " + args[i]);
                 }
             }
         }
@@ -243,7 +236,7 @@ public final class Main {
 
         Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));
 
-        Context context = new Context(new Context.ContextCfg(dataDir, explicitDir, usePoi, headRow, csvDefaultEncoding,
+        Context context = new Context(new Context.ContextCfg(dataDir, explicitDir, headRow, csvDefaultEncoding,
                 i18nfile, langSwitchDir, langSwitchDefaultLang));
 
         for (NamedGenerator ng : generators) {
