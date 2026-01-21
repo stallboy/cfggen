@@ -83,3 +83,11 @@
 /app/.idea/gradle.xml
 /app/.vscode
 /app/spec.md
+/app/src/main/gen
+/AGENTS.md
+/CLAUDE.md
+/app/.classpath
+/app/.idea/copilot.data.migration.agent.xml
+/app/.project
+/app/.settings/org.eclipse.buildship.core.prefs
+/cfgeditor/plan.md
