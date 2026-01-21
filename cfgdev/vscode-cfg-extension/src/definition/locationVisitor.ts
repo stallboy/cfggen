@@ -8,6 +8,10 @@ import { Field_declContext } from '../grammar/CfgParser';
 import { Foreign_declContext } from '../grammar/CfgParser';
 import { RefContext } from '../grammar/CfgParser';
 import { Type_Context } from '../grammar/CfgParser';
+import { TypeMapContext } from '../grammar/CfgParser';
+import { TypeListContext } from '../grammar/CfgParser';
+import { TypeBasicContext } from '../grammar/CfgParser';
+import { Type_eleContext } from '../grammar/CfgParser';
 import { Ns_identContext } from '../grammar/CfgParser';
 import { FileDefinitionAndRef, Ref, TRange } from './fileDefinitionAndRef';
 import { TypeUtils } from '../utils/typeUtils';
@@ -210,7 +214,19 @@ export class LocationVisitor extends AbstractParseTreeVisitor<void> implements C
     // ============================================================
 
     private processType(type: Type_Context, ref: Ref): void {
-        const typeElems = type.type_ele();
+        // Type_Context has three subclasses: TypeListContext, TypeMapContext, TypeBasicContext
+        // All have type_ele() method, but the base class doesn't define it
+        let typeElems: Type_eleContext[];
+
+        if (type instanceof TypeMapContext) {
+            typeElems = type.type_ele();
+        } else if (type instanceof TypeListContext || type instanceof TypeBasicContext) {
+            const elem = type.type_ele();
+            typeElems = elem ? [elem] : [];
+        } else {
+            return;
+        }
+
         if (!typeElems || typeElems.length === 0) return;
 
         // 处理最后一个type_ele（可能是自定义类型）

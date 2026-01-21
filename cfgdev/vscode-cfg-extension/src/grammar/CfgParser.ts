@@ -20,26 +20,27 @@ export class CfgParser extends antlr.Parser {
     public static readonly TBASE = 8;
     public static readonly REF = 9;
     public static readonly LISTREF = 10;
-    public static readonly COMMENT = 11;
-    public static readonly IDENT = 12;
-    public static readonly SEMI = 13;
-    public static readonly EQ = 14;
-    public static readonly LP = 15;
-    public static readonly RP = 16;
-    public static readonly LB = 17;
-    public static readonly RB = 18;
-    public static readonly LC = 19;
-    public static readonly RC = 20;
-    public static readonly DOT = 21;
-    public static readonly COMMA = 22;
-    public static readonly COLON = 23;
-    public static readonly PLUS = 24;
-    public static readonly MINUS = 25;
-    public static readonly STRING_CONSTANT = 26;
+    public static readonly EQ = 11;
+    public static readonly LP = 12;
+    public static readonly RP = 13;
+    public static readonly LB = 14;
+    public static readonly RB = 15;
+    public static readonly RC = 16;
+    public static readonly DOT = 17;
+    public static readonly COMMA = 18;
+    public static readonly COLON = 19;
+    public static readonly PLUS = 20;
+    public static readonly MINUS = 21;
+    public static readonly LC_COMMENT = 22;
+    public static readonly SEMI_COMMENT = 23;
+    public static readonly BOOL_CONSTANT = 24;
+    public static readonly FLOAT_CONSTANT = 25;
+    public static readonly HEX_INTEGER_CONSTANT = 26;
     public static readonly INTEGER_CONSTANT = 27;
-    public static readonly HEX_INTEGER_CONSTANT = 28;
-    public static readonly FLOAT_CONSTANT = 29;
-    public static readonly WS = 30;
+    public static readonly STRING_CONSTANT = 28;
+    public static readonly IDENT = 29;
+    public static readonly COMMENT = 30;
+    public static readonly WS = 31;
     public static readonly RULE_schema = 0;
     public static readonly RULE_schema_ele = 1;
     public static readonly RULE_struct_decl = 2;
@@ -47,10 +48,10 @@ export class CfgParser extends antlr.Parser {
     public static readonly RULE_table_decl = 4;
     public static readonly RULE_field_decl = 5;
     public static readonly RULE_foreign_decl = 6;
-    public static readonly RULE_type_ = 7;
-    public static readonly RULE_type_ele = 8;
-    public static readonly RULE_ref = 9;
-    public static readonly RULE_key_decl = 10;
+    public static readonly RULE_key_decl = 7;
+    public static readonly RULE_type_ = 8;
+    public static readonly RULE_type_ele = 9;
+    public static readonly RULE_ref = 10;
     public static readonly RULE_key = 11;
     public static readonly RULE_metadata = 12;
     public static readonly RULE_ident_with_opt_single_value = 13;
@@ -58,26 +59,26 @@ export class CfgParser extends antlr.Parser {
     public static readonly RULE_single_value = 15;
     public static readonly RULE_ns_ident = 16;
     public static readonly RULE_identifier = 17;
-    public static readonly RULE_keywords = 18;
+    public static readonly RULE_comment = 18;
 
     public static readonly literalNames = [
         null, "'<'", "'>'", "'struct'", "'interface'", "'table'", "'list'", 
-        "'map'", null, "'->'", "'=>'", null, null, "';'", "'='", "'('", 
-        "')'", "'['", "']'", "'{'", "'}'", "'.'", "','", "':'", "'+'", "'-'"
+        "'map'", null, "'->'", "'=>'", "'='", "'('", "')'", "'['", "']'", 
+        "'}'", "'.'", "','", "':'", "'+'", "'-'"
     ];
 
     public static readonly symbolicNames = [
         null, null, null, "STRUCT", "INTERFACE", "TABLE", "TLIST", "TMAP", 
-        "TBASE", "REF", "LISTREF", "COMMENT", "IDENT", "SEMI", "EQ", "LP", 
-        "RP", "LB", "RB", "LC", "RC", "DOT", "COMMA", "COLON", "PLUS", "MINUS", 
-        "STRING_CONSTANT", "INTEGER_CONSTANT", "HEX_INTEGER_CONSTANT", "FLOAT_CONSTANT", 
-        "WS"
+        "TBASE", "REF", "LISTREF", "EQ", "LP", "RP", "LB", "RB", "RC", "DOT", 
+        "COMMA", "COLON", "PLUS", "MINUS", "LC_COMMENT", "SEMI_COMMENT", 
+        "BOOL_CONSTANT", "FLOAT_CONSTANT", "HEX_INTEGER_CONSTANT", "INTEGER_CONSTANT", 
+        "STRING_CONSTANT", "IDENT", "COMMENT", "WS"
     ];
     public static readonly ruleNames = [
         "schema", "schema_ele", "struct_decl", "interface_decl", "table_decl", 
-        "field_decl", "foreign_decl", "type_", "type_ele", "ref", "key_decl", 
+        "field_decl", "foreign_decl", "key_decl", "type_", "type_ele", "ref", 
         "key", "metadata", "ident_with_opt_single_value", "minus_ident", 
-        "single_value", "ns_ident", "identifier", "keywords",
+        "single_value", "ns_ident", "identifier", "comment",
     ];
 
     public get grammarFileName(): string { return "Cfg.g4"; }
@@ -104,7 +105,7 @@ export class CfgParser extends antlr.Parser {
             this.state = 41;
             this.errorHandler.sync(this);
             _la = this.tokenStream.LA(1);
-            while ((((_la) & ~0x1F) === 0 && ((1 << _la) & 56) !== 0)) {
+            while ((((_la) & ~0x1F) === 0 && ((1 << _la) & 1073741880) !== 0)) {
                 {
                 {
                 this.state = 38;
@@ -138,30 +139,28 @@ export class CfgParser extends antlr.Parser {
         try {
             this.state = 49;
             this.errorHandler.sync(this);
-            switch (this.tokenStream.LA(1)) {
-            case CfgParser.STRUCT:
+            switch (this.interpreter.adaptivePredict(this.tokenStream, 1, this.context) ) {
+            case 1:
                 this.enterOuterAlt(localContext, 1);
                 {
                 this.state = 46;
                 this.struct_decl();
                 }
                 break;
-            case CfgParser.INTERFACE:
+            case 2:
                 this.enterOuterAlt(localContext, 2);
                 {
                 this.state = 47;
                 this.interface_decl();
                 }
                 break;
-            case CfgParser.TABLE:
+            case 3:
                 this.enterOuterAlt(localContext, 3);
                 {
                 this.state = 48;
                 this.table_decl();
                 }
                 break;
-            default:
-                throw new antlr.NoViableAltException(this);
             }
         }
         catch (re) {
@@ -184,53 +183,55 @@ export class CfgParser extends antlr.Parser {
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 51;
-            this.match(CfgParser.STRUCT);
-            this.state = 52;
-            this.ns_ident();
-            this.state = 53;
-            this.metadata();
             this.state = 54;
-            this.match(CfgParser.LC);
-            this.state = 56;
             this.errorHandler.sync(this);
             _la = this.tokenStream.LA(1);
-            if (_la === 11) {
+            while (_la === 30) {
                 {
-                this.state = 55;
-                this.match(CfgParser.COMMENT);
+                {
+                this.state = 51;
+                this.comment();
                 }
+                }
+                this.state = 56;
+                this.errorHandler.sync(this);
+                _la = this.tokenStream.LA(1);
             }
-
-            this.state = 61;
+            this.state = 57;
+            this.match(CfgParser.STRUCT);
+            this.state = 58;
+            this.ns_ident();
+            this.state = 59;
+            this.metadata();
+            this.state = 60;
+            this.match(CfgParser.LC_COMMENT);
+            this.state = 65;
             this.errorHandler.sync(this);
             _la = this.tokenStream.LA(1);
-            while ((((_la) & ~0x1F) === 0 && ((1 << _la) & 4600) !== 0)) {
+            while ((((_la) & ~0x1F) === 0 && ((1 << _la) & 1610613752) !== 0)) {
                 {
-                {
-                this.state = 58;
-                this.field_decl();
-                }
-                }
                 this.state = 63;
                 this.errorHandler.sync(this);
-                _la = this.tokenStream.LA(1);
-            }
-            this.state = 67;
-            this.errorHandler.sync(this);
-            _la = this.tokenStream.LA(1);
-            while (_la === 9) {
-                {
-                {
-                this.state = 64;
-                this.foreign_decl();
+                switch (this.interpreter.adaptivePredict(this.tokenStream, 3, this.context) ) {
+                case 1:
+                    {
+                    this.state = 61;
+                    this.field_decl();
+                    }
+                    break;
+                case 2:
+                    {
+                    this.state = 62;
+                    this.foreign_decl();
+                    }
+                    break;
                 }
                 }
-                this.state = 69;
+                this.state = 67;
                 this.errorHandler.sync(this);
                 _la = this.tokenStream.LA(1);
             }
-            this.state = 70;
+            this.state = 68;
             this.match(CfgParser.RC);
             }
         }
@@ -254,39 +255,43 @@ export class CfgParser extends antlr.Parser {
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 72;
-            this.match(CfgParser.INTERFACE);
             this.state = 73;
-            this.ns_ident();
-            this.state = 74;
-            this.metadata();
-            this.state = 75;
-            this.match(CfgParser.LC);
-            this.state = 77;
             this.errorHandler.sync(this);
             _la = this.tokenStream.LA(1);
-            if (_la === 11) {
+            while (_la === 30) {
                 {
-                this.state = 76;
-                this.match(CfgParser.COMMENT);
+                {
+                this.state = 70;
+                this.comment();
                 }
+                }
+                this.state = 75;
+                this.errorHandler.sync(this);
+                _la = this.tokenStream.LA(1);
             }
-
-            this.state = 80;
+            this.state = 76;
+            this.match(CfgParser.INTERFACE);
+            this.state = 77;
+            this.ns_ident();
+            this.state = 78;
+            this.metadata();
+            this.state = 79;
+            this.match(CfgParser.LC_COMMENT);
+            this.state = 81;
             this.errorHandler.sync(this);
             _la = this.tokenStream.LA(1);
             do {
                 {
                 {
-                this.state = 79;
+                this.state = 80;
                 this.struct_decl();
                 }
                 }
-                this.state = 82;
+                this.state = 83;
                 this.errorHandler.sync(this);
                 _la = this.tokenStream.LA(1);
-            } while (_la === 3);
-            this.state = 84;
+            } while (_la === 3 || _la === 30);
+            this.state = 85;
             this.match(CfgParser.RC);
             }
         }
@@ -310,69 +315,63 @@ export class CfgParser extends antlr.Parser {
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 86;
-            this.match(CfgParser.TABLE);
-            this.state = 87;
-            this.ns_ident();
-            this.state = 88;
-            this.key();
-            this.state = 89;
-            this.metadata();
             this.state = 90;
-            this.match(CfgParser.LC);
-            this.state = 92;
             this.errorHandler.sync(this);
             _la = this.tokenStream.LA(1);
-            if (_la === 11) {
+            while (_la === 30) {
                 {
-                this.state = 91;
-                this.match(CfgParser.COMMENT);
+                {
+                this.state = 87;
+                this.comment();
                 }
+                }
+                this.state = 92;
+                this.errorHandler.sync(this);
+                _la = this.tokenStream.LA(1);
             }
-
+            this.state = 93;
+            this.match(CfgParser.TABLE);
+            this.state = 94;
+            this.ns_ident();
+            this.state = 95;
+            this.key();
+            this.state = 96;
+            this.metadata();
             this.state = 97;
+            this.match(CfgParser.LC_COMMENT);
+            this.state = 101;
             this.errorHandler.sync(this);
             _la = this.tokenStream.LA(1);
-            while (_la === 17) {
+            do {
                 {
-                {
-                this.state = 94;
-                this.key_decl();
+                this.state = 101;
+                this.errorHandler.sync(this);
+                switch (this.interpreter.adaptivePredict(this.tokenStream, 8, this.context) ) {
+                case 1:
+                    {
+                    this.state = 98;
+                    this.field_decl();
+                    }
+                    break;
+                case 2:
+                    {
+                    this.state = 99;
+                    this.foreign_decl();
+                    }
+                    break;
+                case 3:
+                    {
+                    this.state = 100;
+                    this.key_decl();
+                    }
+                    break;
                 }
                 }
-                this.state = 99;
+                this.state = 103;
                 this.errorHandler.sync(this);
                 _la = this.tokenStream.LA(1);
-            }
-            this.state = 103;
-            this.errorHandler.sync(this);
-            _la = this.tokenStream.LA(1);
-            while ((((_la) & ~0x1F) === 0 && ((1 << _la) & 4600) !== 0)) {
-                {
-                {
-                this.state = 100;
-                this.field_decl();
-                }
-                }
-                this.state = 105;
-                this.errorHandler.sync(this);
-                _la = this.tokenStream.LA(1);
-            }
-            this.state = 109;
-            this.errorHandler.sync(this);
-            _la = this.tokenStream.LA(1);
-            while (_la === 9) {
-                {
-                {
-                this.state = 106;
-                this.foreign_decl();
-                }
-                }
-                this.state = 111;
-                this.errorHandler.sync(this);
-                _la = this.tokenStream.LA(1);
-            }
-            this.state = 112;
+            } while ((((_la) & ~0x1F) === 0 && ((1 << _la) & 1610630136) !== 0));
+            this.state = 105;
             this.match(CfgParser.RC);
             }
         }
@@ -396,36 +395,40 @@ export class CfgParser extends antlr.Parser {
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 114;
+            this.state = 110;
+            this.errorHandler.sync(this);
+            _la = this.tokenStream.LA(1);
+            while (_la === 30) {
+                {
+                {
+                this.state = 107;
+                this.comment();
+                }
+                }
+                this.state = 112;
+                this.errorHandler.sync(this);
+                _la = this.tokenStream.LA(1);
+            }
+            this.state = 113;
             this.identifier();
-            this.state = 115;
+            this.state = 114;
             this.match(CfgParser.COLON);
-            this.state = 116;
+            this.state = 115;
             this.type_();
-            this.state = 118;
+            this.state = 117;
             this.errorHandler.sync(this);
             _la = this.tokenStream.LA(1);
             if (_la === 9 || _la === 10) {
                 {
-                this.state = 117;
+                this.state = 116;
                 this.ref();
                 }
             }
 
-            this.state = 120;
+            this.state = 119;
             this.metadata();
-            this.state = 121;
-            this.match(CfgParser.SEMI);
-            this.state = 123;
-            this.errorHandler.sync(this);
-            _la = this.tokenStream.LA(1);
-            if (_la === 11) {
-                {
-                this.state = 122;
-                this.match(CfgParser.COMMENT);
-                }
-            }
-
+            this.state = 120;
+            this.match(CfgParser.SEMI_COMMENT);
             }
         }
         catch (re) {
@@ -449,29 +452,73 @@ export class CfgParser extends antlr.Parser {
             this.enterOuterAlt(localContext, 1);
             {
             this.state = 125;
-            this.match(CfgParser.REF);
-            this.state = 126;
-            this.identifier();
-            this.state = 127;
-            this.match(CfgParser.COLON);
-            this.state = 128;
-            this.key();
-            this.state = 129;
-            this.ref();
-            this.state = 130;
-            this.metadata();
-            this.state = 131;
-            this.match(CfgParser.SEMI);
-            this.state = 133;
             this.errorHandler.sync(this);
             _la = this.tokenStream.LA(1);
-            if (_la === 11) {
+            while (_la === 30) {
                 {
-                this.state = 132;
-                this.match(CfgParser.COMMENT);
+                {
+                this.state = 122;
+                this.comment();
                 }
+                }
+                this.state = 127;
+                this.errorHandler.sync(this);
+                _la = this.tokenStream.LA(1);
             }
-
+            this.state = 128;
+            this.match(CfgParser.REF);
+            this.state = 129;
+            this.identifier();
+            this.state = 130;
+            this.match(CfgParser.COLON);
+            this.state = 131;
+            this.key();
+            this.state = 132;
+            this.ref();
+            this.state = 133;
+            this.metadata();
+            this.state = 134;
+            this.match(CfgParser.SEMI_COMMENT);
+            }
+        }
+        catch (re) {
+            if (re instanceof antlr.RecognitionException) {
+                this.errorHandler.reportError(this, re);
+                this.errorHandler.recover(this, re);
+            } else {
+                throw re;
+            }
+        }
+        finally {
+            this.exitRule();
+        }
+        return localContext;
+    }
+    public key_decl(): Key_declContext {
+        let localContext = new Key_declContext(this.context, this.state);
+        this.enterRule(localContext, 14, CfgParser.RULE_key_decl);
+        let _la: number;
+        try {
+            this.enterOuterAlt(localContext, 1);
+            {
+            this.state = 139;
+            this.errorHandler.sync(this);
+            _la = this.tokenStream.LA(1);
+            while (_la === 30) {
+                {
+                {
+                this.state = 136;
+                this.comment();
+                }
+                }
+                this.state = 141;
+                this.errorHandler.sync(this);
+                _la = this.tokenStream.LA(1);
+            }
+            this.state = 142;
+            this.key();
+            this.state = 143;
+            this.match(CfgParser.SEMI_COMMENT);
             }
         }
         catch (re) {
@@ -489,45 +536,48 @@ export class CfgParser extends antlr.Parser {
     }
     public type_(): Type_Context {
         let localContext = new Type_Context(this.context, this.state);
-        this.enterRule(localContext, 14, CfgParser.RULE_type_);
+        this.enterRule(localContext, 16, CfgParser.RULE_type_);
         try {
-            this.state = 148;
+            this.state = 158;
             this.errorHandler.sync(this);
             switch (this.interpreter.adaptivePredict(this.tokenStream, 14, this.context) ) {
             case 1:
+                localContext = new TypeListContext(localContext);
                 this.enterOuterAlt(localContext, 1);
                 {
-                this.state = 135;
+                this.state = 145;
                 this.match(CfgParser.TLIST);
-                this.state = 136;
+                this.state = 146;
                 this.match(CfgParser.T__0);
-                this.state = 137;
+                this.state = 147;
                 this.type_ele();
-                this.state = 138;
+                this.state = 148;
                 this.match(CfgParser.T__1);
                 }
                 break;
             case 2:
+                localContext = new TypeMapContext(localContext);
                 this.enterOuterAlt(localContext, 2);
                 {
-                this.state = 140;
+                this.state = 150;
                 this.match(CfgParser.TMAP);
-                this.state = 141;
+                this.state = 151;
                 this.match(CfgParser.T__0);
-                this.state = 142;
+                this.state = 152;
                 this.type_ele();
-                this.state = 143;
+                this.state = 153;
                 this.match(CfgParser.COMMA);
-                this.state = 144;
+                this.state = 154;
                 this.type_ele();
-                this.state = 145;
+                this.state = 155;
                 this.match(CfgParser.T__1);
                 }
                 break;
             case 3:
+                localContext = new TypeBasicContext(localContext);
                 this.enterOuterAlt(localContext, 3);
                 {
-                this.state = 147;
+                this.state = 157;
                 this.type_ele();
                 }
                 break;
@@ -548,22 +598,22 @@ export class CfgParser extends antlr.Parser {
     }
     public type_ele(): Type_eleContext {
         let localContext = new Type_eleContext(this.context, this.state);
-        this.enterRule(localContext, 16, CfgParser.RULE_type_ele);
+        this.enterRule(localContext, 18, CfgParser.RULE_type_ele);
         try {
-            this.state = 152;
+            this.state = 162;
             this.errorHandler.sync(this);
             switch (this.interpreter.adaptivePredict(this.tokenStream, 15, this.context) ) {
             case 1:
                 this.enterOuterAlt(localContext, 1);
                 {
-                this.state = 150;
+                this.state = 160;
                 this.match(CfgParser.TBASE);
                 }
                 break;
             case 2:
                 this.enterOuterAlt(localContext, 2);
                 {
-                this.state = 151;
+                this.state = 161;
                 this.ns_ident();
                 }
                 break;
@@ -584,12 +634,12 @@ export class CfgParser extends antlr.Parser {
     }
     public ref(): RefContext {
         let localContext = new RefContext(this.context, this.state);
-        this.enterRule(localContext, 18, CfgParser.RULE_ref);
+        this.enterRule(localContext, 20, CfgParser.RULE_ref);
         let _la: number;
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 154;
+            this.state = 164;
             _la = this.tokenStream.LA(1);
             if(!(_la === 9 || _la === 10)) {
             this.errorHandler.recoverInline(this);
@@ -598,43 +648,18 @@ export class CfgParser extends antlr.Parser {
                 this.errorHandler.reportMatch(this);
                 this.consume();
             }
-            this.state = 155;
+            this.state = 165;
             this.ns_ident();
-            this.state = 157;
+            this.state = 167;
             this.errorHandler.sync(this);
             _la = this.tokenStream.LA(1);
-            if (_la === 17) {
+            if (_la === 14) {
                 {
-                this.state = 156;
+                this.state = 166;
                 this.key();
                 }
             }
 
-            }
-        }
-        catch (re) {
-            if (re instanceof antlr.RecognitionException) {
-                this.errorHandler.reportError(this, re);
-                this.errorHandler.recover(this, re);
-            } else {
-                throw re;
-            }
-        }
-        finally {
-            this.exitRule();
-        }
-        return localContext;
-    }
-    public key_decl(): Key_declContext {
-        let localContext = new Key_declContext(this.context, this.state);
-        this.enterRule(localContext, 20, CfgParser.RULE_key_decl);
-        try {
-            this.enterOuterAlt(localContext, 1);
-            {
-            this.state = 159;
-            this.key();
-            this.state = 160;
-            this.match(CfgParser.SEMI);
             }
         }
         catch (re) {
@@ -657,27 +682,27 @@ export class CfgParser extends antlr.Parser {
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 162;
+            this.state = 169;
             this.match(CfgParser.LB);
-            this.state = 163;
+            this.state = 170;
             this.identifier();
-            this.state = 168;
+            this.state = 175;
             this.errorHandler.sync(this);
             _la = this.tokenStream.LA(1);
-            while (_la === 22) {
+            while (_la === 18) {
                 {
                 {
-                this.state = 164;
+                this.state = 171;
                 this.match(CfgParser.COMMA);
-                this.state = 165;
+                this.state = 172;
                 this.identifier();
                 }
                 }
-                this.state = 170;
+                this.state = 177;
                 this.errorHandler.sync(this);
                 _la = this.tokenStream.LA(1);
             }
-            this.state = 171;
+            this.state = 178;
             this.match(CfgParser.RB);
             }
         }
@@ -701,32 +726,32 @@ export class CfgParser extends antlr.Parser {
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 184;
+            this.state = 191;
             this.errorHandler.sync(this);
             _la = this.tokenStream.LA(1);
-            if (_la === 15) {
+            if (_la === 12) {
                 {
-                this.state = 173;
+                this.state = 180;
                 this.match(CfgParser.LP);
-                this.state = 174;
+                this.state = 181;
                 this.ident_with_opt_single_value();
-                this.state = 179;
+                this.state = 186;
                 this.errorHandler.sync(this);
                 _la = this.tokenStream.LA(1);
-                while (_la === 22) {
+                while (_la === 18) {
                     {
                     {
-                    this.state = 175;
+                    this.state = 182;
                     this.match(CfgParser.COMMA);
-                    this.state = 176;
+                    this.state = 183;
                     this.ident_with_opt_single_value();
                     }
                     }
-                    this.state = 181;
+                    this.state = 188;
                     this.errorHandler.sync(this);
                     _la = this.tokenStream.LA(1);
                 }
-                this.state = 182;
+                this.state = 189;
                 this.match(CfgParser.RP);
                 }
             }
@@ -751,7 +776,7 @@ export class CfgParser extends antlr.Parser {
         this.enterRule(localContext, 26, CfgParser.RULE_ident_with_opt_single_value);
         let _la: number;
         try {
-            this.state = 192;
+            this.state = 199;
             this.errorHandler.sync(this);
             switch (this.tokenStream.LA(1)) {
             case CfgParser.STRUCT:
@@ -763,16 +788,16 @@ export class CfgParser extends antlr.Parser {
             case CfgParser.IDENT:
                 this.enterOuterAlt(localContext, 1);
                 {
-                this.state = 186;
+                this.state = 193;
                 this.identifier();
-                this.state = 189;
+                this.state = 196;
                 this.errorHandler.sync(this);
                 _la = this.tokenStream.LA(1);
-                if (_la === 14) {
+                if (_la === 11) {
                     {
-                    this.state = 187;
+                    this.state = 194;
                     this.match(CfgParser.EQ);
-                    this.state = 188;
+                    this.state = 195;
                     this.single_value();
                     }
                 }
@@ -782,7 +807,7 @@ export class CfgParser extends antlr.Parser {
             case CfgParser.MINUS:
                 this.enterOuterAlt(localContext, 2);
                 {
-                this.state = 191;
+                this.state = 198;
                 this.minus_ident();
                 }
                 break;
@@ -809,9 +834,9 @@ export class CfgParser extends antlr.Parser {
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 194;
+            this.state = 201;
             this.match(CfgParser.MINUS);
-            this.state = 195;
+            this.state = 202;
             this.identifier();
             }
         }
@@ -835,9 +860,9 @@ export class CfgParser extends antlr.Parser {
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 197;
+            this.state = 204;
             _la = this.tokenStream.LA(1);
-            if(!((((_la) & ~0x1F) === 0 && ((1 << _la) & 1006632960) !== 0))) {
+            if(!((((_la) & ~0x1F) === 0 && ((1 << _la) & 520093696) !== 0))) {
             this.errorHandler.recoverInline(this);
             }
             else {
@@ -866,21 +891,21 @@ export class CfgParser extends antlr.Parser {
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 199;
+            this.state = 206;
             this.identifier();
-            this.state = 204;
+            this.state = 211;
             this.errorHandler.sync(this);
             _la = this.tokenStream.LA(1);
-            while (_la === 21) {
+            while (_la === 17) {
                 {
                 {
-                this.state = 200;
+                this.state = 207;
                 this.match(CfgParser.DOT);
-                this.state = 201;
+                this.state = 208;
                 this.identifier();
                 }
                 }
-                this.state = 206;
+                this.state = 213;
                 this.errorHandler.sync(this);
                 _la = this.tokenStream.LA(1);
             }
@@ -902,56 +927,13 @@ export class CfgParser extends antlr.Parser {
     public identifier(): IdentifierContext {
         let localContext = new IdentifierContext(this.context, this.state);
         this.enterRule(localContext, 34, CfgParser.RULE_identifier);
-        try {
-            this.state = 209;
-            this.errorHandler.sync(this);
-            switch (this.tokenStream.LA(1)) {
-            case CfgParser.IDENT:
-                this.enterOuterAlt(localContext, 1);
-                {
-                this.state = 207;
-                this.match(CfgParser.IDENT);
-                }
-                break;
-            case CfgParser.STRUCT:
-            case CfgParser.INTERFACE:
-            case CfgParser.TABLE:
-            case CfgParser.TLIST:
-            case CfgParser.TMAP:
-            case CfgParser.TBASE:
-                this.enterOuterAlt(localContext, 2);
-                {
-                this.state = 208;
-                this.keywords();
-                }
-                break;
-            default:
-                throw new antlr.NoViableAltException(this);
-            }
-        }
-        catch (re) {
-            if (re instanceof antlr.RecognitionException) {
-                this.errorHandler.reportError(this, re);
-                this.errorHandler.recover(this, re);
-            } else {
-                throw re;
-            }
-        }
-        finally {
-            this.exitRule();
-        }
-        return localContext;
-    }
-    public keywords(): KeywordsContext {
-        let localContext = new KeywordsContext(this.context, this.state);
-        this.enterRule(localContext, 36, CfgParser.RULE_keywords);
         let _la: number;
         try {
             this.enterOuterAlt(localContext, 1);
             {
-            this.state = 211;
+            this.state = 214;
             _la = this.tokenStream.LA(1);
-            if(!((((_la) & ~0x1F) === 0 && ((1 << _la) & 504) !== 0))) {
+            if(!((((_la) & ~0x1F) === 0 && ((1 << _la) & 536871416) !== 0))) {
             this.errorHandler.recoverInline(this);
             }
             else {
@@ -973,80 +955,105 @@ export class CfgParser extends antlr.Parser {
         }
         return localContext;
     }
+    public comment(): CommentContext {
+        let localContext = new CommentContext(this.context, this.state);
+        this.enterRule(localContext, 36, CfgParser.RULE_comment);
+        try {
+            this.enterOuterAlt(localContext, 1);
+            {
+            this.state = 216;
+            this.match(CfgParser.COMMENT);
+            }
+        }
+        catch (re) {
+            if (re instanceof antlr.RecognitionException) {
+                this.errorHandler.reportError(this, re);
+                this.errorHandler.recover(this, re);
+            } else {
+                throw re;
+            }
+        }
+        finally {
+            this.exitRule();
+        }
+        return localContext;
+    }
 
     public static readonly _serializedATN: number[] = [
-        4,1,30,214,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
+        4,1,31,219,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
         6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,
         2,14,7,14,2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,1,0,5,0,40,8,0,
-        10,0,12,0,43,9,0,1,0,1,0,1,1,1,1,1,1,3,1,50,8,1,1,2,1,2,1,2,1,2,
-        1,2,3,2,57,8,2,1,2,5,2,60,8,2,10,2,12,2,63,9,2,1,2,5,2,66,8,2,10,
-        2,12,2,69,9,2,1,2,1,2,1,3,1,3,1,3,1,3,1,3,3,3,78,8,3,1,3,4,3,81,
-        8,3,11,3,12,3,82,1,3,1,3,1,4,1,4,1,4,1,4,1,4,1,4,3,4,93,8,4,1,4,
-        5,4,96,8,4,10,4,12,4,99,9,4,1,4,5,4,102,8,4,10,4,12,4,105,9,4,1,
-        4,5,4,108,8,4,10,4,12,4,111,9,4,1,4,1,4,1,5,1,5,1,5,1,5,3,5,119,
-        8,5,1,5,1,5,1,5,3,5,124,8,5,1,6,1,6,1,6,1,6,1,6,1,6,1,6,1,6,3,6,
-        134,8,6,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,3,7,
-        149,8,7,1,8,1,8,3,8,153,8,8,1,9,1,9,1,9,3,9,158,8,9,1,10,1,10,1,
-        10,1,11,1,11,1,11,1,11,5,11,167,8,11,10,11,12,11,170,9,11,1,11,1,
-        11,1,12,1,12,1,12,1,12,5,12,178,8,12,10,12,12,12,181,9,12,1,12,1,
-        12,3,12,185,8,12,1,13,1,13,1,13,3,13,190,8,13,1,13,3,13,193,8,13,
-        1,14,1,14,1,14,1,15,1,15,1,16,1,16,1,16,5,16,203,8,16,10,16,12,16,
-        206,9,16,1,17,1,17,3,17,210,8,17,1,18,1,18,1,18,0,0,19,0,2,4,6,8,
-        10,12,14,16,18,20,22,24,26,28,30,32,34,36,0,3,1,0,9,10,1,0,26,29,
-        1,0,3,8,220,0,41,1,0,0,0,2,49,1,0,0,0,4,51,1,0,0,0,6,72,1,0,0,0,
-        8,86,1,0,0,0,10,114,1,0,0,0,12,125,1,0,0,0,14,148,1,0,0,0,16,152,
-        1,0,0,0,18,154,1,0,0,0,20,159,1,0,0,0,22,162,1,0,0,0,24,184,1,0,
-        0,0,26,192,1,0,0,0,28,194,1,0,0,0,30,197,1,0,0,0,32,199,1,0,0,0,
-        34,209,1,0,0,0,36,211,1,0,0,0,38,40,3,2,1,0,39,38,1,0,0,0,40,43,
-        1,0,0,0,41,39,1,0,0,0,41,42,1,0,0,0,42,44,1,0,0,0,43,41,1,0,0,0,
-        44,45,5,0,0,1,45,1,1,0,0,0,46,50,3,4,2,0,47,50,3,6,3,0,48,50,3,8,
-        4,0,49,46,1,0,0,0,49,47,1,0,0,0,49,48,1,0,0,0,50,3,1,0,0,0,51,52,
-        5,3,0,0,52,53,3,32,16,0,53,54,3,24,12,0,54,56,5,19,0,0,55,57,5,11,
-        0,0,56,55,1,0,0,0,56,57,1,0,0,0,57,61,1,0,0,0,58,60,3,10,5,0,59,
-        58,1,0,0,0,60,63,1,0,0,0,61,59,1,0,0,0,61,62,1,0,0,0,62,67,1,0,0,
-        0,63,61,1,0,0,0,64,66,3,12,6,0,65,64,1,0,0,0,66,69,1,0,0,0,67,65,
-        1,0,0,0,67,68,1,0,0,0,68,70,1,0,0,0,69,67,1,0,0,0,70,71,5,20,0,0,
-        71,5,1,0,0,0,72,73,5,4,0,0,73,74,3,32,16,0,74,75,3,24,12,0,75,77,
-        5,19,0,0,76,78,5,11,0,0,77,76,1,0,0,0,77,78,1,0,0,0,78,80,1,0,0,
-        0,79,81,3,4,2,0,80,79,1,0,0,0,81,82,1,0,0,0,82,80,1,0,0,0,82,83,
-        1,0,0,0,83,84,1,0,0,0,84,85,5,20,0,0,85,7,1,0,0,0,86,87,5,5,0,0,
-        87,88,3,32,16,0,88,89,3,22,11,0,89,90,3,24,12,0,90,92,5,19,0,0,91,
-        93,5,11,0,0,92,91,1,0,0,0,92,93,1,0,0,0,93,97,1,0,0,0,94,96,3,20,
-        10,0,95,94,1,0,0,0,96,99,1,0,0,0,97,95,1,0,0,0,97,98,1,0,0,0,98,
-        103,1,0,0,0,99,97,1,0,0,0,100,102,3,10,5,0,101,100,1,0,0,0,102,105,
-        1,0,0,0,103,101,1,0,0,0,103,104,1,0,0,0,104,109,1,0,0,0,105,103,
-        1,0,0,0,106,108,3,12,6,0,107,106,1,0,0,0,108,111,1,0,0,0,109,107,
-        1,0,0,0,109,110,1,0,0,0,110,112,1,0,0,0,111,109,1,0,0,0,112,113,
-        5,20,0,0,113,9,1,0,0,0,114,115,3,34,17,0,115,116,5,23,0,0,116,118,
-        3,14,7,0,117,119,3,18,9,0,118,117,1,0,0,0,118,119,1,0,0,0,119,120,
-        1,0,0,0,120,121,3,24,12,0,121,123,5,13,0,0,122,124,5,11,0,0,123,
-        122,1,0,0,0,123,124,1,0,0,0,124,11,1,0,0,0,125,126,5,9,0,0,126,127,
-        3,34,17,0,127,128,5,23,0,0,128,129,3,22,11,0,129,130,3,18,9,0,130,
-        131,3,24,12,0,131,133,5,13,0,0,132,134,5,11,0,0,133,132,1,0,0,0,
-        133,134,1,0,0,0,134,13,1,0,0,0,135,136,5,6,0,0,136,137,5,1,0,0,137,
-        138,3,16,8,0,138,139,5,2,0,0,139,149,1,0,0,0,140,141,5,7,0,0,141,
-        142,5,1,0,0,142,143,3,16,8,0,143,144,5,22,0,0,144,145,3,16,8,0,145,
-        146,5,2,0,0,146,149,1,0,0,0,147,149,3,16,8,0,148,135,1,0,0,0,148,
-        140,1,0,0,0,148,147,1,0,0,0,149,15,1,0,0,0,150,153,5,8,0,0,151,153,
-        3,32,16,0,152,150,1,0,0,0,152,151,1,0,0,0,153,17,1,0,0,0,154,155,
-        7,0,0,0,155,157,3,32,16,0,156,158,3,22,11,0,157,156,1,0,0,0,157,
-        158,1,0,0,0,158,19,1,0,0,0,159,160,3,22,11,0,160,161,5,13,0,0,161,
-        21,1,0,0,0,162,163,5,17,0,0,163,168,3,34,17,0,164,165,5,22,0,0,165,
-        167,3,34,17,0,166,164,1,0,0,0,167,170,1,0,0,0,168,166,1,0,0,0,168,
-        169,1,0,0,0,169,171,1,0,0,0,170,168,1,0,0,0,171,172,5,18,0,0,172,
-        23,1,0,0,0,173,174,5,15,0,0,174,179,3,26,13,0,175,176,5,22,0,0,176,
-        178,3,26,13,0,177,175,1,0,0,0,178,181,1,0,0,0,179,177,1,0,0,0,179,
-        180,1,0,0,0,180,182,1,0,0,0,181,179,1,0,0,0,182,183,5,16,0,0,183,
-        185,1,0,0,0,184,173,1,0,0,0,184,185,1,0,0,0,185,25,1,0,0,0,186,189,
-        3,34,17,0,187,188,5,14,0,0,188,190,3,30,15,0,189,187,1,0,0,0,189,
-        190,1,0,0,0,190,193,1,0,0,0,191,193,3,28,14,0,192,186,1,0,0,0,192,
-        191,1,0,0,0,193,27,1,0,0,0,194,195,5,25,0,0,195,196,3,34,17,0,196,
-        29,1,0,0,0,197,198,7,1,0,0,198,31,1,0,0,0,199,204,3,34,17,0,200,
-        201,5,21,0,0,201,203,3,34,17,0,202,200,1,0,0,0,203,206,1,0,0,0,204,
-        202,1,0,0,0,204,205,1,0,0,0,205,33,1,0,0,0,206,204,1,0,0,0,207,210,
-        5,12,0,0,208,210,3,36,18,0,209,207,1,0,0,0,209,208,1,0,0,0,210,35,
-        1,0,0,0,211,212,7,2,0,0,212,37,1,0,0,0,24,41,49,56,61,67,77,82,92,
-        97,103,109,118,123,133,148,152,157,168,179,184,189,192,204,209
+        10,0,12,0,43,9,0,1,0,1,0,1,1,1,1,1,1,3,1,50,8,1,1,2,5,2,53,8,2,10,
+        2,12,2,56,9,2,1,2,1,2,1,2,1,2,1,2,1,2,5,2,64,8,2,10,2,12,2,67,9,
+        2,1,2,1,2,1,3,5,3,72,8,3,10,3,12,3,75,9,3,1,3,1,3,1,3,1,3,1,3,4,
+        3,82,8,3,11,3,12,3,83,1,3,1,3,1,4,5,4,89,8,4,10,4,12,4,92,9,4,1,
+        4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,4,4,102,8,4,11,4,12,4,103,1,4,1,4,
+        1,5,5,5,109,8,5,10,5,12,5,112,9,5,1,5,1,5,1,5,1,5,3,5,118,8,5,1,
+        5,1,5,1,5,1,6,5,6,124,8,6,10,6,12,6,127,9,6,1,6,1,6,1,6,1,6,1,6,
+        1,6,1,6,1,6,1,7,5,7,138,8,7,10,7,12,7,141,9,7,1,7,1,7,1,7,1,8,1,
+        8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,1,8,3,8,159,8,8,1,9,1,
+        9,3,9,163,8,9,1,10,1,10,1,10,3,10,168,8,10,1,11,1,11,1,11,1,11,5,
+        11,174,8,11,10,11,12,11,177,9,11,1,11,1,11,1,12,1,12,1,12,1,12,5,
+        12,185,8,12,10,12,12,12,188,9,12,1,12,1,12,3,12,192,8,12,1,13,1,
+        13,1,13,3,13,197,8,13,1,13,3,13,200,8,13,1,14,1,14,1,14,1,15,1,15,
+        1,16,1,16,1,16,5,16,210,8,16,10,16,12,16,213,9,16,1,17,1,17,1,18,
+        1,18,1,18,0,0,19,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,
+        36,0,3,1,0,9,10,1,0,24,28,2,0,3,8,29,29,225,0,41,1,0,0,0,2,49,1,
+        0,0,0,4,54,1,0,0,0,6,73,1,0,0,0,8,90,1,0,0,0,10,110,1,0,0,0,12,125,
+        1,0,0,0,14,139,1,0,0,0,16,158,1,0,0,0,18,162,1,0,0,0,20,164,1,0,
+        0,0,22,169,1,0,0,0,24,191,1,0,0,0,26,199,1,0,0,0,28,201,1,0,0,0,
+        30,204,1,0,0,0,32,206,1,0,0,0,34,214,1,0,0,0,36,216,1,0,0,0,38,40,
+        3,2,1,0,39,38,1,0,0,0,40,43,1,0,0,0,41,39,1,0,0,0,41,42,1,0,0,0,
+        42,44,1,0,0,0,43,41,1,0,0,0,44,45,5,0,0,1,45,1,1,0,0,0,46,50,3,4,
+        2,0,47,50,3,6,3,0,48,50,3,8,4,0,49,46,1,0,0,0,49,47,1,0,0,0,49,48,
+        1,0,0,0,50,3,1,0,0,0,51,53,3,36,18,0,52,51,1,0,0,0,53,56,1,0,0,0,
+        54,52,1,0,0,0,54,55,1,0,0,0,55,57,1,0,0,0,56,54,1,0,0,0,57,58,5,
+        3,0,0,58,59,3,32,16,0,59,60,3,24,12,0,60,65,5,22,0,0,61,64,3,10,
+        5,0,62,64,3,12,6,0,63,61,1,0,0,0,63,62,1,0,0,0,64,67,1,0,0,0,65,
+        63,1,0,0,0,65,66,1,0,0,0,66,68,1,0,0,0,67,65,1,0,0,0,68,69,5,16,
+        0,0,69,5,1,0,0,0,70,72,3,36,18,0,71,70,1,0,0,0,72,75,1,0,0,0,73,
+        71,1,0,0,0,73,74,1,0,0,0,74,76,1,0,0,0,75,73,1,0,0,0,76,77,5,4,0,
+        0,77,78,3,32,16,0,78,79,3,24,12,0,79,81,5,22,0,0,80,82,3,4,2,0,81,
+        80,1,0,0,0,82,83,1,0,0,0,83,81,1,0,0,0,83,84,1,0,0,0,84,85,1,0,0,
+        0,85,86,5,16,0,0,86,7,1,0,0,0,87,89,3,36,18,0,88,87,1,0,0,0,89,92,
+        1,0,0,0,90,88,1,0,0,0,90,91,1,0,0,0,91,93,1,0,0,0,92,90,1,0,0,0,
+        93,94,5,5,0,0,94,95,3,32,16,0,95,96,3,22,11,0,96,97,3,24,12,0,97,
+        101,5,22,0,0,98,102,3,10,5,0,99,102,3,12,6,0,100,102,3,14,7,0,101,
+        98,1,0,0,0,101,99,1,0,0,0,101,100,1,0,0,0,102,103,1,0,0,0,103,101,
+        1,0,0,0,103,104,1,0,0,0,104,105,1,0,0,0,105,106,5,16,0,0,106,9,1,
+        0,0,0,107,109,3,36,18,0,108,107,1,0,0,0,109,112,1,0,0,0,110,108,
+        1,0,0,0,110,111,1,0,0,0,111,113,1,0,0,0,112,110,1,0,0,0,113,114,
+        3,34,17,0,114,115,5,19,0,0,115,117,3,16,8,0,116,118,3,20,10,0,117,
+        116,1,0,0,0,117,118,1,0,0,0,118,119,1,0,0,0,119,120,3,24,12,0,120,
+        121,5,23,0,0,121,11,1,0,0,0,122,124,3,36,18,0,123,122,1,0,0,0,124,
+        127,1,0,0,0,125,123,1,0,0,0,125,126,1,0,0,0,126,128,1,0,0,0,127,
+        125,1,0,0,0,128,129,5,9,0,0,129,130,3,34,17,0,130,131,5,19,0,0,131,
+        132,3,22,11,0,132,133,3,20,10,0,133,134,3,24,12,0,134,135,5,23,0,
+        0,135,13,1,0,0,0,136,138,3,36,18,0,137,136,1,0,0,0,138,141,1,0,0,
+        0,139,137,1,0,0,0,139,140,1,0,0,0,140,142,1,0,0,0,141,139,1,0,0,
+        0,142,143,3,22,11,0,143,144,5,23,0,0,144,15,1,0,0,0,145,146,5,6,
+        0,0,146,147,5,1,0,0,147,148,3,18,9,0,148,149,5,2,0,0,149,159,1,0,
+        0,0,150,151,5,7,0,0,151,152,5,1,0,0,152,153,3,18,9,0,153,154,5,18,
+        0,0,154,155,3,18,9,0,155,156,5,2,0,0,156,159,1,0,0,0,157,159,3,18,
+        9,0,158,145,1,0,0,0,158,150,1,0,0,0,158,157,1,0,0,0,159,17,1,0,0,
+        0,160,163,5,8,0,0,161,163,3,32,16,0,162,160,1,0,0,0,162,161,1,0,
+        0,0,163,19,1,0,0,0,164,165,7,0,0,0,165,167,3,32,16,0,166,168,3,22,
+        11,0,167,166,1,0,0,0,167,168,1,0,0,0,168,21,1,0,0,0,169,170,5,14,
+        0,0,170,175,3,34,17,0,171,172,5,18,0,0,172,174,3,34,17,0,173,171,
+        1,0,0,0,174,177,1,0,0,0,175,173,1,0,0,0,175,176,1,0,0,0,176,178,
+        1,0,0,0,177,175,1,0,0,0,178,179,5,15,0,0,179,23,1,0,0,0,180,181,
+        5,12,0,0,181,186,3,26,13,0,182,183,5,18,0,0,183,185,3,26,13,0,184,
+        182,1,0,0,0,185,188,1,0,0,0,186,184,1,0,0,0,186,187,1,0,0,0,187,
+        189,1,0,0,0,188,186,1,0,0,0,189,190,5,13,0,0,190,192,1,0,0,0,191,
+        180,1,0,0,0,191,192,1,0,0,0,192,25,1,0,0,0,193,196,3,34,17,0,194,
+        195,5,11,0,0,195,197,3,30,15,0,196,194,1,0,0,0,196,197,1,0,0,0,197,
+        200,1,0,0,0,198,200,3,28,14,0,199,193,1,0,0,0,199,198,1,0,0,0,200,
+        27,1,0,0,0,201,202,5,21,0,0,202,203,3,34,17,0,203,29,1,0,0,0,204,
+        205,7,1,0,0,205,31,1,0,0,0,206,211,3,34,17,0,207,208,5,17,0,0,208,
+        210,3,34,17,0,209,207,1,0,0,0,210,213,1,0,0,0,211,209,1,0,0,0,211,
+        212,1,0,0,0,212,33,1,0,0,0,213,211,1,0,0,0,214,215,7,2,0,0,215,35,
+        1,0,0,0,216,217,5,30,0,0,217,37,1,0,0,0,23,41,49,54,63,65,73,83,
+        90,101,103,110,117,125,139,158,162,167,175,186,191,196,199,211
     ];
 
     private static __ATN: antlr.ATN;
@@ -1136,14 +1143,20 @@ export class Struct_declContext extends antlr.ParserRuleContext {
     public metadata(): MetadataContext {
         return this.getRuleContext(0, MetadataContext)!;
     }
-    public LC(): antlr.TerminalNode {
-        return this.getToken(CfgParser.LC, 0)!;
+    public LC_COMMENT(): antlr.TerminalNode {
+        return this.getToken(CfgParser.LC_COMMENT, 0)!;
     }
     public RC(): antlr.TerminalNode {
         return this.getToken(CfgParser.RC, 0)!;
     }
-    public COMMENT(): antlr.TerminalNode | null {
-        return this.getToken(CfgParser.COMMENT, 0);
+    public comment(): CommentContext[];
+    public comment(i: number): CommentContext | null;
+    public comment(i?: number): CommentContext[] | CommentContext | null {
+        if (i === undefined) {
+            return this.getRuleContexts(CommentContext);
+        }
+
+        return this.getRuleContext(i, CommentContext);
     }
     public field_decl(): Field_declContext[];
     public field_decl(i: number): Field_declContext | null;
@@ -1189,14 +1202,20 @@ export class Interface_declContext extends antlr.ParserRuleContext {
     public metadata(): MetadataContext {
         return this.getRuleContext(0, MetadataContext)!;
     }
-    public LC(): antlr.TerminalNode {
-        return this.getToken(CfgParser.LC, 0)!;
+    public LC_COMMENT(): antlr.TerminalNode {
+        return this.getToken(CfgParser.LC_COMMENT, 0)!;
     }
     public RC(): antlr.TerminalNode {
         return this.getToken(CfgParser.RC, 0)!;
     }
-    public COMMENT(): antlr.TerminalNode | null {
-        return this.getToken(CfgParser.COMMENT, 0);
+    public comment(): CommentContext[];
+    public comment(i: number): CommentContext | null;
+    public comment(i?: number): CommentContext[] | CommentContext | null {
+        if (i === undefined) {
+            return this.getRuleContexts(CommentContext);
+        }
+
+        return this.getRuleContext(i, CommentContext);
     }
     public struct_decl(): Struct_declContext[];
     public struct_decl(i: number): Struct_declContext | null;
@@ -1236,23 +1255,20 @@ export class Table_declContext extends antlr.ParserRuleContext {
     public metadata(): MetadataContext {
         return this.getRuleContext(0, MetadataContext)!;
     }
-    public LC(): antlr.TerminalNode {
-        return this.getToken(CfgParser.LC, 0)!;
+    public LC_COMMENT(): antlr.TerminalNode {
+        return this.getToken(CfgParser.LC_COMMENT, 0)!;
     }
     public RC(): antlr.TerminalNode {
         return this.getToken(CfgParser.RC, 0)!;
     }
-    public COMMENT(): antlr.TerminalNode | null {
-        return this.getToken(CfgParser.COMMENT, 0);
-    }
-    public key_decl(): Key_declContext[];
-    public key_decl(i: number): Key_declContext | null;
-    public key_decl(i?: number): Key_declContext[] | Key_declContext | null {
+    public comment(): CommentContext[];
+    public comment(i: number): CommentContext | null;
+    public comment(i?: number): CommentContext[] | CommentContext | null {
         if (i === undefined) {
-            return this.getRuleContexts(Key_declContext);
+            return this.getRuleContexts(CommentContext);
         }
 
-        return this.getRuleContext(i, Key_declContext);
+        return this.getRuleContext(i, CommentContext);
     }
     public field_decl(): Field_declContext[];
     public field_decl(i: number): Field_declContext | null;
@@ -1271,6 +1287,15 @@ export class Table_declContext extends antlr.ParserRuleContext {
         }
 
         return this.getRuleContext(i, Foreign_declContext);
+    }
+    public key_decl(): Key_declContext[];
+    public key_decl(i: number): Key_declContext | null;
+    public key_decl(i?: number): Key_declContext[] | Key_declContext | null {
+        if (i === undefined) {
+            return this.getRuleContexts(Key_declContext);
+        }
+
+        return this.getRuleContext(i, Key_declContext);
     }
     public override get ruleIndex(): number {
         return CfgParser.RULE_table_decl;
@@ -1301,14 +1326,20 @@ export class Field_declContext extends antlr.ParserRuleContext {
     public metadata(): MetadataContext {
         return this.getRuleContext(0, MetadataContext)!;
     }
-    public SEMI(): antlr.TerminalNode {
-        return this.getToken(CfgParser.SEMI, 0)!;
+    public SEMI_COMMENT(): antlr.TerminalNode {
+        return this.getToken(CfgParser.SEMI_COMMENT, 0)!;
+    }
+    public comment(): CommentContext[];
+    public comment(i: number): CommentContext | null;
+    public comment(i?: number): CommentContext[] | CommentContext | null {
+        if (i === undefined) {
+            return this.getRuleContexts(CommentContext);
+        }
+
+        return this.getRuleContext(i, CommentContext);
     }
     public ref(): RefContext | null {
         return this.getRuleContext(0, RefContext);
-    }
-    public COMMENT(): antlr.TerminalNode | null {
-        return this.getToken(CfgParser.COMMENT, 0);
     }
     public override get ruleIndex(): number {
         return CfgParser.RULE_field_decl;
@@ -1345,11 +1376,17 @@ export class Foreign_declContext extends antlr.ParserRuleContext {
     public metadata(): MetadataContext {
         return this.getRuleContext(0, MetadataContext)!;
     }
-    public SEMI(): antlr.TerminalNode {
-        return this.getToken(CfgParser.SEMI, 0)!;
+    public SEMI_COMMENT(): antlr.TerminalNode {
+        return this.getToken(CfgParser.SEMI_COMMENT, 0)!;
     }
-    public COMMENT(): antlr.TerminalNode | null {
-        return this.getToken(CfgParser.COMMENT, 0);
+    public comment(): CommentContext[];
+    public comment(i: number): CommentContext | null;
+    public comment(i?: number): CommentContext[] | CommentContext | null {
+        if (i === undefined) {
+            return this.getRuleContexts(CommentContext);
+        }
+
+        return this.getRuleContext(i, CommentContext);
     }
     public override get ruleIndex(): number {
         return CfgParser.RULE_foreign_decl;
@@ -1364,12 +1401,75 @@ export class Foreign_declContext extends antlr.ParserRuleContext {
 }
 
 
+export class Key_declContext extends antlr.ParserRuleContext {
+    public constructor(parent: antlr.ParserRuleContext | null, invokingState: number) {
+        super(parent, invokingState);
+    }
+    public key(): KeyContext {
+        return this.getRuleContext(0, KeyContext)!;
+    }
+    public SEMI_COMMENT(): antlr.TerminalNode {
+        return this.getToken(CfgParser.SEMI_COMMENT, 0)!;
+    }
+    public comment(): CommentContext[];
+    public comment(i: number): CommentContext | null;
+    public comment(i?: number): CommentContext[] | CommentContext | null {
+        if (i === undefined) {
+            return this.getRuleContexts(CommentContext);
+        }
+
+        return this.getRuleContext(i, CommentContext);
+    }
+    public override get ruleIndex(): number {
+        return CfgParser.RULE_key_decl;
+    }
+    public override accept<Result>(visitor: CfgVisitor<Result>): Result | null {
+        if (visitor.visitKey_decl) {
+            return visitor.visitKey_decl(this);
+        } else {
+            return visitor.visitChildren(this);
+        }
+    }
+}
+
+
 export class Type_Context extends antlr.ParserRuleContext {
     public constructor(parent: antlr.ParserRuleContext | null, invokingState: number) {
         super(parent, invokingState);
     }
-    public TLIST(): antlr.TerminalNode | null {
-        return this.getToken(CfgParser.TLIST, 0);
+    public override get ruleIndex(): number {
+        return CfgParser.RULE_type_;
+    }
+    public override copyFrom(ctx: Type_Context): void {
+        super.copyFrom(ctx);
+    }
+}
+export class TypeListContext extends Type_Context {
+    public constructor(ctx: Type_Context) {
+        super(ctx.parent, ctx.invokingState);
+        super.copyFrom(ctx);
+    }
+    public TLIST(): antlr.TerminalNode {
+        return this.getToken(CfgParser.TLIST, 0)!;
+    }
+    public type_ele(): Type_eleContext {
+        return this.getRuleContext(0, Type_eleContext)!;
+    }
+    public override accept<Result>(visitor: CfgVisitor<Result>): Result | null {
+        if (visitor.visitTypeList) {
+            return visitor.visitTypeList(this);
+        } else {
+            return visitor.visitChildren(this);
+        }
+    }
+}
+export class TypeMapContext extends Type_Context {
+    public constructor(ctx: Type_Context) {
+        super(ctx.parent, ctx.invokingState);
+        super.copyFrom(ctx);
+    }
+    public TMAP(): antlr.TerminalNode {
+        return this.getToken(CfgParser.TMAP, 0)!;
     }
     public type_ele(): Type_eleContext[];
     public type_ele(i: number): Type_eleContext | null;
@@ -1380,18 +1480,28 @@ export class Type_Context extends antlr.ParserRuleContext {
 
         return this.getRuleContext(i, Type_eleContext);
     }
-    public TMAP(): antlr.TerminalNode | null {
-        return this.getToken(CfgParser.TMAP, 0);
-    }
-    public COMMA(): antlr.TerminalNode | null {
-        return this.getToken(CfgParser.COMMA, 0);
-    }
-    public override get ruleIndex(): number {
-        return CfgParser.RULE_type_;
+    public COMMA(): antlr.TerminalNode {
+        return this.getToken(CfgParser.COMMA, 0)!;
     }
     public override accept<Result>(visitor: CfgVisitor<Result>): Result | null {
-        if (visitor.visitType_) {
-            return visitor.visitType_(this);
+        if (visitor.visitTypeMap) {
+            return visitor.visitTypeMap(this);
+        } else {
+            return visitor.visitChildren(this);
+        }
+    }
+}
+export class TypeBasicContext extends Type_Context {
+    public constructor(ctx: Type_Context) {
+        super(ctx.parent, ctx.invokingState);
+        super.copyFrom(ctx);
+    }
+    public type_ele(): Type_eleContext {
+        return this.getRuleContext(0, Type_eleContext)!;
+    }
+    public override accept<Result>(visitor: CfgVisitor<Result>): Result | null {
+        if (visitor.visitTypeBasic) {
+            return visitor.visitTypeBasic(this);
         } else {
             return visitor.visitChildren(this);
         }
@@ -1444,29 +1554,6 @@ export class RefContext extends antlr.ParserRuleContext {
     public override accept<Result>(visitor: CfgVisitor<Result>): Result | null {
         if (visitor.visitRef) {
             return visitor.visitRef(this);
-        } else {
-            return visitor.visitChildren(this);
-        }
-    }
-}
-
-
-export class Key_declContext extends antlr.ParserRuleContext {
-    public constructor(parent: antlr.ParserRuleContext | null, invokingState: number) {
-        super(parent, invokingState);
-    }
-    public key(): KeyContext {
-        return this.getRuleContext(0, KeyContext)!;
-    }
-    public SEMI(): antlr.TerminalNode {
-        return this.getToken(CfgParser.SEMI, 0)!;
-    }
-    public override get ruleIndex(): number {
-        return CfgParser.RULE_key_decl;
-    }
-    public override accept<Result>(visitor: CfgVisitor<Result>): Result | null {
-        if (visitor.visitKey_decl) {
-            return visitor.visitKey_decl(this);
         } else {
             return visitor.visitChildren(this);
         }
@@ -1624,6 +1711,9 @@ export class Single_valueContext extends antlr.ParserRuleContext {
     public STRING_CONSTANT(): antlr.TerminalNode | null {
         return this.getToken(CfgParser.STRING_CONSTANT, 0);
     }
+    public BOOL_CONSTANT(): antlr.TerminalNode | null {
+        return this.getToken(CfgParser.BOOL_CONSTANT, 0);
+    }
     public override get ruleIndex(): number {
         return CfgParser.RULE_single_value;
     }
@@ -1679,26 +1769,6 @@ export class IdentifierContext extends antlr.ParserRuleContext {
     public IDENT(): antlr.TerminalNode | null {
         return this.getToken(CfgParser.IDENT, 0);
     }
-    public keywords(): KeywordsContext | null {
-        return this.getRuleContext(0, KeywordsContext);
-    }
-    public override get ruleIndex(): number {
-        return CfgParser.RULE_identifier;
-    }
-    public override accept<Result>(visitor: CfgVisitor<Result>): Result | null {
-        if (visitor.visitIdentifier) {
-            return visitor.visitIdentifier(this);
-        } else {
-            return visitor.visitChildren(this);
-        }
-    }
-}
-
-
-export class KeywordsContext extends antlr.ParserRuleContext {
-    public constructor(parent: antlr.ParserRuleContext | null, invokingState: number) {
-        super(parent, invokingState);
-    }
     public STRUCT(): antlr.TerminalNode | null {
         return this.getToken(CfgParser.STRUCT, 0);
     }
@@ -1718,11 +1788,31 @@ export class KeywordsContext extends antlr.ParserRuleContext {
         return this.getToken(CfgParser.TBASE, 0);
     }
     public override get ruleIndex(): number {
-        return CfgParser.RULE_keywords;
+        return CfgParser.RULE_identifier;
     }
     public override accept<Result>(visitor: CfgVisitor<Result>): Result | null {
-        if (visitor.visitKeywords) {
-            return visitor.visitKeywords(this);
+        if (visitor.visitIdentifier) {
+            return visitor.visitIdentifier(this);
+        } else {
+            return visitor.visitChildren(this);
+        }
+    }
+}
+
+
+export class CommentContext extends antlr.ParserRuleContext {
+    public constructor(parent: antlr.ParserRuleContext | null, invokingState: number) {
+        super(parent, invokingState);
+    }
+    public COMMENT(): antlr.TerminalNode {
+        return this.getToken(CfgParser.COMMENT, 0)!;
+    }
+    public override get ruleIndex(): number {
+        return CfgParser.RULE_comment;
+    }
+    public override accept<Result>(visitor: CfgVisitor<Result>): Result | null {
+        if (visitor.visitComment) {
+            return visitor.visitComment(this);
         } else {
             return visitor.visitChildren(this);
         }

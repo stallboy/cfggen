@@ -9,10 +9,12 @@ import { Interface_declContext } from "./CfgParser.js";
 import { Table_declContext } from "./CfgParser.js";
 import { Field_declContext } from "./CfgParser.js";
 import { Foreign_declContext } from "./CfgParser.js";
-import { Type_Context } from "./CfgParser.js";
+import { Key_declContext } from "./CfgParser.js";
+import { TypeListContext } from "./CfgParser.js";
+import { TypeMapContext } from "./CfgParser.js";
+import { TypeBasicContext } from "./CfgParser.js";
 import { Type_eleContext } from "./CfgParser.js";
 import { RefContext } from "./CfgParser.js";
-import { Key_declContext } from "./CfgParser.js";
 import { KeyContext } from "./CfgParser.js";
 import { MetadataContext } from "./CfgParser.js";
 import { Ident_with_opt_single_valueContext } from "./CfgParser.js";
@@ -20,7 +22,7 @@ import { Minus_identContext } from "./CfgParser.js";
 import { Single_valueContext } from "./CfgParser.js";
 import { Ns_identContext } from "./CfgParser.js";
 import { IdentifierContext } from "./CfgParser.js";
-import { KeywordsContext } from "./CfgParser.js";
+import { CommentContext } from "./CfgParser.js";
 
 
 /**
@@ -74,11 +76,32 @@ export class CfgVisitor<Result> extends AbstractParseTreeVisitor<Result> {
      */
     visitForeign_decl?: (ctx: Foreign_declContext) => Result;
     /**
-     * Visit a parse tree produced by `CfgParser.type_`.
+     * Visit a parse tree produced by `CfgParser.key_decl`.
      * @param ctx the parse tree
      * @return the visitor result
      */
-    visitType_?: (ctx: Type_Context) => Result;
+    visitKey_decl?: (ctx: Key_declContext) => Result;
+    /**
+     * Visit a parse tree produced by the `TypeList`
+     * labeled alternative in `CfgParser.type_`.
+     * @param ctx the parse tree
+     * @return the visitor result
+     */
+    visitTypeList?: (ctx: TypeListContext) => Result;
+    /**
+     * Visit a parse tree produced by the `TypeMap`
+     * labeled alternative in `CfgParser.type_`.
+     * @param ctx the parse tree
+     * @return the visitor result
+     */
+    visitTypeMap?: (ctx: TypeMapContext) => Result;
+    /**
+     * Visit a parse tree produced by the `TypeBasic`
+     * labeled alternative in `CfgParser.type_`.
+     * @param ctx the parse tree
+     * @return the visitor result
+     */
+    visitTypeBasic?: (ctx: TypeBasicContext) => Result;
     /**
      * Visit a parse tree produced by `CfgParser.type_ele`.
      * @param ctx the parse tree
@@ -91,12 +114,6 @@ export class CfgVisitor<Result> extends AbstractParseTreeVisitor<Result> {
      * @return the visitor result
      */
     visitRef?: (ctx: RefContext) => Result;
-    /**
-     * Visit a parse tree produced by `CfgParser.key_decl`.
-     * @param ctx the parse tree
-     * @return the visitor result
-     */
-    visitKey_decl?: (ctx: Key_declContext) => Result;
     /**
      * Visit a parse tree produced by `CfgParser.key`.
      * @param ctx the parse tree
@@ -140,10 +157,10 @@ export class CfgVisitor<Result> extends AbstractParseTreeVisitor<Result> {
      */
     visitIdentifier?: (ctx: IdentifierContext) => Result;
     /**
-     * Visit a parse tree produced by `CfgParser.keywords`.
+     * Visit a parse tree produced by `CfgParser.comment`.
      * @param ctx the parse tree
      * @return the visitor result
      */
-    visitKeywords?: (ctx: KeywordsContext) => Result;
+    visitComment?: (ctx: CommentContext) => Result;
 }
 

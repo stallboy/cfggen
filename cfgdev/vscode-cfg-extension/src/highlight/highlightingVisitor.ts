@@ -11,6 +11,10 @@ import { Key_declContext } from '../grammar/CfgParser';
 import { KeyContext } from '../grammar/CfgParser';
 import { MetadataContext } from '../grammar/CfgParser';
 import { Type_Context } from '../grammar/CfgParser';
+import { TypeListContext } from '../grammar/CfgParser';
+import { TypeMapContext } from '../grammar/CfgParser';
+import { TypeBasicContext } from '../grammar/CfgParser';
+import { Type_eleContext } from '../grammar/CfgParser';
 import { Ns_identContext } from '../grammar/CfgParser';
 import { TOKEN_TYPES, TokenType } from './tokenTypes';
 import { TypeUtils } from '../utils/typeUtils';
@@ -180,91 +184,106 @@ export class HighlightingVisitor extends AbstractParseTreeVisitor<void> implemen
         // 2. TMAP '<' type_ele ',' type_ele '>'  - e.g., map<string, int>
         // 3. type_ele  - e.g., Range, RewardItem
 
-        const typeElems = type.type_ele();
-        if (typeElems && typeElems.length > 0) {
-            // Check if this is a TLIST or TMAP
-            const tlistToken = type.TLIST();
-            const tmapToken = type.TMAP();
-            const isListOrMap = (tlistToken !== undefined) || (tmapToken !== undefined);
+        let typeElems: Type_eleContext[];
+        let keywordToken: TerminalNode | null = null;
 
-            if (isListOrMap) {
-                // For TLIST/TMAP, highlight from the keyword (list/map) to the last type_ele
-                // Example: "list<int>" -> highlight entire expression "list<int>"
-                // "map<string, int>" -> highlight entire expression "map<string, int>"
-                const keywordToken = tlistToken || tmapToken;
-                const lastElem = typeElems[typeElems.length - 1];
+        // Type_Context has three subclasses: TypeListContext, TypeMapContext, TypeBasicContext
+        if (type instanceof TypeListContext) {
+            const elem = type.type_ele();
+            if (!elem) return;
+            typeElems = [elem];
+            keywordToken = type.TLIST();
+        } else if (type instanceof TypeMapContext) {
+            typeElems = type.type_ele();
+            keywordToken = type.TMAP();
+        } else if (type instanceof TypeBasicContext) {
+            const elem = type.type_ele();
+            if (!elem) return;
+            typeElems = [elem];
+        } else {
+            return;
+        }
 
-                // Find the end position
-                // Check if last element has ns_ident (custom type like "Range")
-                const lastNsIdent = lastElem.ns_ident();
-                let endChar: number;
+        if (!typeElems || typeElems.length === 0) return;
 
-                if (lastNsIdent && lastNsIdent.identifier().length > 0) {
-                    // Custom type like "list<Range>" - use the last identifier
-                    const lastIdent = lastNsIdent.identifier()[lastNsIdent.identifier().length - 1];
-                    const lastTerminal = lastIdent.IDENT();
+        const isListOrMap = keywordToken !== null;
 
-                    if (lastTerminal && lastTerminal.symbol) {
+        if (isListOrMap) {
+            // For TLIST/TMAP, highlight from the keyword (list/map) to the last type_ele
+            // Example: "list<int>" -> highlight entire expression "list<int>"
+            // "map<string, int>" -> highlight entire expression "map<string, int>"
+            const lastElem = typeElems[typeElems.length - 1];
+
+            // Find the end position
+            // Check if last element has ns_ident (custom type like "Range")
+            const lastNsIdent = lastElem.ns_ident();
+            let endChar: number;
+
+            if (lastNsIdent && lastNsIdent.identifier().length > 0) {
+                // Custom type like "list<Range>" - use the last identifier
+                const lastIdent = lastNsIdent.identifier()[lastNsIdent.identifier().length - 1];
+                const lastTerminal = lastIdent.IDENT();
+
+                if (lastTerminal && lastTerminal.symbol) {
+                    endChar = lastTerminal.symbol.column + this.getText(lastTerminal).length;
+                } else {
+                    return; // Can't determine end position
+                }
+            } else {
+                // Basic type like "list<int>" - use the last type_ele's position
+                // Need to find the last terminal in the type_ele
+                const terminals = lastElem.children?.filter((child: ParseTree) => child instanceof TerminalNode) as TerminalNode[];
+                if (terminals && terminals.length > 0) {
+                    const lastTerminal = terminals[terminals.length - 1];
+                    if (lastTerminal.symbol) {
                         endChar = lastTerminal.symbol.column + this.getText(lastTerminal).length;
                     } else {
                         return; // Can't determine end position
                     }
                 } else {
-                    // Basic type like "list<int>" - use the last type_ele's position
-                    // Need to find the last terminal in the type_ele
-                    const terminals = lastElem.children?.filter(child => child instanceof TerminalNode) as TerminalNode[];
-                    if (terminals && terminals.length > 0) {
-                        const lastTerminal = terminals[terminals.length - 1];
-                        if (lastTerminal.symbol) {
-                            endChar = lastTerminal.symbol.column + this.getText(lastTerminal).length;
-                        } else {
-                            return; // Can't determine end position
-                        }
-                    } else {
-                        return; // Can't determine end position
-                    }
+                    return; // Can't determine end position
                 }
+            }
 
-                // Highlight from the keyword (list/map) to the end position
-                if (keywordToken && keywordToken.symbol) {
-                    const startLine = keywordToken.symbol.line - 1;
-                    const startChar = keywordToken.symbol.column;
+            // Highlight from the keyword (list/map) to the end position
+            if (keywordToken && keywordToken.symbol) {
+                const startLine = keywordToken.symbol.line - 1;
+                const startChar = keywordToken.symbol.column;
 
-                    this.builder.push(
-                        startLine,
-                        startChar,
-                        endChar - startChar,
-                        this.getTokenTypeIndex('TYPE_IDENTIFIER'),
-                        0
-                    );
-                }
-            } else {
-                // For simple types (type_ele), highlight the entire namespace identifier if it's NOT a basic type
-                const lastElem = typeElems[typeElems.length - 1];
-                const nsIdent = lastElem.ns_ident();
+                this.builder.push(
+                    startLine,
+                    startChar,
+                    endChar - startChar,
+                    this.getTokenTypeIndex('TYPE_IDENTIFIER'),
+                    0
+                );
+            }
+        } else {
+            // For simple types (type_ele), highlight the entire namespace identifier if it's NOT a basic type
+            const lastElem = typeElems[typeElems.length - 1];
+            const nsIdent = lastElem.ns_ident();
 
-                if (nsIdent && nsIdent.identifier().length > 0) {
-                    const firstIdent = nsIdent.identifier()[0];
-                    const lastIdent = nsIdent.identifier()[nsIdent.identifier().length - 1];
-                    const firstTerminal = firstIdent.IDENT();
-                    const lastTerminal = lastIdent.IDENT();
+            if (nsIdent && nsIdent.identifier().length > 0) {
+                const firstIdent = nsIdent.identifier()[0];
+                const lastIdent = nsIdent.identifier()[nsIdent.identifier().length - 1];
+                const firstTerminal = firstIdent.IDENT();
+                const lastTerminal = lastIdent.IDENT();
 
-                    if (firstTerminal && lastTerminal && firstTerminal.symbol && lastTerminal.symbol) {
-                        // Only highlight if this is NOT a basic type
-                        const typeText = this.getText(lastTerminal);
-                        if (TypeUtils.isCustomType(typeText)) {
-                            const startLine = firstTerminal.symbol.line - 1;
-                            const startChar = firstTerminal.symbol.column;
-                            const endChar = lastTerminal.symbol.column + this.getText(lastTerminal).length;
+                if (firstTerminal && lastTerminal && firstTerminal.symbol && lastTerminal.symbol) {
+                    // Only highlight if this is NOT a basic type
+                    const typeText = this.getText(lastTerminal);
+                    if (TypeUtils.isCustomType(typeText)) {
+                        const startLine = firstTerminal.symbol.line - 1;
+                        const startChar = firstTerminal.symbol.column;
+                        const endChar = lastTerminal.symbol.column + this.getText(lastTerminal).length;
 
-                            this.builder.push(
-                                startLine,
-                                startChar,
-                                endChar - startChar,
-                                this.getTokenTypeIndex('TYPE_IDENTIFIER'),
-                                0
-                            );
-                        }
+                        this.builder.push(
+                            startLine,
+                            startChar,
+                            endChar - startChar,
+                            this.getTokenTypeIndex('TYPE_IDENTIFIER'),
+                            0
+                        );
                     }
                 }
             }
