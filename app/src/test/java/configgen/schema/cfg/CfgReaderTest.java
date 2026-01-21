@@ -209,4 +209,155 @@ class CfgReaderTest {
         ForeignKeySchema fk = table.foreignKeys().getFirst();
         assertTrue(fk.refKey() instanceof RefKey.RefList(KeySchema key) && key.fields().equals(List.of("AttrType")));
     }
+
+    @Test
+    void parseTableWithLeadingComment() {
+        // 测试带有声明前注释的 table
+        String str = """
+                // 这是能力表
+                // 用于定义游戏中的各种能力
+                table ability[id] (enum='name') {
+                	id:int; // 属性类型
+                	name:str; // 程序用名字
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        assertEquals(1, cfg.items().size());
+
+        TableSchema table = (TableSchema) cfg.items().getFirst();
+        assertEquals("ability", table.name());
+
+        // 验证声明前注释和行尾注释都被正确保存
+        String comment = table.meta().data().get("_comment") instanceof Metadata.MetaStr(String c) ? c : "";
+        assertTrue(comment.contains("这是能力表"));
+        assertTrue(comment.contains("用于定义游戏中的各种能力"));
+    }
+
+    @Test
+    void parseStructWithLeadingComment() {
+        // 测试带有声明前注释的 struct
+        String str = """
+                // 属性随机范围配置
+                // 用于生成随机属性值
+                struct AttrRandom {
+                	Attr:int ->common.fightattrs; // 属性id
+                	Min:int; // 最小值
+                	Max:int; // 最大值
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        assertEquals(1, cfg.items().size());
+
+        StructSchema struct = (StructSchema) cfg.items().getFirst();
+        assertEquals("AttrRandom", struct.name());
+
+        // 验证声明前注释
+        String comment = struct.meta().data().get("_comment") instanceof Metadata.MetaStr(String c) ? c : "";
+        assertTrue(comment.contains("属性随机范围配置"));
+        assertTrue(comment.contains("用于生成随机属性值"));
+    }
+
+    @Test
+    void parseInterfaceWithLeadingComment() {
+        // 测试带有声明前注释的 interface
+        String str = """
+                // 成就类型接口
+                // 定义所有成就的基础结构
+                interface achievement.AchievementType {
+                	struct BiographyAchievement {
+                		biographyid:int ->biography.biographyinfo;
+                	}
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        assertEquals(1, cfg.items().size());
+
+        InterfaceSchema sInterface = (InterfaceSchema) cfg.items().getFirst();
+        assertEquals("achievement.AchievementType", sInterface.name());
+
+        // 验证声明前注释
+        String comment = sInterface.meta().data().get("_comment") instanceof Metadata.MetaStr(String c) ? c : "";
+        assertTrue(comment.contains("成就类型接口"));
+        assertTrue(comment.contains("定义所有成就的基础结构"));
+    }
+
+    @Test
+    void parseFieldWithLeadingComment() {
+        // 测试带有声明前注释的字段
+        String str = """
+                struct AttrRandom {
+                	// 属性ID
+                	// 关联到fightprops表
+                	Attr:int ->common.fightattrs;
+                	Min:int; // 最小值
+                	Max:int; // 最大值
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        assertEquals(1, cfg.items().size());
+
+        StructSchema struct = (StructSchema) cfg.items().getFirst();
+        FieldSchema field = struct.fields().getFirst();
+        assertEquals("Attr", field.name());
+
+        // 验证字段的声明前注释
+        String comment = field.meta().data().get("_comment") instanceof Metadata.MetaStr(String c) ? c : "";
+        assertTrue(comment.contains("属性ID"));
+        assertTrue(comment.contains("关联到fightprops表"));
+    }
+
+    @Test
+    void parseMultiLineLeadingComment() {
+        // 测试多行声明前注释
+        String str = """
+                // 第一行注释
+                // 第二行注释
+                // 第三行注释
+                table ability[id] {
+                	id:int;
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        assertEquals(1, cfg.items().size());
+
+        TableSchema table = (TableSchema) cfg.items().getFirst();
+        String comment = table.meta().data().get("_comment") instanceof Metadata.MetaStr(String c) ? c : "";
+        assertTrue(comment.contains("第一行注释"));
+        assertTrue(comment.contains("第二行注释"));
+        assertTrue(comment.contains("第三行注释"));
+    }
+
+    @Test
+    void parseOnlyLeadingComment() {
+        // 测试只有声明前注释（没有行尾注释）
+        String str = """
+                // 只有声明前注释
+                table ability[id] {
+                	id:int;
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        assertEquals(1, cfg.items().size());
+
+        TableSchema table = (TableSchema) cfg.items().getFirst();
+        String comment = table.meta().data().get("_comment") instanceof Metadata.MetaStr(String c) ? c : "";
+        assertTrue(comment.contains("只有声明前注释"));
+    }
+
+    @Test
+    void parseOnlyTrailingComment() {
+        // 测试只有行尾注释（没有声明前注释）
+        String str = """
+                table ability[id] { // 只有行尾注释
+                	id:int;
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        assertEquals(1, cfg.items().size());
+
+        TableSchema table = (TableSchema) cfg.items().getFirst();
+        String comment = table.meta().data().get("_comment") instanceof Metadata.MetaStr(String c) ? c : "";
+        assertTrue(comment.contains("只有行尾注释"));
+        assertFalse(comment.contains(">>>"));
+    }
 }

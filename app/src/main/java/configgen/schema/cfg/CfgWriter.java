@@ -1,6 +1,7 @@
 package configgen.schema.cfg;
 
 import configgen.schema.*;
+import configgen.schema.cfg.CommentUtils.ParsedComment;
 
 import java.util.List;
 import java.util.Map;
@@ -52,11 +53,13 @@ public class CfgWriter {
             meta.putColumnMode();
         }
         meta.putEntry(table.entry());
-        String comment = meta.removeComment();
+
+        ParsedComment comment = CommentUtils.parseComment(meta.removeComment());
+        writeLeadingComment(comment, prefix);
 
         String name = useLastName ? table.lastName() : table.name();
         println("%stable %s%s%s {%s", prefix, name,
-                keyStr(table.primaryKey()), metadataStr(meta), commentStr(comment));
+                keyStr(table.primaryKey()), metadataStr(meta), comment.formatTrailing());
         for (KeySchema keySchema : table.uniqueKeys()) {
             println("%s\t%s;", prefix, keyStr(keySchema));
         }
@@ -74,10 +77,12 @@ public class CfgWriter {
         if (!sInterface.enumRef().isEmpty()) {
             meta.putEnumRef(sInterface.enumRef());
         }
-        String comment = meta.removeComment();
+
+        ParsedComment comment = CommentUtils.parseComment(meta.removeComment());
+        writeLeadingComment(comment, prefix);
 
         String name = useLastName ? sInterface.lastName() : sInterface.name();
-        println("%sinterface %s%s {%s", prefix, name, metadataStr(meta), commentStr(comment));
+        println("%sinterface %s%s {%s", prefix, name, metadataStr(meta), comment.formatTrailing());
         for (StructSchema value : sInterface.impls()) {
             writeStruct(value, prefix + "\t");
         }
@@ -88,9 +93,12 @@ public class CfgWriter {
     public void writeStruct(StructSchema struct, String prefix) {
         Metadata meta = struct.meta().copy();
         meta.putFmt(struct.fmt());
-        String comment = meta.removeComment();
+
+        ParsedComment comment = CommentUtils.parseComment(meta.removeComment());
+        writeLeadingComment(comment, prefix);
+
         String name = useLastName ? struct.lastName() : struct.name();
-        println("%sstruct %s%s {%s", prefix, name, metadataStr(meta), commentStr(comment));
+        println("%sstruct %s%s {%s", prefix, name, metadataStr(meta), comment.formatTrailing());
         writeStructural(struct, prefix);
         println("%s}", prefix);
         println();
@@ -100,24 +108,30 @@ public class CfgWriter {
         for (FieldSchema f : structural.fields()) {
             Metadata meta = f.meta().copy();
             meta.putFmt(f.fmt());
-            String comment = meta.removeComment();
 
             ForeignKeySchema fk = structural.findForeignKey(f.name());
             String fkStr = fk == null ? "" : foreignStr(fk);
             if (fk != null) {
                 foreignToMeta(fk, meta);
             }
+
+            ParsedComment comment = CommentUtils.parseComment(meta.removeComment());
+            writeLeadingComment(comment, prefix + "\t");
+
             println("%s\t%s:%s%s%s;%s",
-                    prefix, f.name(), typeStr(f.type()), fkStr, metadataStr(meta), commentStr(comment));
+                    prefix, f.name(), typeStr(f.type()), fkStr, metadataStr(meta), comment.formatTrailing());
         }
 
         for (ForeignKeySchema fk : structural.foreignKeys()) {
             if (structural.findField(fk.name()) == null) {
                 Metadata meta = fk.meta().copy();
-                String comment = meta.removeComment();
                 foreignToMeta(fk, meta);
+
+                ParsedComment comment = CommentUtils.parseComment(meta.removeComment());
+                writeLeadingComment(comment, prefix + "\t");
+
                 println("%s\t->%s:%s%s%s;%s",
-                        prefix, fk.name(), keyStr(fk.key()), foreignStr(fk), metadataStr(meta), commentStr(comment));
+                        prefix, fk.name(), keyStr(fk.key()), foreignStr(fk), metadataStr(meta), comment.formatTrailing());
             }
         }
     }
@@ -134,6 +148,13 @@ public class CfgWriter {
 
     private void println() {
         destination.append("\r\n");
+    }
+
+    private void writeLeadingComment(ParsedComment pc, String prefix) {
+        String leadingComment = pc.formatLeading(prefix);
+        if (!leadingComment.isEmpty()) {
+            destination.append(leadingComment);
+        }
     }
 
     public static String typeStr(FieldType t) {
@@ -226,11 +247,4 @@ public class CfgWriter {
         };
     }
 
-    static String commentStr(String comment) {
-        if (comment.isEmpty()) {
-            return "";
-        } else {
-            return String.format(" // %s", comment);
-        }
-    }
 }
