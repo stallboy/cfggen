@@ -1,31 +1,17 @@
 {
-	"id":0,
-	"name":"",
+	"$type":"test.test",
 	"testBools":[
 		false
 	],
-	"testInts":[
-		
-	],
-	"testFloats":[
-		
-	],
-	"testStrs":[
-		
-	],
-	"enumInt":0,
+	"enumInt":1,
 	"testEnumInts":[
 		1,
 		2
 	],
 	"enumStr":"LiveTime",
-	"testEnumStrs":[
-		
-	],
-	"ref":0,
+	"ref":2,
 	"testRefs":[
-		0,
+		2,
 		2
-	],
-	"$type":"test.test"
+	]
 }

@@ -56,59 +56,8 @@ java -jar cfggen.jar -datadir example -gen ts
 
 ## 🧪 测试示例
 
-### 📖 查看使用说明
-
-```bash
-cd example
-usage.bat
-```
-
-### 多语言代码生成测试
-
-#### ☕ Java 测试
-```bash
-cd example
-genjava.bat    # 生成 Java 代码和数据
-gradle build   # 构建项目
-java -jar build/libs/example.jar
-# 进入命令行交互模式，输入 'q' 退出，输入表名前缀（如 "ai"）查看相关数据
-```
-
-> **注意**: Java 17+ 支持 sealed 类，如需兼容旧版本可移除 sealed 关键字
-
-#### 📜 Lua 测试
-```bash
-cd example
-genlua.bat
-cd lua
-chcp 65001     # 设置 UTF-8 编码（Windows）
-lua.exe test.lua
-```
-
-#### 🔷 C# 测试
-```bash
-cd example
-gencshape.bat
-cd cs
-run.bat
-```
-
-#### 🐹 Go 测试
-```bash
-cd example
-gengo.bat
-cd go
-go run .
-```
-
-#### 🔷 TypeScript 测试
-```bash
-cd example
-gents.bat
-cd ts
-pnpm i -D tsx  # 安装 TypeScript 运行环境
-npx tsx main.ts
-```
+- **[example/](../example/README.md)** - 多语言代码生成测试示例
+- **[samples/](../samples/README.md)** - 实际游戏系统配置示例（技能、触发器、剧情对话等）
 
 ## 📚 更多资源
 

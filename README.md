@@ -35,12 +35,8 @@
 请参考 [编辑器 cfgeditor 文档](cfgeditor/README.md)
 
 
-### 🔌 VSCode插件：cfg-support
+### 开发工具
 
-我们为 `.cfg` 配置文件提供了专门的 VSCode 插件，包含以下功能：
 
-- 🎨 **语法高亮**: 结构定义、类型标识符、外键引用等
-- 🔗 **跳转到定义**: Ctrl+点击类型名称或外键引用跳转到定义位置
-
-详细功能和使用说明请参考 [VSCode CFG 扩展文档](cfgdev/vscode-cfg-extension/README.md)。
+请参考 [CFG claudecode插件和vscode插件](cfgdev/README.md)。
 
