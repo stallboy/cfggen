@@ -4,7 +4,7 @@ import {useTranslation} from "react-i18next";
 import {Button, Form, Input, Space} from "antd";
 import {CloseOutlined} from "@ant-design/icons";
 import {Schema} from "../table/schemaUtil.tsx";
-import {STable} from "../table/schemaModel.ts";
+import {STable} from "../../api/schemaModel.ts";
 import {FixedPage, FixedPagesConf} from "../../store/storageJson.ts";
 import {useForm} from "antd/es/form/Form";
 

@@ -1,6 +1,6 @@
-import { STable } from "../table/schemaModel.ts";
+import { STable } from "../../api/schemaModel.ts";
 import { Entity } from "../../flow/entityModel.ts";
-import { RecordRefsResult, RefId } from "./recordModel.ts";
+import { RecordRefsResult, RefId } from "../../api/recordModel.ts";
 import { Result } from "antd";
 import { createRefEntities } from "./recordRefEntity.ts";
 import { useTranslation } from "react-i18next";
@@ -9,7 +9,7 @@ import { NodeShowType } from "../../store/storageJson.ts";
 import { navTo, useMyStore, useLocationData } from "../../store/store.ts";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { fetchRecordRefs } from "../api.ts";
+import { fetchRecordRefs } from "../../api/api.ts";
 import { MenuItem } from "../../flow/FlowContextMenu.tsx";
 import { SchemaTableType } from "../../CfgEditorApp.tsx";
 import { fillHandles } from "../../flow/entityToNodeAndEdge.ts";

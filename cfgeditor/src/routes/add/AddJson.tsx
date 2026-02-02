@@ -3,10 +3,10 @@ import {invalidateAllQueries, navTo, useMyStore, useLocationData} from "../../st
 import {memo, useCallback, useState} from "react";
 import {Schema} from "../table/schemaUtil.tsx";
 import {useMutation,} from "@tanstack/react-query";
-import {addOrUpdateRecord} from "../api.ts";
+import {addOrUpdateRecord} from "../../api/api.ts";
 import {Button, Typography, Form, Input, List, Result, Space} from "antd";
 
-import {RecordEditResult} from "../record/recordModel.ts";
+import {RecordEditResult} from "../../api/recordModel.ts";
 import {useNavigate} from "react-router-dom";
 import {useTranslation} from "react-i18next";
 import {ResultStatusType} from "antd/es/result";

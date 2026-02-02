@@ -1,7 +1,7 @@
 import { EmbeddedFieldValue, FieldTypeAnalysis, EmbeddingCheckContext } from './types';
 import { EMBEDDING_CONFIG } from './embeddingConfig';
-import { SStruct, SInterface, SField } from '../../table/schemaModel';
-import { JSONObject } from '../recordModel';
+import { SStruct, SInterface, SField } from '../../../api/schemaModel';
+import { JSONObject } from '../../../api/recordModel';
 import { PrimitiveValue, PrimitiveType } from '../../../flow/entityModel';
 import { FieldTypeAnalyzer, EmptyListFieldFilter } from './embeddingChecker';
 import { getImpl } from '../../table/schemaUtil';

@@ -48,6 +48,7 @@
     "@types/use-sync-external-store": "^0.0.6",
     "@vitejs/plugin-react": "^5.1.1",
     "babel-plugin-react-compiler": "^1.0.0",
+    "baseline-browser-mapping": "^2.9.19",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",

@@ -1,5 +1,5 @@
 import { PrimitiveValue, PrimitiveType } from '../../../flow/entityModel';
-import { SStruct, SInterface } from '../../table/schemaModel';
+import { SStruct, SInterface } from '../../../api/schemaModel';
 
 /**
  * 字段类型分析结果

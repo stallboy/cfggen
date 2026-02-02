@@ -1,4 +1,4 @@
-import {SItem, STable} from "./schemaModel.ts";
+import {SItem, STable} from "../../api/schemaModel.ts";
 import {Entity, EntityEdgeType, EntityType} from "../../flow/entityModel.ts";
 import {Schema} from "./schemaUtil.tsx";
 

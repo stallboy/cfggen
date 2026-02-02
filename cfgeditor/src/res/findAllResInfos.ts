@@ -1,6 +1,6 @@
 import {ResInfo, ResType} from "./resInfo.ts";
 import {ext2type, joinPath, sepParentDirAndFilename} from "./resUtils.ts";
-import {Refs} from "../routes/record/recordModel.ts";
+import {Refs} from "../api/recordModel.ts";
 import {TauriConf} from "../store/storageJson.ts";
 
 

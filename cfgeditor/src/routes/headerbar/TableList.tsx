@@ -1,4 +1,4 @@
-import {STable} from "../table/schemaModel.ts";
+import {STable} from "../../api/schemaModel.ts";
 import {Flex, Select} from "antd";
 import {getLastOpenIdByTable, navTo, useMyStore, useLocationData} from "../../store/store.ts";
 import {useNavigate} from "react-router-dom";

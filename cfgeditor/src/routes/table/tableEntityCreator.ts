@@ -1,4 +1,4 @@
-import {SInterface, SItem, SStruct, STable} from "./schemaModel.ts";
+import {SInterface, SItem, SStruct, STable} from "../../api/schemaModel.ts";
 import {ReadOnlyEntity, DisplayField, EntityEdgeType, EntityType} from "../../flow/entityModel.ts";
 import {Schema} from "./schemaUtil.tsx";
 

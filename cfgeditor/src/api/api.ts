@@ -1,23 +1,19 @@
-import {RawSchema} from "./table/schemaModel.ts";
+import axios from 'axios';
+import {RawSchema} from "./schemaModel.ts";
 import {
     JSONObject,
     RecordEditResult,
     RecordRefIdsResult,
     RecordRefsResult,
     RecordResult
-} from "./record/recordModel.ts";
-import axios from 'axios';
-import {Schema} from "./table/schemaUtil.tsx";
-import {clearLayoutCache} from "../store/store.ts";
-import {NoteEditResult, Notes, notesToMap} from "./record/noteModel.ts";
-import {CheckJsonResult, PromptResult} from "./add/chatModel.ts";
+} from "./recordModel.ts";
+import {NoteEditResult, Notes} from "./noteModel.ts";
+import {CheckJsonResult, PromptResult} from "./chatModel.ts";
 
 
-export async function fetchSchema(server: string, signal: AbortSignal): Promise<Schema> {
+export async function fetchSchema(server: string, signal: AbortSignal): Promise<RawSchema> {
     const response = await axios.get<RawSchema>(`http://${server}/schemas`, {signal});
-    // console.log('fetched schema');
-    clearLayoutCache();
-    return new Schema(response.data);
+    return response.data;
 }
 
 export async function fetchRecordRefIds(server: string, tableId: string, id: string,
@@ -77,11 +73,9 @@ export async function deleteRecord(server: string, tableId: string, id: string):
     return response.data;
 }
 
-export async function fetchNotes(server: string, signal: AbortSignal): Promise<Map<string, string>> {
+export async function fetchNotes(server: string, signal: AbortSignal): Promise<Notes> {
     const response = await axios.get<Notes>(`http://${server}/notes`, {signal});
-    // console.log('fetched notes');
-    clearLayoutCache();
-    return notesToMap(response.data);
+    return response.data;
 }
 
 export async function updateNote(server: string, key: string, note: string): Promise<NoteEditResult> {

@@ -8,7 +8,7 @@ import {LastAccessed} from "./LastAccessed.tsx";
 import {LastModified} from "./LastModified.tsx";
 import {RefIdList} from "./RefIdList.tsx";
 import {useLocationData} from "../../store/store.ts";
-import {RefId} from "../record/recordModel.ts";
+import {RefId} from "../../api/recordModel.ts";
 import {LockOutlined, SyncOutlined, UnlockOutlined} from "@ant-design/icons";
 
 export const Finder = memo(function Finder({schema}: {

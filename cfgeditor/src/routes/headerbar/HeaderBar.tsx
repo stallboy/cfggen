@@ -14,7 +14,7 @@ import {
 import {getNextId, Schema} from "../table/schemaUtil.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
 import {useNavigate} from "react-router-dom";
-import {STable} from "../table/schemaModel.ts";
+import {STable} from "../../api/schemaModel.ts";
 import {useTranslation} from "react-i18next";
 import {memo, useCallback, useMemo} from "react";
 import {toggleFullScreen} from "../setting/colorUtils.ts";

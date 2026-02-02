@@ -1,6 +1,6 @@
 import {memo, useState} from "react";
 import {App, Button, Empty, Input, Result, Table} from "antd";
-import {SearchResult, SearchResultItem} from "./searchModel.ts";
+import {SearchResult, SearchResultItem} from "../../api/searchModel.ts";
 import {useTranslation} from "react-i18next";
 import {navTo, setQuery, useMyStore, useLocationData} from "../../store/store.ts";
 import {useNavigate} from "react-router-dom";

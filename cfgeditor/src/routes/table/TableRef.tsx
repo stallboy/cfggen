@@ -5,7 +5,7 @@ import {navTo, useMyStore, useLocationData} from "../../store/store.ts";
 import {useNavigate, useOutletContext} from "react-router-dom";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
 import {useTranslation} from "react-i18next";
-import {SItem} from "./schemaModel.ts";
+import {SItem} from "../../api/schemaModel.ts";
 import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
 import {memo, useCallback, useMemo} from "react";
 import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";

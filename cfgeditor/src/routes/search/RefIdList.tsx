@@ -3,8 +3,8 @@ import {navTo, useMyStore, useLocationData} from "../../store/store.ts";
 import {Button, Result, Spin, Table} from "antd";
 import {useNavigate} from "react-router-dom";
 import {useQuery} from "@tanstack/react-query";
-import {fetchRecordRefIds} from "../api.ts";
-import {RecordRefId, RecordRefIdsResult, RefId} from "../record/recordModel.ts";
+import {fetchRecordRefIds} from "../../api/api.ts";
+import {RecordRefId, RecordRefIdsResult, RefId} from "../../api/recordModel.ts";
 
 
 function rowKey(item: RecordRefId) {

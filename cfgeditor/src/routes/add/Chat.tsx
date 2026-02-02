@@ -10,9 +10,9 @@ import {useMyStore, useLocationData} from "../../store/store.ts";
 import {memo, useRef} from "react";
 import {Schema} from "../table/schemaUtil.tsx";
 import {useQuery, useMutation} from "@tanstack/react-query";
-import {getPrompt, checkJson} from "../api.ts";
+import {getPrompt, checkJson} from "../../api/api.ts";
 import {Result, Spin} from "antd";
-import {CheckJsonResult} from "./chatModel.ts";
+import {CheckJsonResult} from "../../api/chatModel.ts";
 import {applyNewEditingObject} from "../record/editingObject.ts";
 
 const useChatStyle = createStyles(({token, css}) => {

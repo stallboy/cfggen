@@ -1,5 +1,5 @@
 import {Entity, isEditableEntity} from "../../flow/entityModel.ts";
-import {JSONObject, RecordEditResult, RecordResult, RefId} from "./recordModel.ts";
+import {JSONObject, RecordEditResult, RecordResult, RefId} from "../../api/recordModel.ts";
 import {App, Result} from "antd";
 import {createRefEntities, getId, getLabel} from "./recordRefEntity.ts";
 import {RecordEntityCreator} from "./recordEntityCreator.ts";
@@ -18,7 +18,7 @@ import {useTranslation} from "react-i18next";
 import {invalidateAllQueries, navTo, setIsEditMode, useMyStore, useLocationData} from "../../store/store.ts";
 import {useNavigate, useOutletContext} from "react-router-dom";
 import {useMutation, useQuery} from "@tanstack/react-query";
-import {addOrUpdateRecord, fetchRecord} from "../api.ts";
+import {addOrUpdateRecord, fetchRecord} from "../../api/api.ts";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
 import {SchemaTableType} from "../../CfgEditorApp.tsx";
 import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
@@ -26,7 +26,7 @@ import {memo, useCallback, useEffect, useMemo, useState} from "react";
 
 
 import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
-import {SInterface, SStruct} from "../table/schemaModel.ts";
+import {SInterface, SStruct} from "../../api/schemaModel.ts";
 import {queryClient} from "../../main.tsx";
 import {EntityNode} from "../../flow/FlowGraph.tsx";
 import {NEW_RECORD_ID} from "../table/schemaUtil.tsx";

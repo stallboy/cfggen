@@ -2,7 +2,7 @@ import {Divider, Tabs} from "antd";
 
 import {NodeShowSetting} from "./NodeShowSetting.tsx";
 import {useTranslation} from "react-i18next";
-import {STable} from "../table/schemaModel.ts";
+import {STable} from "../../api/schemaModel.ts";
 import {Schema} from "../table/schemaUtil.tsx";
 
 import {BasicSetting} from "./BasicSetting.tsx";

@@ -9,8 +9,8 @@ import {
     PrimitiveEditField,
     StructRefEditField
 } from "../../flow/entityModel.ts";
-import {SField, SInterface, SItem, SStruct, STable} from "../table/schemaModel.ts";
-import {JSONArray, JSONObject, JSONValue, RefId} from "./recordModel.ts";
+import {SField, SInterface, SItem, SStruct, STable} from "../../api/schemaModel.ts";
+import {JSONArray, JSONObject, JSONValue, RefId} from "../../api/recordModel.ts";
 import {getId, getLabel, getLastName} from "./recordRefEntity.ts";
 import {getField, getIdOptions, getImpl, getMapEntryTypeName, isPkInteger, Schema} from "../table/schemaUtil.tsx";
 import {

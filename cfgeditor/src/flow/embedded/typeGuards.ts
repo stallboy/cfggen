@@ -1,4 +1,4 @@
-import { JSONObject, JSONArray } from '../../routes/record/recordModel';
+import { JSONObject, JSONArray } from '../../api/recordModel';
 import { PrimitiveValue } from '../entityModel';
 
 /**

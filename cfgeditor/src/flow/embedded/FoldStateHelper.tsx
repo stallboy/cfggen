@@ -1,5 +1,5 @@
 import { Folds } from '../../routes/record/recordEditEntityCreator';
-import { JSONObject } from '../../routes/record/recordModel';
+import { JSONObject } from '../../api/recordModel';
 
 /**
  * Fold状态管理助手 - 统一fold状态获取逻辑

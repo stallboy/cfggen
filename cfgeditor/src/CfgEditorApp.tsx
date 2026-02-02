@@ -5,6 +5,7 @@ import {useTranslation} from "react-i18next";
 import {Setting} from "./routes/setting/Setting.tsx";
 import {Schema} from "./routes/table/schemaUtil.tsx";
 import {
+    clearLayoutCache,
     getFixedPage,
     getLastNavToInLocalStore,
     setServer,
@@ -12,8 +13,9 @@ import {
     useLocationData
 } from "./store/store.ts";
 import {Outlet, useNavigate} from "react-router-dom";
-import {STable} from "./routes/table/schemaModel.ts";
-import {fetchNotes, fetchSchema} from "./routes/api.ts";
+import {STable} from "./api/schemaModel.ts";
+import {fetchNotes, fetchSchema} from "./api/api.ts";
+import {notesToMap} from "./api/noteModel.ts";
 import {useQuery} from "@tanstack/react-query";
 import {HeaderBar} from "./routes/headerbar/HeaderBar.tsx";
 import {FlowGraph} from "./flow/FlowGraph.tsx";
@@ -59,12 +61,20 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
         queryKey: ['schema'],
         queryFn: ({signal}) => fetchSchema(server, signal),
         staleTime: 1000 * 60 * 5,
+        select: (rawSchema) => {
+            clearLayoutCache();
+            return new Schema(rawSchema);
+        },
     })
 
     const {data: notes} = useQuery({
         queryKey: ['notes'],
         queryFn: ({signal}) => fetchNotes(server, signal),
         staleTime: 1000 * 60 * 5,
+        select: (notesData) => {
+            clearLayoutCache();
+            return notesToMap(notesData);
+        },
     })
 
 

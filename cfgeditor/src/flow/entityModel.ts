@@ -1,4 +1,4 @@
-import {BriefDescription, JSONObject} from "../routes/record/recordModel.ts";
+import {BriefDescription, JSONObject} from "../api/recordModel.ts";
 import {NodeShowType} from "../store/storageJson.ts";
 import {ResInfo} from "../res/resInfo.ts";
 import * as React from "react";

@@ -9,10 +9,10 @@ import {
 } from "../../store/store.ts";
 import {CloseOutlined} from "@ant-design/icons";
 import {Schema} from "../table/schemaUtil.tsx";
-import {STable} from "../table/schemaModel.ts";
+import {STable} from "../../api/schemaModel.ts";
 import {useMutation} from "@tanstack/react-query";
-import {RecordEditResult} from "../record/recordModel.ts";
-import {deleteRecord} from "../api.ts";
+import {RecordEditResult} from "../../api/recordModel.ts";
+import {deleteRecord} from "../../api/api.ts";
 import {toBlob} from "html-to-image";
 import {saveAs} from "file-saver";
 import {FixPages} from "./FixPages.tsx";

@@ -1,6 +1,6 @@
 import {Entity, ReadOnlyEntity, DisplayField, EntityEdgeType, EntitySourceEdge, EntityType} from "../../flow/entityModel.ts";
-import {SField, SStruct, STable} from "../table/schemaModel.ts";
-import {BriefRecord, JSONArray, JSONObject, JSONValue, RefId, Refs} from "./recordModel.ts";
+import {SField, SStruct, STable} from "../../api/schemaModel.ts";
+import {BriefRecord, JSONArray, JSONObject, JSONValue, RefId, Refs} from "../../api/recordModel.ts";
 import {createRefs, getLabel} from "./recordRefEntity.ts";
 import {getField, Schema} from "../table/schemaUtil.tsx";
 import {findAllResInfos} from "../../res/findAllResInfos.ts";

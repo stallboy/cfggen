@@ -1,4 +1,4 @@
-import {BriefRecord, RefId, Refs} from "./recordModel.ts";
+import {BriefRecord, RefId, Refs} from "../../api/recordModel.ts";
 import {Entity, EntityEdgeType, EntityType} from "../../flow/entityModel.ts";
 
 import {Schema} from "../table/schemaUtil.tsx";

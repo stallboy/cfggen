@@ -1,7 +1,7 @@
 import { EMBEDDING_CONFIG, isPrimitiveType } from './embeddingConfig';
 import { EmbeddingCheckContext, FieldTypeAnalysis } from './types';
-import { JSONObject } from '../recordModel';
-import { SField, SStruct, SInterface } from '../../table/schemaModel';
+import { JSONObject } from '../../../api/recordModel';
+import { SField, SStruct, SInterface } from '../../../api/schemaModel';
 import { getImpl } from '../../table/schemaUtil';
 
 /**
