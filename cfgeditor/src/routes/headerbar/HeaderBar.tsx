@@ -2,6 +2,7 @@ import {Button, Dropdown, Select, Skeleton, Space, Typography} from "antd";
 import {LeftOutlined, RightOutlined, AppstoreOutlined} from "@ant-design/icons";
 import {TableList} from "./TableList.tsx";
 import {IdList} from "./IdList.tsx";
+import {UnreferencedButton} from "./UnreferencedButton.tsx";
 import {
     historyCanPrev,
     historyNext,
@@ -9,7 +10,8 @@ import {
     navTo,
     setDragPanel,
     useMyStore,
-    useLocationData
+    useLocationData,
+    useCurPageRecordOrRecordRef
 } from "../../store/store.ts";
 import {getNextId, Schema} from "../table/schemaUtil.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
@@ -31,7 +33,8 @@ export const HeaderBar = memo(function ({schema, curTable}: {
     schema: Schema | undefined;
     curTable: STable | null;
 }) {
-    const {curPage, curTableId, curId} = useLocationData();
+    const { curPage } = useCurPageRecordOrRecordRef();
+    const { curTableId, curId} = useLocationData();
     const {dragPanel, pageConf, history, isNextIdShow, isEditMode} = useMyStore();
     const navigate = useNavigate();
     const {t} = useTranslation();
@@ -95,6 +98,7 @@ export const HeaderBar = memo(function ({schema, curTable}: {
 
                 {schema ? <TableList schema={schema}/> : <Select id='table' loading={true}/>}
                 {curTable ? <IdList curTable={curTable}/> : <Skeleton.Input/>}
+                {curTable ? <UnreferencedButton curTable={curTable}/> : null}
                 {unsavedSign}
                 {nextId}
 

@@ -1,15 +1,16 @@
 import resso from "./resso.ts";
-import {AIConf, Convert, FixedPage, FixedPagesConf, NodeShowType, TauriConf, ThemeConfig} from "./storageJson.ts";
-import {getPrefBool, getPrefEnumStr, getPrefInt, getPrefJson, getPrefStr, setPref} from "./storage.ts";
-import {History} from "./historyModel.ts";
-import {NEW_RECORD_ID, Schema} from "../routes/table/schemaUtil.tsx";
-import {useLocation} from "react-router-dom";
-import {queryClient} from "../main.tsx";
-import {getId} from "../routes/record/recordRefEntity.ts";
-import {ResInfo} from "../res/resInfo.ts";
+import { AIConf, Convert, FixedPage, FixedRefPage, FixedUnrefPage, FixedPagesConf, NodeShowType, TauriConf, ThemeConfig } from "./storageJson.ts";
+import { getPrefBool, getPrefEnumStr, getPrefInt, getPrefJson, getPrefStr, setPref } from "./storage.ts";
+import { History } from "./historyModel.ts";
+import { NEW_RECORD_ID, Schema } from "../routes/table/schemaUtil.tsx";
+import { useLocation } from "react-router-dom";
+import { queryClient } from "../main.tsx";
+import { getId } from "../routes/record/recordRefEntity.ts";
+import { ResInfo } from "../res/resInfo.ts";
 
-export type PageType = 'table' | 'tableRef' | 'record' | 'recordRef';
-export const pageEnums = ['table', 'tableRef', 'record', 'recordRef'];
+export type PageType = 'table' | 'tableRef' | 'record' | 'recordRef' | 'recordUnref';
+export const pageEnums = ['table', 'tableRef', 'record', 'recordRef', 'recordUnref'];
+export type PageRecordOrRecordRef = 'record' | 'recordRef';
 
 export type StoreState = {
     server: string;
@@ -237,11 +238,11 @@ export function getMyStore() {
 }
 
 export function clearLayoutCache() {
-    queryClient.removeQueries({queryKey: ['layout']});
+    queryClient.removeQueries({ queryKey: ['layout'] });
 }
 
 export function invalidateAllQueries() {
-    queryClient.invalidateQueries({queryKey: [], refetchType: 'all'}).catch((reason: unknown) => {
+    queryClient.invalidateQueries({ queryKey: [], refetchType: 'all' }).catch((reason: unknown) => {
         console.log(reason);
     });
 }
@@ -358,13 +359,34 @@ export function setDragPanel(value: string) {
     setPref('dragPanel', value);
 }
 
-export function makeFixedPage(curTableId: string, curId: string) {
-    const {recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow} = store;
-    const fp: FixedPage = {
+// 类型守卫函数
+export function isFixedRefPage(page: FixedPage): page is FixedRefPage {
+    return 'id' in page;
+}
+
+export function isFixedUnrefPage(page: FixedPage): page is FixedUnrefPage {
+    return !('id' in page);
+}
+
+export function makeFixedPage(curTableId: string, curId: string): FixedRefPage {
+    const { recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow } = store;
+    const fp: FixedRefPage = {
         label: getId(curTableId, curId),
         table: curTableId,
         id: curId,
         refIn: recordRefIn,
+        refOutDepth: recordRefOutDepth,
+        maxNode: recordMaxNode,
+        nodeShow: nodeShow,
+    };
+    return fp;
+}
+
+export function makeUnrefPage(curTableId: string): FixedUnrefPage {
+    const { recordRefOutDepth, recordMaxNode, nodeShow } = store;
+    const fp: FixedUnrefPage = {
+        label: `unref:${curTableId}`,
+        table: curTableId,
         refOutDepth: recordRefOutDepth,
         maxNode: recordMaxNode,
         nodeShow: nodeShow,
@@ -439,7 +461,7 @@ export function historyCanPrev(curTableId: string, curId: string, history: Histo
 }
 
 export function historyPrev(curPage: PageType, curTableId: string, curId: string,
-                            history: History, isEditMode: boolean) {
+    history: History, isEditMode: boolean) {
     let cur = history.cur();
     if (cur && (cur.table != curTableId || cur.id != curId)) {
         // 点击<关联数据>，<访问历史>里的链接时，不会修改访问历史。
@@ -471,7 +493,7 @@ export function setEditingState(editingCurTable: string, editingCurId: string, e
 }
 
 export function getLastOpenIdByTable(schema: Schema, curTableId: string): string | undefined {
-    const {history} = store;
+    const { history } = store;
     const lastOpenId = history.findLastOpenId(curTableId)
     const table = schema.getSTable(curTableId);
     let id;
@@ -493,8 +515,8 @@ export function setIsEditMode(isEditMode: boolean) {
 }
 
 export function navTo(curPage: PageType, tableId: string, id: string,
-                      edit: boolean = false, addHistory: boolean = true) {
-    const {history} = store;
+    edit: boolean = false, addHistory: boolean = true) {
+    const { history } = store;
 
     if (addHistory) {
         const cur = history.cur();
@@ -516,7 +538,7 @@ export function getLastNavToInLocalStore() {
     const tableId = getPrefStr('curTableId', '');
     const id = getPrefStr('curId', '');
     const isEditMode = getPrefBool('isEditMode', false);
-    return navTo(page ?? 'table', tableId, id, isEditMode);
+    return navTo(page ?? 'record', tableId, id, isEditMode);
 }
 
 export function setResourceDir(resourceDir: string) {
@@ -555,5 +577,17 @@ export function useLocationData() {
     if (split.length > idx) {
         curId = split.slice(idx).join("/");
     }
-    return {curPage, curTableId, curId, edit, pathname};
+    return { curPage, curTableId, curId, edit, pathname };
+}
+
+
+export function useCurPageRecordOrRecordRef(): { curPage: PageRecordOrRecordRef } {
+    const location = useLocation();
+    const pathname = location.pathname;
+    const split = pathname.split('/');
+    if (split.length > 1 && split[1] == 'recordRef') {
+        return { curPage: 'recordRef' };
+    } else {
+        return { curPage: 'record' };
+    }
 }

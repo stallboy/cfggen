@@ -21,6 +21,8 @@ i18n.use(LanguageDetector)
                     tableRef: "table relation",
                     record: "record",
                     recordRef: "relation",
+                    unreferenced: "Unreferenced",
+                    unreferencedRecords: "Unreferenced Records",
                     fix: "fix",
 
                     serverConnectFail: 'connect failed',
@@ -94,6 +96,8 @@ i18n.use(LanguageDetector)
                     tableRef: "表关系",
                     record: "记录",
                     recordRef: "关系",
+                    unreferenced: "未引用",
+                    unreferencedRecords: "未被引用的记录",
                     fix: "固定",
                     finder: "导航",
                     chat: "AI➕",

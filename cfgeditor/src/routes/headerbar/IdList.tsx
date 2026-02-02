@@ -1,16 +1,17 @@
-import {Select} from "antd";
-import {getIdOptionsWithNew, NEW_RECORD_ID} from "../table/schemaUtil.tsx";
-import {navTo, useMyStore, useLocationData} from "../../store/store.ts";
-import {useNavigate} from "react-router-dom";
-import {STable} from "../../api/schemaModel.ts";
-import {memo, useMemo, useCallback} from "react";
+import { Select } from "antd";
+import { getIdOptionsWithNew, NEW_RECORD_ID } from "../table/schemaUtil.tsx";
+import { navTo, useMyStore, useLocationData, useCurPageRecordOrRecordRef } from "../../store/store.ts";
+import { useNavigate } from "react-router-dom";
+import { STable } from "../../api/schemaModel.ts";
+import { memo, useMemo, useCallback } from "react";
 
-export const IdList = memo(function ({curTable}: {
+export const IdList = memo(function ({ curTable }: {
     curTable: STable,
 }) {
     const navigate = useNavigate();
-    const {curPage, curTableId, curId} = useLocationData();
-    const {isEditMode} = useMyStore();
+    const { curPage } = useCurPageRecordOrRecordRef();
+    const { curTableId, curId } = useLocationData();
+    const { isEditMode } = useMyStore();
 
     const options = useMemo(() => getIdOptionsWithNew(curTable), [curTable]);
 
@@ -27,13 +28,13 @@ export const IdList = memo(function ({curTable}: {
     }, [navigate, curPage, curTableId, isEditMode]);
 
     return <Select id='id'
-                   showSearch={{
-                       filterOption: (inputValue, option) =>
-                           option?.labelstr.toLowerCase().includes(inputValue.toLowerCase()) ?? false
-                   }}
-                   options={options}
-                   style={{width: 240}}
-                   value={defaultCurId}
-                   placeholder="search a record"
-                   onChange={handleChange}/>;
+        showSearch={{
+            filterOption: (inputValue, option) =>
+                option?.labelstr.toLowerCase().includes(inputValue.toLowerCase()) ?? false
+        }}
+        options={options}
+        style={{ width: 240 }}
+        value={defaultCurId}
+        placeholder="search a record"
+        onChange={handleChange} />;
 });

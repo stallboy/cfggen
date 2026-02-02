@@ -82,6 +82,15 @@ export interface RecordRefsResult {
     refs: BriefRecord[];
 }
 
+// 未被引用记录的查询结果
+export interface UnreferencedRecordsResult {
+    resultCode: ResultCode;
+    table: string;
+    depth: number;
+    maxObjs: number;
+    refs: BriefRecord[];  // 复用BriefRecord，表示所有未引用的记录
+}
+
 export interface RecordRefIdsResult {
     resultCode: ResultCode;
     table: string;

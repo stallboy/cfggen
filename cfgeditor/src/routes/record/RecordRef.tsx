@@ -1,6 +1,6 @@
 import { STable } from "../../api/schemaModel.ts";
 import { Entity } from "../../flow/entityModel.ts";
-import { RecordRefsResult, RefId } from "../../api/recordModel.ts";
+import { RecordRefsResult, RefId, UnreferencedRecordsResult } from "../../api/recordModel.ts";
 import { Result } from "antd";
 import { createRefEntities } from "./recordRefEntity.ts";
 import { useTranslation } from "react-i18next";
@@ -9,7 +9,7 @@ import { NodeShowType } from "../../store/storageJson.ts";
 import { navTo, useMyStore, useLocationData } from "../../store/store.ts";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { fetchRecordRefs } from "../../api/api.ts";
+import { fetchRecordRefs, fetchUnreferencedRecords } from "../../api/api.ts";
 import { MenuItem } from "../../flow/FlowContextMenu.tsx";
 import { SchemaTableType } from "../../CfgEditorApp.tsx";
 import { fillHandles } from "../../flow/entityToNodeAndEdge.ts";
@@ -18,16 +18,18 @@ import { useCallback, useMemo, useState } from "react";
 import { useEntityToGraph } from "../../flow/useEntityToGraph.tsx";
 import { EditingObjectRes, EFitView } from "./editingObject.ts";
 import { EntityNode } from "../../flow/FlowGraph.tsx";
+import { useParams } from "react-router-dom";
 
 
-export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, recordRefResult, inDragPanelAndFix }: {
+export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, recordRefResult, inDragPanelAndFix, isUnrefMode }: {
     schema: Schema;
     notes: Map<string, string> | undefined;
     curTable: STable;
-    curId: string;
+    curId?: string;
     nodeShow: NodeShowType;
-    recordRefResult: RecordRefsResult;
+    recordRefResult: RecordRefsResult | UnreferencedRecordsResult;
     inDragPanelAndFix: boolean;
+    isUnrefMode: boolean;
 }) {
     const [t] = useTranslation();
     const navigate = useNavigate();
@@ -53,7 +55,7 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
             entityMap: map,
             schema,
             briefRecordRefs: recordRefResult.refs,
-            isCreateRefs: true,
+            isCreateRefs: !isUnrefMode,  // 未引用模式不创建引用关系边
             checkTable,
             recordRefInShowLinkMaxNode,
             tauriConf,
@@ -62,14 +64,24 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
         });
         fillHandles(map);
         return map;
-    }, [schema, recordRefResult.refs, checkTable, recordRefInShowLinkMaxNode, tauriConf, resourceDir, resMap]);
+    }, [schema, recordRefResult.refs, checkTable, recordRefInShowLinkMaxNode, tauriConf, resourceDir, resMap, isUnrefMode]);
 
     // Extract menu creation functions
-    const createPaneMenu = useCallback((): MenuItem[] => [{
-        label: t('record') + curId,
-        key: 'record',
-        handler: () => navigate(navTo('record', curTable.name, curId))
-    }], [t, curId, curTable.name, navigate]);
+    const createPaneMenu = useCallback((): MenuItem[] => {
+        const menuItem: MenuItem = {
+            label: isUnrefMode
+                ? `${t('unreferencedRecords')}: ${curTable.name}`
+                : t('record') + curId,
+            key: 'pane',
+            handler: isUnrefMode || !curId
+                ? () => {
+                    // 未引用模式或没有id时不做任何操作
+                }
+                : () => navigate(navTo('record', curTable.name, curId))
+        };
+
+        return [menuItem];
+    }, [t, curId, curTable.name, navigate, isUnrefMode]);
 
     const createNodeMenu = useCallback((entityNode: EntityNode): MenuItem[] => {
         const refId = entityNode.data.entity.userData as RefId;
@@ -89,7 +101,8 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
             });
         }
 
-        if (refId.table !== recordRefResult.table || refId.id !== recordRefResult.id) {
+        // 对于未引用模式，或者在单个record模式下的其他record，显示recordRef选项
+        if (isUnrefMode || (refId.table !== recordRefResult.table || refId.id !== (recordRefResult as RecordRefsResult).id)) {
             menuItems.push({
                 label: t('recordRef') + refId.id,
                 key: 'entityRecordRef',
@@ -98,7 +111,7 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
         }
 
         return menuItems;
-    }, [t, schema, navigate, recordRefResult]);
+    }, [t, schema, navigate, recordRefResult, isUnrefMode]);
 
     const nodeDoubleClickFunc = (entityNode: EntityNode): void => {
         const refId = entityNode.data.entity.userData as RefId;
@@ -106,11 +119,13 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
     };
 
     const [lastFitViewPath, setLastFitViewPath] = useState<string | undefined>(undefined);
-    let pathname = `/recordRef/${curTable.name}/${curId}`;
-    let editingObjectRes; // EFitView.FitFull;
+    const pathname = isUnrefMode
+        ? `/recordUnref/${curTable.name}`
+        : `/recordRef/${curTable.name}/${curId}`;
+    let editingObjectRes;
     if (inDragPanelAndFix) {
-        pathname += '/fix';
-        if (lastFitViewPath && lastFitViewPath === pathname) {
+        const pathnameWithFix = pathname + '/fix';
+        if (lastFitViewPath && lastFitViewPath === pathnameWithFix) {
             editingObjectRes = fitNone;
         }
     }
@@ -136,7 +151,7 @@ export function RecordRef({ schema, notes, curTable, curId, refIn, refOutDepth, 
     schema: Schema;
     notes: Map<string, string> | undefined;
     curTable: STable;
-    curId: string;
+    curId?: string;  // 改为可选，支持未引用模式
     refIn: boolean;
     refOutDepth: number;
     maxNode: number;
@@ -144,10 +159,24 @@ export function RecordRef({ schema, notes, curTable, curId, refIn, refOutDepth, 
     inDragPanelAndFix: boolean;
 }) {
     const { server } = useMyStore();
+
+    // 判断当前是哪种模式
+    const isUnrefMode = curId === undefined || curId === '';
+
+    // 根据模式选择不同的API和数据获取
     const { isLoading, isError, error, data: recordRefResult } = useQuery({
-        queryKey: ['tableRef', curTable.name, curId, refOutDepth, maxNode, refIn],
-        queryFn: ({ signal }) => fetchRecordRefs(server, curTable.name, curId, refOutDepth, maxNode, refIn, signal),
+        queryKey: isUnrefMode
+            ? ['unreferenced', curTable.name, refOutDepth, maxNode]
+            : ['recordRef', curTable.name, curId, refOutDepth, maxNode, refIn],
+        queryFn: ({ signal }) => {
+            if (isUnrefMode) {
+                return fetchUnreferencedRecords(server, curTable.name, refOutDepth, maxNode, signal);
+            } else {
+                return fetchRecordRefs(server, curTable.name, curId!, refOutDepth, maxNode, refIn, signal);
+            }
+        },
         staleTime: 1000 * 10,
+        enabled: !!curId || isUnrefMode,
     })
 
 
@@ -169,16 +198,27 @@ export function RecordRef({ schema, notes, curTable, curId, refIn, refOutDepth, 
 
     return <RecordRefWithResult schema={schema} notes={notes} curTable={curTable} curId={curId}
         nodeShow={nodeShow} recordRefResult={recordRefResult}
-        inDragPanelAndFix={inDragPanelAndFix} />
+        inDragPanelAndFix={inDragPanelAndFix}
+        isUnrefMode={isUnrefMode} />
 
 }
 
 export function RecordRefRoute() {
-    const { schema, notes, curTable } = useOutletContext<SchemaTableType>();
-    const { curId } = useLocationData();
+    const { schema, notes } = useOutletContext<SchemaTableType>();
+    const { table, id } = useParams<{ table: string; id?: string }>();
     const { recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow } = useMyStore();
+    const navigate = useNavigate();
 
-    return <RecordRef schema={schema} notes={notes} curTable={curTable} curId={curId}
+    const curTable = schema ? schema.getSTable(table || '') : null;
+
+    // 如果table不存在，导航到404
+    if (!curTable) {
+        navigate('/PathNotFound');
+        return null;
+    }
+
+    // id可能为undefined（未引用模式）或字符串（单个record模式）
+    return <RecordRef schema={schema} notes={notes} curTable={curTable} curId={id}
         refIn={recordRefIn} refOutDepth={recordRefOutDepth} maxNode={recordMaxNode}
         nodeShow={nodeShow}
         inDragPanelAndFix={false} />

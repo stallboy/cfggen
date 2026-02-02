@@ -10,7 +10,9 @@ import {
     getLastNavToInLocalStore,
     setServer,
     useMyStore,
-    useLocationData
+    useLocationData,
+    isFixedRefPage,
+    isFixedUnrefPage
 } from "./store/store.ts";
 import {Outlet, useNavigate} from "react-router-dom";
 import {STable} from "./api/schemaModel.ts";
@@ -126,17 +128,31 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
             if (fix) {
                 const fixedTable = schema.getSTable(fix.table);
                 if (fixedTable) {
-                    dragPage = <FlowGraph>
-                        <RecordRef schema={schema}
-                                   notes={notes}
-                                   curTable={fixedTable}
-                                   curId={fix.id}
-                                   refIn={fix.refIn}
-                                   refOutDepth={fix.refOutDepth}
-                                   maxNode={fix.maxNode}
-                                   nodeShow={fix.nodeShow}
-                                   inDragPanelAndFix={true}/>
-                    </FlowGraph>;
+                    if (isFixedRefPage(fix)) {  // 固定记录引用页面
+                        dragPage = <FlowGraph>
+                            <RecordRef schema={schema}
+                                       notes={notes}
+                                       curTable={fixedTable}
+                                       curId={fix.id}
+                                       refIn={fix.refIn}
+                                       refOutDepth={fix.refOutDepth}
+                                       maxNode={fix.maxNode}
+                                       nodeShow={fix.nodeShow}
+                                       inDragPanelAndFix={true}/>
+                        </FlowGraph>;
+                    } else if (isFixedUnrefPage(fix)) {  // 固定未引用记录页面
+                        dragPage = <FlowGraph>
+                            <RecordRef schema={schema}
+                                       notes={notes}
+                                       curTable={fixedTable}
+                                       curId={undefined}  // 未引用模式，没有id
+                                       refIn={false}       // 无意义，保留字段
+                                       refOutDepth={fix.refOutDepth}
+                                       maxNode={fix.maxNode}
+                                       nodeShow={fix.nodeShow}
+                                       inDragPanelAndFix={true}/>
+                        </FlowGraph>;
+                    }
                 }
             }
         }

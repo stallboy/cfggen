@@ -170,12 +170,21 @@ public class EditorServer extends GeneratorWithTag {
         String maxObjsStr = query.get("maxObjs");
         String inStr = query.get("in");
         String refsStr = query.get("refs");
+        String noRefInStr = query.get("noRefIn");
 
         int depth = parseIntAndIgnoreErr(depthStr, 1);
         int maxObjs = parseIntAndIgnoreErr(maxObjsStr, 30);
         boolean in = inStr != null;
+        boolean noRefIn = noRefInStr != null;
 
-        RequestType requestType = refsStr != null ? RequestType.requestRefs : RequestType.requestRecord;
+        // 根据参数确定请求类型
+        RequestType requestType;
+        if (noRefIn) {
+            requestType = RequestType.requestUnreferenced;
+        } else {
+            requestType = refsStr != null ? RequestType.requestRefs : RequestType.requestRecord;
+        }
+
         RecordResponse record = new RecordService(cfgValue, graph, table, id, depth, in, maxObjs, requestType).retrieve();
         sendResponse(exchange, record);
     }

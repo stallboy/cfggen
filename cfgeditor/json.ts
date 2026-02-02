@@ -38,7 +38,7 @@ export interface KeywordColor {
 export type ShowDescriptionType = 'show' | 'showFallbackValue' | 'showValue' | 'none';
 export type NodePlacementStrategyType = 'SIMPLE' | 'LINEAR_SEGMENTS' | 'BRANDES_KOEPF' | "mrtree";
 
-export interface FixedPage {
+export interface FixedRefPage {
     label: string; // 显示
     table: string;
     id: string;
@@ -47,6 +47,16 @@ export interface FixedPage {
     maxNode: number;
     nodeShow: NodeShowType;
 }
+
+export interface FixedUnrefPage {
+    label: string;
+    table: string;
+    refOutDepth: number;
+    maxNode: number;
+    nodeShow: NodeShowType;
+}
+
+export type FixedPage = FixedRefPage | FixedUnrefPage;
 
 export interface FixedPagesConf {
     pages: FixedPage[];

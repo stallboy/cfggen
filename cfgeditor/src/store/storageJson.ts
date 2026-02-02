@@ -1,11 +1,13 @@
 // To parse this data:
 //
-//   import { Convert, NodeShowType, KeywordColor, ShowDescriptionType, NodePlacementStrategyType, FixedPage, FixedPagesConf, ResDir, TauriConf, AIConf, ThemeConfig } from "./file";
+//   import { Convert, NodeShowType, KeywordColor, ShowDescriptionType, NodePlacementStrategyType, FixedRefPage, FixedUnrefPage, FixedPage, FixedPagesConf, ResDir, TauriConf, AIConf, ThemeConfig } from "./file";
 //
 //   const nodeShowType = Convert.toNodeShowType(json);
 //   const keywordColor = Convert.toKeywordColor(json);
 //   const showDescriptionType = Convert.toShowDescriptionType(json);
 //   const nodePlacementStrategyType = Convert.toNodePlacementStrategyType(json);
+//   const fixedRefPage = Convert.toFixedRefPage(json);
+//   const fixedUnrefPage = Convert.toFixedUnrefPage(json);
 //   const fixedPage = Convert.toFixedPage(json);
 //   const fixedPagesConf = Convert.toFixedPagesConf(json);
 //   const resDir = Convert.toResDir(json);
@@ -16,11 +18,7 @@
 // These functions will throw an error if the JSON doesn't
 // match the expected interface, even if the JSON is valid.
 
-export interface FixedPagesConf {
-    pages: FixedPage[];
-}
-
-export interface FixedPage {
+export interface FixedRefPage {
     id:          string;
     label:       string;
     maxNode:     number;
@@ -65,6 +63,28 @@ export interface KeywordColor {
 }
 
 export type ShowDescriptionType = "none" | "show" | "showFallbackValue" | "showValue";
+
+export interface FixedUnrefPage {
+    label:       string;
+    maxNode:     number;
+    nodeShow:    NodeShowType;
+    refOutDepth: number;
+    table:       string;
+}
+
+export interface FixedPagesConf {
+    pages: FixedPage[];
+}
+
+export interface FixedPage {
+    id?:         string;
+    label:       string;
+    maxNode:     number;
+    nodeShow:    NodeShowType;
+    refIn?:      boolean;
+    refOutDepth: number;
+    table:       string;
+}
 
 export interface TauriConf {
     assetDir:      string;
@@ -121,6 +141,22 @@ export class Convert {
 
     public static nodePlacementStrategyTypeToJson(value: NodePlacementStrategyType): string {
         return JSON.stringify(uncast(value, r("NodePlacementStrategyType")), null, 2);
+    }
+
+    public static toFixedRefPage(json: string): FixedRefPage {
+        return cast(JSON.parse(json), r("FixedRefPage"));
+    }
+
+    public static fixedRefPageToJson(value: FixedRefPage): string {
+        return JSON.stringify(uncast(value, r("FixedRefPage")), null, 2);
+    }
+
+    public static toFixedUnrefPage(json: string): FixedUnrefPage {
+        return cast(JSON.parse(json), r("FixedUnrefPage"));
+    }
+
+    public static fixedUnrefPageToJson(value: FixedUnrefPage): string {
+        return JSON.stringify(uncast(value, r("FixedUnrefPage")), null, 2);
     }
 
     public static toFixedPage(json: string): FixedPage {
@@ -316,19 +352,16 @@ function o(props: any[], additional: any) {
     return { props, additional };
 }
 
-// function m(additional: any) {
-//     return { props: [], additional };
-// }
+function m(additional: any) {
+    return { props: [], additional };
+}
 
 function r(name: string) {
     return { ref: name };
 }
 
 const typeMap: any = {
-    "FixedPagesConf": o([
-        { json: "pages", js: "pages", typ: a(r("FixedPage")) },
-    ], false),
-    "FixedPage": o([
+    "FixedRefPage": o([
         { json: "id", js: "id", typ: "" },
         { json: "label", js: "label", typ: "" },
         { json: "maxNode", js: "maxNode", typ: 3.14 },
@@ -366,6 +399,25 @@ const typeMap: any = {
     "KeywordColor": o([
         { json: "color", js: "color", typ: "" },
         { json: "keyword", js: "keyword", typ: "" },
+    ], false),
+    "FixedUnrefPage": o([
+        { json: "label", js: "label", typ: "" },
+        { json: "maxNode", js: "maxNode", typ: 3.14 },
+        { json: "nodeShow", js: "nodeShow", typ: r("NodeShowType") },
+        { json: "refOutDepth", js: "refOutDepth", typ: 3.14 },
+        { json: "table", js: "table", typ: "" },
+    ], false),
+    "FixedPagesConf": o([
+        { json: "pages", js: "pages", typ: a(r("FixedPage")) },
+    ], false),
+    "FixedPage": o([
+        { json: "id", js: "id", typ: u(undefined, "") },
+        { json: "label", js: "label", typ: "" },
+        { json: "maxNode", js: "maxNode", typ: 3.14 },
+        { json: "nodeShow", js: "nodeShow", typ: r("NodeShowType") },
+        { json: "refIn", js: "refIn", typ: u(undefined, true) },
+        { json: "refOutDepth", js: "refOutDepth", typ: 3.14 },
+        { json: "table", js: "table", typ: "" },
     ], false),
     "TauriConf": o([
         { json: "assetDir", js: "assetDir", typ: "" },

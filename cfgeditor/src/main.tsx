@@ -52,6 +52,10 @@ const router = createBrowserRouter([
                 Component: RecordRefRoute,
             },
             {
+                path: "recordUnref/:table",  // 新增：未引用记录页面路由
+                Component: RecordRefRoute,   // 复用RecordRefRoute组件
+            },
+            {
                 path: "*",
                 Component: PathNotFound,
             }

@@ -18,18 +18,6 @@ pnpm run dev
 # 访问 http://localhost:5173/
 ```
 
-### 构建发布
-```bash
-# 构建 Web 版本
-pnpm run build
-# 生成的静态文件在 dist 目录
-
-# 启动测试服务器
-cd dist
-jwebserver
-# 访问 http://localhost:8000/
-```
-
 ### 桌面应用构建
 ```bash
 # 构建 Tauri 桌面应用 (需要 Rust 环境)
@@ -46,9 +34,9 @@ pnpm run lint
 ## 架构概览
 
 ### 技术栈
-- **前端**: React 18 + TypeScript + Vite
+- **前端**: React 19 + TypeScript + Vite
 - **桌面框架**: Tauri (Rust 后端)
-- **UI 库**: Ant Design + Ant Design Pro Chat
+- **UI 库**: Ant Design
 - **状态管理**: Resso (轻量级) + React Query
 - **图形可视化**: React Flow (XYFlow)
 - **路由**: React Router DOM
@@ -76,8 +64,9 @@ pnpm run lint
 
 #### 设置管理
 - `src/routes/setting/Setting.tsx` - 应用设置面板
-- `src/routes/setting/store.ts` - 状态管理 (Resso)
-- `src/routes/setting/storage.ts` - 存储管理 (localStorage/YAML)
+- `src/store/store.ts` - 状态管理 (Resso)
+- `src/store/storage.ts` - 存储管理 (localStorage/YAML)
+- `src/store/historyModel.ts` - 历史记录模型
 
 #### 图形可视化
 - `src/flow/FlowGraph.tsx` - 图形可视化包装器
@@ -89,7 +78,7 @@ pnpm run lint
 
 ### 数据模型
 
-#### 模式模型 (`src/routes/table/schemaModel.ts`)
+#### 模式模型 (`src/api/schemaModel.ts`)
 - `STable` - 表结构定义，包含字段、外键和记录ID
 - `SStruct` - 结构定义
 - `SInterface` - 接口定义
@@ -101,19 +90,27 @@ pnpm run lint
 - `EntityEdit` - 编辑状态和功能
 - `EntityGraph` - 完整图形结构
 
-#### 记录模型 (`src/routes/record/recordModel.ts`)
+#### 记录模型 (`src/api/recordModel.ts`)
 - `RecordResult` - 记录数据与引用
 - `JSONObject` - 通用 JSON 数据结构
 
+#### 其他API模型 (`src/api/`)
+- `chatModel.ts` - AI聊天相关模型
+- `noteModel.ts` - 笔记编辑模型
+- `searchModel.ts` - 搜索功能模型
+
 ### API 集成
 
-#### HTTP API 客户端 (`src/routes/api.ts`)
+#### HTTP API 客户端 (`src/api/api.ts`)
 - 使用 Axios 连接后端服务器 (localhost:3456)
 - 主要端点:
   - `/schemas` - 获取模式数据
   - `/record` - 获取单个记录
   - `/recordRefIds` - 获取引用ID
   - `/recordAddOrUpdate` - 创建/更新记录
+  - `/noteEdit` - 编辑笔记
+  - `/checkJson` - 检查JSON数据
+  - `/prompt` - AI提示接口
 
 #### React Query 集成
 - 在 main.tsx 中配置查询客户端
@@ -122,7 +119,7 @@ pnpm run lint
 
 ### 状态管理
 
-#### 存储架构 (`src/routes/setting/store.ts`)
+#### 存储架构 (`src/store/store.ts`)
 - 使用 Resso 进行轻量级状态管理
 - `StoreState` 接口定义所有应用状态:
   - 服务器配置
@@ -132,10 +129,15 @@ pnpm run lint
   - 导航历史
   - 编辑状态
 
-#### 存储管理 (`src/routes/setting/storage.ts`)
+#### 存储管理 (`src/store/storage.ts`)
 - 双重存储: localStorage (Web) 和 YAML 文件 (Tauri)
 - 自动持久化到 `cfgeditor.yml` 和 `cfgeditorSelf.yml`
 - 类型安全的偏好设置管理
+
+#### 历史记录 (`src/store/historyModel.ts`)
+- 管理用户的导航历史
+- 支持前进/后退功能
+- 剪贴板操作记录
 
 ### 关键架构模式
 
@@ -190,8 +192,20 @@ pnpm run lint
 - 翻译文件在 `src/locales/` 目录
 - 使用 i18next 进行文本管理
 
+### 代码生成
+
+#### JSON 解析器生成
+**重要**: `src/store/storageJson.ts` 是自动生成的文件，不要直接编辑！
+
+- 编辑 `json.ts` 来定义接口和类型
+- 运行 `genJsonParser.bat` 重新生成 `storageJson.ts`
+  ```bash
+  genJsonParser.bat
+  ```
+  该脚本使用 quicktype 工具根据 `json.ts` 中的类型定义生成 JSON 解析代码
+- 生成后，在 `storageJson.ts` 中注释掉未使用的函数
+
 ### 错误处理
 - React Query 提供统一的错误处理
 - 组件级别的错误边界
 - 用户友好的错误提示
-- 不要编辑storageJson.ts文件，此文件由json.ts通过genwo JsonParser.bat生成，生成后注释掉未使用的函数。

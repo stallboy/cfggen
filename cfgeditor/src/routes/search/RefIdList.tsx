@@ -1,5 +1,5 @@
 import {memo, useMemo} from "react";
-import {navTo, useMyStore, useLocationData} from "../../store/store.ts";
+import {navTo, useMyStore, useLocationData, useCurPageRecordOrRecordRef} from "../../store/store.ts";
 import {Button, Result, Spin, Table} from "antd";
 import {useNavigate} from "react-router-dom";
 import {useQuery} from "@tanstack/react-query";
@@ -17,7 +17,7 @@ function RefIdListResult({refIdsResult}: {
 
     const {isEditMode} = useMyStore();
     const navigate = useNavigate();
-    const {curPage} = useLocationData();
+    const {curPage} = useCurPageRecordOrRecordRef();
 
 
     const columns = useMemo(() => {

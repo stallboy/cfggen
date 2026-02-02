@@ -30,7 +30,7 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
     const {t} = useTranslation();
     const {server, imageSizeScale} = useMyStore();
 
-    const {curTableId, curId, curPage} = useLocationData();
+    const {curPage, curTableId, curId} = useLocationData();
     const {notification} = App.useApp();
     const navigate = useNavigate();
 
@@ -102,7 +102,8 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
         {label: t('table'), value: 'table'},
         {label: t('tableRef'), value: 'tableRef'},
         {label: t('record'), value: 'record'},
-        {label: t('recordRef'), value: 'recordRef'}
+        {label: t('recordRef'), value: 'recordRef'},
+        {label: t('recordUnref'), value: 'recordUnref'}
     ];
 
     const onChangeCurPage = useCallback((page: PageType) => {

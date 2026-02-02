@@ -44,6 +44,14 @@ public class RecordService {
             Collection<BriefRecord> refs) implements RecordResponse {
     }
 
+    public record UnreferencedRecordsResult(
+            ResultCode resultCode,
+            String table,
+            int depth,
+            int maxObjs,
+            Collection<BriefRecord> refs) implements RecordResponse {
+    }
+
 
     public enum ResultCode {
         ok,
@@ -76,7 +84,8 @@ public class RecordService {
 
     public enum RequestType {
         requestRecord,
-        requestRefs
+        requestRefs,
+        requestUnreferenced
     }
 
     private final CfgValue cfgValue;
@@ -106,6 +115,7 @@ public class RecordService {
         return switch (requestType) {
             case requestRecord -> new TableRecord(code, table, id, maxObjs, null, null);
             case requestRefs -> new TableRecordRefs(code, table, id, depth, in, maxObjs, null);
+            case requestUnreferenced -> new UnreferencedRecordsResult(code, table, depth, maxObjs, null);
         };
     }
 
@@ -113,9 +123,14 @@ public class RecordService {
         if (table == null) {
             return ofErr(tableNotSet);
         }
-        if (id == null) {
-            return ofErr(idNotSet);
+
+        // noRefIn模式不需要id参数
+        if (requestType != RequestType.requestUnreferenced) {
+            if (id == null) {
+                return ofErr(idNotSet);
+            }
         }
+
         if (depth < 0 || maxObjs <= 0) {
             return ofErr(paramErr);
         }
@@ -123,6 +138,11 @@ public class RecordService {
         VTable vTable = cfgValue.vTableMap().get(table);
         if (vTable == null) {
             return ofErr(tableNotFound);
+        }
+
+        // noRefIn模式：直接返回未引用记录列表
+        if (requestType == RequestType.requestUnreferenced) {
+            return handleRequestUnreferenced(vTable);
         }
 
         CfgValueErrs errs = CfgValueErrs.of();
@@ -144,52 +164,22 @@ public class RecordService {
         Map<RefId, VStruct> frontier = new LinkedHashMap<>();
         RefId thisObjId = new RefId(table, id);
         JSONObject object = null;
-        int curDepth = 0;
+        int startDepth;
         switch (requestType) {
             case requestRecord -> {
                 object = new ValueToJson(cfgValue, frontier).toJson(vRecord);
                 frontier.remove(thisObjId);
-                curDepth = 1;
+                startDepth = 1;
             }
             case requestRefs -> {
                 frontier.put(thisObjId, vRecord);
+                startDepth = 0;
             }
+            default -> throw new IllegalArgumentException("Unknown request type: " + requestType);
         }
 
-
-        Map<RefId, BriefRecord> result = new LinkedHashMap<>();
-
-        while (curDepth <= depth) {
-            Map<RefId, VStruct> newFrontier = new LinkedHashMap<>();  // 新节点
-
-            for (Map.Entry<RefId, VStruct> e : frontier.entrySet()) {
-                RefId refId = e.getKey();
-                VStruct record = e.getValue();
-
-                List<FieldRef> fieldRefs = new ArrayList<>();  // 现有到新节点的  链接
-                ValueRefCollector collector = new ValueRefCollector(cfgValue, newFrontier, fieldRefs);
-                collector.collect(record, List.of());
-
-                result.put(refId, vStructToBriefRecord(refId, record, fieldRefs, curDepth));
-
-                if (result.size() > maxObjs) {
-                    break;
-                }
-            }
-
-            if (result.size() > maxObjs) {
-                break;
-            }
-
-            // 去重
-            for (RefId refId : result.keySet()) {
-                newFrontier.remove(refId);
-            }
-            newFrontier.remove(thisObjId);
-
-            frontier = newFrontier;
-            curDepth++;
-        }
+        // 使用公共方法展开正向引用
+        Map<RefId, BriefRecord> result = expandRefOut(frontier, startDepth, Set.of(thisObjId));
 
         if (in) {
             ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
@@ -215,8 +205,95 @@ public class RecordService {
         return switch (requestType) {
             case requestRecord -> new TableRecord(ok, table, id, maxObjs, object, result.values());
             case requestRefs -> new TableRecordRefs(ok, table, id, depth, in, maxObjs, result.values());
+            case requestUnreferenced -> throw new AssertionError("Should not reach here");
         };
 
+    }
+
+    private Map<RefId, BriefRecord> expandRefOut(
+            Map<RefId, VStruct> frontier,
+            int startDepth,
+            Set<RefId> excludeIds) {
+
+        Map<RefId, BriefRecord> result = new LinkedHashMap<>();
+        int curDepth = startDepth;
+
+        while (curDepth <= depth) {
+            Map<RefId, VStruct> newFrontier = new LinkedHashMap<>();
+
+            for (Map.Entry<RefId, VStruct> e : frontier.entrySet()) {
+                RefId refId = e.getKey();
+                VStruct record = e.getValue();
+
+                List<FieldRef> fieldRefs = new ArrayList<>();
+                ValueRefCollector collector = new ValueRefCollector(cfgValue, newFrontier, fieldRefs);
+                collector.collect(record, List.of());
+
+                result.put(refId, vStructToBriefRecord(refId, record, fieldRefs, curDepth));
+
+                if (result.size() > maxObjs) {
+                    break;
+                }
+            }
+
+            if (result.size() > maxObjs) {
+                break;
+            }
+
+            // 去重：排除已处理的记录和excludeIds中的记录
+            for (RefId refId : result.keySet()) {
+                newFrontier.remove(refId);
+            }
+            for (RefId refId : excludeIds) {
+                newFrontier.remove(refId);
+            }
+
+            frontier = newFrontier;
+            curDepth++;
+        }
+
+        return result;
+    }
+
+    private RecordResponse handleRequestUnreferenced(VTable vTable) {
+        Map<RefId, BriefRecord> unreferencedRecords = new LinkedHashMap<>();
+        Map<RefId, VStruct> unreferencedStructs = new LinkedHashMap<>();
+        ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
+
+        // 遍历表中所有记录，收集未被引用的记录
+        for (Map.Entry<Value, VStruct> entry : vTable.primaryKeyMap().entrySet()) {
+            if (unreferencedRecords.size() >= maxObjs) {
+                break;
+            }
+
+            Value pkValue = entry.getKey();
+            VStruct record = entry.getValue();
+
+            // 检查是否被引用
+            Map<RefId, ForeachVStruct.Context> refIns = refInCollector.collect(vTable, pkValue);
+
+            // 如果没有被引用，加入结果
+            if (refIns.isEmpty()) {
+                RefId refId = new RefId(vTable.name(), pkValue.packStr());
+                List<FieldRef> fieldRefs = ValueRefCollector.collectRefs(record, cfgValue);
+                BriefRecord briefRecord = vStructToBriefRecord(refId, record, fieldRefs, 0);
+                unreferencedRecords.put(refId, briefRecord);
+                unreferencedStructs.put(refId, record);
+            }
+        }
+
+        // 如果需要，展开正向引用（复用公共方法）
+        if (depth > 0 && !unreferencedStructs.isEmpty()) {
+            Map<RefId, BriefRecord> expanded = expandRefOut(
+                    unreferencedStructs,
+                    1,
+                    unreferencedRecords.keySet()
+            );
+            unreferencedRecords.putAll(expanded);
+        }
+
+        return new UnreferencedRecordsResult(ok, table, depth, maxObjs,
+                unreferencedRecords.values());
     }
 
     private static BriefRecord vStructToBriefRecord(RefId refId, VStruct vStruct, Collection<FieldRef> refs, int depth) {

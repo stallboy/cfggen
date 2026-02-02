@@ -1,6 +1,6 @@
 import {memo, useMemo} from "react";
 import {Schema} from "../table/schemaUtil.tsx";
-import {navTo, useMyStore, useLocationData} from "../../store/store.ts";
+import {navTo, useMyStore, useCurPageRecordOrRecordRef} from "../../store/store.ts";
 import {useNavigate} from "react-router-dom";
 import {Button, Table} from "antd";
 import TimeAgo from 'react-timeago'
@@ -19,7 +19,7 @@ export const LastModified = memo(function LastModified({schema}: {
 
     const {isEditMode} = useMyStore();
     const navigate = useNavigate();
-    const {curPage} = useLocationData();
+    const {curPage} = useCurPageRecordOrRecordRef();
 
     const orderedItems: LastModifiedItem[] = useMemo(() => {
         if (schema == undefined) {

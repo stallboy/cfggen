@@ -1,42 +1,62 @@
 import axios from 'axios';
-import {RawSchema} from "./schemaModel.ts";
+import { RawSchema } from "./schemaModel.ts";
 import {
     JSONObject,
     RecordEditResult,
     RecordRefIdsResult,
     RecordRefsResult,
-    RecordResult
+    RecordResult,
+    UnreferencedRecordsResult
 } from "./recordModel.ts";
-import {NoteEditResult, Notes} from "./noteModel.ts";
-import {CheckJsonResult, PromptResult} from "./chatModel.ts";
+import { NoteEditResult, Notes } from "./noteModel.ts";
+import { CheckJsonResult, PromptResult } from "./chatModel.ts";
 
 
 export async function fetchSchema(server: string, signal: AbortSignal): Promise<RawSchema> {
-    const response = await axios.get<RawSchema>(`http://${server}/schemas`, {signal});
+    const response = await axios.get<RawSchema>(`http://${server}/schemas`, { signal });
     return response.data;
 }
 
 export async function fetchRecordRefIds(server: string, tableId: string, id: string,
-                                        refInDepth: number, refOutDepth: number, maxIds: number,
-                                        signal: AbortSignal): Promise<RecordRefIdsResult> {
+    refInDepth: number, refOutDepth: number, maxIds: number,
+    signal: AbortSignal): Promise<RecordRefIdsResult> {
     const url = `http://${server}/recordRefIds?table=${tableId}&id=${id}&in=${refInDepth}&out=${refOutDepth}&maxIds=${maxIds}`;
-    const response = await axios.get<RecordRefIdsResult>(url, {signal});
+    const response = await axios.get<RecordRefIdsResult>(url, { signal });
     return response.data;
 }
 
 export async function fetchRecord(server: string, tableId: string, id: string, signal: AbortSignal): Promise<RecordResult> {
     const url = `http://${server}/record?table=${tableId}&id=${id}&depth=1`;
-    const response = await axios.get<RecordResult>(url, {signal});
+    const response = await axios.get<RecordResult>(url, { signal });
     return response.data;
 }
 
-export async function fetchRecordRefs(server: string, tableId: string, id: string,
-                                      refOutDepth: number, maxNode: number, refIn: boolean,
-                                      signal: AbortSignal): Promise<RecordRefsResult> {
+export async function fetchRecordRefs(
+    server: string,
+    tableId: string,
+    id: string,
+    refOutDepth: number,
+    maxNode: number,
+    refIn: boolean,
+    signal: AbortSignal
+): Promise<RecordRefsResult> {
     const url = `http://${server}/record?table=${tableId}&id=${id}&depth=${refOutDepth}&maxObjs=${maxNode}&refs${refIn ? '&in' : ''}`;
     // console.log('fetch refs', tableId, id);
-    const response = await axios.get<RecordRefsResult>(url, {signal});
+    const response = await axios.get<RecordRefsResult>(url, { signal });
     // console.log('fetched refs', tableId, id, response.data);
+    return response.data;
+}
+
+// 获取某个table下所有未被引用的记录
+export async function fetchUnreferencedRecords(
+    server: string,
+    tableId: string,
+    refOutDepth: number,
+    maxNode: number,
+    signal: AbortSignal
+): Promise<UnreferencedRecordsResult> {
+    const url = `http://${server}/record?table=${tableId}&depth=${refOutDepth}&maxObjs=${maxNode}&noRefIn`;
+    const response = await axios.get<UnreferencedRecordsResult>(url, { signal });
     return response.data;
 }
 
@@ -74,7 +94,7 @@ export async function deleteRecord(server: string, tableId: string, id: string):
 }
 
 export async function fetchNotes(server: string, signal: AbortSignal): Promise<Notes> {
-    const response = await axios.get<Notes>(`http://${server}/notes`, {signal});
+    const response = await axios.get<Notes>(`http://${server}/notes`, { signal });
     return response.data;
 }
 
@@ -97,7 +117,7 @@ export async function updateNote(server: string, key: string, note: string): Pro
 
 export async function getPrompt(server: string, table: string, signal: AbortSignal): Promise<PromptResult> {
     const url = `http://${server}/prompt?table=${table}`;
-    const response = await axios.get<PromptResult>(url, {signal});
+    const response = await axios.get<PromptResult>(url, { signal });
     return response.data;
 }
 

@@ -2,7 +2,7 @@ import {memo, useState} from "react";
 import {App, Button, Empty, Input, Result, Table} from "antd";
 import {SearchResult, SearchResultItem} from "../../api/searchModel.ts";
 import {useTranslation} from "react-i18next";
-import {navTo, setQuery, useMyStore, useLocationData} from "../../store/store.ts";
+import {navTo, setQuery, useMyStore, useCurPageRecordOrRecordRef} from "../../store/store.ts";
 import {useNavigate} from "react-router-dom";
 
 
@@ -19,7 +19,7 @@ export const SearchValue = memo(function SearchValue() {
     const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
     const {notification} = App.useApp();
     const {t} = useTranslation();
-    const {curPage} = useLocationData();
+    const {curPage} = useCurPageRecordOrRecordRef();
 
     function onSearch(value: string) {
         setQuery(value);
