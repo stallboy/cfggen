@@ -51,11 +51,10 @@ export async function fetchRecordRefs(
 export async function fetchUnreferencedRecords(
     server: string,
     tableId: string,
-    refOutDepth: number,
     maxNode: number,
     signal: AbortSignal
 ): Promise<UnreferencedRecordsResult> {
-    const url = `http://${server}/record?table=${tableId}&depth=${refOutDepth}&maxObjs=${maxNode}&noRefIn`;
+    const url = `http://${server}/record?table=${tableId}&maxObjs=${maxNode}&noRefIn`;
     const response = await axios.get<UnreferencedRecordsResult>(url, { signal });
     return response.data;
 }

@@ -12,16 +12,15 @@ export const UnreferencedButton = memo(function ({curTable}: {
 }) {
     const {t} = useTranslation();
     const navigate = useNavigate();
-    const {server, recordRefOutDepth, recordMaxNode} = useMyStore();
+    const {server, recordMaxNode} = useMyStore();
     const {curTableId} = useLocationData();
 
     // 获取未引用记录数量
     const {isLoading, data} = useQuery({
-        queryKey: ['unreferenced', curTable.name, recordRefOutDepth, recordMaxNode],
+        queryKey: ['unreferenced', curTable.name, recordMaxNode],
         queryFn: ({signal}) => fetchUnreferencedRecords(
             server,
             curTable.name,
-            recordRefOutDepth,
             recordMaxNode,
             signal
         ),

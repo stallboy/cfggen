@@ -86,7 +86,6 @@ export interface RecordRefsResult {
 export interface UnreferencedRecordsResult {
     resultCode: ResultCode;
     table: string;
-    depth: number;
     maxObjs: number;
     refs: BriefRecord[];  // 复用BriefRecord，表示所有未引用的记录
 }

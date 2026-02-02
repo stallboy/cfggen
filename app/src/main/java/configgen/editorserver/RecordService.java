@@ -47,7 +47,6 @@ public class RecordService {
     public record UnreferencedRecordsResult(
             ResultCode resultCode,
             String table,
-            int depth,
             int maxObjs,
             Collection<BriefRecord> refs) implements RecordResponse {
     }
@@ -115,7 +114,7 @@ public class RecordService {
         return switch (requestType) {
             case requestRecord -> new TableRecord(code, table, id, maxObjs, null, null);
             case requestRefs -> new TableRecordRefs(code, table, id, depth, in, maxObjs, null);
-            case requestUnreferenced -> new UnreferencedRecordsResult(code, table, depth, maxObjs, null);
+            case requestUnreferenced -> new UnreferencedRecordsResult(code, table, maxObjs, null);
         };
     }
 
@@ -253,7 +252,6 @@ public class RecordService {
 
     private RecordResponse handleRequestUnreferenced(VTable vTable) {
         Map<RefId, BriefRecord> unreferencedRecords = new LinkedHashMap<>();
-        Map<RefId, VStruct> unreferencedStructs = new LinkedHashMap<>();
         ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
 
         // 遍历表中所有记录，收集未被引用的记录
@@ -274,18 +272,10 @@ public class RecordService {
                 List<FieldRef> fieldRefs = ValueRefCollector.collectRefs(record, cfgValue);
                 BriefRecord briefRecord = vStructToBriefRecord(refId, record, fieldRefs, 0);
                 unreferencedRecords.put(refId, briefRecord);
-                unreferencedStructs.put(refId, record);
             }
         }
 
-        // 如果需要，展开正向引用（复用公共方法）
-        if (depth > 0 && !unreferencedStructs.isEmpty()) {
-            Map<RefId, BriefRecord> expanded = expandRefOut(unreferencedStructs, 1, unreferencedRecords.keySet());
-            unreferencedRecords.putAll(expanded);
-        }
-
-        return new UnreferencedRecordsResult(ok, table, depth, maxObjs,
-                unreferencedRecords.values());
+        return new UnreferencedRecordsResult(ok, table, maxObjs, unreferencedRecords.values());
     }
 
     private static BriefRecord vStructToBriefRecord(RefId refId, VStruct vStruct, Collection<FieldRef> refs, int depth) {

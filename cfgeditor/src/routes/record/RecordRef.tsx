@@ -55,7 +55,7 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
             entityMap: map,
             schema,
             briefRecordRefs: recordRefResult.refs,
-            isCreateRefs: !isUnrefMode,  // 未引用模式不创建引用关系�?
+            isCreateRefs: !isUnrefMode,  // 未引用模式不创建引用关系
             checkTable,
             recordRefInShowLinkMaxNode,
             tauriConf,
@@ -75,7 +75,7 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
             key: 'pane',
             handler: isUnrefMode || !curId
                 ? () => {
-                    // 未引用模式或没有id时不做任何操�?
+                    // 未引用模式或没有id时不做任何操作
                 }
                 : () => navigate(navTo('record', curTable.name, curId))
         };
@@ -151,7 +151,7 @@ export function RecordRef({ schema, notes, curTable, curId, refIn, refOutDepth, 
     schema: Schema;
     notes: Map<string, string> | undefined;
     curTable: STable;
-    curId?: string;  // 改为可选，支持未引用模�?
+    curId?: string;  // 改为可选，支持未引用模式
     refIn: boolean;
     refOutDepth: number;
     maxNode: number;
@@ -160,17 +160,17 @@ export function RecordRef({ schema, notes, curTable, curId, refIn, refOutDepth, 
 }) {
     const { server } = useMyStore();
 
-    // 判断当前是哪种模�?
+    // 判断当前是哪种模式
     const isUnrefMode = curId === undefined || curId === '';
 
-    // 根据模式选择不同的API和数据获�?
+    // 根据模式选择不同的API
     const { isLoading, isError, error, data: recordRefResult } = useQuery({
         queryKey: isUnrefMode
-            ? ['unreferenced', curTable.name, refOutDepth, maxNode]
+            ? ['unreferenced', curTable.name, maxNode]
             : ['recordRef', curTable.name, curId, refOutDepth, maxNode, refIn],
         queryFn: ({ signal }) => {
             if (isUnrefMode) {
-                return fetchUnreferencedRecords(server, curTable.name, refOutDepth, maxNode, signal);
+                return fetchUnreferencedRecords(server, curTable.name, maxNode, signal);
             } else {
                 return fetchRecordRefs(server, curTable.name, curId!, refOutDepth, maxNode, refIn, signal);
             }
@@ -211,13 +211,13 @@ export function RecordRefRoute() {
 
     const curTable = schema ? schema.getSTable(table || '') : null;
 
-    // 如果table不存在，导航�?404
+    // 如果table不存在
     if (!curTable) {
         navigate('/PathNotFound');
         return null;
     }
 
-    // id可能为undefined（未引用模式）或字符串（单个record模式�?
+    // id可能为undefined（未引用模式）或字符串（单个record模式）
     return <RecordRef schema={schema} notes={notes} curTable={curTable} curId={id}
         refIn={recordRefIn} refOutDepth={recordRefOutDepth} maxNode={recordMaxNode}
         nodeShow={nodeShow}
