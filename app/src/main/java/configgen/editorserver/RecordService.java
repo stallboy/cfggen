@@ -210,11 +210,7 @@ public class RecordService {
 
     }
 
-    private Map<RefId, BriefRecord> expandRefOut(
-            Map<RefId, VStruct> frontier,
-            int startDepth,
-            Set<RefId> excludeIds) {
-
+    private Map<RefId, BriefRecord> expandRefOut(Map<RefId, VStruct> frontier, int startDepth, Set<RefId> excludeIds) {
         Map<RefId, BriefRecord> result = new LinkedHashMap<>();
         int curDepth = startDepth;
 
@@ -284,11 +280,7 @@ public class RecordService {
 
         // 如果需要，展开正向引用（复用公共方法）
         if (depth > 0 && !unreferencedStructs.isEmpty()) {
-            Map<RefId, BriefRecord> expanded = expandRefOut(
-                    unreferencedStructs,
-                    1,
-                    unreferencedRecords.keySet()
-            );
+            Map<RefId, BriefRecord> expanded = expandRefOut(unreferencedStructs, 1, unreferencedRecords.keySet());
             unreferencedRecords.putAll(expanded);
         }
 
