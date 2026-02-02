@@ -1,7 +1,7 @@
 import resso from "./resso.ts";
 import {AIConf, Convert, FixedPage, FixedPagesConf, NodeShowType, TauriConf, ThemeConfig} from "./storageJson.ts";
 import {getPrefBool, getPrefEnumStr, getPrefInt, getPrefJson, getPrefStr, setPref} from "./storage.ts";
-import {History} from "../routes/headerbar/historyModel.ts";
+import {History} from "./historyModel.ts";
 import {NEW_RECORD_ID, Schema} from "../routes/table/schemaUtil.tsx";
 import {useLocation} from "react-router-dom";
 import {queryClient} from "../main.tsx";
