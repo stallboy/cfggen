@@ -219,5 +219,30 @@ public class MetadataTest {
         assertTrue(metadata.removeFmt() instanceof FieldFormat.Block block && block.fix() == 3);
     }
 
+    @Test
+    public void root_tag_is_root_returns_true() {
+        Metadata metadata = Metadata.of();
+        // 直接操作 data 来模拟 CFG 解析器添加 root 标签
+        metadata.data().put("root", Metadata.MetaTag.TAG);
+
+        assertTrue(metadata.isRoot());
+    }
+
+    @Test
+    public void root_tag_not_set_returns_false() {
+        Metadata metadata = Metadata.of();
+
+        assertFalse(metadata.isRoot());
+    }
+
+    @Test
+    public void root_tag_is_reserved() {
+        Metadata metadata = Metadata.of();
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            metadata.putTag("root");
+        });
+        assertEquals("'root' reserved", exception.getMessage());
+    }
+
 
 }

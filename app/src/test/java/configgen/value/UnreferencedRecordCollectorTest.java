@@ -409,4 +409,180 @@ class UnreferencedRecordCollectorTest {
 
         assertEquals(2, result.unreferencedRecords().size());
     }
+
+    @Test
+    void testCollectUnreferenced_skipsRootTables() {
+        String cfgStr = """
+                table roottable[id] (root) {
+                    id:int;
+                    name:str;
+                }
+                table normaltable[id] {
+                    id:int;
+                    name:str;
+                }
+                table reftable[id] {
+                    id:int;
+                    root_id:int ->roottable;
+                    normal_id:int ->normaltable;
+                }
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+        String roottableCsv = """
+                ,
+                id,name
+                1,root1
+                2,root2
+                """;
+        Resources.addTempFileFromText("roottable.csv", tempDir, roottableCsv);
+        String normaltableCsv = """
+                ,
+                id,name
+                1,norm1
+                2,norm2
+                3,unused_norm
+                """;
+        Resources.addTempFileFromText("normaltable.csv", tempDir, normaltableCsv);
+        String reftableCsv = """
+                ,,
+                id,root_id,normal_id
+                1,1,1
+                """;
+        Resources.addTempFileFromText("reftable.csv", tempDir, reftableCsv);
+
+        Logger.setPrinter(Logger.Printer.outPrinter);
+
+        Context ctx = new Context(tempDir);
+        CfgValue cfgValue = ctx.makeValue();
+
+        UnreferencedRecordCollector.Unreferenced result =
+                UnreferencedRecordCollector.collectUnreferenced(cfgValue);
+
+        // roottable 是 root 表，即使有未引用记录也不应该被检查
+        assertFalse(result.tableToUnreferenced().containsKey("roottable"));
+
+        // normaltable 有未引用记录，应该被检查到
+        assertTrue(result.tableToUnreferenced().containsKey("normaltable"));
+        assertEquals(2, result.tableToUnreferenced().get("normaltable").size());
+
+        // reftable 也没有被其他表引用
+        assertTrue(result.tableToUnreferenced().containsKey("reftable"));
+        assertEquals(1, result.tableToUnreferenced().get("reftable").size());
+
+        // 总共 3 个未引用记录
+        assertEquals(3, result.total());
+
+    }
+
+    @Test
+    void testCollectUnreferenced_allRootTables_returnsZero() {
+        String cfgStr = """
+                table root1[id] (root) {
+                    id:int;
+                    name:str;
+                }
+                table root2[id] (root) {
+                    id:int;
+                    value:int;
+                }
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+        String root1Csv = """
+                ,
+                id,name
+                1,first
+                2,second
+                """;
+        Resources.addTempFileFromText("root1.csv", tempDir, root1Csv);
+        String root2Csv = """
+                ,
+                id,value
+                1,100
+                2,200
+                """;
+        Resources.addTempFileFromText("root2.csv", tempDir, root2Csv);
+
+        Context ctx = new Context(tempDir);
+        CfgValue cfgValue = ctx.makeValue();
+
+        UnreferencedRecordCollector.Unreferenced result =
+                UnreferencedRecordCollector.collectUnreferenced(cfgValue);
+
+        // 所有表都是 root 表，不应该有未引用记录报告
+        assertEquals(0, result.total());
+        assertTrue(result.tableToUnreferenced().isEmpty());
+    }
+
+    @Test
+    void testCollectUnreferenced_mixedRootAndNormalTables() {
+        String cfgStr = """
+                table configdefine[id] (root) {
+                    id:int;
+                    name:str;
+                }
+                table itemtype[id] (root) {
+                    id:int;
+                    name:str;
+                }
+                table item[id] {
+                    id:int;
+                    type_id:int ->itemtype;
+                    config_id:int ->configdefine;
+                }
+                table player[id] {
+                    id:int;
+                    item_id:int ->item;
+                }
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+        String configdefineCsv = """
+                ,
+                id,name
+                1,config1
+                2,config2
+                """;
+        Resources.addTempFileFromText("configdefine.csv", tempDir, configdefineCsv);
+        String itemtypeCsv = """
+                ,
+                id,name
+                1,weapon
+                2,armor
+                """;
+        Resources.addTempFileFromText("itemtype.csv", tempDir, itemtypeCsv);
+        String itemCsv = """
+                ,,
+                id,type_id,config_id
+                1,1,1
+                2,1,1
+                3,2,2
+                """;
+        Resources.addTempFileFromText("item.csv", tempDir, itemCsv);
+        String playerCsv = """
+                ,
+                id,item_id
+                1,1
+                """;
+        Resources.addTempFileFromText("player.csv", tempDir, playerCsv);
+
+        Context ctx = new Context(tempDir);
+        CfgValue cfgValue = ctx.makeValue();
+
+        UnreferencedRecordCollector.Unreferenced result =
+                UnreferencedRecordCollector.collectUnreferenced(cfgValue);
+
+        // root 表不应该出现在结果中
+        assertFalse(result.tableToUnreferenced().containsKey("configdefine"));
+        assertFalse(result.tableToUnreferenced().containsKey("itemtype"));
+
+        // item 表有未引用记录
+        assertTrue(result.tableToUnreferenced().containsKey("item"));
+        assertEquals(2, result.tableToUnreferenced().get("item").size());
+
+        // player 表有未引用记录
+        assertTrue(result.tableToUnreferenced().containsKey("player"));
+        assertEquals(1, result.tableToUnreferenced().get("player").size());
+
+        // 总共 3 个未引用记录
+        assertEquals(3, result.total());
+    }
 }

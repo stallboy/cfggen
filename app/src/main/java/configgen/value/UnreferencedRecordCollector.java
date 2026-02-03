@@ -89,9 +89,13 @@ public class UnreferencedRecordCollector {
     public static Unreferenced collectUnreferenced(CfgValue cfgValue) {
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
 
-        // 为每个 table 创建并发任务
+        // 为每个 table 创建并发任务（跳过root表）
         List<Callable<UnreferencedInTable>> tasks = new ArrayList<>();
         for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
+            // 跳过标记为 root 的表（这些表类似GC根节点，无需检查引用）
+            if (vTable.schema().meta().isRoot()) {
+                continue;
+            }
             tasks.add(() -> collectUnreferencedInTable(cfgValue, vTable, graph));
         }
         List<Future<UnreferencedInTable>> futures;
