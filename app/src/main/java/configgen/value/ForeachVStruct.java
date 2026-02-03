@@ -15,51 +15,84 @@ public class ForeachVStruct {
     }
 
     public interface VStructVisitor {
-        void visit(VStruct vStruct, Context ctx);
+        /**
+         * 访问一个 VStruct
+         * @return true 表示继续遍历，false 表示停止遍历
+         */
+        boolean visit(VStruct vStruct, Context ctx);
     }
 
     public static void foreach(VStructVisitor visitor, CfgValue cfgValue) {
         for (VTable table : cfgValue.sortedTables()) {
-            foreachVTable(visitor, table);
+            boolean shouldContinue = foreachVTable(visitor, table);
+            if (!shouldContinue) {
+                break;  // 提前终止
+            }
         }
     }
 
-    public static void foreachVTable(VStructVisitor visitor, VTable table) {
+    public static boolean foreachVTable(VStructVisitor visitor, VTable table) {
         for (Map.Entry<Value, VStruct> e : table.primaryKeyMap().entrySet()) {
-            foreachVStruct(visitor, e.getValue(), new Context(table, e.getKey(), e.getValue()));
+            boolean shouldContinue = foreachVStruct(visitor, e.getValue(),
+                    new Context(table, e.getKey(), e.getValue()));
+            if (!shouldContinue) {
+                return false;  // 提前终止
+            }
         }
+        return true;  // 继续遍历
     }
 
-    private static void foreachVStruct(VStructVisitor visitor, VStruct vStruct, Context ctx) {
-        visitor.visit(vStruct, ctx);
+    private static boolean foreachVStruct(VStructVisitor visitor, VStruct vStruct, Context ctx) {
+        boolean shouldContinue = visitor.visit(vStruct, ctx);
+        if (!shouldContinue) {
+            return false;  // visitor 要求停止
+        }
 
         for (Value fieldValue : vStruct.values()) {
             switch (fieldValue) {
                 case SimpleValue simpleValue -> {
-                    foreachVStructSimpleValue(visitor, simpleValue, ctx);
+                    boolean continueValue = foreachVStructSimpleValue(visitor, simpleValue, ctx);
+                    if (!continueValue) {
+                        return false;
+                    }
                 }
 
                 case VList vList -> {
                     for (SimpleValue sv : vList.valueList()) {
-                        foreachVStructSimpleValue(visitor, sv, ctx);
+                        boolean continueList = foreachVStructSimpleValue(visitor, sv, ctx);
+                        if (!continueList) {
+                            return false;
+                        }
                     }
                 }
                 case VMap vMap -> {
                     for (Map.Entry<SimpleValue, SimpleValue> e : vMap.valueMap().entrySet()) {
-                        foreachVStructSimpleValue(visitor, e.getKey(), ctx);
-                        foreachVStructSimpleValue(visitor, e.getValue(), ctx);
+                        boolean continueKey = foreachVStructSimpleValue(visitor, e.getKey(), ctx);
+                        if (!continueKey) {
+                            return false;
+                        }
+                        boolean continueVal = foreachVStructSimpleValue(visitor, e.getValue(), ctx);
+                        if (!continueVal) {
+                            return false;
+                        }
                     }
                 }
             }
         }
+        return true;
     }
 
-    private static void foreachVStructSimpleValue(VStructVisitor visitor, SimpleValue simpleValue, Context ctx) {
+    private static boolean foreachVStructSimpleValue(VStructVisitor visitor, SimpleValue simpleValue, Context ctx) {
         switch (simpleValue) {
             case PrimitiveValue ignored -> {
+                return true;  // 继续遍历
             }
-            case VInterface vInterface -> foreachVStruct(visitor, vInterface.child(), ctx);
-            case VStruct vStruct -> foreachVStruct(visitor, vStruct, ctx);
+            case VInterface vInterface -> {
+                return foreachVStruct(visitor, vInterface.child(), ctx);
+            }
+            case VStruct vStruct -> {
+                return foreachVStruct(visitor, vStruct, ctx);
+            }
         }
     }
 }

@@ -34,12 +34,27 @@ public class UnreferencedRecordCollector {
                     List<UnreferencedRecord> records = entry.getValue();
                     Logger.log(LocaleUtil.getFormatedLocaleString("UnreferencedRecordCollector.TableInfo",
                             "Table: {0} ({1} unreferenced)", tableName, records.size()));
-
-                    for (UnreferencedRecord record : records) {
-                        record.print();
-                    }
-                    Logger.log("");
                 }
+                Logger.log("==========");
+
+                for (Map.Entry<String, List<UnreferencedRecord>> entry : tableToUnreferenced.entrySet()) {
+                    String tableName = entry.getKey();
+                    List<UnreferencedRecord> records = entry.getValue();
+                    Logger.log(LocaleUtil.getFormatedLocaleString("UnreferencedRecordCollector.TableInfo",
+                            "Table: {0} ({1} unreferenced)", tableName, records.size()));
+
+
+                    int c = 0;
+                    for (UnreferencedRecord record : records) {
+                        if (c >= 50) {
+                            Logger.log("...");
+                            break;
+                        }
+                        record.print();
+                        c++;
+                    }
+                }
+
 
                 Logger.log(LocaleUtil.getLocaleString("UnreferencedRecordCollector.CheckComplete",
                         "========== Check Complete =========="));
@@ -72,52 +87,49 @@ public class UnreferencedRecordCollector {
 
 
     public static Unreferenced collectUnreferenced(CfgValue cfgValue) {
-
         TableSchemaRefGraph graph = new TableSchemaRefGraph(cfgValue.schema());
 
-        // 为每个table创建并发任务
+        // 为每个 table 创建并发任务
         List<Callable<UnreferencedInTable>> tasks = new ArrayList<>();
         for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
-            tasks.add(() -> checkTableUnreferenced(cfgValue, vTable, graph));
+            tasks.add(() -> collectUnreferencedInTable(cfgValue, vTable, graph));
         }
-
-        // 使用work-stealing pool并发执行
+        List<Future<UnreferencedInTable>> futures;
         try (ExecutorService executor = Executors.newWorkStealingPool()) {
-            List<Future<UnreferencedInTable>> futures = null;
             try {
                 futures = executor.invokeAll(tasks);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-
-            Map<String, List<UnreferencedRecord>> allUnreferenced = new TreeMap<>();
-            int totalUnreferencedCount = 0;
-
-            // 收集结果
-            for (Future<UnreferencedInTable> future : futures) {
-                UnreferencedInTable result = null;
-                try {
-                    result = future.get();
-                } catch (InterruptedException | ExecutionException e) {
-                    throw new RuntimeException(e);
-                }
-                if (!result.unreferencedRecords().isEmpty()) {
-                    allUnreferenced.put(result.tableName(), result.unreferencedRecords());
-                    totalUnreferencedCount += result.unreferencedRecords().size();
-                }
-            }
-
-            return new Unreferenced(totalUnreferencedCount, allUnreferenced);
         }
+
+        // 收集结果
+        Map<String, List<UnreferencedRecord>> allUnreferenced = new TreeMap<>();
+        int totalUnreferencedCount = 0;
+        for (Future<UnreferencedInTable> future : futures) {
+            UnreferencedInTable result;
+            try {
+                result = future.get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+            if (!result.unreferencedRecords().isEmpty()) {
+                allUnreferenced.put(result.tableName(), result.unreferencedRecords());
+                totalUnreferencedCount += result.unreferencedRecords().size();
+            }
+        }
+
+        return new Unreferenced(totalUnreferencedCount, allUnreferenced);
+
     }
 
-    private record UnreferencedInTable(
-            String tableName,
-            List<UnreferencedRecord> unreferencedRecords
-    ) {
+    public record UnreferencedInTable(String tableName,
+                                      List<UnreferencedRecord> unreferencedRecords) {
     }
 
-    private static UnreferencedInTable checkTableUnreferenced(CfgValue cfgValue, CfgValue.VTable vTable, TableSchemaRefGraph graph) {
+    public static UnreferencedInTable collectUnreferencedInTable(CfgValue cfgValue,
+                                                                 CfgValue.VTable vTable,
+                                                                 TableSchemaRefGraph graph) {
         List<UnreferencedRecord> unreferencedRecords = new ArrayList<>();
         ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
         TableSchema tableSchema = vTable.schema();
@@ -141,11 +153,8 @@ public class UnreferencedRecordCollector {
                 }
             }
 
-            // 检查是否被引用
-            Map<ValueRefCollector.RefId, ForeachVStruct.Context> refIns = refInCollector.collect(vTable, pkValue);
-
-            // 如果没有被引用，加入结果
-            if (refIns.isEmpty()) {
+            // 检查是否被引用（使用优化的快速检查方法）
+            if (!refInCollector.hasReference(vTable, pkValue)) {
                 unreferencedRecords.add(new UnreferencedRecord(pkValue.packStr(), record));
             }
         }

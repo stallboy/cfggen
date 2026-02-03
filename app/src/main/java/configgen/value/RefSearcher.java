@@ -51,8 +51,8 @@ public final class RefSearcher {
         return new RefSearchResult(Ok, res);
     }
 
-    private static void search(VStruct vStruct, ForeachVStruct.Context ctx, CfgValue cfgValue,
-                               TableSchema refTable, List<String> nullableUniqueKeys, Map<Value, Set<String>> res) {
+    private static boolean search(VStruct vStruct, ForeachVStruct.Context ctx, CfgValue cfgValue,
+                                 TableSchema refTable, List<String> nullableUniqueKeys, Map<Value, Set<String>> res) {
         VTable fromTable = ctx.fromVTable();
         Structural structural = vStruct.schema();
         for (ForeignKeySchema fk : structural.foreignKeys()) {
@@ -93,6 +93,7 @@ public final class RefSearcher {
                 }
             }
         }
+        return true;  // 继续遍历
     }
 
     private static void addValueTable(Map<Value, Set<String>> res, Value value, String tableName) {

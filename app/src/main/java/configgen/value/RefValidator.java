@@ -21,7 +21,7 @@ public class RefValidator {
         ForeachVStruct.foreach(this::validateVStruct, cfgValue);
     }
 
-    private void validateVStruct(VStruct vStruct, ForeachVStruct.Context ctx) {
+    private boolean validateVStruct(VStruct vStruct, ForeachVStruct.Context ctx) {
         VTable fromTable = ctx.fromVTable();
         Structural structural = vStruct.schema();
         for (ForeignKeySchema fk : structural.foreignKeys()) {
@@ -103,6 +103,7 @@ public class RefValidator {
                 }
             }
         }
+        return true;  // 继续遍历
     }
 
     private boolean isForeignLocalKeyInPrimaryOrUniq(ForeignKeySchema fk, TableSchema table) {

@@ -16,6 +16,8 @@ import java.util.*;
 import static configgen.editorserver.RecordService.ResultCode.*;
 import static configgen.value.CfgValue.VTable;
 import static configgen.value.CfgValue.Value;
+import static configgen.value.UnreferencedRecordCollector.*;
+import static configgen.value.UnreferencedRecordCollector.UnreferencedInTable;
 
 /**
  * cfgeditor里record关系界面，record展示，和edit界面 需要的数据 都是由这个service提供
@@ -251,28 +253,19 @@ public class RecordService {
     }
 
     private RecordResponse handleRequestUnreferenced(VTable vTable) {
-        Map<RefId, BriefRecord> unreferencedRecords = new LinkedHashMap<>();
-        ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
+        UnreferencedInTable unreferencedInTable = UnreferencedRecordCollector.collectUnreferencedInTable(
+                cfgValue, vTable, graph);
 
-        // 遍历表中所有记录，收集未被引用的记录
-        for (Map.Entry<Value, VStruct> entry : vTable.primaryKeyMap().entrySet()) {
+
+        Map<RefId, BriefRecord> unreferencedRecords = new LinkedHashMap<>();
+        for (UnreferencedRecord rec : unreferencedInTable.unreferencedRecords()) {
             if (unreferencedRecords.size() >= maxObjs) {
                 break;
             }
-
-            Value pkValue = entry.getKey();
-            VStruct record = entry.getValue();
-
-            // 检查是否被引用
-            Map<RefId, ForeachVStruct.Context> refIns = refInCollector.collect(vTable, pkValue);
-
-            // 如果没有被引用，加入结果
-            if (refIns.isEmpty()) {
-                RefId refId = new RefId(vTable.name(), pkValue.packStr());
-                List<FieldRef> fieldRefs = ValueRefCollector.collectRefs(record, cfgValue);
-                BriefRecord briefRecord = vStructToBriefRecord(refId, record, fieldRefs, 0);
-                unreferencedRecords.put(refId, briefRecord);
-            }
+            RefId refId = new RefId(vTable.name(), rec.primaryKey());
+            List<FieldRef> fieldRefs = ValueRefCollector.collectRefs(rec.record(), cfgValue);
+            BriefRecord briefRecord = vStructToBriefRecord(refId, rec.record(), fieldRefs, 0);
+            unreferencedRecords.put(refId, briefRecord);
         }
 
         return new UnreferencedRecords(ok, table, maxObjs, unreferencedRecords.values());

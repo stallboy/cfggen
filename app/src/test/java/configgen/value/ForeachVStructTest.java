@@ -163,5 +163,234 @@ class ForeachVStructTest {
         assertEquals(3, list.size());
     }
 
+    @Test
+    void foreach_earlyTermination() {
+        String cfgStr = """
+                table t[id] {
+                    id:int;
+                    s:text;
+                }
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+        String csvStr = """
+                ,,,,
+                id,s
+                1,ab
+                2,cd
+                3,ef
+                4,gh
+                """;
+        Resources.addTempFileFromText("t.csv", tempDir, csvStr);
+
+        Context ctx = new Context(tempDir);
+        CfgValue cfgValue = ctx.makeValue();
+
+        List<VStruct> list = new ArrayList<>();
+        int[] visitCount = {0};
+        ForeachVStruct.foreach((vStruct, ctx1) -> {
+            visitCount[0]++;
+            list.add(vStruct);
+            return visitCount[0] < 2; // 访问 2 条后返回 false
+        }, cfgValue);
+
+        assertEquals(2, list.size());
+        assertEquals(2, visitCount[0]);
+    }
+
+    @Test
+    void foreach_earlyTermination_inVStruct() {
+        String cfgStr = """
+                struct s {
+                    a:int;
+                    b:int;
+                    c:int;
+                }
+                table t[id] {
+                    id:int;
+                    s:s;
+                }
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+        String csvStr = """
+                ,,,,
+                id,s.a,s.b,s.c
+                1,11,22,33
+                """;
+        Resources.addTempFileFromText("t.csv", tempDir, csvStr);
+
+        Context ctx = new Context(tempDir);
+        CfgValue cfgValue = ctx.makeValue();
+
+        List<VStruct> list = new ArrayList<>();
+        ForeachVStruct.foreach((vStruct, ctx1) -> {
+            list.add(vStruct);
+            return list.size() < 2; // 只访问顶层的 VStruct 和第一个嵌套的 s
+        }, cfgValue);
+
+        // 应该访问到顶层 VStruct 和第一个嵌套 struct s，然后停止
+        assertEquals(2, list.size());
+    }
+
+    @Test
+    void foreach_earlyTermination_inVList() {
+        String cfgStr = """
+                struct s {
+                    a:int;
+                }
+                table t[id] {
+                    id:int;
+                    items:list<s> (pack);
+                }
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+        String csvStr = """
+                ,,,
+                id,items
+                1,"(1),(2),(3)"
+                """;
+        Resources.addTempFileFromText("t.csv", tempDir, csvStr);
+
+        Context ctx = new Context(tempDir);
+        CfgValue cfgValue = ctx.makeValue();
+
+        List<VStruct> list = new ArrayList<>();
+        ForeachVStruct.foreach((vStruct, ctx1) -> {
+            list.add(vStruct);
+            return list.size() < 2; // 只访问顶层和第一个 list 元素
+        }, cfgValue);
+
+        assertEquals(2, list.size());
+    }
+
+    @Test
+    void foreach_earlyTermination_inVMap() {
+        String cfgStr = """
+                struct s {
+                    a:int;
+                }
+                table t[id] {
+                    id:int;
+                    items:map<int,s> (pack);
+                }
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+        String csvStr = """
+                ,,,
+                id,items
+                1,"1,(1),2,(2),3,(3)"
+                """;
+        Resources.addTempFileFromText("t.csv", tempDir, csvStr);
+
+        Context ctx = new Context(tempDir);
+        CfgValue cfgValue = ctx.makeValue();
+
+        List<VStruct> list = new ArrayList<>();
+        ForeachVStruct.foreach((vStruct, ctx1) -> {
+            list.add(vStruct);
+            return list.size() < 3; // 访问顶层、第一个 key 和第一个 value
+        }, cfgValue);
+
+        assertEquals(3, list.size());
+    }
+
+    @Test
+    void foreach_earlyTermination_inVInterface() {
+        String cfgStr = """
+                interface action {
+                    struct cast {
+                        skillId:int;
+                    }
+                    struct talk {
+                        talkId:int;
+                    }
+                    struct and {
+                        a1:action (pack);
+                        a2:action (pack);
+                    }
+                }
+                table t[id] {
+                    id:int;
+                    act:action;
+                }
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+        String csvStr = """
+                ,
+                id,act.name,act.param1,act.param2
+                1,and,cast(1),talk(2)
+                """;
+        Resources.addTempFileFromText("t.csv", tempDir, csvStr);
+
+        Context ctx = new Context(tempDir);
+        CfgValue cfgValue = ctx.makeValue();
+
+        List<VStruct> list = new ArrayList<>();
+        ForeachVStruct.foreach((vStruct, ctx1) -> {
+            list.add(vStruct);
+            return list.size() < 2; // 只访问顶层和第一个嵌套 interface
+        }, cfgValue);
+
+        assertEquals(2, list.size());
+    }
+
+    @Test
+    void foreach_visitsAllWhenVisitorAlwaysReturnsTrue() {
+        String cfgStr = """
+                table t[id] {
+                    id:int;
+                    s:text;
+                }
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+        String csvStr = """
+                ,,,,
+                id,s
+                1,ab
+                2,cd
+                3,ef
+                """;
+        Resources.addTempFileFromText("t.csv", tempDir, csvStr);
+
+        Context ctx = new Context(tempDir);
+        CfgValue cfgValue = ctx.makeValue();
+
+        List<VStruct> list = new ArrayList<>();
+        ForeachVStruct.foreach((vStruct, ctx1) -> {
+            list.add(vStruct);
+            return true; // 总是返回 true
+        }, cfgValue);
+
+        assertEquals(3, list.size());
+    }
+
+    @Test
+    void foreach_stopsImmediatelyWhenVisitorReturnsFalse() {
+        String cfgStr = """
+                table t[id] {
+                    id:int;
+                    s:text;
+                }
+                """;
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+        String csvStr = """
+                ,,,,
+                id,s
+                1,ab
+                2,cd
+                3,ef
+                """;
+        Resources.addTempFileFromText("t.csv", tempDir, csvStr);
+
+        Context ctx = new Context(tempDir);
+        CfgValue cfgValue = ctx.makeValue();
+
+        List<VStruct> list = new ArrayList<>();
+        ForeachVStruct.foreach((vStruct, ctx1) -> {
+            list.add(vStruct);
+            return false; // 第一次就返回 false
+        }, cfgValue);
+
+        assertEquals(1, list.size());
+    }
 
 }
