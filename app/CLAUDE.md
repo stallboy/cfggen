@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-这是一个Java配置生成器（configgen），用于从多种数据源（Excel、CSV、JSON）读取配置数据，生成多种编程语言（Java、C#、TypeScript、Go、Lua等）的配置代码和数据文件。
+这是一个Java配置生成器（cfggen），用于从多种数据源（Excel、CSV、JSON）读取配置数据，生成多种编程语言（Java、C#、TypeScript、Go、Lua等）的配置代码和数据文件。
 
 ## 构建和开发
 
@@ -146,7 +146,8 @@ java -jar cfggen.jar [tools] -datadir [dir] [options] [gens]
 ### 模板引擎使用
 - 模板位置：`src/main/resources/jte/`
 - 渲染示例：
-  ```java
+
+  ```
   try (CachedIndentPrinter ps = createCode(outputFile, encoding)) {
       JteEngine.render("java/ConfigMgr.jte",
               Map.of("pkg", packageName, "mapsInMgr", maps), ps);
