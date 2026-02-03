@@ -44,7 +44,7 @@ public class RecordService {
             Collection<BriefRecord> refs) implements RecordResponse {
     }
 
-    public record UnreferencedRecordsResult(
+    public record UnreferencedRecords(
             ResultCode resultCode,
             String table,
             int maxObjs,
@@ -114,7 +114,7 @@ public class RecordService {
         return switch (requestType) {
             case requestRecord -> new TableRecord(code, table, id, maxObjs, null, null);
             case requestRefs -> new TableRecordRefs(code, table, id, depth, in, maxObjs, null);
-            case requestUnreferenced -> new UnreferencedRecordsResult(code, table, maxObjs, null);
+            case requestUnreferenced -> new UnreferencedRecords(code, table, maxObjs, null);
         };
     }
 
@@ -275,7 +275,7 @@ public class RecordService {
             }
         }
 
-        return new UnreferencedRecordsResult(ok, table, maxObjs, unreferencedRecords.values());
+        return new UnreferencedRecords(ok, table, maxObjs, unreferencedRecords.values());
     }
 
     private static BriefRecord vStructToBriefRecord(RefId refId, VStruct vStruct, Collection<FieldRef> refs, int depth) {
