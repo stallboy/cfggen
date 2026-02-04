@@ -142,14 +142,14 @@ jobs:
       - name: Copy Linux binary
         run: |
           mkdir -p artifacts
-          cp cfgeditor/src-tauri/target/x86_64-unknown-linux-gnu/release/cfgeditor artifacts/cfgeditor
-          chmod +x artifacts/cfgeditor
+          cp cfgeditor/src-tauri/target/x86_64-unknown-linux-gnu/release/cfgeditor artifacts/cfgeditor-linux
+          chmod +x artifacts/cfgeditor-linux
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: cfgeditor-linux
-          path: artifacts/cfgeditor
+          path: artifacts/cfgeditor-linux
           retention-days: 7
 
   build-tauri-macos:
@@ -198,14 +198,14 @@ jobs:
       - name: Copy macOS binary
         run: |
           mkdir -p artifacts
-          cp cfgeditor/src-tauri/target/aarch64-apple-darwin/release/cfgeditor artifacts/cfgeditor
-          chmod +x artifacts/cfgeditor
+          cp cfgeditor/src-tauri/target/aarch64-apple-darwin/release/cfgeditor artifacts/cfgeditor-macos
+          chmod +x artifacts/cfgeditor-macos
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: cfgeditor-macos
-          path: artifacts/cfgeditor
+          path: artifacts/cfgeditor-macos
           retention-days: 7
 
   pack-source:
@@ -290,8 +290,8 @@ jobs:
           files: |
             artifacts/cfggen-jar/cfggen.jar
             artifacts/cfgeditor-windows/cfgeditor.exe
-            artifacts/cfgeditor-linux/cfgeditor
-            artifacts/cfgeditor-macos/cfgeditor.app
+            artifacts/cfgeditor-linux/cfgeditor-linux
+            artifacts/cfgeditor-macos/cfgeditor-macos
             artifacts/cfggen-source/cfggen-source-${{ github.ref_name }}.zip
           draft: false
           prerelease: false
