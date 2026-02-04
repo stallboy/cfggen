@@ -12,7 +12,7 @@ nav_order: 2
 2. 📊 使用excel编辑、或直接编辑json、或使用基于节点的编辑器编辑，可以浏览所有对象。
 3. 🚀 生成访问代码
 
-[View it on GitHub][cfggen repo]{: .btn .fs-5 .mb-4 .mb-md-0 }
+[快速开始 →](./00.quickstart.md){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 } [View it on GitHub][cfggen repo]{: .btn .fs-5 .mb-4 .mb-md-0 }
 
 ## ✨ 主要功能
 
@@ -26,65 +26,17 @@ nav_order: 2
 
 * 💾 生成lua注重内存大小
 
-## 🔧 build & test
+---
 
-* 生成cfggen.jar
+## 📚 文档导航
 
-    ```bash
-    genjar.bat  # 生成cfggen.jar
-    ```
-
-    ```bash
-    mkexe.bat  # 生成cfggen.zip，里面有exe
-    ```
-
-* 测试java：生成java代码和数据
-
-    ```bash
-    cd example
-    genjavasealed.bat # genjava 也可以，sealed需要java 17或以上才支持
-    ```
-
-* 测试java：检验java生成
-
-    ```bash
-    gradle build 
-    java -jar build/libs/example.jar # 进入命令行，输入q退出，输入其他比如ai会打印表名称以ai开头的结构定义和数据
-    ```
-
-* 测试lua
-
-    ```bash
-    genlua.bat 
-    cd lua
-    chcp 65001
-    lua.exe test.lua
-    ```
-
-* 测试csharp
-
-    ```bash
-    gencshape.bat 
-    cd cs
-    dotnet run
-    ```
-
-* 测试go
-
-    ```bash
-    gengo.bat 
-    cd go
-    go run .
-    ```
-
-* 测试typescript
-
-    ```bash
-    gents.bat 
-    cd ts
-    pnpm i -D tsx
-    npx tsx main.ts
-    ```
-
+- [快速开始](./00.quickstart.md) - 5分钟上手教程
+- [命令行](./01.usage.md) - 完整命令行参考与构建测试
+- [Schema定义](./03.schema.md) - CFG结构定义语法
+- [表格数据](./04.tableData.md) - 表格数据编辑说明
+- [代码生成](./05.codegen.md) - 多语言代码生成详解
+- [其他元数据](./07.otherMetadatas.md) - 标签、术语等元数据
+- [配置编辑器](../cfgeditor/) - 可视化配置编辑工具
+- [AI 生成](../aigen/) - 使用AI自动生成配置数据
 
 [cfggen repo]: https://github.com/stallboy/cfggen
