@@ -193,12 +193,12 @@ jobs:
 
       - name: Build Tauri
         working-directory: cfgeditor
-        run: pnpm tauri build --target x86_64-apple-darwin
+        run: pnpm tauri build --target aarch64-apple-darwin
 
       - name: Copy APP
         run: |
           mkdir -p artifacts
-          cp -R cfgeditor/src-tauri/target/x86_64-apple-darwin/release/bundle/macos/cfgeditor.app artifacts/cfgeditor.app
+          cp -R cfgeditor/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/cfgeditor.app artifacts/cfgeditor.app
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
