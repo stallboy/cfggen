@@ -52,19 +52,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
-          cache-dependency-path: 'cfgeditor/pnpm-lock.yaml'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-
-      - name: Enable corepack and install pnpm
-        working-directory: cfgeditor
-        run: |
-          corepack enable
-          pnpm --version
 
       - name: Install dependencies
         working-directory: cfgeditor
