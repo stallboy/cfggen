@@ -3,11 +3,8 @@
 本项目采用 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 标准，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-## [Unreleased]
 
-当前无未发布功能
-
-### [v1.2.0] - 2026-02-05
+### [v1.3.0] - 2026-02-05
 
 #### Added
 - GenVerifier：检查每个 table 中未被引用的 record
