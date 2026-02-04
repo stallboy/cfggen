@@ -38,10 +38,8 @@ jobs:
           path: cfggen.jar
           retention-days: 7
 
-  build-tauri:
+  build-tauri-windows:
     runs-on: windows-latest
-    outputs:
-      exe-name: cfgeditor.exe
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -81,16 +79,132 @@ jobs:
 
       - name: Build Tauri
         working-directory: cfgeditor
-        run: pnpm tauri build
+        run: pnpm tauri build --target x86_64-pc-windows-msvc
 
       - name: Copy EXE
-        run: Copy-Item cfgeditor\src-tauri\target\release\cfgeditor.exe cfgeditor.exe
+        run: Copy-Item cfgeditor\src-tauri\target\x86_64-pc-windows-msvc\release\cfgeditor.exe cfgeditor.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cfgeditor-exe
+          name: cfgeditor-windows
           path: cfgeditor.exe
+          retention-days: 7
+
+  build-tauri-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Install dependencies
+        working-directory: cfgeditor
+        run: pnpm install
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Cache Rust cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            cfgeditor/src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Build Tauri
+        working-directory: cfgeditor
+        run: pnpm tauri build --target x86_64-unknown-linux-gnu
+
+      - name: Copy AppImage
+        run: |
+          mkdir -p artifacts
+          cp cfgeditor/src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/cfgeditor artifacts/cfgeditor
+          chmod +x artifacts/cfgeditor
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfgeditor-linux
+          path: artifacts/cfgeditor
+          retention-days: 7
+
+  build-tauri-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Install dependencies
+        working-directory: cfgeditor
+        run: pnpm install
+
+      - name: Cache Rust cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            cfgeditor/src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Build Tauri
+        working-directory: cfgeditor
+        run: pnpm tauri build --target x86_64-apple-darwin
+
+      - name: Copy APP
+        run: |
+          mkdir -p artifacts
+          cp -R cfgeditor/src-tauri/target/x86_64-apple-darwin/release/bundle/macos/cfgeditor.app artifacts/cfgeditor.app
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfgeditor-macos
+          path: artifacts/cfgeditor.app
           retention-days: 7
 
   pack-source:
@@ -134,7 +248,7 @@ jobs:
           retention-days: 7
 
   release:
-    needs: [build-java, build-tauri, pack-source]
+    needs: [build-java, build-tauri-windows, build-tauri-linux, build-tauri-macos, pack-source]
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -174,7 +288,9 @@ jobs:
           body_path: release_notes.md
           files: |
             artifacts/cfggen-jar/cfggen.jar
-            artifacts/cfgeditor-exe/cfgeditor.exe
+            artifacts/cfgeditor-windows/cfgeditor.exe
+            artifacts/cfgeditor-linux/cfgeditor
+            artifacts/cfgeditor-macos/cfgeditor.app
             artifacts/cfggen-source/cfggen-source-${{ github.ref_name }}.zip
           draft: false
           prerelease: false
