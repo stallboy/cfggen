@@ -47,6 +47,7 @@ dependencies {
         implementation 'org.apache.poi:poi-ooxml:5.5.0'
     }
 
+    //noinspection VulnerableLibrariesLocal
     implementation 'io.github.codeboyzhou:mcp-declarative-java-sdk:0.9.0'
 
     // https://mvnrepository.com/artifact/org.apache.commons/commons-text
@@ -108,4 +109,41 @@ jacocoTestReport {
         html.required = true
         html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
     }
+}
+
+// 复制 genjava 源文件到 resources/support 目录，用于打包到 JAR 中
+tasks.register('copyGenJavaSources', Copy) {
+    description = '复制 genjava 源文件到 resources/support 目录用于打包'
+
+    def sourceFiles = [
+            'Schema.java',
+            'SchemaBean.java',
+            'SchemaCompatibleException.java',
+            'SchemaEnum.java',
+            'SchemaInterface.java',
+            'SchemaList.java',
+            'SchemaMap.java',
+            'SchemaPrimitive.java',
+            'SchemaRef.java',
+
+            'ConfigErr.java',
+            'ConfigInput.java',
+            'ConfigOutput.java',
+
+            'JavaData.java',
+    ]
+
+    from('src/main/java/configgen/genjava') {
+        include sourceFiles
+    }
+    into('build/resources/main/support/configgen/genjava')
+}
+
+// 确保在 processResources 和 fatJar 之前执行
+tasks.named('processResources') {
+    dependsOn copyGenJavaSources
+}
+
+tasks.named('fatJar') {
+    dependsOn copyGenJavaSources
 }

@@ -28,8 +28,28 @@ public class GenJavaCode extends GeneratorWithTag {
     private final String encoding;
     private final boolean sealed;
     private final String buildersFilename;
+    private final String configgenDir; // 新增：configgen genjava 源文件复制目录
     private Set<String> needBuilderTables = null;
     private final int schemaNumPerFile;
+
+    // 需要复制的源文件列表
+    private static final String[] CONFIGGEN_SOURCE_FILES = {
+            "Schema.java",
+            "SchemaBean.java",
+            "SchemaCompatibleException.java",
+            "SchemaEnum.java",
+            "SchemaInterface.java",
+            "SchemaList.java",
+            "SchemaMap.java",
+            "SchemaPrimitive.java",
+            "SchemaRef.java",
+
+            "ConfigErr.java",
+            "ConfigInput.java",
+            "ConfigOutput.java",
+
+            "JavaData.java",
+    };
 
     public GenJavaCode(Parameter parameter) {
         super(parameter);
@@ -38,8 +58,8 @@ public class GenJavaCode extends GeneratorWithTag {
         encoding = parameter.get("encoding", "UTF-8");
         sealed = parameter.has("sealed");
         buildersFilename = parameter.get("builders", null);
-        schemaNumPerFile = Integer.parseInt(
-                parameter.get("schemanumperfile", "100"));
+        configgenDir = parameter.get("configgenDir", null);
+        schemaNumPerFile = Integer.parseInt(parameter.get("schemaNumPerFile", "100"));
     }
 
 
@@ -105,6 +125,8 @@ public class GenJavaCode extends GeneratorWithTag {
         GenConfigCodeSchema.generateAll(this, schemaNumPerFile, cfgValue, ctx.nullableLangSwitch());
 
         CachedFiles.deleteOtherFiles(dstDir);
+
+        copyConfigGenSourcesIfNeed();
     }
 
     private void readNeedBuilderTables() {
@@ -117,6 +139,32 @@ public class GenJavaCode extends GeneratorWithTag {
             } catch (IOException e) {
                 Logger.log("读文件异常, 忽略此文件", fn.toAbsolutePath());
             }
+        }
+    }
+
+    /**
+     * 复制 configgen genjava 源文件到指定目录
+     * 如果目标目录已存在则跳过，保护用户可能的修改
+     */
+    private void copyConfigGenSourcesIfNeed() throws IOException {
+        if (configgenDir == null || configgenDir.isEmpty()) {
+            return;
+        }
+
+        Path configgenPath = Path.of(configgenDir);
+        Path targetDir = configgenPath.resolve("configgen/genjava");
+
+        // 如果目录已存在，跳过复制，保护用户的修改
+        if (Files.exists(targetDir)) {
+            return;
+        }
+
+        // 创建目标目录
+        Files.createDirectories(targetDir);
+
+        // 逐个复制文件
+        for (String fileName : CONFIGGEN_SOURCE_FILES) {
+            copySupportFileIfNotExist("configgen/genjava/" + fileName, configgenPath, encoding);
         }
     }
 

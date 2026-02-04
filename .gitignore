@@ -93,3 +93,5 @@
 /cfgeditor/plan.md
 /app/plan.md
 /cfgeditor/.npmrc
+/.settings/org.eclipse.buildship.core.prefs
+/app/.settings/org.eclipse.jdt.core.prefs

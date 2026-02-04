@@ -2,7 +2,7 @@
 import config.ConfigCodeSchema;
 import config.ConfigMgr;
 import config.ConfigMgrLoader;
-import configgen.genjava.BinaryToText;
+import configgen.genjava.JavaData;
 import configgen.genjava.ConfigInput;
 import configgen.genjava.Schema;
 import configgen.genjava.SchemaCompatibleException;
@@ -76,7 +76,7 @@ public class LoadConfig {
         ScheduledExecutorService watcher = Executors.newSingleThreadScheduledExecutor();
         autoReload(watcher, fn, null);
         System.out.println("read ok");
-        BinaryToText.loop(fn);
+        new JavaData(fn).loop();
         watcher.close();
     }
 }

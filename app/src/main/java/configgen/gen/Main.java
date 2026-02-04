@@ -5,9 +5,9 @@ import configgen.editorserver.EditorServer;
 import configgen.gen.ui.GuiLauncher;
 import configgen.gencs.GenBytes;
 import configgen.gencs.GenCs;
+import configgen.genjava.JavaDataReader;
 import configgen.gents.GenTs;
 import configgen.gengo.GenGo;
-import configgen.genjava.JavaData;
 import configgen.genjava.GenJavaData;
 import configgen.genjava.code.GenJavaCode;
 import configgen.genjson.GenJson;
@@ -62,7 +62,7 @@ public final class Main {
     public static void registerAllProviders() {
         Tools.addProvider("xmltocfg", XmlToCfg::new);
         Tools.addProvider("fastexcelcheck", ComparePoiAndFastExcel::new);
-        Tools.addProvider("readjavadata", JavaData.ReadJavaData::new);
+        Tools.addProvider("readjavadata", JavaDataReader::new);
         Tools.addProvider("term", TodoTermListerAndChecker::new);
         Tools.addProvider("translate", TodoTranslator::new);
         Tools.addProvider("usage", Usage::new);
