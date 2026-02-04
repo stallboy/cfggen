@@ -21,7 +21,6 @@
 - 国际化：补充所有实现 `Msg` 接口的错误/警告类的国际化消息
 - API 重构：将 RESTful API 和相关模型移至 `api` 目录
 - Store 重构：将 historyModel 移至 `store` 目录
-- API 优化：使用 `maxObjs` 和 `noRefIn` 参数替代 `depth` 参数
 
 #### Fixed
 - C# enumref 生成错误
@@ -31,7 +30,6 @@
 
 #### Removed
 - BuildSetting 类和 `-usepoi` 参数
-- `depth` 参数（改用 `maxObjs` 和 `noRefIn`）
 
 ### [v1.1.0] - 2025-04-03
 

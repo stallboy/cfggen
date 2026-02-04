@@ -24,10 +24,9 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'gradle'
 
       - name: Build fatJar
-        run: .\gradlew fatJar --no-daemon
+        run: gradle fatJar --no-daemon
 
       - name: Copy JAR
         run: Copy-Item app\build\libs\configgen.jar cfggen.jar
