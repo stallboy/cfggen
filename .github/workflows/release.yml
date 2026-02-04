@@ -139,10 +139,10 @@ jobs:
         working-directory: cfgeditor
         run: pnpm tauri build --target x86_64-unknown-linux-gnu
 
-      - name: Copy AppImage
+      - name: Copy Linux binary
         run: |
           mkdir -p artifacts
-          cp cfgeditor/src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/cfgeditor artifacts/cfgeditor
+          cp cfgeditor/src-tauri/target/x86_64-unknown-linux-gnu/release/cfgeditor artifacts/cfgeditor
           chmod +x artifacts/cfgeditor
 
       - name: Upload artifact
@@ -195,16 +195,17 @@ jobs:
         working-directory: cfgeditor
         run: pnpm tauri build --target aarch64-apple-darwin
 
-      - name: Copy APP
+      - name: Copy macOS binary
         run: |
           mkdir -p artifacts
-          cp -R cfgeditor/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/cfgeditor.app artifacts/cfgeditor.app
+          cp cfgeditor/src-tauri/target/aarch64-apple-darwin/release/cfgeditor artifacts/cfgeditor
+          chmod +x artifacts/cfgeditor
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: cfgeditor-macos
-          path: artifacts/cfgeditor.app
+          path: artifacts/cfgeditor
           retention-days: 7
 
   pack-source:
