@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "starlight": {
+      "type": "http",
+      "url": "https://gitmcp.io/withastro/starlight"
+    }
+  }
+}

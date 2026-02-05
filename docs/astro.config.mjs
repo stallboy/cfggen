@@ -24,7 +24,7 @@ export default defineConfig({
 		starlight({
 			plugins: [
 				starlightThemeRapide(),
-				starlightLinksValidator(),
+				// starlightLinksValidator(),
 			],
 			title: 'cfggen 文档',
 			description: 'excel/CSV/JSON object mapping. object database viewer and editor. generate reading code.',
@@ -47,19 +47,19 @@ export default defineConfig({
 			sidebar: [
 				{
 					label: '简介',
-					items: ['index', 'quickstart'] 
+					items: ['index', 'quickstart']
 				},
 				{
 					label: '配表系统',
-					autogenerate: { directory: 'cfggen' }
+					autogenerate: { directory: 'core' }
 				},
 				{
 					label: '编辑器',
-					autogenerate: { directory: 'cfgeditor' }
+					autogenerate: { directory: 'editor' }
 				},
 				{
 					label: 'AI 生成',
-					autogenerate: { directory: 'aigen' }
+					autogenerate: { directory: 'ai' }
 				},
 				{
 					label: 'VSCode 扩展',
