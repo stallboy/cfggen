@@ -19,6 +19,7 @@ cfgGrammar.aliases = ['cfg'];
 
 // https://astro.build/config
 export default defineConfig({
+	base: '/cfggen',
 	integrations: [
 		starlight({
 			plugins: [
