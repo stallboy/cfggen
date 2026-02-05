@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__starlight__fetch_starlight_documentation",
+      "mcp__starlight__search_starlight_documentation",
+      "mcp__web-search-prime__webSearchPrime",
+      "mcp__web-reader__webReader",
+      "WebSearch",
+      "Bash(test:*)",
+      "Bash(pnpm dev)",
+      "Bash(curl:*)",
+      "Bash(pnpm add:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}
