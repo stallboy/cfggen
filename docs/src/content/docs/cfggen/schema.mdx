@@ -49,7 +49,7 @@ CFG文件结构定义系统旨在表达复杂的数据结构和关系网络。�
   - 格式：`字段类型 =>表名[字段名]`
 - **独立外键**：`->外键名:[字段列表] ->|=> 目标表`
 
-> 详细说明请参考：[表键、枚举与数据关联](key)
+> 详细说明请参考：[表键、枚举与数据关联](/cfggen/key)
 
 ### 示例
 
@@ -165,7 +165,7 @@ interface taskexp (enumRef='taskexptype', defaultImpl='ConstValue') {
 - **唯一键**：`{}`内以`[字段名]`开头的行定义唯一键
 - **字段定义**：与struct语法相同
 
-> 详细主键、唯一键说明请参考：[主键、枚举、外键](key)
+> 详细主键、唯一键说明请参考：[主键、枚举、外键](/cfggen/key)
 
 ### 📦 表级属性
 
@@ -177,7 +177,7 @@ interface taskexp (enumRef='taskexptype', defaultImpl='ConstValue') {
   - 作用：Excel中该列由程序员填写，只有特定行需要值
   - 用途：程序代码中通过静态成员直接访问特定行
 
-> 详细说明请参考：[表键、枚举与数据关联](key)
+> 详细说明请参考：[表键、枚举与数据关联](/cfggen/key)
 
 ### 示例
 
@@ -233,7 +233,7 @@ table task[taskid] (entry='entry') {
 | `pack` | 压缩到1列，用逗号或分号分隔 | struct, list, map | `pos:Position (pack)` |
 | `sep='分隔符'`| 自定义分隔符，压缩到1列 | struct, list | `time:Time (sep=':')` |
 
-> 详细映射规则请参考：[映射到表格](tabularMapping)
+> 详细映射规则请参考：[映射到表格](/cfggen/tabularmapping)
 
 ## 📋 完整示例：任务系统
 
@@ -375,7 +375,7 @@ table task[taskid] (entry='entry') {
 
 ## 🔗 相关文档
 
-- **文件目录结构**：详见 [文件目录结构](directoryStructure)
-- **表键与关联**：详见 [表键、枚举与数据关联](key)
-- **表格映射**：详见 [映射到表格](tabularMapping)
+- **文件目录结构**：详见 [文件目录结构](/cfggen/directorystructure)
+- **表键与关联**：详见 [表键、枚举与数据关联](/cfggen/key)
+- **表格映射**：详见 [映射到表格](/cfggen/tabularmapping)
 

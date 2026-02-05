@@ -21,7 +21,10 @@ cfgGrammar.aliases = ['cfg'];
 export default defineConfig({
 	integrations: [
 		starlight({
-			plugins: [starlightThemeRapide(), starlightLinksValidator()],
+			plugins: [
+				starlightThemeRapide(),
+				starlightLinksValidator(),
+			],
 			title: 'cfggen 文档',
 			description: 'excel/CSV/JSON object mapping. object database viewer and editor. generate reading code.',
 			locales: {
@@ -59,7 +62,7 @@ export default defineConfig({
 				},
 				{
 					label: 'VSCode 扩展',
-					items: ['vscodeExtension']
+					items: ['vscodeextension']
 				}
 			],
 			expressiveCode: {
