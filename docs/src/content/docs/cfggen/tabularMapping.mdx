@@ -1,0 +1,535 @@
+---
+title: 表格映射机制
+description: 表格映射机制
+sidebar:
+  order: 5
+---
+
+# 🗺️ 表格映射机制
+
+
+
+
+---
+
+## 概述
+
+配表系统支持复杂的数据结构，包括嵌套、多态和递归嵌套。然而，Excel 是基于二维表格的结构。
+
+**核心问题**：如何将灵活的树状甚至递归结构映射到 Excel 的平坦表格结构中？
+
+本文档详细介绍了五种映射机制：`auto`、`pack`、`sep`、`fix` 和 `block`，它们提供了从复杂数据结构到表格结构的转换方案。
+
+## 🗂️ 映射机制详解
+
+### 🔄 auto（自动映射）
+
+- **适用类型**：基本类型（primitive）、结构体（struct）、接口（interface）
+- **占格规则**：
+  - 基本类型：占用 1 列
+  - 结构体/接口：自动计算所需列数
+- **特点**：默认映射方式，适用于大多数简单场景
+- **示例**：
+
+  ```
+  struct Range {
+      rmin:int; // 最小值
+      rmax:int; // 最大值
+  }
+  ```
+
+  `Range` 结构体占用 2 列
+
+### 📦 pack（压缩映射）
+
+- **适用类型**：结构体（struct）、接口（interface）、列表（list）、映射（map）
+- **占格规则**：将整个数据结构压缩到 1 列
+- **分隔符**：
+  - 字段间：逗号或分号分隔
+  - 嵌套结构：使用 `()` 包裹
+- **应用场景**：
+  - 减少表格列数
+  - 处理递归结构
+  - 简化配置
+- **示例**：
+
+  ```
+  struct Position (pack) {
+      x:int;
+      y:int;
+      z:int;
+  }
+  ```
+
+  数据格式：`"1,2,3"`
+
+  ```
+  list<Position> (pack)
+  ```
+
+  数据格式：`"(1,2,3);(4,5,6)"`
+
+- **重要说明**：当数据结构形成循环引用（递归）时，必须至少在一处使用 `pack` 来打破循环，否则无法计算所需列数
+
+
+### 🔀 sep（分隔符映射）
+
+- **适用类型**：结构体（struct）、列表（list）
+- **占格规则**：将整个数据结构压缩到 1 列
+- **分隔符**：支持自定义分隔符（`:`、`=`、`$` 等）
+- **示例**：
+
+  ```
+  struct Time (sep=':'){
+      hour:int;
+      minute:int;
+      second:int;
+  }
+  ```
+
+  数据格式：`"12:10:00"`
+
+- **使用限制**：
+  - 结构体中的所有字段必须是基本类型（primitive）
+  - 不支持在类型为结构体的字段上设置 `sep`（应在结构体定义上设置）
+  - 如果字段是 `list<struct>` 结构，分隔符需要与内部结构的分隔符区分
+- **建议**：除非有特定分隔符需求，否则推荐使用功能更强大的 `pack` 映射
+
+
+### 🔒 fix（固定长度映射）
+
+- **适用类型**：列表（list）、映射（map）
+- **占格规则**：固定列数 = 元素类型占用列数 × count
+- **参数**：count - 固定长度
+- **应用场景**：已知确切长度的列表或映射
+- **示例**：
+
+  ```
+  list<int> (fix=2) // 占用 2 列
+  ```
+
+### 🧱 block（块状映射）
+
+- **适用类型**：列表（list）、映射（map）
+- **占格规则**：横向固定列数，纵向可扩展
+- **参数**：fix - 横向块数
+- **应用场景**：变长列表，需要在表格中垂直排列
+- **示例**：
+
+  ```
+  list<RewardItem> (block=1) // 横向占用 1 × RewardItem 列数，纵向任意行数
+  ```
+
+
+## 🧠 Block 算法解析
+
+### 读取算法
+
+Block 的读取算法基于单元格的空值检测来确定数据块的边界：
+
+```java
+if (isPkCellAllEmpty(line)) {  // 主键所在格子为空，还是本record
+    DCell prevCell = line.get(firstColIndex - 1);
+    DCell thisCell = line.get(firstColIndex);
+
+    if (prevCell.isCellEmpty()) { // 上一格为空
+        if (thisCell.isCellEmpty()) { // 本格也为空，内部嵌套 block，忽略
+        } else { // 本格不为空 -> 属于当前 block
+            res.add(new CellsWithRowIndex(line.subList(firstColIndex, firstColIndex + colSize), row));
+        }
+    } else { // 上一个不为空，结束当前 block
+        break;
+    }
+} else { // 下一个记录，结束当前 block
+    break;
+}
+```
+
+### 嵌套支持
+
+Block 支持多层嵌套，通过空单元格作为分隔标记：
+
+```
+// 示例结构：
+// 1. xxxaebbxccc
+// 2.      bb cc
+// 3.      bb
+// 4.    aebb
+// 5.      bb
+```
+
+- `aeb` 是 `block=1`
+- `b` 是 `block=2`
+- `c` 是 `block=3`
+
+**嵌套规则**：
+- 每个 block 前需要有空列作为分隔标记
+- 支持多层嵌套：`aebb` 嵌套 `bb`
+- 同级 block 之间建议使用分隔列（如示例中的 `x`）
+- 当前版本不强制检测嵌套规则，需要人工保证正确性
+
+### 潜在问题
+
+如果第 4 行的 `aebb` 中，`e` 对应的 Excel 单元格为空，系统会将第 4、5 行的 `bb` 信息合并到第 1 行的 `aeb` 结构中，而不是创建新的 `aeb` 结构。
+
+这可能导致意外的数据合并，下一节将介绍如何使用 `mustFill` 来避免此类问题。
+
+## ✅ mustFill（必填约束）
+
+### 功能说明
+
+`mustFill` 用于强制字段必须包含有效值：
+
+- **列表/映射类型**：元素个数必须大于 0
+- **其他类型**：单元格不能为空
+
+### 应用场景
+
+主要用于避免 Block 映射中的潜在问题：
+
+- 防止关键字段为空导致意外的数据合并
+- 确保配置的完整性
+- 提高数据质量
+
+### 示例
+
+```
+exp:taskexp (mustFill);  // 经验奖励（必须配置）
+rewardItems:list<RewardItem> (block=1); // 物品奖励
+```
+
+- `exp` 字段设置了 `mustFill`，表示必须配置，不能省略
+- 如果忘记填写对应的 Excel 单元格，系统会报错
+
+## 📋 应用示例
+
+### 🔄 Auto 映射示例
+
+**数据结构定义**：
+```
+table weapon[id] {
+    id:int;
+    weaponAttrs:weaponAttr; // 武器属性
+}
+
+interface weaponAttr{
+    struct Damage {
+        value:int;
+    }
+}
+```
+
+**Excel 表格结构**：
+
+| id  | weaponAttrs | weaponAttrs |
+| --- | ----------- | ----------- |
+| 1   | Damage      | 2           |
+| 2   | Damage      | 2           |
+
+**说明**：
+- 没有使用 `pack`，接口类型和数值需要拆分为 2 列
+- 第一列存储类型名称（`Damage`）
+- 第二列存储具体数值（`2`）
+
+
+
+### 🔒 Fix 列表示例
+
+**数据结构定义**：
+```
+interface weaponAttr (pack){
+	struct Damage{
+		value:int;
+	}
+}
+
+table test[id] {
+	id:str; // ID
+	weaponAttrs:list<weaponAttr>(fix=2); // 武器属性列表
+}
+```
+
+**Excel 表格结构**：
+
+| id  | weaponAttrs | weaponAttrs | weaponAttrs | weaponAttrs |
+| --- | ----------- | ----------- | ----------- | ----------- |
+| 1   | Damage      | 2           |             |             |
+| 2   | Damage      | 2           |             |             |
+
+**说明**：
+- `fix=2` 表示列表固定为 2 个元素
+- 每个 `weaponAttr` 元素占用 2 列（类型 + 数值）
+- 总共占用 4 列（2 个元素 × 2 列/元素）
+
+### 📦 Pack 结构体示例
+
+**数据结构定义**：
+
+```
+struct DmgRatio1 {
+	playerAttr:int;
+	ratio:int;
+}
+
+struct DmgRatio2 (pack) {
+	playerAttr:int;
+	ratio:int;
+}
+
+struct DmgRatio3 {
+	playerAttr:int;
+	ratio:int;
+}
+
+table test[id] {
+	id:int; // ID
+	DmgRatio1:DmgRatio1; // 伤害比例1
+	DmgRatio2:DmgRatio2; // 伤害比例2
+	DmgRatio3:DmgRatio3(pack); // 伤害比例3
+}
+```
+
+**Excel 表格结构**：
+
+| id  | DmgRatio1 | DmgRatio1 | DmgRatio2 | DmgRatio3 |
+| --- | --------- | --------- | --------- | --------- |
+| 1   | 1         | 1         | 2,2       | 3,3       |
+
+**说明**：
+- `DmgRatio1`：未使用 pack，占用 2 列
+- `DmgRatio2`：在结构体定义上使用 pack，占用 1 列
+- `DmgRatio3`：在字段上使用 pack，占用 1 列
+- **两种 pack 方式效果相同**：可在结构体定义或字段上设置
+
+### 🧱 Block 映射示例
+
+**数据结构定义**：
+
+```cfg
+struct RewardItem {
+    itemId:int;      // 物品ID
+    count:int;       // 物品数量
+}
+
+table task[id] {
+    id:int;                                // 任务ID
+    name:str;                              // 任务名称
+    rewardItems:list<RewardItem> (block=1); // 奖励物品列表
+}
+```
+
+**Excel 表格结构**：
+
+| id  | name        | rewardItems | rewardItems |
+| --- | ----------- | ----------- | ----------- |
+| 1   | 击杀怪物    | 1001        | 5           | ← 第1个奖励 |
+|     |             | 1002        | 10          | ← 第2个奖励 |
+|     |             | 1003        | 3           | ← 第3个奖励 |
+| 2   | 收集物品    | 2001        | 2           | ← 第1个奖励 |
+| 3   | 护送任务    | 3001        | 1           | ← 第1个奖励 |
+|     |             | 3002        | 1           | ← 第2个奖励 |
+
+**说明**：
+- `block=1` 表示每次横向占用 1 × `RewardItem` 的列数（2列）
+- 纵向可扩展：空单元格表示仍属于上一条记录
+- 主键（id列为空时：表示继续上一条记录的 `rewardItems`
+- id列不为空时：表示新的记录开始
+
+**数据读取逻辑**：
+- 第1行（id=1）：开始第1条任务，包含第1个奖励（1001, 5）
+- 第2行（id为空）：继续第1条任务，添加第2个奖励（1002, 10）
+- 第3行（id为空）：继续第1条任务，添加第3个奖励（1003, 3）
+- 第4行（id=2）：开始第2条任务，包含第1个奖励（2001, 2）
+- 第5行（id=3）：开始第3条任务，包含第1个奖励（3001, 1）
+- 第6行（id为空）：继续第3条任务，添加第2个奖励（3002, 1）
+
+**对比 fix 映射**：
+- `fix=2`：横向固定占用 4 列（2个奖励 × 2列），只能配置2个奖励
+- `block=1`：横向占用 2 列（1个奖励），纵向可扩展，奖励数量不限
+
+### 🧱 Block 嵌套示例
+
+**数据结构定义**：
+
+```cfg
+struct RewardItem {
+    itemId:int;
+    count:int;
+}
+
+struct RewardGroup {
+    groupName:str;                         // 奖励组名称
+    items:list<RewardItem> (block=1);      // 奖励物品列表
+}
+
+table task[id] {
+    id:int;                                // 任务ID
+    rewardGroups:list<RewardGroup> (block=1); // 奖励组列表
+}
+```
+
+**Excel 表格结构**：
+
+| id  | rewardGroups | rewardGroups | rewardGroups | rewardGroups |
+| --- | ------------ | ------------ | ------------ | ------------ |
+| 1   | 基础奖励     | 1001         | 5            | ← 第1组第1个 |
+|     |              | 1002         | 10           | ← 第1组第2个 |
+|     | 额外奖励     | 2001         | 3            | ← 第2组第1个 |
+|     |              | 2002         | 1            | ← 第2组第2个 |
+
+**说明**：
+- 外层 `rewardGroups` 使用 `block=1`，每次占用 3 列（groupName + itemId + count）
+- 内层 `items` 也使用 `block=1`，嵌套在 rewardGroups 之中
+- 第2-3行：第1个 rewardGroup（基础奖励），包含 2 个 RewardItem
+- 第4行：groupName 列有值"额外奖励"，开始第2个 rewardGroup
+- 第4-5行：第2个 rewardGroup（额外奖励），包含 2 个 RewardItem
+
+**嵌套规则**：
+- 每个 block 前需要有空列或空行作为分隔标记
+- 当前版本不强制检测嵌套规则，需要人工保证正确性
+
+### 🔄 Interface 映射示例
+
+**数据结构定义**：
+
+```
+interface IDmgRatio{
+    struct DmgRatio1 {
+        playerAttr:int;
+        ratio:int;
+    }
+
+    struct DmgRatio2 {
+    	playerAttr:int;
+    	ratio:int;
+    }
+}
+
+table test[id] {
+	id:int; // ID
+	DmgRatio1:IDmgRatio;
+	DmgRatio2:IDmgRatio;
+}
+```
+
+**Excel 表格结构**：
+
+| id  | DmgRatio1 | p1  | p2  | DmgRatio2 | p1  | p2  |
+| --- | --------- | --- | --- | --------- | --- | --- |
+| 1   | DmgRatio1 | 1   | 1   | DmgRatio2 | 2   | 2   |
+
+**说明**：
+- 接口类型在配置中必须明确指定具体结构体类型
+- 每个接口字段占用 3 列：
+  - 第 1 列：结构体类型名称
+  - 第 2-3 列：结构体字段值
+
+
+### 📦 对Interface和struct做pack，sep
+
+```
+interface TestAttr (pack) {
+	struct Damage {
+		value:int;
+	}
+
+	struct Range {
+		value:int;
+	}
+
+}
+
+struct TestStruct (pack) {
+	playerAttr:int;
+	ratio:int;
+}
+
+table test[id] {
+	id:int; // 注释行
+	TestStruct:list<TestStruct> (pack);
+	attrs:list<TestAttr>(pack);
+	sepAttr:list<TestAttr>(sep=';');
+}
+
+
+```
+
+| id  | TestStruct  | attrs               | sepAttr             |
+| --- | ----------- | ------------------- | ------------------- |
+| 1   | (1,2),(2,4) | Damage(50),Range(6) | Damage(50);Range(6) |
+
+
+### 📦 Pack 在递归结构中的应用
+
+**数据结构定义**：
+
+```
+interface CompleteCondition {
+	struct KillMonster {
+		monsterid:int;
+		count:int;
+	}
+
+	struct TalkNpc {
+		npcid:int;
+	}
+
+	struct CollectItem {
+		itemid:int;
+		count:int;
+	}
+
+	struct And {
+		cond1:CompleteCondition (pack);
+		cond2:CompleteCondition (pack);
+	}
+}
+```
+
+**任务表定义**：
+```
+table task...{
+    ...
+    condition: CompleteCondition;
+}
+```
+
+**Excel 表格结构**：
+
+| condition   | param1       | param2               |
+|:------------|--------------|----------------------|
+| KillMonster |1001          |1                     |
+| And         |TalkNpc(5)    |CollectItem(2002, 3)  |
+
+**关键说明**：
+- `And` 结构中的 `cond1` 和 `cond2` 都设置了 `(pack)`，每个字段占用 1 列
+- `And` 结构总共占用 2 列
+- **递归结构处理**：对于形成循环引用的递归结构，必须至少在一处使用 `pack` 来打破循环，否则无法计算所需列数
+
+---
+
+## 📊 映射机制对比
+
+| 映射方式 | 适用类型 | 占格规则 | 主要用途 |
+|---------|---------|---------|---------|
+| **auto** | 基本类型、结构体、接口 | 自动计算 | 默认映射，简单场景 |
+| **pack** | 结构体、接口、列表、映射 | 压缩到 1 列 | 减少列数，处理递归结构 |
+| **sep** | 结构体、列表 | 压缩到 1 列 | 自定义分隔符格式 |
+| **fix** | 列表、映射 | 固定列数 | 已知长度的列表 |
+| **block** | 列表、映射 | 横向固定，纵向扩展 | 变长列表垂直排列 |
+
+## 💡 使用建议
+
+1. **优先使用 `auto`**：对于简单结构，使用默认的自动映射
+2. **考虑使用 `pack`**：当需要减少表格列数或处理递归结构时
+3. **谨慎使用 `sep`**：除非有特定分隔符需求，否则推荐使用 `pack`
+4. **合理使用 `fix`**：仅用于已知确切长度的列表
+5. **灵活使用 `block`**：处理变长列表，注意嵌套规则
+6. **善用 `mustFill`**：确保关键字段不为空，提高数据质量
+
+## 🔍 最佳实践
+
+- 在设计复杂数据结构时，提前规划表格映射方式
+- 对于递归结构，确保至少有一处使用 `pack` 打破循环
+- 使用 `mustFill` 约束关键字段，也用于设置`block`附近字段避免意外的数据合并
+- 保持表格结构的清晰性和可维护性

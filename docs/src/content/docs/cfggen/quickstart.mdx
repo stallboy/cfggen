@@ -1,0 +1,283 @@
+---
+title: 快速入门
+description: 快速入门
+sidebar:
+  order: 1
+---
+
+# 🚀 快速入门
+
+欢迎使用 cfggen 配表系统!本指南将帮助您在 **5 分钟内**完成第一个配置示例。
+
+---
+
+## 📋 前置准备
+
+### 1. 环境要求
+
+- **Java 21** (运行 cfggen 和生成的代码)
+- **Excel** (编辑数据,可选)
+- **任意文本编辑器** (VS Code 推荐配合 CFG 插件)
+
+### 2. 下载 cfggen
+
+从 [GitHub Releases](https://github.com/stallboy/cfggen/releases) 下载预编译的 `cfggen.jar`。
+
+或者从源码构建：
+
+```bash
+genjar.bat # 生成 cfggen.jar
+```
+
+生成的 `cfggen.jar` 位于项目根目录。
+
+---
+
+## ⏱️ 5 分钟快速上手
+
+### 步骤 1: 创建第一个配置结构 (1 分钟)
+
+创建配置目录和定义文件:
+
+```bash
+# 创建项目目录
+mkdir mygame
+cd mygame
+mkdir config
+cd config
+
+# 创建 item 模块目录
+mkdir item
+
+# 创建结构定义文件
+touch item\item.cfg
+```
+
+拷贝`cfggen.jar`到config目录
+
+编辑 `item\item.cfg`,写入以下内容:
+
+```cfg
+// 内嵌结构，奖励
+struct Reward {
+	itemId:int ->item;
+	count:int;
+}
+
+// 物品类型表
+table itemtype[id] (enum='name') {
+	id:int;
+	name:str; // 名称
+}
+
+// 物品表
+table item[id] {
+	id:int;
+	name:str; // 物品名称
+	type:int ->itemtype; // 物品类型
+	price:int; // 价格
+	description:text; // 描述
+	rewards:list<Reward> (pack);
+}
+```
+
+**说明**:
+- `struct`: 定义复杂数据结构
+- `table`: 定义数据表,`[id]` 表示主键
+- `enum='name'`: 数据表是个枚举表，用`name`字段的字符串作为枚举名
+- `->itemtype`: 外键引用,指向 itemtype 表的主键id
+- `list<Reward>`: 列表类型,包含 Reward 结构
+- `pack`: 表示把奖励都配置到一个格子里
+
+### 步骤 2: 准备数据文件 (2 分钟)
+
+#### 方式 A: 使用 Excel (推荐)
+
+1. 打开 Excel,创建 `item.xlsx`
+2. 创建两个工作表:
+
+**工作表 1: `itemtype`**
+
+| id | 名称 |
+|----|------|
+| id | name |
+| 1  | weapon |
+| 2  | armor |
+| 3  | consumable |
+
+**工作表 2: `item`**
+
+| id | 物品名称 | 物品类型 | 价格 | 描述 | rewards |
+|----|------|------|-------|-------------|---------|
+| id | name | type | price | description | rewards |
+| 1001 | 铁剑 | 1 | 100 | 一把普通的铁剑 |  |
+| 1002 | 钢盾 | 2 | 150 | 坚固的钢盾 |  |
+| 2001 | 包裹 | 3 | 200 | 使用后得到装备 | (1001,1),(1002,1) |
+
+将 `item.xlsx` 保存到 `config/` 目录。
+
+### 步骤 3: 生成代码和数据 (1 分钟)
+
+```bash
+# 从 config 目录执行
+cd config
+java -jar cfggen.jar -datadir . -gen java,dir:../java,configgendir:../java -gen javadata,file:../java/config.data
+```
+
+**生成结果**:
+```
+mygame/
+├── config/              # 配置源文件
+│   └── cfggen.jar
+│   └── item/            # item 模块
+│       ├── item.cfg     # 结构定义
+│       └── item.xlsx    # 数据文件
+│
+└──java/                # 生成的代码和数据
+    ├── config/          # 配置类
+    ├── configgen/       # Schema 框架（自动生成）
+    └── config.data      # 数据文件
+```
+
+**说明**:
+- `-gen java,dir:../java,configgendir:../java`: 生成 Java 访问代码到 `../java` 目录，同时生成 Schema 框架文件
+- `-gen javadata,file:../java/config.data`: 生成二进制数据文件到 `../java/config.data`
+- 生成的代码位于 `java/config/` 目录
+- Schema 框架文件自动生成到 `java/configgen/genjava/` 目录
+- 数据文件为 `java/config.data`
+
+### 步骤 4: 配置 Gradle 构建
+
+```bash
+cd ../java
+# 创建settings.gradle
+echo rootProject.name = 'mygame' > settings.gradle
+```
+
+创建 `build.gradle` 文件：
+
+```groovy
+plugins {
+    id 'application'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['.']
+        }
+    }
+}
+
+compileJava {
+    options.encoding = "UTF-8"
+}
+
+application {
+    mainClass = 'LoadConfig'
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'LoadConfig'
+    }
+}
+```
+
+### 步骤 5: 使用生成的代码 (1 分钟)
+
+创建 `LoadConfig.java`:
+
+```java
+import config.ConfigCodeSchema;
+import config.ConfigMgr;
+import config.ConfigMgrLoader;
+import configgen.genjava.ConfigInput;
+import configgen.genjava.Schema;
+import configgen.genjava.SchemaCompatibleException;
+
+import java.io.DataInputStream;
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+
+public class LoadConfig {
+    public static void main(String[] args) throws Exception {
+        // 1. 检查 Schema 兼容性
+        Schema codeSchema = ConfigCodeSchema.getCodeSchema();
+
+        try (ConfigInput input = new ConfigInput(
+                new DataInputStream(new BufferedInputStream(
+                    new FileInputStream("config.data"))))) {
+
+            // 2. 读取数据文件的 Schema
+            Schema dataSchema = Schema.create(input);
+
+            // 3. 检查兼容性
+            if (!codeSchema.compatible(dataSchema)) {
+                throw new SchemaCompatibleException("schema not compatible");
+            }
+
+            // 4. 加载配置数据
+            ConfigMgr mgr = ConfigMgrLoader.load(input);
+            ConfigMgr.setMgr(mgr);
+        }
+
+        // 5. 使用配置
+        config.item.Item item = config.item.Item.get(1001);
+        System.out.println(item.getName());   // 输出: 铁剑
+        System.out.println(item.getPrice());  // 输出: 100
+
+        // 6. 遍历所有道具
+        for (config.item.Item i : config.item.Item.all()) {
+            System.out.println(i.getId() + ": " + i);
+        }
+    }
+}
+```
+
+**运行程序**:
+```bash
+# 编译
+gradle build
+
+# 运行
+gradle run
+
+# 或直接运行 JAR
+java -jar build/libs/mygame.jar
+```
+
+**API 说明**:
+- `ConfigCodeSchema.getCodeSchema()`: 获取代码定义的 Schema
+- `Schema.create(input)`: 从数据文件读取 Schema
+- `codeSchema.compatible(dataSchema)`: 检查兼容性
+- `ConfigMgrLoader.load(input)`: 加载配置数据
+- `Item.get(id)`: 根据主键获取记录
+- `Item.all()`: 获取所有记录的集合
+
+---
+
+## 🎯 下一步学习
+
+恭喜!您已经完成了第一个配置示例。接下来可以学习:
+
+### 1️⃣ 深入结构定义
+
+- [结构定义详解](schema) - 学习 struct、interface、table 的完整语法
+- [主键、枚举、外键](key) - 理解数据关联和引用
+- [映射到表格](tabularMapping) - Excel 单元格如何映射到复杂数据结构
+
+### 2️⃣ 高级功能
+
+- [标签系统](tag) - 客户端/服务器数据分离
+- [国际化支持](i18n) - 多语言配置
+- [AI 生成配置](../aigen/) - 使用 AI 自动生成配置数据
+
+### 3️⃣ 实践示例
+
+查看 `example/` 目录下的完整示例:
+
+- `example/config/` - 配置定义和数据文件
+- `example/genjava.bat` - 生成 Java 代码和数据的完整脚本
+- `example/javaload/LoadConfig.java` - 配置加载示例
+- `example/build.gradle` - Gradle 构建配置示例

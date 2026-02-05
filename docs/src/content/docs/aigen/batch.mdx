@@ -1,0 +1,47 @@
+---
+title: 批量生成
+description: 批量生成
+sidebar:
+  order: 2
+---
+
+
+## 📦 批量生成
+
+```
+-gen byai
+    own=null             提取部分配置，跟cfg中有tag标记的提取
+    cfg=ai.json          llm大模型选择，需要兼容openai的api
+    ask=ask.txt          问题，每行生成一个json
+    table=skill.buff     表名称
+    retry=1              重试llm次数，默认1代表不重试
+```
+
+## 📄 ai.json 例子
+
+```java
+public record AICfg(String baseUrl,
+                    String apiKey,
+                    String model) { // 可以为空，此时table的提示词将都是默认
+}
+```
+例子：
+
+```json
+{
+  "baseUrl": "https://api.deepseek.com",
+  "apiKey": "sk-xxxxxxxxxxxxxxx",
+  "model": "deepseek-chat",
+}
+```
+
+
+### ask.txt 例子
+
+```txt
+100，攻速提高140%
+101，击败敌人时有15%概率提高10%移速，持续10秒，最高叠加5层
+102，提高30%移速，受到伤害时失去此加成4秒
+103，造成的所有冰寒伤害提高30%
+```
+
