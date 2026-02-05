@@ -1,0 +1,297 @@
+---
+title: 配置指南
+description: AI生成配置目录结构和配置文件详解
+sidebar:
+  order: 2
+---
+
+本文档详细介绍 AI 生成功能的配置目录结构、配置文件格式和最佳实践。
+
+## 配置目录结构
+
+AI 生成功能需要在配置目录中添加特定的提示词文件:
+
+```
+config/
+│   config.cfg              # 结构定义文件
+│   config.jte              # 全局提示词模板(可选)
+│   init.md                 # 初始欢迎语(可选)
+│
+├───ai_行为/                # AI行为模块
+│   │   $mod.md             # 模块规则和描述
+│   │   ai.md               # ai表的规则(可选)
+│   │   ai_action.md        # ai_action表的规则(可选)
+│   │
+│   ├── ai.cfg              # 结构定义
+│   ├── ai行为.xlsx         # Excel数据
+│   └── _ai_ai/             # AI生成的JSON数据
+│       ├── 1.json
+│       └── 2.json
+│
+├───equip/                  # 装备模块
+│   │   $mod.md             # 模块规则
+│   │   equip.md            # equip表规则
+│   │
+│   ├── equip.cfg
+│   ├── ability.csv
+│   └── rank.csv
+│
+└───task/                   # 任务模块
+    │   $mod.md             # 模块规则
+    │   task.md             # task表规则
+    │   task2.md            # task2表规则
+    │
+    ├── task.cfg
+    ├── task_任务.csv
+    ├── completeconditiontype.csv
+    └── _task_task2/        # AI生成的数据
+        ├── 1.json
+        ├── 2.json
+        └── 3.json
+```
+
+## 文件说明
+
+| 文件 | 用途 | 必需 |
+|------|------|------|
+| `config.jte` | 全局提示词模板,控制所有表的生成行为 | 否 |
+| `init.md` | AI 对话的初始欢迎语 | 否 |
+| `$mod.md` | 模块级规则和描述,影响该模块下所有表 | 否 |
+| `[table].md` | 表级规则和示例,只影响特定表 | 否 |
+
+**注意**: 以上文件都是可选的,系统提供默认行为。
+
+## 配置文件详解
+
+### 1. 全局提示词模板 `config.jte`
+
+控制 AI 生成行为的核心模板,适用于所有表。
+
+#### 数据模型
+
+```java
+public record PromptModel(
+    String table,              // 表名
+    String structInfo,         // 结构定义(TypeScript格式)
+    String rule,               // 规则(从 $mod.md + [table].md 读取)
+    List<Example> examples     // 示例记录
+) {
+    public record Example(
+        String id,             // 记录ID
+        String description,    // 描述
+        String json            // JSON数据
+    )
+}
+```
+
+#### 默认模板
+
+```markdown
+@import configgen.genbyai.PromptModel
+@import configgen.genbyai.PromptModel.Example
+
+@param PromptModel model
+
+# Role: 专业游戏设计师
+
+## Profile
+- Description: 经验丰富、逻辑严密,大师级,擅长把需求描述转变为符合结构的json数据
+- OutputFormat: json
+
+## Rules
+### ${model.table()}结构定义
+
+\`\`\`typescript
+${model.structInfo()}
+\`\`\`
+
+@if (!model.rule().isEmpty())
+    ${model.rule()}
+@endif
+
+## Constraints
+生成的json数据必须严格遵守[${model.table()}结构定义],确保数据的一致性和有效性。遵守以下规则:
+- 对象要加入$type字段,来表明此对象的类型
+- 如果对象里字段为默认值,则可以忽略此字段
+- 字段类型为number,默认为0
+- 字段类型为array,默认为[]
+- 字段类型为str,默认为空字符串
+- 对象可以加入$note字段,作为注释,不用全部都加,最好这些注释合起来组成了描述
+- json中不要包含//开头的注释
+
+## Workflow
+
+针对用户描述输出json格式的配置(若描述中不含ID,则自动选择)
+
+@if(!model.examples().isEmpty())
+    ## Examples
+    ---
+    @for(Example ex : model.examples())
+        输入:${ex.id()}, ${ex.description()}
+
+        输出:
+        \`\`\`json
+        ${ex.json()}
+        \`\`\`
+        ---
+    @endfor
+@endif
+
+## Initialization
+作为角色 [Role], 严格遵守 [Rules], 告诉用户 [Workflow]
+```
+
+### 2. 模块规则 `$mod.md`
+
+为整个模块提供通用规则和描述。
+
+#### 示例: `config/ai_行为/$mod.md`
+
+```markdown
+---
+description: AI行为配置系统,包含AI的行为树、决策逻辑和动作定义
+---
+
+## 设计原则
+
+1. **简洁性**: AI行为应该简单直接,避免过于复杂的状态
+2. **可预测性**: 相同条件下应该产生可预测的行为
+
+## 数值范围
+
+- 优先级: 0-100(数值越大优先级越高)
+- 概率: 0-10000(单位为0.01%)
+- 冷却时间: 单位为毫秒
+```
+
+### 3. 表规则 `[table].md`
+
+为特定表提供详细规则和示例。
+
+#### 示例: `config/task/task.md`
+
+```markdown
+---
+description: 任务配置,定义游戏中各种任务的目标、奖励和完成条件
+exampleId: 1
+exampleDescription: 新手引导任务,要求玩家击杀10只史莱姆
+---
+
+## 设计原则
+
+1. **渐进性**: 任务难度应该循序渐进
+2. **清晰性**: 任务描述应该清晰易懂
+
+## 数值建议
+
+- 新手任务经验: 100-500
+- 中级任务经验: 500-2000
+- 任务奖励物品: 1-5个
+```
+
+### 4. 初始欢迎语 `init.md`
+
+定义 AI 对话开始时的欢迎语。
+
+#### 示例
+
+```markdown
+你好!我是AI配置助手,可以帮你生成各种游戏配置。
+
+请告诉我你想生成什么配置,我会根据结构定义自动创建符合要求的数据。
+
+例如:
+- "创建一个新手任务"
+- "生成一把稀有装备"
+- "添加一个AI行为"
+```
+
+## 最佳实践
+
+### 1. 编写清晰的规则
+
+**好的规则**:
+```markdown
+## 任务ID规则
+- 主线任务: 1000-1999
+- 支线任务: 2000-2999
+- 日常任务: 3000-3999
+
+## 奖励数量建议
+- 普通任务: 1-2个物品
+- 精英任务: 3-5个物品
+- Boss任务: 5-10个物品
+```
+
+**不好的规则**:
+```markdown
+任务奖励要合理
+```
+
+### 2. 提供具体示例
+
+在 `[table].md` 中提供 exampleId 和 exampleDescription,帮助 AI 理解预期格式:
+
+```markdown
+---
+exampleId: 1001
+exampleDescription: 新手引导任务,简单易懂
+---
+```
+
+### 3. 模块化设计
+
+将相关的表放在同一模块目录下,使用 `$mod.md` 定义通用规则:
+
+```
+config/
+├── task/              # 任务模块
+│   ├── $mod.md        # 任务通用规则
+│   ├── task.md        # task表规则
+│   └── taskreward.md  # taskreward表规则
+```
+
+### 4. 迭代优化
+
+- 第一次生成可能不够完美
+- 通过对话不断调整和优化
+- 将满意的配置作为示例提供给 AI
+
+## 常见问题
+
+### Q: 如何改进 AI 生成质量?
+
+**A**:
+1. 编写详细的 `$mod.md` 和 `[table].md`
+2. 提供更多示例
+3. 通过对话不断调整和优化
+4. 将满意的配置保存为示例
+
+### Q: 支持哪些 AI 模型?
+
+**A**: 兼容 OpenAI API 的模型都可以使用,例如:
+- DeepSeek
+- OpenAI GPT-4/GPT-3.5
+- Azure OpenAI
+- 其他兼容 OpenAI API 的服务
+
+### Q: 如何处理外键关联?
+
+**A**: AI 会自动根据 `.cfg` 中的外键定义生成有效的引用关系。确保:
+1. 外键引用的表已经存在相关数据
+2. 在规则中说明外键的取值范围
+3. 使用示例展示正确的引用方式
+
+### Q: 生成的数据可以修改吗?
+
+**A**: 可以。保存时系统会根据记录ID判断:
+- **新增**: 如果ID不存在,则添加新记录
+- **修改**: 如果ID已存在,则替换该记录
+- **存储格式**: 根据 table 定义自动选择 JSON/CSV/Excel
+
+## 相关文档
+
+- [快速开始](./quickstart) - 快速上手 AI 生成功能
+- [MCP 服务器集成](./mcpserver) - 在编辑器中使用 AI 生成
+- [AI 翻译](./translate) - 使用 AI 翻译多语言文本
+- [结构定义](../cfggen/schema) - CFG 结构定义语法

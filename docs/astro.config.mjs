@@ -24,30 +24,37 @@ export default defineConfig({
 			plugins: [starlightThemeRapide(), starlightLinksValidator()],
 			title: 'cfggen 文档',
 			description: 'excel/CSV/JSON object mapping. object database viewer and editor. generate reading code.',
-			// logo: {
-			// 	src: '/intro.png'
-			// },
 			locales: {
 				root: {
 					label: '简体中文',
 					lang: 'zh-CN'
 				}
 			},
+			social: [
+				{
+					icon: 'github',
+					label: 'GitHub',
+					href: 'https://github.com/stallboy/cfggen',
+				},
+			],
+			editLink: {
+				baseUrl: 'https://github.com/stallboy/cfggen/edit/master/docs/'
+			},
 			sidebar: [
 				{
 					label: '简介',
-					items: ['']
+					items: ['index', 'quickstart'] 
 				},
 				{
 					label: '配表系统',
 					autogenerate: { directory: 'cfggen' }
 				},
 				{
-					label: '配置编辑器',
+					label: '编辑器',
 					autogenerate: { directory: 'cfgeditor' }
 				},
 				{
-					label: 'AI 生成功能',
+					label: 'AI 生成',
 					autogenerate: { directory: 'aigen' }
 				},
 				{
