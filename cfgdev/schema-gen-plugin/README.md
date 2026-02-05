@@ -62,6 +62,6 @@ table item[id] {
 生成的 schema 遵循 cfggen 规范：
 
 - **[结构定义](../../docs/docs/cfggen/03.schema.md)** - struct、interface、table 基础语法
-- **[元数据配置](../../docs/docs/cfggen/07.otherMetadatas.md)** - @column 等元数据用法
+- **[元数据配置](../../docs/docs/cfggen/07.othermetadatas.md)** - @column 等元数据用法
 
 
