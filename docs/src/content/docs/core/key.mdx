@@ -27,7 +27,7 @@ sidebar:
 
 使用单个字段作为主键，这是最常见的主键形式。
 
-```
+```cfg
 table task[taskid] {
     taskid:int;
     text:text;
@@ -43,7 +43,7 @@ table task[taskid] {
 
 使用自定义结构体作为主键。
 
-```
+```cfg
 struct LevelRank {
     level:int;
     rank:int;
@@ -63,7 +63,7 @@ table jewelryrandom[lvlRank] {
 
 使用多个字段组合作为主键。
 
-```
+```cfg
 table jewelryrandom[level,rank] {
     level:int;
     rank:int;
@@ -85,7 +85,7 @@ table jewelryrandom[level,rank] {
 
 唯一键定义在字段定义之前，使用 `[` 和 `]` 包围。
 
-```
+```cfg
 table task[taskid] {
     [nexttask];
     taskid:int; // 任务id
@@ -108,7 +108,7 @@ table task[taskid] {
 
 枚举用于定义一组固定的、不重复的英文名称。
 
-```
+```cfg
 table itemtype[id] (enum='type'){
     id:int;
     type:str;
@@ -125,7 +125,7 @@ table itemtype[id] (enum='type'){
 
 入口用于标识表中的特定行，通常用于配置系统的入口点。
 
-```
+```cfg
 table scene[id] (entry='entry') {
     id:int;
     entry:str;
@@ -152,7 +152,7 @@ table scene[id] (entry='entry') {
 
 ##### 索引到主键
 
-```
+```cfg
 struct RewardItem {
     chance:int; // 掉落概率
     itemids:list<int> ->item.item; // 掉落物品
@@ -164,7 +164,7 @@ struct RewardItem {
 
 ##### 索引到唯一键
 
-```
+```cfg
 struct AA {
     taskid:int ->task[nexttask];
 }
@@ -174,7 +174,7 @@ struct AA {
 
 ##### 索引到任意字段（生成列表引用）
 
-```
+```cfg
 table drop[dropid] {
     dropid:int =>dropItem[dropid];
     name:text;
@@ -189,7 +189,7 @@ table drop[dropid] {
 
 在字段定义完成后，单独声明外键关系。
 
-```
+```cfg
 table monster[id] {
     id:int;
     lootId:int; // loot
@@ -206,7 +206,7 @@ table monster[id] {
   - `[lootId,lootItemId]`：本地键由两个字段组成
   - `->lootitem`：引用目标表
 
-```
+```cfg
 table drop[dropid] {
     dropid:int;
     name:text;
@@ -273,7 +273,7 @@ struct MonsterDrops {
 
 ### 定义方式
 
-```
+```cfg
 table task[taskid] (entry='entry') {
     taskid:int ->task.taskextraexp (nullable); // 任务id
     entry:str;

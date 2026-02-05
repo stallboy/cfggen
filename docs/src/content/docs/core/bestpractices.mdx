@@ -69,7 +69,7 @@ table jewelrysuit[SuitID] (entry='Ename') {
 **场景分析**：如果部件数量大多数情况下小于4，但少数情况会达到12个
 
 - **方案1：固定列数** - 占用过多列数
-```
+```cfg
 table jewelrysuit[SuitID] (entry='Ename') {
     ...
     SuitList:list<int> (fix=12);
@@ -77,14 +77,14 @@ table jewelrysuit[SuitID] (entry='Ename') {
 ```
 
 - **方案2：单列压缩** - 仅占用1列
-```
+```cfg
 table jewelrysuit[SuitID] (entry='Ename') {
     ...
     SuitList:list<int> (pack);
 }
 ```
 
-```
+```cfg
 table jewelrysuit[SuitID] (entry='Ename') {
     ...
     SuitList:list<int> (sep=';');
@@ -92,7 +92,7 @@ table jewelrysuit[SuitID] (entry='Ename') {
 ```
 
 - **方案3：块状布局** - 占用4列，支持多行扩展
-```
+```cfg
 table jewelrysuit[SuitID] (entry='Ename') {
     ...
     SuitList:list<int> (block=4);

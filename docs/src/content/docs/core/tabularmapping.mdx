@@ -15,9 +15,9 @@ sidebar:
 
 本文档详细介绍了五种映射机制：`auto`、`pack`、`sep`、`fix` 和 `block`，它们提供了从复杂数据结构到表格结构的转换方案。
 
-## 🗂️ 映射机制详解
+## 映射机制详解
 
-### 🔄 auto（自动映射）
+### auto（自动映射）
 
 - **适用类型**：基本类型（primitive）、结构体（struct）、接口（interface）
 - **占格规则**：
@@ -26,7 +26,7 @@ sidebar:
 - **特点**：默认映射方式，适用于大多数简单场景
 - **示例**：
 
-  ```
+  ```cfg
   struct Range {
       rmin:int; // 最小值
       rmax:int; // 最大值
@@ -35,7 +35,7 @@ sidebar:
 
   `Range` 结构体占用 2 列
 
-### 📦 pack（压缩映射）
+### pack（压缩映射）
 
 - **适用类型**：结构体（struct）、接口（interface）、列表（list）、映射（map）
 - **占格规则**：将整个数据结构压缩到 1 列
@@ -48,7 +48,7 @@ sidebar:
   - 简化配置
 - **示例**：
 
-  ```
+  ```cfg
   struct Position (pack) {
       x:int;
       y:int;
@@ -58,7 +58,7 @@ sidebar:
 
   数据格式：`"1,2,3"`
 
-  ```
+  ```cfg
   list<Position> (pack)
   ```
 
@@ -67,14 +67,14 @@ sidebar:
 - **重要说明**：当数据结构形成循环引用（递归）时，必须至少在一处使用 `pack` 来打破循环，否则无法计算所需列数
 
 
-### 🔀 sep（分隔符映射）
+### sep（分隔符映射）
 
 - **适用类型**：结构体（struct）、列表（list）
 - **占格规则**：将整个数据结构压缩到 1 列
 - **分隔符**：支持自定义分隔符（`:`、`=`、`$` 等）
 - **示例**：
 
-  ```
+  ```cfg
   struct Time (sep=':'){
       hour:int;
       minute:int;
@@ -91,7 +91,7 @@ sidebar:
 - **建议**：除非有特定分隔符需求，否则推荐使用功能更强大的 `pack` 映射
 
 
-### 🔒 fix（固定长度映射）
+### fix（固定长度映射）
 
 - **适用类型**：列表（list）、映射（map）
 - **占格规则**：固定列数 = 元素类型占用列数 × count
@@ -99,11 +99,11 @@ sidebar:
 - **应用场景**：已知确切长度的列表或映射
 - **示例**：
 
-  ```
+  ```cfg
   list<int> (fix=2) // 占用 2 列
   ```
 
-### 🧱 block（块状映射）
+### block（块状映射）
 
 - **适用类型**：列表（list）、映射（map）
 - **占格规则**：横向固定列数，纵向可扩展
@@ -111,12 +111,12 @@ sidebar:
 - **应用场景**：变长列表，需要在表格中垂直排列
 - **示例**：
 
-  ```
+  ```cfg
   list<RewardItem> (block=1) // 横向占用 1 × RewardItem 列数，纵向任意行数
   ```
 
 
-## 🧠 Block 算法解析
+## Block 算法解析
 
 ### 读取算法
 
@@ -169,7 +169,7 @@ Block 支持多层嵌套，通过空单元格作为分隔标记：
 
 这可能导致意外的数据合并，下一节将介绍如何使用 `mustFill` 来避免此类问题。
 
-## ✅ mustFill（必填约束）
+## mustFill（必填约束）
 
 ### 功能说明
 
@@ -188,7 +188,7 @@ Block 支持多层嵌套，通过空单元格作为分隔标记：
 
 ### 示例
 
-```
+```cfg
 exp:taskexp (mustFill);  // 经验奖励（必须配置）
 rewardItems:list<RewardItem> (block=1); // 物品奖励
 ```
@@ -196,12 +196,12 @@ rewardItems:list<RewardItem> (block=1); // 物品奖励
 - `exp` 字段设置了 `mustFill`，表示必须配置，不能省略
 - 如果忘记填写对应的 Excel 单元格，系统会报错
 
-## 📋 应用示例
+## 应用示例
 
-### 🔄 Auto 映射示例
+### Auto 映射示例
 
 **数据结构定义**：
-```
+```cfg
 table weapon[id] {
     id:int;
     weaponAttrs:weaponAttr; // 武器属性
@@ -228,10 +228,10 @@ interface weaponAttr{
 
 
 
-### 🔒 Fix 列表示例
+### Fix 列表示例
 
 **数据结构定义**：
-```
+```cfg
 interface weaponAttr (pack){
 	struct Damage{
 		value:int;
@@ -256,11 +256,11 @@ table test[id] {
 - 每个 `weaponAttr` 元素占用 2 列（类型 + 数值）
 - 总共占用 4 列（2 个元素 × 2 列/元素）
 
-### 📦 Pack 结构体示例
+### Pack 结构体示例
 
 **数据结构定义**：
 
-```
+```cfg
 struct DmgRatio1 {
 	playerAttr:int;
 	ratio:int;
@@ -296,7 +296,7 @@ table test[id] {
 - `DmgRatio3`：在字段上使用 pack，占用 1 列
 - **两种 pack 方式效果相同**：可在结构体定义或字段上设置
 
-### 🧱 Block 映射示例
+### Block 映射示例
 
 **数据结构定义**：
 
@@ -342,7 +342,7 @@ table task[id] {
 - `fix=2`：横向固定占用 4 列（2个奖励 × 2列），只能配置2个奖励
 - `block=1`：横向占用 2 列（1个奖励），纵向可扩展，奖励数量不限
 
-### 🧱 Block 嵌套示例
+### Block 嵌套示例
 
 **数据结构定义**：
 
@@ -383,11 +383,11 @@ table task[id] {
 - 每个 block 前需要有空列或空行作为分隔标记
 - 当前版本不强制检测嵌套规则，需要人工保证正确性
 
-### 🔄 Interface 映射示例
+### Interface 映射示例
 
 **数据结构定义**：
 
-```
+```cfg
 interface IDmgRatio{
     struct DmgRatio1 {
         playerAttr:int;
@@ -420,9 +420,9 @@ table test[id] {
   - 第 2-3 列：结构体字段值
 
 
-### 📦 对Interface和struct做pack，sep
+### 对Interface和struct做pack，sep
 
-```
+```cfg
 interface TestAttr (pack) {
 	struct Damage {
 		value:int;
@@ -454,11 +454,11 @@ table test[id] {
 | 1   | (1,2),(2,4) | Damage(50),Range(6) | Damage(50);Range(6) |
 
 
-### 📦 Pack 在递归结构中的应用
+### Pack 在递归结构中的应用
 
 **数据结构定义**：
 
-```
+```cfg
 interface CompleteCondition {
 	struct KillMonster {
 		monsterid:int;
@@ -482,7 +482,7 @@ interface CompleteCondition {
 ```
 
 **任务表定义**：
-```
+```cfg
 table task...{
     ...
     condition: CompleteCondition;
@@ -503,7 +503,7 @@ table task...{
 
 ---
 
-## 📊 映射机制对比
+## 映射机制对比
 
 | 映射方式 | 适用类型 | 占格规则 | 主要用途 |
 |---------|---------|---------|---------|
@@ -513,7 +513,7 @@ table task...{
 | **fix** | 列表、映射 | 固定列数 | 已知长度的列表 |
 | **block** | 列表、映射 | 横向固定，纵向扩展 | 变长列表垂直排列 |
 
-## 💡 使用建议
+## 使用建议
 
 1. **优先使用 `auto`**：对于简单结构，使用默认的自动映射
 2. **考虑使用 `pack`**：当需要减少表格列数或处理递归结构时
@@ -522,7 +522,7 @@ table task...{
 5. **灵活使用 `block`**：处理变长列表，注意嵌套规则
 6. **善用 `mustFill`**：确保关键字段不为空，提高数据质量
 
-## 🔍 最佳实践
+## 最佳实践
 
 - 在设计复杂数据结构时，提前规划表格映射方式
 - 对于递归结构，确保至少有一处使用 `pack` 打破循环

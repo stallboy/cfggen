@@ -51,7 +51,7 @@ sidebar:
 
 1. **所有字段无标签，表有标签**：包含所有字段
 
-   ```
+   ```cfg
    table task[id] (client){
        id:int;
        desc:text;
@@ -60,7 +60,7 @@ sidebar:
 
 2. **部分字段有标签**：只包含设置了标签的字段
 
-   ```
+   ```cfg
    table task[id] { // 可以不加(client)，因为有字段加了(client)
        id:int (client);
        desc:text (client);
@@ -70,7 +70,7 @@ sidebar:
 
 3. **字段使用负标签**：提取未设置负标签的字段
 
-   ```
+   ```cfg
    table task[id] (client){
        id:int;
        desc:text;
@@ -102,7 +102,7 @@ sidebar:
 
 在表、结构体或接口上设置 `noserver` 标签，则完全排除该表：
 
-```
+```cfg
 table avatar[id] (noserver){
     id:int;
     path:str;
@@ -113,7 +113,7 @@ table avatar[id] (noserver){
 
 在字段上设置 `noserver` 标签，只排除该特定字段：
 
-```
+```cfg
 table task[id]{
     id:int;
     desc:text (noserver);
