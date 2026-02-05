@@ -29,24 +29,25 @@ public class UnreferencedRecordCollector {
                         "(Ideally 0, as entry/enum mechanisms can avoid magic numbers in code)"));
                 Logger.log("");
 
-                for (Map.Entry<String, List<UnreferencedRecord>> entry : tableToUnreferenced.entrySet()) {
-                    String tableName = entry.getKey();
-                    List<UnreferencedRecord> records = entry.getValue();
-                    Logger.log(LocaleUtil.getFormatedLocaleString("UnreferencedRecordCollector.TableInfo",
-                            "Table: {0} ({1} unreferenced)", tableName, records.size()));
+                if (tableToUnreferenced.size() > 4) {
+                    for (Map.Entry<String, List<UnreferencedRecord>> entry : tableToUnreferenced.entrySet()) {
+                        String tableName = entry.getKey();
+                        List<UnreferencedRecord> records = entry.getValue();
+                        Logger.log(LocaleUtil.getFormatedLocaleString("UnreferencedRecordCollector.TableInfo",
+                                "Table: {0} ({1} unreferenced)", tableName, records.size()));
+                    }
+                    Logger.log("==========");
                 }
-                Logger.log("==========");
 
                 for (Map.Entry<String, List<UnreferencedRecord>> entry : tableToUnreferenced.entrySet()) {
                     String tableName = entry.getKey();
                     List<UnreferencedRecord> records = entry.getValue();
                     Logger.log(LocaleUtil.getFormatedLocaleString("UnreferencedRecordCollector.TableInfo",
                             "Table: {0} ({1} unreferenced)", tableName, records.size()));
-
 
                     int c = 0;
                     for (UnreferencedRecord record : records) {
-                        if (c >= 50) {
+                        if (c >= 10) {
                             Logger.log("...");
                             break;
                         }
@@ -138,10 +139,17 @@ public class UnreferencedRecordCollector {
         ValueRefInCollector refInCollector = new ValueRefInCollector(graph, cfgValue);
         TableSchema tableSchema = vTable.schema();
 
-        // 检查是否有entry，enum类型的entry
         String entryFieldName = null;
-        if (tableSchema.entry() instanceof EntryType.EntryBase eEntry) {
-            entryFieldName = eEntry.field();
+        switch (tableSchema.entry()) {
+            // enum类型 全算入口，直接忽略
+            case EntryType.EEnum ignored -> {
+                return new UnreferencedInTable(vTable.name(), unreferencedRecords);
+            }
+            case EntryType.EEntry eEntry -> {
+                entryFieldName = eEntry.field();
+            }
+            default -> {
+            }
         }
 
         // 遍历表中所有记录
