@@ -32,13 +32,13 @@ sidebar:
 
 本节重点介绍方案1的实现和使用方法。
 
-##  使用示例
+## 使用示例
 
 参考示例项目：[i18n_method1](https://github.com/stallboy/cfggen/blob/master/example/i18n_method1)
 
 假设需要将文本翻译为英文（en）、韩文（kr）、繁体中文（tw）三种语言。
 
-##  1. 生成或更新翻译文件
+## 1. 生成或更新翻译文件
 
 在 `i18n_method1` 目录下执行以下命令：
 
@@ -59,7 +59,7 @@ java -jar ../../cfggen.jar -datadir ../config -i18nfile tw.csv -gen i18n,file=tw
 - **第二列**：提取的待翻译原始文本
 - **第三列**：需要人工填写的翻译结果
 
-## ️ 2. 人工翻译编辑
+## 2. 人工翻译编辑
 
 根据图示，在生成的CSV文件中填写翻译内容：
 - 将 `杀个怪` 翻译为 `kill a monster`
@@ -84,7 +84,7 @@ java -jar ../../cfggen.jar -datadir ../config -i18nfile tw.csv -gen i18n,file=tw
 -i18nfile en.csv -gen ...
 ```
 
-##  迭代流程
+## 迭代流程
 
 ### 翻译内容修改
 当需要修改翻译内容时：

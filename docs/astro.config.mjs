@@ -1,6 +1,8 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import starlightImageZoom from 'starlight-image-zoom'
+
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -21,7 +23,7 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			plugins: [
-				// starlightThemeRapide(),
+				starlightImageZoom(),
 				// starlightLinksValidator(),
 			],
 			title: 'cfggen 文档',
@@ -44,7 +46,7 @@ export default defineConfig({
 			},
 			sidebar: [
 				{
-					label: '简介',
+					label: '从这里开始',
 					items: ['index', 'quickstart']
 				},
 				{

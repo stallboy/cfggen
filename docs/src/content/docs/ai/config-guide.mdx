@@ -5,13 +5,16 @@ sidebar:
   order: 2
 ---
 
+import { Code } from '@astrojs/starlight/components';
+import configPrompt from '~/../../app/src/main/resources/jte/config.jte?raw';
+
 本文档详细介绍 AI 生成功能的配置目录结构、配置文件格式和最佳实践。
 
 ## 配置目录结构
 
 AI 生成功能需要在配置目录中添加特定的提示词文件:
 
-```text
+```
 config/
 │   config.cfg              # 结构定义文件
 │   config.jte              # 全局提示词模板(可选)
@@ -48,7 +51,7 @@ config/
         ├── 1.json
         ├── 2.json
         └── 3.json
-```text
+```
 
 ## 文件说明
 
@@ -82,64 +85,12 @@ public record PromptModel(
         String json            // JSON数据
     )
 }
-```text
+```
 
 #### 默认模板
 
-```markdown
-@import configgen.genbyai.PromptModel
-@import configgen.genbyai.PromptModel.Example
+<Code code={configPrompt} title="config.jte" lang="md" />
 
-@param PromptModel model
-
-# Role: 专业游戏设计师
-
-## Profile
-- Description: 经验丰富、逻辑严密,大师级,擅长把需求描述转变为符合结构的json数据
-- OutputFormat: json
-
-## Rules
-### ${model.table()}结构定义
-
-\`\`\`typescript
-${model.structInfo()}
-\`\`\`
-
-@if (!model.rule().isEmpty())
-    ${model.rule()}
-@endif
-
-## Constraints
-生成的json数据必须严格遵守[${model.table()}结构定义],确保数据的一致性和有效性。遵守以下规则:
-- 对象要加入$type字段,来表明此对象的类型
-- 如果对象里字段为默认值,则可以忽略此字段
-- 字段类型为number,默认为0
-- 字段类型为array,默认为[]
-- 字段类型为str,默认为空字符串
-- 对象可以加入$note字段,作为注释,不用全部都加,最好这些注释合起来组成了描述
-- json中不要包含//开头的注释
-
-## Workflow
-
-针对用户描述输出json格式的配置(若描述中不含ID,则自动选择)
-
-@if(!model.examples().isEmpty())
-    ## Examples
-    ---
-    @for(Example ex : model.examples())
-        输入:${ex.id()}, ${ex.description()}
-
-        输出:
-        \`\`\`json
-        ${ex.json()}
-        \`\`\`
-        ---
-    @endfor
-@endif
-
-## Initialization
-作为角色 [Role], 严格遵守 [Rules], 告诉用户 [Workflow]
-```text
 
 ### 2. 模块规则 `$mod.md`
 
@@ -162,7 +113,7 @@ description: AI行为配置系统,包含AI的行为树、决策逻辑和动作�
 - 优先级: 0-100(数值越大优先级越高)
 - 概率: 0-10000(单位为0.01%)
 - 冷却时间: 单位为毫秒
-```text
+```
 
 ### 3. 表规则 `[table].md`
 
@@ -187,7 +138,7 @@ exampleDescription: 新手引导任务,要求玩家击杀10只史莱姆
 - 新手任务经验: 100-500
 - 中级任务经验: 500-2000
 - 任务奖励物品: 1-5个
-```text
+```
 
 ### 4. 初始欢迎语 `init.md`
 
@@ -204,7 +155,7 @@ exampleDescription: 新手引导任务,要求玩家击杀10只史莱姆
 - "创建一个新手任务"
 - "生成一把稀有装备"
 - "添加一个AI行为"
-```text
+```
 
 ## 最佳实践
 
@@ -221,7 +172,7 @@ exampleDescription: 新手引导任务,要求玩家击杀10只史莱姆
 - 普通任务: 1-2个物品
 - 精英任务: 3-5个物品
 - Boss任务: 5-10个物品
-```text
+```
 
 **不好的规则**:
 任务奖励要合理
@@ -236,7 +187,7 @@ exampleDescription: 新手引导任务,要求玩家击杀10只史莱姆
 exampleId: 1001
 exampleDescription: 新手引导任务,简单易懂
 ---
-```text
+```
 
 ### 3. 模块化设计
 

@@ -22,7 +22,7 @@ CFG文件结构定义系统旨在表达复杂的数据结构和关系网络。�
 
 最终形成一个相互关联的数据网络，支持复杂游戏逻辑的配置。
 
-##  结构体（struct）
+## 结构体（struct）
 
 结构体用于定义复合数据类型，是构建复杂数据结构的基础。
 
@@ -35,7 +35,7 @@ CFG文件结构定义系统旨在表达复杂的数据结构和关系网络。�
   - **聚合类型**：`struct`, `interface`
   - **容器类型**：`list<类型>`, `map<键类型,值类型>`
 
-###  外键关联
+### 外键关联
 
 外键用于建立表之间的关联关系，支持多种引用方式。
 
@@ -164,7 +164,7 @@ interface taskexp (enumRef='taskexptype', defaultImpl='ConstValue') {
 
 > 详细主键、唯一键说明请参考：[主键、枚举、外键](../key/)
 
-###  表级属性
+### 表级属性
 
 - **enum**：指定枚举字段，该表作为枚举表使用
   - 作用：Excel中该列由程序员填写，每行都必须有值
@@ -215,7 +215,7 @@ table task[taskid] (entry='entry') {
 - **唯一键**：`[nexttask]`会生成`GetByNextTask`访问方法
 - **多态字段**：`completecondition`和`exp`字段支持多种实现
 
-## ️ 字段属性
+## ️字段属性
 
 字段可以配置多种属性来控制数据验证和生成行为。
 
@@ -232,109 +232,8 @@ table task[taskid] (entry='entry') {
 
 > 详细映射规则请参考：[映射到表格](../tabularmapping/)
 
-##  完整示例：任务系统
 
-以下是一个完整的任务系统配置，展示了各组件如何协同工作：
-
-```cfg
-// ========== 基础数据结构 ==========
-// 数值范围结构
-struct Range {
-	rmin:int; // 最小值
-	rmax:int; // 最大值
-}
-
-// 奖励物品结构
-struct RewardItem {
-	chance:int; // 掉落概率
-	itemids:list<int> ->item.item (fix=2); // 掉落物品
-	range:Range; // 数量范围
-}
-
-// 时间结构（冒号分隔）
-struct Time (sep=':'){
-    hour:int;   // 小时
-    minute:int; // 分钟
-    second:int; // 秒
-}
-
-// ========== 多态接口定义 ==========
-// 任务完成条件接口
-interface completecondition (enumRef='completeconditiontype') {
-	// 击杀怪物条件
-	struct KillMonster {
-		monsterid:int ->npc.monster; // 怪物ID
-		count:int;                   // 击杀数量
-	}
-
-	// 与NPC对话条件
-	struct TalkNpc {
-		npcid:int ->npc.npcid;       // NPC ID
-	}
-
-	// 多条件与逻辑
-	struct ConditionAnd {
-		cond1:task.completecondition; // 条件1
-		cond2:task.completecondition; // 条件2
-	}
-
-	// 收集物品条件
-	struct CollectItem {
-		itemid:int ->item.item;      // 物品ID
-		count:int;                   // 收集数量
-	}
-}
-
-// 任务经验公式接口
-interface taskexp (enumRef='taskexptype', defaultImpl='ConstValue') {
-    // 基于玩家等级的经验公式
-    struct ByLevel {
-		levelcoef:float; // 等级系数
-		value:int;       // 基础值
-	}
-
-	// 基于服务器开服天数的经验公式
-	struct ByServerUpDay {
-		updaycoef1:float; // 天数系数1
-		updaycoef2:float; // 天数系数2
-		value:int;        // 基础值
-	}
-
-	// 固定经验值
-	struct ConstValue {
-	    value:int;      // 固定经验
-	}
-}
-
-// ========== 枚举表 ==========
-// 任务完成条件类型枚举表
-table completeconditiontype[id] (enum='name') {
-	id:int;   // 类型ID
-	name:str; // 实现类名称
-}
-
-// 任务经验公式类型枚举表
-table taskexptype[id] (enum='name') {
-	id:int;   // 公式类型ID
-	name:str; // 实现类名称
-}
-
-// ========== 主任务表 ==========
-// 任务配置表
-table task[taskid] (entry='entry') {
-	[nexttask];                           // 唯一键：下一个任务
-	taskid:int ->task.taskextraexp (nullable); // 任务ID
-	entry:str;                           // 入口标识
-	text:text;                           // 任务文本
-	nexttask:int ->task (nullable);      // 下一个任务
-	completecondition:task.completecondition; // 完成条件
-	exp:taskexp (mustFill);              // 经验奖励
-	rewardItems:list<RewardItem> (block=1); // 物品奖励
-	time:Time;                           // 时间配置
-}
-```
-
-##  快速参考
+## 快速参考
 
 ### 语法速查
 
@@ -370,7 +269,7 @@ table task[taskid] (entry='entry') {
 | 聚合类型 | `struct`, `interface` | 复合数据类型 |
 | 引用 | `->表名`,`->表名[唯一键]`, `=>表名[字段]` | 表间关联 |
 
-##  相关文档
+## 相关文档
 
 - **文件目录结构**：详见 [文件目录结构](../directorystructure/)
 - **表键与关联**：详见 [表键、枚举与数据关联](../key/)
