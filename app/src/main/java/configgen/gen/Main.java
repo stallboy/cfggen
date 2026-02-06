@@ -14,6 +14,7 @@ import configgen.genjson.GenJson;
 import configgen.genbyai.GenByAI;
 import configgen.genbyai.GenTsSchema;
 import configgen.genlua.GenLua;
+import configgen.gengd.GenGd;
 import configgen.geni18n.TodoTermListerAndChecker;
 import configgen.geni18n.GenI18nByValue;
 import configgen.geni18n.GenI18nById;
@@ -79,6 +80,7 @@ public final class Main {
         Generators.addProvider("lua", GenLua::new);
         Generators.addProvider("ts", GenTs::new);
         Generators.addProvider("go", GenGo::new);
+        Generators.addProvider("gd", GenGd::new);
         Generators.addProvider("tsschema", GenTsSchema::new);
         Generators.addProvider("json", GenJson::new);
 

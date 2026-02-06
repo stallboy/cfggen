@@ -29,7 +29,15 @@
       "Bash(git push:*)",
       "Bash(npm run build:*)",
       "Bash(java:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "mcp__ideajava__list_directory_tree",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(./gradlew:*)",
+      "Bash(gradle compileJava:*)",
+      "Bash(gradle:*)",
+      "Bash(cmd //c gengd.bat)",
+      "Bash(gradle.bat:*)"
     ],
     "deny": [],
     "ask": []

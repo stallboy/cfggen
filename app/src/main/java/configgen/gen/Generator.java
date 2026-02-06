@@ -38,7 +38,11 @@ public abstract class Generator {
     }
 
     protected static void copySupportFileIfNotExist(String file, Path dstDir, String dstEncoding) throws IOException {
-        Path dst = dstDir.resolve(file);
+        copySupportFileIfNotExist(file, file, dstDir, dstEncoding);
+    }
+
+    protected static void copySupportFileIfNotExist(String file, String dstFile, Path dstDir, String dstEncoding) throws IOException {
+        Path dst = dstDir.resolve(dstFile);
         if (Files.exists(dst)) {
             CachedFiles.keepFile(dst);
             return;

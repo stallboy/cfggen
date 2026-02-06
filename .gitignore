@@ -95,3 +95,5 @@
 /cfgeditor/.npmrc
 /.settings/org.eclipse.buildship.core.prefs
 /app/.settings/org.eclipse.jdt.core.prefs
+/.vscode
+/example/gd/.godot
