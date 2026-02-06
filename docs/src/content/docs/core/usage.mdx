@@ -1,11 +1,19 @@
 ---
-title: 命令行
+title: usage
 description: 命令行
 sidebar:
   order: 30
 ---
 
-```bash
+import { Code } from '@astrojs/starlight/components';
+import genjavaBat from '~/../../example/genjava.bat?raw';
+import genluaBat from '~/../../example/genlua.bat?raw';
+import gencsharpBat from '~/../../example/gencsharp.bat?raw';
+import gengoBat from '~/../../example/gengo.bat?raw';
+import gentsBat from '~/../../example/gents.bat?raw';
+
+
+```cmd usage
 Usage: java -jar cfggen.jar [options] [-tool toolname[,param=value...]] -datadir <dir> [-gen genname[,param=value...]]
 
    or: java -jar cfggen.jar  (launch GUI)
@@ -88,7 +96,8 @@ Parameters can be in any order, but -datadir is required when using generators.
         encoding=UTF-8       生成代码文件的编码
         sealed               生成sealed interface，需要java17,默认为false
         builders=null        指向txt文件，每行是一个table，对这些table生成对应的builder
-        schemanumperfile=100 当配表数量过多时生成的ConfigCodeSchema会超过java编译器限制，用此参数来分文
+        configgenDir=null    复制configgen genjava源文件到{configgenDir}/configgen/genjava/，可选
+        schemaNumPerFile=100 当配表数量过多时生成的ConfigCodeSchema会超过java编译器限制，用此参数来分文
     -gen javadata    生成java代码需要的数据
         own=null
         file=config.data     文件名
@@ -154,9 +163,8 @@ Parameters can be in any order, but -datadir is required when using generators.
         retry=1              重试llm次数，默认1代表不重试
 ```
 
----
 
-## 🔧 Build & Test
+##  Build & Test
 
 ### 生成 cfggen.jar
 
@@ -172,8 +180,11 @@ mkexe.bat  # 生成cfggen.zip，里面有exe
 
 ```bash
 cd example
-genjavasealed.bat # genjava 也可以，sealed需要java 17或以上才支持
+genjava.bat
 ```
+
+<Code code={genjavaBat.trim()} title="genjava.bat" lang="bash" />
+
 
 ### 测试 Java：检验 java 生成
 
@@ -191,13 +202,19 @@ chcp 65001
 lua.exe test.lua
 ```
 
+<Code code={genluaBat.trim()} title="genlua.bat" lang="bash" />
+
+
 ### 测试 CSharp
 
 ```bash
-gencshape.bat
+gencsharp.bat
 cd cs
 dotnet run
 ```
+
+<Code code={gencsharpBat.trim()} title="gencsharp.bat" lang="bash" />
+
 
 ### 测试 Go
 
@@ -207,6 +224,9 @@ cd go
 go run .
 ```
 
+<Code code={gengoBat.trim()} title="gengo.bat" lang="bash" />
+
+
 ### 测试 TypeScript
 
 ```bash
@@ -215,4 +235,6 @@ cd ts
 pnpm i -D tsx
 npx tsx main.ts
 ```
+
+<Code code={gentsBat.trim()} title="gents.bat" lang="bash" />
 

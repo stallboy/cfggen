@@ -1,8 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
-import starlightThemeRapide from 'starlight-theme-rapide';
-import starlightLinksValidator from 'starlight-links-validator';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -23,7 +21,7 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			plugins: [
-				starlightThemeRapide(),
+				// starlightThemeRapide(),
 				// starlightLinksValidator(),
 			],
 			title: 'cfggen 文档',
