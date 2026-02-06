@@ -8,9 +8,9 @@ var count: int:
 	get:
 		return count
 # 外键引用属性
-var MonsteridRef: DataOther_Monster:
+var RefMonsterid: DataOther_Monster:
 	get:
-		return MonsteridRef
+		return RefMonsterid
 # 创建实例
 static func create(stream: ConfigStream) -> DataTaskCompletecondition_Killmonster:
 	var instance = DataTaskCompletecondition_Killmonster.new()
@@ -20,6 +20,6 @@ static func create(stream: ConfigStream) -> DataTaskCompletecondition_Killmonste
 
 # 解析外键引用
 func _resolve(errors: ConfigErrors):
-	MonsteridRef = DataOther_Monster.find(monsterid)
-	if MonsteridRef == null:
+	RefMonsterid = DataOther_Monster.find(monsterid)
+	if RefMonsterid == null:
 		errors.ref_null("KillMonster", "monsterid")

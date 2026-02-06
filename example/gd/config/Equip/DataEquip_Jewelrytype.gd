@@ -20,7 +20,7 @@ static func all() -> Array[DataEquip_Jewelrytype]:
 	return _data.values()
 
 # 从流初始化
-static func _init_from_stream(stream: ConfigStream, err: ConfigErrors):
+static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 	var count = stream.get_32()
 	for i in range(count):
 		var item = create(stream)
@@ -29,30 +29,30 @@ static func _init_from_stream(stream: ConfigStream, err: ConfigErrors):
 			match item.typeName.strip_edges():
 				"Jade":
 					if Jade != null:
-						err.error("枚举重复: equip.jewelrytype, " + str(item))
+						_errors.enum_dup("equip.jewelrytype", str(item))
 					Jade = item
 				"Bracelet":
 					if Bracelet != null:
-						err.error("枚举重复: equip.jewelrytype, " + str(item))
+						_errors.enum_dup("equip.jewelrytype", str(item))
 					Bracelet = item
 				"Magic":
 					if Magic != null:
-						err.error("枚举重复: equip.jewelrytype, " + str(item))
+						_errors.enum_dup("equip.jewelrytype", str(item))
 					Magic = item
 				"Bottle":
 					if Bottle != null:
-						err.error("枚举重复: equip.jewelrytype, " + str(item))
+						_errors.enum_dup("equip.jewelrytype", str(item))
 					Bottle = item
 				_:
-					err.error("枚举数据错误: equip.jewelrytype, " + str(item))
+					_errors.enum_data_add("equip.jewelrytype", str(item))
 	if Jade == null:
-		err.error("枚举缺失: equip.jewelrytype, Jade")
+		_errors.enum_null("equip.jewelrytype", "Jade")
 	if Bracelet == null:
-		err.error("枚举缺失: equip.jewelrytype, Bracelet")
+		_errors.enum_null("equip.jewelrytype", "Bracelet")
 	if Magic == null:
-		err.error("枚举缺失: equip.jewelrytype, Magic")
+		_errors.enum_null("equip.jewelrytype", "Magic")
 	if Bottle == null:
-		err.error("枚举缺失: equip.jewelrytype, Bottle")
+		_errors.enum_null("equip.jewelrytype", "Bottle")
 # 内部存储
 static var _data: Dictionary[String, DataEquip_Jewelrytype] = {}
 # 静态枚举实例

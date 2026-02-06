@@ -58,7 +58,7 @@ static func all() -> Array[DataEquip_Jewelrysuit]:
 	return _data.values()
 
 # 从流初始化
-static func _init_from_stream(stream: ConfigStream, err: ConfigErrors):
+static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 	var count = stream.get_32()
 	for i in range(count):
 		var item = create(stream)
@@ -67,12 +67,12 @@ static func _init_from_stream(stream: ConfigStream, err: ConfigErrors):
 			match item.ename.strip_edges():
 				"SpecialSuit":
 					if SpecialSuit != null:
-						err.error("枚举重复: equip.jewelrysuit, " + str(item))
+						_errors.enum_dup("equip.jewelrysuit", str(item))
 					SpecialSuit = item
 				_:
-					err.error("枚举数据错误: equip.jewelrysuit, " + str(item))
+					_errors.enum_data_add("equip.jewelrysuit", str(item))
 	if SpecialSuit == null:
-		err.error("枚举缺失: equip.jewelrysuit, SpecialSuit")
+		_errors.enum_null("equip.jewelrysuit", "SpecialSuit")
 # 内部存储
 static var _data: Dictionary[int, DataEquip_Jewelrysuit] = {}
 # 静态枚举实例

@@ -88,13 +88,13 @@ public class StructModel {
     public String refName(ForeignKeySchema fk) {
         switch (fk.refKey()) {
             case RefKey.RefList ignored -> {
-                return upper1(fk.name()) + "Refs";
+                return "RefList" + upper1(fk.name());
             }
             case RefKey.RefSimple refSimple -> {
                 if (refSimple.nullable()) {
-                    return upper1(fk.name()) + "Ref";
+                    return "NullableRef" + upper1(fk.name());
                 } else {
-                    return upper1(fk.name()) + "Ref";
+                    return "Ref" + upper1(fk.name());
                 }
             }
         }
@@ -181,8 +181,7 @@ public class StructModel {
     public String dictionaryType(KeySchema keySchema, String valueType) {
         // 生成Dictionary类型声明，如 Dictionary[int, ClassName]
         if (keySchema.fieldSchemas().size() > 1) {
-            // 复合键无法指定类型参数
-            return "Dictionary";
+            throw new RuntimeException("gd script not support composite key");
         } else {
             String keyType = type(keySchema.fieldSchemas().getFirst().type());
             return "Dictionary[" + keyType + ", " + valueType + "]";
@@ -192,18 +191,7 @@ public class StructModel {
     public String actualParamsKeySelf(KeySchema keySchema) {
         // GDScript中，复合键使用Dictionary，单键直接返回值
         if (keySchema.fieldSchemas().size() > 1) {
-            // 复合键需要构建Dictionary
-            StringBuilder sb = new StringBuilder("{");
-            for (int i = 0; i < keySchema.fieldSchemas().size(); i++) {
-                if (i > 0) {
-                    sb.append(", ");
-                }
-                FieldSchema field = keySchema.fieldSchemas().get(i);
-                sb.append("\"").append(field.name()).append("\": ");
-                sb.append(lower1(field.name()));
-            }
-            sb.append("}");
-            return sb.toString();
+            throw new RuntimeException("gd script not support composite key");
         } else {
             return lower1(keySchema.fieldSchemas().getFirst().name());
         }

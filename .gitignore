@@ -97,3 +97,4 @@
 /app/.settings/org.eclipse.jdt.core.prefs
 /.vscode
 /example/gd/.godot
+/example/gd/config/**/*.uid

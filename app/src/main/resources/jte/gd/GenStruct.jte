@@ -69,7 +69,7 @@ static func create(stream: ConfigStream) -> ${model.name.className}:
 		return _data.values()
 
 	# 从流初始化
-	static func _init_from_stream(stream: ConfigStream, err: ConfigErrors):
+	static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 		@for(KeySchema uk : table.uniqueKeys())
 			${model.uniqueKeyMapName(uk)} = {}
 		@endfor
@@ -79,7 +79,7 @@ static func create(stream: ConfigStream) -> ${model.name.className}:
 			var item = create(stream)
 			_data[item.${model.primaryKeyFieldName()}] = item
 			@for(KeySchema uk : table.uniqueKeys())
-				${model.uniqueKeyMapName(uk)}[${model.actualParamsKeySelf(uk)}] = item
+				${model.uniqueKeyMapName(uk)}[item.${model.actualParamsKeySelf(uk)}] = item
 			@endfor
 
 			@if(table.entry() instanceof EntryType.EntryBase entryBase)
@@ -89,17 +89,17 @@ static func create(stream: ConfigStream) -> ${model.name.className}:
 						@for(String enumName : model._vTable.enumNames())
 							"${enumName}":
 								if ${model.upper1(enumName)} != null:
-									err.error("枚举重复: ${model.structural.name()}, " + str(item))
+									_errors.enum_dup("${model.structural.name()}", str(item))
 								${model.upper1(enumName)} = item
 						@endfor
 						_:
-							err.error("枚举数据错误: ${model.structural.name()}, " + str(item))
+							_errors.enum_data_add("${model.structural.name()}", str(item))
 			@endif
 
 		@if(table.entry() instanceof EntryType.EntryBase entryBase)
 			@for(String enumName : model._vTable.enumNames())
 				if ${model.upper1(enumName)} == null:
-					err.error("枚举缺失: ${model.structural.name()}, ${enumName}")
+					_errors.enum_null("${model.structural.name()}", "${enumName}")
 			@endfor
 		@endif
 
@@ -176,13 +176,13 @@ static func create(stream: ConfigStream) -> ${model.name.className}:
 				for v in ${refTable}.all():
 					@if(refList.keyNames().size() == 1)
 						!{var keyField = refList.keyNames().getFirst();}
-						!{var localField = model.upper1(fk.key().fields().getFirst());}
-						if v.${model.upper1(keyField)} == ${localField}:
+						!{var localField = fk.key().fields().getFirst();}
+						if v.${keyField} == ${localField}:
 							${refName}.append(v)
 					@else
 						!{var conditions = new java.util.ArrayList<String>();}
 						@for(int i = 0; i < refList.keyNames().size(); i++)
-							!{conditions.add("v." + model.upper1(refList.keyNames().get(i)) + " == " + model.upper1(fk.key().fields().get(i)));}
+							!{conditions.add("v." + refList.keyNames().get(i) + " == " + fk.key().fields().get(i));}
 						@endfor
 						if ${String.join(" and ", conditions)}:
 							${refName}.append(v)

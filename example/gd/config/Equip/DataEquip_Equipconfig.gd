@@ -40,7 +40,7 @@ static func all() -> Array[DataEquip_Equipconfig]:
 	return _data.values()
 
 # 从流初始化
-static func _init_from_stream(stream: ConfigStream, err: ConfigErrors):
+static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 	var count = stream.get_32()
 	for i in range(count):
 		var item = create(stream)
@@ -49,18 +49,18 @@ static func _init_from_stream(stream: ConfigStream, err: ConfigErrors):
 			match item.entry.strip_edges():
 				"Instance":
 					if Instance != null:
-						err.error("枚举重复: equip.equipconfig, " + str(item))
+						_errors.enum_dup("equip.equipconfig", str(item))
 					Instance = item
 				"Instance2":
 					if Instance2 != null:
-						err.error("枚举重复: equip.equipconfig, " + str(item))
+						_errors.enum_dup("equip.equipconfig", str(item))
 					Instance2 = item
 				_:
-					err.error("枚举数据错误: equip.equipconfig, " + str(item))
+					_errors.enum_data_add("equip.equipconfig", str(item))
 	if Instance == null:
-		err.error("枚举缺失: equip.equipconfig, Instance")
+		_errors.enum_null("equip.equipconfig", "Instance")
 	if Instance2 == null:
-		err.error("枚举缺失: equip.equipconfig, Instance2")
+		_errors.enum_null("equip.equipconfig", "Instance2")
 # 内部存储
 static var _data: Dictionary[String, DataEquip_Equipconfig] = {}
 # 静态枚举实例

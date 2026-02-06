@@ -14,12 +14,9 @@ var lootItemId: int:
 	get:
 		return lootItemId  # item
 # 外键引用属性
-var LootRef: DataOther_Lootitem:
+var RefAllLoot: DataOther_Loot:
 	get:
-		return LootRef
-var AllLootRef: DataOther_Loot:
-	get:
-		return AllLootRef
+		return RefAllLoot
 # 创建实例
 static func create(stream: ConfigStream) -> DataOther_Monster:
 	var instance = DataOther_Monster.new()
@@ -40,7 +37,7 @@ static func all() -> Array[DataOther_Monster]:
 	return _data.values()
 
 # 从流初始化
-static func _init_from_stream(stream: ConfigStream, err: ConfigErrors):
+static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 	var count = stream.get_32()
 	for i in range(count):
 		var item = create(stream)
@@ -49,11 +46,8 @@ static func _init_from_stream(stream: ConfigStream, err: ConfigErrors):
 static var _data: Dictionary[int, DataOther_Monster] = {}
 # 解析外键引用
 func _resolve(errors: ConfigErrors):
-	LootRef = DataOther_Lootitem.find(lootId, lootItemId)
-	if LootRef == null:
-		errors.ref_null("other.monster", "Loot")
-	AllLootRef = DataOther_Loot.find(lootId)
-	if AllLootRef == null:
+	RefAllLoot = DataOther_Loot.find(lootId)
+	if RefAllLoot == null:
 		errors.ref_null("other.monster", "AllLoot")
 static func _resolve_refs(errors: ConfigErrors):
 	for item in all():

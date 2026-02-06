@@ -17,9 +17,9 @@ var iconFile: String:
 	get:
 		return iconFile  # 礼包图标
 # 外键引用属性
-var Vipitem2vipcountMapRef: Dictionary[int, DataOther_Loot]:
+var RefVipitem2vipcountMap: Dictionary[int, DataOther_Loot]:
 	get:
-		return Vipitem2vipcountMapRef
+		return RefVipitem2vipcountMap
 # 创建实例
 static func create(stream: ConfigStream) -> DataOther_Signin:
 	var instance = DataOther_Signin.new()
@@ -47,7 +47,7 @@ static func all() -> Array[DataOther_Signin]:
 	return _data.values()
 
 # 从流初始化
-static func _init_from_stream(stream: ConfigStream, err: ConfigErrors):
+static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 	var count = stream.get_32()
 	for i in range(count):
 		var item = create(stream)
@@ -56,12 +56,12 @@ static func _init_from_stream(stream: ConfigStream, err: ConfigErrors):
 static var _data: Dictionary[int, DataOther_Signin] = {}
 # 解析外键引用
 func _resolve(errors: ConfigErrors):
-	Vipitem2vipcountMapRef = {}
+	RefVipitem2vipcountMap = {}
 	for k in vipitem2vipcountMap.keys():
 		var v = DataOther_Loot.find(vipitem2vipcountMap[k])
 		if v == null:
 			errors.ref_null("other.signin", "vipitem2vipcountMap")
-		Vipitem2vipcountMapRef[k] = v
+		RefVipitem2vipcountMap[k] = v
 static func _resolve_refs(errors: ConfigErrors):
 	for item in all():
 		item._resolve(errors)

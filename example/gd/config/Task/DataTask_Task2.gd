@@ -35,12 +35,12 @@ var testListInterface: Array[DataAi_Triggertick]:
 	get:
 		return testListInterface
 # 外键引用属性
-var TaskidRef: DataTask_Taskextraexp:
+var NullableRefTaskid: DataTask_Taskextraexp:
 	get:
-		return TaskidRef
-var NexttaskRef: DataTask_Task:
+		return NullableRefTaskid
+var NullableRefNexttask: DataTask_Task:
 	get:
-		return NexttaskRef
+		return NullableRefNexttask
 # 创建实例
 static func create(stream: ConfigStream) -> DataTask_Task2:
 	var instance = DataTask_Task2.new()
@@ -74,7 +74,7 @@ static func all() -> Array[DataTask_Task2]:
 	return _data.values()
 
 # 从流初始化
-static func _init_from_stream(stream: ConfigStream, err: ConfigErrors):
+static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 	var count = stream.get_32()
 	for i in range(count):
 		var item = create(stream)
@@ -85,8 +85,8 @@ static var _data: Dictionary[int, DataTask_Task2] = {}
 func _resolve(errors: ConfigErrors):
 	if completecondition != null:
 		completecondition._resolve(errors)
-	TaskidRef = DataTask_Taskextraexp.find(taskid)
-	NexttaskRef = DataTask_Task.find(nexttask)
+	NullableRefTaskid = DataTask_Taskextraexp.find(taskid)
+	NullableRefNexttask = DataTask_Task.find(nexttask)
 static func _resolve_refs(errors: ConfigErrors):
 	for item in all():
 		item._resolve(errors)

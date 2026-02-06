@@ -2,18 +2,20 @@ class_name ConfigErrors
 
 ## 配置加载错误收集器
 
-var _errors: Array[Dictionary] = []
-var _warns: Array[Dictionary] = []
+var _errors: Array[String] = []
+var _warns: Array[String] = []
 
 # 添加错误
 func error(msg: String):
-	_errors.append({"type": "Error", "message": msg})
-	print("ERROR: ", msg)
+	_errors.append(msg)
 
 # 添加警告
 func warn(msg: String):
-	_warns.append({"type": "Warn", "message": msg})
-	print("WARN: ", msg)
+	_warns.append(msg)
+
+# 未知配置表
+func config_unknown(config: String):
+	error("未知配置表: " + config)
 
 # 配置表缺失
 func config_null(config: String):
@@ -39,20 +41,6 @@ func enum_null(config: String, enum_name: String):
 func ref_null(config: String, field: String):
 	error("外键引用为空: " + config + ", " + field)
 
-# 检查是否有错误
-func has_errors() -> bool:
-	return _errors.size() > 0
-
-# 检查是否有警告
-func has_warns() -> bool:
-	return _warns.size() > 0
-
-# 获取所有消息（错误+警告）
-func get_messages() -> Array:
-	var all = []
-	all.append_array(_errors)
-	all.append_array(_warns)
-	return all
 
 # 获取错误数量
 func get_error_count() -> int:
@@ -65,6 +53,6 @@ func get_warn_count() -> int:
 # 打印所有消息
 func print_all():
 	for msg in _errors:
-		print("ERROR: ", msg.message)
+		print("ERROR: ", msg)
 	for msg in _warns:
-		print("WARN: ", msg.message)
+		print("WARN: ", msg)

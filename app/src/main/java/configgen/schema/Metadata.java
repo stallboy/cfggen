@@ -34,6 +34,15 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         return new Metadata(new LinkedHashMap<>(data));
     }
 
+    public Metadata copyWithoutState() {
+        LinkedHashMap<String, MetaValue> dataCopy = new LinkedHashMap<>(data);
+        for (String stateTag : stateTags) {
+            dataCopy.remove(stateTag);
+        }
+        return new Metadata(dataCopy);
+    }
+
+
     public Metadata {
         Objects.requireNonNull(data);
     }
@@ -67,7 +76,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     }
 
     public void putTag(String tag) {
-        if (reserved.contains(tag)) {
+        if (reservedTags.contains(tag)) {
             throw new IllegalArgumentException(String.format("'%s' reserved", tag));
         }
         MetaValue old = data.putLast(tag, TAG);
@@ -145,8 +154,9 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     private static final String MUST_FILL = "mustFill";
     private static final String ROOT = "root";
 
+    private static final Set<String> stateTags = Set.of(SPAN, HAS_REF, HAS_BLOCK, HAS_MAP, HAS_TEXT);
 
-    private static final Set<String> reserved = Set.of(COMMENT, SPAN, HAS_REF, HAS_BLOCK, HAS_MAP, HAS_TEXT,
+    private static final Set<String> reservedTags = Set.of(COMMENT, SPAN, HAS_REF, HAS_BLOCK, HAS_MAP, HAS_TEXT,
             JSON, NULLABLE, ENUM_REF, DEFAULT_IMPL, ENTRY, ENUM, COLUMN_MODE, PACK, SEP, FIX, BLOCK,
             LOWER_CASE, MUST_FILL, ROOT);
 

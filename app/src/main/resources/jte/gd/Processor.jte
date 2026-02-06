@@ -30,17 +30,17 @@ func load_from_stream(stream: ConfigStream):
 			@for(TableSchema table : model.tableSchemas)
 				"${table.name()}":
 					config_tables["${table.name()}"] = true
-					${model.fullName(table)}._init_from_stream(stream)
+					${model.fullName(table)}._init_from_stream(stream, _errors)
 				@endfor
 			_:
-				_errors.error("未知配置表: " + csv_name)
+				_errors.config_unknown(csv_name)
 				# 跳过未知表的数据
 				_skip_table_data(stream)
 
 	# 检查缺失的配置表
 	for table_name in config_tables.keys():
 		if not config_tables[table_name]:
-			_errors.error("配置表缺失: " + table_name)
+			_errors.config_null(table_name)
 
 	# 解析外键引用
 	@for(TableSchema table : model.tableSchemas)
@@ -55,11 +55,3 @@ func _skip_table_data(stream: ConfigStream):
 	for i in range(count):
 		# 跳过一行数据（简化处理，假设只有一列）
 		stream.get_string()
-
-# 检查是否有错误
-func has_errors() -> bool:
-	return _errors.has_errors()
-
-# 获取错误消息
-func get_error_messages() -> Array:
-	return _errors.get_messages()

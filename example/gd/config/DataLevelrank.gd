@@ -8,9 +8,9 @@ var rank: int:
 	get:
 		return rank  # 品质
 # 外键引用属性
-var RankRef: DataEquip_Rank:
+var RefRank: DataEquip_Rank:
 	get:
-		return RankRef
+		return RefRank
 # 创建实例
 static func create(stream: ConfigStream) -> DataLevelrank:
 	var instance = DataLevelrank.new()
@@ -20,6 +20,6 @@ static func create(stream: ConfigStream) -> DataLevelrank:
 
 # 解析外键引用
 func _resolve(errors: ConfigErrors):
-	RankRef = DataEquip_Rank.find(rank)
-	if RankRef == null:
+	RefRank = DataEquip_Rank.find(rank)
+	if RefRank == null:
 		errors.ref_null("LevelRank", "Rank")

@@ -154,7 +154,7 @@ public class CfgSchemaFilterByTag {
     private StructSchema filterStruct(StructSchema struct, boolean isImpl, Map<String, TableSchema> tableMap) {
         List<FieldSchema> filteredFields = filterFields(struct, isImpl);
         List<ForeignKeySchema> fks = filterForeignKeys(struct, filteredFields, tableMap);
-        return new StructSchema(struct.name(), struct.fmt(), struct.meta().copy(), filteredFields, fks);
+        return new StructSchema(struct.name(), struct.fmt(), struct.meta().copyWithoutState(), filteredFields, fks);
     }
 
     private InterfaceSchema filterInterface(InterfaceSchema sInterface, Map<String, TableSchema> tableMap) {
@@ -163,7 +163,7 @@ public class CfgSchemaFilterByTag {
             impls.add(filterStruct(impl, true, tableMap));
         }
         return new InterfaceSchema(sInterface.name(), sInterface.enumRef(), sInterface.defaultImpl(),
-                sInterface.fmt(), sInterface.meta().copy(), impls);
+                sInterface.fmt(), sInterface.meta().copyWithoutState(), impls);
     }
 
 
@@ -198,7 +198,7 @@ public class CfgSchemaFilterByTag {
         }
         List<KeySchema> uks = filterUniqKeys(table, filteredFields);
         return new TableSchema(table.name(), table.primaryKey().copy(), entry, table.isColumnMode(),
-                table.meta().copy(), filteredFields, List.of(), uks);
+                table.meta().copyWithoutState(), filteredFields, List.of(), uks);
     }
 
     /**
@@ -210,7 +210,7 @@ public class CfgSchemaFilterByTag {
         List<ForeignKeySchema> fks = filterForeignKeys(originalTable, table.fields(), phase1TableMap);
 
         return new TableSchema(table.name(), table.primaryKey(), table.entry(), table.isColumnMode(),
-                table.meta(), table.fields(), fks, table.uniqueKeys());
+                table.meta().copyWithoutState(), table.fields(), fks, table.uniqueKeys());
 
     }
 

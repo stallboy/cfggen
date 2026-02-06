@@ -28,7 +28,7 @@ static func all() -> Array[DataEquip_Rank]:
 	return _data.values()
 
 # 从流初始化
-static func _init_from_stream(stream: ConfigStream, err: ConfigErrors):
+static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 	var count = stream.get_32()
 	for i in range(count):
 		var item = create(stream)
@@ -37,36 +37,36 @@ static func _init_from_stream(stream: ConfigStream, err: ConfigErrors):
 			match item.rankName.strip_edges():
 				"white":
 					if White != null:
-						err.error("枚举重复: equip.rank, " + str(item))
+						_errors.enum_dup("equip.rank", str(item))
 					White = item
 				"green":
 					if Green != null:
-						err.error("枚举重复: equip.rank, " + str(item))
+						_errors.enum_dup("equip.rank", str(item))
 					Green = item
 				"blue":
 					if Blue != null:
-						err.error("枚举重复: equip.rank, " + str(item))
+						_errors.enum_dup("equip.rank", str(item))
 					Blue = item
 				"purple":
 					if Purple != null:
-						err.error("枚举重复: equip.rank, " + str(item))
+						_errors.enum_dup("equip.rank", str(item))
 					Purple = item
 				"yellow":
 					if Yellow != null:
-						err.error("枚举重复: equip.rank, " + str(item))
+						_errors.enum_dup("equip.rank", str(item))
 					Yellow = item
 				_:
-					err.error("枚举数据错误: equip.rank, " + str(item))
+					_errors.enum_data_add("equip.rank", str(item))
 	if White == null:
-		err.error("枚举缺失: equip.rank, white")
+		_errors.enum_null("equip.rank", "white")
 	if Green == null:
-		err.error("枚举缺失: equip.rank, green")
+		_errors.enum_null("equip.rank", "green")
 	if Blue == null:
-		err.error("枚举缺失: equip.rank, blue")
+		_errors.enum_null("equip.rank", "blue")
 	if Purple == null:
-		err.error("枚举缺失: equip.rank, purple")
+		_errors.enum_null("equip.rank", "purple")
 	if Yellow == null:
-		err.error("枚举缺失: equip.rank, yellow")
+		_errors.enum_null("equip.rank", "yellow")
 # 内部存储
 static var _data: Dictionary[int, DataEquip_Rank] = {}
 # 静态枚举实例

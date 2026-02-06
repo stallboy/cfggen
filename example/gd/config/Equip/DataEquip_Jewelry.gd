@@ -32,18 +32,18 @@ var description: String:
 	get:
 		return description  # 描述,根据Lvl和Rank来随机3个属性，第一个属性由Lvl,Rank行随机，剩下2个由Lvl和小于Rank的行里随机。Rank最小的时候都从Lvl，Rank里随机。
 # 外键引用属性
-var LvlRankRef: DataEquip_Jewelryrandom:
+var RefLvlRank: DataEquip_Jewelryrandom:
 	get:
-		return LvlRankRef
-var JTypeRef: DataEquip_Jewelrytype:
+		return RefLvlRank
+var RefJType: DataEquip_Jewelrytype:
 	get:
-		return JTypeRef
-var SuitIDRef: DataEquip_Jewelrysuit:
+		return RefJType
+var NullableRefSuitID: DataEquip_Jewelrysuit:
 	get:
-		return SuitIDRef
-var KeyAbilityRef: DataEquip_Ability:
+		return NullableRefSuitID
+var RefKeyAbility: DataEquip_Ability:
 	get:
-		return KeyAbilityRef
+		return RefKeyAbility
 # 创建实例
 static func create(stream: ConfigStream) -> DataEquip_Jewelry:
 	var instance = DataEquip_Jewelry.new()
@@ -68,7 +68,7 @@ static func all() -> Array[DataEquip_Jewelry]:
 	return _data.values()
 
 # 从流初始化
-static func _init_from_stream(stream: ConfigStream, err: ConfigErrors):
+static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 	var count = stream.get_32()
 	for i in range(count):
 		var item = create(stream)
@@ -79,15 +79,15 @@ static var _data: Dictionary[int, DataEquip_Jewelry] = {}
 func _resolve(errors: ConfigErrors):
 	if lvlRank != null:
 		lvlRank._resolve(errors)
-	LvlRankRef = DataEquip_Jewelryrandom.find(lvlRank)
-	if LvlRankRef == null:
+	RefLvlRank = DataEquip_Jewelryrandom.find(lvlRank)
+	if RefLvlRank == null:
 		errors.ref_null("equip.jewelry", "LvlRank")
-	JTypeRef = DataEquip_Jewelrytype.find(jType)
-	if JTypeRef == null:
+	RefJType = DataEquip_Jewelrytype.find(jType)
+	if RefJType == null:
 		errors.ref_null("equip.jewelry", "JType")
-	SuitIDRef = DataEquip_Jewelrysuit.find(suitID)
-	KeyAbilityRef = DataEquip_Ability.find(keyAbility)
-	if KeyAbilityRef == null:
+	NullableRefSuitID = DataEquip_Jewelrysuit.find(suitID)
+	RefKeyAbility = DataEquip_Ability.find(keyAbility)
+	if RefKeyAbility == null:
 		errors.ref_null("equip.jewelry", "KeyAbility")
 static func _resolve_refs(errors: ConfigErrors):
 	for item in all():

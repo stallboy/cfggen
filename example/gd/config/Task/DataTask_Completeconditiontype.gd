@@ -24,7 +24,7 @@ static func all() -> Array[DataTask_Completeconditiontype]:
 	return _data.values()
 
 # 从流初始化
-static func _init_from_stream(stream: ConfigStream, err: ConfigErrors):
+static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 	var count = stream.get_32()
 	for i in range(count):
 		var item = create(stream)
@@ -33,48 +33,48 @@ static func _init_from_stream(stream: ConfigStream, err: ConfigErrors):
 			match item.name.strip_edges():
 				"KillMonster":
 					if KillMonster != null:
-						err.error("枚举重复: task.completeconditiontype, " + str(item))
+						_errors.enum_dup("task.completeconditiontype", str(item))
 					KillMonster = item
 				"TalkNpc":
 					if TalkNpc != null:
-						err.error("枚举重复: task.completeconditiontype, " + str(item))
+						_errors.enum_dup("task.completeconditiontype", str(item))
 					TalkNpc = item
 				"CollectItem":
 					if CollectItem != null:
-						err.error("枚举重复: task.completeconditiontype, " + str(item))
+						_errors.enum_dup("task.completeconditiontype", str(item))
 					CollectItem = item
 				"ConditionAnd":
 					if ConditionAnd != null:
-						err.error("枚举重复: task.completeconditiontype, " + str(item))
+						_errors.enum_dup("task.completeconditiontype", str(item))
 					ConditionAnd = item
 				"Chat":
 					if Chat != null:
-						err.error("枚举重复: task.completeconditiontype, " + str(item))
+						_errors.enum_dup("task.completeconditiontype", str(item))
 					Chat = item
 				"TestNoColumn":
 					if TestNoColumn != null:
-						err.error("枚举重复: task.completeconditiontype, " + str(item))
+						_errors.enum_dup("task.completeconditiontype", str(item))
 					TestNoColumn = item
 				"aa":
 					if Aa != null:
-						err.error("枚举重复: task.completeconditiontype, " + str(item))
+						_errors.enum_dup("task.completeconditiontype", str(item))
 					Aa = item
 				_:
-					err.error("枚举数据错误: task.completeconditiontype, " + str(item))
+					_errors.enum_data_add("task.completeconditiontype", str(item))
 	if KillMonster == null:
-		err.error("枚举缺失: task.completeconditiontype, KillMonster")
+		_errors.enum_null("task.completeconditiontype", "KillMonster")
 	if TalkNpc == null:
-		err.error("枚举缺失: task.completeconditiontype, TalkNpc")
+		_errors.enum_null("task.completeconditiontype", "TalkNpc")
 	if CollectItem == null:
-		err.error("枚举缺失: task.completeconditiontype, CollectItem")
+		_errors.enum_null("task.completeconditiontype", "CollectItem")
 	if ConditionAnd == null:
-		err.error("枚举缺失: task.completeconditiontype, ConditionAnd")
+		_errors.enum_null("task.completeconditiontype", "ConditionAnd")
 	if Chat == null:
-		err.error("枚举缺失: task.completeconditiontype, Chat")
+		_errors.enum_null("task.completeconditiontype", "Chat")
 	if TestNoColumn == null:
-		err.error("枚举缺失: task.completeconditiontype, TestNoColumn")
+		_errors.enum_null("task.completeconditiontype", "TestNoColumn")
 	if Aa == null:
-		err.error("枚举缺失: task.completeconditiontype, aa")
+		_errors.enum_null("task.completeconditiontype", "aa")
 # 内部存储
 static var _data: Dictionary[int, DataTask_Completeconditiontype] = {}
 # 静态枚举实例

@@ -15,18 +15,3 @@ static func load_from_bytes(data: PackedByteArray):
 
 	var stream = ConfigStream.new(data)
 	_processor.load_from_stream(stream)
-
-# 检查是否有错误
-static func has_errors() -> bool:
-	return _processor != null and _processor.has_errors()
-
-# 获取错误消息
-static func get_error_messages() -> Array:
-	if _processor == null:
-		return []
-	return _processor.get_error_messages()
-
-# 打印所有消息
-static func print_errors():
-	if _processor != null:
-		_processor.get_errors().print_all()

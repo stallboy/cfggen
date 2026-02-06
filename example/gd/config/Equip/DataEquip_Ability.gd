@@ -24,7 +24,7 @@ static func all() -> Array[DataEquip_Ability]:
 	return _data.values()
 
 # 从流初始化
-static func _init_from_stream(stream: ConfigStream, err: ConfigErrors):
+static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 	var count = stream.get_32()
 	for i in range(count):
 		var item = create(stream)
@@ -33,48 +33,48 @@ static func _init_from_stream(stream: ConfigStream, err: ConfigErrors):
 			match item.name.strip_edges():
 				"attack":
 					if Attack != null:
-						err.error("枚举重复: equip.ability, " + str(item))
+						_errors.enum_dup("equip.ability", str(item))
 					Attack = item
 				"defence":
 					if Defence != null:
-						err.error("枚举重复: equip.ability, " + str(item))
+						_errors.enum_dup("equip.ability", str(item))
 					Defence = item
 				"hp":
 					if Hp != null:
-						err.error("枚举重复: equip.ability, " + str(item))
+						_errors.enum_dup("equip.ability", str(item))
 					Hp = item
 				"critical":
 					if Critical != null:
-						err.error("枚举重复: equip.ability, " + str(item))
+						_errors.enum_dup("equip.ability", str(item))
 					Critical = item
 				"critical_resist":
 					if Critical_resist != null:
-						err.error("枚举重复: equip.ability, " + str(item))
+						_errors.enum_dup("equip.ability", str(item))
 					Critical_resist = item
 				"block":
 					if Block != null:
-						err.error("枚举重复: equip.ability, " + str(item))
+						_errors.enum_dup("equip.ability", str(item))
 					Block = item
 				"break_armor":
 					if Break_armor != null:
-						err.error("枚举重复: equip.ability, " + str(item))
+						_errors.enum_dup("equip.ability", str(item))
 					Break_armor = item
 				_:
-					err.error("枚举数据错误: equip.ability, " + str(item))
+					_errors.enum_data_add("equip.ability", str(item))
 	if Attack == null:
-		err.error("枚举缺失: equip.ability, attack")
+		_errors.enum_null("equip.ability", "attack")
 	if Defence == null:
-		err.error("枚举缺失: equip.ability, defence")
+		_errors.enum_null("equip.ability", "defence")
 	if Hp == null:
-		err.error("枚举缺失: equip.ability, hp")
+		_errors.enum_null("equip.ability", "hp")
 	if Critical == null:
-		err.error("枚举缺失: equip.ability, critical")
+		_errors.enum_null("equip.ability", "critical")
 	if Critical_resist == null:
-		err.error("枚举缺失: equip.ability, critical_resist")
+		_errors.enum_null("equip.ability", "critical_resist")
 	if Block == null:
-		err.error("枚举缺失: equip.ability, block")
+		_errors.enum_null("equip.ability", "block")
 	if Break_armor == null:
-		err.error("枚举缺失: equip.ability, break_armor")
+		_errors.enum_null("equip.ability", "break_armor")
 # 内部存储
 static var _data: Dictionary[int, DataEquip_Ability] = {}
 # 静态枚举实例

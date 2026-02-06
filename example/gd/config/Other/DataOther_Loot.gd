@@ -14,12 +14,6 @@ var chanceList: Array[int]:
 	get:
 		return chanceList  # 掉落0件物品的概率
 # 外键引用属性
-var LootidRefs: Array[DataOther_Lootitem]:
-	get:
-		return LootidRefs
-var AnotherWayRefs: Array[DataOther_Lootitem]:
-	get:
-		return AnotherWayRefs
 # 创建实例
 static func create(stream: ConfigStream) -> DataOther_Loot:
 	var instance = DataOther_Loot.new()
@@ -40,7 +34,7 @@ static func all() -> Array[DataOther_Loot]:
 	return _data.values()
 
 # 从流初始化
-static func _init_from_stream(stream: ConfigStream, err: ConfigErrors):
+static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 	var count = stream.get_32()
 	for i in range(count):
 		var item = create(stream)
@@ -48,15 +42,3 @@ static func _init_from_stream(stream: ConfigStream, err: ConfigErrors):
 # 内部存储
 static var _data: Dictionary[int, DataOther_Loot] = {}
 # 解析外键引用
-func _resolve(errors: ConfigErrors):
-	LootidRefs = []
-	for v in DataOther_Lootitem.all():
-		if v.Lootid == Lootid:
-			LootidRefs.append(v)
-	AnotherWayRefs = []
-	for v in DataOther_Lootitem.all():
-		if v.Lootid == Lootid:
-			AnotherWayRefs.append(v)
-static func _resolve_refs(errors: ConfigErrors):
-	for item in all():
-		item._resolve(errors)
