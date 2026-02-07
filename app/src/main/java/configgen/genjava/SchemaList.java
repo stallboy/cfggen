@@ -1,29 +1,16 @@
 package configgen.genjava;
 
-public final class SchemaList implements Schema {
-    public final Schema ele;
+import org.jetbrains.annotations.NotNull;
 
-    public SchemaList(ConfigInput input) {
-        ele = Schema.create(input);
-    }
-
-    public SchemaList(Schema ele) {
-        this.ele = ele;
-    }
+public record SchemaList(Schema ele) implements Schema {
 
     @Override
     public boolean compatible(Schema other) {
-        return other instanceof SchemaList os && ele.compatible(os.ele);
+        return other instanceof SchemaList(Schema ele1) && ele.compatible(ele1);
     }
 
     @Override
-    public void write(ConfigOutput output) {
-        output.writeInt(LIST);
-        ele.write(output);
-    }
-
-    @Override
-    public String toString() {
+    public @NotNull String toString() {
         return "List<" + ele + ">";
     }
 

@@ -33,7 +33,7 @@ public final class GenJavaData extends GeneratorWithTag {
         LangSwitchable langSwitch = ctx.nullableLangSwitch();
         try (ConfigOutput output = new ConfigOutput(new DataOutputStream(new CachedFileOutputStream(file, 2048 * 1024)))) {
             Schema schema = SchemaParser.parse(cfgValue, langSwitch);
-            schema.write(output);
+            new SchemaSerializer(output).serialize(schema);
             LangSwitchableRuntime langSwitchRuntime = langSwitch != null ?
                     new LangSwitchableRuntime(langSwitch) : null;
             writeCfgValue(cfgValue, output, langSwitchRuntime);

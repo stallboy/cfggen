@@ -6,7 +6,6 @@ public sealed interface Schema permits SchemaBean, SchemaEnum, SchemaInterface, 
      * 参照example/javaload/LoadConfig.java
      */
     boolean compatible(Schema other);
-    void write(ConfigOutput output);
 
     int BOOL = 1;
     int INT = 2;
@@ -19,22 +18,4 @@ public sealed interface Schema permits SchemaBean, SchemaEnum, SchemaInterface, 
     int BEAN = 9;
     int INTERFACE = 10;
     int ENUM = 11;
-
-    static Schema create(ConfigInput input) {
-        int tag = input.readInt();
-        return switch (tag) {
-            case BOOL -> SchemaPrimitive.SBool;
-            case INT -> SchemaPrimitive.SInt;
-            case LONG -> SchemaPrimitive.SLong;
-            case FLOAT -> SchemaPrimitive.SFloat;
-            case STR -> SchemaPrimitive.SStr;
-            case REF -> new SchemaRef(input);
-            case LIST -> new SchemaList(input);
-            case MAP -> new SchemaMap(input);
-            case BEAN -> new SchemaBean(input);
-            case INTERFACE -> new SchemaInterface(input);
-            case ENUM -> new SchemaEnum(input);
-            default -> throw new ConfigErr("schema tag " + tag + " not supported");
-        };
-    }
 }

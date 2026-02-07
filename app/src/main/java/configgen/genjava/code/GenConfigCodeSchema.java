@@ -187,10 +187,10 @@ final class GenConfigCodeSchema {
                 throw new IllegalStateException();
             }
             case SchemaList schemaList -> {
-                return "new SchemaList(" + parse(schemaList.ele) + ")";
+                return "new SchemaList(" + parse(schemaList.ele()) + ")";
             }
             case SchemaMap schemaMap -> {
-                return "new SchemaMap(" + parse(schemaMap.key) + ", " + parse(schemaMap.value) + ")";
+                return "new SchemaMap(" + parse(schemaMap.key()) + ", " + parse(schemaMap.value()) + ")";
             }
             case SchemaPrimitive schemaPrimitive -> {
                 return "SchemaPrimitive." + schemaPrimitive.name();

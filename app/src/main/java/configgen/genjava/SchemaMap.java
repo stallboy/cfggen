@@ -1,36 +1,20 @@
 package configgen.genjava;
 
-public final class SchemaMap implements Schema {
-    public final Schema key;
-    public final Schema value;
+import org.jetbrains.annotations.NotNull;
 
-    public SchemaMap(ConfigInput input) {
-        key = Schema.create(input);
-        value = Schema.create(input);
-    }
-
-    public SchemaMap(Schema key, Schema value) {
-        this.key = key;
-        this.value = value;
-    }
+public record SchemaMap(Schema key,
+                        Schema value) implements Schema {
 
     @Override
     public boolean compatible(Schema other) {
-        if (!(other instanceof SchemaMap sm)) {
+        if (!(other instanceof SchemaMap(Schema key1, Schema value1))) {
             return false;
         }
-        return key.compatible(sm.key) && value.compatible(sm.value);
+        return key.compatible(key1) && value.compatible(value1);
     }
 
     @Override
-    public void write(ConfigOutput output) {
-        output.writeInt(MAP);
-        key.write(output);
-        value.write(output);
-    }
-
-    @Override
-    public String toString() {
+    public @NotNull String toString() {
         return "Map<" + key + ", " + value + ">";
     }
 }

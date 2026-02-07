@@ -14,14 +14,6 @@ public final class SchemaBean implements Schema {
     public final boolean isTable;
     public final List<Column> columns = new ArrayList<>();
 
-    public SchemaBean(ConfigInput input) {
-        isTable = input.readBool();
-        int size = input.readInt();
-        for (int i = 0; i < size; i++) {
-            columns.add(new Column(input.readStr(), Schema.create(input)));
-        }
-    }
-
     public SchemaBean(boolean isTable) {
         this.isTable = isTable;
     }
@@ -50,17 +42,6 @@ public final class SchemaBean implements Schema {
             }
         }
         return true;
-    }
-
-    @Override
-    public void write(ConfigOutput output) {
-        output.writeInt(BEAN);
-        output.writeBool(isTable);
-        output.writeInt(columns.size());
-        for (Column column : columns) {
-            output.writeStr(column.name);
-            column.schema.write(output);
-        }
     }
 
 }

@@ -14,19 +14,6 @@ public final class SchemaEnum implements Schema {
     public final boolean hasIntValue;
     public final Map<String, Integer> values = new LinkedHashMap<>();
 
-    public SchemaEnum(ConfigInput input) {
-        isEnumPart = input.readBool();
-        hasIntValue = input.readBool();
-        int size = input.readInt();
-        for (int i = 0; i < size; i++) {
-            if (hasIntValue) {
-                values.put(input.readStr(), input.readInt());
-            } else {
-                values.put(input.readStr(), 0);
-            }
-        }
-    }
-
     public SchemaEnum(boolean isEnumPart, boolean hasIntValue) {
         this.isEnumPart = isEnumPart;
         this.hasIntValue = hasIntValue;
@@ -74,20 +61,6 @@ public final class SchemaEnum implements Schema {
             }
         }
         return true;
-    }
-
-    @Override
-    public void write(ConfigOutput output) {
-        output.writeInt(ENUM);
-        output.writeBool(isEnumPart);
-        output.writeBool(hasIntValue);
-        output.writeInt(values.size());
-        for (Map.Entry<String, Integer> entry : values.entrySet()) {
-            output.writeStr(entry.getKey());
-            if (hasIntValue) {
-                output.writeInt(entry.getValue());
-            }
-        }
     }
 
 }

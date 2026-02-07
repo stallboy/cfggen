@@ -5,7 +5,6 @@ import java.util.*;
 
 public class JavaData {
 
-
     private final String javaDataFile;
 
     private SchemaInterface rootSchema;
@@ -33,7 +32,7 @@ public class JavaData {
 
     public void match(String match) {
         try (ConfigInput input = new ConfigInput(new DataInputStream(new BufferedInputStream(new FileInputStream(javaDataFile))))) {
-            rootSchema = (SchemaInterface) Schema.create(input);
+            rootSchema = (SchemaInterface) new SchemaDeserializer(input).deserialize();
 
             int tableCount = input.readInt();
             for (int i = 0; i < tableCount; i++) {
@@ -229,7 +228,7 @@ public class JavaData {
                 sb.append("(");
                 int cnt = input.readInt();
                 for (int i = 0; i < cnt; i++) {
-                    visitSchemaToReadData(schemaList.ele, input, sb);
+                    visitSchemaToReadData(schemaList.ele(), input, sb);
                     if (i < cnt - 1) {
                         sb.append(",");
                     }
@@ -240,9 +239,9 @@ public class JavaData {
                 sb.append("(");
                 int cnt = input.readInt();
                 for (int i = 0; i < cnt; i++) {
-                    visitSchemaToReadData(schemaMap.key, input, sb);
+                    visitSchemaToReadData(schemaMap.key(), input, sb);
                     sb.append("=");
-                    visitSchemaToReadData(schemaMap.value, input, sb);
+                    visitSchemaToReadData(schemaMap.value(), input, sb);
                     if (i < cnt - 1) {
                         sb.append(",");
                     }
