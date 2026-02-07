@@ -32,7 +32,7 @@ static func get_text(text_id: String) -> String:
 		return "<missing: " + text_id + ">"
 
 # 从流加载多语言数据
-static func load_from_stream(stream: ConfigStream, languages: Array):
+static func load_from_stream(stream: ConfigStream, languages: Array[String]):
 	# 清空现有数据
 	_texts.clear()
 
@@ -50,5 +50,5 @@ static func has_text(text_id: String) -> bool:
 	return _texts.has(text_id)
 
 # 获取所有文本ID
-static func get_all_text_ids() -> Array:
+static func get_all_text_ids() -> Array[String]:
 	return _texts.keys()

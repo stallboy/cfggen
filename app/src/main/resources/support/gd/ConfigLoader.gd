@@ -15,3 +15,16 @@ static func load_from_bytes(data: PackedByteArray):
 
 	var stream = ConfigStream.new(data)
 	_processor.load_from_stream(stream)
+
+# 从流加载配置（支持已读取 StringPool 的流）
+static func load_from_stream(stream: ConfigStream):
+	if _processor == null:
+		_processor = ConfigProcessor.new()
+
+	_processor.load_from_stream(stream)
+
+# 获取错误收集器
+static func get_errors() -> ConfigErrors:
+	if _processor == null:
+		_processor = ConfigProcessor.new()
+	return _processor.get_errors()

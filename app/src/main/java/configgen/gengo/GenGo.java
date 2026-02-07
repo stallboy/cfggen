@@ -4,20 +4,15 @@ import configgen.ctx.Context;
 import configgen.gen.Generator;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
-import configgen.gengo.model.CfgMgrModel;
-import configgen.gengo.model.InterfaceModel;
-import configgen.gengo.model.StructModel;
 import configgen.schema.*;
 import configgen.util.CachedFiles;
 import configgen.util.CachedIndentPrinter;
 import configgen.util.JteEngine;
 import configgen.value.CfgValue;
 
-import java.util.ArrayList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;

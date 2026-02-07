@@ -1,4 +1,4 @@
-package configgen.gencs;
+package configgen.genbytes;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-package configgen.gencs;
+package configgen.genbytes;
 
 import configgen.ctx.Context;
 import configgen.gen.GeneratorWithTag;
@@ -27,7 +27,7 @@ public class GenBytes extends GeneratorWithTag {
         super(parameter);
         file = new File(parameter.get("file", "config.bytes"));
         cipher = parameter.get("cipher", "");
-        isStringPool = parameter.has("stringpool");
+        isStringPool = parameter.has("stringPool");
 
     }
 

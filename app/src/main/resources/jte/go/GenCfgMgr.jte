@@ -1,12 +1,12 @@
 @import configgen.gengo.GenGo
 @import configgen.gengo.GoName
-@import configgen.gengo.model.CfgMgrModel
+@import configgen.gengo.CfgMgrModel
 @import configgen.value.CfgValue
 @import configgen.value.CfgValue.VTable
 @param CfgMgrModel model
 !{
-    String pkg = model.pkg;
-    CfgValue cfgValue = model.cfgValue;
+    String pkg = model.pkg();
+    CfgValue cfgValue = model.cfgValue();
 }
 package ${pkg}
 

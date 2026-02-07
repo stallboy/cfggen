@@ -94,7 +94,8 @@ func load_from_stream(stream: ConfigStream):
 			_:
 				_errors.config_unknown(csv_name)
 				# 跳过未知表的数据
-				_skip_table_data(stream)
+				assert(false, "Unknown config table: %s" % csv_name)
+				break
 
 	# 检查缺失的配置表
 	for table_name in config_tables.keys():

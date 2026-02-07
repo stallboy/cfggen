@@ -3,7 +3,7 @@ package configgen.gen;
 import configgen.ctx.*;
 import configgen.editorserver.EditorServer;
 import configgen.gen.ui.GuiLauncher;
-import configgen.gencs.GenBytes;
+import configgen.genbytes.GenBytes;
 import configgen.gencs.GenCs;
 import configgen.genjava.JavaDataReader;
 import configgen.gents.GenTs;

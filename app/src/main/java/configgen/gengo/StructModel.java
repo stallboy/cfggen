@@ -1,9 +1,6 @@
-package configgen.gengo.model;
+package configgen.gengo;
 
 import configgen.gen.Generator;
-import configgen.gencs.GenCs;
-import configgen.gengo.GenGo;
-import configgen.gengo.GoName;
 import configgen.schema.*;
 import configgen.value.CfgValue;
 
@@ -47,8 +44,7 @@ public class StructModel {
             case INT -> "int32";
             case LONG -> "int64";
             case FLOAT -> "float32";
-            case STRING -> "string";
-            case TEXT -> "string";
+            case STRING, TEXT -> "string";
             case StructRef structRef -> {
                 Fieldable fieldable = structRef.obj();
                 yield switch (fieldable) {

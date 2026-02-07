@@ -3,7 +3,7 @@
 @import configgen.gengo.GoName
 @import configgen.schema.*
 @import configgen.schema.FieldType.*
-@import configgen.gengo.model.StructModel
+@import configgen.gengo.StructModel
 @import configgen.value.CfgValue
 @import java.util.ArrayList
 @import java.util.List

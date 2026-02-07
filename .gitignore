@@ -98,3 +98,5 @@
 /.vscode
 /example/gd/.godot
 /example/gd/config/**/*.uid
+/example/gd/.claude
+/example/gd/.vscode
