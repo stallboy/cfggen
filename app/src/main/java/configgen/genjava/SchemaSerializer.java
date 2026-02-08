@@ -31,7 +31,7 @@ public final class SchemaSerializer {
 
     private void serializeRef(SchemaRef ref) {
         output.writeInt(Schema.REF);
-        output.writeStr(ref.type);
+        output.writeString(ref.type);
     }
 
     private void serializeList(SchemaList list) {
@@ -50,7 +50,7 @@ public final class SchemaSerializer {
         output.writeBool(bean.isTable);
         output.writeInt(bean.columns.size());
         for (SchemaBean.Column column : bean.columns) {
-            output.writeStr(column.name());
+            output.writeString(column.name());
             serialize(column.schema());
         }
     }
@@ -61,7 +61,7 @@ public final class SchemaSerializer {
         output.writeBool(enumSchema.hasIntValue);
         output.writeInt(enumSchema.values.size());
         for (var entry : enumSchema.values.entrySet()) {
-            output.writeStr(entry.getKey());
+            output.writeString(entry.getKey());
             if (enumSchema.hasIntValue) {
                 output.writeInt(entry.getValue());
             }
@@ -72,7 +72,7 @@ public final class SchemaSerializer {
         output.writeInt(Schema.INTERFACE);
         output.writeInt(interfaceSchema.implementations.size());
         for (var entry : interfaceSchema.implementations.entrySet()) {
-            output.writeStr(entry.getKey());
+            output.writeString(entry.getKey());
             serialize(entry.getValue());
         }
     }

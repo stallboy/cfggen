@@ -8,7 +8,7 @@ import configgen.gencs.GenCs;
 import configgen.genjava.JavaDataReader;
 import configgen.gents.GenTs;
 import configgen.gengo.GenGo;
-import configgen.genjava.GenJavaData;
+// GenJavaData 已被合并到 GenBytes 中
 import configgen.genjava.code.GenJavaCode;
 import configgen.genjson.GenJson;
 import configgen.genbyai.GenByAI;
@@ -74,7 +74,7 @@ public final class Main {
         Generators.addProvider("i18nbyid", GenI18nById::new);
 
         Generators.addProvider("java", GenJavaCode::new);
-        Generators.addProvider("javadata", GenJavaData::new);
+        // GenJavaData 已被合并到 GenBytes 中，使用 bytes 生成器替代
         Generators.addProvider("cs", GenCs::new);
         Generators.addProvider("bytes", GenBytes::new);
         Generators.addProvider("lua", GenLua::new);

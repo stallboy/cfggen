@@ -1,14 +1,14 @@
 package configgen.genjava;
 
-import java.io.Closeable;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 
+// 小端字节序（LE）
 public class ConfigOutput implements Closeable {
     private final DataOutputStream output;
 
-    public ConfigOutput(DataOutputStream output) {
-        this.output = output;
+    public ConfigOutput(OutputStream output) {
+        this.output = new DataOutputStream(output);
     }
 
     public void writeBool(boolean v) {
@@ -19,17 +19,12 @@ public class ConfigOutput implements Closeable {
         }
     }
 
-    public void write(byte[] b, int off, int len) {
-        try {
-            output.write(b, off, len);
-        } catch (IOException e) {
-            throw new ConfigErr(e);
-        }
-    }
-
     public void writeInt(int v) {
         try {
-            output.writeInt(v);
+            output.write(v);
+            output.write(v >>> 8);
+            output.write(v >>> 16);
+            output.write(v >>> 24);
         } catch (IOException e) {
             throw new ConfigErr(e);
         }
@@ -37,30 +32,47 @@ public class ConfigOutput implements Closeable {
 
     public void writeLong(long v) {
         try {
-            output.writeLong(v);
+            output.write((int) v);
+            output.write((int) (v >>> 8));
+            output.write((int) (v >>> 16));
+            output.write((int) (v >>> 24));
+            output.write((int) (v >>> 32));
+            output.write((int) (v >>> 40));
+            output.write((int) (v >>> 48));
+            output.write((int) (v >>> 56));
         } catch (IOException e) {
             throw new ConfigErr(e);
         }
     }
 
     public void writeFloat(float v) {
-        try {
-            output.writeFloat(v);
-        } catch (IOException e) {
-            throw new ConfigErr(e);
-        }
+        writeInt(Float.floatToIntBits(v));
     }
 
-    public void writeStr(String v) {
+    public void writeString(String v) {
+        byte[] bytes = v.getBytes(StandardCharsets.UTF_8);
+        writeInt(bytes.length);
+        writeRawBytes(bytes, 0, bytes.length);
+    }
+
+    public void writeRawBytes(byte[] data) {
+        writeRawBytes(data, 0, data.length);
+    }
+
+    public void writeRawBytes(byte[] data, int off, int len) {
         try {
-            output.writeUTF(v);
+            output.write(data, off, len);
         } catch (IOException e) {
             throw new ConfigErr(e);
         }
     }
 
     @Override
-    public void close() throws IOException {
-        output.close();
+    public void close() {
+        try {
+            output.close();
+        } catch (IOException e) {
+            throw new ConfigErr(e);
+        }
     }
 }
