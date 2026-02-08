@@ -46,7 +46,6 @@ public class GenJavaCode extends GeneratorWithTag {
 
             "ConfigErr.java",
             "ConfigInput.java",
-            "ConfigOutput.java",
 
             "JavaData.java",
     };

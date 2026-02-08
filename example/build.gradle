@@ -33,7 +33,7 @@ java {
 sourceSets {
     main {
         java {
-            srcDirs = ['java', 'javaload']
+            srcDirs = ['java']
         }
     }
 }

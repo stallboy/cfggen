@@ -71,7 +71,7 @@ public class LoadConfig {
     }
 
     public static void main(String[] args) throws IOException {
-        String fn = "config.data";
+        String fn = "java/config.bytes";
         load(fn);
         ScheduledExecutorService watcher = Executors.newSingleThreadScheduledExecutor();
         autoReload(watcher, fn, null);

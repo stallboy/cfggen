@@ -74,7 +74,6 @@ public final class Main {
         Generators.addProvider("i18nbyid", GenI18nById::new);
 
         Generators.addProvider("java", GenJavaCode::new);
-        // GenJavaData 已被合并到 GenBytes 中，使用 bytes 生成器替代
         Generators.addProvider("cs", GenCs::new);
         Generators.addProvider("bytes", GenBytes::new);
         Generators.addProvider("lua", GenLua::new);
