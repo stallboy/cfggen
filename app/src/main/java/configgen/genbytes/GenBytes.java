@@ -48,7 +48,7 @@ public class GenBytes extends GeneratorWithTag {
             langTextPool = new LangTextPool(List.of("default"));
         }
 
-        // 第一遍：收集数据
+        // schema
         ByteArrayOutputStream schemaContent = null;
         if (hasSchema) {
             // 序列化 schema（使用小端序 ConfigOutput）
@@ -63,11 +63,12 @@ public class GenBytes extends GeneratorWithTag {
         StringPool stringPool = new StringPool(); // 必然启用
         ByteArrayOutputStream content = new ByteArrayOutputStream(1024 * 1024);
         try (ConfigOutput valueStream = new ConfigOutput(content)) {
-            CfgValueSerializer serializer = new CfgValueSerializer(valueStream, langSwitchRuntime, stringPool, langTextPool);
+            CfgValueSerializer serializer = new CfgValueSerializer(valueStream,
+                    stringPool, langTextPool, langSwitchRuntime);
             serializer.serialize(cfgValue);
         }
 
-        // 第二遍：写入文件
+        // 写入文件
         if (isLangSeparated && langTextPool.getTextPools().length > 1) {
             // 分离模式：主文件 + 语言文件
             writeConfigBytes(schemaContent, stringPool, langTextPool, true, content);
@@ -88,7 +89,12 @@ public class GenBytes extends GeneratorWithTag {
             // 1. Schema（可选）
             if (schemaContent != null) {
                 // 序列化 schema
-                configOutput.writeRawBytes(schemaContent.toByteArray());
+                byte[] schemaBytes = schemaContent.toByteArray();
+                configOutput.writeInt(schemaBytes.length);
+                configOutput.writeRawBytes(schemaBytes);
+            } else {
+                // 表明 无schema
+                configOutput.writeInt(0);
             }
 
             // 2. StringPool

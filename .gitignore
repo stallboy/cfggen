@@ -100,3 +100,7 @@
 /example/gd/config/**/*.uid
 /example/gd/.claude
 /example/gd/.vscode
+/example/java/.gradle
+/example/java/.idea
+/example/java/build
+/example/java/out

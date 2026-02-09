@@ -13,9 +13,9 @@ public class Equipconfig {
 
     public static Equipconfig _create(configgen.genjava.ConfigInput input) {
         Equipconfig self = new Equipconfig();
-        self.entry = input.readStr();
+        self.entry = input.readStringInPool();
         self.stone_count_for_set = input.readInt();
-        self.draw_protect_name = input.readStr();
+        self.draw_protect_name = input.readStringInPool();
         self.broadcastid = input.readInt();
         self.broadcast_least_quality = input.readInt();
         self.week_reward_mailid = input.readInt();

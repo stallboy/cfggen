@@ -1,6 +1,9 @@
 package configgen.util;
 
-import java.io.File;
+import configgen.gen.Generator;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -63,4 +66,61 @@ public class FileUtils {
             }
         }
     }
+
+
+    public static void copyFileIfNotExist(String sourceFileInResources, String fallbackSourceFile,
+                                             Path dstFilePath, String dstEncoding) throws IOException {
+
+        if (Files.exists(dstFilePath)) {
+            CachedFiles.keepFile(dstFilePath);
+            return;
+        }
+
+        // 1. 优先尝试从类路径获取
+        InputStream is = Generator.class.getResourceAsStream(sourceFileInResources);
+
+        // 2. 找不到则尝试从物理磁盘查找源码
+        if (is == null) {
+            File physicalFile = findSourceFile(fallbackSourceFile);
+            if (physicalFile.exists()) {
+                is = new FileInputStream(physicalFile);
+            }
+        }
+
+        if (is == null) {
+            throw new FileNotFoundException("Could not find source: " + sourceFileInResources);
+        }
+
+        // 3. 使用 try-with-resources 确保所有流（包括 InputStream）都被正确关闭
+        try (InputStream autoCloseIs = is;
+             BufferedReader br = new BufferedReader(new InputStreamReader(autoCloseIs, StandardCharsets.UTF_8));
+             CachedIndentPrinter ps = new CachedIndentPrinter(dstFilePath, dstEncoding)) {
+
+            String line;
+            while ((line = br.readLine()) != null) {
+                ps.println(line);
+            }
+        }
+    }
+
+    private static File findSourceFile(String fallbackPath) {
+        try {
+            // 获取 Generator.class 所在的物理位置 (可能是 JAR 包路径，也可能是 target/classes 目录)
+            Path codePath = Path.of(Generator.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+
+            // 如果是在 IDE 中运行，通常在 project/target/classes
+            // 我们需要向上找，直到找到包含 src 的目录
+            Path current = codePath;
+            while (current != null) {
+                Path candidate = current.resolve(fallbackPath);
+                if (Files.exists(candidate)) {
+                    return candidate.toFile();
+                }
+                current = current.getParent();
+            }
+        } catch (Exception ignored) {
+        }
+        return new File(fallbackPath); // 最后的倔强：尝试当前工作目录
+    }
+
 }

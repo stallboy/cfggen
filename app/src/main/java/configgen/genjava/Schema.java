@@ -12,10 +12,11 @@ public sealed interface Schema permits SchemaBean, SchemaEnum, SchemaInterface, 
     int LONG = 3;
     int FLOAT = 4;
     int STR = 5;
-    int REF = 6;
-    int LIST = 7;
-    int MAP = 8;
-    int BEAN = 9;
-    int INTERFACE = 10;
-    int ENUM = 11;
+    int TEXT = 6;
+    int REF = 7;
+    int LIST = 8;
+    int MAP = 9;
+    int BEAN = 10;
+    int INTERFACE = 11;
+    int ENUM = 12;
 }

@@ -26,7 +26,7 @@ public class TestDefaultBean {
         TestDefaultBean self = new TestDefaultBean();
         self.testInt = input.readInt();
         self.testBool = input.readBool();
-        self.testString = input.readStr();
+        self.testString = input.readStringInPool();
         self.testSubBean = config.Position._create(input);
         {
             int c = input.readInt();
@@ -57,7 +57,7 @@ public class TestDefaultBean {
             } else {
                 self.testMap = new java.util.LinkedHashMap<>(c);
                 for (; c > 0; c--) {
-                    self.testMap.put(input.readInt(), input.readStr());
+                    self.testMap.put(input.readInt(), input.readStringInPool());
                 }
             }
         }

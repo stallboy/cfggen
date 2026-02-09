@@ -1,7 +1,5 @@
 package configgen.genjava;
 
-import org.jetbrains.annotations.NotNull;
-
 public record SchemaList(Schema ele) implements Schema {
 
     @Override
@@ -10,7 +8,7 @@ public record SchemaList(Schema ele) implements Schema {
     }
 
     @Override
-    public @NotNull String toString() {
+    public String toString() {
         return "List<" + ele + ">";
     }
 

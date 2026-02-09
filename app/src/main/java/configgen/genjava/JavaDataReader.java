@@ -3,6 +3,8 @@ package configgen.genjava;
 import configgen.gen.Parameter;
 import configgen.gen.Tool;
 
+import java.io.IOException;
+
 public class JavaDataReader extends Tool {
     private final String javaDataFile;
     private final String match;
@@ -17,7 +19,11 @@ public class JavaDataReader extends Tool {
     public void call() {
         JavaData jd = new JavaData(javaDataFile);
         if (match == null) {
-            jd.loop();
+            try {
+                jd.loop();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         } else {
             jd.match(match);
         }

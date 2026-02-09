@@ -11,8 +11,8 @@ public class Rank_Detail {
     public static Rank_Detail _create(configgen.genjava.ConfigInput input) {
         Rank_Detail self = new Rank_Detail();
         self.rankID = input.readInt();
-        self.rankName = input.readStr();
-        self.rankShowName = input.readStr();
+        self.rankName = input.readStringInPool();
+        self.rankShowName = input.readStringInPool();
         return self;
     }
 

@@ -2,6 +2,7 @@
 import config.ConfigCodeSchema;
 import config.ConfigMgr;
 import config.ConfigMgrLoader;
+import config.task.Task;
 import configgen.genjava.JavaData;
 import configgen.genjava.ConfigInput;
 import configgen.genjava.Schema;
@@ -24,7 +25,7 @@ public class LoadConfig {
     public static void load(String configdata) throws IOException {
         Schema codeSchema = ConfigCodeSchema.getCodeSchema();
         try (ConfigInput input = new ConfigInput(new DataInputStream(new BufferedInputStream(new FileInputStream(configdata))))) {
-            Schema dataSchema = Schema.create(input);
+            Schema dataSchema = ConfigMgrLoader.loadSchema(input);
             boolean compatible = codeSchema.compatible(dataSchema);
             if (compatible) {
                 ConfigMgr mgr = ConfigMgrLoader.load(input);
@@ -71,12 +72,14 @@ public class LoadConfig {
     }
 
     public static void main(String[] args) throws IOException {
-        String fn = "java/config.bytes";
+        String fn = "config.bytes";
         load(fn);
-        ScheduledExecutorService watcher = Executors.newSingleThreadScheduledExecutor();
-        autoReload(watcher, fn, null);
-        System.out.println("read ok");
-        new JavaData(fn).loop();
-        watcher.close();
+//        ScheduledExecutorService watcher = Executors.newSingleThreadScheduledExecutor();
+//        autoReload(watcher, fn, null);
+//        System.out.println("read ok");
+        System.out.println(Task.get(1));
+//        new JavaData(fn).loop();
+        new JavaData(fn).match("eq");
+//        watcher.close();
     }
 }

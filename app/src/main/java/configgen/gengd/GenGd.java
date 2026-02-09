@@ -7,12 +7,14 @@ import configgen.i18n.LangSwitchable;
 import configgen.schema.*;
 import configgen.util.CachedFiles;
 import configgen.util.CachedIndentPrinter;
+import configgen.util.FileUtils;
 import configgen.util.JteEngine;
 import configgen.value.CfgValue;
 
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -20,18 +22,26 @@ import static configgen.value.CfgValue.VTable;
 
 public class GenGd extends GeneratorWithTag {
     public final String prefix;
-    public final String encoding;
     public final Path dstDir;
     public CfgSchema cfgSchema;
     public boolean isLangSwitch;
+
+    private static final String ENCODING = "UTF-8";
+    private static final List<String> COPY_FILES = List.of(
+            "ConfigStream.gd",
+            "ConfigLoader.gd",
+            "ConfigErrors.gd"
+    );
+    private static final String TEXT_MGR_FILE = "TextMgr.gd";
+
 
     public GenGd(Parameter parameter) {
         super(parameter);
         String dir = parameter.get("dir", "config");
         prefix = parameter.get("prefix", "Data");
-        encoding = parameter.get("encoding", "UTF-8");
         dstDir = Paths.get(dir);
     }
+
 
     @Override
     public void generate(Context ctx) throws IOException {
@@ -39,12 +49,19 @@ public class GenGd extends GeneratorWithTag {
         cfgSchema = cfgValue.schema();
 
         isLangSwitch = ctx.nullableLangSwitch() != null;
-        copySupportFileIfNotExist("gd/ConfigStream.gd", "ConfigStream.gd", dstDir, encoding);
-        copySupportFileIfNotExist("gd/ConfigLoader.gd", "ConfigLoader.gd", dstDir, encoding);
-        copySupportFileIfNotExist("gd/ConfigErrors.gd", "ConfigErrors.gd", dstDir, encoding);
+
+
+        List<String> needCopyFiles = new ArrayList<>(4);
+        needCopyFiles.addAll(COPY_FILES);
         if (isLangSwitch) {
-            copySupportFileIfNotExist("gd/TextMgr.gd", "TextMgr.gd", dstDir, encoding);
+            needCopyFiles.add(TEXT_MGR_FILE);
         }
+        for (String fn : needCopyFiles) {
+            FileUtils.copyFileIfNotExist("support/gd/" + fn,
+                    "src/main/resources/support/gd/" + fn,
+                    dstDir.resolve(fn), ENCODING);
+        }
+
         generateProcessor(cfgSchema);
 
         for (Fieldable fieldable : cfgSchema.sortedFieldables()) {
@@ -74,7 +91,7 @@ public class GenGd extends GeneratorWithTag {
 
     private void generateInterface(InterfaceSchema sInterface) {
         InterfaceModel model = new InterfaceModel(this, sInterface);
-        try (CachedIndentPrinter ps = new CachedIndentPrinter(dstDir.resolve(model.name.path), encoding)) {
+        try (CachedIndentPrinter ps = new CachedIndentPrinter(dstDir.resolve(model.name.path), ENCODING)) {
             JteEngine.render("gd/GenInterface.jte", model, ps);
         }
     }
@@ -89,19 +106,19 @@ public class GenGd extends GeneratorWithTag {
 
     private void generateStructOrTable(Structural structural, CfgValue.VTable nullableVTable) {
         StructModel model = new StructModel(this, structural, nullableVTable);
-        try (CachedIndentPrinter ps = new CachedIndentPrinter(dstDir.resolve(model.name.path), encoding)) {
+        try (CachedIndentPrinter ps = new CachedIndentPrinter(dstDir.resolve(model.name.path), ENCODING)) {
             JteEngine.render("gd/GenStruct.jte", model, ps);
         }
     }
 
     private void generateProcessor(CfgSchema cfgSchema) {
-        try (CachedIndentPrinter ps = new CachedIndentPrinter(dstDir.resolve("ConfigProcessor.gd"), encoding)) {
+        try (CachedIndentPrinter ps = new CachedIndentPrinter(dstDir.resolve("ConfigProcessor.gd"), ENCODING)) {
             JteEngine.render("gd/Processor.jte", new ProcessorModel(this, cfgSchema.sortedTables()), ps);
         }
     }
 
     private void generateText(LangSwitchable langSwitch) {
-        try (CachedIndentPrinter ps = new CachedIndentPrinter(dstDir.resolve("ConfigText.gd"), encoding)) {
+        try (CachedIndentPrinter ps = new CachedIndentPrinter(dstDir.resolve("ConfigText.gd"), ENCODING)) {
             List<String> languages = langSwitch.languages();
             JteEngine.render("gd/Text.jte", Map.of("languages", languages), ps);
         }

@@ -14,7 +14,7 @@ public class TestPackBean {
 
     public static TestPackBean _create(configgen.genjava.ConfigInput input) {
         TestPackBean self = new TestPackBean();
-        self.name = input.readStr();
+        self.name = input.readStringInPool();
         self.iRange = config.Range._create(input);
         return self;
     }

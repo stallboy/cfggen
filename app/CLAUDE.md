@@ -95,6 +95,179 @@ gradle clean
    └── 复制支持文件 (Generator.copySupportFileIfNotExist)
 ```
 
+## Bytes 文件格式
+
+**`configgen.genbytes.GenBytes`** 生成二进制配置文件，支持运行时动态加载和多语言。
+
+### 文件结构
+
+```
+┌─────────────────────────────────────┐
+│ 1. Schema 长度标记（int）            │ ← 0 = 无schema，>0 = 有schema
+│    [若长度>0] Schema 数据             │
+├─────────────────────────────────────┤
+│ 2. StringPool（字符串池）             │
+├─────────────────────────────────────┤
+│ 3. LangTextPool（多语言文本池）       │
+├─────────────────────────────────────┤
+│ 4. 表数据（所有配置表）               │
+└─────────────────────────────────────┘
+```
+
+### 详细格式
+
+#### 1. Schema 部分
+```
+[int] schemaLength  // 小端序，0 = 无schema，>0 = schema字节数
+[bytes] schema 数据（schemaLength 字节，仅当长度>0时）
+```
+
+#### 2. StringPool
+```
+[int] 字符串数量
+{
+  [int] 字符串长度（UTF-8字节数，小端序）
+  [bytes] UTF-8字符串
+} * 字符串数量
+```
+
+用于去重存储普通字符串（类型名、字段名、接口子类型等）。
+
+#### 3. LangTextPool
+```
+[int] 语言数量
+{
+  [string] 语言名称（int长度 + UTF-8字节）
+  [int] 文本索引数组长度
+  {
+    [int] 文本索引（指向该语言的StringPool）
+  } * 索引数量
+  [StringPool] 该语言的字符串池
+} * 语言数量
+```
+
+每个语言独立的文本池，支持多语言配置的文本字段。
+
+#### 4. 表数据
+```
+[int] 表数量
+{
+  [string] 表名（int长度 + UTF-8字节）
+  [int] 表数据字节长度
+  {
+    [int] 记录数量
+    {
+      // 每条记录按 schema 递归序列化
+      [bool] boolean 值（1字节）
+      [int] int 值（4字节小端序）
+      [long] long 值（8字节小端序）
+      [float] float 值（4字节，IEEE 754，小端序）
+      [int] StringPool 索引（字符串引用）
+      [int] LangTextPool 索引（文本引用）
+      // 复杂类型递归处理
+    } * 记录数量
+  }
+} * 表数量
+```
+
+### 字节序规范
+
+**所有数值类型使用小端序（Little-Endian）**：
+- `int`: 4字节，低字节在前
+- `long`: 8字节，低字节在前
+- `float`: 4字节（IEEE 754），转int后按小端序写入
+- `string`: 先写长度（int，4字节小端序），再写UTF-8字节
+
+### 关键类
+
+| 类名 | 职责 |
+|------|------|
+| `GenBytes` | 主生成器，协调各组件 |
+| `CfgValueSerializer` | 序列化配置值 |
+| `MultiLangVTableSerializer` | 多语言表序列化 |
+| `StringPool` | 字符串去重池 |
+| `TextPool` | 单语言文本池 |
+| `LangTextPool` | 多语言文本池管理 |
+| `SchemaSerializer` | Schema序列化器 |
+| `SchemaDeserializer` | Schema反序列化器 |
+| `ConfigOutput` | 小端序输出流 |
+| `ConfigInput` | 小端序输入流 |
+
+### 使用示例
+
+#### 生成
+```bash
+java -jar cfggen.jar -datadir example -gen bytes,dir=output,schema=true,langSeparated=true
+```
+
+参数：
+- `dir`: 输出目录（默认.）
+- `cipher`: XOR加密密钥（可选）
+- `schema`: 是否包含schema（添加后包含）
+- `langSeparated`: 是否分离多语言文件（添加后分离）
+
+#### 输出模式
+
+**合并模式（默认）**：
+```
+config.bytes  // 包含所有数据
+```
+
+**分离模式（langSeparated=true）**：
+```
+config.bytes    // 主文件：schema + StringPool + 第1语言文本 + 表数据
+zh-CN.bytes     // 中文文本池
+en-US.bytes     // 英文文本池
+ja.bytes        // 日文文本池
+...
+```
+
+### 读取示例（伪代码）
+
+```java
+// 1. 读取文件头
+int schemaLength = readInt();  // 小端序
+if (schemaLength > 0) {
+    byte[] schemaBytes = readBytes(schemaLength);
+    Schema schema = deserializeSchema(schemaBytes);
+}
+
+// 2. 读取 StringPool
+int stringCount = readInt();
+String[] strings = new String[stringCount];
+for (int i = 0; i < stringCount; i++) {
+    int len = readInt();
+    strings[i] = new String(readBytes(len), UTF_8);
+}
+
+// 3. 读取 LangTextPool
+int langCount = readInt();
+for (int i = 0; i < langCount; i++) {
+    String langName = readString();
+    // ... 读取该语言的文本池
+}
+
+// 4. 读取表数据
+int tableCount = readInt();
+for (int i = 0; i < tableCount; i++) {
+    String tableName = readString();
+    int tableDataLen = readInt();
+    // ... 读取表记录
+}
+```
+
+### 扩展其他语言
+
+实现新的 bytes 读取器需要：
+1. 实现小端序的输入/输出流
+2. 按照上述格式解析各部分
+3. 实现 Schema 的反序列化（可选）
+4. 根据Schema动态构造数据结构
+
+参考现有实现：
+- Java序列化：`configgen.genbytes.*`
+- Java反序列化：待实现（可参考 SchemaDeserializer）
+
 ## 使用方式
 
 ### 基本用法

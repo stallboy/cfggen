@@ -78,7 +78,7 @@ jar {
 }
 
 tasks.register('fatJar', Jar) {
-    archiveFileName = 'configgen.jar'
+    archiveFileName = 'cfggen.jar'
     manifest.from jar.manifest
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
@@ -125,10 +125,10 @@ tasks.register('copyGenJavaSources', Copy) {
             'SchemaMap.java',
             'SchemaPrimitive.java',
             'SchemaRef.java',
+            'SchemaDeserializer.java',
 
             'ConfigErr.java',
             'ConfigInput.java',
-            'ConfigOutput.java',
 
             'JavaData.java',
     ]

@@ -30,15 +30,15 @@ public class Jewelry {
     public static Jewelry _create(configgen.genjava.ConfigInput input) {
         Jewelry self = new Jewelry();
         self.iD = input.readInt();
-        self.name = input.readStr();
-        self.iconFile = input.readStr();
+        self.name = input.readStringInPool();
+        self.iconFile = input.readStringInPool();
         self.lvlRank = config.LevelRank._create(input);
-        self.jType = input.readStr();
+        self.jType = input.readStringInPool();
         self.suitID = input.readInt();
         self.keyAbility = input.readInt();
         self.keyAbilityValue = input.readInt();
         self.salePrice = input.readInt();
-        self.description = input.readStr();
+        self.description = input.readStringInPool();
         return self;
     }
 

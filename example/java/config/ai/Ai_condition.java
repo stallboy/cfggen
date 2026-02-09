@@ -13,7 +13,7 @@ public class Ai_condition {
     public static Ai_condition _create(configgen.genjava.ConfigInput input) {
         Ai_condition self = new Ai_condition();
         self.iD = input.readInt();
-        self.desc = input.readStr();
+        self.desc = input.readStringInPool();
         self.formulaID = input.readInt();
         {
             int c = input.readInt();

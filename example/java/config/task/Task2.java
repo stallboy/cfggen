@@ -28,7 +28,7 @@ public class Task2 {
             } else {
                 self.name = new java.util.ArrayList<>(c);
                 for (; c > 0; c--) {
-                    self.name.add(input.readStr());
+                    self.name.add(input.readTextInPool());
                 }
             }
         }
@@ -36,7 +36,7 @@ public class Task2 {
         self.completecondition = config.task.completecondition.Completecondition._create(input);
         self.exp = input.readInt();
         self.testBool = input.readBool();
-        self.testString = input.readStr();
+        self.testString = input.readStringInPool();
         self.testStruct = config.Position._create(input);
         {
             int c = input.readInt();

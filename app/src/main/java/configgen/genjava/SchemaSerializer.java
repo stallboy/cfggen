@@ -26,6 +26,7 @@ public final class SchemaSerializer {
             case SLong -> Schema.LONG;
             case SFloat -> Schema.FLOAT;
             case SStr -> Schema.STR;
+            case SText -> Schema.TEXT;
         });
     }
 

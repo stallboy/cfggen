@@ -16,11 +16,11 @@ public class Taskextraexp {
         Taskextraexp self = new Taskextraexp();
         self.taskid = input.readInt();
         self.extraexp = input.readInt();
-        self.test1 = input.readStr();
-        self.test2 = input.readStr();
-        self.fielda = input.readStr();
-        self.fieldb = input.readStr();
-        self.fieldc = input.readStr();
+        self.test1 = input.readStringInPool();
+        self.test2 = input.readStringInPool();
+        self.fielda = input.readStringInPool();
+        self.fieldb = input.readStringInPool();
+        self.fieldc = input.readStringInPool();
         return self;
     }
 

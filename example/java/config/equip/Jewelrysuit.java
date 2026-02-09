@@ -18,8 +18,8 @@ public class Jewelrysuit {
     public static Jewelrysuit _create(configgen.genjava.ConfigInput input) {
         Jewelrysuit self = new Jewelrysuit();
         self.suitID = input.readInt();
-        self.ename = input.readStr();
-        self.name = input.readStr();
+        self.ename = input.readStringInPool();
+        self.name = input.readTextInPool();
         self.ability1 = input.readInt();
         self.ability1Value = input.readInt();
         self.ability2 = input.readInt();

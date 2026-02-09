@@ -4,6 +4,7 @@ class_name ConfigStream
 
 var _data: PackedByteArray
 var _pos: int = 0
+var _string_pool: Array[String] = []  # 字符串池，用于去重
 
 func _init(data: PackedByteArray):
 	_data = data
@@ -15,8 +16,26 @@ func read_cfg() -> String:
 		return ""
 	return s
 
+# 读取字符串池（可选，如果二进制数据使用了 stringpool）
+func read_string_pool():
+	"""读取字符串池，必须在 read_string() 之前调用"""
+	var count = read_32()
+	_string_pool = []
+	for i in range(count):
+		_string_pool.append(read_string_impl())
+
 # 读取字符串
 func read_string() -> String:
+	"""读取字符串，如果已读取 stringpool 则从池中获取索引"""
+	if not _string_pool.is_empty():
+		var index = read_32()
+		return _string_pool[index]
+	else:
+		return read_string_impl()
+
+# 实际的字符串读取实现
+func read_string_impl() -> String:
+	"""实际的字符串读取实现"""
 	var length = read_32()
 	if length <= 0:
 		return ""

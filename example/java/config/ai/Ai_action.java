@@ -13,7 +13,7 @@ public class Ai_action {
     public static Ai_action _create(configgen.genjava.ConfigInput input) {
         Ai_action self = new Ai_action();
         self.iD = input.readInt();
-        self.desc = input.readStr();
+        self.desc = input.readStringInPool();
         self.formulaID = input.readInt();
         {
             int c = input.readInt();

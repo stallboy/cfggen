@@ -8,24 +8,15 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class MultiLangVTableSerializer implements ForeachValue.ValueVisitor {
-    private final @NotNull ConfigOutput output;
-    private final @NotNull LangSwitchableRuntime langSwitchRuntime;
-    private final @NotNull StringPool stringPool;
-    private final @NotNull LangTextPool langTextPool;
-
-    public MultiLangVTableSerializer(@NotNull ConfigOutput output,
-                                     @NotNull LangSwitchableRuntime langSwitchRuntime,
-                                     @NotNull StringPool stringPool,
-                                     @NotNull LangTextPool langTextPool) {
-        this.output = output;
-        this.langSwitchRuntime = langSwitchRuntime;
-        this.stringPool = stringPool;
-        this.langTextPool = langTextPool;
-    }
+public record MultiLangTableSerializer(@NotNull ConfigOutput output,
+                                       @NotNull StringPool stringPool,
+                                       @NotNull LangTextPool langTextPool,
+                                       @NotNull LangSwitchableRuntime langSwitchRuntime)
+        implements ForeachValue.ValueVisitor {
 
 
     public void serialize(CfgValue.VTable vTable) {
+        output.writeInt(vTable.valueList().size());
         ForeachValue.foreachVTable(this, vTable);
     }
 
@@ -68,7 +59,7 @@ public class MultiLangVTableSerializer implements ForeachValue.ValueVisitor {
 
     @Override
     public void visitVStruct(CfgValue.VStruct vStruct, CfgValue.Value pk, List<String> fieldChain) {
-
+        // ignore
     }
 
     private void writeStringInPool(String v) {

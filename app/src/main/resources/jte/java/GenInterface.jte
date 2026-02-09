@@ -19,12 +19,13 @@ public interface ${model.className} {
     @endif
 
     static ${model.className} _create(configgen.genjava.ConfigInput input) {
-        switch (input.readStr()) {
+        String tag = input.readStringInPool();
+        switch (tag) {
             @for(InterfaceModel.Impl impl : model.impls)
             case "${impl.name()}":
                 return ${impl.fullName()}._create(input);
             @endfor
         }
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException(tag + " not found");
     }
 }

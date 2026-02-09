@@ -1,4 +1,5 @@
-chcp 65001
+cd app
 call gradle fatjar
-copy /B /Y app\build\libs\configgen.jar cfggen.jar
+cd ..
+copy /B /Y app\build\libs\cfggen.jar cfggen.jar
 pause

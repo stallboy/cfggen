@@ -23,7 +23,7 @@ public class Task {
             } else {
                 self.name = new java.util.ArrayList<>(c);
                 for (; c > 0; c--) {
-                    self.name.add(input.readStr());
+                    self.name.add(input.readTextInPool());
                 }
             }
         }

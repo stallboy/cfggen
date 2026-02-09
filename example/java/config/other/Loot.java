@@ -14,8 +14,8 @@ public class Loot {
     public static Loot _create(configgen.genjava.ConfigInput input) {
         Loot self = new Loot();
         self.lootid = input.readInt();
-        self.ename = input.readStr();
-        self.name = input.readStr();
+        self.ename = input.readStringInPool();
+        self.name = input.readTextInPool();
         {
             int c = input.readInt();
             if (c == 0) {

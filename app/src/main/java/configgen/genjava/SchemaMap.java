@@ -1,7 +1,5 @@
 package configgen.genjava;
 
-import org.jetbrains.annotations.NotNull;
-
 public record SchemaMap(Schema key,
                         Schema value) implements Schema {
 
@@ -14,7 +12,7 @@ public record SchemaMap(Schema key,
     }
 
     @Override
-    public @NotNull String toString() {
+    public String toString() {
         return "Map<" + key + ", " + value + ">";
     }
 }

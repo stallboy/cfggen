@@ -43,7 +43,7 @@ public class Signin {
             }
         }
         self.viplevel = input.readInt();
-        self.iconFile = input.readStr();
+        self.iconFile = input.readStringInPool();
         return self;
     }
 

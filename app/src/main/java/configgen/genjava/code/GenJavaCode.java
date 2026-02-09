@@ -5,10 +5,7 @@ import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
 import configgen.genjava.GenJavaUtil;
 import configgen.schema.*;
-import configgen.util.CachedFiles;
-import configgen.util.CachedIndentPrinter;
-import configgen.util.JteEngine;
-import configgen.util.Logger;
+import configgen.util.*;
 import configgen.value.CfgValue;
 
 import java.io.File;
@@ -33,7 +30,7 @@ public class GenJavaCode extends GeneratorWithTag {
     private final int schemaNumPerFile;
 
     // 需要复制的源文件列表
-    private static final String[] CONFIGGEN_SOURCE_FILES = {
+    private static final String[] COPY_FILES = {
             "Schema.java",
             "SchemaBean.java",
             "SchemaCompatibleException.java",
@@ -43,6 +40,7 @@ public class GenJavaCode extends GeneratorWithTag {
             "SchemaMap.java",
             "SchemaPrimitive.java",
             "SchemaRef.java",
+            "SchemaDeserializer.java",
 
             "ConfigErr.java",
             "ConfigInput.java",
@@ -153,17 +151,11 @@ public class GenJavaCode extends GeneratorWithTag {
         Path configgenPath = Path.of(configgenDir);
         Path targetDir = configgenPath.resolve("configgen/genjava");
 
-        // 如果目录已存在，跳过复制，保护用户的修改
-        if (Files.exists(targetDir)) {
-            return;
-        }
-
-        // 创建目标目录
-        Files.createDirectories(targetDir);
-
         // 逐个复制文件
-        for (String fileName : CONFIGGEN_SOURCE_FILES) {
-            copySupportFileIfNotExist("configgen/genjava/" + fileName, configgenPath, encoding);
+        for (String fn : COPY_FILES) {
+            FileUtils.copyFileIfNotExist("support/configgen/genjava/" + fn,
+                    "src/main/java/configgen/genjava/" + fn,
+                    targetDir.resolve(fn), encoding);
         }
     }
 

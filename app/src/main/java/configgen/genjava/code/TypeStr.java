@@ -36,8 +36,8 @@ public class TypeStr {
             case INT -> "input.readInt()";
             case LONG -> "input.readLong()";
             case FLOAT -> "input.readFloat()";
-            case STRING -> "input.readStr()";
-            case TEXT -> isLangSwitch ? Name.codeTopPkg + ".Text._create(input)" : "input.readStr()";
+            case STRING -> "input.readStringInPool()";
+            case TEXT -> isLangSwitch ? Name.codeTopPkg + ".Text._create(input)" : "input.readTextInPool()";
             case StructRef structRef -> Name.fullName(structRef.obj()) + "._create(input)";
             case FList ignored -> null;
             case FMap ignored -> null;

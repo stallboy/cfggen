@@ -12,7 +12,7 @@ public class Drop {
     public static Drop _create(configgen.genjava.ConfigInput input) {
         Drop self = new Drop();
         self.dropid = input.readInt();
-        self.name = input.readStr();
+        self.name = input.readTextInPool();
         {
             int c = input.readInt();
             if (c == 0) {

@@ -24,8 +24,8 @@ public class Ai {
     public static Ai _create(configgen.genjava.ConfigInput input) {
         Ai self = new Ai();
         self.iD = input.readInt();
-        self.desc = input.readStr();
-        self.condID = input.readStr();
+        self.desc = input.readStringInPool();
+        self.condID = input.readStringInPool();
         self.trigTick = config.ai.triggertick.TriggerTick._create(input);
         self.trigOdds = input.readInt();
         {

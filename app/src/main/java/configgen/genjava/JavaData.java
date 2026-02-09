@@ -14,33 +14,51 @@ public class JavaData {
     }
 
 
-    public void loop() {
+    public void loop() throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         while (true) {
-            try {
-                System.out.print("input>");
-                String input = br.readLine();
-                if (input.equals("q")) {
-                    break;
-                }
-                match(input);
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
+            System.out.print("input>");
+            String input = br.readLine();
+            if (input.equals("q")) {
+                break;
             }
+            match(input);
         }
     }
 
     public void match(String match) {
         try (ConfigInput input = new ConfigInput(new DataInputStream(new BufferedInputStream(new FileInputStream(javaDataFile))))) {
-            rootSchema = (SchemaInterface) new SchemaDeserializer(input).deserialize();
+            // 1. 读取 Schema 长度标记
+            int schemaLength = input.readInt();
+            if (schemaLength > 0) {
+                byte[] schemaBytes = input.readRawBytes(schemaLength);
+                rootSchema = (SchemaInterface) SchemaDeserializer.deserialize(
+                        new ConfigInput(new ByteArrayInputStream(schemaBytes))
+                );
+            } else {
+                println("no schema in data file");
+                return;
+            }
 
+            // 2. 读取 StringPool
+            input.readStringPool();
+
+            // 3. 读取 LangTextPool
+            input.readLangTextPool();
+
+            // 4. 读取表数据
             int tableCount = input.readInt();
             for (int i = 0; i < tableCount; i++) {
-                String tableName = input.readStr();
+                String tableName = input.readString();
                 int tableSize = input.readInt();
                 if (match == null || tableName.startsWith(match)) {
-                    printTableInfo(tableName, tableSize, input);
-                    println("");
+                    boolean read = printTableInfo(tableName, tableSize, input);
+                    if (read) {
+                        println("");
+                    }else{
+                        input.skipBytes(tableSize);
+                    }
+
                 } else {
                     input.skipBytes(tableSize);
                 }
@@ -51,7 +69,7 @@ public class JavaData {
     }
 
 
-    private void printTableInfo(String tableName, int tableSize, ConfigInput input) {
+    private boolean printTableInfo(String tableName, int tableSize, ConfigInput input) {
         Schema schema = rootSchema.implementations.get(tableName);
 
         switch (schema) {
@@ -68,6 +86,7 @@ public class JavaData {
 
                 println("%s data(size=%d):", tableName, tableSize);
                 printTableData(input, schemaBean);
+                return true;
             }
             case SchemaEnum schemaEnum -> {
                 initDepSchemas();
@@ -79,11 +98,14 @@ public class JavaData {
                 if (realSchema instanceof SchemaBean) {
                     println("%s data(size=%d):", tableName, tableSize);
                     printTableData(input, (SchemaBean) realSchema);
+                    return true;
                 }
             }
             default -> {
             }
         }
+
+        return false; // 忽略读，因为schema里信息已经是全的了
 
     }
 
@@ -219,7 +241,7 @@ public class JavaData {
             case SchemaEnum ignored -> {
             }
             case SchemaInterface schemaInterface -> {
-                String type = input.readStr();
+                String type = input.readStringInPool();
                 sb.append(type);
                 Schema implSchema = schemaInterface.implementations.get(type);
                 visitSchemaToReadData(implSchema, input, sb);
@@ -263,7 +285,10 @@ public class JavaData {
                         sb.append(input.readFloat());
                         break;
                     case SStr:
-                        sb.append(input.readStr());
+                        sb.append(input.readStringInPool());
+                        break;
+                    case SText:
+                        sb.append(input.readTextInPool());
                         break;
                 }
             }

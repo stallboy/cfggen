@@ -39,7 +39,8 @@
       "Bash(cmd //c gengd.bat)",
       "Bash(gradle.bat:*)",
       "Bash(mvn:*)",
-      "Bash(javac:*)"
+      "Bash(javac:*)",
+      "Bash(wc:*)"
     ],
     "deny": [],
     "ask": []

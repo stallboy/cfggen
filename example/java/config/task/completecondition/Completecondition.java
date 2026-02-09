@@ -7,7 +7,8 @@ public sealed interface Completecondition permits KillMonster, TalkNpc, TestNoCo
     }
 
     static Completecondition _create(configgen.genjava.ConfigInput input) {
-        switch (input.readStr()) {
+        String tag = input.readStringInPool();
+        switch (tag) {
             case "KillMonster":
                 return config.task.completecondition.KillMonster._create(input);
             case "TalkNpc":
@@ -23,6 +24,6 @@ public sealed interface Completecondition permits KillMonster, TalkNpc, TestNoCo
             case "aa":
                 return config.task.completecondition.Aa._create(input);
         }
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException(tag + " not found");
     }
 }

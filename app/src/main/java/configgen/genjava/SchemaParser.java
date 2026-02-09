@@ -13,6 +13,7 @@ import static configgen.schema.FieldType.Primitive.BOOL;
 import static configgen.schema.FieldType.Primitive.FLOAT;
 import static configgen.schema.FieldType.Primitive.INT;
 import static configgen.schema.FieldType.Primitive.LONG;
+import static configgen.schema.FieldType.Primitive.TEXT;
 import static configgen.value.CfgValue.*;
 
 public final class SchemaParser {

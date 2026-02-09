@@ -17,7 +17,7 @@ public final class Chat implements config.task.completecondition.Completeconditi
 
     public static Chat _create(configgen.genjava.ConfigInput input) {
         Chat self = new Chat();
-        self.msg = input.readStr();
+        self.msg = input.readStringInPool();
         return self;
     }
 
