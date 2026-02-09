@@ -1,9 +1,12 @@
 REM Step 1: gradle build
+cd ..
 call gradle build
+cd script
+
 rm -rf exe
 mkdir exe
 cd exe
-cp ../app/build/distributions/app.zip app.zip
+cp ../../build/distributions/app.zip app.zip
 unzip app.zip
 rm app.zip
 rm -rf app/bin
