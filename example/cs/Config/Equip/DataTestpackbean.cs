@@ -37,7 +37,7 @@ namespace Config.Equip
         internal static DataTestpackbean _create(Config.Stream os)
         {
             var self = new DataTestpackbean();
-            self.Name = os.ReadString();
+            self.Name = os.ReadStringInPool();
             self.IRange = Config.DataRange._create(os);
             return self;
         }

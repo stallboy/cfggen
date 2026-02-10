@@ -27,7 +27,7 @@ namespace Config.Other
 
         public override string ToString()
         {
-            return "(" + Id + "," + CSV.ToString(PosList) + "," + LootId + "," + LootItemId + ")";
+            return "(" + Id + "," + StringUtil.ToString(PosList) + "," + LootId + "," + LootItemId + ")";
         }
 
         

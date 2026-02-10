@@ -26,7 +26,7 @@ namespace Config.Ai
 
         public override string ToString()
         {
-            return "(" + ID + "," + Desc + "," + FormulaID + "," + CSV.ToString(ArgIList) + "," + CSV.ToString(ArgSList) + ")";
+            return "(" + ID + "," + Desc + "," + FormulaID + "," + StringUtil.ToString(ArgIList) + "," + StringUtil.ToString(ArgSList) + ")";
         }
 
         
@@ -69,7 +69,7 @@ namespace Config.Ai
         {
             var self = new DataAi_condition();
             self.ID = os.ReadInt32();
-            self.Desc = os.ReadString();
+            self.Desc = os.ReadStringInPool();
             self.FormulaID = os.ReadInt32();
             self.ArgIList = new List<int>();
             for (var c = os.ReadInt32(); c > 0; c--)

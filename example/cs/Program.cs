@@ -9,19 +9,15 @@
         }
     }
 
-    public static void Main(string[] args)
+    public static void Main()
     {
         byte[] bytes = File.ReadAllBytes("config.bytes");
-        if (args.Length > 0)
-        {
-            string cipher = args[0];
-            Console.WriteLine("cipher: " + cipher);
-            XorBytesWithCipher(bytes, cipher);
-        }
-
+        string cipher = "xyz";
+        Console.WriteLine("cipher: " + cipher);
+        XorBytesWithCipher(bytes, cipher);
+    
         Config.Loader.Processor = Config.Processor.Process;
-        Config.Loader.LoadBytes(bytes);
-
+        Config.Stream stream = Config.Loader.LoadBytes(bytes);
         Console.WriteLine(Config.Task.DataTask.Get(1));
     }
 }

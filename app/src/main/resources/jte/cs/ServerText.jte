@@ -22,8 +22,9 @@ namespace ${pkg}
         internal static Text _create(Config.Stream os)
         {
             Text self = new Text();
-            @for(String lang : languages)
-                self.${lang} = os.ReadString();
+            string[] texts = os.ReadTextsInPool();
+            @for(int i = 0; i < languages.size(); i++)
+                self.${languages.get(i)} = texts[${i}];
             @endfor
             return self;
         }

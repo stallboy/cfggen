@@ -28,7 +28,7 @@ namespace Config.Ai
 
         public override string ToString()
         {
-            return "(" + ID + "," + Desc + "," + CondID + "," + TrigTick + "," + TrigOdds + "," + CSV.ToString(ActionID) + "," + DeathRemove + ")";
+            return "(" + ID + "," + Desc + "," + CondID + "," + TrigTick + "," + TrigOdds + "," + StringUtil.ToString(ActionID) + "," + DeathRemove + ")";
         }
 
         
@@ -71,8 +71,8 @@ namespace Config.Ai
         {
             var self = new DataAi();
             self.ID = os.ReadInt32();
-            self.Desc = os.ReadString();
-            self.CondID = os.ReadString();
+            self.Desc = os.ReadStringInPool();
+            self.CondID = os.ReadStringInPool();
             self.TrigTick = Config.Ai.DataTriggertick._create(os);
             self.TrigOdds = os.ReadInt32();
             self.ActionID = new List<int>();

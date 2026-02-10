@@ -1,7 +1,6 @@
 package configgen.gencs;
 
 import configgen.ctx.Context;
-import configgen.gen.Generator;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
 import configgen.i18n.LangSwitchable;
@@ -23,6 +22,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
     public final String pkg;
     public final String encoding;
     public final String prefix;
+    public final boolean serverText;
 
     private Path dstDir;
     private CacheConfig cacheConfig;
@@ -39,6 +39,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
         pkg = parameter.get("pkg", "Config");
         encoding = parameter.get("encoding", "GBK");
         prefix = parameter.get("prefix", "Data");
+        serverText = parameter.has("servertext");
     }
 
     @Override
@@ -115,7 +116,8 @@ public class CsCodeGenerator extends GeneratorWithTag {
         List<String> languages = langSwitch.languages().stream().map(StringUtil::upper1).toList();
         Map<String, Object> model = Map.of("pkg", pkg, "languages", languages);
         try (var ps = createCode("Text.cs")) {
-            JteEngine.render("cs/Text.jte", model, ps);
+            String template = serverText ? "cs/ServerText.jte" : "cs/ClientText.jte";
+            JteEngine.render(template, model, ps);
         }
     }
 

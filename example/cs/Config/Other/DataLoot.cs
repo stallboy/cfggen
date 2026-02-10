@@ -27,7 +27,7 @@ namespace Config.Other
 
         public override string ToString()
         {
-            return "(" + Lootid + "," + Ename + "," + Name + "," + CSV.ToString(ChanceList) + ")";
+            return "(" + Lootid + "," + Ename + "," + Name + "," + StringUtil.ToString(ChanceList) + ")";
         }
 
         
@@ -75,7 +75,7 @@ namespace Config.Other
         {
             var self = new DataLoot();
             self.Lootid = os.ReadInt32();
-            self.Ename = os.ReadString();
+            self.Ename = os.ReadStringInPool();
             self.Name = os.ReadString();
             self.ChanceList = new List<int>();
             for (var c = os.ReadInt32(); c > 0; c--)

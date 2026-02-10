@@ -25,7 +25,7 @@ namespace Config.Equip
 
         public override string ToString()
         {
-            return "(" + LvlRank + "," + AttackRange + "," + CSV.ToString(OtherRange) + "," + CSV.ToString(TestPack) + ")";
+            return "(" + LvlRank + "," + AttackRange + "," + StringUtil.ToString(OtherRange) + "," + StringUtil.ToString(TestPack) + ")";
         }
 
         

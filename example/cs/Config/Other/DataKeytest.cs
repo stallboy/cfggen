@@ -26,7 +26,7 @@ namespace Config.Other
 
         public override string ToString()
         {
-            return "(" + Id1 + "," + Id2 + "," + Id3 + "," + CSV.ToString(Ids) + ")";
+            return "(" + Id1 + "," + Id2 + "," + Id3 + "," + StringUtil.ToString(Ids) + ")";
         }
 
         

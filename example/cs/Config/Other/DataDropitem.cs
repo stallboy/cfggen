@@ -35,7 +35,7 @@ namespace Config.Other
 
         public override string ToString()
         {
-            return "(" + Chance + "," + CSV.ToString(Itemids) + "," + Countmin + "," + Countmax + ")";
+            return "(" + Chance + "," + StringUtil.ToString(Itemids) + "," + Countmin + "," + Countmax + ")";
         }
 
         internal static DataDropitem _create(Config.Stream os)

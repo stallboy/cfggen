@@ -12,7 +12,7 @@ namespace Config.Task
         }
         internal static DataCompletecondition _create(Config.Stream os)
         {
-            switch(os.ReadString())
+            switch(os.ReadStringInPool())
             {
                 case "KillMonster":
                     return Config.Task.Completecondition.DataKillmonster._create(os);

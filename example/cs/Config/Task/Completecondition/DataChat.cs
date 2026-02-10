@@ -39,7 +39,7 @@ namespace Config.Task.Completecondition
         internal new static DataChat _create(Config.Stream os)
         {
             var self = new DataChat();
-            self.Msg = os.ReadString();
+            self.Msg = os.ReadStringInPool();
             return self;
         }
 

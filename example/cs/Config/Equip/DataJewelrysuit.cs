@@ -32,7 +32,7 @@ namespace Config.Equip
 
         public override string ToString()
         {
-            return "(" + SuitID + "," + Ename + "," + Name + "," + Ability1 + "," + Ability1Value + "," + Ability2 + "," + Ability2Value + "," + Ability3 + "," + Ability3Value + "," + CSV.ToString(SuitList) + ")";
+            return "(" + SuitID + "," + Ename + "," + Name + "," + Ability1 + "," + Ability1Value + "," + Ability2 + "," + Ability2Value + "," + Ability3 + "," + Ability3Value + "," + StringUtil.ToString(SuitList) + ")";
         }
 
         
@@ -90,7 +90,7 @@ namespace Config.Equip
         {
             var self = new DataJewelrysuit();
             self.SuitID = os.ReadInt32();
-            self.Ename = os.ReadString();
+            self.Ename = os.ReadStringInPool();
             self.Name = os.ReadString();
             self.Ability1 = os.ReadInt32();
             self.Ability1Value = os.ReadInt32();

@@ -26,7 +26,7 @@ namespace ${model.name.pkg}
 
         internal static ${model.name.className} _create(Config.Stream os)
         {
-            switch(os.ReadString())
+            switch(os.ReadStringInPool())
             {
                 @for(StructSchema impl : model.sInterface.impls())
                     case "${impl.name()}":

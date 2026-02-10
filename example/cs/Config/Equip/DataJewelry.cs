@@ -83,15 +83,15 @@ namespace Config.Equip
         {
             var self = new DataJewelry();
             self.ID = os.ReadInt32();
-            self.Name = os.ReadString();
-            self.IconFile = os.ReadString();
+            self.Name = os.ReadStringInPool();
+            self.IconFile = os.ReadStringInPool();
             self.LvlRank = Config.DataLevelrank._create(os);
-            self.JType = os.ReadString();
+            self.JType = os.ReadStringInPool();
             self.SuitID = os.ReadInt32();
             self.KeyAbility = os.ReadInt32();
             self.KeyAbilityValue = os.ReadInt32();
             self.SalePrice = os.ReadInt32();
-            self.Description = os.ReadString();
+            self.Description = os.ReadStringInPool();
             return self;
         }
 

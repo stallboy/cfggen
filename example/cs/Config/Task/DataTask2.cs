@@ -34,7 +34,7 @@ namespace Config.Task
 
         public override string ToString()
         {
-            return "(" + Taskid + "," + CSV.ToString(Name) + "," + Nexttask + "," + Completecondition + "," + Exp + "," + TestBool + "," + TestString + "," + TestStruct + "," + CSV.ToString(TestList) + "," + CSV.ToString(TestListStruct) + "," + CSV.ToString(TestListInterface) + ")";
+            return "(" + Taskid + "," + StringUtil.ToString(Name) + "," + Nexttask + "," + Completecondition + "," + Exp + "," + TestBool + "," + TestString + "," + TestStruct + "," + StringUtil.ToString(TestList) + "," + StringUtil.ToString(TestListStruct) + "," + StringUtil.ToString(TestListInterface) + ")";
         }
 
         
@@ -89,7 +89,7 @@ namespace Config.Task
             self.Completecondition = Config.Task.DataCompletecondition._create(os);
             self.Exp = os.ReadInt32();
             self.TestBool = os.ReadBool();
-            self.TestString = os.ReadString();
+            self.TestString = os.ReadStringInPool();
             self.TestStruct = Config.DataPosition._create(os);
             self.TestList = new List<int>();
             for (var c = os.ReadInt32(); c > 0; c--)

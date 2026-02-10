@@ -86,7 +86,7 @@ namespace Config.Other
                 self.Vipitem2vipcountMap.Add(os.ReadInt32(), os.ReadInt32());
             }
             self.Viplevel = os.ReadInt32();
-            self.IconFile = os.ReadString();
+            self.IconFile = os.ReadStringInPool();
             return self;
         }
 

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Config
 {
-    // å®¢æˆ·ç«¯æ¨¡å¼ï¼šå…¨å±€æ–‡æœ¬ç®¡ç†å™¨ï¼ˆåº”ç”¨å±‚è´Ÿè´£è¯­è¨€åˆ‡æ¢ï¼‰
+    // ¿Í»§¶ËÄ£Ê½£ºÈ«¾ÖÎÄ±¾¹ÜÀíÆ÷£¨Ó¦ÓÃ²ã¸ºÔğÓïÑÔÇĞ»»£©
     public static class TextPoolManager
     {
         private static string[] _globalTexts;
@@ -29,9 +29,8 @@ namespace Config
         private int _currentIndex;
         private BinaryReader _byter;
 
-        // StringPool å’Œ LangTextPool å­—æ®µ
+        // StringPool ºÍ LangTextPool ×Ö¶Î
         private string[] _stringPool;
-        private string[] _langNames;
         private string[][] _langTextPools; // langTextPools[langIndex][textIndex]
 
         public Stream(List<BinaryReader> byterList)
@@ -92,7 +91,7 @@ namespace Config
             return _byter.ReadSingle();
         }
 
-        // ä» StringPool è¯»å–å­—ç¬¦ä¸²ï¼ˆç”¨äº STRING ç±»å‹å­—æ®µï¼‰
+        // ´Ó StringPool ¶ÁÈ¡×Ö·û´®£¨ÓÃÓÚ STRING ÀàĞÍ×Ö¶Î£©
         public string ReadStringInPool()
         {
             int index = ReadInt32();
@@ -101,7 +100,7 @@ namespace Config
             return _stringPool[index];
         }
 
-        // è¯»å–å…¨å±€ StringPoolï¼ˆåœ¨è¯»å–è¡¨æ•°æ®ä¹‹å‰è°ƒç”¨ï¼‰
+        // ¶ÁÈ¡È«¾Ö StringPool£¨ÔÚ¶ÁÈ¡±íÊı¾İÖ®Ç°µ÷ÓÃ£©
         public void ReadStringPool()
         {
             int count = ReadInt32();
@@ -112,18 +111,15 @@ namespace Config
             }
         }
 
-        // è¯»å– LangTextPoolï¼ˆåœ¨è¯»å–è¡¨æ•°æ®ä¹‹å‰è°ƒç”¨ï¼‰
-        public void ReadLangTextPool()
+        // ¶ÁÈ¡ LangTextPool£¨ÔÚ¶ÁÈ¡±íÊı¾İÖ®Ç°µ÷ÓÃ£©
+        public void ReadLangTextPool(bool serverMode)
         {
             int langCount = ReadInt32();
-            _langNames = new string[langCount];
             _langTextPools = new string[langCount][];
 
             for (int langIdx = 0; langIdx < langCount; langIdx++)
             {
                 string langName = ReadString();
-                _langNames[langIdx] = langName;
-
                 int indexCount = ReadInt32();
                 int[] indices = new int[indexCount];
                 for (int i = 0; i < indexCount; i++)
@@ -131,7 +127,7 @@ namespace Config
                     indices[i] = ReadInt32();
                 }
 
-                // è¯»å–è¯¥è¯­è¨€çš„ StringPool
+                // ¶ÁÈ¡¸ÃÓïÑÔµÄ StringPool
                 int poolCount = ReadInt32();
                 string[] pool = new string[poolCount];
                 for (int i = 0; i < poolCount; i++)
@@ -139,16 +135,22 @@ namespace Config
                     pool[i] = ReadString();
                 }
 
-                // æ„å»ºæ–‡æœ¬æ•°ç»„ï¼štexts[textIndex] = pool[indices[textIndex]]
+                // ¹¹½¨ÎÄ±¾Êı×é£ºtexts[textIndex] = pool[indices[textIndex]]
                 _langTextPools[langIdx] = new string[indexCount];
                 for (int i = 0; i < indexCount; i++)
                 {
                     _langTextPools[langIdx][i] = pool[indices[i]];
                 }
+
+                // ¿Í»§¶ËÄ£Ê½£ºÊ¹ÓÃµÚÒ»¸öÓïÑÔ³õÊ¼»¯È«¾ÖÎÄ±¾Êı×é
+                if (!serverMode && langIdx == 0)
+                {
+                    TextPoolManager.InitGlobalTexts(_langTextPools[0]);
+                }
             }
         }
 
-        // ä» LangTextPool è¯»å–æ‰€æœ‰è¯­è¨€æ–‡æœ¬ï¼ˆæœåŠ¡å™¨ç«¯æ¨¡å¼ï¼‰
+        // ´Ó LangTextPool ¶ÁÈ¡ËùÓĞÓïÑÔÎÄ±¾£¨·şÎñÆ÷¶ËÄ£Ê½£©
         public string[] ReadTextsInPool()
         {
             int index = ReadInt32();
@@ -166,28 +168,10 @@ namespace Config
             return texts;
         }
 
-        // ä» LangTextPool è¯»å–æ–‡æœ¬ç´¢å¼•ï¼ˆå®¢æˆ·ç«¯æ¨¡å¼ï¼‰
+        // ´Ó LangTextPool ¶ÁÈ¡ÎÄ±¾Ë÷Òı£¨¿Í»§¶ËÄ£Ê½£©
         public int ReadTextIndex()
         {
             return ReadInt32();
-        }
-
-        // è®¿é—®æ¥å£ï¼šè·å–è¯­è¨€åç§°åˆ—è¡¨
-        public string[] GetLangNames()
-        {
-            return _langNames;
-        }
-
-        // è®¿é—®æ¥å£ï¼šè·å–æ‰€æœ‰è¯­è¨€çš„æ–‡æœ¬æ± 
-        public string[][] GetLangTextPools()
-        {
-            return _langTextPools;
-        }
-
-        // è·³è¿‡æŒ‡å®šå­—èŠ‚æ•°ï¼ˆç”¨äºè·³è¿‡æœªçŸ¥è¡¨çš„æ•°æ®ï¼‰
-        public void SkipBytes(int count)
-        {
-            _byter.ReadBytes(count);
         }
     }
 
@@ -198,30 +182,29 @@ namespace Config
 
         public static ProcessConfigStream Processor;
 
-        public static Stream LoadBytes(byte[] data)
+        public static void LoadBytes(byte[] data, bool serverMode)
         {
             MemoryStream memoryStream = new MemoryStream(data);
             var reader = new BinaryReader(memoryStream);
             var stream = new Stream(new List<BinaryReader>{ reader });
 
-            // 1. è·³è¿‡ Schemaï¼ˆå¦‚æœæœ‰ï¼‰
+            // 1. Ìø¹ı Schema£¨Èç¹ûÓĞ£©
             int schemaLength = reader.ReadInt32();
             if (schemaLength > 0)
             {
                 reader.ReadBytes(schemaLength);
             }
 
-            // 2. è¯»å– StringPool
+            // 2. ¶ÁÈ¡ StringPool
             stream.ReadStringPool();
 
-            // 3. è¯»å– LangTextPool
-            stream.ReadLangTextPool();
+            // 3. ¶ÁÈ¡ LangTextPool
+            stream.ReadLangTextPool(serverMode);
 
-            // 4. å¤„ç†è¡¨æ•°æ®
+            // 4. ´¦Àí±íÊı¾İ
             Processor(stream);
 
             memoryStream.Dispose();
-            return stream;
         }
     }
 }

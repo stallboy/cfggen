@@ -189,16 +189,6 @@ namespace Config
             return result;
         }
 
-        public static string ToString<T>(List<T> data)
-        {
-            var elements = new string[data.Count];
-            var i = 0;
-            foreach (var d in data)
-            {
-                elements[i] = d.ToString();
-                i++;
-            }
-            return "[" + string.Join(", ", elements) + "]";
-        }
+
     }
 }

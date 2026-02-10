@@ -29,7 +29,7 @@ namespace Config.Task
 
         public override string ToString()
         {
-            return "(" + Taskid + "," + CSV.ToString(Name) + "," + Nexttask + "," + Completecondition + "," + Exp + "," + TestDefaultBean + ")";
+            return "(" + Taskid + "," + StringUtil.ToString(Name) + "," + Nexttask + "," + Completecondition + "," + Exp + "," + TestDefaultBean + ")";
         }
 
         

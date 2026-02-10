@@ -104,7 +104,7 @@ namespace Config.Equip
         internal static DataJewelrytype _create(Config.Stream os)
         {
             var self = new DataJewelrytype();
-            self.TypeName = os.ReadString();
+            self.TypeName = os.ReadStringInPool();
             return self;
         }
 

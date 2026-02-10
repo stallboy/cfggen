@@ -1,6 +1,5 @@
 package configgen.gencs;
 
-import configgen.gen.Generator;
 import configgen.schema.*;
 import configgen.util.StringUtil;
 import configgen.value.CfgValue;
@@ -23,6 +22,10 @@ public class StructModel {
         this.name = new Name(gen.pkg, gen.prefix, structural);
         this.structural = structural;
         this._vTable = _vTable;
+    }
+
+    public boolean isServerText() {
+        return gen.serverText;
     }
 
     public String fullName(Nameable nameable) {
@@ -57,7 +60,7 @@ public class StructModel {
             case INT -> "os.ReadInt32()";
             case LONG -> "os.ReadInt64()";
             case FLOAT -> "os.ReadSingle()";
-            case STRING -> "os.ReadString()";
+            case STRING -> "os.ReadStringInPool()";
             case TEXT -> gen.isLangSwitch ? topPkg + ".Text._create(os)" : "os.ReadString()";
             case StructRef structRef -> fullName(structRef.obj()) + "._create(os)";
             case FList ignored -> null;
@@ -151,7 +154,7 @@ public class StructModel {
 
     public String toString(String n, FieldType t) {
         if (t instanceof FList)
-            return "CSV.ToString(" + upper1(n) + ")";
+            return "StringUtil.ToString(" + upper1(n) + ")";
         else
             return upper1(n);
     }

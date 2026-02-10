@@ -8,7 +8,7 @@ namespace Config.Ai
 
         internal static DataTriggertick _create(Config.Stream os)
         {
-            switch(os.ReadString())
+            switch(os.ReadStringInPool())
             {
                 case "ConstValue":
                     return Config.Ai.Triggertick.DataConstvalue._create(os);

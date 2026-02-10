@@ -41,7 +41,7 @@ namespace Config.Task
 
         public override string ToString()
         {
-            return "(" + TestInt + "," + TestBool + "," + TestString + "," + TestSubBean + "," + CSV.ToString(TestList) + "," + CSV.ToString(TestList2) + "," + TestMap + ")";
+            return "(" + TestInt + "," + TestBool + "," + TestString + "," + TestSubBean + "," + StringUtil.ToString(TestList) + "," + StringUtil.ToString(TestList2) + "," + TestMap + ")";
         }
 
         internal static DataTestdefaultbean _create(Config.Stream os)
@@ -49,7 +49,7 @@ namespace Config.Task
             var self = new DataTestdefaultbean();
             self.TestInt = os.ReadInt32();
             self.TestBool = os.ReadBool();
-            self.TestString = os.ReadString();
+            self.TestString = os.ReadStringInPool();
             self.TestSubBean = Config.DataPosition._create(os);
             self.TestList = new List<int>();
             for (var c = os.ReadInt32(); c > 0; c--)
@@ -60,7 +60,7 @@ namespace Config.Task
             self.TestMap = new KeyedList<int, string>();
             for (var c = os.ReadInt32(); c > 0; c--)
             {
-                self.TestMap.Add(os.ReadInt32(), os.ReadString());
+                self.TestMap.Add(os.ReadInt32(), os.ReadStringInPool());
             }
             return self;
         }

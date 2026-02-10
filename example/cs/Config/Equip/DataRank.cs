@@ -115,8 +115,8 @@ namespace Config.Equip
         {
             var self = new DataRank();
             self.RankID = os.ReadInt32();
-            self.RankName = os.ReadString();
-            self.RankShowName = os.ReadString();
+            self.RankName = os.ReadStringInPool();
+            self.RankShowName = os.ReadStringInPool();
             return self;
         }
 

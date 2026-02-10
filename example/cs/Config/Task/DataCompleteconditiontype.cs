@@ -130,7 +130,7 @@ namespace Config.Task
         {
             var self = new DataCompleteconditiontype();
             self.Id = os.ReadInt32();
-            self.Name = os.ReadString();
+            self.Name = os.ReadStringInPool();
             return self;
         }
 

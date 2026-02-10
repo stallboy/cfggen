@@ -130,7 +130,7 @@ namespace Config.Equip
         {
             var self = new DataAbility();
             self.Id = os.ReadInt32();
-            self.Name = os.ReadString();
+            self.Name = os.ReadStringInPool();
             return self;
         }
 

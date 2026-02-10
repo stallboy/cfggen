@@ -25,7 +25,7 @@ namespace Config.Other
 
         public override string ToString()
         {
-            return "(" + Dropid + "," + Name + "," + CSV.ToString(Items) + "," + Testmap + ")";
+            return "(" + Dropid + "," + Name + "," + StringUtil.ToString(Items) + "," + Testmap + ")";
         }
 
         
