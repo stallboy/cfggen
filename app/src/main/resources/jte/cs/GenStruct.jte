@@ -114,17 +114,6 @@ namespace ${model.name.pkg}
                 return all.OrderedValues;
             }
 
-            public static List<${className}> Filter(Predicate<${className}> predicate)
-            {
-                var r = new List<${className}>();
-                foreach (var e in all.OrderedValues)
-                {
-                    if (predicate(e))
-                        r.Add(e);
-                }
-                return r;
-            }
-
             internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
             {
                 all = new Config.KeyedList<${model.keyClassName(table.primaryKey())}, ${className}>();

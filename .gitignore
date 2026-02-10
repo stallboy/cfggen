@@ -111,3 +111,6 @@
 /example/java_ls/gradlew
 /example/java_ls/gradlew.bat
 /example/java_ls/out
+/example/cs_ls_client/.idea
+/example/cs_ls_client/bin
+/example/cs_ls_client/obj

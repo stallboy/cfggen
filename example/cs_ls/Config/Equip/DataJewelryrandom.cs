@@ -25,7 +25,7 @@ namespace Config.Equip
 
         public override string ToString()
         {
-            return "(" + LvlRank + "," + AttackRange + "," + CSV.ToString(OtherRange) + "," + CSV.ToString(TestPack) + ")";
+            return "(" + LvlRank + "," + AttackRange + "," + StringUtil.ToString(OtherRange) + "," + StringUtil.ToString(TestPack) + ")";
         }
 
         
@@ -40,17 +40,6 @@ namespace Config.Equip
         public static List<DataJewelryrandom> All()
         {
             return all.OrderedValues;
-        }
-
-        public static List<DataJewelryrandom> Filter(Predicate<DataJewelryrandom> predicate)
-        {
-            var r = new List<DataJewelryrandom>();
-            foreach (var e in all.OrderedValues)
-            {
-                if (predicate(e))
-                    r.Add(e);
-            }
-            return r;
         }
 
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)

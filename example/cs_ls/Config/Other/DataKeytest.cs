@@ -26,7 +26,7 @@ namespace Config.Other
 
         public override string ToString()
         {
-            return "(" + Id1 + "," + Id2 + "," + Id3 + "," + CSV.ToString(Ids) + ")";
+            return "(" + Id1 + "," + Id2 + "," + Id3 + "," + StringUtil.ToString(Ids) + ")";
         }
 
         
@@ -140,17 +140,6 @@ namespace Config.Other
         public static List<DataKeytest> All()
         {
             return all.OrderedValues;
-        }
-
-        public static List<DataKeytest> Filter(Predicate<DataKeytest> predicate)
-        {
-            var r = new List<DataKeytest>();
-            foreach (var e in all.OrderedValues)
-            {
-                if (predicate(e))
-                    r.Add(e);
-            }
-            return r;
         }
 
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)

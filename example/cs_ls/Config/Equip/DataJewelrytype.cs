@@ -43,17 +43,6 @@ namespace Config.Equip
             return all.OrderedValues;
         }
 
-        public static List<DataJewelrytype> Filter(Predicate<DataJewelrytype> predicate)
-        {
-            var r = new List<DataJewelrytype>();
-            foreach (var e in all.OrderedValues)
-            {
-                if (predicate(e))
-                    r.Add(e);
-            }
-            return r;
-        }
-
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<string, DataJewelrytype>();
@@ -104,7 +93,7 @@ namespace Config.Equip
         internal static DataJewelrytype _create(Config.Stream os)
         {
             var self = new DataJewelrytype();
-            self.TypeName = os.ReadString();
+            self.TypeName = os.ReadStringInPool();
             return self;
         }
 

@@ -49,17 +49,6 @@ namespace Config.Equip
             return all.OrderedValues;
         }
 
-        public static List<DataJewelrysuit> Filter(Predicate<DataJewelrysuit> predicate)
-        {
-            var r = new List<DataJewelrysuit>();
-            foreach (var e in all.OrderedValues)
-            {
-                if (predicate(e))
-                    r.Add(e);
-            }
-            return r;
-        }
-
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<int, DataJewelrysuit>();
@@ -91,7 +80,7 @@ namespace Config.Equip
             var self = new DataJewelrysuit();
             self.SuitID = os.ReadInt32();
             self.Ename = os.ReadStringInPool();
-            self.Name = os.ReadString();
+            self.Name = os.ReadStringInPool();
             self.Ability1 = os.ReadInt32();
             self.Ability1Value = os.ReadInt32();
             self.Ability2 = os.ReadInt32();

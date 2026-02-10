@@ -1,1 +1,1 @@
-dotnet run xyz
+dotnet run

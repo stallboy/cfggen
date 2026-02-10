@@ -47,17 +47,6 @@ namespace Config.Equip
             return all.OrderedValues;
         }
 
-        public static List<DataAbility> Filter(Predicate<DataAbility> predicate)
-        {
-            var r = new List<DataAbility>();
-            foreach (var e in all.OrderedValues)
-            {
-                if (predicate(e))
-                    r.Add(e);
-            }
-            return r;
-        }
-
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<int, DataAbility>();
@@ -130,7 +119,7 @@ namespace Config.Equip
         {
             var self = new DataAbility();
             self.Id = os.ReadInt32();
-            self.Name = os.ReadString();
+            self.Name = os.ReadStringInPool();
             return self;
         }
 

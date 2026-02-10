@@ -47,17 +47,6 @@ namespace Config.Task
             return all.OrderedValues;
         }
 
-        public static List<DataCompleteconditiontype> Filter(Predicate<DataCompleteconditiontype> predicate)
-        {
-            var r = new List<DataCompleteconditiontype>();
-            foreach (var e in all.OrderedValues)
-            {
-                if (predicate(e))
-                    r.Add(e);
-            }
-            return r;
-        }
-
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<int, DataCompleteconditiontype>();
@@ -130,7 +119,7 @@ namespace Config.Task
         {
             var self = new DataCompleteconditiontype();
             self.Id = os.ReadInt32();
-            self.Name = os.ReadString();
+            self.Name = os.ReadStringInPool();
             return self;
         }
 

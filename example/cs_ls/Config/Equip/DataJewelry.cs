@@ -52,17 +52,6 @@ namespace Config.Equip
             return all.OrderedValues;
         }
 
-        public static List<DataJewelry> Filter(Predicate<DataJewelry> predicate)
-        {
-            var r = new List<DataJewelry>();
-            foreach (var e in all.OrderedValues)
-            {
-                if (predicate(e))
-                    r.Add(e);
-            }
-            return r;
-        }
-
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<int, DataJewelry>();
@@ -83,15 +72,15 @@ namespace Config.Equip
         {
             var self = new DataJewelry();
             self.ID = os.ReadInt32();
-            self.Name = os.ReadString();
-            self.IconFile = os.ReadString();
+            self.Name = os.ReadStringInPool();
+            self.IconFile = os.ReadStringInPool();
             self.LvlRank = Config.DataLevelrank._create(os);
-            self.JType = os.ReadString();
+            self.JType = os.ReadStringInPool();
             self.SuitID = os.ReadInt32();
             self.KeyAbility = os.ReadInt32();
             self.KeyAbilityValue = os.ReadInt32();
             self.SalePrice = os.ReadInt32();
-            self.Description = os.ReadString();
+            self.Description = os.ReadStringInPool();
             return self;
         }
 

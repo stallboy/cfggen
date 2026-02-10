@@ -42,17 +42,6 @@ namespace Config.Other
             return all.OrderedValues;
         }
 
-        public static List<DataDrop> Filter(Predicate<DataDrop> predicate)
-        {
-            var r = new List<DataDrop>();
-            foreach (var e in all.OrderedValues)
-            {
-                if (predicate(e))
-                    r.Add(e);
-            }
-            return r;
-        }
-
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<int, DataDrop>();
@@ -68,7 +57,7 @@ namespace Config.Other
         {
             var self = new DataDrop();
             self.Dropid = os.ReadInt32();
-            self.Name = os.ReadString();
+            self.Name = os.ReadStringInPool();
             self.Items = new List<Config.Other.DataDropitem>();
             for (var c = os.ReadInt32(); c > 0; c--)
                 self.Items.Add(Config.Other.DataDropitem._create(os));

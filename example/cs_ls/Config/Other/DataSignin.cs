@@ -44,17 +44,6 @@ namespace Config.Other
             return all.OrderedValues;
         }
 
-        public static List<DataSignin> Filter(Predicate<DataSignin> predicate)
-        {
-            var r = new List<DataSignin>();
-            foreach (var e in all.OrderedValues)
-            {
-                if (predicate(e))
-                    r.Add(e);
-            }
-            return r;
-        }
-
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<int, DataSignin>();
@@ -86,7 +75,7 @@ namespace Config.Other
                 self.Vipitem2vipcountMap.Add(os.ReadInt32(), os.ReadInt32());
             }
             self.Viplevel = os.ReadInt32();
-            self.IconFile = os.ReadString();
+            self.IconFile = os.ReadStringInPool();
             return self;
         }
 

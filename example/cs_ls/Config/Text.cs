@@ -15,9 +15,10 @@ namespace Config
         internal static Text _create(Config.Stream os)
         {
             Text self = new Text();
-            self.Zh_cn = os.ReadString();
-            self.En = os.ReadString();
-            self.Tw = os.ReadString();
+            string[] texts = os.ReadTextsInPool();
+            self.Zh_cn = texts[0];
+            self.En = texts[1];
+            self.Tw = texts[2];
             return self;
         }
     }

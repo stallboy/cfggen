@@ -27,7 +27,7 @@ namespace Config.Other
 
         public override string ToString()
         {
-            return "(" + Id + "," + CSV.ToString(PosList) + "," + LootId + "," + LootItemId + ")";
+            return "(" + Id + "," + StringUtil.ToString(PosList) + "," + LootId + "," + LootItemId + ")";
         }
 
         
@@ -42,17 +42,6 @@ namespace Config.Other
         public static List<DataMonster> All()
         {
             return all.OrderedValues;
-        }
-
-        public static List<DataMonster> Filter(Predicate<DataMonster> predicate)
-        {
-            var r = new List<DataMonster>();
-            foreach (var e in all.OrderedValues)
-            {
-                if (predicate(e))
-                    r.Add(e);
-            }
-            return r;
         }
 
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)

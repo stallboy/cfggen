@@ -14,7 +14,7 @@ namespace ${pkg}
         private Text() {}
 
         // 对外接口：从全局文本数组获取文本
-        public string Text
+        public string T
         {
             get
             {
@@ -28,7 +28,7 @@ namespace ${pkg}
 
         public override string ToString()
         {
-            return Text;
+            return T;
         }
 
         internal static Text _create(Config.Stream os)

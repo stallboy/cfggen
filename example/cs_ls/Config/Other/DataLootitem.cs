@@ -67,17 +67,6 @@ namespace Config.Other
             return all.OrderedValues;
         }
 
-        public static List<DataLootitem> Filter(Predicate<DataLootitem> predicate)
-        {
-            var r = new List<DataLootitem>();
-            foreach (var e in all.OrderedValues)
-            {
-                if (predicate(e))
-                    r.Add(e);
-            }
-            return r;
-        }
-
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<LootidItemidKey, DataLootitem>();

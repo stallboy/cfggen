@@ -46,17 +46,6 @@ namespace Config.Task
             return all.OrderedValues;
         }
 
-        public static List<DataTaskextraexp> Filter(Predicate<DataTaskextraexp> predicate)
-        {
-            var r = new List<DataTaskextraexp>();
-            foreach (var e in all.OrderedValues)
-            {
-                if (predicate(e))
-                    r.Add(e);
-            }
-            return r;
-        }
-
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<int, DataTaskextraexp>();
@@ -73,12 +62,12 @@ namespace Config.Task
             var self = new DataTaskextraexp();
             self.Taskid = os.ReadInt32();
             self.Extraexp = os.ReadInt32();
-            self.Test1 = os.ReadString();
-            self.Test2 = os.ReadString();
-            self.Fielda = os.ReadString();
-            self.Fieldb = os.ReadString();
-            self.Fieldc = os.ReadString();
-            self.Fieldd = os.ReadString();
+            self.Test1 = os.ReadStringInPool();
+            self.Test2 = os.ReadStringInPool();
+            self.Fielda = os.ReadStringInPool();
+            self.Fieldb = os.ReadStringInPool();
+            self.Fieldc = os.ReadStringInPool();
+            self.Fieldd = os.ReadStringInPool();
             return self;
         }
 

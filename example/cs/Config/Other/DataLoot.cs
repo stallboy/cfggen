@@ -44,17 +44,6 @@ namespace Config.Other
             return all.OrderedValues;
         }
 
-        public static List<DataLoot> Filter(Predicate<DataLoot> predicate)
-        {
-            var r = new List<DataLoot>();
-            foreach (var e in all.OrderedValues)
-            {
-                if (predicate(e))
-                    r.Add(e);
-            }
-            return r;
-        }
-
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<int, DataLoot>();
@@ -76,7 +65,7 @@ namespace Config.Other
             var self = new DataLoot();
             self.Lootid = os.ReadInt32();
             self.Ename = os.ReadStringInPool();
-            self.Name = os.ReadString();
+            self.Name = os.ReadStringInPool();
             self.ChanceList = new List<int>();
             for (var c = os.ReadInt32(); c > 0; c--)
                 self.ChanceList.Add(os.ReadInt32());

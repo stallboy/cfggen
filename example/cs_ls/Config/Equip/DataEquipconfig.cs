@@ -46,17 +46,6 @@ namespace Config.Equip
             return all.OrderedValues;
         }
 
-        public static List<DataEquipconfig> Filter(Predicate<DataEquipconfig> predicate)
-        {
-            var r = new List<DataEquipconfig>();
-            foreach (var e in all.OrderedValues)
-            {
-                if (predicate(e))
-                    r.Add(e);
-            }
-            return r;
-        }
-
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<string, DataEquipconfig>();
@@ -93,9 +82,9 @@ namespace Config.Equip
         internal static DataEquipconfig _create(Config.Stream os)
         {
             var self = new DataEquipconfig();
-            self.Entry = os.ReadString();
+            self.Entry = os.ReadStringInPool();
             self.Stone_count_for_set = os.ReadInt32();
-            self.Draw_protect_name = os.ReadString();
+            self.Draw_protect_name = os.ReadStringInPool();
             self.Broadcastid = os.ReadInt32();
             self.Broadcast_least_quality = os.ReadInt32();
             self.Week_reward_mailid = os.ReadInt32();

@@ -46,17 +46,6 @@ namespace Config.Task
             return all.OrderedValues;
         }
 
-        public static List<DataTask> Filter(Predicate<DataTask> predicate)
-        {
-            var r = new List<DataTask>();
-            foreach (var e in all.OrderedValues)
-            {
-                if (predicate(e))
-                    r.Add(e);
-            }
-            return r;
-        }
-
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
         {
             all = new Config.KeyedList<int, DataTask>();
@@ -79,7 +68,7 @@ namespace Config.Task
             self.Taskid = os.ReadInt32();
             self.Name = new List<string>();
             for (var c = os.ReadInt32(); c > 0; c--)
-                self.Name.Add(os.ReadString());
+                self.Name.Add(os.ReadStringInPool());
             self.Nexttask = os.ReadInt32();
             self.Completecondition = Config.Task.DataCompletecondition._create(os);
             self.Exp = os.ReadInt32();

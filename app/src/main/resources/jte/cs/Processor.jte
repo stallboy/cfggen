@@ -29,7 +29,7 @@ namespace ${model.topPkg}
 
             for (int i = 0; i < tableCount; i++)
             {
-                // 从 StringPool 读取表名
+                // 读取表名
                 string tableName = os.ReadString();
                 // 读取表大小
                 int tableSize = os.ReadInt32();

@@ -28,7 +28,7 @@ namespace Config.Ai
 
         public override string ToString()
         {
-            return "(" + ID + "," + Desc + "," + CondID + "," + TrigTick + "," + TrigOdds + "," + CSV.ToString(ActionID) + "," + DeathRemove + ")";
+            return "(" + ID + "," + Desc + "," + CondID + "," + TrigTick + "," + TrigOdds + "," + StringUtil.ToString(ActionID) + "," + DeathRemove + ")";
         }
 
         
@@ -43,17 +43,6 @@ namespace Config.Ai
         public static List<DataAi> All()
         {
             return all.OrderedValues;
-        }
-
-        public static List<DataAi> Filter(Predicate<DataAi> predicate)
-        {
-            var r = new List<DataAi>();
-            foreach (var e in all.OrderedValues)
-            {
-                if (predicate(e))
-                    r.Add(e);
-            }
-            return r;
         }
 
         internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
@@ -71,8 +60,8 @@ namespace Config.Ai
         {
             var self = new DataAi();
             self.ID = os.ReadInt32();
-            self.Desc = os.ReadString();
-            self.CondID = os.ReadString();
+            self.Desc = os.ReadStringInPool();
+            self.CondID = os.ReadStringInPool();
             self.TrigTick = Config.Ai.DataTriggertick._create(os);
             self.TrigOdds = os.ReadInt32();
             self.ActionID = new List<int>();
