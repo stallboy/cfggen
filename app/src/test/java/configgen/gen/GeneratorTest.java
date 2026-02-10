@@ -1,5 +1,6 @@
 package configgen.gen;
 
+import configgen.util.StringUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -12,7 +13,7 @@ class GeneratorTest {
         String input = "hello";
 
         // When: 调用字符串转换方法
-        String result = Generator.upper1(input);
+        String result = StringUtil.upper1(input);
 
         // Then: 验证转换结果
         assertEquals("Hello", result);
@@ -24,7 +25,7 @@ class GeneratorTest {
         String input = "Hello";
 
         // When: 调用字符串转换方法
-        String result = Generator.lower1(input);
+        String result = StringUtil.lower1(input);
 
         // Then: 验证转换结果
         assertEquals("hello", result);

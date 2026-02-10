@@ -4,7 +4,7 @@ import configgen.schema.*;
 
 import java.util.List;
 
-import static configgen.gen.Generator.lower1;
+import static configgen.util.StringUtil.lower1;
 
 public class StructuralClassModel {
     public final Structural structural;

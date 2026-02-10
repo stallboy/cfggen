@@ -6,7 +6,7 @@ import configgen.schema.StructSchema;
 
 import java.util.Arrays;
 
-import static configgen.gen.Generator.upper1;
+import static configgen.util.StringUtil.upper1;
 
 public class NameableName {
 

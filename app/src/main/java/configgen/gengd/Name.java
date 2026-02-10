@@ -4,6 +4,7 @@ import configgen.gen.Generator;
 import configgen.schema.InterfaceSchema;
 import configgen.schema.Nameable;
 import configgen.schema.StructSchema;
+import configgen.util.StringUtil;
 
 public class Name {
     public final String className;
@@ -25,7 +26,7 @@ public class Name {
             if (seps.length > 1 && i == seps.length - 1) {
                 classNameBuilder.append("_");
             }
-            classNameBuilder.append(Generator.upper1Only(seps[i]));
+            classNameBuilder.append(StringUtil.upper1Only(seps[i]));
         }
         className = classNameBuilder.toString();
 
@@ -38,7 +39,7 @@ public class Name {
                 if (i > 0) {
                     pathBuilder.append("/");
                 }
-                pathBuilder.append(Generator.upper1Only(seps[i]));
+                pathBuilder.append(StringUtil.upper1Only(seps[i]));
             }
             pathBuilder.append("/").append(className).append(".gd");
             path = pathBuilder.toString();

@@ -2,11 +2,12 @@ package configgen.genjava.code;
 
 import configgen.gen.Generator;
 import configgen.schema.*;
+import configgen.util.StringUtil;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static configgen.gen.Generator.lower1;
+import static configgen.util.StringUtil.lower1;
 import static configgen.schema.RefKey.*;
 
 public class MethodStr {
@@ -16,7 +17,7 @@ public class MethodStr {
     }
 
     public static String actualParams(List<String> keys) {
-        return keys.stream().map(Generator::lower1).collect(Collectors.joining(", "));
+        return keys.stream().map(StringUtil::lower1).collect(Collectors.joining(", "));
     }
 
     public static String actualParamsKey(KeySchema keySchema, String pre, NameableName nullableName) {

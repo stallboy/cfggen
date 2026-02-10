@@ -2,6 +2,7 @@ package configgen.gengo;
 
 import configgen.gen.Generator;
 import configgen.schema.*;
+import configgen.util.StringUtil;
 import configgen.value.CfgValue;
 
 import java.util.stream.Collectors;
@@ -101,42 +102,42 @@ public class StructModel {
     }
 
     public static String upper1(String value) {
-        return GenGo.upper1(value);
+        return StringUtil.upper1(value);
     }
 
     public static String lower1(String value) {
-        return GenGo.lower1(value);
+        return StringUtil.lower1(value);
     }
 
     public static String keyClassName(KeySchema keySchema) {
         if (keySchema.fieldSchemas().size() > 1)
-            return "Key" + keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining());
+            return "Key" + keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining());
         else return type(keySchema.fieldSchemas().getFirst().type());
     }
 
     public static String mapName(KeySchema keySchema) {
         if (keySchema.fieldSchemas().size() > 1) {
-            return Generator.lower1(keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()));
+            return StringUtil.lower1(keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining()));
         } else {
-            return Generator.lower1(keySchema.fields().getFirst());
+            return StringUtil.lower1(keySchema.fields().getFirst());
         }
     }
 
     public static String GetParamVars(KeySchema keySchema) {
         return keySchema.fieldSchemas().stream()
-                .map(f -> Generator.lower1(f.name()))
+                .map(f -> StringUtil.lower1(f.name()))
                 .collect(Collectors.joining(", "));
     }
 
     public static String GetParamVarsInV(KeySchema keySchema, String tempVarName) {
         return keySchema.fieldSchemas().stream()
-                .map(f -> tempVarName + "." + Generator.lower1(f.name()))
+                .map(f -> tempVarName + "." + StringUtil.lower1(f.name()))
                 .collect(Collectors.joining(", "));
     }
 
     public static String GetVarDefines(KeySchema keySchema) {
         return keySchema.fieldSchemas().stream()
-                .map(f -> Generator.lower1(f.name()) + " " + GenGo.type(f.type()))
+                .map(f -> StringUtil.lower1(f.name()) + " " + GoCodeGenerator.type(f.type()))
                 .collect(Collectors.joining(", "));
     }
 
@@ -146,7 +147,7 @@ public class StructModel {
         if (refPrimary) {
             return "Get";
         } else if (fieldCnt > 1) {
-            return "GetBy" + GenGo.keyClassName(keySchema);
+            return "GetBy" + GoCodeGenerator.keyClassName(keySchema);
         } else {
             return "GetBy" + GetParamVars(keySchema);
         }

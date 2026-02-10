@@ -3,11 +3,12 @@ package configgen.genjava.code;
 import configgen.gen.Generator;
 import configgen.genjava.GenJavaUtil;
 import configgen.schema.*;
+import configgen.util.StringUtil;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import static configgen.gen.Generator.upper1;
+import static configgen.util.StringUtil.upper1;
 import static configgen.schema.FieldType.*;
 
 public class Name {
@@ -15,23 +16,23 @@ public class Name {
     static String codeTopPkg;
 
     public static String GetByKeyFunctionNameInConfigMgr(KeySchema keySchema, boolean isPrimaryKey, Nameable nameable) {
-        String name = "get" + Arrays.stream(nameable.name().split("\\.")).map(Generator::upper1).collect(Collectors.joining());
+        String name = "get" + Arrays.stream(nameable.name().split("\\.")).map(StringUtil::upper1).collect(Collectors.joining());
 
         if (isPrimaryKey){
             return name;
         }
-        return name + "By" + keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining());
+        return name + "By" + keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining());
     }
 
     public static String GetByKeyFunctionName(KeySchema keySchema, boolean isPrimaryKey) {
         if (isPrimaryKey){
             return "get";
         }
-        return "getBy" + keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining());
+        return "getBy" + keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining());
     }
 
     public static String uniqueKeyMapName(KeySchema keySchema) {
-        return keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()) + "Map";
+        return keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining()) + "Map";
     }
 
     public static String keyClassName(KeySchema keySchema){
@@ -40,7 +41,7 @@ public class Name {
 
     public static String keyClassName(KeySchema keySchema, NameableName nullableName) {
         if (keySchema.fields().size() > 1) {
-            String klsName = keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()) + "Key";
+            String klsName = keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining()) + "Key";
             if (nullableName != null) {
                 return nullableName.fullName + "." + klsName;
             } else {

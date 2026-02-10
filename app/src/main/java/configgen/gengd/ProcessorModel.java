@@ -5,9 +5,9 @@ import configgen.schema.TableSchema;
 
 public class ProcessorModel {
     public final Iterable<TableSchema> tableSchemas;
-    private final GenGd gen;
+    private final GdCodeGenerator gen;
 
-    public ProcessorModel(GenGd gen, Iterable<TableSchema> tableSchemas) {
+    public ProcessorModel(GdCodeGenerator gen, Iterable<TableSchema> tableSchemas) {
         this.gen = gen;
         this.tableSchemas = tableSchemas;
     }

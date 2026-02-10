@@ -3,21 +3,21 @@ package configgen.gen;
 import configgen.ctx.*;
 import configgen.editorserver.EditorServer;
 import configgen.gen.ui.GuiLauncher;
-import configgen.genbytes.GenBytes;
-import configgen.gencs.GenCs;
-import configgen.genjava.JavaDataReader;
-import configgen.gents.GenTs;
-import configgen.gengo.GenGo;
+import configgen.genbytes.BytesGenerator;
+import configgen.gencs.CsCodeGenerator;
+import configgen.tool.BytesViewTool;
+import configgen.gents.TsCodeGenerator;
+import configgen.gengo.GoCodeGenerator;
 // GenJavaData 已被合并到 GenBytes 中
-import configgen.genjava.code.GenJavaCode;
-import configgen.genjson.GenJson;
-import configgen.genbyai.GenByAI;
-import configgen.genbyai.GenTsSchema;
-import configgen.genlua.GenLua;
-import configgen.gengd.GenGd;
+import configgen.genjava.code.JavaCodeGenerator;
+import configgen.genjson.JsonGenerator;
+import configgen.genbyai.ByAIGenerator;
+import configgen.genbyai.TsSchemaGenerator;
+import configgen.genlua.LuaCodeGenerator;
+import configgen.gengd.GdCodeGenerator;
 import configgen.geni18n.TodoTermListerAndChecker;
-import configgen.geni18n.GenI18nByValue;
-import configgen.geni18n.GenI18nById;
+import configgen.geni18n.I18nByValueGenerator;
+import configgen.geni18n.I18nByIdGenerator;
 import configgen.geni18n.TodoTranslator;
 import configgen.mcpserver.CfgMcpServer;
 import configgen.tool.*;
@@ -35,8 +35,8 @@ import java.util.Locale;
 public final class Main {
     private static final int MAX_EXCEPTION_DEPTH = 30;
 
-    private static int usage(String reason) {
-        Usage.printUsage(reason);
+    private static int help(String reason) {
+        HelpTool.printHelp(reason);
         return 1;
     }
 
@@ -61,31 +61,31 @@ public final class Main {
     }
 
     public static void registerAllProviders() {
-        Tools.addProvider("xmltocfg", XmlToCfg::new);
-        Tools.addProvider("fastexcelcheck", ComparePoiAndFastExcel::new);
-        Tools.addProvider("readjavadata", JavaDataReader::new);
+        Tools.addProvider("xmltocfg", XmlToCfgTool::new);
+        Tools.addProvider("fastexcelcheck", ExcelReadDiffTool::new);
+        Tools.addProvider("bytesview", BytesViewTool::new);
         Tools.addProvider("term", TodoTermListerAndChecker::new);
         Tools.addProvider("translate", TodoTranslator::new);
-        Tools.addProvider("usage", Usage::new);
+        Tools.addProvider("help", HelpTool::new);
 
-        Generators.addProvider("verify", GenVerifier::new);
-        Generators.addProvider("search", GenValueSearcher::new);
-        Generators.addProvider("i18n", GenI18nByValue::new);
-        Generators.addProvider("i18nbyid", GenI18nById::new);
+        Generators.addProvider("verify", ValueVerifyTool::new);
+        Generators.addProvider("search", ValueInspectTool::new);
+        Generators.addProvider("i18n", I18nByValueGenerator::new);
+        Generators.addProvider("i18nbyid", I18nByIdGenerator::new);
 
-        Generators.addProvider("java", GenJavaCode::new);
-        Generators.addProvider("cs", GenCs::new);
-        Generators.addProvider("bytes", GenBytes::new);
-        Generators.addProvider("lua", GenLua::new);
-        Generators.addProvider("ts", GenTs::new);
-        Generators.addProvider("go", GenGo::new);
-        Generators.addProvider("gd", GenGd::new);
-        Generators.addProvider("tsschema", GenTsSchema::new);
-        Generators.addProvider("json", GenJson::new);
+        Generators.addProvider("java", JavaCodeGenerator::new);
+        Generators.addProvider("cs", CsCodeGenerator::new);
+        Generators.addProvider("bytes", BytesGenerator::new);
+        Generators.addProvider("lua", LuaCodeGenerator::new);
+        Generators.addProvider("ts", TsCodeGenerator::new);
+        Generators.addProvider("go", GoCodeGenerator::new);
+        Generators.addProvider("gd", GdCodeGenerator::new);
+        Generators.addProvider("tsschema", TsSchemaGenerator::new);
+        Generators.addProvider("json", JsonGenerator::new);
 
         Generators.addProvider("server", EditorServer::new);
         Generators.addProvider("mcpserver", CfgMcpServer::new);
-        Generators.addProvider("byai", GenByAI::new);
+        Generators.addProvider("byai", ByAIGenerator::new);
     }
 
     public static int runWithCatch(String[] args) {
@@ -180,7 +180,7 @@ public final class Main {
                     String name = args[++i];
                     Tool tool = Tools.create(name);
                     if (tool == null) {
-                        return usage("-tool " + name + " UNKNOWN");
+                        return help("-tool " + name + " UNKNOWN");
                     }
                     tools.add(new NamedTool(name, tool));
                 }
@@ -201,12 +201,12 @@ public final class Main {
                     String name = args[++i];
                     Generator generator = Generators.create(name);
                     if (generator == null) {
-                        return usage("-gen " + name + " UNKNOWN");
+                        return help("-gen " + name + " UNKNOWN");
                     }
                     generators.add(new NamedGenerator(name, generator));
                 }
                 default -> {
-                    return usage("unknown args " + args[i]);
+                    return help("unknown args " + args[i]);
                 }
             }
         }
@@ -218,7 +218,7 @@ public final class Main {
 
         if (datadir == null) {
             if (!generators.isEmpty()) {
-                return usage("-datadir is required");
+                return help("-datadir is required");
             }
             return 0;
         }
@@ -232,7 +232,7 @@ public final class Main {
         ExplicitDir explicitDir = ExplicitDir.parse(asRoot, excelDirs, jsonDirs);
 
         if (i18nfile != null && langSwitchDir != null) {
-            return usage("-不能同时配置-i18nfile和-langswitchdir");
+            return help("-不能同时配置-i18nfile和-langswitchdir");
         }
 
         Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));

@@ -10,29 +10,24 @@ import configgen.write.VTableJsonStorage;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import static configgen.value.CfgValue.*;
 
-public class GenJson extends GeneratorWithTag {
-    private final List<String> tables = new ArrayList<>();
-    private final Path dstPath;
+public class JsonGenerator extends GeneratorWithTag {
+    private final String tables;
+    private final String dst;
 
-    public GenJson(Parameter parameter) {
+    public JsonGenerator(Parameter parameter) {
         super(parameter);
-        String tablesStr = parameter.get("tables", "");
-        String dstDir = parameter.get("dst", ".");
-        dstPath = Path.of(dstDir);
-        String[] split = tablesStr.split(";");
-        tables.addAll(Arrays.asList(split));
+        tables = parameter.get("tables", "");
+        dst = parameter.get("dst", ".");
     }
 
     @Override
     public void generate(Context ctx) throws IOException {
-        if (tables.isEmpty()) {
+        String[] tableNames = tables.split(";");
+        if (tableNames.length == 0) {
             return;
         }
         if (tag != null) {
@@ -41,7 +36,7 @@ public class GenJson extends GeneratorWithTag {
 
         CfgValue cfgValue = ctx.makeValue(tag);
 
-        for (String table : tables) {
+        for (String table : tableNames) {
             VTable vTable = cfgValue.getTable(table);
             if (vTable == null) {
                 Logger.log("ignore gen json: table=%s not found!", table);
@@ -56,7 +51,7 @@ public class GenJson extends GeneratorWithTag {
             for (Map.Entry<Value, VStruct> e : vTable.primaryKeyMap().entrySet()) {
                 Value pk = e.getKey();
                 VStruct record = e.getValue();
-                VTableJsonStorage.addOrUpdateRecord(record, table, pk.packStr(), dstPath);
+                VTableJsonStorage.addOrUpdateRecord(record, table, pk.packStr(), Path.of(dst));
             }
         }
     }

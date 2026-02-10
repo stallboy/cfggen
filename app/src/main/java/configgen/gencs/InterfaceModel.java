@@ -7,9 +7,9 @@ public class InterfaceModel {
     public final String topPkg;
     public final Name name;
     public final InterfaceSchema sInterface;
-    private final GenCs gen;
+    private final CsCodeGenerator gen;
 
-    public InterfaceModel(GenCs gen, InterfaceSchema sInterface) {
+    public InterfaceModel(CsCodeGenerator gen, InterfaceSchema sInterface) {
         this.gen = gen;
         this.topPkg = gen.pkg;
         this.name = new Name(gen.pkg, gen.prefix, sInterface);

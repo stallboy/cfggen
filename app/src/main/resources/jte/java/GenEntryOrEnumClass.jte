@@ -4,6 +4,7 @@
 @import configgen.genjava.code.Name
 @import configgen.schema.FieldSchema
 @import configgen.schema.ForeignKeySchema
+@import configgen.util.StringUtil
 @param EntryOrEnumModel model
 package ${model.pkg};
 
@@ -98,21 +99,21 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
                  * ${field.comment()}
                  */
             @endif
-            public ${TypeStr.type(field.type())} get${Generator.upper1(field.name())}() {
+            public ${TypeStr.type(field.type())} get${StringUtil.upper1(field.name())}() {
                 @if(field == model.table.primaryKey().fieldSchemas().get(0))
                     return value;
                 @elseif(field == model.entryBase.fieldSchema())
                     return name;
                 @else
-                    return ref.get${Generator.upper1(field.name())}();
+                    return ref.get${StringUtil.upper1(field.name())}();
                 @endif
             }
 
         @endfor
 
         @for(ForeignKeySchema fk : model.table.foreignKeys())
-            public ${Name.refType(fk)} ${Generator.lower1(Name.refName(fk))}() {
-                return ref.${Generator.lower1(Name.refName(fk))}();
+            public ${Name.refType(fk)} ${StringUtil.lower1(Name.refName(fk))}() {
+                return ref.${StringUtil.lower1(Name.refName(fk))}();
             }
 
         @endfor

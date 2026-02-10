@@ -3,7 +3,7 @@ import config.ConfigCodeSchema;
 import config.ConfigMgr;
 import config.ConfigMgrLoader;
 import config.task.Task;
-import configgen.genjava.JavaData;
+import configgen.genjava.BytesInspector;
 import configgen.genjava.ConfigInput;
 import configgen.genjava.Schema;
 import configgen.genjava.SchemaCompatibleException;
@@ -13,7 +13,7 @@ import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.*;
-import java.util.concurrent.Executors;
+//import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -74,12 +74,13 @@ public class LoadConfig {
     public static void main(String[] args) throws IOException {
         String fn = "config.bytes";
         load(fn);
+        System.out.println(Task.get(1));
+        new BytesInspector(fn).match("eq");
+
 //        ScheduledExecutorService watcher = Executors.newSingleThreadScheduledExecutor();
 //        autoReload(watcher, fn, null);
 //        System.out.println("read ok");
-        System.out.println(Task.get(1));
-//        new JavaData(fn).loop();
-        new JavaData(fn).match("eq");
+//        new BytesInspector(fn).loop();
 //        watcher.close();
     }
 }

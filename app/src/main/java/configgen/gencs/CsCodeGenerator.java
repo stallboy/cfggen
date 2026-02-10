@@ -1,69 +1,63 @@
-package configgen.gengd;
+package configgen.gencs;
 
 import configgen.ctx.Context;
+import configgen.gen.Generator;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
 import configgen.i18n.LangSwitchable;
 import configgen.schema.*;
-import configgen.util.CachedFiles;
-import configgen.util.CachedIndentPrinter;
-import configgen.util.FileUtils;
-import configgen.util.JteEngine;
+import configgen.util.*;
+import configgen.util.CachedIndentPrinter.CacheConfig;
 import configgen.value.CfgValue;
 
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import static configgen.value.CfgValue.VTable;
 
-public class GenGd extends GeneratorWithTag {
+public class CsCodeGenerator extends GeneratorWithTag {
+    private final String dir;
+    public final String pkg;
+    public final String encoding;
     public final String prefix;
-    public final Path dstDir;
-    public CfgSchema cfgSchema;
+
+    private Path dstDir;
+    private CacheConfig cacheConfig;
     public boolean isLangSwitch;
-
-    private static final String ENCODING = "UTF-8";
     private static final List<String> COPY_FILES = List.of(
-            "ConfigStream.gd",
-            "ConfigLoader.gd",
-            "ConfigErrors.gd"
+            "Loader.cs",
+            "LoadErrors.cs",
+            "KeyedList.cs"
     );
-    private static final String TEXT_MGR_FILE = "TextMgr.gd";
 
-
-    public GenGd(Parameter parameter) {
+    public CsCodeGenerator(Parameter parameter) {
         super(parameter);
-        String dir = parameter.get("dir", "config");
+        dir = parameter.get("dir", "Config");
+        pkg = parameter.get("pkg", "Config");
+        encoding = parameter.get("encoding", "GBK");
         prefix = parameter.get("prefix", "Data");
-        dstDir = Paths.get(dir);
     }
-
 
     @Override
     public void generate(Context ctx) throws IOException {
-        CfgValue cfgValue = ctx.makeValue(tag);
-        cfgSchema = cfgValue.schema();
+        CfgValue cfgValue = ctx.makeValue(tag);  // 这里只需要schema，生成value只用于检验数据
+        CfgSchema cfgSchema = cfgValue.schema();
+
+        dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
+        cacheConfig = CacheConfig.of();
 
         isLangSwitch = ctx.nullableLangSwitch() != null;
-
-
-        List<String> needCopyFiles = new ArrayList<>(4);
-        needCopyFiles.addAll(COPY_FILES);
-        if (isLangSwitch) {
-            needCopyFiles.add(TEXT_MGR_FILE);
-        }
-        for (String fn : needCopyFiles) {
-            FileUtils.copyFileIfNotExist("support/gd/" + fn,
+        for (String fn : COPY_FILES) {
+            FileUtil.copyFileIfNotExist("support/cs/" + fn,
                     "src/main/resources/support/gd/" + fn,
-                    dstDir.resolve(fn), ENCODING);
+                    dstDir.resolve(fn),
+                    encoding);
         }
 
         generateProcessor(cfgSchema);
-
         for (Fieldable fieldable : cfgSchema.sortedFieldables()) {
             switch (fieldable) {
                 case StructSchema structSchema -> {
@@ -77,12 +71,11 @@ public class GenGd extends GeneratorWithTag {
                 }
             }
         }
-
         for (VTable vTable : cfgValue.sortedTables()) {
             generateTable(vTable);
         }
 
-        if (isLangSwitch) {
+        if (isLangSwitch) { //生成 Text这个Bean
             generateText(ctx.nullableLangSwitch());
         }
 
@@ -91,8 +84,8 @@ public class GenGd extends GeneratorWithTag {
 
     private void generateInterface(InterfaceSchema sInterface) {
         InterfaceModel model = new InterfaceModel(this, sInterface);
-        try (CachedIndentPrinter ps = new CachedIndentPrinter(dstDir.resolve(model.name.path), ENCODING)) {
-            JteEngine.render("gd/GenInterface.jte", model, ps);
+        try (var ps = createCode(model.name.path)) {
+            JteEngine.render("cs/GenInterface.jte", model, ps);
         }
     }
 
@@ -106,21 +99,30 @@ public class GenGd extends GeneratorWithTag {
 
     private void generateStructOrTable(Structural structural, CfgValue.VTable nullableVTable) {
         StructModel model = new StructModel(this, structural, nullableVTable);
-        try (CachedIndentPrinter ps = new CachedIndentPrinter(dstDir.resolve(model.name.path), ENCODING)) {
-            JteEngine.render("gd/GenStruct.jte", model, ps);
+        try (var ps = createCode(model.name.path)) {
+            JteEngine.render("cs/GenStruct.jte", model, ps);
         }
     }
 
     private void generateProcessor(CfgSchema cfgSchema) {
-        try (CachedIndentPrinter ps = new CachedIndentPrinter(dstDir.resolve("ConfigProcessor.gd"), ENCODING)) {
-            JteEngine.render("gd/Processor.jte", new ProcessorModel(this, cfgSchema.sortedTables()), ps);
+        ProcessorModel model = new ProcessorModel(this, cfgSchema.sortedTables());
+        try (var ps = createCode("Processor.cs")) {
+            JteEngine.render("cs/Processor.jte", model, ps);
         }
     }
 
     private void generateText(LangSwitchable langSwitch) {
-        try (CachedIndentPrinter ps = new CachedIndentPrinter(dstDir.resolve("ConfigText.gd"), ENCODING)) {
-            List<String> languages = langSwitch.languages();
-            JteEngine.render("gd/Text.jte", Map.of("languages", languages), ps);
+        List<String> languages = langSwitch.languages().stream().map(StringUtil::upper1).toList();
+        Map<String, Object> model = Map.of("pkg", pkg, "languages", languages);
+        try (var ps = createCode("Text.cs")) {
+            JteEngine.render("cs/Text.jte", model, ps);
         }
     }
+
+
+    private CachedIndentPrinter createCode(String fn) {
+        return cacheConfig.printer(dstDir.resolve(fn), encoding);
+    }
+
+
 }

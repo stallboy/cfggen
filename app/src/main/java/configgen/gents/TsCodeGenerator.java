@@ -1,20 +1,21 @@
 package configgen.gents;
 
 import configgen.ctx.Context;
-import configgen.gen.Generator;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
 import configgen.i18n.LangSwitchable;
 import configgen.schema.*;
 import configgen.util.CachedIndentPrinter;
+import configgen.util.FileUtil;
 import configgen.util.JteEngine;
+import configgen.util.StringUtil;
 import configgen.value.CfgValue;
 
 import java.io.*;
 import java.nio.file.Path;
 import java.util.Arrays;
 
-public class GenTs extends GeneratorWithTag {
+public class TsCodeGenerator extends GeneratorWithTag {
     public final String pkg;
     public final String encoding;
     private final Path dstFile;
@@ -22,7 +23,7 @@ public class GenTs extends GeneratorWithTag {
     public CfgSchema cfgSchema;
     public LangSwitchable nullableLanguageSwitch;
 
-    public GenTs(Parameter parameter) {
+    public TsCodeGenerator(Parameter parameter) {
         super(parameter);
         dstFile = Path.of(parameter.get("file", "Config.ts"));
         pkg = parameter.get("pkg", "Config");
@@ -35,14 +36,19 @@ public class GenTs extends GeneratorWithTag {
         cfgSchema = cfgValue.schema();
         nullableLanguageSwitch = ctx.nullableLangSwitch();
 
-        try (CachedIndentPrinter ps = new CachedIndentPrinter(dstFile, encoding)) {
+        try (var ps = new CachedIndentPrinter(dstFile, encoding)) {
             JteEngine.render("ts/Config.jte", this, ps);
         }
-        copySupportFileIfNotExist("ConfigUtil.ts", dstFile.getParent(), encoding);
+
+        FileUtil.copyFileIfNotExist("support/ts/ConfigUtil.ts",
+                "src/main/resources/support/ts/ConfigUtil.ts",
+                dstFile.getParent().resolve("ConfigUtil.ts"),
+                encoding);
+
     }
 
     public String className(Nameable nameable) {
-        String[] seps = nameable.fullName().split("\\.");
-        return String.join("_", Arrays.stream(seps).map(Generator::upper1).toList());
+        String[] s = nameable.fullName().split("\\.");
+        return String.join("_", Arrays.stream(s).map(StringUtil::upper1).toList());
     }
 }

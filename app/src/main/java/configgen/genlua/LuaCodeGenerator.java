@@ -6,9 +6,10 @@ import configgen.gen.Parameter;
 import configgen.schema.*;
 import configgen.util.CachedFiles;
 import configgen.util.CachedIndentPrinter;
+import configgen.util.CachedIndentPrinter.CacheConfig;
+import configgen.util.FileUtil;
 import configgen.value.CfgValue;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -17,8 +18,7 @@ import java.util.*;
 import static configgen.value.CfgValue.VStruct;
 import static configgen.value.CfgValue.VTable;
 
-public class GenLua extends GeneratorWithTag {
-
+public class LuaCodeGenerator extends GeneratorWithTag {
     private final String dir;
     private final String pkg;
     private final String encoding;
@@ -32,12 +32,13 @@ public class GenLua extends GeneratorWithTag {
 
     private CfgValue cfgValue;
     private CfgSchema cfgSchema;
-    private File dstDir;
+    private Path dstDir;
+    private CacheConfig cacheConfig;
     private boolean isLangSwitch;
     private final boolean noStr;
     private final boolean rForOldShared;
 
-    public GenLua(Parameter parameter) {
+    public LuaCodeGenerator(Parameter parameter) {
         super(parameter);
         dir = parameter.get("dir", ".");
         pkg = parameter.get("pkg", "cfg");
@@ -63,34 +64,33 @@ public class GenLua extends GeneratorWithTag {
                 packBool, noStr, rForOldShared);
         isLangSwitch = AContext.getInstance().nullableLangSwitchSupport() != null;
 
-        Path dstDirPath = Paths.get(dir).resolve(pkg.replace('.', '/'));
-        dstDir = dstDirPath.toFile();
+        dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
+        cacheConfig = CacheConfig.of(512 * 1024); //优化gc alloc
+
         cfgValue = ctx.makeValue(tag);
         cfgSchema = cfgValue.schema();
 
-        StringBuilder fileDst = new StringBuilder(512 * 1024); //优化gc alloc
-        StringBuilder cache = new StringBuilder(512 * 1024);
-        StringBuilder tmp = new StringBuilder(128);
-        try (CachedIndentPrinter ps = createCode(new File(dstDir, "_cfgs.lua"), encoding, fileDst, cache, tmp)) {
+
+        try (var ps = createCode("_cfgs.lua")) {
             generate_cfgs(ps);
         }
         if (preload) {
-            try (CachedIndentPrinter ps = createCode(new File(dstDir, "_loads.lua"), encoding, fileDst, cache, tmp)) {
+            try (var ps = createCode("_loads.lua")) {
                 generate_loads(ps);
             }
         }
-        try (CachedIndentPrinter ps = createCode(new File(dstDir, "_beans.lua"), encoding, fileDst, cache, tmp)) {
+        try (var ps = createCode("_beans.lua")) {
             generate_beans(ps);
         }
 
         StringBuilder lineCache = new StringBuilder(256);
 
         for (VTable v : cfgValue.sortedTables()) {
-            try (CachedIndentPrinter ps = createCode(new File(dstDir, Name.tablePath(v.name())), encoding, fileDst, cache, tmp)) {
+            try (var ps = createCode(Name.tablePath(v.name()))) {
                 try {
                     generate_table(v, ps, lineCache);
                 } catch (Throwable e) {
-                    throw new AssertionError(v.name() + ",这个表生成lua代码出错", e);
+                    throw new AssertionError("ERR generating lua code for " + v.name(), e);
                 }
             }
         }
@@ -102,15 +102,22 @@ public class GenLua extends GeneratorWithTag {
             for (Map.Entry<String, List<String>> e : lang2Texts.entrySet()) {
                 String lang = e.getKey();
                 List<String> texts = e.getValue();
-                try (CachedIndentPrinter ps = createCode(new File(dstDir, lang + ".lua"), encoding, fileDst, cache, tmp)) {
+                try (var ps = createCode(lang + ".lua")) {
                     generate_lang(ps, texts, lineCache);
                 }
             }
-            copySupportFileIfNotExist("mkcfg.lua", dstDirPath, encoding);
         }
 
+        FileUtil.copyFileIfNotExist("support/lua/mkcfg.lua",
+                "src/main/resources/support/mkcfg/mkcfg.lua",
+                dstDir.resolve("mkcfg.lua"),
+                encoding);
 
-        CachedFiles.keepMetaAndDeleteOtherFiles(dstDir);
+        CachedFiles.keepMetaAndDeleteOtherFiles(dstDir.toFile());
+    }
+
+    private CachedIndentPrinter createCode(String fn) {
+        return cacheConfig.printer(dstDir.resolve(fn), encoding);
     }
 
     private void generate_lang(CachedIndentPrinter ps, List<String> idToStr, StringBuilder lineCache) {
@@ -428,7 +435,7 @@ public class GenLua extends GeneratorWithTag {
         for (int extraIdx = 0; extraIdx < extraFileCnt; extraIdx++) {
             ps.println("require \"%s_%d\"(mk)", fullName, extraIdx + 1);
 
-            try (CachedIndentPrinter extraPs = createCode(new File(dstDir, Name.tableExtraPath(vTable.name(), extraIdx + 1)), encoding)) {
+            try (var extraPs = createCode(Name.tableExtraPath(vTable.name(), extraIdx + 1))) {
 
                 extraPs.println("local %s = require \"%s._cfgs\"", pkg, pkg);
                 if (HasSubFieldable.hasSubFieldable(table)) {

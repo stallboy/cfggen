@@ -2,6 +2,7 @@ package configgen.gengd;
 
 import configgen.gen.Generator;
 import configgen.schema.*;
+import configgen.util.StringUtil;
 import configgen.value.CfgValue;
 
 import java.util.List;
@@ -13,9 +14,9 @@ public class StructModel {
     public final Name name;
     public final Structural structural;
     public final CfgValue.VTable _vTable;
-    private final GenGd gen;
+    private final GdCodeGenerator gen;
 
-    public StructModel(GenGd gen, Structural structural, CfgValue.VTable _vTable) {
+    public StructModel(GdCodeGenerator gen, Structural structural, CfgValue.VTable _vTable) {
         this.gen = gen;
         this.name = new Name(gen.prefix, structural);
         this.structural = structural;
@@ -27,11 +28,11 @@ public class StructModel {
     }
 
     public String upper1(String value) {
-        return Generator.upper1(value);
+        return StringUtil.upper1(value);
     }
 
     public String lower1(String value) {
-        return Generator.lower1(value);
+        return StringUtil.lower1(value);
     }
 
     public String type(FieldType t) {
@@ -102,13 +103,13 @@ public class StructModel {
 
     public String uniqueKeyGetByName(KeySchema keySchema) {
         return "find_by_" + keySchema.fields().stream()
-                .map(Generator::lower1)
+                .map(StringUtil::lower1)
                 .collect(Collectors.joining("_"));
     }
 
     public String uniqueKeyMapName(KeySchema keySchema) {
         return "_" + keySchema.fields().stream()
-                .map(Generator::lower1)
+                .map(StringUtil::lower1)
                 .collect(Collectors.joining("_")) + "_map";
     }
 
@@ -123,7 +124,7 @@ public class StructModel {
 
     public String actualParams(KeySchema keySchema) {
         return keySchema.fields().stream()
-                .map(Generator::lower1)
+                .map(StringUtil::lower1)
                 .collect(Collectors.joining(", "));
     }
 
@@ -154,7 +155,7 @@ public class StructModel {
             }
             case RefKey.RefUniq refUniq -> {
                 return fullName(refTable) + ".find_by_" + refUniq.keyNames().stream()
-                        .map(Generator::lower1)
+                        .map(StringUtil::lower1)
                         .collect(Collectors.joining("_")) + "(" + actualParam + ")";
             }
         }

@@ -2,6 +2,7 @@
 @import configgen.genjava.GenJavaUtil
 @import configgen.genjava.code.*
 @import configgen.schema.*
+@import configgen.util.StringUtil
 @param String codeTopPkg
 @param Structural structural
 public void _resolveDirect(${codeTopPkg}.ConfigMgr mgr) {
@@ -19,7 +20,7 @@ public void _resolveDirect(${codeTopPkg}.ConfigMgr mgr) {
                     @endif
                 @elseif(firstField.type() instanceof FieldType.FList fList)
                     !{
-                        String firstFieldName = Generator.lower1(firstField.name());
+                        String firstFieldName = StringUtil.lower1(firstField.name());
                     }
                     if (${firstFieldName}.isEmpty()) {
                         ${refName} = java.util.Collections.emptyList();
@@ -33,7 +34,7 @@ public void _resolveDirect(${codeTopPkg}.ConfigMgr mgr) {
                     }
                 @elseif(firstField.type() instanceof FieldType.FMap fMap)
                     !{
-                        String firstFieldName = Generator.lower1(firstField.name());
+                        String firstFieldName = StringUtil.lower1(firstField.name());
                     }
                     if (${firstFieldName}.isEmpty()) {
                         ${refName} = java.util.Collections.emptyMap();
@@ -59,7 +60,7 @@ public void _resolveDirect(${codeTopPkg}.ConfigMgr mgr) {
                     for (${refN.fullName} v : ${refN.fullName}.values()) {
                 @elseif(isEnum)
                     for (${refN.fullName} vv : ${refN.fullName}.values()) {
-                        ${refN.fullName}_Detail v = mgr.${refN.containerPrefix}All.get(vv.get${Generator.upper1(refTable.primaryKey().fields().getFirst())}());
+                        ${refN.fullName}_Detail v = mgr.${refN.containerPrefix}All.get(vv.get${StringUtil.upper1(refTable.primaryKey().fields().getFirst())}());
                 @else
                     for (${Name.refType(refTable)} v : mgr.${refN.containerPrefix}All.values()) {
                 @endif
@@ -68,7 +69,7 @@ public void _resolveDirect(${codeTopPkg}.ConfigMgr mgr) {
                         for (int i = 0; i < fk.key().fields().size(); i++) {
                             FieldSchema k = fk.key().fieldSchemas().get(i);
                             String rk = refList.keyNames().get(i);
-                            eqs.add(MethodStr.equal("v.get" + Generator.upper1(rk) + "()", Generator.lower1(k.name()), k.type()));
+                            eqs.add(MethodStr.equal("v.get" + StringUtil.upper1(rk) + "()", StringUtil.lower1(k.name()), k.type()));
                         }
                     }
                     if (${String.join(" && ", eqs)})

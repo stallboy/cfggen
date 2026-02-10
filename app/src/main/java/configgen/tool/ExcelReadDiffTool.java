@@ -14,13 +14,13 @@ import configgen.util.Logger;
 import java.nio.file.Path;
 import java.util.List;
 
-public class ComparePoiAndFastExcel extends Tool {
+public class ExcelReadDiffTool extends Tool {
     private final Path dataDir;
     private final String csvDefaultEncoding;
     private final HeadRow headRow;
 
 
-    public ComparePoiAndFastExcel(Parameter parameter) {
+    public ExcelReadDiffTool(Parameter parameter) {
         super(parameter);
         dataDir = Path.of(parameter.get("datadir", "."));
         csvDefaultEncoding = parameter.get("csvencoding", "GBK");

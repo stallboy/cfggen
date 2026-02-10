@@ -4,6 +4,7 @@
 @import configgen.schema.*
 @import configgen.schema.FieldType.*
 @import configgen.gengo.StructModel
+@import configgen.util.StringUtil
 @import configgen.value.CfgValue
 @import java.util.ArrayList
 @import java.util.List
@@ -106,7 +107,7 @@ var (
                     getFuncName = model.GetFuncName(fk.key(), true);
                 }
             } else if (refKey instanceof RefKey.RefList) {
-                getFuncName = "GetAllBy" + GenGo.upper1(fk.key().fieldSchemas().getFirst().name());
+                getFuncName = "GetAllBy" + StringUtil.upper1(fk.key().fieldSchemas().getFirst().name());
             }
         }
         @if (getFuncName != null)
@@ -170,8 +171,8 @@ var (
         var paramVars = model.GetParamVars(keySchema);
         var varDefines = model.GetVarDefines(keySchema);
         var getFuncName = model.GetFuncName(keySchema,isPrimaryKey);
-        var IdType = GenGo.keyClassName(keySchema);
-        var mapName = GenGo.mapName(keySchema);
+        var IdType = GoCodeGenerator.keyClassName(keySchema);
+        var mapName = GoCodeGenerator.mapName(keySchema);
     }
     @if (fieldCnt > 1)
         func(t *${className}Mgr) ${getFuncName}(${varDefines}) *${className} {
@@ -210,8 +211,8 @@ var (
         t.all = make([]*${className}, 0, cnt)
         @for (KeySchema keySchema : keySchemas)
         !{
-            var mapName = GenGo.mapName(keySchema);
-            var IdType = GenGo.keyClassName(keySchema);
+            var mapName = GoCodeGenerator.mapName(keySchema);
+            var IdType = GoCodeGenerator.keyClassName(keySchema);
         }
         t.${mapName}Map = make(map[${IdType}]*${className}, cnt)
         @endfor
@@ -222,8 +223,8 @@ var (
             !{
                 var fieldSchemas = keySchema.fieldSchemas();
                 var fieldCnt = fieldSchemas.size();
-                var mapName = GenGo.mapName(keySchema);
-                var IdType = GenGo.keyClassName(keySchema);
+                var mapName = GoCodeGenerator.mapName(keySchema);
+                var IdType = GoCodeGenerator.keyClassName(keySchema);
                 var paramVarsInV = model.GetParamVarsInV(keySchema, "v");
             }
             @if (fieldCnt > 1)
@@ -241,10 +242,10 @@ var (
                     default -> null; // Default case, use a generic name
                 };
             }
-            switch v.${Generator.lower1(entryVarName)} {
+            switch v.${StringUtil.lower1(entryVarName)} {
             @for (String enumName : vTable.enumNames())
-            case "${Generator.upper1(enumName)}":
-                ${Generator.lower1(enumName)} = *v
+            case "${StringUtil.upper1(enumName)}":
+                ${StringUtil.lower1(enumName)} = *v
             @endfor
             }
             @endif

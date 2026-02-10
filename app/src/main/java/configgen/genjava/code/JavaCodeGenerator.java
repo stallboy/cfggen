@@ -6,9 +6,9 @@ import configgen.gen.Parameter;
 import configgen.genjava.GenJavaUtil;
 import configgen.schema.*;
 import configgen.util.*;
+import configgen.util.CachedIndentPrinter.CacheConfig;
 import configgen.value.CfgValue;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -18,8 +18,7 @@ import java.util.*;
 
 import static configgen.value.CfgValue.VTable;
 
-public class GenJavaCode extends GeneratorWithTag {
-    private File dstDir;
+public class JavaCodeGenerator extends GeneratorWithTag {
     private final String dir;
     private final String pkg;
     private final String encoding;
@@ -28,6 +27,9 @@ public class GenJavaCode extends GeneratorWithTag {
     private final String configgenDir; // 新增：configgen genjava 源文件复制目录
     private Set<String> needBuilderTables = null;
     private final int schemaNumPerFile;
+
+    private Path dstDir;
+    private CacheConfig cacheConfig;
 
     // 需要复制的源文件列表
     private static final String[] COPY_FILES = {
@@ -45,10 +47,10 @@ public class GenJavaCode extends GeneratorWithTag {
             "ConfigErr.java",
             "ConfigInput.java",
 
-            "JavaData.java",
+            "BytesInspector.java",
     };
 
-    public GenJavaCode(Parameter parameter) {
+    public JavaCodeGenerator(Parameter parameter) {
         super(parameter);
         dir = parameter.get("dir", "config");
         pkg = parameter.get("pkg", "config");
@@ -62,14 +64,14 @@ public class GenJavaCode extends GeneratorWithTag {
 
     @Override
     public void generate(Context ctx) throws IOException {
-
         CfgValue cfgValue = ctx.makeValue(tag);
-        dstDir = Paths.get(dir).resolve(pkg.replace('.', '/')).toFile();
+        dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
+        cacheConfig = CacheConfig.of();
 
         Name.codeTopPkg = pkg;
         NameableName.isSealedInterface = sealed;
         boolean isLangSwitch = ctx.nullableLangSwitch() != null;
-        TypeStr.isLangSwitch = isLangSwitch; //辅助Text的类型声明和创建
+        TypeStr.isLangSwitch = isLangSwitch; //辅助 Text的类型声明和创建
 
         List<String> mapsInMgr = new ArrayList<>();
         List<String> setAllRefsInMgrLoader = new ArrayList<>();
@@ -97,31 +99,31 @@ public class GenJavaCode extends GeneratorWithTag {
             generateTableClass(vtable, mapsInMgr, setAllRefsInMgrLoader);
         }
 
-        if (isLangSwitch) { //生成Text这个Bean
-            try (CachedIndentPrinter ps = createCode(new File(dstDir, "Text.java"), encoding)) {
+        if (isLangSwitch) {
+            try (var ps = createCode("Text.java")) {
                 JteEngine.render("java/Text.jte",
                         new TextModel(pkg, ctx.nullableLangSwitch().languages()), ps);
             }
         }
 
-        try (CachedIndentPrinter ps = createCode(new File(dstDir, "ConfigMgr.java"), encoding)) {
+        try (var ps = createCode("ConfigMgr.java")) {
             JteEngine.render("java/ConfigMgr.jte",
                     Map.of("pkg", Name.codeTopPkg, "mapsInMgr", mapsInMgr), ps);
         }
 
-        try (CachedIndentPrinter ps = createCode(new File(dstDir, "ConfigLoader.java"), encoding)) {
+        try (var ps = createCode("ConfigLoader.java")) {
             JteEngine.render("java/ConfigLoader.jte",
                     Map.of("pkg", Name.codeTopPkg), ps);
         }
 
-        try (CachedIndentPrinter ps = createCode(new File(dstDir, "ConfigMgrLoader.java"), encoding)) {
+        try (var ps = createCode("ConfigMgrLoader.java")) {
             JteEngine.render("java/ConfigMgrLoader.jte",
                     new ConfigMgrLoaderModel(cfgValue, setAllRefsInMgrLoader), ps);
         }
 
         GenConfigCodeSchema.generateAll(this, schemaNumPerFile, cfgValue, ctx.nullableLangSwitch());
 
-        CachedFiles.deleteOtherFiles(dstDir);
+        CachedFiles.deleteOtherFiles(dstDir.toFile());
 
         copyConfigGenSourcesIfNeed();
     }
@@ -153,20 +155,19 @@ public class GenJavaCode extends GeneratorWithTag {
 
         // 逐个复制文件
         for (String fn : COPY_FILES) {
-            FileUtils.copyFileIfNotExist("support/configgen/genjava/" + fn,
+            FileUtil.copyFileIfNotExist("support/configgen/genjava/" + fn,
                     "src/main/java/configgen/genjava/" + fn,
                     targetDir.resolve(fn), encoding);
         }
     }
 
-    CachedIndentPrinter createCodeFile(String fileName) {
-        return createCode(new File(dstDir, fileName), encoding);
+    CachedIndentPrinter createCode(String fn) {
+        return cacheConfig.printer(dstDir.resolve(fn), encoding);
     }
-
 
     private void generateStructClass(StructSchema struct, List<String> mapsInMgr) {
         NameableName name = new NameableName(struct);
-        try (CachedIndentPrinter ps = createCode(dstDir.toPath().resolve(name.path).toFile(), encoding)) {
+        try (var ps = createCode(name.path)) {
             StructuralClassModel model = new StructuralClassModel(struct, name, false, mapsInMgr);
             JteEngine.render("java/GenStructuralClass.jte", model, ps);
         }
@@ -174,9 +175,9 @@ public class GenJavaCode extends GeneratorWithTag {
 
     private void generateInterfaceClass(InterfaceSchema interfaceSchema) {
         NameableName name = new NameableName(interfaceSchema);
-        try (CachedIndentPrinter ps = createCode(dstDir.toPath().resolve(name.path).toFile(), encoding)) {
-            JteEngine.render("java/GenInterface.jte",
-                    new InterfaceModel(interfaceSchema, name), ps);
+        try (CachedIndentPrinter ps = createCode(name.path)) {
+            InterfaceModel model = new InterfaceModel(interfaceSchema, name);
+            JteEngine.render("java/GenInterface.jte", model, ps);
         }
     }
 
@@ -202,8 +203,7 @@ public class GenJavaCode extends GeneratorWithTag {
                 setAllRefsInMgrLoader.add(name.fullName);
             }
             NameableName dataName = new NameableName(schema, dataPostfix);
-            File javaFile = dstDir.toPath().resolve(name.path).toFile();
-            try (CachedIndentPrinter ps = createCode(javaFile, encoding)) {
+            try (var ps = createCode(name.path)) {
                 JteEngine.render("java/GenEntryOrEnumClass.jte",
                         new EntryOrEnumModel(vTable, entryBase, name, isNeedReadData, dataName), ps);
             }
@@ -212,16 +212,14 @@ public class GenJavaCode extends GeneratorWithTag {
         if (isNeedReadData) {
             NameableName name = new NameableName(schema, dataPostfix);
             boolean isTableNeedBuilder = needBuilderTables != null && needBuilderTables.contains(vTable.name());
-            File javaFile = dstDir.toPath().resolve(name.path).toFile();
-            try (CachedIndentPrinter ps = createCode(javaFile, encoding)) {
+            try (var ps = createCode(name.path)) {
                 StructuralClassModel model = new StructuralClassModel(vTable.schema(), name, isTableNeedBuilder, mapsInMgr);
                 JteEngine.render("java/GenStructuralClass.jte", model, ps);
             }
 
             if (isTableNeedBuilder) {
-                String builderPath = name.path.substring(0, name.path.length() - 5) + "Builder.java";
-                File builderFile = dstDir.toPath().resolve(builderPath).toFile();
-                try (CachedIndentPrinter ps = createCode(builderFile, encoding)) {
+                String builder = name.path.substring(0, name.path.length() - 5) + "Builder.java";
+                try (var ps = createCode(builder)) {
                     JteEngine.render("java/GenTableBuilder.jte",
                             Map.of("table", vTable.schema(), "name", name), ps);
                 }

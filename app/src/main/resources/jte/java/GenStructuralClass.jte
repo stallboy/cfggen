@@ -5,6 +5,7 @@
 @import configgen.genjava.code.StructuralClassModel.FieldInfo
 @import configgen.genjava.code.StructuralClassModel.ForeignKeyInfo
 @import configgen.schema.*
+@import configgen.util.StringUtil
 @param StructuralClassModel model
 package ${model.pkg};
 
@@ -59,7 +60,7 @@ package ${model.pkg};
         ${model.className} self = new ${model.className}();
         @for(FieldSchema field : model.structural.fields())
             !{
-                String ln = Generator.lower1(field.name());
+                String ln = StringUtil.lower1(field.name());
             }
             @if(field.type() instanceof FieldType.SimpleType simpleType)
                 self.${ln} = ${TypeStr.readValue(simpleType)};
@@ -98,7 +99,7 @@ package ${model.pkg};
          * ${field.comment()}
          */
         @endif
-        public ${field.type()} get${Generator.upper1(field.name())}() {
+        public ${field.type()} get${StringUtil.upper1(field.name())}() {
             return ${field.name()};
         }
 
@@ -106,7 +107,7 @@ package ${model.pkg};
 
     @if(!model.isTableAndNeedBuilder)
         @for(ForeignKeyInfo fk : model.foreignKeys)
-            public ${fk.type()} ${Generator.lower1(fk.name())}() {
+            public ${fk.type()} ${StringUtil.lower1(fk.name())}() {
                 return ${fk.name()};
             }
 

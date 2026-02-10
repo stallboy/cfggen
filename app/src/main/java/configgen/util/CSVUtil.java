@@ -76,7 +76,7 @@ public class CSVUtil {
 
        "aaa","b""bb","ccc"
        */
-    public static void write(UTF8Writer writer, List<List<String>> rows) {
+    public static void write(BomUtf8Writer writer, List<List<String>> rows) {
         if (rows.isEmpty()) {
             return;
         }
@@ -92,8 +92,8 @@ public class CSVUtil {
             List<String> row = rows.get(r);
             if (row.size() != columnCount) {
                 throw new IllegalArgumentException(LocaleUtil.getFormatedLocaleString("CsvUtil.RowColumnCountMismatch",
-                    "CSV row {0} has {1} columns, but first row has {2} columns",
-                    r, row.size(), columnCount));
+                        "CSV row {0} has {1} columns, but first row has {2} columns",
+                        r, row.size(), columnCount));
             }
 
             for (int c = 0; c < row.size(); c++) {
@@ -126,7 +126,7 @@ public class CSVUtil {
 
 
     public static void writeToFile(File file, List<List<String>> rows) throws IOException {
-        try (UTF8Writer w = new UTF8Writer(Files.newOutputStream(file.toPath()))) {
+        try (BomUtf8Writer w = new BomUtf8Writer(file.toPath())) {
             write(w, rows);
         }
     }

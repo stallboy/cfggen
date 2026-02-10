@@ -6,9 +6,9 @@ import configgen.schema.Nameable;
 public class InterfaceModel {
     public final Name name;
     public final InterfaceSchema sInterface;
-    private final GenGd gen;
+    private final GdCodeGenerator gen;
 
-    public InterfaceModel(GenGd gen, InterfaceSchema sInterface) {
+    public InterfaceModel(GdCodeGenerator gen, InterfaceSchema sInterface) {
         this.gen = gen;
         this.name = new Name(gen.prefix, sInterface);
         this.sInterface = sInterface;

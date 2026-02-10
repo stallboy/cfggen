@@ -3,6 +3,7 @@
 @import configgen.schema.ForeignKeySchema
 @import configgen.schema.KeySchema
 @import configgen.gengo.GoName
+@import configgen.util.StringUtil
 @param GoName name
 @param ForeignKeySchema foreignKeySchema
 !{
@@ -11,7 +12,7 @@
     FieldSchema fieldSchema = keySchema.fieldSchemas().getFirst();
     String className = name.className;
     String varName = fieldSchema.name();
-    String VarName =Generator.upper1(fieldSchema.name());
+    String VarName =StringUtil.upper1(fieldSchema.name());
     var ValueType = refTableName.className;
 }
 //list ref

@@ -4,7 +4,7 @@ import configgen.ctx.Context;
 import configgen.gen.Generator;
 import configgen.gen.Parameter;
 import configgen.i18n.*;
-import configgen.util.FileUtils;
+import configgen.util.FileUtil;
 import configgen.util.Logger;
 import configgen.value.CfgValue;
 import configgen.value.TextValue;
@@ -36,12 +36,12 @@ import java.util.*;
  * - 当同一翻译项在item.xlsx和TODO文件中同时存在时，优先采用TODO文件中的翻译内容
  * - 若TODO文件中翻译内容为空，则回退使用item.xlsx中的翻译内容
  */
-public final class GenI18nById extends Generator {
+public final class I18nByIdGenerator extends Generator {
     private final Path outputDir;
     private final Path backupDir;
     private final boolean checkWrite;
 
-    public GenI18nById(Parameter parameter) {
+    public I18nByIdGenerator(Parameter parameter) {
         super(parameter);
         outputDir = Path.of(parameter.get("dir", "../i18n/en"));
         backupDir = Path.of(parameter.get("backup", "../backup"));
@@ -97,7 +97,7 @@ public final class GenI18nById extends Generator {
         Path outputTempDir = backupDir.resolve(lang + "_temp");
         Path outputBackupDir = backupDir.resolve(lang);
 
-        boolean needReplace = FileUtils.hasFiles(outputDir);
+        boolean needReplace = FileUtil.hasFiles(outputDir);
         // 确保无temp目录，然后创建
         if (Files.isDirectory(outputTempDir)) {
             throw new RuntimeException("temp directory = %s exist, delete it then retry".formatted(outputTempDir));
@@ -128,11 +128,11 @@ public final class GenI18nById extends Generator {
         // 是覆盖，此时需要先备份原有的，然后temp->outputDir（通过3实现内容相同，就用原有的）
         if (needReplace) {
             // 1.先把 <outputDir> -> <outputBackupDir>
-            FileUtils.moveDirFilesToAnotherDir(outputDir, outputBackupDir);
-            FileUtils.moveOneFile(todoFilePath, todoInBackup);
+            FileUtil.moveDirFilesToAnotherDir(outputDir, outputBackupDir);
+            FileUtil.moveOneFile(todoFilePath, todoInBackup);
 
             // 2.然后把<outputTempDir> -> <outputDir> ，删除<outputTempDir>
-            FileUtils.moveDirFilesToAnotherDir(outputTempDir, outputDir);
+            FileUtil.moveDirFilesToAnotherDir(outputTempDir, outputDir);
             if (!outputTempDir.toFile().delete()) {
                 throw new RuntimeException("delete temp directory = %s failed".formatted(outputTempDir));
             }

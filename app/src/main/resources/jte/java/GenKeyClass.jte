@@ -3,16 +3,17 @@
 @import configgen.genjava.code.TypeStr
 @import configgen.genjava.code.MethodStr
 @import configgen.schema.*
+@import configgen.util.StringUtil
 @param KeySchema keySchema
 public static class ${Name.keyClassName(keySchema)} {
         @for(FieldSchema f : keySchema.fieldSchemas())
-            private final ${TypeStr.type(f.type())} ${Generator.lower1(f.name())};
+            private final ${TypeStr.type(f.type())} ${StringUtil.lower1(f.name())};
         @endfor
 
 
         public ${Name.keyClassName(keySchema)}(${MethodStr.formalParams(keySchema.fieldSchemas())}) {
             @for(FieldSchema f : keySchema.fieldSchemas())
-                this.${Generator.lower1(f.name())} = ${Generator.lower1(f.name())};
+                this.${StringUtil.lower1(f.name())} = ${StringUtil.lower1(f.name())};
             @endfor
         }
 

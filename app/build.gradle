@@ -130,7 +130,7 @@ tasks.register('copyGenJavaSources', Copy) {
             'ConfigErr.java',
             'ConfigInput.java',
 
-            'JavaData.java',
+            'BytesInspector.java',
     ]
 
     from('src/main/java/configgen/genjava') {

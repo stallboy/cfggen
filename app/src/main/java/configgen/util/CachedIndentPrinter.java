@@ -21,28 +21,51 @@ public class CachedIndentPrinter implements Closeable, TemplateOutput {
     private int lineCntPerFile;
     private int lineCnt;
 
+    public record CacheConfig(StringBuilder dst,
+                              StringBuilder cache,
+                              StringBuilder tmp) {
+
+        public static CacheConfig of(int cacheSize) {
+            return new CacheConfig(new StringBuilder(cacheSize),
+                    new StringBuilder(cacheSize),
+                    new StringBuilder(128));
+        }
+
+        public static CacheConfig of() {
+            return of(512 * 1024);
+        }
+
+        public CachedIndentPrinter printer(Path path, String encoding) {
+            return new CachedIndentPrinter(path, encoding, this);
+        }
+
+    }
+
+    private static final CacheConfig DEFAULT_CACHE_CONFIG = new CacheConfig(
+            new StringBuilder(1024 * 2048),
+            new StringBuilder(512 * 1024),
+            new StringBuilder(128)
+    );
+
+
     public CachedIndentPrinter(Path path) {
         this(path, "UTF-8");
     }
 
     public CachedIndentPrinter(Path path, String encoding) {
-        this(path, encoding,
-                new StringBuilder(1024 * 2048),
-                new StringBuilder(512 * 1024),
-                new StringBuilder(128)
-        );
+        this(path, encoding, DEFAULT_CACHE_CONFIG);
     }
 
     public CachedIndentPrinter(File file, String encoding) {
         this(file.toPath().toAbsolutePath().normalize(), encoding);
     }
 
-    public CachedIndentPrinter(Path path, String encoding, StringBuilder dst, StringBuilder cache, StringBuilder tmp) {
+    public CachedIndentPrinter(Path path, String encoding, CacheConfig cacheConfig) {
         this.path = path.toAbsolutePath().normalize();
         this.encoding = encoding;
-        this.dst = dst;
-        this.cache = cache;
-        this.tmp = tmp;
+        this.dst = cacheConfig.dst;
+        this.cache = cacheConfig.cache;
+        this.tmp = cacheConfig.tmp;
         dst.setLength(0);
     }
 

@@ -6,9 +6,9 @@ import configgen.schema.TableSchema;
 public class ProcessorModel {
     public final String topPkg;
     public final Iterable<TableSchema> tableSchemas;
-    private final GenCs gen;
+    private final CsCodeGenerator gen;
 
-    public ProcessorModel(GenCs gen, Iterable<TableSchema> tableSchemas) {
+    public ProcessorModel(CsCodeGenerator gen, Iterable<TableSchema> tableSchemas) {
         this.gen = gen;
         this.topPkg = gen.pkg;
         this.tableSchemas = tableSchemas;

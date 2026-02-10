@@ -13,17 +13,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class GenTsSchema extends GeneratorWithTag {
+public class TsSchemaGenerator extends GeneratorWithTag {
     private final String table;
     private final List<String> refTables;
     private final Path dstPath;
     private final String encoding;
 
-    public GenTsSchema(Parameter parameter) {
+    public TsSchemaGenerator(Parameter parameter) {
         super(parameter);
         String tableStr = parameter.get("table", "");
-        String refsStr = parameter.get("refs", "");
-
         String dstDir = parameter.get("dst", ".");
         encoding = parameter.get("encoding", "UTF-8");
         dstPath = Path.of(dstDir);
@@ -51,7 +49,7 @@ public class GenTsSchema extends GeneratorWithTag {
             Logger.log("ignore gen ts: table=%s not found!", table);
             return;
         }
-        try (CachedIndentPrinter ps = createCode(dstPath.resolve(table + ".ts").toFile(), encoding)) {
+        try (CachedIndentPrinter ps = new CachedIndentPrinter(dstPath.resolve(table + ".ts"), encoding)) {
             String generate = new SchemaToTs(cfgValue, vTable.schema(), refTables, false).generate();
             ps.println(generate);
         }

@@ -6,7 +6,7 @@ import configgen.schema.cfg.CfgWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import static configgen.gen.Generator.lower1;
+import static configgen.util.StringUtil.lower1;
 import static configgen.schema.FieldType.Primitive.*;
 import static configgen.value.CfgValue.VTable;
 

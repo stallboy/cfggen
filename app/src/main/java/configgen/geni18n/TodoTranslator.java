@@ -3,10 +3,10 @@ package configgen.geni18n;
 import configgen.gen.Parameter;
 import configgen.gen.Tool;
 import configgen.genbyai.AICfg;
-import configgen.genbyai.GenByAI;
+import configgen.genbyai.ByAIGenerator;
 import configgen.geni18n.TodoEdit.*;
 import configgen.util.CSVUtil;
-import configgen.util.FileUtils;
+import configgen.util.FileUtil;
 import configgen.util.JteEngine;
 import configgen.util.Logger;
 import configgen.i18n.I18nUtils;
@@ -52,7 +52,7 @@ public class TodoTranslator extends Tool {
 
     @Override
     public void call() {
-        FileUtils.assureFileExistIf(promptJteFile);
+        FileUtil.assureFileExistIf(promptJteFile);
 
         aiCfg = AICfg.readFromFile(aiCfgFile);
         Logger.log("开始翻译TODO文件: %s", todoFile);
@@ -188,7 +188,7 @@ public class TodoTranslator extends Tool {
     private static AITranslationResult parseAIResult(String response) {
         AITranslationResult entries = new AITranslationResult();
 
-        String jsonStr = GenByAI.extractJson(response);
+        String jsonStr = ByAIGenerator.extractJson(response);
         if (jsonStr == null) {
             jsonStr = response;
         }

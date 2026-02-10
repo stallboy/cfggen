@@ -2,6 +2,7 @@ package configgen.gencs;
 
 import configgen.gen.Generator;
 import configgen.schema.*;
+import configgen.util.StringUtil;
 import configgen.value.CfgValue;
 
 import java.util.List;
@@ -14,9 +15,9 @@ public class StructModel {
     public final Name name;
     public final Structural structural;
     public final CfgValue.VTable _vTable;
-    private final GenCs gen;
+    private final CsCodeGenerator gen;
 
-    public StructModel(GenCs gen, Structural structural, CfgValue.VTable _vTable) {
+    public StructModel(CsCodeGenerator gen, Structural structural, CfgValue.VTable _vTable) {
         this.gen = gen;
         this.topPkg = gen.pkg;
         this.name = new Name(gen.pkg, gen.prefix, structural);
@@ -29,11 +30,11 @@ public class StructModel {
     }
 
     public String upper1(String value) {
-        return GenCs.upper1(value);
+        return StringUtil.upper1(value);
     }
 
     public String lower1(String value) {
-        return GenCs.lower1(value);
+        return StringUtil.lower1(value);
     }
 
     public String type(FieldType t) {
@@ -104,16 +105,16 @@ public class StructModel {
 
 
     public String uniqueKeyGetByName(KeySchema keySchema) {
-        return "GetBy" + keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining());
+        return "GetBy" + keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining());
     }
 
     public String uniqueKeyMapName(KeySchema keySchema) {
-        return lower1(keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()) + "Map");
+        return lower1(keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining()) + "Map");
     }
 
     public String keyClassName(KeySchema keySchema) {
         if (keySchema.fieldSchemas().size() > 1)
-            return keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()) + "Key";
+            return keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining()) + "Key";
         else
             return type(keySchema.fieldSchemas().getFirst().type());
     }
@@ -123,11 +124,11 @@ public class StructModel {
     }
 
     public String actualParams(KeySchema keySchema) {
-        return keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining(", "));
+        return keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining(", "));
     }
 
     public String actualParamsKey(KeySchema keySchema) {
-        String p = keySchema.fields().stream().map(Generator::lower1).collect(Collectors.joining(", "));
+        String p = keySchema.fields().stream().map(StringUtil::lower1).collect(Collectors.joining(", "));
         return keySchema.fields().size() > 1 ? "new " + keyClassName(keySchema) + "(" + p + ")" : p;
     }
 
@@ -161,7 +162,7 @@ public class StructModel {
                 return fullName(refTable) + ".Get(" + actualParam + ");";
             }
             case RefKey.RefUniq refUniq -> {
-                return fullName(refTable) + ".GetBy" + refUniq.keyNames().stream().map(Generator::upper1).
+                return fullName(refTable) + ".GetBy" + refUniq.keyNames().stream().map(StringUtil::upper1).
                         collect(Collectors.joining()) + "(" + actualParam + ");";
             }
         }

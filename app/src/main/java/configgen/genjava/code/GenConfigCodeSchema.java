@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 final class GenConfigCodeSchema {
-    static void generateAll(GenJavaCode gen, int schemaNumPerFile, CfgValue cfgValue, LangSwitchable ls) {
+    static void generateAll(JavaCodeGenerator gen, int schemaNumPerFile, CfgValue cfgValue, LangSwitchable ls) {
         SchemaInterface schemaInterface = SchemaParser.parse(cfgValue, ls);
         List<Map.Entry<String, Schema>> all = new ArrayList<>(schemaInterface.implementations.entrySet());
         List<Map.Entry<String, Schema>> main;
@@ -52,12 +52,12 @@ final class GenConfigCodeSchema {
         return className;
     }
 
-    static void generateFile(GenJavaCode gen, int idx,
+    static void generateFile(JavaCodeGenerator gen, int idx,
                              List<Map.Entry<String, Schema>> schemas,
                              List<List<Map.Entry<String, Schema>>> nullableOthers) {
 
         String className = getClassName(idx);
-        try (CachedIndentPrinter ps = gen.createCodeFile(className + ".java")) {
+        try (CachedIndentPrinter ps = gen.createCode(className + ".java")) {
             ps.println("package %s;", Name.codeTopPkg);
             ps.println();
             ps.println("import configgen.genjava.*;");

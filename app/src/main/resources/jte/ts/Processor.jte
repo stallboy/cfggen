@@ -1,7 +1,7 @@
-@import configgen.gents.GenTs
+@import configgen.gents.TsCodeGenerator
 @import configgen.schema.HasRef
 @import configgen.schema.TableSchema
-@param GenTs model
+@param TsCodeGenerator model
 
 export class Processor {
     static Process(os: Stream, errors: LoadErrors) {

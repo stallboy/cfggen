@@ -2,6 +2,7 @@ package configgen.value;
 
 import configgen.gen.Generator;
 import configgen.schema.*;
+import configgen.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -113,7 +114,7 @@ public class ValueRefCollector {
                     }
                 }
                 if (refName == null) {
-                    refName = namePrefix + (refSimple.nullable() ? "nullableRef" : "ref") + Generator.upper1(fk.name());
+                    refName = namePrefix + (refSimple.nullable() ? "nullableRef" : "ref") + StringUtil.upper1(fk.name());
                 }
 
                 switch (ft) {

@@ -10,11 +10,11 @@ import configgen.schema.cfg.XmlReader;
 
 import java.nio.file.Path;
 
-public class XmlToCfg extends Tool {
+public class XmlToCfgTool extends Tool {
 
     private final Path dataDir;
 
-    public XmlToCfg(Parameter parameter) {
+    public XmlToCfgTool(Parameter parameter) {
         super(parameter);
         dataDir = Path.of(parameter.get("datadir", "."));
     }

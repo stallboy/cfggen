@@ -1,10 +1,10 @@
 @import configgen.gents.StructModel
-@import configgen.gents.GenTs
+@import configgen.gents.TsCodeGenerator
 @import configgen.schema.Fieldable
 @import configgen.schema.InterfaceSchema
 @import configgen.schema.StructSchema
 @import configgen.value.CfgValue
-@param GenTs model
+@param TsCodeGenerator model
 // noinspection UnnecessaryLocalVariableJS,JSUnusedLocalSymbols,JSUnusedGlobalSymbols,DuplicatedCode,SpellCheckingInspection
 
 import {Stream, LoadErrors} from "./ConfigUtil";

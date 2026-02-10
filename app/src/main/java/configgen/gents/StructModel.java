@@ -2,6 +2,7 @@ package configgen.gents;
 
 import configgen.gen.Generator;
 import configgen.schema.*;
+import configgen.util.StringUtil;
 import configgen.value.CfgValue;
 
 import java.util.List;
@@ -13,9 +14,9 @@ public class StructModel {
     public final Structural structural;
     public final CfgValue.VTable _vTable;
     public final String structClassName;
-    private final GenTs gen;
+    private final TsCodeGenerator gen;
 
-    public StructModel(GenTs gen, Structural structural, CfgValue.VTable _vTable) {
+    public StructModel(TsCodeGenerator gen, Structural structural, CfgValue.VTable _vTable) {
         this.gen = gen;
         this.structural = structural;
         this._vTable = _vTable;
@@ -27,11 +28,11 @@ public class StructModel {
     }
 
     public String upper1(String value) {
-        return Generator.upper1(value);
+        return StringUtil.upper1(value);
     }
 
     public String lower1(String value) {
-        return Generator.lower1(value);
+        return StringUtil.lower1(value);
     }
 
     public String type(FieldType t) {
@@ -112,11 +113,11 @@ public class StructModel {
 
 
     public String uniqueKeyGetByName(KeySchema keySchema) {
-        return "GetBy" + keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining());
+        return "GetBy" + keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining());
     }
 
     public String uniqueKeyMapName(KeySchema keySchema) {
-        return lower1(keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()) + "Map");
+        return lower1(keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining()) + "Map");
     }
 
 
@@ -185,7 +186,7 @@ public class StructModel {
                 return className(refTable) + ".Get(" + actualParam + ")";
             }
             case RefKey.RefUniq refUniq -> {
-                return className(refTable) + ".GetBy" + refUniq.keyNames().stream().map(Generator::upper1).
+                return className(refTable) + ".GetBy" + refUniq.keyNames().stream().map(StringUtil::upper1).
                         collect(Collectors.joining()) + "(" + actualParam + ")";
             }
         }

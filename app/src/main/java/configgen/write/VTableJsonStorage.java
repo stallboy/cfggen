@@ -1,13 +1,12 @@
 package configgen.write;
 
 import configgen.data.DataUtil;
-import configgen.gen.Generator;
+import configgen.util.CachedFileOutputStream;
 import configgen.value.CfgValue.VStruct;
 import configgen.value.ValueToJson;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -30,7 +29,7 @@ public class VTableJsonStorage {
         Path relativePath = Path.of(jsonDirName).resolve(id + ".json");
 
         Path recordPath = dataDir.resolve(relativePath);
-        try (OutputStreamWriter writer = Generator.createUtf8Writer(recordPath.toFile())) {
+        try (var writer = CachedFileOutputStream.createUtf8Writer(recordPath)) {
             String jsonString = ValueToJson.toJsonStr(record);
             writer.write(jsonString);
             return relativePath;

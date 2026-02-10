@@ -1,8 +1,8 @@
-@import configgen.gents.GenTs
+@import configgen.gents.TsCodeGenerator
 @import configgen.schema.HasRef
 @import configgen.schema.InterfaceSchema
 @import configgen.schema.StructSchema
-@param GenTs gen
+@param TsCodeGenerator gen
 @param InterfaceSchema sInterface 
 
 !{String className = gen.className(sInterface);}

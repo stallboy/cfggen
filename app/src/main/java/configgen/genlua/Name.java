@@ -2,11 +2,12 @@ package configgen.genlua;
 
 import configgen.gen.Generator;
 import configgen.schema.*;
+import configgen.util.StringUtil;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static configgen.gen.Generator.upper1;
+import static configgen.util.StringUtil.upper1;
 
 public class Name {
 
@@ -16,18 +17,18 @@ public class Name {
 
 
     static String uniqueKeyGetByName(KeySchema key) {
-        return "getBy" + key.fields().stream().map(Generator::upper1).collect(Collectors.joining());
+        return "getBy" + key.fields().stream().map(StringUtil::upper1).collect(Collectors.joining());
     }
 
     static String uniqueKeyMapName(KeySchema key) {
-        return key.fields().stream().map(Generator::upper1).collect(Collectors.joining()) + "Map";
+        return key.fields().stream().map(StringUtil::upper1).collect(Collectors.joining()) + "Map";
     }
 
     static String uniqueKeyGetByName(List<String> keyFields) {
         if (keyFields.isEmpty()) //ref to primary key
             return "get";
         else
-            return "getBy" + keyFields.stream().map(Generator::upper1).collect(Collectors.joining());
+            return "getBy" + keyFields.stream().map(StringUtil::upper1).collect(Collectors.joining());
     }
 
 

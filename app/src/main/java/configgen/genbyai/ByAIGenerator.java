@@ -21,13 +21,13 @@ import java.util.regex.Pattern;
 
 import static io.github.sashirestela.openai.domain.chat.ChatMessage.*;
 
-public class GenByAI extends Generator {
+public class ByAIGenerator extends Generator {
     private final String cfgFn;
     private final String askFn;
     private final String table;
     private final int retryTimes;
 
-    public GenByAI(Parameter parameter) {
+    public ByAIGenerator(Parameter parameter) {
         super(parameter);
         cfgFn = parameter.get("cfg", "ai.json");
         askFn = parameter.get("ask", "ask.txt");

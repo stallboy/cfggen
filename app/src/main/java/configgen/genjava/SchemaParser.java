@@ -53,7 +53,7 @@ public final class SchemaParser {
         return root;
     }
 
-    private static Schema parseLangSwitch(LangSwitchable ls) {
+    private static SchemaBean parseLangSwitch(LangSwitchable ls) {
         SchemaBean sb = new SchemaBean(false);
         for (String lang : ls.languages()) {
             sb.addColumn(lang, SStr);
@@ -61,7 +61,7 @@ public final class SchemaParser {
         return sb;
     }
 
-    private static Schema parseEntry(VTable vTable, boolean isEnumPart) {
+    private static SchemaEnum parseEntry(VTable vTable, boolean isEnumPart) {
         boolean hasIntValue = vTable.enumNameToIntegerValueMap() != null;
         SchemaEnum se = new SchemaEnum(isEnumPart, hasIntValue);
 
@@ -77,7 +77,7 @@ public final class SchemaParser {
         return se;
     }
 
-    private static Schema parseInterface(InterfaceSchema interfaceSchema) {
+    private static SchemaInterface parseInterface(InterfaceSchema interfaceSchema) {
         SchemaInterface si = new SchemaInterface();
         for (StructSchema impl : interfaceSchema.impls()) {
             si.addImp(impl.name(), parseStructural(impl));
@@ -86,7 +86,7 @@ public final class SchemaParser {
 
     }
 
-    private static Schema parseStructural(Structural structural) {
+    private static SchemaBean parseStructural(Structural structural) {
         boolean isTable = structural instanceof TableSchema;
         SchemaBean sb = new SchemaBean(isTable);
         for (FieldSchema fs : structural.fields()) {

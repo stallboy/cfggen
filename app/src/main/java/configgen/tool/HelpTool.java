@@ -11,23 +11,23 @@ import configgen.util.Logger;
 /**
  * 打印使用帮助信息
  */
-public class Usage extends Tool {
+public class HelpTool extends Tool {
 
-    public Usage(Parameter parameter) {
+    public HelpTool(Parameter parameter) {
         super(parameter);
         parameter.title("print usage help");
     }
 
     @Override
     public void call() {
-        printUsage();
+        printHelp();
     }
 
-    public static void printUsage() {
-        printUsage(null);
+    public static void printHelp() {
+        printHelp(null);
     }
 
-    public static void printUsage(String reason) {
+    public static void printHelp(String reason) {
         if (reason != null && !reason.isBlank()) {
             Logger.log(reason);
         }

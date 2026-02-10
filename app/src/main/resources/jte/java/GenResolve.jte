@@ -1,13 +1,14 @@
 @import configgen.gen.Generator
 @import configgen.genjava.code.*
 @import configgen.schema.*
+@import configgen.util.StringUtil
 @param String codeTopPkg
 @param Structural structural
 public void _resolve(${codeTopPkg}.ConfigMgr mgr) {
         @for(FieldSchema field : structural.fields())
             @if(HasRef.hasRef(field.type()))
                 !{
-                    String ln = Generator.lower1(field.name());
+                    String ln = StringUtil.lower1(field.name());
                 }
                 @if(field.type() instanceof FieldType.StructRef)
                     ${ln}._resolve(mgr);

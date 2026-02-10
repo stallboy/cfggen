@@ -3,14 +3,12 @@ package configgen.genjava;
 import java.io.*;
 import java.util.*;
 
-public class JavaData {
-
-    private final String javaDataFile;
-
+public class BytesInspector {
+    private final String bytesFilename;
     private SchemaInterface rootSchema;
 
-    public JavaData(String javaDataFile) {
-        this.javaDataFile = javaDataFile;
+    public BytesInspector(String bytesFilename) {
+        this.bytesFilename = bytesFilename;
     }
 
 
@@ -27,7 +25,7 @@ public class JavaData {
     }
 
     public void match(String match) {
-        try (ConfigInput input = new ConfigInput(new DataInputStream(new BufferedInputStream(new FileInputStream(javaDataFile))))) {
+        try (ConfigInput input = new ConfigInput(new DataInputStream(new BufferedInputStream(new FileInputStream(bytesFilename))))) {
             // 1. 读取 Schema 长度标记
             int schemaLength = input.readInt();
             if (schemaLength > 0) {
@@ -55,7 +53,7 @@ public class JavaData {
                     boolean read = printTableInfo(tableName, tableSize, input);
                     if (read) {
                         println("");
-                    }else{
+                    } else {
                         input.skipBytes(tableSize);
                     }
 
@@ -95,9 +93,9 @@ public class JavaData {
 
                 String schemaName = tableName + "_Detail";
                 Schema realSchema = rootSchema.implementations.get(schemaName);
-                if (realSchema instanceof SchemaBean) {
+                if (realSchema instanceof SchemaBean schemaBean ) {
                     println("%s data(size=%d):", tableName, tableSize);
-                    printTableData(input, (SchemaBean) realSchema);
+                    printTableData(input, schemaBean);
                     return true;
                 }
             }

@@ -1,6 +1,7 @@
 package configgen.genjava.code;
 
 import configgen.gen.Generator;
+import configgen.util.StringUtil;
 
 import java.util.List;
 
@@ -10,7 +11,7 @@ public class TextModel {
 
     public TextModel(String pkg, List<String> languages) {
         this.pkg = pkg;
-        this.languages = languages.stream().map(Generator::lower1).toList();
+        this.languages = languages.stream().map(StringUtil::lower1).toList();
     }
 
 }

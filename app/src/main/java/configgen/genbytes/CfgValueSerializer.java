@@ -2,6 +2,7 @@ package configgen.genbytes;
 
 import configgen.genjava.ConfigOutput;
 import configgen.i18n.LangSwitchableRuntime;
+import configgen.util.Logger;
 import configgen.value.CfgValue;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,7 +22,7 @@ public record CfgValueSerializer(@NotNull ConfigOutput output,
         for (VTable vTable : cfgValue.sortedTables()) {
             byte[] tableBytes = serializeTableBytes(vTable);
 
-            System.out.println(vTable.name() + ": " + tableBytes.length);
+            Logger.verbose(vTable.name() + ": " + tableBytes.length);
             //2. 写入table name
             output.writeString(vTable.name());
 

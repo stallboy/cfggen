@@ -10,12 +10,12 @@ import configgen.value.UnreferencedRecordCollector;
 
 import java.io.IOException;
 
-public class GenVerifier extends Generator {
+public class ValueVerifyTool extends Generator {
 
     private final boolean printUnreferenced;
     private final boolean printEntry;
 
-    public GenVerifier(Parameter parameter) {
+    public ValueVerifyTool(Parameter parameter) {
         super(parameter);
 
         parameter.title(LocaleUtil.getLocaleString("GenVerifier.Title",

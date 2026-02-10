@@ -4,6 +4,7 @@ import configgen.gen.Generator;
 import configgen.schema.InterfaceSchema;
 import configgen.schema.Nameable;
 import configgen.schema.StructSchema;
+import configgen.util.StringUtil;
 
 /// go命名规范
 /// 文件名全小写，用下划线分割
@@ -39,7 +40,7 @@ public class GoName {
             if (i < seps.length - 1)
                 _filePath = _filePath + '_';
 
-            _className = _className + Generator.upper1(seps[i]);
+            _className = _className + StringUtil.upper1(seps[i]);
         }
         filePath = _filePath + ".go";
         className = _className;

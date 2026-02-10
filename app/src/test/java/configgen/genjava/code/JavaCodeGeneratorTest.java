@@ -17,7 +17,7 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class GenJavaCodeTest {
+class JavaCodeGeneratorTest {
 
     @TempDir
     Path tempDir;
@@ -62,10 +62,10 @@ class GenJavaCodeTest {
                 outputDir.getAbsolutePath(), "test.config", "");
         Parameter parameter = new ParameterParser(parameterStr);
 
-        GenJavaCode genJavaCode = new GenJavaCode(parameter);
+        JavaCodeGenerator javaCodeGenerator = new JavaCodeGenerator(parameter);
 
         // 执行生成
-        genJavaCode.generate(ctx);
+        javaCodeGenerator.generate(ctx);
 
         // Then: 验证生成的Java文件
         File expectedFilesDir = new File(outputDir, "test/config");
@@ -125,10 +125,10 @@ class GenJavaCodeTest {
                 outputDir.getAbsolutePath(), "test.config.enum", "");
         Parameter parameter = new ParameterParser(parameterStr);
 
-        GenJavaCode genJavaCode = new GenJavaCode(parameter);
+        JavaCodeGenerator javaCodeGenerator = new JavaCodeGenerator(parameter);
 
         // 执行生成
-        genJavaCode.generate(ctx);
+        javaCodeGenerator.generate(ctx);
 
         // Then: 验证生成的Java文件
         File expectedFilesDir = new File(outputDir, "test/config/enum");
@@ -185,10 +185,10 @@ class GenJavaCodeTest {
                 outputDir.getAbsolutePath(), "test.config.complex", "");
         Parameter parameter = new ParameterParser(parameterStr);
 
-        GenJavaCode genJavaCode = new GenJavaCode(parameter);
+        JavaCodeGenerator javaCodeGenerator = new JavaCodeGenerator(parameter);
 
         // 执行生成
-        genJavaCode.generate(ctx);
+        javaCodeGenerator.generate(ctx);
 
         // Then: 验证生成的Java文件
         File expectedFilesDir = new File(outputDir, "test/config/complex");
@@ -257,10 +257,10 @@ class GenJavaCodeTest {
                 outputDir.getAbsolutePath(), "test.config.builders", "", buildersFile.getAbsolutePath());
         Parameter parameter = new ParameterParser(parameterStr);
 
-        GenJavaCode genJavaCode = new GenJavaCode(parameter);
+        JavaCodeGenerator javaCodeGenerator = new JavaCodeGenerator(parameter);
 
         // 执行生成
-        genJavaCode.generate(ctx);
+        javaCodeGenerator.generate(ctx);
 
         // Then: 验证生成的Builder文件
         File expectedFilesDir = new File(outputDir, "test/config/builders");

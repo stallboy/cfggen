@@ -16,15 +16,16 @@ import configgen.value.CfgValue;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
-public class GenBytes extends GeneratorWithTag {
+public class BytesGenerator extends GeneratorWithTag {
     private final String dir;
     private final String cipher;
     private final boolean hasSchema;
     private final boolean isLangSeparated;
 
-    public GenBytes(Parameter parameter) {
+    public BytesGenerator(Parameter parameter) {
         super(parameter);
         dir = parameter.get("dir", ".");
         cipher = parameter.get("cipher", "");
@@ -122,7 +123,7 @@ public class GenBytes extends GeneratorWithTag {
     }
 
     private ConfigOutput createConfigOutput(String fileName) {
-        CachedFileOutputStream stream = new CachedFileOutputStream(new File(dir, fileName));
+        CachedFileOutputStream stream = new CachedFileOutputStream((Path.of(dir, fileName)));
         if (cipher.isEmpty()) {
             return new ConfigOutput(stream);
         } else {

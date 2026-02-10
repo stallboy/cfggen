@@ -1,6 +1,7 @@
-@import configgen.gengo.GenGo
+@import configgen.gengo.GoCodeGenerator
 @import configgen.gengo.GoName
 @import configgen.gengo.CfgMgrModel
+@import configgen.util.StringUtil
 @import configgen.value.CfgValue
 @import configgen.value.CfgValue.VTable
 @param CfgMgrModel model
@@ -15,8 +16,8 @@ import "io"
 @for (VTable vTable : cfgValue.sortedTables())
     !{
         GoName name = new GoName(vTable.schema());
-        var className = GenGo.lower1(name.className);
-        var ClassName = GenGo.upper1(className);
+        var className = StringUtil.lower1(name.className);
+        var ClassName = StringUtil.upper1(className);
     }
     var ${className}Mgr *${ClassName}Mgr
 
@@ -36,8 +37,8 @@ func Init(reader io.Reader) {
         @for (VTable vTable : cfgValue.sortedTables())
         !{
             GoName name = new GoName(vTable.schema());
-            var className = GenGo.lower1(name.className);
-            var ClassName = GenGo.upper1(className);
+            var className = StringUtil.lower1(name.className);
+            var ClassName = StringUtil.upper1(className);
             var ClassReadName = name.pkgName;
         }
         case "${ClassReadName}":

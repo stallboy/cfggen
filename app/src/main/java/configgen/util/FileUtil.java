@@ -8,7 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
-public class FileUtils {
+public class FileUtil {
 
     public static void moveDirFilesToAnotherDir(Path from, Path to) {
         File toDir = to.toFile();
@@ -69,10 +69,10 @@ public class FileUtils {
 
 
     public static void copyFileIfNotExist(String sourceFileInResources, String fallbackSourceFile,
-                                             Path dstFilePath, String dstEncoding) throws IOException {
+                                             Path dstFile, String dstEncoding) throws IOException {
 
-        if (Files.exists(dstFilePath)) {
-            CachedFiles.keepFile(dstFilePath);
+        if (Files.exists(dstFile)) {
+            CachedFiles.keepFile(dstFile);
             return;
         }
 
@@ -94,7 +94,7 @@ public class FileUtils {
         // 3. 使用 try-with-resources 确保所有流（包括 InputStream）都被正确关闭
         try (InputStream autoCloseIs = is;
              BufferedReader br = new BufferedReader(new InputStreamReader(autoCloseIs, StandardCharsets.UTF_8));
-             CachedIndentPrinter ps = new CachedIndentPrinter(dstFilePath, dstEncoding)) {
+             CachedIndentPrinter ps = new CachedIndentPrinter(dstFile, dstEncoding)) {
 
             String line;
             while ((line = br.readLine()) != null) {

@@ -9,11 +9,11 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-public class GenValueSearcher extends GeneratorWithTag {
+public class ValueInspectTool extends GeneratorWithTag {
     private final String searchTo;
     private final List<String> query;
 
-    public GenValueSearcher(Parameter parameter) {
+    public ValueInspectTool(Parameter parameter) {
         super(parameter);
         searchTo = parameter.get("to", null);
         String q = parameter.get("q", null);
@@ -29,13 +29,13 @@ public class GenValueSearcher extends GeneratorWithTag {
             query = null;
         }
 
-        parameter.extra(ValueSearcher.usage());
+        parameter.extra(ValueInspector.help());
     }
 
     @Override
     public void generate(Context ctx) throws IOException {
         CfgValue value = ctx.makeValue(tag);
-        ValueSearcher searcher = new ValueSearcher(value, searchTo);
+        ValueInspector searcher = new ValueInspector(value, searchTo);
 
         if (query == null) {
             searcher.loop();

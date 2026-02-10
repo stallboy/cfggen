@@ -1,5 +1,6 @@
 @import configgen.gen.Generator
 @import configgen.genjava.code.TextModel
+@import configgen.util.StringUtil
 @param TextModel model
 
 package ${model.pkg};
@@ -28,7 +29,7 @@ public class Text {
     }
 
     @for(String lang : model.languages)
-    public String get${Generator.upper1(lang)}() {
+    public String get${StringUtil.upper1(lang)}() {
         return ${lang};
     }
 

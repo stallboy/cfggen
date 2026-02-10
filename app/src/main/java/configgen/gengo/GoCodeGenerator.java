@@ -5,32 +5,26 @@ import configgen.gen.Generator;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
 import configgen.schema.*;
-import configgen.util.CachedFiles;
-import configgen.util.CachedIndentPrinter;
-import configgen.util.JteEngine;
+import configgen.util.*;
+import configgen.util.CachedIndentPrinter.CacheConfig;
 import configgen.value.CfgValue;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Collectors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static configgen.schema.FieldType.Primitive.*;
 import static configgen.schema.FieldType.Primitive.TEXT;
 
-public class GenGo extends GeneratorWithTag {
-    private static final Logger log = LoggerFactory.getLogger(GenGo.class);
+public class GoCodeGenerator extends GeneratorWithTag {
     private final String dir;
-    private File dstDir;
     private final String pkg;
-    private CfgSchema cfgSchema;
     private final String encoding;
-    private boolean isLangSwitch;
+    private Path dstDir;
+    private CacheConfig cacheConfig;
 
-    public GenGo(Parameter parameter) {
+    public GoCodeGenerator(Parameter parameter) {
         super(parameter);
         dir = parameter.get("dir", "config");
         pkg = parameter.get("pkg", "config");
@@ -40,11 +34,17 @@ public class GenGo extends GeneratorWithTag {
 
     @Override
     public void generate(Context ctx) throws IOException {
-        dstDir = Paths.get(dir).resolve(pkg.replace('.', '/')).toFile();
+        dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
         CfgValue cfgValue = ctx.makeValue(tag);
-        cfgSchema = cfgValue.schema();
-        copySupportFileIfNotExist("stream.go", dstDir.toPath(), encoding);
-        GenCfgMgrFile(cfgValue);
+        CfgSchema cfgSchema = cfgValue.schema();
+        cacheConfig = CacheConfig.of();
+
+        FileUtil.copyFileIfNotExist("support/go/stream.go",
+                "src/main/resources/support/go/stream.go",
+                dstDir.resolve("stream.go"),
+                encoding);
+
+        genCfgMgrFile(cfgValue);
 
         for (Fieldable fieldable : cfgSchema.sortedFieldables()) {
             switch (fieldable) {
@@ -63,32 +63,33 @@ public class GenGo extends GeneratorWithTag {
         for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
             generateStruct(vTable.schema(), vTable);
         }
-        CachedFiles.deleteOtherFiles(dstDir);
+        CachedFiles.deleteOtherFiles(dstDir.toFile());
+    }
+
+    private CachedIndentPrinter createCode(String fn) {
+        return cacheConfig.printer(dstDir.resolve(fn), encoding);
     }
 
     private void generateInterface(InterfaceSchema sInterface) {
         GoName name = new GoName(sInterface);
         InterfaceModel model = new InterfaceModel(pkg, name, sInterface);
-        File file = dstDir.toPath().resolve(name.filePath).toFile();
-        try (CachedIndentPrinter ps = new CachedIndentPrinter(file, encoding)) {
+        try (var ps = createCode(name.filePath)) {
             JteEngine.render("go/GenInterface.jte", model, ps);
         }
     }
 
     private void generateStruct(Structural structural, CfgValue.VTable vTable) {
         GoName name = new GoName(structural);
-        StructModel model = new StructModel(pkg, name, structural,vTable);
-        File csFile = dstDir.toPath().resolve(name.filePath).toFile();
-        try (CachedIndentPrinter ps = createCode(csFile, encoding)) {
+        StructModel model = new StructModel(pkg, name, structural, vTable);
+        try (var ps = createCode(name.filePath)) {
             JteEngine.render("go/GenStruct.jte", model, ps);
         }
     }
 
-    private void GenCfgMgrFile(CfgValue cfgValue) {
-        String mgrFileName = Generator.lower1(pkg) + "mgr";
+    private void genCfgMgrFile(CfgValue cfgValue) {
+        String mgrFileName = StringUtil.lower1(pkg) + "mgr";
         var model = new CfgMgrModel(pkg, cfgValue);
-        File csFile = dstDir.toPath().resolve(mgrFileName + ".go").toFile();
-        try (CachedIndentPrinter ps = createCode(csFile, encoding)) {
+        try (var ps = createCode(mgrFileName + ".go")) {
             JteEngine.render("go/GenCfgMgr.jte", model, ps);
         }
     }
@@ -96,15 +97,15 @@ public class GenGo extends GeneratorWithTag {
 
     public static String keyClassName(KeySchema keySchema) {
         if (keySchema.fieldSchemas().size() > 1)
-            return "Key" + keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining());
+            return "Key" + keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining());
         else return type(keySchema.fieldSchemas().getFirst().type());
     }
 
     public static String mapName(KeySchema keySchema) {
         if (keySchema.fieldSchemas().size() > 1) {
-            return Generator.lower1(keySchema.fields().stream().map(Generator::upper1).collect(Collectors.joining()));
+            return StringUtil.lower1(keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining()));
         } else {
-            return Generator.lower1(keySchema.fields().getFirst());
+            return StringUtil.lower1(keySchema.fields().getFirst());
         }
     }
 
@@ -114,8 +115,7 @@ public class GenGo extends GeneratorWithTag {
             case INT -> "int32";
             case LONG -> "int64";
             case FLOAT -> "float32";
-            case STRING -> "string";
-            case TEXT -> "string";
+            case STRING, TEXT -> "string";
             case StructRef structRef -> {
                 Fieldable fieldable = structRef.obj();
                 yield switch (fieldable) {
@@ -127,7 +127,7 @@ public class GenGo extends GeneratorWithTag {
             case FMap fMap -> String.format("map[%s]%s", type(fMap.key()), type(fMap.value()));
         };
     }
-    
+
     public static String ClassName(Nameable variable) {
         var varName = new GoName(variable);
         return varName.className;
