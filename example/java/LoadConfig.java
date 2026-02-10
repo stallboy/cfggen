@@ -22,9 +22,9 @@ public class LoadConfig {
 
     private static final Logger logger = Logger.getLogger("LoadConfig");
 
-    public static void load(String configdata) throws IOException {
+    public static void load(String fn) throws IOException {
         Schema codeSchema = ConfigCodeSchema.getCodeSchema();
-        try (ConfigInput input = new ConfigInput(new DataInputStream(new BufferedInputStream(new FileInputStream(configdata))))) {
+        try (ConfigInput input = new ConfigInput(new DataInputStream(new BufferedInputStream(new FileInputStream(fn))))) {
             Schema dataSchema = ConfigMgrLoader.loadSchema(input);
             boolean compatible = codeSchema.compatible(dataSchema);
             if (compatible) {
@@ -36,10 +36,10 @@ public class LoadConfig {
         }
     }
 
-    public static void autoReload(ScheduledExecutorService executorService, String configdata, Runnable afterReload) throws IOException {
-        listen(executorService, Paths.get(configdata), () -> {
+    public static void autoReload(ScheduledExecutorService executorService, String fn, Runnable afterReload) throws IOException {
+        listen(executorService, Paths.get(fn), () -> {
             try {
-                load(configdata);
+                load(fn);
                 if (afterReload != null) {
                     afterReload.run();
                 }

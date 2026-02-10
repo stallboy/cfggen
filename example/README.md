@@ -45,6 +45,7 @@ gui.bat  # gui来配置参数和启动
 
 ```bash
 genjava.bat         # 生成 Java 代码和数据
+cd java
 gradle build        # 构建项目
 java -jar build/libs/example.jar
 ```

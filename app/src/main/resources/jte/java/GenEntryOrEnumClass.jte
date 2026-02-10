@@ -1,6 +1,5 @@
 @import configgen.genjava.code.EntryOrEnumModel
 @import configgen.genjava.code.TypeStr
-@import configgen.gen.Generator
 @import configgen.genjava.code.Name
 @import configgen.schema.FieldSchema
 @import configgen.schema.ForeignKeySchema

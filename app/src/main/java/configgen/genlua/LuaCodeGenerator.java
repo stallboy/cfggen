@@ -108,7 +108,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
             }
         }
 
-        FileUtil.copyFileIfNotExist("support/lua/mkcfg.lua",
+        FileUtil.copyFileIfNotExist("/support/lua/mkcfg.lua",
                 "src/main/resources/support/mkcfg/mkcfg.lua",
                 dstDir.resolve("mkcfg.lua"),
                 encoding);

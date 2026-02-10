@@ -1,7 +1,6 @@
 @import configgen.genjava.code.Name
 @import configgen.genjava.code.StructuralClassModel
 @import configgen.genjava.code.MethodStr
-@import configgen.gen.Generator
 @import configgen.schema.*
 @import configgen.util.StringUtil
 @import java.util.Arrays

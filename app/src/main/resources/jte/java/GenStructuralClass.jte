@@ -1,6 +1,5 @@
 @import configgen.genjava.code.Name
 @import configgen.genjava.code.TypeStr
-@import configgen.gen.Generator
 @import configgen.genjava.code.StructuralClassModel
 @import configgen.genjava.code.StructuralClassModel.FieldInfo
 @import configgen.genjava.code.StructuralClassModel.ForeignKeyInfo

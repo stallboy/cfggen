@@ -155,7 +155,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
 
         // 逐个复制文件
         for (String fn : COPY_FILES) {
-            FileUtil.copyFileIfNotExist("support/configgen/genjava/" + fn,
+            FileUtil.copyFileIfNotExist("/support/configgen/genjava/" + fn,
                     "src/main/java/configgen/genjava/" + fn,
                     targetDir.resolve(fn), encoding);
         }

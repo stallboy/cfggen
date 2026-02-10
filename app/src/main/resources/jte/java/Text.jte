@@ -1,4 +1,3 @@
-@import configgen.gen.Generator
 @import configgen.genjava.code.TextModel
 @import configgen.util.StringUtil
 @param TextModel model
@@ -34,4 +33,8 @@ public class Text {
     }
 
     @endfor
+    @Override
+    public String toString() {
+        return "Text(" + ${model.join()} + ")";
+    }
 }

@@ -57,7 +57,7 @@ public class GdCodeGenerator extends GeneratorWithTag {
             needCopyFiles.add(TEXT_MGR_FILE);
         }
         for (String fn : needCopyFiles) {
-            FileUtil.copyFileIfNotExist("support/gd/" + fn,
+            FileUtil.copyFileIfNotExist("/support/gd/" + fn,
                     "src/main/resources/support/gd/" + fn,
                     dstDir.resolve(fn),
                     ENCODING);

@@ -1,4 +1,3 @@
-@import configgen.gen.Generator
 @import configgen.genjava.code.Name
 @import configgen.genjava.code.TypeStr
 @import configgen.genjava.code.MethodStr

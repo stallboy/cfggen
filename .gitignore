@@ -104,3 +104,10 @@
 /example/java/.idea
 /example/java/build
 /example/java/out
+/example/java_ls/.gradle
+/example/java_ls/.idea
+/example/java_ls/build
+/example/java_ls/gradle
+/example/java_ls/gradlew
+/example/java_ls/gradlew.bat
+/example/java_ls/out

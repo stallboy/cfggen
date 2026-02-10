@@ -40,7 +40,7 @@ public class TsCodeGenerator extends GeneratorWithTag {
             JteEngine.render("ts/Config.jte", this, ps);
         }
 
-        FileUtil.copyFileIfNotExist("support/ts/ConfigUtil.ts",
+        FileUtil.copyFileIfNotExist("/support/ts/ConfigUtil.ts",
                 "src/main/resources/support/ts/ConfigUtil.ts",
                 dstFile.getParent().resolve("ConfigUtil.ts"),
                 encoding);

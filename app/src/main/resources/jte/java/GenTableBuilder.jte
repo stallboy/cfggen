@@ -1,7 +1,6 @@
 @import configgen.genjava.code.NameableName
 @import configgen.genjava.code.TypeStr
 @import configgen.schema.*
-@import configgen.gen.Generator
 @import configgen.util.StringUtil
 @param TableSchema table
 @param NameableName name

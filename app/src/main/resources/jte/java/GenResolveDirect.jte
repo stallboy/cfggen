@@ -1,4 +1,3 @@
-@import configgen.gen.Generator
 @import configgen.genjava.GenJavaUtil
 @import configgen.genjava.code.*
 @import configgen.schema.*

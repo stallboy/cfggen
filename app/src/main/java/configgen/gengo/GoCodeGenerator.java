@@ -39,7 +39,7 @@ public class GoCodeGenerator extends GeneratorWithTag {
         CfgSchema cfgSchema = cfgValue.schema();
         cacheConfig = CacheConfig.of();
 
-        FileUtil.copyFileIfNotExist("support/go/stream.go",
+        FileUtil.copyFileIfNotExist("/support/go/stream.go",
                 "src/main/resources/support/go/stream.go",
                 dstDir.resolve("stream.go"),
                 encoding);
