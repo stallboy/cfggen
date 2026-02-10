@@ -114,3 +114,5 @@
 /example/cs_ls_client/.idea
 /example/cs_ls_client/bin
 /example/cs_ls_client/obj
+/example/java/bin
+/example/java_ls/bin
