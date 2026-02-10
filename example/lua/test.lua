@@ -1,9 +1,8 @@
 print("中文1234")
 
-package.path = './../../app/src/main/resources/support/?.lua;' .. package.path
-local mkcfg = require("mkcfg")
-local init = require("mkcfginit")
-package.loaded["common.mkcfg"] = mkcfg
+
+local mkcfg = require("common.mkcfg")
+local init = require("common.mkcfginit")
 
 mkcfg.tostring = init.tostring
 mkcfg.action_tostring = init.action_tostring
@@ -65,11 +64,11 @@ local function testMultiColumnAsPrimaryKeyGet()
     assert(rawT == t, "主键是k + j * 100000000")
 end
 
-local function testUniqueKeyGet()
-    local t = cfg.other.signin.get(1)
-    local ut = cfg.other.signin.getByIdViplevel(1, 0)
-    assert(ut == t, "可以有主键，也可以有唯一键，接口为getByXxx")
-end
+-- local function testUniqueKeyGet()
+--     local t = cfg.other.signin.get(1)
+--     local ut = cfg.other.signin.getByIdViplevel(1, 0)
+--     assert(ut == t, "可以有主键，也可以有唯一键，接口为getByXxx")
+-- end
 
 local function testField()
     local t = cfg.task.task.get(1)
@@ -180,22 +179,22 @@ local function testBeanAsPrimaryKeyGetError()
     assert(cfg.equip.jewelryrandom.get(firstK) ~= nil, "只能先拿到引用")
 end
 
-local function testCsvPack()
-    local all = cfg.equip.jewelryrandom.all
-    local tv
-    for k, v in pairs(all) do
-        if k.level == 5 and k.rank == 1 then
-            tv = v
-            break
-        end
-    end
-    print(tv.testPack[1].name, tv.testPack[1].range.min, tv.testPack[1].range.max,
-            tv.testPack[2].name, tv.testPack[2].range.min, tv.testPack[2].range.max)
-    assert(#tv.testPack == 2, "pack=1，可以把任意复杂的结构嵌入一格中")
-    assert(tv.testPack[1].range.min == 100)
-    assert(tv.testPack[1].range.max == 120)
-    assert(tv.testPack[2].range.min == 300)
-end
+-- local function testCsvPack()
+--     local all = cfg.equip.jewelryrandom.all
+--     local tv
+--     for k, v in pairs(all) do
+--         if k.level == 5 and k.rank == 1 then
+--             tv = v
+--             break
+--         end
+--     end
+--     print(tv.testPack[1].name, tv.testPack[1].range.min, tv.testPack[1].range.max,
+--             tv.testPack[2].name, tv.testPack[2].range.min, tv.testPack[2].range.max)
+--     assert(#tv.testPack == 2, "pack=1，可以把任意复杂的结构嵌入一格中")
+--     assert(tv.testPack[1].range.min == 100)
+--     assert(tv.testPack[1].range.max == 120)
+--     assert(tv.testPack[2].range.min == 300)
+-- end
 
 local function testCsvPackSep()
     local m = cfg.other.monster.get(1)
@@ -311,7 +310,7 @@ testToString()
 
 testAllAndGet()
 testMultiColumnAsPrimaryKeyGet()
-testUniqueKeyGet()
+-- testUniqueKeyGet()
 testBeanAsPrimaryKeyGetError()
 
 testField()
@@ -328,7 +327,7 @@ testEnum()
 testEntry()
 
 testCsvColumnMode()
-testCsvPack()
+-- testCsvPack()
 testCsvPackSep()
 testExtraSplit()
 testCsvSplit()

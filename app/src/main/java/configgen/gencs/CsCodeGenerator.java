@@ -53,7 +53,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
         isLangSwitch = ctx.nullableLangSwitch() != null;
         for (String fn : COPY_FILES) {
             FileUtil.copyFileIfNotExist("/support/cs/" + fn,
-                    "src/main/resources/support/gd/" + fn,
+                    "src/main/resources/support/cs/" + fn,
                     dstDir.resolve(fn),
                     encoding);
         }

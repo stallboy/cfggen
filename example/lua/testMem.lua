@@ -3,7 +3,7 @@ local x = collectgarbage("count")
 
 local cfgs = require("cfg._cfgs")
 require("cfg._beans")
-require("cfg._loads")
+-- require("cfg._loads")
 
 collectgarbage("collect")
 local y = collectgarbage("count")

@@ -193,7 +193,7 @@ public class CachedIndentPrinter implements Closeable, TemplateOutput {
     private void prefix(StringBuilder sb, String fmt) {
         sb.append("    ".repeat(Math.max(0, indent)));
         sb.append(fmt);
-        sb.append('\n');
+        sb.append(System.lineSeparator());
     }
 
     @Override

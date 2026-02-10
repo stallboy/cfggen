@@ -37,6 +37,12 @@ public class LuaCodeGenerator extends GeneratorWithTag {
     private boolean isLangSwitch;
     private final boolean noStr;
     private final boolean rForOldShared;
+    private final String mkCfgDir;
+
+    private static final List<String> COPY_FILES = List.of(
+            "mkcfg.lua",
+            "mkcfginit.lua"
+    );
 
     public LuaCodeGenerator(Parameter parameter) {
         super(parameter);
@@ -46,16 +52,17 @@ public class LuaCodeGenerator extends GeneratorWithTag {
 
         useEmmyLua = parameter.has("emmylua");
         if (useEmmyLua) {
-            setHandlerName = parameter.get("sethandlername", null);
-            handlerName = parameter.get("handlername", null);
+            setHandlerName = parameter.get("setHandlerName", null);
+            handlerName = parameter.get("handlerName", null);
         }
         preload = parameter.has("preload");
-        useSharedEmptyTable = parameter.has("sharedemptytable");
+        useSharedEmptyTable = parameter.has("sharedEmptyTable");
         useShared = parameter.has("shared");
 
-        packBool = parameter.has("packbool");
-        rForOldShared = parameter.has("rforoldshared");
-        noStr = parameter.has("nostr");
+        packBool = parameter.has("packBool");
+        rForOldShared = parameter.has("rForOldShared");
+        noStr = parameter.has("noStr");
+        mkCfgDir = parameter.get("mkCfgDir", null);
     }
 
     @Override
@@ -108,10 +115,14 @@ public class LuaCodeGenerator extends GeneratorWithTag {
             }
         }
 
-        FileUtil.copyFileIfNotExist("/support/lua/mkcfg.lua",
-                "src/main/resources/support/mkcfg/mkcfg.lua",
-                dstDir.resolve("mkcfg.lua"),
-                encoding);
+        if (mkCfgDir != null) {
+            for (String fn : COPY_FILES) {
+                FileUtil.copyFileIfNotExist("/support/lua/" + fn,
+                        "src/main/resources/support/lua/" + fn,
+                        Path.of(mkCfgDir, fn),
+                        encoding);
+            }
+        }
 
         CachedFiles.keepMetaAndDeleteOtherFiles(dstDir.toFile());
     }
@@ -435,7 +446,9 @@ public class LuaCodeGenerator extends GeneratorWithTag {
         for (int extraIdx = 0; extraIdx < extraFileCnt; extraIdx++) {
             ps.println("require \"%s_%d\"(mk)", fullName, extraIdx + 1);
 
-            try (var extraPs = createCode(Name.tableExtraPath(vTable.name(), extraIdx + 1))) {
+            // 不能用createCode，不能用之前的cache
+            try (var extraPs = new CachedIndentPrinter(
+                    dstDir.resolve(Name.tableExtraPath(vTable.name(), extraIdx + 1)), encoding)) {
 
                 extraPs.println("local %s = require \"%s._cfgs\"", pkg, pkg);
                 if (HasSubFieldable.hasSubFieldable(table)) {
