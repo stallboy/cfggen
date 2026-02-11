@@ -67,7 +67,6 @@
 /app/CLAUDE.md
 /.claude-trace
 /.claude
-/app/jte-classes
 /app/.claude-trace
 /cfgeditor/.claude-trace
 /thoughts
@@ -84,8 +83,6 @@
 /app/.vscode
 /app/spec.md
 /app/src/main/gen
-/AGENTS.md
-/CLAUDE.md
 /app/.classpath
 /app/.idea/copilot.data.migration.agent.xml
 /app/.project
@@ -116,3 +113,7 @@
 /example/cs_ls_client/obj
 /example/java/bin
 /example/java_ls/bin
+**/.godot
+**/.gradle
+**/jte-classes
+

@@ -19,6 +19,8 @@ function main(): void {
     const errors = new LoadErrors();
     const stream = new Stream(arrayBuffer);
     stream.ReadStringPool();
+    stream.ReadLangTextPool();
+
     Config.Processor.Process(stream, errors);
 
     console.log("Hello, Config!");

@@ -65,7 +65,7 @@ namespace Config.Other
             var self = new DataLoot();
             self.Lootid = os.ReadInt32();
             self.Ename = os.ReadStringInPool();
-            self.Name = os.ReadStringInPool();
+            self.Name = os.ReadTextInPool();
             self.ChanceList = new List<int>();
             for (var c = os.ReadInt32(); c > 0; c--)
                 self.ChanceList.Add(os.ReadInt32());

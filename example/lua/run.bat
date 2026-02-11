@@ -1,1 +1,1 @@
-lua.exe test.lua
+lua test.lua

@@ -40,7 +40,15 @@
       "Bash(gradle.bat:*)",
       "Bash(mvn:*)",
       "Bash(javac:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(genjava.bat:*)",
+      "Bash(genjava_ls.bat:*)",
+      "Bash(gencs.bat:*)",
+      "Bash(cmd:*)",
+      "Bash(cmd.exe:*)",
+      "Bash(dotnet run:*)",
+      "Bash(lua.exe:*)",
+      "Bash(bash:*)"
     ],
     "deny": [],
     "ask": []

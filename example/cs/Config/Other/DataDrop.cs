@@ -57,7 +57,7 @@ namespace Config.Other
         {
             var self = new DataDrop();
             self.Dropid = os.ReadInt32();
-            self.Name = os.ReadStringInPool();
+            self.Name = os.ReadTextInPool();
             self.Items = new List<Config.Other.DataDropitem>();
             for (var c = os.ReadInt32(); c > 0; c--)
                 self.Items.Add(Config.Other.DataDropitem._create(os));

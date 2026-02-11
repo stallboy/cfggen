@@ -20,6 +20,9 @@ sourceSets {
     main {
         java {
             srcDirs = ['.']
+            exclude 'jte-classes/**'
+            exclude 'build/**'
+            exclude '.gradle/**'
         }
     }
 }

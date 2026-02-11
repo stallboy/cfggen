@@ -79,7 +79,7 @@ export class Range {
 
 export abstract class Ai_TriggerTick {
     static _create(os: Stream) : Ai_TriggerTick {
-        switch(os.ReadString()) {
+        switch(os.ReadStringInPool()) {
             case "ConstValue":
                 return Ai_TriggerTick_ConstValue._create(os);
             case "ByLevel":
@@ -160,7 +160,7 @@ export class Equip_TestPackBean {
 
     static _create(os: Stream) : Equip_TestPackBean {
         const self = new Equip_TestPackBean();
-        self._name = os.ReadString();
+        self._name = os.ReadStringInPool();
         self._iRange = Range._create(os);
         return self;
     }
@@ -222,7 +222,7 @@ export class Task_TestDefaultBean {
         const self = new Task_TestDefaultBean();
         self._testInt = os.ReadInt32();
         self._testBool = os.ReadBool();
-        self._testString = os.ReadString();
+        self._testString = os.ReadStringInPool();
         self._testSubBean = Position._create(os);
         self._testList = [];
         for (let c = os.ReadInt32(); c > 0; c--)
@@ -232,7 +232,7 @@ export class Task_TestDefaultBean {
             self._testList2.push(os.ReadInt32());
         self._testMap  = new Map<number, string>();
         for (let c = os.ReadInt32(); c > 0; c--) {
-            self._testMap.set(os.ReadInt32(), os.ReadString());
+            self._testMap.set(os.ReadInt32(), os.ReadStringInPool());
         }
         return self;
     }
@@ -245,7 +245,7 @@ export abstract class Task_Completecondition {
     _resolve(errors: LoadErrors) {
     }
     static _create(os: Stream) : Task_Completecondition {
-        switch(os.ReadString()) {
+        switch(os.ReadStringInPool()) {
             case "KillMonster":
                 return Task_Completecondition_KillMonster._create(os);
             case "TalkNpc":
@@ -347,7 +347,7 @@ export class Task_Completecondition_Chat extends Task_Completecondition {
 
     static _create(os: Stream) : Task_Completecondition_Chat {
         const self = new Task_Completecondition_Chat();
-        self._msg = os.ReadString();
+        self._msg = os.ReadStringInPool();
         return self;
     }
 
@@ -471,8 +471,8 @@ export class Ai_Ai {
     static _create(os: Stream) : Ai_Ai {
         const self = new Ai_Ai();
         self._ID = os.ReadInt32();
-        self._Desc = os.ReadString();
-        self._CondID = os.ReadString();
+        self._Desc = os.ReadStringInPool();
+        self._CondID = os.ReadStringInPool();
         self._TrigTick = Ai_TriggerTick._create(os);
         self._TrigOdds = os.ReadInt32();
         self._ActionID = [];
@@ -528,7 +528,7 @@ export class Ai_Ai_action {
     static _create(os: Stream) : Ai_Ai_action {
         const self = new Ai_Ai_action();
         self._ID = os.ReadInt32();
-        self._Desc = os.ReadString();
+        self._Desc = os.ReadStringInPool();
         self._FormulaID = os.ReadInt32();
         self._ArgIList = [];
         for (let c = os.ReadInt32(); c > 0; c--)
@@ -585,7 +585,7 @@ export class Ai_Ai_condition {
     static _create(os: Stream) : Ai_Ai_condition {
         const self = new Ai_Ai_condition();
         self._ID = os.ReadInt32();
-        self._Desc = os.ReadString();
+        self._Desc = os.ReadStringInPool();
         self._FormulaID = os.ReadInt32();
         self._ArgIList = [];
         for (let c = os.ReadInt32(); c > 0; c--)
@@ -719,7 +719,7 @@ export class Equip_Ability {
     static _create(os: Stream) : Equip_Ability {
         const self = new Equip_Ability();
         self._id = os.ReadInt32();
-        self._name = os.ReadString();
+        self._name = os.ReadStringInPool();
         return self;
     }
 
@@ -802,9 +802,9 @@ export class Equip_Equipconfig {
 
     static _create(os: Stream) : Equip_Equipconfig {
         const self = new Equip_Equipconfig();
-        self._entry = os.ReadString();
+        self._entry = os.ReadStringInPool();
         self._stone_count_for_set = os.ReadInt32();
-        self._draw_protect_name = os.ReadString();
+        self._draw_protect_name = os.ReadStringInPool();
         self._broadcastid = os.ReadInt32();
         self._broadcast_least_quality = os.ReadInt32();
         self._week_reward_mailid = os.ReadInt32();
@@ -886,15 +886,15 @@ export class Equip_Jewelry {
     static _create(os: Stream) : Equip_Jewelry {
         const self = new Equip_Jewelry();
         self._ID = os.ReadInt32();
-        self._Name = os.ReadString();
-        self._IconFile = os.ReadString();
+        self._Name = os.ReadStringInPool();
+        self._IconFile = os.ReadStringInPool();
         self._LvlRank = LevelRank._create(os);
-        self._JType = os.ReadString();
+        self._JType = os.ReadStringInPool();
         self._SuitID = os.ReadInt32();
         self._KeyAbility = os.ReadInt32();
         self._KeyAbilityValue = os.ReadInt32();
         self._SalePrice = os.ReadInt32();
-        self._Description = os.ReadString();
+        self._Description = os.ReadStringInPool();
         return self;
     }
 
@@ -1056,8 +1056,8 @@ export class Equip_Jewelrysuit {
     static _create(os: Stream) : Equip_Jewelrysuit {
         const self = new Equip_Jewelrysuit();
         self._SuitID = os.ReadInt32();
-        self._Ename = os.ReadString();
-        self._Name = os.ReadString();
+        self._Ename = os.ReadStringInPool();
+        self._Name = os.ReadTextInPool();
         self._Ability1 = os.ReadInt32();
         self._Ability1Value = os.ReadInt32();
         self._Ability2 = os.ReadInt32();
@@ -1156,7 +1156,7 @@ export class Equip_Jewelrytype {
 
     static _create(os: Stream) : Equip_Jewelrytype {
         const self = new Equip_Jewelrytype();
-        self._TypeName = os.ReadString();
+        self._TypeName = os.ReadStringInPool();
         return self;
     }
 
@@ -1264,8 +1264,8 @@ export class Equip_Rank {
     static _create(os: Stream) : Equip_Rank {
         const self = new Equip_Rank();
         self._RankID = os.ReadInt32();
-        self._RankName = os.ReadString();
-        self._RankShowName = os.ReadString();
+        self._RankName = os.ReadStringInPool();
+        self._RankShowName = os.ReadStringInPool();
         return self;
     }
 
@@ -1313,7 +1313,7 @@ export class Other_Drop {
     static _create(os: Stream) : Other_Drop {
         const self = new Other_Drop();
         self._dropid = os.ReadInt32();
-        self._name = os.ReadString();
+        self._name = os.ReadTextInPool();
         self._items = [];
         for (let c = os.ReadInt32(); c > 0; c--)
             self._items.push(Other_DropItem._create(os));
@@ -1468,8 +1468,8 @@ export class Other_Loot {
     static _create(os: Stream) : Other_Loot {
         const self = new Other_Loot();
         self._lootid = os.ReadInt32();
-        self._ename = os.ReadString();
-        self._name = os.ReadString();
+        self._ename = os.ReadStringInPool();
+        self._name = os.ReadTextInPool();
         self._chanceList = [];
         for (let c = os.ReadInt32(); c > 0; c--)
             self._chanceList.push(os.ReadInt32());
@@ -1676,7 +1676,7 @@ export class Other_Signin {
             self._vipitem2vipcountMap.set(os.ReadInt32(), os.ReadInt32());
         }
         self._viplevel = os.ReadInt32();
-        self._IconFile = os.ReadString();
+        self._IconFile = os.ReadStringInPool();
         return self;
     }
 
@@ -1813,7 +1813,7 @@ export class Task_Completeconditiontype {
     static _create(os: Stream) : Task_Completeconditiontype {
         const self = new Task_Completeconditiontype();
         self._id = os.ReadInt32();
-        self._name = os.ReadString();
+        self._name = os.ReadStringInPool();
         return self;
     }
 
@@ -1875,7 +1875,7 @@ export class Task_Task {
         self._taskid = os.ReadInt32();
         self._name = [];
         for (let c = os.ReadInt32(); c > 0; c--)
-            self._name.push(os.ReadString());
+            self._name.push(os.ReadTextInPool());
         self._nexttask = os.ReadInt32();
         self._completecondition = Task_Completecondition._create(os);
         self._exp = os.ReadInt32();
@@ -1954,12 +1954,12 @@ export class Task_Task2 {
         self._taskid = os.ReadInt32();
         self._name = [];
         for (let c = os.ReadInt32(); c > 0; c--)
-            self._name.push(os.ReadString());
+            self._name.push(os.ReadTextInPool());
         self._nexttask = os.ReadInt32();
         self._completecondition = Task_Completecondition._create(os);
         self._exp = os.ReadInt32();
         self._testBool = os.ReadBool();
-        self._testString = os.ReadString();
+        self._testString = os.ReadStringInPool();
         self._testStruct = Position._create(os);
         self._testList = [];
         for (let c = os.ReadInt32(); c > 0; c--)
@@ -2029,12 +2029,12 @@ export class Task_Taskextraexp {
         const self = new Task_Taskextraexp();
         self._taskid = os.ReadInt32();
         self._extraexp = os.ReadInt32();
-        self._test1 = os.ReadString();
-        self._test2 = os.ReadString();
-        self._fielda = os.ReadString();
-        self._fieldb = os.ReadString();
-        self._fieldc = os.ReadString();
-        self._fieldd = os.ReadString();
+        self._test1 = os.ReadStringInPool();
+        self._test2 = os.ReadStringInPool();
+        self._fielda = os.ReadStringInPool();
+        self._fieldb = os.ReadStringInPool();
+        self._fieldc = os.ReadStringInPool();
+        self._fieldd = os.ReadStringInPool();
         return self;
     }
 
@@ -2042,8 +2042,10 @@ export class Task_Taskextraexp {
 
 
 export class Processor {
-    static Process(os: Stream, errors: LoadErrors) {
-        const configs = new Set<string>([
+
+    // 从 bytes 文件加载（新格式）
+    static Process(os: Stream, errors: LoadErrors): void {
+        const configNulls = new Set<string>([
             "ai.ai",
             "ai.ai_action",
             "ai.ai_condition",
@@ -2066,99 +2068,110 @@ export class Processor {
             "task.taskextraexp",
         ]);
 
-        for(;;) {
-            const cfg = os.ReadCfg();
-            if (cfg === null) {
-                break;
-            }
-            switch(cfg) {
+        // 读取表数量
+        const tableCount = os.ReadSize();
+
+        for (let i = 0; i < tableCount; i++) {
+            // 读取表名
+            const tableName = os.ReadString();
+            // 读取表大小
+            const tableSize = os.ReadSize();
+
+            // 根据表名分发到对应的 Initialize 方法
+            switch(tableName) {
                 case "ai.ai":
-                    configs.delete(cfg);
+                    configNulls.delete(tableName);
                     Ai_Ai.Initialize(os, errors);
                     break;
                 case "ai.ai_action":
-                    configs.delete(cfg);
+                    configNulls.delete(tableName);
                     Ai_Ai_action.Initialize(os, errors);
                     break;
                 case "ai.ai_condition":
-                    configs.delete(cfg);
+                    configNulls.delete(tableName);
                     Ai_Ai_condition.Initialize(os, errors);
                     break;
                 case "equip.ability":
-                    configs.delete(cfg);
+                    configNulls.delete(tableName);
                     Equip_Ability.Initialize(os, errors);
                     break;
                 case "equip.equipconfig":
-                    configs.delete(cfg);
+                    configNulls.delete(tableName);
                     Equip_Equipconfig.Initialize(os, errors);
                     break;
                 case "equip.jewelry":
-                    configs.delete(cfg);
+                    configNulls.delete(tableName);
                     Equip_Jewelry.Initialize(os, errors);
                     break;
                 case "equip.jewelryrandom":
-                    configs.delete(cfg);
+                    configNulls.delete(tableName);
                     Equip_Jewelryrandom.Initialize(os, errors);
                     break;
                 case "equip.jewelrysuit":
-                    configs.delete(cfg);
+                    configNulls.delete(tableName);
                     Equip_Jewelrysuit.Initialize(os, errors);
                     break;
                 case "equip.jewelrytype":
-                    configs.delete(cfg);
+                    configNulls.delete(tableName);
                     Equip_Jewelrytype.Initialize(os, errors);
                     break;
                 case "equip.rank":
-                    configs.delete(cfg);
+                    configNulls.delete(tableName);
                     Equip_Rank.Initialize(os, errors);
                     break;
                 case "other.drop":
-                    configs.delete(cfg);
+                    configNulls.delete(tableName);
                     Other_Drop.Initialize(os, errors);
                     break;
                 case "other.keytest":
-                    configs.delete(cfg);
+                    configNulls.delete(tableName);
                     Other_Keytest.Initialize(os, errors);
                     break;
                 case "other.loot":
-                    configs.delete(cfg);
+                    configNulls.delete(tableName);
                     Other_Loot.Initialize(os, errors);
                     break;
                 case "other.lootitem":
-                    configs.delete(cfg);
+                    configNulls.delete(tableName);
                     Other_Lootitem.Initialize(os, errors);
                     break;
                 case "other.monster":
-                    configs.delete(cfg);
+                    configNulls.delete(tableName);
                     Other_Monster.Initialize(os, errors);
                     break;
                 case "other.signin":
-                    configs.delete(cfg);
+                    configNulls.delete(tableName);
                     Other_Signin.Initialize(os, errors);
                     break;
                 case "task.completeconditiontype":
-                    configs.delete(cfg);
+                    configNulls.delete(tableName);
                     Task_Completeconditiontype.Initialize(os, errors);
                     break;
                 case "task.task":
-                    configs.delete(cfg);
+                    configNulls.delete(tableName);
                     Task_Task.Initialize(os, errors);
                     break;
                 case "task.task2":
-                    configs.delete(cfg);
+                    configNulls.delete(tableName);
                     Task_Task2.Initialize(os, errors);
                     break;
                 case "task.taskextraexp":
-                    configs.delete(cfg);
+                    configNulls.delete(tableName);
                     Task_Taskextraexp.Initialize(os, errors);
                     break;
                 default:
-                    errors.ConfigDataAdd(cfg);
+                    // 未知表，跳过
+                    os.SkipBytes(tableSize);
                     break;
             }
         }
-        errors.ConfigsNull(configs);
 
+        // 检查缺失的表
+        for (const t of configNulls) {
+            errors.ConfigNull(t);
+        }
+
+        // 解析外键引用
         Equip_Jewelry.Resolve(errors);
         Equip_Jewelryrandom.Resolve(errors);
         Other_Keytest.Resolve(errors);
@@ -2169,6 +2182,7 @@ export class Processor {
         Task_Task2.Resolve(errors);
     }
 }
+
 
 }
 

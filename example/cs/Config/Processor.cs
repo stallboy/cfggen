@@ -4,10 +4,8 @@ namespace Config
 {
     public static class Processor
     {
-        public static readonly LoadErrors Errors = new LoadErrors();
-
         // 从 bytes 文件加载（新格式）
-        public static void Process(Config.Stream os)
+        public static void Process(Config.Stream os, LoadErrors errors)
         {
             var configNulls = new List<string>
             {
@@ -48,83 +46,83 @@ namespace Config
                 {
                     case "ai.ai":
                         configNulls.Remove(tableName);
-                        Config.Ai.DataAi.Initialize(os, Errors);
+                        Config.Ai.DataAi.Initialize(os, errors);
                         break;
                     case "ai.ai_action":
                         configNulls.Remove(tableName);
-                        Config.Ai.DataAi_action.Initialize(os, Errors);
+                        Config.Ai.DataAi_action.Initialize(os, errors);
                         break;
                     case "ai.ai_condition":
                         configNulls.Remove(tableName);
-                        Config.Ai.DataAi_condition.Initialize(os, Errors);
+                        Config.Ai.DataAi_condition.Initialize(os, errors);
                         break;
                     case "equip.ability":
                         configNulls.Remove(tableName);
-                        Config.Equip.DataAbility.Initialize(os, Errors);
+                        Config.Equip.DataAbility.Initialize(os, errors);
                         break;
                     case "equip.equipconfig":
                         configNulls.Remove(tableName);
-                        Config.Equip.DataEquipconfig.Initialize(os, Errors);
+                        Config.Equip.DataEquipconfig.Initialize(os, errors);
                         break;
                     case "equip.jewelry":
                         configNulls.Remove(tableName);
-                        Config.Equip.DataJewelry.Initialize(os, Errors);
+                        Config.Equip.DataJewelry.Initialize(os, errors);
                         break;
                     case "equip.jewelryrandom":
                         configNulls.Remove(tableName);
-                        Config.Equip.DataJewelryrandom.Initialize(os, Errors);
+                        Config.Equip.DataJewelryrandom.Initialize(os, errors);
                         break;
                     case "equip.jewelrysuit":
                         configNulls.Remove(tableName);
-                        Config.Equip.DataJewelrysuit.Initialize(os, Errors);
+                        Config.Equip.DataJewelrysuit.Initialize(os, errors);
                         break;
                     case "equip.jewelrytype":
                         configNulls.Remove(tableName);
-                        Config.Equip.DataJewelrytype.Initialize(os, Errors);
+                        Config.Equip.DataJewelrytype.Initialize(os, errors);
                         break;
                     case "equip.rank":
                         configNulls.Remove(tableName);
-                        Config.Equip.DataRank.Initialize(os, Errors);
+                        Config.Equip.DataRank.Initialize(os, errors);
                         break;
                     case "other.drop":
                         configNulls.Remove(tableName);
-                        Config.Other.DataDrop.Initialize(os, Errors);
+                        Config.Other.DataDrop.Initialize(os, errors);
                         break;
                     case "other.keytest":
                         configNulls.Remove(tableName);
-                        Config.Other.DataKeytest.Initialize(os, Errors);
+                        Config.Other.DataKeytest.Initialize(os, errors);
                         break;
                     case "other.loot":
                         configNulls.Remove(tableName);
-                        Config.Other.DataLoot.Initialize(os, Errors);
+                        Config.Other.DataLoot.Initialize(os, errors);
                         break;
                     case "other.lootitem":
                         configNulls.Remove(tableName);
-                        Config.Other.DataLootitem.Initialize(os, Errors);
+                        Config.Other.DataLootitem.Initialize(os, errors);
                         break;
                     case "other.monster":
                         configNulls.Remove(tableName);
-                        Config.Other.DataMonster.Initialize(os, Errors);
+                        Config.Other.DataMonster.Initialize(os, errors);
                         break;
                     case "other.signin":
                         configNulls.Remove(tableName);
-                        Config.Other.DataSignin.Initialize(os, Errors);
+                        Config.Other.DataSignin.Initialize(os, errors);
                         break;
                     case "task.completeconditiontype":
                         configNulls.Remove(tableName);
-                        Config.Task.DataCompleteconditiontype.Initialize(os, Errors);
+                        Config.Task.DataCompleteconditiontype.Initialize(os, errors);
                         break;
                     case "task.task":
                         configNulls.Remove(tableName);
-                        Config.Task.DataTask.Initialize(os, Errors);
+                        Config.Task.DataTask.Initialize(os, errors);
                         break;
                     case "task.task2":
                         configNulls.Remove(tableName);
-                        Config.Task.DataTask2.Initialize(os, Errors);
+                        Config.Task.DataTask2.Initialize(os, errors);
                         break;
                     case "task.taskextraexp":
                         configNulls.Remove(tableName);
-                        Config.Task.DataTaskextraexp.Initialize(os, Errors);
+                        Config.Task.DataTaskextraexp.Initialize(os, errors);
                         break;
                     default:
                         // 未知表，跳过
@@ -133,16 +131,16 @@ namespace Config
                 }
             }
             foreach (var t in configNulls)
-                Errors.ConfigNull(t);
+                errors.ConfigNull(t);
             // 解析外键引用
-            Config.Equip.DataJewelry.Resolve(Errors);
-            Config.Equip.DataJewelryrandom.Resolve(Errors);
-            Config.Other.DataKeytest.Resolve(Errors);
-            Config.Other.DataLoot.Resolve(Errors);
-            Config.Other.DataMonster.Resolve(Errors);
-            Config.Other.DataSignin.Resolve(Errors);
-            Config.Task.DataTask.Resolve(Errors);
-            Config.Task.DataTask2.Resolve(Errors);
+            Config.Equip.DataJewelry.Resolve(errors);
+            Config.Equip.DataJewelryrandom.Resolve(errors);
+            Config.Other.DataKeytest.Resolve(errors);
+            Config.Other.DataLoot.Resolve(errors);
+            Config.Other.DataMonster.Resolve(errors);
+            Config.Other.DataSignin.Resolve(errors);
+            Config.Task.DataTask.Resolve(errors);
+            Config.Task.DataTask2.Resolve(errors);
         }
     }
 }

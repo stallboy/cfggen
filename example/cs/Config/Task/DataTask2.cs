@@ -73,7 +73,7 @@ namespace Config.Task
             self.Taskid = os.ReadInt32();
             self.Name = new List<string>();
             for (var c = os.ReadInt32(); c > 0; c--)
-                self.Name.Add(os.ReadStringInPool());
+                self.Name.Add(os.ReadTextInPool());
             self.Nexttask = os.ReadInt32();
             self.Completecondition = Config.Task.DataCompletecondition._create(os);
             self.Exp = os.ReadInt32();

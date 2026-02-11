@@ -9,15 +9,13 @@ namespace Config
     {
         private static string[] _globalTexts;
 
-        public static void InitGlobalTexts(string[] texts)
+        public static void SetGlobalTexts(string[] texts)
         {
             _globalTexts = texts;
         }
 
         public static string GetText(int index)
         {
-            if (_globalTexts == null || index < 0 || index >= _globalTexts.Length)
-                return "";
             return _globalTexts[index];
         }
     }
@@ -96,8 +94,12 @@ namespace Config
         public string ReadStringInPool()
         {
             int index = ReadInt32();
-            if (_stringPool == null || index < 0 || index >= _stringPool.Length)
-                return "";
+            if (_stringPool == null)
+                throw new Exception("StringPool not initialized");
+
+            if (index < 0 || index >= _stringPool.Length)
+                throw new Exception("index out of StringPool");
+
             return _stringPool[index];
         }
 
@@ -148,7 +150,7 @@ namespace Config
             }
         }
 
-        // 从 LangTextPool 读取所有语言文本（服务器端模式）
+        // 从 LangTextPool 读取所有语言文本（多语言 服务器端模式）
         public string[] ReadTextsInPool()
         {
             int index = ReadInt32();
@@ -164,6 +166,19 @@ namespace Config
                     texts[i] = _langTextPools[i][index];
             }
             return texts;
+        }
+
+        // 从 LangTextPool 读取text （单语言模式）
+        public string ReadTextInPool()
+        {
+            int index = ReadInt32();
+            if (_langTextPools == null)
+                throw new Exception("LangTextPool not initialized");
+
+            if (index < 0 || index >= _langTextPools[0].Length)
+                throw new Exception("index out of LangTextPool");
+
+            return _langTextPools[0][index];
         }
 
         // 从 LangTextPool 读取文本索引（客户端模式）
@@ -194,11 +209,9 @@ namespace Config
 
     public static class Loader
     {
-        public delegate void ProcessConfigStream(Stream os);
+        public delegate void ProcessConfigStream(Stream os, LoadErrors errors);
 
-        public static ProcessConfigStream Processor;
-
-        public static Stream LoadBytes(byte[] data)
+        public static Stream LoadBytes(byte[] data, ProcessConfigStream processor, LoadErrors errors)
         {
             MemoryStream memoryStream = new MemoryStream(data);
             var reader = new BinaryReader(memoryStream);
@@ -218,7 +231,7 @@ namespace Config
             stream.ReadLangTextPool();
 
             // 4. 处理表数据
-            Processor(stream);
+            processor(stream, errors);
 
             memoryStream.Dispose();
             return stream;

@@ -4,9 +4,25 @@
     {
         byte[] bytes = File.ReadAllBytes("config.bytes");
 
-        Config.Loader.Processor = Config.Processor.Process;
-        Config.Loader.LoadBytes(bytes);
+        
+        Config.LoadErrors errs = new Config.LoadErrors();
+        Config.Stream stream = Config.Loader.LoadBytes(bytes, Config.Processor.Process, errs);
 
+        // 打印警告信息
+        Console.WriteLine("=== Warns ===");
+        foreach (var warn in errs.Warns)
+        {
+            Console.WriteLine(warn);
+        }
+
+        // 打印错误信息
+        Console.WriteLine("\n=== Errors ===");
+        foreach (var err in errs.Errors)
+        {
+            Console.WriteLine(err);
+        }
+
+        Console.WriteLine("\n=== Test Data ===");
         Console.WriteLine(Config.Task.DataTask.Get(1));
     }
 }

@@ -1,2 +1,2 @@
-java -jar ../cfggen.jar -datadir config -search
+java -jar ../cfggen.jar -datadir config -gen search
 

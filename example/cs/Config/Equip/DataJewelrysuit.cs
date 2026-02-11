@@ -80,7 +80,7 @@ namespace Config.Equip
             var self = new DataJewelrysuit();
             self.SuitID = os.ReadInt32();
             self.Ename = os.ReadStringInPool();
-            self.Name = os.ReadStringInPool();
+            self.Name = os.ReadTextInPool();
             self.Ability1 = os.ReadInt32();
             self.Ability1Value = os.ReadInt32();
             self.Ability2 = os.ReadInt32();
