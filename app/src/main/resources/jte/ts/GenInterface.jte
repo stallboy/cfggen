@@ -17,12 +17,17 @@ export abstract class ${className} {
     @endif
 
     static _create(os: Stream) : ${className} {
-        switch(os.ReadStringInPool()) {
+        const typeName = os.ReadStringInPool();
+        switch(typeName) {
             @for(StructSchema impl : sInterface.impls())
                 case "${impl.name()}":
                     return ${gen.className(impl)}._create(os);
             @endfor
+            default:
+                throw new Error("Unknown type: " + typeName);
         }
     }
+
+    abstract toString() : string;
 }
 

@@ -14,8 +14,6 @@ import configgen.value.CfgValue;
 import java.io.*;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 public class TsCodeGenerator extends GeneratorWithTag {
     public final String pkg;
@@ -49,19 +47,6 @@ public class TsCodeGenerator extends GeneratorWithTag {
                 dstDir.resolve("ConfigUtil.ts"),
                 encoding);
 
-        if (nullableLanguageSwitch != null) {
-            generateText(nullableLanguageSwitch);
-        }
-    }
-
-    private void generateText(LangSwitchable langSwitch) {
-        List<String> languages = langSwitch.languages();
-        Map<String, Object> model = Map.of("pkg", pkg, "languages", languages);
-        try (var ps = new CachedIndentPrinter(
-                dstDir.resolve("Text.ts"), encoding)) {
-            String template = serverText ? "ts/ServerText.jte" : "ts/ClientText.jte";
-            JteEngine.render(template, model, ps);
-        }
     }
 
     public String className(Nameable nameable) {

@@ -7,7 +7,11 @@
 @param TsCodeGenerator model
 // noinspection UnnecessaryLocalVariableJS,JSUnusedLocalSymbols,JSUnusedGlobalSymbols,DuplicatedCode,SpellCheckingInspection
 
-import {Stream, LoadErrors} from "./ConfigUtil";
+@if(model.nullableLanguageSwitch != null && !model.serverText)
+    import {Stream, LoadErrors, ToStringList, ToStringMap, TextPoolManager} from "./ConfigUtil";
+@else
+    import {Stream, LoadErrors, ToStringList, ToStringMap} from "./ConfigUtil";
+@endif
 
 export namespace ${model.pkg} {
 
@@ -26,6 +30,14 @@ export namespace ${model.pkg} {
 @for (CfgValue.VTable vTable : model.cfgValue.sortedTables())
     @template.ts.GenStruct(model = new StructModel(model, vTable.schema(), vTable))
 @endfor
+
+@if(model.nullableLanguageSwitch != null)
+    @if(model.serverText)
+        @template.ts.ServerText(pkg = model.pkg, languages = model.nullableLanguageSwitch.languages())
+    @else
+        @template.ts.ClientText(pkg = model.pkg, languages = model.nullableLanguageSwitch.languages())
+    @endif
+@endif
 
 @template.ts.Processor(model = model)
 

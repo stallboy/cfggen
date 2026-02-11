@@ -1,20 +1,20 @@
 // noinspection UnnecessaryLocalVariableJS,JSUnusedLocalSymbols,JSUnusedGlobalSymbols,DuplicatedCode,SpellCheckingInspection
 
-import {Stream, LoadErrors} from "./ConfigUtil";
+import {Stream, LoadErrors, ToStringList, ToStringMap} from "./ConfigUtil";
 
 export namespace Config {
 
 export class LevelRank {
-    private _Level: number | undefined;
+    private _Level!: number;
     /* 等级 */
-    get Level(): number { return this._Level as number; }
-    private _Rank: number | undefined;
+    get Level(): number { return this._Level; }
+    private _Rank!: number;
     /* 品质 */
-    get Rank(): number { return this._Rank as number; }
+    get Rank(): number { return this._Rank; }
 
-    private _RefRank: Equip_Rank | undefined;
-    get RefRank(): Equip_Rank { return this._RefRank as Equip_Rank; }
-    ToString() : string {
+    private _RefRank!: Equip_Rank;
+    get RefRank(): Equip_Rank { return this._RefRank; }
+    toString() : string {
         return "(" + this._Level + "," + this._Rank + ")";
     }
 
@@ -26,22 +26,23 @@ export class LevelRank {
     }
 
     _resolve(errors: LoadErrors) {
-        this._RefRank = Equip_Rank.Get(this._Rank);
-        if (this._RefRank === undefined) {
-            errors.RefNull("LevelRank", this.ToString(), "Rank");
+        const _tmpRefRank = Equip_Rank.Get(this._Rank);
+        if (_tmpRefRank === undefined) {
+            errors.RefNull("LevelRank", this.toString(), "Rank");
         }
+        this._RefRank = _tmpRefRank!;
     }
 }
 
 export class Position {
-    private _x: number | undefined;
-    get X(): number { return this._x as number; }
-    private _y: number | undefined;
-    get Y(): number { return this._y as number; }
-    private _z: number | undefined;
-    get Z(): number { return this._z as number; }
+    private _x!: number;
+    get X(): number { return this._x; }
+    private _y!: number;
+    get Y(): number { return this._y; }
+    private _z!: number;
+    get Z(): number { return this._z; }
 
-    ToString() : string {
+    toString() : string {
         return "(" + this._x + "," + this._y + "," + this._z + ")";
     }
 
@@ -56,14 +57,14 @@ export class Position {
 }
 
 export class Range {
-    private _Min: number | undefined;
+    private _Min!: number;
     /* 最小 */
-    get Min(): number { return this._Min as number; }
-    private _Max: number | undefined;
+    get Min(): number { return this._Min; }
+    private _Max!: number;
     /* 最大 */
-    get Max(): number { return this._Max as number; }
+    get Max(): number { return this._Max; }
 
-    ToString() : string {
+    toString() : string {
         return "(" + this._Min + "," + this._Max + ")";
     }
 
@@ -79,23 +80,28 @@ export class Range {
 
 export abstract class Ai_TriggerTick {
     static _create(os: Stream) : Ai_TriggerTick {
-        switch(os.ReadStringInPool()) {
+        const typeName = os.ReadStringInPool();
+        switch(typeName) {
             case "ConstValue":
                 return Ai_TriggerTick_ConstValue._create(os);
             case "ByLevel":
                 return Ai_TriggerTick_ByLevel._create(os);
             case "ByServerUpDay":
                 return Ai_TriggerTick_ByServerUpDay._create(os);
+            default:
+                throw new Error("Unknown type: " + typeName);
         }
     }
+
+    abstract toString() : string;
 }
 
 
 export class Ai_TriggerTick_ConstValue extends Ai_TriggerTick {
-    private _value: number | undefined;
-    get Value(): number { return this._value as number; }
+    private _value!: number;
+    get Value(): number { return this._value; }
 
-    ToString() : string {
+    toString() : string {
         return "(" + this._value + ")";
     }
 
@@ -108,12 +114,12 @@ export class Ai_TriggerTick_ConstValue extends Ai_TriggerTick {
 }
 
 export class Ai_TriggerTick_ByLevel extends Ai_TriggerTick {
-    private _init: number | undefined;
-    get Init(): number { return this._init as number; }
-    private _coefficient: number | undefined;
-    get Coefficient(): number { return this._coefficient as number; }
+    private _init!: number;
+    get Init(): number { return this._init; }
+    private _coefficient!: number;
+    get Coefficient(): number { return this._coefficient; }
 
-    ToString() : string {
+    toString() : string {
         return "(" + this._init + "," + this._coefficient + ")";
     }
 
@@ -127,14 +133,14 @@ export class Ai_TriggerTick_ByLevel extends Ai_TriggerTick {
 }
 
 export class Ai_TriggerTick_ByServerUpDay extends Ai_TriggerTick {
-    private _init: number | undefined;
-    get Init(): number { return this._init as number; }
-    private _coefficient1: number | undefined;
-    get Coefficient1(): number { return this._coefficient1 as number; }
-    private _coefficient2: number | undefined;
-    get Coefficient2(): number { return this._coefficient2 as number; }
+    private _init!: number;
+    get Init(): number { return this._init; }
+    private _coefficient1!: number;
+    get Coefficient1(): number { return this._coefficient1; }
+    private _coefficient2!: number;
+    get Coefficient2(): number { return this._coefficient2; }
 
-    ToString() : string {
+    toString() : string {
         return "(" + this._init + "," + this._coefficient1 + "," + this._coefficient2 + ")";
     }
 
@@ -149,13 +155,13 @@ export class Ai_TriggerTick_ByServerUpDay extends Ai_TriggerTick {
 }
 
 export class Equip_TestPackBean {
-    private _name: string | undefined;
-    get Name(): string { return this._name as string; }
-    private _iRange: Range | undefined;
-    get IRange(): Range { return this._iRange as Range; }
+    private _name!: string;
+    get Name(): string { return this._name; }
+    private _iRange!: Range;
+    get IRange(): Range { return this._iRange; }
 
-    ToString() : string {
-        return "(" + this._name + "," + this._iRange + ")";
+    toString() : string {
+        return "(" + this._name + "," + this.IRange.toString() + ")";
     }
 
     static _create(os: Stream) : Equip_TestPackBean {
@@ -168,21 +174,21 @@ export class Equip_TestPackBean {
 }
 
 export class Other_DropItem {
-    private _chance: number | undefined;
+    private _chance!: number;
     /* 掉落概率 */
-    get Chance(): number { return this._chance as number; }
-    private _itemids: number[] | undefined;
+    get Chance(): number { return this._chance; }
+    private _itemids!: number[];
     /* 掉落物品 */
-    get Itemids(): number[] { return this._itemids as number[]; }
-    private _countmin: number | undefined;
+    get Itemids(): number[] { return this._itemids; }
+    private _countmin!: number;
     /* 数量下限 */
-    get Countmin(): number { return this._countmin as number; }
-    private _countmax: number | undefined;
+    get Countmin(): number { return this._countmin; }
+    private _countmax!: number;
     /* 数量上限 */
-    get Countmax(): number { return this._countmax as number; }
+    get Countmax(): number { return this._countmax; }
 
-    ToString() : string {
-        return "(" + this._chance + "," + this._itemids + "," + this._countmin + "," + this._countmax + ")";
+    toString() : string {
+        return "(" + this._chance + "," + ToStringList(this._itemids) + "," + this._countmin + "," + this._countmax + ")";
     }
 
     static _create(os: Stream) : Other_DropItem {
@@ -199,23 +205,23 @@ export class Other_DropItem {
 }
 
 export class Task_TestDefaultBean {
-    private _testInt: number | undefined;
-    get TestInt(): number { return this._testInt as number; }
-    private _testBool: boolean | undefined;
-    get TestBool(): boolean { return this._testBool as boolean; }
-    private _testString: string | undefined;
-    get TestString(): string { return this._testString as string; }
-    private _testSubBean: Position | undefined;
-    get TestSubBean(): Position { return this._testSubBean as Position; }
-    private _testList: number[] | undefined;
-    get TestList(): number[] { return this._testList as number[]; }
-    private _testList2: number[] | undefined;
-    get TestList2(): number[] { return this._testList2 as number[]; }
-    private _testMap: Map<number, string> | undefined;
-    get TestMap(): Map<number, string> { return this._testMap as Map<number, string>; }
+    private _testInt!: number;
+    get TestInt(): number { return this._testInt; }
+    private _testBool!: boolean;
+    get TestBool(): boolean { return this._testBool; }
+    private _testString!: string;
+    get TestString(): string { return this._testString; }
+    private _testSubBean!: Position;
+    get TestSubBean(): Position { return this._testSubBean; }
+    private _testList!: number[];
+    get TestList(): number[] { return this._testList; }
+    private _testList2!: number[];
+    get TestList2(): number[] { return this._testList2; }
+    private _testMap!: Map<number, string>;
+    get TestMap(): Map<number, string> { return this._testMap; }
 
-    ToString() : string {
-        return "(" + this._testInt + "," + this._testBool + "," + this._testString + "," + this._testSubBean + "," + this._testList + "," + this._testList2 + "," + this._testMap + ")";
+    toString() : string {
+        return "(" + this._testInt + "," + this._testBool + "," + this._testString + "," + this.TestSubBean.toString() + "," + ToStringList(this._testList) + "," + ToStringList(this._testList2) + "," + ToStringMap(this._testMap) + ")";
     }
 
     static _create(os: Stream) : Task_TestDefaultBean {
@@ -245,7 +251,8 @@ export abstract class Task_Completecondition {
     _resolve(errors: LoadErrors) {
     }
     static _create(os: Stream) : Task_Completecondition {
-        switch(os.ReadStringInPool()) {
+        const typeName = os.ReadStringInPool();
+        switch(typeName) {
             case "KillMonster":
                 return Task_Completecondition_KillMonster._create(os);
             case "TalkNpc":
@@ -260,8 +267,12 @@ export abstract class Task_Completecondition {
                 return Task_Completecondition_CollectItem._create(os);
             case "aa":
                 return Task_Completecondition_Aa._create(os);
+            default:
+                throw new Error("Unknown type: " + typeName);
         }
     }
+
+    abstract toString() : string;
 }
 
 
@@ -270,14 +281,14 @@ export class Task_Completecondition_KillMonster extends Task_Completecondition {
         return Task_Completeconditiontype.KillMonster;
     }
 
-    private _monsterid: number | undefined;
-    get Monsterid(): number { return this._monsterid as number; }
-    private _count: number | undefined;
-    get Count(): number { return this._count as number; }
+    private _monsterid!: number;
+    get Monsterid(): number { return this._monsterid; }
+    private _count!: number;
+    get Count(): number { return this._count; }
 
-    private _RefMonsterid: Other_Monster | undefined;
-    get RefMonsterid(): Other_Monster { return this._RefMonsterid as Other_Monster; }
-    ToString() : string {
+    private _RefMonsterid!: Other_Monster;
+    get RefMonsterid(): Other_Monster { return this._RefMonsterid; }
+    toString() : string {
         return "(" + this._monsterid + "," + this._count + ")";
     }
 
@@ -289,10 +300,11 @@ export class Task_Completecondition_KillMonster extends Task_Completecondition {
     }
 
     _resolve(errors: LoadErrors) {
-        this._RefMonsterid = Other_Monster.Get(this._monsterid);
-        if (this._RefMonsterid === undefined) {
-            errors.RefNull("KillMonster", this.ToString(), "monsterid");
+        const _tmpRefMonsterid = Other_Monster.Get(this._monsterid);
+        if (_tmpRefMonsterid === undefined) {
+            errors.RefNull("KillMonster", this.toString(), "monsterid");
         }
+        this._RefMonsterid = _tmpRefMonsterid!;
     }
 }
 
@@ -301,10 +313,10 @@ export class Task_Completecondition_TalkNpc extends Task_Completecondition {
         return Task_Completeconditiontype.TalkNpc;
     }
 
-    private _npcid: number | undefined;
-    get Npcid(): number { return this._npcid as number; }
+    private _npcid!: number;
+    get Npcid(): number { return this._npcid; }
 
-    ToString() : string {
+    toString() : string {
         return "(" + this._npcid + ")";
     }
 
@@ -322,7 +334,7 @@ export class Task_Completecondition_TestNoColumn extends Task_Completecondition 
     }
 
 
-    ToString() : string {
+    toString() : string {
         return "(" +  + ")";
     }
 
@@ -338,10 +350,10 @@ export class Task_Completecondition_Chat extends Task_Completecondition {
         return Task_Completeconditiontype.Chat;
     }
 
-    private _msg: string | undefined;
-    get Msg(): string { return this._msg as string; }
+    private _msg!: string;
+    get Msg(): string { return this._msg; }
 
-    ToString() : string {
+    toString() : string {
         return "(" + this._msg + ")";
     }
 
@@ -358,13 +370,13 @@ export class Task_Completecondition_ConditionAnd extends Task_Completecondition 
         return Task_Completeconditiontype.ConditionAnd;
     }
 
-    private _cond1: Task_Completecondition | undefined;
-    get Cond1(): Task_Completecondition { return this._cond1 as Task_Completecondition; }
-    private _cond2: Task_Completecondition | undefined;
-    get Cond2(): Task_Completecondition { return this._cond2 as Task_Completecondition; }
+    private _cond1!: Task_Completecondition;
+    get Cond1(): Task_Completecondition { return this._cond1; }
+    private _cond2!: Task_Completecondition;
+    get Cond2(): Task_Completecondition { return this._cond2; }
 
-    ToString() : string {
-        return "(" + this._cond1 + "," + this._cond2 + ")";
+    toString() : string {
+        return "(" + this.Cond1.toString() + "," + this.Cond2.toString() + ")";
     }
 
     static _create(os: Stream) : Task_Completecondition_ConditionAnd {
@@ -385,12 +397,12 @@ export class Task_Completecondition_CollectItem extends Task_Completecondition {
         return Task_Completeconditiontype.CollectItem;
     }
 
-    private _itemid: number | undefined;
-    get Itemid(): number { return this._itemid as number; }
-    private _count: number | undefined;
-    get Count(): number { return this._count as number; }
+    private _itemid!: number;
+    get Itemid(): number { return this._itemid; }
+    private _count!: number;
+    get Count(): number { return this._count; }
 
-    ToString() : string {
+    toString() : string {
         return "(" + this._itemid + "," + this._count + ")";
     }
 
@@ -405,11 +417,11 @@ export class Task_Completecondition_CollectItem extends Task_Completecondition {
 
 export class Task_Completecondition_Aa extends Task_Completecondition {
     type() : Task_Completeconditiontype {
-        return Task_Completeconditiontype.aa;
+        return Task_Completeconditiontype.Aa;
     }
 
 
-    ToString() : string {
+    toString() : string {
         return "(" +  + ")";
     }
 
@@ -422,33 +434,33 @@ export class Task_Completecondition_Aa extends Task_Completecondition {
 
 
 export class Ai_Ai {
-    private _ID: number | undefined;
-    get ID(): number { return this._ID as number; }
-    private _Desc: string | undefined;
+    private _ID!: number;
+    get ID(): number { return this._ID; }
+    private _Desc!: string;
     /* 描述----这里测试下多行效果--再来一行 */
-    get Desc(): string { return this._Desc as string; }
-    private _CondID: string | undefined;
+    get Desc(): string { return this._Desc; }
+    private _CondID!: string;
     /* 触发公式 */
-    get CondID(): string { return this._CondID as string; }
-    private _TrigTick: Ai_TriggerTick | undefined;
+    get CondID(): string { return this._CondID; }
+    private _TrigTick!: Ai_TriggerTick;
     /* 触发间隔(帧) */
-    get TrigTick(): Ai_TriggerTick { return this._TrigTick as Ai_TriggerTick; }
-    private _TrigOdds: number | undefined;
+    get TrigTick(): Ai_TriggerTick { return this._TrigTick; }
+    private _TrigOdds!: number;
     /* 触发几率 */
-    get TrigOdds(): number { return this._TrigOdds as number; }
-    private _ActionID: number[] | undefined;
+    get TrigOdds(): number { return this._TrigOdds; }
+    private _ActionID!: number[];
     /* 触发行为 */
-    get ActionID(): number[] { return this._ActionID as number[]; }
-    private _DeathRemove: boolean | undefined;
+    get ActionID(): number[] { return this._ActionID; }
+    private _DeathRemove!: boolean;
     /* 死亡移除 */
-    get DeathRemove(): boolean { return this._DeathRemove as boolean; }
+    get DeathRemove(): boolean { return this._DeathRemove; }
 
-    ToString() : string {
-        return "(" + this._ID + "," + this._Desc + "," + this._CondID + "," + this._TrigTick + "," + this._TrigOdds + "," + this._ActionID + "," + this._DeathRemove + ")";
+    toString() : string {
+        return "(" + this._ID + "," + this._Desc + "," + this._CondID + "," + this.TrigTick.toString() + "," + this._TrigOdds + "," + ToStringList(this._ActionID) + "," + this._DeathRemove + ")";
     }
 
     
-    private static all : Map<number, Ai_Ai> | undefined;
+    private static all: Map<number, Ai_Ai>;
 
     static Get(ID: number) : Ai_Ai | undefined {
         return this.all.get(ID)
@@ -485,27 +497,27 @@ export class Ai_Ai {
 }
 
 export class Ai_Ai_action {
-    private _ID: number | undefined;
-    get ID(): number { return this._ID as number; }
-    private _Desc: string | undefined;
+    private _ID!: number;
+    get ID(): number { return this._ID; }
+    private _Desc!: string;
     /* 描述 */
-    get Desc(): string { return this._Desc as string; }
-    private _FormulaID: number | undefined;
+    get Desc(): string { return this._Desc; }
+    private _FormulaID!: number;
     /* 公式 */
-    get FormulaID(): number { return this._FormulaID as number; }
-    private _ArgIList: number[] | undefined;
+    get FormulaID(): number { return this._FormulaID; }
+    private _ArgIList!: number[];
     /* 参数(int)1 */
-    get ArgIList(): number[] { return this._ArgIList as number[]; }
-    private _ArgSList: number[] | undefined;
+    get ArgIList(): number[] { return this._ArgIList; }
+    private _ArgSList!: number[];
     /* 参数(string)1 */
-    get ArgSList(): number[] { return this._ArgSList as number[]; }
+    get ArgSList(): number[] { return this._ArgSList; }
 
-    ToString() : string {
-        return "(" + this._ID + "," + this._Desc + "," + this._FormulaID + "," + this._ArgIList + "," + this._ArgSList + ")";
+    toString() : string {
+        return "(" + this._ID + "," + this._Desc + "," + this._FormulaID + "," + ToStringList(this._ArgIList) + "," + ToStringList(this._ArgSList) + ")";
     }
 
     
-    private static all : Map<number, Ai_Ai_action> | undefined;
+    private static all: Map<number, Ai_Ai_action>;
 
     static Get(ID: number) : Ai_Ai_action | undefined {
         return this.all.get(ID)
@@ -542,27 +554,27 @@ export class Ai_Ai_action {
 }
 
 export class Ai_Ai_condition {
-    private _ID: number | undefined;
-    get ID(): number { return this._ID as number; }
-    private _Desc: string | undefined;
+    private _ID!: number;
+    get ID(): number { return this._ID; }
+    private _Desc!: string;
     /* 描述 */
-    get Desc(): string { return this._Desc as string; }
-    private _FormulaID: number | undefined;
+    get Desc(): string { return this._Desc; }
+    private _FormulaID!: number;
     /* 公式 */
-    get FormulaID(): number { return this._FormulaID as number; }
-    private _ArgIList: number[] | undefined;
+    get FormulaID(): number { return this._FormulaID; }
+    private _ArgIList!: number[];
     /* 参数(int)1 */
-    get ArgIList(): number[] { return this._ArgIList as number[]; }
-    private _ArgSList: number[] | undefined;
+    get ArgIList(): number[] { return this._ArgIList; }
+    private _ArgSList!: number[];
     /* 参数(string)1 */
-    get ArgSList(): number[] { return this._ArgSList as number[]; }
+    get ArgSList(): number[] { return this._ArgSList; }
 
-    ToString() : string {
-        return "(" + this._ID + "," + this._Desc + "," + this._FormulaID + "," + this._ArgIList + "," + this._ArgSList + ")";
+    toString() : string {
+        return "(" + this._ID + "," + this._Desc + "," + this._FormulaID + "," + ToStringList(this._ArgIList) + "," + ToStringList(this._ArgSList) + ")";
     }
 
     
-    private static all : Map<number, Ai_Ai_condition> | undefined;
+    private static all: Map<number, Ai_Ai_condition>;
 
     static Get(ID: number) : Ai_Ai_condition | undefined {
         return this.all.get(ID)
@@ -620,19 +632,19 @@ export class Equip_Ability {
     private static _break_armor : Equip_Ability;
     static get Break_armor() :Equip_Ability { return this._break_armor; }
 
-    private _id: number | undefined;
+    private _id!: number;
     /* 属性类型 */
-    get Id(): number { return this._id as number; }
-    private _name: string | undefined;
+    get Id(): number { return this._id; }
+    private _name!: string;
     /* 程序用名字 */
-    get Name(): string { return this._name as string; }
+    get Name(): string { return this._name; }
 
-    ToString() : string {
+    toString() : string {
         return "(" + this._id + "," + this._name + ")";
     }
 
     
-    private static all : Map<number, Equip_Ability> | undefined;
+    private static all: Map<number, Equip_Ability>;
 
     static Get(id: number) : Equip_Ability | undefined {
         return this.all.get(id)
@@ -732,31 +744,31 @@ export class Equip_Equipconfig {
     private static _Instance2 : Equip_Equipconfig;
     static get Instance2() :Equip_Equipconfig { return this._Instance2; }
 
-    private _entry: string | undefined;
+    private _entry!: string;
     /* 入口，程序填 */
-    get Entry(): string { return this._entry as string; }
-    private _stone_count_for_set: number | undefined;
+    get Entry(): string { return this._entry; }
+    private _stone_count_for_set!: number;
     /* 形成套装的音石数量 */
-    get Stone_count_for_set(): number { return this._stone_count_for_set as number; }
-    private _draw_protect_name: string | undefined;
+    get Stone_count_for_set(): number { return this._stone_count_for_set; }
+    private _draw_protect_name!: string;
     /* 保底策略名称 */
-    get Draw_protect_name(): string { return this._draw_protect_name as string; }
-    private _broadcastid: number | undefined;
+    get Draw_protect_name(): string { return this._draw_protect_name; }
+    private _broadcastid!: number;
     /* 公告Id */
-    get Broadcastid(): number { return this._broadcastid as number; }
-    private _broadcast_least_quality: number | undefined;
+    get Broadcastid(): number { return this._broadcastid; }
+    private _broadcast_least_quality!: number;
     /* 公告的最低品质 */
-    get Broadcast_least_quality(): number { return this._broadcast_least_quality as number; }
-    private _week_reward_mailid: number | undefined;
+    get Broadcast_least_quality(): number { return this._broadcast_least_quality; }
+    private _week_reward_mailid!: number;
     /* 抽卡周奖励的邮件id */
-    get Week_reward_mailid(): number { return this._week_reward_mailid as number; }
+    get Week_reward_mailid(): number { return this._week_reward_mailid; }
 
-    ToString() : string {
+    toString() : string {
         return "(" + this._entry + "," + this._stone_count_for_set + "," + this._draw_protect_name + "," + this._broadcastid + "," + this._broadcast_least_quality + "," + this._week_reward_mailid + ")";
     }
 
     
-    private static all : Map<string, Equip_Equipconfig> | undefined;
+    private static all: Map<string, Equip_Equipconfig>;
 
     static Get(entry: string) : Equip_Equipconfig | undefined {
         return this.all.get(entry)
@@ -814,51 +826,51 @@ export class Equip_Equipconfig {
 }
 
 export class Equip_Jewelry {
-    private _ID: number | undefined;
+    private _ID!: number;
     /* 首饰ID */
-    get ID(): number { return this._ID as number; }
-    private _Name: string | undefined;
+    get ID(): number { return this._ID; }
+    private _Name!: string;
     /* 首饰名称 */
-    get Name(): string { return this._Name as string; }
-    private _IconFile: string | undefined;
+    get Name(): string { return this._Name; }
+    private _IconFile!: string;
     /* 图标ID */
-    get IconFile(): string { return this._IconFile as string; }
-    private _LvlRank: LevelRank | undefined;
+    get IconFile(): string { return this._IconFile; }
+    private _LvlRank!: LevelRank;
     /* 首饰等级 */
-    get LvlRank(): LevelRank { return this._LvlRank as LevelRank; }
-    private _JType: string | undefined;
+    get LvlRank(): LevelRank { return this._LvlRank; }
+    private _JType!: string;
     /* 首饰类型 */
-    get JType(): string { return this._JType as string; }
-    private _SuitID: number | undefined;
+    get JType(): string { return this._JType; }
+    private _SuitID!: number;
     /* 套装ID（为0是没有不属于套装，首饰品级为4的首饰该参数为套装id，其余情况为0,引用JewelrySuit.csv） */
-    get SuitID(): number { return this._SuitID as number; }
-    private _KeyAbility: number | undefined;
+    get SuitID(): number { return this._SuitID; }
+    private _KeyAbility!: number;
     /* 关键属性类型 */
-    get KeyAbility(): number { return this._KeyAbility as number; }
-    private _KeyAbilityValue: number | undefined;
+    get KeyAbility(): number { return this._KeyAbility; }
+    private _KeyAbilityValue!: number;
     /* 关键属性数值 */
-    get KeyAbilityValue(): number { return this._KeyAbilityValue as number; }
-    private _SalePrice: number | undefined;
+    get KeyAbilityValue(): number { return this._KeyAbilityValue; }
+    private _SalePrice!: number;
     /* 售卖价格 */
-    get SalePrice(): number { return this._SalePrice as number; }
-    private _Description: string | undefined;
+    get SalePrice(): number { return this._SalePrice; }
+    private _Description!: string;
     /* 描述,根据Lvl和Rank来随机3个属性，第一个属性由Lvl,Rank行随机，剩下2个由Lvl和小于Rank的行里随机。Rank最小的时候都从Lvl，Rank里随机。 */
-    get Description(): string { return this._Description as string; }
+    get Description(): string { return this._Description; }
 
-    private _RefLvlRank: Equip_Jewelryrandom | undefined;
-    get RefLvlRank(): Equip_Jewelryrandom { return this._RefLvlRank as Equip_Jewelryrandom; }
-    private _RefJType: Equip_Jewelrytype | undefined;
-    get RefJType(): Equip_Jewelrytype { return this._RefJType as Equip_Jewelrytype; }
+    private _RefLvlRank!: Equip_Jewelryrandom;
+    get RefLvlRank(): Equip_Jewelryrandom { return this._RefLvlRank; }
+    private _RefJType!: Equip_Jewelrytype;
+    get RefJType(): Equip_Jewelrytype { return this._RefJType; }
     private _NullableRefSuitID: Equip_Jewelrysuit | undefined;
-    get NullableRefSuitID(): Equip_Jewelrysuit { return this._NullableRefSuitID as Equip_Jewelrysuit; }
-    private _RefKeyAbility: Equip_Ability | undefined;
-    get RefKeyAbility(): Equip_Ability { return this._RefKeyAbility as Equip_Ability; }
-    ToString() : string {
-        return "(" + this._ID + "," + this._Name + "," + this._IconFile + "," + this._LvlRank + "," + this._JType + "," + this._SuitID + "," + this._KeyAbility + "," + this._KeyAbilityValue + "," + this._SalePrice + "," + this._Description + ")";
+    get NullableRefSuitID(): Equip_Jewelrysuit | undefined { return this._NullableRefSuitID; }
+    private _RefKeyAbility!: Equip_Ability;
+    get RefKeyAbility(): Equip_Ability { return this._RefKeyAbility; }
+    toString() : string {
+        return "(" + this._ID + "," + this._Name + "," + this._IconFile + "," + this.LvlRank.toString() + "," + this._JType + "," + this._SuitID + "," + this._KeyAbility + "," + this._KeyAbilityValue + "," + this._SalePrice + "," + this._Description + ")";
     }
 
     
-    private static all : Map<number, Equip_Jewelry> | undefined;
+    private static all: Map<number, Equip_Jewelry>;
 
     static Get(ID: number) : Equip_Jewelry | undefined {
         return this.all.get(ID)
@@ -900,42 +912,45 @@ export class Equip_Jewelry {
 
     _resolve(errors: LoadErrors) {
         this._LvlRank._resolve(errors);
-        this._RefLvlRank = Equip_Jewelryrandom.Get(this._LvlRank);
-        if (this._RefLvlRank === undefined) {
-            errors.RefNull("equip.jewelry", this.ToString(), "LvlRank");
+        const _tmpRefLvlRank = Equip_Jewelryrandom.Get(this._LvlRank);
+        if (_tmpRefLvlRank === undefined) {
+            errors.RefNull("equip.jewelry", this.toString(), "LvlRank");
         }
-        this._RefJType = Equip_Jewelrytype.Get(this._JType);
-        if (this._RefJType === undefined) {
-            errors.RefNull("equip.jewelry", this.ToString(), "JType");
+        this._RefLvlRank = _tmpRefLvlRank!;
+        const _tmpRefJType = Equip_Jewelrytype.Get(this._JType);
+        if (_tmpRefJType === undefined) {
+            errors.RefNull("equip.jewelry", this.toString(), "JType");
         }
+        this._RefJType = _tmpRefJType!;
         this._NullableRefSuitID = Equip_Jewelrysuit.Get(this._SuitID);
-        this._RefKeyAbility = Equip_Ability.Get(this._KeyAbility);
-        if (this._RefKeyAbility === undefined) {
-            errors.RefNull("equip.jewelry", this.ToString(), "KeyAbility");
+        const _tmpRefKeyAbility = Equip_Ability.Get(this._KeyAbility);
+        if (_tmpRefKeyAbility === undefined) {
+            errors.RefNull("equip.jewelry", this.toString(), "KeyAbility");
         }
+        this._RefKeyAbility = _tmpRefKeyAbility!;
     }
 }
 
 export class Equip_Jewelryrandom {
-    private _LvlRank: LevelRank | undefined;
+    private _LvlRank!: LevelRank;
     /* 等级 */
-    get LvlRank(): LevelRank { return this._LvlRank as LevelRank; }
-    private _AttackRange: Range | undefined;
+    get LvlRank(): LevelRank { return this._LvlRank; }
+    private _AttackRange!: Range;
     /* 最小攻击力 */
-    get AttackRange(): Range { return this._AttackRange as Range; }
-    private _OtherRange: Range[] | undefined;
+    get AttackRange(): Range { return this._AttackRange; }
+    private _OtherRange!: Range[];
     /* 最小防御力 */
-    get OtherRange(): Range[] { return this._OtherRange as Range[]; }
-    private _TestPack: Equip_TestPackBean[] | undefined;
+    get OtherRange(): Range[] { return this._OtherRange; }
+    private _TestPack!: Equip_TestPackBean[];
     /* 测试pack */
-    get TestPack(): Equip_TestPackBean[] { return this._TestPack as Equip_TestPackBean[]; }
+    get TestPack(): Equip_TestPackBean[] { return this._TestPack; }
 
-    ToString() : string {
-        return "(" + this._LvlRank + "," + this._AttackRange + "," + this._OtherRange + "," + this._TestPack + ")";
+    toString() : string {
+        return "(" + this.LvlRank.toString() + "," + this.AttackRange.toString() + "," + ToStringList(this._OtherRange) + "," + ToStringList(this._TestPack) + ")";
     }
 
     
-    private static all : Map<number, Equip_Jewelryrandom> | undefined;
+    private static all: Map<number, Equip_Jewelryrandom>;
 
     static Get(LvlRank: LevelRank) : Equip_Jewelryrandom | undefined {
         return this.all.get(LvlRank.Level + LvlRank.Rank * 100000000)
@@ -982,42 +997,42 @@ export class Equip_Jewelrysuit {
     private static _SpecialSuit : Equip_Jewelrysuit;
     static get SpecialSuit() :Equip_Jewelrysuit { return this._SpecialSuit; }
 
-    private _SuitID: number | undefined;
+    private _SuitID!: number;
     /* 饰品套装ID */
-    get SuitID(): number { return this._SuitID as number; }
-    private _Ename: string | undefined;
-    get Ename(): string { return this._Ename as string; }
-    private _Name: string | undefined;
+    get SuitID(): number { return this._SuitID; }
+    private _Ename!: string;
+    get Ename(): string { return this._Ename; }
+    private _Name!: string;
     /* 策划用名字 */
-    get Name(): string { return this._Name as string; }
-    private _Ability1: number | undefined;
+    get Name(): string { return this._Name; }
+    private _Ability1!: number;
     /* 套装属性类型1（装备套装中的两件时增加的属性） */
-    get Ability1(): number { return this._Ability1 as number; }
-    private _Ability1Value: number | undefined;
+    get Ability1(): number { return this._Ability1; }
+    private _Ability1Value!: number;
     /* 套装属性1 */
-    get Ability1Value(): number { return this._Ability1Value as number; }
-    private _Ability2: number | undefined;
+    get Ability1Value(): number { return this._Ability1Value; }
+    private _Ability2!: number;
     /* 套装属性类型2（装备套装中的三件时增加的属性） */
-    get Ability2(): number { return this._Ability2 as number; }
-    private _Ability2Value: number | undefined;
+    get Ability2(): number { return this._Ability2; }
+    private _Ability2Value!: number;
     /* 套装属性2 */
-    get Ability2Value(): number { return this._Ability2Value as number; }
-    private _Ability3: number | undefined;
+    get Ability2Value(): number { return this._Ability2Value; }
+    private _Ability3!: number;
     /* 套装属性类型3（装备套装中的四件时增加的属性） */
-    get Ability3(): number { return this._Ability3 as number; }
-    private _Ability3Value: number | undefined;
+    get Ability3(): number { return this._Ability3; }
+    private _Ability3Value!: number;
     /* 套装属性3 */
-    get Ability3Value(): number { return this._Ability3Value as number; }
-    private _SuitList: number[] | undefined;
+    get Ability3Value(): number { return this._Ability3Value; }
+    private _SuitList!: number[];
     /* 部件1 */
-    get SuitList(): number[] { return this._SuitList as number[]; }
+    get SuitList(): number[] { return this._SuitList; }
 
-    ToString() : string {
-        return "(" + this._SuitID + "," + this._Ename + "," + this._Name + "," + this._Ability1 + "," + this._Ability1Value + "," + this._Ability2 + "," + this._Ability2Value + "," + this._Ability3 + "," + this._Ability3Value + "," + this._SuitList + ")";
+    toString() : string {
+        return "(" + this._SuitID + "," + this._Ename + "," + this._Name + "," + this._Ability1 + "," + this._Ability1Value + "," + this._Ability2 + "," + this._Ability2Value + "," + this._Ability3 + "," + this._Ability3Value + "," + ToStringList(this._SuitList) + ")";
     }
 
     
-    private static all : Map<number, Equip_Jewelrysuit> | undefined;
+    private static all: Map<number, Equip_Jewelrysuit>;
 
     static Get(SuitID: number) : Equip_Jewelrysuit | undefined {
         return this.all.get(SuitID)
@@ -1085,16 +1100,16 @@ export class Equip_Jewelrytype {
     private static _Bottle : Equip_Jewelrytype;
     static get Bottle() :Equip_Jewelrytype { return this._Bottle; }
 
-    private _TypeName: string | undefined;
+    private _TypeName!: string;
     /* 程序用名字 */
-    get TypeName(): string { return this._TypeName as string; }
+    get TypeName(): string { return this._TypeName; }
 
-    ToString() : string {
+    toString() : string {
         return "(" + this._TypeName + ")";
     }
 
     
-    private static all : Map<string, Equip_Jewelrytype> | undefined;
+    private static all: Map<string, Equip_Jewelrytype>;
 
     static Get(TypeName: string) : Equip_Jewelrytype | undefined {
         return this.all.get(TypeName)
@@ -1178,22 +1193,22 @@ export class Equip_Rank {
     private static _yellow : Equip_Rank;
     static get Yellow() :Equip_Rank { return this._yellow; }
 
-    private _RankID: number | undefined;
+    private _RankID!: number;
     /* 稀有度 */
-    get RankID(): number { return this._RankID as number; }
-    private _RankName: string | undefined;
+    get RankID(): number { return this._RankID; }
+    private _RankName!: string;
     /* 程序用名字 */
-    get RankName(): string { return this._RankName as string; }
-    private _RankShowName: string | undefined;
+    get RankName(): string { return this._RankName; }
+    private _RankShowName!: string;
     /* 显示名称 */
-    get RankShowName(): string { return this._RankShowName as string; }
+    get RankShowName(): string { return this._RankShowName; }
 
-    ToString() : string {
+    toString() : string {
         return "(" + this._RankID + "," + this._RankName + "," + this._RankShowName + ")";
     }
 
     
-    private static all : Map<number, Equip_Rank> | undefined;
+    private static all: Map<number, Equip_Rank>;
 
     static Get(RankID: number) : Equip_Rank | undefined {
         return this.all.get(RankID)
@@ -1272,25 +1287,25 @@ export class Equip_Rank {
 }
 
 export class Other_Drop {
-    private _dropid: number | undefined;
+    private _dropid!: number;
     /* 序号 */
-    get Dropid(): number { return this._dropid as number; }
-    private _name: string | undefined;
+    get Dropid(): number { return this._dropid; }
+    private _name!: string;
     /* 名字 */
-    get Name(): string { return this._name as string; }
-    private _items: Other_DropItem[] | undefined;
+    get Name(): string { return this._name; }
+    private _items!: Other_DropItem[];
     /* 掉落概率 */
-    get Items(): Other_DropItem[] { return this._items as Other_DropItem[]; }
-    private _testmap: Map<number, number> | undefined;
+    get Items(): Other_DropItem[] { return this._items; }
+    private _testmap!: Map<number, number>;
     /* 测试map block */
-    get Testmap(): Map<number, number> { return this._testmap as Map<number, number>; }
+    get Testmap(): Map<number, number> { return this._testmap; }
 
-    ToString() : string {
-        return "(" + this._dropid + "," + this._name + "," + this._items + "," + this._testmap + ")";
+    toString() : string {
+        return "(" + this._dropid + "," + this._name + "," + ToStringList(this._items) + "," + ToStringMap(this._testmap) + ")";
     }
 
     
-    private static all : Map<number, Other_Drop> | undefined;
+    private static all: Map<number, Other_Drop>;
 
     static Get(dropid: number) : Other_Drop | undefined {
         return this.all.get(dropid)
@@ -1327,44 +1342,44 @@ export class Other_Drop {
 }
 
 export class Other_Keytest {
-    private _id1: number | undefined;
-    get Id1(): number { return this._id1 as number; }
-    private _id2: number | undefined;
-    get Id2(): number { return this._id2 as number; }
-    private _id3: number | undefined;
-    get Id3(): number { return this._id3 as number; }
-    private _ids: number[] | undefined;
-    get Ids(): number[] { return this._ids as number[]; }
+    private _id1!: number;
+    get Id1(): number { return this._id1; }
+    private _id2!: number;
+    get Id2(): number { return this._id2; }
+    private _id3!: number;
+    get Id3(): number { return this._id3; }
+    private _ids!: number[];
+    get Ids(): number[] { return this._ids; }
 
-    private _RefIds: Other_Signin[] | undefined;
-    get RefIds(): Other_Signin[] { return this._RefIds as Other_Signin[]; }
-    ToString() : string {
-        return "(" + this._id1 + "," + this._id2 + "," + this._id3 + "," + this._ids + ")";
+    private _RefIds!: Other_Signin[];
+    get RefIds(): Other_Signin[] { return this._RefIds; }
+    toString() : string {
+        return "(" + this._id1 + "," + this._id2 + "," + this._id3 + "," + ToStringList(this._ids) + ")";
     }
 
     
-    private static all : Map<number, Other_Keytest> | undefined;
+    private static all: Map<number, Other_Keytest>;
 
     static Get(id1: number, id2: number) : Other_Keytest | undefined {
         return this.all.get(id1 + id2 * 100000000)
     }
 
     
-    private static id1Id3Map : Map<number, Other_Keytest> | undefined;
+    private static id1Id3Map: Map<number, Other_Keytest>;
 
     static GetById1Id3(id1: number, id3: number) : Other_Keytest | undefined {
         return this.id1Id3Map.get(id1 + id3 * 100000000)
     }
 
     
-    private static id2Map : Map<number, Other_Keytest> | undefined;
+    private static id2Map: Map<number, Other_Keytest>;
 
     static GetById2(id2: number) : Other_Keytest | undefined {
         return this.id2Map.get(id2)
     }
 
     
-    private static id2Id3Map : Map<number, Other_Keytest> | undefined;
+    private static id2Id3Map: Map<number, Other_Keytest>;
 
     static GetById2Id3(id2: number, id3: number) : Other_Keytest | undefined {
         return this.id2Id3Map.get(id2 + id3 * 100000000)
@@ -1411,7 +1426,7 @@ export class Other_Keytest {
         for (const e of this._ids) {
             const r = Other_Signin.Get(e);
             if (r === undefined) {
-                errors.RefNull("other.keytest", this.ToString(), "ids");
+                errors.RefNull("other.keytest", this.toString(), "ids");
             }
             this._RefIds.push(r);
         }
@@ -1419,28 +1434,28 @@ export class Other_Keytest {
 }
 
 export class Other_Loot {
-    private _lootid: number | undefined;
+    private _lootid!: number;
     /* 序号 */
-    get Lootid(): number { return this._lootid as number; }
-    private _ename: string | undefined;
-    get Ename(): string { return this._ename as string; }
-    private _name: string | undefined;
+    get Lootid(): number { return this._lootid; }
+    private _ename!: string;
+    get Ename(): string { return this._ename; }
+    private _name!: string;
     /* 名字 */
-    get Name(): string { return this._name as string; }
-    private _chanceList: number[] | undefined;
+    get Name(): string { return this._name; }
+    private _chanceList!: number[];
     /* 掉落0件物品的概率 */
-    get ChanceList(): number[] { return this._chanceList as number[]; }
+    get ChanceList(): number[] { return this._chanceList; }
 
-    private _ListRefLootid: Other_Lootitem[] | undefined;
-    get ListRefLootid(): Other_Lootitem[] { return this._ListRefLootid as Other_Lootitem[]; }
-    private _ListRefAnotherWay: Other_Lootitem[] | undefined;
-    get ListRefAnotherWay(): Other_Lootitem[] { return this._ListRefAnotherWay as Other_Lootitem[]; }
-    ToString() : string {
-        return "(" + this._lootid + "," + this._ename + "," + this._name + "," + this._chanceList + ")";
+    private _ListRefLootid!: Other_Lootitem[];
+    get ListRefLootid(): Other_Lootitem[] { return this._ListRefLootid; }
+    private _ListRefAnotherWay!: Other_Lootitem[];
+    get ListRefAnotherWay(): Other_Lootitem[] { return this._ListRefAnotherWay; }
+    toString() : string {
+        return "(" + this._lootid + "," + this._ename + "," + this._name + "," + ToStringList(this._chanceList) + ")";
     }
 
     
-    private static all : Map<number, Other_Loot> | undefined;
+    private static all: Map<number, Other_Loot>;
 
     static Get(lootid: number) : Other_Loot | undefined {
         return this.all.get(lootid)
@@ -1493,28 +1508,28 @@ export class Other_Loot {
 }
 
 export class Other_Lootitem {
-    private _lootid: number | undefined;
+    private _lootid!: number;
     /* 掉落id */
-    get Lootid(): number { return this._lootid as number; }
-    private _itemid: number | undefined;
+    get Lootid(): number { return this._lootid; }
+    private _itemid!: number;
     /* 掉落物品 */
-    get Itemid(): number { return this._itemid as number; }
-    private _chance: number | undefined;
+    get Itemid(): number { return this._itemid; }
+    private _chance!: number;
     /* 掉落概率 */
-    get Chance(): number { return this._chance as number; }
-    private _countmin: number | undefined;
+    get Chance(): number { return this._chance; }
+    private _countmin!: number;
     /* 数量下限 */
-    get Countmin(): number { return this._countmin as number; }
-    private _countmax: number | undefined;
+    get Countmin(): number { return this._countmin; }
+    private _countmax!: number;
     /* 数量上限 */
-    get Countmax(): number { return this._countmax as number; }
+    get Countmax(): number { return this._countmax; }
 
-    ToString() : string {
+    toString() : string {
         return "(" + this._lootid + "," + this._itemid + "," + this._chance + "," + this._countmin + "," + this._countmax + ")";
     }
 
     
-    private static all : Map<number, Other_Lootitem> | undefined;
+    private static all: Map<number, Other_Lootitem>;
 
     static Get(lootid: number, itemid: number) : Other_Lootitem | undefined {
         return this.all.get(lootid + itemid * 100000000)
@@ -1547,27 +1562,27 @@ export class Other_Lootitem {
 }
 
 export class Other_Monster {
-    private _id: number | undefined;
-    get Id(): number { return this._id as number; }
-    private _posList: Position[] | undefined;
-    get PosList(): Position[] { return this._posList as Position[]; }
-    private _lootId: number | undefined;
+    private _id!: number;
+    get Id(): number { return this._id; }
+    private _posList!: Position[];
+    get PosList(): Position[] { return this._posList; }
+    private _lootId!: number;
     /* loot */
-    get LootId(): number { return this._lootId as number; }
-    private _lootItemId: number | undefined;
+    get LootId(): number { return this._lootId; }
+    private _lootItemId!: number;
     /* item */
-    get LootItemId(): number { return this._lootItemId as number; }
+    get LootItemId(): number { return this._lootItemId; }
 
-    private _RefLoot: Other_Lootitem | undefined;
-    get RefLoot(): Other_Lootitem { return this._RefLoot as Other_Lootitem; }
-    private _RefAllLoot: Other_Loot | undefined;
-    get RefAllLoot(): Other_Loot { return this._RefAllLoot as Other_Loot; }
-    ToString() : string {
-        return "(" + this._id + "," + this._posList + "," + this._lootId + "," + this._lootItemId + ")";
+    private _RefLoot!: Other_Lootitem;
+    get RefLoot(): Other_Lootitem { return this._RefLoot; }
+    private _RefAllLoot!: Other_Loot;
+    get RefAllLoot(): Other_Loot { return this._RefAllLoot; }
+    toString() : string {
+        return "(" + this._id + "," + ToStringList(this._posList) + "," + this._lootId + "," + this._lootItemId + ")";
     }
 
     
-    private static all : Map<number, Other_Monster> | undefined;
+    private static all: Map<number, Other_Monster>;
 
     static Get(id: number) : Other_Monster | undefined {
         return this.all.get(id)
@@ -1604,42 +1619,44 @@ export class Other_Monster {
     }
 
     _resolve(errors: LoadErrors) {
-        this._RefLoot = Other_Lootitem.Get(this._lootId, this.lootItemId);
-        if (this._RefLoot === undefined) {
-            errors.RefNull("other.monster", this.ToString(), "Loot");
+        const _tmpRefLoot = Other_Lootitem.Get(this._lootId, this._lootItemId);
+        if (_tmpRefLoot === undefined) {
+            errors.RefNull("other.monster", this.toString(), "Loot");
         }
-        this._RefAllLoot = Other_Loot.Get(this._lootId);
-        if (this._RefAllLoot === undefined) {
-            errors.RefNull("other.monster", this.ToString(), "AllLoot");
+        this._RefLoot = _tmpRefLoot!;
+        const _tmpRefAllLoot = Other_Loot.Get(this._lootId);
+        if (_tmpRefAllLoot === undefined) {
+            errors.RefNull("other.monster", this.toString(), "AllLoot");
         }
+        this._RefAllLoot = _tmpRefAllLoot!;
     }
 }
 
 export class Other_Signin {
-    private _id: number | undefined;
+    private _id!: number;
     /* 礼包ID */
-    get Id(): number { return this._id as number; }
-    private _item2countMap: Map<number, number> | undefined;
+    get Id(): number { return this._id; }
+    private _item2countMap!: Map<number, number>;
     /* 普通奖励 */
-    get Item2countMap(): Map<number, number> { return this._item2countMap as Map<number, number>; }
-    private _vipitem2vipcountMap: Map<number, number> | undefined;
+    get Item2countMap(): Map<number, number> { return this._item2countMap; }
+    private _vipitem2vipcountMap!: Map<number, number>;
     /* vip奖励 */
-    get Vipitem2vipcountMap(): Map<number, number> { return this._vipitem2vipcountMap as Map<number, number>; }
-    private _viplevel: number | undefined;
+    get Vipitem2vipcountMap(): Map<number, number> { return this._vipitem2vipcountMap; }
+    private _viplevel!: number;
     /* 领取vip奖励的最低等级 */
-    get Viplevel(): number { return this._viplevel as number; }
-    private _IconFile: string | undefined;
+    get Viplevel(): number { return this._viplevel; }
+    private _IconFile!: string;
     /* 礼包图标 */
-    get IconFile(): string { return this._IconFile as string; }
+    get IconFile(): string { return this._IconFile; }
 
-    private _RefVipitem2vipcountMap: Map<number, Other_Loot> | undefined;
-    get RefVipitem2vipcountMap(): Map<number, Other_Loot> { return this._RefVipitem2vipcountMap as Map<number, Other_Loot>; }
-    ToString() : string {
-        return "(" + this._id + "," + this._item2countMap + "," + this._vipitem2vipcountMap + "," + this._viplevel + "," + this._IconFile + ")";
+    private _RefVipitem2vipcountMap!: Map<number, Other_Loot>;
+    get RefVipitem2vipcountMap(): Map<number, Other_Loot> { return this._RefVipitem2vipcountMap; }
+    toString() : string {
+        return "(" + this._id + "," + ToStringMap(this._item2countMap) + "," + ToStringMap(this._vipitem2vipcountMap) + "," + this._viplevel + "," + this._IconFile + ")";
     }
 
     
-    private static all : Map<number, Other_Signin> | undefined;
+    private static all: Map<number, Other_Signin>;
 
     static Get(id: number) : Other_Signin | undefined {
         return this.all.get(id)
@@ -1685,7 +1702,7 @@ export class Other_Signin {
         for (const e of this._vipitem2vipcountMap.entries()) {
             const v = Other_Loot.Get(e[1]);
             if (v === undefined) {
-                errors.RefNull("other.signin", this.ToString(), "vipitem2vipcountMap");
+                errors.RefNull("other.signin", this.toString(), "vipitem2vipcountMap");
             }
             this._RefVipitem2vipcountMap.set(e[0], v);
         }
@@ -1714,19 +1731,19 @@ export class Task_Completeconditiontype {
     private static _aa : Task_Completeconditiontype;
     static get Aa() :Task_Completeconditiontype { return this._aa; }
 
-    private _id: number | undefined;
+    private _id!: number;
     /* 任务完成条件类型（id的范围为1-100） */
-    get Id(): number { return this._id as number; }
-    private _name: string | undefined;
+    get Id(): number { return this._id; }
+    private _name!: string;
     /* 程序用名字 */
-    get Name(): string { return this._name as string; }
+    get Name(): string { return this._name; }
 
-    ToString() : string {
+    toString() : string {
         return "(" + this._id + "," + this._name + ")";
     }
 
     
-    private static all : Map<number, Task_Completeconditiontype> | undefined;
+    private static all: Map<number, Task_Completeconditiontype>;
 
     static Get(id: number) : Task_Completeconditiontype | undefined {
         return this.all.get(id)
@@ -1820,32 +1837,32 @@ export class Task_Completeconditiontype {
 }
 
 export class Task_Task {
-    private _taskid: number | undefined;
+    private _taskid!: number;
     /* 任务完成条件类型（id的范围为1-100） */
-    get Taskid(): number { return this._taskid as number; }
-    private _name: string[] | undefined;
+    get Taskid(): number { return this._taskid; }
+    private _name!: string[];
     /* 程序用名字 */
-    get Name(): string[] { return this._name as string[]; }
-    private _nexttask: number | undefined;
-    get Nexttask(): number { return this._nexttask as number; }
-    private _completecondition: Task_Completecondition | undefined;
-    get Completecondition(): Task_Completecondition { return this._completecondition as Task_Completecondition; }
-    private _exp: number | undefined;
-    get Exp(): number { return this._exp as number; }
-    private _testDefaultBean: Task_TestDefaultBean | undefined;
+    get Name(): string[] { return this._name; }
+    private _nexttask!: number;
+    get Nexttask(): number { return this._nexttask; }
+    private _completecondition!: Task_Completecondition;
+    get Completecondition(): Task_Completecondition { return this._completecondition; }
+    private _exp!: number;
+    get Exp(): number { return this._exp; }
+    private _testDefaultBean!: Task_TestDefaultBean;
     /* 测试 */
-    get TestDefaultBean(): Task_TestDefaultBean { return this._testDefaultBean as Task_TestDefaultBean; }
+    get TestDefaultBean(): Task_TestDefaultBean { return this._testDefaultBean; }
 
     private _NullableRefTaskid: Task_Taskextraexp | undefined;
-    get NullableRefTaskid(): Task_Taskextraexp { return this._NullableRefTaskid as Task_Taskextraexp; }
+    get NullableRefTaskid(): Task_Taskextraexp | undefined { return this._NullableRefTaskid; }
     private _NullableRefNexttask: Task_Task | undefined;
-    get NullableRefNexttask(): Task_Task { return this._NullableRefNexttask as Task_Task; }
-    ToString() : string {
-        return "(" + this._taskid + "," + this._name + "," + this._nexttask + "," + this._completecondition + "," + this._exp + "," + this._testDefaultBean + ")";
+    get NullableRefNexttask(): Task_Task | undefined { return this._NullableRefNexttask; }
+    toString() : string {
+        return "(" + this._taskid + "," + ToStringList(this._name) + "," + this._nexttask + "," + this.Completecondition.toString() + "," + this._exp + "," + this.TestDefaultBean.toString() + ")";
     }
 
     
-    private static all : Map<number, Task_Task> | undefined;
+    private static all: Map<number, Task_Task>;
 
     static Get(taskid: number) : Task_Task | undefined {
         return this.all.get(taskid)
@@ -1891,40 +1908,40 @@ export class Task_Task {
 }
 
 export class Task_Task2 {
-    private _taskid: number | undefined;
+    private _taskid!: number;
     /* 任务完成条件类型（id的范围为1-100） */
-    get Taskid(): number { return this._taskid as number; }
-    private _name: string[] | undefined;
-    get Name(): string[] { return this._name as string[]; }
-    private _nexttask: number | undefined;
-    get Nexttask(): number { return this._nexttask as number; }
-    private _completecondition: Task_Completecondition | undefined;
-    get Completecondition(): Task_Completecondition { return this._completecondition as Task_Completecondition; }
-    private _exp: number | undefined;
-    get Exp(): number { return this._exp as number; }
-    private _testBool: boolean | undefined;
-    get TestBool(): boolean { return this._testBool as boolean; }
-    private _testString: string | undefined;
-    get TestString(): string { return this._testString as string; }
-    private _testStruct: Position | undefined;
-    get TestStruct(): Position { return this._testStruct as Position; }
-    private _testList: number[] | undefined;
-    get TestList(): number[] { return this._testList as number[]; }
-    private _testListStruct: Position[] | undefined;
-    get TestListStruct(): Position[] { return this._testListStruct as Position[]; }
-    private _testListInterface: Ai_TriggerTick[] | undefined;
-    get TestListInterface(): Ai_TriggerTick[] { return this._testListInterface as Ai_TriggerTick[]; }
+    get Taskid(): number { return this._taskid; }
+    private _name!: string[];
+    get Name(): string[] { return this._name; }
+    private _nexttask!: number;
+    get Nexttask(): number { return this._nexttask; }
+    private _completecondition!: Task_Completecondition;
+    get Completecondition(): Task_Completecondition { return this._completecondition; }
+    private _exp!: number;
+    get Exp(): number { return this._exp; }
+    private _testBool!: boolean;
+    get TestBool(): boolean { return this._testBool; }
+    private _testString!: string;
+    get TestString(): string { return this._testString; }
+    private _testStruct!: Position;
+    get TestStruct(): Position { return this._testStruct; }
+    private _testList!: number[];
+    get TestList(): number[] { return this._testList; }
+    private _testListStruct!: Position[];
+    get TestListStruct(): Position[] { return this._testListStruct; }
+    private _testListInterface!: Ai_TriggerTick[];
+    get TestListInterface(): Ai_TriggerTick[] { return this._testListInterface; }
 
     private _NullableRefTaskid: Task_Taskextraexp | undefined;
-    get NullableRefTaskid(): Task_Taskextraexp { return this._NullableRefTaskid as Task_Taskextraexp; }
+    get NullableRefTaskid(): Task_Taskextraexp | undefined { return this._NullableRefTaskid; }
     private _NullableRefNexttask: Task_Task | undefined;
-    get NullableRefNexttask(): Task_Task { return this._NullableRefNexttask as Task_Task; }
-    ToString() : string {
-        return "(" + this._taskid + "," + this._name + "," + this._nexttask + "," + this._completecondition + "," + this._exp + "," + this._testBool + "," + this._testString + "," + this._testStruct + "," + this._testList + "," + this._testListStruct + "," + this._testListInterface + ")";
+    get NullableRefNexttask(): Task_Task | undefined { return this._NullableRefNexttask; }
+    toString() : string {
+        return "(" + this._taskid + "," + ToStringList(this._name) + "," + this._nexttask + "," + this.Completecondition.toString() + "," + this._exp + "," + this._testBool + "," + this._testString + "," + this.TestStruct.toString() + "," + ToStringList(this._testList) + "," + ToStringList(this._testListStruct) + "," + ToStringList(this._testListInterface) + ")";
     }
 
     
-    private static all : Map<number, Task_Task2> | undefined;
+    private static all: Map<number, Task_Task2>;
 
     static Get(taskid: number) : Task_Task2 | undefined {
         return this.all.get(taskid)
@@ -1981,31 +1998,31 @@ export class Task_Task2 {
 }
 
 export class Task_Taskextraexp {
-    private _taskid: number | undefined;
+    private _taskid!: number;
     /* 任务完成条件类型（id的范围为1-100） */
-    get Taskid(): number { return this._taskid as number; }
-    private _extraexp: number | undefined;
+    get Taskid(): number { return this._taskid; }
+    private _extraexp!: number;
     /* 额外奖励经验 */
-    get Extraexp(): number { return this._extraexp as number; }
-    private _test1: string | undefined;
-    get Test1(): string { return this._test1 as string; }
-    private _test2: string | undefined;
-    get Test2(): string { return this._test2 as string; }
-    private _fielda: string | undefined;
-    get Fielda(): string { return this._fielda as string; }
-    private _fieldb: string | undefined;
-    get Fieldb(): string { return this._fieldb as string; }
-    private _fieldc: string | undefined;
-    get Fieldc(): string { return this._fieldc as string; }
-    private _fieldd: string | undefined;
-    get Fieldd(): string { return this._fieldd as string; }
+    get Extraexp(): number { return this._extraexp; }
+    private _test1!: string;
+    get Test1(): string { return this._test1; }
+    private _test2!: string;
+    get Test2(): string { return this._test2; }
+    private _fielda!: string;
+    get Fielda(): string { return this._fielda; }
+    private _fieldb!: string;
+    get Fieldb(): string { return this._fieldb; }
+    private _fieldc!: string;
+    get Fieldc(): string { return this._fieldc; }
+    private _fieldd!: string;
+    get Fieldd(): string { return this._fieldd; }
 
-    ToString() : string {
+    toString() : string {
         return "(" + this._taskid + "," + this._extraexp + "," + this._test1 + "," + this._test2 + "," + this._fielda + "," + this._fieldb + "," + this._fieldc + "," + this._fieldd + ")";
     }
 
     
-    private static all : Map<number, Task_Taskextraexp> | undefined;
+    private static all: Map<number, Task_Taskextraexp>;
 
     static Get(taskid: number) : Task_Taskextraexp | undefined {
         return this.all.get(taskid)

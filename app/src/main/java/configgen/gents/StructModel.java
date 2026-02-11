@@ -111,6 +111,27 @@ public class StructModel {
         }
     }
 
+    // 判断外键是否为 nullable
+    public boolean isNullableRef(ForeignKeySchema fk) {
+        return fk.refKey() instanceof RefKey.RefSimple refSimple && refSimple.nullable();
+    }
+
+    // 字段声明（使用确定赋值断言）
+    public String fieldDeclaration(FieldSchema field) {
+        return "_%s!: %s".formatted(field.name(), type(field.type()));
+    }
+
+    // 外键字段声明（区分 nullable）
+    public String refFieldDeclaration(ForeignKeySchema fk) {
+        String typeName = refType(fk);
+        String fieldName = "_%s".formatted(refName(fk));
+        if (isNullableRef(fk)) {
+            return "%s: %s | undefined".formatted(fieldName, typeName);
+        } else {
+            return "%s!: %s".formatted(fieldName, typeName);
+        }
+    }
+
 
     public String uniqueKeyGetByName(KeySchema keySchema) {
         return "GetBy" + keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining());
@@ -141,7 +162,7 @@ public class StructModel {
         } else if (count == 2) {
             String k = keySchema.fields().getFirst();
             String j = keySchema.fields().get(1);
-            return String.format("this._%s, this.%s", k, j);
+            return String.format("this._%s, this._%s", k, j);
         } else {
             throw new RuntimeException("generate typescript, multi key not support > 2 count");
         }
@@ -176,7 +197,19 @@ public class StructModel {
     }
 
     public String toStrings(List<FieldSchema> fs) {
-        return fs.stream().map(f -> "this._" + f.name()).collect(Collectors.joining(" + \",\" + "));
+        return fs.stream()
+                .map(this::fieldToStringExpr)
+                .collect(Collectors.joining(" + \",\" + "));
+    }
+
+    private String fieldToStringExpr(FieldSchema f) {
+        String fieldName = "this._" + f.name();
+        return switch (f.type()) {
+            case FList ignored -> "ToStringList(" + fieldName + ")";
+            case FMap ignored -> "ToStringMap(" + fieldName + ")";
+            case StructRef ignored -> "this." + upper1(f.name()) + ".toString()";
+            default -> fieldName;
+        };
     }
 
 

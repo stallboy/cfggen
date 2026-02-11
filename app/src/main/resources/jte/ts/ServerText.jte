@@ -20,6 +20,6 @@ export class Text
     }
 
     toString(): string {
-        return "(" + ${String.join(" + \",\" + ", languages)} + ")";
+        return "(" + ${String.join(" + \",\" + ", languages.stream().map(l -> "this._" + l).toList())} + ")";
     }
 }

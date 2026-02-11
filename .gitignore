@@ -2,7 +2,6 @@
 /app/build
 /app/out
 /.gradle
-/.idea
 /app/src/main/java/configgen/schema/cfg/Cfg.interp
 /app/src/main/java/configgen/schema/cfg/Cfg.tokens
 /app/src/main/java/configgen/schema/cfg/CfgLexer.interp
@@ -13,11 +12,9 @@
 /example/out
 /app/tmp
 /configgen.jar
-/example/cs/.idea
 /example/cs/bin
 /example/cs/obj
 /cfggen.jar
-/Writerside/.idea
 /native-image
 /cfgeditor.exe
 /cfgeditor服务器.bat
@@ -51,8 +48,6 @@
 /app/src/test/test.iml
 /docs/Gemfile.lock
 /example/jte-classes
-/example/ts/.idea
-/example/ts/node_modules
 /example/ts/package-lock.json
 /example/ts/pnpm-lock.yaml
 /example/i18n/backup
@@ -98,17 +93,14 @@
 /example/gd/.claude
 /example/gd/.vscode
 /example/java/.gradle
-/example/java/.idea
 /example/java/build
 /example/java/out
 /example/java_ls/.gradle
-/example/java_ls/.idea
 /example/java_ls/build
 /example/java_ls/gradle
 /example/java_ls/gradlew
 /example/java_ls/gradlew.bat
 /example/java_ls/out
-/example/cs_ls_client/.idea
 /example/cs_ls_client/bin
 /example/cs_ls_client/obj
 /example/java/bin
@@ -116,4 +108,5 @@
 **/.godot
 **/.gradle
 **/jte-classes
-
+**/node_modules
+**/.idea

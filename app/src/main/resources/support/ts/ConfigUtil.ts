@@ -42,8 +42,11 @@ export class Stream {
 
     ReadString(): string {
         const length = this.ReadSize();
+        if (length < 0) {
+            throw new Error(`Invalid string length: ${length}`);
+        }
         if (this.offset + length > this.view.byteLength) {
-            throw new Error("Buffer overflow while reading string");
+            throw new Error(`Buffer overflow while reading string`);
         }
 
         const bytes = new Uint8Array(this.view.buffer, this.offset, length);
@@ -58,9 +61,9 @@ export class Stream {
     }
 
     ReadInt64(): number {
-        const value = this.view.getFloat64(this.offset, this.littleEndian);
+        const value = this.view.getBigInt64(this.offset, this.littleEndian);
         this.offset += 8;
-        return value;
+        return Number(value);
     }
 
     ReadBool(): boolean {
@@ -127,7 +130,7 @@ export class Stream {
         if (!this.langTextPools) {
             throw new Error("LangTextPool not initialized");
         }
-        if (index < 0 || index >= this.langTextPools[0].Length) {
+        if (index < 0 || index >= this.langTextPools[0].length) {
             throw new Error("index out of LangTextPool");
         }
         return this.langTextPools[0][index];
@@ -220,4 +223,44 @@ export class TextPoolManager {
     }
 }
 
+export class Loader {
+    static LoadBytes(
+        data: ArrayBuffer,
+        processor: (stream: Stream, errors: LoadErrors) => void,
+        errors: LoadErrors
+    ): Stream {
+        const stream = new Stream(data);
 
+        // 1. 跳过 Schema（如果有）
+        const schemaLength = stream.ReadInt32();
+        if (schemaLength > 0) {
+            stream.SkipBytes(schemaLength);
+        }
+
+        // 2. 读取 StringPool
+        stream.ReadStringPool();
+
+        // 3. 读取 LangTextPool
+        stream.ReadLangTextPool();
+
+        // 4. 处理表数据
+        processor(stream, errors);
+
+        return stream;
+    }
+}
+
+// 辅助方法：将 List/Array 转换为字符串
+export function ToStringList<T>(data: readonly T[]): string {
+    const elements = data.map(item => String(item));
+    return "[" + elements.join(", ") + "]";
+}
+
+// 辅助方法：将 Map 转换为字符串
+export function ToStringMap<K, V>(data: ReadonlyMap<K, V>): string {
+    const entries: string[] = [];
+    for (const [key, value] of data.entries()) {
+        entries.push(`${key}=${value}`);
+    }
+    return "{" + entries.join(", ") + "}";
+}

@@ -10,7 +10,7 @@
         !{var enumRefTable = nullableInterface.nullableEnumRefTable();}
         @if(enumRefTable != null)
             type() : ${model.className(enumRefTable)} {
-                return ${model.className(enumRefTable)}.${model.structural.name()};
+                return ${model.className(enumRefTable)}.${model.upper1(model.structural.name())};
             }
 
         @endif
@@ -31,11 +31,11 @@
     @for(FieldSchema field : model.structural.fields())
         !{String t = model.type(field.type());}
         !{String n = field.name();}
-        private _${n}: ${t} | undefined;
+        private _${n}!: ${t};
         @if(!field.comment().isEmpty())
             /* ${field.comment()} */
         @endif
-        get ${model.upper1(n)}(): ${t} { return this._${n} as ${t}; }
+        get ${model.upper1(n)}(): ${t} { return this._${n}; }
     @endfor
 
 
@@ -43,11 +43,17 @@
     @for(ForeignKeySchema fk : model.structural.foreignKeys())
         !{String t = model.refType(fk);}
         !{String n = model.refName(fk);}
-        private _${n}: ${t} | undefined;
-        get ${n}(): ${t} { return this._${n} as ${t}; }
+        !{boolean isNullable = model.isNullableRef(fk);}
+        @if(isNullable)
+            private _${n}: ${t} | undefined;
+            get ${n}(): ${t} | undefined { return this._${n}; }
+        @else
+            private _${n}!: ${t};
+            get ${n}(): ${t} { return this._${n}; }
+        @endif
     @endfor
 
-    ToString() : string {
+    toString() : string {
         return "(" + ${model.toStrings(model.structural.fields())} + ")";
     }
 
@@ -165,18 +171,21 @@
                     !{var refName = model.refName(fk);}
 
                     @if(firstField.type() instanceof SimpleType)
-                        this._${refName} = ${model.tableGet(fk.refTableSchema(), refSimple, model.actualParamsKeyThis(fk.key()))};
-                        @if(!refSimple.nullable())
-                            if (this._${refName} === undefined) {
-                                errors.RefNull("${model.structural.name()}", this.ToString(), "${fk.name()}");
+                        @if(refSimple.nullable())
+                            this._${refName} = ${model.tableGet(fk.refTableSchema(), refSimple, model.actualParamsKeyThis(fk.key()))};
+                        @else
+                            const _tmp${refName} = ${model.tableGet(fk.refTableSchema(), refSimple, model.actualParamsKeyThis(fk.key()))};
+                            if (_tmp${refName} === undefined) {
+                                errors.RefNull("${model.structural.name()}", this.toString(), "${fk.name()}");
                             }
+                            this._${refName} = _tmp${refName}!;
                         @endif
                     @elseif(firstField.type() instanceof FList)
                         this._${refName} = [];
                         for (const e of this._${firstField.name()}) {
                             const r = ${model.tableGet(fk.refTableSchema(), refSimple, "e")};
                             if (r === undefined) {
-                                errors.RefNull("${model.structural.name()}", this.ToString(), "${fk.name()}");
+                                errors.RefNull("${model.structural.name()}", this.toString(), "${fk.name()}");
                             }
                             this._${refName}.push(r);
                         }
@@ -185,7 +194,7 @@
                         for (const e of this._${firstField.name()}.entries()) {
                             const v = ${model.tableGet(fk.refTableSchema(), refSimple, "e[1]")};
                             if (v === undefined) {
-                                errors.RefNull("${model.structural.name()}", this.ToString(), "${fk.name()}");
+                                errors.RefNull("${model.structural.name()}", this.toString(), "${fk.name()}");
                             }
                             this._${refName}.set(e[0], v);
                         }
