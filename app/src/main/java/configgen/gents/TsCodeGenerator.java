@@ -14,20 +14,24 @@ import configgen.value.CfgValue;
 import java.io.*;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 public class TsCodeGenerator extends GeneratorWithTag {
     public final String pkg;
     public final String encoding;
-    private final Path dstFile;
+    public final boolean serverText;
+    private final Path dstDir;
     public CfgValue cfgValue;
     public CfgSchema cfgSchema;
     public LangSwitchable nullableLanguageSwitch;
 
     public TsCodeGenerator(Parameter parameter) {
         super(parameter);
-        dstFile = Path.of(parameter.get("file", "Config.ts"));
+        dstDir = Path.of(parameter.get("dir", "."));
         pkg = parameter.get("pkg", "Config");
         encoding = parameter.get("encoding", "UTF-8");
+        serverText = parameter.has("serverText");
     }
 
     @Override
@@ -36,19 +40,33 @@ public class TsCodeGenerator extends GeneratorWithTag {
         cfgSchema = cfgValue.schema();
         nullableLanguageSwitch = ctx.nullableLangSwitch();
 
-        try (var ps = new CachedIndentPrinter(dstFile, encoding)) {
+        try (var ps = new CachedIndentPrinter(dstDir.resolve("Config.ts"), encoding)) {
             JteEngine.render("ts/Config.jte", this, ps);
         }
 
         FileUtil.copyFileIfNotExist("/support/ts/ConfigUtil.ts",
                 "src/main/resources/support/ts/ConfigUtil.ts",
-                dstFile.getParent().resolve("ConfigUtil.ts"),
+                dstDir.resolve("ConfigUtil.ts"),
                 encoding);
 
+        if (nullableLanguageSwitch != null) {
+            generateText(nullableLanguageSwitch);
+        }
+    }
+
+    private void generateText(LangSwitchable langSwitch) {
+        List<String> languages = langSwitch.languages();
+        Map<String, Object> model = Map.of("pkg", pkg, "languages", languages);
+        try (var ps = new CachedIndentPrinter(
+                dstDir.resolve("Text.ts"), encoding)) {
+            String template = serverText ? "ts/ServerText.jte" : "ts/ClientText.jte";
+            JteEngine.render(template, model, ps);
+        }
     }
 
     public String className(Nameable nameable) {
         String[] s = nameable.fullName().split("\\.");
         return String.join("_", Arrays.stream(s).map(StringUtil::upper1).toList());
     }
+
 }

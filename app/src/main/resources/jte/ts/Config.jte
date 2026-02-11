@@ -27,10 +27,6 @@ export namespace ${model.pkg} {
     @template.ts.GenStruct(model = new StructModel(model, vTable.schema(), vTable))
 @endfor
 
-@if(model.nullableLanguageSwitch!=null)
-    @template.ts.Text(pkg = model.pkg, languages = model.nullableLanguageSwitch.languages())
-@endif
-
 @template.ts.Processor(model = model)
 
 }

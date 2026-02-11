@@ -14,7 +14,6 @@ import configgen.util.XorCipherOutputStream;
 import configgen.value.CfgValue;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;

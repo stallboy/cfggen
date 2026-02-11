@@ -61,7 +61,7 @@ public class StructModel {
             case LONG -> "os.ReadInt64()";
             case FLOAT -> "os.ReadSingle()";
             case STRING -> "os.ReadStringInPool()";
-            case TEXT -> gen.isLangSwitch ? topPkg + ".Text._create(os)" : "os.ReadStringInPool()";
+            case TEXT -> gen.isLangSwitch ? topPkg + ".Text._create(os)" : "os.ReadTextInPool()";
             case StructRef structRef -> fullName(structRef.obj()) + "._create(os)";
             case FList ignored -> null;
             case FMap ignored -> null;

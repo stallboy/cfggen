@@ -12,10 +12,8 @@ namespace ${model.topPkg}
 {
     public static class Processor
     {
-        public static readonly LoadErrors Errors = new LoadErrors();
-
         // 从 bytes 文件加载（新格式）
-        public static void Process(Config.Stream os)
+        public static void Process(Config.Stream os, LoadErrors errors)
         {
             var configNulls = new List<string>
             {
@@ -40,7 +38,7 @@ namespace ${model.topPkg}
                     @for(TableSchema table : model.tableSchemas)
                         case "${table.name()}":
                             configNulls.Remove(tableName);
-                            ${model.fullName(table)}.Initialize(os, Errors);
+                            ${model.fullName(table)}.Initialize(os, errors);
                             break;
                     @endfor
                     default:
@@ -50,11 +48,11 @@ namespace ${model.topPkg}
                 }
             }
             foreach (var t in configNulls)
-                Errors.ConfigNull(t);
+                errors.ConfigNull(t);
             // 解析外键引用
             @for(TableSchema table : model.tableSchemas)
                 @if(HasRef.hasRef(table))
-                    ${model.fullName(table)}.Resolve(Errors);
+                    ${model.fullName(table)}.Resolve(errors);
                 @endif
             @endfor
         }

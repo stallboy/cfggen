@@ -17,7 +17,7 @@ export abstract class ${className} {
     @endif
 
     static _create(os: Stream) : ${className} {
-        switch(os.ReadString()) {
+        switch(os.ReadStringInPool()) {
             @for(StructSchema impl : sInterface.impls())
                 case "${impl.name()}":
                     return ${gen.className(impl)}._create(os);
