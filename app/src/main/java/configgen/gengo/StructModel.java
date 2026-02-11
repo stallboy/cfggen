@@ -1,6 +1,5 @@
 package configgen.gengo;
 
-import configgen.gen.Generator;
 import configgen.schema.*;
 import configgen.util.StringUtil;
 import configgen.value.CfgValue;
@@ -16,8 +15,10 @@ public class StructModel {
     public final Structural structural;
     public final String className;
     public final CfgValue.VTable vTable;
+    private final GoCodeGenerator gen;
 
-    public StructModel(String pkg, GoName name, Structural structural, CfgValue.VTable vTable) {
+    public StructModel(GoCodeGenerator gen, String pkg, GoName name, Structural structural, CfgValue.VTable vTable) {
+        this.gen = gen;
         this.pkg = pkg;
         this.name = name;
         this.structural = structural;
@@ -25,27 +26,32 @@ public class StructModel {
         this.vTable = vTable;
     }
 
+    public boolean isLangSwitch() {
+        return gen.isLangSwitch;
+    }
 
-    public static String genReadField(FieldType t) {
+    public String genReadField(FieldType t) {
         return switch (t) {
             case BOOL -> "stream.ReadBool()";
             case INT -> "stream.ReadInt32()";
             case LONG -> "stream.ReadInt64()";
             case FLOAT -> "stream.ReadFloat32()";
-            case STRING, TEXT -> "stream.ReadString()";
+            case STRING -> "stream.ReadStringInPool()";
+            case TEXT -> gen.isLangSwitch ? "createText(stream)" : "stream.ReadTextInPool()";
             case StructRef structRef -> String.format("create%s(stream)", ClassName(structRef.obj()));
             case FList ignored -> null;
             case FMap ignored -> null;
         };
     }
 
-    public static String type(FieldType t) {
+    public String type(FieldType t) {
         return switch (t) {
             case BOOL -> "bool";
             case INT -> "int32";
             case LONG -> "int64";
             case FLOAT -> "float32";
-            case STRING, TEXT -> "string";
+            case STRING -> "string";
+            case TEXT -> gen.isLangSwitch ? "*Text" : "string";
             case StructRef structRef -> {
                 Fieldable fieldable = structRef.obj();
                 yield switch (fieldable) {
@@ -79,7 +85,7 @@ public class StructModel {
                         return "[]*" + ClassName(fk.refTableSchema());
                     }
                     case FMap fMap -> {
-                        return String.format("map[%s]*%s", type(fMap.key()), ClassName(fk.refTableSchema()));
+                        return String.format("map[%s]*%s", GoCodeGenerator.type(fMap.key()), ClassName(fk.refTableSchema()));
                     }
                 }
             }
@@ -112,7 +118,7 @@ public class StructModel {
     public static String keyClassName(KeySchema keySchema) {
         if (keySchema.fieldSchemas().size() > 1)
             return "Key" + keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining());
-        else return type(keySchema.fieldSchemas().getFirst().type());
+        else return GoCodeGenerator.type(keySchema.fieldSchemas().getFirst().type());
     }
 
     public static String mapName(KeySchema keySchema) {
@@ -150,6 +156,21 @@ public class StructModel {
             return "GetBy" + GoCodeGenerator.keyClassName(keySchema);
         } else {
             return "GetBy" + GetParamVars(keySchema);
+        }
+    }
+
+    // 生成字段在 String() 方法中的打印格式
+    public static String toStringField(FieldSchema f) {
+        String fieldName = lower1(f.name());
+        FieldType t = f.type();
+        if (t instanceof FList) {
+            return String.format("fmt.Sprintf(\"%%v\", t.%s)", fieldName);
+        } else if (t instanceof FMap) {
+            return String.format("fmt.Sprintf(\"%%v\", t.%s)", fieldName);
+        } else if (t instanceof StructRef) {
+            return String.format("fmt.Sprintf(\"%%v\", t.%s)", fieldName);
+        } else {
+            return "t." + fieldName;
         }
     }
 }

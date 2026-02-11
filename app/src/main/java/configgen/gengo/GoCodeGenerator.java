@@ -1,9 +1,9 @@
 package configgen.gengo;
 
 import configgen.ctx.Context;
-import configgen.gen.Generator;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
+import configgen.i18n.LangSwitchable;
 import configgen.schema.*;
 import configgen.util.*;
 import configgen.util.CachedIndentPrinter.CacheConfig;
@@ -12,6 +12,8 @@ import configgen.value.CfgValue;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static configgen.schema.FieldType.Primitive.*;
@@ -21,14 +23,23 @@ public class GoCodeGenerator extends GeneratorWithTag {
     private final String dir;
     private final String pkg;
     private final String encoding;
+    public final boolean serverText;
     private Path dstDir;
     private CacheConfig cacheConfig;
+
+    public boolean isLangSwitch;
+
+    private static final List<String> COPY_FILES = List.of(
+            "stream.go",
+            "LoadErrors.go"
+    );
 
     public GoCodeGenerator(Parameter parameter) {
         super(parameter);
         dir = parameter.get("dir", "config");
         pkg = parameter.get("pkg", "config");
         encoding = parameter.get("encoding", "GBK");
+        serverText = parameter.has("serverText");
         GoName.modName = parameter.get("mod", null);
     }
 
@@ -39,10 +50,14 @@ public class GoCodeGenerator extends GeneratorWithTag {
         CfgSchema cfgSchema = cfgValue.schema();
         cacheConfig = CacheConfig.of();
 
-        FileUtil.copyFileIfNotExist("/support/go/stream.go",
-                "src/main/resources/support/go/stream.go",
-                dstDir.resolve("stream.go"),
-                encoding);
+        isLangSwitch = ctx.nullableLangSwitch() != null;
+
+        for (String fn : COPY_FILES) {
+            FileUtil.copyFileIfNotExist("/support/go/" + fn,
+                    "src/main/resources/support/go/" + fn,
+                    dstDir.resolve(fn),
+                    encoding);
+        }
 
         genCfgMgrFile(cfgValue);
 
@@ -63,6 +78,11 @@ public class GoCodeGenerator extends GeneratorWithTag {
         for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
             generateStruct(vTable.schema(), vTable);
         }
+
+        if (isLangSwitch) {
+            generateText(ctx.nullableLangSwitch());
+        }
+
         CachedFiles.deleteOtherFiles(dstDir.toFile());
     }
 
@@ -80,7 +100,7 @@ public class GoCodeGenerator extends GeneratorWithTag {
 
     private void generateStruct(Structural structural, CfgValue.VTable vTable) {
         GoName name = new GoName(structural);
-        StructModel model = new StructModel(pkg, name, structural, vTable);
+        StructModel model = new StructModel(this, pkg, name, structural, vTable);
         try (var ps = createCode(name.filePath)) {
             JteEngine.render("go/GenStruct.jte", model, ps);
         }
@@ -91,6 +111,15 @@ public class GoCodeGenerator extends GeneratorWithTag {
         var model = new CfgMgrModel(pkg, cfgValue);
         try (var ps = createCode(mgrFileName + ".go")) {
             JteEngine.render("go/GenCfgMgr.jte", model, ps);
+        }
+    }
+
+    private void generateText(LangSwitchable langSwitch) {
+        List<String> languages = langSwitch.languages().stream().map(StringUtil::upper1).toList();
+        Map<String, Object> model = Map.of("pkg", pkg, "languages", languages);
+        try (var ps = createCode("Text.go")) {
+            String template = serverText ? "go/ServerText.jte" : "go/ClientText.jte";
+            JteEngine.render(template, model, ps);
         }
     }
 
@@ -115,7 +144,8 @@ public class GoCodeGenerator extends GeneratorWithTag {
             case INT -> "int32";
             case LONG -> "int64";
             case FLOAT -> "float32";
-            case STRING, TEXT -> "string";
+            case STRING -> "string";
+            case TEXT -> "string"; // 默认返回 string，实际类型由 StructModel.type() 根据 isLangSwitch 决定
             case StructRef structRef -> {
                 Fieldable fieldable = structRef.obj();
                 yield switch (fieldable) {
@@ -133,4 +163,3 @@ public class GoCodeGenerator extends GeneratorWithTag {
         return varName.className;
     }
 }
-

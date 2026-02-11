@@ -1,5 +1,7 @@
 package config
 
+import "fmt"
+
 type TaskTask struct {
     taskid int32 //任务完成条件类型（id的范围为1-100）
     name []string //程序用名字
@@ -17,13 +19,17 @@ func createTaskTask(stream *Stream) *TaskTask {
     nameSize := stream.ReadInt32()
     v.name = make([]string, nameSize)
     for i := 0; i < int(nameSize); i++ {
-        v.name[i] = stream.ReadString()
+        v.name[i] = stream.ReadTextInPool()
     }
     v.nexttask = stream.ReadInt32()
     v.completecondition = createTaskCompletecondition(stream)
     v.exp = stream.ReadInt32()
     v.testDefaultBean = createTaskTestDefaultBean(stream)
     return v
+}
+
+func (t *TaskTask) String() string {
+    return fmt.Sprintf("TaskTask{taskid=%v, name=%v, nexttask=%v, completecondition=%v, exp=%v, testDefaultBean=%v}", t.taskid, fmt.Sprintf("%v", t.name), t.nexttask, fmt.Sprintf("%v", t.completecondition), t.exp, fmt.Sprintf("%v", t.testDefaultBean))
 }
 
 //getters

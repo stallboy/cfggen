@@ -1,5 +1,7 @@
 package config
 
+import "fmt"
+
 type TaskTask2 struct {
     taskid int32 //任务完成条件类型（id的范围为1-100）
     name []string
@@ -22,13 +24,13 @@ func createTaskTask2(stream *Stream) *TaskTask2 {
     nameSize := stream.ReadInt32()
     v.name = make([]string, nameSize)
     for i := 0; i < int(nameSize); i++ {
-        v.name[i] = stream.ReadString()
+        v.name[i] = stream.ReadTextInPool()
     }
     v.nexttask = stream.ReadInt32()
     v.completecondition = createTaskCompletecondition(stream)
     v.exp = stream.ReadInt32()
     v.testBool = stream.ReadBool()
-    v.testString = stream.ReadString()
+    v.testString = stream.ReadStringInPool()
     v.testStruct = createPosition(stream)
     testListSize := stream.ReadInt32()
     v.testList = make([]int32, testListSize)
@@ -46,6 +48,10 @@ func createTaskTask2(stream *Stream) *TaskTask2 {
         v.testListInterface[i] = createAiTriggerTick(stream)
     }
     return v
+}
+
+func (t *TaskTask2) String() string {
+    return fmt.Sprintf("TaskTask2{taskid=%v, name=%v, nexttask=%v, completecondition=%v, exp=%v, testBool=%v, testString=%v, testStruct=%v, testList=%v, testListStruct=%v, testListInterface=%v}", t.taskid, fmt.Sprintf("%v", t.name), t.nexttask, fmt.Sprintf("%v", t.completecondition), t.exp, t.testBool, t.testString, fmt.Sprintf("%v", t.testStruct), fmt.Sprintf("%v", t.testList), fmt.Sprintf("%v", t.testListStruct), fmt.Sprintf("%v", t.testListInterface))
 }
 
 //getters

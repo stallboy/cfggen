@@ -1,5 +1,7 @@
 package config
 
+import "fmt"
+
 type EquipJewelrysuit struct {
     suitID int32 //饰品套装ID
     ename string
@@ -16,8 +18,8 @@ type EquipJewelrysuit struct {
 func createEquipJewelrysuit(stream *Stream) *EquipJewelrysuit {
     v := &EquipJewelrysuit{}
     v.suitID = stream.ReadInt32()
-    v.ename = stream.ReadString()
-    v.name = stream.ReadString()
+    v.ename = stream.ReadStringInPool()
+    v.name = stream.ReadTextInPool()
     v.ability1 = stream.ReadInt32()
     v.ability1Value = stream.ReadInt32()
     v.ability2 = stream.ReadInt32()
@@ -30,6 +32,10 @@ func createEquipJewelrysuit(stream *Stream) *EquipJewelrysuit {
         v.suitList[i] = stream.ReadInt32()
     }
     return v
+}
+
+func (t *EquipJewelrysuit) String() string {
+    return fmt.Sprintf("EquipJewelrysuit{suitID=%v, ename=%v, name=%v, ability1=%v, ability1Value=%v, ability2=%v, ability2Value=%v, ability3=%v, ability3Value=%v, suitList=%v}", t.suitID, t.ename, t.name, t.ability1, t.ability1Value, t.ability2, t.ability2Value, t.ability3, t.ability3Value, fmt.Sprintf("%v", t.suitList))
 }
 
 //entries

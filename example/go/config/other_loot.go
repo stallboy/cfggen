@@ -1,5 +1,7 @@
 package config
 
+import "fmt"
+
 type OtherLoot struct {
     lootid int32 //序号
     ename string
@@ -12,14 +14,18 @@ type OtherLoot struct {
 func createOtherLoot(stream *Stream) *OtherLoot {
     v := &OtherLoot{}
     v.lootid = stream.ReadInt32()
-    v.ename = stream.ReadString()
-    v.name = stream.ReadString()
+    v.ename = stream.ReadStringInPool()
+    v.name = stream.ReadTextInPool()
     chanceListSize := stream.ReadInt32()
     v.chanceList = make([]int32, chanceListSize)
     for i := 0; i < int(chanceListSize); i++ {
         v.chanceList[i] = stream.ReadInt32()
     }
     return v
+}
+
+func (t *OtherLoot) String() string {
+    return fmt.Sprintf("OtherLoot{lootid=%v, ename=%v, name=%v, chanceList=%v}", t.lootid, t.ename, t.name, fmt.Sprintf("%v", t.chanceList))
 }
 
 //getters
@@ -48,7 +54,7 @@ func (t *OtherLoot) ListRefLootid() []*OtherLootitem {
 
 func (t *OtherLoot) ListRefAnotherWay() []*OtherLootitem {
     if t.listRefAnotherWay == nil {
-        t.listRefAnotherWay = GetOtherLootitemMgr().GetAllByLootid(t.anotherWay)
+        t.listRefAnotherWay = GetOtherLootitemMgr().GetAllByLootid(t.lootid)
     }
     return t.listRefAnotherWay
 }

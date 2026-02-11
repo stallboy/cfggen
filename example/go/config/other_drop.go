@@ -1,5 +1,7 @@
 package config
 
+import "fmt"
+
 type OtherDrop struct {
     dropid int32 //序号
     name string //名字
@@ -10,7 +12,7 @@ type OtherDrop struct {
 func createOtherDrop(stream *Stream) *OtherDrop {
     v := &OtherDrop{}
     v.dropid = stream.ReadInt32()
-    v.name = stream.ReadString()
+    v.name = stream.ReadTextInPool()
     itemsSize := stream.ReadInt32()
     v.items = make([]*OtherDropItem, itemsSize)
     for i := 0; i < int(itemsSize); i++ {
@@ -23,6 +25,10 @@ func createOtherDrop(stream *Stream) *OtherDrop {
         v.testmap[k] = stream.ReadInt32()
     }
     return v
+}
+
+func (t *OtherDrop) String() string {
+    return fmt.Sprintf("OtherDrop{dropid=%v, name=%v, items=%v, testmap=%v}", t.dropid, t.name, fmt.Sprintf("%v", t.items), fmt.Sprintf("%v", t.testmap))
 }
 
 //getters

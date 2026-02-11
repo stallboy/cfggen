@@ -1,4 +1,3 @@
-@import configgen.gen.Generator
 @import configgen.gengo.*
 @import configgen.gengo.GoName
 @import configgen.schema.*
@@ -18,6 +17,10 @@
 }
 package ${model.pkg}
 
+@if (!structural.fields().isEmpty())
+import "fmt"
+
+@endif
 type ${className} struct {
     <%--field property--%>
     @for (FieldSchema fieldSchema : structural.fields())
@@ -59,6 +62,16 @@ func create${className}(${streamIf} *Stream) *${className} {
     return v
 }
 
+<%--String method--%>
+!{java.util.List<FieldSchema> fields = structural.fields();}
+func (t *${className}) String() string {
+    @if (fields.isEmpty())
+    return "${className}{}"
+    @else
+    return fmt.Sprintf("${className}{${fields.stream().map(f -> model.lower1(f.name()) + "=%v").collect(java.util.stream.Collectors.joining(", "))}}", ${fields.stream().map(f -> StructModel.toStringField(f)).collect(java.util.stream.Collectors.joining(", "))})
+    @endif
+}
+
 <%--entry--%>
 @if (table != null && table.entry() instanceof EntryType.EntryBase)
 //entries
@@ -94,12 +107,13 @@ var (
         !{
             var RefName = model.refName(fk);
             var refName = model.lower1(RefName);
-            var varName = model.lower1(fk.name());
             var refType = model.refType(fk);
             GoName refTbName = new GoName(fk.refTableSchema());
             var refTableClassName = refTbName.className;
             var fieldType = fk.key().fieldSchemas().getFirst().type();
             var refKey = fk.refKey();
+            var keyFields = fk.key().fieldSchemas();
+            var keyFieldCount = keyFields.size();
 
             String getFuncName = null;
             if (refKey instanceof RefKey.RefPrimary) {
@@ -113,7 +127,17 @@ var (
         @if (getFuncName != null)
             func (t *${className}) ${RefName}() ${refType} {
                 if t.${refName} == nil {
+                    @if (keyFieldCount > 1)
+                    !{
+                        var paramVarsInT = keyFields.stream()
+                            .map(f -> "t." + model.lower1(f.name()))
+                            .collect(java.util.stream.Collectors.joining(", "));
+                    }
+                    t.${refName} = Get${refTableClassName}Mgr().${getFuncName}(${paramVarsInT})
+                    @else
+                    !{var varName = model.lower1(fk.key().fieldSchemas().getFirst().name());}
                     t.${refName} = Get${refTableClassName}Mgr().${getFuncName}(t.${varName})
+                    @endif
                 }
                 return t.${refName}
             }
@@ -171,8 +195,8 @@ var (
         var paramVars = model.GetParamVars(keySchema);
         var varDefines = model.GetVarDefines(keySchema);
         var getFuncName = model.GetFuncName(keySchema,isPrimaryKey);
-        var IdType = GoCodeGenerator.keyClassName(keySchema);
-        var mapName = GoCodeGenerator.mapName(keySchema);
+        var IdType = model.keyClassName(keySchema);
+        var mapName = model.mapName(keySchema);
     }
     @if (fieldCnt > 1)
         func(t *${className}Mgr) ${getFuncName}(${varDefines}) *${className} {
@@ -211,8 +235,8 @@ var (
         t.all = make([]*${className}, 0, cnt)
         @for (KeySchema keySchema : keySchemas)
         !{
-            var mapName = GoCodeGenerator.mapName(keySchema);
-            var IdType = GoCodeGenerator.keyClassName(keySchema);
+            var mapName = model.mapName(keySchema);
+            var IdType = model.keyClassName(keySchema);
         }
         t.${mapName}Map = make(map[${IdType}]*${className}, cnt)
         @endfor
@@ -223,8 +247,8 @@ var (
             !{
                 var fieldSchemas = keySchema.fieldSchemas();
                 var fieldCnt = fieldSchemas.size();
-                var mapName = GoCodeGenerator.mapName(keySchema);
-                var IdType = GoCodeGenerator.keyClassName(keySchema);
+                var mapName = model.mapName(keySchema);
+                var IdType = model.keyClassName(keySchema);
                 var paramVarsInV = model.GetParamVarsInV(keySchema, "v");
             }
             @if (fieldCnt > 1)

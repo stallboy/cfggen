@@ -3,6 +3,7 @@ package main
 import (
 	"cfgtest/config" // 导入 config 包
 	"cfgtest/test"
+	"fmt"
 	"os"
 )
 
@@ -14,6 +15,8 @@ func main() {
 	}
 	defer file.Close()
 	config.Init(file)
+
+	fmt.Println(config.GetTaskTaskMgr().Get(1))
 
 	test.DoTest()
 

@@ -9,7 +9,7 @@ package ${model.pkg()}
 type ${className} interface{}
 
 func create${className}(stream *Stream) ${className} {
-    var typeName = stream.ReadString()
+    var typeName = stream.ReadStringInPool()
     switch typeName {
     @for(Structural impl : model.sInterface().impls())
     case "${impl.name()}":
