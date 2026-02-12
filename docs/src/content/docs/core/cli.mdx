@@ -1,19 +1,19 @@
 ---
-title: usage
+title: cli
 description: 命令行
 sidebar:
   order: 30
 ---
 
 import { Code } from '@astrojs/starlight/components';
-import genjavaBat from '~/../../example/genjava.bat?raw';
-import genluaBat from '~/../../example/genlua.bat?raw';
-import gencsharpBat from '~/../../example/gencsharp.bat?raw';
-import gengoBat from '~/../../example/gengo.bat?raw';
-import gentsBat from '~/../../example/gents.bat?raw';
+import genjavaBat from '~/../../example/java/genjava.bat?raw';
+import genluaBat from '~/../../example/lua/genlua.bat?raw';
+import gencsBat from '~/../../example/cs/gencs.bat?raw';
+import gengoBat from '~/../../example/go/gengo.bat?raw';
+import gentsBat from '~/../../example/ts/gents.bat?raw';
 
 
-```cmd usage
+```cmd help
 Usage: java -jar cfggen.jar [options] [-tool toolname[,param=value...]] -datadir <dir> [-gen genname[,param=value...]]
 
    or: java -jar cfggen.jar  (launch GUI)
@@ -37,8 +37,8 @@ Parameters can be in any order, but -datadir is required when using generators.
         datadir=.
         csvencoding=GBK
         headrow=2
-    -tool readjavadata javadata数据读取
-        javadata=config.data
+    -tool bytesview
+        bytes=config.bytes
         match=null
     -tool term       查看术语，或检查术语使用情况
         todo=null
@@ -53,7 +53,7 @@ Parameters can be in any order, but -datadir is required when using generators.
         ai=ai.json
         prompt=null
         batch=10
-    -tool usage      print usage help
+    -tool help       print usage help
 
 -----schema & data
     -datadir          配表根目录，目录下有文件config.cfg
@@ -71,18 +71,20 @@ Parameters can be in any order, but -datadir is required when using generators.
 
 -----generators
     -gen verify      检验数据
+        unreferenced         ,默认为false
+        entry                ,默认为false
     -gen search      搜索数据
         own=null
         to=null
         q=null
-            int <int> <int> ...: search integers
-            str <str>: search string
-            ref <refTable<[uniqKeys]>?> <IgnoredTables>: search ref
-            sl  <name>?: list name of schemas
-            sll <name>?: list schemas
-            slljson <name>?: list schemas. use json
-            h: help
-            q: quit
+            int <num> [num]...      : Search for integers (supports hex 0x)
+            str <substring>         : Search for strings containing substring
+            ref <table[key]> [skip] : Search references to a table/key
+            sl  [name]              : List matching schema names
+            sll [name]              : List matching schemas with data (limit 100)
+            slljson [name]          : List matching schemas in JSON format
+            h / help                : Show this help
+            q / exit                : Quit
     -gen i18n        生成翻译文件（方案1：by 文本）
         file=../i18n/en.csv  生成文件
     -gen i18nbyid    生成翻译文件（方案2：by id）
@@ -98,20 +100,19 @@ Parameters can be in any order, but -datadir is required when using generators.
         builders=null        指向txt文件，每行是一个table，对这些table生成对应的builder
         configgenDir=null    复制configgen genjava源文件到{configgenDir}/configgen/genjava/，可选
         schemaNumPerFile=100 当配表数量过多时生成的ConfigCodeSchema会超过java编译器限制，用此参数来分文
-    -gen javadata    生成java代码需要的数据
-        own=null
-        file=config.data     文件名
     -gen cs          生成c#代码
         own=null
         dir=Config           目录
         pkg=Config           包名
         encoding=GBK         生成文件的编码
         prefix=Data          生成类的前缀
+        serverText           ,默认为false
     -gen bytes       生成c#/ts/go代码需要的数据
         own=null
-        file=config.bytes    文件名
+        dir=.
         cipher=              xor加密
-        stringpool           ,默认为false
+        schema               ,默认为false
+        langSeparated        ,默认为false
     -gen lua         生成lua代码（数据也是代码）
         own=null
         dir=.                生成代码所在目录
@@ -119,26 +120,32 @@ Parameters can be in any order, but -datadir is required when using generators.
         encoding=UTF-8       编码
         emmylua              是否生成EmmyLua相关的注解,默认为false
         preload              是否一开始就全部加载配置，默认用到的时候再加载,默认为false
-        sharedemptytable     是否提取空table {},默认为false
+        sharedEmptyTable     ,默认为false
         shared               是否提取非空的公共table,默认为false
-        packbool             是否要把同一个结构里的多个bool压缩成一个int,默认为false
-        rforoldshared        以前R用于修饰shared table，现在默认行为改为R修饰list，map,默认为false
-        nostr                只用来测试字符串占用内存大小,默认为false
+        packBool             ,默认为false
+        rForOldShared        ,默认为false
+        noStr                ,默认为false
+        mkCfgDir=null
     -gen ts          生成typescript代码
         own=null
-        file=Config.ts
+        dir=.
         pkg=Config
         encoding=UTF-8       ts文件编码
+        serverText           ,默认为false
     -gen go          生成go代码
         own=null
         dir=config
         pkg=config
         encoding=GBK
+        serverText           ,默认为false
         mod=null
+    -gen gd
+        own=null
+        dir=config
+        prefix=Data
     -gen tsschema    生成特定table的schema（用ts来表达）
         own=null
         table=
-        refs=
         dst=.                目标目录
         encoding=UTF-8       生成的ts文件编码
     -gen json        把特定table里数据输出为json
@@ -172,34 +179,24 @@ Parameters can be in any order, but -datadir is required when using generators.
 genjar.bat  # 生成cfggen.jar
 ```
 
-```bash
-mkexe.bat  # 生成cfggen.zip，里面有exe
-```
 
 ### 测试 Java：生成 java 代码和数据
 
 ```bash
-cd example
+cd example/java
 genjava.bat
+run.bat
 ```
 
 <Code code={genjavaBat.trim()} title="genjava.bat" lang="bash" />
 
 
-### 测试 Java：检验 java 生成
-
-```bash
-gradle build
-java -jar build/libs/example.jar # 进入命令行，输入q退出，输入其他比如ai会打印表名称以ai开头的结构定义和数据
-```
-
 ### 测试 Lua
 
 ```bash
+cd example/lua
 genlua.bat
-cd lua
-chcp 65001
-lua.exe test.lua
+run.bat
 ```
 
 <Code code={genluaBat.trim()} title="genlua.bat" lang="bash" />
@@ -208,20 +205,20 @@ lua.exe test.lua
 ### 测试 CSharp
 
 ```bash
-gencsharp.bat
-cd cs
-dotnet run
+cd example/cs
+gencs.bat
+run.bat
 ```
 
-<Code code={gencsharpBat.trim()} title="gencsharp.bat" lang="bash" />
+<Code code={gencsBat.trim()} title="gencs.bat" lang="bash" />
 
 
 ### 测试 Go
 
 ```bash
+cd example/go
 gengo.bat
-cd go
-go run .
+run.bat
 ```
 
 <Code code={gengoBat.trim()} title="gengo.bat" lang="bash" />
@@ -230,10 +227,9 @@ go run .
 ### 测试 TypeScript
 
 ```bash
+cd example/ts
 gents.bat
-cd ts
-pnpm i -D tsx
-npx tsx main.ts
+run.bat
 ```
 
 <Code code={gentsBat.trim()} title="gents.bat" lang="bash" />

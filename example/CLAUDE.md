@@ -41,8 +41,27 @@ config/
 | ts_ls_client/ | TypeScript | 客户端 | 文本靠切换 |
 | lua/ | Lua | 无 | 单语言版本 |
 | lua_ls_client/ | Lua | 客户端 | 文本靠切换 |
-| go/ | Go | 无 | Go 语言版本 |
-| gd/ | GDScript | 无 | Godot 4.x 版本 |
+| go/ | Go | 无 | Go 语言单语言版本 |
+| go_ls/ | Go | 服务器端 | Go 多语言服务器端版本 |
+| go_ls_client/ | Go | 客户端 | Go 多语言客户端版本 |
+| gd/ | GDScript | 无 | Godot 4.x 单语言版本 |
+| gd_ls_client/ | GDScript | 客户端 | Godot 4.x 多语言客户端版本 |
+
+### 辅助工具脚本
+
+| 脚本 | 功能 |
+|------|------|
+| help.bat | 显示帮助信息 |
+| gui.bat | 启动 GUI 配置工具 |
+| search.bat | 搜索配置内容 |
+| mcp_server.bat | MCP 服务器 |
+| cfgeditor_server.bat | 启动配置编辑器服务器 |
+
+### 各语言目录脚本
+
+每个语言目录（如 `java/`, `cs/`, `go/`, `gd/`, `ts/`, `lua/`）都包含：
+- `gen*.bat` - 生成该语言的代码和数据
+- `run.bat` - 构建并运行验证
 
 ## 后缀命名规范
 
@@ -91,16 +110,43 @@ java -jar ../../cfggen.jar -datadir ../config -gen <目标类型>[,选项...] [-
 2. 在各语言目录下创建或修改生成脚本
 3. 测试生成和运行
 
+### 添加多语言支持
+
+1. 在 `i18n/` 目录下配置语言表
+2. 创建带 `_ls` 或 `_ls_client` 后缀的目录
+3. 修改生成脚本添加多语言相关选项
+
 ## 测试验证
 
 每个语言目录下都有 `run.bat` 用于验证生成的代码：
 
 - **Java**: `gradle run` 或直接运行 Java
 - **C#**: `dotnet run`
-- **TypeScript**: `npx ts-node main.ts`
+- **TypeScript**: `npx tsx main.ts`
 - **Lua**: `lua.exe test.lua`
 - **Go**: `go run main.go`
 - **GDScript**: 需要在 Godot 编辑器中运行
+
+## 特殊说明
+
+### GDScript 项目
+
+- 使用 Godot 4.x 引擎
+- 项目配置文件：`project.godot`
+- 主场景：`main.tscn`
+- 入口脚本：`main.gd`
+
+### Go 项目
+
+- 使用 Go Modules 管理依赖
+- `go.mod` 定义模块依赖
+- 支持 `go_ls` 和 `go_ls_client` 多语言版本
+
+### TypeScript 项目
+
+- 使用 npm/pnpm 管理依赖
+- `package.json` 定义项目配置
+- 使用 tsx 直接运行 TypeScript
 
 ## 注意事项
 
@@ -108,3 +154,4 @@ java -jar ../../cfggen.jar -datadir ../config -gen <目标类型>[,选项...] [-
 2. 生成前会清理旧的生成代码（各 gen*.bat 开头的 rm 命令）
 3. 多语言版本需要配置语言表（i18n 目录）
 4. GDScript 项目使用 Godot 4.x
+5. Windows 环境下执行 .bat 文件使用 `./` 前缀
