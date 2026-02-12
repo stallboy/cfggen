@@ -59,3 +59,6 @@ static var Bracelet: DataEquip_Jewelrytype
 static var Magic: DataEquip_Jewelrytype
 static var Bottle: DataEquip_Jewelrytype
 # 解析外键引用
+# 字符串表示
+func _to_string() -> String:
+	return "DataEquip_Jewelrytype{" + typeName + "}"

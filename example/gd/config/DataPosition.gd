@@ -14,3 +14,6 @@ static func create(stream: ConfigStream) -> DataPosition:
 	return instance
 
 # 解析外键引用
+# 字符串表示
+func _to_string() -> String:
+	return "DataPosition{" + str(x) + "," + str(y) + "," + str(z) + "}"

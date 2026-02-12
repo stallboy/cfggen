@@ -12,3 +12,6 @@ static func create(stream: ConfigStream) -> DataAiTriggertick_Bylevel:
 	return instance
 
 # 解析外键引用
+# 字符串表示
+func _to_string() -> String:
+	return "DataAiTriggertick_Bylevel{" + str(init) + "," + str(coefficient) + "}"

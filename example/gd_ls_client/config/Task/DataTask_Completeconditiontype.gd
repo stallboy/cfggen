@@ -1,17 +1,13 @@
 class_name DataTask_Completeconditiontype
 ## task.completeconditiontype
 # 公开属性
-var id: int:
-	get:
-		return id  # 任务完成条件类型（id的范围为1-100）
-var name: String:
-	get:
-		return name  # 程序用名字
+var id: int  # 任务完成条件类型（id的范围为1-100）
+var name: String  # 程序用名字
 # 外键引用属性
 # 创建实例
 static func create(stream: ConfigStream) -> DataTask_Completeconditiontype:
 	var instance = DataTask_Completeconditiontype.new()
-	instance.id = stream.get_32()
+	instance.id = stream.read_int32()
 	instance.name = stream.read_string_in_pool()
 	return instance
 
@@ -25,7 +21,7 @@ static func all() -> Array[DataTask_Completeconditiontype]:
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var count = stream.get_32()
+	var count = stream.read_int32()
 	for i in range(count):
 		var item = create(stream)
 		_data[item.id] = item
@@ -86,3 +82,6 @@ static var Chat: DataTask_Completeconditiontype
 static var TestNoColumn: DataTask_Completeconditiontype
 static var Aa: DataTask_Completeconditiontype
 # 解析外键引用
+# 字符串表示
+func _to_string() -> String:
+	return "DataTask_Completeconditiontype{" + str(id) + "," + name + "}"

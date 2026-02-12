@@ -82,3 +82,6 @@ static var Chat: DataTask_Completeconditiontype
 static var TestNoColumn: DataTask_Completeconditiontype
 static var Aa: DataTask_Completeconditiontype
 # 解析外键引用
+# 字符串表示
+func _to_string() -> String:
+	return "DataTask_Completeconditiontype{" + str(id) + "," + name + "}"

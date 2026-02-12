@@ -50,3 +50,6 @@ func _resolve(errors: ConfigErrors):
 static func _resolve_refs(errors: ConfigErrors):
 	for item in all():
 		item._resolve(errors)
+# 字符串表示
+func _to_string() -> String:
+	return "DataOther_Signin{" + str(id) + "," + str(item2countMap) + "," + str(vipitem2vipcountMap) + "," + str(viplevel) + "," + iconFile + "}"

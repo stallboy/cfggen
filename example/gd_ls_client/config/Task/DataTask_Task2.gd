@@ -1,67 +1,37 @@
 class_name DataTask_Task2
 ## task.task2
 # 公开属性
-var taskid: int:
-	get:
-		return taskid  # 任务完成条件类型（id的范围为1-100）
-var name: Array[ConfigText]:
-	get:
-		return name
-var nexttask: int:
-	get:
-		return nexttask
-var completecondition: DataTask_Completecondition:
-	get:
-		return completecondition
-var exp: int:
-	get:
-		return exp
-var testBool: bool:
-	get:
-		return testBool
-var testString: String:
-	get:
-		return testString
-var testStruct: DataPosition:
-	get:
-		return testStruct
-var testList: Array[int]:
-	get:
-		return testList
-var testListStruct: Array[DataPosition]:
-	get:
-		return testListStruct
-var testListInterface: Array[DataAi_Triggertick]:
-	get:
-		return testListInterface
+var taskid: int  # 任务完成条件类型（id的范围为1-100）
+var name: Array[ConfigText]
+var nexttask: int
+var completecondition: DataTask_Completecondition
+var exp: int
+var testBool: bool
+var testString: String
+var testStruct: DataPosition
+var testList: Array[int]
+var testListStruct: Array[DataPosition]
+var testListInterface: Array[DataAi_Triggertick]
 # 外键引用属性
-var NullableRefTaskid: DataTask_Taskextraexp:
-	get:
-		return NullableRefTaskid
-var NullableRefNexttask: DataTask_Task:
-	get:
-		return NullableRefNexttask
+var NullableRefTaskid: DataTask_Taskextraexp
+var NullableRefNexttask: DataTask_Task
 # 创建实例
 static func create(stream: ConfigStream) -> DataTask_Task2:
 	var instance = DataTask_Task2.new()
-	instance.taskid = stream.get_32()
-	instance.name = []
-	for c in range(stream.get_32()):
+	instance.taskid = stream.read_int32()
+	for c in range(stream.read_int32()):
 		instance.name.append(ConfigText.create(stream))
-	instance.nexttask = stream.get_32()
+	instance.nexttask = stream.read_int32()
 	instance.completecondition = DataTask_Completecondition.create(stream)
-	instance.exp = stream.get_32()
-	instance.testBool = stream.get_bool()
+	instance.exp = stream.read_int32()
+	instance.testBool = stream.read_bool()
 	instance.testString = stream.read_string_in_pool()
 	instance.testStruct = DataPosition.create(stream)
-	instance.testList = []
-	for c in range(stream.get_32()):
-		instance.testList.append(stream.get_32())
-	instance.testListStruct = []
-	for c in range(stream.get_32()):
+	for c in range(stream.read_int32()):
+		instance.testList.append(stream.read_int32())
+	for c in range(stream.read_int32()):
 		instance.testListStruct.append(DataPosition.create(stream))
-	instance.testListInterface = []
-	for c in range(stream.get_32()):
+	for c in range(stream.read_int32()):
 		instance.testListInterface.append(DataAi_Triggertick.create(stream))
 	return instance
 
@@ -75,7 +45,7 @@ static func all() -> Array[DataTask_Task2]:
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var count = stream.get_32()
+	var count = stream.read_int32()
 	for i in range(count):
 		var item = create(stream)
 		_data[item.taskid] = item
@@ -90,3 +60,6 @@ func _resolve(errors: ConfigErrors):
 static func _resolve_refs(errors: ConfigErrors):
 	for item in all():
 		item._resolve(errors)
+# 字符串表示
+func _to_string() -> String:
+	return "DataTask_Task2{" + str(taskid) + "," + str(name) + "," + str(nexttask) + "," + str(completecondition) + "," + str(exp) + "," + str(testBool) + "," + testString + "," + str(testStruct) + "," + str(testList) + "," + str(testListStruct) + "," + str(testListInterface) + "}"

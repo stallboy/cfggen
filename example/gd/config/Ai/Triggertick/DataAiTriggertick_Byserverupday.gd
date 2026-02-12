@@ -14,3 +14,6 @@ static func create(stream: ConfigStream) -> DataAiTriggertick_Byserverupday:
 	return instance
 
 # 解析外键引用
+# 字符串表示
+func _to_string() -> String:
+	return "DataAiTriggertick_Byserverupday{" + str(init) + "," + str(coefficient1) + "," + str(coefficient2) + "}"

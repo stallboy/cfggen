@@ -17,3 +17,6 @@ func _resolve(errors: ConfigErrors):
 	RefRank = DataEquip_Rank.find(rank)
 	if RefRank == null:
 		errors.ref_null("LevelRank", "Rank")
+# 字符串表示
+func _to_string() -> String:
+	return "DataLevelrank{" + str(level) + "," + str(rank) + "}"

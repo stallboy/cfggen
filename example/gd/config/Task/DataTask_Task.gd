@@ -47,3 +47,6 @@ func _resolve(errors: ConfigErrors):
 static func _resolve_refs(errors: ConfigErrors):
 	for item in all():
 		item._resolve(errors)
+# 字符串表示
+func _to_string() -> String:
+	return "DataTask_Task{" + str(taskid) + "," + str(name) + "," + str(nexttask) + "," + str(completecondition) + "," + str(exp) + "," + str(testDefaultBean) + "}"

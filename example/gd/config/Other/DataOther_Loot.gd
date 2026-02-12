@@ -33,3 +33,6 @@ static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 # 内部存储
 static var _data: Dictionary[int, DataOther_Loot] = {}
 # 解析外键引用
+# 字符串表示
+func _to_string() -> String:
+	return "DataOther_Loot{" + str(lootid) + "," + ename + "," + name + "," + str(chanceList) + "}"

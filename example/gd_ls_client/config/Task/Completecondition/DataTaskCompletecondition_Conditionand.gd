@@ -1,12 +1,8 @@
 class_name DataTaskCompletecondition_Conditionand extends DataTask_Completecondition
 ## ConditionAnd
 # 公开属性
-var cond1: DataTask_Completecondition:
-	get:
-		return cond1
-var cond2: DataTask_Completecondition:
-	get:
-		return cond2
+var cond1: DataTask_Completecondition
+var cond2: DataTask_Completecondition
 # 外键引用属性
 # 创建实例
 static func create(stream: ConfigStream) -> DataTaskCompletecondition_Conditionand:
@@ -21,3 +17,6 @@ func _resolve(errors: ConfigErrors):
 		cond1._resolve(errors)
 	if cond2 != null:
 		cond2._resolve(errors)
+# 字符串表示
+func _to_string() -> String:
+	return "DataTaskCompletecondition_Conditionand{" + str(cond1) + "," + str(cond2) + "}"

@@ -3,8 +3,6 @@ class_name ConfigText
 ## 多语言文本支持（客户端模式）
 
 var _text_index: int
-	get:
-		return _text_index
 
 func _init(text_index: int):
 	_text_index = text_index
@@ -17,3 +15,7 @@ func get_text() -> String:
 static func create(stream: ConfigStream) -> ConfigText:
 	var text_index = stream.read_text_index()
 	return ConfigText.new(text_index)
+
+# 字符串表示
+func _to_string() -> String:
+	return get_text()

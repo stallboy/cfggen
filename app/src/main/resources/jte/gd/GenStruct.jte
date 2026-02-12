@@ -187,3 +187,11 @@ static func create(stream: ConfigStream) -> ${model.name.className}:
 				item._resolve(errors)
 	@endif
 @endif
+
+# 字符串表示
+func _to_string() -> String:
+	@if(model.structural.fields().isEmpty())
+		return "${model.name.className}{}"
+	@else
+		return "${model.name.className}{" + ${model.toStrings(model.structural.fields())} + "}"
+	@endif

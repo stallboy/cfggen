@@ -1,61 +1,32 @@
 class_name DataEquip_Jewelry
 ## equip.jewelry
 # 公开属性
-var iD: int:
-	get:
-		return iD  # 首饰ID
-var name: String:
-	get:
-		return name  # 首饰名称
-var iconFile: String:
-	get:
-		return iconFile  # 图标ID
-var lvlRank: DataLevelrank:
-	get:
-		return lvlRank  # 首饰等级
-var jType: String:
-	get:
-		return jType  # 首饰类型
-var suitID: int:
-	get:
-		return suitID  # 套装ID（为0是没有不属于套装，首饰品级为4的首饰该参数为套装id，其余情况为0,引用JewelrySuit.csv）
-var keyAbility: int:
-	get:
-		return keyAbility  # 关键属性类型
-var keyAbilityValue: int:
-	get:
-		return keyAbilityValue  # 关键属性数值
-var salePrice: int:
-	get:
-		return salePrice  # 售卖价格
-var description: String:
-	get:
-		return description  # 描述,根据Lvl和Rank来随机3个属性，第一个属性由Lvl,Rank行随机，剩下2个由Lvl和小于Rank的行里随机。Rank最小的时候都从Lvl，Rank里随机。
+var iD: int  # 首饰ID
+var name: String  # 首饰名称
+var iconFile: String  # 图标ID
+var lvlRank: DataLevelrank  # 首饰等级
+var jType: String  # 首饰类型
+var suitID: int  # 套装ID（为0是没有不属于套装，首饰品级为4的首饰该参数为套装id，其余情况为0,引用JewelrySuit.csv）
+var keyAbility: int  # 关键属性类型
+var keyAbilityValue: int  # 关键属性数值
+var salePrice: int  # 售卖价格
+var description: String  # 描述,根据Lvl和Rank来随机3个属性，第一个属性由Lvl,Rank行随机，剩下2个由Lvl和小于Rank的行里随机。Rank最小的时候都从Lvl，Rank里随机。
 # 外键引用属性
-var RefLvlRank: DataEquip_Jewelryrandom:
-	get:
-		return RefLvlRank
-var RefJType: DataEquip_Jewelrytype:
-	get:
-		return RefJType
-var NullableRefSuitID: DataEquip_Jewelrysuit:
-	get:
-		return NullableRefSuitID
-var RefKeyAbility: DataEquip_Ability:
-	get:
-		return RefKeyAbility
+var RefJType: DataEquip_Jewelrytype
+var NullableRefSuitID: DataEquip_Jewelrysuit
+var RefKeyAbility: DataEquip_Ability
 # 创建实例
 static func create(stream: ConfigStream) -> DataEquip_Jewelry:
 	var instance = DataEquip_Jewelry.new()
-	instance.iD = stream.get_32()
+	instance.iD = stream.read_int32()
 	instance.name = stream.read_string_in_pool()
 	instance.iconFile = stream.read_string_in_pool()
 	instance.lvlRank = DataLevelrank.create(stream)
 	instance.jType = stream.read_string_in_pool()
-	instance.suitID = stream.get_32()
-	instance.keyAbility = stream.get_32()
-	instance.keyAbilityValue = stream.get_32()
-	instance.salePrice = stream.get_32()
+	instance.suitID = stream.read_int32()
+	instance.keyAbility = stream.read_int32()
+	instance.keyAbilityValue = stream.read_int32()
+	instance.salePrice = stream.read_int32()
 	instance.description = stream.read_string_in_pool()
 	return instance
 
@@ -69,7 +40,7 @@ static func all() -> Array[DataEquip_Jewelry]:
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var count = stream.get_32()
+	var count = stream.read_int32()
 	for i in range(count):
 		var item = create(stream)
 		_data[item.iD] = item
@@ -79,9 +50,6 @@ static var _data: Dictionary[int, DataEquip_Jewelry] = {}
 func _resolve(errors: ConfigErrors):
 	if lvlRank != null:
 		lvlRank._resolve(errors)
-	RefLvlRank = DataEquip_Jewelryrandom.find(lvlRank)
-	if RefLvlRank == null:
-		errors.ref_null("equip.jewelry", "LvlRank")
 	RefJType = DataEquip_Jewelrytype.find(jType)
 	if RefJType == null:
 		errors.ref_null("equip.jewelry", "JType")
@@ -92,3 +60,6 @@ func _resolve(errors: ConfigErrors):
 static func _resolve_refs(errors: ConfigErrors):
 	for item in all():
 		item._resolve(errors)
+# 字符串表示
+func _to_string() -> String:
+	return "DataEquip_Jewelry{" + str(iD) + "," + name + "," + iconFile + "," + str(lvlRank) + "," + jType + "," + str(suitID) + "," + str(keyAbility) + "," + str(keyAbilityValue) + "," + str(salePrice) + "," + description + "}"

@@ -1,31 +1,21 @@
 class_name DataOther_Drop
 ## other.drop
 # 公开属性
-var dropid: int:
-	get:
-		return dropid  # 序号
-var name: ConfigText:
-	get:
-		return name  # 名字
-var items: Array[DataOther_Dropitem]:
-	get:
-		return items  # 掉落概率
-var testmap: Dictionary[int, int]:
-	get:
-		return testmap  # 测试map block
+var dropid: int  # 序号
+var name: ConfigText  # 名字
+var items: Array[DataOther_Dropitem]  # 掉落概率
+var testmap: Dictionary[int, int]  # 测试map block
 # 外键引用属性
 # 创建实例
 static func create(stream: ConfigStream) -> DataOther_Drop:
 	var instance = DataOther_Drop.new()
-	instance.dropid = stream.get_32()
+	instance.dropid = stream.read_int32()
 	instance.name = ConfigText.create(stream)
-	instance.items = []
-	for c in range(stream.get_32()):
+	for c in range(stream.read_int32()):
 		instance.items.append(DataOther_Dropitem.create(stream))
-	instance.testmap = {}
-	for c in range(stream.get_32()):
-		var k = stream.get_32()
-		var v = stream.get_32()
+	for c in range(stream.read_int32()):
+		var k = stream.read_int32()
+		var v = stream.read_int32()
 		instance.testmap[k] = v
 	return instance
 
@@ -39,10 +29,13 @@ static func all() -> Array[DataOther_Drop]:
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var count = stream.get_32()
+	var count = stream.read_int32()
 	for i in range(count):
 		var item = create(stream)
 		_data[item.dropid] = item
 # 内部存储
 static var _data: Dictionary[int, DataOther_Drop] = {}
 # 解析外键引用
+# 字符串表示
+func _to_string() -> String:
+	return "DataOther_Drop{" + str(dropid) + "," + str(name) + "," + str(items) + "," + str(testmap) + "}"

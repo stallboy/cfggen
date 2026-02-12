@@ -95,7 +95,7 @@ func _load_config():
 	var processor = ConfigProcessor.new()
 
 	# 加载配置数据
-	var config_tables = ConfigLoader.load_bytes(bytes, processor.load_from_stream, errors)
+	ConfigLoader.load_bytes(bytes, processor.load_from_stream, errors)
 
 	print("配置加载完成！")
 
@@ -116,16 +116,26 @@ func _load_config():
 func _populate_tables():
 	"""填充表下拉选项"""
 	table_option.clear()
+	table_option.add_item("请选择 Table")
 	for table_name in _tables.keys():
 		table_option.add_item(table_name)
+	table_option.selected = 0
 
 func _on_table_selected(index: int):
 	"""表选择变化时更新 ID 列表"""
-	var table_names = _tables.keys()
-	if index < 0 or index >= table_names.size():
+	if index <= 0:  # 选择了"请选择 Table"
+		_current_table = ""
+		_current_records = []
+		id_option.clear()
+		result_text.text = "请先选择一个表"
 		return
 
-	_current_table = table_names[index]
+	var table_names = _tables.keys()
+	var table_index = index - 1  # 减 1 因为第一项是"请选择 Table"
+	if table_index < 0 or table_index >= table_names.size():
+		return
+
+	_current_table = table_names[table_index]
 	var table_info = _tables[_current_table]
 
 	# 获取该表的所有记录

@@ -8,4 +8,5 @@ rm -f config/ConfigText.gd
 java -jar ../../cfggen.jar -datadir ../config -langswitchdir ../i18n/langs -gen gd,own:-nogd,dir:config -gen bytes,own:-nogd
 
 echo Generated GDScript client code to gd_ls_client/
-pause
+
+rm -rf jte-classes

@@ -1,12 +1,8 @@
 class_name DataEquip_Testpackbean
 ## equip.TestPackBean
 # 公开属性
-var name: String:
-	get:
-		return name
-var iRange: DataRange:
-	get:
-		return iRange
+var name: String
+var iRange: DataRange
 # 外键引用属性
 # 创建实例
 static func create(stream: ConfigStream) -> DataEquip_Testpackbean:
@@ -16,3 +12,6 @@ static func create(stream: ConfigStream) -> DataEquip_Testpackbean:
 	return instance
 
 # 解析外键引用
+# 字符串表示
+func _to_string() -> String:
+	return "DataEquip_Testpackbean{" + name + "," + str(iRange) + "}"

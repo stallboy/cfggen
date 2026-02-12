@@ -12,3 +12,6 @@ static func create(stream: ConfigStream) -> DataTaskCompletecondition_Collectite
 	return instance
 
 # 解析外键引用
+# 字符串表示
+func _to_string() -> String:
+	return "DataTaskCompletecondition_Collectitem{" + str(itemid) + "," + str(count) + "}"

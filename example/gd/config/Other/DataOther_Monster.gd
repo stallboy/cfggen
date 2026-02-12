@@ -41,3 +41,6 @@ func _resolve(errors: ConfigErrors):
 static func _resolve_refs(errors: ConfigErrors):
 	for item in all():
 		item._resolve(errors)
+# 字符串表示
+func _to_string() -> String:
+	return "DataOther_Monster{" + str(id) + "," + str(posList) + "," + str(lootId) + "," + str(lootItemId) + "}"

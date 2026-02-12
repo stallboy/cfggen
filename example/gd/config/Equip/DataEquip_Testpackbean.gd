@@ -12,3 +12,6 @@ static func create(stream: ConfigStream) -> DataEquip_Testpackbean:
 	return instance
 
 # 解析外键引用
+# 字符串表示
+func _to_string() -> String:
+	return "DataEquip_Testpackbean{" + name + "," + str(iRange) + "}"

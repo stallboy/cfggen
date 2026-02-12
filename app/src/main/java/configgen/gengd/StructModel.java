@@ -141,10 +141,23 @@ public class StructModel {
     }
 
     public String toString(String n, FieldType t) {
-        if (t instanceof FList) {
-            return "str(" + lower1(n) + ")";
-        } else {
-            return lower1(n);
+        // 所有字段都需要用 str() 包装，因为 GDScript 是强类型语言
+        // String 和 int/float 等类型不能直接用 + 连接
+        String varName = lower1(n);
+        switch (t) {
+            case Primitive.STRING -> {
+                return varName;
+            }
+            case Primitive.TEXT -> {
+                if (gen.isLangSwitch) {
+                    return "str(" + varName + ")";
+                } else {
+                    return varName;
+                }
+            }
+            default -> {
+                return "str(" + varName + ")";
+            }
         }
     }
 

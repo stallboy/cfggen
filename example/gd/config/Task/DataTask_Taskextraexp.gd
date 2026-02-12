@@ -40,3 +40,6 @@ static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 # 内部存储
 static var _data: Dictionary[int, DataTask_Taskextraexp] = {}
 # 解析外键引用
+# 字符串表示
+func _to_string() -> String:
+	return "DataTask_Taskextraexp{" + str(taskid) + "," + str(extraexp) + "," + test1 + "," + test2 + "," + fielda + "," + fieldb + "," + fieldc + "," + fieldd + "}"

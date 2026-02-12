@@ -6,9 +6,9 @@ class_name TextPoolManager
 static var _global_texts: Array[String] = []  # 当前语言的文本数组
 
 # 设置全局文本数组（语言切换时调用）
-static func set_global_texts(texts: Array[String]):
+static func set_global_texts(texts: Array):
 	"""设置当前语言的文本数组"""
-	_global_texts = texts
+	_global_texts.assign(texts)
 
 # 获取文本（通过索引）
 static func get_text(index: int) -> String:
@@ -16,8 +16,3 @@ static func get_text(index: int) -> String:
 	if index < 0 or index >= _global_texts.size():
 		return "<missing:" + str(index) + ">"
 	return _global_texts[index]
-
-# 清空文本池
-static func clear():
-	"""清空文本池"""
-	_global_texts.clear()

@@ -57,3 +57,6 @@ static var _data: Dictionary[int, DataEquip_Jewelrysuit] = {}
 # 静态枚举实例
 static var SpecialSuit: DataEquip_Jewelrysuit
 # 解析外键引用
+# 字符串表示
+func _to_string() -> String:
+	return "DataEquip_Jewelrysuit{" + str(suitID) + "," + ename + "," + name + "," + str(ability1) + "," + str(ability1Value) + "," + str(ability2) + "," + str(ability2Value) + "," + str(ability3) + "," + str(ability3Value) + "," + str(suitList) + "}"

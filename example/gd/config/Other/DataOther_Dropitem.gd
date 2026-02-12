@@ -17,3 +17,6 @@ static func create(stream: ConfigStream) -> DataOther_Dropitem:
 	return instance
 
 # 解析外键引用
+# 字符串表示
+func _to_string() -> String:
+	return "DataOther_Dropitem{" + str(chance) + "," + str(itemids) + "," + str(countmin) + "," + str(countmax) + "}"

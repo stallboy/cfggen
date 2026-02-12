@@ -40,9 +40,9 @@ func _ready():
 
 		# 查询任务数据
 		var task = DataTask_Task.find(1)
+		print(task);
 		if task != null:
-			print("Task ID: %d" % task.id)
-			print("Task Name: %s" % task.name.get_text())
-			print("Task Desc: %s" % task.desc.get_text())
+			print("Task ID: %d" % task.taskid)
+			print("Task Name: %s" % task.name[0].get_text())
 
 	print("\n=== Test completed ===")

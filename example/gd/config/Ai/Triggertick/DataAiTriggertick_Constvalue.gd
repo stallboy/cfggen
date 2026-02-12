@@ -10,3 +10,6 @@ static func create(stream: ConfigStream) -> DataAiTriggertick_Constvalue:
 	return instance
 
 # 解析外键引用
+# 字符串表示
+func _to_string() -> String:
+	return "DataAiTriggertick_Constvalue{" + str(value) + "}"

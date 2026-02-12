@@ -17,3 +17,6 @@ func _resolve(errors: ConfigErrors):
 	RefMonsterid = DataOther_Monster.find(monsterid)
 	if RefMonsterid == null:
 		errors.ref_null("KillMonster", "monsterid")
+# 字符串表示
+func _to_string() -> String:
+	return "DataTaskCompletecondition_Killmonster{" + str(monsterid) + "," + str(count) + "}"

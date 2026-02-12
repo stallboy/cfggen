@@ -82,3 +82,6 @@ static var Critical_resist: DataEquip_Ability
 static var Block: DataEquip_Ability
 static var Break_armor: DataEquip_Ability
 # 解析外键引用
+# 字符串表示
+func _to_string() -> String:
+	return "DataEquip_Ability{" + str(id) + "," + name + "}"

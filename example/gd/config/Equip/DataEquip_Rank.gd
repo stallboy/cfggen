@@ -70,3 +70,6 @@ static var Blue: DataEquip_Rank
 static var Purple: DataEquip_Rank
 static var Yellow: DataEquip_Rank
 # 解析外键引用
+# 字符串表示
+func _to_string() -> String:
+	return "DataEquip_Rank{" + str(rankID) + "," + rankName + "," + rankShowName + "}"

@@ -55,3 +55,6 @@ static var _data: Dictionary[String, DataEquip_Equipconfig] = {}
 static var Instance: DataEquip_Equipconfig
 static var Instance2: DataEquip_Equipconfig
 # 解析外键引用
+# 字符串表示
+func _to_string() -> String:
+	return "DataEquip_Equipconfig{" + entry + "," + str(stone_count_for_set) + "," + draw_protect_name + "," + str(broadcastid) + "," + str(broadcast_least_quality) + "," + str(week_reward_mailid) + "}"

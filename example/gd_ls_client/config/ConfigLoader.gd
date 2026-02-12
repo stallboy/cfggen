@@ -9,7 +9,7 @@ static func load_bytes(data: PackedByteArray, processor_func: Callable, errors: 
 	var stream = ConfigStream.new(data)
 
 	# 1. 跳过 Schema（如果有）
-	var schema_length = stream.read_32()
+	var schema_length = stream.read_int32()
 	if schema_length > 0:
 		stream.skip_bytes(schema_length)
 

@@ -27,3 +27,6 @@ static func create(stream: ConfigStream) -> DataTask_Testdefaultbean:
 	return instance
 
 # 解析外键引用
+# 字符串表示
+func _to_string() -> String:
+	return "DataTask_Testdefaultbean{" + str(testInt) + "," + str(testBool) + "," + testString + "," + str(testSubBean) + "," + str(testList) + "," + str(testList2) + "," + str(testMap) + "}"

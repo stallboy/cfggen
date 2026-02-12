@@ -36,3 +36,6 @@ static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 # 内部存储
 static var _data: Dictionary[int, DataAi_Ai_action] = {}
 # 解析外键引用
+# 字符串表示
+func _to_string() -> String:
+	return "DataAi_Ai_action{" + str(iD) + "," + desc + "," + str(formulaID) + "," + str(argIList) + "," + str(argSList) + "}"
