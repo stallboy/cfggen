@@ -3,7 +3,7 @@ class_name DataAi_Triggertick
 ## ai.TriggerTick
 # 创建实例（静态工厂方法）
 static func create(stream: ConfigStream) -> DataAi_Triggertick:
-	var type_name = stream.get_string()
+	var type_name = stream.read_string_in_pool()
 	match type_name:
 		"ConstValue":
 			return DataAiTriggertick_Constvalue.create(stream)

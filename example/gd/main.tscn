@@ -1,0 +1,46 @@
+[gd_scene format=3 uid="uid://bgmhp10sbk7ei"]
+
+[ext_resource type="Script" uid="uid://cqffqfoaodmpr" path="res://main.gd" id="1_main"]
+
+[node name="Main" type="Control" unique_id=1729441845]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_main")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1430496590]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TableLabel" type="Label" parent="VBoxContainer" unique_id=269590247]
+layout_mode = 2
+text = "选择表:"
+
+[node name="TableOption" type="OptionButton" parent="VBoxContainer" unique_id=667182776]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="IdLabel" type="Label" parent="VBoxContainer" unique_id=257708281]
+layout_mode = 2
+text = "选择记录 ID:"
+
+[node name="IdOption" type="OptionButton" parent="VBoxContainer" unique_id=433476999]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="ResultText" type="TextEdit" parent="VBoxContainer" unique_id=423819019]
+layout_mode = 2
+size_flags_vertical = 3
+placeholder_text = "选择表和ID后，这里显示记录详情"
+editable = false

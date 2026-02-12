@@ -2,29 +2,38 @@ class_name ConfigLoader
 
 ## 配置加载器，用于从字节数组加载配置
 
-static var _processor: ConfigProcessor = null
-
-# 设置配置处理器
-static func set_processor(processor: ConfigProcessor):
-	_processor = processor
-
-# 从字节数组加载配置
-static func load_from_bytes(data: PackedByteArray):
-	if _processor == null:
-		_processor = ConfigProcessor.new()
-
+# 加载配置的回调函数类型
+# processor_func: Callable(stream, errors) -> void
+static func load_bytes(data: PackedByteArray, processor_func: Callable, errors: ConfigErrors) -> ConfigStream:
+	"""从字节数组加载配置（完全模仿 C# 的 LoadBytes API）"""
 	var stream = ConfigStream.new(data)
-	_processor.load_from_stream(stream)
 
-# 从流加载配置（支持已读取 StringPool 的流）
-static func load_from_stream(stream: ConfigStream):
-	if _processor == null:
-		_processor = ConfigProcessor.new()
+	# 1. 跳过 Schema（如果有）
+	var schema_length = stream.read_int32()
+	if schema_length > 0:
+		stream.skip_bytes(schema_length)
 
-	_processor.load_from_stream(stream)
+	# 2. 读取 StringPool
+	stream.read_string_pool()
 
-# 获取错误收集器
-static func get_errors() -> ConfigErrors:
-	if _processor == null:
-		_processor = ConfigProcessor.new()
-	return _processor.get_errors()
+	# 3. 读取 LangTextPool
+	stream.read_lang_text_pool()
+
+	# 4. 处理表数据（通过回调）
+	processor_func.call(stream, errors)
+
+	# 返回 stream，调用者可直接访问语言信息
+	return stream
+
+# 便捷方法：从文件加载
+static func load_from_file(file_path: String, processor_func: Callable, errors: ConfigErrors) -> ConfigStream:
+	"""从文件加载配置（便捷方法）"""
+	var file = FileAccess.open(file_path, FileAccess.READ)
+	if file == null:
+		push_error("Failed to open config file: " + file_path)
+		return null
+
+	var bytes = file.get_buffer(file.get_length())
+	file.close()
+
+	return load_bytes(bytes, processor_func, errors)

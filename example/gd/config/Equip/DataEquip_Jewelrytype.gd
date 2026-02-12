@@ -1,14 +1,12 @@
 class_name DataEquip_Jewelrytype
 ## equip.jewelrytype
 # 公开属性
-var typeName: String:
-	get:
-		return typeName  # 程序用名字
+var typeName: String  # 程序用名字
 # 外键引用属性
 # 创建实例
 static func create(stream: ConfigStream) -> DataEquip_Jewelrytype:
 	var instance = DataEquip_Jewelrytype.new()
-	instance.typeName = stream.get_string()
+	instance.typeName = stream.read_string_in_pool()
 	return instance
 
 # 主键查询
@@ -21,7 +19,7 @@ static func all() -> Array[DataEquip_Jewelrytype]:
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var count = stream.get_32()
+	var count = stream.read_int32()
 	for i in range(count):
 		var item = create(stream)
 		_data[item.typeName] = item

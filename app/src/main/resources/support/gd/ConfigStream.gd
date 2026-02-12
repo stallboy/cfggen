@@ -5,65 +5,148 @@ class_name ConfigStream
 var _data: PackedByteArray
 var _pos: int = 0
 var _string_pool: Array[String] = []  # 字符串池，用于去重
+var _lang_names: Array[String] = []  # 语言名称列表
+var _lang_text_pools: Array[Array] = []  # 多语言文本池
 
 func _init(data: PackedByteArray):
 	_data = data
 
-# 读取字符串（用于表名）
-func read_cfg() -> String:
-	var s = read_string()
-	if s.is_empty() and _pos >= _data.size():
-		return ""
-	return s
 
 # 读取字符串池（可选，如果二进制数据使用了 stringpool）
 func read_string_pool():
-	"""读取字符串池，必须在 read_string() 之前调用"""
-	var count = read_32()
+	"""读取字符串池，必须在读取字符串数据之前调用"""
+	var count = read_int32()
 	_string_pool = []
 	for i in range(count):
-		_string_pool.append(read_string_impl())
+		var length = read_int32()
+		if length <= 0:
+			_string_pool.append("")
+		else:
+			var bytes = _data.slice(_pos, _pos + length)
+			_pos += length
+			_string_pool.append(bytes.get_string_from_utf8())
+
+# 读取 LangTextPool（在读取表数据之前调用）
+func read_lang_text_pool():
+	"""读取多语言文本池"""
+	var lang_count = read_int32()
+	_lang_names = []
+	_lang_text_pools = []
+
+	for lang_idx in range(lang_count):
+		var length = read_int32()
+		if length <= 0:
+			_lang_names.append("")
+		else:
+			var bytes = _data.slice(_pos, _pos + length)
+			_pos += length
+			_lang_names.append(bytes.get_string_from_utf8())
+
+		# 读取索引数组
+		var index_count = read_int32()
+		var indices = []
+		for i in range(index_count):
+			indices.append(read_int32())
+
+		# 读取该语言的字符串池
+		var pool_count = read_int32()
+		var pool = []
+		for i in range(pool_count):
+			var str_length = read_int32()
+			if str_length <= 0:
+				pool.append("")
+			else:
+				var bytes = _data.slice(_pos, _pos + str_length)
+				_pos += str_length
+				pool.append(bytes.get_string_from_utf8())
+
+		# 构建文本数组：texts[textIndex] = pool[indices[textIndex]]
+		var texts = []
+		texts.resize(index_count)
+		for i in range(index_count):
+			texts[i] = pool[indices[i]]
+
+		_lang_text_pools.append(texts)
 
 # 读取字符串
 func read_string() -> String:
-	"""读取字符串，如果已读取 stringpool 则从池中获取索引"""
-	if not _string_pool.is_empty():
-		var index = read_32()
-		return _string_pool[index]
-	else:
-		return read_string_impl()
-
-# 实际的字符串读取实现
-func read_string_impl() -> String:
-	"""实际的字符串读取实现"""
-	var length = read_32()
+	"""直接读取字符串数据"""
+	var length = read_int32()
 	if length <= 0:
 		return ""
 	var bytes = _data.slice(_pos, _pos + length)
 	_pos += length
 	return bytes.get_string_from_utf8()
 
+# 从字符串池读取字符串
+func read_string_in_pool() -> String:
+	"""从字符串池中读取字符串（通过索引）"""
+	if _string_pool.is_empty():
+		push_error("字符串池未初始化，请先调用 read_string_pool()")
+		return ""
+	var index = read_int32()
+	if index < 0 or index >= _string_pool.size():
+		push_error("字符串索引越界: %d" % index)
+		return ""
+	return _string_pool[index]
+
+# 从多语言文本池读取文本
+func read_text_in_pool() -> String:
+	"""从多语言文本池中读取文本（通过索引）"""
+	if _lang_text_pools.is_empty():
+		push_error("文本池未初始化，请先调用 read_lang_text_pool()")
+		return ""
+	var index = read_int32()
+	# 服务器模式：直接使用第一个语言的文本
+	var current_lang_pool = _lang_text_pools[0]
+	if index < 0 or index >= current_lang_pool.size():
+		push_error("文本索引越界: %d" % index)
+		return ""
+	return current_lang_pool[index]
+
 # 读取32位整数
-func read_32() -> int:
+func read_int32() -> int:
 	var value = _data.decode_s32(_pos)
 	_pos += 4
 	return value
 
 # 读取64位整数
-func read_64() -> int:
+func read_int64() -> int:
 	var value = _data.decode_s64(_pos)
 	_pos += 8
 	return value
 
 # 读取布尔值
-func get_bool() -> bool:
-	return read_32() != 0
+func read_bool() -> bool:
+	var value = _data.decode_s8(_pos) != 0
+	_pos += 1
+	return value
 
 # 读取浮点数
 func read_float() -> float:
 	var value = _data.decode_float(_pos)
 	_pos += 4
 	return value
+
+# 跳过指定字节数
+func skip_bytes(count: int):
+	"""跳过指定数量的字节（用于跳过 Schema）"""
+	_pos += count
+
+# 读取文本索引（客户端模式 TEXT 类型字段）
+func read_text_index() -> int:
+	"""读取文本索引（用于 ConfigText）"""
+	return read_int32()
+
+# 获取语言名称列表
+func get_lang_names() -> Array[String]:
+	"""获取所有支持的语言名称"""
+	return _lang_names
+
+# 获取多语言文本池
+func get_lang_text_pools() -> Array[Array]:
+	"""获取所有语言的文本池（用于语言切换）"""
+	return _lang_text_pools
 
 # 检查是否已到达末尾
 func is_eof() -> bool:

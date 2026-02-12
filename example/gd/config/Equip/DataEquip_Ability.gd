@@ -1,18 +1,14 @@
 class_name DataEquip_Ability
 ## equip.ability
 # 公开属性
-var id: int:
-	get:
-		return id  # 属性类型
-var name: String:
-	get:
-		return name  # 程序用名字
+var id: int  # 属性类型
+var name: String  # 程序用名字
 # 外键引用属性
 # 创建实例
 static func create(stream: ConfigStream) -> DataEquip_Ability:
 	var instance = DataEquip_Ability.new()
-	instance.id = stream.get_32()
-	instance.name = stream.get_string()
+	instance.id = stream.read_int32()
+	instance.name = stream.read_string_in_pool()
 	return instance
 
 # 主键查询
@@ -25,7 +21,7 @@ static func all() -> Array[DataEquip_Ability]:
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var count = stream.get_32()
+	var count = stream.read_int32()
 	for i in range(count):
 		var item = create(stream)
 		_data[item.id] = item

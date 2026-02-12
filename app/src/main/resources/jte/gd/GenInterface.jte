@@ -23,7 +23,7 @@ class_name ${model.name.className}
 
 # 创建实例（静态工厂方法）
 static func create(stream: ConfigStream) -> ${model.name.className}:
-	var type_name = stream.get_string()
+	var type_name = stream.read_string_in_pool()
 	match type_name:
 		@for(StructSchema impl : model.sInterface.impls())
 			"${impl.name()}":

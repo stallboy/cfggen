@@ -17,16 +17,12 @@ class_name ${model.name.className}
 
 # 公开属性
 @for(FieldSchema field : model.structural.fields())
-var ${model.fieldName(field)}: ${model.type(field.type())}:
-	get:
-		return ${model.fieldName(field)}@if(!field.comment().isEmpty())  # ${field.comment()}@endif
+var ${model.fieldName(field)}: ${model.type(field.type())}@if(!field.comment().isEmpty())  # ${field.comment()}@endif
 @endfor
 
 # 外键引用属性
 @for(ForeignKeySchema fk : model.structural.foreignKeys())
-var ${model.refName(fk)}: ${model.refType(fk)}:
-	get:
-		return ${model.refName(fk)}
+var ${model.refName(fk)}: ${model.refType(fk)}
 @endfor
 
 # 创建实例
@@ -36,12 +32,10 @@ static func create(stream: ConfigStream) -> ${model.name.className}:
 		!{String n = field.name();}
 		!{FieldType t = field.type();}
 		@if(t instanceof FList(SimpleType item))
-			instance.${model.fieldName(field)} = []
-			for c in range(stream.get_32()):
+			for c in range(stream.read_int32()):
 				instance.${model.fieldName(field)}.append(${model.create(item)})
 		@elseif(t instanceof FMap(SimpleType key, SimpleType value))
-			instance.${model.fieldName(field)} = {}
-			for c in range(stream.get_32()):
+			for c in range(stream.read_int32()):
 				var k = ${model.create(key)}
 				var v = ${model.create(value)}
 				instance.${model.fieldName(field)}[k] = v
@@ -74,7 +68,7 @@ static func create(stream: ConfigStream) -> ${model.name.className}:
 			${model.uniqueKeyMapName(uk)} = {}
 		@endfor
 
-		var count = stream.get_32()
+		var count = stream.read_int32()
 		for i in range(count):
 			var item = create(stream)
 			_data[item.${model.primaryKeyFieldName()}] = item
@@ -151,14 +145,12 @@ static func create(stream: ConfigStream) -> ${model.name.className}:
 							errors.ref_null("${model.structural.name()}", ${fkStr})
 					@endif
 				@elseif(firstField.type() instanceof FList)
-					${refName} = []
 					for item in ${model.fieldName(firstField)}:
 						var r = ${model.tableGet(fk.refTableSchema(), refSimple, "item")}
 						if r == null:
 							errors.ref_null("${model.structural.name()}", ${fkStr})
 						${refName}.append(r)
 				@elseif(firstField.type() instanceof FMap)
-					${refName} = {}
 					for k in ${model.fieldName(firstField)}.keys():
 						var v = ${model.tableGet(fk.refTableSchema(), refSimple, model.fieldName(firstField) + "[k]")}
 						if v == null:
@@ -172,7 +164,6 @@ static func create(stream: ConfigStream) -> ${model.name.className}:
 			@if(fk.refKey() instanceof RefKey.RefList refList)
 				!{var refName = model.refName(fk);}
 				!{var refTable = model.fullName(fk.refTableSchema());}
-				${refName} = []
 				for v in ${refTable}.all():
 					@if(refList.keyNames().size() == 1)
 						!{var keyField = refList.keyNames().getFirst();}

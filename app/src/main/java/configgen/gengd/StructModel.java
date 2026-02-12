@@ -51,12 +51,12 @@ public class StructModel {
 
     public String create(FieldType t) {
         return switch (t) {
-            case BOOL -> "stream.get_bool()";
-            case INT -> "stream.get_32()";
-            case LONG -> "stream.get_64()";
-            case FLOAT -> "stream.get_float()";
-            case STRING -> "stream.get_string()";
-            case TEXT -> gen.isLangSwitch ? "ConfigText.create(stream)" : "stream.get_string()";
+            case BOOL -> "stream.read_bool()";
+            case INT -> "stream.read_int32()";
+            case LONG -> "stream.read_int64()";
+            case FLOAT -> "stream.read_float()";
+            case STRING -> "stream.read_string_in_pool()";
+            case TEXT -> gen.isLangSwitch ? "ConfigText.create(stream)" : "stream.read_text_in_pool()";
             case StructRef structRef -> fullName(structRef.obj()) + ".create(stream)";
             case FList ignored -> null;
             case FMap ignored -> null;

@@ -49,15 +49,15 @@ java -jar ../cfggen.jar -datadir config -gen gd,own:-nogd,dir:gd/config,encoding
 
 ```
 ConfigLoader.load_from_bytes(config.bytes)
-    ↓
+	↓
 创建 ConfigProcessor
-    ↓
+	↓
 从 ConfigStream 读取配置表名和数据
-    ↓
+	↓
 调用各 Data*_init_from_stream() 初始化
-    ↓
+	↓
 调用 _resolve_refs() 解析外键引用
-    ↓
+	↓
 收集错误到 ConfigErrors
 ```
 
@@ -112,7 +112,7 @@ ConfigLoader.load_from_stream(stream)
 # 检查错误
 var errors = ConfigLoader.get_errors()
 if errors.get_error_count() > 0:
-    errors.print_all()
+	errors.print_all()
 
 # 查询数据
 var jewelry = DataEquip_Jewelry.find(1001)

@@ -11,21 +11,21 @@ public class CachedFiles {
     private static final Set<String> filename_set = new HashSet<>();
 
     private static final List<File> deleteFiles = new ArrayList<>();
-    private static final List<File> deleteKeepMetaFiles = new ArrayList<>();
+    private static final Map<File, String> deleteKeepMetaWithSuffixFiles = new HashMap<>();
 
     public static void deleteOtherFiles(File dir) {
         deleteFiles.add(dir);
     }
 
-    public static void keepMetaAndDeleteOtherFiles(File dir) {
-        deleteKeepMetaFiles.add(dir);
+    public static void keepMetaAndDeleteOtherFiles(File dir, String metaSuffix) {
+        deleteKeepMetaWithSuffixFiles.put(dir, metaSuffix);
     }
 
     public static void finalExit() {
         deleteFiles.stream().filter(File::exists)
-                .forEach(f -> doRemoveFile(f, false));
-        deleteKeepMetaFiles.stream().filter(File::exists)
-                .forEach(f -> doRemoveFile(f, true));
+                .forEach(f -> doRemoveFile(f, false, null));
+        deleteKeepMetaWithSuffixFiles.forEach((dir, suffix) ->
+                doRemoveFile(dir, true, suffix));
     }
 
     public static void writeFile(Path path, byte[] data) throws IOException {
@@ -89,12 +89,12 @@ public class CachedFiles {
         return deleteOk;
     }
 
-    private static void doRemoveFile(File file, boolean keepMeta) {
+    private static void doRemoveFile(File file, boolean keepMeta, String metaSuffix) {
         String key = fileKey(file.toPath());
         boolean keep = filename_set.contains(key);
         if (!keep) {
-            if (keepMeta && key.endsWith(".meta")) {
-                String noMetaKey = key.substring(0, key.length() - 5);
+            if (keepMeta && metaSuffix != null && key.endsWith(metaSuffix)) {
+                String noMetaKey = key.substring(0, key.length() - metaSuffix.length());
                 keep = filename_set.contains(noMetaKey);
                 if (!keep && new File(noMetaKey).isDirectory()) {
                     for (String f : filename_set) {
@@ -112,7 +112,7 @@ public class CachedFiles {
                 File[] files = file.listFiles();
                 if (files != null) {
                     for (File f : files) {
-                        doRemoveFile(f, keepMeta);
+                        doRemoveFile(f, keepMeta, metaSuffix);
                     }
                 }
                 File[] newFiles = file.listFiles();

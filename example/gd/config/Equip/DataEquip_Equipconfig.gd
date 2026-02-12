@@ -1,34 +1,22 @@
 class_name DataEquip_Equipconfig
 ## equip.equipconfig
 # 公开属性
-var entry: String:
-	get:
-		return entry  # 入口，程序填
-var stone_count_for_set: int:
-	get:
-		return stone_count_for_set  # 形成套装的音石数量
-var draw_protect_name: String:
-	get:
-		return draw_protect_name  # 保底策略名称
-var broadcastid: int:
-	get:
-		return broadcastid  # 公告Id
-var broadcast_least_quality: int:
-	get:
-		return broadcast_least_quality  # 公告的最低品质
-var week_reward_mailid: int:
-	get:
-		return week_reward_mailid  # 抽卡周奖励的邮件id
+var entry: String  # 入口，程序填
+var stone_count_for_set: int  # 形成套装的音石数量
+var draw_protect_name: String  # 保底策略名称
+var broadcastid: int  # 公告Id
+var broadcast_least_quality: int  # 公告的最低品质
+var week_reward_mailid: int  # 抽卡周奖励的邮件id
 # 外键引用属性
 # 创建实例
 static func create(stream: ConfigStream) -> DataEquip_Equipconfig:
 	var instance = DataEquip_Equipconfig.new()
-	instance.entry = stream.get_string()
-	instance.stone_count_for_set = stream.get_32()
-	instance.draw_protect_name = stream.get_string()
-	instance.broadcastid = stream.get_32()
-	instance.broadcast_least_quality = stream.get_32()
-	instance.week_reward_mailid = stream.get_32()
+	instance.entry = stream.read_string_in_pool()
+	instance.stone_count_for_set = stream.read_int32()
+	instance.draw_protect_name = stream.read_string_in_pool()
+	instance.broadcastid = stream.read_int32()
+	instance.broadcast_least_quality = stream.read_int32()
+	instance.week_reward_mailid = stream.read_int32()
 	return instance
 
 # 主键查询
@@ -41,7 +29,7 @@ static func all() -> Array[DataEquip_Equipconfig]:
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var count = stream.get_32()
+	var count = stream.read_int32()
 	for i in range(count):
 		var item = create(stream)
 		_data[item.entry] = item

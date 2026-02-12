@@ -1,28 +1,19 @@
 class_name DataOther_Loot
 ## other.loot
 # 公开属性
-var lootid: int:
-	get:
-		return lootid  # 序号
-var ename: String:
-	get:
-		return ename
-var name: String:
-	get:
-		return name  # 名字
-var chanceList: Array[int]:
-	get:
-		return chanceList  # 掉落0件物品的概率
+var lootid: int  # 序号
+var ename: String
+var name: String  # 名字
+var chanceList: Array[int]  # 掉落0件物品的概率
 # 外键引用属性
 # 创建实例
 static func create(stream: ConfigStream) -> DataOther_Loot:
 	var instance = DataOther_Loot.new()
-	instance.lootid = stream.get_32()
-	instance.ename = stream.get_string()
-	instance.name = stream.get_string()
-	instance.chanceList = []
-	for c in range(stream.get_32()):
-		instance.chanceList.append(stream.get_32())
+	instance.lootid = stream.read_int32()
+	instance.ename = stream.read_string_in_pool()
+	instance.name = stream.read_text_in_pool()
+	for c in range(stream.read_int32()):
+		instance.chanceList.append(stream.read_int32())
 	return instance
 
 # 主键查询
@@ -35,7 +26,7 @@ static func all() -> Array[DataOther_Loot]:
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var count = stream.get_32()
+	var count = stream.read_int32()
 	for i in range(count):
 		var item = create(stream)
 		_data[item.lootid] = item

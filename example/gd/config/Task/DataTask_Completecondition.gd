@@ -9,7 +9,7 @@ func _resolve(errors: ConfigErrors):
 	pass
 # 创建实例（静态工厂方法）
 static func create(stream: ConfigStream) -> DataTask_Completecondition:
-	var type_name = stream.get_string()
+	var type_name = stream.read_string_in_pool()
 	match type_name:
 		"KillMonster":
 			return DataTaskCompletecondition_Killmonster.create(stream)

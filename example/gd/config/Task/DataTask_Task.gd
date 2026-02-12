@@ -1,41 +1,24 @@
 class_name DataTask_Task
 ## task.task
 # 公开属性
-var taskid: int:
-	get:
-		return taskid  # 任务完成条件类型（id的范围为1-100）
-var name: Array[String]:
-	get:
-		return name  # 程序用名字
-var nexttask: int:
-	get:
-		return nexttask
-var completecondition: DataTask_Completecondition:
-	get:
-		return completecondition
-var exp: int:
-	get:
-		return exp
-var testDefaultBean: DataTask_Testdefaultbean:
-	get:
-		return testDefaultBean  # 测试
+var taskid: int  # 任务完成条件类型（id的范围为1-100）
+var name: Array[String]  # 程序用名字
+var nexttask: int
+var completecondition: DataTask_Completecondition
+var exp: int
+var testDefaultBean: DataTask_Testdefaultbean  # 测试
 # 外键引用属性
-var NullableRefTaskid: DataTask_Taskextraexp:
-	get:
-		return NullableRefTaskid
-var NullableRefNexttask: DataTask_Task:
-	get:
-		return NullableRefNexttask
+var NullableRefTaskid: DataTask_Taskextraexp
+var NullableRefNexttask: DataTask_Task
 # 创建实例
 static func create(stream: ConfigStream) -> DataTask_Task:
 	var instance = DataTask_Task.new()
-	instance.taskid = stream.get_32()
-	instance.name = []
-	for c in range(stream.get_32()):
-		instance.name.append(stream.get_string())
-	instance.nexttask = stream.get_32()
+	instance.taskid = stream.read_int32()
+	for c in range(stream.read_int32()):
+		instance.name.append(stream.read_text_in_pool())
+	instance.nexttask = stream.read_int32()
 	instance.completecondition = DataTask_Completecondition.create(stream)
-	instance.exp = stream.get_32()
+	instance.exp = stream.read_int32()
 	instance.testDefaultBean = DataTask_Testdefaultbean.create(stream)
 	return instance
 
@@ -49,7 +32,7 @@ static func all() -> Array[DataTask_Task]:
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var count = stream.get_32()
+	var count = stream.read_int32()
 	for i in range(count):
 		var item = create(stream)
 		_data[item.taskid] = item

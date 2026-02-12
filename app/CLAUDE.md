@@ -231,3 +231,16 @@ java -jar cfggen.jar [tools] -datadir [dir] [options] [gens]
 1. 查看错误收集：`CfgSchemaErrs.getErrors()`, `CfgValueErrs.getErrors()`
 2. 启用详细日志：添加调试参数或修改日志级别
 3. 验证数据完整性：使用`-gen verify`参数
+
+## GDScript 开发注意事项
+
+### 属性定义
+GDScript 新版本（Godot 4.x）允许以下属性定义方式，**不会造成无限递归**：
+
+```gdscript
+var actionID: Array[int]:
+    get:
+        return actionID  # 正确！Godot 会自动处理
+```
+
+这是 Godot 4.x 的标准属性定义语法，不要误认为是错误。

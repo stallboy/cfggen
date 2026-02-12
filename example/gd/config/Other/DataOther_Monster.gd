@@ -1,31 +1,20 @@
 class_name DataOther_Monster
 ## other.monster
 # 公开属性
-var id: int:
-	get:
-		return id
-var posList: Array[DataPosition]:
-	get:
-		return posList
-var lootId: int:
-	get:
-		return lootId  # loot
-var lootItemId: int:
-	get:
-		return lootItemId  # item
+var id: int
+var posList: Array[DataPosition]
+var lootId: int  # loot
+var lootItemId: int  # item
 # 外键引用属性
-var RefAllLoot: DataOther_Loot:
-	get:
-		return RefAllLoot
+var RefAllLoot: DataOther_Loot
 # 创建实例
 static func create(stream: ConfigStream) -> DataOther_Monster:
 	var instance = DataOther_Monster.new()
-	instance.id = stream.get_32()
-	instance.posList = []
-	for c in range(stream.get_32()):
+	instance.id = stream.read_int32()
+	for c in range(stream.read_int32()):
 		instance.posList.append(DataPosition.create(stream))
-	instance.lootId = stream.get_32()
-	instance.lootItemId = stream.get_32()
+	instance.lootId = stream.read_int32()
+	instance.lootItemId = stream.read_int32()
 	return instance
 
 # 主键查询
@@ -38,7 +27,7 @@ static func all() -> Array[DataOther_Monster]:
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var count = stream.get_32()
+	var count = stream.read_int32()
 	for i in range(count):
 		var item = create(stream)
 		_data[item.id] = item

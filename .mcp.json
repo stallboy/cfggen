@@ -7,10 +7,6 @@
     "godot-doc": {
       "type": "http",
       "url": "https://gitmcp.io/godotengine/godot-docs"
-    },
-    "ideajava": {
-      "type": "sse",
-      "url": "http://localhost:64342/sse"
     }
   }
 }

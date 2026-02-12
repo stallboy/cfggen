@@ -4,37 +4,35 @@
 @param ProcessorModel model
 class_name ConfigProcessor
 
-# 配置处理器，负责加载所有配置表
-# 从流加载所有配置
-func load_from_stream(stream: ConfigStream, _errors: ConfigErrors) -> Array[String]:
-	var config_tables = {}
-	var config_table_names: Array[String] = []
+# 从流加载所有配置（新格式）
+func load_from_stream(stream: ConfigStream, _errors: ConfigErrors):
+	var config_nulls: Array[String] = []
 	@for(TableSchema table : model.tableSchemas)
-		config_tables["${table.name()}"] = false
-		config_table_names.append("${table.name()}")
+		config_nulls.append("${table.name()}")
 	@endfor
 
-	while true:
-		var csv_name = stream.get_string()
-		if csv_name.is_empty():
-			break
+	# 读取表数量
+	var table_count = stream.read_int32()
 
-		match csv_name:
+	for i in range(table_count):
+		# 读取表名
+		var table_name = stream.read_string()
+		# 读取表大小
+		var table_size = stream.read_int32()
+
+		match table_name:
 			@for(TableSchema table : model.tableSchemas)
 				"${table.name()}":
-					config_tables["${table.name()}"] = true
+					config_nulls.erase("${table.name()}")
 					${model.fullName(table)}._init_from_stream(stream, _errors)
 				@endfor
 			_:
-				_errors.config_unknown(csv_name)
-				# 遇到未知表，无法继续处理，直接抛出异常
-				assert(false, "Unknown config table: %s" % csv_name)
-				break;
+				# 未知表，跳过
+				stream.skip_bytes(table_size)
 
 	# 检查缺失的配置表
-	for table_name in config_tables.keys():
-		if not config_tables[table_name]:
-			_errors.config_null(table_name)
+	for table_name in config_nulls:
+		_errors.config_null(table_name)
 
 	# 解析外键引用
 	@for(TableSchema table : model.tableSchemas)
@@ -42,6 +40,4 @@ func load_from_stream(stream: ConfigStream, _errors: ConfigErrors) -> Array[Stri
 			${model.fullName(table)}._resolve_refs(_errors)
 		@endif
 	@endfor
-
-	return config_table_names
 
