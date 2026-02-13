@@ -15,13 +15,34 @@ var description: String  # 描述,根据Lvl和Rank来随机3个属性，第一�
 var RefJType: DataEquip_Jewelrytype
 var NullableRefSuitID: DataEquip_Jewelrysuit
 var RefKeyAbility: DataEquip_Ability
+
+# 内部存储
+static var _data: Dictionary[int, DataEquip_Jewelry] = {}
+# 主键查询
+static func find(id: int) -> DataEquip_Jewelry:
+	return _data.get(id)
+# 获取所有数据
+static func all() -> Array[DataEquip_Jewelry]:
+	return _data.values()
+
+# 字符串表示
+func _to_string() -> String:
+	return "DataEquip_Jewelry{" + str(iD) + "," + name + "," + iconFile + "," + str(lvlRank) + "," + jType + "," + str(suitID) + "," + str(keyAbility) + "," + str(keyAbilityValue) + "," + str(salePrice) + "," + description + "}"
+
+# 从流初始化
+static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
+	var count = stream.read_int32()
+	for i in range(count):
+		var item = _create(stream)
+		_data[item.iD] = item
+
 # 创建实例
-static func create(stream: ConfigStream) -> DataEquip_Jewelry:
+static func _create(stream: ConfigStream) -> DataEquip_Jewelry:
 	var instance = DataEquip_Jewelry.new()
 	instance.iD = stream.read_int32()
 	instance.name = stream.read_string_in_pool()
 	instance.iconFile = stream.read_string_in_pool()
-	instance.lvlRank = DataLevelrank.create(stream)
+	instance.lvlRank = DataLevelrank._create(stream)
 	instance.jType = stream.read_string_in_pool()
 	instance.suitID = stream.read_int32()
 	instance.keyAbility = stream.read_int32()
@@ -30,22 +51,7 @@ static func create(stream: ConfigStream) -> DataEquip_Jewelry:
 	instance.description = stream.read_string_in_pool()
 	return instance
 
-# 主键查询
-static func find(id: int) -> DataEquip_Jewelry:
-	return _data.get(id)
 
-# 获取所有数据
-static func all() -> Array[DataEquip_Jewelry]:
-	return _data.values()
-
-# 从流初始化
-static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var count = stream.read_int32()
-	for i in range(count):
-		var item = create(stream)
-		_data[item.iD] = item
-# 内部存储
-static var _data: Dictionary[int, DataEquip_Jewelry] = {}
 # 解析外键引用
 func _resolve(errors: ConfigErrors):
 	if lvlRank != null:
@@ -57,9 +63,7 @@ func _resolve(errors: ConfigErrors):
 	RefKeyAbility = DataEquip_Ability.find(keyAbility)
 	if RefKeyAbility == null:
 		errors.ref_null("equip.jewelry", "KeyAbility")
+
 static func _resolve_refs(errors: ConfigErrors):
 	for item in all():
 		item._resolve(errors)
-# 字符串表示
-func _to_string() -> String:
-	return "DataEquip_Jewelry{" + str(iD) + "," + name + "," + iconFile + "," + str(lvlRank) + "," + jType + "," + str(suitID) + "," + str(keyAbility) + "," + str(keyAbilityValue) + "," + str(salePrice) + "," + description + "}"

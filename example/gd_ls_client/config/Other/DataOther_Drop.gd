@@ -5,37 +5,38 @@ var dropid: int  # 序号
 var name: ConfigText  # 名字
 var items: Array[DataOther_Dropitem]  # 掉落概率
 var testmap: Dictionary[int, int]  # 测试map block
-# 外键引用属性
+
+# 内部存储
+static var _data: Dictionary[int, DataOther_Drop] = {}
+# 主键查询
+static func find(id: int) -> DataOther_Drop:
+	return _data.get(id)
+# 获取所有数据
+static func all() -> Array[DataOther_Drop]:
+	return _data.values()
+
+# 字符串表示
+func _to_string() -> String:
+	return "DataOther_Drop{" + str(dropid) + "," + str(name) + "," + str(items) + "," + str(testmap) + "}"
+
+# 从流初始化
+static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
+	var count = stream.read_int32()
+	for i in range(count):
+		var item = _create(stream)
+		_data[item.dropid] = item
+
 # 创建实例
-static func create(stream: ConfigStream) -> DataOther_Drop:
+static func _create(stream: ConfigStream) -> DataOther_Drop:
 	var instance = DataOther_Drop.new()
 	instance.dropid = stream.read_int32()
-	instance.name = ConfigText.create(stream)
+	instance.name = ConfigText._create(stream)
 	for c in range(stream.read_int32()):
-		instance.items.append(DataOther_Dropitem.create(stream))
+		instance.items.append(DataOther_Dropitem._create(stream))
 	for c in range(stream.read_int32()):
 		var k = stream.read_int32()
 		var v = stream.read_int32()
 		instance.testmap[k] = v
 	return instance
 
-# 主键查询
-static func find(id: int) -> DataOther_Drop:
-	return _data.get(id)
 
-# 获取所有数据
-static func all() -> Array[DataOther_Drop]:
-	return _data.values()
-
-# 从流初始化
-static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var count = stream.read_int32()
-	for i in range(count):
-		var item = create(stream)
-		_data[item.dropid] = item
-# 内部存储
-static var _data: Dictionary[int, DataOther_Drop] = {}
-# 解析外键引用
-# 字符串表示
-func _to_string() -> String:
-	return "DataOther_Drop{" + str(dropid) + "," + str(name) + "," + str(items) + "," + str(testmap) + "}"

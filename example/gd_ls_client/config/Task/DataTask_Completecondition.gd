@@ -8,23 +8,23 @@ func get_type():
 func _resolve(errors: ConfigErrors):
 	pass
 # 创建实例（静态工厂方法）
-static func create(stream: ConfigStream) -> DataTask_Completecondition:
+static func _create(stream: ConfigStream) -> DataTask_Completecondition:
 	var type_name = stream.read_string_in_pool()
 	match type_name:
 		"KillMonster":
-			return DataTaskCompletecondition_Killmonster.create(stream)
+			return DataTaskCompletecondition_Killmonster._create(stream)
 		"TalkNpc":
-			return DataTaskCompletecondition_Talknpc.create(stream)
+			return DataTaskCompletecondition_Talknpc._create(stream)
 		"TestNoColumn":
-			return DataTaskCompletecondition_Testnocolumn.create(stream)
+			return DataTaskCompletecondition_Testnocolumn._create(stream)
 		"Chat":
-			return DataTaskCompletecondition_Chat.create(stream)
+			return DataTaskCompletecondition_Chat._create(stream)
 		"ConditionAnd":
-			return DataTaskCompletecondition_Conditionand.create(stream)
+			return DataTaskCompletecondition_Conditionand._create(stream)
 		"CollectItem":
-			return DataTaskCompletecondition_Collectitem.create(stream)
+			return DataTaskCompletecondition_Collectitem._create(stream)
 		"aa":
-			return DataTaskCompletecondition_Aa.create(stream)
+			return DataTaskCompletecondition_Aa._create(stream)
 		_:
 			push_error("Unknown type: " + type_name)
 			return null

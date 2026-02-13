@@ -1,6 +1,5 @@
 package configgen.gengd;
 
-import configgen.gen.Generator;
 import configgen.schema.*;
 import configgen.util.StringUtil;
 import configgen.value.CfgValue;
@@ -56,8 +55,8 @@ public class StructModel {
             case LONG -> "stream.read_int64()";
             case FLOAT -> "stream.read_float()";
             case STRING -> "stream.read_string_in_pool()";
-            case TEXT -> gen.isLangSwitch ? "ConfigText.create(stream)" : "stream.read_text_in_pool()";
-            case StructRef structRef -> fullName(structRef.obj()) + ".create(stream)";
+            case TEXT -> gen.isLangSwitch ? "ConfigText._create(stream)" : "stream.read_text_in_pool()";
+            case StructRef structRef -> fullName(structRef.obj()) + "._create(stream)";
             case FList ignored -> null;
             case FMap ignored -> null;
         };

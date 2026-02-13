@@ -12,55 +12,63 @@ class_name ${model.name.className}
 
 ## ${model.structural.name()}
 @if(!model.structural.comment().isEmpty())
-## ${model.structural.comment()}
+	## ${model.structural.comment()}
 @endif
 
 # 公开属性
 @for(FieldSchema field : model.structural.fields())
-var ${model.fieldName(field)}: ${model.type(field.type())}@if(!field.comment().isEmpty())  # ${field.comment()}@endif
+	var ${model.fieldName(field)}: ${model.type(field.type())}@if(!field.comment().isEmpty())  # ${field.comment()}@endif
 @endfor
 
-# 外键引用属性
-@for(ForeignKeySchema fk : model.structural.foreignKeys())
-var ${model.refName(fk)}: ${model.refType(fk)}
-@endfor
-
-# 创建实例
-static func create(stream: ConfigStream) -> ${model.name.className}:
-	var instance = ${model.name.className}.new()
-	@for(FieldSchema field : model.structural.fields())
-		!{String n = field.name();}
-		!{FieldType t = field.type();}
-		@if(t instanceof FList(SimpleType item))
-			for c in range(stream.read_int32()):
-				instance.${model.fieldName(field)}.append(${model.create(item)})
-		@elseif(t instanceof FMap(SimpleType key, SimpleType value))
-			for c in range(stream.read_int32()):
-				var k = ${model.create(key)}
-				var v = ${model.create(value)}
-				instance.${model.fieldName(field)}[k] = v
-		@else
-			instance.${model.fieldName(field)} = ${model.create(t)}
-		@endif
+@if(!model.structural.foreignKeys().isEmpty())
+	# 外键引用属性
+	@for(ForeignKeySchema fk : model.structural.foreignKeys())
+		var ${model.refName(fk)}: ${model.refType(fk)}
 	@endfor
-	return instance
+@endif
 
 @if(model._vTable != null)
 	!{TableSchema table = model._vTable.schema();}
 
+
+	@if(model._vTable.schema().entry() instanceof EntryType.EntryBase)
+		# 静态枚举实例
+		@for(String enumName : model._vTable.enumNames())
+			static var ${model.upper1(enumName)}: ${model.name.className}
+		@endfor
+	@endif
+
+	# 内部存储
+	static var _data: Dictionary[${model.keyType()}, ${model.name.className}] = {}
+	@for(KeySchema uk : table.uniqueKeys())
+		static var ${model.uniqueKeyMapName(uk)}: ${model.dictionaryType(uk, model.name.className)} = {}
+	@endfor
+
 	# 主键查询
 	static func find(id: ${model.keyType()}) -> ${model.name.className}:
 		return _data.get(id)
-
 	@for(KeySchema uk : table.uniqueKeys())
 		# 唯一键查询
 		static func ${model.uniqueKeyGetByName(uk)}(${model.actualParams(uk)}) -> ${model.name.className}:
 			return ${model.uniqueKeyMapName(uk)}.get(${model.actualParams(uk)})
 	@endfor
-
 	# 获取所有数据
 	static func all() -> Array[${model.name.className}]:
 		return _data.values()
+@endif
+
+
+# 字符串表示
+func _to_string() -> String:
+	@if(model.structural.fields().isEmpty())
+		return "${model.name.className}{}"
+	@else
+		return "${model.name.className}{" + ${model.toStrings(model.structural.fields())} + "}"
+	@endif
+
+
+@if(model._vTable != null)
+	!{TableSchema table = model._vTable.schema();}
 
 	# 从流初始化
 	static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
@@ -70,7 +78,7 @@ static func create(stream: ConfigStream) -> ${model.name.className}:
 
 		var count = stream.read_int32()
 		for i in range(count):
-			var item = create(stream)
+			var item = _create(stream)
 			_data[item.${model.primaryKeyFieldName()}] = item
 			@for(KeySchema uk : table.uniqueKeys())
 				${model.uniqueKeyMapName(uk)}[item.${model.actualParamsKeySelf(uk)}] = item
@@ -97,22 +105,33 @@ static func create(stream: ConfigStream) -> ${model.name.className}:
 			@endfor
 		@endif
 
-	# 内部存储
-	static var _data: Dictionary[${model.keyType()}, ${model.name.className}] = {}
-	@for(KeySchema uk : table.uniqueKeys())
-		static var ${model.uniqueKeyMapName(uk)}: ${model.dictionaryType(uk, model.name.className)} = {}
-	@endfor
 
-	@if(model._vTable.schema().entry() instanceof EntryType.EntryBase)
-		# 静态枚举实例
-		@for(String enumName : model._vTable.enumNames())
-			static var ${model.upper1(enumName)}: ${model.name.className}
-		@endfor
-	@endif
 @endif
 
-# 解析外键引用
+# 创建实例
+static func _create(stream: ConfigStream) -> ${model.name.className}:
+	var instance = ${model.name.className}.new()
+	@for(FieldSchema field : model.structural.fields())
+		!{String n = field.name();}
+		!{FieldType t = field.type();}
+		@if(t instanceof FList(SimpleType item))
+			for c in range(stream.read_int32()):
+				instance.${model.fieldName(field)}.append(${model.create(item)})
+		@elseif(t instanceof FMap(SimpleType key, SimpleType value))
+			for c in range(stream.read_int32()):
+				var k = ${model.create(key)}
+				var v = ${model.create(value)}
+				instance.${model.fieldName(field)}[k] = v
+		@else
+			instance.${model.fieldName(field)} = ${model.create(t)}
+		@endif
+	@endfor
+	return instance
+
+
 @if(configgen.schema.HasRef.hasRef(model.structural))
+	
+	# 解析外键引用
 	func _resolve(errors: ConfigErrors):
 		@for(FieldSchema field : model.structural.fields())
 			!{FieldType type = field.type();}
@@ -181,6 +200,7 @@ static func create(stream: ConfigStream) -> ${model.name.className}:
 			@endif
 		@endfor
 
+
 	@if(model._vTable != null)
 		static func _resolve_refs(errors: ConfigErrors):
 			for item in all():
@@ -188,10 +208,3 @@ static func create(stream: ConfigStream) -> ${model.name.className}:
 	@endif
 @endif
 
-# 字符串表示
-func _to_string() -> String:
-	@if(model.structural.fields().isEmpty())
-		return "${model.name.className}{}"
-	@else
-		return "${model.name.className}{" + ${model.toStrings(model.structural.fields())} + "}"
-	@endif

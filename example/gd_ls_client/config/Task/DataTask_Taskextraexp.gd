@@ -9,9 +9,29 @@ var fielda: String
 var fieldb: String
 var fieldc: String
 var fieldd: String
-# 外键引用属性
+
+# 内部存储
+static var _data: Dictionary[int, DataTask_Taskextraexp] = {}
+# 主键查询
+static func find(id: int) -> DataTask_Taskextraexp:
+	return _data.get(id)
+# 获取所有数据
+static func all() -> Array[DataTask_Taskextraexp]:
+	return _data.values()
+
+# 字符串表示
+func _to_string() -> String:
+	return "DataTask_Taskextraexp{" + str(taskid) + "," + str(extraexp) + "," + test1 + "," + test2 + "," + fielda + "," + fieldb + "," + fieldc + "," + fieldd + "}"
+
+# 从流初始化
+static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
+	var count = stream.read_int32()
+	for i in range(count):
+		var item = _create(stream)
+		_data[item.taskid] = item
+
 # 创建实例
-static func create(stream: ConfigStream) -> DataTask_Taskextraexp:
+static func _create(stream: ConfigStream) -> DataTask_Taskextraexp:
 	var instance = DataTask_Taskextraexp.new()
 	instance.taskid = stream.read_int32()
 	instance.extraexp = stream.read_int32()
@@ -23,23 +43,4 @@ static func create(stream: ConfigStream) -> DataTask_Taskextraexp:
 	instance.fieldd = stream.read_string_in_pool()
 	return instance
 
-# 主键查询
-static func find(id: int) -> DataTask_Taskextraexp:
-	return _data.get(id)
 
-# 获取所有数据
-static func all() -> Array[DataTask_Taskextraexp]:
-	return _data.values()
-
-# 从流初始化
-static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var count = stream.read_int32()
-	for i in range(count):
-		var item = create(stream)
-		_data[item.taskid] = item
-# 内部存储
-static var _data: Dictionary[int, DataTask_Taskextraexp] = {}
-# 解析外键引用
-# 字符串表示
-func _to_string() -> String:
-	return "DataTask_Taskextraexp{" + str(taskid) + "," + str(extraexp) + "," + test1 + "," + test2 + "," + fielda + "," + fieldb + "," + fieldc + "," + fieldd + "}"

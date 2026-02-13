@@ -1,6 +1,5 @@
 package configgen.gengd;
 
-import configgen.gen.Generator;
 import configgen.schema.InterfaceSchema;
 import configgen.schema.Nameable;
 import configgen.schema.StructSchema;

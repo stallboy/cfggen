@@ -8,8 +8,29 @@ var viplevel: int  # 领取vip奖励的最低等级
 var iconFile: String  # 礼包图标
 # 外键引用属性
 var RefVipitem2vipcountMap: Dictionary[int, DataOther_Loot]
+
+# 内部存储
+static var _data: Dictionary[int, DataOther_Signin] = {}
+# 主键查询
+static func find(id: int) -> DataOther_Signin:
+	return _data.get(id)
+# 获取所有数据
+static func all() -> Array[DataOther_Signin]:
+	return _data.values()
+
+# 字符串表示
+func _to_string() -> String:
+	return "DataOther_Signin{" + str(id) + "," + str(item2countMap) + "," + str(vipitem2vipcountMap) + "," + str(viplevel) + "," + iconFile + "}"
+
+# 从流初始化
+static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
+	var count = stream.read_int32()
+	for i in range(count):
+		var item = _create(stream)
+		_data[item.id] = item
+
 # 创建实例
-static func create(stream: ConfigStream) -> DataOther_Signin:
+static func _create(stream: ConfigStream) -> DataOther_Signin:
 	var instance = DataOther_Signin.new()
 	instance.id = stream.read_int32()
 	for c in range(stream.read_int32()):
@@ -24,22 +45,7 @@ static func create(stream: ConfigStream) -> DataOther_Signin:
 	instance.iconFile = stream.read_string_in_pool()
 	return instance
 
-# 主键查询
-static func find(id: int) -> DataOther_Signin:
-	return _data.get(id)
 
-# 获取所有数据
-static func all() -> Array[DataOther_Signin]:
-	return _data.values()
-
-# 从流初始化
-static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
-	var count = stream.read_int32()
-	for i in range(count):
-		var item = create(stream)
-		_data[item.id] = item
-# 内部存储
-static var _data: Dictionary[int, DataOther_Signin] = {}
 # 解析外键引用
 func _resolve(errors: ConfigErrors):
 	for k in vipitem2vipcountMap.keys():
@@ -47,9 +53,7 @@ func _resolve(errors: ConfigErrors):
 		if v == null:
 			errors.ref_null("other.signin", "vipitem2vipcountMap")
 		RefVipitem2vipcountMap[k] = v
+
 static func _resolve_refs(errors: ConfigErrors):
 	for item in all():
 		item._resolve(errors)
-# 字符串表示
-func _to_string() -> String:
-	return "DataOther_Signin{" + str(id) + "," + str(item2countMap) + "," + str(vipitem2vipcountMap) + "," + str(viplevel) + "," + iconFile + "}"

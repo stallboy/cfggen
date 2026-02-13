@@ -3,27 +3,33 @@ class_name DataTask_Completeconditiontype
 # 公开属性
 var id: int  # 任务完成条件类型（id的范围为1-100）
 var name: String  # 程序用名字
-# 外键引用属性
-# 创建实例
-static func create(stream: ConfigStream) -> DataTask_Completeconditiontype:
-	var instance = DataTask_Completeconditiontype.new()
-	instance.id = stream.read_int32()
-	instance.name = stream.read_string_in_pool()
-	return instance
 
+# 静态枚举实例
+static var KillMonster: DataTask_Completeconditiontype
+static var TalkNpc: DataTask_Completeconditiontype
+static var CollectItem: DataTask_Completeconditiontype
+static var ConditionAnd: DataTask_Completeconditiontype
+static var Chat: DataTask_Completeconditiontype
+static var TestNoColumn: DataTask_Completeconditiontype
+static var Aa: DataTask_Completeconditiontype
+# 内部存储
+static var _data: Dictionary[int, DataTask_Completeconditiontype] = {}
 # 主键查询
 static func find(id: int) -> DataTask_Completeconditiontype:
 	return _data.get(id)
-
 # 获取所有数据
 static func all() -> Array[DataTask_Completeconditiontype]:
 	return _data.values()
+
+# 字符串表示
+func _to_string() -> String:
+	return "DataTask_Completeconditiontype{" + str(id) + "," + name + "}"
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 	var count = stream.read_int32()
 	for i in range(count):
-		var item = create(stream)
+		var item = _create(stream)
 		_data[item.id] = item
 		if item.name.strip_edges() != "":
 			match item.name.strip_edges():
@@ -71,17 +77,10 @@ static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 		_errors.enum_null("task.completeconditiontype", "TestNoColumn")
 	if Aa == null:
 		_errors.enum_null("task.completeconditiontype", "aa")
-# 内部存储
-static var _data: Dictionary[int, DataTask_Completeconditiontype] = {}
-# 静态枚举实例
-static var KillMonster: DataTask_Completeconditiontype
-static var TalkNpc: DataTask_Completeconditiontype
-static var CollectItem: DataTask_Completeconditiontype
-static var ConditionAnd: DataTask_Completeconditiontype
-static var Chat: DataTask_Completeconditiontype
-static var TestNoColumn: DataTask_Completeconditiontype
-static var Aa: DataTask_Completeconditiontype
-# 解析外键引用
-# 字符串表示
-func _to_string() -> String:
-	return "DataTask_Completeconditiontype{" + str(id) + "," + name + "}"
+
+# 创建实例
+static func _create(stream: ConfigStream) -> DataTask_Completeconditiontype:
+	var instance = DataTask_Completeconditiontype.new()
+	instance.id = stream.read_int32()
+	instance.name = stream.read_string_in_pool()
+	return instance

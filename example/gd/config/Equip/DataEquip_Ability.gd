@@ -3,27 +3,33 @@ class_name DataEquip_Ability
 # 公开属性
 var id: int  # 属性类型
 var name: String  # 程序用名字
-# 外键引用属性
-# 创建实例
-static func create(stream: ConfigStream) -> DataEquip_Ability:
-	var instance = DataEquip_Ability.new()
-	instance.id = stream.read_int32()
-	instance.name = stream.read_string_in_pool()
-	return instance
 
+# 静态枚举实例
+static var Attack: DataEquip_Ability
+static var Defence: DataEquip_Ability
+static var Hp: DataEquip_Ability
+static var Critical: DataEquip_Ability
+static var Critical_resist: DataEquip_Ability
+static var Block: DataEquip_Ability
+static var Break_armor: DataEquip_Ability
+# 内部存储
+static var _data: Dictionary[int, DataEquip_Ability] = {}
 # 主键查询
 static func find(id: int) -> DataEquip_Ability:
 	return _data.get(id)
-
 # 获取所有数据
 static func all() -> Array[DataEquip_Ability]:
 	return _data.values()
+
+# 字符串表示
+func _to_string() -> String:
+	return "DataEquip_Ability{" + str(id) + "," + name + "}"
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 	var count = stream.read_int32()
 	for i in range(count):
-		var item = create(stream)
+		var item = _create(stream)
 		_data[item.id] = item
 		if item.name.strip_edges() != "":
 			match item.name.strip_edges():
@@ -71,17 +77,12 @@ static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 		_errors.enum_null("equip.ability", "block")
 	if Break_armor == null:
 		_errors.enum_null("equip.ability", "break_armor")
-# 内部存储
-static var _data: Dictionary[int, DataEquip_Ability] = {}
-# 静态枚举实例
-static var Attack: DataEquip_Ability
-static var Defence: DataEquip_Ability
-static var Hp: DataEquip_Ability
-static var Critical: DataEquip_Ability
-static var Critical_resist: DataEquip_Ability
-static var Block: DataEquip_Ability
-static var Break_armor: DataEquip_Ability
-# 解析外键引用
-# 字符串表示
-func _to_string() -> String:
-	return "DataEquip_Ability{" + str(id) + "," + name + "}"
+
+# 创建实例
+static func _create(stream: ConfigStream) -> DataEquip_Ability:
+	var instance = DataEquip_Ability.new()
+	instance.id = stream.read_int32()
+	instance.name = stream.read_string_in_pool()
+	return instance
+
+
