@@ -154,6 +154,7 @@ Schema 验证在解析 `.cfg` 文件时进行，检查配置定义的语法和�
 | 错误代码 | 错误描述 | 解决方案 |
 |---------|---------|----------|
 | `SplitDataHeaderNotEqual` | 数据文件头不匹配 schema 定义 | 更新数据文件或检查 schema |
+| `FieldHeaderSpanNotEnough` | 字段需要的列数超过了 header 的剩余列数 | 检查 struct/list 字段的 span 与 Excel 列数是否匹配 |
 | `JsonTableNotSupportExcel` | 标记为 json 的 table 不能有对应的 excel 文件 | 删除 Excel 文件或移除 json 标记 |
 | `JsonTableNotSupportMap` | 标记为 json 的 table 不能使用 map 类型 | 改用 list 类型 |
 | `MappingToExcelLoop` | 结构有循环且未使用 pack，无法映射到 excel | 使用 pack 格式或重构结构 |
@@ -228,7 +229,6 @@ Schema 验证在解析 `.cfg` 文件时进行，检查配置定义的语法和�
 | 错误代码 | 错误描述 | 常见原因 |
 |---------|---------|----------|
 | `JsonFileReadErr` | JSON 文件读取失败 | 文件路径错误或权限问题 |
-| `JsonFileWriteErr` | JSON 文件写入失败 | 磁盘空间不足或权限问题 |
 | `JsonStrEmpty` | JSON 字符串为空 | 数据缺失 |
 | `JsonParseException` | JSON 解析失败 | JSON 格式错误 |
 | `JsonTypeNotExist` | JSON 中引用的类型不存在 | 检查类型定义 |

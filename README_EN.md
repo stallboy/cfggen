@@ -1,6 +1,6 @@
 # Configuration Table Generation System
 
-![intro](docs/assets/intro.png)
+![intro](docs/src/content/docs/intro.png)
 
 An object database browser, editor, and program access code generator
 

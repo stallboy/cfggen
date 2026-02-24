@@ -127,6 +127,15 @@ public record CfgSchemaErrs(List<Err> errs,
     }
 
     /**
+     * 字段需要的列数超过了 header 的剩余列数
+     */
+    public record FieldHeaderSpanNotEnough(String table,
+                                           String field,
+                                           int expectedSpan,
+                                           int headerRemain) implements Err {
+    }
+
+    /**
      * table名称必须全小写，(因为windows文件名不分大小写，而table名可能就是文件名，这里直接约定必须都小写)
      */
     public record TableNameNotLowerCase(String tableName) implements Err {

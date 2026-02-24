@@ -189,12 +189,6 @@ public record CfgValueErrs(List<VErr> errs,
     }
 
     /**
-     * 写json文件出错
-     */
-    public record JsonFileWriteErr(String jsonFile, String errMsg) implements VErr {
-    }
-
-    /**
      * json文件内容为空
      */
     public record JsonStrEmpty(DFile source) implements VErr {

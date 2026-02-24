@@ -193,6 +193,14 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
             FieldSchema curField = findAndRemove(header, idx, curFields);
             if (curField != null) {
                 int span = Span.fieldSpan(curField);
+                // 检查 header 剩余列数是否足够
+                int remain = header.size() - idx;
+                if (span > remain) {
+                    errs.addErr(new CfgSchemaErrs.FieldHeaderSpanNotEnough(
+                        table.name(), curField.name(), span, remain));
+                    // 跳过剩余 header，避免后续处理产生更多错误
+                    break;
+                }
                 idx += span;
                 String fieldName = curField.name();
                 Metadata meta = curField.meta().copy();

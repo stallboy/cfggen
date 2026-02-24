@@ -1,5 +1,7 @@
 package configgen.data;
 
+import configgen.Resources;
+import configgen.ctx.DirectoryStructure;
 import configgen.ctx.HeadRows;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgReader;
@@ -200,6 +202,49 @@ class CfgSchemaAlignToDataTest {
         assertEquals(1, errs.errs().size());
         CfgSchemaErrs.Err err = errs.errs().getFirst();
         assertInstanceOf(CfgSchemaErrs.PrimaryKeyNotEnumOrIntWhenEnum.class, err);
+    }
+
+    @Test
+    void error_FieldHeaderSpanNotEnough() {
+        String str = """
+                struct Vec2 {
+                    x:int;
+                    y:int;
+                }
+                table span_err[id] {
+                    id:int;
+                    vec:Vec2;
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        cfg.resolve().checkErrors();
+
+        // CSV 只有 2 列：id, vec
+        // vec 字段需要 span=2（x 和 y），但 header 只剩 1 列
+        String csvContent = """
+                ID,Vec
+                id,vec
+                1,1
+                """;
+        Resources.addTempFileFromText("span_err.csv", tempDir, csvContent);
+
+        // 直接从文件系统读取
+        ReadCsv csvReader = new ReadCsv("UTF-8");
+        CfgDataReader fastDataReader = new CfgDataReader(HeadRows.A2_Default, csvReader, ReadByFastExcel.INSTANCE);
+        CfgData cfgData = fastDataReader.readCfgData(new DirectoryStructure(tempDir), null, CfgSchemaErrs.of());
+
+        CfgSchemaErrs errs = CfgSchemaErrs.of();
+        CfgSchema aligned = new CfgSchemaAlignToData(HeadRows.A2_Default).align(cfg, cfgData, errs);
+        new CfgSchemaResolver(aligned, errs).resolve();
+
+        assertEquals(1, errs.errs().size());
+        CfgSchemaErrs.Err err = errs.errs().getFirst();
+        assertInstanceOf(CfgSchemaErrs.FieldHeaderSpanNotEnough.class, err);
+        CfgSchemaErrs.FieldHeaderSpanNotEnough e = (CfgSchemaErrs.FieldHeaderSpanNotEnough) err;
+        assertEquals("span_err", e.table());
+        assertEquals("vec", e.field());
+        assertEquals(2, e.expectedSpan());
+        assertEquals(1, e.headerRemain());
     }
 
 

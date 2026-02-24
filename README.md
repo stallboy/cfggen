@@ -3,7 +3,7 @@
 
 # 📊 策划配表系统
 
-![intro](docs/assets/intro.png)
+![intro](docs/src/content/docs/intro.png)
 
 一个对象数据库浏览器、编辑器、程序访问代码生成器
 
