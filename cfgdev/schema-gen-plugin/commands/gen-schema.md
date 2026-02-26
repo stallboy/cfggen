@@ -117,6 +117,7 @@ config/
 - 顶层只有一个 `config.cfg`，没有模块前缀
 - 每个模块目录只能有一个 `.cfg` 文件，名称必须与模块名相同
 - 模块间引用加前缀：`item.ItemConfig`、`task.TaskCondition`
+- 模块内部的引用无需加前缀。内聚。相关的尽量放到同一个`.cfg`里
 - **禁止使用 include 语句**，cfggen 通过文件命名和前缀自动处理模块引用
 
 ---
@@ -135,7 +136,7 @@ config/
 
 ### 2. 关系建模
 
-- **单向外键 `->`**：引用另一张表的主键，如 `skillid -> skill.id`
+- **单向外键 `->`**：引用另一张表，如 `skillid -> skill`
 - **多向外键 `=>`**：引用另一张表的某个非主键字段
 
 ### 3. 信息流转与上下文
@@ -244,4 +245,8 @@ table task[id] (entry='entry', lang) {
 - **何时创建 interface**：同一字段可能有多种实现（如条件、效果、公式）
 - **str vs text**：`text` 启用国际化；`enum` 和 `entry` 类型必须用 `str`
 
-如需详细的语法规则和高级用法，参考 `cfg-grammar` skill。
+## 参考资源
+
+- **语法规则和高级用法**：参考 `cfg-grammar` skill
+- **详细设计案例**：参考 `skill-system-design.md`（技能系统完整设计示例，包含 Context、Effect、Buff、事件响应等复杂场景的 CFG 实现）
+

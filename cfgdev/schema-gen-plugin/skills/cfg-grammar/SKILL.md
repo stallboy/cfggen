@@ -1,7 +1,7 @@
 ---
 name: CFG Grammar Reference
-description: This skill should be used when the user asks to "check cfg syntax", "cfg grammar rules", "cfggen schema syntax", "cfg field types", "cfg metadata attributes", or when working with CFG schema definition files. Provides comprehensive CFG syntax reference.
-version: 1.0.0
+description: This skill should be used when the user asks to "check cfg syntax", "cfg grammar rules", "cfggen schema syntax", "cfg field types", "cfg metadata attributes", "cfg design patterns", "skill system design", or when working with CFG schema definition files. Provides comprehensive CFG syntax reference and real-world skill system design example.
+version: 1.1.0
 ---
 
 ## Overview
@@ -178,6 +178,19 @@ table item[id] {
 - **`references/metadata.md`** - 所有元数据属性的详细说明
 - **`references/tabular-mapping.md`** - 表格映射机制详解
 - **`references/patterns.md`** - 常见设计模式和最佳实践
+- **`references/skill-system-design.md`** - **技能系统设计参考**（重要实战案例）
+
+## 实战案例：技能系统设计
+
+**`references/skill-system-design.md`** 是一个完整的 CFG 实战案例，展示了如何使用 CFG 设计复杂的游戏技能系统：
+
+- **核心概念**：Skill、Buff、Effect 三层架构
+- **多态设计**：EffectLogic、BuffLogic、FloatValue、Condition 等接口
+- **设计模式**：xxxCases 条件覆盖、addXxxs 累加修改
+- **高级特性**：黑板 Blackboard、便条 Note、事件响应机制
+- **运动逻辑**：Static、Bind、Line、Chase 等子弹运动模式
+
+这是学习 CFG 高级用法的最佳参考！
 
 ## 常见问题
 
