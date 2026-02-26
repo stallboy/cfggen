@@ -13,6 +13,17 @@ allowed-tools:
 
 作为 cfggen schema 架构师和生成助手，根据用户的自然语言描述或业务设计文档，运用领域驱动设计（DDD）思想，生成语法严谨、结构清晰、高可扩展且符合 cfggen 规范的 CFG schema 定义文件。
 
+## ⛔ 禁止事项
+
+以下行为会导致 schema 无效，**绝对禁止**：
+
+| 禁止项 | 错误示例 | 正确做法 |
+|--------|----------|----------|
+| 使用 `enum` 关键字 | `enum Color { Red }` | `table colortype[id] (enum='type')` + 创建对应 CSV |
+| 使用 `include` 语句 | `include "item.cfg"` | 无需包含，系统自动检索各模块 `.cfg` 文件 |
+| 顶层目录有多个 .cfg | `config/item.cfg` | 只有 `config/config.cfg`，模块放子目录 |
+| 模块目录有多个 .cfg | `item/item.cfg` + `item/sub.cfg` | 每个模块只能有一个与模块同名的 `.cfg` |
+
 ## Workflow
 
 接收到用户需求后，严格遵循以下工作流：
@@ -27,7 +38,7 @@ allowed-tools:
 
 ### 2. 领域建模
 
-按照【Schema设计方法论】输出设计思路：
+按照【Schema 设计方法论】输出设计思路：
 
 **实体 (Entities) → `table`**：
 - 具有唯一标识、独立存在的业务对象（如：技能、任务、角色）
@@ -52,15 +63,13 @@ allowed-tools:
 - 字段属性：`nullable`、`mustFill`、`sep`、`fix`、`block`、`pack`
 - 表级属性：`enum`、`entry`、`json`、`columnMode`、`title`、`root`
 
-**创建枚举 CSV 文件：**
+**枚举 CSV 文件格式：**
 
-对于使用 `(enum='字段')` 的表，需要生成对应的 CSV 文件：
-
-1. 文件命名：`表名.csv`（如 `completeconditiontype.csv`）
-2. **CSV 格式规则**：
-   - 第一行：中文注释（字段描述）
-   - 第二行：字段名 header
-   - 后续行：数据
+| 行 | 内容 |
+|----|------|
+| 第1行 | 中文注释（`##,条件名称,描述`） |
+| 第2行 | 字段名 header（`id,name,desc`） |
+| 后续行 | 数据 |
 
 示例 `completeconditiontype.csv`:
 ```csv
@@ -74,20 +83,41 @@ id,name,desc
 
 **注意**：枚举表的 `name` 字段值应对应 interface 的实现类名。
 
-**CSV 文件位置：**
-- 与 `.cfg` 文件同目录
-- 或在统一的数据目录（如 `config/`）
-
 ### 5. 保存文件
 
-**文件组织方式选择：**
+当前目录新建 config 文件夹，在此文件夹中：
+- **保存领域建模的分析到 `plan.md`**，特别要包含实体分析、context 分析
+- **Schema 文件组织**参考【文件组织规则】章节
+- **枚举 CSV 文件**与 `.cfg` 文件同目录
 
-- **平铺结构（小型项目）**：schema 内容放入 `config.cfg`
-- **模块化目录结构（推荐，中大型项目）**：
-  - 每个模块包含相关的 `.cfg`，如 `item.cfg`, `task.cfg`
-  - 顶层是 `config.cfg`，没有模块前缀
-  - 模块间的引用，加前缀 `item.` 或 `task.`
-  - **注意：不要使用 include 语句**，cfggen 通过文件命名和前缀自动处理模块引用
+---
+
+## 文件组织规则
+
+### 平铺结构（小型项目）
+
+schema 内容全部放入 `config.cfg`
+
+### 模块化目录结构（推荐，中大型项目）
+
+```
+config/
+├── config.cfg          # 顶层入口，只有这一个 .cfg
+├── item/
+│   ├── item.cfg        # 物品模块（名称与目录一致）
+│   └── itemtype.csv    # 枚举数据
+├── task/
+│   ├── task.cfg        # 任务模块
+│   └── completeconditiontype.csv
+└── skill/
+    └── skill.cfg       # 技能模块
+```
+
+**规则要点：**
+- 顶层只有一个 `config.cfg`，没有模块前缀
+- 每个模块目录只能有一个 `.cfg` 文件，名称必须与模块名相同
+- 模块间引用加前缀：`item.ItemConfig`、`task.TaskCondition`
+- **禁止使用 include 语句**，cfggen 通过文件命名和前缀自动处理模块引用
 
 ---
 
@@ -113,9 +143,9 @@ id,name,desc
 若配置最终会被程序读取并在复杂环境中执行（如技能效果、任务链），schema 应显式支持 **上下文传递** 与 **事件响应**。
 
 - **Context 意识**：在 `interface` 设计中，考虑输入参数（施法者、目标、黑板）。常用字段命名：`caster`, `target`, `binder`, `blackboardKey`。
-- **黑板与便签**：当配置需要跨节点共享临时数据时，使用 **黑板（Blackboard，全局共享）** 与 **便签（Note，仅子节点继承）**。  
+- **黑板与便签**：当配置需要跨节点共享临时数据时，使用 **黑板（Blackboard，全局共享）** 与 **便签（Note，仅子节点继承）**。
   Schema 中可定义 `bbKey:str` 字符串字段作为读写入口。
-- **事件监听**：若需要“当 X 发生时执行 Y”，可设计 `TriggerEvent` 结构体，包含事件类型、条件、效果等。这是实现被动技能、装备特效的标准模式。
+- **事件监听**：若需要"当 X 发生时执行 Y"，可设计 `TriggerEvent` 结构体，包含事件类型、条件、效果等。这是实现被动技能、装备特效的标准模式。
 
 
 ### 4. 反冗余
@@ -213,7 +243,5 @@ table task[id] (entry='entry', lang) {
 - **何时创建 struct**：多个字段语义相关（如位置信息 x,y,z）
 - **何时创建 interface**：同一字段可能有多种实现（如条件、效果、公式）
 - **str vs text**：`text` 启用国际化；`enum` 和 `entry` 类型必须用 `str`
-
-## 更多参考
 
 如需详细的语法规则和高级用法，参考 `cfg-grammar` skill。
