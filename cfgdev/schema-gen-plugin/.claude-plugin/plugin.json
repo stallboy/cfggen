@@ -1,0 +1,9 @@
+{
+  "name": "cfggen-schema-plugin",
+  "version": "1.0.0",
+  "description": "根据自然语言描述或设计文档生成 cfggen 配表 schema 定义文件",
+  "author": {
+    "name": "cfggen"
+  },
+  "keywords": ["cfggen", "schema", "code-generation", "configuration"]
+}
