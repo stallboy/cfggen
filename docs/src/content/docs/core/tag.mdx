@@ -84,6 +84,56 @@ sidebar:
 - 如果在实现类上设置标签，目的是为了能够筛选出空结构
 - 普通结构体不支持筛选出空结构
 
+#### 使用场景示例
+
+假设有一个技能动作接口，服务端需要完整的动作数据，但客户端只需要知道动作类型，不需要具体数据：
+
+```cfg
+interface action (client) {
+    struct attack {
+        damage:int;
+        critRate:int;
+    }
+    struct heal {
+        amount:int;
+        range:int;
+    }
+    struct buff {
+        buffId:int;
+        duration:int;
+    }
+}
+```
+
+上面的配置会为客户端生成包含所有字段的 `attack`、`heal`、`buff` 实现类。但如果客户端只需要类型标识来判断动画表现，不需要数据，可以这样做：
+
+```cfg
+interface action (client) {
+    struct attack (client) {  // impl上设置tag，表示只保留空结构
+        damage:int;
+        critRate:int;
+    }
+    struct heal (client) {
+        amount:int;
+        range:int;
+    }
+    struct buff {
+        buffId:int;
+        duration:int;
+    }
+}
+```
+
+使用 `-gen lua,own:client` 生成后：
+- `attack` 和 `heal` 会被保留，但字段被过滤，变成空结构（只有类名）
+- `buff` 则被字段被全部包含。
+
+这种设计使得客户端可以用 `action` 类型来区分技能动作类型，同时大幅减少内存占用。
+
+:::note
+普通结构体（非 impl）即使设置了标签，如果其字段没有标签，也会保留所有字段。只有实现类可以通过在 impl 上设置标签来筛选出空结构。
+:::
+
 ## 黑名单模式
 
 ### 基本用法

@@ -6,6 +6,7 @@ import configgen.schema.*;
 import configgen.schema.RefKey.RefList;
 import configgen.schema.RefKey.RefPrimary;
 import configgen.util.DOMUtil;
+import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Element;
 
 import java.nio.file.Path;
@@ -39,7 +40,7 @@ public enum XmlReader {
             if (e.hasAttribute("enumRef")) {
                 f = parseInterface(e, pkgNameDot);
             } else {
-                f = parseStruct(e, pkgNameDot, false);
+                f = parseStruct(e, pkgNameDot, null);
             }
 
             destination.items().add(f);
@@ -63,7 +64,7 @@ public enum XmlReader {
             entry = EntryType.ENo.NO;
         }
         boolean isColumnMode = self.hasAttribute("isColumnMode");
-        FieldTagMap fieldTagMap = parseOwn(self, false);
+        FieldTagMap fieldTagMap = parseTableOrStructOwn(self);
         Metadata meta = fieldTagMap.meta;
         if (self.hasAttribute("extraSplit")) {
             int extraSplit = Integer.parseInt(self.getAttribute("extraSplit"));
@@ -85,9 +86,11 @@ public enum XmlReader {
         return new KeySchema(Arrays.asList(keys));
     }
 
-    private StructSchema parseStruct(Element self, String pkgNameDot, boolean isImpl) {
+    private StructSchema parseStruct(Element self, String pkgNameDot, Set<String> nullableInterfaceOwns) {
         String name = self.getAttribute("name").trim();
-        FieldTagMap fieldTagMap = parseOwn(self, isImpl);
+        FieldTagMap fieldTagMap = nullableInterfaceOwns != null ?
+                parseImplOwn(self, nullableInterfaceOwns) : parseTableOrStructOwn(self);
+
         Metadata meta = fieldTagMap.meta;
         FieldFormat fmt = parseBeanFmt(self);
         List<FieldSchema> fields = parseFieldList(self, fieldTagMap.tag2FieldTag);
@@ -96,39 +99,18 @@ public enum XmlReader {
                 fields, foreignKeys);
     }
 
-    private Metadata parseOwnToMetadata(Element self) {
-        Metadata meta = Metadata.of();
-        for (String tag : parseOwnSet(self)) {
-            meta.putTag(tag);
-        }
-        return meta;
-    }
-
-    private Set<String> parseOwnSet(Element self) {
-        String own = self.getAttribute("own");
-        if (self.hasAttribute("own")) {
-            Set<String> tags = new HashSet<>();
-            for (String tag : own.split(",")) {
-                tag = tag.trim();
-                tags.add(tag);
-            }
-            return tags;
-        } else {
-            return Set.of();
-        }
-    }
-
-
     private InterfaceSchema parseInterface(Element self, String pkgNameDot) {
         String name = self.getAttribute("name").trim();
-        Metadata meta = parseOwnToMetadata(self);
+        Set<String> interfaceOwns = parseOwnSet(self);
+        Metadata meta = createMetadata(interfaceOwns);
+
         FieldFormat fmt = parseBeanFmt(self);
         String enumRef = self.getAttribute("enumRef").trim();
         String defaultBeanName = self.getAttribute("defaultBeanName").trim();
 
         List<StructSchema> impls = new ArrayList<>();
         for (Element subSelf : DOMUtil.elements(self, "bean")) {
-            StructSchema impl = parseStruct(subSelf, "", true);
+            StructSchema impl = parseStruct(subSelf, "", interfaceOwns);
             impls.add(impl);
         }
 
@@ -164,6 +146,21 @@ public enum XmlReader {
     }
 
 
+    private Set<String> parseOwnSet(Element self) {
+        String own = self.getAttribute("own");
+        if (self.hasAttribute("own")) {
+            Set<String> tags = new HashSet<>();
+            for (String tag : own.split(",")) {
+                tag = tag.trim();
+                tags.add(tag);
+            }
+            return tags;
+        } else {
+            return Set.of();
+        }
+    }
+
+
     private enum FieldTagPolicy {
         ALL,
         USE_TAG,
@@ -187,7 +184,7 @@ public enum XmlReader {
                                Metadata meta) {
     }
 
-    private FieldTagMap parseOwn(Element self, boolean isImpl) {
+    private FieldTagMap parseTableOrStructOwn(Element self) {
         Map<String, FieldTag> tag2FieldTag = new LinkedHashMap<>();
         int all = 0;
         for (Element ele : DOMUtil.elements(self, "column")) {
@@ -204,13 +201,54 @@ public enum XmlReader {
             of.resolve(all);
         }
 
-        Metadata meta = Metadata.of();
-        if (!isImpl) { //impl 刘不加了，实际会在interface处
-            for (String tag : tag2FieldTag.keySet()) {
-                meta.putTag(tag);
-            }
-        }
+        Metadata meta = createMetadata(tag2FieldTag.keySet());
         return new FieldTagMap(tag2FieldTag, meta);
+    }
+
+    private FieldTagMap parseImplOwn(Element self, Set<String> interfaceOwns) {
+        Map<String, FieldTag> tag2FieldTag = new LinkedHashMap<>();
+        int all = 0;
+        int fieldCount = 0;
+        for (Element ele : DOMUtil.elements(self, "column")) {
+            fieldCount++;
+            Set<String> tags = parseOwnSet(ele);
+            for (String tag : tags) {
+                if (!interfaceOwns.contains(tag)) {
+                    Logger.log("impl %s has tag %s not in interface, ignore!", self.getAttribute("name"), tag);
+                    continue;
+                }
+                FieldTag ownField = tag2FieldTag.computeIfAbsent(tag, k -> new FieldTag());
+                ownField.count++;
+            }
+            all++;
+        }
+        for (FieldTag of : tag2FieldTag.values()) {
+            of.resolve(all);
+        }
+        Metadata meta = Metadata.of();
+        for (String interfaceOwn : interfaceOwns) {
+            if (fieldCount == 0) {
+                // impl没有field，特殊点，直接当成ALL
+                continue;
+            }
+            FieldTag fieldTag = tag2FieldTag.get(interfaceOwn);
+            // 参考CfgSchemaFilterByTag.filterFields，impl不包含tag，则全部field都被包含
+            if (fieldTag != null && fieldTag.policy == FieldTagPolicy.ALL) {
+                continue;
+            }
+
+            meta.putTag(interfaceOwn);
+        }
+
+        return new FieldTagMap(tag2FieldTag, meta);
+    }
+
+    private static @NotNull Metadata createMetadata(Set<String> owns) {
+        Metadata meta = Metadata.of();
+        for (String tag : owns) {
+            meta.putTag(tag);
+        }
+        return meta;
     }
 
 

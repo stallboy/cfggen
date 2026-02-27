@@ -48,11 +48,11 @@ class AContext {
         }
 
         if (rForOldShared) {
-            listMapPrefixStr = "{";
+            listMapPrefixStr = "R({";
             listMapPostfixStr = "}";
         } else {
-            listMapPrefixStr = "R({";
-            listMapPostfixStr = "})";
+            listMapPrefixStr = "{";
+            listMapPostfixStr = "}";
         }
 
         if (pkg.isEmpty()) {

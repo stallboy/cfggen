@@ -481,7 +481,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
             ps.println("local E = %s._mk.E", pkg);
             hasER = true;
         }
-        if (!rForOldShared && ctx.ctxShared().hasListTableOrMapTable()) {
+        if (rForOldShared && ctx.ctxShared().hasListTableOrMapTable()) {
             ps.println("local R = %s._mk.R", pkg);
             hasER = true;
         }

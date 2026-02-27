@@ -152,21 +152,7 @@ public final class HeadParser {
     }
 
     private static String getColumnName(String name) {
-        int i = name.indexOf('.'); // 给机会在.后面来声明此bean下第一个字段的名称
-        if (i != -1) {
-            return name.substring(0, i).trim();
-        }
-
-        i = name.indexOf(','); // 给机会在,后面来声明此bean下第一个字段的名称
-        if (i != -1) {
-            return name.substring(0, i).trim();
-        }
-
-        i = name.indexOf('@'); //为了是兼容之前版本
-        if (i != -1) {
-            return name.substring(0, i).trim();
-        }
-        return name.trim();
+        return name.split("[.,@]", 2)[0].trim();
     }
 
 }

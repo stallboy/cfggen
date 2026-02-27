@@ -21,7 +21,7 @@ public interface Msg {
             try {
                 df.setAccessible(true);
                 Object v = df.get(this);
-                args[i] = df.getName() + "=" + v.toString();
+                args[i] = v.toString();
                 i++;
             } catch (IllegalAccessException ignored) {
             }

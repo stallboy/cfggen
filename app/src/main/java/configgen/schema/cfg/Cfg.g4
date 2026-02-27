@@ -193,8 +193,6 @@ fragment FLOATLIT
       | DECIMALS EXPONENT
       | DOT DECIMALS EXPONENT?
       )
-    | 'inf'
-    | 'nan'
     ;
 
 fragment DECIMALS

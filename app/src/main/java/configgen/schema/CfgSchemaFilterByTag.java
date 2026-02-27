@@ -107,48 +107,56 @@ public class CfgSchemaFilterByTag {
     }
 
     private List<FieldSchema> filterFields(Structural structural, boolean isImpl) {
+        List<FieldSchema> filteredFields = new ArrayList<>();
         if (isMinusTag) {
-            List<FieldSchema> filteredFields = new ArrayList<>();
             for (FieldSchema field : structural.fields()) {
                 if (!field.meta().hasTag(noMinusTag)) {
                     filteredFields.add(field.copy());
                 }
             }
             return filteredFields;
+        }
 
-        } else {
-            List<FieldSchema> withTagFields = new ArrayList<>();
-            int withMinusTagFieldCount = 0;
-            for (FieldSchema field : structural.fields()) {
-                if (field.meta().hasTag(tag)) {
-                    withTagFields.add(field.copy());
-                } else if (field.meta().hasTag(minusTag)) {
-                    withMinusTagFieldCount++;
-                }
+        int withMinusTagFieldCount = 0;
+        for (FieldSchema field : structural.fields()) {
+            if (field.meta().hasTag(tag)) {
+                filteredFields.add(field.copy());
+            } else if (field.meta().hasTag(minusTag)) {
+                withMinusTagFieldCount++;
             }
+        }
 
-            @SuppressWarnings("UnnecessaryLocalVariable")
-            List<FieldSchema> filteredFields = withTagFields;
-            if (withTagFields.isEmpty()) {
-                //noinspection StatementWithEmptyBody
-                if (isImpl && structural.meta().hasTag(tag)) {
-                    //一般情况下，impl不需要设置tag，
-                    // 如果impl上设置tag，则则是为了能filter出空结构，相当于只用此impl类名字做标志，
-                } else if (withMinusTagFieldCount > 0) {
-                    for (FieldSchema field : structural.fields()) {
-                        if (!field.meta().hasTag(minusTag)) {
-                            filteredFields.add(field.copy());
-                        }
-                    }
-                } else {
-                    for (FieldSchema field : structural.fields()) {
-                        filteredFields.add(field.copy());
-                    }
+        // 如果有设置tag的field，则只取设置了tag的field
+        if (!filteredFields.isEmpty()) {
+            return filteredFields;
+        }
+
+        // 如果没有设置tag的field，但有设置了-tag的field，则取没有设置-tag的field
+        if (withMinusTagFieldCount > 0) {
+            for (FieldSchema field : structural.fields()) {
+                if (!field.meta().hasTag(minusTag)) {
+                    filteredFields.add(field.copy());
                 }
             }
             return filteredFields;
         }
+
+        // 如果都没有设置tag，也没有设置-tag，但impl上设置了tag，则返回空结构
+        if (isImpl && structural.meta().hasTag(tag)) {
+            //一般情况下，impl不需要设置tag，
+            // 如果impl上设置tag，则则是为了能filter出空结构，相当于只用此impl类名字做标志，
+            return filteredFields;
+        }
+
+        // 全包含
+        for (FieldSchema field : structural.fields()) {
+            filteredFields.add(field.copy());
+        }
+
+        return filteredFields;
+
     }
+
     ///////////////////////////////
 
     private StructSchema filterStruct(StructSchema struct, boolean isImpl, Map<String, TableSchema> tableMap) {
