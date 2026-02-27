@@ -61,6 +61,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
     } else if (isCardEntity(entity)) {
         brief = entity.brief;
         note = entity.note;
+        assets = entity.assets;
     }
 
     const color: string = useMemo(() => getNodeBackgroundColor(entity), [entity]);
