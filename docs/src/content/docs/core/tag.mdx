@@ -99,13 +99,21 @@ interface action (client) {
         range:int;
     }
     struct buff {
+        icon:int ->res.icon;
         buffId:int;
         duration:int;
+    }
+    struct run {
+        footstepSound:int ->res.sound;
+        speed:float;
+    }
+    struct sfx {
+        sfx:int ->res.sfx;
     }
 }
 ```
 
-上面的配置会为客户端生成包含所有字段的 `attack`、`heal`、`buff` 实现类。但如果客户端只需要类型标识来判断动画表现，不需要数据，可以这样做：
+上面的配置会为客户端生成包含所有字段的 `attack`、`heal`、`buff`、`run`、`sfx` 实现类。但如果客户端只需要类型标识和资源相关字段，不需要数据，可以这样做：
 
 ```cfg
 interface action (client) {
@@ -118,15 +126,45 @@ interface action (client) {
         range:int;
     }
     struct buff {
+        icon:int ->res.icon (client);
         buffId:int;
         duration:int;
+    }
+    struct run {
+        footstepSound:int ->res.sound;
+        speed:float (-client);
+    }
+    struct sfx {
+        sfx:int ->res.sfx;
     }
 }
 ```
 
 使用 `-gen lua,own:client` 生成后：
 - `attack` 和 `heal` 会被保留，但字段被过滤，变成空结构（只有类名）
-- `buff` 则被字段被全部包含。
+- `buff` 则只包含icon
+- `run` 则只包含footstepSound
+- `sfx` 则完全保留
+
+等价于
+
+```cfg
+interface action {
+    struct attack {  
+    }
+    struct heal {
+    }
+    struct buff {
+        icon:int ->res.icon
+    }
+    struct run {
+        footstepSound:int ->res.sound;
+    }
+    struct sfx {
+        sfx:int ->res.sfx;
+    }
+}
+```
 
 这种设计使得客户端可以用 `action` 类型来区分技能动作类型，同时大幅减少内存占用。
 
