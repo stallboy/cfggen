@@ -204,7 +204,7 @@ namespace ${model.name.pkg}
                             foreach(var e in ${model.upper1(field.name())})
                                 e._resolve(errors);
                         @elseif(type instanceof FMap)
-                            foreach(var e in ${model.upper1(field.name())}.Values)
+                            foreach(var e in ${model.upper1(field.name())}.OrderedValues)
                                 e._resolve(errors);
                         @endif
                     @endif

@@ -5,6 +5,7 @@ import de.siegmar.fastcsv.reader.CsvReader;
 import de.siegmar.fastcsv.reader.CsvRow;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ public class CSVUtil {
                 .skipEmptyRows(false)
                 .commentStrategy(CommentStrategy.NONE)
                 .fieldSeparator(fieldSeparator)
-                .build(new UnicodeReader(Files.newInputStream(path), defaultEncoding))) {
+                .build(new UnicodeReader(Files.newInputStream(path), Charset.forName(defaultEncoding)))) {
             List<CsvRow> rows = new ArrayList<>();
             for (CsvRow csvRow : reader) {
                 rows.add(csvRow);

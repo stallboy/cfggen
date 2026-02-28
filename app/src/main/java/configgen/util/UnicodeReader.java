@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PushbackInputStream;
 import java.io.Reader;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Generic Unicode text reader, which uses a BOM (Byte Order Mark) to identify
@@ -17,7 +19,7 @@ import java.io.Reader;
 public class UnicodeReader extends Reader {
 
     private final InputStreamReader internalInputStreamReader;
-    private final String defaultEnc;
+    private final Charset defaultEnc;
 
     private static final int BOM_SIZE = 4;
 
@@ -27,12 +29,12 @@ public class UnicodeReader extends Reader {
      *                   <code>null</code> to use system default
      * @throws IOException if an I/O error occurs
      */
-    public UnicodeReader(InputStream in, String defaultEnc) throws IOException {
+    public UnicodeReader(InputStream in, Charset defaultEnc) throws IOException {
         this.defaultEnc = defaultEnc;
 
         // Read ahead four bytes and check for BOM marks. Extra bytes are unread
         // back to the stream; only BOM bytes are skipped.
-        String encoding;
+        Charset encoding;
         byte[] bom = new byte[BOM_SIZE];
         int n, unread;
 
@@ -41,21 +43,21 @@ public class UnicodeReader extends Reader {
 
         if (n > 3 && (bom[0] == (byte) 0x00) && (bom[1] == (byte) 0x00)
                 && (bom[2] == (byte) 0xFE) && (bom[3] == (byte) 0xFF)) {
-            encoding = "UTF-32BE";
+            encoding = Charset.forName("UTF-32BE");
             unread = n - 4;
         } else if (n > 3 && (bom[0] == (byte) 0xFF) && (bom[1] == (byte) 0xFE)
                 && (bom[2] == (byte) 0x00) && (bom[3] == (byte) 0x00)) {
-            encoding = "UTF-32LE";
+            encoding = Charset.forName("UTF-32LE");
             unread = n - 4;
         } else if (n > 2 && (bom[0] == (byte) 0xEF) && (bom[1] == (byte) 0xBB)
                 && (bom[2] == (byte) 0xBF)) {
-            encoding = "UTF-8";
+            encoding = StandardCharsets.UTF_8;
             unread = n - 3;
         } else if ((n > 1 && bom[0] == (byte) 0xFE) && (bom[1] == (byte) 0xFF)) {
-            encoding = "UTF-16BE";
+            encoding = StandardCharsets.UTF_16BE;
             unread = n - 2;
         } else if ((n > 1 && bom[0] == (byte) 0xFF) && (bom[1] == (byte) 0xFE)) {
-            encoding = "UTF-16LE";
+            encoding = StandardCharsets.UTF_16LE;
             unread = n - 2;
         } else {
             // Unicode BOM mark not found, unread all bytes
@@ -77,7 +79,7 @@ public class UnicodeReader extends Reader {
         }
     }
 
-    public String getDefaultEncoding() {
+    public Charset getDefaultEncoding() {
         return defaultEnc;
     }
 

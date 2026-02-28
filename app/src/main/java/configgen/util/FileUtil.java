@@ -93,7 +93,7 @@ public class FileUtil {
 
         // 3. 使用 try-with-resources 确保所有流（包括 InputStream）都被正确关闭
         try (InputStream autoCloseIs = is;
-             BufferedReader br = new BufferedReader(new InputStreamReader(autoCloseIs, StandardCharsets.UTF_8));
+             BufferedReader br = new BufferedReader(new UnicodeReader(autoCloseIs, StandardCharsets.UTF_8));
              CachedIndentPrinter ps = new CachedIndentPrinter(dstFile, dstEncoding)) {
 
             String line;
