@@ -22,7 +22,7 @@ func createText(stream *Stream) *Text {
 
 func (t *Text) String() string {
     @if(languages.size() == 1)
-    return t.${languages.get(0)}
+    return t.${languages.getFirst()}
     @else
     result := ""
     @for(int i = 0; i < languages.size(); i++)

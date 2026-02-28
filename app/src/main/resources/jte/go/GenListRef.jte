@@ -1,4 +1,3 @@
-@import configgen.gen.Generator
 @import configgen.schema.FieldSchema
 @import configgen.schema.ForeignKeySchema
 @import configgen.schema.KeySchema

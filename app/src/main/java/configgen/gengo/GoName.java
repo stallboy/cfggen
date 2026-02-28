@@ -1,6 +1,5 @@
 package configgen.gengo;
 
-import configgen.gen.Generator;
 import configgen.schema.InterfaceSchema;
 import configgen.schema.Nameable;
 import configgen.schema.StructSchema;
@@ -14,7 +13,6 @@ import configgen.util.StringUtil;
 /// 函数名，导出函数首字母大写，包内函数小写
 public class GoName {
     public static String modName;
-    public static String topPkg;
 
     public final String fileName;
     public final String filePath;
