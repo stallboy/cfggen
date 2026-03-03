@@ -109,6 +109,7 @@ public class Context {
             Logger.profile("schema write");
             return false;
         } else {
+            schema.printDiff(alignedSchema);
             throw new RuntimeException("schema align failed");
         }
     }

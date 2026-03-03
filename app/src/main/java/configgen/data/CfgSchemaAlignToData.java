@@ -53,6 +53,8 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
                         if (th != null) {
                             TableSchema alignedTable = alignTable(table, th.fields(), errs);
                             alignedCfg.add(alignedTable);
+                        }else{
+                            Logger.log("remove table without data: " + table.name());
                         }
                     }
                 }

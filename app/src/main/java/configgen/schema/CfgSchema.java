@@ -102,11 +102,13 @@ public class CfgSchema {
     public void printDiff(CfgSchema cfg2) {
         int i = 0;
         for (Nameable item1 : items) {
-            Nameable item2 = cfg2.items().get(i);
-            if (!item1.equals(item2)) {
-                System.out.println("=========not eq=========");
-                System.out.println(item1);
-                System.out.println(item2);
+            if (i < cfg2.items().size()) {
+                Nameable item2 = cfg2.items().get(i);
+                if (!item1.equals(item2)) {
+                    Logger.log("Diff at %s", item1.fullName());
+                }
+            } else {
+                Logger.log("Diff at %s, missing in cfg2", item1.fullName());
             }
             i++;
         }
