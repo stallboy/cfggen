@@ -26,6 +26,8 @@ cfg.equip.jewelrytype = pre("cfg.equip.jewelrytype")
 ---@type cfg.equip.rank
 cfg.equip.rank = pre("cfg.equip.rank")
 cfg.other = {}
+---@type cfg.other.argcapturemode
+cfg.other.argcapturemode = pre("cfg.other.argcapturemode")
 ---@type cfg.other.drop
 cfg.other.drop = pre("cfg.other.drop")
 ---@type cfg.other.keytest

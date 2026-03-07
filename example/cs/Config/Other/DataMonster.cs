@@ -9,8 +9,11 @@ namespace Config.Other
         public List<Config.DataPosition> PosList { get; private set; }
         public int LootId { get; private set; } /* loot */
         public int LootItemId { get; private set; } /* item */
+        public KeyedList<string, int> EnumMap1 { get; private set; }
+        public KeyedList<int, string> EnumMap2 { get; private set; }
         public Config.Other.DataLootitem RefLoot { get; private set; }
         public Config.Other.DataLoot RefAllLoot { get; private set; }
+        public KeyedList<int, Config.Other.DataArgcapturemode> RefEnumMap2 { get; private set; }
 
         public override int GetHashCode()
         {
@@ -27,7 +30,7 @@ namespace Config.Other
 
         public override string ToString()
         {
-            return "(" + Id + "," + StringUtil.ToString(PosList) + "," + LootId + "," + LootItemId + ")";
+            return "(" + Id + "," + StringUtil.ToString(PosList) + "," + LootId + "," + LootItemId + "," + EnumMap1 + "," + EnumMap2 + ")";
         }
 
         
@@ -69,6 +72,16 @@ namespace Config.Other
                 self.PosList.Add(Config.DataPosition._create(os));
             self.LootId = os.ReadInt32();
             self.LootItemId = os.ReadInt32();
+            self.EnumMap1 = new KeyedList<string, int>();
+            for (var c = os.ReadInt32(); c > 0; c--)
+            {
+                self.EnumMap1.Add(os.ReadStringInPool(), os.ReadInt32());
+            }
+            self.EnumMap2 = new KeyedList<int, string>();
+            for (var c = os.ReadInt32(); c > 0; c--)
+            {
+                self.EnumMap2.Add(os.ReadInt32(), os.ReadStringInPool());
+            }
             return self;
         }
 
@@ -78,6 +91,14 @@ namespace Config.Other
             if (RefLoot == null) errors.RefNull("other.monster", ToString(), "Loot");
             RefAllLoot = Config.Other.DataLoot.Get(LootId);;
             if (RefAllLoot == null) errors.RefNull("other.monster", ToString(), "AllLoot");
+            RefEnumMap2 = new KeyedList<int, Config.Other.DataArgcapturemode>();
+            foreach(var kv in EnumMap2.Map)
+            {
+                var k = kv.Key;
+                var v = Config.Other.DataArgcapturemode.Get(kv.Value);;
+                if (v == null) errors.RefNull("other.monster", ToString(), "enumMap2");
+                RefEnumMap2.Add(k, v);
+            }
         }
     }
 }

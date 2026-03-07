@@ -19,6 +19,7 @@ namespace Config
                 "equip.jewelrysuit",
                 "equip.jewelrytype",
                 "equip.rank",
+                "other.ArgCaptureMode",
                 "other.drop",
                 "other.keytest",
                 "other.loot",
@@ -83,6 +84,10 @@ namespace Config
                     case "equip.rank":
                         configNulls.Remove(tableName);
                         Config.Equip.DataRank.Initialize(os, errors);
+                        break;
+                    case "other.ArgCaptureMode":
+                        configNulls.Remove(tableName);
+                        Config.Other.DataArgcapturemode.Initialize(os, errors);
                         break;
                     case "other.drop":
                         configNulls.Remove(tableName);

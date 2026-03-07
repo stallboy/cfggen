@@ -36,7 +36,6 @@ local testnocolumn = Beans.task.completecondition.testnocolumn
 local testdefaultbean = Beans.task.testdefaultbean
 
 local E = cfg._mk.E
-local R = cfg._mk.R
 
 local A = {}
 A[1] = killmonster(1, 3)
@@ -45,13 +44,13 @@ A[3] = collectitem(11, 1)
 A[4] = testdefaultbean(0, false, "", position(0, 0, 0), E, E, E)
 A[5] = testnocolumn
 
-mk(1, R({"杀个怪", "杀怪"}), 2, A[1], 1000, A[4])
-mk(2, R({"和npc对话", "和npc对话"}), 3, A[2], 2000, testdefaultbean(22, false, "text", position(3, 4, 5), R({11, 22}), R({3, 4, 5}), R({[1] = "str in map"})))
-mk(3, R({"收集物品", "收集物品"}), 0, A[3], 3000, A[4])
-mk(4, R({"杀怪并且收集物品", "杀怪并且收集物品"}), 0, conditionand(A[1], A[3]), 4000, A[4])
-mk(5, R({"杀怪对话并且收集物品", "杀怪对话并且收集物品"}), 0, conditionand(conditionand(A[1], A[2]), A[3]), 5000, A[4])
-mk(6, R({"聊天并且杀怪", "测试转义符号"}), 0, conditionand(chat("葵花宝典,123"), A[1]), 5000, A[4])
-mk(7, R({"测试", "测试无参数得bean"}), 0, A[5], 2000, A[4])
-mk(8, R({"测试2", "测试默认bean"}), 0, A[5], 3000, A[4])
+mk(1, {"杀个怪", "杀怪"}, 2, A[1], 1000, A[4])
+mk(2, {"和npc对话", "和npc对话"}, 3, A[2], 2000, testdefaultbean(22, false, "text", position(3, 4, 5), {11, 22}, {3, 4, 5}, {[1] = "str in map"}))
+mk(3, {"收集物品", "收集物品"}, 0, A[3], 3000, A[4])
+mk(4, {"杀怪并且收集物品", "杀怪并且收集物品"}, 0, conditionand(A[1], A[3]), 4000, A[4])
+mk(5, {"杀怪对话并且收集物品", "杀怪对话并且收集物品"}, 0, conditionand(conditionand(A[1], A[2]), A[3]), 5000, A[4])
+mk(6, {"聊天并且杀怪", "测试转义符号"}, 0, conditionand(chat("葵花宝典,123"), A[1]), 5000, A[4])
+mk(7, {"测试", "测试无参数得bean"}, 0, A[5], 2000, A[4])
+mk(8, {"测试2", "测试默认bean"}, 0, A[5], 3000, A[4])
 
 return this

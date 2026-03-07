@@ -9,7 +9,11 @@ namespace Config.Other
         public long Id2 { get; private set; }
         public int Id3 { get; private set; }
         public List<int> Ids { get; private set; }
+        public string EnumTest { get; private set; }
+        public List<string> EnumList { get; private set; }
         public List<Config.Other.DataSignin> RefIds { get; private set; }
+        public Config.Other.DataArgcapturemode RefEnumTest { get; private set; }
+        public List<Config.Other.DataArgcapturemode> RefEnumList { get; private set; }
 
         public override int GetHashCode()
         {
@@ -26,7 +30,7 @@ namespace Config.Other
 
         public override string ToString()
         {
-            return "(" + Id1 + "," + Id2 + "," + Id3 + "," + StringUtil.ToString(Ids) + ")";
+            return "(" + Id1 + "," + Id2 + "," + Id3 + "," + StringUtil.ToString(Ids) + "," + EnumTest + "," + StringUtil.ToString(EnumList) + ")";
         }
 
         
@@ -173,6 +177,10 @@ namespace Config.Other
             self.Ids = new List<int>();
             for (var c = os.ReadInt32(); c > 0; c--)
                 self.Ids.Add(os.ReadInt32());
+            self.EnumTest = os.ReadStringInPool();
+            self.EnumList = new List<string>();
+            for (var c = os.ReadInt32(); c > 0; c--)
+                self.EnumList.Add(os.ReadStringInPool());
             return self;
         }
 
@@ -184,6 +192,15 @@ namespace Config.Other
                 var r = Config.Other.DataSignin.Get(e);;
                 if (r == null) errors.RefNull("other.keytest", ToString(), "ids");
                 RefIds.Add(r);
+            }
+            RefEnumTest = Config.Other.DataArgcapturemode.Get(EnumTest);;
+            if (RefEnumTest == null) errors.RefNull("other.keytest", ToString(), "enumTest");
+            RefEnumList = new List<Config.Other.DataArgcapturemode>();
+            foreach(var e in EnumList)
+            {
+                var r = Config.Other.DataArgcapturemode.Get(e);;
+                if (r == null) errors.RefNull("other.keytest", ToString(), "enumList");
+                RefEnumList.Add(r);
             }
         }
     }

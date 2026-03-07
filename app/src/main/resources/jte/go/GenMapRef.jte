@@ -17,7 +17,7 @@
 //map ref
 func (t *${className}) Ref${MapName}() map[int32]*${MapValueType} {
     if t.ref${MapName} == nil {
-        t.ref${MapName} = make(map[int32]*OtherLoot, len(t.${mapName}))
+        t.ref${MapName} = make(map[int32]*${MapValueType}, len(t.${mapName}))
         for k, v := range t.${mapName} {
             t.ref${MapName}[k] = Get${MapValueType}Mgr().Get(v)
         }
