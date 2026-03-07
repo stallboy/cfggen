@@ -64,6 +64,10 @@ export default defineConfig({
 				{
 					label: 'VSCode 扩展',
 					items: ['vscodeextension']
+				},
+				{
+					label: '开发设计',
+					autogenerate: { directory: 'dev' }
 				}
 			],
 			expressiveCode: {

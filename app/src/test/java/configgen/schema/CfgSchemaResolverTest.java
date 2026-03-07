@@ -805,4 +805,200 @@ class CfgSchemaResolverTest {
         assertEquals(0, errs.errs().size());
     }
 
+    // ========== Enum Schema Tests ==========
+
+    @Test
+    public void ok_EnumTableNameNotLowerCase() {
+        // enum table 名称允许大小写
+        String str = """
+                enum ArgCaptureMode {
+                    Snapshot;
+                    Dynamic;
+                }
+                table normaltable[id] {
+                    id:int;
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        CfgSchemaErrs errs = cfg.resolve();
+
+        assertEquals(0, errs.warns().size());
+        assertEquals(0, errs.errs().size());
+        assertNotNull(cfg.findTable("ArgCaptureMode"));
+    }
+
+    @Test
+    public void ok_EnumFieldTypeConverted() {
+        // enum 字段类型应转换为 str + 外键
+        String str = """
+                enum ArgCaptureMode {
+                    Snapshot;
+                    Dynamic;
+                }
+                table mytable[id] {
+                    id:int;
+                    captureMode:ArgCaptureMode;
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        CfgSchemaErrs errs = cfg.resolve();
+
+        assertEquals(0, errs.errs().size());
+
+        TableSchema table = cfg.findTable("mytable");
+        assertNotNull(table);
+
+        // 字段类型应该是 STRING
+        FieldSchema field = table.findField("captureMode");
+        assertNotNull(field);
+        assertEquals(FieldType.Primitive.STRING, field.type());
+
+        // 应该有外键
+        ForeignKeySchema fk = table.findForeignKey("captureMode");
+        assertNotNull(fk);
+        assertEquals("ArgCaptureMode", fk.refTable());
+        assertTrue(fk.meta().isFromEnumType());
+    }
+
+    @Test
+    public void ok_EnumFieldInStruct() {
+        // enum 字段在 struct 中也应该正确转换
+        String str = """
+                enum ArgCaptureMode {
+                    Snapshot;
+                    Dynamic;
+                }
+                struct MyStruct {
+                    mode:ArgCaptureMode;
+                    value:int;
+                }
+                table mytable[id] {
+                    id:int;
+                    data:MyStruct;
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        CfgSchemaErrs errs = cfg.resolve();
+
+        assertEquals(0, errs.errs().size());
+
+        StructSchema struct = cfg.findFieldable("MyStruct") instanceof StructSchema s ? s : null;
+        assertNotNull(struct);
+
+        // 字段类型应该是 STRING
+        FieldSchema field = struct.findField("mode");
+        assertNotNull(field);
+        assertEquals(FieldType.Primitive.STRING, field.type());
+
+        // 应该有外键
+        ForeignKeySchema fk = struct.findForeignKey("mode");
+        assertNotNull(fk);
+        assertTrue(fk.meta().isFromEnumType());
+    }
+
+    @Test
+    public void ok_EnumFieldInList() {
+        // enum 字段在 list 中应转换为 list<str> + 外键
+        String str = """
+                enum ArgCaptureMode {
+                    Snapshot;
+                    Dynamic;
+                }
+                table mytable[id] {
+                    id:int;
+                    modes:list<ArgCaptureMode> (sep=',');
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        CfgSchemaErrs errs = cfg.resolve();
+
+        assertEquals(0, errs.errs().size());
+
+        TableSchema table = cfg.findTable("mytable");
+        assertNotNull(table);
+
+        // 字段类型应该是 FList<STRING>
+        FieldSchema field = table.findField("modes");
+        assertNotNull(field);
+        assertTrue(field.type() instanceof FieldType.FList);
+        FieldType.FList fList = (FieldType.FList) field.type();
+        assertEquals(FieldType.Primitive.STRING, fList.item());
+
+        // 应该有外键
+        ForeignKeySchema fk = table.findForeignKey("modes");
+        assertNotNull(fk);
+        assertEquals("ArgCaptureMode", fk.refTable());
+        assertTrue(fk.meta().isFromEnumType());
+    }
+
+    @Test
+    public void ok_EnumFieldInMapKey() {
+        // enum 字段在 map key 中应转换为 map<str, ...>，但不创建外键（map key 不支持外键）
+        String str = """
+                enum ArgCaptureMode {
+                    Snapshot;
+                    Dynamic;
+                }
+                table mytable[id] {
+                    id:int;
+                    modeToValue:map<ArgCaptureMode,int> (pack);
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        CfgSchemaErrs errs = cfg.resolve();
+
+        assertEquals(0, errs.errs().size());
+
+        TableSchema table = cfg.findTable("mytable");
+        assertNotNull(table);
+
+        // 字段类型应该是 FMap<STRING, INT>
+        FieldSchema field = table.findField("modeToValue");
+        assertNotNull(field);
+        assertTrue(field.type() instanceof FieldType.FMap);
+        FieldType.FMap fMap = (FieldType.FMap) field.type();
+        assertEquals(FieldType.Primitive.STRING, fMap.key());
+        assertEquals(FieldType.Primitive.INT, fMap.value());
+
+        // 不应该有外键（map key 不支持外键）
+        ForeignKeySchema fk = table.findForeignKey("modeToValue");
+        assertNull(fk);
+    }
+
+    @Test
+    public void ok_EnumFieldInMapValue() {
+        // enum 字段在 map value 中应转换为 map<..., str> + 外键
+        String str = """
+                enum ArgCaptureMode {
+                    Snapshot;
+                    Dynamic;
+                }
+                table mytable[id] {
+                    id:int;
+                    idToMode:map<int,ArgCaptureMode> (pack);
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        CfgSchemaErrs errs = cfg.resolve();
+
+        assertEquals(0, errs.errs().size());
+
+        TableSchema table = cfg.findTable("mytable");
+        assertNotNull(table);
+
+        // 字段类型应该是 FMap<INT, STRING>
+        FieldSchema field = table.findField("idToMode");
+        assertNotNull(field);
+        assertTrue(field.type() instanceof FieldType.FMap);
+        FieldType.FMap fMap = (FieldType.FMap) field.type();
+        assertEquals(FieldType.Primitive.INT, fMap.key());
+        assertEquals(FieldType.Primitive.STRING, fMap.value());
+
+        // 应该有外键（map value 支持外键）
+        ForeignKeySchema fk = table.findForeignKey("idToMode");
+        assertNotNull(fk);
+        assertEquals("ArgCaptureMode", fk.refTable());
+        assertTrue(fk.meta().isFromEnumType());
+    }
+
 }

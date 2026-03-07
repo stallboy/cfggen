@@ -13,6 +13,7 @@ schema_ele
     : struct_decl
     | interface_decl
     | table_decl
+    | enum_decl
     ;
 
 // 2. High-level Structures (Struct, Interface, Table)
@@ -26,6 +27,14 @@ interface_decl
 
 table_decl
     : comment* TABLE ns_ident key metadata LC_COMMENT (field_decl | foreign_decl | key_decl)+ RC
+    ;
+
+enum_decl
+    : comment* ENUM ns_ident metadata LC_COMMENT enum_value* RC
+    ;
+
+enum_value
+    : comment* identifier SEMI_COMMENT
     ;
 
 // 3. Members & Fields (字段与定义)
@@ -93,6 +102,7 @@ identifier
     | STRUCT
     | INTERFACE
     | TABLE
+    | ENUM
     | TLIST
     | TMAP
     | TBASE
@@ -111,6 +121,7 @@ comment
 STRUCT      : 'struct';
 INTERFACE   : 'interface';
 TABLE       : 'table';
+ENUM        : 'enum';
 TLIST       : 'list';
 TMAP        : 'map';
 

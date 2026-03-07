@@ -1,6 +1,8 @@
 package configgen.value;
 
+import configgen.data.Source;
 import configgen.schema.*;
+import configgen.schema.Metadata.MetaEnumValues;
 
 import java.util.*;
 
@@ -16,6 +18,25 @@ public class VTableCreator {
     }
 
     public VTable create(List<VStruct> valueList) {
+        // 检查是否是 schema 定义的 enum
+        MetaEnumValues enumValues = tableSchema.meta().getEnumValues();
+
+        if (enumValues != null) {
+            // 生成虚拟数据
+            valueList = new ArrayList<>();
+            Source autoSource = Source.of();  // 自动生成的数据使用空 Source
+            for (MetaEnumValues.EnumValue ev : enumValues.values()) {
+                VStruct vStruct = new VStruct(
+                    tableSchema,  // 使用 tableSchema 作为结构定义
+                    List.of(
+                        new VString(ev.name(), autoSource),
+                        new VString(ev.comment(), autoSource)
+                    ),
+                    autoSource
+                );
+                valueList.add(vStruct);
+            }
+        }
         // 收集主键和唯一键
         SequencedMap<Value, VStruct> primaryKeyMap = new LinkedHashMap<>();
         SequencedMap<List<String>, SequencedMap<Value, VStruct>> uniqueKeyValueSetMap = new LinkedHashMap<>();

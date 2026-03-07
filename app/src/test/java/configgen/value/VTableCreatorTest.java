@@ -126,4 +126,47 @@ class VTableCreatorTest {
         }
     }
 
+    @Test
+    void create_schemaEnumVirtualData() {
+        // 测试 schema 级别 enum 的虚拟数据生成
+        String str = """
+                enum ArgCaptureMode {
+                    Snapshot; // 快照模式
+                    Dynamic;  // 动态模式
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        cfg.resolve().checkErrors();
+        TableSchema enumTable = cfg.findTable("ArgCaptureMode");
+        assertNotNull(enumTable);
+
+        // 使用空的 valueList，VTableCreator 应该自动生成虚拟数据
+        CfgValueErrs errs = CfgValueErrs.of();
+        VTable vTable = new VTableCreator(enumTable, errs).create(List.of());
+
+        // 验证虚拟数据
+        assertEquals(2, vTable.valueList().size());
+
+        // 验证第一行
+        VStruct row1 = vTable.valueList().get(0);
+        assertEquals(2, row1.values().size());
+        assertTrue(row1.values().get(0) instanceof VString);
+        assertEquals("Snapshot", ((VString) row1.values().get(0)).value());
+        assertTrue(row1.values().get(1) instanceof VString);
+        assertEquals("快照模式", ((VString) row1.values().get(1)).value());
+
+        // 验证第二行
+        VStruct row2 = vTable.valueList().get(1);
+        assertEquals(2, row2.values().size());
+        assertTrue(row2.values().get(0) instanceof VString);
+        assertEquals("Dynamic", ((VString) row2.values().get(0)).value());
+        assertTrue(row2.values().get(1) instanceof VString);
+        assertEquals("动态模式", ((VString) row2.values().get(1)).value());
+
+        // 验证 enumNames
+        assertNotNull(vTable.enumNames());
+        assertTrue(vTable.enumNames().contains("Snapshot"));
+        assertTrue(vTable.enumNames().contains("Dynamic"));
+    }
+
 }

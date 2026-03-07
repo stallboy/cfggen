@@ -360,4 +360,58 @@ class CfgReaderTest {
         assertTrue(comment.contains("只有行尾注释"));
         assertFalse(comment.contains(">>>"));
     }
+
+    @Test
+    void parseEnumDecl() {
+        // 测试 schema 级别的 enum 声明
+        String str = """
+                enum ArgCaptureMode {
+                    Snapshot; // 快照模式
+                    Dynamic;  // 动态模式
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        assertEquals(1, cfg.items().size());
+
+        TableSchema table = (TableSchema) cfg.items().getFirst();
+        assertEquals("ArgCaptureMode", table.name());
+        assertEquals(List.of("name"), table.primaryKey().fields());
+        assertTrue(table.entry() instanceof EntryType.EEnum e && e.field().equals("name"));
+
+        // 验证 enumValues
+        Metadata.MetaEnumValues enumValues = table.meta().getEnumValues();
+        assertNotNull(enumValues);
+        assertEquals(2, enumValues.values().size());
+        assertEquals("Snapshot", enumValues.values().get(0).name());
+        assertEquals("快照模式", enumValues.values().get(0).comment());
+        assertEquals("Dynamic", enumValues.values().get(1).name());
+        assertEquals("动态模式", enumValues.values().get(1).comment());
+
+        // 验证自动生成的字段
+        assertEquals(2, table.fields().size());
+        assertEquals("name", table.fields().get(0).name());
+        assertEquals(Primitive.STRING, table.fields().get(0).type());
+        assertEquals("comment", table.fields().get(1).name());
+        assertEquals(Primitive.STRING, table.fields().get(1).type());
+    }
+
+    @Test
+    void parseEnumWithLeadingComment() {
+        // 测试带有声明前注释的 enum
+        String str = """
+                // 参数捕获模式
+                // 定义参数在触发时的捕获方式
+                enum ArgCaptureMode {
+                    Snapshot; // 快照模式
+                    Dynamic;  // 动态模式
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        assertEquals(1, cfg.items().size());
+
+        TableSchema table = (TableSchema) cfg.items().getFirst();
+        String comment = table.meta().data().get("_comment") instanceof Metadata.MetaStr(String c) ? c : "";
+        assertTrue(comment.contains("参数捕获模式"));
+        assertTrue(comment.contains("定义参数在触发时的捕获方式"));
+    }
 }

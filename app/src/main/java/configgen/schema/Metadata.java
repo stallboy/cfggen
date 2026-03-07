@@ -1,6 +1,7 @@
 package configgen.schema;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Objects;
 import java.util.SequencedMap;
 import java.util.Set;
@@ -24,6 +25,10 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     }
 
     public record MetaStr(String value) implements MetaValue {
+    }
+
+    public record MetaEnumValues(List<EnumValue> values) implements MetaValue {
+        public record EnumValue(String name, String comment) {}
     }
 
     public static Metadata of() {
@@ -138,6 +143,8 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     private static final String HAS_BLOCK = "_hasBlock";
     private static final String HAS_MAP = "_hasMap";
     private static final String HAS_TEXT = "_hasText";
+    private static final String ENUM_VALUES = "_enumValues";
+    private static final String FROM_ENUM_TYPE = "_fromEnumType";
 
     private static final String JSON = "json"; // 这个表用json来分文件存
     private static final String NULLABLE = "nullable";
@@ -154,11 +161,11 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     private static final String MUST_FILL = "mustFill";
     private static final String ROOT = "root";
 
-    private static final Set<String> stateTags = Set.of(SPAN, HAS_REF, HAS_BLOCK, HAS_MAP, HAS_TEXT);
+    private static final Set<String> stateTags = Set.of(SPAN, HAS_REF, HAS_BLOCK, HAS_MAP, HAS_TEXT, ENUM_VALUES, FROM_ENUM_TYPE);
 
     private static final Set<String> reservedTags = Set.of(COMMENT, SPAN, HAS_REF, HAS_BLOCK, HAS_MAP, HAS_TEXT,
             JSON, NULLABLE, ENUM_REF, DEFAULT_IMPL, ENTRY, ENUM, COLUMN_MODE, PACK, SEP, FIX, BLOCK,
-            LOWER_CASE, MUST_FILL, ROOT);
+            LOWER_CASE, MUST_FILL, ROOT, ENUM_VALUES, FROM_ENUM_TYPE);
 
     public String getComment() {
         if (data.get(COMMENT) instanceof MetaStr(String value)) {
@@ -181,6 +188,38 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
             return value;
         }
         return "";
+    }
+
+    // enum table 的值列表
+    public void putEnumValues(List<MetaEnumValues.EnumValue> values) {
+        data.put(ENUM_VALUES, new MetaEnumValues(values));
+    }
+
+    public MetaEnumValues removeEnumValues() {
+        MetaValue v = data.remove(ENUM_VALUES);
+        return v instanceof MetaEnumValues e ? e : null;
+    }
+
+    public MetaEnumValues getEnumValues() {
+        MetaValue v = data.get(ENUM_VALUES);
+        return v instanceof MetaEnumValues e ? e : null;
+    }
+
+    public boolean hasEnumValues() {
+        return data.get(ENUM_VALUES) instanceof MetaEnumValues;
+    }
+
+    // 外键来自 enum 类型（用于 CfgWriter 还原）
+    public void putFromEnumType() {
+        data.put(FROM_ENUM_TYPE, TAG);
+    }
+
+    public boolean removeFromEnumType() {
+        return data.remove(FROM_ENUM_TYPE) != null;
+    }
+
+    public boolean isFromEnumType() {
+        return data.containsKey(FROM_ENUM_TYPE);
     }
 
     public void putNullable() {

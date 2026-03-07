@@ -42,7 +42,14 @@ public class CfgWriter {
         switch (item) {
             case StructSchema structSchema -> writeStruct(structSchema, prefix);
             case InterfaceSchema interfaceSchema -> writeInterface(interfaceSchema, prefix);
-            case TableSchema tableSchema -> writeTable(tableSchema, prefix);
+            case TableSchema tableSchema -> {
+                MetaEnumValues enumValues = tableSchema.meta().getEnumValues();
+                if (enumValues != null) {
+                    writeEnum(tableSchema, enumValues, prefix);
+                } else {
+                    writeTable(tableSchema, prefix);
+                }
+            }
         }
 
     }
@@ -64,6 +71,23 @@ public class CfgWriter {
             println("%s\t%s;", prefix, keyStr(keySchema));
         }
         writeStructural(table, prefix);
+        println("%s}", prefix);
+        println();
+    }
+
+    public void writeEnum(TableSchema table, MetaEnumValues enumValues, String prefix) {
+        Metadata meta = table.meta().copy();
+        meta.removeEnumValues();  // 不写出 enumValues，因为会还原为 enum 格式
+
+        ParsedComment comment = CommentUtils.parseComment(meta.removeComment());
+        writeLeadingComment(comment, prefix);
+
+        String name = useLastName ? table.lastName() : table.name();
+        println("%senum %s%s {%s", prefix, name, metadataStr(meta), comment.formatTrailing());
+        for (MetaEnumValues.EnumValue ev : enumValues.values()) {
+            String valueComment = ev.comment().isEmpty() ? "" : " // " + ev.comment();
+            println("%s\t%s;%s", prefix, ev.name(), valueComment);
+        }
         println("%s}", prefix);
         println();
     }
@@ -110,7 +134,19 @@ public class CfgWriter {
             meta.putFmt(f.fmt());
 
             ForeignKeySchema fk = structural.findForeignKey(f.name());
-            String fkStr = fk == null ? "" : foreignStr(fk);
+
+            // 检查是否是 enum 类型的字段
+            String typeStr;
+            String fkStr;
+            if (fk != null && fk.meta().isFromEnumType()) {
+                // enum 字段：还原为 enum 类型名，不写外键符号
+                typeStr = fk.refTable();  // 如 "ArgCaptureMode"
+                fkStr = "";
+            } else {
+                typeStr = typeStr(f.type());
+                fkStr = fk == null ? "" : foreignStr(fk);
+            }
+
             if (fk != null) {
                 foreignToMeta(fk, meta);
             }
@@ -119,10 +155,14 @@ public class CfgWriter {
             writeLeadingComment(comment, prefix + "\t");
 
             println("%s\t%s:%s%s%s;%s",
-                    prefix, f.name(), typeStr(f.type()), fkStr, metadataStr(meta), comment.formatTrailing());
+                    prefix, f.name(), typeStr, fkStr, metadataStr(meta), comment.formatTrailing());
         }
 
         for (ForeignKeySchema fk : structural.foreignKeys()) {
+            // 跳过 fromEnumType 的外键（已在字段中处理）和字段同名的外键
+            if (fk.meta().isFromEnumType()) {
+                continue;
+            }
             if (structural.findField(fk.name()) == null) {
                 Metadata meta = fk.meta().copy();
                 foreignToMeta(fk, meta);
@@ -244,6 +284,7 @@ public class CfgWriter {
             case MetaFloat metaFloat -> String.format("%s=%f", k, metaFloat.value());
             case MetaInt metaInt -> String.format("%s=%d", k, metaInt.value());
             case MetaStr metaStr -> String.format("%s='%s'", k, metaStr.value());
+            case MetaEnumValues ignored -> "";  // enumValues 不会写出
         };
     }
 

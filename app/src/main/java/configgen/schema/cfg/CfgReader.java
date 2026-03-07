@@ -61,6 +61,10 @@ public enum CfgReader {
                     TableSchema table = read_table(ctx, pkgNameDot);
                     destination.add(table);
                 }
+                case Enum_declContext ctx -> {
+                    TableSchema enumTable = read_enum(ctx, pkgNameDot);
+                    destination.add(enumTable);
+                }
 
                 default -> throw new IllegalStateException("Unexpected value: " + child);
             }
@@ -85,6 +89,41 @@ public enum CfgReader {
 
         return new TableSchema(pkgNameDot + name, primaryKey, entry, isColumnMode, meta,
                 ff.fieldSchemas(), ff.foreignKeySchemas(), uniqueKeys);
+    }
+
+    private TableSchema read_enum(Enum_declContext ctx, String pkgNameDot) {
+        String name = read_ns_ident(ctx.ns_ident());
+        String lcComment = extractCommentFromToken(ctx.LC_COMMENT().getText());
+        Metadata meta = read_metadata_with_comments(ctx.comment(), ctx.metadata(), lcComment);
+
+        // 解析 enum 值
+        List<MetaEnumValues.EnumValue> enumValues = new ArrayList<>();
+        for (Enum_valueContext evc : ctx.enum_value()) {
+            String valueName = evc.identifier().getText();
+            String valueComment = extractCommentFromToken(evc.SEMI_COMMENT().getText());
+            // 合并 leading comment
+            for (CommentContext cc : evc.comment()) {
+                valueComment = CommentUtils.buildComment(evc.comment(), valueComment);
+            }
+            enumValues.add(new MetaEnumValues.EnumValue(valueName, valueComment));
+        }
+
+        meta.putEnumValues(enumValues);
+
+        // 创建虚拟 table schema
+        return new TableSchema(
+                pkgNameDot + name,
+                new KeySchema(List.of("name")),
+                new EntryType.EEnum("name"),
+                false,  // isColumnMode
+                meta,
+                List.of(
+                        new FieldSchema("name", Primitive.STRING, FieldFormat.AutoOrPack.AUTO, Metadata.of()),
+                        new FieldSchema("comment", Primitive.STRING, FieldFormat.AutoOrPack.AUTO, Metadata.of())
+                ),
+                List.of(),
+                List.of()
+        );
     }
 
     private InterfaceSchema read_interface(Interface_declContext ctx, String pkgNameDot) {
