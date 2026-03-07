@@ -1,7 +1,6 @@
 // noinspection UnnecessaryLocalVariableJS,JSUnusedLocalSymbols,JSUnusedGlobalSymbols,DuplicatedCode,SpellCheckingInspection
 
 import {Stream, LoadErrors, ToStringList, ToStringMap} from "./ConfigUtil";
-
 export namespace Config {
 
 export class LevelRank {
@@ -1286,6 +1285,76 @@ export class Equip_Rank {
 
 }
 
+export class Other_ArgCaptureMode {
+    private static _Snapshot : Other_ArgCaptureMode;
+    static get Snapshot() :Other_ArgCaptureMode { return this._Snapshot; }
+
+    private static _Dynamic : Other_ArgCaptureMode;
+    static get Dynamic() :Other_ArgCaptureMode { return this._Dynamic; }
+
+    private _name!: string;
+    get Name(): string { return this._name; }
+    private _comment!: string;
+    get Comment(): string { return this._comment; }
+
+    toString() : string {
+        return "(" + this._name + "," + this._comment + ")";
+    }
+
+    
+    private static all: Map<string, Other_ArgCaptureMode>;
+
+    static Get(name: string) : Other_ArgCaptureMode | undefined {
+        return this.all.get(name)
+    }
+
+    static All() : Map<string, Other_ArgCaptureMode> {
+        return this.all;
+    }
+
+    static Initialize(os: Stream, errors: LoadErrors) {
+        this.all = new Map<string, Other_ArgCaptureMode>();
+        for (let c = os.ReadInt32(); c > 0; c--)
+        {
+            let self = this._create(os);
+            this.all.set(self._name, self);
+            if (self._name.trim().length === 0) {
+                continue;
+            }
+            switch(self._name.trim()) {
+                case "Snapshot":
+                    if (this._Snapshot != null)
+                        errors.EnumDup("other.ArgCaptureMode", "Snapshot");
+                    this._Snapshot = self;
+                    break;
+                case "Dynamic":
+                    if (this._Dynamic != null)
+                        errors.EnumDup("other.ArgCaptureMode", "Dynamic");
+                    this._Dynamic = self;
+                    break;
+                default:
+                    errors.EnumDataAdd("other.ArgCaptureMode", self._name);
+                    break;
+            }
+        }
+
+        if (this._Snapshot == null) {
+            errors.EnumNull("other.ArgCaptureMode", "Snapshot");
+        }
+        if (this._Dynamic == null) {
+            errors.EnumNull("other.ArgCaptureMode", "Dynamic");
+        }
+    }
+
+    static _create(os: Stream) : Other_ArgCaptureMode {
+        const self = new Other_ArgCaptureMode();
+        self._name = os.ReadStringInPool();
+        self._comment = os.ReadStringInPool();
+        return self;
+    }
+
+}
+
 export class Other_Drop {
     private _dropid!: number;
     /* 序号 */
@@ -1350,11 +1419,19 @@ export class Other_Keytest {
     get Id3(): number { return this._id3; }
     private _ids!: number[];
     get Ids(): number[] { return this._ids; }
+    private _enumTest!: string;
+    get EnumTest(): string { return this._enumTest; }
+    private _enumList!: string[];
+    get EnumList(): string[] { return this._enumList; }
 
     private _RefIds!: Other_Signin[];
     get RefIds(): Other_Signin[] { return this._RefIds; }
+    private _RefEnumTest!: Other_ArgCaptureMode;
+    get RefEnumTest(): Other_ArgCaptureMode { return this._RefEnumTest; }
+    private _RefEnumList!: Other_ArgCaptureMode[];
+    get RefEnumList(): Other_ArgCaptureMode[] { return this._RefEnumList; }
     toString() : string {
-        return "(" + this._id1 + "," + this._id2 + "," + this._id3 + "," + ToStringList(this._ids) + ")";
+        return "(" + this._id1 + "," + this._id2 + "," + this._id3 + "," + ToStringList(this._ids) + "," + this._enumTest + "," + ToStringList(this._enumList) + ")";
     }
 
     
@@ -1418,6 +1495,10 @@ export class Other_Keytest {
         self._ids = [];
         for (let c = os.ReadInt32(); c > 0; c--)
             self._ids.push(os.ReadInt32());
+        self._enumTest = os.ReadStringInPool();
+        self._enumList = [];
+        for (let c = os.ReadInt32(); c > 0; c--)
+            self._enumList.push(os.ReadStringInPool());
         return self;
     }
 
@@ -1429,6 +1510,19 @@ export class Other_Keytest {
                 errors.RefNull("other.keytest", this.toString(), "ids");
             }
             this._RefIds.push(r);
+        }
+        const _tmpRefEnumTest = Other_ArgCaptureMode.Get(this._enumTest);
+        if (_tmpRefEnumTest === undefined) {
+            errors.RefNull("other.keytest", this.toString(), "enumTest");
+        }
+        this._RefEnumTest = _tmpRefEnumTest!;
+        this._RefEnumList = [];
+        for (const e of this._enumList) {
+            const r = Other_ArgCaptureMode.Get(e);
+            if (r === undefined) {
+                errors.RefNull("other.keytest", this.toString(), "enumList");
+            }
+            this._RefEnumList.push(r);
         }
     }
 }
@@ -1572,13 +1666,19 @@ export class Other_Monster {
     private _lootItemId!: number;
     /* item */
     get LootItemId(): number { return this._lootItemId; }
+    private _enumMap1!: Map<string, number>;
+    get EnumMap1(): Map<string, number> { return this._enumMap1; }
+    private _enumMap2!: Map<number, string>;
+    get EnumMap2(): Map<number, string> { return this._enumMap2; }
 
     private _RefLoot!: Other_Lootitem;
     get RefLoot(): Other_Lootitem { return this._RefLoot; }
     private _RefAllLoot!: Other_Loot;
     get RefAllLoot(): Other_Loot { return this._RefAllLoot; }
+    private _RefEnumMap2!: Map<number, Other_ArgCaptureMode>;
+    get RefEnumMap2(): Map<number, Other_ArgCaptureMode> { return this._RefEnumMap2; }
     toString() : string {
-        return "(" + this._id + "," + ToStringList(this._posList) + "," + this._lootId + "," + this._lootItemId + ")";
+        return "(" + this._id + "," + ToStringList(this._posList) + "," + this._lootId + "," + this._lootItemId + "," + ToStringMap(this._enumMap1) + "," + ToStringMap(this._enumMap2) + ")";
     }
 
     
@@ -1615,6 +1715,14 @@ export class Other_Monster {
             self._posList.push(Position._create(os));
         self._lootId = os.ReadInt32();
         self._lootItemId = os.ReadInt32();
+        self._enumMap1  = new Map<string, number>();
+        for (let c = os.ReadInt32(); c > 0; c--) {
+            self._enumMap1.set(os.ReadStringInPool(), os.ReadInt32());
+        }
+        self._enumMap2  = new Map<number, string>();
+        for (let c = os.ReadInt32(); c > 0; c--) {
+            self._enumMap2.set(os.ReadInt32(), os.ReadStringInPool());
+        }
         return self;
     }
 
@@ -1629,6 +1737,14 @@ export class Other_Monster {
             errors.RefNull("other.monster", this.toString(), "AllLoot");
         }
         this._RefAllLoot = _tmpRefAllLoot!;
+        this._RefEnumMap2 = new Map<number, Other_ArgCaptureMode>();
+        for (const e of this._enumMap2.entries()) {
+            const v = Other_ArgCaptureMode.Get(e[1]);
+            if (v === undefined) {
+                errors.RefNull("other.monster", this.toString(), "enumMap2");
+            }
+            this._RefEnumMap2.set(e[0], v);
+        }
     }
 }
 
@@ -2073,6 +2189,7 @@ export class Processor {
             "equip.jewelrysuit",
             "equip.jewelrytype",
             "equip.rank",
+            "other.ArgCaptureMode",
             "other.drop",
             "other.keytest",
             "other.loot",
@@ -2135,6 +2252,10 @@ export class Processor {
                 case "equip.rank":
                     configNulls.delete(tableName);
                     Equip_Rank.Initialize(os, errors);
+                    break;
+                case "other.ArgCaptureMode":
+                    configNulls.delete(tableName);
+                    Other_ArgCaptureMode.Initialize(os, errors);
                     break;
                 case "other.drop":
                     configNulls.delete(tableName);
