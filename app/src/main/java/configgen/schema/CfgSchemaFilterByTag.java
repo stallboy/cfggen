@@ -205,8 +205,11 @@ public class CfgSchemaFilterByTag {
             }
         }
         List<KeySchema> uks = filterUniqKeys(table, filteredFields);
+
+        Metadata meta = table.meta().copyWithoutState();
+
         return new TableSchema(table.name(), table.primaryKey().copy(), entry, table.isColumnMode(),
-                table.meta().copyWithoutState(), filteredFields, List.of(), uks);
+                meta, filteredFields, List.of(), uks);
     }
 
     /**

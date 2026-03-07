@@ -5,8 +5,11 @@ public class Monster {
     private java.util.List<config.Position> posList;
     private int lootId;
     private int lootItemId;
+    private java.util.Map<String, Integer> enumMap1;
+    private java.util.Map<Integer, String> enumMap2;
     private config.other.Lootitem RefLoot;
     private config.other.Loot RefAllLoot;
+    private java.util.Map<Integer, config.other.ArgCaptureMode> RefEnumMap2;
 
     private Monster() {
     }
@@ -27,6 +30,28 @@ public class Monster {
         }
         self.lootId = input.readInt();
         self.lootItemId = input.readInt();
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.enumMap1 = java.util.Collections.emptyMap();
+            } else {
+                self.enumMap1 = new java.util.LinkedHashMap<>(c);
+                for (; c > 0; c--) {
+                    self.enumMap1.put(input.readStringInPool(), input.readInt());
+                }
+            }
+        }
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.enumMap2 = java.util.Collections.emptyMap();
+            } else {
+                self.enumMap2 = new java.util.LinkedHashMap<>(c);
+                for (; c > 0; c--) {
+                    self.enumMap2.put(input.readInt(), input.readStringInPool());
+                }
+            }
+        }
         return self;
     }
 
@@ -52,6 +77,14 @@ public class Monster {
         return lootItemId;
     }
 
+    public java.util.Map<String, Integer> getEnumMap1() {
+        return enumMap1;
+    }
+
+    public java.util.Map<Integer, String> getEnumMap2() {
+        return enumMap2;
+    }
+
     public config.other.Lootitem refLoot() {
         return RefLoot;
     }
@@ -60,9 +93,13 @@ public class Monster {
         return RefAllLoot;
     }
 
+    public java.util.Map<Integer, config.other.ArgCaptureMode> refEnumMap2() {
+        return RefEnumMap2;
+    }
+
     @Override
     public String toString() {
-        return "(" + id + "," + posList + "," + lootId + "," + lootItemId + ")";
+        return "(" + id + "," + posList + "," + lootId + "," + lootItemId + "," + enumMap1 + "," + enumMap2 + ")";
     }
 
     public void _resolveDirect(config.ConfigMgr mgr) {
@@ -70,6 +107,16 @@ public class Monster {
         java.util.Objects.requireNonNull(RefLoot);
         RefAllLoot = mgr.other_loot_All.get(lootId);
         java.util.Objects.requireNonNull(RefAllLoot);
+        if (enumMap2.isEmpty()) {
+            RefEnumMap2 = java.util.Collections.emptyMap();
+        } else {
+            RefEnumMap2 = new java.util.LinkedHashMap<>(enumMap2.size());
+            for (java.util.Map.Entry<Integer, String> e : enumMap2.entrySet()) {
+                config.other.ArgCaptureMode rv = config.other.ArgCaptureMode.get(e.getValue());
+                java.util.Objects.requireNonNull(rv);
+                RefEnumMap2.put(e.getKey(), rv);
+            }
+        }
     }
 
     public void _resolve(config.ConfigMgr mgr) {

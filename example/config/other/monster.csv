@@ -1,4 +1,4 @@
-id,posList,loot,item
-id,posList,lootId,lootItemId
-1,1;2;3:11;22;33:111;222;333,2,40005
-2,33;44;55,2,40006
+id,posList,loot,item,
+id,posList,lootId,lootItemId,enumMap1,enumMap2
+1,1;2;3:11;22;33:111;222;333,2,40005,,
+2,33;44;55,2,40006,,

@@ -6,5 +6,6 @@
 	"ids":[
 		11,
 		12
-	]
+	],
+	"enumTest": "Dynamic"
 }

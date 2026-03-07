@@ -161,7 +161,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     private static final String MUST_FILL = "mustFill";
     private static final String ROOT = "root";
 
-    private static final Set<String> stateTags = Set.of(SPAN, HAS_REF, HAS_BLOCK, HAS_MAP, HAS_TEXT, ENUM_VALUES, FROM_ENUM_TYPE);
+    private static final Set<String> stateTags = Set.of(SPAN, HAS_REF, HAS_BLOCK, HAS_MAP, HAS_TEXT);
 
     private static final Set<String> reservedTags = Set.of(COMMENT, SPAN, HAS_REF, HAS_BLOCK, HAS_MAP, HAS_TEXT,
             JSON, NULLABLE, ENUM_REF, DEFAULT_IMPL, ENTRY, ENUM, COLUMN_MODE, PACK, SEP, FIX, BLOCK,

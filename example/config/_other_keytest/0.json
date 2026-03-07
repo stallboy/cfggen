@@ -1,3 +1,4 @@
 {
-	"$type":"other.keytest"
+	"$type":"other.keytest",
+	"enumTest": "Snapshot"
 }

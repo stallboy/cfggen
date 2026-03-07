@@ -39,6 +39,12 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
                 case TableSchema table -> {
                     CfgData.DTable th = dataHeaders.remove(table.name());
 
+                    // schema enum 不需要外部数据文件，数据从 MetaEnumValues 自动生成
+                    if (table.meta().hasEnumValues()) {
+                        alignedCfg.add(table.copy());
+                        continue;
+                    }
+
                     if (table.isJson()) {
                         alignedCfg.add(table.copy());
                         if (th != null) {
