@@ -1,0 +1,50 @@
+{
+  "skill_name": "cfggen-architect",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "创建一个物品表，包含 id、名称、类型（武器/防具/消耗品）、价格、描述、是否可堆叠",
+      "expected_output": "生成一个简单的 item.cfg 文件，Schema Enum 定义类型。",
+      "files": [],
+      "expectations": [
+        "输出包含 enum ItemType 定义",
+        "输出包含 table item 定义",
+        "item 表包含 id, name, type, price, description, stackable 字段",
+        "使用 Schema Enum 而不是 Table Enum"
+        "生成了 architecture-plan.md 文档"
+        "目录结构正确（config/config.cfg）"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "设计一个任务系统：\n1. 任务表包含任务id、名称、描述、完成条件（接口）、奖励列表\n2. 完成条件接口支持：击杀怪物、收集物品、与NPC对话、条件组合(And/Or)\n3. 奖励包含经验和物品列表\n4. 任务有前置任务和后续任务",
+      "expected_output": "生成 task.cfg，包含 Condition interface（多态）、Reward struct、task table。",
+      "files": [],
+      "expectations": [
+        "输出包含 interface Condition 定义",
+        "Condition 接口包含 KillMonster, CollectItem, TalkToNpc 实现",
+        "Condition 接口包含 And/Or 组合实现",
+        "输出包含 struct Reward 定义",
+        "输出包含 table task 定义",
+        "task 表有 preTask 和 nextTask 外键字段",
+        "递归结构使用 (pack) 属性"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "设计一个技能系统的核心配置：\n1. 技能表包含id、名称、技能标签、施放消耗、冷却时间、效果\n2. 效果接口支持：造成伤害、治疗、挂载Buff\n3. Buff表包含id、名称、持续时间、修改属性、周期效果\n4. 支持事件触发器，监听受击事件触发反伤",
+      "expected_output": "参考 skill-system-design.md 生成 GAS 风格战斗架构。",
+      "files": [],
+      "expectations": [
+        "输出包含 GameplayTag 系统或类似的标签机制",
+        "输出包含 interface Effect 定义",
+        "Effect 接口包含 Damage, Heal, ApplyStatus 实现",
+        "输出包含 interface Behavior 定义",
+        "Behavior 接口包含 Trigger 实现（事件触发器）",
+        "Trigger 支持监听事件并响应",
+        "模块化拆分（core/skill/buff 等模块）",
+        "生成了 architecture-plan.md 文档"
+      ]
+    }
+  ]
+}
