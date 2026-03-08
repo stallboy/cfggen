@@ -27,10 +27,19 @@ public class SchemaToCsvTool extends Tool {
         cfgSchema.resolve().checkErrors();
 
         for (TableSchema table : cfgSchema.tableMap().values()) {
-            if (table.isJson()) continue;
+            if (table.isJson()) {
+                continue;
+            }
+            if (table.meta().hasEnumValues()){
+                continue;
+            }
 
-            Path csvPath = dataDir.resolve(table.namespace())
-                                  .resolve(table.lastName() + ".csv");
+            Path csvPath = dataDir;
+            String ns = table.namespace();
+            if (!ns.isEmpty()) {
+                csvPath = csvPath.resolve(ns.replace('.', '/'));
+            }
+            csvPath = csvPath.resolve(table.lastName() + ".csv");
             if (Files.exists(csvPath)) {
                 Logger.log("Skip existing: %s", csvPath);
                 continue;
