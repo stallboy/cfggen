@@ -110,3 +110,4 @@
 **/node_modules
 **/.idea
 /cfgdev/schema-gen-plugin/.claude
+/cfggen.sln

@@ -98,7 +98,49 @@ description: 游戏架构师与数据驱动配置生成助手。当用户提到"
 
 ---
 
-### 阶段四：生成文件
+### 阶段四：映射设计 (Mapping Design)
+
+**目标**：确定复杂数据结构如何在 Excel 表格中表示。
+
+> ⚠️ **重要**：此阶段**仅适用于非 json table**。如果 table 声明了 `(json)` 元数据，则该表及其引用的所有结构都用 JSON 文件存储，无需考虑表格映射问题。
+
+#### 4.1 判断是否需要映射设计
+
+```cfg
+// json 存储，无需考虑映射
+table effect[id] (json) {
+    id:int;
+    logic:EffectLogic;  // ← EffectLogic 及其引用的结构都无需映射设计
+}
+
+// 传统 Excel 存储，需要考虑映射
+table task[id] {
+    id:int;
+    condition:Condition;  // ← Condition 及其引用的结构需要映射设计
+}
+```
+
+#### 4.2 映射机制选择
+
+| 映射方式 | 适用场景 | 占格规则 |
+|---------|---------|---------|
+| `auto` | 简单结构（默认） | 自动计算列数 |
+| `pack` | 减少列数、处理递归 | 压缩到 1 列 |
+| `sep='字符'` | 需要特定分隔符 | 压缩到 1 列 |
+| `fix=N` | 固定长度列表 | 固定 N × 元素列数 |
+| `block=N` | 变长列表垂直排列 | 横向固定，纵向扩展 |
+
+#### 4.3 关键规则
+
+1. **递归结构**：必须至少在一处使用 `pack` 打破循环
+2. **嵌套 block**：外层结构前需要有空列作为分隔标记
+3. **mustFill**：用于关键字段非空约束，防止 block 数据意外合并
+
+> **详细参考**：`references/tabular-mapping.md` 包含完整的映射机制说明、Excel 表格示例和最佳实践
+
+---
+
+### 阶段五：生成文件
 
 根据项目规模选择合适的文件组织方式：
 
@@ -253,3 +295,7 @@ parentid:int ->category.id (nullable); // 可空
 - **`references/skill-system-design.md`** - 战斗核心系统设计案例
   - 包含：GameplayTag、Ability/Effect/Status、事件管线、Trigger 模式、运行时架构
   - **用途**：当核心玩法涉及战斗/技能系统时，必须参考此文档
+
+- **`references/tabular-mapping.md`** - 表格映射机制详解
+  - 包含：auto/pack/sep/fix/block 五种映射方式、Excel 表格示例、递归结构处理、block 嵌套规则
+  - **用途**：设计非 json table 的数据结构时，需要参考此文档了解如何在 Excel 中表示复杂数据
