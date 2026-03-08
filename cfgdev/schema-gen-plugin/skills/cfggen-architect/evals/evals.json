@@ -10,8 +10,8 @@
         "输出包含 enum ItemType 定义",
         "输出包含 table item 定义",
         "item 表包含 id, name, type, price, description, stackable 字段",
-        "使用 Schema Enum 而不是 Table Enum"
-        "生成了 architecture-plan.md 文档"
+        "使用 Schema Enum 而不是 Table Enum",
+        "生成了 architecture-plan.md 文档",
         "目录结构正确（config/config.cfg）"
       ]
     },
