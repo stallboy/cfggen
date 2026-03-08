@@ -1,6 +1,6 @@
-# cfggen-schema-plugin
+# cfggen-architect
 
-根据自然语言描述或设计文档生成 cfggen 配表 schema 定义文件的 Claude Code 插件。
+游戏架构师与数据驱动配置生成 Claude Code 插件。根据策划文档或自然语言描述，生成符合 cfggen 规范的模块化 schema 定义文件。
 
 ## 安装
 
@@ -16,93 +16,104 @@ cp -r schema-gen-plugin ~/.claude/plugins/
 
 ## 使用方法
 
-### 基本用法
+直接向 Claude 描述您的配置需求即可：
 
-```bash
-/gen-schema 创建一个物品表，包含id、名称、类型、价格、描述
+```
+创建一个物品表，包含 id、名称、类型、价格、描述
 ```
 
-### 示例 1：简单数据表
-
-```bash
-/gen-schema 创建一个物品表，包含id、名称、类型、价格、描述
+```
+设计一个任务系统，包含多种完成条件（击杀怪物、收集物品）和奖励
 ```
 
-生成 `item.cfg`:
-
-```cfg
-// 物品配置表
-table item[id] {
-    id:int;           // 物品ID
-    name:str;         // 物品名称
-    type:str;         // 物品类型
-    price:int;        // 物品价格
-    description:text; // 物品描述
-}
 ```
-
-### 示例 2：复杂系统
-
-```bash
-/gen-schema 创建一个任务系统：
-1. 任务表包含任务id、名称、描述、完成条件（接口）、奖励列表
-2. 完成条件接口支持：击杀怪物、收集物品、与NPC对话
-3. 奖励包含经验和物品列表
-```
-
-### 示例 3：带关联的配置
-
-```bash
-/gen-schema 创建商店系统，包含商店表和商品表，商品引用物品配置
+设计一个技能系统，支持伤害、治疗、Buff，以及事件触发器（如反伤）
 ```
 
 ## 功能特性
 
 | 特性 | 说明 |
 |------|------|
-| 🎯 **自然语言输入** | 用中文描述配置需求，自动生成 CFG schema |
-| 🏗️ **完整语法支持** | 支持 struct、interface、table、外键、元数据等 |
-| 🔗 **智能关联** | 自动识别并生成外键关联关系（`->` 单向、`=>` 多向） |
-| 📝 **代码注释** | 自动添加清晰的中文注释 |
-| ✨ **多态支持** | 智能识别需要 interface 的多态场景 |
-| 📚 **DDD 方法论** | 运用领域驱动设计思想进行建模 |
+| 🎯 **自然语言输入** | 用中文描述需求，自动生成 CFG schema |
+| 🏗️ **战略设计** | 识别核心玩法，划分模块，定义依赖关系 |
+| ⚙️ **战术设计** | 实体建模、多态接口、值对象、枚举定义 |
+| ✅ **Schema Enum 支持** | 优先使用 `enum Name { Value; }` 语法定义编译时常量 |
+| 📚 **GAS 架构参考** | 战斗系统设计自动参考 skill-system-design.md |
+| 🧪 **可测试性设计** | 引导产出解耦、可 Mock 的配置结构 |
 
-## 组件说明
+## 技能结构
 
-### 命令
+```
+schema-gen-plugin/
+├── .claude-plugin/
+│   └── plugin.json
+├── skills/
+│   └── cfggen-architect/
+│       ├── SKILL.md                      # 核心技能文件
+│       ├── references/
+│       │   └── skill-system-design.md    # 战斗系统设计参考
+│       └── evals/
+│           └── evals.json                # 测试用例
+└── README.md
+```
 
-- **`/gen-schema`** - 主命令，根据自然语言描述生成 schema
+## 设计流程
 
-### Skills
+### 阶段一：战略设计
+1. 识别核心玩法 (Core)
+2. 划分子域与周边系统
+3. 定义模块依赖关系
 
-- **`cfg-grammar`** - CFG 语法规范参考
-  - `references/field-types.md` - 完整类型系统
-  - `references/metadata.md` - 元数据属性详细说明
-  - `references/patterns.md` - 设计模式和最佳实践
+### 阶段二：战术设计
+1. 识别实体 → `table`
+2. 识别多态点 → `interface`
+3. 识别值对象 → `struct`
+4. 识别枚举 → `enum` / Table Enum
 
-## CFG 语法规范
+### 阶段三：可测试性审查
+### 阶段四：生成文件
 
-生成的 schema 遵循 cfggen 规范：
+## CFG 语法示例
 
-- **[结构定义](../../docs/docs/cfggen/03.schema.md)** - struct、interface、table 基础语法
-- **[元数据配置](../../docs/docs/cfggen/07.othermetadatas.md)** - @column 等元数据用法
+### Schema Enum（优先使用）
 
-## 设计方法论
+```cfg
+enum ModifierOp {
+    Add;
+    Multiply;
+    Override;
+}
 
-本插件采用领域驱动设计（DDD）思想：
+// 使用
+op:ModifierOp;
+```
 
-1. **实体 (Entities) → `table`**：具有唯一标识的业务对象
-2. **多态点 (Polymorphism) → `interface`**：多种实现方式的场景
-3. **值对象 (Value Objects) → `struct`**：内聚的字段集合
+### Table Enum（策划扩展）
 
-## 约束说明
+```cfg
+table effecttype[id] (enum='name') {
+    id:int;
+    name:str;
+    desc:text;
+}
+```
 
-为简化学习曲线，本插件：
-- **不包含**唯一键定义
-- **不包含**复杂主键
+### 接口（多态）
 
-如需这些高级特性，请参考 cfggen 完整文档。
+```cfg
+interface Condition {
+    struct KillMonster { monsterid:int; count:int; }
+    struct CollectItem { itemid:int; count:int; }
+    struct And { left:Condition (pack); right:Condition (pack); }
+}
+```
 
-## 许可证
+## 战斗系统设计
 
-MIT
+当需求涉及战斗/技能系统时，技能会自动参考 `skill-system-design.md`，该文档定义了：
+
+- **GameplayTag** - 层级化标签系统
+- **Ability/Effect/Status** - 三层架构
+- **FloatValue** - 动态求值接口
+- **Trigger** - 事件触发器模式
+- **事件管线** - Pre/Post 两阶段提交
