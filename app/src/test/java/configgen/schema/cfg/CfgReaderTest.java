@@ -71,7 +71,7 @@ class CfgReaderTest {
         CfgSchema cfg = CfgReader.parse(str);
         assertEquals(1, cfg.items().size());
 
-        StructSchema struct = (StructSchema) cfg.items().get(0);
+        StructSchema struct = (StructSchema) cfg.items().getFirst();
         assertEquals("AttrRandom", struct.name());
 
         /*
@@ -85,7 +85,7 @@ class CfgReaderTest {
 
         assertEquals(AUTO, struct.fmt());
         assertEquals(1, struct.foreignKeys().size());
-        ForeignKeySchema fk = struct.foreignKeys().get(0);
+        ForeignKeySchema fk = struct.foreignKeys().getFirst();
         assertEquals("Attr", fk.name());
         assertEquals(fk.key().fields(), List.of("Attr"));
         assertEquals("common.fightattrs", fk.refTable());
@@ -127,39 +127,30 @@ class CfgReaderTest {
                 	struct BiographyAchievement {
                 		biographyid:int ->biography.biographyinfo;
                 	}
-
                 	struct TitleItemAchievement {
                 		commonitemid:int ->item.commonitem;
                 	}
-                                
                 	struct MainMenuUnlockAchievement {
                 		moduleopenid:int ->common.moduleopen;
                 	}
-                                
                 	struct VIPAchievement {
                 		vipLevel:int ->vip.vip;
                 	}
-                                
                 	struct TitleIdAchievement {
                 		titleid:int ->title.title;
                 	}
-                                
                 	struct EmptyAchievement {
                 		_dummy:int;
                 	}
-                                
                 	struct RushRankAchievement {
                 		rushrankid:int;
                 	}
-                                
                 	struct CommonAchievement {
                 		_dummy:int;
                 	}
-                                
                 	struct CatteryAchievement {
                 		typeid:int;
                 	}
-                                
                 }
                 """;
         CfgSchema cfg = CfgReader.parse(str);
@@ -414,4 +405,58 @@ class CfgReaderTest {
         assertTrue(comment.contains("参数捕获模式"));
         assertTrue(comment.contains("定义参数在触发时的捕获方式"));
     }
+
+    @Test
+    void parseStructWithSuffixComment() {
+        // 测试结构体 } 前有注释
+        String str = """
+            struct Position {
+                x:int;
+                y:int;
+                // 这是末尾注释
+            }
+            """;
+        CfgSchema cfg = CfgReader.parse(str);
+        assertEquals(1, cfg.items().size());
+
+        StructSchema struct = (StructSchema) cfg.items().getFirst();
+        String comment = struct.comment();
+        // 使用 CommentUtils 解析注释
+        CommentUtils.ParsedComment parsed = CommentUtils.parseComment(comment);
+        assertTrue(parsed.suffix().contains("这是末尾注释"));
+    }
+
+    @Test
+    void parseFileEndComment() {
+        // 测试文件末尾有注释
+        String str = """
+            struct Position {
+                x:int;
+            }
+            // 这是文件末尾注释
+            """;
+        CfgSchema cfg = CfgReader.parse(str);
+        // 文件末尾注释存储在 CfgSchema 中，key 是 ""（默认包名）
+        String endComment = cfg.getFileEndComment("");
+        assertTrue(endComment.contains("这是文件末尾注释"));
+    }
+
+    @Test
+    void writeBackSuffixComment() {
+        // 测试注释写回
+        String str = """
+            struct Position {
+                x:int;
+                // 末尾注释
+            }
+            // 文件末尾注释
+            """;
+        CfgSchema cfg = CfgReader.parse(str);
+        String output = CfgWriter.stringify(cfg);
+
+        // 验证注释被正确写回
+        assertTrue(output.contains("// 末尾注释"));
+        assertTrue(output.contains("// 文件末尾注释"));
+    }
+
 }

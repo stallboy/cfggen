@@ -1,7 +1,6 @@
 package configgen.schema.cfg;
 
 import configgen.schema.*;
-import configgen.schema.cfg.CommentUtils.ParsedComment;
 
 import java.util.List;
 import java.util.Map;
@@ -35,6 +34,18 @@ public class CfgWriter {
     public void writeCfg(CfgSchema cfg, String prefix) {
         for (Nameable item : cfg.items()) {
             writeNamable(item, prefix);
+        }
+
+        // 写回文件末尾注释（默认包名 ""）
+        String endComment = cfg.getFileEndComment("");
+        if (!endComment.isEmpty()) {
+            String[] lines = endComment.split("\n");
+            for (String line : lines) {
+                line = line.trim();
+                if (!line.isEmpty()) {
+                    println("%s// %s", prefix, line);
+                }
+            }
         }
     }
 
@@ -71,6 +82,13 @@ public class CfgWriter {
             println("%s\t%s;", prefix, keyStr(keySchema));
         }
         writeStructural(table, prefix);
+
+        // 写回后缀注释（在 } 之前）
+        String suffixOutput = comment.formatSuffix(prefix);
+        if (!suffixOutput.isEmpty()) {
+            destination.append(suffixOutput);
+        }
+
         println("%s}", prefix);
         println();
     }
@@ -88,6 +106,13 @@ public class CfgWriter {
             String valueComment = ev.comment().isEmpty() ? "" : " // " + ev.comment();
             println("%s\t%s;%s", prefix, ev.name(), valueComment);
         }
+
+        // 写回后缀注释（在 } 之前）
+        String suffixOutput = comment.formatSuffix(prefix);
+        if (!suffixOutput.isEmpty()) {
+            destination.append(suffixOutput);
+        }
+
         println("%s}", prefix);
         println();
     }
@@ -110,6 +135,13 @@ public class CfgWriter {
         for (StructSchema value : sInterface.impls()) {
             writeStruct(value, prefix + "\t");
         }
+
+        // 写回后缀注释（在 } 之前）
+        String suffixOutput = comment.formatSuffix(prefix);
+        if (!suffixOutput.isEmpty()) {
+            destination.append(suffixOutput);
+        }
+
         println("%s}", prefix);
         println();
     }
@@ -124,6 +156,13 @@ public class CfgWriter {
         String name = useLastName ? struct.lastName() : struct.name();
         println("%sstruct %s%s {%s", prefix, name, metadataStr(meta), comment.formatTrailing());
         writeStructural(struct, prefix);
+
+        // 写回后缀注释（在 } 之前）
+        String suffixOutput = comment.formatSuffix(prefix);
+        if (!suffixOutput.isEmpty()) {
+            destination.append(suffixOutput);
+        }
+
         println("%s}", prefix);
         println();
     }

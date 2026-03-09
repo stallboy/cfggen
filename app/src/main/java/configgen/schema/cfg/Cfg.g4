@@ -6,7 +6,7 @@ grammar Cfg;
 
 // 1. Root Rule
 schema
-    : schema_ele* EOF
+    : schema_ele* suffix_comment* EOF
     ;
 
 schema_ele
@@ -18,19 +18,19 @@ schema_ele
 
 // 2. High-level Structures (Struct, Interface, Table)
 struct_decl
-    : comment* STRUCT ns_ident metadata LC_COMMENT (field_decl | foreign_decl)* RC
+    : leading_comment* STRUCT ns_ident metadata LC_COMMENT (field_decl | foreign_decl)* suffix_comment* RC
     ;
 
 interface_decl
-    : comment* INTERFACE ns_ident metadata LC_COMMENT struct_decl+ RC
+    : leading_comment* INTERFACE ns_ident metadata LC_COMMENT struct_decl+ suffix_comment* RC
     ;
 
 table_decl
-    : comment* TABLE ns_ident key metadata LC_COMMENT (field_decl | foreign_decl | key_decl)+ RC
+    : leading_comment* TABLE ns_ident key metadata LC_COMMENT (field_decl | foreign_decl | key_decl)+ suffix_comment* RC
     ;
 
 enum_decl
-    : comment* ENUM ns_ident metadata LC_COMMENT enum_value* RC
+    : leading_comment* ENUM ns_ident metadata LC_COMMENT enum_value* suffix_comment* RC
     ;
 
 enum_value
@@ -109,6 +109,15 @@ identifier
     ;
 
 comment
+    : COMMENT
+    ;
+
+// 命名标签规则，用于区分声明前注释和后缀注释
+leading_comment
+    : COMMENT
+    ;
+
+suffix_comment
     : COMMENT
     ;
 

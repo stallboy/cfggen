@@ -187,4 +187,93 @@ class CfgWriterTest {
         assertTrue(result.contains("// 属性类型"));
         assertTrue(result.contains("// 程序用名字"));
     }
+
+    @Test
+    void stringifyStructWithSuffixComment() {
+        // 测试结构体 } 前有后缀注释
+        eqs("""
+                struct Position {
+                	x:int;
+                	y:int;
+                	// 这是末尾注释
+                }
+                """);
+    }
+
+    @Test
+    void stringifyTableWithSuffixComment() {
+        // 测试表 } 前有后缀注释
+        eqs("""
+                table item[id] {
+                	id:int;
+                	name:str;
+                	// 后缀注释第一行
+                	// 后缀注释第二行
+                }
+                """);
+    }
+
+    @Test
+    void stringifyWithFileEndComment() {
+        // 测试文件末尾有注释
+        String source = """
+                struct Position {
+                	x:int;
+                }
+                // 这是文件末尾注释
+                """;
+
+        CfgSchema cfg = CfgReader.parse(source);
+        String result = cfg.stringify();
+
+        // 验证文件末尾注释被正确输出
+        assertTrue(result.contains("// 这是文件末尾注释"));
+    }
+
+    @Test
+    void stringifyWithAllCommentTypes() {
+        // 测试同时有声明前注释、行尾注释、后缀注释和文件末尾注释
+        String source = """
+                // 结构体声明前注释
+                struct Position { // 行尾注释
+                	x:int;
+                	// 后缀注释
+                }
+                // 文件末尾注释
+                """;
+
+        CfgSchema cfg = CfgReader.parse(source);
+        String result = cfg.stringify();
+
+        // 验证所有注释类型都被正确输出
+        assertTrue(result.contains("// 结构体声明前注释"));
+        assertTrue(result.contains("// 行尾注释"));
+        assertTrue(result.contains("// 后缀注释"));
+        assertTrue(result.contains("// 文件末尾注释"));
+    }
+
+    @Test
+    void stringifyEnumWithSuffixComment() {
+        // 测试枚举 } 前有后缀注释
+        eqs("""
+                enum Status {
+                	Active; // 激活
+                	Inactive; // 未激活
+                	// 后缀注释
+                }
+                """);
+    }
+
+    @Test
+    void stringifyInterfaceWithSuffixComment() {
+        // 测试接口 } 前有后缀注释
+        eqs("""
+                interface Event {
+                	struct ClickEvent {
+                		x:int;
+                	}
+                	// 后缀注释
+                }
+                """);
+    }
 }

@@ -19,6 +19,9 @@ public class CfgSchema {
     private Map<String, TableSchema> tableMap;
     private boolean isResolved = false;
 
+    // 按包名（namespace）存储文件末尾注释
+    private final Map<String, String> fileEndComments = new HashMap<>();
+
     public static CfgSchema of() {
         return new CfgSchema(new ArrayList<>(), false);
     }
@@ -97,6 +100,37 @@ public class CfgSchema {
     public Iterable<TableSchema> sortedTables() {
         Map<String, TableSchema> sorted = new TreeMap<>(tableMap);
         return sorted.values();
+    }
+
+    /**
+     * 获取文件末尾注释
+     *
+     * @param pkgName 包名（namespace），空字符串表示默认包
+     * @return 文件末尾注释，如果没有则返回空字符串
+     */
+    public String getFileEndComment(String pkgName) {
+        return fileEndComments.getOrDefault(pkgName, "");
+    }
+
+    /**
+     * 设置文件末尾注释
+     *
+     * @param pkgName 包名（namespace），空字符串表示默认包
+     * @param comment 文件末尾注释内容
+     */
+    public void setFileEndComment(String pkgName, String comment) {
+        if (comment != null && !comment.isEmpty()) {
+            fileEndComments.put(pkgName, comment);
+        }
+    }
+
+    /**
+     * 获取所有文件末尾注释
+     *
+     * @return 包名到注释的映射
+     */
+    public Map<String, String> fileEndComments() {
+        return fileEndComments;
     }
 
     public void printDiff(CfgSchema cfg2) {

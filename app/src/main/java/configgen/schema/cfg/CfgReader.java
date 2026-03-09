@@ -69,13 +69,27 @@ public enum CfgReader {
                 default -> throw new IllegalStateException("Unexpected value: " + child);
             }
         }
+
+        // 读取并存储文件末尾注释
+        String fileEndComment = readSuffixComment(schema.suffix_comment());
+        if (!fileEndComment.isEmpty()) {
+            destination.setFileEndComment(pkgNameDot, fileEndComment);
+        }
     }
 
     private TableSchema read_table(Table_declContext ctx, String pkgNameDot) {
         String name = read_ns_ident(ctx.ns_ident());
         KeySchema primaryKey = read_key(ctx.key());
-        String lcComment = extractCommentFromToken(ctx.LC_COMMENT().getText());
-        Metadata meta = read_metadata_with_comments(ctx.comment(), ctx.metadata(), lcComment);
+
+        String fullComment = readFullComment(ctx.LC_COMMENT().getText(),
+                ctx.leading_comment(),
+                ctx.suffix_comment());
+
+        Metadata meta = readMetadataValues(ctx.metadata());
+        if (!fullComment.isEmpty()) {
+            meta.putComment(fullComment);
+        }
+
         EntryType entry = meta.removeEntry();
         boolean isColumnMode = meta.removeColumnMode();
         FieldsAndForeigns ff = read_fields_foreigns(ctx.field_decl(), ctx.foreign_decl());
@@ -93,15 +107,22 @@ public enum CfgReader {
 
     private TableSchema read_enum(Enum_declContext ctx, String pkgNameDot) {
         String name = read_ns_ident(ctx.ns_ident());
-        String lcComment = extractCommentFromToken(ctx.LC_COMMENT().getText());
-        Metadata meta = read_metadata_with_comments(ctx.comment(), ctx.metadata(), lcComment);
+
+        String fullComment = CommentUtils.readFullComment(ctx.LC_COMMENT().getText(),
+                ctx.leading_comment(),
+                ctx.suffix_comment());
+
+        Metadata meta = readMetadataValues(ctx.metadata());
+        if (!fullComment.isEmpty()) {
+            meta.putComment(fullComment);
+        }
 
         // 解析 enum 值
         List<MetaEnumValues.EnumValue> enumValues = new ArrayList<>();
         for (Enum_valueContext evc : ctx.enum_value()) {
             String valueName = evc.identifier().getText();
-            String valueComment = extractCommentFromToken(evc.SEMI_COMMENT().getText());
-            // 合并 leading comment
+            String valueComment = readTrailingComment(evc.SEMI_COMMENT().getText());
+            // 合并 leading comment（enum_value 使用原有的 comment 规则）
             for (CommentContext cc : evc.comment()) {
                 valueComment = CommentUtils.buildComment(evc.comment(), valueComment);
             }
@@ -128,8 +149,16 @@ public enum CfgReader {
 
     private InterfaceSchema read_interface(Interface_declContext ctx, String pkgNameDot) {
         String name = read_ns_ident(ctx.ns_ident());
-        String lcComment = extractCommentFromToken(ctx.LC_COMMENT().getText());
-        Metadata meta = read_metadata_with_comments(ctx.comment(), ctx.metadata(), lcComment);
+
+        String fullComment = CommentUtils.readFullComment(ctx.LC_COMMENT().getText(),
+                ctx.leading_comment(),
+                ctx.suffix_comment());
+
+        Metadata meta = readMetadataValues(ctx.metadata());
+        if (!fullComment.isEmpty()) {
+            meta.putComment(fullComment);
+        }
+
         String enumRef = meta.removeEnumRef();
         String defaultImpl = meta.removeDefaultImpl();
         FieldFormat fmt = meta.removeFmt();
@@ -145,8 +174,16 @@ public enum CfgReader {
 
     private StructSchema read_struct(Struct_declContext ctx, String pkgNameDot) {
         String name = read_ns_ident(ctx.ns_ident());
-        String lcComment = extractCommentFromToken(ctx.LC_COMMENT().getText());
-        Metadata meta = read_metadata_with_comments(ctx.comment(), ctx.metadata(), lcComment);
+
+        String fullComment = CommentUtils.readFullComment(ctx.LC_COMMENT().getText(),
+                ctx.leading_comment(),
+                ctx.suffix_comment());
+
+        Metadata meta = readMetadataValues(ctx.metadata());
+        if (!fullComment.isEmpty()) {
+            meta.putComment(fullComment);
+        }
+
         FieldFormat fmt = meta.removeFmt();
         FieldsAndForeigns ff = read_fields_foreigns(ctx.field_decl(), ctx.foreign_decl());
         return new StructSchema(pkgNameDot + name, fmt, meta, ff.fieldSchemas(), ff.foreignKeySchemas());
@@ -159,21 +196,6 @@ public enum CfgReader {
             ids.add(ic.getText());
         }
         return String.join(".", ids);
-    }
-
-    /**
-     * 从 LC_COMMENT 或 SEMI_COMMENT token 中提取注释
-     * tokenText 格式: "{ // comment" 或 "; // comment" 或 "{" 或 ";"
-     */
-    private String extractCommentFromToken(String tokenText) {
-        if (tokenText == null || tokenText.isEmpty()) {
-            return "";
-        }
-        int commentIndex = tokenText.indexOf("//");
-        if (commentIndex >= 0) {
-            return tokenText.substring(commentIndex + 2).trim();
-        }
-        return "";
     }
 
 
@@ -234,7 +256,7 @@ public enum CfgReader {
         for (Field_declContext ctx : fieldDeclContexts) {
             String name = ctx.identifier().getText();
             FieldType type = read_type(ctx.type_());
-            String semiComment = extractCommentFromToken(ctx.SEMI_COMMENT().getText());
+            String semiComment = readTrailingComment(ctx.SEMI_COMMENT().getText());
             Metadata meta = read_metadata_with_comments(ctx.comment(), ctx.metadata(), semiComment);
             FieldFormat fmt = meta.removeFmt();
             FieldSchema fieldSchema = new FieldSchema(name, type, fmt, meta);
@@ -254,7 +276,7 @@ public enum CfgReader {
         for (Foreign_declContext ctx : foreignDeclContexts) {
             String name = ctx.identifier().getText();
             KeySchema localKey = read_key(ctx.key());
-            String semiComment = extractCommentFromToken(ctx.SEMI_COMMENT().getText());
+            String semiComment = readTrailingComment(ctx.SEMI_COMMENT().getText());
             Metadata meta = read_metadata_with_comments(ctx.comment(), ctx.metadata(), semiComment);
             boolean nullable = meta.removeNullable();
             ForeignKeySchema foreignKeySchema = read_ref(ctx.ref(), name, localKey, meta, nullable);

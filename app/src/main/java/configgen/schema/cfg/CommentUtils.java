@@ -4,87 +4,87 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-/**
- * 注释处理工具类
- * <p>
- * 用于处理声明前注释和行尾注释的解析、格式化和合并。
- * 注释使用 "\n&gt;&gt;&gt;\n" 作为分隔符来分隔声明前注释和行尾注释。
- */
 public final class CommentUtils {
 
+    static @NotNull String readFullComment(String tokenText,
+                                                   List<CfgParser.Leading_commentContext> leadingContexts,
+                                                   List<CfgParser.Suffix_commentContext> suffixContexts) {
+        String trailing = readTrailingComment(tokenText);
+        String leading = readLeadingComment(leadingContexts);
+        String suffix = readSuffixComment(suffixContexts);
+        return new CommentData(leading, trailing, suffix).encode();
+    }
+
     /**
-     * 解析后的注释，包含声明前注释和行尾注释两部分
-     *
-     * @param leading 声明前注释（多行）
-     * @param trailing 行尾注释（单行）
+     * 从 LC_COMMENT 或 SEMI_COMMENT token 中提取注释
+     * tokenText 格式: "{ // comment" 或 "; // comment" 或 "{" 或 ";"
      */
-    public record ParsedComment(@NotNull String leading,
-                                @NotNull String trailing) {
+    private static String readTrailingComment(String tokenText) {
+        if (tokenText == null || tokenText.isEmpty()) {
+            return "";
+        }
+        int commentIndex = tokenText.indexOf("//");
+        if (commentIndex >= 0) {
+            return tokenText.substring(commentIndex + 2).trim();
+        }
+        return "";
+    }
 
-
-        public String formatLeading(String prefix) {
-            if (leading.isEmpty()) {
-                return "";
-            }
-            String[] lines = leading.split("\n");
-            StringBuilder sb = new StringBuilder();
-            for (String line : lines) {
-                line = line.trim();
-                if (!line.isEmpty()) {
-                    sb.append(prefix).append("// ").append(line).append("\r\n");
+    /**
+     * 从 Suffix_commentContext 列表中提取后缀注释
+     */
+    private static String readSuffixComment(List<CfgParser.Suffix_commentContext> suffixComments) {
+        if (suffixComments == null || suffixComments.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (CfgParser.Suffix_commentContext sc : suffixComments) {
+            if (sc.COMMENT() != null) {
+                String text = sc.COMMENT().getText();
+                if (text.startsWith("//")) {
+                    String commentText = text.substring(2).trim();
+                    if (!commentText.isEmpty()) {
+                        if (!sb.isEmpty()) sb.append("\n");
+                        sb.append(commentText);
+                    }
                 }
             }
-            return sb.toString();
         }
-
-
-        public String formatTrailing() {
-            if (trailing.isEmpty()) {
-                return "";
-            }
-            return " // " + trailing;
-        }
-
+        return sb.toString();
     }
 
     /**
-     * 解析注释字符串，拆分为声明前注释和行尾注释
-     * <p>
-     * 注释格式：
-     * <ul>
-     *   <li>仅声明前注释: "line1\nline2" (包含换行符)</li>
-     *   <li>仅行尾注释: "trailing comment" (不包含换行符)</li>
-     *   <li>两者都有: "line1\nline2\n&gt;&gt;&gt;\ntrailing comment"</li>
-     * </ul>
-     *
-     * @param comment 原始注释字符串
-     * @return 解析后的注释，如果输入为空则返回两个空字符串
+     * 从 Leading_commentContext 列表中提取声明前注释
      */
-    public static ParsedComment parseComment(String comment) {
-        if (comment == null || comment.isEmpty()) {
-            return new ParsedComment("", "");
+    private static String readLeadingComment(List<CfgParser.Leading_commentContext> leadingComments) {
+        if (leadingComments == null || leadingComments.isEmpty()) {
+            return "";
         }
-
-        String[] parts = comment.split("\n>>>\n", 2);
-        if (parts.length == 2) {
-            return new ParsedComment(parts[0], parts[1]);
+        StringBuilder sb = new StringBuilder();
+        for (CfgParser.Leading_commentContext lc : leadingComments) {
+            if (lc.COMMENT() != null) {
+                String text = lc.COMMENT().getText();
+                if (text.startsWith("//")) {
+                    String commentText = text.substring(2).trim();
+                    if (!commentText.isEmpty()) {
+                        if (!sb.isEmpty()) sb.append("\n");
+                        sb.append(commentText);
+                    }
+                }
+            }
         }
-
-        // 没有分隔符，根据是否包含换行符来判断类型
-        if (comment.contains("\n")) {
-            // 包含换行符，认为是声明前注释
-            return new ParsedComment(comment, "");
-        } else {
-            // 不包含换行符，认为是行尾注释
-            return new ParsedComment("", comment);
-        }
+        return sb.toString();
     }
 
 
+
+
+
+
     /**
-     * 合并声明前注释和行尾注释，用 \n&gt;&gt;&gt;\n 分隔
+     * 合并声明前注释和行尾注释（兼容旧版，无后缀注释）
      *
-     * @param leadingComments 声明前注释上下文列表
+     * @param leadingComments 声明前注释上下文列表（使用 CommentContext）
      * @param trailingComment 行尾注释文本（已提取，不含 "//" 前缀）
      * @return 合并后的注释字符串
      */
@@ -99,6 +99,27 @@ public final class CommentUtils {
         } else {
             return leading + "\n>>>\n" + trailingComment;
         }
+    }
+
+    /**
+     * 合并 Leading_commentContext 列表为字符串
+     */
+    public static String mergeLeadingCommentsFromLeadingContext(
+            List<configgen.schema.cfg.CfgParser.Leading_commentContext> commentContexts) {
+        if (commentContexts == null || commentContexts.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (configgen.schema.cfg.CfgParser.Leading_commentContext lc : commentContexts) {
+            if (lc.COMMENT() != null) {
+                String text = extractCommentText(lc.COMMENT());
+                if (!text.isEmpty()) {
+                    if (!sb.isEmpty()) sb.append("\n");
+                    sb.append(text);
+                }
+            }
+        }
+        return sb.toString();
     }
 
     private static String mergeLeadingComments(
