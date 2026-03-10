@@ -73,7 +73,6 @@ class CfgWriterTest {
                 	struct CatteryAchievement {
                 		typeid:int;
                 	}
-                
                 }
                 """);
     }
@@ -115,7 +114,6 @@ class CfgWriterTest {
                 	struct BiographyAchievement {
                 		biographyid:int ->biography.biographyinfo;
                 	}
-                
                 }
                 """);
     }
@@ -148,11 +146,9 @@ class CfgWriterTest {
     }
 
     @Test
-    void stringifyOnlyLeadingComment() {
-        // 测试只有声明前注释（没有行尾注释）的情况
+    void stringifyOnlyTrailingComment() {
         eqs("""
-                // 只有声明前注释
-                table ability[id] {
+                table ability[id] { // 只有trailing注释
                 	id:int;
                 }
                 """);

@@ -1,6 +1,7 @@
 package configgen.schema.cfg;
 
 import configgen.schema.*;
+import configgen.schema.cfg.CommentUtils.CommentData;
 
 import java.util.List;
 import java.util.Map;
@@ -51,7 +52,7 @@ public class CfgWriter {
 
     public void writeNamable(Nameable item, String prefix) {
         switch (item) {
-            case StructSchema structSchema -> writeStruct(structSchema, prefix);
+            case StructSchema structSchema -> writeStruct(structSchema, prefix, false);
             case InterfaceSchema interfaceSchema -> writeInterface(interfaceSchema, prefix);
             case TableSchema tableSchema -> {
                 MetaEnumValues enumValues = tableSchema.meta().getEnumValues();
@@ -72,7 +73,7 @@ public class CfgWriter {
         }
         meta.putEntry(table.entry());
 
-        ParsedComment comment = CommentUtils.parseComment(meta.removeComment());
+        CommentData comment = CommentUtils.decode(meta.removeComment());
         writeLeadingComment(comment, prefix);
 
         String name = useLastName ? table.lastName() : table.name();
@@ -83,11 +84,7 @@ public class CfgWriter {
         }
         writeStructural(table, prefix);
 
-        // 写回后缀注释（在 } 之前）
-        String suffixOutput = comment.formatSuffix(prefix);
-        if (!suffixOutput.isEmpty()) {
-            destination.append(suffixOutput);
-        }
+        writeSuffixComment(comment, prefix);
 
         println("%s}", prefix);
         println();
@@ -97,7 +94,7 @@ public class CfgWriter {
         Metadata meta = table.meta().copy();
         meta.removeEnumValues();  // 不写出 enumValues，因为会还原为 enum 格式
 
-        ParsedComment comment = CommentUtils.parseComment(meta.removeComment());
+        CommentData comment = CommentUtils.decode(meta.removeComment());
         writeLeadingComment(comment, prefix);
 
         String name = useLastName ? table.lastName() : table.name();
@@ -107,11 +104,7 @@ public class CfgWriter {
             println("%s\t%s;%s", prefix, ev.name(), valueComment);
         }
 
-        // 写回后缀注释（在 } 之前）
-        String suffixOutput = comment.formatSuffix(prefix);
-        if (!suffixOutput.isEmpty()) {
-            destination.append(suffixOutput);
-        }
+        writeSuffixComment(comment, prefix);
 
         println("%s}", prefix);
         println();
@@ -127,44 +120,41 @@ public class CfgWriter {
             meta.putEnumRef(sInterface.enumRef());
         }
 
-        ParsedComment comment = CommentUtils.parseComment(meta.removeComment());
+        CommentData comment = CommentUtils.decode(meta.removeComment());
         writeLeadingComment(comment, prefix);
 
         String name = useLastName ? sInterface.lastName() : sInterface.name();
         println("%sinterface %s%s {%s", prefix, name, metadataStr(meta), comment.formatTrailing());
+        int i = 0;
         for (StructSchema value : sInterface.impls()) {
-            writeStruct(value, prefix + "\t");
+            i++;
+            boolean noLineSeparator = sInterface.impls().size() == i;
+            writeStruct(value, prefix + "\t", noLineSeparator);
         }
 
-        // 写回后缀注释（在 } 之前）
-        String suffixOutput = comment.formatSuffix(prefix);
-        if (!suffixOutput.isEmpty()) {
-            destination.append(suffixOutput);
-        }
+        writeSuffixComment(comment, prefix);
 
         println("%s}", prefix);
         println();
     }
 
-    public void writeStruct(StructSchema struct, String prefix) {
+    public void writeStruct(StructSchema struct, String prefix, boolean noLineSeparator) {
         Metadata meta = struct.meta().copy();
         meta.putFmt(struct.fmt());
 
-        ParsedComment comment = CommentUtils.parseComment(meta.removeComment());
+        CommentData comment = CommentUtils.decode(meta.removeComment());
         writeLeadingComment(comment, prefix);
 
         String name = useLastName ? struct.lastName() : struct.name();
         println("%sstruct %s%s {%s", prefix, name, metadataStr(meta), comment.formatTrailing());
         writeStructural(struct, prefix);
 
-        // 写回后缀注释（在 } 之前）
-        String suffixOutput = comment.formatSuffix(prefix);
-        if (!suffixOutput.isEmpty()) {
-            destination.append(suffixOutput);
-        }
+        writeSuffixComment(comment, prefix);
 
         println("%s}", prefix);
-        println();
+        if (!noLineSeparator) {
+            println();
+        }
     }
 
     private void writeStructural(Structural structural, String prefix) {
@@ -190,11 +180,11 @@ public class CfgWriter {
                 foreignToMeta(fk, meta);
             }
 
-            ParsedComment comment = CommentUtils.parseComment(meta.removeComment());
+            CommentData comment = CommentUtils.decode(meta.removeComment());
             writeLeadingComment(comment, prefix + "\t");
-
             println("%s\t%s:%s%s%s;%s",
-                    prefix, f.name(), typeStr, fkStr, metadataStr(meta), comment.formatTrailing());
+                    prefix, f.name(), typeStr, fkStr,
+                    metadataStr(meta), comment.formatTrailing());
         }
 
         for (ForeignKeySchema fk : structural.foreignKeys()) {
@@ -206,11 +196,11 @@ public class CfgWriter {
                 Metadata meta = fk.meta().copy();
                 foreignToMeta(fk, meta);
 
-                ParsedComment comment = CommentUtils.parseComment(meta.removeComment());
+                CommentData comment = CommentUtils.decode(meta.removeComment());
                 writeLeadingComment(comment, prefix + "\t");
-
                 println("%s\t->%s:%s%s%s;%s",
-                        prefix, fk.name(), keyStr(fk.key()), foreignStr(fk), metadataStr(meta), comment.formatTrailing());
+                        prefix, fk.name(), keyStr(fk.key()), foreignStr(fk),
+                        metadataStr(meta), comment.formatTrailing());
             }
         }
     }
@@ -229,10 +219,17 @@ public class CfgWriter {
         destination.append("\r\n");
     }
 
-    private void writeLeadingComment(ParsedComment pc, String prefix) {
-        String leadingComment = pc.formatLeading(prefix);
+    private void writeLeadingComment(CommentData cd, String prefix) {
+        String leadingComment = cd.formatLeading(prefix);
         if (!leadingComment.isEmpty()) {
             destination.append(leadingComment);
+        }
+    }
+
+    private void writeSuffixComment(CommentData cd, String prefix) {
+        String suffixComment = cd.formatSuffix(prefix);
+        if (!suffixComment.isEmpty()) {
+            destination.append(suffixComment);
         }
     }
 

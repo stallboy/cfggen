@@ -33,21 +33,21 @@ enum_decl
     : leading_comment* ENUM ns_ident metadata LC_COMMENT enum_value* suffix_comment* RC
     ;
 
-enum_value
-    : comment* identifier SEMI_COMMENT
-    ;
-
 // 3. Members & Fields (字段与定义)
 field_decl
-    : comment* identifier COLON type_ ref? metadata SEMI_COMMENT
+    : leading_comment* identifier COLON type_ ref? metadata SEMI_COMMENT
     ;
 
 foreign_decl
-    : comment* REF identifier COLON key ref metadata SEMI_COMMENT
+    : leading_comment* REF identifier COLON key ref metadata SEMI_COMMENT
     ;
 
 key_decl
-    : comment* key SEMI_COMMENT
+    : leading_comment* key SEMI_COMMENT
+    ;
+
+enum_value
+    : leading_comment* identifier SEMI_COMMENT
     ;
 
 // 4. Types System (类型系统)
@@ -106,10 +106,6 @@ identifier
     | TLIST
     | TMAP
     | TBASE
-    ;
-
-comment
-    : COMMENT
     ;
 
 // 命名标签规则，用于区分声明前注释和后缀注释

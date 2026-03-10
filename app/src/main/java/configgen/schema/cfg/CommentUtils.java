@@ -1,56 +1,118 @@
 package configgen.schema.cfg;
 
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public final class CommentUtils {
 
-    static @NotNull String readFullComment(String tokenText,
-                                                   List<CfgParser.Leading_commentContext> leadingContexts,
-                                                   List<CfgParser.Suffix_commentContext> suffixContexts) {
-        String trailing = readTrailingComment(tokenText);
+    /**
+     * 封装注释的三部分数据
+     */
+    public record CommentData(@NotNull String leading,
+            @NotNull String trailing,
+            String suffix) {
+
+        public static final String DELIMITER1 = ">>>";
+        public static final String DELIMITER2 = "<<<";
+
+        public String encode() {
+            if (leading.isBlank() && trailing.isBlank() && (suffix == null || suffix.isBlank())) {
+                return "";
+            }
+
+            String res;
+            if (leading.isBlank()) {
+                res = trailing;
+            } else if (trailing.isBlank()) {
+                res = leading;
+            } else {
+                res = leading + DELIMITER1 + trailing;
+            }
+
+            if (suffix != null && !suffix.isBlank()) {
+                res += DELIMITER2 + suffix;
+            }
+            return res;
+        }
+
+        public String formatLeading(String prefix) {
+            return formatLines(leading, prefix + "// ");
+        }
+
+        public String formatTrailing() {
+            return trailing.isBlank() ? "" : " // " + trailing;
+        }
+
+        public String formatSuffix(String prefix) {
+            return suffix != null ? formatLines(suffix, prefix + "\t// ") : "";
+        }
+
+        private String formatLines(String text, String linePrefix) {
+            if (text.isBlank())
+                return "";
+            return text.lines()
+                    .map(String::trim)
+                    .filter(line -> !line.isBlank())
+                    .map(line -> linePrefix + line + "\n")
+                    .collect(Collectors.joining());
+        }
+    }
+
+    public static CommentData decode(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return new CommentData("", "", "");
+        }
+
+        // 先用 DELIMITER2 ("<<<") 分离 suffix
+        String mainPart;
+        String suffix;
+        int idx2 = raw.indexOf(CommentData.DELIMITER2);
+        if (idx2 >= 0) {
+            mainPart = raw.substring(0, idx2);
+            suffix = raw.substring(idx2 + CommentData.DELIMITER2.length());
+        } else {
+            mainPart = raw;
+            suffix = "";
+        }
+
+        // 再用 DELIMITER1 (">>>") 分离 leading 和 trailing
+        String leading;
+        String trailing;
+        int idx1 = mainPart.indexOf(CommentData.DELIMITER1);
+        if (idx1 >= 0) {
+            leading = mainPart.substring(0, idx1);
+            trailing = mainPart.substring(idx1 + CommentData.DELIMITER1.length());
+        } else {
+            // 这里是猜测：包含\n就是leading，不包含就是trailing
+            if (mainPart.contains("\n")) {
+                leading = mainPart;
+                trailing = "";
+            } else {
+                leading = "";
+                trailing = mainPart;
+            }
+        }
+
+        return new CommentData(leading, trailing, suffix);
+    }
+
+    public static @NotNull String readFull3(List<CfgParser.Leading_commentContext> leadingContexts,
+            TerminalNode trailingNode,
+            List<CfgParser.Suffix_commentContext> suffixContexts) {
         String leading = readLeadingComment(leadingContexts);
+        String trailing = readTrailingComment(trailingNode);
         String suffix = readSuffixComment(suffixContexts);
         return new CommentData(leading, trailing, suffix).encode();
     }
 
-    /**
-     * 从 LC_COMMENT 或 SEMI_COMMENT token 中提取注释
-     * tokenText 格式: "{ // comment" 或 "; // comment" 或 "{" 或 ";"
-     */
-    private static String readTrailingComment(String tokenText) {
-        if (tokenText == null || tokenText.isEmpty()) {
-            return "";
-        }
-        int commentIndex = tokenText.indexOf("//");
-        if (commentIndex >= 0) {
-            return tokenText.substring(commentIndex + 2).trim();
-        }
-        return "";
-    }
-
-    /**
-     * 从 Suffix_commentContext 列表中提取后缀注释
-     */
-    private static String readSuffixComment(List<CfgParser.Suffix_commentContext> suffixComments) {
-        if (suffixComments == null || suffixComments.isEmpty()) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        for (CfgParser.Suffix_commentContext sc : suffixComments) {
-            if (sc.COMMENT() != null) {
-                String text = sc.COMMENT().getText();
-                if (text.startsWith("//")) {
-                    String commentText = text.substring(2).trim();
-                    if (!commentText.isEmpty()) {
-                        if (!sb.isEmpty()) sb.append("\n");
-                        sb.append(commentText);
-                    }
-                }
-            }
-        }
-        return sb.toString();
+    public static @NotNull String readFull2(List<CfgParser.Leading_commentContext> leadingContexts,
+            TerminalNode trailingNode) {
+        String leading = readLeadingComment(leadingContexts);
+        String trailing = readTrailingComment(trailingNode);
+        return new CommentData(leading, trailing, null).encode();
     }
 
     /**
@@ -67,7 +129,8 @@ public final class CommentUtils {
                 if (text.startsWith("//")) {
                     String commentText = text.substring(2).trim();
                     if (!commentText.isEmpty()) {
-                        if (!sb.isEmpty()) sb.append("\n");
+                        if (!sb.isEmpty())
+                            sb.append("\n");
                         sb.append(commentText);
                     }
                 }
@@ -76,80 +139,44 @@ public final class CommentUtils {
         return sb.toString();
     }
 
-
-
-
-
-
     /**
-     * 合并声明前注释和行尾注释（兼容旧版，无后缀注释）
-     *
-     * @param leadingComments 声明前注释上下文列表（使用 CommentContext）
-     * @param trailingComment 行尾注释文本（已提取，不含 "//" 前缀）
-     * @return 合并后的注释字符串
+     * 从 LC_COMMENT 或 SEMI_COMMENT token 中提取注释
+     * tokenText 格式: "{ // comment" 或 "; // comment" 或 "{" 或 ";"
      */
-    public static String buildComment(
-            List<configgen.schema.cfg.CfgParser.CommentContext> leadingComments,
-            String trailingComment) {
-
-        String leading = mergeLeadingComments(leadingComments);
-
-        if (leading.isEmpty()) {
-            return trailingComment;
-        } else {
-            return leading + "\n>>>\n" + trailingComment;
-        }
-    }
-
-    /**
-     * 合并 Leading_commentContext 列表为字符串
-     */
-    public static String mergeLeadingCommentsFromLeadingContext(
-            List<configgen.schema.cfg.CfgParser.Leading_commentContext> commentContexts) {
-        if (commentContexts == null || commentContexts.isEmpty()) {
+    private static String readTrailingComment(TerminalNode trailingNode) {
+        String tokenText = trailingNode.getText();
+        if (tokenText == null || tokenText.isEmpty()) {
             return "";
         }
-        StringBuilder sb = new StringBuilder();
-        for (configgen.schema.cfg.CfgParser.Leading_commentContext lc : commentContexts) {
-            if (lc.COMMENT() != null) {
-                String text = extractCommentText(lc.COMMENT());
-                if (!text.isEmpty()) {
-                    if (!sb.isEmpty()) sb.append("\n");
-                    sb.append(text);
-                }
-            }
-        }
-        return sb.toString();
-    }
-
-    private static String mergeLeadingComments(
-            List<configgen.schema.cfg.CfgParser.CommentContext> commentContexts) {
-        if (commentContexts == null || commentContexts.isEmpty()) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        for (configgen.schema.cfg.CfgParser.CommentContext cc : commentContexts) {
-            if (cc.COMMENT() != null) {
-                String text = extractCommentText(cc.COMMENT());
-                if (!text.isEmpty()) {
-                    if (!sb.isEmpty()) sb.append("\n");
-                    sb.append(text);
-                }
-            }
-        }
-        return sb.toString();
-    }
-
-    private static String extractCommentText(org.antlr.v4.runtime.tree.TerminalNode commentNode) {
-        if (commentNode == null) {
-            return "";
-        }
-        String text = commentNode.getText();
-        if (text.startsWith("//")) {
-            return text.substring(2).trim();
+        int commentIndex = tokenText.indexOf("//");
+        if (commentIndex >= 0) {
+            return tokenText.substring(commentIndex + 2).trim();
         }
         return "";
     }
 
+    /**
+     * 从 Suffix_commentContext 列表中提取后缀注释
+     */
+    public static String readSuffixComment(List<CfgParser.Suffix_commentContext> suffixComments) {
+        if (suffixComments == null || suffixComments.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (CfgParser.Suffix_commentContext sc : suffixComments) {
+            if (sc.COMMENT() != null) {
+                String text = sc.COMMENT().getText();
+                if (text.startsWith("//")) {
+                    String commentText = text.substring(2).trim();
+                    if (!commentText.isEmpty()) {
+                        if (!sb.isEmpty())
+                            sb.append("\n");
+                        sb.append(commentText);
+                    }
+                }
+            }
+        }
+        return sb.toString();
+    }
 
 }

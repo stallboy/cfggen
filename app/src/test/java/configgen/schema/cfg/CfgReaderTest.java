@@ -422,7 +422,7 @@ class CfgReaderTest {
         StructSchema struct = (StructSchema) cfg.items().getFirst();
         String comment = struct.comment();
         // 使用 CommentUtils 解析注释
-        CommentUtils.ParsedComment parsed = CommentUtils.parseComment(comment);
+        CommentUtils.CommentData parsed = CommentUtils.decode(comment);
         assertTrue(parsed.suffix().contains("这是末尾注释"));
     }
 
