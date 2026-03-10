@@ -212,11 +212,11 @@ public class CfgWriter {
             destination.append(String.format(fmt, args));
         }
 
-        destination.append("\r\n");
+        destination.append("\n");
     }
 
     private void println() {
-        destination.append("\r\n");
+        destination.append("\n");
     }
 
     private void writeLeadingComment(CommentData cd, String prefix) {
