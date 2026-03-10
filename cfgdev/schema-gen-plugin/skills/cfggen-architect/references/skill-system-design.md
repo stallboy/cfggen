@@ -127,6 +127,22 @@ interface FloatValue {
     struct PayloadMagnitude { }
     struct PayloadVar { varTag: str ->gameplaytag; }
 }
+interface TargetSelector {
+    // --- 1. Context 维度 (从当前技能/状态的运行上下文中取) ---
+    struct ContextTarget {}     // 技能当前瞄准的准星目标
+    struct ContextInstigator {} // 技能的绝对发起者 (如：玩家)
+    struct ContextCauser {}     // 造成效果的物理媒介 (如：飞行中的子弹/地上的火墙)
+    struct ContextVar {
+        actorVarTag: str -> gameplaytag; 
+    }
+
+    // --- 2. Payload 维度 (从拦截到的 Event 事件载荷中取) ---
+    struct PayloadInstigator {} // 肇事者 (比如引发受击事件的攻击方)
+    struct PayloadTarget {}     // 承受者 (比如受击事件中的受害者)
+    struct PayloadVar {
+        actorVarTag: str -> gameplaytag; 
+    }
+}
 
 enum StatCaptureMode {
     Current;
@@ -187,16 +203,26 @@ table ability[id] (title='name') {
     // 释放瞬间，主动打断自身正在进行的其他技能 (如：闪避打断平A)
     cancelAbilitiesWithTag: list<str> ->gameplaytag;
 
-    costEffect: Effect; // 例: 执行一个扣除 50 EP 的 Effect
-
-    // --- 底层解析时自动转化为 CD Status ---
-    cooldownDuration: FloatValue;
-    cooldownTag: str ->gameplaytag; // 例如: "Cooldown.Ability.Fireball"
-    gcdDuration: FloatValue;
-    gcdTag: str ->gameplaytag;      // 例如: "Cooldown.Global"
+    costs: list<AbilityCost>;
+    cooldowns: list<AbilityCooldown>
+    commitEffects: Effect; // 额外的代价
 
     effect: Effect;
 }
+
+// 资源消耗声明
+struct AbilityCost {
+    statTag: str ->stat_definition; // 如 "Stat.Resource.EP"
+    value: FloatValue;              // 消耗量 (支持静态值或基于最大生命的百分比等)
+}
+
+// 冷却声明
+struct AbilityCooldown {
+    // 冷却状态的标识 (宿主身上带有此 Tag 则代表在 CD 中, 实现：挂载了一个隐藏的 StatusInstance)
+    cooldownTag: str ->gameplaytag; // 如 "State.Cooldown.Skill_Fireball"
+    duration: FloatValue;           // 如 15.0 (支持被装备减CD属性修饰)
+}
+
 ```
 
 ### Effect
@@ -207,6 +233,13 @@ Effect 是瞬间执行、**无状态**的指令流。
 interface Effect {
     struct EffectRef {
         sharedEffectId: int ->shared_effect; // 逻辑复用
+    }
+    
+    // --- 属性修改 ---
+    struct ModifyStat { // 改 baseValue
+        statTag: str ->stat_definition; // 如 "Stat.Resource.Stamina"
+        op: ModifierOp;
+        value: FloatValue;
     }
 
     // 伤害。执行流水线: Snapshot属性 -> 广播 Event.*.Pre (触发 ModifyPayload)
@@ -223,7 +256,7 @@ interface Effect {
         cuesOnHeal: list<str>;
     }
 
-    // --- 状态操作 (标准与内联双轨制) ---
+    // --- 状态操作 ---
     // A. 引用标准 Status (适用于需要 UI 图标、多端网络同步的常规状态，如"中毒", "护盾")
     struct ApplyStatus {
         statusId: int ->status;
@@ -280,6 +313,12 @@ interface Effect {
         effect: Effect;
     }
 
+    // 群体作用域
+    struct WithTargets {
+        targets: TargetScan;
+        effect: Effect;
+    }
+
     // 局部变量绑定
     struct WithLocalVar {
         varTag: str -> gameplaytag;
@@ -294,6 +333,14 @@ interface Effect {
     }
 
     struct Sequence { effects: list<Effect>; }
+}
+
+// 将高频复用的effect（如"通用受击"、"标准炎爆"、"系统级浮空"）提取到独立的配置表中，配合 `EffectRef` 在各处调用
+table shared_effect[id] (title='name') {
+    id: int;
+    name: text;
+    description: text;
+    effect: Effect;
 }
 
 // 参数捕获 (在StatusInstance里无Event参数，所以在Apply时要capture下来放到instanceState里)
@@ -316,12 +363,68 @@ enum ModifierOp {
     Override;
 }
 
-// 将高频复用的effect（如"通用受击"、"标准炎爆"、"系统级浮空"）提取到独立的配置表中，配合 `EffectRef` 在各处调用
-table shared_effect[id] (title='name') {
-    id: int;
-    name: text;
-    description: text;
-    effect: Effect;
+interface TargetScan {
+    // 圆形/球体 (如：以火球 ContextCauser 为中心爆炸)
+    struct Sphere {
+        center: TargetSelector; // 圆心是谁？(极大提升灵活性，比如以目标为圆心)
+        radius: FloatValue;
+        filter: TargetFilter;
+    }
+    // 扇形/锥形 (如：战士面向前方 90 度劈砍)
+    struct Sector {
+        center: TargetSelector; 
+        forwardDir: TargetSelector; // 决定朝向的实体 (通常是 ContextInstigator 面向)
+        radius: FloatValue;
+        angle: FloatValue;          // 角度，如 90.0, 120.0
+        filter: TargetFilter;
+    }
+    // 矩形/Box (如：激光束、剑气、冲锋路径上的敌人)
+    struct Box {
+        center: TargetSelector;
+        forwardDir: TargetSelector;
+        width: FloatValue;
+        length: FloatValue;
+        filter: TargetFilter;
+    }
+    
+    // 全队扫描 (如：奶妈开大招，给全队加血)
+    struct PartyMembers {
+        source: TargetSelector; // 取谁的队伍？
+        filter: TargetFilter;
+    }
+}
+
+struct TargetFilter {
+    // 1. 阵营过滤
+    // 参照物是谁？(通常是 ContextInstigator，即判定“扫描到的目标和施法者是什么关系”)
+    relationSource: TargetSelector; 
+    allowedRelations: list<TeamRelation>;
+
+    // 2. 状态/标签过滤 (复用你文档里的 GameplayTagQuery)
+    // 如：必须包含 "State.Alive" 且不包含 "State.Invincible"
+    tagQuery: GameplayTagQuery;
+
+    // 3. 动态黑名单 (极大提升机制扩展性)
+    // 传入一组单体 TargetSelector，如果扫出来的人在这里面，直接剔除。
+    // 应用场景：防重复弹射、或者避免 AOE 炸到主目标(主目标在 WithTarget 里单独算伤害)。
+    excludeTargets: list<TargetSelector>; 
+
+    // 4. 目标上限与优选策略
+    maxCount: int;          // 最大生效人数 (如 -1 代表无限制，3 代表最多劈 3 个)
+    sortType: SortTarget;   // 当超出上限时，怎么挑人？
+}
+
+enum TeamRelation {
+    Self;       // 自身 (非常重要，有时要防误伤自己)
+    Friendly;   // 友方
+    Hostile;    // 敌方
+    Neutral;    // 中立 (如：场景木桶、野怪)
+}
+
+enum SortTarget {
+    DistanceAsc;    // 距离由近到远 (配合空间扫描使用)
+    HpPercentAsc;   // 优先打血量百分比最低的 (斩杀机制优选)
+    Random;         // 随机选 (比如闪电链随机乱劈)
 }
 ```
 
@@ -381,6 +484,26 @@ interface Behavior {
         onLimitReached: Effect;
     }
 }
+
+interface StackingPolicy {
+    // 传统叠加 (Standard)：层数增加，且所有层共享最新/最长的那个时间。
+    struct Standard {
+        maxStacks: int;
+    }
+    // 覆盖刷新：重置倒计时。
+    struct Override {}
+    // 时长累加：增加持续时间。
+    struct AccumulateDuration { 
+        maxDurationLimit: float; // 例如最多累加到 30 秒
+    }
+    // 独立计时：每层独立衰减。
+    struct Independent {
+        maxStacks: int;
+    }
+    // 拒绝叠加：新状态直接被免疫/丢弃 (如：不可刷新的特殊机制锁)
+    struct Reject {}
+}
+
 ```
 
 ---
@@ -396,7 +519,7 @@ Context 是运行时的载体，连接静态配置与动态执行。
 ```java
 record Context(
     Actor instigator,   // 真正的发起者 (如：玩家)
-    Actor effectCauser, // 造成效果的物理实体 (如：玩家发射的火球)
+    Actor causer, // 造成效果的物理实体 (如：玩家发射的火球)
     ReadOnlyStore initSnapshot, // 冻结的初始参数 (如：蓄力时间,初始锁定的目标)
 
     // --- 数据流转,target或localScope改变的时候要 new Context ---
@@ -526,6 +649,7 @@ struct TagRelationshipRule {
 例子：
 ```
 table global_tag_rules {
+    name: "defaultRules"
     rules: [
         // 范例: 只要宿主拥有 Silence 标签，就封印所有 Spell 标签的技能
         { targetTag: "State.Debuff.Silence", 
@@ -535,6 +659,40 @@ table global_tag_rules {
           blocks: ["Ability.Type"], 
           cancels: ["Ability.Type"] }
     ];
+}
+```
+
+### global_combat_settings
+
+定义了全局统一的伤害级联扣减管线
+
+```
+table global_combat_settings[name] (entry="name") {
+    name: str;
+    damageLayers: list<DamageLayer>; //伤害扣减管线, 依次扣减
+
+    healthStatTag: str ->stat_definition; // 例: "Stat.HP.Current"
+    
+    // 当 baseHealthStat 归零时，引擎自动向宿主派发的 Tag (用于触发死亡表现或复活逻辑)
+    deathTag: str ->gameplaytag; // 例: "State.Dead" 或 "State.Downed"
+}
+
+struct DamageLayer {
+    targetStat: str ->stat_definition; 
+    conversionRate: float; // 1点伤害扣除多少点该属性。如魔法盾可能配置为 1.5
+    
+    // 允许溢出标志
+    // true: 该层属性扣到 0 后，未被抵消的剩余伤害继续向下击穿。
+    // false: 伤害结界（锁血/锁盾），单次伤害最多只能打破该层，多余伤害直接作废。
+    allowOverflow: bool;
+
+    // 受击表现：当这一层被扣减时，触发什么类型的受击反馈？
+    // 例: "Cue.Combat.Hit.Shield", "Cue.Combat.Hit.Armor", "Cue.Combat.Hit.Flesh"
+    hitCueTag: str ->gameplaytag (nullable);
+    
+    // 破盾表现：当这一层的数值刚好被本次伤害清零时，额外触发什么反馈？
+    // 例: "Cue.Combat.Break.Armor"
+    breakCueTag: str ->gameplaytag (nullable);
 }
 ```
 
@@ -739,5 +897,153 @@ class FloatValues {
 
 class Conditions {
     static boolean test(Condition cfg, Context ctx, Event evt);
+}
+```
+
+
+## Gameplay Cue
+
+客户端维护一张纯表现的注册表 `client_cue_registry`，组装视听反馈。
+
+### Cue Schema
+
+```cfg
+// 表现层映射清单 (纯客户端使用，服务器不加载)
+table client_cue_registry[cueTag] (entry="cueTag") {
+    cueTag: str ->gameplaytag; // 强引用，例: "Cue.Combat.Hit.Heavy"
+    handler: CueHandler;
+}
+
+interface CueHandler {
+    // A. 瞬发型 (Instant): 触发即播放，客户端不维护状态，由系统池自动回收。
+    // 适用于：受击、爆炸、挥砍瞬间、破盾
+    struct Instant {
+        vfx: list<VfxConfig>;                   // 特效集合 (例：爆血 + 刀光碎片)
+        sfxEvents: list<SfxConfig>;             // 音效事件集合 (支持 Wwise/FMOD 参数化化音频)
+        animTriggers: list<AnimTriggerConfig>;  // 动画触发器集合
+        cameraShakes: list<str>;                // 摄像机震动配置集合 (全局指令，无需分 Role)
+        damageTexts: list<DamageTextConfig>;    // 飘字设定集合
+    }
+
+    // B. 持续型 (Sustained): 随状态挂载而生成，随状态移除而销毁。
+    // 客户端需将其登记入 Active 字典，确保状态结束时安全销毁/淡出。
+    // 适用于：中毒冒泡、无敌金身材质、残血屏幕发红
+    struct Sustained {
+        loopingVfx: list<VfxConfig>;                     // 循环特效集合
+        loopingSfxEvents: list<SfxConfig>;               // 循环音效集合
+        materialOverrides: list<MaterialOverrideConfig>; // 材质覆写集合
+        screenFilters: list<str>;                        // 屏幕空间后处理集合
+    }
+}
+
+// --- 基础表现组件 ---
+
+struct VfxConfig {
+    role: CueRole;
+    assetPath: str;             // 特效预制体路径
+    attachRule: VfxAttachRule;
+    attachSocket: str;          // 绑定的骨骼挂点（如 "Chest", "Root"）
+    scale: float;
+}
+
+enum VfxAttachRule {
+    KeepWorldPosition; // 瞬发原地留存（如：地上的爆炸坑，不随目标移动）
+    SnapToTarget;      // 绑定并跟随目标移动（如：身上的燃烧火苗）
+}
+
+struct SfxConfig {
+    role: CueRole;     // 决定声音的 3D 发声源在谁身上
+    eventName: str;    // 音效事件路径 (如 "event:/Combat/Hit_Heavy")
+}
+
+struct AnimTriggerConfig {
+    role: CueRole;     
+    triggerName: str;  // 触发目标动画图的节点 (如 "HitReact_Heavy")
+}
+
+struct DamageTextConfig {
+    role: CueRole;
+    colorCode: str;    // 颜色代码 (如 "#FF0000")
+    fontSize: int;
+    prefixIcon: str;   // 前缀小图标 (如 "Icon_Crit")
+    motionStyle: str;  // 运动轨迹枚举 (如 "PopUp", "Gravity")
+}
+
+struct MaterialOverrideConfig {
+    role: CueRole;
+    materialPath: str;    // 材质资产路径
+    targetSlotIndex: int; // 替换第几个材质槽位 (-1 代表替换全部)
+}
+
+enum CueRole {
+    Target;       // 默认值：表现作用于受击者/状态承受者
+    Instigator;   // 表现作用于攻击方/技能发起者
+}
+```
+
+### Runtime
+
+在运行时，逻辑层不需要策划手动配置 Cue 的生命周期类型，底层引擎将根据 Cue 所在的**上下文位置**自动推导并广播网络事件：
+
+* **挂载在 `Effect` 节点中（或 `DamageLayer` 结算时）**：
+* 语义：瞬间行为。
+* 推导：底层触发 `Executed` 事件。客户端查表调用 `Instant` 处理器，对象池“阅后即焚”。
+
+
+* **挂载在 `Status` 的 `cuesWhileActive` 中**：
+* 语义：状态绑定行为。
+* 推导：底层在状态添加时触发 `Added` 事件，在状态销毁时触发 `Removed` 事件。客户端查表调用 `Sustained` 处理器，生成特效后存入 `activeSustainedCues` 字典，收到移除指令时清理。
+
+
+
+**网络通信载荷 (GameplayCueEvent)：**
+
+```java
+record GameplayCueEvent (
+    CueEventType eventType, // 自动推导: Executed / Added / Removed
+    int cueTagId,           // "Cue.Combat.Hit.AbyssalStrike" 对应的整型ID
+    Actor target,           // 作用目标
+    Actor instigator,       // 发起者 (用于 Instigator Role 的表现回溯)
+    float magnitude         // 表现强度 (传递给 UI 飘字数值或音频引擎的 RTPC 参数)
+){}
+
+```
+
+### Example
+
+**“深渊重击”**（攻击造成目标流血，同时自身获得吸血特效与重击硬直后摇）。
+
+```cfg
+table client_cue_registry {
+    [1001] {
+        cueTag: "Cue.Combat.Hit.AbyssalStrike";
+        handler: struct Instant {
+            
+            // 动画：目标播放受击硬直，攻击方(Instigator)播放武器弹刀/重击后摇
+            animTriggers: [
+                { role: Target, triggerName: "Hit_Heavy_Stagger" },
+                { role: Instigator, triggerName: "Attack_Recoil_Heavy" }
+            ];
+
+            // 特效：目标身上爆黑血，攻击方身上爆出绿色恢复流光
+            vfx: [
+                { role: Target, assetPath: "VFX_DarkBlood", attachRule: SnapToTarget, attachSocket: "Chest", scale: 1.0 },
+                { role: Instigator, assetPath: "VFX_Heal_Burst", attachRule: SnapToTarget, attachSocket: "Root", scale: 1.0 }
+            ];
+
+            // 飘字：目标头上爆红字，攻击方头上爆绿色回血数字
+            damageTexts: [
+                { role: Target, colorCode: "#FF0000", fontSize: 40, prefixIcon: "Sword", motionStyle: "PopUp" },
+                { role: Instigator, colorCode: "#00FF00", fontSize: 24, prefixIcon: "Cross", motionStyle: "FloatUp" }
+            ];
+
+            // 音效：发声源在受击目标身上
+            sfxEvents: [
+                { role: Target, eventName: "event:/SFX/Combat/Abyssal_Hit" }
+            ];
+            
+            cameraShakes: ["CamShake_HeavyImpact"];
+        }
+    }
 }
 ```
