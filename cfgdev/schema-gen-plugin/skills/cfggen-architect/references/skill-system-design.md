@@ -664,7 +664,7 @@ table global_tag_rules {
 
 ### global_combat_settings
 
-定义了全局统一的伤害级联扣减管线
+定义了全局统一的伤害与治疗（Damage & Heal）结算管线，负责将最终数值按规则逐层作用于目标的具体属性（如护盾、生命），并自动联动相关的视听表现与死亡判定。
 
 ```
 table global_combat_settings[name] (entry="name") {
@@ -673,7 +673,7 @@ table global_combat_settings[name] (entry="name") {
 
     healthStatTag: str ->stat_definition; // 例: "Stat.HP.Current"
     
-    // 当 baseHealthStat 归零时，引擎自动向宿主派发的 Tag (用于触发死亡表现或复活逻辑)
+    // 当 healthStat 归零时，引擎自动向宿主派发的 Tag (用于触发死亡表现或复活逻辑)
     deathTag: str ->gameplaytag; // 例: "State.Dead" 或 "State.Downed"
 }
 
