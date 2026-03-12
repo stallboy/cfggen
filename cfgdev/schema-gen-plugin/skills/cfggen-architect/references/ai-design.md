@@ -23,7 +23,7 @@
 
 本章节定义 AI 系统运行时的核心数据结构与组件。这些实例化对象在 AI 生命周期中动态创建、更新与销毁，共同支撑感知、决策与执行的完整流程。
 
-- **AIBrainComponent**：作为 AI 的大脑，挂载在 Actor 上，负责维护 AI 的运行时状态。它持有当前活跃的目标列表（activeGoals）、战斗目标与最后已知位置等感知信息，以及正在执行的行为实例（activeBehavior）。此外，它管理行为修饰包堆栈（modifierPackageStack）用于动态修改决策池，并记录各行为的冷却时间（behaviorCooldowns）。该组件是 AI 系统的中枢，驱动感知更新、行为重选与执行推进。
+- **AIBrainComponent**：作为 AI 的大脑，挂载在 Actor 上，负责维护 AI 的运行时状态。它持有当前活跃的目标列表（activeGoals）、战斗目标与最后已知位置等感知信息，以及正在执行的行为实例（activeBehavior）。此外，它管理行为修饰包堆栈（modifierPackageList）用于动态修改决策池，并记录各行为的冷却时间（behaviorCooldowns）。该组件是 AI 系统的中枢，驱动感知更新、行为重选与执行推进。
 
 - **AIGoalInstance**：代表 AI 当前感知到的潜在交互目标（如可疑位置、可攻击的敌人、可互动的物件）。它是“感知阶段”的产物，由 `GoalGenerator` 根据传感器数据或事件生成，包含目标类型标签、关联实体、位置坐标、强度值及创建时间等信息，作为后续行为决策的候选输入。
 
@@ -36,25 +36,26 @@ class AIBrainComponent {
     Actor self; 
     
     // 动态维护的认知库 (What COULD I do)
-    Int2Object<AIGoalInstance> activeGoals;
+    Int2Object<AIGoalInstance> activeGoals; // 假设sense时每类goal只能选一个
     Actor currentCombatTarget;
     Vector3 lastKnownPosition;  
     
     // 执行状态
     AIBehaviorInstance activeBehavior;
-    Stack<Ai_modifier_package> modifierPackageStack;
+    List<ModifierPackageRefCount> modifierPackages;
     Int2FloatMap behaviorCooldowns;
 }
 
 class AIGoalInstance {
+    Ai_goal_definition goalCfg;
     Actor associatedActor;  // 如果由 Event 生成，这里保存 Payload 提取出的肇事者
     Vector3 position;
     float magnitude;
-    float creationTime;     
+    float creationTime;
 }
 
 class AIBehaviorInstance {
-    Ai_behavior config;
+    Ai_behavior behaviorCfg;
     AIBrainComponent aiBrain;
     AIGoalInstance associatedGoal;   // 触发该行为的目标
 
@@ -71,6 +72,11 @@ abstract class AITaskInstance<T extends AITask> {
     abstract void onStart(AIBehaviorInstance ctx);
     abstract TaskStatus tick(AIBehaviorInstance ctx, float deltaTime);
     abstract void onEnd(AIBehaviorInstance ctx, boolean wasAborted);
+}
+
+class ModifierPackageRefCount {
+    Ai_modifier_package modifierCfg;
+    int refCount;
 }
 
 enum TaskStatus { Running, Success, Failed }
@@ -99,7 +105,7 @@ table ai_archetype[name] {
 
     // --- 3. 兜底行为 (Fallback/Default) ---
     // 当所有普通行为的 RequiredGoals 或 PreConditions 都不满足时，强制执行的行为。
-    defaultBehavior: int ->ai_behavior; 
+    defaultBehavior: str ->ai_behavior; 
 }
 ```
 
