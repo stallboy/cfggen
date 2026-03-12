@@ -79,7 +79,7 @@ enum TaskStatus { Running, Success, Failed }
 ---
 
 ## 配置定义
-### AI Archetype (AI 行为原型)
+### ai_archetype
 
 每个需要 AI 功能的实体（如怪物、NPC、宠物）在初始化时，都需要引用一条 `ai_archetype` 数据。它是 AI 系统的最上层配置入口。
 
@@ -104,7 +104,7 @@ table ai_archetype[name] {
 ```
 
 
-### AI Behavior
+### ai_behavior
 
 行为是独立的、可单独测试的逻辑单元 。它声明了准入条件、算分公式和最终要执行的动作组合。
 
@@ -132,7 +132,7 @@ table ai_behavior[name] (json) {
 }
 ```
 
-### AI Behavior Group
+### ai_behavior_group
 
 组 (Group) 的唯一目的是**共享 `preConditions**`，以减少数据冗余 。底层引擎会将组完全压平，不存在树状控制流 。
 
