@@ -44,7 +44,7 @@ table stat_definition[statTag] {
 
     // --- 1. 基础行为契约 ---
     defaultValue: float;        // 实体初始化时的保底默认值
-    isPersistent: bool;         // 是否需要存盘 (如 Level, MaxHP 存盘；Shield, MoveSpeed 不存盘)
+    isPersistent: bool;         // 是否需要存盘
     displayFormat: StatFormat;  // 表现层契约：UI 拿到这个值该怎么显示？
 
     // --- 2. 边界与极值约束 (Clamping) ---
@@ -272,11 +272,11 @@ class EventBus {
 
 ## Expression Layer
 
-本章节定义在运行时求值的表达式和条件接口。它们直接依赖 `Context` 和 `Payload` 进行动态计算，是配置灵活性的核心。
+本章节定义在运行时求值的表达式和条件接口。它们的运行时上下文是(`Context`, `Payload`)。
 
 ### TargetSelector
 
-TargetSelector 用于动态选取一个或多个目标实体，其取值来源于 `Context` 或 `Payload`。
+TargetSelector 用于动态选取一个目标实体。
 
 ```cfg
 interface TargetSelector {
@@ -412,7 +412,7 @@ struct TagCooldown {
 
 ### Effect
 
-Effect 是瞬间执行、**无状态**的指令流。
+`Effect` 是瞬间执行、**无状态**的指令流。其运行时上下文是`Context`
 
 ```cfg
 interface Effect {
@@ -615,7 +615,7 @@ enum SortTarget {
 
 ### Status & Behavior
 
-Status 是定义状态逻辑的静态配置，其实例化为 StatusInstance，承载独立的运行时生命周期与堆叠策略。
+Status 是定义状态逻辑的静态配置，其实例化为 StatusInstance，承载独立的运行时生命周期与堆叠策略。`Behavior` 的运行时上下文是`StatusInstance` (内含`Context`)。
 
 ```cfg
 // 用于定义标准、需要网络同步和 UI 表现的长效状态。

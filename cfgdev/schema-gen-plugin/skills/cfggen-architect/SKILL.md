@@ -129,5 +129,5 @@ table task[id] (entry='entry') {
 ```
 
 > **专业参考建议**：
-> * 若涉及战斗核心系统，**强制提取并参考** `references/skill-system-design.md`。
+> * 若涉及战斗核心系统，**强制提取并参考** `references/ability-design.md`。
 > * 若涉及复杂 Excel 映射排版，**参考** `references/tabular-mapping.md`。
