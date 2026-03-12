@@ -1,7 +1,6 @@
-# 技能系统架构
+# 能力系统架构 (Ability System Architecture)
 
 本文档旨在提供一套基于 `cfggen` 的现代游戏技能系统设计基准。它剥离了早期 ABE 架构中硬编码和高耦合的缺陷，全面吸收了 Unreal **GAS (Gameplay Ability System)** 的核心精髓，致力于打造一套**高内聚、低耦合、全数据驱动**的工业级配置标准。
-
 
 ## Philosophy
 
@@ -21,7 +20,7 @@
 
 ## Data Foundation
 
-本章节定义构成技能系统的"原子"和"词汇"。先定义词汇，再以此造句。
+本章节定义构成技能系统的“原子”和“词汇”。先定义词汇，再以此造句。
 
 ### GameplayTag
 
@@ -58,7 +57,7 @@ table stat_definition[statTag] {
     clampMode: StatClampMode;
 }
 
-// 极值约束器：支持"固定常数"与"动态属性引用"多态
+// 极值约束器：支持“固定常数”与“动态属性引用”多态
 interface StatLimit {
     struct Const { value: float; }
     // 引用另一个 stat_definition，在运行时去取它的 CurrentValue
@@ -86,7 +85,7 @@ enum StatClampMode {
 table event_definition[eventTag] (entry='eventTag') {
     eventTag: str ->gameplaytag; // 如 "Event.Combat.Damage"
 
-    // 定义该事件 Payload 中预期的变量列表 (用于验证和编辑器提示)
+    // 定义该事件 Payload 中预期的变量列表 (可用于验证和编辑器提示)
     // 告知该事件除了 magnitude 以外，在 extras 里还会塞入哪些 Tag 数据
     expectedVars: list<EventVarInfo>;
 }
@@ -103,6 +102,200 @@ enum VarType {
 }
 ```
 
+---
+## Runtime Core
+
+
+本章节定义技能系统运行时的核心数据结构与组件。这些概念是连接静态配置与动态执行的桥梁：
+- **Context** 封装了执行的完整环境（发起者、目标、局部变量等），所有表达式（`FloatValue`、`Condition`）和实体（`Effect`、`Status`）均依赖它进行动态求值与逻辑演算。
+- **Payload** 作为事件通信的标准化载荷，携带动作发生时的瞬时数据（如伤害值、攻击者、受害者），供 `Effect` 和 `Trigger` 在事件响应中读取或修改。
+
+### Context
+
+Context 是运行时的载体，连接静态配置与动态执行。
+
+```java
+record Context(
+    Actor instigator,   // 真正的发起者 (如：玩家)
+    Actor causer, // 造成效果的物理实体 (如：玩家发射的火球)
+    ReadOnlyStore initSnapshot, // 冻结的初始参数 (如：蓄力时间,初始锁定的目标)
+
+    // --- 数据流转,target或localScope改变的时候要 new Context ---
+    // 对于 StatusInstance，target代表 Status 的 Host (宿主)。
+    // 对于 Effect，target代表当前的作用目标。
+    Actor target,       // 被 WithTarget 改变
+    Store instanceState,// 实例状态 (跨节点共享，随技能销毁)
+    Store localScope,   // 局部作用域 (仅对子节点树有效，WithLocalVar时要创建新 localScope)
+    int recursionDepth  // 死循环防护
+){}
+
+interface ReadOnlyStore {
+    float getFloat(int tagId);
+    Object getObject(int tagId);
+    boolean hasTag(int tagId);
+}
+
+interface Store extends ReadOnlyStore {
+    void setFloat(int tagId, float value);
+    void setObject(int tagId, Object obj);
+    void removeTag(int tagId);
+}
+```
+
+### Payload
+
+Payload 是事件携带的载荷，Modifier 是对载荷的修饰机制。
+
+```java
+record Event(
+    int eventTagId,
+    Payload payload
+){}
+
+record Payload(
+    Context sourceContext, // 携带引发该事件的原始技能 Context 引用，用于追溯来源
+    Actor instigator,   // Event的绝对发起者 (谁砍的这一刀)
+    Actor target,       // Event的绝对承受者 (谁挨的这一刀)
+
+    float magnitude,    // 主值（如伤害量、治疗量）
+    Store extras,       // 附加存储，支持 MutatePayloadVar 修改
+
+    ChangeSet magnitudeChanges, // 收集对主值的修改
+    Int2ObjectMap<ChangeSet> extraChanges // 收集对副属性的修改
+){}
+
+// ChangeSet 瞬时态，聚合数值标量，处理载荷最终结算。
+class ChangeSet {
+    FloatList additives;
+    FloatList multipliers;
+    OverrideOp override;
+    float resolve(float baseValue);  // (Base + ΣAdd) * ΠMul
+}
+
+record OverrideOp(
+    float value,
+    int priority
+){}
+```
+
+### Actor
+
+定义游戏实体及其持有的核心组件。
+
+```java
+class Actor {
+    StatusComponent statusComponent;
+    StatComponent statComponent;
+    EventBus eventBus;
+    TagContainer tagContainer;
+}
+```
+
+### TagContainer
+
+TagContainer 是挂载在 Actor 上的核心运行时组件，负责维护实体当前的所有标签状态。为了满足配置表中严格的树状层级需求与高频的查询性能，底层采用 **“引用计数 + 写入时展开”** 策略。
+
+```java
+class TagContainer {
+    // 核心：TagID -> 引用计数
+    Int2IntMap tagCounts;
+
+    // 写入时展开
+    // 当添加子级 Tag (如 Stun) 时，会同时递增其所有父级 (Control, Debuff) 的计数。
+    // 这使得运行时查询 "State.Debuff" 时，只需简单查询 Map 中是否存在该 Key (O(1))，
+    // 而无需遍历检查现有标签的父级关系，极大优化了 GameplayTagQuery 的判定速度。
+    void addTag(int tagId) 
+    void removeTag(int tagId);
+    boolean hasTag(int tagId);
+}
+```
+
+### StatComponent
+
+游戏内所有数值（最大生命、当前血量、攻击力）全部统一为 `Stat` 对象。通过 `StatModifierList` 管线实现临时状态与永久状态的完美隔离。
+
+```java
+class StatComponent {
+    // 核心存储：TagId -> Stat 实例的映射
+    Int2ObjectMap<Stat> stats;
+}
+
+class Stat {
+    Stat_definition config;
+
+    // 面板属性(如攻击力)通常只读。状态属性(如当前HP)受伤时直接永久扣减此值。
+    float baseValue;
+    // 真正暴露给战斗公式读取的值，包含了当前所有 Buff 的加成。
+    float currentValue;
+    // 收集所有依附在该属性上的临时 Buff (如：战吼加攻)
+    StatModifierList modifiers;
+    boolean isDirty = true;
+}
+
+// StatModifierList 支持动态增删，维护长时状态，服务于属性面板计算。
+class StatModifierList {
+    List<StatModifierInstance> additives;
+    List<StatModifierInstance> multipliers;
+    StatModifierInstance activeOverride = null; // 选最高优先级的
+    int currentOverridePriority = -1;
+}
+
+class StatModifierInstance extends StatusInstance<StateModifier> {
+    float evaluate();
+}
+```
+
+### EventBus
+
+以 EventTagId 为键，直连底层的 SafeList<TriggerInstance> 监听队列。
+
+```java
+class EventBus {
+    Int2ObjectMap<SafeList<TriggerInstance>> listeners;
+
+    void dispatch(Event event) {
+        SafeList<TriggerInstance> list = listeners.get(event.eventTagId);
+        if (list == null) return;
+        list.beginIterate();
+        try {
+            for (TriggerInstance trigger : list.items) {
+                if (!trigger.isPendingKill()) trigger.onEventFired(event);
+            }
+        } finally {
+            list.endIterate();
+        }
+    }
+}
+```
+
+---
+
+## Expression Layer
+
+本章节定义在运行时求值的表达式和条件接口。它们直接依赖 `Context` 和 `Payload` 进行动态计算，是配置灵活性的核心。
+
+### TargetSelector
+
+TargetSelector 用于动态选取一个或多个目标实体，其取值来源于 `Context` 或 `Payload`。
+
+```cfg
+interface TargetSelector {
+    // --- 1. Context 维度 (从当前技能/状态的运行上下文中取) ---
+    struct ContextTarget {}     // 技能当前瞄准的准星目标
+    struct ContextInstigator {} // 技能的绝对发起者 (如：玩家)
+    struct ContextCauser {}     // 造成效果的物理媒介 (如：飞行中的子弹/地上的火墙)
+    struct ContextVar {
+        actorVarTag: str -> gameplaytag; 
+    }
+
+    // --- 2. Payload 维度 (从拦截到的 Event 事件载荷中取) ---
+    struct PayloadInstigator {} // 肇事者 (比如引发受击事件的攻击方)
+    struct PayloadTarget {}     // 承受者 (比如受击事件中的受害者)
+    struct PayloadVar {
+        actorVarTag: str -> gameplaytag; 
+    }
+}
+```
 
 ### FloatValue
 
@@ -134,23 +327,6 @@ enum MathOp {
     Divide;
     Max;
     Min;
-}
-
-interface TargetSelector {
-    // --- 1. Context 维度 (从当前技能/状态的运行上下文中取) ---
-    struct ContextTarget {}     // 技能当前瞄准的准星目标
-    struct ContextInstigator {} // 技能的绝对发起者 (如：玩家)
-    struct ContextCauser {}     // 造成效果的物理媒介 (如：飞行中的子弹/地上的火墙)
-    struct ContextVar {
-        actorVarTag: str -> gameplaytag; 
-    }
-
-    // --- 2. Payload 维度 (从拦截到的 Event 事件载荷中取) ---
-    struct PayloadInstigator {} // 肇事者 (比如引发受击事件的攻击方)
-    struct PayloadTarget {}     // 承受者 (比如受击事件中的受害者)
-    struct PayloadVar {
-        actorVarTag: str -> gameplaytag; 
-    }
 }
 
 enum StatCaptureMode {
@@ -197,7 +373,7 @@ struct GameplayTagQuery {
 
 ### Ability
 
-能力是行为的入口(主动技能、被动、普攻、跳跃、喝药)。它不负责具体的伤害数值计算，只负责声明"我是谁"以及"我要执行什么指令序列"。
+能力是行为的入口(主动技能、被动、普攻、跳跃、喝药)。它不负责具体的伤害数值计算，只负责声明“我是谁”以及“我要执行什么指令序列”。
 
 ```cfg
 table ability[id] (json) {
@@ -232,7 +408,6 @@ struct TagCooldown {
     cooldownTag: str ->gameplaytag; // 如 "State.Cooldown.Skill_Fireball"
     duration: FloatValue;           // 如 15.0 (支持被装备减CD属性修饰)
 }
-
 ```
 
 ### Effect
@@ -267,7 +442,7 @@ interface Effect {
     }
 
     // --- 状态操作 ---
-    // A. 引用标准 Status (适用于需要 UI 图标、多端网络同步的常规状态，如"中毒", "护盾")
+    // A. 引用标准 Status (适用于需要 UI 图标、多端网络同步的常规状态，如“中毒”, “护盾”)
     struct ApplyStatus {
         statusId: int ->status;
         captures: list<ArgCapture>;
@@ -319,7 +494,7 @@ interface Effect {
     // --- 作用域 & 控制流 ---
     // 目标重定向
     struct WithTarget {
-        target: TargetScan;
+        target: TargetSelector;
         effect: Effect;
     }
 
@@ -345,7 +520,7 @@ interface Effect {
     struct Sequence { effects: list<Effect>; }
 }
 
-// 将高频复用的effect（如"通用受击"、"标准炎爆"、"系统级浮空"）提取到独立的配置表中，配合 `EffectRef` 在各处调用
+// 将高频复用的effect（如“通用受击”、“标准炎爆”、“系统级浮空”）提取到独立的配置表中，配合 `EffectRef` 在各处调用
 table shared_effect[id] (json) {
     id: int;
     name: text;
@@ -513,121 +688,17 @@ interface StackingPolicy {
     // 拒绝叠加：新状态直接被免疫/丢弃 (如：不可刷新的特殊机制锁)
     struct Reject {}
 }
-
 ```
 
 ---
 
-## Runtime Mechanics
+## Global Rules
 
-本章节定义上述实体在运行时如何交互、数据如何流转。
-
-### Context
-
-Context 是运行时的载体，连接静态配置与动态执行。
-
-```java
-record Context(
-    Actor instigator,   // 真正的发起者 (如：玩家)
-    Actor causer, // 造成效果的物理实体 (如：玩家发射的火球)
-    ReadOnlyStore initSnapshot, // 冻结的初始参数 (如：蓄力时间,初始锁定的目标)
-
-    // --- 数据流转,target或localScope改变的时候要 new Context ---
-    // 对于 StatusInstance，target代表 Status 的 Host (宿主)。
-    // 对于 Effect，target代表当前的作用目标。
-    Actor target,       // 被 WithTarget 改变
-    Store instanceState,// 实例状态 (跨节点共享，随技能销毁)
-    Store localScope,   // 局部作用域 (仅对子节点树有效，WithLocalVar时要创建新 localScope)
-    int recursionDepth  // 死循环防护
-){}
-
-interface ReadOnlyStore {
-    float getFloat(int tagId);
-    Object getObject(int tagId);
-    boolean hasTag(int tagId);
-}
-
-interface Store extends ReadOnlyStore {
-    void setFloat(int tagId, float value);
-    void setObject(int tagId, Object obj);
-    void removeTag(int tagId);
-}
-```
-
-### Payload
-
-Payload 是事件携带的载荷，Modifier 是对载荷的修饰机制。
-
-```java
-record Event(
-    int eventTagId,
-    Payload payload
-){}
-
-record Payload(
-    Context sourceContext, // 携带引发该事件的原始技能 Context 引用，用于追溯来源
-    Actor instigator,   // Event的绝对发起者 (谁砍的这一刀)
-    Actor target,       // Event的绝对承受者 (谁挨的这一刀)
-
-    float magnitude,    // 主值（如伤害量、治疗量）
-    Store extras,       // 附加存储，支持 MutatePayloadVar 修改
-
-    ChangeSet magnitudeChanges, // 收集对主值的修改
-    Int2ObjectMap<ChangeSet> extraChanges // 收集对副属性的修改
-){}
-
-// ChangeSet 瞬时态，聚合数值标量，处理载荷最终结算。
-class ChangeSet {
-    FloatList additives;
-    FloatList multipliers;
-    OverrideOp override;
-    float resolve(float baseValue);  // (Base + ΣAdd) * ΠMul
-}
-
-record OverrideOp(
-    float value,
-    int priority
-){}
-```
-
-### Stat
-
-游戏内所有数值（最大生命、当前血量、攻击力）全部统一为 `Stat` 对象。通过 `StatModifierList` 管线实现临时状态与永久状态的完美隔离。
-
-```java
-class StatComponent {
-    // 核心存储：TagId -> Stat 实例的映射
-    Int2ObjectMap<Stat> stats;
-}
-
-class Stat {
-    Stat_definition config;
-
-    // 面板属性(如攻击力)通常只读。状态属性(如当前HP)受伤时直接永久扣减此值。
-    float baseValue;
-    // 真正暴露给战斗公式读取的值，包含了当前所有 Buff 的加成。
-    float currentValue;
-    // 收集所有依附在该属性上的临时 Buff (如：战吼加攻)
-    StatModifierList modifiers;
-    boolean isDirty = true;
-}
-
-// StatModifierList 支持动态增删，维护长时状态，服务于属性面板计算。
-class StatModifierList {
-    List<StatModifierInstance> additives;
-    List<StatModifierInstance> multipliers;
-    StatModifierInstance activeOverride = null; // 选最高优先级的
-    int currentOverridePriority = -1;
-}
-
-class StatModifierInstance extends StatusInstance<StateModifier> {
-    float evaluate();
-}
-```
+本章节定义全局性的战斗规则，这些规则以配置表的形式存在，由底层引擎直接读取，作为战斗系统的“最高物理法则”。
 
 ### global_tag_rules
 
-该表定义了标签之间的原子化交互准则。通过将"状态"与"行为"解耦，它充当了战斗系统的"最高物理法则"，统一处理控制、打断与免疫。
+该表定义了标签之间的原子化交互准则。通过将“状态”与“行为”解耦，它充当了战斗系统的“最高物理法则”，统一处理控制、打断与免疫。
 
 ```cfg
 table global_tag_rules[name] (entry='name'){
@@ -751,12 +822,12 @@ table status {
             listenEventTag: "Event.Combat.Damage.Take.Post"; // 结算完毕阶段
 
             conditions: [
-                struct PayloadVarGte { varTag: "Data.Damage.Magnitude"; compareValue: 50.0; }
+                struct PayloadMagnitudeGte { compareValue: 50.0; }
             ];
 
             effect: struct WithTarget {
                 // 将反击目标设定为当时的攻击者
-                target: struct TargetFromPayload { role: Instigator; };
+                target: struct PayloadInstigator {};
                 effect: struct Damage {
                     baseDamage: struct Const { value: 10.0; };
                 };
@@ -766,48 +837,15 @@ table status {
 }
 ```
 
-
 ---
 
 ## Implementation Reference
 
-本章提供核心架构的伪代码实现，展示运行时各组件如何协作。
-
-### Actor
-
-定义游戏实体及其持有的核心组件。
-```java
-class Actor {
-    long entityId;
-    StatusComponent statusComponent;
-    StatComponent statComponent;
-    EventBus eventBus;
-    TagContainer tagContainer;
-}
-```
-
-### TagContainer
-
-TagContainer 是挂载在 Actor 上的核心运行时组件，负责维护实体当前的所有标签状态。为了满足配置表中严格的树状层级需求与高频的查询性能，底层采用 **"引用计数 + 写入时展开"** 策略。
-
-```java
-class TagContainer {
-    // 核心：TagID -> 引用计数
-    Int2IntMap tagCounts;
-
-    // 写入时展开
-    // 当添加子级 Tag (如 Stun) 时，会同时递增其所有父级 (Control, Debuff) 的计数。
-    // 这使得运行时查询 "State.Debuff" 时，只需简单查询 Map 中是否存在该 Key (O(1))，
-    // 而无需遍历检查现有标签的父级关系，极大优化了 GameplayTagQuery 的判定速度。
-    void addTag(int tagId) 
-    void removeTag(int tagId);
-    boolean hasTag(int tagId);
-}
-```
+本章提供核心架构的伪代码实现，展示运行时各组件如何协作。此处重点关注具体的技术实现细节，包括生命周期管理、无状态执行器等。
 
 ### SafeList
 
-抽离生命周期管理中的"防重入、防并发修改"逻辑，封装为泛型安全容器。所有受控实体（状态、行为零件等)必须实现 `IPendingKill`。
+抽离生命周期管理中的“防重入、防并发修改”逻辑，封装为泛型安全容器。所有受控实体（状态、行为零件等)必须实现 `IPendingKill`。
 在遍历迭代（ `beginIterate`/`endIterate` ) 期间,组件采用**双缓冲并发隔离**:新增元素会被拦截送入 `pendingAdds` 缓冲队列,而销毁操作仅做 `isPendingKill = true` 的逻辑**软删除**。
 迭代彻底结束后,容器自动进行**延迟硬清理 (`compact`)**,采用 Swap-Remove 策略以 O(1) 的时间复杂度完成数组缝合,避免 `ArrayList` 的整体内存搬运。
 
@@ -835,7 +873,7 @@ class SafeList<T extends IPendingKill> {
 
 - `StatusComponent`(宏观调度层):主导 Tick 驱动与堆叠策略 (Stacking) 的全局路由。
 - `StatusInstance` (生命周期层):专职接管单体状态的倒计时演算与层数突变,并动态装配底层行为单元。
-- `BehaviorInstance` (业务执行层):细粒度的逻辑实体,实现"生命周期管理"与"具体战斗逻辑"的彻底正交。
+- `BehaviorInstance` (业务执行层):细粒度的逻辑实体,实现“生命周期管理”与“具体战斗逻辑”的彻底正交。
 
 ```java
 class StatusComponent {
@@ -864,34 +902,6 @@ abstract class BehaviorInstance<T extends Behavior> {
 }
 ```
 
-### EventBus
-
-以 EventTagId 为键,直连底层的 SafeList<TriggerInstance> 监听队列。
-
-```java
-class EventBus {
-    Int2ObjectMap<SafeList<TriggerInstance>> listeners;
-
-    void dispatch(Event event) {
-        SafeList<TriggerInstance> list = listeners.get(event.eventTagId);
-        if (list == null) return;
-        list.beginIterate();
-        try {
-            for (TriggerInstance trigger : list.items) {
-                if (!trigger.isPendingKill()) trigger.onEventFired(event);
-            }
-        } finally {
-            list.endIterate();
-        }
-    }
-}
-
-class TriggerInstance extends BehaviorInstance<Behavior.Trigger> implements IPendingKill {
-    void onEventFired(Event event);
-    boolean pendingKill;
-}
-
-```
 ### Stateless Executors
 
 `Effect`、`FloatValue`、`Condition` 作为**无状态**指令节点,本身不维护生命周期,被调用时即时消费上下文结算。
@@ -910,6 +920,7 @@ class Conditions {
 }
 ```
 
+---
 
 ## Gameplay Cue
 
@@ -996,13 +1007,13 @@ enum CueRole {
 在运行时，逻辑层不需要策划手动配置 Cue 的生命周期类型，底层引擎将根据 Cue 所在的**上下文位置**自动推导并广播网络事件：
 
 * **挂载在 `Effect` 节点中（或 `DamageLayer` 结算时）**：
-* 语义：瞬间行为。
-* 推导：底层触发 `Executed` 事件。客户端查表调用 `Instant` 处理器，对象池“阅后即焚”。
+    * 语义：瞬间行为。
+    * 推导：底层触发 `Executed` 事件。客户端查表调用 `Instant` 处理器，对象池“阅后即焚”。
 
 
 * **挂载在 `Status` 的 `cuesWhileActive` 中**：
-* 语义：状态绑定行为。
-* 推导：底层在状态添加时触发 `Added` 事件，在状态销毁时触发 `Removed` 事件。客户端查表调用 `Sustained` 处理器，生成特效后存入 `activeSustainedCues` 字典，收到移除指令时清理。
+    * 语义：状态绑定行为。
+    * 推导：底层在状态添加时触发 `Added` 事件，在状态销毁时触发 `Removed` 事件。客户端查表调用 `Sustained` 处理器，生成特效后存入 `activeSustainedCues` 字典，收到移除指令时清理。
 
 
 
@@ -1016,7 +1027,6 @@ record GameplayCueEvent (
     Actor instigator,       // 发起者 (用于 Instigator Role 的表现回溯)
     float magnitude         // 表现强度 (传递给 UI 飘字数值或音频引擎的 RTPC 参数)
 ){}
-
 ```
 
 ### Example

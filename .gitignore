@@ -111,3 +111,4 @@
 **/.idea
 /cfgdev/schema-gen-plugin/.claude
 /cfggen.sln
+/example/i18n/ai.json

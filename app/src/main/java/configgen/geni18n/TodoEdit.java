@@ -184,11 +184,13 @@ public record TodoEdit(List<TodoEntry> todo,
             String note = getCellAsString(row, 7).orElse("");
             // 原则，original读进来就做normalize
             String normalized = I18nUtils.normalize(original);
-            TodoEntry entry = new TodoEntry(table, id, fieldChain, normalized, translated);
-            entry.aiTranslated = aiTranslated;
-            entry.confidence = confidence;
-            entry.note = note;
-            entries.add(entry);
+            if (!original.isBlank()) {
+                TodoEntry entry = new TodoEntry(table, id, fieldChain, normalized, translated);
+                entry.aiTranslated = aiTranslated;
+                entry.confidence = confidence;
+                entry.note = note;
+                entries.add(entry);
+            }
         }
         return entries;
     }
