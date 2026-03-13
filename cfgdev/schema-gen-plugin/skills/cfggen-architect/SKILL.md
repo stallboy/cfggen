@@ -76,11 +76,9 @@ description: 游戏架构师与数据驱动配置生成助手。当用户提到"
 
 * **平铺结构**（简单项目，表 < 8）：所有内容放入根目录 `config.cfg`。
 * **模块化结构**（复杂项目）：
-* 顶层入口 `config/config.cfg`（唯一入口，禁止使用 include）。
+* 顶层入口 `config/config.cfg`（唯一入口，**禁止使用 include**）。
 * 子模块目录 `config/模块名/模块名.cfg`。
 * 跨模块引用必须加前缀：`[模块名].[类型]` (例如 `item.ItemConfig`)。
-
-
 
 ---
 
@@ -95,7 +93,66 @@ description: 游戏架构师与数据驱动配置生成助手。当用户提到"
 * **成功**：列出生成的 CSV 模板文件列表。
 * **失败**：按文件整理错误信息（语法错误、引用丢失、pack 缺失等），**给出修改建议并等待用户指示**，禁止擅自循环修复。
 
+---
 
+## 阶段 4：填入数据 (Data Entry)
+
+### CSV 数据填写
+
+CSV 数据一般是简单扁平结构的表格，**必须严格遵守table的结构定义和映射机制定义**。
+
+### JSON 数据填写
+
+JSON 数据用于存储复杂嵌套结构（CFG 中标记为 `(json)` 的表），**必须严格遵守 table结构定义**，确保数据的一致性和有效性。
+
+#### 核心规则
+
+1. **类型标识**：对象必须加入 `$type` 字段，表明此对象的类型
+2. **默认值省略**：如果字段值为默认值，则可以忽略该字段
+   - `number` 类型默认为 `0`
+   - `array` 类型默认为 `[]`
+   - `str` 类型默认为空字符串 `""`
+3. **注释字段**：对象可以加入 `$note` 字段作为注释，适当的注释有助于后续维护，但不应过度使用
+4. **禁止注释**：JSON 中不要包含 `//` 开头的注释
+
+#### 文件组织
+
+- **目录命名**：`_[表全名.replace(., _)]/`
+  - 例如：表名为 `skill.buff` → 对应目录为 `_skill_buff/`
+- **文件命名**：以主键 pack 的字符串值命名，如 `1.json`、`1,2.json`
+
+#### JSON 示例
+
+假设有以下 skill.cfg 定义：
+```cfg
+interface Effect {
+    struct Damage { value:int; }
+    struct Heal { value:int; }
+}
+
+table shared_effect[id] (json) {
+    id:int;
+    name:str;
+    effects:list<Effect>;
+}
+```
+
+正确的 JSON 数据（`_skill_shared_effect/1.json`）：
+```json
+{
+    "id": 1,
+    "name": "火球术",
+    "$type": "skill.shared_effect",
+    "$note": "基础火系技能",
+    "effects": [
+        {
+            "$type": "skill.Effect.Damage",
+            "value": 100,
+            "$note": "造成伤害"
+        }
+    ]
+}
+```
 
 ---
 
@@ -130,4 +187,5 @@ table task[id] (entry='entry') {
 
 > **专业参考建议**：
 > * 若涉及战斗核心系统，**强制提取并参考** `references/ability-design.md`。
+> * 若涉及npc ai系统，**提取并参考** `references/ai-design.md`。
 > * 若涉及复杂 Excel 映射排版，**参考** `references/tabular-mapping.md`。
