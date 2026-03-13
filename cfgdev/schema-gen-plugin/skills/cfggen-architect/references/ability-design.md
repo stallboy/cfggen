@@ -1,4 +1,4 @@
-# 能力系统架构 (Ability System Architecture)
+# 能力系统设计 (Ability System Design)
 
 本文档旨在提供一套基于 `cfggen` 的现代游戏技能系统设计基准。它剥离了早期 ABE 架构中硬编码和高耦合的缺陷，全面吸收了 Unreal **GAS (Gameplay Ability System)** 的核心精髓，致力于打造一套**高内聚、低耦合、全数据驱动**的工业级配置标准。
 
