@@ -66,7 +66,6 @@ class AIBehaviorInstance {
     Stack<AITaskInstance> taskStack; //是这棵树在运行时的执行轨迹
 
     Store localStorage;              // 行为局部存储（由 WithLocalVar 等填充）
-    boolean isPaused;                // 是否被高优抢占暂停
 }
 
 abstract class AITaskInstance<T extends AITask> {
@@ -173,7 +172,7 @@ table ai_behavior_group[name] {
     description: text;
     sharedConditions: list<AICondition>; 
     behaviors: list<str> ->ai_behavior;
-    subGroupTags: list<str> ->ai_behavior_group;
+    subGroups: list<str> ->ai_behavior_group;
 }
 ```
 
