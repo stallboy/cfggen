@@ -164,7 +164,7 @@ table ai_behavior[name] (json) {
 
 ### ai_behavior_group
 
-组 (Group) 的唯一目的是**共享 `preConditions**`，以减少数据冗余 。底层引擎会将组完全压平，不存在树状控制流 。
+组 (Group) 的唯一目的是**共享 `preConditions**`，以减少配置冗余 。
 
 ```cfg
 table ai_behavior_group[name] {

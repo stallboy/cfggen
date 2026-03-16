@@ -39,11 +39,13 @@ table gameplaytag[name] {
 | 前缀 | 用途 | 示例 |
 |---|---|---|
 | `State.*` | 实体状态标记 | `State.Debuff.Control.Stun` |
+| `Stat.*` | 属性标识 | `Stat.Combat.Attack` |
+| `Status.*` | status分类标识 | `Status.Type.DOT` |
 | `Ability.*` | 技能分类标签 | `Ability.Type.Spell` |
 | `Damage.*` | 伤害/治疗分类 | `Damage.Element.Fire` |
 | `Event.*` | 事件路由键 | `Event.Combat.Damage.Deal.Pre` |
 | `Cue.*` | 表现层路由键 | `Cue.Combat.Hit.Heavy` |
-| `Stat.*` | 属性标识 | `Stat.Combat.Attack` |
+
 | `Var.*` | 变量键名 | `Var.ChargeTime` |
 | `Cooldown.*` | 冷却组键名 | `Cooldown.Ability.Fireball` |
 
@@ -421,26 +423,32 @@ interface Effect {
     }
 
     // --- 状态操作 ---
-    // A. 引用标准 Status (适用于需要 UI 图标、多端网络同步的常规状态，如“中毒”, “护盾”)
+    // 引用标准 Status (适用于需要 UI 图标、多端网络同步的常规状态，如“中毒”, “护盾”)
     struct ApplyStatus {
         statusId: int ->status;
         captures: list<ArgCapture>;
     }
 
-    // B. 内联型 Status (拥有完整功力，适用于无需 UI 显示的一次性专属机制)
+    // 内联型 Status (拥有完整功力，适用于无需 UI 显示的一次性专属机制)
     struct ApplyStatusInline {
         core: StatusCore;
         captures: list<ArgCapture>;
     }
 
-    // C. 快捷方式：极简内联微状态 (适用于冲锋时的零点几秒霸体等纯逻辑阻断状态)
+    // 快捷方式：极简内联微状态 (适用于冲锋时的零点几秒霸体等纯逻辑阻断状态)
     struct GrantTags {
         grantedTags: list<str> ->gameplaytag;
         duration: FloatValue;
     }
 
     struct RemoveStatusByTag {
-        withAnyTags: list<str> ->gameplaytag;
+        query: TagQuery;
+        matchStatusTags: bool;  // 匹配 "它是什么" (如: 魔法, 中毒)
+        matchGrantedTags: bool; // 匹配 "它造成了什么" (如: 眩晕, 沉默)
+    }
+
+    struct RemoveStatus {
+        anyIds: list<int> ->status;
     }
 
     // 发送事件
