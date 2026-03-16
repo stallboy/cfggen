@@ -157,7 +157,7 @@ Payload 是事件携带的瞬时载荷，Trigger 通过它读取"发生了什么
 
 ```java
 record Event(
-    int eventTagId,
+    Event_definition eventTag,
     Payload payload
 ){}
 
@@ -285,28 +285,9 @@ class EventBus {
 
 ## Expression Layer
 
-运行时求值的表达式和条件接口。运行时上下文是`(Context, Payload)`。
-
-### TargetSelector
-
-TargetSelector 用于动态选取一个目标实体。
-
-```cfg
-interface TargetSelector {
-    struct ContextTarget {}
-    struct ContextInstigator {}
-    struct ContextCauser {}
-    struct ContextVar { varTag: str ->gameplaytag; }
-
-    struct PayloadInstigator {}
-    struct PayloadTarget {}
-    struct PayloadVar { varTag: str ->gameplaytag; }
-}
-```
-
 ### FloatValue
 
-FloatValue 提供多态求值能力，将静态配置转化为上下文敏感的运行时指令，替代硬编码参数。
+提供多态求值能力，将静态配置转化为上下文敏感的运行时指令，替代硬编码参数。
 
 ```cfg
 interface FloatValue {
@@ -343,7 +324,7 @@ enum StatCaptureMode { Current; Base; }
 
 ### Condition
 
-Condition 提供执行准入标准，与 FloatValue 配合实现动态逻辑判断。
+提供执行准入标准，与 FloatValue 配合实现动态逻辑判断。
 
 ```cfg
 interface Condition {
@@ -378,6 +359,23 @@ struct TagQuery {
 }
 ```
 
+### TargetSelector
+
+用于动态选取一个目标实体。
+
+```cfg
+interface TargetSelector {
+    struct ContextTarget {}
+    struct ContextInstigator {}
+    struct ContextCauser {}
+    struct ContextVar { varTag: str ->gameplaytag; }
+
+    struct PayloadInstigator {}
+    struct PayloadTarget {}
+    struct PayloadVar { varTag: str ->gameplaytag; }
+}
+```
+
 ---
 
 ## Core Entities
@@ -387,7 +385,7 @@ struct TagQuery {
 
 ### Effect
 
-`Effect` 是瞬间执行、**无状态**的指令流。其运行时上下文是`Context`
+`Effect` 是瞬间执行、**无状态**的指令流。
 
 ```cfg
 interface Effect {
@@ -650,7 +648,7 @@ enum OverflowBehavior {
 
 ### Behavior
 
-Behavior 是附着在 Status 上的逻辑零件。运行时上下文是 StatusInstance（内含 Context）。
+Behavior 是附着在 Status 上的逻辑零件。运行时上下文是 StatusInstance（内含 Context）,Trigger 会接收到事件，上下文会有Payload，所有的事件Payload也都从这而起。
 
 
 ```
@@ -1085,17 +1083,12 @@ struct MaterialEntry {
     slotIndex: int;     // -1 = 全部
 }
 
-enum CueRole { Target; Instigator; }
+enum CueRole { Target; Instigator; Causer }
 ```
 
 ### Cue Runtime
 
-引擎根据 Cue 所在的上下文自动推导生命周期类型：
-
-| 来源 | 推导类型 | 客户端行为 |
-|---|---|---|
-| `Effect.FireCue` / `ApplyPipeline.cuesOnExecute` / `AllocationLayer.onHitCue`  | `Executed` | 查表调用 Instant 处理器 |
-| `Status.cuesWhileActive` | `Added` / `Removed` | 查表调用 Sustained 处理器 |
+`cue_registry`的上下文是`(CueEvent)`
 
 ```java
 record CueEvent(
@@ -1109,6 +1102,15 @@ record CueEvent(
 
 enum CueEventType { Executed; Added; Removed; }
 ```
+
+引擎根据 Cue 所在的上下文自动推导生命周期类型：
+
+| 来源 | 推导类型 | 客户端行为 |
+|---|---|---|
+| `Effect.FireCue` / `ApplyPipeline.cuesOnExecute` / `AllocationLayer.onHitCue`  | `Executed` | 查表调用 Instant 处理器 |
+| `Status.cuesWhileActive` | `Added` / `Removed` | 查表调用 Sustained 处理器 |
+
+
 ---
 
 ## Implementation Reference
@@ -1177,19 +1179,27 @@ abstract class BehaviorInstance<T extends Behavior> {
 
 ### Stateless Executors
 
-`Effect`、`FloatValue`、`Condition` 作为**无状态**指令节点,本身不维护生命周期,被调用时即时消费上下文结算。
+`Effect`、`FloatValue`、`Condition`、`TargetSelector`、`TargetScan` 作为**无状态**指令节点,本身不维护生命周期,被调用时即时消费上下文结算。
 
 ```java
 class Effects {
-    static void execute(Effect cfg, Context ctx, Event evt);
+    static void execute(Effect cfg, Context ctx, Payload payload);
 }
 
 class FloatValues {
-    static float evaluate(FloatValue cfg, Context ctx, Event evt);
+    static float evaluate(FloatValue cfg, Context ctx, Payload payload);
 }
 
 class Conditions {
-    static boolean test(Condition cfg, Context ctx, Event evt);
+    static boolean test(Condition cfg, Context ctx, Payload payload);
+}
+
+class TargetSelectors {
+    static Actor select(TargetSelector cfg, Context ctx, Payload payload);
+}
+
+class TargetScans {
+    static Collection<Actor> scan(TargetScan cfg, Context ctx, Payload payload);
 }
 ```
 
