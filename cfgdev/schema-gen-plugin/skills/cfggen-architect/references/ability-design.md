@@ -128,16 +128,20 @@ Context 是运行时的载体，连接静态配置与动态执行。
 ```java
 record Context(
     Actor instigator,   // 真正的发起者 (如：玩家)
-    Actor causer, // 造成效果的物理实体 (如：玩家发射的火球)
     ReadOnlyStore initSnapshot, // 冻结的初始参数 (如：蓄力时间,初始锁定的目标)
 
-    // --- 数据流转,target或localScope改变的时候要 new Context ---
-    // 对于 StatusInstance，target代表 Status 的 Host (宿主)。
-    // 对于 Effect，target代表当前的作用目标。
-    Actor target,       // 被 WithTarget 改变
-    Store instanceState,// 实例状态 (跨节点共享，随技能销毁)
-    Store localScope,   // 局部作用域 (仅对子节点树有效，WithLocalVar时要创建新 localScope)
-    int recursionDepth  // 死循环防护
+    // 实例状态 (原地被改变，跨节点共享，随技能销毁)
+    Store instanceState,
+    
+    // --- 以下被改变都要 new Context
+    // StatusInstance 里存储的context causer=host,target=host
+    // SpawnedObj 里存储的context causer=self,target=self
+    Actor causer,  // 造成效果的物理实体 (如：玩家发射的火球)
+    // 对于 Effect，target = 当前作用的目标。
+    // 对于 Behavior，target = 当前status的宿主host
+    Actor target,  // 被 WithTarget 改变
+    // 局部作用域 (仅对子节点树有效，WithLocalVar时要创建新 localScope)
+    ReadOnlyStore localScope
 ){}
 
 interface ReadOnlyStore {
@@ -165,8 +169,8 @@ record Event(
 
 record Payload(
     Context sourceContext, // 携带引发该事件的原始技能 Context 引用，用于追溯来源
-    Actor instigator,   // Event的绝对发起者 (谁砍的这一刀)
-    Actor target,       // Event的绝对承受者 (谁挨的这一刀)
+    Actor instigator,   // 发起者 (谁砍的这一刀)
+    Actor target,       // 承受者 (谁挨的这一刀)
 
     float magnitude,    // 主值（如伤害量、治疗量）
     Store extras,       // 附加数据，支持 MutatePayloadVar 修改
@@ -265,19 +269,44 @@ class StatModifierInstance extends StatusInstance<StateModifier> {
 以 EventTagId 为键，直连底层的 SafeList<TriggerInstance> 监听队列。
 
 ```java
+/**
+ * 战斗系统全局上下文，持有所有跨实体的共享状态。
+ * 每个战斗实例（副本/战场）一个。
+ */
+class CombatSystem {
+    int globalDispatchDepth = 0;
+    final int maxDispatchDepth; // 从 combat_settings 读取
+
+    boolean tryEnterDispatch() {
+        if (globalDispatchDepth >= maxDispatchDepth) return false;
+        globalDispatchDepth++;
+        return true;
+    }
+
+    void exitDispatch() {
+        globalDispatchDepth--;
+    }
+}
+
 class EventBus {
     Int2ObjectMap<SafeList<TriggerInstance>> listeners;
+    final CombatSystem combatSystem;
 
     void dispatch(Event event) {
-        SafeList<TriggerInstance> list = listeners.get(event.eventTagId);
-        if (list == null) return;
-        list.beginIterate();
+        if (!combatSystem.tryEnterDispatch()) return; // 全局深度检查
         try {
-            for (TriggerInstance trigger : list.items) {
-                if (!trigger.isPendingKill()) trigger.onEventFired(event);
+            SafeList<TriggerInstance> list = listeners.get(event.eventTagId);
+            if (list == null) return;
+            list.beginIterate();
+            try {
+                for (TriggerInstance trigger : list.items) {
+                    if (!trigger.isPendingKill()) trigger.onEventFired(event);
+                }
+            } finally {
+                list.endIterate();
             }
         } finally {
-            list.endIterate();
+            combatSystem.exitDispatch();
         }
     }
 }
@@ -757,7 +786,11 @@ table combat_settings[name] {
     tagRules: list<str> ->tag_rules;
     damgePipeline: str -> resolution_pipeline;
     healPipeline: str -> resolution_pipeline;
-    maxRecursionDepth: int;
+
+    maxDispatchDepth: int;       // 事件派发嵌套深度上限（防反伤死循环）
+    maxStatusCountPerActor: int; // 单个 Actor 的 StatusInstance 上限
+    maxEffectChainLength: int;   // 单次 Effect 执行链的节点数上限（防 Repeat/Sequence 过长）
+    maxScanTargets: int;         // TargetScan 全局兜底上限（覆盖单个配置中的 maxCount）
 }
 ```
 
@@ -1166,7 +1199,7 @@ class StatusComponent {
 
 class StatusInstance implements IPendingKill {
     StatusCore coreConfig;
-    Context applyContext;
+    Context context;
     StatusComponent ownerComponent;
     // 容纳实例化出来的具体行为（StatModifierInstance, PeriodicInstance, TriggerInstance等）
     List<BehaviorInstance<?>> behaviorInstances;
