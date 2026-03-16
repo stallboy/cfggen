@@ -1,31 +1,30 @@
 # 能力系统设计 (Ability System Design)
 
-本文档旨在提供一套基于 `cfggen` 的现代游戏技能系统设计基准。它剥离了早期 ABE 架构中硬编码和高耦合的缺陷，全面吸收了 Unreal **GAS (Gameplay Ability System)** 的核心精髓，致力于打造一套**高内聚、低耦合、全数据驱动**的工业级配置标准。
+基于 Unreal GAS 核心理念的**全数据驱动**技能系统配置标准。本文档是**架构基准**，具体游戏应在此基础上裁剪和扩展。
 
 ## Philosophy
 
-1.  **层级化标签驱动**：
-    使用具有严格树状层级关系的 Tag（如 `State.Debuff.Control.Stun`）作为逻辑交互的**唯一通用语言**，统一管理状态互斥、免疫拦截与技能分类。支持父级包含查询与子级精确判定。
+1. **层级化标签驱动**：树状 Tag（如 `State.Debuff.Control.Stun`）是逻辑交互的唯一通用语言。支持父级包含查询——查询 `State.Debuff` 可命中 `State.Debuff.Control.Stun`。
 
-2.  **事件管线与载荷修饰**：
-    所有的逻辑通信必须通过 `EventBus` 广播带有 `Tag` (路由键) 和 `Payload` (上下文容器) 的标准消息。重点在于**两阶段提交**机制：通过 `Pre` 事件注入 `Modifier` 实现数值篡改（如减伤），通过 `Post` 事件实现副作用触发（如反伤），彻底解耦事件源与监听者。
+2. **两阶段事件管线**：所有逻辑通信通过 `EventBus` 广播标准消息。`Pre` 阶段注入 `Modifier` 篡改数值（如减伤），`Post` 阶段触发副作用（如反伤）。源与监听者彻底解耦。
 
-3.  **逻辑与表现隔离**：
-    逻辑层（服务器权威）严禁持有任何表现资源（特效、音效、模型）的引用，仅输出带有生命周期事件的 Cue Tag。客户端表现系统独立维护 Tag 到具体资源的映射，依据事件的生命周期自行调度播放与销毁，实现逻辑计算与视听表现的彻底解耦。
+3. **逻辑与表现隔离**：逻辑层仅输出 `CueTag`，客户端独立维护 Tag 到资源的映射。
 
-4.  **原子化节点组合**：
-    保持 **Ability** (行为入口/需求声明)、**Status** (有状态的持续上下文) 与 **Effect** (无状态的瞬间原子指令) 的严格正交分离。拒绝庞大的继承体系，通过组合构建复杂机制，确保配置的高复用性与低耦合度。
+4. **三层正交分离**：`Ability`（行为入口）、`Status`（持续状态容器）、`Effect`（无状态原子指令）严格正交。通过组合构建复杂机制。
 
 ---
 
 ## Data Foundation
 
-本章节定义构成技能系统的“原子”和“词汇”。先定义词汇，再以此造句。
+
+定义系统的"词汇表"——标签、属性、事件的原子定义。
 
 ### GameplayTag
 
 ```cfg
-// Tag 字典注册表 (所有使用到的 Tag 必须在此声明)
+// Tag字典注册表
+// 层级关系通过名称中的 "." 分隔符隐式表达
+// 程序启动时自动构建父子索引
 table gameplaytag[name] {
     name:str; // 例: "State.Debuff.Control.Stun", "Event.Combat.Damage"
     description: text;
@@ -35,39 +34,49 @@ table gameplaytag[name] {
 }
 ```
 
+**命名规范**：
+
+| 前缀 | 用途 | 示例 |
+|---|---|---|
+| `State.*` | 实体状态标记 | `State.Debuff.Control.Stun` |
+| `Ability.*` | 技能分类标签 | `Ability.Type.Spell` |
+| `Damage.*` | 伤害/治疗分类 | `Damage.Element.Fire` |
+| `Event.*` | 事件路由键 | `Event.Combat.Damage.Deal.Pre` |
+| `Cue.*` | 表现层路由键 | `Cue.Combat.Hit.Heavy` |
+| `Stat.*` | 属性标识 | `Stat.Combat.Attack` |
+| `Var.*` | 变量键名 | `Var.ChargeTime` |
+| `Cooldown.*` | 冷却组键名 | `Cooldown.Ability.Fireball` |
+
+
 ### Stat Definition
 
 ```cfg
 table stat_definition[statTag] {
     statTag: str ->gameplaytag;
-    name: text;                 // 策划备注/UI显示名称
+    name: text;
 
-    // --- 1. 基础行为契约 ---
-    defaultValue: float;        // 实体初始化时的保底默认值
-    isPersistent: bool;         // 是否需要存盘
-    displayFormat: StatFormat;  // 表现层契约：UI 拿到这个值该怎么显示？
+    defaultValue: float; 
+    isPersistent: bool;
 
-    // --- 2. 边界与极值约束 (Clamping) ---
-    // 决定了 getCurrentValue() 时，数值被框定在什么范围内
+    // 边界约束
     minLimit: StatLimit;
     maxLimit: StatLimit;
 
-    // --- 3. 级联联动策略 ---
+    // 级联策略
     // 当 minLimit 或 maxLimit 所依赖的属性发生变化时，自身如何同步？
     clampMode: StatClampMode;
+
+    // 归零联动
+    // 当 currentValue 降至 minLimit 时，自动向宿主挂载的 Tag
+    // 例: HP 归零 -> 挂 "State.Dead"
+    onDepletedGrantTag: list<str> ->gameplaytag;
 }
 
-// 极值约束器：支持“固定常数”与“动态属性引用”多态
 interface StatLimit {
     struct Const { value: float; }
     // 引用另一个 stat_definition，在运行时去取它的 CurrentValue
     struct StatLink { statTag: str ->stat_definition; }
-    struct None {} // 无限制
-}
-
-enum StatFormat {
-    Flat;       // 绝对数值 (如：1500)
-    Percent;    // 百分比 (如：0.15，UI层自动渲染为 15%)
+    struct None {}
 }
 
 enum StatClampMode {
@@ -87,13 +96,13 @@ table event_definition[eventTag] (entry='eventTag') {
 
     // 定义该事件 Payload 中预期的变量列表 (可用于验证和编辑器提示)
     // 告知该事件除了 magnitude 以外，在 extras 里还会塞入哪些 Tag 数据
-    expectedVars: list<EventVarInfo>;
+    expectedVars: list<EventVarDecl>;
 }
 
-struct EventVarInfo {
-    varTag: str ->gameplaytag; // 如 "Data.Damage.Element"
+struct EventVarDecl {
+    varTag: str ->gameplaytag; // 如 "Var.Damage.Element"
     type: VarType;
-    name: text;
+    description: text;
 }
 
 enum VarType {
@@ -144,7 +153,7 @@ interface Store extends ReadOnlyStore {
 
 ### Payload
 
-Payload 是事件携带的载荷，Modifier 是对载荷的修饰机制。
+Payload 是事件携带的瞬时载荷，Trigger 通过它读取"发生了什么"并注入ChangSet修饰。
 
 ```java
 record Event(
@@ -158,10 +167,11 @@ record Payload(
     Actor target,       // Event的绝对承受者 (谁挨的这一刀)
 
     float magnitude,    // 主值（如伤害量、治疗量）
-    Store extras,       // 附加存储，支持 MutatePayloadVar 修改
+    Store extras,       // 附加数据，支持 MutatePayloadVar 修改
 
-    ChangeSet magnitudeChanges, // 收集对主值的修改
-    Int2ObjectMap<ChangeSet> extraChanges // 收集对副属性的修改
+    // --- Change 收集器（Pre 阶段使用）---
+    ChangeSet magnitudeChanges,
+    Int2ObjectMap<ChangeSet> extraChanges
 ){}
 
 // ChangeSet 瞬时态，聚合数值标量，处理载荷最终结算。
@@ -169,7 +179,9 @@ class ChangeSet {
     FloatList additives;
     FloatList multipliers;
     OverrideOp override;
-    float resolve(float baseValue);  // 优先override，然后(Base + ΣAdd) * ΠMul
+
+    // 优先override，然后(Base + ΣAdd) * ΠMul
+    float resolve(float baseValue);
 }
 
 record OverrideOp(
@@ -193,7 +205,7 @@ class Actor {
 
 ### TagContainer
 
-TagContainer 是挂载在 Actor 上的核心运行时组件，负责维护实体当前的所有标签状态。为了满足配置表中严格的树状层级需求与高频的查询性能，底层采用 **“引用计数 + 写入时展开”** 策略。
+底层采用 **"引用计数 + 写入时展开"** 策略，实现 O(1) 的父级包含查询。
 
 ```java
 class TagContainer {
@@ -202,8 +214,7 @@ class TagContainer {
 
     // 写入时展开
     // 当添加子级 Tag (如 Stun) 时，会同时递增其所有父级 (Control, Debuff) 的计数。
-    // 这使得运行时查询 "State.Debuff" 时，只需简单查询 Map 中是否存在该 Key (O(1))，
-    // 而无需遍历检查现有标签的父级关系，极大优化了 GameplayTagQuery 的判定速度。
+    // 这使得运行时查询 "State.Debuff" 时，只需简单查询 Map 中是否存在该 Key (O(1))
     void addTag(int tagId) 
     void removeTag(int tagId);
     boolean hasTag(int tagId);
@@ -232,12 +243,14 @@ class Stat {
     boolean isDirty = true;
 }
 
-// StatModifierList 支持动态增删，维护长时状态，服务于属性面板计算。
 class StatModifierList {
     List<StatModifierInstance> additives;
     List<StatModifierInstance> multipliers;
     StatModifierInstance activeOverride = null; // 选最高优先级的
     int currentOverridePriority = -1;
+
+    // currentValue = override ?? (baseValue + ΣAdd) * ΠMul
+    float evaluate(float baseValue);
 }
 
 class StatModifierInstance extends StatusInstance<StateModifier> {
@@ -272,7 +285,7 @@ class EventBus {
 
 ## Expression Layer
 
-本章节定义在运行时求值的表达式和条件接口。它们的运行时上下文是(`Context`, `Payload`)。
+运行时求值的表达式和条件接口。运行时上下文是`(Context, Payload)`。
 
 ### TargetSelector
 
@@ -280,20 +293,14 @@ TargetSelector 用于动态选取一个目标实体。
 
 ```cfg
 interface TargetSelector {
-    // --- 1. Context 维度 (从当前技能/状态的运行上下文中取) ---
-    struct ContextTarget {}     // 技能当前瞄准的准星目标
-    struct ContextInstigator {} // 技能的绝对发起者 (如：玩家)
-    struct ContextCauser {}     // 造成效果的物理媒介 (如：飞行中的子弹/地上的火墙)
-    struct ContextVar {
-        actorVarTag: str -> gameplaytag; 
-    }
+    struct ContextTarget {}
+    struct ContextInstigator {}
+    struct ContextCauser {}
+    struct ContextVar { varTag: str ->gameplaytag; }
 
-    // --- 2. Payload 维度 (从拦截到的 Event 事件载荷中取) ---
-    struct PayloadInstigator {} // 肇事者 (比如引发受击事件的攻击方)
-    struct PayloadTarget {}     // 承受者 (比如受击事件中的受害者)
-    struct PayloadVar {
-        actorVarTag: str -> gameplaytag; 
-    }
+    struct PayloadInstigator {}
+    struct PayloadTarget {}
+    struct PayloadVar { varTag: str ->gameplaytag; }
 }
 ```
 
@@ -318,21 +325,20 @@ interface FloatValue {
     // 事件载荷变量
     struct PayloadMagnitude { }
     struct PayloadVar { varTag: str ->gameplaytag; }
+
+    // Status 层数
+    struct CurrentStacks {}
+
+    // 按层数缩放：(baseValue + perStackAdd * stacks) * perStackMul ^ stacks
+    struct StackScaling {
+        baseValue: float;
+        perStackAdd: float;
+        perStackMul: float;   // 1.0 = 无乘法缩放
+    }
 }
 
-enum MathOp {
-    Add;
-    Subtract; 
-    Multiply;
-    Divide;
-    Max;
-    Min;
-}
-
-enum StatCaptureMode {
-    Current;
-    Base;
-}
+enum MathOp { Add; Sub; Mul; Div; Max; Min; }
+enum StatCaptureMode { Current; Base; }
 ```
 
 ### Condition
@@ -345,7 +351,7 @@ interface Condition {
     struct And { conditions: list<Condition>; }
     struct Or { conditions: list<Condition>; }
     struct Not { condition: Condition; }
-    struct FloatCompare {
+    struct Compare {
         left: FloatValue;
         op: CompareOp;
         right: FloatValue;
@@ -353,26 +359,22 @@ interface Condition {
 
     struct HasTags {
         source: TargetSelector;
-        requirements: GameplayTagQuery;
+        query: TagQuery;
     }
 
-    struct PayloadMagnitudeGte {
-        compareValue: float;
-    }
-    struct PayloadVarGte {
-        varTag: str ->gameplaytag;
-        compareValue: float;
-    }
+    struct PayloadHasVar { varTag: str ->gameplaytag; }
+
+    struct Chance { probability: FloatValue; } // 随机概率
 }
 
 enum CompareOp {
     Gt; Gte; Lt; Lte; Eq; Neq;
 }
 
-struct GameplayTagQuery {
-    requireTagsAll: list<str> ->gameplaytag; // 必须全部包含
-    requireTagsAny: list<str> ->gameplaytag; // 包含其中之一即可生效 (最常用)
-    ignoreTags: list<str> ->gameplaytag;     // 包含任何一个则拦截/失效
+struct TagQuery {
+    requireAll: list<str> ->gameplaytag; // 必须全部包含
+    requireAny: list<str> ->gameplaytag; // 包含其中之一即可生效 (最常用)
+    exclude: list<str> ->gameplaytag;    // 包含任何一个则拦截/失效
 }
 ```
 
@@ -382,44 +384,6 @@ struct GameplayTagQuery {
 
 本章节定义系统的主体部分：Ability 是入口，Effect 是动作，Status 是持续状态，逻辑递进。
 
-### Ability
-
-能力是行为的入口(主动技能、被动、普攻、跳跃、喝药)。它不负责具体的伤害数值计算，只负责声明“我是谁”以及“我要执行什么指令序列”。
-
-```cfg
-table ability[id] (json) {
-    id: int;
-    name: text;
-    description: text;
-
-    // 例: ["Ability.Type.Melee", "Ability.Element.Fire"]
-    abilityTags: list<str> ->gameplaytag;
-    // 如果玩家身上带有 "State.Debuff.Control" (被控)，则直接拦截释放。
-    activationBlockedTags: list<str> ->gameplaytag;
-    // 必须拥有某 Tag 才能释放，如变身形态技能
-    activationRequiredTags: list<str> ->gameplaytag;
-    // 释放瞬间，主动打断自身正在进行的其他技能 (如：闪避打断平A)
-    cancelAbilitiesWithTag: list<str> ->gameplaytag;
-
-    costs: list<StatCost>;
-    selfCooldown: float;
-    cooldowns: list<TagValue>
-    commitEffects: Effect; // 额外的代价
-
-    effect: Effect;
-}
-
-// 资源消耗声明
-struct StatCost {
-    statTag: str ->stat_definition; // 如 "Stat.Resource.EP"
-    value: FloatValue;              // 消耗量 (支持静态值或基于最大生命的百分比等)
-}
-
-struct TagValue {
-    tag: str ->gameplaytag; 
-    value: FloatValue;
-}
-```
 
 ### Effect
 
@@ -429,7 +393,7 @@ struct TagValue {
 interface Effect {
     struct EffectRef {
         sharedEffectId: int ->shared_effect; // 逻辑复用
-        args: list<TagValue>;
+        args: list<VarBinding>;
     }
     
     // --- 属性修改 ---
@@ -439,16 +403,21 @@ interface Effect {
         value: FloatValue;
     }
 
-    // 伤害。执行流水线: Snapshot属性 -> 广播 Event.*.Pre (触发 ModifyPayload)
-    // -> 计算最终数值 -> 扣血 -> 广播 Event.*.Post (触发反伤/吸血)
-    struct Damage {
+    //  结算管线触发（伤害/治疗/自定义管线）
+    struct ApplyPipeline {
+        pipeline: str ->resolution_pipeline;
+        magnitude: FloatValue;
+        tags: list<str> ->gameplaytag;   // 如 ["Damage.Element.Fire"]
+        cuesOnExecute: list<str> ->gameplaytag;
+    }
+
+    struct Damage { // 快捷方式
         damageTags: list<str> ->gameplaytag; // 如: ["Damage.Element.Fire", "Damage.AttackType.Melee"]
         baseDamage: FloatValue;
         cuesOnHit: list<str> ->gameplaytag;
     }
 
-    // 治疗
-    struct Heal {
+    struct Heal { // 快捷方式
         baseHeal: FloatValue;
         cuesOnHeal: list<str> ->gameplaytag;
     }
@@ -467,16 +436,20 @@ interface Effect {
     }
 
     // C. 快捷方式：极简内联微状态 (适用于冲锋时的零点几秒霸体等纯逻辑阻断状态)
-    struct GrantTemporaryTags {
-        duration: FloatValue;
+    struct GrantTags {
         grantedTags: list<str> ->gameplaytag;
+        duration: FloatValue;
+    }
+
+    struct RemoveStatusByTag {
+        withAnyTags: list<str> ->gameplaytag;
     }
 
     // 发送事件
     struct SendEvent {
-        eventTag: str ->event_definition; // 强引用定义表
+        eventTag: str ->event_definition;
         magnitude: FloatValue;
-        extras: list<struct { tag: str ->gameplaytag; value: FloatValue; }>;
+        extras: list<VarBinding>;
     }
 
     // 生成物 (子弹/法阵)
@@ -489,13 +462,13 @@ interface Effect {
         dieInfo: list<ObjDieInfo>;  // 生成物消失的条件、结算
     }
 
-    // --- 事件载荷前置篡改 ---
-    // 向 Payload 的 ModifierStack 中注入修饰器，实现免伤、暴击抵抗等机制
+    // --- 载荷篡改（仅在 Pre 阶段 Trigger 中有效）
     struct ModifyPayloadMagnitude {
         op: ModifierOp;
         value: FloatValue;
         overridePriority: int; // op为Override才起效
     }
+
     struct ModifyPayloadExtra {
         extraTag: str ->gameplaytag;
         op: ModifierOp;
@@ -503,24 +476,20 @@ interface Effect {
         overridePriority: int;
     }
 
+    // --- Cue 触发
+    struct FireCue {
+        cueTag: str ->gameplaytag;
+        magnitude: FloatValue;
+    }
+
     // --- 作用域 & 控制流 ---
-    // 目标重定向
-    struct WithTarget {
-        target: TargetSelector;
-        effect: Effect;
-    }
+    
+    struct Sequence { effects: list<Effect>; 
 
-    // 群体作用域
-    struct WithTargets {
-        targets: TargetScan;
-        effect: Effect;
-    }
-
-    // 局部变量绑定
-    struct WithLocalVar {
-        varTag: str -> gameplaytag;
-        value: FloatValue;
-        effect: Effect;
+    struct Conditional {
+        condition: Condition;
+        thenEffect: Effect;
+        otherwise: list<Effect>;
     }
 
     struct Repeat {
@@ -529,21 +498,26 @@ interface Effect {
         effect: Effect;
     }
 
-    struct Conditional {
-        condition: Condition;
+    struct WithTarget {
+        target: TargetSelector;
         effect: Effect;
-        elseEffect: list<Effect>;
     }
 
-    struct Sequence { effects: list<Effect>; }
+    struct WithTargets {
+        targets: TargetScan;
+        effect: Effect;
+    }
+
+    struct WithLocalVar {
+        bindings: list<VarBinding>;
+        effect: Effect;
+    }
 }
 
-// 将高频复用的effect（如“通用受击”、“标准炎爆”、“系统级浮空”）提取到独立的配置表中，配合 `EffectRef` 在各处调用
-table shared_effect[id] (json) {
-    id: int;
-    name: text;
-    description: text;
-    effect: Effect;
+// 变量绑定
+struct VarBinding {
+    varTag: str ->gameplaytag;
+    value: FloatValue;
 }
 
 // 参数捕获 (在StatusInstance里无Event参数，所以在Apply时要capture下来放到instanceState里)
@@ -560,301 +534,581 @@ enum ArgCaptureMode {
     Dynamic;  // 每次求值时实时获取（如基于当前攻击力的百分比加成）
 }
 
-enum ModifierOp {
-    Add;
-    Multiply;
-    Override;
-}
+enum ModifierOp { Add; Mul; Override; }
 
-interface TargetScan {
-    // 圆形/球体 (如：以火球 ContextCauser 为中心爆炸)
-    struct Sphere {
-        center: TargetSelector; // 圆心是谁？(极大提升灵活性，比如以目标为圆心)
-        radius: FloatValue;
-        filter: TargetFilter;
-    }
-    // 扇形/锥形 (如：战士面向前方 90 度劈砍)
-    struct Sector {
-        center: TargetSelector; 
-        forwardDir: TargetSelector; // 决定朝向的实体 (通常是 ContextInstigator 面向)
-        radius: FloatValue;
-        angle: FloatValue;          // 角度，如 90.0, 120.0
-        filter: TargetFilter;
-    }
-    // 矩形/Box (如：激光束、剑气、冲锋路径上的敌人)
-    struct Box {
-        center: TargetSelector;
-        forwardDir: TargetSelector;
-        width: FloatValue;
-        length: FloatValue;
-        filter: TargetFilter;
-    }
-    
-    // 全队扫描 (如：奶妈开大招，给全队加血)
-    struct PartyMembers {
-        source: TargetSelector; // 取谁的队伍？
-        filter: TargetFilter;
-    }
-}
-
-struct TargetFilter {
-    // 1. 阵营过滤
-    // 参照物是谁？(通常是 ContextInstigator，即判定“扫描到的目标和施法者是什么关系”)
-    relationSource: TargetSelector; 
-    allowedRelations: list<TeamRelation>;
-
-    // 2. 状态/标签过滤 (复用你文档里的 GameplayTagQuery)
-    // 如：必须包含 "State.Alive" 且不包含 "State.Invincible"
-    tagQuery: GameplayTagQuery;
-
-    // 3. 动态黑名单 (极大提升机制扩展性)
-    // 传入一组单体 TargetSelector，如果扫出来的人在这里面，直接剔除。
-    // 应用场景：防重复弹射、或者避免 AOE 炸到主目标(主目标在 WithTarget 里单独算伤害)。
-    excludeTargets: list<TargetSelector>; 
-
-    // 4. 目标上限与优选策略
-    maxCount: int;          // 最大生效人数 (如 -1 代表无限制，3 代表最多劈 3 个)
-    sortType: SortTarget;   // 当超出上限时，怎么挑人？
-}
-
-enum TeamRelation {
-    Self;       // 自身 (非常重要，有时要防误伤自己)
-    Friendly;   // 友方
-    Hostile;    // 敌方
-    Neutral;    // 中立 (如：场景木桶、野怪)
-}
-
-enum SortTarget {
-    DistanceAsc;    // 距离由近到远 (配合空间扫描使用)
-    HpPercentAsc;   // 优先打血量百分比最低的 (斩杀机制优选)
-    Random;         // 随机选 (比如闪电链随机乱劈)
+// 高频复用的effect
+table shared_effect[id] (json) {
+    id: int;
+    name: text;
+    description: text;
+    effect: Effect;
 }
 ```
 
-### Status & Behavior
+### TargetScan
 
-Status 是定义状态逻辑的静态配置，其实例化为 StatusInstance，承载独立的运行时生命周期与堆叠策略。`Behavior` 的运行时上下文是`StatusInstance` (内含`Context`)。
+```
+struct TargetScan {
+    shape: ScanShape;
+
+    relationTo: TargetSelector;
+    allowedRelations: list<Relation>;
+    tagQuery: TagQuery;
+    exclude: list<TargetSelector>; 
+
+    maxCount: int; // -1 = 无限
+    sort: SortStrategy;
+}
+
+interface ScanShape {
+    struct Sphere {
+        center: TargetSelector;
+        radius: FloatValue;
+    }
+
+    struct Sector {
+        center: TargetSelector;
+        facingOf: TargetSelector;   // 取该实体的朝向作为扇形正方向
+        radius: FloatValue;
+        angle: FloatValue;
+    }
+
+    struct Box {
+        center: TargetSelector;
+        facingOf: TargetSelector;
+        width: FloatValue;
+        length: FloatValue;
+    }
+
+    struct PartyOf {
+        source: TargetSelector;
+    }
+}
+
+enum Relation { Self; Friendly; Hostile; Neutral; }
+enum SortStrategy { Nearest; Farthest; HpPercentAsc; HpPercentDesc; Random; None; }
+```
+
+
+### Status
+
+Status 是持续状态的容器，挂载在 Actor 上，拥有独立的生命周期、堆叠策略和行为零件。
 
 ```cfg
-// 用于定义标准、需要网络同步和 UI 表现的长效状态。
-// 对于瞬间转瞬即逝的逻辑锁，请使用 Effect 中的  `ApplyStatusInline`或 `GrantTemporaryTags`。
 table status[id] (json) {
     id: int;
     name: text;
     description: text;
+    icon: str;
+
     stackingPolicy: StackingPolicy;
     core: StatusCore;
 }
 
 struct StatusCore {
-    duration:FloatValue; // 持续时间，-1 为永久 (被动技能)
-    // 存在期间给宿主挂载的 Tag (如: 挂载 "State.Buff.Invincible" 实现无敌)
-    grantedTags: list<str> ->gameplaytag;
-    // 存在期间，免疫/阻挡试图挂载的新 Tag (如: 挂载 "State.Debuff" 实现霸体免控)
-    blockTags: list<str> ->gameplaytag;
-    // 挂载瞬间，立刻驱散宿主身上已有的 Tag (如: 驱散 "State.Debuff" 实现净化)
-    cancelTags: list<str> ->gameplaytag;
-
-    cuesWhileActive: list<str> ->gameplaytag; // 表现层解耦
+    statusTags: list<str> ->gameplaytag;  // Status 自身分类（用于外部查询/移除）
+    grantedTags: list<str> ->gameplaytag; // 存在期间授予宿主的标签
+    
+    duration: FloatValue;           // -1 = 永久
+    
+    cuesWhileActive: list<str> ->gameplaytag;
     behaviors: list<Behavior>;
 }
 
+interface StackingPolicy {
+    // 独立计时：每层独立倒计时
+    struct Independent {
+        maxStacks: int;
+        overflowBehavior: OverflowBehavior;
+    }
+
+    // 共享计时：所有层共享一个倒计时
+    struct Shared {
+        maxStacks: int;
+        refreshMode: RefreshMode;
+        overflowBehavior: OverflowBehavior;
+    }
+
+    // 不可叠加
+    struct Single {
+        refreshMode: RefreshMode;
+    }
+}
+
+enum RefreshMode {
+    ResetDuration;
+    ExtendDuration;
+    KeepDuration;
+}
+
+enum OverflowBehavior {
+    Reject;             // 丢弃
+    ReplaceOldest;      // 替换最早层
+    ExecuteOverflow;    // 触发 OnOverflow 行为
+}
+```
+
+### Behavior
+
+Behavior 是附着在 Status 上的逻辑零件。运行时上下文是 StatusInstance（内含 Context）。
+
+
+```
 interface Behavior {
-    // 基于 Tag 的动态属性修饰，向Stat 运算管线中注入修饰器
+    // 属性修饰器
     struct StatModifier {
-        targetTagQuery: GameplayTagQuery; // 满足此 Tag 环境才生效 (如：对流血敌人特攻)
-        statTag: str ->stat_definition; // 例: "Stat.Combat.Attack", "Stat.CDR.Fire"
+        statTag: str ->stat_definition;
         op: ModifierOp;
         value: FloatValue;
+        requiresAll: list<Condition>;
     }
 
     // 周期性触发 (DOT/HOT)
     struct Periodic {
         period: FloatValue;
-        executeImmediately: bool;
+        executeOnApply: bool;
         effect: Effect;
     }
 
-    // 事件触发器，监听全局 EventBus 上的特定事件并作出反应
-    struct Trigger {
-        // 如 "Event.Combat.Damage.Take" 或 "Event.Character.Dodge"
-        listenEventTag: str ->event_definition;
-        conditions: list<Condition>; // 前置条件 (通常提取 Payload 数据进行合法性校验)
-        effect: Effect; // 条件满足后执行的瞬间动作
-
-        // 自我限制与终末遗言 (完全属于 Behavior 内部逻辑)
-        maxTriggers: int;
-        onLimitReached: Effect;
+    // 时间轴
+    struct Timeline {
+        phases: list<TimelinePhase>;
     }
+
+    // 光环
+    struct Aura {
+        scan: TargetScan; 
+        grantedStatusId: int ->status; 
+        updateInterval: FloatValue; 
+    }
+
+    // 事件触发器
+    struct Trigger {
+        listenEvent: str ->event_definition;
+        requiresAll: list<Condition>;
+        effect: Effect;
+
+        maxTriggers: int; // -1 = 无限
+        cooldown: FloatValue;
+    }
+
+    // 生命周期钩子
+    struct OnApply { effect: Effect; }
+    struct OnStackChange { effect: Effect; }
+    struct OnOverflow { effect: Effect; }
+    struct OnExpire { effect: Effect; }
+    struct OnInterrupt { effect: Effect; }
+    struct OnRemove { effect: Effect; }
 }
 
-interface StackingPolicy {
-    // 传统叠加 (Standard)：层数增加，且所有层共享最长的那个时间。
-    struct Standard {
-        maxStacks: int;
-    }
-    // 覆盖刷新：重置倒计时。
-    struct Override {}
-    // 时长累加：增加持续时间。
-    struct AccumulateDuration { 
-        maxDurationLimit: float; // 例如最多累加到 30 秒
-    }
-    // 独立计时：每层独立衰减。
-    struct Independent {
-        maxStacks: int;
-    }
-    // 拒绝叠加：新状态直接被免疫/丢弃 (如：不可刷新的特殊机制锁)
-    struct Reject {}
+struct TimelinePhase {
+    duration: FloatValue;                  // 持续多久
+    grantedTags: list<str> ->gameplaytag;  // 期间给宿主贴什么标签（暴露给 tag_rules 和外界）
+    effect: list<Effect>;                  // 期间做什么具体动作
+}
+```
+
+### Ability
+
+Ability 是行为的入口点。
+
+```cfg
+table ability[id] (json) {
+    id: int;
+    name: text;
+    description: text;
+
+    // 标签分类
+    abilityTags: list<str> ->gameplaytag;
+
+    // 准入条件
+    requiresAll: list<Condition>;
+
+    // cost
+    costs: list<StatCost>;
+    cooldown: FloatValue;
+    commitEffects: Effect;
+
+    // 效果
+    effect: Effect;
+}
+
+struct StatCost {
+    statTag: str ->stat_definition;
+    value: FloatValue;
 }
 ```
 
 ---
 
-## Global Rules
+## combat_settings
 
 本章节定义全局性的战斗规则，这些规则以配置表的形式存在，由底层引擎直接读取，作为战斗系统的“最高物理法则”。
 
-### global_tag_rules
+```
+table combat_settings[name] {
+    name: str;
+    tagRules: list<str> ->tag_rules;
+    damgePipeline: str -> resolution_pipeline;
+    healPipeline: str -> resolution_pipeline;
+    maxRecursionDepth: int;
+}
+```
+
+
+### tag_rules
 
 该表定义了标签之间的原子化交互准则。通过将“状态”与“行为”解耦，它充当了战斗系统的“最高物理法则”，统一处理控制、打断与免疫。
 
 ```cfg
-table global_tag_rules[name] (entry='name'){
+table tag_rules[name] (json){
     name: str;
-    rules: list<TagRelationshipRule>;
+    rules: list<TagRule>;
 }
 
-struct TagRelationshipRule {
-    // 触发源标签 (通常是宿主身上的状态标签，如 State.Debuff.Silence)
-    sourceTag: str ->gameplaytag;
+struct TagRule {
+    // 当宿主拥有此标签时...
+    whenPresent: str ->gameplaytag;
 
-    // --- 激活拦截 (Activation Blocking) ---
-    // 当宿主拥有 targetTag 时，禁止激活带有以下任意标签的 Ability
-    blocks: list<str> ->gameplaytag;
+    // 阻止激活带有以下标签的 Ability
+    blocksAbilities: list<str> ->gameplaytag;
 
-    // --- 强制中断 (Ongoing Cancellation) ---
-    // 当宿主获得 targetTag 的瞬间，立即打断正在运行且带有以下任意标签的 Ability
-    cancels: list<str> ->gameplaytag;
+    // 打断正在运行且带有以下标签的 Ability
+    cancelsAbilities: list<str> ->gameplaytag;
 
-    // --- 标签免疫 (Tag Immunity) ---
-    // 当宿主拥有 targetTag 时，任何试图挂载到宿主身上的新 Status，
-    // 如果其 GrantedTags 包含以下标签，则直接挂载失败
-    immunes: list<str> ->gameplaytag;
+    // 免疫：拒绝挂载 grantedTags 含以下标签的 Status
+    immuneToTags: list<str> ->gameplaytag;
 
-    comment: text;
+    // 驱散：获得 whenPresent 瞬间，移除 grantedTags 含以下标签的 Status
+    purgesTags: list<str> ->gameplaytag;
+
+    description: text;
 }
 ```
 
-例子：
+**示例：**
+
 ```
-table global_tag_rules {
-    name: "defaultRules"
+tag_rules {
+    name: "CoreCombatRules";
     rules: [
-        // 范例: 只要宿主拥有 Silence 标签，就封印所有 Spell 标签的技能
-        { sourceTag: "State.Debuff.Silence", 
-          blocks: ["Ability.Type.Spell"] },
-        // 范例: 只要宿主拥有 Stun 标签，不仅封印所有技能，还打断正在释放的技能
-        { sourceTag: "State.Debuff.Stun", 
-          blocks: ["Ability.Type"], 
-          cancels: ["Ability.Type"] }
+        { whenPresent: "State.Debuff.Silence";
+          blocksAbilities: ["Ability.Type.Spell"];
+          description: "沉默封印法术"; },
+
+        { whenPresent: "State.Debuff.Control.Stun";
+          blocksAbilities: ["Ability.Type"];
+          cancelsAbilities: ["Ability.Type"];
+          description: "眩晕封印+打断所有技能"; },
+
+        { whenPresent: "State.Buff.Hyperarmor";
+          immuneToTags: ["State.Debuff.Control"];
+          description: "霸体免疫控制"; },
+
+        { whenPresent: "State.Buff.Purify";
+          purgesTags: ["State.Debuff"];
+          description: "净化驱散所有减益"; }
     ];
 }
 ```
 
-### global_combat_settings
+### resolution_pipeline
 
-定义了全局统一的伤害与治疗（Damage & Heal）结算管线，负责将最终数值按规则逐层作用于目标的具体属性（如护盾、生命），并自动联动相关的视听表现与死亡判定。
+将伤害/治疗的结算逻辑配置化。引擎按 Pipeline 定义执行多阶段事件广播与逐层属性扣减。
 
-```
-table global_combat_settings[name] (entry="name") {
+```cfg
+table resolution_pipeline[name] (json) {
     name: str;
-    damageLayers: list<DamageLayer>; //伤害扣减管线, 依次扣减
+    description: text;
 
-    healthStatTag: str ->stat_definition; // 例: "Stat.HP.Current"
-    
-    // 当 healthStat 归零时，引擎自动向宿主派发的 Tag (用于触发死亡表现或复活逻辑)
-    deathTag: str ->gameplaytag; // 例: "State.Dead" 或 "State.Downed"
+    flow: ValueFlow;
+
+    // 事件 Tag（引擎自动广播）
+    preEventTag: str ->event_definition;
+    postEventTag: str ->event_definition;
+
+    // 判定阶段（Pre 事件之后、属性扣减之前执行）
+    checks: list<CheckStage>;
+
+    // 属性扣减/增加管线
+    allocations: list<AllocationLayer>;
 }
 
-struct DamageLayer {
-    targetStat: str ->stat_definition; 
-    conversionRate: float; // 1点伤害扣除多少点该属性。如魔法盾可能配置为 1.5
-    
-    // 允许溢出标志
-    // true: 该层属性扣到 0 后，未被抵消的剩余伤害继续向下击穿。
-    // false: 伤害结界（锁血/锁盾），单次伤害最多只能打破该层，多余伤害直接作废。
-    allowOverflow: bool;
+enum ValueFlow {
+    Deplete;       // 扣减（伤害类）
+    Restore;       // 增加（治疗类）
+}
 
-    // 受击表现：当这一层被扣减时，触发什么类型的受击反馈？
-    // 例: "Cue.Combat.Hit.Shield", "Cue.Combat.Hit.Armor", "Cue.Combat.Hit.Flesh"
-    hitCueTag: str ->gameplaytag (nullable);
-    
-    // 破盾表现：当这一层的数值刚好被本次伤害清零时，额外触发什么反馈？
-    // 例: "Cue.Combat.Break.Armor"
-    breakCueTag: str ->gameplaytag (nullable);
+struct AllocationLayer {
+    targetStat: str ->stat_definition;
+    conversionRate: float;
+    allowOverflow: bool;
+    onHitCue: str ->gameplaytag (nullable);
+    onDepletedCue: str ->gameplaytag (nullable);
+}
+```
+
+### CheckStage
+
+判定阶段在 Pre Modifier 结算之后、属性扣减之前执行。用于实现闪避、格挡、暴击等核心战斗判定。每个阶段独立求值，互不干扰（可配置互斥关系）。
+
+```cfg
+struct CheckStage {
+    name: text;
+
+    // 触发条件
+    skipIfPayloadHasAny: list<str> ->gameplaytag; // 检查Payload extras
+
+    // 触发概率（从 Context/Payload 中动态取值）
+    chance: FloatValue;
+
+    // 判定成功时的效果
+    grantPayloadTags: list<str> ->gameplaytag; // 写入Payload.extras
+    magnitudeModifiers: List<MagnitudeModifier>;
+    onSuccessEffects: List<Effect>;
+}
+
+struct MagnitudeModifier {
+    op: ModifierOp;
+    value: FloatValue;
+    overridePriority: int;       // 仅 Override 时生效
+}
+```
+
+**设计说明：**
+
+判定阶段的执行时机在管线中被精确定义：
+
+```
+ApplyPipeline/Damage/Heal 调用
+    ↓
+1. 构建 Payload（snapshot magnitude + extras）
+    ↓
+2. 广播 Pre 事件 → Trigger 注入 Modifier（如减伤 Buff）
+    ↓
+3. 结算 Pre Modifier → 得到修正后的 magnitude
+    ↓
+4. 【判定阶段】依次执行 checks 列表：
+    │  a. 检查 skipIfPayloadHas（互斥跳过）
+    │  b. 掷骰 chance
+    │  c. 成功：写入 grantPayloadTags，应用 magnitudeModifier，触发 onSuccessEffects
+    ↓
+5. 逐层属性扣减/增加（allocations）
+    ↓
+6. 广播 Post 事件 → Trigger 响应（如反伤、吸血）
+```
+
+**预置管线示例（含判定阶段）：**
+
+```
+resolution_pipeline {
+    name: "StandardPhysicalDamage";
+    flow: Deplete;
+    preEventTag: "Event.Combat.Damage.Take.Pre";
+    postEventTag: "Event.Combat.Damage.Take.Post";
+
+    checks: [
+        // 阶段1：闪避判定
+        {
+            name: "闪避";
+            skipIfPayloadHasAny: [];
+            chance: struct Math {
+                op: Sub;
+                a: struct StatValue {
+                    source: struct PayloadTarget {};
+                    statTag: "Stat.Combat.DodgeRate";
+                    capture: Current;
+                };
+                b: struct StatValue {
+                    source: struct PayloadInstigator {};
+                    statTag: "Stat.Combat.Accuracy";
+                    capture: Current;
+                };
+            };
+            grantPayloadTags: ["Combat.Result.Dodged"];
+            magnitudeModifiers: [{ op: Override; value: struct Const { value: 0.0; }; overridePriority: 999; }];
+            onSuccessCues: ["Cue.Combat.Dodge"];
+        },
+
+        // 阶段2：格挡判定（闪避成功则跳过）
+        {
+            name: "格挡";
+            skipIfPayloadHasAny: ["Combat.Result.Dodged"];
+            chance: struct StatValue {
+                source: struct PayloadTarget {};
+                statTag: "Stat.Combat.BlockRate";
+                capture: Current;
+            };
+            grantPayloadTags: ["Combat.Result.Blocked"];
+            magnitudeModifiers: [{
+                op: Mul;
+                value: struct Math {
+                    op: Sub;
+                    a: struct Const { value: 1.0; };
+                    b: struct StatValue {
+                        source: struct PayloadTarget {};
+                        statTag: "Stat.Combat.BlockEfficiency";
+                        capture: Current;
+                    };
+                };
+                overridePriority: 0;
+            }];
+            onSuccessCues: ["Cue.Combat.Block"];
+        },
+
+        // 阶段3：暴击判定（闪避成功则跳过）
+        {
+            name: "暴击";
+            skipIfPayloadHasAny: ["Combat.Result.Dodged"];
+            chance: struct Math {
+                op: Sub;
+                a: struct StatValue {
+                    source: struct PayloadInstigator {};
+                    statTag: "Stat.Combat.CritRate";
+                    capture: Current;
+                };
+                b: struct StatValue {
+                    source: struct PayloadTarget {};
+                    statTag: "Stat.Combat.CritResist";
+                    capture: Current;
+                };
+            };
+            grantPayloadTags: ["Combat.Result.Critical"];
+            magnitudeModifiers: [{
+                op: Mul;
+                value: struct StatValue {
+                    source: struct PayloadInstigator {};
+                    statTag: "Stat.Combat.CritDamage";
+                    capture: Current;
+                };
+                overridePriority: 0;
+            }];
+            onSuccessCues: ["Cue.Combat.Critical"];
+        }
+    ];
+
+    allocations: [
+        { targetStat: "Stat.Shield.Current"; conversionRate: 1.0; allowOverflow: true;
+          onHitCue: "Cue.Hit.Shield"; onDepletedCue: "Cue.Break.Shield"; },
+        { targetStat: "Stat.HP.Current"; conversionRate: 1.0;
+          onHitCue: "Cue.Hit.Flesh"; }
+    ];
+}
+
+// 纯粹伤害（无视护盾，无判定阶段）
+resolution_pipeline {
+    name: "PureDamage";
+    flow: Deplete;
+    preEventTag: "Event.Combat.PureDamage.Take.Pre";
+    postEventTag: "Event.Combat.PureDamage.Take.Post";
+    allocations: [
+        { targetStat: "Stat.HP.Current"; conversionRate: 1.0; }
+    ];
+}
+
+// 治疗
+resolution_pipeline {
+    name: "StandardHeal";
+    flow: Restore;
+    preEventTag: "Event.Combat.Heal.Pre";
+    postEventTag: "Event.Combat.Heal.Post";
+    allocations: [
+        { targetStat: "Stat.HP.Current"; conversionRate: 1.0;}
+    ];
 }
 ```
 
 ---
 
-## Examples
+##  Gameplay Cue
 
-本章节展示如何使用 Trigger 实现复杂机制，是全系统协同工作的演示。
+客户端表现层。逻辑层仅输出 CueTag，客户端查此表执行视听反馈。
 
-### Trigger
+### Cue Schema
 
-Trigger 是彻底消灭硬编码（如写死在代码里的 `OnHit`, `OnTakeDamage`）的终极武器。
-任何有意义的动作发生后，引擎底层必须向全局 EventBus 广播一个带有 Tag 和 Payload 的事件。监听和响应这些事件的职责全部收口在 `Trigger` 节点中。
-
-### 例A：盾墙减伤
-
-* **底层机制**：监听 `Event.*.Pre`，向 Payload 的主轨注入一个 `Multiply(0.6)` 的 Modifier。由于是延期求值，绝对不会与其他加法/减法 Buff 产生冲突。
-
-```
-table status {
-    id: 5001; name: "盾墙"; duration: 5.0;
-    core: struct StatusCore {
-        behavior: struct Trigger {
-            listenEventTag: "Event.Combat.Damage.Take.Pre"; // 拦截阶段
-            effect: struct ModifyPayloadMagnitude {
-                op: Multiply;
-                value: struct Const { value: 0.6; };
-            };
-        };
-    };
+```cfg
+table cue_registry[cueTag] {
+    cueTag: str ->gameplaytag;
+    handler: CueHandler;
 }
-```
 
-### 例B：反伤装甲
+interface CueHandler {
+    // 瞬发型：触发即播放，自动回收
+    struct Instant {
+        vfx: list<VfxEntry>;
+        sfx: list<SfxEntry>;
+        animTriggers: list<AnimEntry>;
+        cameraShakes: list<str>;
+        damageTexts: list<DmgTextEntry>;
+    }
 
-* **底层机制**：监听 `Event.*.Post`，如果伤害 >=50，抓取 Payload 中的发起者执行反击。
-
-```
-table status {
-    id: 4001;
-    name: "反刺被动";
-
-    core: struct StatusCore {
-        duration: -1.0;
-        behavior: struct Trigger {
-            listenEventTag: "Event.Combat.Damage.Take.Post"; // 结算完毕阶段
-
-            conditions: [
-                struct PayloadMagnitudeGte { compareValue: 50.0; }
-            ];
-
-            effect: struct WithTarget {
-                // 将反击目标设定为当时的攻击者
-                target: struct PayloadInstigator {};
-                effect: struct Damage {
-                    baseDamage: struct Const { value: 10.0; };
-                };
-            };
-        };
-    };
+    // 持续型：随 Status 生命周期创建/销毁
+    struct Sustained {
+        loopVfx: list<VfxEntry>;
+        loopSfx: list<SfxEntry>;
+        materialOverrides: list<MaterialEntry>;
+        screenFilters: list<str>;
+    }
 }
+
+struct VfxEntry {
+    role: CueRole;
+    asset: str;
+    attach: VfxAttach;
+    socket: str;
+    scale: float;
+}
+
+enum VfxAttach { WorldStatic; FollowTarget; }
+
+struct SfxEntry {
+    role: CueRole;
+    event: str;
+}
+
+struct AnimEntry {
+    role: CueRole;
+    trigger: str;
+}
+
+struct DmgTextEntry {
+    role: CueRole;
+    color: str;
+    fontSize: int;
+    icon: str;
+    motion: str;
+}
+
+struct MaterialEntry {
+    role: CueRole;
+    material: str;
+    slotIndex: int;     // -1 = 全部
+}
+
+enum CueRole { Target; Instigator; }
 ```
 
+### Cue Runtime
+
+引擎根据 Cue 所在的上下文自动推导生命周期类型：
+
+| 来源 | 推导类型 | 客户端行为 |
+|---|---|---|
+| `Effect.FireCue` / `ApplyPipeline.cuesOnExecute` / `AllocationLayer.onHitCue`  | `Executed` | 查表调用 Instant 处理器 |
+| `Status.cuesWhileActive` | `Added` / `Removed` | 查表调用 Sustained 处理器 |
+
+```java
+record CueEvent(
+    CueEventType type,
+    int cueTagId,
+    Actor target,
+    Actor instigator,
+    Actor causer,
+    float magnitude
+){}
+
+enum CueEventType { Executed; Added; Removed; }
+```
 ---
 
 ## Implementation Reference
@@ -870,7 +1124,7 @@ table status {
 ```java
 interface IPendingKill {
     boolean isPendingKill();
-    void setPendingKill(boolean pending);
+    void markPendingKill();
 }
 
 class SafeList<T extends IPendingKill> {
@@ -917,6 +1171,7 @@ abstract class BehaviorInstance<T extends Behavior> {
     StatusInstance parentStatus;
     abstract void onStart();
     abstract void onEnd();
+    void tick(float dt) {}
 }
 ```
 
@@ -940,145 +1195,149 @@ class Conditions {
 
 ---
 
-## Gameplay Cue
+## Examples
 
-客户端维护一张纯表现的注册表 `client_cue_registry`，组装视听反馈。
+### 例A：盾墙减伤（Pre 阶段拦截）
 
-### Cue Schema
-
-```cfg
-// 表现层映射清单 (纯客户端使用，服务器不加载)
-table client_cue_registry[cueTag] (entry="cueTag") {
-    cueTag: str ->gameplaytag; // 强引用，例: "Cue.Combat.Hit.Heavy"
-    handler: CueHandler;
-}
-
-interface CueHandler {
-    // A. 瞬发型 (Instant): 触发即播放，客户端不维护状态，由系统池自动回收。
-    // 适用于：受击、爆炸、挥砍瞬间、破盾
-    struct Instant {
-        vfx: list<VfxConfig>;                   // 特效集合 (例：爆血 + 刀光碎片)
-        sfxEvents: list<SfxConfig>;             // 音效事件集合 (支持 Wwise/FMOD 参数化化音频)
-        animTriggers: list<AnimTriggerConfig>;  // 动画触发器集合
-        cameraShakes: list<str>;                // 摄像机震动配置集合 (全局指令，无需分 Role)
-        damageTexts: list<DamageTextConfig>;    // 飘字设定集合
-    }
-
-    // B. 持续型 (Sustained): 随状态挂载而生成，随状态移除而销毁。
-    // 客户端需将其登记入 Active 字典，确保状态结束时安全销毁/淡出。
-    // 适用于：中毒冒泡、无敌金身材质、残血屏幕发红
-    struct Sustained {
-        loopingVfx: list<VfxConfig>;                     // 循环特效集合
-        loopingSfxEvents: list<SfxConfig>;               // 循环音效集合
-        materialOverrides: list<MaterialOverrideConfig>; // 材质覆写集合
-        screenFilters: list<str>;                        // 屏幕空间后处理集合
-    }
-}
-
-// --- 基础表现组件 ---
-
-struct VfxConfig {
-    role: CueRole;
-    assetPath: str;             // 特效预制体路径
-    attachRule: VfxAttachRule;
-    attachSocket: str;          // 绑定的骨骼挂点（如 "Chest", "Root"）
-    scale: float;
-}
-
-enum VfxAttachRule {
-    KeepWorldPosition; // 瞬发原地留存（如：地上的爆炸坑，不随目标移动）
-    SnapToTarget;      // 绑定并跟随目标移动（如：身上的燃烧火苗）
-}
-
-struct SfxConfig {
-    role: CueRole;     // 决定声音的 3D 发声源在谁身上
-    eventName: str;    // 音效事件路径 (如 "event:/Combat/Hit_Heavy")
-}
-
-struct AnimTriggerConfig {
-    role: CueRole;     
-    triggerName: str;  // 触发目标动画图的节点 (如 "HitReact_Heavy")
-}
-
-struct DamageTextConfig {
-    role: CueRole;
-    colorCode: str;    // 颜色代码 (如 "#FF0000")
-    fontSize: int;
-    prefixIcon: str;   // 前缀小图标 (如 "Icon_Crit")
-    motionStyle: str;  // 运动轨迹枚举 (如 "PopUp", "Gravity")
-}
-
-struct MaterialOverrideConfig {
-    role: CueRole;
-    materialPath: str;    // 材质资产路径
-    targetSlotIndex: int; // 替换第几个材质槽位 (-1 代表替换全部)
-}
-
-enum CueRole {
-    Target;       // 默认值：表现作用于受击者/状态承受者
-    Instigator;   // 表现作用于攻击方/技能发起者
-}
 ```
-
-### Runtime
-
-在运行时，逻辑层不需要策划手动配置 Cue 的生命周期类型，底层引擎将根据 Cue 所在的**上下文位置**自动推导并广播网络事件：
-
-* **挂载在 `Effect` 节点中（或 `DamageLayer` 结算时）**：
-    * 语义：瞬间行为。
-    * 推导：底层触发 `Executed` 事件。客户端查表调用 `Instant` 处理器，对象池“阅后即焚”。
-
-
-* **挂载在 `Status` 的 `cuesWhileActive` 中**：
-    * 语义：状态绑定行为。
-    * 推导：底层在状态添加时触发 `Added` 事件，在状态销毁时触发 `Removed` 事件。客户端查表调用 `Sustained` 处理器，生成特效后存入 `activeSustainedCues` 字典，收到移除指令时清理。
-
-```java
-record GameplayCueEvent (
-    CueEventType eventType, // 自动推导: Executed / Added / Removed
-    int cueTagId,           // "Cue.Combat.Hit.AbyssalStrike" 对应的整型ID
-    Actor target,           // 作用目标
-    Actor instigator,       // 发起者 (用于 Instigator Role 的表现回溯)
-    Actor causer,
-    float magnitude         // 表现强度 (传递给 UI 飘字数值或音频引擎的 RTPC 参数)
-){}
-```
-
-### Example
-
-**“深渊重击”**（攻击造成目标流血，同时自身获得吸血特效与重击硬直后摇）。
-
-```cfg
-table client_cue_registry {
-    [1001] {
-        cueTag: "Cue.Combat.Hit.AbyssalStrike";
-        handler: struct Instant {
-            
-            // 动画：目标播放受击硬直，攻击方(Instigator)播放武器弹刀/重击后摇
-            animTriggers: [
-                { role: Target, triggerName: "Hit_Heavy_Stagger" },
-                { role: Instigator, triggerName: "Attack_Recoil_Heavy" }
-            ];
-
-            // 特效：目标身上爆黑血，攻击方身上爆出绿色恢复流光
-            vfx: [
-                { role: Target, assetPath: "VFX_DarkBlood", attachRule: SnapToTarget, attachSocket: "Chest", scale: 1.0 },
-                { role: Instigator, assetPath: "VFX_Heal_Burst", attachRule: SnapToTarget, attachSocket: "Root", scale: 1.0 }
-            ];
-
-            // 飘字：目标头上爆红字，攻击方头上爆绿色回血数字
-            damageTexts: [
-                { role: Target, colorCode: "#FF0000", fontSize: 40, prefixIcon: "Sword", motionStyle: "PopUp" },
-                { role: Instigator, colorCode: "#00FF00", fontSize: 24, prefixIcon: "Cross", motionStyle: "FloatUp" }
-            ];
-
-            // 音效：发声源在受击目标身上
-            sfxEvents: [
-                { role: Target, eventName: "event:/SFX/Combat/Abyssal_Hit" }
-            ];
-            
-            cameraShakes: ["CamShake_HeavyImpact"];
+status {
+    id: 5001;
+    name: "盾墙";
+    grantedTags: ["State.Buff.ShieldWall"];
+    duration: struct Const { value: 5.0; };
+    stackingPolicy: struct Single { refreshMode: ResetDuration; };
+    behaviors: [
+        struct Trigger {
+            listenEvent: "Event.Combat.Damage.Take.Pre";
+            effect: struct ModifyPayloadMagnitude {
+                op: Mul;
+                value: struct Const { value: 0.6; };
+                overridePriority: 0;
+            };
+            maxTriggers: -1;
+            cooldown: 0;
         }
-    }
+    ];
+}
+```
+
+### 例B：反伤装甲（Post 阶段响应）
+
+```
+status {
+    id: 4001;
+    name: "反刺被动";
+    grantedTags: ["State.Passive.ThornArmor"];
+    duration: struct Const { value: -1.0; };
+    stackingPolicy: struct Single { refreshMode: KeepDuration; };
+    behaviors: [
+        struct Trigger {
+            listenEvent: "Event.Combat.Damage.Take.Post";
+            requiresAll: [
+                struct Compare {
+                    left: struct PayloadMagnitude {};
+                    op: Gte;
+                    right: struct Const { value: 50.0; };
+                }
+            ];
+            effect: struct WithTarget {
+                target: struct PayloadInstigator {};
+                effect: struct ApplyPipeline {
+                    pipeline: "PureDamage";
+                    target: struct ContextTarget {};
+                    magnitude: struct Const { value: 10.0; };
+                    tags: ["Damage.Type.Reflected"];
+                };
+            };
+            maxTriggers: -1;
+            cooldown: 0;
+        }
+    ];
+}
+```
+
+### 例C：叠毒（独立计时 DOT + 溢出爆发）
+
+```
+status {
+    id: 3001;
+    name: "剧毒";
+    statusTags: ["Status.Type.DOT"];
+    grantedTags: ["State.Debuff.Poison"];
+    duration: struct Const { value: 8.0; };
+    stackingPolicy: struct Independent {
+        maxStacks: 5;
+        overflowBehavior: ExecuteOverflow;
+    };
+    cuesWhileActive: ["Cue.Status.Poison"];
+    behaviors: [
+        struct Periodic {
+            period: struct Const { value: 2.0; };
+            executeOnApply: false;
+            effect: struct ApplyPipeline {
+                pipeline: "PureDamage";
+                target: struct ContextTarget {};
+                magnitude: struct StackScaling {
+                    baseValue: 5.0;
+                    perStackAdd: 3.0;
+                    perStackMul: 1.0;
+                };
+                tags: ["Damage.Element.Poison"];
+            };
+        },
+        struct OnOverflow {
+            effect: struct Sequence {
+                effects: [
+                    struct ApplyPipeline {
+                        pipeline: "PureDamage";
+                        target: struct ContextTarget {};
+                        magnitude: struct Const { value: 80.0; };
+                        tags: ["Damage.Element.Poison", "Damage.Type.Burst"];
+                        cuesOnExecute: ["Cue.Combat.PoisonBurst"];
+                    },
+                    struct RemoveStatus {
+                        target: struct ContextTarget {};
+                        statusId: 3001;
+                        stacksToRemove: -1;
+                    }
+                ];
+            };
+        }
+    ];
+}
+```
+
+
+### 例D：暴击增伤被动（利用 CheckStage 标记）
+
+```
+// 被动：当你的攻击暴击时，额外造成一次固定伤害
+status {
+    id: 6001;
+    name: "暴击追伤";
+    grantedTags: ["State.Passive.CritFollowup"];
+    duration: struct Const { value: -1.0; };
+    stackingPolicy: struct Single { refreshMode: KeepDuration; };
+    behaviors: [
+        struct Trigger {
+            listenEvent: "Event.Combat.Damage.Take.Post";
+            requiresAll: [
+                // 检查 Payload 中是否有暴击标记（由 CheckStage 写入）
+                struct PayloadHasVar { varTag: "Combat.Result.Critical"; }
+            ];
+            effect: struct WithTarget {
+                target: struct PayloadTarget {};
+                body: struct ApplyPipeline {
+                    pipeline: "PureDamage";
+                    target: struct ContextTarget {};
+                    magnitude: struct Const { value: 25.0; };
+                    tags: ["Damage.Type.Bonus"];
+                    cuesOnExecute: ["Cue.Combat.CritBonus"];
+                };
+            };
+            maxTriggers: -1;
+            cooldown: 1.0;
+        }
+    ];
 }
 ```
