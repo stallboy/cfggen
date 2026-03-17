@@ -907,3 +907,317 @@ commit 时机的选择已经隐含了打断的经济后果。commitOnComplete=tr
 | 射击 | Instant + Channel + Charged | Cast 通常不需要 |
 
 裁剪方式：从 `ActivationModel` 的 interface 中移除不需要的变体，AbilityInstance 中对应的 tick 分支不实现。已有配置向前兼容。
+
+
+这是一个很好的问题。让我从架构角度分析目标锁定/地点选择应该怎么融入现有体系。
+
+---
+
+
+# TargetingRequirement 设计方案（修订版）
+
+## 问题修正
+
+1. **`(nullable)` 语义纠正**：`(nullable)` 仅修饰 `->` 外键引用（表示索引可能不命中），不表示字段本身可缺省。对于"可无"的非引用类型，应使用 `interface` 的 `struct None {}` 变体。
+
+2. **var key 提升至全局**：99% 的技能向同一个 var key 写入目标数据。逐技能配置是冗余的，应由 `combat_settings` 统一定义。
+
+---
+
+## combat_settings 扩展
+
+```cfg
+table combat_settings[name] {
+    name: str;
+    tagRules: list<str> ->tag_rules;
+
+    maxDispatchDepth: int;
+    maxStatusCountPerActor: int;
+    maxEffectChainLength: int;
+    maxScanTargets: int;
+
+    defaultLockoutTag: str ->gameplaytag;
+
+    // ========== 新增 ==========
+    targetingVars: TargetingVarConfig;
+    // ==========================
+}
+
+struct TargetingVarConfig {
+    targetVar: str ->var_key;      // 如 "Var_SelectedTarget"（存 Actor）
+    pointVar: str ->var_key;       // 如 "Var_TargetPoint"（存 Position）
+    directionVar: str ->var_key;   // 如 "Var_TargetDirection"（存 Vector）
+}
+```
+
+引擎启动时读取这三个 var key，在 Ability 激活流程中据此写入 `initSnapshot`。所有 Effect 通过 `ContextVar` 用同一个 key 读取，全局一致、零冗余。
+
+---
+
+## TargetingRequirement
+
+```cfg
+interface TargetingRequirement {
+    // 无需外部目标输入（自身 AOE、自 buff 等）
+    struct None {}
+
+    // 需要一个目标实体（指向性技能、单体治疗）
+    struct SingleTarget {
+        allowedRelations: list<Relation>;
+        tagQuery: TagQuery;
+        maxRange: FloatValue;
+        onTargetLost: TargetLostPolicy;
+    }
+
+    // 需要一个地点（AOE 落点、传送目的地）
+    struct PointTarget {
+        maxRange: FloatValue;
+        requireLineOfSight: bool;
+    }
+
+    // 需要一个方向（冲锋方向、技能射线）
+    struct DirectionTarget {}
+}
+
+enum TargetLostPolicy {
+    Cancel;     // 取消技能（读条期间目标死亡）
+    Retarget;   // 复用同一约束条件扫描最近合法目标
+    Continue;   // 忽略，保留快照继续执行
+}
+```
+
+### 设计说明
+
+**为什么 `DirectionTarget` 为空**：方向是归一化向量，无需距离/关系/Tag 验证。引擎收集玩家输入后直接写入即可。
+
+**为什么没有 `SelfTarget`**：自我施法不需要玩家提供输入，使用 `struct None {}`，Effect 中通过 `ContextInstigator` 引用施法者自身。
+
+**`onTargetLost` 仅对 `SingleTarget` 有意义**：`PointTarget` 和 `DirectionTarget` 在激活时冻结为标量数据，不存在"丢失"的可能。`SingleTarget` 持有 Actor 引用，目标可能死亡或脱离范围。
+
+**`Retarget` 的实现细节**：复用同一 `SingleTarget` 的 `allowedRelations` / `tagQuery` / `maxRange` 约束，按最近距离选取替代目标。新目标写入 `instanceState[targetVar]`，利用 `ContextVar` 的查找优先级（localScope → instanceState → initSnapshot）自然覆盖原始值。
+
+---
+
+## Ability 表集成
+
+```cfg
+table ability[id] (json) {
+    id: int;
+    name: text;
+    description: text;
+
+    abilityTags: list<str> ->gameplaytag;
+    requiresAll: list<Condition>;
+    costs: list<StatCost>;
+    cooldown: FloatValue;
+
+    targeting: TargetingRequirement;
+    activation: ActivationModel;
+    interruptResponse: InterruptResponse;
+    recovery: RecoveryConfig;
+
+    effect: Effect;
+}
+```
+
+> **附注**：`interruptResponse` 和 `recovery` 同样不应使用 `(nullable)`。若需要"可无"语义，应效仿 `TargetingRequirement` 在各自的 interface/struct 中增加 `None` 变体或零值默认。此处不展开，但需在后续迭代中统一处理。
+
+---
+
+## 数据流
+
+```
+玩家操作                    引擎/UI 层                              Ability 层
+─────────                  ──────────                              ──────────
+                     读取 ability.targeting 类型
+                           │
+选中敌人 ──→  验证 allowedRelations / tagQuery / maxRange
+              通过 → 写入 initSnapshot[settings.targetingVars.targetVar]
+                           │
+点击地面 ──→  验证 maxRange / lineOfSight
+              通过 → 写入 initSnapshot[settings.targetingVars.pointVar]
+                           │
+拖拽方向 ──→  归一化 → 写入 initSnapshot[settings.targetingVars.directionVar]
+                           │
+              struct None → 不收集任何输入
+                           │
+                           ▼
+                    CanActivate 检查（targeting 验证已在此前完成）
+                           │
+                           ▼
+                    Activate: 冻结 initSnapshot
+                           │
+                           ▼
+                    Effect 中通过 ContextVar 读取
+```
+
+---
+
+## Process 阶段目标追踪
+
+仅 `SingleTarget` 在 Process 阶段（Cast/Charged/Channel）执行持续验证：
+
+```
+Process 每帧:
+    1. 正常阶段逻辑（累加时间、更新蓄力进度等）
+    2. 若 targeting 为 SingleTarget:
+        a. 取 target = ContextVar 求值 targetVar
+        b. 验证: target 存活 ∧ 在 maxRange 内 ∧ 满足 tagQuery
+        c. 若失败 → 按 onTargetLost 处理:
+           - Cancel   → cancel()
+           - Retarget → 用同一约束扫描最近合法目标
+                        写入 instanceState[targetVar]（覆盖 initSnapshot）
+           - Continue → 不处理
+```
+
+`PointTarget` / `DirectionTarget` 激活时冻结为标量，Process 期间不做验证。
+
+---
+
+## 与现有机制的正交关系
+
+| 机制 | 职责 | 时机 | 数据来源 |
+|---|---|---|---|
+| `TargetingRequirement` | 声明需要什么输入，验证合法性 | Ability 激活前 | 玩家操作 |
+| `TargetSelector` | 从 Context/Payload 中选取**一个**已知实体 | Effect 执行时 | initSnapshot / instanceState / Payload |
+| `TargetScan` | 在空间中实时扫描**多个**实体 | Effect 执行时 | 物理世界 |
+
+三者严格正交：Targeting 注入初始数据 → TargetSelector 从中读取 → TargetScan 在此基础上扩展空间查询。**无需目标输入的技能**（自身 AOE、自 buff）直接用 `struct None {}` + `TargetScan` 或 `ContextInstigator`。
+
+---
+
+## Effect 中的消费方式
+
+目标数据通过 `ContextVar` 读取，完全复用现有 Expression Layer，**不引入任何新的读取路径**：
+
+```cfg
+// 指向性火球：朝锁定目标发射
+ability {
+    id: 1002; name: "指向火球";
+    targeting: struct SingleTarget {
+        allowedRelations: [Hostile];
+        tagQuery: {};
+        maxRange: struct Const { value: 30.0; };
+        onTargetLost: Cancel;
+    };
+    activation: struct Cast {
+        castTime: struct Const { value: 1.5; };
+        castingTags: ["State.Casting", "State.Casting.Spell"];
+        cuesDuringCast: ["Cast.Fireball"];
+        commitOnComplete: true;
+    };
+    effect: struct WithTarget {
+        // 读取全局 targetVar，引擎在激活时已写入
+        target: struct ContextVar { varKey: "Var_SelectedTarget"; };
+        effect: struct ApplyPipeline {
+            pipeline: "StandardPhysicalDamage";
+            magnitude: struct StatValue {
+                source: struct ContextInstigator {};
+                stat: "Combat_Attack";
+                capture: Current;
+            };
+            tags: ["Damage.Element.Fire"];
+            cuesOnExecute: ["Hit.Fireball"];
+        };
+    };
+}
+
+// AOE 落点技能：在指定地点召唤火雨
+ability {
+    id: 1003; name: "火雨";
+    targeting: struct PointTarget {
+        maxRange: struct Const { value: 25.0; };
+        requireLineOfSight: false;
+    };
+    activation: struct Cast {
+        castTime: struct Const { value: 2.0; };
+        castingTags: ["State.Casting", "State.Casting.Spell", "State.Immobile"];
+        cuesDuringCast: ["Cast.FireRain"];
+        commitOnComplete: true;
+    };
+    // pointVar 由引擎在 SpawnObj 的 moveInfo 中直接消费
+    effect: struct SpawnObj {
+        duration: struct Const { value: 6.0; };
+        objTags: ["Obj.Zone.FireRain"];
+        moveInfo: { /* 引擎读取 settings.targetingVars.pointVar 作为生成位置 */ };
+        cuesWhileActive: ["Zone.FireRain"];
+        effectsOnCreate: [ /* 周期性 AOE 伤害 */ ];
+        dieInfo: [];
+    };
+}
+
+// 冲锋：朝指定方向冲刺（无需额外约束）
+ability {
+    id: 1004; name: "冲锋";
+    targeting: struct DirectionTarget {};
+    activation: struct Instant {};
+    // directionVar 由引擎的移动系统直接消费
+    effect: struct Sequence { effects: [
+        struct GrantTags {
+            grantedTags: ["State.Buff.Hyperarmor", "State.Charging.Movement"];
+            duration: struct Const { value: 0.4; };
+        },
+        struct WithTargets {
+            targets: {
+                shape: struct Sphere {
+                    center: struct ContextInstigator {};
+                    radius: struct Const { value: 3.0; };
+                };
+                relationTo: struct ContextInstigator {};
+                allowedRelations: [Hostile];
+                tagQuery: {};
+                exclude: [];
+                maxCount: 5;
+                sort: Nearest;
+            };
+            effect: struct ApplyPipeline {
+                pipeline: "StandardPhysicalDamage";
+                magnitude: struct Const { value: 45.0; };
+                tags: ["Damage.AttackType.Melee"];
+                cuesOnExecute: ["Hit.Charge"];
+            };
+        }
+    ]; };
+}
+
+// 自身 AOE（无需目标输入）
+ability {
+    id: 1005; name: "战吼";
+    targeting: struct None {};
+    activation: struct Instant {};
+    effect: struct WithTargets {
+        targets: {
+            shape: struct Sphere {
+                center: struct ContextInstigator {};
+                radius: struct Const { value: 10.0; };
+            };
+            relationTo: struct ContextInstigator {};
+            allowedRelations: [Hostile];
+            tagQuery: {};
+            exclude: [];
+            maxCount: -1;
+            sort: None;
+        };
+        effect: struct ApplyStatus { statusId: 8001; captures: []; };
+    };
+}
+```
+
+---
+
+## CanActivate 中的 Targeting 验证时机
+
+```
+CanActivate 检查顺序:
+    1. TagRules blocksAbilities 拦截
+    2. cooldown 就绪
+    3. costs 资源充足
+    4. requiresAll 条件满足
+    5. maxConcurrent 未超限
+    6. ★ targeting 验证（目标/地点/方向已由引擎收集且合法）
+```
+
+Targeting 验证放在最后，因为它依赖引擎/UI 层的前置交互（选目标、点地面），这些交互在其他检查之前可能尚未完成。实际上，引擎可以在步骤 1-5 通过后再触发目标选择 UI（如 MOBA 的技能指示器），选择完成后才执行步骤 6。
+
+
+检查思考 Ability 施法过程模型 和 TargetingRequirement 设计方案 ，挨个反省，提出修改优化意见。最后汇总完整的输出 Ability 设计文档
