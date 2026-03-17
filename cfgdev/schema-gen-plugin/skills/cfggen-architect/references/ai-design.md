@@ -499,7 +499,7 @@ struct BehaviorInjection {
 | :--- | :--- | :--- | :--- | :--- |
 | **物理受控 (Hard CC)** | 外部伤害 / 机制打击 (GAS) | GAS (Tag 系统) | `global_ai_settings` 触发全局拦截，强制清空执行栈并**直接挂起大脑的 Tick 循环 (物理宕机)**。| 死亡、冰冻、眩晕、击飞浮空。此时 AI 大脑停止一切思考与动作，躯体表现全盘交由 GAS 的 Cue 驱动。 |
 | **战术中断 (Soft Interrupt)** | 内部感知判断 (AI 大脑) | AI 算分系统 | 触发局部 `abortConditions` 触发本帧顺滑重选，或利用 `interruptPriority` 在 AI 内部进行高优行为抢占。 | 目标跑远放弃追击、紧急闪避、发现更残血目标切流。GAS 毫不知情，纯属 AI 主观战术意图。 |
-| **转阶段/机制锁 (Phase)** | 内部状态感知 (AI) -> 状态持久化 (GAS) | AI 算分系统主导决策，GAS 负责状态托管 | AI 通过特权行为（高 `interruptPriority` + `ignoreGlobalAborts` 霸体）主动执行转阶段前摇，结束后呼叫 GAS 给自身挂载长效 `Status`。由该 Status 内部的 `AIBehaviorModifier` 动态修改后续行为池。 | Boss 30%血量狂暴。AI 寻机主动释放霸体怒吼，结束后由 GAS 接管狂暴状态，原子化地注入全屏大招并替换平 A，状态随战斗重置安全卸载。 |
+| **转阶段/机制锁 (Phase)** | 内部状态感知 (AI) -> 状态持久化 (GAS) | AI 算分系统主导决策，GAS 负责状态托管 | AI 通过特权行为（高 `interruptPriority` ）主动执行转阶段前摇，结束后呼叫 GAS 给自身挂载长效 `Status`。由该 Status 内部的 `AIBehaviorModifier` 动态修改后续行为池。 | Boss 30%血量狂暴。AI 寻机主动释放霸体怒吼，结束后由 GAS 接管狂暴状态，原子化地注入全屏大招并替换平 A，状态随战斗重置安全卸载。 |
 
 ---
 
