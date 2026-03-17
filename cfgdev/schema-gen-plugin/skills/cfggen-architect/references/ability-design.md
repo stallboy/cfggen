@@ -27,10 +27,10 @@
 // 程序启动时自动构建父子索引
 table gameplaytag[tag] {
     tag:str; // 例: "State.Debuff.Control.Stun"
+    tagId: int;
     description: text;
-    value: int;
-    ancestors: list<int> ->gameplaytag[value]; // 策划不用填，程序初始化时自动填
-    [value];
+    ancestors: list<int> ->gameplaytag[tagId]; // 策划不用填，程序初始化时自动填
+    [tagId];
 }
 ```
 
@@ -55,7 +55,6 @@ table gameplaytag[tag] {
 
 ```cfg
 table stat_definition[statKey] {
-    [statId];
     statKey: str;
     statId: int;
     description: text;
@@ -75,6 +74,7 @@ table stat_definition[statKey] {
     // 当 currentValue 降至 minLimit 时，自动向宿主挂载的 Tag
     // 例: HP 归零 -> 挂 "State.Dead"
     onDepletedGrantTag: list<str> ->gameplaytag;
+    [statId];
 }
 
 interface StatLimit {
@@ -97,13 +97,13 @@ enum StatClampMode {
 
 ```cfg
 table event_definition[eventKey] (entry='eventKey') {
-    [eventId];
     eventKey: str; // 如 "Combat_Damage_Pre"
     eventId: int;
 
     // 定义该事件 Payload 中预期的变量列表 (可用于验证和编辑器提示)
     // 告知该事件除了 magnitude 以外，在 extras 里还会塞入哪些 Tag 数据
     expectedVars: list<EventVarDecl>;
+    [eventId];
 }
 
 struct EventVarDecl {
@@ -122,10 +122,10 @@ enum VarType {
 
 ```
 table cue_key[cueKey] {
-    [cueId]; 
     cueKey: str -> cue_registry (nullable);
     cueId: int;
     ancestors: list<int> ->cue_key[cueId]; //按从父到祖父顺序排列
+    [cueId]; 
 }
 ```
 
@@ -133,9 +133,9 @@ table cue_key[cueKey] {
 
 ```
 table var_key[varKey] {
-    [varId];
     varKey: str;
     varId: int;
+    [varId];
 }
 ```
 
@@ -468,17 +468,6 @@ interface Effect {
         cuesOnExecute: list<str> ->cue_key;
     }
 
-    struct Damage { // 快捷方式
-        damageTags: list<str> ->gameplaytag; // 如: ["Damage.Element.Fire", "Damage.AttackType.Melee"]
-        baseDamage: FloatValue;
-        cuesOnHit: list<str> ->cue_key;
-    }
-
-    struct Heal { // 快捷方式
-        baseHeal: FloatValue;
-        cuesOnHeal: list<str> ->cue_key;
-    }
-
     // --- 状态操作 ---
     // 引用标准 Status (适用于需要 UI 图标、多端网络同步的常规状态，如“中毒”, “护盾”)
     struct ApplyStatus {
@@ -738,6 +727,7 @@ interface Behavior {
         stat: str ->stat_definition;
         op: ModifierOp;
         value: FloatValue;
+        overridePriority: int;
         requiresAll: list<Condition>;
     }
 
@@ -827,8 +817,6 @@ struct StatCost {
 table combat_settings[name] {
     name: str;
     tagRules: list<str> ->tag_rules;
-    damgePipeline: str -> resolution_pipeline;
-    healPipeline: str -> resolution_pipeline;
 
     maxDispatchDepth: int;       // 事件派发嵌套深度上限（防反伤死循环）
     maxStatusCountPerActor: int; // 单个 Actor 的 StatusInstance 上限
@@ -967,7 +955,7 @@ struct MagnitudeModifier {
 判定阶段的执行时机在管线中被精确定义：
 
 ```
-ApplyPipeline / Damage / Heal 调用
+ApplyPipeline 调用
     │
     ▼
 1.  构建 Payload（snapshot magnitude + extras + tags）
@@ -1331,7 +1319,6 @@ status {
                 target: struct PayloadInstigator {};
                 effect: struct ApplyPipeline {
                     pipeline: "PureDamage";
-                    target: struct ContextTarget {};
                     magnitude: struct Const { value: 10.0; };
                     tags: ["Damage.Type.Reflected"];
                 };
@@ -1363,7 +1350,6 @@ status {
             executeOnApply: false;
             effect: struct ApplyPipeline {
                 pipeline: "PureDamage";
-                target: struct ContextTarget {};
                 magnitude: struct StackScaling {
                     baseValue: 5.0;
                     perStackAdd: 3.0;
@@ -1377,15 +1363,12 @@ status {
                 effects: [
                     struct ApplyPipeline {
                         pipeline: "PureDamage";
-                        target: struct ContextTarget {};
                         magnitude: struct Const { value: 80.0; };
                         tags: ["Damage.Element.Poison", "Damage.Type.Burst"];
                         cuesOnExecute: ["Combat.PoisonBurst"];
                     },
                     struct RemoveStatus {
-                        target: struct ContextTarget {};
                         statusId: 3001;
-                        stacksToRemove: -1;
                     }
                 ];
             };
@@ -1414,9 +1397,8 @@ status {
             ];
             effect: struct WithTarget {
                 target: struct PayloadTarget {};
-                body: struct ApplyPipeline {
+                effect: struct ApplyPipeline {
                     pipeline: "PureDamage";
-                    target: struct ContextTarget {};
                     magnitude: struct Const { value: 25.0; };
                     tags: ["Damage.Type.Bonus"];
                     cuesOnExecute: ["Combat.CritBonus"];
