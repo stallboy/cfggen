@@ -42,10 +42,8 @@ table gameplaytag[tag] {
 | `Status.*` | status分类标签 | `Status.Type.DOT` |
 | `Ability.*` | ability分类标签 | `Ability.Type.Spell` |
 | `Damage.*` | 伤害/治疗分类 | `Damage.Element.Fire` |
-| `Cooldown.*` | 冷却组键名 | `Cooldown.Ability.Fireball` |
 | `Combat.*` |	管线结果标记 & 战斗分类	| `Combat.Result.Dodged, Combat.Result.Critical` |
 
-`Cooldown.*`相当于给施法者挂载一个status，`grantedTag=Cooldown.Ability.Fireball`给施法者。
 以上分类都可以想象`ancestors`或`TagQuery`的用武之地
 
 `Event、Stat、Var`等都没有ancestors的需求，都无需是`gameplaytag`。
@@ -157,7 +155,7 @@ record Context(
 
     // 实例状态, 原地被改变，跨节点共享
     // 含激活时写入的 targeting 数据、蓄力进度等
-    Store instanceState,
+    InstanceState instanceState,
     
     // --- 以下被改变都要 new Context
     // StatusInstance 里存储的context causer=host,target=host
@@ -181,6 +179,11 @@ interface Store extends ReadOnlyStore {
     void setObject(int varId, Object obj);
     void removeVar(int varId);
 }
+
+class InstanceState implements Store {
+    int abilityLevel = 1;   // 技能等级（由 Ability 注入，默认为 1）
+    int currentStacks = 1;  // 当前状态层数（由 Status 注入，默认为 1） 
+}
 ```
 
 ### Payload
@@ -188,7 +191,7 @@ interface Store extends ReadOnlyStore {
 Payload 是事件携带的瞬时载荷，Trigger 通过它读取"发生了什么"并注入ChangSet修饰。
 
 ```java
-record Event(
+record GameplayEvent(
     int eventId,
     Payload payload
 ){}
@@ -291,6 +294,16 @@ class StatModifierInstance extends StatusInstance<StateModifier> {
 }
 ```
 
+### StatModifier & ChangeSet
+
+| 维度 | StatModifierList | ChangeSet |
+|------|-----------------|-----------|
+| 生命周期 | 跟随 StatusInstance | 单次 Payload 结算后销毁 |
+| 作用对象 | Stat.currentValue | Payload.magnitude / extras |
+| 来源 | Behavior.StatModifier | Trigger 中的 ModifyPayloadMagnitude |
+| 结算时机 | Stat 被标脏后重算 | Pipeline 阶段 4（Pre 结算） |
+
+
 ### EventBus
 
 以 EventTagId 为键，直连底层的 SafeList<TriggerInstance> 监听队列。
@@ -319,7 +332,7 @@ class EventBus {
     Int2ObjectMap<SafeList<TriggerInstance>> listeners;
     final CombatSystem combatSystem;
 
-    void dispatch(Event event) {
+    void dispatch(GameplayEvent event) {
         if (!combatSystem.tryEnterDispatch()) return; // 全局深度检查
         try {
             SafeList<TriggerInstance> list = listeners.get(event.eventId);
@@ -502,7 +515,7 @@ interface Effect {
     }
 
     //  结算管线触发（伤害/治疗/自定义管线）
-    struct ApplyPipeline {
+    struct ResolveCombat {
         pipeline: str ->resolution_pipeline;
         magnitude: FloatValue;
         tags: list<str> ->gameplaytag;   // 如 ["Damage.Element.Fire"]
@@ -716,14 +729,14 @@ interface StackingPolicy {
     // 独立计时：每层独立倒计时
     struct Independent {
         maxStacks: int;
-        overflowBehavior: OverflowBehavior;
+        overflowPolicy: OverflowPolicy;
     }
 
     // 共享计时：所有层共享一个倒计时
     struct Shared {
         maxStacks: int;
         refreshMode: RefreshMode;
-        overflowBehavior: OverflowBehavior;
+        overflowPolicy: OverflowPolicy;
     }
 
     // 不可叠加
@@ -738,16 +751,16 @@ enum RefreshMode {
     KeepDuration;
 }
 
-enum OverflowBehavior {
+enum OverflowPolicy {
     Reject;             // 丢弃
     ReplaceOldest;      // 替换最早层
-    ExecuteOverflow;    // 触发 OnOverflow 行为
+    TriggerOnOverflow;  // 触发 OnOverflow 行为
 }
 ```
 
 ### Behavior
 
-Behavior 是附着在 Status 上的逻辑零件。其基础运行上下文是 `StatusInstance`（内含 `Context`）。
+Behavior 是附着在 Status 上的逻辑零件。其运行在 `StatusInstance`（内含 `Context`）内。
 
 **关于 Payload 的作用域与生命周期：**
 
@@ -797,7 +810,7 @@ interface Behavior {
         requiresAll: list<Condition>;
         effect: Effect;
 
-        maxTriggers: int; // -1 = 无限
+        maxTriggers: int;
         cooldown: FloatValue;
     }
 
@@ -848,6 +861,13 @@ struct StatCost {
 ```
 
 这是简单的瞬发模型。当需要目标选择、读条、蓄力、引导、后摇时，请一定参考`ability-ext.md`。
+
+如果cooldown需要分组，可以增加配置`cooldownGroups`，使用gameplaytag
+
+| 前缀 | 用途 | 示例 |
+|---|---|---|
+| `Cooldown.*` | 冷却组键名 | `Cooldown.Ability.Fireball` |
+
 
 ---
 
@@ -997,7 +1017,7 @@ struct MagnitudeModifier {
 判定阶段的执行时机在管线中被精确定义：
 
 ```
-ApplyPipeline 调用
+ResolveCombat 调用
     │
     ▼
 1.  构建 Payload（snapshot magnitude + extras + tags）
@@ -1214,7 +1234,7 @@ enum CueEventType { Executed; Added; Removed; }
 
 | 来源 | 推导类型 | 客户端行为 |
 |---|---|---|
-| `Effect.FireCue` / `ApplyPipeline.cuesOnExecute` / `AllocationLayer.onHitCue`  | `Executed` | 查表调用 Instant 处理器 |
+| `Effect.FireCue` / `ResolveCombat.cuesOnExecute` / `AllocationLayer.onHitCue`  | `Executed` | 查表调用 Instant 处理器 |
 | `Status.cuesWhileActive` | `Added` / `Removed` | 查表调用 Sustained 处理器 |
 
 
@@ -1331,8 +1351,6 @@ status {
                 value: struct Const { value: 0.6; };
                 overridePriority: 0;
             };
-            maxTriggers: -1;
-            cooldown: 0;
         }
     ];
 }
@@ -1359,14 +1377,12 @@ status {
             ];
             effect: struct WithTarget {
                 target: struct PayloadInstigator {};
-                effect: struct ApplyPipeline {
+                effect: struct ResolveCombat {
                     pipeline: "PureDamage";
                     magnitude: struct Const { value: 10.0; };
                     tags: ["Damage.Type.Reflected"];
                 };
             };
-            maxTriggers: -1;
-            cooldown: 0;
         }
     ];
 }
@@ -1383,14 +1399,14 @@ status {
     duration: struct Const { value: 8.0; };
     stackingPolicy: struct Independent {
         maxStacks: 5;
-        overflowBehavior: ExecuteOverflow;
+        overflowPolicy: TriggerOnOverflow;
     };
     cuesWhileActive: ["Status.Poison"];
     behaviors: [
         struct Periodic {
             period: struct Const { value: 2.0; };
             executeOnApply: false;
-            effect: struct ApplyPipeline {
+            effect: struct ResolveCombat {
                 pipeline: "PureDamage";
                 magnitude: struct StackScaling {
                     baseValue: 5.0;
@@ -1403,7 +1419,7 @@ status {
         struct OnOverflow {
             effect: struct Sequence {
                 effects: [
-                    struct ApplyPipeline {
+                    struct ResolveCombat {
                         pipeline: "PureDamage";
                         magnitude: struct Const { value: 80.0; };
                         tags: ["Damage.Element.Poison", "Damage.Type.Burst"];
@@ -1439,15 +1455,13 @@ status {
             ];
             effect: struct WithTarget {
                 target: struct PayloadTarget {};
-                effect: struct ApplyPipeline {
+                effect: struct ResolveCombat {
                     pipeline: "PureDamage";
                     magnitude: struct Const { value: 25.0; };
                     tags: ["Damage.Type.Bonus"];
                     cuesOnExecute: ["Combat.CritBonus"];
                 };
             };
-            maxTriggers: -1;
-            cooldown: 1.0;
         }
     ];
 }
