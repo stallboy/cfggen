@@ -1309,16 +1309,20 @@ abstract class BehaviorInstance<T extends Behavior> {
 `Effect`、`FloatValue`、`Condition`、`TargetSelector`、`TargetScan` 作为**无状态**指令节点,本身不维护生命周期,被调用时即时消费上下文结算。
 
 ```java
-class Effects {
-    static void execute(Effect cfg, Context ctx, Payload payload);
-}
-
 class FloatValues {
     static float evaluate(FloatValue cfg, Context ctx, Payload payload);
 }
 
+class ActorFloatValues {
+    static float evaluate(FloatValue cfg, Actor actor);
+}
+
 class Conditions {
     static boolean test(Condition cfg, Context ctx, Payload payload);
+}
+
+class ActorConditions {
+    static boolean test(Condition cfg, Actor actor);
 }
 
 class TargetSelectors {
@@ -1328,8 +1332,11 @@ class TargetSelectors {
 class TargetScans {
     static Collection<Actor> scan(TargetScan cfg, Context ctx, Payload payload);
 }
-```
 
+class Effects {
+    static void execute(Effect cfg, Context ctx, Payload payload);
+}
+```
 ---
 
 ## Examples
