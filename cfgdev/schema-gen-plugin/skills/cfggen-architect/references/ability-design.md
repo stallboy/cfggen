@@ -154,9 +154,9 @@ Context 是运行时的载体，连接静态配置与动态执行。
 ```java
 record Context(
     Actor instigator,   // 真正的发起者 (如：玩家)
-    ReadOnlyStore initSnapshot, // 冻结的初始参数 (如：蓄力时间,初始锁定的目标)
 
-    // 实例状态 (原地被改变，跨节点共享，随技能销毁)
+    // 实例状态, 原地被改变，跨节点共享
+    // 含激活时写入的 targeting 数据、蓄力进度等
     Store instanceState,
     
     // --- 以下被改变都要 new Context
@@ -351,14 +351,17 @@ class EventBus {
 interface FloatValue {
     struct Const { value: float; }
     struct Math { op: MathOp; a: FloatValue; b: FloatValue; }
-    
-    struct StatValue {
+    struct Actor {
         source: TargetSelector;
-        stat: str ->stat_definition;
-        capture: StatCaptureMode;
+        value: ActorFloatValue;
     }
 
-    // 上下文变量，优先localScope，然后instanceState，最后initSnapshot
+    struct StatValue { // 取Current
+        source: TargetSelector;
+        stat: str ->stat_definition;
+    }
+
+    // 上下文变量，优先localScope，然后instanceState
     struct ContextVar { varKey: str ->var_key; }
 
     // 事件载荷变量
@@ -377,8 +380,22 @@ interface FloatValue {
 }
 
 enum MathOp { Add; Sub; Mul; Div; Max; Min; }
-enum StatCaptureMode { Current; Base; }
 ```
+
+### ActorFloatValue
+
+上下文是`Actor`
+
+```cfg
+interface ActorFloatValue {
+    struct Const { value: float; }
+    struct Math { op: MathOp; a: ActorFloatValue; b: ActorFloatValue; }
+    
+    struct StatValue { stat: str ->stat_definition; }
+    struct StatBaseValue { stat: str ->stat_definition; }
+}
+```
+
 
 ### Condition
 
@@ -387,15 +404,18 @@ enum StatCaptureMode { Current; Base; }
 ```cfg
 interface Condition {
     struct Const { value: bool; }
-    struct And { conditions: list<Condition>; }
-    struct Or { conditions: list<Condition>; }
-    struct Not { condition: Condition; }
+    struct And { args: list<Condition>; }
+    struct Or { args: list<Condition>; }
+    struct Not { arg: Condition; }
     struct Compare {
         left: FloatValue;
         op: CompareOp;
         right: FloatValue;
     }
-
+    struct Actor {
+        source: TargetSelector;
+        cond: ActorCondition;
+    }
     struct HasTags {
         source: TargetSelector;
         query: TagQuery;
@@ -415,6 +435,27 @@ struct TagQuery {
     requireAll: list<str> ->gameplaytag; // 必须全部包含
     requireAny: list<str> ->gameplaytag; // 包含其中之一即可生效 (最常用)
     exclude: list<str> ->gameplaytag;    // 包含任何一个则拦截/失效
+}
+```
+
+### ActorCondition
+
+上下文是`Actor`
+
+```
+interface ActorCondition {
+    struct Const { value: bool; }
+    struct And { args: list<ActorCondition>; }
+    struct Or { args: list<ActorCondition>; }
+    struct Not { arg: ActorCondition; }
+    struct Compare {
+        left: ActorFloatValue;
+        op: CompareOp;
+        right: ActorFloatValue;
+    }
+    struct HasTags {
+        query: TagQuery;
+    }
 }
 ```
 
@@ -790,12 +831,11 @@ table ability[id] (json) {
     abilityTags: list<str> ->gameplaytag;
 
     // 准入条件
-    requiresAll: list<Condition>;
+    requiresAll: list<ActorCondition>;
 
     // cost
     costs: list<StatCost>;
-    cooldown: FloatValue;
-    commitEffects: Effect;
+    cooldown: ActorFloatValue;
 
     // 效果
     effect: Effect;
@@ -803,9 +843,11 @@ table ability[id] (json) {
 
 struct StatCost {
     stat: str ->stat_definition;
-    value: FloatValue;
+    value: ActorFloatValue;
 }
 ```
+
+这是简单的瞬发模型。当需要目标选择、读条、蓄力、引导、后摇时，请一定参考`ability-ext.md`。
 
 ---
 
@@ -1007,8 +1049,8 @@ resolution_pipeline {
             name: "闪避";
             chance: struct Math {
                 op: Sub;
-                a: struct StatValue { source: struct PayloadTarget {}; stat: "Combat_DodgeRate"; capture: Current; };
-                b: struct StatValue { source: struct PayloadInstigator {}; stat: "Combat_Accuracy"; capture: Current; };
+                a: struct StatValue { source: struct PayloadTarget {}; stat: "Combat_DodgeRate"; };
+                b: struct StatValue { source: struct PayloadInstigator {}; stat: "Combat_Accuracy"; };
             };
             grantPayloadTags: ["Combat.Result.Dodged"];
             magnitudeModifiers: [{ op: Override; value: struct Const { value: 0.0; }; overridePriority: 999; }];
@@ -1018,14 +1060,14 @@ resolution_pipeline {
         {
             name: "格挡";
             skipIfPayloadHasAny: ["Combat.Result.Dodged"];
-            chance: struct StatValue { source: struct PayloadTarget {}; stat: "Combat_BlockRate"; capture: Current; };
+            chance: struct StatValue { source: struct PayloadTarget {}; stat: "Combat_BlockRate"; };
             grantPayloadTags: ["Combat.Result.Blocked"];
             magnitudeModifiers: [{
                 op: Mul;
                 value: struct Math {
                     op: Sub;
                     a: struct Const { value: 1.0; };
-                    b: struct StatValue { source: struct PayloadTarget {}; stat: "Combat_BlockEfficiency"; capture: Current; };
+                    b: struct StatValue { source: struct PayloadTarget {}; stat: "Combat_BlockEfficiency"; };
                 };
             }];
         },
@@ -1036,13 +1078,13 @@ resolution_pipeline {
             skipIfPayloadHasAny: ["Combat.Result.Dodged"];
             chance: struct Math {
                 op: Sub;
-                a: struct StatValue { source: struct PayloadInstigator {}; stat: "Combat_CritRate"; capture: Current; };
-                b: struct StatValue { source: struct PayloadTarget {}; stat: "Combat_CritResist"; capture: Current; };
+                a: struct StatValue { source: struct PayloadInstigator {}; stat: "Combat_CritRate"; };
+                b: struct StatValue { source: struct PayloadTarget {}; stat: "Combat_CritResist"; };
             };
             grantPayloadTags: ["Combat.Result.Critical"];
             magnitudeModifiers: [{
                 op: Mul;
-                value: struct StatValue { source: struct PayloadInstigator {}; stat: "Combat_CritDamage"; capture: Current; };
+                value: struct StatValue { source: struct PayloadInstigator {}; stat: "Combat_CritDamage"; };
             }];
         }
     ];
