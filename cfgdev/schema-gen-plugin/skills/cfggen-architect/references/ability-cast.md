@@ -317,8 +317,8 @@ ability {
     abilityTags: ["Ability.Type.Spell", "Ability.Casting.MoveCancel"];
     //         ▲ 标记为可被移动取消
 
-    castMode: struct CastBar {
-        castTime: struct Const { value: 2.5; };
+    castMode: CastBar {
+        castTime: Const { value: 2.5; };
         castingTags: ["State.Casting.Spell"];
         //         ▲ 不含 State.Immobile → 移动不被 block
         //           但 TagRules: State.Moving cancelsAbilities Ability.Casting.MoveCancel
@@ -336,8 +336,8 @@ ability {
     abilityTags: ["Ability.Type.Spell"];
     //         ▲ 没有 Ability.Casting.MoveCancel → 移动不会取消此技能
 
-    castMode: struct CastBar {
-        castTime: struct Const { value: 2.0; };
+    castMode: CastBar {
+        castTime: Const { value: 2.0; };
         castingTags: ["State.Casting.Spell", "State.Immobile"];
         //         ▲ State.Immobile → TagRules blocks Ability.Type.Movement → 按不动
         cuesDuringCast: ["Cast.Fireball"];
@@ -346,13 +346,13 @@ ability {
 
     effect: ...;
     onInterrupt: [
-        struct GrantTags {
+        GrantTags {
             grantedTags: ["State.AbilityLockout"];
-            duration: struct Const { value: 0.5; };
+            duration: Const { value: 0.5; };
         },
-        struct FireCue { cue: "Cast.Interrupted"; }
+        FireCue { cue: "Cast.Interrupted"; }
     ];
-    recovery: { duration: struct Const { value: 0.3; }; recoveryTags: ["State.Recovery"];};
+    recovery: { duration: Const { value: 0.3; }; recoveryTags: ["State.Recovery"];};
 }
 ```
 

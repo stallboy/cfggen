@@ -2,6 +2,91 @@
 
 基于 Unreal GAS 核心理念的**全数据驱动**技能系统配置标准。本文档是**架构基准**，具体游戏应在此基础上裁剪和扩展。
 
+
+## Architecture Overview
+
+> 本节提供系统的全局视图。建议首次阅读时先通读本节建立心智模型，再进入后续各章的详细定义。
+
+---
+
+### 核心概念速览
+
+| 概念 | 职责 | 生命周期 |
+|------|------|----------|
+| **Ability** | 行为入口 — 准入检查、资源消耗、触发 Effect | 瞬发执行 |
+| **Effect** | 无状态原子指令 — 改属性、挂状态、走结算管线、生成投射物 | 即时执行，不持有任何状态 |
+| **Status** | 持续状态容器 — 挂载在 Actor 上，管理时长、堆叠与标签授予 | 有限时长 / 永久，可堆叠 |
+| **Behavior** | Status 内部的逻辑零件 — 属性修饰、周期脉冲、事件监听 | 随 Status 生死 |
+| **EventBus** | Actor 级事件总线 — 广播携带 Payload 的标准事件 | Actor 组件，常驻 |
+| **Pipeline** | 结算管线 — 将 ResolveCombat 展开为多阶段广播与属性扣减 | 单次结算，无持久状态 |
+| **TagRules** | 全局交互法则 — 基于标签的免疫、阻止、驱散、打断 | 战斗配置，常驻 |
+
+---
+
+### 执行流全景
+
+```
+                         ┌───────────┐
+                         │  Ability  │
+                         └───────────┘
+                               │ execute
+                               ▼
+            ┌───────────────── Effect ─────────────────┐
+            │                    │                     │
+     ApplyStatus            ModifyStat          ResolveCombat
+            │                    │                     │
+            ▼                    ▼                     ▼
+     ┌────────────┐      ┌────────────┐        ┌────────────┐
+     │   Status   │      │    Stat    │        │  Pipeline  │
+     │ ┌────────┐ │      │ Component  │        └──────┬─────┘
+     │ │Behavior│ │      └────────────┘          broadcast
+     │ └───┬────┘ │                                   │
+     └─────┼──────┘                                   ▼
+           │                                   ┌────────────┐
+      Trigger ─────── listen ────────────────▶ │  EventBus  │
+                                               └──────┬─────┘
+                                                      │
+              ┌───────────────────────────────────────┘
+              │ dispatch
+              ▼
+       Trigger.effect ── execute ──▶ Effect   ◄── 响应式循环
+
+
+     Status ── grantTags ──▶ TagContainer ──▶ TagRules
+                                              (免疫/阻止/驱散/打断)
+```
+
+整个系统的驱动核心是这条**响应式循环**：
+
+1. **Ability** 或 **Behavior** 触发 **Effect**
+2. Effect 可以走 `ResolveCombat` 进入结算 **Pipeline**
+3. Pipeline 在 Pre / Post 两个阶段向 **EventBus** 广播事件（携带 **Payload**）
+4. 其他 Status 中的 **Trigger** 监听到事件，执行新的 Effect
+5. 新 Effect 可能再次进入管线 → 回到步骤 2
+
+系统通过 `combat_settings.maxDispatchDepth` 限制嵌套深度，防止无限循环（如反伤互相触发）。
+
+
+### 三层正交原则
+
+系统中的三个实体类型严格正交，各司其职：
+
+| | **Ability** | **Effect** | **Status** |
+|---|---|---|---|
+| **本质** | 入口 | 指令 | 容器 |
+| **是否持有状态** |  | 否（无状态，即时消费） | 是（时长、层数、行为零件） |
+| **与 Actor 关系** | | 不关联，只消费 Context | 挂载在 Actor 上 |
+| **典型用途** | 主动技能、战术位移 | 扣血、加 Buff、发射投射物 | 持续增益/减益、被动技能、光环 |
+
+**组合规则**：
+- Ability 的 `effect` 字段触发 Effect 树
+- Effect 中的 `ApplyStatus` 将 Status 挂载到目标身上
+- Status 中的 Behavior（Trigger/Periodic/Timeline）在运行时触发新的 Effect
+- **被动技能** 不走 Ability，本质是永久 Status（`duration: -1`）
+
+这种正交分离确保每一层只关注自己的职责——Ability 不关心效果如何执行，Effect 不关心状态如何持续，Status 不关心谁触发了它。复杂机制通过**组合**而非继承构建。
+
+
 ## Philosophy
 
 1. **层级化标签驱动**：树状 Tag（如 `State.Debuff.Control.Stun`）是逻辑交互的唯一通用语言。支持父级包含查询——查询 `State.Debuff` 可命中 `State.Debuff.Control.Stun`。
@@ -191,6 +276,18 @@ class InstanceState implements Store {
 ### Payload
 
 Payload 是事件携带的瞬时载荷，Trigger 通过它读取"发生了什么"并注入ChangSet修饰。
+
+**关于 Payload 的作用域与生命周期：**
+
+- **顺流而下**：`Trigger` 监听到事件后，会拿到一个 `Payload`。这个 Payload 会顺着该 Trigger 触发的 `Effect` 动作树一直往下传，沿途节点随时可读。
+- **传递边界**：当执行流遇到 `ApplyStatus` 并生成了一个全新的 `StatusInstance` 时，Payload 的传递**直接终止**。
+- **延迟捕获**：为了省性能，系统不在 Trigger 处存数据，而是把在新状态需要用到触发时的瞬时数据（如：按受击伤害来算流血值），**在 `ApplyStatus` 节点里通过 `VarBinding` 手动把它截留下来。**
+
+**策划配置红线：**
+
+- 带有 `Payload`的节点（如 `PayloadInstigator`、`PayloadMagnitude`），**只能**在带有事件上下文的 `Effect` 执行链中使用。
+
+- 如果在**没有前置事件**的地方直接用，必定报错。遇到这种情况请严格走标准管线：**前面先用 `VarBinding` 截留 -> 后面再用 `ContextVar` 读取**。
 
 ```java
 record GameplayEvent(
@@ -779,18 +876,6 @@ enum OverflowPolicy {
 
 Behavior 是附着在 Status 上的逻辑零件。其运行在 `StatusInstance`（内含 `Context`）内。
 
-**关于 Payload 的作用域与生命周期：**
-
-- **顺流而下**：`Trigger` 监听到事件后，会拿到一个 `Payload`。这个 Payload 会顺着该 Trigger 触发的 `Effect` 动作树一直往下传，沿途节点随时可读。
-- **传递边界**：当执行流遇到 `ApplyStatus` 并生成了一个全新的 `StatusInstance` 时，Payload 的传递**直接终止**。
-- **延迟捕获**：为了省性能，系统不在 Trigger 处存数据，而是把在新状态需要用到触发时的瞬时数据（如：按受击伤害来算流血值），**在 `ApplyStatus` 节点里通过 `VarBinding` 手动把它截留下来。**
-
-**策划配置红线：**
-
-带有 `Payload`的节点（如 `PayloadInstigator`、`PayloadMagnitude`），**只能**在带有事件上下文的 `Effect` 执行链中使用。
-
-如果在**没有前置事件**的地方直接用，必定报错。遇到这种情况请严格走标准管线：**前面先用 `VarBinding` 截留 -> 后面再用 `ContextVar` 读取**。
-
 ```
 interface Behavior {
     // 属性修饰器
@@ -1096,27 +1181,27 @@ resolution_pipeline {
         // 阶段1：闪避
         {
             name: "闪避";
-            chance: struct Math {
+            chance: Math {
                 op: Sub;
-                a: struct StatValue { source: struct PayloadTarget {}; stat: "Combat_DodgeRate"; };
-                b: struct StatValue { source: struct PayloadInstigator {}; stat: "Combat_Accuracy"; };
+                a: StatValue { source: PayloadTarget {}; stat: "Combat_DodgeRate"; };
+                b: StatValue { source: PayloadInstigator {}; stat: "Combat_Accuracy"; };
             };
             grantPayloadTags: ["Combat.Result.Dodged"];
-            magnitudeModifiers: [{ op: Override; value: struct Const { value: 0.0; }; overridePriority: 999; }];
+            magnitudeModifiers: [{ op: Override; value: Const { value: 0.0; }; overridePriority: 999; }];
         },
 
         // 阶段2：格挡
         {
             name: "格挡";
             skipIfPayloadHasAny: ["Combat.Result.Dodged"];
-            chance: struct StatValue { source: struct PayloadTarget {}; stat: "Combat_BlockRate"; };
+            chance: StatValue { source: PayloadTarget {}; stat: "Combat_BlockRate"; };
             grantPayloadTags: ["Combat.Result.Blocked"];
             magnitudeModifiers: [{
                 op: Mul;
-                value: struct Math {
+                value: Math {
                     op: Sub;
-                    a: struct Const { value: 1.0; };
-                    b: struct StatValue { source: struct PayloadTarget {}; stat: "Combat_BlockEfficiency"; };
+                    a: Const { value: 1.0; };
+                    b: StatValue { source: PayloadTarget {}; stat: "Combat_BlockEfficiency"; };
                 };
             }];
         },
@@ -1125,15 +1210,15 @@ resolution_pipeline {
         {
             name: "暴击";
             skipIfPayloadHasAny: ["Combat.Result.Dodged"];
-            chance: struct Math {
+            chance: Math {
                 op: Sub;
-                a: struct StatValue { source: struct PayloadInstigator {}; stat: "Combat_CritRate"; };
-                b: struct StatValue { source: struct PayloadTarget {}; stat: "Combat_CritResist"; };
+                a: StatValue { source: PayloadInstigator {}; stat: "Combat_CritRate"; };
+                b: StatValue { source: PayloadTarget {}; stat: "Combat_CritResist"; };
             };
             grantPayloadTags: ["Combat.Result.Critical"];
             magnitudeModifiers: [{
                 op: Mul;
-                value: struct StatValue { source: struct PayloadInstigator {}; stat: "Combat_CritDamage"; };
+                value: StatValue { source: PayloadInstigator {}; stat: "Combat_CritDamage"; };
             }];
         }
     ];
@@ -1380,14 +1465,14 @@ status {
     id: 5001;
     name: "盾墙";
     grantedTags: ["State.Buff.ShieldWall"];
-    duration: struct Const { value: 5.0; };
-    stackingPolicy: struct Single { refreshMode: ResetDuration; };
+    duration: Const { value: 5.0; };
+    stackingPolicy: Single { refreshMode: ResetDuration; };
     behaviors: [
-        struct Trigger {
+        Trigger {
             listenEvent: "Combat_Damage_Take_Pre";
-            effect: struct ModifyPayloadMagnitude {
+            effect: ModifyPayloadMagnitude {
                 op: Mul;
-                value: struct Const { value: 0.6; };
+                value: Const { value: 0.6; };
                 overridePriority: 0;
             };
         }
@@ -1402,23 +1487,23 @@ status {
     id: 4001;
     name: "反刺被动";
     grantedTags: ["State.Passive.ThornArmor"];
-    duration: struct Const { value: -1.0; };
-    stackingPolicy: struct Single { refreshMode: KeepDuration; };
+    duration: Const { value: -1.0; };
+    stackingPolicy: Single { refreshMode: KeepDuration; };
     behaviors: [
-        struct Trigger {
+        Trigger {
             listenEvent: "Combat_Damage_Take_Post";
             requiresAll: [
-                struct Compare {
-                    left: struct PayloadMagnitude {};
+                Compare {
+                    left: PayloadMagnitude {};
                     op: Gte;
-                    right: struct Const { value: 50.0; };
+                    right: Const { value: 50.0; };
                 }
             ];
-            effect: struct WithTarget {
-                target: struct PayloadInstigator {};
-                effect: struct ResolveCombat {
+            effect: WithTarget {
+                target: PayloadInstigator {};
+                effect: ResolveCombat {
                     pipeline: "PureDamage";
-                    magnitude: struct Const { value: 10.0; };
+                    magnitude: Const { value: 10.0; };
                     tags: ["Damage.Type.Reflected"];
                 };
             };
@@ -1435,19 +1520,19 @@ status {
     name: "剧毒";
     statusTags: ["Status.Type.DOT"];
     grantedTags: ["State.Debuff.Poison"];
-    duration: struct Const { value: 8.0; };
-    stackingPolicy: struct Independent {
+    duration: Const { value: 8.0; };
+    stackingPolicy: Independent {
         maxStacks: 5;
         overflowPolicy: TriggerOnOverflow;
     };
     cuesWhileActive: ["Status.Poison"];
     behaviors: [
-        struct Periodic {
-            period: struct Const { value: 2.0; };
+        Periodic {
+            period: Const { value: 2.0; };
             executeOnApply: false;
-            effect: struct ResolveCombat {
+            effect: ResolveCombat {
                 pipeline: "PureDamage";
-                magnitude: struct StackScaling {
+                magnitude: StackScaling {
                     baseValue: 5.0;
                     perStackAdd: 3.0;
                     perStackMul: 1.0;
@@ -1455,16 +1540,16 @@ status {
                 tags: ["Damage.Element.Poison"];
             };
         },
-        struct OnOverflow {
-            effect: struct Sequence {
+        OnOverflow {
+            effect: Sequence {
                 effects: [
-                    struct ResolveCombat {
+                    ResolveCombat {
                         pipeline: "PureDamage";
-                        magnitude: struct Const { value: 80.0; };
+                        magnitude: Const { value: 80.0; };
                         tags: ["Damage.Element.Poison", "Damage.Type.Burst"];
                         cuesOnExecute: ["Combat.PoisonBurst"];
                     },
-                    struct RemoveStatus {
+                    RemoveStatus {
                         statusId: 3001;
                     }
                 ];
@@ -1483,20 +1568,20 @@ status {
     id: 6001;
     name: "暴击追伤";
     grantedTags: ["State.Passive.CritFollowup"];
-    duration: struct Const { value: -1.0; };
-    stackingPolicy: struct Single { refreshMode: KeepDuration; };
+    duration: Const { value: -1.0; };
+    stackingPolicy: Single { refreshMode: KeepDuration; };
     behaviors: [
-        struct Trigger {
+        Trigger {
             listenEvent: "Combat_Damage_Deal_Post";
             requiresAll: [
                 // 检查 Payload 中是否有暴击标记（由 CheckStage 写入）
-                struct PayloadHasTag { query: { requireAll: ["Combat.Result.Critical"];};}
+                PayloadHasTag { query: { requireAll: ["Combat.Result.Critical"];};}
             ];
-            effect: struct WithTarget {
-                target: struct PayloadTarget {};
-                effect: struct ResolveCombat {
+            effect: WithTarget {
+                target: PayloadTarget {};
+                effect: ResolveCombat {
                     pipeline: "PureDamage";
-                    magnitude: struct Const { value: 25.0; };
+                    magnitude: Const { value: 25.0; };
                     tags: ["Damage.Type.Bonus"];
                     cuesOnExecute: ["Combat.CritBonus"];
                 };
