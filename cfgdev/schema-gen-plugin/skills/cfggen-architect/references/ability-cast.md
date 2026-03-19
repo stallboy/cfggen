@@ -163,10 +163,10 @@ Ability 在运行时的四大核心阶段（Phase）：`Activating`、`Processin
 ```text
   UI / 输入层
       │
-[ CanActivate ] ── 验证 CD / 资源 / 状态 / 目标合法性
+[ CanActivate ] ── 构建 context，验证 CD / 资源 / 状态 / 目标合法性
       │
       ▼
- [ Activating ] ── 创建 AbilityInstance，构建 context
+ [ Activating ] ── 创建 AbilityInstance
       │            * [ 若 CommitPolicy == OnActivate，在此处 Commit ]
       ▼
  [ Processing ] ── (读条/蓄力/引导) 挂载约束标签，接受打断检测，动态更新瞄准
