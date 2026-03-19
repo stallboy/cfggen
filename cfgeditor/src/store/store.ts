@@ -126,7 +126,7 @@ const storeState: StoreState = {
         assetRefTable: '',
     },
 
-    isEditMode: false,
+    isEditMode: true,
     editingCurTable: '',
     editingCurId: '',
     editingIsEdited: false,
