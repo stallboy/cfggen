@@ -97,6 +97,7 @@ enum StatClampMode {
 table event_definition[eventKey] (entry='eventKey') {
     eventKey: str; // 如 "Combat_Damage_Pre"
     eventId: int;
+    description: text;
 
     // 定义该事件 Payload 中预期的变量列表 (可用于验证和编辑器提示)
     // 告知该事件除了 magnitude 以外，在 extras 里还会塞入哪些 Tag 数据
@@ -123,6 +124,7 @@ table cue_key[cueKey] {
     cueKey: str -> cue_registry (nullable);
     cueId: int;
     ancestors: list<int> ->cue_key[cueId]; //按从父到祖父顺序排列
+    description: text;
     [cueId]; 
 }
 ```
@@ -133,6 +135,7 @@ table cue_key[cueKey] {
 table var_key[varKey] {
     varKey: str;
     varId: int;
+    description: text;
     [varId];
 }
 ```
@@ -392,23 +395,14 @@ interface FloatValue {
     }
 }
 
-enum MathOp { Add; Sub; Mul; Div; Max; Min; }
-```
-
-### ActorFloatValue
-
-上下文是`Actor`
-
-```cfg
 interface ActorFloatValue {
-    struct Const { value: float; }
     struct Math { op: MathOp; a: ActorFloatValue; b: ActorFloatValue; }
-    
     struct StatValue { stat: str ->stat_definition; }
     struct StatBaseValue { stat: str ->stat_definition; }
 }
-```
 
+enum MathOp { Add; Sub; Mul; Div; Max; Min; }
+```
 
 ### Condition
 
@@ -440,24 +434,7 @@ interface Condition {
     struct Chance { probability: FloatValue; } // 随机概率
 }
 
-enum CompareOp {
-    Gt; Gte; Lt; Lte; Eq; Neq;
-}
-
-struct TagQuery {
-    requireAll: list<str> ->gameplaytag; // 必须全部包含
-    requireAny: list<str> ->gameplaytag; // 包含其中之一即可生效 (最常用)
-    exclude: list<str> ->gameplaytag;    // 包含任何一个则拦截/失效
-}
-```
-
-### ActorCondition
-
-上下文是`Actor`
-
-```
 interface ActorCondition {
-    struct Const { value: bool; }
     struct And { args: list<ActorCondition>; }
     struct Or { args: list<ActorCondition>; }
     struct Not { arg: ActorCondition; }
@@ -469,6 +446,16 @@ interface ActorCondition {
     struct HasTags {
         query: TagQuery;
     }
+}
+
+enum CompareOp {
+    Gt; Gte; Lt; Lte; Eq; Neq;
+}
+
+struct TagQuery {
+    requireAll: list<str> ->gameplaytag; // 必须全部包含
+    requireAny: list<str> ->gameplaytag; // 包含其中之一即可生效 (最常用)
+    exclude: list<str> ->gameplaytag;    // 包含任何一个则拦截/失效
 }
 ```
 
@@ -549,6 +536,11 @@ interface Effect {
 
     struct RemoveStatus {
         anyIds: list<int> ->status;
+    }
+
+    // 瞬移
+    struct Teleport {
+        destination: LocationSelector;
     }
 
     // 发送事件
@@ -785,6 +777,15 @@ interface Behavior {
         requiresAll: list<Condition>;
     }
 
+    // 根骨骼运动控制 (接管角色的物理移动)
+    struct RootMotion {
+        // 运动模式
+        motionType: MotionType;
+        
+        // 当移动过程中物理胶囊体撞到别的 Actor 时触发的瞬间逻辑
+        onSweepHit: OnSweepHitAction (nullable);
+    }
+
     // 周期性触发 (DOT/HOT)
     struct Periodic {
         period: FloatValue;
@@ -844,11 +845,11 @@ table ability[id] (json) {
     abilityTags: list<str> ->gameplaytag;
 
     // 准入条件
-    requiresAll: list<ActorCondition>;
+    requiresAll: list<Condition>;
 
     // cost
     costs: list<StatCost>;
-    cooldown: ActorFloatValue;
+    cooldown: FloatValue;
 
     // 效果
     effect: Effect;
@@ -856,11 +857,11 @@ table ability[id] (json) {
 
 struct StatCost {
     stat: str ->stat_definition;
-    value: ActorFloatValue;
+    value: FloatValue;
 }
 ```
 
-这是简单的瞬发模型。当需要目标选择、读条、蓄力、引导、后摇时，请一定参考`ability-ext.md`。
+这是简单的瞬发模型。当需要目标选择、读条、蓄力、引导、后摇时，请一定参考`ability-cast.md`。
 
 如果cooldown需要分组，可以增加配置`cooldownGroups`，使用gameplaytag
 
@@ -868,6 +869,9 @@ struct StatCost {
 |---|---|---|
 | `Cooldown.*` | 冷却组键名 | `Cooldown.Ability.Fireball` |
 
+主动技能、战术位移(Dash、Teleport等)使用ability来做。
+
+被动技能不要用ability，它本质是 **挂载在角色身上的 status**。
 
 ---
 
@@ -1244,6 +1248,8 @@ enum CueEventType { Executed; Added; Removed; }
 
 本章提供核心架构的伪代码实现，展示运行时各组件如何协作。此处重点关注具体的技术实现细节，包括生命周期管理、无状态执行器等。
 
+如需网络同步，请一定参考`ability-net.md`
+
 ### SafeList
 
 抽离生命周期管理中的“防重入、防并发修改”逻辑，封装为泛型安全容器。所有受控实体（状态、行为零件等)必须实现 `IPendingKill`。
@@ -1337,6 +1343,7 @@ class Effects {
     static void execute(Effect cfg, Context ctx, Payload payload);
 }
 ```
+
 ---
 
 ## Examples

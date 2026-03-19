@@ -21,10 +21,10 @@ table ability[id] (json) {
 
     abilityTags: list<str> ->gameplaytag;
     
-    // 准入检查（无 Context，仅依赖施法者自身属性）
-    activationConditions: list<ActorCondition>;
+    // 准入检查
+    activationConditions: list<Condition>;
     costs: list<StatCost>;
-    cooldown: ActorFloatValue;
+    cooldown: FloatValue;
 
     // 瞄准与输入要求
     targeting: TargetingRequirement;
@@ -46,7 +46,7 @@ table ability[id] (json) {
 
 struct StatCost {
     stat: str ->stat_definition;
-    value: ActorFloatValue;
+    value: FloatValue;
 }
 ```
 
@@ -65,13 +65,13 @@ interface TargetingRequirement {
     struct SingleTarget {
         allowedRelations: list<Relation>;
         tagQuery: TagQuery;
-        maxRange: ActorFloatValue;
+        maxRange: FloatValue;
         onTargetLost: TargetLostPolicy;
     }
 
     // 需要指定一个地点（如：火雨）
     struct PointTarget {
-        maxRange: ActorFloatValue;
+        maxRange: FloatValue;
     }
 
     // 需要指定一个方向（如：非指向性冲刺、扫射射线）
@@ -160,8 +160,6 @@ enum ChannelCommitPolicy {
 
 Ability 在运行时的四大核心阶段（Phase）：`Activating`、`Processing`、`Executing`、`Recovering`。
 
-**注意**：`Commit` 是一个动作，依据 `CommitPolicy` 附着在不同的生命周期转移点上。
-
 ```text
   UI / 输入层
       │
@@ -228,89 +226,6 @@ Ability 在运行时的四大核心阶段（Phase）：`Activating`、`Processin
 
 ---
 
-## 各模型状态转移
-
-### Instant
-
-```text
-Activating
-    → Commit
-    → Executing: ability.effect
-    → Recovering（如配置）
-    → Ended
-```
-
-单帧完成 Commit + Execute。无 Processing 阶段。
-
-### CastBar
-
-```text
-Activating
-    → [OnActivate → Commit]
-    → Processing: 授予 castingTags，累加时间
-        │
-        ├── elapsed >= castTime
-        │       → [OnComplete → Commit]
-        │       → Executing → Recovering → Ended
-        │
-        ├── interrupt()
-        │       → onInterrupt → Ended
-        │
-        └── cancel()
-                → Ended（不 commit，不执行 effect）
-```
-
-### Charged
-
-```text
-Activating
-    → [OnActivate → Commit]
-    → Processing: 授予 chargingTags
-    │   每帧: chargeProgress = clamp(elapsed / maxChargeTime, 0, 1)
-    │         写入 instanceState[chargeProgressVar]
-        │
-        ├── release() 且 elapsed >= minChargeTime
-        │       → [OnRelease → Commit]
-        │       → Executing → Recovering → Ended
-        │
-        ├── release() 且 elapsed < minChargeTime
-        │       → cancel → Ended（不 commit，不执行 effect）
-        │
-        ├── elapsed >= maxChargeTime 且 releaseOnMax=true
-        │       → 等同 release()，chargeProgress = 1.0
-        │
-        ├── interrupt()
-        │       → onInterrupt → Ended
-        │
-        └── cancel()
-                → Ended（不 commit，不执行 effect）
-```
-
-### Channel
-
-```text
-Activating
-    → [OnActivate → Commit]
-    → Processing: 授予 channelingTags
-    │   [tickOnStart=true → 执行首次 tickEffect（算作首次 tick）]
-    │   [OnFirstTick 且首次 tick → Commit]
-    │   每 tickInterval:
-    │       执行 tickEffect
-    │       tickCount++
-        │
-        ├── tickCount >= maxTicks 或 elapsed >= duration
-        │       → Executing: ability.effect（收尾效果，可为空）
-        │       → Recovering → Ended
-        │
-        ├── interrupt()
-        │       → onInterrupt → Ended
-        │
-        └── cancel()（玩家主动停止）
-                → Ended（不执行 ability.effect）
-```
-
----
-
 ## Recovery 阶段（后摇）
 
 若 duration <= 0 则直接跳过此阶段。
@@ -329,35 +244,18 @@ struct RecoveryConfig {
 | 后摇类型 | recoveryTags | 表现 |
 |---|---|---|
 | 轻型后摇 | `["State.Recovery"]` | 不能攻击/施法，但可以翻滚取消 |
-| 重型后摇 | `["State.Recovery", "State.Recovery.Heavy"]` | 不能攻击/施法/翻滚，必须等后摇结束 |
+| 重型后摇 | `["State.Recovery.Heavy"]` | 不能攻击/施法/翻滚，必须等后摇结束 |
 | 无后摇 | duration=0，跳过 Recovery | 即时释放下一个动作 |
 
 ---
 
 ## tag_rules 扩展
 
-将旧版的 `cancelsAbilities` 拆分为 `interruptsAbilities`（硬打断）和 `cancelsAbilities`（软取消）两种打断动词。
+将旧版的 `cancelsAbilities` 拆分为 `interruptsAbilities`（硬打断）和 `cancelsAbilities`（软取消）。
 
-```cfg
-struct TagRule {
-    whenPresent: str ->gameplaytag;
+### tag_rules配置示例
 
-    // 阻止激活带有以下标签的 Ability
-    blocksAbilities: list<str> ->gameplaytag;
-
-    // 硬打断：强制中断正在运行的 Ability（触发 onInterrupt）
-    interruptsAbilities: list<str> ->gameplaytag;
-
-    // 软取消：柔性终止正在运行的 Ability（不触发 onInterrupt）
-    cancelsAbilities: list<str> ->gameplaytag;
-
-    //...
-}
 ```
-
-### 配套 TagRules 示例
-
-```cfg
 tag_rules {
     name: "CoreCombatRules";
     rules: [
@@ -412,7 +310,7 @@ tag_rules {
 
 ### 技能配置示例：移动取消读条
 
-```cfg
+```
 // 可被移动取消的治疗术
 ability {
     id: 1001; name: "治疗术";
@@ -421,7 +319,7 @@ ability {
 
     castMode: struct CastBar {
         castTime: struct Const { value: 2.5; };
-        castingTags: ["State.Casting", "State.Casting.Spell"];
+        castingTags: ["State.Casting.Spell"];
         //         ▲ 不含 State.Immobile → 移动不被 block
         //           但 TagRules: State.Moving cancelsAbilities Ability.Casting.MoveCancel
         //           → 玩家一动，此技能被 cancel（无惩罚，不扣费）
@@ -430,8 +328,6 @@ ability {
     };
 
     effect: ...;
-    onInterrupt: [];  // 被软取消不触发此列表
-    recovery: { duration: struct Const { value: 0.0; }; recoveryTags: []; cuesDuringRecovery: []; };
 }
 
 // 站桩读条的火球术（移动直接被禁止）
@@ -442,7 +338,7 @@ ability {
 
     castMode: struct CastBar {
         castTime: struct Const { value: 2.0; };
-        castingTags: ["State.Casting", "State.Casting.Spell", "State.Immobile"];
+        castingTags: ["State.Casting.Spell", "State.Immobile"];
         //         ▲ State.Immobile → TagRules blocks Ability.Type.Movement → 按不动
         cuesDuringCast: ["Cast.Fireball"];
         commitPolicy: OnComplete;
@@ -454,9 +350,9 @@ ability {
             grantedTags: ["State.AbilityLockout"];
             duration: struct Const { value: 0.5; };
         },
-        struct FireCue { cue: "Cast.Interrupted"; magnitude: struct Const { value: 0.0; }; }
+        struct FireCue { cue: "Cast.Interrupted"; }
     ];
-    recovery: { duration: struct Const { value: 0.3; }; recoveryTags: ["State.Recovery"]; cuesDuringRecovery: []; };
+    recovery: { duration: struct Const { value: 0.3; }; recoveryTags: ["State.Recovery"];};
 }
 ```
 
