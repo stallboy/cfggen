@@ -37,7 +37,6 @@ table ability[id] (json) {
     effect: Effect;
 
     // Processing 阶段被 interruptsAbilities 打断时的惩罚动作
-    // 默认空列表 = 被打断无任何惩罚
     onInterrupt: list<Effect>;
 
     // 技能主体逻辑执行完毕后的收招阶段
@@ -345,8 +344,7 @@ ability {
     };
 
     effect: ...;
-    onInterrupt: [
-        GrantTags {
+    onInterrupt: [ GrantTags {
             grantedTags: ["State.AbilityLockout"];
             duration: Const { value: 0.5; };
         },
@@ -438,10 +436,6 @@ struct TargetingVarConfig {
 ### 为什么切换型不作为 CastMode 原语
 
 切换型是"Instant Ability + 持续 Status"的直接组合。作为原语不增加表达力。
-
-### Channel 的 tickOnStart 与 OnFirstTick 的关系
-
-`tickOnStart=true` 时的立即执行算作首次 tick。若 `commitPolicy=OnFirstTick`，commit 发生在此刻。保证了"OnFirstTick 意味着至少产生了一次效果才扣资源"的语义。
 
 ### Recovery 阶段为什么不区分 interrupt 和 cancel
 

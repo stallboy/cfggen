@@ -1072,6 +1072,7 @@ tag_rules {
 ```cfg
 table resolution_pipeline[name] (json) {
     name: str;
+    pipelineId: int;
     description: text;
 
     flow: ValueFlow;
@@ -1090,6 +1091,7 @@ table resolution_pipeline[name] (json) {
 
     // 属性扣减/增加管线
     allocations: list<AllocationLayer>;
+    [pipelineId];
 }
 
 enum ValueFlow {

@@ -237,13 +237,13 @@ struct SceneReward {
 
 ---
 
-## SceneAction 节点
+## SceneAction
 
 `SceneAction` 是场景脚本的执行单元，支持任意嵌套组合。
 
 ```cfg
 interface SceneAction {
-
+    struct None {}
 
     // --- 基础动作节点
     struct PlayAnimation {
@@ -327,7 +327,7 @@ interface SceneAction {
         source: SceneActorSelector; // None = 监听所有来源
         conditions: list<SceneCondition>;
         timeoutSec: float;
-        onTimeout: SceneAction (nullable);
+        onTimeout: SceneAction;
     }
 
     // 运行时：onEnter 求值一次；随后只在 reactToEvents 触发时重新求值
@@ -385,6 +385,11 @@ interface SceneAction {
     struct WithVar {
         varKey: str ->var_key;
         initValue: float;
+        body: SceneAction;
+    }
+
+    struct WithTarget {
+        target: SceneActorSelector;
         body: SceneAction;
     }
 
@@ -458,17 +463,16 @@ interface SceneCondition {
     }
     struct ActorHasTags {
         actor: SceneActorSelector;
-        tagQuery: GameplayTagQuery;
+        tagQuery: TagQuery;
     }
     struct ActorIsAlive { actor: SceneActorSelector; }
     struct ActorIsDead { actor: SceneActorSelector; }
-    struct SlotIsActive { slotTag: str ->gameplaytag; }
     struct SceneVarCompare {
-        varTag: str ->gameplaytag;
+        varKey: str ->var_key;
         op: CompareOp;
         value: float;
     }
-    // 场景已运行时长（由 SceneInstance 内部计时器驱动，不需要 reactToEvents）
+
     struct TimeSinceSceneStart {
         op: CompareOp;
         seconds: float;
@@ -476,9 +480,7 @@ interface SceneCondition {
 }
 
 interface SceneActorSelector {
-    struct None {}  // 显式空目标，替代 Nullable，避免运行时 NPE
-    struct SlotActor { slotTag: str ->gameplaytag; }
-    struct AllInSlot { slotTag: str ->gameplaytag; }
+    struct Inherit {}
     struct SceneVar { actorVar: str ->var_key; }
     struct NearestToSlot {
         referenceSlot: str ->var_key;
@@ -489,7 +491,7 @@ interface SceneActorSelector {
 
 interface SceneFloatValue {
     struct Const { value: float; }
-    struct SceneVarValue { varTag: str ->gameplaytag; }
+    struct SceneVarValue { varKey: str ->var_key; }
     struct Math { op: MathOp; a: SceneFloatValue; b: SceneFloatValue; }
     // 线性时间衰减：value = base - decayPerSecond * elapsedTime
     struct TimeBonusDecay {

@@ -104,7 +104,7 @@ message S2C_AbilityResponse {
 message S2C_CombatResult {
   uint64 target_id = 1;
   uint64 instigator_id = 2;
-  int32 pipeline_name_hash = 3;  // resolution_pipeline 名称的 Hash 值
+  int32 pipeline_id_ = 3;
   float final_magnitude = 4;     // 最终结算数值（用于跳字大小计算）
   
   repeated int32 result_tags = 5; // 如 Dodged, Blocked, Critical (tagId)
@@ -189,7 +189,7 @@ message S2C_ActorFullSnapshot {
   int64 server_timestamp = 2;
   
   repeated S2C_StatUpdateBatch.StatEntry stats = 3;
-  repeated int32 active_tags = 4;             // 当前持有的所有叶子节点 Tag
+  repeated int32 active_tags = 4;              // 当前持有的所有叶子节点 Tag
   repeated S2C_StatusSync active_statuses = 5; // 当前挂载的所有 Status 快照
 }
 ```
