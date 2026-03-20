@@ -498,7 +498,7 @@ interface AITask {
         waitForCompletion: bool;
     }
     struct PlayCue {
-        cueTag: str -> gameplaytag;
+        cueKey: str -> cue_key;
         playAt: AITargetSelector;
     }
     struct Speak {
