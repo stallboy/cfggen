@@ -1,55 +1,94 @@
-
-
-
 # AI 行为系统设计
 
 本文档定义了一套与 `能力系统设计` 无缝集成的 AI 行为系统。设计以数据驱动为核心，汲取 Bobby Anguelov《AI Behavior Selector》的理念，通过扁平化评分机制替代传统行为树，解决调试困难与条件冗余问题。
 
-## Philosophy
+## Architecture Overview
 
-1. **三段式分治 (Sense - Think - Act)**
-   - **Sense**：处理传感器与事件输入，生成数据化目标。
-   - **Think**：表达式动态算分，选出最优行为。
-   - **Act**：驱动动作序列，管理执行生命周期与抢占打断。
+AI 系统围绕 **Perceive → Think → Act** 三段式管线构建。每个 AI 实体在初始化时引用一条 `ai_archetype` 配置作为入口，它声明了"我能感知什么"和"我会做什么"的全部可能性。运行时，大脑组件（`AIBrainComponent`）按固定节拍驱动管线，将外部世界的原始刺激逐步精炼为具体动作。
 
-2. **数据驱动与动态组合**
-   行为通过配置组合构建，运行时支持动态插拔行为修饰，零耦合应对 Boss 转阶段等特殊情境。
+```
+                                     ai_archetype
+          ┌─────────────────────────────┼───────────────────┐
+          │                             │                   │
+   goalGenerators                behaviorGroups      defaultBehavior
+          │                      ┌──────┼──────┐
+          │                  group_A group_B  behaviors
+          │                      │      │      │
+          ▼                      ▼      ▼      ▼
+  ┌──────────────┐           ┌──────────────────┐
+  │   Perceive   │           │      Think       │
+  │              │  Goals    │                  │
+  │ GoalGenerator├──────────►│  PreCondition    │
+  │ GoalValidator│           │  ScoreValue      │
+  │              │           │  GoalRequirement │
+  └──────────────┘           └────────┬─────────┘
+                                      │ 胜出行为
+                                      ▼
+                             ┌──────────────────┐
+                             │       Act        │
+                             │                  │
+                             │  AITask          │
+                             │  AbortCondition  │
+                             │  AITargetSelector│
+                             └──────────────────┘
+```
 
-3. **单 Goal 驱动**
-   每个行为由唯一 Goal 驱动决策。执行期若需额外目标（如"搬桶砸人"中的敌人），通过 `RuntimeQuery` 或 `WithLocalVar` 实时获取，严格区分决策动机与执行参数。
+### 三阶段职责
 
-4. **表达式动态决策**
-   准入条件与优先级评分完全由多态表达式驱动，基于属性、距离、时效等变量实时演算。
+| 阶段 | 输入 | 输出 | 核心问题 |
+|:---|:---|:---|:---|
+| **Perceive** | 空间扫描、事件监听 | `AIGoalInstance` 写入认知库 | 世界上正在发生什么？ |
+| **Think** | 认知库中的活跃 Goal + 行为候选池 | 一个胜出的 `AIBehaviorInstance`（含绑定的 boundGoal） | 我现在应该做什么？ |
+| **Act** | 胜出行为的 AITask 配置 | 驱动能力释放、移动、动画等具体动作 | 具体怎么做？ |
 
-5. **白盒可调试性**
-   底层为无状态扁平评分，调试端基于 Group 呈现逻辑目录，支持实时可视化算分、冷却与准入状态。
+### 数据流
+
+三阶段之间通过 **Goal** 这一核心数据对象串联，严格单向流动：
+
+```
+Perceive 产出 AIGoalInstance
+  → 写入 brain.activeGoalsByType（按类型分桶）
+    → Think 按 GoalRequirement 从桶中选出 candidateGoal，参与算分
+      → 胜出后写入 AIBehaviorInstance.boundGoal（动机锁定）
+        → Act 通过 BoundGoalActor / BoundGoalLocation 消费目标
+```
+
+Goal 是连接"为什么做"和"做什么"的唯一桥梁。Perceive 只管生产，Think 只管消费和选择，Act 只管执行——三者互不越权。
+
+### 关键设计约束
+
+**单 Goal 驱动**：每个行为声明至多一个 `GoalRequirement`。决策时从认知库中按策略（最近、最强、最新）选出唯一候选 Goal 绑定到行为实例。执行期若需额外目标（如"搬桶砸人"中的投掷对象），通过 `RuntimeQuery` 或 `WithLocalVar` 实时获取，不污染决策动机。
+
+**扁平评分取代层级树**：所有候选行为处于同一扁平池中，通过准入条件过滤后按分数排序。`ai_behavior_group` 仅用于共享前置条件以减少配置冗余，不构成运行时层级。
+
+**双轨打断**：外部中止（`AbortCondition` 命中 → 强制清栈）与内部冒泡（任务返回 Failed → 正常出栈 + 冷却惩罚）协同工作，覆盖"目标消失需要重选"和"寻路失败需要放弃"两类场景。
+
+**AI × GAS 单一数据源**：GAS 管身体状态（眩晕、死亡、霸体），AI 管战术意图（追击、施法、闪避）。AI 通过只读查询 GAS Tag 做全局拦截或准入判断，绝不复制状态。
+
+**数据驱动与动态组合**：行为通过配置组合构建，运行时通过`AIBehaviorModifier` 动态插拔行为池，零代码应对 Boss 转阶段等特殊情境。
+
+**白盒可调试性**：底层为无状态扁平评分，调试端基于 Group 呈现逻辑目录，支持实时可视化每个候选行为的算分明细、冷却倒计时与准入状态。
+
 
 ---
 
 ## Runtime Core
 
-AI 运行时由四层实例自顶向下逐级持有：
-
-- **AIBrainComponent**：挂载于 Actor 的中枢组件。维护认知库（`activeGoalsByType`，按类型分桶）、当前执行体（`activeBehavior`）、行为修饰栈（`behaviorModifiers`）与冷却表（`behaviorCooldowns`）。不硬编码任何感知字段，所有感知信息统一由 Goal 表达。
-
-- **AIGoalInstance**：感知阶段的产物。由 `GoalGenerator` 生成，携带目标类型、关联实体、位置、强度与时间戳，作为决策阶段的候选输入。
-
-- **AIBehaviorInstance**：行为的运行时实例。封装静态配置（`ai_behavior`）、绑定的唯一驱动目标（`boundGoal`）、任务栈（`taskStack`）与局部存储（`localStorage`）。
-
-- **AITaskInstance**：任务栈中的执行单元。持有静态配置（`taskCfg`），实现 `onStart` / `tick` / `onEnd` 生命周期，由栈顶驱动推进。
+AI 运行时是一条自顶向下的持有链。AIBrainComponent 是挂载在 Actor 上的中枢，它维护着认知记忆（所有活跃的 Goal）和当前正在执行的行为。每个行为实例（AIBehaviorInstance）绑定一个驱动它的目标（AIGoalInstance），并通过任务栈管理执行序列。栈中的每个节点（AITaskInstance）是最小执行单元，拥有独立的生命周期回调。
 
 
 ```java
 class AIBrainComponent {
     Actor self;
+    Ai_archetype archetypeCfg;
 
-     // 认知记忆库：按 GoalType 分桶存储所有未失效的客观刺激源
+     // 认知记忆库：按  Key = ai_goal_definition.goalId 分桶存储所有未失效的客观刺激源
     Int2ObjectMap<List<AIGoalInstance>> activeGoalsByType;
 
     // 执行状态
     AIBehaviorInstance activeBehavior;
-    List<AIBehaviorModifierRef> behaviorModifiers;
-    Int2FloatMap behaviorCooldowns;
+    List<AIBehaviorModifierRef> activeModifiers;
+    Int2FloatMap behaviorCooldowns; // Key = ai_behavior.behaviorId,
 }
 
 class AIGoalInstance {
@@ -98,8 +137,6 @@ table global_ai_settings[name] (entry="name") {
     name: str; // 如: "default"
 
     // 全局强制中止条件
-    // 引擎 Tick 时优先校验。只要满足其一（如宿主带有 "State.Debuff.Control"），
-    // 且当前行为没有豁免权，则立刻清空任务栈并瘫痪大脑。
     abortConditions: list<AbortCondition>;
 }
 ```
@@ -121,6 +158,8 @@ table ai_archetype[name] {
 
     // 兜底行为 (Fallback/Default)
     defaultBehavior: str -> ai_behavior;
+    perceiveInterval: float;  // 感知更新间隔，0 = 每帧
+    thinkInterval: float;     // 决策评估间隔
 }
 ```
 
@@ -140,10 +179,7 @@ table ai_behavior[name] (json) {
     // 常规行为在执行期间，是否允许被更高分的常规行为平滑重选打断
     isInterruptible: bool;
 
-    // 抢占优先级
-    // 0 表示常规行为（走普通的 Score 算分重选流程）。
-    // >0 表示特权行为，数值越大优先级越高（如：死亡=100, 坠落/击飞=80, 重受击=50, 轻受击=20）。
-    // 优先判断优先级，优先级相同时判断 score
+    // 抢占优先级。0=常规（走 Score 流程），>0=特权抢占（死亡 100 > 击飞 80 > 受击 50）
     interruptPriority: int;
 
     // 最小承诺时间。在这个时间内，哪怕 isInterruptible 为 true，
@@ -158,6 +194,7 @@ table ai_behavior[name] (json) {
 
     // ─── 动态评分 (Prioritization) ───
     score: ScoreValue;
+    scoreInertia: float; // 正在执行时，额外增加的防抖分数（也可称为滞后分数）
 
     // ─── 行为执行 (Actuation) ───
     task: AITask;
@@ -193,19 +230,19 @@ table ai_behavior_group[name] {
     description: text;
     sharedConditions: list<PreCondition>;
     behaviors: list<str> -> ai_behavior;
-    subGroups: list<str> -> ai_behavior_group;
+    subGroups: list<str> -> ai_behavior_group; // 须校验 不存在循环引用
 }
 ```
 
 ---
 
-## 感知阶段（Sense）
+## 感知阶段（Perceive）
 
 `GoalGenerator` 挂载在 AI Archetype 上，负责将外部世界信息（传感器数据、事件）转化为 Goal。
 
 ### 上下文定义
 
-**SenseContext = { Actor self, Event? event }**
+**PerceiveContext = { Actor self, Event? event }**
 
 ✅ 可访问：self（自身的物理坐标、朝向、Tag 等）、event（外部传入的事件载荷，如受击事件）。
 
@@ -229,15 +266,15 @@ table ai_goal_definition[name] {
     goalId: int;
     description: text;
 
-    // 存活校验条件 (AND 语义)
-    // 每帧感知更新时，如果此条件组返回 false，大脑立即将该 Goal 判定为失效并剔除。
+    // 存活校验条件 (AND 语义), 若为false，大脑立即将该 Goal 判定为失效并剔除。
     validConditions: list<GoalValidator>;
+    validationInterval: float;
 }
 
 interface GoalGenerator {
     // 周期扫描型：定期查询空间索引
     struct SpatialScan {
-        query: SenseTargetQuery;
+        query: PerceiveTargetQuery;
         interval: float;              // 扫描间隔（秒）
         generatedGoal: str -> ai_goal_definition;
     }
@@ -245,66 +282,65 @@ interface GoalGenerator {
     // 事件驱动型：监听 EventBus
     struct OnEvent {
         listenEventTag: str -> event_definition;
-        triggerCondition: SenseCondition;
+        triggerCondition: PerceiveCondition;
         generatedGoal: str -> ai_goal_definition;
-        extractActor: SenseActorExtractor;
+        extractActor: EventActorExtractor;
         duration: float;               // Goal 存活时效（秒）
     }
 }
 
-// ─── Sense 阶段的完整查询（几何 + Sense 上下文绑定）───
-interface SenseTargetQuery {
+// ─── Perceive 阶段的完整查询（几何 + Perceive 上下文绑定）───
+interface PerceiveTargetQuery {
     struct SphereScan {
-        center: SenseLocation;              // Sense 专属
-        shape: SpatialQueryShape.Sphere;
+        center: PerceiveLocation;              // Perceive 专属
+        shape: SphereQuery;
     }
     struct ConeScan {
-        origin: SenseLocation;              // Sense 专属
-        direction: SenseDirection;          // Sense 专属
-        shape: SpatialQueryShape.Cone;
+        origin: PerceiveLocation;              // Perceive 专属
+        direction: PerceiveDirection;          // Perceive 专属
+        shape: ConeQuery;
     }
 }
 
-// Sense 专属位置（上下文：Actor self, Event? event）
-interface SenseLocation {
+// Perceive 专属位置（上下文：Actor self, Event? event）
+interface PerceiveLocation {
     struct Self {}
     struct EventSourcePosition {}
 }
 
-interface SenseDirection {
+interface PerceiveDirection {
     struct SelfForward {}
 }
 
 // ─── 空间查询几何定义（阶段无关，纯数据）───
 // 描述"查什么形状、过滤什么、取几个"，不关心"圆心/原点从哪来"
-interface SpatialQueryShape {
-    struct Sphere {
-        radius: float;
-        requiredTags: TagQuery;
-        sortBy: SenseSortPolicy;
-        maxResults: int;
-    }
-    struct Cone {
-        angle: float;                  // 半角（度）
-        range: float;
-        requiredTags: TagQuery;
-        sortBy: SenseSortPolicy;
-        maxResults: int;
-    }
+struct SphereQuery {
+    radius: float;
+    requiredTags: TagQuery;
+    sortBy: SortPolicy;
+    maxResults: int;
+}
+struct ConeQuery {
+    angle: float;                  // 半角（度）
+    range: float;
+    requiredTags: TagQuery;
+    sortBy: SortPolicy;
+    maxResults: int;
 }
 
-enum SenseSortPolicy {
+
+enum SortPolicy {
     Nearest;
     Strongest;
     MostRecent;
 }
 
 // 条件：决定事件是否应生成 Goal
-interface SenseCondition {
+interface PerceiveCondition {
     struct Const { value: bool; }
-    struct And { conditions: list<SenseCondition>; }
-    struct Or  { conditions: list<SenseCondition>; }
-    struct Not { condition: SenseCondition; }
+    struct And { conditions: list<PerceiveCondition>; }
+    struct Or  { conditions: list<PerceiveCondition>; }
+    struct Not { condition: PerceiveCondition; }
 
     struct EventSourceHasTags {
         tagQuery: TagQuery;
@@ -318,18 +354,17 @@ interface SenseCondition {
     }
 }
 
-// Actor 提取器：从事件 payload 中提取关联实体
-interface SenseActorExtractor {
-    struct EventSource {}              // 事件的发送者
-    struct EventPayloadActor {         // 从 payload 指定字段提取
-        fieldName: str;
+interface EventActorExtractor {
+    struct None {}
+    struct EventSource {}       // 事件的发送者
+    struct EventPayloadActor {  // 从 payload 指定字段提取
+        varKey: str -> var_key;
     }
-    struct Null {}                     // 无关联 Actor（纯位置型 Goal）
 }
 
 // Goal 存活校验
 interface GoalValidator {
-    struct TargetIsValid {}            // associatedActor 未被销毁
+    struct TargetIsValid {}     // associatedActor 未被销毁
     struct TargetHasTags {
         requirements: TagQuery;
     }
@@ -401,7 +436,7 @@ interface ScoreValue {
         trueValue: float;          // 如果当前正在执行该行为，返回此加分
         falseValue: float;         // 否则返回此值
     }
-    struct ActiveBehaviorElapsedTime {}  // 当前行为的已执行时间
+    struct CurrentBehaviorElapsedTime {}  // 当前行为的已执行时间
 }
 
 // Think 阶段的目标引用（单 Goal 驱动，无需指定 goal 参数）
@@ -464,15 +499,15 @@ interface AITask {
     }
     struct PlayCue {
         cueTag: str -> gameplaytag;
-        target: AITargetSelector;
+        playAt: AITargetSelector;
     }
     struct Speak {
         dialogueId: int -> dialogue;
-        target: AITargetSelector;
+        speakTo: AITargetSelector;
     }
     struct Interact {
-        target: AITargetSelector;
         interactionId: int;
+        interactTo: AITargetSelector;
     }
     struct Wait {
         duration: AIFloatValue;
@@ -492,11 +527,11 @@ interface AITask {
         elseTask: AITask;
     }
     struct Loop {
-        count: AIFloatValue;            // -1 = 无限
+        count: AIFloatValue; /// 运行时向下取整为整数。-1: 无限循环
         task: AITask;
     }
-    struct ReturnFailed {}
-    struct ReturnSuccess {}
+    struct Fail {}
+    struct Succeed {}
 
     // ─── 作用域控制 ───
     struct WithLocalVar {
@@ -518,11 +553,13 @@ interface AILocalVarSource {
     }
     struct ActorFromQuery {
         query: ActSpatialQuery;
-        pickPolicy: SenseSortPolicy;
     }
     struct ActorFromGoalType {
         goalDef: str -> ai_goal_definition;
         selector: GoalSelector;
+    }
+    struct LocationFromQuery {
+        query: ActSpatialQuery;
     }
 }
 
@@ -543,12 +580,11 @@ interface AITargetSelector {
     struct BoundGoalActor {}           // behaviorInstance.boundGoal.associatedActor
     struct BoundGoalLocation {}        // behaviorInstance.boundGoal.position
     struct LocalVarActor {
-        varTag: str -> gameplaytag;
+        varKey: str -> var_key;
     }
     // 运行时空间查询（用于执行期的战术微操，如寻找闪避位置）
     struct RuntimeQuery {
         query: ActSpatialQuery;
-        pickPolicy: SenseSortPolicy;
     }
 }
 
@@ -556,12 +592,12 @@ interface AITargetSelector {
 interface ActSpatialQuery {
     struct SphereScan {
         center: AITargetSelector;           // Act 专属，全功能
-        shape: SpatialQueryShape.Sphere;
+        shape: SphereQuery;
     }
     struct ConeScan {
         origin: AITargetSelector;           // Act 专属
         direction: ActDirection;            // Act 专属
-        shape: SpatialQueryShape.Cone;
+        shape: ConeQuery;
     }
 }
 
@@ -613,7 +649,7 @@ interface AIFloatValue {
         to: AITargetSelector;
     }
     struct LocalVar {
-        varTag: str -> gameplaytag;
+        varKey: str -> var_key;
     }
     struct BoundGoalMagnitude {}    // behaviorInstance.boundGoal.magnitude
 }
@@ -629,7 +665,7 @@ interface AbortCondition {
         maxDistance: float;
     }
     struct SelfHasAnyTags {
-        tags: list<str> -> gameplaytag;
+        tagQuery: TagQuery;
     }
     // 通用桥接：任何 AICondition 都可以作为中止条件
     struct Custom {
@@ -648,7 +684,9 @@ interface AbortCondition {
 table ai_behavior_modifier[name] {
     name: str;
     description: text;
-    disableBehaviorsQuery: TagQuery;
+    // 匹配 ai_behavior.behaviorTags,满足查询条件的行为在 将被排除出决策池。
+    disableBehaviorsQuery: TagQuery; 
+    disableBehaviorIds: list<int> -> ai_behavior;  // 按 ID 精确禁用
     injectedBehaviors: list<BehaviorInjection>;
 }
 
@@ -717,24 +755,15 @@ for each candidate behavior:
 
 ## 协同架构：打断与控制流派
 
+>💡 设计法则：AI 是大脑（意图），GAS 是躯体（表现）。
+
 AI 系统与 GAS 通过配置协同，贯彻单一数据源原则：**每类状态只有唯一归属系统，跨系统通过 Tag 只读消费，绝不冗余复制。** GAS 管"身体处于什么状态"，AI 管"接下来想做什么"。
 
 | 场景 | 状态归属 | 机制 | 案例 |
 | :--- | :--- | :--- | :--- |
 | **物理受控 (Hard CC)** | GAS 独占控制状态 | AI 不维护控制标记，仅读取 GAS Tag 做 `global_ai_settings` 全局拦截，清空执行栈并挂起大脑 Tick。 | 死亡、眩晕、冰冻、击飞 |
 | **战术中断 (Soft Interrupt)** | AI 独占战术意图 | `abortConditions` 顺滑重选或 `interruptPriority` 高优抢占，GAS 无感知。 | 放弃追击、紧急闪避、切换目标 |
-| **转阶段 (Phase)** | GAS 独占阶段状态 | AI 特权行为执行演出后，将状态托管给 GAS Status。`AIBehaviorModifier` 生命周期绑定于此 Status，卸载即原子清零。AI 通过读取 Tag 防重复触发。 | Boss 狂暴：霸体怒吼 → 注入新技能池，随战斗重置安全卸载 |
-
-
-## 数据流向
-
-```
-Sense 产出 AIGoalInstance
-  → 写入 brain.activeGoalsByType
-    → Think 通过 GoalRequirement 消费，选出 candidateGoal
-      → 胜出后写入 AIBehaviorInstance.boundGoal
-        → Act 通过 BoundGoalActor / BoundGoalLocation 消费
-```
+| **转阶段 (Phase)** | GAS 独占阶段状态 | 特权行为执行演出 → GAS Status 托管 → Modifier 绑定 Status 生命周期 | Boss 狂暴：霸体怒吼 → 注入新技能池，随战斗重置安全卸载 |
 
 
 ---
@@ -759,7 +788,7 @@ Sense 产出 AIGoalInstance
 
 ```cfg
 name: "Throw_Barrel_At_Enemy"
-requiredGoal: { goalDef: "Goal.Item.Barrel", selector: Nearest {} }
+requiredGoal: { goalDef: "Goal.Item.Barrel", selector: Nearest }
 preConditions: [
     { GoalTypeExists { goalDef: "Goal.Combat.Enemy" } }
 ]
@@ -769,22 +798,11 @@ task: Sequence {
         MoveTo { target: BoundGoalActor {}, tolerance: 1.5, stopOnFinish: true },
         Interact { target: BoundGoalActor {}, interactionId: 1 },
         WithLocalVar {
-            varTag: "Var.ThrowTarget",
-            value: ActorFromQuery {
-                query: SphereScan {
-                    center: Self {},
-                    shape: Sphere {
-                        radius: 20.0,
-                        requiredTags: "Faction.Enemy AND Character.Alive",
-                        sortBy: Nearest,
-                        maxResults: 1
-                    }
-                },
-                pickPolicy: Nearest
-            },
+            varKey: "Var.ThrowTarget",
+            value: ActorFromQuery {...},
             task: CastAbility {
-                abilityId: "Ability_ThrowBarrel",
-                target: LocalVarActor { varTag: "Var.ThrowTarget" }
+                abilityId: 1234,
+                target: LocalVarActor { varKey: "Var.ThrowTarget" }
             }
         }
     ]

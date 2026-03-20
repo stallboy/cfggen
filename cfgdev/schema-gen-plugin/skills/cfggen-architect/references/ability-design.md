@@ -226,16 +226,19 @@ table var_key[varKey] {
 ```
 
 ---
+
 ## Runtime Core
 
+本章节定义技能系统在游戏运行时的**心智模型**：静态配置表（Config）是如何在内存中实例化、存储状态并互相通信的。
 
-本章节定义技能系统运行时的核心数据结构与组件。这些概念是连接静态配置与动态执行的桥梁：
-- **Context** 封装了执行的完整环境（发起者、目标、局部变量等），所有表达式（`FloatValue`、`Condition`）和实体（`Effect`、`Status`）均依赖它进行动态求值与逻辑演算。
-- **Payload** 作为事件通信的标准化载荷，携带动作发生时的瞬时数据（如伤害值、攻击者、受害者），供 `Effect` 和 `Trigger` 在事件响应中读取或修改。
+### 执行流上下文 (Context & Payload)
 
-### Context
+Context 和 Payload 是连接静态表达式与动态计算的桥梁，也是贯穿整个技能执行树的“血液”。
 
-Context 是运行时的载体，连接静态配置与动态执行。
+#### Context (环境上下文)
+`Context` 代表一个行为（Ability/Behavior/SpawnedObj）执行时的**持久化环境**。
+- **生命周期**：随 Ability 施放或 StatusInstance 生成或 SpawnedObj 诞生而创建，在其整个存活期内保持活跃。
+- **作用域**：当执行流遇到 `WithTarget`、`WithLocalVar` 时，会拷贝并派生新的 Context 子作用域。
 
 ```java
 record Context(
@@ -246,15 +249,20 @@ record Context(
     InstanceState instanceState,
     
     // --- 以下被改变都要 new Context
-    // StatusInstance 里存储的context causer=host,target=host
-    // SpawnedObj 里存储的context causer=self,target=self
+    // StatusInstance 里存储的context：causer=target=host
+    // SpawnedObj 里存储的context：causer=target=self
     Actor causer,  // 造成效果的物理实体 (如：玩家发射的火球)
     // 对于 Effect，target = 当前作用的目标。
     // 对于 Behavior，target = 当前status的宿主host
-    Actor target,  // 被 WithTarget 改变
-    // 局部作用域 (仅对子节点树有效，WithLocalVar时要创建新 localScope)
+    Actor target,  // 当前正在结算的目标 (被 WithTarget 改变)
+    // 局部作用域：仅对当前及子节点树有效 (由 WithLocalVar 绑定，要建新的ReadOnlyStore对象)
     ReadOnlyStore localScope
 ){}
+
+class InstanceState implements Store {
+    int abilityLevel = 1;   // 技能等级（由 Ability 注入，默认为 1）
+    int currentStacks = 1;  // 当前状态层数（由 Status 注入，默认为 1） 
+}
 
 interface ReadOnlyStore {
     float getFloat(int varId);
@@ -266,22 +274,17 @@ interface ReadOnlyStore {
 interface Store extends ReadOnlyStore {
     // ...
 }
-
-class InstanceState implements Store {
-    int abilityLevel = 1;   // 技能等级（由 Ability 注入，默认为 1）
-    int currentStacks = 1;  // 当前状态层数（由 Status 注入，默认为 1） 
-}
 ```
 
-### Payload
+#### Payload (瞬时载荷)
 
 Payload 是事件携带的瞬时载荷，Trigger 通过它读取"发生了什么"并注入ChangSet修饰。
 
 **关于 Payload 的作用域与生命周期：**
 
 - **顺流而下**：`Trigger` 监听到事件后，会拿到一个 `Payload`。这个 Payload 会顺着该 Trigger 触发的 `Effect` 动作树一直往下传，沿途节点随时可读。
-- **传递边界**：当执行流遇到 `ApplyStatus` 并生成了一个全新的 `StatusInstance` 时，Payload 的传递**直接终止**。
-- **延迟捕获**：为了省性能，系统不在 Trigger 处存数据，而是把在新状态需要用到触发时的瞬时数据（如：按受击伤害来算流血值），**在 `ApplyStatus` 节点里通过 `VarBinding` 手动把它截留下来。**
+- **传递边界**：当执行流遇到 `ApplyStatus/SpawnObj` 时，Payload 的传递**终止**。
+- **延迟捕获**：为了省性能，系统不在 Trigger 处存数据，而是把在新状态需要用到触发时的瞬时数据（如：按受击伤害来算流血值），**在 `ApplyStatus/WithLocalVar` 节点里通过 `VarBinding` 手动把它截留下来。**
 
 **策划配置红线：**
 
@@ -325,62 +328,71 @@ record OverrideOp(
 ){}
 ```
 
-### Actor
+### 实体与组件架构 (Entity & Components)
 
-定义游戏实体及其持有的核心组件。
+游戏内的所有战斗实体（玩家、怪物、甚至复杂的投射物）都被抽象为持有四大核心组件的 `Actor`。
 
 ```java
 class Actor {
-    StatusComponent statusComponent;
-    StatComponent statComponent;
-    EventBus eventBus;
-    TagContainer tagContainer;
+    StatusComponent statusComponent; // 状态机：管理所有 Buff/Debuff
+    StatComponent statComponent;     // 属性集：管理血量、攻击力等数字
+    EventBus eventBus;               // 神经网：监听与广播战斗事件
+    TagContainer tagContainer;       // 基因库：实体的当前特征标签
 }
 ```
 
-### TagContainer
-
-底层采用 **"引用计数 + 写入时展开"** 策略，实现 O(1) 的父级包含查询。
+#### Status 层级模型 (Component -> Instance -> Behavior)
+宏观的倒计时驱动与微观的战斗逻辑被严格分层管理。
 
 ```java
-class TagContainer {
-    // 核心：TagID -> 引用计数
-    Int2IntMap tagCounts;
+// 1. 宏观调度层 (挂载在 Actor 上)
+class StatusComponent {
+    SafeList<StatusInstance> statusInstances;
+    // 负责 Tick 驱动倒计时，以及处理同名 Status 的堆叠/刷新策略 (Stacking Policy)
+}
 
-    // 写入时展开
-    // 当添加子级 Tag (如 Stun) 时，会同时递增其所有父级 (Control, Debuff) 的计数。
-    // 这使得运行时查询 "State.Debuff" 时，只需简单查询 Map 中是否存在该 Key (O(1))
-    void addTag(int tagId) 
-    void removeTag(int tagId);
-    boolean hasTag(int tagId);
+// 2. 生命周期层 (单体 Buff/Debuff 在内存中的活体)
+class StatusInstance {
+    StatusCore coreConfig;
+    Context context;                 // 固化了挂载瞬间的环境 (施法者是谁等)
+    float remainingDuration;
+    int currentStacks;
+    
+    // 容纳根据 Config 实例化出来的具体逻辑零件
+    List<BehaviorInstance<?>> behaviorInstances; 
+}
+
+// 3. 业务执行层 (极细粒度的逻辑单元)
+abstract class BehaviorInstance<T extends Behavior> {
+    T config;
+    StatusInstance parentStatus;
+    abstract void onStart();
+    abstract void onEnd();
+    void tick(float dt) {}
 }
 ```
 
-### StatComponent
 
-游戏内所有数值（最大生命、当前血量、攻击力）全部统一为 `Stat` 对象。通过 `StatModifierList` 管线实现临时状态与永久状态的完美隔离。
+#### Stat 属性模型
+游戏内所有数值统一为 `Stat` 对象。临时状态（Buff加攻击）与永久状态（受击扣血）在此完美融合与隔离。
 
 ```java
 class StatComponent {
-    // 核心存储：TagId -> Stat 实例的映射
     Int2ObjectMap<Stat> stats;
 }
 
 class Stat {
-    Stat_definition config;
-
-    // 面板属性(如攻击力)通常只读。状态属性(如当前HP)受伤时直接永久扣减此值。
-    float baseValue;
-    // 真正暴露给战斗公式读取的值，包含了当前所有 Buff 的加成。
-    float currentValue;
-    // 收集所有依附在该属性上的临时 Buff (如：战吼加攻)
-    StatModifierList modifiers;
+    float baseValue;      // 面板基础值 / 当前真实血量
+    float currentValue;   // 暴露给外部读取的最终值 (包含了 modifiers 的修饰)
+    
+    // 收集所有依附在该属性上的临时状态 (如: 战吼加攻)
+    StatModifierList modifiers; 
     boolean isDirty = true;
 }
 
 class StatModifierList {
-    List<StatModifierInstance> additives;
-    List<StatModifierInstance> multipliers;
+    SafeList<StatModifierInstance> additives;
+    SafeList<StatModifierInstance> multipliers;
     StatModifierInstance activeOverride = null; // 选最高优先级的
     int currentOverridePriority = -1;
 
@@ -393,24 +405,23 @@ class StatModifierInstance extends StatusInstance<StateModifier> {
 }
 ```
 
-### StatModifier & ChangeSet
+#### 瞬态与常态修饰器的对比
 
-| 维度 | StatModifierList | ChangeSet |
+| 维度 | StatModifierList (常态属性修饰) | ChangeSet (瞬态载荷修饰) |
 |------|-----------------|-----------|
-| 生命周期 | 跟随 StatusInstance | 单次 Payload 结算后销毁 |
-| 作用对象 | Stat.currentValue | Payload.magnitude / extras |
-| 来源 | Behavior.StatModifier | Trigger 中的 ModifyPayloadMagnitude |
-| 结算时机 | Stat 被标脏后重算 | Pipeline 阶段 4（Pre 结算） |
+| **生命周期** | 跟随 `StatusInstance` 存活 | 单次 `Payload` 结算管线后即销毁 |
+| **作用对象** | `Stat.currentValue` (如：角色攻击力) | `Payload.magnitude` (如：本次火球伤害) |
+| **配置来源** | `Behavior.StatModifier` | `Trigger` 触发的 `ModifyPayloadMagnitude` |
+| **结算时机** | Stat 标脏时惰性重算 | Pipeline 阶段 4（Pre 结算阶段）聚合求值 |
 
 
-### EventBus
+### 事件总线 (EventBus)
 
-以 EventTagId 为键，直连底层的 SafeList<TriggerInstance> 监听队列。
+以 `EventTagId` 为键，直连底层的监听队列。
 
 ```java
 /**
- * 战斗系统全局上下文，持有所有跨实体的共享状态。
- * 每个战斗实例（副本/战场）一个。
+ * 全局战斗沙盘上下文，持有跨实体的共享状态（每个副本/战场一个实例）
  */
 class CombatSystem {
     int globalDispatchDepth = 0;
@@ -450,153 +461,53 @@ class EventBus {
     }
 }
 ```
-
----
-
-## Expression Layer
-
-### FloatValue
-
-提供多态求值能力，将静态配置转化为上下文敏感的运行时指令，替代硬编码参数。
-
-```cfg
-interface FloatValue {
-    struct Const { value: float; }
-    struct Math { op: MathOp; a: FloatValue; b: FloatValue; }
-    struct Actor {
-        source: TargetSelector;
-        value: ActorFloatValue;
-    }
-
-    struct StatValue { // 取Current
-        source: TargetSelector;
-        stat: str ->stat_definition;
-    }
-
-    // 上下文变量，优先localScope，然后instanceState
-    struct ContextVar { varKey: str ->var_key; }
-
-    // 事件载荷变量
-    struct PayloadMagnitude { }
-    struct PayloadVar { varKey: str ->var_key; }
-
-    // Status 层数
-    struct CurrentStacks {}
-
-    // 按层数缩放：(baseValue + perStackAdd * stacks) * perStackMul ^ stacks
-    struct StackScaling {
-        baseValue: float;
-        perStackAdd: float;
-        perStackMul: float;   // 1.0 = 无乘法缩放
-    }
-}
-
-interface ActorFloatValue {
-    struct Math { op: MathOp; a: ActorFloatValue; b: ActorFloatValue; }
-    struct StatValue { stat: str ->stat_definition; }
-    struct StatBaseValue { stat: str ->stat_definition; }
-}
-
-enum MathOp { Add; Sub; Mul; Div; Max; Min; }
-```
-
-### Condition
-
-提供执行准入标准，与 FloatValue 配合实现动态逻辑判断。
-
-```cfg
-interface Condition {
-    struct Const { value: bool; }
-    struct And { args: list<Condition>; }
-    struct Or { args: list<Condition>; }
-    struct Not { arg: Condition; }
-    struct Compare {
-        left: FloatValue;
-        op: CompareOp;
-        right: FloatValue;
-    }
-    struct Actor {
-        source: TargetSelector;
-        cond: ActorCondition;
-    }
-    struct HasTags {
-        source: TargetSelector;
-        query: TagQuery;
-    }
-
-    struct PayloadHasVar { varKey: str ->var_key; }
-    struct PayloadHasTag { query: TagQuery; }
-    
-    struct Chance { probability: FloatValue; } // 随机概率
-}
-
-interface ActorCondition {
-    struct And { args: list<ActorCondition>; }
-    struct Or { args: list<ActorCondition>; }
-    struct Not { arg: ActorCondition; }
-    struct Compare {
-        left: ActorFloatValue;
-        op: CompareOp;
-        right: ActorFloatValue;
-    }
-    struct HasTags {
-        query: TagQuery;
-    }
-}
-
-enum CompareOp {
-    Gt; Gte; Lt; Lte; Eq; Neq;
-}
-
-struct TagQuery {
-    requireAll: list<str> ->gameplaytag; // 必须全部包含
-    requireAny: list<str> ->gameplaytag; // 包含其中之一即可生效 (最常用)
-    exclude: list<str> ->gameplaytag;    // 包含任何一个则拦截/失效
-}
-```
-
-### TargetSelector & LocationSelector
-
-用于动态选取一个目标实体。
-
-```cfg
-interface TargetSelector {
-    struct ContextTarget {}
-    struct ContextInstigator {}
-    struct ContextCauser {}
-    struct ContextVar { varKey: str ->var_key; }
-
-    struct PayloadInstigator {}
-    struct PayloadTarget {}
-    struct PayloadVar { varKey: str ->var_key; }
-}
-
-interface LocationSelector {
-    struct ActorLocation {
-        target: TargetSelector;
-    }
-    
-    // 某个实体的前方/偏移位置 (如：闪现到目标背后 2 米)
-    struct ActorOffset {
-        target: TargetSelector;
-        forwardOffset: FloatValue;
-        rightOffset: FloatValue;
-        upOffset: FloatValue;
-    }
-
-    // 从 Context/Payload 的变量中读取保存的坐标
-    struct ContextVar { varKey: str ->var_key; }
-    struct PayloadVar { varKey: str ->var_key; }
-}
-
-```
-
 ---
 
 ## Core Entities
 
 本章节定义系统的主体部分：Ability 是入口，Effect 是动作，Status 是持续状态，逻辑递进。
 
+### Ability
+
+Ability 是行为的入口点。
+
+```cfg
+table ability[abilityId] (json) {
+    abilityId: int;
+    name: text;
+    description: text;
+
+    // 标签分类
+    abilityTags: list<str> ->gameplaytag;
+
+    // 准入条件
+    requiresAll: list<Condition>;
+
+    // cost
+    costs: list<StatCost>;
+    cooldown: FloatValue;
+
+    // 效果
+    effect: Effect;
+}
+
+struct StatCost {
+    stat: str ->stat_definition;
+    value: FloatValue;
+}
+```
+
+这是简单的瞬发模型。当需要目标选择、读条、蓄力、引导、后摇时，请一定参考 **`ability-cast.md`**。
+
+如果cooldown需要分组，可以增加配置`cooldownGroups`，使用gameplaytag
+
+| 前缀 | 用途 | 示例 |
+|---|---|---|
+| `Cooldown.*` | 冷却组键名 | `Cooldown.Ability.Fireball` |
+
+主动技能、战术位移(Dash、Teleport等)使用ability来做。
+
+被动技能不要用ability，它本质是 **挂载在角色身上的 status**。
 
 ### Effect
 
@@ -769,51 +680,6 @@ table shared_effect[effectId] (json) {
 }
 ```
 
-### TargetScan
-
-```
-struct TargetScan {
-    shape: ScanShape;
-
-    relationTo: TargetSelector;
-    allowedRelations: list<Relation>;
-    tagQuery: TagQuery;
-    exclude: list<TargetSelector>; 
-
-    maxCount: int; // -1 = 无限
-    sort: SortStrategy;
-}
-
-interface ScanShape {
-    struct Sphere {
-        center: TargetSelector;
-        radius: FloatValue;
-    }
-
-    struct Sector {
-        center: TargetSelector;
-        facingOf: TargetSelector;   // 取该实体的朝向作为扇形正方向
-        radius: FloatValue;
-        angle: FloatValue;
-    }
-
-    struct Box {
-        center: TargetSelector;
-        facingOf: TargetSelector;
-        width: FloatValue;
-        length: FloatValue;
-    }
-
-    struct PartyOf {
-        source: TargetSelector;
-    }
-}
-
-enum Relation { Self; Friendly; Hostile; Neutral; }
-enum SortStrategy { Nearest; Farthest; HpPercentAsc; HpPercentDesc; Random; None; }
-```
-
-
 ### Status
 
 Status 是持续状态的容器，挂载在 Actor 上，拥有独立的生命周期、堆叠策略和行为零件。
@@ -941,47 +807,188 @@ struct TimelinePhase {
 }
 ```
 
-### Ability
+---
 
-Ability 是行为的入口点。
+## Expression Layer
+
+### FloatValue
+
+提供多态求值能力，将静态配置转化为上下文敏感的运行时指令，替代硬编码参数。
 
 ```cfg
-table ability[id] (json) {
-    id: int;
-    name: text;
-    description: text;
+interface FloatValue {
+    struct Const { value: float; }
+    struct Math { op: MathOp; a: FloatValue; b: FloatValue; }
+    struct Actor {
+        source: TargetSelector;
+        value: ActorFloatValue;
+    }
 
-    // 标签分类
-    abilityTags: list<str> ->gameplaytag;
+    struct StatValue { // 取Current
+        source: TargetSelector;
+        stat: str ->stat_definition;
+    }
 
-    // 准入条件
-    requiresAll: list<Condition>;
+    // 上下文变量，优先localScope，然后instanceState
+    struct ContextVar { varKey: str ->var_key; }
 
-    // cost
-    costs: list<StatCost>;
-    cooldown: FloatValue;
+    // 事件载荷变量
+    struct PayloadMagnitude { }
+    struct PayloadVar { varKey: str ->var_key; }
 
-    // 效果
-    effect: Effect;
+    // Status 层数
+    struct CurrentStacks {}
+
+    // 按层数缩放：(baseValue + perStackAdd * stacks) * perStackMul ^ stacks
+    struct StackScaling {
+        baseValue: float;
+        perStackAdd: float;
+        perStackMul: float;   // 1.0 = 无乘法缩放
+    }
 }
 
-struct StatCost {
-    stat: str ->stat_definition;
-    value: FloatValue;
+interface ActorFloatValue {
+    struct Math { op: MathOp; a: ActorFloatValue; b: ActorFloatValue; }
+    struct StatValue { stat: str ->stat_definition; }
+    struct StatBaseValue { stat: str ->stat_definition; }
+}
+
+enum MathOp { Add; Sub; Mul; Div; Max; Min; }
+```
+
+### Condition
+
+提供执行准入标准，与 FloatValue 配合实现动态逻辑判断。
+
+```cfg
+interface Condition {
+    struct Const { value: bool; }
+    struct And { args: list<Condition>; }
+    struct Or { args: list<Condition>; }
+    struct Not { arg: Condition; }
+    struct Compare {
+        left: FloatValue;
+        op: CompareOp;
+        right: FloatValue;
+    }
+    struct Actor {
+        source: TargetSelector;
+        cond: ActorCondition;
+    }
+    struct HasTags {
+        source: TargetSelector;
+        query: TagQuery;
+    }
+
+    struct PayloadHasVar { varKey: str ->var_key; }
+    struct PayloadHasTag { query: TagQuery; }
+    
+    struct Chance { probability: FloatValue; } // 随机概率
+}
+
+interface ActorCondition {
+    struct And { args: list<ActorCondition>; }
+    struct Or { args: list<ActorCondition>; }
+    struct Not { arg: ActorCondition; }
+    struct Compare {
+        left: ActorFloatValue;
+        op: CompareOp;
+        right: ActorFloatValue;
+    }
+    struct HasTags {
+        query: TagQuery;
+    }
+}
+
+enum CompareOp {
+    Gt; Gte; Lt; Lte; Eq; Neq;
+}
+
+struct TagQuery {
+    requireAll: list<str> ->gameplaytag; // 必须全部包含
+    requireAny: list<str> ->gameplaytag; // 包含其中之一即可生效 (最常用)
+    exclude: list<str> ->gameplaytag;    // 包含任何一个则拦截/失效
 }
 ```
 
-这是简单的瞬发模型。当需要目标选择、读条、蓄力、引导、后摇时，请一定参考 **`ability-cast.md`**。
+### TargetSelector
+用于动态选取一个目标实体。
+```cfg
+interface TargetSelector {
+    struct ContextTarget {}
+    struct ContextInstigator {}
+    struct ContextCauser {}
+    struct ContextVar { varKey: str ->var_key; }
 
-如果cooldown需要分组，可以增加配置`cooldownGroups`，使用gameplaytag
+    struct PayloadInstigator {}
+    struct PayloadTarget {}
+    struct PayloadVar { varKey: str ->var_key; }
+}
+```
 
-| 前缀 | 用途 | 示例 |
-|---|---|---|
-| `Cooldown.*` | 冷却组键名 | `Cooldown.Ability.Fireball` |
+### LocationSelector
+```
+interface LocationSelector {
+    struct ActorLocation {
+        target: TargetSelector;
+    }
+    
+    // 某个实体的前方/偏移位置 (如：闪现到目标背后 2 米)
+    struct ActorOffset {
+        target: TargetSelector;
+        forwardOffset: FloatValue;
+        rightOffset: FloatValue;
+        upOffset: FloatValue;
+    }
 
-主动技能、战术位移(Dash、Teleport等)使用ability来做。
+    // 从 Context/Payload 的变量中读取保存的坐标
+    struct ContextVar { varKey: str ->var_key; }
+    struct PayloadVar { varKey: str ->var_key; }
+}
+```
 
-被动技能不要用ability，它本质是 **挂载在角色身上的 status**。
+### TargetScan
+```
+struct TargetScan {
+    shape: ScanShape;
+
+    relationTo: TargetSelector;
+    allowedRelations: list<Relation>;
+    tagQuery: TagQuery;
+    exclude: list<TargetSelector>; 
+
+    maxCount: int; // -1 = 无限
+    sort: SortStrategy;
+}
+
+interface ScanShape {
+    struct Sphere {
+        center: TargetSelector;
+        radius: FloatValue;
+    }
+
+    struct Sector {
+        center: TargetSelector;
+        facingOf: TargetSelector;   // 取该实体的朝向作为扇形正方向
+        radius: FloatValue;
+        angle: FloatValue;
+    }
+
+    struct Box {
+        center: TargetSelector;
+        facingOf: TargetSelector;
+        width: FloatValue;
+        length: FloatValue;
+    }
+
+    struct PartyOf {
+        source: TargetSelector;
+    }
+}
+
+enum Relation { Self; Friendly; Hostile; Neutral; }
+enum SortStrategy { Nearest; Farthest; HpPercentAsc; HpPercentDesc; Random; None; }
+```
 
 ---
 
@@ -1181,8 +1188,7 @@ resolution_pipeline {
         // 阶段1：闪避
         {
             name: "闪避";
-            chance: Math {
-                op: Sub;
+            chance: Math { op: Sub;
                 a: StatValue { source: PayloadTarget {}; stat: "Combat_DodgeRate"; };
                 b: StatValue { source: PayloadInstigator {}; stat: "Combat_Accuracy"; };
             };
@@ -1196,10 +1202,8 @@ resolution_pipeline {
             skipIfPayloadHasAny: ["Combat.Result.Dodged"];
             chance: StatValue { source: PayloadTarget {}; stat: "Combat_BlockRate"; };
             grantPayloadTags: ["Combat.Result.Blocked"];
-            magnitudeModifiers: [{
-                op: Mul;
-                value: Math {
-                    op: Sub;
+            magnitudeModifiers: [{ op: Mul;
+                value: Math { op: Sub;
                     a: Const { value: 1.0; };
                     b: StatValue { source: PayloadTarget {}; stat: "Combat_BlockEfficiency"; };
                 };
@@ -1210,14 +1214,12 @@ resolution_pipeline {
         {
             name: "暴击";
             skipIfPayloadHasAny: ["Combat.Result.Dodged"];
-            chance: Math {
-                op: Sub;
+            chance: Math { op: Sub;
                 a: StatValue { source: PayloadInstigator {}; stat: "Combat_CritRate"; };
                 b: StatValue { source: PayloadTarget {}; stat: "Combat_CritResist"; };
             };
             grantPayloadTags: ["Combat.Result.Critical"];
-            magnitudeModifiers: [{
-                op: Mul;
+            magnitudeModifiers: [{ op: Mul;
                 value: StatValue { source: PayloadInstigator {}; stat: "Combat_CritDamage"; };
             }];
         }
@@ -1360,6 +1362,24 @@ enum CueEventType { Executed; Added; Removed; }
 
 如需网络同步，请一定参考 **`ability-net.md`**。
 
+### TagContainer
+
+底层采用 **"引用计数 + 写入时展开"** 策略，实现 O(1) 的父级包含查询。
+
+```java
+class TagContainer {
+    // 核心：TagID -> 引用计数
+    Int2IntMap tagCounts;
+
+    // 写入时展开
+    // 当添加子级 Tag (如 Stun) 时，会同时递增其所有父级 (Control, Debuff) 的计数。
+    // 这使得运行时查询 "State.Debuff" 时，只需简单查询 Map 中是否存在该 Key (O(1))
+    void addTag(int tagId) 
+    void removeTag(int tagId);
+    boolean hasTag(int tagId);
+}
+```
+
 ### SafeList
 
 抽离生命周期管理中的“防重入、防并发修改”逻辑，封装为泛型安全容器。所有受控实体（状态、行为零件等)必须实现 `IPendingKill`。
@@ -1383,40 +1403,6 @@ class SafeList<T extends IPendingKill> {
     void beginIterate(); // 迭代上锁: iterateDepth++
     void endIterate();   // 解锁。若归零,触发 flushPendingAdds 与 compact()
     void compact();      // Swap-Remove 物理清理
-}
-```
-
-### StatusInstance
-
-- `StatusComponent`(宏观调度层):主导 Tick 驱动与堆叠策略 (Stacking) 的全局路由。
-- `StatusInstance` (生命周期层):专职接管单体状态的倒计时演算与层数突变,并动态装配底层行为单元。
-- `BehaviorInstance` (业务执行层):细粒度的逻辑实体,实现“生命周期管理”与“具体战斗逻辑”的彻底正交。
-
-```java
-class StatusComponent {
-    SafeList<StatusInstance> statusInstances;
-    Actor ownerActor;
-    // Tick 驱动倒计时,通过 statusInstances.beginIterate() 安全遍历
-}
-
-class StatusInstance implements IPendingKill {
-    StatusCore coreConfig;
-    Context context;
-    StatusComponent ownerComponent;
-    // 容纳实例化出来的具体行为（StatModifierInstance, PeriodicInstance, TriggerInstance等）
-    List<BehaviorInstance<?>> behaviorInstances;
-
-    float remainingDuration;
-    int currentStacks;
-    boolean pendingKill;
-}
-
-abstract class BehaviorInstance<T extends Behavior> {
-    T config;
-    StatusInstance parentStatus;
-    abstract void onStart();
-    abstract void onEnd();
-    void tick(float dt) {}
 }
 ```
 

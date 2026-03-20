@@ -49,7 +49,7 @@ interface SceneCondition {
     // 槽位实体的 Tag 状态（复用 GAS 标签体系）
     struct ActorHasTags {
         actor: SceneActorSelector;
-        tagQuery: GameplayTagQuery;
+        tagQuery: TagQuery;
     }
 
     struct ActorIsAlive { actor: SceneActorSelector; }
@@ -330,7 +330,7 @@ struct SceneStatOverride {
 }
 
 struct SceneVarInit {
-    varTag:    str ->gameplaytag;
+    varKey: str ->var_key;
     initValue: float;
 }
 
