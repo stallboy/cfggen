@@ -1,253 +1,169 @@
-
-
 # 场景逻辑系统设计 (Scene Logic System Design)
-
-本文档定义一套与 `ability-design` (GAS) 和 `ai-design` (AI) 无缝集成的场景逻辑系统。它解决的核心问题是：**如何用数据驱动的方式，编排多实体在一段时间内的协同行为序列，并与底层物理/状态系统和中层 AI 决策系统深度联动**。
-
----
 
 ## Architecture Overview
 
-场景系统（Scene System）作为游戏逻辑的最高层**编排者（Orchestrator）**，坐落在 GAS（躯体与状态）和 AI（动机与自治行为）之上。它自身不创造基础动作，而是通过向外下达指令、向内订阅事件，将分散的实体组合成有起承转合的沉浸式演出与玩法流程。
+场景系统（Scene System）定位为遭遇战/演出级的逻辑编排层，位于 GAS（状态与效果）与 AI（自治决策）之上、关卡与任务流程系统之下。它不负责实现基础战斗行为，而是通过驱动既有能力、施加约束、订阅运行时事件，将多个实体在一段时间内组织成可控、可复用、可数据化配置的玩法与演出流程。
+
+### 1.1 层级定位
+
+| 层级 | 系统 | 职责边界 |
+|:---|:---|:---|
+| **底层** | GAS | 伤害、状态、Tag、Effect、Stat |
+| **中层** | AI | 寻路、攻击选择、行为决策 |
+| **上层** | Scene | 单场遭遇战/演出的编排 |
+| **顶层** | 关卡/任务 | 房间连接、进度存档、全局流转 |
+
+### 场景接口 — 逻辑与空间分离
+
+场景定义（scene_definition）是**纯逻辑编排**，不含任何世界坐标。空间信息通过 signature 注入：
+
+
+### 核心架构决策
+
+**一切皆树（Act Tree）**。场景定义的执行体是一棵 `rootAct` 树。FSM（状态机）作为树中的一个节点类型（`StateMachine`）存在，而非独立于树的机制。
+
+- **宏观流转**用 `StateMachine` 节点 — Phase 间互斥跳转
+- **微观时序**用 `Sequence`/`Parallel` 等控制流 — 帧级动作编排
+- **持续监听**用 `Parallel + Loop + WaitForEvent` — 无独立 Monitor 机制
+
+所有运行时逻辑共享同一套生命周期、同一套 abort/RAII 清理路径。
+
+### 执行与终止的关系
 
 ```
-+-----------------------------------------------------------------+
-|                   Scene Definition (Static)                     |
-|                                                                 |
-|  [ Actor Slots ]  [ Main Script ]  [ Side Triggers ] [ Outcomes]|
-+-----------------------------------------------------------------+
-                                | Instantiates
-                                v
-+-----------------------------------------------------------------+
-|                   Scene Instance (Runtime)                      |
-|                                                                 |
-|  +-----------------------+        +--------------------------+  |
-|  | Context & Environment |        | Parallel Monitors        |  |
-|  | - Scene Variables     |        | - SideTrigger Instances  |  |
-|  | - Event Subscriptions |        | - Outcome Evaluators     |  |
-|  +-----------------------+        +--------------------------+  |
-|                                                                 |
-|  +-----------------------------------------------------------+  |
-|  | SceneActionInstance Tree (Execution Flow)                 |  |
-|  |                                                           |  |
-|  |  [ Control Flow ] -> Sequence, Parallel, Conditional      |  |
-|  |  [ Execution ]    -> SpawnActor, PlayAnimation, SetVar    |  |
-|  |  [ Wait Nodes ]   -> WaitUntil, WaitForEvent              |  |
-|  |  [ Scope Nodes ]  -> WithActorControl (RAII Lifecycle)    |  |
-|  +-----------------------------------------------------------+  |
-+-----------------------------------------------------------------+
+┌────────────────────────────────────────────┐
+│            SceneInstance                   │
+│                                            │
+│  ┌──────────────────────────────────────┐  │
+│  │  rootAct (Act Tree)                  │  │
+│  │  ┌────────────┐  ┌───────────────┐   │  │
+│  │  │StateMachine│  │ Parallel      │   │  │
+│  │  │(Phases)    │  │ (background)  │   │  │
+│  │  └────────────┘  └───────────────┘   │  │
+│  └──────────────────────────────────────┘  │
+│                                            │
+│  ┌─────────────────────────────────────┐   │
+│  │  Outcome Monitors (always-on)       │   │
+│  └─────────────────────────────────────┘   │
+└────────────────────────────────────────────┘
 ```
 
-### 角色定位模型
+- **rootAct** 自然走完 ≠ 场景结束
+- 场景的生死**由且仅由 Outcome 裁定**
+- rootAct 完成后若无 Outcome 匹配，场景进入等待状态
 
-*   **GAS**：客观物理世界法则（重力、伤害、眩晕、血量）。
-*   **AI**：实体个体的求生与战斗本能（寻找掩体、攻击最近敌人）。
-*   **Scene**：不可见的神明之手（编排命运的相遇、强加剧情锁、判定试炼成败）。
+### 1.5 外部通信
+
+场景通过 `signature`（输入参数）接收外部指令，通过 `outcomes`（结局码）向外部汇报结果。两者之间低耦合通信。
 
 ---
 
-## Philosophy
+## Design Principles
 
-1. **复用，不重造**：场景系统的执行单元直接调用 GAS 的 `Effect`、`Ability`，AI 的行为修饰通过 `Status` 或注入行为完成。不引入平行的战斗逻辑体系，只做编排。
-2. **执行树，非执行栈**：所有动作节点构成一棵 **SceneActionInstance 树**，复合节点与子节点共存于树中，每帧只 tick 处于 Running 状态的节点。这使 `Parallel` 的并发语义自然表达，而传统执行栈无法做到。
-3. **订阅驱动，非轮询**：所有等待节点在 `onEnter` 时向 `EventBus` 注册监听，在 `onExit` 时取消注册。重新评估由事件推送触发，而非每帧主动求值。彻底告别 ECA 时代的"全局变量轮询"。
-4. **作用域即生命周期 (RAII)**：有副作用的操作（占用控制权、挂载临时状态、局部变量）必须包装在对应的 `WithXXX` 作用域节点中。`onExit` 在 `finally` 语义下执行——无论正常完成还是被强制中止，清理必定发生，从根本上杜绝状态残留（Orphaned State）。
-5. **Await 语义显式声明**：`PlayAnimation`、`MoveTo` 等动作默认是 `FireAndForget`（发出指令立刻返回）。如需等待完成，必须显式声明 `await: UntilComplete`，引擎通过订阅完成事件实现阻塞。直接解决"Wait 3.0 seconds 与动画时长脱节"的顽疾。
-6. **结局统一终止语义**：所有终止路径（Boss 死亡、玩家死亡、超时）统一归口于 `outcomes` 列表，采用优先级仲裁机制，避免 `abortConditions` 和 `timeLimit` 的语义重叠。
+1. **复用不重造** — 执行单元直接调用 GAS 的 Effect/Ability，AI 修饰通过 ActStatus 完成。只做编排。
+
+2. **单一执行模型** — 所有逻辑统一为 Act 树。没有树外执行引擎。
+
+3. **执行树非执行栈** — 节点构成树结构，`Parallel` 的并发语义自然表达。每帧只 tick Running 节点。
+
+4. **订阅驱动非轮询** — 等待节点在 `onEnter` 时注册监听，`onExit` 时取消。条件自描述其关心的事件类型。
+
+5. **作用域即生命周期** — 有副作用的操作必须包装在 `WithXXX` 作用域节点中。`onExit` 在 finally 语义下执行，无论正常完成还是强制中止，清理必定发生。
+
+6. **Await 显式声明** — 动作默认 `FireAndForget`。需等待完成必须显式声明 `await: UntilComplete`。
+
+7. **终止与流转分离** — `outcomes` 管场景生死（Terminate），`StateMachine` 内的 `transitions`/`globalTransitions` 管 Phase 流转，职责不交叉。
+
+8. **万物皆变量** — 演员、道具、区域、计数器统一为场景变量，极简心智模型。
+
+9. **上下文继承** — 作用域节点注入 Context Target，子节点默认继承，消除 target 冗余书写。
+
+10. **边界清晰契约分明** — 通过 `signature`（入参）和 `outcomes`（出参）与外部系统通信，不越权。
 
 ---
 
-## Runtime Core
+## Variable System
 
-### SceneInstance
+### 冒泡寻址
 
-场景运行时主体。它维护了槽位映射、局部变量树以及主控 Tick。
+读取变量时沿树向上冒泡：
 
-```java
-class SceneInstance {
-    Scene_definition sceneCfg;
-
-    // 2. 全局环境
-    Store globalSceneVars;
-    EventBus globalEventBus;
-
-    // 3. 运行状态
-    float elapsedTime;
-    enum SceneState { Pending; Running; Completed; Aborted; }
-    SceneState state = Pending;
-
-    // 4. 执行实例
-    SceneActionInstance rootAction;                // 主轴树根节点
-    List<SideTriggerInstance> sideTriggers;          // 旁支触发器状态机
-    List<SceneActionInstance> runningSideActions;  // 旁支触发器孵化出的活跃小树
-
-    //结局监控 ───
-    List<OutcomeListener> outcomeListeners;
-    List<SceneOutcome> matchedOutcomes = new ArrayList<>();
-}
+```
+当前节点 localVars → 父节点 localVars → ... → SceneInstance.globalSceneVars
 ```
 
-### SceneActionInstance
+`WithVar` 在 `onEnter` 创建 localVars，`onExit` 销毁。子节点同名变量**遮蔽**而非覆盖父级。
 
-执行树的节点基类，是场景系统运行时的核心抽象。
+### 写入规则
 
-```java
-abstract class SceneActionInstance<T extends SceneAction> {
-    T actionCfg;      // 绑定的静态配置
-    SceneInstance scene;        // 所属的场景大实例
-    SceneActionInstance parent; // 父实例
-    List<SceneActionInstance> children = new ArrayList<>();
+- `SetSceneVar` → 始终写入 `globalSceneVars`（跨 Phase 可见）
+- `WithVar` 内部 → 只影响当前作用域，随退出销毁
 
-    Store localVars = null;        // 局部变量寄存器
-    enum Status { Pending, Running, Succeeded, Failed, Aborted }
-    Status status = Pending;       // 实例运行状态
+---
 
-    // 生命周期与状态机流转
-    final void enter() { ... }
-    final Status tickInstance(float dt) { ... } // 替代原 tickContext
-    final void abort() { ... }
-    private void exit(boolean aborted) { ... }
+## Context Target — 上下文继承
 
-    // 供具体节点实现的多态方法
-    protected abstract void onStart();
-    protected abstract Status onTick(float dt);
-    protected abstract void onCleanUp(boolean aborted);
+### 机制
 
-    // 工厂方法：通过 SceneAction 配置孵化出对应的 SceneActionInstance
-    static SceneActionInstance create(SceneAction cfg, SceneInstance scene, SceneActionInstance parent) { ... }
-}
+`ActorSelector` 默认值为 `Inherit {}`。运行时沿树向上冒泡，找到最近的**上下文目标提供者**：
+
+- `WithActorControl` 的 `targets[0]`
+- `WithTarget` 节点
+
+### 示例
+
+```
+WithActorControl {
+    targets: [SceneVar { actorVar: "Cast.Boss" }];
+    mode: Immediate;
+    body: Sequence { actions: [
+        // 以下 target 全部省略，自动继承 Cast.Boss
+        PlayAnimation { animName: "entrance_roar"; await: UntilComplete; };
+        Dialogue { dialogueId: 5001; await: UntilComplete; };
+        ApplyEffect { effect: ...; await: FireAndForget; };
+    ]};
+};
 ```
 
 ---
 
-## 配置定义
-
-### scene_definition
-
-场景定义表，是整个场景系统的最上层配置入口。
+## scene_definition
 
 ```cfg
 table scene_definition[sceneId] (json) {
     sceneId: int;
     name: text;
-    sceneTags: list<str> ->gameplaytag;
 
-    actorSlots: list<SceneActorSlot>;
-    environmentAnchors: list<SceneEnvironmentAnchor>;
+    // 函数签名（入参声明）
+    signature: list<SceneVarDecl>;
 
-    // 静态前置条件：加载时检查一次
-    prerequisites: list<SceneCondition>;
-
-    // 场景激活条件（满足则实例化该场景）
-    activation: SceneActivation;
-
-    // 1. 主轴时间线
-    // 负责强时序的演出、Boss 阶段转换、核心对话。
-    // 依然是一棵单根的树，一眼看清起承转合。
-    script: SceneAction;
-
-    // 2. 旁支触发器
-    // 负责在场景运行期间，处理非线性的、碎片的规则。
-    // 例如："只要触碰陷阱就扣血"、"每死一个小怪就加分"
-    sideTriggers: list<SceneSideTrigger>;
-
-    // 结局定义：统一承载终止条件、奖励、计分与超时
+    // 结局裁定
     outcomes: list<SceneOutcome>;
 
-    // 场景变量初始化
-    initVars: list<SceneVarInit>;
-}
-
-struct SceneActivation {
-    condition: SceneCondition;
-    // 声明哪些事件可能导致条件变化，引擎只在这些事件发生时重新 evaluate
-    reactToEvents: list<str> ->event_definition;
-}
-
-struct SceneSideTrigger {
-    // 触发条件
-    condition: SceneCondition;
-    reactToEvents: list<str> ->event_definition;
-
-    // 是否可以重复触发？
-    // false = 触发一次后该 trigger 永久失效
-    // true = 每次条件满足且不在 cooling down 时均可触发
-    isRepeatable: bool;
-    cooldownSec: float;
-
-    // 触发后执行的动作树。
-    // 架构约束：为了避免与主 script 冲突，建议这里的 action
-    // 尽量是 FireAndForget 的短逻辑 (如 DoEffect, SendEvent, SetVar)，
-    // 或者对与主轴无关的环境实体操作。
-    action: SceneAction;
-}
-
-struct SceneActorSlot {
-    slotVar: str ->var_key;
-    aiArchetype: str ->ai_archetype;
-    spawnPoint: str;
-    initialStatuses: list<int> ->status;
-    statOverrides: list<SceneStatOverride>;
-    removeOnDeath: bool;
-}
-
-struct SceneEnvironmentAnchor {
-    slotVar: str ->var_key;
-    spawnPoint: str;
-    initialStatuses: list<int> ->status;
-}
-
-struct SceneStatOverride {
-    statKey: str ->stat_definition;
-    op: ModifierOp;
-    value: float;
-}
-
-struct SceneVarInit {
-    varKey: str ->var_key;
-    initValue: float;
+    // 执行体（纯粹的一棵树）
+    rootAct: Act;
 }
 
 struct SceneOutcome {
-    outcomeTag: str ->gameplaytag;
     condition: SceneCondition;
-    reactToEvents: list<str> ->event_definition;
-
-    // true = 匹配后立即终止场景（如失败、超时）
-    // false = 记录结果但继续执行（如多目标评分场景）
-    terminateScene: bool;
-
-    // 并发匹配时的优先级冲裁（数值越大越优先）
-    // 建议：死亡=100, 超时=50, 胜利=10
-    priority: int;
-
-    rewards: list<SceneReward>;
-}
-
-
-struct SceneReward {
-    // 指向经济系统的专属掉落包 ID（Reward / Drop / Loot Table）
-    rewardPackId: int -> reward_pack;
-
-    // 发放对象（通常是玩家，或者全体参与者）
-    rewardTarget: SceneActorSelector;
+    resultCode: int;  // 0=失败, 1=成功, ...
 }
 ```
 
-
 ---
 
-## SceneAction
+## Act — 执行节点体系
 
-`SceneAction` 是场景脚本的执行单元，支持任意嵌套组合。
+`Act` 是场景脚本的唯一执行单元，支持任意嵌套。
+
+### 基础动作
 
 ```cfg
-interface SceneAction {
+interface Act {
     struct None {}
 
-    // --- 基础动作节点
     struct PlayAnimation {
-        target: SceneActorSelector;
+        target: ActorSelector;
         animName: str;
         blendInTime: float;
         await: AwaitMode;
@@ -255,31 +171,31 @@ interface SceneAction {
     }
 
     struct Dialogue {
-        speaker: SceneActorSelector;
+        speaker: ActorSelector;
         dialogueId: int ->dialogue;
         await: AwaitMode;
     }
 
     struct Camera {
         action: CameraAction;
-        await: AwaitMode; // 通常 FireAndForget
+        await: AwaitMode;
     }
 
-    struct DoEffect {
-        target: SceneActorSelector;
+    struct ApplyEffect {
+        target: ActorSelector;
         effect: Effect;
         await: AwaitMode;
     }
 
     struct CastAbility {
-        caster: SceneActorSelector;
+        caster: ActorSelector;
         abilityId: int ->ability;
-        target: SceneActorSelector;
+        abilityTarget: ActorSelector;
         await: AwaitMode;
     }
 
     struct SendEvent {
-        target: SceneActorSelector; // 使用 None 表示全局广播
+        target: ActorSelector;
         eventTag: str ->event_definition;
         magnitude: float;
         extras: list<VarBinding>;
@@ -287,378 +203,552 @@ interface SceneAction {
 
     struct SpawnActor {
         outputVarKey: str ->var_key;
-        aiArchetype: str ->ai_archetype (nullable);
-        spawnPoint: str;
-        initialStatuses: list<int> ->status;
-    }
-
-    struct SetSceneVar {
-        varKey: str ->var_key;
-        op: ModifierOp;
-        value: float;
+        archetype: str ->ai_archetype;
+        spawnAt: str;
     }
 
     struct PlayCue {
-        cueKey: str -> cue_key;
-        playAt: SceneActorSelector;  // None = 全局 Cue（如屏幕震动、全局 UI 提示）
+        cueKey: str ->cue_key;
+        playAt: ActorSelector;
     }
 
     struct MoveTo {
-        actor: SceneActorSelector;     // 谁在移动
-        target: SceneActorSelector;     // 移动到哪（Actor 位置 或 锚点位置）
-        speedOverride: SceneFloatValue;    // 移动速度覆写，Const{-1} = 使用实体默认速度
-        tolerance: float;                  // 到达距离容差
+        actor: ActorSelector;
+        destination: ActorSelector;
+        speedOverride: SceneFloatValue;
+        tolerance: float;
         await: AwaitMode;
     }
 
     struct Interact {
-        actor: SceneActorSelector; // 谁发起交互
-        interactTo: SceneActorSelector; // 与谁交互
+        actor: ActorSelector;
+        interactTo: ActorSelector;
         interactionId: int;
         await: AwaitMode;
     }
+    
+    struct SetSceneVar {
+        varKey: str ->var_key;
+        op: ModifierOp;
+        value: SceneFloatValue;
+    }
+```
 
+### 等待节点
 
-    // --- 等待节点
-
-    // 运行时：onEnter 订阅，onExit 取消订阅，不轮询
+```cfg
     struct WaitForEvent {
         eventTag: str ->event_definition;
-        source: SceneActorSelector; // None = 监听所有来源
+        source: ActorSelector;
         conditions: list<SceneCondition>;
         timeoutSec: float;
-        onTimeout: SceneAction;
+        onTimeout: Act;
     }
 
-    // 运行时：onEnter 求值一次；随后只在 reactToEvents 触发时重新求值
     struct WaitUntil {
         condition: SceneCondition;
-        reactToEvents: list<str> ->event_definition;
         timeoutSec: float;
+        onTimeout: Act;
     }
 
     struct WaitSeconds {
         duration: SceneFloatValue;
     }
+```
 
-    // --- 控制流节点
+### 控制流节点
 
-    struct Sequence { actions: list<SceneAction>; }
+```cfg
+    struct Sequence {
+        acts: list<Act>;
+    }
 
-    // WaitAll: 均 Succeeded 时成功
-    // WaitAny: 任意 Succeeded 时成功，并自动 Abort 其他 Running 子节点
     struct Parallel {
-        actions: list<SceneAction>;
+        acts: list<Act>;
         policy: ParallelPolicy;
     }
 
     struct Conditional {
         condition: SceneCondition;
-        thenAction: SceneAction;
-        elseAction: SceneAction (nullable);
+        thenAct: Act;
+        elseAct: Act (nullable);
     }
 
     struct Loop {
-        count: int; // -1 表示无限循环
-        body: SceneAction;
+        count: int;  // -1 = 无限循环
+        body: Act;
     }
 
-    // --- 作用域节点，退出时保证执行清理，绝不残留
+    struct RandomSelect {
+        candidates: list<WeightedAct>;
+    }
 
-    // 控制权作用域：结束后自动归还控制权给 AI
+    struct StateMachine {
+        initialPhase: str ->phase_key (nullable);  // 默认 phases[0]
+        phases: list<Phase>;
+        globalTransitions: list<Transition>;
+    }
+```
+
+### 状态机节点相关结构
+
+**StateMachine 作为 Act 节点**：StateMachine 是树中的一个控制流节点，而非独立于树的顶层机制。它可以出现在 rootAct 中的任意位置 — 作为 Parallel 的一个分支、嵌套在 Sequence 中、甚至嵌套在另一个 StateMachine 的 Phase 内。
+
+```cfg
+struct Phase {
+    phaseKey: str ->phase_key;
+    onEnter: Act;
+    onExit: Act;
+    transitions: list<Transition>;
+    autoAdvance: AutoAdvance;
+}
+
+struct Transition {
+    condition: SceneCondition;
+    target: FSMTarget;
+}
+
+interface AutoAdvance {
+    struct None {}
+    struct ToPhase { phaseKey: str ->phase_key; }
+    struct ExitSuccess {}
+    struct ExitFailure {}
+}
+
+interface FSMTarget {
+    struct ToPhase { phaseKey: str ->phase_key; }
+    struct ExitSuccess {}
+    struct ExitFailure {}
+}
+```
+
+### 作用域节点
+
+```cfg
     struct WithActorControl {
-        targets: list<SceneActorSelector>;
+        targets: list<ActorSelector>;
         mode: ActorControlMode;
         softTimeoutSec: float;
-        body: SceneAction;
-        onAbort: SceneAction;   // 清理动作，强制 FireAndForget
+        body: Act;
+        onAbort: Act;
     }
 
-    // 状态作用域：结束后精确移除挂载的该 Status 实例
     struct WithStatus {
-        target: SceneActorSelector;
+        target: ActorSelector;
         statusId: int ->status;
-        body: SceneAction;
+        body: Act;
     }
 
-    // 变量作用域
     struct WithVar {
         varKey: str ->var_key;
-        initValue: float;
-        body: SceneAction;
+        initValue: SceneFloatValue;
+        body: Act;
     }
 
     struct WithTarget {
-        target: SceneActorSelector;
-        body: SceneAction;
+        target: ActorSelector;
+        body: Act;
     }
 
+    struct Cinematic {
+        skippable: bool;
+        body: Act;
+        onSkip: Act;
+    }
+```
 
-    // --- 实用与复用节点
+**Cinematic 语义**：
+- `skippable: true` 时，玩家触发跳过 → abort body（RAII 清理）→ 执行 onSkip（快进到终态）→ Succeeded
+- `skippable: false` 时，等同于直接执行 body
+- `onSkip` 应为短逻辑（瞬移到位、设置变量等）
 
-    struct ScriptRef {
+### 复用节点
+
+```cfg
+    struct RunScript {
         sharedScriptId: int ->shared_scene_script;
+        args: list<SceneVarBinding>;
     }
 
-    // 调用独立的子场景（如播片、特殊小游戏）
     struct RunSubScene {
         sceneId: int ->scene_definition;
+        args: list<SceneVarBinding>;
         await: AwaitMode;
     }
 
-    // 调试辅助
     struct DebugLog {
         message: str;
-        printVars: list<str> ->var_tag;
+        printVars: list<str> ->var_key;
     }
 }
+```
 
-enum AwaitMode {
-    // 发出指令，立刻返回 Succeeded，不等待动作物理完成（发射后不管）
-    // 适用：Camera切换、DoEffect瞬间生效
-    FireAndForget;
+### 辅助类型
 
-    // 挂起节点，等待引擎广播该动作的专属完成事件后才返回 Succeeded
-    // 适用：PlayAnimation(等播完)、Dialogue(等点掉)、CastAbility(等技能结束)
-    UntilComplete;
-}
-
-enum ActorControlMode {
-    // 立即授予 State.Scene.Controlled Tag，触发全局拦截，AI 当帧物理宕机
-    Immediate;
-    // 注入高优先行为，等 AI 在 minCommitmentTime 后主动让权。超时则降级为 Immediate
-    Polite;
-}
+```cfg
+enum AwaitMode { FireAndForget; UntilComplete; }
+enum ActorControlMode { Immediate; Polite; }
+enum ParallelPolicy { WaitAll; WaitAny; }
 
 interface CameraAction {
-    struct FocusOn { target: SceneActorSelector; blendTime: float; }
+    struct FocusOn { target: ActorSelector; blendTime: float; }
     struct Cutscene { cutsceneId: str; }
     struct Shake { preset: str; }
     struct Restore { blendTime: float; }
 }
 
+struct WeightedAct { weight: float; action: Act; }
+```
+
+### shared_scene_script
+
+```cfg
 table shared_scene_script[id] (json) {
     id: int;
     name: text;
-    action: SceneAction;
+    parameters: list<SceneVarDecl>;
+    action: Act;
 }
 ```
+
+运行时 `RunScript` 创建隐式 localVars 作用域，写入形参默认值后用实参覆盖。
+
 ---
 
-## Data Foundation
+## Data Foundation — 原子数据类型
 
-本章节定义原子数据类型。所有 `gameplaytag`、`stat_definition`、`event_definition` 均与 `ability-design` 共享同一张注册表。
+所有 `gameplaytag`、`stat_definition`、`event_definition` 与 GAS 共享同一注册表。
+
+### SceneCondition — 自描述订阅的条件系统
+
+每种原子条件自身携带 `reactToEvents`，声明哪些事件可能改变其求值结果。复合条件自动取子条件的并集。
 
 ```cfg
 interface SceneCondition {
+    // ── 逻辑组合 ──
     struct And { conditions: list<SceneCondition>; }
-    struct Or { conditions: list<SceneCondition>; }
+    struct Or  { conditions: list<SceneCondition>; }
     struct Not { condition: SceneCondition; }
 
+    // ── 原子条件 ──
     struct ActorStatCompare {
-        actor: SceneActorSelector;
+        actor: ActorSelector;
         statTag: str ->stat_definition;
         op: CompareOp;
-        value: float;
+        value: SceneFloatValue;
+        // reactTo: ["Event.Stat.Changed:{statTag}"]
     }
+
     struct ActorHasTags {
-        actor: SceneActorSelector;
+        actor: ActorSelector;
         tagQuery: TagQuery;
+        // reactTo: ["Event.Tag.Changed"]
     }
-    struct ActorIsAlive { actor: SceneActorSelector; }
-    struct ActorIsDead { actor: SceneActorSelector; }
+
+    struct ActorIsAlive {
+        actor: ActorSelector;
+        // reactTo: ["Event.Character.Death", "Event.Character.Revive"]
+    }
+
+    struct ActorIsDead {
+        actor: ActorSelector;
+        // reactTo: ["Event.Character.Death", "Event.Character.Revive"]
+    }
+
     struct SceneVarCompare {
         varKey: str ->var_key;
         op: CompareOp;
-        value: float;
+        value: SceneFloatValue;
+        // reactTo: ["Event.Scene.VarChanged:{varKey}"]
     }
 
     struct TimeSinceSceneStart {
         op: CompareOp;
         seconds: float;
+        // 引擎内部定时器驱动
+    }
+
+    struct GroupCountCompare {
+        groupVar: str ->var_key;
+        countCondition: GroupCountCondition;
+        op: CompareOp;
+        value: SceneFloatValue;
+        // reactTo: ["Event.Character.Death", "Event.Group.MemberChanged:{groupVar}"]
+    }
+
+    struct ActorInZone {
+        actor: ActorSelector;
+        zone: ActorSelector;
+        // reactTo: ["Event.Zone.ActorEntered:{zoneVar}", "Event.Zone.ActorExited:{zoneVar}"]
+    }
+
+    struct EventReceived {
+        eventTag: str ->event_definition;
+        source: ActorSelector;
+        // reactTo: [eventTag]
+    }
+
+    struct CurrentPhaseIs {
+        phaseKey: str ->phase_key;
+        // reactTo: ["Event.Scene.PhaseChanged"]
     }
 }
 
-interface SceneActorSelector {
+enum GroupCountCondition { Alive; Dead; Total; }
+```
+
+**引擎约定**：每种原子条件实现 `getReactiveEvents()` + `evaluate()`。
+
+### ActorSelector
+
+```cfg
+interface ActorSelector {
     struct Inherit {}
+    struct None {}
     struct SceneVar { actorVar: str ->var_key; }
-    struct NearestToSlot {
-        referenceSlot: str ->var_key;
+    struct GroupMembers { groupVar: str ->var_key; }
+    struct GroupQuery {
+        groupVar: str ->var_key;
+        filter: TargetFilter;
+        maxCount: int;
+    }
+    struct NearestTo {
+        referenceActor: ActorSelector;
         filter: TargetFilter;
         maxCount: int;
     }
 }
+```
 
+### SceneFloatValue
+
+```cfg
 interface SceneFloatValue {
     struct Const { value: float; }
-    struct SceneVarValue { varKey: str ->var_key; }
+    struct FromSceneVar { varKey: str ->var_key; }
     struct Math { op: MathOp; a: SceneFloatValue; b: SceneFloatValue; }
-    // 线性时间衰减：value = base - decayPerSecond * elapsedTime
-    struct TimeBonusDecay {
-        baseScore: float;
-        decayPerSecond: float;
+    struct TimeBonusDecay { baseScore: float; decayPerSecond: float; }
+    struct ActorStat { actor: ActorSelector; statTag: str ->stat_definition; }
+}
+```
+
+---
+
+## Runtime Core
+
+### SceneInstance
+
+```java
+class SceneInstance {
+    SceneDefinition sceneCfg;
+    SceneBinding sceneBinding;
+
+    Store globalSceneVars;
+    EventBus sceneEventBus;
+
+    float elapsedTime;
+    enum SceneState { Pending, Running, Completed, Aborted }
+    SceneState state = Pending;
+
+    // 根执行树
+    ActInstance rootActInstance;
+
+    // 结局监控
+    List<OutcomeMonitor> outcomeMonitors;
+    SceneOutcome matchedOutcome = null;
+
+}
+```
+
+### ActInstance — 执行树节点基类
+
+```java
+abstract class ActInstance<T extends Act> {
+    T actionCfg;
+    SceneInstance scene;
+    ActInstance parent;
+    List<ActInstance> children = new ArrayList<>();
+
+    Store localVars = null;
+    Entity contextTarget = null;
+
+    enum ActStatus { Pending, Running, Succeeded, Failed, Aborted }
+    ActStatus status = Pending;
+
+    // ── 生命周期 ──
+    final void enter() {
+        status = Running;
+        onStart();
+    }
+
+    final ActStatus tick(float dt) {
+        if (status != Running) return status;
+        ActStatus result = onTick(dt);
+        if (result != Running) {
+            exit(false);
+        }
+        return result;
+    }
+
+    final void abort() {
+        if (status != Running) return;
+        for (var child : children) child.abort();
+        exit(true);
+    }
+
+    private void exit(boolean aborted) {
+        try {
+            onCleanUp(aborted);
+        } finally {
+            status = aborted ? Aborted : status;
+        }
+    }
+
+    // ── 子类多态 ──
+    protected abstract void onStart();
+    protected abstract ActStatus onTick(float dt);
+    protected abstract void onCleanUp(boolean aborted);
+}
+```
+
+### 例子：CinematicActInstance
+
+```java
+class CinematicActInstance extends ActInstance<Cinematic> {
+    ActInstance bodyInstance;
+    boolean skipRequested = false;
+
+    @Override
+    protected void onStart() {
+        bodyInstance = ActInstance.create(actionCfg.body, scene, this);
+        bodyInstance.enter();
+        if (actionCfg.skippable) {
+            scene.sceneEventBus.subscribe("Event.Input.SkipCinematic", this::onSkipInput);
+        }
+    }
+
+    @Override
+    protected ActStatus onTick(float dt) {
+        if (skipRequested) {
+            bodyInstance.abort();
+            var skipAction = ActInstance.create(actionCfg.onSkip, scene, this);
+            skipAction.enter();
+            skipAction.tick(0);
+            return ActStatus.Succeeded;
+        }
+        ActStatus s = bodyInstance.tick(dt);
+        return s != ActStatus.Running ? s : ActStatus.Running;
+    }
+
+    @Override
+    protected void onCleanUp(boolean aborted) {
+        if (actionCfg.skippable)
+            scene.sceneEventBus.unsubscribe("Event.Input.SkipCinematic", this::onSkipInput);
+        if (aborted && bodyInstance.status == ActStatus.Running)
+            bodyInstance.abort();
     }
 }
 ```
 
+### 8.6 主循环
+
+```java
+void SceneInstance.tick(float dt) {
+    if (state != Running) return;
+    elapsedTime += dt;
+
+    // 1. Tick 根执行树
+    if (rootActInstance != null && rootActInstance.status == ActStatus.Running) {
+        rootActInstance.tick(dt);
+    }
+
+    // 2. 评估 Outcomes（最高优先级，独立于树）
+    SceneOutcome matched = evaluateOutcomes();
+    if (matched != null) {
+        terminate(matched);
+    }
+}
+```
+
+Outcome 评估独立于 rootAct 的 tick，在每帧末尾执行。一旦匹配，abort 整棵 rootAct 树，场景终止。
+
 ---
 
-## 与 GAS / AI 系统的集成关系
+## 与 GAS / AI 系统的集成
 
-场景系统通过以下接口与两个系统交互，贯彻**不直接越权操作数据**的原则。
+场景系统贯彻**不直接越权操作数据**的原则：
 
-| 场景节点 / 机制 | 对接目标 | 原理闭环 |
-| :--- | :--- | :--- |
-| `DoEffect` | GAS Effect | 直接调用 `Effects.execute()`，注入场景 Context。 |
-| `WithStatus` | GAS Status | 挂载 `StatusInstance`，退出时调用 `markPendingKill()`。如果该 Status 内部包含 `AIBehaviorModifier`，即可顺畅实现**场景改变 AI 池**，场景不直接调 AI。 |
-| `SendEvent` | GAS EventBus | 单向广播（FireAndForget），GAS Trigger 可被唤醒。 |
-| `WaitForEvent` | GAS EventBus | 挂起场景自身，反向聆听战斗结算通知。 |
-| `WithActorControl(Immediate)`| GAS Tag + AI | 给实体打上 `State.Scene.Controlled`。AI 的 `global_ai_settings` 识别此 Tag，强制清空任务栈挂起大脑。 |
-| `WithActorControl(Polite)`| AI 决策池 | 往 AI 的决策池中注入一个 `interruptPriority` 极高的 `SceneDirected` 行为。AI 算分选中后交出躯体。 |
+| 场景机制 | 对接目标 | 原理 |
+|:---|:---|:---|
+| `ApplyEffect` | GAS Effect | 调用 `Effects.execute()`，注入场景 Context |
+| `WithStatus` | GAS ActStatus | 挂载 StatusInstance，退出时 markPendingKill |
+| `SendEvent` | GAS EventBus | 单向广播，GAS Trigger 可被唤醒 |
+| `WaitForEvent` | GAS EventBus | 挂起场景，反向聆听战斗结算通知 |
+| `WithActorControl(Immediate)` | GAS Tag + AI | 打 `State.Scene.Controlled` Tag，AI 识别后挂起 |
+| `WithActorControl(Polite)` | AI 决策池 | 注入高优先级 `SceneDirected` 行为，AI 算分选中后交出控制权 |
+| `WithStatus` + `AIBehaviorModifier` | AI 行为池 | 通过 ActStatus 间接修改 AI 的可用行为集 |
 
 ---
 
-## Examples
+## 典型模式速查
 
-### 例 A：炎魔领主 Boss 战（转阶段与 AI 托管）
-
-展示一阶段自治 AI、转阶段 `WithActorControl` 硬夺权、二阶段通过 `WithStatus` 替换行为池。
+### Boss 战三阶段
 
 ```
-scene_definition {
-    sceneId: 7001;
-    name: "炎魔领主试炼";
-    sceneTags: ["Scene.Type.Boss"];
+rootAct: Parallel { policy: WaitAny; actions: [
+    // 主线：状态机驱动阶段流转
+    StateMachine {
+        phases: [
+            Phase {
+                phaseKey: "P1_Normal";
+                onEnter: Sequence { actions: [
+                    Cinematic { skippable: true; body: ...; onSkip: ...; };
+                ]};
+            },
+            Phase {
+                phaseKey: "P2_Enraged";
+                onEnter: Sequence { actions: [...]; };
+            },
+            Phase {
+                phaseKey: "P3_Final";
+                onEnter: Sequence { actions: [...]; };
+            }
+        ];
+        globalTransitions: [
+            { condition: ActorStatCompare { actor: SceneVar { actorVar: "Cast.Boss" }; statTag: "Stat.HPPercent"; op: LessEqual; value: Const { value: 0.6 }; }; target: ToPhase { phaseKey: "P2_Enraged"; };},
+            { condition: ActorStatCompare { actor: SceneVar { actorVar: "Cast.Boss" }; statTag: "Stat.HPPercent"; op: LessEqual; value: Const { value: 0.3 }; }; target: ToPhase { phaseKey: "P3_Final"; };}
+        ];
+    },
 
-    actorSlots: [
-        {
-            slotVar: "Var.Slot.MagmaLord";
-            aiArchetype: "Boss_MagmaLord";
-            spawnPoint: "Boss_Arena_Center";
-            initialStatuses: [];
-            statOverrides: [];
-            removeOnDeath: true;
-        },
-        {
-            slotVar: "Var.Slot.Player";
-            aiArchetype: null;
-            spawnPoint: "Arena_Entrance";
-            initialStatuses: [];
-            statOverrides: [];
-            removeOnDeath: false;
-        }
-    ];
+    // 后台：持续刷小怪
+    Loop { count: -1; body: Sequence { actions: [
+        WaitSeconds { duration: Const { value: 30.0 }; };
+        SpawnActor { ... };
+    ]}; }
+]};
 
-    environmentAnchors: [
-        {
-            slotVar: "Var.Slot.ArenaCenter";
-            spawnPoint: "Arena_Center_Marker";
-            initialStatuses: [];
-        }
-    ];
+outcomes: [
+    { condition: ActorIsDead { actor: SceneVar { actorVar: "Cast.Boss" }; }; resultCode: 1; },
+    { condition: ActorIsDead { actor: SceneVar { actorVar: "Cast.Player" }; }; resultCode: 0; }
+];
+```
 
-    initVars: [
-        { varKey: "Var.Scene.Phase"; initValue: 1.0; }
-    ];
+### 持续监听模式
 
-    script: Sequence { actions: [
+```
+Parallel { policy: WaitAll; actions: [
+    // 主线脚本
+    Sequence { actions: [...]; },
 
-        // ① 入场演出（硬夺权）
-        WithActorControl {
-            targets: [SceneVar { actorVar: "Var.Slot.MagmaLord"; }];
-            mode: Immediate;
-            softTimeoutSec: 0.0;
-            body: Sequence { actions: [
-                Camera { action: FocusOn { target: SceneVar { actorVar: "Var.Slot.MagmaLord"; }; blendTime: 1.0; }; await: FireAndForget; };
-                PlayAnimation {
-                    target: SceneVar { actorVar: "Var.Slot.MagmaLord"; };
-                    animName: "entrance_roar";
-                    blendInTime: 0.3;
-                    await: UntilComplete;
-                    stopOnAbort: true;
-                };
-                Dialogue { speaker: SceneVar { actorVar: "Var.Slot.MagmaLord"; }; dialogueId: 5001; await: UntilComplete; };
-                Camera { action: Restore { blendTime: 0.8; }; await: FireAndForget; };
-            ]};
-            onAbort: PlayAnimation { target: SceneVar { actorVar: "Var.Slot.MagmaLord"; }; animName: "idle"; blendInTime: 0.2; await: FireAndForget; stopOnAbort: false; };
+    // 持续监听：玩家进入危险区域时警告
+    Loop { count: -1; body:
+        WaitForEvent { eventTag: "Event.Zone.ActorEntered"; source: SceneVar { actorVar: "Zone.Danger" };
+            conditions: [];
+            timeoutSec: 0;
+            onTimeout: None {};
         };
-
-        // 授予 P1 标记，AI 接管战斗
-        DoEffect {
-            target: SceneVar { actorVar: "Var.Slot.MagmaLord"; };
-            effect: GrantTemporaryTags { duration: Const { value: -1.0; }; grantedTags: ["Scene.MagmaLord.Phase1"]; };
-            await: FireAndForget;
-        };
-
-        // ② 第一阶段：等待 HP 下降
-        WaitUntil {
-            condition: ActorStatCompare {
-                actor: SceneVar { actorVar: "Var.Slot.MagmaLord"; };
-                statTag: "Stat.HP.Percent";
-                op: LessEqual;
-                value: 0.3;
-            };
-            reactToEvents: ["Event.Combat.Damage.Post"];
-            timeoutSec: -1.0;
-        };
-
-        // ③ 转阶段过场
-        WithActorControl {
-            targets: [SceneVar { actorVar: "Var.Slot.MagmaLord"; }];
-            mode: Immediate;
-            softTimeoutSec: 0.0;
-            body: Sequence { actions: [
-                SetSceneVar { varKey: "Var.Scene.Phase"; op: Override; value: 2.0; };
-                PlayCue { cueKey: "Cue.UI.BossAlert.MagmaLord.PhaseChange"; playAt: None {}; };
-
-                // 霸体保护下播嘶吼动画
-                WithStatus {
-                    target: SceneVar { actorVar: "Var.Slot.MagmaLord"; };
-                    statusId: 4010; // 霸体保护 Status ID
-                    body: PlayAnimation {
-                        target: SceneVar { actorVar: "Var.Slot.MagmaLord"; };
-                        animName: "phase2_roar";
-                        blendInTime: 0.2;
-                        await: UntilComplete;
-                        stopOnAbort: false;
-                    };
-                };
-                
-                // 彻底挂载飞行 Status，内部包含了 AIBehaviorModifier 注入 P2 行为池
-                DoEffect {
-                    target: SceneVar { actorVar: "Var.Slot.MagmaLord"; };
-                    effect: ApplyStatus { statusId: 4002; captures: []; };
-                    await: FireAndForget;
-                };
-            ]};
-            onAbort: null;
-        };
-
-        // ④ 剩余时间交由玩家与 AI 战斗，直到 Outcomes 触发...
-        WaitForEvent {
-            eventTag: "Event.Character.Death";
-            source: SceneVar { actorVar: "Var.Slot.MagmaLord"; };
-        };
-    ]};
-
-    outcomes: [
-        {
-            outcomeTag: "Scene.Result.Victory";
-            condition: ActorIsDead { actor: SceneVar { actorVar: "Var.Slot.MagmaLord"; }; };
-            reactToEvents: ["Event.Character.Death"];
-            terminateScene: true;
-            priority: 10;
-            rewards: [
-                { rewardPackId: 9001; rewardTarget: SceneVar { actorVar: "Var.Slot.Player"; }; }
-            ];
-        },
-        {
-            outcomeTag: "Scene.Result.Defeat";
-            condition: ActorIsDead { actor: SceneVar { actorVar: "Var.Slot.Player"; }; };
-            reactToEvents: ["Event.Character.Death"];
-            terminateScene: true;
-            priority: 100;
-        }
-    ];
-}
+        // 触发后执行警告
+        PlayCue { cueKey: "Cue.DangerWarning"; playAt: SceneVar { actorVar: "Cast.Player" }; };
+    };
+]};
 ```
