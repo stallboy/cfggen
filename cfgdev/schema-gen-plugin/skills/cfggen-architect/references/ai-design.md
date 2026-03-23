@@ -520,9 +520,8 @@ interface AITask {
 
     // ─── 作用域控制 ───
     struct WithLocalVar {
-        varKey: str -> var_key;
-        value: AILocalVarSource;
-        task: AITask;
+        bindings: list<AIVarBinding>;
+        body: AITask;
     }
 
     // ─── 引用共享 ───
@@ -531,21 +530,14 @@ interface AITask {
     }
 }
 
-// 局部变量数据源（支持存储数值和 Actor）
-interface AILocalVarSource {
-    struct FloatValue {
-        value: AIFloatValue;
-    }
-    struct ActorFromQuery {
-        query: ActSpatialQuery;
-    }
-    struct ActorFromGoalType {
-        goalDef: str -> ai_goal_definition;
-        selector: GoalSelector;
-    }
-    struct LocationFromQuery {
-        query: ActSpatialQuery;
-    }
+struct AIVarBinding {
+    varKey: str ->var_key;
+    value: AIVarValue;
+}
+
+interface AIVarValue {
+    struct Float { value: AIFloatValue; }
+    struct ActorOrLocation { selector: AITargetSelector; }
 }
 
 enum ParallelPolicy {
@@ -840,10 +832,9 @@ task: Sequence {
     tasks: [
         MoveTo { target: BoundGoalActor {}, tolerance: 1.5, stopOnFinish: true },
         Interact { target: BoundGoalActor {}, interactionId: 1 },
-        WithLocalVar {
-            varKey: "Var.ThrowTarget",
-            value: ActorFromQuery {...},
-            task: CastAbility {
+        WithLocalVar { 
+            bindings: [{varKey: "Var.ThrowTarget",value: ActorFromQuery {...}} ],
+            body: CastAbility {
                 abilityId: 1234,
                 target: LocalVarActor { varKey: "Var.ThrowTarget" }
             }

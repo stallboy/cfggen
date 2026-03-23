@@ -79,14 +79,14 @@ class SceneInstance {
     SceneContext ctx;
 
     void tick(float dt) {
+        if (rootAct != null) {
+            rootAct.tick(ctx, dt);
+        }
         SceneOutcome matched = evaluateOutcomes();
         if (matched != null) {
             terminate(matched);
         }
 
-        if (rootAct != null) {
-            rootAct.tick(ctx, dt);
-        }
     }
 }
 ```
@@ -113,7 +113,7 @@ table scene_definition[sceneId] (json) {
     // 函数签名（入参声明）
     signature: list<SceneVarDecl>;
 
-    // 结局裁定
+    // 结局裁定，按列表顺序，首个满足的 outcome 胜出
     outcomes: list<SceneOutcome>;
 
     // 执行体（纯粹的一棵树）
@@ -204,9 +204,7 @@ interface Act {
     }
     
     struct SetSceneVar { // 设置到instanceState里，共享
-        varKey: str ->var_key;
-        op: ModifierOp;
-        value: SceneFloatValue;
+        bindings: list<SceneVarBinding>;
     }
 ```
 
@@ -220,6 +218,7 @@ interface Act {
         conditions: list<SceneCondition>;
         timeoutSec: float;
         onTimeout: Act;
+        body: Act;
     }
 
     struct WaitUntil {
@@ -233,8 +232,19 @@ interface Act {
     }
 ```
 
+### Binding相关结构
 
 ```cfg
+struct SceneVarBinding {
+    varKey: str ->var_key;
+    value: SceneVarValue;
+}
+
+interface SceneVarValue {
+    struct Float { value: SceneFloatValue; }
+    struct Actors { selector: ActorSelector; }
+}
+
 struct VarBindingByPayload {
     writeToVar: str ->var_key; // 写入到场景的变量名
     payloadKey: str;           // 事件中的参数名
@@ -275,7 +285,7 @@ struct VarBindingByPayload {
     }
 ```
 
-### 状态机节点相关结构
+### StateMachine相关结构
 
 **StateMachine 作为 Act 节点**：StateMachine 是树中的一个控制流节点，而非独立于树的顶层机制。它可以出现在 rootAct 中的任意位置 — 作为 Parallel 的一个分支、嵌套在 Sequence 中、甚至嵌套在另一个 StateMachine 的 Phase 内。
 
@@ -325,8 +335,7 @@ interface FSMTarget {
     }
 
     struct WithLocalVar {  // 新建localScope，SceneContext
-        varKey: str ->var_key;
-        initValue: SceneFloatValue;
+        bindings: list<SceneVarBinding>;
         body: Act;
     }
 
@@ -352,11 +361,6 @@ interface FSMTarget {
 ```cfg
     struct RunScript {
         sharedScriptId: int ->shared_scene_script;
-        args: list<SceneVarBinding>;
-    }
-
-    struct RunSubScene {
-        sceneId: int ->scene_definition;
         args: list<SceneVarBinding>;
         await: AwaitMode;
     }
