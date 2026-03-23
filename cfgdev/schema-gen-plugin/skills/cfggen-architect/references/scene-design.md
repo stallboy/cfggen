@@ -4,19 +4,18 @@
 
 场景系统（Scene System）定位为遭遇战/演出级的逻辑编排层，位于 GAS（状态与效果）与 AI（自治决策）之上、关卡与任务流程系统之下。它不负责实现基础战斗行为，而是通过驱动既有能力、施加约束、订阅运行时事件，将多个实体在一段时间内组织成可控、可复用、可数据化配置的玩法与演出流程。
 
-### 1.1 层级定位
+### 层级定位
 
 | 层级 | 系统 | 职责边界 |
 |:---|:---|:---|
 | **底层** | GAS | 伤害、状态、Tag、Effect、Stat |
 | **中层** | AI | 寻路、攻击选择、行为决策 |
-| **上层** | Scene | 单场遭遇战/演出的编排 |
+| **上层** | Scene （我在这）| 单场遭遇战/演出的编排 |
 | **顶层** | 关卡/任务 | 房间连接、进度存档、全局流转 |
 
 ### 场景接口 — 逻辑与空间分离
 
-场景定义（scene_definition）是**纯逻辑编排**，不含任何世界坐标。空间信息通过 signature 注入：
-
+场景定义（scene_definition）是**纯逻辑编排**，不含任何世界坐标。空间信息通过 signature 注入。
 
 ### 核心架构决策
 
@@ -28,31 +27,8 @@
 
 所有运行时逻辑共享同一套生命周期、同一套 abort/RAII 清理路径。
 
-### 执行与终止的关系
 
-```
-┌────────────────────────────────────────────┐
-│            SceneInstance                   │
-│                                            │
-│  ┌──────────────────────────────────────┐  │
-│  │  rootAct (Act Tree)                  │  │
-│  │  ┌────────────┐  ┌───────────────┐   │  │
-│  │  │StateMachine│  │ Parallel      │   │  │
-│  │  │(Phases)    │  │ (background)  │   │  │
-│  │  └────────────┘  └───────────────┘   │  │
-│  └──────────────────────────────────────┘  │
-│                                            │
-│  ┌─────────────────────────────────────┐   │
-│  │  Outcome Monitors (always-on)       │   │
-│  └─────────────────────────────────────┘   │
-└────────────────────────────────────────────┘
-```
-
-- **rootAct** 自然走完 ≠ 场景结束
-- 场景的生死**由且仅由 Outcome 裁定**
-- rootAct 完成后若无 Outcome 匹配，场景进入等待状态
-
-### 1.5 外部通信
+### 外部通信
 
 场景通过 `signature`（输入参数）接收外部指令，通过 `outcomes`（结局码）向外部汇报结果。两者之间低耦合通信。
 
@@ -82,50 +58,50 @@
 
 ---
 
-## Variable System
 
-### 冒泡寻址
+## Runtime Core
 
-读取变量时沿树向上冒泡：
+### SceneInstance
 
-```
-当前节点 localVars → 父节点 localVars → ... → SceneInstance.globalSceneVars
-```
+Outcome 评估独立于 rootAct 的 tick，在每帧开始执行。一旦匹配，abort 整棵 rootAct 树，场景终止。
 
-`WithVar` 在 `onEnter` 创建 localVars，`onExit` 销毁。子节点同名变量**遮蔽**而非覆盖父级。
+```java
+class SceneInstance {
+    Scene_definition sceneCfg;
+    EventBus sceneEventBus;
 
-### 写入规则
+    // 实例状态, 原地被改变，跨节点共享
+    Store instanceState; 
+    // 根执行树
+    ActInstance<?> rootAct;
+    // 结局监控
+    List<OutcomeMonitor> outcomeMonitors;
+    SceneContext ctx;
 
-- `SetSceneVar` → 始终写入 `globalSceneVars`（跨 Phase 可见）
-- `WithVar` 内部 → 只影响当前作用域，随退出销毁
+    void tick(float dt) {
+        SceneOutcome matched = evaluateOutcomes();
+        if (matched != null) {
+            terminate(matched);
+        }
 
----
-
-## Context Target — 上下文继承
-
-### 机制
-
-`ActorSelector` 默认值为 `Inherit {}`。运行时沿树向上冒泡，找到最近的**上下文目标提供者**：
-
-- `WithActorControl` 的 `targets[0]`
-- `WithTarget` 节点
-
-### 示例
-
-```
-WithActorControl {
-    targets: [SceneVar { actorVar: "Cast.Boss" }];
-    mode: Immediate;
-    body: Sequence { actions: [
-        // 以下 target 全部省略，自动继承 Cast.Boss
-        PlayAnimation { animName: "entrance_roar"; await: UntilComplete; };
-        Dialogue { dialogueId: 5001; await: UntilComplete; };
-        ApplyEffect { effect: ...; await: FireAndForget; };
-    ]};
-};
+        if (rootAct != null) {
+            rootAct.tick(ctx, dt);
+        }
+    }
+}
 ```
 
----
+### SceneContext
+
+```java
+record SceneContext(
+    SceneInstance scene,
+
+    List<Actor> targets;
+    // 局部作用域：仅对当前及子节点树有效
+    ReadOnlyStore localScope // WithLocalVar时，建新的localScope和SceneContext
+) {}
+```
 
 ## scene_definition
 
@@ -227,7 +203,7 @@ interface Act {
         await: AwaitMode;
     }
     
-    struct SetSceneVar {
+    struct SetSceneVar { // 设置到instanceState里，共享
         varKey: str ->var_key;
         op: ModifierOp;
         value: SceneFloatValue;
@@ -240,6 +216,7 @@ interface Act {
     struct WaitForEvent {
         eventTag: str ->event_definition;
         source: ActorSelector;
+        extractPayloads: list<VarBindingByPayload>; // 写入instanceState
         conditions: list<SceneCondition>;
         timeoutSec: float;
         onTimeout: Act;
@@ -254,6 +231,14 @@ interface Act {
     struct WaitSeconds {
         duration: SceneFloatValue;
     }
+```
+
+
+```cfg
+struct VarBindingByPayload {
+    writeToVar: str ->var_key; // 写入到场景的变量名
+    payloadKey: str;           // 事件中的参数名
+}
 ```
 
 ### 控制流节点
@@ -311,7 +296,7 @@ struct Transition {
 interface AutoAdvance {
     struct None {}
     struct ToPhase { phaseKey: str ->phase_key; }
-    struct ExitSuccess {}
+    struct ExitSuccess {} // 为了能退出StateMachine
     struct ExitFailure {}
 }
 
@@ -326,7 +311,7 @@ interface FSMTarget {
 
 ```cfg
     struct WithActorControl {
-        targets: list<ActorSelector>;
+        targets: ActorSelector;
         mode: ActorControlMode;
         softTimeoutSec: float;
         body: Act;
@@ -339,7 +324,7 @@ interface FSMTarget {
         body: Act;
     }
 
-    struct WithVar {
+    struct WithLocalVar {  // 新建localScope，SceneContext
         varKey: str ->var_key;
         initValue: SceneFloatValue;
         body: Act;
@@ -415,13 +400,24 @@ table shared_scene_script[id] (json) {
 
 ---
 
-## Data Foundation — 原子数据类型
+## Data Foundation
 
 所有 `gameplaytag`、`stat_definition`、`event_definition` 与 GAS 共享同一注册表。
 
-### SceneCondition — 自描述订阅的条件系统
+### SceneCondition 
 
-每种原子条件自身携带 `reactToEvents`，声明哪些事件可能改变其求值结果。复合条件自动取子条件的并集。
+自描述订阅的条件系统，其实现接口为：
+
+```java
+class SceneConditions {
+    static boolean test(SceneCondition cfg, SceneContext ctx);
+
+    // 每种原子条件自身携带 `reactToEvents`，
+    // 声明哪些事件可能改变其求值结果。复合条件自动取子条件的并集。
+    static list<Event_defintion> getReactiveEvents(SceneCondition cfg);
+}
+```
+
 
 ```cfg
 interface SceneCondition {
@@ -433,6 +429,7 @@ interface SceneCondition {
     // ── 原子条件 ──
     struct ActorStatCompare {
         actor: ActorSelector;
+        quantifier: Quantifier;
         statTag: str ->stat_definition;
         op: CompareOp;
         value: SceneFloatValue;
@@ -441,18 +438,28 @@ interface SceneCondition {
 
     struct ActorHasTags {
         actor: ActorSelector;
+        quantifier: Quantifier;
         tagQuery: TagQuery;
         // reactTo: ["Event.Tag.Changed"]
     }
 
     struct ActorIsAlive {
         actor: ActorSelector;
+        quantifier: Quantifier;
         // reactTo: ["Event.Character.Death", "Event.Character.Revive"]
     }
 
     struct ActorIsDead {
         actor: ActorSelector;
+        quantifier: Quantifier;
         // reactTo: ["Event.Character.Death", "Event.Character.Revive"]
+    }
+
+    struct ActorInZone {
+        actor: ActorSelector;
+        quantifier: Quantifier;
+        zone: ActorSelector;     // zone 始终取 [0]
+        // reactTo: ["Event.Zone.ActorEntered:{zoneVar}", "Event.Zone.ActorExited:{zoneVar}"]
     }
 
     struct SceneVarCompare {
@@ -476,30 +483,24 @@ interface SceneCondition {
         // reactTo: ["Event.Character.Death", "Event.Group.MemberChanged:{groupVar}"]
     }
 
-    struct ActorInZone {
-        actor: ActorSelector;
-        zone: ActorSelector;
-        // reactTo: ["Event.Zone.ActorEntered:{zoneVar}", "Event.Zone.ActorExited:{zoneVar}"]
-    }
-
-    struct EventReceived {
-        eventTag: str ->event_definition;
-        source: ActorSelector;
-        // reactTo: [eventTag]
-    }
-
     struct CurrentPhaseIs {
         phaseKey: str ->phase_key;
         // reactTo: ["Event.Scene.PhaseChanged"]
     }
 }
 
+enum Quantifier { Any; All; }  // 默认 All
 enum GroupCountCondition { Alive; Dead; Total; }
 ```
 
-**引擎约定**：每种原子条件实现 `getReactiveEvents()` + `evaluate()`。
-
 ### ActorSelector
+
+返回actor列表，接口如下：
+```java
+class ActorSelectors {
+    static List<Actor> select(ActorSelector cfg, SceneContext ctx);
+}
+```
 
 ```cfg
 interface ActorSelector {
@@ -520,7 +521,48 @@ interface ActorSelector {
 }
 ```
 
+使用侧分类：
+1. 需要单个 Actor 的位置（ForOne语义）：取 list[0]，list 为空则跳过/报错
+   - Dialogue.speaker
+   - MoveTo.actor（单体移动）
+   - SpawnActor.spawnAt
+   
+2. 允许多个 Actor 的位置（ForEach语义）：对每个 Actor 执行
+   - PlayAnimation.target（每个都播）
+   - ApplyEffect.target（每个都施加）
+   - WithActorControl.target（每个都控制）
+   - SendEvent.target（每个都发）
+
+3. 条件中（需要量化）：引入显式 Quantifier
+
+
+**Context Target — 上下文继承**
+
+`ActorSelector` 默认值为 `Inherit {}`。使用`SceneContext.starget`：
+`WithActorControl` `WithTarget` 都会改变`SceneContext.targets`
+
+例如
+```
+WithActorControl {
+    target: SceneVar { actorVar: "Cast.Boss" };
+    mode: Immediate;
+    body: Sequence { actions: [
+        // 以下 target 全部省略，自动继承 Cast.Boss
+        PlayAnimation { animName: "entrance_roar"; await: UntilComplete; };
+        Dialogue { dialogueId: 5001; await: UntilComplete; };
+        ApplyEffect { effect: ...; await: FireAndForget; };
+    ]};
+};
+```
+
 ### SceneFloatValue
+
+接口为：
+```java
+class SceneFloatValues {
+    static float evaluate(SceneFloatValue cfg, SceneContext ctx);
+}
+```
 
 ```cfg
 interface SceneFloatValue {
@@ -534,143 +576,62 @@ interface SceneFloatValue {
 
 ---
 
-## Runtime Core
+## 实现细节
 
-### SceneInstance
-
-```java
-class SceneInstance {
-    SceneDefinition sceneCfg;
-    SceneBinding sceneBinding;
-
-    Store globalSceneVars;
-    EventBus sceneEventBus;
-
-    float elapsedTime;
-    enum SceneState { Pending, Running, Completed, Aborted }
-    SceneState state = Pending;
-
-    // 根执行树
-    ActInstance rootActInstance;
-
-    // 结局监控
-    List<OutcomeMonitor> outcomeMonitors;
-    SceneOutcome matchedOutcome = null;
-
-}
-```
-
-### ActInstance — 执行树节点基类
+### ActInstance
 
 ```java
+enum ActStatus { Pending, Running, Success, Failed, Aborted }
+
 abstract class ActInstance<T extends Act> {
-    T actionCfg;
-    SceneInstance scene;
-    ActInstance parent;
-    List<ActInstance> children = new ArrayList<>();
+    T actCfg;
 
-    Store localVars = null;
-    Entity contextTarget = null;
+    private ActStatus status = ActStatus.Pending;
 
-    enum ActStatus { Pending, Running, Succeeded, Failed, Aborted }
-    ActStatus status = Pending;
-
-    // ── 生命周期 ──
-    final void enter() {
-        status = Running;
-        onStart();
-    }
-
-    final ActStatus tick(float dt) {
-        if (status != Running) return status;
-        ActStatus result = onTick(dt);
-        if (result != Running) {
-            exit(false);
+    public final ActStatus tick(SceneContext ctx, float deltaTime) {
+        if (status == ActStatus.Pending) {
+            status = ActStatus.Running;
+            onStart(ctx); 
         }
-        return result;
-    }
 
-    final void abort() {
-        if (status != Running) return;
-        for (var child : children) child.abort();
-        exit(true);
-    }
-
-    private void exit(boolean aborted) {
-        try {
-            onCleanUp(aborted);
-        } finally {
-            status = aborted ? Aborted : status;
+        if (status != ActStatus.Running) {
+            return status;
         }
-    }
-
-    // ── 子类多态 ──
-    protected abstract void onStart();
-    protected abstract ActStatus onTick(float dt);
-    protected abstract void onCleanUp(boolean aborted);
-}
-```
-
-### 例子：CinematicActInstance
-
-```java
-class CinematicActInstance extends ActInstance<Cinematic> {
-    ActInstance bodyInstance;
-    boolean skipRequested = false;
-
-    @Override
-    protected void onStart() {
-        bodyInstance = ActInstance.create(actionCfg.body, scene, this);
-        bodyInstance.enter();
-        if (actionCfg.skippable) {
-            scene.sceneEventBus.subscribe("Event.Input.SkipCinematic", this::onSkipInput);
+        
+        status = onTick(ctx, deltaTime); 
+        
+        if (status != ActStatus.Running) {
+            onEnd(ctx, false);
         }
+        return status;
     }
 
-    @Override
-    protected ActStatus onTick(float dt) {
-        if (skipRequested) {
-            bodyInstance.abort();
-            var skipAction = ActInstance.create(actionCfg.onSkip, scene, this);
-            skipAction.enter();
-            skipAction.tick(0);
-            return ActStatus.Succeeded;
+    public final void abort(SceneContext ctx) {
+        if (status == ActStatus.Pending) {
+            status = ActStatus.Aborted;
+            return;
         }
-        ActStatus s = bodyInstance.tick(dt);
-        return s != ActStatus.Running ? s : ActStatus.Running;
+        if (status != ActStatus.Running) return;
+        Iterable<AITaskInstance<?>> children = getActiveChildren();
+        if (children != null) {
+            for (AITaskInstance<?> child : children) {
+                if (child != null) child.abort(ctx);
+            }
+        }
+
+        onEnd(ctx, true);
+        status = ActStatus.Aborted;
     }
 
-    @Override
-    protected void onCleanUp(boolean aborted) {
-        if (actionCfg.skippable)
-            scene.sceneEventBus.unsubscribe("Event.Input.SkipCinematic", this::onSkipInput);
-        if (aborted && bodyInstance.status == ActStatus.Running)
-            bodyInstance.abort();
+    abstract void onStart(SceneContext ctx);
+    abstract ActStatus onTick(SceneContext ctx, float deltaTime);
+    abstract void onEnd(SceneContext ctx, boolean wasAborted);
+
+    protected Iterable<ActInstance<?>> getActiveChildren() {
+        return null; 
     }
 }
 ```
-
-### 8.6 主循环
-
-```java
-void SceneInstance.tick(float dt) {
-    if (state != Running) return;
-    elapsedTime += dt;
-
-    // 1. Tick 根执行树
-    if (rootActInstance != null && rootActInstance.status == ActStatus.Running) {
-        rootActInstance.tick(dt);
-    }
-
-    // 2. 评估 Outcomes（最高优先级，独立于树）
-    SceneOutcome matched = evaluateOutcomes();
-    if (matched != null) {
-        terminate(matched);
-    }
-}
-```
-
-Outcome 评估独立于 rootAct 的 tick，在每帧末尾执行。一旦匹配，abort 整棵 rootAct 树，场景终止。
 
 ---
 
@@ -715,8 +676,12 @@ rootAct: Parallel { policy: WaitAny; actions: [
             }
         ];
         globalTransitions: [
-            { condition: ActorStatCompare { actor: SceneVar { actorVar: "Cast.Boss" }; statTag: "Stat.HPPercent"; op: LessEqual; value: Const { value: 0.6 }; }; target: ToPhase { phaseKey: "P2_Enraged"; };},
-            { condition: ActorStatCompare { actor: SceneVar { actorVar: "Cast.Boss" }; statTag: "Stat.HPPercent"; op: LessEqual; value: Const { value: 0.3 }; }; target: ToPhase { phaseKey: "P3_Final"; };}
+            { condition: ActorStatCompare { actor: SceneVar { actorVar: "Cast.Boss" }; 
+                statTag: "Stat.HPPercent"; op: LessEqual; value: Const { value: 0.6 }; }; 
+                target: ToPhase { phaseKey: "P2_Enraged"; };},
+            { condition: ActorStatCompare { actor: SceneVar { actorVar: "Cast.Boss" }; 
+                statTag: "Stat.HPPercent"; op: LessEqual; value: Const { value: 0.3 }; }; 
+                target: ToPhase { phaseKey: "P3_Final"; };}
         ];
     },
 
@@ -742,10 +707,8 @@ Parallel { policy: WaitAll; actions: [
 
     // 持续监听：玩家进入危险区域时警告
     Loop { count: -1; body:
-        WaitForEvent { eventTag: "Event.Zone.ActorEntered"; source: SceneVar { actorVar: "Zone.Danger" };
-            conditions: [];
-            timeoutSec: 0;
-            onTimeout: None {};
+        WaitForEvent { eventTag: "Event.Zone.ActorEntered";
+            source: SceneVar { actorVar: "Zone.Danger" };
         };
         // 触发后执行警告
         PlayCue { cueKey: "Cue.DangerWarning"; playAt: SceneVar { actorVar: "Cast.Player" }; };

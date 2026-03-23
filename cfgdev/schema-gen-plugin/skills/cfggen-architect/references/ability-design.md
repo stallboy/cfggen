@@ -639,7 +639,7 @@ interface Effect {
         effect: Effect;
     }
     
-    struct EffectRef {
+    struct RunEffect {
         sharedEffectId: int ->shared_effect; // 逻辑复用
         bindings: list<VarBinding>;
     }
