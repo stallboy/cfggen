@@ -1,3 +1,9 @@
+---
+title: 能力系统设计
+sidebar:
+  order: 0
+---
+
 # 能力系统设计 (Ability System Design)
 
 基于 Unreal GAS 核心理念的**全数据驱动**技能系统配置标准。本文档是**架构基准**，具体游戏应在此基础上裁剪和扩展。
@@ -742,7 +748,7 @@ enum OverflowPolicy {
 
 Behavior 是附着在 Status 上的逻辑零件。其运行在 `StatusInstance`（内含 `Context`）内。
 
-```
+```cfg
 interface Behavior {
     // 属性修饰器
     struct StatModifier {
@@ -927,7 +933,7 @@ interface TargetSelector {
 ```
 
 ### LocationSelector
-```
+```cfg
 interface LocationSelector {
     struct ActorLocation {
         target: TargetSelector;
@@ -948,7 +954,7 @@ interface LocationSelector {
 ```
 
 ### TargetScan
-```
+```cfg
 struct TargetScan {
     shape: ScanShape;
 
@@ -996,7 +1002,7 @@ enum SortStrategy { Nearest; Farthest; HpPercentAsc; HpPercentDesc; Random; None
 
 本章节定义全局性的战斗规则，这些规则以配置表的形式存在，由底层引擎直接读取，作为战斗系统的“最高物理法则”。
 
-```
+```cfg
 table combat_settings[name] {
     name: str;
     tagRules: list<str> ->tag_rules;

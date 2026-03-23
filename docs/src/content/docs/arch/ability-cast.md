@@ -1,3 +1,9 @@
+---
+title: Ability 施法过程
+sidebar:
+  order: 1
+---
+
 # Ability 施法过程 (Ability Casting Process)
 
 基于全数据驱动理念与深度架构推演，本模型旨在彻底解决动作游戏与 RPG 中复杂的技能生命周期管理问题。

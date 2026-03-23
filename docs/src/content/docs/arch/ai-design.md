@@ -1,3 +1,9 @@
+---
+title: AI系统设计
+sidebar:
+  order: 10
+---
+
 # AI 行为系统设计
 
 本文档定义了一套与 `能力系统设计` 无缝集成的 AI 行为系统。设计以数据驱动为核心，汲取 Bobby Anguelov《AI Behavior Selector》的理念，通过扁平化评分机制替代传统行为树，解决调试困难与条件冗余问题。

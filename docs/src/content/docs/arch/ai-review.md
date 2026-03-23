@@ -1,3 +1,9 @@
+---
+title: AI系统设计 review
+sidebar:
+  order: 11
+---
+
 # 领域专家普遍认同的 5 个核心思维模式：工业实践详解
 
 ## 1. 感知-决策-执行的三段式分离（Sense-Think-Act）

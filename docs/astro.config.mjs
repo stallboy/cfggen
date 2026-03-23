@@ -58,6 +58,10 @@ export default defineConfig({
 					autogenerate: { directory: 'editor' }
 				},
 				{
+					label: '设计参考',
+					autogenerate: { directory: 'arch' }
+				},
+				{
 					label: 'AI 生成',
 					autogenerate: { directory: 'ai' }
 				},

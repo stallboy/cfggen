@@ -1,3 +1,9 @@
+---
+title: 场景系统设计
+sidebar:
+  order: 20
+---
+
 # 场景逻辑系统设计 (Scene Logic System Design)
 
 ## Architecture Overview
