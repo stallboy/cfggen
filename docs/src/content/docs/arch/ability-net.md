@@ -4,8 +4,6 @@ sidebar:
   order: 2
 ---
 
-# 网络同步规范 (Network Synchronization Specification)
-
 基于全数据驱动能力系统（GAS 理念）的网络层扩展基准。本文档定义了战斗系统在客户端-服务器（C/S）架构下的同步策略、数据分类以及标准的 Protobuf 通信协议。
 
 ## 1. Philosophy (核心哲学)

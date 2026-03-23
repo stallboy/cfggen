@@ -4,8 +4,6 @@ sidebar:
   order: 0
 ---
 
-# 能力系统设计 (Ability System Design)
-
 基于 Unreal GAS 核心理念的**全数据驱动**技能系统配置标准。本文档是**架构基准**，具体游戏应在此基础上裁剪和扩展。
 
 
