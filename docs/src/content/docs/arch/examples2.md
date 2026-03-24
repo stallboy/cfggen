@@ -832,7 +832,7 @@ scene_definition {
                             // Status 6030 内含：
                             // - StatModifier: CastSpeed × 1.5
                             // - StatModifier: Attack_Power × 1.3
-                            // - AIBehaviorModifier: 注入"急速火球"行为（cooldown 缩短）
+                            // - AIModifier: 注入"急速火球"行为（cooldown 缩短）
                         },
                         // 刷两只火元素小怪
                         SpawnActor { outputVarKey: "Var.Add1";
@@ -1613,7 +1613,7 @@ ai_behavior {
     ];
 }
 
-// 牧师狂暴后注入的行为（通过 AIBehaviorModifier）
+// 牧师狂暴后注入的行为（通过 AIModifier）
 ai_behavior_modifier {
     name: "Mod_Priest_Enraged";
     disableBehaviorsQuery: { requireAny: ["Behavior.Tag.Heal"]; };
@@ -1762,14 +1762,14 @@ scene_definition {
                                     await: FireAndForget; }
                             ]};
                         },
-                        // 挂载狂暴 Status（内含 AIBehaviorModifier）
+                        // 挂载狂暴 Status（内含 AIModifier）
                         ApplyEffect {
                             target: SceneVar { actorVar: "Cast.Priest"; };
                             effect: ApplyStatus { statusId: 7050; };
                             // Status 7050 "圣光之怒"：
                             // - ATK ×2
                             // - 每次施法后回蓝
-                            // - AIBehaviorModifier "Mod_Priest_Enraged"：
+                            // - AIModifier "Mod_Priest_Enraged"：
                             //   禁用治疗行为，注入"神圣之怒"攻击引导
                         }
                     ]};
@@ -1880,7 +1880,7 @@ scene_definition {
 │  │   └─ UI 危险警告 — 提示玩家打断读条                            │
 │  │                                                             │
 │  └─ 骑士死亡 → Polite 接管牧师(等Channel结束)                    │
-│       → 哀嚎演出 → ApplyStatus(圣光之怒 + AIBehaviorModifier)    │
+│       → 哀嚎演出 → ApplyStatus(圣光之怒 + AIModifier)    │
 │                                                                │
 │  Scene 不关心"牧师怎么治疗"或"骑士怎么连招"                        │
 │  只关心宏观节奏转换和玩家反馈                                      │
@@ -1907,7 +1907,7 @@ scene_definition {
 │  │ 轻攻击(30)                         │                        │
 │  └────────────────────────────────────┘                        │
 │                                                                │
-│  Priest Brain (狂暴, AIBehaviorModifier 生效后):                 │
+│  Priest Brain (狂暴, AIModifier 生效后):                 │
 │  ┌────────────────────────────────────┐                        │
 │  │ ~~~治疗行为被禁用~~~                │                        │
 │  │ 神圣之怒(75) ← Channel AOE 攻击   │ ← 新注入               │
@@ -1954,7 +1954,7 @@ scene_definition {
 │  Status 协同：                                                  │
 │    圣光共鸣(7040): ATK+30% + 受击概率护盾 ← Scene WithStatus    │
 │    破势(7020): 受伤+50% ← onInterrupt 挂载                     │
-│    圣光之怒(7050): ATK×2 + 施法回蓝 + AIBehaviorModifier        │
+│    圣光之怒(7050): ATK×2 + 施法回蓝 + AIModifier        │
 └────────────────────────────────────────────────────────────────┘
 ```
 

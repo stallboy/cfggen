@@ -5,7 +5,6 @@ sidebar:
 ---
 
 
-
 ### 案例一：史诗级 Boss 狂暴转阶段（强演出 + 机制重置）
 
 **场景描述**：
@@ -26,7 +25,6 @@ scene_definition {
                 quantifier: All; // 必须显式量化
                 statTag: "Stat.HPPercent"; op: Lte; value: Const{value: 0.5}; 
             };
-            onTimeout: None {};
         },
         // 阈值触发后执行的演出序列
         Sequence { acts: [
@@ -65,7 +63,7 @@ status {
             // 属性突变：攻击力提升 50%
             StatModifier { stat: "Stat.Attack"; op: Mul; value: Const { value: 1.5 }; overridePriority: 0; requiresAll: [] },
             // 动态修改 AI 大脑
-            AIBehaviorModifier { modifier: "Modifier_Boss_Phase2" } // 👈 核心握手点
+            AIModifier { modifier: "Modifier_Boss_Phase2" } // 👈 核心握手点
         ];
     };
 }
@@ -76,7 +74,7 @@ status {
 ai_behavior_modifier {
     name: "Modifier_Boss_Phase2";
     // 禁用一阶段的平庸技能
-    disableBehaviorsQuery: { requireAny: ["Tag.Behavior.Phase1_Melee"]; requireAll: []; exclude: [] };
+    disableBehaviorsQuery: { requireAny: ["Tag.Behavior.Phase1_Melee"];};
     // 注入二阶段的毁灭技能
     injectedBehaviors: [
         { targetGroup: "Group_Ultimate"; behaviors: ["Behavior_Cast_Doomsday"] }
@@ -324,15 +322,10 @@ ability {
         commitPolicy: OnActivate;
     };
 
-    // 读条顺利结束时（30秒后）执行
-    effect: SendEvent { event: "Event_Ritual_Success"; magnitude: Const{value: 1.0} };
-
     // 读条期间被 TagRules 的 interruptsAbilities 命中时执行（硬打断惩罚）
     onInterrupt: [
         // 1. 受到反噬伤害
         ResolveCombat { pipeline: "PureDamage"; magnitude: Const{value: 9999.0} };
-        // 2. 发送失败事件给 Scene
-        SendEvent { event: "Event_Ritual_Failed"; magnitude: Const{value: 1.0} }
     ];
 }
 ```
@@ -356,30 +349,19 @@ tag_rules {
 ```text
 scene_definition {
     sceneId: 3001; name: "Quest_Defend_Maiden";
-    rootAct: Parallel { policy: WaitAny; acts: [
-        // 线程 1：控制圣女开始施法
-        WithActorControl {
-            targets: SceneVar { actorVar: "NPC_Maiden" }; mode: Polite;
-            body: CastAbility { abilityId: 5001; abilityTarget: ContextTargets{}; await: FireAndForget }
-        },
-        
-        // 线程 2：不断刷怪的 Loop（略）...
-        
-        // 线程 3：监听成功结局
-        WaitForEvent {
-            eventTag: "Event_Ritual_Success"; source: SceneVar { actorVar: "NPC_Maiden" };
-            body: SetSceneVar { bindings: [{ varKey: "Quest_Result"; value: Const{value: 1.0} }] }
-        },
-        
-        // 线程 4：监听失败结局
-        WaitForEvent {
-            eventTag: "Event_Ritual_Failed"; source: SceneVar { actorVar: "NPC_Maiden" };
-            body: SetSceneVar { bindings: [{ varKey: "Quest_Result"; value: Const{value: 0.0} }] }
-        }
-    ]}
+    
+    rootAct: WithActorControl {
+        targets: SceneVar { actorVar: "NPC_Maiden" }; mode: Polite;
+        body: CastAbility { abilityId: 5001; await: UntilComplete } // 阻塞30秒
+    };
+    
     outcomes: [
-        { condition: SceneVarCompare { varKey: "Quest_Result"; op: Eq; value: Const{value: 1.0} }; resultCode: 1 },
-        { condition: SceneVarCompare { varKey: "Quest_Result"; op: Eq; value: Const{value: 0.0} }; resultCode: 0 }
+        // 1. 异步中断：如果在 30 秒内，玩家或圣女被打死了，不论剧本演到哪，立刻判负
+        { condition: ActorIsDead { actor: "NPC_Maiden" }; resultCode: 0 },
+        { condition: ActorIsDead { actor: "Player" }; resultCode: 0 },
+
+        // 2. 主线顺畅：剧本毫无阻碍地演完了（圣女顺利读完条），判胜
+        { condition: RootActFinished { expectedStatus: Success }; resultCode: 1 },
     ]
 }
 ```
