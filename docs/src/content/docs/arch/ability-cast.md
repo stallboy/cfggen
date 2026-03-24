@@ -389,9 +389,9 @@ table combat_settings[name] {
 }
 
 struct TargetingVarConfig {
-    targetVar: str ->var_key;
-    pointVar: str ->var_key;
-    directionVar: str ->var_key;
+    targetVar: str ->var_key;    // Sys.Targeting.Actor
+    pointVar: str ->var_key;     // Sys.Targeting.Point
+    directionVar: str ->var_key; // Sys.Targeting.Direction
 }
 ```
 
