@@ -101,9 +101,11 @@ class SceneInstance {
 record SceneContext(
     SceneInstance scene,
 
-    List<Actor> targets;
+    // WithActorControl时，计算targets，建新的SceneContext
+    List<Actor> targets; 
     // 局部作用域：仅对当前及子节点树有效
-    ReadOnlyStore localScope // WithLocalVar时，建新的localScope和SceneContext
+    // WithLocalVar时，建新的localScope和SceneContext
+    ReadOnlyStore localScope 
 ) {}
 ```
 
@@ -136,25 +138,12 @@ struct SceneOutcome {
 
 `Act` 是场景脚本的唯一执行单元，支持任意嵌套。
 
-### 基础动作
+### Act
 
 ```cfg
 interface Act {
+    // --- 基础节点
     struct None {}
-
-    struct PlayAnimation {
-        target: ActorSelector;
-        animName: str;
-        blendInTime: float;
-        await: AwaitMode;
-        stopOnAbort: bool;
-    }
-
-    struct Dialogue {
-        speaker: ActorSelector;
-        dialogueId: int ->dialogue;
-        await: AwaitMode;
-    }
 
     struct Camera {
         action: CameraAction;
@@ -164,14 +153,6 @@ interface Act {
     struct ApplyEffect {
         target: ActorSelector;
         effect: Effect;
-        await: AwaitMode;
-    }
-
-    struct CastAbility {
-        caster: ActorSelector;
-        abilityId: int ->ability;
-        abilityTarget: ActorSelector;
-        await: AwaitMode;
     }
 
     struct SendEvent {
@@ -192,34 +173,27 @@ interface Act {
         playAt: ActorSelector;
     }
 
-    struct MoveTo {
-        actor: ActorSelector;
-        destination: ActorSelector;
-        speedOverride: SceneFloatValue;
-        tolerance: float;
-        await: AwaitMode;
+    struct DebugLog {
+        message: str;
+        printVars: list<str> ->var_key;
     }
 
-    struct Interact {
-        actor: ActorSelector;
-        interactTo: ActorSelector;
-        interactionId: int;
-        await: AwaitMode;
-    }
-    
     struct SetSceneVar { // 设置到instanceState里，共享
         bindings: list<SceneVarBinding>;
     }
-```
 
-### 等待节点
+    struct RunScript { // 复用
+        sharedScriptId: int ->shared_scene_script;
+        args: list<SceneVarBinding>;
+        await: AwaitMode;
+    }
 
-```cfg
+    // --- 等待节点
     struct WaitForEvent {
         eventTag: str ->event_definition;
         source: ActorSelector;
-        extractPayloads: list<VarBindingByPayload>; // 写入instanceState
         conditions: list<SceneCondition>;
+        extractPayloads: list<VarBindingByPayload>;
         timeoutSec: float;
         onTimeout: Act;
         body: Act;
@@ -234,30 +208,8 @@ interface Act {
     struct WaitSeconds {
         duration: SceneFloatValue;
     }
-```
 
-### Binding相关结构
-
-```cfg
-struct SceneVarBinding {
-    varKey: str ->var_key;
-    value: SceneVarValue;
-}
-
-interface SceneVarValue {
-    struct Float { value: SceneFloatValue; }
-    struct Actors { selector: ActorSelector; }
-}
-
-struct VarBindingByPayload {
-    writeToVar: str ->var_key; // 写入到场景的变量名
-    payloadKey: str;           // 事件中的参数名
-}
-```
-
-### 控制流节点
-
-```cfg
+    // --- 控制流
     struct Sequence {
         acts: list<Act>;
     }
@@ -287,11 +239,110 @@ struct VarBindingByPayload {
         phases: list<Phase>;
         globalTransitions: list<Transition>;
     }
+
+    // --- 作用域
+    struct WithActorControl {
+        targets: ActorSelector;
+        mode: ActorControlMode;
+        body: Act;
+    }
+
+    struct WithStatus {
+        target: ActorSelector;
+        statusId: int ->status;
+        body: Act;
+    }
+
+    struct WithLocalVar {  // 新建localScope，SceneContext
+        bindings: list<SceneVarBinding>;
+        body: Act;
+    }
+
+    struct Cinematic {
+        skippable: bool;
+        body: Act;
+        onSkip: Act;
+    }
+
+    // --- 专属的“傀儡”行为，必须在WithActorControl的body里
+    struct PlayAnimation {
+        animName: str;
+        blendInTime: float;
+        await: AwaitMode;
+    }
+
+    struct MoveTo {
+        destination: ActorSelector;
+        speedOverride: SceneFloatValue;
+        tolerance: float;
+        await: AwaitMode;
+    }
+
+    struct CastAbility {
+        abilityId: int ->ability;
+        abilityTarget: ActorSelector;
+        await: AwaitMode;
+    }
+    
+    struct Interact {
+        interactTo: ActorSelector;
+        interactionId: int;
+        await: AwaitMode;
+    }
+
+    struct Dialogue {
+        dialogueId: int ->dialogue;
+        await: AwaitMode;
+    }
+}
+
+enum AwaitMode { FireAndForget; UntilComplete; }
+enum ActorControlMode { Immediate; Polite; }
+enum ParallelPolicy { WaitAll; WaitAny; }
+
+interface CameraAction {
+    struct FocusOn { target: ActorSelector; blendTime: float; }
+    struct Cutscene { cutsceneId: str; }
+    struct Shake { preset: str; }
+    struct Restore { blendTime: float; }
+}
+
+struct WeightedAct { weight: float; action: Act; }
 ```
 
-### StateMachine相关结构
+### shared_scene_script
 
-**StateMachine 作为 Act 节点**：StateMachine 是树中的一个控制流节点，而非独立于树的顶层机制。它可以出现在 rootAct 中的任意位置 — 作为 Parallel 的一个分支、嵌套在 Sequence 中、甚至嵌套在另一个 StateMachine 的 Phase 内。
+```cfg
+table shared_scene_script[id] (json) {
+    id: int;
+    name: text;
+    parameters: list<SceneVarDecl>;
+    action: Act;
+}
+```
+
+### Binding相关
+
+```cfg
+struct SceneVarBinding {
+    varKey: str ->var_key;
+    value: SceneVarValue;
+}
+
+interface SceneVarValue {
+    struct Float { value: SceneFloatValue; }
+    struct Actors { selector: ActorSelector; }
+}
+
+struct VarBindingByPayload {
+    writeToVar: str ->var_key; // 写入到场景的变量名
+    payloadKey: str;           // 事件中的参数名
+}
+```
+
+### StateMachine相关
+
+StateMachine 是树中的一个控制流节点，而非独立于树的顶层机制。它可以出现在 rootAct 中的任意位置 — 作为 Parallel 的一个分支、嵌套在 Sequence 中、甚至嵌套在另一个 StateMachine 的 Phase 内。
 
 ```cfg
 struct Phase {
@@ -321,88 +372,16 @@ interface FSMTarget {
 }
 ```
 
-### 作用域节点
 
-```cfg
-    struct WithActorControl {
-        targets: ActorSelector;
-        mode: ActorControlMode;
-        softTimeoutSec: float;
-        body: Act;
-        onAbort: Act;
-    }
-
-    struct WithStatus {
-        target: ActorSelector;
-        statusId: int ->status;
-        body: Act;
-    }
-
-    struct WithLocalVar {  // 新建localScope，SceneContext
-        bindings: list<SceneVarBinding>;
-        body: Act;
-    }
-
-    struct WithTarget {
-        target: ActorSelector;
-        body: Act;
-    }
-
-    struct Cinematic {
-        skippable: bool;
-        body: Act;
-        onSkip: Act;
-    }
-```
-
-**Cinematic 语义**：
+### Cinematic 语义
 - `skippable: true` 时，玩家触发跳过 → abort body（RAII 清理）→ 执行 onSkip（快进到终态）→ Succeeded
 - `skippable: false` 时，等同于直接执行 body
 - `onSkip` 应为短逻辑（瞬移到位、设置变量等）
 
-### 复用节点
 
-```cfg
-    struct RunScript {
-        sharedScriptId: int ->shared_scene_script;
-        args: list<SceneVarBinding>;
-        await: AwaitMode;
-    }
 
-    struct DebugLog {
-        message: str;
-        printVars: list<str> ->var_key;
-    }
-}
-```
 
-### 辅助类型
 
-```cfg
-enum AwaitMode { FireAndForget; UntilComplete; }
-enum ActorControlMode { Immediate; Polite; }
-enum ParallelPolicy { WaitAll; WaitAny; }
-
-interface CameraAction {
-    struct FocusOn { target: ActorSelector; blendTime: float; }
-    struct Cutscene { cutsceneId: str; }
-    struct Shake { preset: str; }
-    struct Restore { blendTime: float; }
-}
-
-struct WeightedAct { weight: float; action: Act; }
-```
-
-### shared_scene_script
-
-```cfg
-table shared_scene_script[id] (json) {
-    id: int;
-    name: text;
-    parameters: list<SceneVarDecl>;
-    action: Act;
-}
-```
 
 运行时 `RunScript` 创建隐式 localVars 作用域，写入形参默认值后用实参覆盖。
 
@@ -512,8 +491,7 @@ class ActorSelectors {
 
 ```cfg
 interface ActorSelector {
-    struct Inherit {}
-    struct None {}
+    struct ContextTargets {}
     struct SceneVar { actorVar: str ->var_key; }
     struct GroupMembers { groupVar: str ->var_key; }
     struct GroupQuery {
@@ -529,33 +507,35 @@ interface ActorSelector {
 }
 ```
 
-使用侧分类：
-1. 需要单个 Actor 的位置（ForOne语义）：取 list[0]，list 为空则跳过/报错
-   - Dialogue.speaker
-   - MoveTo.actor（单体移动）
-   - SpawnActor.spawnAt
-   
-2. 允许多个 Actor 的位置（ForEach语义）：对每个 Actor 执行
-   - PlayAnimation.target（每个都播）
-   - ApplyEffect.target（每个都施加）
-   - WithActorControl.target（每个都控制）
-   - SendEvent.target（每个都发）
+根据节点在架构中的定位，Actor 的目标获取分为四大类场景：
 
-3. 条件中（需要量化）：引入显式 Quantifier
+**1. 宏观节点：需要单个 Actor / 位置（ForOne 语义）**
+通过 `ActorSelector` 显式查询，取求值结果的 `list[0]`，若 list 为空则报错或跳过当前节点。
+* `SpawnActor.spawnAt`（只在一个位置生成）
+* `Camera.FocusOn.target`（镜头只能聚焦一个主目标）
 
+**2. 宏观节点：允许多个 Actor（ForEach 语义）**
+通过 `ActorSelector` 显式查询，对求值结果 `list` 中的每个 Actor 逐一执行。
+* `WithActorControl.targets`（劫持列表中的所有目标）
+* `ApplyEffect.target`（给列表中的每个目标挂载状态）
+* `SendEvent.target`（给列表中的每个目标发送事件）
 
-**Context Target — 上下文继承**
+**3. 躯干控制节点：隐式消费上下文（Implicit Target）**
+像 `MoveTo`、`PlayAnimation`、`Interact` 等躯体动作**没有** `target` 字段！它们必须被包裹在 `WithActorControl` 内部，并直接读取被附身的 `SceneContext.targets` 执行。
+* **隐式 ForEach**：`PlayAnimation`、`MoveTo` 会让所有受控者一起播动画、一起走（适合群体检阅/走位演出）。
+* **隐式 ForOne**：`Dialogue`、`Interact` 在逻辑上强依赖单体表现，引擎底层自动取 `targets[0]` 执行。
 
-`ActorSelector` 默认值为 `Inherit {}`。使用`SceneContext.starget`：
-`WithActorControl` `WithTarget` 都会改变`SceneContext.targets`
+**4. 条件判断：需要量化（Quantifier 语义）**
+在 `SceneCondition` 中，当面对可能有多个 Actor 的查询结果时，必须引入显式的 `Quantifier` 来消除歧义。
+* `ActorIsDead { quantifier: All, ... }`（是否全死了）
+* `ActorHasTags { quantifier: Any, ... }`（是否其中任何一个带有该 Tag）
 
 例如
 ```
 WithActorControl {
-    target: SceneVar { actorVar: "Cast.Boss" };
+    targets: SceneVar { actorVar: "Cast.Boss" };
     mode: Immediate;
     body: Sequence { actions: [
-        // 以下 target 全部省略，自动继承 Cast.Boss
         PlayAnimation { animName: "entrance_roar"; await: UntilComplete; };
         Dialogue { dialogueId: 5001; await: UntilComplete; };
         ApplyEffect { effect: ...; await: FireAndForget; };
@@ -620,9 +600,9 @@ abstract class ActInstance<T extends Act> {
             return;
         }
         if (status != ActStatus.Running) return;
-        Iterable<AITaskInstance<?>> children = getActiveChildren();
+        var children = getActiveChildren();
         if (children != null) {
-            for (AITaskInstance<?> child : children) {
+            for (var child : children) {
                 if (child != null) child.abort(ctx);
             }
         }
@@ -664,23 +644,23 @@ abstract class ActInstance<T extends Act> {
 ### Boss 战三阶段
 
 ```
-rootAct: Parallel { policy: WaitAny; actions: [
+rootAct: Parallel { policy: WaitAny; acts: [
     // 主线：状态机驱动阶段流转
     StateMachine {
         phases: [
             Phase {
                 phaseKey: "P1_Normal";
-                onEnter: Sequence { actions: [
+                onEnter: Sequence { acts: [
                     Cinematic { skippable: true; body: ...; onSkip: ...; };
                 ]};
             },
             Phase {
                 phaseKey: "P2_Enraged";
-                onEnter: Sequence { actions: [...]; };
+                onEnter: Sequence { acts: [...]; };
             },
             Phase {
                 phaseKey: "P3_Final";
-                onEnter: Sequence { actions: [...]; };
+                onEnter: Sequence { acts: [...]; };
             }
         ];
         globalTransitions: [
@@ -694,7 +674,7 @@ rootAct: Parallel { policy: WaitAny; actions: [
     },
 
     // 后台：持续刷小怪
-    Loop { count: -1; body: Sequence { actions: [
+    Loop { count: -1; body: Sequence { acts: [
         WaitSeconds { duration: Const { value: 30.0 }; };
         SpawnActor { ... };
     ]}; }
@@ -709,9 +689,9 @@ outcomes: [
 ### 持续监听模式
 
 ```
-Parallel { policy: WaitAll; actions: [
+Parallel { policy: WaitAll; acts: [
     // 主线脚本
-    Sequence { actions: [...]; },
+    Sequence { acts: [...]; },
 
     // 持续监听：玩家进入危险区域时警告
     Loop { count: -1; body:

@@ -785,9 +785,9 @@ abstract class AITaskInstance<T extends AITask> {
             return;
         }
         if (status != TaskStatus.Running) return;
-        Iterable<AITaskInstance<?>> children = getActiveChildren();
+        var children = getActiveChildren();
         if (children != null) {
-            for (AITaskInstance<?> child : children) {
+            for (var child : children) {
                 if (child != null) child.abort(ctx);
             }
         }
