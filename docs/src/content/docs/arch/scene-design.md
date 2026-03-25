@@ -4,9 +4,9 @@ sidebar:
   order: 20
 ---
 
-## Architecture Overview
-
 场景系统（Scene System）定位为遭遇战/演出级的逻辑编排层，位于 GAS（状态与效果）与 AI（自治决策）之上、关卡与任务流程系统之下。它不负责实现基础战斗行为，而是通过驱动既有能力、施加约束、订阅运行时事件，将多个实体在一段时间内组织成可控、可复用、可数据化配置的玩法与演出流程。
+
+## Architecture Overview
 
 ### 层级定位
 
@@ -36,9 +36,8 @@ sidebar:
 
 场景通过 `signature`（输入参数）接收外部指令，通过 `outcomes`（结局码）向外部汇报结果。两者之间低耦合通信。
 
----
 
-## Design Principles
+### Philosophy
 
 1. **复用不重造** — 执行单元直接调用 GAS 的 Effect/Ability，AI 修饰通过 ActStatus 完成。只做编排。
 

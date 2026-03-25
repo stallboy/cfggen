@@ -91,7 +91,7 @@ sidebar:
 这种正交分离确保每一层只关注自己的职责——Ability 不关心效果如何执行，Effect 不关心状态如何持续，Status 不关心谁触发了它。复杂机制通过**组合**而非继承构建。
 
 
-## Philosophy
+### Philosophy
 
 1. **层级化标签驱动**：树状 Tag（如 `State.Debuff.Control.Stun`）是逻辑交互的唯一通用语言。支持父级包含查询——查询 `State.Debuff` 可命中 `State.Debuff.Control.Stun`。
 

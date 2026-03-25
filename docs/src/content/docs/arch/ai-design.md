@@ -59,7 +59,7 @@ Perceive 产出 AIGoalInstance
 
 Goal 是连接"为什么做"和"做什么"的唯一桥梁。Perceive 只管生产，Think 只管消费和选择，Act 只管执行——三者互不越权。
 
-### 关键设计约束
+### Philosophy
 
 **单 Goal 驱动**：每个行为声明至多一个 `GoalRequirement`。决策时从认知库中按策略（最近、最强、最新）选出唯一候选 Goal 绑定到行为实例。执行期若需额外目标（如"搬桶砸人"中的投掷对象），通过 `RuntimeQuery` 或 `WithLocalVar` 实时获取，不污染决策动机。
 
