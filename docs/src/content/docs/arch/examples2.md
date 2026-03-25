@@ -867,7 +867,7 @@ scene_definition {
         // ══════════════════════════════════════════
         Loop { count: -1; body:
             WaitForEvent {
-                eventTag: "Ability_Interrupted";
+                event: "Ability_Interrupted";
                 source: SceneVar { actorVar: "Cast.FireMage"; };
                 conditions: [];
                 timeoutSec: 0; onTimeout: None {};
@@ -1795,7 +1795,7 @@ scene_definition {
         // 当玩家成功打断牧师的引导/读条时，场景给予战术提示
         Loop { count: -1; body:
             WaitForEvent {
-                eventTag: "Ability_Interrupted";
+                event: "Ability_Interrupted";
                 source: SceneVar { actorVar: "Cast.Priest"; };
                 conditions: [];
                 timeoutSec: 0; onTimeout: None {};
@@ -1827,7 +1827,7 @@ scene_definition {
         // 当骑士开始读条天堂之锤时，给玩家 UI 警告
         Loop { count: -1; body:
             WaitForEvent {
-                eventTag: "Ability_Activated";
+                event: "Ability_Activated";
                 source: SceneVar { actorVar: "Cast.Knight"; };
                 conditions: [
                     // 检查是否是天堂之锤

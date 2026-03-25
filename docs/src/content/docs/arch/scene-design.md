@@ -155,7 +155,7 @@ interface Act {
 
     struct SendEvent {
         target: ActorSelector;
-        eventTag: str ->event_definition;
+        event: str ->event_definition;
         magnitude: float;
         extras: list<VarBinding>;
     }
@@ -188,7 +188,7 @@ interface Act {
 
     // --- 等待节点
     struct WaitForEvent {
-        eventTag: str ->event_definition;
+        event: str ->event_definition;
         source: ActorSelector;
         conditions: list<SceneCondition>;
         extractPayloads: list<VarBindingByPayload>;
@@ -415,43 +415,43 @@ interface SceneCondition {
     struct ActorStatCompare {
         actor: ActorSelector;
         quantifier: Quantifier;
-        statTag: str ->stat_definition;
+        stat: str ->stat_definition;
         op: CompareOp;
         value: SceneFloatValue;
-        // reactTo: ["Event.Stat.Changed:{statTag}"]
+        // reactTo: ["Stat_Changed:{stat}"]
     }
 
     struct ActorHasTags {
         actor: ActorSelector;
         quantifier: Quantifier;
         tagQuery: TagQuery;
-        // reactTo: ["Event.Tag.Changed"]
+        // reactTo: ["Tag_Changed"]
     }
 
     struct ActorIsAlive {
         actor: ActorSelector;
         quantifier: Quantifier;
-        // reactTo: ["Event.Character.Death", "Event.Character.Revive"]
+        // reactTo: ["Character_Death", "Character_Revive"]
     }
 
     struct ActorIsDead {
         actor: ActorSelector;
         quantifier: Quantifier;
-        // reactTo: ["Event.Character.Death", "Event.Character.Revive"]
+        // reactTo: ["Character_Death", "Character_Revive"]
     }
 
     struct ActorInZone {
         actor: ActorSelector;
         quantifier: Quantifier;
         zone: ActorSelector;     // zone 始终取 [0]
-        // reactTo: ["Event.Zone.ActorEntered:{zoneVar}", "Event.Zone.ActorExited:{zoneVar}"]
+        // reactTo: ["Zone_ActorEntered:{zoneVar}", "Zone_ActorExited:{zoneVar}"]
     }
 
     struct SceneVarCompare {
         varKey: str ->var_key;
         op: CompareOp;
         value: SceneFloatValue;
-        // reactTo: ["Event.Scene.VarChanged:{varKey}"]
+        // reactTo: ["Scene_VarChanged:{varKey}"]
     }
 
     struct TimeSinceSceneStart {
@@ -465,16 +465,17 @@ interface SceneCondition {
         countCondition: GroupCountCondition;
         op: CompareOp;
         value: SceneFloatValue;
-        // reactTo: ["Event.Character.Death", "Event.Group.MemberChanged:{groupVar}"]
+        // reactTo: ["Character_Death", "Group_MemberChanged:{groupVar}"]
     }
 
     struct CurrentPhaseIs {
         phaseKey: str ->phase_key;
-        // reactTo: ["Event.Scene.PhaseChanged"]
+        // reactTo: ["Scene_PhaseChanged"]
     }
 
     struct RootActFinished {
         expectedStatus: ActFinishStatus;
+        // reactTo: ["Scene_RootActFinished"]
     }
 }
 
@@ -561,7 +562,7 @@ interface SceneFloatValue {
     struct FromSceneVar { varKey: str ->var_key; }
     struct Math { op: MathOp; a: SceneFloatValue; b: SceneFloatValue; }
     struct TimeBonusDecay { baseScore: float; decayPerSecond: float; }
-    struct ActorStat { actor: ActorSelector; statTag: str ->stat_definition; }
+    struct ActorStat { actor: ActorSelector; stat: str ->stat_definition; }
 }
 ```
 
@@ -668,10 +669,10 @@ rootAct: Parallel { policy: WaitAny; acts: [
         ];
         globalTransitions: [
             { condition: ActorStatCompare { actor: SceneVar { actorVar: "Cast.Boss" }; 
-                statTag: "Stat.HPPercent"; op: LessEqual; value: Const { value: 0.6 }; }; 
+                stat: "Stat.HPPercent"; op: LessEqual; value: Const { value: 0.6 }; }; 
                 target: ToPhase { phaseKey: "P2_Enraged"; };},
             { condition: ActorStatCompare { actor: SceneVar { actorVar: "Cast.Boss" }; 
-                statTag: "Stat.HPPercent"; op: LessEqual; value: Const { value: 0.3 }; }; 
+                stat: "Stat.HPPercent"; op: LessEqual; value: Const { value: 0.3 }; }; 
                 target: ToPhase { phaseKey: "P3_Final"; };}
         ];
     },
@@ -698,7 +699,7 @@ Parallel { policy: WaitAll; acts: [
 
     // 持续监听：玩家进入危险区域时警告
     Loop { count: -1; body:
-        WaitForEvent { eventTag: "Event.Zone.ActorEntered";
+        WaitForEvent { event: "Zone_ActorEntered";
             source: SceneVar { actorVar: "Zone.Danger" };
         };
         // 触发后执行警告

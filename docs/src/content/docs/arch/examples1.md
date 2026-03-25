@@ -23,7 +23,7 @@ scene_definition {
             condition: ActorStatCompare { 
                 actor: SceneVar { actorVar: "BossEntity" }; 
                 quantifier: All; // 必须显式量化
-                statTag: "Stat.HPPercent"; op: Lte; value: Const{value: 0.5}; 
+                stat: "Stat.HPPercent"; op: Lte; value: Const{value: 0.5}; 
             };
         },
         // 阈值触发后执行的演出序列       
@@ -101,6 +101,8 @@ ai_behavior {
 }
 ```
 
+**💡 架构之美**：真正的机制解耦。Scene（导演）只管演出和下发状态，完全不碰具体数值与 AI 逻辑；Boss 属性的膨胀与大脑技能池的替换被完美封装在 GAS 的 Status 与 AIModifier 中。这意味着即使脱离了当前专属关卡，只要被挂上该状态，Boss 依然能自洽地展现出完整的二阶段战斗力。
+
 ---
 
 ### 案例二：环境交互与涌现式战斗（打爆火药桶）
@@ -165,7 +167,7 @@ status {
                         effect: ResolveCombat { pipeline: "FireDamage"; magnitude: Const{value: 300.0}; tags: ["Damage.Element.Fire"]; cuesOnExecute: [] }
                     },
                     // 3. 向【自身】的 EventBus 广播爆炸巨响事件
-                    SendEvent { event: "Event_Global_LoudNoise"; magnitude: Const{value: 1.0}; extras: [] },
+                    SendEvent { event: "Env_Explosion"; magnitude: Const{value: 1.0}; extras: [] },
                 ]};
             }
         ];
@@ -182,21 +184,23 @@ scene_definition {
         Sequence { acts: [ /* ... */ ] },
         
         // 修改后的 Scene 监听片段
-    WaitForEvent {
-        eventTag: "Event_Noise_Explosion";
-        source: GroupMembers { groupVar: "Group.LevelBarrels" };
-        
-        // 从底层事件载荷中，提取出“肇事者(instigator)”，存入场景的局部变量！
-        extractPayloads: [
-            { writeToVar: "Var.TheExplodedBarrel"; payloadKey: "instigator" } 
-        ];
-        
-        body: Sequence { acts: [
-            // 警报声精准地在爆炸的那个桶的位置响起，而不是在玩家头顶或者原点
-            PlayCue { cueKey: "Cue.Siren_Alarm"; playAt: SceneVar{actorVar: "Var.TheExplodedBarrel"} },
-            SpawnActor { outputVarKey: "Var.Guard"; archetype: "Archetype_HeavyGuard"; spawnAt: "SpawnPoint_Entrance" }
-        ]}
-    }]}
+        WaitForEvent {
+            event: "Env_Explosion";
+            source: GroupMembers { groupVar: "Group.LevelBarrels" };
+            
+            // 从底层事件载荷中，提取出“肇事者(instigator)”，存入场景的局部变量！
+            extractPayloads: [
+                { writeToVar: "Var.TheExplodedBarrel"; payloadKey: "instigator" } 
+            ];
+            
+            body: Sequence { acts: [
+                // 警报声精准地在爆炸的那个桶的位置响起，而不是在玩家头顶或者原点
+                PlayCue { cueKey: "Cue.Siren_Alarm"; 
+                    playAt: SceneVar{actorVar: "Var.TheExplodedBarrel"} },
+                SpawnActor { outputVarKey: "Var.Guard"; archetype: "Archetype_HeavyGuard"; 
+                    spawnAt: "SpawnPoint_Entrance" }
+            ]}
+        }]}
 }
 ```
 
@@ -257,6 +261,7 @@ ai_goal_generator {
 }
 ```
 
+**💡 架构之美**：极致的系统涌现与空间计算下放。AI 无需进行复杂的环境距离计算，火药桶会通过 GAS 雷达自动给自己贴上“战术标签”吸引 AI 开火。火药桶只管遵循物理法则爆炸发声，Scene 只管通过群组监听拉响警报。三者互不相识，却依靠 Tag 与 EventBus 完美咬合出了精妙的环境交互玩法。
 
 ---
 
