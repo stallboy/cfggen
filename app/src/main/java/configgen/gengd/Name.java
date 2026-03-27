@@ -25,7 +25,7 @@ public class Name {
             if (seps.length > 1 && i == seps.length - 1) {
                 classNameBuilder.append("_");
             }
-            classNameBuilder.append(StringUtil.upper1Only(seps[i]));
+            classNameBuilder.append(StringUtil.upper1(seps[i]));
         }
         className = classNameBuilder.toString();
 
@@ -38,7 +38,7 @@ public class Name {
                 if (i > 0) {
                     pathBuilder.append("/");
                 }
-                pathBuilder.append(StringUtil.upper1Only(seps[i]));
+                pathBuilder.append(StringUtil.upper1(seps[i]));
             }
             pathBuilder.append("/").append(className).append(".gd");
             path = pathBuilder.toString();

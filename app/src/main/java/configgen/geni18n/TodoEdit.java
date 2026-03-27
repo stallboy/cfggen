@@ -2,7 +2,6 @@ package configgen.geni18n;
 
 import configgen.geni18n.TodoFile.Line;
 import configgen.i18n.I18nUtils;
-import configgen.util.Logger;
 import org.dhatim.fastexcel.Workbook;
 import org.dhatim.fastexcel.Worksheet;
 import org.dhatim.fastexcel.reader.ReadableWorkbook;

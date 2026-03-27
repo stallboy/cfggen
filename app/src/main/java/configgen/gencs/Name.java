@@ -22,8 +22,8 @@ public class Name {
         String[] seps = name.split("\\.");
         String[] pks = new String[seps.length - 1];
         for (int i = 0; i < pks.length; i++)
-            pks[i] = StringUtil.upper1Only(seps[i]);
-        className = prefix + StringUtil.upper1Only(seps[seps.length - 1]);
+            pks[i] = StringUtil.upper1(seps[i]);
+        className = prefix + StringUtil.upper1(seps[seps.length - 1]);
 
         if (pks.length == 0)
             pkg = topPkg;

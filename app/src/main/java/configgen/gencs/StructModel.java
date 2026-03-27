@@ -5,6 +5,7 @@ import configgen.util.StringUtil;
 import configgen.value.CfgValue;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static configgen.schema.FieldType.Primitive.*;
@@ -38,6 +39,18 @@ public class StructModel {
 
     public String lower1(String value) {
         return StringUtil.lower1(value);
+    }
+
+    private static final Set<String> reserved = Set.of(
+            "object", "string", "event", "params", "ref", "base", "namespace", "class", "struct");
+
+    public static String _lower1(String value) {
+        String v = StringUtil.lower1(value);
+        if (reserved.contains(v)) {
+            return "_" + v;
+        } else {
+            return v;
+        }
     }
 
     public String type(FieldType t) {
@@ -123,7 +136,7 @@ public class StructModel {
     }
 
     public String formalParams(List<FieldSchema> fs) {
-        return fs.stream().map(f -> type(f.type()) + " " + lower1(f.name())).collect(Collectors.joining(", "));
+        return fs.stream().map(f -> type(f.type()) + " " + _lower1(f.name())).collect(Collectors.joining(", "));
     }
 
     public String actualParams(KeySchema keySchema) {
@@ -131,7 +144,7 @@ public class StructModel {
     }
 
     public String actualParamsKey(KeySchema keySchema) {
-        String p = keySchema.fields().stream().map(StringUtil::lower1).collect(Collectors.joining(", "));
+        String p = keySchema.fields().stream().map(StructModel::_lower1).collect(Collectors.joining(", "));
         return keySchema.fields().size() > 1 ? "new " + keyClassName(keySchema) + "(" + p + ")" : p;
     }
 

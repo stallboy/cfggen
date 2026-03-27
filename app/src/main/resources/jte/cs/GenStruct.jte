@@ -57,7 +57,7 @@ namespace ${model.name.pkg}
             @if(hasFields)
                 public ${className}(${model.formalParams(model.structural.fields())}) {
                     @for(FieldSchema field : model.structural.fields())
-                        this.${model.upper1(field.name())} = ${model.lower1(field.name())};
+                        this.${model.upper1(field.name())} = ${StructModel._lower1(field.name())};
                     @endfor
                 }
 

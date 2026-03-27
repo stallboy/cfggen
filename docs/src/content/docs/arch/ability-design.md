@@ -303,7 +303,6 @@ record GameplayEvent(
 ){}
 
 record Payload(
-    Context sourceContext, // 携带引发该事件的原始技能 Context 引用，用于追溯来源
     Actor instigator,   // 发起者 (谁砍的这一刀)
     Actor target,       // 承受者 (谁挨的这一刀)
 
