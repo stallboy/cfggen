@@ -353,7 +353,7 @@ struct Phase {
 
 struct Transition {
     condition: SceneCondition;
-    target: FSMTarget;
+    target: FsmTarget;
 }
 
 interface AutoAdvance {
@@ -363,7 +363,7 @@ interface AutoAdvance {
     struct ExitFailure {}
 }
 
-interface FSMTarget {
+interface FsmTarget {
     struct ToPhase { phaseKey: str ->phase_key; }
     struct ExitSuccess {}
     struct ExitFailure {}

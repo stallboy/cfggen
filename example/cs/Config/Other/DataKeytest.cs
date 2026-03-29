@@ -1,207 +1,206 @@
-using System;
 using System.Collections.Generic;
+namespace Config.Other;
 
-namespace Config.Other
+public partial class DataKeytest
 {
-    public partial class DataKeytest
+    public required int Id1 { get; init; }
+    public required long Id2 { get; init; }
+    public required int Id3 { get; init; }
+    public required List<int> Ids { get; init; }
+    public required string EnumTest { get; init; }
+    public required List<string> EnumList { get; init; }
+    public List<Other.DataSignin> RefIds { get; private set; } = null!;
+    public Other.DataArgCaptureMode RefEnumTest { get; private set; } = null!;
+    public List<Other.DataArgCaptureMode> RefEnumList { get; private set; } = null!;
+
+    public override int GetHashCode()
     {
-        public int Id1 { get; private set; }
-        public long Id2 { get; private set; }
-        public int Id3 { get; private set; }
-        public List<int> Ids { get; private set; }
-        public string EnumTest { get; private set; }
-        public List<string> EnumList { get; private set; }
-        public List<Config.Other.DataSignin> RefIds { get; private set; }
-        public Config.Other.DataArgcapturemode RefEnumTest { get; private set; }
-        public List<Config.Other.DataArgcapturemode> RefEnumList { get; private set; }
+        return Id1.GetHashCode() + Id2.GetHashCode();
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj == null) return false;
+        if (obj == this) return true;
+        var o = obj as DataKeytest;
+        return o != null && Id1.Equals(o.Id1) && Id2.Equals(o.Id2);
+    }
+
+    public override string ToString()
+    {
+        return "(" + Id1 + "," + Id2 + "," + Id3 + "," + StringUtil.ToString(Ids) + "," + EnumTest + "," + StringUtil.ToString(EnumList) + ")";
+    }
+
+    
+    class Id1Id2Key
+    {
+        readonly int Id1;
+        readonly long Id2;
+        public Id1Id2Key(int id1, long id2)
+        {
+            this.Id1 = id1;
+            this.Id2 = id2;
+        }
 
         public override int GetHashCode()
         {
             return Id1.GetHashCode() + Id2.GetHashCode();
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataKeytest;
+            var o = obj as Id1Id2Key;
             return o != null && Id1.Equals(o.Id1) && Id2.Equals(o.Id2);
         }
+    }
 
-        public override string ToString()
+    private static OrderedDictionary<Id1Id2Key, DataKeytest> _all = [];
+
+    public static DataKeytest? Get(int id1, long id2)
+    {
+        return _all.GetValueOrDefault(new Id1Id2Key(id1, id2));
+    }
+
+    
+    class Id1Id3Key
+    {
+        readonly int Id1;
+        readonly int Id3;
+        public Id1Id3Key(int id1, int id3)
         {
-            return "(" + Id1 + "," + Id2 + "," + Id3 + "," + StringUtil.ToString(Ids) + "," + EnumTest + "," + StringUtil.ToString(EnumList) + ")";
+            this.Id1 = id1;
+            this.Id3 = id3;
         }
 
-        
-        class Id1Id2Key
+        public override int GetHashCode()
         {
-            readonly int Id1;
-            readonly long Id2;
-            public Id1Id2Key(int id1, long id2)
-            {
-                this.Id1 = id1;
-                this.Id2 = id2;
-            }
-
-            public override int GetHashCode()
-            {
-                return Id1.GetHashCode() + Id2.GetHashCode();
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (obj == null) return false;
-                if (obj == this) return true;
-                var o = obj as Id1Id2Key;
-                return o != null && Id1.Equals(o.Id1) && Id2.Equals(o.Id2);
-            }
+            return Id1.GetHashCode() + Id3.GetHashCode();
         }
 
-        static Config.KeyedList<Id1Id2Key, DataKeytest> all = null;
-
-        public static DataKeytest Get(int id1, long id2)
+        public override bool Equals(object? obj)
         {
-            DataKeytest v;
-            return all.TryGetValue(new Id1Id2Key(id1, id2), out v) ? v : null;
+            if (obj == null) return false;
+            if (obj == this) return true;
+            var o = obj as Id1Id3Key;
+            return o != null && Id1.Equals(o.Id1) && Id3.Equals(o.Id3);
+        }
+    }
+
+    private static OrderedDictionary<Id1Id3Key, DataKeytest> _id1Id3Map = [];
+
+    public static DataKeytest? GetById1Id3(int id1, int id3)
+    {
+        return _id1Id3Map.GetValueOrDefault(new Id1Id3Key(id1, id3));
+    }
+
+    
+    private static OrderedDictionary<long, DataKeytest> _id2Map = [];
+
+    public static DataKeytest? GetById2(long id2)
+    {
+        return _id2Map.GetValueOrDefault(id2);
+    }
+
+    
+    class Id2Id3Key
+    {
+        readonly long Id2;
+        readonly int Id3;
+        public Id2Id3Key(long id2, int id3)
+        {
+            this.Id2 = id2;
+            this.Id3 = id3;
         }
 
-        
-        class Id1Id3Key
+        public override int GetHashCode()
         {
-            readonly int Id1;
-            readonly int Id3;
-            public Id1Id3Key(int id1, int id3)
-            {
-                this.Id1 = id1;
-                this.Id3 = id3;
-            }
-
-            public override int GetHashCode()
-            {
-                return Id1.GetHashCode() + Id3.GetHashCode();
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (obj == null) return false;
-                if (obj == this) return true;
-                var o = obj as Id1Id3Key;
-                return o != null && Id1.Equals(o.Id1) && Id3.Equals(o.Id3);
-            }
+            return Id2.GetHashCode() + Id3.GetHashCode();
         }
 
-        static Config.KeyedList<Id1Id3Key, DataKeytest> id1Id3Map = null;
-
-        public static DataKeytest GetById1Id3(int id1, int id3)
+        public override bool Equals(object? obj)
         {
-            DataKeytest v;
-            return id1Id3Map.TryGetValue(new Id1Id3Key(id1, id3), out v) ? v : null;
+            if (obj == null) return false;
+            if (obj == this) return true;
+            var o = obj as Id2Id3Key;
+            return o != null && Id2.Equals(o.Id2) && Id3.Equals(o.Id3);
+        }
+    }
+
+    private static OrderedDictionary<Id2Id3Key, DataKeytest> _id2Id3Map = [];
+
+    public static DataKeytest? GetById2Id3(long id2, int id3)
+    {
+        return _id2Id3Map.GetValueOrDefault(new Id2Id3Key(id2, id3));
+    }
+
+    public static IReadOnlyList<DataKeytest> All()
+    {
+        return _all.Values;
+    }
+
+    internal static void Initialize(Stream os, LoadErrors errors)
+    {
+        _all = [];
+        _id1Id3Map = [];
+        _id2Map = [];
+        _id2Id3Map = [];
+        for (var c = os.ReadInt32(); c > 0; c--)
+        {
+            var self = _create(os);
+            _all.Add(new Id1Id2Key(self.Id1, self.Id2), self);
+            _id1Id3Map.Add(new Id1Id3Key(self.Id1, self.Id3), self);
+            _id2Map.Add(self.Id2, self);
+            _id2Id3Map.Add(new Id2Id3Key(self.Id2, self.Id3), self);
         }
 
-        
-        static Config.KeyedList<long, DataKeytest> id2Map = null;
+    }
 
-        public static DataKeytest GetById2(long id2)
+    internal static void Resolve(LoadErrors errors)
+    {
+        foreach (var v in All())
+            v._resolve(errors);
+    }
+    internal static DataKeytest _create(Stream os)
+    {
+        var id1 = os.ReadInt32();
+        var id2 = os.ReadInt64();
+        var id3 = os.ReadInt32();
+        List<int> ids = [];
+        for (var c = os.ReadInt32(); c > 0; c--)
+            ids.Add(os.ReadInt32());
+        var enumTest = os.ReadStringInPool();
+        List<string> enumList = [];
+        for (var c = os.ReadInt32(); c > 0; c--)
+            enumList.Add(os.ReadStringInPool());
+        return new DataKeytest {
+            Id1 = id1,
+            Id2 = id2,
+            Id3 = id3,
+            Ids = ids,
+            EnumTest = enumTest,
+            EnumList = enumList,
+        };
+    }
+
+    internal void _resolve(LoadErrors errors)
+    {
+        RefIds = [];
+        foreach(var e in Ids)
         {
-            DataKeytest v;
-            return id2Map.TryGetValue(id2, out v) ? v : null;
+            var r = Other.DataSignin.Get(e);
+            if (r == null) errors.RefNull("other.keytest", ToString(), "ids");
+            else RefIds.Add(r);
         }
-
-        
-        class Id2Id3Key
+        RefEnumTest = Other.DataArgCaptureMode.Get(EnumTest)!;
+        if (RefEnumTest == null) errors.RefNull("other.keytest", ToString(), "enumTest");
+        RefEnumList = [];
+        foreach(var e in EnumList)
         {
-            readonly long Id2;
-            readonly int Id3;
-            public Id2Id3Key(long id2, int id3)
-            {
-                this.Id2 = id2;
-                this.Id3 = id3;
-            }
-
-            public override int GetHashCode()
-            {
-                return Id2.GetHashCode() + Id3.GetHashCode();
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (obj == null) return false;
-                if (obj == this) return true;
-                var o = obj as Id2Id3Key;
-                return o != null && Id2.Equals(o.Id2) && Id3.Equals(o.Id3);
-            }
-        }
-
-        static Config.KeyedList<Id2Id3Key, DataKeytest> id2Id3Map = null;
-
-        public static DataKeytest GetById2Id3(long id2, int id3)
-        {
-            DataKeytest v;
-            return id2Id3Map.TryGetValue(new Id2Id3Key(id2, id3), out v) ? v : null;
-        }
-
-        public static List<DataKeytest> All()
-        {
-            return all.OrderedValues;
-        }
-
-        internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
-        {
-            all = new Config.KeyedList<Id1Id2Key, DataKeytest>();
-            id1Id3Map = new Config.KeyedList<Id1Id3Key, DataKeytest>();
-            id2Map = new Config.KeyedList<long, DataKeytest>();
-            id2Id3Map = new Config.KeyedList<Id2Id3Key, DataKeytest>();
-            for (var c = os.ReadInt32(); c > 0; c--)
-            {
-                var self = _create(os);
-                all.Add(new Id1Id2Key(self.Id1, self.Id2), self);
-                id1Id3Map.Add(new Id1Id3Key(self.Id1, self.Id3), self);
-                id2Map.Add(self.Id2, self);
-                id2Id3Map.Add(new Id2Id3Key(self.Id2, self.Id3), self);
-            }
-
-        }
-
-        internal static void Resolve(Config.LoadErrors errors)
-        {
-            foreach (var v in All())
-                v._resolve(errors);
-        }
-        internal static DataKeytest _create(Config.Stream os)
-        {
-            var self = new DataKeytest();
-            self.Id1 = os.ReadInt32();
-            self.Id2 = os.ReadInt64();
-            self.Id3 = os.ReadInt32();
-            self.Ids = new List<int>();
-            for (var c = os.ReadInt32(); c > 0; c--)
-                self.Ids.Add(os.ReadInt32());
-            self.EnumTest = os.ReadStringInPool();
-            self.EnumList = new List<string>();
-            for (var c = os.ReadInt32(); c > 0; c--)
-                self.EnumList.Add(os.ReadStringInPool());
-            return self;
-        }
-
-        internal void _resolve(Config.LoadErrors errors)
-        {
-            RefIds = new List<Config.Other.DataSignin>();
-            foreach(var e in Ids)
-            {
-                var r = Config.Other.DataSignin.Get(e);;
-                if (r == null) errors.RefNull("other.keytest", ToString(), "ids");
-                RefIds.Add(r);
-            }
-            RefEnumTest = Config.Other.DataArgcapturemode.Get(EnumTest);;
-            if (RefEnumTest == null) errors.RefNull("other.keytest", ToString(), "enumTest");
-            RefEnumList = new List<Config.Other.DataArgcapturemode>();
-            foreach(var e in EnumList)
-            {
-                var r = Config.Other.DataArgcapturemode.Get(e);;
-                if (r == null) errors.RefNull("other.keytest", ToString(), "enumList");
-                RefEnumList.Add(r);
-            }
+            var r = Other.DataArgCaptureMode.Get(e);
+            if (r == null) errors.RefNull("other.keytest", ToString(), "enumList");
+            else RefEnumList.Add(r);
         }
     }
 }

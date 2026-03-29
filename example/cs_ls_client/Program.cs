@@ -1,5 +1,4 @@
 ﻿using Config;
-using Stream = Config.Stream;
 
 class Program
 {
@@ -26,15 +25,13 @@ class Program
         }
 
         Console.WriteLine("\n=== Test Data ===");
-        var langNames = stream.GetLangNames();
+        var langNames = stream.GetLangNames()!;
         Console.Out.WriteLine("language Count: " + langNames.Length);
         for (int i = 0; i < langNames.Length; i++) 
         {
             Console.Out.WriteLine(langNames[i]);
-            TextPoolManager.SetGlobalTexts(stream.GetLangTextPools()[i]);
+            TextPoolManager.SetGlobalTexts(stream.GetLangTextPools()![i]);
             Console.WriteLine(Config.Task.DataTask.Get(1));
         }
-        
-        
     }
 }

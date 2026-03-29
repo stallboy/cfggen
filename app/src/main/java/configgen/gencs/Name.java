@@ -15,7 +15,7 @@ public class Name {
         String name;
         InterfaceSchema nullableInterface = nameable instanceof StructSchema struct ? struct.nullableInterface() : null;
         if (nullableInterface != null) {
-            name = nullableInterface.name().toLowerCase() + "." + nameable.name();
+            name = nullableInterface.name() + "." + nameable.name();
         } else {
             name = nameable.name();
         }
@@ -25,15 +25,14 @@ public class Name {
             pks[i] = StringUtil.upper1(seps[i]);
         className = prefix + StringUtil.upper1(seps[seps.length - 1]);
 
-        if (pks.length == 0)
+        if (pks.length == 0) {
             pkg = topPkg;
-        else
-            pkg = topPkg + "." + String.join(".", pks);
-
-        if (pkg.isEmpty())
             fullName = className;
-        else
-            fullName = pkg + "." + className;
+        }else {
+            String join = String.join(".", pks);
+            pkg = topPkg + "." + join;
+            fullName = join + "." + className;
+        }
 
         if (pks.length == 0)
             path = className + ".cs";

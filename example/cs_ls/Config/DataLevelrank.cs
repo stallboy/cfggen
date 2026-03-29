@@ -1,52 +1,42 @@
-using System;
-using System.Collections.Generic;
+namespace Config;
 
-namespace Config
+public partial class DataLevelRank
 {
-    public partial class DataLevelrank
+    public required int Level { get; init; } /* 等级 */
+    public required int Rank { get; init; } /* 品质 */
+    public Equip.DataRank RefRank { get; private set; } = null!;
+
+    public override int GetHashCode()
     {
-        public int Level { get; private set; } /* 等级 */
-        public int Rank { get; private set; } /* 品质 */
-        public Config.Equip.DataRank RefRank { get; private set; }
+        return Level.GetHashCode() + Rank.GetHashCode();
+    }
 
-        public DataLevelrank() {
-        }
+    public override bool Equals(object? obj)
+    {
+        if (obj == null) return false;
+        if (obj == this) return true;
+        var o = obj as DataLevelRank;
+        return o != null && Level.Equals(o.Level) && Rank.Equals(o.Rank);
+    }
 
-        public DataLevelrank(int level, int rank) {
-            this.Level = level;
-            this.Rank = rank;
-        }
+    public override string ToString()
+    {
+        return "(" + Level + "," + Rank + ")";
+    }
 
-        public override int GetHashCode()
-        {
-            return Level.GetHashCode() + Rank.GetHashCode();
-        }
+    internal static DataLevelRank _create(Stream os)
+    {
+        var level = os.ReadInt32();
+        var rank = os.ReadInt32();
+        return new DataLevelRank {
+            Level = level,
+            Rank = rank,
+        };
+    }
 
-        public override bool Equals(object obj)
-        {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DataLevelrank;
-            return o != null && Level.Equals(o.Level) && Rank.Equals(o.Rank);
-        }
-
-        public override string ToString()
-        {
-            return "(" + Level + "," + Rank + ")";
-        }
-
-        internal static DataLevelrank _create(Config.Stream os)
-        {
-            var self = new DataLevelrank();
-            self.Level = os.ReadInt32();
-            self.Rank = os.ReadInt32();
-            return self;
-        }
-
-        internal void _resolve(Config.LoadErrors errors)
-        {
-            RefRank = Config.Equip.DataRank.Get(Rank);;
-            if (RefRank == null) errors.RefNull("LevelRank", ToString(), "Rank");
-        }
+    internal void _resolve(LoadErrors errors)
+    {
+        RefRank = Equip.DataRank.Get(Rank)!;
+        if (RefRank == null) errors.RefNull("LevelRank", ToString(), "Rank");
     }
 }

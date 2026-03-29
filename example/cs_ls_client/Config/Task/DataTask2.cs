@@ -1,102 +1,109 @@
-using System;
 using System.Collections.Generic;
+namespace Config.Task;
 
-namespace Config.Task
+public partial class DataTask2
 {
-    public partial class DataTask2
+    public required int Taskid { get; init; } /* 任务完成条件类型（id的范围为1-100） */
+    public required List<Config.Text> Name { get; init; }
+    public required int Nexttask { get; init; }
+    public required Task.DataCompletecondition Completecondition { get; init; }
+    public required int Exp { get; init; }
+    public required bool TestBool { get; init; }
+    public required string TestString { get; init; }
+    public required DataPosition TestStruct { get; init; }
+    public required List<int> TestList { get; init; }
+    public required List<DataPosition> TestListStruct { get; init; }
+    public required List<Ai.DataTriggerTick> TestListInterface { get; init; }
+    public Task.DataTaskextraexp? NullableRefTaskid { get; private set; }
+    public Task.DataTask? NullableRefNexttask { get; private set; }
+
+    public override int GetHashCode()
     {
-        public int Taskid { get; private set; } /* 任务完成条件类型（id的范围为1-100） */
-        public List<Config.Text> Name { get; private set; }
-        public int Nexttask { get; private set; }
-        public Config.Task.DataCompletecondition Completecondition { get; private set; }
-        public int Exp { get; private set; }
-        public bool TestBool { get; private set; }
-        public string TestString { get; private set; }
-        public Config.DataPosition TestStruct { get; private set; }
-        public List<int> TestList { get; private set; }
-        public List<Config.DataPosition> TestListStruct { get; private set; }
-        public List<Config.Ai.DataTriggertick> TestListInterface { get; private set; }
-        public Config.Task.DataTaskextraexp NullableRefTaskid { get; private set; }
-        public Config.Task.DataTask NullableRefNexttask { get; private set; }
+        return Taskid.GetHashCode();
+    }
 
-        public override int GetHashCode()
+    public override bool Equals(object? obj)
+    {
+        if (obj == null) return false;
+        if (obj == this) return true;
+        var o = obj as DataTask2;
+        return o != null && Taskid.Equals(o.Taskid);
+    }
+
+    public override string ToString()
+    {
+        return "(" + Taskid + "," + StringUtil.ToString(Name) + "," + Nexttask + "," + Completecondition + "," + Exp + "," + TestBool + "," + TestString + "," + TestStruct + "," + StringUtil.ToString(TestList) + "," + StringUtil.ToString(TestListStruct) + "," + StringUtil.ToString(TestListInterface) + ")";
+    }
+
+    
+    private static OrderedDictionary<int, DataTask2> _all = [];
+
+    public static DataTask2? Get(int taskid)
+    {
+        return _all.GetValueOrDefault(taskid);
+    }
+
+    public static IReadOnlyList<DataTask2> All()
+    {
+        return _all.Values;
+    }
+
+    internal static void Initialize(Stream os, LoadErrors errors)
+    {
+        _all = [];
+        for (var c = os.ReadInt32(); c > 0; c--)
         {
-            return Taskid.GetHashCode();
+            var self = _create(os);
+            _all.Add(self.Taskid, self);
         }
 
-        public override bool Equals(object obj)
-        {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DataTask2;
-            return o != null && Taskid.Equals(o.Taskid);
-        }
+    }
 
-        public override string ToString()
-        {
-            return "(" + Taskid + "," + StringUtil.ToString(Name) + "," + Nexttask + "," + Completecondition + "," + Exp + "," + TestBool + "," + TestString + "," + TestStruct + "," + StringUtil.ToString(TestList) + "," + StringUtil.ToString(TestListStruct) + "," + StringUtil.ToString(TestListInterface) + ")";
-        }
+    internal static void Resolve(LoadErrors errors)
+    {
+        foreach (var v in All())
+            v._resolve(errors);
+    }
+    internal static DataTask2 _create(Stream os)
+    {
+        var taskid = os.ReadInt32();
+        List<Config.Text> name = [];
+        for (var c = os.ReadInt32(); c > 0; c--)
+            name.Add(Config.Text._create(os));
+        var nexttask = os.ReadInt32();
+        var completecondition = Task.DataCompletecondition._create(os);
+        var exp = os.ReadInt32();
+        var testBool = os.ReadBool();
+        var testString = os.ReadStringInPool();
+        var testStruct = DataPosition._create(os);
+        List<int> testList = [];
+        for (var c = os.ReadInt32(); c > 0; c--)
+            testList.Add(os.ReadInt32());
+        List<DataPosition> testListStruct = [];
+        for (var c = os.ReadInt32(); c > 0; c--)
+            testListStruct.Add(DataPosition._create(os));
+        List<Ai.DataTriggerTick> testListInterface = [];
+        for (var c = os.ReadInt32(); c > 0; c--)
+            testListInterface.Add(Ai.DataTriggerTick._create(os));
+        return new DataTask2 {
+            Taskid = taskid,
+            Name = name,
+            Nexttask = nexttask,
+            Completecondition = completecondition,
+            Exp = exp,
+            TestBool = testBool,
+            TestString = testString,
+            TestStruct = testStruct,
+            TestList = testList,
+            TestListStruct = testListStruct,
+            TestListInterface = testListInterface,
+        };
+    }
 
-        
-        static Config.KeyedList<int, DataTask2> all = null;
-
-        public static DataTask2 Get(int taskid)
-        {
-            DataTask2 v;
-            return all.TryGetValue(taskid, out v) ? v : null;
-        }
-
-        public static List<DataTask2> All()
-        {
-            return all.OrderedValues;
-        }
-
-        internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
-        {
-            all = new Config.KeyedList<int, DataTask2>();
-            for (var c = os.ReadInt32(); c > 0; c--)
-            {
-                var self = _create(os);
-                all.Add(self.Taskid, self);
-            }
-
-        }
-
-        internal static void Resolve(Config.LoadErrors errors)
-        {
-            foreach (var v in All())
-                v._resolve(errors);
-        }
-        internal static DataTask2 _create(Config.Stream os)
-        {
-            var self = new DataTask2();
-            self.Taskid = os.ReadInt32();
-            self.Name = new List<Config.Text>();
-            for (var c = os.ReadInt32(); c > 0; c--)
-                self.Name.Add(Config.Text._create(os));
-            self.Nexttask = os.ReadInt32();
-            self.Completecondition = Config.Task.DataCompletecondition._create(os);
-            self.Exp = os.ReadInt32();
-            self.TestBool = os.ReadBool();
-            self.TestString = os.ReadStringInPool();
-            self.TestStruct = Config.DataPosition._create(os);
-            self.TestList = new List<int>();
-            for (var c = os.ReadInt32(); c > 0; c--)
-                self.TestList.Add(os.ReadInt32());
-            self.TestListStruct = new List<Config.DataPosition>();
-            for (var c = os.ReadInt32(); c > 0; c--)
-                self.TestListStruct.Add(Config.DataPosition._create(os));
-            self.TestListInterface = new List<Config.Ai.DataTriggertick>();
-            for (var c = os.ReadInt32(); c > 0; c--)
-                self.TestListInterface.Add(Config.Ai.DataTriggertick._create(os));
-            return self;
-        }
-
-        internal void _resolve(Config.LoadErrors errors)
-        {
-            Completecondition._resolve(errors);
-            NullableRefTaskid = Config.Task.DataTaskextraexp.Get(Taskid);;
-            NullableRefNexttask = Config.Task.DataTask.Get(Nexttask);;
-        }
+    internal void _resolve(LoadErrors errors)
+    {
+        Completecondition._resolve(errors);
+        NullableRefTaskid = Task.DataTaskextraexp.Get(Taskid);
+        NullableRefNexttask = Task.DataTask.Get(Nexttask);
     }
 }

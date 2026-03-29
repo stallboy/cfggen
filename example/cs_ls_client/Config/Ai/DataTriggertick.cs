@@ -1,23 +1,21 @@
-using System;
-using System.Collections.Generic;
+namespace Config.Ai;
 
-namespace Config.Ai
+public abstract class DataTriggerTick
 {
-    public abstract class DataTriggertick
-    {
 
-        internal static DataTriggertick _create(Config.Stream os)
+    internal static DataTriggerTick _create(Stream os)
+    {
+        var impl = os.ReadStringInPool();
+        switch(impl)
         {
-            switch(os.ReadStringInPool())
-            {
-                case "ConstValue":
-                    return Config.Ai.Triggertick.DataConstvalue._create(os);
-                case "ByLevel":
-                    return Config.Ai.Triggertick.DataBylevel._create(os);
-                case "ByServerUpDay":
-                    return Config.Ai.Triggertick.DataByserverupday._create(os);
-            }
-            return null;
+            case "ConstValue":
+                return Ai.TriggerTick.DataConstValue._create(os);
+            case "ByLevel":
+                return Ai.TriggerTick.DataByLevel._create(os);
+            case "ByServerUpDay":
+                return Ai.TriggerTick.DataByServerUpDay._create(os);
         }
+        throw os.NotFoundImpl(impl, "ai.TriggerTick");
     }
 }
+

@@ -29,8 +29,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
     public boolean isLangSwitch;
     private static final List<String> COPY_FILES = List.of(
             "Loader.cs",
-            "LoadErrors.cs",
-            "KeyedList.cs"
+            "LoadErrors.cs"
     );
 
     public CsCodeGenerator(Parameter parameter) {

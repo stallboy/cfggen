@@ -1,46 +1,36 @@
-using System;
-using System.Collections.Generic;
+namespace Config.Ai.TriggerTick;
 
-namespace Config.Ai.Triggertick
+public partial class DataByLevel : Ai.DataTriggerTick
 {
-    public partial class DataBylevel : Config.Ai.DataTriggertick
+    public required int Init { get; init; }
+    public required float Coefficient { get; init; }
+
+    public override int GetHashCode()
     {
-        public int Init { get; private set; }
-        public float Coefficient { get; private set; }
-
-        public DataBylevel() {
-        }
-
-        public DataBylevel(int init, float coefficient) {
-            this.Init = init;
-            this.Coefficient = coefficient;
-        }
-
-        public override int GetHashCode()
-        {
-            return Init.GetHashCode() + Coefficient.GetHashCode();
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DataBylevel;
-            return o != null && Init.Equals(o.Init) && Coefficient.Equals(o.Coefficient);
-        }
-
-        public override string ToString()
-        {
-            return "(" + Init + "," + Coefficient + ")";
-        }
-
-        internal new static DataBylevel _create(Config.Stream os)
-        {
-            var self = new DataBylevel();
-            self.Init = os.ReadInt32();
-            self.Coefficient = os.ReadSingle();
-            return self;
-        }
-
+        return Init.GetHashCode() + Coefficient.GetHashCode();
     }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj == null) return false;
+        if (obj == this) return true;
+        var o = obj as DataByLevel;
+        return o != null && Init.Equals(o.Init) && Coefficient.Equals(o.Coefficient);
+    }
+
+    public override string ToString()
+    {
+        return "(" + Init + "," + Coefficient + ")";
+    }
+
+    internal new static DataByLevel _create(Stream os)
+    {
+        var init = os.ReadInt32();
+        var coefficient = os.ReadSingle();
+        return new DataByLevel {
+            Init = init,
+            Coefficient = coefficient,
+        };
+    }
+
 }

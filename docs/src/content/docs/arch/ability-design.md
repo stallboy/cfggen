@@ -272,7 +272,6 @@ interface ReadOnlyStore {
     float getFloat(int varId);
     Actor getActor(int varId);
     Vector3 getLocation(int varId);
-    boolean hasVar(int varId);
 }
 
 interface Store extends ReadOnlyStore {
@@ -883,7 +882,6 @@ interface Condition {
         query: TagQuery;
     }
 
-    struct PayloadHasVar { varKey: str ->var_key; }
     struct PayloadHasTag { query: TagQuery; }
     
     struct Chance { probability: FloatValue; } // 随机概率

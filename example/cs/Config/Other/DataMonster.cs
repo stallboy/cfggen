@@ -1,104 +1,106 @@
-using System;
 using System.Collections.Generic;
+namespace Config.Other;
 
-namespace Config.Other
+public partial class DataMonster
 {
-    public partial class DataMonster
+    public required int Id { get; init; }
+    public required List<DataPosition> PosList { get; init; }
+    public required int LootId { get; init; } /* loot */
+    public required int LootItemId { get; init; } /* item */
+    public required OrderedDictionary<string, int> EnumMap1 { get; init; }
+    public required OrderedDictionary<int, string> EnumMap2 { get; init; }
+    public Other.DataLootitem RefLoot { get; private set; } = null!;
+    public Other.DataLoot RefAllLoot { get; private set; } = null!;
+    public OrderedDictionary<int, Other.DataArgCaptureMode> RefEnumMap2 { get; private set; } = null!;
+
+    public override int GetHashCode()
     {
-        public int Id { get; private set; }
-        public List<Config.DataPosition> PosList { get; private set; }
-        public int LootId { get; private set; } /* loot */
-        public int LootItemId { get; private set; } /* item */
-        public KeyedList<string, int> EnumMap1 { get; private set; }
-        public KeyedList<int, string> EnumMap2 { get; private set; }
-        public Config.Other.DataLootitem RefLoot { get; private set; }
-        public Config.Other.DataLoot RefAllLoot { get; private set; }
-        public KeyedList<int, Config.Other.DataArgcapturemode> RefEnumMap2 { get; private set; }
+        return Id.GetHashCode();
+    }
 
-        public override int GetHashCode()
+    public override bool Equals(object? obj)
+    {
+        if (obj == null) return false;
+        if (obj == this) return true;
+        var o = obj as DataMonster;
+        return o != null && Id.Equals(o.Id);
+    }
+
+    public override string ToString()
+    {
+        return "(" + Id + "," + StringUtil.ToString(PosList) + "," + LootId + "," + LootItemId + "," + EnumMap1 + "," + EnumMap2 + ")";
+    }
+
+    
+    private static OrderedDictionary<int, DataMonster> _all = [];
+
+    public static DataMonster? Get(int id)
+    {
+        return _all.GetValueOrDefault(id);
+    }
+
+    public static IReadOnlyList<DataMonster> All()
+    {
+        return _all.Values;
+    }
+
+    internal static void Initialize(Stream os, LoadErrors errors)
+    {
+        _all = [];
+        for (var c = os.ReadInt32(); c > 0; c--)
         {
-            return Id.GetHashCode();
+            var self = _create(os);
+            _all.Add(self.Id, self);
         }
 
-        public override bool Equals(object obj)
+    }
+
+    internal static void Resolve(LoadErrors errors)
+    {
+        foreach (var v in All())
+            v._resolve(errors);
+    }
+    internal static DataMonster _create(Stream os)
+    {
+        var id = os.ReadInt32();
+        List<DataPosition> posList = [];
+        for (var c = os.ReadInt32(); c > 0; c--)
+            posList.Add(DataPosition._create(os));
+        var lootId = os.ReadInt32();
+        var lootItemId = os.ReadInt32();
+        OrderedDictionary<string, int> enumMap1 = [];
+        for (var c = os.ReadInt32(); c > 0; c--)
         {
-            if (obj == null) return false;
-            if (obj == this) return true;
-            var o = obj as DataMonster;
-            return o != null && Id.Equals(o.Id);
+            enumMap1.Add(os.ReadStringInPool(), os.ReadInt32());
         }
-
-        public override string ToString()
+        OrderedDictionary<int, string> enumMap2 = [];
+        for (var c = os.ReadInt32(); c > 0; c--)
         {
-            return "(" + Id + "," + StringUtil.ToString(PosList) + "," + LootId + "," + LootItemId + "," + EnumMap1 + "," + EnumMap2 + ")";
+            enumMap2.Add(os.ReadInt32(), os.ReadStringInPool());
         }
+        return new DataMonster {
+            Id = id,
+            PosList = posList,
+            LootId = lootId,
+            LootItemId = lootItemId,
+            EnumMap1 = enumMap1,
+            EnumMap2 = enumMap2,
+        };
+    }
 
-        
-        static Config.KeyedList<int, DataMonster> all = null;
-
-        public static DataMonster Get(int id)
+    internal void _resolve(LoadErrors errors)
+    {
+        RefLoot = Other.DataLootitem.Get(LootId, LootItemId)!;
+        if (RefLoot == null) errors.RefNull("other.monster", ToString(), "Loot");
+        RefAllLoot = Other.DataLoot.Get(LootId)!;
+        if (RefAllLoot == null) errors.RefNull("other.monster", ToString(), "AllLoot");
+        RefEnumMap2 = [];
+        foreach(var kv in EnumMap2)
         {
-            DataMonster v;
-            return all.TryGetValue(id, out v) ? v : null;
-        }
-
-        public static List<DataMonster> All()
-        {
-            return all.OrderedValues;
-        }
-
-        internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
-        {
-            all = new Config.KeyedList<int, DataMonster>();
-            for (var c = os.ReadInt32(); c > 0; c--)
-            {
-                var self = _create(os);
-                all.Add(self.Id, self);
-            }
-
-        }
-
-        internal static void Resolve(Config.LoadErrors errors)
-        {
-            foreach (var v in All())
-                v._resolve(errors);
-        }
-        internal static DataMonster _create(Config.Stream os)
-        {
-            var self = new DataMonster();
-            self.Id = os.ReadInt32();
-            self.PosList = new List<Config.DataPosition>();
-            for (var c = os.ReadInt32(); c > 0; c--)
-                self.PosList.Add(Config.DataPosition._create(os));
-            self.LootId = os.ReadInt32();
-            self.LootItemId = os.ReadInt32();
-            self.EnumMap1 = new KeyedList<string, int>();
-            for (var c = os.ReadInt32(); c > 0; c--)
-            {
-                self.EnumMap1.Add(os.ReadStringInPool(), os.ReadInt32());
-            }
-            self.EnumMap2 = new KeyedList<int, string>();
-            for (var c = os.ReadInt32(); c > 0; c--)
-            {
-                self.EnumMap2.Add(os.ReadInt32(), os.ReadStringInPool());
-            }
-            return self;
-        }
-
-        internal void _resolve(Config.LoadErrors errors)
-        {
-            RefLoot = Config.Other.DataLootitem.Get(LootId, LootItemId);;
-            if (RefLoot == null) errors.RefNull("other.monster", ToString(), "Loot");
-            RefAllLoot = Config.Other.DataLoot.Get(LootId);;
-            if (RefAllLoot == null) errors.RefNull("other.monster", ToString(), "AllLoot");
-            RefEnumMap2 = new KeyedList<int, Config.Other.DataArgcapturemode>();
-            foreach(var kv in EnumMap2.Map)
-            {
-                var k = kv.Key;
-                var v = Config.Other.DataArgcapturemode.Get(kv.Value);;
-                if (v == null) errors.RefNull("other.monster", ToString(), "enumMap2");
-                RefEnumMap2.Add(k, v);
-            }
+            var k = kv.Key;
+            var v = Other.DataArgCaptureMode.Get(kv.Value);
+            if (v == null) errors.RefNull("other.monster", ToString(), "enumMap2");
+            else RefEnumMap2.Add(k, v);
         }
     }
 }

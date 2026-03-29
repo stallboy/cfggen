@@ -1,93 +1,94 @@
-using System;
 using System.Collections.Generic;
+namespace Config.Other;
 
-namespace Config.Other
+public partial class DataLootitem
 {
-    public partial class DataLootitem
+    public required int Lootid { get; init; } /* 掉落id */
+    public required int Itemid { get; init; } /* 掉落物品 */
+    public required int Chance { get; init; } /* 掉落概率 */
+    public required int Countmin { get; init; } /* 数量下限 */
+    public required int Countmax { get; init; } /* 数量上限 */
+
+    public override int GetHashCode()
     {
-        public int Lootid { get; private set; } /* 掉落id */
-        public int Itemid { get; private set; } /* 掉落物品 */
-        public int Chance { get; private set; } /* 掉落概率 */
-        public int Countmin { get; private set; } /* 数量下限 */
-        public int Countmax { get; private set; } /* 数量上限 */
+        return Lootid.GetHashCode() + Itemid.GetHashCode();
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj == null) return false;
+        if (obj == this) return true;
+        var o = obj as DataLootitem;
+        return o != null && Lootid.Equals(o.Lootid) && Itemid.Equals(o.Itemid);
+    }
+
+    public override string ToString()
+    {
+        return "(" + Lootid + "," + Itemid + "," + Chance + "," + Countmin + "," + Countmax + ")";
+    }
+
+    
+    class LootidItemidKey
+    {
+        readonly int Lootid;
+        readonly int Itemid;
+        public LootidItemidKey(int lootid, int itemid)
+        {
+            this.Lootid = lootid;
+            this.Itemid = itemid;
+        }
 
         public override int GetHashCode()
         {
             return Lootid.GetHashCode() + Itemid.GetHashCode();
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataLootitem;
+            var o = obj as LootidItemidKey;
             return o != null && Lootid.Equals(o.Lootid) && Itemid.Equals(o.Itemid);
         }
+    }
 
-        public override string ToString()
+    private static OrderedDictionary<LootidItemidKey, DataLootitem> _all = [];
+
+    public static DataLootitem? Get(int lootid, int itemid)
+    {
+        return _all.GetValueOrDefault(new LootidItemidKey(lootid, itemid));
+    }
+
+    public static IReadOnlyList<DataLootitem> All()
+    {
+        return _all.Values;
+    }
+
+    internal static void Initialize(Stream os, LoadErrors errors)
+    {
+        _all = [];
+        for (var c = os.ReadInt32(); c > 0; c--)
         {
-            return "(" + Lootid + "," + Itemid + "," + Chance + "," + Countmin + "," + Countmax + ")";
-        }
-
-        
-        class LootidItemidKey
-        {
-            readonly int Lootid;
-            readonly int Itemid;
-            public LootidItemidKey(int lootid, int itemid)
-            {
-                this.Lootid = lootid;
-                this.Itemid = itemid;
-            }
-
-            public override int GetHashCode()
-            {
-                return Lootid.GetHashCode() + Itemid.GetHashCode();
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (obj == null) return false;
-                if (obj == this) return true;
-                var o = obj as LootidItemidKey;
-                return o != null && Lootid.Equals(o.Lootid) && Itemid.Equals(o.Itemid);
-            }
-        }
-
-        static Config.KeyedList<LootidItemidKey, DataLootitem> all = null;
-
-        public static DataLootitem Get(int lootid, int itemid)
-        {
-            DataLootitem v;
-            return all.TryGetValue(new LootidItemidKey(lootid, itemid), out v) ? v : null;
-        }
-
-        public static List<DataLootitem> All()
-        {
-            return all.OrderedValues;
-        }
-
-        internal static void Initialize(Config.Stream os, Config.LoadErrors errors)
-        {
-            all = new Config.KeyedList<LootidItemidKey, DataLootitem>();
-            for (var c = os.ReadInt32(); c > 0; c--)
-            {
-                var self = _create(os);
-                all.Add(new LootidItemidKey(self.Lootid, self.Itemid), self);
-            }
-
-        }
-
-        internal static DataLootitem _create(Config.Stream os)
-        {
-            var self = new DataLootitem();
-            self.Lootid = os.ReadInt32();
-            self.Itemid = os.ReadInt32();
-            self.Chance = os.ReadInt32();
-            self.Countmin = os.ReadInt32();
-            self.Countmax = os.ReadInt32();
-            return self;
+            var self = _create(os);
+            _all.Add(new LootidItemidKey(self.Lootid, self.Itemid), self);
         }
 
     }
+
+    internal static DataLootitem _create(Stream os)
+    {
+        var lootid = os.ReadInt32();
+        var itemid = os.ReadInt32();
+        var chance = os.ReadInt32();
+        var countmin = os.ReadInt32();
+        var countmax = os.ReadInt32();
+        return new DataLootitem {
+            Lootid = lootid,
+            Itemid = itemid,
+            Chance = chance,
+            Countmin = countmin,
+            Countmax = countmax,
+        };
+    }
+
 }

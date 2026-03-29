@@ -8,53 +8,52 @@ using System.Collections.Generic;
 @endif
 
 
-namespace ${model.topPkg}
+namespace ${model.topPkg};
+
+public static class Processor
 {
-    public static class Processor
+    // 从 bytes 文件加载（新格式）
+    public static void Process(Config.Stream os, LoadErrors errors)
     {
-        // 从 bytes 文件加载（新格式）
-        public static void Process(Config.Stream os, LoadErrors errors)
+        var configNulls = new List<string>
         {
-            var configNulls = new List<string>
+            @for(TableSchema table : model.tableSchemas)
+                "${table.name()}",
+            @endfor
+        };
+
+        // 读取表数量
+        int tableCount = os.ReadInt32();
+
+        for (int i = 0; i < tableCount; i++)
+        {
+            // 读取表名
+            string tableName = os.ReadTableName();
+            // 读取表大小
+            int tableSize = os.ReadInt32();
+
+            // 根据表名分发到对应的 Initialize 方法
+            switch(tableName)
             {
                 @for(TableSchema table : model.tableSchemas)
-                    "${table.name()}",
-                @endfor
-            };
-
-            // 读取表数量
-            int tableCount = os.ReadInt32();
-
-            for (int i = 0; i < tableCount; i++)
-            {
-                // 读取表名
-                string tableName = os.ReadString();
-                // 读取表大小
-                int tableSize = os.ReadInt32();
-
-                // 根据表名分发到对应的 Initialize 方法
-                switch(tableName)
-                {
-                    @for(TableSchema table : model.tableSchemas)
-                        case "${table.name()}":
-                            configNulls.Remove(tableName);
-                            ${model.fullName(table)}.Initialize(os, errors);
-                            break;
-                    @endfor
-                    default:
-                        // 未知表，跳过
-                        os.SkipBytes(tableSize);
+                    case "${table.name()}":
+                        configNulls.Remove(tableName);
+                        ${model.fullName(table)}.Initialize(os, errors);
                         break;
-                }
+                @endfor
+                default:
+                    // 未知表，跳过
+                    os.SkipBytes(tableSize);
+                    break;
             }
-            foreach (var t in configNulls)
-                errors.ConfigNull(t);
-            // 解析外键引用
-            @for(TableSchema table : model.tableSchemas)
-                @if(HasRef.hasRef(table))
-                    ${model.fullName(table)}.Resolve(errors);
-                @endif
-            @endfor
         }
+        foreach (var t in configNulls)
+            errors.ConfigNull(t);
+        // 解析外键引用
+        @for(TableSchema table : model.tableSchemas)
+            @if(HasRef.hasRef(table))
+                ${model.fullName(table)}.Resolve(errors);
+            @endif
+        @endfor
     }
 }

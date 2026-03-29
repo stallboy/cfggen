@@ -25,8 +25,15 @@ public class StructModel {
         this._vTable = _vTable;
     }
 
-    public boolean isServerText() {
-        return gen.serverText;
+    public boolean shouldImportCollectionsGeneric(){
+        return _vTable != null || structural.fields().stream().anyMatch(f -> switch (f.type()) {
+            case FList ignored -> true;
+            case FMap ignored -> true;
+            default -> false;
+        }) || structural.foreignKeys().stream().anyMatch(fk -> switch (fk.refKey()) {
+            case RefKey.RefList ignored -> true;
+            case RefKey.RefSimple ignored -> false;
+        });
     }
 
     public String fullName(Nameable nameable) {
@@ -63,7 +70,7 @@ public class StructModel {
             case TEXT -> gen.isLangSwitch ? topPkg + ".Text" : "string";
             case StructRef structRef -> fullName(structRef.obj());
             case FList fList -> "List<" + type(fList.item()) + ">";
-            case FMap fMap -> "KeyedList<" + type(fMap.key()) + ", " + type(fMap.value()) + ">";
+            case FMap fMap -> "OrderedDictionary<" + type(fMap.key()) + ", " + type(fMap.value()) + ">";
         };
     }
 
@@ -97,7 +104,7 @@ public class StructModel {
                         return "List<" + fullName(fk.refTableSchema()) + ">";
                     }
                     case FMap fMap -> {
-                        return "KeyedList<" + type(fMap.key()) + ", " + fullName(fk.refTableSchema()) + ">";
+                        return "OrderedDictionary<" + type(fMap.key()) + ", " + fullName(fk.refTableSchema()) + ">";
                     }
                 }
             }
@@ -125,7 +132,7 @@ public class StructModel {
     }
 
     public String uniqueKeyMapName(KeySchema keySchema) {
-        return lower1(keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining()) + "Map");
+        return "_" + lower1(keySchema.fields().stream().map(StringUtil::upper1).collect(Collectors.joining()) + "Map");
     }
 
     public String keyClassName(KeySchema keySchema) {
@@ -175,11 +182,11 @@ public class StructModel {
     public String tableGet(TableSchema refTable, RefKey.RefSimple refSimple, String actualParam) {
         switch (refSimple) {
             case RefKey.RefPrimary ignored -> {
-                return fullName(refTable) + ".Get(" + actualParam + ");";
+                return fullName(refTable) + ".Get(" + actualParam + ")";
             }
             case RefKey.RefUniq refUniq -> {
                 return fullName(refTable) + ".GetBy" + refUniq.keyNames().stream().map(StringUtil::upper1).
-                        collect(Collectors.joining()) + "(" + actualParam + ");";
+                        collect(Collectors.joining()) + "(" + actualParam + ")";
             }
         }
     }

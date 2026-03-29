@@ -5,28 +5,29 @@
     using Config;
 @endif
 
-namespace ${pkg}
+namespace ${pkg};
+
+public partial class Text
 {
-    public partial class Text
+    @for(String lang : languages)
+        public required string ${lang} { get; init; }
+    @endfor
+    private Text() {}
+
+    public override string ToString()
     {
-        @for(String lang : languages)
-            public string ${lang} { get; private set; }
+        return "(" + ${String.join(" + \",\" + ", languages)} + ")";
+    }
+
+    internal static Text _create(Config.Stream os)
+    {
+        string[] texts = os.ReadTextsInPool();
+        return new Text
+        {
+        @for(int i = 0; i < languages.size(); i++)
+            ${languages.get(i)} = texts[${i}],
         @endfor
-        private Text() {}
-
-        public override string ToString()
-        {
-            return "(" + ${String.join(" + \",\" + ", languages)} + ")";
-        }
-
-        internal static Text _create(Config.Stream os)
-        {
-            Text self = new Text();
-            string[] texts = os.ReadTextsInPool();
-            @for(int i = 0; i < languages.size(); i++)
-                self.${languages.get(i)} = texts[${i}];
-            @endfor
-            return self;
-        }
+        };
     }
 }
+
