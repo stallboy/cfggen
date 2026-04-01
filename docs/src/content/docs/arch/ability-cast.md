@@ -92,12 +92,12 @@ enum TargetLostPolicy {
 引擎在 `Activate` 时，将瞄准数据写入 `instanceState` 中。
 引擎在 `Processing` 阶段（蓄力、引导期间）**每帧根据玩家鼠标/摇杆实时更新这些变量**。当结算 `effect` 时，读取到的永远是玩家动作那一刻的最精确输入。
 
-| Targeting 类型 | context.target 初始值 | instanceState 写入变量（由 combat_settings 定义）|
+| Targeting 类型 | context.target 初始值 | instanceState 写入 |
 |---|---|---|
 | `None` | 施法者自身 | 无 |
-| `SingleTarget` | 选中的目标 Actor | `targetVar` = 选中目标 |
-| `PointTarget` | 施法者自身 | `pointVar` = 选中地点 |
-| `DirectionalTarget`| 施法者自身 | `directionVar` = 选中方向 |
+| `SingleTarget` | 选中的目标 Actor | `targetingActor` = 选中目标 |
+| `PointTarget` | 施法者自身 | `targetingPoint` = 选中地点 |
+| `DirectionalTarget`| 施法者自身 | `targetingDir` = 选中方向 |
 
 **SingleTarget 的 Processing 阶段追踪**：每帧验证目标存活 ∧ 目标在 maxRange 内 ∧ 目标满足 tagQuery。验证失败时按 `onTargetLost` 处理（`Cancel` 触发 cancel，`Continue` 不处理）。`PointTarget` 和 `DirectionalTarget` 的数据为标量，不存在"丢失"概念，无需追踪。
 
@@ -383,15 +383,6 @@ table combat_settings[name] {
 
     // 兜底并发限制（具体互斥依然靠 TagRules）
     maxConcurrentAbilitiesPerActor: int; 
-
-    // 引擎系统与技能系统的变量通讯桥梁
-    targetingVars: TargetingVarConfig;
-}
-
-struct TargetingVarConfig {
-    targetVar: str ->var_key;    // Sys.Targeting.Actor
-    pointVar: str ->var_key;     // Sys.Targeting.Point
-    directionVar: str ->var_key; // Sys.Targeting.Direction
 }
 ```
 

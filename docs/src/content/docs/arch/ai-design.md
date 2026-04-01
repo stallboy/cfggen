@@ -97,7 +97,7 @@ class AIBrainComponent {
 class AIGoalInstance {
     Ai_goal_definition goalCfg;
     Actor associatedActor;  // 关联实体（可为 null，如纯位置型 Goal）
-    Vector3 position;
+    Vec2 position;
     float magnitude;
     float creationTime;
 }

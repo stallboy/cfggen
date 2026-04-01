@@ -266,12 +266,15 @@ record Context(
 class InstanceState implements Store {
     int abilityLevel = 1;   // 技能等级（由 Ability 注入，默认为 1）
     int currentStacks = 1;  // 当前状态层数（由 Status 注入，默认为 1） 
+    Actor targetingActor;
+    Vec2 targetingPoint;
+    Vec2 targetingDir;
 }
 
 interface ReadOnlyStore {
     float getFloat(int varId);
     Actor getActor(int varId);
-    Vector3 getLocation(int varId);
+    Vec2 getLocation(int varId);
 }
 
 interface Store extends ReadOnlyStore {
