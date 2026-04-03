@@ -2,9 +2,8 @@
 @import configgen.schema.HasRef
 @import configgen.schema.TableSchema
 @param ProcessorModel model
-using System.Collections.Generic;
 @if(!model.topPkg.equals("Config"))
-    using Config;
+using Config;
 @endif
 
 
@@ -13,7 +12,7 @@ namespace ${model.topPkg};
 public static class Processor
 {
     // 从 bytes 文件加载（新格式）
-    public static void Process(Config.Stream os, LoadErrors errors)
+    public static void Process(ConfigReader reader)
     {
         var configNulls = new List<string>
         {
@@ -23,14 +22,14 @@ public static class Processor
         };
 
         // 读取表数量
-        int tableCount = os.ReadInt32();
+        int tableCount = reader.ReadInt32();
 
         for (int i = 0; i < tableCount; i++)
         {
             // 读取表名
-            string tableName = os.ReadTableName();
+            string tableName = reader.ReadTableName();
             // 读取表大小
-            int tableSize = os.ReadInt32();
+            int tableSize = reader.ReadInt32();
 
             // 根据表名分发到对应的 Initialize 方法
             switch(tableName)
@@ -38,21 +37,21 @@ public static class Processor
                 @for(TableSchema table : model.tableSchemas)
                     case "${table.name()}":
                         configNulls.Remove(tableName);
-                        ${model.fullName(table)}.Initialize(os, errors);
+                        ${model.fullName(table)}.Initialize(reader);
                         break;
                 @endfor
                 default:
                     // 未知表，跳过
-                    os.SkipBytes(tableSize);
+                    reader.SkipBytes(tableSize);
                     break;
             }
         }
         foreach (var t in configNulls)
-            errors.ConfigNull(t);
+            reader.TableNotInData(t);
         // 解析外键引用
         @for(TableSchema table : model.tableSchemas)
             @if(HasRef.hasRef(table))
-                ${model.fullName(table)}.Resolve(errors);
+                ${model.fullName(table)}.Resolve(reader);
             @endif
         @endfor
     }

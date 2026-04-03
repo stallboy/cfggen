@@ -12,8 +12,7 @@ import configgen.value.CfgValue;
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static configgen.value.CfgValue.VTable;
 
@@ -28,8 +27,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
     private CacheConfig cacheConfig;
     public boolean isLangSwitch;
     private static final List<String> COPY_FILES = List.of(
-            "Loader.cs",
-            "LoadErrors.cs"
+            "Loader.cs"
     );
 
     public CsCodeGenerator(Parameter parameter) {
@@ -74,6 +72,8 @@ public class CsCodeGenerator extends GeneratorWithTag {
         for (VTable vTable : cfgValue.sortedTables()) {
             generateTable(vTable);
         }
+
+        generateModuleLoaders(cfgSchema, cfgValue);
 
         if (isLangSwitch) { //生成 Text这个Bean
             generateText(ctx.nullableLangSwitch());
@@ -123,6 +123,51 @@ public class CsCodeGenerator extends GeneratorWithTag {
 
     private CachedIndentPrinter createCode(String fn) {
         return cacheConfig.printer(dstDir.resolve(fn), encoding);
+    }
+
+    private void generateModuleLoaders(CfgSchema cfgSchema, CfgValue cfgValue) {
+        Map<String, ModuleModel> modules = new LinkedHashMap<>();
+
+        // Process fieldables (structs, interfaces, interface impls)
+        for (Fieldable fieldable : cfgSchema.sortedFieldables()) {
+            switch (fieldable) {
+                case StructSchema structSchema -> {
+                    StructModel sm = new StructModel(this, structSchema, null);
+                    String key = getModuleKey(sm.name);
+                    modules.computeIfAbsent(key, k -> new ModuleModel(this, k)).addStruct(sm);
+                }
+                case InterfaceSchema interfaceSchema -> {
+                    InterfaceModel im = new InterfaceModel(this, interfaceSchema);
+                    String key = getModuleKey(im.name);
+                    ModuleModel mm = modules.computeIfAbsent(key, k -> new ModuleModel(this, k));
+                    mm.addInterface(im);
+                    for (StructSchema impl : interfaceSchema.impls()) {
+                        StructModel sm = new StructModel(this, impl, null);
+                        mm.addStruct(sm);
+                    }
+                }
+            }
+        }
+
+        // Process tables
+        for (CfgValue.VTable vTable : cfgValue.sortedTables()) {
+            StructModel sm = new StructModel(this, vTable.schema(), vTable);
+            String key = getModuleKey(sm.name);
+            modules.computeIfAbsent(key, k -> new ModuleModel(this, k)).addStruct(sm);
+        }
+
+        // Generate module loader files
+        for (ModuleModel mm : modules.values()) {
+            try (var ps = createCode(mm.loaderPath)) {
+                JteEngine.render("cs/GenModuleLoader.jte", mm, ps);
+            }
+        }
+    }
+
+    private String getModuleKey(Name name) {
+        String path = name.path;
+        int slash = path.indexOf('/');
+        return slash < 0 ? "" : path.substring(0, slash);
     }
 
 

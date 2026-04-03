@@ -17,8 +17,8 @@ public partial class Text(int index)
         return T;
     }
 
-    internal static Text _create(Config.Stream os)
+    internal static Text _create(ConfigReader reader)
     {
-        return new Text(os.ReadTextIndex());
+        return new Text(reader.ReadTextIndex());
     }
 }

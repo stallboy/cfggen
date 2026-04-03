@@ -25,17 +25,6 @@ public class StructModel {
         this._vTable = _vTable;
     }
 
-    public boolean shouldImportCollectionsGeneric(){
-        return _vTable != null || structural.fields().stream().anyMatch(f -> switch (f.type()) {
-            case FList ignored -> true;
-            case FMap ignored -> true;
-            default -> false;
-        }) || structural.foreignKeys().stream().anyMatch(fk -> switch (fk.refKey()) {
-            case RefKey.RefList ignored -> true;
-            case RefKey.RefSimple ignored -> false;
-        });
-    }
-
     public String fullName(Nameable nameable) {
         return new Name(gen.pkg, gen.prefix, nameable).fullName;
     }
@@ -76,13 +65,13 @@ public class StructModel {
 
     public String create(FieldType t) {
         return switch (t) {
-            case BOOL -> "os.ReadBool()";
-            case INT -> "os.ReadInt32()";
-            case LONG -> "os.ReadInt64()";
-            case FLOAT -> "os.ReadSingle()";
-            case STRING -> "os.ReadStringInPool()";
-            case TEXT -> gen.isLangSwitch ? topPkg + ".Text._create(os)" : "os.ReadTextInPool()";
-            case StructRef structRef -> fullName(structRef.obj()) + "._create(os)";
+            case BOOL -> "reader.ReadBool()";
+            case INT -> "reader.ReadInt32()";
+            case LONG -> "reader.ReadInt64()";
+            case FLOAT -> "reader.ReadSingle()";
+            case STRING -> "reader.ReadStringInPool()";
+            case TEXT -> gen.isLangSwitch ? topPkg + ".Text._create(reader)" : "reader.ReadTextInPool()";
+            case StructRef structRef -> fullName(structRef.obj()) + "._create(reader)";
             case FList ignored -> null;
             case FMap ignored -> null;
         };

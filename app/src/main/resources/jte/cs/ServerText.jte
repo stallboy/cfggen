@@ -19,9 +19,9 @@ public partial class Text
         return "(" + ${String.join(" + \",\" + ", languages)} + ")";
     }
 
-    internal static Text _create(Config.Stream os)
+    internal static Text _create(ConfigReader reader)
     {
-        string[] texts = os.ReadTextsInPool();
+        string[] texts = reader.ReadTextsInPool();
         return new Text
         {
         @for(int i = 0; i < languages.size(); i++)
