@@ -4,6 +4,7 @@
 @import configgen.gencs.InterfaceModel
 @import configgen.schema.*
 @import configgen.schema.FieldType.*
+@import java.util.List
 @param ModuleModel model
 !{String topPkg = model.topPkg;}
 @for(NamespaceGroup group : model.groups())
@@ -97,6 +98,45 @@ namespace ${group.ns}
                     @endfor
                 };
             }
+
+        !{boolean hasFields = !sm.structural.fields().isEmpty();}
+
+            <%--hash, equal, toString--%>
+            @if(!hasFields)
+                public override int GetHashCode()
+                {
+                    return this.GetType().GetHashCode();
+                }
+
+                public override bool Equals(object? obj)
+                {
+                    if (obj == null) return false;
+                    if (obj == this) return true;
+                    var o = obj as ${className};
+                    return o != null;
+                }
+
+            @else
+                !{List<FieldSchema> keys = sm._vTable != null ? sm._vTable.schema().primaryKey().fieldSchemas() : sm.structural.fields();}
+                public override int GetHashCode()
+                {
+                    return ${sm.hashCodes(keys)};
+                }
+
+                public override bool Equals(object? obj)
+                {
+                    if (obj == null) return false;
+                    if (obj == this) return true;
+                    var o = obj as ${className};
+                    return o != null && ${sm.equals(keys)};
+                }
+
+                public override string ToString()
+                {
+                    return "(" + ${sm.toStrings(sm.structural.fields())} + ")";
+                }
+
+            @endif
 
         @if(HasRef.hasRef(sm.structural))
             internal void _resolve(ConfigReader reader)

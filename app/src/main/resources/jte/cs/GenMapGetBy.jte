@@ -15,7 +15,7 @@
             public ${keyClassName}(${model.formalParams(keySchema.fieldSchemas())})
             {
                 @for(FieldSchema field : keySchema.fieldSchemas())
-                    this.${model.upper1(field.name())} = ${model.lower1(field.name())};
+                    ${model.upper1(field.name())} = ${model.lower1(field.name())};
                 @endfor
             }
 
