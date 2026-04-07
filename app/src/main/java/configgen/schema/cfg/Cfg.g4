@@ -18,21 +18,28 @@ schema_ele
 
 // 2. High-level Structures (Struct, Interface, Table)
 struct_decl
-    : leading_comment* STRUCT ns_ident metadata LC_COMMENT (field_decl | foreign_decl)* suffix_comment* RC
+    : leading_comment* STRUCT ns_ident metadata
+      LC_COMMENT (field_decl | foreign_decl)*
+      suffix_comment* RC
     ;
 
 interface_decl
-    : leading_comment* INTERFACE ns_ident metadata LC_COMMENT struct_decl+ suffix_comment* RC
+    : leading_comment* INTERFACE ns_ident metadata
+      LC_COMMENT struct_decl+
+      suffix_comment* RC
     ;
 
 table_decl
-    : leading_comment* TABLE ns_ident key metadata LC_COMMENT (field_decl | foreign_decl | key_decl)+ suffix_comment* RC
+    : leading_comment* TABLE ns_ident key metadata
+      LC_COMMENT (field_decl | foreign_decl | key_decl)+
+      suffix_comment* RC
     ;
 
 enum_decl
-    : leading_comment* ENUM ns_ident metadata LC_COMMENT enum_value* suffix_comment* RC
+    : leading_comment* ENUM ns_ident metadata
+      LC_COMMENT ( enum_value_empty+ | enum_value_assigned+ )?
+      suffix_comment* RC
     ;
-
 // 3. Members & Fields (字段与定义)
 field_decl
     : leading_comment* identifier COLON type_ ref? metadata SEMI_COMMENT
@@ -46,8 +53,13 @@ key_decl
     : leading_comment* key SEMI_COMMENT
     ;
 
-enum_value
+enum_value_empty
     : leading_comment* identifier SEMI_COMMENT
+    ;
+
+// 已赋值的枚举字段
+enum_value_assigned
+    : leading_comment* identifier EQ enum_number SEMI_COMMENT
     ;
 
 // 4. Types System (类型系统)
@@ -91,6 +103,11 @@ single_value
     | FLOAT_CONSTANT
     | STRING_CONSTANT
     | BOOL_CONSTANT
+    ;
+
+enum_number
+    : INTEGER_CONSTANT
+    | HEX_INTEGER_CONSTANT
     ;
 
 // 7. Common Utilities (通用工具)

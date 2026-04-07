@@ -9,6 +9,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import configgen.schema.Metadata.MetaEnumValues;
 import static configgen.schema.Metadata.MetaTag.TAG;
 import static configgen.schema.cfg.CfgParser.*;
 
@@ -119,33 +120,71 @@ public enum CfgReader {
             meta.putComment(fullComment);
         }
 
-        // 解析 enum 值
-        List<MetaEnumValues.EnumValue> enumValues = new ArrayList<>();
-        for (Enum_valueContext evc : ctx.enum_value()) {
-            String valueName = evc.identifier().getText();
-            String valueComment = CommentUtils.readFull2(
-                    evc.leading_comment(),
-                    evc.SEMI_COMMENT());
+        // 解析 enum 值：语法保证要么全是 empty，要么全是 assigned
+        List<Enum_value_assignedContext> assignedCtxs = ctx.enum_value_assigned();
+        if (!assignedCtxs.isEmpty()) {
+            // 有赋值的 enum
+            List<Metadata.EnumValueAssigned> enumValues = new ArrayList<>();
+            for (Enum_value_assignedContext evc : assignedCtxs) {
+                String valueName = evc.identifier().getText();
+                String valueComment = CommentUtils.readFull2(
+                        evc.leading_comment(),
+                        evc.SEMI_COMMENT());
+                int number = parseEnumNumber(evc.enum_number());
+                enumValues.add(new Metadata.EnumValueAssigned(valueName, valueComment, number));
+            }
+            meta.putEnumValues(new MetaEnumValues.OfAssigned(enumValues));
 
-            enumValues.add(new MetaEnumValues.EnumValue(valueName, valueComment));
+            return new TableSchema(
+                    pkgNameDot + name,
+                    new KeySchema(List.of("id")),
+                    new EntryType.EEnum("name"),
+                    false,
+                    meta,
+                    List.of(
+                            new FieldSchema("id", Primitive.INT, FieldFormat.AutoOrPack.AUTO, Metadata.of()),
+                            new FieldSchema("name", Primitive.STRING, FieldFormat.AutoOrPack.AUTO, Metadata.of()),
+                            new FieldSchema("comment", Primitive.STRING, FieldFormat.AutoOrPack.AUTO, Metadata.of())
+                    ),
+                    List.of(),
+                    List.of()
+            );
+        } else {
+            // 无赋值的 enum
+            List<Metadata.EnumValueEmpty> enumValues = new ArrayList<>();
+            for (Enum_value_emptyContext evc : ctx.enum_value_empty()) {
+                String valueName = evc.identifier().getText();
+                String valueComment = CommentUtils.readFull2(
+                        evc.leading_comment(),
+                        evc.SEMI_COMMENT());
+                enumValues.add(new Metadata.EnumValueEmpty(valueName, valueComment));
+            }
+            meta.putEnumValues(new MetaEnumValues.OfEmpty(enumValues));
+
+            return new TableSchema(
+                    pkgNameDot + name,
+                    new KeySchema(List.of("name")),
+                    new EntryType.EEnum("name"),
+                    false,
+                    meta,
+                    List.of(
+                            new FieldSchema("name", Primitive.STRING, FieldFormat.AutoOrPack.AUTO, Metadata.of()),
+                            new FieldSchema("comment", Primitive.STRING, FieldFormat.AutoOrPack.AUTO, Metadata.of())
+                    ),
+                    List.of(),
+                    List.of()
+            );
         }
+    }
 
-        meta.putEnumValues(enumValues);
-
-        // 创建虚拟 table schema
-        return new TableSchema(
-                pkgNameDot + name,
-                new KeySchema(List.of("name")),
-                new EntryType.EEnum("name"),
-                false,  // isColumnMode
-                meta,
-                List.of(
-                        new FieldSchema("name", Primitive.STRING, FieldFormat.AutoOrPack.AUTO, Metadata.of()),
-                        new FieldSchema("comment", Primitive.STRING, FieldFormat.AutoOrPack.AUTO, Metadata.of())
-                ),
-                List.of(),
-                List.of()
-        );
+    private int parseEnumNumber(Enum_numberContext ctx) {
+        String text = ctx.getText();
+        if (text.startsWith("0x") || text.startsWith("0X") ||
+            text.startsWith("-0x") || text.startsWith("-0X") ||
+            text.startsWith("+0x") || text.startsWith("+0X")) {
+            return Integer.decode(text);
+        }
+        return Integer.parseInt(text);
     }
 
     private InterfaceSchema read_interface(Interface_declContext ctx, String pkgNameDot) {

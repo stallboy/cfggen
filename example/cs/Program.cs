@@ -16,23 +16,15 @@
         Console.WriteLine("cipher: " + cipher);
         XorBytesWithCipher(bytes, cipher);
     
-        Config.LoadErrors errs = new Config.LoadErrors();
-        Config.Stream stream = Config.Loader.LoadBytes(bytes, Config.Processor.Process, errs);
+        var loadResult = Config.Loader.LoadBytes(bytes, Config.Processor.Process);
 
         // 打印警告信息
-        Console.WriteLine("=== Warns ===");
-        foreach (var warn in errs.Warns)
+        Console.WriteLine("=== Issues ===");
+        foreach (var issue in loadResult.LoadIssues)
         {
-            Console.WriteLine(warn);
+            Console.WriteLine(issue);
         }
-
-        // 打印错误信息
-        Console.WriteLine("\n=== Errors ===");
-        foreach (var err in errs.Errors)
-        {
-            Console.WriteLine(err);
-        }
-
+        
         Console.WriteLine("\n=== Test Data ===");
         Console.WriteLine(Config.Task.DataTask.Get(1));
     }

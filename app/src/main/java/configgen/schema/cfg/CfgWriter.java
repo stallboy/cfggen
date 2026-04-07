@@ -99,9 +99,19 @@ public class CfgWriter {
 
         String name = useLastName ? table.lastName() : table.name();
         println("%senum %s%s {%s", prefix, name, metadataStr(meta), comment.formatTrailing());
-        for (MetaEnumValues.EnumValue ev : enumValues.values()) {
-            String valueComment = ev.comment().isEmpty() ? "" : " // " + ev.comment();
-            println("%s\t%s;%s", prefix, ev.name(), valueComment);
+        switch (enumValues) {
+            case MetaEnumValues.OfEmpty empty -> {
+                for (EnumValueEmpty ev : empty.values()) {
+                    String valueComment = ev.comment().isEmpty() ? "" : " // " + ev.comment();
+                    println("%s\t%s;%s", prefix, ev.name(), valueComment);
+                }
+            }
+            case MetaEnumValues.OfAssigned assigned -> {
+                for (EnumValueAssigned ev : assigned.values()) {
+                    String valueComment = ev.comment().isEmpty() ? "" : " // " + ev.comment();
+                    println("%s\t%s = %d;%s", prefix, ev.name(), ev.number(), valueComment);
+                }
+            }
         }
 
         writeSuffixComment(comment, prefix);

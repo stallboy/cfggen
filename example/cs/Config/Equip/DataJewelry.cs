@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 namespace Config.Equip;
 
 public partial class DataJewelry
@@ -17,25 +16,6 @@ public partial class DataJewelry
     public Equip.DataJewelrytype RefJType { get; private set; } = null!;
     public Equip.DataJewelrysuit? NullableRefSuitID { get; private set; }
     public Equip.DataAbility RefKeyAbility { get; private set; } = null!;
-
-    public override int GetHashCode()
-    {
-        return ID.GetHashCode();
-    }
-
-    public override bool Equals(object? obj)
-    {
-        if (obj == null) return false;
-        if (obj == this) return true;
-        var o = obj as DataJewelry;
-        return o != null && ID.Equals(o.ID);
-    }
-
-    public override string ToString()
-    {
-        return "(" + ID + "," + Name + "," + IconFile + "," + LvlRank + "," + JType + "," + SuitID + "," + KeyAbility + "," + KeyAbilityValue + "," + SalePrice + "," + Description + ")";
-    }
-
     
     private static OrderedDictionary<int, DataJewelry> _all = [];
 
@@ -47,59 +27,5 @@ public partial class DataJewelry
     public static IReadOnlyList<DataJewelry> All()
     {
         return _all.Values;
-    }
-
-    internal static void Initialize(Stream os, LoadErrors errors)
-    {
-        _all = [];
-        for (var c = os.ReadInt32(); c > 0; c--)
-        {
-            var self = _create(os);
-            _all.Add(self.ID, self);
-        }
-
-    }
-
-    internal static void Resolve(LoadErrors errors)
-    {
-        foreach (var v in All())
-            v._resolve(errors);
-    }
-    internal static DataJewelry _create(Stream os)
-    {
-        var iD = os.ReadInt32();
-        var name = os.ReadStringInPool();
-        var iconFile = os.ReadStringInPool();
-        var lvlRank = DataLevelRank._create(os);
-        var jType = os.ReadStringInPool();
-        var suitID = os.ReadInt32();
-        var keyAbility = os.ReadInt32();
-        var keyAbilityValue = os.ReadInt32();
-        var salePrice = os.ReadInt32();
-        var description = os.ReadStringInPool();
-        return new DataJewelry {
-            ID = iD,
-            Name = name,
-            IconFile = iconFile,
-            LvlRank = lvlRank,
-            JType = jType,
-            SuitID = suitID,
-            KeyAbility = keyAbility,
-            KeyAbilityValue = keyAbilityValue,
-            SalePrice = salePrice,
-            Description = description,
-        };
-    }
-
-    internal void _resolve(LoadErrors errors)
-    {
-        LvlRank._resolve(errors);
-        RefLvlRank = Equip.DataJewelryrandom.Get(LvlRank)!;
-        if (RefLvlRank == null) errors.RefNull("equip.jewelry", ToString(), "LvlRank");
-        RefJType = Equip.DataJewelrytype.Get(JType)!;
-        if (RefJType == null) errors.RefNull("equip.jewelry", ToString(), "JType");
-        NullableRefSuitID = Equip.DataJewelrysuit.Get(SuitID);
-        RefKeyAbility = Equip.DataAbility.Get(KeyAbility)!;
-        if (RefKeyAbility == null) errors.RefNull("equip.jewelry", ToString(), "KeyAbility");
     }
 }

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 namespace Config.Task;
 
 public partial class DataTask2
@@ -16,25 +15,6 @@ public partial class DataTask2
     public required List<Ai.DataTriggerTick> TestListInterface { get; init; }
     public Task.DataTaskextraexp? NullableRefTaskid { get; private set; }
     public Task.DataTask? NullableRefNexttask { get; private set; }
-
-    public override int GetHashCode()
-    {
-        return Taskid.GetHashCode();
-    }
-
-    public override bool Equals(object? obj)
-    {
-        if (obj == null) return false;
-        if (obj == this) return true;
-        var o = obj as DataTask2;
-        return o != null && Taskid.Equals(o.Taskid);
-    }
-
-    public override string ToString()
-    {
-        return "(" + Taskid + "," + StringUtil.ToString(Name) + "," + Nexttask + "," + Completecondition + "," + Exp + "," + TestBool + "," + TestString + "," + TestStruct + "," + StringUtil.ToString(TestList) + "," + StringUtil.ToString(TestListStruct) + "," + StringUtil.ToString(TestListInterface) + ")";
-    }
-
     
     private static OrderedDictionary<int, DataTask2> _all = [];
 
@@ -46,64 +26,5 @@ public partial class DataTask2
     public static IReadOnlyList<DataTask2> All()
     {
         return _all.Values;
-    }
-
-    internal static void Initialize(Stream os, LoadErrors errors)
-    {
-        _all = [];
-        for (var c = os.ReadInt32(); c > 0; c--)
-        {
-            var self = _create(os);
-            _all.Add(self.Taskid, self);
-        }
-
-    }
-
-    internal static void Resolve(LoadErrors errors)
-    {
-        foreach (var v in All())
-            v._resolve(errors);
-    }
-    internal static DataTask2 _create(Stream os)
-    {
-        var taskid = os.ReadInt32();
-        List<string> name = [];
-        for (var c = os.ReadInt32(); c > 0; c--)
-            name.Add(os.ReadTextInPool());
-        var nexttask = os.ReadInt32();
-        var completecondition = Task.DataCompletecondition._create(os);
-        var exp = os.ReadInt32();
-        var testBool = os.ReadBool();
-        var testString = os.ReadStringInPool();
-        var testStruct = DataPosition._create(os);
-        List<int> testList = [];
-        for (var c = os.ReadInt32(); c > 0; c--)
-            testList.Add(os.ReadInt32());
-        List<DataPosition> testListStruct = [];
-        for (var c = os.ReadInt32(); c > 0; c--)
-            testListStruct.Add(DataPosition._create(os));
-        List<Ai.DataTriggerTick> testListInterface = [];
-        for (var c = os.ReadInt32(); c > 0; c--)
-            testListInterface.Add(Ai.DataTriggerTick._create(os));
-        return new DataTask2 {
-            Taskid = taskid,
-            Name = name,
-            Nexttask = nexttask,
-            Completecondition = completecondition,
-            Exp = exp,
-            TestBool = testBool,
-            TestString = testString,
-            TestStruct = testStruct,
-            TestList = testList,
-            TestListStruct = testListStruct,
-            TestListInterface = testListInterface,
-        };
-    }
-
-    internal void _resolve(LoadErrors errors)
-    {
-        Completecondition._resolve(errors);
-        NullableRefTaskid = Task.DataTaskextraexp.Get(Taskid);
-        NullableRefNexttask = Task.DataTask.Get(Nexttask);
     }
 }

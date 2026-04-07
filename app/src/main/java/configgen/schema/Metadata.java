@@ -27,9 +27,13 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     public record MetaStr(String value) implements MetaValue {
     }
 
-    public record MetaEnumValues(List<EnumValue> values) implements MetaValue {
-        public record EnumValue(String name, String comment) {}
+    public sealed interface MetaEnumValues extends MetaValue {
+        record OfEmpty(List<EnumValueEmpty> values) implements MetaEnumValues {}
+        record OfAssigned(List<EnumValueAssigned> values) implements MetaEnumValues {}
     }
+
+    public record EnumValueEmpty(String name, String comment) {}
+    public record EnumValueAssigned(String name, String comment, int number) {}
 
     public static Metadata of() {
         return new Metadata(new LinkedHashMap<>());
@@ -191,13 +195,12 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     }
 
     // enum table 的值列表
-    public void putEnumValues(List<MetaEnumValues.EnumValue> values) {
-        data.put(ENUM_VALUES, new MetaEnumValues(values));
+    public void putEnumValues(MetaEnumValues values) {
+        data.put(ENUM_VALUES, values);
     }
 
-    public MetaEnumValues removeEnumValues() {
-        MetaValue v = data.remove(ENUM_VALUES);
-        return v instanceof MetaEnumValues e ? e : null;
+    public void removeEnumValues() {
+        data.remove(ENUM_VALUES);
     }
 
     public MetaEnumValues getEnumValues() {

@@ -372,11 +372,13 @@ class CfgReaderTest {
         // 验证 enumValues
         Metadata.MetaEnumValues enumValues = table.meta().getEnumValues();
         assertNotNull(enumValues);
-        assertEquals(2, enumValues.values().size());
-        assertEquals("Snapshot", enumValues.values().get(0).name());
-        assertEquals("快照模式", enumValues.values().get(0).comment());
-        assertEquals("Dynamic", enumValues.values().get(1).name());
-        assertEquals("动态模式", enumValues.values().get(1).comment());
+        assertTrue(enumValues instanceof Metadata.MetaEnumValues.OfEmpty(List<Metadata.EnumValueEmpty> values)
+                && values.size() == 2);
+        Metadata.MetaEnumValues.OfEmpty empty = (Metadata.MetaEnumValues.OfEmpty) enumValues;
+        assertEquals("Snapshot", empty.values().get(0).name());
+        assertEquals("快照模式", empty.values().get(0).comment());
+        assertEquals("Dynamic", empty.values().get(1).name());
+        assertEquals("动态模式", empty.values().get(1).comment());
 
         // 验证自动生成的字段
         assertEquals(2, table.fields().size());
@@ -384,6 +386,47 @@ class CfgReaderTest {
         assertEquals(Primitive.STRING, table.fields().get(0).type());
         assertEquals("comment", table.fields().get(1).name());
         assertEquals(Primitive.STRING, table.fields().get(1).type());
+    }
+
+    @Test
+    void parseEnumDeclWithAssignedValues() {
+        // 测试带赋值的 enum 声明
+        String str = """
+                enum StatClampMode {
+                    None = 0;
+                    Absolute = 1;
+                    MaintainPercent = 2;
+                }
+                """;
+        CfgSchema cfg = CfgReader.parse(str);
+        assertEquals(1, cfg.items().size());
+
+        TableSchema table = (TableSchema) cfg.items().getFirst();
+        assertEquals("StatClampMode", table.name());
+        assertEquals(List.of("id"), table.primaryKey().fields());
+        assertTrue(table.entry() instanceof EntryType.EEnum e && e.field().equals("name"));
+
+        // 验证 enumValues
+        Metadata.MetaEnumValues enumValues = table.meta().getEnumValues();
+        assertNotNull(enumValues);
+        assertInstanceOf(Metadata.MetaEnumValues.OfAssigned.class, enumValues);
+        Metadata.MetaEnumValues.OfAssigned assigned = (Metadata.MetaEnumValues.OfAssigned) enumValues;
+        assertEquals(3, assigned.values().size());
+        assertEquals("None", assigned.values().get(0).name());
+        assertEquals(0, assigned.values().get(0).number());
+        assertEquals("Absolute", assigned.values().get(1).name());
+        assertEquals(1, assigned.values().get(1).number());
+        assertEquals("MaintainPercent", assigned.values().get(2).name());
+        assertEquals(2, assigned.values().get(2).number());
+
+        // 验证自动生成的字段
+        assertEquals(3, table.fields().size());
+        assertEquals("id", table.fields().get(0).name());
+        assertEquals(Primitive.INT, table.fields().get(0).type());
+        assertEquals("name", table.fields().get(1).name());
+        assertEquals(Primitive.STRING, table.fields().get(1).type());
+        assertEquals("comment", table.fields().get(2).name());
+        assertEquals(Primitive.STRING, table.fields().get(2).type());
     }
 
     @Test

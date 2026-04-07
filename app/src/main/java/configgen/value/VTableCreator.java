@@ -25,16 +25,34 @@ public class VTableCreator {
             // 生成虚拟数据
             valueList = new ArrayList<>();
             Source autoSource = Source.of();  // 自动生成的数据使用空 Source
-            for (MetaEnumValues.EnumValue ev : enumValues.values()) {
-                VStruct vStruct = new VStruct(
-                    tableSchema,  // 使用 tableSchema 作为结构定义
-                    List.of(
-                        new VString(ev.name(), autoSource),
-                        new VString(ev.comment(), autoSource)
-                    ),
-                    autoSource
-                );
-                valueList.add(vStruct);
+            switch (enumValues) {
+                case MetaEnumValues.OfEmpty empty -> {
+                    for (Metadata.EnumValueEmpty ev : empty.values()) {
+                        VStruct vStruct = new VStruct(
+                            tableSchema,
+                            List.of(
+                                new VString(ev.name(), autoSource),
+                                new VString(ev.comment(), autoSource)
+                            ),
+                            autoSource
+                        );
+                        valueList.add(vStruct);
+                    }
+                }
+                case MetaEnumValues.OfAssigned assigned -> {
+                    for (Metadata.EnumValueAssigned ev : assigned.values()) {
+                        VStruct vStruct = new VStruct(
+                            tableSchema,
+                            List.of(
+                                new VInt(ev.number(), autoSource),
+                                new VString(ev.name(), autoSource),
+                                new VString(ev.comment(), autoSource)
+                            ),
+                            autoSource
+                        );
+                        valueList.add(vStruct);
+                    }
+                }
             }
         }
         // 收集主键和唯一键
