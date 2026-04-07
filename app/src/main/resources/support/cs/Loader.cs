@@ -282,4 +282,16 @@ public static class StringUtil
         if (data.Count == 0) return "[]";
         return $"[{string.Join(", ", data.ConvertAll(d => d is null ? "null" : d.ToString()))}]";
     }
+
+    public static string UpperFirstChar(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return input;
+
+        return string.Create(input.Length, input, (span, str) =>
+        {
+            span[0] = char.ToUpper(str[0]);
+            str.AsSpan(1).CopyTo(span[1..]);
+        });
+    }
 }

@@ -13,9 +13,9 @@ public partial class DataJewelry
     public required int SalePrice { get; init; } /* 售卖价格 */
     public required string Description { get; init; } /* 描述,根据Lvl和Rank来随机3个属性，第一个属性由Lvl,Rank行随机，剩下2个由Lvl和小于Rank的行里随机。Rank最小的时候都从Lvl，Rank里随机。 */
     public Equip.DataJewelryrandom RefLvlRank { get; private set; } = null!;
-    public Equip.DataJewelrytype RefJType { get; private set; } = null!;
+    public Equip.DataJewelrytype RefJType { get; private set; }
     public Equip.DataJewelrysuit? NullableRefSuitID { get; private set; }
-    public Equip.DataAbility RefKeyAbility { get; private set; } = null!;
+    public Equip.DataAbility RefKeyAbility { get; private set; }
     
     private static OrderedDictionary<int, DataJewelry> _all = [];
 

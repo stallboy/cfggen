@@ -9,7 +9,7 @@ public partial class DataKeytest
     public required string EnumTest { get; init; }
     public required List<string> EnumList { get; init; }
     public List<Other.DataSignin> RefIds { get; private set; } = null!;
-    public Other.DataArgCaptureMode RefEnumTest { get; private set; } = null!;
+    public Other.DataArgCaptureMode RefEnumTest { get; private set; }
     public List<Other.DataArgCaptureMode> RefEnumList { get; private set; } = null!;
     
     class Id1Id2Key

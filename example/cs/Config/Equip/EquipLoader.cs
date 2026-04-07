@@ -32,7 +32,7 @@ namespace Config.Equip
 
     }
 
-    public partial class DataAbility
+    public partial class DataAbilityInfo
     {
         internal static void Initialize(ConfigReader reader)
         {
@@ -41,74 +41,19 @@ namespace Config.Equip
             {
                 var self = _create(reader);
                 _all.Add(self.Id, self);
-                if (self.Name.Trim().Length == 0)
-                    continue;
-                switch(self.Name.Trim())
-                {
-                    case "attack":
-                        if (Attack != null)
-                            reader.EnumDuplicateInData("attack");
-                        Attack = self;
-                        break;
-                    case "defence":
-                        if (Defence != null)
-                            reader.EnumDuplicateInData("defence");
-                        Defence = self;
-                        break;
-                    case "hp":
-                        if (Hp != null)
-                            reader.EnumDuplicateInData("hp");
-                        Hp = self;
-                        break;
-                    case "critical":
-                        if (Critical != null)
-                            reader.EnumDuplicateInData("critical");
-                        Critical = self;
-                        break;
-                    case "critical_resist":
-                        if (Critical_resist != null)
-                            reader.EnumDuplicateInData("critical_resist");
-                        Critical_resist = self;
-                        break;
-                    case "block":
-                        if (Block != null)
-                            reader.EnumDuplicateInData("block");
-                        Block = self;
-                        break;
-                    case "break_armor":
-                        if (Break_armor != null)
-                            reader.EnumDuplicateInData("break_armor");
-                        Break_armor = self;
-                        break;
-                    default:
-                        reader.EnumNotInCode(self.Name.Trim());
-                        break;
-                }
+                DataAbilityExtensions._infos[(int)self.eEnum] = self;
             }
 
-            if (Attack == null)
-                reader.EnumNotInData("attack");
-            if (Defence == null)
-                reader.EnumNotInData("defence");
-            if (Hp == null)
-                reader.EnumNotInData("hp");
-            if (Critical == null)
-                reader.EnumNotInData("critical");
-            if (Critical_resist == null)
-                reader.EnumNotInData("critical_resist");
-            if (Block == null)
-                reader.EnumNotInData("block");
-            if (Break_armor == null)
-                reader.EnumNotInData("break_armor");
         }
 
-        internal static DataAbility _create(ConfigReader reader)
+        internal static DataAbilityInfo _create(ConfigReader reader)
         {
             var id = reader.ReadInt32();
             var name = reader.ReadStringInPool();
-            return new DataAbility {
+            return new DataAbilityInfo {
                 Id = id,
                 Name = name,
+                eEnum = Enum.Parse<DataAbility>(StringUtil.UpperFirstChar(name))
             };
         }
 
@@ -121,7 +66,7 @@ namespace Config.Equip
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataAbility;
+            var o = obj as DataAbilityInfo;
             return o != null && Id.Equals(o.Id);
         }
 
@@ -137,34 +82,36 @@ namespace Config.Equip
         internal static void Initialize(ConfigReader reader)
         {
             _all = [];
+            DataEquipconfig? eInstance = null;
+            DataEquipconfig? eInstance2 = null;
             for (var c = reader.ReadInt32(); c > 0; c--)
             {
                 var self = _create(reader);
                 _all.Add(self.Entry, self);
-                if (self.Entry.Trim().Length == 0)
+                if (self.Entry.Length == 0)
                     continue;
-                switch(self.Entry.Trim())
+                switch(self.Entry)
                 {
                     case "Instance":
-                        if (Instance != null)
+                        if (eInstance != null)
                             reader.EnumDuplicateInData("Instance");
-                        Instance = self;
+                        eInstance = self;
                         break;
                     case "Instance2":
-                        if (Instance2 != null)
+                        if (eInstance2 != null)
                             reader.EnumDuplicateInData("Instance2");
-                        Instance2 = self;
+                        eInstance2 = self;
                         break;
                     default:
-                        reader.EnumNotInCode(self.Entry.Trim());
+                        reader.EnumNotInCode(self.Entry);
                         break;
                 }
             }
 
-            if (Instance == null)
-                reader.EnumNotInData("Instance");
-            if (Instance2 == null)
-                reader.EnumNotInData("Instance2");
+            if (eInstance == null) reader.EnumNotInData("Instance");
+            else Instance = eInstance;
+            if (eInstance2 == null) reader.EnumNotInData("Instance2");
+            else Instance2 = eInstance2;
         }
 
         internal static DataEquipconfig _create(ConfigReader reader)
@@ -267,17 +214,20 @@ namespace Config.Equip
             return "(" + ID + "," + Name + "," + IconFile + "," + LvlRank + "," + JType + "," + SuitID + "," + KeyAbility + "," + KeyAbilityValue + "," + SalePrice + "," + Description + ")";
         }
 
-    internal void _resolve(ConfigReader reader)
-    {
-        LvlRank._resolve(reader);
-        RefLvlRank = Equip.DataJewelryrandom.Get(LvlRank)!;
-        if (RefLvlRank == null) reader.RefNotFound("equip.jewelry", "LvlRank", LvlRank.ToString());
-        RefJType = Equip.DataJewelrytype.Get(JType)!;
-        if (RefJType == null) reader.RefNotFound("equip.jewelry", "JType", JType.ToString());
-        NullableRefSuitID = Equip.DataJewelrysuit.Get(SuitID);
-        RefKeyAbility = Equip.DataAbility.Get(KeyAbility)!;
-        if (RefKeyAbility == null) reader.RefNotFound("equip.jewelry", "KeyAbility", KeyAbility.ToString());
-    }
+        internal void _resolve(ConfigReader reader)
+        {
+            LvlRank._resolve(reader);
+            var rRefLvlRank = Equip.DataJewelryrandom.Get(LvlRank);
+            if (rRefLvlRank == null) reader.RefNotFound("equip.jewelry", "LvlRank", LvlRank.ToString());
+            else RefLvlRank = rRefLvlRank;
+            var rRefJType = Equip.DataJewelrytypeInfo.Get(JType);
+            if (rRefJType == null) reader.RefNotFound("equip.jewelry", "JType", JType);
+            else RefJType = rRefJType.eEnum;
+            NullableRefSuitID = Equip.DataJewelrysuit.Get(SuitID);
+            var rRefKeyAbility = Equip.DataAbilityInfo.Get(KeyAbility);
+            if (rRefKeyAbility == null) reader.RefNotFound("equip.jewelry", "KeyAbility", KeyAbility.ToString());
+            else RefKeyAbility = rRefKeyAbility.eEnum;
+        }
     }
 
     public partial class DataJewelryrandom
@@ -334,10 +284,10 @@ namespace Config.Equip
             return "(" + LvlRank + "," + AttackRange + "," + StringUtil.ToString(OtherRange) + "," + StringUtil.ToString(TestPack) + ")";
         }
 
-    internal void _resolve(ConfigReader reader)
-    {
-        LvlRank._resolve(reader);
-    }
+        internal void _resolve(ConfigReader reader)
+        {
+            LvlRank._resolve(reader);
+        }
     }
 
     public partial class DataJewelrysuit
@@ -345,27 +295,28 @@ namespace Config.Equip
         internal static void Initialize(ConfigReader reader)
         {
             _all = [];
+            DataJewelrysuit? eSpecialSuit = null;
             for (var c = reader.ReadInt32(); c > 0; c--)
             {
                 var self = _create(reader);
                 _all.Add(self.SuitID, self);
-                if (self.Ename.Trim().Length == 0)
+                if (self.Ename.Length == 0)
                     continue;
-                switch(self.Ename.Trim())
+                switch(self.Ename)
                 {
                     case "SpecialSuit":
-                        if (SpecialSuit != null)
+                        if (eSpecialSuit != null)
                             reader.EnumDuplicateInData("SpecialSuit");
-                        SpecialSuit = self;
+                        eSpecialSuit = self;
                         break;
                     default:
-                        reader.EnumNotInCode(self.Ename.Trim());
+                        reader.EnumNotInCode(self.Ename);
                         break;
                 }
             }
 
-            if (SpecialSuit == null)
-                reader.EnumNotInData("SpecialSuit");
+            if (eSpecialSuit == null) reader.EnumNotInData("SpecialSuit");
+            else SpecialSuit = eSpecialSuit;
         }
 
         internal static DataJewelrysuit _create(ConfigReader reader)
@@ -416,7 +367,7 @@ namespace Config.Equip
 
     }
 
-    public partial class DataJewelrytype
+    public partial class DataJewelrytypeInfo
     {
         internal static void Initialize(ConfigReader reader)
         {
@@ -425,51 +376,17 @@ namespace Config.Equip
             {
                 var self = _create(reader);
                 _all.Add(self.TypeName, self);
-                if (self.TypeName.Trim().Length == 0)
-                    continue;
-                switch(self.TypeName.Trim())
-                {
-                    case "Jade":
-                        if (Jade != null)
-                            reader.EnumDuplicateInData("Jade");
-                        Jade = self;
-                        break;
-                    case "Bracelet":
-                        if (Bracelet != null)
-                            reader.EnumDuplicateInData("Bracelet");
-                        Bracelet = self;
-                        break;
-                    case "Magic":
-                        if (Magic != null)
-                            reader.EnumDuplicateInData("Magic");
-                        Magic = self;
-                        break;
-                    case "Bottle":
-                        if (Bottle != null)
-                            reader.EnumDuplicateInData("Bottle");
-                        Bottle = self;
-                        break;
-                    default:
-                        reader.EnumNotInCode(self.TypeName.Trim());
-                        break;
-                }
+                DataJewelrytypeExtensions._infos[(int)self.eEnum] = self;
             }
 
-            if (Jade == null)
-                reader.EnumNotInData("Jade");
-            if (Bracelet == null)
-                reader.EnumNotInData("Bracelet");
-            if (Magic == null)
-                reader.EnumNotInData("Magic");
-            if (Bottle == null)
-                reader.EnumNotInData("Bottle");
         }
 
-        internal static DataJewelrytype _create(ConfigReader reader)
+        internal static DataJewelrytypeInfo _create(ConfigReader reader)
         {
             var typeName = reader.ReadStringInPool();
-            return new DataJewelrytype {
+            return new DataJewelrytypeInfo {
                 TypeName = typeName,
+                eEnum = Enum.Parse<DataJewelrytype>(StringUtil.UpperFirstChar(typeName))
             };
         }
 
@@ -482,7 +399,7 @@ namespace Config.Equip
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataJewelrytype;
+            var o = obj as DataJewelrytypeInfo;
             return o != null && TypeName.Equals(o.TypeName);
         }
 
@@ -493,7 +410,7 @@ namespace Config.Equip
 
     }
 
-    public partial class DataRank
+    public partial class DataRankInfo
     {
         internal static void Initialize(ConfigReader reader)
         {
@@ -502,62 +419,21 @@ namespace Config.Equip
             {
                 var self = _create(reader);
                 _all.Add(self.RankID, self);
-                if (self.RankName.Trim().Length == 0)
-                    continue;
-                switch(self.RankName.Trim())
-                {
-                    case "white":
-                        if (White != null)
-                            reader.EnumDuplicateInData("white");
-                        White = self;
-                        break;
-                    case "green":
-                        if (Green != null)
-                            reader.EnumDuplicateInData("green");
-                        Green = self;
-                        break;
-                    case "blue":
-                        if (Blue != null)
-                            reader.EnumDuplicateInData("blue");
-                        Blue = self;
-                        break;
-                    case "purple":
-                        if (Purple != null)
-                            reader.EnumDuplicateInData("purple");
-                        Purple = self;
-                        break;
-                    case "yellow":
-                        if (Yellow != null)
-                            reader.EnumDuplicateInData("yellow");
-                        Yellow = self;
-                        break;
-                    default:
-                        reader.EnumNotInCode(self.RankName.Trim());
-                        break;
-                }
+                DataRankExtensions._infos[(int)self.eEnum] = self;
             }
 
-            if (White == null)
-                reader.EnumNotInData("white");
-            if (Green == null)
-                reader.EnumNotInData("green");
-            if (Blue == null)
-                reader.EnumNotInData("blue");
-            if (Purple == null)
-                reader.EnumNotInData("purple");
-            if (Yellow == null)
-                reader.EnumNotInData("yellow");
         }
 
-        internal static DataRank _create(ConfigReader reader)
+        internal static DataRankInfo _create(ConfigReader reader)
         {
             var rankID = reader.ReadInt32();
             var rankName = reader.ReadStringInPool();
             var rankShowName = reader.ReadStringInPool();
-            return new DataRank {
+            return new DataRankInfo {
                 RankID = rankID,
                 RankName = rankName,
                 RankShowName = rankShowName,
+                eEnum = Enum.Parse<DataRank>(StringUtil.UpperFirstChar(rankName))
             };
         }
 
@@ -570,7 +446,7 @@ namespace Config.Equip
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataRank;
+            var o = obj as DataRankInfo;
             return o != null && RankID.Equals(o.RankID);
         }
 

@@ -50,7 +50,7 @@ namespace Config.Task
 
     }
 
-    public partial class DataCompleteconditiontype
+    public partial class DataCompleteconditiontypeInfo
     {
         internal static void Initialize(ConfigReader reader)
         {
@@ -59,74 +59,19 @@ namespace Config.Task
             {
                 var self = _create(reader);
                 _all.Add(self.Id, self);
-                if (self.Name.Trim().Length == 0)
-                    continue;
-                switch(self.Name.Trim())
-                {
-                    case "KillMonster":
-                        if (KillMonster != null)
-                            reader.EnumDuplicateInData("KillMonster");
-                        KillMonster = self;
-                        break;
-                    case "TalkNpc":
-                        if (TalkNpc != null)
-                            reader.EnumDuplicateInData("TalkNpc");
-                        TalkNpc = self;
-                        break;
-                    case "CollectItem":
-                        if (CollectItem != null)
-                            reader.EnumDuplicateInData("CollectItem");
-                        CollectItem = self;
-                        break;
-                    case "ConditionAnd":
-                        if (ConditionAnd != null)
-                            reader.EnumDuplicateInData("ConditionAnd");
-                        ConditionAnd = self;
-                        break;
-                    case "Chat":
-                        if (Chat != null)
-                            reader.EnumDuplicateInData("Chat");
-                        Chat = self;
-                        break;
-                    case "TestNoColumn":
-                        if (TestNoColumn != null)
-                            reader.EnumDuplicateInData("TestNoColumn");
-                        TestNoColumn = self;
-                        break;
-                    case "aa":
-                        if (Aa != null)
-                            reader.EnumDuplicateInData("aa");
-                        Aa = self;
-                        break;
-                    default:
-                        reader.EnumNotInCode(self.Name.Trim());
-                        break;
-                }
+                DataCompleteconditiontypeExtensions._infos[(int)self.eEnum] = self;
             }
 
-            if (KillMonster == null)
-                reader.EnumNotInData("KillMonster");
-            if (TalkNpc == null)
-                reader.EnumNotInData("TalkNpc");
-            if (CollectItem == null)
-                reader.EnumNotInData("CollectItem");
-            if (ConditionAnd == null)
-                reader.EnumNotInData("ConditionAnd");
-            if (Chat == null)
-                reader.EnumNotInData("Chat");
-            if (TestNoColumn == null)
-                reader.EnumNotInData("TestNoColumn");
-            if (Aa == null)
-                reader.EnumNotInData("aa");
         }
 
-        internal static DataCompleteconditiontype _create(ConfigReader reader)
+        internal static DataCompleteconditiontypeInfo _create(ConfigReader reader)
         {
             var id = reader.ReadInt32();
             var name = reader.ReadStringInPool();
-            return new DataCompleteconditiontype {
+            return new DataCompleteconditiontypeInfo {
                 Id = id,
                 Name = name,
+                eEnum = Enum.Parse<DataCompleteconditiontype>(StringUtil.UpperFirstChar(name))
             };
         }
 
@@ -139,7 +84,7 @@ namespace Config.Task
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataCompleteconditiontype;
+            var o = obj as DataCompleteconditiontypeInfo;
             return o != null && Id.Equals(o.Id);
         }
 
@@ -206,12 +151,12 @@ namespace Config.Task
             return "(" + Taskid + "," + StringUtil.ToString(Name) + "," + Nexttask + "," + Completecondition + "," + Exp + "," + TestDefaultBean + ")";
         }
 
-    internal void _resolve(ConfigReader reader)
-    {
-        Completecondition._resolve(reader);
-        NullableRefTaskid = Task.DataTaskextraexp.Get(Taskid);
-        NullableRefNexttask = Task.DataTask.Get(Nexttask);
-    }
+        internal void _resolve(ConfigReader reader)
+        {
+            Completecondition._resolve(reader);
+            NullableRefTaskid = Task.DataTaskextraexp.Get(Taskid);
+            NullableRefNexttask = Task.DataTask.Get(Nexttask);
+        }
     }
 
     public partial class DataTask2
@@ -286,12 +231,12 @@ namespace Config.Task
             return "(" + Taskid + "," + StringUtil.ToString(Name) + "," + Nexttask + "," + Completecondition + "," + Exp + "," + TestBool + "," + TestString + "," + TestStruct + "," + StringUtil.ToString(TestList) + "," + StringUtil.ToString(TestListStruct) + "," + StringUtil.ToString(TestListInterface) + ")";
         }
 
-    internal void _resolve(ConfigReader reader)
-    {
-        Completecondition._resolve(reader);
-        NullableRefTaskid = Task.DataTaskextraexp.Get(Taskid);
-        NullableRefNexttask = Task.DataTask.Get(Nexttask);
-    }
+        internal void _resolve(ConfigReader reader)
+        {
+            Completecondition._resolve(reader);
+            NullableRefTaskid = Task.DataTaskextraexp.Get(Taskid);
+            NullableRefNexttask = Task.DataTask.Get(Nexttask);
+        }
     }
 
     public partial class DataTaskextraexp
@@ -351,7 +296,7 @@ namespace Config.Task
 
 public partial interface DataCompletecondition
 {
-    internal void _resolve(ConfigReader reader)
+    void _resolve(ConfigReader reader)
     {
     }
     internal static DataCompletecondition _create(ConfigReader reader)
@@ -384,7 +329,7 @@ namespace Config.Task.Completecondition
 {
     public partial class DataKillMonster
     {
-        internal new static DataKillMonster _create(ConfigReader reader)
+        internal static DataKillMonster _create(ConfigReader reader)
         {
             var monsterid = reader.ReadInt32();
             var count = reader.ReadInt32();
@@ -412,16 +357,17 @@ namespace Config.Task.Completecondition
             return "(" + Monsterid + "," + Count + ")";
         }
 
-    internal void _resolve(ConfigReader reader)
-    {
-        RefMonsterid = Other.DataMonster.Get(Monsterid)!;
-        if (RefMonsterid == null) reader.RefNotFound("KillMonster", "monsterid", Monsterid.ToString());
-    }
+        public void _resolve(ConfigReader reader)
+        {
+            var rRefMonsterid = Other.DataMonster.Get(Monsterid);
+            if (rRefMonsterid == null) reader.RefNotFound("KillMonster", "monsterid", Monsterid.ToString());
+            else RefMonsterid = rRefMonsterid;
+        }
     }
 
     public partial class DataTalkNpc
     {
-        internal new static DataTalkNpc _create(ConfigReader reader)
+        internal static DataTalkNpc _create(ConfigReader reader)
         {
             var npcid = reader.ReadInt32();
             return new DataTalkNpc {
@@ -451,10 +397,9 @@ namespace Config.Task.Completecondition
 
     public partial class DataTestNoColumn
     {
-        internal new static DataTestNoColumn _create(ConfigReader reader)
+        internal static DataTestNoColumn _create(ConfigReader reader)
         {
-            return new DataTestNoColumn {
-            };
+            return new DataTestNoColumn();
         }
 
         public override int GetHashCode()
@@ -474,7 +419,7 @@ namespace Config.Task.Completecondition
 
     public partial class DataChat
     {
-        internal new static DataChat _create(ConfigReader reader)
+        internal static DataChat _create(ConfigReader reader)
         {
             var msg = reader.ReadStringInPool();
             return new DataChat {
@@ -504,7 +449,7 @@ namespace Config.Task.Completecondition
 
     public partial class DataConditionAnd
     {
-        internal new static DataConditionAnd _create(ConfigReader reader)
+        internal static DataConditionAnd _create(ConfigReader reader)
         {
             var cond1 = Task.DataCompletecondition._create(reader);
             var cond2 = Task.DataCompletecondition._create(reader);
@@ -532,16 +477,16 @@ namespace Config.Task.Completecondition
             return "(" + Cond1 + "," + Cond2 + ")";
         }
 
-    internal void _resolve(ConfigReader reader)
-    {
-        Cond1._resolve(reader);
-        Cond2._resolve(reader);
-    }
+        public void _resolve(ConfigReader reader)
+        {
+            Cond1._resolve(reader);
+            Cond2._resolve(reader);
+        }
     }
 
     public partial class DataCollectItem
     {
-        internal new static DataCollectItem _create(ConfigReader reader)
+        internal static DataCollectItem _create(ConfigReader reader)
         {
             var itemid = reader.ReadInt32();
             var count = reader.ReadInt32();
@@ -573,10 +518,9 @@ namespace Config.Task.Completecondition
 
     public partial class DataAa
     {
-        internal new static DataAa _create(ConfigReader reader)
+        internal static DataAa _create(ConfigReader reader)
         {
-            return new DataAa {
-            };
+            return new DataAa();
         }
 
         public override int GetHashCode()

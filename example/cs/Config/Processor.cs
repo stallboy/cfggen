@@ -58,7 +58,7 @@ public static class Processor
                     break;
                 case "equip.ability":
                     configNulls.Remove(tableName);
-                    Equip.DataAbility.Initialize(reader);
+                    Equip.DataAbilityInfo.Initialize(reader);
                     break;
                 case "equip.equipconfig":
                     configNulls.Remove(tableName);
@@ -78,15 +78,15 @@ public static class Processor
                     break;
                 case "equip.jewelrytype":
                     configNulls.Remove(tableName);
-                    Equip.DataJewelrytype.Initialize(reader);
+                    Equip.DataJewelrytypeInfo.Initialize(reader);
                     break;
                 case "equip.rank":
                     configNulls.Remove(tableName);
-                    Equip.DataRank.Initialize(reader);
+                    Equip.DataRankInfo.Initialize(reader);
                     break;
                 case "other.ArgCaptureMode":
                     configNulls.Remove(tableName);
-                    Other.DataArgCaptureMode.Initialize(reader);
+                    Other.DataArgCaptureModeInfo.Initialize(reader);
                     break;
                 case "other.drop":
                     configNulls.Remove(tableName);
@@ -114,7 +114,7 @@ public static class Processor
                     break;
                 case "task.completeconditiontype":
                     configNulls.Remove(tableName);
-                    Task.DataCompleteconditiontype.Initialize(reader);
+                    Task.DataCompleteconditiontypeInfo.Initialize(reader);
                     break;
                 case "task.task":
                     configNulls.Remove(tableName);

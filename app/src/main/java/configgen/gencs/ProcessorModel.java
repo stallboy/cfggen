@@ -1,6 +1,6 @@
 package configgen.gencs;
 
-import configgen.schema.Nameable;
+import configgen.schema.EntryType;
 import configgen.schema.TableSchema;
 
 public class ProcessorModel {
@@ -14,7 +14,12 @@ public class ProcessorModel {
         this.tableSchemas = tableSchemas;
     }
 
-    public String fullName(Nameable nameable) {
-        return new Name(gen.pkg, gen.prefix, nameable).fullName;
+    public String fullName(TableSchema tableSchema) {
+        String v = new Name(gen.pkg, gen.prefix, tableSchema).fullName;
+        if (tableSchema.entry() instanceof EntryType.EEnum) {
+            return v + "Info";
+        } else {
+            return v;
+        }
     }
 }

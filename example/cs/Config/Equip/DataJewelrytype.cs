@@ -1,23 +1,37 @@
 namespace Config.Equip;
 
-public partial class DataJewelrytype
+public enum DataJewelrytype
 {
-    public static DataJewelrytype Jade { get; private set; } = null!;
-    public static DataJewelrytype Bracelet { get; private set; } = null!;
-    public static DataJewelrytype Magic { get; private set; } = null!;
-    public static DataJewelrytype Bottle { get; private set; } = null!;
+    Jade,
+    Bracelet,
+    Magic,
+    Bottle,
+}
 
+public partial class DataJewelrytypeInfo
+{
     public required string TypeName { get; init; } /* 程序用名字 */
+    public required DataJewelrytype eEnum { get; init; }
     
-    private static OrderedDictionary<string, DataJewelrytype> _all = [];
+    private static OrderedDictionary<string, DataJewelrytypeInfo> _all = [];
 
-    public static DataJewelrytype? Get(string typeName)
+    public static DataJewelrytypeInfo? Get(string typeName)
     {
         return _all.GetValueOrDefault(typeName);
     }
 
-    public static IReadOnlyList<DataJewelrytype> All()
+    public static IReadOnlyList<DataJewelrytypeInfo> All()
     {
         return _all.Values;
+    }
+}
+
+public static class DataJewelrytypeExtensions
+{
+    internal static readonly DataJewelrytypeInfo[] _infos = new DataJewelrytypeInfo[4];
+
+    public static DataJewelrytypeInfo Info(this DataJewelrytype e)
+    {
+        return _infos[(int)e];
     }
 }

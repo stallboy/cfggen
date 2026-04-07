@@ -1,27 +1,41 @@
 namespace Config.Task;
 
-public partial class DataCompleteconditiontype
+public enum DataCompleteconditiontype
 {
-    public static DataCompleteconditiontype KillMonster { get; private set; } = null!;
-    public static DataCompleteconditiontype TalkNpc { get; private set; } = null!;
-    public static DataCompleteconditiontype CollectItem { get; private set; } = null!;
-    public static DataCompleteconditiontype ConditionAnd { get; private set; } = null!;
-    public static DataCompleteconditiontype Chat { get; private set; } = null!;
-    public static DataCompleteconditiontype TestNoColumn { get; private set; } = null!;
-    public static DataCompleteconditiontype Aa { get; private set; } = null!;
+    KillMonster,
+    TalkNpc,
+    CollectItem,
+    ConditionAnd,
+    Chat,
+    TestNoColumn,
+    Aa,
+}
 
+public partial class DataCompleteconditiontypeInfo
+{
     public required int Id { get; init; } /* 任务完成条件类型（id的范围为1-100） */
     public required string Name { get; init; } /* 程序用名字 */
+    public required DataCompleteconditiontype eEnum { get; init; }
     
-    private static OrderedDictionary<int, DataCompleteconditiontype> _all = [];
+    private static OrderedDictionary<int, DataCompleteconditiontypeInfo> _all = [];
 
-    public static DataCompleteconditiontype? Get(int id)
+    public static DataCompleteconditiontypeInfo? Get(int id)
     {
         return _all.GetValueOrDefault(id);
     }
 
-    public static IReadOnlyList<DataCompleteconditiontype> All()
+    public static IReadOnlyList<DataCompleteconditiontypeInfo> All()
     {
         return _all.Values;
+    }
+}
+
+public static class DataCompleteconditiontypeExtensions
+{
+    internal static readonly DataCompleteconditiontypeInfo[] _infos = new DataCompleteconditiontypeInfo[7];
+
+    public static DataCompleteconditiontypeInfo Info(this DataCompleteconditiontype e)
+    {
+        return _infos[(int)e];
     }
 }

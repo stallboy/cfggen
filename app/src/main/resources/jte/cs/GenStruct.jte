@@ -11,6 +11,8 @@ namespace ${model.name.pkg};
 !{String className = model.name.className;}
 !{InterfaceSchema nullableInterface = model.structural instanceof StructSchema struct ? struct.nullableInterface() : null;}
 !{boolean isImpl = nullableInterface != null;}
+!{boolean isEnum = model.isEnum();}
+
 @if(isImpl)
     public partial class ${className} : ${model.fullName(nullableInterface)}
     {
@@ -21,34 +23,43 @@ namespace ${model.name.pkg};
             }
 
         @endif
+@elseif(isEnum)
+    public enum ${className}
+    {
+        @for(String enumName : model._vTable.enumNames())
+            ${model.upper1(enumName)},
+        @endfor
+    }
+
+    public partial class ${className}Info
+    {
 @else
     public partial class ${className}
     {
-@endif
     <%--static enum--%>
-    !{boolean hasEntry = model._vTable != null && model._vTable.schema().entry() instanceof EntryType.EntryBase&& !model._vTable.enumNames().isEmpty();}
-    @if(hasEntry)
-        @for(String enumName : model._vTable.enumNames())
-            public static ${className} ${model.upper1(enumName)} { get; private set; } = null!;
-        @endfor
-    @endif
-    @if(hasEntry)
+        !{boolean hasEntry = model.hasEntry();}
+        @if(hasEntry)
+            @for(String enumName : model._vTable.enumNames())
+                public static ${className} ${model.upper1(enumName)} { get; private set; } = null!;
+            @endfor
+        @endif
+        @if(hasEntry)
 
 
-    @endif
+        @endif
+@endif
 
     <%--field property--%>
     @for(FieldSchema field : model.structural.fields())
         public required ${model.type(field.type())} ${model.upper1(field.name())} { get; init; }@if(!field.comment().isEmpty()) /* ${field.comment()} */@endif
     @endfor
+    @if(isEnum)
+        public required ${className} eEnum { get; init; }
+    @endif
 
     <%--ref property--%>
     @for(ForeignKeySchema fk : model.structural.foreignKeys())
-        @if (fk.refKey() instanceof RefKey.RefSimple refSimple && refSimple.nullable())
-            public ${model.refType(fk)}? ${model.refName(fk)} { get; private set; }
-        @else
-            public ${model.refType(fk)} ${model.refName(fk)} { get; private set; } = null!;
-        @endif
+        public ${model.refType(fk)} ${model.refName(fk)} { get; private set; }${StructModel.refInit(fk)}
     @endfor
 
     <%--table static Get,All--%>
@@ -59,9 +70,22 @@ namespace ${model.name.pkg};
             @template.cs.GenMapGetBy(model = model, keySchema = uk, isPrimaryKey = false)
         @endfor
 
-        public static IReadOnlyList<${className}> All()
+        public static IReadOnlyList<${className}${isEnum?"Info" : ""}> All()
         {
             return _all.Values;
         }
     @endif
 }
+@if(isEnum)
+
+
+public static class ${className}Extensions
+{
+    internal static readonly ${className}Info[] _infos = new ${className}Info[${model._vTable.enumNames().size()}];
+
+    public static ${className}Info Info(this ${className} e)
+    {
+        return _infos[(int)e];
+    }
+}
+@endif

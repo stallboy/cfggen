@@ -185,7 +185,7 @@ namespace Config.Ai.TriggerTick
 {
     public partial class DataConstValue
     {
-        internal new static DataConstValue _create(ConfigReader reader)
+        internal static DataConstValue _create(ConfigReader reader)
         {
             var value = reader.ReadInt32();
             return new DataConstValue {
@@ -215,7 +215,7 @@ namespace Config.Ai.TriggerTick
 
     public partial class DataByLevel
     {
-        internal new static DataByLevel _create(ConfigReader reader)
+        internal static DataByLevel _create(ConfigReader reader)
         {
             var init = reader.ReadInt32();
             var coefficient = reader.ReadSingle();
@@ -247,7 +247,7 @@ namespace Config.Ai.TriggerTick
 
     public partial class DataByServerUpDay
     {
-        internal new static DataByServerUpDay _create(ConfigReader reader)
+        internal static DataByServerUpDay _create(ConfigReader reader)
         {
             var init = reader.ReadInt32();
             var coefficient1 = reader.ReadSingle();

@@ -25,6 +25,19 @@ public class StructModel {
         this._vTable = _vTable;
     }
 
+    public boolean isEnum() {
+        return _vTable != null && _vTable.schema().entry() instanceof EntryType.EEnum;
+    }
+
+    public static boolean isEnum(TableSchema tableSchema) {
+        return tableSchema.entry() instanceof EntryType.EEnum;
+    }
+
+    public boolean hasEntry() {
+        return _vTable != null && _vTable.schema().entry() instanceof EntryType.EEntry
+                && !_vTable.enumNames().isEmpty();
+    }
+
     public String fullName(Nameable nameable) {
         return new Name(gen.pkg, gen.prefix, nameable).fullName;
     }
@@ -63,6 +76,13 @@ public class StructModel {
         };
     }
 
+    public String toStringOrNot(FieldType t) {
+        return switch (t) {
+            case STRING, TEXT -> "";
+            default -> ".ToString()";
+        };
+    }
+
     public String create(FieldType t) {
         return switch (t) {
             case BOOL -> "reader.ReadBool()";
@@ -83,11 +103,11 @@ public class StructModel {
             case RefKey.RefList ignored -> {
                 return "List<" + fullName(fk.refTableSchema()) + ">";
             }
-            case RefKey.RefSimple ignored -> {
+            case RefKey.RefSimple rs -> {
                 FieldSchema firstLocal = fk.key().fieldSchemas().getFirst();
                 switch (firstLocal.type()) {
-                    case SimpleType ignored2 -> {
-                        return fullName(fk.refTableSchema());
+                    case SimpleType ignored -> {
+                        return fullName(fk.refTableSchema()) + (rs.nullable() ? "?" : "");
                     }
                     case FList ignored2 -> {
                         return "List<" + fullName(fk.refTableSchema()) + ">";
@@ -169,14 +189,35 @@ public class StructModel {
     }
 
     public String tableGet(TableSchema refTable, RefKey.RefSimple refSimple, String actualParam) {
-        switch (refSimple) {
-            case RefKey.RefPrimary ignored -> {
-                return fullName(refTable) + ".Get(" + actualParam + ")";
+        boolean isEnum = refTable.entry() instanceof EntryType.EEnum;
+        String post = isEnum ? "Info" : "";
+        return switch (refSimple) {
+            case RefKey.RefPrimary ignored -> fullName(refTable) + post + ".Get(" + actualParam + ")";
+
+            case RefKey.RefUniq refUniq ->
+                    fullName(refTable) + post + ".GetBy" + refUniq.keyNames().stream().map(StringUtil::upper1).
+                            collect(Collectors.joining()) + "(" + actualParam + ")";
+        };
+    }
+
+    public static String refInit(ForeignKeySchema fk){
+        if (fk.refKey() instanceof RefKey.RefSimple refSimple){
+            if (refSimple.nullable()){
+                return "";
             }
-            case RefKey.RefUniq refUniq -> {
-                return fullName(refTable) + ".GetBy" + refUniq.keyNames().stream().map(StringUtil::upper1).
-                        collect(Collectors.joining()) + "(" + actualParam + ")";
+            boolean isContainer = false;
+            for (FieldSchema fs : fk.key().fieldSchemas()) {
+                if (fs.type() instanceof ContainerType){
+                    isContainer = true;
+                    break;
+                }
+            }
+            if (!isContainer && fk.refTableSchema().entry() instanceof EntryType.EEnum){
+                return "";
             }
         }
+
+        return " = null!;";
     }
+
 }
