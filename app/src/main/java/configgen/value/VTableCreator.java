@@ -29,12 +29,10 @@ public class VTableCreator {
                 case MetaEnumValues.OfEmpty empty -> {
                     for (Metadata.EnumValueEmpty ev : empty.values()) {
                         VStruct vStruct = new VStruct(
-                            tableSchema,
-                            List.of(
-                                new VString(ev.name(), autoSource),
-                                new VString(ev.comment(), autoSource)
-                            ),
-                            autoSource
+                                tableSchema,
+                                List.of(new VString(ev.name(), autoSource),
+                                        new VText(ev.comment(), autoSource)),
+                                autoSource
                         );
                         valueList.add(vStruct);
                     }
@@ -42,13 +40,11 @@ public class VTableCreator {
                 case MetaEnumValues.OfAssigned assigned -> {
                     for (Metadata.EnumValueAssigned ev : assigned.values()) {
                         VStruct vStruct = new VStruct(
-                            tableSchema,
-                            List.of(
-                                new VInt(ev.number(), autoSource),
-                                new VString(ev.name(), autoSource),
-                                new VString(ev.comment(), autoSource)
-                            ),
-                            autoSource
+                                tableSchema,
+                                List.of(new VString(ev.name(), autoSource),
+                                        new VInt(ev.number(), autoSource),
+                                        new VText(ev.comment(), autoSource)),
+                                autoSource
                         );
                         valueList.add(vStruct);
                     }
@@ -128,7 +124,7 @@ public class VTableCreator {
         }
     }
 
-    private static SequencedMap<Value, VStruct> sortIfPKIsNumber(SequencedMap<Value, VStruct> keyMap){
+    private static SequencedMap<Value, VStruct> sortIfPKIsNumber(SequencedMap<Value, VStruct> keyMap) {
         if (keyMap.size() <= 1) {
             return keyMap;
         }

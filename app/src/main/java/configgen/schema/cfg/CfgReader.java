@@ -137,17 +137,17 @@ public enum CfgReader {
 
             return new TableSchema(
                     pkgNameDot + name,
-                    new KeySchema(List.of("id")),
+                    new KeySchema(List.of("name")),
                     new EntryType.EEnum("name"),
                     false,
                     meta,
                     List.of(
-                            new FieldSchema("id", Primitive.INT, FieldFormat.AutoOrPack.AUTO, Metadata.of()),
                             new FieldSchema("name", Primitive.STRING, FieldFormat.AutoOrPack.AUTO, Metadata.of()),
-                            new FieldSchema("comment", Primitive.STRING, FieldFormat.AutoOrPack.AUTO, Metadata.of())
+                            new FieldSchema("id", Primitive.INT, FieldFormat.AutoOrPack.AUTO, Metadata.of()),
+                            new FieldSchema("comment", Primitive.TEXT, FieldFormat.AutoOrPack.AUTO, Metadata.of())
                     ),
                     List.of(),
-                    List.of()
+                    List.of(new KeySchema(List.of("id")))
             );
         } else {
             // 无赋值的 enum
@@ -169,7 +169,7 @@ public enum CfgReader {
                     meta,
                     List.of(
                             new FieldSchema("name", Primitive.STRING, FieldFormat.AutoOrPack.AUTO, Metadata.of()),
-                            new FieldSchema("comment", Primitive.STRING, FieldFormat.AutoOrPack.AUTO, Metadata.of())
+                            new FieldSchema("comment", Primitive.TEXT, FieldFormat.AutoOrPack.AUTO, Metadata.of())
                     ),
                     List.of(),
                     List.of()

@@ -148,20 +148,20 @@ class VTableCreatorTest {
         assertEquals(2, vTable.valueList().size());
 
         // 验证第一行
-        VStruct row1 = vTable.valueList().get(0);
+        VStruct row1 = vTable.valueList().getFirst();
         assertEquals(2, row1.values().size());
-        assertTrue(row1.values().get(0) instanceof VString);
+        assertInstanceOf(VString.class, row1.values().get(0));
         assertEquals("Snapshot", ((VString) row1.values().get(0)).value());
-        assertTrue(row1.values().get(1) instanceof VString);
-        assertEquals("快照模式", ((VString) row1.values().get(1)).value());
+        assertInstanceOf(VText.class, row1.values().get(1));
+        assertEquals("快照模式", ((VText) row1.values().get(1)).value());
 
         // 验证第二行
         VStruct row2 = vTable.valueList().get(1);
         assertEquals(2, row2.values().size());
-        assertTrue(row2.values().get(0) instanceof VString);
+        assertInstanceOf(VString.class, row2.values().get(0));
         assertEquals("Dynamic", ((VString) row2.values().get(0)).value());
-        assertTrue(row2.values().get(1) instanceof VString);
-        assertEquals("动态模式", ((VString) row2.values().get(1)).value());
+        assertInstanceOf(VText.class, row2.values().get(1));
+        assertEquals("动态模式", ((VText) row2.values().get(1)).value());
 
         // 验证 enumNames
         assertNotNull(vTable.enumNames());

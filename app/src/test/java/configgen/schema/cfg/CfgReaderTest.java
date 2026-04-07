@@ -385,7 +385,7 @@ class CfgReaderTest {
         assertEquals("name", table.fields().get(0).name());
         assertEquals(Primitive.STRING, table.fields().get(0).type());
         assertEquals("comment", table.fields().get(1).name());
-        assertEquals(Primitive.STRING, table.fields().get(1).type());
+        assertEquals(Primitive.TEXT, table.fields().get(1).type());
     }
 
     @Test
@@ -403,7 +403,7 @@ class CfgReaderTest {
 
         TableSchema table = (TableSchema) cfg.items().getFirst();
         assertEquals("StatClampMode", table.name());
-        assertEquals(List.of("id"), table.primaryKey().fields());
+        assertEquals(List.of("name"), table.primaryKey().fields());
         assertTrue(table.entry() instanceof EntryType.EEnum e && e.field().equals("name"));
 
         // 验证 enumValues
@@ -421,12 +421,12 @@ class CfgReaderTest {
 
         // 验证自动生成的字段
         assertEquals(3, table.fields().size());
-        assertEquals("id", table.fields().get(0).name());
-        assertEquals(Primitive.INT, table.fields().get(0).type());
-        assertEquals("name", table.fields().get(1).name());
-        assertEquals(Primitive.STRING, table.fields().get(1).type());
+        assertEquals("name", table.fields().get(0).name());
+        assertEquals(Primitive.STRING, table.fields().get(0).type());
+        assertEquals("id", table.fields().get(1).name());
+        assertEquals(Primitive.INT, table.fields().get(1).type());
         assertEquals("comment", table.fields().get(2).name());
-        assertEquals(Primitive.STRING, table.fields().get(2).type());
+        assertEquals(Primitive.TEXT, table.fields().get(2).type());
     }
 
     @Test
