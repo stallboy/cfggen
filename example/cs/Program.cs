@@ -26,6 +26,6 @@
         }
         
         Console.WriteLine("\n=== Test Data ===");
-        Console.WriteLine(Config.Task.DataTask.Get(1));
+        Console.WriteLine(Config.Task.DTask.Get(1));
     }
 }

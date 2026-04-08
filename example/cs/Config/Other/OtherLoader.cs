@@ -1,8 +1,8 @@
 namespace Config.Other
 {
-    public partial class DataDropItem
+    public partial class DDropItem
     {
-        internal static DataDropItem _create(ConfigReader reader)
+        internal static DDropItem _create(ConfigReader reader)
         {
             var chance = reader.ReadInt32();
             List<int> itemids = [];
@@ -10,7 +10,7 @@ namespace Config.Other
                 itemids.Add(reader.ReadInt32());
             var countmin = reader.ReadInt32();
             var countmax = reader.ReadInt32();
-            return new DataDropItem {
+            return new DDropItem {
                 Chance = chance,
                 Itemids = itemids,
                 Countmin = countmin,
@@ -27,7 +27,7 @@ namespace Config.Other
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataDropItem;
+            var o = obj as DDropItem;
             return o != null && Chance.Equals(o.Chance) && Itemids.Equals(o.Itemids) && Countmin.Equals(o.Countmin) && Countmax.Equals(o.Countmax);
         }
 
@@ -38,7 +38,7 @@ namespace Config.Other
 
     }
 
-    public partial class DataArgCaptureModeInfo
+    public partial class DArgCaptureModeInfo
     {
         internal static void Initialize(ConfigReader reader)
         {
@@ -47,19 +47,19 @@ namespace Config.Other
             {
                 var self = _create(reader);
                 _all.Add(self.Name, self);
-                DataArgCaptureModeExtensions._infos[(int)self.eEnum] = self;
+                DArgCaptureModeExtensions._infos[(int)self.eEnum] = self;
             }
 
         }
 
-        internal static DataArgCaptureModeInfo _create(ConfigReader reader)
+        internal static DArgCaptureModeInfo _create(ConfigReader reader)
         {
             var name = reader.ReadStringInPool();
             var comment = reader.ReadTextInPool();
-            return new DataArgCaptureModeInfo {
+            return new DArgCaptureModeInfo {
                 Name = name,
                 Comment = comment,
-                eEnum = Enum.Parse<DataArgCaptureMode>(StringUtil.UpperFirstChar(name))
+                eEnum = Enum.Parse<DArgCaptureMode>(StringUtil.UpperFirstChar(name))
             };
         }
 
@@ -72,7 +72,7 @@ namespace Config.Other
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataArgCaptureModeInfo;
+            var o = obj as DArgCaptureModeInfo;
             return o != null && Name.Equals(o.Name);
         }
 
@@ -83,7 +83,7 @@ namespace Config.Other
 
     }
 
-    public partial class DataDrop
+    public partial class DDrop
     {
         internal static void Initialize(ConfigReader reader)
         {
@@ -96,19 +96,19 @@ namespace Config.Other
 
         }
 
-        internal static DataDrop _create(ConfigReader reader)
+        internal static DDrop _create(ConfigReader reader)
         {
             var dropid = reader.ReadInt32();
             var name = reader.ReadTextInPool();
-            List<Other.DataDropItem> items = [];
+            List<Other.DDropItem> items = [];
             for (var c = reader.ReadInt32(); c > 0; c--)
-                items.Add(Other.DataDropItem._create(reader));
+                items.Add(Other.DDropItem._create(reader));
             OrderedDictionary<int, int> testmap = [];
             for (var c = reader.ReadInt32(); c > 0; c--)
             {
                 testmap.Add(reader.ReadInt32(), reader.ReadInt32());
             }
-            return new DataDrop {
+            return new DDrop {
                 Dropid = dropid,
                 Name = name,
                 Items = items,
@@ -125,7 +125,7 @@ namespace Config.Other
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataDrop;
+            var o = obj as DDrop;
             return o != null && Dropid.Equals(o.Dropid);
         }
 
@@ -136,7 +136,7 @@ namespace Config.Other
 
     }
 
-    public partial class DataKeytest
+    public partial class DKeytest
     {
         internal static void Initialize(ConfigReader reader)
         {
@@ -160,7 +160,7 @@ namespace Config.Other
             foreach (var v in All())
                 v._resolve(reader);
         }
-        internal static DataKeytest _create(ConfigReader reader)
+        internal static DKeytest _create(ConfigReader reader)
         {
             var id1 = reader.ReadInt32();
             var id2 = reader.ReadInt64();
@@ -172,7 +172,7 @@ namespace Config.Other
             List<string> enumList = [];
             for (var c = reader.ReadInt32(); c > 0; c--)
                 enumList.Add(reader.ReadStringInPool());
-            return new DataKeytest {
+            return new DKeytest {
                 Id1 = id1,
                 Id2 = id2,
                 Id3 = id3,
@@ -191,7 +191,7 @@ namespace Config.Other
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataKeytest;
+            var o = obj as DKeytest;
             return o != null && Id1.Equals(o.Id1) && Id2.Equals(o.Id2);
         }
 
@@ -205,24 +205,24 @@ namespace Config.Other
             RefIds = [];
             foreach(var e in Ids)
             {
-                var r = Other.DataSignin.Get(e);
+                var r = Other.DSignin.Get(e);
                 if (r == null) reader.RefNotFound("other.keytest", "ids", e.ToString());
                 else RefIds.Add(r);
             }
-            var rRefEnumTest = Other.DataArgCaptureModeInfo.Get(EnumTest);
+            var rRefEnumTest = Other.DArgCaptureModeInfo.Get(EnumTest);
             if (rRefEnumTest == null) reader.RefNotFound("other.keytest", "enumTest", EnumTest);
             else RefEnumTest = rRefEnumTest.eEnum;
             RefEnumList = [];
             foreach(var e in EnumList)
             {
-                var r = Other.DataArgCaptureModeInfo.Get(e);
+                var r = Other.DArgCaptureModeInfo.Get(e);
                 if (r == null) reader.RefNotFound("other.keytest", "enumList", e);
                 else RefEnumList.Add(r.eEnum);
             }
         }
     }
 
-    public partial class DataLoot
+    public partial class DLoot
     {
         internal static void Initialize(ConfigReader reader)
         {
@@ -240,7 +240,7 @@ namespace Config.Other
             foreach (var v in All())
                 v._resolve(reader);
         }
-        internal static DataLoot _create(ConfigReader reader)
+        internal static DLoot _create(ConfigReader reader)
         {
             var lootid = reader.ReadInt32();
             var ename = reader.ReadStringInPool();
@@ -248,7 +248,7 @@ namespace Config.Other
             List<int> chanceList = [];
             for (var c = reader.ReadInt32(); c > 0; c--)
                 chanceList.Add(reader.ReadInt32());
-            return new DataLoot {
+            return new DLoot {
                 Lootid = lootid,
                 Ename = ename,
                 Name = name,
@@ -265,7 +265,7 @@ namespace Config.Other
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataLoot;
+            var o = obj as DLoot;
             return o != null && Lootid.Equals(o.Lootid);
         }
 
@@ -277,13 +277,13 @@ namespace Config.Other
         internal void _resolve(ConfigReader reader)
         {
             ListRefLootid = [];
-            foreach (var v in Other.DataLootitem.All())
+            foreach (var v in Other.DLootitem.All())
             {
                 if (v.Lootid.Equals(Lootid))
                     ListRefLootid.Add(v);
             }
             ListRefAnotherWay = [];
-            foreach (var v in Other.DataLootitem.All())
+            foreach (var v in Other.DLootitem.All())
             {
                 if (v.Lootid.Equals(Lootid))
                     ListRefAnotherWay.Add(v);
@@ -291,7 +291,7 @@ namespace Config.Other
         }
     }
 
-    public partial class DataLootitem
+    public partial class DLootitem
     {
         internal static void Initialize(ConfigReader reader)
         {
@@ -304,14 +304,14 @@ namespace Config.Other
 
         }
 
-        internal static DataLootitem _create(ConfigReader reader)
+        internal static DLootitem _create(ConfigReader reader)
         {
             var lootid = reader.ReadInt32();
             var itemid = reader.ReadInt32();
             var chance = reader.ReadInt32();
             var countmin = reader.ReadInt32();
             var countmax = reader.ReadInt32();
-            return new DataLootitem {
+            return new DLootitem {
                 Lootid = lootid,
                 Itemid = itemid,
                 Chance = chance,
@@ -329,7 +329,7 @@ namespace Config.Other
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataLootitem;
+            var o = obj as DLootitem;
             return o != null && Lootid.Equals(o.Lootid) && Itemid.Equals(o.Itemid);
         }
 
@@ -340,7 +340,7 @@ namespace Config.Other
 
     }
 
-    public partial class DataMonster
+    public partial class DMonster
     {
         internal static void Initialize(ConfigReader reader)
         {
@@ -358,12 +358,12 @@ namespace Config.Other
             foreach (var v in All())
                 v._resolve(reader);
         }
-        internal static DataMonster _create(ConfigReader reader)
+        internal static DMonster _create(ConfigReader reader)
         {
             var id = reader.ReadInt32();
-            List<DataPosition> posList = [];
+            List<DPosition> posList = [];
             for (var c = reader.ReadInt32(); c > 0; c--)
-                posList.Add(DataPosition._create(reader));
+                posList.Add(DPosition._create(reader));
             var lootId = reader.ReadInt32();
             var lootItemId = reader.ReadInt32();
             OrderedDictionary<string, int> enumMap1 = [];
@@ -376,7 +376,7 @@ namespace Config.Other
             {
                 enumMap2.Add(reader.ReadInt32(), reader.ReadStringInPool());
             }
-            return new DataMonster {
+            return new DMonster {
                 Id = id,
                 PosList = posList,
                 LootId = lootId,
@@ -395,7 +395,7 @@ namespace Config.Other
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataMonster;
+            var o = obj as DMonster;
             return o != null && Id.Equals(o.Id);
         }
 
@@ -406,24 +406,24 @@ namespace Config.Other
 
         internal void _resolve(ConfigReader reader)
         {
-            var rRefLoot = Other.DataLootitem.Get(LootId, LootItemId);
+            var rRefLoot = Other.DLootitem.Get(LootId, LootItemId);
             if (rRefLoot == null) reader.RefNotFound("other.monster", "Loot", LootId.ToString());
             else RefLoot = rRefLoot;
-            var rRefAllLoot = Other.DataLoot.Get(LootId);
+            var rRefAllLoot = Other.DLoot.Get(LootId);
             if (rRefAllLoot == null) reader.RefNotFound("other.monster", "AllLoot", LootId.ToString());
             else RefAllLoot = rRefAllLoot;
             RefEnumMap2 = [];
             foreach(var kv in EnumMap2)
             {
                 var k = kv.Key;
-                var v = Other.DataArgCaptureModeInfo.Get(kv.Value);
+                var v = Other.DArgCaptureModeInfo.Get(kv.Value);
                 if (v == null) reader.RefNotFound("other.monster", "enumMap2", kv.Value);
                 else RefEnumMap2.Add(k, v.eEnum);
             }
         }
     }
 
-    public partial class DataSignin
+    public partial class DSignin
     {
         internal static void Initialize(ConfigReader reader)
         {
@@ -441,7 +441,7 @@ namespace Config.Other
             foreach (var v in All())
                 v._resolve(reader);
         }
-        internal static DataSignin _create(ConfigReader reader)
+        internal static DSignin _create(ConfigReader reader)
         {
             var id = reader.ReadInt32();
             OrderedDictionary<int, int> item2countMap = [];
@@ -456,7 +456,7 @@ namespace Config.Other
             }
             var viplevel = reader.ReadInt32();
             var iconFile = reader.ReadStringInPool();
-            return new DataSignin {
+            return new DSignin {
                 Id = id,
                 Item2countMap = item2countMap,
                 Vipitem2vipcountMap = vipitem2vipcountMap,
@@ -474,7 +474,7 @@ namespace Config.Other
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataSignin;
+            var o = obj as DSignin;
             return o != null && Id.Equals(o.Id);
         }
 
@@ -489,7 +489,7 @@ namespace Config.Other
             foreach(var kv in Vipitem2vipcountMap)
             {
                 var k = kv.Key;
-                var v = Other.DataLoot.Get(kv.Value);
+                var v = Other.DLoot.Get(kv.Value);
                 if (v == null) reader.RefNotFound("other.signin", "vipitem2vipcountMap", kv.Value.ToString());
                 else RefVipitem2vipcountMap.Add(k, v);
             }

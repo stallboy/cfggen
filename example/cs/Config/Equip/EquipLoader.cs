@@ -1,12 +1,12 @@
 namespace Config.Equip
 {
-    public partial class DataTestPackBean
+    public partial class DTestPackBean
     {
-        internal static DataTestPackBean _create(ConfigReader reader)
+        internal static DTestPackBean _create(ConfigReader reader)
         {
             var name = reader.ReadStringInPool();
-            var iRange = DataRange._create(reader);
-            return new DataTestPackBean {
+            var iRange = DRange._create(reader);
+            return new DTestPackBean {
                 Name = name,
                 IRange = iRange,
             };
@@ -21,7 +21,7 @@ namespace Config.Equip
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataTestPackBean;
+            var o = obj as DTestPackBean;
             return o != null && Name.Equals(o.Name) && IRange.Equals(o.IRange);
         }
 
@@ -32,7 +32,7 @@ namespace Config.Equip
 
     }
 
-    public partial class DataAbilityInfo
+    public partial class DAbilityInfo
     {
         internal static void Initialize(ConfigReader reader)
         {
@@ -41,19 +41,19 @@ namespace Config.Equip
             {
                 var self = _create(reader);
                 _all.Add(self.Id, self);
-                DataAbilityExtensions._infos[(int)self.eEnum] = self;
+                DAbilityExtensions._infos[(int)self.eEnum] = self;
             }
 
         }
 
-        internal static DataAbilityInfo _create(ConfigReader reader)
+        internal static DAbilityInfo _create(ConfigReader reader)
         {
             var id = reader.ReadInt32();
             var name = reader.ReadStringInPool();
-            return new DataAbilityInfo {
+            return new DAbilityInfo {
                 Id = id,
                 Name = name,
-                eEnum = Enum.Parse<DataAbility>(StringUtil.UpperFirstChar(name))
+                eEnum = Enum.Parse<DAbility>(StringUtil.UpperFirstChar(name))
             };
         }
 
@@ -66,7 +66,7 @@ namespace Config.Equip
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataAbilityInfo;
+            var o = obj as DAbilityInfo;
             return o != null && Id.Equals(o.Id);
         }
 
@@ -77,13 +77,13 @@ namespace Config.Equip
 
     }
 
-    public partial class DataEquipconfig
+    public partial class DEquipconfig
     {
         internal static void Initialize(ConfigReader reader)
         {
             _all = [];
-            DataEquipconfig? eInstance = null;
-            DataEquipconfig? eInstance2 = null;
+            DEquipconfig? eInstance = null;
+            DEquipconfig? eInstance2 = null;
             for (var c = reader.ReadInt32(); c > 0; c--)
             {
                 var self = _create(reader);
@@ -114,7 +114,7 @@ namespace Config.Equip
             else Instance2 = eInstance2;
         }
 
-        internal static DataEquipconfig _create(ConfigReader reader)
+        internal static DEquipconfig _create(ConfigReader reader)
         {
             var entry = reader.ReadStringInPool();
             var stone_count_for_set = reader.ReadInt32();
@@ -122,7 +122,7 @@ namespace Config.Equip
             var broadcastid = reader.ReadInt32();
             var broadcast_least_quality = reader.ReadInt32();
             var week_reward_mailid = reader.ReadInt32();
-            return new DataEquipconfig {
+            return new DEquipconfig {
                 Entry = entry,
                 Stone_count_for_set = stone_count_for_set,
                 Draw_protect_name = draw_protect_name,
@@ -141,7 +141,7 @@ namespace Config.Equip
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataEquipconfig;
+            var o = obj as DEquipconfig;
             return o != null && Entry.Equals(o.Entry);
         }
 
@@ -152,7 +152,7 @@ namespace Config.Equip
 
     }
 
-    public partial class DataJewelry
+    public partial class DJewelry
     {
         internal static void Initialize(ConfigReader reader)
         {
@@ -170,19 +170,19 @@ namespace Config.Equip
             foreach (var v in All())
                 v._resolve(reader);
         }
-        internal static DataJewelry _create(ConfigReader reader)
+        internal static DJewelry _create(ConfigReader reader)
         {
             var iD = reader.ReadInt32();
             var name = reader.ReadStringInPool();
             var iconFile = reader.ReadStringInPool();
-            var lvlRank = DataLevelRank._create(reader);
+            var lvlRank = DLevelRank._create(reader);
             var jType = reader.ReadStringInPool();
             var suitID = reader.ReadInt32();
             var keyAbility = reader.ReadInt32();
             var keyAbilityValue = reader.ReadInt32();
             var salePrice = reader.ReadInt32();
             var description = reader.ReadStringInPool();
-            return new DataJewelry {
+            return new DJewelry {
                 ID = iD,
                 Name = name,
                 IconFile = iconFile,
@@ -205,7 +205,7 @@ namespace Config.Equip
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataJewelry;
+            var o = obj as DJewelry;
             return o != null && ID.Equals(o.ID);
         }
 
@@ -217,20 +217,20 @@ namespace Config.Equip
         internal void _resolve(ConfigReader reader)
         {
             LvlRank._resolve(reader);
-            var rRefLvlRank = Equip.DataJewelryrandom.Get(LvlRank);
+            var rRefLvlRank = Equip.DJewelryrandom.Get(LvlRank);
             if (rRefLvlRank == null) reader.RefNotFound("equip.jewelry", "LvlRank", LvlRank.ToString());
             else RefLvlRank = rRefLvlRank;
-            var rRefJType = Equip.DataJewelrytypeInfo.Get(JType);
+            var rRefJType = Equip.DJewelrytypeInfo.Get(JType);
             if (rRefJType == null) reader.RefNotFound("equip.jewelry", "JType", JType);
             else RefJType = rRefJType.eEnum;
-            NullableRefSuitID = Equip.DataJewelrysuit.Get(SuitID);
-            var rRefKeyAbility = Equip.DataAbilityInfo.Get(KeyAbility);
+            NullableRefSuitID = Equip.DJewelrysuit.Get(SuitID);
+            var rRefKeyAbility = Equip.DAbilityInfo.Get(KeyAbility);
             if (rRefKeyAbility == null) reader.RefNotFound("equip.jewelry", "KeyAbility", KeyAbility.ToString());
             else RefKeyAbility = rRefKeyAbility.eEnum;
         }
     }
 
-    public partial class DataJewelryrandom
+    public partial class DJewelryrandom
     {
         internal static void Initialize(ConfigReader reader)
         {
@@ -248,17 +248,17 @@ namespace Config.Equip
             foreach (var v in All())
                 v._resolve(reader);
         }
-        internal static DataJewelryrandom _create(ConfigReader reader)
+        internal static DJewelryrandom _create(ConfigReader reader)
         {
-            var lvlRank = DataLevelRank._create(reader);
-            var attackRange = DataRange._create(reader);
-            List<DataRange> otherRange = [];
+            var lvlRank = DLevelRank._create(reader);
+            var attackRange = DRange._create(reader);
+            List<DRange> otherRange = [];
             for (var c = reader.ReadInt32(); c > 0; c--)
-                otherRange.Add(DataRange._create(reader));
-            List<Equip.DataTestPackBean> testPack = [];
+                otherRange.Add(DRange._create(reader));
+            List<Equip.DTestPackBean> testPack = [];
             for (var c = reader.ReadInt32(); c > 0; c--)
-                testPack.Add(Equip.DataTestPackBean._create(reader));
-            return new DataJewelryrandom {
+                testPack.Add(Equip.DTestPackBean._create(reader));
+            return new DJewelryrandom {
                 LvlRank = lvlRank,
                 AttackRange = attackRange,
                 OtherRange = otherRange,
@@ -275,7 +275,7 @@ namespace Config.Equip
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataJewelryrandom;
+            var o = obj as DJewelryrandom;
             return o != null && LvlRank.Equals(o.LvlRank);
         }
 
@@ -290,12 +290,12 @@ namespace Config.Equip
         }
     }
 
-    public partial class DataJewelrysuit
+    public partial class DJewelrysuit
     {
         internal static void Initialize(ConfigReader reader)
         {
             _all = [];
-            DataJewelrysuit? eSpecialSuit = null;
+            DJewelrysuit? eSpecialSuit = null;
             for (var c = reader.ReadInt32(); c > 0; c--)
             {
                 var self = _create(reader);
@@ -319,7 +319,7 @@ namespace Config.Equip
             else SpecialSuit = eSpecialSuit;
         }
 
-        internal static DataJewelrysuit _create(ConfigReader reader)
+        internal static DJewelrysuit _create(ConfigReader reader)
         {
             var suitID = reader.ReadInt32();
             var ename = reader.ReadStringInPool();
@@ -333,7 +333,7 @@ namespace Config.Equip
             List<int> suitList = [];
             for (var c = reader.ReadInt32(); c > 0; c--)
                 suitList.Add(reader.ReadInt32());
-            return new DataJewelrysuit {
+            return new DJewelrysuit {
                 SuitID = suitID,
                 Ename = ename,
                 Name = name,
@@ -356,7 +356,7 @@ namespace Config.Equip
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataJewelrysuit;
+            var o = obj as DJewelrysuit;
             return o != null && SuitID.Equals(o.SuitID);
         }
 
@@ -367,7 +367,7 @@ namespace Config.Equip
 
     }
 
-    public partial class DataJewelrytypeInfo
+    public partial class DJewelrytypeInfo
     {
         internal static void Initialize(ConfigReader reader)
         {
@@ -376,17 +376,17 @@ namespace Config.Equip
             {
                 var self = _create(reader);
                 _all.Add(self.TypeName, self);
-                DataJewelrytypeExtensions._infos[(int)self.eEnum] = self;
+                DJewelrytypeExtensions._infos[(int)self.eEnum] = self;
             }
 
         }
 
-        internal static DataJewelrytypeInfo _create(ConfigReader reader)
+        internal static DJewelrytypeInfo _create(ConfigReader reader)
         {
             var typeName = reader.ReadStringInPool();
-            return new DataJewelrytypeInfo {
+            return new DJewelrytypeInfo {
                 TypeName = typeName,
-                eEnum = Enum.Parse<DataJewelrytype>(StringUtil.UpperFirstChar(typeName))
+                eEnum = Enum.Parse<DJewelrytype>(StringUtil.UpperFirstChar(typeName))
             };
         }
 
@@ -399,7 +399,7 @@ namespace Config.Equip
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataJewelrytypeInfo;
+            var o = obj as DJewelrytypeInfo;
             return o != null && TypeName.Equals(o.TypeName);
         }
 
@@ -410,7 +410,7 @@ namespace Config.Equip
 
     }
 
-    public partial class DataRankInfo
+    public partial class DRankInfo
     {
         internal static void Initialize(ConfigReader reader)
         {
@@ -419,21 +419,21 @@ namespace Config.Equip
             {
                 var self = _create(reader);
                 _all.Add(self.RankID, self);
-                DataRankExtensions._infos[(int)self.eEnum] = self;
+                DRankExtensions._infos[(int)self.eEnum] = self;
             }
 
         }
 
-        internal static DataRankInfo _create(ConfigReader reader)
+        internal static DRankInfo _create(ConfigReader reader)
         {
             var rankID = reader.ReadInt32();
             var rankName = reader.ReadStringInPool();
             var rankShowName = reader.ReadStringInPool();
-            return new DataRankInfo {
+            return new DRankInfo {
                 RankID = rankID,
                 RankName = rankName,
                 RankShowName = rankShowName,
-                eEnum = Enum.Parse<DataRank>(StringUtil.UpperFirstChar(rankName))
+                eEnum = Enum.Parse<DRank>(StringUtil.UpperFirstChar(rankName))
             };
         }
 
@@ -446,7 +446,7 @@ namespace Config.Equip
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataRankInfo;
+            var o = obj as DRankInfo;
             return o != null && RankID.Equals(o.RankID);
         }
 

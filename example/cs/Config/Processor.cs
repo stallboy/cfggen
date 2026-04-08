@@ -46,87 +46,87 @@ public static class Processor
             {
                 case "ai.ai":
                     configNulls.Remove(tableName);
-                    Ai.DataAi.Initialize(reader);
+                    Ai.DAi.Initialize(reader);
                     break;
                 case "ai.ai_action":
                     configNulls.Remove(tableName);
-                    Ai.DataAi_action.Initialize(reader);
+                    Ai.DAi_action.Initialize(reader);
                     break;
                 case "ai.ai_condition":
                     configNulls.Remove(tableName);
-                    Ai.DataAi_condition.Initialize(reader);
+                    Ai.DAi_condition.Initialize(reader);
                     break;
                 case "equip.ability":
                     configNulls.Remove(tableName);
-                    Equip.DataAbilityInfo.Initialize(reader);
+                    Equip.DAbilityInfo.Initialize(reader);
                     break;
                 case "equip.equipconfig":
                     configNulls.Remove(tableName);
-                    Equip.DataEquipconfig.Initialize(reader);
+                    Equip.DEquipconfig.Initialize(reader);
                     break;
                 case "equip.jewelry":
                     configNulls.Remove(tableName);
-                    Equip.DataJewelry.Initialize(reader);
+                    Equip.DJewelry.Initialize(reader);
                     break;
                 case "equip.jewelryrandom":
                     configNulls.Remove(tableName);
-                    Equip.DataJewelryrandom.Initialize(reader);
+                    Equip.DJewelryrandom.Initialize(reader);
                     break;
                 case "equip.jewelrysuit":
                     configNulls.Remove(tableName);
-                    Equip.DataJewelrysuit.Initialize(reader);
+                    Equip.DJewelrysuit.Initialize(reader);
                     break;
                 case "equip.jewelrytype":
                     configNulls.Remove(tableName);
-                    Equip.DataJewelrytypeInfo.Initialize(reader);
+                    Equip.DJewelrytypeInfo.Initialize(reader);
                     break;
                 case "equip.rank":
                     configNulls.Remove(tableName);
-                    Equip.DataRankInfo.Initialize(reader);
+                    Equip.DRankInfo.Initialize(reader);
                     break;
                 case "other.ArgCaptureMode":
                     configNulls.Remove(tableName);
-                    Other.DataArgCaptureModeInfo.Initialize(reader);
+                    Other.DArgCaptureModeInfo.Initialize(reader);
                     break;
                 case "other.drop":
                     configNulls.Remove(tableName);
-                    Other.DataDrop.Initialize(reader);
+                    Other.DDrop.Initialize(reader);
                     break;
                 case "other.keytest":
                     configNulls.Remove(tableName);
-                    Other.DataKeytest.Initialize(reader);
+                    Other.DKeytest.Initialize(reader);
                     break;
                 case "other.loot":
                     configNulls.Remove(tableName);
-                    Other.DataLoot.Initialize(reader);
+                    Other.DLoot.Initialize(reader);
                     break;
                 case "other.lootitem":
                     configNulls.Remove(tableName);
-                    Other.DataLootitem.Initialize(reader);
+                    Other.DLootitem.Initialize(reader);
                     break;
                 case "other.monster":
                     configNulls.Remove(tableName);
-                    Other.DataMonster.Initialize(reader);
+                    Other.DMonster.Initialize(reader);
                     break;
                 case "other.signin":
                     configNulls.Remove(tableName);
-                    Other.DataSignin.Initialize(reader);
+                    Other.DSignin.Initialize(reader);
                     break;
                 case "task.completeconditiontype":
                     configNulls.Remove(tableName);
-                    Task.DataCompleteconditiontypeInfo.Initialize(reader);
+                    Task.DCompleteconditiontypeInfo.Initialize(reader);
                     break;
                 case "task.task":
                     configNulls.Remove(tableName);
-                    Task.DataTask.Initialize(reader);
+                    Task.DTask.Initialize(reader);
                     break;
                 case "task.task2":
                     configNulls.Remove(tableName);
-                    Task.DataTask2.Initialize(reader);
+                    Task.DTask2.Initialize(reader);
                     break;
                 case "task.taskextraexp":
                     configNulls.Remove(tableName);
-                    Task.DataTaskextraexp.Initialize(reader);
+                    Task.DTaskextraexp.Initialize(reader);
                     break;
                 default:
                     // 未知表，跳过
@@ -137,13 +137,13 @@ public static class Processor
         foreach (var t in configNulls)
             reader.TableNotInData(t);
         // 解析外键引用
-        Equip.DataJewelry.Resolve(reader);
-        Equip.DataJewelryrandom.Resolve(reader);
-        Other.DataKeytest.Resolve(reader);
-        Other.DataLoot.Resolve(reader);
-        Other.DataMonster.Resolve(reader);
-        Other.DataSignin.Resolve(reader);
-        Task.DataTask.Resolve(reader);
-        Task.DataTask2.Resolve(reader);
+        Equip.DJewelry.Resolve(reader);
+        Equip.DJewelryrandom.Resolve(reader);
+        Other.DKeytest.Resolve(reader);
+        Other.DLoot.Resolve(reader);
+        Other.DMonster.Resolve(reader);
+        Other.DSignin.Resolve(reader);
+        Task.DTask.Resolve(reader);
+        Task.DTask2.Resolve(reader);
     }
 }

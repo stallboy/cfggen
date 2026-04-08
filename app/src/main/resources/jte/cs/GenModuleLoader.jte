@@ -228,32 +228,32 @@ namespace ${group.ns}
 
     @endfor
 
-@for(InterfaceModel im : group.interfaces)
-    !{String className = im.name.className;}
+    @for(InterfaceModel im : group.interfaces)
+        !{String className = im.name.className;}
 
-    public partial interface ${className}
-    {
-        @if(HasRef.hasRef(im.sInterface))
-            void _resolve(ConfigReader reader)
-            {
-            }
-        @endif
-
-        internal static ${className} _create(ConfigReader reader)
+        public partial interface ${className}
         {
-            var impl = reader.ReadStringInPool();
-            switch(impl)
-            {
-                @for(StructSchema implSchema : im.sInterface.impls())
-                    case "${implSchema.name()}":
-                        return ${im.fullName(implSchema)}._create(reader);
-                @endfor
-            }
-            throw reader.NotFoundImpl(impl, "${im.sInterface.name()}");
-        }
-    }
+            @if(HasRef.hasRef(im.sInterface))
+                void _resolve(ConfigReader reader)
+                {
+                }
+            @endif
 
-@endfor
+            internal static ${className} _create(ConfigReader reader)
+            {
+                var impl = reader.ReadStringInPool();
+                switch(impl)
+                {
+                    @for(StructSchema implSchema : im.sInterface.impls())
+                        case "${implSchema.name()}":
+                            return ${im.fullName(implSchema)}._create(reader);
+                    @endfor
+                }
+                throw reader.NotFoundImpl(impl, "${im.sInterface.name()}");
+            }
+        }
+
+    @endfor
 }
 
 @endfor

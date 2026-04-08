@@ -1,6 +1,6 @@
 namespace Config.Ai
 {
-    public partial class DataAi
+    public partial class DAi
     {
         internal static void Initialize(ConfigReader reader)
         {
@@ -13,18 +13,18 @@ namespace Config.Ai
 
         }
 
-        internal static DataAi _create(ConfigReader reader)
+        internal static DAi _create(ConfigReader reader)
         {
             var iD = reader.ReadInt32();
             var desc = reader.ReadStringInPool();
             var condID = reader.ReadStringInPool();
-            var trigTick = Ai.DataTriggerTick._create(reader);
+            var trigTick = Ai.DTriggerTick._create(reader);
             var trigOdds = reader.ReadInt32();
             List<int> actionID = [];
             for (var c = reader.ReadInt32(); c > 0; c--)
                 actionID.Add(reader.ReadInt32());
             var deathRemove = reader.ReadBool();
-            return new DataAi {
+            return new DAi {
                 ID = iD,
                 Desc = desc,
                 CondID = condID,
@@ -44,7 +44,7 @@ namespace Config.Ai
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataAi;
+            var o = obj as DAi;
             return o != null && ID.Equals(o.ID);
         }
 
@@ -55,7 +55,7 @@ namespace Config.Ai
 
     }
 
-    public partial class DataAi_action
+    public partial class DAi_action
     {
         internal static void Initialize(ConfigReader reader)
         {
@@ -68,7 +68,7 @@ namespace Config.Ai
 
         }
 
-        internal static DataAi_action _create(ConfigReader reader)
+        internal static DAi_action _create(ConfigReader reader)
         {
             var iD = reader.ReadInt32();
             var desc = reader.ReadStringInPool();
@@ -79,7 +79,7 @@ namespace Config.Ai
             List<int> argSList = [];
             for (var c = reader.ReadInt32(); c > 0; c--)
                 argSList.Add(reader.ReadInt32());
-            return new DataAi_action {
+            return new DAi_action {
                 ID = iD,
                 Desc = desc,
                 FormulaID = formulaID,
@@ -97,7 +97,7 @@ namespace Config.Ai
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataAi_action;
+            var o = obj as DAi_action;
             return o != null && ID.Equals(o.ID);
         }
 
@@ -108,7 +108,7 @@ namespace Config.Ai
 
     }
 
-    public partial class DataAi_condition
+    public partial class DAi_condition
     {
         internal static void Initialize(ConfigReader reader)
         {
@@ -121,7 +121,7 @@ namespace Config.Ai
 
         }
 
-        internal static DataAi_condition _create(ConfigReader reader)
+        internal static DAi_condition _create(ConfigReader reader)
         {
             var iD = reader.ReadInt32();
             var desc = reader.ReadStringInPool();
@@ -132,7 +132,7 @@ namespace Config.Ai
             List<int> argSList = [];
             for (var c = reader.ReadInt32(); c > 0; c--)
                 argSList.Add(reader.ReadInt32());
-            return new DataAi_condition {
+            return new DAi_condition {
                 ID = iD,
                 Desc = desc,
                 FormulaID = formulaID,
@@ -150,7 +150,7 @@ namespace Config.Ai
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataAi_condition;
+            var o = obj as DAi_condition;
             return o != null && ID.Equals(o.ID);
         }
 
@@ -161,34 +161,34 @@ namespace Config.Ai
 
     }
 
-public partial interface DataTriggerTick
-{
-    internal static DataTriggerTick _create(ConfigReader reader)
+    public partial interface DTriggerTick
     {
-        var impl = reader.ReadStringInPool();
-        switch(impl)
+        internal static DTriggerTick _create(ConfigReader reader)
         {
-            case "ConstValue":
-                return Ai.TriggerTick.DataConstValue._create(reader);
-            case "ByLevel":
-                return Ai.TriggerTick.DataByLevel._create(reader);
-            case "ByServerUpDay":
-                return Ai.TriggerTick.DataByServerUpDay._create(reader);
+            var impl = reader.ReadStringInPool();
+            switch(impl)
+            {
+                case "ConstValue":
+                    return Ai.TriggerTick.DConstValue._create(reader);
+                case "ByLevel":
+                    return Ai.TriggerTick.DByLevel._create(reader);
+                case "ByServerUpDay":
+                    return Ai.TriggerTick.DByServerUpDay._create(reader);
+            }
+            throw reader.NotFoundImpl(impl, "ai.TriggerTick");
         }
-        throw reader.NotFoundImpl(impl, "ai.TriggerTick");
     }
-}
 
 }
 
 namespace Config.Ai.TriggerTick
 {
-    public partial class DataConstValue
+    public partial class DConstValue
     {
-        internal static DataConstValue _create(ConfigReader reader)
+        internal static DConstValue _create(ConfigReader reader)
         {
             var value = reader.ReadInt32();
-            return new DataConstValue {
+            return new DConstValue {
                 Value = value,
             };
         }
@@ -202,7 +202,7 @@ namespace Config.Ai.TriggerTick
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataConstValue;
+            var o = obj as DConstValue;
             return o != null && Value.Equals(o.Value);
         }
 
@@ -213,13 +213,13 @@ namespace Config.Ai.TriggerTick
 
     }
 
-    public partial class DataByLevel
+    public partial class DByLevel
     {
-        internal static DataByLevel _create(ConfigReader reader)
+        internal static DByLevel _create(ConfigReader reader)
         {
             var init = reader.ReadInt32();
             var coefficient = reader.ReadSingle();
-            return new DataByLevel {
+            return new DByLevel {
                 Init = init,
                 Coefficient = coefficient,
             };
@@ -234,7 +234,7 @@ namespace Config.Ai.TriggerTick
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataByLevel;
+            var o = obj as DByLevel;
             return o != null && Init.Equals(o.Init) && Coefficient.Equals(o.Coefficient);
         }
 
@@ -245,14 +245,14 @@ namespace Config.Ai.TriggerTick
 
     }
 
-    public partial class DataByServerUpDay
+    public partial class DByServerUpDay
     {
-        internal static DataByServerUpDay _create(ConfigReader reader)
+        internal static DByServerUpDay _create(ConfigReader reader)
         {
             var init = reader.ReadInt32();
             var coefficient1 = reader.ReadSingle();
             var coefficient2 = reader.ReadSingle();
-            return new DataByServerUpDay {
+            return new DByServerUpDay {
                 Init = init,
                 Coefficient1 = coefficient1,
                 Coefficient2 = coefficient2,
@@ -268,7 +268,7 @@ namespace Config.Ai.TriggerTick
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataByServerUpDay;
+            var o = obj as DByServerUpDay;
             return o != null && Init.Equals(o.Init) && Coefficient1.Equals(o.Coefficient1) && Coefficient2.Equals(o.Coefficient2);
         }
 

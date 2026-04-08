@@ -1,12 +1,12 @@
 namespace Config
 {
-    public partial class DataLevelRank
+    public partial class DLevelRank
     {
-        internal static DataLevelRank _create(ConfigReader reader)
+        internal static DLevelRank _create(ConfigReader reader)
         {
             var level = reader.ReadInt32();
             var rank = reader.ReadInt32();
-            return new DataLevelRank {
+            return new DLevelRank {
                 Level = level,
                 Rank = rank,
             };
@@ -21,7 +21,7 @@ namespace Config
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataLevelRank;
+            var o = obj as DLevelRank;
             return o != null && Level.Equals(o.Level) && Rank.Equals(o.Rank);
         }
 
@@ -32,20 +32,20 @@ namespace Config
 
         internal void _resolve(ConfigReader reader)
         {
-            var rRefRank = Equip.DataRankInfo.Get(Rank);
+            var rRefRank = Equip.DRankInfo.Get(Rank);
             if (rRefRank == null) reader.RefNotFound("LevelRank", "Rank", Rank.ToString());
             else RefRank = rRefRank.eEnum;
         }
     }
 
-    public partial class DataPosition
+    public partial class DPosition
     {
-        internal static DataPosition _create(ConfigReader reader)
+        internal static DPosition _create(ConfigReader reader)
         {
             var x = reader.ReadInt32();
             var y = reader.ReadInt32();
             var z = reader.ReadInt32();
-            return new DataPosition {
+            return new DPosition {
                 X = x,
                 Y = y,
                 Z = z,
@@ -61,7 +61,7 @@ namespace Config
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataPosition;
+            var o = obj as DPosition;
             return o != null && X.Equals(o.X) && Y.Equals(o.Y) && Z.Equals(o.Z);
         }
 
@@ -72,13 +72,13 @@ namespace Config
 
     }
 
-    public partial class DataRange
+    public partial class DRange
     {
-        internal static DataRange _create(ConfigReader reader)
+        internal static DRange _create(ConfigReader reader)
         {
             var min = reader.ReadInt32();
             var max = reader.ReadInt32();
-            return new DataRange {
+            return new DRange {
                 Min = min,
                 Max = max,
             };
@@ -93,7 +93,7 @@ namespace Config
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DataRange;
+            var o = obj as DRange;
             return o != null && Min.Equals(o.Min) && Max.Equals(o.Max);
         }
 
