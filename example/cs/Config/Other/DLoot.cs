@@ -9,7 +9,7 @@ public partial class DLoot
     public List<Other.DLootitem> ListRefLootid { get; private set; } = null!;
     public List<Other.DLootitem> ListRefAnotherWay { get; private set; } = null!;
     
-    private static OrderedDictionary<int, DLoot> _all = [];
+    private static System.Collections.Frozen.FrozenDictionary<int, DLoot> _all = null!;
 
     public static DLoot? Get(int lootid)
     {

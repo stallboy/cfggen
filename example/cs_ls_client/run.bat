@@ -1,2 +1,1 @@
 dotnet run
-pause

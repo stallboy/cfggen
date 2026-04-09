@@ -1,11 +1,10 @@
-using System.Collections.Generic;
 
 namespace Config;
 
 public static class Processor
 {
     // 从 bytes 文件加载（新格式）
-    public static void Process(Config.Stream os, LoadErrors errors)
+    public static void Process(ConfigReader reader)
     {
         var configNulls = new List<string>
         {
@@ -33,118 +32,118 @@ public static class Processor
         };
 
         // 读取表数量
-        int tableCount = os.ReadInt32();
+        int tableCount = reader.ReadInt32();
 
         for (int i = 0; i < tableCount; i++)
         {
             // 读取表名
-            string tableName = os.ReadTableName();
+            string tableName = reader.ReadTableName();
             // 读取表大小
-            int tableSize = os.ReadInt32();
+            int tableSize = reader.ReadInt32();
 
             // 根据表名分发到对应的 Initialize 方法
             switch(tableName)
             {
                 case "ai.ai":
                     configNulls.Remove(tableName);
-                    Ai.DataAi.Initialize(os, errors);
+                    Ai.DAi.Initialize(reader);
                     break;
                 case "ai.ai_action":
                     configNulls.Remove(tableName);
-                    Ai.DataAi_action.Initialize(os, errors);
+                    Ai.DAi_action.Initialize(reader);
                     break;
                 case "ai.ai_condition":
                     configNulls.Remove(tableName);
-                    Ai.DataAi_condition.Initialize(os, errors);
+                    Ai.DAi_condition.Initialize(reader);
                     break;
                 case "equip.ability":
                     configNulls.Remove(tableName);
-                    Equip.DataAbility.Initialize(os, errors);
+                    Equip.DAbilityInfo.Initialize(reader);
                     break;
                 case "equip.equipconfig":
                     configNulls.Remove(tableName);
-                    Equip.DataEquipconfig.Initialize(os, errors);
+                    Equip.DEquipconfig.Initialize(reader);
                     break;
                 case "equip.jewelry":
                     configNulls.Remove(tableName);
-                    Equip.DataJewelry.Initialize(os, errors);
+                    Equip.DJewelry.Initialize(reader);
                     break;
                 case "equip.jewelryrandom":
                     configNulls.Remove(tableName);
-                    Equip.DataJewelryrandom.Initialize(os, errors);
+                    Equip.DJewelryrandom.Initialize(reader);
                     break;
                 case "equip.jewelrysuit":
                     configNulls.Remove(tableName);
-                    Equip.DataJewelrysuit.Initialize(os, errors);
+                    Equip.DJewelrysuit.Initialize(reader);
                     break;
                 case "equip.jewelrytype":
                     configNulls.Remove(tableName);
-                    Equip.DataJewelrytype.Initialize(os, errors);
+                    Equip.DJewelrytypeInfo.Initialize(reader);
                     break;
                 case "equip.rank":
                     configNulls.Remove(tableName);
-                    Equip.DataRank.Initialize(os, errors);
+                    Equip.DRankInfo.Initialize(reader);
                     break;
                 case "other.ArgCaptureMode":
                     configNulls.Remove(tableName);
-                    Other.DataArgCaptureMode.Initialize(os, errors);
+                    Other.DArgCaptureModeInfo.Initialize(reader);
                     break;
                 case "other.drop":
                     configNulls.Remove(tableName);
-                    Other.DataDrop.Initialize(os, errors);
+                    Other.DDrop.Initialize(reader);
                     break;
                 case "other.keytest":
                     configNulls.Remove(tableName);
-                    Other.DataKeytest.Initialize(os, errors);
+                    Other.DKeytest.Initialize(reader);
                     break;
                 case "other.loot":
                     configNulls.Remove(tableName);
-                    Other.DataLoot.Initialize(os, errors);
+                    Other.DLoot.Initialize(reader);
                     break;
                 case "other.lootitem":
                     configNulls.Remove(tableName);
-                    Other.DataLootitem.Initialize(os, errors);
+                    Other.DLootitem.Initialize(reader);
                     break;
                 case "other.monster":
                     configNulls.Remove(tableName);
-                    Other.DataMonster.Initialize(os, errors);
+                    Other.DMonster.Initialize(reader);
                     break;
                 case "other.signin":
                     configNulls.Remove(tableName);
-                    Other.DataSignin.Initialize(os, errors);
+                    Other.DSignin.Initialize(reader);
                     break;
                 case "task.completeconditiontype":
                     configNulls.Remove(tableName);
-                    Task.DataCompleteconditiontype.Initialize(os, errors);
+                    Task.DCompleteconditiontypeInfo.Initialize(reader);
                     break;
                 case "task.task":
                     configNulls.Remove(tableName);
-                    Task.DataTask.Initialize(os, errors);
+                    Task.DTask.Initialize(reader);
                     break;
                 case "task.task2":
                     configNulls.Remove(tableName);
-                    Task.DataTask2.Initialize(os, errors);
+                    Task.DTask2.Initialize(reader);
                     break;
                 case "task.taskextraexp":
                     configNulls.Remove(tableName);
-                    Task.DataTaskextraexp.Initialize(os, errors);
+                    Task.DTaskextraexp.Initialize(reader);
                     break;
                 default:
                     // 未知表，跳过
-                    os.SkipBytes(tableSize);
+                    reader.SkipBytes(tableSize);
                     break;
             }
         }
         foreach (var t in configNulls)
-            errors.ConfigNull(t);
+            reader.TableNotInData(t);
         // 解析外键引用
-        Equip.DataJewelry.Resolve(errors);
-        Equip.DataJewelryrandom.Resolve(errors);
-        Other.DataKeytest.Resolve(errors);
-        Other.DataLoot.Resolve(errors);
-        Other.DataMonster.Resolve(errors);
-        Other.DataSignin.Resolve(errors);
-        Task.DataTask.Resolve(errors);
-        Task.DataTask2.Resolve(errors);
+        Equip.DJewelry.Resolve(reader);
+        Equip.DJewelryrandom.Resolve(reader);
+        Other.DKeytest.Resolve(reader);
+        Other.DLoot.Resolve(reader);
+        Other.DMonster.Resolve(reader);
+        Other.DSignin.Resolve(reader);
+        Task.DTask.Resolve(reader);
+        Task.DTask2.Resolve(reader);
     }
 }

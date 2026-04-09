@@ -1,4 +1,6 @@
-﻿class Program
+﻿using Config;
+
+static class Program
 {
     public static void XorBytesWithCipher(byte[] target, string cipher)
     {
@@ -16,7 +18,7 @@
         Console.WriteLine("cipher: " + cipher);
         XorBytesWithCipher(bytes, cipher);
     
-        var loadResult = Config.Loader.LoadBytes(bytes, Config.Processor.Process);
+        var loadResult = Loader.LoadBytes(bytes, Processor.Process);
 
         // 打印警告信息
         Console.WriteLine("=== Issues ===");

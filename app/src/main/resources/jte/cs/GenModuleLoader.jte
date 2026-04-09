@@ -6,6 +6,11 @@
 @import configgen.schema.FieldType.*
 @import java.util.List
 @param ModuleModel model
+@if(model.hasTable())
+    using System.Collections.Frozen;
+
+@endif
+
 !{String topPkg = model.topPkg;}
 @for(NamespaceGroup group : model.groups())
 
@@ -22,9 +27,10 @@ namespace ${group.ns}
                 !{TableSchema table = sm._vTable.schema();}
                 internal static void Initialize(ConfigReader reader)
                 {
-                    _all = [];
+                    int count = reader.ReadInt32();
+                    var s_all = new ${sm.dictTypeWhenInit(table.primaryKey())}(count);
                     @for(KeySchema uk : table.uniqueKeys())
-                        ${sm.uniqueKeyMapName(uk)} = [];
+                        var s${sm.uniqueKeyMapName(uk)} = new ${sm.dictTypeWhenInit(uk)}(count);
                     @endfor
 
                     @if(table.entry() instanceof EntryType.EEntry eEntry)
@@ -33,12 +39,12 @@ namespace ${group.ns}
                         @endfor
                     @endif
 
-                    for (var c = reader.ReadInt32(); c > 0; c--)
+                    for (int i = 0; i < count; i++)
                     {
                         var self = _create(reader);
-                        _all.Add(${sm.actualParamsKeySelf(table.primaryKey())}, self);
+                        s_all.Add(${sm.actualParamsKeySelf(table.primaryKey())}, self);
                         @for(KeySchema uk : table.uniqueKeys())
-                            ${sm.uniqueKeyMapName(uk)}.Add(${sm.actualParamsKeySelf(uk)}, self);
+                            s${sm.uniqueKeyMapName(uk)}.Add(${sm.actualParamsKeySelf(uk)}, self);
                         @endfor
                         @if(sm.isEnum())
                             ${sm.name.className}Extensions._infos[(int)self.eEnum] = self;
@@ -63,7 +69,11 @@ namespace ${group.ns}
                             }
                         @endif
                     }
-
+                    _all = s_all.ToFrozenDictionary();
+                    @for(KeySchema uk : table.uniqueKeys())
+                        !{String mapName = sm.uniqueKeyMapName(uk);}
+                        ${mapName} = s${mapName}.ToFrozenDictionary();
+                    @endfor
                     @if(table.entry() instanceof EntryType.EEntry)
                         @for(String enumName : sm._vTable.enumNames())
                             if (e${sm.upper1(enumName)} == null) reader.EnumNotInData("${enumName}");
@@ -88,15 +98,15 @@ namespace ${group.ns}
                     !{String n = StructModel._lower1(field.name());}
                     !{FieldType t = field.type();}
                     @if(t instanceof FList(SimpleType item))
-                        ${sm.type(t)} ${n} = [];
-                        for (var c = reader.ReadInt32(); c > 0; c--)
+                        int Count_${n} = reader.ReadInt32();
+                        var ${n} = new ${sm.type(t)}(Count_${n});
+                        for (int i = 0; i < Count_${n}; i++)
                             ${n}.Add(${sm.create(item)});
                     @elseif(field.type() instanceof FMap(SimpleType key, SimpleType value))
-                        ${sm.type(t)} ${n} = [];
-                        for (var c = reader.ReadInt32(); c > 0; c--)
-                        {
+                        int Count_${n} = reader.ReadInt32();
+                        var ${n} = new ${sm.type(t)}(Count_${n});
+                        for (int i = 0; i < Count_${n}; i++)
                             ${n}.Add(${sm.create(key)}, ${sm.create(value)});
-                        }
                     @else
                         var ${n} = ${sm.create(t)};
                     @endif

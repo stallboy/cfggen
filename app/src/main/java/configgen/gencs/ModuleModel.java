@@ -17,7 +17,7 @@ public class ModuleModel {
 
     // Grouped by namespace, preserves insertion order
     private final LinkedHashMap<String, NamespaceGroup> groups = new LinkedHashMap<>();
-
+    private boolean hasTable;
     private final CsCodeGenerator gen;
 
     public ModuleModel(CsCodeGenerator gen, String moduleKey) {
@@ -29,12 +29,15 @@ public class ModuleModel {
                 : moduleKey + "/" + moduleKey + "Loader.cs";
     }
 
-    public void addStruct(StructModel model) {
+    void addStruct(StructModel model) {
         String ns = model.name.pkg;
         groups.computeIfAbsent(ns, NamespaceGroup::new).structs.add(model);
+        if (model._vTable != null){
+            hasTable = true;
+        }
     }
 
-    public void addInterface(InterfaceModel model) {
+    void addInterface(InterfaceModel model) {
         String ns = model.name.pkg;
         groups.computeIfAbsent(ns, NamespaceGroup::new).interfaces.add(model);
     }
@@ -50,6 +53,10 @@ public class ModuleModel {
 
     public String upper1(String value) {
         return StringUtil.upper1(value);
+    }
+
+    public boolean hasTable() {
+        return hasTable;
     }
 
     public static class NamespaceGroup {

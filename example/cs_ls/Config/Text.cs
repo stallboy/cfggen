@@ -12,9 +12,9 @@ public partial class Text
         return "(" + Zh_cn + "," + En + "," + Tw + ")";
     }
 
-    internal static Text _create(Config.Stream os)
+    internal static Text _create(ConfigReader reader)
     {
-        string[] texts = os.ReadTextsInPool();
+        string[] texts = reader.ReadTextsInPool();
         return new Text
         {
         Zh_cn = texts[0],

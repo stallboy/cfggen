@@ -35,11 +35,11 @@
 
     @endif
 
-    !{String className =  model.name.className + (model.isEnum() ? "Info" : "");}
+    !{String className =  model.dictValueType();}
     !{String mapName = isPrimaryKey ? "_all" : model.uniqueKeyMapName(keySchema);}
-    !{String allType = "OrderedDictionary<" + model.keyClassName(keySchema) + ", " + className + ">";}
+    !{String allType = model.dictType(keySchema);}
     !{String getByName = isPrimaryKey ? "Get" : model.uniqueKeyGetByName(keySchema);}
-    private static ${allType} ${mapName} = [];
+    private static ${allType} ${mapName} = null!;
 
     public static ${className}? ${getByName}(${model.formalParams(keySchema.fieldSchemas())})
     {

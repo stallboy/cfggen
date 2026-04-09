@@ -12,7 +12,7 @@ public partial class DArgCaptureModeInfo
     public required string Comment { get; init; }
     public required DArgCaptureMode eEnum { get; init; }
     
-    private static OrderedDictionary<string, DArgCaptureModeInfo> _all = [];
+    private static System.Collections.Frozen.FrozenDictionary<string, DArgCaptureModeInfo> _all = null!;
 
     public static DArgCaptureModeInfo? Get(string name)
     {

@@ -1,3 +1,5 @@
+using System.Collections.Frozen;
+
 namespace Config.Task
 {
     public partial class DTestDefaultBean
@@ -8,17 +10,18 @@ namespace Config.Task
             var testBool = reader.ReadBool();
             var testString = reader.ReadStringInPool();
             var testSubBean = DPosition._create(reader);
-            List<int> testList = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int Count_testList = reader.ReadInt32();
+            var testList = new List<int>(Count_testList);
+            for (int i = 0; i < Count_testList; i++)
                 testList.Add(reader.ReadInt32());
-            List<int> testList2 = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int Count_testList2 = reader.ReadInt32();
+            var testList2 = new List<int>(Count_testList2);
+            for (int i = 0; i < Count_testList2; i++)
                 testList2.Add(reader.ReadInt32());
-            OrderedDictionary<int, string> testMap = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
-            {
+            int Count_testMap = reader.ReadInt32();
+            var testMap = new OrderedDictionary<int, string>(Count_testMap);
+            for (int i = 0; i < Count_testMap; i++)
                 testMap.Add(reader.ReadInt32(), reader.ReadStringInPool());
-            }
             return new DTestDefaultBean {
                 TestInt = testInt,
                 TestBool = testBool,
@@ -54,14 +57,15 @@ namespace Config.Task
     {
         internal static void Initialize(ConfigReader reader)
         {
-            _all = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int count = reader.ReadInt32();
+            var s_all = new Dictionary<int, DCompleteconditiontypeInfo>(count);
+            for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
-                _all.Add(self.Id, self);
+                s_all.Add(self.Id, self);
                 DCompleteconditiontypeExtensions._infos[(int)self.eEnum] = self;
             }
-
+            _all = s_all.ToFrozenDictionary();
         }
 
         internal static DCompleteconditiontypeInfo _create(ConfigReader reader)
@@ -99,13 +103,14 @@ namespace Config.Task
     {
         internal static void Initialize(ConfigReader reader)
         {
-            _all = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int count = reader.ReadInt32();
+            var s_all = new Dictionary<int, DTask>(count);
+            for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
-                _all.Add(self.Taskid, self);
+                s_all.Add(self.Taskid, self);
             }
-
+            _all = s_all.ToFrozenDictionary();
         }
 
         internal static void Resolve(ConfigReader reader)
@@ -116,8 +121,9 @@ namespace Config.Task
         internal static DTask _create(ConfigReader reader)
         {
             var taskid = reader.ReadInt32();
-            List<string> name = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int Count_name = reader.ReadInt32();
+            var name = new List<string>(Count_name);
+            for (int i = 0; i < Count_name; i++)
                 name.Add(reader.ReadTextInPool());
             var nexttask = reader.ReadInt32();
             var completecondition = Task.DCompletecondition._create(reader);
@@ -163,13 +169,14 @@ namespace Config.Task
     {
         internal static void Initialize(ConfigReader reader)
         {
-            _all = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int count = reader.ReadInt32();
+            var s_all = new Dictionary<int, DTask2>(count);
+            for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
-                _all.Add(self.Taskid, self);
+                s_all.Add(self.Taskid, self);
             }
-
+            _all = s_all.ToFrozenDictionary();
         }
 
         internal static void Resolve(ConfigReader reader)
@@ -180,8 +187,9 @@ namespace Config.Task
         internal static DTask2 _create(ConfigReader reader)
         {
             var taskid = reader.ReadInt32();
-            List<string> name = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int Count_name = reader.ReadInt32();
+            var name = new List<string>(Count_name);
+            for (int i = 0; i < Count_name; i++)
                 name.Add(reader.ReadTextInPool());
             var nexttask = reader.ReadInt32();
             var completecondition = Task.DCompletecondition._create(reader);
@@ -189,14 +197,17 @@ namespace Config.Task
             var testBool = reader.ReadBool();
             var testString = reader.ReadStringInPool();
             var testStruct = DPosition._create(reader);
-            List<int> testList = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int Count_testList = reader.ReadInt32();
+            var testList = new List<int>(Count_testList);
+            for (int i = 0; i < Count_testList; i++)
                 testList.Add(reader.ReadInt32());
-            List<DPosition> testListStruct = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int Count_testListStruct = reader.ReadInt32();
+            var testListStruct = new List<DPosition>(Count_testListStruct);
+            for (int i = 0; i < Count_testListStruct; i++)
                 testListStruct.Add(DPosition._create(reader));
-            List<Ai.DTriggerTick> testListInterface = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int Count_testListInterface = reader.ReadInt32();
+            var testListInterface = new List<Ai.DTriggerTick>(Count_testListInterface);
+            for (int i = 0; i < Count_testListInterface; i++)
                 testListInterface.Add(Ai.DTriggerTick._create(reader));
             return new DTask2 {
                 Taskid = taskid,
@@ -243,13 +254,14 @@ namespace Config.Task
     {
         internal static void Initialize(ConfigReader reader)
         {
-            _all = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int count = reader.ReadInt32();
+            var s_all = new Dictionary<int, DTaskextraexp>(count);
+            for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
-                _all.Add(self.Taskid, self);
+                s_all.Add(self.Taskid, self);
             }
-
+            _all = s_all.ToFrozenDictionary();
         }
 
         internal static DTaskextraexp _create(ConfigReader reader)

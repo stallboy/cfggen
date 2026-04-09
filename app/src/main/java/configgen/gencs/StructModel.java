@@ -200,19 +200,31 @@ public class StructModel {
         };
     }
 
-    public static String refInit(ForeignKeySchema fk){
-        if (fk.refKey() instanceof RefKey.RefSimple refSimple){
-            if (refSimple.nullable()){
+    public String dictValueType() {
+        return name.className + (isEnum() ? "Info" : "");
+    }
+
+    public String dictType(KeySchema keySchema) {
+        return "System.Collections.Frozen.FrozenDictionary<" + keyClassName(keySchema) + ", " + dictValueType() + ">";
+    }
+
+    public String dictTypeWhenInit(KeySchema keySchema) {
+        return "Dictionary<" + keyClassName(keySchema) + ", " + dictValueType() + ">";
+    }
+
+    public static String refInit(ForeignKeySchema fk) {
+        if (fk.refKey() instanceof RefKey.RefSimple refSimple) {
+            if (refSimple.nullable()) {
                 return "";
             }
             boolean isContainer = false;
             for (FieldSchema fs : fk.key().fieldSchemas()) {
-                if (fs.type() instanceof ContainerType){
+                if (fs.type() instanceof ContainerType) {
                     isContainer = true;
                     break;
                 }
             }
-            if (!isContainer && fk.refTableSchema().entry() instanceof EntryType.EEnum){
+            if (!isContainer && fk.refTableSchema().entry() instanceof EntryType.EEnum) {
                 return "";
             }
         }

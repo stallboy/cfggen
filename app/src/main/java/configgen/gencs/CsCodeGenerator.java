@@ -35,7 +35,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
         dir = parameter.get("dir", "Config");
         pkg = parameter.get("pkg", "Config");
         encoding = parameter.get("encoding", "GBK");
-        prefix = parameter.get("prefix", "Data");
+        prefix = parameter.get("prefix", "D");
         serverText = parameter.has("serverText");
     }
 

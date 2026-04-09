@@ -7,7 +7,7 @@ public partial class DDrop
     public required List<Other.DDropItem> Items { get; init; } /* 掉落概率 */
     public required OrderedDictionary<int, int> Testmap { get; init; } /* 测试map block */
     
-    private static OrderedDictionary<int, DDrop> _all = [];
+    private static System.Collections.Frozen.FrozenDictionary<int, DDrop> _all = null!;
 
     public static DDrop? Get(int dropid)
     {

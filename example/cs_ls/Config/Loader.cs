@@ -1,13 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
+
 namespace Config;
 
 // 客户端模式：全局文本管理器（应用层负责语言切换）
 public static class TextPoolManager
 {
-    private static string[] _globalTexts = null!;
+    private static string[]? _globalTexts;
 
     public static void SetGlobalTexts(string[] texts)
     {
@@ -16,25 +14,65 @@ public static class TextPoolManager
 
     public static string GetText(int index)
     {
+        if (_globalTexts == null)
+            throw new InvalidOperationException("Global texts have not been initialized.");
+
+        if (index < 0 || index >= _globalTexts.Length)
+            throw new ArgumentOutOfRangeException(nameof(index), $"Text index {index} is out of range.");
+
         return _globalTexts[index];
     }
 }
 
-public class NotFoundImpl : Exception
+public abstract record LoadIssue(string Table)
 {
-    public required string ImplName { get; init; }
-    public required string InterfaceName { get; init; }
-    public required string TableName { get; init; }
+    public abstract bool IsError { get; }
 }
 
-public class Stream(BinaryReader byter)
+public abstract record LoadWarn(string Table) : LoadIssue(Table)
 {
+    public override bool IsError => false;
+}
+
+public abstract record LoadError(string Table) : LoadIssue(Table)
+{
+    public override bool IsError => true;
+}
+
+public sealed record TableNotInData(string Table) : LoadWarn(Table);
+
+public sealed record TableNotInCode(string Table) : LoadWarn(Table);
+
+public sealed record EnumNotInCode(string Table, string EnumName) : LoadWarn(Table);
+
+public sealed record EnumNotInData(string Table, string EnumName) : LoadError(Table);
+
+public sealed record EnumDuplicateInData(string Table, string EnumName) : LoadError(Table);
+
+public sealed record RefNotFound(string Table, string StructName, string FiledName, string FieldValue)
+    : LoadError(Table);
+
+public sealed class NotFoundImpl(string TableName, string ImplName, string InterfaceName) : Exception
+{
+    public override string Message =>
+        $"Implementation '{ImplName}' for interface '{InterfaceName}' not found in table '{TableName}'.";
+}
+
+public record ConfigLoadResult(
+    IReadOnlyList<LoadIssue> LoadIssues,
+    string[]? LangNames,
+    string[][]? LangTextPools);
+
+public class ConfigReader(BinaryReader reader) : IDisposable
+{
+    private byte[] _stringBuffer = new byte[256]; // 预分配一个缓冲区
     private string _curTableName = "";
 
     // StringPool 和 LangTextPool 字段
     private string[]? _stringPool;
     private string[]? _langNames;
-    private string[][]? _langTextPools; // langTextPools[langIndex][textIndex]
+    private string[][]? _langTextPools;
+    private readonly List<LoadIssue> _loadIssues = [];
 
     public string ReadTableName()
     {
@@ -42,56 +80,38 @@ public class Stream(BinaryReader byter)
         return _curTableName;
     }
 
-    public NotFoundImpl NotFoundImpl(String implName, String interfaceName)
-    {
-        return new NotFoundImpl
-        {
-            ImplName = implName,
-            InterfaceName = interfaceName,
-            TableName = _curTableName
-        };
-    }
-
     public string ReadString()
     {
-        var count = byter.ReadInt32();
-        return Encoding.UTF8.GetString(byter.ReadBytes(count));
+        var count = reader.ReadInt32();
+        if (count <= 0) return string.Empty;
+
+        // 扩容机制
+        if (_stringBuffer.Length < count)
+        {
+            Array.Resize(ref _stringBuffer, Math.Max(_stringBuffer.Length * 2, count));
+        }
+
+        reader.BaseStream.ReadExactly(_stringBuffer, 0, count);
+        return Encoding.UTF8.GetString(_stringBuffer, 0, count);
     }
 
-    public int ReadInt32()
-    {
-        return byter.ReadInt32();
-    }
+    public int ReadInt32() => reader.ReadInt32();
+    public long ReadInt64() => reader.ReadInt64();
+    public bool ReadBool() => reader.ReadBoolean();
+    public float ReadSingle() => reader.ReadSingle();
 
-    public long ReadInt64()
-    {
-        return byter.ReadInt64();
-    }
-
-    public bool ReadBool()
-    {
-        return byter.ReadBoolean();
-    }
-
-    public float ReadSingle()
-    {
-        return byter.ReadSingle();
-    }
-
-    // 从 StringPool 读取字符串（用于 STRING 类型字段）
     public string ReadStringInPool()
     {
         int index = ReadInt32();
         if (_stringPool == null)
-            throw new Exception("StringPool not initialized");
+            throw new InvalidOperationException("StringPool not initialized");
 
         if (index < 0 || index >= _stringPool.Length)
-            throw new Exception("index out of StringPool");
+            throw new IndexOutOfRangeException($"Index {index} out of StringPool range.");
 
         return _stringPool[index];
     }
 
-    // 读取全局 StringPool（在读取表数据之前调用）
     public void ReadStringPool()
     {
         int count = ReadInt32();
@@ -102,7 +122,6 @@ public class Stream(BinaryReader byter)
         }
     }
 
-    // 读取 LangTextPool（在读取表数据之前调用）
     public void ReadLangTextPool()
     {
         int langCount = ReadInt32();
@@ -111,8 +130,7 @@ public class Stream(BinaryReader byter)
 
         for (int langIdx = 0; langIdx < langCount; langIdx++)
         {
-            string langName = ReadString();
-            _langNames[langIdx] = langName;
+            _langNames[langIdx] = ReadString();
 
             int indexCount = ReadInt32();
             int[] indices = new int[indexCount];
@@ -121,7 +139,6 @@ public class Stream(BinaryReader byter)
                 indices[i] = ReadInt32();
             }
 
-            // 读取该语言的 StringPool
             int poolCount = ReadInt32();
             string[] pool = new string[poolCount];
             for (int i = 0; i < poolCount; i++)
@@ -129,7 +146,6 @@ public class Stream(BinaryReader byter)
                 pool[i] = ReadString();
             }
 
-            // 构建文本数组：texts[textIndex] = pool[indices[textIndex]]
             _langTextPools[langIdx] = new string[indexCount];
             for (int i = 0; i < indexCount; i++)
             {
@@ -138,91 +154,125 @@ public class Stream(BinaryReader byter)
         }
     }
 
-    // 从 LangTextPool 读取所有语言文本（多语言 服务器端模式）
     public string[] ReadTextsInPool()
     {
         int index = ReadInt32();
         if (_langTextPools == null)
-            throw new Exception("LangTextPool not initialized");
+            throw new InvalidOperationException("LangTextPool not initialized");
 
         string[] texts = new string[_langTextPools.Length];
         for (int i = 0; i < _langTextPools.Length; i++)
         {
-            if (index < 0 || index >= _langTextPools[i].Length)
-                texts[i] = "";
-            else
-                texts[i] = _langTextPools[i][index];
+            texts[i] = (index < 0 || index >= _langTextPools[i].Length)
+                ? ""
+                : _langTextPools[i][index];
         }
 
         return texts;
     }
 
-    // 从 LangTextPool 读取text （单语言模式）
     public string ReadTextInPool()
     {
         int index = ReadInt32();
-        if (_langTextPools == null)
-            throw new Exception("LangTextPool not initialized");
+        if (_langTextPools == null || _langTextPools.Length == 0)
+            throw new InvalidOperationException("LangTextPool not initialized");
 
         if (index < 0 || index >= _langTextPools[0].Length)
-            throw new Exception("index out of LangTextPool");
+            throw new IndexOutOfRangeException($"Index {index} out of LangTextPool.");
 
         return _langTextPools[0][index];
     }
 
-    // 从 LangTextPool 读取文本索引（客户端模式）
-    public int ReadTextIndex()
-    {
-        return ReadInt32();
-    }
+    public int ReadTextIndex() => ReadInt32();
 
-    // 访问接口：获取语言名称列表
-    public string[]? GetLangNames()
-    {
-        return _langNames;
-    }
-
-    // 访问接口：获取所有语言的文本池
-    public string[][]? GetLangTextPools()
-    {
-        return _langTextPools;
-    }
-
-    // 跳过指定字节数（用于跳过未知表的数据）
     public void SkipBytes(int count)
     {
-        byter.ReadBytes(count);
+        reader.BaseStream.Seek(count, SeekOrigin.Current);
+    }
+
+    public NotFoundImpl NotFoundImpl(string implName, string interfaceName)
+    {
+        return new NotFoundImpl(_curTableName, implName, interfaceName);
+    }
+
+    public void TableNotInData(string tableName)
+    {
+        _loadIssues.Add(new TableNotInData(tableName));
+    }
+
+
+    public void TableNotInCode()
+    {
+        _loadIssues.Add(new TableNotInCode(_curTableName));
+    }
+
+    public void EnumNotInCode(string enumName)
+    {
+        _loadIssues.Add(new EnumNotInCode(_curTableName, enumName));
+    }
+
+    public void EnumNotInData(string enumName)
+    {
+        _loadIssues.Add(new EnumNotInData(_curTableName, enumName));
+    }
+
+    public void EnumDuplicateInData(string enumName)
+    {
+        _loadIssues.Add(new EnumDuplicateInData(_curTableName, enumName));
+    }
+
+    public void RefNotFound(string structName, string fieldName, string fieldValue)
+    {
+        _loadIssues.Add(new RefNotFound(_curTableName, structName, fieldName, fieldValue));
+    }
+
+
+    public ConfigLoadResult MakeResult()
+    {
+        return new ConfigLoadResult(_loadIssues, _langNames, _langTextPools);
+    }
+
+    public void Dispose()
+    {
+        reader.Dispose();
     }
 }
 
 public static class Loader
 {
-    public delegate void ProcessConfigStream(Stream os, LoadErrors errors);
+    public delegate void ProcessConfigStream(ConfigReader reader);
 
-    public static Stream LoadBytes(byte[] data, ProcessConfigStream processor, LoadErrors errors)
+    private static ConfigLoadResult Load(ConfigReader reader, ProcessConfigStream processor)
     {
-        MemoryStream memoryStream = new MemoryStream(data);
-        var reader = new BinaryReader(memoryStream);
-        var stream = new Stream(reader);
-
-        // 1. 跳过 Schema（如果有）
         int schemaLength = reader.ReadInt32();
         if (schemaLength > 0)
         {
-            reader.ReadBytes(schemaLength);
+            reader.SkipBytes(schemaLength);
         }
 
-        // 2. 读取 StringPool
-        stream.ReadStringPool();
+        reader.ReadStringPool();
+        reader.ReadLangTextPool();
 
-        // 3. 读取 LangTextPool
-        stream.ReadLangTextPool();
+        processor(reader);
+        return reader.MakeResult();
+    }
 
-        // 4. 处理表数据
-        processor(stream, errors);
+    public static ConfigLoadResult LoadFile(string filePath, ProcessConfigStream processor)
+    {
+        using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read,
+            bufferSize: 4096, FileOptions.SequentialScan);
 
-        memoryStream.Dispose();
-        return stream;
+        using var reader = new ConfigReader(new BinaryReader(fileStream));
+
+        return Load(reader, processor);
+    }
+
+    public static ConfigLoadResult LoadBytes(byte[] data, ProcessConfigStream processor)
+    {
+        using var memoryStream = new MemoryStream(data);
+        using var reader = new ConfigReader(new BinaryReader(memoryStream));
+
+        return Load(reader, processor);
     }
 }
 
@@ -230,14 +280,19 @@ public static class StringUtil
 {
     public static string ToString<T>(List<T> data)
     {
-        var elements = new string?[data.Count];
-        var i = 0;
-        foreach (var d in data)
-        {
-            elements[i] = d == null ? "null" : d.ToString();
-            i++;
-        }
+        if (data.Count == 0) return "[]";
+        return $"[{string.Join(", ", data.ConvertAll(d => d is null ? "null" : d.ToString()))}]";
+    }
 
-        return "[" + string.Join(", ", elements) + "]";
+    public static string UpperFirstChar(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return input;
+
+        return string.Create(input.Length, input, (span, str) =>
+        {
+            span[0] = char.ToUpper(str[0]);
+            str.AsSpan(1).CopyTo(span[1..]);
+        });
     }
 }

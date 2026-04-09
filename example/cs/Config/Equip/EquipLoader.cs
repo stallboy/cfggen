@@ -1,3 +1,5 @@
+using System.Collections.Frozen;
+
 namespace Config.Equip
 {
     public partial class DTestPackBean
@@ -36,14 +38,15 @@ namespace Config.Equip
     {
         internal static void Initialize(ConfigReader reader)
         {
-            _all = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int count = reader.ReadInt32();
+            var s_all = new Dictionary<int, DAbilityInfo>(count);
+            for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
-                _all.Add(self.Id, self);
+                s_all.Add(self.Id, self);
                 DAbilityExtensions._infos[(int)self.eEnum] = self;
             }
-
+            _all = s_all.ToFrozenDictionary();
         }
 
         internal static DAbilityInfo _create(ConfigReader reader)
@@ -81,13 +84,14 @@ namespace Config.Equip
     {
         internal static void Initialize(ConfigReader reader)
         {
-            _all = [];
+            int count = reader.ReadInt32();
+            var s_all = new Dictionary<string, DEquipconfig>(count);
             DEquipconfig? eInstance = null;
             DEquipconfig? eInstance2 = null;
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
-                _all.Add(self.Entry, self);
+                s_all.Add(self.Entry, self);
                 if (self.Entry.Length == 0)
                     continue;
                 switch(self.Entry)
@@ -107,7 +111,7 @@ namespace Config.Equip
                         break;
                 }
             }
-
+            _all = s_all.ToFrozenDictionary();
             if (eInstance == null) reader.EnumNotInData("Instance");
             else Instance = eInstance;
             if (eInstance2 == null) reader.EnumNotInData("Instance2");
@@ -156,13 +160,14 @@ namespace Config.Equip
     {
         internal static void Initialize(ConfigReader reader)
         {
-            _all = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int count = reader.ReadInt32();
+            var s_all = new Dictionary<int, DJewelry>(count);
+            for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
-                _all.Add(self.ID, self);
+                s_all.Add(self.ID, self);
             }
-
+            _all = s_all.ToFrozenDictionary();
         }
 
         internal static void Resolve(ConfigReader reader)
@@ -234,13 +239,14 @@ namespace Config.Equip
     {
         internal static void Initialize(ConfigReader reader)
         {
-            _all = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int count = reader.ReadInt32();
+            var s_all = new Dictionary<DLevelRank, DJewelryrandom>(count);
+            for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
-                _all.Add(self.LvlRank, self);
+                s_all.Add(self.LvlRank, self);
             }
-
+            _all = s_all.ToFrozenDictionary();
         }
 
         internal static void Resolve(ConfigReader reader)
@@ -252,11 +258,13 @@ namespace Config.Equip
         {
             var lvlRank = DLevelRank._create(reader);
             var attackRange = DRange._create(reader);
-            List<DRange> otherRange = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int Count_otherRange = reader.ReadInt32();
+            var otherRange = new List<DRange>(Count_otherRange);
+            for (int i = 0; i < Count_otherRange; i++)
                 otherRange.Add(DRange._create(reader));
-            List<Equip.DTestPackBean> testPack = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int Count_testPack = reader.ReadInt32();
+            var testPack = new List<Equip.DTestPackBean>(Count_testPack);
+            for (int i = 0; i < Count_testPack; i++)
                 testPack.Add(Equip.DTestPackBean._create(reader));
             return new DJewelryrandom {
                 LvlRank = lvlRank,
@@ -294,12 +302,13 @@ namespace Config.Equip
     {
         internal static void Initialize(ConfigReader reader)
         {
-            _all = [];
+            int count = reader.ReadInt32();
+            var s_all = new Dictionary<int, DJewelrysuit>(count);
             DJewelrysuit? eSpecialSuit = null;
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
-                _all.Add(self.SuitID, self);
+                s_all.Add(self.SuitID, self);
                 if (self.Ename.Length == 0)
                     continue;
                 switch(self.Ename)
@@ -314,7 +323,7 @@ namespace Config.Equip
                         break;
                 }
             }
-
+            _all = s_all.ToFrozenDictionary();
             if (eSpecialSuit == null) reader.EnumNotInData("SpecialSuit");
             else SpecialSuit = eSpecialSuit;
         }
@@ -330,8 +339,9 @@ namespace Config.Equip
             var ability2Value = reader.ReadInt32();
             var ability3 = reader.ReadInt32();
             var ability3Value = reader.ReadInt32();
-            List<int> suitList = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int Count_suitList = reader.ReadInt32();
+            var suitList = new List<int>(Count_suitList);
+            for (int i = 0; i < Count_suitList; i++)
                 suitList.Add(reader.ReadInt32());
             return new DJewelrysuit {
                 SuitID = suitID,
@@ -371,14 +381,15 @@ namespace Config.Equip
     {
         internal static void Initialize(ConfigReader reader)
         {
-            _all = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int count = reader.ReadInt32();
+            var s_all = new Dictionary<string, DJewelrytypeInfo>(count);
+            for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
-                _all.Add(self.TypeName, self);
+                s_all.Add(self.TypeName, self);
                 DJewelrytypeExtensions._infos[(int)self.eEnum] = self;
             }
-
+            _all = s_all.ToFrozenDictionary();
         }
 
         internal static DJewelrytypeInfo _create(ConfigReader reader)
@@ -414,14 +425,15 @@ namespace Config.Equip
     {
         internal static void Initialize(ConfigReader reader)
         {
-            _all = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int count = reader.ReadInt32();
+            var s_all = new Dictionary<int, DRankInfo>(count);
+            for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
-                _all.Add(self.RankID, self);
+                s_all.Add(self.RankID, self);
                 DRankExtensions._infos[(int)self.eEnum] = self;
             }
-
+            _all = s_all.ToFrozenDictionary();
         }
 
         internal static DRankInfo _create(ConfigReader reader)

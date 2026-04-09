@@ -15,7 +15,7 @@ public partial class DJewelrysuit
     public required int Ability3Value { get; init; } /* 套装属性3 */
     public required List<int> SuitList { get; init; } /* 部件1 */
     
-    private static OrderedDictionary<int, DJewelrysuit> _all = [];
+    private static System.Collections.Frozen.FrozenDictionary<int, DJewelrysuit> _all = null!;
 
     public static DJewelrysuit? Get(int suitID)
     {

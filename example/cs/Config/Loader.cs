@@ -275,6 +275,7 @@ public static class Loader
         return Load(reader, processor);
     }
 }
+
 public static class StringUtil
 {
     public static string ToString<T>(List<T> data)

@@ -1,3 +1,5 @@
+using System.Collections.Frozen;
+
 namespace Config.Other
 {
     public partial class DDropItem
@@ -5,8 +7,9 @@ namespace Config.Other
         internal static DDropItem _create(ConfigReader reader)
         {
             var chance = reader.ReadInt32();
-            List<int> itemids = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int Count_itemids = reader.ReadInt32();
+            var itemids = new List<int>(Count_itemids);
+            for (int i = 0; i < Count_itemids; i++)
                 itemids.Add(reader.ReadInt32());
             var countmin = reader.ReadInt32();
             var countmax = reader.ReadInt32();
@@ -42,14 +45,15 @@ namespace Config.Other
     {
         internal static void Initialize(ConfigReader reader)
         {
-            _all = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int count = reader.ReadInt32();
+            var s_all = new Dictionary<string, DArgCaptureModeInfo>(count);
+            for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
-                _all.Add(self.Name, self);
+                s_all.Add(self.Name, self);
                 DArgCaptureModeExtensions._infos[(int)self.eEnum] = self;
             }
-
+            _all = s_all.ToFrozenDictionary();
         }
 
         internal static DArgCaptureModeInfo _create(ConfigReader reader)
@@ -87,27 +91,28 @@ namespace Config.Other
     {
         internal static void Initialize(ConfigReader reader)
         {
-            _all = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int count = reader.ReadInt32();
+            var s_all = new Dictionary<int, DDrop>(count);
+            for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
-                _all.Add(self.Dropid, self);
+                s_all.Add(self.Dropid, self);
             }
-
+            _all = s_all.ToFrozenDictionary();
         }
 
         internal static DDrop _create(ConfigReader reader)
         {
             var dropid = reader.ReadInt32();
             var name = reader.ReadTextInPool();
-            List<Other.DDropItem> items = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int Count_items = reader.ReadInt32();
+            var items = new List<Other.DDropItem>(Count_items);
+            for (int i = 0; i < Count_items; i++)
                 items.Add(Other.DDropItem._create(reader));
-            OrderedDictionary<int, int> testmap = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
-            {
+            int Count_testmap = reader.ReadInt32();
+            var testmap = new OrderedDictionary<int, int>(Count_testmap);
+            for (int i = 0; i < Count_testmap; i++)
                 testmap.Add(reader.ReadInt32(), reader.ReadInt32());
-            }
             return new DDrop {
                 Dropid = dropid,
                 Name = name,
@@ -140,19 +145,23 @@ namespace Config.Other
     {
         internal static void Initialize(ConfigReader reader)
         {
-            _all = [];
-            _id1Id3Map = [];
-            _id2Map = [];
-            _id2Id3Map = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int count = reader.ReadInt32();
+            var s_all = new Dictionary<Id1Id2Key, DKeytest>(count);
+            var s_id1Id3Map = new Dictionary<Id1Id3Key, DKeytest>(count);
+            var s_id2Map = new Dictionary<long, DKeytest>(count);
+            var s_id2Id3Map = new Dictionary<Id2Id3Key, DKeytest>(count);
+            for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
-                _all.Add(new Id1Id2Key(self.Id1, self.Id2), self);
-                _id1Id3Map.Add(new Id1Id3Key(self.Id1, self.Id3), self);
-                _id2Map.Add(self.Id2, self);
-                _id2Id3Map.Add(new Id2Id3Key(self.Id2, self.Id3), self);
+                s_all.Add(new Id1Id2Key(self.Id1, self.Id2), self);
+                s_id1Id3Map.Add(new Id1Id3Key(self.Id1, self.Id3), self);
+                s_id2Map.Add(self.Id2, self);
+                s_id2Id3Map.Add(new Id2Id3Key(self.Id2, self.Id3), self);
             }
-
+            _all = s_all.ToFrozenDictionary();
+            _id1Id3Map = s_id1Id3Map.ToFrozenDictionary();
+            _id2Map = s_id2Map.ToFrozenDictionary();
+            _id2Id3Map = s_id2Id3Map.ToFrozenDictionary();
         }
 
         internal static void Resolve(ConfigReader reader)
@@ -165,12 +174,14 @@ namespace Config.Other
             var id1 = reader.ReadInt32();
             var id2 = reader.ReadInt64();
             var id3 = reader.ReadInt32();
-            List<int> ids = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int Count_ids = reader.ReadInt32();
+            var ids = new List<int>(Count_ids);
+            for (int i = 0; i < Count_ids; i++)
                 ids.Add(reader.ReadInt32());
             var enumTest = reader.ReadStringInPool();
-            List<string> enumList = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int Count_enumList = reader.ReadInt32();
+            var enumList = new List<string>(Count_enumList);
+            for (int i = 0; i < Count_enumList; i++)
                 enumList.Add(reader.ReadStringInPool());
             return new DKeytest {
                 Id1 = id1,
@@ -226,13 +237,14 @@ namespace Config.Other
     {
         internal static void Initialize(ConfigReader reader)
         {
-            _all = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int count = reader.ReadInt32();
+            var s_all = new Dictionary<int, DLoot>(count);
+            for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
-                _all.Add(self.Lootid, self);
+                s_all.Add(self.Lootid, self);
             }
-
+            _all = s_all.ToFrozenDictionary();
         }
 
         internal static void Resolve(ConfigReader reader)
@@ -245,8 +257,9 @@ namespace Config.Other
             var lootid = reader.ReadInt32();
             var ename = reader.ReadStringInPool();
             var name = reader.ReadTextInPool();
-            List<int> chanceList = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int Count_chanceList = reader.ReadInt32();
+            var chanceList = new List<int>(Count_chanceList);
+            for (int i = 0; i < Count_chanceList; i++)
                 chanceList.Add(reader.ReadInt32());
             return new DLoot {
                 Lootid = lootid,
@@ -295,13 +308,14 @@ namespace Config.Other
     {
         internal static void Initialize(ConfigReader reader)
         {
-            _all = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int count = reader.ReadInt32();
+            var s_all = new Dictionary<LootidItemidKey, DLootitem>(count);
+            for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
-                _all.Add(new LootidItemidKey(self.Lootid, self.Itemid), self);
+                s_all.Add(new LootidItemidKey(self.Lootid, self.Itemid), self);
             }
-
+            _all = s_all.ToFrozenDictionary();
         }
 
         internal static DLootitem _create(ConfigReader reader)
@@ -344,13 +358,14 @@ namespace Config.Other
     {
         internal static void Initialize(ConfigReader reader)
         {
-            _all = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int count = reader.ReadInt32();
+            var s_all = new Dictionary<int, DMonster>(count);
+            for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
-                _all.Add(self.Id, self);
+                s_all.Add(self.Id, self);
             }
-
+            _all = s_all.ToFrozenDictionary();
         }
 
         internal static void Resolve(ConfigReader reader)
@@ -361,21 +376,20 @@ namespace Config.Other
         internal static DMonster _create(ConfigReader reader)
         {
             var id = reader.ReadInt32();
-            List<DPosition> posList = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int Count_posList = reader.ReadInt32();
+            var posList = new List<DPosition>(Count_posList);
+            for (int i = 0; i < Count_posList; i++)
                 posList.Add(DPosition._create(reader));
             var lootId = reader.ReadInt32();
             var lootItemId = reader.ReadInt32();
-            OrderedDictionary<string, int> enumMap1 = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
-            {
+            int Count_enumMap1 = reader.ReadInt32();
+            var enumMap1 = new OrderedDictionary<string, int>(Count_enumMap1);
+            for (int i = 0; i < Count_enumMap1; i++)
                 enumMap1.Add(reader.ReadStringInPool(), reader.ReadInt32());
-            }
-            OrderedDictionary<int, string> enumMap2 = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
-            {
+            int Count_enumMap2 = reader.ReadInt32();
+            var enumMap2 = new OrderedDictionary<int, string>(Count_enumMap2);
+            for (int i = 0; i < Count_enumMap2; i++)
                 enumMap2.Add(reader.ReadInt32(), reader.ReadStringInPool());
-            }
             return new DMonster {
                 Id = id,
                 PosList = posList,
@@ -427,13 +441,14 @@ namespace Config.Other
     {
         internal static void Initialize(ConfigReader reader)
         {
-            _all = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
+            int count = reader.ReadInt32();
+            var s_all = new Dictionary<int, DSignin>(count);
+            for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
-                _all.Add(self.Id, self);
+                s_all.Add(self.Id, self);
             }
-
+            _all = s_all.ToFrozenDictionary();
         }
 
         internal static void Resolve(ConfigReader reader)
@@ -444,16 +459,14 @@ namespace Config.Other
         internal static DSignin _create(ConfigReader reader)
         {
             var id = reader.ReadInt32();
-            OrderedDictionary<int, int> item2countMap = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
-            {
+            int Count_item2countMap = reader.ReadInt32();
+            var item2countMap = new OrderedDictionary<int, int>(Count_item2countMap);
+            for (int i = 0; i < Count_item2countMap; i++)
                 item2countMap.Add(reader.ReadInt32(), reader.ReadInt32());
-            }
-            OrderedDictionary<int, int> vipitem2vipcountMap = [];
-            for (var c = reader.ReadInt32(); c > 0; c--)
-            {
+            int Count_vipitem2vipcountMap = reader.ReadInt32();
+            var vipitem2vipcountMap = new OrderedDictionary<int, int>(Count_vipitem2vipcountMap);
+            for (int i = 0; i < Count_vipitem2vipcountMap; i++)
                 vipitem2vipcountMap.Add(reader.ReadInt32(), reader.ReadInt32());
-            }
             var viplevel = reader.ReadInt32();
             var iconFile = reader.ReadStringInPool();
             return new DSignin {

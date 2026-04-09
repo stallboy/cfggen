@@ -16,7 +16,7 @@ public partial class DTask2
     public Task.DTaskextraexp? NullableRefTaskid { get; private set; }
     public Task.DTask? NullableRefNexttask { get; private set; }
     
-    private static OrderedDictionary<int, DTask2> _all = [];
+    private static System.Collections.Frozen.FrozenDictionary<int, DTask2> _all = null!;
 
     public static DTask2? Get(int taskid)
     {
