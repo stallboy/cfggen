@@ -319,8 +319,8 @@ record Payload(
 
 // ChangeSet 瞬时态，聚合数值标量，处理载荷最终结算。
 class ChangeSet {
-    FloatList additives;
-    FloatList multipliers;
+    float additives;
+    float multipliers;
     OverrideOp override;
 
     // 优先override，然后(Base + ΣAdd) * ΠMul
