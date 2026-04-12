@@ -123,11 +123,20 @@ table levelup[id] {
 
 ### JSON文件
 
-- **目录命名**：
-  ```
-  _[表全名.replace(., _)]/
-  ```
-  例如：表名为`skill.buff` → 对应目录为`_skill_buff`
+- **目录命名**（两种格式，优先使用嵌套格式）：
+  - **嵌套格式（优先）**：在模块目录下的 `_子表名` 子目录
+    ```
+    [模块目录]/_[子表名]/
+    ```
+    例如：表名为 `skill.buff`，存在 `skill/` 模块目录 → `skill/_buff/`
+    - 模块目录名支持中文后缀，如 `skill_技能/`（codeName 仍为 `skill`）
+    - 支持多层递归：表名 `a.b.c` → 目录 `a/b/_c/`
+  - **根级格式（备选）**：当模块目录不存在时回退
+    ```
+    _[表全名.replace(., _)]/
+    ```
+    例如：表名为 `skill.buff` → `_skill_buff/`
+  - **冲突**：同一表名不能同时存在嵌套和根级两种目录，否则报错
 - **文件命名**：以主键pack的字符串值命名，如`1.json`
 
 ##  忽略机制
@@ -243,26 +252,23 @@ config/
 │       monster.csv
 │       other.cfg
 │       signin.csv
+│       └───_keytest        ← 嵌套 JSON 目录（表 other.keytest）
+│               0.json
+│               1,2.json
 │
 ├───task
 │       completeconditiontype任务完成条件类型.csv
 │       task.cfg
 │       taskextraexp.csv
 │       task_任务.csv
+│       └───_task2          ← 嵌套 JSON 目录（表 task.task2）
+│               1.json
+│               2.json
+│               3.json
 │
-├───_other_keytest
-│       0.json
-│       1,2.json
-│
-└───_task_task2
-        1.json
-        2.json
-        3.json
-        4.json
-        5.json
-        6.json
-        7.json
-        8.json
+└───_other_keytest          ← 旧格式（根级），与上面的嵌套格式不能同时存在
+        0.json
+        1,2.json
 ```
 
 ## 高级功能
@@ -314,7 +320,7 @@ config/
 | CSV文件 | `.csv`后缀，英文字母开头 | `ability.csv`, `task任务.csv` |
 | Excel Sheet | 英文字母开头 | `levelup`, `monster_1` |
 | CFG文件 | 模块名.cfg | `equip.cfg`, `task.cfg` |
-| JSON目录 | `_[表全名.replace(., _)]`| `_skill_buff/` |
+| JSON目录 | 优先 `模块/_子名`，备选 `_[表全名.replace(., _)]`| `skill/_buff/` 或 `_skill_buff/` |
 | 忽略文件 | 非字母开头 | `~temp.csv`, `.hidden` |
 | 忽略列 | 程序用名为空 |  |
 | 忽略行 | 全空或以`#`开头 | `#注释行`, 空行 |
