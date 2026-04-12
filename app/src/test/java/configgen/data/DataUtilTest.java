@@ -97,4 +97,35 @@ class DataUtilTest {
         assertNull(getFileFormat(Path.of("aa.bin")));
     }
 
+    // --- getSubTableNameIfJsonSubDir ---
+
+    @Test
+    void getSubTableNameIfJsonSubDir_normal() {
+        assertEquals("buff", DataUtil.getSubTableNameIfJsonSubDir("_buff"));
+        assertEquals("skill", DataUtil.getSubTableNameIfJsonSubDir("_skill"));
+        assertEquals("instancelogic", DataUtil.getSubTableNameIfJsonSubDir("_instancelogic"));
+    }
+
+    @Test
+    void getSubTableNameIfJsonSubDir_null_whenNoUnderscorePrefix() {
+        assertNull(DataUtil.getSubTableNameIfJsonSubDir("buff"));
+        assertNull(DataUtil.getSubTableNameIfJsonSubDir("skill"));
+    }
+
+    @Test
+    void getSubTableNameIfJsonSubDir_null_whenEmptyAfterUnderscore() {
+        assertNull(DataUtil.getSubTableNameIfJsonSubDir("_"));
+    }
+
+    @Test
+    void getSubTableNameIfJsonSubDir_null_whenNotStartWithAz() {
+        assertNull(DataUtil.getSubTableNameIfJsonSubDir("_1buff"));
+        assertNull(DataUtil.getSubTableNameIfJsonSubDir("_中name"));
+    }
+
+    @Test
+    void getSubTableNameIfJsonSubDir_null_whenContainsChinese() {
+        assertNull(DataUtil.getSubTableNameIfJsonSubDir("_buff技能"));
+    }
+
 }

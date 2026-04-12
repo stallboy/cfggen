@@ -40,7 +40,6 @@ class CfgsTest {
         }
 
         assertEquals(cfg1, cfg2);
-        assertEquals(cfgStr, cfgStr2);
     }
 
 

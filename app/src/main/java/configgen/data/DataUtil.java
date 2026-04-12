@@ -155,6 +155,23 @@ public class DataUtil {
         return sub.replace("_", ".");
     }
 
+    /// 从嵌套的 JSON 子目录名提取表名的后半部分。
+    /// 如 "_buff" → "buff"，"_instancelogic" → "instancelogic"。
+    /// 非 "_" 开头或不符合规则返回 null。
+    public static String getSubTableNameIfJsonSubDir(String subDirName) {
+        if (!subDirName.startsWith("_")) {
+            return null;
+        }
+        String sub = subDirName.substring(1);
+        if (sub.isEmpty() || isFirstNotAzChar(sub)) {
+            return null;
+        }
+        if (findFirstHanIndex(sub) != -1) {
+            return null;
+        }
+        return sub;
+    }
+
     public static boolean isTableDirForJson(String dirName) {
         if (!dirName.startsWith("_")) {
             return false;

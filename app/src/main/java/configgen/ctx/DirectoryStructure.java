@@ -49,14 +49,20 @@ import static configgen.data.DataUtil.FileFmt.*;
 ///   - `[table]`
 ///
 /// ## JSON文件规范
-/// - 目录命名规则：
+/// - **优先（嵌套格式）**：在模块目录下的 `_子名` 子目录
+///   ```
+///   [moduleDir]/_[subName]/
+///   ```
+///   - 示例：table为`skill.buff` → `skill/_buff` 或 `技能skill/_buff`
+///   - `[moduleDir]`是 codeName 等于模块名的目录（如 `skill` 或 `技能skill`）
+/// - **备选（根级格式）**：当模块目录不存在时回退
 ///   ```
 ///   _[table.replace(".", "_")]/
-///```
-/// - 示例：
-///   - 若table为`skill.buff` → 对应目录为`_skill_buff`
+///   ```
+///   - 示例：table为`skill.buff` → `_skill_buff`
+/// - **冲突**：同一表名不能同时存在嵌套和根级两种目录，否则报错
 ///
-/// > 注：`[table]`指代通过table目录规则解析出的名称
+/// > 注：`[moduleDir]`指代通过 getCodeName 解析出模块名的目录，`[subName]`是表名中`.`后面的部分
 public class DirectoryStructure {
     public static final String ROOT_CONFIG_FILENAME = "config.cfg";
     public static final String CONFIG_EXT = "cfg";
@@ -340,9 +346,79 @@ public class DirectoryStructure {
     }
 
     private void findTableToJsonFiles() {
+        // tableName → 绝对路径，用于冲突检测
+        Map<String, Path> discovered = new LinkedHashMap<>();
+
         try (Stream<Path> paths = Files.list(rootDir)) {
             for (Path path : paths.toList()) {
-                findOneTableJsonFilesInDir(path);
+                if (isFileIgnored(path)) {
+                    continue;
+                }
+                if (!Files.isDirectory(path)) {
+                    continue;
+                }
+
+                String dirName = path.getFileName().toString();
+
+                // 1. 旧格式：根级 _xxx 目录（如 _skill_buff）,这个格式不支持table名称有_，因为这里_会被变成.，被解析为模块名了
+                // 所以优先用新格式
+                String tableName = getTableNameIfTableDirForJson(dirName);
+                if (tableName != null) {
+                    Path existing = discovered.put(tableName, path);
+                    if (existing != null) {
+                        throw new RuntimeException("JSON table directory conflict for table '%s': both '%s' and '%s' exist"
+                                .formatted(tableName, existing, path));
+                    }
+                    JsonFileList list = this.jsonFiles.computeIfAbsent(tableName, (String j) -> new JsonFileList());
+                    findOneTableJsonFiles(path, list);
+                    continue;
+                }
+
+                // 2. 新格式：模块目录内的 _子目录（如 buff/_skill），支持多层递归（如 a/b/_c）
+                String codeName = getCodeName(dirName);
+                if (codeName != null) {
+                    findNestedJsonTableFiles(path, codeName, discovered);
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /// 递归扫描模块目录内部的 _ 前缀子目录和更深的模块目录。
+    /// 例如 a/b/_c 对应表名 a.b.c，会先递归进入 a → b → 发现 _c。
+    private void findNestedJsonTableFiles(Path moduleDir, String pkgNameDot,
+                                          Map<String, Path> discovered) {
+        try (Stream<Path> subPaths = Files.list(moduleDir)) {
+            for (Path subPath : subPaths.toList()) {
+                if (isFileIgnored(subPath)) {
+                    continue;
+                }
+                if (!Files.isDirectory(subPath)) {
+                    continue;
+                }
+
+                String subDirName = subPath.getFileName().toString();
+
+                // 检查是否是 JSON 表子目录（_前缀）
+                String subTableName = getSubTableNameIfJsonSubDir(subDirName);
+                if (subTableName != null) {
+                    String fullTableName = pkgNameDot + "." + subTableName;
+                    Path existing = discovered.put(fullTableName, subPath);
+                    if (existing != null) {
+                        throw new RuntimeException("JSON table directory conflict for table '%s': both '%s' and '%s' exist"
+                                .formatted(fullTableName, existing, subPath));
+                    }
+                    JsonFileList list = this.jsonFiles.computeIfAbsent(fullTableName, (String j) -> new JsonFileList());
+                    findOneTableJsonFiles(subPath, list);
+                    continue;
+                }
+
+                // 递归进入更深的模块目录
+                String subCodeName = getCodeName(subDirName);
+                if (subCodeName != null) {
+                    findNestedJsonTableFiles(subPath, pkgNameDot + "." + subCodeName, discovered);
+                }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
