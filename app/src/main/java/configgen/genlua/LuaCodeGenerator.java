@@ -124,7 +124,7 @@ public class LuaCodeGenerator extends GeneratorWithTag {
             }
         }
 
-        CachedFiles.keepMetaAndDeleteOtherFiles(dstDir.toFile(), ".meta");
+        CachedFiles.keepMetaAndDeleteOtherFiles(dstDir.toFile());
     }
 
     private CachedIndentPrinter createCode(String fn) {

@@ -79,7 +79,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
             generateText(ctx.nullableLangSwitch());
         }
 
-        CachedFiles.keepMetaAndDeleteOtherFiles(dstDir.toFile(), ".meta");
+        CachedFiles.keepMetaAndDeleteOtherFiles(dstDir.toFile());
     }
 
     private void generateInterface(InterfaceSchema sInterface) {

@@ -10,22 +10,23 @@ import java.util.*;
 public class CachedFiles {
     private static final Set<String> filename_set = new HashSet<>();
 
-    private static final List<File> deleteFiles = new ArrayList<>();
-    private static final Map<File, String> deleteKeepMetaWithSuffixFiles = new HashMap<>();
+    private static final List<File> deleteFiles = new ArrayList<>(1);
+    private static final List<File> deleteKeepMetaWithSuffixFiles = new ArrayList<>(1);
+    private static final Set<String> metaSuffixSet = Set.of(".meta", ".uid");
 
     public static void deleteOtherFiles(File dir) {
         deleteFiles.add(dir);
     }
 
-    public static void keepMetaAndDeleteOtherFiles(File dir, String metaSuffix) {
-        deleteKeepMetaWithSuffixFiles.put(dir, metaSuffix);
+    public static void keepMetaAndDeleteOtherFiles(File dir) {
+        deleteKeepMetaWithSuffixFiles.add(dir);
     }
 
     public static void finalExit() {
         deleteFiles.stream().filter(File::exists)
-                .forEach(f -> doRemoveFile(f, false, null));
-        deleteKeepMetaWithSuffixFiles.forEach((dir, suffix) ->
-                doRemoveFile(dir, true, suffix));
+                .forEach(f -> doRemoveFile(f, false));
+        deleteKeepMetaWithSuffixFiles.forEach(dir ->
+                doRemoveFile(dir, true));
     }
 
     public static void writeFile(Path path, byte[] data) throws IOException {
@@ -89,12 +90,16 @@ public class CachedFiles {
         return deleteOk;
     }
 
-    private static void doRemoveFile(File file, boolean keepMeta, String metaSuffix) {
+    private static void doRemoveFile(File file, boolean keepMeta) {
         String key = fileKey(file.toPath());
         boolean keep = filename_set.contains(key);
-        if (!keep) {
-            if (keepMeta && metaSuffix != null && key.endsWith(metaSuffix)) {
-                String noMetaKey = key.substring(0, key.length() - metaSuffix.length());
+        if (keep) {
+            return;
+        }
+
+        if (keepMeta) {
+            String noMetaKey = findNoMetaKey(key);
+            if (noMetaKey != null) {
                 keep = filename_set.contains(noMetaKey);
                 if (!keep && new File(noMetaKey).isDirectory()) {
                     for (String f : filename_set) {
@@ -107,22 +112,33 @@ public class CachedFiles {
             }
         }
 
-        if (!keep) {
-            if (file.isDirectory()) {
-                File[] files = file.listFiles();
-                if (files != null) {
-                    for (File f : files) {
-                        doRemoveFile(f, keepMeta, metaSuffix);
-                    }
+        if (keep) {
+            return;
+        }
+
+        if (file.isDirectory()) {
+            File[] files = file.listFiles();
+            if (files != null) {
+                for (File f : files) {
+                    doRemoveFile(f, keepMeta);
                 }
-                File[] newFiles = file.listFiles();
-                if (newFiles != null && newFiles.length == 0) {
-                    delete(file);
-                }
-            } else {
+            }
+            File[] newFiles = file.listFiles();
+            if (newFiles != null && newFiles.length == 0) {
                 delete(file);
             }
+        } else {
+            delete(file);
         }
+    }
+
+    private static String findNoMetaKey(String key) {
+        for (String metaSuffix : metaSuffixSet) {
+            if (key.endsWith(metaSuffix)) {
+                return key.substring(0, key.length() - metaSuffix.length());
+            }
+        }
+        return null;
     }
 
 

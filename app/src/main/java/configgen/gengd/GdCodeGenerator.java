@@ -87,7 +87,7 @@ public class GdCodeGenerator extends GeneratorWithTag {
             generateTable(vTable);
         }
 
-        CachedFiles.keepMetaAndDeleteOtherFiles(dstDir.toFile(), ".uid");
+        CachedFiles.keepMetaAndDeleteOtherFiles(dstDir.toFile());
     }
 
     private void generateInterface(InterfaceSchema sInterface) {
