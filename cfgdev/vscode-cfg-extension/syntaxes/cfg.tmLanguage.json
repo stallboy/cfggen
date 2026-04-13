@@ -11,7 +11,7 @@
 		},
 		{
 			"name": "storage.type.class.cfg",
-			"match": "\\b(struct|interface|table)\\b"
+			"match": "\\b(struct|interface|table|enum)\\b"
 		},
 		{
 			"name": "string.quoted.double.cfg",
@@ -47,7 +47,7 @@
 
 		{
 			"name": "meta.definition",
-			"match": "\\b(struct|interface|table)\\s+\\w+"
+			"match": "\\b(struct|interface|table|enum)\\s+\\w+"
 		},
 		{
 			"name": "variable.name.cfg",

@@ -6,9 +6,9 @@ cfggen 配置系统的配套开发工具和插件。
 
 ## 项目列表
 
-### 1. [/gen-schema](./schema-gen-plugin/)
+### 1. [cfggen-architect](./skills/)
 
-Claude Code 插件 - 根据自然语言描述生成 cfggen 配表  schema 定义`.cfg`文件。
+Claude Code 插件 - 根据自然语言描述生成 cfggen schema、数据。包括.cfg、csv、json文件。
 
 ### 2. [cfg-support](./vscode-cfg-extension/)
 

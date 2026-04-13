@@ -6,39 +6,60 @@ grammar Cfg;
 
 // 1. Root Rule
 schema
-    : schema_ele* EOF
+    : schema_ele* suffix_comment* EOF
     ;
 
 schema_ele
     : struct_decl
     | interface_decl
     | table_decl
+    | enum_decl
     ;
 
 // 2. High-level Structures (Struct, Interface, Table)
 struct_decl
-    : comment* STRUCT ns_ident metadata LC_COMMENT (field_decl | foreign_decl)* RC
+    : leading_comment* STRUCT ns_ident metadata
+      LC_COMMENT (field_decl | foreign_decl)*
+      suffix_comment* RC
     ;
 
 interface_decl
-    : comment* INTERFACE ns_ident metadata LC_COMMENT struct_decl+ RC
+    : leading_comment* INTERFACE ns_ident metadata
+      LC_COMMENT struct_decl+
+      suffix_comment* RC
     ;
 
 table_decl
-    : comment* TABLE ns_ident key metadata LC_COMMENT (field_decl | foreign_decl | key_decl)+ RC
+    : leading_comment* TABLE ns_ident key metadata
+      LC_COMMENT (field_decl | foreign_decl | key_decl)+
+      suffix_comment* RC
     ;
 
+enum_decl
+    : leading_comment* ENUM ns_ident metadata
+      LC_COMMENT ( enum_value_empty+ | enum_value_assigned+ )?
+      suffix_comment* RC
+    ;
 // 3. Members & Fields (字段与定义)
 field_decl
-    : comment* identifier COLON type_ ref? metadata SEMI_COMMENT
+    : leading_comment* identifier COLON type_ ref? metadata SEMI_COMMENT
     ;
 
 foreign_decl
-    : comment* REF identifier COLON key ref metadata SEMI_COMMENT
+    : leading_comment* REF identifier COLON key ref metadata SEMI_COMMENT
     ;
 
 key_decl
-    : comment* key SEMI_COMMENT
+    : leading_comment* key SEMI_COMMENT
+    ;
+
+enum_value_empty
+    : leading_comment* identifier SEMI_COMMENT
+    ;
+
+// 已赋值的枚举字段
+enum_value_assigned
+    : leading_comment* identifier EQ enum_number SEMI_COMMENT
     ;
 
 // 4. Types System (类型系统)
@@ -84,6 +105,11 @@ single_value
     | BOOL_CONSTANT
     ;
 
+enum_number
+    : INTEGER_CONSTANT
+    | HEX_INTEGER_CONSTANT
+    ;
+
 // 7. Common Utilities (通用工具)
 ns_ident
     : identifier ( DOT identifier )* ;
@@ -93,12 +119,18 @@ identifier
     | STRUCT
     | INTERFACE
     | TABLE
+    | ENUM
     | TLIST
     | TMAP
     | TBASE
     ;
 
-comment
+// 命名标签规则，用于区分声明前注释和后缀注释
+leading_comment
+    : COMMENT
+    ;
+
+suffix_comment
     : COMMENT
     ;
 
@@ -111,6 +143,7 @@ comment
 STRUCT      : 'struct';
 INTERFACE   : 'interface';
 TABLE       : 'table';
+ENUM        : 'enum';
 TLIST       : 'list';
 TMAP        : 'map';
 
@@ -193,8 +226,6 @@ fragment FLOATLIT
       | DECIMALS EXPONENT
       | DOT DECIMALS EXPONENT?
       )
-    | 'inf'
-    | 'nan'
     ;
 
 fragment DECIMALS

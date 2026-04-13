@@ -42,7 +42,7 @@ export class Ref {
 /**
  * 定义类型
  */
-export type DefinitionType = 'struct' | 'interface' | 'table';
+export type DefinitionType = 'struct' | 'interface' | 'table' | 'enum';
 
 /**
  * 定义范围信息

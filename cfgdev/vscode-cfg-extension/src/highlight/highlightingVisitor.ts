@@ -4,6 +4,7 @@ import { CfgVisitor } from '../grammar/CfgVisitor';
 import { Struct_declContext } from '../grammar/CfgParser';
 import { Interface_declContext } from '../grammar/CfgParser';
 import { Table_declContext } from '../grammar/CfgParser';
+import { Enum_declContext } from '../grammar/CfgParser';
 import { Field_declContext } from '../grammar/CfgParser';
 import { Foreign_declContext } from '../grammar/CfgParser';
 import { RefContext } from '../grammar/CfgParser';
@@ -16,6 +17,8 @@ import { TypeMapContext } from '../grammar/CfgParser';
 import { TypeBasicContext } from '../grammar/CfgParser';
 import { Type_eleContext } from '../grammar/CfgParser';
 import { Ns_identContext } from '../grammar/CfgParser';
+import { Enum_value_emptyContext } from '../grammar/CfgParser';
+import { Enum_value_assignedContext } from '../grammar/CfgParser';
 import { TOKEN_TYPES, TokenType } from './tokenTypes';
 import { TypeUtils } from '../utils/typeUtils';
 import { ErrorHandler } from '../utils/errorHandler';
@@ -124,6 +127,44 @@ export class HighlightingVisitor extends AbstractParseTreeVisitor<void> implemen
             });
         }
         this.visitChildren(ctx);
+    }
+
+    public visitEnum_decl(ctx: Enum_declContext): void {
+        // Highlight the enum name as structure definition
+        this.highlightNsIdent(ctx.ns_ident());
+        this.visitChildren(ctx);
+    }
+
+    // ============================================================
+    // Enum Values
+    // ============================================================
+
+    public visitEnum_value_empty(ctx: Enum_value_emptyContext): void {
+        const identifier = ctx.identifier();
+        const terminal = identifier.IDENT();
+        if (terminal && terminal.symbol) {
+            this.builder.push(
+                terminal.symbol.line - 1,
+                terminal.symbol.column,
+                this.getText(terminal).length,
+                this.getTokenTypeIndex('ENUM_MEMBER'),
+                0
+            );
+        }
+    }
+
+    public visitEnum_value_assigned(ctx: Enum_value_assignedContext): void {
+        const identifier = ctx.identifier();
+        const terminal = identifier.IDENT();
+        if (terminal && terminal.symbol) {
+            this.builder.push(
+                terminal.symbol.line - 1,
+                terminal.symbol.column,
+                this.getText(terminal).length,
+                this.getTokenTypeIndex('ENUM_MEMBER'),
+                0
+            );
+        }
     }
 
     // ============================================================

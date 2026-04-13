@@ -5,22 +5,24 @@
 
 // VSCode语义标记图例的标记类型名称
 export const TOKEN_TYPE_NAMES: string[] = [
-    'structureDefinition',  // 0: struct/interface/table names
+    'structureDefinition',  // 0: struct/interface/table/enum names
     'typeIdentifier',       // 1: custom types (non-basic)
     'foreignKey',           // 2: foreign key references
     'metadata',             // 3: metadata keywords
     'primaryKey',           // 4: primary key fields
-    'uniqueKey'             // 5: unique key fields
+    'uniqueKey',            // 5: unique key fields
+    'enumMember'            // 6: enum value names
 ];
 
 // 内部使用的标记类型常量
 export const TOKEN_TYPES = {
-    STRUCTURE_DEFINITION: 0,  // struct/interface/table names
+    STRUCTURE_DEFINITION: 0,  // struct/interface/table/enum names
     TYPE_IDENTIFIER: 1,       // custom types and generic types
     FOREIGN_KEY: 2,           // foreign key references (->xxx)
     METADATA: 3,              // metadata keywords
     PRIMARY_KEY: 4,           // primary key field names
-    UNIQUE_KEY: 5             // unique key field names
+    UNIQUE_KEY: 5,            // unique key field names
+    ENUM_MEMBER: 6            // enum value names
 } as const;
 
 export type TokenType = keyof typeof TOKEN_TYPES;

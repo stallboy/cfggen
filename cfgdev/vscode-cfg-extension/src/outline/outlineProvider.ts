@@ -71,6 +71,8 @@ export class CfgDocumentSymbolProvider implements vscode.DocumentSymbolProvider 
                 return vscode.SymbolKind.Struct;
             case 'table':
                 return vscode.SymbolKind.Class; // 使用Class表示table
+            case 'enum':
+                return vscode.SymbolKind.Enum;
             default:
                 return vscode.SymbolKind.Class;
         }

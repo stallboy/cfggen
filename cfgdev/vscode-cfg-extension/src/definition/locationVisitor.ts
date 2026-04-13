@@ -4,6 +4,7 @@ import { CfgVisitor } from '../grammar/CfgVisitor';
 import { Struct_declContext } from '../grammar/CfgParser';
 import { Interface_declContext } from '../grammar/CfgParser';
 import { Table_declContext } from '../grammar/CfgParser';
+import { Enum_declContext } from '../grammar/CfgParser';
 import { Field_declContext } from '../grammar/CfgParser';
 import { Foreign_declContext } from '../grammar/CfgParser';
 import { RefContext } from '../grammar/CfgParser';
@@ -141,6 +142,18 @@ export class LocationVisitor extends AbstractParseTreeVisitor<void> implements C
         if (name && range) {
             // 全局table
             const tRange: TRange = { type: 'table', range };
+            this.fileDef.definitions.set(name, tRange);
+        }
+        this.visitChildren(ctx);
+    }
+
+    public visitEnum_decl(ctx: Enum_declContext): void {
+        const nsIdent = ctx.ns_ident();
+        const name = this.getNsIdentText(nsIdent);
+        const range = this.getNsIdentRange(nsIdent);
+
+        if (name && range) {
+            const tRange: TRange = { type: 'enum', range };
             this.fileDef.definitions.set(name, tRange);
         }
         this.visitChildren(ctx);

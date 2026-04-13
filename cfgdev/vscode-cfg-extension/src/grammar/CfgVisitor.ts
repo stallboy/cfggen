@@ -7,9 +7,12 @@ import { Schema_eleContext } from "./CfgParser.js";
 import { Struct_declContext } from "./CfgParser.js";
 import { Interface_declContext } from "./CfgParser.js";
 import { Table_declContext } from "./CfgParser.js";
+import { Enum_declContext } from "./CfgParser.js";
 import { Field_declContext } from "./CfgParser.js";
 import { Foreign_declContext } from "./CfgParser.js";
 import { Key_declContext } from "./CfgParser.js";
+import { Enum_value_emptyContext } from "./CfgParser.js";
+import { Enum_value_assignedContext } from "./CfgParser.js";
 import { TypeListContext } from "./CfgParser.js";
 import { TypeMapContext } from "./CfgParser.js";
 import { TypeBasicContext } from "./CfgParser.js";
@@ -20,9 +23,11 @@ import { MetadataContext } from "./CfgParser.js";
 import { Ident_with_opt_single_valueContext } from "./CfgParser.js";
 import { Minus_identContext } from "./CfgParser.js";
 import { Single_valueContext } from "./CfgParser.js";
+import { Enum_numberContext } from "./CfgParser.js";
 import { Ns_identContext } from "./CfgParser.js";
 import { IdentifierContext } from "./CfgParser.js";
-import { CommentContext } from "./CfgParser.js";
+import { Leading_commentContext } from "./CfgParser.js";
+import { Suffix_commentContext } from "./CfgParser.js";
 
 
 /**
@@ -64,6 +69,12 @@ export class CfgVisitor<Result> extends AbstractParseTreeVisitor<Result> {
      */
     visitTable_decl?: (ctx: Table_declContext) => Result;
     /**
+     * Visit a parse tree produced by `CfgParser.enum_decl`.
+     * @param ctx the parse tree
+     * @return the visitor result
+     */
+    visitEnum_decl?: (ctx: Enum_declContext) => Result;
+    /**
      * Visit a parse tree produced by `CfgParser.field_decl`.
      * @param ctx the parse tree
      * @return the visitor result
@@ -81,6 +92,18 @@ export class CfgVisitor<Result> extends AbstractParseTreeVisitor<Result> {
      * @return the visitor result
      */
     visitKey_decl?: (ctx: Key_declContext) => Result;
+    /**
+     * Visit a parse tree produced by `CfgParser.enum_value_empty`.
+     * @param ctx the parse tree
+     * @return the visitor result
+     */
+    visitEnum_value_empty?: (ctx: Enum_value_emptyContext) => Result;
+    /**
+     * Visit a parse tree produced by `CfgParser.enum_value_assigned`.
+     * @param ctx the parse tree
+     * @return the visitor result
+     */
+    visitEnum_value_assigned?: (ctx: Enum_value_assignedContext) => Result;
     /**
      * Visit a parse tree produced by the `TypeList`
      * labeled alternative in `CfgParser.type_`.
@@ -145,6 +168,12 @@ export class CfgVisitor<Result> extends AbstractParseTreeVisitor<Result> {
      */
     visitSingle_value?: (ctx: Single_valueContext) => Result;
     /**
+     * Visit a parse tree produced by `CfgParser.enum_number`.
+     * @param ctx the parse tree
+     * @return the visitor result
+     */
+    visitEnum_number?: (ctx: Enum_numberContext) => Result;
+    /**
      * Visit a parse tree produced by `CfgParser.ns_ident`.
      * @param ctx the parse tree
      * @return the visitor result
@@ -157,10 +186,16 @@ export class CfgVisitor<Result> extends AbstractParseTreeVisitor<Result> {
      */
     visitIdentifier?: (ctx: IdentifierContext) => Result;
     /**
-     * Visit a parse tree produced by `CfgParser.comment`.
+     * Visit a parse tree produced by `CfgParser.leading_comment`.
      * @param ctx the parse tree
      * @return the visitor result
      */
-    visitComment?: (ctx: CommentContext) => Result;
+    visitLeading_comment?: (ctx: Leading_commentContext) => Result;
+    /**
+     * Visit a parse tree produced by `CfgParser.suffix_comment`.
+     * @param ctx the parse tree
+     * @return the visitor result
+     */
+    visitSuffix_comment?: (ctx: Suffix_commentContext) => Result;
 }
 
