@@ -21,16 +21,18 @@ def versions = [
 dependencies {
     // 核心业务依赖
     implementation "org.antlr:antlr4-runtime:${versions.antlr}"
+    implementation "gg.jte:jte:3.2.1"
+    implementation "org.apache.poi:poi:${versions.poi}"
+    implementation "org.apache.poi:poi-ooxml:${versions.poi}"
+    implementation 'org.apache.commons:commons-text:1.14.0'
+
     implementation "org.dhatim:fastexcel:${versions.fastexcel}"
     implementation "org.dhatim:fastexcel-reader:${versions.fastexcel}"
     implementation 'de.siegmar:fastcsv:2.2.2'
     implementation "com.alibaba.fastjson2:fastjson2:${versions.fastjson2}"
+
     implementation 'io.github.sashirestela:simple-openai:3.8.2'
-    implementation "gg.jte:jte:3.2.1"
-    implementation "org.apache.poi:poi:${versions.poi}"
-    implementation "org.apache.poi:poi-ooxml:${versions.poi}"
     implementation 'io.github.codeboyzhou:mcp-declarative-java-sdk:0.9.0'
-    implementation 'org.apache.commons:commons-text:1.14.0'
 
     // 测试依赖
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.1'

@@ -120,6 +120,10 @@ class ValueJsonParserTest {
         String jsonStr = """
                 {"$type":"test","id":0,"bool1":false,"long1":0,"float1":0.0,"str1":""}""";
         assertEquals(jsonStr, json.toString());
+
+        VStruct vStruct2 = fromJson(test, "{}");
+        JSONObject json2 = new ValueToJson().toJson(vStruct2);
+        assertEquals(jsonStr, json2.toString());
     }
 
     @Test
@@ -160,6 +164,11 @@ class ValueJsonParserTest {
 
         VStruct vStruct2 = fromJson(ts, jsonStr);
         assertEquals(vTs, vStruct2);
+
+        String jsonStr_simplified = """
+                {"id":1,"attr":{"Attr":111,"Min":222,"Max":333}}""";
+        VStruct vStruct_simplified = fromJson(ts, jsonStr_simplified);
+        assertEquals(vTs, vStruct_simplified);
     }
 
     @Test
@@ -270,6 +279,11 @@ class ValueJsonParserTest {
 
         VStruct vStruct2 = fromJson(ts, json.toString());
         assertEquals(vStruct, vStruct2);
+
+        String jsonStr_simplified = """
+                {"id":1,"listAttr":[{"Attr":111,"Min":222,"Max":333}]}""";
+        VStruct vStruct_simplified = fromJson(ts, jsonStr_simplified);
+        assertEquals(vStruct, vStruct_simplified);
     }
 
 
@@ -294,9 +308,13 @@ class ValueJsonParserTest {
         VStruct vStruct2 = fromJson(cond, jsonStr);
         assertNotEquals(vStruct, vStruct2); // 因为vStruct里的对象 没有用VInterface包装
 
+        String jsonStr_simplified = """
+                {"id":666,"c":[{"key":123456,"value":{"$type":"and","c1":{"$type":"checkItem","id":123},"c2":{"$type":"checkItem","id":456}}}]}""";
+        VStruct vStruct2_simplified = fromJson(cond, jsonStr_simplified);
+        assertEquals(vStruct2, vStruct2_simplified);
+
         JSONObject json2 = new ValueToJson().toJson(vStruct2);
         assertEquals(jsonStr, json2.toString());
-
     }
 
     @Test

@@ -15,8 +15,8 @@ import static configgen.schema.FieldType.Primitive.*;
 import static configgen.value.CfgValue.*;
 import static configgen.value.CfgValueErrs.*;
 
+@SuppressWarnings("SwitchStatementWithTooFewBranches")
 public class ValueJsonParser {
-
     private final TableSchema tableSchema;
     private final boolean isTableSchemaPartial;
     private final CfgValueErrs errs;
@@ -67,16 +67,7 @@ public class ValueJsonParser {
     private static final Set<String> jsonExtraKeySet = Set.of("$type", "$note", "$fold", "$refs");
 
     private VStruct parseStructural(Structural structural, JSONObject jsonObject, DFile source) {
-        String type = jsonObject.getString("$type");
-        if (type == null) {
-//            errs.addErr(new JsonTypeNotExist(source, structural.fullName()));
-//            return ValueDefault.ofStructural(structural, source);
-            type = structural.fullName(); //兼容一点，可以没有
-        } else if (!type.equals(structural.fullName())) {
-            errs.addErr(new JsonTypeNotMatch(source, type, structural.fullName()));
-            return ValueDefault.ofStructural(structural, source);
-        }
-
+        String type = structural.fullName();
 
         VStruct vStruct = new VStruct(structural, new ArrayList<>(structural.fields().size()), source);
         DFile thisSource = source.inStruct(structural.fullName());
@@ -126,13 +117,19 @@ public class ValueJsonParser {
             errs.addErr(new JsonTypeNotExist(source, name));
             return ValueDefault.ofInterface(interfaceSchema, source);
         }
+        String implName;
         String interfaceNamePrefix = name + ".";
-        if (!type.startsWith(interfaceNamePrefix)) {
-            errs.addErr(new JsonTypeNotMatch(source, type, name));
-            return ValueDefault.ofInterface(interfaceSchema, source);
+        if (type.contains(".")) {
+            if (type.startsWith(interfaceNamePrefix)) {  // 老版本数据，是包含了前缀的，兼容
+                implName = type.substring(interfaceNamePrefix.length());
+            } else {
+                errs.addErr(new JsonTypeNotMatch(source, type, name));
+                return ValueDefault.ofInterface(interfaceSchema, source);
+            }
+        } else {
+            implName = type; // 建议这种，不用包含前缀
         }
 
-        String implName = type.substring(interfaceNamePrefix.length());
         StructSchema impl = interfaceSchema.findImpl(implName);
         if (impl == null) {
             errs.addErr(new JsonTypeNotMatch(source, type, name));
