@@ -178,7 +178,6 @@ public class CachedIndentPrinter implements Closeable, TemplateOutput {
             return cache;
         }
 
-
         int idx = lineCnt / lineCntPerFile;
         lineCnt++;
 
