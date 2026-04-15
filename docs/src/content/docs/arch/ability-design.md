@@ -1248,7 +1248,7 @@ resolution_pipeline {
 
 ---
 
-## Gameplay Cue
+## 表现层设计 Cue
 
 表现层（客户端）系统。其核心逻辑是：逻辑层输出**意图 (CueKey)**、**强度 (Magnitude)** 与 **语义上下文 (Tags)**，客户端据此自动寻址并执行视听反馈。
 
