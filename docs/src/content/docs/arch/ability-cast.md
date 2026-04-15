@@ -9,9 +9,9 @@ sidebar:
 ## 设计原则
 
 1. **瞬发零开销**：`Instant` 模型等同于极简的"扣资源-触发"行为，不被复杂的生命周期拖累。
-2. **生命周期原生托管**：读条（CastBar）、引导（Channel）甚至后摇（Recovery），都是技能**真实占用角色时间**的生命周期阶段，必须由 `AbilityInstance` 原生接管，以保证动作取消、UI 表现、并发锁的精确性。
-3. **打断与取消双轨语义**：TagRules 提供 `interruptsAbilities`（硬打断，有惩罚）和 `cancelsAbilities`（软取消，无惩罚）两种打断动词。技能在读条时被眩晕是"打断"，在后摇时被翻滚截断是"动作取消"，底层逻辑完全自洽。
-4. **最少时间原语**：只保留不可互相还原的四种时间模型（Instant/CastBar/Charged/Channel）。连招、形态切换等复合需求通过"标签 + 组合"实现。
+2. **生命周期原生托管**：前摇（Startup）、引导（Channel）甚至后摇（Recovery），都是技能**真实占用角色时间**的生命周期阶段，必须由 `AbilityInstance` 原生接管，以保证动作取消、UI 表现、并发锁的精确性。
+3. **打断与取消双轨语义**：TagRules 提供 `interruptsAbilities`（硬打断，有惩罚）和 `cancelsAbilities`（软取消，无惩罚）两种打断动词。技能在前摇时被眩晕是"打断"，在后摇时被翻滚截断是"动作取消"，底层逻辑完全自洽。
+4. **最少时间原语**：只保留不可互相还原的四种时间模型（Instant/Startup/Charge/Channel）。连招、形态切换等复合需求通过"标签 + 组合"实现。
 
 ---
 
@@ -37,7 +37,6 @@ table ability[id] (json) {
     castMode: CastMode;
 
     // 技能的核心动作（出伤、发子弹、挂 Buff 等）
-    // 对于 Channel 模型，此 effect 代表引导正常结束时的"终结/收尾技"
     effect: Effect;
 
     // Processing 阶段被 interruptsAbilities 打断时的惩罚动作
@@ -110,32 +109,35 @@ interface CastMode {
     // 瞬发模型
     struct Instant {}
 
-    // 读条模型（按下等待，满后触发）
-    struct CastBar {
-        castTime: FloatValue;
-        castingTags: list<str> ->gameplaytag;
-        cuesDuringCast: list<str> ->cue_key;
-        commitPolicy: CastBarCommitPolicy;
+    // 前摇模型
+    struct Startup {
+        startupTime: FloatValue;
+        
+        startupTags: list<str> ->gameplaytag;
+        cuesDuringStartup: list<str> ->cue_key;
+        commitPolicy: StartupCommitPolicy;
     }
 
     // 蓄力模型（按住蓄力，松手触发）
-    struct Charged {
+    struct Charge {
         minChargeTime: FloatValue;
         maxChargeTime: FloatValue;
         releaseOnMax: bool;
         chargeProgressVar: str ->var_key; // 将 0~1 的蓄力进度写入 instanceState
+        
         chargingTags: list<str> ->gameplaytag;
         cuesDuringCharge: list<str> ->cue_key;
-        commitPolicy: ChargedCommitPolicy;
+        commitPolicy: ChargeCommitPolicy;
     }
 
-    // 引导模型（按下持续触发）
+    // 引导模型（持续触发）
     struct Channel {
         duration: FloatValue;
-        tickInterval: FloatValue;
-        tickEffect: Effect;  // 每次心跳执行的逻辑
+        tickInterval: FloatValue;  // 心跳间隔，执行effect逻辑
         maxTicks: int;       // -1 = 无限，由 duration 截断
         tickOnStart: bool;   // 是否在激活瞬间立即触发首个 tick
+        finisherEffect: list<Effect>; // 收尾技
+        
         channelingTags: list<str> ->gameplaytag;
         cuesDuringChannel: list<str> ->cue_key;
         commitPolicy: ChannelCommitPolicy;
@@ -143,11 +145,11 @@ interface CastMode {
 }
 
 // Commit 决定了【扣除 costs + 启动 cooldown】发生的精确时刻
-enum CastBarCommitPolicy {
+enum StartupCommitPolicy {
     OnActivate;     // 激活即扣（被打断不退费）
-    OnComplete;     // 读条完成瞬间扣（被打断白嫖）
+    OnComplete;     // 前摇完成瞬间扣（被打断白嫖）
 }
-enum ChargedCommitPolicy {
+enum ChargeCommitPolicy {
     OnActivate;     // 激活即扣
     OnRelease;      // 松手且达到 minChargeTime 时扣（蓄力不足取消不扣费）
 }
@@ -172,7 +174,7 @@ Ability 在运行时的四大核心阶段（Phase）：`Activating`、`Processin
  [ Activating ] ── 创建 AbilityInstance
       │            * [ 若 CommitPolicy == OnActivate，在此处 Commit ]
       ▼
- [ Processing ] ── (读条/蓄力/引导) 挂载约束标签，接受打断检测，动态更新瞄准
+ [ Processing ] ── (前摇/蓄力/引导) 挂载约束标签，接受打断检测，动态更新瞄准
       │                │                     │
       │          interruptsAbilities     cancelsAbilities
       │           (硬打断)                (软取消)
@@ -252,17 +254,14 @@ struct RecoveryConfig {
 
 ---
 
-## tag_rules 扩展
-
-将旧版的 `cancelsAbilities` 拆分为 `interruptsAbilities`（硬打断）和 `cancelsAbilities`（软取消）。
-
-### tag_rules配置示例
+## 状态与 TagRules 的交互示例
+TagRules 的完整定义见 `ability-design.md`。此处展示其 `interruptsAbilities`（硬打断）、`cancelsAbilities`（软取消）和`blocksAbilities`（施法约束）在施法生命周期中的具体运用示例：
 
 ```
 tag_rules {
     name: "CoreCombatRules";
     rules: [
-        // ============ 硬控打断 ============
+        // 硬控打断
         { whenPresent: "State.Debuff.Control.Stun";
           interruptsAbilities: ["Ability.Type"];
           blocksAbilities: ["Ability.Type"];
@@ -273,77 +272,60 @@ tag_rules {
           blocksAbilities: ["Ability.Type.Spell"];
           description: "沉默：硬打断并封锁法术类技能"; },
 
-        // ============ 软取消 ============
+        // 软取消
         { whenPresent: "State.Dodging";
           cancelsAbilities: ["Ability.Type"];
           description: "翻滚：软取消任何技能（含后摇）"; },
 
         { whenPresent: "State.Moving";
-          cancelsAbilities: ["Ability.Casting.MoveCancel"];
-          description: "移动：软取消标记为可移动取消的读条技能"; },
+          cancelsAbilities: ["Ability.Startup.MoveCancel"];
+          description: "移动：软取消标记为可移动取消的前摇技能"; },
 
-        // ============ 施法约束 ============
+        // 施法约束
         { whenPresent: "State.Recovery";
           blocksAbilities: ["Ability.Type.Spell", "Ability.Type.Melee"];
           description: "后摇期间禁止攻击和施法"; },
 
         { whenPresent: "State.Recovery.Heavy";
           blocksAbilities: ["Ability.Type.Movement"];
-          description: "重型后摇期间禁止移动类技能"; },
-
-        { whenPresent: "State.Immobile";
-          blocksAbilities: ["Ability.Type.Movement"];
-          description: "不可移动状态禁止移动类技能"; },
-
-        { whenPresent: "State.Casting.Spell";
-          blocksAbilities: ["Ability.Type.Spell"];
-          description: "法术读条期间不可再放法术"; },
-
-        // ============ 免疫与驱散 ============
-        { whenPresent: "State.Buff.Hyperarmor";
-          immuneToTags: ["State.Debuff.Control"];
-          description: "霸体免疫控制"; },
-
-        { whenPresent: "State.Buff.Purify";
-          purgesTags: ["State.Debuff"];
-          description: "净化驱散所有减益"; }
+          description: "重型后摇期间禁止移动类技能"; }
     ];
 }
 ```
 
-### 技能配置示例：移动取消读条
+### 技能配置示例：移动取消前摇
 
 ```
 // 可被移动取消的治疗术
 ability {
     id: 1001; name: "治疗术";
-    abilityTags: ["Ability.Type.Spell", "Ability.Casting.MoveCancel"];
+    abilityTags: ["Ability.Type.Spell", "Ability.Startup.MoveCancel"];
     //         ▲ 标记为可被移动取消
 
-    castMode: CastBar {
-        castTime: Const { value: 2.5; };
-        castingTags: ["State.Casting.Spell"];
+    castMode: Startup {
+        startupTime: Const { value: 2.5; };
+        startupTags: ["State.Startup.Spell"];
         //         ▲ 不含 State.Immobile → 移动不被 block
-        //           但 TagRules: State.Moving cancelsAbilities Ability.Casting.MoveCancel
+        //           但 TagRules: State.Moving cancelsAbilities Ability.Startup.MoveCancel
         //           → 玩家一动，此技能被 cancel（无惩罚，不扣费）
-        cuesDuringCast: ["Cast.Heal"];
+        cuesDuringStartup: ["Startup.Heal"];
         commitPolicy: OnComplete;
     };
 
     effect: ...;
 }
 
-// 站桩读条的火球术（移动直接被禁止）
+// 站桩带前摇的火球术（移动直接被禁止）
 ability {
     id: 1002; name: "火球术";
     abilityTags: ["Ability.Type.Spell"];
-    //         ▲ 没有 Ability.Casting.MoveCancel → 移动不会取消此技能
+    //         ▲ 没有 Ability.Startup.MoveCancel → 移动不会取消此技能
 
-    castMode: CastBar {
-        castTime: Const { value: 2.0; };
-        castingTags: ["State.Casting.Spell", "State.Immobile"];
+    castMode: Startup {
+        startupTime: Const { value: 2.0; };
+        startupTags: ["State.Startup.Spell", "State.Immobile"];
         //         ▲ State.Immobile → TagRules blocks Ability.Type.Movement → 按不动
-        cuesDuringCast: ["Cast.Fireball"];
+        cuesDuringStartup: ["Startup.Fireball"];
         commitPolicy: OnComplete;
     };
 
@@ -352,7 +334,7 @@ ability {
             grantedTags: ["State.AbilityLockout"];
             duration: Const { value: 0.5; };
         },
-        FireCue { cue: "Cast.Interrupted"; }
+        FireCue { cue: "Startup.Interrupted"; }
     ];
     recovery: { duration: Const { value: 0.3; }; recoveryTags: ["State.Recovery"];};
 }
@@ -372,19 +354,6 @@ ability {
 | `Ability_Interrupted` | Processing 阶段被 `interruptsAbilities` 命中 | 触发"被打断时获得激怒"被动 |
 | `Ability_Cancelled` | 玩家主动停止 / `cancelsAbilities` 命中 / TargetLost | UI 提示"蓄力失败" |
 | `Ability_Completed` | Executing 阶段完成后最终退出（无论 Recovery 是否被取消）| |
-
----
-
-## combat_settings 扩展
-
-```cfg
-table combat_settings[name] {
-    //...
-
-    // 兜底并发限制（具体互斥依然靠 TagRules）
-    maxConcurrentAbilitiesPerActor: int; 
-}
-```
 
 ---
 
@@ -419,8 +388,8 @@ table combat_settings[name] {
 
 ### 为什么 interruptsAbilities 和 cancelsAbilities 需要分开
 
-旧版只有一个 `cancelsAbilities`，无法区分"眩晕打断读条（应有惩罚）"和"翻滚取消后摇（不应有惩罚）"。拆分后：
-- 策划可以精确控制"移动取消读条"这类柔性中断——不触发 `onInterrupt`，不扣费
+旧版只有一个 `cancelsAbilities`，无法区分"眩晕打断前摇（应有惩罚）"和"翻滚取消后摇（不应有惩罚）"。拆分后：
+- 策划可以精确控制"移动取消前摇"这类柔性中断——不触发 `onInterrupt`，不扣费
 - Recovery 阶段两种动词效果相同（均为无惩罚清理），保持了语义一致性
 - 硬控（眩晕/沉默）用 `interruptsAbilities`，玩家主动行为（翻滚/移动）用 `cancelsAbilities`，职责清晰
 
@@ -468,7 +437,7 @@ class AbilityInstance implements IPendingKill {
     void tick(float dt);
     
     // 由输入/引擎系统调用
-    void release();     // Charged: 玩家松手
+    void release();     // Charge: 玩家松手
     void cancel();      // 玩家主动取消 / TagRules cancelsAbilities 驱动
     void interrupt();   // TagRules interruptsAbilities 驱动
 }

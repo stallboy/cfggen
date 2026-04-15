@@ -474,45 +474,22 @@ class EventBus {
 
 ### Ability
 
-Ability 是行为的入口点。
+Ability 是整个系统的**逻辑入口点**。它负责处理玩家或 AI 的主动意图，并将其转化为具体的战斗效果。
 
-```cfg
-table ability[abilityId] (json) {
-    abilityId: int;
-    name: text;
-    description: text;
+**核心职责：**
+1. **执行准入检查**：验证冷却（Cooldown）、资源消耗（Cost）及自定义激活条件。
+2. **定义生命周期**：管理从按键触发到效果结算的全过程（含前摇、蓄力、引导等阶段）。
+3. **驱动效果执行**：在特定时机触发 `Effect` 树。
 
-    // 标签分类
-    abilityTags: list<str> ->gameplaytag;
+**配置标准：**
+为了支持动作游戏复杂的生命周期管理，Ability 的详细表结构、施法模型（Startup/Charge/Channel）、瞄准逻辑以及完整的运行时状态机已拆分为独立专题文档。
 
-    // 准入条件
-    requiresAll: list<Condition>;
+> **关于 Ability 的详细配置定义、生命周期及状态机，请严格参考：[施法过程与生命周期 (ability-cast.md)](ability-cast.md)**
 
-    // cost
-    costs: list<StatCost>;
-    cooldown: FloatValue;
-
-    // 效果
-    effect: Effect;
-}
-
-struct StatCost {
-    stat: str ->stat_definition;
-    value: FloatValue;
-}
-```
-
-这是简单的瞬发模型。当需要目标选择、读条、蓄力、引导、后摇时，请一定参考 **`ability-cast.md`**。
-
-如果cooldown需要分组，可以增加配置`cooldownGroups`，使用gameplaytag
-
-| 前缀 | 用途 | 示例 |
-|---|---|---|
-| `Cooldown.*` | 冷却组键名 | `Cooldown.Ability.Fireball` |
-
-主动技能、战术位移(Dash、Teleport等)使用ability来做。
-
-被动技能不要用ability，它本质是 **挂载在角色身上的 status**。
+**设计红线：**
+* **主动性**：只有主动触发的行为（含 Dash、瞬移等）才使用 Ability。
+* **被动解耦**：被动技能严禁使用 Ability 实现，本质应为挂载在 Actor 上的永久 `Status`。
+* **无状态性**：Ability 配置本身是静态的，所有运行时数据（如当前蓄力时长）必须存储在 `AbilityInstance` 的 `context.instanceState` 中。
 
 ### Effect
 
@@ -1009,6 +986,7 @@ table combat_settings[name] {
     maxStatusCountPerActor: int; // 单个 Actor 的 StatusInstance 上限
     maxEffectChainLength: int;   // 单次 Effect 执行链的节点数上限（防 Repeat/Sequence 过长）
     maxScanTargets: int;         // TargetScan 全局兜底上限（覆盖单个配置中的 maxCount）
+    maxConcurrentAbilitiesPerActor: int; // 兜底并发限制
 }
 ```
 
@@ -1029,10 +1007,13 @@ struct TagRule {
 
     // 阻止激活带有以下标签的 Ability
     blocksAbilities: list<str> ->gameplaytag;
-
-    // 打断正在运行且带有以下标签的 Ability
-    cancelsAbilities: list<str> ->gameplaytag;
-
+    
+	// 硬打断：打断正在运行的前摇/蓄力/引导，并触发惩罚（onInterrupt） 
+	interruptsAbilities: list<str> ->gameplaytag; 
+	
+	// 软取消：无惩罚地取消正在运行的前摇/蓄力/引导，或提前结束任何技能的后摇 
+	cancelsAbilities: list<str> ->gameplaytag;
+	
     // 免疫：拒绝挂载 grantedTags 含以下标签的 Status
     immuneToTags: list<str> ->gameplaytag;
 
@@ -1267,98 +1248,16 @@ resolution_pipeline {
 
 ---
 
-##  Gameplay Cue
+## Gameplay Cue
 
-客户端表现层。逻辑层仅输出 CueTag，客户端查此表执行视听反馈。
+表现层（客户端）系统。其核心逻辑是：逻辑层输出**意图 (CueKey)**、**强度 (Magnitude)** 与 **语义上下文 (Tags)**，客户端据此自动寻址并执行视听反馈。
 
-### Cue Schema
+**设计原则：**
 
-```cfg
-table cue_registry[cueName] {
-    cueName: str;
-    handler: CueHandler;
-}
+  * **意图、资源与上下文三解耦**：逻辑层只需告知“发生了什么”（意图）及“环境特征”（标签），无需关心具体路径。
+  * **标签驱动的智能匹配**：表现层计算 `ContextTags` 与资产池标签的交集，得分最高者即为最终呈现资源。
 
-interface CueHandler {
-    // 瞬发型：触发即播放，自动回收
-    struct Instant {
-        vfx: list<VfxEntry>;
-        sfx: list<SfxEntry>;
-        animTriggers: list<AnimEntry>;
-        cameraShakes: list<str>;
-        damageTexts: list<DmgTextEntry>;
-    }
-
-    // 持续型：随 Status 生命周期创建/销毁
-    struct Sustained {
-        loopVfx: list<VfxEntry>;
-        loopSfx: list<SfxEntry>;
-        materialOverrides: list<MaterialEntry>;
-        screenFilters: list<str>;
-    }
-}
-
-struct VfxEntry {
-    role: CueRole;
-    asset: str;
-    attach: VfxAttach;
-    socket: str;
-    scale: float;
-}
-
-enum VfxAttach { WorldStatic; FollowTarget; }
-
-struct SfxEntry {
-    role: CueRole;
-    event: str;
-}
-
-struct AnimEntry {
-    role: CueRole;
-    trigger: str;
-}
-
-struct DmgTextEntry {
-    role: CueRole;
-    color: str;
-    fontSize: int;
-    icon: str;
-    motion: str;
-}
-
-struct MaterialEntry {
-    role: CueRole;
-    material: str;
-    slotIndex: int;     // -1 = 全部
-}
-
-enum CueRole { Target; Instigator; Causer }
-```
-
-### Cue Runtime
-
-`cue_registry`的上下文是`(CueEvent)`
-
-```java
-record CueEvent(
-    CueEventType type,
-    int cueTagId,
-    Actor target,
-    Actor instigator,
-    Actor causer,
-    float magnitude
-){}
-
-enum CueEventType { Executed; Added; Removed; }
-```
-
-引擎根据 Cue 所在的上下文自动推导生命周期类型：
-
-| 来源 | 推导类型 | 客户端行为 |
-|---|---|---|
-| `Effect.FireCue` / `ResolveCombat.cuesOnExecute` / `AllocationLayer.onHitCue`  | `Executed` | 查表调用 Instant 处理器 |
-| `Status.cuesWhileActive` | `Added` / `Removed` | 查表调用 Sustained 处理器 |
-
+> **关于资产匹配加权算法、材质栈管理及飘字聚合策略，请参考专项文档：[表现层系统设计 (cue-design.md)](https://www.google.com/search?q=cue-design.md)**
 
 ---
 
