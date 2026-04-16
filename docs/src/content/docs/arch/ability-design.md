@@ -209,10 +209,18 @@ enum VarType {
 ### cue_key
 
 ```
-table cue_key[cueKey] {
-    cueKey: str -> cue_registry (nullable);
+table cue_key_instant[cueKey] {
+    cueKey: str -> cue_registry_instant (nullable);
     cueId: int;
-    ancestors: list<int> ->cue_key[cueId]; //按从父到祖父顺序排列
+    ancestors: list<int> ->cue_key_instant[cueId]; //按从父到祖父顺序排列
+    description: text;
+    [cueId]; 
+}
+
+table cue_key_loop[cueKey] {
+    cueKey: str -> cue_registry_loop (nullable);
+    cueId: int;
+    ancestors: list<int> ->cue_key_loop[cueId]; //按从父到祖父顺序排列
     description: text;
     [cueId]; 
 }
@@ -512,7 +520,7 @@ interface Effect {
         pipeline: str ->resolution_pipeline;
         magnitude: FloatValue;
         tags: list<str> ->gameplaytag;   // 如 ["Damage.Element.Fire"]
-        cuesOnExecute: list<str> ->cue_key;
+        cues: list<str> ->cue_key_instant;
     }
 
     // --- 状态操作 ---
@@ -561,7 +569,7 @@ interface Effect {
         duration: FloatValue;
         objTags: list<str> ->gameplaytag;
         moveInfo: ObjMoveInfo; // 移动，弹道，碰撞在这里定义
-        cuesWhileActive: list<str> ->cue_key; // 飞行时的呼啸声、法阵的底图特效
+        cuesWhileActive: list<str> ->cue_key_loop; // 飞行时的呼啸声、法阵的底图特效
         effectsOnCreate: list<Effect>; // 诞生时：瞬间触发的逻辑 (如：落地瞬间的拉扯，伤害的定时触发）
         dieInfo: list<ObjDieInfo>;  // 生成物消失的条件、结算
     }
@@ -586,7 +594,7 @@ interface Effect {
 
     // --- Cue 触发
     struct FireCue {
-        cue: str ->cue_key;
+        cues: list<str> ->cue_key_instant;
         magnitude: FloatValue;
     }
 
@@ -683,7 +691,7 @@ struct StatusCore {
     
     duration: FloatValue;           // -1 = 永久
     
-    cuesWhileActive: list<str> ->cue_key;
+    cuesWhileActive: list<str> ->cue_key_loop;
     behaviors: list<Behavior>;
 }
 
@@ -1088,8 +1096,8 @@ struct AllocationLayer {
     targetStat: str ->stat_definition;
     conversionRate: float;
     allowOverflow: bool;
-    onHitCue: list<str> ->cue_key;
-    onDepletedCue: list<str> ->cue_key;
+    onHitCue: list<str> ->cue_key_instant;
+    onDepletedCue: list<str> ->cue_key_instant;
 }
 ```
 

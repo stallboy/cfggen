@@ -79,44 +79,25 @@ class CueParams {
 * **核心契约**：**“逻辑终止”不等于“物理销毁”**。
 * **行为规范**：引擎层收到指令后，应立即解除 `bindingId` 映射，并通知资产进入退出阶段。资产应执行平滑过渡逻辑（如音效淡出、特效停止发射、材质渐变），待表现完全结束后自行销毁。
 
-
-
-
+---
 
 ## cue注册表
 
-逻辑层派发的 `cue_key` 在此处被翻译为具体的“资源请求”。
+逻辑层派发的 `cueKey` 在此处被翻译为具体的“资源请求”。
+
+### 瞬发型
 
 ```cfg
-table cue_registry[cueKey] (json) {
-    cueKey: str -> cue_key;
-    handler: CueHandler; 
-}
-```
-
-### CueHandler
-
-CueHandler 明确划分瞬发与持续语义。**核心契约：瞬发型允许跨实体调度，持续型强制锚点归一（无 role 选择，仅作用于宿主自身）。**
-
-```cfg
-interface CueHandler {
-    // 瞬发型：一波流释放，自动回收。
-    // 允许通过 role 跨实体表现 (如：在 Instigator 身上播放吸血流轨迹)。
-    struct Instant {
-        vfx: list<InstantVfx>;             
-        sfx: list<InstantSfx>;
-        floatingTexts: list<FloatingText>; // 飘字
-    }
-
-    // 持续型：跟随 Status/SpawnObj 同生共死。
-    struct Loop {
-        vfx: list<LoopVfx>;
-        sfx: list<LoopSfx>;
-        materials: list<MaterialOverride>; // 材质状态覆写
-    }
+// 瞬发型：一波流释放，自动回收。
+// 允许通过 role 跨实体表现 (如：在 Instigator 身上播放吸血流轨迹)。
+table cue_registry_instant[cueKey] {
+    cueKey: str ->cue_key_instant (nullable);
+    vfx: list<InstantVfx> (block=1);        
+    sfx: list<InstantSfx> (block=1);
+    floatingTexts: list<FloatingText> (block=1); // 飘字
 }
 
-// 瞬发型 (含 role，可跨实体)
+// 含 role，可跨实体
 struct InstantVfx {
     role: CueRole;
     attach: VfxAttach;
@@ -124,12 +105,32 @@ struct InstantVfx {
     asset: str -> vfx_metadata;   
 }
 
+struct InstantSfx { 
+    role: CueRole;
+    asset: str -> sfx_metadata; 
+}
+
 struct FloatingText {
     role: CueRole;
     asset: str ->floating_text_metadata;
 }
 
-// 持续型 Entry (无 role，必定挂载在宿主 Actor 身上)
+enum VfxAttach { WorldStatic; FollowTarget; }
+enum CueRole { Target; Instigator; Causer; }
+```
+
+### 持续型
+
+```cfg
+// 持续型：跟随 Status/SpawnObj 同生共死。
+table cue_registry_loop[cueKey] {
+    cueKey: str ->cue_key_loop (nullable);
+    vfx: list<LoopVfx> (block=1);  
+    sfx: list<LoopSfx> (block=1);
+    materials: list<MaterialOverride> (block=1); // 材质状态覆写
+}
+
+// 无 role，必定挂载在宿主 Actor 身上
 struct LoopVfx { 
     attach: VfxAttach; 
     socket: str;
@@ -144,9 +145,6 @@ struct MaterialOverride {
     slotIndex: int;
     asset: str ->mat_metadata;
 }
-
-enum VfxAttach { WorldStatic; FollowTarget; }
-enum CueRole { Target; Instigator; Causer; }
 ```
 
 ---
@@ -241,29 +239,19 @@ enum ResolveRule {
 
 ## 资产解析算法
 
-表现系统的寻址是一个严密的**两阶段过程**：首先在树状拓扑中回退寻找可用的表现意图（CueHandler），随后在具体的资产池中基于标签进行打分决断。
+表现系统的寻址是一个严密的**两阶段过程**：首先在树状拓扑中回退寻找可用的`cue_registry`，随后在具体的资产池`metadata`中基于标签进行打分决断。
 
 ### 阶段一：意图层级回退
 
-参照`ability-design.md`里的`cue_key`
-
-```cfg
-table cue_key[cueKey] {
-    cueKey: str -> cue_registry (nullable);
-    cueId: int;
-    ancestors: list<int> -> cue_key[cueId]; // 按从父到祖父顺序排列
-    description: text;
-    [cueId]; 
-}
-```
+参照`ability-design.md`里的`cue_key_instant`、`cue_key_loop`
 
 **解析路由规则**：当逻辑层派发一个 `cueKey` 时，底层执行以下上溯逻辑：
 1. **本级探查**：检查当前 `cueKey` 是否绑定了非空的 `cue_registry`。若有，则直接提取并阻断寻址。
 2. **祖先回退**：若自身 `cue_registry` 为空，则严格按照 `ancestors` 列表的顺序（由近及远：父级 -> 祖父级）逐层上溯。
-3. **命中提取**：返回第一个挂载了有效 `cue_registry` 的祖先节点，并提取其对应的 `CueHandler`。
+3. **命中提取**：返回第一个非空的 `cue_registry`
 
 ### 阶段二：资产加权匹配
-获取到 `CueHandler` 后，底层解析其内部引用的各个资产池（如 `Vfx.Hit`）。此时表现层不执行任何硬编码的 `if-else` 分支，而是利用当前事件的标签快照进行**加权语义匹配**。
+获取到对应的`metadata`后，底层解析其内部引用的各个资产池`entries`（如 `Vfx.Hit`）。此时表现层不执行任何硬编码的 `if-else` 分支，而是利用当前事件的标签快照进行**加权语义匹配**。
 
 对于资产池中的每一个候选条目 $A$，其匹配得分 $S$ 计算如下：
 
@@ -277,8 +265,8 @@ $$S = \text{Count}(\text{A.Tags} \cap \text{Event.Tags}) \times 100 + \text{Coun
 * **逻辑输入**：由于暴击，逻辑管线触发了 `Hit.Physical.Critical` 事件，`ContextTags` 携带了 `[Damage.Element.Fire]`。
 * **执行步骤**：
     1. **层级回退**：查表发现 `Hit.Physical.Critical` 未单独配置注册表（`cue_registry` 为空）。
-    2. **向上上溯**：读取其 `ancestors`，定位到父节点 `Hit.Physical`。发现该父节点拥有有效的配置，成功获取其 `CueHandler`。
-    3. **请求资产**：`CueHandler` 请求播放 `Vfx.Hit` 资产池。
+    2. **向上上溯**：读取其 `ancestors`，定位到父节点 `Hit.Physical`。发现该父节点拥有有效的配置，成功获取其 `cue_registry`。
+    3. **请求资产**：`cue_registry` 请求播放 `Vfx.Hit` 资产池。
     4. **加权打分**：在 `Vfx.Hit` 的候选列表中评估：
         * `vfx_default_spark` (无标签) -> **Score: 0** (兜底候选)
         * `vfx_ice_shatter` (`[State.Debuff.Frozen]`) -> **Score: 0**
@@ -293,7 +281,7 @@ $$S = \text{Count}(\text{A.Tags} \cap \text{Event.Tags}) \times 100 + \text{Coun
 
 | Logic Source | 事件  | 广播目标 | BindingId |
 | :--- | :--- | :--- | :--- |
-| `Effect.FireCue` / `ResolveCombat.cuesOnExecute` | CueEvent | `target` | `0` (即放即走) |
+| `Effect.FireCue` / `ResolveCombat.cues`... | CueEvent | `target` | `0` (即放即走) |
 | `Status` 首次挂载 | CueEvent | host | `StatusInstance.uid` |
 | `Status` 层数变化 / 时长刷新 | UpdateCueEvent | host | `StatusInstance.uid` |
 | `Status` 移除 (过期/驱散/死亡) | DetachCueEvent | host | `StatusInstance.uid` |
