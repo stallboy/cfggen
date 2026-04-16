@@ -4,104 +4,86 @@ sidebar:
   order: 5
 ---
 
-基于 2D 暗黑/割草类 Roguelike 的极高频触发特征，本系统的核心哲学是：**意图与资源彻底解耦、严格的性能剔除、基于集中式注册表的智能资产寻址，以及锚点归一的生命周期管理**。
+本系统的核心哲学是：**意图与资源彻底解耦、严格的性能剔除、基于集中式注册表的智能资产寻址，以及逻辑驱动与资产自决的闭环生命周期管理**。
 
-表现层仅作为逻辑层 `CueEvent` 的下游消费者，不进行任何业务数值判定。逻辑层只发号施令（触发、挂载、卸载、刷新），表现层只管执行。
+## 架构边界与“黑盒资产”模式 
 
-## 1. Runtime Context (运行时上下文)
+采用**“瘦配置层，胖资产层（Thin Config, Thick Asset）”**的设计思想，严格界定能力系统配置与底层游戏引擎（如 Godot 的 `.tscn` 或 Unity 的 `Prefab`）的职责边界：
+
+* **表现层配置 (Cue Layer)**：秉持“极简声明”原则。在配置中，任何表现表现仅仅是一个**高度抽象的意图入口**（如 `VFX`）。逻辑层只负责界定该意图的**触发时机、生命周期归属（Anchor）与空间挂载位置（Socket）**，彻底剥离具体的物理寻址与播放逻辑。
+* **引擎资产层 (Engine Asset Layer)**：视听细节被**严格封装为绝对黑盒**。诸如激光轨迹运算 (`LineVFX`)、屏幕震动 (`CameraShake`)、顿帧定格 (`HitStop`) 或定制化文本等复合表现，均在引擎预制体内自闭环实现，**严禁**在 `Cue` 的通信协议中向下穿透或进行字段膨胀。
+* **数据流转契约 (Data Flow Contract)**：上下游基于标准接口（如 `OnSetup`）进行单向通信。引擎资产被动接收**高度浓缩的上下文载荷**——包含瞬时强度（`magnitude`）、实体引用（`instigator / target`）与环境修饰（`tags`），随后由资产内部逻辑自主解析这些抽象数据，并驱动内部的粒子、组件或全局渲染管线。
+
+    ```csharp
+    public interface ICueInstance 
+    {
+        void OnSetupCue(CueEvent ctx);
+        void OnUpdateCue(UpdateCueEvent ctx);   
+        void OnDetachCue(); 
+    }
+    ```
+
+这种设计确保了协议层的极度收敛：TA 和表现美术可以在引擎侧自由拼装极其复杂的复合视听反馈，而无需增加逻辑系统的心智负担和表结构复杂度。
+
+
+## 运行时上下文
 
 当底层管线触发效果时，系统向目标 Actor 的表现组件广播 `CueEvent`。
 
-```java
+```csharp
 record CueEvent(
-    CueEventType type,       // Trigger (瞬发) / Attach (挂载) / Detach (卸载) / Refresh (刷新)
-    int cueId,               // 对应能力系统中的 cue_key (如 "Hit.Physical")
-    long bindingId,          // 逻辑层实例的不透明句柄 (StatusInstance.uid / SpawnObj.uid)，Trigger 时为 0
+    // 0：瞬时Cue, 无需生命周期管理
+    // 非0：代表(StatusInstance.uid / SpawnObj.uid)，需要生命周期管理
+    long bindingId,  
+    int cueId,  // 对应能力系统中的 cue_key (如 "Hit.Physical")
     
-    // --- 实体上下文 ---
-    Actor target,            // 承受者 / 表现锚点宿主
-    Actor instigator,        // 发起者
-    Actor causer,            // 媒介 (如飞行中的子弹实例)
+    Actor target,       // 承受者 / 表现锚点宿主
+    Actor instigator,   // 发起者
+    Actor causer,       // 媒介 (如飞行中的子弹实例)
     
-    // --- 动态修饰上下文 ---
-    float magnitude,         // 强度数值 (用于决定爆炸缩放、叠层表现等)
-    IntList contextTags      // 逻辑管线的瞬态标签快照 (如 ["Damage.Element.Fire", "Combat.Result.Critical"])
-){}
+    IntList contextTags,// Event的瞬态标签快照 (如 ["Damage.Element.Fire"])
+    float magnitude,    // 强度数值 (用于决定爆炸缩放、叠层表现等)
+    CueParams parameters);
 
-enum CueEventType { 
-    Trigger;  // 瞬发指令：一波流释放，自动回收。
-    Attach;   // 挂载指令：创建并绑定到 bindingId，持久存在。
-    Detach;   // 卸载指令：精确销毁 bindingId 对应的资源。
-    Refresh;  // 刷新指令：更新 bindingId 对应的资源参数 (如叠层变强)。
+record UpdateCueEvent(
+    long bindingId, 
+    int cueId, 
+    float magnitude, 
+    CueParams parameters);
+
+record DetachCueEvent(
+    long bindingId, 
+    int cueId);
+
+class CueParams {
+    private int[] keys; // var_key
+    private float[] values;
+    private int size;
 }
 ```
 
-## 2. 集中式资产库
+表现层采用**异步单向广播**机制。逻辑层仅负责在关键生命周期节点派发事件，不干预具体的表现实现。
 
-这是标签驱动的基石。我们将所有同类表现资源打包成一个个“资产池”。引擎启动时读取此表，作为资源寻址的数据库。
+### 触发与装载 (CueEvent)
+表现意图的入口。根据 `bindingId` 划分为两种生命周期模式：
+* **瞬态模式 (`bindingId == 0`)**：即放即走（Fire-and-forget）。引擎层触发后立即执行，无需缓存句柄，由资产内部逻辑（如粒子时效、动画长度）自决销毁。
+* **持久模式 (`bindingId != 0`)**：有状态表现。引擎层需建立 `bindingId` 与表现实例的映射缓存，直至收到显式卸载指令。
 
-```cfg
-// VFX 专属资产池
-table vfx_metadata[asset] {
-    asset: str; 
-    description: text;
-    assets: list<VfxAsset> (block=1);
-}
+### 状态刷新 (UpdateCueEvent)
+**仅作用于持久模式表现**。当逻辑状态改变（如 Buff 叠层、数值衰减）但未终止时派发。
+* **核心契约**：引擎层通过 `bindingId` 检索活跃实例，调用其 `OnUpdate` 接口。
+* **应用场景**：驱动特效范围缩放、改变材质参数（如护盾透明度）或同步 UI 数值。
 
-struct VfxAsset {
-    assetPath: str; 
-    supportedTags: list<str> -> gameplaytag (pack); 
-    spatialRadius: float;  //空间剔除半径
-}
+### 逻辑卸载 (DetachCueEvent)
+**仅作用于持久模式表现**。当状态过期、宿主死亡或逻辑实体销毁时派发。
+* **核心契约**：**“逻辑终止”不等于“物理销毁”**。
+* **行为规范**：引擎层收到指令后，应立即解除 `bindingId` 映射，并通知资产进入退出阶段。资产应执行平滑过渡逻辑（如音效淡出、特效停止发射、材质渐变），待表现完全结束后自行销毁。
 
-// SFX 专属资产池
-table sfx_metadata[asset] {
-    asset: str; 
-    description: text;
-    assets: list<SfxAsset> (block=1);
-}
 
-struct SfxAsset {
-    assetPath: str; 
-    supportedTags: list<str> -> gameplaytag (pack); 
-    cooldownPeriod: float; // 时间防爆音冷却
-}
 
-// 材质专属资产池
-table mat_metadata[asset] {
-    asset: str; 
-    description: text;
-    assets: list<MatAsset> (block=1);
-}
 
-struct MatAsset {
-    assetPath: str; // 指向 Godot 的 .tres 文件
-    supportedTags: list<str> -> gameplaytag (pack); 
-    priority: int; // 该材质在材质栈中的优先级（如：霸体 > 冰冻 > 中毒）
-}
 
-// 飘字风格池
-table floating_text_style[styleId] {
-    styleId: str;
-    assetPath: str; // 资源实际路径
-    
-    // 聚合逻辑
-    hideIfBelowMagnitude: float; 
-    mergeMode: TextMergeMode;
-    mergeWindow: float; // 聚合时间窗口 (如 0.2s)
-}
-
-enum TextMergeMode {
-    None;    // 独立弹出：绝不合并 (适用于单发慢速武器、暴击)
-    Batch;   // 节奏批处理：在内存中偷偷累加，窗口期满后【生成 1 个】新飘字。
-             // -> 适用于：DOT、HOT、或者存在微小时间差的多发霰弹枪。
-    Rolling; // 滚动刷新：【立刻生成】飘字，后续伤害持续叠加并【刷新原有UI节点】的数值与存活时间。
-             // -> 适用于：激光束、喷火器、高频持续切割。
-    Highest; // 取最高值：窗口期内只显示最大的那个数字。
-}
-```
-
-## 3. Cue Schema (语义注册表)
+## cue注册表
 
 逻辑层派发的 `cue_key` 在此处被翻译为具体的“资源请求”。
 
@@ -112,9 +94,9 @@ table cue_registry[cueKey] (json) {
 }
 ```
 
-## 4. Cue Handlers (意图执行器)
+### CueHandler
 
-执行器明确划分瞬发与持续语义。**核心契约：瞬发型允许跨实体调度，持续型强制锚点归一（无 role 选择，仅作用于宿主自身）。**
+CueHandler 明确划分瞬发与持续语义。**核心契约：瞬发型允许跨实体调度，持续型强制锚点归一（无 role 选择，仅作用于宿主自身）。**
 
 ```cfg
 interface CueHandler {
@@ -127,7 +109,6 @@ interface CueHandler {
     }
 
     // 持续型：跟随 Status/SpawnObj 同生共死。
-    // 强制锚点归一：无 role 字段，所有表现仅挂载在接收该 CueEvent 的宿主 Actor 身上。
     struct Loop {
         vfx: list<LoopVfx>;
         sfx: list<LoopSfx>;
@@ -136,7 +117,6 @@ interface CueHandler {
 }
 
 // 瞬发型 (含 role，可跨实体)
-
 struct InstantVfx {
     role: CueRole;
     attach: VfxAttach;
@@ -146,11 +126,10 @@ struct InstantVfx {
 
 struct FloatingText {
     role: CueRole;
-    style: str ->floating_text_style;
+    asset: str ->floating_text_metadata;
 }
 
 // 持续型 Entry (无 role，必定挂载在宿主 Actor 身上)
-
 struct LoopVfx { 
     attach: VfxAttach; 
     socket: str;
@@ -169,61 +148,165 @@ struct MaterialOverride {
 enum VfxAttach { WorldStatic; FollowTarget; }
 enum CueRole { Target; Instigator; Causer; }
 ```
-针对 `cue-design.md` 的后续章节，我进行了重构与优化。本次优化重点在于**强化“资产解析算法”的权重逻辑**，并确保**生命周期管理**与逻辑层推导规则严丝合缝。
 
 ---
 
-## 5. 智能资产解析算法 (Intelligent Asset Matching)
+## 资产库
 
-表现层不通过 `if-else` 判断分支，而是利用标签空间进行**加权语义匹配**。当 `CueHandler` 请求一个资产池（如 `asset: "Vfx.Hit"`）时，底层执行以下逻辑：
+这是标签驱动的基石。我们将所有同类表现资源打包成一个个“资产池”。引擎启动时读取此表，作为资源寻址的数据库。
 
-### 匹配权重公式
-对于候选池中的每一个资产 $A$，其匹配得分 $S$ 计算如下：
+```cfg
+// 特效资产库
+table vfx_metadata[asset] {
+    asset: str; 
+    description: text;
+    concurrency: str -> cue_concurrency;
+    entries: list<VfxAsset> (block=1);
+}
+
+// 声效资产库
+table sfx_metadata[asset] {
+    asset: str; 
+    description: text;
+    concurrency: str -> cue_concurrency;
+    cooldown: float; // 时间防爆音冷却
+    entries: list<TagAsset> (block=1);
+}
+
+// 材质资产库
+table mat_metadata[asset] {
+    asset: str; 
+    description: text;
+    priority: int; // 该材质在材质栈中的优先级（如：霸体 > 冰冻 > 中毒）
+    entries: list<TagAsset> (block=1);
+}
+
+// 飘字资产库
+table floating_text_metadata[asset] {
+    asset: str;
+    description: text;
+    concurrency: str -> cue_concurrency;
+    hideIfBelowMagnitude: float; // 忽略机制
+    mergeMode: TextMergeMode;
+    mergeWindow: float; // 聚合时间窗口 (如 0.2s)
+    entries: list<TagAsset> (block=1);
+}
+
+struct VfxAsset {
+    assetPath: str; 
+    tags: list<str> -> gameplaytag (pack); 
+    cullDistance: float;  // 跟相机距离太大就剔除
+}
+
+struct TagAsset {
+    assetPath: str; 
+    tags: list<str> -> gameplaytag (pack); 
+}
+
+enum TextMergeMode {
+    None;    // 独立弹出：绝不合并 (适用于单发慢速武器、暴击)
+    // 节奏批处理：在内存中偷偷累加，窗口期满后【生成 1 个】新飘字。
+    Batch;   // -> 适用于：DOT、HOT、或者存在微小时间差的多发霰弹枪。
+    // 滚动刷新：【立刻生成】飘字，后续伤害持续叠加并【刷新原有UI节点】的数值与存活时间。
+    Rolling; // -> 适用于：激光束、喷火器、高频持续切割。
+    Highest; // 取最高值：窗口期内只显示最大的那个数字。
+}
+```
+
+### 并发组规则表
+
+```cfg
+// 并发组规则表
+table cue_concurrency[groupId] {
+    groupId: str;  // 例如："LightHits" (轻受击), "HeavyExplosions" (大爆炸), "Ambient" (环境)
+    maxCount: int; // 该通道的全局最大存活数量
+    resolveRule: ResolveRule; // 超出限制时的解决策略
+}
+
+enum ResolveRule {
+    StopOldest;  // 顶替最老的：杀掉该组中存活最久的实例，为新请求腾出空间 (适用于连续受击)
+    RejectNew;   // 拒绝新的：保留旧的，直接丢弃新请求 (适用于持续性范围光环)
+    StopLowest;  // 优先顶替 Magnitude 最低的实例
+}
+```
+
+### 总结
+
+1. **`vfx_metadata` (特效)**：拦数量 (Concurrency) + 拦空间 (Cull Distance)
+2. **`sfx_metadata` (音效)**：拦数量 (Concurrency) + 拦时间频次 (Cooldown)
+3. **`floating_text_metadata` (UI)**：拦数量 (Concurrency) + 清洗聚合 (Merge & Threshold)
+4. **`mat_metadata` (材质)**：仅靠优先级决断 (Priority Stack)，**不设并发拦截**，绝对忠实于状态语义。
+
+---
+
+## 资产解析算法
+
+表现系统的寻址是一个严密的**两阶段过程**：首先在树状拓扑中回退寻找可用的表现意图（CueHandler），随后在具体的资产池中基于标签进行打分决断。
+
+### 阶段一：意图层级回退
+
+参照`ability-design.md`里的`cue_key`
+
+```cfg
+table cue_key[cueKey] {
+    cueKey: str -> cue_registry (nullable);
+    cueId: int;
+    ancestors: list<int> -> cue_key[cueId]; // 按从父到祖父顺序排列
+    description: text;
+    [cueId]; 
+}
+```
+
+**解析路由规则**：当逻辑层派发一个 `cueKey` 时，底层执行以下上溯逻辑：
+1. **本级探查**：检查当前 `cueKey` 是否绑定了非空的 `cue_registry`。若有，则直接提取并阻断寻址。
+2. **祖先回退**：若自身 `cue_registry` 为空，则严格按照 `ancestors` 列表的顺序（由近及远：父级 -> 祖父级）逐层上溯。
+3. **命中提取**：返回第一个挂载了有效 `cue_registry` 的祖先节点，并提取其对应的 `CueHandler`。
+
+### 阶段二：资产加权匹配
+获取到 `CueHandler` 后，底层解析其内部引用的各个资产池（如 `Vfx.Hit`）。此时表现层不执行任何硬编码的 `if-else` 分支，而是利用当前事件的标签快照进行**加权语义匹配**。
+
+对于资产池中的每一个候选条目 $A$，其匹配得分 $S$ 计算如下：
 
 $$S = \text{Count}(\text{A.Tags} \cap \text{Event.Tags}) \times 100 + \text{Count}(\text{A.Tags} \cap \text{Target.Tags})$$
 
 * **优先匹配事件标签**：如 `Damage.Element.Fire`，这代表了本次动作的“本质”。
 * **其次匹配宿主状态**：如 `State.Debuff.Frozen`，这代表了表现的“环境”。
-* **排除法（硬拦截）**：若资产要求的某个标签在 `Event` 或 `Target` 中被显式标记为“排除”（取决于具体的 TagQuery 定义），该资产直接出局。
 
-### 寻址示例
-* **逻辑输入**：触发 `Hit.Physical` 效果，`ContextTags` 携带 `[Damage.Element.Fire]`。
-* **候选资产池 (`Vfx.Hit`)**：
-    1.  `vfx_default_spark` (无标签) -> **Score: 0** (兜底)
-    2.  `vfx_ice_shatter` (`[State.Debuff.Frozen]`) -> **Score: 0**
-    3.  `vfx_fire_explosion` (`[Damage.Element.Fire]`) -> **Score: 100** 🏆 **选中**
+### 寻址完整示例
+
+* **逻辑输入**：由于暴击，逻辑管线触发了 `Hit.Physical.Critical` 事件，`ContextTags` 携带了 `[Damage.Element.Fire]`。
+* **执行步骤**：
+    1. **层级回退**：查表发现 `Hit.Physical.Critical` 未单独配置注册表（`cue_registry` 为空）。
+    2. **向上上溯**：读取其 `ancestors`，定位到父节点 `Hit.Physical`。发现该父节点拥有有效的配置，成功获取其 `CueHandler`。
+    3. **请求资产**：`CueHandler` 请求播放 `Vfx.Hit` 资产池。
+    4. **加权打分**：在 `Vfx.Hit` 的候选列表中评估：
+        * `vfx_default_spark` (无标签) -> **Score: 0** (兜底候选)
+        * `vfx_ice_shatter` (`[State.Debuff.Frozen]`) -> **Score: 0**
+        * `vfx_fire_explosion` (`[Damage.Element.Fire]`) -> **Score: 100** 🏆 **最终选中**
+* **结果**：系统优雅地播放了一场带有火焰属性的通用物理受击表现，全程零硬编码。
 
 ---
 
-## 6. 生命周期管理：锚点归一原则
+## 生命周期管理
 
-表现层严格遵循**锚点归一（Anchor Normalization）**：**持续型表现的生命周期必须且仅能与其挂载的 Actor 绑定。** ### 引擎自动推导规则
-逻辑层无需关心表现指令。表现系统拦截底层管线动作，自动将其翻译为下表中的 `CueEvent`：
+**持续型表现的生命周期必须且仅能与其挂载的 Actor 绑定。** 
 
-| 逻辑动作 (Logic Source) | 推导事件 (`Type`) | 广播目标 (Anchor) | 唯一标识 (`BindingId`) |
+| Logic Source | 事件  | 广播目标 | BindingId |
 | :--- | :--- | :--- | :--- |
-| `Effect.FireCue` / `ResolveCombat.cuesOnExecute` | **`Trigger`** | `target` | `0` (即放即走) |
-| `Status` 首次挂载 | **`Attach`** | 宿主 Actor | `StatusInstance.uid` |
-| `Status` 层数变化 / 时长刷新 | **`Refresh`** | 宿主 Actor | `StatusInstance.uid` |
-| `Status` 移除 (过期/驱散/死亡) | **`Detach`** | 宿主 Actor | `StatusInstance.uid` |
-| `SpawnObj` (子弹/法阵) 诞生 | **`Attach`** | 实体自身 | `SpawnObj.uid` |
-| `SpawnObj` (子弹/法阵) 销毁 | **`Detach`** | 实体自身 | `SpawnObj.uid` |
+| `Effect.FireCue` / `ResolveCombat.cuesOnExecute` | CueEvent | `target` | `0` (即放即走) |
+| `Status` 首次挂载 | CueEvent | host | `StatusInstance.uid` |
+| `Status` 层数变化 / 时长刷新 | UpdateCueEvent | host | `StatusInstance.uid` |
+| `Status` 移除 (过期/驱散/死亡) | DetachCueEvent | host | `StatusInstance.uid` |
+| `SpawnObj` (子弹/法阵) 诞生 | CueEvent | self | `SpawnObj.uid` |
+| `SpawnObj` (子弹/法阵) 销毁 | DetachCueEvent | self | `SpawnObj.uid` |
 
-### 核心机制：CueComponent
-每个 Actor 挂载一个无状态的 `CueComponent`，其职责如下：
-1.  **字典寻址**：维护 `Map<BindingId, ActiveCueResources>`。
-2.  **刷新响应**：收到 `Refresh` 时，根据新的 `magnitude` 动态调整 VFX 缩放或材质参数。
-3.  **确定性清理**：当 `Detach` 信号到达或 Actor 销毁时，根据 `BindingId` 精准回收资源，**杜绝幽灵特效**。
 
 ---
 
-## 7. 高级表现特性
+## 实现
 
-### 材质栈管理 (Material Stack)
-对于 `MaterialOverride`，系统内部维护一个基于优先级的**材质栈**：
-* **入栈**：新状态（如“石化”）覆盖旧状态（如“中毒”）。
-* **优先级比较**：仅 `priority` 最高的材质渲染到模型。
-* **出栈**：当“石化”结束触发 `Detach`，材质栈弹出顶部元素，模型自动恢复为次高优先级的“中毒”效果或原始材质。
+### 材质优先级调度
+对于 `MaterialOverride`，针对每个 Actor 维护一个**活跃材质映射表**，利用 `bindingId` 实现无序的精准移除，并基于 `priority` 动态裁决最终渲染
 
 ### 飘字聚合策略 (Floating Text Batching)
 针对割草类游戏的高频伤害，表现层提供内置聚合：
@@ -232,7 +315,7 @@ $$S = \text{Count}(\text{A.Tags} \cap \text{Event.Tags}) \times 100 + \text{Coun
 
 ---
 
-## 8. LLM 配置指南 (Agent Instructions)
+## 配置指南
 
 > **核心原则**：你作为逻辑配置者，**严禁**硬编码资源路径，**严禁**直接操作表现生命周期。
 
@@ -240,5 +323,5 @@ $$S = \text{Count}(\text{A.Tags} \cap \text{Event.Tags}) \times 100 + \text{Coun
 2.  **意图对齐**：
     * 若是瞬发动作（如受击、爆炸），在 `Effect` 中调用 `FireCue`。
     * 若是持续状态（如 Buff、光环、材质变化），将 `cue_key` 填入 `Status` 的 `cuesWhileActive` 字段。
-3.  **强度映射**：利用 `magnitude` 传递关键数值（如暴击倍率、叠层数），表现层会自动根据此值调整视听强度。
+3.  **参数传递**：利用 `magnitude` 传递关键数值（如暴击倍率、叠层数），利用CueParams来传递其他参数，表现层会自动根据此值调整。
 
