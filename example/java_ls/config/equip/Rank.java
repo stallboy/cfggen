@@ -29,21 +29,21 @@ public enum Rank {
     }
 
     /**
-     * 稀有度
+    * 稀有度
      */
     public int getRankID() {
         return value;
     }
 
     /**
-     * 程序用名字
+    * 程序用名字
      */
     public String getRankName() {
         return name;
     }
 
     /**
-     * 显示名称
+    * 显示名称
      */
     public String getRankShowName() {
         return ref.getRankShowName();

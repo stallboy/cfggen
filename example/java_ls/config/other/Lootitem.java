@@ -21,35 +21,35 @@ public class Lootitem {
     }
 
     /**
-     * 掉落id
+    * 掉落id
      */
     public int getLootid() {
         return lootid;
     }
 
     /**
-     * 掉落物品
+    * 掉落物品
      */
     public int getItemid() {
         return itemid;
     }
 
     /**
-     * 掉落概率
+    * 掉落概率
      */
     public int getChance() {
         return chance;
     }
 
     /**
-     * 数量下限
+    * 数量下限
      */
     public int getCountmin() {
         return countmin;
     }
 
     /**
-     * 数量上限
+    * 数量上限
      */
     public int getCountmax() {
         return countmax;

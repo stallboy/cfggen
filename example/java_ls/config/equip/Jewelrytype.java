@@ -25,7 +25,7 @@ public enum Jewelrytype {
     }
 
     /**
-     * 程序用名字
+    * 程序用名字
      */
     public String getTypeName() {
         return value;

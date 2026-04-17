@@ -362,6 +362,6 @@ class TypeStr {
         if (desc.isEmpty()) {
             return "";
         }
-        return ", " + desc;
+        return ", " + desc.replace("\n", "---");
     }
 }

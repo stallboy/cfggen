@@ -1,6 +1,7 @@
 @import configgen.schema.*
 @import configgen.schema.FieldType.*
 @import configgen.gengd.StructModel
+@import configgen.util.StringUtil
 @param StructModel model
 !{InterfaceSchema nullableInterface = model.structural instanceof StructSchema struct ? struct.nullableInterface() : null;}
 !{boolean isImpl = nullableInterface != null;}
@@ -12,12 +13,14 @@ class_name ${model.name.className}
 
 ## ${model.structural.name()}
 @if(!model.structural.comment().isEmpty())
-	## ${model.structural.comment()}
+	@for(String line : model.structural.comment().split("\n"))
+		## ${line}
+	@endfor
 @endif
 
 # 公开属性
 @for(FieldSchema field : model.structural.fields())
-	var ${model.fieldName(field)}: ${model.type(field.type())}@if(!field.comment().isEmpty())  # ${field.comment()}@endif
+	var ${model.fieldName(field)}: ${model.type(field.type())}@if(!field.comment().isEmpty())  # ${StringUtil.removeLineSep(field.comment())}@endif
 @endfor
 
 @if(!model.structural.foreignKeys().isEmpty())
@@ -130,7 +133,7 @@ static func _create(stream: ConfigStream) -> ${model.name.className}:
 
 
 @if(configgen.schema.HasRef.hasRef(model.structural))
-	
+
 	# 解析外键引用
 	func _resolve(errors: ConfigErrors):
 		@for(FieldSchema field : model.structural.fields())

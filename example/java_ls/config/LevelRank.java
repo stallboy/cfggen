@@ -21,14 +21,14 @@ public class LevelRank {
     }
 
     /**
-     * 等级
+    * 等级
      */
     public int getLevel() {
         return level;
     }
 
     /**
-     * 品质
+    * 品质
      */
     public int getRank() {
         return rank;

@@ -300,6 +300,7 @@ public class ConfigCodeSchema {
     static Schema other_ArgCaptureMode_Detail() {
         SchemaBean s2 = new SchemaBean(true);
         s2.addColumn("name", SchemaPrimitive.SStr);
+        s2.addColumn("id", SchemaPrimitive.SInt);
         s2.addColumn("comment", SchemaPrimitive.SStr);
         return s2;
     }

@@ -35,14 +35,14 @@ public class Task {
     }
 
     /**
-     * 任务完成条件类型（id的范围为1-100）
+    * 任务完成条件类型（id的范围为1-100）
      */
     public int getTaskid() {
         return taskid;
     }
 
     /**
-     * 程序用名字
+    * 程序用名字
      */
     public java.util.List<config.Text> getName() {
         return name;
@@ -61,7 +61,7 @@ public class Task {
     }
 
     /**
-     * 测试
+    * 测试
      */
     public config.task.TestDefaultBean getTestDefaultBean() {
         return testDefaultBean;

@@ -7,6 +7,8 @@
 @import configgen.value.CfgValue
 @import java.util.ArrayList
 @import java.util.List
+@import static configgen.util.StringUtil.upper1
+@import static configgen.util.StringUtil.lower1
 @param StructModel model
 !{
     Structural structural = model.structural;
@@ -25,21 +27,21 @@ type ${className} struct {
     <%--field property--%>
     @for (FieldSchema fieldSchema : structural.fields())
         !{String comment = fieldSchema.comment();}
-        ${model.lower1(fieldSchema.name())} ${model.type(fieldSchema.type())}${comment != null && !comment.isEmpty() ? " //" + comment : ""}
+        ${lower1(fieldSchema.name())} ${model.type(fieldSchema.type())}${comment != null && !comment.isEmpty() ? " //" + StringUtil.removeLineSep(comment) : ""}
     @endfor
     <%--ref property--%>
     @for (ForeignKeySchema fk : structural.foreignKeys())
-        ${model.lower1(model.refName(fk))} ${model.refType(fk)}
+        ${lower1(StructModel.refName(fk))} ${StructModel.refType(fk)}
     @endfor
 }
 
 <%--create instance--%>
-!{String streamIf = structural.fields().size() > 0 ? "stream" : "_";}
+!{String streamIf = structural.fields().isEmpty() ? "_" : "stream";}
 func create${className}(${streamIf} *Stream) *${className} {
     v := &${className}{}
     @for (FieldSchema fieldSchema : structural.fields())
         !{var t = fieldSchema.type();}
-        !{var n = model.lower1(fieldSchema.name());}
+        !{var n = lower1(fieldSchema.name());}
         @if (t instanceof StructRef structRef)
             v.${n} = create${model.ClassName(structRef.obj())}(stream)
         @elseif(t instanceof FList (SimpleType item))
@@ -68,7 +70,7 @@ func (t *${className}) String() string {
     @if (fields.isEmpty())
     return "${className}{}"
     @else
-    return fmt.Sprintf("${className}{${fields.stream().map(f -> model.lower1(f.name()) + "=%v").collect(java.util.stream.Collectors.joining(", "))}}", ${fields.stream().map(f -> StructModel.toStringField(f)).collect(java.util.stream.Collectors.joining(", "))})
+    return fmt.Sprintf("${className}{${fields.stream().map(f -> lower1(f.name()) + "=%v").collect(java.util.stream.Collectors.joining(", "))}}", ${fields.stream().map(f -> StructModel.toStringField(f)).collect(java.util.stream.Collectors.joining(", "))})
     @endif
 }
 
@@ -77,7 +79,7 @@ func (t *${className}) String() string {
 //entries
 var (
     @for (String e : vTable.enumNames())
-    ${model.lower1(e)} ${name.className}
+    ${lower1(e)} ${name.className}
     @endfor
 )
 
@@ -86,8 +88,8 @@ var (
 @if (!structural.fields().isEmpty())
     //getters
     @for (FieldSchema fieldSchema : structural.fields())
-    func (t *${name.className}) ${model.upper1(fieldSchema.name())}() ${model.type(fieldSchema.type())} {
-        return t.${model.lower1(fieldSchema.name())}
+    func (t *${name.className}) ${upper1(fieldSchema.name())}() ${model.type(fieldSchema.type())} {
+        return t.${lower1(fieldSchema.name())}
     }
 
     @endfor
@@ -106,7 +108,7 @@ var (
     @for(ForeignKeySchema fk : structural.foreignKeys())
         !{
             var RefName = model.refName(fk);
-            var refName = model.lower1(RefName);
+            var refName = lower1(RefName);
             var refType = model.refType(fk);
             GoName refTbName = new GoName(fk.refTableSchema());
             var refTableClassName = refTbName.className;
@@ -121,7 +123,7 @@ var (
                     getFuncName = model.GetFuncName(fk.key(), true);
                 }
             } else if (refKey instanceof RefKey.RefList) {
-                getFuncName = "GetAllBy" + StringUtil.upper1(fk.key().fieldSchemas().getFirst().name());
+                getFuncName = "GetAllBy" + upper1(fk.key().fieldSchemas().getFirst().name());
             }
         }
         @if (getFuncName != null)
@@ -130,12 +132,12 @@ var (
                     @if (keyFieldCount > 1)
                     !{
                         var paramVarsInT = keyFields.stream()
-                            .map(f -> "t." + model.lower1(f.name()))
+                            .map(f -> "t." + lower1(f.name()))
                             .collect(java.util.stream.Collectors.joining(", "));
                     }
                     t.${refName} = Get${refTableClassName}Mgr().${getFuncName}(${paramVarsInT})
                     @else
-                    !{var varName = model.lower1(fk.key().fieldSchemas().getFirst().name());}
+                    !{var varName = lower1(fk.key().fieldSchemas().getFirst().name());}
                     t.${refName} = Get${refTableClassName}Mgr().${getFuncName}(t.${varName})
                     @endif
                 }
@@ -150,8 +152,8 @@ var (
     @if(vTable.schema().entry() instanceof EntryType.EntryBase)
         !{var tableName = new GoName(vTable.schema());}
         @for (String e : vTable.enumNames())
-        func (t *${tableName.className}Mgr) Get${model.upper1(e)}() *${tableName.className} {
-        	return &${model.lower1(e)}
+        func (t *${tableName.className}Mgr) Get${upper1(e)}() *${tableName.className} {
+        	return &${lower1(e)}
         }
 
         @endfor
@@ -165,7 +167,7 @@ var (
         @if (keySchema.fieldSchemas().size() > 1)
             type ${model.keyClassName(keySchema)} struct {
                 @for (FieldSchema field : keySchema.fieldSchemas())
-                    ${model.lower1(field.name())} ${model.type(field.type())}
+                    ${lower1(field.name())} ${model.type(field.type())}
                 @endfor
             }
 
@@ -215,7 +217,7 @@ var (
         @for(FieldSchema fieldSchema : table.primaryKey().fieldSchemas())
             !{
                 var mapName =fieldSchema.name();
-                var codeGetByFuncName = "GetAllBy" + model.upper1(fieldSchema.name());
+                var codeGetByFuncName = "GetAllBy" + upper1(fieldSchema.name());
                 var IdType= model.type(fieldSchema.type());
             }
             func (t *${className}Mgr) ${codeGetByFuncName}(${mapName} ${IdType}) []*${className} {
@@ -266,9 +268,9 @@ var (
                     default -> null; // Default case, use a generic name
                 };
             }
-            switch v.${StringUtil.lower1(entryVarName)} {
+            switch v.${lower1(entryVarName)} {
             @for (String enumName : vTable.enumNames())
-            case "${StringUtil.upper1(enumName)}":
+            case "${upper1(enumName)}":
                 ${StringUtil.lower1(enumName)} = *v
             @endfor
             }

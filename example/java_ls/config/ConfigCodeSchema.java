@@ -28,6 +28,8 @@ public class ConfigCodeSchema {
         schema.addImp("equip.jewelrytype", equip_jewelrytype());
         schema.addImp("equip.rank", equip_rank());
         schema.addImp("equip.rank_Detail", equip_rank_Detail());
+        schema.addImp("other.ArgCaptureMode", other_ArgCaptureMode());
+        schema.addImp("other.ArgCaptureMode_Detail", other_ArgCaptureMode_Detail());
         schema.addImp("other.drop", other_drop());
         schema.addImp("other.keytest", other_keytest());
         schema.addImp("other.loot", other_loot());
@@ -297,6 +299,21 @@ public class ConfigCodeSchema {
         return s2;
     }
 
+    static Schema other_ArgCaptureMode() {
+        SchemaEnum s2 = new SchemaEnum(false, false);
+        s2.addValue("Snapshot");
+        s2.addValue("Dynamic");
+        return s2;
+    }
+
+    static Schema other_ArgCaptureMode_Detail() {
+        SchemaBean s2 = new SchemaBean(true);
+        s2.addColumn("name", SchemaPrimitive.SStr);
+        s2.addColumn("id", SchemaPrimitive.SInt);
+        s2.addColumn("comment", SchemaPrimitive.SStr);
+        return s2;
+    }
+
     static Schema other_drop() {
         SchemaBean s2 = new SchemaBean(true);
         s2.addColumn("dropid", SchemaPrimitive.SInt);
@@ -312,6 +329,8 @@ public class ConfigCodeSchema {
         s2.addColumn("id2", SchemaPrimitive.SLong);
         s2.addColumn("id3", SchemaPrimitive.SInt);
         s2.addColumn("ids", new SchemaList(SchemaPrimitive.SInt));
+        s2.addColumn("enumTest", SchemaPrimitive.SStr);
+        s2.addColumn("enumList", new SchemaList(SchemaPrimitive.SStr));
         return s2;
     }
 
@@ -340,6 +359,8 @@ public class ConfigCodeSchema {
         s2.addColumn("posList", new SchemaList(new SchemaRef("Position")));
         s2.addColumn("lootId", SchemaPrimitive.SInt);
         s2.addColumn("lootItemId", SchemaPrimitive.SInt);
+        s2.addColumn("enumMap1", new SchemaMap(SchemaPrimitive.SStr, SchemaPrimitive.SInt));
+        s2.addColumn("enumMap2", new SchemaMap(SchemaPrimitive.SInt, SchemaPrimitive.SStr));
         return s2;
     }
 

@@ -6,7 +6,9 @@ class_name ${model.name.className}
 
 ## ${model.sInterface.name()}
 @if(!model.sInterface.comment().isEmpty())
-## ${model.sInterface.comment()}
+	@for(String line : model.sInterface.comment().split("\n"))
+		## ${line}
+	@endfor
 @endif
 
 @if(model.sInterface.nullableEnumRefTable() != null)

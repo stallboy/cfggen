@@ -45,28 +45,28 @@ public class Ai_condition {
     }
 
     /**
-     * 描述
+    * 描述
      */
     public String getDesc() {
         return desc;
     }
 
     /**
-     * 公式
+    * 公式
      */
     public int getFormulaID() {
         return formulaID;
     }
 
     /**
-     * 参数(int)1
+    * 参数(int)1
      */
     public java.util.List<Integer> getArgIList() {
         return argIList;
     }
 
     /**
-     * 参数(string)1
+    * 参数(string)1
      */
     public java.util.List<Integer> getArgSList() {
         return argSList;

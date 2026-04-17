@@ -1,6 +1,7 @@
 @import configgen.schema.*
 @import configgen.schema.FieldType.*
 @import configgen.gencs.StructModel
+@import configgen.util.StringUtil
 @param StructModel model
 @if(!model.topPkg.equals("Config"))
 using Config;
@@ -51,7 +52,7 @@ namespace ${model.name.pkg};
 
     <%--field property--%>
     @for(FieldSchema field : model.structural.fields())
-        public required ${model.type(field.type())} ${model.upper1(field.name())} { get; init; }@if(!field.comment().isEmpty()) /* ${field.comment()} */@endif
+        public required ${model.type(field.type())} ${model.upper1(field.name())} { get; init; }@if(!field.comment().isEmpty()) /* ${StringUtil.removeLineSep(field.comment())} */@endif
     @endfor
     @if(isEnum)
         public required ${className} eEnum { get; init; }

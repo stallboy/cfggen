@@ -95,24 +95,16 @@ public class StructModel {
     public static String refName(ForeignKeySchema fk) {
         switch (fk.refKey()) {
             case RefKey.RefList ignored -> {
-                return "ListRef" + upper1(fk.name());
+                return "ListRef" + StringUtil.upper1(fk.name());
             }
             case RefKey.RefSimple refSimple -> {
                 if (refSimple.nullable()) {
-                    return "NullableRef" + upper1(fk.name());
+                    return "NullableRef" + StringUtil.upper1(fk.name());
                 } else {
-                    return "Ref" + upper1(fk.name());
+                    return "Ref" + StringUtil.upper1(fk.name());
                 }
             }
         }
-    }
-
-    public static String upper1(String value) {
-        return StringUtil.upper1(value);
-    }
-
-    public static String lower1(String value) {
-        return StringUtil.lower1(value);
     }
 
     public static String keyClassName(KeySchema keySchema) {
@@ -161,7 +153,7 @@ public class StructModel {
 
     // 生成字段在 String() 方法中的打印格式
     public static String toStringField(FieldSchema f) {
-        String fieldName = lower1(f.name());
+        String fieldName = StringUtil.lower1(f.name());
         FieldType t = f.type();
         if (t instanceof FList) {
             return String.format("fmt.Sprintf(\"%%v\", t.%s)", fieldName);

@@ -31,7 +31,7 @@ public class Loot {
     }
 
     /**
-     * 序号
+    * 序号
      */
     public int getLootid() {
         return lootid;
@@ -42,14 +42,14 @@ public class Loot {
     }
 
     /**
-     * 名字
+    * 名字
      */
     public config.Text getName() {
         return name;
     }
 
     /**
-     * 掉落0件物品的概率
+    * 掉落0件物品的概率
      */
     public java.util.List<Integer> getChanceList() {
         return chanceList;

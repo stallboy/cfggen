@@ -3,7 +3,7 @@ package config.other;
 public class ArgCaptureMode_Detail {
     private String name;
     private int id;
-    private String comment;
+    private config.Text comment;
 
     private ArgCaptureMode_Detail() {
     }
@@ -12,7 +12,7 @@ public class ArgCaptureMode_Detail {
         ArgCaptureMode_Detail self = new ArgCaptureMode_Detail();
         self.name = input.readStringInPool();
         self.id = input.readInt();
-        self.comment = input.readTextInPool();
+        self.comment = config.Text._create(input);
         return self;
     }
 
@@ -24,7 +24,7 @@ public class ArgCaptureMode_Detail {
         return id;
     }
 
-    public String getComment() {
+    public config.Text getComment() {
         return comment;
     }
 

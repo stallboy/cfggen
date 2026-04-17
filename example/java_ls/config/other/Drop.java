@@ -39,28 +39,28 @@ public class Drop {
     }
 
     /**
-     * 序号
+    * 序号
      */
     public int getDropid() {
         return dropid;
     }
 
     /**
-     * 名字
+    * 名字
      */
     public config.Text getName() {
         return name;
     }
 
     /**
-     * 掉落概率
+    * 掉落概率
      */
     public java.util.List<config.other.DropItem> getItems() {
         return items;
     }
 
     /**
-     * 测试map block
+    * 测试map block
      */
     public java.util.Map<Integer, Integer> getTestmap() {
         return testmap;

@@ -39,28 +39,28 @@ public class Jewelryrandom {
     }
 
     /**
-     * 等级
+    * 等级
      */
     public config.LevelRank getLvlRank() {
         return lvlRank;
     }
 
     /**
-     * 最小攻击力
+    * 最小攻击力
      */
     public config.Range getAttackRange() {
         return attackRange;
     }
 
     /**
-     * 最小防御力
+    * 最小防御力
      */
     public java.util.List<config.Range> getOtherRange() {
         return otherRange;
     }
 
     /**
-     * 测试pack
+    * 测试pack
      */
     public java.util.List<config.equip.TestPackBean> getTestPack() {
         return testPack;

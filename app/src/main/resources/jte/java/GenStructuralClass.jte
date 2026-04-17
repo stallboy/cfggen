@@ -95,7 +95,7 @@ package ${model.pkg};
     @for(FieldInfo field : model.fields)
         @if(!field.comment().isEmpty())
         /**
-         * ${field.comment()}
+        @for(String line : field.comment().split("\n")) * ${line}@endfor
          */
         @endif
         public ${field.type()} get${StringUtil.upper1(field.name())}() {

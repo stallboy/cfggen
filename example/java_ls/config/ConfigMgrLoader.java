@@ -28,7 +28,7 @@ public class ConfigMgrLoader {
 
         // 3. 读取表数据
         int c = input.readInt();
-        if (c < 17) {
+        if (c < 18) {
             throw new IllegalArgumentException();
         }
 
@@ -51,6 +51,7 @@ public class ConfigMgrLoader {
         config.equip.Equipconfig_Entry.setAllRefs(mgr);
         config.equip.Jewelrysuit_Entry.setAllRefs(mgr);
         config.equip.Rank.setAllRefs(mgr);
+        config.other.ArgCaptureMode.setAllRefs(mgr);
 
         return mgr;
     }
@@ -65,6 +66,7 @@ public class ConfigMgrLoader {
         allConfigLoaders.put("equip.jewelryrandom", new config.equip.Jewelryrandom._ConfigLoader());
         allConfigLoaders.put("equip.jewelrysuit", new config.equip.Jewelrysuit._ConfigLoader());
         allConfigLoaders.put("equip.rank", new config.equip.Rank_Detail._ConfigLoader());
+        allConfigLoaders.put("other.ArgCaptureMode", new config.other.ArgCaptureMode_Detail._ConfigLoader());
         allConfigLoaders.put("other.drop", new config.other.Drop._ConfigLoader());
         allConfigLoaders.put("other.keytest", new config.other.Keytest._ConfigLoader());
         allConfigLoaders.put("other.loot", new config.other.Loot._ConfigLoader());

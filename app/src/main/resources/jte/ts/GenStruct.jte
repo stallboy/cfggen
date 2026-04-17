@@ -1,6 +1,7 @@
 @import configgen.schema.*
 @import configgen.schema.FieldType.*
 @import configgen.gents.StructModel
+@import configgen.util.StringUtil
 @param StructModel model
 !{String className = model.className(model.structural);}
 !{InterfaceSchema nullableInterface = model.structural instanceof StructSchema struct ? struct.nullableInterface() : null;}
@@ -33,7 +34,7 @@
         !{String n = field.name();}
         private _${n}!: ${t};
         @if(!field.comment().isEmpty())
-            /* ${field.comment()} */
+            /* ${StringUtil.removeLineSep(field.comment())} */
         @endif
         get ${model.upper1(n)}(): ${t} { return this._${n}; }
     @endfor

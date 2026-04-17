@@ -17,21 +17,21 @@ public class Rank_Detail {
     }
 
     /**
-     * 稀有度
+    * 稀有度
      */
     public int getRankID() {
         return rankID;
     }
 
     /**
-     * 程序用名字
+    * 程序用名字
      */
     public String getRankName() {
         return rankName;
     }
 
     /**
-     * 显示名称
+    * 显示名称
      */
     public String getRankShowName() {
         return rankShowName;

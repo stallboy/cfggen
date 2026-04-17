@@ -63,6 +63,10 @@ public class ConfigMgr {
 
     public config.other.ArgCaptureMode_Detail getOtherArgCaptureMode(String name) { return other_ArgCaptureMode_All.get(name); }
 
+    public final java.util.Map<Integer, config.other.ArgCaptureMode_Detail> other_ArgCaptureMode_IdMap = new java.util.LinkedHashMap<>();
+
+    public config.other.ArgCaptureMode_Detail getOtherArgCaptureModeById(int id) { return other_ArgCaptureMode_IdMap.get(id); }
+
     public java.util.Collection<config.other.ArgCaptureMode_Detail> allOtherArgCaptureMode() { return other_ArgCaptureMode_All.values(); }
 
     public final java.util.Map<Integer, config.other.Drop> other_drop_All = new java.util.LinkedHashMap<>();

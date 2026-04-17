@@ -75,7 +75,7 @@ public class Task2 {
     }
 
     /**
-     * 任务完成条件类型（id的范围为1-100）
+    * 任务完成条件类型（id的范围为1-100）
      */
     public int getTaskid() {
         return taskid;

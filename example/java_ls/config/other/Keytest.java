@@ -5,7 +5,11 @@ public class Keytest {
     private long id2;
     private int id3;
     private java.util.List<Integer> ids;
+    private String enumTest;
+    private java.util.List<String> enumList;
     private java.util.List<config.other.Signin> RefIds;
+    private config.other.ArgCaptureMode RefEnumTest;
+    private java.util.List<config.other.ArgCaptureMode> RefEnumList;
 
     private Keytest() {
     }
@@ -23,6 +27,18 @@ public class Keytest {
                 self.ids = new java.util.ArrayList<>(c);
                 for (; c > 0; c--) {
                     self.ids.add(input.readInt());
+                }
+            }
+        }
+        self.enumTest = input.readStringInPool();
+        {
+            int c = input.readInt();
+            if (c == 0) {
+                self.enumList = java.util.Collections.emptyList();
+            } else {
+                self.enumList = new java.util.ArrayList<>(c);
+                for (; c > 0; c--) {
+                    self.enumList.add(input.readStringInPool());
                 }
             }
         }
@@ -45,13 +61,29 @@ public class Keytest {
         return ids;
     }
 
+    public String getEnumTest() {
+        return enumTest;
+    }
+
+    public java.util.List<String> getEnumList() {
+        return enumList;
+    }
+
     public java.util.List<config.other.Signin> refIds() {
         return RefIds;
     }
 
+    public config.other.ArgCaptureMode refEnumTest() {
+        return RefEnumTest;
+    }
+
+    public java.util.List<config.other.ArgCaptureMode> refEnumList() {
+        return RefEnumList;
+    }
+
     @Override
     public String toString() {
-        return "(" + id1 + "," + id2 + "," + id3 + "," + ids + ")";
+        return "(" + id1 + "," + id2 + "," + id3 + "," + ids + "," + enumTest + "," + enumList + ")";
     }
 
     public void _resolveDirect(config.ConfigMgr mgr) {
@@ -63,6 +95,18 @@ public class Keytest {
                 config.other.Signin r = mgr.other_signin_All.get(e);
                 java.util.Objects.requireNonNull(r);
                 RefIds.add(r);
+            }
+        }
+        RefEnumTest = config.other.ArgCaptureMode.get(enumTest);
+        java.util.Objects.requireNonNull(RefEnumTest);
+        if (enumList.isEmpty()) {
+            RefEnumList = java.util.Collections.emptyList();
+        } else {
+            RefEnumList = new java.util.ArrayList<>(enumList.size());
+            for (String e : enumList) {
+                config.other.ArgCaptureMode r = config.other.ArgCaptureMode.get(e);
+                java.util.Objects.requireNonNull(r);
+                RefEnumList.add(r);
             }
         }
     }

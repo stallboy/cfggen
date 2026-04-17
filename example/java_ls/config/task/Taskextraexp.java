@@ -25,14 +25,14 @@ public class Taskextraexp {
     }
 
     /**
-     * 任务完成条件类型（id的范围为1-100）
+    * 任务完成条件类型（id的范围为1-100）
      */
     public int getTaskid() {
         return taskid;
     }
 
     /**
-     * 额外奖励经验
+    * 额外奖励经验
      */
     public int getExtraexp() {
         return extraexp;

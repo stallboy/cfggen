@@ -95,7 +95,7 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
         @for(FieldSchema field : model.table.fields())
             @if(!field.comment().isEmpty())
                 /**
-                 * ${field.comment()}
+                @for(String line : field.comment().split("\n")) * ${line}@endfor
                  */
             @endif
             public ${TypeStr.type(field.type())} get${StringUtil.upper1(field.name())}() {
