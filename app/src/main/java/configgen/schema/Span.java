@@ -72,7 +72,7 @@ public class Span {
                 if (fmt != AUTO) {
                     errs.addErr(new PrimitiveFieldFmtMustBeAuto(ctx,
                             field.name(),
-                            CfgWriter.typeStr(field.type()),
+                            CfgWriter.typeStr(field),
                             CfgWriter.fmtStr(field.fmt())));
                 }
             }
@@ -80,7 +80,7 @@ public class Span {
                 if (!(fmt instanceof FieldFormat.AutoOrPack)) {
                     errs.addErr(new StructFieldFmtMustBeAutoOrPack(ctx,
                             field.name(),
-                            CfgWriter.typeStr(field.type()),
+                            CfgWriter.typeStr(field),
                             CfgWriter.fmtStr(field.fmt())));
                 }
             }
@@ -88,7 +88,7 @@ public class Span {
                 if (fmt == AUTO) {
                     errs.addErr(new ListFieldFmtMustBePackOrSepOrFixOrBlock(ctx,
                             field.name(),
-                            CfgWriter.typeStr(field.type()),
+                            CfgWriter.typeStr(field),
                             CfgWriter.fmtStr(field.fmt())));
                 }
                 if (fmt instanceof FieldFormat.Sep(char sep) && flist.item() instanceof StructRef structRef) {
@@ -102,7 +102,7 @@ public class Span {
                 if (fmt == AUTO || fmt instanceof FieldFormat.Sep) {
                     errs.addErr(new MapFieldFmtMustBePackOrFixOrBlock(ctx,
                             field.name(),
-                            CfgWriter.typeStr(field.type()),
+                            CfgWriter.typeStr(field),
                             CfgWriter.fmtStr(field.fmt())));
                 }
             }

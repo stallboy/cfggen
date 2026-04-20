@@ -12,8 +12,14 @@ public final class CommentUtils {
      * 封装注释的三部分数据
      */
     public record CommentData(@NotNull String leading,
-            @NotNull String trailing,
-            String suffix) {
+                              @NotNull String trailing,
+                              String suffix) {
+
+        public CommentData {
+            if (trailing.contains("\n")) { // 不会发生，这里以防万一
+                trailing = trailing.replace("\n", "LF");
+            }
+        }
 
         public static final String DELIMITER1 = ">>>";
         public static final String DELIMITER2 = "<<<";
@@ -28,6 +34,9 @@ public final class CommentUtils {
                 res = trailing;
             } else if (trailing.isBlank()) {
                 res = leading;
+                if (!res.contains("\n")) { // 加一个\n来让decode区分出它是leading
+                    res += "\n";
+                }
             } else {
                 res = leading + DELIMITER1 + trailing;
             }
@@ -89,6 +98,12 @@ public final class CommentUtils {
             // 这里是猜测：包含\n就是leading，不包含就是trailing
             if (mainPart.contains("\n")) {
                 leading = mainPart;
+                if (leading.endsWith("\n")) {
+                    String maybeLeading = leading.substring(0, leading.length() - 1);
+                    if (!maybeLeading.contains("\n")) {
+                        leading = maybeLeading;
+                    }
+                }
                 trailing = "";
             } else {
                 leading = "";
@@ -100,8 +115,8 @@ public final class CommentUtils {
     }
 
     public static @NotNull String readFull3(List<CfgParser.Leading_commentContext> leadingContexts,
-            TerminalNode trailingNode,
-            List<CfgParser.Suffix_commentContext> suffixContexts) {
+                                            TerminalNode trailingNode,
+                                            List<CfgParser.Suffix_commentContext> suffixContexts) {
         String leading = readLeadingComment(leadingContexts);
         String trailing = readTrailingComment(trailingNode);
         String suffix = readSuffixComment(suffixContexts);
@@ -109,7 +124,7 @@ public final class CommentUtils {
     }
 
     public static @NotNull String readFull2(List<CfgParser.Leading_commentContext> leadingContexts,
-            TerminalNode trailingNode) {
+                                            TerminalNode trailingNode) {
         String leading = readLeadingComment(leadingContexts);
         String trailing = readTrailingComment(trailingNode);
         return new CommentData(leading, trailing, null).encode();

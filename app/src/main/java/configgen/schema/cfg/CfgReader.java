@@ -94,7 +94,7 @@ public enum CfgReader {
 
         EntryType entry = meta.removeEntry();
         boolean isColumnMode = meta.removeColumnMode();
-        FieldsAndForeigns ff = read_fields_foreigns(ctx.field_decl(), ctx.foreign_decl());
+        StructSpec ff = read_struct_spec(ctx.field_decl(), ctx.foreign_decl());
 
         List<Key_declContext> kds = ctx.key_decl();
         List<KeySchema> uniqueKeys = new ArrayList<>(kds.size());
@@ -227,7 +227,7 @@ public enum CfgReader {
         }
 
         FieldFormat fmt = meta.removeFmt();
-        FieldsAndForeigns ff = read_fields_foreigns(ctx.field_decl(), ctx.foreign_decl());
+        StructSpec ff = read_struct_spec(ctx.field_decl(), ctx.foreign_decl());
         return new StructSchema(pkgNameDot + name, fmt, meta, ff.fieldSchemas(), ff.foreignKeySchemas());
     }
 
@@ -285,12 +285,12 @@ public enum CfgReader {
         };
     }
 
-    private record FieldsAndForeigns(List<FieldSchema> fieldSchemas,
-                                     List<ForeignKeySchema> foreignKeySchemas) {
+    private record StructSpec(List<FieldSchema> fieldSchemas,
+                              List<ForeignKeySchema> foreignKeySchemas) {
     }
 
-    private FieldsAndForeigns read_fields_foreigns(List<Field_declContext> fieldDeclContexts,
-                                                   List<Foreign_declContext> foreignDeclContexts) {
+    private StructSpec read_struct_spec(List<Field_declContext> fieldDeclContexts,
+                                        List<Foreign_declContext> foreignDeclContexts) {
         List<FieldSchema> fieldSchemas = new ArrayList<>(fieldDeclContexts.size());
         List<ForeignKeySchema> foreignKeySchemas = new ArrayList<>(foreignDeclContexts.size());
         for (Field_declContext ctx : fieldDeclContexts) {
@@ -335,7 +335,7 @@ public enum CfgReader {
             foreignKeySchemas.add(foreignKeySchema);
         }
 
-        return new FieldsAndForeigns(fieldSchemas, foreignKeySchemas);
+        return new StructSpec(fieldSchemas, foreignKeySchemas);
     }
 
     private FieldType read_type(Type_Context ctx) {
@@ -355,7 +355,7 @@ public enum CfgReader {
             String text = tBase.getText().toUpperCase();
             if (text.equals("STR"))
                 return Primitive.STRING;
-            return Primitive.valueOf(text.toUpperCase());
+            return Primitive.valueOf(text);
         } else {
             return new StructRef(read_ns_ident(ctx.ns_ident()));
         }

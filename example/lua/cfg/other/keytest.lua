@@ -26,8 +26,8 @@ local mk = cfg._mk.table(this, { { 'all', 'get', 1, 2 }, { 'Id1Id3Map', 'getById
     'id2', -- long
     'id3', -- int
     'ids', -- list<int>
-    'enumTest', -- str
-    'enumList' -- list<str>
+    'enumTest', -- ArgCaptureMode
+    'enumList' -- list<ArgCaptureMode>
     )
 
 local E = cfg._mk.E

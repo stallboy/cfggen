@@ -204,7 +204,7 @@ public final class CfgSchemaResolver {
                     }
                     case FMap(SimpleType key, SimpleType value) -> {
                         // map key 中的 enum：只转换类型，不创建外键
-                        SimpleType resolvedKey = resolveSimpleTypeInContainer(key, field);
+                        SimpleType resolvedKey = resolveSimpleTypeForMapKey(key, field);
                         // map value 中的 enum：转换为 STRING + 创建外键
                         SimpleType resolvedValue = resolveSimpleType(value, field, structural);
                         if (resolvedKey != key || resolvedValue != value) {
@@ -230,12 +230,13 @@ public final class CfgSchemaResolver {
      * 解析容器中的 SimpleType，处理 enum 类型转换（不创建外键）
      * @return 解析后的 SimpleType（如果是 enum 则返回 STRING，否则返回原类型或设置了 obj 的 StructRef）
      */
-    private SimpleType resolveSimpleTypeInContainer(SimpleType simpleType, FieldSchema field) {
+    private SimpleType resolveSimpleTypeForMapKey(SimpleType simpleType, FieldSchema field) {
         if (simpleType instanceof StructRef structRef) {
             // 首先检查是否是 enum table 引用
             TableSchema enumTable = findTableInLocalThenGlobal(structRef.name());
             if (enumTable != null && enumTable.meta().hasEnumValues()) {
                 // enum 字段在容器中：只转换为 STRING，不创建外键
+                errs.addWarn(new MapKeyNotSupportEnumType(ctx(), field.name(), structRef.name()));
                 return STRING;
             } else {
                 // 普通 struct 引用
@@ -261,17 +262,21 @@ public final class CfgSchemaResolver {
             TableSchema enumTable = findTableInLocalThenGlobal(structRef.name());
             if (enumTable != null && enumTable.meta().hasEnumValues()) {
                 // enum 字段：转换为 STRING + 外键
-                // 创建外键（meta 标记 fromEnumType）
+                // field标记 fromEnumType
+                field.meta().putFromEnumType(structRef.name());
+                // 外键标记 fromEnumType
                 Metadata fkMeta = Metadata.of();
-                fkMeta.putFromEnumType();
+                fkMeta.putFromEnumType(structRef.name());
+
                 ForeignKeySchema fk = new ForeignKeySchema(
-                    field.name(),
-                    new KeySchema(List.of(field.name())),
-                    enumTable.name(),
-                    new RefKey.RefPrimary(false),
-                    fkMeta
+                        field.name(),
+                        new KeySchema(List.of(field.name())),
+                        enumTable.name(),
+                        new RefKey.RefPrimary(false),
+                        fkMeta
                 );
                 structural.addForeignKey(fk);
+
                 return STRING;
             } else {
                 // 普通 struct 引用
@@ -398,7 +403,7 @@ public final class CfgSchemaResolver {
                 if (fs.type() == STRING) {
                     entryBase.setFieldSchema(fs);
                 } else {
-                    errs.addErr(new EntryFieldTypeNotStr(ctx(), fn, CfgWriter.typeStr(fs.type())));
+                    errs.addErr(new EntryFieldTypeNotStr(ctx(), fn, CfgWriter.typeStr(fs)));
                 }
             } else {
                 errs.addErr(new EntryNotFound(ctx(), fn));

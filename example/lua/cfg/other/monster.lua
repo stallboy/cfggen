@@ -25,7 +25,7 @@ local mk = cfg._mk.table(this, { { 'all', 'get', 1 }, }, nil, {
     'lootId', -- int, loot
     'lootItemId', -- int, item
     'enumMap1', -- map<str,int>
-    'enumMap2' -- map<int,str>
+    'enumMap2' -- map<int,ArgCaptureMode>
     )
 
 local position = Beans.position

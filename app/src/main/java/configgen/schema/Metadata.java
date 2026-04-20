@@ -212,17 +212,18 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         return data.get(ENUM_VALUES) instanceof MetaEnumValues;
     }
 
-    // 外键来自 enum 类型（用于 CfgWriter 还原）
-    public void putFromEnumType() {
-        data.put(FROM_ENUM_TYPE, TAG);
-    }
-
-    public boolean removeFromEnumType() {
-        return data.remove(FROM_ENUM_TYPE) != null;
+    // 来自 enum 类型（用于 CfgWriter 还原）
+    public void putFromEnumType(String enumType) {
+        data.put(FROM_ENUM_TYPE, new MetaStr(enumType));
     }
 
     public boolean isFromEnumType() {
         return data.containsKey(FROM_ENUM_TYPE);
+    }
+
+    public String getFromEnumType() {
+        MetaValue v = data.get(FROM_ENUM_TYPE);
+        return v instanceof MetaStr(String value) ? value : null;
     }
 
     public void putNullable() {

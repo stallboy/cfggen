@@ -5,6 +5,7 @@ import configgen.schema.cfg.CommentUtils.CommentData;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static configgen.schema.FieldType.*;
@@ -175,15 +176,11 @@ public class CfgWriter {
             ForeignKeySchema fk = structural.findForeignKey(f.name());
 
             // 检查是否是 enum 类型的字段
-            String typeStr;
-            String fkStr;
-            if (fk != null && fk.meta().isFromEnumType()) {
-                // enum 字段：还原为 enum 类型名，不写外键符号
-                typeStr = fk.refTable();  // 如 "ArgCaptureMode"
-                fkStr = "";
-            } else {
-                typeStr = typeStr(f.type());
-                fkStr = fk == null ? "" : foreignStr(fk);
+            String typeStr = typeStr(f);
+
+            String fkStr = "";
+            if (fk != null && !fk.meta().isFromEnumType()) {
+                fkStr = foreignStr(fk);
             }
 
             if (fk != null) {
@@ -243,13 +240,37 @@ public class CfgWriter {
         }
     }
 
-    public static String typeStr(FieldType t) {
+    public static String typeStr(FieldSchema f) {
+        return typeStr(f.type(), f);
+    }
+
+    private static String typeStr(FieldType nullableType, FieldSchema f) {
+        FieldType type = nullableType != null ? nullableType : f.type();
+        switch (type) {
+            case Primitive.STRING -> {
+                String s = f.meta().getFromEnumType();
+                return Objects.requireNonNullElse(s, "str");
+            }
+            case Primitive primitive -> {
+                return primitive.name().toLowerCase();
+            }
+            case StructRef structRef -> {
+                return structRef.name();
+            }
+            case FList fList -> {
+                return String.format("list<%s>", typeStr(fList.item(), f));
+            }
+            case FMap fMap -> {
+                return String.format("map<%s,%s>", simpleTypeStr(fMap.key()), typeStr(fMap.value(), f));
+            }
+        }
+    }
+
+    public static String simpleTypeStr(SimpleType t) {
         return switch (t) {
             case Primitive.STRING -> "str";
             case Primitive primitive -> primitive.name().toLowerCase();
             case StructRef structRef -> structRef.name();
-            case FList fList -> String.format("list<%s>", typeStr(fList.item()));
-            case FMap fMap -> String.format("map<%s,%s>", typeStr(fMap.key()), typeStr(fMap.value()));
         };
     }
 

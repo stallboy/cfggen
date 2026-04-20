@@ -123,6 +123,15 @@ public record CfgSchemaErrs(List<Err> errs,
                                      String unknownType) implements Warn {
     }
 
+
+    /**
+     * Map key 不支持外键，所以就不支持枚举类型了，毕竟枚举类型也要映射成外键
+     */
+    public record MapKeyNotSupportEnumType(String struct,
+                                           String field,
+                                           String refEnum) implements Warn {
+    }
+
     public sealed interface Err extends Msg {
     }
 

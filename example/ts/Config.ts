@@ -1294,11 +1294,13 @@ export class Other_ArgCaptureMode {
 
     private _name!: string;
     get Name(): string { return this._name; }
+    private _id!: number;
+    get Id(): number { return this._id; }
     private _comment!: string;
     get Comment(): string { return this._comment; }
 
     toString() : string {
-        return "(" + this._name + "," + this._comment + ")";
+        return "(" + this._name + "," + this._id + "," + this._comment + ")";
     }
 
     
@@ -1308,16 +1310,25 @@ export class Other_ArgCaptureMode {
         return this.all.get(name)
     }
 
+    
+    private static idMap: Map<number, Other_ArgCaptureMode>;
+
+    static GetById(id: number) : Other_ArgCaptureMode | undefined {
+        return this.idMap.get(id)
+    }
+
     static All() : Map<string, Other_ArgCaptureMode> {
         return this.all;
     }
 
     static Initialize(os: Stream, errors: LoadErrors) {
         this.all = new Map<string, Other_ArgCaptureMode>();
+        this.idMap = new Map<number, Other_ArgCaptureMode>();
         for (let c = os.ReadInt32(); c > 0; c--)
         {
             let self = this._create(os);
             this.all.set(self._name, self);
+            this.idMap.set(self._id, self);
             if (self._name.trim().length === 0) {
                 continue;
             }
@@ -1349,7 +1360,8 @@ export class Other_ArgCaptureMode {
     static _create(os: Stream) : Other_ArgCaptureMode {
         const self = new Other_ArgCaptureMode();
         self._name = os.ReadStringInPool();
-        self._comment = os.ReadStringInPool();
+        self._id = os.ReadInt32();
+        self._comment = os.ReadTextInPool();
         return self;
     }
 

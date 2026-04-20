@@ -66,6 +66,7 @@ class CommentUtilsTest {
         assertEquals("  // 这是注释\n", result);
     }
 
+
     @Test
     void testParsedCommentFormatLeading_MultipleLines() {
         // 格式化多行声明前注释
@@ -201,5 +202,75 @@ class CommentUtilsTest {
         String result = pc.formatSuffix("\t");
         assertEquals("", result);
     }
+
+    @Test
+    void testEncode_Leading_SingleLine() {
+        // 格式化单行声明前注释
+        CommentData pc = new CommentData("这是注释", "", "");
+        String en = pc.encode();
+        assertEquals("这是注释\n", en);
+
+        CommentData cd = CommentUtils.decode(en);
+        assertEquals("这是注释", cd.leading());
+    }
+
+    @Test
+    void testEncode_LeadingWithLF_SingleLine() {
+        // 格式化单行声明前注释
+        CommentData pc = new CommentData("这是注释\n第二行", "", "");
+        String en = pc.encode();
+        assertEquals("这是注释\n第二行", en);
+
+        CommentData cd = CommentUtils.decode(en);
+        assertEquals("这是注释\n第二行", cd.leading());
+    }
+
+    @Test
+    void testEncode_LeadingWithLF2_SingleLine() {
+        // 格式化单行声明前注释
+        CommentData pc = new CommentData("这是注释\n第二行\n", "", "");
+        String en = pc.encode();
+        assertEquals("这是注释\n第二行\n", en);
+
+        CommentData cd = CommentUtils.decode(en);
+        assertEquals("这是注释\n第二行\n", cd.leading());
+    }
+
+    @Test
+    void testEncode_LeadingAndTrailing_SingleLine() {
+        // 格式化单行声明前注释
+        CommentData pc = new CommentData("这是注释", "trailing", "");
+        String en = pc.encode();
+        assertEquals("这是注释>>>trailing", en);
+
+        CommentData cd = CommentUtils.decode(en);
+        assertEquals("这是注释", cd.leading());
+        assertEquals("trailing", cd.trailing());
+    }
+
+    @Test
+    void testEncode_LeadingWithLFAndTrailing_SingleLine() {
+        // 格式化单行声明前注释
+        CommentData pc = new CommentData("这是注释\n", "trailing", "");
+        String en = pc.encode();
+        assertEquals("这是注释\n>>>trailing", en);
+
+        CommentData cd = CommentUtils.decode(en);
+        assertEquals("这是注释\n", cd.leading());
+        assertEquals("trailing", cd.trailing());
+    }
+
+    @Test
+    void testEncode_LeadingWithLF2AndTrailing_SingleLine() {
+        // 格式化单行声明前注释
+        CommentData pc = new CommentData("这是注释\n注释第二行", "trailing", "");
+        String en = pc.encode();
+        assertEquals("这是注释\n注释第二行>>>trailing", en);
+
+        CommentData cd = CommentUtils.decode(en);
+        assertEquals("这是注释\n注释第二行", cd.leading());
+        assertEquals("trailing", cd.trailing());
+    }
+
 
 }

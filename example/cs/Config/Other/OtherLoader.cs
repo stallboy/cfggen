@@ -47,21 +47,26 @@ namespace Config.Other
         {
             int count = reader.ReadInt32();
             var s_all = new Dictionary<string, DArgCaptureModeInfo>(count);
+            var s_idMap = new Dictionary<int, DArgCaptureModeInfo>(count);
             for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
                 s_all.Add(self.Name, self);
+                s_idMap.Add(self.Id, self);
                 DArgCaptureModeExtensions._infos[(int)self.eEnum] = self;
             }
             _all = s_all.ToFrozenDictionary();
+            _idMap = s_idMap.ToFrozenDictionary();
         }
 
         internal static DArgCaptureModeInfo _create(ConfigReader reader)
         {
             var name = reader.ReadStringInPool();
+            var id = reader.ReadInt32();
             var comment = reader.ReadTextInPool();
             return new DArgCaptureModeInfo {
                 Name = name,
+                Id = id,
                 Comment = comment,
                 eEnum = Enum.Parse<DArgCaptureMode>(StringUtil.UpperFirstChar(name))
             };
@@ -82,7 +87,7 @@ namespace Config.Other
 
         public override string ToString()
         {
-            return "(" + Name + "," + Comment + ")";
+            return "(" + Name + "," + Id + "," + Comment + ")";
         }
 
     }
