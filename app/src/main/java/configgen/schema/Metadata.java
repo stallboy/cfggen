@@ -149,6 +149,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     private static final String HAS_TEXT = "_hasText";
     private static final String ENUM_VALUES = "_enumValues";
     private static final String FROM_ENUM_TYPE = "_fromEnumType";
+    private static final String FROM_CFG_FILEPATH = "_fromCfgFilePATH";
 
     private static final String JSON = "json"; // 这个表用json来分文件存
     private static final String NULLABLE = "nullable";
@@ -169,7 +170,7 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
 
     private static final Set<String> reservedTags = Set.of(COMMENT, SPAN, HAS_REF, HAS_BLOCK, HAS_MAP, HAS_TEXT,
             JSON, NULLABLE, ENUM_REF, DEFAULT_IMPL, ENTRY, ENUM, COLUMN_MODE, PACK, SEP, FIX, BLOCK,
-            LOWER_CASE, MUST_FILL, ROOT, ENUM_VALUES, FROM_ENUM_TYPE);
+            LOWER_CASE, MUST_FILL, ROOT, ENUM_VALUES, FROM_ENUM_TYPE, FROM_CFG_FILEPATH);
 
     public String getComment() {
         if (data.get(COMMENT) instanceof MetaStr(String value)) {
@@ -223,6 +224,15 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
 
     public String getFromEnumType() {
         MetaValue v = data.get(FROM_ENUM_TYPE);
+        return v instanceof MetaStr(String value) ? value : null;
+    }
+
+    public void putFromCfgFilepath(String filepath) {
+        data.put(FROM_CFG_FILEPATH, new MetaStr(filepath));
+    }
+
+    public String getFromCfgFilepath() {
+        MetaValue v = data.get(FROM_CFG_FILEPATH);
         return v instanceof MetaStr(String value) ? value : null;
     }
 

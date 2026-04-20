@@ -1,6 +1,7 @@
 package configgen.tool;
 
 import configgen.ctx.DirectoryStructure;
+import configgen.data.TableCollector;
 import configgen.gen.Parameter;
 import configgen.gen.Tool;
 import configgen.schema.*;
@@ -8,9 +9,9 @@ import configgen.util.CSVUtil;
 import configgen.util.Logger;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 
 public class SchemaToCsvTool extends Tool {
     private final Path dataDir;
@@ -25,6 +26,7 @@ public class SchemaToCsvTool extends Tool {
         DirectoryStructure structure = new DirectoryStructure(dataDir);
         CfgSchema cfgSchema = CfgSchemas.readFromDir(structure);
         cfgSchema.resolve().checkErrors();
+        Set<String> exsitTableSet = TableCollector.collect(structure);
 
         for (TableSchema table : cfgSchema.tableMap().values()) {
             if (table.isJson()) {
@@ -34,17 +36,17 @@ public class SchemaToCsvTool extends Tool {
                 continue;
             }
 
-            Path csvPath = dataDir;
-            String ns = table.namespace();
-            if (!ns.isEmpty()) {
-                csvPath = csvPath.resolve(ns.replace('.', '/'));
-            }
-            csvPath = csvPath.resolve(table.lastName() + ".csv");
-            if (Files.exists(csvPath)) {
-                Logger.log("Skip existing: %s", csvPath);
+            if (exsitTableSet.contains(table.fullName())) {
                 continue;
             }
 
+            String fromCfgFilepath = table.meta().getFromCfgFilepath();
+            if (fromCfgFilepath == null) {
+                Logger.log("Skip %s: no fromCfgFilepath, SHOULD NOT HAPPEN", table.fullName());
+                continue;
+            }
+
+            Path csvPath = Path.of(fromCfgFilepath).getParent().resolve(table.lastName() + ".csv");
             SchemaToCsvHeader headerGen = new SchemaToCsvHeader();
             headerGen.flattenFields(table.fields());
 

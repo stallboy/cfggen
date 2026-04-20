@@ -29,7 +29,7 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
         Objects.requireNonNull(cfgData);
         Objects.requireNonNull(errs);
 
-        TreeMap<String, CfgData.DTable> dataHeaders = new TreeMap<>(cfgData.tables());
+        TreeMap<String, CfgData.DTable> dTableMap = new TreeMap<>(cfgData.tables());
         CfgSchema alignedCfg = CfgSchema.of();
         for (Nameable item : cfgSchema.items()) {
             switch (item) {
@@ -37,7 +37,7 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
                     alignedCfg.add(fieldable.copy());
                 }
                 case TableSchema table -> {
-                    CfgData.DTable th = dataHeaders.remove(table.name());
+                    CfgData.DTable dTable = dTableMap.remove(table.name());
 
                     // schema enum 不需要外部数据文件，数据从 MetaEnumValues 自动生成
                     if (table.meta().hasEnumValues()) {
@@ -47,19 +47,19 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
 
                     if (table.isJson()) {
                         alignedCfg.add(table.copy());
-                        if (th != null) {
+                        if (dTable != null) {
                             // 用json，就不能用excel
                             List<String> sheets = new ArrayList<>();
-                            for (CfgData.DRawSheet rawSheet : th.rawSheets()) {
+                            for (CfgData.DRawSheet rawSheet : dTable.rawSheets()) {
                                 sheets.add(String.format("%s[%s]", rawSheet.relativeFilePath(), rawSheet.sheetName()));
                             }
                             errs.addErr(new CfgSchemaErrs.JsonTableNotSupportExcel(table.name(), sheets));
                         }
                     } else {
-                        if (th != null) {
-                            TableSchema alignedTable = alignTable(table, th.fields(), errs);
+                        if (dTable != null) {
+                            TableSchema alignedTable = alignTable(table, dTable.fields(), errs);
                             alignedCfg.add(alignedTable);
-                        }else{
+                        } else {
                             Logger.log("remove table without data: " + table.name());
                         }
                     }
@@ -67,7 +67,7 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
             }
         }
 
-        for (CfgData.DTable th : dataHeaders.values()) {
+        for (CfgData.DTable th : dTableMap.values()) {
             TableSchema newTable = newTableSchema(th, errs);
             alignedCfg.add(newTable);
         }
@@ -87,7 +87,7 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
 
         if (fields.isEmpty()) {
             Logger.log(LocaleUtil.getFormatedLocaleString("CfgSchemaAlignToData.HeaderEmptyIgnored",
-                "{0} header empty, ignored!", th.tableName()));
+                    "{0} header empty, ignored!", th.tableName()));
             return null;
         }
 
@@ -205,7 +205,7 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
                 int remain = header.size() - idx;
                 if (span > remain) {
                     errs.addErr(new CfgSchemaErrs.FieldHeaderSpanNotEnough(
-                        table.name(), curField.name(), span, remain));
+                            table.name(), curField.name(), span, remain));
                     // 跳过剩余 header，避免后续处理产生更多错误
                     break;
                 }
@@ -216,13 +216,13 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
                     String old = meta.putComment(comment);
                     if (!old.equals(comment)) {
                         Logger.log(LocaleUtil.getFormatedLocaleString("CfgSchemaAlignToData.SetComment",
-                            "{0}[{1}] set comment: {2} -> {3}", table.name(), fieldName, old, comment));
+                                "{0}[{1}] set comment: {2} -> {3}", table.name(), fieldName, old, comment));
                     }
                 } else {
                     String old = meta.removeComment();
                     if (!old.isEmpty()) {
                         Logger.log(LocaleUtil.getFormatedLocaleString("CfgSchemaAlignToData.RemoveComment",
-                            "{0}[{1}] remove old comment: {2}", table.name(), fieldName, old));
+                                "{0}[{1}] remove old comment: {2}", table.name(), fieldName, old));
                     }
                 }
                 newField = new FieldSchema(fieldName, curField.type().copy(), curField.fmt(), meta);
@@ -237,7 +237,7 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
                 if (CfgUtil.isIdentifier(hf.name())) {
                     newField = newFieldSchema(hf, table.fullName(), errs);
                     Logger.log(LocaleUtil.getFormatedLocaleString("CfgSchemaAlignToData.NewField",
-                        "{0} new field: {1}", table.name(), hf.name()));
+                            "{0} new field: {1}", table.name(), hf.name()));
                     FieldSchema old = alignedFields.put(newField.name(), newField);
                     if (old != null) {
                         errs.addErr(new CfgSchemaErrs.DataHeadNameDuplicated(table.name(), newField.name()));
@@ -251,7 +251,7 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
 
         for (FieldSchema remove : curFields.values()) {
             Logger.log(LocaleUtil.getFormatedLocaleString("CfgSchemaAlignToData.DeleteField",
-                "{0} delete field: {1}", table.name(), remove.name()));
+                    "{0} delete field: {1}", table.name(), remove.name()));
         }
         return alignedFields;
     }

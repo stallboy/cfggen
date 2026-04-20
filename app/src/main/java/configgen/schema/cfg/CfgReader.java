@@ -23,21 +23,21 @@ public enum CfgReader {
 
     public static CfgSchema parse(String cfgStr) {
         CfgSchema cfg = CfgSchema.of();
-        INSTANCE.readTo(cfg, CharStreams.fromString(cfgStr), "");
+        INSTANCE.readCfgSchema(cfg, CharStreams.fromString(cfgStr), "", "<>");
         return cfg;
     }
 
-    public void readTo(CfgSchema destination, Path source, String pkgNameDot) {
+    public void read(CfgSchema destination, Path source, String pkgNameDot) {
         CharStream input;
         try {
             input = CharStreams.fromPath(source);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        readTo(destination, input, pkgNameDot);
+        readCfgSchema(destination, input, pkgNameDot, source.normalize().toString());
     }
 
-    public void readTo(CfgSchema destination, CharStream input, String pkgNameDot) {
+    private void readCfgSchema(CfgSchema destination, CharStream input, String pkgNameDot, String fromCfgFilePath) {
         CfgLexer lexer = new CfgLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         CfgParser parser = new CfgParser(tokens);
@@ -51,19 +51,19 @@ public enum CfgReader {
             ParseTree child = ele.getChild(0);
             switch (child) {
                 case Struct_declContext ctx -> {
-                    StructSchema struct = read_struct(ctx, pkgNameDot);
+                    StructSchema struct = readStruct(ctx, pkgNameDot);
                     destination.add(struct);
                 }
                 case Interface_declContext ctx -> {
-                    InterfaceSchema sInterface = read_interface(ctx, pkgNameDot);
+                    InterfaceSchema sInterface = readInterface(ctx, pkgNameDot);
                     destination.add(sInterface);
                 }
                 case Table_declContext ctx -> {
-                    TableSchema table = read_table(ctx, pkgNameDot);
+                    TableSchema table = readTable(ctx, pkgNameDot, fromCfgFilePath);
                     destination.add(table);
                 }
                 case Enum_declContext ctx -> {
-                    TableSchema enumTable = read_enum(ctx, pkgNameDot);
+                    TableSchema enumTable = readEnum(ctx, pkgNameDot);
                     destination.add(enumTable);
                 }
 
@@ -78,9 +78,9 @@ public enum CfgReader {
         }
     }
 
-    private TableSchema read_table(Table_declContext ctx, String pkgNameDot) {
-        String name = read_ns_ident(ctx.ns_ident());
-        KeySchema primaryKey = read_key(ctx.key());
+    private TableSchema readTable(Table_declContext ctx, String pkgNameDot, String fromCfgFilePath) {
+        String name = readNamespaceIdentifier(ctx.ns_ident());
+        KeySchema primaryKey = readKey(ctx.key());
 
         String fullComment = CommentUtils.readFull3(
                 ctx.leading_comment(),
@@ -88,18 +88,19 @@ public enum CfgReader {
                 ctx.suffix_comment());
 
         Metadata meta = readMetadataValues(ctx.metadata());
+        meta.putFromCfgFilepath(fromCfgFilePath);
         if (!fullComment.isEmpty()) {
             meta.putComment(fullComment);
         }
 
         EntryType entry = meta.removeEntry();
         boolean isColumnMode = meta.removeColumnMode();
-        StructSpec ff = read_struct_spec(ctx.field_decl(), ctx.foreign_decl());
+        StructSpec ff = readStructSpec(ctx.field_decl(), ctx.foreign_decl());
 
         List<Key_declContext> kds = ctx.key_decl();
         List<KeySchema> uniqueKeys = new ArrayList<>(kds.size());
         for (Key_declContext kd : kds) {
-            KeySchema uniqKey = read_key(kd.key());
+            KeySchema uniqKey = readKey(kd.key());
             uniqueKeys.add(uniqKey);
         }
 
@@ -107,8 +108,8 @@ public enum CfgReader {
                 ff.fieldSchemas(), ff.foreignKeySchemas(), uniqueKeys);
     }
 
-    private TableSchema read_enum(Enum_declContext ctx, String pkgNameDot) {
-        String name = read_ns_ident(ctx.ns_ident());
+    private TableSchema readEnum(Enum_declContext ctx, String pkgNameDot) {
+        String name = readNamespaceIdentifier(ctx.ns_ident());
 
         String fullComment = CommentUtils.readFull3(
                 ctx.leading_comment(),
@@ -187,8 +188,8 @@ public enum CfgReader {
         return Integer.parseInt(text);
     }
 
-    private InterfaceSchema read_interface(Interface_declContext ctx, String pkgNameDot) {
-        String name = read_ns_ident(ctx.ns_ident());
+    private InterfaceSchema readInterface(Interface_declContext ctx, String pkgNameDot) {
+        String name = readNamespaceIdentifier(ctx.ns_ident());
 
         String fullComment = CommentUtils.readFull3(
                 ctx.leading_comment(),
@@ -207,14 +208,14 @@ public enum CfgReader {
         List<Struct_declContext> struct_decls = ctx.struct_decl();
         List<StructSchema> structSchemas = new ArrayList<>(struct_decls.size());
         for (Struct_declContext sc : ctx.struct_decl()) {
-            StructSchema struct = read_struct(sc, "");
+            StructSchema struct = readStruct(sc, "");
             structSchemas.add(struct);
         }
         return new InterfaceSchema(pkgNameDot + name, enumRef, defaultImpl, fmt, meta, structSchemas);
     }
 
-    private StructSchema read_struct(Struct_declContext ctx, String pkgNameDot) {
-        String name = read_ns_ident(ctx.ns_ident());
+    private StructSchema readStruct(Struct_declContext ctx, String pkgNameDot) {
+        String name = readNamespaceIdentifier(ctx.ns_ident());
 
         String fullComment = CommentUtils.readFull3(
                 ctx.leading_comment(),
@@ -227,29 +228,17 @@ public enum CfgReader {
         }
 
         FieldFormat fmt = meta.removeFmt();
-        StructSpec ff = read_struct_spec(ctx.field_decl(), ctx.foreign_decl());
+        StructSpec ff = readStructSpec(ctx.field_decl(), ctx.foreign_decl());
         return new StructSchema(pkgNameDot + name, fmt, meta, ff.fieldSchemas(), ff.foreignKeySchemas());
     }
 
 
-    private String read_ns_ident(Ns_identContext ctx) {
+    private String readNamespaceIdentifier(Ns_identContext ctx) {
         List<String> ids = new ArrayList<>();
         for (IdentifierContext ic : ctx.identifier()) {
             ids.add(ic.getText());
         }
         return String.join(".", ids);
-    }
-
-
-    private Metadata read_metadata_with_comments(
-            MetadataContext metadata,
-            String comment) {
-
-        Metadata meta = readMetadataValues(metadata);
-        if (!comment.isEmpty()) {
-            meta.putComment(comment);
-        }
-        return meta;
     }
 
     private Metadata readMetadataValues(MetadataContext metadata) {
@@ -263,7 +252,7 @@ public enum CfgReader {
                     meta.data().put(k, TAG);
                 } else {
                     TerminalNode tn = (TerminalNode) val.getChild(0);
-                    meta.data().put(k, metaValue(tn));
+                    meta.data().put(k, readMetaValue(tn));
                 }
             } else {
                 meta.data().put("-" + minusIdentContext.identifier().getText(), TAG);
@@ -272,7 +261,7 @@ public enum CfgReader {
         return meta;
     }
 
-    private static MetaValue metaValue(TerminalNode tn) {
+    private static MetaValue readMetaValue(TerminalNode tn) {
         int type = tn.getSymbol().getType();
         String text = tn.getSymbol().getText();
         return switch (type) {
@@ -289,13 +278,13 @@ public enum CfgReader {
                               List<ForeignKeySchema> foreignKeySchemas) {
     }
 
-    private StructSpec read_struct_spec(List<Field_declContext> fieldDeclContexts,
-                                        List<Foreign_declContext> foreignDeclContexts) {
+    private StructSpec readStructSpec(List<Field_declContext> fieldDeclContexts,
+                                      List<Foreign_declContext> foreignDeclContexts) {
         List<FieldSchema> fieldSchemas = new ArrayList<>(fieldDeclContexts.size());
         List<ForeignKeySchema> foreignKeySchemas = new ArrayList<>(foreignDeclContexts.size());
         for (Field_declContext ctx : fieldDeclContexts) {
             String name = ctx.identifier().getText();
-            FieldType type = read_type(ctx.type_());
+            FieldType type = readType(ctx.type_());
             String comment = CommentUtils.readFull2(
                     ctx.leading_comment(),
                     ctx.SEMI_COMMENT());
@@ -314,14 +303,14 @@ public enum CfgReader {
                 boolean nullable = meta.removeNullable();
                 Metadata refMeta = meta.copy();
                 refMeta.removeComment();
-                ForeignKeySchema foreignKeySchema = read_ref(ref, name, localKey, refMeta, nullable);
+                ForeignKeySchema foreignKeySchema = readRef(ref, name, localKey, refMeta, nullable);
                 foreignKeySchemas.add(foreignKeySchema);
             }
         }
 
         for (Foreign_declContext ctx : foreignDeclContexts) {
             String name = ctx.identifier().getText();
-            KeySchema localKey = read_key(ctx.key());
+            KeySchema localKey = readKey(ctx.key());
             String comment = CommentUtils.readFull2(
                     ctx.leading_comment(),
                     ctx.SEMI_COMMENT());
@@ -331,25 +320,25 @@ public enum CfgReader {
             }
 
             boolean nullable = meta.removeNullable();
-            ForeignKeySchema foreignKeySchema = read_ref(ctx.ref(), name, localKey, meta, nullable);
+            ForeignKeySchema foreignKeySchema = readRef(ctx.ref(), name, localKey, meta, nullable);
             foreignKeySchemas.add(foreignKeySchema);
         }
 
         return new StructSpec(fieldSchemas, foreignKeySchemas);
     }
 
-    private FieldType read_type(Type_Context ctx) {
+    private FieldType readType(Type_Context ctx) {
         if (ctx instanceof TypeListContext listCtx) {
-            return new FList(read_type_ele(listCtx.type_ele()));
+            return new FList(readTypeEle(listCtx.type_ele()));
         } else if (ctx instanceof TypeMapContext mapCtx) {
-            return new FMap(read_type_ele(mapCtx.type_ele(0)), read_type_ele(mapCtx.type_ele(1)));
+            return new FMap(readTypeEle(mapCtx.type_ele(0)), readTypeEle(mapCtx.type_ele(1)));
         } else { // TypeBasicContext
             TypeBasicContext basicCtx = (TypeBasicContext) ctx;
-            return read_type_ele(basicCtx.type_ele());
+            return readTypeEle(basicCtx.type_ele());
         }
     }
 
-    private SimpleType read_type_ele(Type_eleContext ctx) {
+    private SimpleType readTypeEle(Type_eleContext ctx) {
         TerminalNode tBase = ctx.TBASE();
         if (tBase != null) {
             String text = tBase.getText().toUpperCase();
@@ -357,18 +346,18 @@ public enum CfgReader {
                 return Primitive.STRING;
             return Primitive.valueOf(text);
         } else {
-            return new StructRef(read_ns_ident(ctx.ns_ident()));
+            return new StructRef(readNamespaceIdentifier(ctx.ns_ident()));
         }
     }
 
-    private ForeignKeySchema read_ref(RefContext ctx, String name, KeySchema localKey,
-                                      Metadata meta, boolean nullable) {
-        String refTable = read_ns_ident(ctx.ns_ident());
+    private ForeignKeySchema readRef(RefContext ctx, String name, KeySchema localKey,
+                                     Metadata meta, boolean nullable) {
+        String refTable = readNamespaceIdentifier(ctx.ns_ident());
         RefKey refKey;
         KeySchema remoteKey = null;
         KeyContext keyCtx = ctx.key();
         if (keyCtx != null) {
-            remoteKey = read_key(keyCtx);
+            remoteKey = readKey(keyCtx);
         }
         if (remoteKey == null) {
             refKey = new RefKey.RefPrimary(nullable);
@@ -380,7 +369,7 @@ public enum CfgReader {
         return new ForeignKeySchema(name, localKey, refTable, refKey, meta);
     }
 
-    private KeySchema read_key(KeyContext keyCtx) {
+    private KeySchema readKey(KeyContext keyCtx) {
         List<IdentifierContext> identifiers = keyCtx.identifier();
         List<String> rk = new ArrayList<>(identifiers.size());
         for (IdentifierContext ic : identifiers) {

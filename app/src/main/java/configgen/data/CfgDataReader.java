@@ -43,7 +43,8 @@ public record CfgDataReader(HeadRow headRow,
     }
 
     @SuppressWarnings("ExtractMethodRecommender")
-    private CfgData _readCfgData(DirectoryStructure sourceStructure, CfgSchema nullableCfgSchema, CfgSchemaErrs errs) throws Exception {
+    private CfgData _readCfgData(DirectoryStructure sourceStructure, CfgSchema nullableCfgSchema, CfgSchemaErrs errs)
+            throws Exception {
 //        try(ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())) {
 //        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
         try (ExecutorService executor = Executors.newWorkStealingPool()) {
@@ -64,8 +65,11 @@ public record CfgDataReader(HeadRow headRow,
                             char fieldSeparator = df.fmt() == DataUtil.FileFmt.CSV ? ',' : '\t';
                             tasks.add(() -> {
                                 try {
-                                    return csvReader.readCsv(df.path(), df.relativePath(),
-                                            ti.tableName(), ti.index(), fieldSeparator, df.nullableAddTag());
+                                    return csvReader.readCsv(
+                                            df.path(), df.relativePath(),
+                                            ti.tableName(), ti.index(),
+                                            fieldSeparator,
+                                            df.nullableAddTag());
                                 } catch (Exception e) {
                                     throw new RuntimeException("read csv failed: " + df.path(), e);
                                 }
@@ -102,7 +106,7 @@ public record CfgDataReader(HeadRow headRow,
                     try {
                         HeadParser.parse(table, tStat, headRow, isColumnMode, errs);
                         CellParser.parse(table, tStat, headRow.rowCount(), isColumnMode);
-                    }catch (Exception e) {
+                    } catch (Exception e) {
                         throw new RuntimeException("parse table failed: " + table.tableName(), e);
                     }
                     return tStat;

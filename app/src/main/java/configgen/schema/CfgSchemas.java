@@ -18,35 +18,24 @@ public class CfgSchemas {
     public static CfgSchema readFromDir(DirectoryStructure sourceStructure) {
         CfgSchema destination = CfgSchema.of();
         for (CfgFileInfo c : sourceStructure.getCfgFiles()) {
-            CfgReader.INSTANCE.readTo(destination, c.path(), c.pkgNameDot());
+            CfgReader.INSTANCE.read(destination, c.path(), c.pkgNameDot());
         }
-        return destination;
-    }
-
-    public static CfgSchema readFromOneFile(Path filePath) {
-        CfgSchema destination = CfgSchema.of();
-        CfgReader.INSTANCE.readTo(destination, filePath, "");
         return destination;
     }
 
     public static void writeToDir(Path destination, CfgSchema root) {
         Path absoluteDst = destination.toAbsolutePath().normalize();
-        Map<String, CfgSchema> cfgs = CfgUtil.separate(root);
-        for (Map.Entry<String, CfgSchema> entry : cfgs.entrySet()) {
+        Map<String, CfgSchema> modules = CfgUtil.separate(root);
+        for (Map.Entry<String, CfgSchema> entry : modules.entrySet()) {
             String ns = entry.getKey();
             CfgSchema cfg = entry.getValue();
             Path dst = CfgUtil.getCfgFilePathByNamespace(ns, absoluteDst);
-            writeToOneFile(dst, cfg, true);
+            writeToOneFile(dst, cfg);
         }
     }
 
-    public static void writeToOneFile(Path dst, CfgSchema cfg) {
-        writeToOneFile(dst, cfg, false);
-
-    }
-
-    private static void writeToOneFile(Path dst, CfgSchema cfg, boolean useLastName) {
-        String content = CfgWriter.stringify(cfg, useLastName, false);
+    private static void writeToOneFile(Path dst, CfgSchema cfg) {
+        String content = CfgWriter.stringify(cfg, true, false);
         try {
             CachedFiles.writeFile(dst, content.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {

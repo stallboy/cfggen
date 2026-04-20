@@ -102,17 +102,15 @@ class SchemaToCsvHeader {
         }
 
         // span > 1 的情况，递归处理
-        switch (type) {
-            case FieldType.StructRef structRef -> {
-                flattenFieldable(structRef.obj());
-            }
-            default -> { } // Primitive 类型的 span 总是 1，不会进入这里
+        // Primitive 类型的 span 总是 1，不会进入这里
+        if (type instanceof FieldType.StructRef structRef) {
+            flattenFieldable(structRef.obj());
         }
     }
 
     private int getCount(FieldFormat fmt) {
-        if (fmt instanceof FieldFormat.Fix fix) return fix.count();
-        if (fmt instanceof FieldFormat.Block block) return block.fix();
+        if (fmt instanceof FieldFormat.Fix(int count)) return count;
+        if (fmt instanceof FieldFormat.Block(int fix)) return fix;
         return 0;
     }
 

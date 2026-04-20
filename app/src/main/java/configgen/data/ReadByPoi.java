@@ -16,7 +16,6 @@ import static org.apache.poi.ss.usermodel.CellType.NUMERIC;
 public enum ReadByPoi implements ExcelReader {
     INSTANCE;
 
-
     @Override
     public ReadResult readExcels(@NotNull Path path,
                                  @NotNull Path relativePath,
