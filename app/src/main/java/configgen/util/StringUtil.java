@@ -9,12 +9,34 @@ public class StringUtil {
         return value.substring(0, 1).toLowerCase() + value.substring(1);
     }
 
-    public static String firstLine(String value) {
-        int idx = value.indexOf('\n');
-        return idx < 0 ? value : value.substring(0, idx);
-    }
-
     public static String removeLineSep(String value) {
         return value.replace("\n", "---");
     }
+
+    public static String underscoreToPascalCase(String input) {
+        if (input == null || input.isEmpty()) {
+            return input;
+        }
+
+        StringBuilder result = new StringBuilder();
+        boolean capitalizeNext = true;
+
+        for (int i = 0; i < input.length(); i++) {
+            char currentChar = input.charAt(i);
+
+            if (currentChar == '_') {
+                capitalizeNext = true;
+            } else {
+                if (capitalizeNext) {
+                    result.append(Character.toUpperCase(currentChar));
+                    capitalizeNext = false;
+                } else {
+                    result.append(currentChar);
+                }
+            }
+        }
+
+        return result.toString();
+    }
+
 }

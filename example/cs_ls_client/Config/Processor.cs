@@ -50,11 +50,11 @@ public static class Processor
                     break;
                 case "ai.ai_action":
                     configNulls.Remove(tableName);
-                    Ai.DAi_action.Initialize(reader);
+                    Ai.DAiAction.Initialize(reader);
                     break;
                 case "ai.ai_condition":
                     configNulls.Remove(tableName);
-                    Ai.DAi_condition.Initialize(reader);
+                    Ai.DAiCondition.Initialize(reader);
                     break;
                 case "equip.ability":
                     configNulls.Remove(tableName);

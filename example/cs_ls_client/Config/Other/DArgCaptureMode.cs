@@ -9,6 +9,7 @@ public enum DArgCaptureMode
 public partial class DArgCaptureModeInfo
 {
     public required string Name { get; init; }
+    public required int Id { get; init; }
     public required Config.Text Comment { get; init; }
     public required DArgCaptureMode eEnum { get; init; }
     
@@ -17,6 +18,14 @@ public partial class DArgCaptureModeInfo
     public static DArgCaptureModeInfo? Get(string name)
     {
         return _all.GetValueOrDefault(name);
+    }
+
+    
+    private static System.Collections.Frozen.FrozenDictionary<int, DArgCaptureModeInfo> _idMap = null!;
+
+    public static DArgCaptureModeInfo? GetById(int id)
+    {
+        return _idMap.GetValueOrDefault(id);
     }
 
     public static IReadOnlyList<DArgCaptureModeInfo> All()

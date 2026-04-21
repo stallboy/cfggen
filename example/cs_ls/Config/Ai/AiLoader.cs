@@ -59,12 +59,12 @@ namespace Config.Ai
 
     }
 
-    public partial class DAi_action
+    public partial class DAiAction
     {
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
-            var s_all = new Dictionary<int, DAi_action>(count);
+            var s_all = new Dictionary<int, DAiAction>(count);
             for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
@@ -73,7 +73,7 @@ namespace Config.Ai
             _all = s_all.ToFrozenDictionary();
         }
 
-        internal static DAi_action _create(ConfigReader reader)
+        internal static DAiAction _create(ConfigReader reader)
         {
             var iD = reader.ReadInt32();
             var desc = reader.ReadStringInPool();
@@ -86,7 +86,7 @@ namespace Config.Ai
             var argSList = new List<int>(Count_argSList);
             for (int i = 0; i < Count_argSList; i++)
                 argSList.Add(reader.ReadInt32());
-            return new DAi_action {
+            return new DAiAction {
                 ID = iD,
                 Desc = desc,
                 FormulaID = formulaID,
@@ -104,7 +104,7 @@ namespace Config.Ai
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DAi_action;
+            var o = obj as DAiAction;
             return o != null && ID.Equals(o.ID);
         }
 
@@ -115,12 +115,12 @@ namespace Config.Ai
 
     }
 
-    public partial class DAi_condition
+    public partial class DAiCondition
     {
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
-            var s_all = new Dictionary<int, DAi_condition>(count);
+            var s_all = new Dictionary<int, DAiCondition>(count);
             for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
@@ -129,7 +129,7 @@ namespace Config.Ai
             _all = s_all.ToFrozenDictionary();
         }
 
-        internal static DAi_condition _create(ConfigReader reader)
+        internal static DAiCondition _create(ConfigReader reader)
         {
             var iD = reader.ReadInt32();
             var desc = reader.ReadStringInPool();
@@ -142,7 +142,7 @@ namespace Config.Ai
             var argSList = new List<int>(Count_argSList);
             for (int i = 0; i < Count_argSList; i++)
                 argSList.Add(reader.ReadInt32());
-            return new DAi_condition {
+            return new DAiCondition {
                 ID = iD,
                 Desc = desc,
                 FormulaID = formulaID,
@@ -160,7 +160,7 @@ namespace Config.Ai
         {
             if (obj == null) return false;
             if (obj == this) return true;
-            var o = obj as DAi_condition;
+            var o = obj as DAiCondition;
             return o != null && ID.Equals(o.ID);
         }
 

@@ -1,6 +1,6 @@
 namespace Config.Ai;
 
-public partial class DAi_condition
+public partial class DAiAction
 {
     public required int ID { get; init; }
     public required string Desc { get; init; } /* 描述 */
@@ -8,14 +8,14 @@ public partial class DAi_condition
     public required List<int> ArgIList { get; init; } /* 参数(int)1 */
     public required List<int> ArgSList { get; init; } /* 参数(string)1 */
     
-    private static System.Collections.Frozen.FrozenDictionary<int, DAi_condition> _all = null!;
+    private static System.Collections.Frozen.FrozenDictionary<int, DAiAction> _all = null!;
 
-    public static DAi_condition? Get(int iD)
+    public static DAiAction? Get(int iD)
     {
         return _all.GetValueOrDefault(iD);
     }
 
-    public static IReadOnlyList<DAi_condition> All()
+    public static IReadOnlyList<DAiAction> All()
     {
         return _all.Values;
     }
