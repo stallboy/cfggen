@@ -11,7 +11,7 @@ public partial class DArgCaptureModeInfo
     public required string Name { get; init; }
     public required int Id { get; init; }
     public required Config.Text Comment { get; init; }
-    public required DArgCaptureMode eEnum { get; init; }
+    public required DArgCaptureMode EEnum { get; init; }
     
     private static System.Collections.Frozen.FrozenDictionary<string, DArgCaptureModeInfo> _all = null!;
 

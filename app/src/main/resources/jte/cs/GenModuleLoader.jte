@@ -47,7 +47,7 @@ namespace ${group.ns}
                             s${sm.uniqueKeyMapName(uk)}.Add(${sm.actualParamsKeySelf(uk)}, self);
                         @endfor
                         @if(sm.isEnum())
-                            ${sm.name.className}Extensions._infos[(int)self.eEnum] = self;
+                            ${sm.name.className}Extensions._infos[(int)self.EEnum] = self;
                         @endif
 
                         @if(table.entry() instanceof EntryType.EEntry eEntry)
@@ -119,7 +119,7 @@ namespace ${group.ns}
                             ${sm.upper1(field.name())} = ${StructModel._lower1(field.name())},
                         @endfor
                         @if(sm.isEnum())
-                            eEnum = Enum.Parse<${sm.name.className}>(StringUtil.UpperFirstChar(${StructModel._lower1(((EntryType.EEnum)(sm._vTable.schema().entry())).field())}))
+                            EEnum = Enum.Parse<${sm.name.className}>(StringUtil.UpperFirstChar(${StructModel._lower1(((EntryType.EEnum)(sm._vTable.schema().entry())).field())}))
                         @endif
                     };
                 @endif
@@ -194,7 +194,7 @@ namespace ${group.ns}
                                 @else
                                     var r${refName} = ${sm.tableGet(fk.refTableSchema(), refSimple, sm.actualParams(fk.key()))};
                                     if (r${refName} == null) reader.RefNotFound("${sm.structural.name()}", "${fkStr}", ${model.upper1(firstField.name())}${sm.toStringOrNot(smpl)});
-                                    else ${refName} = r${refName}${StructModel.isEnum(fk.refTableSchema())? ".eEnum" : ""};
+                                    else ${refName} = r${refName}${StructModel.isEnum(fk.refTableSchema())? ".EEnum" : ""};
                                 @endif
                             @elseif(firstField.type() instanceof FList flist)
                                 ${refName} = [];
@@ -202,7 +202,7 @@ namespace ${group.ns}
                                 {
                                     var r = ${sm.tableGet(fk.refTableSchema(), refSimple, "e")};
                                     if (r == null) reader.RefNotFound("${sm.structural.name()}", "${fkStr}", e${sm.toStringOrNot(flist.item())});
-                                    else ${refName}.Add(r${StructModel.isEnum(fk.refTableSchema())? ".eEnum" : ""});
+                                    else ${refName}.Add(r${StructModel.isEnum(fk.refTableSchema())? ".EEnum" : ""});
                                 }
                             @elseif(firstField.type() instanceof FMap fmap)
                                 ${refName} = [];
@@ -211,7 +211,7 @@ namespace ${group.ns}
                                     var k = kv.Key;
                                     var v = ${sm.tableGet(fk.refTableSchema(), refSimple, "kv.Value")};
                                     if (v == null) reader.RefNotFound("${sm.structural.name()}", "${fkStr}", kv.Value${sm.toStringOrNot(fmap.value())});
-                                    else ${refName}.Add(k, v${StructModel.isEnum(fk.refTableSchema())? ".eEnum" : ""});
+                                    else ${refName}.Add(k, v${StructModel.isEnum(fk.refTableSchema())? ".EEnum" : ""});
                                 }
                             @endif
                         @endif

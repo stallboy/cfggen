@@ -11,7 +11,7 @@ public enum DJewelrytype
 public partial class DJewelrytypeInfo
 {
     public required string TypeName { get; init; } /* 程序用名字 */
-    public required DJewelrytype eEnum { get; init; }
+    public required DJewelrytype EEnum { get; init; }
     
     private static System.Collections.Frozen.FrozenDictionary<string, DJewelrytypeInfo> _all = null!;
 

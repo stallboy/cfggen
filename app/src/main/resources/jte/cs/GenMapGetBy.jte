@@ -34,7 +34,6 @@
         }
 
     @endif
-
     !{String className =  model.dictValueType();}
     !{String mapName = isPrimaryKey ? "_all" : model.uniqueKeyMapName(keySchema);}
     !{String allType = model.dictType(keySchema);}

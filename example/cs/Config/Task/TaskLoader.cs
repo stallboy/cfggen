@@ -63,7 +63,7 @@ namespace Config.Task
             {
                 var self = _create(reader);
                 s_all.Add(self.Id, self);
-                DCompleteconditiontypeExtensions._infos[(int)self.eEnum] = self;
+                DCompleteconditiontypeExtensions._infos[(int)self.EEnum] = self;
             }
             _all = s_all.ToFrozenDictionary();
         }
@@ -75,7 +75,7 @@ namespace Config.Task
             return new DCompleteconditiontypeInfo {
                 Id = id,
                 Name = name,
-                eEnum = Enum.Parse<DCompleteconditiontype>(StringUtil.UpperFirstChar(name))
+                EEnum = Enum.Parse<DCompleteconditiontype>(StringUtil.UpperFirstChar(name))
             };
         }
 

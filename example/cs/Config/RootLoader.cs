@@ -34,7 +34,7 @@ namespace Config
         {
             var rRefRank = Equip.DRankInfo.Get(Rank);
             if (rRefRank == null) reader.RefNotFound("LevelRank", "Rank", Rank.ToString());
-            else RefRank = rRefRank.eEnum;
+            else RefRank = rRefRank.EEnum;
         }
     }
 

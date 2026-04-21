@@ -55,7 +55,7 @@ namespace ${model.name.pkg};
         public required ${model.type(field.type())} ${model.upper1(field.name())} { get; init; }@if(!field.comment().isEmpty()) /* ${StringUtil.removeLineSep(field.comment())} */@endif
     @endfor
     @if(isEnum)
-        public required ${className} eEnum { get; init; }
+        public required ${className} EEnum { get; init; }
     @endif
 
     <%--ref property--%>

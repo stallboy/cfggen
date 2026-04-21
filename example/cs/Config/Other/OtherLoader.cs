@@ -53,7 +53,7 @@ namespace Config.Other
                 var self = _create(reader);
                 s_all.Add(self.Name, self);
                 s_idMap.Add(self.Id, self);
-                DArgCaptureModeExtensions._infos[(int)self.eEnum] = self;
+                DArgCaptureModeExtensions._infos[(int)self.EEnum] = self;
             }
             _all = s_all.ToFrozenDictionary();
             _idMap = s_idMap.ToFrozenDictionary();
@@ -68,7 +68,7 @@ namespace Config.Other
                 Name = name,
                 Id = id,
                 Comment = comment,
-                eEnum = Enum.Parse<DArgCaptureMode>(StringUtil.UpperFirstChar(name))
+                EEnum = Enum.Parse<DArgCaptureMode>(StringUtil.UpperFirstChar(name))
             };
         }
 
@@ -227,13 +227,13 @@ namespace Config.Other
             }
             var rRefEnumTest = Other.DArgCaptureModeInfo.Get(EnumTest);
             if (rRefEnumTest == null) reader.RefNotFound("other.keytest", "enumTest", EnumTest);
-            else RefEnumTest = rRefEnumTest.eEnum;
+            else RefEnumTest = rRefEnumTest.EEnum;
             RefEnumList = [];
             foreach(var e in EnumList)
             {
                 var r = Other.DArgCaptureModeInfo.Get(e);
                 if (r == null) reader.RefNotFound("other.keytest", "enumList", e);
-                else RefEnumList.Add(r.eEnum);
+                else RefEnumList.Add(r.EEnum);
             }
         }
     }
@@ -437,7 +437,7 @@ namespace Config.Other
                 var k = kv.Key;
                 var v = Other.DArgCaptureModeInfo.Get(kv.Value);
                 if (v == null) reader.RefNotFound("other.monster", "enumMap2", kv.Value);
-                else RefEnumMap2.Add(k, v.eEnum);
+                else RefEnumMap2.Add(k, v.EEnum);
             }
         }
     }

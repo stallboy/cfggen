@@ -44,7 +44,7 @@ namespace Config.Equip
             {
                 var self = _create(reader);
                 s_all.Add(self.Id, self);
-                DAbilityExtensions._infos[(int)self.eEnum] = self;
+                DAbilityExtensions._infos[(int)self.EEnum] = self;
             }
             _all = s_all.ToFrozenDictionary();
         }
@@ -56,7 +56,7 @@ namespace Config.Equip
             return new DAbilityInfo {
                 Id = id,
                 Name = name,
-                eEnum = Enum.Parse<DAbility>(StringUtil.UpperFirstChar(name))
+                EEnum = Enum.Parse<DAbility>(StringUtil.UpperFirstChar(name))
             };
         }
 
@@ -227,11 +227,11 @@ namespace Config.Equip
             else RefLvlRank = rRefLvlRank;
             var rRefJType = Equip.DJewelrytypeInfo.Get(JType);
             if (rRefJType == null) reader.RefNotFound("equip.jewelry", "JType", JType);
-            else RefJType = rRefJType.eEnum;
+            else RefJType = rRefJType.EEnum;
             NullableRefSuitID = Equip.DJewelrysuit.Get(SuitID);
             var rRefKeyAbility = Equip.DAbilityInfo.Get(KeyAbility);
             if (rRefKeyAbility == null) reader.RefNotFound("equip.jewelry", "KeyAbility", KeyAbility.ToString());
-            else RefKeyAbility = rRefKeyAbility.eEnum;
+            else RefKeyAbility = rRefKeyAbility.EEnum;
         }
     }
 
@@ -387,7 +387,7 @@ namespace Config.Equip
             {
                 var self = _create(reader);
                 s_all.Add(self.TypeName, self);
-                DJewelrytypeExtensions._infos[(int)self.eEnum] = self;
+                DJewelrytypeExtensions._infos[(int)self.EEnum] = self;
             }
             _all = s_all.ToFrozenDictionary();
         }
@@ -397,7 +397,7 @@ namespace Config.Equip
             var typeName = reader.ReadStringInPool();
             return new DJewelrytypeInfo {
                 TypeName = typeName,
-                eEnum = Enum.Parse<DJewelrytype>(StringUtil.UpperFirstChar(typeName))
+                EEnum = Enum.Parse<DJewelrytype>(StringUtil.UpperFirstChar(typeName))
             };
         }
 
@@ -431,7 +431,7 @@ namespace Config.Equip
             {
                 var self = _create(reader);
                 s_all.Add(self.RankID, self);
-                DRankExtensions._infos[(int)self.eEnum] = self;
+                DRankExtensions._infos[(int)self.EEnum] = self;
             }
             _all = s_all.ToFrozenDictionary();
         }
@@ -445,7 +445,7 @@ namespace Config.Equip
                 RankID = rankID,
                 RankName = rankName,
                 RankShowName = rankShowName,
-                eEnum = Enum.Parse<DRank>(StringUtil.UpperFirstChar(rankName))
+                EEnum = Enum.Parse<DRank>(StringUtil.UpperFirstChar(rankName))
             };
         }
 

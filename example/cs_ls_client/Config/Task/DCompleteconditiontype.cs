@@ -15,7 +15,7 @@ public partial class DCompleteconditiontypeInfo
 {
     public required int Id { get; init; } /* 任务完成条件类型（id的范围为1-100） */
     public required string Name { get; init; } /* 程序用名字 */
-    public required DCompleteconditiontype eEnum { get; init; }
+    public required DCompleteconditiontype EEnum { get; init; }
     
     private static System.Collections.Frozen.FrozenDictionary<int, DCompleteconditiontypeInfo> _all = null!;
 

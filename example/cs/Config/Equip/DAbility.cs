@@ -15,7 +15,7 @@ public partial class DAbilityInfo
 {
     public required int Id { get; init; } /* 属性类型 */
     public required string Name { get; init; } /* 程序用名字 */
-    public required DAbility eEnum { get; init; }
+    public required DAbility EEnum { get; init; }
     
     private static System.Collections.Frozen.FrozenDictionary<int, DAbilityInfo> _all = null!;
 
