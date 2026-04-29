@@ -48,42 +48,42 @@ public class Ai {
     }
 
     /**
-    * 描述----这里测试下多行效果--再来一行
+     * 描述----这里测试下多行效果--再来一行
      */
     public String getDesc() {
         return desc;
     }
 
     /**
-    * 触发公式
+     * 触发公式
      */
     public String getCondID() {
         return condID;
     }
 
     /**
-    * 触发间隔(帧)
+     * 触发间隔(帧)
      */
     public config.ai.triggertick.TriggerTick getTrigTick() {
         return trigTick;
     }
 
     /**
-    * 触发几率
+     * 触发几率
      */
     public int getTrigOdds() {
         return trigOdds;
     }
 
     /**
-    * 触发行为
+     * 触发行为
      */
     public java.util.List<Integer> getActionID() {
         return actionID;
     }
 
     /**
-    * 死亡移除
+     * 死亡移除
      */
     public boolean getDeathRemove() {
         return deathRemove;
@@ -103,12 +103,13 @@ public class Ai {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allAiAi();
     }
-
     public static class _ConfigLoader implements config.ConfigLoader {
 
         @Override
         public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            for (int c = input.readInt(); c > 0; c--) {
+            int c = input.readInt();
+            mgr.ai_ai_All = new java.util.LinkedHashMap<>(c);
+            for (; c > 0; c--) {
                 Ai self = Ai._create(input);
                 mgr.ai_ai_All.put(self.iD, self);
             }

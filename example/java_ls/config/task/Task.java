@@ -35,14 +35,14 @@ public class Task {
     }
 
     /**
-    * 任务完成条件类型（id的范围为1-100）
+     * 任务完成条件类型（id的范围为1-100）
      */
     public int getTaskid() {
         return taskid;
     }
 
     /**
-    * 程序用名字
+     * 程序用名字
      */
     public java.util.List<config.Text> getName() {
         return name;
@@ -61,7 +61,7 @@ public class Task {
     }
 
     /**
-    * 测试
+     * 测试
      */
     public config.task.TestDefaultBean getTestDefaultBean() {
         return testDefaultBean;
@@ -99,12 +99,13 @@ public class Task {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allTaskTask();
     }
-
     public static class _ConfigLoader implements config.ConfigLoader {
 
         @Override
         public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            for (int c = input.readInt(); c > 0; c--) {
+            int c = input.readInt();
+            mgr.task_task_All = new java.util.LinkedHashMap<>(c);
+            for (; c > 0; c--) {
                 Task self = Task._create(input);
                 mgr.task_task_All.put(self.taskid, self);
             }

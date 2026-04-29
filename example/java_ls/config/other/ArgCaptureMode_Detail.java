@@ -47,12 +47,14 @@ public class ArgCaptureMode_Detail {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allOtherArgCaptureMode();
     }
-
     public static class _ConfigLoader implements config.ConfigLoader {
 
         @Override
         public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            for (int c = input.readInt(); c > 0; c--) {
+            int c = input.readInt();
+            mgr.other_ArgCaptureMode_All = new java.util.LinkedHashMap<>(c);
+            mgr.other_ArgCaptureMode_IdMap = new java.util.LinkedHashMap<>(c);
+            for (; c > 0; c--) {
                 ArgCaptureMode_Detail self = ArgCaptureMode_Detail._create(input);
                 mgr.other_ArgCaptureMode_All.put(self.name, self);
                 mgr.other_ArgCaptureMode_IdMap.put(self.id, self);

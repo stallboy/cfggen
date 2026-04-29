@@ -36,28 +36,28 @@ public class DropItem {
     }
 
     /**
-    * 掉落概率
+     * 掉落概率
      */
     public int getChance() {
         return chance;
     }
 
     /**
-    * 掉落物品
+     * 掉落物品
      */
     public java.util.List<Integer> getItemids() {
         return itemids;
     }
 
     /**
-    * 数量下限
+     * 数量下限
      */
     public int getCountmin() {
         return countmin;
     }
 
     /**
-    * 数量上限
+     * 数量上限
      */
     public int getCountmax() {
         return countmax;

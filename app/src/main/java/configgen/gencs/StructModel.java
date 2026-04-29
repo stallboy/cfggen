@@ -212,6 +212,10 @@ public class StructModel {
         return "Dictionary<" + keyClassName(keySchema) + ", " + dictValueType() + ">";
     }
 
+    public boolean isSeqKey(KeySchema keySchema) {
+        return keySchema.fieldSchemas().size() == 1 && keySchema.fieldSchemas().getFirst().isSeq();
+    }
+
     public static String refInit(ForeignKeySchema fk) {
         if (fk.refKey() instanceof RefKey.RefSimple refSimple) {
             if (refSimple.nullable()) {

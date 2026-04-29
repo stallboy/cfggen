@@ -7,6 +7,7 @@ public enum DRank
     Blue,
     Purple,
     Yellow,
+    Red,
 }
 
 public partial class DRankInfo
@@ -16,22 +17,23 @@ public partial class DRankInfo
     public required string RankShowName { get; init; } /* 显示名称 */
     public required DRank EEnum { get; init; }
     
-    private static System.Collections.Frozen.FrozenDictionary<int, DRankInfo> _all = null!;
+    private static DRankInfo[] _all = null!;
 
     public static DRankInfo? Get(int rankID)
     {
-        return _all.GetValueOrDefault(rankID);
+        var key = rankID;
+        return key >= 0 && key < _all.Length ? _all[key] : null;
     }
 
     public static IReadOnlyList<DRankInfo> All()
     {
-        return _all.Values;
+        return _all;
     }
 }
 
 public static class DRankExtensions
 {
-    internal static readonly DRankInfo[] _infos = new DRankInfo[5];
+    internal static readonly DRankInfo[] _infos = new DRankInfo[6];
 
     public static DRankInfo Info(this DRank e)
     {

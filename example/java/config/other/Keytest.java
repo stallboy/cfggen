@@ -208,12 +208,16 @@ public class Keytest {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allOtherKeytest();
     }
-
     public static class _ConfigLoader implements config.ConfigLoader {
 
         @Override
         public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            for (int c = input.readInt(); c > 0; c--) {
+            int c = input.readInt();
+            mgr.other_keytest_All = new java.util.LinkedHashMap<>(c);
+            mgr.other_keytest_Id1Id3Map = new java.util.LinkedHashMap<>(c);
+            mgr.other_keytest_Id2Map = new java.util.LinkedHashMap<>(c);
+            mgr.other_keytest_Id2Id3Map = new java.util.LinkedHashMap<>(c);
+            for (; c > 0; c--) {
                 Keytest self = Keytest._create(input);
                 mgr.other_keytest_All.put(new Id1Id2Key(self.id1, self.id2), self);
                 mgr.other_keytest_Id1Id3Map.put(new Id1Id3Key(self.id1, self.id3), self);

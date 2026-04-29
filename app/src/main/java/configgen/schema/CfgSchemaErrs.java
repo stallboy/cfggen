@@ -395,4 +395,12 @@ public record CfgSchemaErrs(List<Err> errs,
      */
     public record MappingToExcelLoop(SequencedCollection<String> structNameLoop) implements Err {
     }
+
+    /**
+     * seq只能用于int类型字段
+     */
+    public record SeqFieldMustBeInt(String structural,
+                                    String field,
+                                    String actualType) implements Err {
+    }
 }

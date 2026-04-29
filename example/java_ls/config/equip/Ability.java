@@ -30,14 +30,14 @@ public enum Ability {
     }
 
     /**
-    * 属性类型
+     * 属性类型
      */
     public int getId() {
         return value;
     }
 
     /**
-    * 程序用名字
+     * 程序用名字
      */
     public String getName() {
         return name;

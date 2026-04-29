@@ -34,4 +34,8 @@ public record FieldSchema(String name,
     public boolean isMustFill() {
         return meta.isMustFill();
     }
+
+    public boolean isSeq() {
+        return meta.isSeq();
+    }
 }

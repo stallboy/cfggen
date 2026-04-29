@@ -126,12 +126,13 @@ public class Jewelry {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allEquipJewelry();
     }
-
     public static class _ConfigLoader implements config.ConfigLoader {
 
         @Override
         public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            for (int c = input.readInt(); c > 0; c--) {
+            int c = input.readInt();
+            mgr.equip_jewelry_All = new java.util.LinkedHashMap<>(c);
+            for (; c > 0; c--) {
                 Jewelry self = Jewelry._create(input);
                 mgr.equip_jewelry_All.put(self.iD, self);
             }

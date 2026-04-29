@@ -31,7 +31,7 @@ public class Loot {
     }
 
     /**
-    * 序号
+     * 序号
      */
     public int getLootid() {
         return lootid;
@@ -42,14 +42,14 @@ public class Loot {
     }
 
     /**
-    * 名字
+     * 名字
      */
     public config.Text getName() {
         return name;
     }
 
     /**
-    * 掉落0件物品的概率
+     * 掉落0件物品的概率
      */
     public java.util.List<Integer> getChanceList() {
         return chanceList;
@@ -96,12 +96,13 @@ public class Loot {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allOtherLoot();
     }
-
     public static class _ConfigLoader implements config.ConfigLoader {
 
         @Override
         public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            for (int c = input.readInt(); c > 0; c--) {
+            int c = input.readInt();
+            mgr.other_loot_All = new java.util.LinkedHashMap<>(c);
+            for (; c > 0; c--) {
                 Loot self = Loot._create(input);
                 mgr.other_loot_All.put(self.lootid, self);
             }

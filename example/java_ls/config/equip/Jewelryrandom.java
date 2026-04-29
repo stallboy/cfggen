@@ -39,28 +39,28 @@ public class Jewelryrandom {
     }
 
     /**
-    * 等级
+     * 等级
      */
     public config.LevelRank getLvlRank() {
         return lvlRank;
     }
 
     /**
-    * 最小攻击力
+     * 最小攻击力
      */
     public config.Range getAttackRange() {
         return attackRange;
     }
 
     /**
-    * 最小防御力
+     * 最小防御力
      */
     public java.util.List<config.Range> getOtherRange() {
         return otherRange;
     }
 
     /**
-    * 测试pack
+     * 测试pack
      */
     public java.util.List<config.equip.TestPackBean> getTestPack() {
         return testPack;
@@ -84,12 +84,13 @@ public class Jewelryrandom {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allEquipJewelryrandom();
     }
-
     public static class _ConfigLoader implements config.ConfigLoader {
 
         @Override
         public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            for (int c = input.readInt(); c > 0; c--) {
+            int c = input.readInt();
+            mgr.equip_jewelryrandom_All = new java.util.LinkedHashMap<>(c);
+            for (; c > 0; c--) {
                 Jewelryrandom self = Jewelryrandom._create(input);
                 mgr.equip_jewelryrandom_All.put(self.lvlRank, self);
             }

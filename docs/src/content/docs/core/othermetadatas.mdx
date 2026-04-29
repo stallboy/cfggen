@@ -137,6 +137,42 @@ table effectclass[name] (enum='name', title='text') {
 
 ---
 
+## seq - 连续序列标记
+
+### 功能描述
+在字段上设置 `(seq)` 元数据，声明该字段的值为从 0 开始的连续整数序列（0, 1, 2, 3, ...）。
+
+### 约束条件
+- 仅适用于 `int` 类型字段
+- 数据验证时会检查字段值确实构成从 0 开始的连续序列
+
+### 代码生成效果
+当 `seq` 字段被用作主键或唯一键时，生成的代码使用**数组**存储而非 Map/Dictionary，提升访问性能：
+
+| 语言 | 普通主键存储 | seq 主键存储 |
+|------|------------|-------------|
+| Java | `Map<Integer, T>` | `T[]` |
+| C# | `FrozenDictionary<int, T>` | `T?[]` |
+| Go | `map[int32]*T` | `[]*T` |
+
+### 语法示例
+```cfg
+table gameplaytag[tag] {
+    tag:str;
+    tagId:int (seq);    // 值必须为 0, 1, 2, 3, ...
+    description:text;
+    ancestors:list<int> ->gameplaytag[tagId];
+    [tagId];            // seq 字段作为唯一键，生成数组访问
+}
+```
+
+### 应用场景
+- 游戏标签（Gameplay Tag）系统，用连续 ID 作为标志位
+- 需要高性能随机访问的配置表
+- ID 天然连续且从 0 开始的配置数据
+
+---
+
 ## root - 根表标记
 
 ### 功能描述

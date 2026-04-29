@@ -218,6 +218,12 @@ public record CfgValueErrs(List<VErr> errs,
     public record JsonHasExtraFields(DFile source, String type, Set<String> extraFields) implements VWarn {
     }
 
+    /**
+     * seq字段的值不连续
+     */
+    public record SeqValueNotContinuous(Source source, String table, String field, int expectedValue) implements VErr {
+    }
+
     public enum EType {
         BOOL,
         INT,

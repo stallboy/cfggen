@@ -78,12 +78,13 @@ public class Equipconfig {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allEquipEquipconfig();
     }
-
     public static class _ConfigLoader implements config.ConfigLoader {
 
         @Override
         public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            for (int c = input.readInt(); c > 0; c--) {
+            int c = input.readInt();
+            mgr.equip_equipconfig_All = new java.util.LinkedHashMap<>(c);
+            for (; c > 0; c--) {
                 Equipconfig self = Equipconfig._create(input);
                 mgr.equip_equipconfig_All.put(self.entry, self);
             }

@@ -176,7 +176,11 @@ var (
     type ${className}Mgr struct {
         all []*${className}
         @for (KeySchema keySchema : keySchemas)
-            ${model.mapName(keySchema)}Map map[${model.keyClassName(keySchema)}]*${name.className}
+            @if (keySchema.fieldSchemas().size() == 1 && keySchema.fieldSchemas().getFirst().isSeq())
+                ${model.mapName(keySchema)}Arr []*${name.className}
+            @else
+                ${model.mapName(keySchema)}Map map[${model.keyClassName(keySchema)}]*${name.className}
+            @endif
         @endfor
         @if(table.primaryKey().fieldSchemas().size() > 1)
             @for (FieldSchema fieldSchema : table.primaryKey().fieldSchemas())
@@ -199,8 +203,17 @@ var (
         var getFuncName = model.GetFuncName(keySchema,isPrimaryKey);
         var IdType = model.keyClassName(keySchema);
         var mapName = model.mapName(keySchema);
+        var isSeq = fieldCnt == 1 && fieldSchemas.getFirst().isSeq();
     }
-    @if (fieldCnt > 1)
+    @if (isSeq)
+        func(t *${className}Mgr) ${getFuncName}(${varDefines}) *${className} {
+            if ${paramVars} < 0 || int(${paramVars}) >= len(t.${mapName}Arr) {
+                return nil
+            }
+            return t.${mapName}Arr[${paramVars}]
+        }
+
+    @elseif (fieldCnt > 1)
         func(t *${className}Mgr) ${getFuncName}(${varDefines}) *${className} {
             return t.${mapName}Map[${IdType}{${paramVars}}]
         }
@@ -239,8 +252,13 @@ var (
         !{
             var mapName = model.mapName(keySchema);
             var IdType = model.keyClassName(keySchema);
+            var initIsSeq = keySchema.fieldSchemas().size() == 1 && keySchema.fieldSchemas().getFirst().isSeq();
         }
-        t.${mapName}Map = make(map[${IdType}]*${className}, cnt)
+        @if (initIsSeq)
+            t.${mapName}Arr = make([]*${className}, cnt)
+        @else
+            t.${mapName}Map = make(map[${IdType}]*${className}, cnt)
+        @endif
         @endfor
         for i := 0; i < int(cnt); i++ {
             v := create${className}(stream)
@@ -252,8 +270,11 @@ var (
                 var mapName = model.mapName(keySchema);
                 var IdType = model.keyClassName(keySchema);
                 var paramVarsInV = model.GetParamVarsInV(keySchema, "v");
+                var loopIsSeq = fieldCnt == 1 && fieldSchemas.getFirst().isSeq();
             }
-            @if (fieldCnt > 1)
+            @if (loopIsSeq)
+                t.${mapName}Arr[${paramVarsInV}] = v
+            @elseif (fieldCnt > 1)
                 t.${mapName}Map[${IdType}{${paramVarsInV}}] = v
             @else
                 t.${mapName}Map[${paramVarsInV}] = v

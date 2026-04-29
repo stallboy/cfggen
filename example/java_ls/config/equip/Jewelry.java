@@ -43,70 +43,70 @@ public class Jewelry {
     }
 
     /**
-    * 首饰ID
+     * 首饰ID
      */
     public int getID() {
         return iD;
     }
 
     /**
-    * 首饰名称
+     * 首饰名称
      */
     public String getName() {
         return name;
     }
 
     /**
-    * 图标ID
+     * 图标ID
      */
     public String getIconFile() {
         return iconFile;
     }
 
     /**
-    * 首饰等级
+     * 首饰等级
      */
     public config.LevelRank getLvlRank() {
         return lvlRank;
     }
 
     /**
-    * 首饰类型
+     * 首饰类型
      */
     public String getJType() {
         return jType;
     }
 
     /**
-    * 套装ID（为0是没有不属于套装，首饰品级为4的首饰该参数为套装id，其余情况为0,引用JewelrySuit.csv）
+     * 套装ID（为0是没有不属于套装，首饰品级为4的首饰该参数为套装id，其余情况为0,引用JewelrySuit.csv）
      */
     public int getSuitID() {
         return suitID;
     }
 
     /**
-    * 关键属性类型
+     * 关键属性类型
      */
     public int getKeyAbility() {
         return keyAbility;
     }
 
     /**
-    * 关键属性数值
+     * 关键属性数值
      */
     public int getKeyAbilityValue() {
         return keyAbilityValue;
     }
 
     /**
-    * 售卖价格
+     * 售卖价格
      */
     public int getSalePrice() {
         return salePrice;
     }
 
     /**
-    * 描述,根据Lvl和Rank来随机3个属性，第一个属性由Lvl,Rank行随机，剩下2个由Lvl和小于Rank的行里随机。Rank最小的时候都从Lvl，Rank里随机。
+     * 描述,根据Lvl和Rank来随机3个属性，第一个属性由Lvl,Rank行随机，剩下2个由Lvl和小于Rank的行里随机。Rank最小的时候都从Lvl，Rank里随机。
      */
     public String getDescription() {
         return description;
@@ -126,12 +126,13 @@ public class Jewelry {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allEquipJewelry();
     }
-
     public static class _ConfigLoader implements config.ConfigLoader {
 
         @Override
         public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            for (int c = input.readInt(); c > 0; c--) {
+            int c = input.readInt();
+            mgr.equip_jewelry_All = new java.util.LinkedHashMap<>(c);
+            for (; c > 0; c--) {
                 Jewelry self = Jewelry._create(input);
                 mgr.equip_jewelry_All.put(self.iD, self);
             }

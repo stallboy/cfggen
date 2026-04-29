@@ -84,6 +84,10 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
         return hasTag(ROOT);
     }
 
+    public boolean isSeq() {
+        return hasTag(SEQ);
+    }
+
     public void putTag(String tag) {
         if (reservedTags.contains(tag)) {
             throw new IllegalArgumentException(String.format("'%s' reserved", tag));
@@ -165,12 +169,13 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     private static final String LOWER_CASE = "lowercase";
     private static final String MUST_FILL = "mustFill";
     private static final String ROOT = "root";
+    private static final String SEQ = "seq";
 
     private static final Set<String> stateTags = Set.of(SPAN, HAS_REF, HAS_BLOCK, HAS_MAP, HAS_TEXT);
 
     private static final Set<String> reservedTags = Set.of(COMMENT, SPAN, HAS_REF, HAS_BLOCK, HAS_MAP, HAS_TEXT,
             JSON, NULLABLE, ENUM_REF, DEFAULT_IMPL, ENTRY, ENUM, COLUMN_MODE, PACK, SEP, FIX, BLOCK,
-            LOWER_CASE, MUST_FILL, ROOT, ENUM_VALUES, FROM_ENUM_TYPE, FROM_CFG_FILEPATH);
+            LOWER_CASE, MUST_FILL, ROOT, SEQ, ENUM_VALUES, FROM_ENUM_TYPE, FROM_CFG_FILEPATH);
 
     public String getComment() {
         if (data.get(COMMENT) instanceof MetaStr(String value)) {

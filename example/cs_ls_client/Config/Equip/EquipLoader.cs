@@ -426,14 +426,14 @@ namespace Config.Equip
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
-            var s_all = new Dictionary<int, DRankInfo>(count);
+            var s_all = new DRankInfo[count];
             for (int i = 0; i < count; i++)
             {
                 var self = _create(reader);
-                s_all.Add(self.RankID, self);
+                s_all[self.RankID] = self;
                 DRankExtensions._infos[(int)self.EEnum] = self;
             }
-            _all = s_all.ToFrozenDictionary();
+            _all = s_all;
         }
 
         internal static DRankInfo _create(ConfigReader reader)

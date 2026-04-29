@@ -41,7 +41,7 @@ public class Jewelrysuit {
     }
 
     /**
-    * 饰品套装ID
+     * 饰品套装ID
      */
     public int getSuitID() {
         return suitID;
@@ -52,56 +52,56 @@ public class Jewelrysuit {
     }
 
     /**
-    * 策划用名字
+     * 策划用名字
      */
     public config.Text getName() {
         return name;
     }
 
     /**
-    * 套装属性类型1（装备套装中的两件时增加的属性）
+     * 套装属性类型1（装备套装中的两件时增加的属性）
      */
     public int getAbility1() {
         return ability1;
     }
 
     /**
-    * 套装属性1
+     * 套装属性1
      */
     public int getAbility1Value() {
         return ability1Value;
     }
 
     /**
-    * 套装属性类型2（装备套装中的三件时增加的属性）
+     * 套装属性类型2（装备套装中的三件时增加的属性）
      */
     public int getAbility2() {
         return ability2;
     }
 
     /**
-    * 套装属性2
+     * 套装属性2
      */
     public int getAbility2Value() {
         return ability2Value;
     }
 
     /**
-    * 套装属性类型3（装备套装中的四件时增加的属性）
+     * 套装属性类型3（装备套装中的四件时增加的属性）
      */
     public int getAbility3() {
         return ability3;
     }
 
     /**
-    * 套装属性3
+     * 套装属性3
      */
     public int getAbility3Value() {
         return ability3Value;
     }
 
     /**
-    * 部件1
+     * 部件1
      */
     public java.util.List<Integer> getSuitList() {
         return suitList;
@@ -121,12 +121,13 @@ public class Jewelrysuit {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allEquipJewelrysuit();
     }
-
     public static class _ConfigLoader implements config.ConfigLoader {
 
         @Override
         public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            for (int c = input.readInt(); c > 0; c--) {
+            int c = input.readInt();
+            mgr.equip_jewelrysuit_All = new java.util.LinkedHashMap<>(c);
+            for (; c > 0; c--) {
                 Jewelrysuit self = Jewelrysuit._create(input);
                 mgr.equip_jewelrysuit_All.put(self.suitID, self);
             }

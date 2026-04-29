@@ -180,6 +180,9 @@ public final class CfgSchemaResolver {
 
     private void resolveFields(Structural structural) {
         for (FieldSchema field : structural.fields()) {
+            if (field.isSeq() && field.type() != INT) {
+                errs.addErr(new SeqFieldMustBeInt(ctx(), field.name(), field.type().toString()));
+            }
             resolveFieldType(field.type(), field, structural);
         }
     }

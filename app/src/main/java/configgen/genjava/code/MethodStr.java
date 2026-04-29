@@ -51,7 +51,11 @@ public class MethodStr {
             String pre = "mgr." + name.containerPrefix;
             switch (refSimple) {
                 case RefPrimary ignored -> {
-                    if (refTable.primaryKey().fieldSchemas().size() == 1) {
+                    boolean isSeq = refTable.primaryKey().fieldSchemas().size() == 1
+                            && refTable.primaryKey().fieldSchemas().getFirst().isSeq();
+                    if (isSeq) {
+                        return pre + "All[" + actualParam + "]";
+                    } else if (refTable.primaryKey().fieldSchemas().size() == 1) {
                         return pre + "All.get(" + actualParam + ")";
                     } else {
                         return pre + "All.get(new " + Name.keyClassName(refTable.primaryKey(), name) +
@@ -60,10 +64,15 @@ public class MethodStr {
                 }
 
                 case RefUniq refUniq -> {
-                    if (refUniq.key().fields().size() == 1) {
-                        return pre + Name.uniqueKeyMapName(refUniq.key()) + ".get(" + actualParam + ")";
+                    boolean isSeq = refUniq.key().fieldSchemas().size() == 1
+                            && refUniq.key().fieldSchemas().getFirst().isSeq();
+                    String mapName = Name.uniqueKeyMapName(refUniq.key());
+                    if (isSeq) {
+                        return pre + mapName + "[" + actualParam + "]";
+                    } else if (refUniq.key().fields().size() == 1) {
+                        return pre + mapName + ".get(" + actualParam + ")";
                     } else {
-                        return pre + Name.uniqueKeyMapName(refUniq.key()) + ".get( new " +
+                        return pre + mapName + ".get( new " +
                                 Name.keyClassName(refUniq.key(), name) + "(" + actualParam + ") )";
                     }
                 }

@@ -59,9 +59,17 @@ public void _resolveDirect(${codeTopPkg}.ConfigMgr mgr) {
                     for (${refN.fullName} v : ${refN.fullName}.values()) {
                 @elseif(isEnum)
                     for (${refN.fullName} vv : ${refN.fullName}.values()) {
-                        ${refN.fullName}_Detail v = mgr.${refN.containerPrefix}All.get(vv.get${StringUtil.upper1(refTable.primaryKey().fields().getFirst())}());
+                        @if(refTable.primaryKey().fieldSchemas().size() == 1 && refTable.primaryKey().fieldSchemas().getFirst().isSeq())
+                            ${refN.fullName}_Detail v = mgr.${refN.containerPrefix}All[vv.get${StringUtil.upper1(refTable.primaryKey().fields().getFirst())}()];
+                        @else
+                            ${refN.fullName}_Detail v = mgr.${refN.containerPrefix}All.get(vv.get${StringUtil.upper1(refTable.primaryKey().fields().getFirst())}());
+                        @endif
                 @else
-                    for (${Name.refType(refTable)} v : mgr.${refN.containerPrefix}All.values()) {
+                    @if(refTable.primaryKey().fieldSchemas().size() == 1 && refTable.primaryKey().fieldSchemas().getFirst().isSeq())
+                        for (${Name.refType(refTable)} v : java.util.Arrays.asList(mgr.${refN.containerPrefix}All)) {
+                    @else
+                        for (${Name.refType(refTable)} v : mgr.${refN.containerPrefix}All.values()) {
+                    @endif
                 @endif
                     !{
                         java.util.List<String> eqs = new java.util.ArrayList<>();

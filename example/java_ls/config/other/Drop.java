@@ -39,28 +39,28 @@ public class Drop {
     }
 
     /**
-    * 序号
+     * 序号
      */
     public int getDropid() {
         return dropid;
     }
 
     /**
-    * 名字
+     * 名字
      */
     public config.Text getName() {
         return name;
     }
 
     /**
-    * 掉落概率
+     * 掉落概率
      */
     public java.util.List<config.other.DropItem> getItems() {
         return items;
     }
 
     /**
-    * 测试map block
+     * 测试map block
      */
     public java.util.Map<Integer, Integer> getTestmap() {
         return testmap;
@@ -80,12 +80,13 @@ public class Drop {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allOtherDrop();
     }
-
     public static class _ConfigLoader implements config.ConfigLoader {
 
         @Override
         public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            for (int c = input.readInt(); c > 0; c--) {
+            int c = input.readInt();
+            mgr.other_drop_All = new java.util.LinkedHashMap<>(c);
+            for (; c > 0; c--) {
                 Drop self = Drop._create(input);
                 mgr.other_drop_All.put(self.dropid, self);
             }

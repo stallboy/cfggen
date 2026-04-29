@@ -84,12 +84,13 @@ public class Jewelryrandom {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allEquipJewelryrandom();
     }
-
     public static class _ConfigLoader implements config.ConfigLoader {
 
         @Override
         public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            for (int c = input.readInt(); c > 0; c--) {
+            int c = input.readInt();
+            mgr.equip_jewelryrandom_All = new java.util.LinkedHashMap<>(c);
+            for (; c > 0; c--) {
                 Jewelryrandom self = Jewelryrandom._create(input);
                 mgr.equip_jewelryrandom_All.put(self.lvlRank, self);
             }

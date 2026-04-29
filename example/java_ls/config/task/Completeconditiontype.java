@@ -30,14 +30,14 @@ public enum Completeconditiontype {
     }
 
     /**
-    * 任务完成条件类型（id的范围为1-100）
+     * 任务完成条件类型（id的范围为1-100）
      */
     public int getId() {
         return value;
     }
 
     /**
-    * 程序用名字
+     * 程序用名字
      */
     public String getName() {
         return name;

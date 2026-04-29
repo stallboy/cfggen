@@ -66,6 +66,7 @@ namespace ${model.name.pkg};
     <%--table static Get,All--%>
     @if(model._vTable != null)
         !{TableSchema table = model._vTable.schema();}
+        !{boolean primarySeq = model.isSeqKey(table.primaryKey());}
         @template.cs.GenMapGetBy(model = model, keySchema = table.primaryKey(), isPrimaryKey = true)
         @for(KeySchema uk : table.uniqueKeys())
             @template.cs.GenMapGetBy(model = model, keySchema = uk, isPrimaryKey = false)
@@ -73,7 +74,11 @@ namespace ${model.name.pkg};
 
         public static IReadOnlyList<${className}${isEnum?"Info" : ""}> All()
         {
-            return _all.Values;
+            @if(primarySeq)
+                return _all;
+            @else
+                return _all.Values;
+            @endif
         }
     @endif
 }

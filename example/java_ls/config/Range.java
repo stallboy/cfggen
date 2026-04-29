@@ -20,14 +20,14 @@ public class Range {
     }
 
     /**
-    * 最小
+     * 最小
      */
     public int getMin() {
         return min;
     }
 
     /**
-    * 最大
+     * 最大
      */
     public int getMax() {
         return max;

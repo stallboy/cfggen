@@ -274,11 +274,12 @@ public class ConfigCodeSchema {
 
     static Schema equip_rank() {
         SchemaEnum s2 = new SchemaEnum(false, true);
-        s2.addValue("white", 1);
-        s2.addValue("green", 2);
-        s2.addValue("blue", 3);
-        s2.addValue("purple", 4);
-        s2.addValue("yellow", 5);
+        s2.addValue("white", 0);
+        s2.addValue("green", 1);
+        s2.addValue("blue", 2);
+        s2.addValue("purple", 3);
+        s2.addValue("yellow", 4);
+        s2.addValue("red", 5);
         return s2;
     }
 

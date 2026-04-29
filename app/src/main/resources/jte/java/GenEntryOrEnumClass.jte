@@ -124,7 +124,11 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
         }
 
         void setRef(${model.codeTopPkg}.ConfigMgr mgr) {
-            ref = mgr.${model.name.containerPrefix}All.get(value);
+            @if(model.table.primaryKey().fieldSchemas().size() == 1 && model.table.primaryKey().fieldSchemas().getFirst().isSeq())
+                ref = mgr.${model.name.containerPrefix}All[value];
+            @else
+                ref = mgr.${model.name.containerPrefix}All.get(value);
+            @endif
             java.util.Objects.requireNonNull(ref);
         }
 

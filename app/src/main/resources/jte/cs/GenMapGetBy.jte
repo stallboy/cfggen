@@ -36,11 +36,21 @@
     @endif
     !{String className =  model.dictValueType();}
     !{String mapName = isPrimaryKey ? "_all" : model.uniqueKeyMapName(keySchema);}
-    !{String allType = model.dictType(keySchema);}
     !{String getByName = isPrimaryKey ? "Get" : model.uniqueKeyGetByName(keySchema);}
+    @if(model.isSeqKey(keySchema))
+    private static ${model.dictValueType()}[] ${mapName} = null!;
+
+    public static ${className}? ${getByName}(${model.formalParams(keySchema.fieldSchemas())})
+    {
+        var key = ${model.actualParamsKey(keySchema)};
+        return key >= 0 && key < ${mapName}.Length ? ${mapName}[key] : null;
+    }
+    @else
+    !{String allType = model.dictType(keySchema);}
     private static ${allType} ${mapName} = null!;
 
     public static ${className}? ${getByName}(${model.formalParams(keySchema.fieldSchemas())})
     {
         return ${mapName}.GetValueOrDefault(${model.actualParamsKey(keySchema)});
     }
+    @endif

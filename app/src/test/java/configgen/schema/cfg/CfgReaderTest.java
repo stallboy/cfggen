@@ -36,7 +36,6 @@ class CfgReaderTest {
         assertEquals(table.primaryKey().fields(), List.of("id"));
         assertTrue(table.entry() instanceof EntryType.EEnum e && e.field().equals("name"));
         assertFalse(table.isColumnMode());
-        assertTrue(table.meta().data().isEmpty());
 
         assertEquals(2, table.fields().size());
         {

@@ -294,6 +294,7 @@ table task[taskid] (entry='entry') {
 |------|------|----------|------|
 | `nullable` | 允许字段为空 | 所有类型 | `field:int (nullable)` |
 | `mustFill` | 必须填写，不能为空 | 所有类型 | `field:str (mustFill)` |
+| `seq` | 声明字段值为连续序列（从0开始） | int | `tagId:int (seq)` |
 | `fix=N` | 固定长度，占用N倍元素类型的列数 | list, map | `items:list<int> (fix=3)` |
 | `block=N` | 块状映射，横向固定N个元素，纵向可扩展 | list, map | `rewards:list<Reward> (block=1)` |
 | `pack` | 压缩到1列，用逗号或分号分隔 | struct, list, map | `pos:Position (pack)` |
@@ -325,6 +326,7 @@ table task[taskid] (entry='entry') {
 | `entry='字段名'` | table | 指定入口字段 |
 | `nullable` | 字段 | 允许为空 |
 | `mustFill` | 字段 | 必须填写 |
+| `seq` | 字段 (int) | 声明值为连续序列（0,1,2,...） |
 | `fix=N` | 映射... | ... |
 | `block=N` | 映射... | ... |
 | `pack` | 映射... | ... |

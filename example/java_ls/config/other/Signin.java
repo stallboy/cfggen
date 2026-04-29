@@ -48,35 +48,35 @@ public class Signin {
     }
 
     /**
-    * 礼包ID
+     * 礼包ID
      */
     public int getId() {
         return id;
     }
 
     /**
-    * 普通奖励
+     * 普通奖励
      */
     public java.util.Map<Integer, Integer> getItem2countMap() {
         return item2countMap;
     }
 
     /**
-    * vip奖励
+     * vip奖励
      */
     public java.util.Map<Integer, Integer> getVipitem2vipcountMap() {
         return vipitem2vipcountMap;
     }
 
     /**
-    * 领取vip奖励的最低等级
+     * 领取vip奖励的最低等级
      */
     public int getViplevel() {
         return viplevel;
     }
 
     /**
-    * 礼包图标
+     * 礼包图标
      */
     public String getIconFile() {
         return iconFile;
@@ -96,12 +96,13 @@ public class Signin {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allOtherSignin();
     }
-
     public static class _ConfigLoader implements config.ConfigLoader {
 
         @Override
         public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            for (int c = input.readInt(); c > 0; c--) {
+            int c = input.readInt();
+            mgr.other_signin_All = new java.util.LinkedHashMap<>(c);
+            for (; c > 0; c--) {
                 Signin self = Signin._create(input);
                 mgr.other_signin_All.put(self.id, self);
             }

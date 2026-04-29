@@ -75,7 +75,7 @@ public class Task2 {
     }
 
     /**
-    * 任务完成条件类型（id的范围为1-100）
+     * 任务完成条件类型（id的范围为1-100）
      */
     public int getTaskid() {
         return taskid;
@@ -153,12 +153,13 @@ public class Task2 {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allTaskTask2();
     }
-
     public static class _ConfigLoader implements config.ConfigLoader {
 
         @Override
         public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            for (int c = input.readInt(); c > 0; c--) {
+            int c = input.readInt();
+            mgr.task_task2_All = new java.util.LinkedHashMap<>(c);
+            for (; c > 0; c--) {
                 Task2 self = Task2._create(input);
                 mgr.task_task2_All.put(self.taskid, self);
             }

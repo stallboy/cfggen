@@ -45,28 +45,28 @@ public class Ai_condition {
     }
 
     /**
-    * 描述
+     * 描述
      */
     public String getDesc() {
         return desc;
     }
 
     /**
-    * 公式
+     * 公式
      */
     public int getFormulaID() {
         return formulaID;
     }
 
     /**
-    * 参数(int)1
+     * 参数(int)1
      */
     public java.util.List<Integer> getArgIList() {
         return argIList;
     }
 
     /**
-    * 参数(string)1
+     * 参数(string)1
      */
     public java.util.List<Integer> getArgSList() {
         return argSList;
@@ -86,12 +86,13 @@ public class Ai_condition {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allAiAi_condition();
     }
-
     public static class _ConfigLoader implements config.ConfigLoader {
 
         @Override
         public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            for (int c = input.readInt(); c > 0; c--) {
+            int c = input.readInt();
+            mgr.ai_ai_condition_All = new java.util.LinkedHashMap<>(c);
+            for (; c > 0; c--) {
                 Ai_condition self = Ai_condition._create(input);
                 mgr.ai_ai_condition_All.put(self.iD, self);
             }

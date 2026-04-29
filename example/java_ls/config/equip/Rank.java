@@ -1,11 +1,12 @@
 package config.equip;
 
 public enum Rank {
-    WHITE("white", 1),
-    GREEN("green", 2),
-    BLUE("blue", 3),
-    PURPLE("purple", 4),
-    YELLOW("yellow", 5);
+    WHITE("white", 0),
+    GREEN("green", 1),
+    BLUE("blue", 2),
+    PURPLE("purple", 3),
+    YELLOW("yellow", 4),
+    RED("red", 5);
 
     private final String name;
     private final int value;
@@ -29,21 +30,21 @@ public enum Rank {
     }
 
     /**
-    * 稀有度
+     * 稀有度
      */
     public int getRankID() {
         return value;
     }
 
     /**
-    * 程序用名字
+     * 程序用名字
      */
     public String getRankName() {
         return name;
     }
 
     /**
-    * 显示名称
+     * 显示名称
      */
     public String getRankShowName() {
         return ref.getRankShowName();
@@ -54,7 +55,7 @@ public enum Rank {
     }
 
     void setRef(config.ConfigMgr mgr) {
-        ref = mgr.equip_rank_All.get(value);
+        ref = mgr.equip_rank_All[value];
         java.util.Objects.requireNonNull(ref);
     }
 

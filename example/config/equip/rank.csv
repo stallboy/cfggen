@@ -1,7 +1,8 @@
 稀有度,程序用名字,策划注释,显示名称
 RankID,RankName,,RankShowName
-1,white,白,下品
-2,green,绿,中品
-3,blue,蓝,上品
-4,purple,紫,绝品
-5,yellow,黄,准神
+0,white,白,下品
+1,green,绿,中品
+2,blue,蓝,上品
+3,purple,紫,绝品
+4,yellow,黄,准神
+5,red,红,神

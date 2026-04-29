@@ -25,12 +25,21 @@ namespace ${group.ns}
         {
             @if(sm._vTable != null)
                 !{TableSchema table = sm._vTable.schema();}
+                !{boolean primarySeq = sm.isSeqKey(table.primaryKey());}
                 internal static void Initialize(ConfigReader reader)
                 {
                     int count = reader.ReadInt32();
-                    var s_all = new ${sm.dictTypeWhenInit(table.primaryKey())}(count);
+                    @if(primarySeq)
+                        var s_all = new ${sm.dictValueType()}[count];
+                    @else
+                        var s_all = new ${sm.dictTypeWhenInit(table.primaryKey())}(count);
+                    @endif
                     @for(KeySchema uk : table.uniqueKeys())
-                        var s${sm.uniqueKeyMapName(uk)} = new ${sm.dictTypeWhenInit(uk)}(count);
+                        @if(sm.isSeqKey(uk))
+                            var s${sm.uniqueKeyMapName(uk)} = new ${sm.dictValueType()}[count];
+                        @else
+                            var s${sm.uniqueKeyMapName(uk)} = new ${sm.dictTypeWhenInit(uk)}(count);
+                        @endif
                     @endfor
 
                     @if(table.entry() instanceof EntryType.EEntry eEntry)
@@ -42,9 +51,17 @@ namespace ${group.ns}
                     for (int i = 0; i < count; i++)
                     {
                         var self = _create(reader);
-                        s_all.Add(${sm.actualParamsKeySelf(table.primaryKey())}, self);
+                        @if(primarySeq)
+                            s_all[${sm.actualParamsKeySelf(table.primaryKey())}] = self;
+                        @else
+                            s_all.Add(${sm.actualParamsKeySelf(table.primaryKey())}, self);
+                        @endif
                         @for(KeySchema uk : table.uniqueKeys())
-                            s${sm.uniqueKeyMapName(uk)}.Add(${sm.actualParamsKeySelf(uk)}, self);
+                            @if(sm.isSeqKey(uk))
+                                s${sm.uniqueKeyMapName(uk)}[${sm.actualParamsKeySelf(uk)}] = self;
+                            @else
+                                s${sm.uniqueKeyMapName(uk)}.Add(${sm.actualParamsKeySelf(uk)}, self);
+                            @endif
                         @endfor
                         @if(sm.isEnum())
                             ${sm.name.className}Extensions._infos[(int)self.EEnum] = self;
@@ -69,10 +86,18 @@ namespace ${group.ns}
                             }
                         @endif
                     }
-                    _all = s_all.ToFrozenDictionary();
+                    @if(primarySeq)
+                        _all = s_all;
+                    @else
+                        _all = s_all.ToFrozenDictionary();
+                    @endif
                     @for(KeySchema uk : table.uniqueKeys())
                         !{String mapName = sm.uniqueKeyMapName(uk);}
-                        ${mapName} = s${mapName}.ToFrozenDictionary();
+                        @if(sm.isSeqKey(uk))
+                            ${mapName} = s${mapName};
+                        @else
+                            ${mapName} = s${mapName}.ToFrozenDictionary();
+                        @endif
                     @endfor
                     @if(table.entry() instanceof EntryType.EEntry)
                         @for(String enumName : sm._vTable.enumNames())

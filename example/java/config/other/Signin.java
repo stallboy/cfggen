@@ -96,12 +96,13 @@ public class Signin {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allOtherSignin();
     }
-
     public static class _ConfigLoader implements config.ConfigLoader {
 
         @Override
         public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            for (int c = input.readInt(); c > 0; c--) {
+            int c = input.readInt();
+            mgr.other_signin_All = new java.util.LinkedHashMap<>(c);
+            for (; c > 0; c--) {
                 Signin self = Signin._create(input);
                 mgr.other_signin_All.put(self.id, self);
             }

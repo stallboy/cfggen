@@ -96,12 +96,13 @@ public class Loot {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allOtherLoot();
     }
-
     public static class _ConfigLoader implements config.ConfigLoader {
 
         @Override
         public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            for (int c = input.readInt(); c > 0; c--) {
+            int c = input.readInt();
+            mgr.other_loot_All = new java.util.LinkedHashMap<>(c);
+            for (; c > 0; c--) {
                 Loot self = Loot._create(input);
                 mgr.other_loot_All.put(self.lootid, self);
             }

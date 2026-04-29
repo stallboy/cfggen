@@ -17,21 +17,21 @@ public class Rank_Detail {
     }
 
     /**
-    * 稀有度
+     * 稀有度
      */
     public int getRankID() {
         return rankID;
     }
 
     /**
-    * 程序用名字
+     * 程序用名字
      */
     public String getRankName() {
         return rankName;
     }
 
     /**
-    * 显示名称
+     * 显示名称
      */
     public String getRankShowName() {
         return rankShowName;
@@ -47,18 +47,19 @@ public class Rank_Detail {
         return mgr.getEquipRank(rankID);
     }
 
-    public static java.util.Collection<Rank_Detail> all() {
+    public static java.util.List<Rank_Detail> all() {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allEquipRank();
     }
-
     public static class _ConfigLoader implements config.ConfigLoader {
 
         @Override
         public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            for (int c = input.readInt(); c > 0; c--) {
+            int c = input.readInt();
+            mgr.equip_rank_All = new Rank_Detail[c];
+            for (; c > 0; c--) {
                 Rank_Detail self = Rank_Detail._create(input);
-                mgr.equip_rank_All.put(self.rankID, self);
+                mgr.equip_rank_All[self.rankID] = self;
             }
         }
 

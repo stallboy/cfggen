@@ -21,35 +21,35 @@ public class Lootitem {
     }
 
     /**
-    * 掉落id
+     * 掉落id
      */
     public int getLootid() {
         return lootid;
     }
 
     /**
-    * 掉落物品
+     * 掉落物品
      */
     public int getItemid() {
         return itemid;
     }
 
     /**
-    * 掉落概率
+     * 掉落概率
      */
     public int getChance() {
         return chance;
     }
 
     /**
-    * 数量下限
+     * 数量下限
      */
     public int getCountmin() {
         return countmin;
     }
 
     /**
-    * 数量上限
+     * 数量上限
      */
     public int getCountmax() {
         return countmax;
@@ -92,12 +92,13 @@ public class Lootitem {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allOtherLootitem();
     }
-
     public static class _ConfigLoader implements config.ConfigLoader {
 
         @Override
         public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            for (int c = input.readInt(); c > 0; c--) {
+            int c = input.readInt();
+            mgr.other_lootitem_All = new java.util.LinkedHashMap<>(c);
+            for (; c > 0; c--) {
                 Lootitem self = Lootitem._create(input);
                 mgr.other_lootitem_All.put(new LootidItemidKey(self.lootid, self.itemid), self);
             }

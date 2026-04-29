@@ -132,12 +132,13 @@ public class Monster {
         config.ConfigMgr mgr = config.ConfigMgr.getMgr();
         return mgr.allOtherMonster();
     }
-
     public static class _ConfigLoader implements config.ConfigLoader {
 
         @Override
         public void createAll(config.ConfigMgr mgr, configgen.genjava.ConfigInput input) {
-            for (int c = input.readInt(); c > 0; c--) {
+            int c = input.readInt();
+            mgr.other_monster_All = new java.util.LinkedHashMap<>(c);
+            for (; c > 0; c--) {
                 Monster self = Monster._create(input);
                 mgr.other_monster_All.put(self.id, self);
             }

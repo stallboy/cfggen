@@ -107,9 +107,33 @@ public class VTableCreator {
             }
         }
 
+        // 验证seq字段值连续性
+        validateSeqFields(valueList);
+
         return new VTable(tableSchema, valueList,
                 primaryKeyMap, uniqueKeyValueSetMap, enumNames, enumNameToIntegerValueMap);
 
+    }
+
+
+    private void validateSeqFields(List<VStruct> valueList) {
+        for (FieldSchema field : tableSchema.fields()) {
+            if (field.isSeq()) {
+                int fieldIdx = FindFieldIndex.findFieldIndex(tableSchema, field);
+                int nextExpected = 0;
+                for (VStruct vStruct : valueList) {
+                    Value v = vStruct.values().get(fieldIdx);
+                    if (v instanceof VInt vInt) {
+                        int val = vInt.value();
+                        if (val != nextExpected) {
+                            errs.addErr(new CfgValueErrs.SeqValueNotContinuous(
+                                    vInt.source(), tableSchema.name(), field.name(), val));
+                        }
+                        nextExpected++;
+                    }
+                }
+            }
+        }
     }
 
 
