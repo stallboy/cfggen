@@ -107,8 +107,14 @@ public final class InterfaceSchema implements Fieldable, Nameable {
         this.enumRefTable = enumRefTable;
     }
 
-    public StructSchema nullableDefaultImplStruct() {
-        return nullableDefaultImplStruct;
+    /**
+     * 如果设置了defaultImpl，则找这个名字的实现，如果找不到则默认是第一个实现。
+     */
+    public StructSchema defaultImplStruct() {
+        if (nullableDefaultImplStruct != null) {
+            return nullableDefaultImplStruct;
+        }
+        return impls.getFirst();
     }
 
     void setNullableDefaultImplStruct(StructSchema defaultImplStruct) {

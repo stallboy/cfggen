@@ -91,12 +91,8 @@ public class ValueParser {
         // 内容为空的单一格子，处理方式是把这空的parsed一层层传下去
         VStruct vImpl;
         if (isEmpty) {
-            StructSchema impl = sInterface.nullableDefaultImplStruct();
-            StructSchema subImpl = subInterface.nullableDefaultImplStruct();
-            if (impl == null) {
-                errs.addErr(new CfgValueErrs.InterfaceCellEmptyButHasNoDefaultImpl(parsed.getFirst(), sInterface.name()));
-                return null;
-            }
+            StructSchema impl = sInterface.defaultImplStruct();
+            StructSchema subImpl = subInterface.defaultImplStruct();
             require(subImpl != null);
 
             // 之后按pack为true来处理，因为反正parsed里都是单个cell，并且里面value为空
@@ -108,8 +104,8 @@ public class ValueParser {
             StructSchema subImpl;
             List<DCell> implCells;
             if (isNumberOrBool) {
-                impl = sInterface.nullableDefaultImplStruct();
-                subImpl = subInterface.nullableDefaultImplStruct();
+                impl = sInterface.defaultImplStruct();
+                subImpl = subInterface.defaultImplStruct();
                 require(subImpl != null);
                 implCells = parsed;
 
@@ -123,12 +119,8 @@ public class ValueParser {
                         return null;
                     }
                 } else {
-                    impl = sInterface.nullableDefaultImplStruct();
-                    subImpl = subInterface.nullableDefaultImplStruct();
-                    if (impl == null) {
-                        errs.addErr(new CfgValueErrs.InterfaceCellEmptyButHasNoDefaultImpl(parsed.getFirst(), sInterface.name()));
-                        return null;
-                    }
+                    impl = sInterface.defaultImplStruct();
+                    subImpl = subInterface.defaultImplStruct();
                 }
 
                 require(subImpl != null);

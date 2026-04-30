@@ -437,47 +437,6 @@ class CfgValueParserTest {
         }
     }
 
-
-    @Test
-    void error_InterfaceCellEmptyButHasNoDefaultImpl() {
-        String cfgStr = """
-                interface action {
-                    struct cast{
-                        skillId:int;
-                    }
-                    struct talk{
-                        talkId:int;
-                        str:text;
-                    }
-                }
-                table t[id] {
-                    id:int;
-                    action:action;
-                }
-                """;
-        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
-        String csvStr = """
-                ,,
-                id,action.name,action.param1,action.param2
-                1,,,""";
-        Resources.addTempFileFromText("t.csv", tempDir, csvStr);
-
-        Context ctx = new Context(tempDir);
-        CfgValueErrs valueErrs = CfgValueErrs.of();
-        CfgValueParser clientValueParser = new CfgValueParser(ctx.cfgSchema(), ctx, valueErrs);
-        clientValueParser.parseCfgValue();
-
-        assertEquals(1, valueErrs.errs().size());
-        assertInstanceOf(InterfaceCellEmptyButHasNoDefaultImpl.class, valueErrs.errs().getFirst());
-        InterfaceCellEmptyButHasNoDefaultImpl err = (InterfaceCellEmptyButHasNoDefaultImpl) valueErrs.errs().getFirst();
-        assertEquals("action", err.interfaceName());
-        assertTrue(err.source() instanceof CfgData.DCell cell &&
-                cell.rowId().row() == 2 &&
-                cell.col() == 1);
-
-    }
-
-
     @Test
     void error_InterfaceCellImplNotFound() {
         String cfgStr = """

@@ -59,10 +59,7 @@ public class ValueDefault {
     }
 
     public static VInterface ofInterface(InterfaceSchema interfaceSchema, Source source) {
-        StructSchema impl = interfaceSchema.nullableDefaultImplStruct();
-        if (impl == null) {
-            impl = interfaceSchema.impls().getFirst();
-        }
+        StructSchema impl = interfaceSchema.defaultImplStruct();
         VStruct vStruct = ofStructural(impl, source);
         return new VInterface(interfaceSchema, vStruct, source);
     }

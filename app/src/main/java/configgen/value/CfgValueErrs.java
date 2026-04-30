@@ -74,13 +74,6 @@ public record CfgValueErrs(List<VErr> errs,
     }
 
     /**
-     * interface的格子为空，且interface没有配置defaultImpl
-     */
-    public record InterfaceCellEmptyButHasNoDefaultImpl(Source source,
-                                                        String interfaceName) implements VErr {
-    }
-
-    /**
      * interface没有这个impl
      */
     public record InterfaceCellImplNotFound(Source source,
