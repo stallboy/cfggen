@@ -13,7 +13,6 @@ import java.util.*;
 public class ModuleModel {
     public final String topPkg;
     public final String moduleKey;     // "" for root, "Ai", "Task", etc.
-    public final String loaderPath;    // output file path
 
     // Grouped by namespace, preserves insertion order
     private final LinkedHashMap<String, NamespaceGroup> groups = new LinkedHashMap<>();
@@ -24,15 +23,16 @@ public class ModuleModel {
         this.gen = gen;
         this.topPkg = gen.pkg;
         this.moduleKey = moduleKey;
-        this.loaderPath = moduleKey.isEmpty()
-                ? "RootLoader.cs"
-                : moduleKey + "/" + moduleKey + "Loader.cs";
+    }
+
+    public String outputFilaPath() {
+        return "_loaders/%sLoader.cs".formatted(moduleKey.isEmpty() ? "_root" : moduleKey);
     }
 
     void addStruct(StructModel model) {
         String ns = model.name.pkg;
         groups.computeIfAbsent(ns, NamespaceGroup::new).structs.add(model);
-        if (model._vTable != null){
+        if (model._vTable != null) {
             hasTable = true;
         }
     }

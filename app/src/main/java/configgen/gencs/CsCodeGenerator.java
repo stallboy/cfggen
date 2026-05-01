@@ -158,7 +158,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
 
         // Generate module loader files
         for (ModuleModel mm : modules.values()) {
-            try (var ps = createCode(mm.loaderPath)) {
+            try (var ps = createCode(mm.outputFilaPath())) {
                 JteEngine.render("cs/GenModuleLoader.jte", mm, ps);
             }
         }
@@ -169,6 +169,4 @@ public class CsCodeGenerator extends GeneratorWithTag {
         int slash = path.indexOf('/');
         return slash < 0 ? "" : path.substring(0, slash);
     }
-
-
 }
