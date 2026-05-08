@@ -63,7 +63,15 @@ public record ConfigLoadResult(
     string[]? LangNames,
     string[][]? LangTextPools);
 
-public class ConfigReader(BinaryReader reader) : IDisposable
+public interface IIssueHandler
+{
+    public void EnumNotInCode(string enumName);
+    public void EnumNotInData(string enumName);
+    public void EnumDuplicateInData(string enumName);
+    public void RefNotFound(string structName, string fieldName, string fieldValue);
+}
+
+public class ConfigReader(BinaryReader reader) : IIssueHandler, IDisposable
 {
     private byte[] _stringBuffer = new byte[256]; // 预分配一个缓冲区
     private string _curTableName = "";
@@ -294,5 +302,29 @@ public static class StringUtil
             span[0] = char.ToUpper(str[0]);
             str.AsSpan(1).CopyTo(span[1..]);
         });
+    }
+}
+
+
+public class SimpleIssueHandler(string _tableName, List<LoadIssue> _issues) : IIssueHandler
+{
+    public void EnumNotInCode(string enumName)
+    {
+        _issues.Add(new EnumNotInCode(_tableName, enumName));
+    }
+
+    public void EnumNotInData(string enumName)
+    {
+        _issues.Add(new EnumNotInData(_tableName, enumName));
+    }
+
+    public void EnumDuplicateInData(string enumName)
+    {
+        _issues.Add(new EnumDuplicateInData(_tableName, enumName));
+    }
+
+    public void RefNotFound(string structName, string fieldName, string fieldValue)
+    {
+        _issues.Add(new RefNotFound(_tableName, structName, fieldName, fieldValue));
     }
 }

@@ -7,10 +7,18 @@ namespace Config.Ai
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
-            var s_all = new Dictionary<int, DAi>(count);
+            var list = new List<DAi>(count);
             for (int i = 0; i < count; i++)
+                list.Add(_create(reader));
+            InitializeAll(list, reader);
+        }
+
+        internal static void InitializeAll(List<DAi> list, IIssueHandler handler)
+        {
+            int count = list.Count;
+            var s_all = new Dictionary<int, DAi>(count);
+            foreach (var self in list)
             {
-                var self = _create(reader);
                 s_all.Add(self.ID, self);
             }
             _all = s_all.ToFrozenDictionary();
@@ -64,10 +72,18 @@ namespace Config.Ai
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
-            var s_all = new Dictionary<int, DAiAction>(count);
+            var list = new List<DAiAction>(count);
             for (int i = 0; i < count; i++)
+                list.Add(_create(reader));
+            InitializeAll(list, reader);
+        }
+
+        internal static void InitializeAll(List<DAiAction> list, IIssueHandler handler)
+        {
+            int count = list.Count;
+            var s_all = new Dictionary<int, DAiAction>(count);
+            foreach (var self in list)
             {
-                var self = _create(reader);
                 s_all.Add(self.ID, self);
             }
             _all = s_all.ToFrozenDictionary();
@@ -120,10 +136,18 @@ namespace Config.Ai
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
-            var s_all = new Dictionary<int, DAiCondition>(count);
+            var list = new List<DAiCondition>(count);
             for (int i = 0; i < count; i++)
+                list.Add(_create(reader));
+            InitializeAll(list, reader);
+        }
+
+        internal static void InitializeAll(List<DAiCondition> list, IIssueHandler handler)
+        {
+            int count = list.Count;
+            var s_all = new Dictionary<int, DAiCondition>(count);
+            foreach (var self in list)
             {
-                var self = _create(reader);
                 s_all.Add(self.ID, self);
             }
             _all = s_all.ToFrozenDictionary();

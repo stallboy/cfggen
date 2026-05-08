@@ -61,6 +61,26 @@ sidebar:
 
   数据格式：`"(1,2,3);(4,5,6)"`
 
+  ```cfg
+  interface Attr (pack) {
+      struct Damage {
+          value:int;
+      }
+      struct Range {
+          value:int;
+      }
+  }
+  ```
+
+  数据格式：`"Damage(12)"`
+
+  ```cfg
+  list<Attr> (pack)
+  ```
+
+  数据格式：`"Damage(12);Range(42)"`
+
+
 - **重要说明**：当数据结构形成循环引用（递归）时，必须至少在一处使用 `pack` 来打破循环，否则无法计算所需列数
 
 
@@ -428,7 +448,6 @@ interface TestAttr (pack) {
 	struct Range {
 		value:int;
 	}
-
 }
 
 struct TestStruct (pack) {

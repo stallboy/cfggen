@@ -46,11 +46,19 @@ namespace Config.Other
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
+            var list = new List<DArgCaptureModeInfo>(count);
+            for (int i = 0; i < count; i++)
+                list.Add(_create(reader));
+            InitializeAll(list, reader);
+        }
+
+        internal static void InitializeAll(List<DArgCaptureModeInfo> list, IIssueHandler handler)
+        {
+            int count = list.Count;
             var s_all = new Dictionary<string, DArgCaptureModeInfo>(count);
             var s_idMap = new Dictionary<int, DArgCaptureModeInfo>(count);
-            for (int i = 0; i < count; i++)
+            foreach (var self in list)
             {
-                var self = _create(reader);
                 s_all.Add(self.Name, self);
                 s_idMap.Add(self.Id, self);
                 DArgCaptureModeExtensions._infos[(int)self.EEnum] = self;
@@ -97,10 +105,18 @@ namespace Config.Other
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
-            var s_all = new Dictionary<int, DDrop>(count);
+            var list = new List<DDrop>(count);
             for (int i = 0; i < count; i++)
+                list.Add(_create(reader));
+            InitializeAll(list, reader);
+        }
+
+        internal static void InitializeAll(List<DDrop> list, IIssueHandler handler)
+        {
+            int count = list.Count;
+            var s_all = new Dictionary<int, DDrop>(count);
+            foreach (var self in list)
             {
-                var self = _create(reader);
                 s_all.Add(self.Dropid, self);
             }
             _all = s_all.ToFrozenDictionary();
@@ -151,13 +167,21 @@ namespace Config.Other
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
+            var list = new List<DKeytest>(count);
+            for (int i = 0; i < count; i++)
+                list.Add(_create(reader));
+            InitializeAll(list, reader);
+        }
+
+        internal static void InitializeAll(List<DKeytest> list, IIssueHandler handler)
+        {
+            int count = list.Count;
             var s_all = new Dictionary<Id1Id2Key, DKeytest>(count);
             var s_id1Id3Map = new Dictionary<Id1Id3Key, DKeytest>(count);
             var s_id2Map = new Dictionary<long, DKeytest>(count);
             var s_id2Id3Map = new Dictionary<Id2Id3Key, DKeytest>(count);
-            for (int i = 0; i < count; i++)
+            foreach (var self in list)
             {
-                var self = _create(reader);
                 s_all.Add(new Id1Id2Key(self.Id1, self.Id2), self);
                 s_id1Id3Map.Add(new Id1Id3Key(self.Id1, self.Id3), self);
                 s_id2Map.Add(self.Id2, self);
@@ -169,10 +193,10 @@ namespace Config.Other
             _id2Id3Map = s_id2Id3Map.ToFrozenDictionary();
         }
 
-        internal static void Resolve(ConfigReader reader)
+        internal static void Resolve(IIssueHandler h)
         {
             foreach (var v in All())
-                v._resolve(reader);
+                v._resolve(h);
         }
         internal static DKeytest _create(ConfigReader reader)
         {
@@ -216,23 +240,23 @@ namespace Config.Other
             return "(" + Id1 + "," + Id2 + "," + Id3 + "," + StringUtil.ToString(Ids) + "," + EnumTest + "," + StringUtil.ToString(EnumList) + ")";
         }
 
-        internal void _resolve(ConfigReader reader)
+        internal void _resolve(IIssueHandler h)
         {
             RefIds = [];
             foreach(var e in Ids)
             {
                 var r = Other.DSignin.Get(e);
-                if (r == null) reader.RefNotFound("other.keytest", "ids", e.ToString());
+                if (r == null) h.RefNotFound("other.keytest", "ids", e.ToString());
                 else RefIds.Add(r);
             }
             var rRefEnumTest = Other.DArgCaptureModeInfo.Get(EnumTest);
-            if (rRefEnumTest == null) reader.RefNotFound("other.keytest", "enumTest", EnumTest);
+            if (rRefEnumTest == null) h.RefNotFound("other.keytest", "enumTest", EnumTest);
             else RefEnumTest = rRefEnumTest.EEnum;
             RefEnumList = [];
             foreach(var e in EnumList)
             {
                 var r = Other.DArgCaptureModeInfo.Get(e);
-                if (r == null) reader.RefNotFound("other.keytest", "enumList", e);
+                if (r == null) h.RefNotFound("other.keytest", "enumList", e);
                 else RefEnumList.Add(r.EEnum);
             }
         }
@@ -243,19 +267,27 @@ namespace Config.Other
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
-            var s_all = new Dictionary<int, DLoot>(count);
+            var list = new List<DLoot>(count);
             for (int i = 0; i < count; i++)
+                list.Add(_create(reader));
+            InitializeAll(list, reader);
+        }
+
+        internal static void InitializeAll(List<DLoot> list, IIssueHandler handler)
+        {
+            int count = list.Count;
+            var s_all = new Dictionary<int, DLoot>(count);
+            foreach (var self in list)
             {
-                var self = _create(reader);
                 s_all.Add(self.Lootid, self);
             }
             _all = s_all.ToFrozenDictionary();
         }
 
-        internal static void Resolve(ConfigReader reader)
+        internal static void Resolve(IIssueHandler h)
         {
             foreach (var v in All())
-                v._resolve(reader);
+                v._resolve(h);
         }
         internal static DLoot _create(ConfigReader reader)
         {
@@ -292,7 +324,7 @@ namespace Config.Other
             return "(" + Lootid + "," + Ename + "," + Name + "," + StringUtil.ToString(ChanceList) + ")";
         }
 
-        internal void _resolve(ConfigReader reader)
+        internal void _resolve(IIssueHandler h)
         {
             ListRefLootid = [];
             foreach (var v in Other.DLootitem.All())
@@ -314,10 +346,18 @@ namespace Config.Other
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
-            var s_all = new Dictionary<LootidItemidKey, DLootitem>(count);
+            var list = new List<DLootitem>(count);
             for (int i = 0; i < count; i++)
+                list.Add(_create(reader));
+            InitializeAll(list, reader);
+        }
+
+        internal static void InitializeAll(List<DLootitem> list, IIssueHandler handler)
+        {
+            int count = list.Count;
+            var s_all = new Dictionary<LootidItemidKey, DLootitem>(count);
+            foreach (var self in list)
             {
-                var self = _create(reader);
                 s_all.Add(new LootidItemidKey(self.Lootid, self.Itemid), self);
             }
             _all = s_all.ToFrozenDictionary();
@@ -364,19 +404,27 @@ namespace Config.Other
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
-            var s_all = new Dictionary<int, DMonster>(count);
+            var list = new List<DMonster>(count);
             for (int i = 0; i < count; i++)
+                list.Add(_create(reader));
+            InitializeAll(list, reader);
+        }
+
+        internal static void InitializeAll(List<DMonster> list, IIssueHandler handler)
+        {
+            int count = list.Count;
+            var s_all = new Dictionary<int, DMonster>(count);
+            foreach (var self in list)
             {
-                var self = _create(reader);
                 s_all.Add(self.Id, self);
             }
             _all = s_all.ToFrozenDictionary();
         }
 
-        internal static void Resolve(ConfigReader reader)
+        internal static void Resolve(IIssueHandler h)
         {
             foreach (var v in All())
-                v._resolve(reader);
+                v._resolve(h);
         }
         internal static DMonster _create(ConfigReader reader)
         {
@@ -423,20 +471,20 @@ namespace Config.Other
             return "(" + Id + "," + StringUtil.ToString(PosList) + "," + LootId + "," + LootItemId + "," + EnumMap1 + "," + EnumMap2 + ")";
         }
 
-        internal void _resolve(ConfigReader reader)
+        internal void _resolve(IIssueHandler h)
         {
             var rRefLoot = Other.DLootitem.Get(LootId, LootItemId);
-            if (rRefLoot == null) reader.RefNotFound("other.monster", "Loot", LootId.ToString());
+            if (rRefLoot == null) h.RefNotFound("other.monster", "Loot", LootId.ToString());
             else RefLoot = rRefLoot;
             var rRefAllLoot = Other.DLoot.Get(LootId);
-            if (rRefAllLoot == null) reader.RefNotFound("other.monster", "AllLoot", LootId.ToString());
+            if (rRefAllLoot == null) h.RefNotFound("other.monster", "AllLoot", LootId.ToString());
             else RefAllLoot = rRefAllLoot;
             RefEnumMap2 = [];
             foreach(var kv in EnumMap2)
             {
                 var k = kv.Key;
                 var v = Other.DArgCaptureModeInfo.Get(kv.Value);
-                if (v == null) reader.RefNotFound("other.monster", "enumMap2", kv.Value);
+                if (v == null) h.RefNotFound("other.monster", "enumMap2", kv.Value);
                 else RefEnumMap2.Add(k, v.EEnum);
             }
         }
@@ -447,19 +495,27 @@ namespace Config.Other
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
-            var s_all = new Dictionary<int, DSignin>(count);
+            var list = new List<DSignin>(count);
             for (int i = 0; i < count; i++)
+                list.Add(_create(reader));
+            InitializeAll(list, reader);
+        }
+
+        internal static void InitializeAll(List<DSignin> list, IIssueHandler handler)
+        {
+            int count = list.Count;
+            var s_all = new Dictionary<int, DSignin>(count);
+            foreach (var self in list)
             {
-                var self = _create(reader);
                 s_all.Add(self.Id, self);
             }
             _all = s_all.ToFrozenDictionary();
         }
 
-        internal static void Resolve(ConfigReader reader)
+        internal static void Resolve(IIssueHandler h)
         {
             foreach (var v in All())
-                v._resolve(reader);
+                v._resolve(h);
         }
         internal static DSignin _create(ConfigReader reader)
         {
@@ -501,14 +557,14 @@ namespace Config.Other
             return "(" + Id + "," + Item2countMap + "," + Vipitem2vipcountMap + "," + Viplevel + "," + IconFile + ")";
         }
 
-        internal void _resolve(ConfigReader reader)
+        internal void _resolve(IIssueHandler h)
         {
             RefVipitem2vipcountMap = [];
             foreach(var kv in Vipitem2vipcountMap)
             {
                 var k = kv.Key;
                 var v = Other.DLoot.Get(kv.Value);
-                if (v == null) reader.RefNotFound("other.signin", "vipitem2vipcountMap", kv.Value.ToString());
+                if (v == null) h.RefNotFound("other.signin", "vipitem2vipcountMap", kv.Value.ToString());
                 else RefVipitem2vipcountMap.Add(k, v);
             }
         }

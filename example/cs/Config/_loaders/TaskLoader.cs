@@ -58,10 +58,18 @@ namespace Config.Task
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
-            var s_all = new Dictionary<int, DCompleteconditiontypeInfo>(count);
+            var list = new List<DCompleteconditiontypeInfo>(count);
             for (int i = 0; i < count; i++)
+                list.Add(_create(reader));
+            InitializeAll(list, reader);
+        }
+
+        internal static void InitializeAll(List<DCompleteconditiontypeInfo> list, IIssueHandler handler)
+        {
+            int count = list.Count;
+            var s_all = new Dictionary<int, DCompleteconditiontypeInfo>(count);
+            foreach (var self in list)
             {
-                var self = _create(reader);
                 s_all.Add(self.Id, self);
                 DCompleteconditiontypeExtensions._infos[(int)self.EEnum] = self;
             }
@@ -104,19 +112,27 @@ namespace Config.Task
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
-            var s_all = new Dictionary<int, DTask>(count);
+            var list = new List<DTask>(count);
             for (int i = 0; i < count; i++)
+                list.Add(_create(reader));
+            InitializeAll(list, reader);
+        }
+
+        internal static void InitializeAll(List<DTask> list, IIssueHandler handler)
+        {
+            int count = list.Count;
+            var s_all = new Dictionary<int, DTask>(count);
+            foreach (var self in list)
             {
-                var self = _create(reader);
                 s_all.Add(self.Taskid, self);
             }
             _all = s_all.ToFrozenDictionary();
         }
 
-        internal static void Resolve(ConfigReader reader)
+        internal static void Resolve(IIssueHandler h)
         {
             foreach (var v in All())
-                v._resolve(reader);
+                v._resolve(h);
         }
         internal static DTask _create(ConfigReader reader)
         {
@@ -157,9 +173,9 @@ namespace Config.Task
             return "(" + Taskid + "," + StringUtil.ToString(Name) + "," + Nexttask + "," + Completecondition + "," + Exp + "," + TestDefaultBean + ")";
         }
 
-        internal void _resolve(ConfigReader reader)
+        internal void _resolve(IIssueHandler h)
         {
-            Completecondition._resolve(reader);
+            Completecondition._resolve(h);
             NullableRefTaskid = Task.DTaskextraexp.Get(Taskid);
             NullableRefNexttask = Task.DTask.Get(Nexttask);
         }
@@ -170,19 +186,27 @@ namespace Config.Task
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
-            var s_all = new Dictionary<int, DTask2>(count);
+            var list = new List<DTask2>(count);
             for (int i = 0; i < count; i++)
+                list.Add(_create(reader));
+            InitializeAll(list, reader);
+        }
+
+        internal static void InitializeAll(List<DTask2> list, IIssueHandler handler)
+        {
+            int count = list.Count;
+            var s_all = new Dictionary<int, DTask2>(count);
+            foreach (var self in list)
             {
-                var self = _create(reader);
                 s_all.Add(self.Taskid, self);
             }
             _all = s_all.ToFrozenDictionary();
         }
 
-        internal static void Resolve(ConfigReader reader)
+        internal static void Resolve(IIssueHandler h)
         {
             foreach (var v in All())
-                v._resolve(reader);
+                v._resolve(h);
         }
         internal static DTask2 _create(ConfigReader reader)
         {
@@ -242,9 +266,9 @@ namespace Config.Task
             return "(" + Taskid + "," + StringUtil.ToString(Name) + "," + Nexttask + "," + Completecondition + "," + Exp + "," + TestBool + "," + TestString + "," + TestStruct + "," + StringUtil.ToString(TestList) + "," + StringUtil.ToString(TestListStruct) + "," + StringUtil.ToString(TestListInterface) + ")";
         }
 
-        internal void _resolve(ConfigReader reader)
+        internal void _resolve(IIssueHandler h)
         {
-            Completecondition._resolve(reader);
+            Completecondition._resolve(h);
             NullableRefTaskid = Task.DTaskextraexp.Get(Taskid);
             NullableRefNexttask = Task.DTask.Get(Nexttask);
         }
@@ -255,10 +279,18 @@ namespace Config.Task
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
-            var s_all = new Dictionary<int, DTaskextraexp>(count);
+            var list = new List<DTaskextraexp>(count);
             for (int i = 0; i < count; i++)
+                list.Add(_create(reader));
+            InitializeAll(list, reader);
+        }
+
+        internal static void InitializeAll(List<DTaskextraexp> list, IIssueHandler handler)
+        {
+            int count = list.Count;
+            var s_all = new Dictionary<int, DTaskextraexp>(count);
+            foreach (var self in list)
             {
-                var self = _create(reader);
                 s_all.Add(self.Taskid, self);
             }
             _all = s_all.ToFrozenDictionary();
@@ -308,7 +340,7 @@ namespace Config.Task
 
     public partial interface DCompletecondition
     {
-        void _resolve(ConfigReader reader)
+        void _resolve(IIssueHandler h)
         {
         }
         internal static DCompletecondition _create(ConfigReader reader)
@@ -369,10 +401,10 @@ namespace Config.Task.Completecondition
             return "(" + Monsterid + "," + Count + ")";
         }
 
-        public void _resolve(ConfigReader reader)
+        public void _resolve(IIssueHandler h)
         {
             var rRefMonsterid = Other.DMonster.Get(Monsterid);
-            if (rRefMonsterid == null) reader.RefNotFound("KillMonster", "monsterid", Monsterid.ToString());
+            if (rRefMonsterid == null) h.RefNotFound("KillMonster", "monsterid", Monsterid.ToString());
             else RefMonsterid = rRefMonsterid;
         }
     }
@@ -489,10 +521,10 @@ namespace Config.Task.Completecondition
             return "(" + Cond1 + "," + Cond2 + ")";
         }
 
-        public void _resolve(ConfigReader reader)
+        public void _resolve(IIssueHandler h)
         {
-            Cond1._resolve(reader);
-            Cond2._resolve(reader);
+            Cond1._resolve(h);
+            Cond2._resolve(h);
         }
     }
 

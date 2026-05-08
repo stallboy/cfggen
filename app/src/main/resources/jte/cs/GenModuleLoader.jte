@@ -29,6 +29,15 @@ namespace ${group.ns}
                 internal static void Initialize(ConfigReader reader)
                 {
                     int count = reader.ReadInt32();
+                    var list = new List<${className}>(count);
+                    for (int i = 0; i < count; i++)
+                        list.Add(_create(reader));
+                    InitializeAll(list, reader);
+                }
+
+                internal static void InitializeAll(List<${className}> list, IIssueHandler handler)
+                {
+                    int count = list.Count;
                     @if(primarySeq)
                         var s_all = new ${sm.dictValueType()}[count];
                     @else
@@ -48,9 +57,8 @@ namespace ${group.ns}
                         @endfor
                     @endif
 
-                    for (int i = 0; i < count; i++)
+                    foreach (var self in list)
                     {
-                        var self = _create(reader);
                         @if(primarySeq)
                             s_all[${sm.actualParamsKeySelf(table.primaryKey())}] = self;
                         @else
@@ -76,12 +84,12 @@ namespace ${group.ns}
                                 @for(String enumName : sm._vTable.enumNames())
                                     case "${enumName}":
                                         if (e${sm.upper1(enumName)} != null)
-                                            reader.EnumDuplicateInData("${enumName}");
+                                            handler.EnumDuplicateInData("${enumName}");
                                         e${sm.upper1(enumName)} = self;
                                         break;
                                 @endfor
                                 default:
-                                    reader.EnumNotInCode(self.${ef});
+                                    handler.EnumNotInCode(self.${ef});
                                     break;
                             }
                         @endif
@@ -101,17 +109,17 @@ namespace ${group.ns}
                     @endfor
                     @if(table.entry() instanceof EntryType.EEntry)
                         @for(String enumName : sm._vTable.enumNames())
-                            if (e${sm.upper1(enumName)} == null) reader.EnumNotInData("${enumName}");
+                            if (e${sm.upper1(enumName)} == null) handler.EnumNotInData("${enumName}");
                             else ${sm.upper1(enumName)} = e${sm.upper1(enumName)};
                         @endfor
                     @endif
                 }
 
                 @if(HasRef.hasRef(sm.structural))
-                    internal static void Resolve(ConfigReader reader)
+                    internal static void Resolve(IIssueHandler h)
                     {
                         foreach (var v in All())
-                            v._resolve(reader);
+                            v._resolve(h);
                     }
                 @endif
 
@@ -190,19 +198,19 @@ namespace ${group.ns}
             @endif
 
             @if(HasRef.hasRef(sm.structural))
-                ${isImpl ? "public" : "internal"} void _resolve(ConfigReader reader)
+                ${isImpl ? "public" : "internal"} void _resolve(IIssueHandler h)
                 {
                     @for(FieldSchema field : sm.structural.fields())
                         !{FieldType type = field.type();}
                         @if(HasRef.hasRef(type))
                             @if(type instanceof StructRef)
-                                ${sm.upper1(field.name())}._resolve(reader);
+                                ${sm.upper1(field.name())}._resolve(h);
                             @elseif(type instanceof FList)
                                 foreach(var e in ${sm.upper1(field.name())})
-                                    e._resolve(reader);
+                                    e._resolve(h);
                             @elseif(type instanceof FMap)
                                 foreach(var e in ${sm.upper1(field.name())}.OrderedValues)
-                                    e._resolve(reader);
+                                    e._resolve(h);
                             @endif
                         @endif
                     @endfor
@@ -218,7 +226,7 @@ namespace ${group.ns}
                                     ${refName} = ${sm.tableGet(fk.refTableSchema(), refSimple, sm.actualParams(fk.key()))};
                                 @else
                                     var r${refName} = ${sm.tableGet(fk.refTableSchema(), refSimple, sm.actualParams(fk.key()))};
-                                    if (r${refName} == null) reader.RefNotFound("${sm.structural.name()}", "${fkStr}", ${model.upper1(firstField.name())}${sm.toStringOrNot(smpl)});
+                                    if (r${refName} == null) h.RefNotFound("${sm.structural.name()}", "${fkStr}", ${model.upper1(firstField.name())}${sm.toStringOrNot(smpl)});
                                     else ${refName} = r${refName}${StructModel.isEnum(fk.refTableSchema())? ".EEnum" : ""};
                                 @endif
                             @elseif(firstField.type() instanceof FList flist)
@@ -226,7 +234,7 @@ namespace ${group.ns}
                                 foreach(var e in ${sm.upper1(firstField.name())})
                                 {
                                     var r = ${sm.tableGet(fk.refTableSchema(), refSimple, "e")};
-                                    if (r == null) reader.RefNotFound("${sm.structural.name()}", "${fkStr}", e${sm.toStringOrNot(flist.item())});
+                                    if (r == null) h.RefNotFound("${sm.structural.name()}", "${fkStr}", e${sm.toStringOrNot(flist.item())});
                                     else ${refName}.Add(r${StructModel.isEnum(fk.refTableSchema())? ".EEnum" : ""});
                                 }
                             @elseif(firstField.type() instanceof FMap fmap)
@@ -235,7 +243,7 @@ namespace ${group.ns}
                                 {
                                     var k = kv.Key;
                                     var v = ${sm.tableGet(fk.refTableSchema(), refSimple, "kv.Value")};
-                                    if (v == null) reader.RefNotFound("${sm.structural.name()}", "${fkStr}", kv.Value${sm.toStringOrNot(fmap.value())});
+                                    if (v == null) h.RefNotFound("${sm.structural.name()}", "${fkStr}", kv.Value${sm.toStringOrNot(fmap.value())});
                                     else ${refName}.Add(k, v${StructModel.isEnum(fk.refTableSchema())? ".EEnum" : ""});
                                 }
                             @endif
@@ -269,7 +277,7 @@ namespace ${group.ns}
         public partial interface ${className}
         {
             @if(HasRef.hasRef(im.sInterface))
-                void _resolve(ConfigReader reader)
+                void _resolve(IIssueHandler h)
                 {
                 }
             @endif

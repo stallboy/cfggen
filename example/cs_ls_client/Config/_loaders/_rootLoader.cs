@@ -30,10 +30,10 @@ namespace Config
             return "(" + Level + "," + Rank + ")";
         }
 
-        internal void _resolve(ConfigReader reader)
+        internal void _resolve(IIssueHandler h)
         {
             var rRefRank = Equip.DRankInfo.Get(Rank);
-            if (rRefRank == null) reader.RefNotFound("LevelRank", "Rank", Rank.ToString());
+            if (rRefRank == null) h.RefNotFound("LevelRank", "Rank", Rank.ToString());
             else RefRank = rRefRank.EEnum;
         }
     }

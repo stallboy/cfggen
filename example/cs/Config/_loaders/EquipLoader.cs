@@ -39,10 +39,18 @@ namespace Config.Equip
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
-            var s_all = new Dictionary<int, DAbilityInfo>(count);
+            var list = new List<DAbilityInfo>(count);
             for (int i = 0; i < count; i++)
+                list.Add(_create(reader));
+            InitializeAll(list, reader);
+        }
+
+        internal static void InitializeAll(List<DAbilityInfo> list, IIssueHandler handler)
+        {
+            int count = list.Count;
+            var s_all = new Dictionary<int, DAbilityInfo>(count);
+            foreach (var self in list)
             {
-                var self = _create(reader);
                 s_all.Add(self.Id, self);
                 DAbilityExtensions._infos[(int)self.EEnum] = self;
             }
@@ -85,12 +93,20 @@ namespace Config.Equip
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
+            var list = new List<DEquipconfig>(count);
+            for (int i = 0; i < count; i++)
+                list.Add(_create(reader));
+            InitializeAll(list, reader);
+        }
+
+        internal static void InitializeAll(List<DEquipconfig> list, IIssueHandler handler)
+        {
+            int count = list.Count;
             var s_all = new Dictionary<string, DEquipconfig>(count);
             DEquipconfig? eInstance = null;
             DEquipconfig? eInstance2 = null;
-            for (int i = 0; i < count; i++)
+            foreach (var self in list)
             {
-                var self = _create(reader);
                 s_all.Add(self.Entry, self);
                 if (self.Entry.Length == 0)
                     continue;
@@ -98,23 +114,23 @@ namespace Config.Equip
                 {
                     case "Instance":
                         if (eInstance != null)
-                            reader.EnumDuplicateInData("Instance");
+                            handler.EnumDuplicateInData("Instance");
                         eInstance = self;
                         break;
                     case "Instance2":
                         if (eInstance2 != null)
-                            reader.EnumDuplicateInData("Instance2");
+                            handler.EnumDuplicateInData("Instance2");
                         eInstance2 = self;
                         break;
                     default:
-                        reader.EnumNotInCode(self.Entry);
+                        handler.EnumNotInCode(self.Entry);
                         break;
                 }
             }
             _all = s_all.ToFrozenDictionary();
-            if (eInstance == null) reader.EnumNotInData("Instance");
+            if (eInstance == null) handler.EnumNotInData("Instance");
             else Instance = eInstance;
-            if (eInstance2 == null) reader.EnumNotInData("Instance2");
+            if (eInstance2 == null) handler.EnumNotInData("Instance2");
             else Instance2 = eInstance2;
         }
 
@@ -161,19 +177,27 @@ namespace Config.Equip
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
-            var s_all = new Dictionary<int, DJewelry>(count);
+            var list = new List<DJewelry>(count);
             for (int i = 0; i < count; i++)
+                list.Add(_create(reader));
+            InitializeAll(list, reader);
+        }
+
+        internal static void InitializeAll(List<DJewelry> list, IIssueHandler handler)
+        {
+            int count = list.Count;
+            var s_all = new Dictionary<int, DJewelry>(count);
+            foreach (var self in list)
             {
-                var self = _create(reader);
                 s_all.Add(self.ID, self);
             }
             _all = s_all.ToFrozenDictionary();
         }
 
-        internal static void Resolve(ConfigReader reader)
+        internal static void Resolve(IIssueHandler h)
         {
             foreach (var v in All())
-                v._resolve(reader);
+                v._resolve(h);
         }
         internal static DJewelry _create(ConfigReader reader)
         {
@@ -219,18 +243,18 @@ namespace Config.Equip
             return "(" + ID + "," + Name + "," + IconFile + "," + LvlRank + "," + JType + "," + SuitID + "," + KeyAbility + "," + KeyAbilityValue + "," + SalePrice + "," + Description + ")";
         }
 
-        internal void _resolve(ConfigReader reader)
+        internal void _resolve(IIssueHandler h)
         {
-            LvlRank._resolve(reader);
+            LvlRank._resolve(h);
             var rRefLvlRank = Equip.DJewelryrandom.Get(LvlRank);
-            if (rRefLvlRank == null) reader.RefNotFound("equip.jewelry", "LvlRank", LvlRank.ToString());
+            if (rRefLvlRank == null) h.RefNotFound("equip.jewelry", "LvlRank", LvlRank.ToString());
             else RefLvlRank = rRefLvlRank;
             var rRefJType = Equip.DJewelrytypeInfo.Get(JType);
-            if (rRefJType == null) reader.RefNotFound("equip.jewelry", "JType", JType);
+            if (rRefJType == null) h.RefNotFound("equip.jewelry", "JType", JType);
             else RefJType = rRefJType.EEnum;
             NullableRefSuitID = Equip.DJewelrysuit.Get(SuitID);
             var rRefKeyAbility = Equip.DAbilityInfo.Get(KeyAbility);
-            if (rRefKeyAbility == null) reader.RefNotFound("equip.jewelry", "KeyAbility", KeyAbility.ToString());
+            if (rRefKeyAbility == null) h.RefNotFound("equip.jewelry", "KeyAbility", KeyAbility.ToString());
             else RefKeyAbility = rRefKeyAbility.EEnum;
         }
     }
@@ -240,19 +264,27 @@ namespace Config.Equip
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
-            var s_all = new Dictionary<DLevelRank, DJewelryrandom>(count);
+            var list = new List<DJewelryrandom>(count);
             for (int i = 0; i < count; i++)
+                list.Add(_create(reader));
+            InitializeAll(list, reader);
+        }
+
+        internal static void InitializeAll(List<DJewelryrandom> list, IIssueHandler handler)
+        {
+            int count = list.Count;
+            var s_all = new Dictionary<DLevelRank, DJewelryrandom>(count);
+            foreach (var self in list)
             {
-                var self = _create(reader);
                 s_all.Add(self.LvlRank, self);
             }
             _all = s_all.ToFrozenDictionary();
         }
 
-        internal static void Resolve(ConfigReader reader)
+        internal static void Resolve(IIssueHandler h)
         {
             foreach (var v in All())
-                v._resolve(reader);
+                v._resolve(h);
         }
         internal static DJewelryrandom _create(ConfigReader reader)
         {
@@ -292,9 +324,9 @@ namespace Config.Equip
             return "(" + LvlRank + "," + AttackRange + "," + StringUtil.ToString(OtherRange) + "," + StringUtil.ToString(TestPack) + ")";
         }
 
-        internal void _resolve(ConfigReader reader)
+        internal void _resolve(IIssueHandler h)
         {
-            LvlRank._resolve(reader);
+            LvlRank._resolve(h);
         }
     }
 
@@ -303,11 +335,19 @@ namespace Config.Equip
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
+            var list = new List<DJewelrysuit>(count);
+            for (int i = 0; i < count; i++)
+                list.Add(_create(reader));
+            InitializeAll(list, reader);
+        }
+
+        internal static void InitializeAll(List<DJewelrysuit> list, IIssueHandler handler)
+        {
+            int count = list.Count;
             var s_all = new Dictionary<int, DJewelrysuit>(count);
             DJewelrysuit? eSpecialSuit = null;
-            for (int i = 0; i < count; i++)
+            foreach (var self in list)
             {
-                var self = _create(reader);
                 s_all.Add(self.SuitID, self);
                 if (self.Ename.Length == 0)
                     continue;
@@ -315,16 +355,16 @@ namespace Config.Equip
                 {
                     case "SpecialSuit":
                         if (eSpecialSuit != null)
-                            reader.EnumDuplicateInData("SpecialSuit");
+                            handler.EnumDuplicateInData("SpecialSuit");
                         eSpecialSuit = self;
                         break;
                     default:
-                        reader.EnumNotInCode(self.Ename);
+                        handler.EnumNotInCode(self.Ename);
                         break;
                 }
             }
             _all = s_all.ToFrozenDictionary();
-            if (eSpecialSuit == null) reader.EnumNotInData("SpecialSuit");
+            if (eSpecialSuit == null) handler.EnumNotInData("SpecialSuit");
             else SpecialSuit = eSpecialSuit;
         }
 
@@ -382,10 +422,18 @@ namespace Config.Equip
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
-            var s_all = new Dictionary<string, DJewelrytypeInfo>(count);
+            var list = new List<DJewelrytypeInfo>(count);
             for (int i = 0; i < count; i++)
+                list.Add(_create(reader));
+            InitializeAll(list, reader);
+        }
+
+        internal static void InitializeAll(List<DJewelrytypeInfo> list, IIssueHandler handler)
+        {
+            int count = list.Count;
+            var s_all = new Dictionary<string, DJewelrytypeInfo>(count);
+            foreach (var self in list)
             {
-                var self = _create(reader);
                 s_all.Add(self.TypeName, self);
                 DJewelrytypeExtensions._infos[(int)self.EEnum] = self;
             }
@@ -426,10 +474,18 @@ namespace Config.Equip
         internal static void Initialize(ConfigReader reader)
         {
             int count = reader.ReadInt32();
-            var s_all = new DRankInfo[count];
+            var list = new List<DRankInfo>(count);
             for (int i = 0; i < count; i++)
+                list.Add(_create(reader));
+            InitializeAll(list, reader);
+        }
+
+        internal static void InitializeAll(List<DRankInfo> list, IIssueHandler handler)
+        {
+            int count = list.Count;
+            var s_all = new DRankInfo[count];
+            foreach (var self in list)
             {
-                var self = _create(reader);
                 s_all[self.RankID] = self;
                 DRankExtensions._infos[(int)self.EEnum] = self;
             }
