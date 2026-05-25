@@ -184,7 +184,7 @@ enum StatClampMode {
 
 ```cfg
 table event_definition[eventKey] (entry='eventKey') {
-    eventKey: str; // 如 "Combat_Damage_Pre"
+    eventKey: str; // 如 "Damage_Pre"
     eventId: int;
     description: text;
 
@@ -209,18 +209,16 @@ enum VarType {
 ### cue_key
 
 ```
-table cue_key_instant[cueKey] {
-    cueKey: str -> cue_registry_instant (nullable);
+table cue_key_pulse[cueKey] {
+    cueKey: str -> cue_registry_pulse (nullable);
     cueId: int;
-    ancestors: list<int> ->cue_key_instant[cueId]; //按从父到祖父顺序排列
     description: text;
     [cueId]; 
 }
 
-table cue_key_loop[cueKey] {
-    cueKey: str -> cue_registry_loop (nullable);
+table cue_key_state[cueKey] {
+    cueKey: str -> cue_registry_state (nullable);
     cueId: int;
-    ancestors: list<int> ->cue_key_loop[cueId]; //按从父到祖父顺序排列
     description: text;
     [cueId]; 
 }
@@ -308,7 +306,7 @@ Payload 是事件携带的瞬时载荷，Trigger 通过它读取"发生了什么
 
 ```java
 record GameplayEvent(
-    int eventId,
+    DEventDefinition eventCfg,
     Payload payload
 ){}
 
@@ -520,7 +518,7 @@ interface Effect {
         pipeline: str ->resolution_pipeline;
         magnitude: FloatValue;
         tags: list<str> ->gameplaytag;   // 如 ["Damage.Element.Fire"]
-        cues: list<str> ->cue_key_instant;
+        cues: list<str> ->cue_key_pulse;
     }
 
     // --- 状态操作 ---
@@ -569,9 +567,8 @@ interface Effect {
         duration: FloatValue;
         objTags: list<str> ->gameplaytag;
         moveInfo: ObjMoveInfo; // 移动，弹道，碰撞在这里定义
-        cuesWhileActive: list<str> ->cue_key_loop; // 飞行时的呼啸声、法阵的底图特效
+        cuesWhileActive: list<str> ->cue_key_state; // 飞行时的呼啸声、法阵的底图特效
         effectsOnCreate: list<Effect>; // 诞生时：瞬间触发的逻辑 (如：落地瞬间的拉扯，伤害的定时触发）
-        dieInfo: list<ObjDieInfo>;  // 生成物消失的条件、结算
     }
 
     // --- 载荷篡改（仅在 Pre 阶段 Trigger 中有效）
@@ -594,7 +591,7 @@ interface Effect {
 
     // --- Cue 触发
     struct FireCue {
-        cues: list<str> ->cue_key_instant;
+        cues: list<str> ->cue_key_pulse;
         magnitude: FloatValue;
     }
 
@@ -691,7 +688,7 @@ struct StatusCore {
     
     duration: FloatValue;           // -1 = 永久
     
-    cuesWhileActive: list<str> ->cue_key_loop;
+    cuesWhileActive: list<str> ->cue_key_state;
     behaviors: list<Behavior>;
 }
 
@@ -1096,8 +1093,8 @@ struct AllocationLayer {
     targetStat: str ->stat_definition;
     conversionRate: float;
     allowOverflow: bool;
-    onHitCue: list<str> ->cue_key_instant;
-    onDepletedCue: list<str> ->cue_key_instant;
+    onHitCue: list<str> ->cue_key_pulse;
+    onDepletedCue: list<str> ->cue_key_pulse;
 }
 ```
 
@@ -1174,10 +1171,10 @@ resolution_pipeline {
     name: "StandardPhysicalDamage";
     flow: Deplete;
 
-    dealPreEvent:  "Combat_Damage_Deal_Pre";
-    dealPostEvent: "Combat_Damage_Deal_Post";
-    takePreEvent:  "Combat_Damage_Take_Pre";
-    takePostEvent: "Combat_Damage_Take_Post";
+    dealPreEvent:  "Damage_Deal_Pre";
+    dealPostEvent: "Damage_Deal_Post";
+    takePreEvent:  "Damage_Take_Pre";
+    takePostEvent: "Damage_Take_Post";
 
     checks: [
         // 阶段1：闪避
@@ -1231,10 +1228,10 @@ resolution_pipeline {
 resolution_pipeline {
     name: "PureDamage";
     flow: Deplete;
-    dealPreEvent:  "Combat_Damage_Deal_Pre";
-    dealPostEvent: "Combat_Damage_Deal_Post";
-    takePreEvent:  "Combat_Damage_Take_Pre";
-    takePostEvent: "Combat_Damage_Take_Post";
+    dealPreEvent:  "Damage_Deal_Pre";
+    dealPostEvent: "Damage_Deal_Post";
+    takePreEvent:  "Damage_Take_Pre";
+    takePostEvent: "Damage_Take_Post";
     // 无 checks — 纯伤害不参与闪避/格挡/暴击
     allocations: [
         { targetStat: "HP_Current"; conversionRate: 1.0; }
@@ -1244,10 +1241,10 @@ resolution_pipeline {
 resolution_pipeline {
     name: "StandardHeal";
     flow: Restore;
-    dealPreEvent:  "Combat_Heal_Give_Pre";   // 治疗者视角：治疗量增幅
-    dealPostEvent: "Combat_Heal_Give_Post";  // 治疗者视角：治疗后触发
-    takePreEvent:  "Combat_Heal_Take_Pre";   // 受疗者视角：受疗量增幅
-    takePostEvent: "Combat_Heal_Take_Post";  // 受疗者视角：受疗后触发
+    dealPreEvent:  "Heal_Give_Pre";   // 治疗者视角：治疗量增幅
+    dealPostEvent: "Heal_Give_Post";  // 治疗者视角：治疗后触发
+    takePreEvent:  "Heal_Take_Pre";   // 受疗者视角：受疗量增幅
+    takePostEvent: "Heal_Take_Post";  // 受疗者视角：受疗后触发
     allocations: [
         { targetStat: "HP_Current"; conversionRate: 1.0; }
     ];
@@ -1363,7 +1360,7 @@ status {
     stackingPolicy: Single { refreshMode: ResetDuration; };
     behaviors: [
         Trigger {
-            listenEvent: "Combat_Damage_Take_Pre";
+            listenEvent: "Damage_Take_Pre";
             effect: ModifyPayloadMagnitude {
                 op: Mul;
                 value: Const { value: 0.6; };
@@ -1385,7 +1382,7 @@ status {
     stackingPolicy: Single { refreshMode: KeepDuration; };
     behaviors: [
         Trigger {
-            listenEvent: "Combat_Damage_Take_Post";
+            listenEvent: "Damage_Take_Post";
             requiresAll: [
                 Compare {
                     left: PayloadMagnitude {};
@@ -1466,7 +1463,7 @@ status {
     stackingPolicy: Single { refreshMode: KeepDuration; };
     behaviors: [
         Trigger {
-            listenEvent: "Combat_Damage_Deal_Post";
+            listenEvent: "Damage_Deal_Post";
             requiresAll: [
                 // 检查 Payload 中是否有暴击标记（由 CheckStage 写入）
                 PayloadHasTag { query: { requireAll: ["Combat.Result.Critical"];};}
