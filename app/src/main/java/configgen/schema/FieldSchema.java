@@ -20,7 +20,8 @@ public record FieldSchema(String name,
      * @return empty when no comment
      */
     public String comment() {
-        return meta.getComment();
+        CommentData cd = meta.getComment();
+        return cd != null ? cd.encode() : "";
     }
 
     public FieldSchema copy() {

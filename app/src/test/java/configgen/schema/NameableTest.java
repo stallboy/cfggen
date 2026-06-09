@@ -22,7 +22,7 @@ class NameableTest {
     void comment() {
         String comment = "comment123";
         Metadata meta = Metadata.of();
-        meta.putComment(comment);
+        meta.putComment(new CommentData("", comment, null));
 
         InterfaceSchema action = new InterfaceSchema("ns1.ns2.action", "", "", AUTO,
                 meta, List.of());

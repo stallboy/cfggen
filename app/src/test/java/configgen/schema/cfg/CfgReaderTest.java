@@ -2,6 +2,7 @@ package configgen.schema.cfg;
 
 import configgen.schema.*;
 import configgen.schema.FieldType.Primitive;
+import configgen.schema.CommentData;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -44,8 +45,8 @@ class CfgReaderTest {
             assertEquals(Primitive.INT, f1.type());
             assertEquals(AUTO, f1.fmt());
             assertEquals(1, f1.meta().data().size());
-            assertTrue(f1.meta().data().get("_comment") instanceof Metadata.MetaStr(String value) &&
-                    value.equals("属性类型"));
+            assertTrue(f1.meta().data().get("_comment") instanceof Metadata.MetaComment(CommentData cd) &&
+                    cd.trailing().equals("属性类型"));
         }
         {
             FieldSchema f2 = table.fields().get(1);
@@ -53,8 +54,8 @@ class CfgReaderTest {
             assertEquals(Primitive.STRING, f2.type());
             assertEquals(AUTO, f2.fmt());
             assertEquals(1, f2.meta().data().size());
-            assertTrue(f2.meta().data().get("_comment") instanceof Metadata.MetaStr(String value) &&
-                    value.equals("程序用名字"));
+            assertTrue(f2.meta().data().get("_comment") instanceof Metadata.MetaComment(CommentData cd) &&
+                    cd.trailing().equals("程序用名字"));
         }
     }
 
@@ -218,7 +219,7 @@ class CfgReaderTest {
         assertEquals("ability", table.name());
 
         // 验证声明前注释和行尾注释都被正确保存
-        String comment = table.meta().data().get("_comment") instanceof Metadata.MetaStr(String c) ? c : "";
+        String comment = table.meta().data().get("_comment") instanceof Metadata.MetaComment(CommentData cd) ? cd.encode() : "";
         assertTrue(comment.contains("这是能力表"));
         assertTrue(comment.contains("用于定义游戏中的各种能力"));
     }
@@ -242,7 +243,7 @@ class CfgReaderTest {
         assertEquals("AttrRandom", struct.name());
 
         // 验证声明前注释
-        String comment = struct.meta().data().get("_comment") instanceof Metadata.MetaStr(String c) ? c : "";
+        String comment = struct.meta().data().get("_comment") instanceof Metadata.MetaComment(CommentData cd) ? cd.encode() : "";
         assertTrue(comment.contains("属性随机范围配置"));
         assertTrue(comment.contains("用于生成随机属性值"));
     }
@@ -266,7 +267,7 @@ class CfgReaderTest {
         assertEquals("achievement.AchievementType", sInterface.name());
 
         // 验证声明前注释
-        String comment = sInterface.meta().data().get("_comment") instanceof Metadata.MetaStr(String c) ? c : "";
+        String comment = sInterface.meta().data().get("_comment") instanceof Metadata.MetaComment(CommentData cd) ? cd.encode() : "";
         assertTrue(comment.contains("成就类型接口"));
         assertTrue(comment.contains("定义所有成就的基础结构"));
     }
@@ -291,7 +292,7 @@ class CfgReaderTest {
         assertEquals("Attr", field.name());
 
         // 验证字段的声明前注释
-        String comment = field.meta().data().get("_comment") instanceof Metadata.MetaStr(String c) ? c : "";
+        String comment = field.meta().data().get("_comment") instanceof Metadata.MetaComment(CommentData cd) ? cd.encode() : "";
         assertTrue(comment.contains("属性ID"));
         assertTrue(comment.contains("关联到fightprops表"));
     }
@@ -311,7 +312,7 @@ class CfgReaderTest {
         assertEquals(1, cfg.items().size());
 
         TableSchema table = (TableSchema) cfg.items().getFirst();
-        String comment = table.meta().data().get("_comment") instanceof Metadata.MetaStr(String c) ? c : "";
+        String comment = table.meta().data().get("_comment") instanceof Metadata.MetaComment(CommentData cd) ? cd.encode() : "";
         assertTrue(comment.contains("第一行注释"));
         assertTrue(comment.contains("第二行注释"));
         assertTrue(comment.contains("第三行注释"));
@@ -330,7 +331,7 @@ class CfgReaderTest {
         assertEquals(1, cfg.items().size());
 
         TableSchema table = (TableSchema) cfg.items().getFirst();
-        String comment = table.meta().data().get("_comment") instanceof Metadata.MetaStr(String c) ? c : "";
+        String comment = table.meta().data().get("_comment") instanceof Metadata.MetaComment(CommentData cd) ? cd.encode() : "";
         assertTrue(comment.contains("只有声明前注释"));
     }
 
@@ -346,7 +347,7 @@ class CfgReaderTest {
         assertEquals(1, cfg.items().size());
 
         TableSchema table = (TableSchema) cfg.items().getFirst();
-        String comment = table.meta().data().get("_comment") instanceof Metadata.MetaStr(String c) ? c : "";
+        String comment = table.meta().data().get("_comment") instanceof Metadata.MetaComment(CommentData cd) ? cd.encode() : "";
         assertTrue(comment.contains("只有行尾注释"));
         assertFalse(comment.contains(">>>"));
     }
@@ -443,7 +444,7 @@ class CfgReaderTest {
         assertEquals(1, cfg.items().size());
 
         TableSchema table = (TableSchema) cfg.items().getFirst();
-        String comment = table.meta().data().get("_comment") instanceof Metadata.MetaStr(String c) ? c : "";
+        String comment = table.meta().data().get("_comment") instanceof Metadata.MetaComment(CommentData cd) ? cd.encode() : "";
         assertTrue(comment.contains("参数捕获模式"));
         assertTrue(comment.contains("定义参数在触发时的捕获方式"));
     }
@@ -464,7 +465,7 @@ class CfgReaderTest {
         StructSchema struct = (StructSchema) cfg.items().getFirst();
         String comment = struct.comment();
         // 使用 CommentUtils 解析注释
-        CommentUtils.CommentData parsed = CommentUtils.decode(comment);
+        CommentData parsed = CommentUtil.decode(comment);
         assertTrue(parsed.suffix().contains("这是末尾注释"));
     }
 

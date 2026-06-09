@@ -1,7 +1,7 @@
 package configgen.schema.cfg;
 
 import configgen.schema.*;
-import configgen.schema.cfg.CommentUtils.CommentData;
+import configgen.schema.CommentData;
 
 import java.util.List;
 import java.util.Map;
@@ -74,7 +74,8 @@ public class CfgWriter {
         }
         meta.putEntry(table.entry());
 
-        CommentData comment = CommentUtils.decode(meta.removeComment());
+        CommentData comment = meta.removeComment();
+        if (comment == null) comment = new CommentData("", "", "");
         writeLeadingComment(comment, prefix);
 
         String name = useLastName ? table.lastName() : table.name();
@@ -95,7 +96,8 @@ public class CfgWriter {
         Metadata meta = table.meta().copy();
         meta.removeEnumValues();  // 不写出 enumValues，因为会还原为 enum 格式
 
-        CommentData comment = CommentUtils.decode(meta.removeComment());
+        CommentData comment = meta.removeComment();
+        if (comment == null) comment = new CommentData("", "", "");
         writeLeadingComment(comment, prefix);
 
         String name = useLastName ? table.lastName() : table.name();
@@ -131,7 +133,8 @@ public class CfgWriter {
             meta.putEnumRef(sInterface.enumRef());
         }
 
-        CommentData comment = CommentUtils.decode(meta.removeComment());
+        CommentData comment = meta.removeComment();
+        if (comment == null) comment = new CommentData("", "", "");
         writeLeadingComment(comment, prefix);
 
         String name = useLastName ? sInterface.lastName() : sInterface.name();
@@ -153,7 +156,8 @@ public class CfgWriter {
         Metadata meta = struct.meta().copy();
         meta.putFmt(struct.fmt());
 
-        CommentData comment = CommentUtils.decode(meta.removeComment());
+        CommentData comment = meta.removeComment();
+        if (comment == null) comment = new CommentData("", "", "");
         writeLeadingComment(comment, prefix);
 
         String name = useLastName ? struct.lastName() : struct.name();
@@ -187,7 +191,8 @@ public class CfgWriter {
                 foreignToMeta(fk, meta);
             }
 
-            CommentData comment = CommentUtils.decode(meta.removeComment());
+            CommentData comment = meta.removeComment();
+            if (comment == null) comment = new CommentData("", "", "");
             writeLeadingComment(comment, prefix + "\t");
             println("%s\t%s:%s%s%s;%s",
                     prefix, f.name(), typeStr, fkStr,
@@ -203,7 +208,8 @@ public class CfgWriter {
                 Metadata meta = fk.meta().copy();
                 foreignToMeta(fk, meta);
 
-                CommentData comment = CommentUtils.decode(meta.removeComment());
+                CommentData comment = meta.removeComment();
+                if (comment == null) comment = new CommentData("", "", "");
                 writeLeadingComment(comment, prefix + "\t");
                 println("%s\t->%s:%s%s%s;%s",
                         prefix, fk.name(), keyStr(fk.key()), foreignStr(fk),
@@ -352,6 +358,7 @@ public class CfgWriter {
             case MetaInt metaInt -> String.format("%s=%d", k, metaInt.value());
             case MetaStr metaStr -> String.format("%s='%s'", k, metaStr.value());
             case MetaEnumValues ignored -> "";  // enumValues 不会写出
+            case MetaComment ignored -> "";     // comment 不会通过 metadataStr 写出
         };
     }
 

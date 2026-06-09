@@ -27,6 +27,9 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
     public record MetaStr(String value) implements MetaValue {
     }
 
+    public record MetaComment(CommentData comment) implements MetaValue {
+    }
+
     public sealed interface MetaEnumValues extends MetaValue {
         record OfEmpty(List<EnumValueEmpty> values) implements MetaEnumValues {}
         record OfAssigned(List<EnumValueAssigned> values) implements MetaEnumValues {}
@@ -177,27 +180,23 @@ public record Metadata(SequencedMap<String, MetaValue> data) {
             JSON, NULLABLE, ENUM_REF, DEFAULT_IMPL, ENTRY, ENUM, COLUMN_MODE, PACK, SEP, FIX, BLOCK,
             LOWER_CASE, MUST_FILL, ROOT, SEQ, ENUM_VALUES, FROM_ENUM_TYPE, FROM_CFG_FILEPATH);
 
-    public String getComment() {
-        if (data.get(COMMENT) instanceof MetaStr(String value)) {
-            return value;
+    public CommentData getComment() {
+        if (data.get(COMMENT) instanceof MetaComment(CommentData cd)) {
+            return cd;
         }
-        return "";
+        return null;
     }
 
-    public String putComment(String comment) {
-        MetaValue old = data.putLast(COMMENT, new MetaStr(comment));
-        if (old instanceof MetaStr(String value)) {
-            return value;
-        }
-        return "";
+    public void putComment(CommentData comment) {
+        data.putLast(COMMENT, new MetaComment(comment));
     }
 
-    public String removeComment() {
+    public CommentData removeComment() {
         MetaValue obj = data.remove(COMMENT);
-        if (obj instanceof MetaStr(String value)) {
-            return value;
+        if (obj instanceof MetaComment(CommentData cd)) {
+            return cd;
         }
-        return "";
+        return null;
     }
 
     // enum table 的值列表

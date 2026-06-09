@@ -3,6 +3,7 @@ package configgen.schema.cfg;
 import configgen.schema.*;
 import configgen.schema.FieldType.*;
 import configgen.schema.Metadata.*;
+import configgen.schema.CommentData;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -72,7 +73,7 @@ public enum CfgReader {
         }
 
         // 读取并存储文件末尾注释
-        String fileEndComment = CommentUtils.readSuffixComment(schema.suffix_comment());
+        String fileEndComment = CommentUtil.readSuffixComment(schema.suffix_comment());
         if (!fileEndComment.isEmpty()) {
             destination.setFileEndComment(pkgNameDot, fileEndComment);
         }
@@ -82,14 +83,14 @@ public enum CfgReader {
         String name = readNamespaceIdentifier(ctx.ns_ident());
         KeySchema primaryKey = readKey(ctx.key());
 
-        String fullComment = CommentUtils.readFull3(
+        CommentData fullComment = CommentUtil.readFull3(
                 ctx.leading_comment(),
                 ctx.LC_COMMENT(),
                 ctx.suffix_comment());
 
         Metadata meta = readMetadataValues(ctx.metadata());
         meta.putFromCfgFilepath(fromCfgFilePath);
-        if (!fullComment.isEmpty()) {
+        if (!fullComment.encode().isEmpty()) {
             meta.putComment(fullComment);
         }
 
@@ -111,13 +112,13 @@ public enum CfgReader {
     private TableSchema readEnum(Enum_declContext ctx, String pkgNameDot) {
         String name = readNamespaceIdentifier(ctx.ns_ident());
 
-        String fullComment = CommentUtils.readFull3(
+        CommentData fullComment = CommentUtil.readFull3(
                 ctx.leading_comment(),
                 ctx.LC_COMMENT(),
                 ctx.suffix_comment());
 
         Metadata meta = readMetadataValues(ctx.metadata());
-        if (!fullComment.isEmpty()) {
+        if (!fullComment.encode().isEmpty()) {
             meta.putComment(fullComment);
         }
 
@@ -128,9 +129,9 @@ public enum CfgReader {
             List<Metadata.EnumValueAssigned> enumValues = new ArrayList<>();
             for (Enum_value_assignedContext evc : assignedCtxs) {
                 String valueName = evc.identifier().getText();
-                String valueComment = CommentUtils.readFull2(
+                String valueComment = CommentUtil.readFull2(
                         evc.leading_comment(),
-                        evc.SEMI_COMMENT());
+                        evc.SEMI_COMMENT()).encode();
                 int number = parseEnumNumber(evc.enum_number());
                 enumValues.add(new Metadata.EnumValueAssigned(valueName, valueComment, number));
             }
@@ -155,9 +156,9 @@ public enum CfgReader {
             List<Metadata.EnumValueEmpty> enumValues = new ArrayList<>();
             for (Enum_value_emptyContext evc : ctx.enum_value_empty()) {
                 String valueName = evc.identifier().getText();
-                String valueComment = CommentUtils.readFull2(
+                String valueComment = CommentUtil.readFull2(
                         evc.leading_comment(),
-                        evc.SEMI_COMMENT());
+                        evc.SEMI_COMMENT()).encode();
                 enumValues.add(new Metadata.EnumValueEmpty(valueName, valueComment));
             }
             meta.putEnumValues(new MetaEnumValues.OfEmpty(enumValues));
@@ -191,13 +192,13 @@ public enum CfgReader {
     private InterfaceSchema readInterface(Interface_declContext ctx, String pkgNameDot) {
         String name = readNamespaceIdentifier(ctx.ns_ident());
 
-        String fullComment = CommentUtils.readFull3(
+        CommentData fullComment = CommentUtil.readFull3(
                 ctx.leading_comment(),
                 ctx.LC_COMMENT(),
                 ctx.suffix_comment());
 
         Metadata meta = readMetadataValues(ctx.metadata());
-        if (!fullComment.isEmpty()) {
+        if (!fullComment.encode().isEmpty()) {
             meta.putComment(fullComment);
         }
 
@@ -217,13 +218,13 @@ public enum CfgReader {
     private StructSchema readStruct(Struct_declContext ctx, String pkgNameDot) {
         String name = readNamespaceIdentifier(ctx.ns_ident());
 
-        String fullComment = CommentUtils.readFull3(
+        CommentData fullComment = CommentUtil.readFull3(
                 ctx.leading_comment(),
                 ctx.LC_COMMENT(),
                 ctx.suffix_comment());
 
         Metadata meta = readMetadataValues(ctx.metadata());
-        if (!fullComment.isEmpty()) {
+        if (!fullComment.encode().isEmpty()) {
             meta.putComment(fullComment);
         }
 
@@ -285,11 +286,11 @@ public enum CfgReader {
         for (Field_declContext ctx : fieldDeclContexts) {
             String name = ctx.identifier().getText();
             FieldType type = readType(ctx.type_());
-            String comment = CommentUtils.readFull2(
+            CommentData comment = CommentUtil.readFull2(
                     ctx.leading_comment(),
                     ctx.SEMI_COMMENT());
             Metadata meta = readMetadataValues(ctx.metadata());
-            if (!comment.isEmpty()) {
+            if (!comment.encode().isEmpty()) {
                 meta.putComment(comment);
             }
 
@@ -311,11 +312,11 @@ public enum CfgReader {
         for (Foreign_declContext ctx : foreignDeclContexts) {
             String name = ctx.identifier().getText();
             KeySchema localKey = readKey(ctx.key());
-            String comment = CommentUtils.readFull2(
+            CommentData comment = CommentUtil.readFull2(
                     ctx.leading_comment(),
                     ctx.SEMI_COMMENT());
             Metadata meta = readMetadataValues(ctx.metadata());
-            if (!comment.isEmpty()) {
+            if (!comment.encode().isEmpty()) {
                 meta.putComment(comment);
             }
 

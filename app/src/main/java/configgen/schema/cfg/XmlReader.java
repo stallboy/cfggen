@@ -1,6 +1,7 @@
 package configgen.schema.cfg;
 
 import configgen.ctx.DirectoryStructure;
+import configgen.schema.CommentData;
 import configgen.util.Logger;
 import configgen.schema.*;
 import configgen.schema.RefKey.RefList;
@@ -290,7 +291,7 @@ public enum XmlReader {
 
         String comment = self.getAttribute("desc").trim();
         if (!comment.isEmpty() && !comment.equalsIgnoreCase(name)) {
-            meta.putComment(comment);
+            meta.putComment(new CommentData("", comment, null));
         }
 
         FieldType type;

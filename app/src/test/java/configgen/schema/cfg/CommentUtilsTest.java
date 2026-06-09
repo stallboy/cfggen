@@ -1,6 +1,6 @@
 package configgen.schema.cfg;
 
-import configgen.schema.cfg.CommentUtils.CommentData;
+import configgen.schema.CommentData;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -13,7 +13,7 @@ class CommentUtilsTest {
     @Test
     void testDecode_OnlyTrailing() {
         // 只有行尾注释
-        CommentData result = CommentUtils.decode("这是行尾注释");
+        CommentData result = CommentUtil.decode("这是行尾注释");
         assertEquals("", result.leading());
         assertEquals("这是行尾注释", result.trailing());
     }
@@ -21,7 +21,7 @@ class CommentUtilsTest {
     @Test
     void testDecode_OnlyLeading() {
         // 只有声明前注释
-        CommentData result = CommentUtils.decode("第一行\n第二行\n第三行");
+        CommentData result = CommentUtil.decode("第一行\n第二行\n第三行");
         assertEquals("第一行\n第二行\n第三行", result.leading());
         assertEquals("", result.trailing());
     }
@@ -29,7 +29,7 @@ class CommentUtilsTest {
     @Test
     void testDecode_BothLeadingAndTrailing() {
         // 同时有声明前注释和行尾注释
-        CommentData result = CommentUtils.decode("声明前注释第一行\n声明前注释第二行>>>行尾注释");
+        CommentData result = CommentUtil.decode("声明前注释第一行\n声明前注释第二行>>>行尾注释");
         assertEquals("声明前注释第一行\n声明前注释第二行", result.leading());
         assertEquals("行尾注释", result.trailing());
     }
@@ -37,7 +37,7 @@ class CommentUtilsTest {
     @Test
     void testDecode_EmptyString() {
         // 空字符串
-        CommentData result = CommentUtils.decode("");
+        CommentData result = CommentUtil.decode("");
         assertEquals("", result.leading());
         assertEquals("", result.trailing());
     }
@@ -45,7 +45,7 @@ class CommentUtilsTest {
     @Test
     void testDecode_Null() {
         // null 输入
-        CommentData result = CommentUtils.decode(null);
+        CommentData result = CommentUtil.decode(null);
         assertEquals("", result.leading());
         assertEquals("", result.trailing());
     }
@@ -53,7 +53,7 @@ class CommentUtilsTest {
     @Test
     void testDecode_MultipleSeparators() {
         // 多个分隔符，应该只在第一个处分割
-        CommentData result = CommentUtils.decode("第一行>>>第二行>>>第三行");
+        CommentData result = CommentUtil.decode("第一行>>>第二行>>>第三行");
         assertEquals("第一行", result.leading());
         assertEquals("第二行>>>第三行", result.trailing());
     }
@@ -137,7 +137,7 @@ class CommentUtilsTest {
     void testParsedCommentRoundTrip() {
         // 测试往返一致性
         String original = "声明前第一行\n声明前第二行>>>行尾注释";
-        CommentData pc = CommentUtils.decode(original);
+        CommentData pc = CommentUtil.decode(original);
 
         // 验证解析正确
         assertEquals("声明前第一行\n声明前第二行", pc.leading());
@@ -155,7 +155,7 @@ class CommentUtilsTest {
     @Test
     void testDecode_WithSuffix() {
         // 有后缀注释
-        CommentData result = CommentUtils.decode("声明前>>>行尾<<<后缀第一行\n后缀第二行");
+        CommentData result = CommentUtil.decode("声明前>>>行尾<<<后缀第一行\n后缀第二行");
         assertEquals("声明前", result.leading());
         assertEquals("行尾", result.trailing());
         assertEquals("后缀第一行\n后缀第二行", result.suffix());
@@ -164,7 +164,7 @@ class CommentUtilsTest {
     @Test
     void testDecode_OnlySuffix() {
         // 只有后缀注释
-        CommentData result = CommentUtils.decode("<<<后缀注释");
+        CommentData result = CommentUtil.decode("<<<后缀注释");
         assertEquals("", result.leading());
         assertEquals("", result.trailing());
         assertEquals("后缀注释", result.suffix());
@@ -173,7 +173,7 @@ class CommentUtilsTest {
     @Test
     void testDecode_TrailingAndSuffix() {
         // 行尾和后缀注释
-        CommentData result = CommentUtils.decode("行尾<<<后缀注释");
+        CommentData result = CommentUtil.decode("行尾<<<后缀注释");
         assertEquals("", result.leading());
         assertEquals("行尾", result.trailing());
         assertEquals("后缀注释", result.suffix());
@@ -210,7 +210,7 @@ class CommentUtilsTest {
         String en = pc.encode();
         assertEquals("这是注释\n", en);
 
-        CommentData cd = CommentUtils.decode(en);
+        CommentData cd = CommentUtil.decode(en);
         assertEquals("这是注释", cd.leading());
     }
 
@@ -221,7 +221,7 @@ class CommentUtilsTest {
         String en = pc.encode();
         assertEquals("这是注释\n第二行", en);
 
-        CommentData cd = CommentUtils.decode(en);
+        CommentData cd = CommentUtil.decode(en);
         assertEquals("这是注释\n第二行", cd.leading());
     }
 
@@ -232,7 +232,7 @@ class CommentUtilsTest {
         String en = pc.encode();
         assertEquals("这是注释\n第二行\n", en);
 
-        CommentData cd = CommentUtils.decode(en);
+        CommentData cd = CommentUtil.decode(en);
         assertEquals("这是注释\n第二行\n", cd.leading());
     }
 
@@ -243,7 +243,7 @@ class CommentUtilsTest {
         String en = pc.encode();
         assertEquals("这是注释>>>trailing", en);
 
-        CommentData cd = CommentUtils.decode(en);
+        CommentData cd = CommentUtil.decode(en);
         assertEquals("这是注释", cd.leading());
         assertEquals("trailing", cd.trailing());
     }
@@ -255,7 +255,7 @@ class CommentUtilsTest {
         String en = pc.encode();
         assertEquals("这是注释\n>>>trailing", en);
 
-        CommentData cd = CommentUtils.decode(en);
+        CommentData cd = CommentUtil.decode(en);
         assertEquals("这是注释\n", cd.leading());
         assertEquals("trailing", cd.trailing());
     }
@@ -267,7 +267,7 @@ class CommentUtilsTest {
         String en = pc.encode();
         assertEquals("这是注释\n注释第二行>>>trailing", en);
 
-        CommentData cd = CommentUtils.decode(en);
+        CommentData cd = CommentUtil.decode(en);
         assertEquals("这是注释\n注释第二行", cd.leading());
         assertEquals("trailing", cd.trailing());
     }

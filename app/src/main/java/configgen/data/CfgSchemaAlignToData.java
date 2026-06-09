@@ -7,6 +7,7 @@ import configgen.schema.*;
 import configgen.schema.EntryType.EEntry;
 import configgen.schema.EntryType.EEnum;
 import configgen.schema.FieldType.Primitive;
+import configgen.schema.CommentData;
 import configgen.schema.cfg.CfgUtil;
 
 import java.util.*;
@@ -107,7 +108,7 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
     private FieldSchema newFieldSchema(DField hf, String tableName, CfgSchemaErrs errs) {
         Metadata meta = Metadata.of();
         if (!hf.comment().isEmpty()) {
-            meta.putComment(hf.comment());
+            meta.putComment(new CommentData("", hf.comment(), null));
         }
         FieldType type;
         String typeStr = hf.suggestedType();
@@ -213,16 +214,27 @@ public record CfgSchemaAlignToData(HeadRow headRow) {
                 String fieldName = curField.name();
                 Metadata meta = curField.meta().copy();
                 if (!comment.isEmpty() && !comment.equalsIgnoreCase(fieldName)) {
-                    String old = meta.putComment(comment);
-                    if (!old.equals(comment)) {
+                    CommentData old = meta.getComment();
+                    String oldTrailing = old != null ? old.trailing() : "";
+                    if (!comment.equals(oldTrailing)) {
+                        CommentData updated = old != null
+                                ? new CommentData(old.leading(), comment, old.suffix())
+                                : new CommentData("", comment, null);
+                        meta.putComment(updated);
                         Logger.log(LocaleUtil.getFormatedLocaleString("CfgSchemaAlignToData.SetComment",
-                                "{0}[{1}] set comment: {2} -> {3}", table.name(), fieldName, old, comment));
+                                "{0}[{1}] set comment: {2} -> {3}", table.name(), fieldName, oldTrailing, comment));
                     }
                 } else {
-                    String old = meta.removeComment();
-                    if (!old.isEmpty()) {
+                    CommentData old = meta.getComment();
+                    if (old != null && !old.trailing().isEmpty()) {
+                        CommentData updated = new CommentData(old.leading(), "", old.suffix());
+                        if (updated.encode().isEmpty()) {
+                            meta.removeComment();
+                        } else {
+                            meta.putComment(updated);
+                        }
                         Logger.log(LocaleUtil.getFormatedLocaleString("CfgSchemaAlignToData.RemoveComment",
-                                "{0}[{1}] remove old comment: {2}", table.name(), fieldName, old));
+                                "{0}[{1}] remove old comment: {2}", table.name(), fieldName, old.trailing()));
                     }
                 }
                 newField = new FieldSchema(fieldName, curField.type().copy(), curField.fmt(), meta);

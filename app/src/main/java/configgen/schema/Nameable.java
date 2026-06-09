@@ -17,7 +17,8 @@ public sealed interface Nameable permits Fieldable, Structural, StructSchema, In
     Metadata meta();
 
     default String comment() {
-        return meta().getComment();
+        CommentData cd = meta().getComment();
+        return cd != null ? cd.encode() : "";
     }
 
     default String namespace() {

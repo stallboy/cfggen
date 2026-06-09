@@ -99,20 +99,27 @@ public class MetadataTest {
     @Test
     public void comment() {
         Metadata metadata = Metadata.of();
-        String comment = "This is a test comment";
-        metadata.putComment(comment);
-        assertEquals(comment, metadata.getComment());
+        assertNull(metadata.getComment());
+
+        CommentData cd = new CommentData("", "This is a test comment", null);
+        metadata.putComment(cd);
+        CommentData got = metadata.getComment();
+        assertNotNull(got);
+        assertEquals("This is a test comment", got.trailing());
+        assertEquals("This is a test comment", got.encode());
     }
 
     @Test
     public void remove_comment() {
         Metadata metadata = Metadata.of();
-        metadata.putComment("Test Comment");
+        assertNull(metadata.removeComment());
 
-        String removedComment = metadata.removeComment();
+        metadata.putComment(new CommentData("", "Test Comment", null));
 
-        assertEquals("Test Comment", removedComment);
-        assertEquals("", metadata.getComment());
+        CommentData removedComment = metadata.removeComment();
+        assertNotNull(removedComment);
+        assertEquals("Test Comment", removedComment.trailing());
+        assertNull(metadata.getComment());
     }
 
     @Test
