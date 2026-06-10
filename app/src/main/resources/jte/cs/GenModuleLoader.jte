@@ -223,7 +223,7 @@ namespace ${group.ns}
 
                             @if(firstField.type() instanceof SimpleType smpl)
                                 @if (refSimple.nullable())
-                                    ${refName} = ${sm.tableGet(fk.refTableSchema(), refSimple, sm.actualParams(fk.key()))};
+                                    ${refName} = ${sm.tableGet(fk.refTableSchema(), refSimple, sm.actualParams(fk.key()))}${StructModel.isEnum(fk.refTableSchema())? "?.EEnum" : ""};
                                 @else
                                     var r${refName} = ${sm.tableGet(fk.refTableSchema(), refSimple, sm.actualParams(fk.key()))};
                                     if (r${refName} == null) h.RefNotFound("${sm.structural.name()}", "${fkStr}", ${model.upper1(firstField.name())}${sm.toStringOrNot(smpl)});
