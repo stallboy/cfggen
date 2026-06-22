@@ -97,7 +97,7 @@ class AIBrainComponent {
 class AIGoalInstance {
     Ai_goal_definition goalCfg;
     Actor associatedActor;  // 关联实体（可为 null，如纯位置型 Goal）
-    Vec2 position;
+    Vector3 position;
     float magnitude;
     float creationTime;
 }
@@ -403,7 +403,11 @@ interface ScoreValue {
     struct GoalMagnitude {}        // 取 candidateGoal.magnitude
     struct StatValue {
         target: ThinkActor;
-        statTag: str -> stat_definition;
+        stat: str -> stat_definition;
+    }
+    struct ResourceValue {
+        target: ThinkActor;
+        resource: str -> resource_definition;
     }
     struct IsActiveBehavior {
         trueValue: float;          // 如果当前正在执行该行为，返回此加分
@@ -459,7 +463,6 @@ interface AITask {
     }
     struct MoveTo {
         target: AITargetSelector;
-        speedStat: str -> stat_definition;
         tolerance: float;              // 到达距离容差
         stopOnFinish: bool;            // 到达后是否停止
     }
@@ -605,7 +608,11 @@ interface AIFloatValue {
 
     struct StatValue {
         target: AITargetSelector;
-        statTag: str -> stat_definition;
+        stat: str -> stat_definition;
+    }
+    struct ResourceValue {
+        target: AITargetSelector;
+        resource: str -> resource_definition;
     }
     struct Distance {
         from: AITargetSelector;

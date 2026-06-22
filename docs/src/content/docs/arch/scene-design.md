@@ -39,25 +39,23 @@ sidebar:
 
 ### Philosophy
 
-1. **复用不重造** — 执行单元直接调用 GAS 的 Effect/Ability，AI 修饰通过 ActStatus 完成。只做编排。
+- **复用不重造** — 执行单元直接调用 GAS 的 Effect/Ability，AI 修饰通过 ActStatus 完成。只做编排。
 
-2. **单一执行模型** — 所有逻辑统一为 Act 树。没有树外执行引擎。
+- **单一执行模型** — 所有逻辑统一为 Act 树。没有树外执行引擎。
 
-3. **执行树非执行栈** — 节点构成树结构，`Parallel` 的并发语义自然表达。每帧只 tick Running 节点。
+- **执行树非执行栈** — 节点构成树结构，`Parallel` 的并发语义自然表达。每帧只 tick Running 节点
 
-4. **订阅驱动非轮询** — 等待节点在 `onEnter` 时注册监听，`onExit` 时取消。条件自描述其关心的事件类型。
+- **作用域即生命周期** — 有副作用的操作必须包装在 `WithXXX` 作用域节点中。`onExit` 在 finally 语义下执行，无论正常完成还是强制中止，清理必定发生。
 
-5. **作用域即生命周期** — 有副作用的操作必须包装在 `WithXXX` 作用域节点中。`onExit` 在 finally 语义下执行，无论正常完成还是强制中止，清理必定发生。
+- **Await 显式声明** — 动作默认 `FireAndForget`。需等待完成必须显式声明 `await: UntilComplete`。
 
-6. **Await 显式声明** — 动作默认 `FireAndForget`。需等待完成必须显式声明 `await: UntilComplete`。
+- **终止与流转分离** — `outcomes` 管场景生死（Terminate），`StateMachine` 内的 `transitions`/`globalTransitions` 管 Phase 流转，职责不交叉。
 
-7. **终止与流转分离** — `outcomes` 管场景生死（Terminate），`StateMachine` 内的 `transitions`/`globalTransitions` 管 Phase 流转，职责不交叉。
+- **万物皆变量** — 演员、道具、区域、计数器统一为场景变量，极简心智模型。
 
-8. **万物皆变量** — 演员、道具、区域、计数器统一为场景变量，极简心智模型。
+- **上下文继承** — 作用域节点注入 Context Target，子节点默认继承，消除 target 冗余书写。
 
-9. **上下文继承** — 作用域节点注入 Context Target，子节点默认继承，消除 target 冗余书写。
-
-10. **边界清晰契约分明** — 通过 `signature`（入参）和 `outcomes`（出参）与外部系统通信，不越权。
+- **边界清晰契约分明** — 通过 `signature`（入参）和 `outcomes`（出参）与外部系统通信，不越权。
 
 ---
 
@@ -66,43 +64,55 @@ sidebar:
 
 ### SceneInstance
 
-Outcome 评估独立于 rootAct 的 tick，在每帧开始执行。一旦匹配，abort 整棵 rootAct 树，场景终止。
+一场遭遇战的**世界状态**：持有演员 registry 与场景变量，统一管理对象生命周期。脚本执行委托给 `SceneDirector`。
 
 ```java
 class SceneInstance {
-    Scene_definition sceneCfg;
-    
+    ActorRegistry actors;
+    SceneDirector director;
+}
+```
+
+### SceneDirector
+
+纯执行引擎，无世界状态。负责 rootAct 的 tick 与 outcome 裁定。Outcome 评估独立于 rootAct 的 tick，在每帧开始执行；一旦匹配，abort 整棵 rootAct 树，并回调 `SceneInstance.terminate` 触发清场。
+
+```java
+class SceneDirector {
+    SceneDefinition def;
     // 实例状态, 原地被改变，跨节点共享
     Store instanceState; 
+    DirectorContext ctx;
+
     // 根执行树
     ActInstance<?> rootAct;
-    // 结局监控
     List<OutcomeMonitor> outcomeMonitors;
-    SceneContext ctx;
+    string currentPhaseKey;  // 供 CurrentPhaseIs 条件查询
 
     void tick(float dt) {
-        if (rootAct != null) {
-            rootAct.tick(ctx, dt);
-        }
         SceneOutcome matched = evaluateOutcomes();
         if (matched != null) {
-            terminate(matched);
+            ctx.scene.terminate(matched);
+            return;
         }
 
+        if (rootAct != null) {
+            rootAct.tick(dt);
+        }
     }
 }
 ```
 
-### SceneContext
+### DirectorContext
 
 ```java
-record SceneContext(
-    SceneInstance scene,
+record DirectorContext(
+    SceneDirector director,
 
-    // WithActorControl时，计算targets，建新的SceneContext
+    // WithActorControl时，计算targets，建新的DirectorContext
     List<Actor> targets; 
     // 局部作用域：仅对当前及子节点树有效
-    // WithLocalVar时，建新的localScope和SceneContext
+    // WithLocalVar时，建新的localScope和DirectorContext
     ReadOnlyStore localScope 
 ) {}
 ```
@@ -251,7 +261,7 @@ interface Act {
         body: Act;
     }
 
-    struct WithLocalVar {  // 新建localScope，SceneContext
+    struct WithLocalVar {  // 新建localScope，DirectorContext
         bindings: list<SceneVarBinding>;
         body: Act;
     }
@@ -387,19 +397,13 @@ interface FsmTarget {
 
 ## Data Foundation
 
-所有 `gameplaytag`、`stat_definition`、`event_definition` 与 GAS 共享同一注册表。
+所有 `gameplaytag`、`stat_definition`、`resource_definition`、`event_definition` 与 GAS 共享同一注册表。
 
 ### SceneCondition 
 
-自描述订阅的条件系统，其实现接口为：
-
 ```java
 class SceneConditions {
-    static boolean test(SceneCondition cfg, SceneContext ctx);
-
-    // 每种原子条件自身携带 `reactToEvents`，
-    // 声明哪些事件可能改变其求值结果。复合条件自动取子条件的并集。
-    static list<Event_defintion> getReactiveEvents(SceneCondition cfg);
+    static boolean test(SceneCondition cfg, DirectorContext ctx);
 }
 ```
 
@@ -418,46 +422,47 @@ interface SceneCondition {
         stat: str ->stat_definition;
         op: CompareOp;
         value: SceneFloatValue;
-        // reactTo: ["Stat_Changed:{stat}"]
+    }
+
+    struct ActorResourceCompare {
+        actor: ActorSelector;
+        quantifier: Quantifier;
+        resource: str ->resource_definition;
+        op: CompareOp;
+        value: SceneFloatValue;
     }
 
     struct ActorHasTags {
         actor: ActorSelector;
         quantifier: Quantifier;
         tagQuery: TagQuery;
-        // reactTo: ["Tag_Changed"]
     }
 
     struct ActorIsAlive {
         actor: ActorSelector;
         quantifier: Quantifier;
-        // reactTo: ["Character_Death", "Character_Revive"]
     }
 
     struct ActorIsDead {
         actor: ActorSelector;
         quantifier: Quantifier;
-        // reactTo: ["Character_Death", "Character_Revive"]
     }
 
     struct ActorInZone {
         actor: ActorSelector;
         quantifier: Quantifier;
         zone: ActorSelector;     // zone 始终取 [0]
-        // reactTo: ["Zone_ActorEntered:{zoneVar}", "Zone_ActorExited:{zoneVar}"]
     }
 
     struct SceneVarCompare {
         varKey: str ->var_key;
         op: CompareOp;
         value: SceneFloatValue;
-        // reactTo: ["Scene_VarChanged:{varKey}"]
     }
 
     struct TimeSinceSceneStart {
         op: CompareOp;
         seconds: float;
-        // 引擎内部定时器驱动
     }
 
     struct GroupCountCompare {
@@ -465,17 +470,14 @@ interface SceneCondition {
         countCondition: GroupCountCondition;
         op: CompareOp;
         value: SceneFloatValue;
-        // reactTo: ["Character_Death", "Group_MemberChanged:{groupVar}"]
     }
 
     struct CurrentPhaseIs {
         phaseKey: str ->phase_key;
-        // reactTo: ["Scene_PhaseChanged"]
     }
 
     struct RootActFinished {
         expectedStatus: ActFinishStatus;
-        // reactTo: ["Scene_RootActFinished"]
     }
 }
 
@@ -489,7 +491,7 @@ enum ActFinishStatus { Success; Failed; }
 返回actor列表，接口如下：
 ```java
 class ActorSelectors {
-    static List<Actor> select(ActorSelector cfg, SceneContext ctx);
+    static List<Actor> select(ActorSelector cfg, DirectorContext ctx);
 }
 ```
 
@@ -525,7 +527,7 @@ interface ActorSelector {
 * `SendEvent.target`（给列表中的每个目标发送事件）
 
 **3. 躯干控制节点：隐式消费上下文（Implicit Target）**
-像 `MoveTo`、`PlayAnimation`、`Interact` 等躯体动作**没有** `target` 字段！它们必须被包裹在 `WithActorControl` 内部，并直接读取被附身的 `SceneContext.targets` 执行。
+像 `MoveTo`、`PlayAnimation`、`Interact` 等躯体动作**没有** `target` 字段！它们必须被包裹在 `WithActorControl` 内部，并直接读取被附身的 `DirectorContext.targets` 执行。
 * **隐式 ForEach**：`PlayAnimation`、`MoveTo` 会让所有受控者一起播动画、一起走（适合群体检阅/走位演出）。
 * **隐式 ForOne**：`Dialogue`、`Interact` 在逻辑上强依赖单体表现，引擎底层自动取 `targets[0]` 执行。
 
@@ -552,7 +554,7 @@ WithActorControl {
 接口为：
 ```java
 class SceneFloatValues {
-    static float evaluate(SceneFloatValue cfg, SceneContext ctx);
+    static float evaluate(SceneFloatValue cfg, DirectorContext ctx);
 }
 ```
 
@@ -563,6 +565,7 @@ interface SceneFloatValue {
     struct Math { op: MathOp; a: SceneFloatValue; b: SceneFloatValue; }
     struct TimeBonusDecay { baseScore: float; decayPerSecond: float; }
     struct ActorStat { actor: ActorSelector; stat: str ->stat_definition; }
+    struct ActorResource { actor: ActorSelector; resource: str ->resource_definition; }
 }
 ```
 
@@ -580,7 +583,7 @@ abstract class ActInstance<T extends Act> {
 
     private ActStatus status = ActStatus.Pending;
 
-    public final ActStatus tick(SceneContext ctx, float deltaTime) {
+    public final ActStatus tick(DirectorContext ctx, float deltaTime) {
         if (status == ActStatus.Pending) {
             status = ActStatus.Running;
             onStart(ctx); 
@@ -598,7 +601,7 @@ abstract class ActInstance<T extends Act> {
         return status;
     }
 
-    public final void abort(SceneContext ctx) {
+    public final void abort(DirectorContext ctx) {
         if (status == ActStatus.Pending) {
             status = ActStatus.Aborted;
             return;
@@ -615,9 +618,9 @@ abstract class ActInstance<T extends Act> {
         status = ActStatus.Aborted;
     }
 
-    abstract void onStart(SceneContext ctx);
-    abstract ActStatus onTick(SceneContext ctx, float deltaTime);
-    abstract void onEnd(SceneContext ctx, boolean wasAborted);
+    abstract void onStart(DirectorContext ctx);
+    abstract ActStatus onTick(DirectorContext ctx, float deltaTime);
+    abstract void onEnd(DirectorContext ctx, boolean wasAborted);
 
     protected Iterable<ActInstance<?>> getActiveChildren() {
         return null; 

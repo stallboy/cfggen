@@ -27,7 +27,7 @@ table ability[id] (json) {
     
     // 准入检查
     activationConditions: list<Condition>;
-    costs: list<StatCost>;
+    costs: list<ResourceCost>;
     cooldown: FloatValue;
 
     // 瞄准与输入要求
@@ -46,11 +46,13 @@ table ability[id] (json) {
     recovery: RecoveryConfig;
 }
 
-struct StatCost {
-    stat: str ->stat_definition;
+struct ResourceCost {
+    resource: str ->resource_definition;
     value: FloatValue;
 }
 ```
+
+**Cost / Cooldown 的 FloatValue 约束**：`costs[].value` 与 `cooldown` 在激活期（`CanActivate` / `StartCooldown`）用 `WithoutPayload` 路径求值，**此时没有事件上下文**。因此禁止使用 Payload-relative 表达式（`PayloadMagnitude` / `PayloadVar`）——否则会静默求值为 0，导致**零消耗 / 零冷却**。
 
 ---
 
@@ -109,13 +111,13 @@ interface CastMode {
     // 瞬发模型
     struct Instant {}
 
-    // 前摇模型
+    // 前摇模型，读条
     struct Startup {
         startupTime: FloatValue;
         
         startupTags: list<str> ->gameplaytag;
-        cuesDuringStartup: list<str> ->cue_key;
-        commitPolicy: StartupCommitPolicy;
+        startupCues: list<str> ->cue_key_state;
+        commit: StartupCommitTiming;
     }
 
     // 蓄力模型（按住蓄力，松手触发）
@@ -123,11 +125,10 @@ interface CastMode {
         minChargeTime: FloatValue;
         maxChargeTime: FloatValue;
         releaseOnMax: bool;
-        chargeProgressVar: str ->var_key; // 将 0~1 的蓄力进度写入 instanceState
-        
+
         chargingTags: list<str> ->gameplaytag;
-        cuesDuringCharge: list<str> ->cue_key;
-        commitPolicy: ChargeCommitPolicy;
+        chargingCues: list<str> ->cue_key_state;
+        commit: ChargeCommitTiming;
     }
 
     // 引导模型（持续触发）
@@ -139,31 +140,43 @@ interface CastMode {
         finisherEffect: list<Effect>; // 收尾技
         
         channelingTags: list<str> ->gameplaytag;
-        cuesDuringChannel: list<str> ->cue_key;
-        commitPolicy: ChannelCommitPolicy;
+        channelingCues: list<str> ->cue_key_state;
+        commit: ChannelCommitTiming;
     }
 }
 
 // Commit 决定了【扣除 costs + 启动 cooldown】发生的精确时刻
-enum StartupCommitPolicy {
+enum StartupCommitTiming {
     OnActivate;     // 激活即扣（被打断不退费）
     OnComplete;     // 前摇完成瞬间扣（被打断白嫖）
 }
-enum ChargeCommitPolicy {
+enum ChargeCommitTiming {
     OnActivate;     // 激活即扣
     OnRelease;      // 松手且达到 minChargeTime 时扣（蓄力不足取消不扣费）
 }
-enum ChannelCommitPolicy {
+enum ChannelCommitTiming {
     OnActivate;     // 激活即扣
     OnFirstTick;    // 发生首次 tick 时扣（tickOnStart=true 的立即执行算作首次 tick）
 }
 ```
 
+### 引擎标准输出变量
+
+部分引擎产物的语义对所有同类 CastMode 技能完全一致，不再让每个技能重复声明，而是收敛为全局约定（在 `combat_settings` 中统一配置）。配置端通过 `FloatValue.ContextVar(varKey)` 读取。
+
+| 变量 | 来源 | 语义 | 配置位置 |
+|---|---|---|---|
+| `chargeProgressVar` | Charge 阶段每帧写入 | 当前蓄力在 [minCharge, maxCharge] 区间的归一化进度（0~1，单调递增） | `combat_settings.chargeProgressVar` |
+
+> 红线：只有「引擎产出 + 语义跨同类技能统一」的变量才进 `combat_settings`。技能局部计数器（命中次数、连击数等）仍由技能自身在 instanceState 中按 var_key 维护。
+
 ---
 
 ## 生命周期与状态机 (Lifecycle)
 
-Ability 在运行时的四大核心阶段（Phase）：`Activating`、`Processing`、`Executing`、`Recovering`。
+Ability 运行时由「激活动作」切入三大核心阶段（Phase）：`Processing`、`Executing`、`Recovering`。
+
+> 对齐 `StatusInstance.Apply`：`AbilityInstance` 的构造只做无副作用的字段初始化，真正的首帧动作（Commit / 首 tick）由 `Activate()` 显式执行，并直达首个真实阶段。`Activate` 执行期间免疫打断——首帧挂载的标签可能触发 `OnTagAdded` 级联，免疫窗口防止级联回调重入尚未完成的激活流程。
 
 ```text
   UI / 输入层
@@ -171,8 +184,11 @@ Ability 在运行时的四大核心阶段（Phase）：`Activating`、`Processin
 [ CanActivate ] ── 构建 context，验证 CD / 资源 / 状态 / 目标合法性
       │
       ▼
- [ Activating ] ── 创建 AbilityInstance
-      │            * [ 若 CommitPolicy == OnActivate，在此处 Commit ]
+ [ Activate() ] ── 创建 AbilityInstance（无副作用）→ 显式激活
+      │            * [ 若 Commit == OnActivate，在此处 Commit ]
+      │            * 激活全程不可被打断（免疫窗口）
+      │            * Instant 直达 Executing；Startup/Charge/Channel 直达 Processing
+      │            * Channel 的 tickOnStart 首 tick 在挂载 channelingTags 之后、激活完成之前触发
       ▼
  [ Processing ] ── (前摇/蓄力/引导) 挂载约束标签，接受打断检测，动态更新瞄准
       │                │                     │
@@ -240,7 +256,7 @@ Ability 在运行时的四大核心阶段（Phase）：`Activating`、`Processin
 struct RecoveryConfig {
     duration: FloatValue;
     recoveryTags: list<str> ->gameplaytag;   // 如 ["State.Recovery"]
-    cuesDuringRecovery: list<str> ->cue_key; 
+    recoveryCues: list<str> ->cue_key_state; 
 }
 ```
 
@@ -308,8 +324,8 @@ ability {
         //         ▲ 不含 State.Immobile → 移动不被 block
         //           但 TagRules: State.Moving cancelsAbilities Ability.Startup.MoveCancel
         //           → 玩家一动，此技能被 cancel（无惩罚，不扣费）
-        cuesDuringStartup: ["Startup.Heal"];
-        commitPolicy: OnComplete;
+        startupCues: ["Startup.Heal"];
+        commit: OnComplete;
     };
 
     effect: ...;
@@ -325,12 +341,12 @@ ability {
         startupTime: Const { value: 2.0; };
         startupTags: ["State.Startup.Spell", "State.Immobile"];
         //         ▲ State.Immobile → TagRules blocks Ability.Type.Movement → 按不动
-        cuesDuringStartup: ["Startup.Fireball"];
-        commitPolicy: OnComplete;
+        startupCues: ["Startup.Fireball"];
+        commit: OnComplete;
     };
 
     effect: ...;
-    onInterrupt: [ GrantTags {
+    onInterrupt: [ GrantTag {
             grantedTags: ["State.AbilityLockout"];
             duration: Const { value: 0.5; };
         },
@@ -344,7 +360,13 @@ ability {
 
 ## 生命周期广播事件
 
-引擎在 EventBus 中广播技能关键节点。`Payload` 约定：`instigator` = `target` = 施法者自身。
+
+存在**两套事件、两种 payload 语义**
+
+| 事件族 | instigator | target |
+|---|---|---|
+| Ability 生命周期事件（`Ability_Activated/Committed/Executed/...`） | 施法者 | 施法者 |
+| Pipeline 伤害事件（`Damage_Deal_Pre/Post`、`Damage_Take_Pre/Post`） | 攻击者 | 被击者 |
 
 | 事件名 | 触发时机 | 典型用途 |
 |---|---|---|
@@ -373,9 +395,9 @@ ability {
    recoveryTags: ["State.Recovery"]  recoveryTags: ["State.Recovery"]
 
  effect:                           effect:
-   + Damage(50)                      + RemoveStatusByTag ["Combo.Attack"]
-   + GrantTags                       + Damage(80)
-     "Combo.Attack.S2"               + GrantTags
+   + Damage(50)                      + PurgeStatusByTag ["Combo.Attack"]
+   + GrantTag                       + Damage(80)
+     "Combo.Attack.S2"               + GrantTag
      duration: 1.0s                    "Combo.Attack.S3"
                                        duration: 1.0s
 ```
@@ -395,7 +417,7 @@ ability {
 
 ### 为什么连招不作为 CastMode 原语
 
-连招的本质是"多个行为按条件链接"。每段的消耗、打断容忍度、后摇通常不同。用独立 Ability + GrantTags 窗口串联，每段保持完整的 Ability 语义，TagRules 自然覆盖。
+连招的本质是"多个行为按条件链接"。每段的消耗、打断容忍度、后摇通常不同。用独立 Ability + GrantTag 窗口串联，每段保持完整的 Ability 语义，TagRules 自然覆盖。
 
 ### 为什么切换型不作为 CastMode 原语
 
@@ -437,9 +459,9 @@ class AbilityInstance implements IPendingKill {
     void tick(float dt);
     
     // 由输入/引擎系统调用
-    void release();     // Charge: 玩家松手
-    void cancel();      // 玩家主动取消 / TagRules cancelsAbilities 驱动
-    void interrupt();   // TagRules interruptsAbilities 驱动
+    void releaseCharge(); // Charge: 玩家松手
+    void cancel();        // 玩家主动取消 / TagRules cancelsAbilities 驱动
+    void interrupt();     // TagRules interruptsAbilities 驱动
 }
 
 enum AbilityPhase {

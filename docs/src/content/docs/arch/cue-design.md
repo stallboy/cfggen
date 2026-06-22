@@ -134,7 +134,7 @@ public readonly struct CueParams {
 
 | Logic Source | 调用方法  | 目标 |
 | :--- | :--- | :--- |
-| `Effect.FireCue` / `ResolveCombat.cues`... | FireCue | `target` |
+| `Effect.FireCue` / `EmitPayload.cues`... | FireCue | `target` |
 | `Status` 首次挂载 | AttachCue | host | 
 | `Status` 层数变化 / 时长刷新 | UpdateCue | host | 
 | `Status` 移除 (过期/驱散/死亡) | DetachCue | host | 
@@ -167,6 +167,7 @@ table cue_registry_pulse[cueKey] (json) {
     sfxSelectors: list<PulseSfx>; // 听觉选择：互斥执行，防止物理碰撞音效重叠
     sfxAdditives: list<PulseSfx>; // 叠加：用于 UI 反馈、额外机制音效
     floatingTexts: list<FloatingText>; // 飘字选择：互斥执行
+    anim: list<PulseAnim>; // 动作选择：互斥执行，向 ActorView 广播抽象意图
 }
 
 struct PulseVfx {
@@ -192,6 +193,12 @@ struct FloatingText {
 
     hideIfBelowMagnitude: float; 
     mergePolicy: TextMergePolicy;
+}
+
+struct PulseAnim {
+    role: CueRole;
+    intent: str ->anim_intent;
+    requireTags: list<str> -> gameplaytag; // AND
 }
 
 enum TrackingMode {
@@ -369,6 +376,14 @@ table floating_text_metadata[assetId] {
     assetPath: str;
 
     group: str ->limit_group; // [仅 Pulse 生效]
+}
+
+// 动作意图元数据
+// 注意：这里只登记"抽象动作意图"（如 "Hit.Recoil"），不持有动画状态机。
+// Actor 表现层作为 Actor 的组件监听该意图，自行驱动状态机。
+table anim_intent[intentId] {
+    intentId: str;
+    description: text;
 }
 ```
 
@@ -719,6 +734,9 @@ public interface ICueAssetProvider
     IPulseCue? CreatePulseVfx(in VfxArgs vfx, CueAnchor anchor);
     IPulseCue? CreatePulseSfx(DSfxMetadata sfx, CueAnchor anchor);
     IFloatingTextCue? CreateFloatingText(DFloatingTextMetadata text, Actor anchor);
+    // 注意：anim intent 是纯广播，无物理资产/无 Ticket 闭环/无 Watchdog，
+    // 故不返回 IPulseCue，也不参与生命周期防线。直接广播给 ActorView。
+    void DoPulseAnim(DAnimIntent intent, Actor anchor);
 
     IStateCue? CreateStateVfx(in VfxArgs vfx, Actor anchor);
     IStateCue? CreateStateSfx(DSfxMetadata sfx, Actor anchor);
@@ -732,3 +750,36 @@ public interface ICueAssetProvider
 1. **标签即表现**：逻辑源必须提供准确的 Tags（如 `Damage.Element.Lightning`），而非直接请求具体特效。
 2. **意图对齐**：瞬发事件使用 `FireCue`；持续状态使用 `Status.cuesWhileActive` 挂载。
 3. **参数浓缩**：仅通过 `magnitude` 或 `CueParams` 传递数值，严禁在协议中扩展具体的颜色、缩放等物理字段。
+
+---
+
+## 表现层职责边界
+
+Cue 只承担**事件驱动的瞬时视听意图**（VFX / SFX / 飘字 / 瞬时动作）。下列职责按生命周期与耦合方向划归他处，Cue 不感知：
+
+### 持续动画状态机 → `ActorPresentation`（上层组件）
+
+待机、移动、朝向、持续动画混合、Socket 装配等是 Actor 的内禀视觉状态，由上层 `ActorPresentation` 组件自治，**不进入 `cue_registry_state`**。
+
+**理由**：动画状态机强耦合骨骼与上层逻辑（移动、寻路、能力阶段）。若由 cue 反向驱动，会制造"表现层→逻辑层"的双向依赖，违背瘦配置原则。
+
+**唯一握手**：`cue_registry_pulse.anim`。Cue 在瞬时事件（受击、处决）发生时广播一个抽象动作意图（`anim_intent`，如 `"Hit.Recoil"`），`ActorPresentation` 监听后自主裁决打断与混合。Cue 不感知骨骼与动画片段。
+
+### 相机反馈 → VFX 轨（瞬时） / `scene-design`（宏观）
+
+| 路径 | 归属 | 理由 |
+| :--- | :--- | :--- |
+| 瞬时震屏（暴击、爆炸） | cue VFX 轨 | 与主特效同源选择、同源限频。震屏实现为一个 `vfx_metadata` 资产，prefab 内部脚本驱动相机 |
+| 宏观相机控制（FocusOn / Cutscene / Restore） | `scene-design` 的 `CameraAction` | 演出级调度，生命周期与瞬时事件不同量级，归导演层 |
+
+**不为相机单设轨**：震屏复用 VFX 轨即可，无需新增表；宏观控制属演出意图，让 Cue 穿透到导演层会破坏职责单一。
+
+### 大招演出（Ultimate / Cinematic）→ `scene-design`
+
+招式过场、镜头编排、输入锁定、时间轴推进由 scene 层的 `Act` / `CameraAction` / `WithActorControl` 承担，**不通过 Cue 触发**。可以考虑为Effect引入`RunSceneEffect`
+
+**Cue 的本份**：仅负责演出过程中的瞬时视听碎片（剑光、法阵、震屏），走 Pulse 的 VFX/SFX 轨。演出编排本身是 Ability 的逻辑阶段，归 scene 层。
+
+---
+
+> **一句话**：Cue = 瞬时视听广播；ActorPresentation = Actor 自治的持续状态机；scene = 导演调度。三者各司其职，仅 `PulseAnim` 的抽象意图是 Cue 与 ActorPresentation 的握手面。
