@@ -1,0 +1,68 @@
+---
+const { head } = Astro.locals.starlightRoute;
+---
+
+{head.map(({ tag: Tag, attrs, content }) => <Tag {...attrs} set:html={content} />)}
+
+<style is:global>
+	.mermaid {
+		display: flex;
+		justify-content: center;
+		margin: 1.5rem 0;
+	}
+	.mermaid svg {
+		max-width: 100%;
+		height: auto;
+	}
+	.mermaid-error {
+		color: #c00;
+	}
+</style>
+
+<script>
+	import mermaid from 'mermaid';
+
+	const themeMap = { light: 'default', dark: 'dark' };
+	const currentTheme = () =>
+		themeMap[document.documentElement.getAttribute('data-theme')] ?? 'default';
+
+	async function renderAll() {
+		const els = [
+			...document.querySelectorAll('pre.mermaid:not([data-processed])'),
+		];
+		if (els.length === 0) return;
+		mermaid.initialize({
+			startOnLoad: false,
+			theme: currentTheme(),
+			securityLevel: 'loose',
+		});
+		for (const el of els) {
+			if (!el.hasAttribute('data-diagram')) {
+				el.setAttribute('data-diagram', el.textContent);
+			}
+			const id = 'mermaid-' + Math.random().toString(36).slice(2, 9);
+			try {
+				const { svg } = await mermaid.render(
+					id,
+					el.getAttribute('data-diagram')
+				);
+				el.innerHTML = svg;
+			} catch (e) {
+				el.textContent = 'Mermaid 渲染失败: ' + (e.message || e);
+			}
+			el.setAttribute('data-processed', '');
+		}
+	}
+
+	document.addEventListener('astro:page-load', renderAll);
+
+	new MutationObserver(() => {
+		document
+			.querySelectorAll('pre.mermaid[data-processed]')
+			.forEach((el) => el.removeAttribute('data-processed'));
+		renderAll();
+	}).observe(document.documentElement, {
+		attributes: true,
+		attributeFilter: ['data-theme'],
+	});
+</script>

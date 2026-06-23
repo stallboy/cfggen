@@ -29,46 +29,53 @@ sidebar:
 
 ### 执行流全景
 
+```mermaid
+flowchart TD
+    Ability(["Ability<br/>主动行为入口"])
+    Effect{{"Effect<br/>无状态原子指令"}}
+
+    Ability -->|execute| Effect
+
+    subgraph Actor["Actor 运行时组件"]
+        direction TB
+        SC["StatusComponent<br/>Status · Behavior"]
+        Trigger(["Trigger<br/>Status 内 Behavior"])
+        STC["StatComponent"]
+        EB(("EventBus"))
+        TC["TagContainer"]
+        RC["ResourceComponent"]
+    end
+
+    Effect -->|ApplyStatus| SC
+    Effect -->|GrantTag| TC
+    Effect -->|ModifyResource| RC
+    Effect -->|EmitPayload| Pipe["结算管线<br/>Pre 广播 → ResolveSinks → Post 广播"]
+
+    SC -->|grantedTags| TC
+    SC -->|"StatModifier 修饰"| STC
+
+    Pipe -->|"broadcast 携带 Payload"| EB
+    Pipe -->|"属性扣减"| RC
+
+    Trigger -.->|listen| EB
+    EB ==>|dispatch| Trigger
+    Trigger ==>|"execute 新 Effect"| Effect
+
+    TC -->|"标签查询"| TR["TagRules 全局战斗法则<br/>免疫 / 阻止 / 驱散 / 打断"]
+    TR -.->|"gate 挂载 / 激活"| SC
 ```
-                         ┌───────────┐
-                         │  Ability  │
-                         └───────────┘
-                               │ execute
-                               ▼
-            ┌───────────────── Effect ─────────────────┐
-            │                    │                     │
-     ApplyStatus            ModifyResource         EmitPayload
-            │                    │                     │
-            ▼                    ▼                     ▼
-     ┌────────────┐      ┌────────────┐        ┌────────────┐
-     │   Status   │      │    Stat    │        │  Pipeline  │
-     │ ┌────────┐ │      │ Component  │        └──────┬─────┘
-     │ │Behavior│ │      └────────────┘          broadcast
-     │ └───┬────┘ │                                   │
-     └─────┼──────┘                                   ▼
-           │                                   ┌────────────┐
-      Trigger ─────── listen ────────────────> │  EventBus  │
-                                               └──────┬─────┘
-                                                      │
-              ┌───────────────────────────────────────┘
-              │ dispatch
-              ▼
-       Trigger.effect ── execute ──▶ Effect   ◄── 响应式循环
 
+图中 **Actor 框内**是挂载在实体上的运行时组件；框外的 Ability / Effect / 结算管线 / TagRules 是无状态指令或全局配置，本身不持有状态。粗箭头 `==>` 标出贯穿全局的**响应式循环**——它是整个系统的驱动核心：
 
-     Status ── grantTag ──▶ TagContainer ──▶ TagRules
-                                              (免疫/阻止/驱散/打断)
-```
+1. **Ability**（主动）或 **Status** 内的 **Behavior**（被动 / 周期）触发 **Effect**
+2. Effect 是无状态原子指令，按动作分流：`ApplyStatus` 挂 Status、`GrantTag` 写 TagContainer、`ModifyResource` 改资源池；`EmitPayload` 则进入结算管线
+3. 结算管线在 Pre / Post 两个阶段向 **EventBus** 广播事件（携带 **Payload**），中段 `ResolveSinks` 将载荷落地为属性扣减
+4. 其他 Status 中的 **Trigger**（Behavior 的一种）监听到事件，执行新的 Effect
+5. 新 Effect 可能再次走 `EmitPayload` → 回到步骤 2，循环往复
 
-整个系统的驱动核心是这条**响应式循环**：
+**TagContainer ↔ TagRules** 横切这条循环：Status 的 `grantedTags` 与 Effect 的 `GrantTag` 都向 TagContainer 写入；TagRules 基于标签查询执行**免疫 / 阻止 / 驱散 / 打断**，在 Status 挂载、Ability 激活等关口拦截。
 
-1. **Ability** 或 **Behavior** 触发 **Effect**
-2. Effect 可以走 `EmitPayload` 进入结算 **Pipeline**
-3. Pipeline 在 Pre / Post 两个阶段向 **EventBus** 广播事件（携带 **Payload**）
-4. 其他 Status 中的 **Trigger** 监听到事件，执行新的 Effect
-5. 新 Effect 可能再次进入管线 → 回到步骤 2
-
-系统通过 `combat_settings.maxDispatchDepth` 限制嵌套深度，防止无限循环（如反伤互相触发）。
+系统通过 `combat_settings.maxDispatchDepth` 限制事件派发的嵌套深度，防止无限循环（如反伤互相触发）。
 
 
 ### 三层正交原则

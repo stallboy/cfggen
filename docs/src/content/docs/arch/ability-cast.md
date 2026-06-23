@@ -178,44 +178,34 @@ Ability 运行时由「激活动作」切入三大核心阶段（Phase）：`Pro
 
 > 对齐 `StatusInstance.Apply`：`AbilityInstance` 的构造只做无副作用的字段初始化，真正的首帧动作（Commit / 首 tick）由 `Activate()` 显式执行，并直达首个真实阶段。`Activate` 执行期间免疫打断——首帧挂载的标签可能触发 `OnTagAdded` 级联，免疫窗口防止级联回调重入尚未完成的激活流程。
 
-```text
-  UI / 输入层
-      │
-[ CanActivate ] ── 构建 context，验证 CD / 资源 / 状态 / 目标合法性
-      │
-      ▼
- [ Activate() ] ── 创建 AbilityInstance（无副作用）→ 显式激活
-      │            * [ 若 Commit == OnActivate，在此处 Commit ]
-      │            * 激活全程不可被打断（免疫窗口）
-      │            * Instant 直达 Executing；Startup/Charge/Channel 直达 Processing
-      │            * Channel 的 tickOnStart 首 tick 在挂载 channelingTags 之后、激活完成之前触发
-      ▼
- [ Processing ] ── (前摇/蓄力/引导) 挂载约束标签，接受打断检测，动态更新瞄准
-      │                │                     │
-      │          interruptsAbilities     cancelsAbilities
-      │           (硬打断)                (软取消)
-      │                │                     │
-      │                ▼                     ▼
-      │         执行 onInterrupt       直接清理 ──▶ End
-      │                │
-      │                ▼
-      │               End
-      ▼
-      │            * [ 延迟的 Commit 通常在此处或释放瞬间发生 ]
- [ Executing ] ── 瞬间结算 ability.effect
-      │
-      ▼
- [ Recovering ] ── 挂载 recoveryTags 进入后摇倒计时
-      │                │                     │
-      │          interruptsAbilities     cancelsAbilities
-      │           (硬打断)                (软取消)
-      │                │                     │
-      │                └──────┬───────────────┘
-      │                       ▼
-      │              直接清理 ──▶ End
-      │              (Recovery 阶段始终无惩罚，两种打断动词效果相同)
-      ▼
-   [ Ended ] ── 正常销毁
+```mermaid
+stateDiagram-v2
+    direction TB
+    [*] --> CanActivate
+    CanActivate --> Activating: 准入通过
+    CanActivate --> [*]: 准入拒绝
+
+    note right of Activating
+        免疫打断窗口
+        Commit==OnActivate 在此扣费
+        Channel tickOnStart 首 tick
+    end note
+
+    Activating --> Executing: Instant 直达
+    Activating --> Processing: Startup / Charge / Channel
+
+    Processing --> Executing: 阶段完成
+    Processing --> Ended: interrupt → onInterrupt
+    Processing --> Ended: cancel → 直接清理
+
+    Executing --> Recovering: effect 结算完毕
+    note right of Executing: 延迟 Commit 通常在此
+    Executing --> Ended: duration <= 0 跳过
+
+    Recovering --> Ended: 倒计时结束
+    Recovering --> Ended: interrupt / cancel 均无惩罚
+
+    Ended --> [*]
 ```
 
 ### CanActivate

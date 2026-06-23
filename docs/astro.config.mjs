@@ -17,9 +17,32 @@ const cfgGrammar = JSON.parse(fs.readFileSync(cfgGrammarPath, 'utf-8'));
 cfgGrammar.id = 'cfg';
 cfgGrammar.aliases = ['cfg'];
 
+function escapeHtml(s) {
+	return String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+}
+
+function remarkMermaid() {
+	return (tree) => {
+		const walk = (nodes) => {
+			for (let i = 0; i < nodes.length; i++) {
+				const n = nodes[i];
+				if (n.type === 'code' && n.lang === 'mermaid') {
+					nodes[i] = { type: 'html', value: `<pre class="mermaid">${escapeHtml(n.value)}</pre>` };
+				} else if (n.children) {
+					walk(n.children);
+				}
+			}
+		};
+		walk(tree.children);
+	};
+}
+
 // https://astro.build/config
 export default defineConfig({
 	base: '/cfggen',
+	markdown: {
+		remarkPlugins: [remarkMermaid],
+	},
 	integrations: [
 		starlight({
 			plugins: [
@@ -51,19 +74,19 @@ export default defineConfig({
 				},
 				{
 					label: '配表系统',
-					autogenerate: { directory: 'core' }
+					items: [{ autogenerate: { directory: 'core' } }]
 				},
 				{
 					label: '编辑器',
-					autogenerate: { directory: 'editor' }
+					items: [{ autogenerate: { directory: 'editor' } }]
 				},
 				{
 					label: '设计参考',
-					autogenerate: { directory: 'arch' }
+					items: [{ autogenerate: { directory: 'arch' } }]
 				},
 				{
 					label: 'AI 生成',
-					autogenerate: { directory: 'ai' }
+					items: [{ autogenerate: { directory: 'ai' } }]
 				},
 				{
 					label: 'VSCode 扩展',
@@ -71,13 +94,16 @@ export default defineConfig({
 				},
 				{
 					label: '开发设计',
-					autogenerate: { directory: 'dev' }
+					items: [{ autogenerate: { directory: 'dev' } }]
 				}
 			],
 			expressiveCode: {
 				shiki: {
 					langs: [cfgGrammar],
 				},
+			},
+			components: {
+				Head: 'src/components/Head.astro',
 			},
 		}),
 	],
