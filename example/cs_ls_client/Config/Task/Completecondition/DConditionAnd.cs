@@ -1,4 +1,7 @@
-namespace Config.Task.Completecondition;
+using System;
+using System.Collections.Generic;
+namespace Config.Task.Completecondition
+{
 
 public partial class DConditionAnd : Task.DCompletecondition
 {
@@ -6,6 +9,7 @@ public partial class DConditionAnd : Task.DCompletecondition
         return Task.DCompleteconditiontype.ConditionAnd;
     }
 
-    public required Task.DCompletecondition Cond1 { get; init; }
-    public required Task.DCompletecondition Cond2 { get; init; }
+    public Task.DCompletecondition Cond1 { get; init; } = null!;
+    public Task.DCompletecondition Cond2 { get; init; } = null!;
+}
 }

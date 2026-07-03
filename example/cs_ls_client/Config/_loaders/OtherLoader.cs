@@ -1,5 +1,5 @@
-using System.Collections.Frozen;
-
+using System;
+using System.Collections.Generic;
 namespace Config.Other
 {
     public partial class DDropItem
@@ -63,8 +63,9 @@ namespace Config.Other
                 s_idMap.Add(self.Id, self);
                 DArgCaptureModeExtensions._infos[(int)self.EEnum] = self;
             }
-            _all = s_all.ToFrozenDictionary();
-            _idMap = s_idMap.ToFrozenDictionary();
+            _all = s_all;
+            _allList = list;
+            _idMap = s_idMap;
         }
 
         internal static DArgCaptureModeInfo _create(ConfigReader reader)
@@ -76,7 +77,7 @@ namespace Config.Other
                 Name = name,
                 Id = id,
                 Comment = comment,
-                EEnum = Enum.Parse<DArgCaptureMode>(StringUtil.UpperFirstChar(name))
+                EEnum = (DArgCaptureMode)Enum.Parse(typeof(DArgCaptureMode), StringUtil.UpperFirstChar(name))
             };
         }
 
@@ -119,7 +120,8 @@ namespace Config.Other
             {
                 s_all.Add(self.Dropid, self);
             }
-            _all = s_all.ToFrozenDictionary();
+            _all = s_all;
+            _allList = list;
         }
 
         internal static DDrop _create(ConfigReader reader)
@@ -187,10 +189,11 @@ namespace Config.Other
                 s_id2Map.Add(self.Id2, self);
                 s_id2Id3Map.Add(new Id2Id3Key(self.Id2, self.Id3), self);
             }
-            _all = s_all.ToFrozenDictionary();
-            _id1Id3Map = s_id1Id3Map.ToFrozenDictionary();
-            _id2Map = s_id2Map.ToFrozenDictionary();
-            _id2Id3Map = s_id2Id3Map.ToFrozenDictionary();
+            _all = s_all;
+            _allList = list;
+            _id1Id3Map = s_id1Id3Map;
+            _id2Map = s_id2Map;
+            _id2Id3Map = s_id2Id3Map;
         }
 
         internal static void Resolve(IIssueHandler h)
@@ -242,7 +245,7 @@ namespace Config.Other
 
         internal void _resolve(IIssueHandler h)
         {
-            RefIds = [];
+            RefIds = new List<Other.DSignin>();
             foreach(var e in Ids)
             {
                 var r = Other.DSignin.Get(e);
@@ -252,7 +255,7 @@ namespace Config.Other
             var rRefEnumTest = Other.DArgCaptureModeInfo.Get(EnumTest);
             if (rRefEnumTest == null) h.RefNotFound("other.keytest", "enumTest", EnumTest);
             else RefEnumTest = rRefEnumTest.EEnum;
-            RefEnumList = [];
+            RefEnumList = new List<Other.DArgCaptureMode>();
             foreach(var e in EnumList)
             {
                 var r = Other.DArgCaptureModeInfo.Get(e);
@@ -281,7 +284,8 @@ namespace Config.Other
             {
                 s_all.Add(self.Lootid, self);
             }
-            _all = s_all.ToFrozenDictionary();
+            _all = s_all;
+            _allList = list;
         }
 
         internal static void Resolve(IIssueHandler h)
@@ -326,13 +330,13 @@ namespace Config.Other
 
         internal void _resolve(IIssueHandler h)
         {
-            ListRefLootid = [];
+            ListRefLootid = new List<Other.DLootitem>();
             foreach (var v in Other.DLootitem.All())
             {
                 if (v.Lootid.Equals(Lootid))
                     ListRefLootid.Add(v);
             }
-            ListRefAnotherWay = [];
+            ListRefAnotherWay = new List<Other.DLootitem>();
             foreach (var v in Other.DLootitem.All())
             {
                 if (v.Lootid.Equals(Lootid))
@@ -360,7 +364,8 @@ namespace Config.Other
             {
                 s_all.Add(new LootidItemidKey(self.Lootid, self.Itemid), self);
             }
-            _all = s_all.ToFrozenDictionary();
+            _all = s_all;
+            _allList = list;
         }
 
         internal static DLootitem _create(ConfigReader reader)
@@ -418,7 +423,8 @@ namespace Config.Other
             {
                 s_all.Add(self.Id, self);
             }
-            _all = s_all.ToFrozenDictionary();
+            _all = s_all;
+            _allList = list;
         }
 
         internal static void Resolve(IIssueHandler h)
@@ -479,7 +485,7 @@ namespace Config.Other
             var rRefAllLoot = Other.DLoot.Get(LootId);
             if (rRefAllLoot == null) h.RefNotFound("other.monster", "AllLoot", LootId.ToString());
             else RefAllLoot = rRefAllLoot;
-            RefEnumMap2 = [];
+            RefEnumMap2 = new OrderedDictionary<int, Other.DArgCaptureMode>();
             foreach(var kv in EnumMap2)
             {
                 var k = kv.Key;
@@ -509,7 +515,8 @@ namespace Config.Other
             {
                 s_all.Add(self.Id, self);
             }
-            _all = s_all.ToFrozenDictionary();
+            _all = s_all;
+            _allList = list;
         }
 
         internal static void Resolve(IIssueHandler h)
@@ -559,7 +566,7 @@ namespace Config.Other
 
         internal void _resolve(IIssueHandler h)
         {
-            RefVipitem2vipcountMap = [];
+            RefVipitem2vipcountMap = new OrderedDictionary<int, Other.DLoot>();
             foreach(var kv in Vipitem2vipcountMap)
             {
                 var k = kv.Key;

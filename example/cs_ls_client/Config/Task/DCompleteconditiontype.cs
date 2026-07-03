@@ -1,4 +1,7 @@
-namespace Config.Task;
+using System;
+using System.Collections.Generic;
+namespace Config.Task
+{
 
 public enum DCompleteconditiontype
 {
@@ -13,11 +16,12 @@ public enum DCompleteconditiontype
 
 public partial class DCompleteconditiontypeInfo
 {
-    public required int Id { get; init; } /* 任务完成条件类型（id的范围为1-100） */
-    public required string Name { get; init; } /* 程序用名字 */
-    public required DCompleteconditiontype EEnum { get; init; }
+    public int Id { get; init; } /* 任务完成条件类型（id的范围为1-100） */
+    public string Name { get; init; } = null!; /* 程序用名字 */
+    public DCompleteconditiontype EEnum { get; init; }
+    private static IReadOnlyList<DCompleteconditiontypeInfo> _allList = null!;
     
-    private static System.Collections.Frozen.FrozenDictionary<int, DCompleteconditiontypeInfo> _all = null!;
+    private static Dictionary<int, DCompleteconditiontypeInfo> _all = null!;
 
     public static DCompleteconditiontypeInfo? Get(int id)
     {
@@ -26,7 +30,7 @@ public partial class DCompleteconditiontypeInfo
 
     public static IReadOnlyList<DCompleteconditiontypeInfo> All()
     {
-        return _all.Values;
+        return _allList;
     }
 }
 
@@ -38,4 +42,5 @@ public static class DCompleteconditiontypeExtensions
     {
         return _infos[(int)e];
     }
+}
 }

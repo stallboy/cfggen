@@ -1,5 +1,5 @@
-using System.Collections.Frozen;
-
+using System;
+using System.Collections.Generic;
 namespace Config.Equip
 {
     public partial class DTestPackBean
@@ -54,7 +54,8 @@ namespace Config.Equip
                 s_all.Add(self.Id, self);
                 DAbilityExtensions._infos[(int)self.EEnum] = self;
             }
-            _all = s_all.ToFrozenDictionary();
+            _all = s_all;
+            _allList = list;
         }
 
         internal static DAbilityInfo _create(ConfigReader reader)
@@ -64,7 +65,7 @@ namespace Config.Equip
             return new DAbilityInfo {
                 Id = id,
                 Name = name,
-                EEnum = Enum.Parse<DAbility>(StringUtil.UpperFirstChar(name))
+                EEnum = (DAbility)Enum.Parse(typeof(DAbility), StringUtil.UpperFirstChar(name))
             };
         }
 
@@ -127,7 +128,8 @@ namespace Config.Equip
                         break;
                 }
             }
-            _all = s_all.ToFrozenDictionary();
+            _all = s_all;
+            _allList = list;
             if (eInstance == null) handler.EnumNotInData("Instance");
             else Instance = eInstance;
             if (eInstance2 == null) handler.EnumNotInData("Instance2");
@@ -191,7 +193,8 @@ namespace Config.Equip
             {
                 s_all.Add(self.ID, self);
             }
-            _all = s_all.ToFrozenDictionary();
+            _all = s_all;
+            _allList = list;
         }
 
         internal static void Resolve(IIssueHandler h)
@@ -278,7 +281,8 @@ namespace Config.Equip
             {
                 s_all.Add(self.LvlRank, self);
             }
-            _all = s_all.ToFrozenDictionary();
+            _all = s_all;
+            _allList = list;
         }
 
         internal static void Resolve(IIssueHandler h)
@@ -363,7 +367,8 @@ namespace Config.Equip
                         break;
                 }
             }
-            _all = s_all.ToFrozenDictionary();
+            _all = s_all;
+            _allList = list;
             if (eSpecialSuit == null) handler.EnumNotInData("SpecialSuit");
             else SpecialSuit = eSpecialSuit;
         }
@@ -437,7 +442,8 @@ namespace Config.Equip
                 s_all.Add(self.TypeName, self);
                 DJewelrytypeExtensions._infos[(int)self.EEnum] = self;
             }
-            _all = s_all.ToFrozenDictionary();
+            _all = s_all;
+            _allList = list;
         }
 
         internal static DJewelrytypeInfo _create(ConfigReader reader)
@@ -445,7 +451,7 @@ namespace Config.Equip
             var typeName = reader.ReadStringInPool();
             return new DJewelrytypeInfo {
                 TypeName = typeName,
-                EEnum = Enum.Parse<DJewelrytype>(StringUtil.UpperFirstChar(typeName))
+                EEnum = (DJewelrytype)Enum.Parse(typeof(DJewelrytype), StringUtil.UpperFirstChar(typeName))
             };
         }
 
@@ -501,7 +507,7 @@ namespace Config.Equip
                 RankID = rankID,
                 RankName = rankName,
                 RankShowName = rankShowName,
-                EEnum = Enum.Parse<DRank>(StringUtil.UpperFirstChar(rankName))
+                EEnum = (DRank)Enum.Parse(typeof(DRank), StringUtil.UpperFirstChar(rankName))
             };
         }
 

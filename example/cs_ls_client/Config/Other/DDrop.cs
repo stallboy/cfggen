@@ -1,13 +1,17 @@
-namespace Config.Other;
+using System;
+using System.Collections.Generic;
+namespace Config.Other
+{
 
 public partial class DDrop
 {
-    public required int Dropid { get; init; } /* 序号 */
-    public required Config.Text Name { get; init; } /* 名字 */
-    public required List<Other.DDropItem> Items { get; init; } /* 掉落概率 */
-    public required OrderedDictionary<int, int> Testmap { get; init; } /* 测试map block */
+    public int Dropid { get; init; } /* 序号 */
+    public Config.Text Name { get; init; } = null!; /* 名字 */
+    public List<Other.DDropItem> Items { get; init; } = null!; /* 掉落概率 */
+    public OrderedDictionary<int, int> Testmap { get; init; } = null!; /* 测试map block */
+    private static IReadOnlyList<DDrop> _allList = null!;
     
-    private static System.Collections.Frozen.FrozenDictionary<int, DDrop> _all = null!;
+    private static Dictionary<int, DDrop> _all = null!;
 
     public static DDrop? Get(int dropid)
     {
@@ -16,6 +20,7 @@ public partial class DDrop
 
     public static IReadOnlyList<DDrop> All()
     {
-        return _all.Values;
+        return _allList;
     }
+}
 }

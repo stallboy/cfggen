@@ -1,4 +1,7 @@
-namespace Config.Task.Completecondition;
+using System;
+using System.Collections.Generic;
+namespace Config.Task.Completecondition
+{
 
 public partial class DCollectItem : Task.DCompletecondition
 {
@@ -6,6 +9,7 @@ public partial class DCollectItem : Task.DCompletecondition
         return Task.DCompleteconditiontype.CollectItem;
     }
 
-    public required int Itemid { get; init; }
-    public required int Count { get; init; }
+    public int Itemid { get; init; }
+    public int Count { get; init; }
+}
 }

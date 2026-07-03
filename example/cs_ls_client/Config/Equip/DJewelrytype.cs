@@ -1,4 +1,7 @@
-namespace Config.Equip;
+using System;
+using System.Collections.Generic;
+namespace Config.Equip
+{
 
 public enum DJewelrytype
 {
@@ -10,10 +13,11 @@ public enum DJewelrytype
 
 public partial class DJewelrytypeInfo
 {
-    public required string TypeName { get; init; } /* 程序用名字 */
-    public required DJewelrytype EEnum { get; init; }
+    public string TypeName { get; init; } = null!; /* 程序用名字 */
+    public DJewelrytype EEnum { get; init; }
+    private static IReadOnlyList<DJewelrytypeInfo> _allList = null!;
     
-    private static System.Collections.Frozen.FrozenDictionary<string, DJewelrytypeInfo> _all = null!;
+    private static Dictionary<string, DJewelrytypeInfo> _all = null!;
 
     public static DJewelrytypeInfo? Get(string typeName)
     {
@@ -22,7 +26,7 @@ public partial class DJewelrytypeInfo
 
     public static IReadOnlyList<DJewelrytypeInfo> All()
     {
-        return _all.Values;
+        return _allList;
     }
 }
 
@@ -34,4 +38,5 @@ public static class DJewelrytypeExtensions
     {
         return _infos[(int)e];
     }
+}
 }

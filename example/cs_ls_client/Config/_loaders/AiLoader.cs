@@ -1,5 +1,5 @@
-using System.Collections.Frozen;
-
+using System;
+using System.Collections.Generic;
 namespace Config.Ai
 {
     public partial class DAi
@@ -21,7 +21,8 @@ namespace Config.Ai
             {
                 s_all.Add(self.ID, self);
             }
-            _all = s_all.ToFrozenDictionary();
+            _all = s_all;
+            _allList = list;
         }
 
         internal static DAi _create(ConfigReader reader)
@@ -86,7 +87,8 @@ namespace Config.Ai
             {
                 s_all.Add(self.ID, self);
             }
-            _all = s_all.ToFrozenDictionary();
+            _all = s_all;
+            _allList = list;
         }
 
         internal static DAiAction _create(ConfigReader reader)
@@ -150,7 +152,8 @@ namespace Config.Ai
             {
                 s_all.Add(self.ID, self);
             }
-            _all = s_all.ToFrozenDictionary();
+            _all = s_all;
+            _allList = list;
         }
 
         internal static DAiCondition _create(ConfigReader reader)

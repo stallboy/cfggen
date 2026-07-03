@@ -1,4 +1,5 @@
-﻿using Config;
+﻿using System;
+using Config;
 
 static class Program
 {

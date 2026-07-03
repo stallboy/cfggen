@@ -22,21 +22,20 @@ public class CsCodeGenerator extends GeneratorWithTag {
     public final String encoding;
     public final String prefix;
     public final boolean serverText;
+    public final boolean unity;
 
     private Path dstDir;
     private CacheConfig cacheConfig;
     public boolean isLangSwitch;
-    private static final List<String> COPY_FILES = List.of(
-            "Loader.cs"
-    );
 
     public CsCodeGenerator(Parameter parameter) {
         super(parameter);
         dir = parameter.get("dir", "Config");
         pkg = parameter.get("pkg", "Config");
-        encoding = parameter.get("encoding", "GBK");
+        encoding = parameter.get("encoding", "UTF-8");
         prefix = parameter.get("prefix", "D");
         serverText = parameter.has("serverText");
+        unity = parameter.has("unity");
     }
 
     @Override
@@ -48,12 +47,12 @@ public class CsCodeGenerator extends GeneratorWithTag {
         cacheConfig = CacheConfig.of();
 
         isLangSwitch = ctx.nullableLangSwitch() != null;
-        for (String fn : COPY_FILES) {
-            FileUtil.copyFileIfNotExist("/support/cs/" + fn,
-                    "src/main/resources/support/cs/" + fn,
-                    dstDir.resolve(fn),
-                    encoding);
-        }
+        // unity 模式用 C#9 兼容的 Loader（含自定义 OrderedDictionary 等）；否则用最新特性版
+        String loaderSrc = unity ? "Loader.unity.cs" : "Loader.cs";
+        FileUtil.copyFileIfNotExist("/support/cs/" + loaderSrc,
+                "src/main/resources/support/cs/" + loaderSrc,
+                dstDir.resolve("Loader.cs"),
+                encoding);
 
         generateProcessor(cfgSchema);
         for (Fieldable fieldable : cfgSchema.sortedFieldables()) {
@@ -113,7 +112,7 @@ public class CsCodeGenerator extends GeneratorWithTag {
 
     private void generateText(LangSwitchable langSwitch) {
         List<String> languages = langSwitch.languages().stream().map(StringUtil::upper1).toList();
-        Map<String, Object> model = Map.of("pkg", pkg, "languages", languages);
+        Map<String, Object> model = Map.of("pkg", pkg, "languages", languages, "unity", unity);
         try (var ps = createCode("Text.cs")) {
             String template = serverText ? "cs/ServerText.jte" : "cs/ClientText.jte";
             JteEngine.render(template, model, ps);

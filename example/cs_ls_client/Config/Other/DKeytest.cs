@@ -1,16 +1,20 @@
-namespace Config.Other;
+using System;
+using System.Collections.Generic;
+namespace Config.Other
+{
 
 public partial class DKeytest
 {
-    public required int Id1 { get; init; }
-    public required long Id2 { get; init; }
-    public required int Id3 { get; init; }
-    public required List<int> Ids { get; init; }
-    public required string EnumTest { get; init; }
-    public required List<string> EnumList { get; init; }
+    public int Id1 { get; init; }
+    public long Id2 { get; init; }
+    public int Id3 { get; init; }
+    public List<int> Ids { get; init; } = null!;
+    public string EnumTest { get; init; } = null!;
+    public List<string> EnumList { get; init; } = null!;
     public List<Other.DSignin> RefIds { get; private set; } = null!;
     public Other.DArgCaptureMode RefEnumTest { get; private set; }
     public List<Other.DArgCaptureMode> RefEnumList { get; private set; } = null!;
+    private static IReadOnlyList<DKeytest> _allList = null!;
     
     class Id1Id2Key
     {
@@ -36,7 +40,7 @@ public partial class DKeytest
         }
     }
 
-    private static System.Collections.Frozen.FrozenDictionary<Id1Id2Key, DKeytest> _all = null!;
+    private static Dictionary<Id1Id2Key, DKeytest> _all = null!;
 
     public static DKeytest? Get(int id1, long id2)
     {
@@ -68,7 +72,7 @@ public partial class DKeytest
         }
     }
 
-    private static System.Collections.Frozen.FrozenDictionary<Id1Id3Key, DKeytest> _id1Id3Map = null!;
+    private static Dictionary<Id1Id3Key, DKeytest> _id1Id3Map = null!;
 
     public static DKeytest? GetById1Id3(int id1, int id3)
     {
@@ -76,7 +80,7 @@ public partial class DKeytest
     }
 
     
-    private static System.Collections.Frozen.FrozenDictionary<long, DKeytest> _id2Map = null!;
+    private static Dictionary<long, DKeytest> _id2Map = null!;
 
     public static DKeytest? GetById2(long id2)
     {
@@ -108,7 +112,7 @@ public partial class DKeytest
         }
     }
 
-    private static System.Collections.Frozen.FrozenDictionary<Id2Id3Key, DKeytest> _id2Id3Map = null!;
+    private static Dictionary<Id2Id3Key, DKeytest> _id2Id3Map = null!;
 
     public static DKeytest? GetById2Id3(long id2, int id3)
     {
@@ -117,6 +121,7 @@ public partial class DKeytest
 
     public static IReadOnlyList<DKeytest> All()
     {
-        return _all.Values;
+        return _allList;
     }
+}
 }

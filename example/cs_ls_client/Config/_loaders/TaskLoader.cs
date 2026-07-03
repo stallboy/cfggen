@@ -1,5 +1,5 @@
-using System.Collections.Frozen;
-
+using System;
+using System.Collections.Generic;
 namespace Config.Task
 {
     public partial class DTestDefaultBean
@@ -73,7 +73,8 @@ namespace Config.Task
                 s_all.Add(self.Id, self);
                 DCompleteconditiontypeExtensions._infos[(int)self.EEnum] = self;
             }
-            _all = s_all.ToFrozenDictionary();
+            _all = s_all;
+            _allList = list;
         }
 
         internal static DCompleteconditiontypeInfo _create(ConfigReader reader)
@@ -83,7 +84,7 @@ namespace Config.Task
             return new DCompleteconditiontypeInfo {
                 Id = id,
                 Name = name,
-                EEnum = Enum.Parse<DCompleteconditiontype>(StringUtil.UpperFirstChar(name))
+                EEnum = (DCompleteconditiontype)Enum.Parse(typeof(DCompleteconditiontype), StringUtil.UpperFirstChar(name))
             };
         }
 
@@ -126,7 +127,8 @@ namespace Config.Task
             {
                 s_all.Add(self.Taskid, self);
             }
-            _all = s_all.ToFrozenDictionary();
+            _all = s_all;
+            _allList = list;
         }
 
         internal static void Resolve(IIssueHandler h)
@@ -200,7 +202,8 @@ namespace Config.Task
             {
                 s_all.Add(self.Taskid, self);
             }
-            _all = s_all.ToFrozenDictionary();
+            _all = s_all;
+            _allList = list;
         }
 
         internal static void Resolve(IIssueHandler h)
@@ -293,7 +296,8 @@ namespace Config.Task
             {
                 s_all.Add(self.Taskid, self);
             }
-            _all = s_all.ToFrozenDictionary();
+            _all = s_all;
+            _allList = list;
         }
 
         internal static DTaskextraexp _create(ConfigReader reader)

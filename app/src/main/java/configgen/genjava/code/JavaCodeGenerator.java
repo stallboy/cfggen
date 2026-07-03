@@ -55,7 +55,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         dir = parameter.get("dir", "config");
         pkg = parameter.get("pkg", "config");
         encoding = parameter.get("encoding", "UTF-8");
-        sealed = parameter.has("sealed");
+        sealed = !parameter.has("noSealed"); // 默认sealed
         buildersFilename = parameter.get("builders", null);
         configgenDir = parameter.get("configgenDir", null);
         schemaNumPerFile = Integer.parseInt(parameter.get("schemaNumPerFile", "100"));
@@ -82,9 +82,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
 
         for (Nameable nameable : cfgValue.schema().items()) {
             switch (nameable) {
-                case StructSchema structSchema -> {
-                    generateStructClass(structSchema, mapsInMgr);
-                }
+                case StructSchema structSchema -> generateStructClass(structSchema, mapsInMgr);
                 case InterfaceSchema interfaceSchema -> {
                     generateInterfaceClass(interfaceSchema);
                     for (StructSchema impl : interfaceSchema.impls()) {

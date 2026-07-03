@@ -1,11 +1,15 @@
 @import configgen.gencs.InterfaceModel
 @import configgen.schema.StructSchema
 @param InterfaceModel model
+@if(model.unity)
+using System;
+using System.Collections.Generic;
+@endif
 @if(!model.topPkg.equals("Config"))
 using Config;
 @endif
 
-namespace ${model.name.pkg};
+${model.nsLine()}
 
 public partial interface ${model.name.className}
 {
@@ -13,3 +17,6 @@ public partial interface ${model.name.className}
         public ${model.fullName(model.sInterface.nullableEnumRefTable())} type();
     @endif
 }
+@if(model.unity)
+}
+@endif

@@ -1,4 +1,7 @@
-namespace Config.Task.Completecondition;
+using System;
+using System.Collections.Generic;
+namespace Config.Task.Completecondition
+{
 
 public partial class DTalkNpc : Task.DCompletecondition
 {
@@ -6,5 +9,6 @@ public partial class DTalkNpc : Task.DCompletecondition
         return Task.DCompleteconditiontype.TalkNpc;
     }
 
-    public required int Npcid { get; init; }
+    public int Npcid { get; init; }
+}
 }

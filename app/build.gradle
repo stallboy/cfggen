@@ -12,7 +12,7 @@ repositories {
 
 // 将版本号统一管理，方便后续升级
 def versions = [
-        fastjson2: '2.0.61',
+        fastjson2: '2.0.62',
         poi      : '5.5.0',
         fastexcel: '0.19.0',
         antlr    : '4.13.1'

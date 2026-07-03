@@ -1,4 +1,4 @@
 rm Config/Loader.cs
 
-java -jar ../../cfggen.jar -datadir ../config -langswitchdir ../i18n/langs -gen cs,dir:.,encoding:UTF-8 -gen bytes
+java -jar ../../cfggen.jar -datadir ../config -langswitchdir ../i18n/langs -gen cs,dir:.,encoding:UTF-8,unity -gen bytes
 

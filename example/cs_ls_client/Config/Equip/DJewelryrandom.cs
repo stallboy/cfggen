@@ -1,13 +1,17 @@
-namespace Config.Equip;
+using System;
+using System.Collections.Generic;
+namespace Config.Equip
+{
 
 public partial class DJewelryrandom
 {
-    public required DLevelRank LvlRank { get; init; } /* 等级 */
-    public required DRange AttackRange { get; init; } /* 最小攻击力 */
-    public required List<DRange> OtherRange { get; init; } /* 最小防御力 */
-    public required List<Equip.DTestPackBean> TestPack { get; init; } /* 测试pack */
+    public DLevelRank LvlRank { get; init; } = null!; /* 等级 */
+    public DRange AttackRange { get; init; } = null!; /* 最小攻击力 */
+    public List<DRange> OtherRange { get; init; } = null!; /* 最小防御力 */
+    public List<Equip.DTestPackBean> TestPack { get; init; } = null!; /* 测试pack */
+    private static IReadOnlyList<DJewelryrandom> _allList = null!;
     
-    private static System.Collections.Frozen.FrozenDictionary<DLevelRank, DJewelryrandom> _all = null!;
+    private static Dictionary<DLevelRank, DJewelryrandom> _all = null!;
 
     public static DJewelryrandom? Get(DLevelRank lvlRank)
     {
@@ -16,6 +20,7 @@ public partial class DJewelryrandom
 
     public static IReadOnlyList<DJewelryrandom> All()
     {
-        return _all.Values;
+        return _allList;
     }
+}
 }

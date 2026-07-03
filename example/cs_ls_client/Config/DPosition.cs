@@ -1,8 +1,12 @@
-namespace Config;
+using System;
+using System.Collections.Generic;
+namespace Config
+{
 
 public partial class DPosition
 {
-    public required int X { get; init; }
-    public required int Y { get; init; }
-    public required int Z { get; init; }
+    public int X { get; init; }
+    public int Y { get; init; }
+    public int Z { get; init; }
+}
 }

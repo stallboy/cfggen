@@ -1,17 +1,21 @@
-namespace Config.Task;
+using System;
+using System.Collections.Generic;
+namespace Config.Task
+{
 
 public partial class DTaskextraexp
 {
-    public required int Taskid { get; init; } /* 任务完成条件类型（id的范围为1-100） */
-    public required int Extraexp { get; init; } /* 额外奖励经验 */
-    public required string Test1 { get; init; }
-    public required string Test2 { get; init; }
-    public required string Fielda { get; init; }
-    public required string Fieldb { get; init; }
-    public required string Fieldc { get; init; }
-    public required string Fieldd { get; init; }
+    public int Taskid { get; init; } /* 任务完成条件类型（id的范围为1-100） */
+    public int Extraexp { get; init; } /* 额外奖励经验 */
+    public string Test1 { get; init; } = null!;
+    public string Test2 { get; init; } = null!;
+    public string Fielda { get; init; } = null!;
+    public string Fieldb { get; init; } = null!;
+    public string Fieldc { get; init; } = null!;
+    public string Fieldd { get; init; } = null!;
+    private static IReadOnlyList<DTaskextraexp> _allList = null!;
     
-    private static System.Collections.Frozen.FrozenDictionary<int, DTaskextraexp> _all = null!;
+    private static Dictionary<int, DTaskextraexp> _all = null!;
 
     public static DTaskextraexp? Get(int taskid)
     {
@@ -20,6 +24,7 @@ public partial class DTaskextraexp
 
     public static IReadOnlyList<DTaskextraexp> All()
     {
-        return _all.Values;
+        return _allList;
     }
+}
 }

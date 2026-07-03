@@ -1,12 +1,16 @@
-namespace Config.Other;
+using System;
+using System.Collections.Generic;
+namespace Config.Other
+{
 
 public partial class DLootitem
 {
-    public required int Lootid { get; init; } /* 掉落id */
-    public required int Itemid { get; init; } /* 掉落物品 */
-    public required int Chance { get; init; } /* 掉落概率 */
-    public required int Countmin { get; init; } /* 数量下限 */
-    public required int Countmax { get; init; } /* 数量上限 */
+    public int Lootid { get; init; } /* 掉落id */
+    public int Itemid { get; init; } /* 掉落物品 */
+    public int Chance { get; init; } /* 掉落概率 */
+    public int Countmin { get; init; } /* 数量下限 */
+    public int Countmax { get; init; } /* 数量上限 */
+    private static IReadOnlyList<DLootitem> _allList = null!;
     
     class LootidItemidKey
     {
@@ -32,7 +36,7 @@ public partial class DLootitem
         }
     }
 
-    private static System.Collections.Frozen.FrozenDictionary<LootidItemidKey, DLootitem> _all = null!;
+    private static Dictionary<LootidItemidKey, DLootitem> _all = null!;
 
     public static DLootitem? Get(int lootid, int itemid)
     {
@@ -41,6 +45,7 @@ public partial class DLootitem
 
     public static IReadOnlyList<DLootitem> All()
     {
-        return _all.Values;
+        return _allList;
     }
+}
 }

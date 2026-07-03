@@ -1,16 +1,25 @@
 @import java.util.List
 @param String pkg
 @param List<String> languages
+@param boolean unity
+@if(unity)
+using System;
+using System.Collections.Generic;
+@endif
 @if(!pkg.equals("Config"))
     using Config;
 @endif
 
-namespace ${pkg};
+${unity ? "namespace " + pkg + "\n{" : "namespace " + pkg + ";"}
 
 public partial class Text
 {
     @for(String lang : languages)
+        @if(unity)
+        public string ${lang} { get; init; } = null!;
+        @else
         public required string ${lang} { get; init; }
+        @endif
     @endfor
     private Text() {}
 
@@ -30,4 +39,4 @@ public partial class Text
         };
     }
 }
-
+${unity ? "}" : ""}

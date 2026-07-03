@@ -1,6 +1,10 @@
-namespace Config.Ai.TriggerTick;
+using System;
+using System.Collections.Generic;
+namespace Config.Ai.TriggerTick
+{
 
 public partial class DConstValue : Ai.DTriggerTick
 {
-    public required int Value { get; init; }
+    public int Value { get; init; }
+}
 }

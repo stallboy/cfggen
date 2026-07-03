@@ -1,14 +1,18 @@
-namespace Config.Ai;
+using System;
+using System.Collections.Generic;
+namespace Config.Ai
+{
 
 public partial class DAiCondition
 {
-    public required int ID { get; init; }
-    public required string Desc { get; init; } /* 描述 */
-    public required int FormulaID { get; init; } /* 公式 */
-    public required List<int> ArgIList { get; init; } /* 参数(int)1 */
-    public required List<int> ArgSList { get; init; } /* 参数(string)1 */
+    public int ID { get; init; }
+    public string Desc { get; init; } = null!; /* 描述 */
+    public int FormulaID { get; init; } /* 公式 */
+    public List<int> ArgIList { get; init; } = null!; /* 参数(int)1 */
+    public List<int> ArgSList { get; init; } = null!; /* 参数(string)1 */
+    private static IReadOnlyList<DAiCondition> _allList = null!;
     
-    private static System.Collections.Frozen.FrozenDictionary<int, DAiCondition> _all = null!;
+    private static Dictionary<int, DAiCondition> _all = null!;
 
     public static DAiCondition? Get(int iD)
     {
@@ -17,6 +21,7 @@ public partial class DAiCondition
 
     public static IReadOnlyList<DAiCondition> All()
     {
-        return _all.Values;
+        return _allList;
     }
+}
 }

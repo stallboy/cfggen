@@ -1,16 +1,20 @@
-namespace Config.Ai;
+using System;
+using System.Collections.Generic;
+namespace Config.Ai
+{
 
 public partial class DAi
 {
-    public required int ID { get; init; }
-    public required string Desc { get; init; } /* 描述----这里测试下多行效果--再来一行 */
-    public required string CondID { get; init; } /* 触发公式 */
-    public required Ai.DTriggerTick TrigTick { get; init; } /* 触发间隔(帧) */
-    public required int TrigOdds { get; init; } /* 触发几率 */
-    public required List<int> ActionID { get; init; } /* 触发行为 */
-    public required bool DeathRemove { get; init; } /* 死亡移除 */
+    public int ID { get; init; }
+    public string Desc { get; init; } = null!; /* 描述----这里测试下多行效果--再来一行 */
+    public string CondID { get; init; } = null!; /* 触发公式 */
+    public Ai.DTriggerTick TrigTick { get; init; } = null!; /* 触发间隔(帧) */
+    public int TrigOdds { get; init; } /* 触发几率 */
+    public List<int> ActionID { get; init; } = null!; /* 触发行为 */
+    public bool DeathRemove { get; init; } /* 死亡移除 */
+    private static IReadOnlyList<DAi> _allList = null!;
     
-    private static System.Collections.Frozen.FrozenDictionary<int, DAi> _all = null!;
+    private static Dictionary<int, DAi> _all = null!;
 
     public static DAi? Get(int iD)
     {
@@ -19,6 +23,7 @@ public partial class DAi
 
     public static IReadOnlyList<DAi> All()
     {
-        return _all.Values;
+        return _allList;
     }
+}
 }

@@ -1,4 +1,7 @@
-namespace Config.Equip;
+using System;
+using System.Collections.Generic;
+namespace Config.Equip
+{
 
 public enum DAbility
 {
@@ -13,11 +16,12 @@ public enum DAbility
 
 public partial class DAbilityInfo
 {
-    public required int Id { get; init; } /* 属性类型 */
-    public required string Name { get; init; } /* 程序用名字 */
-    public required DAbility EEnum { get; init; }
+    public int Id { get; init; } /* 属性类型 */
+    public string Name { get; init; } = null!; /* 程序用名字 */
+    public DAbility EEnum { get; init; }
+    private static IReadOnlyList<DAbilityInfo> _allList = null!;
     
-    private static System.Collections.Frozen.FrozenDictionary<int, DAbilityInfo> _all = null!;
+    private static Dictionary<int, DAbilityInfo> _all = null!;
 
     public static DAbilityInfo? Get(int id)
     {
@@ -26,7 +30,7 @@ public partial class DAbilityInfo
 
     public static IReadOnlyList<DAbilityInfo> All()
     {
-        return _all.Values;
+        return _allList;
     }
 }
 
@@ -38,4 +42,5 @@ public static class DAbilityExtensions
     {
         return _infos[(int)e];
     }
+}
 }

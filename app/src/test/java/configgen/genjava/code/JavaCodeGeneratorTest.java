@@ -54,18 +54,7 @@ class JavaCodeGeneratorTest {
         Resources.addTempFileFromText("user.csv", tempDir, csvData);
 
         // When: 创建Context并生成配置值
-        Context ctx = new Context(tempDir);
-
-        // 创建GenJavaCode实例
-        File outputDir = tempDir.resolve("config").toFile();
-        String parameterStr = String.format("javacode,dir:%s,pkg:%s,tag:%s",
-                outputDir.getAbsolutePath(), "test.config", "");
-        Parameter parameter = new ParameterParser(parameterStr);
-
-        JavaCodeGenerator javaCodeGenerator = new JavaCodeGenerator(parameter);
-
-        // 执行生成
-        javaCodeGenerator.generate(ctx);
+        File outputDir = generateJavaCode("config", "test.config", "");
 
         // Then: 验证生成的Java文件
         File expectedFilesDir = new File(outputDir, "test/config");
@@ -117,18 +106,7 @@ class JavaCodeGeneratorTest {
         Resources.addTempFileFromText("ability.csv", tempDir, csvData);
 
         // When: 创建Context并生成配置值
-        Context ctx = new Context(tempDir);
-
-        // 创建GenJavaCode实例
-        File outputDir = tempDir.resolve("config_enum").toFile();
-        String parameterStr = String.format("javacode,dir:%s,pkg:%s,tag:%s",
-                outputDir.getAbsolutePath(), "test.config.enum", "");
-        Parameter parameter = new ParameterParser(parameterStr);
-
-        JavaCodeGenerator javaCodeGenerator = new JavaCodeGenerator(parameter);
-
-        // 执行生成
-        javaCodeGenerator.generate(ctx);
+        File outputDir = generateJavaCode("config_enum", "test.config.enum", "");
 
         // Then: 验证生成的Java文件
         File expectedFilesDir = new File(outputDir, "test/config/enum");
@@ -177,18 +155,7 @@ class JavaCodeGeneratorTest {
         Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
 
         // When: 创建Context并生成配置值
-        Context ctx = new Context(tempDir);
-
-        // 创建GenJavaCode实例
-        File outputDir = tempDir.resolve("config_complex").toFile();
-        String parameterStr = String.format("javacode,dir:%s,pkg:%s,tag:%s",
-                outputDir.getAbsolutePath(), "test.config.complex", "");
-        Parameter parameter = new ParameterParser(parameterStr);
-
-        JavaCodeGenerator javaCodeGenerator = new JavaCodeGenerator(parameter);
-
-        // 执行生成
-        javaCodeGenerator.generate(ctx);
+        File outputDir = generateJavaCode("config_complex", "test.config.complex", "");
 
         // Then: 验证生成的Java文件
         File expectedFilesDir = new File(outputDir, "test/config/complex");
@@ -196,7 +163,7 @@ class JavaCodeGeneratorTest {
 
         // 验证struct和interface相关文件
         File positionFile = new File(expectedFilesDir, "Position.java");
-        File shapeFile = new File(expectedFilesDir, "Shape.java");
+        File shapeFile = new File(expectedFilesDir, "shape/Shape.java");
         File circleFile = new File(expectedFilesDir, "shape/Circle.java");
         File rectangleFile = new File(expectedFilesDir, "shape/Rectangle.java");
 
@@ -249,18 +216,8 @@ class JavaCodeGeneratorTest {
         Files.write(buildersFile.toPath(), "user".getBytes());
 
         // When: 创建Context并生成配置值
-        Context ctx = new Context(tempDir);
-
-        // 创建GenJavaCode实例
-        File outputDir = tempDir.resolve("config_builders").toFile();
-        String parameterStr = String.format("javacode,dir:%s,pkg:%s,tag:%s,builders:%s",
-                outputDir.getAbsolutePath(), "test.config.builders", "", buildersFile.getAbsolutePath());
-        Parameter parameter = new ParameterParser(parameterStr);
-
-        JavaCodeGenerator javaCodeGenerator = new JavaCodeGenerator(parameter);
-
-        // 执行生成
-        javaCodeGenerator.generate(ctx);
+        File outputDir = generateJavaCode("config_builders", "test.config.builders",
+                ",builders:" + buildersFile.getAbsolutePath());
 
         // Then: 验证生成的Builder文件
         File expectedFilesDir = new File(outputDir, "test/config/builders");
@@ -272,5 +229,24 @@ class JavaCodeGeneratorTest {
         String builderContent = Files.readString(userBuilderFile.toPath());
         assertTrue(builderContent.contains("class UserBuilder"), "UserBuilder.java应该包含类定义");
         assertTrue(builderContent.contains("build"), "应该包含build方法");
+    }
+
+    /**
+     * 公共的代码生成逻辑：创建 Context、构建参数、执行生成，返回输出目录。
+     *
+     * @param outputDirName 输出子目录名（相对于 tempDir）
+     * @param pkg           Java 包名
+     * @param extraParams   附加参数片段（如 ",builders:xxx" 或 ",tag:"），无则传空串
+     * @return 输出目录
+     */
+    private File generateJavaCode(String outputDirName, String pkg, String extraParams) throws IOException {
+        Context ctx = new Context(tempDir);
+        File outputDir = tempDir.resolve(outputDirName).toFile();
+        String parameterStr = String.format("javacode,dir:%s,pkg:%s%s",
+                outputDir.getAbsolutePath(), pkg, extraParams);
+        Parameter parameter = new ParameterParser(parameterStr);
+        JavaCodeGenerator javaCodeGenerator = new JavaCodeGenerator(parameter);
+        javaCodeGenerator.generate(ctx);
+        return outputDir;
     }
 }

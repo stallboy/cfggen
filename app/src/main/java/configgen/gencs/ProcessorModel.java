@@ -7,11 +7,13 @@ public class ProcessorModel {
     public final String topPkg;
     public final Iterable<TableSchema> tableSchemas;
     private final CsCodeGenerator gen;
+    public final boolean unity;
 
     public ProcessorModel(CsCodeGenerator gen, Iterable<TableSchema> tableSchemas) {
         this.gen = gen;
         this.topPkg = gen.pkg;
         this.tableSchemas = tableSchemas;
+        this.unity = gen.unity;
     }
 
     public String fullName(TableSchema tableSchema) {
@@ -21,5 +23,9 @@ public class ProcessorModel {
         } else {
             return v;
         }
+    }
+
+    public String nsLine() {
+        return unity ? "namespace " + topPkg + "\n{" : "namespace " + topPkg + ";";
     }
 }

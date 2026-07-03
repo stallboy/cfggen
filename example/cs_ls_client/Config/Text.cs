@@ -1,10 +1,19 @@
-namespace Config;
-
-public partial class Text(int index)
+using System;
+using System.Collections.Generic;
+namespace Config
 {
-    // 对外接口：从全局文本数组获取文本
-    public string T => TextPoolManager.GetText(index);
 
+public partial class Text
+{
+    private readonly int _index;
+
+    public Text(int index)
+    {
+        _index = index;
+    }
+
+    // 对外接口：从全局文本数组获取文本
+    public string T => TextPoolManager.GetText(_index);
     public override string ToString()
     {
         return T;
@@ -14,4 +23,5 @@ public partial class Text(int index)
     {
         return new Text(reader.ReadTextIndex());
     }
+}
 }

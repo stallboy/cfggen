@@ -1,4 +1,7 @@
-namespace Config.Equip;
+using System;
+using System.Collections.Generic;
+namespace Config.Equip
+{
 
 public enum DRank
 {
@@ -12,10 +15,10 @@ public enum DRank
 
 public partial class DRankInfo
 {
-    public required int RankID { get; init; } /* 稀有度 */
-    public required string RankName { get; init; } /* 程序用名字 */
-    public required string RankShowName { get; init; } /* 显示名称 */
-    public required DRank EEnum { get; init; }
+    public int RankID { get; init; } /* 稀有度 */
+    public string RankName { get; init; } = null!; /* 程序用名字 */
+    public string RankShowName { get; init; } = null!; /* 显示名称 */
+    public DRank EEnum { get; init; }
     
     private static DRankInfo[] _all = null!;
 
@@ -39,4 +42,5 @@ public static class DRankExtensions
     {
         return _infos[(int)e];
     }
+}
 }

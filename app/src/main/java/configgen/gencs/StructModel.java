@@ -16,6 +16,7 @@ public class StructModel {
     public final Structural structural;
     public final CfgValue.VTable _vTable;
     private final CsCodeGenerator gen;
+    public final boolean unity;
 
     public StructModel(CsCodeGenerator gen, Structural structural, CfgValue.VTable _vTable) {
         this.gen = gen;
@@ -23,6 +24,7 @@ public class StructModel {
         this.name = new Name(gen.pkg, gen.prefix, structural);
         this.structural = structural;
         this._vTable = _vTable;
+        this.unity = gen.unity;
     }
 
     public boolean isEnum() {
@@ -205,11 +207,17 @@ public class StructModel {
     }
 
     public String dictType(KeySchema keySchema) {
-        return "System.Collections.Frozen.FrozenDictionary<" + keyClassName(keySchema) + ", " + dictValueType() + ">";
+        String dict = unity ? "Dictionary" : "System.Collections.Frozen.FrozenDictionary";
+        return dict + "<" + keyClassName(keySchema) + ", " + dictValueType() + ">";
     }
 
     public String dictTypeWhenInit(KeySchema keySchema) {
         return "Dictionary<" + keyClassName(keySchema) + ", " + dictValueType() + ">";
+    }
+
+    // namespace 声明：unity 块作用域，非 unity 文件作用域（作为内容输出避免 @if 吞空行）
+    public String nsLine() {
+        return unity ? "namespace " + name.pkg + "\n{" : "namespace " + name.pkg + ";";
     }
 
     public boolean isSeqKey(KeySchema keySchema) {
@@ -234,6 +242,25 @@ public class StructModel {
         }
 
         return " = null!;";
+    }
+
+    // unity(C#9) 无 required，引用类型属性用 = null! 消除 nullable 警告；非 unity 用 required，返回空
+    public String nullInit(FieldType t) {
+        if (!unity) return "";
+        return switch (t) {
+            case BOOL, INT, LONG, FLOAT -> "";
+            default -> " = null!;";
+        };
+    }
+
+    // unity(C#9) 不支持 required 关键字
+    public String requiredKeyword() {
+        return unity ? "" : "required ";
+    }
+
+    // unity(C#9) 无集合表达式 []，用 new；非 unity 用 []
+    public String refAssignExpr(ForeignKeySchema fk) {
+        return unity ? "new " + refType(fk) + "()" : "[]";
     }
 
 }

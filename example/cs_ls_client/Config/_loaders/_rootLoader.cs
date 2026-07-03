@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 namespace Config
 {
     public partial class DLevelRank

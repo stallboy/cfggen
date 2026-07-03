@@ -1,4 +1,7 @@
-namespace Config.Task.Completecondition;
+using System;
+using System.Collections.Generic;
+namespace Config.Task.Completecondition
+{
 
 public partial class DChat : Task.DCompletecondition
 {
@@ -6,5 +9,6 @@ public partial class DChat : Task.DCompletecondition
         return Task.DCompleteconditiontype.Chat;
     }
 
-    public required string Msg { get; init; }
+    public string Msg { get; init; } = null!;
+}
 }

@@ -18,11 +18,13 @@ public class ModuleModel {
     private final LinkedHashMap<String, NamespaceGroup> groups = new LinkedHashMap<>();
     private boolean hasTable;
     private final CsCodeGenerator gen;
+    public final boolean unity;
 
     public ModuleModel(CsCodeGenerator gen, String moduleKey) {
         this.gen = gen;
         this.topPkg = gen.pkg;
         this.moduleKey = moduleKey;
+        this.unity = gen.unity;
     }
 
     public String outputFilaPath() {

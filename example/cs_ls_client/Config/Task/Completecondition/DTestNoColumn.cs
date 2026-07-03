@@ -1,4 +1,7 @@
-namespace Config.Task.Completecondition;
+using System;
+using System.Collections.Generic;
+namespace Config.Task.Completecondition
+{
 
 public partial class DTestNoColumn : Task.DCompletecondition
 {
@@ -6,4 +9,5 @@ public partial class DTestNoColumn : Task.DCompletecondition
         return Task.DCompleteconditiontype.TestNoColumn;
     }
 
+}
 }

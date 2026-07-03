@@ -6,9 +6,14 @@
 @import configgen.schema.FieldType.*
 @import java.util.List
 @param ModuleModel model
+@if(model.unity)
+using System;
+using System.Collections.Generic;
+@else
 @if(model.hasTable())
     using System.Collections.Frozen;
 
+@endif
 @endif
 
 !{String topPkg = model.topPkg;}
@@ -97,14 +102,23 @@ namespace ${group.ns}
                     @if(primarySeq)
                         _all = s_all;
                     @else
-                        _all = s_all.ToFrozenDictionary();
+                        @if(sm.unity)
+                            _all = s_all;
+                            _allList = list;
+                        @else
+                            _all = s_all.ToFrozenDictionary();
+                        @endif
                     @endif
                     @for(KeySchema uk : table.uniqueKeys())
                         !{String mapName = sm.uniqueKeyMapName(uk);}
-                        @if(sm.isSeqKey(uk))
+                        @if(sm.unity)
                             ${mapName} = s${mapName};
                         @else
-                            ${mapName} = s${mapName}.ToFrozenDictionary();
+                            @if(sm.isSeqKey(uk))
+                                ${mapName} = s${mapName};
+                            @else
+                                ${mapName} = s${mapName}.ToFrozenDictionary();
+                            @endif
                         @endif
                     @endfor
                     @if(table.entry() instanceof EntryType.EEntry)
@@ -152,7 +166,11 @@ namespace ${group.ns}
                             ${sm.upper1(field.name())} = ${StructModel._lower1(field.name())},
                         @endfor
                         @if(sm.isEnum())
-                            EEnum = Enum.Parse<${sm.name.className}>(StringUtil.UpperFirstChar(${StructModel._lower1(((EntryType.EEnum)(sm._vTable.schema().entry())).field())}))
+                            @if(sm.unity)
+                                EEnum = (${sm.name.className})Enum.Parse(typeof(${sm.name.className}), StringUtil.UpperFirstChar(${StructModel._lower1(((EntryType.EEnum)(sm._vTable.schema().entry())).field())}))
+                            @else
+                                EEnum = Enum.Parse<${sm.name.className}>(StringUtil.UpperFirstChar(${StructModel._lower1(((EntryType.EEnum)(sm._vTable.schema().entry())).field())}))
+                            @endif
                         @endif
                     };
                 @endif
@@ -230,7 +248,7 @@ namespace ${group.ns}
                                     else ${refName} = r${refName}${StructModel.isEnum(fk.refTableSchema())? ".EEnum" : ""};
                                 @endif
                             @elseif(firstField.type() instanceof FList flist)
-                                ${refName} = [];
+                                ${refName} = ${sm.refAssignExpr(fk)};
                                 foreach(var e in ${sm.upper1(firstField.name())})
                                 {
                                     var r = ${sm.tableGet(fk.refTableSchema(), refSimple, "e")};
@@ -238,7 +256,7 @@ namespace ${group.ns}
                                     else ${refName}.Add(r${StructModel.isEnum(fk.refTableSchema())? ".EEnum" : ""});
                                 }
                             @elseif(firstField.type() instanceof FMap fmap)
-                                ${refName} = [];
+                                ${refName} = ${sm.refAssignExpr(fk)};
                                 foreach(var kv in ${sm.upper1(firstField.name())})
                                 {
                                     var k = kv.Key;
@@ -253,7 +271,7 @@ namespace ${group.ns}
                     @for(ForeignKeySchema fk : sm.structural.foreignKeys())
                         @if(fk.refKey() instanceof RefKey.RefList refList)
                             !{var refName = sm.refName(fk);}
-                            ${refName} = [];
+                            ${refName} = ${sm.refAssignExpr(fk)};
                             foreach (var v in ${sm.fullName(fk.refTableSchema())}.All())
                             {
                                 !{var eqs = new java.util.ArrayList<String>();}

@@ -2,12 +2,16 @@
 @import configgen.schema.HasRef
 @import configgen.schema.TableSchema
 @param ProcessorModel model
+@if(model.unity)
+using System;
+using System.Collections.Generic;
+@endif
 @if(!model.topPkg.equals("Config"))
 using Config;
 @endif
 
 
-namespace ${model.topPkg};
+${model.nsLine()}
 
 public static class Processor
 {
@@ -56,3 +60,6 @@ public static class Processor
         @endfor
     }
 }
+@if(model.unity)
+}
+@endif

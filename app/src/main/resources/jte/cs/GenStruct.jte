@@ -3,11 +3,15 @@
 @import configgen.gencs.StructModel
 @import configgen.util.StringUtil
 @param StructModel model
+@if(model.unity)
+using System;
+using System.Collections.Generic;
+@endif
 @if(!model.topPkg.equals("Config"))
 using Config;
 @endif
 
-namespace ${model.name.pkg};
+${model.nsLine()}
 
 !{String className = model.name.className;}
 !{InterfaceSchema nullableInterface = model.structural instanceof StructSchema struct ? struct.nullableInterface() : null;}
@@ -52,10 +56,10 @@ namespace ${model.name.pkg};
 
     <%--field property--%>
     @for(FieldSchema field : model.structural.fields())
-        public required ${model.type(field.type())} ${model.upper1(field.name())} { get; init; }@if(!field.comment().isEmpty()) /* ${StringUtil.removeLineSep(field.comment())} */@endif
+        public ${model.requiredKeyword()}${model.type(field.type())} ${model.upper1(field.name())} { get; init; }${model.nullInit(field.type())}@if(!field.comment().isEmpty()) /* ${StringUtil.removeLineSep(field.comment())} */@endif
     @endfor
     @if(isEnum)
-        public required ${className} EEnum { get; init; }
+        public ${model.requiredKeyword()}${className} EEnum { get; init; }
     @endif
 
     <%--ref property--%>
@@ -67,6 +71,9 @@ namespace ${model.name.pkg};
     @if(model._vTable != null)
         !{TableSchema table = model._vTable.schema();}
         !{boolean primarySeq = model.isSeqKey(table.primaryKey());}
+        @if(model.unity && !primarySeq)
+            private static IReadOnlyList<${model.dictValueType()}> _allList = null!;
+        @endif
         @template.cs.GenMapGetBy(model = model, keySchema = table.primaryKey(), isPrimaryKey = true)
         @for(KeySchema uk : table.uniqueKeys())
             @template.cs.GenMapGetBy(model = model, keySchema = uk, isPrimaryKey = false)
@@ -77,7 +84,11 @@ namespace ${model.name.pkg};
             @if(primarySeq)
                 return _all;
             @else
-                return _all.Values;
+                @if(model.unity)
+                    return _allList;
+                @else
+                    return _all.Values;
+                @endif
             @endif
         }
     @endif
@@ -93,5 +104,8 @@ public static class ${className}Extensions
     {
         return _infos[(int)e];
     }
+}
+@endif
+@if(model.unity)
 }
 @endif

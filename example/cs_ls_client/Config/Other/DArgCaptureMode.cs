@@ -1,4 +1,7 @@
-namespace Config.Other;
+using System;
+using System.Collections.Generic;
+namespace Config.Other
+{
 
 public enum DArgCaptureMode
 {
@@ -8,12 +11,13 @@ public enum DArgCaptureMode
 
 public partial class DArgCaptureModeInfo
 {
-    public required string Name { get; init; }
-    public required int Id { get; init; }
-    public required Config.Text Comment { get; init; }
-    public required DArgCaptureMode EEnum { get; init; }
+    public string Name { get; init; } = null!;
+    public int Id { get; init; }
+    public Config.Text Comment { get; init; } = null!;
+    public DArgCaptureMode EEnum { get; init; }
+    private static IReadOnlyList<DArgCaptureModeInfo> _allList = null!;
     
-    private static System.Collections.Frozen.FrozenDictionary<string, DArgCaptureModeInfo> _all = null!;
+    private static Dictionary<string, DArgCaptureModeInfo> _all = null!;
 
     public static DArgCaptureModeInfo? Get(string name)
     {
@@ -21,7 +25,7 @@ public partial class DArgCaptureModeInfo
     }
 
     
-    private static System.Collections.Frozen.FrozenDictionary<int, DArgCaptureModeInfo> _idMap = null!;
+    private static Dictionary<int, DArgCaptureModeInfo> _idMap = null!;
 
     public static DArgCaptureModeInfo? GetById(int id)
     {
@@ -30,7 +34,7 @@ public partial class DArgCaptureModeInfo
 
     public static IReadOnlyList<DArgCaptureModeInfo> All()
     {
-        return _all.Values;
+        return _allList;
     }
 }
 
@@ -42,4 +46,5 @@ public static class DArgCaptureModeExtensions
     {
         return _infos[(int)e];
     }
+}
 }
