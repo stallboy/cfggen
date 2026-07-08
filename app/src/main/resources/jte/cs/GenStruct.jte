@@ -7,9 +7,6 @@
 using System;
 using System.Collections.Generic;
 @endif
-@if(!model.topPkg.equals("Config"))
-using Config;
-@endif
 
 ${model.nsLine()}
 

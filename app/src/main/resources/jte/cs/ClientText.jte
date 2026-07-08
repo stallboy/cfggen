@@ -6,9 +6,6 @@
 using System;
 using System.Collections.Generic;
 @endif
-@if(!pkg.equals("Config"))
-    using Config;
-@endif
 
 ${unity ? "namespace " + pkg + "\n{" : "namespace " + pkg + ";"}
 
