@@ -582,8 +582,7 @@ const FuncSubmitFormItem = memo(function FuncSubmitFormItem({field}: PrimitiveFo
     const [t] = useTranslation();
     const func = field.value as FuncSubmitType;
 
-    useHotkeys("alt+s", () => func.funcSubmit());
-
+    // alt+s 提交热键已移至 EntityForm，按节点表单作用域注册（见 EntityForm），避免全局重复触发。
     return (
         <Form.Item {...FORM_ITEM_LAYOUT_WITHOUT_LABEL} key={field.name}>
             <Space size={50}>
@@ -751,21 +750,33 @@ interface EntityFormProps {
 export const EntityForm = memo(function EntityForm({edit, nodeProps, sharedSetting}: EntityFormProps) {
     const [form] = Form.useForm();
 
+    // 把 alt+s 绑定到本节点表单的 DOM 子树：每个可编辑节点只注册一次，且仅在焦点位于本表单内时触发
+    // （enableOnFormTags 让输入框内也能触发）。原先在 FuncSubmitFormItem 里无作用域地全局注册，
+    // 画布上 N 个可编辑节点会让按一次 alt+s 触发 N 次 recordAddOrUpdate。
+    const formWrapperRef = useHotkeys<HTMLDivElement>("alt+s", () => {
+        const submitField = edit.fields.find((f) => f.type === 'funcSubmit');
+        if (submitField && submitField.type === 'funcSubmit') {
+            submitField.value.funcSubmit();
+        }
+    }, {enableOnFormTags: true});
+
     // form里单个字段的改变不会引起这个界面更新，只更新jsonObject对象
     // initialValue放在每个Form.Item里
     // 参考: https://github.com/ant-design/ant-design/issues/56102
     return (
         <ConfigProvider theme={FORM_THEME}>
-            <Form
-                {...FORM_LAYOUT}
-                form={form}
-                onValuesChange={() => {
-                    edit.editOnUpdateValues(form.getFieldsValue(true));
-                }}
-                style={FORM_STYLE}
-            >
-                {renderFieldItems(edit.fields, edit, nodeProps, sharedSetting)}
-            </Form>
+            <div ref={formWrapperRef}>
+                <Form
+                    {...FORM_LAYOUT}
+                    form={form}
+                    onValuesChange={() => {
+                        edit.editOnUpdateValues(form.getFieldsValue(true));
+                    }}
+                    style={FORM_STYLE}
+                >
+                    {renderFieldItems(edit.fields, edit, nodeProps, sharedSetting)}
+                </Form>
+            </div>
         </ConfigProvider>
     );
 });
