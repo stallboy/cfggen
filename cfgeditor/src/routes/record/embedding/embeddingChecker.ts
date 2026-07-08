@@ -172,7 +172,8 @@ function checkStructEmbeddable(struct: SStruct, fieldValue: JSONObject): boolean
  * 检查interface是否可以内嵌
  */
 function checkInterfaceEmbeddable(iface: SInterface, fieldValue: JSONObject): boolean {
-  const type = fieldValue['$type'] as string;
+  const type = fieldValue['$type'];
+  if (typeof type !== 'string') return false;  // 后端脏数据/新旧 schema 不一致时 $type 可能缺失
   const implName = type.split('.').pop() || type;
   const impl = getImpl(iface, implName);
   if (!impl) return false;

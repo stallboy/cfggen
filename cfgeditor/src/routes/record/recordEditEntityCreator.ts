@@ -89,7 +89,7 @@ export class RecordEditEntityCreator {
             }
             const fieldValue: JSONValue = obj[fieldKey];
             const ft = typeof fieldValue
-            if (ft != 'object') {
+            if (ft != 'object' || fieldValue === null) {  // typeof null === 'object'，需额外排除
                 continue;
             }
 
@@ -322,7 +322,7 @@ export class RecordEditEntityCreator {
         if ('impls' in sItem) { // is interface
             const implName = getLastName(type);
             const sInterface = sItem as SInterface;
-            const impl = getImpl(sInterface, implName) as SStruct;
+            const impl = getImpl(sInterface, implName);
             fields.push({
                 name: '$impl',
                 comment: sItem.comment,
@@ -330,13 +330,16 @@ export class RecordEditEntityCreator {
                 eleType: sInterface.name,
                 value: implName,
                 autoCompleteOptions: getImplNameOptions(sInterface),
-                implFields: this.makeEditFields(impl, obj, fieldChain),
+                implFields: impl ? this.makeEditFields(impl, obj, fieldChain) : [],
                 interfaceOnChangeImpl: (newImplName: string, position: EntityPosition) => {
                         let newObj: JSONObject;
                     if (newImplName == implName) {
                         newObj = obj;
                     } else {
-                        const newImpl = getImpl(sInterface, newImplName) as SStruct;
+                        const newImpl = getImpl(sInterface, newImplName);
+                        if (!newImpl) {
+                            return;  // 目标 impl 不存在，放弃切换
+                        }
                         newObj = this.schema.defaultValueOfStructural(newImpl);
                         newObj['$fold'] = false;  // 明确设置为展开状态，避免自动内嵌
                     }

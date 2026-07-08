@@ -260,6 +260,8 @@ export class Schema {
             } else if (t == 'str' || t == 'text') {
                 res[n] = '';
             } else if (t.startsWith('list<') || t.startsWith('map<')) {
+                // map<K,V> 在 cfggen 的 JSON 序列化里是 entry 结构体的 list（见 schemaUtil 构造 mapEntryType），
+                // 故 map 与 list 的默认值都是空数组 []。
                 res[n] = [];
             } else {
                 const sf = this.itemIncludeImplMap.get(t);

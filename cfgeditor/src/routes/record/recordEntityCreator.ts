@@ -63,7 +63,7 @@ export class RecordEntityCreator {
             fields.push(field);
 
             const ft = typeof fieldValue
-            if (ft == 'object') {
+            if (ft == 'object' && fieldValue !== null) {  // typeof null === 'object'，需额外排除
                 if (Array.isArray(fieldValue)) {  // list or map, (map is list of $entry)
                     const fArr: JSONArray = fieldValue as JSONArray;
                     if (fArr.length == 0) {

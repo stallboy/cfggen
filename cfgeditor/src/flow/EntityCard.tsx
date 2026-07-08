@@ -17,8 +17,14 @@ const DESC_STYLE: CSSProperties = {whiteSpace: "break-spaces"};
 // 高亮组件
 // ============================================================================
 
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 export function Highlight({text, keyword}: {text: string; keyword: string}): ReactElement {
-    const parts = text.split(new RegExp(`(${keyword})`, "gi"));
+    if (!keyword) {
+        return <>{text}</>;
+    }
+    // keyword 来自用户搜索框，需先转义正则元字符，否则输入 ( * [ 等会让 new RegExp 抛 SyntaxError 导致渲染崩溃
+    const parts = text.split(new RegExp(`(${escapeRegExp(keyword)})`, "gi"));
     return <>{parts.map((part, i) =>
         part.toLowerCase() === keyword.toLowerCase() ? <mark key={i}>{part}</mark> : part
     )}</>;
