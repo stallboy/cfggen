@@ -11,7 +11,7 @@ import {memo, RefObject} from "react";
 import {AiSetting} from "./AiSetting.tsx";
 import {ThemeSetting} from "./ThemeSetting.tsx";
 import {isTauri} from "@tauri-apps/api/core";
-import {TauriSetting} from "./TauriSeting.tsx";
+import {TauriSetting} from "./TauriSetting.tsx";
 import {AddJson} from "../add/AddJson.tsx";
 
 
