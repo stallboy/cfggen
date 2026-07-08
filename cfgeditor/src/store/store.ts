@@ -138,7 +138,7 @@ const storeState: StoreState = {
 
 let prefKeySet: Set<string> | undefined;
 const prefSelfKeySet: Set<string> = new Set<string>(['curPage', 'curTableId', 'curId', 'query', 'isEditMode',
-    'imageSizeScale', 'dragPanel']);
+    'imageSizeScale', 'dragPanel', 'aiConf']);  // aiConf 含 apiKey，写入个人文件 cfgeditorSelf.yml 而非共享的 cfgeditor.yml
 
 const notSaveKeySet = new Set<string>(['history', 'resMap', 'resourceDir',
     'editingCurTable', 'editingCurId', 'editingIsEdited']);

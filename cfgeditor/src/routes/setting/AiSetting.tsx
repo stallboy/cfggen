@@ -16,7 +16,6 @@ export const AiSetting = memo(function () {
     return <>
         <Form name="aiConf" layout={"vertical"} size={"small"} initialValues={aiConf} autoComplete="off" onFinish={
             (values) => {
-                console.log(values);
                 setAIConf(values);
             }}>
 
@@ -26,7 +25,7 @@ export const AiSetting = memo(function () {
                 <Input placeholder="base url"/>
             </Form.Item>
             <Form.Item name='apiKey' label={t('apiKey')}>
-                <Input placeholder="api key"/>
+                <Input.Password placeholder="api key" autoComplete="off"/>
             </Form.Item>
 
             <Form.Item name='model' label={t('model')}>
