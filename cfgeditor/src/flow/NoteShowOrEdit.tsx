@@ -7,7 +7,7 @@ import {useMutation} from "@tanstack/react-query";
 import {updateNote} from "../api/api.ts";
 import {useMyStore} from "../store/store.ts";
 import {NoteEditResult, notesToMap} from "../api/noteModel.ts";
-import {queryClient} from "../main.tsx";
+import {queryClient} from "../queryClient.ts";
 
 
 const noteButtonStyle: CSSProperties = {float: 'right', borderWidth: 0, backgroundColor: 'transparent'};

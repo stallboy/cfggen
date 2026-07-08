@@ -36,7 +36,7 @@ export const TauriSetting = memo(function ({schema}: {
                 });
             })
         }
-    }, [notification, schema])
+    }, [notification, schema, resMap])
 
     return <>
         <Divider/>

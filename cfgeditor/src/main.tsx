@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
-import {QueryClient, QueryClientProvider} from '@tanstack/react-query'
+import {QueryClientProvider} from '@tanstack/react-query'
+import {queryClient} from "./queryClient.ts";
 
 import '@xyflow/react/dist/style.css';
 import './style.css'
@@ -19,16 +20,7 @@ import {Window} from "@tauri-apps/api/window";
 import {useMyStore} from "./store/store.ts";
 import {themeService} from "./routes/setting/themeService.ts";
 // import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
-// import { Monitoring } from "react-scan/monitoring";
 
-
-export const queryClient = new QueryClient({
-    defaultOptions: {
-        queries: {
-            staleTime: 1000 * 10,
-        },
-    },
-})
 
 const router = createBrowserRouter([
     {
@@ -121,21 +113,9 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
 }
 
 function MyApp() {
-//     const params = useParams(); // i.e { projectId: "123" }
-//     const {pathname} = useLocation(); // i.e /project/123/page
 
     return (
         <App>
-            {/* <Monitoring
-              apiKey="2Y6dFSyjCFj9VRWB2DxRpy-NUD3uV2G5" // Safe to expose publically
-              url="https://monitoring.react-scan.com/api/v1/ingest"
-              commit={process.env.GIT_COMMIT_HASH} // optional but recommended
-              branch={process.env.GIT_BRANCH} // optional but recommended
-              params={params}
-              path={pathname}
-                >
-            </Monitoring> */}
-
             <QueryClientProvider client={queryClient}>
                 <RouterProvider router={router}/>
                 {/*<ReactQueryDevtools initialIsOpen={false} />*/}

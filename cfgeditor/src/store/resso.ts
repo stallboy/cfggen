@@ -98,7 +98,7 @@ const resso = <Obj extends Record<string, unknown>>(obj: Obj): Store<Obj> => {
               state[key].getSnapshot,
               state[key].getSnapshot,
             );
-          } catch (err) {
+          } catch {
             return obj[key];
           }
         }

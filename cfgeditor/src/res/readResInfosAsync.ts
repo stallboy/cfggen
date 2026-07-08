@@ -5,7 +5,7 @@ import {
     setResMap
 } from "../store/store.ts";
 import {readDir} from "@tauri-apps/plugin-fs";
-import {queryClient} from "../main.tsx";
+import {queryClient} from "../queryClient.ts";
 import {ext2type, findKeyEndIndex} from "./resUtils.ts";
 import {ResAudioTrack, ResInfo, ResSubtitlesTrack, ResType} from "./resInfo.ts";
 import {isTauri} from "@tauri-apps/api/core";

@@ -1,4 +1,4 @@
-import {JSONArray, JSONObject, RecordResult} from "../../api/recordModel.ts";
+import {JSONArray, JSONObject, JSONValue, RecordResult} from "../../api/recordModel.ts";
 import {SItem, SStruct, STable} from "../../api/schemaModel.ts";
 import {getField, Schema} from "../table/schemaUtil.tsx";
 import {EntityPosition} from "../../flow/entityModel.ts";
@@ -103,7 +103,7 @@ export function onUpdateFormValues(schema: Schema,
                                    fieldChains: (string | number)[]) {
     // console.log('formChange', fieldChains, values);
 
-    const obj = getFieldObj(editState.editingObject, fieldChains);
+    const obj = getFieldObj(editState.editingObject, fieldChains) as JSONObject;
     const name = obj['$type'] as string;
     if (name == undefined) {
         console.log("type undefined", obj, fieldChains, values);
@@ -161,8 +161,8 @@ export function onUpdateFormValues(schema: Schema,
 
 export function onUpdateNote(note: string | undefined,
                              fieldChains: (string | number)[]) {
-    const obj = getFieldObj(editState.editingObject, fieldChains);
-    obj['$note'] = note;
+    const obj = getFieldObj(editState.editingObject, fieldChains) as JSONObject;
+    obj['$note'] = note as JSONValue;
     notifyEditingState();
 }
 
@@ -170,7 +170,7 @@ export function onUpdateNote(note: string | undefined,
 export function onUpdateFold(fold: boolean,
                              fieldChains: (string | number)[],
                              position: EntityPosition) {
-    const obj = getFieldObj(editState.editingObject, fieldChains);
+    const obj = getFieldObj(editState.editingObject, fieldChains) as JSONObject;
     obj['$fold'] = fold;
 
     editState.fitView = EFitView.FitId;
@@ -184,7 +184,7 @@ export function onUpdateInterfaceValue(jsonObject: JSONObject,
                                        position: EntityPosition) {
     // console.log('updateInterface', fieldChains, jsonObject);
 
-    const obj = getFieldObj(editState.editingObject, fieldChains.slice(0, fieldChains.length - 1));
+    const obj = getFieldObj(editState.editingObject, fieldChains.slice(0, fieldChains.length - 1)) as JSONObject;
     obj[fieldChains[fieldChains.length - 1]] = jsonObject;
 
     editState.fitView = EFitView.FitId;
@@ -296,10 +296,11 @@ export function onStructPaste(fieldChains: (string | number)[],
     editState.update();
 }
 
-function getFieldObj(editingObject: JSONObject, fieldChains: (string | number)[]): any {
-    let obj: any = editingObject;
+function getFieldObj(editingObject: JSONObject, fieldChains: (string | number)[]): JSONObject | JSONArray {
+    let obj: JSONObject | JSONArray = editingObject;
     for (const field of fieldChains) {
-        obj = obj[field];  // as 只是为了跳过ts类型检查
+        // 动态路径访问，中间节点都是容器（object/array），断言不可避免
+        obj = (obj as JSONObject)[field as string] as JSONObject | JSONArray;
     }
     return obj;
 }
@@ -326,11 +327,11 @@ function getFieldPrimitiveTypeConverter(fieldName: string, sItem: SItem) {
      return same;
 }
 
-function same(value: any) {
-    return value;
+function same(value: unknown): JSONValue {
+    return value as JSONValue;
 }
 
-function toInt(value: any) {
+function toInt(value: unknown): JSONValue {
     if (typeof value == 'string') {
         try {
             return parseInt(value);
@@ -338,11 +339,11 @@ function toInt(value: any) {
             return 0;
         }
     } else {
-        return value;
+        return value as JSONValue;
     }
 }
 
-function toFloat(value: any) {
+function toFloat(value: unknown): JSONValue {
     if (typeof value == 'string') {
         try {
             return parseFloat(value);
@@ -350,11 +351,11 @@ function toFloat(value: any) {
             return 0.0;
         }
     } else {
-        return value;
+        return value as JSONValue;
     }
 }
 
-function isDeeplyEqual(obj1: any, obj2: any): boolean {
+function isDeeplyEqual(obj1: unknown, obj2: unknown): boolean {
     if (obj1 === obj2) return true;
 
     if (Array.isArray(obj1) && Array.isArray(obj2)) {
@@ -370,8 +371,10 @@ function isDeeplyEqual(obj1: any, obj2: any): boolean {
         const keys2 = Object.keys(obj2)
         if (keys1.length !== keys2.length || !keys1.every(key => keys2.includes(key))) return false;
 
-        for (const key in obj1) {
-            const isEqual = isDeeplyEqual(obj1[key], obj2[key])
+        const o1 = obj1 as Record<string, unknown>;
+        const o2 = obj2 as Record<string, unknown>;
+        for (const key in o1) {
+            const isEqual = isDeeplyEqual(o1[key], o2[key])
             if (!isEqual) {
                 return false;
             }
@@ -382,11 +385,12 @@ function isDeeplyEqual(obj1: any, obj2: any): boolean {
     return false;
 }
 
-function delete$refInPlace(obj: any) {
-    if (typeof obj === "object") {
-        delete obj['$refs'];
-        for (const k in obj) {
-            delete$refInPlace(obj[k]);
+function delete$refInPlace(obj: unknown) {
+    if (typeof obj === "object" && obj !== null) {
+        const o = obj as Record<string, unknown>;
+        delete o['$refs'];
+        for (const k in o) {
+            delete$refInPlace(o[k]);
         }
     } else if (Array.isArray(obj)) {
         for (const item of obj.values()) {
