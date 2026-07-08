@@ -3,7 +3,7 @@ import {App, Button, Empty, Input, Result, Table} from "antd";
 import {SearchResult, SearchResultItem} from "../../api/searchModel.ts";
 import {useTranslation} from "react-i18next";
 import {navTo, setQuery, useMyStore, useCurPageRecordOrRecordRef} from "../../store/store.ts";
-import {useNavigate} from "react-router-dom";
+import {useNavigate} from "react-router";
 
 
 function getLabel(table: string, id: string): string {

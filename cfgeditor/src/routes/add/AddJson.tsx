@@ -7,7 +7,7 @@ import {addOrUpdateRecord} from "../../api/api.ts";
 import {Button, Typography, Form, Input, List, Result, Space} from "antd";
 
 import {RecordEditResult} from "../../api/recordModel.ts";
-import {useNavigate} from "react-router-dom";
+import {useNavigate} from "react-router";
 import {useTranslation} from "react-i18next";
 import {ResultStatusType} from "antd/es/result";
 import {applyNewEditingObject} from "../record/editingObject.ts";

@@ -2,7 +2,7 @@ import {ReadOnlyEntity} from "../../flow/entityModel.ts";
 import {SchemaTableType} from "../../CfgEditorApp.tsx";
 import {TableEntityCreator, UserData} from "./tableEntityCreator.ts";
 import {navTo, useLocationData, useMyStore} from "../../store/store.ts";
-import {useNavigate, useOutletContext} from "react-router-dom";
+import {useNavigate, useOutletContext} from "react-router";
 // import {useReactFlow} from "reactflow";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
 import {useTranslation} from "react-i18next";

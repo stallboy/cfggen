@@ -2,7 +2,7 @@ import {memo, useMemo} from "react";
 import {Schema} from "../table/schemaUtil.tsx";
 import {navTo, useMyStore, useCurPageRecordOrRecordRef} from "../../store/store.ts";
 import {Button, Table} from "antd";
-import {useNavigate} from "react-router-dom";
+import {useNavigate} from "react-router";
 
 class LastAccessedItem {
     constructor(public table: string,

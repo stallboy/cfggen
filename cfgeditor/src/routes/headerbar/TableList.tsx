@@ -1,7 +1,7 @@
 import {STable} from "../../api/schemaModel.ts";
 import {Flex, Select} from "antd";
 import {getLastOpenIdByTable, navTo, useMyStore, useLocationData} from "../../store/store.ts";
-import {useNavigate} from "react-router-dom";
+import {useNavigate} from "react-router";
 import {Schema} from "../table/schemaUtil.tsx";
 import {memo, useMemo, useCallback, CSSProperties} from "react";
 

@@ -5,7 +5,7 @@ import {useMyStore, useLocationData, navTo} from "../../store/store.ts";
 import {STable} from "../../api/schemaModel.ts";
 import {memo} from "react";
 import {useTranslation} from "react-i18next";
-import {useNavigate} from "react-router-dom";
+import {useNavigate} from "react-router";
 
 export const UnreferencedButton = memo(function ({curTable}: {
     curTable: STable,

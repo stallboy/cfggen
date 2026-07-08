@@ -15,7 +15,7 @@ import {
 } from "../../store/store.ts";
 import {getNextId, Schema} from "../table/schemaUtil.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
-import {useNavigate} from "react-router-dom";
+import {useNavigate} from "react-router";
 import {STable} from "../../api/schemaModel.ts";
 import {useTranslation} from "react-i18next";
 import {memo, useCallback, useMemo} from "react";

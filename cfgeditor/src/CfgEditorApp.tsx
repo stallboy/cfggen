@@ -14,7 +14,7 @@ import {
     isFixedRefPage,
     isFixedUnrefPage
 } from "./store/store.ts";
-import {Outlet, useNavigate} from "react-router-dom";
+import {Outlet, useNavigate} from "react-router";
 import {STable} from "./api/schemaModel.ts";
 import {fetchNotes, fetchSchema} from "./api/api.ts";
 import {notesToMap} from "./api/noteModel.ts";

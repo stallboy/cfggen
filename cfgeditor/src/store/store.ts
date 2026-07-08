@@ -3,7 +3,7 @@ import { AIConf, Convert, FixedPage, FixedRefPage, FixedUnrefPage, FixedPagesCon
 import { getPrefBool, getPrefEnumStr, getPrefInt, getPrefJson, getPrefStr, setPref } from "./storage.ts";
 import { History } from "./historyModel.ts";
 import { NEW_RECORD_ID, Schema } from "../routes/table/schemaUtil.tsx";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { queryClient } from "../queryClient.ts";
 import { getId } from "../routes/record/recordRefEntity.ts";
 import { ResInfo } from "../res/resInfo.ts";

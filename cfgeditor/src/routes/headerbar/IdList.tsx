@@ -1,7 +1,7 @@
 import { Select } from "antd";
 import { getIdOptionsWithNew, NEW_RECORD_ID } from "../table/schemaUtil.tsx";
 import { navTo, useMyStore, useLocationData, useCurPageRecordOrRecordRef } from "../../store/store.ts";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { STable } from "../../api/schemaModel.ts";
 import { memo, useMemo, useCallback } from "react";
 

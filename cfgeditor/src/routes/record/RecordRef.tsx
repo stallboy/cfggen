@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { Schema } from "../table/schemaUtil.tsx";
 import { NodeShowType } from "../../store/storageJson.ts";
 import { navTo, useMyStore } from "../../store/store.ts";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { fetchRecordRefs, fetchUnreferencedRecords } from "../../api/api.ts";
 import { MenuItem } from "../../flow/FlowContextMenu.tsx";
@@ -18,7 +18,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useEntityToGraph } from "../../flow/useEntityToGraph.tsx";
 import { EditingObjectRes, EFitView } from "./editingObject.ts";
 import { EntityNode } from "../../flow/FlowGraph.tsx";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 
 
 export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, recordRefResult, inDragPanelAndFix, isUnrefMode }: {

@@ -1,6 +1,6 @@
 import {useLocationData} from "../store/store.ts";
 import {Alert, Flex} from "antd";
-import {Link} from "react-router-dom";
+import {Link} from "react-router";
 
 export function PathNotFound() {
     const {pathname} = useLocationData();

@@ -7,7 +7,8 @@ import '@xyflow/react/dist/style.css';
 import './style.css'
 import {App, ConfigProvider} from "antd";
 import './i18n.js'
-import {createBrowserRouter, RouterProvider} from "react-router-dom";
+import {createBrowserRouter} from "react-router";
+import {RouterProvider} from "react-router/dom";
 import {Table} from "./routes/table/Table.tsx";
 import {Record} from "./routes/record/Record.tsx";
 import {RecordRefRoute} from "./routes/record/RecordRef.tsx";

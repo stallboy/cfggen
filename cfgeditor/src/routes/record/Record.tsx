@@ -16,7 +16,7 @@ import {
 } from "./editingObject.ts";
 import {useTranslation} from "react-i18next";
 import {invalidateAllQueries, navTo, setIsEditMode, useMyStore, useLocationData} from "../../store/store.ts";
-import {useNavigate, useOutletContext} from "react-router-dom";
+import {useNavigate, useOutletContext} from "react-router";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {addOrUpdateRecord, fetchRecord} from "../../api/api.ts";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
