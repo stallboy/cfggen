@@ -261,14 +261,14 @@ export function onStructCopy(obj: JSONObject) {
     editState.copiedObject = structuredClone(obj);
 }
 
-export function isCopiedFitAllowedType(allowdType: string) {
+export function isCopiedFitAllowedType(allowedType: string) {
     const type = editState.copiedObject.$type;
-    if (type == allowdType) {
+    if (type == allowedType) {
         return true;
     }
 
-    if (type.startsWith(allowdType)) {
-        return type[allowdType.length] == '.'  //简单判断，没有去查询interface和impl
+    if (type.startsWith(allowedType)) {
+        return type[allowedType.length] == '.'  //简单判断，没有去查询interface和impl
     }
 
     return false;
@@ -386,15 +386,15 @@ function isDeeplyEqual(obj1: unknown, obj2: unknown): boolean {
 }
 
 function delete$refInPlace(obj: unknown) {
-    if (typeof obj === "object" && obj !== null) {
+    if (Array.isArray(obj)) {
+        for (const item of obj) {
+            delete$refInPlace(item);
+        }
+    } else if (typeof obj === "object" && obj !== null) {
         const o = obj as Record<string, unknown>;
         delete o['$refs'];
         for (const k in o) {
             delete$refInPlace(o[k]);
-        }
-    } else if (Array.isArray(obj)) {
-        for (const item of obj.values()) {
-            delete$refInPlace(item);
         }
     }
 }
