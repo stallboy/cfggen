@@ -19,7 +19,7 @@ import {useNavigate} from "react-router";
 import {STable} from "../../api/schemaModel.ts";
 import {useTranslation} from "react-i18next";
 import {memo, useCallback, useMemo} from "react";
-import {toggleFullScreen} from "../setting/colorUtils.ts";
+import {toggleFullScreen} from "../../utils/windowUtils.ts";
 
 const {Text} = Typography;
 const prevIcon = <LeftOutlined/>;

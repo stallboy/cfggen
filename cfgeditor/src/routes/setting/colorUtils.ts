@@ -1,8 +1,6 @@
 /**
  * Utility functions for color handling in settings
  */
-import {getCurrentWebviewWindow} from "@tauri-apps/api/webviewWindow";
-
 type ColorValue = string | { toHexString: () => string } | null | undefined;
 
 export function fixColor(color: ColorValue, defaultColor: string = '#0898b5'): string {
@@ -28,10 +26,4 @@ export function fixColors(keywordColors: KeywordColorInput[], defaultColor: stri
         colors.push({keyword: keyword, color: fixColor(color, defaultColor)})
     }
     return colors;
-}
-
-export async function toggleFullScreen() {
-    const appWindow = getCurrentWebviewWindow()
-    const isFullScreen = await appWindow.isFullscreen();
-    await appWindow.setFullscreen(!isFullScreen);
 }

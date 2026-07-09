@@ -18,7 +18,7 @@ import {saveAs} from "file-saver";
 import {FixPages} from "./FixPages.tsx";
 import {PageType, navTo, useLocationData} from "../../store/store.ts";
 import {KeyShortCut} from "./KeyShortcut.tsx";
-import {toggleFullScreen} from "./colorUtils.ts";
+import {toggleFullScreen} from "../../utils/windowUtils.ts";
 
 
 
