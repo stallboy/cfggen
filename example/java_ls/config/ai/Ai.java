@@ -8,17 +8,8 @@ public class Ai {
     private int trigOdds;
     private java.util.List<Integer> actionID;
     private boolean deathRemove;
-    private Ai() {
-    }
 
-    Ai(AiBuilder b) {
-        this.iD = b.iD;
-        this.desc = b.desc;
-        this.condID = b.condID;
-        this.trigTick = b.trigTick;
-        this.trigOdds = b.trigOdds;
-        this.actionID = b.actionID;
-        this.deathRemove = b.deathRemove;
+    private Ai() {
     }
 
     public static Ai _create(configgen.genjava.ConfigInput input) {

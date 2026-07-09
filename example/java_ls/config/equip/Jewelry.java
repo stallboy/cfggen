@@ -11,20 +11,12 @@ public class Jewelry {
     private int keyAbilityValue;
     private int salePrice;
     private String description;
-    private Jewelry() {
-    }
+    private config.equip.Jewelryrandom RefLvlRank;
+    private config.equip.Jewelrytype RefJType;
+    private config.equip.Jewelrysuit NullableRefSuitID;
+    private config.equip.Ability RefKeyAbility;
 
-    Jewelry(JewelryBuilder b) {
-        this.iD = b.iD;
-        this.name = b.name;
-        this.iconFile = b.iconFile;
-        this.lvlRank = b.lvlRank;
-        this.jType = b.jType;
-        this.suitID = b.suitID;
-        this.keyAbility = b.keyAbility;
-        this.keyAbilityValue = b.keyAbilityValue;
-        this.salePrice = b.salePrice;
-        this.description = b.description;
+    private Jewelry() {
     }
 
     public static Jewelry _create(configgen.genjava.ConfigInput input) {
@@ -112,9 +104,40 @@ public class Jewelry {
         return description;
     }
 
+    public config.equip.Jewelryrandom refLvlRank() {
+        return RefLvlRank;
+    }
+
+    public config.equip.Jewelrytype refJType() {
+        return RefJType;
+    }
+
+    public config.equip.Jewelrysuit nullableRefSuitID() {
+        return NullableRefSuitID;
+    }
+
+    public config.equip.Ability refKeyAbility() {
+        return RefKeyAbility;
+    }
+
     @Override
     public String toString() {
         return "(" + iD + "," + name + "," + iconFile + "," + lvlRank + "," + jType + "," + suitID + "," + keyAbility + "," + keyAbilityValue + "," + salePrice + "," + description + ")";
+    }
+
+    public void _resolveDirect(config.ConfigMgr mgr) {
+        RefLvlRank = mgr.equip_jewelryrandom_All.get(lvlRank);
+        java.util.Objects.requireNonNull(RefLvlRank);
+        RefJType = config.equip.Jewelrytype.get(jType);
+        java.util.Objects.requireNonNull(RefJType);
+        NullableRefSuitID = mgr.equip_jewelrysuit_All.get(suitID);
+        RefKeyAbility = config.equip.Ability.get(keyAbility);
+        java.util.Objects.requireNonNull(RefKeyAbility);
+    }
+
+    public void _resolve(config.ConfigMgr mgr) {
+        lvlRank._resolve(mgr);
+        _resolveDirect(mgr);
     }
 
     public static Jewelry get(int iD) {
@@ -140,7 +163,9 @@ public class Jewelry {
 
         @Override
         public void resolveAll(config.ConfigMgr mgr) {
-            // no resolve
+            for (Jewelry e : mgr.equip_jewelry_All.values()) {
+                e._resolve(mgr);
+            }
         }
 
     }

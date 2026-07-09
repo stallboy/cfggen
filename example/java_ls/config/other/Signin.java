@@ -6,15 +6,9 @@ public class Signin {
     private java.util.Map<Integer, Integer> vipitem2vipcountMap;
     private int viplevel;
     private String iconFile;
-    private Signin() {
-    }
+    private java.util.Map<Integer, config.other.Loot> RefVipitem2vipcountMap;
 
-    Signin(SigninBuilder b) {
-        this.id = b.id;
-        this.item2countMap = b.item2countMap;
-        this.vipitem2vipcountMap = b.vipitem2vipcountMap;
-        this.viplevel = b.viplevel;
-        this.iconFile = b.iconFile;
+    private Signin() {
     }
 
     public static Signin _create(configgen.genjava.ConfigInput input) {
@@ -82,9 +76,30 @@ public class Signin {
         return iconFile;
     }
 
+    public java.util.Map<Integer, config.other.Loot> refVipitem2vipcountMap() {
+        return RefVipitem2vipcountMap;
+    }
+
     @Override
     public String toString() {
         return "(" + id + "," + item2countMap + "," + vipitem2vipcountMap + "," + viplevel + "," + iconFile + ")";
+    }
+
+    public void _resolveDirect(config.ConfigMgr mgr) {
+        if (vipitem2vipcountMap.isEmpty()) {
+            RefVipitem2vipcountMap = java.util.Collections.emptyMap();
+        } else {
+            RefVipitem2vipcountMap = new java.util.LinkedHashMap<>(vipitem2vipcountMap.size());
+            for (java.util.Map.Entry<Integer, Integer> e : vipitem2vipcountMap.entrySet()) {
+                config.other.Loot rv = mgr.other_loot_All.get(e.getValue());
+                java.util.Objects.requireNonNull(rv);
+                RefVipitem2vipcountMap.put(e.getKey(), rv);
+            }
+        }
+    }
+
+    public void _resolve(config.ConfigMgr mgr) {
+        _resolveDirect(mgr);
     }
 
     public static Signin get(int id) {
@@ -110,7 +125,9 @@ public class Signin {
 
         @Override
         public void resolveAll(config.ConfigMgr mgr) {
-            // no resolve
+            for (Signin e : mgr.other_signin_All.values()) {
+                e._resolve(mgr);
+            }
         }
 
     }
