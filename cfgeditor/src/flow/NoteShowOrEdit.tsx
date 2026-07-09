@@ -48,8 +48,8 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
                 title: `updateNote  ${id} ${variables} err: ${error.toString()}`,
                 placement: 'topRight', duration: 4
             });
-            setIsEdit(false);
-
+            // 提交失败时保持编辑框打开，保留用户已输入的 newNote 便于重试
+            // （原 setIsEdit(false) 会卸载 NoteEdit、销毁 newNote 本地状态）
         },
         onSuccess: (editResult, variables) => {
             const {resultCode, notes} = editResult;

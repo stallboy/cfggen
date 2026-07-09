@@ -69,8 +69,7 @@ const role: BubbleListProps["role"] = {
     assistant: {
         placement: "start",
         contentRender(content: string) {
-            const newContent = content.replace("/\n\n/g", "<br/><br/>");
-            return <XMarkdown content={newContent}/>;
+            return <XMarkdown content={content}/>;
         },
     },
     user: {placement: "end"},
@@ -109,7 +108,11 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
         onSuccess: (result: CheckJsonResult) => {
             if (result.resultCode == 'ok') {
                 if (curTableId == result.table) {
-                    applyNewEditingObject(JSON.parse(result.jsonResult));
+                    try {
+                        applyNewEditingObject(JSON.parse(result.jsonResult));
+                    } catch (e) {
+                        setInputValue(`parse jsonResult failed: ${e}`);
+                    }
                 } else {
                     setInputValue(`table changed! ${result.table} != ${curTableId}`);
                 }
@@ -120,7 +123,9 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
     });
 
 
-    const isAiSet = aiConf.baseUrl.length > 0;
+    // 同时校验 baseUrl 与 apiKey：默认 baseUrl 非空但 apiKey 默认为 ''，
+    // 仅校验 baseUrl 会以空 key 发 Bearer 导致 401 且无引导
+    const isAiSet = aiConf.baseUrl.length > 0 && aiConf.apiKey.length > 0;
     const baseUrl = isAiSet ? aiConf.baseUrl : 'https://api.x.ant.design/api/big_model_glm-4.5-flash';
     const model = isAiSet ? aiConf.model : 'glm-4.5-flash';
     const apiKey = isAiSet ? aiConf.apiKey : 'xxx';
@@ -146,9 +151,19 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
 
                                 // 累积流式内容，遇到 finish_reason 就停止
                                 for (const chunk of chunks) {
-
+                                    // 跳过 [DONE] 哨兵/keepalive 等非 JSON 帧，并防御非法 JSON，避免整条流处理中断
                                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                    const data = JSON.parse((chunk as any).data);
+                                    const raw = (chunk as any).data;
+                                    if (raw === '[DONE]' || raw == null) {
+                                        continue;
+                                    }
+                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                    let data: any;
+                                    try {
+                                        data = JSON.parse(raw);
+                                    } catch {
+                                        continue;
+                                    }
                                     const choices = data.choices;
                                     if (choices && Array.isArray(choices) && choices.length > 0) {
                                         const choice = choices[0];
@@ -174,10 +189,8 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
                         onError: (err) => {
                             console.error(err);
                         },
-                        onUpdate: (chunk) => {
-                            // 处理流式更新
-                            console.log('sse object', chunk);
-                            // 这里应该更新流式内容，但需要更多上下文
+                        onUpdate: () => {
+                            // 流式增量更新暂未实现（完整内容由 onSuccess 统一处理）
                         }
                     }
 
