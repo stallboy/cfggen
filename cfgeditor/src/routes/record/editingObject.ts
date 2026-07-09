@@ -234,14 +234,16 @@ export function onAddItemToArrayIndex(defaultItemJsonObject: JSONObject,
 }
 
 
-export function onMoveItemInArray(curIndex: number,
-                                  newIndex: number,
+export function onSwapItemInArray(indexA: number,
+                                  indexB: number,
                                   arrayFieldChains: (string | number)[],
                                   position: EntityPosition) {
     const obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
-    const o2 = obj[newIndex];
-    obj[newIndex] = obj[curIndex]
-    obj[curIndex] = o2;
+    // 交换 indexA / indexB 两个元素。调用方均为相邻索引（上/下移按钮传 arrayIndex-1 / arrayIndex+1），
+    // 相邻 swap 即"移动一格"，故语义是 swap 而非 move——命名据此（原 onMoveItemInArray 易误导）
+    const o2 = obj[indexB];
+    obj[indexB] = obj[indexA]
+    obj[indexA] = o2;
 
     editState.fitView = EFitView.FitId;
     editState.fitViewToIdPosition = position;

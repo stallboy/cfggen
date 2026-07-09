@@ -16,7 +16,7 @@ import {getField, getIdOptions, getImpl, getMapEntryTypeName, isPkInteger, Schem
 import {
     applyNewEditingObject, editState,
     onAddItemToArray,
-    onDeleteItemFromArray, onMoveItemInArray, onUpdateFold,
+    onDeleteItemFromArray, onSwapItemInArray, onUpdateFold,
     onUpdateFormValues,
     onUpdateInterfaceValue, onUpdateNote
 } from "./editingObject.ts";
@@ -171,14 +171,14 @@ export class RecordEditEntityCreator {
                     let onMoveUpFunc;
                     if (arrayIndex > 0) {
                         onMoveUpFunc = (position: EntityPosition) => {
-                            onMoveItemInArray(arrayIndex, arrayIndex - 1, chain, position);
+                            onSwapItemInArray(arrayIndex, arrayIndex - 1, chain, position);
                         }
                     }
 
                     let onMoveDownFunc;
                     if (arrayIndex < fArrLen - 1) {
                         onMoveDownFunc = (position: EntityPosition) => {
-                            onMoveItemInArray(arrayIndex, arrayIndex + 1, chain, position);
+                            onSwapItemInArray(arrayIndex, arrayIndex + 1, chain, position);
                         }
                     }
 
