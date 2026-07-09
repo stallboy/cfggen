@@ -1,8 +1,14 @@
 import ELK, {ElkNode, ElkExtendedEdge} from 'elkjs';
+// 用 Web Worker 跑布局算法，避免几十~几百节点时分层/MR 树计算阻塞主线程（O1）
+// workerUrl 指向 elkjs 自带的 worker 脚本（elk-worker.min.js），由 ELK 内部 new Worker 加载
+import elkWorkerUrl from 'elkjs/lib/elk-worker.min.js?url';
 import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
 import {Rect, XYPosition} from "@xyflow/react";
 import {calcWidthHeight} from "./calcWidthHeight.ts";
 import {NodePlacementStrategyType, NodeShowType} from "../store/storageJson.ts";
+
+// 模块级单例（worker 模式）：layout 在 Web Worker 跑，每次布局复用同一 worker
+const elk = new ELK({workerUrl: elkWorkerUrl});
 
 
 function nodeToLayoutChild(node: EntityNode, id2RectMap: Map<string, Rect>): ElkNode {
@@ -48,7 +54,7 @@ function allPositionXYOk(nodes: EntityNode[], map: Map<string, XYPosition>) {
 
 
 export async function layoutAsync(nodes: EntityNode[], edges: EntityEdge[], layoutStrategy: NodePlacementStrategyType, nodeShow?: NodeShowType) {
-    const elk = new ELK();
+    // elk 为模块级单例（见文件顶部），worker 模式下 layout 在 Web Worker 跑
     // console.log('layout', nodes.length, nodes, edges);
     const id2RectMap = new Map<string, Rect>();
 
