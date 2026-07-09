@@ -103,7 +103,10 @@ function resetEditingObject(newTable: string, newId: string, newEditingObject: J
     editState.originalEditingObject = structuredClone(newEditingObject);
     editState.editingObject = newEditingObject;
     editState.isEdited = false;
-    notifyEditingState();
+    // 不在此调 notifyEditingState：本函数经 startEditingObject 在 useMemo(render 期间) 调用，
+    // notifyEditingState → setEditingState 会触发 "Cannot update component while rendering"，
+    // 导致 React 丢弃本次更新（视图切换/重选已访问 id 不刷新）。isEdited 的对外通知改由
+    // Record.tsx 的 useEffect([isEditing, recordResult]) 在 render 之后负责。
 }
 
 

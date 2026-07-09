@@ -132,7 +132,7 @@ const RecordWithResult = memo(function RecordWithResult({recordResult}: { record
         if (isEditing) {
             notifyEditingState()
         }
-    }, [isEditing]); // editState.table, editState.id, editState.editingObject
+    }, [isEditing, recordResult]); // recordResult 变会触发 startEditingObject 的 reset，需在 render 后重新通知 isEdited
 
 
     const getEditMenu = useCallback(function (table: string, id: string, edit: boolean) {
