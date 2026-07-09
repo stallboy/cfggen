@@ -3,7 +3,7 @@ import {memo, useCallback, useEffect} from "react";
 import {useTranslation} from "react-i18next";
 import {Button, Form, Input, Space} from "antd";
 import {CloseOutlined} from "@ant-design/icons";
-import {Schema} from "../table/schemaUtil.tsx";
+import {Schema} from "../../domain/schema.tsx";
 import {STable} from "../../api/schemaModel.ts";
 import {FixedPage, FixedPagesConf} from "../../store/storageJson.ts";
 

@@ -3,7 +3,7 @@ import {Alert, Flex, Form, Input, Modal, Splitter,} from "antd";
 import {RecordRef} from "./routes/record/RecordRef.tsx";
 import {useTranslation} from "react-i18next";
 import {Setting} from "./routes/setting/Setting.tsx";
-import {Schema} from "./routes/table/schemaUtil.tsx";
+import {Schema} from "./domain/schema.tsx";
 import {
     clearLayoutCache,
     getFixedPage,

@@ -2,7 +2,7 @@ import {memo, useState, useEffect} from "react";
 import {Form, Input, Button, message, Space, Typography, Divider} from "antd";
 import {useTranslation} from "react-i18next";
 import {useMyStore, setThemeConfig} from "../../store/store.ts";
-import {themeService} from "./themeService.ts";
+import {themeService} from "../../services/themeService.ts";
 import {FlowVisualizationSetting} from "./FlowVisualizationSetting.tsx";
 const {Text, Title} = Typography;
 

@@ -1,7 +1,7 @@
 import {BriefRecord, RefId, Refs} from "../../api/recordModel.ts";
 import {Entity, EntityEdgeType, EntityType} from "../../flow/entityModel.ts";
 
-import {Schema} from "../table/schemaUtil.tsx";
+import {Schema} from "../../domain/schema.tsx";
 import {findAllResInfos} from "../../res/findAllResInfos.ts";
 import {TauriConf} from "../../store/storageJson.ts";
 import {ResInfo} from "../../res/resInfo.ts";

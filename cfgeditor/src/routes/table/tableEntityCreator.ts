@@ -1,6 +1,6 @@
 import {SInterface, SItem, SStruct, STable} from "../../api/schemaModel.ts";
 import {ReadOnlyEntity, DisplayField, EntityEdgeType, EntityType} from "../../flow/entityModel.ts";
-import {Schema} from "./schemaUtil.tsx";
+import {Schema} from "../../domain/schema.tsx";
 
 export class UserData {
     constructor(public table: string, public item: SItem) {}

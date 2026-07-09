@@ -1,5 +1,5 @@
 import {memo, useState} from "react";
-import {Schema} from "../table/schemaUtil.tsx";
+import {Schema} from "../../domain/schema.tsx";
 import {useTranslation} from "react-i18next";
 import {CollapseProps, Space} from "antd";
 import {SearchValue} from "./SearchValue.tsx";

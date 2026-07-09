@@ -1,6 +1,6 @@
 import {Entity, EntityEditField, isReadOnlyEntity, isEditableEntity, isCardEntity} from "./entityModel.ts";
 import {ResInfo} from "../res/resInfo.ts";
-import {getDsLenAndDesc} from "./getDsLenAndDesc.tsx";
+import {getDsLenAndDesc} from "./getDsLenAndDesc.ts";
 
 
 // 在一次又一次尝试了等待node准备好，直接用node的computed理的width，height后，增加这一个异步，太容易有闪烁和被代码绕晕了。

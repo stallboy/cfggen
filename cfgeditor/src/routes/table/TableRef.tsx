@@ -8,9 +8,9 @@ import {useTranslation} from "react-i18next";
 import {SItem} from "../../api/schemaModel.ts";
 import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
 import {memo, useCallback, useMemo} from "react";
-import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
+import {useEntityToGraph} from "../../flow/useEntityToGraph.ts";
 import {EntityNode} from "../../flow/FlowGraph.tsx";
-import {getDefaultIdInTable} from "./schemaUtil.tsx";
+import {getDefaultIdInTable} from "../../domain/schema.tsx";
 
 export const TableRef = memo(function TableRef() {
     const {schema, notes, curTable} = useOutletContext<SchemaTableType>();

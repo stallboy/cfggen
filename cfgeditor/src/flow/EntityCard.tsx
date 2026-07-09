@@ -5,7 +5,7 @@ type DescriptionsItemType = NonNullable<DescriptionsProps['items']>[number];
 import {convertFileSrc, isTauri} from "@tauri-apps/api/core";
 import {CSSProperties, memo, ReactElement} from "react";
 import {CardEntity, Entity, isCardEntity} from "./entityModel.ts";
-import {getDsLenAndDesc} from "./getDsLenAndDesc.tsx";
+import {getDsLenAndDesc} from "./getDsLenAndDesc.ts";
 
 // ============================================================================
 // 常量定义

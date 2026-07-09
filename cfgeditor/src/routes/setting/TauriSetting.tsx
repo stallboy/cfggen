@@ -4,7 +4,7 @@ import {useTranslation} from "react-i18next";
 import {useQuery} from "@tanstack/react-query";
 import {App, Button, Checkbox, Divider, Form, Input, Space, Typography} from "antd";
 import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
-import {Schema} from "../table/schemaUtil.tsx";
+import {Schema} from "../../domain/schema.tsx";
 import {invalidateResInfos} from "../../res/readResInfosAsync.ts";
 import {summarizeResAsync} from "../../res/summarizeResAsync.ts";
 import {path} from "@tauri-apps/api";

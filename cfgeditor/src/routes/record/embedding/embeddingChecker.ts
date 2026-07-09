@@ -2,7 +2,7 @@ import { EMBEDDING_CONFIG, isPrimitiveType } from './embeddingConfig';
 import { EmbeddingCheckContext, FieldTypeAnalysis } from './types';
 import { JSONObject } from '../../../api/recordModel';
 import { SField, SStruct, SInterface } from '../../../api/schemaModel';
-import { getImpl } from '../../table/schemaUtil';
+import { getImpl } from '../../../domain/schema.tsx';
 
 /**
  * 字段类型分析器

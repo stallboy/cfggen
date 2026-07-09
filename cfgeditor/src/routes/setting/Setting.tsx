@@ -3,7 +3,7 @@ import {Divider, Tabs} from "antd";
 import {NodeShowSetting} from "./NodeShowSetting.tsx";
 import {useTranslation} from "react-i18next";
 import {STable} from "../../api/schemaModel.ts";
-import {Schema} from "../table/schemaUtil.tsx";
+import {Schema} from "../../domain/schema.tsx";
 
 import {BasicSetting} from "./BasicSetting.tsx";
 import {Operations} from "./Operations.tsx";

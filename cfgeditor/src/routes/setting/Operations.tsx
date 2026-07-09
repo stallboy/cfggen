@@ -8,7 +8,7 @@ import {
     invalidateAllQueries, setServer,
 } from "../../store/store.ts";
 import {CloseOutlined} from "@ant-design/icons";
-import {Schema} from "../table/schemaUtil.tsx";
+import {Schema} from "../../domain/schema.tsx";
 import {STable} from "../../api/schemaModel.ts";
 import {useMutation} from "@tanstack/react-query";
 import {RecordEditResult} from "../../api/recordModel.ts";
@@ -18,7 +18,7 @@ import {saveAs} from "file-saver";
 import {FixPages} from "./FixPages.tsx";
 import {PageType, navTo, useLocationData} from "../../store/store.ts";
 import {KeyShortCut} from "./KeyShortcut.tsx";
-import {toggleFullScreen} from "./colorUtils.ts";
+import {toggleFullScreen} from "../../utils/windowUtils.ts";
 
 
 
@@ -96,6 +96,7 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
             notification.error({title: "save png failed: limit the max node count", duration: 3});
             console.log(err)
         })
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- flowRef 在 body 中经解构使用（const {current} = flowRef），oxlint exhaustive-deps 未追踪解构引用而误报
     }, [flowRef, imageSizeScale, curPage, notification, curTableId, curId]);
 
     const options = [
