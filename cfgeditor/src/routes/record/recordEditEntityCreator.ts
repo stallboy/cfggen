@@ -26,6 +26,8 @@ import { EmbeddingFieldExtractor } from "./embedding/embeddingFieldExtractor";
 import { isPrimitiveType } from "./embedding/embeddingConfig";
 // 导入Fold状态管理助手
 import { FoldStateHelper } from "../../flow/embedded/FoldStateHelper";
+// Folds 已下沉到独立文件，打破 FoldStateHelper ↔ recordEditEntityCreator 的循环依赖
+import {Folds} from "../../flow/embedded/Folds";
 
 
 interface ArrayItemParam {
@@ -712,62 +714,7 @@ function getImplNameOptions(sInterface: SInterface): EntityEditFieldOptions {
     return {options: impls, isValueInteger: false, isEnum: true};
 }
 
-export interface ChainFold {
-    chain: (string | number)[],
-    fold: boolean
-}
-
-export class Folds {
-
-    constructor(public list: ChainFold[]) {
-    }
-
-    setFold(chain: (string | number)[], fold: boolean): Folds {
-        const f = this.isFold(chain);
-        if (f === fold) {
-            return this;
-        }
-
-        if (f === undefined) {
-            return new Folds([...this.list, {chain, fold}]);
-        }
-
-        const newList: ChainFold[] = [];
-        for (const c of this.list) {
-            if (isChainEqual(c.chain, chain)) {
-                newList.push({chain, fold});
-            } else {
-                newList.push(c);
-            }
-        }
-        return new Folds(newList);
-    }
-
-    isFold(chain: (string | number)[]): boolean | undefined {
-        for (const c of this.list) {
-            if (isChainEqual(c.chain, chain)) {
-                return c.fold;
-            }
-        }
-    }
-}
-
-function isChainEqual(a: (string | number)[], b: (string | number)[]) {
-    if (a === b) {
-        return true;
-    }
-    if (a == null || b == null) {
-        return false;
-    }
-    if (a.length !== b.length) {
-        return false;
-    }
-    for (let i = 0; i < a.length; ++i) {
-        if (a[i] !== b[i])
-            return false;
-    }
-    return true;
-}
+// ChainFold / Folds / isChainEqual 已下沉到 flow/embedded/Folds.ts（见顶部 import）
 
 /**
  * 从struct或interface中提取内嵌字段的值

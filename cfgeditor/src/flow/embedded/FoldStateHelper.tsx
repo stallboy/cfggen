@@ -1,4 +1,4 @@
-import { Folds } from '../../routes/record/recordEditEntityCreator';
+import { Folds } from './Folds';
 import { JSONObject } from '../../api/recordModel';
 
 /**

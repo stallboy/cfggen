@@ -3,7 +3,8 @@ import {JSONObject, RecordEditResult, RecordResult, RefId} from "../../api/recor
 import {App, Result} from "antd";
 import {createRefEntities, getId, getLabel} from "./recordRefEntity.ts";
 import {RecordEntityCreator} from "./recordEntityCreator.ts";
-import {Folds, RecordEditEntityCreator} from "./recordEditEntityCreator.ts";
+import {RecordEditEntityCreator} from "./recordEditEntityCreator.ts";
+import {Folds} from "../../flow/embedded/Folds";
 import {
     EditingObjectRes,
     editState,
