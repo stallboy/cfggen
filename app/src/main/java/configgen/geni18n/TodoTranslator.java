@@ -14,10 +14,10 @@ import io.github.sashirestela.openai.SimpleOpenAI;
 import io.github.sashirestela.openai.domain.chat.ChatMessage;
 import io.github.sashirestela.openai.domain.chat.ChatRequest;
 import org.apache.commons.text.similarity.LevenshteinDistance;
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
+import org.simdjson.JsonValue;
+import org.simdjson.SimdJsonParser;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -193,14 +193,19 @@ public class TodoTranslator extends Tool {
             jsonStr = response;
         }
 
-        // 尝试解析JSON数组
-        JSONArray jsonArray = JSON.parseArray(jsonStr);
-        for (int i = 0; i < jsonArray.size(); i++) {
-            JSONObject item = jsonArray.getJSONObject(i);
-            String original = item.getString("original");
-            String translated = item.getString("translated");
-            String confidence = item.getString("confidence");
-            String note = item.getString("note");
+        // 尝试解析JSON数组（simdjson）
+        byte[] bytes = jsonStr.getBytes(StandardCharsets.UTF_8);
+        JsonValue root = new SimdJsonParser().parse(bytes, bytes.length);
+        if (!root.isArray()) {
+            return entries;
+        }
+        Iterator<JsonValue> it = root.arrayIterator();
+        while (it.hasNext()) {
+            JsonValue item = it.next();
+            String original = getOptString(item, "original");
+            String translated = getOptString(item, "translated");
+            String confidence = getOptString(item, "confidence");
+            String note = getOptString(item, "note");
 
             if (original != null && !original.isBlank() &&
                     translated != null && !translated.isBlank()) {
@@ -210,6 +215,11 @@ public class TodoTranslator extends Tool {
             }
         }
         return entries;
+    }
+
+    private static String getOptString(JsonValue obj, String key) {
+        JsonValue v = obj.get(key);
+        return (v != null && !v.isNull() && v.isString()) ? v.asString() : null;
     }
 
     private static String buildRelatedTermsCsv(Set<String> todoOriginals, Map<String, String> terms) {

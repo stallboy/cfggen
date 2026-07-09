@@ -1,9 +1,9 @@
 package configgen.value;
 
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgReader;
+import configgen.util.json.JsonArr;
+import configgen.util.json.JsonMap;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -39,7 +39,7 @@ class ValueToJsonTest {
     void toJson_ListPrimitiveValue() {
         {
             VList vList = ofList(List.of(ofInt(123), ofInt(222), ofInt(333)));
-            JSONArray ja = valueToJson.toJson(vList);
+            JsonArr ja = valueToJson.toJson(vList);
             assertEquals("[123,222,333]", ja.toString());
             assertEquals(123, ja.get(0));
             assertEquals(222, ja.get(1));
@@ -49,7 +49,7 @@ class ValueToJsonTest {
             String jsonStr = """
                     ["aaa","bbb"]""";
             VList vList = ofList(List.of(ofStr("aaa"), ofStr("bbb")));
-            JSONArray ja = valueToJson.toJson(vList);
+            JsonArr ja = valueToJson.toJson(vList);
             assertEquals(jsonStr, ja.toString());
         }
     }
@@ -57,13 +57,13 @@ class ValueToJsonTest {
     @Test
     void toJson_MapPrimitiveValue() {
         VMap vMap = ofMap(Map.of(ofInt(111), ofStr("aaa"), ofInt(222), ofStr("bbb")));
-        JSONArray ja = valueToJson.toJson(vMap);
+        JsonArr ja = valueToJson.toJson(vMap);
         // [{"key":111,"value":"aaa","$type":"$entry"},{"key":222,"value":"bbb","$type":"$entry"}]
         assertEquals(2, ja.size());
-        assertEquals(Set.of(111, 222), Set.of(ja.getJSONObject(0).getIntValue("key"),
-                ja.getJSONObject(1).getIntValue("key")));
-        assertEquals(Set.of("aaa", "bbb"), Set.of(ja.getJSONObject(0).getString("value"),
-                ja.getJSONObject(1).getString("value")));
+        assertEquals(Set.of(111, 222), Set.of(((JsonMap) ja.get(0)).get("key"),
+                ((JsonMap) ja.get(1)).get("key")));
+        assertEquals(Set.of("aaa", "bbb"), Set.of(((JsonMap) ja.get(0)).get("value"),
+                ((JsonMap) ja.get(1)).get("value")));
     }
 
 
@@ -74,12 +74,12 @@ class ValueToJsonTest {
                         new FieldSchema("fieldStrB", FieldType.Primitive.STRING, AUTO, Metadata.of())),
                 List.of());
         VStruct vStruct = ofStruct(ss, List.of(ofInt(123), ofStr("test str")));
-        JSONObject json = valueToJson.toJson(vStruct);
+        JsonMap json = valueToJson.toJson(vStruct);
         assertEquals(3, json.values().size());
 
-        assertEquals(123, json.getIntValue("fieldIntA"));
-        assertEquals("test str", json.getString("fieldStrB"));
-        assertEquals("structName", json.getString("$type"));
+        assertEquals(123, json.get("fieldIntA"));
+        assertEquals("test str", json.get("fieldStrB"));
+        assertEquals("structName", json.get("$type"));
     }
 
     @Test
@@ -91,7 +91,7 @@ class ValueToJsonTest {
         VStruct v1 = ofStruct(ss, List.of(ofInt(123), ofStr("test str")));
         VStruct v2 = ofStruct(ss, List.of(ofInt(456), ofStr("bbb")));
         VList vList = ofList(List.of(v1, v2));
-        JSONArray ja = valueToJson.toJson(vList);
+        JsonArr ja = valueToJson.toJson(vList);
 
         String jsonStr = """
                 [{"$type":"structName","fieldIntA":123,"fieldStrB":"test str"},{"$type":"structName","fieldIntA":456,"fieldStrB":"bbb"}]""";
@@ -123,13 +123,13 @@ class ValueToJsonTest {
         VStruct vAnd = ofStruct(and, List.of(c1, c2));
         VInterface vCond = ofInterface(condition, vAnd, ofCell("and"));
 
-        JSONObject json = valueToJson.toJson(vCond);
+        JsonMap json = valueToJson.toJson(vCond);
         String jsonStr = """
                 {"$type":"condition.and","c1":{"$type":"condition.checkItem","id":123},"c2":{"$type":"condition.checkItem","id":456}}""";
         assertEquals(jsonStr, json.toString());
-        assertEquals("condition.and", json.getString("$type"));
-        assertEquals(123, json.getJSONObject("c1").getIntValue("id"));
-        assertEquals(456, json.getJSONObject("c2").getIntValue("id"));
+        assertEquals("condition.and", json.get("$type"));
+        assertEquals(123, ((JsonMap) json.get("c1")).get("id"));
+        assertEquals(456, ((JsonMap) json.get("c2")).get("id"));
     }
 
 
@@ -167,7 +167,7 @@ class ValueToJsonTest {
                 List.of(ofInt(666), ofMap(Map.of(ofInt(123456), vAnd))));
 
 
-        JSONObject json = valueToJson.toJson(vStruct);
+        JsonMap json = valueToJson.toJson(vStruct);
         String jsonStr = """
                 {"$type":"cond","id":666,"c":[{"$type":"$entry","key":123456,"value":{"$type":"condition.and","c1":{"$type":"condition.checkItem","id":123},"c2":{"$type":"condition.checkItem","id":456}}}]}""";
         assertEquals(jsonStr, json.toString());

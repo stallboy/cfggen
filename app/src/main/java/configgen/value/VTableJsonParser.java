@@ -40,16 +40,16 @@ public class VTableJsonParser {
         Collection<JsonFileInfo> jsonFiles = sourceStructure.getJsonFilesByTable(tableName);
 
         for (JsonFileInfo jf : jsonFiles) {
-            String jsonStr = null;
+            byte[] jsonBytes = null;
             long modified = 0;
             try {
-                jsonStr = Files.readString(jf.path());
+                jsonBytes = Files.readAllBytes(jf.path());
                 modified = jf.lastModified();
             } catch (Exception e) {
                 errs.addErr(new CfgValueErrs.JsonFileReadErr(jf.path().toString(), e.getMessage()));
             }
-            if (jsonStr != null) {
-                VStruct vStruct = parser.fromJson(jsonStr,
+            if (jsonBytes != null) {
+                VStruct vStruct = parser.fromJson(jsonBytes,
                         DFile.of(jf.relativePath().toString(), tableName));
 
                 valueList.add(vStruct);

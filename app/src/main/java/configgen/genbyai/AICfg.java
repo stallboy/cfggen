@@ -1,6 +1,6 @@
 package configgen.genbyai;
 
-import com.alibaba.fastjson2.JSON;
+import org.simdjson.SimdJsonParser;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,15 +14,24 @@ public record AICfg(String baseUrl,
         if (!Files.exists(path)) {
             throw new RuntimeException(cfgFn + " not exist!");
         }
-        String jsonStr;
+        byte[] bytes;
         try {
-            jsonStr = Files.readString(path);
+            bytes = Files.readAllBytes(path);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        if (jsonStr.isEmpty()) {
+        if (bytes.length == 0) {
             throw new RuntimeException(cfgFn + " is empty!");
         }
-        return JSON.parseObject(jsonStr, AICfg.class);
+        // simdjson 严格 UTF-8 不跳 BOM，剥离可能的 UTF-8 BOM
+        int len = bytes.length;
+        if (len >= 3
+                && (bytes[0] & 0xFF) == 0xEF
+                && (bytes[1] & 0xFF) == 0xBB
+                && (bytes[2] & 0xFF) == 0xBF) {
+            bytes = java.util.Arrays.copyOfRange(bytes, 3, len);
+            len = bytes.length;
+        }
+        return new SimdJsonParser().parse(bytes, len, AICfg.class);
     }
 }

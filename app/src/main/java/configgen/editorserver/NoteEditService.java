@@ -2,7 +2,7 @@ package configgen.editorserver;
 
 import configgen.util.CSVUtil;
 import configgen.util.Logger;
-import de.siegmar.fastcsv.reader.CsvRow;
+import de.siegmar.fastcsv.reader.CsvRecord;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -41,8 +41,8 @@ public class NoteEditService {
         this.noteCsvPath = noteCsvPath;
         noteMap = new LinkedHashMap<>(256);
         if (Files.exists(noteCsvPath)) {
-            List<CsvRow> rows = CSVUtil.read(noteCsvPath);
-            for (CsvRow row : rows) {
+            List<CsvRecord> rows = CSVUtil.read(noteCsvPath);
+            for (CsvRecord row : rows) {
                 if (row.getFieldCount() == 2) {
                     noteMap.put(row.getField(0), row.getField(1));
                 } else {

@@ -1,9 +1,9 @@
 package configgen.value;
 
-import com.alibaba.fastjson2.JSONObject;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgReader;
 import configgen.util.Logger;
+import configgen.util.json.JsonMap;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -84,7 +84,7 @@ class ValueJsonParserTest {
         TableSchema test = cfg.findTable("test");
         VStruct vStruct = ofStruct(test, List.of(ofInt(123), ofBool(true), ofLong(1234567890L), ofFloat(3.14f), ofStr("abc")));
 
-        JSONObject json = new ValueToJson().toJson(vStruct);
+        JsonMap json = new ValueToJson().toJson(vStruct);
         String jsonStr = """
                 {"$type":"test","id":123,"bool1":true,"long1":1234567890,"float1":3.14,"str1":"abc"}""";
         assertEquals(jsonStr, json.toString());
@@ -115,14 +115,14 @@ class ValueJsonParserTest {
         TableSchema test = cfg.findTable("test");
         VStruct vStruct = fromJson(test, """
                 {"$type":"test"}""");
-        JSONObject json = new ValueToJson().toJson(vStruct);
+        JsonMap json = new ValueToJson().toJson(vStruct);
 
         String jsonStr = """
                 {"$type":"test","id":0,"bool1":false,"long1":0,"float1":0.0,"str1":""}""";
         assertEquals(jsonStr, json.toString());
 
         VStruct vStruct2 = fromJson(test, "{}");
-        JSONObject json2 = new ValueToJson().toJson(vStruct2);
+        JsonMap json2 = new ValueToJson().toJson(vStruct2);
         assertEquals(jsonStr, json2.toString());
     }
 
@@ -157,7 +157,7 @@ class ValueJsonParserTest {
         VStruct vAttr = ofStruct(attr, List.of(ofInt(111), ofInt(222), ofInt(333)));
         VStruct vTs = ofStruct(ts, List.of(ofInt(1), vAttr));
 
-        JSONObject json = new ValueToJson().toJson(vTs);
+        JsonMap json = new ValueToJson().toJson(vTs);
         String jsonStr = """
                 {"$type":"ts","id":1,"attr":{"$type":"attr","Attr":111,"Min":222,"Max":333}}""";
         assertEquals(jsonStr, json.toString());
@@ -178,7 +178,7 @@ class ValueJsonParserTest {
                 {"id":1,"$type":"ts"}""";
         VStruct vStruct = fromJson(ts, jsonStr);
 
-        JSONObject json = new ValueToJson().toJson(vStruct);
+        JsonMap json = new ValueToJson().toJson(vStruct);
         String jsonStr2 = """
                 {"$type":"ts","id":1,"attr":{"$type":"attr","Attr":0,"Min":0,"Max":0}}""";
         assertEquals(jsonStr2, json.toString());
@@ -200,7 +200,7 @@ class ValueJsonParserTest {
         VList vList = ofList(List.of(ofInt(111), ofInt(222), ofInt(333)));
         VStruct vStruct = ofStruct(ts, List.of(ofInt(1), vList));
 
-        JSONObject json = new ValueToJson().toJson(vStruct);
+        JsonMap json = new ValueToJson().toJson(vStruct);
         String jsonStr = """
                 {"$type":"tl","id":1,"listInt1":[111,222,333]}""";
         assertEquals(jsonStr, json.toString());
@@ -217,7 +217,7 @@ class ValueJsonParserTest {
                 {"id":1,"$type":"tl"}""";
         VStruct vStruct = fromJson(ts, jsonStr);
 
-        JSONObject json = new ValueToJson().toJson(vStruct);
+        JsonMap json = new ValueToJson().toJson(vStruct);
         String jsonStr2 = """
                 {"$type":"tl","id":1,"listInt1":[]}""";
         assertEquals(jsonStr2, json.toString());
@@ -232,7 +232,7 @@ class ValueJsonParserTest {
         VStruct vStruct = fromJson(ts, errs, jsonStr);
         assertEquals(1, errs.warns().size());
 
-        JSONObject json = new ValueToJson().toJson(vStruct);
+        JsonMap json = new ValueToJson().toJson(vStruct);
         String jsonStr2 = """
                 {"$type":"tl","id":1,"listInt1":[]}""";
         assertEquals(jsonStr2, json.toString());
@@ -245,7 +245,7 @@ class ValueJsonParserTest {
         VMap vMap = ofMap(Map.of(ofInt(111), ofStr("aaa"), ofInt(222), ofStr("bbb")));
         VStruct vStruct = ofStruct(ts, List.of(ofInt(1), vMap));
 
-        JSONObject json = new ValueToJson().toJson(vStruct); // 顺序不定
+        JsonMap json = new ValueToJson().toJson(vStruct); // 顺序不定
         //{"id":1,"mapIntStr":[{"key":111,"value":"aaa","$type":"$entry"},{"key":222,"value":"bbb","$type":"$entry"}],"$type":"tm"}
         VStruct vStruct2 = fromJson(ts, json.toString());
         assertEquals(vStruct, vStruct2);
@@ -258,7 +258,7 @@ class ValueJsonParserTest {
                 {"id":1,"$type":"tm"}""";
         VStruct vStruct = fromJson(ts, jsonStr);
 
-        JSONObject json = new ValueToJson().toJson(vStruct);
+        JsonMap json = new ValueToJson().toJson(vStruct);
         String jsonStr2 = """
                 {"$type":"tm","id":1,"mapIntStr":[]}""";
         assertEquals(jsonStr2, json.toString());
@@ -272,7 +272,7 @@ class ValueJsonParserTest {
         VList vList = ofList(List.of(vAttr));
         VStruct vStruct = ofStruct(ts, List.of(ofInt(1), vList));
 
-        JSONObject json = new ValueToJson().toJson(vStruct);
+        JsonMap json = new ValueToJson().toJson(vStruct);
         String jsonStr = """
                 {"$type":"tls","id":1,"listAttr":[{"$type":"attr","Attr":111,"Min":222,"Max":333}]}""";
         assertEquals(jsonStr, json.toString());
@@ -300,7 +300,7 @@ class ValueJsonParserTest {
         VStruct vStruct = ofStruct(cond,
                 List.of(ofInt(666), ofMap(Map.of(ofInt(123456), vAnd))));
 
-        JSONObject json = new ValueToJson().toJson(vStruct);
+        JsonMap json = new ValueToJson().toJson(vStruct);
         String jsonStr = """
                 {"$type":"cond","id":666,"c":[{"$type":"$entry","key":123456,"value":{"$type":"condition.and","c1":{"$type":"condition.checkItem","id":123},"c2":{"$type":"condition.checkItem","id":456}}}]}""";
         assertEquals(jsonStr, json.toString());
@@ -313,7 +313,7 @@ class ValueJsonParserTest {
         VStruct vStruct2_simplified = fromJson(cond, jsonStr_simplified);
         assertEquals(vStruct2, vStruct2_simplified);
 
-        JSONObject json2 = new ValueToJson().toJson(vStruct2);
+        JsonMap json2 = new ValueToJson().toJson(vStruct2);
         assertEquals(jsonStr, json2.toString());
     }
 

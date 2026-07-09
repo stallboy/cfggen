@@ -1,7 +1,7 @@
 package configgen.i18n;
 
 import configgen.util.CSVUtil;
-import de.siegmar.fastcsv.reader.CsvRow;
+import de.siegmar.fastcsv.reader.CsvRecord;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -53,19 +53,19 @@ public class TextByValueFinder implements LangTextFinder.TextFinder {
     }
 
     public static LangTextFinder loadOneLang(Path path) {
-        List<CsvRow> rows = CSVUtil.read(path);
+        List<CsvRecord> rows = CSVUtil.read(path);
 
         if (rows.isEmpty()) {
             throw new IllegalArgumentException("国际化i18n文件为空");
         }
-        CsvRow row0 = rows.getFirst();
+        CsvRecord row0 = rows.getFirst();
         if (row0.getFieldCount() != 3) {
             throw new IllegalArgumentException("国际化i18n文件列数不为3");
         }
 
         LangTextFinder res = new LangTextFinder();
-        for (CsvRow row : rows) {
-            if (row.isEmpty()) {
+        for (CsvRecord row : rows) {
+            if (row.getFields().isEmpty()) {
                 continue;
             }
             if (row.getFieldCount() != 3) {

@@ -1,8 +1,8 @@
 package configgen.editorserver;
 
-import com.alibaba.fastjson2.annotation.JSONField;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgWriter;
+import configgen.util.json.JsonField;
 import configgen.value.CfgValue;
 import org.jetbrains.annotations.NotNull;
 
@@ -44,7 +44,7 @@ public class SchemaService {
                           @NotNull List<SField> fields,
                           @NotNull List<SForeignKey> foreignKeys) implements SNameable {
 
-        @JSONField
+        @JsonField
         public String type() {
             return "struct";
         }
@@ -63,7 +63,7 @@ public class SchemaService {
                              String defaultImpl,
                              List<SStruct> impls) implements SNameable {
 
-        @JSONField
+        @JsonField
         public String type() {
             return "interface";
         }
@@ -82,7 +82,7 @@ public class SchemaService {
                          List<SField> fields,
                          List<SForeignKey> foreignKeys,
                          List<RecordId> recordIds) implements SNameable {
-        @JSONField
+        @JsonField
         public String type() {
             return "table";
         }

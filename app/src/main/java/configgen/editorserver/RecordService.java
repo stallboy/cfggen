@@ -1,11 +1,11 @@
 package configgen.editorserver;
 
-import com.alibaba.fastjson2.JSONObject;
-import com.alibaba.fastjson2.annotation.JSONField;
 import configgen.schema.EntryType;
 import configgen.schema.FieldSchema;
 import configgen.schema.TableSchema;
 import configgen.schema.TableSchemaRefGraph;
+import configgen.util.json.JsonField;
+import configgen.util.json.JsonMap;
 import configgen.value.*;
 import configgen.value.CfgValue.VStruct;
 import configgen.value.ValueRefCollector.FieldRef;
@@ -32,7 +32,7 @@ public class RecordService {
             String table,
             String id,
             int maxObjs,
-            JSONObject object,
+            JsonMap object,
             Collection<BriefRecord> refs) implements RecordResponse {
     }
 
@@ -78,7 +78,7 @@ public class RecordService {
             List<BriefDescription> descriptions,
             String value,  // 完整信息
             // refName -> [refId]
-            @JSONField(name = "$refs")
+            @JsonField(name = "$refs")
             Collection<FieldRef> refs,
             int depth) {
     }
@@ -164,7 +164,7 @@ public class RecordService {
 
         Map<RefId, VStruct> frontier = new LinkedHashMap<>();
         RefId thisObjId = new RefId(table, id);
-        JSONObject object = null;
+        JsonMap object = null;
         int startDepth;
         switch (requestType) {
             case requestRecord -> {

@@ -1,7 +1,7 @@
 package configgen.data;
 
 import configgen.util.CSVUtil;
-import de.siegmar.fastcsv.reader.CsvRow;
+import de.siegmar.fastcsv.reader.CsvRecord;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
@@ -26,8 +26,8 @@ public class ReadCsv {
                               String nullableAddTag) {
         CfgDataStat stat = new CfgDataStat();
         List<DRawRow> rows = new ArrayList<>();
-        List<CsvRow> read = CSVUtil.read(path, defaultEncoding, fieldSeparator);
-        for (CsvRow csvRow : read) {
+        List<CsvRecord> read = CSVUtil.read(path, defaultEncoding, fieldSeparator);
+        for (CsvRecord csvRow : read) {
             rows.add(new DRawCsvRow(csvRow));
             stat.cellCsvCount += csvRow.getFieldCount();
         }
@@ -36,7 +36,7 @@ public class ReadCsv {
         return new ReadResult(List.of(new ReadResult.OneSheet(tableName, sheet)), stat, nullableAddTag);
     }
 
-    record DRawCsvRow(CsvRow row) implements DRawRow {
+    record DRawCsvRow(CsvRecord row) implements DRawRow {
         @Override
         public String cell(int c) {
             return c < row.getFieldCount() ? row.getField(c).trim() : "";

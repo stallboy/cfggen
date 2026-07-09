@@ -12,10 +12,9 @@ repositories {
 
 // 将版本号统一管理，方便后续升级
 def versions = [
-        fastjson2: '2.0.62',
-        poi      : '5.5.0',
+        poi      : '5.5.1',
         fastexcel: '0.19.0',
-        antlr    : '4.13.1'
+        antlr    : '4.13.2'
 ]
 
 dependencies {
@@ -24,24 +23,26 @@ dependencies {
     implementation "gg.jte:jte:3.2.1"
     implementation "org.apache.poi:poi:${versions.poi}"
     implementation "org.apache.poi:poi-ooxml:${versions.poi}"
-    implementation 'org.apache.commons:commons-text:1.14.0'
+    implementation 'org.apache.commons:commons-text:1.15.0'
 
     implementation "org.dhatim:fastexcel:${versions.fastexcel}"
     implementation "org.dhatim:fastexcel-reader:${versions.fastexcel}"
-    implementation 'de.siegmar:fastcsv:2.2.2'
-    implementation "com.alibaba.fastjson2:fastjson2:${versions.fastjson2}"
+    implementation 'de.siegmar:fastcsv:4.3.1' // 4.x：CsvRow→CsvRecord、skipEmptyRows→skipEmptyLines、build→ofCsvRecord
+    // SIMD 加速 JSON 解析；运行/测试需 --add-modules jdk.incubator.vector（见 applicationDefaultJvmArgs 与 test.jvmArgs）
+    implementation 'org.simdjson:simdjson-java:0.4.0'
 
-    implementation 'io.github.sashirestela:simple-openai:3.8.2'
+    implementation 'io.github.sashirestela:simple-openai:3.21.0'
     implementation 'io.github.codeboyzhou:mcp-declarative-java-sdk:0.9.0'
 
     // 测试依赖
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.12.2'
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        // simdjson-java 0.4.0 需要 JDK 24+（其字节码为 class version 68），故升至 25
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -53,8 +54,8 @@ tasks.withType(JavaCompile).configureEach {
 
 application {
     mainClass = 'configgen.gen.Main'
-    // 解决 Java 21 下 Fastjson2 触发的 Unsafe 警告
-    applicationDefaultJvmArgs = ["--add-opens=java.base/sun.misc=ALL-UNNAMED"]
+    // simdjson-java 依赖孵化器模块 jdk.incubator.vector，运行时必须显式加入模块图，否则 NoClassDefFoundError
+    applicationDefaultJvmArgs = ["--add-modules", "jdk.incubator.vector"]
 }
 
 jar {
@@ -129,6 +130,8 @@ tasks.named('fatJar') {
 // 测试与覆盖率配置
 tasks.named('test') {
     useJUnitPlatform()
+    // 单测同样需要孵化器模块（解析层用到了 simdjson）
+    jvmArgs '--add-modules', 'jdk.incubator.vector'
     finalizedBy jacocoTestReport
 }
 

@@ -2,7 +2,8 @@ package configgen.util;
 
 import de.siegmar.fastcsv.reader.CommentStrategy;
 import de.siegmar.fastcsv.reader.CsvReader;
-import de.siegmar.fastcsv.reader.CsvRow;
+import de.siegmar.fastcsv.reader.CsvRecord;
+import de.siegmar.fastcsv.reader.FieldMismatchStrategy;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -14,24 +15,29 @@ import java.util.OptionalInt;
 
 public class CSVUtil {
 
-    public static List<CsvRow> read(Path path) {
+    public static List<CsvRecord> read(Path path) {
         return read(path, "UTF-8", ',');
     }
 
 
-    public static List<CsvRow> read(Path path, String defaultEncoding) {
+    public static List<CsvRecord> read(Path path, String defaultEncoding) {
         return read(path, defaultEncoding, ',');
     }
 
-    public static List<CsvRow> read(Path path, String defaultEncoding, char fieldSeparator) {
-        try (CsvReader reader = CsvReader.builder()
-                .skipEmptyRows(false)
+    public static List<CsvRecord> read(Path path, String defaultEncoding, char fieldSeparator) {
+        try (CsvReader<CsvRecord> reader = CsvReader.builder()
+                .skipEmptyLines(false)
                 .commentStrategy(CommentStrategy.NONE)
                 .fieldSeparator(fieldSeparator)
-                .build(new UnicodeReader(Files.newInputStream(path), Charset.forName(defaultEncoding)))) {
-            List<CsvRow> rows = new ArrayList<>();
-            for (CsvRow csvRow : reader) {
-                rows.add(csvRow);
+                // 4.x 默认严格(字段数不齐即抛异常)；2.x 宽松放行，readAndNormalize/ReadCsv 也按各行列数处理，故用 IGNORE
+                .extraFieldStrategy(FieldMismatchStrategy.IGNORE)
+                .missingFieldStrategy(FieldMismatchStrategy.IGNORE)
+                // 4.x StrictCsvParser 对引号内含未转义引号等会抛异常；2.x 宽松。开启后自动切换到 RelaxedCsvParser
+                .allowExtraCharsAfterClosingQuote(true)
+                .ofCsvRecord(new UnicodeReader(Files.newInputStream(path), Charset.forName(defaultEncoding)))) {
+            List<CsvRecord> rows = new ArrayList<>();
+            for (CsvRecord csvRecord : reader) {
+                rows.add(csvRecord);
             }
             return rows;
         } catch (IOException e) {
@@ -40,19 +46,19 @@ public class CSVUtil {
     }
 
     public static List<List<String>> readAndNormalize(Path path, String defaultEncoding) {
-        List<CsvRow> rows = read(path, defaultEncoding);
+        List<CsvRecord> rows = read(path, defaultEncoding);
 
         List<List<String>> result = new ArrayList<>(rows.size());
-        OptionalInt cols = rows.stream().mapToInt(CsvRow::getFieldCount).max();
+        OptionalInt cols = rows.stream().mapToInt(CsvRecord::getFieldCount).max();
         if (cols.isEmpty()) {
             return result;
         }
         int colCount = cols.getAsInt();
-        for (CsvRow csvRow : rows) {
+        for (CsvRecord csvRecord : rows) {
             List<String> row = new ArrayList<>(colCount);
             for (int c = 0; c < colCount; c++) {
-                if (c < csvRow.getFieldCount()) {
-                    row.add(csvRow.getField(c));
+                if (c < csvRecord.getFieldCount()) {
+                    row.add(csvRecord.getField(c));
                 } else {
                     row.add("");
                 }

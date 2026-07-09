@@ -2,7 +2,7 @@ package configgen.geni18n;
 
 import configgen.geni18n.TodoFile.Line;
 import configgen.util.CSVUtil;
-import de.siegmar.fastcsv.reader.CsvRow;
+import de.siegmar.fastcsv.reader.CsvRecord;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
@@ -18,11 +18,11 @@ public record TermCfg(@NotNull List<TermCfgItem> items) {
     }
 
     public static TermCfg load(Path termCfgFile) {
-        List<CsvRow> rows = CSVUtil.read(termCfgFile);
+        List<CsvRecord> rows = CSVUtil.read(termCfgFile);
 
         List<TermCfgItem> result = new ArrayList<>(8);
-        for (CsvRow row : rows) {
-            if (row.isEmpty()) {
+        for (CsvRecord row : rows) {
+            if (row.getFields().isEmpty()) {
                 continue;
             }
             if (row.getFieldCount() > 1) {
