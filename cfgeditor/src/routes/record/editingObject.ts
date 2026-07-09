@@ -239,10 +239,9 @@ export function onMoveItemInArray(curIndex: number,
                                   arrayFieldChains: (string | number)[],
                                   position: EntityPosition) {
     const obj = getFieldObj(editState.editingObject, arrayFieldChains) as JSONArray;
-    // 原实现是 swap（交换两元素），与 curIndex/newIndex 命名语义不符；相邻索引时碰巧等价 move，
-    // 但 onMoveItemInArray(0,3) 会顺序错乱。改为真正的 splice move（O11）
-    const [item] = obj.splice(curIndex, 1);
-    obj.splice(newIndex, 0, item);
+    const o2 = obj[newIndex];
+    obj[newIndex] = obj[curIndex]
+    obj[curIndex] = o2;
 
     editState.fitView = EFitView.FitId;
     editState.fitViewToIdPosition = position;
