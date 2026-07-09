@@ -65,7 +65,16 @@ const defaultTheme = {
     },
 }
 if (isTauri()) {
-    Window.getCurrent().onCloseRequested(saveSelfPrefAsync);
+    Window.getCurrent().onCloseRequested(async (event) => {
+        // preventDefault 后等自身偏好写盘完成再销毁窗口，避免 fire-and-forget 在写入完成前关窗丢失会话态
+        event.preventDefault();
+        try {
+            await saveSelfPrefAsync();
+        } catch {
+            // 写盘失败也不能阻止用户关窗
+        }
+        await Window.getCurrent().destroy();
+    });
 }
 
 

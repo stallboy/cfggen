@@ -63,21 +63,24 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
         queryKey: ['schema'],
         queryFn: ({signal}) => fetchSchema(server, signal),
         staleTime: 1000 * 60 * 5,
-        select: (rawSchema) => {
-            clearLayoutCache();
-            return new Schema(rawSchema);
-        },
+        select: (rawSchema) => new Schema(rawSchema),
     })
 
     const {data: notes} = useQuery({
         queryKey: ['notes'],
         queryFn: ({signal}) => fetchNotes(server, signal),
         staleTime: 1000 * 60 * 5,
-        select: (notesData) => {
-            clearLayoutCache();
-            return notesToMap(notesData);
-        },
+        select: (notesData) => notesToMap(notesData),
     })
+
+    // schema/notes 变化时清布局缓存（原写在 select 内的副作用，移到 effect 避免反复触发）
+    useEffect(() => {
+        if (schema) clearLayoutCache();
+    }, [schema]);
+
+    useEffect(() => {
+        if (notes) clearLayoutCache();
+    }, [notes]);
 
 
     useEffect(() => {

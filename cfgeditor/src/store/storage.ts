@@ -95,32 +95,58 @@ async function saveKeySetPrefAsync(keySet: Set<string>, fn: string) {
     await writeTextFile(fn, stringify(settings, {sortMapEntries: true}), {baseDir: BaseDirectory.Resource});
 }
 
-async function savePrefAsyncIf(changedKey: string) {
-    const prefKeySet = getPrefKeySet();
-    if (prefKeySet.has(changedKey)) {
-        await saveKeySetPrefAsync(prefKeySet, "cfgeditor.yml");
-    }
-}
-
-function log(reason: string) {
+function log(reason: unknown) {
     console.log(reason)
 }
 
-export function saveSelfPrefAsync() {
+// 写入串行化：同一时刻只有一个 writeTextFile 在执行，避免并发写同一文件导致损坏/丢字段
+let writeChain: Promise<void> = Promise.resolve();
+function writeFileSerialized(fn: string, keySet: Set<string>): Promise<void> {
+    writeChain = writeChain
+        .then(() => saveKeySetPrefAsync(keySet, fn))
+        .catch(log);
+    return writeChain;
+}
+
+// debounce：合并同文件短时间内的多次写入（如 navTo 一次触发 3 次 setPref），减少全量重写次数
+const WRITE_DEBOUNCE_MS = 300;
+const writeTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+function scheduleWrite(fn: string, keySet: Set<string>) {
+    const existing = writeTimers.get(fn);
+    if (existing) {
+        clearTimeout(existing);
+    }
+    const timer = setTimeout(() => {
+        writeTimers.delete(fn);
+        writeFileSerialized(fn, keySet);
+    }, WRITE_DEBOUNCE_MS);
+    writeTimers.set(fn, timer);
+}
+
+function savePrefAsyncIf(changedKey: string) {
+    const prefKeySet = getPrefKeySet();
+    if (prefKeySet.has(changedKey)) {
+        scheduleWrite("cfgeditor.yml", prefKeySet);
+    }
+}
+
+export async function saveSelfPrefAsync() {
+    // 关窗等需立即落盘的场景：绕过 debounce 直接串行写，返回 promise 供调用方 await
     const prefSelfKeySet = getPrefSelfKeySet();
-    saveKeySetPrefAsync(prefSelfKeySet, "cfgeditorSelf.yml").catch(log);
+    await writeFileSerialized("cfgeditorSelf.yml", prefSelfKeySet);
 }
 
 export function setPref(key: string, value: string) {
     localStorage.setItem(key, value);
     if (isTauri()) {
-        savePrefAsyncIf(key).catch(log);
+        savePrefAsyncIf(key);
     }
 }
 
 export function removePref(key: string) {
     localStorage.removeItem(key);
     if (isTauri()) {
-        savePrefAsyncIf(key).catch(log);
+        savePrefAsyncIf(key);
     }
 }
