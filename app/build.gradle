@@ -12,6 +12,7 @@ repositories {
 
 // 将版本号统一管理，方便后续升级
 def versions = [
+        fastjson2: '2.0.62',
         poi      : '5.5.1',
         fastexcel: '0.19.0',
         antlr    : '4.13.2'
@@ -28,8 +29,7 @@ dependencies {
     implementation "org.dhatim:fastexcel:${versions.fastexcel}"
     implementation "org.dhatim:fastexcel-reader:${versions.fastexcel}"
     implementation 'de.siegmar:fastcsv:4.3.1' // 4.x：CsvRow→CsvRecord、skipEmptyRows→skipEmptyLines、build→ofCsvRecord
-    // SIMD 加速 JSON 解析；运行/测试需 --add-modules jdk.incubator.vector（见 applicationDefaultJvmArgs 与 test.jvmArgs）
-    implementation 'org.simdjson:simdjson-java:0.4.0'
+    implementation "com.alibaba.fastjson2:fastjson2:${versions.fastjson2}"
 
     implementation 'io.github.sashirestela:simple-openai:3.21.0'
     implementation 'io.github.codeboyzhou:mcp-declarative-java-sdk:0.9.0'
@@ -41,7 +41,6 @@ dependencies {
 
 java {
     toolchain {
-        // simdjson-java 0.4.0 需要 JDK 24+（其字节码为 class version 68），故升至 25
         languageVersion = JavaLanguageVersion.of(25)
     }
 }
@@ -54,8 +53,8 @@ tasks.withType(JavaCompile).configureEach {
 
 application {
     mainClass = 'configgen.gen.Main'
-    // simdjson-java 依赖孵化器模块 jdk.incubator.vector，运行时必须显式加入模块图，否则 NoClassDefFoundError
-    applicationDefaultJvmArgs = ["--add-modules", "jdk.incubator.vector"]
+    // 抑制 fastjson2 调用 sun.misc.Unsafe 内存方法时 JDK 25 的弃用警告（JEP 471）
+    applicationDefaultJvmArgs = ["--sun-misc-unsafe-memory-access=allow"]
 }
 
 jar {
@@ -130,8 +129,8 @@ tasks.named('fatJar') {
 // 测试与覆盖率配置
 tasks.named('test') {
     useJUnitPlatform()
-    // 单测同样需要孵化器模块（解析层用到了 simdjson）
-    jvmArgs '--add-modules', 'jdk.incubator.vector'
+    // 抑制 fastjson2 的 sun.misc.Unsafe 弃用警告（同 applicationDefaultJvmArgs）
+    jvmArgs '--sun-misc-unsafe-memory-access=allow'
     finalizedBy jacocoTestReport
 }
 

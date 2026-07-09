@@ -1,6 +1,6 @@
 package configgen.editorserver;
 
-import configgen.util.json.JsonWriter;
+import com.alibaba.fastjson2.JSON;
 import com.sun.net.httpserver.*;
 import configgen.ctx.*;
 import configgen.gen.GeneratorWithTag;
@@ -299,7 +299,7 @@ public class EditorServer extends GeneratorWithTag {
     }
 
     private static void sendResponse(HttpExchange exchange, Object object) throws IOException {
-        byte[] jsonBytes = JsonWriter.toBytes(object);
+        byte[] jsonBytes = JSON.toJSONBytes(object);
         exchange.getResponseHeaders().set("Content-Type", "application/json");
         exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
         exchange.getResponseHeaders().set("Access-Control-Allow-Credentials", "true");

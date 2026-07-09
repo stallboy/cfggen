@@ -1,7 +1,8 @@
 package configgen.tool;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONWriter;
 import configgen.editorserver.SchemaService;
-import configgen.util.json.JsonWriter;
 import configgen.schema.CfgSchema;
 import configgen.schema.Nameable;
 import configgen.schema.TableSchema;
@@ -194,7 +195,7 @@ public class ValueInspector implements AutoCloseable {
         cfgValue.schema().items().stream()
                 .filter(n -> n.name().contains(want))
                 .forEach(schema::add);
-        println(JsonWriter.toPrettyString(SchemaService.fromCfgSchema(schema)));
+        println(JSON.toJSONString(SchemaService.fromCfgSchema(schema), JSONWriter.Feature.PrettyFormat));
     }
 
     // --- 交互循环逻辑 ---

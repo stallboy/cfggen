@@ -1,11 +1,12 @@
 package configgen.value;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONException;
+import com.alibaba.fastjson2.JSONObject;
 import configgen.data.Source;
 import configgen.schema.*;
-import org.simdjson.JsonValue;
-import org.simdjson.SimdJsonParser;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static configgen.data.Source.*;
@@ -19,12 +20,6 @@ public class ValueJsonParser {
     private final TableSchema tableSchema;
     private final boolean isTableSchemaPartial;
     private final CfgValueErrs errs;
-
-    /**
-     * simdjson 的 SimdJsonParser 内部复用缓冲区、非线程安全；cfggen 用 ForkJoinPool 并发读多张表，
-     * 故按线程各持有一个 parser，跨多次解析复用（simdjson 的标准用法：one parser, many documents）。
-     */
-    private static final ThreadLocal<SimdJsonParser> PARSER = ThreadLocal.withInitial(SimdJsonParser::new);
 
     public ValueJsonParser(TableSchema tableSchema,
                            CfgValueErrs errs) {
@@ -44,42 +39,21 @@ public class ValueJsonParser {
     }
 
     public VStruct fromJson(String jsonStr, DFile source) {
-        if (jsonStr == null || jsonStr.isEmpty()) {
-            errs.addErr(new JsonStrEmpty(source));
-            return ValueDefault.ofStructural(tableSchema, source);
-        }
-        return fromJson(jsonStr.getBytes(StandardCharsets.UTF_8), source);
-    }
-
-    /**
-     * 直接吃 UTF-8 字节，避免上层先解码成 String。热路径（VTableJsonParser 读数据文件）走这里。
-     */
-    public VStruct fromJson(byte[] jsonBytes, DFile source) {
-        // simdjson 严格 UTF-8，不跳 BOM；部分 Windows 生成的 json 文件带 UTF-8 BOM（EF BB BF），
-        // 需先剥离，否则报 "Unrecognized primitive"。fastjson2 原本会自行跳过。
-        int len = jsonBytes.length;
-        if (len >= 3
-                && (jsonBytes[0] & 0xFF) == 0xEF
-                && (jsonBytes[1] & 0xFF) == 0xBB
-                && (jsonBytes[2] & 0xFF) == 0xBF) {
-            jsonBytes = Arrays.copyOfRange(jsonBytes, 3, len);
-            len = jsonBytes.length;
-        }
         try {
-            JsonValue root = PARSER.get().parse(jsonBytes, len);
-            if (root != null && root.isObject()) {
-                return parseStructural(tableSchema, root, source);
+            JSONObject jsonObject = JSON.parseObject(jsonStr);
+            if (jsonObject != null) {
+                return parseStructural(tableSchema, jsonObject, source);
             } else {
                 errs.addErr(new JsonStrEmpty(source));
             }
-        } catch (Exception e) {
+        } catch (JSONException e) {
             errs.addErr(new JsonParseException(source, e.getMessage()));
         }
         return ValueDefault.ofStructural(tableSchema, source);
     }
 
 
-    private SimpleValue parseNameable(Nameable nameable, JsonValue jsonObject, DFile source) {
+    private SimpleValue parseNameable(Nameable nameable, JSONObject jsonObject, DFile source) {
         switch (nameable) {
             case InterfaceSchema interfaceSchema -> {
                 return parseInterface(interfaceSchema, jsonObject, source);
@@ -92,27 +66,30 @@ public class ValueJsonParser {
 
     private static final Set<String> jsonExtraKeySet = Set.of("$type", "$note", "$fold", "$refs");
 
-    private VStruct parseStructural(Structural structural, JsonValue jsonObject, DFile source) {
+    private VStruct parseStructural(Structural structural, JSONObject jsonObject, DFile source) {
         String type = structural.fullName();
 
         VStruct vStruct = new VStruct(structural, new ArrayList<>(structural.fields().size()), source);
         DFile thisSource = source.inStruct(structural.fullName());
         for (FieldSchema fs : structural.fields()) {
-            JsonValue fieldObj = jsonObject.get(fs.name());
+            Object fieldObj = jsonObject.get(fs.name());
             Value fieldValue;
 
             DFile fieldSource = thisSource.child(fs.name());
-            if (fieldObj != null && !fieldObj.isNull()) {
+            if (fieldObj != null) {
                 fieldValue = parse(fs.type(), fieldObj, fieldSource, fs);
             } else {
                 // not throw exception, but use default value
                 // save compactly and make it easy to add field in future
                 fieldValue = ValueDefault.of(fs.type(), fieldSource);
+//                if (isLogNotFoundField) {
+//                    Logger.log("%s %s[%s] not found ", fromFileName, subStructural.fullName(), fs.name());
+//                }
             }
             vStruct.values().add(fieldValue);
         }
 
-        String note = getString(jsonObject, "$note");
+        String note = jsonObject.getString("$note");
         if (note != null && !note.isEmpty()) {
             vStruct.setNote(note);
         }
@@ -122,11 +99,7 @@ public class ValueJsonParser {
         }
 
         if (!isTableSchemaPartial) {
-            Set<String> jsonKeys = new HashSet<>();
-            Iterator<Map.Entry<String, JsonValue>> it = jsonObject.objectIterator();
-            while (it.hasNext()) {
-                jsonKeys.add(it.next().getKey());
-            }
+            Set<String> jsonKeys = new HashSet<>(jsonObject.keySet());
             jsonKeys.removeAll(structural.fieldNameSet());
             jsonKeys.removeAll(jsonExtraKeySet);
             if (!jsonKeys.isEmpty()) {
@@ -137,8 +110,8 @@ public class ValueJsonParser {
         return vStruct;
     }
 
-    private VInterface parseInterface(InterfaceSchema interfaceSchema, JsonValue jsonObject, DFile source) {
-        String type = getString(jsonObject, "$type");
+    private VInterface parseInterface(InterfaceSchema interfaceSchema, JSONObject jsonObject, DFile source) {
+        String type = jsonObject.getString("$type");
         String name = interfaceSchema.name();
         if (type == null) {
             errs.addErr(new JsonTypeNotExist(source, name));
@@ -167,81 +140,108 @@ public class ValueJsonParser {
         return new VInterface(interfaceSchema, implValue, source); // 需要这层包装，以方便生成data file
     }
 
-    private boolean parseBool(JsonValue obj, DFile source) {
-        if (obj == null || obj.isNull()) {
+    private boolean parseBool(Object obj, DFile source) {
+        if (obj == null) {
             return false;
         }
-        if (obj.isBoolean()) {
-            return obj.asBoolean();
+        switch (obj) {
+            case Boolean b -> {
+                return b;
+            }
+            case Number num -> {
+                return num.intValue() == 1;
+            }
+            default -> {
+                errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.BOOL));
+                return false;
+            }
         }
-        if (obj.isLong()) {
-            return obj.asLong() == 1;
-        }
-        errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.BOOL));
-        return false;
     }
 
-    private SimpleValue parseSimpleType(SimpleType type, JsonValue obj, DFile source, FieldSchema fieldSchema) {
+    private SimpleValue parseSimpleType(SimpleType type, Object obj, DFile source, FieldSchema fieldSchema) {
         switch (type) {
             case BOOL -> {
                 return new VBool(parseBool(obj, source), source);
             }
             case INT -> {
                 int iv = 0;
-                if (obj != null && !obj.isNull() && (obj.isLong() || obj.isDouble())) {
-                    iv = obj.isLong() ? (int) obj.asLong() : (int) obj.asDouble();
-                } else if (obj != null && !obj.isNull()) {
-                    errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.INT));
+                switch (obj) {
+                    case Number num -> {
+                        iv = num.intValue();
+                    }
+                    default -> {
+                        errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.INT));
+                    }
                 }
                 return new VInt(iv, source);
             }
             case LONG -> {
                 long lv = 0;
-                if (obj != null && !obj.isNull() && (obj.isLong() || obj.isDouble())) {
-                    lv = obj.isLong() ? obj.asLong() : (long) obj.asDouble();
-                } else if (obj != null && !obj.isNull()) {
-                    errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.LONG));
+                switch (obj) {
+                    case Number num -> {
+                        lv = num.longValue();
+                    }
+                    default -> {
+                        errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.LONG));
+                    }
                 }
                 return new VLong(lv, source);
             }
             case FLOAT -> {
                 float fv = 0;
-                if (obj != null && !obj.isNull() && (obj.isLong() || obj.isDouble())) {
-                    fv = obj.isLong() ? (float) obj.asLong() : (float) obj.asDouble();
-                } else if (obj != null && !obj.isNull()) {
-                    errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.FLOAT));
+                switch (obj) {
+                    case Number num -> {
+                        fv = num.floatValue();
+                    }
+                    default -> {
+                        errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.FLOAT));
+                    }
                 }
                 return new VFloat(fv, source);
             }
             case STRING -> {
                 String sv = "";
-                if (obj != null && !obj.isNull() && obj.isString()) {
-                    sv = obj.asString();
-                    if (fieldSchema.isLowercase()) {
-                        sv = sv.toLowerCase();
+                switch (obj) {
+                    case String str -> {
+                        sv = str;
+                        if (fieldSchema.isLowercase()) {
+                            sv = sv.toLowerCase();
+                        }
                     }
-                } else if (obj != null && !obj.isNull()) {
-                    errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.STR));
+                    default -> {
+                        errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.STR));
+                    }
                 }
                 return new VString(sv, source);
             }
             case TEXT -> {
                 String sv = "";
-                if (obj != null && !obj.isNull() && obj.isString()) {
-                    sv = obj.asString();
-                    if (fieldSchema.isLowercase()) {
-                        sv = sv.toLowerCase();
+                switch (obj) {
+                    case String str -> {
+                        sv = str;
+                        if (fieldSchema.isLowercase()) {
+                            sv = sv.toLowerCase();
+                        }
                     }
-                } else if (obj != null && !obj.isNull()) {
-                    errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.STR));
+                    default -> {
+                        errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.STR));
+                    }
                 }
                 return new VText(sv, source);
             }
             case StructRef structRef -> {
-                if (obj != null && !obj.isNull() && obj.isObject()) {
-                    return parseNameable(structRef.obj(), obj, source);
+                JSONObject ov = null;
+                switch (obj) {
+                    case JSONObject jsonObject -> {
+                        ov = jsonObject;
+                    }
+                    default -> {
+                        errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.STRUCT));
+                    }
+                }
+                if (ov != null) {
+                    return parseNameable(structRef.obj(), ov, source);
                 } else {
-                    errs.addErr(new JsonValueNotMatchType(source, obj == null ? "null" : obj.toString(), EType.STRUCT));
                     return ValueDefault.ofNamable(structRef.obj(), source);
                 }
             }
@@ -249,25 +249,26 @@ public class ValueJsonParser {
 
     }
 
-    private Value parse(FieldType type, JsonValue obj, DFile source, FieldSchema fieldSchema) {
+    private Value parse(FieldType type, Object obj, DFile source, FieldSchema fieldSchema) {
         switch (type) {
             case SimpleType simpleType -> {
                 return parseSimpleType(simpleType, obj, source, fieldSchema);
             }
 
             case FList fList -> {
-                if (obj == null || obj.isNull() || !obj.isArray()) {
-                    if (obj != null && !obj.isNull()) {
+                JSONArray jsonArray = JSONArray.of();
+                switch (obj) {
+                    case JSONArray array -> {
+                        jsonArray = array;
+                    }
+                    default -> {
                         errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.ARRAY));
                     }
-                    return new VList(new ArrayList<>(), source);
                 }
 
-                VList vList = new VList(new ArrayList<>(obj.getSize()), source);
+                VList vList = new VList(new ArrayList<>(jsonArray.size()), source);
                 int i = 0;
-                Iterator<JsonValue> it = obj.arrayIterator();
-                while (it.hasNext()) {
-                    JsonValue itemObj = it.next();
+                for (Object itemObj : jsonArray) {
                     Value v = parse(fList.item(), itemObj, source.child("[" + i + "]"), fieldSchema);
                     if (v instanceof SimpleValue sv) {
                         vList.valueList().add(sv);
@@ -278,38 +279,46 @@ public class ValueJsonParser {
                 return vList;
             }
             case FMap fMap -> {
-                if (obj == null || obj.isNull() || !obj.isArray()) {
-                    if (obj != null && !obj.isNull()) {
+                JSONArray jsonArray = JSONArray.of();
+                switch (obj) {
+                    case JSONArray array -> {
+                        jsonArray = array;
+                    }
+                    default -> {
                         errs.addErr(new JsonValueNotMatchType(source, obj.toString(), EType.MAP));
                     }
-                    return new VMap(new LinkedHashMap<>(), source);
                 }
-                VMap vMap = new VMap(new LinkedHashMap<>(obj.getSize()), source);
+                int cnt = jsonArray.size();
+                VMap vMap = new VMap(new LinkedHashMap<>(cnt), source);
                 int i = 0;
-                Iterator<JsonValue> it = obj.arrayIterator();
-                while (it.hasNext()) {
-                    JsonValue itemObj = it.next();
-                    DFile ks = source.child("[k" + i + "]");
-                    DFile vs = source.child("[v" + i + "]");
-                    if (!itemObj.isObject()) {
-                        errs.addErr(new JsonValueNotMatchType(source.child("[e" + i + "]"), itemObj.toString(), EType.MAP_ENTRY));
-                        i++;
-                        continue;
+                for (Object itemObj : jsonArray) {
+                    JSONObject entry = null;
+                    switch (itemObj) {
+                        case JSONObject jsonObject -> {
+                            entry = jsonObject;
+                        }
+                        default -> {
+                            errs.addErr(new JsonValueNotMatchType(source.child("[e" + i + "]"), itemObj.toString(), EType.MAP_ENTRY));
+                        }
                     }
+                    if (entry != null) {
+                        Object keyObj = entry.get("key");
+                        DFile ks = source.child("[k" + i + "]");
+                        if (keyObj == null) {
+                            errs.addErr(new JsonValueNotMatchType(ks, itemObj.toString(), EType.MAP_ENTRY));
+                        }
 
-                    JsonValue keyObj = itemObj.get("key");
-                    JsonValue valueObj = itemObj.get("value");
-                    if (keyObj == null || keyObj.isNull()) {
-                        errs.addErr(new JsonValueNotMatchType(ks, itemObj.toString(), EType.MAP_ENTRY));
-                    }
-                    if (valueObj == null || valueObj.isNull()) {
-                        errs.addErr(new JsonValueNotMatchType(vs, itemObj.toString(), EType.MAP_ENTRY));
-                    }
+                        Object valueObj = entry.get("value");
+                        DFile vs = source.child("[v" + i + "]");
+                        if (valueObj == null) {
+                            errs.addErr(new JsonValueNotMatchType(vs, itemObj.toString(), EType.MAP_ENTRY));
+                        }
 
-                    if (keyObj != null && !keyObj.isNull() && valueObj != null && !valueObj.isNull()) {
-                        SimpleValue key = parseSimpleType(fMap.key(), keyObj, ks, fieldSchema);
-                        SimpleValue value = parseSimpleType(fMap.value(), valueObj, vs, fieldSchema);
-                        vMap.valueMap().put(key, value);
+                        if (keyObj != null && valueObj != null) {
+                            SimpleValue key = parseSimpleType(fMap.key(), keyObj, ks, fieldSchema);
+                            SimpleValue value = parseSimpleType(fMap.value(), valueObj, vs, fieldSchema);
+                            vMap.valueMap().put(key, value);
+                        }
                     }
                     i++;
                 }
@@ -317,14 +326,6 @@ public class ValueJsonParser {
             }
 
         }
-    }
-
-    private static String getString(JsonValue obj, String key) {
-        if (obj == null) {
-            return null;
-        }
-        JsonValue v = obj.get(key);
-        return (v != null && !v.isNull() && v.isString()) ? v.asString() : null;
     }
 
 }

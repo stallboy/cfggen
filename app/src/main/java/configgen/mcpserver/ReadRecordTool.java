@@ -1,6 +1,6 @@
 package configgen.mcpserver;
 
-import configgen.util.json.JsonWriter;
+import com.alibaba.fastjson2.JSONWriter;
 import com.github.codeboyzhou.mcp.declarative.annotation.McpTool;
 import com.github.codeboyzhou.mcp.declarative.annotation.McpToolParam;
 import com.github.codeboyzhou.mcp.declarative.server.McpStructuredContent;
@@ -94,7 +94,7 @@ public class ReadRecordTool {
         }
 
         Map<ValueRefCollector.RefId, CfgValue.VStruct> frontier = new LinkedHashMap<>();
-        String object = JsonWriter.toPrettyString(new ValueToJson(cfgValue, frontier).toJson(vRecord));
+        String object = new ValueToJson(cfgValue, frontier).toJson(vRecord).toJSONString(JSONWriter.Feature.PrettyFormat);
         return new ReadRecordResult(ReadRecordErrorCode.OK, tableName, recordId, List.of(), object);
     }
 }

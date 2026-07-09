@@ -1,9 +1,10 @@
 package configgen.value;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
+import com.alibaba.fastjson2.JSONWriter;
 import configgen.schema.FieldSchema;
-import configgen.util.json.JsonArr;
-import configgen.util.json.JsonMap;
-import configgen.util.json.JsonWriter;
 import configgen.value.ValueRefCollector.FieldRef;
 
 import java.util.List;
@@ -21,8 +22,8 @@ public class ValueToJson {
     public static String toJsonStr(VStruct record) {
         ValueToJson toJson = new ValueToJson();
         toJson.setSaveDefault(false);
-        JsonMap jsonObject = toJson.toJson(record);
-        return JsonWriter.toPrettyString(jsonObject);
+        JSONObject jsonObject = toJson.toJson(record);
+        return JSON.toJSONString(jsonObject, JSONWriter.Feature.PrettyFormat);
     }
 
     public ValueToJson() {
@@ -54,9 +55,9 @@ public class ValueToJson {
         };
     }
 
-    public JsonMap toJson(VStruct vStruct) {
+    public JSONObject toJson(VStruct vStruct) {
         int count = vStruct.values().size();
-        JsonMap json = new JsonMap(count + 3);
+        JSONObject json = new JSONObject(count + 3);
 
         json.put("$type", vStruct.schema().fullName());
         String note = vStruct.note();
@@ -85,26 +86,26 @@ public class ValueToJson {
         return json;
     }
 
-    public JsonMap toJson(VInterface vInterface) {
+    public JSONObject toJson(VInterface vInterface) {
         VStruct child = vInterface.child();
         return toJson(child);
     }
 
-    public JsonArr toJson(VList vList) {
-        JsonArr json = new JsonArr(vList.valueList().size());
+    public JSONArray toJson(VList vList) {
+        JSONArray json = new JSONArray(vList.valueList().size());
         for (SimpleValue sv : vList.valueList()) {
             json.add(toJson(sv));
         }
         return json;
     }
 
-    public JsonArr toJson(VMap vMap) {
-        JsonArr json = new JsonArr(vMap.valueMap().size());
+    public JSONArray toJson(VMap vMap) {
+        JSONArray json = new JSONArray(vMap.valueMap().size());
         for (Map.Entry<SimpleValue, SimpleValue> e : vMap.valueMap().entrySet()) {
             SimpleValue key = e.getKey();
             SimpleValue value = e.getValue();
 
-            JsonMap entryJson = new JsonMap(2);
+            JSONObject entryJson = new JSONObject(2);
             entryJson.put("$type", "$entry");
             entryJson.put("key", toJson(key));
             entryJson.put("value", toJson(value));
