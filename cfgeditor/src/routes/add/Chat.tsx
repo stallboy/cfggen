@@ -8,7 +8,7 @@ import {useState, useEffect} from "react";
 
 import {useMyStore, useLocationData} from "../../store/store.ts";
 import {memo, useRef} from "react";
-import {Schema} from "../table/schemaUtil.tsx";
+import {Schema} from "../../domain/schema.tsx";
 import {useQuery, useMutation} from "@tanstack/react-query";
 import {getPrompt, checkJson} from "../../api/api.ts";
 import {Result, Spin} from "antd";

@@ -1,6 +1,6 @@
 import {JSONArray, JSONObject, JSONValue, RecordResult} from "../../api/recordModel.ts";
 import {SItem, SStruct, STable} from "../../api/schemaModel.ts";
-import {getField, Schema} from "../table/schemaUtil.tsx";
+import {getField, Schema} from "../../domain/schema.tsx";
 import {EntityPosition} from "../../flow/entityModel.ts";
 import {setEditingState} from "../../store/store.ts";
 

@@ -2,7 +2,7 @@ import {Entity, ReadOnlyEntity, DisplayField, EntityEdgeType, EntitySourceEdge, 
 import {SField, SStruct, STable} from "../../api/schemaModel.ts";
 import {BriefRecord, JSONArray, JSONObject, JSONValue, RefId, Refs} from "../../api/recordModel.ts";
 import {createRefs, getLabel} from "./recordRefEntity.ts";
-import {getField, Schema} from "../table/schemaUtil.tsx";
+import {getField, Schema} from "../../domain/schema.tsx";
 import {findAllResInfos} from "../../res/findAllResInfos.ts";
 import {TauriConf} from "../../store/storageJson.ts";
 import {ResInfo} from "../../res/resInfo.ts";

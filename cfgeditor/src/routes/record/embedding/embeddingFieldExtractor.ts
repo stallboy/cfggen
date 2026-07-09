@@ -4,7 +4,7 @@ import { SStruct, SInterface, SField } from '../../../api/schemaModel';
 import { JSONObject } from '../../../api/recordModel';
 import { PrimitiveValue, PrimitiveType } from '../../../flow/entityModel';
 import { FieldTypeAnalyzer, EmptyListFieldFilter, EmbeddingConditionChecker } from './embeddingChecker';
-import { getImpl } from '../../table/schemaUtil';
+import { getImpl } from '../../../domain/schema.tsx';
 
 /**
  * 内嵌字段提取器

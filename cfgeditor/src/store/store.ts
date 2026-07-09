@@ -2,7 +2,7 @@ import resso from "./resso.ts";
 import { AIConf, Convert, FixedPage, FixedRefPage, FixedUnrefPage, FixedPagesConf, NodeShowType, TauriConf, ThemeConfig } from "./storageJson.ts";
 import { getPrefBool, getPrefEnumStr, getPrefInt, getPrefJson, getPrefStr, setPref } from "./storage.ts";
 import { History } from "./historyModel.ts";
-import { NEW_RECORD_ID, Schema } from "../routes/table/schemaUtil.tsx";
+import { NEW_RECORD_ID, Schema } from "../domain/schema.tsx";
 import { useLocation } from "react-router";
 import { queryClient } from "../queryClient.ts";
 import { getId } from "../routes/record/recordRefEntity.ts";

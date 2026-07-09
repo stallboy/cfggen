@@ -8,7 +8,7 @@ import {
     invalidateAllQueries, setServer,
 } from "../../store/store.ts";
 import {CloseOutlined} from "@ant-design/icons";
-import {Schema} from "../table/schemaUtil.tsx";
+import {Schema} from "../../domain/schema.tsx";
 import {STable} from "../../api/schemaModel.ts";
 import {useMutation} from "@tanstack/react-query";
 import {RecordEditResult} from "../../api/recordModel.ts";

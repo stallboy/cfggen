@@ -30,7 +30,7 @@ import {useEntityToGraph} from "../../flow/useEntityToGraph.ts";
 import {SInterface, SStruct} from "../../api/schemaModel.ts";
 import {queryClient} from "../../queryClient.ts";
 import {EntityNode} from "../../flow/FlowGraph.tsx";
-import {NEW_RECORD_ID} from "../table/schemaUtil.tsx";
+import {NEW_RECORD_ID} from "../../domain/schema.tsx";
 
 
 const RecordWithResult = memo(function RecordWithResult({recordResult}: { recordResult: RecordResult }) {

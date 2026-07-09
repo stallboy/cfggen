@@ -4,7 +4,7 @@ import { RecordRefsResult, RefId, UnreferencedRecordsResult } from "../../api/re
 import { Result } from "antd";
 import { createRefEntities } from "./recordRefEntity.ts";
 import { useTranslation } from "react-i18next";
-import { Schema } from "../table/schemaUtil.tsx";
+import { Schema } from "../../domain/schema.tsx";
 import { NodeShowType } from "../../store/storageJson.ts";
 import { navTo, useMyStore } from "../../store/store.ts";
 import { useNavigate, useOutletContext } from "react-router";

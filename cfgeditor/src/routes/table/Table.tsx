@@ -7,7 +7,7 @@ import {useNavigate, useOutletContext} from "react-router";
 import {MenuItem} from "../../flow/FlowContextMenu.tsx";
 import {useTranslation} from "react-i18next";
 import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
-import {getDefaultIdInTable} from "./schemaUtil.tsx";
+import {getDefaultIdInTable} from "../../domain/schema.tsx";
 import {useEntityToGraph} from "../../flow/useEntityToGraph.ts";
 import {EntityNode} from "../../flow/FlowGraph.tsx";
 

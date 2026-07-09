@@ -13,7 +13,7 @@ import {
     useLocationData,
     useCurPageRecordOrRecordRef
 } from "../../store/store.ts";
-import {getNextId, Schema} from "../table/schemaUtil.tsx";
+import {getNextId, Schema} from "../../domain/schema.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
 import {useNavigate} from "react-router";
 import {STable} from "../../api/schemaModel.ts";
