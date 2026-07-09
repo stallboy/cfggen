@@ -56,9 +56,9 @@ export class EmbeddingConditionChecker {
   }
 
   /**
-   * 检查是否匹配任一内嵌条件
+   * 检查是否匹配任一内嵌条件（checker 与 extractor 共用此单一判定，避免 5 条条件复制漂移）
    */
-  private static matchesAnyCondition(
+  public static matchesAnyCondition(
     analysis: FieldTypeAnalysis,
     config: typeof EMBEDDING_CONFIG.struct | typeof EMBEDDING_CONFIG.interface
   ): boolean {

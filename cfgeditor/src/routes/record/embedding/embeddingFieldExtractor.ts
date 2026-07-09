@@ -1,9 +1,9 @@
-import { EmbeddedFieldValue, FieldTypeAnalysis, EmbeddingCheckContext } from './types';
+import { EmbeddedFieldValue } from './types';
 import { EMBEDDING_CONFIG } from './embeddingConfig';
 import { SStruct, SInterface, SField } from '../../../api/schemaModel';
 import { JSONObject } from '../../../api/recordModel';
 import { PrimitiveValue, PrimitiveType } from '../../../flow/entityModel';
-import { FieldTypeAnalyzer, EmptyListFieldFilter } from './embeddingChecker';
+import { FieldTypeAnalyzer, EmptyListFieldFilter, EmbeddingConditionChecker } from './embeddingChecker';
 import { getImpl } from '../../table/schemaUtil';
 
 /**
@@ -77,12 +77,9 @@ export class EmbeddingFieldExtractor {
 
     // 多字段情况
     if (analysis.allPrimitive) {
-      // 检查是否满足内嵌条件
-      const structContext: EmbeddingCheckContext = { fieldType: 'struct' };
-      const interfaceContext: EmbeddingCheckContext = { fieldType: 'interface' };
-
-      const canEmbedAsStruct = this.canEmbedWithConfig(analysis, structContext, EMBEDDING_CONFIG.struct);
-      const canEmbedAsInterface = this.canEmbedWithConfig(analysis, interfaceContext, EMBEDDING_CONFIG.interface);
+      // 复用 checker 的单一内嵌判定，避免 5 条条件复制漂移（A3）
+      const canEmbedAsStruct = EmbeddingConditionChecker.matchesAnyCondition(analysis, EMBEDDING_CONFIG.struct);
+      const canEmbedAsInterface = EmbeddingConditionChecker.matchesAnyCondition(analysis, EMBEDDING_CONFIG.interface);
 
       if (canEmbedAsStruct || canEmbedAsInterface) {
         return filteredFields.map(field => ({
@@ -95,40 +92,6 @@ export class EmbeddingFieldExtractor {
     }
 
     return null;
-  }
-
-  /**
-   * 检查是否可以使用指定配置内嵌
-   */
-  private static canEmbedWithConfig(
-    analysis: FieldTypeAnalysis,
-    _context: EmbeddingCheckContext,
-    config: typeof EMBEDDING_CONFIG.struct | typeof EMBEDDING_CONFIG.interface
-  ): boolean {
-    // 条件a: 没有字段
-    if (analysis.totalFields === config.maxFieldsForEmpty) return true;
-
-    // 条件b: 只有1个primitive
-    if (analysis.totalFields === config.maxFieldsForSinglePrimitive &&
-        analysis.allPrimitive) return true;
-
-    // 条件c: 只有≤N个number
-    if (analysis.totalFields <= config.maxNumberFields &&
-        analysis.totalFields === analysis.numberCount &&
-        analysis.allPrimitive) return true;
-
-    // 条件d: 只有≤M个bool
-    if (analysis.totalFields <= config.maxBoolFields &&
-        analysis.totalFields === analysis.boolCount &&
-        analysis.allPrimitive) return true;
-
-    // 条件e: 1个bool + 1个number
-    if (analysis.totalFields === config.boolAndNumberCombination.totalFields &&
-        analysis.boolCount === config.boolAndNumberCombination.boolCount &&
-        analysis.numberCount === config.boolAndNumberCombination.numberCount &&
-        analysis.allPrimitive) return true;
-
-    return false;
   }
 
   /**
