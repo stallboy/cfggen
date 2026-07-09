@@ -35,8 +35,6 @@ i18n.use(LanguageDetector)
                     reconnectCurServer: 'reconnect',
 
                     deleteCurRecord: 'delete cur record',
-                    addFix: 'add fix',
-                    removeFix: 'remove fix',
                     toPng: 'save relation png',
 
                     addColor: 'add color',
@@ -84,7 +82,100 @@ i18n.use(LanguageDetector)
                     nodeColor: 'Node Color',
                     nodeRefColor: 'Ref1 Color',
                     nodeRef2Color: 'Ref2 Color',
-                    nodeRefInColor: 'RefIn Color'
+                    nodeRefInColor: 'RefIn Color',
+
+                    // —— 以下 key 原仅 zh 段有，补齐 en 以免英文界面显示裸 key ——
+                    finder: "Finder",
+                    chat: "AI➕",
+                    setting: "Setting",
+
+                    basicSetting: "Basic",
+                    recordShowSetting: "Display",
+                    aiSetting: "AI",
+                    resourceSetting: "Resource",
+                    operations: "Operations",
+                    keySetting: "Shortcuts",
+                    appSetting: "Resource",
+                    addJson: "➕",
+
+                    tableRefSettingTitle: "Table relation node options",
+                    implsShowCnt: "Impl count",
+                    refIn: "In layer",
+                    recordRefInShowLinkMaxNode: "Max nodes shown for in-layer links",
+                    refOutDepth: "Out layer",
+                    maxNode: "Node count",
+                    recordRefSettingTitle: "Record relation node options",
+                    recordRefIn: "Record in layer",
+                    recordRefOutDepth: "Record out layer",
+                    recordMaxNode: "Record node count",
+                    isNextIdShow: "Show next empty id",
+                    refIdSettingTitle: "Finder - related records",
+                    refIdsInDepth: "Id in layer",
+                    refIdsOutDepth: "Id out layer",
+                    refIdsMaxNode: "Id total",
+                    refIdList: "Related records",
+                    otherSetting: "Other",
+                    SIMPLE: "Middle",
+                    LINEAR_SEGMENTS: "Middle wave",
+                    BRANDES_KOEPF: "Default",
+                    mrtree: "Tree",
+
+                    searchMaxReturn: "Search return count",
+                    imageSizeScale: "Image scale",
+                    dragPanel: "Draggable panel",
+                    pages: "Pages",
+                    setFixedPagesConf: "Set fixed pages",
+                    fixCurrentPage: "Pin current page",
+                    none: "None",
+
+                    keyCode: "Shortcut",
+
+                    showDescription: "Description",
+                    show: "Show",
+                    showFallbackValue: "Show value if empty",
+                    showValue: "Full value",
+
+                    layoutSettingTitle: "Layout",
+                    recordLayout: "Record layout",
+                    editLayout: "Edit layout",
+                    refLayout: "Relation layout",
+                    tableLayout: "Table layout",
+                    tableRefLayout: "Table relation layout",
+
+                    colorSettingTitle: "Color",
+                    nodeColorsByLabel: "Node color <label",
+                    nodeColorsByValue: "Node color <value",
+                    fieldColorsByName: "Field color <name",
+                    editFoldColor: "Fold background color",
+
+                    refIsShowCopyable: "Ref title copyable",
+                    refShowDescription: "Ref content",
+                    refContainEnum: "Ref show <enum",
+                    refTableHides: "Ref hide <table",
+                    addTableHide: "Add",
+
+                    aiConf: "AI service",
+                    setAIConf: "Submit",
+
+                    toggleFullScreen: "Toggle fullscreen",
+                    tauriConf: "App settings",
+                    resDirs: "Resource dirs",
+                    addResDir: "Add",
+                    setTauriConf: "Submit",
+                    summarizeRes: "Analyze resources",
+                    reloadRes: "Reload resources",
+                    cancelUpdateNote: "Cancel",
+                    updateNote: "Update",
+                    pageType: "Page",
+
+                    addOrUpdateTooltip: "Add or update record, alt+s",
+
+                    addListItemBefore: "Insert before",
+                    structCopy: "Copy",
+                    structPaste: "Paste",
+
+                    lastAccessed: "Access history",
+                    lastModified: "Modify history"
                 }
             },
             zh: {
