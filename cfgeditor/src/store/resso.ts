@@ -1,3 +1,4 @@
+// VENDORED from resso（https://github.com/nanxiaobei/resso）—— 勿在此加业务代码；升级时整文件覆盖
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
 
 type VoidFn = () => void;
