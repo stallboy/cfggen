@@ -19,7 +19,7 @@ import {isTauri} from "@tauri-apps/api/core";
 import {saveSelfPrefAsync} from "./store/storage.ts";
 import {Window} from "@tauri-apps/api/window";
 import {useMyStore} from "./store/store.ts";
-import {themeService} from "./routes/setting/themeService.ts";
+import {themeService} from "./services/themeService.ts";
 // import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
 
 
