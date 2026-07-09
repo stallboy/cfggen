@@ -39,6 +39,14 @@ public class CachedFiles {
             return;
         }
 
+        // 大小不同则内容必然变化，直接写入，避免读取整个旧文件做逐字节比较
+        if (path.toFile().length() != data.length) {
+            Logger.log("modify file: " + path);
+            Files.write(path, data, StandardOpenOption.CREATE,
+                    StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+            return;
+        }
+
         byte[] buf = Files.readAllBytes(path);
         int nread = buf.length;
         if (!arrayEquals(buf, nread, data, data.length)) {

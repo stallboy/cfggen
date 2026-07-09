@@ -20,7 +20,21 @@ public class JteEngine {
     public static final TemplateEngine engine;
 
     static {
+        // 优先使用构建期预编译的模板（jar/classpath 含 gg.jte.generated.precompiled.* class），
+        // 运行时直接加载 class，省去每次启动解析+编译模板的开销（约 1.6s）。
+        // 若无预编译产物（如开发期直接运行未 generate 的类），回退到运行时动态编译并缓存到临时目录。
+        boolean hasPrecompiled = JteEngine.class.getClassLoader()
+                .getResource("gg/jte/generated/precompiled/") != null;
         TemplateEngine engine1;
+        if (hasPrecompiled) {
+            engine1 = TemplateEngine.createPrecompiled(ContentType.Plain);
+        } else {
+            engine1 = createDynamicEngine();
+        }
+        engine = engine1;
+    }
+
+    private static TemplateEngine createDynamicEngine() {
         try {
             // 1. 获取当前项目工作目录的绝对路径
             String currentDirPath = Paths.get("").toAbsolutePath().toString();
@@ -39,15 +53,15 @@ public class JteEngine {
             }
 
             // 5. 调用 create 方法传入我们计算好的目录
-            engine1 = TemplateEngine.create(new ResourceCodeResolver("jte"), tempClassDir, ContentType.Plain);
-            engine1.setTrimControlStructures(true);
+            TemplateEngine e = TemplateEngine.create(new ResourceCodeResolver("jte"), tempClassDir, ContentType.Plain);
+            e.setTrimControlStructures(true);
+            return e;
         } catch (IOException e) {
             Logger.log("Failed to create temp classes directory, fallback to cwd. %s", e.getMessage());
-            engine1 = TemplateEngine.create(new ResourceCodeResolver("jte"), ContentType.Plain);
-            engine1.setTrimControlStructures(true);
-
+            TemplateEngine fallback = TemplateEngine.create(new ResourceCodeResolver("jte"), ContentType.Plain);
+            fallback.setTrimControlStructures(true);
+            return fallback;
         }
-        engine = engine1;
     }
 
     public static void render(String name, Object model, TemplateOutput output) {

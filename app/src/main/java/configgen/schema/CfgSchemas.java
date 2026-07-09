@@ -9,16 +9,40 @@ import configgen.util.CachedFiles;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static configgen.ctx.DirectoryStructure.*;
 
 public class CfgSchemas {
 
     public static CfgSchema readFromDir(DirectoryStructure sourceStructure) {
+        List<CfgFileInfo> files = new ArrayList<>(sourceStructure.getCfgFiles());
+        List<Callable<CfgSchema>> tasks = new ArrayList<>(files.size());
+        for (CfgFileInfo c : files) {
+            tasks.add(() -> CfgReader.INSTANCE.readToSchema(c.path(), c.pkgNameDot()));
+        }
+
         CfgSchema destination = CfgSchema.of();
-        for (CfgFileInfo c : sourceStructure.getCfgFiles()) {
-            CfgReader.INSTANCE.read(destination, c.path(), c.pkgNameDot());
+        // 各 cfg 文件相互独立，可并行解析；invokeAll 保证结果顺序与提交顺序一致
+        try (ExecutorService executor = Executors.newWorkStealingPool()) {
+            List<Future<CfgSchema>> futures = executor.invokeAll(tasks);
+            for (Future<CfgSchema> f : futures) {
+                CfgSchema one = f.get();
+                for (Nameable n : one.items()) {
+                    destination.add(n);
+                }
+                for (Map.Entry<String, String> e : one.fileEndComments().entrySet()) {
+                    destination.setFileEndComment(e.getKey(), e.getValue());
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
         return destination;
     }

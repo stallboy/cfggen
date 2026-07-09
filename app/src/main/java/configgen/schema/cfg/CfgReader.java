@@ -18,27 +18,43 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public enum CfgReader {
     INSTANCE;
 
     public static CfgSchema parse(String cfgStr) {
-        CfgSchema cfg = CfgSchema.of();
-        INSTANCE.readCfgSchema(cfg, CharStreams.fromString(cfgStr), "", "<>");
-        return cfg;
+        return INSTANCE.readCfgSchema(CharStreams.fromString(cfgStr), "", "<>");
     }
 
     public void read(CfgSchema destination, Path source, String pkgNameDot) {
+        mergeInto(destination, readToSchema(source, pkgNameDot));
+    }
+
+    /**
+     * 解析单个 cfg 文件到独立的 CfgSchema，便于上层并行解析后合并。
+     */
+    public CfgSchema readToSchema(Path source, String pkgNameDot) {
         CharStream input;
         try {
             input = CharStreams.fromPath(source);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        readCfgSchema(destination, input, pkgNameDot, source.normalize().toString());
+        return readCfgSchema(input, pkgNameDot, source.normalize().toString());
     }
 
-    private void readCfgSchema(CfgSchema destination, CharStream input, String pkgNameDot, String fromCfgFilePath) {
+    private static void mergeInto(CfgSchema destination, CfgSchema one) {
+        for (Nameable n : one.items()) {
+            destination.add(n);
+        }
+        for (Map.Entry<String, String> e : one.fileEndComments().entrySet()) {
+            destination.setFileEndComment(e.getKey(), e.getValue());
+        }
+    }
+
+    private CfgSchema readCfgSchema(CharStream input, String pkgNameDot, String fromCfgFilePath) {
+        CfgSchema destination = CfgSchema.of();
         CfgLexer lexer = new CfgLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         CfgParser parser = new CfgParser(tokens);
@@ -77,6 +93,7 @@ public enum CfgReader {
         if (!fileEndComment.isEmpty()) {
             destination.setFileEndComment(pkgNameDot, fileEndComment);
         }
+        return destination;
     }
 
     private TableSchema readTable(Table_declContext ctx, String pkgNameDot, String fromCfgFilePath) {

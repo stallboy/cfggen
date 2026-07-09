@@ -1,6 +1,7 @@
 plugins {
     id 'application'
     id 'jacoco'
+    id 'gg.jte.gradle' version '3.2.1'
 }
 
 group = 'cfggen'
@@ -37,6 +38,15 @@ dependencies {
     // 测试依赖
     testImplementation 'org.junit.jupiter:junit-jupiter:5.12.2'
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+// JTE 模板预编译：构建期把 .jte 生成 .java 并与应用代码一起编译进 jar，
+// 运行时通过 TemplateEngine.createPrecompiled 直接加载 class，省去每次启动的模板编译开销（~1.6s）
+jte {
+    sourceDirectory = file('src/main/resources/jte').toPath()
+    generate()
+    contentType = 'Plain'
+    trimControlStructures = true
 }
 
 java {
