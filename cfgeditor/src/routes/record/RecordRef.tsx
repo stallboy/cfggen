@@ -15,7 +15,7 @@ import { SchemaTableType } from "../../CfgEditorApp.tsx";
 import { fillHandles } from "../../flow/entityToNodeAndEdge.ts";
 
 import { useCallback, useMemo, useState } from "react";
-import { useEntityToGraph } from "../../flow/useEntityToGraph.tsx";
+import { useEntityToGraph } from "../../flow/useEntityToGraph.ts";
 import { EditingObjectRes, EFitView } from "./editingObject.ts";
 import { EntityNode } from "../../flow/FlowGraph.tsx";
 import { useParams } from "react-router";

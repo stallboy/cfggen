@@ -26,7 +26,7 @@ import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
 
 
-import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
+import {useEntityToGraph} from "../../flow/useEntityToGraph.ts";
 import {SInterface, SStruct} from "../../api/schemaModel.ts";
 import {queryClient} from "../../queryClient.ts";
 import {EntityNode} from "../../flow/FlowGraph.tsx";

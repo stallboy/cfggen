@@ -8,7 +8,7 @@ import {MenuItem} from "../../flow/FlowContextMenu.tsx";
 import {useTranslation} from "react-i18next";
 import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
 import {getDefaultIdInTable} from "./schemaUtil.tsx";
-import {useEntityToGraph} from "../../flow/useEntityToGraph.tsx";
+import {useEntityToGraph} from "../../flow/useEntityToGraph.ts";
 import {EntityNode} from "../../flow/FlowGraph.tsx";
 
 
