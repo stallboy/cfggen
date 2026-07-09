@@ -1,4 +1,4 @@
-import ELK, {ElkNode, ElkExtendedEdge} from 'elkjs';
+import ELK, {ElkNode, ElkExtendedEdge} from 'elkjs/lib/elk-api.js';
 // 用 Web Worker 跑布局算法，避免几十~几百节点时分层/MR 树计算阻塞主线程（O1）
 // workerUrl 指向 elkjs 自带的 worker 脚本（elk-worker.min.js），由 ELK 内部 new Worker 加载
 import elkWorkerUrl from 'elkjs/lib/elk-worker.min.js?url';
