@@ -56,11 +56,9 @@ pnpm run lint
 - `src/routes/recordRef/RecordRef.tsx` - 记录引用可视化
 
 #### 搜索和查询
-- `src/routes/query/Query.tsx` - 搜索界面
-- `src/routes/finder/Finder.tsx` - 搜索功能
-- `src/routes/adder/Adder.tsx` - 添加记录
-- `src/routes/chat/Chat.tsx` - AI 聊天界面
-- `src/routes/addJson/AddJson.tsx` - JSON 数据导入
+- `src/routes/search/Finder.tsx` - 导航/搜索面板（最近访问、最近修改、引用列表、搜索值）
+- `src/routes/add/Chat.tsx` - AI 聊天界面
+- `src/routes/add/AddJson.tsx` - JSON 数据导入
 
 #### 设置管理
 - `src/routes/setting/Setting.tsx` - 应用设置面板
@@ -189,7 +187,7 @@ pnpm run lint
 
 ### 国际化
 - 支持中英文界面
-- 翻译文件在 `src/locales/` 目录
+- 翻译内联在 `src/i18n.ts`（en/zh 两段，无独立 locales 目录）
 - 使用 i18next 进行文本管理
 
 ### 代码生成
