@@ -31,16 +31,3 @@ export interface EmbeddedFieldValue {
   name: string;
   comment?: string;
 }
-
-/**
- * 内嵌检查结果
- */
-export interface EmbeddingCheckResult {
-  canEmbed: boolean;
-  reason?: string;
-}
-
-/**
- * 字段类型
- */
-export type FieldDataType = 'struct' | 'interface';
