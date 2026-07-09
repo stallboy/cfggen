@@ -1,0 +1,30 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "react-hooks"],
+  "categories": {
+    "correctness": "error"
+  },
+  "env": {
+    "browser": true
+  },
+  "ignorePatterns": ["dist", "src-tauri", "src/store/storageJson.ts"],
+  "rules": {
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "react/only-export-components": "warn"
+  },
+  "overrides": [
+    {
+      "files": ["src/store/resso.ts"],
+      "rules": {
+        "react-hooks/rules-of-hooks": "off"
+      }
+    },
+    {
+      "files": ["src/main.tsx"],
+      "rules": {
+        "react/only-export-components": "off"
+      }
+    }
+  ]
+}

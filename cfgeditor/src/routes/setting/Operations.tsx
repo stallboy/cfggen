@@ -96,6 +96,7 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
             notification.error({title: "save png failed: limit the max node count", duration: 3});
             console.log(err)
         })
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- flowRef 在 body 中经解构使用（const {current} = flowRef），oxlint exhaustive-deps 未追踪解构引用而误报
     }, [flowRef, imageSizeScale, curPage, notification, curTableId, curId]);
 
     const options = [
