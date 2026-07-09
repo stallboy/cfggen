@@ -62,22 +62,40 @@ export function startEditingObject(recordResult: RecordResult,
     editState.submitEditingObject = submitEditingObject;
     const {table, id, fitView, fitViewToIdPosition} = editState;
     const {table: newTable, id: newId} = recordResult;
+
+    // 同表同 id：先 clone 一份与 originalEditingObject 比较
     if (newTable == table && newId == id) {
         const newEditingObject = structuredClone(recordResult.object);
         delete$refInPlace(newEditingObject);
 
         if (isDeeplyEqual(editState.originalEditingObject, newEditingObject)) {
+            // 内容未变：保留当前编辑态
             return {
                 fitView,
                 fitViewToIdPosition,
                 isEdited: editState.isEdited
             };
         }
+        // 内容变了：复用本次 clone 进入重置，避免下方二次 clone（O6）
+        resetEditingObject(newTable, newId, newEditingObject);
+        return {
+            fitView: editState.fitView,
+            fitViewToIdPosition: editState.fitViewToIdPosition,
+            isEdited: editState.isEdited
+        };
     }
 
     const newEditingObject = structuredClone(recordResult.object);
     delete$refInPlace(newEditingObject);
-    // console.log("start editing new", newEditingObject)
+    resetEditingObject(newTable, newId, newEditingObject);
+    return {
+        fitView: editState.fitView,
+        fitViewToIdPosition: editState.fitViewToIdPosition,
+        isEdited: editState.isEdited
+    };
+}
+
+function resetEditingObject(newTable: string, newId: string, newEditingObject: JSONObject) {
     editState.table = newTable;
     editState.id = newId;
     editState.fitView = EFitView.FitFull;
@@ -86,11 +104,6 @@ export function startEditingObject(recordResult: RecordResult,
     editState.editingObject = newEditingObject;
     editState.isEdited = false;
     notifyEditingState();
-    return {
-        fitView: editState.fitView,
-        fitViewToIdPosition: editState.fitViewToIdPosition,
-        isEdited: editState.isEdited
-    };
 }
 
 
@@ -332,27 +345,21 @@ function same(value: unknown): JSONValue {
 }
 
 function toInt(value: unknown): JSONValue {
+    // parseInt 对非法输入返回 NaN 且不抛异常；原 try/catch 是死代码，NaN 会被静默写回提交
     if (typeof value == 'string') {
-        try {
-            return parseInt(value);
-        } catch {
-            return 0;
-        }
-    } else {
-        return value as JSONValue;
+        const n = parseInt(value);
+        return Number.isNaN(n) ? 0 : n;
     }
+    return value as JSONValue;
 }
 
 function toFloat(value: unknown): JSONValue {
+    // parseFloat 同上
     if (typeof value == 'string') {
-        try {
-            return parseFloat(value);
-        } catch {
-            return 0.0;
-        }
-    } else {
-        return value as JSONValue;
+        const n = parseFloat(value);
+        return Number.isNaN(n) ? 0 : n;
     }
+    return value as JSONValue;
 }
 
 function isDeeplyEqual(obj1: unknown, obj2: unknown): boolean {

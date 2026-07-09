@@ -394,19 +394,16 @@ export function makeUnrefPage(curTableId: string): FixedUnrefPage {
     return fp;
 }
 
-export function setFixedPagesConf(newPageConf: FixedPagesConf) {
-    // Check if current dragPanel references a page that no longer exists
-    const currentDragPanel = store.dragPanel;
-    if (currentDragPanel &&
-        currentDragPanel !== 'none' &&
-        currentDragPanel !== 'recordRef' &&
-        currentDragPanel !== 'finder' &&
-        currentDragPanel !== 'adder' &&
-        currentDragPanel !== 'setting') {
+// 内置面板（非用户自定义 fixed page）：切换 pageConf 时不参与"引用了已删除页面"的校验。
+// 与 dragPanel 注释及 HeaderBar 面板菜单保持一致（原排除名单漏 'chat'、多了死代码 'adder'）
+const BUILTIN_PANELS: readonly string[] = ['none', 'recordRef', 'finder', 'chat', 'setting'];
 
+export function setFixedPagesConf(newPageConf: FixedPagesConf) {
+    // 若当前 dragPanel 指向已被删除的用户自定义页面，则回退到 'none'
+    const currentDragPanel = store.dragPanel;
+    if (currentDragPanel && !BUILTIN_PANELS.includes(currentDragPanel)) {
         const pageExists = newPageConf.pages.some(page => page.label === currentDragPanel);
         if (!pageExists) {
-            // Reset dragPanel to 'none' if the referenced page was removed
             store.dragPanel = 'none';
             setPref('dragPanel', 'none');
         }

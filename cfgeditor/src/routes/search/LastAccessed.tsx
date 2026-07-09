@@ -64,6 +64,7 @@ export const LastAccessed = memo(function LastAccessed({schema}: {
                   showHeader={false}
                   size={'small'}
                   pagination={false}
+                  virtual={uniqItems.length > 30}
                   rowKey={rowKey}/>
 
 });

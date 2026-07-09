@@ -82,6 +82,10 @@ const RecordWithResult = memo(function RecordWithResult({recordResult}: { record
     const isEditable = schema.isEditable;
     const isEditing = isEditable && edit;
 
+    // useMutation 返回的 mutate 是稳定引用；放入依赖可避免 mutation 状态
+    // (isPending/isSuccess) 变化导致整个 useMemo 重算（O3）
+    const mutateRecord = addOrUpdateRecordMutation.mutate;
+
     const {entityMap, editingObjectRes} = useMemo(() => {
         const entityMap = new Map<string, Entity>();
         let editingObjectRes: EditingObjectRes;
@@ -106,7 +110,7 @@ const RecordWithResult = memo(function RecordWithResult({recordResult}: { record
 
         } else {
             const submitEditingObject = () => {
-                addOrUpdateRecordMutation.mutate(editState.editingObject);
+                mutateRecord(editState.editingObject);
             };
 
             // 这是非纯函数，escape hatch，用useRef也能做，这里用全局变量
@@ -117,7 +121,7 @@ const RecordWithResult = memo(function RecordWithResult({recordResult}: { record
         fillHandles(entityMap);
         return {entityMap, editingObjectRes}
     }, [isEditing, curId, schema, recordResult, tauriConf, resourceDir, resMap, curTable,
-        addOrUpdateRecordMutation, update, folds, setFolds]);
+        mutateRecord, update, folds, setFolds]);
 
     useEffect(() => {
         setIsEditMode(edit);
