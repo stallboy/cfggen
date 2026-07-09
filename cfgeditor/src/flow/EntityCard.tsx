@@ -1,5 +1,7 @@
 import {Card, Descriptions, Tooltip} from "antd";
-import type {DescriptionsItemType} from "antd/es/descriptions";
+import type {DescriptionsProps} from "antd";
+// antd 最佳实践：用根导出的 DescriptionsProps 派生类型，避免深路径 antd/es/*
+type DescriptionsItemType = NonNullable<DescriptionsProps['items']>[number];
 import {convertFileSrc, isTauri} from "@tauri-apps/api/core";
 import {CSSProperties, memo, ReactElement} from "react";
 import {CardEntity, Entity, isCardEntity} from "./entityModel.ts";

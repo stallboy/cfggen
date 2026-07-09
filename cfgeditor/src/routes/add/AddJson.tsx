@@ -5,14 +5,16 @@ import {Schema} from "../table/schemaUtil.tsx";
 import {useMutation,} from "@tanstack/react-query";
 import {addOrUpdateRecord} from "../../api/api.ts";
 import {Button, Typography, Form, Input, List, Result, Space} from "antd";
+import type {ResultProps} from "antd";
 
 import {RecordEditResult} from "../../api/recordModel.ts";
 import {useNavigate} from "react-router";
 import {useTranslation} from "react-i18next";
-import {ResultStatusType} from "antd/es/result";
 import {applyNewEditingObject} from "../record/editingObject.ts";
 
 const {Title} = Typography;
+// antd 最佳实践：用根导出的 ResultProps 派生类型，避免深路径 antd/es/*
+type ResultStatusType = ResultProps['status'];
 
 interface AddJsonProps {
     json: string;

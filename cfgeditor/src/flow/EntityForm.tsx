@@ -11,6 +11,7 @@ import {
     ConfigProvider,
     Flex,
     Form,
+    Input,
     InputNumber,
     Select,
     Space,
@@ -18,7 +19,6 @@ import {
     Tag,
     Tooltip,
 } from "antd";
-import TextArea from "antd/es/input/TextArea";
 import {Handle, NodeProps, Position} from "@xyflow/react";
 import {useHotkeys} from "react-hotkeys-hook";
 import {useTranslation} from "react-i18next";
@@ -174,7 +174,7 @@ function primitiveControl(field: EntityEditField, style: CSSProperties) {
         case "float":
             return <InputNumber className="nodrag" style={style}/>;
         default:
-            return <TextArea className="nodrag" autoSize={TEXT_AREA_AUTO_SIZE} style={style}/>;
+            return <Input.TextArea className="nodrag" autoSize={TEXT_AREA_AUTO_SIZE} style={style}/>;
     }
 }
 

@@ -1,6 +1,5 @@
 import {ChangeEvent, CSSProperties, memo, useCallback, useState} from "react";
-import {App, Button, Flex} from "antd";
-import TextArea from "antd/es/input/TextArea";
+import {App, Button, Flex, Input} from "antd";
 import {BookOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 import {useMutation} from "@tanstack/react-query";
@@ -85,7 +84,7 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
     }, [setNewNote]);
 
     return <Flex vertical style={noteStyle}>
-        <TextArea className='nodrag' placeholder='note'
+        <Input.TextArea className='nodrag' placeholder='note'
                   autoSize={autoSize}
                   style={textAreaStyle}
                   value={newNote}
@@ -120,7 +119,7 @@ export const NoteEditInner = memo(function NoteEditInner({note, updateNoteInEdit
     }, [updateNoteInEdit]);
 
     return <Flex vertical style={noteStyle}>
-        <TextArea className='nodrag' placeholder='note'
+        <Input.TextArea className='nodrag' placeholder='note'
                   autoSize={autoSize}
                   style={textAreaStyle}
                   value={note}

@@ -6,7 +6,6 @@ import {CloseOutlined} from "@ant-design/icons";
 import {Schema} from "../table/schemaUtil.tsx";
 import {STable} from "../../api/schemaModel.ts";
 import {FixedPage, FixedPagesConf} from "../../store/storageJson.ts";
-import {useForm} from "antd/es/form/Form";
 
 // OnePage使用自己的Union类型定义，用于表单显示
 interface OneRefPage {
@@ -34,7 +33,7 @@ export const FixPages = memo(function ({schema, curTable}: {
     const {t} = useTranslation();
     const {curPage, curTableId, curId} = useLocationData();
     const {pageConf} = useMyStore();
-    const [form] = useForm();
+    const [form] = Form.useForm();
 
     const onFixCurrentPageClick = useCallback(function () {
         // 根据当前页面类型创建不同的fixed page

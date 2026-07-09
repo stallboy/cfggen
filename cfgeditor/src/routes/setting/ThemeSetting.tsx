@@ -4,9 +4,7 @@ import {useTranslation} from "react-i18next";
 import {useMyStore, setThemeConfig} from "../../store/store.ts";
 import {themeService} from "./themeService.ts";
 import {FlowVisualizationSetting} from "./FlowVisualizationSetting.tsx";
-import Title from "antd/lib/typography/Title";
-
-const {Text} = Typography;
+const {Text, Title} = Typography;
 
 export const ThemeSetting = memo(function ThemeSetting() {
     const {t} = useTranslation();
