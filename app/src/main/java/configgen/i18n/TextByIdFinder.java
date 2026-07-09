@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.Stream;
 
 
@@ -177,19 +178,32 @@ public class TextByIdFinder implements LangTextFinder.TextFinder {
         String todoFilename = getTodoFileName(langName);
 
         LangTextFinder langFinder = new LangTextFinder();
-        // 加载正常的xlsx文件
+        // 各 xlsx 互相独立（fastexcel 读+解析 CPU/IO 密集），可并行；invokeAll 按提交顺序返回、
+        // 顺序 putAll 合并，且 LangTextFinder 为 TreeMap（按 table 名排序），结果与串行完全一致
         try (Stream<Path> plist = Files.list(langDir)) {
-            plist.forEach(filePath -> {
-                if (Files.isRegularFile(filePath)) {
-                    String fileName = filePath.getFileName().toString().toLowerCase();
-                    if (fileName.endsWith(".xlsx") && !fileName.equals(todoFilename)) {
-
-                        langFinder.putAll(loadOneFile(filePath));
-                    }
+            List<Path> xlsxFiles = plist.filter(Files::isRegularFile)
+                    .filter(filePath -> {
+                        String fileName = filePath.getFileName().toString().toLowerCase();
+                        return fileName.endsWith(".xlsx") && !fileName.equals(todoFilename);
+                    })
+                    .toList();
+            try (ExecutorService executor = Executors.newWorkStealingPool()) {
+                List<Callable<Map<String, TextByIdFinder>>> tasks = new ArrayList<>(xlsxFiles.size());
+                for (Path filePath : xlsxFiles) {
+                    tasks.add(() -> loadOneFile(filePath));
                 }
-            });
+                for (Future<Map<String, TextByIdFinder>> fut : executor.invokeAll(tasks)) {
+                    langFinder.putAll(fut.get());
+                }
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            throw cause instanceof RuntimeException re ? re : new RuntimeException(cause);
         }
 
         // 合并_todo_[lang].xlsx文件
