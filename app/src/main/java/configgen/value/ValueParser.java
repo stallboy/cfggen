@@ -35,6 +35,8 @@ public class ValueParser {
     private final HeadRow headRow;
     private final BlockParser blockParser;
     private List<DCell> currentCells;
+    // 缓存每个 structural 的 字段名→FieldSchema，避免 parseStructural 每行每字段线性查找（大表 O(N²·M)→O(N·M)）
+    private final Map<Structural, Map<String, FieldSchema>> fieldMapCache = new IdentityHashMap<>();
 
     public ValueParser(CfgValueErrs errs, HeadRow headRow, BlockParser blockParser) {
         Objects.requireNonNull(errs);
@@ -186,7 +188,7 @@ public class ValueParser {
         List<Value> values = new ArrayList<>(subStructural.fields().size());
         if (isEmpty) {
             for (FieldSchema subField : subStructural.fields()) {
-                FieldSchema field = structural.findField(subField.name());
+                FieldSchema field = findFieldCached(structural, subField.name());
                 require(field != null);
                 Value v = parseField(subField, parsed, field,
                         new ParseContext(structural.name(), true, true, parseContext.curRowIndex));
@@ -208,7 +210,7 @@ public class ValueParser {
                 // 如果是sep，也只占1，CfgSchemaResolver里保证了
                 // 而不要去查询Spans.fieldSpan，因为Spans会忽略掉struct为sep的field计算。
                 int expected = isPack || isSep ? 1 : Span.fieldSpan(field);
-                FieldSchema subField = subStructural.findField(field.name());
+                FieldSchema subField = findFieldCached(subStructural, field.name());
                 if (subField != null) {
                     // 提取单个field
                     if (parsed.size() < startIdx + expected) {
@@ -499,7 +501,24 @@ public class ValueParser {
     }
 
     private static boolean isCellNotAllEmpty(List<DCell> cells) {
-        return cells.stream().anyMatch(c -> !c.isCellEmpty());
+        for (DCell c : cells) {
+            if (!c.isCellEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private FieldSchema findFieldCached(Structural s, String name) {
+        Map<String, FieldSchema> m = fieldMapCache.get(s);
+        if (m == null) {
+            m = new HashMap<>();
+            for (FieldSchema f : s.fields()) {
+                m.put(f.name(), f);
+            }
+            fieldMapCache.put(s, m);
+        }
+        return m.get(name);
     }
 
     private void require(boolean cond) {
