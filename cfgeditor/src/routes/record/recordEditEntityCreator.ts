@@ -11,7 +11,7 @@ import {
 } from "../../flow/entityModel.ts";
 import {SField, SInterface, SItem, SStruct, STable} from "../../api/schemaModel.ts";
 import {JSONArray, JSONObject, JSONValue, RefId} from "../../api/recordModel.ts";
-import {getId, getLabel, getLastName} from "./recordRefEntity.ts";
+import {getId, getLabel, getLastName} from "./recordRefUtils.ts";
 import {getField, getIdOptions, getImpl, getMapEntryTypeName, isPkInteger, Schema} from "../../domain/schema.tsx";
 import {
     applyNewEditingObject, editState,

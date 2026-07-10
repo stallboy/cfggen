@@ -2,7 +2,7 @@ import { STable } from "../../api/schemaModel.ts";
 import { Entity } from "../../flow/entityModel.ts";
 import { RecordRefsResult, RefId, UnreferencedRecordsResult } from "../../api/recordModel.ts";
 import { Result } from "antd";
-import { createRefEntities } from "./recordRefEntity.ts";
+import { createRefEntities } from "./recordRefUtils.ts";
 import { useTranslation } from "react-i18next";
 import { Schema } from "../../domain/schema.tsx";
 import { NodeShowType } from "../../store/storageJson.ts";
