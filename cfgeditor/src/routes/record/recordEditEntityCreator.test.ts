@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest'
 import {RecordEditEntityCreator} from './recordEditEntityCreator.ts'
-import {EntityEditField} from '../../flow/entityModel.ts'
+import {EntityEditField} from '../../domain/entityModel.ts'
 import {Schema} from '../../domain/schema.tsx'
 import {Folds} from '../../flow/embedded/Folds.ts'
 import {field, fk, makeInterface, makeRawSchema, makeStruct, makeTable} from '../../test/fixtures.ts'

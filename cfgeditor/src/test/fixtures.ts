@@ -7,7 +7,7 @@ import {
 import {
     CardEntity, EditableEntity, Entity, EntityEdit, EntityEditField,
     EntitySharedSetting, ReadOnlyEntity,
-} from '../flow/entityModel.ts'
+} from '../domain/entityModel.ts'
 import {NodeShowType} from '../store/storageJson.ts'
 
 // ---------------------------------------------------------------------------

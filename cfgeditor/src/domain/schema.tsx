@@ -1,6 +1,6 @@
 import {JSONObject} from "../api/recordModel.ts";
 import {RawSchema, RecordId, SField, SForeignKey, SInterface, SItem, SStruct, STable} from "../api/schemaModel.ts";
-import {EntityEditFieldOption} from "../flow/entityModel.ts";
+import {EntityEditFieldOption} from "./entityModel.ts";
 import {CSSProperties} from "react";
 import {Flex} from "antd";
 

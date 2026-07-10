@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest'
 import {getNodeBackgroundColor, getFieldBackgroundColor, getEdgeColor} from './colors.ts'
-import {EntityType, EntityEditField} from './entityModel.ts'
+import {EntityType, EntityEditField} from '../domain/entityModel.ts'
 import {makeNodeShow, makeCard, makeReadOnly, makeEditable, withShared} from '../test/fixtures.ts'
 
 describe('getNodeBackgroundColor', () => {

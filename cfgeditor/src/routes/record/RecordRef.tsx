@@ -1,5 +1,5 @@
 import { STable } from "../../api/schemaModel.ts";
-import { Entity } from "../../flow/entityModel.ts";
+import { Entity } from "../../domain/entityModel.ts";
 import { RecordRefsResult, RefId, UnreferencedRecordsResult } from "../../api/recordModel.ts";
 import { Result } from "antd";
 import { createRefEntities } from "./recordRefUtils.ts";

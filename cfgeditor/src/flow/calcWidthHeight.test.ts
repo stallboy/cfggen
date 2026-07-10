@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest'
 import {calcWidthHeight, findFirstImage} from './calcWidthHeight.ts'
-import {EntityEditField} from './entityModel.ts'
+import {EntityEditField} from '../domain/entityModel.ts'
 import {BriefDescription} from '../api/recordModel.ts'
 import {ResInfo} from '../res/resInfo.ts'
 import {

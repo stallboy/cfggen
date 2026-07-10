@@ -1,4 +1,4 @@
-import {Entity, ReadOnlyEntity, DisplayField, EntityEdgeType, EntitySourceEdge, EntityType} from "../../flow/entityModel.ts";
+import {Entity, ReadOnlyEntity, DisplayField, EntityEdgeType, EntitySourceEdge, EntityType} from "../../domain/entityModel.ts";
 import {SField, SStruct, STable} from "../../api/schemaModel.ts";
 import {BriefRecord, JSONArray, JSONObject, JSONValue, RefId, Refs} from "../../api/recordModel.ts";
 import {createRefs, getLabel} from "./recordRefUtils.ts";

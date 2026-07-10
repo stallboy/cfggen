@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest'
 import {RecordEntityCreator} from './recordEntityCreator.ts'
-import {EntityEdgeType, EntityType} from '../../flow/entityModel.ts'
+import {EntityEdgeType, EntityType} from '../../domain/entityModel.ts'
 import {RefId} from '../../api/recordModel.ts'
 import {Schema} from '../../domain/schema.tsx'
 import {field, makeRawSchema, makeStruct} from '../../test/fixtures.ts'

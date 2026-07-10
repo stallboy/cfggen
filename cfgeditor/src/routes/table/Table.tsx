@@ -1,4 +1,4 @@
-import {ReadOnlyEntity} from "../../flow/entityModel.ts";
+import {ReadOnlyEntity} from "../../domain/entityModel.ts";
 import {SchemaTableType} from "../../CfgEditorApp.tsx";
 import {TableEntityCreator, UserData} from "./tableEntityCreator.ts";
 import {navTo, useLocationData, useMyStore} from "../../store/store.ts";

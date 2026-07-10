@@ -1,5 +1,5 @@
 import {SInterface, SItem, SStruct, STable} from "../../api/schemaModel.ts";
-import {ReadOnlyEntity, DisplayField, EntityEdgeType, EntityType} from "../../flow/entityModel.ts";
+import {ReadOnlyEntity, DisplayField, EntityEdgeType, EntityType} from "../../domain/entityModel.ts";
 import {Schema} from "../../domain/schema.tsx";
 
 export class UserData {

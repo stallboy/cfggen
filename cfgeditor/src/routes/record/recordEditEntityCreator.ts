@@ -8,7 +8,7 @@ import {
     PrimitiveType,
     PrimitiveEditField,
     StructRefEditField
-} from "../../flow/entityModel.ts";
+} from "../../domain/entityModel.ts";
 import {SField, SInterface, SItem, SStruct, STable} from "../../api/schemaModel.ts";
 import {JSONArray, JSONObject, JSONValue, RefId} from "../../api/recordModel.ts";
 import {getId, getLabel, getLastName} from "./recordRefUtils.ts";
@@ -21,8 +21,8 @@ import {
     onUpdateInterfaceValue, onUpdateNote
 } from "./editingObject.ts";
 // 导入新的embedding模块
-import { canBeEmbeddedCheck, extractEmbeddingFields } from "./embedding/embeddingChecker";
-import { isPrimitiveType } from "./embedding/embeddingConfig";
+import { canBeEmbeddedCheck, extractEmbeddingFields } from "../../domain/embedding/embeddingChecker";
+import { isPrimitiveType } from "../../domain/embedding/embeddingConfig";
 // 导入Fold状态管理助手
 import { FoldStateHelper } from "../../flow/embedded/FoldStateHelper";
 // Folds 已下沉到独立文件，打破 FoldStateHelper ↔ recordEditEntityCreator 的循环依赖

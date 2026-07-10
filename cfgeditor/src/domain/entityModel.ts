@@ -351,10 +351,6 @@ export function isCardEntity(entity: Entity): entity is CardEntity {
     return entity.type === 'card';
 }
 
-// ============================================================================
-// Entity Graph
-// ============================================================================
-
 /**
  * 实体图
  */
@@ -362,10 +358,6 @@ export interface EntityGraph {
     entityMap: Map<string, Entity>;
     sharedSetting?: EntitySharedSetting;
 }
-
-// ============================================================================
-// Entity Shared Setting
-// ============================================================================
 
 /**
  * 实体共享设置

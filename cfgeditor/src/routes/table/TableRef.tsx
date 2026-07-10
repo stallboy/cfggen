@@ -1,4 +1,4 @@
-import {Entity} from "../../flow/entityModel.ts";
+import {Entity} from "../../domain/entityModel.ts";
 import {SchemaTableType} from "../../CfgEditorApp.tsx";
 import {includeRefTables} from "./tableRefEntity.ts";
 import {navTo, useMyStore, useLocationData} from "../../store/store.ts";

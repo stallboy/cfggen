@@ -1,8 +1,8 @@
 import {describe, it, expect} from 'vitest'
 import {fillHandles, convertNodeAndEdges} from './entityToNodeAndEdge.ts'
-import {Entity, EntityEdgeType, EntityGraph} from './entityModel.ts'
+import {Entity, EntityEdgeType, EntityGraph} from '../domain/entityModel.ts'
 import {makeNodeShow, makeReadOnly, makeEditable, editWith} from '../test/fixtures.ts'
-import {EntityEditField} from './entityModel.ts'
+import {EntityEditField} from '../domain/entityModel.ts'
 
 describe('fillHandles', () => {
     it('@out 源 handle 标记实体 handleOut', () => {

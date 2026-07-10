@@ -1,5 +1,5 @@
 import {BriefRecord, RefId, Refs} from "../../api/recordModel.ts";
-import {Entity, EntityEdgeType, EntityType} from "../../flow/entityModel.ts";
+import {Entity, EntityEdgeType, EntityType} from "../../domain/entityModel.ts";
 
 import {Schema} from "../../domain/schema.tsx";
 import {findAllResInfos} from "../../res/findAllResInfos.ts";

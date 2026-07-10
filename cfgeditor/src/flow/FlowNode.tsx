@@ -1,6 +1,6 @@
 import { CSSProperties, memo, useCallback, useMemo, useState } from "react";
 import { Handle, NodeProps, Position } from "@xyflow/react";
-import { Entity, isReadOnlyEntity, isEditableEntity, isCardEntity } from "./entityModel.ts";
+import { Entity, isReadOnlyEntity, isEditableEntity, isCardEntity } from "../domain/entityModel.ts";
 import { getNodeBackgroundColor } from "./colors.ts";
 import { Button, Flex, Popover, Space, Typography } from "antd";
 import { EntityCard, Highlight } from "./EntityCard.tsx";

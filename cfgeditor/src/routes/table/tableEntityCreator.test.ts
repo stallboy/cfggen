@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest'
 import {TableEntityCreator, UserData} from './tableEntityCreator.ts'
-import {EntityEdgeType, EntityType} from '../../flow/entityModel.ts'
+import {EntityEdgeType, EntityType} from '../../domain/entityModel.ts'
 import {Schema} from '../../domain/schema.tsx'
 import {field, fk, makeInterface, makeRawSchema, makeStruct, makeTable} from '../../test/fixtures.ts'
 

@@ -99,7 +99,7 @@ pnpm test:run
 - `SField` - 字段定义
 - `RawSchema` - 完整模式数据结构
 
-#### 实体模型 (`src/flow/entityModel.ts`)
+#### 实体模型 (`src/domain/entityModel.ts`)
 - `Entity` - 图形可视化核心实体
 - `EntityEdit` - 编辑状态和功能
 - `EntityGraph` - 完整图形结构

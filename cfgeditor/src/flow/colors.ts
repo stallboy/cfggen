@@ -1,5 +1,5 @@
-import type {DisplayField, Entity, EntityEditField} from "./entityModel.ts";
-import {EntityType, isCardEntity, isEditableEntity, isReadOnlyEntity} from "./entityModel.ts";
+import type {DisplayField, Entity, EntityEditField} from "../domain/entityModel.ts";
+import {EntityType, isCardEntity, isEditableEntity, isReadOnlyEntity} from "../domain/entityModel.ts";
 import type {NodeShowType} from "../store/storageJson.ts";
 
 

@@ -1,4 +1,4 @@
-import {Entity, isEditableEntity} from "../../flow/entityModel.ts";
+import {Entity, isEditableEntity} from "../../domain/entityModel.ts";
 import {JSONObject, RecordEditResult, RecordResult, RefId} from "../../api/recordModel.ts";
 import {App, Result} from "antd";
 import {createRefEntities, getId, getLabel} from "./recordRefUtils.ts";
