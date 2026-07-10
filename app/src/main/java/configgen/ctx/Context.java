@@ -50,6 +50,8 @@ public class Context {
      */
     private volatile CfgValue lastCfgValue;
     private volatile String lastCfgValueTag;
+    // 缓存键的一部分：见 makeValue 的说明，allowErr 必须参与缓存命中判断
+    private volatile boolean lastCfgValueAllowErr;
 
     public Context(Path dataDir) {
         this(ContextCfg.of(dataDir));
@@ -170,15 +172,21 @@ public class Context {
         return makeValue(tag, false);
     }
 
-    public CfgValue makeValue(String tag, boolean allowErr) {
+    public synchronized CfgValue makeValue(String tag, boolean allowErr) {
         if (tag != null && tag.isEmpty()) {
             throw new IllegalArgumentException("tag不能为空");
         }
 
-        if (lastCfgValue != null) {
-            if (Objects.equals(tag, lastCfgValueTag)) {
-                return lastCfgValue;
-            }
+        // allowErr 不进入 cfgValue 内容，只控制下方 checkErrors 是否抛异常。缓存命中按"值是否可能带错"判断：
+        //   - lastCfgValueAllowErr=false：严格校验过、保证无错（有错会在 checkErrors 抛出、走不到写缓存），可服务任意 allowErr 请求；
+        //   - lastCfgValueAllowErr=true ：可能带错，只能服务 allowErr=true 的宽松请求；allowErr=false 必须重算以重新校验。
+        // 关键是堵住宽松→严格方向：否则 EditorServer 的 makeValue(tag,true) 缓存的带错值会被生成器 makeValue(tag) 复用、跳过 checkErrors。
+        // synchronized：check-then-act（读缓存→解析→写缓存）非原子，且 updateDataAndValue 也会写这几个字段，
+        // 编辑器 handler 线程与 reload 线程可能并发，必须互斥。
+        if (lastCfgValue != null
+                && Objects.equals(tag, lastCfgValueTag)
+                && (!lastCfgValueAllowErr || allowErr)) {
+            return lastCfgValue;
         }
         lastCfgValue = null; //让它可以被尽快gc
 
@@ -201,12 +209,16 @@ public class Context {
 
         lastCfgValue = cfgValue;
         lastCfgValueTag = tag;
+        lastCfgValueAllowErr = allowErr;
         return lastCfgValue;
     }
 
-    public void updateDataAndValue(CfgData cfgData, CfgValue cfgValue) {
+    // 与 makeValue 共用 this 锁：二者都读写 lastCfgValue/lastCfgValueTag/lastCfgValueAllowErr，
+    // 编辑器 handler 线程调 updateDataAndValue、reload 线程调 makeValue，必须互斥。
+    public synchronized void updateDataAndValue(CfgData cfgData, CfgValue cfgValue) {
         this.cfgData = cfgData;
         this.lastCfgValue = cfgValue;
         this.lastCfgValueTag = null;
+        this.lastCfgValueAllowErr = false;
     }
 }

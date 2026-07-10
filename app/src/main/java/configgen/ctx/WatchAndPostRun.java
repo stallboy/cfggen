@@ -33,7 +33,8 @@ public enum WatchAndPostRun {
     private boolean started = false;
     private final List<PostRunBat> postRunBats = new ArrayList<>();
     private final List<PostRunCallback> postRunCallbacks = new ArrayList<>();
-    private Context context;
+    // reloadData（WaitWatcher 线程）写、tryPostRun 的 bat 虚拟线程（:163）读，跨线程必须保证可见性
+    private volatile Context context;
 
     /**
      * 开始监听，多次调用，只有第一次起效，后面的忽略

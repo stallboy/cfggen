@@ -235,6 +235,44 @@ class ContextTest {
     }
 
     @Test
+    void shouldKeyCacheByAllowErrSemantics() {
+        // allowErr 不进入 cfgValue 内容，只控制 checkErrors 是否抛异常。缓存命中按"值是否可能带错"判断：
+        //   严格值（allowErr=false 产生，保证无错）可服务任意请求；
+        //   宽松值（allowErr=true 产生，可能带错）只能服务宽松请求。
+        // 关键回归门：宽松→严格必须 miss 重算，否则严格请求复用宽松值、跳过 checkErrors 拿到本该报错的值。
+        String cfgStr = """
+                table user[id] {
+                    id:int;
+                    name:str;
+                }
+                """;
+
+        String csvData = """
+                用户ID,姓名
+                id,name
+                1,Alice
+                """;
+
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+        Resources.addTempFileFromText("user.csv", tempDir, csvData);
+
+        Context ctx = new Context(tempDir);
+
+        String tag = "editor";
+
+        // 宽松→严格：必须 miss 重算（不同对象）—— bug 回归门
+        CfgValue lenient = ctx.makeValue(tag, true);
+        CfgValue strict = ctx.makeValue(tag, false);
+        assertNotSame(lenient, strict);
+
+        // 严格→严格：命中缓存（同一对象）
+        assertSame(strict, ctx.makeValue(tag, false));
+
+        // 严格→宽松：也应命中（严格值保证无错，可安全服务宽松请求，不必重算）
+        assertSame(strict, ctx.makeValue(tag, true));
+    }
+
+    @Test
     void shouldReturnNullForNullableLangTextFinderWhenNotConfigured() {
         // Given: 没有配置国际化文件的Context
         String cfgStr = """
