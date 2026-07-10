@@ -1,4 +1,4 @@
-import {ResInfo} from "./resInfo.ts";
+import {ResInfo} from "@/domain/resInfo";
 
 export function getResBrief(res: ResInfo[]) {
     let v = 0;

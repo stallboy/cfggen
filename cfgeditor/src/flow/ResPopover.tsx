@@ -4,7 +4,7 @@ import {convertFileSrc} from "@tauri-apps/api/core";
 import {Command} from "@tauri-apps/plugin-shell";
 import {readFile} from "@tauri-apps/plugin-fs";
 import {useQuery} from "@tanstack/react-query";
-import {ResInfo} from "@/res/resInfo";
+import {ResInfo} from "@/domain/resInfo";
 
 function srt2vtt(srtBody: string) {
     return 'WEBVTT\n\n' + srtBody.split(/\n/g).map(line => line.replace(/((\d+:){0,2}\d+),(\d+)/g, '$1.$3')).join('\n');

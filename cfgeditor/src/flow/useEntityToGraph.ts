@@ -7,7 +7,7 @@ import {layoutAsync} from "./layoutAsync.ts";
 import {EntityNode, NodeDoubleClickFunc, NodeMenuFunc} from "./FlowGraph.tsx";
 import {Entity, EditingObjectRes, EFitView} from "@/domain/entityModel";
 import {MenuItem} from "./FlowContextMenu.tsx";
-import {NodePlacementStrategyType, NodeShowType} from "@/store/storageJson";
+import {NodePlacementStrategyType, NodeShowType} from "@/domain/storageJson";
 import {FlowGraphContext} from "./FlowGraphContext.ts";
 
 

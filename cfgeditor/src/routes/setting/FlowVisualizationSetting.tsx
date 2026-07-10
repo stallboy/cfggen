@@ -3,7 +3,7 @@ import {Form, InputNumber, ColorPicker, Divider, Typography} from "antd";
 import {useTranslation} from "react-i18next";
 import {useMyStore, setNodeShow} from "@/store/store";
 import {fixColor} from "./colorUtils.ts";
-import {NodeShowType} from "@/store/storageJson";
+import {NodeShowType} from "@/domain/storageJson";
 
 const {Title} = Typography;
 

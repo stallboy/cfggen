@@ -1,4 +1,4 @@
-import {ResType} from "./resInfo.ts";
+import {ResType} from "@/domain/resInfo";
 import {path} from "@tauri-apps/api";
 
 export function findKeyEndIndex(name: string) {

@@ -1,5 +1,5 @@
 import {Entity, EntityEditField, isReadOnlyEntity, isEditableEntity, isCardEntity} from "@/domain/entityModel";
-import {ResInfo} from "@/res/resInfo";
+import {ResInfo} from "@/domain/resInfo";
 import {getDsLenAndDesc} from "./getDsLenAndDesc.ts";
 
 

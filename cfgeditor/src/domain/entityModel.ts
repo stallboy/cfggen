@@ -1,6 +1,6 @@
 import {BriefDescription, JSONObject} from "@/api/recordModel";
-import {NodeShowType} from "@/store/storageJson";
-import {ResInfo} from "@/res/resInfo";
+import {NodeShowType} from "@/domain/storageJson";
+import {ResInfo} from "@/domain/resInfo";
 import * as React from "react";
 
 // ============================================================================

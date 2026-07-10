@@ -9,7 +9,7 @@ import {
     NodeShowType,
     TauriConf,
     ThemeConfig
-} from "./storageJson.ts";
+} from "@/domain/storageJson";
 import {
     getPrefBool,
     getPrefEnumStr,
@@ -23,7 +23,7 @@ import {History} from "./historyModel.ts";
 import {NEW_RECORD_ID, Schema} from "@/domain/schema";
 import {useLocation} from "react-router";
 import {queryClient} from "@/queryClient";
-import {ResInfo} from "@/res/resInfo";
+import {ResInfo} from "@/domain/resInfo";
 
 export type PageType = 'table' | 'tableRef' | 'record' | 'recordRef' | 'recordUnref';
 export const pageEnums = ['table', 'tableRef', 'record', 'recordRef', 'recordUnref'];

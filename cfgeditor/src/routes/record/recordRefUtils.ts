@@ -3,8 +3,8 @@ import {Entity, EntityEdgeType, EntityType} from "@/domain/entityModel";
 
 import {Schema} from "@/domain/schema";
 import {findAllResInfos} from "@/res/findAllResInfos";
-import {TauriConf} from "@/store/storageJson";
-import {ResInfo} from "@/res/resInfo";
+import {TauriConf} from "@/domain/storageJson";
+import {ResInfo} from "@/domain/resInfo";
 
 export function getLastName(id: string): string {
     const seps = id.split('.');

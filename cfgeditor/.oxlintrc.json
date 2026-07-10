@@ -7,7 +7,7 @@
   "env": {
     "browser": true
   },
-  "ignorePatterns": ["dist", "src-tauri", "src/store/storageJson.ts"],
+  "ignorePatterns": ["dist", "src-tauri", "src/domain/storageJson.ts"],
   "rules": {
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
@@ -25,6 +25,26 @@
       "rules": {
         "react/only-export-components": "off"
       }
+    },
+    {
+      "files": ["src/api/**"],
+      "rules": {"no-restricted-imports": ["error", {"patterns": ["@/domain/**", "@/store/**", "@/flow/**", "@/routes/**", "@/res/**", "@/services/**"]}]}
+    },
+    {
+      "files": ["src/domain/**"],
+      "rules": {"no-restricted-imports": ["error", {"patterns": ["@/flow/**", "@/routes/**", "@/store/**", "@/res/**", "@/services/**"]}]}
+    },
+    {
+      "files": ["src/flow/**"],
+      "rules": {"no-restricted-imports": ["error", {"patterns": ["@/routes/**"]}]}
+    },
+    {
+      "files": ["src/store/**"],
+      "rules": {"no-restricted-imports": ["error", {"patterns": ["@/routes/**", "@/flow/**"]}]}
+    },
+    {
+      "files": ["src/res/**"],
+      "rules": {"no-restricted-imports": ["error", {"patterns": ["@/flow/**", "@/routes/**"]}]}
     }
   ]
 }

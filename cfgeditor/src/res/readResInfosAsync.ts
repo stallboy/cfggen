@@ -7,7 +7,7 @@ import {
 import {readDir} from "@tauri-apps/plugin-fs";
 import {queryClient} from "@/queryClient";
 import {ext2type, findKeyEndIndex} from "./resUtils.ts";
-import {ResAudioTrack, ResInfo, ResSubtitlesTrack, ResType} from "./resInfo.ts";
+import {ResAudioTrack, ResInfo, ResSubtitlesTrack, ResType} from "@/domain/resInfo";
 import {isTauri} from "@tauri-apps/api/core";
 import {join} from "@tauri-apps/api/path";
 import {path} from "@tauri-apps/api";

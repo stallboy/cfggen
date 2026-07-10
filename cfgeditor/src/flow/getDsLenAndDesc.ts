@@ -1,5 +1,5 @@
 import {EntityBrief} from "@/domain/entityModel";
-import {NodeShowType} from "@/store/storageJson";
+import {NodeShowType} from "@/domain/storageJson";
 
 export function getDsLenAndDesc(brief: EntityBrief, nodeShow?: NodeShowType): [number, string | null] {
     const ds = brief.descriptions;

@@ -5,7 +5,7 @@ import { Result } from "antd";
 import { createRefEntities } from "./recordRefUtils.ts";
 import { useTranslation } from "react-i18next";
 import { Schema } from "@/domain/schema";
-import { NodeShowType } from "@/store/storageJson";
+import { NodeShowType } from "@/domain/storageJson";
 import { navTo, useMyStore } from "@/store/store";
 import { useNavigate, useOutletContext } from "react-router";
 import { useQuery } from "@tanstack/react-query";

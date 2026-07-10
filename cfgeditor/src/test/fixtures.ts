@@ -8,7 +8,7 @@ import {
     CardEntity, EditableEntity, Entity, EntityEdit, EntityEditField,
     EntitySharedSetting, ReadOnlyEntity,
 } from '@/domain/entityModel'
-import {NodeShowType} from '@/store/storageJson'
+import {NodeShowType} from '@/domain/storageJson'
 
 // ---------------------------------------------------------------------------
 // NodeShowType

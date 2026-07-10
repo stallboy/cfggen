@@ -1,6 +1,6 @@
 import {Schema} from "@/domain/schema";
 import {BaseDirectory, writeTextFile} from "@tauri-apps/plugin-fs";
-import {ResInfo} from "./resInfo.ts";
+import {ResInfo} from "@/domain/resInfo";
 import {getResBrief} from "./getResBrief.ts";
 import {path} from "@tauri-apps/api";
 

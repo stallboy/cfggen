@@ -4,8 +4,8 @@ import {BriefRecord, JSONArray, JSONObject, JSONValue, RefId, Refs} from "@/api/
 import {createRefs, getLabel} from "./recordRefUtils.ts";
 import {getField, Schema} from "@/domain/schema";
 import {findAllResInfos} from "@/res/findAllResInfos";
-import {TauriConf} from "@/store/storageJson";
-import {ResInfo} from "@/res/resInfo";
+import {TauriConf} from "@/domain/storageJson";
+import {ResInfo} from "@/domain/resInfo";
 
 
 export class RecordEntityCreator {

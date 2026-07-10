@@ -2,7 +2,7 @@ import {Button, ColorPicker, Form, Input, Radio, Select, Space, Switch, Typograp
 import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 
-import {NodeShowType} from "@/store/storageJson";
+import {NodeShowType} from "@/domain/storageJson";
 import {
     setNodeShow,
     useMyStore
