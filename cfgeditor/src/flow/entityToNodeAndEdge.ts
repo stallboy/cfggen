@@ -1,4 +1,4 @@
-import {Entity, DisplayField, EntityEditField, isReadOnlyEntity, isEditableEntity, EntityEdgeType, EntityGraph} from "../domain/entityModel.ts";
+import {Entity, DisplayField, EntityEditField, isReadOnlyEntity, isEditableEntity, EntityEdgeType, EntityGraph} from "@/domain/entityModel";
 import {getEdgeColor} from "./colors.ts";
 import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
 

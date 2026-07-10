@@ -1,22 +1,22 @@
-import { STable } from "../../api/schemaModel.ts";
-import { Entity, EditingObjectRes, EFitView } from "../../domain/entityModel.ts";
-import { RecordRefsResult, RefId, UnreferencedRecordsResult } from "../../api/recordModel.ts";
+import { STable } from "@/api/schemaModel";
+import { Entity, EditingObjectRes, EFitView } from "@/domain/entityModel";
+import { RecordRefsResult, RefId, UnreferencedRecordsResult } from "@/api/recordModel";
 import { Result } from "antd";
 import { createRefEntities } from "./recordRefUtils.ts";
 import { useTranslation } from "react-i18next";
-import { Schema } from "../../domain/schema.tsx";
-import { NodeShowType } from "../../store/storageJson.ts";
-import { navTo, useMyStore } from "../../store/store.ts";
+import { Schema } from "@/domain/schema";
+import { NodeShowType } from "@/store/storageJson";
+import { navTo, useMyStore } from "@/store/store";
 import { useNavigate, useOutletContext } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { fetchRecordRefs, fetchUnreferencedRecords } from "../../api/api.ts";
-import { MenuItem } from "../../flow/FlowContextMenu.tsx";
-import { SchemaTableType } from "../../CfgEditorApp.tsx";
-import { fillHandles } from "../../flow/entityToNodeAndEdge.ts";
+import { fetchRecordRefs, fetchUnreferencedRecords } from "@/api/api";
+import { MenuItem } from "@/flow/FlowContextMenu";
+import { SchemaTableType } from "@/CfgEditorApp";
+import { fillHandles } from "@/flow/entityToNodeAndEdge";
 
 import { useCallback, useMemo, useState } from "react";
-import { useEntityToGraph } from "../../flow/useEntityToGraph.ts";
-import { EntityNode } from "../../flow/FlowGraph.tsx";
+import { useEntityToGraph } from "@/flow/useEntityToGraph";
+import { EntityNode } from "@/flow/FlowGraph";
 import { useParams } from "react-router";
 
 

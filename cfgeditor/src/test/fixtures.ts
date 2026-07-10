@@ -3,12 +3,12 @@
 // 这里只构造数据，不含任何被测逻辑。
 import {
     SField, SForeignKey, SInterface, SItem, SStruct, STable, RawSchema,
-} from '../api/schemaModel.ts'
+} from '@/api/schemaModel'
 import {
     CardEntity, EditableEntity, Entity, EntityEdit, EntityEditField,
     EntitySharedSetting, ReadOnlyEntity,
-} from '../domain/entityModel.ts'
-import {NodeShowType} from '../store/storageJson.ts'
+} from '@/domain/entityModel'
+import {NodeShowType} from '@/store/storageJson'
 
 // ---------------------------------------------------------------------------
 // NodeShowType

@@ -1,6 +1,6 @@
 import {CSSProperties, memo, useMemo} from 'react';
 import {AutoComplete, Input} from 'antd';
-import {EntityEditFieldOption} from "../domain/entityModel.ts";
+import {EntityEditFieldOption} from "@/domain/entityModel";
 import {FilterOption} from "./EntityForm.tsx";
 
 const suffixStyle: CSSProperties = {

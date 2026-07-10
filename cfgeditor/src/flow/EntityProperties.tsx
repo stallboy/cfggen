@@ -1,5 +1,5 @@
 import {Handle, Position} from "@xyflow/react";
-import {DisplayField, EntitySharedSetting} from "../domain/entityModel.ts";
+import {DisplayField, EntitySharedSetting} from "@/domain/entityModel";
 import {Flex, List, Tooltip, Typography} from "antd";
 import {CSSProperties, memo, useMemo} from "react";
 import {getFieldBackgroundColor} from "./colors.ts";

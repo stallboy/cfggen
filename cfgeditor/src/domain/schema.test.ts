@@ -4,7 +4,7 @@ import {
 } from './schema.tsx'
 import {
     field, fk, makeInterface, makeRawSchema, makeStruct, makeTable,
-} from '../test/fixtures.ts'
+} from '@/test/fixtures'
 
 // ---------------------------------------------------------------------------
 // 纯函数（非类方法）

@@ -1,12 +1,12 @@
-import {setTauriConf, useMyStore} from "../../store/store.ts";
+import {setTauriConf, useMyStore} from "@/store/store";
 import {memo, useCallback} from "react";
 import {useTranslation} from "react-i18next";
 import {useQuery} from "@tanstack/react-query";
 import {App, Button, Checkbox, Divider, Form, Input, Space, Typography} from "antd";
 import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
-import {Schema} from "../../domain/schema.tsx";
-import {invalidateResInfos} from "../../res/readResInfosAsync.ts";
-import {summarizeResAsync} from "../../res/summarizeResAsync.ts";
+import {Schema} from "@/domain/schema";
+import {invalidateResInfos} from "@/res/readResInfosAsync";
+import {summarizeResAsync} from "@/res/summarizeResAsync";
 import {path} from "@tauri-apps/api";
 
 const {Title} = Typography;

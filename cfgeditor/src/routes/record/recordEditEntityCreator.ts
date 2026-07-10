@@ -8,11 +8,11 @@ import {
     PrimitiveType,
     PrimitiveEditField,
     StructRefEditField
-} from "../../domain/entityModel.ts";
-import {SField, SInterface, SItem, SStruct, STable} from "../../api/schemaModel.ts";
-import {JSONArray, JSONObject, JSONValue, RefId} from "../../api/recordModel.ts";
+} from "@/domain/entityModel";
+import {SField, SInterface, SItem, SStruct, STable} from "@/api/schemaModel";
+import {JSONArray, JSONObject, JSONValue, RefId} from "@/api/recordModel";
 import {getId, getLabel, getLastName} from "./recordRefUtils.ts";
-import {getField, getIdOptions, getImpl, getMapEntryTypeName, isPkInteger, Schema} from "../../domain/schema.tsx";
+import {getField, getIdOptions, getImpl, getMapEntryTypeName, isPkInteger, Schema} from "@/domain/schema";
 import {
     applyNewEditingObject, editState,
     onAddItemToArray,
@@ -21,12 +21,12 @@ import {
     onUpdateInterfaceValue, onUpdateNote
 } from "./editingObject.ts";
 // 导入新的embedding模块
-import { canBeEmbeddedCheck, extractEmbeddingFields } from "../../domain/embedding/embeddingChecker";
-import { isPrimitiveType } from "../../domain/embedding/embeddingConfig";
+import { canBeEmbeddedCheck, extractEmbeddingFields } from "@/domain/embedding/embeddingChecker";
+import { isPrimitiveType } from "@/domain/embedding/embeddingConfig";
 // 导入Fold状态管理助手
-import { FoldStateHelper } from "../../flow/embedded/FoldStateHelper";
+import { FoldStateHelper } from "@/flow/embedded/FoldStateHelper";
 // Folds 已下沉到独立文件，打破 FoldStateHelper ↔ recordEditEntityCreator 的循环依赖
-import {Folds} from "../../flow/embedded/Folds";
+import {Folds} from "@/flow/embedded/Folds";
 
 
 interface ArrayItemParam {

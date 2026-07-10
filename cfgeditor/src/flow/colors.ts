@@ -1,6 +1,6 @@
-import type {DisplayField, Entity, EntityEditField} from "../domain/entityModel.ts";
-import {EntityType, isCardEntity, isEditableEntity, isReadOnlyEntity} from "../domain/entityModel.ts";
-import type {NodeShowType} from "../store/storageJson.ts";
+import type {DisplayField, Entity, EntityEditField} from "@/domain/entityModel";
+import {EntityType, isCardEntity, isEditableEntity, isReadOnlyEntity} from "@/domain/entityModel";
+import type {NodeShowType} from "@/store/storageJson";
 
 
 // 需要提取值的字段类型

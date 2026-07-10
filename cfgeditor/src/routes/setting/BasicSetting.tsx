@@ -10,7 +10,7 @@ import {
     setRefOutDepth,
     setSearchMax,
     useMyStore
-} from "../../store/store.ts";
+} from "@/store/store";
 import {useTranslation} from "react-i18next";
 
 const {Title} = Typography;

@@ -1,15 +1,15 @@
-import {ReadOnlyEntity} from "../../domain/entityModel.ts";
-import {SchemaTableType} from "../../CfgEditorApp.tsx";
+import {ReadOnlyEntity} from "@/domain/entityModel";
+import {SchemaTableType} from "@/CfgEditorApp";
 import {TableEntityCreator, UserData} from "./tableEntityCreator.ts";
-import {navTo, useLocationData, useMyStore} from "../../store/store.ts";
+import {navTo, useLocationData, useMyStore} from "@/store/store";
 import {useNavigate, useOutletContext} from "react-router";
 // import {useReactFlow} from "reactflow";
-import {MenuItem} from "../../flow/FlowContextMenu.tsx";
+import {MenuItem} from "@/flow/FlowContextMenu";
 import {useTranslation} from "react-i18next";
-import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
-import {getDefaultIdInTable} from "../../domain/schema.tsx";
-import {useEntityToGraph} from "../../flow/useEntityToGraph.ts";
-import {EntityNode} from "../../flow/FlowGraph.tsx";
+import {fillHandles} from "@/flow/entityToNodeAndEdge";
+import {getDefaultIdInTable} from "@/domain/schema";
+import {useEntityToGraph} from "@/flow/useEntityToGraph";
+import {EntityNode} from "@/flow/FlowGraph";
 
 
 export function Table() {

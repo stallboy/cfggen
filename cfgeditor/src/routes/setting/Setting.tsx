@@ -2,8 +2,8 @@ import {Divider, Tabs} from "antd";
 
 import {NodeShowSetting} from "./NodeShowSetting.tsx";
 import {useTranslation} from "react-i18next";
-import {STable} from "../../api/schemaModel.ts";
-import {Schema} from "../../domain/schema.tsx";
+import {STable} from "@/api/schemaModel";
+import {Schema} from "@/domain/schema";
 
 import {BasicSetting} from "./BasicSetting.tsx";
 import {Operations} from "./Operations.tsx";
@@ -12,7 +12,7 @@ import {AiSetting} from "./AiSetting.tsx";
 import {ThemeSetting} from "./ThemeSetting.tsx";
 import {isTauri} from "@tauri-apps/api/core";
 import {TauriSetting} from "./TauriSetting.tsx";
-import {AddJson} from "../add/AddJson.tsx";
+import {AddJson} from "@/routes/add/AddJson";
 
 
 export const Setting = memo(function Setting({schema, curTable, flowRef}: {

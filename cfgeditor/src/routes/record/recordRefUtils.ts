@@ -1,10 +1,10 @@
-import {BriefRecord, RefId, Refs} from "../../api/recordModel.ts";
-import {Entity, EntityEdgeType, EntityType} from "../../domain/entityModel.ts";
+import {BriefRecord, RefId, Refs} from "@/api/recordModel";
+import {Entity, EntityEdgeType, EntityType} from "@/domain/entityModel";
 
-import {Schema} from "../../domain/schema.tsx";
-import {findAllResInfos} from "../../res/findAllResInfos.ts";
-import {TauriConf} from "../../store/storageJson.ts";
-import {ResInfo} from "../../res/resInfo.ts";
+import {Schema} from "@/domain/schema";
+import {findAllResInfos} from "@/res/findAllResInfos";
+import {TauriConf} from "@/store/storageJson";
+import {ResInfo} from "@/res/resInfo";
 
 export function getLastName(id: string): string {
     const seps = id.split('.');

@@ -1,7 +1,7 @@
 import {ResInfo, ResType} from "./resInfo.ts";
 import {ext2type, joinPath, sepParentDirAndFilename} from "./resUtils.ts";
-import {Refs} from "../api/recordModel.ts";
-import {TauriConf} from "../store/storageJson.ts";
+import {Refs} from "@/api/recordModel";
+import {TauriConf} from "@/store/storageJson";
 
 
 export interface FindResInfosParameter {

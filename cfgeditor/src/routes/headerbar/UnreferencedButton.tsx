@@ -1,8 +1,8 @@
 import {Button, Tag, Skeleton} from "antd";
 import {useQuery} from "@tanstack/react-query";
-import {fetchUnreferencedRecords} from "../../api/api.ts";
-import {useMyStore, useLocationData, navTo} from "../../store/store.ts";
-import {STable} from "../../api/schemaModel.ts";
+import {fetchUnreferencedRecords} from "@/api/api";
+import {useMyStore, useLocationData, navTo} from "@/store/store";
+import {STable} from "@/api/schemaModel";
 import {memo} from "react";
 import {useTranslation} from "react-i18next";
 import {useNavigate} from "react-router";

@@ -1,5 +1,5 @@
 import {memo, useState} from "react";
-import {Schema} from "../../domain/schema.tsx";
+import {Schema} from "@/domain/schema";
 import {useTranslation} from "react-i18next";
 import {CollapseProps, Space} from "antd";
 import {SearchValue} from "./SearchValue.tsx";
@@ -7,8 +7,8 @@ import {Collapse} from "antd/lib";
 import {LastAccessed} from "./LastAccessed.tsx";
 import {LastModified} from "./LastModified.tsx";
 import {RefIdList} from "./RefIdList.tsx";
-import {useLocationData} from "../../store/store.ts";
-import {RefId} from "../../api/recordModel.ts";
+import {useLocationData} from "@/store/store";
+import {RefId} from "@/api/recordModel";
 import {LockOutlined, SyncOutlined, UnlockOutlined} from "@ant-design/icons";
 
 export const Finder = memo(function Finder({schema}: {

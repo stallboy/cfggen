@@ -1,10 +1,10 @@
 import {memo, useMemo} from "react";
-import {navTo, useMyStore, useLocationData, useCurPageRecordOrRecordRef} from "../../store/store.ts";
+import {navTo, useMyStore, useLocationData, useCurPageRecordOrRecordRef} from "@/store/store";
 import {Button, Result, Spin, Table} from "antd";
 import {useNavigate} from "react-router";
 import {useQuery} from "@tanstack/react-query";
-import {fetchRecordRefIds} from "../../api/api.ts";
-import {RecordRefId, RecordRefIdsResult, RefId} from "../../api/recordModel.ts";
+import {fetchRecordRefIds} from "@/api/api";
+import {RecordRefId, RecordRefIdsResult, RefId} from "@/api/recordModel";
 
 
 function rowKey(item: RecordRefId) {

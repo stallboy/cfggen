@@ -1,6 +1,6 @@
 import { CSSProperties, memo, useCallback, useMemo, useState } from "react";
 import { Handle, NodeProps, Position } from "@xyflow/react";
-import { Entity, isReadOnlyEntity, isEditableEntity, isCardEntity } from "../domain/entityModel.ts";
+import { Entity, isReadOnlyEntity, isEditableEntity, isCardEntity } from "@/domain/entityModel";
 import { getNodeBackgroundColor } from "./colors.ts";
 import { Button, Flex, Popover, Space, Typography } from "antd";
 import { EntityCard, Highlight } from "./EntityCard.tsx";
@@ -17,7 +17,7 @@ import {
 import { ResPopover } from "./ResPopover.tsx";
 import { NoteShow, NoteEdit, NoteShowInner, NoteEditInner } from "./NoteShowOrEdit.tsx";
 import { findFirstImage } from "./calcWidthHeight.ts";
-import { getResBrief } from "../res/getResBrief.ts";
+import { getResBrief } from "@/res/getResBrief";
 import { EntityNode } from "./FlowGraph.tsx";
 
 const { Text } = Typography;

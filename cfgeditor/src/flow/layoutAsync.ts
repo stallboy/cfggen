@@ -5,7 +5,7 @@ import elkWorkerUrl from 'elkjs/lib/elk-worker.min.js?url';
 import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
 import {Rect, XYPosition} from "@xyflow/react";
 import {calcWidthHeight} from "./calcWidthHeight.ts";
-import {NodePlacementStrategyType, NodeShowType} from "../store/storageJson.ts";
+import {NodePlacementStrategyType, NodeShowType} from "@/store/storageJson";
 
 // 模块级单例（worker 模式）：layout 在 Web Worker 跑，每次布局复用同一 worker
 const elk = new ELK({workerUrl: elkWorkerUrl});

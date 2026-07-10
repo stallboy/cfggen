@@ -1,16 +1,16 @@
-import {Entity} from "../../domain/entityModel.ts";
-import {SchemaTableType} from "../../CfgEditorApp.tsx";
+import {Entity} from "@/domain/entityModel";
+import {SchemaTableType} from "@/CfgEditorApp";
 import {includeRefTables} from "./tableRefEntity.ts";
-import {navTo, useMyStore, useLocationData} from "../../store/store.ts";
+import {navTo, useMyStore, useLocationData} from "@/store/store";
 import {useNavigate, useOutletContext} from "react-router";
-import {MenuItem} from "../../flow/FlowContextMenu.tsx";
+import {MenuItem} from "@/flow/FlowContextMenu";
 import {useTranslation} from "react-i18next";
-import {SItem} from "../../api/schemaModel.ts";
-import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
+import {SItem} from "@/api/schemaModel";
+import {fillHandles} from "@/flow/entityToNodeAndEdge";
 import {memo, useCallback, useMemo} from "react";
-import {useEntityToGraph} from "../../flow/useEntityToGraph.ts";
-import {EntityNode} from "../../flow/FlowGraph.tsx";
-import {getDefaultIdInTable} from "../../domain/schema.tsx";
+import {useEntityToGraph} from "@/flow/useEntityToGraph";
+import {EntityNode} from "@/flow/FlowGraph";
+import {getDefaultIdInTable} from "@/domain/schema";
 
 export const TableRef = memo(function TableRef() {
     const {schema, notes, curTable} = useOutletContext<SchemaTableType>();

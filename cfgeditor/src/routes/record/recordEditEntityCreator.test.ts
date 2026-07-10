@@ -1,9 +1,9 @@
 import {describe, it, expect} from 'vitest'
 import {RecordEditEntityCreator} from './recordEditEntityCreator.ts'
-import {EntityEditField} from '../../domain/entityModel.ts'
-import {Schema} from '../../domain/schema.tsx'
-import {Folds} from '../../flow/embedded/Folds.ts'
-import {field, fk, makeInterface, makeRawSchema, makeStruct, makeTable} from '../../test/fixtures.ts'
+import {EntityEditField} from '@/domain/entityModel'
+import {Schema} from '@/domain/schema'
+import {Folds} from '@/flow/embedded/Folds'
+import {field, fk, makeInterface, makeRawSchema, makeStruct, makeTable} from '@/test/fixtures'
 
 function buildSchema() {
     const small = makeStruct('Small', [field('dmg', 'int')])              // 可内嵌：1 个 primitive

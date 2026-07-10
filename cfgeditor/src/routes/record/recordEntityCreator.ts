@@ -1,11 +1,11 @@
-import {Entity, ReadOnlyEntity, DisplayField, EntityEdgeType, EntitySourceEdge, EntityType} from "../../domain/entityModel.ts";
-import {SField, SStruct, STable} from "../../api/schemaModel.ts";
-import {BriefRecord, JSONArray, JSONObject, JSONValue, RefId, Refs} from "../../api/recordModel.ts";
+import {Entity, ReadOnlyEntity, DisplayField, EntityEdgeType, EntitySourceEdge, EntityType} from "@/domain/entityModel";
+import {SField, SStruct, STable} from "@/api/schemaModel";
+import {BriefRecord, JSONArray, JSONObject, JSONValue, RefId, Refs} from "@/api/recordModel";
 import {createRefs, getLabel} from "./recordRefUtils.ts";
-import {getField, Schema} from "../../domain/schema.tsx";
-import {findAllResInfos} from "../../res/findAllResInfos.ts";
-import {TauriConf} from "../../store/storageJson.ts";
-import {ResInfo} from "../../res/resInfo.ts";
+import {getField, Schema} from "@/domain/schema";
+import {findAllResInfos} from "@/res/findAllResInfos";
+import {TauriConf} from "@/store/storageJson";
+import {ResInfo} from "@/res/resInfo";
 
 
 export class RecordEntityCreator {

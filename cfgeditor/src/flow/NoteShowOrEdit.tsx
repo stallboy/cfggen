@@ -3,10 +3,10 @@ import {App, Button, Flex, Input} from "antd";
 import {BookOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 import {useMutation} from "@tanstack/react-query";
-import {updateNote} from "../api/api.ts";
-import {useMyStore} from "../store/store.ts";
-import {NoteEditResult, notesToMap} from "../api/noteModel.ts";
-import {queryClient} from "../queryClient.ts";
+import {updateNote} from "@/api/api";
+import {useMyStore} from "@/store/store";
+import {NoteEditResult, notesToMap} from "@/api/noteModel";
+import {queryClient} from "@/queryClient";
 
 
 const noteButtonStyle: CSSProperties = {float: 'right', borderWidth: 0, backgroundColor: 'transparent'};

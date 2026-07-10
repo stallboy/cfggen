@@ -6,14 +6,14 @@ import {Flex} from "antd";
 import {createStyles} from "antd-style";
 import {useState, useEffect} from "react";
 
-import {useMyStore, useLocationData} from "../../store/store.ts";
+import {useMyStore, useLocationData} from "@/store/store";
 import {memo, useRef} from "react";
-import {Schema} from "../../domain/schema.tsx";
+import {Schema} from "@/domain/schema";
 import {useQuery, useMutation} from "@tanstack/react-query";
-import {getPrompt, checkJson} from "../../api/api.ts";
+import {getPrompt, checkJson} from "@/api/api";
 import {Result, Spin} from "antd";
-import {CheckJsonResult} from "../../api/chatModel.ts";
-import {applyNewEditingObject} from "../record/editingObject.ts";
+import {CheckJsonResult} from "@/api/chatModel";
+import {applyNewEditingObject} from "@/routes/record/editingObject";
 
 const useChatStyle = createStyles(({token, css}) => {
     return {

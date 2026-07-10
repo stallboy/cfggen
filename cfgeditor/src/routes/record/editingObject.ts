@@ -1,10 +1,10 @@
-import {JSONArray, JSONObject, JSONValue, RecordResult} from "../../api/recordModel.ts";
-import {SItem, SStruct, STable} from "../../api/schemaModel.ts";
-import {getField, Schema} from "../../domain/schema.tsx";
-import {EntityPosition, EFitView, EditingObjectRes} from "../../domain/entityModel.ts";
-import {setEditingState} from "../../store/store.ts";
+import {JSONArray, JSONObject, JSONValue, RecordResult} from "@/api/recordModel";
+import {SItem, SStruct, STable} from "@/api/schemaModel";
+import {getField, Schema} from "@/domain/schema";
+import {EntityPosition, EFitView, EditingObjectRes} from "@/domain/entityModel";
+import {setEditingState} from "@/store/store";
 
-// import {doEdit} from "../setting/store.ts";
+// import {doEdit} from "@/routes/setting/store";
 
 export type EditState = {
     table: string;

@@ -20,10 +20,10 @@ import {
     setPref
 } from "./storage.ts";
 import {History} from "./historyModel.ts";
-import {NEW_RECORD_ID, Schema} from "../domain/schema.tsx";
+import {NEW_RECORD_ID, Schema} from "@/domain/schema";
 import {useLocation} from "react-router";
-import {queryClient} from "../queryClient.ts";
-import {ResInfo} from "../res/resInfo.ts";
+import {queryClient} from "@/queryClient";
+import {ResInfo} from "@/res/resInfo";
 
 export type PageType = 'table' | 'tableRef' | 'record' | 'recordRef' | 'recordUnref';
 export const pageEnums = ['table', 'tableRef', 'record', 'recordRef', 'recordUnref'];

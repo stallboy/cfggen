@@ -1,11 +1,11 @@
 import {describe, it, expect} from 'vitest'
 import {calcWidthHeight, findFirstImage} from './calcWidthHeight.ts'
-import {EntityEditField} from '../domain/entityModel.ts'
-import {BriefDescription} from '../api/recordModel.ts'
-import {ResInfo} from '../res/resInfo.ts'
+import {EntityEditField} from '@/domain/entityModel'
+import {BriefDescription} from '@/api/recordModel'
+import {ResInfo} from '@/res/resInfo'
 import {
     makeNodeShow, makeReadOnly, makeCard, makeEditable, editWith, withShared,
-} from '../test/fixtures.ts'
+} from '@/test/fixtures'
 
 describe('calcWidthHeight', () => {
     // -----------------------------------------------------------------------

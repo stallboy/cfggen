@@ -1,11 +1,11 @@
-import {makeFixedPage, makeUnrefPage, setFixedPagesConf, useMyStore, useLocationData, isFixedRefPage} from "../../store/store.ts";
+import {makeFixedPage, makeUnrefPage, setFixedPagesConf, useMyStore, useLocationData, isFixedRefPage} from "@/store/store";
 import {memo, useCallback, useEffect} from "react";
 import {useTranslation} from "react-i18next";
 import {Button, Form, Input, Space} from "antd";
 import {CloseOutlined} from "@ant-design/icons";
-import {Schema} from "../../domain/schema.tsx";
-import {STable} from "../../api/schemaModel.ts";
-import {FixedPage, FixedPagesConf} from "../../store/storageJson.ts";
+import {Schema} from "@/domain/schema";
+import {STable} from "@/api/schemaModel";
+import {FixedPage, FixedPagesConf} from "@/store/storageJson";
 
 // OnePage使用自己的Union类型定义，用于表单显示
 interface OneRefPage {

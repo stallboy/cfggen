@@ -6,19 +6,19 @@ import {
     setImageSizeScale,
     useMyStore,
     invalidateAllQueries, setServer,
-} from "../../store/store.ts";
+} from "@/store/store";
 import {CloseOutlined} from "@ant-design/icons";
-import {Schema} from "../../domain/schema.tsx";
-import {STable} from "../../api/schemaModel.ts";
+import {Schema} from "@/domain/schema";
+import {STable} from "@/api/schemaModel";
 import {useMutation} from "@tanstack/react-query";
-import {RecordEditResult} from "../../api/recordModel.ts";
-import {deleteRecord} from "../../api/api.ts";
+import {RecordEditResult} from "@/api/recordModel";
+import {deleteRecord} from "@/api/api";
 import {toBlob} from "html-to-image";
 import {saveAs} from "file-saver";
 import {FixPages} from "./FixPages.tsx";
-import {PageType, navTo, useLocationData} from "../../store/store.ts";
+import {PageType, navTo, useLocationData} from "@/store/store";
 import {KeyShortCut} from "./KeyShortcut.tsx";
-import {toggleFullScreen} from "../../utils/windowUtils.ts";
+import {toggleFullScreen} from "@/utils/windowUtils";
 
 
 

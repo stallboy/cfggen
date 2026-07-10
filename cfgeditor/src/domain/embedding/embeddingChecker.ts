@@ -1,9 +1,9 @@
 import {EmbeddableStructConfig, EMBEDDING_CONFIG, isNumberType, isPrimitiveType} from './embeddingConfig';
 
-import {JSONObject} from '../../api/recordModel';
-import {SField, SInterface, SStruct} from '../../api/schemaModel';
-import {getImpl} from '../schema.tsx';
-import {PrimitiveType, PrimitiveValue} from "../entityModel.ts";
+import {JSONObject} from '@/api/recordModel';
+import {SField, SInterface, SStruct} from '@/api/schemaModel';
+import {getImpl} from '@/domain/schema';
+import {PrimitiveType, PrimitiveValue} from "@/domain/entityModel";
 
 export interface EmbeddingSchema {
     itemIncludeImplMap: Map<string, SStruct | SInterface>;

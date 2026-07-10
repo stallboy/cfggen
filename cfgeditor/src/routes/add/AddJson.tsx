@@ -1,16 +1,16 @@
-import {invalidateAllQueries, navTo, useMyStore, useLocationData} from "../../store/store.ts";
+import {invalidateAllQueries, navTo, useMyStore, useLocationData} from "@/store/store";
 
 import {memo, useCallback, useState} from "react";
-import {Schema} from "../../domain/schema.tsx";
+import {Schema} from "@/domain/schema";
 import {useMutation,} from "@tanstack/react-query";
-import {addOrUpdateRecord} from "../../api/api.ts";
+import {addOrUpdateRecord} from "@/api/api";
 import {Button, Typography, Form, Input, List, Result, Space} from "antd";
 import type {ResultProps} from "antd";
 
-import {RecordEditResult} from "../../api/recordModel.ts";
+import {RecordEditResult} from "@/api/recordModel";
 import {useNavigate} from "react-router";
 import {useTranslation} from "react-i18next";
-import {applyNewEditingObject} from "../record/editingObject.ts";
+import {applyNewEditingObject} from "@/routes/record/editingObject";
 
 const {Title} = Typography;
 // antd 最佳实践：用根导出的 ResultProps 派生类型，避免深路径 antd/es/*

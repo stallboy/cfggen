@@ -1,8 +1,8 @@
 import {describe, it, expect} from 'vitest'
 import {TableEntityCreator, UserData} from './tableEntityCreator.ts'
-import {EntityEdgeType, EntityType} from '../../domain/entityModel.ts'
-import {Schema} from '../../domain/schema.tsx'
-import {field, fk, makeInterface, makeRawSchema, makeStruct, makeTable} from '../../test/fixtures.ts'
+import {EntityEdgeType, EntityType} from '@/domain/entityModel'
+import {Schema} from '@/domain/schema'
+import {field, fk, makeInterface, makeRawSchema, makeStruct, makeTable} from '@/test/fixtures'
 
 // 构造测试用 schema：Hero 依赖 Cost(struct) 与 IPet(interface)，并有 FK→Team；IPet.enumRef→PetEnum
 function buildSchema() {

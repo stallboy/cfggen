@@ -1,10 +1,10 @@
-import {Entity, isEditableEntity, EditingObjectRes, EFitView} from "../../domain/entityModel.ts";
-import {JSONObject, RecordEditResult, RecordResult, RefId} from "../../api/recordModel.ts";
+import {Entity, isEditableEntity, EditingObjectRes, EFitView} from "@/domain/entityModel";
+import {JSONObject, RecordEditResult, RecordResult, RefId} from "@/api/recordModel";
 import {App, Result} from "antd";
 import {createRefEntities, getId, getLabel} from "./recordRefUtils.ts";
 import {RecordEntityCreator} from "./recordEntityCreator.ts";
 import {RecordEditEntityCreator} from "./recordEditEntityCreator.ts";
-import {Folds} from "../../flow/embedded/Folds";
+import {Folds} from "@/flow/embedded/Folds";
 import {
     editState,
     isCopiedFitAllowedType, notifyEditingState,
@@ -14,21 +14,21 @@ import {
     startEditingObject,
 } from "./editingObject.ts";
 import {useTranslation} from "react-i18next";
-import {invalidateAllQueries, navTo, setIsEditMode, useMyStore, useLocationData} from "../../store/store.ts";
+import {invalidateAllQueries, navTo, setIsEditMode, useMyStore, useLocationData} from "@/store/store";
 import {useNavigate, useOutletContext} from "react-router";
 import {useMutation, useQuery} from "@tanstack/react-query";
-import {addOrUpdateRecord, fetchRecord} from "../../api/api.ts";
-import {MenuItem} from "../../flow/FlowContextMenu.tsx";
-import {SchemaTableType} from "../../CfgEditorApp.tsx";
-import {fillHandles} from "../../flow/entityToNodeAndEdge.ts";
+import {addOrUpdateRecord, fetchRecord} from "@/api/api";
+import {MenuItem} from "@/flow/FlowContextMenu";
+import {SchemaTableType} from "@/CfgEditorApp";
+import {fillHandles} from "@/flow/entityToNodeAndEdge";
 import {memo, useCallback, useEffect, useMemo, useState} from "react";
 
 
-import {useEntityToGraph} from "../../flow/useEntityToGraph.ts";
-import {SInterface, SStruct} from "../../api/schemaModel.ts";
-import {queryClient} from "../../queryClient.ts";
-import {EntityNode} from "../../flow/FlowGraph.tsx";
-import {NEW_RECORD_ID} from "../../domain/schema.tsx";
+import {useEntityToGraph} from "@/flow/useEntityToGraph";
+import {SInterface, SStruct} from "@/api/schemaModel";
+import {queryClient} from "@/queryClient";
+import {EntityNode} from "@/flow/FlowGraph";
+import {NEW_RECORD_ID} from "@/domain/schema";
 
 
 const RecordWithResult = memo(function RecordWithResult({recordResult}: { recordResult: RecordResult }) {

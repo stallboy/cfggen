@@ -12,14 +12,14 @@ import {
     useMyStore,
     useLocationData,
     useCurPageRecordOrRecordRef
-} from "../../store/store.ts";
-import {getNextId, Schema} from "../../domain/schema.tsx";
+} from "@/store/store";
+import {getNextId, Schema} from "@/domain/schema";
 import {useHotkeys} from "react-hotkeys-hook";
 import {useNavigate} from "react-router";
-import {STable} from "../../api/schemaModel.ts";
+import {STable} from "@/api/schemaModel";
 import {useTranslation} from "react-i18next";
 import {memo, useCallback, useMemo} from "react";
-import {toggleFullScreen} from "../../utils/windowUtils.ts";
+import {toggleFullScreen} from "@/utils/windowUtils";
 
 const {Text} = Typography;
 const prevIcon = <LeftOutlined/>;

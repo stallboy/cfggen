@@ -1,7 +1,7 @@
 import {describe, it, expect} from 'vitest'
 import {FoldStateHelper} from './FoldStateHelper.ts'
 import {Folds} from './Folds.ts'
-import {JSONObject} from '../../api/recordModel.ts'
+import {JSONObject} from '@/api/recordModel'
 
 // 构造带 $fold 的最小 JSONObject（类型要求 $type，运行时仅读 $fold）
 function objWithFold(fold: boolean | undefined): JSONObject {

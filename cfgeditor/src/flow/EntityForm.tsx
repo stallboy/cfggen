@@ -37,7 +37,7 @@ import {
     FuncType,
     InterfaceEditField, PrimitiveType,
     PrimitiveValue, StructRefEditField,
-} from "../domain/entityModel.ts";
+} from "@/domain/entityModel";
 import {EntityNode} from "./FlowGraph.tsx";
 
 // ============================================================================

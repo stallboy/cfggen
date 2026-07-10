@@ -4,7 +4,7 @@ import {Button, Form, Input, Typography} from "antd";
 import {
     setAIConf,
     useMyStore
-} from "../../store/store.ts";
+} from "@/store/store";
 
 const {Title} = Typography;
 
