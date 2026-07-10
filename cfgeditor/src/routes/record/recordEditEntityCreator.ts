@@ -24,6 +24,7 @@ import {
 import { canBeEmbeddedCheck } from "./embedding/embeddingChecker";
 import { EmbeddingFieldExtractor } from "./embedding/embeddingFieldExtractor";
 import { isPrimitiveType } from "./embedding/embeddingConfig";
+import { EmbeddedFieldValue } from "./embedding/types";
 // 导入Fold状态管理助手
 import { FoldStateHelper } from "../../flow/embedded/FoldStateHelper";
 // Folds 已下沉到独立文件，打破 FoldStateHelper ↔ recordEditEntityCreator 的循环依赖
@@ -630,12 +631,12 @@ export class RecordEditEntityCreator {
         obj: JSONObject,
         embeddedFieldChain: (string | number)[]
     ): { fields: Array<{value: PrimitiveValue; type: PrimitiveType; name: string; comment?: string}>; note?: string; implName?: string; embeddedFieldChain: (string | number)[] } | null {
-        let embeddedFields: ReturnType<typeof getEmbeddedFieldValues> | null = null;
+        let embeddedFields: EmbeddedFieldValue[] | null = null;
         let implNameToDisplay: string | undefined = undefined;
 
         if (fieldType.type === 'struct') {
             const struct = fieldType as SStruct;
-            embeddedFields = getEmbeddedFieldValues(struct, obj);
+            embeddedFields = EmbeddingFieldExtractor.extractFromStruct(struct, obj);
         } else if (fieldType.type === 'interface') {
             const iface = fieldType as SInterface;
             const result = EmbeddingFieldExtractor.extractFromInterface(iface, obj);
@@ -715,14 +716,3 @@ function getImplNameOptions(sInterface: SInterface): EntityEditFieldOptions {
 }
 
 // ChainFold / Folds / isChainEqual 已下沉到 flow/embedded/Folds.ts（见顶部 import）
-
-/**
- * 从struct或interface中提取内嵌字段的值
- * 使用新的embedding模块统一处理
- */
-function getEmbeddedFieldValues(
-    struct: SStruct,
-    obj: JSONObject
-): Array<{value: PrimitiveValue; type: PrimitiveType; name: string; comment?: string}> | null {
-    return EmbeddingFieldExtractor.extractFromStruct(struct, obj);
-}
