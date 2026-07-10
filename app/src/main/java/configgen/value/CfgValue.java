@@ -93,7 +93,7 @@ public record CfgValue(CfgSchema schema,
         default String toStr() {
             return switch (this) {
                 case StringValue stringValue -> stringValue.value();
-                case VBool vBool -> vBool.value() ? "true" : "false";
+                case VBool vBool -> Boolean.toString(vBool.value());
                 case VFloat vFloat -> vFloat.repr();
                 case VInt vInt -> String.valueOf(vInt.value());
                 case VLong vLong -> String.valueOf(vLong.value());

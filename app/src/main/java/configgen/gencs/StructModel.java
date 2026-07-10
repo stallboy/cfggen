@@ -94,21 +94,21 @@ public class StructModel {
             case STRING -> "reader.ReadStringInPool()";
             case TEXT -> gen.isLangSwitch ? topPkg + ".Text._create(reader)" : "reader.ReadTextInPool()";
             case StructRef structRef -> fullName(structRef.obj()) + "._create(reader)";
-            case FList ignored -> null;
-            case FMap ignored -> null;
+            case FList _ -> null;
+            case FMap _ -> null;
         };
     }
 
 
     public String refType(ForeignKeySchema fk) {
         switch (fk.refKey()) {
-            case RefKey.RefList ignored -> {
+            case RefKey.RefList _ -> {
                 return "List<" + fullName(fk.refTableSchema()) + ">";
             }
             case RefKey.RefSimple rs -> {
                 FieldSchema firstLocal = fk.key().fieldSchemas().getFirst();
                 switch (firstLocal.type()) {
-                    case SimpleType ignored -> {
+                    case SimpleType _ -> {
                         return fullName(fk.refTableSchema()) + (rs.nullable() ? "?" : "");
                     }
                     case FList ignored2 -> {
@@ -124,7 +124,7 @@ public class StructModel {
 
     public String refName(ForeignKeySchema fk) {
         switch (fk.refKey()) {
-            case RefKey.RefList ignored -> {
+            case RefKey.RefList _ -> {
                 return "ListRef" + upper1(fk.name());
             }
             case RefKey.RefSimple refSimple -> {
@@ -194,7 +194,7 @@ public class StructModel {
         boolean isEnum = refTable.entry() instanceof EntryType.EEnum;
         String post = isEnum ? "Info" : "";
         return switch (refSimple) {
-            case RefKey.RefPrimary ignored -> fullName(refTable) + post + ".Get(" + actualParam + ")";
+            case RefKey.RefPrimary _ -> fullName(refTable) + post + ".Get(" + actualParam + ")";
 
             case RefKey.RefUniq refUniq ->
                     fullName(refTable) + post + ".GetBy" + refUniq.keyNames().stream().map(StringUtil::upper1).

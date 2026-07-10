@@ -108,7 +108,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
                         return local;
                     });
                 }
-                case TableSchema ignored -> {
+                case TableSchema _ -> {
                 }
             }
         }
