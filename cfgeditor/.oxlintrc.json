@@ -45,6 +45,10 @@
     {
       "files": ["src/res/**"],
       "rules": {"no-restricted-imports": ["error", {"patterns": ["@/flow/**", "@/routes/**"]}]}
+    },
+    {
+      "files": ["src/services/**"],
+      "rules": {"no-restricted-imports": ["error", {"patterns": ["@/routes/**", "@/flow/**"]}]}
     }
   ]
 }
