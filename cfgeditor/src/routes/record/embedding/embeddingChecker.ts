@@ -1,4 +1,4 @@
-import { EMBEDDING_CONFIG, isPrimitiveType } from './embeddingConfig';
+import { EMBEDDING_CONFIG, isNumberType, isPrimitiveType } from './embeddingConfig';
 import { EmbeddingCheckContext, FieldTypeAnalysis } from './types';
 import { JSONObject } from '../../../api/recordModel';
 import { SField, SStruct, SInterface } from '../../../api/schemaModel';
@@ -20,8 +20,7 @@ export class FieldTypeAnalyzer {
       if (isPrimitiveType(field.type)) {
         primitiveCount++;
         if (field.type === 'bool') boolCount++;
-        if (EMBEDDING_CONFIG.struct && // 使用配置判断
-            ['int', 'long', 'float'].includes(field.type)) numberCount++;
+        if (isNumberType(field.type)) numberCount++;
       }
     }
 
