@@ -1,5 +1,5 @@
 import { STable } from "../../api/schemaModel.ts";
-import { Entity } from "../../domain/entityModel.ts";
+import { Entity, EditingObjectRes, EFitView } from "../../domain/entityModel.ts";
 import { RecordRefsResult, RefId, UnreferencedRecordsResult } from "../../api/recordModel.ts";
 import { Result } from "antd";
 import { createRefEntities } from "./recordRefUtils.ts";
@@ -16,7 +16,6 @@ import { fillHandles } from "../../flow/entityToNodeAndEdge.ts";
 
 import { useCallback, useMemo, useState } from "react";
 import { useEntityToGraph } from "../../flow/useEntityToGraph.ts";
-import { EditingObjectRes, EFitView } from "./editingObject.ts";
 import { EntityNode } from "../../flow/FlowGraph.tsx";
 import { useParams } from "react-router";
 

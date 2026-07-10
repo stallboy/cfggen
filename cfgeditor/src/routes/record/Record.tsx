@@ -1,4 +1,4 @@
-import {Entity, isEditableEntity} from "../../domain/entityModel.ts";
+import {Entity, isEditableEntity, EditingObjectRes, EFitView} from "../../domain/entityModel.ts";
 import {JSONObject, RecordEditResult, RecordResult, RefId} from "../../api/recordModel.ts";
 import {App, Result} from "antd";
 import {createRefEntities, getId, getLabel} from "./recordRefUtils.ts";
@@ -6,9 +6,7 @@ import {RecordEntityCreator} from "./recordEntityCreator.ts";
 import {RecordEditEntityCreator} from "./recordEditEntityCreator.ts";
 import {Folds} from "../../flow/embedded/Folds";
 import {
-    EditingObjectRes,
     editState,
-    EFitView,
     isCopiedFitAllowedType, notifyEditingState,
     onAddItemToArrayIndex,
     onStructCopy,

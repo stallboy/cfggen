@@ -5,10 +5,9 @@ import {convertNodeAndEdges} from "./entityToNodeAndEdge.ts";
 import {useQuery} from "@tanstack/react-query";
 import {layoutAsync} from "./layoutAsync.ts";
 import {EntityNode, NodeDoubleClickFunc, NodeMenuFunc} from "./FlowGraph.tsx";
-import {Entity} from "../domain/entityModel.ts";
+import {Entity, EditingObjectRes, EFitView} from "../domain/entityModel.ts";
 import {MenuItem} from "./FlowContextMenu.tsx";
 import {NodePlacementStrategyType, NodeShowType} from "../store/storageJson.ts";
-import {EditingObjectRes, EFitView} from "../routes/record/editingObject.ts";
 import {FlowGraphContext} from "./FlowGraphContext.ts";
 
 

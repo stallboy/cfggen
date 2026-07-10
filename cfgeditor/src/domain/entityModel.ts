@@ -367,3 +367,21 @@ export interface EntitySharedSetting {
     query?: string;
     nodeShow?: NodeShowType;
 }
+
+
+// ============================================================================
+// FitView / EditingObjectRes —— 编辑态 ↔ 视图层契约
+// 抽离到此，消除 flow/useEntityToGraph → routes/record/editingObject 的反向依赖
+// ============================================================================
+
+export enum EFitView {
+    FitFull,
+    FitId,
+    FitNone,
+}
+
+export type EditingObjectRes = {
+    fitView: EFitView;
+    fitViewToIdPosition?: EntityPosition;
+    isEdited: boolean;
+}

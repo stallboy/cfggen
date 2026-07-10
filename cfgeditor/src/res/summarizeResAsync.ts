@@ -1,7 +1,7 @@
 import {Schema} from "../domain/schema.tsx";
 import {BaseDirectory, writeTextFile} from "@tauri-apps/plugin-fs";
 import {ResInfo} from "./resInfo.ts";
-import {getResBrief} from "../flow/getResBrief.ts";
+import {getResBrief} from "./getResBrief.ts";
 import {path} from "@tauri-apps/api";
 
 interface ResEntry {

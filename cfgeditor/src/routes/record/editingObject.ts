@@ -1,16 +1,10 @@
 import {JSONArray, JSONObject, JSONValue, RecordResult} from "../../api/recordModel.ts";
 import {SItem, SStruct, STable} from "../../api/schemaModel.ts";
 import {getField, Schema} from "../../domain/schema.tsx";
-import {EntityPosition} from "../../domain/entityModel.ts";
+import {EntityPosition, EFitView, EditingObjectRes} from "../../domain/entityModel.ts";
 import {setEditingState} from "../../store/store.ts";
 
 // import {doEdit} from "../setting/store.ts";
-
-export enum EFitView {
-    FitFull,
-    FitId,
-    FitNone,
-}
 
 export type EditState = {
     table: string;
@@ -43,12 +37,6 @@ export const editState: EditState = {
 
     copiedObject: {'$type': ''},
 };
-
-export type EditingObjectRes = {
-    fitView: EFitView;
-    fitViewToIdPosition?: EntityPosition;
-    isEdited: boolean;   // 是否要重新计算节点的layout
-}
 
 
 export function startEditingObject(recordResult: RecordResult,

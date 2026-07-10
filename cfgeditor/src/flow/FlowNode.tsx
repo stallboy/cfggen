@@ -17,7 +17,7 @@ import {
 import { ResPopover } from "./ResPopover.tsx";
 import { NoteShow, NoteEdit, NoteShowInner, NoteEditInner } from "./NoteShowOrEdit.tsx";
 import { findFirstImage } from "./calcWidthHeight.ts";
-import { getResBrief } from "./getResBrief.ts";
+import { getResBrief } from "../res/getResBrief.ts";
 import { EntityNode } from "./FlowGraph.tsx";
 
 const { Text } = Typography;
