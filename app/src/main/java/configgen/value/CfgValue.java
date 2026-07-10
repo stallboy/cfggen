@@ -131,7 +131,7 @@ public record CfgValue(CfgSchema schema,
 
         @Override
         public int hashCode() {
-            return Objects.hash(values);
+            return values.hashCode();
         }
 
         public Structural schema() {
@@ -189,7 +189,7 @@ public record CfgValue(CfgSchema schema,
 
         @Override
         public int hashCode() {
-            return Objects.hash(child);
+            return child.hashCode();
         }
 
         public InterfaceSchema schema() {
@@ -237,7 +237,7 @@ public record CfgValue(CfgSchema schema,
 
         @Override
         public int hashCode() {
-            return Objects.hash(valueList);
+            return valueList.hashCode();
         }
 
         public List<SimpleValue> valueList() {
@@ -271,7 +271,7 @@ public record CfgValue(CfgSchema schema,
 
         @Override
         public int hashCode() {
-            return Objects.hash(valueMap);
+            return valueMap.hashCode();
         }
 
         public Map<SimpleValue, SimpleValue> valueMap() {
@@ -322,7 +322,7 @@ public record CfgValue(CfgSchema schema,
 
         @Override
         public int hashCode() {
-            return Objects.hash(value);
+            return value;
         }
     }
 
@@ -341,7 +341,7 @@ public record CfgValue(CfgSchema schema,
 
         @Override
         public int hashCode() {
-            return Objects.hash(value);
+            return Long.hashCode(value);
         }
     }
 
@@ -368,7 +368,7 @@ public record CfgValue(CfgSchema schema,
 
         @Override
         public int hashCode() {
-            return Objects.hash(value);
+            return Float.hashCode(value);
         }
     }
 
@@ -392,7 +392,7 @@ public record CfgValue(CfgSchema schema,
 
         @Override
         public int hashCode() {
-            return Objects.hash(value);
+            return value.hashCode();
         }
     }
 
@@ -452,7 +452,7 @@ public record CfgValue(CfgSchema schema,
 
         @Override
         public int hashCode() {
-            return Objects.hash(value);
+            return value.hashCode();
         }
     }
 

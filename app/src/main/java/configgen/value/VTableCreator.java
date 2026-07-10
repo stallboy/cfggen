@@ -52,14 +52,15 @@ public class VTableCreator {
             }
         }
         // 收集主键和唯一键
-        SequencedMap<Value, VStruct> primaryKeyMap = new LinkedHashMap<>();
+        int capacity = (int) (valueList.size() / 0.75f) + 1;
+        SequencedMap<Value, VStruct> primaryKeyMap = new LinkedHashMap<>(capacity);
         SequencedMap<List<String>, SequencedMap<Value, VStruct>> uniqueKeyValueSetMap = new LinkedHashMap<>();
         extractKeyValues(primaryKeyMap, valueList, tableSchema.primaryKey());
 
         // 如果主键是int类型，则按主键int值排序，否则保持原顺序
         primaryKeyMap = sortIfPKIsNumber(primaryKeyMap);
         for (KeySchema uniqueKey : tableSchema.uniqueKeys()) {
-            SequencedMap<Value, VStruct> ukMap = new LinkedHashMap<>();
+            SequencedMap<Value, VStruct> ukMap = new LinkedHashMap<>(capacity);
             extractKeyValues(ukMap, primaryKeyMap.values(), uniqueKey);
             uniqueKeyValueSetMap.put(uniqueKey.fields(), ukMap);
         }
