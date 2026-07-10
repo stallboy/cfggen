@@ -15,6 +15,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static configgen.value.CfgValue.VTable;
 
@@ -29,7 +34,8 @@ public class JavaCodeGenerator extends GeneratorWithTag {
     private final int schemaNumPerFile;
 
     private Path dstDir;
-    private CacheConfig cacheConfig;
+    // 并发生成：每个工作线程独占一组打印机缓冲区，避免多线程踩踏共享 StringBuilder
+    private final ThreadLocal<CacheConfig> mainCc = ThreadLocal.withInitial(CacheConfig::of);
 
     // 需要复制的源文件列表
     private static final String[] COPY_FILES = {
@@ -66,7 +72,6 @@ public class JavaCodeGenerator extends GeneratorWithTag {
     public void generate(Context ctx) throws IOException {
         CfgValue cfgValue = ctx.makeValue(tag);
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
-        cacheConfig = CacheConfig.of();
 
         Name.codeTopPkg = pkg;
         NameableName.isSealedInterface = sealed;
@@ -79,22 +84,64 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         if (buildersFilename != null) {
             readNeedBuilderTables();
         }
-
+        // struct/interface 类与 table 类各自生成独立文件，互不依赖；并发渲染。
+        // mapsInMgr / setAllRefs 在模板渲染时被 add，且被后续 ConfigMgr/ConfigMgrLoader 消费、顺序敏感——
+        // 故每个任务用独立的 local 列表，渲染后按原序合并，保证字节级一致。
+        List<Callable<List<String>>> structTasks = new ArrayList<>();
         for (Nameable nameable : cfgValue.schema().items()) {
             switch (nameable) {
-                case StructSchema structSchema -> generateStructClass(structSchema, mapsInMgr);
-                case InterfaceSchema interfaceSchema -> {
-                    generateInterfaceClass(interfaceSchema);
-                    for (StructSchema impl : interfaceSchema.impls()) {
-                        generateStructClass(impl, mapsInMgr);
-                    }
+                case StructSchema s -> structTasks.add(() -> {
+                    List<String> local = new ArrayList<>();
+                    generateStructClass(s, local);
+                    return local;
+                });
+                case InterfaceSchema iface -> {
+                    final InterfaceSchema ifaceF = iface;
+                    // interface 连同其 impls 放一个任务：二者可能同名同包（如 Effect），
+                    // 串行下 impl 后写覆盖 interface；任务内保持先 interface 后 impls 的顺序，避免并发竞态写反。
+                    structTasks.add(() -> {
+                        generateInterfaceClass(ifaceF);
+                        List<String> local = new ArrayList<>();
+                        for (StructSchema impl : ifaceF.impls()) {
+                            generateStructClass(impl, local);
+                        }
+                        return local;
+                    });
                 }
                 case TableSchema ignored -> {
                 }
             }
         }
+
+        List<Callable<TableRefs>> tableTasks = new ArrayList<>();
         for (VTable vtable : cfgValue.tables()) {
-            generateTableClass(vtable, mapsInMgr, setAllRefsInMgrLoader);
+            final VTable vt = vtable;
+            tableTasks.add(() -> {
+                List<String> localMaps = new ArrayList<>();
+                List<String> localSetAllRefs = new ArrayList<>();
+                generateTableClass(vt, localMaps, localSetAllRefs);
+                return new TableRefs(localMaps, localSetAllRefs);
+            });
+        }
+
+        try (ExecutorService executor = Executors.newWorkStealingPool()) {
+            // 两个 invokeAll 屏障：struct 阶段先于 table 阶段完成，保持 mapsInMgr 里 struct 项先于 table 项的顺序
+            for (Future<List<String>> f : executor.invokeAll(structTasks)) {
+                mapsInMgr.addAll(f.get());
+            }
+            for (Future<TableRefs> f : executor.invokeAll(tableTasks)) {
+                TableRefs r = f.get();
+                mapsInMgr.addAll(r.maps);
+                setAllRefsInMgrLoader.addAll(r.setAllRefs);
+            }
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException re) throw re;
+            if (cause instanceof Error err) throw err;
+            throw new RuntimeException(cause);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
         }
 
         if (isLangSwitch) {
@@ -124,6 +171,10 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         CachedFiles.deleteOtherFiles(dstDir.toFile());
 
         copyConfigGenSourcesIfNeed();
+    }
+
+    // 单个 table 任务的并发产物：本任务往 mapsInMgr / setAllRefsInMgrLoader 累加的项
+    private record TableRefs(List<String> maps, List<String> setAllRefs) {
     }
 
     private void readNeedBuilderTables() {
@@ -160,7 +211,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
     }
 
     CachedIndentPrinter createCode(String fn) {
-        return cacheConfig.printer(dstDir.resolve(fn), encoding);
+        return mainCc.get().printer(dstDir.resolve(fn), encoding);
     }
 
     private void generateStructClass(StructSchema struct, List<String> mapsInMgr) {
