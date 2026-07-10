@@ -21,8 +21,7 @@ import {
     onUpdateInterfaceValue, onUpdateNote
 } from "./editingObject.ts";
 // 导入新的embedding模块
-import { canBeEmbeddedCheck } from "./embedding/embeddingChecker";
-import { EmbeddingFieldExtractor, EmbeddedFieldValue } from "./embedding/embeddingFieldExtractor";
+import { canBeEmbeddedCheck, extractEmbeddingFields } from "./embedding/embeddingChecker";
 import { isPrimitiveType } from "./embedding/embeddingConfig";
 // 导入Fold状态管理助手
 import { FoldStateHelper } from "../../flow/embedded/FoldStateHelper";
@@ -614,25 +613,12 @@ export class RecordEditEntityCreator {
         obj: JSONObject,
         embeddedFieldChain: (string | number)[]
     ): { fields: Array<{value: PrimitiveValue; type: PrimitiveType; name: string; comment?: string}>; note?: string; implName?: string; embeddedFieldChain: (string | number)[] } | null {
-        let embeddedFields: EmbeddedFieldValue[] | null = null;
-        let implNameToDisplay: string | undefined = undefined;
-
-        if (fieldType.type === 'struct') {
-            const struct = fieldType as SStruct;
-            embeddedFields = EmbeddingFieldExtractor.extractFromStruct(struct, obj);
-        } else if (fieldType.type === 'interface') {
-            const iface = fieldType as SInterface;
-            const result = EmbeddingFieldExtractor.extractFromInterface(iface, obj);
-            if (result) {
-                embeddedFields = result.fields;
-                implNameToDisplay = result.implName;
-            }
-        }
-
-        if (!embeddedFields) {
+        const result = extractEmbeddingFields(fieldType, obj);
+        if (!result){
             return null;
         }
 
+        const { embeddedFields, implNameToDisplay } = result;
         // 获取note
         const note = obj['$note'] as string | undefined;
 

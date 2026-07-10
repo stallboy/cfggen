@@ -1,62 +1,134 @@
 import {EmbeddableStructConfig, EMBEDDING_CONFIG, isNumberType, isPrimitiveType} from './embeddingConfig';
 
-import { JSONObject } from '../../../api/recordModel';
-import { SField, SStruct, SInterface } from '../../../api/schemaModel';
-import { getImpl } from '../../../domain/schema.tsx';
-
+import {JSONObject} from '../../../api/recordModel';
+import {SField, SInterface, SStruct} from '../../../api/schemaModel';
+import {getImpl} from '../../../domain/schema.tsx';
+import {PrimitiveType, PrimitiveValue} from "../../../flow/entityModel.ts";
 
 export interface EmbeddingSchema {
-  itemIncludeImplMap: Map<string, SStruct | SInterface>;
-}
-
-export interface FieldTypeAnalysis {
-  totalFields: number;
-  boolCount: number;
-  numberCount: number;
-  primitiveCount: number;
-  allPrimitive: boolean;
-}
-
-
-
-export class FieldTypeAnalyzer {
-  /**
-   * 分析字段类型
-   */
-  static analyze(fields: SField[]): FieldTypeAnalysis {
-    let boolCount = 0, numberCount = 0, primitiveCount = 0;
-
-    for (const field of fields) {
-      if (isPrimitiveType(field.type)) {
-        primitiveCount++;
-        if (field.type === 'bool') boolCount++;
-        if (isNumberType(field.type)) numberCount++;
-      }
-    }
-
-    return {
-      totalFields: fields.length,
-      boolCount,
-      numberCount,
-      primitiveCount,
-      allPrimitive: primitiveCount === fields.length,
-    };
-  }
+    itemIncludeImplMap: Map<string, SStruct | SInterface>;
 }
 
 /**
+ * 内嵌检查器（统一入口）
+ * 检查字段是否可以内嵌显示
+ */
+export function canBeEmbeddedCheck(fieldValue: JSONObject, sField: SField, schema: EmbeddingSchema): boolean {
+    const fieldType = schema.itemIncludeImplMap.get(sField.type);
+    if (!fieldType) return false;
+
+    let struct: SStruct;
+    let structCfg: EmbeddableStructConfig;
+    if (fieldType.type === 'struct') {
+        struct = fieldType as SStruct;
+        structCfg = EMBEDDING_CONFIG.struct;
+    } else if (fieldType.type === 'interface') {
+        const sInterface = fieldType as SInterface;
+        const resolved = resolveImpl(sInterface, fieldValue);
+        if (!resolved) return false;
+        struct = resolved.impl;
+        structCfg = EMBEDDING_CONFIG.interface;
+    } else {
+        return false;
+    }
+
+    const filteredFields = filterEmptyListFields(struct.fields, fieldValue);
+    const analysis = analyzeFieldTypes(filteredFields);
+
+    return matchEmbeddingConfig(analysis, structCfg);
+}
+
+
+export interface EmbeddingFieldValues {
+    embeddedFields: {
+        value: PrimitiveValue;
+        type: PrimitiveType;
+        name: string;
+        comment?: string;
+    }[];
+    implNameToDisplay?: string;
+}
+
+
+export function extractEmbeddingFields(fieldType: SStruct | SInterface, fieldValue: JSONObject): EmbeddingFieldValues | null {
+    let struct: SStruct;
+    let structCfg: EmbeddableStructConfig;
+    let implNameToDisplay: string | undefined = undefined;
+    if (fieldType.type === 'struct') {
+        struct = fieldType as SStruct;
+        structCfg = EMBEDDING_CONFIG.struct;
+    } else if (fieldType.type === 'interface') {
+        const sInterface = fieldType as SInterface;
+        const resolved = resolveImpl(sInterface, fieldValue);
+        if (!resolved) return null;
+        struct = resolved.impl;
+        structCfg = EMBEDDING_CONFIG.interface;
+        // 记录implName（非defaultImpl时需要显示）
+        implNameToDisplay = resolved.implName !== sInterface.defaultImpl ? resolved.implName : undefined;
+    } else {
+        return null;
+    }
+
+    const filteredFields = filterEmptyListFields(struct.fields, fieldValue);
+
+    if (filteredFields.length === 0) {
+        // 没有字段，返回空数组
+        return {embeddedFields: []};
+    }
+
+    const analysis = analyzeFieldTypes(filteredFields);
+    const canEmbedding = matchEmbeddingConfig(analysis, structCfg);
+
+    if (canEmbedding) {
+        return {
+            embeddedFields: filteredFields.map(field => ({
+                value: getFieldValue(fieldValue, field),
+                type: field.type as PrimitiveType,
+                name: field.name,
+                comment: field.comment,
+            })),
+            implNameToDisplay: implNameToDisplay
+        };
+    }
+
+    return null;
+}
+
+
+interface FieldTypeAnalysis {
+    totalFields: number;
+    boolCount: number;
+    numberCount: number;
+    primitiveCount: number;
+    allPrimitive: boolean;
+}
+
+function analyzeFieldTypes(fields: SField[]): FieldTypeAnalysis {
+    let boolCount = 0, numberCount = 0, primitiveCount = 0;
+
+    for (const field of fields) {
+        if (isPrimitiveType(field.type)) {
+            primitiveCount++;
+            if (field.type === 'bool') boolCount++;
+            if (isNumberType(field.type)) numberCount++;
+        }
+    }
+
+    return {
+        totalFields: fields.length,
+        boolCount,
+        numberCount,
+        primitiveCount,
+        allPrimitive: primitiveCount === fields.length,
+    };
+}
+
+
+/**
  * 内嵌条件检查器
- *
  * 负责检查给定的字段类型分析是否满足内嵌条件
  */
-export class EmbeddingConditionChecker {
-  /**
-   * 检查是否匹配任一内嵌条件（checker 与 extractor 共用此单一判定，避免 5 条条件复制漂移）
-   */
-  public static matchesAnyCondition(
-    analysis: FieldTypeAnalysis,
-    config: EmbeddableStructConfig
-  ): boolean {
+function matchEmbeddingConfig(analysis: FieldTypeAnalysis, config: EmbeddableStructConfig): boolean {
     // 条件a: 没有字段
     if (analysis.totalFields === config.maxFieldsForEmpty) return true;
 
@@ -75,114 +147,83 @@ export class EmbeddingConditionChecker {
         analysis.allPrimitive) return true;
 
     // 条件e: 1个bool + 1个number
-    if (analysis.totalFields === config.boolAndNumberCombination.totalFields &&
-        analysis.boolCount === config.boolAndNumberCombination.boolCount &&
-        analysis.numberCount === config.boolAndNumberCombination.numberCount &&
+    const {numberCount, totalFields, boolCount} = config.boolAndNumberCombination;
+    // noinspection RedundantIfStatementJS
+    if (analysis.totalFields === totalFields &&
+        analysis.boolCount === boolCount &&
+        analysis.numberCount === numberCount &&
         analysis.allPrimitive) return true;
 
     return false;
-  }
 }
+
 
 /**
  * 空list字段过滤器
- *
  * 负责过滤掉值为空数组的list类型字段
  */
-export class EmptyListFieldFilter {
-  /**
-   * 过滤空list字段
-   */
-  static filter(fields: SField[], obj: JSONObject): SField[] {
+function filterEmptyListFields(fields: SField[], obj: JSONObject): SField[] {
     if (!EMBEDDING_CONFIG.common.filterEmptyLists) {
-      return fields;
+        return fields;
     }
 
     return fields.filter(field => {
-      // 检查是否为list类型
-      if (!field.type.startsWith('list<')) {
-        return true; // 非list类型，保留
-      }
+        // 检查是否为list类型
+        if (!field.type.startsWith('list<')) {
+            return true; // 非list类型，保留
+        }
 
-      // list类型，检查实际值是否为空数组
-      const fieldValue = obj[field.name];
-      if (!Array.isArray(fieldValue)) {
-        return true; // 不是数组，保留
-      }
+        // list类型，检查实际值是否为空数组
+        const fieldValue = obj[field.name];
+        if (!Array.isArray(fieldValue)) {
+            return true; // 不是数组，保留
+        }
 
-      // 是空数组，过滤掉
-      if (fieldValue.length === 0) {
-        return false;
-      }
+        // 是空数组，过滤掉
+        if (fieldValue.length === 0) {
+            return false;
+        }
 
-      // 非空数组，保留
-      return true;
+        // 非空数组，保留
+        return true;
     });
-  }
 }
 
-/**
- * 内嵌检查器（统一入口）
- *
- * 检查字段是否可以内嵌显示
- */
-export function canBeEmbeddedCheck(
-  fieldValue: JSONObject,
-  sField: SField,
-  schema: EmbeddingSchema
-): boolean {
-  const fieldType = schema.itemIncludeImplMap.get(sField.type);
-  if (!fieldType) return false;
-
-  if (fieldType.type === 'struct') {
-    const struct = fieldType as SStruct;
-    return checkStructEmbeddable(struct, fieldValue);
-  }
-
-  if (fieldType.type === 'interface') {
-    const iface = fieldType as SInterface;
-    return checkInterfaceEmbeddable(iface, fieldValue);
-  }
-
-  return false;
-}
-
-/**
- * 检查struct是否可以内嵌
- */
-function checkStructEmbeddable(struct: SStruct, fieldValue: JSONObject): boolean {
-  // 先过滤空list字段
-  const filteredFields = EmptyListFieldFilter.filter(struct.fields, fieldValue);
-  const analysis = FieldTypeAnalyzer.analyze(filteredFields);
-
-  return EmbeddingConditionChecker.matchesAnyCondition(analysis, EMBEDDING_CONFIG.struct);
-}
-
-/**
- * 检查interface是否可以内嵌
- */
-function checkInterfaceEmbeddable(iface: SInterface, fieldValue: JSONObject): boolean {
-  const resolved = resolveImpl(iface, fieldValue);
-  if (!resolved) return false;
-  const { impl } = resolved;
-
-  // 先过滤空list字段
-  const filteredFields = EmptyListFieldFilter.filter(impl.fields, fieldValue);
-  const analysis = FieldTypeAnalyzer.analyze(filteredFields);
-
-  return EmbeddingConditionChecker.matchesAnyCondition(analysis, EMBEDDING_CONFIG.interface);
-}
 
 /**
  * 解析 interface 的 $type → impl（checker 与 extractor 共用，避免解析逻辑漂移）
  */
-export function resolveImpl(iface: SInterface, obj: JSONObject): { impl: SStruct; implName: string } | null {
-  const type = obj['$type'];
-  if (typeof type !== 'string') return null;  // 后端脏数据/新旧 schema 不一致时 $type 可能缺失
-  const implName = type.split('.').pop() || type;
-  const impl = getImpl(iface, implName);
-  if (!impl) return null;
-  return { impl, implName };
+function resolveImpl(iface: SInterface, obj: JSONObject): { impl: SStruct; implName: string } | null {
+    const type = obj['$type'];
+    if (typeof type !== 'string') return null;  // 后端脏数据/新旧 schema 不一致时 $type 可能缺失
+    const implName = type.split('.').pop() || type;
+    const impl = getImpl(iface, implName);
+    if (!impl) return null;
+    return {impl, implName};
 }
 
+/**
+ * 获取字段值（带默认值处理）
+ */
+function getFieldValue(obj: JSONObject, field: SField): PrimitiveValue {
+    const value = obj[field.name];
 
+    if (value !== undefined && value !== null) {
+        return value as PrimitiveValue;
+    }
+
+    // 默认值（集中管理）
+    switch (field.type) {
+        case 'bool':
+            return false;
+        case 'int':
+        case 'long':
+        case 'float':
+            return 0;
+        case 'str':
+        case 'text':
+            return '';
+        default:
+            return 0;
+    }
+}

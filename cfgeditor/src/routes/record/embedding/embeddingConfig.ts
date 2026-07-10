@@ -1,8 +1,3 @@
-/**
- * 内嵌显示配置 - 统一管理所有内嵌相关的阈值和规则
- *
- * 将分散在代码中的魔数集中管理，便于调整内嵌规则
- */
 
 export interface EmbeddableStructConfig {
   maxFieldsForEmpty: number,
@@ -24,6 +19,10 @@ export interface EmbeddingConfig {
   }
 }
 
+/**
+ * 内嵌显示配置 - 统一管理所有内嵌相关的阈值和规则
+ * 将分散在代码中的魔数集中管理，便于调整内嵌规则
+ */
 export const EMBEDDING_CONFIG : EmbeddingConfig = {
   struct: {
     maxFieldsForEmpty: 0,           // 条件1a: 没有字段
