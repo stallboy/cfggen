@@ -25,7 +25,7 @@ java -jar ../cfggen.jar -datadir ../example/config  -gen server
 pnpm run dev
 ```
 
-then visit http://localhost:5173/.
+then visit http://localhost:1420/.
 
 
 ### publish

@@ -15,7 +15,7 @@ pnpm install
 
 # 启动开发服务器
 pnpm run dev
-# 访问 http://localhost:5173/
+# 访问 http://localhost:1420/
 ```
 
 ### 桌面应用构建
@@ -194,7 +194,7 @@ pnpm test:run
 ### Tauri 配置
 - 桌面应用配置在 `src-tauri/tauri.conf.json`
 - 构建时自动运行前端构建命令
-- 开发时使用 `http://localhost:5173`
+- 开发时使用 `http://localhost:1420`
 
 ### 样式和主题
 - 使用 Ant Design 组件库

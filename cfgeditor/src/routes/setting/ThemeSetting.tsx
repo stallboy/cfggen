@@ -1,5 +1,5 @@
 import {memo, useState, useEffect} from "react";
-import {Form, Input, Button, message, Space, Typography, Divider} from "antd";
+import {App, Button, Divider, Form, Input, Space, Typography} from "antd";
 import {useTranslation} from "react-i18next";
 import {useMyStore, setThemeConfig} from "@/store/store";
 import {themeService} from "@/services/themeService";
@@ -8,6 +8,7 @@ const {Text, Title} = Typography;
 
 export const ThemeSetting = memo(function ThemeSetting() {
     const {t} = useTranslation();
+    const {message} = App.useApp();
     const {themeConfig} = useMyStore();
     const [loading, setLoading] = useState(false);
     const [themeExists, setThemeExists] = useState<boolean | null>(null);

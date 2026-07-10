@@ -2,68 +2,16 @@ import type {BubbleListProps} from "@ant-design/x";
 import {Bubble, Sender, Welcome} from "@ant-design/x";
 import XMarkdown from "@ant-design/x-markdown";
 import {OpenAIChatProvider, useXChat, XModelParams, XModelResponse, XRequest} from "@ant-design/x-sdk";
-import {Flex} from "antd";
-import {createStyles} from "antd-style";
+import {Flex, Result, Spin, theme} from "antd";
 import {useState, useEffect} from "react";
 
 import {useMyStore, useLocationData} from "@/store/store";
-import {memo, useRef} from "react";
+import {memo, useRef, type CSSProperties} from "react";
 import {Schema} from "@/domain/schema";
 import {useQuery, useMutation} from "@tanstack/react-query";
 import {getPrompt, checkJson} from "@/api/api";
-import {Result, Spin} from "antd";
 import {CheckJsonResult} from "@/api/chatModel";
 import {applyNewEditingObject} from "@/services/editingObject";
-
-const useChatStyle = createStyles(({token, css}) => {
-    return {
-        chatContainer: css`
-            display: flex;
-            flex-direction: column;
-            background: ${token.colorBgContainer};
-            color: ${token.colorText};
-            height: calc(100vh - 80px);
-        `,
-        chatHeader: css`
-            height: 52px;
-            box-sizing: border-box;
-            border-bottom: 1px solid ${token.colorBorder};
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 10px 0 16px;
-            flex-shrink: 0;
-        `,
-        headerTitle: css`
-            font-weight: 600;
-            font-size: 15px;
-        `,
-        headerButton: css`
-            font-size: 18px;
-        `,
-        chatList: css`
-            margin-block-start: ${token.margin}px;
-            display: flex;
-            flex: 1;
-            flex-direction: column;
-            overflow-y: auto;
-            padding-bottom: ${token.margin}px;
-        `,
-        chatWelcome: css`
-            margin-inline: ${token.margin}px;
-            padding: 12px 16px;
-            border-radius: 2px 12px 12px 12px;
-            background: ${token.colorBgTextHover};
-            margin-bottom: ${token.margin}px;
-        `,
-        chatSend: css`
-            padding: ${token.padding}px;
-            flex-shrink: 0;
-            border-top: 1px solid ${token.colorBorder};
-            background: ${token.colorBgContainer};
-        `,
-    };
-});
 
 const role: BubbleListProps["role"] = {
     assistant: {
@@ -76,7 +24,51 @@ const role: BubbleListProps["role"] = {
 };
 
 export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }) {
-    const {styles} = useChatStyle();
+    const {token} = theme.useToken();
+    const styles = {
+        chatContainer: {
+            display: 'flex',
+            flexDirection: 'column',
+            background: token.colorBgContainer,
+            color: token.colorText,
+            height: 'calc(100vh - 80px)',
+        },
+        chatHeader: {
+            height: 52,
+            boxSizing: 'border-box',
+            borderBottom: `1px solid ${token.colorBorder}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0 10px 0 16px',
+            flexShrink: 0,
+        },
+        headerTitle: {
+            fontWeight: 600,
+            fontSize: 15,
+        },
+        chatList: {
+            marginBlockStart: token.margin,
+            display: 'flex',
+            flex: 1,
+            flexDirection: 'column',
+            overflowY: 'auto',
+            paddingBottom: token.margin,
+        },
+        chatWelcome: {
+            marginInline: token.margin,
+            padding: '12px 16px',
+            borderRadius: '2px 12px 12px 12px',
+            background: token.colorBgTextHover,
+            marginBottom: token.margin,
+        },
+        chatSend: {
+            padding: token.padding,
+            flexShrink: 0,
+            borderTop: `1px solid ${token.colorBorder}`,
+            background: token.colorBgContainer,
+        },
+    } satisfies Record<string, CSSProperties>;
     const {server, aiConf} = useMyStore();
     const {curTableId} = useLocationData();
 
@@ -272,13 +264,13 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
     }
 
     const chatHeader = (
-        <div className={styles.chatHeader}>
-            <div className={styles.headerTitle}>AI Chat</div>
+        <div style={styles.chatHeader}>
+            <div style={styles.headerTitle}>AI Chat</div>
         </div>
     );
 
     const chatList = (
-        <div className={styles.chatList}>
+        <div style={styles.chatList}>
             {messages.length ? (
                 <Bubble.List
                     style={{paddingInline: 16}}
@@ -296,7 +288,7 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
                         variant="borderless"
                         title={`👋 Welcome to AI Chat`}
                         description="I can help you generate and edit configuration data"
-                        className={styles.chatWelcome}
+                        style={styles.chatWelcome}
                     />
                 </>
             )}
@@ -304,7 +296,7 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
     );
 
     const chatSender = (
-        <Flex vertical gap={12} className={styles.chatSend}>
+        <Flex vertical gap={12} style={styles.chatSend}>
             <Sender
                 ref={chatRef}
                 loading={isRequesting}
@@ -324,7 +316,7 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
 
     return (<>
         <div style={{height: 32}}/>
-        <div className={styles.chatContainer}>
+        <div style={styles.chatContainer}>
             {chatHeader}
             {chatList}
             {chatSender}

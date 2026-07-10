@@ -27,7 +27,7 @@
     pnpm run dev
     ```
 
-    使用浏览器查看 http://localhost:5173/
+    使用浏览器查看 http://localhost:1420/
 
 
 ### 发布html

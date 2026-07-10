@@ -23,6 +23,9 @@ export default defineConfig({
     clearScreen: false,
     // Tauri expects a fixed port, fail if that port is not available
     server: {
+        // 5173 落在 Windows Hyper-V/WSL2 动态保留端口范围 (5041–5240) 内，绑定会 EACCES；
+        // 改用 Tauri 官方模板默认端口 1420，远离所有保留区间
+        port: 1420,
         strictPort: true,
     },
     // to access the Tauri environment variables set by the CLI with information about the current target
