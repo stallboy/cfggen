@@ -43,11 +43,6 @@ public class ReadCsv {
         }
 
         @Override
-        public boolean isCellNumber(int c) {
-            return false;
-        }
-
-        @Override
         public int count() {
             return row.getFieldCount();
         }

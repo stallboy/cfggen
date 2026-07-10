@@ -132,17 +132,13 @@ public record CfgData(Map<String, DTable> tables,
         }
 
         public static final byte COLUMN_MODE = 0x1;
-        public static final byte CELL_NUMBER = 0x2;
         public static final byte CELL_FAKE = 0x4;
         public static final byte CELL_PACK_OR_SEP = 0x8;
 
-        public static byte modeOf(boolean isColumnMode, boolean isCellNumber) {
+        public static byte modeOf(boolean isColumnMode) {
             byte res = 0;
             if (isColumnMode) {
                 res |= COLUMN_MODE;
-            }
-            if (isCellNumber) {
-                res |= CELL_NUMBER;
             }
             return res;
         }
@@ -226,8 +222,6 @@ public record CfgData(Map<String, DTable> tables,
 
     public interface DRawRow {
         String cell(int c);
-
-        boolean isCellNumber(int c);
 
         int count();
     }

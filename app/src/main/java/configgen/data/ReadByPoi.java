@@ -122,12 +122,6 @@ public enum ReadByPoi implements ExcelReader {
         }
 
         @Override
-        public boolean isCellNumber(int c) {
-            Cell cell = row.getCell(c);
-            return cell != null && cell.getCellType() == NUMERIC; //这里只判断数字，外部判断comma
-        }
-
-        @Override
         public int count() {
             return row.getLastCellNum();
         }

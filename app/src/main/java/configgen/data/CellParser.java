@@ -89,8 +89,7 @@ public final class CellParser {
         for (int col : sheet.fieldIndices()) {
             DRawRow rawRow = sheet.rows().get(col);
             String val = rawRow.cell(logicRowIdx);
-            boolean isNumber = rawRow.isCellNumber(logicRowIdx);
-            logicRow.add(new DCell(val, logicRowId, col, DCell.modeOf(true, isNumber)));
+            logicRow.add(new DCell(val, logicRowId, col, DCell.modeOf(true)));
         }
         return logicRow;
     }
@@ -100,8 +99,7 @@ public final class CellParser {
         DRowId logicRowId = new DRowId(sheet.relativeFilePath(), sheet.sheetName(), rowIndex);
         for (int col : sheet.fieldIndices()) {
             String val = rawRow.cell(col);
-            boolean isNumber = rawRow.isCellNumber(col);
-            logicRow.add(new DCell(val, logicRowId, col, DCell.modeOf(false, isNumber)));
+            logicRow.add(new DCell(val, logicRowId, col, DCell.modeOf(false)));
         }
         return logicRow;
     }

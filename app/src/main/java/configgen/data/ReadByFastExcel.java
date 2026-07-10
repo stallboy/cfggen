@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public enum ReadByFastExcel implements ExcelReader {
     INSTANCE;
@@ -39,9 +38,12 @@ public enum ReadByFastExcel implements ExcelReader {
 
                 stat.sheetCount++;
                 List<Row> rawRows = sheet.read();
-                int formula = addStatAndReturnFormulaCount(rawRows, stat);
-                if (formula > 0) {
-                    Logger.verbose2("%s [%s] formula count=%d", path, sheetName, formula);
+                // cell 类型统计仅用于 verbose 日志输出；非 verbose 时跳过整表 getType 遍历，省一次全量扫描
+                if (Logger.verboseLevel() > 0) {
+                    int formula = addStatAndReturnFormulaCount(rawRows, stat);
+                    if (formula > 0) {
+                        Logger.verbose2("%s [%s] formula count=%d", path, sheetName, formula);
+                    }
                 }
 
                 // rawRows会忽略空行，这里要fix下
@@ -123,12 +125,6 @@ public enum ReadByFastExcel implements ExcelReader {
         }
 
         @Override
-        public boolean isCellNumber(int c) {
-            Optional<Cell> cell = row.getOptionalCell(c);
-            return cell.isPresent() && cell.get().getType() == CellType.NUMBER; //这里只判断数字，外部判断comma
-        }
-
-        @Override
         public int count() {
             return row.getCellCount();
         }
@@ -138,11 +134,6 @@ public enum ReadByFastExcel implements ExcelReader {
         @Override
         public String cell(int c) {
             return "";
-        }
-
-        @Override
-        public boolean isCellNumber(int c) {
-            return false;
         }
 
         @Override
