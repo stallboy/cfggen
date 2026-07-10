@@ -3,7 +3,28 @@
  *
  * 将分散在代码中的魔数集中管理，便于调整内嵌规则
  */
-export const EMBEDDING_CONFIG = {
+
+export interface EmbeddableStructConfig {
+  maxFieldsForEmpty: number,
+  maxFieldsForSinglePrimitive: number,
+  maxNumberFields: number,
+  maxBoolFields: number,
+  boolAndNumberCombination: {
+    boolCount: number,
+    numberCount: number,
+    totalFields: number,
+  },
+}
+
+export interface EmbeddingConfig {
+  struct : EmbeddableStructConfig,
+  interface: EmbeddableStructConfig,
+  common: {
+    filterEmptyLists: boolean
+  }
+}
+
+export const EMBEDDING_CONFIG : EmbeddingConfig = {
   struct: {
     maxFieldsForEmpty: 0,           // 条件1a: 没有字段
     maxFieldsForSinglePrimitive: 1, // 条件1b: 只有1个primitive

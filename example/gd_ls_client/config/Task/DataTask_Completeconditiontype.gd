@@ -1,5 +1,6 @@
 class_name DataTask_Completeconditiontype
 ## task.completeconditiontype
+## 任务完成条件类型
 # 公开属性
 var id: int  # 任务完成条件类型（id的范围为1-100）
 var name: String  # 程序用名字

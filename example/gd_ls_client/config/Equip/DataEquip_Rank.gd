@@ -11,6 +11,7 @@ static var Green: DataEquip_Rank
 static var Blue: DataEquip_Rank
 static var Purple: DataEquip_Rank
 static var Yellow: DataEquip_Rank
+static var Red: DataEquip_Rank
 # 内部存储
 static var _data: Dictionary[int, DataEquip_Rank] = {}
 # 主键查询
@@ -52,6 +53,10 @@ static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 					if Yellow != null:
 						_errors.enum_dup("equip.rank", str(item))
 					Yellow = item
+				"red":
+					if Red != null:
+						_errors.enum_dup("equip.rank", str(item))
+					Red = item
 				_:
 					_errors.enum_data_add("equip.rank", str(item))
 	if White == null:
@@ -64,6 +69,8 @@ static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 		_errors.enum_null("equip.rank", "purple")
 	if Yellow == null:
 		_errors.enum_null("equip.rank", "yellow")
+	if Red == null:
+		_errors.enum_null("equip.rank", "red")
 
 # 创建实例
 static func _create(stream: ConfigStream) -> DataEquip_Rank:

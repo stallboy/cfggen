@@ -1,2 +1,2 @@
-java -jar ../../cfggen.jar -datadir ../config -langswitchdir langs  -gen i18nbyid,dir=langs,backup=backup
-pause
+call %~dp0..\cfggen_common.bat
+%CFGGEN% -langswitchdir langs  -gen i18nbyid,dir=langs,backup=backup

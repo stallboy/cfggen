@@ -46,14 +46,14 @@ static func _create(stream: ConfigStream) -> DataOther_Signin:
 	return instance
 
 
-# 解析外键引用
-func _resolve(errors: ConfigErrors):
-	for k in vipitem2vipcountMap.keys():
-		var v = DataOther_Loot.find(vipitem2vipcountMap[k])
-		if v == null:
-			errors.ref_null("other.signin", "vipitem2vipcountMap")
-		RefVipitem2vipcountMap[k] = v
+	# 解析外键引用
+	func _resolve(errors: ConfigErrors):
+		for k in vipitem2vipcountMap.keys():
+			var v = DataOther_Loot.find(vipitem2vipcountMap[k])
+			if v == null:
+				errors.ref_null("other.signin", "vipitem2vipcountMap")
+			RefVipitem2vipcountMap[k] = v
 
-static func _resolve_refs(errors: ConfigErrors):
-	for item in all():
-		item._resolve(errors)
+	static func _resolve_refs(errors: ConfigErrors):
+		for item in all():
+			item._resolve(errors)

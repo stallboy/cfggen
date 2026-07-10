@@ -6,7 +6,7 @@ var name: Array[String]  # 程序用名字
 var nexttask: int
 var completecondition: DataTask_Completecondition
 var exp: int
-var testDefaultBean: DataTask_Testdefaultbean  # 测试
+var testDefaultBean: DataTask_TestDefaultBean  # 测试
 # 外键引用属性
 var NullableRefTaskid: DataTask_Taskextraexp
 var NullableRefNexttask: DataTask_Task
@@ -40,17 +40,17 @@ static func _create(stream: ConfigStream) -> DataTask_Task:
 	instance.nexttask = stream.read_int32()
 	instance.completecondition = DataTask_Completecondition._create(stream)
 	instance.exp = stream.read_int32()
-	instance.testDefaultBean = DataTask_Testdefaultbean._create(stream)
+	instance.testDefaultBean = DataTask_TestDefaultBean._create(stream)
 	return instance
 
 
-# 解析外键引用
-func _resolve(errors: ConfigErrors):
-	if completecondition != null:
-		completecondition._resolve(errors)
-	NullableRefTaskid = DataTask_Taskextraexp.find(taskid)
-	NullableRefNexttask = DataTask_Task.find(nexttask)
+	# 解析外键引用
+	func _resolve(errors: ConfigErrors):
+		if completecondition != null:
+			completecondition._resolve(errors)
+		NullableRefTaskid = DataTask_Taskextraexp.find(taskid)
+		NullableRefNexttask = DataTask_Task.find(nexttask)
 
-static func _resolve_refs(errors: ConfigErrors):
-	for item in all():
-		item._resolve(errors)
+	static func _resolve_refs(errors: ConfigErrors):
+		for item in all():
+			item._resolve(errors)

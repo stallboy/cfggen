@@ -1,11 +1,29 @@
 import resso from "./resso.ts";
-import { AIConf, Convert, FixedPage, FixedRefPage, FixedUnrefPage, FixedPagesConf, NodeShowType, TauriConf, ThemeConfig } from "./storageJson.ts";
-import { getPrefBool, getPrefEnumStr, getPrefInt, getPrefJson, getPrefStr, registerPrefKeySet, setPref } from "./storage.ts";
-import { History } from "./historyModel.ts";
-import { NEW_RECORD_ID, Schema } from "../domain/schema.tsx";
-import { useLocation } from "react-router";
-import { queryClient } from "../queryClient.ts";
-import { ResInfo } from "../res/resInfo.ts";
+import {
+    AIConf,
+    Convert,
+    FixedPage,
+    FixedPagesConf,
+    FixedRefPage,
+    FixedUnrefPage,
+    NodeShowType,
+    TauriConf,
+    ThemeConfig
+} from "./storageJson.ts";
+import {
+    getPrefBool,
+    getPrefEnumStr,
+    getPrefInt,
+    getPrefJson,
+    getPrefStr,
+    registerPrefKeySet,
+    setPref
+} from "./storage.ts";
+import {History} from "./historyModel.ts";
+import {NEW_RECORD_ID, Schema} from "../domain/schema.tsx";
+import {useLocation} from "react-router";
+import {queryClient} from "../queryClient.ts";
+import {ResInfo} from "../res/resInfo.ts";
 
 export type PageType = 'table' | 'tableRef' | 'record' | 'recordRef' | 'recordUnref';
 export const pageEnums = ['table', 'tableRef', 'record', 'recordRef', 'recordUnref'];
@@ -372,7 +390,7 @@ export function isFixedUnrefPage(page: FixedPage): page is FixedUnrefPage {
 
 export function makeFixedPage(curTableId: string, curId: string): FixedRefPage {
     const { recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow } = store;
-    const fp: FixedRefPage = {
+    return {
         label: `${curTableId}_${curId}`,
         table: curTableId,
         id: curId,
@@ -381,19 +399,17 @@ export function makeFixedPage(curTableId: string, curId: string): FixedRefPage {
         maxNode: recordMaxNode,
         nodeShow: nodeShow,
     };
-    return fp;
 }
 
 export function makeUnrefPage(curTableId: string): FixedUnrefPage {
     const { recordRefOutDepth, recordMaxNode, nodeShow } = store;
-    const fp: FixedUnrefPage = {
+    return {
         label: `unref:${curTableId}`,
         table: curTableId,
         refOutDepth: recordRefOutDepth,
         maxNode: recordMaxNode,
         nodeShow: nodeShow,
     };
-    return fp;
 }
 
 // 内置面板（非用户自定义 fixed page）：切换 pageConf 时不参与"引用了已删除页面"的校验。

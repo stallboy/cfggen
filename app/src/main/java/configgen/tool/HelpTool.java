@@ -1,9 +1,7 @@
 package configgen.tool;
 
 import configgen.gen.Generators;
-import configgen.gen.Parameter;
 import configgen.gen.ParameterInfoCollector;
-import configgen.gen.Tool;
 import configgen.gen.Tools;
 import configgen.util.LocaleUtil;
 import configgen.util.Logger;
@@ -11,17 +9,7 @@ import configgen.util.Logger;
 /**
  * 打印使用帮助信息
  */
-public class HelpTool extends Tool {
-
-    public HelpTool(Parameter parameter) {
-        super(parameter);
-        parameter.title("print usage help");
-    }
-
-    @Override
-    public void call() {
-        printHelp();
-    }
+public class HelpTool {
 
     public static void printHelp() {
         printHelp(null);
@@ -34,7 +22,8 @@ public class HelpTool extends Tool {
 
         Logger.log("Usage: java -jar cfggen.jar [options] [-tool toolname[,param=value...]] -datadir <dir> [-gen genname[,param=value...]]");
         Logger.log("");
-        Logger.log("   or: java -jar cfggen.jar  (launch GUI)");
+        Logger.log("   or: java -jar cfggen.jar [-h] (print help)");
+        Logger.log("   or: java -jar cfggen.jar -gui (launch GUI)");
         Logger.log("");
         Logger.log("Parameters can be in any order, but -datadir is required when using generators.");
         Logger.log(LocaleUtil.getLocaleString("Usage.ToolGenStart",

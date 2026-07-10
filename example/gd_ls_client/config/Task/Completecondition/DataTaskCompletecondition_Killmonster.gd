@@ -1,4 +1,4 @@
-class_name DataTaskCompletecondition_Killmonster extends DataTask_Completecondition
+class_name DataTaskCompletecondition_KillMonster extends DataTask_Completecondition
 ## KillMonster
 # 公开属性
 var monsterid: int
@@ -8,19 +8,19 @@ var RefMonsterid: DataOther_Monster
 
 # 字符串表示
 func _to_string() -> String:
-	return "DataTaskCompletecondition_Killmonster{" + str(monsterid) + "," + str(count) + "}"
+	return "DataTaskCompletecondition_KillMonster{" + str(monsterid) + "," + str(count) + "}"
 
 # 创建实例
-static func _create(stream: ConfigStream) -> DataTaskCompletecondition_Killmonster:
-	var instance = DataTaskCompletecondition_Killmonster.new()
+static func _create(stream: ConfigStream) -> DataTaskCompletecondition_KillMonster:
+	var instance = DataTaskCompletecondition_KillMonster.new()
 	instance.monsterid = stream.read_int32()
 	instance.count = stream.read_int32()
 	return instance
 
 
-# 解析外键引用
-func _resolve(errors: ConfigErrors):
-	RefMonsterid = DataOther_Monster.find(monsterid)
-	if RefMonsterid == null:
-		errors.ref_null("KillMonster", "monsterid")
+	# 解析外键引用
+	func _resolve(errors: ConfigErrors):
+		RefMonsterid = DataOther_Monster.find(monsterid)
+		if RefMonsterid == null:
+			errors.ref_null("KillMonster", "monsterid")
 

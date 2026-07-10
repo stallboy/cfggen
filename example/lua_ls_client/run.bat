@@ -1,1 +1,1 @@
-lua test.lua
+..\lua\lua test.lua

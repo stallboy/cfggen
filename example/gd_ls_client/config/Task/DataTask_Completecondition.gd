@@ -12,17 +12,17 @@ static func _create(stream: ConfigStream) -> DataTask_Completecondition:
 	var type_name = stream.read_string_in_pool()
 	match type_name:
 		"KillMonster":
-			return DataTaskCompletecondition_Killmonster._create(stream)
+			return DataTaskCompletecondition_KillMonster._create(stream)
 		"TalkNpc":
-			return DataTaskCompletecondition_Talknpc._create(stream)
+			return DataTaskCompletecondition_TalkNpc._create(stream)
 		"TestNoColumn":
-			return DataTaskCompletecondition_Testnocolumn._create(stream)
+			return DataTaskCompletecondition_TestNoColumn._create(stream)
 		"Chat":
 			return DataTaskCompletecondition_Chat._create(stream)
 		"ConditionAnd":
-			return DataTaskCompletecondition_Conditionand._create(stream)
+			return DataTaskCompletecondition_ConditionAnd._create(stream)
 		"CollectItem":
-			return DataTaskCompletecondition_Collectitem._create(stream)
+			return DataTaskCompletecondition_CollectItem._create(stream)
 		"aa":
 			return DataTaskCompletecondition_Aa._create(stream)
 		_:

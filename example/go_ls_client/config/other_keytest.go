@@ -7,7 +7,11 @@ type OtherKeytest struct {
     id2 int64
     id3 int32
     ids []int32
+    enumTest string
+    enumList []string
     refIds []*OtherSignin
+    refEnumTest *OtherArgCaptureMode
+    refEnumList []*OtherArgCaptureMode
 }
 
 func createOtherKeytest(stream *Stream) *OtherKeytest {
@@ -20,11 +24,17 @@ func createOtherKeytest(stream *Stream) *OtherKeytest {
     for i := 0; i < int(idsSize); i++ {
         v.ids[i] = stream.ReadInt32()
     }
+    v.enumTest = stream.ReadStringInPool()
+    enumListSize := stream.ReadInt32()
+    v.enumList = make([]string, enumListSize)
+    for i := 0; i < int(enumListSize); i++ {
+        v.enumList[i] = stream.ReadStringInPool()
+    }
     return v
 }
 
 func (t *OtherKeytest) String() string {
-    return fmt.Sprintf("OtherKeytest{id1=%v, id2=%v, id3=%v, ids=%v}", t.id1, t.id2, t.id3, fmt.Sprintf("%v", t.ids))
+    return fmt.Sprintf("OtherKeytest{id1=%v, id2=%v, id3=%v, ids=%v, enumTest=%v, enumList=%v}", t.id1, t.id2, t.id3, fmt.Sprintf("%v", t.ids), t.enumTest, fmt.Sprintf("%v", t.enumList))
 }
 
 //getters
@@ -44,6 +54,14 @@ func (t *OtherKeytest) Ids() []int32 {
     return t.ids
 }
 
+func (t *OtherKeytest) EnumTest() string {
+    return t.enumTest
+}
+
+func (t *OtherKeytest) EnumList() []string {
+    return t.enumList
+}
+
 //list ref
 func (t *OtherKeytest) RefIds() []*OtherSignin {
     if t.refIds == nil {
@@ -54,6 +72,23 @@ func (t *OtherKeytest) RefIds() []*OtherSignin {
     }
     return t.refIds
 }
+//list ref
+func (t *OtherKeytest) RefEnumList() []*OtherArgCaptureMode {
+    if t.refEnumList == nil {
+        t.refEnumList = make([]*OtherArgCaptureMode, len(t.enumList))
+        for i, v := range t.enumList {
+            t.refEnumList[i] = GetOtherArgCaptureModeMgr().Get(v)
+        }
+    }
+    return t.refEnumList
+}
+func (t *OtherKeytest) RefEnumTest() *OtherArgCaptureMode {
+    if t.refEnumTest == nil {
+        t.refEnumTest = GetOtherArgCaptureModeMgr().Get(t.enumTest)
+    }
+    return t.refEnumTest
+}
+
 type KeyId1Id2 struct {
     id1 int32
     id2 int64

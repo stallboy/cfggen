@@ -4,7 +4,7 @@ class_name DataEquip_Jewelry
 var iD: int  # 首饰ID
 var name: String  # 首饰名称
 var iconFile: String  # 图标ID
-var lvlRank: DataLevelrank  # 首饰等级
+var lvlRank: DataLevelRank  # 首饰等级
 var jType: String  # 首饰类型
 var suitID: int  # 套装ID（为0是没有不属于套装，首饰品级为4的首饰该参数为套装id，其余情况为0,引用JewelrySuit.csv）
 var keyAbility: int  # 关键属性类型
@@ -42,7 +42,7 @@ static func _create(stream: ConfigStream) -> DataEquip_Jewelry:
 	instance.iD = stream.read_int32()
 	instance.name = stream.read_string_in_pool()
 	instance.iconFile = stream.read_string_in_pool()
-	instance.lvlRank = DataLevelrank._create(stream)
+	instance.lvlRank = DataLevelRank._create(stream)
 	instance.jType = stream.read_string_in_pool()
 	instance.suitID = stream.read_int32()
 	instance.keyAbility = stream.read_int32()
@@ -52,18 +52,18 @@ static func _create(stream: ConfigStream) -> DataEquip_Jewelry:
 	return instance
 
 
-# 解析外键引用
-func _resolve(errors: ConfigErrors):
-	if lvlRank != null:
-		lvlRank._resolve(errors)
-	RefJType = DataEquip_Jewelrytype.find(jType)
-	if RefJType == null:
-		errors.ref_null("equip.jewelry", "JType")
-	NullableRefSuitID = DataEquip_Jewelrysuit.find(suitID)
-	RefKeyAbility = DataEquip_Ability.find(keyAbility)
-	if RefKeyAbility == null:
-		errors.ref_null("equip.jewelry", "KeyAbility")
+	# 解析外键引用
+	func _resolve(errors: ConfigErrors):
+		if lvlRank != null:
+			lvlRank._resolve(errors)
+		RefJType = DataEquip_Jewelrytype.find(jType)
+		if RefJType == null:
+			errors.ref_null("equip.jewelry", "JType")
+		NullableRefSuitID = DataEquip_Jewelrysuit.find(suitID)
+		RefKeyAbility = DataEquip_Ability.find(keyAbility)
+		if RefKeyAbility == null:
+			errors.ref_null("equip.jewelry", "KeyAbility")
 
-static func _resolve_refs(errors: ConfigErrors):
-	for item in all():
-		item._resolve(errors)
+	static func _resolve_refs(errors: ConfigErrors):
+		for item in all():
+			item._resolve(errors)

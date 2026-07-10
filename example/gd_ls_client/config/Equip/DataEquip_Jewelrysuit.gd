@@ -59,3 +59,5 @@ static func _create(stream: ConfigStream) -> DataEquip_Jewelrysuit:
 	for c in range(stream.read_int32()):
 		instance.suitList.append(stream.read_int32())
 	return instance
+
+

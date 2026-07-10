@@ -1,4 +1,3 @@
-
 namespace Config;
 
 public static class Processor

@@ -27,6 +27,7 @@ var (
     blue EquipRank
     purple EquipRank
     yellow EquipRank
+    red EquipRank
 )
 
 //getters
@@ -62,9 +63,13 @@ func (t *EquipRankMgr) GetYellow() *EquipRank {
 	return &yellow
 }
 
+func (t *EquipRankMgr) GetRed() *EquipRank {
+	return &red
+}
+
 type EquipRankMgr struct {
     all []*EquipRank
-    rankIDMap map[int32]*EquipRank
+    rankIDArr []*EquipRank
 }
 
 func(t *EquipRankMgr) GetAll() []*EquipRank {
@@ -72,17 +77,20 @@ func(t *EquipRankMgr) GetAll() []*EquipRank {
 }
 
 func(t *EquipRankMgr) Get(rankID int32) *EquipRank {
-    return t.rankIDMap[rankID]
+    if rankID < 0 || int(rankID) >= len(t.rankIDArr) {
+        return nil
+    }
+    return t.rankIDArr[rankID]
 }
 
 func (t *EquipRankMgr) Init(stream *Stream) {
     cnt := stream.ReadInt32()
     t.all = make([]*EquipRank, 0, cnt)
-    t.rankIDMap = make(map[int32]*EquipRank, cnt)
+    t.rankIDArr = make([]*EquipRank, cnt)
     for i := 0; i < int(cnt); i++ {
         v := createEquipRank(stream)
         t.all = append(t.all, v)
-        t.rankIDMap[v.rankID] = v
+        t.rankIDArr[v.rankID] = v
         switch v.rankName {
         case "White":
             white = *v
@@ -94,6 +102,8 @@ func (t *EquipRankMgr) Init(stream *Stream) {
             purple = *v
         case "Yellow":
             yellow = *v
+        case "Red":
+            red = *v
         }
     }
 }

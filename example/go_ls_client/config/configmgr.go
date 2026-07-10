@@ -62,6 +62,12 @@ func GetEquipRankMgr() *EquipRankMgr {
     return equipRankMgr
 }
 
+var otherArgCaptureModeMgr *OtherArgCaptureModeMgr
+
+func GetOtherArgCaptureModeMgr() *OtherArgCaptureModeMgr {
+    return otherArgCaptureModeMgr
+}
+
 var otherDropMgr *OtherDropMgr
 
 func GetOtherDropMgr() *OtherDropMgr {
@@ -173,6 +179,9 @@ func Init(reader io.Reader) *Stream {
         case "equip.rank":
             equipRankMgr = &EquipRankMgr{}
             equipRankMgr.Init(stream)
+        case "other.ArgCaptureMode":
+            otherArgCaptureModeMgr = &OtherArgCaptureModeMgr{}
+            otherArgCaptureModeMgr.Init(stream)
         case "other.drop":
             otherDropMgr = &OtherDropMgr{}
             otherDropMgr.Init(stream)

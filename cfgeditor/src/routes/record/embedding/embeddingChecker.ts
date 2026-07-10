@@ -1,14 +1,24 @@
-import { EMBEDDING_CONFIG, isNumberType, isPrimitiveType } from './embeddingConfig';
-import { FieldTypeAnalysis } from './types';
+import {EmbeddableStructConfig, EMBEDDING_CONFIG, isNumberType, isPrimitiveType} from './embeddingConfig';
+
 import { JSONObject } from '../../../api/recordModel';
 import { SField, SStruct, SInterface } from '../../../api/schemaModel';
 import { getImpl } from '../../../domain/schema.tsx';
 
-/**
- * 字段类型分析器
- *
- * 负责分析结构体或接口的字段类型分布
- */
+
+export interface EmbeddingSchema {
+  itemIncludeImplMap: Map<string, SStruct | SInterface>;
+}
+
+export interface FieldTypeAnalysis {
+  totalFields: number;
+  boolCount: number;
+  numberCount: number;
+  primitiveCount: number;
+  allPrimitive: boolean;
+}
+
+
+
 export class FieldTypeAnalyzer {
   /**
    * 分析字段类型
@@ -45,7 +55,7 @@ export class EmbeddingConditionChecker {
    */
   public static matchesAnyCondition(
     analysis: FieldTypeAnalysis,
-    config: typeof EMBEDDING_CONFIG.struct | typeof EMBEDDING_CONFIG.interface
+    config: EmbeddableStructConfig
   ): boolean {
     // 条件a: 没有字段
     if (analysis.totalFields === config.maxFieldsForEmpty) return true;
@@ -119,7 +129,7 @@ export class EmptyListFieldFilter {
 export function canBeEmbeddedCheck(
   fieldValue: JSONObject,
   sField: SField,
-  schema: { itemIncludeImplMap: Map<string, SStruct | SInterface> }
+  schema: EmbeddingSchema
 ): boolean {
   const fieldType = schema.itemIncludeImplMap.get(sField.type);
   if (!fieldType) return false;
@@ -149,18 +159,6 @@ function checkStructEmbeddable(struct: SStruct, fieldValue: JSONObject): boolean
 }
 
 /**
- * 解析 interface 的 $type → impl（checker 与 extractor 共用，避免解析逻辑漂移）
- */
-export function resolveImpl(iface: SInterface, obj: JSONObject): { impl: SStruct; implName: string } | null {
-  const type = obj['$type'];
-  if (typeof type !== 'string') return null;  // 后端脏数据/新旧 schema 不一致时 $type 可能缺失
-  const implName = type.split('.').pop() || type;
-  const impl = getImpl(iface, implName);
-  if (!impl) return null;
-  return { impl, implName };
-}
-
-/**
  * 检查interface是否可以内嵌
  */
 function checkInterfaceEmbeddable(iface: SInterface, fieldValue: JSONObject): boolean {
@@ -174,3 +172,17 @@ function checkInterfaceEmbeddable(iface: SInterface, fieldValue: JSONObject): bo
 
   return EmbeddingConditionChecker.matchesAnyCondition(analysis, EMBEDDING_CONFIG.interface);
 }
+
+/**
+ * 解析 interface 的 $type → impl（checker 与 extractor 共用，避免解析逻辑漂移）
+ */
+export function resolveImpl(iface: SInterface, obj: JSONObject): { impl: SStruct; implName: string } | null {
+  const type = obj['$type'];
+  if (typeof type !== 'string') return null;  // 后端脏数据/新旧 schema 不一致时 $type 可能缺失
+  const implName = type.split('.').pop() || type;
+  const impl = getImpl(iface, implName);
+  if (!impl) return null;
+  return { impl, implName };
+}
+
+

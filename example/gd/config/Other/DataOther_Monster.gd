@@ -5,8 +5,11 @@ var id: int
 var posList: Array[DataPosition]
 var lootId: int  # loot
 var lootItemId: int  # item
+var enumMap1: Dictionary[String, int]
+var enumMap2: Dictionary[int, String]
 # 外键引用属性
 var RefAllLoot: DataOther_Loot
+var RefEnumMap2: Dictionary[int, DataOther_ArgCaptureMode]
 
 # 内部存储
 static var _data: Dictionary[int, DataOther_Monster] = {}
@@ -19,7 +22,7 @@ static func all() -> Array[DataOther_Monster]:
 
 # 字符串表示
 func _to_string() -> String:
-	return "DataOther_Monster{" + str(id) + "," + str(posList) + "," + str(lootId) + "," + str(lootItemId) + "}"
+	return "DataOther_Monster{" + str(id) + "," + str(posList) + "," + str(lootId) + "," + str(lootItemId) + "," + str(enumMap1) + "," + str(enumMap2) + "}"
 
 # 从流初始化
 static func _init_from_stream(stream: ConfigStream, _errors: ConfigErrors):
@@ -36,15 +39,28 @@ static func _create(stream: ConfigStream) -> DataOther_Monster:
 		instance.posList.append(DataPosition._create(stream))
 	instance.lootId = stream.read_int32()
 	instance.lootItemId = stream.read_int32()
+	for c in range(stream.read_int32()):
+		var k = stream.read_string_in_pool()
+		var v = stream.read_int32()
+		instance.enumMap1[k] = v
+	for c in range(stream.read_int32()):
+		var k = stream.read_int32()
+		var v = stream.read_string_in_pool()
+		instance.enumMap2[k] = v
 	return instance
 
 
-# 解析外键引用
-func _resolve(errors: ConfigErrors):
-	RefAllLoot = DataOther_Loot.find(lootId)
-	if RefAllLoot == null:
-		errors.ref_null("other.monster", "AllLoot")
+	# 解析外键引用
+	func _resolve(errors: ConfigErrors):
+		RefAllLoot = DataOther_Loot.find(lootId)
+		if RefAllLoot == null:
+			errors.ref_null("other.monster", "AllLoot")
+		for k in enumMap2.keys():
+			var v = DataOther_ArgCaptureMode.find(enumMap2[k])
+			if v == null:
+				errors.ref_null("other.monster", "enumMap2")
+			RefEnumMap2[k] = v
 
-static func _resolve_refs(errors: ConfigErrors):
-	for item in all():
-		item._resolve(errors)
+	static func _resolve_refs(errors: ConfigErrors):
+		for item in all():
+			item._resolve(errors)

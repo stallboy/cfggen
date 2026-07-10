@@ -20,6 +20,8 @@ return {
     "",
     "",
     "",
+    "",
+    "",
     "kill a monster",
     "kill monster",
     "",

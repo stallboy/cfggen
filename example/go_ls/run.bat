@@ -1,2 +1,1 @@
 go run .
-pause

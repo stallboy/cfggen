@@ -4,7 +4,7 @@ class_name DataAi_Ai
 var iD: int
 var desc: String  # 描述----这里测试下多行效果--再来一行
 var condID: String  # 触发公式
-var trigTick: DataAi_Triggertick  # 触发间隔(帧)
+var trigTick: DataAi_TriggerTick  # 触发间隔(帧)
 var trigOdds: int  # 触发几率
 var actionID: Array[int]  # 触发行为
 var deathRemove: bool  # 死亡移除
@@ -35,7 +35,7 @@ static func _create(stream: ConfigStream) -> DataAi_Ai:
 	instance.iD = stream.read_int32()
 	instance.desc = stream.read_string_in_pool()
 	instance.condID = stream.read_string_in_pool()
-	instance.trigTick = DataAi_Triggertick._create(stream)
+	instance.trigTick = DataAi_TriggerTick._create(stream)
 	instance.trigOdds = stream.read_int32()
 	for c in range(stream.read_int32()):
 		instance.actionID.append(stream.read_int32())

@@ -1,1 +1,1 @@
-java -jar ../cfggen.jar
+java -jar ../cfggen.jar -gui

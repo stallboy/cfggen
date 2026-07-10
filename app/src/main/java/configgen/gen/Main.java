@@ -40,11 +40,11 @@ public final class Main {
         return 1;
     }
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         registerAllProviders();
 
         if (args.length == 0) {
-            GuiLauncher.launch();
+            HelpTool.printHelp();
             return;
         }
 
@@ -66,7 +66,6 @@ public final class Main {
         Tools.addProvider("bytesview", BytesViewTool::new);
         Tools.addProvider("term", TodoTermListerAndChecker::new);
         Tools.addProvider("translate", TodoTranslator::new);
-        Tools.addProvider("help", HelpTool::new);
         Tools.addProvider("schematocsv", SchemaToCsvTool::new);
 
         Generators.addProvider("verify", ValueVerifyTool::new);
@@ -167,6 +166,11 @@ public final class Main {
                     LocaleUtil.setLocale(locale);
                 }
 
+                case "-gui" -> {
+                    GuiLauncher.launch();
+                    return 0;
+                }
+                case "-h" -> HelpTool.printHelp();
                 case "-v" -> Logger.setVerboseLevel(1);
                 case "-vv" -> Logger.setVerboseLevel(2);
                 case "-p" -> Logger.enableProfile();

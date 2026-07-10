@@ -22,9 +22,8 @@ import {
 } from "./editingObject.ts";
 // 导入新的embedding模块
 import { canBeEmbeddedCheck } from "./embedding/embeddingChecker";
-import { EmbeddingFieldExtractor } from "./embedding/embeddingFieldExtractor";
+import { EmbeddingFieldExtractor, EmbeddedFieldValue } from "./embedding/embeddingFieldExtractor";
 import { isPrimitiveType } from "./embedding/embeddingConfig";
-import { EmbeddedFieldValue } from "./embedding/types";
 // 导入Fold状态管理助手
 import { FoldStateHelper } from "../../flow/embedded/FoldStateHelper";
 // Folds 已下沉到独立文件，打破 FoldStateHelper ↔ recordEditEntityCreator 的循环依赖

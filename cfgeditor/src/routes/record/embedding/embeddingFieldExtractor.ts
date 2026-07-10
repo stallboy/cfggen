@@ -1,9 +1,23 @@
-import { EmbeddedFieldValue } from './types';
+
 import { EMBEDDING_CONFIG } from './embeddingConfig';
 import { SStruct, SInterface, SField } from '../../../api/schemaModel';
 import { JSONObject } from '../../../api/recordModel';
 import { PrimitiveValue, PrimitiveType } from '../../../flow/entityModel';
-import { FieldTypeAnalyzer, EmptyListFieldFilter, EmbeddingConditionChecker, resolveImpl } from './embeddingChecker';
+import {
+  FieldTypeAnalyzer,
+  EmptyListFieldFilter,
+  EmbeddingConditionChecker,
+  resolveImpl,
+} from './embeddingChecker';
+
+
+export interface EmbeddedFieldValue {
+  value: PrimitiveValue;
+  type: PrimitiveType;
+  name: string;
+  comment?: string;
+}
+
 
 /**
  * 内嵌字段提取器

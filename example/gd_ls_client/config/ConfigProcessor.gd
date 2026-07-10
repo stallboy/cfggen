@@ -12,6 +12,7 @@ func load_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 	config_nulls.append("equip.jewelrysuit")
 	config_nulls.append("equip.jewelrytype")
 	config_nulls.append("equip.rank")
+	config_nulls.append("other.ArgCaptureMode")
 	config_nulls.append("other.drop")
 	config_nulls.append("other.loot")
 	config_nulls.append("other.monster")
@@ -57,6 +58,9 @@ func load_from_stream(stream: ConfigStream, _errors: ConfigErrors):
 			"equip.rank":
 				config_nulls.erase("equip.rank")
 				DataEquip_Rank._init_from_stream(stream, _errors)
+			"other.ArgCaptureMode":
+				config_nulls.erase("other.ArgCaptureMode")
+				DataOther_ArgCaptureMode._init_from_stream(stream, _errors)
 			"other.drop":
 				config_nulls.erase("other.drop")
 				DataOther_Drop._init_from_stream(stream, _errors)

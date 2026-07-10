@@ -3,7 +3,7 @@ class_name DataOther_Drop
 # 公开属性
 var dropid: int  # 序号
 var name: ConfigText  # 名字
-var items: Array[DataOther_Dropitem]  # 掉落概率
+var items: Array[DataOther_DropItem]  # 掉落概率
 var testmap: Dictionary[int, int]  # 测试map block
 
 # 内部存储
@@ -32,7 +32,7 @@ static func _create(stream: ConfigStream) -> DataOther_Drop:
 	instance.dropid = stream.read_int32()
 	instance.name = ConfigText._create(stream)
 	for c in range(stream.read_int32()):
-		instance.items.append(DataOther_Dropitem._create(stream))
+		instance.items.append(DataOther_DropItem._create(stream))
 	for c in range(stream.read_int32()):
 		var k = stream.read_int32()
 		var v = stream.read_int32()

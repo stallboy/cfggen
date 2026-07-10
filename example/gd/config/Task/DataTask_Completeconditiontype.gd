@@ -1,5 +1,6 @@
 class_name DataTask_Completeconditiontype
 ## task.completeconditiontype
+## 任务完成条件类型
 # 公开属性
 var id: int  # 任务完成条件类型（id的范围为1-100）
 var name: String  # 程序用名字
@@ -84,3 +85,5 @@ static func _create(stream: ConfigStream) -> DataTask_Completeconditiontype:
 	instance.id = stream.read_int32()
 	instance.name = stream.read_string_in_pool()
 	return instance
+
+

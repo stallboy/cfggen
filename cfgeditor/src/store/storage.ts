@@ -149,9 +149,9 @@ export function setPref(key: string, value: string) {
     }
 }
 
-export function removePref(key: string) {
-    localStorage.removeItem(key);
-    if (isTauri()) {
-        savePrefAsyncIf(key);
-    }
-}
+// export function removePref(key: string) {
+//     localStorage.removeItem(key);
+//     if (isTauri()) {
+//         savePrefAsyncIf(key);
+//     }
+// }

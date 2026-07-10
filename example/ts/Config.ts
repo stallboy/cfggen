@@ -1192,6 +1192,9 @@ export class Equip_Rank {
     private static _yellow : Equip_Rank;
     static get Yellow() :Equip_Rank { return this._yellow; }
 
+    private static _red : Equip_Rank;
+    static get Red() :Equip_Rank { return this._red; }
+
     private _RankID!: number;
     /* 稀有度 */
     get RankID(): number { return this._RankID; }
@@ -1252,6 +1255,11 @@ export class Equip_Rank {
                         errors.EnumDup("equip.rank", "yellow");
                     this._yellow = self;
                     break;
+                case "red":
+                    if (this._red != null)
+                        errors.EnumDup("equip.rank", "red");
+                    this._red = self;
+                    break;
                 default:
                     errors.EnumDataAdd("equip.rank", self._RankName);
                     break;
@@ -1272,6 +1280,9 @@ export class Equip_Rank {
         }
         if (this._yellow == null) {
             errors.EnumNull("equip.rank", "yellow");
+        }
+        if (this._red == null) {
+            errors.EnumNull("equip.rank", "red");
         }
     }
 

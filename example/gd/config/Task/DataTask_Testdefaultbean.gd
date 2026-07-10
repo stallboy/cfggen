@@ -1,4 +1,4 @@
-class_name DataTask_Testdefaultbean
+class_name DataTask_TestDefaultBean
 ## task.TestDefaultBean
 # 公开属性
 var testInt: int
@@ -11,11 +11,11 @@ var testMap: Dictionary[int, String]
 
 # 字符串表示
 func _to_string() -> String:
-	return "DataTask_Testdefaultbean{" + str(testInt) + "," + str(testBool) + "," + testString + "," + str(testSubBean) + "," + str(testList) + "," + str(testList2) + "," + str(testMap) + "}"
+	return "DataTask_TestDefaultBean{" + str(testInt) + "," + str(testBool) + "," + testString + "," + str(testSubBean) + "," + str(testList) + "," + str(testList2) + "," + str(testMap) + "}"
 
 # 创建实例
-static func _create(stream: ConfigStream) -> DataTask_Testdefaultbean:
-	var instance = DataTask_Testdefaultbean.new()
+static func _create(stream: ConfigStream) -> DataTask_TestDefaultBean:
+	var instance = DataTask_TestDefaultBean.new()
 	instance.testInt = stream.read_int32()
 	instance.testBool = stream.read_bool()
 	instance.testString = stream.read_string_in_pool()

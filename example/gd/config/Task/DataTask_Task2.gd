@@ -11,7 +11,7 @@ var testString: String
 var testStruct: DataPosition
 var testList: Array[int]
 var testListStruct: Array[DataPosition]
-var testListInterface: Array[DataAi_Triggertick]
+var testListInterface: Array[DataAi_TriggerTick]
 # 外键引用属性
 var NullableRefTaskid: DataTask_Taskextraexp
 var NullableRefNexttask: DataTask_Task
@@ -53,17 +53,17 @@ static func _create(stream: ConfigStream) -> DataTask_Task2:
 	for c in range(stream.read_int32()):
 		instance.testListStruct.append(DataPosition._create(stream))
 	for c in range(stream.read_int32()):
-		instance.testListInterface.append(DataAi_Triggertick._create(stream))
+		instance.testListInterface.append(DataAi_TriggerTick._create(stream))
 	return instance
 
 
-# 解析外键引用
-func _resolve(errors: ConfigErrors):
-	if completecondition != null:
-		completecondition._resolve(errors)
-	NullableRefTaskid = DataTask_Taskextraexp.find(taskid)
-	NullableRefNexttask = DataTask_Task.find(nexttask)
+	# 解析外键引用
+	func _resolve(errors: ConfigErrors):
+		if completecondition != null:
+			completecondition._resolve(errors)
+		NullableRefTaskid = DataTask_Taskextraexp.find(taskid)
+		NullableRefNexttask = DataTask_Task.find(nexttask)
 
-static func _resolve_refs(errors: ConfigErrors):
-	for item in all():
-		item._resolve(errors)
+	static func _resolve_refs(errors: ConfigErrors):
+		for item in all():
+			item._resolve(errors)

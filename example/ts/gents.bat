@@ -1,2 +1,3 @@
 rm ConfigUtil.ts
-java -jar ../../cfggen.jar  -datadir ../config  -gen ts -gen bytes
+call %~dp0..\cfggen_common.bat
+%CFGGEN% -gen ts -gen bytes
