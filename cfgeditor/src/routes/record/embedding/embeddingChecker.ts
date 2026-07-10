@@ -1,5 +1,5 @@
 import { EMBEDDING_CONFIG, isNumberType, isPrimitiveType } from './embeddingConfig';
-import { EmbeddingCheckContext, FieldTypeAnalysis } from './types';
+import { FieldTypeAnalysis } from './types';
 import { JSONObject } from '../../../api/recordModel';
 import { SField, SStruct, SInterface } from '../../../api/schemaModel';
 import { getImpl } from '../../../domain/schema.tsx';
@@ -40,20 +40,6 @@ export class FieldTypeAnalyzer {
  * 负责检查给定的字段类型分析是否满足内嵌条件
  */
 export class EmbeddingConditionChecker {
-  /**
-   * 检查是否满足内嵌条件
-   */
-  static check(
-    analysis: FieldTypeAnalysis,
-    context: EmbeddingCheckContext
-  ): boolean {
-    const config = context.fieldType === 'struct'
-      ? EMBEDDING_CONFIG.struct
-      : EMBEDDING_CONFIG.interface;
-
-    return this.matchesAnyCondition(analysis, config);
-  }
-
   /**
    * 检查是否匹配任一内嵌条件（checker 与 extractor 共用此单一判定，避免 5 条条件复制漂移）
    */
@@ -159,33 +145,32 @@ function checkStructEmbeddable(struct: SStruct, fieldValue: JSONObject): boolean
   const filteredFields = EmptyListFieldFilter.filter(struct.fields, fieldValue);
   const analysis = FieldTypeAnalyzer.analyze(filteredFields);
 
-  const context: EmbeddingCheckContext = {
-    fieldType: 'struct',
-    struct,
-  };
+  return EmbeddingConditionChecker.matchesAnyCondition(analysis, EMBEDDING_CONFIG.struct);
+}
 
-  return EmbeddingConditionChecker.check(analysis, context);
+/**
+ * 解析 interface 的 $type → impl（checker 与 extractor 共用，避免解析逻辑漂移）
+ */
+export function resolveImpl(iface: SInterface, obj: JSONObject): { impl: SStruct; implName: string } | null {
+  const type = obj['$type'];
+  if (typeof type !== 'string') return null;  // 后端脏数据/新旧 schema 不一致时 $type 可能缺失
+  const implName = type.split('.').pop() || type;
+  const impl = getImpl(iface, implName);
+  if (!impl) return null;
+  return { impl, implName };
 }
 
 /**
  * 检查interface是否可以内嵌
  */
 function checkInterfaceEmbeddable(iface: SInterface, fieldValue: JSONObject): boolean {
-  const type = fieldValue['$type'];
-  if (typeof type !== 'string') return false;  // 后端脏数据/新旧 schema 不一致时 $type 可能缺失
-  const implName = type.split('.').pop() || type;
-  const impl = getImpl(iface, implName);
-  if (!impl) return false;
+  const resolved = resolveImpl(iface, fieldValue);
+  if (!resolved) return false;
+  const { impl } = resolved;
 
   // 先过滤空list字段
   const filteredFields = EmptyListFieldFilter.filter(impl.fields, fieldValue);
   const analysis = FieldTypeAnalyzer.analyze(filteredFields);
 
-  const context: EmbeddingCheckContext = {
-    fieldType: 'interface',
-    iface,
-    impl,
-  };
-
-  return EmbeddingConditionChecker.check(analysis, context);
+  return EmbeddingConditionChecker.matchesAnyCondition(analysis, EMBEDDING_CONFIG.interface);
 }

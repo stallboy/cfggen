@@ -1,5 +1,4 @@
 import { PrimitiveValue, PrimitiveType } from '../../../flow/entityModel';
-import { SStruct, SInterface } from '../../../api/schemaModel';
 
 /**
  * 字段类型分析结果
@@ -10,16 +9,6 @@ export interface FieldTypeAnalysis {
   numberCount: number;
   primitiveCount: number;
   allPrimitive: boolean;
-}
-
-/**
- * 内嵌检查上下文
- */
-export interface EmbeddingCheckContext {
-  fieldType: 'struct' | 'interface';
-  struct?: SStruct;
-  iface?: SInterface;
-  impl?: SStruct;
 }
 
 /**

@@ -3,8 +3,7 @@ import { EMBEDDING_CONFIG } from './embeddingConfig';
 import { SStruct, SInterface, SField } from '../../../api/schemaModel';
 import { JSONObject } from '../../../api/recordModel';
 import { PrimitiveValue, PrimitiveType } from '../../../flow/entityModel';
-import { FieldTypeAnalyzer, EmptyListFieldFilter, EmbeddingConditionChecker } from './embeddingChecker';
-import { getImpl } from '../../../domain/schema.tsx';
+import { FieldTypeAnalyzer, EmptyListFieldFilter, EmbeddingConditionChecker, resolveImpl } from './embeddingChecker';
 
 /**
  * 内嵌字段提取器
@@ -29,12 +28,9 @@ export class EmbeddingFieldExtractor {
     iface: SInterface,
     obj: JSONObject
   ): { fields: EmbeddedFieldValue[]; implName?: string } | null {
-    const type = obj['$type'];
-    if (typeof type !== 'string') return null;  // $type 缺失则无法定位 impl
-    const implName = type.split('.').pop() || type;
-    const impl = getImpl(iface, implName);
-
-    if (!impl) return null;
+    const resolved = resolveImpl(iface, obj);
+    if (!resolved) return null;
+    const { impl, implName } = resolved;
 
     const fields = this.extractFields(impl.fields, obj);
 
