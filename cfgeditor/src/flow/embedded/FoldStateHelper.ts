@@ -35,22 +35,6 @@ export class FoldStateHelper {
   }
 
   /**
-   * 检查是否应该展开（创建独立节点）
-   * @param folds 本地fold状态
-   * @param fieldChain 字段路径
-   * @param obj 数据对象
-   * @returns true表示应该展开，false表示应该折叠
-   */
-  static shouldExpand(
-    folds: Folds,
-    fieldChain: (string | number)[],
-    obj: JSONObject
-  ): boolean {
-    const foldState = this.getFoldState(folds, fieldChain, obj);
-    return foldState === false;
-  }
-
-  /**
    * 检查是否应该内嵌（折叠状态）
    * @param folds 本地fold状态
    * @param fieldChain 字段路径
@@ -64,23 +48,5 @@ export class FoldStateHelper {
   ): boolean {
     const foldState = this.getFoldState(folds, fieldChain, obj);
     return foldState !== false; // true或undefined都内嵌
-  }
-
-  /**
-   * 获取fold状态的默认值
-   * @param folds 本地fold状态
-   * @param fieldChain 字段路径
-   * @param obj 数据对象
-   * @param defaultValue 默认值
-   * @returns fold状态
-   */
-  static getFoldStateOrDefault(
-    folds: Folds,
-    fieldChain: (string | number)[],
-    obj: JSONObject | undefined,
-    defaultValue: boolean
-  ): boolean {
-    const foldState = this.getFoldState(folds, fieldChain, obj);
-    return foldState !== undefined ? foldState : defaultValue;
   }
 }

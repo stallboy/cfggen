@@ -39,56 +39,31 @@ describe('FoldStateHelper', () => {
     })
 
     // ---------------------------------------------------------------------------
-    // shouldExpand / shouldEmbed
+    // shouldEmbed
     // ---------------------------------------------------------------------------
-    describe('shouldExpand / shouldEmbed', () => {
-        it('状态为 false 时展开（不内嵌）', () => {
+    describe('shouldEmbed', () => {
+        it('状态为 false 时不内嵌', () => {
             const folds = new Folds([{chain: ['a'], fold: false}])
             const obj = objWithFold(undefined)
-            expect(FoldStateHelper.shouldExpand(folds, ['a'], obj)).toBe(true)
             expect(FoldStateHelper.shouldEmbed(folds, ['a'], obj)).toBe(false)
         })
 
-        it('状态为 true 时折叠（内嵌）', () => {
+        it('状态为 true 时内嵌', () => {
             const folds = new Folds([{chain: ['a'], fold: true}])
             const obj = objWithFold(undefined)
-            expect(FoldStateHelper.shouldExpand(folds, ['a'], obj)).toBe(false)
             expect(FoldStateHelper.shouldEmbed(folds, ['a'], obj)).toBe(true)
         })
 
         it('状态为 undefined（本地+对象均未设）时默认内嵌', () => {
             const folds = new Folds([])
             const obj = objWithFold(undefined)
-            expect(FoldStateHelper.shouldExpand(folds, ['a'], obj)).toBe(false)
             expect(FoldStateHelper.shouldEmbed(folds, ['a'], obj)).toBe(true)
         })
 
-        it('本地未设但 obj.$fold=false 时展开', () => {
+        it('本地未设但 obj.$fold=false 时不内嵌', () => {
             const folds = new Folds([])
             const obj = objWithFold(false)
-            expect(FoldStateHelper.shouldExpand(folds, ['a'], obj)).toBe(true)
             expect(FoldStateHelper.shouldEmbed(folds, ['a'], obj)).toBe(false)
-        })
-    })
-
-    // ---------------------------------------------------------------------------
-    // getFoldStateOrDefault
-    // ---------------------------------------------------------------------------
-    describe('getFoldStateOrDefault', () => {
-        it('有明确状态时返回该状态，忽略默认值', () => {
-            const folds = new Folds([{chain: ['a'], fold: true}])
-            expect(FoldStateHelper.getFoldStateOrDefault(folds, ['a'], undefined, false)).toBe(true)
-        })
-
-        it('状态为 undefined 时返回默认值', () => {
-            const folds = new Folds([])
-            expect(FoldStateHelper.getFoldStateOrDefault(folds, ['a'], undefined, false)).toBe(false)
-            expect(FoldStateHelper.getFoldStateOrDefault(folds, ['a'], undefined, true)).toBe(true)
-        })
-
-        it('obj.$fold 提供状态时优先于默认值', () => {
-            const folds = new Folds([])
-            expect(FoldStateHelper.getFoldStateOrDefault(folds, ['a'], objWithFold(true), false)).toBe(true)
         })
     })
 })
