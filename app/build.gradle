@@ -49,6 +49,34 @@ jte {
     trimControlStructures = true
 }
 
+// 保证 jte 模板行尾为 LF：jte 预编译按字节读取模板，模板里的 CRLF 会原样透传到生成的代码文件。
+// 无论工作区行尾如何，构建时强制把所有 .jte 规范化为 LF，确保打进 jar 的模板与编译进 class 的字面文本一致。
+// （原地修改源文件；因 .gitattributes 为 eol=lf，git 不会因此报 modified。）
+tasks.register('normalizeJteLineEndings') {
+    group = 'build'
+    description = '把 src/main/resources/jte 下所有 .jte 的行尾统一为 LF'
+    // 配置阶段解析路径并捕获为局部变量；configuration cache 下 doLast 不能再引用 Project（file(...) 等）
+    def jteRoot = file('src/main/resources/jte')
+    doLast {
+        def changed = 0
+        jteRoot.eachFileRecurse { f ->
+            if (f.isFile() && f.name.endsWith('.jte')) {
+                def content = f.getText('UTF-8')
+                def normalized = content.replaceAll('\r\n', '\n').replaceAll('\r', '\n')
+                if (content != normalized) {
+                    f.write(normalized, 'UTF-8')
+                    changed++
+                    println "[normalizeJteLineEndings] -> LF: ${jteRoot.toPath().relativize(f.toPath())}"
+                }
+            }
+        }
+        println "[normalizeJteLineEndings] 完成，共转换 ${changed} 个 .jte 为 LF"
+    }
+}
+
+tasks.named('generateJte') { dependsOn 'normalizeJteLineEndings' }
+tasks.named('processResources') { dependsOn 'normalizeJteLineEndings' }
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(25)
