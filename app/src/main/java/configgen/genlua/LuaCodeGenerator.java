@@ -14,6 +14,11 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static configgen.value.CfgValue.VStruct;
 import static configgen.value.CfgValue.VTable;
@@ -33,8 +38,15 @@ public class LuaCodeGenerator extends GeneratorWithTag {
     private CfgValue cfgValue;
     private CfgSchema cfgSchema;
     private Path dstDir;
-    private CacheConfig cacheConfig;
     private boolean isLangSwitch;
+
+    // 表生成并发：每个工作线程独占一组缓冲区。
+    // mainCc 给主表文件，extraCc 给 extraSplit 分片文件——二者在 generate_table 中生命周期重叠
+    // （主表 ps 未关闭时就会创建分片 ps），必须用独立缓冲区，否则分片 ps 构造时的 setLength(0)
+    // 会清掉主表已累积的内容。ThreadLocal 在同一线程内跨表复用，避免每表重新分配大缓冲区。
+    private final ThreadLocal<CacheConfig> mainCc = ThreadLocal.withInitial(() -> CacheConfig.of(512 * 1024));
+    private final ThreadLocal<CacheConfig> extraCc = ThreadLocal.withInitial(() -> CacheConfig.of(512 * 1024));
+    private final ThreadLocal<StringBuilder> lineCacheTl = ThreadLocal.withInitial(() -> new StringBuilder(256));
     private final boolean noStr;
     private final boolean rForOldShared;
     private final String mkCfgDir;
@@ -72,11 +84,9 @@ public class LuaCodeGenerator extends GeneratorWithTag {
         isLangSwitch = AContext.getInstance().nullableLangSwitchSupport() != null;
 
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
-        cacheConfig = CacheConfig.of(512 * 1024); //优化gc alloc
 
         cfgValue = ctx.makeValue(tag);
         cfgSchema = cfgValue.schema();
-
 
         try (var ps = createCode("_cfgs.lua")) {
             generate_cfgs(ps);
@@ -90,22 +100,27 @@ public class LuaCodeGenerator extends GeneratorWithTag {
             generate_beans(ps);
         }
 
-        StringBuilder lineCache = new StringBuilder(256);
-
-        for (VTable v : cfgValue.sortedTables()) {
-            try (var ps = createCode(Name.tablePath(v.name()))) {
-                try {
+        // 每个表生成独立的 .lua 文件，互不依赖，是并发的主要收益点。
+        if (isLangSwitch) {
+            // LangSwitchSupport.enterTable/enterText 在多表间共享可变状态（curTableTextFinder、全局 text id），
+            // 并行化需要较大改造；保持串行 = 现状，零风险。
+            StringBuilder lineCache = lineCacheTl.get();
+            for (VTable v : cfgValue.sortedTables()) {
+                try (var ps = createCode(Name.tablePath(v.name()))) {
                     generate_table(v, ps, lineCache);
                 } catch (Throwable e) {
                     throw new AssertionError("ERR generating lua code for " + v.name(), e);
                 }
             }
+        } else {
+            generateTablesParallel();
         }
 
         AContext.getInstance().getStatistics().print();
 
         if (AContext.getInstance().nullableLangSwitchSupport() != null) {
             Map<String, List<String>> lang2Texts = AContext.getInstance().nullableLangSwitchSupport().getLang2Texts();
+            StringBuilder lineCache = lineCacheTl.get();
             for (Map.Entry<String, List<String>> e : lang2Texts.entrySet()) {
                 String lang = e.getKey();
                 List<String> texts = e.getValue();
@@ -128,7 +143,38 @@ public class LuaCodeGenerator extends GeneratorWithTag {
     }
 
     private CachedIndentPrinter createCode(String fn) {
-        return cacheConfig.printer(dstDir.resolve(fn), encoding);
+        return mainCc.get().printer(dstDir.resolve(fn), encoding);
+    }
+
+    private void generateTablesParallel() {
+        List<Callable<Void>> tasks = new ArrayList<>();
+        for (VTable v : cfgValue.sortedTables()) {
+            tasks.add(() -> {
+                // 每任务借本线程的缓冲区（lineCache/mainCc/extraCc），互不干扰
+                StringBuilder lineCache = lineCacheTl.get();
+                try (CachedIndentPrinter ps = createCode(Name.tablePath(v.name()))) {
+                    generate_table(v, ps, lineCache);
+                } catch (Throwable e) {
+                    throw new AssertionError("ERR generating lua code for " + v.name(), e);
+                }
+                return null;
+            });
+        }
+
+        try (ExecutorService executor = Executors.newWorkStealingPool()) {
+            List<Future<Void>> futures = executor.invokeAll(tasks);
+            for (Future<Void> f : futures) {
+                f.get(); // 传播生成异常
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException re) throw re;
+            if (cause instanceof Error err) throw err;
+            throw new RuntimeException(cause);
+        }
     }
 
     private void generate_lang(CachedIndentPrinter ps, List<String> idToStr, StringBuilder lineCache) {
@@ -446,8 +492,8 @@ public class LuaCodeGenerator extends GeneratorWithTag {
         for (int extraIdx = 0; extraIdx < extraFileCnt; extraIdx++) {
             ps.println("require \"%s_%d\"(mk)", fullName, extraIdx + 1);
 
-            // 不能用createCode，不能用之前的cache
-            try (var extraPs = new CachedIndentPrinter(
+            // 不能用createCode，不能用主表的cache；用本线程独立的 extraCc，与主表 mainCc 缓冲区分开
+            try (CachedIndentPrinter extraPs = extraCc.get().printer(
                     dstDir.resolve(Name.tableExtraPath(vTable.name(), extraIdx + 1)), encoding)) {
 
                 extraPs.println("local %s = require \"%s._cfgs\"", pkg, pkg);

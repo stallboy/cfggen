@@ -6,9 +6,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class CachedFiles {
-    private static final Set<String> filename_set = new HashSet<>();
+    // 表生成并发：writeFile/keepFile 会被多个工作线程同时调用，必须用并发安全 Set
+    private static final Set<String> filename_set = ConcurrentHashMap.newKeySet();
 
     private static final List<File> deleteFiles = new ArrayList<>(1);
     private static final List<File> deleteKeepMetaWithSuffixFiles = new ArrayList<>(1);

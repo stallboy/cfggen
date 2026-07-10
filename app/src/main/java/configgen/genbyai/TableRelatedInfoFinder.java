@@ -112,7 +112,7 @@ public class TableRelatedInfoFinder {
 
         // $mod.md
         Path modDir = cfgFilePath.getParent();
-        String moduleRule = null;
+        String moduleRule;
         Path modFile = modDir.resolve("$mod.md");
         if (!Files.exists(modFile)) {
             return null;

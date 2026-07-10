@@ -2,59 +2,62 @@ package configgen.genlua;
 
 import configgen.util.Logger;
 
+import java.util.concurrent.atomic.LongAdder;
+
 class AStat {
-    private int emptyTableCount = 0;
-    private int listTableCount = 0;
-    private int mapTableCount = 0;
-    private int interfaceTableCount = 0;
-    private int structTableCount = 0;
-    private int recordTableCount = 0;
-    private int sharedTableReduceCount = 0;
-    private int packBoolReduceCount = 0;
+    // 表生成并发：计数器被多个工作线程同时累加，用 LongAdder 降低竞争
+    private final LongAdder emptyTableCount = new LongAdder();
+    private final LongAdder listTableCount = new LongAdder();
+    private final LongAdder mapTableCount = new LongAdder();
+    private final LongAdder interfaceTableCount = new LongAdder();
+    private final LongAdder structTableCount = new LongAdder();
+    private final LongAdder recordTableCount = new LongAdder();
+    private final LongAdder sharedTableReduceCount = new LongAdder();
+    private final LongAdder packBoolReduceCount = new LongAdder();
 
     void useEmptyTable() {
-        emptyTableCount++;
+        emptyTableCount.increment();
     }
 
     void useListTable() {
-        listTableCount++;
+        listTableCount.increment();
     }
 
     void useMapTable() {
-        mapTableCount++;
+        mapTableCount.increment();
     }
 
     void useInterfaceTable() {
-        interfaceTableCount++;
+        interfaceTableCount.increment();
     }
 
     void useStructTable() {
-        structTableCount++;
+        structTableCount.increment();
     }
 
     void useRecordTable() {
-        recordTableCount++;
+        recordTableCount.increment();
     }
 
     void useSharedTable(int c) {
-        sharedTableReduceCount += c;
+        sharedTableReduceCount.add(c);
     }
 
     void usePackBool(int c) {
-        packBoolReduceCount += c;
+        packBoolReduceCount.add(c);
     }
 
 
     void print() {
         Logger.verbose(
                 "可共享空table个数:%d, 共享table节省:%d，压缩bool节省:%d，总共有list:%d，map:%d，interface:%d，struct:%d，record:%d",
-                emptyTableCount,
-                sharedTableReduceCount,
-                packBoolReduceCount,
-                listTableCount,
-                mapTableCount,
-                interfaceTableCount,
-                structTableCount,
-                recordTableCount);
+                emptyTableCount.sum(),
+                sharedTableReduceCount.sum(),
+                packBoolReduceCount.sum(),
+                listTableCount.sum(),
+                mapTableCount.sum(),
+                interfaceTableCount.sum(),
+                structTableCount.sum(),
+                recordTableCount.sum());
     }
 }
