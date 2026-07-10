@@ -17,11 +17,13 @@
 | **TypeScript** | Typed configuration for frontend and Node.js | Web applications, frontend projects |
 | **Go** | Configuration structs for Go language | Go backend services |
 | **Lua** | Lua table configuration data | Game scripting, embedded systems |
+| **GDScript** | Configuration code for the Godot engine | Godot games |
 | **JSON** | Universal configuration data format | Data exchange, API configuration |
+| **Bytes** | Binary config file, supports runtime dynamic loading and multiple languages | Release artifacts, hot loading |
 
 ## 📋 Environment Requirements
 
-* **JDK 21** - Java development environment
+* **JDK 25** - Java development environment
 * **Gradle** - Build tool
 * **Git** - Version control tool (ensure git/bin path is added to PATH environment variable)
 
@@ -42,15 +44,23 @@ mkexe.bat
 ### 🎯 Basic Usage
 
 ```bash
-# Use the generated JAR file
+# Launch the GUI to visually assemble the command line (prints help when no args given)
+java -jar cfggen.jar -gui
+
+# Generate code with the JAR file (multiple -gen flags can be combined)
 java -jar cfggen.jar -datadir [config_directory] -gen [language]
 
 # Example: Generate Java code
 java -jar cfggen.jar -datadir example -gen java
 
-# Example: Generate TypeScript code
-java -jar cfggen.jar -datadir example -gen ts
+# Example: Generate TypeScript code + binary data
+java -jar cfggen.jar -datadir example -gen ts -gen bytes
+
+# Example: Validate config foreign key reference integrity
+java -jar cfggen.jar -datadir example -gen verify
 ```
+
+> Run `java -jar cfggen.jar -h` for the full parameter list (i18n, encoding, head row, performance profiler, etc.).
 
 ## 🧪 Testing Examples
 
@@ -67,7 +77,7 @@ usage.bat
 ```bash
 cd example
 genjava.bat    # Generate Java code and data
-gradle build   # Build project
+./gradlew.bat build   # Build project
 java -jar build/libs/example.jar
 # Enter command line interactive mode, type 'q' to exit, type table name prefix (like "ai") to view related data
 ```

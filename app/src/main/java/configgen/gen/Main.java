@@ -36,7 +36,7 @@ public final class Main {
     private static final int MAX_EXCEPTION_DEPTH = 30;
 
     private static int help(String reason) {
-        HelpTool.printHelp(reason);
+        Help.printHelp(reason);
         return 1;
     }
 
@@ -44,7 +44,7 @@ public final class Main {
         registerAllProviders();
 
         if (args.length == 0) {
-            HelpTool.printHelp();
+            Help.printHelp();
             return;
         }
 
@@ -60,6 +60,7 @@ public final class Main {
     record NamedGenerator(String name, Generator gen) {
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     public static void registerAllProviders() {
         Tools.addProvider("xmltocfg", XmlToCfgTool::new);
         Tools.addProvider("fastexcelcheck", ExcelReadDiffTool::new);
@@ -170,7 +171,7 @@ public final class Main {
                     GuiLauncher.launch();
                     return 0;
                 }
-                case "-h" -> HelpTool.printHelp();
+                case "-h" -> Help.printHelp();
                 case "-v" -> Logger.setVerboseLevel(1);
                 case "-vv" -> Logger.setVerboseLevel(2);
                 case "-p" -> Logger.enableProfile();
@@ -237,7 +238,7 @@ public final class Main {
         ExplicitDir explicitDir = ExplicitDir.parse(asRoot, excelDirs, jsonDirs);
 
         if (i18nfile != null && langSwitchDir != null) {
-            return help("-不能同时配置-i18nfile和-langswitchdir");
+            return help("-不能同时配置-i18nFile和-langSwitchDir");
         }
 
         Logger.profile(String.format("start total memory %dm", Runtime.getRuntime().maxMemory() / 1024 / 1024));

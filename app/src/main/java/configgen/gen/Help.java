@@ -1,15 +1,12 @@
-package configgen.tool;
+package configgen.gen;
 
-import configgen.gen.Generators;
-import configgen.gen.ParameterInfoCollector;
-import configgen.gen.Tools;
 import configgen.util.LocaleUtil;
 import configgen.util.Logger;
 
 /**
  * 打印使用帮助信息
  */
-public class HelpTool {
+public class Help {
 
     public static void printHelp() {
         printHelp(null);
@@ -20,7 +17,7 @@ public class HelpTool {
             Logger.log(reason);
         }
 
-        Logger.log("Usage: java -jar cfggen.jar [options] [-tool toolname[,param=value...]] -datadir <dir> [-gen genname[,param=value...]]");
+        Logger.log("Usage: java -jar cfggen.jar [options] [-tool toolName[,param=value...]] -datadir <dir> [-gen genName[,param=value...]]");
         Logger.log("");
         Logger.log("   or: java -jar cfggen.jar [-h] (print help)");
         Logger.log("   or: java -jar cfggen.jar -gui (launch GUI)");
@@ -62,6 +59,7 @@ public class HelpTool {
                 "csv/txt/excel file head row type, default 2"));
         Logger.log("    -encoding         " + LocaleUtil.getLocaleString("Usage.Encoding",
                 "csv/txt encoding, default GBK, if csv file has BOM head, use that encoding"));
+        //noinspection SpellCheckingInspection
         Logger.log("    -asroot           " + LocaleUtil.getLocaleString("Usage.AsRoot",
                 "ExplicitDir.txtAsTsvFileInThisDirAsInRoot_To_AddTag_Map， default null, can be 'ClientTables:noserver,PublicTables,ServerTables:noclient'"));
         Logger.log("    -exceldirs        " + LocaleUtil.getLocaleString("Usage.ExcelDirs",

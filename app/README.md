@@ -14,16 +14,18 @@
 
 | 语言/格式 | 描述 | 主要用途 |
 |-----------|------|----------|
-| **Java** | 类型安全的配置访问 | 后端服务 |
+| **Java** | 类型安全的配置访问，支持 sealed 类 | 后端服务 |
 | **C#** | .NET 平台的配置访问 | Unity 游戏、.NET 应用 |
 | **TypeScript** | 前端和 Node.js 的类型化配置 | Web 应用、前端项目 |
 | **Go** | Go 语言的配置结构体 | Go 后端服务 |
 | **Lua** | Lua 表的配置数据 | 游戏脚本、嵌入式系统 |
+| **GDScript** | Godot 引擎的配置代码 | Godot 游戏 |
 | **JSON** | 通用的配置数据格式 | 数据交换、API 配置 |
+| **Bytes** | 二进制配置文件，支持运行时动态加载与多语言 | 发布产物、热加载 |
 
 ## 📋 环境要求
 
-* **JDK 21** - Java 开发环境
+* **JDK 25** - Java 开发环境
 * **Gradle** - 构建工具
 * **Git** - 版本控制工具（确保 git/bin 路径已添加到 PATH 环境变量中）
 
@@ -44,15 +46,23 @@ mkexe.bat
 ### 🎯 基本用法
 
 ```bash
-# 使用生成的 JAR 文件
+# 启动 GUI 可视化拼装命令行（无参数时默认打印帮助）
+java -jar cfggen.jar -gui
+
+# 使用生成的 JAR 文件生成代码（可同时指定多个 -gen）
 java -jar cfggen.jar -datadir [配置目录] -gen [语言]
 
 # 示例：生成 Java 代码
 java -jar cfggen.jar -datadir example -gen java
 
-# 示例：生成 TypeScript 代码
-java -jar cfggen.jar -datadir example -gen ts
+# 示例：生成 TypeScript 代码 + 二进制数据
+java -jar cfggen.jar -datadir example -gen ts -gen bytes
+
+# 示例：校验配置外键引用完整性
+java -jar cfggen.jar -datadir example -gen verify
 ```
+
+> 完整参数列表（含 i18n、编码、表头行、性能 profile 等）运行 `java -jar cfggen.jar -h` 查看。
 
 ## 🧪 测试示例
 
