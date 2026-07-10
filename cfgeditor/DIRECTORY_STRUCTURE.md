@@ -98,10 +98,12 @@ src/
 │   ├── schema.tsx         Schema 类 + getField/getImpl/getIdOptions…
 │   ├── storageJson.ts     quicktype 生成的配置契约（NodeShowType/TauriConf/FixedPage/AIConf…）+ Convert
 │   ├── resInfo.ts         ResInfo 资源类型
-│   └── embedding/         内嵌判定规则（5 条规则的纯函数 + 配置）
+│   ├── folds.ts           Folds 折叠记录（纯数据结构 setFold/isFold）
+│   ├── embedding.ts       内嵌判定（规则函数 + 阈值配置，原 checker+config 合并）
+│   └── embedding.md       内嵌机制说明（5 条规则）
 │
 ├── store/               全局状态（Resso）+ 持久化 + history
-├── services/            【有状态/有副作用服务】themeService（editingObject 待迁入）
+├── services/            【有状态/有副作用服务】editingObject（编辑态单例）+ themeService
 │
 ├── flow/                图形可视化特性（React Flow 渲染 + 布局计算 + hook）
 ├── routes/              路由/页面层（薄壳：取数据 + 调 service + 渲 flow）
@@ -112,8 +114,8 @@ src/
 
 ### 各层一句话定位
 - **api**：后端长什么样，这里就长什么样。纯类型 + 请求函数，不依赖任何上层。
-- **domain**：项目的"心脏"。放"不管用什么 UI 框架、跑在哪"都成立的模型、规则、契约类型。**它越厚越健康**——可测、可复用、不依附 React。`schema.tsx`、`entityModel.ts`、`embeddingChecker`、`storageJson`（配置契约）、`resInfo` 都属此。
-- **store / services**：管"变化"和"副作用"。`editingObject.ts` 这种持有可变单例、调 `setEditingState` 的，本质是服务（计划迁 `services/`）。
+- **domain**：项目的"心脏"。放"不管用什么 UI 框架、跑在哪"都成立的模型、规则、契约类型。**它越厚越健康**——可测、可复用、不依附 React。`schema.tsx`、`entityModel.ts`、`embedding`、`folds`、`storageJson`（配置契约）、`resInfo` 都属此。
+- **store / services**：管"变化"和"副作用"。`services/editingObject.ts` 持有可变单例、调 `setEditingState`，是典型服务；`themeService` 读取主题文件。
 - **flow**："图形可视化"特性。domain 之上、routes 之下的业务特性层。
 - **routes**：页面，尽量薄。
 
@@ -178,14 +180,14 @@ oxlint **不支持** `import/no-restricted-paths`（zone 规则），但可用 E
 
 目录重构最忌"大爆炸重排"。本项目按小步走，每步可验证。**已完成**（master 上的提交）：
 
-1. ✅ **纯规则下沉**：`embedding` → `domain/embedding/`
+1. ✅ **纯规则下沉**：`embedding` → `domain/`
 2. ✅ **核心模型归位**：`entityModel.ts` → `domain/`
 3. ✅ **消除反向依赖**：`EFitView`/`EditingObjectRes` 抽到中立层（解开 flow→routes）；`getResBrief` 下沉 res（解开 res→flow）
 4. ✅ **路径别名**：`@/`（`../`→`@/`，`./` 保留），tsconfig/vite/vitest 三处
 5. ✅ **lint 方向守门**：oxlint 6 方向规则 + `storageJson`/`resInfo` 契约类型下沉 domain
+6. ✅ **domain 扁平化 + services 上浮**：`Folds` 下沉 `domain/folds.ts`（纯数据结构，决策逻辑留上层）；`embeddingChecker`+`embeddingConfig` 合并成 `domain/embedding.ts`（消除子目录 + 命名）；`editingObject` → `services/`（状态服务归位）；`flow/embedded/` 目录消失
 
 **后续**（lint 规则已就位接住）：
-- `editingObject.ts` → `services/`（状态层上浮；services 的方向规则已配好）
 - 当 record 的 editing 全家桶（editingObject + recordEditEntityCreator + Record.tsx）膨胀到自成体系，再收进 `features/record/` 自包含——那时才真正进入 feature-based
 
 ---
@@ -196,4 +198,4 @@ oxlint **不支持** `import/no-restricted-paths`（zone 规则），但可用 E
 - **一条铁律**：依赖只能向下；低层 import 高层 = 该重构的信号（本项目靠 lint 自动拦截）。
 - **一个判据**：纯 → 下沉 domain；有状态/副作用 → 抬 store/services；有 UI → 上层。
 - **两个护栏**：路径别名 `@/`（治深路径）+ oxlint 方向规则（治依赖方向）。
-- **domain 是心脏**：跨层共享的模型/规则/契约类型（entityModel/schema/embedding/storageJson/resInfo）都沉这，越厚越健康。
+- **domain 是心脏**：跨层共享的模型/规则/契约类型（entityModel/schema/embedding/folds/storageJson/resInfo）都沉这，越厚越健康。
