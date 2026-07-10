@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest'
-import {Folds} from './Folds.ts'
+import {Folds} from './folds.ts'
 
 describe('Folds', () => {
     // ---------------------------------------------------------------------------

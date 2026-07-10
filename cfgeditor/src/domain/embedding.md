@@ -38,7 +38,7 @@
 | **e** | 恰好 1 个 bool + 1 个 number | 2 (1+1) | 2 (1+1) |
 
 > struct 比 interface **更宽松**（允许更多 number/bool）—— struct 是具体类型、结构稳定；interface 可能有多个 impl，更保守。
-> 阈值集中在 `embeddingConfig.ts` 的 `EMBEDDING_CONFIG`，要调内嵌规则改这一处即可。
+> 阈值集中在 `embedding.ts` 的 `EMBEDDING_CONFIG`，要调内嵌规则改这一处即可。
 
 **关键约束**：所有条件都要求 `allPrimitive`（字段全是 primitive）。只要有一个 struct/interface 子字段，就**不内嵌**（展开）。值为空数组 `[]` 的 list 字段会先被过滤掉，不计入字段数。
 

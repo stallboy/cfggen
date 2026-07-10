@@ -2,7 +2,7 @@ import {describe, it, expect} from 'vitest'
 import {RecordEditEntityCreator} from './recordEditEntityCreator.ts'
 import {EntityEditField} from '@/domain/entityModel'
 import {Schema} from '@/domain/schema'
-import {Folds} from '@/flow/embedded/Folds'
+import {Folds} from '@/domain/folds'
 import {field, fk, makeInterface, makeRawSchema, makeStruct, makeTable} from '@/test/fixtures'
 
 function buildSchema() {

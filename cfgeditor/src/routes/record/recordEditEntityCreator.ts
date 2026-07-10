@@ -19,14 +19,10 @@ import {
     onDeleteItemFromArray, onSwapItemInArray, onUpdateFold,
     onUpdateFormValues,
     onUpdateInterfaceValue, onUpdateNote
-} from "./editingObject.ts";
-// 导入新的embedding模块
-import { canBeEmbeddedCheck, extractEmbeddingFields } from "@/domain/embedding/embeddingChecker";
-import { isPrimitiveType } from "@/domain/embedding/embeddingConfig";
-// 导入Fold状态管理助手
-import { FoldStateHelper } from "@/flow/embedded/FoldStateHelper";
-// Folds 已下沉到独立文件，打破 FoldStateHelper ↔ recordEditEntityCreator 的循环依赖
-import {Folds} from "@/flow/embedded/Folds";
+} from "@/services/editingObject";
+import { canBeEmbeddedCheck, extractEmbeddingFields, isPrimitiveType } from "@/domain/embedding";
+// Folds（折叠状态，domain）
+import {Folds} from "@/domain/folds";
 
 
 interface ArrayItemParam {
@@ -631,18 +627,24 @@ export class RecordEditEntityCreator {
     }
 
     /**
-     * 获取fold状态（优先本地状态，其次对象字段）
-     * 使用FoldStateHelper统一管理
+     * 获取fold状态：优先本地 Folds，其次 obj.$fold，均无则 undefined
      */
     private getFoldState(fieldChain: (string | number)[], obj?: JSONObject): boolean | undefined {
-        return FoldStateHelper.getFoldState(this.folds, fieldChain, obj);
+        const localFold = this.folds.isFold(fieldChain);
+        if (localFold !== undefined) {
+            return localFold;
+        }
+        if (obj) {
+            return obj['$fold'] as boolean | undefined;
+        }
+        return undefined;
     }
 
     /**
      * 是否内嵌（fold 非 false 即内嵌：true 或 undefined）
      */
     private shouldEmbed(fieldChain: (string | number)[], obj: JSONObject): boolean {
-        return FoldStateHelper.shouldEmbed(this.folds, fieldChain, obj);
+        return this.getFoldState(fieldChain, obj) !== false;
     }
 
     getAutoCompleteOptions(structural: SStruct | STable,
@@ -691,4 +693,4 @@ function getImplNameOptions(sInterface: SInterface): EntityEditFieldOptions {
     return {options: impls, isValueInteger: false, isEnum: true};
 }
 
-// ChainFold / Folds / isChainEqual 已下沉到 flow/embedded/Folds.ts（见顶部 import）
+// ChainFold / Folds / isChainEqual 已下沉到 domain/folds.ts（见顶部 import）

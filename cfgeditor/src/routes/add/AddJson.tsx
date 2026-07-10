@@ -10,7 +10,7 @@ import type {ResultProps} from "antd";
 import {RecordEditResult} from "@/api/recordModel";
 import {useNavigate} from "react-router";
 import {useTranslation} from "react-i18next";
-import {applyNewEditingObject} from "@/routes/record/editingObject";
+import {applyNewEditingObject} from "@/services/editingObject";
 
 const {Title} = Typography;
 // antd 最佳实践：用根导出的 ResultProps 派生类型，避免深路径 antd/es/*

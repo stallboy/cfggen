@@ -13,7 +13,7 @@ import {useQuery, useMutation} from "@tanstack/react-query";
 import {getPrompt, checkJson} from "@/api/api";
 import {Result, Spin} from "antd";
 import {CheckJsonResult} from "@/api/chatModel";
-import {applyNewEditingObject} from "@/routes/record/editingObject";
+import {applyNewEditingObject} from "@/services/editingObject";
 
 const useChatStyle = createStyles(({token, css}) => {
     return {

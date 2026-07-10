@@ -4,7 +4,7 @@ import {App, Result} from "antd";
 import {createRefEntities, getId, getLabel} from "./recordRefUtils.ts";
 import {RecordEntityCreator} from "./recordEntityCreator.ts";
 import {RecordEditEntityCreator} from "./recordEditEntityCreator.ts";
-import {Folds} from "@/flow/embedded/Folds";
+import {Folds} from "@/domain/folds";
 import {
     editState,
     isCopiedFitAllowedType, notifyEditingState,
@@ -12,7 +12,7 @@ import {
     onStructCopy,
     onStructPaste,
     startEditingObject,
-} from "./editingObject.ts";
+} from "@/services/editingObject";
 import {useTranslation} from "react-i18next";
 import {invalidateAllQueries, navTo, setIsEditMode, useMyStore, useLocationData} from "@/store/store";
 import {useNavigate, useOutletContext} from "react-router";

@@ -1,11 +1,9 @@
 /**
- * Folds —— 编辑态折叠记录的不可变包装（仅 (string|number)[][] 的薄封装，无任何依赖）。
+ * Folds —— 编辑态折叠记录的不可变包装（ChainFold[] 薄封装，零依赖）。
  *
- * 原位于 routes/record/recordEditEntityCreator.ts，下沉到此处以打破
- * FoldStateHelper ↔ recordEditEntityCreator 的 ES module 循环依赖
- * （FoldStateHelper 属底层通用层，不应反向依赖路由层）。
+ * 下沉 domain。注意：fold 状态的"优先级决策"（本地 Folds vs obj.$fold）是上层
+ * 业务概念，不在此纯数据结构内——由消费者（recordEditEntityCreator）自行实现。
  */
-
 export interface ChainFold {
     chain: (string | number)[],
     fold: boolean
