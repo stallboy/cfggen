@@ -1,7 +1,14 @@
 import {BaseDirectory, readFile, writeTextFile} from "@tauri-apps/plugin-fs";
 import {parse, stringify} from "yaml";
-import {getPrefKeySet, getPrefSelfKeySet} from "./store.ts";
 import {isTauri} from "@tauri-apps/api/core";
+
+// 持久化键集由 store 在初始化时注册，避免 storage 反向依赖 store（消除 store↔storage 循环）
+let prefKeySet: Set<string> = new Set();
+let prefSelfKeySet: Set<string> = new Set();
+export function registerPrefKeySet(keySet: Set<string>, selfKeySet: Set<string>) {
+    prefKeySet = keySet;
+    prefSelfKeySet = selfKeySet;
+}
 
 export function getPrefInt(key: string, def: number): number {
     const v = localStorage.getItem(key);
@@ -125,7 +132,6 @@ function scheduleWrite(fn: string, keySet: Set<string>) {
 }
 
 function savePrefAsyncIf(changedKey: string) {
-    const prefKeySet = getPrefKeySet();
     if (prefKeySet.has(changedKey)) {
         scheduleWrite("cfgeditor.yml", prefKeySet);
     }
@@ -133,7 +139,6 @@ function savePrefAsyncIf(changedKey: string) {
 
 export async function saveSelfPrefAsync() {
     // 关窗等需立即落盘的场景：绕过 debounce 直接串行写，返回 promise 供调用方 await
-    const prefSelfKeySet = getPrefSelfKeySet();
     await writeFileSerialized("cfgeditorSelf.yml", prefSelfKeySet);
 }
 

@@ -1,11 +1,10 @@
 import resso from "./resso.ts";
 import { AIConf, Convert, FixedPage, FixedRefPage, FixedUnrefPage, FixedPagesConf, NodeShowType, TauriConf, ThemeConfig } from "./storageJson.ts";
-import { getPrefBool, getPrefEnumStr, getPrefInt, getPrefJson, getPrefStr, setPref } from "./storage.ts";
+import { getPrefBool, getPrefEnumStr, getPrefInt, getPrefJson, getPrefStr, registerPrefKeySet, setPref } from "./storage.ts";
 import { History } from "./historyModel.ts";
 import { NEW_RECORD_ID, Schema } from "../domain/schema.tsx";
 import { useLocation } from "react-router";
 import { queryClient } from "../queryClient.ts";
-import { getId } from "../routes/record/recordRefEntity.ts";
 import { ResInfo } from "../res/resInfo.ts";
 
 export type PageType = 'table' | 'tableRef' | 'record' | 'recordRef' | 'recordUnref';
@@ -159,6 +158,9 @@ export function getPrefKeySet(): Set<string> {
 export function getPrefSelfKeySet(): Set<string> {
     return prefSelfKeySet;
 }
+
+// 把持久化键集注册给 storage，消除 storage→store 反向依赖（模块加载时 storeState 已就绪）
+registerPrefKeySet(getPrefKeySet(), getPrefSelfKeySet());
 
 let alreadyRead = false;
 
@@ -371,7 +373,7 @@ export function isFixedUnrefPage(page: FixedPage): page is FixedUnrefPage {
 export function makeFixedPage(curTableId: string, curId: string): FixedRefPage {
     const { recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow } = store;
     const fp: FixedRefPage = {
-        label: getId(curTableId, curId),
+        label: `${curTableId}_${curId}`,
         table: curTableId,
         id: curId,
         refIn: recordRefIn,
