@@ -75,10 +75,7 @@ export class RecordEditEntityCreator {
         }
 
         const note: string | undefined = obj['$note'] as string | undefined;
-        let fold: boolean | undefined = this.folds.isFold(fieldChain);
-        if (fold === undefined) { // 只有本地状态没有设置时才用服务器的
-            fold = obj['$fold'] as boolean | undefined;
-        }
+        const fold = this.getFoldState(fieldChain, obj);
 
         let hasChild: boolean = false;
 
@@ -137,14 +134,7 @@ export class RecordEditEntityCreator {
                     if (canBeEmbeddedCheck(itemObj, tempSField, this.schema)) {
                         itemCanBeEmbedded = true;
 
-                        // 读取元素的fold状态
-                        let isItemFolded = this.folds.isFold([...fieldChain, fieldKey, 0]);
-                        if (isItemFolded === undefined) {
-                            // 本地状态没有设置时，读取元素的$fold字段
-                            isItemFolded = itemObj['$fold'] as boolean | undefined;
-                        }
-
-                        if (isItemFolded !== false) {
+                        if (this.shouldEmbed([...fieldChain, fieldKey, 0], itemObj)) {
                             // 元素被内嵌，不创建子entity，但标记有子节点（因为内嵌字段也算子节点）
                             hasChild = true;
                             continue;
@@ -216,13 +206,7 @@ export class RecordEditEntityCreator {
                 const canEmbed = canBeEmbeddedCheck(fieldValue as JSONObject, sField, this.schema);
 
                 if (canEmbed) {
-                    let isFolded = this.folds.isFold([...fieldChain, fieldKey]);
-                    if (isFolded === undefined) {
-                        // 本地状态没有设置时，读取对象的$fold字段
-                        const fieldObj = fieldValue as JSONObject;
-                        isFolded = fieldObj['$fold'] as boolean | undefined;
-                    }
-                    if (isFolded !== false) {
+                    if (this.shouldEmbed([...fieldChain, fieldKey], fieldValue as JSONObject)) {
                         // fold=true 或 undefined，内嵌模式，不创建子节点
                         continue;
                     }
@@ -667,6 +651,13 @@ export class RecordEditEntityCreator {
      */
     private getFoldState(fieldChain: (string | number)[], obj?: JSONObject): boolean | undefined {
         return FoldStateHelper.getFoldState(this.folds, fieldChain, obj);
+    }
+
+    /**
+     * 是否内嵌（fold 非 false 即内嵌：true 或 undefined）
+     */
+    private shouldEmbed(fieldChain: (string | number)[], obj: JSONObject): boolean {
+        return FoldStateHelper.shouldEmbed(this.folds, fieldChain, obj);
     }
 
     getAutoCompleteOptions(structural: SStruct | STable,
