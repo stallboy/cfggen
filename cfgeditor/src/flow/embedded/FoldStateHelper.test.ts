@@ -1,0 +1,94 @@
+import {describe, it, expect} from 'vitest'
+import {FoldStateHelper} from './FoldStateHelper.ts'
+import {Folds} from './Folds.ts'
+import {JSONObject} from '../../api/recordModel.ts'
+
+// 构造带 $fold 的最小 JSONObject（类型要求 $type，运行时仅读 $fold）
+function objWithFold(fold: boolean | undefined): JSONObject {
+    const o: JSONObject = {$type: 'X'}
+    if (fold !== undefined) o['$fold'] = fold
+    return o
+}
+
+describe('FoldStateHelper', () => {
+    // ---------------------------------------------------------------------------
+    // getFoldState
+    // ---------------------------------------------------------------------------
+    describe('getFoldState', () => {
+        it('优先返回本地 Folds 状态', () => {
+            const folds = new Folds([{chain: ['a'], fold: true}])
+            // 本地 true，对象 $fold=false → 仍取本地 true
+            expect(FoldStateHelper.getFoldState(folds, ['a'], objWithFold(false))).toBe(true)
+        })
+
+        it('本地未设时回退到 obj.$fold', () => {
+            const folds = new Folds([])
+            expect(FoldStateHelper.getFoldState(folds, ['a'], objWithFold(true))).toBe(true)
+            expect(FoldStateHelper.getFoldState(folds, ['a'], objWithFold(false))).toBe(false)
+        })
+
+        it('本地未设且 obj 无 $fold 时返回 undefined', () => {
+            const folds = new Folds([])
+            expect(FoldStateHelper.getFoldState(folds, ['a'], objWithFold(undefined))).toBeUndefined()
+        })
+
+        it('本地未设且未传 obj 时返回 undefined', () => {
+            const folds = new Folds([])
+            expect(FoldStateHelper.getFoldState(folds, ['a'])).toBeUndefined()
+        })
+    })
+
+    // ---------------------------------------------------------------------------
+    // shouldExpand / shouldEmbed
+    // ---------------------------------------------------------------------------
+    describe('shouldExpand / shouldEmbed', () => {
+        it('状态为 false 时展开（不内嵌）', () => {
+            const folds = new Folds([{chain: ['a'], fold: false}])
+            const obj = objWithFold(undefined)
+            expect(FoldStateHelper.shouldExpand(folds, ['a'], obj)).toBe(true)
+            expect(FoldStateHelper.shouldEmbed(folds, ['a'], obj)).toBe(false)
+        })
+
+        it('状态为 true 时折叠（内嵌）', () => {
+            const folds = new Folds([{chain: ['a'], fold: true}])
+            const obj = objWithFold(undefined)
+            expect(FoldStateHelper.shouldExpand(folds, ['a'], obj)).toBe(false)
+            expect(FoldStateHelper.shouldEmbed(folds, ['a'], obj)).toBe(true)
+        })
+
+        it('状态为 undefined（本地+对象均未设）时默认内嵌', () => {
+            const folds = new Folds([])
+            const obj = objWithFold(undefined)
+            expect(FoldStateHelper.shouldExpand(folds, ['a'], obj)).toBe(false)
+            expect(FoldStateHelper.shouldEmbed(folds, ['a'], obj)).toBe(true)
+        })
+
+        it('本地未设但 obj.$fold=false 时展开', () => {
+            const folds = new Folds([])
+            const obj = objWithFold(false)
+            expect(FoldStateHelper.shouldExpand(folds, ['a'], obj)).toBe(true)
+            expect(FoldStateHelper.shouldEmbed(folds, ['a'], obj)).toBe(false)
+        })
+    })
+
+    // ---------------------------------------------------------------------------
+    // getFoldStateOrDefault
+    // ---------------------------------------------------------------------------
+    describe('getFoldStateOrDefault', () => {
+        it('有明确状态时返回该状态，忽略默认值', () => {
+            const folds = new Folds([{chain: ['a'], fold: true}])
+            expect(FoldStateHelper.getFoldStateOrDefault(folds, ['a'], undefined, false)).toBe(true)
+        })
+
+        it('状态为 undefined 时返回默认值', () => {
+            const folds = new Folds([])
+            expect(FoldStateHelper.getFoldStateOrDefault(folds, ['a'], undefined, false)).toBe(false)
+            expect(FoldStateHelper.getFoldStateOrDefault(folds, ['a'], undefined, true)).toBe(true)
+        })
+
+        it('obj.$fold 提供状态时优先于默认值', () => {
+            const folds = new Folds([])
+            expect(FoldStateHelper.getFoldStateOrDefault(folds, ['a'], objWithFold(true), false)).toBe(true)
+        })
+    })
+})
