@@ -156,6 +156,7 @@ public class CachedIndentPrinter implements Closeable, TemplateOutput {
     }
 
 
+    @SuppressWarnings("SpellCheckingInspection")
     private void printlnn(int n, String fmt, Object... args) {
         StringBuilder to = to();
         indent += n;
@@ -190,7 +191,7 @@ public class CachedIndentPrinter implements Closeable, TemplateOutput {
     }
 
     private void prefix(StringBuilder sb, String fmt) {
-        sb.append("    ".repeat(Math.max(0, indent)));
+        sb.repeat("    ", Math.max(0, indent));
         sb.append(fmt);
         sb.append("\n");  // 统一使用LF换行符
     }
