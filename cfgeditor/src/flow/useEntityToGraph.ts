@@ -101,7 +101,6 @@ export function useEntityToGraph({
     // staleTime 脏=0（每次重取，编辑可能改了拓扑）/ 干净=5min（拓扑稳定复用缓存）。
     // quirk：纯值类编辑（键入 primitive）期间 isEdited 不刷新——entityMap 不重算、editingObjectRes 不
     // 重建（性能契约1）。安全：值类不改拓扑、布局不变，继续走干净态 5min 缓存正确。勿当 bug 修。
-    // 状态管理文档 9.5 / §6.2。
     const queryKey = editingObjectRes?.isEdited ?
         ['layout', pathname, 'e', nodeShowSetting] : ['layout', pathname, nodeShowSetting]
     const staleTime = editingObjectRes?.isEdited ? 0 : 1000 * 60 * 5;

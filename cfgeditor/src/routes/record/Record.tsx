@@ -83,7 +83,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
             // 结构变更时同步删 layout 缓存：用 removeQueries（非 invalidate）——remove 不主动 fetch，
             // 等重渲后 useQuery 用新 queryFn 闭包（新 nodes）重取；invalidate 会立即用重渲前的旧闭包 refetch
             // → 旧布局。不能挪 effect：effect 晚于 render，重渲那一帧 useQuery 会读到还没被删的旧缓存 →
-            // 旧布局多一帧。状态管理文档 9.1c。
+            // 旧布局多一帧。
             onStructureChange: () => queryClient.removeQueries({queryKey: ['layout', pathnameRef.current, 'e']}),
             mutate: mutateRecord,
         });
