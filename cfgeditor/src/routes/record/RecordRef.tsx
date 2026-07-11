@@ -112,10 +112,10 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
         return menuItems;
     }, [t, schema, navigate, recordRefResult, isUnrefMode]);
 
-    const nodeDoubleClickFunc = (entityNode: EntityNode): void => {
+    const nodeDoubleClickFunc = useCallback((entityNode: EntityNode): void => {
         const refId = entityNode.data.entity.userData as RefId;
         navigate(navTo('record', refId.table, refId.id, isEditMode));
-    };
+    }, [navigate, isEditMode]);
 
     const [lastFitViewPath, setLastFitViewPath] = useState<string | undefined>(undefined);
     const pathname = isUnrefMode
@@ -134,9 +134,11 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
     }, []);
 
 
+    const paneMenu = useMemo(() => createPaneMenu(), [createPaneMenu]);
+
     useEntityToGraph({
         type: 'ref',
-        pathname, entityMap, notes, nodeMenuFunc: createNodeMenu, paneMenu: createPaneMenu(), nodeDoubleClickFunc, editingObjectRes,
+        pathname, entityMap, notes, nodeMenuFunc: createNodeMenu, paneMenu, nodeDoubleClickFunc, editingObjectRes,
         setFitViewForPathname: (inDragPanelAndFix ? setFitViewForPathname : undefined),
         nodeShow,
     });

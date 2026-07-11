@@ -10,32 +10,39 @@ import {fillHandles} from "@/flow/entityToNodeAndEdge";
 import {getDefaultIdInTable} from "@/domain/schema";
 import {useEntityToGraph} from "@/flow/useEntityToGraph";
 import {EntityNode} from "@/flow/FlowGraph";
+import {memo, useCallback, useMemo} from "react";
 
 
-export function Table() {
+export const Table = memo(function Table() {
     const {schema, notes, curTable} = useOutletContext<SchemaTableType>();
     const {maxImpl} = useMyStore();
     const {pathname, curId} = useLocationData();
     const {t} = useTranslation();
     const navigate = useNavigate();
 
-    const getTableDefaultId = (tableName: string) => getDefaultIdInTable(schema, tableName, curId);
+    const getTableDefaultId = useCallback((tableName: string) =>
+        getDefaultIdInTable(schema, tableName, curId), [schema, curId]);
 
-    const entityMap = new Map<string, ReadOnlyEntity>();
-    const creator = new TableEntityCreator(entityMap, schema, curTable, maxImpl);
-    creator.includeSubStructs();
-    creator.includeRefTables();
-    fillHandles(entityMap);
+    // entityMap 构建含 fillHandles 副作用，React Compiler 不会 memo，需手动 useMemo
+    // 以免每次 render 新建 Map 触发 useEntityToGraph 全量重算。
+    const entityMap = useMemo(() => {
+        const map = new Map<string, ReadOnlyEntity>();
+        const creator = new TableEntityCreator(map, schema, curTable, maxImpl);
+        creator.includeSubStructs();
+        creator.includeRefTables();
+        fillHandles(map);
+        return map;
+    }, [schema, curTable, maxImpl]);
 
-    const paneMenu: MenuItem[] = [
+    const paneMenu = useMemo<MenuItem[]>(() => [
         {
             label: `${curTable.name}\n${t('tableRef')}`,
             key: 'tableRef',
             handler: () => navigate(navTo('tableRef', curTable.name, getTableDefaultId(curTable.name)))
         }
-    ];
+    ], [curTable.name, t, navigate, getTableDefaultId]);
 
-    const nodeMenuFunc = (entityNode: EntityNode): MenuItem[] => {
+    const nodeMenuFunc = useCallback((entityNode: EntityNode): MenuItem[] => {
         const userData = entityNode.data.entity.userData as UserData;
         const menuItems: MenuItem[] = [];
         if (userData.table !== curTable.name) {
@@ -51,10 +58,10 @@ export function Table() {
             handler: () => navigate(navTo('tableRef', userData.table, getTableDefaultId(userData.table)))
         });
         return menuItems;
-    };
+    }, [curTable.name, t, navigate, getTableDefaultId]);
 
     useEntityToGraph({type: 'table', pathname, entityMap, notes, nodeMenuFunc, paneMenu});
     return null;
-}
+});
 
 

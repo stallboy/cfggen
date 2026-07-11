@@ -262,7 +262,9 @@ export function clearLayoutCache() {
 }
 
 export function invalidateAllQueries() {
-    queryClient.invalidateQueries({ queryKey: [], refetchType: 'all' }).catch((reason: unknown) => {
+    // queryKey: [] 匹配所有查询并标记 stale；去掉 refetchType:'all' 改用默认 'active'，
+    // 只立即重请求当前挂载的查询，未挂载的查询在下次 mount 时按 stale 自然刷新（正确性不变）。
+    queryClient.invalidateQueries({ queryKey: [] }).catch((reason: unknown) => {
         console.log(reason);
     });
 }
@@ -270,7 +272,8 @@ export function invalidateAllQueries() {
 export function setQuery(v: string) {
     store.query = v;
     setPref('query', v);
-    clearLayoutCache();
+    // query 仅用于节点高亮（FlowNode/EntityProperties/EntityCard），不进入 elk 布局输入，
+    // 无需清 layout 缓存——否则每次搜索都会让所有可见图在 worker 里重跑布局并得到相同结果。
 }
 
 

@@ -9,11 +9,6 @@ import {App, ConfigProvider} from "antd";
 import './i18n.js'
 import {createBrowserRouter} from "react-router";
 import {RouterProvider} from "react-router/dom";
-import {Table} from "./routes/table/Table.tsx";
-import {Record} from "./routes/record/Record.tsx";
-import {RecordRefRoute} from "./routes/record/RecordRef.tsx";
-import {PathNotFound} from "./routes/PathNotFound.tsx";
-import {TableRef} from "./routes/table/TableRef.tsx";
 import {AppLoader} from "./AppLoader.tsx";
 import {isTauri} from "@tauri-apps/api/core";
 import {saveSelfPrefAsync} from "./store/storage.ts";
@@ -30,27 +25,27 @@ const router = createBrowserRouter([
         children: [
             {
                 path: "table/:table/*",
-                Component: Table,
+                lazy: () => import("./routes/table/Table.tsx").then(m => ({Component: m.Table})),
             },
             {
                 path: "tableRef/:table/*",
-                Component: TableRef,
+                lazy: () => import("./routes/table/TableRef.tsx").then(m => ({Component: m.TableRef})),
             },
             {
                 path: "edit?/record/:table/*",
-                Component: Record,
+                lazy: () => import("./routes/record/Record.tsx").then(m => ({Component: m.Record})),
             },
             {
                 path: "recordRef/:table/:id",
-                Component: RecordRefRoute,
+                lazy: () => import("./routes/record/RecordRef.tsx").then(m => ({Component: m.RecordRefRoute})),
             },
             {
-                path: "recordUnref/:table",  // 新增：未引用记录页面路由
-                Component: RecordRefRoute,   // 复用RecordRefRoute组件
+                path: "recordUnref/:table",  // 未引用记录页面路由
+                lazy: () => import("./routes/record/RecordRef.tsx").then(m => ({Component: m.RecordRefRoute})),   // 复用RecordRefRoute组件
             },
             {
                 path: "*",
-                Component: PathNotFound,
+                lazy: () => import("./routes/PathNotFound.tsx").then(m => ({Component: m.PathNotFound})),
             }
         ]
     }
