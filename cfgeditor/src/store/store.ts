@@ -19,7 +19,7 @@ import {
     registerPrefKeySet,
     setPref
 } from "./storage.ts";
-import {History} from "./historyModel.ts";
+import {History} from "@/domain/historyModel";
 import {NEW_RECORD_ID, Schema} from "@/domain/schema";
 import {useLocation} from "react-router";
 import {queryClient} from "@/queryClient";

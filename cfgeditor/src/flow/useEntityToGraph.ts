@@ -96,6 +96,12 @@ export function useEntityToGraph({
         sharedSetting: {notes, query, nodeShow: nodeShowSetting}
     }), [entityMap, notes, query, nodeShowSetting]);
 
+    // layout 缓存策略：'e' 是编辑态（isEdited）layout 缓存的隔离标记——结构变更时 onStructureChange 调
+    // removeQueries(['layout', pathname, 'e']) 只清编辑态缓存，浏览态（无 'e'）的 5min 缓存不受影响。
+    // staleTime 脏=0（每次重取，编辑可能改了拓扑）/ 干净=5min（拓扑稳定复用缓存）。
+    // quirk：纯值类编辑（键入 primitive）期间 isEdited 不刷新——entityMap 不重算、editingObjectRes 不
+    // 重建（性能契约1）。安全：值类不改拓扑、布局不变，继续走干净态 5min 缓存正确。勿当 bug 修。
+    // 状态管理文档 9.5 / §6.2。
     const queryKey = editingObjectRes?.isEdited ?
         ['layout', pathname, 'e', nodeShowSetting] : ['layout', pathname, nodeShowSetting]
     const staleTime = editingObjectRes?.isEdited ? 0 : 1000 * 60 * 5;

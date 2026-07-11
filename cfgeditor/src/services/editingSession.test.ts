@@ -2,6 +2,9 @@ import {describe, expect, it} from 'vitest';
 import {EditingSession} from './editingSession';
 import {EFitView} from '@/domain/entityModel';
 import {JSONArray, JSONObject, RecordResult} from '@/api/recordModel';
+import {structCopy} from './clipboard';
+import {Schema} from '@/domain/schema';
+import {field, makeInterface, makeRawSchema, makeStruct} from '@/test/fixtures';
 
 // 最小 recordResult fixture（maybeReset 只用 table/id/object）。
 function makeRecord(table: string, id: string, object: JSONObject): RecordResult {
@@ -207,5 +210,60 @@ describe('EditingSession fuzz（确定性伪随机混合操作）', () => {
         unsub2();  // 第二次 unsub 对已 delete 的无影响
         s.addArrayItem(ITEM(), ['items'], POS);
         expect(count).toBe(1);  // 反注册后不再通知（不 leak）
+    });
+});
+
+describe('EditingSession.updateFormValues（类型转换 + $impl 早退）', () => {
+    // schema: struct Foo { int x; float y; list<int> arr; }
+    const schema = new Schema(makeRawSchema([
+        makeStruct('Foo', [field('x', 'int'), field('y', 'float'), field('arr', 'list<int>')]),
+    ]));
+
+    it('int 字段：字符串转 number，非法字符串 → 0（toInt 的 NaN 兜底）', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', x: 0, y: 0, arr: []}));
+        s.updateFormValues(schema, {x: '123'}, []);
+        expect(s.getEditingObject()['x']).toBe(123);
+        s.updateFormValues(schema, {x: 'abc'}, []);
+        expect(s.getEditingObject()['x']).toBe(0);   // parseInt('abc')=NaN → 0
+    });
+
+    it('float 字段：字符串转 number，非法 → 0（toFloat 的 NaN 兜底）', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', x: 0, y: 0, arr: []}));
+        s.updateFormValues(schema, {y: '1.5'}, []);
+        expect(s.getEditingObject()['y']).toBe(1.5);
+        s.updateFormValues(schema, {y: 'xyz'}, []);
+        expect(s.getEditingObject()['y']).toBe(0);
+    });
+
+    it('list<int>：过滤 undefined 元素后逐个转 int', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', x: 0, y: 0, arr: []}));
+        // antd Form 会返回含 undefined 的数组（保留上一个 form 的槽位），这里应被过滤
+        s.updateFormValues(schema, {arr: [undefined, '2', undefined, '4']}, []);
+        expect(s.getEditingObject()['arr']).toEqual([2, 4]);
+    });
+
+    it('$impl 与当前 $type 末尾名不一致时整段跳过（拦截 impl 切换过渡帧）', () => {
+        const ie = makeInterface('IFoo', [
+            makeStruct('ImplA', [field('x', 'int')], {id: 'IFoo.ImplA'}),
+            makeStruct('ImplB', [field('y', 'str')], {id: 'IFoo.ImplB'}),
+        ]);
+        const schemaIe = new Schema(makeRawSchema([ie]));
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'IFoo.ImplA', x: 1}));
+        // values 带 $impl=ImplB（≠ 当前 ImplA）+ 普通字段 x → 整段 return，x 不被改
+        s.updateFormValues(schemaIe, {$impl: 'ImplB', x: '2'}, []);
+        expect(s.getEditingObject()['x']).toBe(1);
+    });
+});
+
+describe('EditingSession.pasteStruct（深拷贝独立性）', () => {
+    it('多处粘贴不共享引用：改一处不影响后粘的另一处', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', a: {$type: 'A'}, b: {$type: 'B'}}));
+        structCopy({'$type': 'Src', val: 1});
+        s.pasteStruct(['a'], POS);
+        (s.getEditingObject()['a'] as JSONObject)['val'] = 999;   // 改 a 处
+        s.pasteStruct(['b'], POS);                                 // 再粘到 b
+        const b = s.getEditingObject()['b'] as JSONObject;
+        expect(b['val']).toBe(1);                                  // b 仍是原始副本（深拷贝生效）
+        expect(b).not.toBe(s.getEditingObject()['a']);            // 且不与 a 共享引用
     });
 });
