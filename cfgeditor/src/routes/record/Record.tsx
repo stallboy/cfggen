@@ -8,7 +8,7 @@ import {Folds} from "@/domain/folds";
 import {EditingSession, getCurrentEditingSession, setCurrentEditingSession} from "@/services/editingSession";
 import {isCopiedFitAllowedType, structCopy} from "@/services/clipboard";
 import {useTranslation} from "react-i18next";
-import {invalidateAllQueries, navTo, setIsEditMode, useMyStore, useLocationData} from "@/store/store";
+import {navTo, setIsEditMode, useMyStore, useLocationData} from "@/store/store";
 import {useNavigate, useOutletContext} from "react-router";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {addOrUpdateRecord, fetchRecord} from "@/api/api";
@@ -20,7 +20,7 @@ import {memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternal
 
 import {useEntityToGraph} from "@/flow/useEntityToGraph";
 import {SInterface, SStruct} from "@/api/schemaModel";
-import {queryClient} from "@/queryClient";
+import {invalidateAllQueries, queryClient} from "@/queryClient";
 import {EntityNode} from "@/flow/FlowGraph";
 import {NEW_RECORD_ID} from "@/domain/schema";
 

@@ -5,8 +5,9 @@ import {App, Button, Divider, Form, Input, InputNumber, Radio, Space} from "antd
 import {
     setImageSizeScale,
     useMyStore,
-    invalidateAllQueries, setServer,
+    setServer,
 } from "@/store/store";
+import {invalidateAllQueries} from "@/queryClient";
 import {CloseOutlined} from "@ant-design/icons";
 import {Schema} from "@/domain/schema";
 import {STable} from "@/api/schemaModel";
