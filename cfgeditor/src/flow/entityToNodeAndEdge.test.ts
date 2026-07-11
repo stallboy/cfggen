@@ -3,6 +3,7 @@ import {fillHandles, convertNodeAndEdges} from './entityToNodeAndEdge.ts'
 import {Entity, EntityEdgeType, EntityGraph} from '@/domain/entityModel'
 import {makeNodeShow, makeReadOnly, makeEditable, editWith} from '@/test/fixtures'
 import {EntityEditField} from '@/domain/entityModel'
+import {NODE_SHOW_DEFAULTS} from './colors.ts'
 
 describe('fillHandles', () => {
     it('@out 源 handle 标记实体 handleOut', () => {
@@ -112,12 +113,12 @@ describe('convertNodeAndEdges', () => {
         expect(edges[1].animated).toBe(true)
     })
 
-    it('无 sharedSetting 时边色为默认 #0898b5', () => {
+    it('无 sharedSetting 时边色为默认（NODE_SHOW_DEFAULTS）', () => {
         const a = makeReadOnly({id: 'A', label: 'a', fields: [], sourceEdges: [
             {sourceHandle: '@out', target: 'T', targetHandle: '@in', type: EntityEdgeType.Normal},
         ]})
         const {edges} = convertNodeAndEdges({entityMap: new Map([['A', a]])})
-        expect(edges[0].style).toEqual({stroke: '#0898b5'})
+        expect(edges[0].style).toEqual({stroke: NODE_SHOW_DEFAULTS.edgeColor})
     })
 
     it('sharedSetting.nodeShow.edgeColor 决定边色并写入每个实体', () => {

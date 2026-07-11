@@ -7,12 +7,36 @@ import type {NodeShowType} from "@/domain/storageJson";
 const VALUE_FIELD_TYPES = new Set(["primitive", "arrayOfPrimitive", "interface"]);
 
 // ============================================================================
+// 默认颜色值
+// ============================================================================
+// NODE_SHOW_DEFAULTS 是 nodeShow 各颜色字段缺失时的"兜底默认色"单一来源，
+// 供 colors.ts 内部、colorUtils、测试断言共用，避免 #0898b5/#207b4a 等 hex 散落多处。
+//
+// 注意：这些 DEFAULT 与 antd token 刻意解耦——colors.ts 是纯函数、无 hook 上下文，
+// 拿不到 useToken；若未来要跟随主题，需在调用点（FlowNode）useToken 后把解析值传入。
+// store.ts 里的同值是持久化进 NodeShowType 的初始值（另一关注点，且 oxlint 禁 store→flow），
+// 二者刻意保持同值但不互相 import。
+export const NODE_SHOW_DEFAULTS = {
+    nodeColor: "#0898b5",
+    nodeRefColor: "#207b4a",
+    nodeRef2Color: "#006d75",
+    nodeRefInColor: "#003eb3",
+    edgeColor: "#0898b5",
+} as const;
+
+// ============================================================================
 // 节点背景色
 // ============================================================================
 
-export function getNodeBackgroundColor(entity: Entity): string {
-    const {nodeShow} = entity.sharedSetting ?? {};
-
+/**
+ * 节点背景色：按"值 → 标签 → 实体类型"三级优先级解析。
+ *
+ * @param entity  实体（取值串/标签/entityType）
+ * @param nodeShow 已解析的配色配置（含 per-graph override）。FlowNode 传入 entity.sharedSetting?.nodeShow。
+ *                 显式入参（而非内部深读 entity.sharedSetting?.nodeShow）是为了让调用方把 nodeShow
+ *                 放进 useMemo deps——否则 entity 引用不变时改主题色会 stale（见 FlowNode color memo）。
+ */
+export function getNodeBackgroundColor(entity: Entity, nodeShow?: NodeShowType): string {
     // 1. 按值着色（优先级最高）
     if (nodeShow?.nodeColorsByValue.length) {
         const valueStr = getEntityValueString(entity);
@@ -38,24 +62,17 @@ export function getNodeBackgroundColor(entity: Entity): string {
     return getTypeColor(entity.entityType, nodeShow);
 }
 
-// 默认颜色值
-const DEFAULT_NODE_COLOR = "#0898b5";
-const DEFAULT_REF_COLOR = "#207b4a";
-const DEFAULT_REF2_COLOR = "#006d75";
-const DEFAULT_REF_IN_COLOR = "#003eb3";
-const DEFAULT_EDGE_COLOR = "#0898b5";
-
 
 function getTypeColor(entityType: EntityType | undefined, nodeShow: NodeShowType | undefined): string {
     switch (entityType) {
         case EntityType.Ref:
-            return nodeShow?.nodeRefColor ?? DEFAULT_REF_COLOR;
+            return nodeShow?.nodeRefColor ?? NODE_SHOW_DEFAULTS.nodeRefColor;
         case EntityType.Ref2:
-            return nodeShow?.nodeRef2Color ?? DEFAULT_REF2_COLOR;
+            return nodeShow?.nodeRef2Color ?? NODE_SHOW_DEFAULTS.nodeRef2Color;
         case EntityType.RefIn:
-            return nodeShow?.nodeRefInColor ?? DEFAULT_REF_IN_COLOR;
+            return nodeShow?.nodeRefInColor ?? NODE_SHOW_DEFAULTS.nodeRefInColor;
         default:
-            return nodeShow?.nodeColor ?? DEFAULT_NODE_COLOR;
+            return nodeShow?.nodeColor ?? NODE_SHOW_DEFAULTS.nodeColor;
     }
 }
 
@@ -116,5 +133,5 @@ export function getFieldBackgroundColor(
 // ============================================================================
 
 export function getEdgeColor(nodeShow?: NodeShowType): string {
-    return nodeShow?.edgeColor ?? DEFAULT_EDGE_COLOR;
+    return nodeShow?.edgeColor ?? NODE_SHOW_DEFAULTS.edgeColor;
 }

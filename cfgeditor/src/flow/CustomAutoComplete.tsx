@@ -26,12 +26,14 @@ export const CustomAutoComplete = memo(function CustomAutoComplete(
                 return <Input suffix={<span style={suffixStyle}>{matchedOptionTitle}</span>}/>
             }, [value, options]);
 
+            // AutoComplete 的 onChange 在「输入」与「选中选项」时都会触发（受控值回调契约），
+            // 已覆盖 onSelect / onSearch 的情形。原先三处都别名到 onChange，导致每次输入/选中
+            // editOnUpdateValues → session.updateFormValues 被调 2 次（白跑 schema/转换器查找）。
+            // 这里只留 onChange + {...filters}（filters 内的 showSearch:boolean 负责下拉过滤）。
             return <AutoComplete id={id} className='nodrag' {...filters}
                                  options={options}
                                  value={value}
-                                 onChange={onChange}
-                                 onSelect={onChange}
-                                 showSearch={{onSearch: onChange}}>
+                                 onChange={onChange}>
                 {input}
             </AutoComplete>
         }

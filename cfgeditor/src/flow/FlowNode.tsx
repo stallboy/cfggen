@@ -1,9 +1,12 @@
-import { CSSProperties, memo, useCallback, useMemo, useState } from "react";
-import { Handle, NodeProps, Position } from "@xyflow/react";
+import { CSSProperties, memo, useCallback, useEffect, useMemo, useState } from "react";
+import { Handle, NodeProps, Position, useStore } from "@xyflow/react";
 import { Entity, isReadOnlyEntity, isEditableEntity, isCardEntity } from "@/domain/entityModel";
+import { mayHaveResOrNote } from "@/domain/entityPredicates";
 import { getNodeBackgroundColor } from "./colors.ts";
+import { getNodeWidth } from "./dimensions.ts";
 import { Button, Flex, Popover, Space, Typography } from "antd";
-import { EntityCard, Highlight } from "./EntityCard.tsx";
+import { EntityCard } from "./EntityCard.tsx";
+import { Highlight } from "./Highlight.tsx";
 import { EntityProperties } from "./EntityProperties.tsx";
 import { EntityForm } from "./EntityForm.tsx";
 import {
@@ -16,7 +19,7 @@ import {
 } from "@ant-design/icons";
 import { ResPopover } from "./ResPopover.tsx";
 import { NoteShow, NoteEdit, NoteShowInner, NoteEditInner } from "./NoteShowOrEdit.tsx";
-import { findFirstImage } from "./calcWidthHeight.ts";
+import { findFirstImage, calcWidthHeight } from "./calcWidthHeight.ts";
 import { getResBrief } from "@/res/getResBrief";
 import { EntityNode } from "./FlowGraph.tsx";
 
@@ -34,6 +37,29 @@ const foldIcon = <ShrinkOutlined />;
 const unfoldIcon = <ArrowsAltOutlined />;
 
 const resBriefButtonStyle = { color: '#fff' };
+
+// dev-only：记录已警告过 height drift 的节点 id，避免同一节点反复 console.warn 刷屏
+const heightDriftWarned = new Set<string>();
+
+// dev-only 实测对账护栏：节点挂载后 xyflow 用 ResizeObserver 回写 measured.height 到内部 store，
+// 这里响应式读取并与 calcWidthHeight 估算比，偏差 >8px 且 >5% 时 warn（按 id 去重）。不重排不闪烁。
+// 抽成独立子组件并用 import.meta.env.DEV 条件渲染：useStore 订阅在子组件挂载时才建立，
+// prod 不挂载即零订阅（Vite 把 import.meta.env.DEV 编译期 DFE），守住 doc §8「本项目从不读取 measured」立场。
+// 仅针对 height：width 两端同源（FlowNode 与 calcWidthHeight 都读 nodeShow.nodeWidth/editNodeWidth）不会漂。
+// 注：NodeProps 在本版本无 measured 字段，故走 useStore 只读尺寸切片（doc §5 允许的 escape-hatch 场景）。
+function HeightDriftGuard({id, entity}: { id: string; entity: Entity }) {
+    const measuredHeight = useStore((s) => s.nodeLookup.get(id)?.measured?.height);
+    useEffect(() => {
+        if (measuredHeight === undefined) return;
+        const [, est] = calcWidthHeight(entity);
+        const drift = Math.abs(measuredHeight - est);
+        if (drift > 8 && drift / est > 0.05 && !heightDriftWarned.has(id)) {
+            heightDriftWarned.add(id);
+            console.warn(`[flow] node ${id} height drift: est=${est} measured=${measuredHeight} Δ=${drift}px`);
+        }
+    }, [id, entity, measuredHeight]);
+    return null;
+}
 
 interface TempNote {
     note: string;
@@ -64,8 +90,11 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
         assets = entity.assets;
     }
 
-    const color: string = useMemo(() => getNodeBackgroundColor(entity), [entity]);
-    const width = edit ? (entity.sharedSetting?.nodeShow?.editNodeWidth ?? 280) : (entity.sharedSetting?.nodeShow?.nodeWidth ?? 240);
+    // nodeShow 单独取出放进 color 的 useMemo deps：convertNodeAndEdges 把新 nodeShow 就地盖章到
+    // 同一 entity（引用不变），若 deps 只写 [entity]，改主题色时 color 不会重算 → 背景 stale。
+    const nodeShow = sharedSetting?.nodeShow;
+    const color: string = useMemo(() => getNodeBackgroundColor(entity, nodeShow), [entity, nodeShow]);
+    const width = getNodeWidth(entity);
     const nodeStyle: CSSProperties = useMemo(() => {
         return { width: width, backgroundColor: color, outlineColor: entity.sharedSetting?.nodeShow?.editFoldColor };
     }, [width, color, entity.sharedSetting?.nodeShow?.editFoldColor]);
@@ -92,15 +121,18 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
             edit.editOnUpdateNote(note);
             setTmpNote({ note, entity });
         }
-    }, [edit, setTmpNote, entity]); const unfoldNode = useCallback(() => {
+    }, [edit, setTmpNote, entity]);
+    const unfoldNode = useCallback(() => {
         if (edit && edit.editOnUpdateFold) {
             edit.editOnUpdateFold(false, { id, x: nodeProps.positionAbsoluteX, y: nodeProps.positionAbsoluteY });
         }
-    }, [edit, id, nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY]); const foldNode = useCallback(() => {
+    }, [edit, id, nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY]);
+    const foldNode = useCallback(() => {
         if (edit && edit.editOnUpdateFold) {
             edit.editOnUpdateFold(true, { id, x: nodeProps.positionAbsoluteX, y: nodeProps.positionAbsoluteY });
         }
-    }, [edit, id, nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY]); const [resBriefButton, firstImage] = useMemo(() => {
+    }, [edit, id, nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY]);
+    const [resBriefButton, firstImage] = useMemo(() => {
         let btn;
         const firstImage = findFirstImage(assets);
         if (assets) {
@@ -134,8 +166,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
         return null;
     }, [edit, unfoldIconButtonStyle, unfoldNode, foldNode]);
     const editNoteButton = useMemo(() => {
-        const mayHasResOrNote = label.includes('_');
-        if (mayHasResOrNote && !edit) {
+        if (mayHaveResOrNote(label) && !edit) {
             const recordNote = sharedSetting?.notes?.get(id) ?? '';
             if (!((recordNote.length > 0) || isEditNote) && !note) {
                 return <Button style={iconButtonStyle} icon={bookIcon} onClick={onEditNote} />;
@@ -153,8 +184,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
     }, [sharedSetting, id, isEditNote, note, edit, tmpNote, entity, label, onEditNote, onEditNoteClickInEdit]);
 
     const noteShowOrEdit = useMemo(() => {
-        const mayHasResOrNote = label.includes('_');
-        if (mayHasResOrNote) {
+        if (mayHaveResOrNote(label)) {
             const notes = sharedSetting?.notes;
             const recordNote = notes?.get(id) ?? '';
             if ((recordNote.length > 0) || isEditNote) {
@@ -230,6 +260,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
     }, [foldButton, sharedSetting, label, brief, editNoteButton, resBriefButton, edit, id, nodeProps]);
 
     return <div key={id} className={edit && edit.fold ? 'flowNodeWithBorder' : 'flowNode'} style={nodeStyle}>
+        {import.meta.env.DEV && <HeightDriftGuard id={id} entity={entity} />}
         {noteShowOrEdit}
         {title}
         {fields && <EntityProperties fields={fields} sharedSetting={sharedSetting} color={color} />}

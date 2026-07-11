@@ -11,6 +11,7 @@ import {
     ConfigProvider,
     Flex,
     Form,
+    FormInstance,
     Input,
     InputNumber,
     Select,
@@ -26,6 +27,7 @@ import {CSSProperties, Fragment, memo, useCallback, useEffect, useMemo, useState
 
 import {CustomAutoComplete} from "./CustomAutoComplete.tsx";
 import {getFieldBackgroundColor} from "./colors.ts";
+import {DEFAULT_EDIT_NODE_WIDTH, getEditNodeWidth} from "./dimensions.ts";
 import {
     EntityEdit,
     EntityEditField,
@@ -43,8 +45,6 @@ import {EntityNode} from "./FlowGraph.tsx";
 // ============================================================================
 // 常量定义
 // ============================================================================
-
-const DEFAULT_NODE_WIDTH = 280;
 
 const FORM_LAYOUT = {
     labelCol: {xs: {span: 24}, sm: {span: 6}},
@@ -149,6 +149,22 @@ function isArrayPrimitiveBoolOrNumber(field: EntityEditField): boolean {
 }
 
 // ============================================================================
+// 表单字段同步 Hook
+// ============================================================================
+
+/**
+ * 同步外部 field.value 到 antd Form 字段。
+ * Form.Item 的 initialValue 仅在字段首次注册时生效；父级以 key={field.name} 复用实例时
+ * （切换 impl / 编辑同 key 不同值），新 initialValue 被忽略 → 表单显示旧值。此 effect 命令式同步。
+ * 参考：https://github.com/ant-design/ant-design/issues/56102
+ */
+function useSyncFieldValue(form: FormInstance, name: string, value: unknown) {
+    useEffect(() => {
+        form.setFieldValue(name, value);
+    }, [name, value, form]);
+}
+
+// ============================================================================
 // 原始类型控件渲染
 // ============================================================================
 
@@ -195,7 +211,7 @@ function useRefItemStyles(width?: number, bgColor?: string) {
     const handleOutStyle: CSSProperties = useMemo(
         () => ({
             position: "absolute",
-            left: `${(width ?? DEFAULT_NODE_WIDTH) - 10}px`,
+            left: `${(width ?? DEFAULT_EDIT_NODE_WIDTH) - 10}px`,
             backgroundColor: "blue",
         }),
         [width]
@@ -435,10 +451,7 @@ interface PrimitiveFormItemProps {
 
 const PrimitiveFormItem = memo(function PrimitiveFormItem({field, bgColor}: PrimitiveFormItemProps) {
     const form = Form.useFormInstance();
-
-    useEffect(() => {
-        form.setFieldValue(field.name, field.value);
-    }, [field.name, field.value, form]);
+    useSyncFieldValue(form, field.name, field.value);
 
     const itemStyle: CSSProperties = useMemo(
         () => (bgColor === undefined ? {} : {backgroundColor: bgColor}),
@@ -475,10 +488,7 @@ const ArrayOfPrimitiveFormItem = memo(function ArrayOfPrimitiveFormItem({
                                                                             bgColor,
                                                                         }: PrimitiveFormItemProps) {
     const form = Form.useFormInstance();
-
-    useEffect(() => {
-        form.setFieldValue(field.name, field.value);
-    }, [field.name, field.value, form]);
+    useSyncFieldValue(form, field.name, field.value);
 
     const itemStyle: CSSProperties = useMemo(
         () => (bgColor === undefined ? {} : {backgroundColor: bgColor}),
@@ -611,12 +621,7 @@ interface InterfaceFormItemProps {
 const InterfaceFormItem = memo(
     function InterfaceFormItem({field, edit, nodeProps, sharedSetting}: InterfaceFormItemProps) {
         const form = Form.useFormInstance();
-
-        // edit后，key又都相同，initialValue改变，所以form需要设置回去
-        // 参考: https://zhuanlan.zhihu.com/p/375753910
-        useEffect(() => {
-            form.setFieldValue(field.name, field.value);
-        }, [field.name, field.value, form]);
+        useSyncFieldValue(form, field.name, field.value);
 
         const handleSelectChange = useCallback(
             (value: string) => {
@@ -662,7 +667,7 @@ interface FieldRenderProps {
 
 function renderFieldItem({field, edit, nodeProps, sharedSetting}: FieldRenderProps) {
     const bgColor = getFieldBackgroundColor(field, sharedSetting?.nodeShow);
-    const width = sharedSetting?.nodeShow?.editNodeWidth;
+    const width = getEditNodeWidth(sharedSetting?.nodeShow);
 
     switch (field.type) {
         case "structRef":

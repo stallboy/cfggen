@@ -3,20 +3,24 @@ import {DisplayField, EntitySharedSetting} from "@/domain/entityModel";
 import {Flex, List, Tooltip, Typography} from "antd";
 import {CSSProperties, memo, useMemo} from "react";
 import {getFieldBackgroundColor} from "./colors.ts";
-import {Highlight} from "./EntityCard.tsx";
+import {getReadNodeWidth} from "./dimensions.ts";
+import {Highlight} from "./Highlight.tsx";
 
 const {Text} = Typography;
 
-function tooltip({comment, name}: { name: string, comment?: string }) {
+// 字段标签：取 comment 第一个中/英左括号前的部分，截前 6 字符。外层 <Text ellipsis maxWidth:80%>
+// 已做 CSS 截断，这里仅预截断避免标签过长撑宽节点——数据层不读 DOM 宽度，避免 measure cycle。
+const LABEL_COMMENT_PREFIX_MAX_LEN = 6;
+const COMMENT_OPEN_BRACKET = /[（(]/; // 中文/英文左括号：comment 常见「说明（细节）」形式，只取括号前
+
+function buildFieldTooltip({comment, name}: { name: string, comment?: string }) {
     return comment ? `${name}: ${comment}` : name;
 }
 
-const re = /[（(]/;
-
-function text({comment, name}: { name: string, comment?: string }) {
+function buildFieldLabel({comment, name}: { name: string, comment?: string }) {
     if (comment) {
-        const c = comment.split(re)[0];
-        return `${name} ${c.substring(0, 6)} `
+        const c = comment.split(COMMENT_OPEN_BRACKET)[0];
+        return `${name} ${c.substring(0, LABEL_COMMENT_PREFIX_MAX_LEN)} `
     }
     return name;
 }
@@ -41,9 +45,9 @@ export const EntityProperties = memo(function EntityProperties({fields, sharedSe
         return {position: 'absolute', left: '-10px', backgroundColor: color}
     }, [color]);
     const handleOutStyle: CSSProperties = useMemo(() => {
-        const width = sharedSetting?.nodeShow?.nodeWidth ?? 240;
+        const width = getReadNodeWidth(sharedSetting?.nodeShow);
         return {position: 'absolute', left: `${width - 2}px`, backgroundColor: color}
-    }, [color, sharedSetting?.nodeShow?.nodeWidth]);
+    }, [color, sharedSetting?.nodeShow]);
 
     if (fields.length == 0) {
         return <></>;
@@ -58,9 +62,9 @@ export const EntityProperties = memo(function EntityProperties({fields, sharedSe
 
                      return <List.Item key={item.key} style={thisItemStyle}>
                          <Flex justify="space-between" style={flexStyle}>
-                             <Tooltip title={tooltip(item)}>
+                             <Tooltip title={buildFieldTooltip(item)}>
                                  <Text style={itemKeyStyle} ellipsis={ellipsis}>
-                                     {text(item)}
+                                     {buildFieldLabel(item)}
                                  </Text>
                              </Tooltip>
                              <Text style={itemValueStyle} ellipsis={ellipsis}>

@@ -12,6 +12,9 @@ import {queryClient} from "@/queryClient";
 const noteButtonStyle: CSSProperties = {float: 'right', borderWidth: 0, backgroundColor: 'transparent'};
 const bookIcon = <BookOutlined/>;
 const noteStyle: CSSProperties = {backgroundColor: "yellow", borderRadius: '8px'}
+// 与 EntityForm.tsx 的 TEXT_AREA_AUTO_SIZE 同值（重复常量，后续可合并到共享样式模块）。
+const TEXT_AREA_AUTO_SIZE = {minRows: 1, maxRows: 10};
+const TEXT_AREA_STYLE: CSSProperties = {backgroundColor: "yellow"};
 
 export const NoteShow = memo(function NoteShow({note, setIsEdit}: {
     note: string;
@@ -59,14 +62,16 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
                     duration: 3
                 });
                 queryClient.setQueryData(['notes'], notesToMap(notes));
+                setIsEdit(false);   // 仅真成功才关闭编辑器
             } else {
                 notification.warning({
                     title: `updateNote ${resultCode} ${id} ${variables}`,
                     placement: 'topRight',
                     duration: 4
                 });
+                // 业务失败（storeErr/keyNotSet/keyNotFoundOnDelete，HTTP 200 带非 OK resultCode）
+                // 保留编辑框与 newNote，便于用户改后重试——与 onError 的设计意图一致。
             }
-            setIsEdit(false);
         },
     });
 
@@ -85,8 +90,8 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
 
     return <Flex vertical style={noteStyle}>
         <Input.TextArea className='nodrag' placeholder='note'
-                  autoSize={autoSize}
-                  style={textAreaStyle}
+                  autoSize={TEXT_AREA_AUTO_SIZE}
+                  style={TEXT_AREA_STYLE}
                   value={newNote}
                   onChange={onNoteChange}/>
         <Flex justify={'flex-end'} gap={'small'}>
@@ -106,9 +111,6 @@ export const NoteShowInner = memo(function NoteShowInner({note}: {
     </div>
 });
 
-const textAreaStyle = {backgroundColor: "yellow"};
-const autoSize = {minRows: 1, maxRows: 10};
-
 export const NoteEditInner = memo(function NoteEditInner({note, updateNoteInEdit}: {
     note: string;
     updateNoteInEdit: (note: string) => void;
@@ -120,8 +122,8 @@ export const NoteEditInner = memo(function NoteEditInner({note, updateNoteInEdit
 
     return <Flex vertical style={noteStyle}>
         <Input.TextArea className='nodrag' placeholder='note'
-                  autoSize={autoSize}
-                  style={textAreaStyle}
+                  autoSize={TEXT_AREA_AUTO_SIZE}
+                  style={TEXT_AREA_STYLE}
                   value={note}
                   onChange={onNoteChange}/>
     </Flex>

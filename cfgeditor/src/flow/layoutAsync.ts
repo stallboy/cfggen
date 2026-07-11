@@ -53,9 +53,24 @@ function allPositionXYOk(nodes: EntityNode[], map: Map<string, XYPosition>) {
 }
 
 
-export async function layoutAsync(nodes: EntityNode[], edges: EntityEdge[], layoutStrategy: NodePlacementStrategyType, nodeShow?: NodeShowType) {
+/**
+ * layoutAsync 的失败语义：失败一律 throw LayoutError，绝不 resolve 为 undefined。
+ *
+ * 原因：react-query 把 resolve 的 undefined 当成"成功但无数据"（isSuccess=true, data=undefined），
+ * 既不进 retry/error 通道，也彻底打破下游 `if (data)` 守卫——表现为偶发空/旧图且零反馈。
+ * throw 后 react-query 正确进入 error 态（会 retry），下游也能据 error 兜底。见 useEntityToGraph。
+ */
+export class LayoutError extends Error {
+    readonly code: 'aborted' | 'no_children' | 'dropped_nodes';
+    constructor(code: LayoutError['code'], message: string) {
+        super(message);
+        this.code = code;
+        this.name = 'LayoutError';
+    }
+}
+
+export async function layoutAsync(nodes: EntityNode[], edges: EntityEdge[], layoutStrategy: NodePlacementStrategyType, nodeShow?: NodeShowType, signal?: AbortSignal) {
     // elk 为模块级单例（见文件顶部），worker 模式下 layout 在 Web Worker 跑
-    // console.log('layout', nodes.length, nodes, edges);
     const id2RectMap = new Map<string, Rect>();
 
     // Use configurable spacing values with defaults
@@ -90,22 +105,24 @@ export async function layoutAsync(nodes: EntityNode[], edges: EntityEdge[], layo
         children: nodes.map((n) => nodeToLayoutChild(n, id2RectMap)),
         edges: edges.map(edgeToLayoutEdge),
     };
-    // console.log(graph);
+
+    // 调用前已被 abort（react-query 在 query 变 stale/inactive 时 abort signal）→ 直接放弃
+    if (signal?.aborted) throw new LayoutError('aborted', 'layout aborted before elk.layout');
 
     const {children} = await elk.layout(graph);
-    if (children) {
-        toPositionMap(id2RectMap, children);
 
-        // 重新取nodes，因为此时nodes可能跟异步layout请求开始时的nodes不同，所以要检验下是不是allPositionXYOk
-        if (!allPositionXYOk(nodes, id2RectMap)) {
-            console.log('layout ignored', nodes);
-            return;
-        }
-        return id2RectMap;
-    } else {
-        console.log('layout children null');
+    // elk.layout 异步期间被 abort → 不再写回结果
+    if (signal?.aborted) throw new LayoutError('aborted', 'layout aborted after elk.layout');
+    if (!children) throw new LayoutError('no_children', 'elk.layout returned no children');
+
+    toPositionMap(id2RectMap, children);
+
+    // 校验 ELK 返回的位置 map 覆盖了所有输入 node：map 由 nodeToLayoutChild 按 node.id 预填，
+    // 正常 map.size===nodes.length；出现重复 id（Map 去重后变小）等情况时校验失败 → throw 交 react-query retry。
+    if (!allPositionXYOk(nodes, id2RectMap)) {
+        throw new LayoutError('dropped_nodes', `layout dropped some nodes (expected ${nodes.length}, got ${id2RectMap.size})`);
     }
-
+    return id2RectMap;
 }
 
 

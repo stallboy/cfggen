@@ -2,6 +2,7 @@ import {ResInfo, ResType} from "@/domain/resInfo";
 import {ext2type, joinPath, sepParentDirAndFilename} from "./resUtils.ts";
 import {Refs} from "@/api/recordModel";
 import {TauriConf} from "@/domain/storageJson";
+import {mayHaveResOrNote} from "@/domain/entityPredicates";
 
 
 export interface FindResInfosParameter {
@@ -14,7 +15,7 @@ export interface FindResInfosParameter {
 
 export function findAllResInfos(param: FindResInfosParameter): ResInfo[] | undefined {
     let res: ResInfo[] | undefined;
-    if (param.label.includes('_')) {
+    if (mayHaveResOrNote(param.label)) {
         res = param.resMap.get(param.label);
     }
 

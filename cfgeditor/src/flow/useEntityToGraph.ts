@@ -1,6 +1,6 @@
 import {useContext, useEffect, useMemo} from "react";
 import {useMyStore} from "@/store/store";
-import {getViewportForBounds, Rect, useReactFlow, useStore} from "@xyflow/react";
+import {Rect, useReactFlow, useStore} from "@xyflow/react";
 import {convertNodeAndEdges} from "./entityToNodeAndEdge.ts";
 import {useQuery} from "@tanstack/react-query";
 import {layoutAsync} from "./layoutAsync.ts";
@@ -9,6 +9,8 @@ import {Entity, EditingObjectRes, EFitView} from "@/domain/entityModel";
 import {MenuItem} from "./FlowContextMenu.tsx";
 import {NodePlacementStrategyType, NodeShowType} from "@/domain/storageJson";
 import {FlowGraphContext} from "./FlowGraphContext.ts";
+import {computeStableViewport} from "./viewportMath.ts";
+import {pickLayoutKeys} from "@/domain/nodeShowLayoutKeys";
 
 
 type FlowGraphType = 'record' | 'edit' | 'ref' | 'table' | 'tableRef';
@@ -83,13 +85,13 @@ export function useEntityToGraph({
                                  }: FlowGraphInput) {
     const flowGraph = useContext(FlowGraphContext);
     const {query, nodeShow: currentNodeShow} = useMyStore();
-    const width = useStore((state) => state.width);
-    const height = useStore((state) => state.height);
-    const setNodes = useStore((state) => state.setNodes);
-    const setEdges = useStore((state) => state.setEdges);
-    const panZoom = useStore((state) => state.panZoom);
     const nodeShowSetting = nodeShow ?? currentNodeShow;
-    const {getNodesBounds} = useReactFlow();
+    // 命令面收口到公开稳定的 useReactFlow（setNodes/setEdges/setViewport/getViewport/fitView），
+    // 不再调用内部 panZoom 的方法（非公开契约，升级易变）。详见 doc §5。
+    // 唯一保留的 useStore 只读切片：viewport 是否就绪——本版本无 viewportInitialized 字段，
+    // 就绪信号即 panZoom 非空；只做 null 判断不调用其方法。
+    const viewportReady = useStore((state) => state.panZoom !== null);
+    const {setNodes, setEdges, setViewport, getViewport, fitView} = useReactFlow();
 
     const {nodes, edges} = useMemo(() => convertNodeAndEdges({
         entityMap,
@@ -101,12 +103,17 @@ export function useEntityToGraph({
     // staleTime 脏=0（每次重取，编辑可能改了拓扑）/ 干净=5min（拓扑稳定复用缓存）。
     // quirk：纯值类编辑（键入 primitive）期间 isEdited 不刷新——entityMap 不重算、editingObjectRes 不
     // 重建（性能契约1）。安全：值类不改拓扑、布局不变，继续走干净态 5min 缓存正确。勿当 bug 修。
+    // queryKey 只含布局相关字段（pickLayoutKeys）——改纯颜色字段时 queryKey 不变 → 命中缓存不重跑 ELK。
+    // 'e' 标记保持在 pathname 之后同一层级，保 Record.tsx 的 ['layout', pathname, 'e'] prefix 失效契约。
+    const layoutKeys = pickLayoutKeys(nodeShowSetting);
     const queryKey = editingObjectRes?.isEdited ?
-        ['layout', pathname, 'e', nodeShowSetting] : ['layout', pathname, nodeShowSetting]
+        ['layout', pathname, 'e', layoutKeys] : ['layout', pathname, layoutKeys]
     const staleTime = editingObjectRes?.isEdited ? 0 : 1000 * 60 * 5;
-    const {data: id2RectMap} = useQuery({
+    const {data: id2RectMap, error: layoutError} = useQuery({
         queryKey: queryKey,
-        queryFn: async () => await layoutAsync(nodes, edges, getLayoutStrategy(nodeShowSetting, type), nodeShowSetting),
+        // 透传 react-query 的 AbortSignal：query 变 stale/inactive 时 react-query abort，
+        // layoutAsync 据此放弃过期的 ELK 结果。失败一律 throw（绝不 resolve undefined）。
+        queryFn: async (ctx) => await layoutAsync(nodes, edges, getLayoutStrategy(nodeShowSetting, type), nodeShowSetting, ctx.signal),
         staleTime: staleTime,
     })
 
@@ -127,13 +134,11 @@ export function useEntityToGraph({
             }
             setNodes(newNodes);
             setEdges(edges);
-            // console.log("set nodes", newNodes, edges);
-            if (panZoom && id2RectMap) {
+            if (viewportReady && id2RectMap) {
                 if (editingObjectRes === undefined || editingObjectRes.fitView === EFitView.FitFull) {
-                    const bounds = getNodesBounds(newNodes); //  {useRelativePosition: true}
-                    const viewportForBounds = getViewportForBounds(bounds, width, height, 0.3, 1, 0.2);
-                    panZoom.setViewport(viewportForBounds);
-                    // console.log(pathname, bounds, width, height, viewportForBounds)
+                    // FitFull：原 getNodesBounds+getViewportForBounds+setViewport 三步等价于一次公开 fitView。
+                    // padding/minZoom/maxZoom 与原 getViewportForBounds(bounds,w,h,0.3,1,0.2) 对齐。
+                    void fitView({padding: 0.2, minZoom: 0.3, maxZoom: 1});
                     if (setFitViewForPathname) {
                         setFitViewForPathname(pathname);
                     }
@@ -142,23 +147,27 @@ export function useEntityToGraph({
                     const {id, x, y} = editingObjectRes.fitViewToIdPosition;
                     const nowXy = id2RectMap.get(id);
                     if (nowXy !== undefined) { // onDeleteItemFromArray时，是会遇到undefined情况的
-                        const {x: nowX, y: nowY} = nowXy;
-                        const {x: tx, y: ty, zoom} = panZoom.getViewport();
-                        // xyflow的viewport的含义如下：
-                        // screenX = x*zoom + tx
-                        // screenY = y*zoom + ty
-                        // 这里要保证screenX，screenY前后一致
-                        // nowX*zoom + nowTx = x*zoom + tx
-                        const nowTx = x * zoom + tx - nowX * zoom;
-                        const nowTy = y * zoom + ty - nowY * zoom;
-                        panZoom.setViewport({x: nowTx, y: nowTy, zoom});
+                        // FitId：relayout 后让该节点屏幕坐标不变。fitView 做不到，必须自算（见 viewportMath）。
+                        // anchorOld=旧世界坐标(x,y) anchorNew=新世界坐标(nowXy)；求保持锚点屏幕不动的 newVp。
+                        const newVp = computeStableViewport(
+                            {x, y},
+                            {x: nowXy.x, y: nowXy.y},
+                            getViewport(),
+                        );
+                        void setViewport(newVp);
                     }
                 }
             }
-
-
+        } else if (layoutError) {
+            // 布局失败兜底（layoutAsync throw → react-query retry 耗尽后 error 态）：
+            // 把未布局节点（默认位置 100,100）推入保证画布非空 + console.error 反馈，
+            // 等 retry 成功后由 newNodes 分支校正。仅 error 态触发，不污染正常路径（无闪烁）。
+            console.error('[layout] failed, falling back to unpositioned nodes', layoutError);
+            setNodes(nodes);
+            setEdges(edges);
         }
     }, [newNodes, edges, nodeMenuFunc, paneMenu, editingObjectRes, flowGraph, nodeDoubleClickFunc,
-        setNodes, setEdges, id2RectMap, width, height, panZoom, setFitViewForPathname, pathname, getNodesBounds]);
+        setNodes, setEdges, id2RectMap, viewportReady, fitView, setViewport, getViewport,
+        setFitViewForPathname, pathname, layoutError, nodes]);
 
 }

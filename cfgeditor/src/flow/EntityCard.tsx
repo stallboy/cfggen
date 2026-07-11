@@ -6,6 +6,7 @@ import {convertFileSrc, isTauri} from "@tauri-apps/api/core";
 import {CSSProperties, memo, ReactElement} from "react";
 import {CardEntity, Entity, isCardEntity} from "@/domain/entityModel";
 import {getDsLenAndDesc} from "./getDsLenAndDesc.ts";
+import {Highlight} from "./Highlight.tsx";
 
 // ============================================================================
 // 常量定义
@@ -14,23 +15,6 @@ import {getDsLenAndDesc} from "./getDsLenAndDesc.ts";
 const IMAGE_STYLE: CSSProperties = {maxHeight: "220px", objectFit: "scale-down"};
 
 const DESC_STYLE: CSSProperties = {whiteSpace: "break-spaces"};
-
-// ============================================================================
-// 高亮组件
-// ============================================================================
-
-const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-export function Highlight({text, keyword}: {text: string; keyword: string}): ReactElement {
-    if (!keyword) {
-        return <>{text}</>;
-    }
-    // keyword 来自用户搜索框，需先转义正则元字符，否则输入 ( * [ 等会让 new RegExp 抛 SyntaxError 导致渲染崩溃
-    const parts = text.split(new RegExp(`(${escapeRegExp(keyword)})`, "gi"));
-    return <>{parts.map((part, i) =>
-        part.toLowerCase() === keyword.toLowerCase() ? <mark key={i}>{part}</mark> : part
-    )}</>;
-}
 
 // ============================================================================
 // 描述构建函数

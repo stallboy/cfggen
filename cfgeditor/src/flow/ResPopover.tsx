@@ -1,4 +1,4 @@
-import {memo, useCallback, useRef} from "react";
+import {memo, useCallback, useEffect, useRef, useState} from "react";
 import {Button, Flex, Space, Tabs, TabsProps} from "antd";
 import {convertFileSrc} from "@tauri-apps/api/core";
 import {Command} from "@tauri-apps/plugin-shell";
@@ -10,23 +10,23 @@ function srt2vtt(srtBody: string) {
     return 'WEBVTT\n\n' + srtBody.split(/\n/g).map(line => line.replace(/((\d+:){0,2}\d+),(\d+)/g, '$1.$3')).join('\n');
 }
 
-async function getSrt2VttUrls(resInfo: ResInfo) {
+// 读取字幕并转成 VTT 文本（纯字符串，可正常被 React Query 缓存/GC）。
+// 不再在此 createObjectURL——blob URL 的生命周期下沉到 VideoAudioSyncer 的 effect 管理，
+// 避免返回的 url 被缓存后永不 revoke（全仓曾 0 处 revokeObjectURL → blob store 泄漏到 unload）。
+async function getSrt2Vtts(resInfo: ResInfo) {
     const {subtitlesTracks} = resInfo;
     if (!subtitlesTracks || subtitlesTracks.length == 0) {
         return;
     }
 
-    const urls = [];
+    const vtts: string[] = [];
     for (const st of subtitlesTracks) {
         const contentBytes = await readFile(st.path);
         const txt = new TextDecoder().decode(contentBytes);
         const vtt = srt2vtt(txt);
-        // console.log(st.name, vtt);
-        const blobCaption = new Blob([vtt])
-        const url = URL.createObjectURL(blobCaption)
-        urls.push(url);
+        vtts.push(vtt);
     }
-    return urls;
+    return vtts;
 }
 
 async function goExplorer(file: string) {
@@ -39,10 +39,22 @@ async function goExplorer(file: string) {
 
 export const VideoAudioSyncer = memo(function VideoAudioSyncer({resInfo}: { resInfo: ResInfo }) {
     const ref = useRef<HTMLElement>(null);
-    const {data: vttUrls} = useQuery({
-        queryKey: ['vtt', resInfo.path],
-        queryFn: () => getSrt2VttUrls(resInfo)
+    const {data: vttTexts} = useQuery({
+        // queryKey bump 到 'vtt2'：旧 'vtt' 缓存存的是 blob URL 字符串，新存 VTT 文本，避免错配
+        queryKey: ['vtt2', resInfo.path],
+        queryFn: () => getSrt2Vtts(resInfo)
     })
+
+    // 由 VTT 文本创建 blob URL 并在卸载/文本变化时 revoke，修复"blob URL 永不释放"泄漏。
+    // 在 effect（非 useMemo）里 createObjectURL：本应用开了 React.StrictMode，useMemo 会被
+    // dev 双调用产生孤儿 blob；effect + cleanup 保证创建即登记、卸载即释放。
+    const [vttUrls, setVttUrls] = useState<string[] | undefined>();
+    useEffect(() => {
+        if (!vttTexts) return;
+        const urls = vttTexts.map(t => URL.createObjectURL(new Blob([t], {type: 'text/vtt'})));
+        setVttUrls(urls);
+        return () => urls.forEach(u => URL.revokeObjectURL(u));
+    }, [vttTexts]);
 
     const onPlay = useCallback(() => {
         if (ref.current) {

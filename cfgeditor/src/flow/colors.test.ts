@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest'
-import {getNodeBackgroundColor, getFieldBackgroundColor, getEdgeColor} from './colors.ts'
+import {getNodeBackgroundColor, getFieldBackgroundColor, getEdgeColor, NODE_SHOW_DEFAULTS} from './colors.ts'
 import {EntityType, EntityEditField} from '@/domain/entityModel'
 import {makeNodeShow, makeCard, makeReadOnly, makeEditable, withShared} from '@/test/fixtures'
 
@@ -8,24 +8,24 @@ describe('getNodeBackgroundColor', () => {
     // 按类型着色（最低优先级）
     // -----------------------------------------------------------------------
     describe('按类型着色', () => {
-        it('默认实体使用 nodeColor 默认值 #0898b5', () => {
+        it('默认实体使用 nodeColor 默认色（NODE_SHOW_DEFAULTS）', () => {
             const e = makeCard({id: '1', label: 'x', brief: {value: ''}})
-            expect(getNodeBackgroundColor(e)).toBe('#0898b5')
+            expect(getNodeBackgroundColor(e)).toBe(NODE_SHOW_DEFAULTS.nodeColor)
         })
 
         it('Ref/Ref2/RefIn 各自的默认色', () => {
-            expect(getNodeBackgroundColor(makeCard({id: '1', label: 'x', entityType: EntityType.Ref, brief: {value: ''}}))).toBe('#207b4a')
-            expect(getNodeBackgroundColor(makeCard({id: '2', label: 'x', entityType: EntityType.Ref2, brief: {value: ''}}))).toBe('#006d75')
-            expect(getNodeBackgroundColor(makeCard({id: '3', label: 'x', entityType: EntityType.RefIn, brief: {value: ''}}))).toBe('#003eb3')
+            expect(getNodeBackgroundColor(makeCard({id: '1', label: 'x', entityType: EntityType.Ref, brief: {value: ''}}))).toBe(NODE_SHOW_DEFAULTS.nodeRefColor)
+            expect(getNodeBackgroundColor(makeCard({id: '2', label: 'x', entityType: EntityType.Ref2, brief: {value: ''}}))).toBe(NODE_SHOW_DEFAULTS.nodeRef2Color)
+            expect(getNodeBackgroundColor(makeCard({id: '3', label: 'x', entityType: EntityType.RefIn, brief: {value: ''}}))).toBe(NODE_SHOW_DEFAULTS.nodeRefInColor)
         })
 
         it('nodeShow 中自定义类型色优先于默认色', () => {
             const ns = makeNodeShow({nodeColor: '#AAAAAA', nodeRefColor: '#BBBBBB'})
             const e = withShared(makeCard({id: '1', label: 'x', brief: {value: ''}}), ns)
-            expect(getNodeBackgroundColor(e)).toBe('#AAAAAA')
+            expect(getNodeBackgroundColor(e, ns)).toBe('#AAAAAA')
 
             const ref = withShared(makeCard({id: '2', label: 'x', entityType: EntityType.Ref, brief: {value: ''}}), ns)
-            expect(getNodeBackgroundColor(ref)).toBe('#BBBBBB')
+            expect(getNodeBackgroundColor(ref, ns)).toBe('#BBBBBB')
         })
     })
 
@@ -36,7 +36,7 @@ describe('getNodeBackgroundColor', () => {
         it('card 实体按 brief.value 命中关键字', () => {
             const ns = makeNodeShow({nodeColorsByValue: [{keyword: 'BOSS', color: '#FF0000'}]})
             const e = withShared(makeCard({id: '1', label: 'x', brief: {value: 'BOSS dragon'}}), ns)
-            expect(getNodeBackgroundColor(e)).toBe('#FF0000')
+            expect(getNodeBackgroundColor(e, ns)).toBe('#FF0000')
         })
 
         it('readonly 实体按字段值拼接串命中关键字', () => {
@@ -49,7 +49,7 @@ describe('getNodeBackgroundColor', () => {
                 ],
             }), ns)
             // 拼接串 "normal,rare" 命中 "rare"
-            expect(getNodeBackgroundColor(e)).toBe('#GOLD')
+            expect(getNodeBackgroundColor(e, ns)).toBe('#GOLD')
         })
 
         it('editable 实体递归收集 primitive/array/interface 字段值', () => {
@@ -66,20 +66,20 @@ describe('getNodeBackgroundColor', () => {
             ]
             const e = withShared(makeEditable({id: '1', label: 'x', edit: {fields, hasChild: false} as never}), ns)
             // 收集到 "100,a,b,Dog,3"，命中 "Dog"
-            expect(getNodeBackgroundColor(e)).toBe('#PET')
+            expect(getNodeBackgroundColor(e, ns)).toBe('#PET')
         })
 
         it('值关键字未命中时落到下一优先级', () => {
             const ns = makeNodeShow({nodeColorsByValue: [{keyword: 'zzz', color: '#NO'}], nodeColor: '#FALL'})
             const e = withShared(makeCard({id: '1', label: 'x', brief: {value: 'hello'}}), ns)
-            expect(getNodeBackgroundColor(e)).toBe('#FALL')
+            expect(getNodeBackgroundColor(e, ns)).toBe('#FALL')
         })
 
         it('value 为空串时不参与值着色', () => {
             const ns = makeNodeShow({nodeColorsByValue: [{keyword: '', color: '#EMPTY'}], nodeColor: '#DEF'})
             const e = withShared(makeCard({id: '1', label: 'x', brief: {value: ''}}), ns)
             // getEntityValueString 返回 ''（falsy），跳过值着色
-            expect(getNodeBackgroundColor(e)).toBe('#DEF')
+            expect(getNodeBackgroundColor(e, ns)).toBe('#DEF')
         })
     })
 
@@ -90,7 +90,7 @@ describe('getNodeBackgroundColor', () => {
         it('label 包含关键字时命中', () => {
             const ns = makeNodeShow({nodeColorsByLabel: [{keyword: 'Boss', color: '#LBL'}]})
             const e = withShared(makeCard({id: '1', label: 'FinalBoss', brief: {value: ''}}), ns)
-            expect(getNodeBackgroundColor(e)).toBe('#LBL')
+            expect(getNodeBackgroundColor(e, ns)).toBe('#LBL')
         })
 
         it('值着色优先于标签着色', () => {
@@ -99,14 +99,22 @@ describe('getNodeBackgroundColor', () => {
                 nodeColorsByLabel: [{keyword: 'A', color: '#LBL'}],
             })
             const e = withShared(makeCard({id: '1', label: 'A', brief: {value: 'v'}}), ns)
-            expect(getNodeBackgroundColor(e)).toBe('#VAL')
+            expect(getNodeBackgroundColor(e, ns)).toBe('#VAL')
         })
+    })
+
+    // -----------------------------------------------------------------------
+    // nodeShow 缺失（undefined）走纯类型默认色
+    // -----------------------------------------------------------------------
+    it('nodeShow=undefined 时走 NODE_SHOW_DEFAULTS 默认色', () => {
+        const e = makeCard({id: '1', label: 'x', brief: {value: ''}})
+        expect(getNodeBackgroundColor(e, undefined)).toBe(NODE_SHOW_DEFAULTS.nodeColor)
     })
 })
 
 describe('getEdgeColor', () => {
-    it('无 nodeShow 时返回默认边色 #0898b5', () => {
-        expect(getEdgeColor(undefined)).toBe('#0898b5')
+    it('无 nodeShow 时返回默认边色（NODE_SHOW_DEFAULTS）', () => {
+        expect(getEdgeColor(undefined)).toBe(NODE_SHOW_DEFAULTS.edgeColor)
     })
 
     it('nodeShow.edgeColor 优先', () => {

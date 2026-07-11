@@ -9,15 +9,16 @@ import {
     EntitySharedSetting, ReadOnlyEntity,
 } from '@/domain/entityModel'
 import {NodeShowType} from '@/domain/storageJson'
+import {NODE_SHOW_DEFAULTS} from '@/flow/colors.ts'
 
 // ---------------------------------------------------------------------------
 // NodeShowType
 // ---------------------------------------------------------------------------
 
-/** 构造合法 NodeShowType，默认值取自 colors.ts 的各 DEFAULT_* 常量，便于断言。 */
+/** 构造合法 NodeShowType，颜色默认值取自 colors.ts 的 NODE_SHOW_DEFAULTS，便于断言解耦 hex。 */
 export function makeNodeShow(overrides: Partial<NodeShowType> = {}): NodeShowType {
     return {
-        edgeColor: '#0898b5',
+        edgeColor: NODE_SHOW_DEFAULTS.edgeColor,
         edgeStrokeWidth: 1.5,
         editFoldColor: '#888',
         editLayout: 'SIMPLE',
@@ -26,12 +27,12 @@ export function makeNodeShow(overrides: Partial<NodeShowType> = {}): NodeShowTyp
         layeredNodeSpacing: 40,
         layeredSpacing: 40,
         mrtreeSpacing: 40,
-        nodeColor: '#0898b5',
+        nodeColor: NODE_SHOW_DEFAULTS.nodeColor,
         nodeColorsByLabel: [],
         nodeColorsByValue: [],
-        nodeRef2Color: '#006d75',
-        nodeRefColor: '#207b4a',
-        nodeRefInColor: '#003eb3',
+        nodeRef2Color: NODE_SHOW_DEFAULTS.nodeRef2Color,
+        nodeRefColor: NODE_SHOW_DEFAULTS.nodeRefColor,
+        nodeRefInColor: NODE_SHOW_DEFAULTS.nodeRefInColor,
         nodeWidth: 240,
         recordLayout: 'SIMPLE',
         refContainEnum: false,

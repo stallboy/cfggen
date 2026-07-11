@@ -20,6 +20,7 @@ import {
     setPref
 } from "./storage.ts";
 import {History} from "@/domain/historyModel";
+import {layoutKeysChanged} from "@/domain/nodeShowLayoutKeys";
 import {NEW_RECORD_ID, Schema} from "@/domain/schema";
 import {useLocation} from "react-router";
 import {queryClient} from "@/queryClient";
@@ -449,9 +450,14 @@ export function setServer(value: string) {
 }
 
 export function setNodeShow(nodeShow: NodeShowType) {
+    const layoutChanged = layoutKeysChanged(store.nodeShow, nodeShow);
     store.nodeShow = nodeShow;
     setPref('nodeShow', Convert.nodeShowTypeToJson(nodeShow));
-    clearLayoutCache();
+    // 仅布局相关字段（算法/间距/尺寸/拓扑过滤）变化才清 layout 缓存；
+    // 纯颜色/显示字段变更不进 ELK 输入，由 queryKey 收窄（useEntityToGraph）命中缓存、不重跑 ELK。
+    if (layoutChanged) {
+        clearLayoutCache();
+    }
 }
 
 export function setTauriConf(tauriConf: TauriConf) {
