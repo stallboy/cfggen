@@ -144,3 +144,58 @@ describe('EditingSession.getEditingObjectRes（layout 通道）', () => {
         expect(res.isEdited).toBe(true);
     });
 });
+
+describe('EditingSession fuzz（确定性伪随机混合操作）', () => {
+    it('混合结构/值类/reset：structureVersion 单调不减，editingObject 始终有效', () => {
+        // 确定性 LCG，避免测试不确定性
+        let seed = 12345;
+        const rand = () => {
+            seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+            return seed / 0x7fffffff;
+        };
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
+        let lastVersion = s.getStructureVersion();
+        for (let i = 0; i < 300; i++) {
+            const op = Math.floor(rand() * 5);
+            switch (op) {
+                case 0:
+                    s.addArrayItem(ITEM(), ['items'], POS);  // 结构类：bump
+                    break;
+                case 1:
+                    s.updateNote(`n${i}`, []);  // 值类：不 bump
+                    break;
+                case 2: {
+                    const newId = String(Math.floor(rand() * 5));
+                    s.maybeReset(makeRecord('t', newId, {'$type': 'Foo', items: []}));  // 同id早退 / 异id reset
+                    break;
+                }
+                case 3:
+                    s.replaceEditingObject({'$type': 'Bar', items: []});  // 结构类：bump
+                    break;
+                case 4:
+                    s.deleteArrayItem(0, ['items'], POS);  // 空数组时 splice 无效但不崩，仍 bump
+                    break;
+            }
+            expect(s.getStructureVersion()).toBeGreaterThanOrEqual(lastVersion);
+            lastVersion = s.getStructureVersion();
+            expect(s.getEditingObject()).toBeTruthy();
+            expect(typeof s.getEditingObject()['$type']).toBe('string');
+        }
+    });
+
+    it('subscribe/unsubscribe 配对：Set 语义 + 重复反注册安全', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
+        let count = 0;
+        const listener = () => {
+            count++;
+        };
+        const unsub1 = s.subscribe(listener);
+        const unsub2 = s.subscribe(listener);  // 同一 listener 再注册（Set 去重）
+        s.addArrayItem(ITEM(), ['items'], POS);
+        expect(count).toBe(1);  // Set 去重：只通知一次
+        unsub1();
+        unsub2();  // 第二次 unsub 对已 delete 的无影响
+        s.addArrayItem(ITEM(), ['items'], POS);
+        expect(count).toBe(1);  // 反注册后不再通知（不 leak）
+    });
+});

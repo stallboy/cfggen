@@ -452,3 +452,21 @@ class EditSessionStore {
 ### C.3 结论
 
 可变单例在 cfgeditor 场景**是合理的模式选择，甚至优于 reducer**（性能契约使然）。要改的不是消灭它，而是把它从"模块级全局 + render 期变异 + 无订阅"升级成"每会话实例 + 构造/effect 期初始化 + `useSyncExternalStore` 订阅"。**这正是方案 C**——它承认可变单例的合理性，只修它接入 React 的方式。换句话说：cfgeditor 当前的痛苦不来自"用了可变单例"，而来自"用得不够彻底"——既没把它包成有订阅的 store，又让它越界在 render 期初始化。
+
+## 附录 D：方案 C 已实施（2026-07-11）
+
+重构按 §5 方案 D 分阶段落地，共两个 commit：
+
+- `f6d27484` 阶段 0+1：新增 `services/editingSession.ts`（`EditingSession` 类 + 模块级活动会话 holder）、`services/clipboard.ts`（app 级剪贴板）、`editingSession.test.ts`；`Record.tsx` 用 lazy ref 创建 session + `useSyncExternalStore` 订阅 `structureVersion` + useMemo 依赖结构版本 + reset 进 effect（合并删除原 notify 补偿 effect）+ holder 注册；`recordEditEntityCreator.ts` 接收 session/editingObject 参数，闭包改 session 方法；`editingObject.ts` 的 `applyNewEditingObject` 临时改 holder 桥。
+- `9f542399` 阶段 2：Chat/AddJson 直接调 `getCurrentEditingSession()?.replaceEditingObject`，删除整个 `editingObject.ts`（模块级 `editState` 单例、`startEditingObject`、`resetEditingObject`、`notifyEditingState`、所有 `onUpdateXxx` 退出）。
+
+**实际落地的关键决策**（与 §5 设计的细化）：
+- **寻址用模块级 holder**（`getCurrentEditingSession`/`setCurrentEditingSession`），非 context——子创父供场景下 context 退化为 holder 加一层（§5 决策1 验证）。
+- **clearLayout 事件时同步触发**：session 持有 `onStructureChange` 回调，每个结构方法末尾同步调（组件侧 `pathnameRef` 注入读 ref 的稳定闭包）。不能用 effect 补救——React Query 不因 queryFn 闭包里 nodes 变化重执行，effect 会晚一帧布局错乱。
+- **首帧靠 lazy ref 构造期 reset**（零延迟），recordResult 后台变化靠 effect `maybeReset`（幂等）。
+- **剪贴板 app 级**独立模块，保住跨记录复制粘贴。
+- **两条 isEdited 通道都保留**：store 通道 → HeaderBar 实时脏标记；`editingObjectRes.isEdited` 返回值 → `useEntityToGraph` layout 缓存策略。后者在纯值类编辑期间的 staleness 是**有意保留的 quirk**（`editingSession.ts` 注释标明，勿当 bug 修）。
+
+**验证**：tsc（src）干净、oxlint 干净、vitest 202 测试绿（含 `editingSession.test.ts` 纯逻辑单测 + 确定性 fuzz）；实机通过（primitive 键入零重渲、结构编辑重渲一次、StrictMode 无 "Cannot update component while rendering" 警告、layout 重取正常、编辑全流程 + Chat/AddJson 写入 + 跨记录粘贴）。
+
+**结果**：render 期变异消除，React Compiler 等价性保证恢复；编辑管线状态从"模块级可变单例 + render 期副作用"变为"每会话 store 实例 + useSyncExternalStore 订阅"，性能契约（值类零重渲 / 结构类共享引用）完整保留。
