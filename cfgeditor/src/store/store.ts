@@ -20,7 +20,6 @@ import {
     setPref
 } from "./storage.ts";
 import {History} from "@/domain/historyModel";
-import {layoutKeysChanged} from "@/domain/nodeShowLayoutKeys";
 import {NEW_RECORD_ID, Schema} from "@/domain/schema";
 import {useLocation} from "react-router";
 import {queryClient} from "@/queryClient";
@@ -258,10 +257,6 @@ export function getMyStore() {
     return store;
 }
 
-export function clearLayoutCache() {
-    queryClient.removeQueries({ queryKey: ['layout'] });
-}
-
 export function invalidateAllQueries() {
     // queryKey: [] 匹配所有查询并标记 stale；去掉 refetchType:'all' 改用默认 'active'，
     // 只立即重请求当前挂载的查询，未挂载的查询在下次 mount 时按 stale 自然刷新（正确性不变）。
@@ -278,25 +273,24 @@ export function setQuery(v: string) {
 }
 
 
+// 拓扑相关 setter（doc BR4）：不再 clearLayoutCache——这些 setting 已纳入 useEntityToGraph 的 layout
+// queryKey（topologyKeys），改值时缓存自然失效重布局。store 重新变纯状态容器（Query Key Factory）。
 export function setMaxImpl(value: number | null) {
     if (value) {
         store.maxImpl = value;
         setPref('maxImpl', value.toString());
-        clearLayoutCache();
     }
 }
 
 export function setRefIn(checked: boolean) {
     store.refIn = checked;
     setPref('refIn', checked ? 'true' : 'false');
-    clearLayoutCache();
 }
 
 export function setRefOutDepth(value: number | null) {
     if (value) {
         store.refOutDepth = value;
         setPref('refOutDepth', value.toString());
-        clearLayoutCache();
     }
 }
 
@@ -304,21 +298,18 @@ export function setMaxNode(value: number | null) {
     if (value) {
         store.maxNode = value;
         setPref('maxNode', value.toString());
-        clearLayoutCache();
     }
 }
 
 export function setRecordRefIn(checked: boolean) {
     store.recordRefIn = checked;
     setPref('recordRefIn', checked ? 'true' : 'false');
-    clearLayoutCache();
 }
 
 export function setRecordRefInShowLinkMaxNode(value: number | null) {
     if (value) {
         store.recordRefInShowLinkMaxNode = value;
         setPref('recordRefInShowLinkMaxNode', value.toString());
-        clearLayoutCache();
     }
 }
 
@@ -326,7 +317,6 @@ export function setRecordRefOutDepth(value: number | null) {
     if (value) {
         store.recordRefOutDepth = value;
         setPref('recordRefOutDepth', value.toString());
-        clearLayoutCache();
     }
 }
 
@@ -334,7 +324,6 @@ export function setRecordMaxNode(value: number | null) {
     if (value) {
         store.recordMaxNode = value;
         setPref('recordMaxNode', value.toString());
-        clearLayoutCache();
     }
 }
 
@@ -433,7 +422,7 @@ export function setFixedPagesConf(newPageConf: FixedPagesConf) {
 
     store.pageConf = newPageConf;
     setPref('pageConf', Convert.fixedPagesConfToJson(newPageConf));
-    clearLayoutCache();
+    // pageConf 不改当前路由的 layout 输入（固定页各自有独立 pathname → 独立 layout query），无需清缓存（doc BR4 审计）。
 }
 
 export function getFixedPage(pageConf: FixedPagesConf, label: string) {
@@ -450,20 +439,16 @@ export function setServer(value: string) {
 }
 
 export function setNodeShow(nodeShow: NodeShowType) {
-    const layoutChanged = layoutKeysChanged(store.nodeShow, nodeShow);
     store.nodeShow = nodeShow;
     setPref('nodeShow', Convert.nodeShowTypeToJson(nodeShow));
-    // 仅布局相关字段（算法/间距/尺寸/拓扑过滤）变化才清 layout 缓存；
-    // 纯颜色/显示字段变更不进 ELK 输入，由 queryKey 收窄（useEntityToGraph）命中缓存、不重跑 ELK。
-    if (layoutChanged) {
-        clearLayoutCache();
-    }
+    // 不清 layout 缓存：布局相关字段已由 useEntityToGraph 的 pickLayoutKeys 进 queryKey——改这些字段时
+    // queryKey 变 → 缓存自然失效；改纯颜色字段 queryKey 不变 → 命中缓存不重跑 ELK（doc BR4）。
 }
 
 export function setTauriConf(tauriConf: TauriConf) {
     store.tauriConf = tauriConf;
     setPref('tauriConf', Convert.tauriConfToJson(tauriConf));
-    clearLayoutCache();
+    // tauriConf 已纳入 layout queryKey（topologyKeys），改值时缓存自然失效，无需手动清（doc BR4）。
 }
 
 export function setAIConf(aiConf: AIConf) {

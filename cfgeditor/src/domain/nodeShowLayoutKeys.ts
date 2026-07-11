@@ -3,9 +3,8 @@ import type {NodeShowType} from './storageJson'
 // NodeShowType 中影响 ELK 布局输出的字段（算法 / 间距 / 节点尺寸 / 拓扑过滤）。
 // 改这些字段需要重跑 ELK；改其它字段（纯颜色/显示）不应触发重布局。
 //
-// 用途：
-//   (1) useEntityToGraph 的 layout queryKey 只 pick 这些字段 —— 颜色变更→queryKey 不变→命中缓存，不重布局；
-//   (2) store.setNodeShow 仅当这些字段变化时才 clearLayoutCache。
+// 用途：useEntityToGraph 的 layout queryKey 只 pick 这些字段 —— 颜色变更→queryKey 不变→命中缓存，
+// 不重布局；布局字段变更→queryKey 变→缓存自然失效重布局（doc BR4，store setter 不再 clearLayoutCache）。
 //
 // 分类依据（逐字段核实）：
 //   - *Layout（5 个）：layoutAsync 里 getLayoutStrategy 选的 ELK 算法。
@@ -33,25 +32,4 @@ export function pickLayoutKeys(nodeShow: NodeShowType): Pick<NodeShowType, NodeS
         (result as Record<string, unknown>)[key] = nodeShow[key]
     }
     return result
-}
-
-/**
- * 判断两个 NodeShowType 在"布局相关字段"上是否不同。
- * 用于 setNodeShow 决定是否需要 clearLayoutCache。
- * 注：refTableHides 是 string[]，表单每次产出新数组引用——必须按值比，否则改颜色（同内容新数组）
- * 会被误判为布局变化而清缓存。其余字段为基本类型，=== 即可。
- */
-function shallowEqualValues(a: unknown, b: unknown): boolean {
-    if (a === b) return true
-    if (Array.isArray(a) && Array.isArray(b)) {
-        return a.length === b.length && a.every((v, i) => v === b[i])
-    }
-    return false
-}
-
-export function layoutKeysChanged(a: NodeShowType, b: NodeShowType): boolean {
-    for (const key of NODESHOW_LAYOUT_KEYS) {
-        if (!shallowEqualValues(a[key], b[key])) return true
-    }
-    return false
 }

@@ -84,7 +84,13 @@ export function useEntityToGraph({
                                      setFitViewForPathname, nodeShow,
                                  }: FlowGraphInput) {
     const flowGraph = useContext(FlowGraphContext);
-    const {nodeShow: currentNodeShow} = useMyStore();
+    const {
+        nodeShow: currentNodeShow,
+        // 拓扑 setting（影响 entityMap 节点集合）纳入 layout queryKey → 改这些缓存自然失效（doc BR4），
+        // 替代旧 store setter 的 clearLayoutCache 命令式清缓存。新增拓扑 setting 在此登记即可，无需 clearLayoutCache。
+        maxImpl, refIn, refOutDepth, maxNode,
+        recordRefIn, recordRefInShowLinkMaxNode, recordRefOutDepth, recordMaxNode, tauriConf,
+    } = useMyStore();
     const nodeShowSetting = nodeShow ?? currentNodeShow;
     // 命令面收口到公开稳定的 useReactFlow（setNodes/setEdges/setViewport/getViewport/fitView），
     // 不再调用内部 panZoom 的方法（非公开契约，升级易变）。详见 doc §5。
@@ -107,11 +113,17 @@ export function useEntityToGraph({
     // staleTime 脏=0（每次重取，编辑可能改了拓扑）/ 干净=5min（拓扑稳定复用缓存）。
     // quirk：纯值类编辑（键入 primitive）期间 isEdited 不刷新——entityMap 不重算、editingObjectRes 不
     // 重建（性能契约1）。安全：值类不改拓扑、布局不变，继续走干净态 5min 缓存正确。勿当 bug 修。
-    // queryKey 只含布局相关字段（pickLayoutKeys）——改纯颜色字段时 queryKey 不变 → 命中缓存不重跑 ELK。
+    // queryKey 含布局相关字段（pickLayoutKeys）+ 拓扑 setting（topologyKeys）：
+    //   - 改纯颜色字段 → queryKey 不变 → 命中缓存不重跑 ELK；
+    //   - 改拓扑 setting（maxImpl/refOutDepth/recordRef*/tauriConf…）→ topologyKeys 变 → 缓存自然失效重布局（doc BR4）。
     // 'e' 标记保持在 pathname 之后同一层级，保 Record.tsx 的 ['layout', pathname, 'e'] prefix 失效契约。
     const layoutKeys = pickLayoutKeys(nodeShowSetting);
+    const topologyKeys = {
+        maxImpl, refIn, refOutDepth, maxNode,
+        recordRefIn, recordRefInShowLinkMaxNode, recordRefOutDepth, recordMaxNode, tauriConf,
+    };
     const queryKey = editingObjectRes?.isEdited ?
-        ['layout', pathname, 'e', layoutKeys] : ['layout', pathname, layoutKeys]
+        ['layout', pathname, 'e', layoutKeys, topologyKeys] : ['layout', pathname, layoutKeys, topologyKeys]
     const staleTime = editingObjectRes?.isEdited ? 0 : 1000 * 60 * 5;
     const {data: id2RectMap, error: layoutError} = useQuery({
         queryKey: queryKey,

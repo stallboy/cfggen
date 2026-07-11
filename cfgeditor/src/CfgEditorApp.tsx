@@ -18,6 +18,7 @@ import {notesToMap} from "./api/noteModel.ts";
 import {useQuery} from "@tanstack/react-query";
 import {HeaderBar} from "./routes/headerbar/HeaderBar.tsx";
 import {FlowGraph} from "./flow/FlowGraph.tsx";
+import {FlowStyleManager} from "./flow/FlowStyleManager.tsx";
 import {Finder} from "./routes/search/Finder.tsx";
 
 // Chat / Setting 仅在 dragPanel 切换到对应面板时才渲染，懒加载以推迟
@@ -180,6 +181,8 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
     }
 
     return <div>
+        {/* doc BR2：全局 CSS 变量（--edge-stroke-width）只挂一次，避免多画布 cleanup 互相抹掉 */}
+        <FlowStyleManager/>
         <HeaderBar schema={schema} curTable={curTable}/>
 
         {content}
