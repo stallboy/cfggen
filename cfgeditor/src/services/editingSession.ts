@@ -8,7 +8,7 @@ import {getCopiedObject} from "./clipboard";
 /**
  * EditingSession —— 一个编辑会话的可变 store 实例（每条 record 编辑态一个实例）。
  *
- * 设计要点（见 docs/startEditingObject-重构分析.md §5 方案 C）：
+ * 设计要点：
  *
  * 1. 取代旧的模块级全局单例 editState。副作用移出 React render：本类的 mutation 都发生在
  *    事件回调（UI 触发的编辑方法）或 effect（maybeReset）里，绝不在 render 期。
