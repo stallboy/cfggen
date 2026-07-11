@@ -112,7 +112,13 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
                 mutateRecord(editState.editingObject);
             };
 
-            // 这是非纯函数，escape hatch，用useRef也能做，这里用全局变量
+            // ⚠️ 已知反模式（render 期 mutate 全局 editState），与已根治的 select clearLayoutCache 同源。
+            // startEditingObject→resetEditingObject 在 useMemo 里变异模块级 editState。当前实际风险低：
+            // resetEditingObject 幂等（StrictMode 双调用安全），reset 仅在 recordResult 内容变化时发生
+            // （后台推新数据时重置编辑，属预期行为），编辑期间 isEdited 保留。根治需把 startEditingObject
+            // + RecordEditEntityCreator.createThis（同样依赖 editState.editingObject）整条编辑态构建链
+            // 从 useMemo 移到 useEffect+useState，但会引入编辑多一帧延迟，且需充分验证所有编辑交互
+            // （键入/增删数组/折叠/复制粘贴/保存/切换记录）。未做前勿当简单优化重构。
             editingObjectRes = startEditingObject(recordResult, update, submitEditingObject);
             const creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId, folds, setFolds);
             creator.createThis();

@@ -18,9 +18,13 @@ export const TableRef = memo(function TableRef() {
     const {curId, pathname} = useLocationData();
     const {t} = useTranslation();
     const navigate = useNavigate();
-    const entityMap = new Map<string, Entity>();
-    includeRefTables(entityMap, curTable, schema, refIn, refOutDepth, maxNode);
-    fillHandles(entityMap);
+    // entityMap 构建含 fillHandles 副作用，React Compiler 不会 memo，需手动 useMemo
+    const entityMap = useMemo(() => {
+        const map = new Map<string, Entity>();
+        includeRefTables(map, curTable, schema, refIn, refOutDepth, maxNode);
+        fillHandles(map);
+        return map;
+    }, [curTable, schema, refIn, refOutDepth, maxNode]);
 
     const getTableDefaultId = useCallback(
         (tableName: string) => getDefaultIdInTable(schema, tableName, curId), [schema, curId]);

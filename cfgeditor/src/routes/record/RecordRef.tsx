@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { Schema } from "@/domain/schema";
 import { NodeShowType } from "@/domain/storageJson";
 import { navTo, useMyStore } from "@/store/store";
-import { useNavigate, useOutletContext } from "react-router";
+import { Navigate, useNavigate, useOutletContext } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { fetchRecordRefs, fetchUnreferencedRecords } from "@/api/api";
 import { MenuItem } from "@/flow/FlowContextMenu";
@@ -208,14 +208,12 @@ export function RecordRefRoute() {
     const { schema, notes } = useOutletContext<SchemaTableType>();
     const { table, id } = useParams<{ table: string; id?: string }>();
     const { recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow } = useMyStore();
-    const navigate = useNavigate();
 
     const curTable = schema ? schema.getSTable(table || '') : null;
 
-    // 如果table不存在
+    // table 不存在时声明式跳转（render 期 navigate 是副作用，StrictMode 下会触发两次）
     if (!curTable) {
-        navigate('/PathNotFound');
-        return null;
+        return <Navigate to="/PathNotFound" replace />;
     }
 
     // id可能为undefined（未引用模式）或字符串（单个record模式）
