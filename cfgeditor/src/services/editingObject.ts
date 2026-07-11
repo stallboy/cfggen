@@ -3,6 +3,7 @@ import {SItem, SStruct, STable} from "@/api/schemaModel";
 import {getField, Schema} from "@/domain/schema";
 import {EntityPosition, EFitView, EditingObjectRes} from "@/domain/entityModel";
 import {setEditingState} from "@/store/store";
+import {getCurrentEditingSession} from "./editingSession";
 
 // import {doEdit} from "@/routes/setting/store";
 
@@ -256,11 +257,8 @@ export function onDeleteItemFromArray(deleteIndex: number,
 }
 
 export function applyNewEditingObject(newEditingObject: JSONObject) {
-    editState.editingObject = newEditingObject;
-
-    // editState.seq++;
-    editState.fitView = EFitView.FitFull;
-    editState.update();
+    // 阶段1 桥：Chat/AddJson 经此写入当前活动编辑会话（阶段2 改为直接调 getCurrentEditingSession）。
+    getCurrentEditingSession()?.replaceEditingObject(newEditingObject);
 }
 
 export function onStructCopy(obj: JSONObject) {

@@ -13,13 +13,7 @@ import {SField, SInterface, SItem, SStruct, STable} from "@/api/schemaModel";
 import {JSONArray, JSONObject, JSONValue, RefId} from "@/api/recordModel";
 import {getId, getLabel, getLastName} from "./recordRefUtils.ts";
 import {getField, getIdOptions, getImpl, getMapEntryTypeName, isPkInteger, Schema} from "@/domain/schema";
-import {
-    applyNewEditingObject, editState,
-    onAddItemToArray,
-    onDeleteItemFromArray, onSwapItemInArray, onUpdateFold,
-    onUpdateFormValues,
-    onUpdateInterfaceValue, onUpdateNote
-} from "@/services/editingObject";
+import {EditingSession} from "@/services/editingSession";
 import { canBeEmbeddedCheck, extractEmbeddingFields, isPrimitiveType } from "@/domain/embedding";
 // Folds（折叠状态，domain）
 import {Folds} from "@/domain/folds";
@@ -40,13 +34,15 @@ export class RecordEditEntityCreator {
                 public curId: string,
                 public folds: Folds,
                 public setFolds: (f: Folds) => void,
+                public session: EditingSession,
+                public editingObject: JSONObject,
     ) {
         this.curRefId = {table: curTable.name, id: curId};
     }
 
     createThis() {
         const id = getId(this.curTable.name, this.curId);
-        this.createEntity(id, this.curTable, editState.editingObject, []);
+        this.createEntity(id, this.curTable, this.editingObject, []);
     }
 
     createEntity(id: string,
@@ -150,20 +146,20 @@ export class RecordEditEntityCreator {
 
                     const chain = [...fieldChain, fieldKey]
                     const onDeleteFunc = (position: EntityPosition) => {
-                        onDeleteItemFromArray(arrayIndex, chain, position);
+                        this.session.deleteArrayItem(arrayIndex, chain, position);
                     }
 
                     let onMoveUpFunc;
                     if (arrayIndex > 0) {
                         onMoveUpFunc = (position: EntityPosition) => {
-                            onSwapItemInArray(arrayIndex, arrayIndex - 1, chain, position);
+                            this.session.swapArrayItem(arrayIndex, arrayIndex - 1, chain, position);
                         }
                     }
 
                     let onMoveDownFunc;
                     if (arrayIndex < fArrLen - 1) {
                         onMoveDownFunc = (position: EntityPosition) => {
-                            onSwapItemInArray(arrayIndex, arrayIndex + 1, chain, position);
+                            this.session.swapArrayItem(arrayIndex, arrayIndex + 1, chain, position);
                         }
                     }
 
@@ -236,18 +232,18 @@ export class RecordEditEntityCreator {
 
 
         const editOnUpdateValues = (values: Record<string, unknown>) => {
-                onUpdateFormValues(this.schema, values, fieldChain);
+                this.session.updateFormValues(this.schema, values, fieldChain);
             }
         ;
 
         const editOnUpdateNote = (note?: string) => {
-            onUpdateNote(note, fieldChain);
+            this.session.updateNote(note, fieldChain);
         };
 
         const editOnUpdateFold = (fold: boolean, position: EntityPosition, embeddedFieldChain?: (string | number)[]) => {
             // 如果提供了 embeddedFieldChain，使用它；否则使用默认的 fieldChain
             const targetChain = embeddedFieldChain ?? fieldChain;
-            onUpdateFold(fold, targetChain, position);
+            this.session.updateFold(fold, targetChain, position);
             const newFolds = this.folds.setFold(targetChain, fold);
             this.setFolds(newFolds);
         };
@@ -324,7 +320,7 @@ export class RecordEditEntityCreator {
                         newObj = this.schema.defaultValueOfStructural(newImpl);
                         newObj['$fold'] = false;  // 明确设置为展开状态，避免自动内嵌
                     }
-                    onUpdateInterfaceValue(newObj, fieldChain, position);
+                    this.session.updateInterfaceValue(newObj, fieldChain, position);
                 },
             })
 
@@ -334,7 +330,7 @@ export class RecordEditEntityCreator {
 
             const funcClear = () => {
                 const defaultValue = this.schema.defaultValueOfStructural(structural);
-                applyNewEditingObject(defaultValue);
+                this.session.replaceEditingObject(defaultValue);
             };
 
             if ('pk' in structural) { // is STable
@@ -344,7 +340,7 @@ export class RecordEditEntityCreator {
                     type: 'funcSubmit',
                     eleType: 'bool',
                     value: {
-                        funcSubmit: editState.submitEditingObject,
+                        funcSubmit: () => this.session.submit(),
                         funcClear
                     }
                 });
@@ -469,7 +465,7 @@ export class RecordEditEntityCreator {
                 value: (position: EntityPosition) => {
                     const sFieldable = this.schema.itemIncludeImplMap.get(itemTypeId) as SStruct | SInterface;
                     const defaultValue = this.schema.defaultValue(sFieldable);
-                    onAddItemToArray(defaultValue, [...fieldChain, sField.name], position);
+                    this.session.addArrayItem(defaultValue, [...fieldChain, sField.name], position);
                 }
             };
         }

@@ -5,14 +5,8 @@ import {createRefEntities, getId, getLabel} from "./recordRefUtils.ts";
 import {RecordEntityCreator} from "./recordEntityCreator.ts";
 import {RecordEditEntityCreator} from "./recordEditEntityCreator.ts";
 import {Folds} from "@/domain/folds";
-import {
-    editState,
-    isCopiedFitAllowedType, notifyEditingState,
-    onAddItemToArrayIndex,
-    onStructCopy,
-    onStructPaste,
-    startEditingObject,
-} from "@/services/editingObject";
+import {EditingSession, getCurrentEditingSession, setCurrentEditingSession} from "@/services/editingSession";
+import {isCopiedFitAllowedType, structCopy} from "@/services/clipboard";
 import {useTranslation} from "react-i18next";
 import {invalidateAllQueries, navTo, setIsEditMode, useMyStore, useLocationData} from "@/store/store";
 import {useNavigate, useOutletContext} from "react-router";
@@ -21,7 +15,7 @@ import {addOrUpdateRecord, fetchRecord} from "@/api/api";
 import {MenuItem} from "@/flow/FlowContextMenu";
 import {SchemaTableType} from "@/CfgEditorApp";
 import {fillHandles} from "@/flow/entityToNodeAndEdge";
-import {memo, useCallback, useEffect, useMemo, useState} from "react";
+import {memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore} from "react";
 
 
 import {useEntityToGraph} from "@/flow/useEntityToGraph";
@@ -38,7 +32,6 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const {curTableId, curId, edit, pathname} = useLocationData();
     const navigate = useNavigate();
     const {t} = useTranslation();
-    const [updateVersion, setUpdateVersion] = useState(0);
 
     const addOrUpdateRecordMutation = useMutation<RecordEditResult, Error, JSONObject>({
         mutationFn: (jsonObject: JSONObject) => addOrUpdateRecord(server, curTableId, jsonObject),
@@ -72,18 +65,28 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
 
     // folds 信息跟notes信息一样都是临时存下来，而不是直接通知server存成json。
     const [folds, setFolds] = useState<Folds>(new Folds([]));
-    const update = useCallback(() => {
-        // 让其重新layout，因为可能已经经过编辑，缺少了某些节点的位置信息
-        queryClient.removeQueries({queryKey: ['layout', pathname, 'e']});
-        setUpdateVersion(updateVersion + 1);
-    }, [pathname, updateVersion, setUpdateVersion])
 
     const isEditable = schema.isEditable;
     const isEditing = isEditable && edit;
 
-    // useMutation 返回的 mutate 是稳定引用；放入依赖可避免 mutation 状态
-    // (isPending/isSuccess) 变化导致整个 useMemo 重算（O3）
+    // useMutation 返回的 mutate 是稳定引用；构造 session 时直接捕获。
     const mutateRecord = addOrUpdateRecordMutation.mutate;
+
+    // 编辑会话 store（每条记录编辑态一个实例，取代旧的模块级 editState 单例）。
+    // lazy ref：首次渲染构造，构造函数纯（仅初始化字段，不 notify）。recordResult 变化由下方 effect 的 maybeReset 同步。
+    // pathname 走 ref：edit↔view 切换会改 pathname 但 key 不变、session 不重建，闭包需读到最新 pathname。
+    const pathnameRef = useRef(pathname);
+    pathnameRef.current = pathname;
+    const sessionRef = useRef<EditingSession | null>(null);
+    if (sessionRef.current === null) {
+        sessionRef.current = new EditingSession(recordResult, {
+            onStructureChange: () => queryClient.removeQueries({queryKey: ['layout', pathnameRef.current, 'e']}),
+            mutate: mutateRecord,
+        });
+    }
+    const session = sessionRef.current;
+    // 只订阅结构版本号（number）：值类编辑不 bump → 不重渲（性能契约1）；结构类编辑 bump → 重渲重算 entityMap。
+    const structureVersion = useSyncExternalStore(session.subscribe, session.getStructureVersion);
 
     const {entityMap, editingObjectRes} = useMemo(() => {
         const entityMap = new Map<string, Entity>();
@@ -108,35 +111,42 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
             }
 
         } else {
-            const submitEditingObject = () => {
-                mutateRecord(editState.editingObject);
-            };
-
-            // ⚠️ 已知反模式（render 期 mutate 全局 editState），与已根治的 select clearLayoutCache 同源。
-            // startEditingObject→resetEditingObject 在 useMemo 里变异模块级 editState。当前实际风险低：
-            // resetEditingObject 幂等（StrictMode 双调用安全），reset 仅在 recordResult 内容变化时发生
-            // （后台推新数据时重置编辑，属预期行为），编辑期间 isEdited 保留。根治需把 startEditingObject
-            // + RecordEditEntityCreator.createThis（同样依赖 editState.editingObject）整条编辑态构建链
-            // 从 useMemo 移到 useEffect+useState，但会引入编辑多一帧延迟，且需充分验证所有编辑交互
-            // （键入/增删数组/折叠/复制粘贴/保存/切换记录）。未做前勿当简单优化重构。
-            editingObjectRes = startEditingObject(recordResult, update, submitEditingObject);
-            const creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId, folds, setFolds);
+            // editingObject 是 session 的就地变异对象（共享引用）。structureVersion 是 entityMap 重算的显式触发器：
+            // in-place 变异下 editingObject 顶层引用不变，无法靠引用变化驱动重算；值类编辑不 bump structureVersion
+            // （性能契约1：几十表单输入零重渲），结构类编辑 bump → 此处重算 → 闭包拿到最新子对象引用（契约2）。
+            void structureVersion;
+            const editingObject = session.getEditingObject();
+            const creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId, folds, setFolds, session, editingObject);
             creator.createThis();
+            editingObjectRes = session.getEditingObjectRes();
         }
         fillHandles(entityMap);
         return {entityMap, editingObjectRes}
     }, [isEditing, curId, schema, recordResult, tauriConf, resourceDir, resMap, curTable,
-        mutateRecord, update, folds, setFolds]);
+        folds, setFolds, session, structureVersion]);
 
     useEffect(() => {
         setIsEditMode(edit);
     }, [edit]);
 
+    // recordResult 变化（切记录 / 后台推新数据）→ maybeReset（幂等：同表同id且内容相等则早退，保留编辑态）。
+    // effect 期可合法 notifyEditingState（render 期不行），故原 render 后补通知的补偿 effect 合并到此。
     useEffect(() => {
         if (isEditing) {
-            notifyEditingState()
+            session.maybeReset(recordResult);
+            session.notifyEditingState();
         }
-    }, [isEditing, recordResult]); // recordResult 变会触发 startEditingObject 的 reset，需在 render 后重新通知 isEdited
+    }, [isEditing, recordResult, session]);
+
+    // 注册为当前活动编辑会话，供 Chat / AddJson（Splitter 兄弟，非本路由子树）寻址写入。
+    useEffect(() => {
+        setCurrentEditingSession(session);
+        return () => {
+            if (getCurrentEditingSession() === session) {
+                setCurrentEditingSession(null);
+            }
+        };
+    }, [session]);
 
 
     const getEditMenu = useCallback(function (table: string, id: string, edit: boolean) {
@@ -220,7 +230,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
                         handler() {
                             const sFieldable = schema.itemIncludeImplMap.get(editAllowObjType) as SStruct | SInterface;
                             const defaultValue = schema.defaultValue(sFieldable);
-                            onAddItemToArrayIndex(defaultValue, index,
+                            session.addArrayItemAtIndex(defaultValue, index,
                                 editFieldChain.slice(0, editFieldChain.length - 1),
                                 {id: entity.id, x: entityNode.position.x, y: entityNode.position.y}
                             )
@@ -231,7 +241,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
                     label: t('structCopy'),
                     key: 'structCopy',
                     handler() {
-                        onStructCopy(editObj)
+                        structCopy(editObj)
                     }
                 });
             }
@@ -241,7 +251,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
                     label: t('structPaste'),
                     key: 'structPaste',
                     handler() {
-                        onStructPaste(editFieldChain, {
+                        session.pasteStruct(editFieldChain, {
                             id: entity.id,
                             x: entityNode.position.x,
                             y: entityNode.position.y
@@ -251,7 +261,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
             }
         }
         return mm;
-    }, [curTable.name, curId, t, isEditing, isEditable, getEditMenu, edit, schema, navigate]);
+    }, [curTable.name, curId, t, isEditing, isEditable, getEditMenu, edit, schema, navigate, session]);
 
     // const ep = pathname + (isEditing ? ',' + editSeq : ''); // 用 editSeq触发layout
     useEntityToGraph({

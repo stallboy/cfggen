@@ -4,6 +4,8 @@ import {EntityEditField} from '@/domain/entityModel'
 import {Schema} from '@/domain/schema'
 import {Folds} from '@/domain/folds'
 import {field, fk, makeInterface, makeRawSchema, makeStruct, makeTable} from '@/test/fixtures'
+import {EditingSession} from '@/services/editingSession'
+import {JSONObject} from '@/api/recordModel'
 
 function buildSchema() {
     const small = makeStruct('Small', [field('dmg', 'int')])              // 可内嵌：1 个 primitive
@@ -28,7 +30,10 @@ function buildSchema() {
 }
 
 function newCreator(schema: Schema, curTable: ReturnType<typeof makeTable>) {
-    return new RecordEditEntityCreator(new Map(), schema, curTable, '1', new Folds([]), () => {})
+    // 这些用例只测 makeEditFields / getAutoCompleteOptions 的字段生成逻辑，不触发编辑回调，
+    // 故 session 传 mock、editingObject 传占位即可。
+    return new RecordEditEntityCreator(new Map(), schema, curTable, '1', new Folds([]), () => {},
+        {} as unknown as EditingSession, {$type: 'Placeholder'} as JSONObject)
 }
 
 describe('RecordEditEntityCreator.makeEditFields 原始字段', () => {

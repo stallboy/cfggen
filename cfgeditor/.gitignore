@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# TypeScript 增量构建缓存（tsc -b 产物）
+*.tsbuildinfo
