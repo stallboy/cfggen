@@ -31,7 +31,7 @@ import {EntityNode} from "@/flow/FlowGraph";
 import {NEW_RECORD_ID} from "@/domain/schema";
 
 
-const RecordWithResult = memo(function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
+function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const {schema, notes, curTable} = useOutletContext<SchemaTableType>();
     const {server, tauriConf, resourceDir, resMap} = useMyStore();
     const {notification} = App.useApp();
@@ -259,7 +259,7 @@ const RecordWithResult = memo(function RecordWithResult({recordResult}: { record
     });
 
     return null;
-});
+}
 
 
 export const Record = memo(function () {

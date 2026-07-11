@@ -3,7 +3,6 @@ import {Alert, Flex, Form, Input, Modal, Splitter,} from "antd";
 import {useTranslation} from "react-i18next";
 import {Schema} from "./domain/schema.tsx";
 import {
-    clearLayoutCache,
     getFixedPage,
     getLastNavToInLocalStore,
     setServer,
@@ -66,26 +65,14 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
         queryKey: ['schema'],
         queryFn: ({signal}) => fetchSchema(server, signal),
         staleTime: 1000 * 60 * 5,
-        select: (rawSchema) => {
-            // ⚠️ 这里的 clearLayoutCache 是有意为之，勿当反模式删除（曾误判移除，见 revert 970b768）：
-            // RQ select 在 CfgEditorApp 每次重渲染（URL 变化/store 通知）时都会执行，借此清 layout
-            // 缓存使 layout query 失效重取，从而驱动订阅它的 RecordWithResult（memo 组件）在 SPA
-            // navigate（切编辑/浏览、重选已访问 id）时重渲染。移到 useEffect([schema]) 会因 navigate
-            // 时 schema 引用不变而不触发，导致 layout 已 resolve 却无 setNodes、视图不刷新。
-            // 要根除此 render 期副作用，须重构 RecordWithResult 的重渲染驱动方式，而非简单移走。
-            clearLayoutCache();
-            return new Schema(rawSchema);
-        },
+        select: (rawSchema) => new Schema(rawSchema),
     })
 
     const {data: notes} = useQuery({
         queryKey: ['notes'],
         queryFn: ({signal}) => fetchNotes(server, signal),
         staleTime: 1000 * 60 * 5,
-        select: (notesData) => {
-            clearLayoutCache();
-            return notesToMap(notesData);
-        },
+        select: notesToMap,
     })
 
 
