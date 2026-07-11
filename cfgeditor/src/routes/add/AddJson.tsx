@@ -10,7 +10,7 @@ import type {ResultProps} from "antd";
 import {RecordEditResult} from "@/api/recordModel";
 import {useNavigate} from "react-router";
 import {useTranslation} from "react-i18next";
-import {applyNewEditingObject} from "@/services/editingObject";
+import {getCurrentEditingSession} from "@/services/editingSession";
 
 const {Title} = Typography;
 // antd 最佳实践：用根导出的 ResultProps 派生类型，避免深路径 antd/es/*
@@ -58,7 +58,7 @@ export const AddJson = memo(function AddJson({schema}: {
 
     const onShow = useCallback(() => {
         const json = form.getFieldValue('json')
-        applyNewEditingObject(JSON.parse(json));
+        getCurrentEditingSession()?.replaceEditingObject(JSON.parse(json));
     }, [form]);
 
 

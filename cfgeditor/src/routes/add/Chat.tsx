@@ -11,7 +11,7 @@ import {Schema} from "@/domain/schema";
 import {useQuery, useMutation} from "@tanstack/react-query";
 import {getPrompt, checkJson} from "@/api/api";
 import {CheckJsonResult} from "@/api/chatModel";
-import {applyNewEditingObject} from "@/services/editingObject";
+import {getCurrentEditingSession} from "@/services/editingSession";
 
 const role: BubbleListProps["role"] = {
     assistant: {
@@ -101,7 +101,7 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
             if (result.resultCode == 'ok') {
                 if (curTableId == result.table) {
                     try {
-                        applyNewEditingObject(JSON.parse(result.jsonResult));
+                        getCurrentEditingSession()?.replaceEditingObject(JSON.parse(result.jsonResult));
                     } catch (e) {
                         setInputValue(`parse jsonResult failed: ${e}`);
                     }
