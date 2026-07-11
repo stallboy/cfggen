@@ -129,6 +129,16 @@ describe('EditingSession submit / replaceEditingObject', () => {
         expect(s.getEditingObject()).not.toBe(old);
         expect(s.getIsEdited()).toBe(true); // newObj !== originalEditingObject(旧 Foo)
     });
+
+    it('replaceEditingObject：就地剥离入参的 $refs（与 prepareEditingObject 对齐）', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
+        // 模拟 Chat/AddJson 的外部 JSON 带后端附加的 $refs 引用元数据
+        const withRefs: JSONObject = {'$type': 'Bar', items: [], '$refs': [{$type: 'Ref'}]};
+        s.replaceEditingObject(withRefs);
+        expect('$refs' in s.getEditingObject()).toBe(false);   // $refs 被剥离
+        expect(s.getEditingObject()['$type']).toBe('Bar');     // 其余字段保留
+        expect(s.getEditingObject()).toBe(withRefs);           // 就地净化，仍共享引用（未 clone）
+    });
 });
 
 describe('EditingSession.getEditingObjectRes（layout 通道）', () => {

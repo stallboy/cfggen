@@ -217,8 +217,14 @@ export class EditingSession {
         this.structureChange(position);
     }
 
-    /** 整体替换编辑对象（Chat/AddJson 写入 / funcClear）。不改 originalEditingObject（保留脏比较基准）。用 FitFull。 */
+    /**
+     * 整体替换编辑对象（Chat/AddJson 写入 / funcClear）。不改 originalEditingObject（保留脏比较基准）。用 FitFull。
+     * 入参就地剥离 $refs，与 prepareEditingObject 对齐：Chat/AddJson 的外部 JSON 可能带后端附加的 $refs（引用元数据），
+     * 不剥离会污染提交载荷、并让 getIsEdited 误判 dirty（基准 originalEditingObject 构造期已净化过）。
+     * 入参均为调用方 fresh 构造（JSON.parse / defaultValueOfStructural，无共享引用），故就地净化而非 clone。
+     */
     replaceEditingObject(newEditingObject: JSONObject): void {
+        deleteRefsInPlace(newEditingObject);
         this.editingObject = newEditingObject;
         this.fitView = EFitView.FitFull;
         this.fitViewToIdPosition = undefined;
@@ -291,7 +297,7 @@ export function setCurrentEditingSession(session: EditingSession | null): void {
 
 function prepareEditingObject(rawObj: JSONObject): JSONObject {
     const cloned = structuredClone(rawObj);
-    delete$refInPlace(cloned);
+    deleteRefsInPlace(cloned);
     return cloned;
 }
 
@@ -378,16 +384,21 @@ function isDeeplyEqual(obj1: unknown, obj2: unknown): boolean {
     return false;
 }
 
-function delete$refInPlace(obj: unknown) {
+/**
+ * 就地删除后端附加的 `$refs`（FieldRef[]，"哪些记录引用了本记录"的展示元数据，见 recordModel.ts 的 Refs）。
+ * 净化目的：`$refs` 是运行时引用关系、非可编辑数据，剥离后避免它进入 editingObject、污染提交载荷与
+ * isEdited 脏比较基准。注意删的是本项目的 `$refs`（复数），不是 JSON Schema 的 `$ref`（引用指针）。
+ */
+function deleteRefsInPlace(obj: unknown) {
     if (Array.isArray(obj)) {
         for (const item of obj) {
-            delete$refInPlace(item);
+            deleteRefsInPlace(item);
         }
     } else if (typeof obj === "object" && obj !== null) {
         const o = obj as Record<string, unknown>;
         delete o['$refs'];
         for (const k in o) {
-            delete$refInPlace(o[k]);
+            deleteRefsInPlace(o[k]);
         }
     }
 }
