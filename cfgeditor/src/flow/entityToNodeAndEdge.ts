@@ -1,4 +1,5 @@
-import {Entity, DisplayField, EntityEditField, isReadOnlyEntity, isEditableEntity, EntityEdgeType, EntityGraph} from "@/domain/entityModel";
+import {Entity, DisplayField, EntityEditField, isReadOnlyEntity, isEditableEntity, EntityEdgeType} from "@/domain/entityModel";
+import type {NodeShowType} from "@/domain/storageJson";
 import {getEdgeColor} from "./colors.ts";
 import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
 
@@ -56,7 +57,18 @@ export function fillHandles(entityMap: Map<string, Entity>) {
     }
 }
 
-export function convertNodeAndEdges({entityMap, sharedSetting}: EntityGraph): {
+/**
+ * 把 entityMap 转成 xyflow 的 nodes/edges。
+ *
+ * nodeShow/notes 是呈现层数据，写入 node.data（EntityNodeData）供 FlowNode 及布局估算读取，
+ * **不再盖章到 entity.sharedSetting**——entity 保持纯 domain、不可变 memo-safe（doc BR1）。
+ * query 不在此处下发：它无 per-graph override，渲染组件各自 useMyStore() 订阅。
+ */
+export function convertNodeAndEdges({entityMap, nodeShow, notes}: {
+    entityMap: Map<string, Entity>;
+    nodeShow?: NodeShowType;
+    notes?: Map<string, string>;
+}): {
     nodes: EntityNode[],
     edges: EntityEdge[]
 } {
@@ -64,14 +76,12 @@ export function convertNodeAndEdges({entityMap, sharedSetting}: EntityGraph): {
     const edges: EntityEdge[] = []
 
     let ei = 1;
-    const edgeColor = getEdgeColor(sharedSetting?.nodeShow);
+    const edgeColor = getEdgeColor(nodeShow);
 
     for (const entity of entityMap.values()) {
-        entity.sharedSetting = sharedSetting;
-
         nodes.push({
             id: entity.id,
-            data: {entity: entity},
+            data: {entity, nodeShow, notes},
             type: 'node',
             position: {x: 100, y: 100},
         })

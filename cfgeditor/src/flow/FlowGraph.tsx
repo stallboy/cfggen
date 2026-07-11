@@ -1,12 +1,26 @@
 import {Background, Controls, Edge, Node, NodeTypes, ReactFlow, ReactFlowProvider} from "@xyflow/react";
 import {Entity} from "@/domain/entityModel";
+import type {NodeShowType} from "@/domain/storageJson";
 import {memo, MouseEvent as ReactMouseEvent, ReactNode, useCallback, useMemo, useState} from "react";
 import {FlowContextMenu, MenuItem, MenuStyle} from "./FlowContextMenu.tsx";
 import {FlowNode} from "./FlowNode.tsx";
 import {FlowStyleManager} from "./FlowStyleManager.tsx";
 import {FlowGraphContext as FlowGraphContext1} from "./FlowGraphContext.ts";
 
-export type EntityNode = Node<{ entity: Entity }, "node">;
+// EntityNode.data 是「呈现层下发袋」：entity 是纯 domain（不可变、memo-safe），
+// nodeShow/notes 是呈现层数据，由 useEntityToGraph 经 convertNodeAndEdges 写入 node.data，
+// 而非盖章到 entity.sharedSetting（doc BR1：去 domain↔presentation 耦合）。
+// nodeShow 走 node.data（非子组件直接 useStore）以保留 FixedPage 的 per-graph override（doc A2）；
+// query 不在此列——它无 per-graph override，渲染组件各自 useMyStore() 订阅（resso per-key，零多余重渲）。
+// 用 type 别名而非 interface：xyflow 的 Node<T> 要求 T extends Record<string,unknown>，
+// type 字面量带隐式索引签名可满足，interface 不带（会被判 index signature 缺失）。
+export type EntityNodeData = {
+    entity: Entity;
+    nodeShow?: NodeShowType;
+    notes?: Map<string, string>;
+};
+
+export type EntityNode = Node<EntityNodeData, "node">;
 export type EntityEdge = Edge;
 export type NodeMenuFunc = (entityNode: EntityNode) => MenuItem[];
 export type NodeDoubleClickFunc = (entityNode: EntityNode) => void;

@@ -1,5 +1,4 @@
 import {BriefDescription, JSONObject} from "@/api/recordModel";
-import {NodeShowType} from "@/domain/storageJson";
 import {ResInfo} from "@/domain/resInfo";
 import * as React from "react";
 
@@ -283,7 +282,6 @@ export interface EntityBase {
     note?: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     userData?: any;
-    sharedSetting?: EntitySharedSetting;
     assets?: ResInfo[];
     handleIn?: boolean;
     handleOut?: boolean;
@@ -349,23 +347,6 @@ export function isEditableEntity(entity: Entity): entity is EditableEntity {
  */
 export function isCardEntity(entity: Entity): entity is CardEntity {
     return entity.type === 'card';
-}
-
-/**
- * 实体图
- */
-export interface EntityGraph {
-    entityMap: Map<string, Entity>;
-    sharedSetting?: EntitySharedSetting;
-}
-
-/**
- * 实体共享设置
- */
-export interface EntitySharedSetting {
-    notes?: Map<string, string>;
-    query?: string;
-    nodeShow?: NodeShowType;
 }
 
 

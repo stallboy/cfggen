@@ -5,8 +5,10 @@ type DescriptionsItemType = NonNullable<DescriptionsProps['items']>[number];
 import {convertFileSrc, isTauri} from "@tauri-apps/api/core";
 import {CSSProperties, memo, ReactElement} from "react";
 import {CardEntity, Entity, isCardEntity} from "@/domain/entityModel";
+import type {NodeShowType} from "@/domain/storageJson";
 import {getDsLenAndDesc} from "./getDsLenAndDesc.ts";
 import {Highlight} from "./Highlight.tsx";
+import {useMyStore} from "@/store/store";
 
 // ============================================================================
 // 常量定义
@@ -63,16 +65,19 @@ function buildCardDescription(
 // 主组件
 // ============================================================================
 
-export const EntityCard = memo(function EntityCard({entity, image}: {
+export const EntityCard = memo(function EntityCard({entity, image, nodeShow}: {
     entity: Entity;
     image?: string;
+    nodeShow?: NodeShowType;
 }) {
+    // query 无 per-graph override，走全局 store（resso per-key 订阅）。hook 须在 early return 之前。
+    const {query} = useMyStore();
+
     if (!isCardEntity(entity) || !entity.brief) {
         return <></>;
     }
 
-    const {brief, sharedSetting} = entity;
-    const {query, nodeShow} = sharedSetting ?? {};
+    const {brief} = entity;
 
     // 构建封面
     const coverEl = image && isTauri()

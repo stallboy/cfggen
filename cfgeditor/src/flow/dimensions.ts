@@ -25,9 +25,9 @@ export function getEditNodeWidth(nodeShow?: NodeShowType): number {
     return nodeShow?.editNodeWidth ?? DEFAULT_EDIT_NODE_WIDTH;
 }
 
-/** 按 entity 是否可编辑取对应宽度（calcWidthHeight/FlowNode 共用）。 */
-export function getNodeWidth(entity: Entity): number {
+/** 按 entity 是否可编辑取对应宽度（calcWidthHeight/FlowNode 共用）。nodeShow 由调用方传入（doc BR1）。 */
+export function getNodeWidth(entity: Entity, nodeShow?: NodeShowType): number {
     return isEditableEntity(entity)
-        ? getEditNodeWidth(entity.sharedSetting?.nodeShow)
-        : getReadNodeWidth(entity.sharedSetting?.nodeShow);
+        ? getEditNodeWidth(nodeShow)
+        : getReadNodeWidth(nodeShow);
 }

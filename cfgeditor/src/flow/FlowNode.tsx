@@ -1,7 +1,9 @@
 import { CSSProperties, memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Handle, NodeProps, Position, useStore } from "@xyflow/react";
 import { Entity, isReadOnlyEntity, isEditableEntity, isCardEntity } from "@/domain/entityModel";
+import type { NodeShowType } from "@/domain/storageJson";
 import { mayHaveResOrNote } from "@/domain/entityPredicates";
+import { useMyStore } from "@/store/store";
 import { getNodeBackgroundColor } from "./colors.ts";
 import { getNodeWidth } from "./dimensions.ts";
 import { Button, Flex, Popover, Space, Typography } from "antd";
@@ -47,17 +49,22 @@ const heightDriftWarned = new Set<string>();
 // prod 不挂载即零订阅（Vite 把 import.meta.env.DEV 编译期 DFE），守住 doc §8「本项目从不读取 measured」立场。
 // 仅针对 height：width 两端同源（FlowNode 与 calcWidthHeight 都读 nodeShow.nodeWidth/editNodeWidth）不会漂。
 // 注：NodeProps 在本版本无 measured 字段，故走 useStore 只读尺寸切片（doc §5 允许的 escape-hatch 场景）。
-function HeightDriftGuard({id, entity}: { id: string; entity: Entity }) {
+function HeightDriftGuard({id, entity, nodeShow, notes}: {
+    id: string;
+    entity: Entity;
+    nodeShow?: NodeShowType;
+    notes?: Map<string, string>;
+}) {
     const measuredHeight = useStore((s) => s.nodeLookup.get(id)?.measured?.height);
     useEffect(() => {
         if (measuredHeight === undefined) return;
-        const [, est] = calcWidthHeight(entity);
+        const [, est] = calcWidthHeight(entity, nodeShow, notes);
         const drift = Math.abs(measuredHeight - est);
         if (drift > 8 && drift / est > 0.05 && !heightDriftWarned.has(id)) {
             heightDriftWarned.add(id);
             console.warn(`[flow] node ${id} height drift: est=${est} measured=${measuredHeight} Δ=${drift}px`);
         }
-    }, [id, entity, measuredHeight]);
+    }, [id, entity, nodeShow, notes, measuredHeight]);
     return null;
 }
 
@@ -68,7 +75,12 @@ interface TempNote {
 
 export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>) {
     const entity = nodeProps.data.entity;
-    const { id, label, handleIn, handleOut, sharedSetting } = entity;
+    // nodeShow/notes 是呈现层下发（doc BR1），从 nodeProps.data 读——保留 FixedPage per-graph override；
+    // query 无 per-graph override，走全局 store（resso per-key 订阅，仅 query 变时重渲）。
+    const nodeShow = nodeProps.data.nodeShow;
+    const notes = nodeProps.data.notes;
+    const { query } = useMyStore();
+    const { id, label, handleIn, handleOut } = entity;
 
     // 使用类型守卫确定 Entity 类型并获取相应属性
     let fields = undefined;
@@ -90,18 +102,16 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
         assets = entity.assets;
     }
 
-    // nodeShow 单独取出放进 color 的 useMemo deps：convertNodeAndEdges 把新 nodeShow 就地盖章到
-    // 同一 entity（引用不变），若 deps 只写 [entity]，改主题色时 color 不会重算 → 背景 stale。
-    const nodeShow = sharedSetting?.nodeShow;
+    // nodeShow 进 color 的 useMemo deps：entity 引用不变时，改主题色仍要让 color 重算（避免 stale）。
     const color: string = useMemo(() => getNodeBackgroundColor(entity, nodeShow), [entity, nodeShow]);
-    const width = getNodeWidth(entity);
+    const width = getNodeWidth(entity, nodeShow);
     const nodeStyle: CSSProperties = useMemo(() => {
-        return { width: width, backgroundColor: color, outlineColor: entity.sharedSetting?.nodeShow?.editFoldColor };
-    }, [width, color, entity.sharedSetting?.nodeShow?.editFoldColor]);
+        return { width: width, backgroundColor: color, outlineColor: nodeShow?.editFoldColor };
+    }, [width, color, nodeShow?.editFoldColor]);
 
     const unfoldIconButtonStyle = useMemo(() => {
-        return { borderWidth: 0, backgroundColor: entity.sharedSetting?.nodeShow?.editFoldColor ?? '#ffd6e7' };
-    }, [entity.sharedSetting?.nodeShow?.editFoldColor]);
+        return { borderWidth: 0, backgroundColor: nodeShow?.editFoldColor ?? '#ffd6e7' };
+    }, [nodeShow?.editFoldColor]);
 
     const [isEditNote, setIsEditNote] = useState<boolean>(false);
     const onEditNote = useCallback(() => {
@@ -167,7 +177,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
     }, [edit, unfoldIconButtonStyle, unfoldNode, foldNode]);
     const editNoteButton = useMemo(() => {
         if (mayHaveResOrNote(label) && !edit) {
-            const recordNote = sharedSetting?.notes?.get(id) ?? '';
+            const recordNote = notes?.get(id) ?? '';
             if (!((recordNote.length > 0) || isEditNote) && !note) {
                 return <Button style={iconButtonStyle} icon={bookIcon} onClick={onEditNote} />;
             }
@@ -181,11 +191,10 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
         }
 
         return null;
-    }, [sharedSetting, id, isEditNote, note, edit, tmpNote, entity, label, onEditNote, onEditNoteClickInEdit]);
+    }, [notes, id, isEditNote, note, edit, tmpNote, entity, label, onEditNote, onEditNoteClickInEdit]);
 
     const noteShowOrEdit = useMemo(() => {
         if (mayHaveResOrNote(label)) {
-            const notes = sharedSetting?.notes;
             const recordNote = notes?.get(id) ?? '';
             if ((recordNote.length > 0) || isEditNote) {
                 if (isEditNote) {
@@ -215,15 +224,15 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
         }
 
         return null;
-    }, [label, edit, note, sharedSetting?.notes, id, isEditNote, tmpNote, entity, updateNoteInEdit]);
+    }, [label, edit, note, notes, id, isEditNote, tmpNote, entity, updateNoteInEdit]);
 
 
     const title = useMemo(() => {
         return <Flex justify="space-between" style={titleStyle}>
             {foldButton}
             <Text strong style={titleTextStyle} ellipsis={false}
-                copyable={brief && sharedSetting?.nodeShow?.refIsShowCopyable}>
-                {sharedSetting?.query ? <Highlight text={label} keyword={sharedSetting.query} /> : label}
+                copyable={brief && nodeShow?.refIsShowCopyable}>
+                {query ? <Highlight text={label} keyword={query} /> : label}
             </Text>
             {editNoteButton}
             {resBriefButton}
@@ -257,15 +266,15 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
                         }} />}
             </Space>
         </Flex>
-    }, [foldButton, sharedSetting, label, brief, editNoteButton, resBriefButton, edit, id, nodeProps]);
+    }, [foldButton, nodeShow, query, label, brief, editNoteButton, resBriefButton, edit, id, nodeProps]);
 
     return <div key={id} className={edit && edit.fold ? 'flowNodeWithBorder' : 'flowNode'} style={nodeStyle}>
-        {import.meta.env.DEV && <HeightDriftGuard id={id} entity={entity} />}
+        {import.meta.env.DEV && <HeightDriftGuard id={id} entity={entity} nodeShow={nodeShow} notes={notes} />}
         {noteShowOrEdit}
         {title}
-        {fields && <EntityProperties fields={fields} sharedSetting={sharedSetting} color={color} />}
-        {brief && <EntityCard entity={nodeProps.data.entity} image={firstImage} />}
-        {edit && <EntityForm edit={edit} nodeProps={nodeProps} sharedSetting={sharedSetting} />}
+        {fields && <EntityProperties fields={fields} nodeShow={nodeShow} color={color} />}
+        {brief && <EntityCard entity={nodeProps.data.entity} image={firstImage} nodeShow={nodeShow} />}
+        {edit && <EntityForm edit={edit} nodeProps={nodeProps} nodeShow={nodeShow} />}
         {(handleIn && <Handle type='target' position={Position.Left} id='@in' style={handleStyle} />)}
         {(handleOut && <Handle type='source' position={Position.Right} id='@out' style={handleStyle} />)}
     </div>;

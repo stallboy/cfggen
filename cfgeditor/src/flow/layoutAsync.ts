@@ -12,7 +12,8 @@ const elk = new ELK({workerUrl: elkWorkerUrl});
 
 
 function nodeToLayoutChild(node: EntityNode, id2RectMap: Map<string, Rect>): ElkNode {
-    const [width, height] = calcWidthHeight(node.data.entity);
+    const {entity, nodeShow, notes} = node.data;
+    const [width, height] = calcWidthHeight(entity, nodeShow, notes);
     id2RectMap.set(node.id, {x: 0, y: 0, width, height})
     return {id: node.id, width, height};
 }

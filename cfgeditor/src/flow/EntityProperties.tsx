@@ -1,10 +1,12 @@
 import {Handle, Position} from "@xyflow/react";
-import {DisplayField, EntitySharedSetting} from "@/domain/entityModel";
+import {DisplayField} from "@/domain/entityModel";
+import type {NodeShowType} from "@/domain/storageJson";
 import {Flex, List, Tooltip, Typography} from "antd";
 import {CSSProperties, memo, useMemo} from "react";
 import {getFieldBackgroundColor} from "./colors.ts";
 import {getReadNodeWidth} from "./dimensions.ts";
 import {Highlight} from "./Highlight.tsx";
+import {useMyStore} from "@/store/store";
 
 const {Text} = Typography;
 
@@ -31,11 +33,13 @@ const flexStyle = {width: '100%'};
 const ellipsis = {tooltip: true};
 const itemValueStyle = {maxWidth: '70%'};
 
-export const EntityProperties = memo(function EntityProperties({fields, sharedSetting, color}: {
+export const EntityProperties = memo(function EntityProperties({fields, nodeShow, color}: {
     fields: DisplayField[],
-    sharedSetting?: EntitySharedSetting,
+    nodeShow?: NodeShowType,
     color: string,
 }) {
+    // query 无 per-graph override，走全局 store（resso per-key 订阅，仅 query 变时重渲）。
+    const {query: keyword} = useMyStore();
 
     const itemKeyStyle = useMemo(() => {
         return {color: color, maxWidth: '80%'}
@@ -45,18 +49,17 @@ export const EntityProperties = memo(function EntityProperties({fields, sharedSe
         return {position: 'absolute', left: '-10px', backgroundColor: color}
     }, [color]);
     const handleOutStyle: CSSProperties = useMemo(() => {
-        const width = getReadNodeWidth(sharedSetting?.nodeShow);
+        const width = getReadNodeWidth(nodeShow);
         return {position: 'absolute', left: `${width - 2}px`, backgroundColor: color}
-    }, [color, sharedSetting?.nodeShow]);
+    }, [color, nodeShow]);
 
     if (fields.length == 0) {
         return <></>;
     }
 
-    const keyword = sharedSetting?.query
     return <List size='small' style={listStyle} bordered dataSource={fields}
                  renderItem={(item) => {
-                     const bgColor = getFieldBackgroundColor(item, sharedSetting?.nodeShow)
+                     const bgColor = getFieldBackgroundColor(item, nodeShow)
                      const thisItemStyle: CSSProperties = bgColor ?
                          {position: 'relative', backgroundColor: bgColor} : listItemStyle;
 

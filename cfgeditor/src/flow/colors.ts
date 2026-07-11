@@ -32,9 +32,9 @@ export const NODE_SHOW_DEFAULTS = {
  * 节点背景色：按"值 → 标签 → 实体类型"三级优先级解析。
  *
  * @param entity  实体（取值串/标签/entityType）
- * @param nodeShow 已解析的配色配置（含 per-graph override）。FlowNode 传入 entity.sharedSetting?.nodeShow。
- *                 显式入参（而非内部深读 entity.sharedSetting?.nodeShow）是为了让调用方把 nodeShow
- *                 放进 useMemo deps——否则 entity 引用不变时改主题色会 stale（见 FlowNode color memo）。
+ * @param nodeShow 已解析的配色配置（含 per-graph override）。FlowNode 传入 nodeProps.data.nodeShow
+ *                 （doc BR1：nodeShow 下发到 node.data，不再盖章到 entity.sharedSetting）。
+ *                 显式入参是为了让调用方把 nodeShow 放进 useMemo deps——否则 entity 引用不变时改主题色会 stale。
  */
 export function getNodeBackgroundColor(entity: Entity, nodeShow?: NodeShowType): string {
     // 1. 按值着色（优先级最高）

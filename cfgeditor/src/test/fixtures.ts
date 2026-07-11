@@ -5,8 +5,8 @@ import {
     SField, SForeignKey, SInterface, SItem, SStruct, STable, RawSchema,
 } from '@/api/schemaModel'
 import {
-    CardEntity, EditableEntity, Entity, EntityEdit, EntityEditField,
-    EntitySharedSetting, ReadOnlyEntity,
+    CardEntity, EditableEntity, EntityEdit, EntityEditField,
+    ReadOnlyEntity,
 } from '@/domain/entityModel'
 import {NodeShowType} from '@/domain/storageJson'
 import {NODE_SHOW_DEFAULTS} from '@/flow/colors.ts'
@@ -83,11 +83,6 @@ export function makeEditable(over: Partial<EditableEntity> & Pick<EditableEntity
     } as EditableEntity
 }
 
-export function sharedWith(nodeShow?: NodeShowType): EntitySharedSetting | undefined {
-    if (!nodeShow) return undefined
-    return {nodeShow}
-}
-
 /** 构造完整 EntityEdit（calcWidthHeight 等仅读 fields/fold，其余给 noop 占位）。 */
 export function editWith(fields: EntityEditField[], over: Partial<EntityEdit> = {}): EntityEdit {
     return {
@@ -141,10 +136,4 @@ export function makeRawSchema(items: SItem[], over: Partial<RawSchema> = {}): Ra
         lastModifiedMap: new Map(),
         ...over,
     }
-}
-
-// 方便构造带 sharedSetting 的 Entity（用于 colors/calcWidthHeight 等纯函数）
-export function withShared<E extends Entity>(e: E, nodeShow?: NodeShowType): E {
-    e.sharedSetting = sharedWith(nodeShow)
-    return e
 }

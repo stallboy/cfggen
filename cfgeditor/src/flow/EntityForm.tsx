@@ -33,13 +33,13 @@ import {
     EntityEditField,
     EntityEditFieldOption,
     EntityEditFieldOptions,
-    EntitySharedSetting,
     FuncAddType,
     FuncSubmitType,
     FuncType,
     InterfaceEditField, PrimitiveType,
     PrimitiveValue, StructRefEditField,
 } from "@/domain/entityModel";
+import type {NodeShowType} from "@/domain/storageJson";
 import {EntityNode} from "./FlowGraph.tsx";
 
 // ============================================================================
@@ -615,11 +615,11 @@ interface InterfaceFormItemProps {
     field: InterfaceEditField;
     edit: EntityEdit,
     nodeProps: NodeProps<EntityNode>;
-    sharedSetting?: EntitySharedSetting;
+    nodeShow?: NodeShowType;
 }
 
 const InterfaceFormItem = memo(
-    function InterfaceFormItem({field, edit, nodeProps, sharedSetting}: InterfaceFormItemProps) {
+    function InterfaceFormItem({field, edit, nodeProps, nodeShow}: InterfaceFormItemProps) {
         const form = Form.useFormInstance();
         useSyncFieldValue(form, field.name, field.value);
 
@@ -649,7 +649,7 @@ const InterfaceFormItem = memo(
         return (
             <>
                 {formItem}
-                {renderFieldItems(field.implFields, edit, nodeProps, sharedSetting)}
+                {renderFieldItems(field.implFields, edit, nodeProps, nodeShow)}
             </>
         );
     });
@@ -662,12 +662,12 @@ interface FieldRenderProps {
     field: EntityEditField;
     edit: EntityEdit,
     nodeProps: NodeProps<EntityNode>;
-    sharedSetting?: EntitySharedSetting;
+    nodeShow?: NodeShowType;
 }
 
-function renderFieldItem({field, edit, nodeProps, sharedSetting}: FieldRenderProps) {
-    const bgColor = getFieldBackgroundColor(field, sharedSetting?.nodeShow);
-    const width = getEditNodeWidth(sharedSetting?.nodeShow);
+function renderFieldItem({field, edit, nodeProps, nodeShow}: FieldRenderProps) {
+    const bgColor = getFieldBackgroundColor(field, nodeShow);
+    const width = getEditNodeWidth(nodeShow);
 
     switch (field.type) {
         case "structRef":
@@ -723,7 +723,7 @@ function renderFieldItem({field, edit, nodeProps, sharedSetting}: FieldRenderPro
         case "interface":
             return (
                 <InterfaceFormItem key={field.name} field={field} edit={edit}
-                                   nodeProps={nodeProps} sharedSetting={sharedSetting}/>
+                                   nodeProps={nodeProps} nodeShow={nodeShow}/>
             );
 
         case "funcSubmit":
@@ -738,8 +738,8 @@ function renderFieldItem({field, edit, nodeProps, sharedSetting}: FieldRenderPro
 }
 
 function renderFieldItems(fields: EntityEditField[], edit: EntityEdit,
-                          nodeProps: NodeProps<EntityNode>, sharedSetting?: EntitySharedSetting) {
-    return fields.map((field) => renderFieldItem({field, edit, nodeProps, sharedSetting}));
+                          nodeProps: NodeProps<EntityNode>, nodeShow?: NodeShowType) {
+    return fields.map((field) => renderFieldItem({field, edit, nodeProps, nodeShow}));
 }
 
 // ============================================================================
@@ -749,10 +749,10 @@ function renderFieldItems(fields: EntityEditField[], edit: EntityEdit,
 interface EntityFormProps {
     edit: EntityEdit;
     nodeProps: NodeProps<EntityNode>;
-    sharedSetting?: EntitySharedSetting;
+    nodeShow?: NodeShowType;
 }
 
-export const EntityForm = memo(function EntityForm({edit, nodeProps, sharedSetting}: EntityFormProps) {
+export const EntityForm = memo(function EntityForm({edit, nodeProps, nodeShow}: EntityFormProps) {
     const [form] = Form.useForm();
 
     // 把 alt+s 绑定到本节点表单的 DOM 子树：每个可编辑节点只注册一次，且仅在焦点位于本表单内时触发
@@ -779,7 +779,7 @@ export const EntityForm = memo(function EntityForm({edit, nodeProps, sharedSetti
                     }}
                     style={FORM_STYLE}
                 >
-                    {renderFieldItems(edit.fields, edit, nodeProps, sharedSetting)}
+                    {renderFieldItems(edit.fields, edit, nodeProps, nodeShow)}
                 </Form>
             </div>
         </ConfigProvider>

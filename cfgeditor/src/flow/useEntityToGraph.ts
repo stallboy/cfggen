@@ -84,7 +84,7 @@ export function useEntityToGraph({
                                      setFitViewForPathname, nodeShow,
                                  }: FlowGraphInput) {
     const flowGraph = useContext(FlowGraphContext);
-    const {query, nodeShow: currentNodeShow} = useMyStore();
+    const {nodeShow: currentNodeShow} = useMyStore();
     const nodeShowSetting = nodeShow ?? currentNodeShow;
     // 命令面收口到公开稳定的 useReactFlow（setNodes/setEdges/setViewport/getViewport/fitView），
     // 不再调用内部 panZoom 的方法（非公开契约，升级易变）。详见 doc §5。
@@ -93,10 +93,14 @@ export function useEntityToGraph({
     const viewportReady = useStore((state) => state.panZoom !== null);
     const {setNodes, setEdges, setViewport, getViewport, fitView} = useReactFlow();
 
+    // nodeShow/notes 下发到 node.data（doc BR1）；query 不在此下发——它无 per-graph override，
+    // 渲染组件（FlowNode/EntityProperties/EntityCard）各自 useMyStore() 订阅（resso per-key），
+    // 故 query 不进 nodes 重建、不进 layout，搜索时不重跑 ELK（与 store.ts setQuery 注释一致）。
     const {nodes, edges} = useMemo(() => convertNodeAndEdges({
         entityMap,
-        sharedSetting: {notes, query, nodeShow: nodeShowSetting}
-    }), [entityMap, notes, query, nodeShowSetting]);
+        nodeShow: nodeShowSetting,
+        notes,
+    }), [entityMap, notes, nodeShowSetting]);
 
     // layout 缓存策略：'e' 是编辑态（isEdited）layout 缓存的隔离标记——结构变更时 onStructureChange 调
     // removeQueries(['layout', pathname, 'e']) 只清编辑态缓存，浏览态（无 'e'）的 5min 缓存不受影响。

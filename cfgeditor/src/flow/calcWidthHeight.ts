@@ -1,4 +1,5 @@
 import {Entity, EntityEditField, isReadOnlyEntity, isEditableEntity, isCardEntity} from "@/domain/entityModel";
+import type {NodeShowType} from "@/domain/storageJson";
 import {ResInfo} from "@/domain/resInfo";
 import {mayHaveResOrNote} from "@/domain/entityPredicates";
 import {getDsLenAndDesc} from "./getDsLenAndDesc.ts";
@@ -42,9 +43,9 @@ const NOTE_MAX_ROWS = 10;  // note 最大估算行数
 const NOTE_MIN_ROWS = 2;   // note 最小估算行数（即使很短也预留）
 const NOTE_PADDING_H = 22; // note 区域额外 padding
 
-export function calcWidthHeight(entity: Entity) {
+export function calcWidthHeight(entity: Entity, nodeShow?: NodeShowType, notes?: Map<string, string>) {
     const {id, label} = entity;
-    const width = getNodeWidth(entity);
+    const width = getNodeWidth(entity, nodeShow);
     let height = NODE_BASE_H;
 
     if (isReadOnlyEntity(entity)) {
@@ -53,7 +54,7 @@ export function calcWidthHeight(entity: Entity) {
     } else if (isCardEntity(entity)) {
         const brief = entity.brief;
         height += CARD_BASE_H + (brief.title ? CARD_TITLE_H : 0);
-        const [showDsLen, desc] = getDsLenAndDesc(brief, entity.sharedSetting?.nodeShow);
+        const [showDsLen, desc] = getDsLenAndDesc(brief, nodeShow);
         height += showDsLen * CARD_DS_H;
         if (desc) {
             height += DESC_ROW_H * simpleStrRowCount(desc, Math.floor(width / DESC_CHAR_WIDTH));
@@ -71,7 +72,6 @@ export function calcWidthHeight(entity: Entity) {
         }
     }
 
-    const notes = entity.sharedSetting?.notes;
     if (notes && mayHaveResOrNote(label)) {
         const note = notes.get(id);
         if (note) {

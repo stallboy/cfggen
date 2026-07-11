@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest'
 import {fillHandles, convertNodeAndEdges} from './entityToNodeAndEdge.ts'
-import {Entity, EntityEdgeType, EntityGraph} from '@/domain/entityModel'
+import {Entity, EntityEdgeType} from '@/domain/entityModel'
 import {makeNodeShow, makeReadOnly, makeEditable, editWith} from '@/test/fixtures'
 import {EntityEditField} from '@/domain/entityModel'
 import {NODE_SHOW_DEFAULTS} from './colors.ts'
@@ -75,13 +75,12 @@ describe('convertNodeAndEdges', () => {
     it('每个实体生成一个 node，位置固定 (100,100)，type=node', () => {
         const a = makeReadOnly({id: 'A', label: 'a', fields: []})
         const b = makeReadOnly({id: 'B', label: 'b', fields: []})
-        const graph: EntityGraph = {entityMap: new Map([['A', a], ['B', b]])}
 
-        const {nodes} = convertNodeAndEdges(graph)
+        const {nodes} = convertNodeAndEdges({entityMap: new Map([['A', a], ['B', b]])})
 
         expect(nodes).toHaveLength(2)
         expect(nodes[0]).toMatchObject({id: 'A', type: 'node', position: {x: 100, y: 100}})
-        expect((nodes[0].data as {entity: Entity}).entity.id).toBe('A')
+        expect(nodes[0].data.entity.id).toBe('A')
     })
 
     it('按 sourceEdges 生成 edge，id 形如 source_target_n，自增计数', () => {
@@ -91,9 +90,8 @@ describe('convertNodeAndEdges', () => {
         const b = makeReadOnly({id: 'B', label: 'b', fields: [], sourceEdges: [
             {sourceHandle: '@out', target: 'T2', targetHandle: '@in', type: EntityEdgeType.Ref},
         ]})
-        const graph: EntityGraph = {entityMap: new Map([['A', a], ['B', b]])}
 
-        const {edges} = convertNodeAndEdges(graph)
+        const {edges} = convertNodeAndEdges({entityMap: new Map([['A', a], ['B', b]])})
 
         expect(edges).toHaveLength(2)
         expect(edges[0]).toMatchObject({id: 'A_T1_1', source: 'A', target: 'T1', sourceHandle: '@out', targetHandle: '@in'})
@@ -113,7 +111,7 @@ describe('convertNodeAndEdges', () => {
         expect(edges[1].animated).toBe(true)
     })
 
-    it('无 sharedSetting 时边色为默认（NODE_SHOW_DEFAULTS）', () => {
+    it('无 nodeShow 时边色为默认（NODE_SHOW_DEFAULTS）', () => {
         const a = makeReadOnly({id: 'A', label: 'a', fields: [], sourceEdges: [
             {sourceHandle: '@out', target: 'T', targetHandle: '@in', type: EntityEdgeType.Normal},
         ]})
@@ -121,17 +119,18 @@ describe('convertNodeAndEdges', () => {
         expect(edges[0].style).toEqual({stroke: NODE_SHOW_DEFAULTS.edgeColor})
     })
 
-    it('sharedSetting.nodeShow.edgeColor 决定边色并写入每个实体', () => {
+    it('nodeShow.edgeColor 决定边色，node.data 带上 nodeShow（entity 不再被盖章 mutate）', () => {
         const ns = makeNodeShow({edgeColor: '#CCC'})
         const a = makeReadOnly({id: 'A', label: 'a', fields: [], sourceEdges: [
             {sourceHandle: '@out', target: 'T', targetHandle: '@in', type: EntityEdgeType.Normal},
         ]})
-        const {edges} = convertNodeAndEdges({
+        const {edges, nodes} = convertNodeAndEdges({
             entityMap: new Map([['A', a]]),
-            sharedSetting: {nodeShow: ns},
+            nodeShow: ns,
         })
         expect(edges[0].style).toEqual({stroke: '#CCC'})
-        // sharedSetting 被回写到实体
-        expect(a.sharedSetting?.nodeShow?.edgeColor).toBe('#CCC')
+        // nodeShow 下发到 node.data（doc BR1）；entity 保持纯 domain、不被 mutate
+        expect(nodes[0].data.nodeShow?.edgeColor).toBe('#CCC')
+        expect(nodes[0].data.entity).toBe(a)
     })
 })
