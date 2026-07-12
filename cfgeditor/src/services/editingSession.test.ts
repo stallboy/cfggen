@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {EditingSession} from './editingSession';
+import {EditingSession, isDeeplyEqual} from './editingSession';
 import {EFitView} from '@/domain/entityModel';
 import {JSONArray, JSONObject, RecordResult} from '@/api/recordModel';
 import {structCopy} from './clipboard';
@@ -284,5 +284,24 @@ describe('EditingSession.pasteStruct（深拷贝独立性）', () => {
         const b = s.getEditingObject()['b'] as JSONObject;
         expect(b['val']).toBe(1);                                  // b 仍是原始副本（深拷贝生效）
         expect(b).not.toBe(s.getEditingObject()['a']);            // 且不与 a 共享引用
+    });
+});
+
+describe('isDeeplyEqual（导出 + Set 优化）', () => {
+    it('key 顺序不同但内容相同 → true', () => {
+        expect(isDeeplyEqual({a: 1, b: 2}, {b: 2, a: 1})).toBe(true);
+    });
+    it('key 数量不同 → false', () => {
+        expect(isDeeplyEqual({a: 1}, {a: 1, b: 2})).toBe(false);
+    });
+    it('一方有对方无的 key → false', () => {
+        expect(isDeeplyEqual({a: 1, b: 2}, {a: 1, c: 2})).toBe(false);
+    });
+    it('嵌套对象 + 数组深比较', () => {
+        expect(isDeeplyEqual({a: [1, {x: 2}]}, {a: [1, {x: 2}]})).toBe(true);
+        expect(isDeeplyEqual({a: [1, {x: 3}]}, {a: [1, {x: 2}]})).toBe(false);
+    });
+    it('数组长度不同 → false', () => {
+        expect(isDeeplyEqual([1, 2], [1, 2, 3])).toBe(false);
     });
 });
