@@ -305,3 +305,85 @@ describe('isDeeplyEqual（导出 + Set 优化）', () => {
         expect(isDeeplyEqual([1, 2], [1, 2, 3])).toBe(false);
     });
 });
+
+describe('EditingSession undo/redo（结构类，阶段2）', () => {
+    it('结构编辑后 undo 恢复到编辑前', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
+        s.initUndoBaseline();
+        s.addArrayItem(ITEM(), ['items'], POS);
+        expect((s.getEditingObject().items as JSONArray).length).toBe(1);
+        s.undo();
+        expect((s.getEditingObject().items as JSONArray).length).toBe(0);
+    });
+
+    it('undo 后 redo 恢复到编辑后', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
+        s.initUndoBaseline();
+        s.addArrayItem(ITEM(), ['items'], POS);
+        s.undo();
+        s.redo();
+        expect((s.getEditingObject().items as JSONArray).length).toBe(1);
+    });
+
+    it('canUndo/canRedo 状态随操作切换', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
+        s.initUndoBaseline();
+        expect(s.canUndo()).toBe(false);
+        expect(s.canRedo()).toBe(false);
+        s.addArrayItem(ITEM(), ['items'], POS);
+        expect(s.canUndo()).toBe(true);
+        s.undo();
+        expect(s.canUndo()).toBe(false);
+        expect(s.canRedo()).toBe(true);
+        s.redo();
+        expect(s.canUndo()).toBe(true);
+        expect(s.canRedo()).toBe(false);
+    });
+
+    it('undo 后 editingObject 独立于栈（深拷，后续编辑不污染历史）', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
+        s.initUndoBaseline();
+        s.addArrayItem(ITEM(), ['items'], POS);
+        s.undo();                                       // 回到 items=[]
+        s.addArrayItem(ITEM(), ['items'], POS);         // 新编辑（分叉，redo 历史清）
+        s.undo();
+        expect((s.getEditingObject().items as JSONArray).length).toBe(0);  // 回到 baseline
+    });
+
+    it('undo 不跳视口：fitView=NoChange', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
+        s.initUndoBaseline();
+        s.addArrayItem(ITEM(), ['items'], POS);
+        s.undo();
+        expect(s.getEditingObjectRes().fitView).toBe(EFitView.NoChange);
+    });
+
+    it('replaceEditingObject 入栈可 undo', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
+        s.initUndoBaseline();
+        s.replaceEditingObject({'$type': 'Bar', items: [ITEM()]});
+        expect(s.getEditingObject()['$type']).toBe('Bar');
+        s.undo();
+        expect(s.getEditingObject()['$type']).toBe('Foo');
+    });
+
+    it('分叉：undo 后新结构编辑清 redo 历史', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
+        s.initUndoBaseline();
+        s.addArrayItem(ITEM(), ['items'], POS);
+        s.undo();
+        expect(s.canRedo()).toBe(true);
+        s.addArrayItem(ITEM(), ['items'], POS);   // 新结构编辑（分叉）
+        expect(s.canRedo()).toBe(false);          // redo 历史作废
+    });
+
+    it('onCommitSuccess 清栈（提交后 undo 历史清）', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
+        s.initUndoBaseline();
+        s.addArrayItem(ITEM(), ['items'], POS);
+        expect(s.canUndo()).toBe(true);
+        s.onCommitSuccess();
+        expect(s.canUndo()).toBe(false);
+        expect(s.canRedo()).toBe(false);
+    });
+});

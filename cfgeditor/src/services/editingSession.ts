@@ -4,6 +4,7 @@ import {getField, Schema} from "@/domain/schema";
 import {EntityPosition, EFitView, EditingObjectRes} from "@/domain/entityModel";
 import {setEditingState} from "@/store/store";
 import {getCopiedObject} from "./clipboard";
+import {UndoStore} from "@/domain/undoStore";
 
 /**
  * EditingSession —— 一个编辑会话的可变 store 实例（每条 record 编辑态一个实例）。
@@ -47,6 +48,10 @@ export class EditingSession {
     private readonly listeners = new Set<() => void>();
     private readonly onStructureChange?: () => void;
     private readonly mutate?: (obj: JSONObject) => void;
+
+    // undo/redo 快照栈（per-session，随实例生灭）。capture 时机：结构操作后 / 值类 coalescing 组关闭。
+    // 命名 undoStore 而非 undo：避免与 undo() 方法同名（TS 不允许同名的属性与方法）。
+    private readonly undoStore = new UndoStore();
 
     constructor(recordResult: RecordResult, cbs: EditingSessionCallbacks = {}) {
         this.onStructureChange = cbs.onStructureChange;
@@ -105,9 +110,9 @@ export class EditingSession {
 
         this.table = newTable;
         this.id = newId;
-        this.originalEditingObject = structuredClone(newObj);
         this.editingObject = newObj;
         this.bumpStructure({fitView: EFitView.FitFull});
+        this.resetBaselines();   // 新数据为新基准（脏比较 + undo baseline），清栈
     }
 
     // ============ 值类编辑（不 bump、不 emit → 不重渲 entityMap）============
@@ -225,6 +230,7 @@ export class EditingSession {
         deleteRefsInPlace(newEditingObject);
         this.editingObject = newEditingObject;
         this.bumpStructure({fitView: EFitView.FitFull});
+        this.undoStore.capture(this.captureUndoPoint());
     }
 
     /** 把剪贴板内容粘贴到 fieldChains 位置。 */
@@ -250,11 +256,11 @@ export class EditingSession {
         this.mutate?.(this.editingObject);
     }
 
-    /** 提交成功后重置脏基准（submit 异步、成败要等网络，故重基准挂在 onSuccess 而非 submit 调用时——
+    /** 提交成功后重置基准（submit 异步、成败要等网络，故重基准挂在 onSuccess 而非 submit 调用时——
      *  否则提交失败会丢 undo 历史、脏标记还误报"无未保存"）。
-     *  阶段0：只重 originalEditingObject（让 getIsEdited 归 false）；阶段2 接入 UndoStore 后扩展 setBaseline（清栈+重基准）。 */
+     *  重 originalEditingObject（脏比较归 false）+ undo.setBaseline（清栈+新基准 = 当前已提交状态）。 */
     onCommitSuccess(): void {
-        this.originalEditingObject = structuredClone(this.editingObject);
+        this.resetBaselines();
     }
 
     /** 把 table/id/isEdited 同步到 resso store（HeaderBar 唯一订阅者，显示 unsaved）。 */
@@ -262,10 +268,46 @@ export class EditingSession {
         setEditingState(this.table, this.id, this.getIsEdited());
     }
 
+    // ============ undo/redo ============
+
+    /** 初始 undo 基准：mount effect 调一次（构造函数在 render 期，structuredClone 是副作用，挪到 effect）。
+     *  幂等：StrictMode 双调安全（setBaseline 清栈+设基准，二次调同值无害）。 */
+    initUndoBaseline(): void {
+        this.undoStore.setBaseline(this.captureUndoPoint());
+    }
+
+    undo(): void {
+        if (!this.undoStore.canUndo()) return;
+        const target = this.undoStore.popUndo();
+        this.applyUndoPoint(target);
+        this.bumpStructure({fitView: EFitView.NoChange});   // 不跳视口
+    }
+
+    redo(): void {
+        if (!this.undoStore.canRedo()) return;
+        const target = this.undoStore.popRedo();
+        this.applyUndoPoint(target);
+        this.bumpStructure({fitView: EFitView.NoChange});
+    }
+
+    canUndo(): boolean {
+        return this.undoStore.canUndo();
+    }
+
+    canRedo(): boolean {
+        return this.undoStore.canRedo();
+    }
+
+    /** unmount 清理：清 listeners 防 leak（coalesce timer 清理在阶段3 dispose 扩展）。 */
+    dispose(): void {
+        this.listeners.clear();
+    }
+
     // ============ 内部 ============
 
     private structureChange(position: EntityPosition): void {
         this.bumpStructure({fitView: EFitView.FitId, position});
+        this.undoStore.capture(this.captureUndoPoint());   // 结构编辑后入栈
     }
 
     /** 结构变更通用收尾：写 fitView 契约 → bump 版本（触发订阅者重渲）→ 同步清 layout 缓存 → 刷新脏标记 → emit。
@@ -281,6 +323,25 @@ export class EditingSession {
 
     private emit(): void {
         this.listeners.forEach(l => l());
+    }
+
+    /** editingObject 的一份独立深拷（snapshot）。升级契约点：将来换 JSON Patch 只动这两个方法。 */
+    private captureUndoPoint(): JSONObject {
+        return structuredClone(this.editingObject);
+    }
+
+    /** 把 snapshot 恢复成 editingObject（clone 入参，避免栈里 snapshot 被后续就地变异污染）。 */
+    private applyUndoPoint(s: JSONObject): void {
+        this.editingObject = structuredClone(s);
+    }
+
+    /** 重置脏比较基准 + undo 基准为当前 editingObject（提交/reset 后调，清栈）。
+     *  originalEditingObject 与 undo.baseline 共享同一 clone：两者都只读不被 mutate（popUndo 返回 baseline
+     *  引用但 applyUndoPoint 会 clone，不污染），共享安全且省一次 structuredClone。 */
+    private resetBaselines(): void {
+        const snap = this.captureUndoPoint();
+        this.originalEditingObject = snap;
+        this.undoStore.setBaseline(snap);
     }
 }
 
