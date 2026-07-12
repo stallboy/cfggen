@@ -51,7 +51,10 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
 
                 session.onCommitSuccess();
                 invalidateAllQueries();
-                // navigate(0);
+                if (curId === NEW_RECORD_ID) {
+                    // 新记录创建后跳真实 id：key 变 → 旧 session unmount（栈随实例销毁）→ 新 session 用真实 id 构造
+                    navigate(navTo('record', curTableId, editResult.id, true));
+                }
             } else {
                 notification.warning({
                     title: `addOrUpdateRecord ${curTableId} ${editResult.resultCode}`,
