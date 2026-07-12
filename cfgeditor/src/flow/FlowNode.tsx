@@ -1,7 +1,6 @@
-import { CSSProperties, memo, useCallback, useEffect, useMemo, useState } from "react";
-import { Handle, NodeProps, Position, useStore } from "@xyflow/react";
+import { CSSProperties, memo, useCallback, useMemo, useState } from "react";
+import { Handle, NodeProps, Position } from "@xyflow/react";
 import { Entity, isReadOnlyEntity, isEditableEntity, isCardEntity } from "@/domain/entityModel";
-import type { NodeShowType } from "@/domain/storageJson";
 import { mayHaveResOrNote } from "@/domain/entityPredicates";
 import { useMyStore } from "@/store/store";
 import { getNodeBackgroundColor } from "./colors.ts";
@@ -21,7 +20,7 @@ import {
 } from "@ant-design/icons";
 import { ResPopover } from "./ResPopover.tsx";
 import { NoteShow, NoteEdit, NoteShowInner, NoteEditInner } from "./NoteShowOrEdit.tsx";
-import { findFirstImage, calcWidthHeight } from "./calcWidthHeight.ts";
+import { findFirstImage } from "./calcWidthHeight.ts";
 import { getResBrief } from "@/res/getResBrief";
 import { EntityNode } from "./FlowGraph.tsx";
 
@@ -39,34 +38,6 @@ const foldIcon = <ShrinkOutlined />;
 const unfoldIcon = <ArrowsAltOutlined />;
 
 const resBriefButtonStyle = { color: '#fff' };
-
-// dev-only：记录已警告过 height drift 的节点 id，避免同一节点反复 console.warn 刷屏
-const heightDriftWarned = new Set<string>();
-
-// dev-only 实测对账护栏：节点挂载后 xyflow 用 ResizeObserver 回写 measured.height 到内部 store，
-// 这里响应式读取并与 calcWidthHeight 估算比，偏差 >8px 且 >5% 时 warn（按 id 去重）。不重排不闪烁。
-// 抽成独立子组件并用 import.meta.env.DEV 条件渲染：useStore 订阅在子组件挂载时才建立，
-// prod 不挂载即零订阅（Vite 把 import.meta.env.DEV 编译期 DFE），守住 doc §8「本项目从不读取 measured」立场。
-// 仅针对 height：width 两端同源（FlowNode 与 calcWidthHeight 都读 nodeShow.nodeWidth/editNodeWidth）不会漂。
-// 注：NodeProps 在本版本无 measured 字段，故走 useStore 只读尺寸切片（doc §5 允许的 escape-hatch 场景）。
-function HeightDriftGuard({id, entity, nodeShow, notes}: {
-    id: string;
-    entity: Entity;
-    nodeShow?: NodeShowType;
-    notes?: Map<string, string>;
-}) {
-    const measuredHeight = useStore((s) => s.nodeLookup.get(id)?.measured?.height);
-    useEffect(() => {
-        if (measuredHeight === undefined) return;
-        const [, est] = calcWidthHeight(entity, nodeShow, notes);
-        const drift = Math.abs(measuredHeight - est);
-        if (drift > 8 && drift / est > 0.05 && !heightDriftWarned.has(id)) {
-            heightDriftWarned.add(id);
-            console.warn(`[flow] node ${id} height drift: est=${est} measured=${measuredHeight} Δ=${drift}px`);
-        }
-    }, [id, entity, nodeShow, notes, measuredHeight]);
-    return null;
-}
 
 interface TempNote {
     note: string;
@@ -269,7 +240,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
     }, [foldButton, nodeShow, query, label, brief, editNoteButton, resBriefButton, edit, id, nodeProps]);
 
     return <div key={id} className={edit && edit.fold ? 'flowNodeWithBorder' : 'flowNode'} style={nodeStyle}>
-        {import.meta.env.DEV && <HeightDriftGuard id={id} entity={entity} nodeShow={nodeShow} notes={notes} />}
+        {/* HeightDriftGuard 已停用（见 ./HeightDriftGuard.tsx） */}
         {noteShowOrEdit}
         {title}
         {fields && <EntityProperties fields={fields} nodeShow={nodeShow} color={color} />}
