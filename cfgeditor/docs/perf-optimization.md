@@ -37,20 +37,9 @@
 | baseline | 102 |
 | 修复后 | **8**（视口内，4068px 总高由 spacer 撑） |
 
-### TOP3：FlowGraph 启用 onlyRenderVisibleElements — commit `e714ce4f`
-
-**根因**：ReactFlow 默认渲染全部节点/边，单个 FlowNode 是 Form/List/Tooltip/多 Button 的重组件，大图视口外节点白白挂载 DOM。
-
-**修复**：ReactFlow 加 `onlyRenderVisibleElements`（xyflow 官方 windowing），视口外节点不挂 DOM、pan/zoom 按需挂载；节点 state 保留，编辑态 session 不受影响。
-
-**验证**（recordRef `item.itemtype/1`，39 节点）：
-
-- React fiber 确认 `onlyRenderVisibleElements=true` 已传入 ReactFlow（HMR 生效）
-- 视图正常渲染，39 节点无回归
-- fitView 全显时初始 DOM=全部节点（fitView 把所有节点纳入视口，预期行为）；用户 zoom in/pan 后视口外节点 DOM 由 xyflow 按需回收
-- 局限：MCP 无法模拟真实滚轮（react-flow/d3-zoom 不响应合成 wheel 事件），DOM 减少数字未取，机制由 xyflow 保证
-
 ## 评估后跳过
+### TOP3：FlowGraph 启用 onlyRenderVisibleElements — （跳过）
+改后视角拖放会卡
 
 ### TOP4：query 三处订阅 → FlowNode 单点 + prop 下发（跳过）
 

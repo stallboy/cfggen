@@ -102,7 +102,7 @@ export const FlowGraph = memo(function FlowGraph({children}: {
             onMoveStart={closeMenu}
             onNodeDragStart={closeMenu}
             onPaneContextMenu={onPaneContextMenu}
-            onlyRenderVisibleElements
+            // onlyRenderVisibleElements
             proOptions={proOptions}>
             <Background/>
             <Controls showZoom={false}/>
