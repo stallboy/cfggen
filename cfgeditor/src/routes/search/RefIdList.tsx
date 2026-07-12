@@ -57,6 +57,8 @@ function RefIdListResult({refIdsResult}: {
                   showHeader={false}
                   size={'small'}
                   pagination={false}
+                  virtual={refIdsResult.recordRefIds.length > 30}
+                  scroll={{y: 300}}
                   rowKey={rowKey}/>
 
 }
