@@ -11,6 +11,7 @@ export interface MenuItem {
     key: string;
     label: string;
     handler: () => void;
+    disabled?: boolean;
 }
 
 export function FlowContextMenu({menuStyle, menuItems, closeMenu}: {
@@ -23,7 +24,8 @@ export function FlowContextMenu({menuStyle, menuItems, closeMenu}: {
         <Menu items={menuItems.map(mi => {
             return {
                 key: mi.key,
-                label: mi.label
+                label: mi.label,
+                disabled: mi.disabled,
             };
         })} onClick={(info) => {
             const menuItem = menuItems.find((mi) => mi.key == info.key);

@@ -42,6 +42,8 @@ i18n.use(LanguageDetector)
 
                     search: 'search',
                     edit: 'edit',
+                    undo: 'undo',
+                    redo: 'redo',
                     view: 'view',
                     addOrUpdate: 'add or update',
                     setDefaultValue: 'clear',
@@ -287,6 +289,8 @@ i18n.use(LanguageDetector)
 
                     search: '搜索',
                     edit: '编辑',
+                    undo: '撤销',
+                    redo: '重做',
                     view: '浏览',
                     addOrUpdate: '更新',
                     addOrUpdateTooltip: '增加或更新记录,alt+s',

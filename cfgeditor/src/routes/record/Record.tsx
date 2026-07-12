@@ -15,6 +15,7 @@ import {MenuItem} from "@/flow/FlowContextMenu";
 import {SchemaTableType} from "@/CfgEditorApp";
 import {fillHandles} from "@/flow/entityToNodeAndEdge";
 import {memo, useCallback, useEffect, useMemo, useRef, useSyncExternalStore} from "react";
+import {useHotkeys} from "react-hotkeys-hook";
 
 
 import {useEntityToGraph} from "@/flow/useEntityToGraph";
@@ -91,6 +92,12 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const session = sessionRef.current;
     // 只订阅结构版本号（number）：值类编辑不 bump → 不重渲（性能契约1）；结构类编辑 bump → 重渲重算 entityMap。
     const structureVersion = useSyncExternalStore(session.subscribe, session.getStructureVersion);
+    // undo/redo 按钮态：订阅 canUndo/canRedo（随 capture/undo/redo 变化，flushValueCoalesce 的 emit 触发刷新）
+    const canUndo = useSyncExternalStore(session.subscribe, session.canUndo);
+    const canRedo = useSyncExternalStore(session.subscribe, session.canRedo);
+    // ctrl+z/y per-session（Record 单实例无分屏歧义；enableOnFormTags 拦截 input 默认 undo，由 session coalescing 接管）
+    useHotkeys('ctrl+z, cmd+z', (e) => { e.preventDefault(); session.undo(); }, {enableOnFormTags: true, enabled: isEditing});
+    useHotkeys('ctrl+y, ctrl+shift+z, cmd+y, cmd+shift+z', (e) => { e.preventDefault(); session.redo(); }, {enableOnFormTags: true, enabled: isEditing});
 
     const {entityMap, editingObjectRes} = useMemo(() => {
         const entityMap = new Map<string, Entity>();
@@ -183,6 +190,10 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
 
     const paneMenu = useMemo(() => {
         const menu: MenuItem[] = [];
+        if (isEditing) {
+            menu.push({label: t('undo'), key: 'undo', handler: () => session.undo(), disabled: !canUndo});
+            menu.push({label: t('redo'), key: 'redo', handler: () => session.redo(), disabled: !canRedo});
+        }
         if (isEditable) {
             menu.push(getEditMenu(curTable.name, curId, !edit));
         }
@@ -194,7 +205,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
             }
         });
         return menu;
-    }, [isEditable, getEditMenu, curTable, curId, edit, t, navigate]);
+    }, [isEditing, canUndo, canRedo, isEditable, getEditMenu, curTable, curId, edit, t, navigate, session]);
 
 
     const nodeMenuFunc = useCallback(function (entityNode: EntityNode): MenuItem[] {
