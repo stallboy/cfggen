@@ -45,7 +45,7 @@ pnpm test:run
 - 测试文件与源码同目录，命名 `*.test.ts`（如 `domain/schema.test.ts`）。
 - 共享 fixture 工厂在 `src/test/fixtures.ts`（构造 `NodeShowType` / `Entity` / `RawSchema` 等冗长类型）。
 - 环境为 jsdom；`src/test/setup.ts` 给 `window.__TAURI_INTERNALS__` 打 shim，让 `res/resUtils.joinPath`（调用 `@tauri-apps/api` 的 `path.sep()`）可在测试中运行。
-- 当前覆盖范围：`domain/schema`、`store/historyModel`、`api/noteModel`、`res/resUtils`、`flow/{colors,calcWidthHeight,entityToNodeAndEdge,embedded/{Folds,FoldStateHelper}}`、`routes/{record/{recordEntityCreator,recordEditEntityCreator,recordRefUtils},table/tableEntityCreator}`。
+- 当前覆盖范围：`domain/schema`、`domain/undoStore`、`store/historyModel`、`api/noteModel`、`res/resUtils`、`flow/{colors,calcWidthHeight,entityToNodeAndEdge,embedded/{Folds,FoldStateHelper}}`、`routes/{record/{recordEntityCreator,recordEditEntityCreator,recordRefUtils},table/tableEntityCreator}`。
 
 ## 架构概览
 

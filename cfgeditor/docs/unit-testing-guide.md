@@ -34,11 +34,11 @@
 
 ### 2.2 已覆盖模块（截至 2026-07）
 
-共 **13 个测试文件**，全部针对纯逻辑：
+共 **14 个测试文件**，全部针对纯逻辑：
 
 ```
 api/      noteModel
-domain/   schema, folds, historyModel
+domain/   schema, folds, historyModel, undoStore
 flow/     colors, calcWidthHeight, entityToNodeAndEdge
 res/      resUtils
 routes/   record/{recordEntityCreator, recordEditEntityCreator, recordRefUtils}
