@@ -15,7 +15,7 @@
 cfgeditor 已有的 `historyModel.ts`（`alt+c`/`alt+v`）是**导航历史**——"我访问过哪些 record"。本文做的是**编辑 undo**——"我在当前 record 改了什么、撤回"。两者正交，数据流不交叉，不试图统一。下文"栈""undo"一律指编辑 undo。
 
 ### 范围
-- **覆盖**：结构类编辑（增/删/前插/上下移/换 impl/粘贴/整体替换）+ 值类编辑（primitive 键入 / note），在当前编辑会话内。
+- **覆盖**：结构类编辑（增/删/前插/上下移/折叠/换 impl/粘贴/整体替换）+ 值类编辑（primitive 键入 / note），在当前编辑会话内。
 - **不覆盖**（非目标）：跨 record 的 undo（切走再切回不保留旧 record 历史）；已提交数据的回滚（那是服务端 record 版本功能）；多人协同 / CRDT；纯 UI 局部态（如 `ArrayItemExpandButton`）。
 
 ### 一个前置事实（贯穿全文）
@@ -327,10 +327,25 @@ undo 落地前必须或强烈建议先清理：
 | # | 债务 | 清法 | 工作量 |
 |---|---|---|---|
 | **D4** | `bumpStructure`/`structureChange` private + fitView 强耦合；`EFitView` 无"保持视口"枚举值 | 参量化 `bumpStructure({fitView, position?})` + `EFitView.NoChange` + `useEntityToGraph` 加分支（§2.4/2.5 依赖它） | M |
-| **D1** | 折叠状态双写不一致：`updateFold` 双写 `session.$fold` + Record `Folds` useState；`interfaceOnChangeImpl` 只写 `$fold`；`getFoldState` 双源优先 | `$fold` 是持久化字段（⚠️ Q9 已定：随 record submit 落库、跨启动，保留不剥离）。**单一存储 `editingObject.$fold`**：去掉 `Folds` useState + creator 参数、`getFoldState` 只读 `obj.$fold`、`updateFold` 只调 session。fold 进 undo（$fold 在 snapshot 自然覆盖） | M |
+| **D1** | fold 双源（`$fold` 持久化 + `Folds` 本地缓存）的独立 useState 在 `f6d27484` 重构后冗余：`updateFold` 双写、`interfaceOnChangeImpl` 只写 `$fold` 不一致、Folds 用 chain 做 key 在结构变更后变孤儿；Folds 的"React 信号"旧职责已被 `structureVersion` 接管（反证：`interfaceOnChangeImpl` 不调 setFolds 但 UI 仍刷新） | 保留两概念层（`$fold` 持久化 + `Folds` 本地缓存），但 `Folds` 改**从 `$fold` 派生**（不再独立 useState）——详见下方 fold 专节 | M |
 | **D5** | `submit` 不动 `originalEditingObject`，提交后脏基准不重置 | `onCommitSuccess` 里 `setBaseline`（§2.7，设计内含） | S |
 
 顺带：`isDeeplyEqual` 导出 + O(k²)→Set（D6）。`updateFormValues` 的 `toInt/toFloat` 不可逆→接受"值类 undo 还原到转换后有效值"（D3）。
+
+### fold 双源澄清（D1 详）
+
+你已定 fold **既要持久化又要本地缓存，都需要**——这满足：保留两个**概念层**（`$fold` 持久化 + `Folds` 本地缓存），只是 `Folds` 的**实现**从"独立 useState"改成"从 `$fold` 派生"。理由是独立 useState 在 `f6d27484` 重构后已冗余且带 bug：
+
+- **`$fold` 是后端 day-1 持久化字段**（commit `5b03455b`，`app/src/main/java/configgen/value/ValueJsonParser.java:67,96-99` 的 `jsonExtraKeySet = Set.of("$type","$note","$fold","$refs")`，与 `$note` 同构；`ValueToJson.java:68` 序列化回 JSON）。**持久化层，保留不动**。
+- **`Folds` useState 的历史作用是"React 可观察信号"**——`5b03455b` 时代旧 `editState` 就地变异不触发重渲，`setFolds` 是唯一驱动 Record 重渲的信号。**`f6d27484` 重构引入 `structureVersion` 后，`updateFold` 的 `bumpStructure` 已驱动 Record 重渲读最新 `$fold`**，`Folds` 在 `Record.tsx:129` 的 useMemo deps 里已是冗余依赖。
+- 独立 useState 还带三个 bug：①`interfaceOnChangeImpl`（`:321`）只写 `$fold` 不写 Folds → 切 impl 不一致；②Folds 用 chain（含数组下标）做 key，结构变更（swap/delete）后下标平移 → 旧 chain 条目变孤儿，而 `$fold` 长在对象上跟着走；③undo 难同步（Folds 不在 snapshot）。
+
+**清法（保留两概念层 + 消除冗余根源）**：
+- **`$fold`**：持久化层，不动。
+- **`Folds`**：本地缓存层，**改为从 `$fold` 派生**——`Folds` 类与单测保留（`domain/folds.ts` 不删，概念/类型仍在）；但 `Record.tsx:67` 的 `useState<Folds>` 与 creator 的 `folds/setFolds` 参数去掉；`getFoldState` 三处调用点（`recordEditEntityCreator.ts:68/505/578`，三处都持有 `obj`）直接读 `obj?.$fold`；`updateFold`（`editOnUpdateFold`）只调 `session.updateFold`，去掉 `setFolds`。
+- **收益**：`interfaceOnChangeImpl` 不一致自动消失；结构变更后 fold 跟对象走（无 chain 孤儿）；**undo/redo fold 零额外逻辑**（`$fold` 在 snapshot，恢复后 entityMap 重算读新 `$fold`，派生 Folds 自动同步）；顺带纠正 `Record.tsx:66` 的误导注释（"`folds` 跟 notes 一样临时存"——实际 `$fold` 进提交载荷）。
+
+> **为什么不让 `Folds` 保持独立 useState**（曾考虑、已否决）：要给 session 加 fold 同步通道（`foldsVersion` 订阅 key 或 `setExternalFoldsRebuilder` 回调），破坏 session/React 解耦契约（`editingSession.ts:8-30`）；且 `interfaceOnChangeImpl` bug 与 chain 孤儿仍需单独修；undo fold 同步复杂。代价显著高于派生，无收益。
 
 ---
 
@@ -364,7 +379,7 @@ undo 落地前必须或强烈建议先清理：
 | Q11 | 栈上限 | 条数（maxDepth=50）先上；若大 record 内存重，改字节预算（如 32MB）驱动 | §2.2 |
 | Q12 | 快捷键名 | ctrl+z / ctrl+y | 实测 Tauri/浏览器冲突 |
 | Q13 | 后台推数据覆盖本地编辑时 | getIsEdited 时提示"是否丢弃" | §2.7 maybeReset 守卫 |
-| Q14 | fold 是否进 undo？ | 是（持久化数据；单一存储后几乎免费） | §4 D1 |
+| Q14 | fold 是否进 undo？ | 是（持久化数据；`Folds` 改派生后 `$fold` 在 snapshot 自然覆盖，几乎免费） | §4 D1 |
 | Q15 | 值类 undo 走 bump（P0）还是 form registry 轻量？ | **P0 走 bump（简单先落地）；§7 实测若卡，P1 上 form registry 轻量** | §3.2/3.3 |
 
 ---
@@ -385,7 +400,7 @@ undo 落地前必须或强烈建议先清理：
 
 | 阶段 | 内容 | 依赖 |
 |---|---|---|
-| **0. 清债** | D4（参量化 `bumpStructure` + `EFitView.NoChange` + useEntityToGraph 分支）、D1（fold 单一存储 `$fold`）、D5（`onCommitSuccess`）、D6（顺带）、改 `onValuesChange` 传 changedValues | — |
+| **0. 清债** | D4（参量化 `bumpStructure` + `EFitView.NoChange` + useEntityToGraph 分支）、D1（fold：`$fold` 持久化保留 + `Folds` 改派生）、D5（`onCommitSuccess`）、D6（顺带）、改 `onValuesChange` 传 changedValues | — |
 | **1. P0 阻塞验证** | §7 的 1/2/3/4 四项 spike | 阶段 0 |
 | **2. UndoStore + session 接入** | 纯数据 `UndoStore`（§2.2）；session 的 `setBaseline/capture/undo/redo/onCommitSuccess/dispose/flushValueCoalesce`；参量化 `bumpStructure` 接入；`maxDepth` 封顶 | 阶段 1 |
 | **3. capture + coalescing** | 结构 mutation 前置 `beforeStructuralChange` + 后置 capture（§2.4）；值类 coalescing（per-key O(1) 不变量 + 单测）；Form.List 长度 diff（§2.6） | 阶段 2 |
@@ -407,7 +422,7 @@ undo 落地前必须或强烈建议先清理：
 - **生命周期**：per-session，unmount 必须 `dispose()`（清定时器 + flush + 清 listeners）。
 - **UI**：按钮放 Record 工具栏 + 快捷键 per-session 注册（非 HeaderBar、非全局 getCurrentEditingSession）。
 - **性能**：undo 是重渲非 mount（远低于 350ms mount），成本 = 结构编辑（fold/add）。**非快照栈特有**。P0 走 bump；值类 undo 若卡 → P1 form registry 轻量；结构重渲治本 → Entity 引用稳定化（一举两得修 perf :71 债）。
-- **前置清债**：D4（参量化 bump + NoChange，M）、D1（fold 单一存储 $fold、持久化保留，M）、D5（onCommitSuccess，S）。
+- **前置清债**：D4（参量化 bump + NoChange，M）、D1（fold：`$fold` 持久化保留 + `Folds` 改派生消除冗余双源，M）、D5（onCommitSuccess，S）。
 - **升级路径**：`captureUndoPoint`/`applyUndoPoint` 是契约点，P1.5 换 JSON Patch 只动这两处。
 
 ## 参考
