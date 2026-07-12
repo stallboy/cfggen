@@ -417,28 +417,13 @@ const suffixStyle: CSSProperties = {
     marginLeft: '8px'       // 给 ID 和 Title 之间留一点固定间距
 }
 
-// FK 选项只依赖 sTable.recordIds + valueToInteger，与 editing object / folds 无关；
-// schema 重建时 STable 是新对象 → WeakMap 自动失效，无跨 schema 泄漏。
-// 原实现每次建图都为每个 FK 字段全量重建（含 JSX label），是编辑态加载主成本（见 perf-optimization.md）。
-const _idOptionsCache = new WeakMap<STable, { v0?: EntityEditFieldOption[]; v1?: EntityEditFieldOption[] }>();
-
 export function getIdOptions(sTable: STable, valueToInteger: boolean = false): EntityEditFieldOption[] {
-    let slot = _idOptionsCache.get(sTable);
-    if (!slot) {
-        slot = {};
-        _idOptionsCache.set(sTable, slot);
-    }
-    const key = valueToInteger ? 'v1' : 'v0';
-    if (slot[key] !== undefined) {
-        return slot[key]!;
-    }
-
-    const options: EntityEditFieldOption[] = [];
+    const options = [];
     for (const {id, title} of sTable.recordIds) {
         const isShowTitle = title && title != id;
         options.push({
             label: isShowTitle ? <Flex align="flex-end" style={{ width: '100%' }}>
-                    <span style={{ flexShrink: 0 }}>{id}</span>
+                    <span style={{ flexShrink: 0 }}>{id}</span> 
                     <span style={suffixStyle}>{title}</span>
                 </Flex> : id,
             labelstr: isShowTitle ? `${id} ${title}` : id,
@@ -446,7 +431,6 @@ export function getIdOptions(sTable: STable, valueToInteger: boolean = false): E
             title: title ?? ''
         });
     }
-    slot[key] = options;
     return options;
 }
 
@@ -457,12 +441,12 @@ export function getIdOptionsWithNew(sTable: STable, valueToInteger: boolean = fa
 
     // 当没有记录时添加新记录选项
     if (options.length === 0) {
-        return [{
+        options.push({
             label: <>➕ new</>,
             labelstr: NEW_RECORD_ID,
             value: NEW_RECORD_ID,
             title: 'Create new record'
-        }];
+        });
     }
 
     return options;
