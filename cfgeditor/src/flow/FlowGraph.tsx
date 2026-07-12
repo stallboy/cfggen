@@ -1,4 +1,5 @@
 import {Background, Controls, Edge, Node, NodeTypes, ReactFlow, ReactFlowProvider} from "@xyflow/react";
+import {ConfigProvider} from "antd";
 import {Entity} from "@/domain/entityModel";
 import type {NodeShowType} from "@/domain/storageJson";
 import {memo, MouseEvent as ReactMouseEvent, ReactNode, useCallback, useMemo, useState} from "react";
@@ -32,6 +33,19 @@ const defaultNodes: EntityNode[] = [];
 const defaultEdges: EntityEdge[] = [];
 
 const proOptions = {hideAttribution: true};
+
+// 图内 EntityForm 的主题（仅 Form.itemMarginBottom）。
+// 原写在 EntityForm 里、每节点套一个 ConfigProvider：N 个可编辑节点 = N 个 ConfigProvider（各做一次 theme 合并
+// + context Provider 实例，N=45 时是初始 mount 的可观开销）。上提到 FlowGraph 单实例：FlowGraph 子树唯一的
+// antd Form 就是 EntityForm（Background/Controls/FlowContextMenu 均非 Form，FORM_THEME 对它们无影响），
+// recordRef/table 等只读视图的 FlowGraph 节点无 Form 亦不受影响——语义不变，ConfigProvider 45→1。
+const FORM_THEME = {
+    components: {
+        Form: {
+            itemMarginBottom: 8,
+        },
+    },
+};
 
 export const FlowGraph = memo(function FlowGraph({children}: {
     children: ReactNode
@@ -87,28 +101,30 @@ export const FlowGraph = memo(function FlowGraph({children}: {
 
 
     return <ReactFlowProvider>
-        <ReactFlow
-            defaultNodes={defaultNodes}
-            defaultEdges={defaultEdges}
-            nodeTypes={nodeTypes}
-            minZoom={0.1}
-            maxZoom={2}
-            deleteKeyCode={null}
-            // fitView
-            onNodeDoubleClick={onNodeDoubleClick}
-            onNodeContextMenu={onNodeContextMenu}
-            onPaneClick={closeMenu}
-            onNodeClick={closeMenu}
-            onMoveStart={closeMenu}
-            onNodeDragStart={closeMenu}
-            onPaneContextMenu={onPaneContextMenu}
-            // onlyRenderVisibleElements
-            proOptions={proOptions}>
-            <Background/>
-            <Controls showZoom={false}/>
-        </ReactFlow>
-        {(menuStyle && menuItems && menuItems.length > 0) &&
-            <FlowContextMenu menuStyle={menuStyle} menuItems={menuItems} closeMenu={closeMenu}/>}
+        <ConfigProvider theme={FORM_THEME}>
+            <ReactFlow
+                defaultNodes={defaultNodes}
+                defaultEdges={defaultEdges}
+                nodeTypes={nodeTypes}
+                minZoom={0.1}
+                maxZoom={2}
+                deleteKeyCode={null}
+                // fitView
+                onNodeDoubleClick={onNodeDoubleClick}
+                onNodeContextMenu={onNodeContextMenu}
+                onPaneClick={closeMenu}
+                onNodeClick={closeMenu}
+                onMoveStart={closeMenu}
+                onNodeDragStart={closeMenu}
+                onPaneContextMenu={onPaneContextMenu}
+                // onlyRenderVisibleElements
+                proOptions={proOptions}>
+                <Background/>
+                <Controls showZoom={false}/>
+            </ReactFlow>
+            {(menuStyle && menuItems && menuItems.length > 0) &&
+                <FlowContextMenu menuStyle={menuStyle} menuItems={menuItems} closeMenu={closeMenu}/>}
+        </ConfigProvider>
 
         <FlowGraphContext1 value={ctx}>
             {children}

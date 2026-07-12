@@ -16,10 +16,12 @@ import {RawSchema, STable} from "./api/schemaModel.ts";
 import {fetchNotes, fetchSchema} from "./api/api.ts";
 import {notesToMap} from "./api/noteModel.ts";
 import {useQuery} from "@tanstack/react-query";
+import {useHotkeys} from "react-hotkeys-hook";
 import {HeaderBar} from "./routes/headerbar/HeaderBar.tsx";
 import {FlowGraph} from "./flow/FlowGraph.tsx";
 import {FlowStyleManager} from "./flow/FlowStyleManager.tsx";
 import {Finder} from "./routes/search/Finder.tsx";
+import {getCurrentEditingSession} from "./services/editingSession";
 
 // Chat / Setting 仅在 dragPanel 切换到对应面板时才渲染，懒加载以推迟
 // @ant-design/x* + openai + marked + dompurify 等重依赖的解析（不进首屏）
@@ -68,6 +70,16 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
 
     const {t} = useTranslation();
     const ref = useRef<HTMLDivElement>(null)
+
+    // alt+s「提交」全局命令：单实例根注册唯一监听，直达当前编辑会话的 submit()。
+    // funcSubmit 字段（仅根 STable 追加）唯一逻辑即 session.submit()（见 recordEditEntityCreator.ts），
+    // 故「提交」是「当前编辑会话」的全局语义——不再 per-form 注册、不靠焦点路由。原先每个 EntityForm 各注册
+    // 一个 useHotkeys 靠 DOM 冒泡「碰巧」命中，是历史 N 次触发 bug 的过设计修复。FlowGraph 多实例（分割布局），
+    // 监听必须在更高的单实例点；getCurrentEditingSession 在非编辑视图为 null，自动无副作用。
+    useHotkeys("alt+s", () => {
+        getCurrentEditingSession()?.submit();
+    }, {enableOnFormTags: true});
+
     const {isLoading, isError, error, data: schema} = useQuery({
         queryKey: ['schema'],
         queryFn: ({signal}) => fetchSchema(server, signal),

@@ -8,7 +8,6 @@ import {
 } from "@ant-design/icons";
 import {
     Button,
-    ConfigProvider,
     Flex,
     Form,
     FormInstance,
@@ -21,7 +20,6 @@ import {
     Tooltip,
 } from "antd";
 import {Handle, NodeProps, Position} from "@xyflow/react";
-import {useHotkeys} from "react-hotkeys-hook";
 import {useTranslation} from "react-i18next";
 import {CSSProperties, Fragment, memo, useCallback, useEffect, useMemo, useState} from "react";
 
@@ -77,14 +75,7 @@ const FILTER_SEARCH = {
 };
 
 
-// 主题配置
-const FORM_THEME = {
-    components: {
-        Form: {
-            itemMarginBottom: 8,
-        },
-    },
-};
+// 主题配置（FORM_THEME）已上提到 FlowGraph 单实例 ConfigProvider（原每节点一个，N=45 时 mount 开销可观），见 FlowGraph.tsx。
 
 const FORM_STYLE = {backgroundColor: "white", borderRadius: 15, padding: 10};
 
@@ -755,33 +746,22 @@ interface EntityFormProps {
 export const EntityForm = memo(function EntityForm({edit, nodeProps, nodeShow}: EntityFormProps) {
     const [form] = Form.useForm();
 
-    // 把 alt+s 绑定到本节点表单的 DOM 子树：每个可编辑节点只注册一次，且仅在焦点位于本表单内时触发
-    // （enableOnFormTags 让输入框内也能触发）。原先在 FuncSubmitFormItem 里无作用域地全局注册，
-    // 画布上 N 个可编辑节点会让按一次 alt+s 触发 N 次 recordAddOrUpdate。
-    const formWrapperRef = useHotkeys<HTMLDivElement>("alt+s", () => {
-        const submitField = edit.fields.find((f) => f.type === 'funcSubmit');
-        if (submitField && submitField.type === 'funcSubmit') {
-            submitField.value.funcSubmit();
-        }
-    }, {enableOnFormTags: true});
-
+    // alt+s「提交」由 CfgEditorApp 全局单点注册，直达 getCurrentEditingSession().submit()：
+    // funcSubmit 字段（仅根 STable 追加）唯一逻辑即 session.submit()（见 recordEditEntityCreator.ts），
+    // 提交是「当前编辑会话」的全局语义，本组件无需参与命令路由。
     // form里单个字段的改变不会引起这个界面更新，只更新jsonObject对象
     // initialValue放在每个Form.Item里
     // 参考: https://github.com/ant-design/ant-design/issues/56102
     return (
-        <ConfigProvider theme={FORM_THEME}>
-            <div ref={formWrapperRef}>
-                <Form
-                    {...FORM_LAYOUT}
-                    form={form}
-                    onValuesChange={() => {
-                        edit.editOnUpdateValues(form.getFieldsValue(true));
-                    }}
-                    style={FORM_STYLE}
-                >
-                    {renderFieldItems(edit.fields, edit, nodeProps, nodeShow)}
-                </Form>
-            </div>
-        </ConfigProvider>
+            <Form
+                {...FORM_LAYOUT}
+                form={form}
+                onValuesChange={() => {
+                    edit.editOnUpdateValues(form.getFieldsValue(true));
+                }}
+                style={FORM_STYLE}
+            >
+                {renderFieldItems(edit.fields, edit, nodeProps, nodeShow)}
+            </Form>
     );
 });
