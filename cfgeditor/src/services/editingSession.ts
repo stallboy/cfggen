@@ -250,6 +250,13 @@ export class EditingSession {
         this.mutate?.(this.editingObject);
     }
 
+    /** 提交成功后重置脏基准（submit 异步、成败要等网络，故重基准挂在 onSuccess 而非 submit 调用时——
+     *  否则提交失败会丢 undo 历史、脏标记还误报"无未保存"）。
+     *  阶段0：只重 originalEditingObject（让 getIsEdited 归 false）；阶段2 接入 UndoStore 后扩展 setBaseline（清栈+重基准）。 */
+    onCommitSuccess(): void {
+        this.originalEditingObject = structuredClone(this.editingObject);
+    }
+
     /** 把 table/id/isEdited 同步到 resso store（HeaderBar 唯一订阅者，显示 unsaved）。 */
     notifyEditingState(): void {
         setEditingState(this.table, this.id, this.getIsEdited());

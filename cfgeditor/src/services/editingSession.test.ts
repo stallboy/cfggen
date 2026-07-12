@@ -144,6 +144,25 @@ describe('EditingSession submit / replaceEditingObject', () => {
     });
 });
 
+describe('EditingSession.onCommitSuccess（提交边界：重置脏基准）', () => {
+    it('重基准后 getIsEdited 归 false（提交成功 → 脏标记清除）', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
+        s.addArrayItem(ITEM(), ['items'], POS);
+        expect(s.getIsEdited()).toBe(true);
+        s.onCommitSuccess();
+        expect(s.getIsEdited()).toBe(false);
+    });
+
+    it('重基准为深拷：提交后再编辑不污染基准，isEdited 重新 true', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
+        s.addArrayItem(ITEM(), ['items'], POS);
+        s.onCommitSuccess();                    // 提交成功，基准 = 当前态
+        expect(s.getIsEdited()).toBe(false);
+        s.addArrayItem(ITEM(), ['items'], POS); // 再编辑
+        expect(s.getIsEdited()).toBe(true);     // 基准未被污染，新编辑判定 dirty
+    });
+});
+
 describe('EditingSession.getEditingObjectRes（layout 通道）', () => {
     it('反映 fitView/isEdited 的变化', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));

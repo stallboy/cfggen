@@ -49,6 +49,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
                     duration: 3
                 });
 
+                session.onCommitSuccess();
                 invalidateAllQueries();
                 // navigate(0);
             } else {
