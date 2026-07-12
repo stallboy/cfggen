@@ -760,11 +760,9 @@ export const EntityForm = memo(function EntityForm({edit, nodeProps, nodeShow}: 
             <Form
                 {...FORM_LAYOUT}
                 form={form}
-                onValuesChange={(_, allValues) => {
-                    // 用 antd 提供的 allValues（等价于原 form.getFieldsValue(true)，省一次调用）。
-                    // 阶段3 在此引入 changedValues 用于 coalescing 合并 key——届时 updateFormValues 改造
-                    // 处理 array 长度 diff 后才能安全传 changed（当前 updateFormValues 期望完整 array）。
-                    edit.editOnUpdateValues(allValues);
+                onValuesChange={(changed, allValues) => {
+                    // allValues 写回 editingObject（完整 array 安全）；changed 喂 coalescing 合并 key + Form.List 长度 diff。
+                    edit.editOnUpdateValues(changed, allValues);
                 }}
                 style={FORM_STYLE}
             >

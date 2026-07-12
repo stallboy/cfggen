@@ -1,4 +1,4 @@
-import {describe, expect, it} from 'vitest';
+import {describe, expect, it, vi} from 'vitest';
 import {EditingSession, isDeeplyEqual} from './editingSession';
 import {EFitView} from '@/domain/entityModel';
 import {JSONArray, JSONObject, RecordResult} from '@/api/recordModel';
@@ -387,3 +387,113 @@ describe('EditingSession undo/redo（结构类，阶段2）', () => {
         expect(s.canRedo()).toBe(false);
     });
 });
+
+describe('EditingSession 值类 coalescing（阶段3）', () => {
+    // schema: struct Foo { int x; float y; list<int> arr; }
+    const schema = new Schema(makeRawSchema([
+        makeStruct('Foo', [field('x', 'int'), field('y', 'float'), field('arr', 'list<int>')]),
+    ]));
+    const rec = () => makeRecord('t', '1', {'$type': 'Foo', x: 0, y: 0, arr: []});
+
+    it('同字段连续键入合并为一步 undo（换字段关闭旧组）', () => {
+        const s = new EditingSession(rec());
+        s.initUndoBaseline();
+        s.updateFormValues(schema, {x: 1, y: 0, arr: []}, [], {x: 1});
+        s.updateFormValues(schema, {x: 2, y: 0, arr: []}, [], {x: 2});
+        s.updateFormValues(schema, {x: 3, y: 0, arr: []}, [], {x: 3});
+        expect(s.canUndo()).toBe(false);   // 同字段 + 500ms 内 → 未 flush，不入栈
+        s.updateFormValues(schema, {x: 3, y: 1, arr: []}, [], {y: 1});   // 换字段 → flush x 组
+        expect(s.canUndo()).toBe(true);
+        s.undo();   // 撤 y 组 → {x:3,y:0}
+        expect(s.getEditingObject()['x']).toBe(3);
+        expect(s.getEditingObject()['y']).toBe(0);
+        s.undo();   // 撤 x 组（3 次键入一步撤）→ {x:0,y:0}
+        expect(s.getEditingObject()['x']).toBe(0);
+    });
+
+    it('undo 开头 flush 未 capture 的键入（不丢最后一次输入）', () => {
+        const s = new EditingSession(rec());
+        s.initUndoBaseline();
+        s.updateFormValues(schema, {x: 1, y: 0, arr: []}, [], {x: 1});
+        expect(s.canUndo()).toBe(false);   // 未 flush
+        s.undo();   // undo 开头 flush x 组 → capture → 撤 → x 回 0
+        expect(s.getEditingObject()['x']).toBe(0);
+    });
+
+    it('Form.List 长度变 = 结构步（立即 capture，不经 coalescing）', () => {
+        const s = new EditingSession(rec());
+        s.initUndoBaseline();
+        s.updateFormValues(schema, {x: 0, y: 0, arr: [1, 2]}, [], {arr: [1, 2]});   // arr 0→2
+        expect(s.canUndo()).toBe(true);   // 结构步立即 capture
+        s.undo();
+        expect(s.getEditingObject()['arr']).toEqual([]);
+    });
+
+    it('Form.List 长度同 = 值类合并（不立即 capture）', () => {
+        const s = new EditingSession(rec());
+        s.initUndoBaseline();
+        s.updateFormValues(schema, {x: 0, y: 0, arr: [1, 2]}, [], {arr: [1, 2]});   // 0→2 结构步
+        s.updateFormValues(schema, {x: 0, y: 0, arr: [9, 2]}, [], {arr: [9, 2]});   // 长度同 2→2，值类合并
+        expect(s.canUndo()).toBe(true);    // 第一步结构步已 capture
+        // 第二步未 flush（同字段 arr + 500ms 内）→ 仍是 1 步
+        s.undo();   // 撤第一步（arr 2→0）？还是第二步？
+        // undo 开头 flush 第二步（arr=[9,2] capture）→ 栈=[snap{arr:[1,2]}, snap{arr:[9,2]}]
+        // popUndo 弹 snap{arr:[9,2]} 返回 snap{arr:[1,2]} → arr=[1,2]
+        expect(s.getEditingObject()['arr']).toEqual([1, 2]);
+    });
+
+    it('per-key O(1) 不变量：值类编辑不 bump structureVersion、不 emit（仅 flush 时 emit 一次）', () => {
+        const s = new EditingSession(rec());
+        s.initUndoBaseline();
+        const v0 = s.getStructureVersion();
+        let notified = 0;
+        s.subscribe(() => notified++);
+        s.updateFormValues(schema, {x: 1, y: 0, arr: []}, [], {x: 1});
+        expect(s.getStructureVersion()).toBe(v0);   // 不 bump
+        expect(notified).toBe(0);                    // 不 emit（coalescing 只设 timer）
+        s.updateFormValues(schema, {x: 1, y: 2, arr: []}, [], {y: 2});   // 换字段 → flush
+        expect(s.getStructureVersion()).toBe(v0);   // capture 不 bump
+        expect(notified).toBe(1);                    // flush 的 emit
+    });
+
+    it('timer 500ms 到期 flush', () => {
+        vi.useFakeTimers();
+        try {
+            const s = new EditingSession(rec());
+            s.initUndoBaseline();
+            s.updateFormValues(schema, {x: 1, y: 0, arr: []}, [], {x: 1});
+            expect(s.canUndo()).toBe(false);
+            vi.advanceTimersByTime(500);
+            expect(s.canUndo()).toBe(true);   // timer 到期 flush
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it('dispose flush 未 capture 键入 + 清 timer（不抛、不残留 fire）', () => {
+        vi.useFakeTimers();
+        try {
+            const s = new EditingSession(rec());
+            s.initUndoBaseline();
+            s.updateFormValues(schema, {x: 1, y: 0, arr: []}, [], {x: 1});
+            s.dispose();   // flush + 清 timer + clear listeners
+            vi.advanceTimersByTime(500);   // timer 已清，不 fire（不抛即过）
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it('结构操作前 flush 值类组（beforeStructuralChange）：键入与结构操作分开两步 undo', () => {
+        const s = new EditingSession(rec());
+        s.initUndoBaseline();
+        s.updateFormValues(schema, {x: 5, y: 0, arr: []}, [], {x: 5});   // 键入 x=5（未 flush）
+        s.updateFold(true, [], POS);   // 结构操作：beforeStructuralChange flush x 组，再 capture $fold 步
+        expect(s.canUndo()).toBe(true);
+        s.undo();   // 撤 $fold → x 仍 5
+        expect(s.getEditingObject()['$fold']).toBeUndefined();
+        expect(s.getEditingObject()['x']).toBe(5);
+        s.undo();   // 撤 x 键入 → x 回 0
+        expect(s.getEditingObject()['x']).toBe(0);
+    });
+});
+

@@ -53,6 +53,11 @@ export class EditingSession {
     // 命名 undoStore 而非 undo：避免与 undo() 方法同名（TS 不允许同名的属性与方法）。
     private readonly undoStore = new UndoStore();
 
+    // 值类 coalescing：同字段连续键入合并为一步 undo（500ms 窗口 + 换字段/blur/结构 op 关闭组）。
+    // per-key O(1) 不变量：只做"字段标识比较 + clearTimeout/setTimeout"，严禁每键 clone/遍历（啃掉契约1）。
+    private valueCoalesceTimer: ReturnType<typeof setTimeout> | undefined;
+    private valueCoalesceKey: string | undefined;
+
     constructor(recordResult: RecordResult, cbs: EditingSessionCallbacks = {}) {
         this.onStructureChange = cbs.onStructureChange;
         this.mutate = cbs.mutate;
@@ -117,8 +122,11 @@ export class EditingSession {
 
     // ============ 值类编辑（不 bump、不 emit → 不重渲 entityMap）============
 
-    /** primitive 表单值变更。就地改 editingObject，仅 notifyEditingState 刷新 HeaderBar 脏标记。 */
-    updateFormValues(schema: Schema, values: Record<string, unknown>, fieldChains: (string | number)[]): void {
+    /** primitive 表单值变更。就地改 editingObject，仅 notifyEditingState 刷新 HeaderBar 脏标记。
+     *  changed（可选）= antd changedValues，用于值类 coalescing 合并 key + Form.List 长度 diff。
+     *  不传 changed（如单测直接调）→ 只写回，不 coalescing。 */
+    updateFormValues(schema: Schema, values: Record<string, unknown>, fieldChains: (string | number)[],
+                     changed?: Record<string, unknown>): void {
         const obj = getFieldObj(this.editingObject, fieldChains) as JSONObject;
         const name = obj['$type'] as string;
         if (name == undefined) {
@@ -153,7 +161,11 @@ export class EditingSession {
             }
 
             const fieldValue = values[key];
+            const isChanged = changed !== undefined && key in changed;
             if (Array.isArray(fieldValue)) {
+                // Form.List 长度 diff（写回前比较旧长度）
+                const oldArr = obj[key];
+                const oldLen = Array.isArray(oldArr) ? oldArr.length : 0;
                 // antd form 会返回[undefined, .. ], 这里忽略掉undefined 的item
                 const fArr: JSONArray = fieldValue as JSONArray;
                 const newArr = [];
@@ -162,8 +174,23 @@ export class EditingSession {
                         newArr.push(conv(fArrElement));
                     }
                 }
-                obj[key] = newArr;
+                if (isChanged && newArr.length !== oldLen) {
+                    // 长度变 = 结构步：flush 旧组（capture 旧态，不含本次写入）+ 写回 + capture 新态
+                    this.flushValueCoalesce();
+                    obj[key] = newArr;
+                    this.undoStore.capture(this.captureUndoPoint());
+                } else {
+                    // 长度同 = 值类合并：touch（写回前，换字段 flush 旧组 capture 旧态）+ 写回
+                    if (isChanged) {
+                        this.touchValueCoalesce(this.coalesceKey(fieldChains, key));
+                    }
+                    obj[key] = newArr;
+                }
             } else {
+                // primitive：touch（写回前，换字段 flush 旧组 capture 旧态，不含本次写入）+ 写回
+                if (isChanged) {
+                    this.touchValueCoalesce(this.coalesceKey(fieldChains, key));
+                }
                 obj[key] = conv(fieldValue);
             }
         }
@@ -174,12 +201,14 @@ export class EditingSession {
     updateNote(note: string | undefined, fieldChains: (string | number)[]): void {
         const obj = getFieldObj(this.editingObject, fieldChains) as JSONObject;
         obj['$note'] = note as JSONValue;
+        this.touchValueCoalesce(this.coalesceKey(fieldChains, '$note'));
         this.notifyEditingState();
     }
 
     // ============ 结构类编辑（bump + emit → 重渲 entityMap）============
 
     addArrayItem(defaultItemJsonObject: JSONObject, arrayFieldChains: (string | number)[], position: EntityPosition): void {
+        this.beforeStructuralChange();
         const obj = getFieldObj(this.editingObject, arrayFieldChains) as JSONArray;
         obj.push(defaultItemJsonObject);
         this.structureChange(position);
@@ -188,12 +217,14 @@ export class EditingSession {
     /** 前插入：让插入的节点和当前鼠标所在节点位置不变 */
     addArrayItemAtIndex(defaultItemJsonObject: JSONObject, index: number,
                         arrayFieldChains: (string | number)[], position: EntityPosition): void {
+        this.beforeStructuralChange();
         const obj = getFieldObj(this.editingObject, arrayFieldChains) as JSONArray;
         obj.splice(index, 0, defaultItemJsonObject);
         this.structureChange(position);
     }
 
     deleteArrayItem(deleteIndex: number, arrayFieldChains: (string | number)[], position: EntityPosition): void {
+        this.beforeStructuralChange();
         const obj = getFieldObj(this.editingObject, arrayFieldChains) as JSONArray;
         obj.splice(deleteIndex, 1);
         this.structureChange(position);
@@ -201,6 +232,7 @@ export class EditingSession {
 
     /** 相邻索引的上/下移，语义是 swap 而非 move（命名沿用旧 onSwapItemInArray）。 */
     swapArrayItem(indexA: number, indexB: number, arrayFieldChains: (string | number)[], position: EntityPosition): void {
+        this.beforeStructuralChange();
         const obj = getFieldObj(this.editingObject, arrayFieldChains) as JSONArray;
         const o2 = obj[indexB];
         obj[indexB] = obj[indexA];
@@ -209,12 +241,14 @@ export class EditingSession {
     }
 
     updateFold(fold: boolean, fieldChains: (string | number)[], position: EntityPosition): void {
+        this.beforeStructuralChange();
         const obj = getFieldObj(this.editingObject, fieldChains) as JSONObject;
         obj['$fold'] = fold;
         this.structureChange(position);
     }
 
     updateInterfaceValue(jsonObject: JSONObject, fieldChains: (string | number)[], position: EntityPosition): void {
+        this.beforeStructuralChange();
         const obj = getFieldObj(this.editingObject, fieldChains.slice(0, fieldChains.length - 1)) as JSONObject;
         obj[fieldChains[fieldChains.length - 1] as string] = jsonObject;
         this.structureChange(position);
@@ -227,6 +261,7 @@ export class EditingSession {
      * 入参均为调用方 fresh 构造（JSON.parse / defaultValueOfStructural，无共享引用），故就地净化而非 clone。
      */
     replaceEditingObject(newEditingObject: JSONObject): void {
+        this.beforeStructuralChange();
         deleteRefsInPlace(newEditingObject);
         this.editingObject = newEditingObject;
         this.bumpStructure({fitView: EFitView.FitFull});
@@ -235,6 +270,7 @@ export class EditingSession {
 
     /** 把剪贴板内容粘贴到 fieldChains 位置。 */
     pasteStruct(fieldChains: (string | number)[], position: EntityPosition): void {
+        this.beforeStructuralChange();
         const copied = getCopiedObject();
         let obj: JSONObject | JSONArray = this.editingObject;
         let i = 0;
@@ -277,6 +313,7 @@ export class EditingSession {
     }
 
     undo(): void {
+        this.flushValueCoalesce();   // 先固化未 capture 的键入（否则丢失）
         if (!this.undoStore.canUndo()) return;
         const target = this.undoStore.popUndo();
         this.applyUndoPoint(target);
@@ -284,6 +321,7 @@ export class EditingSession {
     }
 
     redo(): void {
+        this.flushValueCoalesce();
         if (!this.undoStore.canRedo()) return;
         const target = this.undoStore.popRedo();
         this.applyUndoPoint(target);
@@ -298,8 +336,10 @@ export class EditingSession {
         return this.undoStore.canRedo();
     }
 
-    /** unmount 清理：清 listeners 防 leak（coalesce timer 清理在阶段3 dispose 扩展）。 */
+    /** unmount 清理：flush 值类组（不丢最后一次键入）+ 清 timer 防 setTimeout 闭包持 session 泄漏 + 清 listeners。 */
     dispose(): void {
+        this.flushValueCoalesce();
+        clearTimeout(this.valueCoalesceTimer);
         this.listeners.clear();
     }
 
@@ -339,9 +379,46 @@ export class EditingSession {
      *  originalEditingObject 与 undo.baseline 共享同一 clone：两者都只读不被 mutate（popUndo 返回 baseline
      *  引用但 applyUndoPoint 会 clone，不污染），共享安全且省一次 structuredClone。 */
     private resetBaselines(): void {
+        // 清 coalesce timer（提交/reset 后旧键入已落库或被新数据覆盖，不保留 undo；timer 不清会 fire 污染新栈）
+        clearTimeout(this.valueCoalesceTimer);
+        this.valueCoalesceTimer = undefined;
+        this.valueCoalesceKey = undefined;
         const snap = this.captureUndoPoint();
         this.originalEditingObject = snap;
         this.undoStore.setBaseline(snap);
+    }
+
+    // ---- 值类 coalescing（§2.6）----
+
+    /** 字段标识：fieldChain + 字段名 → 唯一 string（同字段连续键入合并）。 */
+    private coalesceKey(fieldChains: (string | number)[], fieldKey: string): string {
+        return [...fieldChains, fieldKey].join('/');
+    }
+
+    /** 值类编辑每键调：同字段 + 500ms 窗口内 → 重置定时器不入栈；换字段 → 关闭旧组开新组。
+     *  per-key O(1)：只比较字段标识 + clearTimeout/setTimeout，不 clone 不遍历。 */
+    private touchValueCoalesce(fieldKey: string): void {
+        if (this.valueCoalesceKey !== fieldKey) {
+            this.flushValueCoalesce();
+            this.valueCoalesceKey = fieldKey;
+        }
+        if (this.valueCoalesceTimer !== undefined) clearTimeout(this.valueCoalesceTimer);
+        this.valueCoalesceTimer = setTimeout(() => this.flushValueCoalesce(), 500);
+    }
+
+    /** 关闭当前值类组：capture 一份快照入栈 + emit 刷 canUndo/canRedo 按钮态。无活跃组则 no-op。 */
+    private flushValueCoalesce(): void {
+        if (this.valueCoalesceTimer === undefined) return;
+        clearTimeout(this.valueCoalesceTimer);
+        this.valueCoalesceTimer = undefined;
+        this.undoStore.capture(this.captureUndoPoint());
+        this.valueCoalesceKey = undefined;
+        this.emit();   // capture 不 bump structureVersion，但 canUndo 变了 → emit 让按钮订阅刷新
+    }
+
+    /** 结构操作前置：关闭值类组（固化未 capture 的键入，避免与结构操作混在一个快照）。 */
+    private beforeStructuralChange(): void {
+        this.flushValueCoalesce();
     }
 }
 

@@ -194,7 +194,7 @@ export interface EntityEditFieldOptions {
  */
 export interface EntityEdit {
     fields: EntityEditField[];
-    editOnUpdateValues: (values: Record<string, unknown>) => void;
+    editOnUpdateValues: (changed: Record<string, unknown>, allValues: Record<string, unknown>) => void;
     editOnUpdateNote: (note?: string) => void;
     editOnUpdateFold: (fold: boolean, position: EntityPosition, embeddedFieldChain?: (string | number)[]) => void;
     editOnDelete?: (position: EntityPosition) => void;

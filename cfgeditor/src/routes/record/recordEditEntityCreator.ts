@@ -227,8 +227,8 @@ export class RecordEditEntityCreator {
         }
 
 
-        const editOnUpdateValues = (values: Record<string, unknown>) => {
-                this.session.updateFormValues(this.schema, values, fieldChain);
+        const editOnUpdateValues = (changed: Record<string, unknown>, allValues: Record<string, unknown>) => {
+                this.session.updateFormValues(this.schema, allValues, fieldChain, changed);
             }
         ;
 
