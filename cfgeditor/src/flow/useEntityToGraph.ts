@@ -86,7 +86,7 @@ export function useEntityToGraph({
     const flowGraph = useContext(FlowGraphContext);
     const {
         nodeShow: currentNodeShow,
-        // 拓扑 setting（影响 entityMap 节点集合）纳入 layout queryKey → 改这些缓存自然失效（doc BR4），
+        // 拓扑 setting（影响 entityMap 节点集合）纳入 layout queryKey → 改这些缓存自然失效，
         // 替代旧 store setter 的 clearLayoutCache 命令式清缓存。新增拓扑 setting 在此登记即可，无需 clearLayoutCache。
         maxImpl, refIn, refOutDepth, maxNode,
         recordRefIn, recordRefInShowLinkMaxNode, recordRefOutDepth, recordMaxNode, tauriConf,
@@ -99,7 +99,7 @@ export function useEntityToGraph({
     const viewportReady = useStore((state) => state.panZoom !== null);
     const {setNodes, setEdges, setViewport, getViewport, fitView} = useReactFlow();
 
-    // nodeShow/notes 下发到 node.data（doc BR1）；query 不在此下发——它无 per-graph override，
+    // nodeShow/notes 下发到 node.data；query 不在此下发——它无 per-graph override，
     // 渲染组件（FlowNode/EntityProperties/EntityCard）各自 useMyStore() 订阅（resso per-key），
     // 故 query 不进 nodes 重建、不进 layout，搜索时不重跑 ELK（与 store.ts setQuery 注释一致）。
     const {nodes, edges} = useMemo(() => convertNodeAndEdges({
@@ -115,7 +115,7 @@ export function useEntityToGraph({
     // 重建（性能契约1）。安全：值类不改拓扑、布局不变，继续走干净态 5min 缓存正确。勿当 bug 修。
     // queryKey 含布局相关字段（pickLayoutKeys）+ 拓扑 setting（topologyKeys）：
     //   - 改纯颜色字段 → queryKey 不变 → 命中缓存不重跑 ELK；
-    //   - 改拓扑 setting（maxImpl/refOutDepth/recordRef*/tauriConf…）→ topologyKeys 变 → 缓存自然失效重布局（doc BR4）。
+    //   - 改拓扑 setting（maxImpl/refOutDepth/recordRef*/tauriConf…）→ topologyKeys 变 → 缓存自然失效重布局。
     // 'e' 标记保持在 pathname 之后同一层级，保 Record.tsx 的 ['layout', pathname, 'e'] prefix 失效契约。
     const layoutKeys = pickLayoutKeys(nodeShowSetting);
     const topologyKeys = {

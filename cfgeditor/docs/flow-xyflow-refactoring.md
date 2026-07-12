@@ -1,13 +1,13 @@
-# cfgeditor 图形层（src/flow）重构与 xyflow v12 教学指南
+# cfgeditor 图形层（src/flow）现状与优化 + xyflow v12 教学指南
 
-> **双线文档**：左手是 xyflow v12 + ELK 的入门教学（每个概念都落在本项目的真实代码上），
-> 右手是 `src/flow` 的重构路线图（每条动作标注 ROI、风险与依赖顺序）。
+> **双线文档**：左手是 xyflow v12 + ELK 的入门教学（每个概念落在本项目的真实代码上），
+> 右手是 `src/flow` 的**现状说明 + 优化 backlog**——只记当前状态与待优化点，不记变更历史。
 >
 > **读者画像**：熟悉 React、不熟 xyflow。读完既能把这些图形模式复用到下一个项目，
-> 也能拿出一份可执行的重构 backlog。
+> 也能拿出一份可执行的优化 backlog。
 >
 > **覆盖版本**：`@xyflow/react ^12.11.2` + `elkjs`（Web Worker 模式）。
-> 文中 `file:line` 基于撰写时的代码，重构后可能漂移，以函数/符号名为主索引。
+> 文中 `file:line` 基于当前代码，可能漂移，以函数/符号名为主索引。
 
 ---
 
@@ -15,11 +15,9 @@
 
 - [0. 怎么读这篇文档](#0-怎么读这篇文档)
 - [第一部分 · xyflow v12 核心概念（教学主线）](#第一部分--xyflow-v12-核心概念教学主线)
-- [第二部分 · 本项目架构现状巡礼](#第二部分--本项目架构现状巡礼)
-- [第三部分 · 重构机会](#第三部分--重构机会)
-  - [3.0 先读我：这些"看起来像问题"的，请勿动](#30-先读我这些看起来像问题的请勿动)
-  - [3.1 P3+ — 架构级 big rocks](#31-p3--架构级-big-rocks)
-- [第四部分 · 路线图与依赖](#第四部分--路线图与依赖)
+- [第二部分 · 架构现状](#第二部分--架构现状)
+- [第三部分 · 现状澄清（看起来像问题、实则勿动）](#第三部分--现状澄清看起来像问题实则勿动)
+- [第四部分 · 待优化点](#第四部分--待优化点)
 - [附录 A · xyflow v12 概念速查](#附录-a--xyflow-v12-概念速查)
 - [附录 B · 参考来源](#附录-b--参考来源)
 
@@ -30,7 +28,7 @@
 ### 两条阅读路径
 
 - **只想学 xyflow**：读 [第一部分](#第一部分--xyflow-v12-核心概念教学主线)（10 个核心概念，每个对照本项目代码）。
-- **只想改本项目**：跳到 [第三部分](#第三部分--重构机会)，先看 [3.0 勿动清单](#30-先读我这些看起来像问题的请勿动) 避免误伤，再看 [3.1 P3+ big rocks](#31-p3--架构级-big-rocks)。
+- **只想改本项目**：读 [第二部分](#第二部分--架构现状) 摸清现状，再跳 [第三部分](#第三部分--现状澄清看起来像问题实则勿动) 避免误伤"伪问题"，最后看 [第四部分](#第四部分--待优化点) 的优化 backlog。
 
 ### xyflow 心智模型（三句话）
 
@@ -42,13 +40,15 @@
 
 ```
 Entity (domain/entityModel.ts)
-  │   判别联合：ReadOnlyEntity | EditableEntity | CardEntity
+  │   判别联合：ReadOnlyEntity | EditableEntity | CardEntity（纯 domain，不携带 UI 配置）
   ▼
 convertNodeAndEdges (flow/entityToNodeAndEdge.ts)
-  │   产出 EntityNode[] / EntityEdge[]；顺手 fillHandles 标注连接点
+  │   产出 EntityNode[] / EntityEdge[]；node.data = {entity, nodeShow?, notes?}（呈现层下发袋，无 mutate）
+  │   顺手 fillHandles 标注连接点
   ▼
 layoutAsync (flow/layoutAsync.ts)
-  │   ELK Web Worker 算位置；结果由 React Query 按 ['layout', pathname, mode, nodeShow] 缓存
+  │   ELK Web Worker 算位置；结果由 React Query 按
+  │   ['layout', pathname, ('e'), pickLayoutKeys(nodeShow), topologyKeys] 缓存
   ▼
 useEntityToGraph (flow/useEntityToGraph.ts)
   │   通过 useReactFlow()（setNodes/setEdges/fitView/setViewport）+ 一个 useStore 只读切片
@@ -59,8 +59,9 @@ FlowGraph (flow/FlowGraph.tsx)
   │   管右键菜单；通过 FlowGraphContext 让 children 反向注册菜单/双击回调
   ▼
 FlowNode (flow/FlowNode.tsx)
-      nodeTypes.node 注册的唯一自定义节点；按 entity.type 分派渲染
-      EntityProperties(readonly) / EntityForm(editable) / EntityCard(card)
+      nodeTypes.node 唯一自定义节点；读 nodeProps.data.{entity, nodeShow, notes}，
+      按 entity.type 分派 EntityProperties(readonly) / EntityForm(editable) / EntityCard(card)；
+      query 经 useMyStore() per-key 读（resso selector，零多余重渲）
 ```
 
 **关键特征**：route 组件（Table/Record/…）`return null`——它们是"副作用型图形控制器"，真正的画布是它们在 `CfgEditorApp.tsx` 里的父级 `<FlowGraph>`。
@@ -70,11 +71,12 @@ FlowNode (flow/FlowNode.tsx)
 | 术语 | 含义 | 本项目位置 |
 |---|---|---|
 | **受控模式** | `<ReactFlow nodes={..} onNodesChange={..}/>`，真相源在外部 React state | 本项目**未采用** |
-| **非受控模式** | `defaultNodes` 初始化，所有权归 xyflow 内部 store | `FlowGraph.tsx:79-80` |
-| **命令式 patch** | 通过 `setNodes`/`setEdges` 直接写内部 store | `useEntityToGraph.ts:128-129` |
+| **非受控模式** | `defaultNodes` 初始化，所有权归 xyflow 内部 store | `FlowGraph.tsx` |
+| **命令式 patch** | 通过 `setNodes`/`setEdges` 直接写内部 store | `useEntityToGraph.ts` |
 | **声明尺寸** | `node.width/height`，你告诉 xyflow/ELK 节点多大 | `calcWidthHeight.ts` 估算后写入 |
 | **实测尺寸** | `node.measured.{width,height}`，xyflow 挂载 DOM 后 ResizeObserver 实测 | 生产路径**从不读取**（仅 dev-only height drift 护栏对账）|
 | **FitFull / FitId / FitNone** | 视口策略：全图适配 / 锚点不动 / 不动 | `entityModel.ts` `EFitView` |
+| **node.data 下发袋** | ReactFlow node 的 data 承载 entity（domain）+ nodeShow/notes（呈现层） | `FlowGraph.tsx` `EntityNodeData` |
 
 ---
 
@@ -84,7 +86,7 @@ FlowNode (flow/FlowNode.tsx)
 
 `ReactFlowProvider` 建立一个**独立的图实例**——自带一个内部 zustand store，持有这个图的 nodes/edges/viewport/dimensions/panZoom。`useReactFlow()` / `useStore()` 都只访问**最近祖先 Provider** 的图，没有 scope 参数。
 
-**本项目用法**：`FlowGraph.tsx:76` 每个 `<FlowGraph>` 自带一个 `<ReactFlowProvider>`。而 `CfgEditorApp.tsx` 在 Splitter 主区与（可选的）拖拽面板**各挂一个** `<FlowGraph>`——所以同一页面最多并存两个互不可见的图实例（`CfgEditorApp.tsx:167` 主区、`:103/:128/:141` 侧面板）。
+**本项目用法**：每个 `<FlowGraph>` 自带一个 `<ReactFlowProvider>`（`FlowGraph.tsx`）。而 `CfgEditorApp.tsx` 在 Splitter 主区与（可选的）拖拽面板**各挂一个** `<FlowGraph>`——所以同一页面最多并存两个互不可见的图实例（主区 + 侧面板）。
 
 ```tsx
 // CfgEditorApp.tsx —— 两个独立画布并存
@@ -101,35 +103,45 @@ FlowNode (flow/FlowNode.tsx)
 ### 2. nodeTypes + 自定义节点 + NodeProps
 
 ```ts
-// FlowGraph.tsx
-const nodeTypes: NodeTypes = { node: FlowNode };        // 必须定义在组件外（模块级）
-export type EntityNode = Node<{ entity: Entity }, "node">;
+// FlowGraph.tsx —— nodeTypes 必须定义在组件外（模块级）
+const nodeTypes: NodeTypes = { node: FlowNode };
+
+// EntityNodeData 是「呈现层下发袋」：entity 是纯 domain，nodeShow/notes 是呈现层配置。
+// 用 type 别名（非 interface）以满足 xyflow Node<T> 的 T extends Record<string,unknown> 约束。
+export type EntityNodeData = {
+    entity: Entity;
+    nodeShow?: NodeShowType;
+    notes?: Map<string, string>;
+};
+export type EntityNode = Node<EntityNodeData, "node">;
 
 <ReactFlow defaultNodes={...} defaultEdges={...} nodeTypes={nodeTypes} ... />
 ```
 
 ```tsx
-// FlowNode.tsx:43
+// FlowNode.tsx
 export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>) {
   const entity = nodeProps.data.entity;
+  const nodeShow = nodeProps.data.nodeShow;   // 呈现层配置经 node.data 下发（保留 per-graph override）
+  const notes = nodeProps.data.notes;
   // 按 entity.type 分派：EntityProperties / EntityForm / EntityCard
 });
 ```
 
 **三条 v12 官方最佳实践，本项目全部合规**：
 
-1. `nodeTypes` 定义在组件外（`FlowGraph.tsx:14-16`）——避免每次 render 新建对象导致 xyflow 认为节点类型变了、全量卸载重挂。
-2. 自定义节点用 `React.memo` 包裹（`FlowNode.tsx:43`）。
+1. `nodeTypes` 定义在组件外（`FlowGraph.tsx`）——避免每次 render 新建对象导致 xyflow 认为节点类型变了、全量卸载重挂。
+2. 自定义节点用 `React.memo` 包裹（`FlowNode.tsx`）。
 3. 用 `NodeProps<TData>` 泛型强类型 `data`（`EntityNode`）。
 
-> **教学点**：xyflow 在内部 store 每次变更后会**重组传给节点组件的 props**，`NodeProps` 引用常变。即使 `nodeTypes`/`memo` 都合规，若 `useMemo` 的 deps 写错（漏掉实际读取的可变字段），节点仍会 stale——本项目 FlowNode 的 color memo 曾因 deps 只写 `[entity]`（漏 `nodeShow`）而 stale，现已加 `nodeShow` 修复。
+> **教学点**：xyflow 在内部 store 每次变更后会**重组传给节点组件的 props**，`NodeProps` 引用常变。即使 `nodeTypes`/`memo` 都合规，若 `useMemo` 的 deps 写错（漏掉实际读取的可变字段），节点仍会 stale——例如 `FlowNode` 的 color memo 必须把 `nodeShow`（来自 `nodeProps.data.nodeShow`）放进 deps：entity 引用不变时，改主题色仍要重算 color，否则背景 stale。
 
 ---
 
 ### 3. Handle / Position / nodrag
 
 ```tsx
-// FlowNode.tsx:238-239
+// FlowNode.tsx
 {handleIn  && <Handle type='target' position={Position.Left}  id='@in'  style={handleStyle} />}
 {handleOut && <Handle type='source' position={Position.Right} id='@out' style={handleStyle} />}
 ```
@@ -137,7 +149,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
 - `<Handle type='source'|'target' position id>` 是节点上的**连接桩**；同一节点可有多个 Handle，用 `id` 区分（本项目用 `@in`/`@out`，或字段名 `item.name`）。
 - `className='nodrag'` 让按钮/表单区域**不触发节点拖拽**——`EntityForm.tsx` 里所有可交互控件都带这个 class。
 
-> **教学点**：`fillHandles`（`entityToNodeAndEdge.ts:26`）在 entityMap 构建后遍历 `sourceEdges`，把 `handleIn`/`handleOut` 标记盖到 entity/field 上，渲染时 FlowNode 据此决定是否画 `<Handle>`。这是"数据驱动连接桩"的干净做法。
+> **教学点**：`fillHandles`（`entityToNodeAndEdge.ts`）在 entityMap 构建后遍历 `sourceEdges`，把 `handleIn`/`handleOut` 标记盖到 entity/field 上，渲染时 FlowNode 据此决定是否画 `<Handle>`。这是"数据驱动连接桩"的干净做法。
 
 ---
 
@@ -153,21 +165,21 @@ xyflow 支持两种节点管理范式：
 **本项目是混用**：
 
 ```tsx
-// FlowGraph.tsx:79-80 —— 非受控初始化（空数组）
+// FlowGraph.tsx —— 非受控初始化（空数组）
 <ReactFlow defaultNodes={defaultNodes} defaultEdges={defaultEdges} ...>
 
-// useEntityToGraph.ts:128-129 —— 命令式 patch
+// useEntityToGraph.ts —— 命令式 patch
 setNodes(newNodes);
 setEdges(edges);
 ```
 
-> **关键澄清（勿误判为 bug）**：这种混用**不是错误**，是 xyflow 完全支持的"非受控初值 + 命令式注入"模式。它的代价是**数据流不直观**——route `return null`，节点哪来的要看 effect；但好处是可在 effect 里"等 ELK 布局算完一次性原子注入"，避免中间态闪烁。详见 [3.0 勿动清单](#a6-useentitytograph-的超长-effect--受控非受控混用--手算-viewport)。
+> **关键澄清（勿误判为 bug）**：这种混用**不是错误**，是 xyflow 完全支持的"非受控初值 + 命令式注入"模式。它的代价是**数据流不直观**——route `return null`，节点哪来的要看 effect；但好处是可在 effect 里"等 ELK 布局算完一次性原子注入"，避免中间态闪烁。详见 [第三部分 A6](#a6-useentitytograph-的超长-effect--受控非受控混用--手算-viewport)。
 
 ---
 
 ### 5. useReactFlow（公开稳定）vs useStore（内部 escape-hatch）
 
-> 本项目 `useEntityToGraph` 的命令面已收口到 `useReactFlow`（`setNodes`/`setEdges`/`setViewport`/`getViewport`/`fitView`），仅保留一个 `useStore` 只读切片作 viewport 就绪信号，不再调用内部 `panZoom` 方法。先把两类 API 的概念讲清：
+> 本项目 `useEntityToGraph` 的命令面收口到 `useReactFlow`（`setNodes`/`setEdges`/`setViewport`/`getViewport`/`fitView`），仅保留一个 `useStore` 只读切片作 viewport 就绪信号，不调用内部 `panZoom` 方法。先把两类 API 的概念讲清：
 
 | API | 性质 | 返回 | 稳定性 |
 |---|---|---|---|
@@ -175,8 +187,8 @@ setEdges(edges);
 | `useStore(selector)` | **内部** zustand escape-hatch | store 任意切片 | 文档自标 escape-hatch；`panZoom` 尤其是**实现细节**，非公开契约 |
 
 ```ts
-// useEntityToGraph.ts —— 命令面收口后：命令走公开 useReactFlow，仅留一个 useStore 只读切片
-const viewportReady = useStore((state) => state.panZoom !== null);  // 就绪信号（本版本无 viewportInitialized 字段，panZoom 非空即就绪）
+// useEntityToGraph.ts —— 命令走公开 useReactFlow，仅留一个 useStore 只读切片
+const viewportReady = useStore((state) => state.panZoom !== null);  // 就绪信号（panZoom 非空即就绪）
 const { setNodes, setEdges, setViewport, getViewport, fitView } = useReactFlow();  // 公开
 ```
 
@@ -208,7 +220,7 @@ export function computeStableViewport(anchorOld, anchorNew, vp: Viewport): Viewp
 }
 ```
 
-> **教学点**：这个方程是**代数正确**的，且 xyflow 没有提供"保持某点屏幕坐标不变"的高层原语——所以 FitId 分支**必须自算**，不能用 `fitView` 替代（这是 [3.0 勿动清单](#a6-useentitytograph-的超长-effect--受控非受控混用--手算-viewport) 的重要一条）。`useEntityToGraph` 的 FitId 分支调用此函数 + `useReactFlow().setViewport`；不变量由 `viewportMath.test.ts` 锁定。
+> **教学点**：这个方程是**代数正确**的，且 xyflow 没有提供"保持某点屏幕坐标不变"的高层原语——所以 FitId 分支**必须自算**，不能用 `fitView` 替代（这是 [第三部分 A6](#a6-useentitytograph-的超长-effect--受控非受控混用--手算-viewport) 的重要一条）。`useEntityToGraph` 的 FitId 分支调用此函数 + `useReactFlow().setViewport`；不变量由 `viewportMath.test.ts` 锁定。
 
 ---
 
@@ -223,7 +235,7 @@ export function computeStableViewport(anchorOld, anchorNew, vp: Viewport): Viewp
 **本项目 FitFull 走高层 fitView，FitId 走自算**（`useEntityToGraph.ts`）：
 
 ```ts
-// FitFull 分支：直接用公开 fitView（等价于原 getNodesBounds+getViewportForBounds+setViewport 三步）
+// FitFull 分支：直接用公开 fitView
 void fitView({ padding: 0.2, minZoom: 0.3, maxZoom: 1 });
 // FitId 分支：见 §6 的 computeStableViewport + useReactFlow().setViewport（fitView 做不到锚点不动）
 ```
@@ -243,24 +255,19 @@ v12 把节点尺寸拆成**两条独立轨道**：
 
 理想流程是**"声明估算 → ELK 算位 → 挂载 → 用 measured 校正 → 偏差大则重排"**。
 
-**本项目只走第一轨**，从不读 measured（`calcWidthHeight.ts:6-7` 作者注释明说放弃了 measured 重排，原因是闪烁）：
+**本项目只走第一轨**，从不读 measured（`calcWidthHeight.ts` 顶部注释说明：放弃 measured 重排——异步等待实测尺寸会引入闪烁与控制流复杂度，改为预先估算）：
 
 ```ts
-// calcWidthHeight.ts:6-7 —— 作者书面弃案
-// 在一次又一次尝试了等待 node 准备好，直接用 node 的 computed 的 width/height 后，
-// 增加这一个异步，太容易有闪烁和被代码绕晕了。放弃放弃，还是预先估算好。
-```
-
-```ts
-// layoutAsync.ts:14-18 —— 把估算尺寸直接当 ELK 边界框
-function nodeToLayoutChild(node, id2RectMap): ElkNode {
-  const [width, height] = calcWidthHeight(node.data.entity);   // 纯魔数估算
+// layoutAsync.ts —— nodeToLayoutChild：从 node.data 取 entity + 呈现层配置，估算尺寸喂 ELK
+function nodeToLayoutChild(node: EntityNode, id2RectMap): ElkNode {
+  const { entity, nodeShow, notes } = node.data;
+  const [width, height] = calcWidthHeight(entity, nodeShow, notes);   // 纯魔数估算
   id2RectMap.set(node.id, { x: 0, y: 0, width, height });
-  return { id: node.id, width, height };                       // ELK 当作不可压缩边界框
+  return { id: node.id, width, height };                              // ELK 当作不可压缩边界框
 }
 ```
 
-> **关键教学点**：ELK（elkjs）**不会去测 DOM**，它把 `ElkNode.{width,height}` 当不可压缩边界框排布。所以你喂给 ELK 的尺寸**必须与真实渲染一致**，否则节点重叠或留异常间隙。这正是 `calcWidthHeight` 的带名常量（`FIELD_ROW_H=41`/`CARD_DS_H=38`/`DESC_ROW_H=22`/`IMAGE_H=200`…）精度的意义，也是 measured vs 声明权衡的根源。魔数已常量化、并有 dev-only height drift 护栏兜底；仅当护栏显示系统性漂移才考虑 measured 重排（见 [3.1 Big Rock 6](#big-rock-6calcwidthheight-measured-重排仅护栏持续报警才上)）。
+> **关键教学点**：ELK（elkjs）**不会去测 DOM**，它把 `ElkNode.{width,height}` 当不可压缩边界框排布。所以你喂给 ELK 的尺寸**必须与真实渲染一致**，否则节点重叠或留异常间隙。这正是 `calcWidthHeight` 的带名常量（`FIELD_ROW_H=41`/`CARD_DS_H=38`/`DESC_ROW_H=22`/`IMAGE_H=200`…）精度的意义，也是 measured vs 声明权衡的根源。魔数已常量化、并有 dev-only height drift 护栏兜底；仅当护栏显示系统性漂移才考虑 measured 重排（见 [第四部分 优化点 3](#优化点-3-calcwidthheight-measured-重排仅护栏持续报警才上)）。
 >
 > **已知坑**（v12）：custom node 把 `width/height` 设为 0 会让 `measured` 永不赋值、`useNodesInitialized()` 永远 false（[issue #5215](https://github.com/xyflow/xyflow/issues/5215)）。
 
@@ -272,7 +279,7 @@ function nodeToLayoutChild(node, id2RectMap): ElkNode {
 // layoutAsync.ts —— 模块级单例 ELK，workerUrl 模式跑在 Web Worker
 const elk = new ELK({ workerUrl: elkWorkerUrl });
 
-// layoutAsync.ts —— 异步布局：失败一律 throw LayoutError（绝不 resolve undefined），透传 AbortSignal
+// 异步布局：失败一律 throw LayoutError（绝不 resolve undefined），透传 AbortSignal
 if (signal?.aborted) throw new LayoutError('aborted', '...');
 const { children } = await elk.layout(graph);
 if (signal?.aborted) throw new LayoutError('aborted', '...');
@@ -283,9 +290,14 @@ return id2RectMap;
 ```
 
 ```ts
-// useEntityToGraph.ts —— React Query 缓存布局结果；queryKey 只含布局相关字段，透传 ctx.signal
+// useEntityToGraph.ts —— React Query 缓存布局结果；queryKey 含布局 + 拓扑输入，透传 ctx.signal
+const layoutKeys = pickLayoutKeys(nodeShowSetting);            // nodeShow 布局字段（算法/间距/尺寸/拓扑过滤）
+const topologyKeys = { maxImpl, refIn, refOutDepth, maxNode,   // 拓扑 setting（影响 entityMap 节点集合）
+                       recordRefIn, recordRefInShowLinkMaxNode, recordRefOutDepth, recordMaxNode, tauriConf };
+const queryKey = isEdited ? ['layout', pathname, 'e', layoutKeys, topologyKeys]
+                          : ['layout', pathname, layoutKeys, topologyKeys];
 const { data: id2RectMap, error: layoutError } = useQuery({
-  queryKey: ['layout', pathname, isEdited ? 'e' : '', pickLayoutKeys(nodeShowSetting)],
+  queryKey,
   queryFn: (ctx) => layoutAsync(nodes, edges, strategy, nodeShowSetting, ctx.signal),
   staleTime: isEdited ? 0 : 1000 * 60 * 5,   // 编辑态每次重取，浏览态 5min
 });
@@ -293,12 +305,12 @@ const { data: id2RectMap, error: layoutError } = useQuery({
 
 **三个教学子概念**：
 
-1. **内容寻址缓存**：queryKey 是 queryFn 输入的"指纹"——凡影响 ELK 输出的变量都必须进 key。本项目 queryKey 收窄到 `pickLayoutKeys(nodeShowSetting)`（算法/间距/节点尺寸/拓扑过滤字段），**纯颜色字段不进 key**——故改主题色命中缓存、不重跑 ELK。`setNodeShow` 也仅在布局相关字段变化时才 `clearLayoutCache`。仍漏进 key 的是**拓扑相关 store setting**（`maxImpl`/`refDepth`/…），靠各自 setter 手动 `clearLayoutCache` 同步——这是"声明式依赖退化成命令式失效"，见 [3.1 Big Rock 4](#big-rock-4storets-querykey-纳入拓扑-settingp4)。
+1. **内容寻址缓存**（Query Key Factory）：queryKey 是 queryFn 输入的"指纹"——凡影响 ELK 输出的变量都进 key。本项目 queryKey 含两块：`pickLayoutKeys(nodeShow)`（nodeShow 布局字段）+ `topologyKeys`（影响节点集合的拓扑 setting）。改它们 → queryKey 变 → 缓存自然失效重布局；**纯颜色字段不进 key** → 改主题色命中缓存不重跑 ELK。store setter 因此**不再手动清 layout 缓存**——"改 setting 要不要清缓存"的判断消失，store 重新变纯状态容器。
 
 2. **`removeQueries` vs `invalidateQueries`**（本项目用得很精妙）：
    - `invalidate`：对 active query 立即 refetch，但**重渲前的旧闭包会算出旧布局**。
    - `removeQueries`：物理删 entry，等重渲用**新闭包**重取。
-   - 本项目 `Record.tsx:87` `onStructureChange` 用 `removeQueries(['layout', pathname, 'e'])` 只清编辑态缓存——这是对的。任何 queryKey 重构都必须保留这个 prefix 语义（`'e'` 标记保持在 `pathname` 之后同一层级）。
+   - 本项目 `Record.tsx` `onStructureChange` 用 `removeQueries(['layout', pathname, 'e'])` 只清编辑态缓存——这是对的。任何 queryKey 重构都必须保留这个 prefix 语义（`'e'` 标记保持在 `pathname` 之后同一层级）。
 
 3. **竞态与失败的正确处置**：react-query v5 给每个 queryFn 注入 `AbortSignal`，query 变 stale/inactive 时自动 abort。`layoutAsync` 透传 signal 并在 `elk.layout` 前后校验 `aborted`；失败一律 `throw LayoutError`——`undefined` 是 react-query 的非法缓存值（会 `isSuccess=true` 但 `data=undefined` 打破下游守卫），throw 才能进 retry/error 通道。下游解构 `error`，error 态兜底 `setNodes(未布局节点)` 保证画布非空。
 
@@ -321,13 +333,13 @@ const { data: id2RectMap, error: layoutError } = useQuery({
 - `useMemo` 稳定 value
 - **外部 store + selector**（resso / zustand 的 `useSyncExternalStore` 路线）
 
-**对本项目的含义**：`nodeShow` 变更本来就会 `clearLayoutCache` → ELK 重算所有节点位置 → 全部节点重渲（**这是正确行为**，颜色/宽度变了本就该全刷）。唯一"本可避免却没避免"的是 `query` 变更（`setQuery` 故意不清 layout 缓存，见 `store.ts:272-277`），但那要靠 selector store 才能兑现，**Context 兑现不了**。
+**对本项目的含义**：nodeShow 布局字段变更 → queryKey 变 → 缓存失效 → ELK 重算所有节点位置 → 全部节点重渲（**这是正确行为**，颜色/宽度变了本就该全刷）。`query` 变更走的是另一条路：`FlowNode`/`EntityProperties`/`EntityCard` 各自 `useMyStore()` 订阅 query（resso per-key selector），query 变只重渲这些高亮组件、不触发重布局——这正是「外部 store + selector」路线能兑现、Context 兑现不了的选择性重渲。
 
-> 所以 [3.1 Big Rock 1](#big-rock-1nodeshow-下发去- entitysharedsetting-mutate) 推 nodeShow 下发时，**理由是"契约洁净 + 解 domain 耦合"，不是"性能"**。不要承诺减重渲。
+> 所以 nodeShow 经 node.data 下发（而非子组件各自 `useContext`）的理由是"**契约洁净 + 保留 per-graph override + 解 domain 耦合**"，不是"Context 性能差"。不要承诺减重渲——nodeShow 变更本就该全图刷新。
 
 ---
 
-## 第二部分 · 本项目架构现状巡礼
+## 第二部分 · 架构现状
 
 ### 2.1 渲染层
 
@@ -337,46 +349,50 @@ const { data: id2RectMap, error: layoutError } = useQuery({
 - `EntityForm`（editable 表单，antd Form + 一组 memo 子组件）
 - `EntityCard`（card 卡片，带图片/描述）
 
+FlowNode 从 `nodeProps.data` 读 `entity`/`nodeShow`/`notes`，把 `nodeShow` 作为 prop 下发子组件（`EntityProperties`/`EntityForm`/`EntityCard` 形参是 `nodeShow?`）。`query` 不经 node.data 下发——它无 per-graph override，渲染组件各自 `useMyStore()` per-key 订阅。
+
 **note 有两套并行的持久化通道**（有意设计，非重复）：
 - readonly/card note → React Query `['notes']` + `updateNote` 网络 API（`NoteShowOrEdit.tsx`）
 - editable note → `EditingSession.updateNote` 就地改 `editingObject.$note`（不走网络，提交时一并上报）
 
-**右键菜单**用 xyflow v12 标准事件 `onNodeContextMenu`/`onPaneContextMenu`/`onNodeDoubleClick`（`FlowGraph.tsx:33-53,87-92`），菜单自绘为 antd `Menu` + `position:fixed` 定位。是推荐做法。
+**右键菜单**用 xyflow v12 标准事件 `onNodeContextMenu`/`onPaneContextMenu`/`onNodeDoubleClick`（`FlowGraph.tsx`），菜单自绘为 antd `Menu` + `position:fixed` 定位。是推荐做法。
 
 ### 2.2 样式与尺寸层
 
 三层样式注入：
-1. **配色**（`colors.ts`）：纯函数，按"值 → 标签 → 实体类型"三级优先级返回节点背景色，默认色集中在 `NODE_SHOW_DEFAULTS` 常量对象（与 antd token 刻意解耦）；`getNodeBackgroundColor(entity, nodeShow?)` 显式收 nodeShow 入参（避免 FlowNode memo stale）。
-2. **尺寸**（`calcWidthHeight.ts`）：纯估算函数，带名常量（`FIELD_ROW_H`/`CARD_DS_H`/`DESC_ROW_H` 等）预先算 `width/height`，喂给 ELK；节点宽度走 `dimensions.ts` 的 `getNodeWidth`（240/280 单一来源）。dev-only `HeightDriftGuard` 子组件读 `measured.height` 对账估算漂移。
-3. **CSS 变量**（`FlowStyleManager.tsx`）：只在 `documentElement` 上设一个 `--edge-stroke-width`（配合 `style.css` 的 `svg .react-flow__edge-path`）；其余 nodeWidth/editNodeWidth 那两行被注释掉了——**名不副实**，几乎是空壳。
+1. **配色**（`colors.ts`）：纯函数，按"值 → 标签 → 实体类型"三级优先级返回节点背景色，默认色集中在 `NODE_SHOW_DEFAULTS` 常量对象（与 antd token 刻意解耦）；`getNodeBackgroundColor(entity, nodeShow?)` 显式收 nodeShow 入参（让调用方把 nodeShow 放进 useMemo deps，避免 FlowNode memo stale）。
+2. **尺寸**（`calcWidthHeight.ts`）：纯估算函数 `calcWidthHeight(entity, nodeShow?, notes?)`，带名常量（`FIELD_ROW_H`/`CARD_DS_H`/`DESC_ROW_H` 等）预先算 `width/height` 喂给 ELK；节点宽度走 `dimensions.ts` 的 `getNodeWidth(entity, nodeShow?)`（240/280 单一来源）。dev-only `HeightDriftGuard` 子组件读 `measured.height` 对账估算漂移。
+3. **CSS 变量**（`FlowStyleManager.tsx`）：在 `CfgEditorApp` 顶层**挂单实例**（非每个 FlowGraph），只在 `documentElement` 上设一个 `--edge-stroke-width`（配合 `style.css` 的 `svg .react-flow__edge-path`）；cleanup 不 `removeProperty`——CSS 变量全局唯一，app 生命周期内常驻。
 
 `colors` / `calcWidthHeight` / `getDsLenAndDesc` / `simpleStrRowCount` / `dimensions` 均有纯函数测试（CLAUDE.md 约定只测纯逻辑）。
 
-### 2.3 集成层
+### 2.3 集成层与缓存失效契约
 
 4 个 route（`Table`/`TableRef`/`Record`/`RecordRef`）+ 1 个 dragPanel 固定页消费者，都调同一个 `useEntityToGraph` 把 entityMap 推进 xyflow store。每个 route 都 `return null`——它们是"副作用型图形控制器"，真正的画布 `<FlowGraph>` 是它们在 `CfgEditorApp.tsx` 里的兄弟/父节点。
 
-**配置回流**：`NodeShowSetting`/`FlowVisualizationSetting` 调 `setNodeShow` 写 `store.nodeShow`，**仅当布局相关字段（`NODESHOW_LAYOUT_KEYS`：算法/间距/尺寸/拓扑过滤）变化时**才 `clearLayoutCache()`（全局 `removeQueries(['layout'])`）；纯颜色变更不清缓存。`useEntityToGraph` 把 nodeShow 放进 useMemo 依赖（触发节点重转换）和 layout queryKey（`pickLayoutKeys` 收窄——纯颜色不进 key，故不重布局）。
+**配置回流**：`NodeShowSetting`/`FlowVisualizationSetting` 调 `setNodeShow` 写 `store.nodeShow`。`useEntityToGraph` 把 nodeShow 经 `convertNodeAndEdges` 写进每个 `node.data`（触发节点重转换），并放进 layout queryKey（`pickLayoutKeys` 收窄——纯颜色不进 key，故不重布局）。
+
+**layout 缓存失效全靠 queryKey 自反映**（Query Key Factory），store setter 不再手动清缓存：
+- `pickLayoutKeys(nodeShow)`：nodeShow 布局字段（算法/间距/尺寸/拓扑过滤）。
+- `topologyKeys`：影响 entityMap 节点集合的 store setting（`maxImpl`/`refIn`/`refOutDepth`/`maxNode`/`recordRefIn`/`recordRefInShowLinkMaxNode`/`recordRefOutDepth`/`recordMaxNode`/`tauriConf`）。
+- 改任一块 → queryKey 变 → 缓存自然失效重布局；改纯颜色/query（不进 key）→ 命中缓存不重跑 ELK。
+
+前提：各 route 的 entityMap useMemo 依赖都包含自身用到的拓扑 setting（Table:`maxImpl`；TableRef:`refIn`/`refOutDepth`/`maxNode`；Record:`tauriConf`；RecordRef:`recordRefInShowLinkMaxNode`/`tauriConf` + recordRef* 经 recordRefResult 流入），所以拓扑变更时 entityMap 重算 + queryKey 变 + 重布局，链路自洽。
 
 ### 2.4 数据模型与 store 边界
 
-- `domain/entityModel.ts`：`Entity` 判别联合 + `EntityGraph` + `EntitySharedSetting`；并把编辑态↔视图契约 `EFitView`/`EditingObjectRes` 也放在 domain（消除 `flow → routes` 的反向依赖，是正确的"共享内核"）。
-- `store.ts`：用 vendored 的 `resso`（基于 `useSyncExternalStore`）做全局 `StoreState`，所有 setter 走"整体赋新对象 + `setPref` 持久化"模式。
-- **关键边界**：`resso` store 与 xyflow 内部 store 是**两套独立的 `useSyncExternalStore` 实例**。`store.ts` 的 `StoreState` 里**没有** `setNodes`/`setEdges`/`panZoom`——那些是 xyflow 内部 store 的字段，`useEntityToGraph` 通过 `useReactFlow()` 取命令面（`setNodes`/`setEdges`/`setViewport`/`getViewport`/`fitView`），仅留一个 `useStore(s=>s.panZoom!==null)` 只读切片作 viewport 就绪信号。
-- `services/editingSession.ts`：每会话可变 store（`useSyncExternalStore` 订阅 `structureVersion`），产出 `EditingObjectRes` 喂给 flow 的 layout queryKey 与 viewport 决策。**这是 2026-07 由"方案 C"根治的成熟设计**——值类编辑不 bump（零重渲契约）、结构类编辑 bump，`editingObject` 就地变异是有意设计，**勿改**（详见 memory 与 [3.0 勿动 A4](#a4record-entitymap-的-12-项-usememo-依赖折叠时全量重建)）。
+- `domain/entityModel.ts`：`Entity` 判别联合（ReadOnly/Editable/Card）；`EFitView`/`EditingObjectRes`（编辑态↔视图契约）放 domain，消除 `flow → routes` 的反向依赖（正确的"共享内核"）。**Entity 不携带任何 UI 配置**——`nodeShow`/`notes` 是呈现层数据，经 ReactFlow `node.data` 下发（见 §2.1/2.3）。
+- `store.ts`：vendored `resso`（基于 `useSyncExternalStore`）做全局 `StoreState`。**resso 是 per-key 订阅**（Proxy 上每个属性各自 `useSyncExternalStore`），`const {a,b} = useMyStore()` 只订阅 a/b 两个 key、各自独立触发。所有 setter 走 `setPref` 持久化；layout 缓存失效全靠 queryKey，setter 不手动清缓存。
+- **关键边界**：resso store 与 xyflow 内部 store 是**两套独立的 `useSyncExternalStore` 实例**。`StoreState` 里**没有** `setNodes`/`setEdges`/`panZoom`——那些是 xyflow 内部 store 的字段，`useEntityToGraph` 通过 `useReactFlow()` 取命令面，仅留一个 `useStore(s=>s.panZoom!==null)` 只读切片作 viewport 就绪信号。
+- `services/editingSession.ts`：每会话可变 store（`useSyncExternalStore` 订阅 `structureVersion`），产出 `EditingObjectRes` 喂给 flow 的 layout queryKey 与 viewport 决策。方案 C 设计：值类编辑不 bump（零重渲契约）、结构类编辑 bump，`editingObject` 就地变异是有意设计，**勿改**（见 [第三部分 A4](#a4-record-entitymap-全量重建--折叠改拓扑有意设计)）。
 
 **测试覆盖**：`fillHandles`/`convertNodeAndEdges`/`colors`/`calcWidthHeight`/`getDsLenAndDesc`/`simpleStrRowCount`/`dimensions`/`viewportMath`/`layoutAsync`(vi.mock ELK)/`nodeShowLayoutKeys`/`entityPredicates`/`Folds`/`editingSession.getEditingObjectRes` 均有纯函数测试；flow 层的 effect 本身（命令式推 nodes/viewport）不测（CLAUDE.md 约定 vitest 只测纯逻辑，effect 行为靠手测）。
 
 ---
 
-## 第三部分 · 重构机会
+## 第三部分 · 现状澄清（看起来像问题、实则勿动）
 
-> 本部分只剩两类内容：[3.0 勿动清单](#30-先读我这些看起来像问题的请勿动)（曾疑为缺陷、核实后确认勿动的"伪问题"）与 [3.1 P3+ 架构级 big rocks](#31-p3--架构级-big-rocks)（需独立 PR 的根治项）。
-> 每条 big rock 统一格式：**现状**(file:line) / **问题** / **改法**(代码) / **风险**。
-
-### 3.0 先读我：这些"看起来像问题"的，请勿动
-
-> 这 6 条都曾被怀疑为缺陷，深入核实后确认是**合理设计或诊断错误**。重构时若遇到，**不要动**；其中几条与 memory 记录的"方案 C 根治"一致。误改会引入真实回归。
+> 这 6 条都曾被怀疑为缺陷，深入核实后确认是**合理设计或诊断错误**。重构时若遇到，**不要动**；误改会引入真实回归。
 
 #### A1. 4 个 route "复制"useEntityToGraph 骨架 → 夸大
 
@@ -387,35 +403,35 @@ const { data: id2RectMap, error: layoutError } = useQuery({
 - `Record` 传 `editingObjectRes` 并按 `isEditing` 切 `type`；
 - `RecordRef` 传 `setFitViewForPathname`/`nodeShow`/`nodeDoubleClickFunc`。
 
-entityMap 构造各用完全不同的 creator（`TableEntityCreator` / `includeRefTables` / `RecordEntityCreator`|`RecordEditEntityCreator` / `createRefEntities`），菜单逻辑也完全不同。`Record.tsx` 还有 ~180 行额外逻辑（useMutation、EditingSession、folds、structureVersion、3 个 useEffect），与 `Table`/`TableRef` 的 ~50 行天差地别，**绝非同构**。`fillHandles` 确为 4 处必调的约定（`entityToNodeAndEdge.ts:26`，纯 mutate 设 handleIn/handleOut，不依赖 route 信息），但这只是 4 处共用的一个调用约定，不构成"抽公共 hook"的理由。
+entityMap 构造各用完全不同的 creator（`TableEntityCreator` / `includeRefTables` / `RecordEntityCreator`|`RecordEditEntityCreator` / `createRefEntities`），菜单逻辑也完全不同。`Record.tsx` 还有 ~180 行额外逻辑（useMutation、EditingSession、folds、structureVersion、3 个 useEffect），与 `Table`/`TableRef` 的 ~50 行天差地别，**绝非同构**。`fillHandles` 确为 4 处必调的约定（纯 mutate 设 handleIn/handleOut，不依赖 route 信息），但这只是 4 处共用的一个调用约定，不构成"抽公共 hook"的理由。
 
 > **结论**：不需要抽公共 `useFlowPage` 工厂。重复量未到 DRY 阈值，强抽会增加间接层。
 
 #### A2. nodeShow 固定页"陈旧快照" → 有意的 per-graph override
 
-`useEntityToGraph.ts:91` `nodeShowSetting = nodeShow ?? currentNodeShow`；`makeFixedPage`（`store.ts:394-405`）**有意冻结整套视图参数**（`recordRefIn`/`refOutDepth`/`maxNode`/`nodeShow` 4 项），让固定页保留创建时的配置快照，与主图当前配置解耦。
+`useEntityToGraph` 里 `nodeShowSetting = nodeShow ?? currentNodeShow`；`makeFixedPage`（`store.ts`）**有意冻结整套视图参数**（`recordRefIn`/`refOutDepth`/`maxNode`/`nodeShow` 4 项），让固定页保留创建时的配置快照，与主图当前配置解耦。
 
-主图（`RecordRefRoute.tsx:210`）读全局 `useMyStore().nodeShow`；固定页（`CfgEditorApp.tsx:136/148`）读 `fix.nodeShow` 快照；同屏不一致是**有意设计**——用户期望"我钉住的引用图保持当初的样子"。
+主图（`RecordRef.tsx`）读全局 `useMyStore().nodeShow`；固定页（`CfgEditorApp.tsx`）读 `fix.nodeShow` 快照；同屏不一致是**有意设计**——用户期望"我钉住的引用图保持当初的样子"。
 
-> **结论**：不是 bug。任何 nodeShow 下发重构（[big rock 1](#big-rock-1nodeshow-下发去- entitysharedsetting-mutate)）都**必须保留这个 per-graph override**，子组件**绝不能**直接 `useMyStore().nodeShow`，否则 FixedPage 配置失效。
+> **结论**：不是 bug。nodeShow 全程经 `nodeProps.data` 下发（`convertNodeAndEdges` 写入 node.data），子组件**绝不能**直接 `useMyStore().nodeShow`（当前架构已如此），否则 FixedPage 配置失效。
 
 #### A3. Table/TableRef 的 `getDefaultIdInTable` useCallback 重复 → 只两处，非项目级
 
-`Table.tsx:23-24` 与 `TableRef.tsx:29-30` 确实逐字相同（`useCallback((tableName) => getDefaultIdInTable(schema, tableName, curId), [schema, curId])`），但**仅此两处兄弟 route**，`Record.tsx` 不用此模式，不是项目级约定。被调函数 `getDefaultIdInTable` 已在 `schema.test.ts` 单测。
+`Table.tsx` 与 `TableRef.tsx` 确实逐字相同（`useCallback((tableName) => getDefaultIdInTable(schema, tableName, curId), [schema, curId])`），但**仅此两处兄弟 route**，`Record.tsx` 不用此模式，不是项目级约定。被调函数 `getDefaultIdInTable` 已在 `schema.test.ts` 单测。
 
 > **结论**：可顺带提取，但**不建议单独开 PR**，价值低。
 
-#### A4. Record entityMap 的 12 项 useMemo 依赖、折叠时全量重建 → 折叠改拓扑，是有意设计
+#### A4. Record entityMap 全量重建、折叠时重建 → 折叠改拓扑，有意设计
 
-`Record.tsx:129-130` 的 useMemo deps 实测为 12 项：`[isEditing, curId, schema, recordResult, tauriConf, resourceDir, resMap, curTable, folds, setFolds, session, structureVersion]`。fold 触发时 `recordEditEntityCreator.ts:136-138/208-210` 折叠分支直接 `continue` **不创建子 entity**——子节点不存在于 entityMap 而非 hidden，这是**改拓扑**，必须重建 entityMap + 重布局。
+Record 的 useMemo deps 实测为 12 项：`[isEditing, curId, schema, recordResult, tauriConf, resourceDir, resMap, curTable, folds, setFolds, session, structureVersion]`。fold 触发时 `recordEditEntityCreator.ts` 折叠分支直接 `continue` **不创建子 entity**——子节点不存在于 entityMap 而非 hidden，这是**改拓扑**，必须重建 entityMap + 重布局。
 
-`folds`（本地 React state）与 `obj.$fold`（提交载荷）**双存储是有意设计**（`recordEditEntityCreator.ts:628-637` `getFoldState`：本地 Folds 优先、`obj.$fold` 兜底），提供"本地覆盖持久化 fold"语义。
+`folds`（本地 React state）与 `obj.$fold`（提交载荷）**双存储是有意设计**（`recordEditEntityCreator.ts` `getFoldState`：本地 Folds 优先、`obj.$fold` 兜底），提供"本地覆盖持久化 fold"语义。
 
-> **结论**：折叠全量重建是正确的。这与 memory 记录的 [EditingSession 方案 C 根治] 一致——**editingObject 就地变异是有意设计，勿改 reducer**。
+> **结论**：折叠全量重建是正确的。这与 `editingSession` 的方案 C 设计一致——**editingObject 就地变异是有意设计，勿改 reducer**。
 
 #### A5. EFitView/EditingObjectRes 下沉 domain 是依赖方向反了 → 错诊
 
-`entityModel.ts:372-387` 注释明说"消除 `flow/useEntityToGraph → routes/record/editingObject` 的反向依赖"。真正生产 `EditingObjectRes` 的是 `services/editingSession.ts`（`EditingSession` 持有 `fitView`/`fitViewToIdPosition`，`structureChange()` 在结构编辑时 set `FitId`+position），消费方是 `flow/useEntityToGraph.ts:132-156`。把契约类型放 domain，让 flow 与 routes/services 都依赖 domain 而非互相依赖，是**正确的"共享内核"式依赖反转**。`.oxlintrc.json` 的边界规则（`src/flow/**` 禁 import `@/routes/**`；`src/services/**` 禁 import `@/flow/**`）也确认 `routes→flow` 是允许的既定方向。
+`entityModel.ts` 注释明说"消除 `flow/useEntityToGraph → routes/record/editingObject` 的反向依赖"。真正生产 `EditingObjectRes` 的是 `services/editingSession.ts`（`EditingSession` 持有 `fitView`/`fitViewToIdPosition`，`structureChange()` 在结构编辑时 set `FitId`+position），消费方是 `flow/useEntityToGraph.ts`。把契约类型放 domain，让 flow 与 routes/services 都依赖 domain 而非互相依赖，是**正确的"共享内核"式依赖反转**。`.oxlintrc.json` 的边界规则（`src/flow/**` 禁 import `@/routes/**`；`src/services/**` 禁 import `@/flow/**`）也确认 `routes→flow` 是允许的既定方向。
 
 > **结论**：依赖方向正确，勿动。教学启示：依赖反转的目标层应是中性契约，`EFitView` 名字虽带视图语义，但作为"编辑态↔视图"的共享契约放 domain 合理。
 
@@ -429,70 +445,31 @@ entityMap 构造各用完全不同的 creator（`TableEntityCreator` / `includeR
 
 3. **手算 viewport 不能简单替换**：FitFull 已用 `fitView`，但 FitId 分支的"relayout 后锚点屏幕坐标不变"方程 fitView **做不到**，必须自算（已抽到 `viewportMath.computeStableViewport`，不变量有测试）。
 
-4. **FlowGraph.tsx:85 的 `// fitView` 注释悬空**——确实是死注释，可清理，但不是 bug。
+4. **`FlowGraph.tsx` 的 `// fitView` 注释悬空**——确实是死注释，可清理，但不是 bug。
 
-> **结论**：effect 本身不是问题。命令面已收口到 `useReactFlow`、FitFull 已 `fitView` 化、FitId 数学已抽纯函数（`panZoom` 仅留 null 判断作就绪信号）——这些都是稳定性/可读性改进，不是修 bug。
-
----
-
-### 3.1 P3+ — 架构级 big rocks
-
-> 需独立 PR，遵守依赖顺序。详见 [第四部分](#第四部分--路线图与依赖)。
-
-#### Big Rock 1. nodeShow 下发，去 entity.sharedSetting mutate（B + C + F 的共同根因）
-
-> ✅ **已落地（2026-07，轻档）**：`nodeShow/notes` 下发到 ReactFlow node.data（`EntityNodeData = {entity, nodeShow?, notes?}`），`FlowNode` 读 `nodeProps.data.{nodeShow,notes}`；`convertNodeAndEdges` 删 mutate，`EntityBase.sharedSetting`/`EntitySharedSetting`/`EntityGraph` 一并移除（domain 解耦）。`calcWidthHeight(entity, nodeShow?, notes?)`、`getNodeWidth(entity, nodeShow?)` 收显式入参（`layoutAsync.nodeToLayoutChild` 从 node.data 取值，保住布局路径的 note 高度估算）。`query` 走 `useMyStore()`（resso per-key 订阅，零多余重渲）。**FixedPage per-graph override 保留**（nodeShow 全程经 node.data 下发，子组件不直接读 store.nodeShow）。重档（SharedSettingContext）未做——轻档已达成「契约洁净 + 解 domain 耦合」目标。
-
-**现状**：`EntityBase.sharedSetting`（`entityModel.ts:286`）让 domain Entity 携带 `NodeShowType`（UI 配置）——domain↔presentation 耦合。`useEntityToGraph` 构造一次 `sharedSetting`，`entityToNodeAndEdge.ts:70` 在循环里把**同一引用盖章**到每个 entity（mutate 入参）。渲染层遍布 `entity.sharedSetting?.nodeShow?.xxx` 两层可选链（`FlowNode`/`EntityProperties`/`EntityForm`/`EntityCard`/`colors`）。而 `nodeShow`/`query` 本就在 resso store——等于 `store → entity.sharedSetting → prop → ?. ` 一圈空转。
-
-这是多条 finding 的共同根因：B（convertNodeAndEdges 副作用 mutate）、C（memo 纪律）、F（nodeShow 透传）。其中 **color stale 已止血**（`getNodeBackgroundColor` 显式收 `nodeShow` 入参 + `FlowNode` 的 color memo deps 含 `nodeShow`），但 **mutate 根因仍在**——本 big rock 是根治。
-
-**改法**（分两档）：
-
-- **轻档（推荐先做，零结构风险）**：把解析后的 nodeShow 切片直接放进 ReactFlow node 的 `data`，`FlowNode` 读 `nodeProps.data.nodeShow`（解析好的、含 per-graph override）而非 `entity.sharedSetting?.nodeShow?.`。子组件形参从 `sharedSetting?` 改 `nodeShow?`。（`colors.ts` `getNodeBackgroundColor(entity, nodeShow)` 签名已改好。）`query` 可直接 `useMyStore()` 读（无 per-graph override，`setQuery` 明确不进 layout）。
-- **重档（可选根治）**：新增 `SharedSettingContext`，**Provider 必须放在 `ReactFlowProvider` 内、`<ReactFlow>` 之前把 ReactFlow 一起包住**（⚠️ 现 `FlowGraphContext.tsx:100-102` 只包 `{children}` 不包 ReactFlow，FlowNode 读不到）。`value` 要 `useMemo` 稳定引用。
-
-**无论哪档**：删 `entityToNodeAndEdge.ts:70` 的 mutate，entity 保持不可变 memo-safe；同步改 `entityToNodeAndEdge.test.ts` 的"回写实体"断言。
-
-> ⚠️ **关键陷阱**：(1) 子组件**绝不能**直接 `useMyStore().nodeShow`，否则破坏 FixedPage per-graph override（[A2](#a2-nodeshow-固定页陈旧快照--有意的-per-graph-override)）。(2) **不要承诺减重渲**——nodeShow 变更本就该全图刷新（[§10](#10-context-不能优化重渲关键误解澄清)）；性能增益只在 `query` 变更，且需 selector store 才能兑现，Context 兑现不了。
+> **结论**：effect 本身不是问题。命令面收口到 `useReactFlow`、FitFull 走 `fitView`、FitId 数学抽纯函数（`panZoom` 仅留 null 判断作就绪信号）——这些都是稳定性/可读性改进，不是修 bug。
 
 ---
 
-#### Big Rock 2. FlowStyleManager 提升 + 全局 CSS 变量竞争根治
+## 第四部分 · 待优化点
 
-**现状**：`FlowStyleManager` 在**每个 `<FlowGraph>` 实例**里挂载（`FlowGraph.tsx:77`），`useEffect` 在 `documentElement` 上设 `--edge-stroke-width`，cleanup 里 `removeProperty`。当多实例并存（`CfgEditorApp` 主区 + 侧面板），一个实例 unmount 的 cleanup 会 `removeProperty` 把另一个实例仍在用的变量抹掉 → 右画布失样式。
+> 每条统一格式：**现状问题**(file/symbol) / **优化方向**(代码) / **风险**。
 
-**改法**：`FlowStyleManager` 从每个 `FlowGraph` 实例提升到 `CfgEditorApp` 顶层**只挂一次**（CSS 变量本就该全局唯一），cleanup **不再 `removeProperty`**。
+### 优化点 1. ActiveMediaPlayerContext 替代 document.querySelectorAll
 
-**风险**：低。需确认多画布共享同一 `--edge-stroke-width` 是预期（当前 `nodeShow` 全局唯一，是）。
+**现状问题**（`ResPopover.tsx` `VideoAudioSyncer.onPlay`）：用 `document.querySelectorAll("video")`/`"audio"` 全局暂停其他播放器，副作用逃逸出 React 子树。⚠️ `onPause` 用的是 `ref.current.querySelectorAll("audio")`，作用域限本组件，**无问题，勿混改**。
 
----
-
-#### Big Rock 3. ActiveMediaPlayerContext 替代 document.querySelectorAll
-
-**现状**（`ResPopover.tsx:50-58`）：`VideoAudioSyncer.onPlay` 用 `document.querySelectorAll("video")`/`"audio"` 全局暂停其他播放器，副作用逃逸出 React 子树。⚠️ **纠正误判**：`onPause`（`:71-82`）用的是 `ref.current.querySelectorAll("audio")`，作用域限本组件，**无问题，勿混改**。
-
-**改法**：轻档给 `Popover` 加 `destroyTooltipOnHide`（video 随子树卸载）；重档引入 `ActiveMediaPlayerContext`（`register`/`take` 互斥），Provider 放 `CfgEditorApp` 或 `FlowGraphProvider` 外层。
+**优化方向**：轻档给 `Popover` 加 `destroyTooltipOnHide`（video 随子树卸载）；重档引入 `ActiveMediaPlayerContext`（`register`/`take` 互斥），Provider 放 `CfgEditorApp` 或 `ReactFlowProvider` 外层。
 
 **风险**：中。`onPause` 局部 ref 逻辑保留不动。
 
 ---
 
-#### Big Rock 4. store.ts queryKey 纳入拓扑 setting（P4）
+### 优化点 2. 菜单变 ReactFlow props，删 FlowGraphContext（可选）
 
-**现状**（`store.ts:260-270`）：混入 `clearLayoutCache`/`invalidateAllQueries` 命令式 cache 操作，11 处 setter 调 `clearLayoutCache`；`setQuery:272-277` 用特意注释解释"为何不加"，说明模式已脆弱（开发者每次加 setting 要记得该不该加）。
+**现状问题**：`useEntityToGraph.ts` 把"注册菜单回调"+"推 nodes/edges"+"算 viewport"三件不相关的事塞进**同一 useEffect 同一 `if(newNodes)` 守卫**——菜单被布局就绪状态错误门控，初次挂载/路由切换的 layout 拉取期右键无菜单。`FlowGraphContext` 是项目自创的"child→parent 反向注册"模式（xyflow 官方 context-menu 示例是直接把 `onNodeContextMenu` 作为稳定 props 传给 `ReactFlow`）。
 
-**改法**（根治）：把拓扑相关 setting（`maxImpl`/`refDepth`/`maxNode`/`recordRef*`/`tauriConf`）纳入 layout queryKey，setter 只剩 `setPref` 不再 `clearLayoutCache`——让"是否清缓存"问题消失，store 重新变纯状态容器（Query Key Factory 模式）。
-
-**风险**：⚠️ 前置 `P0-3`（layoutAsync throw）已修，undefined 污染不会再暴露；⚠️ `'e'` 标记层级不变以保 `Record.tsx:87` prefix 语义。可选最小方案：先审计去冗余（`setFixedPagesConf` 的 `clearLayoutCache` 嫌疑最大，pageConf 不直接改当前 layout 输入）。
-
----
-
-#### Big Rock 5. 菜单变 ReactFlow props，删 FlowGraphContext（可选）
-
-**现状**：`useEntityToGraph.ts:121-162` 把"注册菜单回调"+"推 nodes/edges"+"算 viewport"三件不相关的事塞进**同一 useEffect 同一 `if(newNodes)` 守卫**——菜单被布局就绪状态错误门控，初次挂载/路由切换的 layout 拉取期右键无菜单。`FlowGraphContext` 是项目自创的"child→parent 反向注册"模式（xyflow 官方 context-menu 示例是直接把 `onNodeContextMenu` 作为稳定 props 传给 `ReactFlow`）。
-
-**改法**：
+**优化方向**：
 - **方案 A（最小修复）**：拆菜单 effect 到独立 + 路由 unmount 清理（cleanup 里 `setNodes([])`/`setEdges([])`）。
 - **方案 B（根治，可选）**：删 `FlowGraphContext` 反向注册，菜单变 `ReactFlow` props（`onNodeContextMenu` 等），各 route 用 `useCallback` 稳定函数直接传。
 
@@ -500,52 +477,13 @@ entityMap 构造各用完全不同的 creator（`TableEntityCreator` / `includeR
 
 ---
 
-#### Big Rock 6. calcWidthHeight measured 重排（仅护栏持续报警才上）
+### 优化点 3. calcWidthHeight measured 重排（仅护栏持续报警才上）
 
-**现状**：作者 `calcWidthHeight.ts:6-7` 已书面弃案（measured 重排导致闪烁与代码绕晕）。魔数已常量化、dev-only `HeightDriftGuard` 护栏已落地（读 `measured.height` 对账估算，偏差 >8px & >5% 按 id 去重 `console.warn`）。
+**现状问题**：`calcWidthHeight.ts` 顶部注释明确放弃 measured 重排（异步等待实测尺寸→闪烁 + 控制流复杂度）。魔数已常量化、dev-only `HeightDriftGuard` 护栏已落地（读 `measured.height` 对账估算，偏差 >8px & >5% 按 id 去重 `console.warn`）。
 
-**改法**：**仅当 dev 护栏显示系统性漂移**（多种实体类型都偏）才考虑 measured 驱动重排，且要走 React Query `staleTime` 缓存避免每次重算。优先调常量不重排。
+**优化方向**：**仅当 dev 护栏显示系统性漂移**（多种实体类型都偏）才考虑 measured 驱动重排，且要走 React Query `staleTime` 缓存避免每次重算。优先调常量不重排。
 
-**风险**：高。与作者已解决的闪烁问题直接冲突。优先级最低。
-
----
-
-## 第四部分 · 路线图与依赖
-
-### 依赖顺序硬约束
-
-```
-Big Rock 1 (nodeShow 下发 + 删 entity.sharedSetting mutate)
-  └─► 同时解决 B + C + F（同根）；color stale 已止血，本 rock 根治 mutate
-
-Big Rock 4 (store queryKey 纳入拓扑 setting)
-  └─► 前置已满足（layoutAsync throw 已修）；'e' 标记层级不变以保 Record.tsx:87 prefix
-
-Big Rock 6 (calcWidthHeight measured 重排)
-  └─► 仅当 dev height drift 护栏（已落地）持续报警才上
-```
-
-### Big Rocks PR 规划（架构级，独立 PR）
-
-| PR | 内容 | 依赖 | 回归面 |
-|---|---|---|---|
-| ✅ BR-1（已完成 2026-07，轻档）| nodeShow 轻档下发（node.data 切片）+ 删 entity.sharedSetting mutate | — | 所有节点渲染、改主题色、FixedPage |
-| BR-4 | FlowStyleManager 提升 + CSS 变量竞争 | — | 多画布并存场景 |
-| BR-5 | ActiveMediaPlayerContext + Popover destroyTooltipOnHide | — | 视频节点播放 |
-| BR-6 | store queryKey 纳入拓扑 setting | — | 所有 setter 的缓存行为 |
-| BR-7（可选）| 菜单变 ReactFlow props，删 FlowGraphContext（方案 A 先行）| — | 右键菜单、路由切换 |
-
-### 验证策略
-
-本项目 vitest **只测纯逻辑不测 UI**（CLAUDE.md 约定），big rock 落地时要么**配纯函数测试**，要么**手测关键路径**：
-
-- BR-1：改主题色 → 节点背景实时刷新；FixedPage 钉住的引用图保持当初配置（per-graph override 不失效）
-- BR-4：多画布并存（Splitter 主区 + 固定页）样式不互相抹掉
-- BR-5：视频节点播放互斥、Popover 关闭后 video/media 停止
-- BR-6：改拓扑相关 setting（`maxImpl`/`refDepth`/…）后布局正确刷新；改非拓扑 setting 不触发重布局
-- BR-7：路由切换 / 初次挂载的 layout 拉取期右键菜单可用
-
-进度追踪建议：把上表做成 issue/milestone，每条标注改动文件、预估行数、是否需手测。
+**风险**：高。与已解决的闪烁问题直接冲突。优先级最低。
 
 ---
 
@@ -555,10 +493,11 @@ Big Rock 6 (calcWidthHeight measured 重排)
 
 | 概念 | 一句话 | 本项目位置 |
 |---|---|---|
-| **ReactFlowProvider** | 建独立图实例（store/viewport/dimensions），hook 绑定最近祖先 | `FlowGraph.tsx:76`；`CfgEditorApp.tsx` 多实例 |
-| **nodeTypes + 自定义节点** | `{[type]: Component}` 注册分派，必须定义在组件外 | `FlowGraph.tsx:14-16` |
-| **NodeProps\<TData\>** | 节点 props，泛型强类型 data；引用常变是 memo 议题根因 | `FlowNode.tsx:43` |
-| **Handle / Position / nodrag** | 连接桩；`className='nodrag'` 禁拖拽 | `FlowNode.tsx:238-239`；`EntityForm` 全程 `nodrag` |
+| **ReactFlowProvider** | 建独立图实例（store/viewport/dimensions），hook 绑定最近祖先 | `FlowGraph.tsx`；`CfgEditorApp.tsx` 多实例 |
+| **nodeTypes + 自定义节点** | `{[type]: Component}` 注册分派，必须定义在组件外 | `FlowGraph.tsx` |
+| **NodeProps\<TData\>** | 节点 props，泛型强类型 data；引用常变是 memo 议题根因 | `FlowNode.tsx` |
+| **node.data 下发袋** | node.data 承载 entity（domain）+ nodeShow/notes（呈现层）；type 别名满足 `Record<string,unknown>` | `FlowGraph.tsx` `EntityNodeData`；`convertNodeAndEdges` 写入 |
+| **Handle / Position / nodrag** | 连接桩；`className='nodrag'` 禁拖拽 | `FlowNode.tsx`；`EntityForm` 全程 `nodrag` |
 | **受控 vs 非受控** | `nodes` prop + onNodesChange vs `defaultNodes` + 命令式 setNodes | 本项目混用 |
 | **useReactFlow vs useStore** | 公开稳定 instance vs 内部 escape-hatch（panZoom 非公开）| `useEntityToGraph` 命令面走 useReactFlow，仅留 useStore 读 viewport 就绪 |
 | **Viewport 数学** | `screen = world*zoom + t`，线性变换公开契约 | `flow/viewportMath.ts` `computeStableViewport`（+不变量测试）|
@@ -566,15 +505,16 @@ Big Rock 6 (calcWidthHeight measured 重排)
 | **声明 vs measured 尺寸** | `node.width/height`（喂 ELK）vs `node.measured.{w,h}`（实测）| 生产只走声明（`calcWidthHeight.ts`）；dev-only `HeightDriftGuard` 对账 measured |
 | **ElkNode 边界框** | ELK 把 `{w,h}` 当不可压缩框，不测 DOM | `layoutAsync.ts` `nodeToLayoutChild` |
 | **ELK Web Worker + 竞态** | workerUrl 模式不阻塞主线程；失败 throw LayoutError + AbortSignal | `layoutAsync.ts`（+vi.mock 测试）|
-| **React Query 缓存布局** | queryKey 是输入指纹（`pickLayoutKeys` 收窄）；removeQueries vs invalidateQueries 时序 | `useEntityToGraph`；`Record.tsx:87` |
-| **Context 不优化重渲** | useContext value 变重渲所有 consumer，memo 挡不住 | （本项目潜在误区）|
+| **React Query 缓存布局** | queryKey 是输入指纹（`pickLayoutKeys` + `topologyKeys`），store setter 不手动清缓存 | `useEntityToGraph`；`Record.tsx` `onStructureChange` |
+| **resso per-key 订阅** | `useMyStore()` 解构几个 key 只订阅这几个（Proxy 每属性各自 useSyncExternalStore） | `store/resso.ts`；query 经此 selector 读 |
+| **Context 不优化重渲** | useContext value 变重渲所有 consumer，memo 挡不住；选择性重渲靠外部 store + selector | nodeShow 经 node.data 下发；query 经 resso per-key |
 | **defaultEdgeOptions** | ReactFlow prop，统一边 style/type/marker | 本项目未用（潜在改进）|
 | **useNodesInitialized** | "实测就绪"信号；node 尺寸为 0 会永 false | 本项目未用 |
-| **FlowGraphContext 反向注册** | 项目自创：child 把菜单工厂反向注册给 parent | `FlowGraphContext.ts`；`useEntityToGraph.ts:84,123-127` |
-| **useSyncExternalStore** | 外部可变 store 接 React 官方机制 | `resso.ts`；`editingSession.ts:67-87` |
+| **FlowGraphContext 反向注册** | 项目自创：child 把菜单工厂反向注册给 parent（见优化点 2）| `FlowGraphContext.ts`；`useEntityToGraph.ts` |
+| **useSyncExternalStore** | 外部可变 store 接 React 官方机制 | `resso.ts`；`editingSession.ts` |
 | **就地变异 + 共享引用契约** | editingObject 各回调就地改同一对象；值类不 bump 版本 | `editingSession.ts`；**勿改** |
-| **Outlet context** | react-router 父→子传值主干 | `CfgEditorApp.tsx:87-89` |
-| **判别联合 Entity** | ReadOnly\|Editable\|Card，type 字段区分 + 类型守卫 | `entityModel.ts:300-352` |
+| **Outlet context** | react-router 父→子传值主干 | `CfgEditorApp.tsx` |
+| **判别联合 Entity** | ReadOnly\|Editable\|Card，type 字段区分 + 类型守卫；不携带 UI 配置 | `entityModel.ts` |
 
 ---
 
@@ -619,5 +559,4 @@ Big Rock 6 (calcWidthHeight measured 重排)
 
 ---
 
-*本文档由通读 `src/flow` 全部源码 + 多 agent 对每条重构机会做 xyflow v12 文档对齐验证后综合而成。[3.0 勿动清单](#30-先读我这些看起来像问题的请勿动) 是经"读源码确认现状 → 查官方文档对齐惯用法 → 评估风险"三步核实后被否决的"伪问题"，专门列出以防误伤；[3.1 P3+ big rocks](#31-p3--架构级-big-rocks) 是剩余的架构级根治项。*
-
+*本文档只记 `src/flow` 的**现状**与**待优化点**，不记变更历史。[第三部分 现状澄清](#第三部分--现状澄清看起来像问题实则勿动) 是经"读源码确认现状 → 查官方文档对齐惯用法 → 评估风险"三步核实后被否决的"伪问题"，专门列出以防误伤；[第四部分 待优化点](#第四部分--待优化点) 是剩余的架构级优化项。*

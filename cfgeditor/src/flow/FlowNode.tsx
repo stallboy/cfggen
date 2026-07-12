@@ -75,7 +75,7 @@ interface TempNote {
 
 export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>) {
     const entity = nodeProps.data.entity;
-    // nodeShow/notes 是呈现层下发（doc BR1），从 nodeProps.data 读——保留 FixedPage per-graph override；
+    // nodeShow/notes 是呈现层配置，从 nodeProps.data 读——保留 FixedPage per-graph override；
     // query 无 per-graph override，走全局 store（resso per-key 订阅，仅 query 变时重渲）。
     const nodeShow = nodeProps.data.nodeShow;
     const notes = nodeProps.data.notes;

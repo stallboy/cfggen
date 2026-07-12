@@ -8,7 +8,7 @@ import {
 } from '@/test/fixtures'
 
 // calcWidthHeight(entity, nodeShow?, notes?)：nodeShow/notes 由调用方显式传入
-// （doc BR1，不再读 entity.sharedSetting）。
+// （不再读 entity.sharedSetting）。
 
 describe('calcWidthHeight', () => {
     // -----------------------------------------------------------------------

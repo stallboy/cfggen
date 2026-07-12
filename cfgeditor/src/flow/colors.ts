@@ -33,7 +33,7 @@ export const NODE_SHOW_DEFAULTS = {
  *
  * @param entity  实体（取值串/标签/entityType）
  * @param nodeShow 已解析的配色配置（含 per-graph override）。FlowNode 传入 nodeProps.data.nodeShow
- *                 （doc BR1：nodeShow 下发到 node.data，不再盖章到 entity.sharedSetting）。
+ *                 （nodeShow 经 node.data 下发，不再盖章到 entity.sharedSetting）。
  *                 显式入参是为了让调用方把 nodeShow 放进 useMemo deps——否则 entity 引用不变时改主题色会 stale。
  */
 export function getNodeBackgroundColor(entity: Entity, nodeShow?: NodeShowType): string {

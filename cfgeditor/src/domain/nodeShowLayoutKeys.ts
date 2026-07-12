@@ -4,7 +4,7 @@ import type {NodeShowType} from './storageJson'
 // 改这些字段需要重跑 ELK；改其它字段（纯颜色/显示）不应触发重布局。
 //
 // 用途：useEntityToGraph 的 layout queryKey 只 pick 这些字段 —— 颜色变更→queryKey 不变→命中缓存，
-// 不重布局；布局字段变更→queryKey 变→缓存自然失效重布局（doc BR4，store setter 不再 clearLayoutCache）。
+// 不重布局；布局字段变更→queryKey 变→缓存自然失效重布局（store setter 不再 clearLayoutCache）。
 //
 // 分类依据（逐字段核实）：
 //   - *Layout（5 个）：layoutAsync 里 getLayoutStrategy 选的 ELK 算法。

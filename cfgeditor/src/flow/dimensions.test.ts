@@ -34,7 +34,7 @@ describe('getEditNodeWidth', () => {
 })
 
 describe('getNodeWidth', () => {
-    // getNodeWidth(entity, nodeShow?)：nodeShow 由调用方传入（doc BR1，不再读 entity.sharedSetting）。
+    // getNodeWidth(entity, nodeShow?)：nodeShow 由调用方传入（不再读 entity.sharedSetting）。
     // 4 组合矩阵：edit×{缺省,覆盖} × 非edit×{缺省,覆盖}
     it('editable + 缺省 nodeShow → 280', () => {
         expect(getNodeWidth(makeEditable({id: '1', label: 'x', edit: editWith([])}))).toBe(280)

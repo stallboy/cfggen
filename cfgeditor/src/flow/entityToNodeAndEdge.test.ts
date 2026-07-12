@@ -129,7 +129,7 @@ describe('convertNodeAndEdges', () => {
             nodeShow: ns,
         })
         expect(edges[0].style).toEqual({stroke: '#CCC'})
-        // nodeShow 下发到 node.data（doc BR1）；entity 保持纯 domain、不被 mutate
+        // nodeShow 下发到 node.data；entity 保持纯 domain、不被 mutate
         expect(nodes[0].data.nodeShow?.edgeColor).toBe('#CCC')
         expect(nodes[0].data.entity).toBe(a)
     })

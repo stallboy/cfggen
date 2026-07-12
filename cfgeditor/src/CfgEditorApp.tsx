@@ -181,7 +181,7 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
     }
 
     return <div>
-        {/* doc BR2：全局 CSS 变量（--edge-stroke-width）只挂一次，避免多画布 cleanup 互相抹掉 */}
+        {/* 全局 CSS 变量（--edge-stroke-width）只挂一次，避免多画布 cleanup 互相抹掉 */}
         <FlowStyleManager/>
         <HeaderBar schema={schema} curTable={curTable}/>
 

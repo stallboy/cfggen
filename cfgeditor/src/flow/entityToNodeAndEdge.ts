@@ -61,7 +61,7 @@ export function fillHandles(entityMap: Map<string, Entity>) {
  * 把 entityMap 转成 xyflow 的 nodes/edges。
  *
  * nodeShow/notes 是呈现层数据，写入 node.data（EntityNodeData）供 FlowNode 及布局估算读取，
- * **不再盖章到 entity.sharedSetting**——entity 保持纯 domain、不可变 memo-safe（doc BR1）。
+ * **不再盖章到 entity.sharedSetting**——entity 保持纯 domain、不可变 memo-safe。
  * query 不在此处下发：它无 per-graph override，渲染组件各自 useMyStore() 订阅。
  */
 export function convertNodeAndEdges({entityMap, nodeShow, notes}: {

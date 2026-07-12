@@ -8,7 +8,7 @@ import {FlowGraphContext as FlowGraphContext1} from "./FlowGraphContext.ts";
 
 // EntityNode.data 是「呈现层下发袋」：entity 是纯 domain（不可变、memo-safe），
 // nodeShow/notes 是呈现层数据，由 useEntityToGraph 经 convertNodeAndEdges 写入 node.data，
-// 而非盖章到 entity.sharedSetting（doc BR1：去 domain↔presentation 耦合）。
+// 而非盖章到 entity.sharedSetting（domain 与 presentation 解耦，entity 保持不可变）。
 // nodeShow 走 node.data（非子组件直接 useStore）以保留 FixedPage 的 per-graph override（doc A2）；
 // query 不在此列——它无 per-graph override，渲染组件各自 useMyStore() 订阅（resso per-key，零多余重渲）。
 // 用 type 别名而非 interface：xyflow 的 Node<T> 要求 T extends Record<string,unknown>，

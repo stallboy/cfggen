@@ -264,7 +264,7 @@ export function setQuery(v: string) {
 }
 
 
-// 拓扑相关 setter（doc BR4）：不再 clearLayoutCache——这些 setting 已纳入 useEntityToGraph 的 layout
+// 拓扑相关 setter：不再 clearLayoutCache——这些 setting 已纳入 useEntityToGraph 的 layout
 // queryKey（topologyKeys），改值时缓存自然失效重布局。store 重新变纯状态容器（Query Key Factory）。
 export function setMaxImpl(value: number | null) {
     if (value) {
@@ -413,7 +413,7 @@ export function setFixedPagesConf(newPageConf: FixedPagesConf) {
 
     store.pageConf = newPageConf;
     setPref('pageConf', Convert.fixedPagesConfToJson(newPageConf));
-    // pageConf 不改当前路由的 layout 输入（固定页各自有独立 pathname → 独立 layout query），无需清缓存（doc BR4 审计）。
+    // pageConf 不改当前路由的 layout 输入（固定页各自有独立 pathname → 独立 layout query），无需清缓存。
 }
 
 export function getFixedPage(pageConf: FixedPagesConf, label: string) {
@@ -433,13 +433,13 @@ export function setNodeShow(nodeShow: NodeShowType) {
     store.nodeShow = nodeShow;
     setPref('nodeShow', Convert.nodeShowTypeToJson(nodeShow));
     // 不清 layout 缓存：布局相关字段已由 useEntityToGraph 的 pickLayoutKeys 进 queryKey——改这些字段时
-    // queryKey 变 → 缓存自然失效；改纯颜色字段 queryKey 不变 → 命中缓存不重跑 ELK（doc BR4）。
+    // queryKey 变 → 缓存自然失效；改纯颜色字段 queryKey 不变 → 命中缓存不重跑 ELK。
 }
 
 export function setTauriConf(tauriConf: TauriConf) {
     store.tauriConf = tauriConf;
     setPref('tauriConf', Convert.tauriConfToJson(tauriConf));
-    // tauriConf 已纳入 layout queryKey（topologyKeys），改值时缓存自然失效，无需手动清（doc BR4）。
+    // tauriConf 已纳入 layout queryKey（topologyKeys），改值时缓存自然失效，无需手动清。
 }
 
 export function setAIConf(aiConf: AIConf) {
