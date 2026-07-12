@@ -12,7 +12,7 @@ import {
     isFixedUnrefPage
 } from "./store/store.ts";
 import {Outlet, useNavigate} from "react-router";
-import {STable} from "./api/schemaModel.ts";
+import {RawSchema, STable} from "./api/schemaModel.ts";
 import {fetchNotes, fetchSchema} from "./api/api.ts";
 import {notesToMap} from "./api/noteModel.ts";
 import {useQuery} from "@tanstack/react-query";
@@ -51,6 +51,12 @@ function onConnectServer(value: string) {
     setServer(value);
 }
 
+// select 必须是稳定引用：内联箭头每次 render 新身份 → React Query 每次 render 重跑 select →
+// 重建 Schema（构造函数遍历全部 items、建多个 Map、为每张 table 建 idMap，毫秒级）；且 Schema 是含 Map
+// 字段的 class 实例，replaceEqualDeep 判不等 → schema 引用每帧变 → outletCtx 每帧新建 → Outlet 子树
+// （Table/TableRef/Record/RecordRef，context 变化绕过 memo）全树重渲。提为模块级常量后只在 rawSchema 变化时构造。
+const schemaSelector = (rawSchema: RawSchema) => new Schema(rawSchema);
+
 export const CfgEditorApp = memo(function CfgEditorApp() {
     const {
         server, dragPanel, pageConf,
@@ -66,7 +72,7 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
         queryKey: ['schema'],
         queryFn: ({signal}) => fetchSchema(server, signal),
         staleTime: 1000 * 60 * 5,
-        select: (rawSchema) => new Schema(rawSchema),
+        select: schemaSelector,
     })
 
     const {data: notes} = useQuery({
