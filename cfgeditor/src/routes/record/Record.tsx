@@ -4,7 +4,6 @@ import {App, Result} from "antd";
 import {createRefEntities, getId, getLabel} from "./recordRefUtils.ts";
 import {RecordEntityCreator} from "./recordEntityCreator.ts";
 import {RecordEditEntityCreator} from "./recordEditEntityCreator.ts";
-import {Folds} from "@/domain/folds";
 import {EditingSession, getCurrentEditingSession, setCurrentEditingSession} from "@/services/editingSession";
 import {isCopiedFitAllowedType, structCopy} from "@/services/clipboard";
 import {useTranslation} from "react-i18next";
@@ -15,7 +14,7 @@ import {addOrUpdateRecord, fetchRecord} from "@/api/api";
 import {MenuItem} from "@/flow/FlowContextMenu";
 import {SchemaTableType} from "@/CfgEditorApp";
 import {fillHandles} from "@/flow/entityToNodeAndEdge";
-import {memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore} from "react";
+import {memo, useCallback, useEffect, useMemo, useRef, useSyncExternalStore} from "react";
 
 
 import {useEntityToGraph} from "@/flow/useEntityToGraph";
@@ -62,9 +61,6 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
         },
     });
 
-
-    // folds 信息跟notes信息一样都是临时存下来，而不是直接通知server存成json。
-    const [folds, setFolds] = useState<Folds>(new Folds([]));
 
     const isEditable = schema.isEditable;
     const isEditing = isEditable && edit;
@@ -120,14 +116,14 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
             // （性能契约1：几十表单输入零重渲），结构类编辑 bump → 此处重算 → 闭包拿到最新子对象引用（契约2）。
             void structureVersion;
             const editingObject = session.getEditingObject();
-            const creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId, folds, setFolds, session, editingObject);
+            const creator = new RecordEditEntityCreator(entityMap, schema, curTable, curId, session, editingObject);
             creator.createThis();
             editingObjectRes = session.getEditingObjectRes();
         }
         fillHandles(entityMap);
         return {entityMap, editingObjectRes}
     }, [isEditing, curId, schema, recordResult, tauriConf, resourceDir, resMap, curTable,
-        folds, setFolds, session, structureVersion]);
+        session, structureVersion]);
 
     useEffect(() => {
         setIsEditMode(edit);
@@ -326,7 +322,7 @@ export const Record = memo(function () {
         return <Result status={'error'} title={recordResult.resultCode}/>;
     }
 
-    // 需要key，让不同key的RecordWithResult里folds不会互相影响
+    // key 让切 record 时 unmount 旧 RecordWithResult（session 随之销毁），编辑态/undo 栈 per-record 隔离
     return <RecordWithResult key={`${curTableId}-${curId}`} recordResult={recordResult}/>;
 });
 

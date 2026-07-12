@@ -2,7 +2,6 @@ import {describe, it, expect} from 'vitest'
 import {RecordEditEntityCreator} from './recordEditEntityCreator.ts'
 import {EntityEditField} from '@/domain/entityModel'
 import {Schema} from '@/domain/schema'
-import {Folds} from '@/domain/folds'
 import {field, fk, makeInterface, makeRawSchema, makeStruct, makeTable} from '@/test/fixtures'
 import {EditingSession} from '@/services/editingSession'
 import {JSONObject} from '@/api/recordModel'
@@ -32,7 +31,7 @@ function buildSchema() {
 function newCreator(schema: Schema, curTable: ReturnType<typeof makeTable>) {
     // 这些用例只测 makeEditFields / getAutoCompleteOptions 的字段生成逻辑，不触发编辑回调，
     // 故 session 传 mock、editingObject 传占位即可。
-    return new RecordEditEntityCreator(new Map(), schema, curTable, '1', new Folds([]), () => {},
+    return new RecordEditEntityCreator(new Map(), schema, curTable, '1',
         {} as unknown as EditingSession, {$type: 'Placeholder'} as JSONObject)
 }
 

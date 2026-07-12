@@ -15,8 +15,6 @@ import {getId, getLabel, getLastName} from "./recordRefUtils.ts";
 import {getField, getIdOptions, getImpl, getMapEntryTypeName, isPkInteger, Schema} from "@/domain/schema";
 import {EditingSession} from "@/services/editingSession";
 import { canBeEmbeddedCheck, extractEmbeddingFields, isPrimitiveType } from "@/domain/embedding";
-// Folds（折叠状态，domain）
-import {Folds} from "@/domain/folds";
 
 
 interface ArrayItemParam {
@@ -32,8 +30,6 @@ export class RecordEditEntityCreator {
                 public schema: Schema,
                 public curTable: STable,
                 public curId: string,
-                public folds: Folds,
-                public setFolds: (f: Folds) => void,
                 public session: EditingSession,
                 public editingObject: JSONObject,
     ) {
@@ -65,7 +61,7 @@ export class RecordEditEntityCreator {
         }
 
         const note: string | undefined = obj['$note'] as string | undefined;
-        const fold = this.getFoldState(fieldChain, obj);
+        const fold = this.getFoldState(obj);
 
         let hasChild: boolean = false;
 
@@ -124,7 +120,7 @@ export class RecordEditEntityCreator {
                     if (canBeEmbeddedCheck(itemObj, tempSField, this.schema)) {
                         itemCanBeEmbedded = true;
 
-                        if (this.shouldEmbed([...fieldChain, fieldKey, 0], itemObj)) {
+                        if (this.shouldEmbed(itemObj)) {
                             // 元素被内嵌，不创建子entity，但标记有子节点（因为内嵌字段也算子节点）
                             hasChild = true;
                             continue;
@@ -196,7 +192,7 @@ export class RecordEditEntityCreator {
                 const canEmbed = canBeEmbeddedCheck(fieldValue as JSONObject, sField, this.schema);
 
                 if (canEmbed) {
-                    if (this.shouldEmbed([...fieldChain, fieldKey], fieldValue as JSONObject)) {
+                    if (this.shouldEmbed(fieldValue as JSONObject)) {
                         // fold=true 或 undefined，内嵌模式，不创建子节点
                         continue;
                     }
@@ -243,9 +239,9 @@ export class RecordEditEntityCreator {
         const editOnUpdateFold = (fold: boolean, position: EntityPosition, embeddedFieldChain?: (string | number)[]) => {
             // 如果提供了 embeddedFieldChain，使用它；否则使用默认的 fieldChain
             const targetChain = embeddedFieldChain ?? fieldChain;
+            // D1 后 fold 状态从 $fold 派生：updateFold 写 obj.$fold + structureChange 驱动重渲读新 $fold，
+            // 不再双写 Folds state（interfaceOnChangeImpl 的 $fold 写入也自然被覆盖）。
             this.session.updateFold(fold, targetChain, position);
-            const newFolds = this.folds.setFold(targetChain, fold);
-            this.setFolds(newFolds);
         };
 
 
@@ -502,7 +498,7 @@ export class RecordEditEntityCreator {
         }
 
         // 读取元素的fold状态
-        const isFolded = this.getFoldState([...fieldChain, sField.name, 0], itemObj);
+        const isFolded = this.getFoldState(itemObj);
         if (isFolded === false) {
             return null; // 展开状态，不内嵌
         }
@@ -575,7 +571,7 @@ export class RecordEditEntityCreator {
             return null;
         }
 
-        const isFolded = this.getFoldState([...fieldChain, sField.name], fieldObj);
+        const isFolded = this.getFoldState(fieldObj);
         if (isFolded === false) {
             return null; // 展开状态，不内嵌
         }
@@ -623,24 +619,19 @@ export class RecordEditEntityCreator {
     }
 
     /**
-     * 获取fold状态：优先本地 Folds，其次 obj.$fold，均无则 undefined
+     * 获取 fold 状态：直接读 obj.$fold（持久化层）。
+     * D1 后 Folds 不再独立 React state——fold 状态从此处 $fold 派生，undo/redo 恢复 $fold 即恢复 fold。
+     * 无 obj 或无 $fold → undefined（shouldEmbed 视 undefined 为内嵌）。
      */
-    private getFoldState(fieldChain: (string | number)[], obj?: JSONObject): boolean | undefined {
-        const localFold = this.folds.isFold(fieldChain);
-        if (localFold !== undefined) {
-            return localFold;
-        }
-        if (obj) {
-            return obj['$fold'] as boolean | undefined;
-        }
-        return undefined;
+    private getFoldState(obj?: JSONObject): boolean | undefined {
+        return obj?.['$fold'] as boolean | undefined;
     }
 
     /**
      * 是否内嵌（fold 非 false 即内嵌：true 或 undefined）
      */
-    private shouldEmbed(fieldChain: (string | number)[], obj: JSONObject): boolean {
-        return this.getFoldState(fieldChain, obj) !== false;
+    private shouldEmbed(obj: JSONObject): boolean {
+        return this.getFoldState(obj) !== false;
     }
 
     getAutoCompleteOptions(structural: SStruct | STable,
@@ -689,4 +680,4 @@ function getImplNameOptions(sInterface: SInterface): EntityEditFieldOptions {
     return {options: impls, isValueInteger: false, isEnum: true};
 }
 
-// ChainFold / Folds / isChainEqual 已下沉到 domain/folds.ts（见顶部 import）
+// ChainFold / Folds / isChainEqual 已下沉到 domain/folds.ts（D1 后 creator 不再持有 Folds state，fold 状态从 $fold 派生）
