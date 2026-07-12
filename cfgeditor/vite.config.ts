@@ -1,17 +1,21 @@
 import {defineConfig} from 'vite'
 import react from '@vitejs/plugin-react'
 import {fileURLToPath, URL} from 'node:url'
+import { reactDevtools } from 'agent-react-devtools/vite';
 
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [react({
-        babel: {
-            plugins: [
-                ["babel-plugin-react-compiler"],
-            ],
-        },
-    })],
+    plugins: [
+        // React DevTools 连接脚本，仅 CFG_RDT=1 时注入（profile 时 `CFG_RDT=1 pnpm dev`）
+        ...(process.env.CFG_RDT ? [reactDevtools()] : []),
+        react({
+            babel: {
+                plugins: [
+                    ["babel-plugin-react-compiler"],
+                ],
+            },
+        })],
 
     resolve: {
         alias: {
