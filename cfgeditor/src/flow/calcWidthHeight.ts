@@ -32,9 +32,7 @@ const EDIT_ROW_H = 40;                   // 单个 Form.Item 行高
 const EDIT_FOLD_H = 16;                  // fold 折叠态额外高度
 const EDIT_ARRAY_EXTRA_PER_ITEM = 8;     // arrayOfPrimitive 每项 extra
 const EDIT_TEXT_ROW_H = 22;              // 长文本 primitive 每行高
-const EDIT_TEXT_WRAP_COLS = 10;          // 长文本每行字符数（估算换行）
-const EDIT_TEXT_EXTRA_BASE = 10;         // 长文本 extra 基础（行数>1 才计入 extra）
-const EDIT_TEXT_MAX_ROWS = 10;           // 长文本最大估算行数
+const EDIT_TEXT_EXTRA_BASE = 10;         // 长文本 extra 基础
 
 // notes（note TextArea）
 const NOTE_ROW_H = 22;     // note 单行高
@@ -111,17 +109,11 @@ function calcEditFieldsCntAndExtra(editFields: EntityEditField[]) {
                 }
                 break;
             case 'primitive':
-                if (editField.eleType == 'text' || editField.eleType == 'str') {
-                    let row = (editField.value as string).length / EDIT_TEXT_WRAP_COLS;
-                    if (row > EDIT_TEXT_MAX_ROWS) {
-                        row = EDIT_TEXT_MAX_ROWS;
-                    }
-                    if (row > 1) {
-                        extra += row * EDIT_TEXT_ROW_H + EDIT_TEXT_EXTRA_BASE;
-                    } else {
-                        cnt++;
-                    }
+                if (editField.eleType == 'text') {
+                    // text 固定 rows={4}（EntityForm 去 autoSize），不再按内容长度估算行数
+                    extra += 4 * EDIT_TEXT_ROW_H + EDIT_TEXT_EXTRA_BASE;
                 } else {
+                    // str（含换行，TextArea rows={1} 滚动）/int/bool 等：单行
                     cnt++;
                 }
                 break;

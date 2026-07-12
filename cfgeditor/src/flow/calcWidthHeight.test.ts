@@ -96,14 +96,14 @@ describe('calcWidthHeight', () => {
             expect(calcWidthHeight(e)).toEqual([280, 76])
         })
 
-        it('长文本 primitive(>10 字符) 折算为 extra 而非 cnt', () => {
+        it('text primitive 固定 4 行（rows={4}，去 autoSize 后不再按内容长度）', () => {
             const fields: EntityEditField[] = [
                 {name: 'desc', type: 'primitive', eleType: 'text', value: '01234567890123456789'} as EntityEditField,
             ]
             const e = makeEditable({id: '1', label: 'x', edit: editWith(fields)})
-            // value.length=20 → row=20/10=2 (>1) → extra += 2*22+10 = 54；cnt 不增
-            // 40 + 20 + 40*0 + 54 = 114
-            expect(calcWidthHeight(e)).toEqual([280, 114])
+            // text 固定 4 行 → extra = 4*22+10 = 98；cnt 不增
+            // 40 + 20 + 40*0 + 98 = 158
+            expect(calcWidthHeight(e)).toEqual([280, 158])
         })
 
         it('arrayOfPrimitive 计入 cnt(len+1) 与 extra(len*8)', () => {

@@ -56,8 +56,6 @@ const FORM_ITEM_LAYOUT_WITHOUT_LABEL = {
     },
 };
 
-const TEXT_AREA_AUTO_SIZE = {minRows: 1, maxRows: 10};
-
 const AUTO_COMPLETE_ITEM_STYLE = {style: {width: 170}};
 
 // 数字类型集合
@@ -181,7 +179,13 @@ function primitiveControl(field: EntityEditField, style: CSSProperties) {
         case "float":
             return <InputNumber className="nodrag" style={style}/>;
         default:
-            return <Input.TextArea className="nodrag" autoSize={TEXT_AREA_AUTO_SIZE} style={style}/>;
+            // 去 autoSize：rc-textarea 的 ResizeObserver 随节点数放大成 rAF 风暴，是 /edit/record/ 大图
+            // 加载卡顿的根因（memory: cfgeditor-load-jank-textarea-autosize）。str 可能含换行用 rows={1}（滚动），
+            // text 用 rows={4}。固定 rows → 无 ResizeObserver → 无 rAF 风暴。
+            if (field.eleType === "text") {
+                return <Input.TextArea className="nodrag" rows={4} style={style}/>;
+            }
+            return <Input.TextArea className="nodrag" rows={1} style={style}/>;
     }
 }
 

@@ -12,8 +12,6 @@ import {queryClient} from "@/queryClient";
 const noteButtonStyle: CSSProperties = {float: 'right', borderWidth: 0, backgroundColor: 'transparent'};
 const bookIcon = <BookOutlined/>;
 const noteStyle: CSSProperties = {backgroundColor: "yellow", borderRadius: '8px'}
-// 与 EntityForm.tsx 的 TEXT_AREA_AUTO_SIZE 同值（重复常量，后续可合并到共享样式模块）。
-const TEXT_AREA_AUTO_SIZE = {minRows: 1, maxRows: 10};
 const TEXT_AREA_STYLE: CSSProperties = {backgroundColor: "yellow"};
 
 export const NoteShow = memo(function NoteShow({note, setIsEdit}: {
@@ -90,7 +88,7 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
 
     return <Flex vertical style={noteStyle}>
         <Input.TextArea className='nodrag' placeholder='note'
-                  autoSize={TEXT_AREA_AUTO_SIZE}
+                  rows={1}
                   style={TEXT_AREA_STYLE}
                   value={newNote}
                   onChange={onNoteChange}/>
@@ -122,7 +120,7 @@ export const NoteEditInner = memo(function NoteEditInner({note, updateNoteInEdit
 
     return <Flex vertical style={noteStyle}>
         <Input.TextArea className='nodrag' placeholder='note'
-                  autoSize={TEXT_AREA_AUTO_SIZE}
+                  rows={1}
                   style={TEXT_AREA_STYLE}
                   value={note}
                   onChange={onNoteChange}/>
