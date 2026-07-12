@@ -105,11 +105,9 @@ export class EditingSession {
 
         this.table = newTable;
         this.id = newId;
-        this.fitView = EFitView.FitFull;
-        this.fitViewToIdPosition = undefined;
         this.originalEditingObject = structuredClone(newObj);
         this.editingObject = newObj;
-        this.bumpStructure();
+        this.bumpStructure({fitView: EFitView.FitFull});
     }
 
     // ============ 值类编辑（不 bump、不 emit → 不重渲 entityMap）============
@@ -226,9 +224,7 @@ export class EditingSession {
     replaceEditingObject(newEditingObject: JSONObject): void {
         deleteRefsInPlace(newEditingObject);
         this.editingObject = newEditingObject;
-        this.fitView = EFitView.FitFull;
-        this.fitViewToIdPosition = undefined;
-        this.bumpStructure();
+        this.bumpStructure({fitView: EFitView.FitFull});
     }
 
     /** 把剪贴板内容粘贴到 fieldChains 位置。 */
@@ -262,13 +258,14 @@ export class EditingSession {
     // ============ 内部 ============
 
     private structureChange(position: EntityPosition): void {
-        this.fitView = EFitView.FitId;
-        this.fitViewToIdPosition = position;
-        this.bumpStructure();
+        this.bumpStructure({fitView: EFitView.FitId, position});
     }
 
-    /** 结构变更通用收尾：bump 版本（触发订阅者重渲）→ 同步清 layout 缓存 → 刷新脏标记 → emit。 */
-    private bumpStructure(): void {
+    /** 结构变更通用收尾：写 fitView 契约 → bump 版本（触发订阅者重渲）→ 同步清 layout 缓存 → 刷新脏标记 → emit。
+     *  参量化 fitView：undo/redo 传 {fitView: NoChange} 不跳视口；结构操作传 FitId；整体替换/reset 传 FitFull。 */
+    private bumpStructure(opts: {fitView: EFitView; position?: EntityPosition}): void {
+        this.fitView = opts.fitView;
+        this.fitViewToIdPosition = opts.position;
         this.structureVersion++;
         this.onStructureChange?.();
         this.notifyEditingState();

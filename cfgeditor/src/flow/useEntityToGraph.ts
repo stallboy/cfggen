@@ -172,6 +172,10 @@ export function useEntityToGraph({
                         );
                         void setViewport(newVp);
                     }
+                } else if (editingObjectRes?.fitView === EFitView.NoChange) {
+                    // undo/redo：数据回滚但保持当前视口——不调 fitView/setViewport。
+                    // 节点 key 稳定时 React 复用实例仅重渲，视口由用户当前意图决定，不回滚。
+                    // FitNone（只读路径，RecordRef）语义同为不跳视口，落空到此。
                 }
             }
         } else if (layoutError) {

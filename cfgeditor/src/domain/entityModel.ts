@@ -359,6 +359,8 @@ export enum EFitView {
     FitFull,
     FitId,
     FitNone,
+    /** undo/redo 专用：数据回滚但保持当前视口（不调 fitView/setViewport）。 */
+    NoChange,
 }
 
 export type EditingObjectRes = {
