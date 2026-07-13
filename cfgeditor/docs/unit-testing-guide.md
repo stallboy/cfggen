@@ -32,20 +32,24 @@
 - 用**显式** `import { describe, it, expect } from 'vitest'`，**不开** `globals: true`——让依赖可见，也避免全局命名空间污染。
 - `environment: 'jsdom'`，`include: ['src/**/*.{test,spec}.{ts,tsx}']`。
 
-### 2.2 已覆盖模块（截至 2026-07）
+### 2.2 已覆盖模块（截至 2026-07-14）
 
-共 **14 个测试文件**，全部针对纯逻辑：
+共 **27 个测试文件**，全部针对纯逻辑（`layoutAsync` 是唯一带 mock 的——见下注）：
 
 ```
-api/      noteModel
-domain/   schema, folds, historyModel, undoStore
-flow/     colors, calcWidthHeight, entityToNodeAndEdge
-res/      resUtils
-routes/   record/{recordEntityCreator, recordEditEntityCreator, recordRefUtils}
-          table/tableEntityCreator
-services/ editingSession
+api/       noteModel, schemaModel(isPrimitiveType/isNumberType + 类型集合一致性)
+domain/    schema, historyModel, undoStore, entityPredicates, nodeShowLayoutKeys,
+           embedding, entityModel(type guards)
+flow/      colors, calcWidthHeight, simpleStrRowCount, dimensions,
+           getDsLenAndDesc, entityToNodeAndEdge, viewportMath, layoutAsync
+res/       resUtils, getResBrief
+routes/    record/{recordEntityCreator, recordEditEntityCreator, recordRefUtils}
+           table/{tableEntityCreator, tableRefEntity}
+           setting/colorUtils
+services/  editingSession, clipboard
 ```
 
+> 注：`layoutAsync` 用 `vi.mock` 替换 elkjs 的 `layout` 入口——mock 的是**出站命令的契约边界**，断言的是 `layoutAsync` 自身如何组织入参 / 处理错误 / 映射结果，不是 elkjs 内部行为，故不违反 §3.7「不 mock 你不拥有的东西」（它 mock 边界、不 mock 内部）。
 > 维护提示：新增测试后请同步本清单，以及 `cfgeditor/CLAUDE.md` 的「单元测试」章节。
 
 ### 2.3 这些测试做对了什么（值得学的范本）
@@ -103,7 +107,7 @@ cfgeditor 刻意把可测的**规则与状态**下沉到 `domain/` `services/` `
 
 带来的结论：
 - ✅ 测 `domain/schema`、`services/editingSession`、`flow/colors`：喂 fixture，断言输出，**零 mock**。
-- ❌ 不测 `EntityForm.tsx`（782 行 UI）、`Record.tsx`、`api/api.ts`（HTTP）、`res/readResInfosAsync.ts`（Tauri 文件 IPC）、`flow/layoutAsync.ts`（elkjs 异步）。
+- ❌ 不测 `EntityForm.tsx`（782 行 UI）、`Record.tsx`、`api/api.ts`（HTTP）、`res/readResInfosAsync.ts`（Tauri 文件 IPC）。`flow/layoutAsync.ts` 的 elkjs 交互已用 mock 边界测（见 2.2 注）。
 - ❌ 不测 `store/store.ts`：Resso 全局状态跨组件耦合，单测性价比低，留给手测。
 
 > **这不是偷懒，是架构使然。** 当你发现一段业务逻辑只能靠"渲染组件 + mock 一堆依赖"才能测时，正确反应不是去写组件测试，而是**把逻辑抽成纯函数**（像 `embedding.ts`、`colors.ts` 那样），再测纯函数。UI 薄到不可测时，它也就**不需要**被单测了。
@@ -194,41 +198,42 @@ it('返回大于 curId 的下一个空闲整数', () => {
 
 按"**价值 / 成本**"排序。价值看「逻辑复杂度 × 回归损失」，成本看「纯度 × 是否要 mock」。
 
-### P0 —— `domain/embedding.ts`（高价值，纯，未测）
+### ✅ P0 —— `domain/embedding.ts`（已完成，`embedding.test.ts`，34 例）
 
-最大、最值得补的一块。导出 `EMBEDDING_CONFIG`（struct 与 interface **两套不同阈值**）、`isPrimitiveType` / `isNumberType`、核心规则 `canBeEmbeddableCheck`、`extractEmbeddingFields`。
+覆盖：`EMBEDDING_CONFIG` 阈值快照、`isPrimitiveType` / `isNumberType`、`canBeEmbeddableCheck` 的 5 条规则（struct + interface 两套阈值）、边值（=阈值 / 超阈值）、`allPrimitive` 约束、`$type` 解析、`extractEmbeddingFields`（摊平 / 类型默认值 / `implNameToDisplay` / 空 list 过滤）。
 
-为什么 P0：
-- **魔数集中 + 多分支规则**，最容易被改坏且不易察觉。
-- struct 与 interface 阈值不同（如 `maxNumberFields` 3 vs 2），是典型"边值用例"温床。
-- 纯函数，零 mock，成本极低。
-- 建议覆盖：各条件分支（1a–1e / 2a–2e）、边值（正好等于阈值 / 阈值±1）、`boolAndNumberCombination` 这类组合条件、`extractEmbeddingFields` 的递归结构。
+> 为什么这块曾排 P0（保留作背景）：
+> - **魔数集中 + 多分支规则**，最容易被改坏且不易察觉。
+> - struct 与 interface 阈值不同（`maxNumberFields` 3 vs 2），是典型"边值用例"温床。
+> - 纯函数，零 mock，成本极低。
 
-### P1 —— 小而纯，零成本（任选若干）
+### ✅ P1 —— 小而纯（已完成）
 
-| 模块 | 函数 | 为什么值得 |
+| 模块 | 测试文件 | 覆盖要点 |
 |---|---|---|
-| `routes/setting/colorUtils.ts` | `fixColor` / `fixColors` | 3 种入参形态（string / `{toHexString}` / null）分支多，纯函数 |
-| `services/clipboard.ts` | `isCopiedFitAllowedType` | 类型前缀匹配 + `.` 边界判断，易出 off-by-one，值得用断言锁死 |
-| `flow/getDsLenAndDesc.ts` | `getDsLenAndDesc` | `refShowDescription` 4 分支 switch，纯 |
-| `res/getResBrief.ts` | `getResBrief` | 聚合统计 + 拼串，边界（全 0、各类计数）值得锁 |
-| `flow/getDsLenAndDesc` 等若隐式依赖 fixture | — | 复用 `makeNodeShow` 即可 |
+| `routes/setting/colorUtils.ts` | `colorUtils.test.ts` | `fixColor` 三种入参形态（string / `{toHexString}` / null）+ 默认色；`fixColors` 映射 |
+| `services/clipboard.ts` | `clipboard.test.ts` | `isCopiedFitAllowedType` 前缀 + `.` 边界 / off-by-one（每 `it` 先 `structCopy` 重置模块级 `copiedObject`，遵守 3.6） |
+| `flow/getDsLenAndDesc.ts` | `getDsLenAndDesc.test.ts` | `refShowDescription` 4 分支 switch + ±1 契约 |
+| `res/getResBrief.ts` | `getResBrief.test.ts` | 4 类计数 + 音轨/字幕累加 + 拼串顺序 + 全 0 边界 |
 
-> `clipboard.ts` 注意：模块顶部有**模块级状态** `copiedObject`。测试时每个 `it` 先 `structCopy` 重置，避免用例间耦合（遵守 3.6 的 Independent）。
+### ✅ P2 —— 中价值（前两项已完成）
 
-### P2 —— 中价值
+| 模块 | 测试文件 | 覆盖要点 |
+|---|---|---|
+| `routes/table/tableRefEntity.ts` | `tableRefEntity.test.ts` | `includeRefTables`：refIn 分支、`maxOutDepth` 截断（Ref / Ref2）、`maxNode` 截断、curTable 常驻、BFS 连边 |
+| `domain/entityModel.ts` | `entityModel.test.ts` | 三个 type guard（`isReadOnlyEntity` / `isEditableEntity` / `isCardEntity`）+ 互斥不变量 |
 
-| 模块 | 说明 |
-|---|---|
-| `routes/table/tableRefEntity.ts` | `includeRefTables`：BFS 图遍历，与已测的 `tableEntityCreator` / `recordRefUtils` 同类，纯函数。重点测 `maxNode` / `maxOutDepth` 截断、`refIn` 分支。 |
-| `domain/entityModel.ts` | 三个 type guard（`isReadOnlyEntity` / `isEditableEntity` / `isCardEntity`）。简单，可用 `fixtures.ts` 的 `makeReadOnly/makeCard/makeEditable` 顺手锁。 |
-| `api/recordModel.ts` 等 | 若有纯转换/规整函数（参照 `noteModel.notesToMap` 的测法）可补；纯类型定义不必测。 |
+### 后续候选（无明确优先级）
+
+- `domain/schema.tsx` 还有 `getField` / `getImpl` / `getNextId` / `defaultValue` / `getAllDepStructs` 等纯函数，`schema.test.ts` 目前只覆盖一部分，可按需深化。
+- `api/recordModel.ts` 等若有纯转换/规整函数（参照 `noteModel.notesToMap` 的测法）可补；纯类型定义不必测。
+- 若 `embedding.ts` / `schema.tsx` 这类规则模块要追求更高置信，可引入 `fast-check` 做 property-based（见 §3.5）。
 
 ### 明确**不**测（当前策略）
 
-- 所有 `*.tsx` UI 组件（`EntityForm`、`Record`、`Table`、`Finder`、`Setting/*`……）。
+- 所有 `*.tsx` UI 组件（`EntityForm`、`Record`、`Table`、`Finder`、`Setting` 下的 `.tsx`……）。注意 `Setting/colorUtils.ts` 是纯 `.ts` 函数，已测。
 - `api/api.ts`（HTTP，需 mock axios——违反 3.7，留给手测/集成）。
-- `res/readResInfosAsync.ts` / `res/summarizeResAsync.ts` / `flow/layoutAsync.ts`（Tauri 文件 IPC / elkjs 异步，留给手测）。
+- `res/readResInfosAsync.ts` / `res/summarizeResAsync.ts`（Tauri 文件 IPC，留给手测）。`flow/layoutAsync.ts` 已用 mock 边界测（见 2.2 注）。
 - `store/store.ts` / `store/resso.ts`（全局状态库，跨组件耦合）。
 - `domain/storageJson.ts`（quicktype **自动生成**，测它等于测生成器；应通过 `genJsonParser.bat` 保证正确性，而非单测）。
 - `i18n.ts`（翻译表，靠目视 / 用时验证）。

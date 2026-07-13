@@ -5,16 +5,15 @@ import {
     EntityEditFieldOptions, EntityPosition,
     EntitySourceEdge,
     EntityType,
-    PrimitiveType,
     PrimitiveEditField,
     StructRefEditField
 } from "@/domain/entityModel";
-import {SField, SInterface, SItem, SStruct, STable} from "@/api/schemaModel";
+import {isPrimitiveType, PrimitiveType, SField, SInterface, SItem, SStruct, STable} from "@/api/schemaModel";
 import {JSONArray, JSONObject, JSONValue, RefId} from "@/api/recordModel";
 import {getId, getLabel, getLastName} from "./recordRefUtils.ts";
 import {getField, getIdOptions, getImpl, getMapEntryTypeName, isPkInteger, Schema} from "@/domain/schema";
 import {EditingSession} from "@/services/editingSession";
-import { canBeEmbeddedCheck, extractEmbeddingFields, isPrimitiveType } from "@/domain/embedding";
+import { canBeEmbeddedCheck, extractEmbeddingFields } from "@/domain/embedding";
 
 
 interface ArrayItemParam {

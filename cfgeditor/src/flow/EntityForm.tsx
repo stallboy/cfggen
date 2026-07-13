@@ -34,9 +34,10 @@ import {
     FuncAddType,
     FuncSubmitType,
     FuncType,
-    InterfaceEditField, PrimitiveType,
+    InterfaceEditField,
     PrimitiveValue, StructRefEditField,
 } from "@/domain/entityModel";
+import {isNumberType, PrimitiveType} from "@/api/schemaModel";
 import type {NodeShowType} from "@/domain/storageJson";
 import {EntityNode} from "./FlowGraph.tsx";
 
@@ -57,9 +58,6 @@ const FORM_ITEM_LAYOUT_WITHOUT_LABEL = {
 };
 
 const AUTO_COMPLETE_ITEM_STYLE = {style: {width: 170}};
-
-// 数字类型集合
-const NUMBER_TYPES = new Set<string>(['int', 'long', 'float']);
 
 // Select 过滤器配置
 const FILTER_EMPTY = {};
@@ -133,7 +131,7 @@ function isArrayPrimitiveBoolOrNumber(field: EntityEditField): boolean {
     } else if (field.eleType == 'bool') {
         return true;
     } else {
-        return NUMBER_TYPES.has(field.eleType);
+        return isNumberType(field.eleType);
     }
 }
 

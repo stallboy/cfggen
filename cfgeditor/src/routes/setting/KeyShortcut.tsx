@@ -49,6 +49,16 @@ export const KeyShortCut = memo(function () {
             label: t('addOrUpdate'),
             children: 'alt+s',
         },
+        {
+            key: '9',
+            label: t('undo'),
+            children: 'ctrl+z / cmd+z',
+        },
+        {
+            key: '10',
+            label: t('redo'),
+            children: 'ctrl+y / cmd+y',
+        },
     ]}/>
 
 

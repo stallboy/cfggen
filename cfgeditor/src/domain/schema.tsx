@@ -1,5 +1,5 @@
 import {JSONObject} from "@/api/recordModel";
-import {RawSchema, RecordId, SField, SForeignKey, SInterface, SItem, SStruct, STable} from "@/api/schemaModel";
+import {isPrimitiveType, RawSchema, RecordId, SField, SForeignKey, SInterface, SItem, SStruct, STable} from "@/api/schemaModel";
 import {EntityEditFieldOption} from "./entityModel.ts";
 import {CSSProperties} from "react";
 import {Flex} from "antd";
@@ -119,15 +119,14 @@ export class Schema {
         }
 
         item = item as SStruct | STable
-        const primitiveTypeSet = new Set<string>(['bool', 'int', 'long', 'float', 'str', 'text']);
 
         for (const {name, type} of item.fields) {
-            if (primitiveTypeSet.has(type)) {
+            if (isPrimitiveType(type)) {
                 continue;
             }
             if (type.startsWith("list<")) {
                 const itemType = type.slice(5, type.length - 1);
-                if (!primitiveTypeSet.has(itemType)) {
+                if (!isPrimitiveType(itemType)) {
                     depNameMap.set(itemType, name);
                 }
             } else if (type.startsWith("map<")) {
@@ -135,10 +134,10 @@ export class Schema {
                 const sp = item.split(",");
                 const keyType = sp[0].trim();
                 const valueType = sp[1].trim();
-                if (!primitiveTypeSet.has(keyType)) {
+                if (!isPrimitiveType(keyType)) {
                     depNameMap.set(keyType, name);
                 }
-                if (!primitiveTypeSet.has(valueType)) {
+                if (!isPrimitiveType(valueType)) {
                     depNameMap.set(valueType, name);
                 }
             } else {

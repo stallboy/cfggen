@@ -1,7 +1,7 @@
 import {JSONObject} from '@/api/recordModel';
-import {SField, SInterface, SStruct} from '@/api/schemaModel';
+import {isNumberType, isPrimitiveType, PrimitiveType, SField, SInterface, SStruct} from '@/api/schemaModel';
 import {getImpl} from '@/domain/schema';
-import {PrimitiveType, PrimitiveValue} from "@/domain/entityModel";
+import {PrimitiveValue} from "@/domain/entityModel";
 
 // ============================================================================
 // 内嵌配置（原 embeddingConfig.ts）—— 内嵌规则的阈值与类型判断
@@ -58,30 +58,6 @@ export const EMBEDDING_CONFIG : EmbeddingConfig = {
     filterEmptyLists: true,         // 是否过滤空list字段
   },
 } as const;
-
-/**
- * 原始类型集合
- */
-export const PRIMITIVE_TYPES = new Set<string>(['bool', 'int', 'long', 'float', 'str', 'text']);
-
-/**
- * 数字类型集合
- */
-export const NUMBER_TYPES = new Set<string>(['int', 'long', 'float']);
-
-/**
- * 判断是否为原始类型
- */
-export function isPrimitiveType(type: string): boolean {
-  return PRIMITIVE_TYPES.has(type);
-}
-
-/**
- * 判断是否为数字类型
- */
-export function isNumberType(type: string): boolean {
-  return NUMBER_TYPES.has(type);
-}
 
 // ============================================================================
 // 内嵌判定规则（原 embeddingChecker.ts）—— 检查/提取可内嵌字段

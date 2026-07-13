@@ -12,6 +12,31 @@ export interface SField {
     comment: string;
 }
 
+// ---------------------------------------------------------------------------
+// 字段类型分类：原始类型 / 数字类型
+// 这是后端 cfggen 类型系统的一部分（SField.type 的字面量分类），集中在此为单一权威，
+// 供 domain / flow / routes 各层复用，消除散落的重复集合。
+// ---------------------------------------------------------------------------
+
+/** 原始字段类型（cfggen 后端基础类型字面量） */
+export type PrimitiveType = 'bool' | 'int' | 'long' | 'float' | 'str' | 'text';
+
+/** 原始类型集合（与 PrimitiveType 字面量一致） */
+export const PRIMITIVE_TYPES = new Set<string>(['bool', 'int', 'long', 'float', 'str', 'text']);
+
+/** 数字类型集合（int/long/float） */
+export const NUMBER_TYPES = new Set<string>(['int', 'long', 'float']);
+
+/** 判断是否为原始类型 */
+export function isPrimitiveType(type: string): boolean {
+    return PRIMITIVE_TYPES.has(type);
+}
+
+/** 判断是否为数字类型 */
+export function isNumberType(type: string): boolean {
+    return NUMBER_TYPES.has(type);
+}
+
 export interface SForeignKey {
     name: string;
     keys: string[];
