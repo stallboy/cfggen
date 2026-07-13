@@ -26,7 +26,7 @@ import {getCurrentEditingSession} from "./services/editingSession";
 
 // Chat / Setting 仅在 dragPanel 切换到对应面板时才渲染，懒加载以推迟
 // @ant-design/x* + openai + marked + dompurify 等重依赖的解析（不进首屏）
-const Chat = lazy(() => import("./routes/add/Chat.tsx").then(m => ({default: m.Chat})));
+const AddPanel = lazy(() => import("./routes/add/AddPanel.tsx").then(m => ({default: m.AddPanel})));
 const Setting = lazy(() => import("./routes/setting/Setting.tsx").then(m => ({default: m.Setting})));
 const RecordRef = lazy(() => import("./routes/record/RecordRef.tsx").then(m => ({default: m.RecordRef})));
 
@@ -133,8 +133,8 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
             </FlowGraph>;
         } else if (dragPanel == 'finder') {
             dragPage = <SidePanelShell><Finder schema={schema}/></SidePanelShell>;
-        } else if (dragPanel == 'chat') {
-            dragPage = <SidePanelShell><Suspense fallback={null}><Chat schema={schema} key={'chat-' + curTableId}/></Suspense></SidePanelShell>;
+        } else if (dragPanel == 'add') {
+            dragPage = <SidePanelShell><Suspense fallback={null}><AddPanel schema={schema} key={'add-' + curTableId}/></Suspense></SidePanelShell>;
 
         } else if (dragPanel == 'setting') {
             dragPage = <SidePanelShell><Suspense fallback={null}><Setting schema={schema} curTable={curTable} flowRef={ref}/></Suspense></SidePanelShell>

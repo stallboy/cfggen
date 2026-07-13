@@ -31,7 +31,7 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
             flexDirection: 'column',
             background: token.colorBgContainer,
             color: token.colorText,
-            height: 'calc(100vh - 80px)',
+            height: '100%',
         },
         chatHeader: {
             height: 52,

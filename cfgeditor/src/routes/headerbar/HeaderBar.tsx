@@ -6,7 +6,7 @@ import {
     CompassOutlined,
     LeftOutlined,
     RightOutlined,
-    RobotOutlined,
+    FileAddOutlined,
     SettingOutlined
 } from "@ant-design/icons";
 import {TableList} from "./TableList.tsx";
@@ -89,7 +89,7 @@ export const HeaderBar = memo(function ({schema, curTable}: {
             type: 'group' as const, label: t('dragPanel'), children: [
                 {key: 'finder', label: t('finder'), icon: <CompassOutlined/>},
                 {key: 'recordRef', label: t('recordRef'), icon: <ApartmentOutlined/>},
-                {key: 'chat', label: t('chat'), icon: <RobotOutlined/>},
+                {key: 'add', label: t('addJson'), icon: <FileAddOutlined/>},
                 {key: 'setting', label: t('setting'), icon: <SettingOutlined/>},
                 {key: 'none', label: t('none'), icon: <CloseOutlined/>},
             ]

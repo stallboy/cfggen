@@ -13,7 +13,6 @@ import {FixPages} from "./FixPages.tsx";
 import {ToolsSetting} from "./ToolsSetting.tsx";
 import {memo, RefObject} from "react";
 import {isTauri} from "@tauri-apps/api/core";
-import {AddJson} from "@/routes/add/AddJson";
 
 
 export const Setting = memo(function Setting({schema, curTable, flowRef}: {
@@ -54,11 +53,6 @@ export const Setting = memo(function Setting({schema, curTable, flowRef}: {
             key: 'tools',
             label: t('tools'),
             children: <ToolsSetting schema={schema} curTable={curTable} flowRef={flowRef}/>,
-        },
-        {
-            key: 'addJson',
-            label: t('addJson'),
-            children: <AddJson schema={schema} key={"addJson-" + (curTable?.name || "$")}/>,
         },
     ];
 

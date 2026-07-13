@@ -114,7 +114,7 @@ export const AddJson = memo(function AddJson({schema}: {
                     </Button>
 
                     <Button type="primary" onClick={onShow}>
-                        {t('show')}
+                        {t('loadIntoForm')}
                     </Button>
                 </Space>
             </Form.Item>
