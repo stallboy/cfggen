@@ -356,11 +356,10 @@ export function isCardEntity(entity: Entity): entity is CardEntity {
 // ============================================================================
 
 export enum EFitView {
-    FitFull,
-    FitId,
-    FitNone,
-    /** undo/redo 专用：数据回滚但保持当前视口（不调 fitView/setViewport）。 */
-    NoChange,
+    FitFull = 'FitFull',
+    FitId = 'FitId',
+    /** 不跳视口：undo/redo 数据回滚、只读/固定页保持当前视口（不调 fitView/setViewport）。 */
+    NoChange = 'NoChange',
 }
 
 export type EditingObjectRes = {

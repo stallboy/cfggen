@@ -109,7 +109,6 @@ export const FlowGraph = memo(function FlowGraph({children}: {
                 minZoom={0.1}
                 maxZoom={2}
                 deleteKeyCode={null}
-                // fitView
                 onNodeDoubleClick={onNodeDoubleClick}
                 onNodeContextMenu={onNodeContextMenu}
                 onPaneClick={closeMenu}

@@ -117,20 +117,20 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
         navigate(navTo('record', refId.table, refId.id, isEditMode));
     }, [navigate, isEditMode]);
 
-    const [lastFitViewPath, setLastFitViewPath] = useState<string | undefined>(undefined);
+    // 固定面板「首次 FitFull 后保持视口」：fittedPathname 记录已适配过的 pathname。
+    // useEntityToGraph 在 FitFull 分支回调 setFitViewForPathname 写入；再次进入同 pathname → fitNone 不跳。
+    // 写入与比较用同一个 pathname（见 cfgeditor/docs/fitview-视口适配机制.md §7）。
+    const [fittedPathname, setFittedPathname] = useState<string | undefined>(undefined);
     const pathname = isUnrefMode
         ? `/recordUnref/${curTable.name}`
         : `/recordRef/${curTable.name}/${curId}`;
     let editingObjectRes;
-    if (inDragPanelAndFix) {
-        const pathnameWithFix = pathname + '/fix';
-        if (lastFitViewPath && lastFitViewPath === pathnameWithFix) {
-            editingObjectRes = fitNone;
-        }
+    if (inDragPanelAndFix && fittedPathname === pathname) {
+        editingObjectRes = keepViewport;
     }
 
-    const setFitViewForPathname = useCallback((pathname: string) => {
-        setLastFitViewPath(pathname);
+    const setFitViewForPathname = useCallback((pn: string) => {
+        setFittedPathname(pn);
     }, []);
 
 
@@ -146,7 +146,7 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
     return null;
 }
 
-const fitNone: EditingObjectRes = { fitView: EFitView.FitNone, isEdited: false }
+const keepViewport: EditingObjectRes = { fitView: EFitView.NoChange, isEdited: false }
 
 export function RecordRef({ schema, notes, curTable, curId, refIn, refOutDepth, maxNode, nodeShow, inDragPanelAndFix }: {
     schema: Schema;

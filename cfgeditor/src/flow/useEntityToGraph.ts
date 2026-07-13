@@ -5,11 +5,11 @@ import {convertNodeAndEdges} from "./entityToNodeAndEdge.ts";
 import {useQuery} from "@tanstack/react-query";
 import {layoutAsync} from "./layoutAsync.ts";
 import {EntityNode, NodeDoubleClickFunc, NodeMenuFunc} from "./FlowGraph.tsx";
-import {Entity, EditingObjectRes, EFitView} from "@/domain/entityModel";
+import {Entity, EditingObjectRes} from "@/domain/entityModel";
 import {MenuItem} from "./FlowContextMenu.tsx";
 import {NodePlacementStrategyType, NodeShowType} from "@/domain/storageJson";
 import {FlowGraphContext} from "./FlowGraphContext.ts";
-import {computeStableViewport} from "./viewportMath.ts";
+import {pickViewportAction} from "./viewportMath.ts";
 import {pickLayoutKeys} from "@/domain/nodeShowLayoutKeys";
 
 
@@ -141,6 +141,7 @@ export function useEntityToGraph({
         return undefined;
     }, [nodes, id2RectMap]);
 
+    // Effect 1：节点/边/菜单回调下发。随 nodes/edges/菜单回调变化重跑。
     useEffect(() => {
         if (newNodes) {
             flowGraph.setNodeMenuFunc(nodeMenuFunc);
@@ -150,34 +151,6 @@ export function useEntityToGraph({
             }
             setNodes(newNodes);
             setEdges(edges);
-            if (viewportReady && id2RectMap) {
-                if (editingObjectRes === undefined || editingObjectRes.fitView === EFitView.FitFull) {
-                    // FitFull：原 getNodesBounds+getViewportForBounds+setViewport 三步等价于一次公开 fitView。
-                    // padding/minZoom/maxZoom 与原 getViewportForBounds(bounds,w,h,0.3,1,0.2) 对齐。
-                    void fitView({padding: 0.2, minZoom: 0.3, maxZoom: 1});
-                    if (setFitViewForPathname) {
-                        setFitViewForPathname(pathname);
-                    }
-                } else if (editingObjectRes?.fitView === EFitView.FitId
-                    && editingObjectRes.fitViewToIdPosition) {
-                    const {id, x, y} = editingObjectRes.fitViewToIdPosition;
-                    const nowXy = id2RectMap.get(id);
-                    if (nowXy !== undefined) { // onDeleteItemFromArray时，是会遇到undefined情况的
-                        // FitId：relayout 后让该节点屏幕坐标不变。fitView 做不到，必须自算（见 viewportMath）。
-                        // anchorOld=旧世界坐标(x,y) anchorNew=新世界坐标(nowXy)；求保持锚点屏幕不动的 newVp。
-                        const newVp = computeStableViewport(
-                            {x, y},
-                            {x: nowXy.x, y: nowXy.y},
-                            getViewport(),
-                        );
-                        void setViewport(newVp);
-                    }
-                } else if (editingObjectRes?.fitView === EFitView.NoChange) {
-                    // undo/redo：数据回滚但保持当前视口——不调 fitView/setViewport。
-                    // 节点 key 稳定时 React 复用实例仅重渲，视口由用户当前意图决定，不回滚。
-                    // FitNone（只读路径，RecordRef）语义同为不跳视口，落空到此。
-                }
-            }
         } else if (layoutError) {
             // 布局失败兜底（layoutAsync throw → react-query retry 耗尽后 error 态）：
             // 把未布局节点（默认位置 100,100）推入保证画布非空 + console.error 反馈，
@@ -186,8 +159,31 @@ export function useEntityToGraph({
             setNodes(nodes);
             setEdges(edges);
         }
-    }, [newNodes, edges, nodeMenuFunc, paneMenu, editingObjectRes, flowGraph, nodeDoubleClickFunc,
-        setNodes, setEdges, id2RectMap, viewportReady, fitView, setViewport, getViewport,
-        setFitViewForPathname, pathname, layoutError, nodes]);
+    }, [newNodes, edges, nodeMenuFunc, paneMenu, nodeDoubleClickFunc, flowGraph,
+        setNodes, setEdges, layoutError, nodes]);
+
+    // Effect 2：视口动作。刻意与 Effect 1 拆开——视口只随「视口指令(editingObjectRes) / layout 结果
+    // (id2RectMap) / 就绪信号(viewportReady)」变化，不含 paneMenu/nodeMenuFunc 等菜单回调。
+    // 否则值类编辑 coalescing flush 会让 Record 的 canUndo 翻转 → paneMenu 新引用 → 视口被连带重置
+    // （EntityForm 输入 primitive 后过一会偶发 fitFull 的 bug，根因就在此）。
+    useEffect(() => {
+        if (viewportReady && id2RectMap && newNodes) {
+            const action = pickViewportAction(editingObjectRes, id2RectMap, getViewport());
+            if (action.kind === 'fitFull') {
+                // FitFull：原 getNodesBounds+getViewportForBounds+setViewport 三步等价于一次公开 fitView。
+                // padding/minZoom/maxZoom 与原 getViewportForBounds(bounds,w,h,0.3,1,0.2) 对齐。
+                void fitView({padding: 0.2, minZoom: 0.3, maxZoom: 1});
+                if (setFitViewForPathname) {
+                    setFitViewForPathname(pathname);
+                }
+            } else if (action.kind === 'fitId') {
+                // FitId：relayout 后让锚点节点屏幕坐标不变。fitView 做不到，newVp 已由
+                // pickViewportAction 经 computeStableViewport 算好。
+                void setViewport(action.viewport);
+            }
+            // noop（NoChange / FitId 但 id 不存在）：不调 fitView/setViewport，保持当前视口。
+        }
+    }, [editingObjectRes, id2RectMap, viewportReady, newNodes, fitView, setViewport, getViewport,
+        setFitViewForPathname, pathname]);
 
 }
