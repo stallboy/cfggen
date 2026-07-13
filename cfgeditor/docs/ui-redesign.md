@@ -9,25 +9,26 @@
 
 ## 0. 一句话总目标
 
-让顶栏回答 **"我在哪 / 我能去哪"**，让侧栏回答 **"什么和我相关"**，让设置回答 **"应用该怎么表现"**，让添加回答 **"我怎么写入数据"** ——
-四者边界清晰、生效模型一致、布局没有补丁。
+让**顶栏**只回答 **"我在哪 + 此刻高频要做什么"**；让**侧栏**按意图切换面板，分别回答 **"什么和我相关"(发现) / "怎么写入数据"(添加) / "应用该怎么表现"(设置)** ——
+区域边界清晰、生效模型一致、布局没有补丁，且**低频与危险操作一律收进深入口**、不占顶栏。
 
 ---
 
 ## 1. 现状诊断：五个根本问题
 
-### 问题 ❶ 布局根因：HeaderBar 绝对定位 + 全局占位 hack
+### 问题 ❶ 避让散落：浮层遮挡后，每个文字面板自己挖坑
 
-`HeaderBar` 外层 `position: relative`、内层 `position: absolute`，使它**脱离文档流**。后果是每一个被它遮挡的子页面都得自己在顶部挖一个坑：
+`HeaderBar` 是**有意的浮层**（`position:absolute; zIndex:1`，让画布占满全屏，详见 §3）。浮层本身没错，错在**被遮挡的文字面板各自挖坑避让**，且数值还不一致：
 
 ```tsx
-// Finder.tsx / Chat.tsx 里都有这一行补丁
+// Finder.tsx / Chat.tsx 里：height: 32
+// Setting.tsx 里：    height: 16   ← 连避让量都不统一
 return <>
     <div style={{height: 32}}/>   // ← 纯粹为了不被 HeaderBar 遮住
     ...
 ```
 
-这是教科书级的反模式：**布局的债，让每个子页面来还**。新增任何面板都要记得加这 32px，忘了就遮挡。
+这是"避让责任散落到 N 个子页面"：新增面板要记得加 px、还得猜加多少，忘了就遮挡。
 
 ### 问题 ❷ HeaderBar 职责过载，五类语义挤一行
 
@@ -76,12 +77,12 @@ return <>
 
 | 区域 | 用户的问题 | 本质 |
 |---|---|---|
-| **HeaderBar** | 我在哪？我能去哪？ | 定位 + 导航 |
+| **HeaderBar** | 我在哪？此刻高频做什么？ | 定位 + 高频动作（"去哪"由侧栏面板切换 + 历史导航承担） |
 | **Finder（侧栏）** | 什么和我相关？ | 探索（最近/引用/搜索） |
 | **Setting** | 应用该怎么表现？ | 配置（显示/连接/数据源） |
 | **Add** | 我怎么写入数据？ | 写入（AI 生成 / JSON 导入） |
 
-**教学**：当一个 tab/区域让你犹豫"这个该放哪"时，问一句"用户在做这件事时，心里的问题是哪个"。例如"删除当前记录"——用户的问题是"这条数据我不要了"，那是**对当前数据的操作**，归属是记录视图，**不是设置**。
+**教学**：当一个 tab/区域让你犹豫"这个该放哪"时，问一句"用户在做这件事时，心里的问题是哪个"——这是主原则。但有一个 **override：频率 + 危险性**。即使某操作语义上属于"当前对象"（如"删除当前记录"是对当前数据的操作），若它**低频且危险**，就应收进深入口（Setting 工具 tab）埋深防误触，而不是摆在记录视图的浅处。"按问什么分组"决定大方向，"频率 + 危险性"决定深浅。
 
 ### 原则 ② 一致的生效模型（The Effect Model）
 
@@ -98,7 +99,7 @@ return <>
 | 需求 | 该用 | 现在用（错/次优） | 为什么 |
 |---|---|---|---|
 | 可点击的条目列表 | **List** | Table(showHeader=false) | Table 是数据网格，导航是 List 的语义 |
-| 模式 / 类型切换 | **Segmented** | Radio.Group button / Dropdown | Segmented 更轻、当前态可见、原生支持 icon |
+| 模式 / 类型切换（少选项 + 高频 + 空间允许） | **Segmented** | Radio.Group button | Segmented 更轻、当前态可见、原生支持 icon。选项多/低频/空间紧时仍用 Dropdown（见 §5） |
 | 危险操作前确认 | **Popconfirm** | 直接 mutate | 删除无确认=数据事故 |
 | 计数标记 | **Badge** | `<Tag>{n}</Tag>` | Badge 表"数量"，Tag 表"分类" |
 | 随时可能用的浮动动作 | **FloatButton.Group** | 顶栏 Button | 不占顶栏，语义即"浮动工具" |
@@ -106,11 +107,11 @@ return <>
 
 **教学**：`Tag` 和 `Badge` 都能显示数字，但 `Tag` 语义是"给事物贴分类标签"，`Badge` 语义是"附着在事物上的计数/状态"。选错不会报错，但会让 UI"哪里都对、哪里都别扭"。
 
-### 原则 ④ 布局容器自己负责留白（Layout Owns Its Space）
+### 原则 ④ 避让责任归一处，不散落到子页面（Layout Owns Its Space）
 
-谁遮挡，谁负责留白；**不要让被遮挡者自己挖坑**。HeaderBar 回到正常文档流，`height:32` 占位全部删除。
+HeaderBar 是**有意的浮层**（让画布占满全屏，见 §3），它遮挡文字面板顶部是既定代价。问题不在浮层，而在"避让"由谁负责：现状是每个文字面板自己挖一个 `height:32`/`height:16` 的坑——**避让责任散落到 N 个子页面**。正确做法是把避让收敛到**一处**（`SidePanelShell` + `HEADER_HEIGHT` 常量），子面板不再关心 header 有多高。
 
-**教学**：这是"责任归属"问题。绝对定位的 header 把"给自己腾位置"的责任转嫁给了 N 个子页面，耦合点从 1 变成 N。修复后耦合点归 1，新增页面零成本。
+**教学**：这是"责任归属"问题。浮层把"给自己腾位置"的责任转嫁给了 N 个子页面，耦合点从 1 变成 N。收敛到一处后耦合点归 1，新增面板套个 Shell 即可，魔法数也随之消失。
 
 ### 原则 ⑤ 聚合相似意图（Cohesion by Intent）
 
@@ -147,9 +148,15 @@ const SPACE_STYLE = {position: 'absolute', zIndex: 1};
 // 一处定义
 export const HEADER_HEIGHT = 40;
 
-// 文字类侧栏统一外壳
+// 文字类侧栏统一外壳：顶部固定占位（避让浮层 header）+ 下方独立滚动
+// ⚠️ 别用 paddingTop——它在 overflow 容器里会随内容滚走，导致内容滚到 header 下面。
 function SidePanelShell({children}: {children: React.ReactNode}) {
-  return <div style={{height: '100%', overflow: 'auto', paddingTop: HEADER_HEIGHT}}>{children}</div>;
+  return (
+    <div style={{height: '100%', display: 'flex', flexDirection: 'column'}}>
+      <div style={{flexShrink: 0, height: HEADER_HEIGHT}}/>      {/* 固定占位，不参与滚动 */}
+      <div style={{flex: 1, minHeight: 0, overflow: 'auto'}}>{children}</div>
+    </div>
+  );
 }
 
 // CfgEditorApp.tsx —— 文字类套 Shell，画布类不套
@@ -196,13 +203,14 @@ else if (dragPanel === 'setting') dragPage = <SidePanelShell><Suspense fallback=
 ```tsx
 import {Space, Badge} from 'antd';
 
-<Space.Compact size="small">
-  <TableList schema={schema}/>          {/* 内部 Select，去自带 width，由 Compact 分配 */}
-  <IdList curTable={curTable}/>
-</Space.Compact>
-
-{/* 状态标记：未保存 = 一个附着在定位条上的小圆点 */}
-{unsavedSign && <Badge status="warning" offset={[-4, 0]} dot/>}
+{/* 未保存 = 附着在定位条右上角的小圆点。Badge 必须包裹子元素圆点才附着；
+    dot=false 时仅作透明包裹（不渲染圆点），所以无条件包裹即可 */}
+<Badge dot={!!unsavedSign} status="warning" offset={[-4, 0]}>
+  <Space.Compact size="small">
+    <TableList schema={schema}/>          {/* 内部 Select，去自带 width，由 Compact 分配 */}
+    <IdList curTable={curTable}/>
+  </Space.Compact>
+</Badge>
 
 {/* nextId：从裸 Text 改成 Tooltip + 可复制小标签 */}
 {nextId && <Tooltip title={t('nextSlot')}><Typography.Text copyable type="secondary">{nId}</Typography.Text></Tooltip>}
@@ -238,7 +246,7 @@ import {Space, Badge} from 'antd';
 <Button size="small">{t('unreferenced')} <Tag color="default">{count}</Tag></Button>
 
 // 建议：count 作为 Badge 附着在按钮上，或按钮本身用 Badge 包裹
-<Badge count={count} offset={[-2, 0)} size="small">
+<Badge count={count} offset={[-2, 0]} size="small" overflowCount={99}>
   <Button size="small" onClick={handleClick}>{t('unreferenced')}</Button>
 </Badge>
 ```
@@ -265,7 +273,7 @@ const menuItems = [
   {type: 'group', label: t('builtinPanel'), children: [
     {key: 'finder',   icon: <CompassOutlined/>,   label: t('finder')},
     {key: 'recordRef',icon: <ApartmentOutlined/>, label: t('recordRef')},
-    {key: 'chat',     icon: <RobotOutlined/>,     label: t('chat')},
+    {key: 'add',      icon: <FileAddOutlined/>,   label: t('addData')},   // 原 chat 入口演进为 AddPanel(AI+JSON)，见 §8
     {key: 'setting',  icon: <SettingOutlined/>,   label: t('setting')},
     {key: 'none',     icon: <CloseOutlined/>,     label: t('closePanel')},
   ]},
@@ -318,14 +326,14 @@ export function NavList<T>({items, rowKey, toNav, renderTitle, renderExtra, empt
   const {isEditMode} = useMyStore();
   return (
     <List size="small" split dataSource={items} rowKey={rowKey}
-          locale={{emptyText: empty ?? <Empty description={false}/>}}>
-      {items.map(item => (
-        <List.Item style={{cursor: 'pointer'}} onClick={() => navigate(navTo(curPage, toNav(item).table, toNav(item).id, isEditMode))}>
-          <List.Item.Meta title={<Typography.Link>{renderTitle(item)}</Typography.Link>}/>
-          {renderExtra && <div>{renderExtra(item)}</div>}
-        </List.Item>
-      ))}
-    </List>
+          locale={{emptyText: empty ?? <Empty description={false}/>}}
+          renderItem={(item) => (
+            <List.Item style={{cursor: 'pointer'}}
+              onClick={() => navigate(navTo(curPage, toNav(item).table, toNav(item).id, isEditMode))}>
+              <List.Item.Meta title={<Typography.Link>{renderTitle(item)}</Typography.Link>}/>
+              {renderExtra && <div>{renderExtra(item)}</div>}
+            </List.Item>
+          )}/>
   );
 }
 ```
@@ -396,9 +404,10 @@ const {data, isFetching, error} = useQuery({
 | **固定页 Pinned** | `FixPages` | 显式提交 |
 | **工具 Tools** | 页面类型切换（`Radio.Group`→可改 `Segmented`）+ 全屏 + 快捷键速查（`KeyShortcut`）+ 导出 PNG | 即时 / 只读 |
 
-被**移出 Setting** 的（仅这两项；低频项都留在"工具"tab，不上顶栏）：
-- **删除当前记录** → 移到**记录编辑视图**（EntityForm / 记录操作区），加 Popconfirm（对当前数据的操作，归记录视图而非设置）
+被**移出 Setting** 的（仅一项）：
 - AddJson → 与 Chat 聚合为"添加数据"独立侧栏面板（§8）
+
+> **删除当前记录**故意**留在"工具"tab 深处**：低频 + 危险操作就该埋深防误触（再叠加 §7.3 的 Popconfirm）。**不提到记录视图**——浅入口对危险操作是缺点，不是优点。
 
 > **明确归属**：页面切换 / 全屏 / 快捷键 / 导出 PNG 都是低频，**留在 Setting 的"工具"tab**，不占顶栏（顶栏只放高频，见 §4）。
 > **关键纠正**：`FlowVisualizationSetting` 从 `ThemeSetting` 拆出归"显示"——它和主题 JSON 文件无关，历史误植。
@@ -412,19 +421,19 @@ const {data, isFetching, error} = useQuery({
 
 > 现状里 `NodeShowSetting` 用 `onFinish`（要保存），而 `BasicSetting`/`FlowVisualizationSetting` 用 `onValuesChange`（即时），三者同属"显示偏好"却生效模型不一。统一为即时生效。
 
-### 7.3 删除记录：加 Popconfirm + 归位
+### 7.3 删除记录：保留深入口，只补 Popconfirm
 
-当前"删除当前记录"是一个裸 `Button danger` 直接 `mutate()`，**无二次确认**，且埋在 Setting 里。
+当前"删除当前记录"是裸 `Button danger` 直接 `mutate()`，**无二次确认**。**位置（埋在 Setting"工具"tab 深处）是对的，不动**——低频 + 危险操作就该埋深防误触。唯一要补的是执行前的二次确认：
 
 ```tsx
-// 移到记录视图后
+// 留在"工具"tab 原位，只把裸 Button 包一层 Popconfirm
 <Popconfirm title={t('deleteCurRecordConfirm')} okText={t('delete')} okButtonProps={{danger: true}}
             onConfirm={() => deleteRecordMutation.mutate()}>
   <Button danger icon={<DeleteOutlined/>}>{t('deleteCurRecord')}</Button>
 </Popconfirm>
 ```
 
-> 危险操作必须二次确认。这是数据安全底线，不是审美问题。
+> 危险操作的安全靠两层叠加：**深入口**（降低误触概率）+ **Popconfirm**（执行前显式确认）。不是二选一——埋深已经挡掉大部分误触，Popconfirm 再兜底最后一步。
 
 ### 7.4 Tabs 写法（v6 已核实）
 
@@ -441,7 +450,7 @@ const {data, isFetching, error} = useQuery({
 
 > - `tabPlacement`（不是 `tabPosition`）—— 现代码 `tabPlacement='start'` **本身是对的**，文档在此澄清，避免重构时被人"顺手改错"。
 > - `items[].label` 是 ReactNode，可带 icon。
-> - `destroyOnHidden`（5.25.0+）让非活动 tab 内容卸载，配合 Setting 的懒加载更省内存（Chat/AddJson 这类重组件尤其受益）。
+> - `destroyOnHidden`（5.25.0+）让非活动 tab 内容卸载、省内存；Setting 里 `TauriSetting`（带资源查询）等有数据获取的 tab 切走时及时卸载，避免后台查询空跑。
 
 ---
 
@@ -491,7 +500,7 @@ export function useIsCurTableEditable(schema?: Schema): boolean {
 // 改为：用 createStyles / 模块级常量 + token
 import {createStyles} from 'antd-style';
 
-const useStyles = createStyles(({token, css}) => ({
+const useStyles = createStyles(({token}) => ({
   container: {display: 'flex', flexDirection: 'column', height: 'calc(100vh - 48px)', background: token.colorBgContainer},
   // ...
 }));
@@ -519,9 +528,8 @@ const {styles} = useStyles();
 | **Space.Compact** | `block`/`direction`/`size` | 表+记录 Select 组合 |
 | **Breadcrumb** | `items[]`(项含 title/onClick/menu/href)；children 拼接已废弃 | （可选）表›记录 路径 |
 | **Badge** | `count`/`status`/`dot`/`offset`/`overflowCount` | 未保存、未引用计数 |
-| **Popover** | `content`/`trigger`/`placement` | 快捷键速查（替代常驻 tab） |
 | **Popconfirm** | `title`/`onConfirm`/`okButtonProps:{danger:true}` | 删除记录二次确认 |
-| **Tour** | `open`/`steps`/`current`/`onClose`/`onFinish` | （可选）首次使用引导，**不适合**常驻速查 |
+| **Popover** / **Tour** | `content`/`trigger`；`open`/`steps`/`current` | 本方案**未采用**——快捷键速查已留 Setting 工具 tab；Tour 仅适合一次性首引导，不在本方案范围 |
 
 > **避坑**：`tabPosition` 别用（已废弃，用 `tabPlacement`）；List 别指望 `virtual`（没有）；Breadcrumb 别用 children 拼接（用 `items`）。
 
@@ -546,10 +554,10 @@ const {styles} = useStyles();
 ## 附录 A：风险与权衡备忘
 
 - **List 无 virtual**：RefIdList 长列表必须保留 Table virtual 或自实现限量/虚拟化，不可盲目换 List。（§6.2）
-- **FloatButton.disabled** 在 6.4.0 才加入，给历史按钮做禁用前确认项目 antd 版本 ≥6.4。（§4.4）
+- **FloatButton.disabled** 在 6.4.0 才加入，给历史按钮做禁用前确认项目 antd 版本 ≥6.4。（§4.2 可选方案）
 - **`destroyOnHidden`** 是 5.25.0+，确认项目 antd ≥5.25（v6 默认满足）。（§7.4）
 - **dragPanel 新增 `'add'` 类型**：需在 `store` 的 `dragPanel` 类型、`CfgEditorApp` 的面板渲染分支、`HeaderBar` 的面板菜单里同步新增，三处缺一不可。
-- **删除记录归位到记录视图**：需要确认记录视图（EntityForm 周边）有合适的放置点；若没有，P1 阶段可先只加 Popconfirm、暂留在原位，归位放 P2。
+- **删除记录**：留 Setting"工具"tab 原位（低频危险，故意埋深），仅叠加 Popconfirm；P1 即可完成，不涉及任何视图改动。
 
 ## 附录 B：一页纸总览
 
@@ -570,5 +578,5 @@ const {styles} = useStyles();
     连接(服务器/AI, 保存) | 数据源(资源, 保存) | 主题(文件, 保存) |
     固定页(保存) | 工具(页面切换/全屏/快捷键/导出, 低频)
   }
-  ↳ 删除记录 → 记录视图(Popconfirm)；低频工具 → Setting"工具"tab（均不上顶栏）
+  ↳ 删除记录 → 留 Setting"工具"tab 深处 + Popconfirm（低频危险，故意埋深）；低频工具同在此 tab（均不上顶栏）
 ```
