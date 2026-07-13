@@ -315,7 +315,6 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
     );
 
     return (<>
-        <div style={{height: 32}}/>
         <div style={styles.chatContainer}>
             {chatHeader}
             {chatList}

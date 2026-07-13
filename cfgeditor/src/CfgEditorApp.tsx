@@ -21,6 +21,7 @@ import {HeaderBar} from "./routes/headerbar/HeaderBar.tsx";
 import {FlowGraph} from "./flow/FlowGraph.tsx";
 import {FlowStyleManager} from "./flow/FlowStyleManager.tsx";
 import {Finder} from "./routes/search/Finder.tsx";
+import {SidePanelShell} from "./layout/SidePanelShell.tsx";
 import {getCurrentEditingSession} from "./services/editingSession";
 
 // Chat / Setting 仅在 dragPanel 切换到对应面板时才渲染，懒加载以推迟
@@ -131,12 +132,12 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
                            inDragPanelAndFix={false}/>
             </FlowGraph>;
         } else if (dragPanel == 'finder') {
-            dragPage = <Finder schema={schema}/>;
+            dragPage = <SidePanelShell><Finder schema={schema}/></SidePanelShell>;
         } else if (dragPanel == 'chat') {
-            dragPage = <Suspense fallback={null}><Chat schema={schema} key={'chat-' + curTableId}/></Suspense>;
+            dragPage = <SidePanelShell><Suspense fallback={null}><Chat schema={schema} key={'chat-' + curTableId}/></Suspense></SidePanelShell>;
 
         } else if (dragPanel == 'setting') {
-            dragPage = <Suspense fallback={null}><Setting schema={schema} curTable={curTable} flowRef={ref}/></Suspense>
+            dragPage = <SidePanelShell><Suspense fallback={null}><Setting schema={schema} curTable={curTable} flowRef={ref}/></Suspense></SidePanelShell>
 
         } else if (dragPanel != 'none') {
             const fix = getFixedPage(pageConf, dragPanel);
