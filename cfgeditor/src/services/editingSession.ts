@@ -328,13 +328,10 @@ export class EditingSession {
         this.bumpStructure({fitView: EFitView.NoChange});
     }
 
-    canUndo(): boolean {
-        return this.undoStore.canUndo();
-    }
+    // 箭头字段：作为引用传给 useSyncExternalStore 时 this 不丢（与 subscribe/getStructureVersion 等读取器同约定）。
+    canUndo = (): boolean => this.undoStore.canUndo();
 
-    canRedo(): boolean {
-        return this.undoStore.canRedo();
-    }
+    canRedo = (): boolean => this.undoStore.canRedo();
 
     /** unmount 清理：flush 值类组（不丢最后一次键入）+ 清 timer 防 setTimeout 闭包持 session 泄漏 + 清 listeners。 */
     dispose(): void {

@@ -45,7 +45,7 @@ dependencies {
 jte {
     sourceDirectory = file('src/main/resources/jte').toPath()
     generate()
-    contentType = 'Plain'
+    contentType = gg.jte.ContentType.Plain
     trimControlStructures = true
 }
 
