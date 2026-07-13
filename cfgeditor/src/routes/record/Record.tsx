@@ -150,7 +150,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     }, [isEditing, recordResult, session]);
 
     // undo 基准初始化（mount）+ unmount 清理。构造函数在 render 期，structuredClone 是副作用，挪到 effect；
-    // unmount 显式 dispose 清 listeners（coalesce timer 清理在阶段3 dispose 扩展），防 session 被 setTimeout 闭包持住泄漏。
+    // unmount 显式 dispose 清 listeners + coalesce timer，防 session 被 setTimeout 闭包持住泄漏。
     useEffect(() => {
         session.initUndoBaseline();
         return () => session.dispose();

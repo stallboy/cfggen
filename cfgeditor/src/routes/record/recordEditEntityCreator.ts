@@ -239,7 +239,7 @@ export class RecordEditEntityCreator {
         const editOnUpdateFold = (fold: boolean, position: EntityPosition, embeddedFieldChain?: (string | number)[]) => {
             // 如果提供了 embeddedFieldChain，使用它；否则使用默认的 fieldChain
             const targetChain = embeddedFieldChain ?? fieldChain;
-            // D1 后 fold 状态从 $fold 派生：updateFold 写 obj.$fold + structureChange 驱动重渲读新 $fold，
+            // fold 状态从 $fold 派生：updateFold 写 obj.$fold + structureChange 驱动重渲读新 $fold，
             // 不再双写 Folds state（interfaceOnChangeImpl 的 $fold 写入也自然被覆盖）。
             this.session.updateFold(fold, targetChain, position);
         };
@@ -620,7 +620,7 @@ export class RecordEditEntityCreator {
 
     /**
      * 获取 fold 状态：直接读 obj.$fold（持久化层）。
-     * D1 后 Folds 不再独立 React state——fold 状态从此处 $fold 派生，undo/redo 恢复 $fold 即恢复 fold。
+     * Folds 不再独立 React state——fold 状态从此处 $fold 派生，undo/redo 恢复 $fold 即恢复 fold。
      * 无 obj 或无 $fold → undefined（shouldEmbed 视 undefined 为内嵌）。
      */
     private getFoldState(obj?: JSONObject): boolean | undefined {
@@ -679,5 +679,3 @@ function getImplNameOptions(sInterface: SInterface): EntityEditFieldOptions {
     }
     return {options: impls, isValueInteger: false, isEnum: true};
 }
-
-// ChainFold / Folds / isChainEqual 已下沉到 domain/folds.ts（D1 后 creator 不再持有 Folds state，fold 状态从 $fold 派生）

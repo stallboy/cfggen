@@ -10,7 +10,7 @@ import {JSONObject} from '@/api/recordModel';
 type Snapshot = JSONObject;
 
 /**
- * UndoStore —— undo/redo 的纯数据栈（快照栈模式，见 docs/undo-redo-设计.md §2.2）。
+ * UndoStore —— undo/redo 的纯数据栈（快照栈模式）。
  *
  * 不依赖 session、不调 React——只管 baseline / done / undone 三段。session 负责 capture/apply 时机
  * 与 bumpStructure 驱动 React。这样栈语义可独立单测（栈深、分叉、baseline 栈底）。
@@ -21,7 +21,7 @@ type Snapshot = JSONObject;
  * - undone：已 undo、可 redo。popRedo 弹出。
  *
  * 分叉：capture 清空 undone（undo 后又新编辑，redo 历史作废，与所有编辑器一致）。
- * maxDepth：栈深硬上限，超限丢弃最旧（大 record 的内存兜底，§6 Q11）。
+ * maxDepth：栈深硬上限，超限丢弃最旧（大 record 的内存兜底）。
  */
 export class UndoStore {
     private baseline!: Snapshot;

@@ -125,8 +125,11 @@ export class EditingSession {
     /** primitive 表单值变更。就地改 editingObject，仅 notifyEditingState 刷新 HeaderBar 脏标记。
      *  changed（可选）= antd changedValues，用于值类 coalescing 合并 key + Form.List 长度 diff。
      *  不传 changed（如单测直接调）→ 只写回，不 coalescing。 */
-    updateFormValues(schema: Schema, values: Record<string, unknown>, fieldChains: (string | number)[],
+    updateFormValues(schema: Schema,
+                     values: Record<string, unknown>,
+                     fieldChains: (string | number)[],
                      changed?: Record<string, unknown>): void {
+
         const obj = getFieldObj(this.editingObject, fieldChains) as JSONObject;
         const name = obj['$type'] as string;
         if (name == undefined) {
@@ -349,7 +352,7 @@ export class EditingSession {
 
     /** 结构变更通用收尾：写 fitView 契约 → bump 版本（触发订阅者重渲）→ 同步清 layout 缓存 → 刷新脏标记 → emit。
      *  参量化 fitView：undo/redo 传 {fitView: NoChange} 不跳视口；结构操作传 FitId；整体替换/reset 传 FitFull。 */
-    private bumpStructure(opts: {fitView: EFitView; position?: EntityPosition}): void {
+    private bumpStructure(opts: { fitView: EFitView; position?: EntityPosition }): void {
         this.fitView = opts.fitView;
         this.fitViewToIdPosition = opts.position;
         this.structureVersion++;
@@ -385,7 +388,7 @@ export class EditingSession {
         this.undoStore.setBaseline(snap);
     }
 
-    // ---- 值类 coalescing（§2.6）----
+    // ---- 值类 coalescing ----
 
     /** 字段标识：fieldChain + 字段名 → 唯一 string（同字段连续键入合并）。 */
     private coalesceKey(fieldChains: (string | number)[], fieldKey: string): string {

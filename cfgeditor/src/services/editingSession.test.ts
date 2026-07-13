@@ -306,7 +306,7 @@ describe('isDeeplyEqual（导出 + Set 优化）', () => {
     });
 });
 
-describe('EditingSession undo/redo（结构类，阶段2）', () => {
+describe('EditingSession undo/redo（结构类）', () => {
     it('结构编辑后 undo 恢复到编辑前', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
         s.initUndoBaseline();
@@ -388,7 +388,7 @@ describe('EditingSession undo/redo（结构类，阶段2）', () => {
     });
 });
 
-describe('EditingSession 值类 coalescing（阶段3）', () => {
+describe('EditingSession 值类 coalescing', () => {
     // schema: struct Foo { int x; float y; list<int> arr; }
     const schema = new Schema(makeRawSchema([
         makeStruct('Foo', [field('x', 'int'), field('y', 'float'), field('arr', 'list<int>')]),
