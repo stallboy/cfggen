@@ -1,4 +1,4 @@
-import {Button, Tag, Skeleton} from "antd";
+import {Badge, Button, Skeleton} from "antd";
 import {useQuery} from "@tanstack/react-query";
 import {fetchUnreferencedRecords} from "@/api/api";
 import {useMyStore, useLocationData, navTo} from "@/store/store";
@@ -44,12 +44,14 @@ export const UnreferencedButton = memo(function ({curTable}: {
     }
 
     return (
-        <Button
-            size="small"
-            onClick={handleClick}
-            title={t('unreferencedRecords')}
-        >
-            {t('unreferenced')} <Tag color="default">{count}</Tag>
-        </Button>
+        <Badge count={count} size="small" offset={[-2, 0]}>
+            <Button
+                size="small"
+                onClick={handleClick}
+                title={t('unreferencedRecords')}
+            >
+                {t('unreferenced')}
+            </Button>
+        </Badge>
     );
 });

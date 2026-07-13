@@ -1,5 +1,14 @@
-import {Button, Dropdown, Select, Skeleton, Space, Typography} from "antd";
-import {LeftOutlined, RightOutlined, AppstoreOutlined} from "@ant-design/icons";
+import {Badge, Button, Dropdown, Flex, Select, Skeleton, Space, Tooltip, Typography} from "antd";
+import {
+    ApartmentOutlined,
+    AppstoreOutlined,
+    CloseOutlined,
+    CompassOutlined,
+    LeftOutlined,
+    RightOutlined,
+    RobotOutlined,
+    SettingOutlined
+} from "@ant-design/icons";
 import {TableList} from "./TableList.tsx";
 import {IdList} from "./IdList.tsx";
 import {UnreferencedButton} from "./UnreferencedButton.tsx";
@@ -33,9 +42,10 @@ export const HeaderBar = memo(function ({schema, curTable}: {
     schema: Schema | undefined;
     curTable: STable | null;
 }) {
-    const { curPage } = useCurPageRecordOrRecordRef();
-    const { curTableId, curId} = useLocationData();
+    const {curPage} = useCurPageRecordOrRecordRef();
+    const {curTableId, curId} = useLocationData();
     const {dragPanel, pageConf, history, isNextIdShow, isEditMode} = useMyStore();
+    const {editingCurTable, editingCurId, editingIsEdited} = useMyStore();
     const navigate = useNavigate();
     const {t} = useTranslation();
     useHotkeys('alt+1', () => navigate(navTo('table', curTableId, curId)));
@@ -60,35 +70,49 @@ export const HeaderBar = memo(function ({schema, curTable}: {
     useHotkeys('alt+c', () => prev());
     useHotkeys('alt+v', () => next());
 
-    const {editingCurTable, editingCurId, editingIsEdited} = useMyStore();
-
-    let unsavedSign;
-    if (editingIsEdited && editingCurTable == curTableId && editingCurId == curId) {
-        unsavedSign = <Text>{t('unsaved')}</Text>
-    }
+    // 未保存：附着在定位条右上角的小圆点（Badge 必须包裹子元素圆点才附着）
+    const isUnsaved = editingIsEdited && editingCurTable == curTableId && editingCurId == curId;
 
     let nextId;
     if (isNextIdShow && curTable) {
         const nId = getNextId(curTable, curId);
         if (nId) {
-            nextId = <Text>{t('nextSlot')} <Text copyable>{nId}</Text> </Text>
+            nextId = <Tooltip title={t('nextSlot')}>
+                <Text copyable type="secondary">{nId}</Text>
+            </Tooltip>;
         }
     }
 
+    // 面板切换菜单：内置面板与用户固定页分组（type:'group'）
     const menuItems = useMemo(() => [
-        ...(pageConf.pages.map(fp => {
-            return {label: fp.label, key: fp.label};
-        })),
-        {label: t('recordRef'), key: 'recordRef'},
-        {label: t('finder'), key: 'finder'},
-        {label: t('chat'), key: 'chat'},
-        {label: t('setting'), key: 'setting'},
-        {label: t('none'), key: 'none'},
+        {
+            type: 'group' as const, label: t('dragPanel'), children: [
+                {key: 'finder', label: t('finder'), icon: <CompassOutlined/>},
+                {key: 'recordRef', label: t('recordRef'), icon: <ApartmentOutlined/>},
+                {key: 'chat', label: t('chat'), icon: <RobotOutlined/>},
+                {key: 'setting', label: t('setting'), icon: <SettingOutlined/>},
+                {key: 'none', label: t('none'), icon: <CloseOutlined/>},
+            ]
+        },
+        ...(pageConf.pages.length ? [{
+            type: 'group' as const,
+            label: t('pages'),
+            children: pageConf.pages.map(fp => ({key: fp.label, label: fp.label})),
+        }] : []),
     ], [pageConf.pages, t]);
 
+    // 定位条：表 + 记录 收成一个视觉整体
+    const locator = schema
+        ? <Space.Compact size="small">
+            <TableList schema={schema}/>
+            {curTable ? <IdList curTable={curTable}/> : <Skeleton.Input/>}
+        </Space.Compact>
+        : <Select id='table' loading={true}/>;
+
     return <div style={HEADER_STYLE}>
-        <Space size={'small'} style={SPACE_STYLE}>
-            <Space size={'small'}>
+        <Flex align="center" justify="space-between" gap="small" style={SPACE_STYLE}>
+            {/* 左段：面板切换 + 定位(表/记录) + 状态标记 */}
+            <Space size="small" align="center">
                 <Dropdown menu={{
                     items: menuItems,
                     onClick: (e) => setDragPanel(e.key), selectedKeys: [dragPanel]
@@ -96,17 +120,21 @@ export const HeaderBar = memo(function ({schema, curTable}: {
                     <Button icon={<AppstoreOutlined/>} title={t('panelMenu')}/>
                 </Dropdown>
 
-                {schema ? <TableList schema={schema}/> : <Select id='table' loading={true}/>}
-                {curTable ? <IdList curTable={curTable}/> : <Skeleton.Input/>}
-                {curTable ? <UnreferencedButton curTable={curTable}/> : null}
-                {unsavedSign}
-                {nextId}
+                <Badge dot={isUnsaved} status="warning" offset={[-4, 0]}>
+                    {locator}
+                </Badge>
 
+                {nextId}
             </Space>
-            <Space size={'small'}>
-                <Button icon={prevIcon} onClick={prev} disabled={!historyCanPrev(curTableId, curId, history)}/>
-                <Button icon={nextIcon} onClick={next} disabled={!history.canNext()}/>
+
+            {/* 右段：未引用入口 + 历史导航 */}
+            <Space size="small" align="center">
+                {curTable ? <UnreferencedButton curTable={curTable}/> : null}
+                <Space.Compact>
+                    <Button icon={prevIcon} onClick={prev} disabled={!historyCanPrev(curTableId, curId, history)}/>
+                    <Button icon={nextIcon} onClick={next} disabled={!history.canNext()}/>
+                </Space.Compact>
             </Space>
-        </Space>
+        </Flex>
     </div>;
 });
