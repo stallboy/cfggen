@@ -43,6 +43,7 @@ pnpm test:run
 
 约定：
 - 测试文件与源码同目录，命名 `*.test.ts`（如 `domain/schema.test.ts`）。
+- **`*.test.ts` 在搜索时被 `.ignore` 排除**：根目录 `.ignore` 让 ripgrep（即 Grep 工具）忽略测试文件，搜符号时不会被 test 污染上下文。需要查测试内容时用 `Glob src/**/*.test.ts` 定位（Glob 不读 `.ignore`）再 Read——**别用 Grep 搜 test 内容**（`.ignore` 会让它搜不到）。LSP `findReferences` 不受影响，仍会返回 test 里的断言引用。
 - 共享 fixture 工厂在 `src/test/fixtures.ts`（构造 `NodeShowType` / `Entity` / `RawSchema` 等冗长类型）。
 - 环境为 jsdom；`src/test/setup.ts` 给 `window.__TAURI_INTERNALS__` 打 shim，让 `res/resUtils.joinPath`（调用 `@tauri-apps/api` 的 `path.sep()`）可在测试中运行。
 - 当前覆盖范围：`domain/schema`、`domain/undoStore`、`store/historyModel`、`api/noteModel`、`res/resUtils`、`flow/{colors,calcWidthHeight,entityToNodeAndEdge,embedded/{Folds,FoldStateHelper}}`、`routes/{record/{recordEntityCreator,recordEditEntityCreator,recordRefUtils},table/tableEntityCreator}`。

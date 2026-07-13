@@ -1,0 +1,4 @@
+# 搜索（ripgrep / Claude Code Grep）时忽略测试文件
+# 仅影响 Grep，不影响 git 跟踪 / Glob / LSP / 编辑器。需要查测试时用 Glob **/*.test.ts 精确指定。
+*.test.ts
+*.test.tsx
