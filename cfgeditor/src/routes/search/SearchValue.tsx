@@ -16,7 +16,7 @@ export const SearchValue = memo(function SearchValue() {
     const {server, query, searchMax} = useMyStore();
     const {notification} = App.useApp();
     const {t} = useTranslation();
-    const [value, setValue] = useState(query);
+    const [value, setValue] = useState('');
 
     const {data: searchResult, isFetching, error} = useQuery({
         queryKey: ['search', value, searchMax, server],
@@ -31,7 +31,7 @@ export const SearchValue = memo(function SearchValue() {
 
     useEffect(() => {
         if (error) {
-            notification.error({message: `search err: ${error.message}`, placement: 'topRight', duration: 4});
+            notification.error({title: `search err: ${error.message}`, placement: 'topRight', duration: 4});
         }
     }, [error, notification]);
 
@@ -53,8 +53,9 @@ export const SearchValue = memo(function SearchValue() {
             rowKey={item => `${item.table}-${item.pk}-${item.fieldChain}`}
             toNav={item => ({table: item.table, id: item.pk})}
             renderTitle={item => `${getLastSegment(item.table)}-${item.pk}`}
-            renderExtra={item => <Typography.Text type="secondary" ellipsis
-                                                  style={{maxWidth: 120}}>{item.value}</Typography.Text>}
+            renderExtra={item => <Typography.Text type="secondary" ellipsis style={{maxWidth: 160}}>
+                {item.fieldChain}{item.value ? `: ${item.value}` : ''}
+            </Typography.Text>}
         />;
     }
 

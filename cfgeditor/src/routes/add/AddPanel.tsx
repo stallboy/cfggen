@@ -22,11 +22,17 @@ export const AddPanel = memo(function AddPanel({schema}: { schema: Schema | unde
     return (
         <Flex vertical gap="small" style={{height: '100%'}}>
             <Segmented block value={mode} options={[
-                {icon: <RobotOutlined/>, label: t('chat'), value: 'ai'},
-                {icon: <CodeOutlined/>, label: t('addJson'), value: 'json'},
+                {icon: <RobotOutlined/>, label: t('aiGenerate'), value: 'ai'},
+                {icon: <CodeOutlined/>, label: t('jsonImport'), value: 'json'},
             ]} onChange={(v) => setMode(v as 'ai' | 'json')}/>
-            <div style={{flex: 1, minHeight: 0, overflow: 'auto'}}>
-                {mode === 'ai' ? <Chat schema={schema}/> : <AddJson schema={schema}/>}
+            {/* 两侧常驻、用 display 隐藏非活动侧，避免切换卸载 Chat 丢失 useXChat 对话 */}
+            <div style={{flex: 1, minHeight: 0}}>
+                <div style={{height: '100%', display: mode === 'ai' ? 'flex' : 'none', flexDirection: 'column'}}>
+                    <Chat schema={schema}/>
+                </div>
+                <div style={{height: '100%', display: mode === 'json' ? 'block' : 'none', overflow: 'auto'}}>
+                    <AddJson/>
+                </div>
             </div>
         </Flex>
     );

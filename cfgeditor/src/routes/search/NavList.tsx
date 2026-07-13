@@ -12,6 +12,8 @@ interface NavListProps<T> {
     renderTitle: (item: T) => ReactNode;
     /** 右侧次要信息（TimeAgo / depth / value 等） */
     renderExtra?: (item: T) => ReactNode;
+    /** 跳转是否写入导航历史；派生列表（如最近访问）传 false 避免循环污染 alt+c/v 链 */
+    addHistory?: boolean;
     empty?: ReactNode;
 }
 
@@ -24,7 +26,7 @@ const itemStyle: CSSProperties = {cursor: 'pointer', paddingInline: 8};
  * 注意：List 在 v6 无原生 virtual，故仅用于条目不多的场景；
  * 长列表（如 RefIdList 可能上百）仍保留 Table virtual。
  */
-export function NavList<T>({items, rowKey, toNav, renderTitle, renderExtra, empty}: NavListProps<T>) {
+export function NavList<T>({items, rowKey, toNav, renderTitle, renderExtra, empty, addHistory = true}: NavListProps<T>) {
     const navigate = useNavigate();
     const {curPage} = useCurPageRecordOrRecordRef();
     const {isEditMode} = useMyStore();
@@ -34,7 +36,7 @@ export function NavList<T>({items, rowKey, toNav, renderTitle, renderExtra, empt
               locale={{emptyText: empty ?? <Empty description={false}/>}}
               renderItem={(item) => (
                   <List.Item style={itemStyle}
-                             onClick={() => navigate(navTo(curPage, toNav(item).table, toNav(item).id, isEditMode))}>
+                             onClick={() => navigate(navTo(curPage, toNav(item).table, toNav(item).id, isEditMode, addHistory))}>
                       <List.Item.Meta title={<Typography.Link>{renderTitle(item)}</Typography.Link>}/>
                       {renderExtra ? <div>{renderExtra(item)}</div> : null}
                   </List.Item>

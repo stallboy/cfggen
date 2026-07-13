@@ -31,7 +31,7 @@ export const Setting = memo(function Setting({schema, curTable, flowRef}: {
         },
         {
             key: 'behavior',
-            label: t('basicSetting'),
+            label: t('behavior'),
             children: <BasicSetting/>,
         },
         {
@@ -67,6 +67,6 @@ export const Setting = memo(function Setting({schema, curTable, flowRef}: {
 
     return <div style={{paddingRight: 24}}>
         <Divider/>
-        <Tabs items={items} tabPlacement='start'/>
+        <Tabs items={items} tabPlacement='start' destroyOnHidden/>
     </div>
 });

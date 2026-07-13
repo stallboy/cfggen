@@ -86,10 +86,10 @@ export const HeaderBar = memo(function ({schema, curTable}: {
     // 面板切换菜单：内置面板与用户固定页分组（type:'group'）
     const menuItems = useMemo(() => [
         {
-            type: 'group' as const, label: t('dragPanel'), children: [
+            type: 'group' as const, label: t('builtinPanel'), children: [
                 {key: 'finder', label: t('finder'), icon: <CompassOutlined/>},
                 {key: 'recordRef', label: t('recordRef'), icon: <ApartmentOutlined/>},
-                {key: 'add', label: t('addJson'), icon: <FileAddOutlined/>},
+                {key: 'add', label: t('addData'), icon: <FileAddOutlined/>},
                 {key: 'setting', label: t('setting'), icon: <SettingOutlined/>},
                 {key: 'none', label: t('none'), icon: <CloseOutlined/>},
             ]
@@ -131,8 +131,9 @@ export const HeaderBar = memo(function ({schema, curTable}: {
             <Space size="small" align="center">
                 {curTable ? <UnreferencedButton curTable={curTable}/> : null}
                 <Space.Compact>
-                    <Button icon={prevIcon} onClick={prev} disabled={!historyCanPrev(curTableId, curId, history)}/>
-                    <Button icon={nextIcon} onClick={next} disabled={!history.canNext()}/>
+                    <Button icon={prevIcon} onClick={prev} title="alt+c"
+                            disabled={!historyCanPrev(curTableId, curId, history)}/>
+                    <Button icon={nextIcon} onClick={next} title="alt+v" disabled={!history.canNext()}/>
                 </Space.Compact>
             </Space>
         </Flex>

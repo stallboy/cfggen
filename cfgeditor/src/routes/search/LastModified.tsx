@@ -1,6 +1,11 @@
 import {memo, useMemo} from "react";
 import {Schema} from "@/domain/schema";
 import {NavList} from "./NavList.tsx";
+
+function getLastSegment(table: string): string {
+    const seps = table.split('.');
+    return seps[seps.length - 1];
+}
 import TimeAgo from 'react-timeago'
 
 class LastModifiedItem {
@@ -45,7 +50,7 @@ export const LastModified = memo(function LastModified({schema}: {
         items={orderedItems}
         rowKey={item => `${item.table}-${item.id}`}
         toNav={item => ({table: item.table, id: item.id})}
-        renderTitle={item => `${item.id}-${item.title}`}
+        renderTitle={item => `${getLastSegment(item.table)} ${item.id}-${item.title}`}
         renderExtra={item => <TimeAgo date={item.lastModified}/>}
     />;
 });

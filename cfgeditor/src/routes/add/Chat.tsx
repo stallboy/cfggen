@@ -6,6 +6,7 @@ import {Flex, Result, Spin, theme} from "antd";
 import {useState, useEffect} from "react";
 
 import {useMyStore, useLocationData} from "@/store/store";
+import {useIsCurTableEditable} from "./useEditable.ts";
 import {memo, useRef, type CSSProperties} from "react";
 import {Schema} from "@/domain/schema";
 import {useQuery, useMutation} from "@tanstack/react-query";
@@ -71,14 +72,7 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
     } satisfies Record<string, CSSProperties>;
     const {server, aiConf} = useMyStore();
     const {curTableId} = useLocationData();
-
-    let editable = false;
-    if (schema && schema.isEditable) {
-        const sTable = schema.getSTable(curTableId);
-        if (sTable) {
-            editable = true;
-        }
-    }
+    const editable = useIsCurTableEditable(schema);
 
     const [inputValue, setInputValue] = useState("");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -242,10 +236,6 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
             messages: [{ role: "user", content: val }],
         });
     };
-
-    if (!editable) {
-        return <Result title={"not editable"}/>;
-    }
 
     if (isLoading) {
         return <Spin/>;

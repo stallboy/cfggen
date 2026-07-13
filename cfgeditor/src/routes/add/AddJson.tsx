@@ -2,7 +2,6 @@ import {navTo, useMyStore, useLocationData} from "@/store/store";
 import {invalidateAllQueries} from "@/queryClient";
 
 import {memo, useCallback, useState} from "react";
-import {Schema} from "@/domain/schema";
 import {useMutation,} from "@tanstack/react-query";
 import {addOrUpdateRecord} from "@/api/api";
 import {Button, Typography, Form, Input, List, Result, Space} from "antd";
@@ -21,20 +20,11 @@ interface AddJsonProps {
     json: string;
 }
 
-export const AddJson = memo(function AddJson({schema}: {
-    schema: Schema | undefined;
-}) {
+export const AddJson = memo(function AddJson() {
     const {t} = useTranslation();
     const {server} = useMyStore();
     const navigate = useNavigate();
     const {curTableId} = useLocationData();
-    let editable = false;
-    if (schema && schema.isEditable) {
-        const sTable = schema.getSTable(curTableId);
-        if (sTable) {
-            editable = true;
-        }
-    }
 
     const [result, setResult] = useState<RecordEditResult | Error | undefined>();
 
@@ -67,10 +57,6 @@ export const AddJson = memo(function AddJson({schema}: {
         addOrUpdateRecordMutation.mutate(addJsonProps.json)
     }, [addOrUpdateRecordMutation]);
 
-
-    if (!editable) {
-        return <Result title={'not editable'}/>;
-    }
 
     let res = <></>
     if (result != undefined) {

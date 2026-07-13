@@ -93,17 +93,21 @@ export const RefIdList = memo(function () {
         content = <RefIdListResult refIdsResult={recordResult}/>
     }
 
-    // lock 控件移到面板内部（自管 lockedId），不再挂在 Collapse 公共 extra 误导其它面板
+    // lock 控件移到面板内部（自管 lockedId），不再挂在 Collapse 公共 extra 误导其它面板。
+    // 三态：未锁→锁到当前；锁到当前→解锁；锁到别处→重置到当前。
     const isLockedToCurrent = lockedId?.table == curTableId && lockedId?.id == curId;
     const lockBtn = lockedId
         ? (isLockedToCurrent
-            ? <LockOutlined/>
-            : <SyncOutlined onClick={() => setLockedId({table: curTableId, id: curId})}/>)
-        : <UnlockOutlined onClick={() => setLockedId({table: curTableId, id: curId})}/>;
+            ? {icon: <LockOutlined/>, tip: t('unlock'), act: () => setLockedId(undefined)}
+            : {icon: <SyncOutlined/>, tip: t('lock'), act: () => setLockedId({table: curTableId, id: curId})})
+        : {icon: <UnlockOutlined/>, tip: t('lock'), act: () => setLockedId({table: curTableId, id: curId})};
 
     return <>
         <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-            <Tooltip title={lockedId ? t('unlock') : t('lock')}>{lockBtn}</Tooltip>
+            <Tooltip title={lockBtn.tip}>
+                <Button type="text" size="small" icon={lockBtn.icon} onClick={lockBtn.act}
+                        aria-label={lockBtn.tip}/>
+            </Tooltip>
         </div>
         {content}
     </>;

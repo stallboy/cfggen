@@ -54,7 +54,7 @@ export type StoreState = {
     searchMax: number;
     imageSizeScale: number;
 
-    dragPanel: string;  // 'recordRef', 'setting', 'none', 'finder', 'chat',  page.label（page的label前面的）
+    dragPanel: string;  // 'recordRef', 'setting', 'none', 'finder', 'add',  page.label（page的label前面的）
     pageConf: FixedPagesConf;
     tauriConf: TauriConf;
 
@@ -397,8 +397,8 @@ export function makeUnrefPage(curTableId: string): FixedUnrefPage {
 }
 
 // 内置面板（非用户自定义 fixed page）：切换 pageConf 时不参与"引用了已删除页面"的校验。
-// 与 dragPanel 注释及 HeaderBar 面板菜单保持一致（原排除名单漏 'chat'、多了死代码 'adder'）
-const BUILTIN_PANELS: readonly string[] = ['none', 'recordRef', 'finder', 'chat', 'setting'];
+// 与 dragPanel 注释及 HeaderBar 面板菜单保持一致（'add' = AddPanel，聚合 AI/JSON）
+const BUILTIN_PANELS: readonly string[] = ['none', 'recordRef', 'finder', 'add', 'setting'];
 
 export function setFixedPagesConf(newPageConf: FixedPagesConf) {
     // 若当前 dragPanel 指向已被删除的用户自定义页面，则回退到 'none'

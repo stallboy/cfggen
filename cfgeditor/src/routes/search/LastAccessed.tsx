@@ -3,6 +3,11 @@ import {Schema} from "@/domain/schema";
 import {useMyStore} from "@/store/store";
 import {NavList} from "./NavList.tsx";
 
+function getLastSegment(table: string): string {
+    const seps = table.split('.');
+    return seps[seps.length - 1];
+}
+
 class LastAccessedItem {
     constructor(public table: string,
                 public id: string,
@@ -31,6 +36,7 @@ export const LastAccessed = memo(function LastAccessed({schema}: {
         items={uniqItems}
         rowKey={item => `${item.table}-${item.id}`}
         toNav={item => ({table: item.table, id: item.id})}
-        renderTitle={item => `${item.id}-${item.title}`}
+        renderTitle={item => `${getLastSegment(item.table)} ${item.id}-${item.title}`}
+        addHistory={false}
     />;
 });

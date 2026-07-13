@@ -5,6 +5,7 @@ import {Schema} from "./domain/schema.tsx";
 import {
     getFixedPage,
     getLastNavToInLocalStore,
+    setDragPanel,
     setServer,
     useMyStore,
     useLocationData,
@@ -101,6 +102,11 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
             navigate(getLastNavToInLocalStore());
         }
     }, [curTableId.length, navigate, schema]);
+
+    // 旧版本 dragPanel='chat' 持久化值迁移到 'add'（AddPanel 取代了 Chat）
+    useEffect(() => {
+        if (dragPanel === 'chat') setDragPanel('add');
+    }, [dragPanel]);
 
     const curTable = schema ? schema.getSTable(curTableId) : null;
 

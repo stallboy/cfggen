@@ -44,7 +44,6 @@ export const ToolsSetting = memo(function ToolsSetting({schema, curTable, flowRe
         },
         onSuccess: (editResult) => {
             if (editResult.resultCode == 'deleteOk') {
-                // console.log(editResult);
                 notification.info({
                     title: `deleteRecord ${curTableId}/${curId} ${editResult.resultCode}`,
                     placement: 'topRight',
@@ -90,9 +89,8 @@ export const ToolsSetting = memo(function ToolsSetting({schema, curTable, flowRe
                 saveAs(blob, fn);
                 notification.info({title: "save png to " + fn, duration: 3});
             }
-        }).catch((err) => {
+        }).catch(() => {
             notification.error({title: "save png failed: limit the max node count", duration: 3});
-            console.log(err)
         })
         // eslint-disable-next-line react-hooks/exhaustive-deps -- flowRef 在 body 中经解构使用（const {current} = flowRef），oxlint exhaustive-deps 未追踪解构引用而误报
     }, [flowRef, imageSizeScale, curPage, notification, curTableId, curId]);
@@ -126,23 +124,20 @@ export const ToolsSetting = memo(function ToolsSetting({schema, curTable, flowRe
                     </Button>
                 </Space>
             </Form.Item>
-
-
-            {(schema && curTable && schema.isEditable) &&
-                <Form.Item>
-                    <Divider/>
-                    <Popconfirm title={t('deleteCurRecord')}
-                                okText={t('delete')}
-                                cancelText={t('cancel')}
-                                okButtonProps={{danger: true}}
-                                onConfirm={() => deleteRecordMutation.mutate()}>
-                        <Button type="primary" danger>
-                            <CloseOutlined/>{t('deleteCurRecord')}
-                        </Button>
-                    </Popconfirm>
-                </Form.Item>
-            }
         </Form>
+
+        {schema && curTable && schema.isEditable &&
+            <Popconfirm title={t('deleteCurRecord')}
+                        okText={t('delete')}
+                        cancelText={t('cancel')}
+                        okButtonProps={{danger: true}}
+                        onConfirm={() => deleteRecordMutation.mutate()}>
+                <Button type="primary" danger>
+                    <CloseOutlined/>{t('deleteCurRecord')}
+                </Button>
+            </Popconfirm>
+        }
+
         <Divider/>
         <Button onClick={toggleFullScreen}> {t('toggleFullScreen')}</Button>
         <Divider/>
