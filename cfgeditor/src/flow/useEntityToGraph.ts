@@ -164,8 +164,9 @@ export function useEntityToGraph({
 
     // Effect 2：视口动作。刻意与 Effect 1 拆开——视口只随「视口指令(editingObjectRes) / layout 结果
     // (id2RectMap) / 就绪信号(viewportReady)」变化，不含 paneMenu/nodeMenuFunc 等菜单回调。
-    // 否则值类编辑 coalescing flush 会让 Record 的 canUndo 翻转 → paneMenu 新引用 → 视口被连带重置
-    // （EntityForm 输入 primitive 后过一会偶发 fitFull 的 bug，根因就在此）。
+    // 历史背景：值类编辑 coalescing flush 曾让 Record 订阅的 canUndo 翻转 → paneMenu 新引用 → 视口被
+    // 连带重置（EntityForm 输入 primitive 后过一会偶发 fitFull）。现 Record 不再订阅 canUndo（hotkey 回调
+    // 实时判）+ paneMenu disabled 惰性化，paneMenu 引用稳定，此诱因消除；拆分仍作视口语义独立边界保留。
     useEffect(() => {
         if (viewportReady && id2RectMap && newNodes) {
             const action = pickViewportAction(editingObjectRes, id2RectMap, getViewport());

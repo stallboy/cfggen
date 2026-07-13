@@ -406,14 +406,14 @@ export class EditingSession {
         this.valueCoalesceTimer = setTimeout(() => this.flushValueCoalesce(), 500);
     }
 
-    /** 关闭当前值类组：capture 一份快照入栈 + emit 刷 canUndo/canRedo 按钮态。无活跃组则 no-op。 */
+    /** 关闭当前值类组：capture 一份快照入栈 + emit 通知订阅者（canUndo/canRedo 已变）。无活跃组则 no-op。 */
     private flushValueCoalesce(): void {
         if (this.valueCoalesceTimer === undefined) return;
         clearTimeout(this.valueCoalesceTimer);
         this.valueCoalesceTimer = undefined;
         this.undoStore.capture(this.captureUndoPoint());
         this.valueCoalesceKey = undefined;
-        this.emit();   // capture 不 bump structureVersion，但 canUndo 变了 → emit 让按钮订阅刷新
+        this.emit();   // capture 不 bump structureVersion；canUndo/canRedo 已变，emit 通知潜在订阅者（Record 现不订阅，hotkey 回调实时判）
     }
 
     /** 结构操作前置：关闭值类组（固化未 capture 的键入，避免与结构操作混在一个快照）。 */

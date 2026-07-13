@@ -92,12 +92,19 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const session = sessionRef.current;
     // 只订阅结构版本号（number）：值类编辑不 bump → 不重渲（性能契约1）；结构类编辑 bump → 重渲重算 entityMap。
     const structureVersion = useSyncExternalStore(session.subscribe, session.getStructureVersion);
-    // undo/redo 按钮态：订阅 canUndo/canRedo（随 capture/undo/redo 变化，flushValueCoalesce 的 emit 触发刷新）
-    const canUndo = useSyncExternalStore(session.subscribe, session.canUndo);
-    const canRedo = useSyncExternalStore(session.subscribe, session.canRedo);
-    // ctrl+z/y per-session（Record 单实例无分屏歧义；enableOnFormTags 拦截 input 默认 undo，由 session coalescing 接管）
-    useHotkeys('ctrl+z, cmd+z', (e) => { e.preventDefault(); session.undo(); }, {enableOnFormTags: true, enabled: isEditing});
-    useHotkeys('ctrl+y, ctrl+shift+z, cmd+y, cmd+shift+z', (e) => { e.preventDefault(); session.redo(); }, {enableOnFormTags: true, enabled: isEditing});
+    // ctrl+z/y per-session。回调实时判 canUndo/canRedo：栈空/非编辑态直接放行（不 preventDefault）→
+    // input 原生 undo 不被误杀；不订阅 canUndo → 其翻转不触发重渲（性能契约1）。
+    // react-hotkeys-hook 内部用 ref 存最新回调，本组件因他因重渲（edit 切换/结构编辑）时刷新 isEditing 闭包。
+    useHotkeys('ctrl+z, cmd+z', (e) => {
+        if (!isEditing || !session.canUndo()) return;
+        e.preventDefault();
+        session.undo();
+    }, {enableOnFormTags: true});
+    useHotkeys('ctrl+y, ctrl+shift+z, cmd+y, cmd+shift+z', (e) => {
+        if (!isEditing || !session.canRedo()) return;
+        e.preventDefault();
+        session.redo();
+    }, {enableOnFormTags: true});
 
     const {entityMap, editingObjectRes} = useMemo(() => {
         const entityMap = new Map<string, Entity>();
@@ -191,8 +198,8 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const paneMenu = useMemo(() => {
         const menu: MenuItem[] = [];
         if (isEditing) {
-            menu.push({label: t('undo'), key: 'undo', handler: () => session.undo(), disabled: !canUndo});
-            menu.push({label: t('redo'), key: 'redo', handler: () => session.redo(), disabled: !canRedo});
+            menu.push({label: t('undo'), key: 'undo', handler: () => session.undo(), disabled: () => !session.canUndo()});
+            menu.push({label: t('redo'), key: 'redo', handler: () => session.redo(), disabled: () => !session.canRedo()});
         }
         if (isEditable) {
             menu.push(getEditMenu(curTable.name, curId, !edit));
@@ -205,7 +212,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
             }
         });
         return menu;
-    }, [isEditing, canUndo, canRedo, isEditable, getEditMenu, curTable, curId, edit, t, navigate, session]);
+    }, [isEditing, isEditable, getEditMenu, curTable, curId, edit, t, navigate, session]);
 
 
     const nodeMenuFunc = useCallback(function (entityNode: EntityNode): MenuItem[] {
