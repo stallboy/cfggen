@@ -1,8 +1,6 @@
 import {memo, useMemo} from "react";
 import {Schema} from "@/domain/schema";
-import {navTo, useMyStore, useCurPageRecordOrRecordRef} from "@/store/store";
-import {useNavigate} from "react-router";
-import {Button, Table} from "antd";
+import {NavList} from "./NavList.tsx";
 import TimeAgo from 'react-timeago'
 
 class LastModifiedItem {
@@ -16,10 +14,6 @@ class LastModifiedItem {
 export const LastModified = memo(function LastModified({schema}: {
     schema: Schema | undefined;
 }) {
-
-    const {isEditMode} = useMyStore();
-    const navigate = useNavigate();
-    const {curPage} = useCurPageRecordOrRecordRef();
 
     const orderedItems: LastModifiedItem[] = useMemo(() => {
         if (schema == undefined) {
@@ -45,62 +39,13 @@ export const LastModified = memo(function LastModified({schema}: {
     }, [schema]);
 
 
-    const columns = useMemo(() => {
-        return [
-            {
-                title: 'table',
-                dataIndex: 'table',
-                width: 60,
-                key: 'table',
-                ellipsis: true,
-            },
-            {
-                title: 'id',
-                // align: 'left',
-                width: 160,
-                key: 'id',
-                ellipsis: {
-                    showTitle: false
-                },
-                render: (_text: unknown, item: LastModifiedItem) => {
-                    const label = item.id + '-' + item.title;
-
-                    return <Button type={'link'} onClick={() => {
-                        navigate(navTo(curPage, item.table, item.id, isEditMode));
-                    }}>
-                        {label}
-                    </Button>;
-                }
-            },
-            {
-                title: 'lastModified',
-                // align: 'left',
-                width: 80,
-                key: 'lastModified',
-                ellipsis: {
-                    showTitle: false
-                },
-                render: (_text: unknown, item: LastModifiedItem) => {
-                    return <TimeAgo date={item.lastModified}/> ;
-                }
-            }
-        ];
-    }, [navigate, curPage, isEditMode]);
-
-
     if (!schema) return <></>;
 
-    return <Table columns={columns}
-                  dataSource={orderedItems}
-                  showHeader={false}
-                  size={'small'}
-                  pagination={false}
-                  virtual={orderedItems.length > 30}
-                  rowKey={rowKey}/>
-
+    return <NavList
+        items={orderedItems}
+        rowKey={item => `${item.table}-${item.id}`}
+        toNav={item => ({table: item.table, id: item.id})}
+        renderTitle={item => `${item.id}-${item.title}`}
+        renderExtra={item => <TimeAgo date={item.lastModified}/>}
+    />;
 });
-
-
-function rowKey(item: LastModifiedItem) {
-    return `${item.table}-${item.id}`
-}

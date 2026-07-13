@@ -1,107 +1,69 @@
-import {memo, useState} from "react";
-import {App, Button, Empty, Input, Result, Table} from "antd";
-import {SearchResult, SearchResultItem} from "@/api/searchModel";
+import {memo, useEffect, useState} from "react";
+import {App, Empty, Input, Result, Skeleton, Typography} from "antd";
+import {SearchResult} from "@/api/searchModel";
 import {useTranslation} from "react-i18next";
-import {navTo, setQuery, useMyStore, useCurPageRecordOrRecordRef} from "@/store/store";
-import {useNavigate} from "react-router";
+import {setQuery, useMyStore} from "@/store/store";
+import {useQuery} from "@tanstack/react-query";
+import {NavList} from "./NavList.tsx";
 
 
-function getLabel(table: string, id: string): string {
+function getLastSegment(table: string): string {
     const seps = table.split('.');
-    return seps[seps.length - 1] + '-' + id;
+    return seps[seps.length - 1];
 }
 
 export const SearchValue = memo(function SearchValue() {
-    const {server, query, searchMax, isEditMode} = useMyStore();
-    const navigate = useNavigate();
-
-    const [loading, setLoading] = useState<boolean>(false);
-    const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
+    const {server, query, searchMax} = useMyStore();
     const {notification} = App.useApp();
     const {t} = useTranslation();
-    const {curPage} = useCurPageRecordOrRecordRef();
+    const [value, setValue] = useState(query);
 
-    function onSearch(value: string) {
-        setQuery(value);
+    const {data: searchResult, isFetching, error} = useQuery({
+        queryKey: ['search', value, searchMax, server],
+        queryFn: async ({signal}) => {
+            const url = `http://${server}/search?q=${encodeURIComponent(value)}&max=${searchMax}`;
+            const res = await fetch(url, {signal});
+            return (await res.json()) as SearchResult;
+        },
+        enabled: value.length > 0,
+        retry: false,
+    });
 
-        setLoading(true);
-        const url = `http://${server}/search?q=${value}&max=${searchMax}`;
-        const fetchData = async () => {
-            const response = await fetch(url);
-            const recordResult: SearchResult = await response.json();
-            setSearchResult(recordResult);
-            setLoading(false);
+    useEffect(() => {
+        if (error) {
+            notification.error({message: `search err: ${error.message}`, placement: 'topRight', duration: 4});
         }
-        fetchData().catch((err) => {
-            notification.error({title: `fetch ${url} err: ${err.toString()}`, placement: 'topRight', duration: 4});
-            setLoading(false);
-        });
+    }, [error, notification]);
+
+    function onSearch(v: string) {
+        setValue(v);
+        setQuery(v);
     }
 
     let content;
-    if (searchResult == null) {
-        content = <Empty/>
+    if (!value) {
+        content = <Empty/>;
+    } else if (searchResult == null) {
+        content = isFetching ? <Skeleton/> : <Empty/>;
     } else if (searchResult.resultCode != 'ok') {
-        content = <Result status={'error'} title={searchResult.resultCode}/>
+        content = <Result status="error" title={searchResult.resultCode}/>;
     } else {
-        const columns = [
-            {
-                title: 'id',
-                // align: 'left',
-                width: 160,
-                key: 'id',
-                ellipsis: {
-                    showTitle: false
-                },
-                render: (_text: unknown, item: SearchResultItem) => {
-                    const label = getLabel(item.table, item.pk);
-                    return <Button type={'link'} onClick={() => {
-                        navigate(navTo(curPage, item.table, item.pk, isEditMode));
-                    }}>
-                        {label}
-                    </Button>;
-                }
-            },
-            {
-                title: 'fieldChain',
-                dataIndex: 'fieldChain',
-                width: 160,
-                key: 'fieldChain',
-                ellipsis: true,
-            },
-            {
-                title: 'value',
-                dataIndex: 'value',
-                // width: 300,
-                key: 'value',
-                ellipsis: true,
-            }
-        ];
-        //q={searchResult.q}&max={searchResult.max}
-        content =
-            // <div style={{overflow: "auto"}}>
-            <Table columns={columns}
-                   dataSource={searchResult.items}
-                   size={'small'}
-                   pagination={false}
-                   virtual={searchResult.items.length > 30}
-                // pagination={{position: ['bottomRight']}}
-                // scroll={{y: "80vh"}}
-                   rowKey={rowKey}/>
-        // </div>
+        content = <NavList
+            items={searchResult.items}
+            rowKey={item => `${item.table}-${item.pk}-${item.fieldChain}`}
+            toNav={item => ({table: item.table, id: item.pk})}
+            renderTitle={item => `${getLastSegment(item.table)}-${item.pk}`}
+            renderExtra={item => <Typography.Text type="secondary" ellipsis
+                                                  style={{maxWidth: 120}}>{item.value}</Typography.Text>}
+        />;
     }
 
     return <>
         <Input.Search placeholder='search value' defaultValue={query}
                       enterButton={t('search')}
                       size='large'
-                      loading={loading}
+                      loading={isFetching}
                       onSearch={onSearch}/>
         {content}
     </>;
 });
-
-
-function rowKey(item: SearchResultItem) {
-    return `${item.table}-${item.pk}-${item.fieldChain}`
-}

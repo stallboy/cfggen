@@ -1,8 +1,7 @@
 import {memo, useMemo} from "react";
 import {Schema} from "@/domain/schema";
-import {navTo, useMyStore, useCurPageRecordOrRecordRef} from "@/store/store";
-import {Button, Table} from "antd";
-import {useNavigate} from "react-router";
+import {useMyStore} from "@/store/store";
+import {NavList} from "./NavList.tsx";
 
 class LastAccessedItem {
     constructor(public table: string,
@@ -14,9 +13,7 @@ class LastAccessedItem {
 export const LastAccessed = memo(function LastAccessed({schema}: {
     schema: Schema | undefined;
 }) {
-    const {history, isEditMode} = useMyStore();
-    const navigate = useNavigate();
-    const {curPage} = useCurPageRecordOrRecordRef();
+    const {history} = useMyStore();
 
     const uniqItems: LastAccessedItem[] = useMemo(() => {
         const uniq: LastAccessedItem[] = [];
@@ -30,47 +27,10 @@ export const LastAccessed = memo(function LastAccessed({schema}: {
         return uniq;
     }, [history.items, schema]);
 
-    const columns = useMemo(() => {
-        return [
-            {
-                title: 'table',
-                dataIndex: 'table',
-                width: 70,
-                key: 'table',
-                ellipsis: true,
-            },
-            {
-                title: 'id',
-                // align: 'left',
-                width: 160,
-                key: 'id',
-                ellipsis: {
-                    showTitle: false
-                },
-                render: (_text: unknown, item: LastAccessedItem) => {
-                    const label = item.id + '-' + item.title;
-                    return <Button type={'link'} onClick={() => {
-                        navigate(navTo(curPage, item.table, item.id, isEditMode, false));
-                    }}>
-                        {label}
-                    </Button>;
-                }
-            },
-        ];
-    }, [navigate, curPage, isEditMode]);
-
-    return <Table columns={columns}
-                  dataSource={uniqItems}
-                  showHeader={false}
-                  size={'small'}
-                  pagination={false}
-                  virtual={uniqItems.length > 30}
-                  rowKey={rowKey}/>
-
+    return <NavList
+        items={uniqItems}
+        rowKey={item => `${item.table}-${item.id}`}
+        toNav={item => ({table: item.table, id: item.id})}
+        renderTitle={item => `${item.id}-${item.title}`}
+    />;
 });
-
-
-function rowKey(item: LastAccessedItem) {
-    return `${item.table}-${item.id}`
-}
-

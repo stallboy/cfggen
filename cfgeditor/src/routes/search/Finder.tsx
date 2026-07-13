@@ -1,51 +1,24 @@
-import {memo, useState} from "react";
+import {memo} from "react";
 import {Schema} from "@/domain/schema";
 import {useTranslation} from "react-i18next";
-import {CollapseProps, Space} from "antd";
-import {SearchValue} from "./SearchValue.tsx";
+import {CollapseProps} from "antd";
 import {Collapse} from "antd/lib";
+import {SearchValue} from "./SearchValue.tsx";
 import {LastAccessed} from "./LastAccessed.tsx";
 import {LastModified} from "./LastModified.tsx";
 import {RefIdList} from "./RefIdList.tsx";
-import {useLocationData} from "@/store/store";
-import {RefId} from "@/api/recordModel";
-import {LockOutlined, SyncOutlined, UnlockOutlined} from "@ant-design/icons";
 
 export const Finder = memo(function Finder({schema}: {
     schema: Schema | undefined;
 }) {
 
     const {t} = useTranslation();
-    const [lockedId, setLockedId] = useState<RefId | undefined>(undefined);
-    const {curTableId, curId} = useLocationData();
-
-    const genExtra = () => {
-        if (lockedId) {
-            return <Space>
-                {lockedId.table == curTableId && lockedId.id == curId ? undefined :
-                    <SyncOutlined onClick={(event) => {
-                        event.stopPropagation();
-                        setLockedId({table: curTableId, id: curId});
-                    }}/>}
-                <LockOutlined onClick={(event) => {
-                    event.stopPropagation();
-                    setLockedId(undefined);
-                }}/>
-            </Space>
-        } else {
-            return <UnlockOutlined onClick={(event) => {
-                event.stopPropagation();
-                setLockedId({table: curTableId, id: curId});
-            }}/>
-        }
-    };
 
     const items: CollapseProps['items'] = [
         {
             key: 'refIdList',
             label: t('refIdList'),
-            children: <RefIdList lockedId={lockedId}/>,
-            extra: genExtra(),
+            children: <RefIdList/>,
         },
         {
             key: 'lastAccessed',
@@ -64,8 +37,6 @@ export const Finder = memo(function Finder({schema}: {
         },
     ];
     return <>
-        <Collapse defaultActiveKey="lastAccessed" items={items} size={"small"}/>
+        <Collapse defaultActiveKey="search" items={items} size={"small"}/>
     </>
 });
-
-
