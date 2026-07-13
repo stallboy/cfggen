@@ -1,11 +1,10 @@
 import {memo, RefObject, useCallback} from "react";
 import {useNavigate} from "react-router";
 import {useTranslation} from "react-i18next";
-import {App, Button, Divider, Form, Input, InputNumber, Radio, Space} from "antd";
+import {App, Button, Divider, Form, InputNumber, Popconfirm, Radio, Space} from "antd";
 import {
     setImageSizeScale,
     useMyStore,
-    setServer,
 } from "@/store/store";
 import {invalidateAllQueries} from "@/queryClient";
 import {CloseOutlined} from "@ant-design/icons";
@@ -16,14 +15,12 @@ import {RecordEditResult} from "@/api/recordModel";
 import {deleteRecord} from "@/api/api";
 import {toBlob} from "html-to-image";
 import {saveAs} from "file-saver";
-import {FixPages} from "./FixPages.tsx";
 import {PageType, navTo, useLocationData} from "@/store/store";
 import {KeyShortCut} from "./KeyShortcut.tsx";
 import {toggleFullScreen} from "@/utils/windowUtils";
 
 
-
-export const Operations = memo(function Operations({schema, curTable, flowRef}: {
+export const ToolsSetting = memo(function ToolsSetting({schema, curTable, flowRef}: {
     schema: Schema | undefined;
     curTable: STable | null;
     flowRef: RefObject<HTMLDivElement | null>;
@@ -114,25 +111,10 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
 
 
     return <>
-        <Form layout={'vertical'} initialValues={{server}}>
-            <Form.Item label={t('curServer')}>
-                {server}
-            </Form.Item>
-            <Form.Item name='server' label={t('newServer')}>
-                <Input.Search enterButton={t('connect')} onSearch={(value: string) => setServer(value)}/>
-            </Form.Item>
-        </Form>
-
-        <Divider/>
-
         <Radio.Group optionType="button"
                      value={curPage}
                      options={options}
                      onChange={(e) => onChangeCurPage(e.target.value)}/>
-        <Divider/>
-
-        <FixPages schema={schema} curTable={curTable}/>
-
         <Divider/>
 
         <Form layout={'vertical'} initialValues={{imageSizeScale}}>
@@ -149,10 +131,15 @@ export const Operations = memo(function Operations({schema, curTable, flowRef}: 
             {(schema && curTable && schema.isEditable) &&
                 <Form.Item>
                     <Divider/>
-                    <Button type="primary" danger
-                            onClick={() => deleteRecordMutation.mutate()}>
-                        <CloseOutlined/>{t('deleteCurRecord')}
-                    </Button>
+                    <Popconfirm title={t('deleteCurRecord')}
+                                okText={t('delete')}
+                                cancelText={t('cancel')}
+                                okButtonProps={{danger: true}}
+                                onConfirm={() => deleteRecordMutation.mutate()}>
+                        <Button type="primary" danger>
+                            <CloseOutlined/>{t('deleteCurRecord')}
+                        </Button>
+                    </Popconfirm>
                 </Form.Item>
             }
         </Form>

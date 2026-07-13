@@ -32,14 +32,13 @@ export const NodeShowSetting = memo(function () {
 
     return <Form name="node show setting" layout={"vertical"}
                  initialValues={nodeShow} size={"small"} autoComplete="off"
-                 onFinish={(values) => {
-                     // console.log(values);
+                 onValuesChange={(_changed, allValues) => {
                      const newNodeShow: NodeShowType = {
                          ...nodeShow,
-                         ...values,
-                         nodeColorsByValue: fixColors(values.nodeColorsByValue),
-                         nodeColorsByLabel: fixColors(values.nodeColorsByLabel),
-                         fieldColorsByName: fixColors(values.fieldColorsByName)
+                         ...allValues,
+                         nodeColorsByValue: fixColors(allValues.nodeColorsByValue),
+                         nodeColorsByLabel: fixColors(allValues.nodeColorsByLabel),
+                         fieldColorsByName: fixColors(allValues.fieldColorsByName)
                      };
                      setNodeShow(newNodeShow);
                  }}>
@@ -172,10 +171,5 @@ export const NodeShowSetting = memo(function () {
             </Form.List>
         </Form.Item>
 
-        <Form.Item>
-            <Button type="primary" htmlType="submit">
-                {t('setNodeShow')}
-            </Button>
-        </Form.Item>
     </Form>;
 });

@@ -1,9 +1,8 @@
 import {memo, useState, useEffect} from "react";
-import {App, Button, Divider, Form, Input, Space, Typography} from "antd";
+import {App, Button, Form, Input, Space, Typography} from "antd";
 import {useTranslation} from "react-i18next";
 import {useMyStore, setThemeConfig} from "@/store/store";
 import {themeService} from "@/services/themeService";
-import {FlowVisualizationSetting} from "./FlowVisualizationSetting.tsx";
 const {Text, Title} = Typography;
 
 export const ThemeSetting = memo(function ThemeSetting() {
@@ -116,8 +115,5 @@ export const ThemeSetting = memo(function ThemeSetting() {
                 </Space>
             </Form.Item>
         </Form>
-
-        <Divider/>
-        <FlowVisualizationSetting/>
     </>;
 });
