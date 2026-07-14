@@ -7,6 +7,7 @@ import {updateNote} from "@/api/api";
 import {useMyStore} from "@/store/store";
 import {NoteEditResult, notesToMap} from "@/api/noteModel";
 import {queryClient} from "@/queryClient";
+import {estimateNoteRows, NOTE_ROW_H} from "./calcWidthHeight.ts";
 
 
 const noteButtonStyle: CSSProperties = {float: 'right', borderWidth: 0, backgroundColor: 'transparent'};
@@ -22,7 +23,7 @@ export const NoteShow = memo(function NoteShow({note, setIsEdit}: {
         setIsEdit(true);
     }, [setIsEdit]);
 
-    return <div style={noteStyle}>
+    return <div style={{...noteStyle, minHeight: estimateNoteRows(note) * NOTE_ROW_H}}>
         {note} <Button style={noteButtonStyle}
                        icon={bookIcon}
                        onClick={onEditClick}/>
@@ -88,7 +89,7 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
 
     return <Flex vertical style={noteStyle}>
         <Input.TextArea className='nodrag' placeholder='note'
-                  rows={1}
+                  rows={estimateNoteRows(note)}
                   style={TEXT_AREA_STYLE}
                   value={newNote}
                   onChange={onNoteChange}/>
@@ -104,7 +105,7 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
 export const NoteShowInner = memo(function NoteShowInner({note}: {
     note: string;
 }) {
-    return <div style={noteStyle}>
+    return <div style={{...noteStyle, minHeight: estimateNoteRows(note) * NOTE_ROW_H}}>
         {note}
     </div>
 });
@@ -120,7 +121,7 @@ export const NoteEditInner = memo(function NoteEditInner({note, updateNoteInEdit
 
     return <Flex vertical style={noteStyle}>
         <Input.TextArea className='nodrag' placeholder='note'
-                  rows={1}
+                  rows={estimateNoteRows(note)}
                   style={TEXT_AREA_STYLE}
                   value={note}
                   onChange={onNoteChange}/>

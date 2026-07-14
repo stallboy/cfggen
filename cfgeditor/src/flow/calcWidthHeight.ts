@@ -35,11 +35,26 @@ const EDIT_TEXT_ROW_H = 22;              // 长文本 primitive 每行高
 const EDIT_TEXT_EXTRA_BASE = 10;         // 长文本 extra 基础
 
 // notes（note TextArea）
-const NOTE_ROW_H = 22;     // note 单行高
+export const NOTE_ROW_H = 22;     // note 单行高（估算与渲染同源：calcWidthHeight 估算 + NoteShow/NoteEdit 渲染都读它）
 const NOTE_WRAP_COLS = 15; // note 每行字符数（估算换行）
 const NOTE_MAX_ROWS = 10;  // note 最大估算行数
 const NOTE_MIN_ROWS = 2;   // note 最小估算行数（即使很短也预留）
 const NOTE_PADDING_H = 22; // note 区域额外 padding
+
+// note 估算行数：note.length / NOTE_WRAP_COLS，夹到 [NOTE_MIN_ROWS, NOTE_MAX_ROWS]。
+// 估算（calcWidthHeight 喂 ELK）与渲染（NoteShow/NoteShowInner 的 min-height、NoteEdit/NoteEditInner 的 TextArea rows）
+// 同源 import 本函数，杜绝两侧各自维护一套魔数导致"估算留 N 行、渲染只占 1 行"的纵向空隙（docs/flow-refactor.md §5-A3）。
+// 返回小数：calcWidthHeight 用它算精确高度（算术不变）；TextArea rows 传小数由浏览器取整，min-height 用小数 px 精确对齐估算。
+export function estimateNoteRows(note: string): number {
+    let row = note.length / NOTE_WRAP_COLS;
+    if (row > NOTE_MAX_ROWS) {
+        row = NOTE_MAX_ROWS;
+    }
+    if (row < NOTE_MIN_ROWS) {
+        row = NOTE_MIN_ROWS;
+    }
+    return row;
+}
 
 export function calcWidthHeight(entity: Entity, nodeShow?: NodeShowType, notes?: Map<string, string>) {
     const {id, label} = entity;
@@ -73,14 +88,7 @@ export function calcWidthHeight(entity: Entity, nodeShow?: NodeShowType, notes?:
     if (notes && mayHaveResOrNote(label)) {
         const note = notes.get(id);
         if (note) {
-            let row = note.length / NOTE_WRAP_COLS;
-            if (row > NOTE_MAX_ROWS) {
-                row = NOTE_MAX_ROWS;
-            }
-            if (row < NOTE_MIN_ROWS) {
-                row = NOTE_MIN_ROWS;
-            }
-            height += row * NOTE_ROW_H + NOTE_PADDING_H;
+            height += estimateNoteRows(note) * NOTE_ROW_H + NOTE_PADDING_H;
         }
     }
 
