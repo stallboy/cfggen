@@ -14,11 +14,11 @@ import {
 } from "@/store/store";
 import {Outlet, useNavigate} from "react-router";
 import {RawSchema} from "@/api/schemaModel";
-import {fetchNotes, fetchSchema} from "@/api/api";
+import {fetchNotes, fetchSchema} from "@/api/apiClient.ts";
 import {notesToMap} from "@/api/noteModel";
 import {useQuery} from "@tanstack/react-query";
 import {useHotkeys} from "react-hotkeys-hook";
-import {HeaderBar} from "@/routes/headerbar/HeaderBar";
+import {HeaderBar} from "@/app/headerbar/HeaderBar";
 import {FlowGraph} from "@/flow/FlowGraph";
 import {FlowStyleManager} from "@/flow/FlowStyleManager";
 import {Finder} from "@/routes/finder/Finder";

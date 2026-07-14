@@ -89,35 +89,68 @@ src/
 
 ```
 src/
-├── api/                 后端契约层（最底，无任何上层依赖）
-│   ├── recordModel.ts / schemaModel.ts   DTO 类型
-│   └── api.ts           HTTP 客户端
+├── main.tsx             React 入口（挂 React + 路由 + queryClient）
+├── app/                 应用层：主组件、Provider、布局壳、i18n（第三节的 app/ 落点）
+│   ├── CfgEditorApp / AppLoader / SidePanelShell   主组件 / 加载器 / 分割面板壳
+│   ├── queryClient.ts      React Query 配置
+│   └── i18n.ts / types.ts  国际化文案 / 全局类型
+│
+├── api/                 后端契约层（最底，不依赖任何上层）
+│   ├── recordModel / schemaModel / searchModel / noteModel / chatModel   DTO 类型
+│   └── apiClient.ts             HTTP 客户端
 │
 ├── domain/              【纯领域层】核心模型 + 纯规则 + 跨层共享契约类型（无 UI / 无副作用 / 无全局状态）
-│   ├── entityModel.ts     Entity / EntityEdit / EntityEditField / EFitView / EditingObjectRes…
+│   ├── entityModel.ts     Entity / EntityEdit / EFitView / EditingObjectRes…
 │   ├── schema.tsx         Schema 类 + getField/getImpl/getIdOptions…
 │   ├── storageJson.ts     quicktype 生成的配置契约（NodeShowType/TauriConf/FixedPage/AIConf…）+ Convert
 │   ├── resInfo.ts         ResInfo 资源类型
-│   ├── folds.ts           Folds 折叠记录（纯数据结构 setFold/isFold）
-│   ├── embedding.ts       内嵌判定（规则函数 + 阈值配置，原 checker+config 合并）
-│   └── embedding.md       内嵌机制说明（5 条规则）
+│   ├── embedding.ts(+.md) 内嵌判定（规则函数 + 阈值，原 checker+config 合并）+ 机制说明
+│   ├── entityPredicates.ts 实体判定纯函数
+│   ├── nodeShowLayoutKeys.ts 节点展示布局 key 派生
+│   ├── historyModel.ts    导航历史模型（纯，原 store 下沉）
+│   └── undoStack.ts       undo/redo 纯数据栈（Snapshot 快照栈，不依赖 React）
 │
-├── store/               全局状态（Resso）+ 持久化 + history
-├── services/            【有状态/有副作用服务】editingObject（编辑态单例）+ themeService
+├── store/               全局状态（Resso）+ 持久化
+│   ├── store.ts / storage.ts   Resso store + localStorage/YAML 持久化
+│   └── resso.ts            【vendored】resso 库源码副本（升级整文件覆盖，oxlint 单独 override）
 │
-├── flow/                图形可视化特性（React Flow 渲染 + 布局计算 + hook）
-├── routes/              路由/页面层（薄壳：取数据 + 调 service + 渲 flow）
-├── res/                 资源处理特性（findAllResInfos / readResInfosAsync / summarizeResAsync…）
-├── utils/               通用纯工具
-└── test/                测试 fixture
+├── services/            【有状态/有副作用服务】
+│   ├── editingSession.ts  编辑态单例（原 editingObject；方案 C 重构：useSyncExternalStore + UndoStack）
+│   ├── clipboard.ts       剪贴板服务
+│   ├── windowUtils.ts     Tauri 窗口封装（toggleFullScreen；原 utils/，按纯度挪此）
+│   └── themeService.ts    主题文件读取
+│
+├── flow/                图形可视化特性（已内聚出 edit / layout 子系统）
+│   ├── （根）FlowGraph/FlowNode/EntityCard/EntityForm/FlowContextMenu/NodeToolbar/ResPopover…  React Flow 渲染
+│   ├── edit/              编辑表单子系统
+│   │   ├── EntityForm.tsx / FieldRenderer.tsx
+│   │   ├── fields/        各类型字段项（Primitive/Array/Interface/Func/StructRef…）
+│   │   └── shared/        编辑共享件（CustomAutoComplete/fieldUtils/primitiveControl/types/hooks…）
+│   ├── layout/            【纯布局计算】colors/dimensions/calcWidthHeight/entityToNodeAndEdge/viewportMath/layoutAsync/getDsLenAndDesc（各自带 .test）
+│   ├── useEntityToGraph.ts / nodeAnchor.ts / devLog.ts   hook + 锚点 + dev 日志
+│   └── __dev__/           开发期护栏（HeightDriftGuard）
+│
+├── routes/              路由/页面层（部分子目录已含子系统级业务逻辑，非纯薄壳）
+│   ├── record/   Record / RecordRef + recordEntityCreator / recordEditEntityCreator / recordRefUtils（record 子系统，偏重）
+│   ├── table/    Table / TableRef + tableEntityCreator / tableRefEntity
+│   ├── finder/   Finder + NavList / RefIdList / LastAccessed / LastModified / SearchValue（原 search/）
+│   ├── setting/  Setting + 多个子设置面板（Ai/Basic/Tauri/FixPages/FlowVis/NodeShow/Theme/Display/Connection/KeyShortcut/Tools）+ colorUtils
+│   ├── add/      Chat / AddJson / AddPanel + useEditable（AI 录入）
+│   ├── headerbar/ HeaderBar + IdList / TableList / UnreferencedButton（顶栏布局件）
+│   └── PathNotFound.tsx
+│
+├── res/                 资源处理特性（findAllResInfos / readResInfosAsync / summarizeResAsync / getResBrief）
+├── utils/               通用纯工具（当前空置待生长——windowUtils 已按纯度挪 services/）
+└── test/                测试 fixture + setup
 ```
 
 ### 各层一句话定位
+- **app**：入口与全局装配。`main.tsx` 挂 React + 路由 + queryClient；`app/` 装主组件、Provider、分割面板壳、i18n。
 - **api**：后端长什么样，这里就长什么样。纯类型 + 请求函数，不依赖任何上层。
-- **domain**：项目的"心脏"。放"不管用什么 UI 框架、跑在哪"都成立的模型、规则、契约类型。**它越厚越健康**——可测、可复用、不依附 React。`schema.tsx`、`entityModel.ts`、`embedding`、`folds`、`storageJson`（配置契约）、`resInfo` 都属此。
-- **store / services**：管"变化"和"副作用"。`services/editingObject.ts` 持有可变单例、调 `setEditingState`，是典型服务；`themeService` 读取主题文件。
-- **flow**："图形可视化"特性。domain 之上、routes 之下的业务特性层。
-- **routes**：页面，尽量薄。
+- **domain**：项目的"心脏"。放"不管用什么 UI 框架、跑在哪"都成立的模型、规则、契约类型。**它越厚越健康**——可测、可复用、不依附 React。`schema.tsx`、`entityModel.ts`、`embedding`、`storageJson`（配置契约）、`resInfo`、`entityPredicates`、`nodeShowLayoutKeys`、`historyModel`、`undoStack` 都属此。
+- **store / services**：管"变化"和"副作用"。`store/resso.ts` 是 vendored 的状态库源码（非项目代码）；`services/editingSession.ts` 持有编辑态可变单例（方案 C 后用 useSyncExternalStore 订阅 + UndoStack 存快照），`clipboard`/`windowUtils`/`themeService` 是典型服务。
+- **flow**："图形可视化"特性。domain 之上、routes 之下的业务特性层；内部已分出 `edit/`（编辑表单子系统）与 `layout/`（纯布局计算，自带测试）。
+- **routes**：页面，尽量薄——但 `record/`、`setting/` 等子目录已携带子系统级业务逻辑（creator/ref 工具），非纯薄壳。
 
 ### 特性目录 vs 层目录：flow / res 为什么不拆
 
@@ -132,10 +165,19 @@ src/
 
 ### 依赖方向（已由 lint 强制，见第五节）
 ```
-routes → flow → store/services → domain → api
-              （flow 不得 import routes；store/services 不得 import routes/flow；
-               domain 只能 import api；api 不 import 任何上层）
+app/routes
+   ↓
+  flow ──→ res
+   ↓         ↓
+ store / services
+   ↓
+  domain
+   ↓
+   api
 ```
+- `flow` 可 import `res`（如 `flow/ResPopover` 调 res）；`res` 不得反向 import flow。
+- `flow` / `store` / `services` / `res` 均不得 import `routes`；`flow`/`store`/`services`/`res` 之间除 flow→res 外不横向依赖。
+- `domain` 只能 import `api`；`api` 不 import 任何上层。
 
 ---
 
@@ -165,6 +207,7 @@ oxlint **不支持** `import/no-restricted-paths`（zone 规则），但可用 E
 - 前提是跨目录 import 都走 `@/`（同目录 `./` 不被检查，但 `./` 本就不跨层）。
 - 抓到违反 = 该类型位置错了。本项目正是因此把 `storageJson.ts`、`resInfo.ts`（跨层共享契约类型）下沉到 `domain/`，才让 domain 规则 0 违反。
 - 生成文件（`domain/storageJson.ts`，quicktype 产出）要进 `ignorePatterns`，否则其内部 `no-unused-vars` 等会误报。
+- 除 6 条方向规则外，`.oxlintrc.json` 另有两个**非方向**的特例 override：`src/store/resso.ts` 关 `react-hooks/rules-of-hooks`（vendored 库源码，hooks 调用模式不合规则）；`src/main.tsx` 关 `react/only-export-components`（入口文件允许导出非组件）。这两个是"既知特殊文件"的豁免，不涉及方向。
 
 从此任何反向 `import`，`pnpm lint` 立即红——靠 lint 守门，不靠人 review。
 
@@ -187,8 +230,17 @@ oxlint **不支持** `import/no-restricted-paths`（zone 规则），但可用 E
 5. ✅ **lint 方向守门**：oxlint 6 方向规则 + `storageJson`/`resInfo` 契约类型下沉 domain
 6. ✅ **domain 扁平化 + services 上浮**：`Folds` 下沉 `domain/folds.ts`（纯数据结构，决策逻辑留上层）；`embeddingChecker`+`embeddingConfig` 合并成 `domain/embedding.ts`（消除子目录 + 命名）；`editingObject` → `services/`（状态服务归位）；`flow/embedded/` 目录消失
 
+> 下列为近一轮（方案 C 编辑态重构 + 纯逻辑继续下沉）的变更：
+
+7. ✅ **editingObject → editingSession（方案 C 重构）**：render 期变异 `editState` 的反模式根治——引入 `EditingSession`（`useSyncExternalStore` 外部 store，外部订阅读写分离）+ `UndoStack`（纯快照栈，下沉 `domain/undoStack.ts`）。**注意**：`editingObject` 的就地变异保留为有意设计（见 reducer 注释），勿当反模式回改。
+8. ✅ **historyModel 下沉 domain**：导航历史模型从 `store/` 下沉纯层，可独立单测（`domain/historyModel.test.ts`）。
+9. ✅ **Folds 移除**：fold 状态不再独立 React state、`domain/folds.ts` 删除，改由 `$fold` 派生（undo/redo 恢复 `$fold` 即恢复 fold；见 `record/recordEditEntityCreator.ts` 注释）。→ 第 6 条中的 `domain/folds.ts` 已成历史。
+10. ✅ **纯判定/派生继续下沉 domain**：`entityPredicates`、`nodeShowLayoutKeys` 下沉纯层（均可单测）。
+11. ✅ **search → finder 重命名**：路由目录 `routes/search/` → `routes/finder/`，语义校准——该目录承载的是查找/导航面板（最近访问、最近修改、引用列表、搜索值），非全文搜索。
+12. ✅ **命名/位置纯度修正**：① `domain/undoStore` → `undoStack`（消除纯层的 `Store` 命名误导——它是纯数据栈、非全局可变状态；类 `UndoStore` → `UndoStack`）；② `utils/windowUtils` → `services/`（Tauri 窗口封装有副作用，按第三节纯度判定不属"通用纯工具"）。挪后 `utils/` 暂空置待生长。
+
 **后续**（lint 规则已就位接住）：
-- 当 record 的 editing 全家桶（editingObject + recordEditEntityCreator + Record.tsx）膨胀到自成体系，再收进 `features/record/` 自包含——那时才真正进入 feature-based
+- record 子系统现已具雏形（`Record`/`RecordRef` + `recordEntityCreator`/`recordEditEntityCreator`/`recordRefUtils` + `services/editingSession` + `domain/undoStack`），当其再膨胀到自成体系，整体收进 `features/record/` 自包含——那时才真正进入 feature-based。`flow/edit/`（编辑表单子系统）同理，可作为下一个 feature 化候选。
 
 ---
 
@@ -198,4 +250,4 @@ oxlint **不支持** `import/no-restricted-paths`（zone 规则），但可用 E
 - **一条铁律**：依赖只能向下；低层 import 高层 = 该重构的信号（本项目靠 lint 自动拦截）。
 - **一个判据**：纯 → 下沉 domain；有状态/副作用 → 抬 store/services；有 UI → 上层。
 - **两个护栏**：路径别名 `@/`（治深路径）+ oxlint 方向规则（治依赖方向）。
-- **domain 是心脏**：跨层共享的模型/规则/契约类型（entityModel/schema/embedding/folds/storageJson/resInfo）都沉这，越厚越健康。
+- **domain 是心脏**：跨层共享的模型/规则/契约类型（entityModel/schema/embedding/storageJson/resInfo/entityPredicates/nodeShowLayoutKeys/historyModel/undoStack）都沉这，越厚越健康。

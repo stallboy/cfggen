@@ -20,14 +20,14 @@ import {
     useMyStore,
     useLocationData,
     useCurPageRecordOrRecordRef
-} from "@/store/store";
-import {getNextId, Schema} from "@/domain/schema";
+} from "@/store/store.ts";
+import {getNextId, Schema} from "@/domain/schema.tsx";
 import {useHotkeys} from "react-hotkeys-hook";
 import {useNavigate} from "react-router";
-import {STable} from "@/api/schemaModel";
+import {STable} from "@/api/schemaModel.ts";
 import {useTranslation} from "react-i18next";
 import {memo, useCallback, useMemo} from "react";
-import {toggleFullScreen} from "@/utils/windowUtils";
+import {toggleFullScreen} from "@/services/windowUtils.ts";
 
 const {Text} = Typography;
 const prevIcon = <LeftOutlined/>;

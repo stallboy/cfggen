@@ -3,7 +3,7 @@ import {invalidateAllQueries} from "@/app/queryClient";
 
 import {memo, useCallback, useState} from "react";
 import {useMutation,} from "@tanstack/react-query";
-import {addOrUpdateRecord} from "@/api/api";
+import {addOrUpdateRecord} from "@/api/apiClient.ts";
 import {Button, Typography, Form, Input, List, Result, Space} from "antd";
 import type {ResultProps} from "antd";
 

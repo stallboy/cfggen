@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest'
-import {UndoStore, Snapshot} from './undoStore.ts'
+import {UndoStack, Snapshot} from './undoStack.ts'
 import {EFitView} from '@/domain/entityModel'
 import {JSONObject} from '@/api/recordModel'
 
@@ -7,16 +7,16 @@ import {JSONObject} from '@/api/recordModel'
 const snap = (o: Record<string, unknown>, undoFitView: EFitView = EFitView.NoChange, anchorId?: string): Snapshot =>
     ({data: o as JSONObject, undoFitView, anchorId});
 
-describe('UndoStore 栈语义', () => {
+describe('UndoStack 栈语义', () => {
     it('setBaseline 后 canUndo/canRedo 均 false', () => {
-        const u = new UndoStore()
+        const u = new UndoStack()
         u.setBaseline(snap({a: 1}))
         expect(u.canUndo()).toBe(false)
         expect(u.canRedo()).toBe(false)
     })
 
     it('capture 后 canUndo true、canRedo false', () => {
-        const u = new UndoStore()
+        const u = new UndoStack()
         u.setBaseline(snap({a: 1}))
         u.capture(snap({a: 2}))
         expect(u.canUndo()).toBe(true)
@@ -24,7 +24,7 @@ describe('UndoStore 栈语义', () => {
     })
 
     it('undo：target 恢复成前一个快照（栈底回 baseline）；之后 canRedo true', () => {
-        const u = new UndoStore()
+        const u = new UndoStack()
         u.setBaseline(snap({a: 1}))
         u.capture(snap({a: 2}))
         expect(u.popUndo().target.data).toEqual({a: 1})   // 回到 baseline
@@ -33,7 +33,7 @@ describe('UndoStore 栈语义', () => {
     })
 
     it('redo：target 恢复成刚 undo 的快照；之后 canUndo true', () => {
-        const u = new UndoStore()
+        const u = new UndoStack()
         u.setBaseline(snap({a: 1}))
         u.capture(snap({a: 2}))
         u.popUndo()
@@ -43,7 +43,7 @@ describe('UndoStore 栈语义', () => {
     })
 
     it('多步 undo 逐级回退到 baseline', () => {
-        const u = new UndoStore()
+        const u = new UndoStack()
         u.setBaseline(snap({a: 1}))
         u.capture(snap({a: 2}))
         u.capture(snap({a: 3}))
@@ -53,7 +53,7 @@ describe('UndoStore 栈语义', () => {
     })
 
     it('多步 redo 逐级前进到最近', () => {
-        const u = new UndoStore()
+        const u = new UndoStack()
         u.setBaseline(snap({a: 1}))
         u.capture(snap({a: 2}))
         u.capture(snap({a: 3}))
@@ -65,9 +65,9 @@ describe('UndoStore 栈语义', () => {
     })
 })
 
-describe('UndoStore 视口语义（undoFitView/anchorId 随被弹出快照）', () => {
+describe('UndoStack 视口语义（undoFitView/anchorId 随被弹出快照）', () => {
     it('popUndo 返回被撤销操作快照的 undoFitView/anchorId（结构→KeepStable+锚点）', () => {
-        const u = new UndoStore()
+        const u = new UndoStack()
         u.setBaseline(snap({a: 1}, EFitView.FitFull))
         u.capture(snap({a: 2}, EFitView.KeepStable, 'nodeX'))   // 结构操作
         const r = u.popUndo()
@@ -77,7 +77,7 @@ describe('UndoStore 视口语义（undoFitView/anchorId 随被弹出快照）', 
     })
 
     it('popRedo 返回重做操作快照的 undoFitView/anchorId', () => {
-        const u = new UndoStore()
+        const u = new UndoStack()
         u.setBaseline(snap({a: 1}, EFitView.FitFull))
         u.capture(snap({a: 2}, EFitView.KeepStable, 'nodeX'))
         u.popUndo()
@@ -88,9 +88,9 @@ describe('UndoStore 视口语义（undoFitView/anchorId 随被弹出快照）', 
     })
 })
 
-describe('UndoStore 分叉（capture 清 undone）', () => {
+describe('UndoStack 分叉（capture 清 undone）', () => {
     it('undo 后新 capture 丢弃 redo 历史', () => {
-        const u = new UndoStore()
+        const u = new UndoStack()
         u.setBaseline(snap({a: 1}))
         u.capture(snap({a: 2}))
         u.capture(snap({a: 3}))
@@ -102,7 +102,7 @@ describe('UndoStore 分叉（capture 清 undone）', () => {
     })
 
     it('redo 后新 capture 也丢弃 redo 历史', () => {
-        const u = new UndoStore()
+        const u = new UndoStack()
         u.setBaseline(snap({a: 1}))
         u.capture(snap({a: 2}))
         u.popUndo()
@@ -114,9 +114,9 @@ describe('UndoStore 分叉（capture 清 undone）', () => {
     })
 })
 
-describe('UndoStore maxDepth 封顶', () => {
+describe('UndoStack maxDepth 封顶', () => {
     it('超 maxDepth 丢弃最旧，undo 到栈底仍回 baseline', () => {
-        const u = new UndoStore()
+        const u = new UndoStack()
         u.setBaseline(snap({a: 0}))
         for (let i = 1; i <= 60; i++) u.capture(snap({a: i}))
         // done=[a11..a60]（maxDepth=50 封顶），baseline=a0
@@ -127,7 +127,7 @@ describe('UndoStore maxDepth 封顶', () => {
     })
 
     it('setBaseline 清栈（提交后 redo 历史也清）', () => {
-        const u = new UndoStore()
+        const u = new UndoStack()
         u.setBaseline(snap({a: 1}))
         u.capture(snap({a: 2}))
         u.popUndo()

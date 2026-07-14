@@ -1,8 +1,8 @@
 import { Select } from "antd";
-import { getIdOptionsWithNew, NEW_RECORD_ID } from "@/domain/schema";
-import { navTo, useMyStore, useLocationData, useCurPageRecordOrRecordRef } from "@/store/store";
+import { getIdOptionsWithNew, NEW_RECORD_ID } from "@/domain/schema.tsx";
+import { navTo, useMyStore, useLocationData, useCurPageRecordOrRecordRef } from "@/store/store.ts";
 import { useNavigate } from "react-router";
-import { STable } from "@/api/schemaModel";
+import { STable } from "@/api/schemaModel.ts";
 import { memo, useMemo, useCallback } from "react";
 
 export const IdList = memo(function ({ curTable }: {

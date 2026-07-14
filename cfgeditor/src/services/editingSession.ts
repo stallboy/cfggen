@@ -4,7 +4,7 @@ import {getField, Schema} from "@/domain/schema";
 import {EntityPosition, EFitView, EditingObjectRes} from "@/domain/entityModel";
 import {setEditingState} from "@/store/store";
 import {getCopiedObject} from "./clipboard";
-import {UndoStore} from "@/domain/undoStore";
+import {UndoStack} from "@/domain/undoStack";
 
 /**
  * EditingSession —— 一个编辑会话的可变 store 实例（每条 record 编辑态一个实例）。
@@ -50,8 +50,8 @@ export class EditingSession {
     private readonly mutate?: (obj: JSONObject) => void;
 
     // undo/redo 快照栈（per-session，随实例生灭）。capture 时机：结构操作后 / 值类 coalescing 组关闭。
-    // 命名 undoStore 而非 undo：避免与 undo() 方法同名（TS 不允许同名的属性与方法）。
-    private readonly undoStore = new UndoStore();
+    // 命名 undoStack 而非 undo：避免与 undo() 方法同名（TS 不允许同名的属性与方法）。
+    private readonly undoStack = new UndoStack();
 
     // 值类 coalescing：同字段连续键入合并为一步 undo（500ms 窗口 + 换字段/blur/结构 op 关闭组）。
     // per-key O(1) 不变量：只做"字段标识比较 + clearTimeout/setTimeout"，严禁每键 clone/遍历（啃掉契约1）。
@@ -315,13 +315,13 @@ export class EditingSession {
     /** 初始 undo 基准：mount effect 调一次（构造函数在 render 期，structuredClone 是副作用，挪到 effect）。
      *  幂等：StrictMode 双调安全（setBaseline 清栈+设基准，二次调同值无害）。 */
     initUndoBaseline(): void {
-        this.undoStore.setBaseline({data: this.captureUndoPoint(), undoFitView: EFitView.FitFull});
+        this.undoStack.setBaseline({data: this.captureUndoPoint(), undoFitView: EFitView.FitFull});
     }
 
     undo(): void {
         this.flushValueCoalesce();   // 先固化未 capture 的键入（否则丢失）
-        if (!this.undoStore.canUndo()) return;
-        const {target, undoFitView, anchorId} = this.undoStore.popUndo();
+        if (!this.undoStack.canUndo()) return;
+        const {target, undoFitView, anchorId} = this.undoStack.popUndo();
         this.applyUndoPoint(target.data);
         // 按被撤销操作的视口语义驱动：结构→KeepStable(锚点屏幕不动)；整体替换→FitFull；值类→NoChange(不动)
         this.bumpStructure({fitView: undoFitView, position: anchorId ? {id: anchorId, x: 0, y: 0} : undefined});
@@ -329,16 +329,16 @@ export class EditingSession {
 
     redo(): void {
         this.flushValueCoalesce();
-        if (!this.undoStore.canRedo()) return;
-        const {target, undoFitView, anchorId} = this.undoStore.popRedo();
+        if (!this.undoStack.canRedo()) return;
+        const {target, undoFitView, anchorId} = this.undoStack.popRedo();
         this.applyUndoPoint(target.data);
         this.bumpStructure({fitView: undoFitView, position: anchorId ? {id: anchorId, x: 0, y: 0} : undefined});
     }
 
     // 箭头字段：作为引用传给 useSyncExternalStore 时 this 不丢（与 subscribe/getStructureVersion 等读取器同约定）。
-    canUndo = (): boolean => this.undoStore.canUndo();
+    canUndo = (): boolean => this.undoStack.canUndo();
 
-    canRedo = (): boolean => this.undoStore.canRedo();
+    canRedo = (): boolean => this.undoStack.canRedo();
 
     /** unmount 清理：flush 值类组（不丢最后一次键入）+ 清 timer 防 setTimeout 闭包持 session 泄漏 + 清 listeners。 */
     dispose(): void {
@@ -378,7 +378,7 @@ export class EditingSession {
     /** 入栈一份带 undo 视口语义的快照（data=captureUndoPoint 深拷）。
      *  结构步→KeepStable+锚点（undo 时锚点屏幕不动）；整体替换→FitFull；值类/Form.List→NoChange（undo 不动）。 */
     private capture(undoFitView: EFitView, anchorId?: string): void {
-        this.undoStore.capture({data: this.captureUndoPoint(), undoFitView, anchorId});
+        this.undoStack.capture({data: this.captureUndoPoint(), undoFitView, anchorId});
     }
 
     /** 把 snapshot 恢复成 editingObject（clone 入参，避免栈里 snapshot 被后续就地变异污染）。 */
@@ -396,7 +396,7 @@ export class EditingSession {
         this.valueCoalesceKey = undefined;
         const snap = this.captureUndoPoint();
         this.originalEditingObject = snap;
-        this.undoStore.setBaseline({data: snap, undoFitView: EFitView.FitFull});
+        this.undoStack.setBaseline({data: snap, undoFitView: EFitView.FitFull});
     }
 
     // ---- 值类 coalescing ----

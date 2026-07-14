@@ -9,7 +9,7 @@ import { NodeShowType } from "@/domain/storageJson";
 import { navTo, useMyStore, useLocationData, PageType } from "@/store/store";
 import { Navigate, useNavigate, useOutletContext } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { fetchRecordRefs, fetchUnreferencedRecords } from "@/api/api";
+import { fetchRecordRefs, fetchUnreferencedRecords } from "@/api/apiClient.ts";
 import { MenuItem } from "@/flow/FlowContextMenu";
 import { SchemaTableType } from "@/app/types";
 import { fillHandles } from "@/flow/layout/entityToNodeAndEdge";

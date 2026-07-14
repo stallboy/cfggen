@@ -5,7 +5,7 @@ import {EFitView} from '@/domain/entityModel';
  * Snapshot —— editingObject 的一份独立深拷贝 + undo/redo 视口语义。
  *
  * data 必须独立（structuredClone），不能存 editingObject / editObj 的引用——它们会被后续就地变异污染，
- * 存引用等于存一个会被改的活对象。clone 由 session 的 captureUndoPoint 负责，UndoStore 只存调用方传入
+ * 存引用等于存一个会被改的活对象。clone 由 session 的 captureUndoPoint 负责，UndoStack 只存调用方传入
  * 的已 clone 对象（不二次 clone）。
  *
  * undoFitView / anchorId 记录「产生此快照的操作」的视口语义，供 undo/redo 弹出该快照时按其语义驱动视口
@@ -20,7 +20,7 @@ export type Snapshot = {
 };
 
 /**
- * UndoStore —— undo/redo 的纯数据栈（快照栈模式）。
+ * UndoStack —— undo/redo 的纯数据栈（快照栈模式）。
  *
  * 不依赖 session、不调 React——只管 baseline / done / undone 三段。session 负责 capture/apply 时机
  * 与 bumpStructure 驱动 React。这样栈语义可独立单测（栈深、分叉、baseline 栈底、视口语义随快照）。
@@ -33,7 +33,7 @@ export type Snapshot = {
  * 分叉：capture 清空 undone（undo 后又新编辑，redo 历史作废，与所有编辑器一致）。
  * maxDepth：栈深硬上限，超限丢弃最旧（大 record 的内存兜底）。
  */
-export class UndoStore {
+export class UndoStack {
     private baseline!: Snapshot;
     private done: Snapshot[] = [];
     private undone: Snapshot[] = [];

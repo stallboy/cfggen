@@ -3,7 +3,7 @@ import {navTo, useMyStore, useLocationData, useCurPageRecordOrRecordRef} from "@
 import {Button, Result, Spin, Table} from "antd";
 import {useNavigate} from "react-router";
 import {useQuery} from "@tanstack/react-query";
-import {fetchRecordRefIds} from "@/api/api";
+import {fetchRecordRefIds} from "@/api/apiClient.ts";
 import {RecordRefId, RecordRefIdsResult, RefId} from "@/api/recordModel";
 
 

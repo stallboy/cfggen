@@ -1,8 +1,8 @@
-import {STable} from "@/api/schemaModel";
+import {STable} from "@/api/schemaModel.ts";
 import {Flex, Select} from "antd";
-import {getLastOpenIdByTable, navTo, useMyStore, useLocationData} from "@/store/store";
+import {getLastOpenIdByTable, navTo, useMyStore, useLocationData} from "@/store/store.ts";
 import {useNavigate} from "react-router";
-import {Schema} from "@/domain/schema";
+import {Schema} from "@/domain/schema.tsx";
 import {memo, useMemo, useCallback, CSSProperties} from "react";
 
 interface TableWithLastName {

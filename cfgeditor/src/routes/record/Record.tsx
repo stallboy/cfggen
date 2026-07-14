@@ -10,7 +10,7 @@ import {useTranslation} from "react-i18next";
 import {navTo, setIsEditMode, useMyStore, useLocationData} from "@/store/store";
 import {useNavigate, useOutletContext} from "react-router";
 import {useMutation, useQuery} from "@tanstack/react-query";
-import {addOrUpdateRecord, fetchRecord} from "@/api/api";
+import {addOrUpdateRecord, fetchRecord} from "@/api/apiClient.ts";
 import {MenuItem} from "@/flow/FlowContextMenu";
 import {SchemaTableType} from "@/app/types";
 import {fillHandles} from "@/flow/layout/entityToNodeAndEdge";

@@ -3,7 +3,7 @@ import {App, Button, Flex, Input} from "antd";
 import {BookOutlined, DeleteOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 import {useMutation} from "@tanstack/react-query";
-import {updateNote} from "@/api/api";
+import {updateNote} from "@/api/apiClient.ts";
 import {useMyStore} from "@/store/store";
 import {NoteEditResult, notesToMap} from "@/api/noteModel";
 import {queryClient} from "@/app/queryClient";

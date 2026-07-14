@@ -12,12 +12,12 @@ import {Schema} from "@/domain/schema";
 import {STable} from "@/api/schemaModel";
 import {useMutation} from "@tanstack/react-query";
 import {RecordEditResult} from "@/api/recordModel";
-import {deleteRecord} from "@/api/api";
+import {deleteRecord} from "@/api/apiClient.ts";
 import {toBlob} from "html-to-image";
 import {saveAs} from "file-saver";
 import {PageType, navTo, useLocationData} from "@/store/store";
 import {KeyShortCut} from "./KeyShortcut.tsx";
-import {toggleFullScreen} from "@/utils/windowUtils";
+import {toggleFullScreen} from "@/services/windowUtils";
 
 
 export const ToolsSetting = memo(function ToolsSetting({schema, curTable, flowRef}: {

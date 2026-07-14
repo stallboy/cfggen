@@ -10,7 +10,7 @@ import {useIsCurTableEditable} from "./useEditable.ts";
 import {memo, useRef, type CSSProperties} from "react";
 import {Schema} from "@/domain/schema";
 import {useQuery, useMutation} from "@tanstack/react-query";
-import {getPrompt, checkJson} from "@/api/api";
+import {getPrompt, checkJson} from "@/api/apiClient.ts";
 import {CheckJsonResult} from "@/api/chatModel";
 import {getCurrentEditingSession} from "@/services/editingSession";
 
