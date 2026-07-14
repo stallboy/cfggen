@@ -164,6 +164,9 @@ export const NoteEditInner = memo(function NoteEditInner({note, updateNoteInEdit
     // rows 在 mount 时按初始 note 算一次，之后固定——符合 §6 "textarea 固定 rows、不随输入动态伸缩"。
     // note 是变化的 tmpNote，若 rows 随之动态重算，编辑长 note 时 textarea 会持续长高、节点 DOM
     // 超出 ELK 估算高度而 overlap 相邻节点。value 仍受控随输入变化，但高度固定（超出滚动）。
+    // 不加 autoFocus：编辑态下多个已有 note 的节点会各自挂一份 NoteEditInner，autoFocus 会让
+    // 最后挂载的那个抢焦点 + scrollIntoView，把焦点从用户要编辑的表单字段夺走。autoFocus 只留给
+    // 单实例的 NoteEdit（点击触发、一次只一个）。placeholder 仍走 i18n。
     const {noteStyle, textAreaStyle} = useNoteStyles();
     const [rows] = useState(() => estimateNoteRows(note));
     const onNoteChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -172,7 +175,7 @@ export const NoteEditInner = memo(function NoteEditInner({note, updateNoteInEdit
     }, [updateNoteInEdit]);
 
     return <Flex vertical style={noteStyle}>
-        <Input.TextArea className='nodrag' placeholder={t('notePlaceholder')} autoFocus
+        <Input.TextArea className='nodrag' placeholder={t('notePlaceholder')}
                   rows={rows}
                   style={textAreaStyle}
                   value={note}

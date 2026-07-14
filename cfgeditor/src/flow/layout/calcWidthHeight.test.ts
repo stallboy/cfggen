@@ -121,10 +121,11 @@ describe('calcWidthHeight', () => {
     // notes（备注）高度
     // -----------------------------------------------------------------------
     describe('notes 高度', () => {
-        it('label 含 _ 且 id 有 note 时按行数增加高度（行数下限 2）', () => {
+        it('label 含 _ 且 id 有 note 时按行数增加高度（行数下限 1）', () => {
             const e = makeReadOnly({id: '1', label: 'a_b', fields: []})
-            // length 5 → row=5/15≈0.33 → clamp 2；40 + (2*22+22) = 40 + 66 = 106
-            expect(calcWidthHeight(e, undefined, new Map([['1', 'short']]))).toEqual([240, 106])
+            // length 5 → row=5/15≈0.33 → clamp 1（NOTE_MIN_ROWS=1，"视觉修正"把下限从 2 改 1，
+            // 短 note 不再预留整一行空隙）；40 + (1*22+22) = 40 + 44 = 84
+            expect(calcWidthHeight(e, undefined, new Map([['1', 'short']]))).toEqual([240, 84])
         })
 
         it('note 较长时按 length/15 计行', () => {
