@@ -21,7 +21,7 @@ import {useHotkeys} from "react-hotkeys-hook";
 import {HeaderBar} from "@/routes/headerbar/HeaderBar";
 import {FlowGraph} from "@/flow/FlowGraph";
 import {FlowStyleManager} from "@/flow/FlowStyleManager";
-import {Finder} from "@/routes/search/Finder";
+import {Finder} from "@/routes/finder/Finder";
 import {SidePanelShell} from "./SidePanelShell";
 import {getCurrentEditingSession} from "@/services/editingSession";
 

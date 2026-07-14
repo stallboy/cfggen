@@ -306,7 +306,7 @@ const menuItems = [
 四个列表（`LastAccessed`/`LastModified`/`RefIdList`/`SearchValue`）是同一模式。抽一个泛型组件：
 
 ```tsx
-// routes/search/NavList.tsx
+// routes/finder/NavList.tsx
 import {List, Empty} from 'antd';
 import {navTo, useCurPageRecordOrRecordRef, useMyStore} from '@/store/store';
 import {useNavigate} from 'react-router';
