@@ -1,10 +1,8 @@
-import {memo, useState} from "react";
+import {memo} from "react";
 import {navTo, useMyStore, useLocationData, useCurPageRecordOrRecordRef} from "@/store/store";
-import {Button, Result, Spin, Table, Tooltip} from "antd";
-import {LockOutlined, SyncOutlined, UnlockOutlined} from "@ant-design/icons";
+import {Button, Result, Spin, Table} from "antd";
 import {useNavigate} from "react-router";
 import {useQuery} from "@tanstack/react-query";
-import {useTranslation} from "react-i18next";
 import {fetchRecordRefIds} from "@/api/api";
 import {RecordRefId, RecordRefIdsResult, RefId} from "@/api/recordModel";
 
@@ -63,11 +61,11 @@ function RefIdListResult({refIdsResult}: {
 }
 
 
-export const RefIdList = memo(function () {
-    const {t} = useTranslation();
+export const RefIdList = memo(function ({lockedId}: {
+    lockedId: RefId | undefined
+}) {
     const {server, refIdsInDepth, refIdsOutDepth, refIdsMaxNode} = useMyStore();
     const {curTableId, curId} = useLocationData();
-    const [lockedId, setLockedId] = useState<RefId | undefined>(undefined);
 
     const thisTable = lockedId ? lockedId.table : curTableId;
     const thisId = lockedId ? lockedId.id : curId;
@@ -80,35 +78,14 @@ export const RefIdList = memo(function () {
                 signal),
     })
 
-    let content;
     if (isLoading) {
-        content = <Spin/>;
+        return <Spin/>;
     } else if (isError) {
-        content = <Result status={'error'} title={error.message}/>;
+        return <Result status={'error'} title={error.message}/>;
     } else if (!recordResult) {
-        content = <Result title={'record result empty'}/>;
+        return <Result title={'record result empty'}/>;
     } else if (recordResult.resultCode != 'ok') {
-        content = <Result status={'error'} title={recordResult.resultCode}/>;
-    } else {
-        content = <RefIdListResult refIdsResult={recordResult}/>
+        return <Result status={'error'} title={recordResult.resultCode}/>;
     }
-
-    // lock 控件移到面板内部（自管 lockedId），不再挂在 Collapse 公共 extra 误导其它面板。
-    // 三态：未锁→锁到当前；锁到当前→解锁；锁到别处→重置到当前。
-    const isLockedToCurrent = lockedId?.table == curTableId && lockedId?.id == curId;
-    const lockBtn = lockedId
-        ? (isLockedToCurrent
-            ? {icon: <LockOutlined/>, tip: t('unlock'), act: () => setLockedId(undefined)}
-            : {icon: <SyncOutlined/>, tip: t('lock'), act: () => setLockedId({table: curTableId, id: curId})})
-        : {icon: <UnlockOutlined/>, tip: t('lock'), act: () => setLockedId({table: curTableId, id: curId})};
-
-    return <>
-        <div style={{display: 'flex', justifyContent: 'flex-end'}}>
-            <Tooltip title={lockBtn.tip}>
-                <Button type="text" size="small" icon={lockBtn.icon} onClick={lockBtn.act}
-                        aria-label={lockBtn.tip}/>
-            </Tooltip>
-        </div>
-        {content}
-    </>;
+    return <RefIdListResult refIdsResult={recordResult}/>;
 });

@@ -40,7 +40,7 @@ export const LastModified = memo(function LastModified({schema}: {
             }
         }
         ordered.sort((a: LastModifiedItem, b: LastModifiedItem) => b.lastModified - a.lastModified);
-        return ordered;
+        return ordered.slice(0, 20);
     }, [schema]);
 
 

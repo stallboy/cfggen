@@ -1,13 +1,12 @@
 import {Badge, Button, Dropdown, Flex, Select, Skeleton, Space, Tooltip, Typography} from "antd";
 import {
     ApartmentOutlined,
-    AppstoreOutlined,
     CloseOutlined,
     CompassOutlined,
     LeftOutlined,
     RightOutlined,
     FileAddOutlined,
-    SettingOutlined
+    SettingOutlined, BarsOutlined
 } from "@ant-design/icons";
 import {TableList} from "./TableList.tsx";
 import {IdList} from "./IdList.tsx";
@@ -117,7 +116,7 @@ export const HeaderBar = memo(function ({schema, curTable}: {
                     items: menuItems,
                     onClick: (e) => setDragPanel(e.key), selectedKeys: [dragPanel]
                 }} trigger={['click']}>
-                    <Button icon={<AppstoreOutlined/>} title={t('panelMenu')}/>
+                    <Button size="small" icon={<BarsOutlined/>} title={t('panelMenu')}/>
                 </Dropdown>
 
                 <Badge dot={isUnsaved} status="warning">
