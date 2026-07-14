@@ -1,5 +1,6 @@
 import {Background, Controls, Edge, Node, NodeTypes, ReactFlow, ReactFlowProvider} from "@xyflow/react";
-import {ConfigProvider} from "antd";
+import {Button, ConfigProvider, Result} from "antd";
+import {useTranslation} from "react-i18next";
 import {Entity} from "@/domain/entityModel";
 import type {NodeShowType} from "@/domain/storageJson";
 import {memo, MouseEvent as ReactMouseEvent, ReactNode, useCallback, useMemo, useState} from "react";
@@ -50,12 +51,17 @@ const FORM_THEME = {
 export const FlowGraph = memo(function FlowGraph({children}: {
     children: ReactNode
 }) {
+    const {t} = useTranslation();
     const [menuStyle, setMenuStyle] = useState<MenuStyle | undefined>(undefined);
     const [menuItems, setMenuItems] = useState<MenuItem[] | undefined>(undefined);
 
     const [paneMenu, setPaneMenu] = useState<MenuItem[]>([]);
     const [nodeMenuFunc, setNodeMenuFunc] = useState<NodeMenuFunc>();
     const [nodeDoubleClickFunc, setNodeDoubleClickFunc] = useState<NodeDoubleClickFunc>();
+
+    // 布局失败覆盖层：layoutError 由 useEntityToGraph 透传，retryLayout 为 invalidate 该图 layout 缓存的回调。
+    const [layoutError, setLayoutError] = useState<Error | undefined>(undefined);
+    const [retryLayout, setRetryLayout] = useState<(() => void) | undefined>(undefined);
 
     const onPaneContextMenu = useCallback((event: ReactMouseEvent<Element, MouseEvent> | MouseEvent) => {
             event.stopPropagation();
@@ -91,38 +97,58 @@ export const FlowGraph = memo(function FlowGraph({children}: {
         setNodeDoubleClickFunc(() => func);
     }, [setNodeDoubleClickFunc]);
 
+    // retryLayout 是函数——用「存回调」写法 setRetryLayout(() => fn) 避免 React 把它当 functional updater 调用。
+    const thisSetRetryLayout = useCallback(function (fn: () => void) {
+        setRetryLayout(() => fn);
+    }, [setRetryLayout]);
+
     const ctx = useMemo(() => {
         return {
             setPaneMenu,
             setNodeMenuFunc: thisSetNodeMenuFunc,
             setNodeDoubleClickFunc: thisSetNodeDoubleClickFunc,
+            setLayoutError,
+            setRetryLayout: thisSetRetryLayout,
         }
-    }, [setPaneMenu, thisSetNodeMenuFunc, thisSetNodeDoubleClickFunc]);
+    }, [setPaneMenu, thisSetNodeMenuFunc, thisSetNodeDoubleClickFunc, setLayoutError, thisSetRetryLayout]);
 
 
     return <ReactFlowProvider>
         <ConfigProvider theme={FORM_THEME}>
-            <ReactFlow
-                defaultNodes={defaultNodes}
-                defaultEdges={defaultEdges}
-                nodeTypes={nodeTypes}
-                minZoom={0.1}
-                maxZoom={2}
-                deleteKeyCode={null}
-                onNodeDoubleClick={onNodeDoubleClick}
-                onNodeContextMenu={onNodeContextMenu}
-                onPaneClick={closeMenu}
-                onNodeClick={closeMenu}
-                onMoveStart={closeMenu}
-                onNodeDragStart={closeMenu}
-                onPaneContextMenu={onPaneContextMenu}
-                // onlyRenderVisibleElements
-                proOptions={proOptions}>
-                <Background/>
-                <Controls showZoom={false}/>
-            </ReactFlow>
-            {(menuStyle && menuItems && menuItems.length > 0) &&
-                <FlowContextMenu menuStyle={menuStyle} menuItems={menuItems} closeMenu={closeMenu}/>}
+            {/* 定位容器：为布局失败覆盖层提供 relative 锚定，不影响 ReactFlow 撑满父级（100%/100%） */}
+            <div className='flowGraphCanvas'>
+                <ReactFlow
+                    defaultNodes={defaultNodes}
+                    defaultEdges={defaultEdges}
+                    nodeTypes={nodeTypes}
+                    minZoom={0.1}
+                    maxZoom={2}
+                    deleteKeyCode={null}
+                    onNodeDoubleClick={onNodeDoubleClick}
+                    onNodeContextMenu={onNodeContextMenu}
+                    onPaneClick={closeMenu}
+                    onNodeClick={closeMenu}
+                    onMoveStart={closeMenu}
+                    onNodeDragStart={closeMenu}
+                    onPaneContextMenu={onPaneContextMenu}
+                    // onlyRenderVisibleElements
+                    proOptions={proOptions}>
+                    <Background/>
+                    <Controls showZoom={false}/>
+                </ReactFlow>
+                {(menuStyle && menuItems && menuItems.length > 0) &&
+                    <FlowContextMenu menuStyle={menuStyle} menuItems={menuItems} closeMenu={closeMenu}/>}
+                {layoutError &&
+                    <div className='flowLayoutErrorOverlay'>
+                        <Result
+                            status='error'
+                            title={t('layoutFailedTitle')}
+                            subTitle={t('layoutFailedDesc')}
+                            extra={retryLayout &&
+                                <Button type='primary' onClick={retryLayout}>{t('retryLayout')}</Button>}
+                        />
+                    </div>}
+            </div>
         </ConfigProvider>
 
         <FlowGraphContext value={ctx}>

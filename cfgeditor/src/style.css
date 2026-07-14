@@ -41,6 +41,29 @@ svg .react-flow__edge-path{
     cursor: default;
 }
 
+/* FlowGraph 画布容器：为布局失败覆盖层提供 relative 锚定，自身撑满父级 */
+.flowGraphCanvas {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* 布局失败覆盖层：半透明遮罩居中显示 Result，遮罩自身不拦截事件（仍可点背后节点），仅 Result 卡片可交互 */
+.flowLayoutErrorOverlay {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.55);
+    pointer-events: none;
+}
+
+.flowLayoutErrorOverlay > * {
+    pointer-events: auto;
+}
+
 .contextMenu {
     border-color: #2986ff;
     border-style: solid;

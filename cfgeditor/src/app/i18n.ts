@@ -182,6 +182,11 @@ i18n.use(LanguageDetector)
 
                     addOrUpdateTooltip: "Add or update record, alt+s",
 
+                    // 布局失败覆盖层
+                    layoutFailedTitle: "Layout failed",
+                    layoutFailedDesc: "Auto layout failed. Nodes are shown unsorted. Click retry to re-layout.",
+                    retryLayout: "Retry layout",
+
                     addListItemBefore: "Insert before",
                     structCopy: "Copy",
                     structPaste: "Paste",
@@ -305,6 +310,11 @@ i18n.use(LanguageDetector)
                     cancelUpdateNote: '取消',
                     updateNote: '更新',
                     pageType: '页面',
+
+                    // 布局失败覆盖层
+                    layoutFailedTitle: '自动布局失败',
+                    layoutFailedDesc: '节点已按兜底位置展开。点击重试重新布局。',
+                    retryLayout: '重试布局',
 
                     search: '搜索',
                     edit: '编辑',

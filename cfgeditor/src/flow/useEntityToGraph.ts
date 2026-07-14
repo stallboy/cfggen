@@ -3,6 +3,7 @@ import {useMyStore} from "@/store/store";
 import {Rect, useReactFlow, useStore} from "@xyflow/react";
 import {convertNodeAndEdges} from "./layout/entityToNodeAndEdge.ts";
 import {useQuery} from "@tanstack/react-query";
+import {queryClient} from "@/app/queryClient";
 import {layoutAsync} from "./layout/layoutAsync.ts";
 import {EntityNode, NodeDoubleClickFunc, NodeMenuFunc} from "./FlowGraph.tsx";
 import {Entity, EditingObjectRes} from "@/domain/entityModel";
@@ -59,6 +60,23 @@ function applyRectToNodes(nodes: EntityNode[], rectMap?: Map<string, Rect>) {
         devLog('not found', n, rectMap);
         return n;
     });
+}
+
+// 布局失败兜底：ELK 失败时把节点按网格铺开，避免全部塌叠在默认 (100,100) 成一摞不可读。
+// 非精确布局——只求"看得见、不重叠成一摞"，retry 成功后由正常 applyRectToNodes 路径校正。
+// 网格单元略大于最大节点（edit 280 宽 + padding），保证横向不贴边；纵向高度按典型行数留余量。
+const FALLBACK_CELL_W = 320;
+const FALLBACK_CELL_H = 260;
+const FALLBACK_COLS = 5;
+const FALLBACK_ORIGIN = 80;
+function spreadFallbackNodes(nodes: EntityNode[]): EntityNode[] {
+    return nodes.map((n, i) => ({
+        ...n,
+        position: {
+            x: FALLBACK_ORIGIN + (i % FALLBACK_COLS) * FALLBACK_CELL_W,
+            y: FALLBACK_ORIGIN + Math.floor(i / FALLBACK_COLS) * FALLBACK_CELL_H,
+        },
+    }));
 }
 
 
@@ -141,14 +159,23 @@ export function useEntityToGraph({
             setEdges(edges);
         } else if (layoutError) {
             // 布局失败兜底（layoutAsync throw → react-query retry 耗尽后 error 态）：
-            // 把未布局节点（默认位置 100,100）推入保证画布非空 + console.error 反馈，
-            // 等 retry 成功后由 newNodes 分支校正。仅 error 态触发，不污染正常路径（无闪烁）。
+            // 节点按网格铺开（spreadFallbackNodes）保证画布非空且可读 + console.error 反馈；
+            // 视觉反馈（Result 覆盖层 + retry）由 Effect 3 经 FlowGraphContext 透传到 FlowGraph。
+            // retry 成功后由 newNodes 分支校正。仅 error 态触发，不污染正常路径（无闪烁）。
             console.error('[layout] failed, falling back to unpositioned nodes', layoutError);
-            setNodes(nodes);
+            setNodes(spreadFallbackNodes(nodes));
             setEdges(edges);
         }
     }, [newNodes, edges, nodeMenuFunc, paneMenu, nodeDoubleClickFunc, flowGraph,
         setNodes, setEdges, layoutError, nodes]);
+
+    // Effect 3：布局失败反馈。把 error 透传给 FlowGraph（渲染 Result 覆盖层 + retry 按钮），
+    // retry = invalidate 该 pathname 的 layout 缓存 → react-query 重新跑 ELK。
+    // 拆独立 effect：只随 layoutError/pathname 变化，不沾 Effect 1 的菜单依赖；flowGraph 引用稳定（ctx memoized）。
+    useEffect(() => {
+        flowGraph.setLayoutError(layoutError ?? undefined);
+        flowGraph.setRetryLayout(() => queryClient.invalidateQueries({queryKey: ['layout', pathname]}));
+    }, [layoutError, flowGraph, pathname]);
 
     // Effect 2：视口动作。刻意与 Effect 1 拆开——视口只随「视口指令(editingObjectRes) / layout 结果
     // (id2RectMap) / 就绪信号(viewportReady)」变化，不含 paneMenu/nodeMenuFunc 等菜单回调。
