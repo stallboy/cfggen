@@ -114,6 +114,10 @@ export const NoteEditInner = memo(function NoteEditInner({note, updateNoteInEdit
     note: string;
     updateNoteInEdit: (note: string) => void;
 }) {
+    // rows 在 mount 时按初始 note 算一次，之后固定——符合 §6 "textarea 固定 rows、不随输入动态伸缩"。
+    // note 是变化的 tmpNote，若 rows 随之动态重算，编辑长 note 时 textarea 会持续长高、节点 DOM
+    // 超出 ELK 估算高度而 overlap 相邻节点。value 仍受控随输入变化，但高度固定（超出滚动）。
+    const [rows] = useState(() => estimateNoteRows(note));
     const onNoteChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
         const value = e.target.value;
         updateNoteInEdit(value);
@@ -121,7 +125,7 @@ export const NoteEditInner = memo(function NoteEditInner({note, updateNoteInEdit
 
     return <Flex vertical style={noteStyle}>
         <Input.TextArea className='nodrag' placeholder='note'
-                  rows={estimateNoteRows(note)}
+                  rows={rows}
                   style={TEXT_AREA_STYLE}
                   value={note}
                   onChange={onNoteChange}/>

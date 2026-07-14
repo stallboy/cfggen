@@ -1,6 +1,6 @@
 import {MenuItem} from "./FlowContextMenu.tsx";
 import {createContext} from "react";
-import {NodeDoubleClickFunc, NodeMenuFunc} from "./FlowGraph.tsx";
+import type {NodeDoubleClickFunc, NodeMenuFunc} from "./FlowGraph.tsx";
 
 export interface FlowGraphContextType {
     setPaneMenu: (menu: MenuItem[]) => void;
