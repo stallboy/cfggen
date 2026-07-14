@@ -135,7 +135,9 @@ export class RecordEditEntityCreator {
 
                     const chain = [...fieldChain, fieldKey]
                     const onDeleteFunc = (position: EntityPosition) => {
-                        this.session.deleteArrayItem(arrayIndex, chain, position);
+                        // undo 锚点取父节点（id = 当前 struct，即 list 父）：被删 item 在 undo 前不存在，
+                        // 父节点 undo 前后都在 → KeepStable 补偿让其屏幕不动。正向 position 仍指被删 item（删后不在新布局 → FitId noop）。
+                        this.session.deleteArrayItem(arrayIndex, chain, position, id);
                     }
 
                     let onMoveUpFunc;

@@ -42,24 +42,27 @@ xyflow 提供的视口相关公开 API（`useReactFlow()` 返回）：
 
 ## 3. 核心概念
 
-### 3.1 `EFitView` 四档枚举
+### 3.1 `EFitView` 五档枚举
 
 定义在 `domain/entityModel.ts`：
 
 ```ts
 export enum EFitView {
     FitFull = 'FitFull',    // 全图适配：把所有节点框进视口
-    FitId = 'FitId',        // 锚点不动：relayout 后让指定节点屏幕坐标不变
-    /** 不跳视口：undo/redo 数据回滚、只读/固定页保持当前视口（不调 fitView/setViewport）。 */
+    FitId = 'FitId',        // 锚点不动（正向结构操作）：relayout 后让指定节点屏幕坐标不变，anchorOld=position.x/y
+    /** undo/redo 结构操作：relayout 后让锚点屏幕坐标不变，但 anchorOld 取自「上一帧布局」（非 position.x/y，后者是操作发起时坐标会过时）。 */
+    KeepStable = 'KeepStable',
+    /** 不跳视口：只读/固定页保持当前视口；值类 undo（布局不变）亦用此（不调 fitView/setViewport）。 */
     NoChange = 'NoChange',  // 字符串枚举：DevTools/调试可读，不依赖隐式数字
 }
 ```
 
 | 档位 | 触发场景 | 视口效果 | xyflow 调用 |
 |---|---|---|---|
-| `FitFull` | 初次加载、整体替换、reset、浏览态 | 全图重新铺满 | `fitView()` |
-| `FitId` | 增删/swap/fold/换 impl/粘贴等**结构**操作 | 让"锚点节点"屏幕位置不动 | `setViewport()`（视口由内部 `computeStableViewport` 算） |
-| `NoChange` | undo/redo、只读/固定页（首次适配后） | 不跳 | 无 |
+| `FitFull` | 初次加载、整体替换、reset、浏览态、整体替换的 undo | 全图重新铺满 | `fitView()` |
+| `FitId` | 增删/swap/fold/换 impl/粘贴等**正向结构**操作 | 让"锚点节点"屏幕位置不动 | `setViewport()`（anchorOld=position.x/y） |
+| `KeepStable` | **undo/redo 结构操作** | 让"被撤销操作的焦点节点"屏幕位置不动 | `setViewport()`（anchorOld=上一帧布局坐标；锚点=被撤销操作节点，delete 取父） |
+| `NoChange` | undo/redo 值类、只读/固定页（首次适配后） | 不跳 | 无 |
 
 ### 3.2 `EditingObjectRes` 契约载体
 
@@ -193,7 +196,7 @@ if (action.kind === 'fitFull') {
 | `updateFold` | `FitId` | ✓ | 折叠/展开，定位到该节点 |
 | `updateInterfaceValue` | `FitId` | ✓ | 换 interface 实现 |
 | `pasteStruct` | `FitId` | ✓ | 粘贴 |
-| `undo` / `redo` | `NoChange` | — | 数据回滚，视口不动 |
+| `undo` / `redo` | 按被撤销操作快照语义：结构→`KeepStable`+锚点；值类→`NoChange`；整体替换→`FitFull` | 锚点（结构） | 数据回滚；结构 undo 让焦点节点屏幕不动（详见 [undo-redo-视口稳定方案](./undo-redo-视口稳定方案.md)） |
 
 **记忆口诀**：
 
@@ -293,7 +296,7 @@ const staleTime = editingObjectRes?.isEdited ? 0 : 1000 * 60 * 5;
 |---|---|
 | 编辑后视口跳到错误位置 | 检查 `fitViewToIdPosition` 的 `x/y` 是不是**操作发起时**的旧坐标（不是目标坐标） |
 | FitId 时画布猛地一跳 | 检查 `id2RectMap.get(id)` 是否拿到了**新布局**结果（layout 缓存是否被正确 remove） |
-| undo 后视口动了 | `bumpStructure` 应传 `NoChange`；检查是否误传了 `FitId`/`FitFull` |
+| undo 结构后视口大跳 | 结构 undo 应传 `KeepStable`+锚点（补偿让焦点节点屏幕不动）；检查快照 `anchorId` 是否正确、`prevRectMap` 是否拿到 undo 前布局（loading 期 guard 不应更新 ref） |
 | 固定页面视口反复重置 | P0 已修；若复现，检查 `fittedPathname === pathname` 是否成立、`setFitViewForPathname` 回调是否传入 |
 | 键入 input 后视口偶发被 fitFull | 视口 effect 不得含 `paneMenu`/`nodeMenuFunc` 等菜单回调 deps（coalescing flush 让 `canUndo` 翻转 → `paneMenu` 新引用 → 连带重跑视口）；已拆 effect 隔离 |
 | 浏览态每次 refetch 都重铺 | `editingObjectRes` 在非编辑态每次 memo 新建对象引用，可能触发 effect 重跑；检查 memo deps |
@@ -307,8 +310,9 @@ const staleTime = editingObjectRes?.isEdited ? 0 : 1000 * 60 * 5;
 编辑动作                    fitView       视口 API                    数学
 ─────────────────────────────────────────────────────────────────────────
 初次加载 / 整体替换 / reset  FitFull       fitView()                  —
-增删/swap/fold/impl/paste   FitId         setViewport(compute…)      anchor 屏幕不变
-undo / redo / 固定页 / 只读  NoChange     (无)                       —
+增删/swap/fold/impl/paste   FitId         setViewport(compute…)      anchor 屏幕不变（anchorOld=position）
+undo/redo 结构              KeepStable    setViewport(compute…)      焦点 anchor 屏幕不变（anchorOld=上一帧布局）
+undo/redo 值类 / 固定页 / 只读 NoChange   (无)                       —
 ```
 
 **一句话收尾**：FitView 把"视口该怎么动"这种带时序的意图，编码进单向数据流，让 EditingSession 只管"发生了什么"，useEntityToGraph 只管"视口怎么响应"——两边解耦，中间靠一个三值枚举 + 一个公开纯函数（`pickViewportAction`，内部 `computeStableViewport` 兜数学）收口所有视口决策。

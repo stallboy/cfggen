@@ -50,6 +50,7 @@ export function pickViewportAction(
     editingObjectRes: EditingObjectRes | undefined,
     id2RectMap: Map<string, Rect>,
     currentVp: Viewport,
+    opts?: { prevId2RectMap?: Map<string, Rect> },   // 上一帧布局，仅 KeepStable 用
 ): ViewportAction {
     if (editingObjectRes === undefined || editingObjectRes.fitView === EFitView.FitFull) {
         return {kind: 'fitFull'};
@@ -61,6 +62,20 @@ export function pickViewportAction(
             return {
                 kind: 'fitId',
                 viewport: computeStableViewport({x, y}, {x: nowXy.x, y: nowXy.y}, currentVp),
+            };
+        }
+    }
+    if (editingObjectRes.fitView === EFitView.KeepStable
+        && editingObjectRes.fitViewToIdPosition && opts?.prevId2RectMap) {
+        // undo/redo：anchorOld = 上一帧布局该 id 坐标（= undo 发起时锚点坐标，不用 position.x/y——那是操作发起时坐标，已过时），
+        // anchorNew = 新布局同 id 坐标。锚点=被撤销操作的视觉焦点（delete 取父）。命中失败（锚点被删/无 prevMap）→ noop。
+        const {id} = editingObjectRes.fitViewToIdPosition;
+        const oldRect = opts.prevId2RectMap.get(id);
+        const newRect = id2RectMap.get(id);
+        if (oldRect && newRect) {
+            return {
+                kind: 'fitId',
+                viewport: computeStableViewport({x: oldRect.x, y: oldRect.y}, {x: newRect.x, y: newRect.y}, currentVp),
             };
         }
     }

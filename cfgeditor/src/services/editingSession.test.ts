@@ -350,12 +350,40 @@ describe('EditingSession undo/redo（结构类）', () => {
         expect((s.getEditingObject().items as JSONArray).length).toBe(0);  // 回到 baseline
     });
 
-    it('undo 不跳视口：fitView=NoChange', () => {
+    it('结构 undo 视口稳定：fitView=KeepStable，锚点=被撤销操作节点 id', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
         s.initUndoBaseline();
-        s.addArrayItem(ITEM(), ['items'], POS);
+        s.addArrayItem(ITEM(), ['items'], POS);   // POS.id='n'
+        s.undo();
+        const res = s.getEditingObjectRes();
+        expect(res.fitView).toBe(EFitView.KeepStable);
+        expect(res.fitViewToIdPosition).toEqual({id: 'n', x: 0, y: 0});
+    });
+
+    it('值类 undo 不动视口：fitView=NoChange', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
+        s.initUndoBaseline();
+        s.updateNote('hello', []);   // 值类（coalescing，undo 开头 flush 入 NoChange 快照）
         s.undo();
         expect(s.getEditingObjectRes().fitView).toBe(EFitView.NoChange);
+    });
+
+    it('整体替换 undo 重新铺满：fitView=FitFull', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
+        s.initUndoBaseline();
+        s.replaceEditingObject({'$type': 'Bar', items: []});
+        s.undo();
+        expect(s.getEditingObjectRes().fitView).toBe(EFitView.FitFull);
+    });
+
+    it('delete undo 锚点取父：fitViewToIdPosition.id = undoAnchorId', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM()]}));
+        s.initUndoBaseline();
+        s.deleteArrayItem(0, ['items'], POS, 'parentId');   // 第4参 = undoAnchorId（父）
+        s.undo();
+        const res = s.getEditingObjectRes();
+        expect(res.fitView).toBe(EFitView.KeepStable);
+        expect(res.fitViewToIdPosition).toEqual({id: 'parentId', x: 0, y: 0});
     });
 
     it('replaceEditingObject 入栈可 undo', () => {

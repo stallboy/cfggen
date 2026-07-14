@@ -1,4 +1,4 @@
-import {useContext, useEffect, useMemo} from "react";
+import {useContext, useEffect, useMemo, useRef} from "react";
 import {useMyStore} from "@/store/store";
 import {Rect, useReactFlow, useStore} from "@xyflow/react";
 import {convertNodeAndEdges} from "./layout/entityToNodeAndEdge.ts";
@@ -106,6 +106,10 @@ export function useEntityToGraph({
     const viewportReady = useStore((state) => state.panZoom !== null);
     const {setNodes, setEdges, setViewport, getViewport, fitView} = useReactFlow();
 
+    // 上一帧布局结果：供 KeepStable（undo/redo）算 anchorOld（undo 发起时锚点坐标）。
+    // 只在 Effect 2 主体内更新；loading 期（id2RectMap=undefined）guard 不满足、不更新 → undo 前布局留存到补偿那帧。
+    const prevRectMapRef = useRef<Map<string, Rect> | undefined>(undefined);
+
     // nodeShow/notes 下发到 node.data；query 不在此下发——它无 per-graph override，
     // 渲染组件（FlowNode/EntityProperties/EntityCard）各自 useMyStore() 订阅（resso per-key），
     // 故 query 不进 nodes 重建、不进 layout，搜索时不重跑 ELK（与 store.ts setQuery 注释一致）。
@@ -184,7 +188,9 @@ export function useEntityToGraph({
     // 实时判）+ paneMenu disabled 惰性化，paneMenu 引用稳定，此诱因消除；拆分仍作视口语义独立边界保留。
     useEffect(() => {
         if (viewportReady && id2RectMap && newNodes) {
-            const action = pickViewportAction(editingObjectRes, id2RectMap, getViewport());
+            const action = pickViewportAction(editingObjectRes, id2RectMap, getViewport(), {
+                prevId2RectMap: prevRectMapRef.current,
+            });
             if (action.kind === 'fitFull') {
                 // FitFull：原 getNodesBounds+getViewportForBounds+setViewport 三步等价于一次公开 fitView。
                 // padding/minZoom/maxZoom 与原 getViewportForBounds(bounds,w,h,0.3,1,0.2) 对齐。
@@ -193,11 +199,12 @@ export function useEntityToGraph({
                     setFitViewForPathname(pathname);
                 }
             } else if (action.kind === 'fitId') {
-                // FitId：relayout 后让锚点节点屏幕坐标不变。fitView 做不到，newVp 已由
-                // pickViewportAction 经 computeStableViewport 算好。
+                // FitId / KeepStable：relayout 后让锚点节点屏幕坐标不变。newVp 已由 pickViewportAction
+                // 经 computeStableViewport 算好（FitId 用 position.x/y，KeepStable 用 prevRectMap 坐标）。
                 void setViewport(action.viewport);
             }
-            // noop（NoChange / FitId 但 id 不存在）：不调 fitView/setViewport，保持当前视口。
+            // noop（NoChange / FitId 但 id 不存在 / KeepStable 锚点缺失）：不调 fitView/setViewport，保持当前视口。
+            prevRectMapRef.current = id2RectMap;   // 记录本帧布局，供下次 KeepStable 作 anchorOld
         }
     }, [editingObjectRes, id2RectMap, viewportReady, newNodes, fitView, setViewport, getViewport,
         setFitViewForPathname, pathname]);

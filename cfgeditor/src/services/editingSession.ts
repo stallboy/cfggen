@@ -179,9 +179,10 @@ export class EditingSession {
                 }
                 if (isChanged && newArr.length !== oldLen) {
                     // 长度变 = 结构步：flush 旧组（capture 旧态，不含本次写入）+ 写回 + capture 新态
+                    // Form.List 行增删不建实体（primitive list 非节点），布局变化极小 → undo 用 NoChange（不动）
                     this.flushValueCoalesce();
                     obj[key] = newArr;
-                    this.undoStore.capture(this.captureUndoPoint());
+                    this.capture(EFitView.NoChange);
                 } else {
                     // 长度同 = 值类合并：touch（写回前，换字段 flush 旧组 capture 旧态）+ 写回
                     if (isChanged) {
@@ -226,11 +227,13 @@ export class EditingSession {
         this.structureChange(position);
     }
 
-    deleteArrayItem(deleteIndex: number, arrayFieldChains: (string | number)[], position: EntityPosition): void {
+    /** undoAnchorId：undo 锚点节点 id。默认 position.id（被删 item），但被删节点 undo 前不存在 → 调用方应传父节点 id。
+     *  正向 position 仍指被删 item（删后不在新布局 → FitId 自然 noop，删除后视口不动行为不变）。 */
+    deleteArrayItem(deleteIndex: number, arrayFieldChains: (string | number)[], position: EntityPosition, undoAnchorId?: string): void {
         this.beforeStructuralChange();
         const obj = getFieldObj(this.editingObject, arrayFieldChains) as JSONArray;
         obj.splice(deleteIndex, 1);
-        this.structureChange(position);
+        this.structureChange(position, undoAnchorId);
     }
 
     /** 相邻索引的上/下移，语义是 swap 而非 move（命名沿用旧 onSwapItemInArray）。 */
@@ -268,7 +271,7 @@ export class EditingSession {
         deleteRefsInPlace(newEditingObject);
         this.editingObject = newEditingObject;
         this.bumpStructure({fitView: EFitView.FitFull});
-        this.undoStore.capture(this.captureUndoPoint());
+        this.capture(EFitView.FitFull);   // 整体替换 undo 时也 FitFull（重新认识图）
     }
 
     /** 把剪贴板内容粘贴到 fieldChains 位置。 */
@@ -312,23 +315,24 @@ export class EditingSession {
     /** 初始 undo 基准：mount effect 调一次（构造函数在 render 期，structuredClone 是副作用，挪到 effect）。
      *  幂等：StrictMode 双调安全（setBaseline 清栈+设基准，二次调同值无害）。 */
     initUndoBaseline(): void {
-        this.undoStore.setBaseline(this.captureUndoPoint());
+        this.undoStore.setBaseline({data: this.captureUndoPoint(), undoFitView: EFitView.FitFull});
     }
 
     undo(): void {
         this.flushValueCoalesce();   // 先固化未 capture 的键入（否则丢失）
         if (!this.undoStore.canUndo()) return;
-        const target = this.undoStore.popUndo();
-        this.applyUndoPoint(target);
-        this.bumpStructure({fitView: EFitView.NoChange});   // 不跳视口
+        const {target, undoFitView, anchorId} = this.undoStore.popUndo();
+        this.applyUndoPoint(target.data);
+        // 按被撤销操作的视口语义驱动：结构→KeepStable(锚点屏幕不动)；整体替换→FitFull；值类→NoChange(不动)
+        this.bumpStructure({fitView: undoFitView, position: anchorId ? {id: anchorId, x: 0, y: 0} : undefined});
     }
 
     redo(): void {
         this.flushValueCoalesce();
         if (!this.undoStore.canRedo()) return;
-        const target = this.undoStore.popRedo();
-        this.applyUndoPoint(target);
-        this.bumpStructure({fitView: EFitView.NoChange});
+        const {target, undoFitView, anchorId} = this.undoStore.popRedo();
+        this.applyUndoPoint(target.data);
+        this.bumpStructure({fitView: undoFitView, position: anchorId ? {id: anchorId, x: 0, y: 0} : undefined});
     }
 
     // 箭头字段：作为引用传给 useSyncExternalStore 时 this 不丢（与 subscribe/getStructureVersion 等读取器同约定）。
@@ -345,13 +349,14 @@ export class EditingSession {
 
     // ============ 内部 ============
 
-    private structureChange(position: EntityPosition): void {
+    private structureChange(position: EntityPosition, undoAnchorId?: string): void {
         this.bumpStructure({fitView: EFitView.FitId, position});
-        this.undoStore.capture(this.captureUndoPoint());   // 结构编辑后入栈
+        // undo 锚点默认 = 操作节点 id（用户视觉焦点）；delete 传父 id（被删节点 undo 前不存在，父稳定）
+        this.capture(EFitView.KeepStable, undoAnchorId ?? position.id);
     }
 
     /** 结构变更通用收尾：写 fitView 契约 → bump 版本（触发订阅者重渲）→ 同步清 layout 缓存 → 刷新脏标记 → emit。
-     *  参量化 fitView：undo/redo 传 {fitView: NoChange} 不跳视口；结构操作传 FitId；整体替换/reset 传 FitFull。 */
+     *  参量化 fitView：结构操作传 FitId；整体替换/reset 传 FitFull；undo/redo 按被撤销操作快照的语义传 KeepStable/NoChange/FitFull。 */
     private bumpStructure(opts: { fitView: EFitView; position?: EntityPosition }): void {
         this.fitView = opts.fitView;
         this.fitViewToIdPosition = opts.position;
@@ -370,6 +375,12 @@ export class EditingSession {
         return structuredClone(this.editingObject);
     }
 
+    /** 入栈一份带 undo 视口语义的快照（data=captureUndoPoint 深拷）。
+     *  结构步→KeepStable+锚点（undo 时锚点屏幕不动）；整体替换→FitFull；值类/Form.List→NoChange（undo 不动）。 */
+    private capture(undoFitView: EFitView, anchorId?: string): void {
+        this.undoStore.capture({data: this.captureUndoPoint(), undoFitView, anchorId});
+    }
+
     /** 把 snapshot 恢复成 editingObject（clone 入参，避免栈里 snapshot 被后续就地变异污染）。 */
     private applyUndoPoint(s: JSONObject): void {
         this.editingObject = structuredClone(s);
@@ -385,7 +396,7 @@ export class EditingSession {
         this.valueCoalesceKey = undefined;
         const snap = this.captureUndoPoint();
         this.originalEditingObject = snap;
-        this.undoStore.setBaseline(snap);
+        this.undoStore.setBaseline({data: snap, undoFitView: EFitView.FitFull});
     }
 
     // ---- 值类 coalescing ----
@@ -411,7 +422,7 @@ export class EditingSession {
         if (this.valueCoalesceTimer === undefined) return;
         clearTimeout(this.valueCoalesceTimer);
         this.valueCoalesceTimer = undefined;
-        this.undoStore.capture(this.captureUndoPoint());
+        this.capture(EFitView.NoChange);
         this.valueCoalesceKey = undefined;
         this.emit();   // capture 不 bump structureVersion；canUndo/canRedo 已变，emit 通知潜在订阅者（Record 现不订阅，hotkey 回调实时判）
     }

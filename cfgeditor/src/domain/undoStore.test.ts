@@ -1,8 +1,11 @@
 import {describe, it, expect} from 'vitest'
-import {UndoStore} from './undoStore.ts'
+import {UndoStore, Snapshot} from './undoStore.ts'
+import {EFitView} from '@/domain/entityModel'
 import {JSONObject} from '@/api/recordModel'
 
-const snap = (o: Record<string, unknown>): JSONObject => o as JSONObject
+// snap：构造快照。undoFitView 默认 NoChange（值类），anchorId 可选（KeepStable 用）。
+const snap = (o: Record<string, unknown>, undoFitView: EFitView = EFitView.NoChange, anchorId?: string): Snapshot =>
+    ({data: o as JSONObject, undoFitView, anchorId});
 
 describe('UndoStore 栈语义', () => {
     it('setBaseline 后 canUndo/canRedo 均 false', () => {
@@ -20,21 +23,21 @@ describe('UndoStore 栈语义', () => {
         expect(u.canRedo()).toBe(false)
     })
 
-    it('undo：恢复成前一个快照（栈底回 baseline）；之后 canRedo true', () => {
+    it('undo：target 恢复成前一个快照（栈底回 baseline）；之后 canRedo true', () => {
         const u = new UndoStore()
         u.setBaseline(snap({a: 1}))
         u.capture(snap({a: 2}))
-        expect(u.popUndo()).toEqual({a: 1})   // 回到 baseline
+        expect(u.popUndo().target.data).toEqual({a: 1})   // 回到 baseline
         expect(u.canUndo()).toBe(false)
         expect(u.canRedo()).toBe(true)
     })
 
-    it('redo：恢复成刚 undo 的快照；之后 canUndo true', () => {
+    it('redo：target 恢复成刚 undo 的快照；之后 canUndo true', () => {
         const u = new UndoStore()
         u.setBaseline(snap({a: 1}))
         u.capture(snap({a: 2}))
         u.popUndo()
-        expect(u.popRedo()).toEqual({a: 2})
+        expect(u.popRedo().target.data).toEqual({a: 2})
         expect(u.canUndo()).toBe(true)
         expect(u.canRedo()).toBe(false)
     })
@@ -44,8 +47,8 @@ describe('UndoStore 栈语义', () => {
         u.setBaseline(snap({a: 1}))
         u.capture(snap({a: 2}))
         u.capture(snap({a: 3}))
-        expect(u.popUndo()).toEqual({a: 2})
-        expect(u.popUndo()).toEqual({a: 1})   // baseline
+        expect(u.popUndo().target.data).toEqual({a: 2})
+        expect(u.popUndo().target.data).toEqual({a: 1})   // baseline
         expect(u.canUndo()).toBe(false)
     })
 
@@ -56,9 +59,32 @@ describe('UndoStore 栈语义', () => {
         u.capture(snap({a: 3}))
         u.popUndo()
         u.popUndo()
-        expect(u.popRedo()).toEqual({a: 2})
-        expect(u.popRedo()).toEqual({a: 3})
+        expect(u.popRedo().target.data).toEqual({a: 2})
+        expect(u.popRedo().target.data).toEqual({a: 3})
         expect(u.canRedo()).toBe(false)
+    })
+})
+
+describe('UndoStore 视口语义（undoFitView/anchorId 随被弹出快照）', () => {
+    it('popUndo 返回被撤销操作快照的 undoFitView/anchorId（结构→KeepStable+锚点）', () => {
+        const u = new UndoStore()
+        u.setBaseline(snap({a: 1}, EFitView.FitFull))
+        u.capture(snap({a: 2}, EFitView.KeepStable, 'nodeX'))   // 结构操作
+        const r = u.popUndo()
+        expect(r.undoFitView).toBe(EFitView.KeepStable)   // 被撤销的是结构操作
+        expect(r.anchorId).toBe('nodeX')
+        expect(r.target.data).toEqual({a: 1})              // 恢复成 baseline
+    })
+
+    it('popRedo 返回重做操作快照的 undoFitView/anchorId', () => {
+        const u = new UndoStore()
+        u.setBaseline(snap({a: 1}, EFitView.FitFull))
+        u.capture(snap({a: 2}, EFitView.KeepStable, 'nodeX'))
+        u.popUndo()
+        const r = u.popRedo()
+        expect(r.undoFitView).toBe(EFitView.KeepStable)
+        expect(r.anchorId).toBe('nodeX')
+        expect(r.target.data).toEqual({a: 2})
     })
 })
 
@@ -72,7 +98,7 @@ describe('UndoStore 分叉（capture 清 undone）', () => {
         expect(u.canRedo()).toBe(true)
         u.capture(snap({a: 9}))      // 分叉：新编辑
         expect(u.canRedo()).toBe(false)   // redo 历史作废
-        expect(u.popUndo()).toEqual({a: 2})   // 回到 {a:2}
+        expect(u.popUndo().target.data).toEqual({a: 2})   // 回到 {a:2}
     })
 
     it('redo 后新 capture 也丢弃 redo 历史', () => {
@@ -84,7 +110,7 @@ describe('UndoStore 分叉（capture 清 undone）', () => {
         expect(u.canRedo()).toBe(false)
         u.capture(snap({a: 9}))
         expect(u.canRedo()).toBe(false)
-        expect(u.popUndo()).toEqual({a: 2})
+        expect(u.popUndo().target.data).toEqual({a: 2})
     })
 })
 
@@ -94,9 +120,9 @@ describe('UndoStore maxDepth 封顶', () => {
         u.setBaseline(snap({a: 0}))
         for (let i = 1; i <= 60; i++) u.capture(snap({a: i}))
         // done=[a11..a60]（maxDepth=50 封顶），baseline=a0
-        expect(u.popUndo()).toEqual({a: 59})   // 弹 a60 返 a59（最近未丢）
-        let last: JSONObject = snap({})
-        while (u.canUndo()) last = u.popUndo()
+        expect(u.popUndo().target.data).toEqual({a: 59})   // 弹 a60 返 a59（最近未丢）
+        let last: JSONObject = snap({}).data
+        while (u.canUndo()) last = u.popUndo().target.data
         expect(last).toEqual({a: 0})   // 栈底回到 baseline
     })
 
