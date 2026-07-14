@@ -6,7 +6,7 @@ import { createRefEntities } from "./recordRefUtils.ts";
 import { useTranslation } from "react-i18next";
 import { Schema } from "@/domain/schema";
 import { NodeShowType } from "@/domain/storageJson";
-import { navTo, useMyStore } from "@/store/store";
+import { navTo, useMyStore, useLocationData, PageType } from "@/store/store";
 import { Navigate, useNavigate, useOutletContext } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { fetchRecordRefs, fetchUnreferencedRecords } from "@/api/api";
@@ -17,7 +17,6 @@ import { fillHandles } from "@/flow/entityToNodeAndEdge";
 import { useCallback, useMemo, useState } from "react";
 import { useEntityToGraph } from "@/flow/useEntityToGraph";
 import { EntityNode } from "@/flow/FlowGraph";
-import { useParams } from "react-router";
 
 
 export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, recordRefResult, inDragPanelAndFix, isUnrefMode }: {
@@ -148,11 +147,12 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
 
 const keepViewport: EditingObjectRes = { fitView: EFitView.NoChange, isEdited: false }
 
-export function RecordRef({ schema, notes, curTable, curId, refIn, refOutDepth, maxNode, nodeShow, inDragPanelAndFix }: {
+export function RecordRef({ schema, notes, curTable, curPage, curId, refIn, refOutDepth, maxNode, nodeShow, inDragPanelAndFix }: {
     schema: Schema;
     notes: Map<string, string> | undefined;
     curTable: STable;
-    curId?: string;  // 改为可选，支持未引用模式
+    curPage: PageType;
+    curId?: string;  // unref 模式下仅作「切回 record 的上下文记忆」，组件不消费
     refIn: boolean;
     refOutDepth: number;
     maxNode: number;
@@ -161,8 +161,9 @@ export function RecordRef({ schema, notes, curTable, curId, refIn, refOutDepth, 
 }) {
     const { server } = useMyStore();
 
-    // 判断当前是哪种模式
-    const isUnrefMode = curId === undefined || curId === '';
+    // 用 curPage 判定模式（唯一标识页面），而非 curId 是否为空——
+    // 这样 recordUnref 页可携带上次 record 的 curId 用于切回，不会被误判成 recordRef 模式
+    const isUnrefMode = curPage === 'recordUnref';
 
     // 根据模式选择不同的API
     const { isLoading, isError, error, data: recordRefResult } = useQuery({
@@ -206,18 +207,20 @@ export function RecordRef({ schema, notes, curTable, curId, refIn, refOutDepth, 
 
 export function RecordRefRoute() {
     const { schema, notes } = useOutletContext<SchemaTableType>();
-    const { table, id } = useParams<{ table: string; id?: string }>();
+    // recordUnref 路由为 recordUnref/:table/*，id 段无名（落在 * 里），useParams 取不到；
+    // 用 useLocationData 统一解析 curTableId/curId/curPage（对 recordRef/:table/:id 同样正确）
+    const { curTableId, curId, curPage } = useLocationData();
     const { recordRefIn, recordRefOutDepth, recordMaxNode, nodeShow } = useMyStore();
 
-    const curTable = schema ? schema.getSTable(table || '') : null;
+    const curTable = schema ? schema.getSTable(curTableId) : null;
 
     // table 不存在时声明式跳转（render 期 navigate 是副作用，StrictMode 下会触发两次）
     if (!curTable) {
         return <Navigate to="/PathNotFound" replace />;
     }
 
-    // id可能为undefined（未引用模式）或字符串（单个record模式）
-    return <RecordRef schema={schema} notes={notes} curTable={curTable} curId={id}
+    // curId 在 unref 模式下可能是上次 record 的 id（仅作切回记忆，组件内由 isUnrefMode 短路不消费）
+    return <RecordRef schema={schema} notes={notes} curTable={curTable} curPage={curPage} curId={curId}
         refIn={recordRefIn} refOutDepth={recordRefOutDepth} maxNode={recordMaxNode}
         nodeShow={nodeShow}
         inDragPanelAndFix={false} />

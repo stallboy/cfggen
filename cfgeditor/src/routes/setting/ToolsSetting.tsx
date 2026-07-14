@@ -80,12 +80,11 @@ export const ToolsSetting = memo(function ToolsSetting({schema, curTable, flowRe
             }
         }).then((blob) => {
             if (blob) {
-                let fn;
-                if (curPage.startsWith("table")) {
-                    fn = `${curPage}_${curTableId}.png`;
-                } else {
-                    fn = `${curPage}_${curTableId}_${curId}.png`;
-                }
+                // record/recordRef 是记录级视图，文件名带 curId；table/tableRef/recordUnref 是表级视图，只带表名
+                const isRecordLevel = curPage === 'record' || curPage === 'recordRef';
+                const fn = isRecordLevel
+                    ? `${curPage}_${curTableId}_${curId}.png`
+                    : `${curPage}_${curTableId}.png`;
                 saveAs(blob, fn);
                 notification.info({title: "save png to " + fn, duration: 3});
             }
@@ -104,8 +103,8 @@ export const ToolsSetting = memo(function ToolsSetting({schema, curTable, flowRe
     ];
 
     const onChangeCurPage = useCallback((page: PageType) => {
-        // recordUnref 是未引用记录列表（路由 recordUnref/:table，两段无 id），切到它时不带 curId
-        navigate(navTo(page, curTableId, page === 'recordUnref' ? '' : curId));
+        // recordUnref 路由为 recordUnref/:table/*（带 id 段），统一带 curId：切到 unref 再切回 record/table 等不丢上下文
+        navigate(navTo(page, curTableId, curId));
     }, [curTableId, curId, navigate]);
 
 

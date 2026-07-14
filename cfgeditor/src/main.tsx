@@ -40,7 +40,7 @@ const router = createBrowserRouter([
                 lazy: () => import("./routes/record/RecordRef.tsx").then(m => ({Component: m.RecordRefRoute})),
             },
             {
-                path: "recordUnref/:table",  // 未引用记录页面路由
+                path: "recordUnref/:table/*",  // 未引用记录页面路由：/* 承载 id 段（保留上次 record 的 curId，切回不丢），兼容空 id 进入
                 lazy: () => import("./routes/record/RecordRef.tsx").then(m => ({Component: m.RecordRefRoute})),   // 复用RecordRefRoute组件
             },
             {

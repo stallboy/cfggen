@@ -13,7 +13,7 @@ export const UnreferencedButton = memo(function ({curTable}: {
     const {t} = useTranslation();
     const navigate = useNavigate();
     const {server, recordMaxNode} = useMyStore();
-    const {curTableId} = useLocationData();
+    const {curTableId, curId} = useLocationData();
 
     // 获取未引用记录数量
     const {isLoading, data} = useQuery({
@@ -31,8 +31,8 @@ export const UnreferencedButton = memo(function ({curTable}: {
     const count = data?.resultCode === 'ok' ? data.refs.length : 0;
 
     const handleClick = () => {
-        // 使用navigate跳转到recordUnref路由
-        navigate(navTo('recordUnref', curTable.name, '', false, false));
+        // 跳转到 recordUnref 路由；带上当前 curId，以便从 unref 切回 record 时保留上下文
+        navigate(navTo('recordUnref', curTable.name, curId, false, false));
     };
 
     if (isLoading) {
