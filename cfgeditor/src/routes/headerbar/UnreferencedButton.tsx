@@ -1,4 +1,4 @@
-import {Badge, Button, Skeleton} from "antd";
+import {Button, Skeleton, theme} from "antd";
 import {useQuery} from "@tanstack/react-query";
 import {fetchUnreferencedRecords} from "@/api/api";
 import {useMyStore, useLocationData, navTo} from "@/store/store";
@@ -28,6 +28,7 @@ export const UnreferencedButton = memo(function ({curTable}: {
         enabled: curTableId === curTable.name, // 只在当前table时查询
     });
 
+    const {token} = theme.useToken();
     const count = data?.resultCode === 'ok' ? data.refs.length : 0;
 
     const handleClick = () => {
@@ -44,14 +45,21 @@ export const UnreferencedButton = memo(function ({curTable}: {
     }
 
     return (
-        <Badge count={count} size="small" offset={[-2, 0]}>
-            <Button
-                size="small"
-                onClick={handleClick}
-                title={t('unreferencedRecords')}
-            >
-                {t('unreferenced')}
-            </Button>
-        </Badge>
+        <Button
+            size="small"
+            onClick={handleClick}
+            title={t('unreferencedRecords')}
+        >
+            <span style={{
+                marginLeft: token.marginXXS,
+                paddingInline: token.paddingXXS,
+                borderRadius: token.borderRadiusSM,
+                fontSize: token.fontSizeSM,
+                lineHeight: '16px',
+                verticalAlign: 'middle',
+                background: token.colorFillSecondary,
+                color: token.colorTextSecondary,
+            }}> {t('unreferenced')} {count}</span>
+        </Button>
     );
 });
