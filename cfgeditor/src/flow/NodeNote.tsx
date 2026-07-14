@@ -73,6 +73,15 @@ export function useNodeNote({id, entity, edit, note, notes, label}: UseNodeNoteA
         }
     }, [edit, entity]);
 
+    // 有效 note：tmpNote 已为当前 entity 编辑过（含清空）→ 用 tmpNote；否则才用 json note。
+    // 用它统一"编辑器是否显示"与"添加按钮是否显示"——两者互为非，避免清空已有 note 后
+    // note prop（json，提交前 stale）仍非空导致添加按钮不出现。
+    // tmpNote.entity 匹配校验避免切换 record 后 key 相同时 note 误用。
+    const editingTmp = !!(tmpNote && tmpNote.entity === entity);
+    const effectiveNote = editingTmp ? tmpNote!.note : (note ?? '');
+    // 编辑器显示 = 正在草拟新 note（点添加后 drafting，内容可空）或有效 note 非空。
+    const noteEditorVisible = (editingTmp && noteDrafting) || effectiveNote.length > 0;
+
     const editNoteButton = useMemo(() => {
         if (mayHaveResOrNote(label) && !edit) {
             const recordNote = notes?.get(id) ?? '';
@@ -82,19 +91,15 @@ export function useNodeNote({id, entity, edit, note, notes, label}: UseNodeNoteA
                 </Tooltip>;
             }
         }
-        // edit 态：编辑器正在显示（drafting 或有内容）或已有 json note → 隐藏"添加"按钮。
-        const editingTmp = !!(tmpNote && tmpNote.entity === entity);
-        const editingActive = editingTmp && (noteDrafting || tmpNote!.note.length > 0);
-        const hasNote = !!(note && note.length > 0);
-
-        if (edit && !editingActive && !hasNote) {
+        // edit 态：编辑器不可见（无草拟、有效 note 空）→ 显示"添加"按钮（与 noteBlock 互为非）。
+        if (edit && !noteEditorVisible) {
             return <Tooltip title={t('addNote')}>
                 <Button style={iconButtonStyle} icon={bookIcon} aria-label={t('addNote')} onClick={onEditNoteClickInEdit} />
             </Tooltip>;
         }
 
         return null;
-    }, [notes, id, isEditNote, note, edit, tmpNote, entity, label, noteDrafting, t, onEditNote, onEditNoteClickInEdit]);
+    }, [notes, id, isEditNote, note, edit, label, noteEditorVisible, t, onEditNote, onEditNoteClickInEdit]);
 
     const noteBlock = useMemo(() => {
         if (mayHaveResOrNote(label)) {
@@ -111,23 +116,17 @@ export function useNodeNote({id, entity, edit, note, notes, label}: UseNodeNoteA
         }
 
         if (edit) {
-            // 显示条件：tmpNote 已设（编辑中）→ drafting 或有内容才显示（清空即消失）；
-            //          否则 → 有 json note 才显示（直接编辑已有 note）。
-            // tmpNote.entity 匹配校验避免切换 record 后 key 相同时 note 误用。
-            const editingTmp = !!(tmpNote && tmpNote.entity === entity);
-            const showNote = editingTmp ? tmpNote!.note : (note ?? '');
-            const showEditor = editingTmp
-                ? (noteDrafting || tmpNote!.note.length > 0)
-                : !!(note && note.length > 0);
-            if (showEditor) {
-                return <NoteEditInner note={showNote} updateNoteInEdit={updateNoteInEdit} />;
+            // 编辑器显示条件与 editNoteButton 互为非（共用 noteEditorVisible/effectiveNote）：
+            // 草拟中（drafting，内容可空）或有效 note 非空才显示；清空即隐去。
+            if (noteEditorVisible) {
+                return <NoteEditInner note={effectiveNote} updateNoteInEdit={updateNoteInEdit} />;
             }
         } else if (note) {
             return <NoteShowInner note={note} />;
         }
 
         return null;
-    }, [label, edit, note, notes, id, isEditNote, tmpNote, entity, noteDrafting, updateNoteInEdit]);
+    }, [label, edit, note, notes, id, isEditNote, noteEditorVisible, effectiveNote, updateNoteInEdit]);
 
     return {noteBlock, editNoteButton};
 }
