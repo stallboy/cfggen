@@ -40,6 +40,7 @@ import {
 import {isNumberType, PrimitiveType} from "@/api/schemaModel";
 import type {NodeShowType} from "@/domain/storageJson";
 import {EntityNode} from "./FlowGraph.tsx";
+import {nodeAnchor} from "./nodeAnchor.ts";
 
 // ============================================================================
 // 常量定义
@@ -99,7 +100,7 @@ function hasAutoCompleteOptions(
 // 工具函数
 // ============================================================================
 
-function getFilter(_isValueInteger: boolean, useSearch: boolean): FilterOption {
+function getFilter(useSearch: boolean): FilterOption {
     return useSearch ? FILTER_SEARCH : FILTER_EMPTY;
 }
 
@@ -133,6 +134,12 @@ function isArrayPrimitiveBoolOrNumber(field: EntityEditField): boolean {
     } else {
         return isNumberType(field.eleType);
     }
+}
+
+// 字段项背景色样式：bgColor 缺省（值类无高亮）时返回空对象，否则铺色。Primitive/ArrayOfPrimitive 共用。
+// 纯函数（无 hook 依赖）。调用方若需引用稳定（喂给 useMemo deps），应依赖 bgColor 而非本函数返回值——后者每次新对象。
+function fieldItemStyle(bgColor?: string): CSSProperties {
+    return bgColor === undefined ? {} : {backgroundColor: bgColor};
 }
 
 // ============================================================================
@@ -173,8 +180,8 @@ function primitiveControl(field: EntityEditField, style: CSSProperties) {
     const autoCompleteOptions = hasAutoCompleteOptions(field) ? field.autoCompleteOptions : undefined;
 
     if (autoCompleteOptions?.options.length) {
-        const {options, isValueInteger, isEnum} = autoCompleteOptions;
-        const filters = getFilter(isValueInteger, options.length > 5);
+        const {options, isEnum} = autoCompleteOptions;
+        const filters = getFilter(options.length > 5);
 
         if (isEnum) {
             return <Select className="nodrag" options={options} {...filters}/>;
@@ -303,7 +310,6 @@ interface EmbeddedSimpleStructuralItemProps {
 
 const EmbeddedSimpleStructuralItem = memo(
     function EmbeddedSimpleStructuralItem({field, edit, nodeProps}: EmbeddedSimpleStructuralItemProps) {
-        const entity = nodeProps.data.entity;
         const embeddedData = field.embeddedField!;
 
         // 组合comment：field.comment + embeddedData.note
@@ -320,17 +326,9 @@ const EmbeddedSimpleStructuralItem = memo(
         // 点击展开
         const handleExpand = useCallback(() => {
             if (embeddedData.embeddedFieldChain && edit.editOnUpdateFold) {
-                edit.editOnUpdateFold(
-                    false,
-                    {
-                        id: entity.id,
-                        x: nodeProps.positionAbsoluteX,
-                        y: nodeProps.positionAbsoluteY,
-                    },
-                    embeddedData.embeddedFieldChain
-                );
+                edit.editOnUpdateFold(false, nodeAnchor(nodeProps), embeddedData.embeddedFieldChain);
             }
-        }, [embeddedData.embeddedFieldChain, edit, entity.id, nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY]);
+        }, [embeddedData.embeddedFieldChain, edit, nodeProps]);
 
         // 格式化单个值的显示
         const formatDisplayValue = useCallback((value: PrimitiveValue, type: PrimitiveType): string => {
@@ -427,11 +425,7 @@ const FuncAddFormItem = memo(function FuncAddFormItem({
     const {rowStyle, handleOutStyle} = useRefItemStyles(width, bgColor);
 
     const handleAdd = useCallback(() => {
-        func({
-            id: nodeProps.data.entity.id,
-            x: nodeProps.positionAbsoluteX,
-            y: nodeProps.positionAbsoluteY,
-        });
+        func(nodeAnchor(nodeProps));
     }, [func, nodeProps]);
 
     return (
@@ -459,17 +453,13 @@ const PrimitiveFormItem = memo(function PrimitiveFormItem({field, bgColor}: Prim
     const form = Form.useFormInstance();
     useSyncFieldValue(form, field);
 
-    const itemStyle: CSSProperties = useMemo(
-        () => (bgColor === undefined ? {} : {backgroundColor: bgColor}),
-        [bgColor]
-    );
-
     const boolProps = useMemo(
         () => (field.eleType === "bool" ? {valuePropName: "checked" as const} : {}),
         [field.eleType]
     );
 
-    const control = useMemo(() => primitiveControl(field, itemStyle), [field, itemStyle]);
+    // control memo deps 用 bgColor（原始值）而非 fieldItemStyle(bgColor) 的返回值——后者每次新对象会使 memo 失效。
+    const control = useMemo(() => primitiveControl(field, fieldItemStyle(bgColor)), [field, bgColor]);
 
     return (
         <Form.Item
@@ -478,7 +468,7 @@ const PrimitiveFormItem = memo(function PrimitiveFormItem({field, bgColor}: Prim
             label={<LabelWithTooltip name={field.name} comment={field.comment} isAutoFontSize/>}
             initialValue={field.value}
             {...boolProps}
-            style={itemStyle}
+            style={fieldItemStyle(bgColor)}
         >
             {control}
         </Form.Item>
@@ -496,11 +486,7 @@ const ArrayOfPrimitiveFormItem = memo(function ArrayOfPrimitiveFormItem({
     const form = Form.useFormInstance();
     useSyncFieldValue(form, field);
 
-    const itemStyle: CSSProperties = useMemo(
-        () => (bgColor === undefined ? {} : {backgroundColor: bgColor}),
-        [bgColor]
-    );
-
+    const itemStyle = fieldItemStyle(bgColor);
     const hasOptions = hasAutoCompleteOptions(field) && field.autoCompleteOptions != null;
     const inputItemStyle = hasOptions ? AUTO_COMPLETE_ITEM_STYLE : FILTER_EMPTY;
 
@@ -631,17 +617,13 @@ const InterfaceFormItem = memo(
 
         const handleSelectChange = useCallback(
             (value: string) => {
-                field.interfaceOnChangeImpl(value, {
-                    id: nodeProps.data.entity.id,
-                    x: nodeProps.positionAbsoluteX,
-                    y: nodeProps.positionAbsoluteY,
-                });
+                field.interfaceOnChangeImpl(value, nodeAnchor(nodeProps));
             },
-            [field, nodeProps.data.entity.id, nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY]
+            [field, nodeProps]
         );
 
         const options = field.autoCompleteOptions?.options;
-        const filters = getFilter(false, (options?.length ?? 0) > 5);
+        const filters = getFilter((options?.length ?? 0) > 5);
 
         const formItem = useMemo(
             () => (

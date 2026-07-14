@@ -8,11 +8,7 @@ export interface FlowGraphContextType {
     setNodeDoubleClickFunc: (func: NodeDoubleClickFunc) => void;
 }
 
-function dummy() {
-}
-
-export const FlowGraphContext = createContext<FlowGraphContextType>({
-    setPaneMenu: dummy,
-    setNodeMenuFunc: dummy,
-    setNodeDoubleClickFunc: dummy,
-});
+// 默认 undefined：<FlowGraph> 必须先渲染（它包裹 <Routes>，路由在 children 内靠 context 反向下发菜单）
+// 才会经 value=ctx 提供真实实现。若在 FlowGraph 外误用，useContext 返回 undefined → 消费处 throw，
+// 把误用变显式报错，而非旧 dummy noop 的静默失败。
+export const FlowGraphContext = createContext<FlowGraphContextType | undefined>(undefined);

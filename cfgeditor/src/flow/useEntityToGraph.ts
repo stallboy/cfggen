@@ -10,6 +10,7 @@ import {MenuItem} from "./FlowContextMenu.tsx";
 import {NodePlacementStrategyType, NodeShowType} from "@/domain/storageJson";
 import {FlowGraphContext} from "./FlowGraphContext.ts";
 import {pickViewportAction} from "./viewportMath.ts";
+import {devLog} from "./devLog.ts";
 import {pickLayoutKeys} from "@/domain/nodeShowLayoutKeys";
 
 
@@ -44,36 +45,20 @@ function getLayoutStrategy(nodeShow: NodeShowType, type: FlowGraphType): NodePla
     }
 }
 
-function applyPositionToNodes(nodes: EntityNode[], id2RectMap: Map<string, Rect>) {
-    return nodes.map(n => {
-        const newPos = id2RectMap.get(n.id);
-        if (newPos) {
-            const {x, y} = newPos;
-            return {
-                ...n,
-                position: {x, y},
-            }
-        } else {
-            console.log('not found', n, id2RectMap)
-            return n;
-        }
-    })
-}
-
-
-function applyWidthHeightToNodes(nodes: EntityNode[], id2RectMap?: Map<string, Rect>) {
-    if (!id2RectMap) {
+// 一次遍历同时写 position 与 width/height（原 applyPositionToNodes + applyWidthHeightToNodes 各遍历一次同一份 rectMap，合并省一趟 map）。
+function applyRectToNodes(nodes: EntityNode[], rectMap?: Map<string, Rect>) {
+    if (!rectMap) {
         return nodes;
     }
     return nodes.map(n => {
-        const newPos = id2RectMap.get(n.id);
-        if (newPos) {
-            const {width, height} = newPos;
-            return {...n, width, height};
-        } else {
-            return n;
+        const r = rectMap.get(n.id);
+        if (r) {
+            return {...n, position: {x: r.x, y: r.y}, width: r.width, height: r.height};
         }
-    })
+        // 节点无对应布局 rect：数据异常（节点未进 ELK 结果），诊断仅 dev 打印。
+        devLog('not found', n, rectMap);
+        return n;
+    });
 }
 
 
@@ -84,6 +69,10 @@ export function useEntityToGraph({
                                      setFitViewForPathname, nodeShow,
                                  }: FlowGraphInput) {
     const flowGraph = useContext(FlowGraphContext);
+    if (!flowGraph) {
+        // FlowGraphContext 默认 undefined（见 FlowGraphContext.ts）：FlowGraph 外误用即显式报错，避免旧 dummy noop 的静默失败。
+        throw new Error('FlowGraphContext missing: useEntityToGraph must run inside <FlowGraph>');
+    }
     const {
         nodeShow: currentNodeShow,
         // 拓扑 setting（影响 entityMap 节点集合）纳入 layout queryKey → 改这些缓存自然失效，
@@ -135,8 +124,7 @@ export function useEntityToGraph({
 
     const newNodes: EntityNode[] | undefined = useMemo(() => {
         if (id2RectMap) {
-            const positionedNodes = applyPositionToNodes(nodes, id2RectMap);
-            return applyWidthHeightToNodes(positionedNodes, id2RectMap);
+            return applyRectToNodes(nodes, id2RectMap);
         }
         return undefined;
     }, [nodes, id2RectMap]);

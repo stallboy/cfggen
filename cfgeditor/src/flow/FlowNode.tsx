@@ -23,6 +23,7 @@ import { NoteShow, NoteEdit, NoteShowInner, NoteEditInner } from "./NoteShowOrEd
 import { findFirstImage } from "./calcWidthHeight.ts";
 import { getResBrief } from "@/res/getResBrief";
 import { EntityNode } from "./FlowGraph.tsx";
+import { nodeAnchor } from "./nodeAnchor.ts";
 
 const { Text } = Typography;
 const bookIcon = <BookOutlined />;
@@ -105,25 +106,23 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
     }, [edit, setTmpNote, entity]);
     const unfoldNode = useCallback(() => {
         if (edit && edit.editOnUpdateFold) {
-            edit.editOnUpdateFold(false, { id, x: nodeProps.positionAbsoluteX, y: nodeProps.positionAbsoluteY });
+            edit.editOnUpdateFold(false, nodeAnchor(nodeProps));
         }
-    }, [edit, id, nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY]);
+    }, [edit, nodeProps]);
     const foldNode = useCallback(() => {
         if (edit && edit.editOnUpdateFold) {
-            edit.editOnUpdateFold(true, { id, x: nodeProps.positionAbsoluteX, y: nodeProps.positionAbsoluteY });
+            edit.editOnUpdateFold(true, nodeAnchor(nodeProps));
         }
-    }, [edit, id, nodeProps.positionAbsoluteX, nodeProps.positionAbsoluteY]);
-    const [resBriefButton, firstImage] = useMemo(() => {
-        let btn;
-        const firstImage = findFirstImage(assets);
-        if (assets) {
-            btn = <Popover content={<ResPopover resInfos={assets} />}
-                placement='rightTop'
-                trigger='click'>
-                <Button type='text' style={resBriefButtonStyle}>{getResBrief(assets)}</Button>
-            </Popover>;
-        }
-        return [btn, firstImage];
+    }, [edit, nodeProps]);
+    // 首图与资源摘要按钮各自独立 memo（原为一个 useMemo 返回 [btn, firstImage] 元组，两个不相关产物混算）。
+    const firstImage = useMemo(() => findFirstImage(assets), [assets]);
+    const resBriefButton = useMemo(() => {
+        if (!assets) return undefined;
+        return <Popover content={<ResPopover resInfos={assets} />}
+            placement='rightTop'
+            trigger='click'>
+            <Button type='text' style={resBriefButtonStyle}>{getResBrief(assets)}</Button>
+        </Popover>;
     }, [assets]);
 
     const handleStyle: CSSProperties = useMemo(() => {
@@ -210,37 +209,19 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
             <Space size={1}>
                 {edit && edit.editOnMoveUp &&
                     <Button className='nodrag' style={iconButtonStyle} icon={moveUpIcon}
-                        onClick={() => {
-                            edit.editOnMoveUp?.({
-                                id,
-                                x: nodeProps.positionAbsoluteX,
-                                y: nodeProps.positionAbsoluteY
-                            })
-                        }} />}
+                        onClick={() => edit.editOnMoveUp?.(nodeAnchor(nodeProps))} />}
                 {edit && edit.editOnMoveDown &&
                     <Button className='nodrag' style={iconButtonStyle} icon={moveDownIcon}
-                        onClick={() => {
-                            edit.editOnMoveDown?.({
-                                id,
-                                x: nodeProps.positionAbsoluteX,
-                                y: nodeProps.positionAbsoluteY
-                            })
-                        }} />}
+                        onClick={() => edit.editOnMoveDown?.(nodeAnchor(nodeProps))} />}
                 {edit && edit.editOnDelete &&
                     <Button className='nodrag' style={iconButtonStyle} icon={closeIcon}
-                        onClick={() => {
-                            edit.editOnDelete?.({
-                                id,
-                                x: nodeProps.positionAbsoluteX,
-                                y: nodeProps.positionAbsoluteY
-                            })
-                        }} />}
+                        onClick={() => edit.editOnDelete?.(nodeAnchor(nodeProps))} />}
             </Space>
         </Flex>
-    }, [foldButton, nodeShow, query, label, brief, editNoteButton, resBriefButton, edit, id, nodeProps]);
+    }, [foldButton, nodeShow, query, label, brief, editNoteButton, resBriefButton, edit, nodeProps]);
 
     return <div key={id} className={edit && edit.fold ? 'flowNodeWithBorder' : 'flowNode'} style={nodeStyle}>
-        {/* HeightDriftGuard 已停用（见 ./HeightDriftGuard.tsx） */}
+        {/* HeightDriftGuard 已停用并归档（见 ./__dev__/HeightDriftGuard.tsx） */}
         {noteShowOrEdit}
         {title}
         {fields && <EntityProperties fields={fields} nodeShow={nodeShow} color={color} />}

@@ -5,7 +5,7 @@ import type {NodeShowType} from "@/domain/storageJson";
 import {memo, MouseEvent as ReactMouseEvent, ReactNode, useCallback, useMemo, useState} from "react";
 import {FlowContextMenu, MenuItem, MenuStyle} from "./FlowContextMenu.tsx";
 import {FlowNode} from "./FlowNode.tsx";
-import {FlowGraphContext as FlowGraphContext1} from "./FlowGraphContext.ts";
+import {FlowGraphContext} from "./FlowGraphContext.ts";
 
 // EntityNode.data 是「呈现层下发袋」：entity 是纯 domain（不可变、memo-safe），
 // nodeShow/notes 是呈现层数据，由 useEntityToGraph 经 convertNodeAndEdges 写入 node.data，
@@ -125,9 +125,9 @@ export const FlowGraph = memo(function FlowGraph({children}: {
                 <FlowContextMenu menuStyle={menuStyle} menuItems={menuItems} closeMenu={closeMenu}/>}
         </ConfigProvider>
 
-        <FlowGraphContext1 value={ctx}>
+        <FlowGraphContext value={ctx}>
             {children}
-        </FlowGraphContext1>
+        </FlowGraphContext>
     </ReactFlowProvider>;
 
 });

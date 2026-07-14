@@ -2,6 +2,7 @@ import {Entity, DisplayField, EntityEditField, isReadOnlyEntity, isEditableEntit
 import type {NodeShowType} from "@/domain/storageJson";
 import {getEdgeColor} from "./colors.ts";
 import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
+import {devLog, devError} from "./devLog.ts";
 
 function findField(entity: Entity, name: string): DisplayField | EntityEditField | undefined {
     if (isReadOnlyEntity(entity)) {
@@ -34,7 +35,7 @@ export function fillHandles(entityMap: Map<string, Entity>) {
                 if (field) {
                     field.handleOut = true;
                 } else {
-                    console.log(sourceHandle + " handle not found for", entity);
+                    devLog(sourceHandle + " handle not found for", entity);
                 }
             }
 
@@ -47,10 +48,10 @@ export function fillHandles(entityMap: Map<string, Entity>) {
                     if (targetField) {
                         targetField.handleIn = true;
                     } else {
-                        console.log(targetHandle + " handle not found for", targetEntity);
+                        devLog(targetHandle + " handle not found for", targetEntity);
                     }
                 } else {
-                    console.error(targetHandle + ' not found for', targetEntity);
+                    devError(targetHandle + ' not found for', targetEntity);
                 }
             }
         }

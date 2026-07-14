@@ -2,13 +2,15 @@ import { useEffect } from "react";
 import { useStore } from "@xyflow/react";
 import { Entity } from "@/domain/entityModel";
 import type { NodeShowType } from "@/domain/storageJson";
-import { calcWidthHeight } from "./calcWidthHeight.ts";
+import { calcWidthHeight } from "../calcWidthHeight.ts";
 
-// 已从 FlowNode 移出到本独立文件并停用。原在 FlowNode 内以 {import.meta.env.DEV && <HeightDriftGuard/>} 渲染，
+// 已从 FlowNode 移出并停用，现归档于 __dev__/（不在主路径装活代码）。
+// 原在 FlowNode 内以 {import.meta.env.DEV && <HeightDriftGuard/>} 渲染，
 // 但 dev-only 的 useStore(measured.height) 订阅在节点高度抖动时引发 re-render 风暴——实测禁用后 dev long task
 // 总量 -45%、11.7→16.7s 后段周期 task 全消失。FlowNode 不再引用本文件。
 //
-// 恢复使用：FlowNode 加 `import {HeightDriftGuard} from "./HeightDriftGuard.tsx"`，
+// 恢复使用（见 docs/flow-refactor.md §5-A3 第3档：改为单次测量、不持续订阅 store）：
+// FlowNode 加 `import {HeightDriftGuard} from "./__dev__/HeightDriftGuard.tsx"`，
 // 并在节点 div 内放 `{import.meta.env.DEV && <HeightDriftGuard id={id} entity={entity} nodeShow={nodeShow} notes={notes} />}`。
 
 // dev-only：记录已警告过 height drift 的节点 id，避免同一节点反复 console.warn 刷屏
