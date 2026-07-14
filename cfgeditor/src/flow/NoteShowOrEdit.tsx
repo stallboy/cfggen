@@ -9,10 +9,26 @@ import {NoteEditResult, notesToMap} from "@/api/noteModel";
 import {queryClient} from "@/app/queryClient";
 import {estimateNoteRows, NOTE_ROW_H} from "./layout/calcWidthHeight.ts";
 
+// ── note 展示/编辑组件：按「是否内嵌 EntityForm 编辑表单」分两套 ──
+//
+// 独立态（只读 / card 视图，自带网络请求）：
+//   NoteShow       展示 note + 编辑按钮，点击切到 NoteEdit
+//   NoteEdit       自带 useMutation，提交即 updateNote API 落库 + 刷新 ['notes']
+//
+// Inner 态（内嵌 EntityForm 编辑表单，不触网）：
+//   NoteShowInner  纯展示，无按钮
+//   NoteEditInner  onChange → updateNoteInEdit 写入编辑会话，随表单 alt+s 提交
+//
+// 记法：「Inner」后缀 = 嵌在编辑表单里、不直接落库、随 EntityEdit 会话提交；
+//       无 Inner = 独立卡片态、自己发网络请求。
+//       调度见 useNodeNote（NodeNote.tsx）：edit 分支用 Inner 两件，非 edit 用 NoteShow / NoteEdit。
 
 const noteButtonStyle: CSSProperties = {float: 'right', borderWidth: 0, backgroundColor: 'transparent'};
 const bookIcon = <BookOutlined/>;
-const noteStyle: CSSProperties = {backgroundColor: "yellow", borderRadius: '8px'}
+// whiteSpace: pre-wrap 让 div（NoteShow/NoteShowInner）尊重 note 里的 \n 换行——默认 normal 会把 \n 当空白折叠，
+// 与 TextArea（NoteEdit/NoteEditInner 按 \n 换行）表现不一致，含换行的 note 在 div 里行数错乱、与 estimateNoteRows
+// 预留高度对不上。pre-wrap 仅影响文本内联布局；NoteEdit/NoteEditInner 的 Flex 容器也用此样式作背景，TextArea 不受影响。
+const noteStyle: CSSProperties = {backgroundColor: "yellow", borderRadius: '8px', whiteSpace: 'pre-wrap'}
 const TEXT_AREA_STYLE: CSSProperties = {backgroundColor: "yellow"};
 
 export const NoteShow = memo(function NoteShow({note, setIsEdit}: {
@@ -31,6 +47,8 @@ export const NoteShow = memo(function NoteShow({note, setIsEdit}: {
 });
 
 
+// 独立态编辑器（只读 / card 视图用）：自带 useMutation，提交即 updateNote API 落库 + 刷新 ['notes'] 缓存。
+// 仅真成功才 setIsEdit(false) 关闭（失败保留 newNote 便于重试）。嵌入版见 NoteEditInner。
 export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
     id: string;
     note: string;
@@ -110,6 +128,8 @@ export const NoteShowInner = memo(function NoteShowInner({note}: {
     </div>
 });
 
+// 嵌入态编辑器（内嵌 EntityForm 编辑表单）：不触网，onChange → updateNoteInEdit 写入编辑会话(EntityEdit)，
+// note 随整个表单 alt+s 一起提交；无提交/取消按钮（提交由外层会话统一）。独立版见 NoteEdit。
 export const NoteEditInner = memo(function NoteEditInner({note, updateNoteInEdit}: {
     note: string;
     updateNoteInEdit: (note: string) => void;

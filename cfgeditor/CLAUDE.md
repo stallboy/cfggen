@@ -63,8 +63,8 @@ pnpm test:run
 
 #### 应用入口
 - `src/main.tsx` - React 应用主入口，配置路由和查询客户端
-- `src/CfgEditorApp.tsx` - 主应用组件，使用分割布局
-- `src/AppLoader.tsx` - 应用加载器，初始化设置
+- `src/app/CfgEditorApp.tsx` - 主应用组件，使用分割布局
+- `src/app/AppLoader.tsx` - 应用加载器，初始化设置
 
 #### 主要页面组件
 - `src/routes/table/Table.tsx` - 表结构可视化
@@ -204,7 +204,7 @@ pnpm test:run
 
 ### 国际化
 - 支持中英文界面
-- 翻译内联在 `src/i18n.ts`（en/zh 两段，无独立 locales 目录）
+- 翻译内联在 `src/app/i18n.ts`（en/zh 两段，无独立 locales 目录）
 - 使用 i18next 进行文本管理
 
 ### 代码生成

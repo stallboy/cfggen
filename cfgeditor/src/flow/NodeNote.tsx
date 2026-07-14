@@ -27,6 +27,10 @@ interface UseNodeNoteArgs {
 // 产物分两块 DOM：editNoteButton 渲染于 title 栏（无 note 时的"添加"触发器），noteBlock 渲染于节点顶部（note 内容区），
 // 二者互斥显示但共享 isEditNote/tmpNote 状态，故用 hook 收口——FlowNode 调一次拿到两块 ReactNode，无需为共享状态提升到父级。
 //
+// 为何用 hook 返回 JSX（看似「hook 吐组件」的怪写法）而非组件：editNoteButton 是作为 prop 注入兄弟组件 <NodeTitle>
+// （非直接渲染），noteBlock 才直接摆放——这种「产出一个值喂兄弟组件 + 一块 DOM 自己摆」的混合需求，hook 返回 {ReactNode}
+// 比 render-prop 更精确（后者得把 <NodeTitle> 整体搬进 children 函数）。属 headless-hook 写法，有意为之，非反模式。
+//
 // 只读/card 态：NoteShow/NoteEdit 走 useMutation → updateNote API；无 note 时由 editNoteButton 触发编辑。
 // 编辑态：NoteEditInner + 本地 tmpNote，走 edit.editOnUpdateNote（不触网，先写 tmpNote，提交时再落 json）。
 export function useNodeNote({id, entity, edit, note, notes, label}: UseNodeNoteArgs): {

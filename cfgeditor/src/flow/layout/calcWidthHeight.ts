@@ -38,7 +38,7 @@ const EDIT_TEXT_EXTRA_BASE = 10;         // 长文本 extra 基础
 export const NOTE_ROW_H = 22;     // note 单行高（估算与渲染同源：calcWidthHeight 估算 + NoteShow/NoteEdit 渲染都读它）
 const NOTE_WRAP_COLS = 15; // note 每行字符数（估算换行）
 const NOTE_MAX_ROWS = 10;  // note 最大估算行数
-const NOTE_MIN_ROWS = 2;   // note 最小估算行数（即使很短也预留）
+const NOTE_MIN_ROWS = 1;   // note 最小估算行数（即使很短也预留）
 const NOTE_PADDING_H = 22; // note 区域额外 padding
 
 // note 估算行数：note.length / NOTE_WRAP_COLS，夹到 [NOTE_MIN_ROWS, NOTE_MAX_ROWS]。
