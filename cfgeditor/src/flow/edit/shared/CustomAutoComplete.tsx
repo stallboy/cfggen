@@ -1,7 +1,7 @@
 import {CSSProperties, memo, useMemo} from 'react';
 import {AutoComplete, Input} from 'antd';
 import {EntityEditFieldOption} from "@/domain/entityModel";
-import type {FilterOption} from "./edit/shared/types.ts";
+import type {FilterOption} from "./types.ts";
 
 const suffixStyle: CSSProperties = {
     color: '#597ef7', fontSize: '0.8em',

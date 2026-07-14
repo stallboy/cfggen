@@ -6,7 +6,7 @@ import {convertFileSrc, isTauri} from "@tauri-apps/api/core";
 import {CSSProperties, memo, ReactElement} from "react";
 import {CardEntity, Entity, isCardEntity} from "@/domain/entityModel";
 import type {NodeShowType} from "@/domain/storageJson";
-import {getDsLenAndDesc} from "./getDsLenAndDesc.ts";
+import {getDsLenAndDesc} from "./layout/getDsLenAndDesc.ts";
 import {Highlight} from "./Highlight.tsx";
 import {useMyStore} from "@/store/store";
 

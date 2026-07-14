@@ -3,8 +3,8 @@ import {DisplayField} from "@/domain/entityModel";
 import type {NodeShowType} from "@/domain/storageJson";
 import {Flex, List, Tooltip, Typography} from "antd";
 import {CSSProperties, memo, useMemo} from "react";
-import {getFieldBackgroundColor} from "./colors.ts";
-import {getReadNodeWidth} from "./dimensions.ts";
+import {getFieldBackgroundColor} from "./layout/colors.ts";
+import {getReadNodeWidth} from "./layout/dimensions.ts";
 import {Highlight} from "./Highlight.tsx";
 import {useMyStore} from "@/store/store";
 

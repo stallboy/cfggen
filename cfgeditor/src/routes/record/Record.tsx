@@ -13,7 +13,7 @@ import {useMutation, useQuery} from "@tanstack/react-query";
 import {addOrUpdateRecord, fetchRecord} from "@/api/api";
 import {MenuItem} from "@/flow/FlowContextMenu";
 import {SchemaTableType} from "@/CfgEditorApp";
-import {fillHandles} from "@/flow/entityToNodeAndEdge";
+import {fillHandles} from "@/flow/layout/entityToNodeAndEdge";
 import {memo, useCallback, useEffect, useMemo, useRef, useSyncExternalStore} from "react";
 import {useHotkeys} from "react-hotkeys-hook";
 
@@ -197,10 +197,6 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
 
     const paneMenu = useMemo(() => {
         const menu: MenuItem[] = [];
-        if (isEditing) {
-            menu.push({label: t('undo'), key: 'undo', handler: () => session.undo(), disabled: () => !session.canUndo()});
-            menu.push({label: t('redo'), key: 'redo', handler: () => session.redo(), disabled: () => !session.canRedo()});
-        }
         if (isEditable) {
             menu.push(getEditMenu(curTable.name, curId, !edit));
         }
@@ -211,6 +207,10 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
                 navigate(navTo('recordRef', curTable.name, curId));
             }
         });
+        if (isEditing) {
+            menu.push({label: t('undo'), key: 'undo', handler: () => session.undo(), disabled: () => !session.canUndo()});
+            menu.push({label: t('redo'), key: 'redo', handler: () => session.redo(), disabled: () => !session.canRedo()});
+        }
         return menu;
     }, [isEditing, isEditable, getEditMenu, curTable, curId, edit, t, navigate, session]);
 

@@ -6,7 +6,7 @@ import {useNavigate, useOutletContext} from "react-router";
 import {MenuItem} from "@/flow/FlowContextMenu";
 import {useTranslation} from "react-i18next";
 import {SItem} from "@/api/schemaModel";
-import {fillHandles} from "@/flow/entityToNodeAndEdge";
+import {fillHandles} from "@/flow/layout/entityToNodeAndEdge";
 import {memo, useCallback, useMemo} from "react";
 import {useEntityToGraph} from "@/flow/useEntityToGraph";
 import {EntityNode} from "@/flow/FlowGraph";

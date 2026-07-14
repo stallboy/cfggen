@@ -1,7 +1,7 @@
 import type {CSSProperties} from "react";
 import {Input, InputNumber, Select, Switch} from "antd";
 import {EntityEditField} from "@/domain/entityModel";
-import {CustomAutoComplete} from "../../CustomAutoComplete.tsx";
+import {CustomAutoComplete} from "./CustomAutoComplete.tsx";
 import {getFilter, hasAutoCompleteOptions} from "./fieldUtils.ts";
 
 export function primitiveControl(field: EntityEditField, style: CSSProperties) {

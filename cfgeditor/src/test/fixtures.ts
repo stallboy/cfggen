@@ -9,7 +9,7 @@ import {
     ReadOnlyEntity,
 } from '@/domain/entityModel'
 import {NodeShowType} from '@/domain/storageJson'
-import {NODE_SHOW_DEFAULTS} from '@/flow/colors.ts'
+import {NODE_SHOW_DEFAULTS} from '@/flow/layout/colors.ts'
 
 // ---------------------------------------------------------------------------
 // NodeShowType

@@ -14,7 +14,7 @@ vi.mock('elkjs/lib/elk-api.js', () => ({
 vi.mock('elkjs/lib/elk-worker.min.js?url', () => ({default: 'mock-worker-url'}))
 
 import {layoutAsync, LayoutError} from './layoutAsync.ts'
-import type {EntityNode} from './FlowGraph.tsx'
+import type {EntityNode} from '../FlowGraph.tsx'
 import {makeReadOnly} from '@/test/fixtures'
 
 function node(id: string): EntityNode {

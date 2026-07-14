@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchRecordRefs, fetchUnreferencedRecords } from "@/api/api";
 import { MenuItem } from "@/flow/FlowContextMenu";
 import { SchemaTableType } from "@/CfgEditorApp";
-import { fillHandles } from "@/flow/entityToNodeAndEdge";
+import { fillHandles } from "@/flow/layout/entityToNodeAndEdge";
 
 import { useCallback, useMemo, useState } from "react";
 import { useEntityToGraph } from "@/flow/useEntityToGraph";

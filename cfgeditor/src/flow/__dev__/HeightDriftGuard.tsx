@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useStore } from "@xyflow/react";
 import { Entity } from "@/domain/entityModel";
 import type { NodeShowType } from "@/domain/storageJson";
-import { calcWidthHeight } from "../calcWidthHeight.ts";
+import { calcWidthHeight } from "../layout/calcWidthHeight.ts";
 
 // 已从 FlowNode 移出并停用，现归档于 __dev__/（不在主路径装活代码）。
 // 原在 FlowNode 内以 {import.meta.env.DEV && <HeightDriftGuard/>} 渲染，

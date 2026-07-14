@@ -7,7 +7,7 @@ import {updateNote} from "@/api/api";
 import {useMyStore} from "@/store/store";
 import {NoteEditResult, notesToMap} from "@/api/noteModel";
 import {queryClient} from "@/queryClient";
-import {estimateNoteRows, NOTE_ROW_H} from "./calcWidthHeight.ts";
+import {estimateNoteRows, NOTE_ROW_H} from "./layout/calcWidthHeight.ts";
 
 
 const noteButtonStyle: CSSProperties = {float: 'right', borderWidth: 0, backgroundColor: 'transparent'};

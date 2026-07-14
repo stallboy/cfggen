@@ -1,15 +1,15 @@
 import {CSSProperties, memo, useCallback, useMemo} from "react";
 import {Handle, NodeProps, Position} from "@xyflow/react";
 import {useMyStore} from "@/store/store";
-import {getNodeBackgroundColor} from "./colors.ts";
-import {getNodeWidth} from "./dimensions.ts";
+import {getNodeBackgroundColor} from "./layout/colors.ts";
+import {getNodeWidth} from "./layout/dimensions.ts";
 import {Button, Popover} from "antd";
 import {ArrowsAltOutlined, ShrinkOutlined} from "@ant-design/icons";
 import {EntityCard} from "./EntityCard.tsx";
 import {EntityProperties} from "./EntityProperties.tsx";
 import {EntityForm} from "./edit/EntityForm.tsx";
 import {ResPopover} from "./ResPopover.tsx";
-import {findFirstImage} from "./calcWidthHeight.ts";
+import {findFirstImage} from "./layout/calcWidthHeight.ts";
 import {getResBrief} from "@/res/getResBrief";
 import {EntityNode} from "./FlowGraph.tsx";
 import {nodeAnchor} from "./nodeAnchor.ts";

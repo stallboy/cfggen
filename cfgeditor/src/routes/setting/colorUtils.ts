@@ -1,7 +1,7 @@
 /**
  * Utility functions for color handling in settings
  */
-import {NODE_SHOW_DEFAULTS} from "@/flow/colors.ts";
+import {NODE_SHOW_DEFAULTS} from "@/flow/layout/colors.ts";
 
 type ColorValue = string | { toHexString: () => string } | null | undefined;
 

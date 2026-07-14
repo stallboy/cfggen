@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest'
 import {fixColor, fixColors} from './colorUtils'
-import {NODE_SHOW_DEFAULTS} from '@/flow/colors'
+import {NODE_SHOW_DEFAULTS} from '@/flow/layout/colors'
 
 describe('fixColor', () => {
     it('string 入参 → 原样返回（不走默认色）', () => {

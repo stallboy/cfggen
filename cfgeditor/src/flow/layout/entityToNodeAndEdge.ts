@@ -1,8 +1,8 @@
 import {Entity, DisplayField, EntityEditField, isReadOnlyEntity, isEditableEntity, EntityEdgeType} from "@/domain/entityModel";
 import type {NodeShowType} from "@/domain/storageJson";
 import {getEdgeColor} from "./colors.ts";
-import {EntityEdge, EntityNode} from "./FlowGraph.tsx";
-import {devLog, devError} from "./devLog.ts";
+import {EntityEdge, EntityNode} from "../FlowGraph.tsx";
+import {devLog, devError} from "../devLog.ts";
 
 function findField(entity: Entity, name: string): DisplayField | EntityEditField | undefined {
     if (isReadOnlyEntity(entity)) {
