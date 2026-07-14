@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest'
-import {getResBrief} from './getResBrief'
+import {getResBrief, getResBriefEmoji} from './getResBrief'
 import {ResInfo} from '@/domain/resInfo'
 
 function res(type: ResInfo['type'], over: Partial<ResInfo> = {}): ResInfo {
@@ -49,5 +49,26 @@ describe('getResBrief', () => {
         ])
         // v=1, a=1(audio)+1(track)=2, i=1, o=1(other)+1(sub track)=2
         expect(brief).toBe('1v2a1i2o')
+    })
+})
+
+describe('getResBriefEmoji', () => {
+    it('空数组 → 空串', () => {
+        expect(getResBriefEmoji([])).toBe('')
+    })
+
+    it('计数与 getResBrief 同源（同输入同 v/a/i/o），仅呈现换 emoji+数字', () => {
+        const input = [
+            res('video', {audioTracks: [{name: 'a', path: 'p'}]}),
+            res('audio'),
+            res('image'),
+            res('other', {subtitlesTracks: [{name: 's', path: 'p', lang: 'zh'}]}),
+        ]
+        // 与上例同输入：v=1, a=2, i=1, o=2
+        expect(getResBriefEmoji(input)).toBe('🎬1 🔊2 🖼1 📎2')
+    })
+
+    it('计数为 0 的类别不出现', () => {
+        expect(getResBriefEmoji([res('video'), res('image')])).toBe('🎬1 🖼1')
     })
 })

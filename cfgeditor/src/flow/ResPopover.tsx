@@ -1,10 +1,15 @@
 import {memo, useCallback, useEffect, useRef, useState} from "react";
-import {Button, Flex, Space, Tabs, TabsProps} from "antd";
+import {Button, Flex, Space, Tabs, TabsProps, Tooltip} from "antd";
 import {convertFileSrc} from "@tauri-apps/api/core";
 import {Command} from "@tauri-apps/plugin-shell";
 import {readFile} from "@tauri-apps/plugin-fs";
 import {useQuery} from "@tanstack/react-query";
 import {ResInfo} from "@/domain/resInfo";
+
+// 取路径末段作短名（兼容 / 与 \）；原 default 分支把完整 path 当按钮文字，长路径撑爆按钮。
+function basename(p: string): string {
+    return p.split(/[/\\]/).pop() || p;
+}
 
 function srt2vtt(srtBody: string) {
     return 'WEBVTT\n\n' + srtBody.split(/\n/g).map(line => line.replace(/((\d+:){0,2}\d+),(\d+)/g, '$1.$3')).join('\n');
@@ -160,7 +165,7 @@ export const ResPopover = memo(function ({resInfos}: { resInfos: ResInfo[] }) {
                 content = getImageEle(name, path);
                 break;
             default:
-                content = <Button onClick={() => goExplorer(path)}>{path}</Button>
+                content = <Tooltip title={path}><Button onClick={() => goExplorer(path)}>{basename(path)}</Button></Tooltip>
                 break;
         }
 

@@ -187,6 +187,18 @@ i18n.use(LanguageDetector)
                     layoutFailedDesc: "Auto layout failed. Nodes are shown unsorted. Click retry to re-layout.",
                     retryLayout: "Retry layout",
 
+                    // flow 节点交互（图标按钮 tooltip / aria-label）
+                    nodeFold: "Collapse",
+                    nodeUnfold: "Expand",
+                    nodeMoveUp: "Move up",
+                    nodeMoveDown: "Move down",
+                    nodeDelete: "Delete",
+                    addNote: "Add note",
+                    editNote: "Edit note",
+                    notePlaceholder: "note",
+                    deleteNote: "Delete this note?",
+                    resButton: "Resources",
+
                     addListItemBefore: "Insert before",
                     structCopy: "Copy",
                     structPaste: "Paste",
@@ -315,6 +327,18 @@ i18n.use(LanguageDetector)
                     layoutFailedTitle: '自动布局失败',
                     layoutFailedDesc: '节点已按兜底位置展开。点击重试重新布局。',
                     retryLayout: '重试布局',
+
+                    // flow 节点交互（图标按钮 tooltip / aria-label）
+                    nodeFold: '折叠',
+                    nodeUnfold: '展开',
+                    nodeMoveUp: '上移',
+                    nodeMoveDown: '下移',
+                    nodeDelete: '删除',
+                    addNote: '添加备注',
+                    editNote: '编辑备注',
+                    notePlaceholder: '备注',
+                    deleteNote: '删除该备注？',
+                    resButton: '资源',
 
                     search: '搜索',
                     edit: '编辑',

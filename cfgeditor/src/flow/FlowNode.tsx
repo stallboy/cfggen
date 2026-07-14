@@ -1,9 +1,10 @@
 import {CSSProperties, memo, useCallback, useMemo} from "react";
 import {Handle, NodeProps, Position} from "@xyflow/react";
+import {useTranslation} from "react-i18next";
 import {useMyStore} from "@/store/store";
 import {getNodeBackgroundColor} from "./layout/colors.ts";
 import {getNodeWidth} from "./layout/dimensions.ts";
-import {Button, Popover} from "antd";
+import {Button, Popover, Tooltip} from "antd";
 import {ArrowsAltOutlined, ShrinkOutlined} from "@ant-design/icons";
 import {EntityCard} from "./EntityCard.tsx";
 import {EntityProperties} from "./EntityProperties.tsx";
@@ -11,7 +12,7 @@ import {EntityForm} from "./edit/EntityForm.tsx";
 import {ResPopover} from "./ResPopover.tsx";
 import {findFirstImage} from "./layout/calcWidthHeight.ts";
 import {getReadableTextColor} from "./layout/colors.ts";
-import {getResBrief} from "@/res/getResBrief";
+import {getResBriefEmoji} from "@/res/getResBrief";
 import {EntityNode} from "./FlowGraph.tsx";
 import {nodeAnchor} from "./nodeAnchor.ts";
 import {useNodeNote} from "./NodeNote.tsx";
@@ -23,6 +24,7 @@ const foldIcon = <ShrinkOutlined />;
 const unfoldIcon = <ArrowsAltOutlined />;
 
 export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>) {
+    const {t} = useTranslation();
     const entity = nodeProps.data.entity;
     // nodeShow/notes 是呈现层配置，从 nodeProps.data 读——保留 FixedPage per-graph override；
     // query 无 per-graph override，走全局 store（resso per-key 订阅，仅 query 变时重渲）。
@@ -62,12 +64,13 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
     const resBriefButton = useMemo(() => {
         if (!assets) return undefined;
         // 资源摘要按钮文字按节点底色自动反色（原硬编码 #fff 在浅底色上会糊掉）。
+        // 用 emoji+数字（🎬🔊🖼📎）替代字母缩写 "2v3a1i"；title 给原生提示，避免与 Popover 叠 antd Tooltip 冲突。
         return <Popover content={<ResPopover resInfos={assets} />}
             placement='rightTop'
             trigger='click'>
-            <Button type='text' style={{color: getReadableTextColor(color)}}>{getResBrief(assets)}</Button>
+            <Button type='text' title={t('resButton')} style={{color: getReadableTextColor(color)}}>{getResBriefEmoji(assets)}</Button>
         </Popover>;
-    }, [assets, color]);
+    }, [assets, color, t]);
 
     const handleStyle: CSSProperties = useMemo(() => {
         return { position: 'absolute', backgroundColor: color };
@@ -77,13 +80,17 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
         // 显示 fold 按钮的条件：有子节点，或可以被内嵌（从内嵌展开的节点）。
         if (edit && (edit.hasChild || edit.canBeEmbedded)) {
             if (edit.fold) {
-                return <Button style={unfoldIconButtonStyle} icon={unfoldIcon} onClick={unfoldNode} />;
+                return <Tooltip title={t('nodeUnfold')}>
+                    <Button style={unfoldIconButtonStyle} icon={unfoldIcon} aria-label={t('nodeUnfold')} onClick={unfoldNode} />
+                </Tooltip>;
             } else {
-                return <Button style={iconButtonStyle} icon={foldIcon} onClick={foldNode} />;
+                return <Tooltip title={t('nodeFold')}>
+                    <Button style={iconButtonStyle} icon={foldIcon} aria-label={t('nodeFold')} onClick={foldNode} />
+                </Tooltip>;
             }
         }
         return null;
-    }, [edit, unfoldIconButtonStyle, unfoldNode, foldNode]);
+    }, [edit, unfoldIconButtonStyle, unfoldNode, foldNode, t]);
 
     // note 双模式（触发按钮 + 内容区）收口到 useNodeNote；editNoteButton 渲染于 title，noteBlock 渲染于顶部。
     const {noteBlock, editNoteButton} = useNodeNote({id, entity, edit, note, notes, label});

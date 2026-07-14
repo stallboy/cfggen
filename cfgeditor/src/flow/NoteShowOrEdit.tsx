@@ -1,6 +1,6 @@
 import {ChangeEvent, CSSProperties, memo, useCallback, useMemo, useState} from "react";
-import {App, Button, Flex, Input, theme} from "antd";
-import {BookOutlined} from "@ant-design/icons";
+import {App, Button, Flex, Input, Popconfirm, Tooltip, theme} from "antd";
+import {BookOutlined, DeleteOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 import {useMutation} from "@tanstack/react-query";
 import {updateNote} from "@/api/api";
@@ -45,14 +45,18 @@ export const NoteShow = memo(function NoteShow({note, setIsEdit}: {
     setIsEdit: (ie: boolean) => void;
 }) {
     const {noteStyle} = useNoteStyles();
+    const {t} = useTranslation();
     const onEditClick = useCallback(() => {
         setIsEdit(true);
     }, [setIsEdit]);
 
     return <div style={{...noteStyle, minHeight: estimateNoteRows(note) * NOTE_ROW_H}}>
-        {note} <Button style={noteButtonStyle}
-                       icon={bookIcon}
-                       onClick={onEditClick}/>
+        {note} <Tooltip title={t('editNote')}>
+            <Button style={noteButtonStyle}
+                    icon={bookIcon}
+                    aria-label={t('editNote')}
+                    onClick={onEditClick}/>
+        </Tooltip>
     </div>
 });
 
@@ -111,19 +115,29 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
         mutate(newNote);
     }, [mutate, newNote]);
 
+    // 删除 note：提交空串 → updateNote 走 'deleteOk' 分支（onSuccess 关闭编辑器 + 刷新 ['notes']）。
+    // 仅已有 note 时显示该按钮（新增态 recordNote 为空，Cancel 已足够）。
+    const onDeleteClick = useCallback(() => {
+        mutate("");
+    }, [mutate]);
+
     const onNoteChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
         const value = e.target.value;
         setNewNote(value);
     }, [setNewNote]);
 
     return <Flex vertical style={noteStyle}>
-        <Input.TextArea className='nodrag' placeholder='note'
+        <Input.TextArea className='nodrag' placeholder={t('notePlaceholder')} autoFocus
                   rows={estimateNoteRows(note)}
                   style={textAreaStyle}
                   value={newNote}
                   onChange={onNoteChange}/>
         <Flex justify={'flex-end'} gap={'small'}>
             <Button onClick={onCancelClick}>{t('cancelUpdateNote')}</Button>
+            {note.length > 0 &&
+                <Popconfirm title={t('deleteNote')} onConfirm={onDeleteClick}>
+                    <Button danger icon={<DeleteOutlined/>}>{t('nodeDelete')}</Button>
+                </Popconfirm>}
             <Button type='primary' loading={isPending} onClick={onSubmitClick}>{t('updateNote')}</Button>
         </Flex>
     </Flex>
@@ -146,6 +160,7 @@ export const NoteEditInner = memo(function NoteEditInner({note, updateNoteInEdit
     note: string;
     updateNoteInEdit: (note: string) => void;
 }) {
+    const {t} = useTranslation();
     // rows 在 mount 时按初始 note 算一次，之后固定——符合 §6 "textarea 固定 rows、不随输入动态伸缩"。
     // note 是变化的 tmpNote，若 rows 随之动态重算，编辑长 note 时 textarea 会持续长高、节点 DOM
     // 超出 ELK 估算高度而 overlap 相邻节点。value 仍受控随输入变化，但高度固定（超出滚动）。
@@ -157,7 +172,7 @@ export const NoteEditInner = memo(function NoteEditInner({note, updateNoteInEdit
     }, [updateNoteInEdit]);
 
     return <Flex vertical style={noteStyle}>
-        <Input.TextArea className='nodrag' placeholder='note'
+        <Input.TextArea className='nodrag' placeholder={t('notePlaceholder')} autoFocus
                   rows={rows}
                   style={textAreaStyle}
                   value={note}
