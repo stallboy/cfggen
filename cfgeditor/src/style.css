@@ -30,18 +30,11 @@ svg .react-flow__edge-path{
 }
 
 .flowNodeWithBorder {
-    /* 折叠态：虚线描边标识"已折叠"。
-       原 8px solid 过重（像告警）；2px dashed + offset 2px 又太淡（细 + 飘在节点外侧 2px，
-       中间透明间隙让虚线像散落而非"框住"）。取 3px dashed + offset 0（贴外缘）：
-       更粗 + 贴边，虚线连成框、显眼度提升，外延仅 3px（不挤压邻居）。
-       颜色由 FlowNode 内联 outlineColor（nodeShow.editFoldColor）覆盖，缺省走此处的 #ffd6e7。 */
-    outline: 3px dashed #ffd6e7;
-    outline-offset: 0;
+    outline: 8px solid #ffd6e7;
     padding: 5px;
     border-radius: 8px;
     min-height: 60px;
 }
-
 
 .react-flow__pane {
     cursor: default;

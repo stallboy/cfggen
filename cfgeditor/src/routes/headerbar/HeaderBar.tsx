@@ -120,7 +120,7 @@ export const HeaderBar = memo(function ({schema, curTable}: {
                     <Button icon={<AppstoreOutlined/>} title={t('panelMenu')}/>
                 </Dropdown>
 
-                <Badge dot={isUnsaved} status="warning" offset={[-4, 0]}>
+                <Badge dot={isUnsaved} status="warning">
                     {locator}
                 </Badge>
 
