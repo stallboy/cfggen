@@ -100,11 +100,12 @@ export const ToolsSetting = memo(function ToolsSetting({schema, curTable, flowRe
         {label: t('tableRef'), value: 'tableRef'},
         {label: t('record'), value: 'record'},
         {label: t('recordRef'), value: 'recordRef'},
-        {label: t('recordUnref'), value: 'recordUnref'}
+        {label: t('unreferenced'), value: 'recordUnref'}
     ];
 
     const onChangeCurPage = useCallback((page: PageType) => {
-        navigate(navTo(page, curTableId, curId));
+        // recordUnref 是未引用记录列表（路由 recordUnref/:table，两段无 id），切到它时不带 curId
+        navigate(navTo(page, curTableId, page === 'recordUnref' ? '' : curId));
     }, [curTableId, curId, navigate]);
 
 
