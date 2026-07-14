@@ -10,6 +10,7 @@ import {EntityProperties} from "./EntityProperties.tsx";
 import {EntityForm} from "./edit/EntityForm.tsx";
 import {ResPopover} from "./ResPopover.tsx";
 import {findFirstImage} from "./layout/calcWidthHeight.ts";
+import {getReadableTextColor} from "./layout/colors.ts";
 import {getResBrief} from "@/res/getResBrief";
 import {EntityNode} from "./FlowGraph.tsx";
 import {nodeAnchor} from "./nodeAnchor.ts";
@@ -20,8 +21,6 @@ const iconButtonStyle = { borderWidth: 0, backgroundColor: 'transparent' };
 
 const foldIcon = <ShrinkOutlined />;
 const unfoldIcon = <ArrowsAltOutlined />;
-
-const resBriefButtonStyle = { color: '#fff' };
 
 export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>) {
     const entity = nodeProps.data.entity;
@@ -62,12 +61,13 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
     const firstImage = useMemo(() => findFirstImage(assets), [assets]);
     const resBriefButton = useMemo(() => {
         if (!assets) return undefined;
+        // 资源摘要按钮文字按节点底色自动反色（原硬编码 #fff 在浅底色上会糊掉）。
         return <Popover content={<ResPopover resInfos={assets} />}
             placement='rightTop'
             trigger='click'>
-            <Button type='text' style={resBriefButtonStyle}>{getResBrief(assets)}</Button>
+            <Button type='text' style={{color: getReadableTextColor(color)}}>{getResBrief(assets)}</Button>
         </Popover>;
-    }, [assets]);
+    }, [assets, color]);
 
     const handleStyle: CSSProperties = useMemo(() => {
         return { position: 'absolute', backgroundColor: color };
@@ -100,6 +100,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
             resBriefButton={resBriefButton}
             edit={edit}
             nodeProps={nodeProps}
+            nodeBgColor={color}
         />
         {fields && <EntityProperties fields={fields} nodeShow={nodeShow} color={color} />}
         {brief && <EntityCard entity={entity} image={firstImage} nodeShow={nodeShow} />}

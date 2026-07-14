@@ -1,4 +1,4 @@
-import {memo} from "react";
+import {memo, useMemo} from "react";
 import type {ReactNode} from "react";
 import {Flex, Typography} from "antd";
 import type {NodeProps} from "@xyflow/react";
@@ -6,10 +6,10 @@ import {EntityEdit} from "@/domain/entityModel";
 import type {EntityNode} from "./FlowGraph.tsx";
 import {Highlight} from "./Highlight.tsx";
 import {NodeToolbar} from "./NodeToolbar.tsx";
+import {getReadableTextColor} from "./layout/colors.ts";
 
 const {Text} = Typography;
 const titleStyle = { width: '100%' };
-const titleTextStyle = { fontSize: 14, color: "#fff" };
 
 interface NodeTitleProps {
     foldButton: ReactNode;
@@ -20,6 +20,8 @@ interface NodeTitleProps {
     resBriefButton: ReactNode;
     edit?: EntityEdit;
     nodeProps: NodeProps<EntityNode>;
+    // 节点底色：标题文字按它自动反色（原硬编码 #fff 在浅底色上会糊掉）。
+    nodeBgColor: string;
 }
 
 // 节点标题栏布局：fold 按钮 + 标题文本（含 query 高亮）+ note 触发按钮 + 资源摘要按钮 + 操作按钮组。
@@ -27,7 +29,13 @@ interface NodeTitleProps {
 export const NodeTitle = memo(function NodeTitle({
                                                      foldButton, label, query, copyable,
                                                      editNoteButton, resBriefButton, edit, nodeProps,
+                                                     nodeBgColor,
                                                  }: NodeTitleProps) {
+    const titleTextStyle = useMemo(() => ({
+        fontSize: 14,
+        color: getReadableTextColor(nodeBgColor),
+    }), [nodeBgColor]);
+
     return <Flex justify="space-between" style={titleStyle}>
         {foldButton}
         <Text strong style={titleTextStyle} ellipsis={false} copyable={copyable}>

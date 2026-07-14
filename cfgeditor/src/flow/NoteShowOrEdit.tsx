@@ -1,5 +1,5 @@
-import {ChangeEvent, CSSProperties, memo, useCallback, useState} from "react";
-import {App, Button, Flex, Input} from "antd";
+import {ChangeEvent, CSSProperties, memo, useCallback, useMemo, useState} from "react";
+import {App, Button, Flex, Input, theme} from "antd";
 import {BookOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 import {useMutation} from "@tanstack/react-query";
@@ -25,16 +25,26 @@ import {estimateNoteRows, NOTE_ROW_H} from "./layout/calcWidthHeight.ts";
 
 const noteButtonStyle: CSSProperties = {float: 'right', borderWidth: 0, backgroundColor: 'transparent'};
 const bookIcon = <BookOutlined/>;
-// whiteSpace: pre-wrap 让 div（NoteShow/NoteShowInner）尊重 note 里的 \n 换行——默认 normal 会把 \n 当空白折叠，
-// 与 TextArea（NoteEdit/NoteEditInner 按 \n 换行）表现不一致，含换行的 note 在 div 里行数错乱、与 estimateNoteRows
-// 预留高度对不上。pre-wrap 仅影响文本内联布局；NoteEdit/NoteEditInner 的 Flex 容器也用此样式作背景，TextArea 不受影响。
-const noteStyle: CSSProperties = {backgroundColor: "yellow", borderRadius: '8px', whiteSpace: 'pre-wrap'}
-const TEXT_AREA_STYLE: CSSProperties = {backgroundColor: "yellow"};
+
+// note 配色走 antd warning token（原硬编码纯 yellow #FFFF00 与整体低饱和配色冲突）。
+// 用 useToken 读 colorWarningBg，跟随主题（明/暗）；不加 border 以免改变 note 高度估算
+// （estimateNoteRows/NOTE_ROW_H 按当前无 border 渲染校准）。
+function useNoteStyles() {
+    const {token} = theme.useToken();
+    return useMemo(() => ({
+        // whiteSpace: pre-wrap 让 div（NoteShow/NoteShowInner）尊重 note 里的 \n 换行——默认 normal 会把 \n 当空白折叠，
+        // 与 TextArea（NoteEdit/NoteEditInner 按 \n 换行）表现不一致，含换行的 note 在 div 里行数错乱、与 estimateNoteRows
+        // 预留高度对不上。pre-wrap 仅影响文本内联布局；NoteEdit/NoteEditInner 的 Flex 容器也用此样式作背景，TextArea 不受影响。
+        noteStyle: {backgroundColor: token.colorWarningBg, borderRadius: 8, whiteSpace: 'pre-wrap'} as CSSProperties,
+        textAreaStyle: {backgroundColor: token.colorWarningBg} as CSSProperties,
+    }), [token.colorWarningBg]);
+}
 
 export const NoteShow = memo(function NoteShow({note, setIsEdit}: {
     note: string;
     setIsEdit: (ie: boolean) => void;
 }) {
+    const {noteStyle} = useNoteStyles();
     const onEditClick = useCallback(() => {
         setIsEdit(true);
     }, [setIsEdit]);
@@ -56,6 +66,7 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
 }) {
     const {server} = useMyStore();
     const {t} = useTranslation();
+    const {noteStyle, textAreaStyle} = useNoteStyles();
     const [newNote, setNewNote] = useState<string>(note);
     const {notification} = App.useApp();
 
@@ -108,7 +119,7 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
     return <Flex vertical style={noteStyle}>
         <Input.TextArea className='nodrag' placeholder='note'
                   rows={estimateNoteRows(note)}
-                  style={TEXT_AREA_STYLE}
+                  style={textAreaStyle}
                   value={newNote}
                   onChange={onNoteChange}/>
         <Flex justify={'flex-end'} gap={'small'}>
@@ -123,6 +134,7 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
 export const NoteShowInner = memo(function NoteShowInner({note}: {
     note: string;
 }) {
+    const {noteStyle} = useNoteStyles();
     return <div style={{...noteStyle, minHeight: estimateNoteRows(note) * NOTE_ROW_H}}>
         {note}
     </div>
@@ -137,6 +149,7 @@ export const NoteEditInner = memo(function NoteEditInner({note, updateNoteInEdit
     // rows 在 mount 时按初始 note 算一次，之后固定——符合 §6 "textarea 固定 rows、不随输入动态伸缩"。
     // note 是变化的 tmpNote，若 rows 随之动态重算，编辑长 note 时 textarea 会持续长高、节点 DOM
     // 超出 ELK 估算高度而 overlap 相邻节点。value 仍受控随输入变化，但高度固定（超出滚动）。
+    const {noteStyle, textAreaStyle} = useNoteStyles();
     const [rows] = useState(() => estimateNoteRows(note));
     const onNoteChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
         const value = e.target.value;
@@ -146,7 +159,7 @@ export const NoteEditInner = memo(function NoteEditInner({note, updateNoteInEdit
     return <Flex vertical style={noteStyle}>
         <Input.TextArea className='nodrag' placeholder='note'
                   rows={rows}
-                  style={TEXT_AREA_STYLE}
+                  style={textAreaStyle}
                   value={note}
                   onChange={onNoteChange}/>
     </Flex>

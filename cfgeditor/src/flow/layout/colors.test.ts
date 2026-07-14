@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest'
-import {getNodeBackgroundColor, getFieldBackgroundColor, getEdgeColor, NODE_SHOW_DEFAULTS} from './colors.ts'
+import {getNodeBackgroundColor, getFieldBackgroundColor, getEdgeColor, getReadableTextColor, NODE_SHOW_DEFAULTS} from './colors.ts'
 import {EntityType, EntityEditField} from '@/domain/entityModel'
 import {makeNodeShow, makeCard, makeReadOnly, makeEditable} from '@/test/fixtures'
 
@@ -135,5 +135,37 @@ describe('getFieldBackgroundColor', () => {
     it('字段名不匹配时返回 undefined', () => {
         const ns = makeNodeShow({fieldColorsByName: [{keyword: 'hp', color: '#HP'}]})
         expect(getFieldBackgroundColor({name: 'mp'} as never, ns)).toBeUndefined()
+    })
+})
+
+describe('getReadableTextColor', () => {
+    it('默认调色板四色全部返回白字（保持视觉一致）', () => {
+        expect(getReadableTextColor(NODE_SHOW_DEFAULTS.nodeColor)).toBe('#ffffff')     // #0898b5
+        expect(getReadableTextColor(NODE_SHOW_DEFAULTS.nodeRefColor)).toBe('#ffffff')  // #207b4a
+        expect(getReadableTextColor(NODE_SHOW_DEFAULTS.nodeRef2Color)).toBe('#ffffff') // #006d75
+        expect(getReadableTextColor(NODE_SHOW_DEFAULTS.nodeRefInColor)).toBe('#ffffff')// #003eb3
+    })
+
+    it('浅色底翻黑字（解决白字糊掉）', () => {
+        expect(getReadableTextColor('#ffff00')).toBe('#000000') // 纯黄
+        expect(getReadableTextColor('#ffffff')).toBe('#000000') // 纯白
+        expect(getReadableTextColor('#add8e6')).toBe('#000000') // 浅蓝
+        expect(getReadableTextColor('#ffe7f0')).toBe('#000000') // 浅粉
+    })
+
+    it('深色底返回白字', () => {
+        expect(getReadableTextColor('#000000')).toBe('#ffffff')
+        expect(getReadableTextColor('#123456')).toBe('#ffffff')
+    })
+
+    it('支持 #rgb 简写与 #rrggbbaa（取 rgb）', () => {
+        expect(getReadableTextColor('#fff')).toBe('#000000')
+        expect(getReadableTextColor('#000')).toBe('#ffffff')
+        expect(getReadableTextColor('#ffff0080')).toBe('#000000')
+    })
+
+    it('非法色按暗色处理 → 白字（与原 #fff 硬编码兜底一致）', () => {
+        expect(getReadableTextColor('not-a-color')).toBe('#ffffff')
+        expect(getReadableTextColor('')).toBe('#ffffff')
     })
 })

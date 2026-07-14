@@ -135,3 +135,39 @@ export function getFieldBackgroundColor(
 export function getEdgeColor(nodeShow?: NodeShowType): string {
     return nodeShow?.edgeColor ?? NODE_SHOW_DEFAULTS.edgeColor;
 }
+
+// ============================================================================
+// 可读文字色（按背景自动反色）
+// ============================================================================
+
+// 节点底色可被用户经 nodeColorsByValue/Label 任意配置（包括浅色）。
+// 节点标题/资源按钮原硬编码 #fff，浅底色上白字会糊掉不可读——按底色自动反色解决。
+//
+// 用 YIQ 感知亮度（Bootstrap color-yiq 同款）而非 WCAG 相对亮度：
+// 阈值 150 刻意偏低，保证本仓默认调色板（#0898b5/#207b4a/#006d75/#003eb3，YIQ 均 <150）
+// 全部保留白字、视觉一致；只有真正浅色底（黄/浅蓝/粉等，YIQ≥150）才翻黑字。
+// 若改用 WCAG 0.179 阈值，#0898b5(YIQ≈112, L≈0.26) 会被判为"该用黑字"，
+// 导致主节点色翻黑、与其它默认色白字不一致——故取 YIQ。
+const READABLE_BRIGHTNESS_THRESHOLD = 150;
+
+export function getReadableTextColor(bg: string): string {
+    return perceivedBrightness(bg) >= READABLE_BRIGHTNESS_THRESHOLD ? '#000000' : '#ffffff';
+}
+
+function perceivedBrightness(hex: string): number {
+    const n = parseHexToRgb(hex);
+    if (n === null) return 0; // 解析失败按暗色处理 → 白字（与原硬编码 #fff 行为一致）
+    const r = (n >> 16) & 0xff;
+    const g = (n >> 8) & 0xff;
+    const b = n & 0xff;
+    return (r * 299 + g * 587 + b * 114) / 1000;
+}
+
+// 解析 #rgb / #rrggbb / #rrggbbaa 为 0xrrggbb 数字；非法返回 null。
+function parseHexToRgb(hex: string): number | null {
+    if (typeof hex !== 'string') return null;
+    let s = hex.trim().replace(/^#/, '');
+    if (s.length === 3) s = s.split('').map(c => c + c).join('');
+    if (s.length === 8) s = s.slice(0, 6); // 带 alpha：取 rgb 部分
+    return /^[0-9a-fA-F]{6}$/.test(s) ? parseInt(s, 16) : null;
+}
