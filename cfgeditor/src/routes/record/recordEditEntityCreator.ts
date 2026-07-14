@@ -13,7 +13,7 @@ import {JSONArray, JSONObject, JSONValue, RefId} from "@/api/recordModel";
 import {getId, getLabel, getLastName} from "./recordRefUtils.ts";
 import {getField, getIdOptions, getImpl, getMapEntryTypeName, isPkInteger, Schema} from "@/domain/schema";
 import {EditingSession} from "@/services/editingSession";
-import { canBeEmbeddedCheck, extractEmbeddingFields } from "@/domain/embedding";
+import { canBeEmbeddedCheck, extractEmbeddingFields, markNewItemExpanded } from "@/domain/embedding";
 
 
 interface ArrayItemParam {
@@ -109,14 +109,8 @@ export class RecordEditEntityCreator {
                 if (fArrLen === 1) {
                     const itemObj = fArr[0] as JSONObject;
 
-                    // 构造临时SField用于内嵌检查（类型去掉list包装）
-                    const tempSField: SField = {
-                        ...sField,
-                        type: itemTypeId, // 去掉list<...>包装
-                    };
-
                     // 判断元素是否可以内嵌
-                    if (canBeEmbeddedCheck(itemObj, tempSField, this.schema)) {
+                    if (canBeEmbeddedCheck(itemObj, itemType)) {
                         itemCanBeEmbedded = true;
 
                         if (this.shouldEmbed(itemObj)) {
@@ -188,7 +182,7 @@ export class RecordEditEntityCreator {
                 }
 
                 // 检查是否为内嵌模式
-                const canEmbed = canBeEmbeddedCheck(fieldValue as JSONObject, sField, this.schema);
+                const canEmbed = canBeEmbeddedCheck(fieldValue as JSONObject, fieldType);
 
                 if (canEmbed) {
                     if (this.shouldEmbed(fieldValue as JSONObject)) {
@@ -460,6 +454,8 @@ export class RecordEditEntityCreator {
                 value: (position: EntityPosition) => {
                     const sFieldable = this.schema.itemIncludeImplMap.get(itemTypeId) as SStruct | SInterface;
                     const defaultValue = this.schema.defaultValue(sFieldable);
+                    // 可内嵌的新元素默认展开成节点（$fold=false），避免内嵌压缩态需再点展开才能编辑
+                    markNewItemExpanded(defaultValue, sFieldable);
                     this.session.addArrayItem(defaultValue, [...fieldChain, sField.name], position);
                 }
             };
@@ -485,14 +481,8 @@ export class RecordEditEntityCreator {
             return null;
         }
 
-        // 构造临时SField用于内嵌检查（类型去掉list包装）
-        const tempSField: SField = {
-            ...sField,
-            type: itemTypeId, // 去掉list<...>包装
-        };
-
         // 判断元素是否可以内嵌
-        if (!canBeEmbeddedCheck(itemObj, tempSField, this.schema)) {
+        if (!canBeEmbeddedCheck(itemObj, itemType)) {
             return null;
         }
 
@@ -566,7 +556,7 @@ export class RecordEditEntityCreator {
         fieldChain: (string | number)[]
     ): StructRefEditField | null {
         // 判断是否可以内嵌
-        if (!canBeEmbeddedCheck(fieldObj, sField, this.schema)) {
+        if (!canBeEmbeddedCheck(fieldObj, fieldType)) {
             return null;
         }
 

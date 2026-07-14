@@ -23,6 +23,7 @@ import {SInterface, SStruct} from "@/api/schemaModel";
 import {invalidateAllQueries, queryClient} from "@/app/queryClient";
 import {EntityNode} from "@/flow/FlowGraph";
 import {NEW_RECORD_ID} from "@/domain/schema";
+import {markNewItemExpanded} from "@/domain/embedding";
 
 
 function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
@@ -259,6 +260,8 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
                         handler() {
                             const sFieldable = schema.itemIncludeImplMap.get(editAllowObjType) as SStruct | SInterface;
                             const defaultValue = schema.defaultValue(sFieldable);
+                            // 可内嵌的新元素默认展开成节点（$fold=false），避免内嵌压缩态需再点展开才能编辑
+                            markNewItemExpanded(defaultValue, sFieldable);
                             session.addArrayItemAtIndex(defaultValue, index,
                                 editFieldChain.slice(0, editFieldChain.length - 1),
                                 {id: entity.id, x: entityNode.position.x, y: entityNode.position.y}

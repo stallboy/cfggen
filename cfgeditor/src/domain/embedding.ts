@@ -63,18 +63,11 @@ export const EMBEDDING_CONFIG : EmbeddingConfig = {
 // 内嵌判定规则（原 embeddingChecker.ts）—— 检查/提取可内嵌字段
 // ============================================================================
 
-export interface EmbeddingSchema {
-    itemIncludeImplMap: Map<string, SStruct | SInterface>;
-}
-
 /**
  * 内嵌检查器（统一入口）
  * 检查字段是否可以内嵌显示
  */
-export function canBeEmbeddedCheck(fieldValue: JSONObject, sField: SField, schema: EmbeddingSchema): boolean {
-    const fieldType = schema.itemIncludeImplMap.get(sField.type);
-    if (!fieldType) return false;
-
+export function canBeEmbeddedCheck(fieldValue: JSONObject, fieldType: SStruct | SInterface): boolean {
     let struct: SStruct;
     let structCfg: EmbeddableStructConfig;
     if (fieldType.type === 'struct') {
@@ -94,6 +87,21 @@ export function canBeEmbeddedCheck(fieldValue: JSONObject, sField: SField, schem
     const analysis = analyzeFieldTypes(filteredFields);
 
     return matchEmbeddingConfig(analysis, structCfg);
+}
+
+/**
+ * 手工新增 list 元素（"添加" / "前插入"）时调用：若该元素类型满足内嵌条件，显式置 $fold=false，
+ * 使其作为可编辑节点展开，而非内嵌压缩态——否则新元素因无 $fold（→ undefined）被 shouldEmbed 视为
+ * 内嵌，渲染成 EmbeddedSimpleStructuralItem，用户需再点一次展开按钮才能编辑，与"添加后立即编辑"的
+ * 意图相悖。与 interfaceOnChangeImpl 切换 impl 后置 $fold=false 同理。
+ *
+ * 仅对可内嵌元素写入 $fold：永不内嵌的对象（canBeEmbeddedCheck=false）不需要此 UI 标记，避免提交载荷
+ * 残留无意义字段。就地变异入参（与 addArrayItem 的 push 语义对齐：调用方 fresh 构造，无共享引用）。
+ */
+export function markNewItemExpanded(obj: JSONObject, fieldType: SStruct | SInterface): void {
+    if (canBeEmbeddedCheck(obj, fieldType)) {
+        obj['$fold'] = false;
+    }
 }
 
 

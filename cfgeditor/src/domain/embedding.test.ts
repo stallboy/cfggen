@@ -5,23 +5,14 @@ import {
     EMBEDDING_CONFIG,
     canBeEmbeddedCheck,
     extractEmbeddingFields,
+    markNewItemExpanded,
 } from './embedding'
 import {field, makeInterface, makeStruct} from '@/test/fixtures'
 
 // ---------------------------------------------------------------------------
-// 就近工厂：构造最小 EmbeddingSchema（只填 itemIncludeImplMap，贴合 embedding.ts 的实际依赖，
-// 不引入完整 Schema —— 被测函数只依赖这个 map）
+// 就近工厂：被测函数（canBeEmbeddedCheck / extractEmbeddingFields / markNewItemExpanded）
+// 均直接接收 SStruct | SInterface，无需构造 EmbeddingSchema 容器，故工厂只包字段/impl。
 // ---------------------------------------------------------------------------
-function structSchema(...fields: SField[]) {
-    const s = makeStruct('S', fields)
-    return {itemIncludeImplMap: new Map<string, SStruct | SInterface>([['S', s]])}
-}
-
-function ifaceSchema(impls: SStruct[], over: Partial<SInterface> = {}) {
-    const iface = makeInterface('I', impls, over)
-    return {itemIncludeImplMap: new Map<string, SStruct | SInterface>([['I', iface]])}
-}
-
 // JSONObject 要求 $type 必填，但 struct 判定不读 $type（仅 interface 分支读）。
 // 这里给 struct 场景的字面量补占位 $type，满足类型又不影响判定。
 function obj(values: Record<string, unknown> = {}): JSONObject {
@@ -30,11 +21,11 @@ function obj(values: Record<string, unknown> = {}): JSONObject {
 
 // 字段类型指向 'S'（struct）/ 'I'（interface），value 默认空对象
 function checkStruct(fields: SField[], value: JSONObject = obj()) {
-    return canBeEmbeddedCheck(value, field('f', 'S'), structSchema(...fields))
+    return canBeEmbeddedCheck(value, makeStruct('S', fields))
 }
 
 function checkInterface(impls: SStruct[], value: JSONObject, over: Partial<SInterface> = {}) {
-    return canBeEmbeddedCheck(value, field('f', 'I'), ifaceSchema(impls, over))
+    return canBeEmbeddedCheck(value, makeInterface('I', impls, over))
 }
 
 const int = (n = 'n') => field(n, 'int')
@@ -120,11 +111,6 @@ describe('canBeEmbeddedCheck — struct（5 条规则）', () => {
     })
     it('allPrimitive 约束：primitive + struct 混合 → 不内嵌（Mixed {a:int,b:Pos}）', () => {
         expect(checkStruct([field('a', 'int'), field('b', 'Pos')])).toBe(false)
-    })
-
-    it('sField.type 不在 schema map → false', () => {
-        const schema = {itemIncludeImplMap: new Map<string, SStruct | SInterface>()}
-        expect(canBeEmbeddedCheck(obj(), field('f', 'Unknown'), schema)).toBe(false)
     })
 })
 
@@ -250,5 +236,36 @@ describe('extractEmbeddingFields', () => {
     it('非空 list 字段保留 → 破坏 allPrimitive → 不内嵌 → null', () => {
         const s = makeStruct('S', [int('a'), int('b'), field('lst', 'list<int>')])
         expect(extractEmbeddingFields(s, obj({a: 1, b: 2, lst: [1, 2]}))).toBeNull()
+    })
+})
+
+// ===========================================================================
+// markNewItemExpanded — 手工新增 list 元素时，可内嵌者默认展开成节点
+// ===========================================================================
+describe('markNewItemExpanded', () => {
+    it('可内嵌的 struct 新元素 → 置 $fold=false（展开成节点，立即可编辑）', () => {
+        const o = obj()
+        markNewItemExpanded(o, makeStruct('S', [field('x', 'int'), field('y', 'int')]))  // 2 number 可内嵌
+        expect(o['$fold']).toBe(false)
+    })
+
+    it('不可内嵌的 struct 新元素（超阈值）→ 不写入 $fold（避免无意义字段残留）', () => {
+        const o = obj()
+        markNewItemExpanded(o, makeStruct('S', [int('a'), int('b'), int('c'), int('d')]))  // 4 number 超阈值
+        expect('$fold' in o).toBe(false)
+    })
+
+    it('可内嵌的 interface 新元素（$type 命中可内嵌 impl）→ 置 $fold=false', () => {
+        const dog = makeStruct('Dog', [field('bite', 'int')])  // 单 primitive 可内嵌
+        const o = obj({$type: 'Dog'})
+        markNewItemExpanded(o, makeInterface('I', [dog]))
+        expect(o['$fold']).toBe(false)
+    })
+
+    it('interface 新元素 $type 缺失 → canBeEmbedded=false → 不写入 $fold', () => {
+        const dog = makeStruct('Dog', [field('bite', 'int')])
+        const o = obj()  // $type:'' → resolveImpl null → 不可内嵌
+        markNewItemExpanded(o, makeInterface('I', [dog]))
+        expect('$fold' in o).toBe(false)
     })
 })
