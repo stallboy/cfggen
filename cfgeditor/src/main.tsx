@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 import {QueryClientProvider} from '@tanstack/react-query'
-import {queryClient} from "./queryClient.ts";
+import {queryClient} from "./app/queryClient.ts";
 
 import '@xyflow/react/dist/style.css';
 import './style.css'
 import {App, ConfigProvider} from "antd";
-import './i18n.js'
+import './app/i18n.js'
 import {createBrowserRouter} from "react-router";
 import {RouterProvider} from "react-router/dom";
-import {AppLoader} from "./AppLoader.tsx";
+import {AppLoader} from "./app/AppLoader.tsx";
 import {isTauri} from "@tauri-apps/api/core";
 import {saveSelfPrefAsync} from "./store/storage.ts";
 import {Window} from "@tauri-apps/api/window";
@@ -60,7 +60,9 @@ const defaultTheme = {
     },
 }
 if (isTauri()) {
-    Window.getCurrent().onCloseRequested(async (event) => {
+    // onCloseRequested 返回 Promise<UnlistenFn>（监听器注册）；在 app 顶层注册、随窗口生命周期常驻，
+    // 无需持有 unlisten。void 显式标记该 Promise 有意 fire-and-forget，消除 floating-promise 警告。
+    void Window.getCurrent().onCloseRequested(async (event) => {
         // preventDefault 后等自身偏好写盘完成再销毁窗口，避免 fire-and-forget 在写入完成前关窗丢失会话态
         event.preventDefault();
         try {
@@ -107,7 +109,7 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
             }
         };
 
-        loadTheme();
+        void loadTheme();
     }, [themeConfig.themeFile]);
 
     return (

@@ -6,7 +6,7 @@ import {useMutation} from "@tanstack/react-query";
 import {updateNote} from "@/api/api";
 import {useMyStore} from "@/store/store";
 import {NoteEditResult, notesToMap} from "@/api/noteModel";
-import {queryClient} from "@/queryClient";
+import {queryClient} from "@/app/queryClient";
 import {estimateNoteRows, NOTE_ROW_H} from "./layout/calcWidthHeight.ts";
 
 

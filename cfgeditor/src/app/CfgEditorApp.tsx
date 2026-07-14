@@ -1,7 +1,7 @@
 import {CSSProperties, lazy, memo, Suspense, useCallback, useEffect, useMemo, useRef} from "react";
 import {Alert, Flex, Form, Input, Modal, Splitter,} from "antd";
 import {useTranslation} from "react-i18next";
-import {Schema} from "./domain/schema.tsx";
+import {Schema} from "@/domain/schema";
 import {
     getFixedPage,
     getLastNavToInLocalStore,
@@ -11,32 +11,25 @@ import {
     useLocationData,
     isFixedRefPage,
     isFixedUnrefPage
-} from "./store/store.ts";
+} from "@/store/store";
 import {Outlet, useNavigate} from "react-router";
-import {RawSchema, STable} from "./api/schemaModel.ts";
-import {fetchNotes, fetchSchema} from "./api/api.ts";
-import {notesToMap} from "./api/noteModel.ts";
+import {RawSchema} from "@/api/schemaModel";
+import {fetchNotes, fetchSchema} from "@/api/api";
+import {notesToMap} from "@/api/noteModel";
 import {useQuery} from "@tanstack/react-query";
 import {useHotkeys} from "react-hotkeys-hook";
-import {HeaderBar} from "./routes/headerbar/HeaderBar.tsx";
-import {FlowGraph} from "./flow/FlowGraph.tsx";
-import {FlowStyleManager} from "./flow/FlowStyleManager.tsx";
-import {Finder} from "./routes/search/Finder.tsx";
-import {SidePanelShell} from "./layout/SidePanelShell.tsx";
-import {getCurrentEditingSession} from "./services/editingSession";
+import {HeaderBar} from "@/routes/headerbar/HeaderBar";
+import {FlowGraph} from "@/flow/FlowGraph";
+import {FlowStyleManager} from "@/flow/FlowStyleManager";
+import {Finder} from "@/routes/search/Finder";
+import {SidePanelShell} from "./SidePanelShell";
+import {getCurrentEditingSession} from "@/services/editingSession";
 
 // Chat / Setting 仅在 dragPanel 切换到对应面板时才渲染，懒加载以推迟
 // @ant-design/x* + openai + marked + dompurify 等重依赖的解析（不进首屏）
-const AddPanel = lazy(() => import("./routes/add/AddPanel.tsx").then(m => ({default: m.AddPanel})));
-const Setting = lazy(() => import("./routes/setting/Setting.tsx").then(m => ({default: m.Setting})));
-const RecordRef = lazy(() => import("./routes/record/RecordRef.tsx").then(m => ({default: m.RecordRef})));
-
-
-export type SchemaTableType = {
-    schema: Schema,
-    notes?: Map<string, string>,
-    curTable: STable
-};
+const AddPanel = lazy(() => import("@/routes/add/AddPanel").then(m => ({default: m.AddPanel})));
+const Setting = lazy(() => import("@/routes/setting/Setting").then(m => ({default: m.Setting})));
+const RecordRef = lazy(() => import("@/routes/record/RecordRef").then(m => ({default: m.RecordRef})));
 
 const contentDivStyle: CSSProperties = {
     position: "absolute",
@@ -130,6 +123,7 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
                 <RecordRef schema={schema}
                            notes={notes}
                            curTable={curTable}
+                           curPage={'recordRef'}
                            curId={curId}
                            refIn={recordRefIn}
                            refOutDepth={recordRefOutDepth}
@@ -155,6 +149,7 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
                             <RecordRef schema={schema}
                                        notes={notes}
                                        curTable={fixedTable}
+                                       curPage={'recordRef'}
                                        curId={fix.id}
                                        refIn={fix.refIn}
                                        refOutDepth={fix.refOutDepth}
@@ -167,6 +162,7 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
                             <RecordRef schema={schema}
                                        notes={notes}
                                        curTable={fixedTable}
+                                       curPage={'recordUnref'}
                                        curId={undefined}  // 未引用模式，没有id
                                        refIn={false}       // 无意义，保留字段
                                        refOutDepth={fix.refOutDepth}

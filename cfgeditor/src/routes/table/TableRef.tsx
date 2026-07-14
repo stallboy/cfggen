@@ -1,5 +1,5 @@
 import {Entity} from "@/domain/entityModel";
-import {SchemaTableType} from "@/CfgEditorApp";
+import {SchemaTableType} from "@/app/types";
 import {includeRefTables} from "./tableRefEntity.ts";
 import {navTo, useMyStore, useLocationData} from "@/store/store";
 import {useNavigate, useOutletContext} from "react-router";

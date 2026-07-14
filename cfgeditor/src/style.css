@@ -13,6 +13,10 @@ mark {
     font-weight: bold;
 }
 
+:root {
+    --edge-stroke-width: 3px;
+}
+
 svg .react-flow__edge-path{
     stroke-width: var(--edge-stroke-width, 3);
 }

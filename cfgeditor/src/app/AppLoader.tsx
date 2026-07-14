@@ -1,7 +1,7 @@
 import {useQuery} from "@tanstack/react-query";
-import {readPrefAsyncOnce} from "./store/storage.ts";
-import {CfgEditorApp} from "./CfgEditorApp.tsx";
-import {readResInfosAsync} from "./res/readResInfosAsync.ts";
+import {readPrefAsyncOnce} from "@/store/storage";
+import {CfgEditorApp} from "./CfgEditorApp";
+import {readResInfosAsync} from "@/res/readResInfosAsync";
 
 export function AppLoader() {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

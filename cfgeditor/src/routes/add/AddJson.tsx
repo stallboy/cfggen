@@ -1,5 +1,5 @@
 import {navTo, useMyStore, useLocationData} from "@/store/store";
-import {invalidateAllQueries} from "@/queryClient";
+import {invalidateAllQueries} from "@/app/queryClient";
 
 import {memo, useCallback, useState} from "react";
 import {useMutation,} from "@tanstack/react-query";

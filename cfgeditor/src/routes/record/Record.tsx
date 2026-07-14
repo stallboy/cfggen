@@ -12,7 +12,7 @@ import {useNavigate, useOutletContext} from "react-router";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {addOrUpdateRecord, fetchRecord} from "@/api/api";
 import {MenuItem} from "@/flow/FlowContextMenu";
-import {SchemaTableType} from "@/CfgEditorApp";
+import {SchemaTableType} from "@/app/types";
 import {fillHandles} from "@/flow/layout/entityToNodeAndEdge";
 import {memo, useCallback, useEffect, useMemo, useRef, useSyncExternalStore} from "react";
 import {useHotkeys} from "react-hotkeys-hook";
@@ -20,7 +20,7 @@ import {useHotkeys} from "react-hotkeys-hook";
 
 import {useEntityToGraph} from "@/flow/useEntityToGraph";
 import {SInterface, SStruct} from "@/api/schemaModel";
-import {invalidateAllQueries, queryClient} from "@/queryClient";
+import {invalidateAllQueries, queryClient} from "@/app/queryClient";
 import {EntityNode} from "@/flow/FlowGraph";
 import {NEW_RECORD_ID} from "@/domain/schema";
 

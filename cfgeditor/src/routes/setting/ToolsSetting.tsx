@@ -6,7 +6,7 @@ import {
     setImageSizeScale,
     useMyStore,
 } from "@/store/store";
-import {invalidateAllQueries} from "@/queryClient";
+import {invalidateAllQueries} from "@/app/queryClient";
 import {CloseOutlined} from "@ant-design/icons";
 import {Schema} from "@/domain/schema";
 import {STable} from "@/api/schemaModel";

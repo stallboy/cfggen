@@ -11,7 +11,7 @@ import { Navigate, useNavigate, useOutletContext } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { fetchRecordRefs, fetchUnreferencedRecords } from "@/api/api";
 import { MenuItem } from "@/flow/FlowContextMenu";
-import { SchemaTableType } from "@/CfgEditorApp";
+import { SchemaTableType } from "@/app/types";
 import { fillHandles } from "@/flow/layout/entityToNodeAndEdge";
 
 import { useCallback, useMemo, useState } from "react";

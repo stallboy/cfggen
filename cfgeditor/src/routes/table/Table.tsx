@@ -1,5 +1,5 @@
 import {ReadOnlyEntity} from "@/domain/entityModel";
-import {SchemaTableType} from "@/CfgEditorApp";
+import {SchemaTableType} from "@/app/types";
 import {TableEntityCreator, UserData} from "./tableEntityCreator.ts";
 import {navTo, useLocationData, useMyStore} from "@/store/store";
 import {useNavigate, useOutletContext} from "react-router";
