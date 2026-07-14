@@ -41,23 +41,35 @@ export function useNodeNote({id, entity, edit, note, notes, label}: UseNodeNoteA
     const {t} = useTranslation();
     const [isEditNote, setIsEditNote] = useState<boolean>(false);
     const [tmpNote, setTmpNote] = useState<TempNote | undefined>();
+    // noteDrafting：用户点了"添加 note"后置 true，用于让"空编辑器"显示出来。
+    //
+    // 背景：edit 态的 note 编辑器显示条件与"清空即消失"规则有内在冲突——
+    //   - 点击添加后要让空编辑器出现（用户要往里输）；
+    //   - 但用户把内容清空时又要让编辑器消失（隐式取消，原产品规则）。
+    //   两者 tmpNote.note 都是 ""，纯数据无法区分。原代码靠预填字面量 "note："（非空）让点击添加后显示，
+    //   清空（删到 length 0）即消失——但 "note：" 会被当真实内容提交进 json。
+    //   现用 noteDrafting 标志区分这两种"空"：点击添加=drafting true（空也显示）；onChange 收到空串=drafting false（消失）。
+    //   不预填任何脏内容，靠 placeholder 提示。
+    const [noteDrafting, setNoteDrafting] = useState<boolean>(false);
 
     const onEditNote = useCallback(() => {
         setIsEditNote(true);
     }, []);
 
-    // 编辑态下点"添加 note"：留空 tmpNote.note，由 NoteEditInner 的 placeholder 提示。
-    // 原预填字面量 "note：" 会被当真实内容提交进 json（用户不清空时）。editingTmp（tmpNote set）
-    // 作为"显示编辑器"的信号，取代原"note 长度>0 才显示"的 hack——内容空也能显示空编辑器。
-    // 记录 tmpNote 时的 entity：切换不同 record 时 key 可能相同，note 不能误用。
+    // 编辑态点"添加 note"：置 drafting，tmpNote 留空（placeholder 提示），编辑器据此显示。
     const onEditNoteClickInEdit = useCallback(() => {
+        setNoteDrafting(true);
         setTmpNote({note: "", entity});
     }, [entity]);
 
     const updateNoteInEdit = useCallback((noteValue: string) => {
         if (edit?.editOnUpdateNote) {
             edit.editOnUpdateNote(noteValue);
-            setTmpNote({note: noteValue, entity});
+        }
+        setTmpNote({note: noteValue, entity});
+        if (noteValue === "") {
+            // 清空 = 取消草拟：drafting 落 false，编辑器按"清空即消失"规则隐去（恢复原产品行为）。
+            setNoteDrafting(false);
         }
     }, [edit, entity]);
 
@@ -70,18 +82,19 @@ export function useNodeNote({id, entity, edit, note, notes, label}: UseNodeNoteA
                 </Tooltip>;
             }
         }
-        // edit 态：用户已点"添加"(tmpNote set) 或已有 note → 隐藏 book 图标（noteBlock 的编辑器接管）。
+        // edit 态：编辑器正在显示（drafting 或有内容）或已有 json note → 隐藏"添加"按钮。
         const editingTmp = !!(tmpNote && tmpNote.entity === entity);
+        const editingActive = editingTmp && (noteDrafting || tmpNote!.note.length > 0);
         const hasNote = !!(note && note.length > 0);
 
-        if (edit && !editingTmp && !hasNote) {
+        if (edit && !editingActive && !hasNote) {
             return <Tooltip title={t('addNote')}>
                 <Button style={iconButtonStyle} icon={bookIcon} aria-label={t('addNote')} onClick={onEditNoteClickInEdit} />
             </Tooltip>;
         }
 
         return null;
-    }, [notes, id, isEditNote, note, edit, tmpNote, entity, label, t, onEditNote, onEditNoteClickInEdit]);
+    }, [notes, id, isEditNote, note, edit, tmpNote, entity, label, noteDrafting, t, onEditNote, onEditNoteClickInEdit]);
 
     const noteBlock = useMemo(() => {
         if (mayHaveResOrNote(label)) {
@@ -98,24 +111,23 @@ export function useNodeNote({id, entity, edit, note, notes, label}: UseNodeNoteA
         }
 
         if (edit) {
-            // editingTmp：用户点过"添加 note"（tmpNote set，内容即便为空也显示编辑器，靠 placeholder 提示）。
-            // 无 tmpNote 但有 json note：直接进编辑器编辑该 note。
+            // 显示条件：tmpNote 已设（编辑中）→ drafting 或有内容才显示（清空即消失）；
+            //          否则 → 有 json note 才显示（直接编辑已有 note）。
+            // tmpNote.entity 匹配校验避免切换 record 后 key 相同时 note 误用。
             const editingTmp = !!(tmpNote && tmpNote.entity === entity);
-            let showNote: string | undefined;
-            if (editingTmp) {
-                showNote = tmpNote!.note;
-            } else if (note && note.length > 0) {
-                showNote = note;
-            }
-            if (editingTmp || (note && note.length > 0)) {
-                return <NoteEditInner note={showNote ?? ''} updateNoteInEdit={updateNoteInEdit} />;
+            const showNote = editingTmp ? tmpNote!.note : (note ?? '');
+            const showEditor = editingTmp
+                ? (noteDrafting || tmpNote!.note.length > 0)
+                : !!(note && note.length > 0);
+            if (showEditor) {
+                return <NoteEditInner note={showNote} updateNoteInEdit={updateNoteInEdit} />;
             }
         } else if (note) {
             return <NoteShowInner note={note} />;
         }
 
         return null;
-    }, [label, edit, note, notes, id, isEditNote, tmpNote, entity, updateNoteInEdit]);
+    }, [label, edit, note, notes, id, isEditNote, tmpNote, entity, noteDrafting, updateNoteInEdit]);
 
     return {noteBlock, editNoteButton};
 }

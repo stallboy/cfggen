@@ -1,5 +1,5 @@
-import {ChangeEvent, CSSProperties, memo, useCallback, useMemo, useState} from "react";
-import {App, Button, Flex, Input, Popconfirm, Tooltip, theme} from "antd";
+import {ChangeEvent, CSSProperties, memo, useCallback, useState} from "react";
+import {App, Button, Flex, Input, Popconfirm, Tooltip} from "antd";
 import {BookOutlined, DeleteOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 import {useMutation} from "@tanstack/react-query";
@@ -26,31 +26,27 @@ import {estimateNoteRows, NOTE_ROW_H} from "./layout/calcWidthHeight.ts";
 const noteButtonStyle: CSSProperties = {float: 'right', borderWidth: 0, backgroundColor: 'transparent'};
 const bookIcon = <BookOutlined/>;
 
-// note 配色走 antd warning token（原硬编码纯 yellow #FFFF00 与整体低饱和配色冲突）。
-// 用 useToken 读 colorWarningBg，跟随主题（明/暗）；不加 border 以免改变 note 高度估算
+// note 是"便利贴"语义，底色刻意用饱和暖黄显眼（区别于节点底色，提醒用户这里有批注）。
+// 原纯 yellow #FFFF00 过刺眼、colorWarningBg #fffbe6 又太淡失去提醒作用——取中间的 #ffe066（明亮金黄）。
+// 固定色不随主题：暗色模式下黄底黑字的便利贴同样合理且醒目。不加 border 以免改变 note 高度估算
 // （estimateNoteRows/NOTE_ROW_H 按当前无 border 渲染校准）。
-function useNoteStyles() {
-    const {token} = theme.useToken();
-    return useMemo(() => ({
-        // whiteSpace: pre-wrap 让 div（NoteShow/NoteShowInner）尊重 note 里的 \n 换行——默认 normal 会把 \n 当空白折叠，
-        // 与 TextArea（NoteEdit/NoteEditInner 按 \n 换行）表现不一致，含换行的 note 在 div 里行数错乱、与 estimateNoteRows
-        // 预留高度对不上。pre-wrap 仅影响文本内联布局；NoteEdit/NoteEditInner 的 Flex 容器也用此样式作背景，TextArea 不受影响。
-        noteStyle: {backgroundColor: token.colorWarningBg, borderRadius: 8, whiteSpace: 'pre-wrap'} as CSSProperties,
-        textAreaStyle: {backgroundColor: token.colorWarningBg} as CSSProperties,
-    }), [token.colorWarningBg]);
-}
+const NOTE_BG = '#ffe066';
+const NOTE_STYLE: CSSProperties = {backgroundColor: NOTE_BG, borderRadius: 8, whiteSpace: 'pre-wrap'};
+const NOTE_TEXT_AREA_STYLE: CSSProperties = {backgroundColor: NOTE_BG};
+// whiteSpace: pre-wrap 让 div（NoteShow/NoteShowInner）尊重 note 里的 \n 换行——默认 normal 会把 \n 当空白折叠，
+// 与 TextArea（NoteEdit/NoteEditInner 按 \n 换行）表现不一致，含换行的 note 在 div 里行数错乱、与 estimateNoteRows
+// 预留高度对不上。pre-wrap 仅影响文本内联布局；NoteEdit/NoteEditInner 的 Flex 容器也用此样式作背景，TextArea 不受影响。
 
 export const NoteShow = memo(function NoteShow({note, setIsEdit}: {
     note: string;
     setIsEdit: (ie: boolean) => void;
 }) {
-    const {noteStyle} = useNoteStyles();
     const {t} = useTranslation();
     const onEditClick = useCallback(() => {
         setIsEdit(true);
     }, [setIsEdit]);
 
-    return <div style={{...noteStyle, minHeight: estimateNoteRows(note) * NOTE_ROW_H}}>
+    return <div style={{...NOTE_STYLE, minHeight: estimateNoteRows(note) * NOTE_ROW_H}}>
         {note} <Tooltip title={t('editNote')}>
             <Button style={noteButtonStyle}
                     icon={bookIcon}
@@ -70,7 +66,6 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
 }) {
     const {server} = useMyStore();
     const {t} = useTranslation();
-    const {noteStyle, textAreaStyle} = useNoteStyles();
     const [newNote, setNewNote] = useState<string>(note);
     const {notification} = App.useApp();
 
@@ -126,10 +121,10 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
         setNewNote(value);
     }, [setNewNote]);
 
-    return <Flex vertical style={noteStyle}>
+    return <Flex vertical style={NOTE_STYLE}>
         <Input.TextArea className='nodrag' placeholder={t('notePlaceholder')} autoFocus
                   rows={estimateNoteRows(note)}
-                  style={textAreaStyle}
+                  style={NOTE_TEXT_AREA_STYLE}
                   value={newNote}
                   onChange={onNoteChange}/>
         <Flex justify={'flex-end'} gap={'small'}>
@@ -148,8 +143,7 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
 export const NoteShowInner = memo(function NoteShowInner({note}: {
     note: string;
 }) {
-    const {noteStyle} = useNoteStyles();
-    return <div style={{...noteStyle, minHeight: estimateNoteRows(note) * NOTE_ROW_H}}>
+    return <div style={{...NOTE_STYLE, minHeight: estimateNoteRows(note) * NOTE_ROW_H}}>
         {note}
     </div>
 });
@@ -167,17 +161,16 @@ export const NoteEditInner = memo(function NoteEditInner({note, updateNoteInEdit
     // 不加 autoFocus：编辑态下多个已有 note 的节点会各自挂一份 NoteEditInner，autoFocus 会让
     // 最后挂载的那个抢焦点 + scrollIntoView，把焦点从用户要编辑的表单字段夺走。autoFocus 只留给
     // 单实例的 NoteEdit（点击触发、一次只一个）。placeholder 仍走 i18n。
-    const {noteStyle, textAreaStyle} = useNoteStyles();
     const [rows] = useState(() => estimateNoteRows(note));
     const onNoteChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
         const value = e.target.value;
         updateNoteInEdit(value);
     }, [updateNoteInEdit]);
 
-    return <Flex vertical style={noteStyle}>
+    return <Flex vertical style={NOTE_STYLE}>
         <Input.TextArea className='nodrag' placeholder={t('notePlaceholder')}
                   rows={rows}
-                  style={textAreaStyle}
+                  style={NOTE_TEXT_AREA_STYLE}
                   value={note}
                   onChange={onNoteChange}/>
     </Flex>
