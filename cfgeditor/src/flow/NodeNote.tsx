@@ -1,6 +1,6 @@
 import {useCallback, useMemo, useState} from "react";
 import type {ReactNode} from "react";
-import {Button, Tooltip} from "antd";
+import {Button} from "antd";
 import {BookOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 import {Entity, EntityEdit} from "@/domain/entityModel";
@@ -86,16 +86,12 @@ export function useNodeNote({id, entity, edit, note, notes, label}: UseNodeNoteA
         if (mayHaveResOrNote(label) && !edit) {
             const recordNote = notes?.get(id) ?? '';
             if (!((recordNote.length > 0) || isEditNote) && !note) {
-                return <Tooltip title={t('addNote')}>
-                    <Button style={iconButtonStyle} icon={bookIcon} aria-label={t('addNote')} onClick={onEditNote} />
-                </Tooltip>;
+                return <Button style={iconButtonStyle} icon={bookIcon} aria-label={t('addNote')} onClick={onEditNote} />;
             }
         }
         // edit 态：编辑器不可见（无草拟、有效 note 空）→ 显示"添加"按钮（与 noteBlock 互为非）。
         if (edit && !noteEditorVisible) {
-            return <Tooltip title={t('addNote')}>
-                <Button style={iconButtonStyle} icon={bookIcon} aria-label={t('addNote')} onClick={onEditNoteClickInEdit} />
-            </Tooltip>;
+            return <Button style={iconButtonStyle} icon={bookIcon} aria-label={t('addNote')} onClick={onEditNoteClickInEdit} />;
         }
 
         return null;

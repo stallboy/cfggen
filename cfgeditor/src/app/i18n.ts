@@ -196,8 +196,6 @@ i18n.use(LanguageDetector)
                     addNote: "Add note",
                     editNote: "Edit note",
                     notePlaceholder: "note",
-                    deleteNote: "Delete this note?",
-                    resButton: "Resources",
 
                     addListItemBefore: "Insert before",
                     structCopy: "Copy",
@@ -337,8 +335,6 @@ i18n.use(LanguageDetector)
                     addNote: '添加备注',
                     editNote: '编辑备注',
                     notePlaceholder: '备注',
-                    deleteNote: '删除该备注？',
-                    resButton: '资源',
 
                     search: '搜索',
                     edit: '编辑',

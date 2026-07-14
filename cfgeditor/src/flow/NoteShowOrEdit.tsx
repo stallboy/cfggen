@@ -1,5 +1,5 @@
 import {ChangeEvent, CSSProperties, memo, useCallback, useState} from "react";
-import {App, Button, Flex, Input, Popconfirm, Tooltip} from "antd";
+import {App, Button, Flex, Input} from "antd";
 import {BookOutlined, DeleteOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 import {useMutation} from "@tanstack/react-query";
@@ -47,12 +47,10 @@ export const NoteShow = memo(function NoteShow({note, setIsEdit}: {
     }, [setIsEdit]);
 
     return <div style={{...NOTE_STYLE, minHeight: estimateNoteRows(note) * NOTE_ROW_H}}>
-        {note} <Tooltip title={t('editNote')}>
-            <Button style={noteButtonStyle}
+        {note} <Button style={noteButtonStyle}
                     icon={bookIcon}
                     aria-label={t('editNote')}
                     onClick={onEditClick}/>
-        </Tooltip>
     </div>
 });
 
@@ -130,9 +128,7 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
         <Flex justify={'flex-end'} gap={'small'}>
             <Button onClick={onCancelClick}>{t('cancelUpdateNote')}</Button>
             {note.length > 0 &&
-                <Popconfirm title={t('deleteNote')} onConfirm={onDeleteClick}>
-                    <Button danger icon={<DeleteOutlined/>}>{t('nodeDelete')}</Button>
-                </Popconfirm>}
+                <Button danger icon={<DeleteOutlined/>} onClick={onDeleteClick}>{t('nodeDelete')}</Button>}
             <Button type='primary' loading={isPending} onClick={onSubmitClick}>{t('updateNote')}</Button>
         </Flex>
     </Flex>

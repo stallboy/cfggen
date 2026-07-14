@@ -4,7 +4,7 @@ import {useTranslation} from "react-i18next";
 import {useMyStore} from "@/store/store";
 import {getNodeBackgroundColor} from "./layout/colors.ts";
 import {getNodeWidth} from "./layout/dimensions.ts";
-import {Button, Popover, Tooltip} from "antd";
+import {Button, Popover} from "antd";
 import {ArrowsAltOutlined, ShrinkOutlined} from "@ant-design/icons";
 import {EntityCard} from "./EntityCard.tsx";
 import {EntityProperties} from "./EntityProperties.tsx";
@@ -64,13 +64,13 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
     const resBriefButton = useMemo(() => {
         if (!assets) return undefined;
         // 资源摘要按钮文字按节点底色自动反色（原硬编码 #fff 在浅底色上会糊掉）。
-        // 用 emoji+数字（🎬🔊🖼📎）替代字母缩写 "2v3a1i"；title 给原生提示，避免与 Popover 叠 antd Tooltip 冲突。
+        // 用 emoji+数字（🎬🔊🖼📎）替代字母缩写 "2v3a1i"，自带说明、无需提示。
         return <Popover content={<ResPopover resInfos={assets} />}
             placement='rightTop'
             trigger='click'>
-            <Button type='text' title={t('resButton')} style={{color: getReadableTextColor(color)}}>{getResBriefEmoji(assets)}</Button>
+            <Button type='text' style={{color: getReadableTextColor(color)}}>{getResBriefEmoji(assets)}</Button>
         </Popover>;
-    }, [assets, color, t]);
+    }, [assets, color]);
 
     const handleStyle: CSSProperties = useMemo(() => {
         return { position: 'absolute', backgroundColor: color };
@@ -80,13 +80,9 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
         // 显示 fold 按钮的条件：有子节点，或可以被内嵌（从内嵌展开的节点）。
         if (edit && (edit.hasChild || edit.canBeEmbedded)) {
             if (edit.fold) {
-                return <Tooltip title={t('nodeUnfold')}>
-                    <Button style={unfoldIconButtonStyle} icon={unfoldIcon} aria-label={t('nodeUnfold')} onClick={unfoldNode} />
-                </Tooltip>;
+                return <Button style={unfoldIconButtonStyle} icon={unfoldIcon} aria-label={t('nodeUnfold')} onClick={unfoldNode} />;
             } else {
-                return <Tooltip title={t('nodeFold')}>
-                    <Button style={iconButtonStyle} icon={foldIcon} aria-label={t('nodeFold')} onClick={foldNode} />
-                </Tooltip>;
+                return <Button style={iconButtonStyle} icon={foldIcon} aria-label={t('nodeFold')} onClick={foldNode} />;
             }
         }
         return null;
