@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 import {QueryClientProvider} from '@tanstack/react-query'
-import {queryClient} from "./app/queryClient.ts";
+import {queryClient} from "./services/queryClient.ts";
 
 import '@xyflow/react/dist/style.css';
 import './style.css'
@@ -25,27 +25,27 @@ const router = createBrowserRouter([
         children: [
             {
                 path: "table/:table/*",
-                lazy: () => import("./routes/table/Table.tsx").then(m => ({Component: m.Table})),
+                lazy: () => import("@/features/table/Table.tsx").then(m => ({Component: m.Table})),
             },
             {
                 path: "tableRef/:table/*",
-                lazy: () => import("./routes/table/TableRef.tsx").then(m => ({Component: m.TableRef})),
+                lazy: () => import("@/features/table/TableRef.tsx").then(m => ({Component: m.TableRef})),
             },
             {
                 path: "edit?/record/:table/*",
-                lazy: () => import("./routes/record/Record.tsx").then(m => ({Component: m.Record})),
+                lazy: () => import("@/features/record/Record.tsx").then(m => ({Component: m.Record})),
             },
             {
                 path: "recordRef/:table/:id",
-                lazy: () => import("./routes/record/RecordRef.tsx").then(m => ({Component: m.RecordRefRoute})),
+                lazy: () => import("@/features/record/RecordRef.tsx").then(m => ({Component: m.RecordRefRoute})),
             },
             {
                 path: "recordUnref/:table/*",  // 未引用记录页面路由：/* 承载 id 段（保留上次 record 的 curId，切回不丢），兼容空 id 进入
-                lazy: () => import("./routes/record/RecordRef.tsx").then(m => ({Component: m.RecordRefRoute})),   // 复用RecordRefRoute组件
+                lazy: () => import("@/features/record/RecordRef.tsx").then(m => ({Component: m.RecordRefRoute})),   // 复用RecordRefRoute组件
             },
             {
                 path: "*",
-                lazy: () => import("./routes/PathNotFound.tsx").then(m => ({Component: m.PathNotFound})),
+                lazy: () => import("./app/PathNotFound.tsx").then(m => ({Component: m.PathNotFound})),
             }
         ]
     }

@@ -18,18 +18,18 @@ import {fetchNotes, fetchSchema} from "@/api/apiClient.ts";
 import {notesToMap} from "@/api/noteModel";
 import {useQuery} from "@tanstack/react-query";
 import {useHotkeys} from "react-hotkeys-hook";
-import {HeaderBar} from "@/app/headerbar/HeaderBar";
+import {HeaderBar} from "@/features/headerbar/HeaderBar";
 import {FlowGraph} from "@/flow/FlowGraph";
 import {FlowStyleManager} from "@/flow/FlowStyleManager";
-import {Finder} from "@/routes/finder/Finder";
+import {Finder} from "@/features/finder/Finder";
 import {SidePanelShell} from "./SidePanelShell";
 import {getCurrentEditingSession} from "@/services/editingSession";
 
 // Chat / Setting 仅在 dragPanel 切换到对应面板时才渲染，懒加载以推迟
 // @ant-design/x* + openai + marked + dompurify 等重依赖的解析（不进首屏）
-const AddPanel = lazy(() => import("@/routes/add/AddPanel").then(m => ({default: m.AddPanel})));
-const Setting = lazy(() => import("@/routes/setting/Setting").then(m => ({default: m.Setting})));
-const RecordRef = lazy(() => import("@/routes/record/RecordRef").then(m => ({default: m.RecordRef})));
+const AddPanel = lazy(() => import("@/features/add/AddPanel").then(m => ({default: m.AddPanel})));
+const Setting = lazy(() => import("@/features/setting/Setting").then(m => ({default: m.Setting})));
+const RecordRef = lazy(() => import("@/features/record/RecordRef").then(m => ({default: m.RecordRef})));
 
 const contentDivStyle: CSSProperties = {
     position: "absolute",

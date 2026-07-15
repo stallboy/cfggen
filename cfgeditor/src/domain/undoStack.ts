@@ -9,7 +9,7 @@ import {EFitView} from '@/domain/entityModel';
  * 的已 clone 对象（不二次 clone）。
  *
  * undoFitView / anchorId 记录「产生此快照的操作」的视口语义，供 undo/redo 弹出该快照时按其语义驱动视口
- * （结构操作 → KeepStable + 锚点；整体替换 → FitFull；值类 → NoChange）。详见 docs/undo-redo-视口稳定方案.md。
+ * （结构操作 → KeepStable + 锚点；整体替换 → FitFull；值类 → NoChange）。详见 docs/undo-redo.md 第四部分。
  */
 export type Snapshot = {
     data: JSONObject;

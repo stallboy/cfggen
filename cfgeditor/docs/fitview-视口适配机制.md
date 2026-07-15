@@ -2,7 +2,7 @@
 
 > 适用范围：`cfgeditor`
 > 关键词：`EFitView`、`EditingObjectRes`、视口、`fitView`、`pickViewportAction`、EditingSession
-> 关联文档：[状态管理-总结与演进](./状态管理-总结与演进.md)、[flow-xyflow-refactoring](./flow-xyflow-refactoring.md)、[undo-redo-设计](./undo-redo-设计.md)
+> 关联文档：[状态管理-总结与演进](./状态管理-总结与演进.md)、[flow-xyflow-refactoring](./flow-xyflow-refactoring.md)、[undo-redo](./undo-redo.md)
 
 ---
 
@@ -42,7 +42,7 @@ xyflow 提供的视口相关公开 API（`useReactFlow()` 返回）：
 
 ## 3. 核心概念
 
-### 3.1 `EFitView` 五档枚举
+### 3.1 `EFitView` 枚举
 
 定义在 `domain/entityModel.ts`：
 
@@ -196,7 +196,7 @@ if (action.kind === 'fitFull') {
 | `updateFold` | `FitId` | ✓ | 折叠/展开，定位到该节点 |
 | `updateInterfaceValue` | `FitId` | ✓ | 换 interface 实现 |
 | `pasteStruct` | `FitId` | ✓ | 粘贴 |
-| `undo` / `redo` | 按被撤销操作快照语义：结构→`KeepStable`+锚点；值类→`NoChange`；整体替换→`FitFull` | 锚点（结构） | 数据回滚；结构 undo 让焦点节点屏幕不动（详见 [undo-redo-视口稳定方案](./undo-redo-视口稳定方案.md)） |
+| `undo` / `redo` | 按被撤销操作快照语义：结构→`KeepStable`+锚点；值类→`NoChange`；整体替换→`FitFull` | 锚点（结构） | 数据回滚；结构 undo 让焦点节点屏幕不动（详见 [undo-redo](./undo-redo.md) 第四部分） |
 
 **记忆口诀**：
 
@@ -225,8 +225,6 @@ if (inDragPanelAndFix && fittedPathname === pathname) {
 
 `useEntityToGraph` 的 FitFull 分支会回调 `setFitViewForPathname(pathname)`，记录"已适配"。
 
-> ✅ **此处曾有的缺陷已修复**（详见 [§9 改进记录 P0](#9-改进记录已全部落地)）：早期用 `pathname + '/fix'` 做比较键、但回写入的是不含 `/fix` 的 pathname，两者恒不相等 → "保持视口"失效。现已统一为 `fittedPathname === pathname`，写入与比较用同一个值。
-
 `Record.tsx` 浏览态（非编辑）则直接 `{fitView: FitFull, isEdited: false}` 写死，每次都全图适配。
 
 ---
@@ -249,48 +247,35 @@ const staleTime = editingObjectRes?.isEdited ? 0 : 1000 * 60 * 5;
 
 ---
 
-## 9. 改进记录（已全部落地）
+## 9. 实现备忘（当前状态要点）
 
-> 本节原为「改进建议」，所列 P0–P3 已全部实施。保留为记录，每条标注实际做法与验证。
+- **视口切换一律瞬时**：`fitView`/`setViewport` 不带 `duration`（曾加 300ms 过渡，动画引起视觉不适已撤销）。这是有意的产品决定，勿回改。
+- **Effect 2 与 Effect 1 拆分**：`useEntityToGraph` 把「节点/菜单下发」（Effect 1，deps 含 `paneMenu`/`nodeMenuFunc`）与「视口动作」（Effect 2，deps 只 `editingObjectRes`/`id2RectMap`/`viewportReady`/`newNodes`）拆成两个 effect。拆分的历史诱因（值类 coalescing flush 让 `canUndo` 翻转 → 连带重置视口）已随「Record 不订阅 `canUndo` + `paneMenu` 的 `disabled` 惰性化」消除，但拆分作为视口语义的独立边界保留（详见 [undo-redo](./undo-redo.md) §3.8）。
+- **决策/数学收口纯函数**：`pickViewportAction`（`flow/layout/viewportMath.ts`）是公开纯函数，三分支选择 + FitId/KeepStable 数学全收口其中，effect 只调命令；`computeStableViewport` 为内部函数。配 `viewportMath.test.ts` 单测全分支。
+- **`EFitView` 字符串枚举**：`= 'FitFull'` 等字符串值（DevTools/调试可读，不依赖隐式数字）；`FitNone` 已并入 `NoChange`（消费端两者完全相同，YAGNI），`RecordRef` 用 `keepViewport` 常量。
 
-### ✅ P0 ｜ 修复 fixed-page 视口被反复重置
+## 10. 改进建议
 
-**根因**（git 溯源）：`cdf61e66` 原始实现里 `pathname += '/fix'` 直接改写传入 `useEntityToGraph` 的 pathname，`/fix` 兼做 queryKey 隔离 + 已适配标记；`252139b8`（未引用记录功能）把 pathname 改 const 后，`/fix` 拆成局部变量 `pathnameWithFix` 只用于比较，而回写入的是不含 `/fix` 的 pathname → 比较恒 false → 固定面板每次 refetch 重置视口。
+> 面向代码的优化候选，按 ROI 排序。
 
-**做法**：去掉 `/fix`，`RecordRef.tsx` 改为 `fittedPathname === pathname`（写入与比较用同一个值），`lastFitViewPath` 重命名为 `fittedPathname`。`/fix` 的 queryKey 隔离作用已由 `layoutKeys`（`pickLayoutKeys(nodeShow)`）取代，无需恢复。
+### 10.1【中】浏览态 Record 每次 refetch 重新 FitFull
 
-**验证**：全量单测通过 + 手动（固定页缩放后等 refetch 视口保持不动）。
+Record 浏览态（非编辑）`editingObjectRes = {fitView: FitFull, isEdited: false}` 写死，每次 `useMemo` 重算都新建对象 → record query refetch（record query 无 staleTime，窗口 refocus 即触发）→ Effect 2 重跑 → `fitView()` 丢掉用户手动缩放/平移。RecordRef 的固定页已有 `fittedPathname` 机制解决同类问题，浏览态 Record 没有。
 
-### ✅ P1 ｜ 清理悬空注释 + `EFitView` 字符串枚举
+**改进**：浏览态 Record 也接 `fittedPathname`（pathname 已含 `curId`——切记录 → 新 pathname → 重铺；同记录 refetch → 同 pathname → 保持用户视口）。需权衡：浏览态用户通常期望「图没变就别跳」。中价值、低风险。
 
-- 删除 `FlowGraph.tsx` 中挂在 `<ReactFlow>` 上的 `// fitView` 死注释。
-- `EFitView` 改字符串枚举（`= 'FitFull'` 等）。全 18 处引用都是成员引用，零风险。
+### 10.2【低，记录为有意 quirk】值类编辑不刷 layout 缓存
 
-### ⏮ P2 ｜ FitView 切换 `duration` 过渡（已撤销）
+纯值类编辑期间 `isEdited` 不刷新（entityMap 不重算 → `editingObjectRes` 不重建 → layout 走 5min 干净缓存）。安全前提是「值类不改拓扑、布局不变」。但若值类改了节点尺寸（如长字符串行数变化），节点尺寸会短暂过时，直到下次结构编辑才刷新。**这是有意的性能取舍（契约1），勿当 bug 修**；若实测发现尺寸过时影响体验，可在值类编辑也 invalidate layout（代价是放弃契约1 的零重渲，需实测权衡）。
 
-曾给 `fitView` / `setViewport` 加 `duration: 300` 过渡，用户反馈动画引起视觉不适，已撤销，恢复瞬时切换。
+### 10.3【不推荐】合并 KeepStable/FitId 分支、给视口切换加 duration
 
-### ✅ P2 ｜ FitNone 合并入 NoChange（原"不合并"立场已反转）
-
-原计划保留 `FitNone`（只读/固定页）与 `NoChange`（undo/redo）区分，理由是"将来可能分化"。重估后判为过度设计：消费端两者完全相同（都 noop），假设的分化不值保留冗余（YAGNI）。`NoChange` 名字对两场景都成立（视口不变），合并为单值，`RecordRef` 的 `fitNone` 常量改名 `keepViewport` 并改用 `NoChange`。
-
-### ✅ P3 ｜ fitView 分支选择抽纯函数 + 单测
-
-新增 `viewportMath.ts` 的 `pickViewportAction(editingObjectRes, id2RectMap, currentVp): ViewportAction`，把 effect 里「按 fitView 选视口动作 + FitId 数学」收口为纯函数，行为与原三分支逐分支等价。`useEntityToGraph` effect 改为读 `action.kind` 调命令，副作用（fitView/setViewport/回调）留在 effect。
-
-**测试**：`viewportMath.test.ts` 只测公开 API `pickViewportAction` 全分支（undefined/FitFull→fitFull；FitId+命中→fitId 且锚点屏幕不变、缩放保持；FitId+id 不存在/无 position→noop；NoChange→noop）。`screenOf` 删除、`computeStableViewport` 降内部，其不变量由 `pickViewportAction` fitId 分支多组形状覆盖。全量 286 测试通过。
-
-### ✅ P0 ｜ 修复键入 input 后视口偶发被 fitFull（effect 拆分）
-
-**现象**：EntityForm 里输入 primitive，过一会（500ms coalescing 窗口关闭）有概率视口被重置到 fitFull。
-
-**根因**：`useEntityToGraph` 原来只有一个 effect，混了「节点/菜单下发」和「视口动作」两件事，deps 含 `paneMenu`。值类编辑的 `flushValueCoalesce` → `canUndo` 翻转（false→true）→ `emit` → Record 订阅 `canUndo` 重渲 → `paneMenu = useMemo(..., [canUndo, ...])` 产生新引用 → 视口 effect 连带重跑。此时 `session.fitView` 仍是构造期 `FitFull` → `fitView()` 重置视口。"概率性"因只在 canUndo 状态翻转的那次 flush 触发（首次键入 false→true、undo 到栈空 true→false）。
-
-**做法**：拆成两个 effect——Effect 1 节点/菜单下发（deps 含 `paneMenu`/`nodeMenuFunc`），Effect 2 视口动作（deps 只 `editingObjectRes`/`id2RectMap`/`viewportReady`/`newNodes`，不含菜单回调）。菜单回调变化不再连带触发视口重置。
+- `pickViewportAction` 里 `KeepStable` 与 `FitId` 两分支结构相似但 anchorOld 来源不同（prevMap vs position.x/y），合并会掩盖语义差异，不值。
+- 视口切换加 `duration` 过渡已评估否决（视觉不适，见 §9）。
 
 ---
 
-## 10. 常见排查清单
+## 11. 常见排查清单
 
 | 现象 | 排查方向 |
 |---|---|
@@ -298,13 +283,13 @@ const staleTime = editingObjectRes?.isEdited ? 0 : 1000 * 60 * 5;
 | FitId 时画布猛地一跳 | 检查 `id2RectMap.get(id)` 是否拿到了**新布局**结果（layout 缓存是否被正确 remove） |
 | undo 结构后视口大跳 | 结构 undo 应传 `KeepStable`+锚点（补偿让焦点节点屏幕不动）；检查快照 `anchorId` 是否正确、`prevRectMap` 是否拿到 undo 前布局（loading 期 guard 不应更新 ref） |
 | 固定页面视口反复重置 | P0 已修；若复现，检查 `fittedPathname === pathname` 是否成立、`setFitViewForPathname` 回调是否传入 |
-| 键入 input 后视口偶发被 fitFull | 视口 effect 不得含 `paneMenu`/`nodeMenuFunc` 等菜单回调 deps（coalescing flush 让 `canUndo` 翻转 → `paneMenu` 新引用 → 连带重跑视口）；已拆 effect 隔离 |
+| 键入 input 后视口偶发被 fitFull | 视口 effect（Effect 2）不得含 `paneMenu`/`nodeMenuFunc` 等菜单回调 deps——任何让这些回调换引用的改动都会连带重跑视口；已拆 effect 隔离（见 §9） |
 | 浏览态每次 refetch 都重铺 | `editingObjectRes` 在非编辑态每次 memo 新建对象引用，可能触发 effect 重跑；检查 memo deps |
 | 新增结构后节点没定位过去 | `viewportReady`（`panZoom !== null`）是否就绪；`id2RectMap` 是否含该 id |
 
 ---
 
-## 11. 速查表
+## 12. 速查表
 
 ```
 编辑动作                    fitView       视口 API                    数学

@@ -3,7 +3,7 @@ import {useMyStore} from "@/store/store";
 import {Rect, useReactFlow, useStore} from "@xyflow/react";
 import {convertNodeAndEdges} from "./layout/entityToNodeAndEdge.ts";
 import {useQuery} from "@tanstack/react-query";
-import {queryClient} from "@/app/queryClient";
+import {queryClient} from "@/services/queryClient.ts";
 import {layoutAsync} from "./layout/layoutAsync.ts";
 import {EntityNode, NodeDoubleClickFunc, NodeMenuFunc} from "./FlowGraph.tsx";
 import {Entity, EditingObjectRes} from "@/domain/entityModel";

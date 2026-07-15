@@ -6,7 +6,7 @@ import {useMutation} from "@tanstack/react-query";
 import {updateNote} from "@/api/apiClient.ts";
 import {useMyStore} from "@/store/store";
 import {NoteEditResult, notesToMap} from "@/api/noteModel";
-import {queryClient} from "@/app/queryClient";
+import {queryClient} from "@/services/queryClient.ts";
 import {estimateNoteRows, NOTE_ROW_H} from "./layout/calcWidthHeight.ts";
 
 // ── note 展示/编辑组件：按「是否内嵌 EntityForm 编辑表单」分两套 ──

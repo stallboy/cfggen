@@ -92,8 +92,9 @@ src/
 ├── main.tsx             React 入口（挂 React + 路由 + queryClient）
 ├── app/                 应用层：主组件、Provider、布局壳、i18n（第三节的 app/ 落点）
 │   ├── CfgEditorApp / AppLoader / SidePanelShell   主组件 / 加载器 / 分割面板壳
-│   ├── queryClient.ts      React Query 配置
-│   └── i18n.ts / types.ts  国际化文案 / 全局类型
+│   ├── headerbar/        顶栏布局件：HeaderBar + IdList / TableList / UnreferencedButton
+│   ├── queryClient.ts      React Query 配置（queryClient / invalidateAllQueries）
+│   └── i18n.ts / types.ts  国际化文案 / SchemaTableType 等全局类型
 │
 ├── api/                 后端契约层（最底，不依赖任何上层）
 │   ├── recordModel / schemaModel / searchModel / noteModel / chatModel   DTO 类型
@@ -121,7 +122,7 @@ src/
 │   └── themeService.ts    主题文件读取
 │
 ├── flow/                图形可视化特性（已内聚出 edit / layout 子系统）
-│   ├── （根）FlowGraph/FlowNode/EntityCard/EntityForm/FlowContextMenu/NodeToolbar/ResPopover…  React Flow 渲染
+│   ├── （根）FlowGraph/FlowNode/EntityCard/FlowContextMenu/NodeToolbar/ResPopover/EntityProperties/Highlight/NodeNote/NodeTitle/NoteShowOrEdit…  React Flow 渲染
 │   ├── edit/              编辑表单子系统
 │   │   ├── EntityForm.tsx / FieldRenderer.tsx
 │   │   ├── fields/        各类型字段项（Primitive/Array/Interface/Func/StructRef…）
@@ -136,11 +137,9 @@ src/
 │   ├── finder/   Finder + NavList / RefIdList / LastAccessed / LastModified / SearchValue（原 search/）
 │   ├── setting/  Setting + 多个子设置面板（Ai/Basic/Tauri/FixPages/FlowVis/NodeShow/Theme/Display/Connection/KeyShortcut/Tools）+ colorUtils
 │   ├── add/      Chat / AddJson / AddPanel + useEditable（AI 录入）
-│   ├── headerbar/ HeaderBar + IdList / TableList / UnreferencedButton（顶栏布局件）
 │   └── PathNotFound.tsx
 │
 ├── res/                 资源处理特性（findAllResInfos / readResInfosAsync / summarizeResAsync / getResBrief）
-├── utils/               通用纯工具（当前空置待生长——windowUtils 已按纯度挪 services/）
 └── test/                测试 fixture + setup
 ```
 
@@ -176,8 +175,9 @@ app/routes
    api
 ```
 - `flow` 可 import `res`（如 `flow/ResPopover` 调 res）；`res` 不得反向 import flow。
-- `flow` / `store` / `services` / `res` 均不得 import `routes`；`flow`/`store`/`services`/`res` 之间除 flow→res 外不横向依赖。
+- `flow` / `store` / `services` / `res` 均不得 import `routes`；`flow`/`store`/`services`/`res` 之间除 flow→res 外不横向依赖（`services`→`store` 有 1 处例外：`editingSession` 调 `setEditingState`）。
 - `domain` 只能 import `api`；`api` 不 import 任何上层。
+- `app` 是顶层（main 装配它），理论上谁都可 import；但 app 内只应放"装配级"件（主组件 / Provider / 壳 / i18n / 顶栏），**不得承载被下层复用的数据层件或契约类型**。曾经 `app/queryClient.ts`（queryClient / invalidateAllQueries）与 `app/types.ts`（SchemaTableType）被 flow/res/routes 向上 import，是 app 唯一向下泄漏的软边界；现已下沉（queryClient→`services/`、SchemaTableType→`domain/types.ts`）并由 lint 堵死（见 5.2）。
 
 ---
 
@@ -208,6 +208,7 @@ oxlint **不支持** `import/no-restricted-paths`（zone 规则），但可用 E
 - 抓到违反 = 该类型位置错了。本项目正是因此把 `storageJson.ts`、`resInfo.ts`（跨层共享契约类型）下沉到 `domain/`，才让 domain 规则 0 违反。
 - 生成文件（`domain/storageJson.ts`，quicktype 产出）要进 `ignorePatterns`，否则其内部 `no-unused-vars` 等会误报。
 - 除 6 条方向规则外，`.oxlintrc.json` 另有两个**非方向**的特例 override：`src/store/resso.ts` 关 `react-hooks/rules-of-hooks`（vendored 库源码，hooks 调用模式不合规则）；`src/main.tsx` 关 `react/only-export-components`（入口文件允许导出非组件）。这两个是"既知特殊文件"的豁免，不涉及方向。
+- **app 边界已守门**：原本 6 条规则都没禁 `@/app/**`——app 被当作"顶层谁都可 import"，导致 flow/res/routes 曾向上 import `@/app/queryClient` 与 `@/app/types`（`SchemaTableType`）。现已先下沉（`queryClient`→`services/queryClient.ts`，`SchemaTableType`→`domain/types.ts`），再给 flow/res/store/services 补 `@/app/**` 禁令堵死回归。（api/domain 暂未加 `@/app/**`——二者当前无 @/app 引用，需要时一并补即可。）
 
 从此任何反向 `import`，`pnpm lint` 立即红——靠 lint 守门，不靠人 review。
 
@@ -237,10 +238,9 @@ oxlint **不支持** `import/no-restricted-paths`（zone 规则），但可用 E
 9. ✅ **Folds 移除**：fold 状态不再独立 React state、`domain/folds.ts` 删除，改由 `$fold` 派生（undo/redo 恢复 `$fold` 即恢复 fold；见 `record/recordEditEntityCreator.ts` 注释）。→ 第 6 条中的 `domain/folds.ts` 已成历史。
 10. ✅ **纯判定/派生继续下沉 domain**：`entityPredicates`、`nodeShowLayoutKeys` 下沉纯层（均可单测）。
 11. ✅ **search → finder 重命名**：路由目录 `routes/search/` → `routes/finder/`，语义校准——该目录承载的是查找/导航面板（最近访问、最近修改、引用列表、搜索值），非全文搜索。
-12. ✅ **命名/位置纯度修正**：① `domain/undoStore` → `undoStack`（消除纯层的 `Store` 命名误导——它是纯数据栈、非全局可变状态；类 `UndoStore` → `UndoStack`）；② `utils/windowUtils` → `services/`（Tauri 窗口封装有副作用，按第三节纯度判定不属"通用纯工具"）。挪后 `utils/` 暂空置待生长。
+12. ✅ **命名/位置纯度修正**：① `domain/undoStore` → `undoStack`（消除纯层的 `Store` 命名误导——它是纯数据栈、非全局可变状态；类 `UndoStore` → `UndoStack`）；② `utils/windowUtils` → `services/`（Tauri 窗口封装有副作用，按第三节纯度判定不属"通用纯工具"）。挪后 `utils/` 目录已整个删除（暂无通用纯工具需要它，待真有再建）。
+13. ✅ **app 边界守门（堵软边界）**：`app/queryClient.ts` → `services/queryClient.ts`、`app/types.ts`（`SchemaTableType`）→ `domain/types.ts`，并给 flow/res/store/services 补 `@/app/**` 方向规则——app 不再向下泄漏数据层件 / 契约类型，下层对 app 的反向依赖由 lint 拦截。
 
-**后续**（lint 规则已就位接住）：
-- record 子系统现已具雏形（`Record`/`RecordRef` + `recordEntityCreator`/`recordEditEntityCreator`/`recordRefUtils` + `services/editingSession` + `domain/undoStack`），当其再膨胀到自成体系，整体收进 `features/record/` 自包含——那时才真正进入 feature-based。`flow/edit/`（编辑表单子系统）同理，可作为下一个 feature 化候选。
 
 ---
 

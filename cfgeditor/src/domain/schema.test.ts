@@ -1,7 +1,7 @@
 import {describe, it, expect} from 'vitest'
 import {
     Schema, getField, getImpl, getMapEntryTypeName, isPkInteger, getNextId, getDefaultIdInTable,
-} from './schema.tsx'
+} from './schema.ts'
 import {
     field, fk, makeInterface, makeRawSchema, makeStruct, makeTable,
 } from '@/test/fixtures'

@@ -28,27 +28,27 @@
     },
     {
       "files": ["src/api/**"],
-      "rules": {"no-restricted-imports": ["error", {"patterns": ["@/domain/**", "@/store/**", "@/flow/**", "@/routes/**", "@/res/**", "@/services/**"]}]}
+      "rules": {"no-restricted-imports": ["error", {"patterns": ["@/domain/**", "@/store/**", "@/flow/**", "@/features/**", "@/res/**", "@/services/**"]}]}
     },
     {
       "files": ["src/domain/**"],
-      "rules": {"no-restricted-imports": ["error", {"patterns": ["@/flow/**", "@/routes/**", "@/store/**", "@/res/**", "@/services/**"]}]}
+      "rules": {"no-restricted-imports": ["error", {"patterns": ["@/flow/**", "@/features/**", "@/store/**", "@/res/**", "@/services/**"]}]}
     },
     {
       "files": ["src/flow/**"],
-      "rules": {"no-restricted-imports": ["error", {"patterns": ["@/routes/**"]}]}
+      "rules": {"no-restricted-imports": ["error", {"patterns": ["@/app/**", "@/features/**"]}]}
     },
     {
       "files": ["src/store/**"],
-      "rules": {"no-restricted-imports": ["error", {"patterns": ["@/routes/**", "@/flow/**"]}]}
+      "rules": {"no-restricted-imports": ["error", {"patterns": ["@/app/**", "@/features/**", "@/flow/**"]}]}
     },
     {
       "files": ["src/res/**"],
-      "rules": {"no-restricted-imports": ["error", {"patterns": ["@/flow/**", "@/routes/**"]}]}
+      "rules": {"no-restricted-imports": ["error", {"patterns": ["@/app/**", "@/flow/**", "@/features/**"]}]}
     },
     {
       "files": ["src/services/**"],
-      "rules": {"no-restricted-imports": ["error", {"patterns": ["@/routes/**", "@/flow/**"]}]}
+      "rules": {"no-restricted-imports": ["error", {"patterns": ["@/app/**", "@/features/**", "@/flow/**"]}]}
     }
   ]
 }

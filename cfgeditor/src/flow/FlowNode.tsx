@@ -12,7 +12,7 @@ import {EntityForm} from "./edit/EntityForm.tsx";
 import {ResPopover} from "./ResPopover.tsx";
 import {findFirstImage} from "./layout/calcWidthHeight.ts";
 import {getReadableTextColor} from "./layout/colors.ts";
-import {getResBriefEmoji} from "@/res/getResBrief";
+import {getResBrief} from "@/res/getResBrief";
 import {EntityNode} from "./FlowGraph.tsx";
 import {nodeAnchor} from "./nodeAnchor.ts";
 import {useNodeNote} from "./NodeNote.tsx";
@@ -68,7 +68,7 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
         return <Popover content={<ResPopover resInfos={assets} />}
             placement='rightTop'
             trigger='click'>
-            <Button type='text' style={{color: getReadableTextColor(color)}}>{getResBriefEmoji(assets)}</Button>
+            <Button type='text' style={{color: getReadableTextColor(color)}}>{getResBrief(assets, true)}</Button>
         </Popover>;
     }, [assets, color]);
 
