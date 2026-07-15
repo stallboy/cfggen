@@ -189,7 +189,7 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
                 role: "assistant",
             };
         },
-        requestFallback: (_, {error}) => {
+        requestFallback: (_, {error} :  {error: Error}) => {
             if (error.name === "AbortError") {
                 return {
                     content: "Request was cancelled",
@@ -256,6 +256,7 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
     const chatHeader = (
         <div style={styles.chatHeader}>
             <div style={styles.headerTitle}>AI Chat</div>
+            <div style={{color: token.colorTextSecondary, fontSize: 13}}>{model}</div>
         </div>
     );
 

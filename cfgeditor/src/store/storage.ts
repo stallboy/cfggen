@@ -126,7 +126,7 @@ function scheduleWrite(fn: string, keySet: Set<string>) {
     }
     const timer = setTimeout(() => {
         writeTimers.delete(fn);
-        writeFileSerialized(fn, keySet);
+        void writeFileSerialized(fn, keySet);
     }, WRITE_DEBOUNCE_MS);
     writeTimers.set(fn, timer);
 }

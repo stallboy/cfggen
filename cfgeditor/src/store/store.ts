@@ -73,7 +73,7 @@ const storeState: StoreState = {
     aiConf: {
         baseUrl: 'https://api.deepseek.com/chat/completions',
         apiKey: '',
-        model: 'deepseek-chat',
+        model: 'deepseek-v4-flash',
     },
     themeConfig: {
         themeFile: '',
