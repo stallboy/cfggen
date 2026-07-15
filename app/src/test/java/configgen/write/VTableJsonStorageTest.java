@@ -108,4 +108,5 @@ class VTableJsonStorageTest {
         // Then: a/b_数据/_c
         assertEquals(Path.of("a").resolve("b_数据").resolve("_c"), result);
     }
+
 }

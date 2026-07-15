@@ -1,5 +1,6 @@
 package configgen.write;
 
+import configgen.ctx.DirectoryStructure;
 import configgen.data.DataUtil;
 import configgen.util.CachedFileOutputStream;
 import configgen.value.CfgValue.VStruct;
@@ -24,9 +25,12 @@ public class VTableJsonStorage {
     public static Path addOrUpdateRecord(@NotNull VStruct record,
                                          @NotNull String table,
                                          @NotNull String id,
-                                         @NotNull Path dataDir) throws IOException {
-
-        Path jsonDirRelPath = resolveJsonDirRelativePath(table, dataDir);
+                                         @NotNull Path dataDir,
+                                         DirectoryStructure directoryStructure) throws IOException {
+        var existingDirRelativePath = directoryStructure.getJsonTableDir(table);
+        Path jsonDirRelPath = existingDirRelativePath != null
+                ? existingDirRelativePath
+                : resolveJsonDirRelativePath(table, dataDir);
         Path relativePath = jsonDirRelPath.resolve(id + ".json");
 
         Path recordPath = dataDir.resolve(relativePath);
@@ -37,13 +41,18 @@ public class VTableJsonStorage {
         }
     }
 
+
     /**
      * @return relative path of the record file
      */
     public static Path deleteRecord(@NotNull String table,
                                     @NotNull String id,
-                                    @NotNull Path dataDir) throws IOException {
-        Path jsonDirRelPath = resolveJsonDirRelativePath(table, dataDir);
+                                    @NotNull Path dataDir,
+                                    DirectoryStructure directoryStructure) throws IOException {
+        var existingDirRelativePath = directoryStructure.getJsonTableDir(table);
+        Path jsonDirRelPath = existingDirRelativePath != null
+                ? existingDirRelativePath
+                : resolveJsonDirRelativePath(table, dataDir);
         Path relativePath = jsonDirRelPath.resolve(id + ".json");
         Path recordPath = dataDir.resolve(relativePath);
         Files.delete(recordPath);

@@ -421,4 +421,33 @@ class DirectoryStructureBehaviorTest {
         assertTrue(structure.getJsonFilesByTable("equip.sub").isEmpty(),
                 "非 _ 前缀子目录不应被识别为 JSON 表目录");
     }
+
+    @Test
+    void shouldReportRootLevelJsonDirEvenWhenModuleDirExists() throws IOException {
+        // 复现 bug：表 skill.buff 的数据放在根级 _skill_buff，同时根目录存在 skill 模块目录。
+        // 编辑写入若用「重新推导」会错误落到嵌套 skill/_buff，造成两目录并存、下次启动冲突。
+        Path rootLevelDir = tempDir.resolve("_skill_buff");
+        Files.createDirectories(rootLevelDir);
+        Resources.addTempFileFromText("1.json", rootLevelDir, "{\"id\": 1}");
+
+        Files.createDirectories(tempDir.resolve("skill"));
+
+        DirectoryStructure structure = new DirectoryStructure(tempDir);
+
+        // 发现阶段记录的真实目录必须是 _skill_buff（不能被推导成 skill/_buff）
+        Path tableDir = structure.getJsonTableDir("skill.buff");
+        assertNotNull(tableDir, "skill.buff 应被发现");
+        assertEquals(Path.of("_skill_buff"), tableDir,
+                "发现目录应为根级 _skill_buff，而非嵌套 skill/_buff");
+
+        // 模拟编辑：按发现目录写入新记录（即修复后 AddOrUpdateService 的行为）
+        Files.writeString(tempDir.resolve(tableDir).resolve("2.json"), "{\"id\": 2}");
+
+        // 重新扫描不得抛冲突——skill/_buff 不应被创建
+        DirectoryStructure rescanned = assertDoesNotThrow(() -> new DirectoryStructure(tempDir));
+        assertEquals(2, rescanned.getJsonFilesByTable("skill.buff").size(),
+                "两条记录都应在 _skill_buff 下");
+        assertFalse(Files.exists(tempDir.resolve("skill").resolve("_buff")),
+                "不应在 skill/ 下新建 _buff 目录");
+    }
 }

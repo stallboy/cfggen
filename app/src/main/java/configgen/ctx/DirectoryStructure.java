@@ -110,6 +110,9 @@ public class DirectoryStructure {
     static class JsonFileList {
         List<JsonFileInfo> list = new ArrayList<>();
         Map<String, JsonFileInfo> map = new LinkedHashMap<>();
+        /// 该表 JSON 文件所在目录（相对 rootDir），在发现时记录。
+        /// 写入/删除必须用这个目录，避免与发现位置不一致导致数据被拆到两个目录。
+        Path tableDirRelativePath;
 
 
         void sort() {
@@ -127,6 +130,7 @@ public class DirectoryStructure {
             JsonFileList c = new JsonFileList();
             c.map = new LinkedHashMap<>(map);
             c.list = new ArrayList<>(list);
+            c.tableDirRelativePath = tableDirRelativePath;
             return c;
         }
 
@@ -232,6 +236,15 @@ public class DirectoryStructure {
             return List.of();
         }
         return list.list;
+    }
+
+    /// 返回该表 JSON 文件所在的目录（相对 rootDir）。
+    /// 这是发现阶段记录的真实位置（根级 _skill_buff 或嵌套 skill/_buff 都可能），
+    /// 写入/删除应据此进行，避免重新推导出另一个目录而把同一表的数据拆到两处。
+    /// 表不是 JSON 表或尚未被发现（没有目录）时返回 null。
+    public Path getJsonTableDir(String tableName) {
+        JsonFileList list = jsonFiles.get(tableName);
+        return list == null ? null : list.tableDirRelativePath;
     }
 
     public static void findConfigFilesFromRecursively(Path source,
@@ -445,6 +458,7 @@ public class DirectoryStructure {
 
 
     private void findOneTableJsonFiles(Path tableDir, JsonFileList list) {
+        list.tableDirRelativePath = rootDir.relativize(tableDir);
         try (Stream<Path> paths = Files.list(tableDir)) {
             for (Path path : paths.toList()) {
                 if (isFileIgnored(path)) {

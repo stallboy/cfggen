@@ -51,7 +51,7 @@ public class JsonGenerator extends GeneratorWithTag {
             for (Map.Entry<Value, VStruct> e : vTable.primaryKeyMap().entrySet()) {
                 Value pk = e.getKey();
                 VStruct record = e.getValue();
-                VTableJsonStorage.addOrUpdateRecord(record, table, pk.packStr(), Path.of(dst));
+                VTableJsonStorage.addOrUpdateRecord(record, table, pk.packStr(), Path.of(dst), ctx.sourceStructure());
             }
         }
     }

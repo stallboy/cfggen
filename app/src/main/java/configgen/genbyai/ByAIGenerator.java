@@ -132,7 +132,7 @@ public class ByAIGenerator extends Generator {
                     try {
                         if (tableSchema.isJson()) {
                             VTableJsonStorage.addOrUpdateRecord(record, tableSchema.name(), id,
-                                    context.rootDir());
+                                    context.rootDir(), context.sourceStructure());
                         } else {
                             CfgData.DTable dTable = context.cfgData().getDTable(table);
                             VTableStorage.addOrUpdateRecord(context, vTable, dTable, pkValue, record);

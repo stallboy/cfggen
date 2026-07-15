@@ -65,7 +65,7 @@ public class AddOrUpdateService {
 
             if (vTable.schema().isJson()) {
                 Path relatveiJsonPath = VTableJsonStorage.addOrUpdateRecord(thisValue, tableName, id,
-                        context.rootDir());
+                        context.rootDir(), context.sourceStructure());
 
                 nr = ValueUpdater.updateByJsonFileAddOrUpdate(context, cfgValue, vTable, relatveiJsonPath);
 
