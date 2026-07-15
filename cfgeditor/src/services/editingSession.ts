@@ -2,7 +2,6 @@ import {JSONArray, JSONObject, JSONValue, RecordResult} from "@/api/recordModel"
 import {SItem, SStruct, STable} from "@/api/schemaModel";
 import {getField, Schema} from "@/domain/schema";
 import {EntityPosition, EFitView, EditingObjectRes} from "@/domain/entityModel";
-import {setEditingState} from "@/store/store";
 import {getCopiedObject} from "./clipboard";
 import {UndoStack} from "@/domain/undoStack";
 
@@ -34,6 +33,8 @@ export interface EditingSessionCallbacks {
     onStructureChange?: () => void;
     /** 提交回调（mutateRecord，引用稳定）。 */
     mutate?: (obj: JSONObject) => void;
+    /** 编辑态变化通知（table/id/isEdited）——由创建方注入写 store，使本类不依赖 store 层。 */
+    onEditingStateChange?: (table: string, id: string, isEdited: boolean) => void;
 }
 
 export class EditingSession {
@@ -58,6 +59,7 @@ export class EditingSession {
     private readonly listeners = new Set<() => void>();
     private readonly onStructureChange?: () => void;
     private readonly mutate?: (obj: JSONObject) => void;
+    private readonly onEditingStateChange?: (table: string, id: string, isEdited: boolean) => void;
 
     // undo/redo 快照栈（per-session，随实例生灭）。capture 时机：结构操作后 / 值类 coalescing 组关闭。
     // 命名 undoStack 而非 undo：避免与 undo() 方法同名（TS 不允许同名的属性与方法）。
@@ -71,6 +73,7 @@ export class EditingSession {
     constructor(recordResult: RecordResult, cbs: EditingSessionCallbacks = {}) {
         this.onStructureChange = cbs.onStructureChange;
         this.mutate = cbs.mutate;
+        this.onEditingStateChange = cbs.onEditingStateChange;
         this.fitView = EFitView.FitFull;
         this.fitViewToIdPosition = undefined;
         // 首次初始化（构造期，纯字段赋值，不 bump/emit/onStructureChange：首帧 useMemo 本就会跑，
@@ -339,9 +342,9 @@ export class EditingSession {
         this.resetBaselines();
     }
 
-    /** 把 table/id/isEdited 同步到 resso store（HeaderBar 唯一订阅者，显示 unsaved）。 */
+    /** 把 table/id/isEdited 通知订阅者（HeaderBar 显示 unsaved）。实现由创建方注入，本类不依赖 store。 */
     notifyEditingState(): void {
-        setEditingState(this.table, this.id, this.getIsEdited());
+        this.onEditingStateChange?.(this.table, this.id, this.getIsEdited());
     }
 
     // ============ undo/redo ============

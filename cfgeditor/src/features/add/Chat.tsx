@@ -13,6 +13,7 @@ import {useQuery, useMutation} from "@tanstack/react-query";
 import {getPrompt, checkJson} from "@/api/apiClient.ts";
 import {CheckJsonResult} from "@/api/chatModel.ts";
 import {getCurrentEditingSession} from "@/services/editingSession.ts";
+import {queryKeys} from "@/services/queryKeys.ts";
 
 const role: BubbleListProps["role"] = {
     assistant: {
@@ -79,7 +80,7 @@ export const Chat = memo(function Chat({schema}: { schema: Schema | undefined; }
     const chatRef = useRef<any>(null);
 
     const {isLoading, isError, error, data: promptRes} = useQuery({
-        queryKey: ["prompt", curTableId],
+        queryKey: queryKeys.prompt(curTableId),
         queryFn: ({signal}) => getPrompt(server, curTableId, signal),
         staleTime: Infinity,
         enabled: editable,

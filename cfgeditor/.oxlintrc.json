@@ -48,7 +48,7 @@
     },
     {
       "files": ["src/services/**"],
-      "rules": {"no-restricted-imports": ["error", {"patterns": ["@/app/**", "@/features/**", "@/flow/**"]}]}
+      "rules": {"no-restricted-imports": ["error", {"patterns": ["@/app/**", "@/features/**", "@/flow/**", "@/store/**"]}]}
     }
   ]
 }

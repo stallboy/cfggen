@@ -513,34 +513,6 @@ new PerformanceObserver(list => {
 
 ---
 
-## 第七部分：改进建议（代码优化）
-
-> 以下是面向代码的优化候选，按 ROI 排序。多数需先经 5.3 release 实测确认再动手（反对预优化）。
-
-### 7.1 【中，需实测】`isDeeplyEqual` 在每次键入都跑全量比较
-
-`updateFormValues`/`updateNote` 每键调 `notifyEditingState()` → `getIsEdited()` → `isDeeplyEqual(editingObject, originalEditingObject)`。这是值类（每键）路径上**唯一的非 O(1) 操作**——coalescing 的「per-key 不 bump/emit」只挡住了 `structureVersion`/`emit`，没挡住这次全量深比较。对几十字段的 record 无感，但对含长数组/深嵌套的大 record，每次键入都全量 diff 可能成卡顿源。
-
-**改进（实测确认后再做）**：引入 dirty flag——任何 mutation 置 dirty=true（O(1)）；`getIsEdited` 在 dirty 时返回 true，仅在 **undo/redo/commit/reset** 这些离散 gate 上跑一次完整 `isDeeplyEqual` 精确重算并清/置 dirty。语义损失：手动把字段改回原值这种「精确复原」在下次 gate 前不会立即清脏标记（罕见，且 HeaderBar 多显示一下「未保存」属可接受的小瑕疵）。收益：连续键入路径彻底 O(1)。
-
-### 7.2 【低，顺手】`dispose()` 冗余 `clearTimeout`
-
-`dispose()` 先 `flushValueCoalesce()`（内部已 `clearTimeout` 并把 timer 置 undefined），紧接着又 `clearTimeout(this.valueCoalesceTimer)`——第二次 `clearTimeout(undefined)` 是 no-op，死代码。可删第二行（或保留并加注释说明是防御）。无害，纯整洁。
-
-### 7.3 【低，文档化即可】`coalesceKey` 每键分配
-
-`coalesceKey` = `[...fieldChains, fieldKey].join('/')` 每次键入都 spread + join，严格说是 O(chainLength) 而非注释宣称的 O(1)。典型 fieldChain 长度 3-5，可忽略；若追求严格 O(1)，可让调用方传入稳定的字段标识（如 entity 已有的 id）作为 key 而非每次拼。低优先。
-
-### 7.4 【低，类型整洁】KeepStable 的 position 占位 `{id, x:0, y:0}`
-
-`undo()`/`redo()` 里 `position: anchorId ? {id: anchorId, x: 0, y: 0} : undefined` 的 `x:0,y:0` 是占位（undoFitView 永不为 FitId，x/y 不被消费）。`EntityPosition` 语义上要求真实坐标，这里塞 0/0 是类型噪音。可选改进：让 `bumpStructure` 的 position 参数对 KeepStable 场景只传 id（如 `position?: {id: string; x?: number; y?: number}`，或单独 anchorId 通道）。会扩散到 `EditingObjectRes`/`pickViewportAction`，需权衡——当前注释已说明，不改也可接受。
-
-### 7.5 【不推荐】换 JSON Patch / 命令模式
-
-明确反对在无实测数据时迁移。见第六部分：结构 undo 卡顿根源是 entityMap 全量重算，不是快照栈；换实现解决不了，反而引入 diff 引擎/路径互译/逆逻辑维护成本。ROI 三问（收益多大、变更频率多低、抽象成本多高）皆不通过。
-
----
-
 ## 速记
 
 - **做什么**：record 编辑态 undo/redo（≠ 导航历史）。覆盖值类 + 结构类，session 内，不跨 record、不回滚已提交。

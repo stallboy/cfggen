@@ -254,28 +254,9 @@ const staleTime = editingObjectRes?.isEdited ? 0 : 1000 * 60 * 5;
 - **决策/数学收口纯函数**：`pickViewportAction`（`flow/layout/viewportMath.ts`）是公开纯函数，三分支选择 + FitId/KeepStable 数学全收口其中，effect 只调命令；`computeStableViewport` 为内部函数。配 `viewportMath.test.ts` 单测全分支。
 - **`EFitView` 字符串枚举**：`= 'FitFull'` 等字符串值（DevTools/调试可读，不依赖隐式数字）；`FitNone` 已并入 `NoChange`（消费端两者完全相同，YAGNI），`RecordRef` 用 `keepViewport` 常量。
 
-## 10. 改进建议
-
-> 面向代码的优化候选，按 ROI 排序。
-
-### 10.1【中】浏览态 Record 每次 refetch 重新 FitFull
-
-Record 浏览态（非编辑）`editingObjectRes = {fitView: FitFull, isEdited: false}` 写死，每次 `useMemo` 重算都新建对象 → record query refetch（record query 无 staleTime，窗口 refocus 即触发）→ Effect 2 重跑 → `fitView()` 丢掉用户手动缩放/平移。RecordRef 的固定页已有 `fittedPathname` 机制解决同类问题，浏览态 Record 没有。
-
-**改进**：浏览态 Record 也接 `fittedPathname`（pathname 已含 `curId`——切记录 → 新 pathname → 重铺；同记录 refetch → 同 pathname → 保持用户视口）。需权衡：浏览态用户通常期望「图没变就别跳」。中价值、低风险。
-
-### 10.2【低，记录为有意 quirk】值类编辑不刷 layout 缓存
-
-纯值类编辑期间 `isEdited` 不刷新（entityMap 不重算 → `editingObjectRes` 不重建 → layout 走 5min 干净缓存）。安全前提是「值类不改拓扑、布局不变」。但若值类改了节点尺寸（如长字符串行数变化），节点尺寸会短暂过时，直到下次结构编辑才刷新。**这是有意的性能取舍（契约1），勿当 bug 修**；若实测发现尺寸过时影响体验，可在值类编辑也 invalidate layout（代价是放弃契约1 的零重渲，需实测权衡）。
-
-### 10.3【不推荐】合并 KeepStable/FitId 分支、给视口切换加 duration
-
-- `pickViewportAction` 里 `KeepStable` 与 `FitId` 两分支结构相似但 anchorOld 来源不同（prevMap vs position.x/y），合并会掩盖语义差异，不值。
-- 视口切换加 `duration` 过渡已评估否决（视觉不适，见 §9）。
-
 ---
 
-## 11. 常见排查清单
+## 10. 常见排查清单
 
 | 现象 | 排查方向 |
 |---|---|
@@ -289,7 +270,7 @@ Record 浏览态（非编辑）`editingObjectRes = {fitView: FitFull, isEdited: 
 
 ---
 
-## 12. 速查表
+## 11. 速查表
 
 ```
 编辑动作                    fitView       视口 API                    数学

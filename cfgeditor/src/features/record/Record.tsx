@@ -7,7 +7,7 @@ import {RecordEditEntityCreator} from "./recordEditEntityCreator.ts";
 import {EditingSession, getCurrentEditingSession, setCurrentEditingSession} from "@/services/editingSession.ts";
 import {isCopiedFitAllowedType, structCopy} from "@/services/clipboard.ts";
 import {useTranslation} from "react-i18next";
-import {navTo, setIsEditMode, useMyStore, useLocationData} from "@/store/store.ts";
+import {navTo, setIsEditMode, setEditingState, useMyStore, useLocationData} from "@/store/store.ts";
 import {useNavigate, useOutletContext} from "react-router";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {addOrUpdateRecord, fetchRecord} from "@/api/apiClient.ts";
@@ -20,6 +20,7 @@ import {useHotkeys} from "react-hotkeys-hook";
 import {useEntityToGraph} from "@/flow/useEntityToGraph.ts";
 import {SInterface, SStruct} from "@/api/schemaModel.ts";
 import {invalidateAllQueries, queryClient} from "@/services/queryClient.ts";
+import {queryKeys} from "@/services/queryKeys.ts";
 import {EntityNode} from "@/flow/FlowGraph.tsx";
 import {NEW_RECORD_ID, SchemaTableType} from "@/domain/schema.ts";
 import {markNewItemExpanded} from "@/domain/embedding.ts";
@@ -87,6 +88,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
             // 旧布局多一帧。
             onStructureChange: () => queryClient.removeQueries({queryKey: ['layout', pathnameRef.current, 'e']}),
             mutate: mutateRecord,
+            onEditingStateChange: (table, id, isEdited) => setEditingState(table, id, isEdited),
         });
     }
     const session = sessionRef.current;
@@ -318,7 +320,7 @@ export const Record = memo(function () {
     const isNewRecord = curTable.recordIds.length == 0;
     // 对于现有记录，使用API获取数据
     const {isLoading, isError, error, data: recordResult} = useQuery({
-        queryKey: ['table', curTableId, curId],
+        queryKey: queryKeys.record(curTableId, curId),
         queryFn: ({signal}) => fetchRecord(server, curTableId, curId, signal),
         enabled: !isNewRecord,
     })

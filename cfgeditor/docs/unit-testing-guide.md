@@ -32,25 +32,11 @@
 - 用**显式** `import { describe, it, expect } from 'vitest'`，**不开** `globals: true`——让依赖可见，也避免全局命名空间污染。
 - `environment: 'jsdom'`，`include: ['src/**/*.{test,spec}.{ts,tsx}']`。
 
-### 2.2 已覆盖模块
+### 2.2 覆盖范围
 
-共 **27 个测试文件**，全部针对纯逻辑（`flow/layout/layoutAsync` 是唯一带 mock 的——见下注）：
+测试针对纯逻辑模块（按什么标准挑选见 §5.1）。**本指南不维护逐文件覆盖清单**——清单注定随重构漂移、需要人肉同步，性价比低；想知道现在测了哪些，直接 `Glob src/**/*.test.ts` 看实际文件即可。
 
-```
-api/           noteModel, schemaModel(isPrimitiveType/isNumberType + 类型集合一致性)
-domain/        schema, historyModel, undoStack, entityPredicates, nodeShowLayoutKeys,
-               embedding, entityModel(type guards)
-flow/layout/   colors, calcWidthHeight, simpleStrRowCount, dimensions,
-               getDsLenAndDesc, entityToNodeAndEdge, viewportMath, layoutAsync
-res/           resUtils, getResBrief
-routes/record/ recordEntityCreator, recordEditEntityCreator, recordRefUtils
-routes/table/  tableEntityCreator, tableRefEntity
-routes/setting/ colorUtils
-services/      editingSession, clipboard
-```
-
-> 注：`flow/layout/layoutAsync` 用 `vi.mock` 替换 elkjs 的 `layout` 入口——mock 的是**出站命令的契约边界**，断言的是 `layoutAsync` 自身如何组织入参 / 处理错误 / 映射结果，不是 elkjs 内部行为，故不违反 §3.7「不 mock 你不拥有的东西」（它 mock 边界、不 mock 内部）。
-> 维护提示：新增测试后请同步本清单，以及 `cfgeditor/CLAUDE.md` 的「单元测试」章节。
+> 例外：`flow/layout/layoutAsync` 是唯一带 `vi.mock` 的——它替换的是 elkjs `layout` 入口的**出站命令契约边界**，断言的是 `layoutAsync` 自身如何组织入参 / 处理错误 / 映射结果，不是 elkjs 内部行为，故不违反 §3.7「不 mock 你不拥有的东西」（mock 边界、不 mock 内部）。
 
 ### 2.3 这些测试做对了什么（值得学的范本）
 
@@ -107,7 +93,7 @@ cfgeditor 刻意把可测的**规则与状态**下沉到 `domain/` `services/` `
 带来的结论：
 - ✅ 测 `domain/schema`、`services/editingSession`、`flow/layout/colors`：喂 fixture，断言输出，**零 mock**。
 - ❌ 不测 `*.tsx` UI 组件（`flow/edit/` 下的 `EntityForm` / `EntityCard`、`routes/record/Record` 等）：它们只做渲染与派发，逻辑已下沉到纯模块。
-- ❌ 不测 `api/apiClient.ts`（HTTP）、`res/readResInfosAsync.ts` / `res/summarizeResAsync.ts`（Tauri 文件 IPC）。`flow/layout/layoutAsync.ts` 的 elkjs 交互已用 mock 边界测（见 2.2 注）。
+- ❌ 不测 `api/apiClient.ts`（HTTP）、`res/readResInfosAsync.ts` / `res/summarizeResAsync.ts`（Tauri 文件 IPC）。`flow/layout/layoutAsync.ts` 的 elkjs 交互已用 mock 边界测（见 §2.2）。
 - ❌ 不测 `store/store.ts`：Resso 全局状态跨组件耦合，单测性价比低，留给手测。
 
 > **这不是偷懒，是架构使然。** 当你发现一段业务逻辑只能靠"渲染组件 + mock 一堆依赖"才能测时，正确反应不是去写组件测试，而是**把逻辑抽成纯函数**（像 `embedding.ts`、`colors.ts` 那样），再测纯函数。UI 薄到不可测时，它也就**不需要**被单测了。
@@ -200,13 +186,13 @@ it('返回大于 curId 的下一个空闲整数', () => {
 
 ### 5.1 该测的：纯逻辑模块
 
-凡是「规则集中、容易被改坏、且不碰 UI/网络/IPC」的代码，都是单测的目标。本项目已覆盖的范本：
+凡是「规则集中、容易被改坏、且不碰 UI/网络/IPC」的代码，都是单测的目标。按**类型维度**看，本项目里典型该测的有（举例，非穷举清单）：
 
-- **规则密集的纯函数**：`flow/layout/colors`（配色计算）、`flow/layout/calcWidthHeight`、`flow/layout/dimensions`、`flow/layout/getDsLenAndDesc`、`res/getResBrief`（计数/拼串）——魔数与多分支集中处，喂 fixture 断言输出即可。
-- **带阈值的判定逻辑**：`domain/embedding`（`canBeEmbeddableCheck` 的 5 条规则、struct/interface 两套阈值、边值）——典型的"边值用例"温床。
-- **状态机 / 编辑会话**：`services/editingSession`（值类 vs 结构类的 bump 契约、早退路径、引用相等性）、`domain/historyModel` / `undoStack`。
-- **图构建与布局**：`flow/layout/entityToNodeAndEdge`、`flow/layout/viewportMath`、`routes/table/tableRefEntity`（`includeRefTables` 的深度/节点截断）。
-- **类型守卫与谓词**：`domain/entityModel`（type guard 互斥不变量）、`domain/entityPredicates`、`services/clipboard`（前缀匹配边界）。
+- **规则密集的纯函数**：魔数与多分支集中的计算——配色、尺寸、计数/拼串这类。喂 fixture 断言输出即可。
+- **带阈值的判定逻辑**：多条规则 + 两套阈值 + 边值的判定（如 `domain/embedding` 的 `canBeEmbeddableCheck`）——典型的"边值用例"温床。
+- **状态机 / 编辑会话**：如 `services/editingSession` 的值类 vs 结构类 bump 契约、早退路径、引用相等性；以及 `undoStack` 这类栈式结构。
+- **图构建与布局**：实体→节点/边转换、视口计算、引用表的深度/节点截断。
+- **类型守卫与谓词**：如 type guard 的互斥不变量、前缀匹配边界。
 
 可深化的方向（按需，无优先级）：
 - `domain/schema.tsx` 还有 `getField` / `getImpl` / `getNextId` / `defaultValue` / `getAllDepStructs` 等纯函数，`schema.test.ts` 目前只覆盖一部分。
@@ -217,7 +203,7 @@ it('返回大于 curId 的下一个空闲整数', () => {
 
 - 所有 `*.tsx` UI 组件（`flow/edit/` 下的 `EntityForm` / `EntityCard`、`routes/record/Record`、`routes/table/Table`、`routes/search/Finder`、`routes/setting/Setting` 下的 `.tsx`……）。注意 `routes/setting/colorUtils.ts` 是纯 `.ts` 函数，已测。
 - `api/apiClient.ts`（HTTP，需 mock axios——违反 3.7，留给手测/集成）。
-- `res/readResInfosAsync.ts` / `res/summarizeResAsync.ts`（Tauri 文件 IPC，留给手测）。`flow/layout/layoutAsync.ts` 已用 mock 边界测（见 2.2 注）。
+- `res/readResInfosAsync.ts` / `res/summarizeResAsync.ts`（Tauri 文件 IPC，留给手测）。`flow/layout/layoutAsync.ts` 已用 mock 边界测（见 §2.2）。
 - `store/store.ts` / `store/resso.ts`（全局状态库，跨组件耦合）。
 - `domain/storageJson.ts`（quicktype **自动生成**，测它等于测生成器；应通过 `genJsonParser.bat` 保证正确性，而非单测）。
 - `i18n.ts`（翻译表，靠目视 / 用时验证）。
@@ -257,7 +243,7 @@ it('返回大于 curId 的下一个空闲整数', () => {
 
 ## 八、维护
 
-- 新增 / 删除测试文件后，更新**第二节清单**和 `cfgeditor/CLAUDE.md` 的「单元测试」章节。
+- 新增 / 删除测试文件后**无需同步清单**——本指南与 `CLAUDE.md` 都不维护逐文件覆盖清单（理由见 §2.2）。
 - 改了纯逻辑模块的公共行为，先改/补对应 `*.test.ts`（FIRST 的 Timely）。
 - 引入新的全局测试依赖（如 `fast-check`、RTL）前，先在本文件登记理由与边界。
 - 本文描述的是**目标与原则**；若现实与本文冲突，优先修现实（把逻辑抽纯 / 修测试），其次才更新本文。

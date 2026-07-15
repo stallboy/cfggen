@@ -10,6 +10,7 @@ import { navTo, useMyStore, useLocationData, PageType } from "@/store/store.ts";
 import { Navigate, useNavigate, useOutletContext } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { fetchRecordRefs, fetchUnreferencedRecords } from "@/api/apiClient.ts";
+import { queryKeys } from "@/services/queryKeys.ts";
 import { MenuItem } from "@/flow/FlowContextMenu.tsx";
 import { fillHandles } from "@/flow/layout/entityToNodeAndEdge.ts";
 
@@ -146,10 +147,11 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
 
 const keepViewport: EditingObjectRes = { fitView: EFitView.NoChange, isEdited: false }
 
-export function RecordRef({ schema, notes, curTable, curPage, curId, refIn, refOutDepth, maxNode, nodeShow, inDragPanelAndFix }: {
+export function RecordRef({ schema, notes, curTable, curTableId, curPage, curId, refIn, refOutDepth, maxNode, nodeShow, inDragPanelAndFix }: {
     schema: Schema;
     notes: Map<string, string> | undefined;
     curTable: STable;
+    curTableId: string;
     curPage: PageType;
     curId?: string;  // unref 模式下仅作「切回 record 的上下文记忆」，组件不消费
     refIn: boolean;
@@ -167,8 +169,8 @@ export function RecordRef({ schema, notes, curTable, curPage, curId, refIn, refO
     // 根据模式选择不同的API
     const { isLoading, isError, error, data: recordRefResult } = useQuery({
         queryKey: isUnrefMode
-            ? ['unreferenced', curTable.name, maxNode]
-            : ['recordRef', curTable.name, curId, refOutDepth, maxNode, refIn],
+            ? queryKeys.unreferenced(curTableId, maxNode)
+            : queryKeys.recordRef(curTableId, curId!, refOutDepth, maxNode, refIn),
         queryFn: ({ signal }) => {
             if (isUnrefMode) {
                 return fetchUnreferencedRecords(server, curTable.name, maxNode, signal);
@@ -219,7 +221,7 @@ export function RecordRefRoute() {
     }
 
     // curId 在 unref 模式下可能是上次 record 的 id（仅作切回记忆，组件内由 isUnrefMode 短路不消费）
-    return <RecordRef schema={schema} notes={notes} curTable={curTable} curPage={curPage} curId={curId}
+    return <RecordRef schema={schema} notes={notes} curTable={curTable} curTableId={curTableId} curPage={curPage} curId={curId}
         refIn={recordRefIn} refOutDepth={recordRefOutDepth} maxNode={recordMaxNode}
         nodeShow={nodeShow}
         inDragPanelAndFix={false} />

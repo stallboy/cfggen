@@ -18,6 +18,7 @@ import {fetchNotes, fetchSchema} from "@/api/apiClient.ts";
 import {notesToMap} from "@/api/noteModel";
 import {useQuery} from "@tanstack/react-query";
 import {useHotkeys} from "react-hotkeys-hook";
+import {queryKeys} from "@/services/queryKeys.ts";
 import {HeaderBar} from "@/features/headerbar/HeaderBar";
 import {FlowGraph} from "@/flow/FlowGraph";
 import {FlowStyleManager} from "@/flow/FlowStyleManager";
@@ -76,14 +77,14 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
     }, {enableOnFormTags: true});
 
     const {isLoading, isError, error, data: schema} = useQuery({
-        queryKey: ['schema'],
+        queryKey: queryKeys.schema(),
         queryFn: ({signal}) => fetchSchema(server, signal),
         staleTime: 1000 * 60 * 5,
         select: schemaSelector,
     })
 
     const {data: notes} = useQuery({
-        queryKey: ['notes'],
+        queryKey: queryKeys.notes(),
         queryFn: ({signal}) => fetchNotes(server, signal),
         staleTime: 1000 * 60 * 5,
         select: notesToMap,
@@ -123,6 +124,7 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
                 <RecordRef schema={schema}
                            notes={notes}
                            curTable={curTable}
+                           curTableId={curTableId}
                            curPage={'recordRef'}
                            curId={curId}
                            refIn={recordRefIn}
@@ -149,6 +151,7 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
                             <RecordRef schema={schema}
                                        notes={notes}
                                        curTable={fixedTable}
+                                       curTableId={fix.table}
                                        curPage={'recordRef'}
                                        curId={fix.id}
                                        refIn={fix.refIn}
@@ -162,6 +165,7 @@ export const CfgEditorApp = memo(function CfgEditorApp() {
                             <RecordRef schema={schema}
                                        notes={notes}
                                        curTable={fixedTable}
+                                       curTableId={fix.table}
                                        curPage={'recordUnref'}
                                        curId={undefined}  // 未引用模式，没有id
                                        refIn={false}       // 无意义，保留字段

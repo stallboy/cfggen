@@ -1,226 +1,45 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+配置编辑器 (cfgeditor)，可视化浏览与编辑表结构和记录。React 19 + TypeScript + Vite + Tauri 桌面应用，UI 用 Ant Design，图形用 React Flow (XYFlow)，状态用 Resso + React Query。
 
-## 项目概述
-
-这是一个配置编辑器应用 (cfgeditor)，用于可视化浏览和编辑表结构和记录。项目使用 React + TypeScript + Tauri 技术栈构建。
+> 架构、分层、数据模型、状态管理、API、undo/redo 等细节都在 `docs/`，本文件只放命令、文档索引和易踩坑约定。
 
 ## 开发命令
 
-### 开发环境
 ```bash
-# 安装依赖
-pnpm install
-
-# 启动开发服务器
-pnpm run dev
-# 访问 http://localhost:1420/
+pnpm install                 # 安装依赖
+pnpm run dev                 # 开发服务器 http://localhost:1420/
+pnpm tauri build             # 构建 Tauri 桌面应用（exe 在 src-tauri/target/release/，需 Rust）
+pnpm run lint                # 代码检查（oxlint）
+pnpm test                    # 单元测试 watch
+pnpm test:run                # 单元测试单次跑（CI 用）
 ```
 
-### 桌面应用构建
+## 后端依赖
+
+需启动 Java 后端提供 API（`localhost:3456`）：
+
 ```bash
-# 构建 Tauri 桌面应用 (需要 Rust 环境)
-pnpm tauri build
-# 生成的 exe 文件在 src-tauri\target\release\ 目录
+java -jar ../cfggen.jar -datadir ../example/config -gen server
 ```
 
-### 代码质量
-```bash
-# 代码检查
-pnpm run lint
-```
+## 文档索引（详情见 docs/）
 
-### 单元测试
-```bash
-# watch 模式
-pnpm test
-# 单次跑全量（CI 用）
-pnpm test:run
-```
+| 主题 | 文档 |
+|---|---|
+| 目录结构 / 分层 / 依赖方向 / oxlint 护栏 / `@/` 别名 | `docs/DIRECTORY_STRUCTURE.md` |
+| 状态管理（Resso / EditingSession / useSyncExternalStore） | `docs/状态管理-总结与演进.md` |
+| API / React Query / URL 数据流 | `docs/url-api-reactquery.md` |
+| Undo/Redo | `docs/undo-redo.md` |
+| 视口适配（fitView / computeStableViewport） | `docs/fitview-视口适配机制.md` |
+| 字段内嵌机制 | `docs/embedding-字段内嵌机制.md` |
+| 单元测试指南（含覆盖清单） | `docs/unit-testing-guide.md` |
+| 性能记录 | `docs/perf-optimization.md` |
 
-测试框架为 **vitest**（配置见 `vitest.config.ts`），仅覆盖**纯逻辑**模块——不涉及 UI 渲染、网络、Tauri IPC，无需任何 mock，喂入 fixture 断言输出即可。
+## 必守约定（易踩坑）
 
-约定：
-- 测试文件与源码同目录，命名 `*.test.ts`（如 `domain/schema.test.ts`）。
-- **`*.test.ts` 在搜索时被 `.ignore` 排除**：根目录 `.ignore` 让 ripgrep（即 Grep 工具）忽略测试文件，搜符号时不会被 test 污染上下文。需要查测试内容时用 `Glob src/**/*.test.ts` 定位（Glob 不读 `.ignore`）再 Read——**别用 Grep 搜 test 内容**（`.ignore` 会让它搜不到）。LSP `findReferences` 不受影响，仍会返回 test 里的断言引用。
-- 共享 fixture 工厂在 `src/test/fixtures.ts`（构造 `NodeShowType` / `Entity` / `RawSchema` 等冗长类型）。
-- 环境为 jsdom；`src/test/setup.ts` 给 `window.__TAURI_INTERNALS__` 打 shim，让 `res/resUtils.joinPath`（调用 `@tauri-apps/api` 的 `path.sep()`）可在测试中运行。
-- 当前覆盖范围（27 个测试文件，权威清单见 `docs/unit-testing-guide.md` §2.2）：`api/{noteModel,schemaModel}`、`domain/{schema,historyModel,undoStack,entityPredicates,nodeShowLayoutKeys,embedding,entityModel}`、`flow/{colors,calcWidthHeight,simpleStrRowCount,dimensions,getDsLenAndDesc,entityToNodeAndEdge,viewportMath,layoutAsync}`、`res/{resUtils,getResBrief}`、`routes/{record/{recordEntityCreator,recordEditEntityCreator,recordRefUtils},table/{tableEntityCreator,tableRefEntity},setting/colorUtils}`、`services/{editingSession,clipboard}`。其中 `layoutAsync` 例外用 mock 锁 elkjs 边界，详见指南 §2.2。
-
-## 架构概览
-
-### 技术栈
-- **前端**: React 19 + TypeScript + Vite
-- **桌面框架**: Tauri (Rust 后端)
-- **UI 库**: Ant Design
-- **状态管理**: Resso (轻量级) + React Query
-- **图形可视化**: React Flow (XYFlow)
-- **路由**: React Router DOM
-- **国际化**: i18next
-
-### 核心组件结构
-
-#### 应用入口
-- `src/main.tsx` - React 应用主入口，配置路由和查询客户端
-- `src/app/CfgEditorApp.tsx` - 主应用组件，使用分割布局
-- `src/app/AppLoader.tsx` - 应用加载器，初始化设置
-
-#### 主要页面组件
-- `src/routes/table/Table.tsx` - 表结构可视化
-- `src/routes/record/Record.tsx` - 记录显示和编辑
-- `src/routes/tableRef/TableRef.tsx` - 表引用可视化
-- `src/routes/recordRef/RecordRef.tsx` - 记录引用可视化
-
-#### 搜索和查询
-- `src/routes/search/Finder.tsx` - 导航/搜索面板（最近访问、最近修改、引用列表、搜索值）
-- `src/routes/add/Chat.tsx` - AI 聊天界面
-- `src/routes/add/AddJson.tsx` - JSON 数据导入
-
-#### 设置管理
-- `src/routes/setting/Setting.tsx` - 应用设置面板
-- `src/store/store.ts` - 状态管理 (Resso)
-- `src/store/storage.ts` - 存储管理 (localStorage/YAML)
-- `src/store/historyModel.ts` - 历史记录模型
-
-#### 图形可视化
-- `src/flow/FlowGraph.tsx` - 图形可视化包装器
-- `src/flow/FlowNode.tsx` - 节点渲染
-- `src/flow/EntityCard.tsx` - 实体显示卡片
-- `src/flow/EntityForm.tsx` - 实体编辑表单
-- `src/flow/FlowStyleManager.tsx` - 样式管理
-- `src/flow/FlowVisualizationSetting.tsx` - 可视化配置
-
-### 数据模型
-
-#### 模式模型 (`src/api/schemaModel.ts`)
-- `STable` - 表结构定义，包含字段、外键和记录ID
-- `SStruct` - 结构定义
-- `SInterface` - 接口定义
-- `SField` - 字段定义
-- `RawSchema` - 完整模式数据结构
-
-#### 实体模型 (`src/domain/entityModel.ts`)
-- `Entity` - 图形可视化核心实体
-- `EntityEdit` - 编辑状态和功能
-- `EntityGraph` - 完整图形结构
-
-#### 记录模型 (`src/api/recordModel.ts`)
-- `RecordResult` - 记录数据与引用
-- `JSONObject` - 通用 JSON 数据结构
-
-#### 其他API模型 (`src/api/`)
-- `chatModel.ts` - AI聊天相关模型
-- `noteModel.ts` - 笔记编辑模型
-- `searchModel.ts` - 搜索功能模型
-
-### API 集成
-
-#### HTTP API 客户端 (`src/api/apiClient.ts`)
-- 使用 Axios 连接后端服务器 (localhost:3456)
-- 主要端点:
-  - `/schemas` - 获取模式数据
-  - `/record` - 获取单个记录
-  - `/recordRefIds` - 获取引用ID
-  - `/recordAddOrUpdate` - 创建/更新记录
-  - `/noteEdit` - 编辑笔记
-  - `/checkJson` - 检查JSON数据
-  - `/prompt` - AI提示接口
-
-#### React Query 集成
-- 在 main.tsx 中配置查询客户端
-- 支持乐观更新和缓存
-- 自动重试和错误处理
-
-### 状态管理
-
-#### 存储架构 (`src/store/store.ts`)
-- 使用 Resso 进行轻量级状态管理
-- `StoreState` 接口定义所有应用状态:
-  - 服务器配置
-  - AI 设置
-  - 引用深度和节点限制
-  - UI 偏好设置
-  - 导航历史
-  - 编辑状态
-
-#### 存储管理 (`src/store/storage.ts`)
-- 双重存储: localStorage (Web) 和 YAML 文件 (Tauri)
-- 自动持久化到 `cfgeditor.yml` 和 `cfgeditorSelf.yml`
-- 类型安全的偏好设置管理
-
-#### 历史记录 (`src/store/historyModel.ts`)
-- 管理用户的导航历史
-- 支持前进/后退功能
-- 剪贴板操作记录
-
-### 关键架构模式
-
-#### 1. 基于图形的可视化
-- 使用 React Flow 进行交互式图形可视化
-- 实体作为节点，关系作为边
-- 上下文菜单用于节点交互
-
-#### 2. 分割布局系统
-- 拖拽面板系统实现并排视图
-- 固定页面配置用于持久化布局
-- 灵活的面板排列
-
-#### 3. 热键导航
-- 常用操作的键盘快捷键
-- 历史导航 (alt+c/alt+v)
-- 页面类型切换 (alt+1 到 alt+4)
-
-#### 4. 多模式界面
-- 表视图 (模式可视化)
-- 记录视图 (单个数据显示)
-- 引用视图 (关系探索)
-- 编辑模式 (数据修改)
-
-#### 5. 可视化配置系统
-- 节点尺寸配置 (编辑/非编辑模式宽度)
-- 边样式配置 (颜色、粗细)
-- 布局间距配置 (树状/分层布局)
-- 实时配置更新
-- 国际化支持
-
-## 开发注意事项
-
-### 后端依赖
-- 需要启动 Java 后端服务器:
-  ```bash
-  java -jar ../cfggen.jar -datadir ../example/config -gen server
-  ```
-
-### Tauri 配置
-- 桌面应用配置在 `src-tauri/tauri.conf.json`
-- 构建时自动运行前端构建命令
-- 开发时使用 `http://localhost:1420`
-
-### 样式和主题
-- 使用 Ant Design 组件库
-- 支持暗色/亮色主题
-- 自定义样式通过 antd-style 管理
-
-### 国际化
-- 支持中英文界面
-- 翻译内联在 `src/app/i18n.ts`（en/zh 两段，无独立 locales 目录）
-- 使用 i18next 进行文本管理
-
-### 代码生成
-
-#### JSON 解析器生成
-**重要**: `src/store/storageJson.ts` 是自动生成的文件，不要直接编辑！
-
-- 编辑 `json.ts` 来定义接口和类型
-- 运行 `genJsonParser.bat` 重新生成 `storageJson.ts`
-  ```bash
-  genJsonParser.bat
-  ```
-  该脚本使用 quicktype 工具根据 `json.ts` 中的类型定义生成 JSON 解析代码
-- 生成后，在 `storageJson.ts` 中注释掉未使用的函数
-
-### 错误处理
-- React Query 提供统一的错误处理
-- 组件级别的错误边界
-- 用户友好的错误提示
+- **依赖只能向下**：`app/features → flow/res → store/services → domain → api`，反向 import 被 oxlint 立即拦下。规则见 `DIRECTORY_STRUCTURE.md §5`，以 `.oxlintrc.json` 为准。
+- **`src/domain/storageJson.ts` 是自动生成的**（quicktype 产出），不要手改——改 `src/domain/json.ts` 定义类型后跑 `genJsonParser.bat` 重新生成，再注释掉未用函数。
+- **`*.test.ts` 被 `.ignore` 排除**：Grep 工具搜不到测试内容，需用 `Glob src/**/*.test.ts` 定位再 Read（LSP `findReferences` 不受影响）。
+- **测试只覆盖纯逻辑**：vitest，jsdom 环境，不 mock、不碰 UI/网络/Tauri IPC；喂 fixture 断言输出。范围与取舍见 `docs/unit-testing-guide.md`。
+- **国际化**：翻译内联在 `src/app/i18n.ts`（en/zh 两段，无独立 locales 目录），用 i18next。

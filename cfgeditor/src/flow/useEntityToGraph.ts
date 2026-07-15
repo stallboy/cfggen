@@ -4,6 +4,7 @@ import {Rect, useReactFlow, useStore} from "@xyflow/react";
 import {convertNodeAndEdges} from "./layout/entityToNodeAndEdge.ts";
 import {useQuery} from "@tanstack/react-query";
 import {queryClient} from "@/services/queryClient.ts";
+import {queryKeys} from "@/services/queryKeys.ts";
 import {layoutAsync} from "./layout/layoutAsync.ts";
 import {EntityNode, NodeDoubleClickFunc, NodeMenuFunc} from "./FlowGraph.tsx";
 import {Entity, EditingObjectRes} from "@/domain/entityModel";
@@ -133,9 +134,9 @@ export function useEntityToGraph({
         maxImpl, refIn, refOutDepth, maxNode,
         recordRefIn, recordRefInShowLinkMaxNode, recordRefOutDepth, recordMaxNode, tauriConf,
     };
-    const queryKey = editingObjectRes?.isEdited ?
-        ['layout', pathname, 'e', layoutKeys, topologyKeys] : ['layout', pathname, layoutKeys, topologyKeys]
-    const staleTime = editingObjectRes?.isEdited ? 0 : 1000 * 60 * 5;
+    const isEdited = !!editingObjectRes?.isEdited;
+    const queryKey = queryKeys.layout(pathname, layoutKeys, topologyKeys, isEdited)
+    const staleTime = isEdited ? 0 : 1000 * 60 * 5;
     const {data: id2RectMap, error: layoutError} = useQuery({
         queryKey: queryKey,
         // 透传 react-query 的 AbortSignal：query 变 stale/inactive 时 react-query abort，
