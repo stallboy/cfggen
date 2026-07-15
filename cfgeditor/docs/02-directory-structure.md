@@ -1,12 +1,16 @@
-# 前端目录结构：原则、落地与守门（cfgeditor）
+# 目录结构：代码按什么分层、依赖只能向下怎么守
 
-> 通用原则 → 本项目落地 → 工程化护栏。第一~三节通用，第四、五节是 cfgeditor 当前实际结构。
+> 这篇讲 cfgeditor 的**目录怎么切、依赖方向怎么管**：先讲通用的分层原则（type-based vs feature-based、依赖只能向下、纯度判定），再落到本项目的实际结构，最后讲 oxlint 怎么自动拦反向 import。
+>
+> **不讲**：cfgeditor 是什么、核心概念（→ [`01-overview.md`](./01-overview.md)）、各层里的具体机制（状态 → [`04-state-management.md`](./04-state-management.md)、数据流 → [`05-url-api-reactquery.md`](./05-url-api-reactquery.md)）。本文只管「东西该放哪、能不能 import」。
+>
+> **读法**：第一~三节通用，第四、五节是 cfgeditor 当前实际结构。改代码前先读这篇，知道文件该落哪层。
 
 ---
 
-## 一、本质问题：目录按"什么"切？
+## 一、本质问题：目录按「什么」切
 
-所有目录方案都在回答：**代码按什么维度归类？** 两种基本切法：
+所有目录方案都在回答一个问题：**代码按什么维度归类？** 两种基本切法：
 
 - **切法 A — 按技术类型分层（type-based）**：组件 `components/`、hook `hooks/`、工具 `utils/`、接口 `api/`。心智简单、小项目绝佳；项目一大，改一个功能要在多个目录间跳。
 - **切法 B — 按业务特性分模块（feature-based）**：每个特性自包含（自己的组件 / hook / api / 类型）。大项目几乎都收敛到 B。
@@ -31,7 +35,7 @@
 
 ## 三、分层的灵魂：依赖方向 + 纯度
 
-**层的依赖只能向下，不能反向**——目录规划的底层物理定律：
+**层的依赖只能向下，不能反向**——这是目录规划的底层物理定律：
 
 ```
         app/              ← 入口、Provider、路由装配
@@ -57,13 +61,13 @@
 | 渲染 UI | `features/` / `flow/` |
 | 与业务无关、到处能复用 | `shared/` / `utils/` |
 
-> 越"纯"越往下沉，越"有状态 / 靠近用户"越往上浮。
+> 越「纯」越往下沉，越「有状态 / 靠近用户」越往上浮。
 
 ---
 
 ## 四、cfgeditor 当前结构
 
-分层骨架为主，`flow/`、`res/`、`features/` 是 feature-based 的特性目录（内部混装类型 / 工具 / UI / 服务）。`domain/` 是核心纯层。
+以分层骨架为主，`flow/`、`res/`、`features/` 是 feature-based 的特性目录（内部混装类型 / 工具 / UI / 服务）。`domain/` 是核心纯层。
 
 ```
 src/
@@ -103,10 +107,14 @@ app/features
 ## 五、工程化护栏
 
 ### 5.1 路径别名 `@/`
+
 跨目录 import 用 `@/`（同目录 `./` 保留）。`tsconfig.json` 的 `paths` + `vite.config.ts` / `vitest.config.ts` 的 `resolve.alias` 三处都要配，缺一则对应环节报 "Could not resolve @/"。
 
+> 用 TS7，`paths` 不能配 `baseUrl`、值须 `./` 相对；改别名三处一起改。
+
 ### 5.2 依赖方向守门（oxlint）
-`.oxlintrc.json` 用 `no-restricted-imports` 的 `patterns` + `overrides`（按 `files` 区分目录），给每层禁掉它不应 import 的 `@/` 上层前缀——任何反向 import 立即红。当前规则（以文件为准）：
+
+`.oxlintrc.json` 用 `no-restricted-imports` 的 `patterns` + `overrides`（按 `files` 区分目录），给每层禁掉它不应 import 的 `@/` 上层前缀——任何反向 import 立即红。当前规则（以 `.oxlintrc.json` 为准）：
 
 | 目录 | 不得 import |
 |---|---|
@@ -120,7 +128,8 @@ app/features
 特例：`store/resso.ts`（vendored 库源码）关 `rules-of-hooks`；`main.tsx` 关 `only-export-components`；`domain/storageJson.ts`（quicktype 产出）进 `ignorePatterns`。
 
 ### 5.3 测试随源码
-`*.test.ts` 与源码同目录（vitest），纯逻辑测试天然落 `domain/`。
+
+`*.test.ts` 与源码同目录（vitest），纯逻辑测试天然落 `domain/`。测试怎么写、测什么不测什么，见 [`09-unit-testing-guide.md`](./09-unit-testing-guide.md)。
 
 ---
 

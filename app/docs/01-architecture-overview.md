@@ -10,7 +10,7 @@ cfggen 是一个**配置定义驱动**的多语言代码生成器：从 `.cfg` s
 
 ## 端到端流水线
 
-入口在 `Main`（见 `../src/main/java/configgen/gen/Main.java`）：`main` → `registerAllProviders()`（注册全部 `-tool` / `-gen` 插件）→ `runWithCatch` → `run`。`run` 解析命令行，构造 `Context`，再依次对每个 `-gen` 调 `generate(context)`。
+入口在 `Main`（见 `gen/Main.java`）：`main` → `registerAllProviders()`（注册全部 `-tool` / `-gen` 插件）→ `runWithCatch` → `run`。`run` 解析命令行，构造 `Context`，再依次对每个 `-gen` 调 `generate(context)`。
 
 `Context` 在构造时就把 schema 和 data 读完并对齐；`makeValue` 在第一个生成器需要值时按需解析并缓存。
 
@@ -56,7 +56,7 @@ flowchart TD
 
 ### 1. 为什么以 `Context` 为中心
 
-`Context`（见 `../src/main/java/configgen/ctx/Context.java`）是唯一持有 `cfgSchema`、`cfgData` 和缓存值的地方。所有生成器和服务器都接收 `Context` 从中取数据，而不是各自去读文件。
+`Context`（见 `ctx/Context.java`）是唯一持有 `cfgSchema`、`cfgData` 和缓存值的地方。所有生成器和服务器都接收 `Context` 从中取数据，而不是各自去读文件。
 
 好处：读 + 对齐 + 缓存的逻辑只写一遍；生成器退化为纯粹的"取值 → 渲染"，极其轻量；服务器（`editorserver` / `mcpserver`）和命令行复用同一套**已对齐**的数据。
 

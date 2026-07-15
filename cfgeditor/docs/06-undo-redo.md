@@ -1,15 +1,18 @@
-# Undo/Redo（cfgeditor）
+# Undo/Redo：编辑态撤销重做怎么做、为什么不靠现成库
 
-> 范围：一条 record 编辑态内的撤销/重做（增删数组项、改字段值、换 impl、粘贴、AI/JSON 整体写入……）。
-> 与导航历史正交：`historyModel.ts`（`alt+c`/`alt+v`）是「访问过哪些 record」，undo/redo 是「当前 record 改了什么」，数据流不交叉。
-> 相关文档：[fitview-视口适配机制](./fitview-视口适配机制.md)（视口契约与 `computeStableViewport`）、[状态管理-总结与演进](./状态管理-总结与演进.md)（EditingSession/resso/useSyncExternalStore 全景）、[perf-optimization](./perf-optimization.md)（性能契约背景）。
-
-**覆盖**：结构类编辑（增/删/前插/上下移/折叠/换 impl/粘贴/整体替换）+ 值类编辑（primitive 键入 / note），在当前编辑会话内。
-**不覆盖**：跨 record 的 undo（切走再切回不保留旧 record 历史）、已提交数据的回滚、多人协同、纯 UI 局部态（如展开按钮）。
+> 这篇讲一条 record **编辑态内**的撤销/重做：为什么内建快照栈、不外包给 redux-undo/zundo/immer；快照栈怎么接 EditingSession、值类怎么合并、提交边界在哪、结构 undo 视口怎么稳定。
+>
+> **范围**：结构类编辑（增/删/前插/上下移/折叠/换 impl/粘贴/整体替换）+ 值类编辑（primitive 键入 / note），在当前编辑会话内。与导航历史正交——`historyModel.ts`（`alt+c`/`alt+v`）是「访问过哪些 record」，undo/redo 是「当前 record 改了什么」，数据流不交叉。
+>
+> **不讲（不覆盖）**：跨 record 的 undo（切走再切回不保留旧 record 历史）、已提交数据的回滚、多人协同、纯 UI 局部态（如展开按钮）。
+>
+> **配套**：编辑会话/性能契约全景（→ [`04-state-management.md`](./04-state-management.md) §六）、视口契约与 `computeStableViewport`（→ [`07-fitview.md`](./07-fitview.md)）、性能契约背景与 release 实测（→ [`10-perf-optimization.md`](./10-perf-optimization.md)）。
+>
+> **锚点**：快照栈 `domain/undoStack.ts`（`UndoStack`）；接入与 coalescing 在 `services/editingSession.ts`；视口决策 `flow/layout/viewportMath.ts`。
 
 ---
 
-## 第一部分：业界原理
+## 一、业界原理
 
 表面看 undo 就是「回到上一个状态」。难点在于：**程序的当前状态只有一个，而 undo 需要「过去的状态」——过去已被覆盖。** 所以 undo 的本质是**额外存储历史信息**，而「存什么」决定了方案。
 
@@ -33,7 +36,7 @@
 2. **内存 / 结构共享**：快照栈对大对象每份独立深拷 → 内存爆炸。缓解手段：栈深封顶（如 50）、改 patch 路线、结构共享（immutable.js/immer，但要求整个数据模型不可变）。**关键事实**：结构共享只在「不可变数据结构」下免费；普通可变 JSON 对象 `structuredClone` 出来的快照之间没有任何共享。
 3. **提交/持久化后的 undo 语义**：已保存到磁盘/后端的改动不靠内存 undo 回滚（那是版本控制/数据库的另一层）。提交 = undo 栈的天然边界——Monaco `setValue()` 销毁 undo 栈、Excalidraw 提交后栈重置。
 
-> 附：**视图状态的独立性**。undo 数据时，光标/选中/视口焦点要不要一起回滚？多数工具：数据 undo，视图尽量稳定（不强制跳焦点）。视图状态（焦点/视口/折叠）是「瞬时意图」，不是「数据历史」的一部分——但 cfgeditor 对 undo 后的**视口稳定**做了专门处理（见第四部分）。
+> 附：**视图状态的独立性**。undo 数据时，光标/选中/视口焦点要不要一起回滚？多数工具：数据 undo，视图尽量稳定（不强制跳焦点）。视图状态（焦点/视口/折叠）是「瞬时意图」，不是「数据历史」的一部分——但 cfgeditor 对 undo 后的**视口稳定**做了专门处理（见 §四）。
 
 ### 1.3 成熟产品的做法（范本）
 
@@ -45,7 +48,7 @@
 
 ### 1.4 结论：cfgeditor 为何内建快照栈
 
-对照 cfgeditor 现状（第二部分详述），通用 undo 库都不适用：
+对照 cfgeditor 现状（§二详述），通用 undo 库都不适用：
 
 - **redux-undo / zundo / use-undo**：假定不可变 reducer store `{past, present, future}`。cfgeditor 的 `EditingSession` 是**就地变异 + `getSnapshot` 返回 number**，根本冲突，强行套用要重写 EditingSession 为不可变 reducer，破坏性能契约。
 - **immer `produceWithPatches`**：`produce` 要求不可变更新，与就地变异 + 共享引用闭包冲突；只能当 diff 引擎替代品（等价 fast-json-patch），无额外收益。
@@ -57,7 +60,7 @@
 
 ---
 
-## 第二部分：cfgeditor 编辑管线（undo 的硬约束来源）
+## 二、cfgeditor 编辑管线（undo 的硬约束来源）
 
 ### 2.1 EditingSession：就地变异 + 结构版本号
 
@@ -119,7 +122,7 @@ session.submit() → mutate(editingObject) → 后端 addOrUpdateRecord
 
 ---
 
-## 第三部分：当前设计——快照栈
+## 三、当前设计——快照栈
 
 ### 3.1 UndoStack：纯数据栈
 
@@ -181,7 +184,7 @@ export class UndoStack {
 | `flush/touch/coalesceKey` | 值类合并（见 3.5） |
 | `resetBaselines()` | 重置脏比较基准 + undo baseline（提交/reset 后） |
 
-`captureUndoPoint` / `applyUndoPoint` 是**升级契约点**：现为 `structuredClone`，将来若换 JSON Patch 只动这两个方法体，上层不动（见第六部分）。
+`captureUndoPoint` / `applyUndoPoint` 是**升级契约点**：现为 `structuredClone`，将来若换 JSON Patch 只动这两个方法体，上层不动（见 §六）。
 
 ### 3.3 capture：什么时候存快照
 
@@ -244,7 +247,7 @@ redo() { /* 对称：popRedo，其余相同 */ }
 
 `bumpStructure` 内含 `notifyEditingState`（刷 HeaderBar 脏标记）+ `emit`（通知 `useSyncExternalStore` 订阅者）。
 
-> `position: {id: anchorId, x: 0, y: 0}` 的 `x/y` 是占位：undo/redo 的 `undoFitView` 只会是 `KeepStable`/`NoChange`/`FitFull`，永远不是 `FitId`，故 `x/y` 不会被消费（KeepStable 的 anchorOld 来自 flow 层缓存的上一帧布局，不用 position.x/y，见第四部分）。
+> `position: {id: anchorId, x: 0, y: 0}` 的 `x/y` 是占位：undo/redo 的 `undoFitView` 只会是 `KeepStable`/`NoChange`/`FitFull`，永远不是 `FitId`，故 `x/y` 不会被消费（KeepStable 的 anchorOld 来自 flow 层缓存的上一帧布局，不用 position.x/y，见 §四）。
 
 **UI 同步链路**（undo 后 Form 显示新值）：
 
@@ -290,7 +293,7 @@ private flushValueCoalesce() {
 }
 ```
 
-**per-key 成本**：合并判定只做「字段标识比较 + `clearTimeout`/`setTimeout`」，不 clone、不遍历 `editingObject`。这是「键入零重渲」的关键之一（另一处见第七部分改进建议——`notifyEditingState` 里的 `isDeeplyEqual`）。换字段的信号来自 `EntityForm` 的 `onValuesChange(changed, allValues)`：`allValues` 写回 editingObject，`changed` 算 coalescing key + Form.List 长度 diff。
+**per-key 成本**：合并判定只做「字段标识比较 + `clearTimeout`/`setTimeout`」，不 clone、不遍历 `editingObject`。这是「键入零重渲」的关键之一（另一处是 `notifyEditingState` 里的 `isDeeplyEqual` 深比较，见 [`04-state-management.md`](./04-state-management.md) §8.2）。换字段的信号来自 `EntityForm` 的 `onValuesChange(changed, allValues)`：`allValues` 写回 editingObject，`changed` 算 coalescing key + Form.List 长度 diff。
 
 值类 coalescing 由 `editingSession.test.ts` 单测（同字段合并、换字段关闭、timer 到期、Form.List 长度变/同、per-key 不 bump/emit、结构操作前 flush、dispose flush）。
 
@@ -369,7 +372,7 @@ antd `setFieldValue` by design 不触发 `onValuesChange`，不会回流污染 c
 
 ---
 
-## 第四部分：视口稳定（当前实现：KeepStable）
+## 四、视口稳定（当前实现：KeepStable）
 
 ### 4.1 问题：结构 undo 会跳
 
@@ -461,11 +464,11 @@ t3  ELK 返回新 id2RectMap → newNodes 更新 → Effect 2 主体跑：
 | 锚点在新布局不存在（极端） | `prevRectMap.get`/`id2RectMap.get` 命中失败 → noop（罕见，接受小跳） |
 | 首次无 prevRectMapRef | `opts.prevId2RectMap` 缺失 → noop（undo 前必有布局，防御） |
 
-视口机制全貌（`EFitView` 五档语义、`computeStableViewport` 推导、`pickViewportAction` 三分支、固定页/只读路径）见 [fitview-视口适配机制](./fitview-视口适配机制.md)。
+视口机制全貌（`EFitView` 四档语义、`computeStableViewport` 推导、`pickViewportAction` 三分支、固定页/只读路径）见 [`07-fitview.md`](./07-fitview.md)。
 
 ---
 
-## 第五部分：性能契约与测试
+## 五、性能契约与测试
 
 ### 5.1 契约回顾
 
@@ -507,13 +510,13 @@ new PerformanceObserver(list => {
 
 ---
 
-## 第六部分：升级路径
+## 六、升级路径
 
 `captureUndoPoint` / `applyUndoPoint` 是升级契约点。当前 `structuredClone` 全量快照——正确性最好、实现最简，maxDepth=50 + 快照独立深拷是内存兜底。**不建议预优化**：换 JSON Patch 要引入 diff 引擎 + 路径互译成本，而结构 undo 的卡顿根源是 entityMap 全量重算模型（命令模式/Patch 同样要走 `bumpStructure` 全量重渲），换 undo 实现解决不了。**先按 5.3 release 实测，确认真有内存/性能问题再动**；若要动，优先 entityMap 引用稳定化（一举两得），其次才考虑 JSON Patch（只改这两个方法体，上层不动）。
 
 ---
 
-## 速记
+## 一句话速记
 
 - **做什么**：record 编辑态 undo/redo（≠ 导航历史）。覆盖值类 + 结构类，session 内，不跨 record、不回滚已提交。
 - **怎么做**（快照栈）：每次编辑后存 `editingObject` 全量深拷（快照带 `{undoFitView, anchorId?}`）；undo = apply 上一份 + `bumpStructure`（按快照语义：结构→`KeepStable`+锚点 / 值类→`NoChange` / 整体替换→`FitFull`）；redo 对称。`UndoStack`（`domain/undoStack.ts`）纯数据类，`undo/redo` 是 session 方法。

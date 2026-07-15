@@ -1,12 +1,14 @@
-# FitView 视口适配机制
+# 视口适配（FitView）：编辑后画布为什么不乱跳
 
-> 适用范围：`cfgeditor`
-> 关键词：`EFitView`、`EditingObjectRes`、视口、`fitView`、`pickViewportAction`、EditingSession
-> 关联文档：[状态管理-总结与演进](./状态管理-总结与演进.md)、[flow-xyflow-refactoring](./flow-xyflow-refactoring.md)、[undo-redo](./undo-redo.md)
+> 这篇讲画布**视口（viewport）怎么适配**：编辑动作之后，视口该全图重铺、还是锚定某个节点不动、还是不动——这套"视口意图"怎么用一个枚举（`EFitView`）沿单向数据流从编辑会话传到视图层，以及 FitId 档位为什么必须自己算数学。
+>
+> **不讲**：编辑会话与就地变异（→ [`04-state-management.md`](./04-state-management.md) §六）、undo 快照栈与视口语义的由来（→ [`06-undo-redo.md`](./06-undo-redo.md)）、layout 缓存/queryKey（→ [`05-url-api-reactquery.md`](./05-url-api-reactquery.md) §5.3，本文 §八只点它们的耦合点）。
+>
+> **锚点**：契约载体 `EFitView` / `EditingObjectRes` 在 `domain/entityModel.ts`；决策与数学 `pickViewportAction`（内部 `computeStableViewport`）在 `flow/layout/viewportMath.ts`；消费在 `flow/useEntityToGraph.ts`；产生在 `services/editingSession.ts` 的 `bumpStructure`。
 
 ---
 
-## 1. 一句话理解
+## 一、一句话理解
 
 **FitView 是「编辑动作」与「视口动作」之间的契约**：编辑会话（`EditingSession`）每次结构变更时，在 `EditingObjectRes` 上挂一个 `EFitView` 枚举值，声明"这次变更后视口应该怎么动"；视图层（`useEntityToGraph`）读到这个值，翻译成对应的 xyflow 命令（`fitView` / `setViewport` / 什么都不做）。
 
@@ -14,9 +16,9 @@
 
 ---
 
-## 2. 背景知识：xyflow 的视口是什么
+## 二、背景知识：xyflow 的视口是什么
 
-xyflow（React Flow）的视口（viewport）是一个**线性变换参数**（公开契约，见 `flow/viewportMath.ts`）：
+xyflow（React Flow）的视口（viewport）是一个**线性变换参数**（公开契约，见 `flow/layout/viewportMath.ts`）：
 
 ```
 screenX = worldX * zoom + vp.x
@@ -36,11 +38,11 @@ xyflow 提供的视口相关公开 API（`useReactFlow()` 返回）：
 | `setViewport(vp)` | 直接设置平移+缩放（最底层） |
 | `getViewport()` | 读当前视口 |
 
-> **关键认知**：xyflow **没有**"保持某点屏幕坐标不变"的高层原语。这正是 FitView 需要分档、且有一档必须自己算数学的根本原因（见 §5）。
+> **关键认知**：xyflow **没有**"保持某点屏幕坐标不变"的高层原语。这正是 FitView 需要分档、且有一档必须自己算数学的根本原因（见 §五）。
 
 ---
 
-## 3. 核心概念
+## 三、核心概念
 
 ### 3.1 `EFitView` 枚举
 
@@ -74,11 +76,11 @@ export type EditingObjectRes = {
 }
 ```
 
-它被放在 `domain/` 中立层，目的是消除 `flow → routes` 的反向依赖（详见 `flow-xyflow-refactoring.md` A5）。`fitView` 名字虽带视图语义，但作为"编辑态↔视图"的共享契约放 domain 合理。
+它被放在 `domain/` 中立层，目的是消除 `flow → features` 的反向依赖（视图层 `flow/` 只 import `domain/` 契约，不反向依赖 `features/`）。`fitView` 名字虽带视图语义，但作为"编辑态↔视图"的共享契约放 domain 合理。
 
 ---
 
-## 4. 端到端数据流
+## 四、端到端数据流
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -121,7 +123,7 @@ export type EditingObjectRes = {
 
 ---
 
-## 5. FitId 的数学：为什么必须自己算
+## 五、FitId 的数学：为什么必须自己算
 
 ### 5.1 问题陈述
 
@@ -144,7 +146,7 @@ anchorNew.x * zoom + newVp.x = anchorOld.x * zoom + vp.x
           = (anchorOld.x - anchorNew.x) * zoom + vp.x
 ```
 
-y 同理。`flow/viewportMath.ts` 的内部函数 `computeStableViewport` 即此实现（由 `pickViewportAction` 调用，不单独导出）：
+y 同理。`flow/layout/viewportMath.ts` 的内部函数 `computeStableViewport` 即此实现（由 `pickViewportAction` 调用，不单独导出）：
 
 ```ts
 function computeStableViewport(anchorOld: Point, anchorNew: Point, vp: Viewport): Viewport {
@@ -161,12 +163,12 @@ function computeStableViewport(anchorOld: Point, anchorNew: Point, vp: Viewport)
 - `fitView` 框的是"所有节点的包围盒"，会改变缩放和平移，做不到"锚点屏幕不动"。
 - `setCenter` 把指定点居中，但用户要的不是"居中"而是"原地不动"。
 
-xyflow 没提供这个原语，所以**必须自算**。这是 `flow-xyflow-refactoring.md` A6 强调的一条：不要试图用 `fitView` 替换 FitId 分支。
+xyflow 没提供这个原语，所以**必须自算**。不要试图用 `fitView` 替换 FitId 分支——数学不等价。
 
 ### 5.4 消费端代码（`useEntityToGraph.ts`）
 
 ```ts
-// 视口动作决策走纯函数 pickViewportAction（flow/viewportMath.ts）：三分支选择 + FitId 数学
+// 视口动作决策走纯函数 pickViewportAction（flow/layout/viewportMath.ts）：三分支选择 + FitId 数学
 // 全部收口其中，effect 只负责调命令。行为与原 inline 三分支逐分支等价。
 const action = pickViewportAction(editingObjectRes, id2RectMap, getViewport());
 if (action.kind === 'fitFull') {
@@ -183,7 +185,7 @@ if (action.kind === 'fitFull') {
 
 ---
 
-## 6. 各档的触发点一览（EditingSession）
+## 六、各档的触发点一览（EditingSession）
 
 `services/editingSession.ts` 里 `bumpStructure` 是唯一的 fitView 写入点，所有方法按语义传参：
 
@@ -196,7 +198,7 @@ if (action.kind === 'fitFull') {
 | `updateFold` | `FitId` | ✓ | 折叠/展开，定位到该节点 |
 | `updateInterfaceValue` | `FitId` | ✓ | 换 interface 实现 |
 | `pasteStruct` | `FitId` | ✓ | 粘贴 |
-| `undo` / `redo` | 按被撤销操作快照语义：结构→`KeepStable`+锚点；值类→`NoChange`；整体替换→`FitFull` | 锚点（结构） | 数据回滚；结构 undo 让焦点节点屏幕不动（详见 [undo-redo](./undo-redo.md) 第四部分） |
+| `undo` / `redo` | 按被撤销操作快照语义：结构→`KeepStable`+锚点；值类→`NoChange`；整体替换→`FitFull` | 锚点（结构） | 数据回滚；结构 undo 让焦点节点屏幕不动（详见 [`06-undo-redo.md`](./06-undo-redo.md) §四） |
 
 **记忆口诀**：
 
@@ -206,9 +208,9 @@ if (action.kind === 'fitFull') {
 
 ---
 
-## 7. 只读路径与固定页面（RecordRef）
+## 七、只读路径与固定页面（RecordRef）
 
-`RecordRef.tsx` 不走 `EditingSession`，自己构造 `editingObjectRes`：
+`features/record/RecordRef.tsx` 不走 `EditingSession`，自己构造 `editingObjectRes`：
 
 ```ts
 const keepViewport: EditingObjectRes = { fitView: EFitView.NoChange, isEdited: false }
@@ -229,7 +231,7 @@ if (inDragPanelAndFix && fittedPathname === pathname) {
 
 ---
 
-## 8. 与性能契约、缓存的关系
+## 八、与性能契约、缓存的关系
 
 FitView 不是孤立的视口开关，它和 layout 缓存通道深度耦合（见 `useEntityToGraph.ts` 注释）：
 
@@ -247,16 +249,16 @@ const staleTime = editingObjectRes?.isEdited ? 0 : 1000 * 60 * 5;
 
 ---
 
-## 9. 实现备忘（当前状态要点）
+## 九、实现备忘（当前状态要点）
 
 - **视口切换一律瞬时**：`fitView`/`setViewport` 不带 `duration`（曾加 300ms 过渡，动画引起视觉不适已撤销）。这是有意的产品决定，勿回改。
-- **Effect 2 与 Effect 1 拆分**：`useEntityToGraph` 把「节点/菜单下发」（Effect 1，deps 含 `paneMenu`/`nodeMenuFunc`）与「视口动作」（Effect 2，deps 只 `editingObjectRes`/`id2RectMap`/`viewportReady`/`newNodes`）拆成两个 effect。拆分的历史诱因（值类 coalescing flush 让 `canUndo` 翻转 → 连带重置视口）已随「Record 不订阅 `canUndo` + `paneMenu` 的 `disabled` 惰性化」消除，但拆分作为视口语义的独立边界保留（详见 [undo-redo](./undo-redo.md) §3.8）。
+- **Effect 2 与 Effect 1 拆分**：`useEntityToGraph` 把「节点/菜单下发」（Effect 1，deps 含 `paneMenu`/`nodeMenuFunc`）与「视口动作」（Effect 2，deps 只 `editingObjectRes`/`id2RectMap`/`viewportReady`/`newNodes`）拆成两个 effect。拆分的历史诱因（值类 coalescing flush 让 `canUndo` 翻转 → 连带重置视口）已随「Record 不订阅 `canUndo` + `paneMenu` 的 `disabled` 惰性化」消除，但拆分作为视口语义的独立边界保留（详见 [`06-undo-redo.md`](./06-undo-redo.md) §3.8）。
 - **决策/数学收口纯函数**：`pickViewportAction`（`flow/layout/viewportMath.ts`）是公开纯函数，三分支选择 + FitId/KeepStable 数学全收口其中，effect 只调命令；`computeStableViewport` 为内部函数。配 `viewportMath.test.ts` 单测全分支。
 - **`EFitView` 字符串枚举**：`= 'FitFull'` 等字符串值（DevTools/调试可读，不依赖隐式数字）；`FitNone` 已并入 `NoChange`（消费端两者完全相同，YAGNI），`RecordRef` 用 `keepViewport` 常量。
 
 ---
 
-## 10. 常见排查清单
+## 十、常见排查清单
 
 | 现象 | 排查方向 |
 |---|---|
@@ -264,13 +266,13 @@ const staleTime = editingObjectRes?.isEdited ? 0 : 1000 * 60 * 5;
 | FitId 时画布猛地一跳 | 检查 `id2RectMap.get(id)` 是否拿到了**新布局**结果（layout 缓存是否被正确 remove） |
 | undo 结构后视口大跳 | 结构 undo 应传 `KeepStable`+锚点（补偿让焦点节点屏幕不动）；检查快照 `anchorId` 是否正确、`prevRectMap` 是否拿到 undo 前布局（loading 期 guard 不应更新 ref） |
 | 固定页面视口反复重置 | P0 已修；若复现，检查 `fittedPathname === pathname` 是否成立、`setFitViewForPathname` 回调是否传入 |
-| 键入 input 后视口偶发被 fitFull | 视口 effect（Effect 2）不得含 `paneMenu`/`nodeMenuFunc` 等菜单回调 deps——任何让这些回调换引用的改动都会连带重跑视口；已拆 effect 隔离（见 §9） |
+| 键入 input 后视口偶发被 fitFull | 视口 effect（Effect 2）不得含 `paneMenu`/`nodeMenuFunc` 等菜单回调 deps——任何让这些回调换引用的改动都会连带重跑视口；已拆 effect 隔离（见 §九） |
 | 浏览态每次 refetch 都重铺 | `editingObjectRes` 在非编辑态每次 memo 新建对象引用，可能触发 effect 重跑；检查 memo deps |
 | 新增结构后节点没定位过去 | `viewportReady`（`panZoom !== null`）是否就绪；`id2RectMap` 是否含该 id |
 
 ---
 
-## 11. 速查表
+## 十一、速查表
 
 ```
 编辑动作                    fitView       视口 API                    数学
@@ -281,4 +283,12 @@ undo/redo 结构              KeepStable    setViewport(compute…)      焦点 
 undo/redo 值类 / 固定页 / 只读 NoChange   (无)                       —
 ```
 
-**一句话收尾**：FitView 把"视口该怎么动"这种带时序的意图，编码进单向数据流，让 EditingSession 只管"发生了什么"，useEntityToGraph 只管"视口怎么响应"——两边解耦，中间靠一个三值枚举 + 一个公开纯函数（`pickViewportAction`，内部 `computeStableViewport` 兜数学）收口所有视口决策。
+---
+
+## 一句话速记
+
+- **FitView 是"编辑动作→视口动作"的契约**：`EFitView` 四档（FitFull/FitId/KeepStable/NoChange）挂在 `EditingObjectRes` 上，沿单向数据流从 EditingSession 传到 `useEntityToGraph`。
+- **记忆口诀**：整体换→FitFull、局部动→FitId、只是回退→NoChange。
+- **FitId 必须自算数学**（`computeStableViewport`）：xyflow 没有"保持锚点屏幕坐标不变"的原语，靠 `newVp = (anchorOld-anchorNew)*zoom + vp` 补偿。
+- **决策全收口纯函数 `pickViewportAction`**（`flow/layout/viewportMath.ts`，配单测），effect 只调命令、幂等。
+- **fitView 搭 structureVersion 便车**：值类编辑不 bump → 视口通道不更新（有意，值类不改拓扑）。

@@ -1,6 +1,8 @@
-# cfgeditor 性能记录（2026-07）
+# 性能记录（2026-07）：baseline → 修复 → after，不靠猜
 
-基于三路静态审查 + chrome-devtools 运行时验证。每项给 baseline → 修复 → after，不靠猜。配套：[`undo-redo.md`](./undo-redo.md) §5.3 release 实测方案、memory「性能测量陷阱」。
+> 这是一份**点在当下的性能实证记录**（2026-07）：每项给 baseline → 修复 → after 的实测数字、commit 号、否决项，基于三路静态审查 + chrome-devtools 运行时验证。它不是教程——是「当时测到什么、改了什么、为什么不改」的快照，数字不随重构重算。
+>
+> **配套**：release 实测方法（PerformanceObserver longtask、定时器直测）见 [`06-undo-redo.md`](./06-undo-redo.md) §5.3；测量陷阱见 memory「性能测量陷阱」。
 
 ---
 

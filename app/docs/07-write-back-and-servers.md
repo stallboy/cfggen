@@ -19,17 +19,17 @@ flowchart LR
 
 ## `VTableStorage`：原地编辑
 
-见 `../src/main/java/configgen/write/VTableStorage.java`。类注释一句话点明设计：**"不做任何内存数据结构的修改，只读"**——它只动文件，不动内存。
+见 `write/VTableStorage.java`。类注释一句话点明设计：**"不做任何内存数据结构的修改，只读"**——它只动文件，不动内存。
 
 - **更新**：按主键找到旧记录在文件里的位置（靠记录的 `Source` / `DRowId` 回溯），`emptyRows` 清空那几行，再把新记录块插回原位。
 - **新增**：取一个 sheet，`startRow=-1` 追加到末尾。
 - **删除**：定位后清空行。
 
-记录在内存里先经 `RecordBlockMapper.mapToBlock` 转成 `RecordBlock`（单元格表示），再按 `fieldIndices` 变换到文件列。`TableFile` 接口（见 `../src/main/java/configgen/write/TableFile.java`）抽象掉格式差异：`emptyRows` / `insertRecordBlock`（空行不够时自动插新行） / `saveAndClose`，实现有 `ExcelTableFile` / `CsvTableFile` / `ColumnModeExcelTableFile` / `ColumnModeCsvTableFile`。
+记录在内存里先经 `RecordBlockMapper.mapToBlock` 转成 `RecordBlock`（单元格表示），再按 `fieldIndices` 变换到文件列。`TableFile` 接口（见 `write/TableFile.java`）抽象掉格式差异：`emptyRows` / `insertRecordBlock`（空行不够时自动插新行） / `saveAndClose`，实现有 `ExcelTableFile` / `CsvTableFile` / `ColumnModeExcelTableFile` / `ColumnModeCsvTableFile`。
 
 ## `editorserver`：给 cfgeditor 的 REST API
 
-见 `../src/main/java/configgen/editorserver/EditorServer.java`。基于 `com.sun.net.httpserver`，虚拟线程池执行（`newVirtualThreadPerTaskExecutor`）。主要路由：
+见 `editorserver/EditorServer.java`。基于 `com.sun.net.httpserver`，虚拟线程池执行（`newVirtualThreadPerTaskExecutor`）。主要路由：
 
 | 方法 | 路由 | 作用 |
 |---|---|---|
@@ -49,13 +49,13 @@ flowchart LR
 
 ## `mcpserver`：给 AI 的 MCP 服务
 
-见 `../src/main/java/configgen/mcpserver/CfgMcpServer.java`。用 codeboyzhou 的声明式 MCP SDK（`@McpServerApplication`），流式 HTTP 端口默认 3457。工具（`@McpTool`）：
+见 `mcpserver/CfgMcpServer.java`。用 codeboyzhou 的声明式 MCP SDK（`@McpServerApplication`），流式 HTTP 端口默认 3457。工具（`@McpTool`）：
 
 | 工具 | 作用 |
 |---|---|
 | `SchemaTool` | 查表结构 |
 | `ReadRecordTool` | 读记录 |
-| `WriteRecordTool` | `addOrUpdateRecord` / `deleteRecord`（见 `../src/main/java/configgen/mcpserver/WriteRecordTool.java`） |
+| `WriteRecordTool` | `addOrUpdateRecord` / `deleteRecord`（见 `mcpserver/WriteRecordTool.java`） |
 | `SearchTool` | 搜索 |
 
 写工具 `synchronized(lock)` 串行化，成功后 `CfgMcpServer.updateCfgValue` 换值。

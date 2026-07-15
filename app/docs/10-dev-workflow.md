@@ -12,8 +12,8 @@
 
 | 任务 | 作用 |
 |---|---|
-| `jte { generate() }` | 把 `src/main/resources/jte/*.jte` **预编译成 class** 烤进 jar；运行时 `JteEngine` 走 `createPrecompiled`，省每次启动 ~1.6s 的模板编译（见 [`05`](05-codegen-and-extension.md)） |
-| `normalizeJteLineEndings` | 强制所有 `.jte` 行尾为 **LF**。CRLF 会原样透传到生成的代码文件；`.gitattributes` 设了 `eol=lf`，所以 git 不会因这步原地改文件而报 modified |
+| `normalizeJteLineEndings` | 先于 `generateJte` 跑（`generateJte` / `processResources` 都 `dependsOn` 它）。强制所有 `.jte` 行尾为 **LF**——jte 预编译按字节读模板，工作区若是 CRLF 会原样透传到生成的代码文件；这步原地改源文件，但 `.gitattributes` 设了 `eol=lf`，所以 git 不会报 modified |
+| `jte { generate() }` | 紧随其后把 `src/main/resources/jte/*.jte` **预编译成 class** 烤进 jar；运行时 `JteEngine` 走 `createPrecompiled`，省每次启动 ~1.6s 的模板编译（见 [`05`](05-codegen-and-extension.md)） |
 | `copyGenJavaSources` | 把 `genjava` 的**运行时读取侧**源码（`Schema*` / `ConfigInput` / `BytesInspector` 等）拷进 jar 的 `resources/support/`，供读取侧使用 |
 
 还有两个细节：`fatJar` 排除 `META-INF/*.SF|DSA|RSA`（依赖的签名文件，不排会 `java -jar` 报 `SecurityException`）；因为 fastjson2 在 JDK25 下用 `sun.misc.Unsafe`（JEP 471 弃用），`applicationDefaultJvmArgs` 加了 `--sun-misc-unsafe-memory-access=allow`。
@@ -32,7 +32,7 @@
 
 ## 性能 profile
 
-`util/Logger`（见 `../src/main/java/configgen/util/Logger.java`）提供：
+`util/Logger`（见 `util/Logger.java`）提供：
 
 | 参数 | 作用 |
 |---|---|
@@ -48,7 +48,7 @@
 
 - **JTE 预编译坑**：改模板要重新 `fatjar`，否则 jar 里还是旧模板。
 - **GDScript 属性递归不是 bug**：Godot 4.x 的 `var x: Array[int]: get: return x` 是标准语法，会自动处理，别当无限递归修（见 `gengd`）。
-- **`_skill_buff` 目录陷阱**：同一份 json 不能同时存在于两个目录（如 `_skill_buff` 和 `skill/_buff`），否则启动时找不到——历史 commit 修过这类问题。
+- **`_skill_buff` 目录陷阱**：同一份 json 不能同时存在于两个目录（如 `_skill_buff` 和 `skill/_buff`）。
 - **Java25 Unsafe 警告**：已用 JVM arg 抑制，看到是正常的。
 
 ## 测试 / 覆盖率
@@ -64,7 +64,7 @@
 | 便捷打包（Windows） | `../../genjar.bat`（Git Bash 下用 `./gradlew.bat fatjar`） |
 | 生成 exe | `../script/mkexe.bat`（含 `genexe_step1/2.bat`） |
 | 模板 | `../src/main/resources/jte/` |
-| 日志 / profile | `../src/main/java/configgen/util/Logger.java` |
+| 日志 / profile | `util/Logger.java` |
 | 示例数据 | `../../example/` |
 
 ---

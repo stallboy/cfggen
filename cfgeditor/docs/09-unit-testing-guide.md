@@ -1,7 +1,10 @@
-# cfgeditor 单元测试指南
+# 单元测试：测什么、怎么测、为什么不测 UI/网络/IPC
 
-> 本文是 cfgeditor 单元测试的**长期指导**：讲清测什么、怎么测、为什么这么取舍。
-> 面向新人：前半部分讲原则（带业界出处，偏教学），后半部分讲本项目怎么落地、测什么、不测什么。
+> 本文是 cfgeditor 单元测试的**长期指导**：讲清测什么、怎么测、为什么这么取舍。前半部分讲原则（带业界出处，偏教学），后半部分讲本项目怎么落地、测什么、不测什么。
+>
+> **不讲**：目录分层与「测试随源码同目录」的约定背景（→ [`02-directory-structure.md`](./02-directory-structure.md) §5.3）、各纯逻辑模块的机制本身。
+>
+> **锚点**：配置 `vitest.config.ts`；fixture 与 setup 在 `src/test/`；测试与源码同目录、命名 `*.test.ts`。
 
 ---
 
@@ -92,7 +95,7 @@ cfgeditor 刻意把可测的**规则与状态**下沉到 `domain/` `services/` `
 
 带来的结论：
 - ✅ 测 `domain/schema`、`services/editingSession`、`flow/layout/colors`：喂 fixture，断言输出，**零 mock**。
-- ❌ 不测 `*.tsx` UI 组件（`flow/edit/` 下的 `EntityForm` / `EntityCard`、`routes/record/Record` 等）：它们只做渲染与派发，逻辑已下沉到纯模块。
+- ❌ 不测 `*.tsx` UI 组件（`flow/edit/` 下的 `EntityForm` 等编辑表单、`features/record/Record` 等）：它们只做渲染与派发，逻辑已下沉到纯模块。
 - ❌ 不测 `api/apiClient.ts`（HTTP）、`res/readResInfosAsync.ts` / `res/summarizeResAsync.ts`（Tauri 文件 IPC）。`flow/layout/layoutAsync.ts` 的 elkjs 交互已用 mock 边界测（见 §2.2）。
 - ❌ 不测 `store/store.ts`：Resso 全局状态跨组件耦合，单测性价比低，留给手测。
 
@@ -189,7 +192,7 @@ it('返回大于 curId 的下一个空闲整数', () => {
 凡是「规则集中、容易被改坏、且不碰 UI/网络/IPC」的代码，都是单测的目标。按**类型维度**看，本项目里典型该测的有（举例，非穷举清单）：
 
 - **规则密集的纯函数**：魔数与多分支集中的计算——配色、尺寸、计数/拼串这类。喂 fixture 断言输出即可。
-- **带阈值的判定逻辑**：多条规则 + 两套阈值 + 边值的判定（如 `domain/embedding` 的 `canBeEmbeddableCheck`）——典型的"边值用例"温床。
+- **带阈值的判定逻辑**：多条规则 + 两套阈值 + 边值的判定（如 `domain/embedding` 的 `canBeEmbeddedCheck`）——典型的"边值用例"温床。
 - **状态机 / 编辑会话**：如 `services/editingSession` 的值类 vs 结构类 bump 契约、早退路径、引用相等性；以及 `undoStack` 这类栈式结构。
 - **图构建与布局**：实体→节点/边转换、视口计算、引用表的深度/节点截断。
 - **类型守卫与谓词**：如 type guard 的互斥不变量、前缀匹配边界。
@@ -201,7 +204,7 @@ it('返回大于 curId 的下一个空闲整数', () => {
 
 ### 5.2 明确不测的（当前策略）
 
-- 所有 `*.tsx` UI 组件（`flow/edit/` 下的 `EntityForm` / `EntityCard`、`routes/record/Record`、`routes/table/Table`、`routes/search/Finder`、`routes/setting/Setting` 下的 `.tsx`……）。注意 `routes/setting/colorUtils.ts` 是纯 `.ts` 函数，已测。
+- 所有 `*.tsx` UI 组件（`flow/edit/` 下的 `EntityForm` 等编辑表单、`features/record/Record`、`features/table/Table`、`features/finder/Finder`、`features/setting/Setting` 下的 `.tsx`……）。注意 `features/setting/colorUtils.ts` 是纯 `.ts` 函数，已测。
 - `api/apiClient.ts`（HTTP，需 mock axios——违反 3.7，留给手测/集成）。
 - `res/readResInfosAsync.ts` / `res/summarizeResAsync.ts`（Tauri 文件 IPC，留给手测）。`flow/layout/layoutAsync.ts` 已用 mock 边界测（见 §2.2）。
 - `store/store.ts` / `store/resso.ts`（全局状态库，跨组件耦合）。
@@ -247,3 +250,13 @@ it('返回大于 curId 的下一个空闲整数', () => {
 - 改了纯逻辑模块的公共行为，先改/补对应 `*.test.ts`（FIRST 的 Timely）。
 - 引入新的全局测试依赖（如 `fast-check`、RTL）前，先在本文件登记理由与边界。
 - 本文描述的是**目标与原则**；若现实与本文冲突，优先修现实（把逻辑抽纯 / 修测试），其次才更新本文。
+
+---
+
+## 一句话速记
+
+- **只测纯逻辑**（`domain` / `services` / `flow` 里的纯函数与纯类），**不测** UI/网络/Tauri IPC/全局 store——是架构使然，不是偷懒。
+- **零业务 mock**：喂 fixture 断言输出；只在 `setup.ts` 放「让代码跑起来」的 shim，不 mock 你不拥有的库。
+- **DAMP > DRY**：每个 `it` 自给自足、中文行为命名、一个 `it` 一个意图。
+- **不变量优先**：把「恒成立」的性质写成断言，比枚举 case 更紧凑难漏。
+- **文件随源码同目录 `*.test.ts`**；本指南不维护逐文件覆盖清单（注定漂移），想知道测了啥直接 `Glob src/**/*.test.ts`。

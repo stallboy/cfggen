@@ -1,7 +1,10 @@
-# URL、API 与 React Query：数据流全景与教学（cfgeditor）
+# URL、API 与 React Query：数据怎么来、怎么缓存、URL 怎么编码状态
 
 > 面向 cfgeditor 的「数据从哪来、怎么缓存、URL 怎么编码状态」文档：通用原理 → 本项目三层现状 → queryKey/mutation 实战 → 可改进之处。
-> 配套：[`状态管理-总结与演进.md`](./状态管理-总结与演进.md)（状态分类与 resso/EditingSession）、[`DIRECTORY_STRUCTURE.md`](./DIRECTORY_STRUCTURE.md)（分层）、[`fitview-视口适配机制.md`](./fitview-视口适配机制.md)（layout 查询的下游消费）。
+>
+> **不讲**：状态分类与 resso/EditingSession（→ [`04-state-management.md`](./04-state-management.md)）、目录分层（→ [`02-directory-structure.md`](./02-directory-structure.md)）；本文聚焦 URL / API / React Query 这条数据主线。
+>
+> **配套**：[`07-fitview.md`](./07-fitview.md)（layout 查询的下游消费——视口怎么用布局结果）、[`03-data-lifecycle.md`](./03-data-lifecycle.md)（一条编辑的全程，把本文的缓存/失效串进完整写路径）。
 
 ---
 
@@ -370,6 +373,14 @@ queryClient.invalidateQueries({queryKey: ['setting', 'resInfo'], refetchType: 'a
 
 **跳转**：永远 `navigate(navTo(curPage, table, id, edit))`，别手拼 URL。
 
-**换 server / 换库**：`setServer` 已自动清缓存（见 §A），无需额外处理。
+**换 server / 换库**：`setServer` 已 `removeQueries({queryKey: []})` 清空全部缓存（所有 queryKey 都不含 server，不清的话换库后旧库数据会赖在缓存里直到 staleTime 过期），无需额外处理。
 
-**记住三句话**：URL 决定查什么，API 决定怎么查，React Query 决定查过的是否还能用。
+---
+
+## 一句话速记
+
+- **三层各司其职**：URL 决定查什么、API 决定怎么查、React Query 决定查过的是否还能用；别让任何一层越界。
+- **queryKey 是缓存身份证**：第一段资源域 + 全部入参；经 `services/queryKeys.ts` factory 集中构造，别在组件里手写字面量。
+- **`select` 要稳定引用**：内联箭头会让派生每帧重跑、引用每帧变 → 全树重渲；`new` 了非平凡对象就提为模块级常量。
+- **三种失效别混**：`invalidate`（标记+立即用当前闭包重取）/ `remove`（清掉等未来新闭包自然重取）/ `setQueryData`（后端已给全量就替它回答）。
+- **业务结果看 `resultCode` 不看 HTTP**：200 不代表成功，`onSuccess` 要按 `resultCode` 分流。

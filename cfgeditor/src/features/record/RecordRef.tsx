@@ -118,7 +118,7 @@ export function RecordRefWithResult({ schema, notes, curTable, curId, nodeShow, 
 
     // 固定面板「首次 FitFull 后保持视口」：fittedPathname 记录已适配过的 pathname。
     // useEntityToGraph 在 FitFull 分支回调 setFitViewForPathname 写入；再次进入同 pathname → fitNone 不跳。
-    // 写入与比较用同一个 pathname（见 cfgeditor/docs/fitview-视口适配机制.md §7）。
+    // 写入与比较用同一个 pathname（见 cfgeditor/docs/07-fitview.md §七）。
     const [fittedPathname, setFittedPathname] = useState<string | undefined>(undefined);
     const pathname = isUnrefMode
         ? `/recordUnref/${curTable.name}`

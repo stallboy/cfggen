@@ -6,7 +6,7 @@ data 层把磁盘上的 Excel / CSV 文件变成内存里的**原始单元格模
 
 ## 模型 `CfgData`
 
-见 `../src/main/java/configgen/data/CfgData.java`。核心是几张 record：
+见 `data/CfgData.java`。核心是几张 record：
 
 | 类型 | 含义 |
 |---|---|
@@ -26,7 +26,7 @@ data 层把磁盘上的 Excel / CSV 文件变成内存里的**原始单元格模
 
 ## 读取管线（`CfgDataReader`）
 
-见 `../src/main/java/configgen/data/CfgDataReader.java`。`readCfgData` 分**两阶段并发**：
+见 `data/CfgDataReader.java`。`readCfgData` 分**两阶段并发**：
 
 ```mermaid
 flowchart TD
@@ -51,7 +51,7 @@ flowchart TD
 
 ## Excel 读取：FastExcel vs POI
 
-- 默认 `ReadByFastExcel`（见 `../src/main/java/configgen/data/ReadByFastExcel.java`），用 `org.dhatim.fastexcel.reader`。
+- 默认 `ReadByFastExcel`（见 `data/ReadByFastExcel.java`），用 `org.dhatim.fastexcel.reader`。
 - 备选 `ReadByPoi`（Apache POI）。`ExcelReadDiffTool`（`-tool fastexcelcheck`）专门比对两者读取结果，做一致性兜底。
 
 FastExcel 实现里两个**非显然**点：
@@ -61,7 +61,7 @@ FastExcel 实现里两个**非显然**点：
 
 ## 表头解析（`HeadParser`）
 
-见 `../src/main/java/configgen/data/HeadParser.java`。
+见 `data/HeadParser.java`。
 
 - `HeadRow`（`-headrow` 选，默认 2 行）定义哪几行是 `nameRow` / `commentRow` / `suggestedTypeRow`，以及 `rowCount`。
 - **行模式 vs 列模式**：`getLogicRow` 在行模式读一条**横行**，在列模式读一条**竖列**（相当于转置）——同一套逻辑兼容两种排版。

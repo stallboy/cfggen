@@ -18,7 +18,7 @@ cfggen.jar -gen server (Java 后端,../app)
 Excel / CSV / JSON 配表文件 (磁盘)
 ```
 
-> 后端怎么起、端点清单、缓存策略——见 [`url-api-reactquery.md`](./url-api-reactquery.md)。**本文只点一句:cfgeditor 是瘦前端,数据在后端。**
+> 后端怎么起、端点清单、缓存策略——见 [`05-url-api-reactquery.md`](./05-url-api-reactquery.md)。**本文只点一句:cfgeditor 是瘦前端,数据在后端。**
 
 ---
 
@@ -55,7 +55,7 @@ schema (类型)  ┘    (recordEditEntityCreator /        (FlowGraph)
                       entityToNodeAndEdges)
 ```
 
-一条 record 不是直接渲染的:它先和 schema 一起被**变换成若干 entity**(一条记录往往展开成多个节点——主节点 + 它引用的、被引用的节点),entity 再包成 node + 连线,最终上画布。**编辑就是反着走**:在 node 的表单里改值 → 写回 record 的数据对象 → 提交回后端。这条正反双向流的全过程,见 [`data-lifecycle.md`](./data-lifecycle.md)。
+一条 record 不是直接渲染的:它先和 schema 一起被**变换成若干 entity**(一条记录往往展开成多个节点——主节点 + 它引用的、被引用的节点),entity 再包成 node + 连线,最终上画布。**编辑就是反着走**:在 node 的表单里改值 → 写回 record 的数据对象 → 提交回后端。这条正反双向流的全过程,见 [`03-data-lifecycle.md`](./03-data-lifecycle.md)。
 
 ---
 
@@ -64,12 +64,12 @@ schema (类型)  ┘    (recordEditEntityCreator /        (FlowGraph)
 一个典型使用流程(对应代码里的特性目录 `src/features/`):
 
 1. **选表** —— 左侧表列表(`headerbar/TableList`)选一张配表。
-2. **看图** —— 表的记录按引用关系展开成一张流程图(节点 = entity,连线 = 引用/外键)。视口怎么稳定不乱跳,见 [`fitview-视口适配机制.md`](./fitview-视口适配机制.md)。
-3. **编辑** —— 双击节点进入编辑态,在表单里改字段值、增删数组项、换接口实现。字段怎么内嵌显示,见 [`embedding-字段内嵌机制.md`](./embedding-字段内嵌机制.md)。
-4. **撤销/重做** —— Ctrl+Z / Ctrl+Y。见 [`undo-redo.md`](./undo-redo.md)。
+2. **看图** —— 表的记录按引用关系展开成一张流程图(节点 = entity,连线 = 引用/外键)。视口怎么稳定不乱跳,见 [`07-fitview.md`](./07-fitview.md)。
+3. **编辑** —— 双击节点进入编辑态,在表单里改字段值、增删数组项、换接口实现。字段怎么内嵌显示,见 [`08-embedding.md`](./08-embedding.md)。
+4. **撤销/重做** —— Ctrl+Z / Ctrl+Y。见 [`06-undo-redo.md`](./06-undo-redo.md)。
 5. **保存** —— alt+s 提交,经后端落盘。失败会保留你的编辑态,不丢。
 
-> 这五步背后是一条完整的"编辑→缓冲→撤销→提交→刷新"数据流。想看它怎么转一圈,直接读 [`data-lifecycle.md`](./data-lifecycle.md)。
+> 这五步背后是一条完整的"编辑→缓冲→撤销→提交→刷新"数据流。想看它怎么转一圈,直接读 [`03-data-lifecycle.md`](./03-data-lifecycle.md)。
 
 ---
 
@@ -79,14 +79,14 @@ schema (类型)  ┘    (recordEditEntityCreator /        (FlowGraph)
 
 | 想懂 | 读 |
 |---|---|
-| 数据从输入到落盘怎么转一圈 | [`data-lifecycle.md`](./data-lifecycle.md) |
-| 目录怎么分、依赖只能向下、oxlint 护栏 | [`DIRECTORY_STRUCTURE.md`](./DIRECTORY_STRUCTURE.md) |
-| 状态怎么管理(Resso / EditingSession / useSyncExternalStore) | [`状态管理-总结与演进.md`](./状态管理-总结与演进.md) |
-| URL / API / React Query 数据流 | [`url-api-reactquery.md`](./url-api-reactquery.md) |
-| undo/redo | [`undo-redo.md`](./undo-redo.md) |
-| 视口适配 | [`fitview-视口适配机制.md`](./fitview-视口适配机制.md) |
-| 字段内嵌 | [`embedding-字段内嵌机制.md`](./embedding-字段内嵌机制.md) |
-| 单元测试 | [`unit-testing-guide.md`](./unit-testing-guide.md) |
-| 性能 | [`perf-optimization.md`](./perf-optimization.md) |
+| 数据从输入到落盘怎么转一圈 | [`03-data-lifecycle.md`](./03-data-lifecycle.md) |
+| 目录怎么分、依赖只能向下、oxlint 护栏 | [`02-directory-structure.md`](./02-directory-structure.md) |
+| 状态怎么管理(Resso / EditingSession / useSyncExternalStore) | [`04-state-management.md`](./04-state-management.md) |
+| URL / API / React Query 数据流 | [`05-url-api-reactquery.md`](./05-url-api-reactquery.md) |
+| undo/redo | [`06-undo-redo.md`](./06-undo-redo.md) |
+| 视口适配 | [`07-fitview.md`](./07-fitview.md) |
+| 字段内嵌 | [`08-embedding.md`](./08-embedding.md) |
+| 单元测试 | [`09-unit-testing-guide.md`](./09-unit-testing-guide.md) |
+| 性能 | [`10-perf-optimization.md`](./10-perf-optimization.md) |
 
 不确定先读哪篇?看 [`README.md`](./README.md) 的阅读路径。

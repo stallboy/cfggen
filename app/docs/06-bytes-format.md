@@ -6,7 +6,7 @@
 
 ## 文件结构
 
-`BytesGenerator`（见 `../src/main/java/configgen/genbytes/BytesGenerator.java`）按固定顺序写四段：
+`BytesGenerator`（见 `genbytes/BytesGenerator.java`）按固定顺序写四段：
 
 ```
 ┌───────────────────────────────────────────┐
@@ -25,12 +25,12 @@
 ## 两个池
 
 ### StringPool
-见 `../src/main/java/configgen/genbytes/StringPool.java`。字符串去重池：`addString` 返回已有索引或新增索引，数据里只存索引。
+见 `genbytes/StringPool.java`。字符串去重池：`addString` 返回已有索引或新增索引，数据里只存索引。
 
 **为什么**：字段名、枚举名、重复值在表里大量重复。去重后数据只存整数索引，文件显著变小；代价是建文件时多一次去重、运行时按索引回查。
 
 ### LangTextPool / TextPool
-见 `../src/main/java/configgen/genbytes/LangTextPool.java`。按语言分组，每种语言一个 `TextPool`（单语言文本去重池，结构同 StringPool）。`addText(String[] 各语言译文)` 往每个池各加一条，返回一个**跨语言共享的索引**。
+见 `genbytes/LangTextPool.java`。按语言分组，每种语言一个 `TextPool`（单语言文本去重池，结构同 StringPool）。`addText(String[] 各语言译文)` 往每个池各加一条，返回一个**跨语言共享的索引**。
 
 **为什么**：把**易变的文本**（翻译会变、按语言不同）和**稳定的数据**（数值、结构）分开。于是同一份数据可以：
 - 配不同语言包；
@@ -38,7 +38,7 @@
 
 ## 表数据
 
-`CfgValueSerializer`（见 `../src/main/java/configgen/genbytes/CfgValueSerializer.java`）：先写表数量，再逐表写 `name + 长度 + bytes`。每张表**先独立序列化到一个 buffer** 再带长度写入。
+`CfgValueSerializer`（见 `genbytes/CfgValueSerializer.java`）：先写表数量，再逐表写 `name + 长度 + bytes`。每张表**先独立序列化到一个 buffer** 再带长度写入。
 
 **为什么带长度前缀**：运行时可以按表名定位、跳过不需要的表、或选择性加载——长度前缀是可随机跳读的前提。
 

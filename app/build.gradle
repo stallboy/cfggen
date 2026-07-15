@@ -1,3 +1,5 @@
+import gg.jte.ContentType
+
 plugins {
     id 'application'
     id 'jacoco'
@@ -45,7 +47,7 @@ dependencies {
 jte {
     sourceDirectory = file('src/main/resources/jte').toPath()
     generate()
-    contentType = gg.jte.ContentType.Plain
+    contentType = ContentType.Plain
     trimControlStructures = true
 }
 

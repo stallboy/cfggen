@@ -1,7 +1,10 @@
-# 前端状态管理：原理、现状与优化方向（cfgeditor）
+# 状态管理：resso / EditingSession / useSyncExternalStore 怎么分工
 
-> 面向 cfgeditor 的状态管理文档：通用原理 → 本项目现状 → 数据流 → 优化方向。
-> 配套：[`DIRECTORY_STRUCTURE.md`](./DIRECTORY_STRUCTURE.md)（目录/分层/依赖方向）、[`undo-redo.md`](./undo-redo.md) / [`fitview-视口适配机制.md`](./fitview-视口适配机制.md)（undo/redo 与视口的展开专档）。
+> 这篇讲 cfgeditor 的状态管理：状态分哪几类、每类用什么工具、resso 与 EditingSession 底层为何都是 `useSyncExternalStore`、编辑对象为什么不进 React state。通用原理 → 本项目现状 → 数据流 → 优化方向。
+>
+> **不讲**：URL / API / React Query 那条数据主线（→ [`05-url-api-reactquery.md`](./05-url-api-reactquery.md)）、undo 快照栈与视口语义的展开（→ [`06-undo-redo.md`](./06-undo-redo.md) / [`07-fitview.md`](./07-fitview.md)）、目录分层（→ [`02-directory-structure.md`](./02-directory-structure.md)）。
+>
+> **配套**：一条编辑的全程串联见 [`03-data-lifecycle.md`](./03-data-lifecycle.md)。
 >
 > **引用约定**：正文用「文件 + 导出符号」定位（如 `store.ts` 的 `setMaxImpl`），不用行号——行号随重构漂移，符号稳定。
 
@@ -49,7 +52,7 @@
 
 | 状态源 | 工具/文件 | 作用域 | 响应式机制 | 代表字段 |
 |---|---|---|---|---|
-| 服务端数据 | React Query（`app/queryClient.ts`） | app | query 缓存 + hook 订阅 | `schema`/`record`/`refs`/`prompt`/`layout` |
+| 服务端数据 | React Query（`services/queryClient.ts`） | app | query 缓存 + hook 订阅 | `schema`/`record`/`refs`/`prompt`/`layout` |
 | 客户端 app 状态 | **resso store**（`store/store.ts`） | app 全局单例 | **useSyncExternalStore per-key** | `server`/`refIn`/`nodeShow`/`dragPanel`/`isEditMode` |
 | 编辑会话 | **EditingSession**（`services/editingSession.ts`） | 每会话实例 | **useSyncExternalStore（structureVersion）** | `editingObject`/`structureVersion`/`fitView`/`undoStack` |
 | URL/路由 | react-router（`useLocationData`） | URL | `useLocation` | `curPage`/`curTableId`/`curId`/`edit` |
@@ -152,8 +155,8 @@ const structureVersion = useSyncExternalStore(session.subscribe, session.getStru
 几乎每个 setter 都是同一模式（以 `setMaxImpl` 为例，`store.ts`）：
 ```ts
 export function setMaxImpl(value: number | null) {
-    if (value) {                              // ① 改 resso（触发订阅者重渲）
-        store.maxImpl = value;                //    ⚠️ truthy 判空会误杀 0，见文末「代码改进意见」
+    if (value !== null) {                     // ① 改 resso（触发订阅者重渲）；判 null 不判 truthy，免误杀 0
+        store.maxImpl = value;
         setPref('maxImpl', value.toString()); // ② 持久化（localStorage + debounce 写 YAML）
     }
 }
@@ -175,7 +178,7 @@ export function setMaxImpl(value: number | null) {
 - **双存储**：web 用 localStorage；Tauri 下启动时读 YAML → 灌入 localStorage（`readPrefAsyncOnce`），`setPref` 写 localStorage + 防抖写 YAML。
 - **防抖 300ms**（`storage.ts` 的 `WRITE_DEBOUNCE_MS`）：`navTo` 一次连发 3 个 `setPref`，防抖合并成一次 YAML 全量重写。
 - **串行化**（`storage.ts` 的 `writeChain`）：串成 Promise 链，避免并发写同一文件损坏/丢字段。
-- **关窗立即落盘**（`main.tsx` 的 `onCloseRequested`）：`preventDefault` → `await saveSelfPrefAsync()` → `destroy()`，绕过 debounce 直接串行写个人偏好。⚠️ 当前只 flush 个人文件，共享文件的 pending 防抖写可能丢失，见文末「代码改进意见」。
+- **关窗立即落盘**（`main.tsx` 的 `onCloseRequested`）：`preventDefault` → `await flushAllPrefsAsync()` → `destroy()`，绕过 debounce 直接串行写**个人 + 共享**两份偏好（`flushAllPrefsAsync` = `Promise.all([saveSelfPrefAsync(), saveSharedPrefAsync()])`），避免关窗丢失 pending 写入。
 
 ### 5.4 `useMyStore` vs `getMyStore`
 
@@ -246,7 +249,7 @@ EditingSession 内置一套 per-session 的 undo/redo（`UndoStack`，`domain/un
 
 > 命名坑：实例字段叫 `undoStack` 而非 `undo`，是为了避免与 `undo()` 方法同名（TS 不允许同名的属性与方法）。
 >
-> 展开细节见专档：[`undo-redo.md`](./undo-redo.md)、[`fitview-视口适配机制.md`](./fitview-视口适配机制.md)。
+> 展开细节见专档：[`06-undo-redo.md`](./06-undo-redo.md)、[`07-fitview.md`](./07-fitview.md)。
 
 ### 6.5 提交与基准重置
 
@@ -338,7 +341,7 @@ alt+s / 保存 → session.submit() → mutate(editingObject)          【React 
 
 ### 8.2 `isEdited` 三处判定的收敛评估
 
-当前脏判定散在三处：resso `editingIsEdited`、`EditingSession.getIsEdited()`、`editingObjectRes.isEdited`。它们各有正当用途（广播 / 会话内查询 / layout 缓存策略），不是冗余。但"同一语义三份计算"是可读性负担，且 `getIsEdited` 每次值类编辑跑 O(n) 深比较（详见文末「代码改进意见」的脏标记缓存方案，可同时收敛此处性能与可读性）。**不急于合并通道**——性能契约使它们有意分离。
+当前脏判定散在三处：resso `editingIsEdited`、`EditingSession.getIsEdited()`、`editingObjectRes.isEdited`。它们各有正当用途（广播 / 会话内查询 / layout 缓存策略），不是冗余。但“同一语义三份计算”是可读性负担，且 `getIsEdited` 每次值类编辑跑 O(n) 深比较（可缓存脏标记同时收敛此处性能与可读性）。**不急于合并通道**——性能契约使它们有意分离。
 
 ### 8.3 `StoreState` 逻辑切片 / clipboard 响应式
 

@@ -29,9 +29,7 @@ public record MultiLangTableSerializer(@NotNull ConfigOutput output,
             case CfgValue.VLong vLong -> output.writeLong(vLong.value());
             case CfgValue.VFloat vFloat -> output.writeFloat(vFloat.value());
 
-            case CfgValue.VString vStr -> {
-                writeStringInPool(vStr.value());
-            }
+            case CfgValue.VString vStr -> writeStringInPool(vStr.value());
 
             case CfgValue.VText vText -> {
                 String[] i18nStrings = langSwitchRuntime.findAllLangText(pk.packStr(), fieldChain, vText.value());
