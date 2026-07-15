@@ -25,9 +25,14 @@ java -jar ../cfggen.jar -datadir ../example/config -gen server
 
 ## 文档索引（详情见 docs/）
 
+> 👉 想理解 cfgeditor 源码与设计，先读 [`docs/README.md`](docs/README.md) 的阅读路径。
+
 | 主题 | 文档 |
 |---|---|
+| 总览（是什么 / 核心概念 / 操作主线） | `docs/overview.md` |
+| 文档导航（阅读路径 / 起点） | `docs/README.md` |
 | 目录结构 / 分层 / 依赖方向 / oxlint 护栏 / `@/` 别名 | `docs/DIRECTORY_STRUCTURE.md` |
+| 数据生命周期（一条编辑的全程） | `docs/data-lifecycle.md` |
 | 状态管理（Resso / EditingSession / useSyncExternalStore） | `docs/状态管理-总结与演进.md` |
 | API / React Query / URL 数据流 | `docs/url-api-reactquery.md` |
 | Undo/Redo | `docs/undo-redo.md` |
