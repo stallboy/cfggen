@@ -154,7 +154,7 @@ const storeState: StoreState = {
 
 let prefKeySet: Set<string> | undefined;
 const prefSelfKeySet: Set<string> = new Set<string>(['curPage', 'curTableId', 'curId', 'query', 'isEditMode',
-    'imageSizeScale', 'dragPanel', 'aiConf']);  // aiConf 含 apiKey，写入个人文件 cfgeditorSelf.yml 而非共享的 cfgeditor.yml
+    'imageSizeScale', 'dragPanel', 'aiConf']);  // aiConf 含 apiKey，写入个人文件
 
 const notSaveKeySet = new Set<string>(['history', 'resMap', 'resourceDir',
     'editingCurTable', 'editingCurId', 'editingIsEdited']);
@@ -267,7 +267,7 @@ export function setQuery(v: string) {
 // 拓扑相关 setter：不再 clearLayoutCache——这些 setting 已纳入 useEntityToGraph 的 layout
 // queryKey（topologyKeys），改值时缓存自然失效重布局。store 重新变纯状态容器（Query Key Factory）。
 export function setMaxImpl(value: number | null) {
-    if (value) {
+    if (value !== null) {
         store.maxImpl = value;
         setPref('maxImpl', value.toString());
     }
@@ -279,14 +279,14 @@ export function setRefIn(checked: boolean) {
 }
 
 export function setRefOutDepth(value: number | null) {
-    if (value) {
+    if (value !== null) {
         store.refOutDepth = value;
         setPref('refOutDepth', value.toString());
     }
 }
 
 export function setMaxNode(value: number | null) {
-    if (value) {
+    if (value !== null) {
         store.maxNode = value;
         setPref('maxNode', value.toString());
     }
@@ -298,21 +298,21 @@ export function setRecordRefIn(checked: boolean) {
 }
 
 export function setRecordRefInShowLinkMaxNode(value: number | null) {
-    if (value) {
+    if (value !== null) {
         store.recordRefInShowLinkMaxNode = value;
         setPref('recordRefInShowLinkMaxNode', value.toString());
     }
 }
 
 export function setRecordRefOutDepth(value: number | null) {
-    if (value) {
+    if (value !== null) {
         store.recordRefOutDepth = value;
         setPref('recordRefOutDepth', value.toString());
     }
 }
 
 export function setRecordMaxNode(value: number | null) {
-    if (value) {
+    if (value !== null) {
         store.recordMaxNode = value;
         setPref('recordMaxNode', value.toString());
     }
@@ -324,35 +324,35 @@ export function setIsNextIdShow(checked: boolean) {
 }
 
 export function setRefIdsInDepth(value: number | null) {
-    if (value) {
+    if (value !== null) {
         store.refIdsInDepth = value;
         setPref('refIdsInDepth', value.toString());
     }
 }
 
 export function setRefIdsOutDepth(value: number | null) {
-    if (value) {
+    if (value !== null) {
         store.refIdsOutDepth = value;
         setPref('refIdsOutDepth', value.toString());
     }
 }
 
 export function setRefIdsMaxNode(value: number | null) {
-    if (value) {
+    if (value !== null) {
         store.refIdsMaxNode = value;
         setPref('refIdsMaxNode', value.toString());
     }
 }
 
 export function setSearchMax(value: number | null) {
-    if (value) {
+    if (value !== null) {
         store.searchMax = value;
         setPref('searchMax', value.toString());
     }
 }
 
 export function setImageSizeScale(value: number | null) {
-    if (value) {
+    if (value !== null) {
         store.imageSizeScale = value;
         setPref('imageSizeScale', value.toString());
     }

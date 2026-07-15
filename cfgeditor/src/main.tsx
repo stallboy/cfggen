@@ -11,7 +11,7 @@ import {createBrowserRouter} from "react-router";
 import {RouterProvider} from "react-router/dom";
 import {AppLoader} from "./app/AppLoader.tsx";
 import {isTauri} from "@tauri-apps/api/core";
-import {saveSelfPrefAsync} from "./store/storage.ts";
+import {flushAllPrefsAsync} from "./store/storage.ts";
 import {Window} from "@tauri-apps/api/window";
 import {useMyStore} from "./store/store.ts";
 import {themeService} from "./services/themeService.ts";
@@ -63,10 +63,10 @@ if (isTauri()) {
     // onCloseRequested 返回 Promise<UnlistenFn>（监听器注册）；在 app 顶层注册、随窗口生命周期常驻，
     // 无需持有 unlisten。void 显式标记该 Promise 有意 fire-and-forget，消除 floating-promise 警告。
     void Window.getCurrent().onCloseRequested(async (event) => {
-        // preventDefault 后等自身偏好写盘完成再销毁窗口，避免 fire-and-forget 在写入完成前关窗丢失会话态
+        // preventDefault 后等个人 + 共享偏好都写盘完成再销毁窗口，避免 fire-and-forget 在写入完成前关窗丢失会话态
         event.preventDefault();
         try {
-            await saveSelfPrefAsync();
+            await flushAllPrefsAsync();
         } catch {
             // 写盘失败也不能阻止用户关窗
         }

@@ -1,8 +1,7 @@
 import type {CSSProperties} from "react";
 import {EntityEditField, EntityEditFieldOptions, PrimitiveValue} from "@/domain/entityModel";
 import {isNumberType} from "@/api/schemaModel";
-import {FILTER_EMPTY, FILTER_SEARCH} from "./constants.ts";
-import type {FilterOption} from "./types.ts";
+import {FILTER_EMPTY, FILTER_SEARCH, FilterOption} from "./constants.ts";
 
 // 类型守卫：primitive / arrayOfPrimitive / interface 三类字段可携带 autoCompleteOptions。
 export function hasAutoCompleteOptions(

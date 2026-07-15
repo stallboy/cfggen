@@ -2,8 +2,7 @@ import {memo} from "react";
 import {Button, Form, Space, Tooltip} from "antd";
 import {useTranslation} from "react-i18next";
 import {FuncSubmitType} from "@/domain/entityModel";
-import {FORM_ITEM_LAYOUT_WITHOUT_LABEL} from "../shared/constants.ts";
-import type {PrimitiveFormItemProps} from "../shared/types.ts";
+import {FORM_ITEM_LAYOUT_WITHOUT_LABEL, PrimitiveFormItemProps} from "../shared/constants.ts";
 
 export const FuncSubmitFormItem = memo(function FuncSubmitFormItem({field}: PrimitiveFormItemProps) {
     const [t] = useTranslation();

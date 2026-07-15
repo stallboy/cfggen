@@ -60,6 +60,9 @@ export function getPrefJson<T>(key: string, parser: (jsonStr: string) => T): T |
 
 let alreadyRead = false;
 
+const CFGEDITOR_YML = 'cfgeditor.yml';
+const CFGEDITOR_SELF_YML = 'cfgeditorSelf.yml';
+
 export async function readPrefAsyncOnce() {
     if (alreadyRead) {
         return true;
@@ -69,8 +72,8 @@ export async function readPrefAsyncOnce() {
         return true;
     }
     localStorage.clear();
-    await readConf("cfgeditor.yml");
-    await readConf("cfgeditorSelf.yml");
+    await readConf(CFGEDITOR_YML);
+    await readConf(CFGEDITOR_SELF_YML);
     return true;
 }
 
@@ -133,13 +136,26 @@ function scheduleWrite(fn: string, keySet: Set<string>) {
 
 function savePrefAsyncIf(changedKey: string) {
     if (prefKeySet.has(changedKey)) {
-        scheduleWrite("cfgeditor.yml", prefKeySet);
+        scheduleWrite(CFGEDITOR_YML, prefKeySet);
     }
 }
 
-export async function saveSelfPrefAsync() {
+async function saveSelfPrefAsync() {
     // 关窗等需立即落盘的场景：绕过 debounce 直接串行写，返回 promise 供调用方 await
-    await writeFileSerialized("cfgeditorSelf.yml", prefSelfKeySet);
+    await writeFileSerialized(CFGEDITOR_SELF_YML, prefSelfKeySet);
+}
+
+async function saveSharedPrefAsync() {
+    // 同 saveSelfPrefAsync，针对共享偏好文件 cfgeditor.yml（maxImpl/nodeShow/themeConfig/refOutDepth…）。
+    // shared 偏好平时走 debounce（scheduleWrite）写盘，关窗时若只 flush self，shared 的 pending 定时器
+    // 还没 fire 就 destroy → 变更丢失。此处绕过 debounce 强制串行写，堵这个窗口。
+    await writeFileSerialized(CFGEDITOR_YML, prefKeySet);
+}
+
+export async function flushAllPrefsAsync() {
+    // 关窗落盘总入口：绕过 debounce，把个人 + 共享两份 pending 写都串行落盘后再返回。
+    // 两次 writeFileSerialized 共用同一条 writeChain（串行化），Promise.all 仅表达"两份都写完"。
+    await Promise.all([saveSelfPrefAsync(), saveSharedPrefAsync()]);
 }
 
 export function setPref(key: string, value: string) {

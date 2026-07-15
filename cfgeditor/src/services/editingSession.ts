@@ -44,6 +44,16 @@ export class EditingSession {
     private fitView: EFitView;
     private fitViewToIdPosition?: EntityPosition;
 
+    /** 编辑态脏标记缓存，让 getIsEdited 在 clean 路径 O(1)、dirty 路径惰性精确化：
+     *  - dirty=false：必然精确 clean（reset/commit/recomputeDirty/getIsEdited 算出），且任何 mutation 经
+     *    markDirty 置 true，故 dirty=false 期间不可能有"未计入"的变更 → 可直接采信。
+     *  - dirty=true：可能是 markDirty 的乐观置位（尚未精确算），用 dirtySeq/dirtySeqWhenGet 判缓存有效性：
+     *    seq 相同 → 自上次精确计算后无新 mutation，采信 true；seq 不同 → 有新 mutation，重新精确算。
+     *  这样既保留缓存收益，又修正纯 dirty 标记会误报的场景（updateNote 加一字符再减一字符 = 实际相等却报 dirty）。 */
+    private dirty = false;
+    private mutationSeq = 0;          // 每次 mutation（markDirty）递增，标记"对象可能又变了"
+    private mutationSeqCached = 0;   // 上次精确计算 dirty 时的 mutationSeq，缓存有效性的基准
+
     private structureVersion = 0;
     private readonly listeners = new Set<() => void>();
     private readonly onStructureChange?: () => void;
@@ -85,7 +95,27 @@ export class EditingSession {
 
     getEditingObject = (): JSONObject => this.editingObject;
 
-    getIsEdited = (): boolean => !isDeeplyEqual(this.editingObject, this.originalEditingObject);
+    getIsEdited = (): boolean => {
+        if (!this.dirty) return false;                               // 精确 clean：采信（任何 mutation 会经 markDirty 置 true）
+        if (this.mutationSeq === this.mutationSeqCached) return true;     // 自上次精确计算后无新 mutation：采信 true
+        // 有新 mutation 且尚未精确算：重新深比较并缓存（O(n)，仅在"mutation 后首次读"发生）
+        this.dirty = !isDeeplyEqual(this.editingObject, this.originalEditingObject);
+        this.mutationSeqCached = this.mutationSeq;
+        return this.dirty;
+    };
+
+    /** mutation 通用置脏：乐观标 dirty=true + 递增 dirtySeq（让 getIsEdited 缓存失效，下次精确重算）。 */
+    private markDirty(): void {
+        this.dirty = true;
+        this.mutationSeq++;
+    }
+
+    /** 全量重算 dirty（undo/redo 后调：可能恰好回到 baseline 变 clean，不能简单翻转）。
+     *  算后对齐 dirtySeqWhenGet=dirtySeq——相当于"在当前 seq 精确算过一次"，下次 getIsEdited 可直接采信缓存。 */
+    private recomputeDirty(): void {
+        this.dirty = !isDeeplyEqual(this.editingObject, this.originalEditingObject);
+        this.mutationSeqCached = this.mutationSeq;
+    }
 
     /** 供 useMemo 返回的 editingObjectRes（喂 useEntityToGraph 的 layout queryKey/staleTime 通道）。 */
     getEditingObjectRes = (): EditingObjectRes => ({
@@ -116,6 +146,7 @@ export class EditingSession {
         this.table = newTable;
         this.id = newId;
         this.editingObject = newObj;
+        this.dirty = false;   // 切到新 record：新基准即 newObj，初始无编辑（bumpStructure 的 notify 需读到 false）
         this.bumpStructure({fitView: EFitView.FitFull});
         this.resetBaselines();   // 新数据为新基准（脏比较 + undo baseline），清栈
     }
@@ -198,7 +229,8 @@ export class EditingSession {
                 obj[key] = conv(fieldValue);
             }
         }
-        // 值类：就地改完成。不 bump structureVersion、不 emit（契约1）。仅刷新脏标记。
+        // 值类：就地改完成。不 bump structureVersion、不 emit（契约1）。置脏 + 刷新 HeaderBar 标记。
+        this.markDirty();
         this.notifyEditingState();
     }
 
@@ -206,6 +238,7 @@ export class EditingSession {
         const obj = getFieldObj(this.editingObject, fieldChains) as JSONObject;
         obj['$note'] = note as JSONValue;
         this.touchValueCoalesce(this.coalesceKey(fieldChains, '$note'));
+        this.markDirty();
         this.notifyEditingState();
     }
 
@@ -270,6 +303,7 @@ export class EditingSession {
         this.beforeStructuralChange();
         deleteRefsInPlace(newEditingObject);
         this.editingObject = newEditingObject;
+        this.markDirty();
         this.bumpStructure({fitView: EFitView.FitFull});
         this.capture(EFitView.FitFull);   // 整体替换 undo 时也 FitFull（重新认识图）
     }
@@ -323,6 +357,7 @@ export class EditingSession {
         if (!this.undoStack.canUndo()) return;
         const {target, undoFitView, anchorId} = this.undoStack.popUndo();
         this.applyUndoPoint(target.data);
+        this.recomputeDirty();   // undo 可能恰好回到 baseline（变 clean），重算而非简单翻转
         // 按被撤销操作的视口语义驱动：结构→KeepStable(锚点屏幕不动)；整体替换→FitFull；值类→NoChange(不动)
         this.bumpStructure({fitView: undoFitView, position: anchorId ? {id: anchorId, x: 0, y: 0} : undefined});
     }
@@ -332,6 +367,7 @@ export class EditingSession {
         if (!this.undoStack.canRedo()) return;
         const {target, undoFitView, anchorId} = this.undoStack.popRedo();
         this.applyUndoPoint(target.data);
+        this.recomputeDirty();
         this.bumpStructure({fitView: undoFitView, position: anchorId ? {id: anchorId, x: 0, y: 0} : undefined});
     }
 
@@ -350,6 +386,7 @@ export class EditingSession {
     // ============ 内部 ============
 
     private structureChange(position: EntityPosition, undoAnchorId?: string): void {
+        this.markDirty();
         this.bumpStructure({fitView: EFitView.FitId, position});
         // undo 锚点默认 = 操作节点 id（用户视觉焦点）；delete 传父 id（被删节点 undo 前不存在，父稳定）
         this.capture(EFitView.KeepStable, undoAnchorId ?? position.id);
@@ -396,6 +433,7 @@ export class EditingSession {
         this.valueCoalesceKey = undefined;
         const snap = this.captureUndoPoint();
         this.originalEditingObject = snap;
+        this.dirty = false;   // 新基准 = 当前已提交/重置态，脏比较归零
         this.undoStack.setBaseline({data: snap, undoFitView: EFitView.FitFull});
     }
 

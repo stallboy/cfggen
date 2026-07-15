@@ -4,7 +4,8 @@ import {useSyncFieldValue} from "../shared/useSyncFieldValue.ts";
 import {primitiveControl} from "../shared/primitiveControl.tsx";
 import {fieldItemStyle} from "../shared/fieldUtils.ts";
 import {LabelWithTooltip} from "../shared/LabelWithTooltip.tsx";
-import type {PrimitiveFormItemProps} from "../shared/types.ts";
+
+import {PrimitiveFormItemProps} from "@/flow/edit/shared/constants.ts";
 
 export const PrimitiveFormItem = memo(function PrimitiveFormItem({field, bgColor}: PrimitiveFormItemProps) {
     const form = Form.useFormInstance();
