@@ -10,7 +10,7 @@
 
 ## 一、本质：一次「看一条记录」牵动三层
 
-用户点开一条记录，背后三层性质截然不同的代码在协作。混为一谈是大多数 bug 的根：
+用户点开一条记录，背后三层性质截然不同的代码在协作。三层职责要分清，否则容易出现「该让 React Query 扛的状态写进了组件、该走 URL 的真值写进了缓存」这类错位：
 
 | 层 | 关注什么 | 本项目落点 | 典型动作 |
 |---|---|---|---|
@@ -30,24 +30,9 @@
 
 ## 二、URL 层：把「在看什么」编码进地址栏
 
-### 2.1 路由表（main.tsx:21）
+### 2.1 路由表
 
-react-router v8 的 `createBrowserRouter`（v7 起包名统一为 `react-router`，`RouterProvider` 从 `react-router/dom` 导入）。根路由 `/` 挂 `AppLoader`，子路由**全部 `lazy` 懒加载**（按需打包，首屏只加载壳）：
-
-```ts
-createBrowserRouter([{
-    path: "/",
-    Component: AppLoader,
-    children: [
-        { path: "table/:table/*",        lazy: () => import("@/features/table/Table.tsx").then(m => ({Component: m.Table})) },
-        { path: "tableRef/:table/*",     lazy: () => import("@/features/table/TableRef.tsx").then(m => ({Component: m.TableRef})) },
-        { path: "edit?/record/:table/*", lazy: () => import("@/features/record/Record.tsx").then(m => ({Component: m.Record})) },
-        { path: "recordRef/:table/:id",  lazy: () => import("@/features/record/RecordRef.tsx").then(m => ({Component: m.RecordRefRoute})) },
-        { path: "recordUnref/:table/*",  lazy: () => import("@/features/record/RecordRef.tsx").then(m => ({Component: m.RecordRefRoute})) },
-        { path: "*",                     lazy: () => import("./app/PathNotFound.tsx").then(m => ({Component: m.PathNotFound})) },
-    ]
-}])
-```
+react-router v8 的 `createBrowserRouter`（在 [`main.tsx`](../src/main.tsx)；v7 起包名统一为 `react-router`，`RouterProvider` 从 `react-router/dom` 导入）。根路由 `/` 挂 [`AppLoader`](../src/app/AppLoader.tsx)，子路由**全部 `lazy` 懒加载**——每条 `import()` 一个 feature 组件（Table / TableRef / Record / RecordRef / PathNotFound），按需打包，首屏只加载壳。
 
 URL 形态：
 
@@ -68,13 +53,9 @@ URL 形态：
 
 所有跳转都走 `navTo`，它做三件事：维护访问历史栈 → 把当前位置写进个人偏好持久化（冷启动恢复）→ 拼出 URL 返回。调用方 `navigate(navTo('record', table, id, true))`。**不要手拼 URL**——绕过 `navTo` 会丢历史和持久化。
 
-### 2.3 解析：`useLocationData`（store.ts:557）
+### 2.3 解析：`useLocationData`（store.ts）
 
-```ts
-const { curPage, curTableId, curId, edit, pathname } = useLocationData();
-```
-
-内部 `useLocation()` 拿 pathname，手写 `split('/')` 解析（识别 `/edit` 前缀、识别 `curPage`、剩余段 join 成 `curId`）。
+`useLocationData()` 返回 `{ curPage, curTableId, curId, edit, pathname }`。内部 `useLocation()` 拿 pathname，手写 `split('/')` 解析（识别 `/edit` 前缀、识别 `curPage`、剩余段 join 成 `curId`）。
 
 **为什么不用 `useParams`**：`recordUnref/:table/*` 的 id 段是无名 splat，`useParams` 取不到；统一用 pathname 解析对所有路由都正确，参数同源不漂移。
 
@@ -86,7 +67,7 @@ const { curPage, curTableId, curId, edit, pathname } = useLocationData();
 | 何时读 | 每次渲染 | app 启动一次（`getLastNavToInLocalStore`） |
 | 谁写 | `navigate(navTo(...))` | `navTo` 内部同步写 |
 
-启动流程：`AppLoader` 跑完 → `CfgEditorApp` 若 `curTableId` 为空，`navigate(getLastNavToInLocalStore())` 把地址栏拨到上次位置（CfgEditorApp.tsx:94-98）。之后一切以 URL 为准。
+启动流程：`AppLoader` 跑完 → `CfgEditorApp` 若 `curTableId` 为空，`navigate(getLastNavToInLocalStore())` 把地址栏拨到上次位置（见 [`CfgEditorApp.tsx`](../src/app/CfgEditorApp.tsx)）。之后一切以 URL 为准。
 
 > URL 是会话内真值，持久化只负责「下次开窗回到哪」。刷新 / 分享链接 / 前进后退全靠 URL。
 
@@ -96,23 +77,12 @@ const { curPage, curTableId, curId, edit, pathname } = useLocationData();
 
 整层是一组**纯函数**：入参 `(server, ..., signal)`，出参 `Promise<T>`。不持有任何缓存、不维护任何状态。
 
-### 3.1 axios 实例按需创建（apiClient.ts:29）
+### 3.1 axios 实例按需创建
 
-```ts
-function normalizeServer(server: string): string {
-    return server.trim().replace(/^https?:\/\//i, '').replace(/\/+$/, '');
-}
-function httpClient(server: string) {
-    return axios.create({
-        baseURL: `http://${normalizeServer(server)}`,
-        timeout: 15000,
-        headers: { 'Content-Type': 'application/json' },
-    });
-}
-```
+[`apiClient.ts`](../src/api/apiClient.ts) 内两件事：
 
-- **为什么每次 `axios.create`**：`server` 用户动态配置（可换库），无法模块加载时定死全局实例。`axios.create` 开销可忽略。
-- **`normalizeServer`**：剥掉用户可能误填的 `http://` / `https://` 前缀和尾随 `/`，避免拼出 `http://https://host`。固定 `http://` 因后端 `cfggen -gen server` 只支持 http。
+- **每次请求 `axios.create` 一个新实例**：`server` 是用户动态配置（可换库），无法在模块加载时定死全局实例。`axios.create` 开销可忽略。
+- **`normalizeServer` 剥前缀 / 尾斜杠**：剥掉用户可能误填的 `http://` / `https://` 前缀和尾随 `/`，避免拼出 `http://https://host`。固定拼 `http://` 因后端 `cfggen -gen server` 只支持 http。
 
 ### 3.2 端点清单
 
@@ -130,7 +100,7 @@ function httpClient(server: string) {
 | `getPrompt` | GET `/prompt` | query:`table` | `PromptResult` |
 | `checkJson` | POST `/checkJson` | query:`table` + **text body** | `CheckJsonResult` |
 
-> 另有 `/search` 端点（GET `?q=&max=`，`SearchValue.tsx:22` 原生 `fetch` **绕过 apiClient**，不走上表 axios 管线）。
+> 另有 `/search` 端点（GET `?q=&max=`，[`SearchValue.tsx`](../src/features/finder/SearchValue.tsx) 原生 `fetch` **绕过 apiClient**，不走上表 axios 管线）。
 
 ### 3.3 三个易踩细节
 
@@ -138,7 +108,7 @@ function httpClient(server: string) {
 
 2. **`Content-Type: text/plain` 要显式设**：`updateNote` / `checkJson` body 是裸字符串。axios 实例默认 `application/json`，发裸字符串会被当 JSON 序列化出错，故单独 `headers: {'Content-Type':'text/plain'}`。
 
-3. **后端用「参数存在性」做开关**：`fetchRecordRefs` 里 `refs: ''`（空串占位）、`refIn ? {in:''} : {}`。后端 `EditorServer` 对 `refs` / `in` 做 `!= null` 判断，传空串等价于原先无值的 `&refs`。这是后端契约，不是 axios 的事。
+3. **后端用「参数存在性」做开关**：`fetchRecordRefs` 里 `refs: ''`（空串占位）、`refIn ? {in:''} : {}`。后端 `EditorServer` 对 `refs` / `in` 做 `!= null` 判断，传空串等价于原先无值的 `&refs`。这是后端那边的协议约定，不是 axios 的事。
 
 > API 层越「笨」越好。它不该知道「这条记录改了要不要刷别的表」——那是 React Query 的事。它只忠实搬运。
 
@@ -146,23 +116,16 @@ function httpClient(server: string) {
 
 ## 四、React Query 层：缓存、失效、取消
 
-### 4.1 全局配置（queryClient.ts:3）
+### 4.1 全局配置
 
-```ts
-export const queryClient = new QueryClient({
-    defaultOptions: { queries: { staleTime: 1000 * 30 } },   // 默认 30s 内不重取
-});
-export function invalidateAllQueries() {
-    queryClient.invalidateQueries({queryKey: []}).catch(console.log);
-}
-```
+[`queryClient.ts`](../src/services/queryClient.ts) 设全局默认 `staleTime: 30s`（30s 内不重取）。`invalidateAllQueries()` 调 `queryClient.invalidateQueries({queryKey: []})`。
 
 - `{queryKey: []}` 是「匹配所有 query」的前缀（空数组是所有 key 的公共前缀）。
 - 故意**不**加 `refetchType:'all'`：默认 `'active'` 只立即重取当前挂载的查询，未挂载的标记 stale 后下次 mount 自然刷新——正确性不变，避免一次性轰炸后端。
 
-挂在 main.tsx：`<QueryClientProvider client={queryClient}>` 包 `<RouterProvider>`，整个 app 共享一个 `queryClient` 单例。
+挂在 [`main.tsx`](../src/main.tsx)：`<QueryClientProvider client={queryClient}>` 包 `<RouterProvider>`，整个 app 共享一个 `queryClient` 单例。
 
-### 4.2 queryKey 设计哲学（最重要的教学点）
+### 4.2 queryKey 设计要点
 
 **queryKey 是「这条缓存对应哪份数据」的唯一身份证。** 三原则：
 
@@ -170,22 +133,22 @@ export function invalidateAllQueries() {
 2. **凡「会影响返回结果」的参数都进 key**——漏一个 = 不同参数共享同一缓存 = 张冠李戴的脏数据。
 3. **`select` 必须稳定引用**（见 §5.2）。
 
-所有 queryKey 经 [`queryKeys.ts`](../src/services/queryKeys.ts) 的 **Query Key Factory** 集中构造，避免字面量散落、invalidate 时拼错：
+所有 queryKey 经 [`queryKeys.ts`](../src/services/queryKeys.ts) 的 **Query Key Factory** 集中构造，避免字面量散落、invalidate 时拼错。工厂构造（脱掉 TS 类型后的 key 形状）：
 
-```ts
-export const queryKeys = {
-    setting: () => ['setting'],
-    resInfo: () => ['setting', 'resInfo'],          // 挂在 setting 域下，enabled 依赖 setting 完成
-    schema: () => ['schema'],
-    notes: () => ['notes'],
-    record: (tableId, id) => ['record', tableId, id],
-    recordRef: (tableId, id, refOutDepth, maxNode, refIn) => ['recordRef', tableId, id, refOutDepth, maxNode, refIn],
-    unreferenced: (tableId, maxNode) => ['unreferenced', tableId, maxNode],
-    layout: (pathname, layoutKeys, topologyKeys, isEdited) => isEdited
-        ? ['layout', pathname, 'e', layoutKeys, topologyKeys]
-        : ['layout', pathname, layoutKeys, topologyKeys],
-    prompt: (tableId) => ['prompt', tableId],
-};
+```
+queryKeys 工厂:
+  setting()                  → ['setting']
+  resInfo()                  → ['setting', 'resInfo']        // 挂 setting 域下，enabled 依赖 setting 完成
+  schema()                   → ['schema']
+  notes()                    → ['notes']
+  record(table, id)          → ['record', table, id]
+  recordRef(table, id, depth, max, refIn)
+                             → ['recordRef', table, id, depth, max, refIn]
+  unreferenced(table, max)   → ['unreferenced', table, max]
+  layout(pathname, layoutKeys, topologyKeys, isEdited):
+      isEdited  → ['layout', pathname, 'e', layoutKeys, topologyKeys]    // 编辑态：'e' 隔离
+      otherwise → ['layout', pathname, layoutKeys, topologyKeys]
+  prompt(table)              → ['prompt', table]
 ```
 
 > 例外：layout 的「按前缀批量失效」（`['layout', pathname]`、`['layout', pathname, 'e']`）仍手写——那是批量语义，与「构造单条 key」不同；第一段 `'layout'` 与 factory 一致即可。
@@ -200,7 +163,7 @@ export const queryKeys = {
 | `.notes()` | CfgEditorApp | `fetchNotes` | 5min | `select: notesToMap` |
 | `.record(tableId, id)` | Record | `fetchRecord` | 默认 30s | `enabled: !isNewRecord`（新记录用本地 mock 不发请求）|
 | `.recordRef(...)` | RecordRef | `fetchRecordRefs` | 10s | |
-| `.unreferenced(tableId, maxNode)` | RecordRef / UnreferencedButton | `fetchUnreferencedRecords` | 10s | UnreferencedButton **手写同形 key**（`headerbar/UnreferencedButton.tsx:20`）→ 跨组件共享缓存 |
+| `.unreferenced(tableId, maxNode)` | RecordRef / UnreferencedButton | `fetchUnreferencedRecords` | 10s | UnreferencedButton **手写同形 key**（[`UnreferencedButton.tsx`](../src/features/headerbar/UnreferencedButton.tsx)）→ 跨组件共享缓存 |
 | `.layout(pathname, layoutKeys, topologyKeys, isEdited)` | useEntityToGraph | `layoutAsync`（ELK） | `isEdited ? 0 : 5min` | 编辑态 `'e'` 段，04 讲 |
 | `.prompt(tableId)` | Chat | `getPrompt` | `Infinity` | prompt 后端静态生成，`enabled: editable` |
 
@@ -222,50 +185,59 @@ export const queryKeys = {
 
 ### 5.1 标准数据加载
 
-```ts
-const { isLoading, isError, error, data: recordResult } = useQuery({
-    queryKey: queryKeys.record(curTableId, curId),
-    queryFn: ({signal}) => fetchRecord(server, curTableId, curId, signal),
-    enabled: !isNewRecord,
-});
-if (isLoading) return;                                   // 壳子兜底
-if (isError)  return <Result status='error' title={error.message}/>;
-if (!recordResult) return <Result title='record result empty'/>;
-if (recordResult.resultCode != 'ok') return <Result status='error' title={recordResult.resultCode}/>;
+四要素：`queryKey` 定身份、`queryFn` 透传 `signal`、`enabled` 控条件、四态兜底。
+
+```
+useQuery({
+    queryKey: queryKeys.record(table, id),            // 定身份
+    queryFn:  ({signal}) => fetchRecord(..., signal), // signal 透传给 axios
+    enabled:  !isNewRecord,                           // 控条件
+})
 ```
 
-四要素：`queryKey` 定身份、`queryFn` 透传 `signal`、`enabled` 控条件、四态兜底（loading / error / empty / business-error）。**业务错误（HTTP 200 但 `resultCode != 'ok'`）要单独判**——后端用 resultCode 表达业务结果，axios 不会抛。
+四态兜底（按顺序短路返回）：
+
+| 兜底态 | 触发 | 处理 |
+|---|---|---|
+| loading | `isLoading` | 壳子兜底 |
+| error | `isError` | `<Result status='error' title={error.message}/>` |
+| empty | `!recordResult` | `<Result title='record result empty'/>` |
+| 业务错误 | `resultCode != 'ok'` | `<Result status='error' title={resultCode}/>` |
+
+**业务错误（HTTP 200 但 `resultCode != 'ok'`）要单独判**——后端用 resultCode 表达业务结果，axios 不会抛。
 
 ### 5.2 `select` 必须稳定引用（CfgEditorApp 的 schemaSelector）
 
-```ts
-// ❌ 反例：内联箭头，每次 render 新身份
-useQuery({ queryKey:['schema'], queryFn:..., select: (raw) => new Schema(raw) });
+```
+❌ 反例：内联箭头，每次 render 新身份
+   select: (raw) => new Schema(raw)
 
-// ✅ 正例：模块级常量（CfgEditorApp.tsx:56）
-const schemaSelector = (rawSchema: RawSchema) => new Schema(rawSchema);
-useQuery({ queryKey: queryKeys.schema(), queryFn:..., select: schemaSelector });
+✅ 正例：模块级常量（CfgEditorApp）
+   const schemaSelector = (raw) => new Schema(raw);    // 模块加载时定一次
+   select: schemaSelector
 ```
 
-**为什么**（CfgEditorApp.tsx:52-55 注释）：`select` 每次 render 换新引用 → RQ 每次 render 重跑它 → 每次 `new Schema()`（遍历全部 items、建多个 Map、为每张 table 建 idMap，毫秒级）。更糟：`Schema` 是含 `Map` 字段的 class 实例，RQ 的 `replaceEqualDeep` 判不等 → `schema` 引用每帧变 → `outletCtx` 每帧新建 → Outlet 子树（Table / TableRef / Record / RecordRef，context 变化绕过 memo）**全树重渲**。提为模块级常量后只在 `rawSchema` 变化时构造。
+**为什么**：`select` 每次 render 换新引用 → RQ 每次 render 重跑它 → 每次 `new Schema()`（遍历全部 items、建多个 Map、为每张 table 建 idMap，毫秒级）。更糟：`Schema` 是含 `Map` 字段的 class 实例，RQ 的 `replaceEqualDeep` 判不等 → `schema` 引用每帧变 → `outletCtx` 每帧新建 → Outlet 子树（Table / TableRef / Record / RecordRef，context 变化绕过 memo）**全树重渲**。提为模块级常量后只在 `rawSchema` 变化时构造。
 
 > `select` 是「每次都跑」的派生函数，它的引用稳定性直接决定派生结果是否稳定。凡 `select` 里 `new` 了非平凡对象（class 实例、含 Map / Set），务必提为模块级常量。
 
 ### 5.3 layout 查询：把「影响输出的设置」塞进 queryKey（useEntityToGraph）
 
-```ts
-const layoutKeys  = pickLayoutKeys(nodeShowSetting);               // 布局相关字段（白名单）
-const topologyKeys = { maxImpl, refIn, refOutDepth, maxNode,       // 拓扑 setting（9 个）
-                       recordRefIn, recordRefInShowLinkMaxNode, recordRefOutDepth, recordMaxNode, tauriConf };
-const queryKey = isEdited
-    ? ['layout', pathname, 'e', layoutKeys, topologyKeys]          // 编辑态：'e' 隔离 + staleTime 0
-    : ['layout', pathname, layoutKeys, topologyKeys];              // 浏览态：5min 缓存
+[`useEntityToGraph`](../src/flow/useEntityToGraph.ts) 把两类 setting 都纳入 layout 的 queryKey：
+
+```
+layoutKeys   = 布局字段白名单（颜色等纯表现字段）
+topologyKeys = 拓扑 setting（maxImpl / refIn / refOutDepth / maxNode / ...）
+
+queryKey = isEdited
+    ? ['layout', pathname, 'e', layoutKeys, topologyKeys]    // 编辑态：'e' 隔离 + staleTime 0
+    : ['layout', pathname, layoutKeys, topologyKeys]         // 浏览态：5min 缓存
 ```
 
-精妙之处（详见 04）：
+要点（详见 04）：
 
 - **`pathname` 进 key**：每个图布局独立缓存。
-- **`topologyKeys` 进 key**：改拓扑参数（`refOutDepth` 等）→ key 变 → 自然失效重布局；改纯颜色字段 → key 不变 → 命中缓存不重跑 ELK。**用 queryKey 替代了手动的 `clearLayoutCache`**，store 重新变纯状态容器。
+- **`topologyKeys` 进 key**：改拓扑参数（`refOutDepth` 等）→ key 变 → 自然失效重布局；改纯颜色字段 → key 不变 → 命中缓存不重跑 ELK。**用 queryKey 替代了手动的 `clearLayoutCache`**——store 因此回归纯状态容器（store 作为纯状态容器的定位详见 [02 §3.1](02-state-management.md)）。
 - **`'e'` 隔离编辑态**：编辑可能改拓扑，故编辑态 `staleTime=0`；浏览态 5min。结构变更 `removeQueries(['layout', pathname, 'e'])` 只清编辑态。
 
 ---
@@ -274,21 +246,20 @@ const queryKey = isEdited
 
 ### 6.1 提交后全量失效 + 按 resultCode 分流（Record.tsx）
 
-```ts
-const mutation = useMutation({
-    mutationFn: (obj) => addOrUpdateRecord(server, curTableId, obj),
-    onError: (error) => notification.error({title: `err: ${error}`}),
-    onSuccess: (editResult) => {
-        if (editResult.resultCode == 'updateOk' || editResult.resultCode == 'addOk') {
-            notification.info({title: editResult.resultCode});
-            session.onCommitSuccess();                 // 重置 undo 基准 + 清栈（详见 03 §九）
-            invalidateAllQueries();                       // 全量标记 stale
-            if (curId === NEW_RECORD_ID) navigate(navTo('record', curTableId, editResult.id, true));
-        } else {
-            notification.warning({title: editResult.resultCode});   // 业务失败
-        }
-    },
-});
+[`Record.tsx`](../src/features/record/Record.tsx) 的提交 mutation 在回调里按 `resultCode` 分流：
+
+```
+onSuccess(editResult):
+  resultCode ∈ {updateOk, addOk}:
+      notification.info(resultCode)
+      session.onCommitSuccess()           // 重置 undo 基准 + 清栈（详见 03 §九）
+      invalidateAllQueries()              // 全量标记 stale
+      if (curId === NEW_RECORD_ID):
+          navigate(navTo('record', table, editResult.id, true))   // 跳到后端返回的真实 id
+  else:
+      notification.warning(resultCode)    // 业务失败
+onError(error):
+      notification.error(error)
 ```
 
 - **HTTP 200 不代表业务成功**：后端用 `resultCode` 表达，只有 `updateOk` / `addOk` 才真成功。
@@ -300,19 +271,11 @@ const mutation = useMutation({
 
 ### 6.3 精确写缓存（NoteShowOrEdit.tsx）
 
-```ts
-onSuccess: (editResult) => {
-    if (resultCode ok) queryClient.setQueryData(queryKeys.notes(), notesToMap(editResult.notes));
-}
-```
-
-`updateNote` 后端返回**全量 notes**，直接 `setQueryData` 写缓存，**省一次 refetch**。比 `invalidateQueries(['notes'])`（触发一次 GET /notes）更省。前提：后端真返回了完整新状态。
+[`NoteShowOrEdit.tsx`](../src/flow/NoteShowOrEdit.tsx) 在 `updateNote` 成功后，直接 `queryClient.setQueryData(queryKeys.notes(), notesToMap(editResult.notes))` 写缓存。因为 `updateNote` 后端返回**全量 notes**，直接写就**省一次 refetch**——比 `invalidateQueries(['notes'])`（触发一次 GET /notes）更省。前提：后端真返回了完整新状态。
 
 ### 6.4 `removeQueries` 而非 `invalidate`（Record.tsx 的 onStructureChange）
 
-```ts
-onStructureChange: () => queryClient.removeQueries({queryKey: ['layout', pathnameRef.current, 'e']})
-```
+`Record.tsx` 的 `onStructureChange` 在事件期同步调 `queryClient.removeQueries({queryKey: ['layout', pathnameRef.current, 'e']})`。
 
 **为什么 remove 不 invalidate**：结构变更（增删节点）后 `entityMap` 会重算，`useEntityToGraph` 的 `queryFn` 闭包里的 `nodes` 变了。若用 `invalidate`，它会**立即用重渲前的旧闭包 refetch** → 旧布局；用 `remove` 只删缓存不主动 fetch，等重渲那一帧 `useQuery` 用**新闭包**（新 nodes）自然重取 → 新布局。且 `remove` 必须在事件期同步调用（不能挪 effect），否则重渲那一帧读到还没删的旧缓存。这是 03 → 04 的真实钩子。
 

@@ -48,7 +48,7 @@ export class EditingSession {
     /** 编辑态脏标记缓存，让 getIsEdited 在 clean 路径 O(1)、dirty 路径惰性精确化：
      *  - dirty=false：必然精确 clean（reset/commit/recomputeDirty/getIsEdited 算出），且任何 mutation 经
      *    markDirty 置 true，故 dirty=false 期间不可能有"未计入"的变更 → 可直接采信。
-     *  - dirty=true：可能是 markDirty 的乐观置位（尚未精确算），用 dirtySeq/dirtySeqWhenGet 判缓存有效性：
+     *  - dirty=true：可能是 markDirty 的乐观置位（尚未精确算），用 mutationSeq/mutationSeqCached 判缓存有效性：
      *    seq 相同 → 自上次精确计算后无新 mutation，采信 true；seq 不同 → 有新 mutation，重新精确算。
      *  这样既保留缓存收益，又修正纯 dirty 标记会误报的场景（updateNote 加一字符再减一字符 = 实际相等却报 dirty）。 */
     private dirty = false;
@@ -107,14 +107,14 @@ export class EditingSession {
         return this.dirty;
     };
 
-    /** mutation 通用置脏：乐观标 dirty=true + 递增 dirtySeq（让 getIsEdited 缓存失效，下次精确重算）。 */
+    /** mutation 通用置脏：乐观标 dirty=true + 递增 mutationSeq（让 getIsEdited 缓存失效，下次精确重算）。 */
     private markDirty(): void {
         this.dirty = true;
         this.mutationSeq++;
     }
 
     /** 全量重算 dirty（undo/redo 后调：可能恰好回到 baseline 变 clean，不能简单翻转）。
-     *  算后对齐 dirtySeqWhenGet=dirtySeq——相当于"在当前 seq 精确算过一次"，下次 getIsEdited 可直接采信缓存。 */
+     *  算后对齐 mutationSeqCached=mutationSeq——相当于"在当前 seq 精确算过一次"，下次 getIsEdited 可直接采信缓存。 */
     private recomputeDirty(): void {
         this.dirty = !isDeeplyEqual(this.editingObject, this.originalEditingObject);
         this.mutationSeqCached = this.mutationSeq;

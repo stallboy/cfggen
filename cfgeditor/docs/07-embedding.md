@@ -14,43 +14,38 @@ embedding 把 trivial 的子结构（字段极少、全 primitive）压扁成父
 
 为什么：避免为「1 个 bool」「3 个 number」这种 trivial 子结构建独立节点，让画布节点数膨胀、连线噪声大；压缩成一行 Tag 后视觉密度与可读性更优。
 
-判定与数据全在 [`embedding.ts`](../src/domain/embedding.ts)。
+判定与数据全在 [embedding.ts](../src/domain/embedding.ts)。
 
 ---
 
 ## 二、判定规则
 
-`canBeEmbeddedCheck`（:70）→ `matchEmbeddingConfig`（:197），struct 与 interface 各一套阈值（`EMBEDDING_CONFIG` :34，**struct 比 interface 松**）：
+`canBeEmbeddedCheck` → `matchEmbeddingConfig`，struct 与 interface 各一套阈值（`EMBEDDING_CONFIG`，**struct 比 interface 松**）：
 
-```ts
-export const EMBEDDING_CONFIG = {
-  struct:     { maxFieldsForEmpty: 0, maxFieldsForSinglePrimitive: 1, maxNumberFields: 3, maxBoolFields: 4,
-                boolAndNumberCombination: { boolCount: 1, numberCount: 1, totalFields: 2 } },
-  interface:  { maxFieldsForEmpty: 0, maxFieldsForSinglePrimitive: 1, maxNumberFields: 2, maxBoolFields: 3,   // 比 struct 严
-                boolAndNumberCombination: { boolCount: 1, numberCount: 1, totalFields: 2 } },
-  common: { filterEmptyLists: true },
-} as const;
+| 阈值（struct / interface 各一套） | struct | interface |
+|---|---|---|
+| `maxFieldsForEmpty` — 无字段 | 0 | 0 |
+| `maxFieldsForSinglePrimitive` — 仅 1 primitive | 1 | 1 |
+| `maxNumberFields` — ≤N 个 number | 3 | 2（更紧） |
+| `maxBoolFields` — ≤M 个 bool | 4 | 3（更紧） |
+| `boolAndNumberCombination.totalFields` — 1 bool + 1 number | 2 | 2 |
+
+全局开关：`common.filterEmptyLists = true`（计数前过滤值为空的 `list<>` 字段）。
+
+`matchEmbeddingConfig` 满足任一即可内嵌（字段全集需 allPrimitive，条件 a 除外）：
+
 ```
-
-`matchEmbeddingConfig`（:197）满足任一即可内嵌（5 个条件 a-e）：
-
-```ts
-// a) 没有字段
-if (analysis.totalFields === config.maxFieldsForEmpty) return true;
-// b) 只有 1 个 primitive
-if (analysis.totalFields === config.maxFieldsForSinglePrimitive && analysis.allPrimitive) return true;
-// c) 只有 ≤N 个 number（全 primitive）
-if (analysis.totalFields <= config.maxNumberFields && analysis.totalFields === analysis.numberCount && analysis.allPrimitive) return true;
-// d) 只有 ≤M 个 bool（全 primitive）
-if (analysis.totalFields <= config.maxBoolFields && analysis.totalFields === analysis.boolCount && analysis.allPrimitive) return true;
-// e) 1 bool + 1 number（共 2 字段，全 primitive；totalFields/boolCount/numberCount 解构自 config.boolAndNumberCombination）
-if (analysis.totalFields === totalFields && analysis.boolCount === boolCount && analysis.numberCount === numberCount && analysis.allPrimitive) return true;
+a) 没有字段
+b) 只有 1 个 primitive
+c) 只有 ≤N 个 number（N = struct 3 / interface 2）
+d) 只有 ≤M 个 bool（M = struct 4 / interface 3）
+e) 1 bool + 1 number（共 2 字段）
 ```
 
 **两个预处理**：
 
-- `filterEmptyListFields`（:231）：计数前先过滤值为空数组的 `list<>` 字段（开关 `common.filterEmptyLists`）——避免一个空 list 把字段数顶过阈值。
-- `resolveImpl`（:262）：interface 需先按 `obj.$type` 找到具体 impl 的 SStruct（`.split('.').pop()` 取 impl 名）；找不到（`$type` 缺失 / 脏数据 / 新旧 schema 不一致）→ 不可内嵌（返回 false）。
+- `filterEmptyListFields`：计数前先过滤值为空数组的 `list<>` 字段（开关 `common.filterEmptyLists`）——避免一个空 list 把字段数顶过阈值。
+- `resolveImpl`：interface 需先按 `obj.$type` 找到具体 impl 的 SStruct（`.split('.').pop()` 取 impl 名）；找不到（`$type` 缺失 / 脏数据 / 新旧 schema 不一致）→ 不可内嵌（返回 false）。
 
 **为什么 struct 阈值比 interface 松**：interface 切 impl 时字段集可能变，给更紧阈值避免频繁在内嵌 / 展开间抖动。
 
@@ -60,26 +55,24 @@ if (analysis.totalFields === totalFields && analysis.boolCount === boolCount && 
 
 内嵌数据流经**两个类型**：
 
-**① `EmbeddingFieldValues`**（[embedding.ts](../src/domain/embedding.ts):108，`extractEmbeddingFields`（:119）的返回值——**中间产物**）：
+**① `EmbeddingFieldValues`**（[embedding.ts](../src/domain/embedding.ts)，`extractEmbeddingFields` 的返回值——**中间产物**）：
 
-```ts
-export interface EmbeddingFieldValues {
-    embeddedFields: { value: PrimitiveValue; type: PrimitiveType; name: string; comment?: string }[];
-    implNameToDisplay?: string;   // interface 非 defaultImpl 时展示的实现名（:133）
-}
+```
+EmbeddingFieldValues:
+  embeddedFields: [{ value, type, name, comment? }]   // 各 primitive 字段
+  implNameToDisplay?                                  // interface 非 defaultImpl 时展示的实现名
 ```
 
-`getFieldValue`（:274）带默认值处理（bool→false、int/long/float→0、str/text→''）。
+`getFieldValue` 带默认值处理（bool→false、int/long/float→0、str/text→''）。
 
-**② `EmbeddedFieldData`**（[entityModel.ts](../src/domain/entityModel.ts):67，**真正挂到 `StructRefEditField.embeddedField` 上的最终类型**）：
+**② `EmbeddedFieldData`**（[entityModel.ts](../src/domain/entityModel.ts)，**真正挂到 `StructRefEditField.embeddedField` 上的最终类型**）：
 
-```ts
-export interface EmbeddedFieldData {
-    fields: {...}[];           // ← 由 embeddedFields 改名
-    note?: string;             // 元素 $note
-    implName?: string;         // ← 由 implNameToDisplay 改名
-    embeddedFieldChain?: ...;  // 字段完整路径，点展开时定位
-}
+```
+EmbeddedFieldData:
+  fields              ← 由 embeddedFields 改名
+  note?               元素 $note
+  implName?           ← 由 implNameToDisplay 改名
+  embeddedFieldChain? 字段完整路径，点展开时定位
 ```
 
 桥接在 [recordEditEntityCreator.ts](../src/features/record/recordEditEntityCreator.ts) 的 `extractEmbeddedFieldData`：把 `EmbeddingFieldValues` 转成 `EmbeddedFieldData`——`embeddedFields → fields`、`implNameToDisplay → implName`、补 `note` + `embeddedFieldChain`。
@@ -90,18 +83,18 @@ export interface EmbeddedFieldData {
 
 - 普通 structRef 字段 = 占位行 + source Handle + **独立子 entity**。
 - 内嵌 structRef 字段 = `value:'<>'`、`handleOut:true`、附 `embeddedField`、**不创建子 entity**、**不 push sourceEdge**。
-- FieldRenderer.tsx:35 通过 `if (field.embeddedField)` 把 structRef 分流到 `EmbeddedSimpleStructuralItem`（06 讲过分发）。
+- [FieldRenderer.tsx](../src/flow/edit/FieldRenderer.tsx) 通过 `if (field.embeddedField)` 把 structRef 分流到 `EmbeddedSimpleStructuralItem`（06 讲过分发）。
 
 **两条内嵌入口**（都产 `embeddedField`、不建子 entity）：
 
 - **(a) 普通 struct / interface 字段**：子结构满足阈值即压成一行 Tag（§二）。
-- **(b) `list<struct>` / `list<interface>` 恰 1 元素且该元素可内嵌**：整个 list 字段也压成一行 Tag（`recordEditEntityCreator.ts` 的 `tryCreateEmbeddedFieldForList`）——把唯一元素内容平铺，不建独立子节点、不 push sourceEdge。多元素或不可内嵌时退回 **funcAdd**（+ 添加按钮）。
+- **(b) `list<struct>` / `list<interface>` 恰 1 元素且该元素可内嵌**：整个 list 字段也压成一行 Tag（[recordEditEntityCreator.ts](../src/features/record/recordEditEntityCreator.ts) 的 `tryCreateEmbeddedFieldForList`）——把唯一元素内容平铺，不建独立子节点、不 push sourceEdge。多元素或不可内嵌时退回 **funcAdd**（+ 添加按钮）。
 
 ---
 
-## 五、`$fold` 状态机（核心）
+## 五、`$fold` 状态机
 
-fold 状态从 `obj.$fold` 派生（recordEditEntityCreator.ts），**不再独立 React state**：
+fold 状态从 `obj.$fold` 派生（[recordEditEntityCreator.ts](../src/features/record/recordEditEntityCreator.ts)），**不再独立 React state**：
 
 ```
 shouldEmbed = $fold !== false     // true 或 undefined 都内嵌
@@ -119,7 +112,7 @@ flowchart LR
     D -. 无法直接回嵌 .-> C
 ```
 
-**展开**：点 `ArrowsAltOutlined`（EmbeddedSimpleStructuralItem.tsx）→ `editOnUpdateFold(false, nodeAnchor, embeddedFieldChain)` → `session.updateFold(false, targetChain, ...)`（03）→ bump `structureVersion` → entityMap 重算 → `shouldEmbed=false` → 建独立子节点。
+**展开**：点 `ArrowsAltOutlined`（[EmbeddedSimpleStructuralItem.tsx](../src/flow/edit/fields/EmbeddedSimpleStructuralItem.tsx)）→ `editOnUpdateFold(false, nodeAnchor, embeddedFieldChain)` → `session.updateFold(false, targetChain, ...)`（03）→ bump `structureVersion` → entityMap 重算 → `shouldEmbed=false` → 建独立子节点。
 
 展开按钮用 `embeddedFieldChain`（不是父节点 `fieldChain`）：内嵌字段在父表单里没有自己的 entity，`embeddedFieldChain` 记录它本该在的完整路径，fold 更新必须定位到这条 chain 才能正确改 `$fold`。
 
@@ -131,9 +124,9 @@ flowchart LR
 
 为避免「新建 / 切换后需再点一次才能编辑」：
 
-- **`markNewItemExpanded`**（:101）：手工 `addArrayItem`（+添加 / 前插入）时，对可内嵌的新元素显式置 `$fold=false`。注释（:92-100）：否则新元素因无 `$fold`（→ undefined）被 `shouldEmbed` 视为内嵌，渲染成 `EmbeddedSimpleStructuralItem`，用户需再点一次展开按钮才能编辑，与「添加后立即编辑」相悖。
+- **`markNewItemExpanded`**：手工 `addArrayItem`（+添加 / 前插入）时，对可内嵌的新元素显式置 `$fold=false`。源码注释解释：否则新元素因无 `$fold`（→ undefined）被 `shouldEmbed` 视为内嵌，渲染成 `EmbeddedSimpleStructuralItem`，用户需再点一次展开按钮才能编辑，与「添加后立即编辑」相悖。
   - **仅对可内嵌元素写入**（`if (canBeEmbeddedCheck(...))`）：永不内嵌的对象不需要此 UI 标记，避免提交载荷残留无意义字段。
-- **`interfaceOnChangeImpl`**（recordEditEntityCreator.ts）：切 impl 后新 obj 也写 `$fold=false`，防止新 impl 默认被内嵌。
+- **`interfaceOnChangeImpl`**（[recordEditEntityCreator.ts](../src/features/record/recordEditEntityCreator.ts)）：切 impl 后新 obj 也写 `$fold=false`，防止新 impl 默认被内嵌。
 
 ---
 

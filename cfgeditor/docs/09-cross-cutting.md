@@ -8,15 +8,7 @@
 
 ## 一、i18n
 
-[`app/i18n.ts`](../src/app/i18n.ts) 用 i18next + react-i18next + `LanguageDetector`。翻译**内联在 `resources`**（en / zh 两段），无独立 locales 目录：
-
-```ts
-i18n.use(LanguageDetector).use(initReactI18next).init({
-    fallbackLng: 'en',
-    interpolation: { escapeValue: false },
-    resources: { en: { translation: {...} }, zh: { translation: {...} } },
-});
-```
+[`app/i18n.ts`](../src/app/i18n.ts) 用 i18next + react-i18next + `LanguageDetector`。翻译**内联在 `resources`**（en / zh 两段），无独立 locales 目录——init 时设 `fallbackLng: 'en'`、`interpolation.escapeValue=false`，把 `en.translation` / `zh.translation` 两段对象直接喂进去。
 
 组件用 `useTranslation()` 读 `t('key')`（如 `t('retryLayout')`、`t('nodeFold')`）。`fallbackLng: 'en'`——缺 key 时回退英文。
 
@@ -26,7 +18,7 @@ i18n.use(LanguageDetector).use(initReactI18next).init({
 
 ```mermaid
 flowchart LR
-    S[store] --> TP[ThemeProvider<br/>main.tsx:79]
+    S[store] --> TP[ThemeProvider<br/>main.tsx]
     S --> FSM[FlowStyleManager<br/>读 nodeShow.edgeStrokeWidth<br/>挂 CSS 变量]
     TP -->|loadTheme| TS[themeService 单例]
     TS -->|readFile Tauri Resource| F[主题 JSON]
@@ -36,13 +28,13 @@ flowchart LR
     CP --> URI["useRefItemStyles<br/>handle 色 = token.colorPrimary"]
 ```
 
-> [colors.ts](../src/flow/layout/colors.ts) **不在上图**——它是纯函数做节点 / 边 / 文字配色，**刻意与 antd token 解耦**（无 hook 上下文、拿不到 `useToken`），配色来自 `nodeShow` + `NODE_SHOW_DEFAULTS`（04）。
+> [colors.ts](../src/flow/layout/colors.ts) **不在上图**——节点 / 边 / 文字配色是纯函数（无 hook 上下文、拿不到 `useToken`），与 antd token 解耦的设计详见 04。
 
-- **`ThemeProvider`**（[main.tsx](../src/main.tsx):79）：读 `store.themeConfig.themeFile` → `themeService.loadTheme` → 合并 `defaultTheme` → antd `ConfigProvider`（顶层单实例，包整个 app）。
+- **`ThemeProvider`**（[main.tsx](../src/main.tsx)）：读 `store.themeConfig.themeFile` → `themeService.loadTheme` → 合并 `defaultTheme` → antd `ConfigProvider`（顶层单实例，包整个 app）。
 - **`themeService`**（[themeService.ts](../src/services/themeService.ts)）：`ThemeService` 单例（`getInstance`），`loadTheme` 从 Tauri `Resource` 目录读主题 JSON（`readFile` + `JSON.parse` + `cache` + `validateThemeConfig`）。`AntdThemeConfig = {token, components}`。
 - **`FlowStyleManager`**（[FlowStyleManager.tsx](../src/flow/FlowStyleManager.tsx)）：app 顶层单实例，挂 CSS 变量（`--edge-stroke-width`），供非 antd 的 SVG / CSS 消费。**为什么上提到顶层**：CSS 变量全局唯一，多实例并存时一个 unmount 的 cleanup 会抹掉另一实例仍在用的变量（05 讲过）。
 
-主题 token（`colorPrimary`）驱动 [useRefItemStyles.ts](../src/flow/edit/shared/useRefItemStyles.ts) 的 handle 色（06）；[colors.ts](../src/flow/layout/colors.ts) 是**纯函数**做节点 / 边 / 文字配色，**刻意与 antd token 解耦**（04）。
+主题 token（`colorPrimary`）驱动 [useRefItemStyles.ts](../src/flow/edit/shared/useRefItemStyles.ts) 的 handle 色（06）；节点 / 边 / 文字配色走 [colors.ts](../src/flow/layout/colors.ts) 纯函数（与 token 解耦的设计见 04）。
 
 ---
 
@@ -50,17 +42,11 @@ flowchart LR
 
 [`clipboard.ts`](../src/services/clipboard.ts) 是 **app 级**剪贴板（模块级 `copiedObject`），**独立于 EditingSession（会话级）**——因为跨记录复制粘贴是现有能力（record A 复制 → 切到 record B → 同类型字段右键粘贴）：
 
-```ts
-let copiedObject: JSONObject = {'$type': ''};
-
-export function structCopy(obj: JSONObject): void { copiedObject = structuredClone(obj); }
-export function getCopiedObject(): JSONObject { return copiedObject; }
-export function isCopiedFitAllowedType(allowedType: string): boolean {
-    const type = copiedObject.$type;
-    if (type == allowedType) return true;
-    if (type.startsWith(allowedType)) return type[allowedType.length] == '.';   // 简单判断 interface.impl，不查 schema
-    return false;
-}
+```
+isCopiedFitAllowedType(allowedType):
+  type == allowedType                    → true
+  type 以 allowedType 开头且紧接一个 '.'  → true   // 简单判 interface.impl，不查 schema
+  其它                                   → false
 ```
 
 - `structCopy`：`structuredClone`（深拷，独立于源对象后续变异）。
@@ -71,32 +57,30 @@ export function isCopiedFitAllowedType(allowedType: string): boolean {
 
 ## 四、窗口
 
-[`windowUtils.ts`](../src/services/windowUtils.ts) 极简，只有 `toggleFullScreen`（Tauri `getCurrentWebviewWindow`）。关窗 flush 在 main.tsx:65（02 §4.4 讲过三层防丢）：
+[`windowUtils.ts`](../src/services/windowUtils.ts) 极简，只有 `toggleFullScreen`（Tauri `getCurrentWebviewWindow`）。关窗 flush 在 [main.tsx](../src/main.tsx) 注册（02 §4.4 讲过三层防丢）：
 
-```ts
-// main.tsx —— Tauri 关窗：preventDefault → flushAllPrefsAsync 写盘 → destroy
-void Window.getCurrent().onCloseRequested(async (event) => {
-    event.preventDefault();
-    try { await flushAllPrefsAsync(); } catch { /* 写盘失败也不阻止关窗 */ }
-    await Window.getCurrent().destroy();
-});
+```
+关窗回调（main.tsx）：
+  event.preventDefault()
+  → await flushAllPrefsAsync()   // 写盘失败也不阻止关窗（catch 吞掉）
+  → await window.destroy()
 ```
 
 ---
 
 ## 五、全局快捷键（react-hotkeys-hook）
 
-`react-hotkeys-hook` 注册的全局快捷键，**单实例根注册**（CfgEditorApp.tsx:75 等）：
+`react-hotkeys-hook` 注册的全局快捷键，**单实例根注册**（见 [CfgEditorApp.tsx](../src/app/CfgEditorApp.tsx) 等）：
 
 | 快捷键 | 作用 | 注册点 |
 |---|---|---|
-| `alt+s` | 提交当前编辑会话（`getCurrentEditingSession().submit()`）| CfgEditorApp.tsx:75 |
-| `alt+1/2/3/4` | 路由切换（table / tableRef / record / recordRef）| HeaderBar.tsx:50-54 |
-| `alt+enter` | 全屏切换 | HeaderBar.tsx |
-| `alt+c` / `alt+v` | 上一条 / 下一条记录 | HeaderBar.tsx:69-70 |
-| `ctrl+z` / `ctrl+y` | undo / redo | Record.tsx:100, 105 |
+| `alt+s` | 提交当前编辑会话（`getCurrentEditingSession().submit()`）| [CfgEditorApp.tsx](../src/app/CfgEditorApp.tsx) |
+| `alt+1/2/3/4` | 路由切换（table / tableRef / record / recordRef）| [HeaderBar.tsx](../src/features/headerbar/HeaderBar.tsx) |
+| `alt+enter` | 全屏切换 | [HeaderBar.tsx](../src/features/headerbar/HeaderBar.tsx) |
+| `alt+c` / `alt+v` | 上一条 / 下一条记录 | [HeaderBar.tsx](../src/features/headerbar/HeaderBar.tsx) |
+| `ctrl+z` / `ctrl+y` | undo / redo | [Record.tsx](../src/features/record/Record.tsx) |
 
-**为什么 `alt+s` 上提到 CfgEditorApp 单实例**（CfgEditorApp.tsx:70-77 注释）：FlowGraph 在 Splitter 布局下可能多实例，原先每个 EntityForm 各注册 `useHotkeys` 靠 DOM 冒泡「碰巧」命中，是历史多次触发 submit bug 的过设计修复（EntityForm.tsx:19-21）。监听必须在更高的单实例点——快捷键是 app 级语义，不属任一节点。
+**为什么 `alt+s` 上提到 CfgEditorApp 单实例**（[CfgEditorApp.tsx](../src/app/CfgEditorApp.tsx) 注释）：FlowGraph 在 Splitter 布局下可能多实例，原先每个 EntityForm 各注册 `useHotkeys` 靠 DOM 冒泡「碰巧」命中，是历史多次触发 submit bug 的过设计修复（[EntityForm.tsx](../src/flow/edit/EntityForm.tsx) 留有迁移注释）。监听必须在更高的单实例点——快捷键是 app 级语义，不属任一节点。
 
 ---
 
@@ -120,20 +104,14 @@ cfgeditor 是 Tauri 桌面应用，原生能力经 Tauri API：
 - **窗口**（`@tauri-apps/api/window` + `webviewWindow`）：关窗 flush（main.tsx）、`toggleFullScreen`。
 - **`isTauri()` 守卫**：非 Tauri（纯 Web，如 dev 的 vite）环境降级——`storage.readPrefAsyncOnce` / `themeService.loadTheme` 都判 `isTauri()`，Web 下跳过文件操作。
 
-```ts
-// storage.ts:66 —— isTauri 守卫
-export async function readPrefAsyncOnce() {
-    if (alreadyRead) return true;
-    alreadyRead = true;
-    if (!isTauri()) return true;        // Web 环境无 yml，直接返回
-    localStorage.clear();
-    await readConf(CFGEDITOR_YML);
-    await readConf(CFGEDITOR_SELF_YML);
-    return true;
-}
+```
+readPrefAsyncOnce（[storage.ts](../src/store/storage.ts)）:
+  已读过                  → 直接返回
+  非 Tauri（Web / vite）  → 直接返回（无 yml 可读）
+  Tauri                   → 清 localStorage + 读两份 yml（cfgeditor.yml / cfgeditorSelf.yml）
 ```
 
-> 注意：Tauri fs 2.0.1 之后 `readTextFile` 出来是乱码，故用 `readFile` + `new TextDecoder().decode(contentBytes)`（storage.ts:84-85、themeService.ts:81-82）。
+> 注意：Tauri fs 早期版本踩坑——`readTextFile` 出来是乱码（当前版本可能已修），故 [storage.ts](../src/store/storage.ts) / [themeService.ts](../src/services/themeService.ts) 改用 `readFile` + `new TextDecoder().decode(contentBytes)` 手动解码。
 
 ---
 

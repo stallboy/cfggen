@@ -77,7 +77,7 @@ sequenceDiagram
     U->>F: 键入新值
     F->>S: onValuesChange → updateFormValues
     S->>S: 就地改 editingObject + markDirty
-    Note right of S: 不 bump structureVersion、不 emit<br/>→ Record 不重渲（性能契约 1）
+    Note right of S: 不 bump structureVersion、不 emit<br/>→ Record 不重渲（值类编辑不重布局）
 
     Note over S,UN: ② 500ms 合并：连续键入 = 一步 undo
     S->>UN: capture(NoChange)
@@ -130,18 +130,7 @@ api/        HTTP：apiClient, recordModel, schemaModel, noteModel, searchModel, 
 
 特例：`store/resso.ts`（vendored）关 `rules-of-hooks`；`main.tsx` 关 `only-export-components`；`domain/storageJson.ts`（quicktype 产出）进 `ignorePatterns`。
 
-## 五、六条贯穿红线
-
-这些决策不属任何单篇，反复出现在多篇里。读任何一篇前先认下它们：
-
-1. **值类 vs 结构类编辑二分**（03 / 04 / 06 / 07）— 改字段值（值类）不 bump `structureVersion`、不重布局、不重渲，几十个表单输入零重渲（性能契约 1）；增删 / 折叠 / 换 impl / 粘贴（结构类）bump + 重算 entityMap。这是全项目的性能地基。
-2. **就地变异 + 共享引用**（03 / 04 / 06）— `editingObject` 就地改，子对象引用塞进 `entity.edit.editObj`，闭包自动见最新值，提交时读到全量。不靠不可变更新。
-3. **项目级缓存失效三策略**（01 / 02 / 04；区别于 01 §4.3 的 React Query 三原语 `invalidate`/`remove`/`setQueryData`）— (a) 拓扑 setting 进 layout `queryKey`，改值自然失效；(b) `pickLayoutKeys` 白名单，改纯颜色字段不重跑 ELK；(c) 结构变更 `removeQueries` 同步清编辑态。store setter **不再命令式清缓存**——把失效让位给 queryKey（例外：`setServer` 仍命令式全清，见 02 §七）。
-4. **启动门卫两段式**（01 / 02）— `setting` query 把偏好从 yml 灌进 localStorage，`resInfo` query 再把 localStorage 灌进 resso store。先 clear 再灌。
-5. **`nodeAnchor` 统一命令参数**（05）— 所有节点编辑命令收口到 `{id, 屏幕坐标}`，避免各处重复字面量。
-6. **domain ↔ presentation 解耦**（04 / 05）— `entity` 保持不可变 / memo-safe，呈现层数据（`nodeShow` / `notes`）走 `node.data` 数据袋下发，不盖章到 entity。
-
-## 六、文档索引
+## 五、文档索引
 
 | # | 主题 | 文件 |
 |---|---|---|
@@ -160,4 +149,3 @@ api/        HTTP：apiClient, recordModel, schemaModel, noteModel, searchModel, 
 - cfgeditor = **瘦前端**，数据在后端（cfggen `-gen server`）。
 - record + schema → entity → node + edge → 画布；编辑反着走（表单改值 → 写回 record → 提交后端）。
 - 八目录四组分层，依赖**只能向下**，oxlint `no-restricted-imports` 守门。
-- 六红线：值类 / 结构类二分、就地变异 + 共享引用、缓存失效三策略、启动门卫两段式、`nodeAnchor` 统一、domain ↔ presentation 解耦。

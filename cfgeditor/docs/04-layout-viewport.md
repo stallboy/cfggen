@@ -10,7 +10,7 @@
 
 ## 一、总装：useEntityToGraph
 
-[`useEntityToGraph.ts`](../src/flow/useEntityToGraph.ts):84 是布局的 react-query 异步管线，把 `entityMap` 变成画布上的 nodes / edges + 视口：
+[`useEntityToGraph.ts`](../src/flow/useEntityToGraph.ts) 是布局的 react-query 异步管线，把 `entityMap` 变成画布上的 nodes / edges + 视口：
 
 ```mermaid
 flowchart LR
@@ -31,65 +31,50 @@ flowchart LR
 
 ### 1.2 nodes/edges（convertNodeAndEdges）
 
-```ts
-const {nodes, edges} = useMemo(() => convertNodeAndEdges({
-    entityMap, nodeShow: nodeShowSetting, notes,
-}), [entityMap, notes, nodeShowSetting]);
-```
+`useMemo` 调 `convertNodeAndEdges({entityMap, nodeShow: nodeShowSetting, notes})`，依赖 `entityMap / notes / nodeShowSetting`。[`convertNodeAndEdges`](../src/flow/layout/entityToNodeAndEdge.ts) 输出 xyflow nodes/edges：每个 node 的 `data = {entity, nodeShow, notes}`（呈现层「下发袋」）；edge 用 `simplebezier` + `getEdgeColor`，`EntityEdgeType.Ref` 加 `animated`。
 
-[`convertNodeAndEdges`](../src/flow/layout/entityToNodeAndEdge.ts):68 输出 xyflow nodes/edges：每个 node 的 `data = {entity, nodeShow, notes}`（呈现层「下发袋」）；edge 用 `simplebezier` + `getEdgeColor`，`EntityEdgeType.Ref` 加 `animated`。
-
-> **query 不走 `node.data`**（useEntityToGraph.ts:114-116）：`query` 无 per-graph override，渲染组件各自 `useMyStore()` 订阅（resso per-key），故 query 不进 nodes 重建、搜索时不重跑 ELK（红线 6：domain ↔ presentation 解耦）。
+> **query 不走 `node.data`**：`query` 无 per-graph override，渲染组件各自 `useMyStore()` 订阅（resso per-key），故 query 不进 nodes 重建、搜索时不重跑 ELK（domain ↔ presentation 解耦）。
 
 ---
 
 ## 二、ELK Web Worker（layoutAsync）
 
-[`layoutAsync.ts`](../src/flow/layout/layoutAsync.ts):73 用 `'elkjs/lib/elk-api.js'` + `'elkjs/lib/elk-worker.min.js?url'`，**模块级单例** `new ELK({workerUrl})` 复用同一 worker。内部流程：
+[`layoutAsync.ts`](../src/flow/layout/layoutAsync.ts) 用 `'elkjs/lib/elk-api.js'` + `'elkjs/lib/elk-worker.min.js?url'`，**模块级单例** `new ELK({workerUrl})` 复用同一 worker。内部流程：
 
 1. `nodeToLayoutChild` 对每个 node 调 `calcWidthHeight` 拿 `[w,h]` 喂 ELK `ElkNode`（**不可压缩边界框**）。
-2. 按 `layoutStrategy` 选两套 options：`'mrtree'` 或默认 layered（都 `elk.direction: RIGHT` + `POLYLINE`；layered 时 `layoutStrategy` 取值 `BRANDES_KOEPH` / `LINEAR_SEGMENTS` / `SIMPLE` 之一喂 `elk.layered.nodePlacement.strategy`）。`layoutStrategy` 由 `getLayoutStrategy(nodeShow, type)`（useEntityToGraph.ts:35）按 graph 类型从 `nodeShow` 选对应 `*Layout` 字段。
+2. 按 `layoutStrategy` 选两套 options：`'mrtree'` 或默认 layered（都 `elk.direction: RIGHT` + `POLYLINE`；layered 时 `layoutStrategy` 取值 `BRANDES_KOEPF` / `LINEAR_SEGMENTS` / `SIMPLE` 之一喂 `elk.layered.nodePlacement.strategy`）。`layoutStrategy` 由 `getLayoutStrategy(nodeShow, type)` 按 graph 类型从 `nodeShow` 选对应 `*Layout` 字段。
 3. `id2RectMap` 两阶段填充：`nodeToLayoutChild` 先填 `width/height`（喂 ELK 当边界框，初值 x/y=0），`elk.layout(graph)` 返回后 `toPositionMap` 用 ELK 算出的 x/y 覆盖。
 
 **为什么 Web Worker**：几十~几百节点的分层 / MR 树计算会阻塞主线程，扔 worker 不卡 UI。
 
 ### 2.1 写回 nodes（applyRectToNodes）
 
-```ts
-// useEntityToGraph.ts:51 —— 一次遍历同时写 position 与 width/height
-function applyRectToNodes(nodes: EntityNode[], rectMap?: Map<string, Rect>) {
-    if (!rectMap) return nodes;
-    return nodes.map(n => {
-        const r = rectMap.get(n.id);
-        return r ? {...n, position: {x: r.x, y: r.y}, width: r.width, height: r.height} : n;
-    });
-}
-```
+一次遍历同时写 position 与 width/height——合并了原 `applyPositionToNodes` + `applyWidthHeightToNodes` 两趟 map 为一趟：
 
-合并了原 `applyPositionToNodes` + `applyWidthHeightToNodes` 两趟 map 为一趟。
+```
+applyRectToNodes(nodes, rectMap):
+  无 rectMap            → 原样返回（layout 尚未出结果）
+  有 rectMap，按 id 查 rect：
+      命中              → 用 rect 的 x/y/width/height 覆盖该 node
+      未命中（节点未进 ELK 结果，数据异常） → 仅 dev 打印，保留原 node
+```
 
 ### 2.2 LayoutError 三态 + AbortSignal（绝不 resolve undefined）
 
-```ts
-// layoutAsync.ts —— 布局失败一律 throw，绝不 resolve undefined
-// 三种错误码：aborted（竞态放弃）/ no_children（无子节点）/ dropped_nodes（节点被丢弃）
-```
+失败一律 throw `LayoutError`，三种错误码：`aborted`（竞态放弃）/ `no_children`（无子节点）/ `dropped_nodes`（节点被丢弃）。
 
-**为什么绝不 resolve undefined**（layoutAsync.ts:57-71 注释）：react-query 把 resolve undefined 当成功无数据（`isSuccess=true`），打破下游 `if (data)` 守卫导致偶发空图。
+**为什么绝不 resolve undefined**（layoutAsync.ts 注释）：react-query 把 resolve undefined 当成功无数据（`isSuccess=true`），打破下游 `if (data)` 守卫导致偶发空图。
 
-**AbortSignal 竞态保护**（useEntityToGraph.ts:144 透传 `ctx.signal`）：`layoutAsync` 在 `elk.layout` 前后两次检查 `signal?.aborted`，query 变 stale/inactive 时 react-query abort，layoutAsync 据此放弃过期结果。
+**AbortSignal 竞态保护**：`useEntityToGraph` 透传 react-query 的 `ctx.signal`，`layoutAsync` 在 `elk.layout` 前后两次检查 `signal?.aborted`，query 变 stale/inactive 时 react-query abort，layoutAsync 据此放弃过期结果。
 
 ### 2.3 失败兜底（spreadFallbackNodes）
 
 ELK throw 时（retry 耗尽）按 5 列网格铺开，避免全塌在默认 (100,100) 成一摞：
 
-```ts
-const FALLBACK_CELL_W = 320, FALLBACK_CELL_H = 260, FALLBACK_COLS = 5, FALLBACK_ORIGIN = 80;
-function spreadFallbackNodes(nodes: EntityNode[]) {
-    return nodes.map((n, i) => ({...n,
-        position: { x: FALLBACK_ORIGIN + (i % FALLBACK_COLS) * FALLBACK_CELL_W,
-                   y: FALLBACK_ORIGIN + Math.floor(i / FALLBACK_COLS) * FALLBACK_CELL_H }}));
-}
+```
+spreadFallbackNodes(nodes):
+  cell 320×260，5 列，起点 (80,80)
+  第 i 个节点 → ( 80 + (i mod 5) × 320 ,  80 + floor(i / 5) × 260 )
 ```
 
 `retry` = `queryClient.invalidateQueries({queryKey: ['layout', pathname]})`（Effect 3）。
@@ -98,60 +83,63 @@ function spreadFallbackNodes(nodes: EntityNode[]) {
 
 ## 三、尺寸预估体系（calcWidthHeight）
 
-[`calcWidthHeight.ts`](../src/flow/layout/calcWidthHeight.ts):59 是尺寸估算主函数。**核心决策：预先估算而非等 DOM 测量**——ELK 在 worker 跑、无 DOM 访问，必须喂入不可压缩的 `[w,h]`，否则节点 overlap / 异常间隙（注释 calcWidthHeight.ts:9-14）。
+[`calcWidthHeight.ts`](../src/flow/layout/calcWidthHeight.ts) 是尺寸估算主函数。**核心决策：预先估算而非等 DOM 测量**——ELK 在 worker 跑、无 DOM 访问，必须喂入不可压缩的 `[w,h]`，否则节点 overlap / 异常间隙（calcWidthHeight.ts 注释）。
 
 - **魔数锁死 antd 实测 DOM 尺寸**：`NODE_BASE_H=40` / `FIELD_ROW_H=41` / `CARD_DS_H=38` / `EDIT_ROW_H=40` 等，且 `calcWidthHeight.test.ts` 锁住算术（护栏）。
-- **节点宽度 dimensions.ts:14,16 单一来源**（`DEFAULT_NODE_WIDTH=240`（:14）/ `DEFAULT_EDIT_NODE_WIDTH=280`（:16）），驱动三处（ELK 边界框 / FlowNode CSS / Handle 绝对定位）。
-- **note 行数 `estimateNoteRows`（:48）与渲染同源**，杜绝「估算留 N 行、渲染只占 1 行」的纵向漂移。
-- **`simpleStrRowCount`（:175）用 `Intl.Segmenter` grapheme + East Asian Width 表**替代 `charCodeAt`（修三缺陷：代理对误计、Latin Extended 误判、固定 30 与 `nodeWidth` 解耦）。
+- **节点宽度 dimensions.ts 单一来源**（`DEFAULT_NODE_WIDTH=240` / `DEFAULT_EDIT_NODE_WIDTH=280`），驱动三处（ELK 边界框 / FlowNode CSS / Handle 绝对定位）。
+- **note 行数 `estimateNoteRows` 与渲染同源**，杜绝「估算留 N 行、渲染只占 1 行」的纵向漂移。
+- **`simpleStrRowCount` 用 `Intl.Segmenter` grapheme + East Asian Width 表**替代 `charCodeAt`（修三缺陷：代理对误计、Latin Extended 误判、固定 30 与 `nodeWidth` 解耦）。
 
 ---
 
 ## 四、colors 配色
 
-[`colors.ts`](../src/flow/layout/colors.ts)：`getNodeBackgroundColor`（:39）三级解析（值 → 标签 → 类型）；`getEdgeColor`（:135）；`getReadableTextColor`（:153）用 **YIQ（阈值 150）而非 WCAG** 相对亮度——保证默认调色板全部保留白字视觉一致（WCAG 0.179 阈值会让 `#0898b5` 翻黑字）。
+[`colors.ts`](../src/flow/layout/colors.ts)：`getNodeBackgroundColor` 三级解析（值 → 标签 → 类型）；`getEdgeColor`；`getReadableTextColor` 用 **YIQ（阈值 150）而非 WCAG** 相对亮度——保证默认调色板全部保留白字视觉一致（WCAG 0.179 阈值会让 `#0898b5` 翻黑字）。
 
 `getNodeBackgroundColor` **显式接收 `nodeShow` 参数**（非组件内 `useStore`）——colors.ts 是纯函数无 hook 上下文，显式入参让 FlowNode 把 `nodeShow` 放进 `useMemo` deps，避免 entity 引用不变时改主题色 stale。
 
+> **colors.ts 与 antd token 解耦（本篇主家）**：colors.ts 是纯函数、拿不到 `useToken`，故 `NODE_SHOW_DEFAULTS` 与 antd token 同值但互不 import；store.ts 里的同值是持久化进 NodeShowType 的初始值（另一关注点，且 oxlint 禁 store→flow）。若未来要跟随主题，需在调用点（FlowNode）`useToken` 后把解析值传入。
+
 ---
 
-## 五、缓存白名单 + 失效（红线 3）
+## 五、缓存白名单 + 失效
 
-layout `queryKey` 三段（useEntityToGraph.ts:132-139）：
+layout `queryKey` 由 `pathname` + 三段内容 + 编辑态标记构成：
 
-```ts
-const layoutKeys   = pickLayoutKeys(nodeShowSetting);               // 布局相关字段（白名单 13 个）
-const topologyKeys = { maxImpl, refIn, refOutDepth, maxNode,        // 拓扑 setting（9 个，改任一 → key 变 → 重布局）
-                       recordRefIn, recordRefInShowLinkMaxNode, recordRefOutDepth, recordMaxNode, tauriConf };
-// 注：tauriConf 不直接喂 ELK，但驱动 Record.tsx 的 entityMap 构建（影响 refs 拉取），nodes 集合会变 → 必须进 queryKey 才能让缓存失效
-const isEdited = !!editingObjectRes?.isEdited;
-const queryKey = queryKeys.layout(pathname, layoutKeys, topologyKeys, isEdited);
-const staleTime = isEdited ? 0 : 1000 * 60 * 5;
+| 段 | 来源 | 作用 |
+|---|---|---|
+| `layoutKeys` | `pickLayoutKeys(nodeShowSetting)` 白名单 13 字段 | 改纯颜色字段 → queryKey 不变 → 命中缓存不重跑 ELK |
+| `topologyKeys` | `maxImpl / refIn / refOutDepth / maxNode / recordRefIn / recordRefInShowLinkMaxNode / recordRefOutDepth / recordMaxNode / tauriConf`（9 个，store 纯状态容器概念见 [02 §3.1](02-state-management.md)） | 改任一拓扑 setting → key 变 → 重布局 |
+
+> 注：`tauriConf` 不直接喂 ELK，但驱动 Record.tsx 的 entityMap 构建（影响 refs 拉取），nodes 集合会变 → 必须进 queryKey 才能让缓存失效。
+
+```
+isEdited  = !!editingObjectRes?.isEdited
+queryKey  = queryKeys.layout(pathname, layoutKeys, topologyKeys, isEdited)
+staleTime = isEdited ? 0 : 1000*60*5    // 编辑态每次重取 / 浏览态 5min
 ```
 
-[`pickLayoutKeys`](../src/domain/nodeShowLayoutKeys.ts)（常量 `NODESHOW_LAYOUT_KEYS` :17 / 函数 :28）白名单 13 个字段：**改纯颜色字段 → queryKey 不变 → 命中缓存不重跑 ELK**；改拓扑 setting → `topologyKeys` 变 → 缓存自然失效重布局。**用 queryKey 替代了旧 store setter 的 `clearLayoutCache` 命令式清缓存**。
+[`pickLayoutKeys`](../src/domain/nodeShowLayoutKeys.ts)（常量 `NODESHOW_LAYOUT_KEYS` / 函数 `pickLayoutKeys`）白名单 13 个字段：**改纯颜色字段 → queryKey 不变 → 命中缓存不重跑 ELK**；改拓扑 setting → `topologyKeys` 变 → 缓存自然失效重布局。**用 queryKey 替代了旧 store setter 的 `clearLayoutCache` 命令式清缓存**。
 
 `'e'` 段隔离：编辑态 queryKey 多一个 `'e'`，`staleTime=0`（拓扑可能改→立即重取）；浏览态 5min。结构变更 `removeQueries(['layout', pathname, 'e'])`（03 的 `onStructureChange`）只清编辑态，浏览态缓存不受影响。
 
-> **quirk**（useEntityToGraph.ts:126-127）：纯值类编辑期间 `isEdited` 不刷新（entityMap 不重算、editingObjectRes 不重建，性能契约 1）。安全——值类不改拓扑、布局不变，继续走干净态 5min 缓存正确。勿当 bug 修。
+> **quirk**：纯值类编辑期间 `isEdited` 不刷新（entityMap 不重算、editingObjectRes 不重建，值类编辑就地改、不 bump structureVersion）。安全——值类不改拓扑、布局不变，继续走干净态 5min 缓存正确。勿当 bug 修。
 
 ---
 
 ## 六、稳定视口自算 + 四态 EFitView
 
-xyflow 的 `fitView` 做不到「保持某点屏幕坐标不变」（[viewportMath.ts](../src/flow/layout/viewportMath.ts) 注释 :22-24 / 函数 `computeStableViewport` :26），故自算。视口是线性变换：`screen = world × zoom + 平移`。要使锚点屏幕坐标不动，解得：
+xyflow 的 `fitView` 做不到「保持某点屏幕坐标不变」（[viewportMath.ts](../src/flow/layout/viewportMath.ts) 注释），故自算。视口是线性变换：`screen = world × zoom + 平移`。要使锚点屏幕坐标不动（zoom 不变），解得：
 
-```ts
-function computeStableViewport(anchorOld: Point, anchorNew: Point, vp: Viewport): Viewport {
-    return {
-        zoom: vp.zoom,
-        x: anchorOld.x * vp.zoom - anchorNew.x * vp.zoom + vp.x,
-        y: anchorOld.y * vp.zoom - anchorNew.y * vp.zoom + vp.y,
-    };
-}
+```
+computeStableViewport(anchorOld, anchorNew, vp):
+  // 锚点世界坐标由 anchorOld → anchorNew，要求其屏幕坐标不变
+  zoom: vp.zoom                                              // 缩放不变
+  x = anchorOld.x × zoom − anchorNew.x × zoom + vp.x
+  y = anchorOld.y × zoom − anchorNew.y × zoom + vp.y
 ```
 
-四态 `EFitView` 决定 `anchorOld` 来源（`pickViewportAction`，viewportMath.ts:49）：
+四态 `EFitView` 决定 `anchorOld` 来源（`pickViewportAction`）：
 
 | `EFitView` | `anchorOld` 来源 | 视口动作 |
 |---|---|---|
@@ -160,51 +148,40 @@ function computeStableViewport(anchorOld: Point, anchorNew: Point, vp: Viewport)
 | `KeepStable` | `prevRectMap` 坐标（undo 前一帧布局，`position` 已过时）| `computeStableViewport` |
 | `NoChange` | — | noop（undo/redo 值类、只读 / 固定页）|
 
-```ts
-// viewportMath.ts:68-81 —— KeepStable 分支
-if (editingObjectRes.fitView === EFitView.KeepStable && editingObjectRes.fitViewToIdPosition && opts?.prevId2RectMap) {
-    const {id} = editingObjectRes.fitViewToIdPosition;
-    const oldRect = opts.prevId2RectMap.get(id);   // 上一帧布局坐标（undo 发起时锚点）
-    const newRect = id2RectMap.get(id);              // 新布局同 id 坐标
-    if (oldRect && newRect) return {kind: 'fitId', viewport: computeStableViewport(...)};
-}
-```
+`KeepStable` 分支：`editingObjectRes.fitViewToIdPosition` 给出锚点 id，`prevId2RectMap.get(id)` 取上一帧布局坐标作 `anchorOld`、`id2RectMap.get(id)` 取新布局同 id 坐标作 `anchorNew`，两者都命中才算 fitId 视口；锚点被删 / 无 prevMap → noop。
 
-`prevRectMapRef`（useEntityToGraph.ts:112）记上一帧布局，Effect 2 末尾更新，供下次 KeepStable 作 `anchorOld`。
+`prevRectMapRef` 记上一帧布局，Effect 2 末尾更新，供下次 KeepStable 作 `anchorOld`。
 
 → undo 快照的 `undoFitView` / `anchorId`（03 讲过）就喂给这里决定视口动作——这是 03 → 04 视口语义钩子的回收。
 
-**另一条视口稳定机制：`setFitViewForPathname`（RecordRef 固定面板）**——`useEntityToGraph` 的可选回调，仅在 FitFull 分支调（Effect 2 :199）。RecordRef 固定面板用它回写「已适配 pathname」；再次进入同 pathname 时把 `editingObjectRes.fitView` 替换成 `NoChange`，实现「首次 FitFull 后保持视口不跳」。与四态 `EFitView` 是独立的策略。
+**另一条视口稳定机制：`setFitViewForPathname`（RecordRef 固定面板）**——`useEntityToGraph` 的可选回调，仅在 FitFull 分支调。RecordRef 固定面板用它回写「已适配 pathname」；再次进入同 pathname 时把 `editingObjectRes.fitView` 替换成 `NoChange`，实现「首次 FitFull 后保持视口不跳」。与四态 `EFitView` 是独立的策略。
 
 ---
 
 ## 七、三个 Effect 拆分
 
-```ts
-// Effect 1（:156）：节点/边/菜单回调下发
-useEffect(() => {
-    if (newNodes) { flowGraph.setNodeMenuFunc(...); setNodes(newNodes); setEdges(edges); }
-    else if (layoutError) { setNodes(spreadFallbackNodes(nodes)); setEdges(edges); }   // 失败兜底
-}, [newNodes, edges, nodeMenuFunc, paneMenu, nodeDoubleClickFunc, flowGraph, setNodes, setEdges, layoutError, nodes]);
+```
+Effect 1: 节点 / 边 / 菜单回调下发
+  newNodes 有              → setNodeMenuFunc/setPaneMenu/setNodeDoubleClickFunc + setNodes/setEdges
+  newNodes 无 + layoutError → spreadFallbackNodes 网格铺开 + console.error（失败兜底）
+  deps: newNodes, edges, 菜单回调, flowGraph, setNodes/setEdges, layoutError, nodes
 
-// Effect 3（:180）：错误反馈（拆独立，只随 layoutError 变，不沾菜单依赖）
-useEffect(() => {
-    flowGraph.setLayoutError(layoutError ?? undefined);
-    flowGraph.setRetryLayout(() => queryClient.invalidateQueries({queryKey: ['layout', pathname]}));
-}, [layoutError, flowGraph, pathname]);
+Effect 3: 错误反馈（拆独立，只随 layoutError 变，不沾菜单依赖）
+  flowGraph.setLayoutError(layoutError)
+  flowGraph.setRetryLayout(() => invalidate ['layout', pathname])
+  deps: layoutError, flowGraph, pathname
 
-// Effect 2（:190）：视口动作（刻意与 Effect 1 拆开）
-useEffect(() => {
-    if (viewportReady && id2RectMap && newNodes) {
-        const action = pickViewportAction(editingObjectRes, id2RectMap, getViewport(), {prevId2RectMap: prevRectMapRef.current});
-        if (action.kind === 'fitFull') { void fitView({padding:0.2, minZoom:0.3, maxZoom:1}); setFitViewForPathname?.(pathname); }
-        else if (action.kind === 'fitId') { void setViewport(action.viewport); }
-        prevRectMapRef.current = id2RectMap;
-    }
-}, [editingObjectRes, id2RectMap, viewportReady, newNodes, fitView, setViewport, getViewport, setFitViewForPathname, pathname]);
+Effect 2: 视口动作（刻意与 Effect 1 拆开）
+  viewportReady && id2RectMap && newNodes 时：
+    action = pickViewportAction(editingObjectRes, id2RectMap, getViewport(), {prevId2RectMap})
+    fitFull → fitView({padding:0.2, minZoom:0.3, maxZoom:1}) + setFitViewForPathname(pathname)
+    fitId   → setViewport(action.viewport)
+    noop    → 不动
+    末尾 prevRectMapRef.current = id2RectMap   // 记录本帧布局，供下次 KeepStable
+  deps: editingObjectRes, id2RectMap, viewportReady, newNodes, fitView/setViewport/getViewport, setFitViewForPathname, pathname
 ```
 
-**为什么视口拆独立 Effect**（:185-189）：历史背景——值类编辑 coalescing flush 曾让 Record 订阅的 canUndo 翻转 → `paneMenu` 新引用 → 视口被连带重置（输入 primitive 后过一会偶发 fitFull）。现 Record 不再订阅 canUndo + `paneMenu` 引用稳定，诱因消除；拆分仍作「视口语义独立边界」保留。
+**为什么视口拆独立 Effect**：历史背景——值类编辑 coalescing flush 曾让 Record 订阅的 canUndo 翻转 → `paneMenu` 新引用 → 视口被连带重置（输入 primitive 后过一会偶发 fitFull）。现 Record 不再订阅 canUndo + `paneMenu` 引用稳定，诱因消除；拆分仍作「视口语义独立边界」保留。
 
 ---
 
