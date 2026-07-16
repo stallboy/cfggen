@@ -25,26 +25,25 @@ java -jar ../cfggen.jar -datadir ../example/config -gen server
 
 ## 文档索引（详情见 docs/）
 
-> 👉 想理解 cfgeditor 源码与设计，先读 [`docs/README.md`](docs/README.md) 的阅读路径。
+> 👉 想理解 cfgeditor 源码与设计，先读 [`docs/README.md`](docs/README.md)——分层地图 + 一条记录的旅程主线 + 六条贯穿红线。
 
-| 主题 | 文档 |
-|---|---|
-| 总览（是什么 / 核心概念 / 操作主线） | `docs/01-overview.md` |
-| 文档导航（阅读路径 / 起点） | `docs/README.md` |
-| 目录结构 / 分层 / 依赖方向 / oxlint 护栏 / `@/` 别名 | `docs/02-directory-structure.md` |
-| 数据生命周期（一条编辑的全程） | `docs/03-data-lifecycle.md` |
-| 状态管理（Resso / EditingSession / useSyncExternalStore） | `docs/04-state-management.md` |
-| API / React Query / URL 数据流 | `docs/05-url-api-reactquery.md` |
-| Undo/Redo | `docs/06-undo-redo.md` |
-| 视口适配（fitView / computeStableViewport） | `docs/07-fitview.md` |
-| 字段内嵌机制 | `docs/08-embedding.md` |
-| 单元测试指南（含覆盖清单） | `docs/09-unit-testing-guide.md` |
-| 性能记录 | `docs/10-perf-optimization.md` |
+| # | 主题 | 文档 |
+|---|---|---|
+| 00 | 总览（地图 / 旅程 / 红线） | `docs/README.md` |
+| 01 | 数据流：URL → API → React Query | `docs/01-data-flow.md` |
+| 02 | 状态管理：五种方案分工 | `docs/02-state-management.md` |
+| 03 | 编辑会话 + Undo/Redo | `docs/03-editing-session-undo.md` |
+| 04 | 布局引擎 + 视口 | `docs/04-layout-viewport.md` |
+| 05 | Flow 图层（XYFlow 集成） | `docs/05-flow-graph.md` |
+| 06 | 编辑表单 | `docs/06-edit-form.md` |
+| 07 | 字段内嵌 embedding + `$fold` | `docs/07-embedding.md` |
+| 08 | AI Chat | `docs/08-ai-chat.md` |
+| 09 | 横切关注点 | `docs/09-cross-cutting.md` |
 
 ## 必守约定（易踩坑）
 
-- **依赖只能向下**：`app/features → flow/res → store/services → domain → api`，反向 import 被 oxlint 立即拦下。规则见 `02-directory-structure.md §5`，以 `.oxlintrc.json` 为准。
+- **依赖只能向下**：`app/features → flow/res → store/services → domain → api`，反向 import 被 oxlint 立即拦下。分层地图见 `docs/README.md`，规则以 `.oxlintrc.json` 为准。
 - **`src/domain/storageJson.ts` 是自动生成的**（quicktype 产出），不要手改——改 `src/domain/json.ts` 定义类型后跑 `genJsonParser.bat` 重新生成，再注释掉未用函数。
 - **`*.test.ts` 被 `.ignore` 排除**：Grep 工具搜不到测试内容，需用 `Glob src/**/*.test.ts` 定位再 Read（LSP `findReferences` 不受影响）。
-- **测试只覆盖纯逻辑**：vitest，jsdom 环境，不 mock、不碰 UI/网络/Tauri IPC；喂 fixture 断言输出。范围与取舍见 `docs/09-unit-testing-guide.md`。
+- **测试只覆盖纯逻辑**：vitest，jsdom 环境，不 mock、不碰 UI/网络/Tauri IPC；喂 fixture 断言输出。
 - **国际化**：翻译内联在 `src/app/i18n.ts`（en/zh 两段，无独立 locales 目录），用 i18next。

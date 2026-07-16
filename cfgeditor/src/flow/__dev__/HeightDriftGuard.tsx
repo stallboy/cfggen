@@ -9,7 +9,7 @@ import { calcWidthHeight } from "../layout/calcWidthHeight.ts";
 // 但 dev-only 的 useStore(measured.height) 订阅在节点高度抖动时引发 re-render 风暴——实测禁用后 dev long task
 // 总量 -45%、11.7→16.7s 后段周期 task 全消失。FlowNode 不再引用本文件。
 //
-// 恢复使用（见 docs/flow-refactor.md §5-A3 第3档：改为单次测量、不持续订阅 store）：
+// 恢复使用（改为单次测量、不持续订阅 store）：
 // FlowNode 加 `import {HeightDriftGuard} from "./__dev__/HeightDriftGuard.tsx"`，
 // 并在节点 div 内放 `{import.meta.env.DEV && <HeightDriftGuard id={id} entity={entity} nodeShow={nodeShow} notes={notes} />}`。
 
