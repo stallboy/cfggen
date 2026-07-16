@@ -91,9 +91,20 @@ public final class CfgSchemaResolver {
 
             switch (item) {
                 case InterfaceSchema interfaceSchema -> {
+                    Map<String, String> implLowerToName = new HashMap<>();
                     for (StructSchema impl : interfaceSchema.impls()) {
                         if (!impl.namespace().isEmpty()) {
                             errs.addErr(new ImplNamespaceNotEmpty(interfaceSchema.name(), impl.name()));
+                        }
+                        // 生成java sealed interface时，interface和impl会落到同一目录同一类名文件，
+                        // impl名不能与interface名相同（忽略大小写），否则文件互相覆盖。
+                        if (interfaceSchema.lastName().equalsIgnoreCase(impl.name())) {
+                            errs.addErr(new InterfaceImplNameConflict(interfaceSchema.name(), impl.name()));
+                        }
+                        // 同理，同一interface内impl之间名也不能忽略大小写相同，否则也会互相覆盖
+                        String first = implLowerToName.putIfAbsent(impl.name().toLowerCase(), impl.name());
+                        if (first != null) {
+                            errs.addErr(new ImplNameConflict(interfaceSchema.name(), first, impl.name()));
                         }
                         checkInnerNameConflict(impl);
                     }

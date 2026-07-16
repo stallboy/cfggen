@@ -115,6 +115,90 @@ class CfgSchemaResolverTest {
     }
 
     @Test
+    public void InterfaceImplNameConflict_sameName() {
+        String str = """
+                interface action {
+                    struct action {
+                    }
+                }
+                """;
+
+        CfgSchema cfg = CfgReader.parse(str);
+        CfgSchemaErrs errs = cfg.resolve();
+        assertEquals(1, errs.errs().size());
+        Err err = errs.errs().getFirst();
+        assertInstanceOf(InterfaceImplNameConflict.class, err);
+        InterfaceImplNameConflict e = (InterfaceImplNameConflict) err;
+        assertEquals("action", e.sInterface());
+        assertEquals("action", e.impl());
+    }
+
+    @Test
+    public void InterfaceImplNameConflict_caseInsensitive() {
+        // interface Action 与 impl action 仅大小写不同，生成 java 时类名都是 Action，会落到同一文件
+        String str = """
+                interface Action {
+                    struct action {
+                    }
+                }
+                """;
+
+        CfgSchema cfg = CfgReader.parse(str);
+        CfgSchemaErrs errs = cfg.resolve();
+        assertEquals(1, errs.errs().size());
+        Err err = errs.errs().getFirst();
+        assertInstanceOf(InterfaceImplNameConflict.class, err);
+        InterfaceImplNameConflict e = (InterfaceImplNameConflict) err;
+        assertEquals("Action", e.sInterface());
+        assertEquals("action", e.impl());
+    }
+
+    @Test
+    public void ImplNameConflict_sameName() {
+        String str = """
+                interface action {
+                    struct impl1 {
+                    }
+                    struct impl1 {
+                    }
+                }
+                """;
+
+        CfgSchema cfg = CfgReader.parse(str);
+        CfgSchemaErrs errs = cfg.resolve();
+        assertEquals(1, errs.errs().size());
+        Err err = errs.errs().getFirst();
+        assertInstanceOf(ImplNameConflict.class, err);
+        ImplNameConflict e = (ImplNameConflict) err;
+        assertEquals("action", e.sInterface());
+        assertEquals("impl1", e.impl1());
+        assertEquals("impl1", e.impl2());
+    }
+
+    @Test
+    public void ImplNameConflict_caseInsensitive() {
+        // impl1 与 IMPL1 仅大小写不同，生成 java 时类名都是 Impl1，会落到同一文件
+        String str = """
+                interface action {
+                    struct impl1 {
+                    }
+                    struct IMPL1 {
+                    }
+                }
+                """;
+
+        CfgSchema cfg = CfgReader.parse(str);
+        CfgSchemaErrs errs = cfg.resolve();
+        assertEquals(1, errs.errs().size());
+        Err err = errs.errs().getFirst();
+        assertInstanceOf(ImplNameConflict.class, err);
+        ImplNameConflict e = (ImplNameConflict) err;
+        assertEquals("action", e.sInterface());
+        assertEquals("impl1", e.impl1());
+        assertEquals("IMPL1", e.impl2());
+    }
+
+    @Test
     public void NameConflict() {
         String str = """
                 struct action {

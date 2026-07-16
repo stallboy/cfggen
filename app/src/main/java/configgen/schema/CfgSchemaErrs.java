@@ -158,6 +158,24 @@ public record CfgSchemaErrs(List<Err> errs,
     }
 
     /**
+     * interface名与其内部struct(impl)名相同（忽略大小写）。
+     * 生成java sealed interface时，interface和impl会落到同一目录同一类名文件
+     * （包名=interface名小写，类名=首字母大写），同名会导致文件互相覆盖。
+     */
+    public record InterfaceImplNameConflict(String sInterface,
+                                            String impl) implements Err {
+    }
+
+    /**
+     * 同一interface内的多个struct(impl)名忽略大小写后相同。
+     * 生成java sealed interface时它们会落到同一目录同一类名文件，互相覆盖。
+     */
+    public record ImplNameConflict(String sInterface,
+                                   String impl1,
+                                   String impl2) implements Err {
+    }
+
+    /**
      * table，struct，interface名字冲突
      */
     public record NameConflict(String name) implements Err {
