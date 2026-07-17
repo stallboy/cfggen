@@ -4,6 +4,8 @@ sidebar:
   order: 31
 ---
 
+> 本文为说明性配置示例：含 `...` 占位与省略定义（如未展开的 ability id `2010`/`3010`/`3020`），旨在展示 GAS / AI / Scene 三层联动，**不可直接 gen**。
+
 # 综合示例集
 
 以下每个示例横跨 **GAS（能力系统 + 施法过程）**、**AI（行为系统）**、**Scene（场景编排系统）** 三层，重点展示施法生命周期（CastBar/Charged/Channel）如何与 AI 决策和场景编排深度联动。
@@ -55,17 +57,27 @@ ability {
         onTargetLost: Cancel;
     };
 
-    castMode: Charged {
-        minChargeTime: Const { value: 0.5; };
-        maxChargeTime: Const { value: 2.5; };
-        releaseOnMax: true;    // 蓄满自动释放
-        chargeProgressVar: "Var.ChargeProgress";
-        chargingTags: ["State.Casting.Spell"];
-        // 不含 State.Immobile → 可以被移动取消
-        cuesDuringCharge: ["Cue.Charge.Fireball"];
-        commitPolicy: OnRelease;
-        // 蓄力不足 minChargeTime 松手 → cancel → 不扣费不触发CD
-    };
+    phases: [
+        Charge {
+            minTime: Const { value: 0.5; };
+            maxTime: Const { value: 2.5; };
+            releaseOnMax: true;    // 蓄满自动释放
+            statuses: [
+                StatusCore {
+                    grantedTags: ["State.Casting.Spell"]; // 不含 State.Immobile → 可被移动取消
+                    cuesWhileActive: ["Cue.Charge.Fireball"];
+                }
+            ];
+            commitOnRelease: true; // 松手且达 minTime 才扣费；蓄力不足松手 → cancel → 不扣费不触发CD
+            // chargeProgress 由全局 combat_settings.chargeProgressVar 写出，下方 effect 用 ContextVar 读取
+            onInterrupt: [
+                // 蓄力被打断：自身受到反噬伤害 + 短暂锁定
+                ResolveCombat { pipeline: "PureDamage"; magnitude: Const { value: 20; }; tags: ["Damage.Type.SelfHarm"]; },
+                GrantTags { grantedTags: ["State.AbilityLockout"]; duration: Const { value: 0.8; }; },
+                FireCue { cue: "Cue.Cast.Interrupted.Fire"; }
+            ];
+        }
+    ];
 
     // 蓄力进度影响伤害：基础 1.0 倍 + 蓄力进度 * 2.0 倍
     effect: WithTarget {
@@ -104,24 +116,9 @@ ability {
         ]};
     };
 
-    onInterrupt: [
-        // 蓄力被打断：自身受到反噬伤害 + 短暂锁定
-        ResolveCombat {
-            pipeline: "PureDamage";
-            magnitude: Const { value: 20; };
-            tags: ["Damage.Type.SelfHarm"];
-        },
-        GrantTags {
-            grantedTags: ["State.AbilityLockout"];
-            duration: Const { value: 0.8; };
-        },
-        FireCue { cue: "Cue.Cast.Interrupted.Fire"; }
-    ];
-
     recovery: {
         duration: Const { value: 0.4; };
-        recoveryTags: ["State.Recovery"];
-        cuesDuringRecovery: [];
+        statuses: [ StatusCore { grantedTags: ["State.Recovery"] } ];
     };
 }
 
@@ -142,44 +139,51 @@ ability {
         maxRange: Const { value: 15.0; };
     };
 
-    castMode: Channel {
-        duration: Const { value: 4.0; };
-        tickInterval: Const { value: 0.5; };
-        maxTicks: 8;
-        tickOnStart: true;
+    phases: [
+        Channel {
+            tickSchedule: Fixed { interval: Const { value: 0.5; }; maxTicks: 8; tickOnStart: true };
+            duration: Const { value: 4.0 };
 
-        // 每次心跳：在指定地点造成 AOE 伤害
-        tickEffect: WithTargets {
-            targets: TargetScan {
-                shape: Sphere {
-                    center: ContextVar { varKey: "Var.AbilityPoint"; };
-                    // 注意：ContextVar 在此处读取 PointTarget 写入的 pointVar
-                    // 因为 TargetSelector 不支持直接读 pointVar，
-                    // 需要 combat_settings.targetingVars.pointVar 定义映射
-                    radius: Const { value: 5.0; };
+            // 每次心跳：在指定地点造成 AOE 伤害
+            tickEffect: [ WithTargets {
+                targets: TargetScan {
+                    shape: Sphere {
+                        center: ContextVar { varKey: "Var.AbilityPoint"; };
+                        // 注意：ContextVar 在此处读取 PointTarget 写入的 pointVar
+                        // 因为 TargetSelector 不支持直接读 pointVar，
+                        // 需要 combat_settings.targetingVars.pointVar 定义映射
+                        radius: Const { value: 5.0; };
+                    };
+                    relationTo: ContextInstigator {};
+                    allowedRelations: [Hostile];
+                    maxCount: -1;
                 };
-                relationTo: ContextInstigator {};
-                allowedRelations: [Hostile];
-                maxCount: -1;
-            };
-            effect: ResolveCombat {
-                pipeline: "StandardMagicDamage";
-                magnitude: Math {
-                    op: Mul;
-                    a: StatValue { source: ContextInstigator {};
-                        stat: "Attack_Power"; };
-                    b: Const { value: 0.6; };
+                effect: ResolveCombat {
+                    pipeline: "StandardMagicDamage";
+                    magnitude: Math {
+                        op: Mul;
+                        a: StatValue { source: ContextInstigator {};
+                            stat: "Attack_Power"; };
+                        b: Const { value: 0.6; };
+                    };
+                    tags: ["Damage.Element.Fire", "Damage.AOE"];
+                    cuesOnExecute: ["Cue.Hit.FireRain"];
                 };
-                tags: ["Damage.Element.Fire", "Damage.AOE"];
-                cuesOnExecute: ["Cue.Hit.FireRain"];
-            };
-        };
+            } ];
 
-        channelingTags: ["State.Casting.Spell", "State.Immobile"];
-        // State.Immobile → TagRules blocks Ability.Type.Movement → 站桩引导
-        cuesDuringChannel: ["Cue.Channel.FireRain"];
-        commitPolicy: OnFirstTick;
-    };
+            statuses: [
+                StatusCore {
+                    grantedTags: ["State.Casting.Spell", "State.Immobile"]; // Immobile → TagRules blocks Movement → 站桩引导
+                    cuesWhileActive: ["Cue.Channel.FireRain"];
+                }
+            ];
+            commitOnFirstTick: true;
+            onInterrupt: [
+                GrantTags { grantedTags: ["State.AbilityLockout"]; duration: Const { value: 1.0; }; },
+                FireCue { cue: "Cue.Cast.Interrupted.Fire"; }
+            ];
+        }
+    ];
 
     // 引导结束的收尾技：地面留下燃烧区域
     effect: WithLocalVar {
@@ -221,19 +225,9 @@ ability {
         };
     };
 
-    onInterrupt: [
-        GrantTags {
-            grantedTags: ["State.AbilityLockout"];
-            duration: Const { value: 1.0; };
-        },
-        FireCue { cue: "Cue.Cast.Interrupted.Fire"; }
-    ];
-
     recovery: {
         duration: Const { value: 0.6; };
-        recoveryTags: ["State.Recovery.Heavy"];
-        // 重型后摇：TagRules blocks Ability.Type.Movement → 不可翻滚
-        cuesDuringRecovery: [];
+        statuses: [ StatusCore { grantedTags: ["State.Recovery.Heavy"] } ]; // 重型后摇：TagRules blocks Movement → 不可翻滚
     };
 }
 
@@ -279,7 +273,7 @@ ability {
         onTargetLost: Continue;
     };
 
-    castMode: Instant {};
+    phases: []; // 瞬发：空 phases，Activate 直达 Executing
 
     effect: WithTarget {
         target: ContextVar { varKey: "Var.AbilityTarget"; };
@@ -304,11 +298,9 @@ ability {
         ]};
     };
 
-    onInterrupt: [];
     recovery: {
         duration: Const { value: 0.5; };
-        recoveryTags: ["State.Recovery"];
-        // 轻型后摇：可被翻滚/移动取消，也可被二段连招取消
+        statuses: [ StatusCore { grantedTags: ["State.Recovery"] } ]; // 轻型后摇：可被翻滚/移动取消，也可被二段连招取消
     };
 }
 
@@ -333,7 +325,7 @@ ability {
         onTargetLost: Continue;
     };
 
-    castMode: Instant {};
+    phases: []; // 瞬发：空 phases，Activate 直达 Executing
 
     effect: WithTarget {
         target: ContextVar { varKey: "Var.AbilityTarget"; };
@@ -359,11 +351,9 @@ ability {
         ]};
     };
 
-    onInterrupt: [];
     recovery: {
         duration: Const { value: 0.8; };
-        recoveryTags: ["State.Recovery.Heavy"];
-        // 重型后摇：大招收尾
+        statuses: [ StatusCore { grantedTags: ["State.Recovery.Heavy"] } ]; // 重型后摇：大招收尾
     };
 }
 
@@ -521,13 +511,12 @@ ai_behavior {
 
     abortConditions: [
         { TargetIsDead { target: BoundGoalActor {}; } },
-        // 目标冲到面前 → 放弃蓄力
-        { DistanceGreaterThan {
-            from: Self {};
-            to: BoundGoalActor {};
-            maxDistance: 20.0; // 实际是 "距离小于 5" 的反向表达
-            // 注：这里应该用 Custom + AICondition
-        }; }
+        // 目标冲到面前（< 5m）→ 放弃远距离蓄力
+        { Custom { condition: Compare {
+            a: Distance { from: Self {}; to: BoundGoalActor {}; };
+            op: Lt;
+            b: Const { value: 5.0; };
+        }; }; }
     ];
 }
 
@@ -535,7 +524,7 @@ ai_behavior {
 // 行为：火雨引导 — 区域控场
 // ═══════════════════════════════════════════
 // AI 视角：当多个敌人聚集时高分。Channel 期间站桩不动
-// （channelingTags 含 State.Immobile），若被硬控打断，
+// （grantedTags 含 State.Immobile），若被硬控打断，
 // onInterrupt 生效，AI 行为返回 Failed。
 ai_behavior {
     behaviorId: 7002;
@@ -988,8 +977,8 @@ status {
 │  火雨 (Channel):                                               │
 │  Activate → Processing[心跳×8, 每0.5s AOE] → Execute[燃烧区]   │
 │     │            │                              → Recovery    │
-│     │     commitPolicy: OnFirstTick                           │
-│     │     channelingTags: [Immobile] → 站桩                    │
+│     │     commitOnFirstTick: true                           │
+│     │     grantedTags: [Immobile] → 站桩                    │
 │     │                                                         │
 │  连招 (Instant×2):                                             │
 │  一段 → GrantTags(Combo.S2, 1.2s) → Recovery[0.5s]            │
@@ -1031,13 +1020,19 @@ ability {
         onTargetLost: Cancel;
     };
 
-    castMode: CastBar {
-        castTime: Const { value: 0.8; };
-        castingTags: ["State.Casting.Melee", "State.Buff.Hyperarmor"];
-        // 读条期间自带霸体 → immuneToTags: State.Debuff.Control
-        cuesDuringCast: ["Cue.Charge.Shield"];
-        commitPolicy: OnActivate; // 激活即扣费
-    };
+    phases: [
+        Startup {
+            duration: Const { value: 0.8; };
+            statuses: [
+                StatusCore {
+                    grantedTags: ["State.Casting.Melee", "State.Buff.Hyperarmor"]; // 读条期间自带霸体 → immuneToTags: State.Debuff.Control
+                    cuesWhileActive: ["Cue.Charge.Shield"];
+                }
+            ];
+            // commit 默认 OnActivate（激活即扣费）
+            onInterrupt: [ FireCue { cue: "Cue.Charge.Failed"; } ];
+        }
+    ];
 
     effect: WithTarget {
         target: ContextVar { varKey: "Var.AbilityTarget"; };
@@ -1073,11 +1068,8 @@ ability {
         ]};
     };
 
-    onInterrupt: [
-        FireCue { cue: "Cue.Charge.Failed"; }
-    ];
     recovery: { duration: Const { value: 1.0; };
-        recoveryTags: ["State.Recovery.Heavy"]; };
+        statuses: [ StatusCore { grantedTags: ["State.Recovery.Heavy"] } ]; };
 }
 
 // 技能：天堂之锤 (CastBar — 长读条大招)
@@ -1091,13 +1083,23 @@ ability {
 
     targeting: None {};
 
-    castMode: CastBar {
-        castTime: Const { value: 3.0; }; // 长达 3 秒的读条
-        castingTags: ["State.Casting.Melee", "State.Immobile"];
-        // 站桩读条，不带霸体 → 可以被打断！
-        cuesDuringCast: ["Cue.Cast.HeavenHammer"];
-        commitPolicy: OnComplete;
-    };
+    phases: [
+        Startup {
+            duration: Const { value: 3.0; }; // 长达 3 秒的读条
+            statuses: [
+                StatusCore {
+                    grantedTags: ["State.Casting.Melee", "State.Immobile"]; // 站桩读条，不带霸体 → 可以被打断
+                    cuesWhileActive: ["Cue.Cast.HeavenHammer"];
+                }
+            ];
+            commitOnComplete: true;
+            onInterrupt: [
+                // 大招被打断 → 骑士短暂虚弱
+                WithTarget { target: ContextInstigator {}; effect: ApplyStatus { statusId: 7020; }; }, // "破势" 3 秒
+                FireCue { cue: "Cue.Cast.Interrupted.Heavy"; }
+            ];
+        }
+    ];
 
     effect: Sequence { effects: [
         FireCue { cue: "Cue.Slam.HeavenHammer"; },
@@ -1124,16 +1126,8 @@ ability {
         }
     ]};
 
-    onInterrupt: [
-        // 大招被打断 → 骑士短暂虚弱
-        WithTarget {
-            target: ContextInstigator {};
-            effect: ApplyStatus { statusId: 7020; }; // "破势" 3 秒
-        },
-        FireCue { cue: "Cue.Cast.Interrupted.Heavy"; }
-    ];
     recovery: { duration: Const { value: 1.5; };
-        recoveryTags: ["State.Recovery.Heavy"]; };
+        statuses: [ StatusCore { grantedTags: ["State.Recovery.Heavy"] } ]; };
 }
 
 // ═══════════════════════════════════════════
@@ -1157,26 +1151,35 @@ ability {
         // 骑士死亡 → 目标丢失 → Cancel → 引导中止（无惩罚）
     };
 
-    castMode: Channel {
-        duration: Const { value: 5.0; };
-        tickInterval: Const { value: 1.0; };
-        maxTicks: 5;
-        tickOnStart: true;
-        tickEffect: WithTarget {
-            target: ContextVar { varKey: "Var.AbilityTarget"; };
-            effect: ResolveCombat {
-                pipeline: "StandardHeal";
-                magnitude: Math { op: Mul;
-                    a: StatValue { source: ContextInstigator {};
-                        stat: "Attack_Power"; };
-                    b: Const { value: 1.2; }; };
-                cuesOnExecute: ["Cue.Heal.HolyPulse"];
-            };
-        };
-        channelingTags: ["State.Casting.Spell", "State.Immobile"];
-        cuesDuringChannel: ["Cue.Channel.HolyBeam"];
-        commitPolicy: OnFirstTick;
-    };
+    phases: [
+        Channel {
+            tickSchedule: Fixed { interval: Const { value: 1.0; }; maxTicks: 5; tickOnStart: true };
+            duration: Const { value: 5.0; };
+            tickEffect: [ WithTarget {
+                target: ContextVar { varKey: "Var.AbilityTarget"; };
+                effect: ResolveCombat {
+                    pipeline: "StandardHeal";
+                    magnitude: Math { op: Mul;
+                        a: StatValue { source: ContextInstigator {};
+                            stat: "Attack_Power"; };
+                        b: Const { value: 1.2; }; };
+                    cuesOnExecute: ["Cue.Heal.HolyPulse"];
+                };
+            } ];
+            statuses: [
+                StatusCore {
+                    grantedTags: ["State.Casting.Spell", "State.Immobile"];
+                    cuesWhileActive: ["Cue.Channel.HolyBeam"];
+                }
+            ];
+            commitOnFirstTick: true;
+            onInterrupt: [
+                // 引导被打断 → 牧师短暂沉默自己
+                WithTarget { target: ContextInstigator {}; effect: GrantTags { grantedTags: ["State.Debuff.Silence"]; duration: Const { value: 2.0; }; }; },
+                FireCue { cue: "Cue.Cast.Interrupted.Holy"; }
+            ];
+        }
+    ];
 
     // 引导完成后：给骑士挂一个持续回血 HOT
     effect: WithTarget {
@@ -1184,19 +1187,8 @@ ability {
         effect: ApplyStatus { statusId: 7030; }; // 神圣余韵 HOT
     };
 
-    onInterrupt: [
-        // 引导被打断 → 牧师短暂沉默自己
-        WithTarget {
-            target: ContextInstigator {};
-            effect: GrantTags {
-                grantedTags: ["State.Debuff.Silence"];
-                duration: Const { value: 2.0; };
-            };
-        },
-        FireCue { cue: "Cue.Cast.Interrupted.Holy"; }
-    ];
     recovery: { duration: Const { value: 0.5; };
-        recoveryTags: ["State.Recovery"]; };
+        statuses: [ StatusCore { grantedTags: ["State.Recovery"] } ]; };
 }
 
 // 技能：群体祝福 (CastBar — 读条群体治疗)
@@ -1210,12 +1202,22 @@ ability {
 
     targeting: None {};
 
-    castMode: CastBar {
-        castTime: Const { value: 2.5; };
-        castingTags: ["State.Casting.Spell", "State.Immobile"];
-        cuesDuringCast: ["Cue.Cast.MassBlessing"];
-        commitPolicy: OnComplete;
-    };
+    phases: [
+        Startup {
+            duration: Const { value: 2.5; };
+            statuses: [
+                StatusCore {
+                    grantedTags: ["State.Casting.Spell", "State.Immobile"];
+                    cuesWhileActive: ["Cue.Cast.MassBlessing"];
+                }
+            ];
+            commitOnComplete: true;
+            onInterrupt: [
+                GrantTags { grantedTags: ["State.Debuff.Silence"]; duration: Const { value: 3.0; }; },
+                FireCue { cue: "Cue.Cast.Interrupted.Holy"; }
+            ];
+        }
+    ];
 
     effect: WithTargets {
         targets: TargetScan {
@@ -1240,15 +1242,8 @@ ability {
         ]};
     };
 
-    onInterrupt: [
-        GrantTags {
-            grantedTags: ["State.Debuff.Silence"];
-            duration: Const { value: 3.0; };
-        },
-        FireCue { cue: "Cue.Cast.Interrupted.Holy"; }
-    ];
     recovery: { duration: Const { value: 0.6; };
-        recoveryTags: ["State.Recovery"]; };
+        statuses: [ StatusCore { grantedTags: ["State.Recovery"] } ]; };
 }
 
 // ═══ 配套 Status ═══
@@ -1488,7 +1483,7 @@ ai_goal_generator {
 // 行为：神圣引导（Channel 治疗骑士）
 // AI 发出 CastAbility 后，引擎处理整个 Channel：
 // - 每秒一次 tickEffect 治疗
-// - 站桩不动（channelingTags: Immobile）
+// - 站桩不动（grantedTags: Immobile）
 // - 被玩家打断 → onInterrupt 自我沉默 2 秒
 // - 骑士死亡 → onTargetLost: Cancel → 引导中止（无惩罚）
 ai_behavior {
@@ -1937,7 +1932,7 @@ scene_definition {
 │                                                                │
 │  牧师·神圣引导 (Channel 5s):                                     │
 │    Activate → Processing[心跳×5, 每秒治疗骑士]                   │
-│    │  commitPolicy: OnFirstTick → 首次心跳后才扣费               │
+│    │  commitOnFirstTick: true → 首次心跳后才扣费               │
 │    │  骑士死亡 → onTargetLost: Cancel → 无惩罚中止               │
 │    │  被玩家打断 → interruptsAbilities                          │
 │    │    → onInterrupt: 自我沉默 2s                              │
@@ -1968,12 +1963,12 @@ t=0   牧师 AI Think: 骑士HP<70%, 引导治疗分数最高
       → GAS: CanActivate ✓ → Activating
 
 t=0   GAS: Channel Processing 开始
-      → channelingTags: [Casting.Spell, Immobile] 写入 TagContainer
-      → cuesDuringChannel: "Cue.Channel.HolyBeam" → 客户端播放光束
+      → grantedTags: [Casting.Spell, Immobile] 写入 TagContainer
+      → cuesWhileActive: "Cue.Channel.HolyBeam" → 客户端播放光束
 
 t=0   GAS: tickOnStart=true → 首次 tickEffect 执行
       → StandardHeal(骑士, ATK×1.2)
-      → commitPolicy: OnFirstTick → 此刻扣费+启动CD
+      → commitOnFirstTick: true → 此刻扣费+启动CD
 
 t=1   GAS: 第2次 tickEffect → 治疗骑士
 t=2   GAS: 第3次 tickEffect → 治疗骑士

@@ -1,17 +1,17 @@
 ---
 title: Ability 施法过程
 sidebar:
-  order: 1
+  order: 3
 ---
 
 基于全数据驱动理念与深度架构推演，本模型旨在彻底解决动作游戏与 RPG 中复杂的技能生命周期管理问题。
 
 ## 设计原则
 
-1. **瞬发零开销**：`Instant` 模型等同于极简的"扣资源-触发"行为，不被复杂的生命周期拖累。
+1. **瞬发零开销**：空 `phases`（瞬发）等同于极简的"扣资源-触发"行为，不被复杂的生命周期拖累。
 2. **生命周期原生托管**：前摇（Startup）、引导（Channel）甚至后摇（Recovery），都是技能**真实占用角色时间**的生命周期阶段，必须由 `AbilityInstance` 原生接管，以保证动作取消、UI 表现、并发锁的精确性。
 3. **打断与取消双轨语义**：TagRules 提供 `interruptsAbilities`（硬打断，有惩罚）和 `cancelsAbilities`（软取消，无惩罚）两种打断动词。技能在前摇时被眩晕是"打断"，在后摇时被翻滚截断是"动作取消"，底层逻辑完全自洽。
-4. **最少时间原语**：只保留不可互相还原的四种时间模型（Instant/Startup/Charge/Channel）。连招、形态切换等复合需求通过"标签 + 组合"实现。
+4. **阶段序列原语**：施法过程是有序的 `Phase` 序列（`Startup` 时间门控 / `Charge` 输入门控 / `Channel` 周期），可任意串联（如蓄力→前摇→出伤）。空序列 = 瞬发。Phase 是"主动意图的时间容器"——承载 `Status`/`Behavior.Timeline` 没有的三样东西：**输入门控、commit 经济性、interrupt/cancel 双轨打断**。连招、形态切换等复合需求通过"标签 + 组合"实现。
 
 ---
 
@@ -33,14 +33,11 @@ table ability[id] (json) {
     // 瞄准与输入要求
     targeting: TargetingRequirement;
     
-    // 施法方式
-    castMode: CastMode;
+    // 施法过程：有序的 Phase 序列。空列表 = 瞬发（直达 Executing）。
+    phases: list<Phase>;
 
-    // 技能的核心动作（出伤、发子弹、挂 Buff 等）
+    // 所有 phase 跑完后的核心结算（出伤、发子弹、挂 Buff 等）
     effect: Effect;
-
-    // Processing 阶段被 interruptsAbilities 打断时的惩罚动作
-    onInterrupt: list<Effect>;
 
     // 技能主体逻辑执行完毕后的收招阶段
     recovery: RecoveryConfig;
@@ -104,71 +101,124 @@ enum TargetLostPolicy {
 
 ---
 
-## 施法方式 (CastMode)
+## 施法阶段 (Phases)
+
+施法过程是一个**有序的 `Phase` 序列**（`phases`）。引擎按顺序推进每个 Phase：进入时施加其 `statuses`、运行其时间/输入逻辑、完成后进入下一个 Phase；全部完成后进入 `Executing` 结算 `effect`。**空列表 = 瞬发**（Activate 直达 Executing）。
+
+Phase 是"主动意图的时间容器"。它和 `Status`（被动持续容器）、`Behavior.Timeline`（纯时间轴）形似神不似——Phase 独自承载三样后者没有的东西：**输入门控、commit 经济性、interrupt/cancel 双轨打断**。因此施法生命周期必须由 Phase（Ability 层）托管，不能下放给 behavior——否则前摇/后摇的打断边界会消失，无法区分 interrupt 与 cancel（详见文末决策记录）。
 
 ```cfg
-interface CastMode {
-    // 瞬发模型
-    struct Instant {}
-
-    // 前摇模型，读条
+interface Phase {
+    // 时间门控阶段（固定前摇，读条）
     struct Startup {
-        startupTime: FloatValue;
-        
-        startupTags: list<str> ->gameplaytag;
-        startupCues: list<str> ->cue_key_state;
-        commit: StartupCommitTiming;
+        duration: FloatValue;
+
+        // 进入 Apply / 离开 Remove（生命周期由本 Phase 托管，施加永久、退出时 Remove）
+        statuses: list<StatusCore>;
+
+        commitOnComplete: bool;       // 前摇完成瞬间扣费
+        onInterrupt: list<Effect>;    // 被 interruptsAbilities 命中时的瞬时惩罚
     }
 
-    // 蓄力模型（按住蓄力，松手触发）
+    // 输入门控阶段（按住蓄力，松手/到 max 完成）
     struct Charge {
-        minChargeTime: FloatValue;
-        maxChargeTime: FloatValue;
+        minTime: FloatValue;
+        maxTime: FloatValue;
         releaseOnMax: bool;
 
-        chargingTags: list<str> ->gameplaytag;
-        chargingCues: list<str> ->cue_key_state;
-        commit: ChargeCommitTiming;
+        statuses: list<StatusCore>;
+
+        commitOnRelease: bool;        // 松手且达 minTime 时扣费（蓄力不足取消不扣）
+        onInterrupt: list<Effect>;
     }
 
-    // 引导模型（持续触发）
+    // 周期阶段（按节奏反复触发 tickEffect）
     struct Channel {
-        duration: FloatValue;
-        tickInterval: FloatValue;  // 心跳间隔，执行effect逻辑
-        maxTicks: int;       // -1 = 无限，由 duration 截断
-        tickOnStart: bool;   // 是否在激活瞬间立即触发首个 tick
-        finisherEffect: list<Effect>; // 收尾技
-        
-        channelingTags: list<str> ->gameplaytag;
-        channelingCues: list<str> ->cue_key_state;
-        commit: ChannelCommitTiming;
+        tickSchedule: TickSchedule;   // 触发节奏（等间隔 / 时刻表）
+        duration: FloatValue;         // 总时长硬截断
+        tickEffect: list<Effect>;     // 每 tick 的瞬时结算
+
+        statuses: list<StatusCore>;
+
+        commitOnFirstTick: bool;      // 首次 tick 时扣费
+        onInterrupt: list<Effect>;
     }
 }
+```
 
-// Commit 决定了【扣除 costs + 启动 cooldown】发生的精确时刻
-enum StartupCommitTiming {
-    OnActivate;     // 激活即扣（被打断不退费）
-    OnComplete;     // 前摇完成瞬间扣（被打断白嫖）
-}
-enum ChargeCommitTiming {
-    OnActivate;     // 激活即扣
-    OnRelease;      // 松手且达到 minChargeTime 时扣（蓄力不足取消不扣费）
-}
-enum ChannelCommitTiming {
-    OnActivate;     // 激活即扣
-    OnFirstTick;    // 发生首次 tick 时扣（tickOnStart=true 的立即执行算作首次 tick）
+**Phase 字段职责**（互不重叠）：
+
+| 字段 | 性质 | 说明 |
+|---|---|---|
+| 时间参数（duration / min-max / releaseOnMax / tickSchedule） | Phase 独有 | 决定阶段如何**推进**（时间 / 输入信号 / 周期） |
+| `statuses` | 持续物收敛点 | 身份标签、表现、持续效果**全部**在此。挂载即 `grantedTags` 进 TagContainer，TagRules 照常 O(1) 查询 |
+| `tickEffect` | Channel 独有 | 周期性瞬时结算 |
+| `commit*` | 经济性 | 扣 costs + 启 CD 的锚点（见下） |
+| `onInterrupt` | 瞬时动作 | 被 `interruptsAbilities` 命中时触发一次（不随 phase 持续） |
+
+> **为什么没有 Instant Phase？** 瞬发 = 空 `phases` 列表（Activate 直达 Executing）。Instant 作为 Phase 没有时间、没状态，是冗余原语。
+
+> **为什么 tags/cues 不在 Phase 顶层？** `StatusCore` 已有 `grantedTags` + `cuesWhileActive` + `behaviors`，更完备；且 Status 挂载后 `grantedTags` 自动写入 TagContainer，TagRules 无需 Phase 另维一份 tags。持续物单一出口收敛到 `statuses`，避免概念重复。
+
+### Commit：扣费锚点与退费语义
+
+每个 Phase 用**一个 bool** 声明自己的 commit 锚点（`commitOnComplete` / `commitOnRelease` / `commitOnFirstTick`）。规则：
+
+- 所有 `commit*` 全 `false` → **默认 `OnActivate`**（激活即扣，最常见，零配置）
+- 恰好一个 `true` → 在该里程碑扣费
+- 多个 `true` → `ConfigPostProcessor` **fail-fast** 报错
+
+commit 锚点不只决定"何时扣"，还**隐含定义退费边界**——这是它存在的根本原因：
+
+| 被打断/取消发生在 commit 锚点 | 结果 |
+|---|---|
+| **之前** | 尚未扣费 → 无损失（"蓄力不足取消不扣费"靠 `commitOnRelease`） |
+| **之后** | 已扣费 → 不退（"激活即扣被打断不退"靠默认 `OnActivate`） |
+
+策划选锚点 = 同时选了扣费时机与退费策略。
+
+### 旧 castMode 对照
+
+| 旧单选 castMode | 新 phases |
+|---|---|
+| `Instant` | `phases: []` |
+| `Startup{commit:OnComplete}` | `phases:[Startup{commitOnComplete:true}]` |
+| `Charge{commit:OnRelease}` | `phases:[Charge{commitOnRelease:true}]` |
+| `Channel{commit:OnFirstTick}` | `phases:[Channel{commitOnFirstTick:true}]` |
+| 无法表达：蓄力→前摇→出伤（前摇可被打断） | `phases:[Charge, Startup]` |
+
+### Channel 的触发节奏
+
+```cfg
+interface TickSchedule {
+    // 等间隔：经典连发 / 无限引导
+    struct Fixed {
+        interval: FloatValue;
+        maxTicks: int;        // -1 = 无限，由 Channel.duration 截断
+        tickOnStart: bool;    // 进入 Channel 后是否立即触发首个 tick（否则再等一个 interval）
+    }
+    // 时刻表：非等间隔（快-快-慢 / 节奏型连发）
+    struct At {
+        times: list<FloatValue>;  // 每次 tick 相对进入 Channel 的时刻（秒），单调递增
+        // tickOnStart 等价于 times[0]==0；maxTicks 等价于 times.length，二者被吸收无需单列
+    }
 }
 ```
 
 ### 引擎标准输出变量
 
-部分引擎产物的语义对所有同类 CastMode 技能完全一致，不再让每个技能重复声明，而是收敛为全局约定（在 `combat_settings` 中统一配置）。配置端通过 `FloatValue.ContextVar(varKey)` 读取。
+部分引擎产物的语义对所有同类 Phase 技能完全一致，不再让每个技能重复声明，而是收敛为全局约定（在 `combat_settings` 中统一配置）。配置端通过 `FloatValue.ContextVar(varKey)` 读取。
 
 | 变量 | 来源 | 语义 | 配置位置 |
 |---|---|---|---|
-| `chargeProgressVar` | Charge 阶段每帧写入 | 当前蓄力在 [minCharge, maxCharge] 区间的归一化进度（0~1，单调递增） | `combat_settings.chargeProgressVar` |
+| `chargeProgressVar` | Charge 阶段每帧写入 instanceState | 当前蓄力在 [minCharge, maxCharge] 区间的归一化进度（0~1，单调递增） | `combat_settings.chargeProgressVar` |
+| `channelTickIndexVar` | Channel 每次 tick 触发 effect 前写入 localScope | 当前是本次引导的第几次 tick（从 0 开始） | `combat_settings.channelTickIndexVar` |
 
 > 红线：只有「引擎产出 + 语义跨同类技能统一」的变量才进 `combat_settings`。技能局部计数器（命中次数、连击数等）仍由技能自身在 instanceState 中按 var_key 维护。
+
+> **tick 序号的作用域与命名**：Channel / Periodic / Repeat 都向触发 effect 的 **localScope** 写入"第几次"序号（从 0 开始），effect 内统一用 `ContextVar` 读取（分层查找，localScope 优先于 instanceState）。三者的区别仅在 var_key 归属——
+> - **Channel** 的 tick 序号语义跨所有 Channel 技能统一（本次引导的第几次），且一个 Ability 只有一个 Channel，故 var_key 收敛到 `combat_settings.channelTickIndexVar`。
+> - **Periodic**（一个 Status 可挂多个，如掉血+掉蓝并存）/ **Repeat**（一棵 Effect 树可嵌套多个）各自独立计数，var_key 必须 per-behavior 自配（`indexVarTag` 字段），全局一个 key 会互相覆盖。
 
 ---
 
@@ -191,15 +241,14 @@ stateDiagram-v2
         Channel tickOnStart 首 tick
     end note
 
-    Activating --> Executing: Instant 直达
-    Activating --> Processing: Startup / Charge / Channel
+    Activating --> Executing: phases 为空，直达
+    Activating --> Processing: 进入首个 Phase
 
-    Processing --> Executing: 阶段完成
+    Processing --> Executing: 阶段序列完成
     Processing --> Ended: interrupt → onInterrupt
     Processing --> Ended: cancel → 直接清理
 
     Executing --> Recovering: effect 结算完毕
-    note right of Executing: 延迟 Commit 通常在此
     Executing --> Ended: duration <= 0 跳过
 
     Recovering --> Ended: 倒计时结束
@@ -245,17 +294,16 @@ stateDiagram-v2
 ```cfg
 struct RecoveryConfig {
     duration: FloatValue;
-    recoveryTags: list<str> ->gameplaytag;   // 如 ["State.Recovery"]
-    recoveryCues: list<str> ->cue_key_state; 
+    statuses: list<StatusCore>;   // 后摇期间维持的状态（身份/表现），进入施加/离开移除
 }
 ```
 
-通过 `recoveryTags` 与 `tag_rules` 的组合，策划可精确控制每个技能后摇的"硬度"：
+通过 `statuses`（其 `grantedTags`）与 `tag_rules` 的组合，策划可精确控制每个技能后摇的"硬度"：
 
-| 后摇类型 | recoveryTags | 表现 |
+| 后摇类型 | statuses 授予的标签 | 表现 |
 |---|---|---|
-| 轻型后摇 | `["State.Recovery"]` | 不能攻击/施法，但可以翻滚取消 |
-| 重型后摇 | `["State.Recovery.Heavy"]` | 不能攻击/施法/翻滚，必须等后摇结束 |
+| 轻型后摇 | `Actor.Cast.Recovery` | 不能攻击/施法，但可以翻滚取消 |
+| 重型后摇 | `Actor.Cast.Recovery.Heavy` | 不能攻击/施法/翻滚，必须等后摇结束 |
 | 无后摇 | duration=0，跳过 Recovery | 即时释放下一个动作 |
 
 ---
@@ -268,31 +316,31 @@ tag_rules {
     name: "CoreCombatRules";
     rules: [
         // 硬控打断
-        { whenPresent: "State.Debuff.Control.Stun";
+        { whenPresent: "Actor.Debuff.Control.Stun";
           interruptsAbilities: ["Ability.Type"];
           blocksAbilities: ["Ability.Type"];
           description: "眩晕：硬打断并封锁所有技能"; },
 
-        { whenPresent: "State.Debuff.Silence";
+        { whenPresent: "Actor.Debuff.Control.Silence";
           interruptsAbilities: ["Ability.Type.Spell"];
           blocksAbilities: ["Ability.Type.Spell"];
           description: "沉默：硬打断并封锁法术类技能"; },
 
         // 软取消
-        { whenPresent: "State.Dodging";
+        { whenPresent: "Actor.Motion.Dodging";
           cancelsAbilities: ["Ability.Type"];
           description: "翻滚：软取消任何技能（含后摇）"; },
 
-        { whenPresent: "State.Moving";
-          cancelsAbilities: ["Ability.Startup.MoveCancel"];
+        { whenPresent: "Actor.Motion.Moving";
+          cancelsAbilities: ["Ability.Cancel.Move"];
           description: "移动：软取消标记为可移动取消的前摇技能"; },
 
         // 施法约束
-        { whenPresent: "State.Recovery";
+        { whenPresent: "Actor.Cast.Recovery";
           blocksAbilities: ["Ability.Type.Spell", "Ability.Type.Melee"];
           description: "后摇期间禁止攻击和施法"; },
 
-        { whenPresent: "State.Recovery.Heavy";
+        { whenPresent: "Actor.Cast.Recovery.Heavy";
           blocksAbilities: ["Ability.Type.Movement"];
           description: "重型后摇期间禁止移动类技能"; }
     ];
@@ -305,18 +353,24 @@ tag_rules {
 // 可被移动取消的治疗术
 ability {
     id: 1001; name: "治疗术";
-    abilityTags: ["Ability.Type.Spell", "Ability.Startup.MoveCancel"];
+    abilityTags: ["Ability.Type.Spell", "Ability.Cancel.Move"];
     //         ▲ 标记为可被移动取消
 
-    castMode: Startup {
-        startupTime: Const { value: 2.5; };
-        startupTags: ["State.Startup.Spell"];
-        //         ▲ 不含 State.Immobile → 移动不被 block
-        //           但 TagRules: State.Moving cancelsAbilities Ability.Startup.MoveCancel
-        //           → 玩家一动，此技能被 cancel（无惩罚，不扣费）
-        startupCues: ["Startup.Heal"];
-        commit: OnComplete;
-    };
+    phases: [
+        Startup {
+            duration: Const { value: 2.5; };
+            statuses: [
+                StatusCore {
+                    grantedTags: ["Actor.Cast.Startup.Spell"];
+                    //         ▲ 不含 Actor.Motion.Immobile → 移动不被 block
+                    //           但 TagRules: Actor.Motion.Moving cancelsAbilities Ability.Cancel.Move
+                    //           → 玩家一动，此技能被 cancel（无惩罚，不扣费）
+                    cuesWhileActive: ["Startup.Heal"];
+                }
+            ];
+            commitOnComplete: true;
+        }
+    ];
 
     effect: ...;
 }
@@ -325,24 +379,75 @@ ability {
 ability {
     id: 1002; name: "火球术";
     abilityTags: ["Ability.Type.Spell"];
-    //         ▲ 没有 Ability.Startup.MoveCancel → 移动不会取消此技能
+    //         ▲ 没有 Ability.Cancel.Move → 移动不会取消此技能
 
-    castMode: Startup {
-        startupTime: Const { value: 2.0; };
-        startupTags: ["State.Startup.Spell", "State.Immobile"];
-        //         ▲ State.Immobile → TagRules blocks Ability.Type.Movement → 按不动
-        startupCues: ["Startup.Fireball"];
-        commit: OnComplete;
-    };
+    phases: [
+        Startup {
+            duration: Const { value: 2.0; };
+            statuses: [
+                StatusCore {
+                    grantedTags: ["Actor.Cast.Startup.Spell", "Actor.Motion.Immobile"];
+                    //         ▲ Actor.Motion.Immobile → TagRules blocks Ability.Type.Movement → 按不动
+                    cuesWhileActive: ["Startup.Fireball"];
+                }
+            ];
+            commitOnComplete: true;
+            onInterrupt: [ GrantTag {
+                    grantedTags: ["Actor.Lockout.Ability"];
+                    duration: Const { value: 0.5; };
+                },
+                FireCue { cue: "Startup.Interrupted"; }
+            ];
+        }
+    ];
 
     effect: ...;
-    onInterrupt: [ GrantTag {
-            grantedTags: ["State.AbilityLockout"];
-            duration: Const { value: 0.5; };
+    recovery: {
+        duration: Const { value: 0.3; };
+        statuses: [ StatusCore { grantedTags: ["Actor.Cast.Recovery"]; } ];
+    };
+}
+
+// 霸体蓄力重剑：按住蓄力(霸体)，松手后进入极短前摇(失去霸体，可被打断)
+ability {
+    id: 3001; name: "重剑蓄力斩";
+    abilityTags: ["Ability.Type.Melee"];
+
+    phases: [
+        // Phase 1: 蓄力期
+        Charge {
+            minTime: Const { value: 0.5; };
+            maxTime: Const { value: 2.0; };
+            releaseOnMax: true;
+            statuses: [
+                StatusCore {
+                    grantedTags: ["Actor.Cast.Charging", "Actor.Buff.SuperArmor"]; // 霸体护甲
+                    cuesWhileActive: ["Cue.ChargeHeavy"];
+                }
+            ];
+            commitOnRelease: false; // 蓄力期间不扣费
+            onInterrupt: [ FireCue { cues: ["Cue.ChargeBroken"]; } ]; // 仅当被无视霸体的击飞打断时触发
         },
-        FireCue { cue: "Startup.Interrupted"; }
+        
+        // Phase 2: 松手后的前摇期
+        Startup {
+            duration: Const { value: 0.4; };
+            statuses: [
+                StatusCore {
+                    // 移除霸体，暴露出前摇弱点标签
+                    grantedTags: ["Actor.Cast.Startup.Heavy"]; 
+                    cuesWhileActive: ["Cue.SwingWindup"];
+                }
+            ];
+            commitOnComplete: true; // 前摇完成（出伤瞬间）才扣费进CD
+            onInterrupt: [ 
+                GrantTag { grantedTags: ["Actor.Debuff.Control.Stun.Self"]; duration: Const{value: 1.0;} }, // 被打断导致自身硬直
+                FireCue { cues: ["Cue.WeaponFumbled"]; } 
+            ];
+        }
     ];
-    recovery: { duration: Const { value: 0.3; }; recoveryTags: ["State.Recovery"];};
+
+    effect: RunPipeline { ... }; // 出伤
 }
 ```
 
@@ -375,14 +480,14 @@ ability {
 
 ```text
 [普攻一段] (id:1001)               [普攻二段] (id:1002)
- Instant                           Instant
+ 瞬发 (空 phases)                  瞬发 (空 phases)
  CD: 0.0s                          CD: 0.0s
                                    activationConditions: 
                                      HasTag "Combo.Attack.S2"
 
  recovery:                         recovery:
    duration: 0.6s                    duration: 0.8s
-   recoveryTags: ["State.Recovery"]  recoveryTags: ["State.Recovery"]
+   statuses:[Actor.Cast.Recovery]         statuses:[Actor.Cast.Recovery]
 
  effect:                           effect:
    + Damage(50)                      + PurgeStatusByTag ["Combo.Attack"]
@@ -405,17 +510,45 @@ ability {
 - Recovery 阶段两种动词效果相同（均为无惩罚清理），保持了语义一致性
 - 硬控（眩晕/沉默）用 `interruptsAbilities`，玩家主动行为（翻滚/移动）用 `cancelsAbilities`，职责清晰
 
-### 为什么连招不作为 CastMode 原语
+### 为什么连招不作为 Phase 原语
 
 连招的本质是"多个行为按条件链接"。每段的消耗、打断容忍度、后摇通常不同。用独立 Ability + GrantTag 窗口串联，每段保持完整的 Ability 语义，TagRules 自然覆盖。
 
-### 为什么切换型不作为 CastMode 原语
+### 为什么切换型不作为 Phase 原语
 
-切换型是"Instant Ability + 持续 Status"的直接组合。作为原语不增加表达力。
+切换型是"瞬发 Ability（空 phases）+ 持续 Status"的直接组合。作为原语不增加表达力。
 
 ### Recovery 阶段为什么不区分 interrupt 和 cancel
 
 ability.effect 已成功执行，"被打断惩罚"的语义不适用。无论何种外力终止后摇，玩家的核心诉求都是"尽快恢复行动自由"。统一为无惩罚清理，消除了策划的认知负担。
+
+### 为什么从单选 castMode 演进为 phases 序列
+
+旧版 `castMode` 是四选一互斥（Instant/Startup/Charge/Channel），无法表达"蓄力→前摇→出伤"这类阶段串联。根因是它把两个正交维度扁平化了：
+
+- **Instant/Startup/Channel** 是"出伤节奏"（时间如何流逝→如何结算 effect）
+- **Charge** 是"输入门控"（何时允许进入结算，由松手信号推进）
+
+两者本不同层，塞进同一个互斥枚举导致组合无法表达。改为有序 `Phase` 序列后，任意串联成为可能（`[Charge, Startup]` = 蓄力后接可打断前摇），且 `releaseCharge` 不再是 Charge 的怪方法——它是"推进过输入门控 Phase"的通用信号，其他 Phase 由时间自动推进故不需要它。
+
+### 为什么 Phase 不下放给 Behavior
+
+Phase 和 `Behavior.Timeline` 形似（都是时间段序列），但 Phase 独自承载三样 Timeline 没有的东西：**输入门控、commit 经济性、interrupt/cancel 双轨打断**。
+
+若把施法生命周期交给 behavior（如 ability 关联一个 timeline behavior、打断 = 干掉 behavior），则前摇被眩晕打断（应惩罚）与后摇被翻滚截断（不应惩罚）在 behavior 层是同一个"提前结束"操作，无法区分——这正是 interrupt/cancel 无法区分的根因。Phase 必须留在 Ability 层，靠 phase 边界界定双轨打断的触发范围：Processing 阶段被命中 = `interrupt`（触发 `onInterrupt`），Recovery 阶段被命中 = `cancel`（无惩罚）。
+
+### 为什么 Phase 的持续物收敛进 statuses
+
+`StatusCore` 已有 `grantedTags` + `cuesWhileActive` + `behaviors`，比 Phase 顶层单列 tags/cues 更完备。且 Status 挂载后 `grantedTags` 自动写入 TagContainer（见 `ability-design.md`），TagRules 照常 O(1) 引用计数查询——Phase 无需另维一份 tags 供 TagRules 使用。持续物（身份/表现/效果）单一出口收敛到 `statuses`，消除概念重复。代价：纯身份标签（无属性修改）也需包一个空 `StatusCore`，配置略繁，换取概念统一。
+
+### 为什么 commit 用 Phase 内 bool 而非全局 enum
+
+旧版三个 `*CommitTiming` enum 死绑 CastMode。phases 化后若用全局 `CommitPoint{index}`：一无法表达 Phase 内部里程碑（Channel 首次 tick），二绝对 index 脆弱（phases 调序失效）。改为**每个 Phase 一个 bool**（`commitOnComplete`/`commitOnRelease`/`commitOnFirstTick`）后：
+
+- 每个 Phase 只暴露自己语义有效的锚点（类型安全——Startup 没有 `commitOnFirstTick`）
+- 标记贴在 Phase 上，自动跟随调序
+- 全 `false` 默认 `OnActivate`（最常见，零配置）；多个 `true` 由 `ConfigPostProcessor` fail-fast
+- commit 锚点隐含退费边界：锚点前被打断 = 未扣无损失；锚点后 = 已扣不退
 
 ---
 
@@ -441,7 +574,8 @@ class AbilityInstance implements IPendingKill {
     Context context;
     Actor owner;
 
-    AbilityPhase phase;
+    AbilityPhase phase;          // 生命周期大阶段（Activating/Processing/Executing/Recovering/Ended）
+    int currentPhaseIndex;       // Processing 内：当前推进到 phases 序列的第几个施法 Phase
     float phaseElapsed;
     boolean isCommitted;
     boolean pendingKill;
@@ -449,7 +583,7 @@ class AbilityInstance implements IPendingKill {
     void tick(float dt);
     
     // 由输入/引擎系统调用
-    void releaseCharge(); // Charge: 玩家松手
+    void releaseCharge(); // 推进过 Charge Phase（玩家松手且达 minTime）
     void cancel();        // 玩家主动取消 / TagRules cancelsAbilities 驱动
     void interrupt();     // TagRules interruptsAbilities 驱动
 }

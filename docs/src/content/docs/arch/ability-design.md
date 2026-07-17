@@ -1,7 +1,7 @@
 ---
-title: 能力系统设计
+title: Ability 系统设计
 sidebar:
-  order: 0
+  order: 2
 ---
 
 基于 Unreal GAS 核心理念的**全数据驱动**技能系统配置标准。本文档是**架构基准**，具体游戏应在此基础上裁剪和扩展。
@@ -22,7 +22,7 @@ sidebar:
 | **Status** | 持续状态容器 — 挂载在 Actor 上，管理时长、堆叠与标签授予 | 有限时长 / 永久，可堆叠 |
 | **Behavior** | Status 内部的逻辑零件 — 属性修饰、周期脉冲、事件监听 | 随 Status 生死 |
 | **EventBus** | Actor 级事件总线 — 广播携带 Payload 的标准事件 | Actor 组件，常驻 |
-| **Pipeline** | 结算管线 — 将 EmitPayload 展开为多阶段广播与属性扣减 | 单次结算，无持久状态 |
+| **Pipeline** | 结算管线 — 将 RunPipeline 展开为多阶段广播与属性扣减 | 单次结算，无持久状态 |
 | **TagRules** | 全局交互法则 — 基于标签的免疫、阻止、驱散、打断 | 战斗配置，常驻 |
 
 ---
@@ -49,7 +49,7 @@ flowchart TD
     Effect -->|ApplyStatus| SC
     Effect -->|GrantTag| TC
     Effect -->|ModifyResource| RC
-    Effect -->|EmitPayload| Pipe["结算管线<br/>Pre 广播 → ResolveSinks → Post 广播"]
+    Effect -->|RunPipeline| Pipe["结算管线<br/>Pre 广播 → ResolveSinks → Post 广播"]
 
     SC -->|grantedTags| TC
     SC -->|"StatModifier 修饰"| STC
@@ -68,10 +68,10 @@ flowchart TD
 图中 **Actor 框内**是挂载在实体上的运行时组件；框外的 Ability / Effect / 结算管线 / TagRules 是无状态指令或全局配置，本身不持有状态。粗箭头 `==>` 标出贯穿全局的**响应式循环**——它是整个系统的驱动核心：
 
 1. **Ability**（主动）或 **Status** 内的 **Behavior**（被动 / 周期）触发 **Effect**
-2. Effect 是无状态原子指令，按动作分流：`ApplyStatus` 挂 Status、`GrantTag` 写 TagContainer、`ModifyResource` 改资源池；`EmitPayload` 则进入结算管线
+2. Effect 是无状态原子指令，按动作分流：`ApplyStatus` 挂 Status、`GrantTag` 写 TagContainer、`ModifyResource` 改资源池；`RunPipeline` 则进入结算管线
 3. 结算管线在 Pre / Post 两个阶段向 **EventBus** 广播事件（携带 **Payload**），中段 `ResolveSinks` 将载荷落地为属性扣减
 4. 其他 Status 中的 **Trigger**（Behavior 的一种）监听到事件，执行新的 Effect
-5. 新 Effect 可能再次走 `EmitPayload` → 回到步骤 2，循环往复
+5. 新 Effect 可能再次走 `RunPipeline` → 回到步骤 2，循环往复
 
 **TagContainer ↔ TagRules** 横切这条循环：Status 的 `grantedTags` 与 Effect 的 `GrantTag` 都向 TagContainer 写入；TagRules 基于标签查询执行**免疫 / 阻止 / 驱散 / 打断**，在 Status 挂载、Ability 激活等关口拦截。
 
@@ -100,7 +100,7 @@ flowchart TD
 
 ### Philosophy
 
-1. **层级化标签驱动**：树状 Tag（如 `State.Debuff.Control.Stun`）是逻辑交互的唯一通用语言。支持父级包含查询——查询 `State.Debuff` 可命中 `State.Debuff.Control.Stun`。
+1. **层级化标签驱动**：树状 Tag（如 `Actor.Debuff.Control.Stun`）是逻辑交互的唯一通用语言。支持父级包含查询——查询 `Actor.Debuff` 可命中 `Actor.Debuff.Control.Stun`。
 
 2. **两阶段事件管线**：所有逻辑通信通过 `EventBus` 广播标准消息。`Pre` 阶段注入 `Modifier` 篡改数值（如减伤），`Post` 阶段触发副作用（如反伤）。源与监听者彻底解耦。
 
@@ -112,131 +112,7 @@ flowchart TD
 
 ## Data Foundation
 
-
-定义系统的"词汇表"——标签、属性、事件的原子定义。
-
-### gameplaytag
-
-```cfg
-// Tag字典注册表
-// 层级关系通过名称中的 "." 分隔符隐式表达
-// 程序启动时自动构建父子索引
-table gameplaytag[tag] {
-    tag:str; // 例: "State.Debuff.Control.Stun"
-    tagId: int;
-    description: text;
-    ancestors: list<int> ->gameplaytag[tagId]; // 策划不用填，程序初始化时自动填
-    [tagId];
-}
-```
-
-**命名规范**：
-
-| 前缀 | 用途 | 示例 |
-|---|---|---|
-| `State.*` | 实体状态标记 | `State.Debuff.Control.Stun` |
-| `Status.*` | status分类标签 | `Status.Type.DOT` |
-| `Ability.*` | ability分类标签 | `Ability.Type.Spell` |
-| `Combat.Element.*` | 元素 / 类型（伤害、治疗、护盾通吃） | `Combat.Element.Fire`、`Combat.Element.Heal` |
-| `Combat.Result.*` | 结算结果标记 | `Combat.Result.Critical`、`Combat.Result.Dodged` |
-| `Combat.Source.*` | 来源类型 | `Combat.Source.Reflected`、`Combat.Source.Bonus` |
-
-以上分类都可以想象`ancestors`或`TagQuery`的用武之地
-
-`Event、Stat、Resource、Var`等都没有ancestors的需求，都无需是`gameplaytag`。
-`Cue`则没有TagQuery的需求，不放`gameplaytag`里，这样表现层与逻辑层也更隔离。
-
-### stat_definition
-```cfg
-table stat_definition[statKey] (enum='statKey') {
-    statKey: str;
-    statId: int;
-    description: text;
-    defaultValue: float;
-
-    // 静态硬边界
-    hardMin: float;
-    hardMax: float;
-    [statId];
-}
-```
-
-### resource_definition
-```
-table resource_definition[resKey] (enum='resKey') {
-    resKey: str;
-    resId: int;
-    description: text;
-
-    // 例：HP_Current 的 clampMax 指向 HP_Max。
-    // 当 HP_Current 变化时，会自动clamp HP_Max。
-    // 当 HP_Max 降低导致越界时，HP_Current不做变化，因为这是业务逻辑。
-    clampMax: str ->stat_definition;
-    
-    // 归零联动 (属性自身的物理特性)
-    // 当 currentValue 降至 0 时，自动向宿主挂载的 Tag
-    // 例: HP 归零 -> 挂 "State.Dead"
-    onDepletedGrantTag: str ->gameplaytag (nullable);
-    [resId];
-}
-```
-
-### event_definition
-
-定义系统中所有可用的事件类型
-
-```cfg
-table event_definition[eventKey] (entry='eventKey') {
-    eventKey: str; // 如 "Damage_Pre"
-    eventId: int;
-    description: text;
-
-    // 定义该事件 Payload 中预期的变量列表 (可用于验证和编辑器提示)
-    // 告知该事件除了 magnitude 以外，在 extras 里还会塞入哪些 Tag 数据
-    expectedVars: list<EventVarDecl>;
-    [eventId];
-}
-
-struct EventVarDecl {
-    varKey: str ->var_key;
-    type: VarType;
-    description: text;
-}
-
-enum VarType {
-    Float;
-    Actor;
-}
-```
-
-### cue_key
-
-```
-table cue_key_pulse[cueKey] {
-    cueKey: str -> cue_registry_pulse (nullable);
-    cueId: int;
-    description: text;
-    [cueId]; 
-}
-
-table cue_key_state[cueKey] {
-    cueKey: str -> cue_registry_state (nullable);
-    cueId: int;
-    description: text;
-    [cueId]; 
-}
-```
-
-### var_key
-
-```
-table var_key[varKey] {
-    varKey: str;
-    varId: int;
-    description: text;
-    [varId];
-}
-```
+> 标签（gameplaytag）、属性（stat_definition）、资源（resource_definition）、事件（event_definition）、表现键（cue_key）、变量键（var_key）的原子定义，以及 **gameplaytag 命名规范**（`Actor.*` / `Char.*` / `Status.*` / `Ability.*` / `Combat.*` 五域），已拆分到独立专题：**`data-foundation.md`**。
 
 ---
 
@@ -553,11 +429,11 @@ interface Effect {
     }
 
     // 发射载荷 (外部入口，发起一次带规则的伤害/治疗) ---
-    struct EmitPayload {
+    struct RunPipeline {
         pipeline: str ->pipeline;
         magnitude: FloatValue;
-        tags: list<str> ->gameplaytag;   // 如 ["Damage.Element.Fire"]
-        cues: list<str> ->cue_key_pulse;
+        tags: list<str> ->gameplaytag;   // 如 ["Combat.DamageType.Fire"]
+        impactCues: list<str> ->cue_key_pulse;   // 受击 cue：结算命中瞬间播放（溅血/受击音效/伤害数字）
     }
 
     // 篡改载荷（即时：直接覆盖当前值，无聚合）
@@ -582,7 +458,7 @@ interface Effect {
     // 结算载荷 (管线末端，将载荷落地到具体资源池)
     struct ResolvePayload {
         flow: SinkFlow;
-        stages: list<Sink>;
+        sinks: list<Sink>;
     }
 
     // --- 状态操作 ---
@@ -594,6 +470,7 @@ interface Effect {
 
     // 内联型 Status (拥有完整功力，适用于无需 UI 显示的一次性专属机制)
     struct ApplyStatusInline {
+        duration: FloatValue;        // -1 = 永久（必填：内联即图灵活，时长应显式给）
         core: StatusCore;
         bindings: list<VarBinding>;
     }
@@ -664,7 +541,7 @@ interface Effect {
 
     struct Repeat {
         count: FloatValue; // 取下界
-        indexVarTag: str -> var_key (nullable); // 放入localScope里
+        indexVarTag: str -> var_key (nullable); // 放入localScope里，从0开始
         effect: Effect;
     }
 
@@ -749,15 +626,14 @@ table status[id] (json) {
     icon: str;
 
     stackingPolicy: StackingPolicy;
+    duration: FloatValue;        // -1 = 永久（容器外壳属性，与 stackingPolicy 同层）
     core: StatusCore;
 }
 
 struct StatusCore {
     statusTags: list<str> ->gameplaytag;  // Status 自身分类（用于外部查询/移除）
     grantedTags: list<str> ->gameplaytag; // 存在期间授予宿主的标签
-    
-    duration: FloatValue;           // -1 = 永久
-    
+
     cuesWhileActive: list<str> ->cue_key_state;
     behaviors: list<Behavior>;
 }
@@ -828,8 +704,8 @@ interface Behavior {
         isRealtime: bool; // 是否实时计算（每次访问都重新评估 value 和 requiresAll）
     }
 
-    // 根骨骼运动控制 (接管角色的物理移动)
-    struct RootMotion {
+    // 程序化移动控制 (接管角色的物理移动)
+    struct Movement {
         // 运动模式
         motionType: MotionType;
         
@@ -841,6 +717,7 @@ interface Behavior {
     struct Periodic {
         period: FloatValue;
         executeOnApply: bool;
+        indexVarTag: str ->var_key (nullable); // 当前是第几次周期 tick（从0开始），写入 localScope，effect 内用 ContextVar 读取
         effect: Effect;
     }
 
@@ -1111,8 +988,9 @@ table combat_settings[name] {
     maxScanTargets: int;         // TargetScan 全局兜底上限（覆盖单个配置中的 maxCount）
     maxConcurrentAbilitiesPerActor: int; // 兜底并发限制
 
-    // ── 引擎标准输出变量（引擎按此 key 写入 instanceState，配置端用 ContextVar 读取）──
-    chargeProgressVar: str ->var_key; // Charge 阶段蓄力进度（0~1）
+    // ── 引擎标准输出变量（配置端用 ContextVar 读取；写入位置见各条注释）──
+    chargeProgressVar: str ->var_key;   // Charge 阶段蓄力进度（0~1），写入 instanceState
+    channelTickIndexVar: str ->var_key; // Channel 当前 tick 序号（从0开始），每次 tick 触发 effect 前写入 localScope
 
     // ── 业务态死亡约定 ──
     // 资源（如 HP）归零时宿主被挂上该 tag（见 resource_definition.onDepletedGrantTag）。
@@ -1121,9 +999,6 @@ table combat_settings[name] {
     deadTag: str ->gameplaytag;
 }
 ```
-
-> 红线：`chargeProgressVar` 这类「引擎标准输出」的语义跨同类技能完全一致，因此收敛为全局约定而非每技能自配。新增条目必须满足「引擎产出 + 语义跨同类技能统一」。技能局部计数器（命中次数等）不进此表。
-
 
 ### tag_rules
 
@@ -1142,11 +1017,11 @@ struct TagRule {
     // 阻止激活带有以下标签的 Ability
     blocksAbilities: list<str> ->gameplaytag;
     
-	// 硬打断：打断正在运行的前摇/蓄力/引导，并触发惩罚（onInterrupt） 
-	interruptsAbilities: list<str> ->gameplaytag; 
+    // 硬打断：打断正在运行的前摇/蓄力/引导，并触发惩罚（onInterrupt） 
+    interruptsAbilities: list<str> ->gameplaytag; 
 	
-	// 软取消：无惩罚地取消正在运行的前摇/蓄力/引导，或提前结束任何技能的后摇 
-	cancelsAbilities: list<str> ->gameplaytag;
+    // 软取消：无惩罚地取消正在运行的前摇/蓄力/引导，或提前结束任何技能的后摇 
+    cancelsAbilities: list<str> ->gameplaytag;
 	
     // 免疫：拒绝挂载 grantedTags 含以下标签的 Status
     immuneToTags: list<str> ->gameplaytag;
@@ -1164,21 +1039,21 @@ struct TagRule {
 tag_rules {
     name: "CoreCombatRules";
     rules: [
-        { whenPresent: "State.Debuff.Silence";
+        { whenPresent: "Actor.Debuff.Control.Silence";
           blocksAbilities: ["Ability.Type.Spell"];
           description: "沉默封印法术"; },
 
-        { whenPresent: "State.Debuff.Control.Stun";
+        { whenPresent: "Actor.Debuff.Control.Stun";
           blocksAbilities: ["Ability.Type"];
           cancelsAbilities: ["Ability.Type"];
           description: "眩晕封印+打断所有技能"; },
 
-        { whenPresent: "State.Buff.Hyperarmor";
-          immuneToTags: ["State.Debuff.Control"];
+        { whenPresent: "Actor.Buff.SuperArmor";
+          immuneToTags: ["Actor.Debuff.Control"];
           description: "霸体免疫控制"; },
 
-        { whenPresent: "State.Buff.Purify";
-          purgesTags: ["State.Debuff"];
+        { whenPresent: "Actor.Buff.Purify";
+          purgesTags: ["Actor.Debuff"];
           description: "净化驱散所有减益"; }
     ];
 }
@@ -1217,13 +1092,16 @@ struct Sink {
 }
 ```
 
-**Magnitude 写回语义**：`ResolveSinks` 执行后，`payload.Magnitude` 写回为**各 sink 实际造成的净变化绝对值之和**（被 Resource clamp 截断后的真实生效量），而非 Pre 修饰后的理论值。
+**Magnitude 写回语义**：`ResolveSinks` 执行后，`payload.Magnitude` 写回为**最后一个生效 sink（约定为扣血层）的实际净变化绝对值**（被 Resource clamp 截断后的真实生效量），而非 Pre 修饰后的理论值，也非各 sink 之和。
 
-- Post 事件（反伤/吸血）的 Trigger 读到的 `PayloadMagnitude` 是**实际造成的量**。
-- 护盾吸收 / HP 见底被 clamp 截断的部分**不计入**，因此不会触发反伤/吸血——符合直觉。
+- **多 sink 约定**：sinks 按顺序扣减（如先护盾后血量），约定**最后一层为扣血层**，写回值只反映这一层的实际生效量；前序 sink（护盾）吸收的部分不计入。
+- Post 事件（反伤/吸血）的 Trigger 与受击 cue 读到的 `PayloadMagnitude` 均为这个扣血量——护盾吸收 / HP 见底被 clamp 截断的部分不触发反伤/吸血，受击 cue 强度也只反映真正打到肉的量，符合直觉。
+- 护盾破裂等**中间 sink 的专属表现**不进 `payload.Magnitude`，而是由管线 `Effect` 内的 `FireCue` 自行配置（见下「受击 cue 触发时机」）。
 - Pre 阶段的 Trigger 若需读理论值，应在 Pre 事件里读取（此时 magnitude 尚未被 ResolveSinks 写回）。
 
-**Post 阶段 ModifyPayload 语义**：Post 分支的 `ModifyPayload` **直接覆盖** `payload.Magnitude`，不支持 ChangeSet 聚合。多个 Post Trigger 同时改 magnitude 是"后写覆盖先写"，顺序依赖。推荐做法：Post 副作用（反伤/吸血）应走 `EmitPayload` 派生**新的 Payload**进入独立管线，而非篡改当前 Payload。
+**受击 cue 触发时机**：`RunPipeline.impactCues` 声明"这次结算伴随哪些受击 cue"，但**不在 RunPipeline 这一层触发**——而是透传给 `Pipeline.Resolve`，在 **Post 事件广播之后**统一触发。这样 cue 能拿到：(1) 写回后的实际扣血量；(2) 完整的 `payload.PayloadTags` 快照（含管线 `Effect` 写入的 result tags，如 `Combat.Result.Critical`，cue 资产解析第二阶段据此做 `requireTags` 选择）。中间 sink 的表现（护盾破裂）则不走此路径，由 `Effect` 树内的 `FireCue` 配置。
+
+**Post 阶段 ModifyPayload 语义**：Post 分支的 `ModifyPayload` **直接覆盖** `payload.Magnitude`，不支持 ChangeSet 聚合。多个 Post Trigger 同时改 magnitude 是"后写覆盖先写"，顺序依赖。推荐做法：Post 副作用（反伤/吸血）应走 `RunPipeline` 派生**新的 Payload**进入独立管线，而非篡改当前 Payload。
 
 ---
 
@@ -1252,7 +1130,7 @@ class TagContainer {
 
     // 写入时展开
     // 当添加子级 Tag (如 Stun) 时，会同时递增其所有父级 (Control, Debuff) 的计数。
-    // 这使得运行时查询 "State.Debuff" 时，只需简单查询 Map 中是否存在该 Key (O(1))
+    // 这使得运行时查询 "Actor.Debuff" 时，只需简单查询 Map 中是否存在该 Key (O(1))
     void addTag(int tagId) 
     void removeTag(int tagId);
     boolean hasTag(int tagId);
@@ -1328,7 +1206,7 @@ class Effects {
 status {
     id: 5001;
     name: "盾墙";
-    grantedTags: ["State.Buff.ShieldWall"];
+    grantedTags: ["Actor.Buff.ShieldWall"];
     duration: Const { value: 5.0; };
     stackingPolicy: Single { refreshMode: ResetDuration; };
     behaviors: [
@@ -1338,7 +1216,6 @@ status {
                 // 减伤 40%：MulAdditive 用增量比例记法，-0.4 → 结算乘子 1+(-0.4)=0.6
                 op: MulAdditive;
                 value: Const { value: -0.4; };
-                overridePriority: 0;
             };
         }
     ];
@@ -1351,7 +1228,7 @@ status {
 status {
     id: 4001;
     name: "反刺被动";
-    grantedTags: ["State.Passive.ThornArmor"];
+    grantedTags: ["Actor.Passive.ThornArmor"];
     duration: Const { value: -1.0; };
     stackingPolicy: Single { refreshMode: KeepDuration; };
     behaviors: [
@@ -1366,10 +1243,10 @@ status {
             ];
             effect: WithTarget {
                 target: PayloadInstigator {};
-                effect: EmitPayload {
+                effect: RunPipeline {
                     pipeline: "PureDamage";
                     magnitude: Const { value: 10.0; };
-                    tags: ["Damage.Type.Reflected"];
+                    tags: ["Combat.Flags.Reflected"];
                 };
             };
         }
@@ -1384,7 +1261,7 @@ status {
     id: 3001;
     name: "剧毒";
     statusTags: ["Status.Type.DOT"];
-    grantedTags: ["State.Debuff.Poison"];
+    grantedTags: ["Actor.Debuff.Poison"];
     duration: Const { value: 8.0; };
     stackingPolicy: Shared {
         stackLimit: 5;
@@ -1395,25 +1272,25 @@ status {
         Periodic {
             period: Const { value: 2.0; };
             executeOnApply: false;
-            effect: EmitPayload {
+            effect: RunPipeline {
                 pipeline: "PureDamage";
                 magnitude: StackScaling {
                     baseValue: 5.0;
                     perStackAdd: 3.0;
                     perStackMul: 1.0;
                 };
-                tags: ["Damage.Element.Poison"];
+                tags: ["Combat.DamageType.Poison"];
             };
         },
         // 满层再施加 → 溢出爆发（Shared 满层会触发 OnOverflow）
         OnOverflow {
             effect: Sequence {
                 effects: [
-                    EmitPayload {
+                    RunPipeline {
                         pipeline: "PureDamage";
                         magnitude: Const { value: 80.0; };
-                        tags: ["Damage.Element.Poison", "Damage.Type.Burst"];
-                        cues: ["Combat.PoisonBurst"];
+                        tags: ["Combat.DamageType.Poison", "Combat.Origin.Burst"];
+                        impactCues: ["Combat.PoisonBurst"];
                     },
                     PurgeStatus {
                         anyIds: [3001];
@@ -1433,7 +1310,7 @@ status {
 status {
     id: 6001;
     name: "暴击追伤";
-    grantedTags: ["State.Passive.CritFollowup"];
+    grantedTags: ["Actor.Passive.CritFollowup"];
     duration: Const { value: -1.0; };
     stackingPolicy: Single { refreshMode: KeepDuration; };
     behaviors: [
@@ -1445,11 +1322,11 @@ status {
             ];
             effect: WithTarget {
                 target: PayloadTarget {};
-                effect: EmitPayload {
+                effect: RunPipeline {
                     pipeline: "PureDamage";
                     magnitude: Const { value: 25.0; };
-                    tags: ["Damage.Type.Bonus"];
-                    cues: ["Combat.CritBonus"];
+                    tags: ["Combat.Flags.Bonus"];
+                    impactCues: ["Combat.CritBonus"];
                 };
             };
         }

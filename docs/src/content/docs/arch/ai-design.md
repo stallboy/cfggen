@@ -1,7 +1,7 @@
 ---
-title: AI系统设计
+title: AI 系统设计
 sidebar:
-  order: 10
+  order: 11
 ---
 
 本文档定义了一套与 `能力系统设计` 无缝集成的 AI 行为系统。设计以数据驱动为核心，汲取 Bobby Anguelov《AI Behavior Selector》的理念，通过扁平化评分机制替代传统行为树，解决调试困难与条件冗余问题。
@@ -829,13 +829,13 @@ abstract class AITaskInstance<T extends AITask> {
 
 将"转阶段"设计为 AI 主动寻机的战术动作而非被动触发，避免扣血瞬间强行切断当前动画的表现突变。
 
-1. **决策**：特权行为 `Boss_Enter_Phase2`（高 `interruptPriority`），前置条件查询血量 ≤ 30% 且自身无 `State.Phase.Enrage` Tag（防重复）。无需 `requiredGoal`。
+1. **决策**：特权行为 `Boss_Enter_Phase2`（高 `interruptPriority`），前置条件查询血量 ≤ 30% 且自身无 `Actor.Phase.Enrage` Tag（防重复）。无需 `requiredGoal`。
 
 2. **演出**：Sequence 首节点通过 `ApplyEffect` 挂载临时霸体 Status（GAS `blockTags` 拦截控制），随后 `PlayAnimation` 播放怒吼动画。
 
 3. **移交**：演出结束，`ApplyEffect` 挂载长效 `Status_Enrage`，AI 战术动作完成，控制权移交 GAS。
 
-4. **托管**：`Status_Enrage` 作为唯一数据源驱动后续逻辑：`StatModifier` 翻倍攻击力；`cuesWhileActive` 播放特效；关联 `AIModifier` 覆写行为池（屏蔽平 A、注入全屏 AOE）并赋予 `State.Phase.Enrage` Tag。Status 销毁时所有效果原子化卸载，AI 恢复初始逻辑。
+4. **托管**：`Status_Enrage` 作为唯一数据源驱动后续逻辑：`StatModifier` 翻倍攻击力；`cuesWhileActive` 播放特效；关联 `AIModifier` 覆写行为池（屏蔽平 A、注入全屏 AOE）并赋予 `Actor.Phase.Enrage` Tag。Status 销毁时所有效果原子化卸载，AI 恢复初始逻辑。
 
 ### 搬桶砸人（单 Goal 驱动 + RuntimeQuery）
 

@@ -92,10 +92,6 @@ export default defineConfig({
 					label: 'VSCode 扩展',
 					items: ['vscodeextension']
 				},
-				{
-					label: '开发设计',
-					items: [{ autogenerate: { directory: 'dev' } }]
-				}
 			],
 			expressiveCode: {
 				shiki: {

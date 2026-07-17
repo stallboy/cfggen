@@ -4,6 +4,8 @@ sidebar:
   order: 30
 ---
 
+> 本文为说明性配置示例：含 `...` 占位与省略定义，旨在展示 GAS / AI / Scene 三层联动，**不可直接 gen**。
+
 
 ### 案例一：史诗级 Boss 狂暴转阶段（强演出 + 机制重置）
 
@@ -101,7 +103,7 @@ ai_behavior {
 }
 ```
 
-**💡 架构之美**：真正的机制解耦。Scene（导演）只管演出和下发状态，完全不碰具体数值与 AI 逻辑；Boss 属性的膨胀与大脑技能池的替换被完美封装在 GAS 的 Status 与 AIModifier 中。这意味着即使脱离了当前专属关卡，只要被挂上该状态，Boss 依然能自洽地展现出完整的二阶段战斗力。
+**要点**：机制解耦。Scene（导演）只管演出和下发状态，不碰具体数值与 AI 逻辑；Boss 属性的膨胀与技能池的替换封装在 GAS 的 Status 与 AIModifier 中。即使脱离当前专属关卡，只要被挂上该状态，Boss 仍能展现出完整的二阶段战斗力。
 
 ---
 
@@ -216,11 +218,11 @@ scene_definition {
 **火药桶的补全配置（GAS）：**
 ```text
 status {
-    id: 4050; name: "Status_Barrel_Logic";
+    id: 4051; name: "Status_Barrel_TacticalRadar";
     core: StatusCore {
         duration: Const { value: -1.0 };
         behaviors: [
-            // 1. 原有的受击爆炸 Trigger 略...
+            // 受击爆炸在 status 4050（见上），这里只管战术雷达
             
             // 2. 【新增】：战术雷达！
             Periodic {
@@ -261,7 +263,7 @@ ai_goal_generator {
 }
 ```
 
-**💡 架构之美**：极致的系统涌现与空间计算下放。AI 无需进行复杂的环境距离计算，火药桶会通过 GAS 雷达自动给自己贴上“战术标签”吸引 AI 开火。火药桶只管遵循物理法则爆炸发声，Scene 只管通过群组监听拉响警报。三者互不相识，却依靠 Tag 与 EventBus 完美咬合出了精妙的环境交互玩法。
+**要点**：系统涌现与空间计算下放。AI 无需做复杂的环境距离计算，火药桶通过 GAS 雷达自动给自己贴上“战术标签”吸引 AI 开火。火药桶只管遵循物理法则爆炸发声，Scene 只管通过群组监听拉响警报。三者互不相识，依靠 Tag 与 EventBus 咬合出环境交互玩法。
 
 ---
 
@@ -283,16 +285,21 @@ ability {
     // 无需目标，原地施法
     targeting: None {};
     
-    castMode: CastBar {
-        castTime: Const { value: 30.0 }; // 漫长的 30 秒读条
-        castingTags: ["State.Casting.Spell", "State.Immobile"]; // 施法期间不可移动
-        commitPolicy: OnActivate;
-    };
-
-    // 读条期间被 TagRules 的 interruptsAbilities 命中时执行（硬打断惩罚）
-    onInterrupt: [
-        // 1. 受到反噬伤害
-        ResolveCombat { pipeline: "PureDamage"; magnitude: Const{value: 9999.0} };
+    phases: [
+        Startup {
+            duration: Const { value: 30.0; }; // 漫长的 30 秒读条
+            statuses: [
+                StatusCore {
+                    grantedTags: ["State.Casting.Spell", "State.Immobile"]; // 施法期间不可移动
+                }
+            ];
+            // commit 全 false → 默认 OnActivate（激活即扣）
+            // 读条期间被 TagRules 的 interruptsAbilities 命中时执行（硬打断惩罚）
+            onInterrupt: [
+                // 受到反噬伤害
+                ResolveCombat { pipeline: "PureDamage"; magnitude: Const{value: 9999.0} };
+            ];
+        }
     ];
 }
 ```
@@ -333,7 +340,7 @@ scene_definition {
 }
 ```
 
-**💡 架构之美**：Scene 脚本极其清爽，完全没有写复杂的计时器或血量检测。30 秒的时长管理、被打断时的判定、甚至反噬扣血，全部交由 GAS 的 `CastBar` 生命周期原生接管。Scene 只需坐等结局事件。
+**要点**：Scene 脚本清爽，没有写复杂的计时器或血量检测。30 秒的时长管理、被打断时的判定、反噬扣血，全部交由 GAS 的 `CastBar` 生命周期接管。Scene 只需坐等结局事件。
 
 ---
 
@@ -352,7 +359,7 @@ scene_definition {
 ability {
     id: 101; name: "Ability_Slash_1";
     abilityTags: ["Ability.Type.Melee"];
-    castMode: Instant {}; // 瞬发出伤
+    phases: []; // 瞬发：空 phases，Activate 直达 Executing
     
     effect: Sequence { effects: [
         WithTargets {
@@ -377,7 +384,7 @@ ability {
     ]};
     
     // 动作做完后，进入 0.6 秒后摇
-    recovery: { duration: Const{value: 0.6}; recoveryTags: ["State.Recovery"] };
+    recovery: { duration: Const{value: 0.6}; statuses: [ StatusCore { grantedTags: ["State.Recovery"] } ] };
 }
 
 // 翻滚技能
@@ -423,7 +430,7 @@ ai_behavior {
 }
 ```
 
-**💡 架构之美**：完美实现了 ACT 游戏中的 **"Cancel 机制"**。因为 `Recovery` 阶段被打断是不触发 `onInterrupt` 惩罚的，所以刺客用翻滚顶掉自己的后摇，表现得如同行云流水。而如果刺客没有翻滚 CD，它就会被死死卡在 `State.Recovery` 中挨打。
+**要点**：实现了 ACT 游戏中的 **“Cancel 机制”**。因为 `Recovery` 阶段被打断不触发 `onInterrupt` 惩罚，刺客用翻滚顶掉自己的后摇，衔接流畅。而如果刺客没有翻滚 CD，它就会被卡在 `State.Recovery` 中挨打。
 
 ---
 
@@ -450,22 +457,26 @@ ability {
         onTargetLost: Cancel;            // 一旦超出，立刻触发 Cancel 流程
     };
 
-    castMode: Channel {
-        duration: Const { value: 5.0 };
-        tickInterval: Const { value: 1.0 }; // 每秒奶一口
-        tickOnStart: true;
-        channelingTags: ["State.Casting.Spell"]; // 注意：没有 Immobile，法师可以边走边连线
-        
-        // 每次 Tick 触发的效果
-        tickEffect: WithTarget {
-            target: ContextVar { varKey: "Sys.Targeting.Actor" }; // 读取引擎每帧更新的准星目标
-            effect: ResolveCombat { pipeline: "StandardHeal"; magnitude: Const{value: 200.0} }
+    phases: [
+        Channel {
+            tickSchedule: Fixed { interval: Const { value: 1.0; }; maxTicks: -1; tickOnStart: true }; // 每秒奶一口，由 duration 截断
+            duration: Const { value: 5.0 };
+            tickEffect: [ // 每次 Tick 触发的效果
+                WithTarget {
+                    target: ContextVar { varKey: "Sys.Targeting.Actor" }; // 读取引擎每帧更新的准星目标
+                    effect: ResolveCombat { pipeline: "StandardHeal"; magnitude: Const{value: 200.0} }
+                }
+            ];
+            statuses: [
+                StatusCore {
+                    grantedTags: ["State.Casting.Spell"]; // 注意：没有 Immobile，法师可以边走边连线
+                }
+            ];
+            commitOnFirstTick: true;
+            // 被沉默硬打断会反噬；目标跑远导致的 Cancel 不走这里，平滑结束
+            onInterrupt: [ FireCue { cue: "Cue.Voice.Ouch" } ];
         }
-    };
-    
-    // 如果是被玩家的沉默技能“硬打断”，会反噬。
-    // 但如果是目标跑远了导致的 Cancel，不走这里，直接平滑结束。
-    onInterrupt: [ FireCue { cue: "Cue.Voice.Ouch" } ]; 
+    ]; 
 }
 ```
 
@@ -495,6 +506,6 @@ ai_behavior {
 }
 ```
 
-**💡 架构之美**：**逻辑与物理状态的高度解耦**。
-如果不用底层的 `Targeting` 追踪机制，策划就必须在各种 Effect 节点或者 AI 节点里手动写 `If Distance > 15 Then Abort`，这会极其容易产生 Bug 并污染决策树。
-现在，AI 只管“我要奶他并跟着他走”，玩家只管“把 Boss 踢飞”。空间计算与打断逻辑由底层的 Ability `Processing` 阶段每帧自动校验并调用 `cancel()`，这就是原语抽象的威力。
+**要点**：**逻辑与物理状态的解耦**。
+如果不用底层的 `Targeting` 追踪机制，策划就必须在各种 Effect 节点或者 AI 节点里手动写 `If Distance > 15 Then Abort`，容易产生 Bug 并污染决策树。
+现在，AI 只管“我要奶他并跟着他走”，玩家只管“把 Boss 踢飞”。空间计算与打断逻辑由底层的 Ability `Processing` 阶段每帧自动校验并调用 `cancel()`。

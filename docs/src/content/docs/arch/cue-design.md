@@ -1,7 +1,7 @@
 ---
-title: 表现层设计 cue
+title: Cue 表现系统
 sidebar:
-  order: 5
+  order: 22
 ---
 
 本系统的核心哲学是：以“瘦配置、胖资产”实现意图与资源的彻底解耦；借集中注册表与动态标签完成智能寻址；靠双轨防线（脉冲/状态）实现严格性能剔除；并通过 Ticket 凭证闭环，使逻辑驱动与资产自决的生命周期完全分离。
@@ -92,7 +92,7 @@ public readonly record struct CueContext(
     Actor Instigator,   // 发起者
     Actor Causer,       // 媒介 (如飞行中的子弹实例)
     
-    TagSet ContextTags,// Event的瞬态标签快照 (如 ["Damage.Element.Fire"])
+    TagSet ContextTags,// Event的瞬态标签快照 (如 ["Combat.DamageType.Fire"])
     CueParams Parameters
 );
 
@@ -134,7 +134,7 @@ public readonly struct CueParams {
 
 | Logic Source | 调用方法  | 目标 |
 | :--- | :--- | :--- |
-| `Effect.FireCue` / `EmitPayload.cues`... | FireCue | `target` |
+| `Effect.FireCue` / `RunPipeline.impactCues`... | FireCue | `target` |
 | `Status` 首次挂载 | AttachCue | host | 
 | `Status` 层数变化 / 时长刷新 | UpdateCue | host | 
 | `Status` 移除 (过期/驱散/死亡) | DetachCue | host | 
@@ -238,7 +238,9 @@ enum MergeScope {
 }
 ```
 
-- TrackingMode.Follow/Stationary 只用于确立父子节点关系。要不要旋转属于胖资产做决定，不在配置层配。要实现`随宿主位置移动，但不是宿主旋转`配置成Follow，`不是宿主旋转`由胖资产实现。
+- TrackingMode 是**意图声明**，非实现规定：配置层只声明"要不要跟随宿主"，具体跟随方式（同步位置 / 是否继承旋转）由胖资产自决。要实现"随宿主位置移动但不继承旋转"，配置成 Follow，"不继承旋转"由胖资产实现。
+- **Pulse 的 Follow 不得通过"挂为宿主子节点"实现**：宿主销毁会级联带走子节点，从而绕过 Ticket 归还闭环（资产须主动 Return、严禁私自销毁），留下悬挂引用。Pulse 无主、fire-and-forget，其跟随只能以"资产独立存活、按帧同步锚点位置"实现，宿主死亡后停止跟随、原地播完自行归还。State 因有主、随宿主同生共死，挂载于宿主安全，不受此限。
+- **与 Unreal/Unity 的 attach + 死前 detach 有别**：那条路径隐含"资产归属某宿主"的反向索引，与无主模型冲突；且逻辑层宿主与引擎节点销毁不同步，detach 可能错过时机。按帧同步是无主模型的代价，非实现偏差。
 
 #### 状态型 (State)
 **适用于：持续性表现（如 Buff光环、引导施法、材质覆写）。**
@@ -747,39 +749,10 @@ public interface ICueAssetProvider
 ---
 
 ## 配置 Checklist
-1. **标签即表现**：逻辑源必须提供准确的 Tags（如 `Damage.Element.Lightning`），而非直接请求具体特效。
+1. **标签即表现**：逻辑源必须提供准确的 Tags（如 `Combat.DamageType.Lightning`），而非直接请求具体特效。
 2. **意图对齐**：瞬发事件使用 `FireCue`；持续状态使用 `Status.cuesWhileActive` 挂载。
 3. **参数浓缩**：仅通过 `magnitude` 或 `CueParams` 传递数值，严禁在协议中扩展具体的颜色、缩放等物理字段。
 
 ---
 
-## 表现层职责边界
-
-Cue 只承担**事件驱动的瞬时视听意图**（VFX / SFX / 飘字 / 瞬时动作）。下列职责按生命周期与耦合方向划归他处，Cue 不感知：
-
-### 持续动画状态机 → `ActorPresentation`（上层组件）
-
-待机、移动、朝向、持续动画混合、Socket 装配等是 Actor 的内禀视觉状态，由上层 `ActorPresentation` 组件自治，**不进入 `cue_registry_state`**。
-
-**理由**：动画状态机强耦合骨骼与上层逻辑（移动、寻路、能力阶段）。若由 cue 反向驱动，会制造"表现层→逻辑层"的双向依赖，违背瘦配置原则。
-
-**唯一握手**：`cue_registry_pulse.anim`。Cue 在瞬时事件（受击、处决）发生时广播一个抽象动作意图（`anim_intent`，如 `"Hit.Recoil"`），`ActorPresentation` 监听后自主裁决打断与混合。Cue 不感知骨骼与动画片段。
-
-### 相机反馈 → VFX 轨（瞬时） / `scene-design`（宏观）
-
-| 路径 | 归属 | 理由 |
-| :--- | :--- | :--- |
-| 瞬时震屏（暴击、爆炸） | cue VFX 轨 | 与主特效同源选择、同源限频。震屏实现为一个 `vfx_metadata` 资产，prefab 内部脚本驱动相机 |
-| 宏观相机控制（FocusOn / Cutscene / Restore） | `scene-design` 的 `CameraAction` | 演出级调度，生命周期与瞬时事件不同量级，归导演层 |
-
-**不为相机单设轨**：震屏复用 VFX 轨即可，无需新增表；宏观控制属演出意图，让 Cue 穿透到导演层会破坏职责单一。
-
-### 大招演出（Ultimate / Cinematic）→ `scene-design`
-
-招式过场、镜头编排、输入锁定、时间轴推进由 scene 层的 `Act` / `CameraAction` / `WithActorControl` 承担，**不通过 Cue 触发**。可以考虑为Effect引入`RunSceneEffect`
-
-**Cue 的本份**：仅负责演出过程中的瞬时视听碎片（剑光、法阵、震屏），走 Pulse 的 VFX/SFX 轨。演出编排本身是 Ability 的逻辑阶段，归 scene 层。
-
----
-
-> **一句话**：Cue = 瞬时视听广播；ActorPresentation = Actor 自治的持续状态机；scene = 导演调度。三者各司其职，仅 `PulseAnim` 的抽象意图是 Cue 与 ActorPresentation 的握手面。
+> **表现层职责边界**：Cue 是双轨——Pulse 轨管瞬时视听（命中/爆炸/飘字），State 轨管宿主绑定的持续表现（Buff 光环、循环音、材质覆写、Slot 优先级竞争）；持续动画状态机与瞬时动作裁决归 [ActorPresentation](./actor-presentation.md)；宏观相机与大招演出归 [场景演出](./scene-design.md)。Cue 与 ActorPresentation 的唯一握手是 `Pulse.anim` 的抽象意图。详见 [Actor 表现层](./actor-presentation.md)。

@@ -14,9 +14,10 @@ import gentsBat from '~/../../example/ts/gents.bat?raw';
 
 
 ```cmd help
-Usage: java -jar cfggen.jar [options] [-tool toolname[,param=value...]] -datadir <dir> [-gen genname[,param=value...]]
+Usage: java -jar cfggen.jar [options] [-tool toolName[,param=value...]] -datadir <dir> [-gen genName[,param=value...]]
 
-   or: java -jar cfggen.jar  (launch GUI)
+   or: java -jar cfggen.jar [-h] (print help)
+   or: java -jar cfggen.jar -gui (launch GUI)
 
 Parameters can be in any order, but -datadir is required when using generators.
 以下tool/gen参数之间由,分割,参数名和参数取值之间由=或:分割
@@ -53,7 +54,6 @@ Parameters can be in any order, but -datadir is required when using generators.
         ai=ai.json
         prompt=null
         batch=10
-    -tool help       print usage help
     -tool schematocsv
         datadir=.
 
@@ -98,7 +98,7 @@ Parameters can be in any order, but -datadir is required when using generators.
         dir=config           目录
         pkg=config           包名
         encoding=UTF-8       生成代码文件的编码
-        sealed               生成sealed interface，需要java17,默认为false
+        noSealed             ,默认为false
         builders=null        指向txt文件，每行是一个table，对这些table生成对应的builder
         configgenDir=null    复制configgen genjava源文件到{configgenDir}/configgen/genjava/，可选
         schemaNumPerFile=100 当配表数量过多时生成的ConfigCodeSchema会超过java编译器限制，用此参数来分文
@@ -106,9 +106,10 @@ Parameters can be in any order, but -datadir is required when using generators.
         own=null
         dir=Config           目录
         pkg=Config           包名
-        encoding=GBK         生成文件的编码
-        prefix=Data          生成类的前缀
+        encoding=UTF-8       生成文件的编码
+        prefix=D             生成类的前缀
         serverText           ,默认为false
+        unity                ,默认为false
     -gen bytes       生成c#/ts/go代码需要的数据
         own=null
         dir=.

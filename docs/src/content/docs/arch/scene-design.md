@@ -1,7 +1,7 @@
 ---
-title: 场景系统设计
+title: 场景演出编排
 sidebar:
-  order: 20
+  order: 15
 ---
 
 场景系统（Scene System）定位为遭遇战/演出级的逻辑编排层，位于 GAS（状态与效果）与 AI（自治决策）之上、关卡与任务流程系统之下。它不负责实现基础战斗行为，而是通过驱动既有能力、施加约束、订阅运行时事件，将多个实体在一段时间内组织成可控、可复用、可数据化配置的玩法与演出流程。
@@ -62,16 +62,6 @@ sidebar:
 
 ## Runtime Core
 
-### SceneInstance
-
-一场遭遇战的**世界状态**：持有演员 registry 与场景变量，统一管理对象生命周期。脚本执行委托给 `SceneDirector`。
-
-```java
-class SceneInstance {
-    ActorRegistry actors;
-    SceneDirector director;
-}
-```
 
 ### SceneDirector
 
@@ -640,7 +630,7 @@ abstract class ActInstance<T extends Act> {
 | `WithStatus` | GAS ActStatus | 挂载 StatusInstance，退出时 markPendingKill |
 | `SendEvent` | GAS EventBus | 单向广播，GAS Trigger 可被唤醒 |
 | `WaitForEvent` | GAS EventBus | 挂起场景，反向聆听战斗结算通知 |
-| `WithActorControl(Immediate)` | GAS Tag + AI | 打 `State.Scene.Controlled` Tag，AI 识别后挂起 |
+| `WithActorControl(Immediate)` | GAS Tag + AI | 打 `Actor.Scene.Controlled` Tag，AI 识别后挂起 |
 | `WithActorControl(Polite)` | AI 决策池 | 注入高优先级 `SceneDirected` 行为，AI 算分选中后交出控制权 |
 | `WithStatus` + `AIModifier` | AI 行为池 | 通过 ActStatus 间接修改 AI 的可用行为集 |
 
