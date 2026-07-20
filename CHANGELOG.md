@@ -4,6 +4,36 @@
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
 
+### [v1.4.0] - 2026-07-20
+
+速度优化与编辑器 undo/redo。
+
+#### Added
+- 编辑器 undo/redo：撤销/重做按钮与快捷键，值类编辑合并提交，结构操作保持视口稳定（EFitView.KeepStable）
+- 大小写不敏感的 impl 去重检测：impl 之间、impl 与 interface 同名（忽略大小写）时报冲突
+- GDScript（Godot）代码生成
+- Schema 级别 Enum 类型支持，零代码生成器改动
+- C# 适配 .NET 9.0 与 Unity，使用 FrozenDictionary
+- gen_run.bat：一次性运行全部 example
+- Chat 面板显示当前模型名；table 切换时 url 附带上次选中记录 id
+
+#### Changed
+- 多语言代码生成并发化，生成耗时显著下降：
+  - Java：struct/table 循环并发，~2.8x（0.51→0.18s）
+  - C#：render 循环并发，~2.3x（0.23→0.10s）
+  - Go / GD：仿 Java/C# 并发化
+  - Lua：表生成并发，~1.4x（0.88→0.63s）
+- JTE 模板预编译 + schema 并行解析，整体生成耗时 -36%
+- i18n 各语言 xlsx 并行读取
+- 内存分配优化：hashCode 去 varargs、keyMap 容量预分配，总分配 -15%
+- 统一 bytes 序列化格式，多语言共享同一结构与小端字节序
+- 编辑器大表/大图渲染优化：schema select 稳定化、列表虚拟滚动、代码分割、elk 布局移入 Web Worker
+- cfggen 无参启动改为打印帮助（原为启动 GUI）
+
+#### Fixed
+- cfggen：Context 缓存竞态与 allowErr 缓存污染
+- DirectoryStructure.findTableToJsonFiles：同名表跨目录（如 _skill_buff / skill/_buff）编辑后落盘位置变更，导致下次启动失败
+
 ### [v1.3.0] - 2026-02-05
 
 #### Added
