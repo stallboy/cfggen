@@ -39,7 +39,7 @@ jobs:
         run: ./gradlew.bat fatJar --no-daemon
 
       - name: Copy JAR
-        run: Copy-Item app\build\libs\configgen.jar cfggen.jar
+        run: Copy-Item app\build\libs\cfggen.jar cfggen.jar
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
