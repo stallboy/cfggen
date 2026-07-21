@@ -25,6 +25,7 @@ public class StructuralClassModel {
     public final List<ForeignKeyInfo> foreignKeys;
     public final boolean hasRef;
     public final String codeTopPkg;
+    public final String sourceComment; // 类文件顶部来源注释（trailing + 数据文件路径）；无则空串
 
     public record FieldInfo(String name,
                             String type,
@@ -35,10 +36,12 @@ public class StructuralClassModel {
                                  String name) {
     }
 
-    public StructuralClassModel(Structural structural, NameableName name, boolean isTableAndNeedBuilder, List<String> mapsInMgr) {
+    public StructuralClassModel(Structural structural, NameableName name, boolean isTableAndNeedBuilder,
+                                List<String> mapsInMgr, String sourceComment) {
         this.structural = structural;
         this.name = name;
         this.mapsInMgr = mapsInMgr;
+        this.sourceComment = sourceComment;
         this.pkg = name.pkg;
         this.className = name.className;
         this.isSealedInterface = NameableName.isSealedInterface;

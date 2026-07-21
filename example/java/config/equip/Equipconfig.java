@@ -1,5 +1,6 @@
 package config.equip;
 
+// 来自：equip/equipconfig.csv
 public class Equipconfig {
     private String entry;
     private int stone_count_for_set;

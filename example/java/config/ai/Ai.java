@@ -1,5 +1,6 @@
 package config.ai;
 
+// 来自：ai_行为/ai行为.xlsx[AI中文会被忽略只要a-z开头]
 public class Ai {
     private int iD;
     private String desc;

@@ -1,5 +1,6 @@
 package config.other;
 
+// 来自：other/drop.csv
 public class Drop {
     private int dropid;
     private String name;

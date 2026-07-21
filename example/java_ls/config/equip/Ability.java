@@ -1,5 +1,6 @@
 package config.equip;
 
+// 来自：equip/ability.csv
 public enum Ability {
     ATTACK("attack", 1),
     DEFENCE("defence", 2),

@@ -1,5 +1,6 @@
 package config.other;
 
+// 来自：other/loot.csv
 public class Loot {
     private int lootid;
     private String ename;

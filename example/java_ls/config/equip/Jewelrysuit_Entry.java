@@ -1,5 +1,6 @@
 package config.equip;
 
+// 来自：equip/jewelrysuit.csv
 public class Jewelrysuit_Entry {
     public static final Jewelrysuit_Entry SPECIALSUIT = new Jewelrysuit_Entry("SpecialSuit", 4);
 

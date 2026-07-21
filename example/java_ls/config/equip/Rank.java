@@ -1,5 +1,6 @@
 package config.equip;
 
+// 来自：equip/rank.csv
 public enum Rank {
     WHITE("white", 0),
     GREEN("green", 1),

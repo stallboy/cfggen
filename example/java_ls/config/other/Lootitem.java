@@ -1,5 +1,6 @@
 package config.other;
 
+// 来自：other/lootitem.csv, other/lootitem_1.csv, other/lootitem_2.csv
 public class Lootitem {
     private int lootid;
     private int itemid;

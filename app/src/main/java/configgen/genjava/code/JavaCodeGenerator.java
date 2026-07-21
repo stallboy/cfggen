@@ -1,6 +1,7 @@
 package configgen.genjava.code;
 
 import configgen.ctx.Context;
+import configgen.data.CfgData;
 import configgen.gen.GeneratorWithTag;
 import configgen.gen.Parameter;
 import configgen.genjava.GenJavaUtil;
@@ -34,6 +35,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
     private final int schemaNumPerFile;
 
     private Path dstDir;
+    private CfgData cfgData;
     // 并发生成：每个工作线程独占一组打印机缓冲区，避免多线程踩踏共享 StringBuilder
     private final ThreadLocal<CacheConfig> mainCc = ThreadLocal.withInitial(CacheConfig::of);
 
@@ -71,6 +73,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
     @Override
     public void generate(Context ctx) throws IOException {
         CfgValue cfgValue = ctx.makeValue(tag);
+        cfgData = ctx.cfgData();
         dstDir = Paths.get(dir).resolve(pkg.replace('.', '/'));
 
         Name.codeTopPkg = pkg;
@@ -217,7 +220,8 @@ public class JavaCodeGenerator extends GeneratorWithTag {
     private void generateStructClass(StructSchema struct, List<String> mapsInMgr) {
         NameableName name = new NameableName(struct);
         try (var ps = createCode(name.path)) {
-            StructuralClassModel model = new StructuralClassModel(struct, name, false, mapsInMgr);
+            StructuralClassModel model = new StructuralClassModel(struct, name, false, mapsInMgr,
+                    SourceComment.of(struct, null));
             JteEngine.render("java/GenStructuralClass.jte", model, ps);
         }
     }
@@ -234,6 +238,11 @@ public class JavaCodeGenerator extends GeneratorWithTag {
         boolean isNeedReadData = true;
         String dataPostfix = "";
         TableSchema schema = vTable.schema();
+        // 该表数据来源的原始文件路径（xlsx/csv 或其 sheet），写到生成类顶部方便反查源文件
+        CfgData.DTable dTable = cfgData.getDTable(vTable.name());
+        List<String> rawSheetIds = (dTable == null) ? List.of()
+                : dTable.rawSheets().stream().map(CfgData.DRawSheet::id).toList();
+        String sourceComment = SourceComment.of(schema, rawSheetIds);
         if (schema.entry() instanceof EntryType.EntryBase entryBase) {
             String entryPostfix = "";
             boolean isEnum = entryBase instanceof EntryType.EEnum;
@@ -254,7 +263,7 @@ public class JavaCodeGenerator extends GeneratorWithTag {
             NameableName dataName = new NameableName(schema, dataPostfix);
             try (var ps = createCode(name.path)) {
                 JteEngine.render("java/GenEntryOrEnumClass.jte",
-                        new EntryOrEnumModel(vTable, entryBase, name, isNeedReadData, dataName), ps);
+                        new EntryOrEnumModel(vTable, entryBase, name, isNeedReadData, dataName, sourceComment), ps);
             }
         }
 
@@ -262,7 +271,8 @@ public class JavaCodeGenerator extends GeneratorWithTag {
             NameableName name = new NameableName(schema, dataPostfix);
             boolean isTableNeedBuilder = needBuilderTables != null && needBuilderTables.contains(vTable.name());
             try (var ps = createCode(name.path)) {
-                StructuralClassModel model = new StructuralClassModel(vTable.schema(), name, isTableNeedBuilder, mapsInMgr);
+                StructuralClassModel model = new StructuralClassModel(vTable.schema(), name, isTableNeedBuilder,
+                        mapsInMgr, sourceComment);
                 JteEngine.render("java/GenStructuralClass.jte", model, ps);
             }
 

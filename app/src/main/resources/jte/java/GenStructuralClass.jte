@@ -8,6 +8,9 @@
 @param StructuralClassModel model
 package ${model.pkg};
 
+@if(!model.sourceComment.isEmpty())
+${model.sourceComment}
+@endif
 @if(model.isImpl)
     public ${model.isSealedInterface?"final ":""}class ${model.className} implements ${model.nullableInterfaceFullName} {
         @if(model.enumRefTable != null)

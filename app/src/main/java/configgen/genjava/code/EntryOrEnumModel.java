@@ -19,9 +19,10 @@ public class EntryOrEnumModel {
     public final String dataNameFullName;
     public final EntryType.EntryBase entryBase;
     public final String codeTopPkg;
+    public final String sourceComment; // 类文件顶部来源注释（trailing + 数据文件路径）；无则空串
 
     public EntryOrEnumModel(CfgValue.VTable vTable, EntryType.EntryBase entryBase, NameableName name,
-                           boolean isNeedReadData, NameableName dataName) {
+                           boolean isNeedReadData, NameableName dataName, String sourceComment) {
         this.pkg = name.pkg;
         this.name = name;
         this.codeTopPkg = Name.codeTopPkg;
@@ -34,5 +35,6 @@ public class EntryOrEnumModel {
         this.isNeedReadData = isNeedReadData;
         this.dataNameFullName = dataName.fullName;
         this.entryBase = entryBase;
+        this.sourceComment = sourceComment;
     }
 }

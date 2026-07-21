@@ -1,5 +1,6 @@
 package config.task;
 
+// 来自：task/task_任务.csv
 public class Task {
     private int taskid;
     private java.util.List<config.Text> name;

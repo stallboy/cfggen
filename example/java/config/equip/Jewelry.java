@@ -1,5 +1,6 @@
 package config.equip;
 
+// 来自：equip/jewelry.csv
 public class Jewelry {
     private int iD;
     private String name;

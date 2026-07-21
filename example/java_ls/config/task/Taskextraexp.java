@@ -1,5 +1,6 @@
 package config.task;
 
+// 来自：task/taskextraexp.csv
 public class Taskextraexp {
     private int taskid;
     private int extraexp;

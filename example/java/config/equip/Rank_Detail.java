@@ -1,5 +1,6 @@
 package config.equip;
 
+// 来自：equip/rank.csv
 public class Rank_Detail {
     private int rankID;
     private String rankName;

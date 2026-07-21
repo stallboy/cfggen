@@ -1,5 +1,7 @@
 package config.task;
 
+// 任务完成条件类型
+// 来自：task/completeconditiontype任务完成条件类型.csv
 public enum Completeconditiontype {
     KILLMONSTER("KillMonster", 1),
     TALKNPC("TalkNpc", 2),

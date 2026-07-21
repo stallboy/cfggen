@@ -7,6 +7,9 @@
 @param EntryOrEnumModel model
 package ${model.pkg};
 
+@if(!model.sourceComment.isEmpty())
+${model.sourceComment}
+@endif
 public ${model.isEnum ? "enum" : "class"} ${model.className} {
     @if(model.hasNoIntValue)
         !{

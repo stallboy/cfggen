@@ -1,5 +1,6 @@
 package config.ai;
 
+// 来自：ai_行为/ai行为.xlsx[AI_CONDITION]
 public class Ai_condition {
     private int iD;
     private String desc;

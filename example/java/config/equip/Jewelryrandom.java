@@ -1,5 +1,7 @@
 package config.equip;
 
+// struct 作为key，有些生成代码是不支持的
+// 来自：equip/jewelryrandom.csv
 public class Jewelryrandom {
     private config.LevelRank lvlRank;
     private config.Range attackRange;

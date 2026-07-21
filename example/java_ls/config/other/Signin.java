@@ -1,5 +1,6 @@
 package config.other;
 
+// 来自：other/signin.csv
 public class Signin {
     private int id;
     private java.util.Map<Integer, Integer> item2countMap;

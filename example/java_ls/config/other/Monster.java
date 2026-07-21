@@ -1,5 +1,6 @@
 package config.other;
 
+// 来自：other/monster.csv
 public class Monster {
     private int id;
     private java.util.List<config.Position> posList;

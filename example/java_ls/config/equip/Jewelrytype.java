@@ -1,5 +1,6 @@
 package config.equip;
 
+// 来自：equip/jewelrytype.csv
 public enum Jewelrytype {
     JADE("Jade"),
     BRACELET("Bracelet"),

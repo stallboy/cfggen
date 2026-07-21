@@ -1,5 +1,6 @@
 package config.equip;
 
+// 来自：equip/equipconfig.csv
 public class Equipconfig_Entry {
     public static final Equipconfig_Entry INSTANCE = new Equipconfig_Entry("Instance");
     public static final Equipconfig_Entry INSTANCE2 = new Equipconfig_Entry("Instance2");
