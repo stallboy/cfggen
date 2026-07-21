@@ -3,7 +3,7 @@ package config.task.completecondition;
 public final class CollectItem implements config.task.completecondition.Completecondition {
     @Override
     public config.task.Completeconditiontype type() {
-        return config.task.Completeconditiontype.COLLECTITEM;
+        return config.task.Completeconditiontype.COLLECT_ITEM;
     }
 
     private int itemid;

@@ -15,6 +15,22 @@ public class Name {
 
     static String codeTopPkg;
 
+    /**
+     * enum/entry 常量字段名风格开关。
+     * false（默认，老行为）：直接 toUpperCase，如 ResetDuration -> RESETDURATION。
+     * true：转 SCREAMING_SNAKE_CASE，如 ResetDuration / Reset_Duration -> RESET_DURATION。
+     * 由 JavaCodeGenerator.generate() 在并发渲染前一次性赋值。
+     */
+    static boolean snakeEnumName = false;
+
+    /**
+     * 生成 enum/entry 常量的 Java 字段名。声明处（GenEntryOrEnumClass）和引用处
+     * （GenStructuralClass 里 interface impl 的 type()）必须用同一个方法，保证一致。
+     */
+    public static String enumFieldName(String enumName) {
+        return snakeEnumName ? StringUtil.toScreamingSnakeCase(enumName) : enumName.toUpperCase();
+    }
+
     public static String GetByKeyFunctionNameInConfigMgr(KeySchema keySchema, boolean isPrimaryKey, Nameable nameable) {
         String name = "get" + Arrays.stream(nameable.name().split("\\.")).map(StringUtil::upper1).collect(Collectors.joining());
 

@@ -4,6 +4,11 @@
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
 
+### [Unreleased]
+
+#### Added
+- Java 生成器新增 `snakeEnumName` 参数：开启后 enum/entry 常量字段名转为 SCREAMING_SNAKE_CASE（`ResetDuration`、`Reset_Duration` 都得到 `RESET_DURATION`），默认关闭保持原 `toUpperCase` 行为。interface impl 的 `type()` 引用同步使用新命名。
+
 ### [v1.4.0] - 2026-07-20
 
 速度优化与编辑器 undo/redo。

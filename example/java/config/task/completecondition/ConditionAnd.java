@@ -3,7 +3,7 @@ package config.task.completecondition;
 public final class ConditionAnd implements config.task.completecondition.Completecondition {
     @Override
     public config.task.Completeconditiontype type() {
-        return config.task.Completeconditiontype.CONDITIONAND;
+        return config.task.Completeconditiontype.CONDITION_AND;
     }
 
     private config.task.completecondition.Completecondition cond1;

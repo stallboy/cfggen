@@ -125,6 +125,43 @@ class JavaCodeGeneratorTest {
     }
 
     @Test
+    void generate_enumTable_snakeEnumName() throws IOException {
+        // Given: 枚举表，枚举值用 camelCase 命名
+        String cfgStr = """
+                table ability[id] (enum='name') {
+                    id:int;
+                    name:str;
+                }
+                """;
+
+        String csvData = """
+                技能ID,技能名称
+                id,name
+                1,ResetDuration
+                2,MaxHp
+                3,Fireball
+                """;
+
+        Resources.addTempFileFromText("config.cfg", tempDir, cfgStr);
+        Resources.addTempFileFromText("ability.csv", tempDir, csvData);
+
+        // When: 开启 snakeEnumName 生成代码
+        File outputDir = generateJavaCode("config_snake", "test.config.snake", ",snakeEnumName");
+
+        // Then: 枚举常量字段名转为 SCREAMING_SNAKE_CASE，字符串实参保持原值
+        File expectedFilesDir = new File(outputDir, "test/config/snake");
+        File abilityEntryFile = new File(expectedFilesDir, "Ability.java");
+        assertTrue(abilityEntryFile.exists(), "应该生成Ability.java文件");
+
+        String content = Files.readString(abilityEntryFile.toPath());
+        assertTrue(content.contains("RESET_DURATION(\"ResetDuration\""),
+                "ResetDuration 应转为 RESET_DURATION，且字符串实参保持原值");
+        assertTrue(content.contains("MAX_HP(\"MaxHp\""), "MaxHp 应转为 MAX_HP");
+        assertTrue(content.contains("FIREBALL(\"Fireball\""), "Fireball 单词应保持 FIREBALL");
+        assertFalse(content.contains("RESETDURATION"), "不应出现老的大写直连 RESETDURATION");
+    }
+
+    @Test
     void generate_structAndInterface() throws IOException {
         // Given: 包含struct和interface的schema
         String cfgStr = """

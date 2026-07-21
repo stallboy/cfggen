@@ -2,7 +2,7 @@ package config.equip;
 
 // 来自：equip/jewelrysuit.csv
 public class Jewelrysuit_Entry {
-    public static final Jewelrysuit_Entry SPECIALSUIT = new Jewelrysuit_Entry("SpecialSuit", 4);
+    public static final Jewelrysuit_Entry SPECIAL_SUIT = new Jewelrysuit_Entry("SpecialSuit", 4);
 
     private final String name;
     private final int value;
@@ -23,6 +23,6 @@ public class Jewelrysuit_Entry {
     }
 
     public static void setAllRefs(config.ConfigMgr mgr) {
-        SPECIALSUIT.setRef(mgr);
+        SPECIAL_SUIT.setRef(mgr);
     }
 }

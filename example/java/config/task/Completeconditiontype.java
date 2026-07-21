@@ -3,12 +3,12 @@ package config.task;
 // 任务完成条件类型
 // 来自：task/completeconditiontype任务完成条件类型.csv
 public enum Completeconditiontype {
-    KILLMONSTER("KillMonster", 1),
-    TALKNPC("TalkNpc", 2),
-    COLLECTITEM("CollectItem", 3),
-    CONDITIONAND("ConditionAnd", 4),
+    KILL_MONSTER("KillMonster", 1),
+    TALK_NPC("TalkNpc", 2),
+    COLLECT_ITEM("CollectItem", 3),
+    CONDITION_AND("ConditionAnd", 4),
     CHAT("Chat", 5),
-    TESTNOCOLUMN("TestNoColumn", 6),
+    TEST_NO_COLUMN("TestNoColumn", 6),
     AA("aa", 7);
 
     private final String name;

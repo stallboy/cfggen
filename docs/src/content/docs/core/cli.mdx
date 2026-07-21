@@ -99,6 +99,7 @@ Parameters can be in any order, but -datadir is required when using generators.
         pkg=config           包名
         encoding=UTF-8       生成代码文件的编码
         noSealed             ,默认为false
+        snakeEnumName        enum/entry常量字段名用SCREAMING_SNAKE_CASE（如ResetDuration->RESET_DURATION），默认false为大写直连
         builders=null        指向txt文件，每行是一个table，对这些table生成对应的builder
         configgenDir=null    复制configgen genjava源文件到{configgenDir}/configgen/genjava/，可选
         schemaNumPerFile=100 当配表数量过多时生成的ConfigCodeSchema会超过java编译器限制，用此参数来分文

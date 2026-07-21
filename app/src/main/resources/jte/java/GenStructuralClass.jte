@@ -16,7 +16,7 @@ ${model.sourceComment}
         @if(model.enumRefTable != null)
             @Override
             public ${Name.refType(model.enumRefTable)} type() {
-                return ${Name.refType(model.enumRefTable)}.${model.structural.name().toUpperCase()};
+                return ${Name.refType(model.enumRefTable)}.${Name.enumFieldName(model.structural.name())};
             }
 
         @endif

@@ -3,7 +3,7 @@ package config.task.completecondition;
 public final class TalkNpc implements config.task.completecondition.Completecondition {
     @Override
     public config.task.Completeconditiontype type() {
-        return config.task.Completeconditiontype.TALKNPC;
+        return config.task.Completeconditiontype.TALK_NPC;
     }
 
     private int npcid;

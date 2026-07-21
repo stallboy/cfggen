@@ -25,9 +25,9 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
                 String fix = c == len ? ";" : ",";
             }
             @if(model.isEnum)
-                ${enumName.toUpperCase()}("${enumName}")${fix}
+                ${Name.enumFieldName(enumName)}("${enumName}")${fix}
             @else
-                public static final ${model.className} ${enumName.toUpperCase()} = new ${model.className}("${enumName}");
+                public static final ${model.className} ${Name.enumFieldName(enumName)} = new ${model.className}("${enumName}");
             @endif
         @endfor
         @if(model.isEnum && 0 == c)
@@ -58,9 +58,9 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
                 String fix = c == len ? ";" : ",";
             }
             @if(model.isEnum)
-                ${enumName.toUpperCase()}("${enumName}", ${value})${fix}
+                ${Name.enumFieldName(enumName)}("${enumName}", ${value})${fix}
             @else
-                public static final ${model.className} ${enumName.toUpperCase()} = new ${model.className}("${enumName}", ${value});
+                public static final ${model.className} ${Name.enumFieldName(enumName)} = new ${model.className}("${enumName}", ${value});
             @endif
         @endfor
         @if(model.isEnum && 0 == c)
@@ -144,7 +144,7 @@ public ${model.isEnum ? "enum" : "class"} ${model.className} {
         @else
             public static void setAllRefs(${model.codeTopPkg}.ConfigMgr mgr) {
                 @for(String enumName : model.enumNames)
-                    ${enumName.toUpperCase()}.setRef(mgr);
+                    ${Name.enumFieldName(enumName)}.setRef(mgr);
                 @endfor
             }
         @endif

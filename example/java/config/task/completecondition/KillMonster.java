@@ -3,7 +3,7 @@ package config.task.completecondition;
 public final class KillMonster implements config.task.completecondition.Completecondition {
     @Override
     public config.task.Completeconditiontype type() {
-        return config.task.Completeconditiontype.KILLMONSTER;
+        return config.task.Completeconditiontype.KILL_MONSTER;
     }
 
     private int monsterid;
