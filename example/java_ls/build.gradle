@@ -11,21 +11,23 @@ repositories {
 // Apply a specific Java toolchain to ease working on different environments.
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
-
-sourceSets {
-    main {
-        java {
-            srcDirs = ['.']
-            exclude 'jte-classes/**'
-            exclude 'build/**'
-            exclude '.gradle/**'
-        }
-    }
+// 源码平铺在工程根：LoadConfig.java 在根，config/ 与 configgen/ 是包目录，
+// 把根设为源码目录并排除各类产物/IDE 目录。
+// 用 sourceSets.main.java { ... } 属性访问风格，避免 IDE 对 sourceSets { main { } } 块的 DSL 误报
+sourceSets.main.java {
+    srcDirs = ['.']
+    exclude 'jte-classes/**'
+    exclude 'build/**'
+    exclude '.gradle/**'
+    exclude 'bin/**'
+    exclude 'out/**'
+    exclude '.idea/**'
 }
+
 
 
 compileJava {

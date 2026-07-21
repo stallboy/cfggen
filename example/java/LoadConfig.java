@@ -8,9 +8,6 @@ import configgen.genjava.ConfigInput;
 import configgen.genjava.Schema;
 import configgen.genjava.SchemaCompatibleException;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.*;
 //import java.util.concurrent.Executors;
@@ -24,7 +21,7 @@ public class LoadConfig {
 
     public static void load(String fn) throws IOException {
         Schema codeSchema = ConfigCodeSchema.getCodeSchema();
-        try (ConfigInput input = new ConfigInput(new DataInputStream(new BufferedInputStream(new FileInputStream(fn))))) {
+        try (ConfigInput input = new ConfigInput(Path.of(fn))) {
             Schema dataSchema = ConfigMgrLoader.loadSchema(input);
             boolean compatible = codeSchema.compatible(dataSchema);
             if (compatible) {

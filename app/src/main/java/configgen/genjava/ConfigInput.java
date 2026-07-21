@@ -1,113 +1,83 @@
 package configgen.genjava;
 
-import java.io.*;
-import java.nio.ByteBuffer;
+import java.io.Closeable;
+import java.io.IOException;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.ValueLayout;
+import java.lang.foreign.ValueLayout.OfFloat;
+import java.lang.foreign.ValueLayout.OfInt;
+import java.lang.foreign.ValueLayout.OfLong;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
-public class ConfigInput implements Closeable {
-    private final InputStream input;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-    // 专门用于 primitives (int, long, float) 的小缓冲区，避免频繁 new 数组
-    private final byte[] localBuffer = new byte[8];
-    private final ByteBuffer converter = ByteBuffer.wrap(localBuffer).order(ByteOrder.LITTLE_ENDIAN);
+public class ConfigInput implements Closeable {
+    // 小端序的 layout 常量，UNALIGNED 避免 MemorySegment 按地址对齐做额外检查
+    private static final OfInt INT_LE = OfInt.JAVA_INT_UNALIGNED.withOrder(ByteOrder.LITTLE_ENDIAN);
+    private static final OfLong LONG_LE = OfLong.JAVA_LONG_UNALIGNED.withOrder(ByteOrder.LITTLE_ENDIAN);
+    private static final OfFloat FLOAT_LE = OfFloat.JAVA_FLOAT_UNALIGNED.withOrder(ByteOrder.LITTLE_ENDIAN);
+    private static final byte[] EMPTY_BYTES = new byte[0];
+
+    // 构造时一次性读入内存，后续全程基于 MemorySegment 直接读取，
+    // 避免 InputStream 逐段读取 + ByteBuffer 中转的开销。
+    private final byte[] fileBytes;
+    private final MemorySegment segment;
+    private long pos;
 
     private String[] stringPool;
     private LangTextPool[] langTextPools;
 
-    public ConfigInput(InputStream input) {
-        // 核心优化：确保外层有缓冲，减少系统调用次数
-        this.input = (input instanceof BufferedInputStream) ? input : new BufferedInputStream(input);
+    public ConfigInput(byte[] bytes) {
+        this.fileBytes = bytes;
+        this.segment = MemorySegment.ofArray(fileBytes);
     }
 
-    /**
-     * 内部辅助：确保读满指定的字节到 localBuffer
-     */
-    private void fillLocalBuffer(int len) {
-        readFully(localBuffer, 0, len);
-        converter.rewind();
-    }
-
-    /**
-     * 核心逻辑：确保从流中读取出“确切长度”的字节
-     */
-    @SuppressWarnings("SameParameterValue")
-    private void readFully(byte[] b, int off, int len) {
-        int n = 0;
-        try {
-            while (n < len) {
-                int count = input.read(b, off + n, len - n);
-                if (count < 0) {
-                    throw new ConfigErr("EOF: Need " + len + " bytes, but only got " + n);
-                }
-                n += count;
-            }
-        } catch (IOException e) {
-            throw new ConfigErr(e);
-        }
+    public ConfigInput(Path filePath) throws IOException {
+        this(Files.readAllBytes(filePath));
     }
 
     public int readInt() {
-        fillLocalBuffer(4);
-        return converter.getInt();
+        int v = segment.get(INT_LE, pos);
+        pos += 4;
+        return v;
     }
 
     public long readLong() {
-        fillLocalBuffer(8);
-        return converter.getLong();
+        long v = segment.get(LONG_LE, pos);
+        pos += 8;
+        return v;
     }
 
     public float readFloat() {
-        fillLocalBuffer(4);
-        return converter.getFloat();
+        float v = segment.get(FLOAT_LE, pos);
+        pos += 4;
+        return v;
     }
 
     public boolean readBool() {
-        try {
-            int b = input.read();
-            if (b < 0) throw new ConfigErr("EOF reading bool");
-            return b != 0;
-        } catch (IOException e) {
-            throw new ConfigErr(e);
-        }
+        byte v = segment.get(ValueLayout.JAVA_BYTE, pos);
+        pos++;
+        return v != 0;
     }
 
     /**
-     * 读取指定长度的原始字节。
-     * 优化点：使用了循环读取确保数据完整性。
+     * 读取指定长度的原始字节。len==0 时复用共享的 EMPTY_BYTES，避免每次 new byte[0]。
      */
     public byte[] readRawBytes(int len) {
         if (len < 0) throw new ConfigErr("Invalid length: " + len);
-        if (len == 0) return new byte[0];
-
+        if (len == 0) return EMPTY_BYTES;
         byte[] bytes = new byte[len];
-        readFully(bytes, 0, len);
+        MemorySegment.copy(segment, ValueLayout.JAVA_BYTE, pos, bytes, 0, len);
+        pos += len;
         return bytes;
     }
 
-
     /**
-     * 跳过指定字节。
-     * 优化点：处理了 skip() 可能返回 0 的情况。
+     * 跳过指定字节。数据已在内存，直接移动游标。
      */
     public void skipBytes(int n) {
-        if (n <= 0) return;
-        try {
-            long totalSkipped = 0;
-            while (totalSkipped < n) {
-                long skipped = input.skip(n - totalSkipped);
-                if (skipped <= 0) {
-                    // 如果 skip 返回 0，尝试读取一个字节来确认是否到文件尾
-                    if (input.read() == -1) {
-                        throw new ConfigErr("EOF skip " + n + " bytes");
-                    }
-                    totalSkipped++;
-                } else {
-                    totalSkipped += skipped;
-                }
-            }
-        } catch (IOException e) {
-            throw new ConfigErr(e);
-        }
+        pos += n;
     }
 
     // --- 字符串与池逻辑 ---
@@ -115,9 +85,10 @@ public class ConfigInput implements Closeable {
     public String readString() {
         int len = readInt();
         if (len == 0) return "";
-        // 这种方式虽然会产生临时 byte[]，但对于 readString 来说是最稳妥的
-        byte[] bytes = readRawBytes(len);
-        return new String(bytes, StandardCharsets.UTF_8);
+        // 数据已在堆内 byte[]，直接零拷贝构造 String，省掉 readRawBytes 的临时数组
+        String s = new String(fileBytes, (int) pos, len, StandardCharsets.UTF_8);
+        pos += len;
+        return s;
     }
 
     // ------Pool------
@@ -223,6 +194,7 @@ public class ConfigInput implements Closeable {
 
     @Override
     public void close() throws IOException {
-        input.close();
+        // InputStream 在构造时（readAllBytes 后）已通过 try-with-resources 关闭，
+        // fileBytes 由 GC 回收，这里无需操作。保留签名以满足 Closeable 与现有 try-with-resources 调用。
     }
 }

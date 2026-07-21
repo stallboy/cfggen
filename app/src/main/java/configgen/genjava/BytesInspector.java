@@ -1,6 +1,7 @@
 package configgen.genjava;
 
 import java.io.*;
+import java.nio.file.Path;
 import java.util.*;
 
 public class BytesInspector {
@@ -25,14 +26,12 @@ public class BytesInspector {
     }
 
     public void match(String match) {
-        try (ConfigInput input = new ConfigInput(new DataInputStream(new BufferedInputStream(new FileInputStream(bytesFilename))))) {
+        try (ConfigInput input = new ConfigInput(Path.of(bytesFilename))) {
             // 1. 读取 Schema 长度标记
             int schemaLength = input.readInt();
             if (schemaLength > 0) {
                 byte[] schemaBytes = input.readRawBytes(schemaLength);
-                rootSchema = (SchemaInterface) SchemaDeserializer.deserialize(
-                        new ConfigInput(new ByteArrayInputStream(schemaBytes))
-                );
+                rootSchema = (SchemaInterface) SchemaDeserializer.deserialize(new ConfigInput(schemaBytes));
             } else {
                 println("no schema in data file");
                 return;
@@ -93,7 +92,7 @@ public class BytesInspector {
 
                 String schemaName = tableName + "_Detail";
                 Schema realSchema = rootSchema.implementations.get(schemaName);
-                if (realSchema instanceof SchemaBean schemaBean ) {
+                if (realSchema instanceof SchemaBean schemaBean) {
                     println("%s data(size=%d):", tableName, tableSize);
                     printTableData(input, schemaBean);
                     return true;
