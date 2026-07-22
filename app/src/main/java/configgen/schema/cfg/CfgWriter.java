@@ -16,6 +16,12 @@ public class CfgWriter {
     private final boolean useLastName;
     private final boolean includeMetaStartWith_;
 
+    private static final boolean schemaOldSave;
+
+    static {
+        schemaOldSave = System.getProperty("schema.oldSave") != null;
+    }
+
     public static String stringify(CfgSchema cfg) {
         return stringify(cfg, false, false);
     }
@@ -142,7 +148,7 @@ public class CfgWriter {
         int i = 0;
         for (StructSchema value : sInterface.impls()) {
             i++;
-            boolean noLineSeparator = sInterface.impls().size() == i;
+            boolean noLineSeparator = !schemaOldSave && sInterface.impls().size() == i;
             writeStruct(value, prefix + "\t", noLineSeparator);
         }
 
@@ -225,11 +231,11 @@ public class CfgWriter {
             destination.append(String.format(fmt, args));
         }
 
-        destination.append("\n");
+        println();
     }
 
     private void println() {
-        destination.append("\n");
+        destination.append(schemaOldSave ? "\r\n" : "\n");
     }
 
     private void writeLeadingComment(CommentData cd, String prefix) {
