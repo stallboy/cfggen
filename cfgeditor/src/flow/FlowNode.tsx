@@ -77,8 +77,9 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
     }, [color]);
 
     const foldButton = useMemo(() => {
-        // 显示 fold 按钮的条件：有子节点，或可以被内嵌（从内嵌展开的节点）。
-        if (edit && (edit.hasChild || edit.canBeEmbedded)) {
+        // fold 按钮只有一种语义：折叠本节点的子节点（有子节点才显示）。
+        // 可内嵌子结构的回嵌入口在父表单的 structRef 占位行上，不在本节点。
+        if (edit && edit.hasChild) {
             if (edit.fold) {
                 return <Button style={unfoldIconButtonStyle} icon={unfoldIcon} aria-label={t('nodeUnfold')} onClick={unfoldNode} />;
             } else {

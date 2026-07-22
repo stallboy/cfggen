@@ -1,12 +1,11 @@
 import {memo} from "react";
 import {Button, Form, Space, Tooltip} from "antd";
 import {useTranslation} from "react-i18next";
-import {FuncSubmitType} from "@/domain/entityModel";
-import {FORM_ITEM_LAYOUT_WITHOUT_LABEL, PrimitiveFormItemProps} from "../shared/constants.ts";
+import {FORM_ITEM_LAYOUT_WITHOUT_LABEL, FuncSubmitFormItemProps} from "../shared/constants.ts";
 
-export const FuncSubmitFormItem = memo(function FuncSubmitFormItem({field}: PrimitiveFormItemProps) {
+export const FuncSubmitFormItem = memo(function FuncSubmitFormItem({field}: FuncSubmitFormItemProps) {
     const [t] = useTranslation();
-    const func = field.value as FuncSubmitType;
+    const func = field.value;
 
     // alt+s 提交热键已移至 EntityForm，按节点表单作用域注册（见 EntityForm），避免全局重复触发。
     return (

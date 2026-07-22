@@ -308,6 +308,15 @@ export class EditingSession {
         this.structureChange(position);
     }
 
+    /** 回嵌：删子对象上的 $fold 键（undefined = 默认内嵌），与 list unfold 删键同约定——
+     *  不写 $fold=true，避免载荷残留与 undefined 语义相同的键。 */
+    deleteFold(fieldChains: (string | number)[], position: EntityPosition): void {
+        this.beforeStructuralChange();
+        const obj = getFieldObj(this.editingObject, fieldChains) as JSONObject;
+        delete obj['$fold'];
+        this.structureChange(position);
+    }
+
     /** 删除父对象上的 `$fold_<fieldName>` 折叠键（add/deleteArrayItem 的自动展开用；键不存在时 noop）。
      *  arrayFieldChains 末端是 list 字段名，其余是父对象链。 */
     private unfoldListOf(arrayFieldChains: (string | number)[]): void {

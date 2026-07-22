@@ -139,7 +139,7 @@ export function extractEmbeddingFields(fieldType: SStruct | SInterface, fieldVal
 
     if (filteredFields.length === 0) {
         // 没有字段，返回空数组
-        return {embeddedFields: []};
+        return {embeddedFields: [], implNameToDisplay};
     }
 
     const analysis = analyzeFieldTypes(filteredFields);

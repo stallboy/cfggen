@@ -2,10 +2,6 @@ import type {DisplayField, Entity, EntityEditField} from "@/domain/entityModel";
 import {EntityType, isCardEntity, isEditableEntity, isReadOnlyEntity} from "@/domain/entityModel";
 import type {NodeShowType} from "@/domain/storageJson";
 
-
-// 需要提取值的字段类型
-const VALUE_FIELD_TYPES = new Set(["primitive", "arrayOfPrimitive", "interface"]);
-
 // ============================================================================
 // 默认颜色值
 // ============================================================================
@@ -100,7 +96,9 @@ function getEntityValueString(entity: Entity): string | undefined {
 
 function collectEditFieldValues(values: string[], fields: EntityEditField[]): void {
     for (const field of fields) {
-        if (VALUE_FIELD_TYPES.has(field.type)) {
+        // 需要提取值的字段类型：primitive / arrayOfPrimitive / interface。
+        // 用显式判别比较（而非 Set.has）——TS 只认判别式收窄，否则取不到具体成员的 value。
+        if (field.type === "primitive" || field.type === "arrayOfPrimitive" || field.type === "interface") {
             values.push(String(field.value));
         }
         if (field.type === "interface") {

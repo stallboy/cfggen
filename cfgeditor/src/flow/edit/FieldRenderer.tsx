@@ -51,6 +51,8 @@ export function FieldRenderer({field, edit, nodeProps, nodeShow}: FieldRenderPro
                     handleOut={field.handleOut}
                     bgColor={bgColor}
                     width={width}
+                    reEmbed={field.reEmbed}
+                    nodeProps={nodeProps}
                 />
             );
 

@@ -5,13 +5,13 @@ import {useSyncFieldValue} from "../shared/useSyncFieldValue.ts";
 import {primitiveControl} from "../shared/primitiveControl.tsx";
 import {fieldItemStyle, getDefaultPrimitiveValue, hasAutoCompleteOptions, isArrayPrimitiveBoolOrNumber} from "../shared/fieldUtils.ts";
 import {LabelWithTooltip} from "../shared/LabelWithTooltip.tsx";
-import {AUTO_COMPLETE_ITEM_STYLE, FILTER_EMPTY, FORM_LAYOUT, PrimitiveFormItemProps} from "../shared/constants.ts";
+import {AUTO_COMPLETE_ITEM_STYLE, ArrayPrimitiveFormItemProps, FILTER_EMPTY, FORM_LAYOUT} from "../shared/constants.ts";
 import {ArrayItemExpandButton} from "./ArrayItemExpandButton.tsx";
 
 export const ArrayOfPrimitiveFormItem = memo(function ArrayOfPrimitiveFormItem({
                                                                                     field,
                                                                                     bgColor,
-                                                                                }: PrimitiveFormItemProps) {
+                                                                                }: ArrayPrimitiveFormItemProps) {
     const form = Form.useFormInstance();
     useSyncFieldValue(form, field);
 
@@ -25,7 +25,7 @@ export const ArrayOfPrimitiveFormItem = memo(function ArrayOfPrimitiveFormItem({
             label={<LabelWithTooltip name={field.name} comment={field.comment} isAutoFontSize/>}
             style={itemStyle}
         >
-            <Form.List name={field.name} initialValue={field.value as unknown[]}>
+            <Form.List name={field.name} initialValue={field.value}>
                 {(fields, {add, remove, move}) => (
                     <>
                         {fields.map((f, index) => (

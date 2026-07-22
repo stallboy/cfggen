@@ -598,3 +598,33 @@ describe('EditingSession list 折叠（$fold_<fieldName>）', () => {
         expect(s.getEditingObject()['$fold_items']).toBe(true);
     });
 });
+
+describe('EditingSession 回嵌（deleteFold）', () => {
+    it('deleteFold 删子对象上的 $fold 键（回到默认内嵌态），emit 一次', () => {
+        const s = new EditingSession(makeRecord('t', '1', {
+            '$type': 'Foo', child: {$type: 'Small', '$fold': false}
+        }));
+        let notified = 0;
+        s.subscribe(() => {
+            notified++;
+        });
+
+        s.deleteFold(['child'], POS);
+        const child = s.getEditingObject()['child'] as JSONObject;
+        expect('$fold' in child).toBe(false);   // 删键而非写 true
+        expect(notified).toBe(1);
+    });
+
+    it('undo/redo 恢复回嵌（删 $fold 键也是结构操作）', () => {
+        const s = new EditingSession(makeRecord('t', '1', {
+            '$type': 'Foo', child: {$type: 'Small', '$fold': false}
+        }));
+        s.initUndoBaseline();
+        s.deleteFold(['child'], POS);
+        expect('$fold' in (s.getEditingObject()['child'] as JSONObject)).toBe(false);
+        s.undo();
+        expect((s.getEditingObject()['child'] as JSONObject)['$fold']).toBe(false);
+        s.redo();
+        expect('$fold' in (s.getEditingObject()['child'] as JSONObject)).toBe(false);
+    });
+});

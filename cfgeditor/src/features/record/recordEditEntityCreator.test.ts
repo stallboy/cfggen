@@ -135,9 +135,8 @@ describe('RecordEditEntityCreator.makeEditFields list/struct 引用与内嵌判�
         expect(byName.sf.type).toBe('structRef')
         expect(byName.sf.embeddedField).toBeDefined()
 
-        // bf：不可内嵌 struct → structRef，value '[]'，无 embeddedField
+        // bf：不可内嵌 struct → structRef，无 embeddedField
         expect(byName.bf.type).toBe('structRef')
-        expect(byName.bf.value).toBe('[]')
         expect(byName.bf.embeddedField).toBeUndefined()
 
         // lp：list<primitive> → arrayOfPrimitive
@@ -248,5 +247,43 @@ describe('RecordEditEntityCreator list 折叠（$fold_<fieldName>）', () => {
             $type: 'WrapT', bg: [bigItem('a', 1), bigItem('b', 2)],
         } as never)
         expect(entityMap.size).toBe(3)   // 根 + 2 个元素节点
+    })
+})
+
+describe('RecordEditEntityCreator 回嵌入口（reEmbed）', () => {
+    it('可内嵌且展开的 struct 字段 → structRef 占位行带 reEmbed；不可内嵌 → 无', () => {
+        const {schema} = buildSchema()
+        const c = newCreator(schema, makeTable('Placeholder', []))
+        const fields = c.makeEditFields(
+            schema.itemIncludeImplMap.get('Wrap')!,
+            {
+                $type: 'Wrap',
+                sf: {$type: 'Small', dmg: 1, '$fold': false},
+                bf: {$type: 'Big', name: 'n', desc: 'd', dmg: 1},
+            } as never,
+            [],
+        ) as (EntityEditField & {reEmbed?: unknown; embeddedField?: unknown})[]
+
+        const sf = fields.find(f => f.name === 'sf')!
+        expect(sf.type).toBe('structRef')
+        expect(sf.embeddedField).toBeUndefined()   // 展开态，非内嵌
+        expect(sf.reEmbed).toBeDefined()           // 占位行挂回嵌入口
+
+        const bf = fields.find(f => f.name === 'bf')!
+        expect(bf.type).toBe('structRef')
+        expect(bf.reEmbed).toBeUndefined()         // 不可内嵌 → 无回嵌入口
+    })
+
+    it('内嵌态（无 $fold）→ embeddedField，无 reEmbed', () => {
+        const {schema} = buildSchema()
+        const c = newCreator(schema, makeTable('Placeholder', []))
+        const fields = c.makeEditFields(
+            schema.itemIncludeImplMap.get('Wrap')!,
+            {$type: 'Wrap', sf: {$type: 'Small', dmg: 1}} as never,
+            [],
+        ) as (EntityEditField & {reEmbed?: unknown; embeddedField?: unknown})[]
+        const sf = fields.find(f => f.name === 'sf')!
+        expect(sf.embeddedField).toBeDefined()
+        expect(sf.reEmbed).toBeUndefined()
     })
 })

@@ -1,4 +1,4 @@
-import type {EntityEditField, EntityEditFieldOption} from "@/domain/entityModel";
+import type {ArrayPrimitiveEditField, EntityEditFieldOption, FuncSubmitEditField, PrimitiveEditField} from "@/domain/entityModel";
 
 export const FORM_LAYOUT = {
     labelCol: {xs: {span: 24}, sm: {span: 6}},
@@ -36,8 +36,18 @@ export const FILTER_SEARCH: FilterOption = {
 export const FORM_STYLE = {backgroundColor: "white", borderRadius: 15, padding: 10};
 
 
-// Primitive/ArrayOfPrimitive/FuncSubmit 三类字段项组件共用的 props。
+// 各字段项组件的 props：field 用具体字段类型（而非 EntityEditField 联合），
+// 这样组件内访问 value/autoCompleteOptions 不依赖「联合所有成员都有该属性」的巧合。
 export interface PrimitiveFormItemProps {
-    field: EntityEditField;
+    field: PrimitiveEditField;
     bgColor?: string;
+}
+
+export interface ArrayPrimitiveFormItemProps {
+    field: ArrayPrimitiveEditField;
+    bgColor?: string;
+}
+
+export interface FuncSubmitFormItemProps {
+    field: FuncSubmitEditField;
 }

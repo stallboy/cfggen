@@ -86,10 +86,12 @@ export interface EmbeddedFieldData {
 export interface StructRefEditField extends FieldBase {
     type: 'structRef';
     eleType: string;
-    value: string;  // 占位符，如 '<>'
 
     /** 内嵌字段数据（包含 fields, note, implName, embeddedFieldChain） */
     embeddedField?: EmbeddedFieldData;
+    /** 回嵌入口：子结构可内嵌且当前展开时，挂在 structRef 占位行上（点击删 $fold 回到内嵌态）。
+     *  与 list fold 同约定：子结构的收起/展开开关都在父行上。 */
+    reEmbed?: (position: EntityPosition) => void;
 }
 
 /**
@@ -219,7 +221,6 @@ export interface EntityEdit {
     editAllowObjType?: string;
     fold?: boolean;
     hasChild: boolean;
-    canBeEmbedded?: boolean;  // 标识是否可以被内嵌
 }
 
 // ============================================================================

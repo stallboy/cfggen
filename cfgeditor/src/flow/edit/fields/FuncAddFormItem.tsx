@@ -1,10 +1,8 @@
 import {memo, useCallback} from "react";
 import {Button, Flex, Tag} from "antd";
 import {Handle, Position} from "@xyflow/react";
-import type {NodeProps} from "@xyflow/react";
 import {ArrowsAltOutlined, PlusSquareTwoTone, ShrinkOutlined} from "@ant-design/icons";
 import {FuncAddType, ListFoldData} from "@/domain/entityModel";
-import type {EntityNode} from "../../FlowGraph.tsx";
 import {nodeAnchor} from "../../nodeAnchor.ts";
 import {useRefItemStyles} from "../shared/useRefItemStyles.ts";
 import {LabelWithTooltip} from "../shared/LabelWithTooltip.tsx";
@@ -12,7 +10,6 @@ import type {StructRefItemProps} from "./StructRefItem.tsx";
 
 interface FuncAddFormItemProps extends StructRefItemProps {
     func: FuncAddType;
-    nodeProps: NodeProps<EntityNode>;
     listFold?: ListFoldData;
     /** 折叠态摘要行的凸显底色（nodeShow.editFoldColor，与折叠节点同色） */
     foldColor?: string;
