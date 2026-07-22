@@ -20,6 +20,16 @@ import {NodeTitle} from "./NodeTitle.tsx";
 
 const iconButtonStyle = { borderWidth: 0, backgroundColor: 'transparent' };
 
+// fold 按钮占位样式：与真实按钮同宽（paddingInline + 图标宽不变），零高度、不可见、不可点，
+// 只用于撑住 NodeTitle space-between 布局中的槽位宽度。
+const foldPlaceholderStyle: CSSProperties = {
+    ...iconButtonStyle,
+    visibility: 'hidden',
+    height: 0,
+    paddingTop: 0,
+    paddingBottom: 0,
+};
+
 const foldIcon = <ShrinkOutlined />;
 const unfoldIcon = <ArrowsAltOutlined />;
 
@@ -85,6 +95,12 @@ export const FlowNode = memo(function FlowNode(nodeProps: NodeProps<EntityNode>)
             } else {
                 return <Button style={iconButtonStyle} icon={foldIcon} aria-label={t('nodeFold')} onClick={foldNode} />;
             }
+        }
+        // 无 fold 按钮时渲染同宽占位（仅 editable 节点：fold 按钮只可能在这类节点上出现/消失）。
+        // NodeTitle 是 space-between 布局，foldButton 在 null↔有 之间切换会重排子项、标题位置跳变；
+        // 占位与真实按钮同组件同样式（同宽），visibility:hidden 不可见不响应，零高度不撑高标题行。
+        if (edit) {
+            return <Button style={foldPlaceholderStyle} icon={foldIcon} aria-hidden tabIndex={-1} />;
         }
         return null;
     }, [edit, unfoldIconButtonStyle, unfoldNode, foldNode, t]);
