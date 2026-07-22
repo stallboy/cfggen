@@ -70,6 +70,8 @@ export function FieldRenderer({field, edit, nodeProps, nodeShow}: FieldRenderPro
                     nodeProps={nodeProps}
                     bgColor={bgColor}
                     width={width}
+                    listFold={field.listFold}
+                    foldColor={nodeShow?.editFoldColor}
                 />
             );
 

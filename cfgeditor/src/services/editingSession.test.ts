@@ -525,3 +525,76 @@ describe('EditingSession 值类 coalescing', () => {
     });
 });
 
+describe('EditingSession list 折叠（$fold_<fieldName>）', () => {
+    it('updateListFold(true) 在父对象上写 $fold_ 键，(false) 删键，各 emit 一次', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM()]}));
+        let notified = 0;
+        s.subscribe(() => {
+            notified++;
+        });
+
+        s.updateListFold(true, 'items', [], POS);
+        expect(s.getEditingObject()['$fold_items']).toBe(true);
+        s.updateListFold(false, 'items', [], POS);
+        expect('$fold_items' in s.getEditingObject()).toBe(false);   // 删键，不残留 false
+        expect(notified).toBe(2);
+    });
+
+    it('updateListFold 支持嵌套 parentChain（写到嵌套父对象上）', () => {
+        const s = new EditingSession(makeRecord('t', '1', {
+            '$type': 'Foo', child: {$type: 'Child', items: [ITEM()]}
+        }));
+        s.updateListFold(true, 'items', ['child'], POS);
+        const child = s.getEditingObject()['child'] as JSONObject;
+        expect(child['$fold_items']).toBe(true);
+        expect('$fold_items' in s.getEditingObject()).toBe(false);   // 顶层不挂
+    });
+
+    it('往折叠中的 list 加元素 ⇒ 自动展开（删 $fold_ 键，同一步 undo）', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM()]}));
+        s.initUndoBaseline();
+        s.updateListFold(true, 'items', [], POS);
+        const v0 = s.getStructureVersion();
+
+        s.addArrayItem(ITEM(), ['items'], POS);
+        expect('$fold_items' in s.getEditingObject()).toBe(false);   // 自动展开
+        expect(s.getStructureVersion()).toBe(v0 + 1);                // 单步结构变更
+        expect((s.getEditingObject()['items'] as JSONArray).length).toBe(2);
+
+        s.undo();   // 一步撤掉「加元素 + 展开」
+        expect(s.getEditingObject()['$fold_items']).toBe(true);
+        expect((s.getEditingObject()['items'] as JSONArray).length).toBe(1);
+    });
+
+    it('addArrayItemAtIndex 同样自动展开', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM()]}));
+        s.updateListFold(true, 'items', [], POS);
+        s.addArrayItemAtIndex(ITEM(), 0, ['items'], POS);
+        expect('$fold_items' in s.getEditingObject()).toBe(false);
+    });
+
+    it('折叠中删到最后一个元素 ⇒ 自动展开（空 list 折叠无意义）', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM()]}));
+        s.updateListFold(true, 'items', [], POS);
+        s.deleteArrayItem(0, ['items'], POS);
+        expect('$fold_items' in s.getEditingObject()).toBe(false);
+    });
+
+    it('未删空时保留折叠键', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM(), ITEM()]}));
+        s.updateListFold(true, 'items', [], POS);
+        s.deleteArrayItem(0, ['items'], POS);
+        expect(s.getEditingObject()['$fold_items']).toBe(true);
+    });
+
+    it('undo/redo 恢复 $fold_ 键（状态在 JSON 里，不走独立 state）', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM()]}));
+        s.initUndoBaseline();
+        s.updateListFold(true, 'items', [], POS);
+        expect(s.getEditingObject()['$fold_items']).toBe(true);
+        s.undo();
+        expect('$fold_items' in s.getEditingObject()).toBe(false);
+        s.redo();
+        expect(s.getEditingObject()['$fold_items']).toBe(true);
+    });
+});

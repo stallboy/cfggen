@@ -93,12 +93,28 @@ export interface StructRefEditField extends FieldBase {
 }
 
 /**
+ * list/map 折叠状态（挂在 funcAdd 字段上）。
+ * fold 状态持久化在父对象的 `$fold_<fieldName>` 键上（数组本身挂不了属性），
+ * 与对象级 `$fold` 同约定：随数据提交、undo/redo 自动恢复。
+ */
+export interface ListFoldData {
+    /** 当前是否已折叠 */
+    folded: boolean;
+    /** 元素数（折叠态摘要行显示用） */
+    itemCount: number;
+    /** 折叠/展开回调：fold=true 写 `$fold_<fieldName>`，false 删键 */
+    onUpdateListFold: (fold: boolean, position: EntityPosition) => void;
+}
+
+/**
  * 函数添加编辑字段（用于向数组中添加结构体）
  */
 export interface FuncAddEditField extends FieldBase { // arrayOfStructural
     type: 'funcAdd';
     eleType: string;
     value: FuncAddType;
+    /** list/map 折叠信息：所有会 spawn 子节点的 list/map 字段都有（折叠入口 + 折叠态摘要行） */
+    listFold?: ListFoldData;
 }
 
 /**

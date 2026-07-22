@@ -120,6 +120,26 @@ flowchart LR
 
 ---
 
+## 五-b、list/map 的折叠：`$fold_<fieldName>`
+
+list 在 JSON 里是数组，挂不了 `$fold` 属性——折叠状态**寄存在父对象**上，键名 `$fold_<fieldName>`（如 `"$fold_equipList": true`），与 `$fold`/`$note` 同约定：随数据持久化、undo/redo 恢复 `$fold_` 键即恢复折叠态。
+
+与 embedding 的关系：**只做 fold，不做 embed**——折叠入口面向所有会 spawn 子节点的 list/map 字段（非空、未走单元素内嵌），不论元素是否 trivial。
+
+- **写入**：`session.updateListFold(fold, fieldName, parentChain, position)`（[editingSession.ts](../src/services/editingSession.ts)）——fold=true 写键，false **删键**（不残留 false 值）；position 锚点固定取父节点（两个方向上父节点都在，KeepStable 天然成立）。
+- **读取**：`RecordEditEntityCreator.getListFoldState(obj, fieldName)`，两处消费：
+  1. `createEntity` 的子节点循环：折叠 → `hasChild=true` 并 `continue`，不建子 entity、不 push sourceEdge（与节点级 fold 的 `if (fold) continue` 同构）。
+  2. `createListOrMapEditField`：折叠 → 跳过单元素内嵌尝试，渲染为带 `listFold` 的 funcAdd 字段（`ListFoldData: {folded, itemCount, onUpdateListFold}`，[entityModel.ts](../src/domain/entityModel.ts)）。
+- **渲染**（[FuncAddFormItem.tsx](../src/flow/edit/fields/FuncAddFormItem.tsx)）：
+  - 未折叠：funcAdd 行右侧有 fold 按钮（`ShrinkOutlined`）。
+  - 折叠：摘要行 = `字段名 (N)` Tag + unfold 按钮 + **保留 + 添加按钮**，行底色用 `editFoldColor` 凸显（与折叠节点 `flowNodeWithBorder` 同语义）。
+- **两个自动展开**（session 层，与触发操作同一步 undo）：
+  - `addArrayItem` / `addArrayItemAtIndex`：往折叠中的 list 加元素 ⇒ 删 `$fold_` 键（与 `markNewItemExpanded`「添加后立即编辑」同意图）。
+  - `deleteArrayItem` 删到空：空 list 折叠无意义 ⇒ 删键。
+- **惰性清理**：`$fold_xxx` 只在字段存在且非空时生效；残留键不影响渲染，靠上述编辑路径顺带清理。
+
+---
+
 ## 六、两个特殊入口的 `$fold=false`
 
 为避免「新建 / 切换后需再点一次才能编辑」：
@@ -140,6 +160,8 @@ flowchart LR
 
 **展开后想回嵌**：当前不支持（`StructRefItem` 无 `$fold=true` 入口），只能 undo。如需双向，要在 StructRefItem 加回嵌入口。
 
+**折叠整个 list/map**：数据里显式写 `$fold_<fieldName>=true`（或经 `updateListFold(true, ...)`）；子元素节点全部收起，父表单显示 `字段名 (N)` 摘要行（§五-b）。
+
 ---
 
 ## 一句话速记
@@ -147,5 +169,6 @@ flowchart LR
 - **embedding**：trivial 子结构（全 primitive、极少字段）压成父表单一行 Tag，不建独立节点。
 - **阈值**：`EMBEDDING_CONFIG` 5 条件（无字段 / 1 primitive / ≤N number / ≤M bool / 1bool+1number），struct 比 interface 松；先 `filterEmptyListFields` 再计数；interface 需 `resolveImpl`。
 - **`$fold` 状态机**：`shouldEmbed = $fold !== false`——内嵌默认、展开 opt-out、展开后无法回嵌（除非 undo）。
+- **list/map 折叠**：状态寄存父对象 `$fold_<fieldName>`（数组挂不了属性）；折叠 = 不建子节点 + 摘要行（`字段名 (N)`，editFoldColor 底色）；加元素 / 删到空自动展开；`updateListFold` 写/删键。
 - **数据**：`extractEmbeddingFields` 产中间值 `EmbeddingFieldValues`（`embeddedFields`/`implNameToDisplay`），再经 `recordEditEntityCreator` 转成最终类型 `EmbeddedFieldData`（`fields`/`implName`/`note`/`embeddedFieldChain`）挂在父字段 `embeddedField` 上。
 - **特殊入口**：`markNewItemExpanded`（新建可内嵌元素置 `$fold=false` 立即可编辑，仅对可内嵌对象写）/ `interfaceOnChangeImpl`（切 impl 同理）。

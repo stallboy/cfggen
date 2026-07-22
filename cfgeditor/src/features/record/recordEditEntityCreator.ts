@@ -12,7 +12,7 @@ import {isPrimitiveType, PrimitiveType, SField, SInterface, SItem, SStruct, STab
 import {JSONArray, JSONObject, JSONValue, RefId} from "@/api/recordModel.ts";
 import {getId, getLabel, getLastName} from "./recordRefUtils.ts";
 import {getField, getImpl, getMapEntryTypeName, isPkInteger, Schema} from "@/domain/schema.ts";
-import {EditingSession} from "@/services/editingSession.ts";
+import {EditingSession, listFoldKey} from "@/services/editingSession.ts";
 import { canBeEmbeddedCheck, extractEmbeddingFields, markNewItemExpanded } from "@/domain/embedding.ts";
 import {getIdOptions} from "@/flow/edit/shared/idOptions.tsx";
 
@@ -102,6 +102,12 @@ export class RecordEditEntityCreator {
 
                 const itemType = this.schema.itemIncludeImplMap.get(itemTypeId);
                 if (itemType == null) {
+                    continue;
+                }
+
+                // list 折叠（父对象上 $fold_<fieldName>=true）：不创建子 entity、不 push sourceEdge
+                if (this.getListFoldState(obj, fieldKey)) {
+                    hasChild = true;
                     continue;
                 }
 
@@ -373,7 +379,8 @@ export class RecordEditEntityCreator {
         const itemTypeId = getItemTypeId(sField.type, structural, sField.name);
         if (itemTypeId != undefined) {
             // list or map
-            return this.createListOrMapEditField(sField, fieldValue, itemTypeId, fieldChain, structural);
+            const listFolded = this.getListFoldState(obj, sField.name);
+            return this.createListOrMapEditField(sField, fieldValue, itemTypeId, fieldChain, structural, listFolded);
         } else {
             // struct or interface
             return this.createStructuralRefEditField(sField, fieldValue, fieldChain);
@@ -423,7 +430,8 @@ export class RecordEditEntityCreator {
         fieldValue: unknown,
         itemTypeId: string,
         fieldChain: (string | number)[],
-        structural: SStruct | STable
+        structural: SStruct | STable,
+        listFolded: boolean   // 父对象上 $fold_<fieldName>=true：折叠 → 不尝试内嵌，渲染为摘要行
     ): EntityEditField {
         if (isPrimitiveType(itemTypeId)) {
             // list<primitive> or map<primitive>
@@ -440,15 +448,17 @@ export class RecordEditEntityCreator {
             // list<struct> 或 list<interface>
             const v = fieldValue as JSONArray;
 
-            // 尝试内嵌单元素list
-            const embeddedField = this.tryCreateEmbeddedFieldForList(
-                sField, v, itemTypeId, fieldChain
-            );
-            if (embeddedField) {
-                return embeddedField;
+            if (!listFolded) {
+                // 尝试内嵌单元素list
+                const embeddedField = this.tryCreateEmbeddedFieldForList(
+                    sField, v, itemTypeId, fieldChain
+                );
+                if (embeddedField) {
+                    return embeddedField;
+                }
             }
 
-            // 非单元素list或不可内嵌，按现有逻辑处理（显示添加按钮）
+            // 非单元素list或不可内嵌或已折叠，按现有逻辑处理（显示添加按钮 + 折叠入口）
             return {
                 name: sField.name,
                 comment: sField.comment,
@@ -460,7 +470,14 @@ export class RecordEditEntityCreator {
                     // 可内嵌的新元素默认展开成节点（$fold=false），避免内嵌压缩态需再点展开才能编辑
                     markNewItemExpanded(defaultValue, sFieldable);
                     this.session.addArrayItem(defaultValue, [...fieldChain, sField.name], position);
-                }
+                },
+                listFold: {
+                    folded: listFolded,
+                    itemCount: v?.length ?? 0,
+                    onUpdateListFold: (fold: boolean, position: EntityPosition) => {
+                        this.session.updateListFold(fold, sField.name, fieldChain, position);
+                    },
+                },
             };
         }
     }
@@ -617,6 +634,14 @@ export class RecordEditEntityCreator {
      */
     private getFoldState(obj?: JSONObject): boolean | undefined {
         return obj?.['$fold'] as boolean | undefined;
+    }
+
+    /**
+     * 获取 list/map 的 fold 状态：读父对象上的 `$fold_<fieldName>`（数组挂不了属性，状态寄存在父对象）。
+     * 与 $fold 同约定：随数据持久化、undo/redo 自动恢复。未折叠（无键）→ false。
+     */
+    private getListFoldState(obj: JSONObject | undefined, fieldName: string): boolean {
+        return obj?.[listFoldKey(fieldName)] === true;
     }
 
     /**

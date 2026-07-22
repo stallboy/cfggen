@@ -251,6 +251,7 @@ export class EditingSession {
         this.beforeStructuralChange();
         const obj = getFieldObj(this.editingObject, arrayFieldChains) as JSONArray;
         obj.push(defaultItemJsonObject);
+        this.unfoldListOf(arrayFieldChains);   // 往折叠中的 list 加元素 ⇒ 自动展开（同一步 undo）
         this.structureChange(position);
     }
 
@@ -260,6 +261,7 @@ export class EditingSession {
         this.beforeStructuralChange();
         const obj = getFieldObj(this.editingObject, arrayFieldChains) as JSONArray;
         obj.splice(index, 0, defaultItemJsonObject);
+        this.unfoldListOf(arrayFieldChains);   // 同 addArrayItem：加元素 ⇒ 自动展开
         this.structureChange(position);
     }
 
@@ -269,6 +271,9 @@ export class EditingSession {
         this.beforeStructuralChange();
         const obj = getFieldObj(this.editingObject, arrayFieldChains) as JSONArray;
         obj.splice(deleteIndex, 1);
+        if (obj.length === 0) {
+            this.unfoldListOf(arrayFieldChains);   // 删到空 ⇒ 折叠失去意义，自动展开（删键）
+        }
         this.structureChange(position, undoAnchorId);
     }
 
@@ -287,6 +292,27 @@ export class EditingSession {
         const obj = getFieldObj(this.editingObject, fieldChains) as JSONObject;
         obj['$fold'] = fold;
         this.structureChange(position);
+    }
+
+    /** list/map 折叠：状态写在父对象的 `$fold_<fieldName>` 键上（数组挂不了属性，与 $fold 同约定持久化）。
+     *  fold=true 写键，false 删键（不残留 false 值）。position 锚点取父节点（两个方向上父节点都在）。 */
+    updateListFold(fold: boolean, fieldName: string, parentChain: (string | number)[], position: EntityPosition): void {
+        this.beforeStructuralChange();
+        const obj = getFieldObj(this.editingObject, parentChain) as JSONObject;
+        const key = listFoldKey(fieldName);
+        if (fold) {
+            obj[key] = true;
+        } else {
+            delete obj[key];
+        }
+        this.structureChange(position);
+    }
+
+    /** 删除父对象上的 `$fold_<fieldName>` 折叠键（add/deleteArrayItem 的自动展开用；键不存在时 noop）。
+     *  arrayFieldChains 末端是 list 字段名，其余是父对象链。 */
+    private unfoldListOf(arrayFieldChains: (string | number)[]): void {
+        const parent = getFieldObj(this.editingObject, arrayFieldChains.slice(0, -1)) as JSONObject;
+        delete parent[listFoldKey(arrayFieldChains[arrayFieldChains.length - 1] as string)];
     }
 
     updateInterfaceValue(jsonObject: JSONObject, fieldChains: (string | number)[], position: EntityPosition): void {
@@ -488,6 +514,12 @@ export function setCurrentEditingSession(session: EditingSession | null): void {
 }
 
 // ============ 纯函数工具（从 editingObject.ts 搬入，自包含）============
+
+/** list/map 折叠状态键：折叠状态寄存在父对象的 `$fold_<fieldName>` 上（数组挂不了属性）。
+ *  session 写入侧与 creator 读取侧共用此函数，避免键格式漂移。 */
+export function listFoldKey(fieldName: string): string {
+    return `$fold_${fieldName}`;
+}
 
 function prepareEditingObject(rawObj: JSONObject): JSONObject {
     const cloned = structuredClone(rawObj);

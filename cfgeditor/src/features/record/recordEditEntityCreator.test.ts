@@ -184,3 +184,69 @@ describe('RecordEditEntityCreator.getAutoCompleteOptions', () => {
         expect(c.getAutoCompleteOptions(big, 'name')).toBeUndefined()
     })
 })
+
+describe('RecordEditEntityCreator list 折叠（$fold_<fieldName>）', () => {
+    const big = () => makeStruct('Big', [field('name', 'str'), field('desc', 'str'), field('dmg', 'int')])
+    const bigItem = (name: string, dmg: number) => ({$type: 'Big', name, desc: 'd', dmg})
+
+    /** 建含 Big + WrapT(bg: list<Big>) 的 schema，跑 createThis 返回 entityMap。 */
+    function createEntities(obj: JSONObject) {
+        const wrapT = makeTable('WrapT', [field('bg', 'list<Big>')])
+        const s2 = new Schema(makeRawSchema([big(), wrapT]))
+        const entityMap = new Map()
+        new RecordEditEntityCreator(entityMap, s2, wrapT, '1',
+            {} as unknown as EditingSession, obj).createThis()
+        return entityMap
+    }
+
+    it('funcAdd 字段带 listFold：未折叠 folded=false + itemCount', () => {
+        const onlyList = makeStruct('OnlyList', [field('bg', 'list<Big>')])
+        const s2 = new Schema(makeRawSchema([big(), onlyList]))
+        const c = newCreator(s2, makeTable('Placeholder', []))
+        const fields = c.makeEditFields(
+            onlyList,
+            {$type: 'OnlyList', bg: [bigItem('n', 1)]} as never,
+            [],
+        ) as EntityEditField[]
+        const bg = fields.find(f => f.name === 'bg')!
+        expect(bg.type).toBe('funcAdd')
+        const lf = (bg as {listFold?: {folded: boolean; itemCount: number}}).listFold!
+        expect(lf.folded).toBe(false)
+        expect(lf.itemCount).toBe(1)
+    })
+
+    it('折叠的单元素可内嵌 list（$fold_sm=true）→ funcAdd 摘要行，不走内嵌', () => {
+        const small = makeStruct('Small', [field('dmg', 'int')])
+        const onlySm = makeStruct('OnlySm', [field('sm', 'list<Small>')])
+        const s2 = new Schema(makeRawSchema([small, onlySm]))
+        const c = newCreator(s2, makeTable('Placeholder', []))
+        const fields = c.makeEditFields(
+            onlySm,
+            {$type: 'OnlySm', sm: [{$type: 'Small', dmg: 3}], '$fold_sm': true} as never,
+            [],
+        ) as EntityEditField[]
+        const sm = fields.find(f => f.name === 'sm')! as EntityEditField & {
+            embeddedField?: unknown; listFold?: {folded: boolean; itemCount: number}
+        }
+        expect(sm.type).toBe('funcAdd')
+        expect(sm.embeddedField).toBeUndefined()
+        expect(sm.listFold!.folded).toBe(true)
+        expect(sm.listFold!.itemCount).toBe(1)
+    })
+
+    it('createEntity：折叠的 list 不建子 entity（hasChild 仍为 true）', () => {
+        const entityMap = createEntities({
+            $type: 'WrapT', bg: [bigItem('a', 1), bigItem('b', 2)], '$fold_bg': true,
+        } as never)
+        expect(entityMap.size).toBe(1)   // 只有根节点，子 element 不建
+        const root = [...entityMap.values()][0] as {edit: {hasChild: boolean}}
+        expect(root.edit.hasChild).toBe(true)
+    })
+
+    it('createEntity：未折叠的 list 正常建子 entity', () => {
+        const entityMap = createEntities({
+            $type: 'WrapT', bg: [bigItem('a', 1), bigItem('b', 2)],
+        } as never)
+        expect(entityMap.size).toBe(3)   // 根 + 2 个元素节点
+    })
+})
