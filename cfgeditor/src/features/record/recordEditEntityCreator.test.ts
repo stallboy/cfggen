@@ -184,7 +184,7 @@ describe('RecordEditEntityCreator.getAutoCompleteOptions', () => {
     })
 })
 
-describe('RecordEditEntityCreator list 折叠（$fold_<fieldName>）', () => {
+describe('RecordEditEntityCreator list 嵌入（$embed_<fieldName>，类 2）', () => {
     const big = () => makeStruct('Big', [field('name', 'str'), field('desc', 'str'), field('dmg', 'int')])
     const bigItem = (name: string, dmg: number) => ({$type: 'Big', name, desc: 'd', dmg})
 
@@ -198,7 +198,7 @@ describe('RecordEditEntityCreator list 折叠（$fold_<fieldName>）', () => {
         return entityMap
     }
 
-    it('funcAdd 字段带 listFold：未折叠 folded=false + itemCount', () => {
+    it('funcAdd 字段带 listEmbed：未嵌入 embedded=false + itemCount', () => {
         const onlyList = makeStruct('OnlyList', [field('bg', 'list<Big>')])
         const s2 = new Schema(makeRawSchema([big(), onlyList]))
         const c = newCreator(s2, makeTable('Placeholder', []))
@@ -209,40 +209,38 @@ describe('RecordEditEntityCreator list 折叠（$fold_<fieldName>）', () => {
         ) as EntityEditField[]
         const bg = fields.find(f => f.name === 'bg')!
         expect(bg.type).toBe('funcAdd')
-        const lf = (bg as {listFold?: {folded: boolean; itemCount: number}}).listFold!
-        expect(lf.folded).toBe(false)
-        expect(lf.itemCount).toBe(1)
+        const le = (bg as {listEmbed?: {embedded: boolean; itemCount: number}}).listEmbed!
+        expect(le.embedded).toBe(false)
+        expect(le.itemCount).toBe(1)
     })
 
-    it('折叠的单元素可内嵌 list（$fold_sm=true）→ funcAdd 摘要行，不走内嵌', () => {
-        const small = makeStruct('Small', [field('dmg', 'int')])
-        const onlySm = makeStruct('OnlySm', [field('sm', 'list<Small>')])
-        const s2 = new Schema(makeRawSchema([small, onlySm]))
+    it('嵌入的多元素 list（$embed_bg=true）→ funcAdd 摘要行', () => {
+        const onlyList = makeStruct('OnlyList', [field('bg', 'list<Big>')])
+        const s2 = new Schema(makeRawSchema([big(), onlyList]))
         const c = newCreator(s2, makeTable('Placeholder', []))
         const fields = c.makeEditFields(
-            onlySm,
-            {$type: 'OnlySm', sm: [{$type: 'Small', dmg: 3}], '$fold_sm': true} as never,
+            onlyList,
+            {$type: 'OnlyList', bg: [bigItem('a', 1), bigItem('b', 2)], '$embed_bg': true} as never,
             [],
         ) as EntityEditField[]
-        const sm = fields.find(f => f.name === 'sm')! as EntityEditField & {
-            embeddedField?: unknown; listFold?: {folded: boolean; itemCount: number}
+        const bg = fields.find(f => f.name === 'bg')! as EntityEditField & {
+            listEmbed?: {embedded: boolean; itemCount: number}
         }
-        expect(sm.type).toBe('funcAdd')
-        expect(sm.embeddedField).toBeUndefined()
-        expect(sm.listFold!.folded).toBe(true)
-        expect(sm.listFold!.itemCount).toBe(1)
+        expect(bg.type).toBe('funcAdd')
+        expect(bg.listEmbed!.embedded).toBe(true)
+        expect(bg.listEmbed!.itemCount).toBe(2)
     })
 
-    it('createEntity：折叠的 list 不建子 entity（hasChild 仍为 true）', () => {
+    it('createEntity：嵌入的 list 不建子 entity（hasChild 仍为 true）', () => {
         const entityMap = createEntities({
-            $type: 'WrapT', bg: [bigItem('a', 1), bigItem('b', 2)], '$fold_bg': true,
+            $type: 'WrapT', bg: [bigItem('a', 1), bigItem('b', 2)], '$embed_bg': true,
         } as never)
         expect(entityMap.size).toBe(1)   // 只有根节点，子 element 不建
         const root = [...entityMap.values()][0] as {edit: {hasChild: boolean}}
         expect(root.edit.hasChild).toBe(true)
     })
 
-    it('createEntity：未折叠的 list 正常建子 entity', () => {
+    it('createEntity：未嵌入的 list 正常建子 entity', () => {
         const entityMap = createEntities({
             $type: 'WrapT', bg: [bigItem('a', 1), bigItem('b', 2)],
         } as never)
@@ -250,40 +248,130 @@ describe('RecordEditEntityCreator list 折叠（$fold_<fieldName>）', () => {
     })
 })
 
-describe('RecordEditEntityCreator 回嵌入口（reEmbed）', () => {
-    it('可内嵌且展开的 struct 字段 → structRef 占位行带 reEmbed；不可内嵌 → 无', () => {
+describe('RecordEditEntityCreator 单元素 list 嵌入（类 1）', () => {
+    const small = () => makeStruct('Small', [field('dmg', 'int')])
+    const onlySm = () => makeStruct('OnlySm', [field('sm', 'list<Small>')])
+
+    function makeSmFields(obj: JSONObject) {
+        const s2 = new Schema(makeRawSchema([small(), onlySm()]))
+        const c = newCreator(s2, makeTable('Placeholder', []))
+        return c.makeEditFields(onlySm(), obj, []) as (EntityEditField & {
+            embeddedField?: unknown; expandEmbedded?: unknown;
+            listEmbed?: {embedded: boolean; itemCount: number}
+        })[]
+    }
+
+    it('默认（无键）→ 内嵌 Tag', () => {
+        const fields = makeSmFields({$type: 'OnlySm', sm: [{$type: 'Small', dmg: 3}]} as never)
+        const sm = fields.find(f => f.name === 'sm')!
+        expect(sm.type).toBe('structRef')
+        expect(sm.embeddedField).toBeDefined()
+        expect(sm.expandEmbedded).toBeDefined()   // 内嵌 Tag 行挂展开入口
+    })
+
+    it('$embed_sm=false → 显式展开：funcAdd 非嵌入态', () => {
+        const fields = makeSmFields({$type: 'OnlySm', sm: [{$type: 'Small', dmg: 3}], '$embed_sm': false} as never)
+        const sm = fields.find(f => f.name === 'sm')!
+        expect(sm.type).toBe('funcAdd')
+        expect(sm.embeddedField).toBeUndefined()
+        expect(sm.listEmbed!.embedded).toBe(false)
+    })
+
+    it('$embed_sm=true → 类 1 语义视同默认（收起）→ 内嵌 Tag（true 键本是类 1 残留，读侧按语义消化）', () => {
+        const fields = makeSmFields({$type: 'OnlySm', sm: [{$type: 'Small', dmg: 3}], '$embed_sm': true} as never)
+        const sm = fields.find(f => f.name === 'sm')!
+        expect(sm.type).toBe('structRef')
+        expect(sm.embeddedField).toBeDefined()
+    })
+
+    it('单元素展开态点嵌入按钮 ⇒ 类 1 收起=删键（不写 true 残留，守不变式）', () => {
+        const session = new EditingSession({
+            resultCode: 'ok', table: 't', id: '1', maxObjs: 0,
+            object: {$type: 'OnlySm', sm: [{$type: 'Small', dmg: 3}], '$embed_sm': false} as never,
+            refs: [],
+        })
+        const s2 = new Schema(makeRawSchema([small(), onlySm()]))
+        const c = new RecordEditEntityCreator(new Map(), s2, makeTable('Placeholder', []), '1',
+            session, {$type: 'Placeholder'} as JSONObject)
+        const fields = c.makeEditFields(onlySm(),
+            {$type: 'OnlySm', sm: [{$type: 'Small', dmg: 3}], '$embed_sm': false} as never, []) as (EntityEditField & {
+            listEmbed?: {embedded: boolean; onUpdateListEmbed: (embed: boolean, position: never) => void}
+        })[]
+        const sm = fields.find(f => f.name === 'sm')!
+        expect(sm.type).toBe('funcAdd')   // 展开态
+        sm.listEmbed!.onUpdateListEmbed(true, {id: 'n', x: 0, y: 0} as never)
+        expect('$embed_sm' in session.getEditingObject()).toBe(false)   // 删键回默认内嵌，而非写 true
+    })
+
+    it('多元素展开态点嵌入按钮 ⇒ 类 2 写 $embed=true', () => {
+        const session = new EditingSession({
+            resultCode: 'ok', table: 't', id: '1', maxObjs: 0,
+            object: {$type: 'OnlySm', sm: [{$type: 'Small', dmg: 3}, {$type: 'Small', dmg: 4}]} as never,
+            refs: [],
+        })
+        const s2 = new Schema(makeRawSchema([small(), onlySm()]))
+        const c = new RecordEditEntityCreator(new Map(), s2, makeTable('Placeholder', []), '1',
+            session, {$type: 'Placeholder'} as JSONObject)
+        const fields = c.makeEditFields(onlySm(),
+            {$type: 'OnlySm', sm: [{$type: 'Small', dmg: 3}, {$type: 'Small', dmg: 4}]} as never, []) as (EntityEditField & {
+            listEmbed?: {embedded: boolean; onUpdateListEmbed: (embed: boolean, position: never) => void}
+        })[]
+        const sm = fields.find(f => f.name === 'sm')!
+        sm.listEmbed!.onUpdateListEmbed(true, {id: 'n', x: 0, y: 0} as never)
+        expect(session.getEditingObject()['$embed_sm']).toBe(true)
+    })
+})
+
+describe('RecordEditEntityCreator 展开/回嵌入口（$embed_<fieldName>，类 1）', () => {
+    it('可内嵌且展开的 struct 字段（$embed_sf=false）→ structRef 占位行带 reEmbed；不可内嵌 → 无', () => {
         const {schema} = buildSchema()
         const c = newCreator(schema, makeTable('Placeholder', []))
         const fields = c.makeEditFields(
             schema.itemIncludeImplMap.get('Wrap')!,
             {
                 $type: 'Wrap',
-                sf: {$type: 'Small', dmg: 1, '$fold': false},
+                sf: {$type: 'Small', dmg: 1},
                 bf: {$type: 'Big', name: 'n', desc: 'd', dmg: 1},
+                '$embed_sf': false,
             } as never,
             [],
-        ) as (EntityEditField & {reEmbed?: unknown; embeddedField?: unknown})[]
+        ) as (EntityEditField & {reEmbed?: unknown; embeddedField?: unknown; expandEmbedded?: unknown})[]
 
         const sf = fields.find(f => f.name === 'sf')!
         expect(sf.type).toBe('structRef')
         expect(sf.embeddedField).toBeUndefined()   // 展开态，非内嵌
         expect(sf.reEmbed).toBeDefined()           // 占位行挂回嵌入口
+        expect(sf.expandEmbedded).toBeUndefined()
 
         const bf = fields.find(f => f.name === 'bf')!
         expect(bf.type).toBe('structRef')
         expect(bf.reEmbed).toBeUndefined()         // 不可内嵌 → 无回嵌入口
     })
 
-    it('内嵌态（无 $fold）→ embeddedField，无 reEmbed', () => {
+    it('内嵌态（无 $embed 键）→ embeddedField + expandEmbedded，无 reEmbed', () => {
         const {schema} = buildSchema()
         const c = newCreator(schema, makeTable('Placeholder', []))
         const fields = c.makeEditFields(
             schema.itemIncludeImplMap.get('Wrap')!,
             {$type: 'Wrap', sf: {$type: 'Small', dmg: 1}} as never,
             [],
-        ) as (EntityEditField & {reEmbed?: unknown; embeddedField?: unknown})[]
+        ) as (EntityEditField & {reEmbed?: unknown; embeddedField?: unknown; expandEmbedded?: unknown})[]
         const sf = fields.find(f => f.name === 'sf')!
         expect(sf.embeddedField).toBeDefined()
+        expect(sf.expandEmbedded).toBeDefined()    // 内嵌 Tag 行挂展开入口
+        expect(sf.reEmbed).toBeUndefined()
+    })
+
+    it('旧格式迁移：子对象上的 $fold=false 失效（视为节点级 fold 的 inert 残留）→ 默认内嵌', () => {
+        const {schema} = buildSchema()
+        const c = newCreator(schema, makeTable('Placeholder', []))
+        const fields = c.makeEditFields(
+            schema.itemIncludeImplMap.get('Wrap')!,
+            {$type: 'Wrap', sf: {$type: 'Small', dmg: 1, '$fold': false}} as never,
+            [],
+        ) as (EntityEditField & {embeddedField?: unknown; reEmbed?: unknown})[]
+        const sf = fields.find(f => f.name === 'sf')!
+        expect(sf.embeddedField).toBeDefined()   // 旧 $fold=false 不再表展开，接受视觉状态回嵌
         expect(sf.reEmbed).toBeUndefined()
     })
 })

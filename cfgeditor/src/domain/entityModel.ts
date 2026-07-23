@@ -76,8 +76,6 @@ export interface EmbeddedFieldData {
     note?: string;
     /** interface 的实现名称（非 defaultImpl 时显示） */
     implName?: string;
-    /** 内嵌字段的完整路径 */
-    embeddedFieldChain?: (string | number)[];
 }
 
 /**
@@ -87,25 +85,27 @@ export interface StructRefEditField extends FieldBase {
     type: 'structRef';
     eleType: string;
 
-    /** 内嵌字段数据（包含 fields, note, implName, embeddedFieldChain） */
+    /** 内嵌字段数据（包含 fields, note, implName） */
     embeddedField?: EmbeddedFieldData;
-    /** 回嵌入口：子结构可内嵌且当前展开时，挂在 structRef 占位行上（点击删 $fold 回到内嵌态）。
-     *  与 list fold 同约定：子结构的收起/展开开关都在父行上。 */
+    /** 展开入口：挂在内嵌 Tag 行上（点击写 `$embed_<fieldName>=false`，展开成独立子节点） */
+    expandEmbedded?: (position: EntityPosition) => void;
+    /** 回嵌入口：子结构可内嵌且当前展开时，挂在 structRef 占位行上（点击删 `$embed_<fieldName>` 回到内嵌态）。
+     *  与 list 嵌入同约定：子结构的收起/展开开关都在父行上。 */
     reEmbed?: (position: EntityPosition) => void;
 }
 
 /**
- * list/map 折叠状态（挂在 funcAdd 字段上）。
- * fold 状态持久化在父对象的 `$fold_<fieldName>` 键上（数组本身挂不了属性），
- * 与对象级 `$fold` 同约定：随数据提交、undo/redo 自动恢复。
+ * list/map 嵌入状态（挂在 funcAdd 字段上）。
+ * 状态持久化在父对象的 `$embed_<fieldName>` 键上（数组本身挂不了属性），
+ * 与节点级 `$fold` 同约定：随数据提交、undo/redo 自动恢复。
  */
-export interface ListFoldData {
-    /** 当前是否已折叠 */
-    folded: boolean;
-    /** 元素数（折叠态摘要行显示用） */
+export interface ListEmbedData {
+    /** 当前是否已嵌入（摘要行态） */
+    embedded: boolean;
+    /** 元素数（嵌入态摘要行显示用） */
     itemCount: number;
-    /** 折叠/展开回调：fold=true 写 `$fold_<fieldName>`，false 删键 */
-    onUpdateListFold: (fold: boolean, position: EntityPosition) => void;
+    /** 嵌入/展开回调：embed=true 写 `$embed_<fieldName>=true`，false 删键 */
+    onUpdateListEmbed: (embed: boolean, position: EntityPosition) => void;
 }
 
 /**
@@ -115,8 +115,8 @@ export interface FuncAddEditField extends FieldBase { // arrayOfStructural
     type: 'funcAdd';
     eleType: string;
     value: FuncAddType;
-    /** list/map 折叠信息：所有会 spawn 子节点的 list/map 字段都有（折叠入口 + 折叠态摘要行） */
-    listFold?: ListFoldData;
+    /** list/map 嵌入信息：所有会 spawn 子节点的 list/map 字段都有（嵌入口 + 嵌入态摘要行） */
+    listEmbed?: ListEmbedData;
 }
 
 /**
@@ -212,7 +212,7 @@ export interface EntityEdit {
     fields: EntityEditField[];
     editOnUpdateValues: (changed: Record<string, unknown>, allValues: Record<string, unknown>) => void;
     editOnUpdateNote: (note?: string) => void;
-    editOnUpdateFold: (fold: boolean, position: EntityPosition, embeddedFieldChain?: (string | number)[]) => void;
+    editOnUpdateFold: (fold: boolean, position: EntityPosition) => void;   // 节点级 fold（$fold 单义：折我自己的子节点）
     editOnDelete?: (position: EntityPosition) => void;
     editOnMoveUp?: (position: EntityPosition) => void;
     editOnMoveDown?: (position: EntityPosition) => void;

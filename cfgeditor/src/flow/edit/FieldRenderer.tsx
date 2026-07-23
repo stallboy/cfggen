@@ -36,7 +36,6 @@ export function FieldRenderer({field, edit, nodeProps, nodeShow}: FieldRenderPro
                 return (
                     <EmbeddedSimpleStructuralItem
                         field={field}
-                        edit={edit}
                         nodeProps={nodeProps}
                         bgColor={bgColor}
                     />
@@ -72,7 +71,7 @@ export function FieldRenderer({field, edit, nodeProps, nodeShow}: FieldRenderPro
                     nodeProps={nodeProps}
                     bgColor={bgColor}
                     width={width}
-                    listFold={field.listFold}
+                    listEmbed={field.listEmbed}
                     foldColor={nodeShow?.editFoldColor}
                 />
             );

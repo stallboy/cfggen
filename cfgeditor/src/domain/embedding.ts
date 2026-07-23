@@ -22,9 +22,6 @@ export interface EmbeddableStructConfig {
 export interface EmbeddingConfig {
   struct : EmbeddableStructConfig,
   interface: EmbeddableStructConfig,
-  common: {
-    filterEmptyLists: boolean
-  }
 }
 
 /**
@@ -53,9 +50,6 @@ export const EMBEDDING_CONFIG : EmbeddingConfig = {
       numberCount: 1,
       totalFields: 2,
     },
-  },
-  common: {
-    filterEmptyLists: true,         // 是否过滤空list字段
   },
 } as const;
 
@@ -88,22 +82,6 @@ export function canBeEmbeddedCheck(fieldValue: JSONObject, fieldType: SStruct | 
 
     return matchEmbeddingConfig(analysis, structCfg);
 }
-
-/**
- * 手工新增 list 元素（"添加" / "前插入"）时调用：若该元素类型满足内嵌条件，显式置 $fold=false，
- * 使其作为可编辑节点展开，而非内嵌压缩态——否则新元素因无 $fold（→ undefined）被 shouldEmbed 视为
- * 内嵌，渲染成 EmbeddedSimpleStructuralItem，用户需再点一次展开按钮才能编辑，与"添加后立即编辑"的
- * 意图相悖。与 interfaceOnChangeImpl 切换 impl 后置 $fold=false 同理。
- *
- * 仅对可内嵌元素写入 $fold：永不内嵌的对象（canBeEmbeddedCheck=false）不需要此 UI 标记，避免提交载荷
- * 残留无意义字段。就地变异入参（与 addArrayItem 的 push 语义对齐：调用方 fresh 构造，无共享引用）。
- */
-export function markNewItemExpanded(obj: JSONObject, fieldType: SStruct | SInterface): void {
-    if (canBeEmbeddedCheck(obj, fieldType)) {
-        obj['$fold'] = false;
-    }
-}
-
 
 export interface EmbeddingFieldValues {
     embeddedFields: {
@@ -225,14 +203,10 @@ function matchEmbeddingConfig(analysis: FieldTypeAnalysis, config: EmbeddableStr
 
 
 /**
- * 空list字段过滤器
- * 负责过滤掉值为空数组的list类型字段
+ * 空list字段过滤器：计数前固定过滤值为空数组的 list 类型字段（无开关）——
+ * 避免一个空 list 把字段数顶过阈值。
  */
 function filterEmptyListFields(fields: SField[], obj: JSONObject): SField[] {
-    if (!EMBEDDING_CONFIG.common.filterEmptyLists) {
-        return fields;
-    }
-
     return fields.filter(field => {
         // 检查是否为list类型
         if (!field.type.startsWith('list<')) {

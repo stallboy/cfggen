@@ -1,5 +1,6 @@
 package configgen.value;
 
+import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import configgen.schema.*;
 import configgen.schema.cfg.CfgReader;
@@ -337,6 +338,129 @@ class ValueJsonParserTest {
         fromJson(cond, errs, jsonStr);
         errs.checkErrors("", true);
         assertEquals(1, errs.errs().size());
+    }
+
+    @Test
+    void fromJson_EmbedFields_RoundTrip() {
+        TableSchema test = cfg.findTable("test");
+        String jsonStr = """
+                {"$type":"test","id":123,"bool1":true,"long1":1234567890,"float1":3.14,"str1":"abc","$embed_bool1":true,"$embed_long1":false}""";
+        CfgValueErrs errs = CfgValueErrs.of();
+        VStruct vStruct = fromJson(test, errs, jsonStr);
+        assertEquals(0, errs.errs().size());
+        assertEquals(0, errs.warns().size()); // $embed_* 不再产生JsonHasExtraFields警告
+
+        JSONObject json = new ValueToJson().toJson(vStruct);
+        assertEquals(Boolean.TRUE, json.getBoolean("$embed_bool1"));
+        assertEquals(Boolean.FALSE, json.getBoolean("$embed_long1"));
+
+        // 再parse一次，embedFields保持一致
+        VStruct vStruct2 = fromJson(test, json.toString());
+        assertEquals(vStruct.embedFields(), vStruct2.embedFields());
+    }
+
+    @Test
+    void fromJson_EmbedFields_NonBooleanStillWarn() {
+        TableSchema test = cfg.findTable("test");
+        String jsonStr = """
+                {"$type":"test","id":123,"$embed_bool1":"yes"}""";
+        CfgValueErrs errs = CfgValueErrs.of();
+        VStruct vStruct = fromJson(test, errs, jsonStr);
+        assertEquals(1, errs.warns().size()); // 非boolean的$embed_* 照旧警告
+        assertNull(vStruct.embedFields());
+    }
+
+    @Test
+    void fromJson_EmbedFields_NestedStruct_RoundTrip() {
+        TableSchema ts = cfg.findTable("ts");
+        String jsonStr = """
+                {"$type":"ts","id":1,"$embed_attr":true,"attr":{"$type":"attr","Attr":111,"Min":222,"Max":333,"$embed_Attr":true,"$embed_Min":false}}""";
+        VStruct vStruct = fromJson(ts, jsonStr);
+
+        JSONObject json = new ValueToJson().toJson(vStruct);
+        assertEquals(Boolean.TRUE, json.getBoolean("$embed_attr"));
+        JSONObject attrJson = json.getJSONObject("attr");
+        assertEquals(Boolean.TRUE, attrJson.getBoolean("$embed_Attr"));
+        assertEquals(Boolean.FALSE, attrJson.getBoolean("$embed_Min"));
+    }
+
+    @Test
+    void fromJson_MapEntryEmbed_RoundTrip() {
+        TableSchema tm = cfg.findTable("tm");
+        String jsonStr = """
+                {"$type":"tm","id":1,"mapIntStr":[{"$type":"$entry","key":111,"value":"aaa","$embed_value":true},{"$type":"$entry","key":222,"value":"bbb","$embed_value":false}]}""";
+        VStruct vStruct = fromJson(tm, jsonStr);
+
+        JSONObject json = new ValueToJson().toJson(vStruct);
+        JSONArray entries = json.getJSONArray("mapIntStr");
+        assertEquals(2, entries.size());
+        JSONObject e0 = entries.getJSONObject(0);
+        assertEquals(111, e0.getIntValue("key"));
+        assertEquals(Boolean.TRUE, e0.getBoolean("$embed_value"));
+        JSONObject e1 = entries.getJSONObject(1);
+        assertEquals(222, e1.getIntValue("key"));
+        assertEquals(Boolean.FALSE, e1.getBoolean("$embed_value"));
+
+        // 完整字符串round-trip
+        VStruct vStruct2 = fromJson(tm, json.toString());
+        assertEquals(json.toString(), new ValueToJson().toJson(vStruct2).toString());
+    }
+
+    @Test
+    void fromJson_MapEntryNodeFold_RoundTrip() {
+        TableSchema tm = cfg.findTable("tm");
+        String jsonStr = """
+                {"$type":"tm","id":1,"mapIntStr":[{"$type":"$entry","key":111,"value":"aaa","$fold":true,"$embed_value":false,"$note":"精锐"},{"$type":"$entry","key":222,"value":"bbb"}]}""";
+        VStruct vStruct = fromJson(tm, jsonStr);
+
+        JSONObject json = new ValueToJson().toJson(vStruct);
+        JSONArray entries = json.getJSONArray("mapIntStr");
+        assertEquals(2, entries.size());
+        JSONObject e0 = entries.getJSONObject(0);
+        assertEquals(Boolean.TRUE, e0.getBoolean("$fold"));          // 节点级折叠透传
+        assertEquals(Boolean.FALSE, e0.getBoolean("$embed_value"));  // 与 $embed_value 并存
+        assertEquals("精锐", e0.getString("$note"));                  // entry 备注透传
+        JSONObject e1 = entries.getJSONObject(1);
+        assertFalse(e1.containsKey("$fold"));                        // 无折叠的 entry 不写键
+        assertFalse(e1.containsKey("$embed_value"));
+        assertFalse(e1.containsKey("$note"));
+
+        // 完整字符串round-trip
+        VStruct vStruct2 = fromJson(tm, json.toString());
+        assertEquals(json.toString(), new ValueToJson().toJson(vStruct2).toString());
+    }
+
+    @Test
+    void fromJson_MapEntryFoldFalse_Dropped() {
+        TableSchema tm = cfg.findTable("tm");
+        String jsonStr = """
+                {"$type":"tm","id":1,"mapIntStr":[{"$type":"$entry","key":111,"value":"aaa","$fold":false}]}""";
+        VStruct vStruct = fromJson(tm, jsonStr);
+        VMap vMap = (VMap) vStruct.values().get(1);
+        assertNull(vMap.foldedEntries()); // $fold=false 无意义（展开即无键），与 VStruct 的 fold 处理同约定
+
+        JSONObject json = new ValueToJson().toJson(vStruct);
+        assertFalse(json.getJSONArray("mapIntStr").getJSONObject(0).containsKey("$fold"));
+    }
+
+    @Test
+    void fromJson_NoEmbedFields_NoEntryEmbed() {
+        TableSchema tm = cfg.findTable("tm");
+        String jsonStr = """
+                {"$type":"tm","id":1,"mapIntStr":[{"$type":"$entry","key":111,"value":"aaa"}]}""";
+        VStruct vStruct = fromJson(tm, jsonStr);
+        assertNull(vStruct.embedFields());
+        VMap vMap = (VMap) vStruct.values().get(1);
+        assertNull(vMap.entryEmbeds());
+        assertNull(vMap.foldedEntries());
+        assertNull(vMap.entryNotes());
+
+        JSONObject json = new ValueToJson().toJson(vStruct);
+        assertFalse(json.containsKey("$embed_mapIntStr"));
+        JSONObject e0 = json.getJSONArray("mapIntStr").getJSONObject(0);
+        assertFalse(e0.containsKey("$embed_value"));
+        assertFalse(e0.containsKey("$fold"));
+        assertFalse(e0.containsKey("$note"));
     }
 
 }

@@ -12,8 +12,8 @@ import {isPrimitiveType, PrimitiveType, SField, SInterface, SItem, SStruct, STab
 import {JSONArray, JSONObject, JSONValue, RefId} from "@/api/recordModel.ts";
 import {getId, getLabel, getLastName} from "./recordRefUtils.ts";
 import {getField, getImpl, getMapEntryTypeName, isPkInteger, Schema} from "@/domain/schema.ts";
-import {EditingSession, listFoldKey} from "@/services/editingSession.ts";
-import { canBeEmbeddedCheck, extractEmbeddingFields, markNewItemExpanded } from "@/domain/embedding.ts";
+import {EditingSession, embedKey} from "@/services/editingSession.ts";
+import {canBeEmbeddedCheck, extractEmbeddingFields} from "@/domain/embedding.ts";
 import {getIdOptions} from "@/flow/edit/shared/idOptions.tsx";
 
 
@@ -104,20 +104,11 @@ export class RecordEditEntityCreator {
                     continue;
                 }
 
-                // list 折叠（父对象上 $fold_<fieldName>=true）：不创建子 entity、不 push sourceEdge
-                if (this.getListFoldState(obj, fieldKey)) {
+                // list 字段 embed 分类（与 createListOrMapEditField 共用 classifyListField）：
+                // embedTag / summary 都不建子 entity、不 push sourceEdge（内嵌字段也算有子节点）
+                if (this.classifyListField(obj, fieldKey, fArr, itemType) !== 'nodes') {
                     hasChild = true;
                     continue;
-                }
-
-                // 检查单元素list是否可以被内嵌
-                if (fArrLen === 1) {
-                    const itemObj = fArr[0] as JSONObject;
-                    if (canBeEmbeddedCheck(itemObj, itemType) && this.shouldEmbed(itemObj)) {
-                        // 元素被内嵌，不创建子entity，但标记有子节点（因为内嵌字段也算子节点）
-                        hasChild = true;
-                        continue;
-                    }
                 }
 
                 hasChild = true;
@@ -136,7 +127,12 @@ export class RecordEditEntityCreator {
                     const onDeleteFunc = (position: EntityPosition) => {
                         // undo 锚点取父节点（id = 当前 struct，即 list 父）：被删 item 在 undo 前不存在，
                         // 父节点 undo 前后都在 → KeepStable 补偿让其屏幕不动。正向 position 仍指被删 item（删后不在新布局 → FitId noop）。
-                        this.session.deleteArrayItem(arrayIndex, chain, position, id);
+                        // N→1 归一化：删除后恰剩 1 元素时，预先用 canBeEmbeddedCheck 算好其可内嵌判定传入
+                        //（session 不反向依赖 domain 的 embedding 判定）
+                        const embeddableWhenSingle = fArrLen === 2
+                            ? canBeEmbeddedCheck(fArr[1 - arrayIndex] as JSONObject, itemType)
+                            : undefined;
+                        this.session.deleteArrayItem(arrayIndex, chain, position, id, embeddableWhenSingle);
                     }
 
                     let onMoveUpFunc;
@@ -181,15 +177,15 @@ export class RecordEditEntityCreator {
                     continue;
                 }
 
-                // 检查是否为内嵌模式
+                // 检查是否为内嵌模式（类 1：可内嵌且父对象上 `$embed_<fieldName> !== false`）
                 const canEmbed = canBeEmbeddedCheck(fieldValue as JSONObject, fieldType);
 
                 if (canEmbed) {
-                    if (this.shouldEmbed(fieldValue as JSONObject)) {
-                        // fold=true 或 undefined，内嵌模式，不创建子节点
+                    if (this.getEmbedState(obj, fieldKey) !== false) {
+                        // 内嵌模式，不创建子节点
                         continue;
                     }
-                    // fold=false，展开模式，继续创建子节点
+                    // $embed=false，展开模式，继续创建子节点
                 }
 
                 // 正常模式: 创建子节点
@@ -228,12 +224,10 @@ export class RecordEditEntityCreator {
             this.session.updateNote(note, fieldChain);
         };
 
-        const editOnUpdateFold = (fold: boolean, position: EntityPosition, embeddedFieldChain?: (string | number)[]) => {
-            // 如果提供了 embeddedFieldChain，使用它；否则使用默认的 fieldChain
-            const targetChain = embeddedFieldChain ?? fieldChain;
-            // fold 状态从 $fold 派生：updateFold 写 obj.$fold + structureChange 驱动重渲读新 $fold，
-            // 不再双写 Folds state（interfaceOnChangeImpl 的 $fold 写入也自然被覆盖）。
-            this.session.updateFold(fold, targetChain, position);
+        const editOnUpdateFold = (fold: boolean, position: EntityPosition) => {
+            // 节点级 fold：$fold 单义（折叠我自己的子节点）。updateFold 写/删 obj.$fold +
+            // structureChange 驱动重渲读新 $fold。
+            this.session.updateFold(fold, fieldChain, position);
         };
 
 
@@ -296,7 +290,7 @@ export class RecordEditEntityCreator {
                 autoCompleteOptions: getImplNameOptions(sInterface),
                 implFields: impl ? this.makeEditFields(impl, obj, fieldChain) : [],
                 interfaceOnChangeImpl: (newImplName: string, position: EntityPosition) => {
-                        let newObj: JSONObject;
+                    let newObj: JSONObject;
                     if (newImplName == implName) {
                         newObj = obj;
                     } else {
@@ -305,9 +299,11 @@ export class RecordEditEntityCreator {
                             return;  // 目标 impl 不存在，放弃切换
                         }
                         newObj = this.schema.defaultValueOfStructural(newImpl);
-                        newObj['$fold'] = false;  // 明确设置为展开状态，避免自动内嵌
                     }
-                    this.session.updateInterfaceValue(newObj, fieldChain, position);
+                    // embed 状态在父对象上、随 obj 替换天然存活；此处只做双向归一化：
+                    // 新 impl 可内嵌 → 确保 $embed=false（保持展开，切换入口只在展开态）；不可内嵌 → 删残留键
+                    const embeddable = canBeEmbeddedCheck(newObj, sInterface);
+                    this.session.updateInterfaceValue(newObj, fieldChain, position, embeddable);
                 },
             })
 
@@ -368,11 +364,10 @@ export class RecordEditEntityCreator {
         const itemTypeId = getItemTypeId(sField.type, structural, sField.name);
         if (itemTypeId != undefined) {
             // list or map
-            const listFolded = this.getListFoldState(obj, sField.name);
-            return this.createListOrMapEditField(sField, fieldValue, itemTypeId, fieldChain, structural, listFolded);
+            return this.createListOrMapEditField(sField, fieldValue, itemTypeId, obj, fieldChain, structural);
         } else {
             // struct or interface
-            return this.createStructuralRefEditField(sField, fieldValue, fieldChain);
+            return this.createStructuralRefEditField(sField, fieldValue, obj, fieldChain);
         }
     }
 
@@ -404,10 +399,13 @@ export class RecordEditEntityCreator {
             return fieldValue as PrimitiveValue;
         }
         switch (fieldType) {
-            case 'bool': return false;
+            case 'bool':
+                return false;
             case 'str':
-            case 'text': return '';
-            default: return 0;
+            case 'text':
+                return '';
+            default:
+                return 0;
         }
     }
 
@@ -418,9 +416,9 @@ export class RecordEditEntityCreator {
         sField: SField,
         fieldValue: unknown,
         itemTypeId: string,
+        obj: JSONObject,
         fieldChain: (string | number)[],
-        structural: SStruct | STable,
-        listFolded: boolean   // 父对象上 $fold_<fieldName>=true：折叠 → 不尝试内嵌，渲染为摘要行
+        structural: SStruct | STable
     ): EntityEditField {
         if (isPrimitiveType(itemTypeId)) {
             // list<primitive> or map<primitive>
@@ -435,19 +433,21 @@ export class RecordEditEntityCreator {
             };
         } else {
             // list<struct> 或 list<interface>
-            const v = fieldValue as JSONArray;
+            const v = (fieldValue ?? []) as JSONArray;
+            const itemType = this.schema.itemIncludeImplMap.get(itemTypeId);
 
-            if (!listFolded) {
-                // 尝试内嵌单元素list
-                const embeddedField = this.tryCreateEmbeddedFieldForList(
-                    sField, v, itemTypeId, fieldChain
-                );
+            // list 字段 embed 分类（与 createEntity 子节点循环共用 classifyListField）：
+            // 类 1 → 内嵌 Tag；类 2 嵌入态 → 摘要行；否则 funcAdd 展开态
+            const cls = itemType ? this.classifyListField(obj, sField.name, v, itemType) : 'nodes';
+            if (itemType && cls === 'embedTag') {
+                const embeddedField = this.createEmbeddedListField(sField, v, itemType, fieldChain);
                 if (embeddedField) {
                     return embeddedField;
                 }
             }
+            const embedded = cls === 'summary';
 
-            // 非单元素list或不可内嵌或已折叠，按现有逻辑处理（显示添加按钮 + 折叠入口）
+            // 非单元素list或不可内嵌或已嵌入，按现有逻辑处理（显示添加按钮 + 嵌入口）
             return {
                 name: sField.name,
                 comment: sField.comment,
@@ -456,15 +456,28 @@ export class RecordEditEntityCreator {
                 value: (position: EntityPosition) => {
                     const sFieldable = this.schema.itemIncludeImplMap.get(itemTypeId) as SStruct | SInterface;
                     const defaultValue = this.schema.defaultValue(sFieldable);
-                    // 可内嵌的新元素默认展开成节点（$fold=false），避免内嵌压缩态需再点展开才能编辑
-                    markNewItemExpanded(defaultValue, sFieldable);
-                    this.session.addArrayItem(defaultValue, [...fieldChain, sField.name], position);
+                    // 0→1 且可内嵌时 session 写 $embed=false（原 markNewItemExpanded 语义）：
+                    // 新元素默认展开成节点，立即可编辑
+                    const markExpanded = canBeEmbeddedCheck(defaultValue, sFieldable);
+                    this.session.addArrayItem(defaultValue, [...fieldChain, sField.name], position, markExpanded);
                 },
-                listFold: {
-                    folded: listFolded,
-                    itemCount: v?.length ?? 0,
-                    onUpdateListFold: (fold: boolean, position: EntityPosition) => {
-                        this.session.updateListFold(fold, sField.name, fieldChain, position);
+                listEmbed: {
+                    embedded,
+                    itemCount: v.length,
+                    onUpdateListEmbed: (embed: boolean, position: EntityPosition) => {
+                        if (embed) {
+                            // 类 1（恰 1 元素可内嵌）的收起 = 默认内嵌 ⇒ 删键即可，不写 true 残留
+                            //（不变式：键只存当前类的非默认值）
+                            const class1 = itemType != null && v.length === 1
+                                && canBeEmbeddedCheck(v[0] as JSONObject, itemType);
+                            if (class1) {
+                                this.session.deleteEmbed(sField.name, fieldChain, position);
+                            } else {
+                                this.session.updateEmbed(true, sField.name, fieldChain, position);
+                            }
+                        } else {
+                            this.session.deleteEmbed(sField.name, fieldChain, position);
+                        }
                     },
                 },
             };
@@ -472,37 +485,40 @@ export class RecordEditEntityCreator {
     }
 
     /**
-     * 尝试为list创建内嵌字段
+     * list 字段的 embed 分类——**类由数据决定，键在类语义内解读**。
+     * createEntity 子节点循环与 createListOrMapEditField 共用此判定，两条读路径不会漂移：
+     * - 'embedTag'：类 1（恰 1 元素、元素可内嵌、`$embed !== false`）→ 内嵌 Tag，不建子节点
+     * - 'summary'：类 2 嵌入态（`$embed === true`）→ 摘要行，不建子节点
+     * - 'nodes'：展开 → 建子 entity / funcAdd 非嵌入态
      */
-    private tryCreateEmbeddedFieldForList(
+    private classifyListField(
+        obj: JSONObject,
+        fieldName: string,
+        fArr: JSONArray,
+        itemType: SStruct | SInterface
+    ): 'embedTag' | 'summary' | 'nodes' {
+        const embedState = this.getEmbedState(obj, fieldName);
+        if (fArr.length === 1 && embedState !== false
+            && canBeEmbeddedCheck(fArr[0] as JSONObject, itemType)) {
+            return 'embedTag';   // true 键在类 1 视同默认（收起）
+        }
+        if (embedState === true) {
+            return 'summary';
+        }
+        return 'nodes';
+    }
+
+    /**
+     * 创建单元素 list 的内嵌字段（类 1 渲染载体；调用前已由 classifyListField 判出 'embedTag'，
+     * 此处只剩 extract 失败（resolveImpl 脏数据等）的兜底 null）
+     */
+    private createEmbeddedListField(
         sField: SField,
         v: JSONArray,
-        itemTypeId: string,
+        itemType: SStruct | SInterface,
         fieldChain: (string | number)[]
     ): StructRefEditField | null {
-        if (!v || v.length !== 1) {
-            return null;
-        }
-
-        const itemObj = v[0] as JSONObject;
-        const itemType = this.schema.itemIncludeImplMap.get(itemTypeId);
-        if (!itemType) {
-            return null;
-        }
-
-        // 判断元素是否可以内嵌
-        if (!canBeEmbeddedCheck(itemObj, itemType)) {
-            return null;
-        }
-
-        // 读取元素的fold状态
-        const isFolded = this.getFoldState(itemObj);
-        if (isFolded === false) {
-            return null; // 展开状态，不内嵌
-        }
-
-        // 提取内嵌字段数据
-        const embeddedData = this.extractEmbeddedFieldData(itemType, itemObj, [...fieldChain, sField.name, 0]);
+        const embeddedData = this.extractEmbeddedFieldData(itemType, v[0] as JSONObject);
         if (!embeddedData) {
             return null;
         }
@@ -514,6 +530,8 @@ export class RecordEditEntityCreator {
             eleType: sField.type,
             handleOut: true,
             embeddedField: embeddedData,
+            expandEmbedded: (position: EntityPosition) =>
+                this.session.updateEmbed(false, sField.name, fieldChain, position),
         };
     }
 
@@ -523,6 +541,7 @@ export class RecordEditEntityCreator {
     private createStructuralRefEditField(
         sField: SField,
         fieldValue: unknown,
+        obj: JSONObject,
         fieldChain: (string | number)[]
     ): StructRefEditField {
         const base = {
@@ -540,19 +559,25 @@ export class RecordEditEntityCreator {
         const fieldObj = fieldValue as JSONObject;
         const canEmbed = canBeEmbeddedCheck(fieldObj, fieldType);
 
-        // 可内嵌且未显式展开（$fold !== false）→ 内嵌成一行 Tag
-        if (canEmbed && this.shouldEmbed(fieldObj)) {
-            const embeddedData = this.extractEmbeddedFieldData(fieldType, fieldObj, [...fieldChain, sField.name]);
+        // 可内嵌且未显式展开（父对象上 `$embed_<fieldName> !== false`）→ 内嵌成一行 Tag
+        if (canEmbed && this.getEmbedState(obj, sField.name) !== false) {
+            const embeddedData = this.extractEmbeddedFieldData(fieldType, fieldObj);
             if (embeddedData) {
-                return {...base, handleOut: true, embeddedField: embeddedData};
+                return {
+                    ...base,
+                    handleOut: true,
+                    embeddedField: embeddedData,
+                    expandEmbedded: (position: EntityPosition) =>
+                        this.session.updateEmbed(false, sField.name, fieldChain, position),
+                };
             }
         }
 
-        // 正常模式: 创建独立子节点。可内嵌的子结构在占位行上挂回嵌入口（点击删 $fold 回到内嵌态）
+        // 正常模式: 创建独立子节点。可内嵌的子结构在占位行上挂回嵌入口（点击删 $embed 键回到内嵌态）
         return {
             ...base,
             reEmbed: canEmbed
-                ? (position: EntityPosition) => this.session.deleteFold([...fieldChain, sField.name], position)
+                ? (position: EntityPosition) => this.session.deleteEmbed(sField.name, fieldChain, position)
                 : undefined,
         };
     }
@@ -562,15 +587,18 @@ export class RecordEditEntityCreator {
      */
     private extractEmbeddedFieldData(
         fieldType: SStruct | SInterface,
-        obj: JSONObject,
-        embeddedFieldChain: (string | number)[]
-    ): { fields: Array<{value: PrimitiveValue; type: PrimitiveType; name: string; comment?: string}>; note?: string; implName?: string; embeddedFieldChain: (string | number)[] } | null {
+        obj: JSONObject
+    ): {
+        fields: Array<{ value: PrimitiveValue; type: PrimitiveType; name: string; comment?: string }>;
+        note?: string;
+        implName?: string
+    } | null {
         const result = extractEmbeddingFields(fieldType, obj);
-        if (!result){
+        if (!result) {
             return null;
         }
 
-        const { embeddedFields, implNameToDisplay } = result;
+        const {embeddedFields, implNameToDisplay} = result;
         // 获取note
         const note = obj['$note'] as string | undefined;
 
@@ -578,32 +606,23 @@ export class RecordEditEntityCreator {
             fields: embeddedFields,
             note: note,
             implName: implNameToDisplay,
-            embeddedFieldChain: embeddedFieldChain,
         };
     }
 
     /**
-     * 获取 fold 状态：直接读 obj.$fold（持久化层）。
-     * Folds 不再独立 React state——fold 状态从此处 $fold 派生，undo/redo 恢复 $fold 即恢复 fold。
-     * 无 obj 或无 $fold → undefined（shouldEmbed 视 undefined 为内嵌）。
+     * 获取节点级 fold 状态：直接读 obj.$fold（持久化层，单义：折叠我自己的子节点）。
+     * undo/redo 恢复 $fold 即恢复 fold。无 obj 或无 $fold → undefined（视为未折叠）。
      */
     private getFoldState(obj?: JSONObject): boolean | undefined {
         return obj?.['$fold'] as boolean | undefined;
     }
 
     /**
-     * 获取 list/map 的 fold 状态：读父对象上的 `$fold_<fieldName>`（数组挂不了属性，状态寄存在父对象）。
-     * 与 $fold 同约定：随数据持久化、undo/redo 自动恢复。未折叠（无键）→ false。
+     * 获取字段级 embed 状态：读父对象上的 `$embed_<fieldName>`（数组挂不了属性，状态寄存在父对象）。
+     * 语义「true=收起，false=展开，键只存当前类的非默认值」；随数据持久化、undo/redo 自动恢复。
      */
-    private getListFoldState(obj: JSONObject | undefined, fieldName: string): boolean {
-        return obj?.[listFoldKey(fieldName)] === true;
-    }
-
-    /**
-     * 是否内嵌（fold 非 false 即内嵌：true 或 undefined）
-     */
-    private shouldEmbed(obj: JSONObject): boolean {
-        return this.getFoldState(obj) !== false;
+    private getEmbedState(obj: JSONObject | undefined, fieldName: string): boolean | undefined {
+        return obj?.[embedKey(fieldName)] as boolean | undefined;
     }
 
     getAutoCompleteOptions(structural: SStruct | STable,

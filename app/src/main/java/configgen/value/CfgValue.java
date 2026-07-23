@@ -107,6 +107,7 @@ public record CfgValue(CfgSchema schema,
         private final List<Value> values;
         private String note;  // 用json存储的内部结构也要克注释，cfgeditor使用
         private boolean fold; // 用json存储的结构可被折叠，cfgeditor使用
+        private Map<String, Boolean> embedFields; // 各字段的嵌入状态，key为$embed_<fieldName>，cfgeditor使用
 
         public VStruct(@NotNull Structural schema,
                        @NotNull List<Value> values,
@@ -164,6 +165,14 @@ public record CfgValue(CfgSchema schema,
 
         public void setFold(boolean fold) {
             this.fold = fold;
+        }
+
+        public Map<String, Boolean> embedFields() {
+            return embedFields;
+        }
+
+        public void setEmbedFields(Map<String, Boolean> embedFields) {
+            this.embedFields = embedFields;
         }
     }
 
@@ -254,6 +263,9 @@ public record CfgValue(CfgSchema schema,
 
     public static final class VMap extends CompositeValue implements ContainerValue {
         private final Map<SimpleValue, SimpleValue> valueMap;
+        private Map<SimpleValue, Boolean> entryEmbeds; // 各entry的value字段嵌入状态（$embed_value），cfgeditor使用
+        private Set<SimpleValue> foldedEntries; // 各entry的节点级折叠状态（$fold=true，折自己的子节点），cfgeditor使用
+        private Map<SimpleValue, String> entryNotes; // 各entry的备注（$note），cfgeditor使用
 
         public VMap(@NotNull Map<SimpleValue, SimpleValue> valueMap,
                     @NotNull Source source) {
@@ -276,6 +288,30 @@ public record CfgValue(CfgSchema schema,
 
         public Map<SimpleValue, SimpleValue> valueMap() {
             return valueMap;
+        }
+
+        public Map<SimpleValue, Boolean> entryEmbeds() {
+            return entryEmbeds;
+        }
+
+        public void setEntryEmbeds(Map<SimpleValue, Boolean> entryEmbeds) {
+            this.entryEmbeds = entryEmbeds;
+        }
+
+        public Set<SimpleValue> foldedEntries() {
+            return foldedEntries;
+        }
+
+        public void setFoldedEntries(Set<SimpleValue> foldedEntries) {
+            this.foldedEntries = foldedEntries;
+        }
+
+        public Map<SimpleValue, String> entryNotes() {
+            return entryNotes;
+        }
+
+        public void setEntryNotes(Map<SimpleValue, String> entryNotes) {
+            this.entryNotes = entryNotes;
         }
 
         @Override

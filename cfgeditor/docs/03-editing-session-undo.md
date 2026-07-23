@@ -45,12 +45,12 @@ setCurrentEditingSession(s)     → 注册 / 注销
 
 ### 2.2 结构类（重算）
 
-`addArrayItem` / `addArrayItemAtIndex` / `deleteArrayItem` / `swapArrayItem` / `updateFold` / `updateInterfaceValue` / `pasteStruct`：
+`addArrayItem` / `addArrayItemAtIndex` / `deleteArrayItem` / `swapArrayItem` / `updateFold` / `updateEmbed` / `deleteEmbed` / `updateInterfaceValue` / `pasteStruct`：
 
 ```
 结构类编辑通用流程：
   beforeStructuralChange（先固化未 capture 的值类键入）
-  → 就地改（push / splice / 赋值 $fold / 换 impl / 粘贴）
+  → 就地改（push / splice / 赋值 $fold / 写删 $embed_ 键 / 换 impl / 粘贴）
   → structureChange(position)
        // 内部：bump FitId（正向焦点）+ capture KeepStable（undo 锚点）+ onStructureChange
 ```
@@ -65,7 +65,7 @@ setCurrentEditingSession(s)     → 注册 / 注销
 |---|---|---|
 | 值类 | `updateFormValues` / `updateNote` | 不 bump、不重布局 |
 | 结构类 | `addArrayItem` / `addArrayItemAtIndex` / `deleteArrayItem` / `swapArrayItem` | `FitId` + undo `KeepStable` |
-| 结构类 | `updateFold`（07 的 `$fold`）| `FitId` + undo `KeepStable` |
+| 结构类 | `updateFold`（节点级 `$fold`）/ `updateEmbed` / `deleteEmbed`（07 的 `$embed_<fieldName>`）| `FitId` + undo `KeepStable` |
 | 结构类 | `updateInterfaceValue`（换 impl）| `FitId` + undo `KeepStable` |
 | 结构类 | `pasteStruct`（粘贴）| `FitId` + undo `KeepStable` |
 | 结构类 | `replaceEditingObject`（Chat / AddJson / funcClear）| `FitFull` + undo `FitFull` |

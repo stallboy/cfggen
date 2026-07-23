@@ -140,7 +140,7 @@ api/        HTTP：apiClient, recordModel, schemaModel, noteModel, searchModel, 
 | 04 | 布局引擎 + 视口 | [04-layout-viewport.md](04-layout-viewport.md) |
 | 05 | Flow 图层（XYFlow 集成） | [05-flow-graph.md](05-flow-graph.md) |
 | 06 | 编辑表单 | [06-edit-form.md](06-edit-form.md) |
-| 07 | 字段内嵌 embedding + `$fold` | [07-embedding.md](07-embedding.md) |
+| 07 | 字段内嵌 embedding（`$fold` + `$embed_<fieldName>`） | [07-embedding.md](07-embedding.md) |
 | 08 | AI Chat | [08-ai-chat.md](08-ai-chat.md) |
 | 09 | 横切关注点 | [09-cross-cutting.md](09-cross-cutting.md) |
 

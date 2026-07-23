@@ -3,7 +3,7 @@ import type {CSSProperties} from "react";
 import {Button, Flex, Tag} from "antd";
 import {ArrowsAltOutlined} from "@ant-design/icons";
 import type {NodeProps} from "@xyflow/react";
-import {EntityEdit, PrimitiveValue, StructRefEditField} from "@/domain/entityModel";
+import {PrimitiveValue, StructRefEditField} from "@/domain/entityModel";
 import {PrimitiveType} from "@/api/schemaModel";
 import type {EntityNode} from "../../FlowGraph.tsx";
 import {nodeAnchor} from "../../nodeAnchor.ts";
@@ -11,13 +11,12 @@ import {LabelWithTooltip} from "../shared/LabelWithTooltip.tsx";
 
 interface EmbeddedSimpleStructuralItemProps {
     field: StructRefEditField;
-    edit: EntityEdit;
     nodeProps: NodeProps<EntityNode>;
     bgColor?: string;
 }
 
 export const EmbeddedSimpleStructuralItem = memo(
-    function EmbeddedSimpleStructuralItem({field, edit, nodeProps}: EmbeddedSimpleStructuralItemProps) {
+    function EmbeddedSimpleStructuralItem({field, nodeProps}: EmbeddedSimpleStructuralItemProps) {
         const embeddedData = field.embeddedField!;
 
         // 组合comment：field.comment + embeddedData.note
@@ -31,12 +30,10 @@ export const EmbeddedSimpleStructuralItem = memo(
         // 字段名称Tag颜色（有note时黄色）
         const fieldNameTagColor = embeddedData.note ? '#876800' : 'blue';
 
-        // 点击展开
+        // 点击展开（写父对象上 $embed_<fieldName>=false，展开成独立子节点）
         const handleExpand = useCallback(() => {
-            if (embeddedData.embeddedFieldChain && edit.editOnUpdateFold) {
-                edit.editOnUpdateFold(false, nodeAnchor(nodeProps), embeddedData.embeddedFieldChain);
-            }
-        }, [embeddedData.embeddedFieldChain, edit, nodeProps]);
+            field.expandEmbedded?.(nodeAnchor(nodeProps));
+        }, [field, nodeProps]);
 
         // 格式化单个值的显示
         const formatDisplayValue = useCallback((value: PrimitiveValue, type: PrimitiveType): string => {

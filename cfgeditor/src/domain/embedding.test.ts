@@ -5,12 +5,11 @@ import {
     EMBEDDING_CONFIG,
     canBeEmbeddedCheck,
     extractEmbeddingFields,
-    markNewItemExpanded,
 } from './embedding'
 import {field, makeInterface, makeStruct} from '@/test/fixtures'
 
 // ---------------------------------------------------------------------------
-// 就近工厂：被测函数（canBeEmbeddedCheck / extractEmbeddingFields / markNewItemExpanded）
+// 就近工厂：被测函数（canBeEmbeddedCheck / extractEmbeddingFields）
 // 均直接接收 SStruct | SInterface，无需构造 EmbeddingSchema 容器，故工厂只包字段/impl。
 // ---------------------------------------------------------------------------
 // JSONObject 要求 $type 必填，但 struct 判定不读 $type（仅 interface 分支读）。
@@ -60,8 +59,9 @@ describe('EMBEDDING_CONFIG 阈值契约', () => {
         })
     })
 
-    it('空 list 过滤开关默认开启', () => {
-        expect(EMBEDDING_CONFIG.common.filterEmptyLists).toBe(true)
+    it('空 list 字段计数前固定过滤（无开关，行为断言见下方「空 list 过滤」用例）', () => {
+        // 配置上不再有 filterEmptyLists 开关：EMBEDDING_CONFIG 只剩 struct / interface 两套阈值
+        expect(Object.keys(EMBEDDING_CONFIG).sort()).toEqual(['interface', 'struct'])
     })
 })
 
@@ -236,36 +236,5 @@ describe('extractEmbeddingFields', () => {
     it('非空 list 字段保留 → 破坏 allPrimitive → 不内嵌 → null', () => {
         const s = makeStruct('S', [int('a'), int('b'), field('lst', 'list<int>')])
         expect(extractEmbeddingFields(s, obj({a: 1, b: 2, lst: [1, 2]}))).toBeNull()
-    })
-})
-
-// ===========================================================================
-// markNewItemExpanded — 手工新增 list 元素时，可内嵌者默认展开成节点
-// ===========================================================================
-describe('markNewItemExpanded', () => {
-    it('可内嵌的 struct 新元素 → 置 $fold=false（展开成节点，立即可编辑）', () => {
-        const o = obj()
-        markNewItemExpanded(o, makeStruct('S', [field('x', 'int'), field('y', 'int')]))  // 2 number 可内嵌
-        expect(o['$fold']).toBe(false)
-    })
-
-    it('不可内嵌的 struct 新元素（超阈值）→ 不写入 $fold（避免无意义字段残留）', () => {
-        const o = obj()
-        markNewItemExpanded(o, makeStruct('S', [int('a'), int('b'), int('c'), int('d')]))  // 4 number 超阈值
-        expect('$fold' in o).toBe(false)
-    })
-
-    it('可内嵌的 interface 新元素（$type 命中可内嵌 impl）→ 置 $fold=false', () => {
-        const dog = makeStruct('Dog', [field('bite', 'int')])  // 单 primitive 可内嵌
-        const o = obj({$type: 'Dog'})
-        markNewItemExpanded(o, makeInterface('I', [dog]))
-        expect(o['$fold']).toBe(false)
-    })
-
-    it('interface 新元素 $type 缺失 → canBeEmbedded=false → 不写入 $fold', () => {
-        const dog = makeStruct('Dog', [field('bite', 'int')])
-        const o = obj()  // $type:'' → resolveImpl null → 不可内嵌
-        markNewItemExpanded(o, makeInterface('I', [dog]))
-        expect('$fold' in o).toBe(false)
     })
 })

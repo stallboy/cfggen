@@ -9,6 +9,7 @@ import configgen.value.ValueRefCollector.FieldRef;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static configgen.value.CfgValue.*;
 import static configgen.value.ValueRefCollector.RefId;
@@ -67,6 +68,10 @@ public class ValueToJson {
         if (vStruct.isFold()) {
             json.put("$fold", true);
         }
+        Map<String, Boolean> embedFields = vStruct.embedFields();
+        if (embedFields != null) {
+            json.putAll(embedFields); // 透传cfgeditor写入的$embed_<fieldName>
+        }
 
         for (int i = 0; i < count; i++) {
             FieldSchema fs = vStruct.schema().fields().get(i);
@@ -101,6 +106,9 @@ public class ValueToJson {
 
     public JSONArray toJson(VMap vMap) {
         JSONArray json = new JSONArray(vMap.valueMap().size());
+        Map<SimpleValue, Boolean> entryEmbeds = vMap.entryEmbeds();
+        Set<SimpleValue> foldedEntries = vMap.foldedEntries();
+        Map<SimpleValue, String> entryNotes = vMap.entryNotes();
         for (Map.Entry<SimpleValue, SimpleValue> e : vMap.valueMap().entrySet()) {
             SimpleValue key = e.getKey();
             SimpleValue value = e.getValue();
@@ -109,6 +117,15 @@ public class ValueToJson {
             entryJson.put("$type", "$entry");
             entryJson.put("key", toJson(key));
             entryJson.put("value", toJson(value));
+            if (entryEmbeds != null && entryEmbeds.containsKey(key)) {
+                entryJson.put("$embed_value", entryEmbeds.get(key)); // 透传cfgeditor写入的entry value字段嵌入状态
+            }
+            if (foldedEntries != null && foldedEntries.contains(key)) {
+                entryJson.put("$fold", true); // 透传cfgeditor写入的entry节点级折叠状态
+            }
+            if (entryNotes != null && entryNotes.containsKey(key)) {
+                entryJson.put("$note", entryNotes.get(key)); // 透传cfgeditor写入的entry备注
+            }
             json.add(entryJson);
         }
         return json;

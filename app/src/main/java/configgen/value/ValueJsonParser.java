@@ -98,10 +98,26 @@ public class ValueJsonParser {
             vStruct.setFold(true);
         }
 
+        // cfgeditor会写入$embed_<fieldName>表示各字段的嵌入状态，透传保存
+        Map<String, Boolean> embedFields = null;
+        for (Map.Entry<String, Object> e : jsonObject.entrySet()) {
+            String k = e.getKey();
+            if (k.startsWith("$embed_") && e.getValue() instanceof Boolean b) {
+                if (embedFields == null) {
+                    embedFields = new LinkedHashMap<>();
+                }
+                embedFields.put(k, b);
+            }
+        }
+        vStruct.setEmbedFields(embedFields);
+
         if (!isTableSchemaPartial) {
             Set<String> jsonKeys = new HashSet<>(jsonObject.keySet());
             jsonKeys.removeAll(structural.fieldNameSet());
             jsonKeys.removeAll(jsonExtraKeySet);
+            if (embedFields != null) {
+                jsonKeys.removeAll(embedFields.keySet());
+            }
             if (!jsonKeys.isEmpty()) {
                 errs.addWarn(new JsonHasExtraFields(thisSource, type, jsonKeys));
             }
@@ -290,6 +306,9 @@ public class ValueJsonParser {
                 }
                 int cnt = jsonArray.size();
                 VMap vMap = new VMap(new LinkedHashMap<>(cnt), source);
+                Map<SimpleValue, Boolean> entryEmbeds = null;
+                Set<SimpleValue> foldedEntries = null;
+                Map<SimpleValue, String> entryNotes = null;
                 int i = 0;
                 for (Object itemObj : jsonArray) {
                     JSONObject entry = null;
@@ -318,10 +337,37 @@ public class ValueJsonParser {
                             SimpleValue key = parseSimpleType(fMap.key(), keyObj, ks, fieldSchema);
                             SimpleValue value = parseSimpleType(fMap.value(), valueObj, vs, fieldSchema);
                             vMap.valueMap().put(key, value);
+
+                            // cfgeditor会在$entry上写$embed_value表示value字段的嵌入状态，透传保存
+                            if (entry.get("$embed_value") instanceof Boolean entryEmbed) {
+                                if (entryEmbeds == null) {
+                                    entryEmbeds = new LinkedHashMap<>();
+                                }
+                                entryEmbeds.put(key, entryEmbed);
+                            }
+
+                            // cfgeditor会在$entry上写$fold=true表示节点级折叠（折自己的子节点），透传保存
+                            if (entry.get("$fold") instanceof Boolean entryFold && entryFold) {
+                                if (foldedEntries == null) {
+                                    foldedEntries = new LinkedHashSet<>();
+                                }
+                                foldedEntries.add(key);
+                            }
+
+                            // cfgeditor会在$entry上写$note表示备注，透传保存
+                            if (entry.get("$note") instanceof String entryNote && !entryNote.isEmpty()) {
+                                if (entryNotes == null) {
+                                    entryNotes = new LinkedHashMap<>();
+                                }
+                                entryNotes.put(key, entryNote);
+                            }
                         }
                     }
                     i++;
                 }
+                vMap.setEntryEmbeds(entryEmbeds);
+                vMap.setFoldedEntries(foldedEntries);
+                vMap.setEntryNotes(entryNotes);
                 return vMap;
             }
 

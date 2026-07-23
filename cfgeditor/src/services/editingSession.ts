@@ -247,33 +247,36 @@ export class EditingSession {
 
     // ============ 结构类编辑（bump + emit → 重渲 entityMap）============
 
-    addArrayItem(defaultItemJsonObject: JSONObject, arrayFieldChains: (string | number)[], position: EntityPosition): void {
+    addArrayItem(defaultItemJsonObject: JSONObject, arrayFieldChains: (string | number)[], position: EntityPosition,
+                 markExpanded?: boolean): void {
         this.beforeStructuralChange();
         const obj = getFieldObj(this.editingObject, arrayFieldChains) as JSONArray;
         obj.push(defaultItemJsonObject);
-        this.unfoldListOf(arrayFieldChains);   // 往折叠中的 list 加元素 ⇒ 自动展开（同一步 undo）
+        this.normalizeEmbedKeyOnAdd(arrayFieldChains, markExpanded);
         this.structureChange(position);
     }
 
     /** 前插入：让插入的节点和当前鼠标所在节点位置不变 */
     addArrayItemAtIndex(defaultItemJsonObject: JSONObject, index: number,
-                        arrayFieldChains: (string | number)[], position: EntityPosition): void {
+                        arrayFieldChains: (string | number)[], position: EntityPosition,
+                        markExpanded?: boolean): void {
         this.beforeStructuralChange();
         const obj = getFieldObj(this.editingObject, arrayFieldChains) as JSONArray;
         obj.splice(index, 0, defaultItemJsonObject);
-        this.unfoldListOf(arrayFieldChains);   // 同 addArrayItem：加元素 ⇒ 自动展开
+        this.normalizeEmbedKeyOnAdd(arrayFieldChains, markExpanded);   // 同 addArrayItem
         this.structureChange(position);
     }
 
     /** undoAnchorId：undo 锚点节点 id。默认 position.id（被删 item），但被删节点 undo 前不存在 → 调用方应传父节点 id。
-     *  正向 position 仍指被删 item（删后不在新布局 → FitId 自然 noop，删除后视口不动行为不变）。 */
-    deleteArrayItem(deleteIndex: number, arrayFieldChains: (string | number)[], position: EntityPosition, undoAnchorId?: string): void {
+     *  正向 position 仍指被删 item（删后不在新布局 → FitId 自然 noop，删除后视口不动行为不变）。
+     *  embeddableWhenSingle：删除后恰剩 1 元素时，该元素的可内嵌判定（由调用方经 canBeEmbeddedCheck 算好，
+     *  session 不反向依赖 domain 的 embedding 判定）。 */
+    deleteArrayItem(deleteIndex: number, arrayFieldChains: (string | number)[], position: EntityPosition,
+                    undoAnchorId?: string, embeddableWhenSingle?: boolean): void {
         this.beforeStructuralChange();
         const obj = getFieldObj(this.editingObject, arrayFieldChains) as JSONArray;
         obj.splice(deleteIndex, 1);
-        if (obj.length === 0) {
-            this.unfoldListOf(arrayFieldChains);   // 删到空 ⇒ 折叠失去意义，自动展开（删键）
-        }
+        this.normalizeEmbedKeyOnDelete(arrayFieldChains, embeddableWhenSingle);
         this.structureChange(position, undoAnchorId);
     }
 
@@ -287,47 +290,108 @@ export class EditingSession {
         this.structureChange(position);
     }
 
+    /** 节点级 fold：`$fold` 单义——折叠我自己的子节点。true 写键，false 删键（不残留 inert 的 false 值）。 */
     updateFold(fold: boolean, fieldChains: (string | number)[], position: EntityPosition): void {
         this.beforeStructuralChange();
         const obj = getFieldObj(this.editingObject, fieldChains) as JSONObject;
-        obj['$fold'] = fold;
-        this.structureChange(position);
-    }
-
-    /** list/map 折叠：状态写在父对象的 `$fold_<fieldName>` 键上（数组挂不了属性，与 $fold 同约定持久化）。
-     *  fold=true 写键，false 删键（不残留 false 值）。position 锚点取父节点（两个方向上父节点都在）。 */
-    updateListFold(fold: boolean, fieldName: string, parentChain: (string | number)[], position: EntityPosition): void {
-        this.beforeStructuralChange();
-        const obj = getFieldObj(this.editingObject, parentChain) as JSONObject;
-        const key = listFoldKey(fieldName);
         if (fold) {
-            obj[key] = true;
+            obj['$fold'] = true;
         } else {
-            delete obj[key];
+            delete obj['$fold'];
         }
         this.structureChange(position);
     }
 
-    /** 回嵌：删子对象上的 $fold 键（undefined = 默认内嵌），与 list unfold 删键同约定——
-     *  不写 $fold=true，避免载荷残留与 undefined 语义相同的键。 */
-    deleteFold(fieldChains: (string | number)[], position: EntityPosition): void {
+    /** 字段级 embed：状态写在父对象的 `$embed_<fieldName>` 键上（数组挂不了属性，与 $fold 同约定持久化）。
+     *  语义「true=收起，false=展开，键只存当前类的非默认值」——本方法写字面布尔值：
+     *  类 1（自动嵌入）展开时传 false；类 2（list 嵌入）折叠时传 true。回到默认态走 deleteEmbed。
+     *  position 锚点取父节点（两个方向上父节点都在）。 */
+    updateEmbed(embed: boolean, fieldName: string, parentChain: (string | number)[], position: EntityPosition): void {
         this.beforeStructuralChange();
-        const obj = getFieldObj(this.editingObject, fieldChains) as JSONObject;
-        delete obj['$fold'];
+        const obj = getFieldObj(this.editingObject, parentChain) as JSONObject;
+        obj[embedKey(fieldName)] = embed;
         this.structureChange(position);
     }
 
-    /** 删除父对象上的 `$fold_<fieldName>` 折叠键（add/deleteArrayItem 的自动展开用；键不存在时 noop）。
-     *  arrayFieldChains 末端是 list 字段名，其余是父对象链。 */
-    private unfoldListOf(arrayFieldChains: (string | number)[]): void {
-        const parent = getFieldObj(this.editingObject, arrayFieldChains.slice(0, -1)) as JSONObject;
-        delete parent[listFoldKey(arrayFieldChains[arrayFieldChains.length - 1] as string)];
+    /** 回到字段当前类的默认 embed 态：删 `$embed_<fieldName>` 键（回嵌 / 展开 list 共用）。
+     *  不写与默认值同义的键，避免载荷残留。 */
+    deleteEmbed(fieldName: string, parentChain: (string | number)[], position: EntityPosition): void {
+        this.beforeStructuralChange();
+        const obj = getFieldObj(this.editingObject, parentChain) as JSONObject;
+        delete obj[embedKey(fieldName)];
+        this.structureChange(position);
     }
 
-    updateInterfaceValue(jsonObject: JSONObject, fieldChains: (string | number)[], position: EntityPosition): void {
+    /** 定位字段级 embed 槽位：父对象 + 键 + list 本体（add / delete / impl 切换三个归一化执行点共用）。 */
+    private resolveEmbedSlot(arrayFieldChains: (string | number)[]): { parent: JSONObject; key: string; arr: JSONArray } {
+        const parent = getFieldObj(this.editingObject, arrayFieldChains.slice(0, -1)) as JSONObject;
+        const fieldName = arrayFieldChains[arrayFieldChains.length - 1] as string;
+        return {parent, key: embedKey(fieldName), arr: parent[fieldName] as JSONArray};
+    }
+
+    /** add 后的 `$embed_` 键归一化（不变式：键必须存当前类的非默认值）：
+     *  - 0→1 且新元素可内嵌（markExpanded）：写 false——新元素默认展开、立即可编辑（原 markNewItemExpanded 语义）；
+     *  - 其余（≥2，或单元素不可内嵌）：删键——覆盖「折叠中加元素自动展开」与「1→2 后 false 键变残留」两种情形。 */
+    private normalizeEmbedKeyOnAdd(arrayFieldChains: (string | number)[], markExpanded?: boolean): void {
+        const {parent, key, arr} = this.resolveEmbedSlot(arrayFieldChains);
+        if (arr.length === 1 && markExpanded) {
+            parent[key] = false;
+        } else {
+            delete parent[key];
+        }
+    }
+
+    /** delete 后的 `$embed_` 键归一化（与用户操作同一步 undo）：
+     *  - 删到空：嵌入失去意义，删键；
+     *  - 删到恰剩 1 且元素可内嵌（跨入类 1）：true（折叠）→ 删键（嵌入 Tag 延续收起意图）；否则写 false（保持展开，
+     *    含「展开的多元素 list 删到 1」——不把用户正看着的展开节点压回 Tag）；
+     *  - 删到恰剩 1 且元素不可内嵌（类 2）：删键（默认展开）。 */
+    private normalizeEmbedKeyOnDelete(arrayFieldChains: (string | number)[], embeddableWhenSingle?: boolean): void {
+        const {parent, key, arr} = this.resolveEmbedSlot(arrayFieldChains);
+        if (arr.length === 0) {
+            delete parent[key];
+        } else if (arr.length === 1) {
+            if (embeddableWhenSingle) {
+                if (parent[key] === true) {
+                    delete parent[key];
+                } else {
+                    parent[key] = false;
+                }
+            } else {
+                delete parent[key];
+            }
+        }
+    }
+
+    /** embeddable：切换 impl 后的 `$embed_` 键归一化（双向，不变式 + 保持展开意图——切换入口只在展开态）：
+     *  新 impl 可内嵌 → 确保 `$embed_<fieldName>=false`（无则补写）；不可内嵌 → 删残留键。
+     *  判定由调用方经 canBeEmbeddedCheck 算好传入，session 不反向依赖 domain。
+     *  注意 fieldChains 可能以数组索引结尾（list 元素换 impl）：此时 embed 键属于祖父对象的
+     *  `$embed_<listName>`，且仅当 list 恰剩 1 元素（类 1 候选）时才可能写 false，多元素一律删键。 */
+    updateInterfaceValue(jsonObject: JSONObject, fieldChains: (string | number)[], position: EntityPosition,
+                         embeddable?: boolean): void {
         this.beforeStructuralChange();
-        const obj = getFieldObj(this.editingObject, fieldChains.slice(0, fieldChains.length - 1)) as JSONObject;
-        obj[fieldChains[fieldChains.length - 1] as string] = jsonObject;
+        const last = fieldChains[fieldChains.length - 1];
+        const parent = getFieldObj(this.editingObject, fieldChains.slice(0, fieldChains.length - 1)) as JSONObject;
+        parent[last as string] = jsonObject;
+        if (embeddable !== undefined) {
+            if (typeof last === 'number') {
+                // list 元素换 impl：键在祖父对象上，键名取 list 字段名
+                const slot = this.resolveEmbedSlot(fieldChains.slice(0, -1));
+                if (slot.arr.length === 1 && embeddable) {
+                    slot.parent[slot.key] = false;
+                } else {
+                    delete slot.parent[slot.key];
+                }
+            } else {
+                const key = embedKey(last);
+                if (embeddable) {
+                    parent[key] = false;
+                } else {
+                    delete parent[key];
+                }
+            }
+        }
         this.structureChange(position);
     }
 
@@ -524,10 +588,11 @@ export function setCurrentEditingSession(session: EditingSession | null): void {
 
 // ============ 纯函数工具（从 editingObject.ts 搬入，自包含）============
 
-/** list/map 折叠状态键：折叠状态寄存在父对象的 `$fold_<fieldName>` 上（数组挂不了属性）。
- *  session 写入侧与 creator 读取侧共用此函数，避免键格式漂移。 */
-export function listFoldKey(fieldName: string): string {
-    return `$fold_${fieldName}`;
+/** 字段级 embed 状态键：状态寄存在父对象的 `$embed_<fieldName>` 上（数组挂不了属性）。
+ *  语义「true=收起，false=展开，键只存当前类的非默认值」：类 1（自动嵌入）默认收起、写 false 展开；
+ *  类 2（list 嵌入）默认展开、写 true 收起。session 写入侧与 creator 读取侧共用此函数，避免键格式漂移。 */
+export function embedKey(fieldName: string): string {
+    return `$embed_${fieldName}`;
 }
 
 function prepareEditingObject(rawObj: JSONObject): JSONObject {

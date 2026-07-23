@@ -36,7 +36,7 @@ java -jar ../cfggen.jar -datadir ../example/config -gen server
 | 04 | 布局引擎 + 视口 | `docs/04-layout-viewport.md` |
 | 05 | Flow 图层（XYFlow 集成） | `docs/05-flow-graph.md` |
 | 06 | 编辑表单 | `docs/06-edit-form.md` |
-| 07 | 字段内嵌 embedding + `$fold` | `docs/07-embedding.md` |
+| 07 | 字段内嵌 embedding（`$fold` + `$embed_<fieldName>`） | `docs/07-embedding.md` |
 | 08 | AI Chat | `docs/08-ai-chat.md` |
 | 09 | 横切关注点 | `docs/09-cross-cutting.md` |
 

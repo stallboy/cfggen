@@ -16,7 +16,7 @@ export interface StructRefItemProps {
     bgColor?: string;
     width?: number;
     nodeProps: NodeProps<EntityNode>;
-    /** 回嵌入口（子结构可内嵌且当前展开时挂载）：点击删 $fold 回到内嵌 Tag 态 */
+    /** 回嵌入口（子结构可内嵌且当前展开时挂载）：点击删 `$embed_<fieldName>` 回到内嵌 Tag 态 */
     reEmbed?: (position: EntityPosition) => void;
 }
 

@@ -525,106 +525,171 @@ describe('EditingSession 值类 coalescing', () => {
     });
 });
 
-describe('EditingSession list 折叠（$fold_<fieldName>）', () => {
-    it('updateListFold(true) 在父对象上写 $fold_ 键，(false) 删键，各 emit 一次', () => {
+describe('EditingSession 字段级嵌入（$embed_<fieldName>）', () => {
+    it('updateEmbed 写字面布尔值（true=收起 / false=展开），deleteEmbed 删键，emit 正确', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM()]}));
         let notified = 0;
         s.subscribe(() => {
             notified++;
         });
 
-        s.updateListFold(true, 'items', [], POS);
-        expect(s.getEditingObject()['$fold_items']).toBe(true);
-        s.updateListFold(false, 'items', [], POS);
-        expect('$fold_items' in s.getEditingObject()).toBe(false);   // 删键，不残留 false
-        expect(notified).toBe(2);
+        s.updateEmbed(true, 'items', [], POS);
+        expect(s.getEditingObject()['$embed_items']).toBe(true);
+        s.updateEmbed(false, 'items', [], POS);
+        expect(s.getEditingObject()['$embed_items']).toBe(false);   // 字面 false（类 1 的展开标记）
+        s.deleteEmbed('items', [], POS);
+        expect('$embed_items' in s.getEditingObject()).toBe(false);   // 删键回默认态
+        expect(notified).toBe(3);
     });
 
-    it('updateListFold 支持嵌套 parentChain（写到嵌套父对象上）', () => {
+    it('updateEmbed 支持嵌套 parentChain（写到嵌套父对象上）', () => {
         const s = new EditingSession(makeRecord('t', '1', {
             '$type': 'Foo', child: {$type: 'Child', items: [ITEM()]}
         }));
-        s.updateListFold(true, 'items', ['child'], POS);
+        s.updateEmbed(true, 'items', ['child'], POS);
         const child = s.getEditingObject()['child'] as JSONObject;
-        expect(child['$fold_items']).toBe(true);
-        expect('$fold_items' in s.getEditingObject()).toBe(false);   // 顶层不挂
+        expect(child['$embed_items']).toBe(true);
+        expect('$embed_items' in s.getEditingObject()).toBe(false);   // 顶层不挂
     });
 
-    it('往折叠中的 list 加元素 ⇒ 自动展开（删 $fold_ 键，同一步 undo）', () => {
+    it('0→1 加元素且可内嵌（markExpanded）⇒ 写 $embed=false（新元素默认展开，同一步 undo）', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
+        s.initUndoBaseline();
+        const v0 = s.getStructureVersion();
+
+        s.addArrayItem(ITEM(), ['items'], POS, true);
+        expect(s.getEditingObject()['$embed_items']).toBe(false);
+        expect(s.getStructureVersion()).toBe(v0 + 1);   // 单步结构变更
+
+        s.undo();   // 一步撤掉「加元素 + 展开标记」
+        expect((s.getEditingObject()['items'] as JSONArray).length).toBe(0);
+        expect('$embed_items' in s.getEditingObject()).toBe(false);
+    });
+
+    it('0→1 加元素但不可内嵌（无 markExpanded）⇒ 不写键', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
+        s.addArrayItem(ITEM(), ['items'], POS);
+        expect('$embed_items' in s.getEditingObject()).toBe(false);
+    });
+
+    it('往折叠中的 list 加元素 ⇒ 自动展开（删 $embed_ 键，同一步 undo）', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM()]}));
         s.initUndoBaseline();
-        s.updateListFold(true, 'items', [], POS);
+        s.updateEmbed(true, 'items', [], POS);
         const v0 = s.getStructureVersion();
 
         s.addArrayItem(ITEM(), ['items'], POS);
-        expect('$fold_items' in s.getEditingObject()).toBe(false);   // 自动展开
+        expect('$embed_items' in s.getEditingObject()).toBe(false);   // 自动展开
         expect(s.getStructureVersion()).toBe(v0 + 1);                // 单步结构变更
         expect((s.getEditingObject()['items'] as JSONArray).length).toBe(2);
 
         s.undo();   // 一步撤掉「加元素 + 展开」
-        expect(s.getEditingObject()['$fold_items']).toBe(true);
+        expect(s.getEditingObject()['$embed_items']).toBe(true);
         expect((s.getEditingObject()['items'] as JSONArray).length).toBe(1);
     });
 
-    it('addArrayItemAtIndex 同样自动展开', () => {
+    it('1→2 加元素后 $embed=false 变残留（等于类 2 默认值）⇒ 删键', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM()]}));
-        s.updateListFold(true, 'items', [], POS);
+        s.updateEmbed(false, 'items', [], POS);   // 类 1 的展开标记
+        s.addArrayItem(ITEM(), ['items'], POS);
+        expect('$embed_items' in s.getEditingObject()).toBe(false);
+    });
+
+    it('addArrayItemAtIndex 同样归一化（折叠中前插入 ⇒ 自动展开）', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM()]}));
+        s.updateEmbed(true, 'items', [], POS);
         s.addArrayItemAtIndex(ITEM(), 0, ['items'], POS);
-        expect('$fold_items' in s.getEditingObject()).toBe(false);
+        expect('$embed_items' in s.getEditingObject()).toBe(false);
     });
 
-    it('折叠中删到最后一个元素 ⇒ 自动展开（空 list 折叠无意义）', () => {
+    it('addArrayItemAtIndex 带 markExpanded（0→1 可内嵌）⇒ 写 $embed=false', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
+        s.addArrayItemAtIndex(ITEM(), 0, ['items'], POS, true);
+        expect(s.getEditingObject()['$embed_items']).toBe(false);
+    });
+
+    it('删到空 ⇒ 删键（空 list 嵌入无意义）', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM()]}));
-        s.updateListFold(true, 'items', [], POS);
+        s.updateEmbed(true, 'items', [], POS);
         s.deleteArrayItem(0, ['items'], POS);
-        expect('$fold_items' in s.getEditingObject()).toBe(false);
+        expect('$embed_items' in s.getEditingObject()).toBe(false);
     });
 
-    it('未删空时保留折叠键', () => {
+    it('折叠中删到恰剩 1 个可内嵌元素 ⇒ 删 true 键（嵌入 Tag 延续收起意图）', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM(), ITEM()]}));
-        s.updateListFold(true, 'items', [], POS);
-        s.deleteArrayItem(0, ['items'], POS);
-        expect(s.getEditingObject()['$fold_items']).toBe(true);
+        s.updateEmbed(true, 'items', [], POS);
+        s.deleteArrayItem(0, ['items'], POS, undefined, true);
+        expect('$embed_items' in s.getEditingObject()).toBe(false);
     });
 
-    it('undo/redo 恢复 $fold_ 键（状态在 JSON 里，不走独立 state）', () => {
+    it('展开的多元素 list 删到恰剩 1 个可内嵌元素 ⇒ 补写 false（保持展开，不回嵌）', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM(), ITEM()]}));
+        s.deleteArrayItem(0, ['items'], POS, undefined, true);
+        expect(s.getEditingObject()['$embed_items']).toBe(false);
+    });
+
+    it('删到恰剩 1 个不可内嵌元素（embeddableWhenSingle=false）⇒ 删键（类 2 默认展开）', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM(), ITEM()]}));
+        s.updateEmbed(true, 'items', [], POS);
+        s.deleteArrayItem(0, ['items'], POS, undefined, false);
+        expect('$embed_items' in s.getEditingObject()).toBe(false);
+    });
+
+    it('删后仍多元素 ⇒ 保留折叠键（不跨类，无需归一化）', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM(), ITEM(), ITEM()]}));
+        s.updateEmbed(true, 'items', [], POS);
+        s.deleteArrayItem(0, ['items'], POS);
+        expect(s.getEditingObject()['$embed_items']).toBe(true);
+    });
+
+    it('undo/redo 恢复 $embed_ 键（状态在 JSON 里，不走独立 state）', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM()]}));
         s.initUndoBaseline();
-        s.updateListFold(true, 'items', [], POS);
-        expect(s.getEditingObject()['$fold_items']).toBe(true);
+        s.updateEmbed(true, 'items', [], POS);
+        expect(s.getEditingObject()['$embed_items']).toBe(true);
         s.undo();
-        expect('$fold_items' in s.getEditingObject()).toBe(false);
+        expect('$embed_items' in s.getEditingObject()).toBe(false);
         s.redo();
-        expect(s.getEditingObject()['$fold_items']).toBe(true);
+        expect(s.getEditingObject()['$embed_items']).toBe(true);
+    });
+
+    it('updateInterfaceValue 双向归一化：新 impl 可内嵌 ⇒ 确保 $embed=false；不可内嵌 ⇒ 删残留键', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', child: {$type: 'A'}}));
+        s.updateInterfaceValue({$type: 'B'}, ['child'], POS, true);
+        expect(s.getEditingObject()['$embed_child']).toBe(false);   // 保持展开（切换入口只在展开态）
+
+        s.updateInterfaceValue({$type: 'C'}, ['child'], POS, false);
+        expect('$embed_child' in s.getEditingObject()).toBe(false);   // 新 impl 不可内嵌 → 清残留
+        expect((s.getEditingObject()['child'] as JSONObject)['$type']).toBe('C');
+    });
+
+    it('updateInterfaceValue 换 list 元素的 impl（索引结尾链）：键归一化到祖父对象的 $embed_<listName>', () => {
+        // 恰 1 元素且新 impl 可内嵌 ⇒ 祖父对象写 $embed_list=false（不是数组上的 $embed_0）
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', list: [{$type: 'A'}]}));
+        s.updateInterfaceValue({$type: 'B'}, ['list', 0], POS, true);
+        expect(s.getEditingObject()['$embed_list']).toBe(false);
+        const arr = s.getEditingObject()['list'] as JSONArray;
+        expect((arr as unknown as JSONObject)['$embed_0']).toBeUndefined();   // 不在数组上写脏键
+        expect((arr[0] as JSONObject)['$type']).toBe('B');
+
+        // 多元素（类 2）⇒ 删键（不写 false 残留）
+        const s2 = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', list: [{$type: 'A'}, {$type: 'A'}]}));
+        s2.updateInterfaceValue({$type: 'B'}, ['list', 1], POS, true);
+        expect('$embed_list' in s2.getEditingObject()).toBe(false);
+
+        // 恰 1 元素但新 impl 不可内嵌 ⇒ 删键（类 2 默认展开，元素仍是节点）
+        const s3 = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', list: [{$type: 'A'}], '$embed_list': false}));
+        s3.updateInterfaceValue({$type: 'C'}, ['list', 0], POS, false);
+        expect('$embed_list' in s3.getEditingObject()).toBe(false);
     });
 });
 
-describe('EditingSession 回嵌（deleteFold）', () => {
-    it('deleteFold 删子对象上的 $fold 键（回到默认内嵌态），emit 一次', () => {
-        const s = new EditingSession(makeRecord('t', '1', {
-            '$type': 'Foo', child: {$type: 'Small', '$fold': false}
-        }));
-        let notified = 0;
-        s.subscribe(() => {
-            notified++;
-        });
-
-        s.deleteFold(['child'], POS);
-        const child = s.getEditingObject()['child'] as JSONObject;
-        expect('$fold' in child).toBe(false);   // 删键而非写 true
-        expect(notified).toBe(1);
-    });
-
-    it('undo/redo 恢复回嵌（删 $fold 键也是结构操作）', () => {
-        const s = new EditingSession(makeRecord('t', '1', {
-            '$type': 'Foo', child: {$type: 'Small', '$fold': false}
-        }));
-        s.initUndoBaseline();
-        s.deleteFold(['child'], POS);
-        expect('$fold' in (s.getEditingObject()['child'] as JSONObject)).toBe(false);
-        s.undo();
-        expect((s.getEditingObject()['child'] as JSONObject)['$fold']).toBe(false);
-        s.redo();
-        expect('$fold' in (s.getEditingObject()['child'] as JSONObject)).toBe(false);
+describe('EditingSession 节点级 fold（$fold 单义）', () => {
+    it('updateFold(true) 写 $fold=true，updateFold(false) 删键（不残留 inert false）', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo'}));
+        s.updateFold(true, [], POS);
+        expect(s.getEditingObject()['$fold']).toBe(true);
+        s.updateFold(false, [], POS);
+        expect('$fold' in s.getEditingObject()).toBe(false);
     });
 });
