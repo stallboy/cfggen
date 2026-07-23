@@ -55,16 +55,19 @@ setCurrentEditingSession(s)     → 注册 / 注销
        // 内部：bump FitId（正向焦点）+ capture KeepStable（undo 锚点）+ onStructureChange
 ```
 
-增删 / 交换 / 折叠 / 换 impl / 粘贴 → `beforeStructuralChange` + 就地改 + `structureChange`（固定 `FitId` + undo `KeepStable` 锚点）→ bump `structureVersion` + emit → Record 重渲 → entityMap 重算。
+增删 / 交换 / 折叠 / 换 impl / 粘贴 → `beforeStructuralChange` + 就地改 + `structureChange`（正向 `FitId` + undo `KeepStable` 锚点）→ bump `structureVersion` + emit → Record 重渲 → entityMap 重算。
 
-**例外：`replaceEditingObject`（Chat / AddJson 整体替换 / funcClear）bypass `structureChange`**——它直接 `bumpStructure({fitView: FitFull})` + `capture(FitFull)`，因为整体替换需要正向 FitFull + undo FitFull 且无锚点，与 `structureChange` 固定的 `FitId + KeepStable` 语义不同。
+**两个例外**：
+- **`replaceEditingObject`（Chat / AddJson 整体替换 / funcClear）bypass `structureChange`**——它直接 `bumpStructure({fitView: FitFull})` + `capture(FitFull)`，因为整体替换需要正向 FitFull + undo FitFull 且无锚点，与 `structureChange` 默认的 `FitId + KeepStable` 语义不同。
+- **`deleteArrayItem` 正向也用 `KeepStable`（锚点必传父节点 id，不接收 position）**——被删节点在新布局里不存在，`FitId` 只会 noop（视口不动但节点在视口内漂移）；锚定父节点则父节点屏幕不动、其余节点相对它重排。
 
 ### 2.3 方法清单
 
 | 类别 | 方法 | 视口语义 |
 |---|---|---|
 | 值类 | `updateFormValues` / `updateNote` | 不 bump、不重布局 |
-| 结构类 | `addArrayItem` / `addArrayItemAtIndex` / `deleteArrayItem` / `swapArrayItem` | `FitId` + undo `KeepStable` |
+| 结构类 | `addArrayItem` / `addArrayItemAtIndex` / `swapArrayItem` | `FitId` + undo `KeepStable` |
+| 结构类 | `deleteArrayItem`（锚点必传父节点 id） | 正向 `KeepStable` 锚定父节点 + undo `KeepStable` |
 | 结构类 | `updateFold`（节点级 `$fold`）/ `updateEmbed` / `deleteEmbed`（07 的 `$embed_<fieldName>`）| `FitId` + undo `KeepStable` |
 | 结构类 | `updateInterfaceValue`（换 impl）| `FitId` + undo `KeepStable` |
 | 结构类 | `pasteStruct`（粘贴）| `FitId` + undo `KeepStable` |
@@ -184,14 +187,14 @@ capture(v, anchor?)   → undoStack.capture({data: captureUndoPoint(), undoFitVi
 applyUndoPoint(s)     → editingObject = structuredClone(s)    // 出栈后再 clone，防栈里 snapshot 被后续就地变异污染
 ```
 
-四态 `EFitView`（[entityModel.ts](../src/domain/entityModel.ts)）区分 undo/redo 时的视口动作：
+四态 `EFitView`（[entityModel.ts](../src/domain/entityModel.ts)）区分正向与 undo/redo 的视口动作：
 
-| `EFitView` | 何时用 | undo/redo 视口 |
+| `EFitView` | 何时用 | 视口效果 |
 |---|---|---|
-| `FitFull` | 整体替换（Chat / AddJson / reset）| 重新认识图，全图适配 |
-| `KeepStable` + 锚点 | 结构操作（增删 / swap / fold / impl / paste）| 锚点屏幕坐标不动 |
-| `NoChange` | 值类 / Form.List 长度变 | 不动（值类不重布局）|
-| `FitId` | 结构操作**正向**（非 undo）| 适配操作焦点（04 讲）|
+| `FitFull` | 整体替换（Chat / AddJson / reset），及其 undo/redo | 重新认识图，全图适配 |
+| `KeepStable` + 锚点 | undo/redo 结构操作；**正向删除**（锚定父节点） | 锚点屏幕坐标不动 |
+| `NoChange` | 值类 / Form.List 长度变，及其 undo/redo | 不动（值类不重布局）|
+| `FitId` | 其余结构操作**正向**（非 undo；删除除外，见 2.2 例外）| 适配操作焦点（04 讲）|
 
 `undo()` / `redo()` 按被撤销操作的快照语义驱动视口：
 

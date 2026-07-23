@@ -124,15 +124,15 @@ export class RecordEditEntityCreator {
                     const arrayIndex = i;
 
                     const chain = [...fieldChain, fieldKey]
-                    const onDeleteFunc = (position: EntityPosition) => {
-                        // undo 锚点取父节点（id = 当前 struct，即 list 父）：被删 item 在 undo 前不存在，
-                        // 父节点 undo 前后都在 → KeepStable 补偿让其屏幕不动。正向 position 仍指被删 item（删后不在新布局 → FitId noop）。
+                    const onDeleteFunc = () => {
+                        // 锚点取父节点（id = 当前 struct，即 list 父）：被删 item 正向已消失、undo 前不存在，
+                        // 父节点两个方向都在 → 正向删除与 undo 都是 KeepStable 锚定父节点，其屏幕不动。
                         // N→1 归一化：删除后恰剩 1 元素时，预先用 canBeEmbeddedCheck 算好其可内嵌判定传入
                         //（session 不反向依赖 domain 的 embedding 判定）
                         const embeddableWhenSingle = fArrLen === 2
                             ? canBeEmbeddedCheck(fArr[1 - arrayIndex] as JSONObject, itemType)
                             : undefined;
-                        this.session.deleteArrayItem(arrayIndex, chain, position, id, embeddableWhenSingle);
+                        this.session.deleteArrayItem(arrayIndex, chain, id, embeddableWhenSingle);
                     }
 
                     let onMoveUpFunc;

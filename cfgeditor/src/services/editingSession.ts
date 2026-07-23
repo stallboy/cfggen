@@ -267,17 +267,17 @@ export class EditingSession {
         this.structureChange(position);
     }
 
-    /** undoAnchorId：undo 锚点节点 id。默认 position.id（被删 item），但被删节点 undo 前不存在 → 调用方应传父节点 id。
-     *  正向 position 仍指被删 item（删后不在新布局 → FitId 自然 noop，删除后视口不动行为不变）。
+    /** anchorId：锚点节点 id，必传父节点 id（被删节点锚不住：正向已消失、undo 前不存在）。
+     *  正向删除与 undo/redo 都是 KeepStable 锚定父节点——父节点屏幕不动，其余节点相对它重排。
      *  embeddableWhenSingle：删除后恰剩 1 元素时，该元素的可内嵌判定（由调用方经 canBeEmbeddedCheck 算好，
      *  session 不反向依赖 domain 的 embedding 判定）。 */
-    deleteArrayItem(deleteIndex: number, arrayFieldChains: (string | number)[], position: EntityPosition,
-                    undoAnchorId?: string, embeddableWhenSingle?: boolean): void {
+    deleteArrayItem(deleteIndex: number, arrayFieldChains: (string | number)[], anchorId: string,
+                    embeddableWhenSingle?: boolean): void {
         this.beforeStructuralChange();
         const obj = getFieldObj(this.editingObject, arrayFieldChains) as JSONArray;
         obj.splice(deleteIndex, 1);
         this.normalizeEmbedKeyOnDelete(arrayFieldChains, embeddableWhenSingle);
-        this.structureChange(position, undoAnchorId);
+        this.structureChange(anchorPosition(anchorId), anchorId, EFitView.KeepStable);
     }
 
     /** 相邻索引的上/下移，语义是 swap 而非 move（命名沿用旧 onSwapItemInArray）。 */
@@ -461,7 +461,7 @@ export class EditingSession {
         this.applyUndoPoint(target.data);
         this.recomputeDirty();   // undo 可能恰好回到 baseline（变 clean），重算而非简单翻转
         // 按被撤销操作的视口语义驱动：结构→KeepStable(锚点屏幕不动)；整体替换→FitFull；值类→NoChange(不动)
-        this.bumpStructure({fitView: undoFitView, position: anchorId ? {id: anchorId, x: 0, y: 0} : undefined});
+        this.bumpStructure({fitView: undoFitView, position: anchorId ? anchorPosition(anchorId) : undefined});
     }
 
     redo(): void {
@@ -470,7 +470,7 @@ export class EditingSession {
         const {target, undoFitView, anchorId} = this.undoStack.popRedo();
         this.applyUndoPoint(target.data);
         this.recomputeDirty();
-        this.bumpStructure({fitView: undoFitView, position: anchorId ? {id: anchorId, x: 0, y: 0} : undefined});
+        this.bumpStructure({fitView: undoFitView, position: anchorId ? anchorPosition(anchorId) : undefined});
     }
 
     // 箭头字段：作为引用传给 useSyncExternalStore 时 this 不丢（与 subscribe/getStructureVersion 等读取器同约定）。
@@ -487,11 +487,11 @@ export class EditingSession {
 
     // ============ 内部 ============
 
-    private structureChange(position: EntityPosition, undoAnchorId?: string): void {
+    private structureChange(position: EntityPosition, anchorId?: string, forwardFitView?: EFitView): void {
         this.markDirty();
-        this.bumpStructure({fitView: EFitView.FitId, position});
-        // undo 锚点默认 = 操作节点 id（用户视觉焦点）；delete 传父 id（被删节点 undo 前不存在，父稳定）
-        this.capture(EFitView.KeepStable, undoAnchorId ?? position.id);
+        this.bumpStructure({fitView: forwardFitView ?? EFitView.FitId, position});
+        // undo 锚点默认 = 操作节点 id（用户视觉焦点）；delete 传父 id（被删节点锚不住，父稳定）
+        this.capture(EFitView.KeepStable, anchorId ?? position.id);
     }
 
     /** 结构变更通用收尾：写 fitView 契约 → bump 版本（触发订阅者重渲）→ 同步清 layout 缓存 → 刷新脏标记 → emit。
@@ -593,6 +593,12 @@ export function setCurrentEditingSession(session: EditingSession | null): void {
  *  类 2（list 嵌入）默认展开、写 true 收起。session 写入侧与 creator 读取侧共用此函数，避免键格式漂移。 */
 export function embedKey(fieldName: string): string {
     return `$embed_${fieldName}`;
+}
+
+/** KeepStable 锚点位置：pickViewportAction 的 KeepStable 分支只读 id，x/y 为满足 EntityPosition 形状的占位。
+ *  undo/redo 与正向删除三处共用，避免各处手搓 {id, x: 0, y: 0}。 */
+function anchorPosition(id: string): EntityPosition {
+    return {id, x: 0, y: 0};
 }
 
 function prepareEditingObject(rawObj: JSONObject): JSONObject {

@@ -103,7 +103,7 @@ describe('EditingSession 值类 vs 结构类（性能契约）', () => {
             notified++;
         });
 
-        s.deleteArrayItem(0, ['items'], POS);
+        s.deleteArrayItem(0, ['items'], 'parentId');
         s.swapArrayItem(0, 1, ['items'], POS);
         s.updateInterfaceValue({$type: 'Other'}, ['child'], POS);
         expect(notified).toBe(3);
@@ -205,7 +205,7 @@ describe('EditingSession fuzz（确定性伪随机混合操作）', () => {
                     s.replaceEditingObject({'$type': 'Bar', items: []});  // 结构类：bump
                     break;
                 case 4:
-                    s.deleteArrayItem(0, ['items'], POS);  // 空数组时 splice 无效但不崩，仍 bump
+                    s.deleteArrayItem(0, ['items'], 'parentId');  // 空数组时 splice 无效但不崩，仍 bump
                     break;
             }
             expect(s.getStructureVersion()).toBeGreaterThanOrEqual(lastVersion);
@@ -379,7 +379,7 @@ describe('EditingSession undo/redo（结构类）', () => {
     it('delete undo 锚点取父：fitViewToIdPosition.id = undoAnchorId', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM()]}));
         s.initUndoBaseline();
-        s.deleteArrayItem(0, ['items'], POS, 'parentId');   // 第4参 = undoAnchorId（父）
+        s.deleteArrayItem(0, ['items'], 'parentId');   // 第3参 = anchorId（父）
         s.undo();
         const res = s.getEditingObjectRes();
         expect(res.fitView).toBe(EFitView.KeepStable);
@@ -611,34 +611,34 @@ describe('EditingSession 字段级嵌入（$embed_<fieldName>）', () => {
     it('删到空 ⇒ 删键（空 list 嵌入无意义）', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM()]}));
         s.updateEmbed(true, 'items', [], POS);
-        s.deleteArrayItem(0, ['items'], POS);
+        s.deleteArrayItem(0, ['items'], 'parentNode');
         expect('$embed_items' in s.getEditingObject()).toBe(false);
     });
 
     it('折叠中删到恰剩 1 个可内嵌元素 ⇒ 删 true 键（嵌入 Tag 延续收起意图）', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM(), ITEM()]}));
         s.updateEmbed(true, 'items', [], POS);
-        s.deleteArrayItem(0, ['items'], POS, undefined, true);
+        s.deleteArrayItem(0, ['items'], 'parentNode', true);
         expect('$embed_items' in s.getEditingObject()).toBe(false);
     });
 
     it('展开的多元素 list 删到恰剩 1 个可内嵌元素 ⇒ 补写 false（保持展开，不回嵌）', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM(), ITEM()]}));
-        s.deleteArrayItem(0, ['items'], POS, undefined, true);
+        s.deleteArrayItem(0, ['items'], 'parentNode', true);
         expect(s.getEditingObject()['$embed_items']).toBe(false);
     });
 
     it('删到恰剩 1 个不可内嵌元素（embeddableWhenSingle=false）⇒ 删键（类 2 默认展开）', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM(), ITEM()]}));
         s.updateEmbed(true, 'items', [], POS);
-        s.deleteArrayItem(0, ['items'], POS, undefined, false);
+        s.deleteArrayItem(0, ['items'], 'parentNode', false);
         expect('$embed_items' in s.getEditingObject()).toBe(false);
     });
 
     it('删后仍多元素 ⇒ 保留折叠键（不跨类，无需归一化）', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM(), ITEM(), ITEM()]}));
         s.updateEmbed(true, 'items', [], POS);
-        s.deleteArrayItem(0, ['items'], POS);
+        s.deleteArrayItem(0, ['items'], 'parentNode');
         expect(s.getEditingObject()['$embed_items']).toBe(true);
     });
 
@@ -681,6 +681,28 @@ describe('EditingSession 字段级嵌入（$embed_<fieldName>）', () => {
         const s3 = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', list: [{$type: 'A'}], '$embed_list': false}));
         s3.updateInterfaceValue({$type: 'C'}, ['list', 0], POS, false);
         expect('$embed_list' in s3.getEditingObject()).toBe(false);
+    });
+});
+
+describe('EditingSession 删除节点的视口语义（KeepStable 锚定父节点）', () => {
+    it('正向删除：fitView=KeepStable、锚点为父 id（anchorId 必传）', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM(), ITEM()]}));
+        s.deleteArrayItem(0, ['items'], 'parentNode');
+        const res = s.getEditingObjectRes();
+        expect(res.fitView).toBe(EFitView.KeepStable);
+        expect(res.fitViewToIdPosition?.id).toBe('parentNode');
+    });
+
+    it('undo 删除同样锚定父节点（capture 锚点 = anchorId）', () => {
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM(), ITEM()]}));
+        s.initUndoBaseline();
+        s.deleteArrayItem(0, ['items'], 'parentNode');
+        expect((s.getEditingObject()['items'] as JSONArray).length).toBe(1);
+        s.undo();
+        expect((s.getEditingObject()['items'] as JSONArray).length).toBe(2);   // 数据恢复
+        const res = s.getEditingObjectRes();
+        expect(res.fitView).toBe(EFitView.KeepStable);
+        expect(res.fitViewToIdPosition?.id).toBe('parentNode');
     });
 });
 

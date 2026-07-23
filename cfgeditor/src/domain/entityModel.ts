@@ -373,9 +373,9 @@ export function isCardEntity(entity: Entity): entity is CardEntity {
 export enum EFitView {
     FitFull = 'FitFull',
     FitId = 'FitId',
-    /** undo/redo 用：以 fitViewToIdPosition.id 为锚点，relayout 后让该节点屏幕坐标不变。锚点 = 被撤销操作的
-     *  视觉焦点（delete 取父节点）。anchorOld 由 flow 层从「上一帧布局」读——不用 position.x/y，那是「当初操作
-     *  发起时」的坐标，期间可能发生别的编辑，已过时。
+    /** 锚点稳定：以 fitViewToIdPosition.id 为锚点，relayout 后让该节点屏幕坐标不变。用于 undo/redo（锚点 =
+     *  被撤销操作的视觉焦点）与正向删除（锚点 = 父节点，被删节点锚不住）。anchorOld 由 flow 层从「上一帧布局」
+     *  读——不用 position.x/y，那是「当初操作发起时」的坐标，期间可能发生别的编辑，已过时。
      *  与 FitId 区别：anchorOld 来源不同（prevMap vs position.x/y）；与 NoChange 区别：NoChange 无论如何不动，KeepStable 布局变就补偿、不变则不动。 */
     KeepStable = 'KeepStable',
     /** 不跳视口：只读/固定页保持当前视口；值类 undo（布局不变）亦用此（不调 fitView/setViewport）。 */
