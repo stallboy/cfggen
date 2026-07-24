@@ -5,9 +5,8 @@ import {useTranslation} from "react-i18next";
 import {useMutation} from "@tanstack/react-query";
 import {updateNote} from "@/api/apiClient.ts";
 import {useMyStore} from "@/store/store";
-import {NoteEditResult, notesToMap} from "@/api/noteModel";
-import {queryClient} from "@/services/queryClient.ts";
-import {queryKeys} from "@/services/queryKeys.ts";
+import {NoteEditResult} from "@/api/noteModel";
+import {setNotesCache} from "@/services/queryKeys.ts";
 import {estimateNoteRows, NOTE_ROW_H} from "./layout/calcWidthHeight.ts";
 
 // ── note 展示/编辑组件：按「是否内嵌 EntityForm 编辑表单」分两套 ──
@@ -87,7 +86,7 @@ export const NoteEdit = memo(function NoteEdit({id, note, setIsEdit}: {
                     placement: 'topRight',
                     duration: 3
                 });
-                queryClient.setQueryData(queryKeys.notes(), notesToMap(notes));
+                setNotesCache(notes);
                 setIsEdit(false);   // 仅真成功才关闭编辑器
             } else {
                 notification.warning({

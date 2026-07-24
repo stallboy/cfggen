@@ -23,7 +23,7 @@ import {History} from "@/domain/historyModel";
 import {NEW_RECORD_ID, Schema} from "@/domain/schema";
 import {useLocation} from "react-router";
 import {ResInfo} from "@/domain/resInfo";
-import {queryClient} from "@/services/queryClient.ts";
+import {removeAllQueryCache} from "@/services/queryClient.ts";
 
 export type PageType = 'table' | 'tableRef' | 'record' | 'recordRef' | 'recordUnref';
 export const pageEnums = ['table', 'tableRef', 'record', 'recordRef', 'recordUnref'];
@@ -431,7 +431,7 @@ export function setServer(value: string) {
     // server 改了（含「重连当前 server」「换库」）：清空全部缓存强制重取。
     // 所有 queryKey 都不含 server（queryFn 直接闭包捕获 store.server），不清的话换库后旧库数据
     // 会赖在缓存里直到 staleTime（schema 5min / record 30s）过期才刷新——期间显示错库数据。
-    queryClient.removeQueries({queryKey: []});
+    removeAllQueryCache();
 }
 
 export function setNodeShow(nodeShow: NodeShowType) {

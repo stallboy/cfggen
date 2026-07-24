@@ -19,8 +19,8 @@ import {useHotkeys} from "react-hotkeys-hook";
 
 import {useEntityToGraph} from "@/flow/useEntityToGraph.ts";
 import {SInterface, SStruct} from "@/api/schemaModel.ts";
-import {invalidateAllQueries, queryClient} from "@/services/queryClient.ts";
-import {queryKeys} from "@/services/queryKeys.ts";
+import {invalidateAllQueries} from "@/services/queryClient.ts";
+import {queryKeys, removeEditLayoutCache} from "@/services/queryKeys.ts";
 import {EntityNode} from "@/flow/FlowGraph.tsx";
 import {NEW_RECORD_ID, SchemaTableType} from "@/domain/schema.ts";
 
@@ -81,11 +81,8 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
     const sessionRef = useRef<EditingSession | null>(null);
     if (sessionRef.current === null) {
         sessionRef.current = new EditingSession(recordResult, {
-            // 结构变更时同步删 layout 缓存：用 removeQueries（非 invalidate）——remove 不主动 fetch，
-            // 等重渲后 useQuery 用新 queryFn 闭包（新 nodes）重取；invalidate 会立即用重渲前的旧闭包 refetch
-            // → 旧布局。不能挪 effect：effect 晚于 render，重渲那一帧 useQuery 会读到还没被删的旧缓存 →
-            // 旧布局多一帧。
-            onStructureChange: () => queryClient.removeQueries({queryKey: ['layout', pathnameRef.current, 'e']}),
+            // 结构变更时事件期同步清编辑态 layout 缓存（remove 非 invalidate、不可挪 effect，理由见 helper JSDoc）
+            onStructureChange: () => removeEditLayoutCache(pathnameRef.current),
             mutate: mutateRecord,
             onEditingStateChange: (table, id, isEdited) => setEditingState(table, id, isEdited),
         });

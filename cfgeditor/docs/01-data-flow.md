@@ -151,7 +151,7 @@ queryKeys 工厂:
   prompt(table)              → ['prompt', table]
 ```
 
-> 例外：layout 的「按前缀批量失效」（`['layout', pathname]`、`['layout', pathname, 'e']`）仍手写——那是批量语义，与「构造单条 key」不同；第一段 `'layout'` 与 factory 一致即可。
+> 缓存写操作收口为**动词函数**，调用方不碰 `queryClient` 实例：key 相关的动词收在本 factory 同文件——`removeEditLayoutCache(pathname)` = `removeQueries(['layout', pathname, 'e'])`（结构编辑清编辑态，§6.4）、`invalidateLayoutCache(pathname)` = `invalidateQueries(['layout', pathname])`（布局失败 retry，04）、`refetchResInfoCache()`、`setNotesCache(notes)`（§6.3）；key 无关的全量操作（`invalidateAllQueries` / `removeAllQueryCache`）留在 `queryClient.ts`。前缀含 `'e'` 分桶段的位置与 `queryKeys.layout` 同文件共处，改分桶约定时同步改——调用方不再手写字面量。
 
 **factory 维护的 queryKey 清单**（另有 `recordRefIds` / `search` / `tauri` / `vtt2` 等手写 key 散落在组件里）：
 
@@ -272,11 +272,11 @@ onError(error):
 
 ### 6.3 精确写缓存（NoteShowOrEdit.tsx）
 
-[`NoteShowOrEdit.tsx`](../src/flow/NoteShowOrEdit.tsx) 在 `updateNote` 成功后，直接 `queryClient.setQueryData(queryKeys.notes(), notesToMap(editResult.notes))` 写缓存。因为 `updateNote` 后端返回**全量 notes**，直接写就**省一次 refetch**——比 `invalidateQueries(['notes'])`（触发一次 GET /notes）更省。前提：后端真返回了完整新状态。
+[`NoteShowOrEdit.tsx`](../src/flow/NoteShowOrEdit.tsx) 在 `updateNote` 成功后，调 `setNotesCache(editResult.notes)`（`queryKeys.ts` 动词，内部 `setQueryData(queryKeys.notes(), notesToMap(notes))`）直接写缓存。因为 `updateNote` 后端返回**全量 notes**，直接写就**省一次 refetch**——比 `invalidateQueries(['notes'])`（触发一次 GET /notes）更省。前提：后端真返回了完整新状态。
 
 ### 6.4 `removeQueries` 而非 `invalidate`（Record.tsx 的 onStructureChange）
 
-`Record.tsx` 的 `onStructureChange` 在事件期同步调 `queryClient.removeQueries({queryKey: ['layout', pathnameRef.current, 'e']})`。
+`Record.tsx` 的 `onStructureChange` 在事件期同步调 `removeEditLayoutCache(pathnameRef.current)`（`queryKeys.ts` 的动词，内部即 `removeQueries({queryKey: ['layout', pathname, 'e']})`）。
 
 **为什么 remove 不 invalidate**：结构变更（增删节点）后 `entityMap` 会重算，`useEntityToGraph` 的 `queryFn` 闭包里的 `nodes` 变了。若用 `invalidate`，它会**立即用重渲前的旧闭包 refetch** → 旧布局；用 `remove` 只删缓存不主动 fetch，等重渲那一帧 `useQuery` 用**新闭包**（新 nodes）自然重取 → 新布局。且 `remove` 必须在事件期同步调用（不能挪 effect），否则重渲那一帧读到还没删的旧缓存。这是 03 → 04 的真实钩子。
 
@@ -292,7 +292,7 @@ onError(error):
 
 **跳转**：永远 `navigate(navTo(curPage, table, id, edit))`，别手拼 URL。
 
-**换库**：`setServer` 已 `removeQueries({queryKey: []})` 全清（多数 queryKey 不含 `server`，个别如 `search` 含——但全清已覆盖，旧库数据不会赖缓存），无需额外处理。
+**换库**：`setServer` 已 `removeAllQueryCache()` 全清（多数 queryKey 不含 `server`，个别如 `search` 含——但全清已覆盖，旧库数据不会赖缓存），无需额外处理。
 
 ---
 

@@ -77,7 +77,7 @@ spreadFallbackNodes(nodes):
   第 i 个节点 → ( 80 + (i mod 5) × 320 ,  80 + floor(i / 5) × 260 )
 ```
 
-`retry` = `queryClient.invalidateQueries({queryKey: ['layout', pathname]})`（Effect 3）。
+`retry` = `invalidateLayoutCache(pathname)`（`queryKeys.ts` 动词，内部 `invalidateQueries(['layout', pathname])`；Effect 3）。
 
 ---
 

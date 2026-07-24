@@ -200,7 +200,7 @@ sequenceDiagram
 
 **偏好读写**：读用 `getPrefInt/Bool/Str/Json`（同步，读 localStorage）；写用 `setPref`（写 localStorage + 异步 yml）。别直接操作 localStorage / yml。
 
-**换库**：`setServer` 已 `removeQueries({queryKey: []})` 全清缓存（多数 queryKey 不含 `server`，个别如 `search` 含——全清已覆盖），无需额外处理。
+**换库**：`setServer` 已 `removeAllQueryCache()` 全清缓存（多数 queryKey 不含 `server`，个别如 `search` 含——全清已覆盖），无需额外处理。
 
 **改拓扑 setting**：直接 `setMaxImpl` 等，**不要**手动清 layout 缓存——`topologyKeys` 已进 layout queryKey，自然失效。
 

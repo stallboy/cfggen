@@ -115,6 +115,48 @@ describe('EditingSession 值类 vs 结构类（性能契约）', () => {
     });
 });
 
+describe('EditingSession.onStructureChange（03→04 接缝：事件期同步清 layout 缓存）', () => {
+    it('结构类编辑：方法返回前已同步调用，且恰好一次', () => {
+        let calls = 0;
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}), {
+            onStructureChange: () => {
+                calls++;
+            },
+        });
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
+        // 同步语义：若回调被挪到 effect/setTimeout，此处读到 0 → 重渲帧会用旧 layout 缓存多渲一帧
+        expect(calls).toBe(1);
+    });
+
+    it('每个结构 op 恰好一次（addArrayItem / updateFold / replaceEditingObject）', () => {
+        let calls = 0;
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [], child: {$type: 'Child'}}), {
+            onStructureChange: () => {
+                calls++;
+            },
+        });
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
+        s.updateFold(true, [], POS);
+        s.replaceEditingObject({'$type': 'Foo', items: []});
+        expect(calls).toBe(3);
+    });
+
+    it('值类编辑不触发（updateNote / updateFormValues）', () => {
+        const schema = new Schema(makeRawSchema([
+            makeStruct('Foo', [field('x', 'int')]),
+        ]));
+        let calls = 0;
+        const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', x: 0}), {
+            onStructureChange: () => {
+                calls++;
+            },
+        });
+        s.updateNote('n', []);
+        s.updateFormValues(schema, {x: 1}, []);
+        expect(calls).toBe(0); // 值类不清 layout 缓存（拓扑不变，布局可复用）
+    });
+});
+
 describe('EditingSession submit / replaceEditingObject', () => {
     it('submit 读到 in-place 编辑后的最新 editingObject', () => {
         let captured: JSONObject | null = null;

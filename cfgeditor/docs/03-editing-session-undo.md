@@ -262,14 +262,14 @@ bumpStructure({fitView, position?}):
 
 | callback | 作用 | 注入点 |
 |---|---|---|
-| `onStructureChange` | 结构变更时清 layout 缓存（钩给 04）| [Record.tsx](../src/features/record/Record.tsx) 注入：`queryClient.removeQueries({queryKey: ['layout', pathname, 'e']})` |
+| `onStructureChange` | 结构变更时清 layout 缓存（钩给 04）| [Record.tsx](../src/features/record/Record.tsx) 注入：`removeEditLayoutCache(pathname)`（`queryKeys.ts` 动词，内部 `removeQueries(['layout', pathname, 'e'])`）|
 | `mutate` | 提交写回后端（`submit()` 调）| [Record.tsx](../src/features/record/Record.tsx) 的 addOrUpdateRecord mutation |
 | `onEditingStateChange` | `(table, id, isEdited)` → 写 store 镜像（HeaderBar 脏点）| [Record.tsx](../src/features/record/Record.tsx) 注入：`setEditingState` |
 
 **为什么走回调而非直接 import store**：让 EditingSession 不依赖 store 层（守住 services 不反向依赖 store 的方向）。Record 注入 `onStructureChange` 成：
 
 ```
-onStructureChange: () => queryClient.removeQueries({queryKey: ['layout', pathname, 'e']})
+onStructureChange: () => removeEditLayoutCache(pathnameRef.current)
 ```
 
 **同步在事件期执行**（不能挪 effect）——否则重渲那一帧读到还没删的旧 layout 缓存，多渲染一帧旧布局。这是 03 给 04 埋的钩子：结构变更清编辑态 layout 缓存，Record 重渲后用新 entityMap 重跑 ELK（为什么用 `remove` 不用 `invalidate`，见 [01 §6.4](01-data-flow.md)）。

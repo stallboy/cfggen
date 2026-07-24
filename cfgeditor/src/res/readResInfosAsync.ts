@@ -5,8 +5,7 @@ import {
     setResMap
 } from "@/store/store";
 import {readDir} from "@tauri-apps/plugin-fs";
-import {queryClient} from "@/services/queryClient.ts";
-import {queryKeys} from "@/services/queryKeys.ts";
+import {refetchResInfoCache} from "@/services/queryKeys.ts";
 import {ext2type, findKeyEndIndex} from "./resUtils.ts";
 import {ResAudioTrack, ResInfo, ResSubtitlesTrack, ResType} from "@/domain/resInfo";
 import {isTauri} from "@tauri-apps/api/core";
@@ -156,9 +155,7 @@ function packAllTracks(raws: Map<string, ResInfo[]>) {
 let alreadyRead = false;
 
 export function invalidateResInfos() {
-    queryClient.invalidateQueries({queryKey: queryKeys.resInfo(), refetchType: 'all'}).catch((reason: unknown) => {
-        console.log(reason);
-    });
+    refetchResInfoCache();
     alreadyRead = false;
 }
 

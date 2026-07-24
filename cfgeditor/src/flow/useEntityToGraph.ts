@@ -3,8 +3,7 @@ import {useMyStore} from "@/store/store";
 import {Rect, useReactFlow, useStore} from "@xyflow/react";
 import {convertNodeAndEdges} from "./layout/entityToNodeAndEdge.ts";
 import {useQuery} from "@tanstack/react-query";
-import {queryClient} from "@/services/queryClient.ts";
-import {queryKeys} from "@/services/queryKeys.ts";
+import {invalidateLayoutCache, queryKeys} from "@/services/queryKeys.ts";
 import {layoutAsync} from "./layout/layoutAsync.ts";
 import {EntityNode, NodeDoubleClickFunc, NodeMenuFunc} from "./FlowGraph.tsx";
 import {Entity, EditingObjectRes} from "@/domain/entityModel";
@@ -183,7 +182,7 @@ export function useEntityToGraph({
     // 拆独立 effect：只随 layoutError/pathname 变化，不沾 Effect 1 的菜单依赖；flowGraph 引用稳定（ctx memoized）。
     useEffect(() => {
         flowGraph.setLayoutError(layoutError ?? undefined);
-        flowGraph.setRetryLayout(() => queryClient.invalidateQueries({queryKey: ['layout', pathname]}));
+        flowGraph.setRetryLayout(() => invalidateLayoutCache(pathname));
     }, [layoutError, flowGraph, pathname]);
 
     // Effect 2：视口动作。刻意与 Effect 1 拆开——视口只随「视口指令(editingObjectRes) / layout 结果
