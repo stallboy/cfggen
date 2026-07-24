@@ -57,30 +57,39 @@ export const EMBEDDING_CONFIG : EmbeddingConfig = {
 // 内嵌判定规则（原 embeddingChecker.ts）—— 检查/提取可内嵌字段
 // ============================================================================
 
+interface ResolvedEmbed {
+    struct: SStruct;
+    structCfg: EmbeddableStructConfig;
+    implNameToDisplay?: string;
+}
+
+// struct/interface 解析（canBeEmbeddedCheck 与 extractEmbeddingFields 共用）：
+// 选 struct + 对应 structCfg；interface 解析失败返回 null。
+// 注意 SStruct/SInterface 未把 type 收窄为单字面量（见 schemaModel.ts Namable），故仍需 as 断言。
+function resolveEmbedTarget(fieldType: SStruct | SInterface, fieldValue: JSONObject): ResolvedEmbed | null {
+    if (fieldType.type === 'struct') {
+        return {struct: fieldType as SStruct, structCfg: EMBEDDING_CONFIG.struct};
+    }
+    if (fieldType.type === 'interface') {
+        const sInterface = fieldType as SInterface;
+        const resolved = resolveImpl(sInterface, fieldValue);
+        if (!resolved) return null;
+        const implNameToDisplay = resolved.implName !== sInterface.defaultImpl ? resolved.implName : undefined;
+        return {struct: resolved.impl, structCfg: EMBEDDING_CONFIG.interface, implNameToDisplay};
+    }
+    return null;
+}
+
 /**
  * 内嵌检查器（统一入口）
  * 检查字段是否可以内嵌显示
  */
 export function canBeEmbeddedCheck(fieldValue: JSONObject, fieldType: SStruct | SInterface): boolean {
-    let struct: SStruct;
-    let structCfg: EmbeddableStructConfig;
-    if (fieldType.type === 'struct') {
-        struct = fieldType as SStruct;
-        structCfg = EMBEDDING_CONFIG.struct;
-    } else if (fieldType.type === 'interface') {
-        const sInterface = fieldType as SInterface;
-        const resolved = resolveImpl(sInterface, fieldValue);
-        if (!resolved) return false;
-        struct = resolved.impl;
-        structCfg = EMBEDDING_CONFIG.interface;
-    } else {
-        return false;
-    }
+    const target = resolveEmbedTarget(fieldType, fieldValue);
+    if (!target) return false;
 
-    const filteredFields = filterEmptyListFields(struct.fields, fieldValue);
-    const analysis = analyzeFieldTypes(filteredFields);
-
-    return matchEmbeddingConfig(analysis, structCfg);
+    const filteredFields = filterEmptyListFields(target.struct.fields, fieldValue);
+    return matchEmbeddingConfig(analyzeFieldTypes(filteredFields), target.structCfg);
 }
 
 export interface EmbeddingFieldValues {
@@ -95,23 +104,9 @@ export interface EmbeddingFieldValues {
 
 
 export function extractEmbeddingFields(fieldType: SStruct | SInterface, fieldValue: JSONObject): EmbeddingFieldValues | null {
-    let struct: SStruct;
-    let structCfg: EmbeddableStructConfig;
-    let implNameToDisplay: string | undefined = undefined;
-    if (fieldType.type === 'struct') {
-        struct = fieldType as SStruct;
-        structCfg = EMBEDDING_CONFIG.struct;
-    } else if (fieldType.type === 'interface') {
-        const sInterface = fieldType as SInterface;
-        const resolved = resolveImpl(sInterface, fieldValue);
-        if (!resolved) return null;
-        struct = resolved.impl;
-        structCfg = EMBEDDING_CONFIG.interface;
-        // 记录implName（非defaultImpl时需要显示）
-        implNameToDisplay = resolved.implName !== sInterface.defaultImpl ? resolved.implName : undefined;
-    } else {
-        return null;
-    }
+    const target = resolveEmbedTarget(fieldType, fieldValue);
+    if (!target) return null;
+    const {struct, structCfg, implNameToDisplay} = target;
 
     const filteredFields = filterEmptyListFields(struct.fields, fieldValue);
 
@@ -120,10 +115,7 @@ export function extractEmbeddingFields(fieldType: SStruct | SInterface, fieldVal
         return {embeddedFields: [], implNameToDisplay};
     }
 
-    const analysis = analyzeFieldTypes(filteredFields);
-    const canEmbedding = matchEmbeddingConfig(analysis, structCfg);
-
-    if (canEmbedding) {
+    if (matchEmbeddingConfig(analyzeFieldTypes(filteredFields), structCfg)) {
         return {
             embeddedFields: filteredFields.map(field => ({
                 value: getFieldValue(fieldValue, field),
@@ -131,7 +123,7 @@ export function extractEmbeddingFields(fieldType: SStruct | SInterface, fieldVal
                 name: field.name,
                 comment: field.comment,
             })),
-            implNameToDisplay: implNameToDisplay
+            implNameToDisplay
         };
     }
 

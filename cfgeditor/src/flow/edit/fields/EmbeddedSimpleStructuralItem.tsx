@@ -1,4 +1,4 @@
-import {Fragment, memo, useCallback, useMemo} from "react";
+import {Fragment, memo, useCallback} from "react";
 import type {CSSProperties} from "react";
 import {Button, Flex, Tag} from "antd";
 import {ArrowsAltOutlined} from "@ant-design/icons";
@@ -15,17 +15,50 @@ interface EmbeddedSimpleStructuralItemProps {
     bgColor?: string;
 }
 
+// 格式化单个值的显示（无组件状态依赖，提模块级，省去 useCallback 样板）
+function formatDisplayValue(value: PrimitiveValue, type: PrimitiveType): string {
+    if (value === undefined || value === null) {
+        return '-';
+    }
+    if (type === 'bool') {
+        return value ? '✓' : '✗';
+    }
+    return String(value);
+}
+
+// 渲染单个值 Tag（无组件状态依赖，提模块级）
+function renderValueTag(
+    value: PrimitiveValue,
+    type: PrimitiveType,
+    name: string,
+    comment?: string,
+) {
+    const displayValue = formatDisplayValue(value, type);
+    const valueStyle: CSSProperties = {
+        color: (value === undefined || value === null || value === '')
+            ? '#999'
+            : undefined,
+    };
+
+    // 值的comment组合：name + comment
+    const valueComment = comment ? `${name}: ${comment}` : name;
+
+    return (
+        <Tag color="blue" style={valueStyle}>
+            <LabelWithTooltip
+                name={displayValue}
+                comment={valueComment}
+            />
+        </Tag>
+    );
+}
+
 export const EmbeddedSimpleStructuralItem = memo(
     function EmbeddedSimpleStructuralItem({field, nodeProps}: EmbeddedSimpleStructuralItemProps) {
         const embeddedData = field.embeddedField!;
 
-        // 组合comment：field.comment + embeddedData.note
-        const fieldComment = useMemo(() => {
-            const parts: string[] = [];
-            if (field.comment) parts.push(field.comment);
-            if (embeddedData.note) parts.push(embeddedData.note);
-            return parts.join(' ');
-        }, [field.comment, embeddedData.note]);
+        // 组合comment：field.comment + embeddedData.note（filter(Boolean) 与原 if-guard push 等价：都过滤 falsy）
+        const fieldComment = [field.comment, embeddedData.note].filter(Boolean).join(' ');
 
         // 字段名称Tag颜色（有note时黄色）
         const fieldNameTagColor = embeddedData.note ? '#876800' : 'blue';
@@ -34,44 +67,6 @@ export const EmbeddedSimpleStructuralItem = memo(
         const handleExpand = useCallback(() => {
             field.expandEmbedded?.(nodeAnchor(nodeProps));
         }, [field, nodeProps]);
-
-        // 格式化单个值的显示
-        const formatDisplayValue = useCallback((value: PrimitiveValue, type: PrimitiveType): string => {
-            if (value === undefined || value === null) {
-                return '-';
-            }
-            if (type === 'bool') {
-                return value ? '✓' : '✗';
-            }
-            return String(value);
-        }, []);
-
-        // 渲染单个值Tag
-        const renderValueTag = useCallback((
-            value: PrimitiveValue,
-            type: PrimitiveType,
-            name: string,
-            comment?: string
-        ) => {
-            const displayValue = formatDisplayValue(value, type);
-            const valueStyle: CSSProperties = {
-                color: (value === undefined || value === null || value === '')
-                    ? '#999'
-                    : undefined,
-            };
-
-            // 值的comment组合：name + comment
-            const valueComment = comment ? `${name}: ${comment}` : name;
-
-            return (
-                <Tag color="blue" style={valueStyle}>
-                    <LabelWithTooltip
-                        name={displayValue}
-                        comment={valueComment}
-                    />
-                </Tag>
-            );
-        }, [formatDisplayValue]);
 
         return (
             <Flex gap="small" justify="flex-end" align="center">
