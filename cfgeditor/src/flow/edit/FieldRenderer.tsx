@@ -88,8 +88,12 @@ export function FieldRenderer({field, edit, nodeProps, nodeShow}: FieldRenderPro
         case "funcSubmit":
             return <FuncSubmitFormItem field={field}/>;
 
-        default:
-            // 理论上不会到达这里
+        default: {
+            // exhaustive 守卫：EntityEditField 新增成员时 TS 在此报错（field 不再 narrow 成 never），
+            // 不再像原先 default:return <></> 那样默默渲染空。
+            const _exhaustive: never = field;
+            void _exhaustive;
             return <></>;
+        }
     }
 }

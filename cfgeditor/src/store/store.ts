@@ -69,13 +69,18 @@ export type StoreState = {
     resourceDir: string;
 }
 
-const storeState: StoreState = {
+// 持久化分类按「声明分组」决定（结构强保证）：新增 store key 必须归入下列某一组，强制开发者决定
+// 它的持久化语义。三个分类 Set 从分组派生（见下方 prefKeySet / prefSelfKeySet），不再手维护——
+// 原本「手维护三个独立 Set」曾导致新 key 默认落进 prefKeySet → 写入共享 cfgeditor.yml，
+// 对含 apiKey 的 aiConf 是真实泄漏风险。
+//   sharedPrefState → cfgeditor.yml（团队共享）
+//   selfPrefState   → cfgeditorSelf.yml（个人/敏感，aiConf 含 apiKey）
+//   sessionState    → 不持久化（运行时）
+// 另：路由派生的 localStorage key（curPage/curTableId/curId）不在 StoreState，由 navTo 直接 setPref 写、归 self。
+
+// → cfgeditor.yml（团队共享）
+const sharedPrefState = {
     server: 'localhost:3456',
-    aiConf: {
-        baseUrl: 'https://api.deepseek.com/chat/completions',
-        apiKey: '',
-        model: 'deepseek-v4-flash',
-    },
     themeConfig: {
         themeFile: '',
     },
@@ -127,13 +132,9 @@ const storeState: StoreState = {
         nodeRefColor: '#207b4a',
         nodeRef2Color: '#006d75',
         nodeRefInColor: '#003eb3',
-    },
+    } satisfies NodeShowType,
 
-    query: '',
     searchMax: 50,
-    imageSizeScale: 4,
-
-    dragPanel: 'none',
     pageConf: {
         pages: [],
     },
@@ -142,34 +143,41 @@ const storeState: StoreState = {
         assetDir: '',
         assetRefTable: '',
     },
+};
 
+// → cfgeditorSelf.yml（个人/敏感，aiConf 含 apiKey）
+const selfPrefState = {
+    aiConf: {
+        baseUrl: 'https://api.deepseek.com/chat/completions',
+        apiKey: '',
+        model: 'deepseek-v4-flash',
+    },
+    query: '',
     isEditMode: true,
-    editingCurTable: '',
-    editingCurId: '',
-    editingIsEdited: false,
+    imageSizeScale: 4,
+    dragPanel: 'none',
+};
 
+// 不持久化（运行时）
+const sessionState = {
     history: new History(),
     resMap: new Map<string, ResInfo[]>(),
     resourceDir: '',
+    editingCurTable: '',
+    editingCurId: '',
+    editingIsEdited: false,
 };
 
-let prefKeySet: Set<string> | undefined;
-const prefSelfKeySet: Set<string> = new Set<string>(['curPage', 'curTableId', 'curId', 'query', 'isEditMode',
-    'imageSizeScale', 'dragPanel', 'aiConf']);  // aiConf 含 apiKey，写入个人文件
+// 三组声明合并为完整 storeState；TS 在此强制：StoreState 的每个 key 都必须由某组提供
+// （漏归组 = 编译报错），分类则由「在哪个组」决定。
+const storeState: StoreState = {...sharedPrefState, ...selfPrefState, ...sessionState};
 
-const notSaveKeySet = new Set<string>(['history', 'resMap', 'resourceDir',
-    'editingCurTable', 'editingCurId', 'editingIsEdited']);
+// 三个分类 Set 从上方声明分组派生（结构强保证：分组即分类）。
+const prefKeySet = new Set<string>(Object.keys(sharedPrefState));
+// prefSelfKeySet = 个人 store keys + 路由派生的 localStorage key（curPage/curTableId/curId 不在 StoreState，由 navTo 直接 setPref 写）
+const prefSelfKeySet = new Set<string>([...Object.keys(selfPrefState), 'curPage', 'curTableId', 'curId']);
 
 export function getPrefKeySet(): Set<string> {
-    if (prefKeySet === undefined) {
-        prefKeySet = new Set<string>(Object.keys(storeState));
-        for (const sk of prefSelfKeySet) {
-            prefKeySet.delete(sk);
-        }
-        for (const nk of notSaveKeySet) {
-            prefKeySet.delete(nk);
-        }
-    }
     return prefKeySet;
 }
 
