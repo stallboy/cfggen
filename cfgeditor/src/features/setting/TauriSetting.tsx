@@ -2,6 +2,7 @@ import {setTauriConf, useMyStore} from "@/store/store.ts";
 import {memo, useCallback} from "react";
 import {useTranslation} from "react-i18next";
 import {useQuery} from "@tanstack/react-query";
+import {queryKeys} from "@/services/queryKeys.ts";
 import {App, Button, Checkbox, Divider, Form, Input, Space, Typography} from "antd";
 import {CloseOutlined, PlusOutlined} from "@ant-design/icons";
 import {Schema} from "@/domain/schema.ts";
@@ -20,7 +21,7 @@ export const TauriSetting = memo(function ({schema}: {
 }) {
     const {t} = useTranslation();
     const {data: resourceDir} = useQuery({
-        queryKey: ['tauri', 'resourceDir'],
+        queryKey: queryKeys.tauriResourceDir(),
         queryFn: path.resourceDir,
     });
     const {resMap, tauriConf} = useMyStore();

@@ -31,6 +31,16 @@ export const queryKeys = {
     recordRef: (tableId: string, id: string, refOutDepth: number, maxNode: number, refIn: boolean) =>
         ['recordRef', tableId, id, refOutDepth, maxNode, refIn],
     unreferenced: (tableId: string, maxNode: number) => ['unreferenced', tableId, maxNode],
+    // Finder - 关联记录 id 列表
+    recordRefIds: (tableId: string, id: string, refInDepth: number, refOutDepth: number, maxIds: number) =>
+        ['recordRefIds', tableId, id, refInDepth, refOutDepth, maxIds],
+
+    // 搜索（含 server：唯一把 server 进 key 的查询；换库时由 setServer 的 removeQueries([]) 全清兜底）
+    search: (q: string, max: number, server: string) => ['search', q, max, server],
+
+    // 资源 / Tauri（与 server 无关的本地查询）
+    vtt2: (path: string) => ['vtt2', path],
+    tauriResourceDir: () => ['tauri', 'resourceDir'],
 
     // 布局（ELK 结果缓存）；编辑路由态插入 'e' 段隔离——编辑/浏览 entityMap 构建方式不同（节点集合不同），
     // 必须分桶，否则 nodes 与 rectMap 错配（applyRectToNodes not found）。结构变更时

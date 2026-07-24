@@ -4,6 +4,7 @@ import {Button, Result, Spin, Table} from "antd";
 import {useNavigate} from "react-router";
 import {useQuery} from "@tanstack/react-query";
 import {fetchRecordRefIds} from "@/api/apiClient.ts";
+import {queryKeys} from "@/services/queryKeys.ts";
 import {RecordRefId, RecordRefIdsResult, RefId} from "@/api/recordModel.ts";
 
 
@@ -71,7 +72,7 @@ export const RefIdList = memo(function ({lockedId}: {
     const thisId = lockedId ? lockedId.id : curId;
 
     const {isLoading, isError, error, data: recordResult} = useQuery({
-        queryKey: ['recordRefIds', thisTable, thisId, refIdsInDepth, refIdsOutDepth, refIdsMaxNode],
+        queryKey: queryKeys.recordRefIds(thisTable, thisId, refIdsInDepth, refIdsOutDepth, refIdsMaxNode),
         queryFn: ({signal}) =>
             fetchRecordRefIds(server, thisTable, thisId,
                 refIdsInDepth, refIdsOutDepth, refIdsMaxNode,

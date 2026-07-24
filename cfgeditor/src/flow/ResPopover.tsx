@@ -5,6 +5,7 @@ import {Command} from "@tauri-apps/plugin-shell";
 import {readFile} from "@tauri-apps/plugin-fs";
 import {useQuery} from "@tanstack/react-query";
 import {ResInfo} from "@/domain/resInfo";
+import {queryKeys} from "@/services/queryKeys.ts";
 
 // 取路径末段作短名（兼容 / 与 \）；原 default 分支把完整 path 当按钮文字，长路径撑爆按钮。
 function basename(p: string): string {
@@ -46,7 +47,7 @@ export const VideoAudioSyncer = memo(function VideoAudioSyncer({resInfo}: { resI
     const ref = useRef<HTMLElement>(null);
     const {data: vttTexts} = useQuery({
         // queryKey bump 到 'vtt2'：旧 'vtt' 缓存存的是 blob URL 字符串，新存 VTT 文本，避免错配
-        queryKey: ['vtt2', resInfo.path],
+        queryKey: queryKeys.vtt2(resInfo.path),
         queryFn: () => getSrt2Vtts(resInfo)
     })
 

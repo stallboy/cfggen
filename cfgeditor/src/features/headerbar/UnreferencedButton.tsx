@@ -1,6 +1,7 @@
 import {Button, Skeleton, theme} from "antd";
 import {useQuery} from "@tanstack/react-query";
 import {fetchUnreferencedRecords} from "@/api/apiClient.ts";
+import {queryKeys} from "@/services/queryKeys.ts";
 import {useMyStore, useLocationData, navTo} from "@/store/store.ts";
 import {STable} from "@/api/schemaModel.ts";
 import {memo} from "react";
@@ -17,7 +18,7 @@ export const UnreferencedButton = memo(function ({curTable}: {
 
     // 获取未引用记录数量
     const {isLoading, data} = useQuery({
-        queryKey: ['unreferenced', curTable.name, recordMaxNode],
+        queryKey: queryKeys.unreferenced(curTable.name, recordMaxNode),
         queryFn: ({signal}) => fetchUnreferencedRecords(
             server,
             curTable.name,
