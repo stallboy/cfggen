@@ -1,5 +1,5 @@
 import {JSONArray, JSONObject, JSONValue, RecordResult} from "@/api/recordModel";
-import {SItem, SInterface, SStruct, STable} from "@/api/schemaModel";
+import {parseFieldTypeId, SItem, SInterface, SStruct, STable} from "@/api/schemaModel";
 import {getField, Schema} from "@/domain/schema";
 import {EntityPosition, EFitView, EditingObjectRes} from "@/domain/entityModel";
 import {embedKey, normalizeOnAdd, normalizeOnDelete, normalizeOnImplSwitch} from "@/domain/embedding";
@@ -605,19 +605,12 @@ function getFieldPrimitiveTypeConverter(fieldName: string, sItem: SItem) {
     if (field == null) {
         return null;
     }
-    const ft = field.type;
-    if (ft == 'int') {
-        return toInt;
-    } else if (ft == 'long' || ft == 'float') {
-        return toFloat;
-    } else if (ft.startsWith('list<')) {
-        const itemType = ft.slice(5, ft.length - 1);
-        if (itemType == 'int') {
-            return toInt;
-        } else if (itemType == 'long' || itemType == 'float') {
-            return toFloat;
-        }
-    }
+    // 原始类型或 list<原始> 的元素类型：int→toInt、long|float→toFloat，其余→same
+    const parsed = parseFieldTypeId(field.type);
+    const elemType = parsed.kind === 'list' ? parsed.item
+        : parsed.kind === 'primitive' ? parsed.name : null;
+    if (elemType === 'int') return toInt;
+    if (elemType === 'long' || elemType === 'float') return toFloat;
     return same;
 }
 

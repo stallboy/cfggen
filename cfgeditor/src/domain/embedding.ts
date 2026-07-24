@@ -1,6 +1,6 @@
 import {JSONArray, JSONObject} from '@/api/recordModel';
 import {isNumberType, isPrimitiveType, PrimitiveType, SField, SInterface, SStruct} from '@/api/schemaModel';
-import {getImpl} from '@/domain/schema';
+import {defaultValueOfPrimitive, getImpl} from '@/domain/schema';
 import {PrimitiveValue} from "@/domain/entityModel";
 
 // ============================================================================
@@ -244,20 +244,8 @@ function getFieldValue(obj: JSONObject, field: SField): PrimitiveValue {
         return value as PrimitiveValue;
     }
 
-    // 默认值（集中管理）
-    switch (field.type) {
-        case 'bool':
-            return false;
-        case 'int':
-        case 'long':
-        case 'float':
-            return 0;
-        case 'str':
-        case 'text':
-            return '';
-        default:
-            return 0;
-    }
+    // 默认值（走 schemaModel 单一来源 defaultValueOfPrimitive；非原始类型兜底 0）
+    return isPrimitiveType(field.type) ? defaultValueOfPrimitive(field.type) : 0;
 }
 
 // ============================================================================

@@ -27,14 +27,38 @@ export const PRIMITIVE_TYPES = new Set<string>(['bool', 'int', 'long', 'float', 
 /** 数字类型集合（int/long/float） */
 export const NUMBER_TYPES = new Set<string>(['int', 'long', 'float']);
 
-/** 判断是否为原始类型 */
-export function isPrimitiveType(type: string): boolean {
+/** 判断是否为原始类型（类型守卫：收窄为 PrimitiveType，调用方无需再 as 强转） */
+export function isPrimitiveType(type: string): type is PrimitiveType {
     return PRIMITIVE_TYPES.has(type);
 }
 
 /** 判断是否为数字类型 */
 export function isNumberType(type: string): boolean {
     return NUMBER_TYPES.has(type);
+}
+
+// ---------------------------------------------------------------------------
+// 字段类型解析：把 SField.type 字面量分类（单一来源）
+// 替代散落在 schema.getDirectDepStructsMapByItem / editingSession.getFieldPrimitiveTypeConverter /
+// recordEditEntityCreator.getItemTypeId 的 startsWith('list<'/'map<') + slice 字符串算术。
+// ---------------------------------------------------------------------------
+
+/** SField.type 解析结果：原始 / list / map / 引用（struct|interface 名） */
+export type FieldTypeId =
+    | { kind: 'primitive'; name: PrimitiveType }
+    | { kind: 'list'; item: string }
+    | { kind: 'map'; key: string; value: string }
+    | { kind: 'ref'; name: string };
+
+/** 解析 SField.type 字面量。map<K,V> 以首个逗号切分（与原散落实现同语义）；非容器归 'ref'。 */
+export function parseFieldTypeId(type: string): FieldTypeId {
+    if (isPrimitiveType(type)) return {kind: 'primitive', name: type};
+    if (type.startsWith('list<')) return {kind: 'list', item: type.slice(5, -1)};
+    if (type.startsWith('map<')) {
+        const sp = type.slice(4, -1).split(',');
+        return {kind: 'map', key: sp[0].trim(), value: (sp[1] ?? '').trim()};
+    }
+    return {kind: 'ref', name: type};
 }
 
 export interface SForeignKey {

@@ -1,6 +1,9 @@
 import {JSONObject} from "@/api/recordModel";
+import {PrimitiveValue} from "@/domain/entityModel";
 import {
     isPrimitiveType,
+    parseFieldTypeId,
+    PrimitiveType,
     RawSchema,
     RecordId,
     SField,
@@ -134,27 +137,20 @@ export class Schema {
         item = item as SStruct | STable
 
         for (const {name, type} of item.fields) {
-            if (isPrimitiveType(type)) {
-                continue;
-            }
-            if (type.startsWith("list<")) {
-                const itemType = type.slice(5, type.length - 1);
-                if (!isPrimitiveType(itemType)) {
-                    depNameMap.set(itemType, name);
-                }
-            } else if (type.startsWith("map<")) {
-                const item = type.slice(4, type.length - 1);
-                const sp = item.split(",");
-                const keyType = sp[0].trim();
-                const valueType = sp[1].trim();
-                if (!isPrimitiveType(keyType)) {
-                    depNameMap.set(keyType, name);
-                }
-                if (!isPrimitiveType(valueType)) {
-                    depNameMap.set(valueType, name);
-                }
-            } else {
-                depNameMap.set(type, name);
+            const ft = parseFieldTypeId(type);
+            switch (ft.kind) {
+                case 'primitive':
+                    continue;
+                case 'list':
+                    if (!isPrimitiveType(ft.item)) depNameMap.set(ft.item, name);
+                    break;
+                case 'map':
+                    if (!isPrimitiveType(ft.key)) depNameMap.set(ft.key, name);
+                    if (!isPrimitiveType(ft.value)) depNameMap.set(ft.value, name);
+                    break;
+                case 'ref':
+                    depNameMap.set(ft.name, name);
+                    break;
             }
         }
 
@@ -265,12 +261,8 @@ export class Schema {
         for (const field of sStruct.fields) {
             const n = field.name;
             const t = field.type;
-            if (t == 'bool') {
-                res[n] = false;
-            } else if (t == 'int' || t == 'long' || t == 'float') {
-                res[n] = 0;
-            } else if (t == 'str' || t == 'text') {
-                res[n] = '';
+            if (isPrimitiveType(t)) {
+                res[n] = defaultValueOfPrimitive(t);
             } else if (t.startsWith('list<') || t.startsWith('map<')) {
                 // map<K,V> 在 cfggen 的 JSON 序列化里是 entry 结构体的 list（见 schemaUtil 构造 mapEntryType），
                 // 故 map 与 list 的默认值都是空数组 []。
@@ -342,6 +334,24 @@ function setUnion(dst: Set<string>, from: Set<string>) {
 function setDelete(dst: Set<string>, from: Set<string>) {
     for (const s of from) {
         dst.delete(s);
+    }
+}
+
+/** 原始类型默认值（单一来源）：bool→false / int|long|float→0 / str|text→''。
+ *  替代原先散落在 schema.defaultValueOfStructural / embedding.getFieldValue /
+ *  recordEditEntityCreator.getPrimitiveValue 的三份重复 switch。
+ *  PrimitiveType 字面量扩展时由 TS exhaustive switch 强制同步（漏一个即编译报错）。 */
+export function defaultValueOfPrimitive(type: PrimitiveType): PrimitiveValue {
+    switch (type) {
+        case 'bool':
+            return false;
+        case 'int':
+        case 'long':
+        case 'float':
+            return 0;
+        case 'str':
+        case 'text':
+            return '';
     }
 }
 

@@ -8,10 +8,10 @@ import {
     PrimitiveEditField,
     StructRefEditField
 } from "@/domain/entityModel.ts";
-import {isPrimitiveType, PrimitiveType, SField, SInterface, SItem, SStruct, STable} from "@/api/schemaModel.ts";
+import {isPrimitiveType, parseFieldTypeId, PrimitiveType, SField, SInterface, SItem, SStruct, STable} from "@/api/schemaModel.ts";
 import {JSONArray, JSONObject, JSONValue, RefId} from "@/api/recordModel.ts";
 import {getId, getLabel, getLastName} from "./recordRefUtils.ts";
-import {getField, getImpl, getMapEntryTypeName, isPkInteger, Schema} from "@/domain/schema.ts";
+import {defaultValueOfPrimitive, getField, getImpl, getMapEntryTypeName, isPkInteger, Schema} from "@/domain/schema.ts";
 import {EditingSession} from "@/services/editingSession.ts";
 import {canBeEmbeddedCheck, classifyListField, extractEmbeddingFields, getEmbedState} from "@/domain/embedding.ts";
 import {getIdOptions} from "@/flow/edit/shared/idOptions.tsx";
@@ -394,15 +394,8 @@ export class RecordEditEntityCreator {
         if (fieldValue) {
             return fieldValue as PrimitiveValue;
         }
-        switch (fieldType) {
-            case 'bool':
-                return false;
-            case 'str':
-            case 'text':
-                return '';
-            default:
-                return 0;
-        }
+        // 走 schemaModel 单一来源 defaultValueOfPrimitive（exhaustive）；非原始类型兜底 0
+        return isPrimitiveType(fieldType) ? defaultValueOfPrimitive(fieldType) : 0;
     }
 
     /**
@@ -619,12 +612,11 @@ export class RecordEditEntityCreator {
 }
 
 
-function getItemTypeId(type: string, structural: SStruct | STable, fieldName: string) {
-    if (type.startsWith("list<")) {  // list
-        return type.substring(5, type.length - 1);
-    } else if (type.startsWith("map<")) { //map
-        return getMapEntryTypeName(structural, fieldName);
-    }
+function getItemTypeId(type: string, structural: SStruct | STable, fieldName: string): string | undefined {
+    const ft = parseFieldTypeId(type);
+    if (ft.kind === 'list') return ft.item;
+    if (ft.kind === 'map') return getMapEntryTypeName(structural, fieldName);
+    return undefined;
 }
 
 function getImplNameOptions(sInterface: SInterface): EntityEditFieldOptions {
