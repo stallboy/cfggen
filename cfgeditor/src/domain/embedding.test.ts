@@ -4,7 +4,13 @@ import {SField, SInterface, SStruct} from '@/api/schemaModel'
 import {
     EMBEDDING_CONFIG,
     canBeEmbeddedCheck,
+    classifyListField,
+    embedKey,
     extractEmbeddingFields,
+    getEmbedState,
+    normalizeOnAdd,
+    normalizeOnDelete,
+    normalizeOnImplSwitch,
 } from './embedding'
 import {field, makeInterface, makeStruct} from '@/test/fixtures'
 
@@ -29,6 +35,10 @@ function checkInterface(impls: SStruct[], value: JSONObject, over: Partial<SInte
 
 const int = (n = 'n') => field(n, 'int')
 const bool = (n = 'b') => field(n, 'bool')
+
+// 共用 itemType fixture：可内嵌（1 int）/ 不可内嵌（5 primitive 超阈值）
+const embeddableType = makeStruct('S', [int()])
+const notEmbeddableType = makeStruct('Big', [int('a'), int('b'), int('c'), int('d'), bool('e')])
 
 // isPrimitiveType / isNumberType / PRIMITIVE_TYPES / NUMBER_TYPES 已下沉到 @/api/schemaModel，
 // 其测试见 schemaModel.test.ts。本文件聚焦内嵌规则本身。
@@ -236,5 +246,94 @@ describe('extractEmbeddingFields', () => {
     it('非空 list 字段保留 → 破坏 allPrimitive → 不内嵌 → null', () => {
         const s = makeStruct('S', [int('a'), int('b'), field('lst', 'list<int>')])
         expect(extractEmbeddingFields(s, obj({a: 1, b: 2, lst: [1, 2]}))).toBeNull()
+    })
+})
+
+// ===========================================================================
+// embed 状态机：键原语 + 读侧分类 + 写侧归一化政策（纯函数直测）
+// ===========================================================================
+describe('embedKey / getEmbedState（键原语）', () => {
+    it('embedKey 加 $embed_ 前缀', () => {
+        expect(embedKey('equipList')).toBe('$embed_equipList')
+    })
+    it('getEmbedState 读键值；无键 / 无 obj → undefined', () => {
+        expect(getEmbedState(obj({$embed_x: true}), 'x')).toBe(true)
+        expect(getEmbedState(obj({$embed_x: false}), 'x')).toBe(false)
+        expect(getEmbedState(obj(), 'x')).toBeUndefined()
+        expect(getEmbedState(undefined, 'x')).toBeUndefined()
+    })
+})
+
+describe('classifyListField（4 稳态机读侧）', () => {
+    it('类 1：恰 1 元素可内嵌、默认(undefined) → embedTag', () => {
+        expect(classifyListField([obj({n: 1})], embeddableType, undefined)).toBe('embedTag')
+    })
+    it('类 1：恰 1 元素可内嵌、true（视同默认收起） → embedTag', () => {
+        expect(classifyListField([obj({n: 1})], embeddableType, true)).toBe('embedTag')
+    })
+    it('类 1：恰 1 元素可内嵌、false（显式展开） → nodes', () => {
+        expect(classifyListField([obj({n: 1})], embeddableType, false)).toBe('nodes')
+    })
+    it('类 2：多元素、true（收起） → summary', () => {
+        expect(classifyListField([obj({n: 1}), obj({n: 2})], embeddableType, true)).toBe('summary')
+    })
+    it('类 2：多元素、默认(undefined) → nodes', () => {
+        expect(classifyListField([obj({n: 1}), obj({n: 2})], embeddableType, undefined)).toBe('nodes')
+    })
+    it('单元素不可内嵌 → nodes（无内嵌选项）', () => {
+        expect(classifyListField([obj()], notEmbeddableType, undefined)).toBe('nodes')
+    })
+    it('空数组 → nodes', () => {
+        expect(classifyListField([], embeddableType, undefined)).toBe('nodes')
+    })
+})
+
+describe('normalizeOnAdd', () => {
+    it('0→1 可内嵌 → writeFalse（默认展开、立即可编辑）', () => {
+        expect(normalizeOnAdd([obj()], embeddableType)).toBe('writeFalse')
+    })
+    it('1→2 → delete（false 键变残留需清）', () => {
+        expect(normalizeOnAdd([obj(), obj()], embeddableType)).toBe('delete')
+    })
+    it('0→1 不可内嵌 → delete', () => {
+        expect(normalizeOnAdd([obj()], notEmbeddableType)).toBe('delete')
+    })
+})
+
+describe('normalizeOnDelete', () => {
+    it('删到空 → delete', () => {
+        expect(normalizeOnDelete([], embeddableType)).toBe('delete')
+    })
+    it('删到 1 且可内嵌、原键 true（收起） → delete（延续收起意图成内嵌 Tag）', () => {
+        expect(normalizeOnDelete([obj()], embeddableType, true)).toBe('delete')
+    })
+    it('删到 1 且可内嵌、原键 false / undefined（展开） → writeFalse（保持展开）', () => {
+        expect(normalizeOnDelete([obj()], embeddableType, false)).toBe('writeFalse')
+        expect(normalizeOnDelete([obj()], embeddableType, undefined)).toBe('writeFalse')
+    })
+    it('删到 1 且不可内嵌 → delete（类 2 默认展开）', () => {
+        expect(normalizeOnDelete([obj()], notEmbeddableType)).toBe('delete')
+    })
+    it('删到 ≥2 → noop（类 2 收起 true 仍合法）', () => {
+        expect(normalizeOnDelete([obj(), obj()], notEmbeddableType, true)).toBe('noop')
+        expect(normalizeOnDelete([obj(), obj(), obj()], embeddableType)).toBe('noop')
+    })
+})
+
+describe('normalizeOnImplSwitch', () => {
+    it('struct 字段：新 impl 可内嵌 → writeFalse（保持展开）', () => {
+        expect(normalizeOnImplSwitch(obj(), embeddableType)).toBe('writeFalse')
+    })
+    it('struct 字段：新 impl 不可内嵌 → delete（清残留）', () => {
+        expect(normalizeOnImplSwitch(obj(), notEmbeddableType)).toBe('delete')
+    })
+    it('list 元素：恰剩 1 且可内嵌 → writeFalse', () => {
+        expect(normalizeOnImplSwitch(obj(), embeddableType, 1)).toBe('writeFalse')
+    })
+    it('list 元素：多元素 → delete（哪怕可内嵌）', () => {
+        expect(normalizeOnImplSwitch(obj(), embeddableType, 2)).toBe('delete')
+    })
+    it('list 元素：恰剩 1 但不可内嵌 → delete', () => {
+        expect(normalizeOnImplSwitch(obj(), notEmbeddableType, 1)).toBe('delete')
     })
 })

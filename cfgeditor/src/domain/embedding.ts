@@ -1,4 +1,4 @@
-import {JSONObject} from '@/api/recordModel';
+import {JSONArray, JSONObject} from '@/api/recordModel';
 import {isNumberType, isPrimitiveType, PrimitiveType, SField, SInterface, SStruct} from '@/api/schemaModel';
 import {getImpl} from '@/domain/schema';
 import {PrimitiveValue} from "@/domain/entityModel";
@@ -258,4 +258,90 @@ function getFieldValue(obj: JSONObject, field: SField): PrimitiveValue {
         default:
             return 0;
     }
+}
+
+// ============================================================================
+// embed 状态机（读侧分类 + 写侧归一化政策）
+// ----------------------------------------------------------------------------
+// 给「`$embed_<fieldName>` 键该怎么读、操作后该怎么写」一个家。读侧 classifyListField 是
+// doc 07 §五-b 的 4 稳态机本体；写侧 normalizeOnX 是纯决策（返回 KeyOp），由 EditingSession
+// 在 undo 括号内 apply——session 仍是唯一 mutator、creator 仍经参数注入可内嵌判定。
+// 不变式：键只存「当前类」的非默认值（类 1 默认收起 / 类 2 默认展开）。归一化只写 false（保持
+// 展开意图）或删键，永不写 true（true 仅来自用户显式收起 updateEmbed(true)）。
+// ============================================================================
+
+/** 字段级 embed 状态键：状态寄存在父对象的 `$embed_<fieldName>` 上（数组挂不了属性）。 */
+export function embedKey(fieldName: string): string {
+    return `$embed_${fieldName}`;
+}
+
+/** 读父对象上的 `$embed_<fieldName>`：true=收起 / false=展开 / undefined=当前类默认态。 */
+export function getEmbedState(obj: JSONObject | undefined, fieldName: string): boolean | undefined {
+    return obj?.[embedKey(fieldName)] as boolean | undefined;
+}
+
+/** 写侧归一化决策：操作后该对 `$embed_<fieldName>` 键做什么。三种都不带 payload——归一化只写
+ *  字面 false（永不写 true；true 仅来自用户显式收起 updateEmbed(true)），故用字符串联合而非
+ *  {kind} 判别联合（无 payload 时判别联合是纯仪式）。 */
+export type KeyOp = 'writeFalse' | 'delete' | 'noop';
+
+/**
+ * list 字段的 embed 分类——**类由数据决定，键在类语义内解读**（doc 07 §五-b 4 稳态机读侧）：
+ * - 'embedTag'：类 1（恰 1 元素、元素可内嵌、`embedState !== false`）→ 内嵌 Tag，不建子节点
+ * - 'summary'：类 2 嵌入态（`embedState === true`）→ 摘要行，不建子节点
+ * - 'nodes'：展开 → 建子 entity / funcAdd 非嵌入态
+ *
+ * embedState 由调用方经 getEmbedState 算好传入；可内嵌判定内部自调 canBeEmbeddedCheck。
+ */
+export function classifyListField(
+    fArr: JSONArray,
+    itemType: SStruct | SInterface,
+    embedState: boolean | undefined,
+): 'embedTag' | 'summary' | 'nodes' {
+    if (fArr.length === 1 && embedState !== false
+        && canBeEmbeddedCheck(fArr[0] as JSONObject, itemType)) {
+        return 'embedTag';   // true 键在类 1 视同默认（收起）
+    }
+    if (embedState === true) {
+        return 'summary';
+    }
+    return 'nodes';
+}
+
+/** add 后归一化决策：0→1 且新元素可内嵌 → 写 false（默认展开、立即可编辑）；
+ *  其余（≥2 或单元素不可内嵌）→ 删键。可内嵌判定内部自调 canBeEmbeddedCheck（itemType 由调用方传入）。 */
+export function normalizeOnAdd(arr: JSONArray, itemType: SStruct | SInterface): KeyOp {
+    if (arr.length === 1 && canBeEmbeddedCheck(arr[0] as JSONObject, itemType)) {
+        return 'writeFalse';
+    }
+    return 'delete';
+}
+
+/** delete 后归一化决策（与用户操作同一步 undo）：
+ *  删到空 → 删键；恰剩 1 且可内嵌 →（true→删键延续收起意图 / 否则写 false 保持展开）；
+ *  恰剩 1 且不可内嵌 → 删键（默认展开）；≥2 → 不动（类 2 收起态 true 仍合法）。
+ *  传删后的 arr——幸存元素即 arr[0]，判定内部自调 canBeEmbeddedCheck。 */
+export function normalizeOnDelete(arr: JSONArray, itemType: SStruct | SInterface, currentKey?: boolean): KeyOp {
+    if (arr.length === 0) {
+        return 'delete';
+    }
+    if (arr.length === 1) {
+        if (canBeEmbeddedCheck(arr[0] as JSONObject, itemType)) {
+            return currentKey === true ? 'delete' : 'writeFalse';
+        }
+        return 'delete';
+    }
+    return 'noop';
+}
+
+/** impl 切换后归一化决策（双向，切换入口只在展开态）：
+ *  新 impl 可内嵌 → 写 false（保持展开）；不可内嵌 → 删残留键。判定内部自调 canBeEmbeddedCheck。
+ *  arrLen 非 undefined（list 元素换 impl）：仅恰剩 1 元素（类 1 候选）才写 false，多元素删键。
+ *  arrLen undefined（struct 字段换 impl）：直接按可内嵌决定。 */
+export function normalizeOnImplSwitch(newImpl: JSONObject, itemType: SStruct | SInterface, arrLen?: number): KeyOp {
+    const embeddable = canBeEmbeddedCheck(newImpl, itemType);
+    if (arrLen !== undefined) {
+        return arrLen === 1 && embeddable ? 'writeFalse' : 'delete';
+    }
+    return embeddable ? 'writeFalse' : 'delete';
 }

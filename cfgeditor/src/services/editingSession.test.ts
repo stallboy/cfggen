@@ -15,6 +15,11 @@ const POS = {id: 'n', x: 0, y: 0};
 
 const ITEM = (): JSONObject => ({'$type': 'Item'});
 
+// itemType fixture：传给 addArrayItem/deleteArrayItem/updateInterfaceValue 的 itemType 参数。
+// canBeEmbeddedCheck 用 struct 即可（不读 $type）。可内嵌（1 int）/ 不可内嵌（5 primitive 超阈值）。
+const EMBEDDABLE = makeStruct('E', [field('x', 'int')]);
+const NOT_EMBEDDABLE = makeStruct('N', [field('a', 'int'), field('b', 'int'), field('c', 'int'), field('d', 'int'), field('e', 'bool')]);
+
 describe('EditingSession.maybeReset', () => {
     it('早退：同 table/id 且内容相等时保留当前编辑态（不额外 bump）', () => {
         const rr = makeRecord('t', '1', {'$type': 'Foo', items: []});
@@ -22,7 +27,7 @@ describe('EditingSession.maybeReset', () => {
         const editingRef = s.getEditingObject();
         const v0 = s.getStructureVersion();
 
-        s.addArrayItem(ITEM(), ['items'], POS); // 先做一次结构编辑
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE); // 先做一次结构编辑
         const vAfterEdit = s.getStructureVersion();
         expect(vAfterEdit).toBe(v0 + 1);
 
@@ -34,7 +39,7 @@ describe('EditingSession.maybeReset', () => {
     it('真 reset：不同 id 时重置，isEdited 归 false', () => {
         const rr = makeRecord('t', '1', {'$type': 'Foo', items: []});
         const s = new EditingSession(rr);
-        s.addArrayItem(ITEM(), ['items'], POS);
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
         expect(s.getIsEdited()).toBe(true);
 
         const vBefore = s.getStructureVersion();
@@ -57,7 +62,7 @@ describe('EditingSession.maybeReset', () => {
 
     it('真 reset（同 id 但服务端内容变了）：触发重置', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
-        s.addArrayItem(ITEM(), ['items'], POS);
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
         // 同 id，但 recordResult.object 与 originalEditingObject 不同（后台推了新数据）
         s.maybeReset(makeRecord('t', '1', {'$type': 'Foo', items: [{$type: 'Item'}]}));
         expect(s.getIsEdited()).toBe(false); // 以新内容为基准，未编辑
@@ -88,7 +93,7 @@ describe('EditingSession 值类 vs 结构类（性能契约）', () => {
             notified++;
         });
 
-        s.addArrayItem(ITEM(), ['items'], POS);
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
         expect(s.getStructureVersion()).toBe(v0 + 1);
         expect(notified).toBe(1);
         unsub();
@@ -103,9 +108,9 @@ describe('EditingSession 值类 vs 结构类（性能契约）', () => {
             notified++;
         });
 
-        s.deleteArrayItem(0, ['items'], 'parentId');
+        s.deleteArrayItem(0, ['items'], 'parentId', NOT_EMBEDDABLE);
         s.swapArrayItem(0, 1, ['items'], POS);
-        s.updateInterfaceValue({$type: 'Other'}, ['child'], POS);
+        s.updateInterfaceValue({$type: 'Other'}, ['child'], POS, NOT_EMBEDDABLE);
         expect(notified).toBe(3);
     });
 });
@@ -117,7 +122,7 @@ describe('EditingSession submit / replaceEditingObject', () => {
             makeRecord('t', '1', {'$type': 'Foo', items: []}),
             {mutate: (o) => { captured = o; }},
         );
-        s.addArrayItem(ITEM(), ['items'], POS);
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
         s.submit();
         expect(captured).toBe(s.getEditingObject());
         expect((s.getEditingObject().items as JSONArray).length).toBe(1);
@@ -147,7 +152,7 @@ describe('EditingSession submit / replaceEditingObject', () => {
 describe('EditingSession.onCommitSuccess（提交边界：重置脏基准）', () => {
     it('重基准后 getIsEdited 归 false（提交成功 → 脏标记清除）', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
-        s.addArrayItem(ITEM(), ['items'], POS);
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
         expect(s.getIsEdited()).toBe(true);
         s.onCommitSuccess();
         expect(s.getIsEdited()).toBe(false);
@@ -155,10 +160,10 @@ describe('EditingSession.onCommitSuccess（提交边界：重置脏基准）', (
 
     it('重基准为深拷：提交后再编辑不污染基准，isEdited 重新 true', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
-        s.addArrayItem(ITEM(), ['items'], POS);
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
         s.onCommitSuccess();                    // 提交成功，基准 = 当前态
         expect(s.getIsEdited()).toBe(false);
-        s.addArrayItem(ITEM(), ['items'], POS); // 再编辑
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE); // 再编辑
         expect(s.getIsEdited()).toBe(true);     // 基准未被污染，新编辑判定 dirty
     });
 });
@@ -169,7 +174,7 @@ describe('EditingSession.getEditingObjectRes（layout 通道）', () => {
         expect(s.getEditingObjectRes().fitView).toBe(EFitView.FitFull);
         expect(s.getEditingObjectRes().isEdited).toBe(false);
 
-        s.addArrayItem(ITEM(), ['items'], POS);
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
         const res = s.getEditingObjectRes();
         expect(res.fitView).toBe(EFitView.FitId);
         expect(res.fitViewToIdPosition).toEqual(POS);
@@ -191,7 +196,7 @@ describe('EditingSession fuzz（确定性伪随机混合操作）', () => {
             const op = Math.floor(rand() * 5);
             switch (op) {
                 case 0:
-                    s.addArrayItem(ITEM(), ['items'], POS);  // 结构类：bump
+                    s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);  // 结构类：bump
                     break;
                 case 1:
                     s.updateNote(`n${i}`, []);  // 值类：不 bump
@@ -205,7 +210,7 @@ describe('EditingSession fuzz（确定性伪随机混合操作）', () => {
                     s.replaceEditingObject({'$type': 'Bar', items: []});  // 结构类：bump
                     break;
                 case 4:
-                    s.deleteArrayItem(0, ['items'], 'parentId');  // 空数组时 splice 无效但不崩，仍 bump
+                    s.deleteArrayItem(0, ['items'], 'parentId', NOT_EMBEDDABLE);  // 空数组时 splice 无效但不崩，仍 bump
                     break;
             }
             expect(s.getStructureVersion()).toBeGreaterThanOrEqual(lastVersion);
@@ -223,11 +228,11 @@ describe('EditingSession fuzz（确定性伪随机混合操作）', () => {
         };
         const unsub1 = s.subscribe(listener);
         const unsub2 = s.subscribe(listener);  // 同一 listener 再注册（Set 去重）
-        s.addArrayItem(ITEM(), ['items'], POS);
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
         expect(count).toBe(1);  // Set 去重：只通知一次
         unsub1();
         unsub2();  // 第二次 unsub 对已 delete 的无影响
-        s.addArrayItem(ITEM(), ['items'], POS);
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
         expect(count).toBe(1);  // 反注册后不再通知（不 leak）
     });
 });
@@ -310,7 +315,7 @@ describe('EditingSession undo/redo（结构类）', () => {
     it('结构编辑后 undo 恢复到编辑前', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
         s.initUndoBaseline();
-        s.addArrayItem(ITEM(), ['items'], POS);
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
         expect((s.getEditingObject().items as JSONArray).length).toBe(1);
         s.undo();
         expect((s.getEditingObject().items as JSONArray).length).toBe(0);
@@ -319,7 +324,7 @@ describe('EditingSession undo/redo（结构类）', () => {
     it('undo 后 redo 恢复到编辑后', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
         s.initUndoBaseline();
-        s.addArrayItem(ITEM(), ['items'], POS);
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
         s.undo();
         s.redo();
         expect((s.getEditingObject().items as JSONArray).length).toBe(1);
@@ -330,7 +335,7 @@ describe('EditingSession undo/redo（结构类）', () => {
         s.initUndoBaseline();
         expect(s.canUndo()).toBe(false);
         expect(s.canRedo()).toBe(false);
-        s.addArrayItem(ITEM(), ['items'], POS);
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
         expect(s.canUndo()).toBe(true);
         s.undo();
         expect(s.canUndo()).toBe(false);
@@ -343,9 +348,9 @@ describe('EditingSession undo/redo（结构类）', () => {
     it('undo 后 editingObject 独立于栈（深拷，后续编辑不污染历史）', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
         s.initUndoBaseline();
-        s.addArrayItem(ITEM(), ['items'], POS);
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
         s.undo();                                       // 回到 items=[]
-        s.addArrayItem(ITEM(), ['items'], POS);         // 新编辑（分叉，redo 历史清）
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);         // 新编辑（分叉，redo 历史清）
         s.undo();
         expect((s.getEditingObject().items as JSONArray).length).toBe(0);  // 回到 baseline
     });
@@ -353,7 +358,7 @@ describe('EditingSession undo/redo（结构类）', () => {
     it('结构 undo 视口稳定：fitView=KeepStable，锚点=被撤销操作节点 id', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
         s.initUndoBaseline();
-        s.addArrayItem(ITEM(), ['items'], POS);   // POS.id='n'
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);   // POS.id='n'
         s.undo();
         const res = s.getEditingObjectRes();
         expect(res.fitView).toBe(EFitView.KeepStable);
@@ -379,7 +384,7 @@ describe('EditingSession undo/redo（结构类）', () => {
     it('delete undo 锚点取父：fitViewToIdPosition.id = undoAnchorId', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM()]}));
         s.initUndoBaseline();
-        s.deleteArrayItem(0, ['items'], 'parentId');   // 第3参 = anchorId（父）
+        s.deleteArrayItem(0, ['items'], 'parentId', NOT_EMBEDDABLE);   // 第3参 = anchorId（父）
         s.undo();
         const res = s.getEditingObjectRes();
         expect(res.fitView).toBe(EFitView.KeepStable);
@@ -398,17 +403,17 @@ describe('EditingSession undo/redo（结构类）', () => {
     it('分叉：undo 后新结构编辑清 redo 历史', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
         s.initUndoBaseline();
-        s.addArrayItem(ITEM(), ['items'], POS);
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
         s.undo();
         expect(s.canRedo()).toBe(true);
-        s.addArrayItem(ITEM(), ['items'], POS);   // 新结构编辑（分叉）
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);   // 新结构编辑（分叉）
         expect(s.canRedo()).toBe(false);          // redo 历史作废
     });
 
     it('onCommitSuccess 清栈（提交后 undo 历史清）', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
         s.initUndoBaseline();
-        s.addArrayItem(ITEM(), ['items'], POS);
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
         expect(s.canUndo()).toBe(true);
         s.onCommitSuccess();
         expect(s.canUndo()).toBe(false);
@@ -557,7 +562,7 @@ describe('EditingSession 字段级嵌入（$embed_<fieldName>）', () => {
         s.initUndoBaseline();
         const v0 = s.getStructureVersion();
 
-        s.addArrayItem(ITEM(), ['items'], POS, true);
+        s.addArrayItem(ITEM(), ['items'], POS, EMBEDDABLE);
         expect(s.getEditingObject()['$embed_items']).toBe(false);
         expect(s.getStructureVersion()).toBe(v0 + 1);   // 单步结构变更
 
@@ -568,7 +573,7 @@ describe('EditingSession 字段级嵌入（$embed_<fieldName>）', () => {
 
     it('0→1 加元素但不可内嵌（无 markExpanded）⇒ 不写键', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
-        s.addArrayItem(ITEM(), ['items'], POS);
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
         expect('$embed_items' in s.getEditingObject()).toBe(false);
     });
 
@@ -578,7 +583,7 @@ describe('EditingSession 字段级嵌入（$embed_<fieldName>）', () => {
         s.updateEmbed(true, 'items', [], POS);
         const v0 = s.getStructureVersion();
 
-        s.addArrayItem(ITEM(), ['items'], POS);
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
         expect('$embed_items' in s.getEditingObject()).toBe(false);   // 自动展开
         expect(s.getStructureVersion()).toBe(v0 + 1);                // 单步结构变更
         expect((s.getEditingObject()['items'] as JSONArray).length).toBe(2);
@@ -591,54 +596,54 @@ describe('EditingSession 字段级嵌入（$embed_<fieldName>）', () => {
     it('1→2 加元素后 $embed=false 变残留（等于类 2 默认值）⇒ 删键', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM()]}));
         s.updateEmbed(false, 'items', [], POS);   // 类 1 的展开标记
-        s.addArrayItem(ITEM(), ['items'], POS);
+        s.addArrayItem(ITEM(), ['items'], POS, NOT_EMBEDDABLE);
         expect('$embed_items' in s.getEditingObject()).toBe(false);
     });
 
     it('addArrayItemAtIndex 同样归一化（折叠中前插入 ⇒ 自动展开）', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM()]}));
         s.updateEmbed(true, 'items', [], POS);
-        s.addArrayItemAtIndex(ITEM(), 0, ['items'], POS);
+        s.addArrayItemAtIndex(ITEM(), 0, ['items'], POS, NOT_EMBEDDABLE);
         expect('$embed_items' in s.getEditingObject()).toBe(false);
     });
 
     it('addArrayItemAtIndex 带 markExpanded（0→1 可内嵌）⇒ 写 $embed=false', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: []}));
-        s.addArrayItemAtIndex(ITEM(), 0, ['items'], POS, true);
+        s.addArrayItemAtIndex(ITEM(), 0, ['items'], POS, EMBEDDABLE);
         expect(s.getEditingObject()['$embed_items']).toBe(false);
     });
 
     it('删到空 ⇒ 删键（空 list 嵌入无意义）', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM()]}));
         s.updateEmbed(true, 'items', [], POS);
-        s.deleteArrayItem(0, ['items'], 'parentNode');
+        s.deleteArrayItem(0, ['items'], 'parentNode', NOT_EMBEDDABLE);
         expect('$embed_items' in s.getEditingObject()).toBe(false);
     });
 
     it('折叠中删到恰剩 1 个可内嵌元素 ⇒ 删 true 键（嵌入 Tag 延续收起意图）', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM(), ITEM()]}));
         s.updateEmbed(true, 'items', [], POS);
-        s.deleteArrayItem(0, ['items'], 'parentNode', true);
+        s.deleteArrayItem(0, ['items'], 'parentNode', EMBEDDABLE);
         expect('$embed_items' in s.getEditingObject()).toBe(false);
     });
 
     it('展开的多元素 list 删到恰剩 1 个可内嵌元素 ⇒ 补写 false（保持展开，不回嵌）', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM(), ITEM()]}));
-        s.deleteArrayItem(0, ['items'], 'parentNode', true);
+        s.deleteArrayItem(0, ['items'], 'parentNode', EMBEDDABLE);
         expect(s.getEditingObject()['$embed_items']).toBe(false);
     });
 
     it('删到恰剩 1 个不可内嵌元素（embeddableWhenSingle=false）⇒ 删键（类 2 默认展开）', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM(), ITEM()]}));
         s.updateEmbed(true, 'items', [], POS);
-        s.deleteArrayItem(0, ['items'], 'parentNode', false);
+        s.deleteArrayItem(0, ['items'], 'parentNode', NOT_EMBEDDABLE);
         expect('$embed_items' in s.getEditingObject()).toBe(false);
     });
 
     it('删后仍多元素 ⇒ 保留折叠键（不跨类，无需归一化）', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM(), ITEM(), ITEM()]}));
         s.updateEmbed(true, 'items', [], POS);
-        s.deleteArrayItem(0, ['items'], 'parentNode');
+        s.deleteArrayItem(0, ['items'], 'parentNode', NOT_EMBEDDABLE);
         expect(s.getEditingObject()['$embed_items']).toBe(true);
     });
 
@@ -655,10 +660,10 @@ describe('EditingSession 字段级嵌入（$embed_<fieldName>）', () => {
 
     it('updateInterfaceValue 双向归一化：新 impl 可内嵌 ⇒ 确保 $embed=false；不可内嵌 ⇒ 删残留键', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', child: {$type: 'A'}}));
-        s.updateInterfaceValue({$type: 'B'}, ['child'], POS, true);
+        s.updateInterfaceValue({$type: 'B'}, ['child'], POS, EMBEDDABLE);
         expect(s.getEditingObject()['$embed_child']).toBe(false);   // 保持展开（切换入口只在展开态）
 
-        s.updateInterfaceValue({$type: 'C'}, ['child'], POS, false);
+        s.updateInterfaceValue({$type: 'C'}, ['child'], POS, NOT_EMBEDDABLE);
         expect('$embed_child' in s.getEditingObject()).toBe(false);   // 新 impl 不可内嵌 → 清残留
         expect((s.getEditingObject()['child'] as JSONObject)['$type']).toBe('C');
     });
@@ -666,7 +671,7 @@ describe('EditingSession 字段级嵌入（$embed_<fieldName>）', () => {
     it('updateInterfaceValue 换 list 元素的 impl（索引结尾链）：键归一化到祖父对象的 $embed_<listName>', () => {
         // 恰 1 元素且新 impl 可内嵌 ⇒ 祖父对象写 $embed_list=false（不是数组上的 $embed_0）
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', list: [{$type: 'A'}]}));
-        s.updateInterfaceValue({$type: 'B'}, ['list', 0], POS, true);
+        s.updateInterfaceValue({$type: 'B'}, ['list', 0], POS, EMBEDDABLE);
         expect(s.getEditingObject()['$embed_list']).toBe(false);
         const arr = s.getEditingObject()['list'] as JSONArray;
         expect((arr as unknown as JSONObject)['$embed_0']).toBeUndefined();   // 不在数组上写脏键
@@ -674,12 +679,12 @@ describe('EditingSession 字段级嵌入（$embed_<fieldName>）', () => {
 
         // 多元素（类 2）⇒ 删键（不写 false 残留）
         const s2 = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', list: [{$type: 'A'}, {$type: 'A'}]}));
-        s2.updateInterfaceValue({$type: 'B'}, ['list', 1], POS, true);
+        s2.updateInterfaceValue({$type: 'B'}, ['list', 1], POS, EMBEDDABLE);
         expect('$embed_list' in s2.getEditingObject()).toBe(false);
 
         // 恰 1 元素但新 impl 不可内嵌 ⇒ 删键（类 2 默认展开，元素仍是节点）
         const s3 = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', list: [{$type: 'A'}], '$embed_list': false}));
-        s3.updateInterfaceValue({$type: 'C'}, ['list', 0], POS, false);
+        s3.updateInterfaceValue({$type: 'C'}, ['list', 0], POS, NOT_EMBEDDABLE);
         expect('$embed_list' in s3.getEditingObject()).toBe(false);
     });
 });
@@ -687,7 +692,7 @@ describe('EditingSession 字段级嵌入（$embed_<fieldName>）', () => {
 describe('EditingSession 删除节点的视口语义（KeepStable 锚定父节点）', () => {
     it('正向删除：fitView=KeepStable、锚点为父 id（anchorId 必传）', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM(), ITEM()]}));
-        s.deleteArrayItem(0, ['items'], 'parentNode');
+        s.deleteArrayItem(0, ['items'], 'parentNode', NOT_EMBEDDABLE);
         const res = s.getEditingObjectRes();
         expect(res.fitView).toBe(EFitView.KeepStable);
         expect(res.fitViewToIdPosition?.id).toBe('parentNode');
@@ -696,7 +701,7 @@ describe('EditingSession 删除节点的视口语义（KeepStable 锚定父节�
     it('undo 删除同样锚定父节点（capture 锚点 = anchorId）', () => {
         const s = new EditingSession(makeRecord('t', '1', {'$type': 'Foo', items: [ITEM(), ITEM()]}));
         s.initUndoBaseline();
-        s.deleteArrayItem(0, ['items'], 'parentNode');
+        s.deleteArrayItem(0, ['items'], 'parentNode', NOT_EMBEDDABLE);
         expect((s.getEditingObject()['items'] as JSONArray).length).toBe(1);
         s.undo();
         expect((s.getEditingObject()['items'] as JSONArray).length).toBe(2);   // 数据恢复
