@@ -10,6 +10,7 @@ import {
 } from "./recordModel.ts";
 import { NoteEditResult, Notes } from "./noteModel.ts";
 import { CheckJsonResult, PromptResult } from "./chatModel.ts";
+import { SearchResult } from "./searchModel.ts";
 
 const DEFAULT_TIMEOUT_MS = 15000;
 
@@ -132,5 +133,15 @@ export async function getPrompt(server: string, table: string, signal: AbortSign
 export async function checkJson(server: string, tableId: string, raw: string, signal?: AbortSignal): Promise<CheckJsonResult> {
     const { data } = await httpClient(server).post<CheckJsonResult>(
         '/checkJson', raw, { params: { table: tableId }, headers: { 'Content-Type': 'text/plain' }, signal });
+    return data;
+}
+
+// /search 原由 SearchValue 用原生 fetch 直发，绕过 normalizeServer → 用户填带 http:// 前缀的 server 时
+// 拼出 http://http://host 双前缀导致搜索挂掉，且丢了统一超时 / header / 错误处理。收回 apiClient 统一管线。
+export async function searchServer(server: string, q: string, max: number, signal: AbortSignal): Promise<SearchResult> {
+    const { data } = await httpClient(server).get<SearchResult>('/search', {
+        params: { q, max },
+        signal,
+    });
     return data;
 }

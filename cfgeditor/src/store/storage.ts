@@ -71,10 +71,17 @@ export async function readPrefAsyncOnce() {
     if (!isTauri()) {
         return true;
     }
-    localStorage.clear();
-    await readConf(CFGEDITOR_YML);
-    await readConf(CFGEDITOR_SELF_YML);
-    return true;
+    try {
+        localStorage.clear();
+        await readConf(CFGEDITOR_YML);
+        await readConf(CFGEDITOR_SELF_YML);
+        return true;
+    } catch (e) {
+        // 读失败：放行重试（重连当前服务器 / 重新 mount 会再调本函数），避免 alreadyRead 永久卡死，
+        // 也避免 localStorage 已 clear 却未回填导致偏好静默回退默认。re-throw 让 setting query 进入 isError。
+        alreadyRead = false;
+        throw e;
+    }
 }
 
 async function readConf(conf: string) {

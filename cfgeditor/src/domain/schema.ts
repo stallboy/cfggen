@@ -88,8 +88,14 @@ export class Schema {
                 const st = item as STable;
                 const refTables = st.refTables as Set<string>;
                 for (const refTable of refTables) {
-                    const t: STable = this.getSTable(refTable) as STable;
-                    t.refInTables?.add(st.name);
+                    // getSTable 返回 nullable：脏 schema（refTable 不存在）时跳过 + 打日志定位，
+                    // 不再 as STable 强转吃 null、靠 ?. 静默丢反向索引条目。
+                    const t = this.getSTable(refTable);
+                    if (t) {
+                        t.refInTables?.add(st.name);
+                    } else {
+                        console.error(`refTable ${refTable} not found in schema (dirty schema?)`);
+                    }
                 }
             }
         }
@@ -281,11 +287,12 @@ export class Schema {
     }
 
     defaultValueOfInterface(sInterface: SInterface): JSONObject {
-        let impl: SStruct;
-        if (sInterface.defaultImpl) {
-            impl = getImpl(sInterface, sInterface.defaultImpl) as SStruct;
-        } else {
-            impl = sInterface.impls[0];
+        // getImpl 返回 nullable：defaultImpl 指定但找不到（脏 schema）时 fallback impls[0]；
+        // 两者皆空时返回空对象避免 NPE、打日志定位（不再 as SStruct 强转吃 null）。
+        const impl = (sInterface.defaultImpl ? getImpl(sInterface, sInterface.defaultImpl) : null) ?? sInterface.impls[0];
+        if (!impl) {
+            console.error(`interface ${sInterface.name} has no impl (dirty schema?)`);
+            return {$type: sInterface.name};
         }
         return this.defaultValueOfStructural(impl);
     }
