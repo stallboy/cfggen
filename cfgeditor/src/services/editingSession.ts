@@ -438,6 +438,11 @@ export class EditingSession {
      *  否则提交失败会丢 undo 历史、脏标记还误报"无未保存"）。
      *  重 originalEditingObject（脏比较归 false）+ undo.setBaseline（清栈+新基准 = 当前已提交状态）。 */
     onCommitSuccess(): void {
+        // 提交后保持当前视图：重置视口语义为 NoChange。onSuccess 还会 invalidateAllQueries → record refetch
+        // → recordResult 新引用触发 useMemo 重算，读到此处设的 fitView，Effect 2 走 noop 不跳视口。
+        // （onCommitSuccess 本就不 emit；fitView 靠 recordResult 重取驱动的那次重渲生效，不依赖本次 bump。）
+        this.fitView = EFitView.NoChange;
+        this.fitViewToIdPosition = undefined;
         this.resetBaselines();
     }
 

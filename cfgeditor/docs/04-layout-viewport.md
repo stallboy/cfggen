@@ -104,7 +104,7 @@ spreadFallbackNodes(nodes):
 
 ## 五、缓存白名单 + 失效
 
-layout `queryKey` 由 `pathname` + 三段内容 + 编辑态标记构成：
+layout `queryKey` 由 `pathname` + 两段内容构成，编辑路由态用 `'e'` 段分桶（`staleTime` 另跟脏标记，见下）：
 
 | 段 | 来源 | 作用 |
 |---|---|---|
@@ -114,16 +114,17 @@ layout `queryKey` 由 `pathname` + 三段内容 + 编辑态标记构成：
 > 注：`tauriConf` 不直接喂 ELK，但驱动 Record.tsx 的 entityMap 构建（影响 refs 拉取），nodes 集合会变 → 必须进 queryKey 才能让缓存失效。
 
 ```
-isEdited  = !!editingObjectRes?.isEdited
-queryKey  = queryKeys.layout(pathname, layoutKeys, topologyKeys, isEdited)
-staleTime = isEdited ? 0 : 1000*60*5    // 编辑态每次重取 / 浏览态 5min
+isEditRoute = type === 'edit'                           // 分桶：按 entityMap 构建方式（缓存身份）
+isEdited    = !!editingObjectRes?.isEdited             // 复用策略：脏标记（新鲜度）
+queryKey    = queryKeys.layout(pathname, layoutKeys, topologyKeys, isEditRoute)
+staleTime   = isEdited ? 0 : 1000*60*5    // 脏=trigger 时重取 / 干净=5min 复用
 ```
 
 [`pickLayoutKeys`](../src/domain/nodeShowLayoutKeys.ts)（常量 `NODESHOW_LAYOUT_KEYS` / 函数 `pickLayoutKeys`）白名单 13 个字段：**改纯颜色字段 → queryKey 不变 → 命中缓存不重跑 ELK**；改拓扑 setting → `topologyKeys` 变 → 缓存自然失效重布局。**用 queryKey 替代了旧 store setter 的 `clearLayoutCache` 命令式清缓存**。
 
-`'e'` 段隔离：编辑态 queryKey 多一个 `'e'`，`staleTime=0`（拓扑可能改→立即重取）；浏览态 5min。结构变更 `removeQueries(['layout', pathname, 'e'])`（03 的 `onStructureChange`）只清编辑态，浏览态缓存不受影响。
+`'e'` 段按**路由态**分桶（`type==='edit'`），而非脏标记：编辑路由（`RecordEditEntityCreator`，按 `$fold`/`$embed` 收起子结构）与浏览路由（`RecordEntityCreator`，全展开 + 外部 ref）产出**不同节点集合**，混用同一 key 会让 `nodes` 与 `rectMap` 错配（`applyRectToNodes` not found + 节点跳位）。用路由态而非 `isEdited`：提交后 `isEdited` 翻 false 但 entityMap 仍是编辑态构建，按脏标记切浏览态 key 会命中陈旧浏览态缓存；`isEdited` 改去驱动 `staleTime`（脏 0 / 干净 5min）。结构变更 `removeQueries(['layout', pathname, 'e'])`（03 的 `onStructureChange`）只清编辑路由态，浏览态缓存不受影响。
 
-> **quirk**：纯值类编辑期间 `isEdited` 不刷新（entityMap 不重算、editingObjectRes 不重建，值类编辑就地改、不 bump structureVersion）。安全——值类不改拓扑、布局不变，继续走干净态 5min 缓存正确。勿当 bug 修。
+> **quirk**：纯值类编辑期间 `isEdited` 不刷新（entityMap 不重算、editingObjectRes 不重建，值类编辑就地改、不 bump structureVersion）→ `staleTime` 不刷新，但 `queryKey` 分桶由路由态决定（编辑路由恒定）故缓存身份不变。安全——值类不改拓扑、布局不变。勿当 bug 修。
 
 ---
 
@@ -202,6 +203,6 @@ Effect 2: 视口动作（刻意与 Effect 1 拆开）
 - **useEntityToGraph 管线**：entityMap → `convertNodeAndEdges`（useMemo）→ `useQuery(layoutAsync ELK worker)` → `applyRectToNodes` → 三 Effect。
 - **ELK 在 Web Worker**：模块级单例；失败 throw `LayoutError` 三态（绝不 resolve undefined）；AbortSignal 透传防竞态；失败网格兜底。
 - **尺寸预先估算**（不等 DOM）：魔数锁 antd 实测 + 测试护栏；宽度 dimensions 单一来源；note 行数与渲染同源。
-- **缓存白名单**：`pickLayoutKeys` 13 字段 + `topologyKeys`，改颜色不重 ELK、改拓扑自然失效；`'e'` 段隔离编辑态（staleTime 0）/ 浏览态（5min）。
+- **缓存白名单**：`pickLayoutKeys` 13 字段 + `topologyKeys`，改颜色不重 ELK、改拓扑自然失效；`'e'` 段按**路由态**分桶（编辑/浏览节点集合不同），`staleTime` 才跟 `isEdited`（脏 0 / 干净 5min）。
 - **稳定视口自算**：`screen = world×zoom + 平移`，四态 EFitView 区分 anchorOld 来源（FitId 用 position / KeepStable 用 prevRectMap）。
 - **三 Effect 拆分**：节点下发 / 错误反馈 / 视口动作——视口刻意独立，避免菜单引用翻转连带重置。

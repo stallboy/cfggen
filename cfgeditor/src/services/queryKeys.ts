@@ -28,9 +28,12 @@ export const queryKeys = {
         ['recordRef', tableId, id, refOutDepth, maxNode, refIn],
     unreferenced: (tableId: string, maxNode: number) => ['unreferenced', tableId, maxNode],
 
-    // 布局（ELK 结果缓存）；编辑态插入 'e' 段隔离，结构变更时只清编辑态缓存
-    layout: (pathname: string, layoutKeys: object, topologyKeys: object, isEdited: boolean) =>
-        isEdited
+    // 布局（ELK 结果缓存）；编辑路由态插入 'e' 段隔离——编辑/浏览 entityMap 构建方式不同（节点集合不同），
+    // 必须分桶，否则 nodes 与 rectMap 错配（applyRectToNodes not found）。结构变更时
+    // removeQueries(['layout', pathname, 'e']) 只清编辑态。分桶标志是「路由态」(type==='edit') 而非脏标记：
+    // 提交后 isEdited 翻 false 但 entityMap 仍是编辑态构建；脏标记只驱动 staleTime（见 useEntityToGraph）。
+    layout: (pathname: string, layoutKeys: object, topologyKeys: object, isEditRoute: boolean) =>
+        isEditRoute
             ? ['layout', pathname, 'e', layoutKeys, topologyKeys]
             : ['layout', pathname, layoutKeys, topologyKeys],
 

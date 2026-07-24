@@ -118,7 +118,7 @@ setCurrentEditingSession(s)     → 注册 / 注销
 
 > 历史：曾订阅 canUndo → paneMenu 引用变 → 视口连带重置，故改为不订阅。
 
-**连带 quirk**：`getEditingObjectRes` 返回的 `isEdited` 在值类编辑期间也不刷新（同源：值类不重算 entityMap，`getEditingObjectRes` 不重建），layout 仍走 5min 干净缓存——安全，值类不改拓扑。勿当 bug 修（04 §五也提了）。
+**连带 quirk**：`getEditingObjectRes` 返回的 `isEdited` 在值类编辑期间也不刷新（同源：值类不重算 entityMap，`getEditingObjectRes` 不重建），`staleTime` 随之不刷新（`queryKey` 分桶由路由态决定，不受影响）——安全，值类不改拓扑。勿当 bug 修（04 §五也提了）。
 
 ---
 
@@ -285,9 +285,9 @@ getEditingObjectRes():
   → {fitView, fitViewToIdPosition, isEdited: getIsEdited()}
 ```
 
-Record 的 `useMemo` 调 `session.getEditingObjectRes()` 拿 `editingObjectRes`，喂给 `useEntityToGraph`——04 的 `pickViewportAction` 吃它的 `fitView` / `fitViewToIdPosition` 决定视口动作，`isEdited` 决定 layout queryKey 的 `'e'` 段 + staleTime。
+Record 的 `useMemo` 调 `session.getEditingObjectRes()` 拿 `editingObjectRes`，喂给 `useEntityToGraph`——04 的 `pickViewportAction` 吃它的 `fitView` / `fitViewToIdPosition` 决定视口动作，`isEdited` 决定 layout 的 `staleTime`（queryKey 的 `'e'` 分桶改由路由态 `type==='edit'` 决定，见 04）。
 
-> **quirk**：值类编辑不重算 entityMap → `editingObjectRes` 不重建 → `isEdited` 不刷新（layout 仍走 5min 干净缓存）。安全——值类不改拓扑、布局不变。勿当 bug 修（04 §五也提了）。
+> **quirk**：值类编辑不重算 entityMap → `editingObjectRes` 不重建 → `isEdited` 不刷新（`staleTime` 随之不刷新；`queryKey` 由路由态决定本就不受影响）。安全——值类不改拓扑、布局不变。勿当 bug 修（04 §五也提了）。
 
 ---
 

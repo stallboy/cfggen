@@ -120,22 +120,26 @@ export function useEntityToGraph({
         notes,
     }), [entityMap, notes, nodeShowSetting]);
 
-    // layout 缓存策略：'e' 是编辑态（isEdited）layout 缓存的隔离标记——结构变更时 onStructureChange 调
-    // removeQueries(['layout', pathname, 'e']) 只清编辑态缓存，浏览态（无 'e'）的 5min 缓存不受影响。
-    // staleTime 脏=0（每次重取，编辑可能改了拓扑）/ 干净=5min（拓扑稳定复用缓存）。
-    // quirk：纯值类编辑（键入 primitive）期间 isEdited 不刷新——entityMap 不重算、editingObjectRes 不
-    // 重建（性能契约1）。安全：值类不改拓扑、布局不变，继续走干净态 5min 缓存正确。勿当 bug 修。
-    // queryKey 含布局相关字段（pickLayoutKeys）+ 拓扑 setting（topologyKeys）：
+    // layout 缓存：queryKey 与 staleTime 是两个独立维度。
+    //   - queryKey 分桶（isEditRoute）：按 entityMap 构建方式分。编辑路由（RecordEditEntityCreator）与浏览
+    //     路由（RecordEntityCreator）产出不同节点集合（编辑态按 $fold/$embed 收起子结构，浏览态全展开 + 外部
+    //     ref），混用同一 key 会让 nodes 与 rectMap 错配（applyRectToNodes not found + 节点跳位）。用
+    //     type==='edit' 分桶而非 isEdited——提交后 isEdited 翻 false 但 entityMap 仍是编辑态构建，若按 isEdited
+    //     切到浏览态 key 会命中陈旧浏览态缓存（节点集合错配）。
+    //   - staleTime（isEdited）：跟脏标记走。干净（进入编辑未改 / 刚提交）→ 5min 复用；脏（有未提交修改）→ 0，
+    //     trigger 时重取。值类编辑不 bump、不刷新 isEdited（quirk）→ 继续走干净态缓存正确。勿当 bug 修。
+    // queryKey 还含布局相关字段（pickLayoutKeys）+ 拓扑 setting（topologyKeys）：
     //   - 改纯颜色字段 → queryKey 不变 → 命中缓存不重跑 ELK；
     //   - 改拓扑 setting（maxImpl/refOutDepth/recordRef*/tauriConf…）→ topologyKeys 变 → 缓存自然失效重布局。
-    // 'e' 标记保持在 pathname 之后同一层级，保 Record.tsx 的 ['layout', pathname, 'e'] prefix 失效契约。
+    // 'e' 段保持在 pathname 之后同一层级，保 Record.tsx 的 ['layout', pathname, 'e'] prefix 失效契约。
     const layoutKeys = pickLayoutKeys(nodeShowSetting);
     const topologyKeys = {
         maxImpl, refIn, refOutDepth, maxNode,
         recordRefIn, recordRefInShowLinkMaxNode, recordRefOutDepth, recordMaxNode, tauriConf,
     };
+    const isEditRoute = type === 'edit';
     const isEdited = !!editingObjectRes?.isEdited;
-    const queryKey = queryKeys.layout(pathname, layoutKeys, topologyKeys, isEdited)
+    const queryKey = queryKeys.layout(pathname, layoutKeys, topologyKeys, isEditRoute)
     const staleTime = isEdited ? 0 : 1000 * 60 * 5;
     const {data: id2RectMap, error: layoutError} = useQuery({
         queryKey: queryKey,

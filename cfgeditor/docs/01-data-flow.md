@@ -145,9 +145,9 @@ queryKeys 工厂:
   recordRef(table, id, depth, max, refIn)
                              → ['recordRef', table, id, depth, max, refIn]
   unreferenced(table, max)   → ['unreferenced', table, max]
-  layout(pathname, layoutKeys, topologyKeys, isEdited):
-      isEdited  → ['layout', pathname, 'e', layoutKeys, topologyKeys]    // 编辑态：'e' 隔离
-      otherwise → ['layout', pathname, layoutKeys, topologyKeys]
+  layout(pathname, layoutKeys, topologyKeys, isEditRoute):
+      isEditRoute → ['layout', pathname, 'e', layoutKeys, topologyKeys]   // 编辑路由态：'e' 隔离（节点集合不同）
+      otherwise   → ['layout', pathname, layoutKeys, topologyKeys]
   prompt(table)              → ['prompt', table]
 ```
 
@@ -164,10 +164,10 @@ queryKeys 工厂:
 | `.record(tableId, id)` | Record | `fetchRecord` | 默认 30s | `enabled: !isNewRecord`（新记录用本地 mock 不发请求）|
 | `.recordRef(...)` | RecordRef | `fetchRecordRefs` | 10s | |
 | `.unreferenced(tableId, maxNode)` | RecordRef / UnreferencedButton | `fetchUnreferencedRecords` | 10s | UnreferencedButton **手写同形 key**（[`UnreferencedButton.tsx`](../src/features/headerbar/UnreferencedButton.tsx)）→ 跨组件共享缓存 |
-| `.layout(pathname, layoutKeys, topologyKeys, isEdited)` | useEntityToGraph | `layoutAsync`（ELK） | `isEdited ? 0 : 5min` | 编辑态 `'e'` 段，04 讲 |
+| `.layout(pathname, layoutKeys, topologyKeys, isEditRoute)` | useEntityToGraph | `layoutAsync`（ELK） | `isEdited ? 0 : 5min` | `'e'` 段按路由态分桶（`type==='edit'`），staleTime 跟脏标记；04 讲 |
 | `.prompt(tableId)` | Chat | `getPrompt` | `Infinity` | prompt 后端静态生成，`enabled: editable` |
 
-> **staleTime 取舍**：`Infinity` = 「永远新鲜除非显式 invalidate」（schema / prompt / setting）；`0` = 「永远要最新」（编辑态布局）；中间值 = 「N 秒内快照够用」。越长越省请求但越可能脏；越短越准但越费。
+> **staleTime 取舍**：`Infinity` = 「永远新鲜除非显式 invalidate」（schema / prompt / setting）；`0` = 「永远要最新」（编辑路由且脏——有未提交修改）；中间值 = 「N 秒内快照够用」。越长越省请求但越可能脏；越短越准但越费。
 
 ### 4.3 三种缓存失效手段（重点对比）
 
@@ -229,16 +229,17 @@ useQuery({
 layoutKeys   = 布局字段白名单（颜色等纯表现字段）
 topologyKeys = 拓扑 setting（maxImpl / refIn / refOutDepth / maxNode / ...）
 
-queryKey = isEdited
-    ? ['layout', pathname, 'e', layoutKeys, topologyKeys]    // 编辑态：'e' 隔离 + staleTime 0
-    : ['layout', pathname, layoutKeys, topologyKeys]         // 浏览态：5min 缓存
+queryKey = isEditRoute    // type === 'edit'：按 entityMap 构建方式分桶（编辑/浏览节点集合不同）
+    ? ['layout', pathname, 'e', layoutKeys, topologyKeys]    // 编辑路由态：'e' 隔离
+    : ['layout', pathname, layoutKeys, topologyKeys]         // 浏览路由态
+staleTime = isEdited ? 0 : 5min   // 脏标记驱动，与 queryKey 分桶独立
 ```
 
 要点（详见 04）：
 
 - **`pathname` 进 key**：每个图布局独立缓存。
 - **`topologyKeys` 进 key**：改拓扑参数（`refOutDepth` 等）→ key 变 → 自然失效重布局；改纯颜色字段 → key 不变 → 命中缓存不重跑 ELK。**用 queryKey 替代了手动的 `clearLayoutCache`**——store 因此回归纯状态容器（store 作为纯状态容器的定位详见 [02 §3.1](02-state-management.md)）。
-- **`'e'` 隔离编辑态**：编辑可能改拓扑，故编辑态 `staleTime=0`；浏览态 5min。结构变更 `removeQueries(['layout', pathname, 'e'])` 只清编辑态。
+- **`'e'` 按路由态分桶**：编辑/浏览 entityMap 构建方式不同（节点集合不同），必须分桶防 `nodes`/`rectMap` 错配。分桶用 `type==='edit'` 而非脏标记——提交后脏标记翻 false 但 entityMap 仍是编辑态构建；`staleTime` 才跟脏标记（脏 0 / 干净 5min）。结构变更 `removeQueries(['layout', pathname, 'e'])` 只清编辑路由态。
 
 ---
 
