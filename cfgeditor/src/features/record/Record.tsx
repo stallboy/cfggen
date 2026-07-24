@@ -18,7 +18,6 @@ import {useHotkeys} from "react-hotkeys-hook";
 
 
 import {useEntityToGraph} from "@/flow/useEntityToGraph.ts";
-import {SInterface, SStruct} from "@/api/schemaModel.ts";
 import {invalidateAllQueries} from "@/services/queryClient.ts";
 import {queryKeys, removeEditLayoutCache} from "@/services/queryKeys.ts";
 import {EntityNode} from "@/flow/FlowGraph.tsx";
@@ -255,7 +254,8 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
                         label: t('addListItemBefore'),
                         key: 'addListItemBefore',
                         handler() {
-                            const sFieldable = schema.itemIncludeImplMap.get(editAllowObjType) as SStruct | SInterface;
+                            const sFieldable = schema.getStructOrInterface(editAllowObjType);
+                            if (!sFieldable) return;
                             const defaultValue = schema.defaultValue(sFieldable);
                             // 0→1 且可内嵌时 session 写 $embed=false（原 markNewItemExpanded 语义）：
                             // 新元素默认展开成节点，立即可编辑。判定由 normalizeOnAdd 自调 canBeEmbeddedCheck

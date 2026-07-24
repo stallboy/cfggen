@@ -65,13 +65,12 @@ interface ResolvedEmbed {
 
 // struct/interface 解析（canBeEmbeddedCheck 与 extractEmbeddingFields 共用）：
 // 选 struct + 对应 structCfg；interface 解析失败返回 null。
-// 注意 SStruct/SInterface 未把 type 收窄为单字面量（见 schemaModel.ts Namable），故仍需 as 断言。
 function resolveEmbedTarget(fieldType: SStruct | SInterface, fieldValue: JSONObject): ResolvedEmbed | null {
     if (fieldType.type === 'struct') {
-        return {struct: fieldType as SStruct, structCfg: EMBEDDING_CONFIG.struct};
+        return {struct: fieldType, structCfg: EMBEDDING_CONFIG.struct};
     }
     if (fieldType.type === 'interface') {
-        const sInterface = fieldType as SInterface;
+        const sInterface = fieldType;
         const resolved = resolveImpl(sInterface, fieldValue);
         if (!resolved) return null;
         const implNameToDisplay = resolved.implName !== sInterface.defaultImpl ? resolved.implName : undefined;

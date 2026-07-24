@@ -1,6 +1,5 @@
-export interface Namable {
+export interface Nameable {
     name: string;
-    type: 'struct' | 'interface' | 'table';
     comment: string;
     id?: string;  // 给impl唯一id，由json推理得到
     refTables?: Set<string> // 能索引到的表, cache，是个优化
@@ -69,13 +68,15 @@ export interface SForeignKey {
     refKeys?: string[];
 }
 
-export interface SStruct extends Namable {
+export interface SStruct extends Nameable {
+    type: 'struct';   // SItem 判别联合的 discriminant（单字面量），按 type 可 narrow，消除各处 as SStruct
     fields: SField[];
     foreignKeys?: SForeignKey[];
     extends?: SInterface; // 由json推理得到
 }
 
-export interface SInterface extends Namable {
+export interface SInterface extends Nameable {
+    type: 'interface';
     enumRef?: string;
     defaultImpl?: string;
     impls: SStruct[];
@@ -86,7 +87,8 @@ export interface RecordId {
     title?: string;
 }
 
-export interface STable extends Namable {
+export interface STable extends Nameable {
+    type: 'table';
     pk: string[];
     uks: string[][];
     entryType: 'eNo' | 'eEnum' | 'eEntry';

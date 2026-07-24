@@ -23,7 +23,7 @@ function createEntity(
     table: string,
     entityType: EntityType = EntityType.Normal
 ): ReadOnlyEntity {
-    const fields: DisplayField[] = item.type === "interface" ? [] : (item as STable | SStruct).fields.map(field => ({
+    const fields: DisplayField[] = item.type === "interface" ? [] : item.fields.map(field => ({
         key: field.name,
         name: field.name,
         comment: field.comment,
@@ -77,9 +77,9 @@ export class TableEntityCreator {
                 this.addEntityToMap(depEntity);
 
                 if (dep.type === 'interface') {
-                    this.handleInterface(dep as SInterface, depEntity, frontier);
+                    this.handleInterface(dep, depEntity, frontier);
                 } else {
-                    frontier.push(dep as SStruct);
+                    frontier.push(dep);
                 }
             }
 
@@ -132,9 +132,9 @@ export class TableEntityCreator {
             const item = oldEntity.userData as UserData;
 
             if (item.item.type === 'interface') {
-                this.handleInterfaceRef(item.item as SInterface, oldEntity);
+                this.handleInterfaceRef(item.item, oldEntity);
             } else {
-                this.handleStructOrTableRef(item.item as (SStruct | STable), oldEntity);
+                this.handleStructOrTableRef(item.item, oldEntity);
             }
         });
     }

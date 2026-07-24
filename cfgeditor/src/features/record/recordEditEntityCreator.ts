@@ -99,7 +99,7 @@ export class RecordEditEntityCreator {
                     continue;
                 }
 
-                const itemType = this.schema.itemIncludeImplMap.get(itemTypeId);
+                const itemType = this.schema.getStructOrInterface(itemTypeId);
                 if (itemType == null) {
                     continue;
                 }
@@ -169,7 +169,7 @@ export class RecordEditEntityCreator {
                 }
 
             } else { // struct or interface
-                const fieldType = this.schema.itemIncludeImplMap.get(sField.type);
+                const fieldType = this.schema.getStructOrInterface(sField.type);
                 if (fieldType == null) {
                     continue;
                 }
@@ -276,7 +276,7 @@ export class RecordEditEntityCreator {
         const type: string = obj['$type'] as string;
         if ('impls' in sItem) { // is interface
             const implName = getLastName(type);
-            const sInterface = sItem as SInterface;
+            const sInterface = sItem;
             const impl = getImpl(sInterface, implName);
             fields.push({
                 name: '$impl',
@@ -304,7 +304,7 @@ export class RecordEditEntityCreator {
             })
 
         } else {
-            const structural = sItem as (SStruct | STable);
+            const structural = sItem;
             this.makeStructuralEditFields(fields, structural, obj, fieldChain);
 
             const funcClear = () => {
@@ -423,7 +423,7 @@ export class RecordEditEntityCreator {
         } else {
             // list<struct> 或 list<interface>
             const v = (fieldValue ?? []) as JSONArray;
-            const itemType = this.schema.itemIncludeImplMap.get(itemTypeId);
+            const itemType = this.schema.getStructOrInterface(itemTypeId);
 
             // list 字段 embed 分类（与 createEntity 子节点循环共用 classifyListField）：
             // 类 1 → 内嵌 Tag；类 2 嵌入态 → 摘要行；否则 funcAdd 展开态
@@ -443,7 +443,8 @@ export class RecordEditEntityCreator {
                 type: 'funcAdd',
                 eleType: itemTypeId,
                 value: (position: EntityPosition) => {
-                    const sFieldable = this.schema.itemIncludeImplMap.get(itemTypeId) as SStruct | SInterface;
+                    const sFieldable = this.schema.getStructOrInterface(itemTypeId);
+                    if (!sFieldable) return;
                     const defaultValue = this.schema.defaultValue(sFieldable);
                     // 0→1 且可内嵌时 session 写 $embed=false（原 markNewItemExpanded 语义）：
                     // 新元素默认展开成节点，立即可编辑。可内嵌判定由 normalizeOnAdd 自调 canBeEmbeddedCheck，
@@ -516,7 +517,7 @@ export class RecordEditEntityCreator {
             eleType: sField.type,
         } as const;
 
-        const fieldType = this.schema.itemIncludeImplMap.get(sField.type);
+        const fieldType = this.schema.getStructOrInterface(sField.type);
         if (!fieldType) {
             return {...base};
         }

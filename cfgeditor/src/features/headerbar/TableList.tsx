@@ -24,7 +24,7 @@ function generateTableOptions(schema: Schema) {
     // Group tables by their namespace
     for (const item of schema.itemMap.values()) {
         if (item.type === 'table') {
-            const table = item as STable;
+            const table = item;
             const tableId = item.name;
             const [group, lastName] = parseTableId(tableId);
 

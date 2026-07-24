@@ -26,7 +26,7 @@ export class Schema {
         // 结构名称->结构  方便查找
         for (const item of rawSchema.items) {
             if (item.type == 'interface') {
-                const ii = item as SInterface;
+                const ii = item;
                 // impl 附带上接口名称
                 for (const impl of ii.impls) {
                     impl.extends = ii;
@@ -43,7 +43,7 @@ export class Schema {
         const mapEntryTypes = new Map<string, SStruct>();
         for (const item of this.itemIncludeImplMap.values()) {
             if (item.type != "interface") {
-                const ss = item as SStruct | STable;
+                const ss = item;
                 for (const {name, type} of ss.fields) {
                     if (type.startsWith("map<")) {
                         const split = type.substring(4, type.length - 1).split(",");
@@ -76,7 +76,7 @@ export class Schema {
         for (const item of rawSchema.items) {
             this.getAllRefTablesByItem(item);
             if (item.type == 'table') {
-                const st = item as STable;
+                const st = item;
                 st.refInTables = new Set<string>();
                 st.idMap = new Map<string, RecordId>();
                 for (const recordId of st.recordIds) {
@@ -88,7 +88,7 @@ export class Schema {
         // table 被哪些表 外键连接
         for (const item of rawSchema.items) {
             if (item.type == 'table') {
-                const st = item as STable;
+                const st = item;
                 const refTables = st.refTables as Set<string>;
                 for (const refTable of refTables) {
                     // getSTable 返回 nullable：脏 schema（refTable 不存在）时跳过 + 打日志定位，
@@ -107,8 +107,17 @@ export class Schema {
     getSTable(name: string): STable | null {
         const item = this.itemMap.get(name);
         if (item && item.type == 'table') {
-            return item as STable;
+            return item;
         }
+        return null;
+    }
+
+    /** 按 name 查 struct/interface（不含 table；字段类型为 list<struct>/struct/interface 引用时用）。
+     *  返回 nullable：调用方须显式处理缺失，替代原先 itemIncludeImplMap.get(name) as SStruct|SInterface
+     *  把 undefined 吃成对象、掩盖脏 schema 的 null 隐患。table 名查到这里返回 null（字段类型不该引用 table）。 */
+    getStructOrInterface(name: string): SStruct | SInterface | null {
+        const item = this.itemIncludeImplMap.get(name);
+        if (item && item.type !== 'table') return item;
         return null;
     }
 
@@ -133,8 +142,6 @@ export class Schema {
             }
             return depNameMap;
         }
-
-        item = item as SStruct | STable
 
         for (const {name, type} of item.fields) {
             const ft = parseFieldTypeId(type);
@@ -250,9 +257,9 @@ export class Schema {
 
     defaultValue(sFieldable: SStruct | SInterface): JSONObject {
         if ('impls' in sFieldable) {
-            return this.defaultValueOfInterface(sFieldable as SInterface);
+            return this.defaultValueOfInterface(sFieldable);
         } else {
-            return this.defaultValueOfStructural(sFieldable as SStruct);
+            return this.defaultValueOfStructural(sFieldable);
         }
     }
 
@@ -268,7 +275,7 @@ export class Schema {
                 // 故 map 与 list 的默认值都是空数组 []。
                 res[n] = [];
             } else {
-                const sf = this.itemIncludeImplMap.get(t);
+                const sf = this.getStructOrInterface(t);
                 if (sf) {
                     res[n] = this.defaultValue(sf);
                     // TODO recursive check
@@ -310,7 +317,7 @@ export class Schema {
                     name = name.substring(i + 1);
                 }
                 if (name == tableLabel) {
-                    return item as STable;
+                    return item;
                 }
             }
         }
