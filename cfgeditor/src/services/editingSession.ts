@@ -141,6 +141,10 @@ export class EditingSession {
         // 注意：此处 isEdited 随 entityMap 重算而更新。值类编辑不重算 entityMap → 此值不刷新
         // （layout 仍走 5min 缓存），这是现有 quirk，有意保留，勿当 bug 修。
         isEdited: this.getIsEdited(),
+        // structureVersion 是直接字段，bump 即最新（值类编辑不 bump，故不误触 layout 重取）。
+        // 进 layout queryKey 的 edit 桶——结构变更（含 reload 的 maybeReset→bumpStructure）让 key 变、
+        // cache miss、用新闭包重取，杜绝陈旧布局服到新节点集（见 EditingObjectRes.structureVersion 注释）。
+        structureVersion: this.structureVersion,
     });
 
     // ============ reset（recordResult 变化时由 effect 调，幂等）============
@@ -437,7 +441,7 @@ export class EditingSession {
      *  是快照内容，故基准设为快照而非当前态——保留这些编辑的 dirty 状态，随后 refetch 的 maybeReset
      *  与服务器数据一致即早退，飞行期编辑不被重置掉。 */
     onCommitSuccess(): void {
-        // 提交后保持当前视图：重置视口语义为 NoChange。onSuccess 还会 invalidateAllQueries → record refetch
+        // 提交后保持当前视图：重置视口语义为 NoChange。onSuccess 还会 invalidateAllExceptLayout → record refetch
         // → recordResult 新引用触发 useMemo 重算，读到此处设的 fitView，Effect 2 走 noop 不跳视口。
         // （onCommitSuccess 本就不 emit；fitView 靠 recordResult 重取驱动的那次重渲生效，不依赖本次 bump。）
         this.fitView = EFitView.NoChange;

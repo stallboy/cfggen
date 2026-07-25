@@ -62,4 +62,25 @@ describe('缓存写动词（行为契约）', () => {
         expect(spy).toHaveBeenCalledTimes(1);
         expect(spy).toHaveBeenCalledWith({queryKey: queryKeys.resInfo(), refetchType: 'all'});
     });
+
+    it('layout edit 桶含 structureVersion：结构变更让 key 变 → 命中失败 → 用新闭包重取（防 reload 陈旧布局）', () => {
+        // 同 pathname/拓扑/布局设置、仅 structureVersion 不同 → 必须产出不同 key。
+        // 否则保存后 reload 展开（maybeReset→bumpStructure 让版本号自增）仍命中收起态缓存 →
+        // applyRectToNodes not found + 新节点跳默认位重叠（"删 list 项→embed→更新→子项重叠"根因）。
+        const before = queryKeys.layout('/p', {k: 1}, {t: 1}, true, 5);
+        const after = queryKeys.layout('/p', {k: 1}, {t: 1}, true, 6);
+        expect(after).not.toEqual(before);
+        // 浏览桶不带 structureVersion（不区分）——浏览态无此 bug，不受影响
+        expect(queryKeys.layout('/p', {}, {}, false, 5)).toEqual(queryKeys.layout('/p', {}, {}, false, 6));
+    });
+
+    it('removeEditLayoutCache 仍命中带 structureVersion 段的 edit key（prefix 契约不被新段破坏）', () => {
+        queryClient.setQueryData(['layout', '/p', 'e', {}, {}, 5], 'edit-v5');
+        queryClient.setQueryData(['layout', '/p', 'e', {}, {}, 6], 'edit-v6');
+
+        removeEditLayoutCache('/p');
+
+        expect(queryClient.getQueryData(['layout', '/p', 'e', {}, {}, 5])).toBeUndefined();
+        expect(queryClient.getQueryData(['layout', '/p', 'e', {}, {}, 6])).toBeUndefined();
+    });
 });

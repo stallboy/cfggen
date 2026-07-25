@@ -115,6 +115,9 @@ export function useEntityToGraph({
     //   - 改纯颜色字段 → queryKey 不变 → 命中缓存不重跑 ELK；
     //   - 改拓扑 setting（maxImpl/refOutDepth/recordRef*/tauriConf…）→ topologyKeys 变 → 缓存自然失效重布局。
     // 'e' 段保持在 pathname 之后同一层级，保 Record.tsx 的 ['layout', pathname, 'e'] prefix 失效契约。
+    // structureVersion（仅 edit 桶）随结构变更自增 → key 变 → cache miss → 用新闭包重取。这条专门防 reload
+    // 路径的陈旧布局：保存后 record 回来展开、maybeReset(effect)→bumpStructure 让版本号变，但 removeEditLayoutCache
+    // 也在该 effect 触发、observer 持旧 data 未必同步清——靠 key 变强制 cache miss 才兜得住（见 queryKeys.layout）。
     const layoutKeys = pickLayoutKeys(nodeShowSetting);
     const topologyKeys = {
         maxImpl, refIn, refOutDepth, maxNode,
@@ -122,7 +125,7 @@ export function useEntityToGraph({
     };
     const isEditRoute = type === 'edit';
     const isEdited = !!editingObjectRes?.isEdited;
-    const queryKey = queryKeys.layout(pathname, layoutKeys, topologyKeys, isEditRoute)
+    const queryKey = queryKeys.layout(pathname, layoutKeys, topologyKeys, isEditRoute, editingObjectRes?.structureVersion)
     const staleTime = isEdited ? 0 : 1000 * 60 * 5;
     const {data: id2RectMap, error: layoutError} = useQuery({
         queryKey: queryKey,

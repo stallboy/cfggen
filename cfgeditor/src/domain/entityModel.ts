@@ -425,4 +425,10 @@ export type EditingObjectRes = {
     fitView: EFitView;
     fitViewToIdPosition?: EntityPosition;
     isEdited: boolean;
+    /** 编辑会话结构版本号（EditingSession.structureVersion）。进 layout queryKey 的 edit 桶：结构变更
+     *  （含保存后 reload 引发的 maybeReset→bumpStructure）使其自增 → key 变 → cache miss → 重渲后用**新闭包**
+     *  重取布局。从结构上杜绝"陈旧布局被服到新节点集"（applyRectToNodes not found + 新节点跳默认位重叠）——
+     *  因 removeEditLayoutCache 在 maybeReset 这个 effect 里触发时，react-query observer 持有的旧 data
+     *  未必同步清，单靠它兜不住 reload 路径。浏览态不传（undefined，不进 browse key）。 */
+    structureVersion?: number;
 }

@@ -1,5 +1,5 @@
 import {navTo, useMyStore, useLocationData} from "@/store/store.ts";
-import {invalidateAllQueries} from "@/services/queryClient.ts";
+import {invalidateAllExceptLayout} from "@/services/queryClient.ts";
 
 import {memo, useCallback, useState} from "react";
 import {useMutation,} from "@tanstack/react-query";
@@ -42,7 +42,7 @@ export const AddJson = memo(function AddJson() {
         onSuccess: (editResult) => {
             setResult(editResult);
             if (editResult.resultCode == 'updateOk' || editResult.resultCode == 'addOk') {
-                invalidateAllQueries();
+                invalidateAllExceptLayout();   // 排除 layout：避免用重渲前旧闭包 refetch 出陈旧布局（同 Record.tsx，见 helper 注释 + cfgeditor-layout-key-track-structure）
                 navigate(navTo('record', editResult.table, editResult.id, true));
             }
         },

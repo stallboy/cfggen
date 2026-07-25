@@ -18,7 +18,7 @@ import {useHotkeys} from "react-hotkeys-hook";
 
 
 import {useEntityToGraph} from "@/flow/useEntityToGraph.ts";
-import {invalidateAllQueries} from "@/services/queryClient.ts";
+import {invalidateAllExceptLayout} from "@/services/queryClient.ts";
 import {queryKeys, removeEditLayoutCache} from "@/services/queryKeys.ts";
 import {EntityNode} from "@/flow/FlowGraph.tsx";
 import {NEW_RECORD_ID, SchemaTableType} from "@/domain/schema.ts";
@@ -51,7 +51,7 @@ function RecordWithResult({recordResult}: { recordResult: RecordResult }) {
                 });
 
                 session.onCommitSuccess();
-                invalidateAllQueries();
+                invalidateAllExceptLayout();   // 排除 layout：避免用重渲前旧闭包 refetch 出陈旧布局服到展开后的新节点集（见 helper 注释）
                 if (curId === NEW_RECORD_ID) {
                     // 新记录创建后跳真实 id：key 变 → 旧 session unmount（栈随实例销毁）→ 新 session 用真实 id 构造
                     navigate(navTo('record', curTableId, editResult.id, true));

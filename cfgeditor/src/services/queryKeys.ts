@@ -46,9 +46,12 @@ export const queryKeys = {
     // 必须分桶，否则 nodes 与 rectMap 错配（applyRectToNodes not found）。结构变更时
     // removeQueries(['layout', pathname, 'e']) 只清编辑态。分桶标志是「路由态」(type==='edit') 而非脏标记：
     // 提交后 isEdited 翻 false 但 entityMap 仍是编辑态构建；脏标记只驱动 staleTime（见 useEntityToGraph）。
-    layout: (pathname: string, layoutKeys: object, topologyKeys: object, isEditRoute: boolean) =>
+    // edit 桶还含 structureVersion：结构变更（含保存 reload 的 maybeReset→bumpStructure）让版本号自增 → key 变 →
+    // cache miss → 用新闭包重取。这条是必须的——removeEditLayoutCache 在 maybeReset(effect) 里触发时 observer
+    // 持旧 data 未必同步清，单靠 prefix 失效兜不住 reload 路径（"删 list 项→embed→更新→子项重叠"根因）。
+    layout: (pathname: string, layoutKeys: object, topologyKeys: object, isEditRoute: boolean, structureVersion?: number) =>
         isEditRoute
-            ? ['layout', pathname, 'e', layoutKeys, topologyKeys]
+            ? ['layout', pathname, 'e', layoutKeys, topologyKeys, structureVersion]
             : ['layout', pathname, layoutKeys, topologyKeys],
 
     // AI
